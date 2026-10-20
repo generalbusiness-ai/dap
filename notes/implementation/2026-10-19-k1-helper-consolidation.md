@@ -1,482 +1,150 @@
-# K1: consolidate shared helpers
+# K1: shared owning helpers
 
-K1 is now integrated in an independent worktree on published Main
-`8aad37bb`, which adds the D1 design packet to published Grow Main `7594822`.
-The source hygiene check passes: 528 source files against 174 bytes exports.
-The refreshed, explicitly specified inventory is 139 matching declarations
-before and seven after; this includes distinct domain names, not 132
-identical implementations removed. All 429 existing test files stay
-byte-exact to that Main. Owning compiler/runtime checks, the new integrated
-head's gate and complete review remain ahead.
+K1 replaces identical local helpers with imports from their owning modules.
+Different validation, rendering, storage and error policies retain distinct
+names. It includes a source check that refuses new local definitions of
+bytes exports. No existing assertion, case, limit, deadline, grant, pin or
+default changes. The original two Node guard cases are its only shipped
+test addition.
 
-The previous exact-head approval `c79f05e9` / adoption `c82bdbab` applies to
-`5706ac22`, not this new integration. Its original passing code/test head
-was `b1f611d78eabb01ffe7adbcb2fee458647645283`. The following history retains
-that implementation, original gate and all failed probes. The final
-integration section records the newer Main preservation checks.
+Request `b1212999e370e4936b14138e381446047b18d92d`.
+Builder promise `1b758ab79406a126c390fca8a5e14b0b76fa9405`.
+This remains interruptible filler behind the demo work. The current code
+head is `61a644573d1d20d0d2e5c8cd5aa87aec4f97d616`, tree
+`fe905d762efa59c78c43e38e355de22a36080d7a`, on published Main `8aad37bb`.
+That Main is the notes-only D1 landing over published Grow Main `7594822`.
+Original approval `c79f05e9`, adopted by `c82bdbab`, belongs to the older
+`5706ac22` candidate. A fresh exact-head review is required for this
+integration. Its ordinary gate passes; review remains pending.
 
-Request `b1212999e370e4936b14138e381446047b18d92d`, builder promise
-`1b758ab79406a126c390fca8a5e14b0b76fa9405`. This is interruptible filler
-behind G5a, G5, S2a and S2b. Preparation starts at actual Main
-`dba3e76237250b6ce205d511691554de3d809baf` in an isolated checkout. No
-frozen demo or review view is changed. The first checkpoint was incomplete:
-the other named helper families still needed their semantic comparison,
-consolidation or distinct names. Its evidence did not include a whole gate
-or review; those stages are recorded separately below.
+## Owning modules and distinct meanings
 
-## The first shared families
+| Owner | Shared decision |
+| --- | --- |
+| bytes `records.ts` | `isRecord`; existing `isLocalId` for nonnegative safe integers including negative zero |
+| bytes `values.ts` | strict canonical `same`, negative-zero-refusing `natural`, `stringOrNull`, in-place owned-JSON `freeze` |
+| Scope `sqlite.ts` | `sqlJsonText`, the unchanged bounded SQL text expression |
+| Scope `response.ts` | JSON response serialization, status and no-store headers |
+| Git `ascii.ts` | numeric byte-to-code-unit conversion, including bytes above ASCII |
+| Git journal/HTTP owners | strict `decodeGitText` and nonthrowing `unreadableGit` construction |
+| Projection/archive owners | shared constructors beside the original error classes |
 
-Bytes now owns `same`, `natural` and `freeze` in `src/values.ts`, alongside
-its existing `isRecord` in `src/records.ts`. Identical local implementations
-import these functions. `same` preserves canonical JSON equality and its
-errors; `natural` preserves nonnegative safe integers with negative zero
-refused; `freeze` recursively freezes already owned acyclic JSON and
-returns the original value. Its prior callers either ignored the result
-or returned that same value. No validation or cloning is added.
+Canonical equality retains canonicalize's refusal. False-on-invalid and
+optional-member policies keep their separate adapters. Freeze retains
+in-place recursion over already owned acyclic JSON; callers retain their
+copy/ownership responsibilities. `natural` excludes negative zero;
+`isLocalId` accepts it. The imports preserve each caller's original choice.
+Metrics keep their extra negative-zero and 31-bit bounds as `metricInteger`.
+Throwing projection ranges are `projectionInteger`; MCP arguments are
+`integerArgument`; Counter's declaration factory is `integerField`.
+The simulator's separate min/max check is `simulationIntegerInRange`.
 
-Derive's public `same`, the host-wiring export and Counter's browser model
-continue to export their existing names as aliases of the one bytes
-implementation. Existing tests and their assertions are unchanged. Page
-assets are rebuilt from source and their existing comparison passes.
+Different record operations are `recordShape`, `projectionRecord`,
+`matchesRecordMembers`, `githubRecord`, `holdRecord` and `recordOrNull`.
+No optional-member, nullable or error rule is forced into a boolean guard.
+Jam's musical `record` and `keyOf` remain at their original public names
+and exact source/assets. Destination's unrelated local record variable
+also stays local and unchanged.
 
-Similar names with different behavior keep that behavior:
+Worker/Room replies share `jsonReply`. Application replies retain their
+extra nosniff header through `applicationJsonReply`. MCP retains its
+separate `rpcJsonReply` caller-header policy and `describeJson` formatting;
+SQLite's parser is `rowJson`. Serialization, headers, status and body
+remain the caller's values. Projection uses `projectionFailure` beside its
+error class; fact-time keeps `unavailableProjection`. Archive callers
+share `stopArchivePrefix` beside the same error class. Other scenario,
+package, view, view-parameter, GitHub, blob, content and admission errors
+keep explicit names and their original classes, reasons and defaults.
+`stopCall` and `stopCommand` retain their different result types.
 
-| Name now | Meaning preserved |
-|---|---|
-| CLI `sameOptional` | Undefined compares only with undefined before canonical comparison. |
-| Platform `sameCanonicalStanding` | Invalid canonical values compare false instead of throwing. |
-| Git `sameObjectBytes` | Exact Uint8Array length and byte equality. |
-| Scope `sameHealthKey` | Compare only binding and scope fields. |
-| Page `hasScopeRefFields` | Existing permissive string-field check, not the strict bytes reference guard. |
-| Replay `hasHeadFields` | Existing source header check accepts a string hash before replay validation. |
-| CLI `verifyScopeCommand` | Public command behavior; `verify` remains its export alias. |
-| Replay `verifyHistory` | History verification; `verify` remains its export alias. |
-| Scope `turnDeadline` | Existing turn deadline with its own LATE symbol and catch behavior; `within` remains its export alias. |
+Storage keys remain byte-exact under `jobStorageKey`, `attemptStorageKey`,
+`bindingKey`, `attemptKey`, `identityStorageKey`, `startStorageKey` and
+`listStorageKey`. Derive's `keyOf` remains a public alias of `bindingKey`.
+Byte operations retain distinct policies as `envelopeBytes`, `replyBytes`,
+`sqlBytes` and `objectIdBytes`; paging's `bytesOf` remains a public alias.
+Package validation's `fail` and the CLI's `verify` aliases stay available.
 
-Only identifier references and export aliases change for these variants.
-Public command spellings, messages, error classes, permissions, native
-rules and all pinned definition data stay unchanged.
+Git journal decoding retains fatal UTF-8 refusal and the leading BOM.
+Destination's different latin1 policy remains `latin1Decoder`; replacement
+and BOM policies in other decoders stay distinct. Text policies retain
+names including `queryText`, `configurationText`, `wellFormedText`,
+`callResultText`, `displayText`, `outcomeText`, `viewText`, `packageText`,
+`registerText`, `destinationText`, `textNode` and `shelfText`. Their empty
+string, byte/character bound, NUL, surrogate, fallback and error rules
+remain unchanged. Tick's own string and error policies are `tickText` and
+`tickFailure`.
 
-## Before and checkpoint counts
+## Source guard
 
-The same command produces both inventories:
+`scripts/check-shared-helpers.mjs` uses the already pinned parser to read
+actual bytes runtime entry points, including application/application-v2.
+It follows named/barrel re-exports and actual module resolution, ignores
+type-only exports, and checks new untracked source files. It imports no
+project source. A local function declaration or expression redefining a
+bytes export refuses with the owner path. Imports and public aliases are
+allowed; distinct meanings require distinct names. Tests, comments and
+string examples are excluded.
+
+The gate runs the guard before type checking. The current guard passes
+528 source files against 174 exports. Its original two Node cases remain
+in the explicit Node list. Earlier controls show the missing-refusal
+variant fails an unchanged assertion, and an actual new untracked
+`projectionFailure` copy, exported only through application-v2, is refused.
+Both controls restore exact source and retain their original failures.
+The guard is source hygiene, not a hostile-code boundary.
+
+## Current Main integration and preservation
+
+The original approved source, dependencies and tools remain permanently
+frozen. The new owned worktree is
+`/tmp/artroom-builder-k1-main-integration-20261020`. Exactly 5,499 granted
+dependency regular leaves and 31 contained relative links are copied into
+distinct inodes, with all bytes/hashes checked and current physical modes
+preserved. Only owned-copy output caches are removed. Lock/stamp match;
+no package is installed. The older grant does not encode historical modes,
+so no unrecorded mode history is inferred.
+
+Main changed 18 original K1 Source paths. The owned merge naturally stops
+at eight conflicts; all 24 stages are retained before resolution under
+`/tmp/builder-k1-main-conflict-stages-20261020/`. Seven source files keep
+Main's feature code with the reviewed helper aliases/imports; Page's asset
+is rebuilt from the combined source. Its current bytes/hash are in the
+closed build receipt, and the existing asset witness passes.
+
+Main's archive requirement, Device owner, capability fact kinds, principal
+and creation context, supported cohorts and public refusals remain present.
+Source-only comparison covers eleven Main bodies: seven conflicted source
+files and four Grow consumers. Remaining AST nodes and literals match after
+explicit helper/import/export-wrapper normalization. It is not a runtime
+or complete API proof. Removed older helper declarations match the
+previously reviewed base; the four owning implementation files match
+approved K1. The newer Grow declarations receive their separate proofs.
+
+The two newer Grow `same` copies use identical strict canonical equality.
+Tick's local integer matches `isLocalId`; command-journal's equivalent
+predicate is checked on 24 values, including a proxy that must not coerce.
+Negative zero distinguishes the wrong `natural` substitution. The bounded
+simulation predicate retains its range body under its distinct name.
+All 429 pre-existing tracked `.test.ts`/`.test.mjs` files remain completely
+byte-exact to actual Main; source mapping is not a runtime count proof.
+
+Mappings, original stages, pure probes and failed/corrected tools use
+`/tmp/builder-k1-*20261020*`. The final body mapping is
+`builder-k1-main-body-preservation-v5-20261020.json`; exact test comparison
+is `builder-k1-main-existing-test-preservation-20261020.json`.
+The original code/gate note remains as an exact historical Git snapshot
+in the review evidence, including all earlier preparation records.
+
+## Repeatable counts
+
+Both columns use the same disclosed command on published Main `8aad37bb`
+and this integration:
 
 ```sh
 rg -n '^(export )?(const|function) (isRecord|natural|same|text|fail|record|freeze|keyOf|integer|json|ascii|stop|bytesOf)\b' packages/*/src apps examples --glob '*.ts' --glob '!*.test.ts' --glob '!**/test/**' --glob '!**/test-support.ts' --glob '!**/testing.ts'
 ```
 
-The retained files are `/tmp/artroom-k1-helper-before-20261019.txt`,
-`...helper-checkpoint...txt` and `...helper-counts-checkpoint...json`.
-This is a count of matching top-level declarations, including the owner,
-not a claim that every matching name has identical semantics. In
-particular `text` includes decoder instances and domain text validators.
-The planner's exact survey command was requested so differing inclusion
-counts can be reconciled before the final report.
-
-| Helper | Before | Checkpoint |
-|---|---:|---:|
-| isRecord | 9 | 1 |
-| natural | 12 | 1 |
-| same | 21 | 1 |
-| freeze | 9 | 1 |
-| integer | 8 | 8 |
-| record | 9 | 9 |
-| keyOf | 8 | 8 |
-| text | 22 | 22 |
-| json | 6 | 6 |
-| ascii | 6 | 6 |
-| fail | 14 | 14 |
-| stop | 4 | 4 |
-| bytesOf | 4 | 4 |
-
-## Refuse new copies
-
-`scripts/check-shared-helpers.mjs` parses the actual bytes runtime exports
-and source declarations using the TypeScript parser already locked with
-Vite/Vitest. It executes no project source and installs no package. It
-follows barrel and named re-exports to the original implementation, skips
-type-only exports, and includes new untracked source files. A file-local
-function declaration or function expression that redefines an exported
-bytes name refuses with its owning path. Imports and public aliases are
-allowed; a different meaning needs a distinct name. Tests, comments and
-strings containing example code are not implementations.
-
-The gate runs it before typechecking. Its two Node cases join the existing
-explicit Node list; no existing test assertion or case limit changes.
-The first checkpoint's actual source check passes across 503 files and 133 exports.
-A first alias-aware source check failed because it treated the forwarded
-contract module as a relative path. Resolution now uses Node's existing
-module resolution without importing it; the failed original is retained.
-
-## Focused evidence and limits
-
-All logs have prefix `/tmp/artroom-k1-` and date 20261019:
-
-- `shared-values-owning`: eight Node files, 25 cases pass (64568 closed
-  zero). Existing package/projection ownership and freezing, agent-key
-  parsing, operational replies and publication-standing cases are used.
-- `shared-values-native`: four files, 11 cases pass (7993 closed zero):
-  actual native archive privacy/prefix, session preparation and application
-  projection ownership. Their existing TEST boundaries remain unchanged.
-- `distinct-helpers-owning`: four files, 11 cases pass (41722 closed zero):
-  CLI verification and retained invitations, Git application blob reading
-  and replay source ordering. Existing stand-in labels remain unchanged.
-- `shared-values-{bytes,client}-types` and
-  `shared-values-corrected-{derive,git,mcp,platform,replay,scope}-types`
-  pass all eight package compiler commands. The first six downstream
-  commands failed for five newly unused canonicalize imports; those
-  imports were removed and the failed originals retained.
-- `distinct-helper-{cli,platform,replay,scope,page}-types` and
-  `shared-counter-types` pass after the semantic names/export aliases.
-- `duplicate-guard-resolved-owning` passes both Node guard cases;
-  `duplicate-guard-resolved-source` passes the actual source check.
-- `duplicate-guard-control`: baseline passes both cases. Removing only
-  the refusal produces one unchanged new-source assertion failure, with
-  no timeout. The script restores exact source in `finally`, SHA-256
-  `3582e12cbb86eb2e7076059d2f8b6463249044ef4b998efd3d435a95f0730350`.
-  Its script and separate baseline/without-refusal logs are retained.
-- `page-assets-build` succeeds and `page-assets-owning` passes the existing
-  asset comparison. No package assets are published.
-
-All originals have terminated. No source changes occurred during any
-related compiler, focused test or control. Private copy-on-write
-dependencies contain 5,498 regular files with distinct source inodes and
-31 contained links across seven installed module roots; the copied lock
-stamp matches SHA-256
-`3546b5384c9245fb646c4f7c22cabde0f4351b05dfcec704d1bdeb170666361a`.
-An initial copy probe encountered an ignored legacy packages/lanes folder
-that is absent from Main; selecting actual workspaces from the new
-checkout fixed that setup. No dependency install or manifest/lock dependency
-change occurred. The root test script alone adds the new Node witness.
-
-The remaining families, final same-command count comparison, integrated
-gate and exact-head review are still required. Demo/cohort work preempts
-this checkpoint. Nothing here authorizes landing, publishing or deployment.
-
-## Second checkpoint: wire text, record meanings and replies
-
-Five copies of Git's byte-to-code-unit conversion now import `ascii` from
-`packages/git/src/ascii.ts`. The loop preserves every byte's numeric code
-unit, including values above ASCII. Destination's existing latin1 decoder
-has a different decoding policy and is named `latin1Decoder`; its behavior
-is unchanged. The bounded SQL JSON text expression now lives in
-`sqlite.ts` as `sqlJsonText` and Archive privacy imports it. Its SQL string
-and internal path arguments stay exact. The local inventory found one
-such declaration; other matches named text include distinct validators,
-decoder objects and constructors. The requested survey command remains
-needed to reconcile the planner's description of fourteen SQL helpers.
-
-Three nonnegative safe-integer checks import bytes `isLocalId` under the
-existing local alias integer. These checks continue to accept negative
-zero. The metrics checks retain their stricter negative-zero refusal and
-31-bit bound by using shared `natural` plus that unchanged bound, under
-the name `metricInteger`. Projection's throwing range validator is
-`projectionInteger`, the MCP argument reader is `integerArgument`, and
-Counter's declaration factory is `integerField`. The latter constructs
-exactly the same pinned data; its existing definition witness passes.
-
-Identical boolean record checks now import bytes `isRecord` under their
-existing caller alias record, including Page's nested check. Different
-record operations are named `recordShape` (bytes guard constructor),
-`projectionRecord` (bounded throwing projection dictionary),
-`matchesRecordMembers` (Destination's own optional-member policy),
-`githubRecord` (GitHub response admission), `holdRecord` (capability state
-lookup) and `recordOrNull` (Site host's nullable result). No differing
-optional-member or error policy is merged.
-
-Jam's `record(log, entry)` is a musical log writer, with no shared JSON
-guard semantics. It stays at its original public name and exact source
-bytes: the managed deployment recipe binds seventeen source modules and
-nineteen public bodies. A proposed internal rename was restored before
-this checkpoint; neither the historical record nor its assertions is
-rewritten. Both existing managed-asset cases pass. The same constraint
-applies to Jam's distinct musical keyOf operation in the remaining survey.
-
-The Scope Worker and Room dispatch now import one `jsonReply` from
-`scope/src/response.ts`. The application route calls it through
-`applicationJsonReply`, retaining its extra nosniff header. Content type,
-no-store policy, status, serialization and body remain the callers' exact
-values. MCP's RPC-specific reply remains `rpcJsonReply` with its existing
-caller-header policy; its descriptive formatter is `describeJson`.
-SQLite's parser is `rowJson`. These have different inputs/results and
-are not forced into the Worker helper.
-
-Projection errors use one `projectionFailure` constructor path beside
-their existing error class. The fact-time adapter retains its fixed
-unavailable reason through `unavailableProjection`. Archive prefix,
-inventory and privacy share `stopArchivePrefix` beside the original
-error class. The error classes, reasons, defaults and throw behavior stay
-unchanged; remaining different error families still need their own names.
-
-The guard now reads all runtime entry points from bytes package.json,
-including application and application-v2, and follows their actual
-re-exports. It passes 505 source files against 173 exports. It correctly
-refused the proposed HTTP helper name applicationJson, already owned by
-the bytes validator; applicationJsonReply states its different meaning.
-The guard's two Node cases pass after the entry-point expansion.
-
-An actual gate counterexample creates one owned, untracked source file
-that redefines projectionFailure, exported only through application-v2.
-The baseline passes; the gate refuses that file and names its actual
-bytes owner without executing it. The script deletes the probe in
-`finally` and verifies that the guard is unchanged, SHA-256
-`6b5146974b1b8b66f54f0e883cb877ab2d5e62554b661685dcbb3dfffb2da28d`.
-Script and baseline/refusal/summary logs have prefix
-`/tmp/artroom-k1-public-entry-new-file-` and date 20261019.
-
-Further focused logs, with the same K1 prefix/date:
-
-- `wire-record-integer-owning`: seven files, 26 cases pass (15813 closed
-  zero); actual local Git tests retain their confstr temporary-directory
-  warnings. No assertion or timeout limit changes.
-- `wire-record-integer-native`: five files, 24 cases pass (83219 closed
-  zero), covering native SQL privacy, metrics, proof bytes, signer evidence
-  and demo creation. Existing native/TEST boundaries stay unchanged.
-- `shared-error-reply-owning`: the three bytes files pass seven cases.
-  MCP's local HTTP beforeAll could not listen on 127.0.0.1 in the sandbox
-  (EPERM); it then hit its original ten-second hook bound and an afterAll
-  close of an uninitialized server. All nine HTTP cases skipped. Original
-  49268 closed nonzero and remains failed evidence.
-- `shared-reply-http-loopback`: only that HTTP file reruns with loopback
-  access; all nine cases pass (47701 closed zero). No source or deadline
-  change, and no rerun of the three already passing bytes files.
-- `shared-error-reply-native`: three files, ten cases pass (13244 closed
-  zero), including actual archive refusals and application HTTP routes.
-- `wire-sql-{git,scope}-types`, `record-page-types`,
-  `record-integer-{bytes,derive,git,mcp,platform,scope}-types`,
-  `shared-reply-{mcp,scope}-types` and `shared-errors-{bytes,scope}-types`
-  all pass. Every original is closed.
-- `preserved-jam-assets` passes both existing Node cases with exact source
-  and deployed bodies. `record-page-assets-build` and
-  `record-page-assets-owning` rebuild and verify Page's maintained asset.
-
-The same grep is retained as `helper-second-checkpoint...txt` and
-`helper-counts-second-checkpoint...json`. Relative to the original:
-ascii 6 to 1; record 9 to 1 (Jam's separate operation); integer 8 to 0
-and json 6 to 0 after imports or distinct names; fail 14 to 9; stop 4
-to 2; text 22 to 21. The four first-checkpoint families stay at one each.
-keyOf remains eight and bytesOf four. These and the remaining text/error
-families still need completion. No existing test assertion changed. No
-whole gate or Source review has run, and demo work still takes priority.
-
-## Implementation ready for its gate
-
-The remaining families now have shared implementations or explicit names
-for their different meanings. Storage-key formats stay exact:
-jobStorageKey, attemptStorageKey, bindingKey, attemptKey,
-identityStorageKey, startStorageKey and listStorageKey name their separate
-inputs and records. Derive's existing keyOf export remains an alias of
-bindingKey. Jam's unrelated musical keyOf stays at its recorded source.
-
-Byte operations are envelopeBytes (canonical custody JSON size),
-replyBytes (ordinary reply JSON size), sqlBytes (SQLite buffer conversion)
-and objectIdBytes (Git object-ID decoding). Paging's bytesOf export remains
-an alias of replyBytes. None exchanges its serialization or copy policy
-for another's. Scenario, package, view, view-parameter, GitHub, blob,
-content and admission failures have distinct names and retain their
-existing error classes and arguments. The package validator's fail export
-remains an alias. Git's HTTP readers now share the nonthrowing
-unreadableGit error constructor; their caller still chooses throw or
-rejection. stopCall and stopCommand keep their different result types.
-
-Bytes owns stringOrNull for the two identical optional-string readers.
-Git's three strict journal decoders share decodeGitText, preserving fatal
-UTF-8 refusal and the retained leading byte order mark; Git operations use
-bytes utf8 for encoding. Default process and Site decoders keep their
-different replacement/BOM behavior under explicit names. queryText,
-configurationText, wellFormedText, callResultText, displayText,
-outcomeText, viewText, packageText, registerText, destinationText,
-textNode and shelfText name different validation, rendering or construction
-policies. Their empty-string, byte/character limit, NUL, surrogate,
-fallback and error rules are unchanged. Nullable Site and throwing GitHub
-record adapters now call the shared isRecord decision too.
-
-A draft identifier-only rename had also renamed Destination's unrelated
-local record variable. The scope-aware audit restores that local binding
-and its references while keeping the actual helper named
-matchesRecordMembers. The same audit of every earlier helper rename found
-no other such change. It handles parameters, block/loop/catch bindings,
-property keys and public aliases separately. Its first text pass exposed
-a type-annotation span in the parser's binding node: all six compilers
-stopped at the resulting implicit-any parameter in wellFormedText. The
-original Check annotation is restored, and identifier replacements now
-preserve that span. These failed originals remain in
-`shared-text-{bytes,platform,git,mcp,scope,checkers}-types` logs. Corrected
-commands all pass. The scoped tool, mapping files and repair log are
-retained under `/tmp/artroom-k1-` for review; they execute no project code.
-
-Final inventories repeat exactly the command above, retained as
-`/tmp/artroom-k1-helper-final-20261019.txt` and
-`...helper-counts-final...json`:
-
-| Helper | Before | After |
-|---|---:|---:|
-| isRecord | 9 | 1 |
-| natural | 12 | 1 |
-| same | 21 | 1 |
-| freeze | 9 | 1 |
-| ascii | 6 | 1 |
-| integer | 8 | 0 |
-| json | 6 | 0 |
-| text | 22 | 0 |
-| fail | 14 | 0 |
-| stop | 4 | 0 |
-| bytesOf | 4 | 0 |
-| record | 9 | 1 |
-| keyOf | 8 | 1 |
-
-The last two are Jam's distinct recorded domain operations. This is a
-reduction from 132 to seven matching declarations, achieved by imports
-and by naming different meanings. It is not a claim that 125 identical
-function bodies were removed. The SQL helper has one original declaration
-and now one owning declaration in SQLite. No exact alternative planner
-grep arrived during preparation; this explicit repeatable baseline is the
-comparison used, rather than an unexplained different count.
-
-The guard passes 506 source files against 174 runtime exports across all
-public bytes entry points. Existing test files and their assertions remain
-unchanged; its two Node cases are the only new cases. No case deadline,
-Vitest worker setting, pinned definition body, default cohort, storage key
-or wire schema changes. The final Page asset is rebuilt and its existing
-comparison passes; Jam's source, asset record and nineteen bodies are exact.
-
-Further owning evidence, with the same K1 prefix/date:
-
-- `distinct-errors-keys-{bytes,derive,git,mcp,scope,cli,checkers}-types`
-  pass. `shared-text-corrected-{bytes,platform,git,mcp,scope,checkers}-types`
-  and `shared-text-page-types` pass after the annotation correction.
-- `complete-helper-types` passes the full project typecheck after the
-  scoped correction and final shared helpers (83527 closed zero), including
-  all workspace and root script, browser and Grow targets.
-- `text-storage-errors-owning`: fifteen files, 95 cases pass and one
-  existing case skips (85211 closed zero). These are the unchanged owning
-  view/parameter, journal/object/GitHub/snapshot/read, SQLite custody/budget/
-  resource, Page custody/list/member, checker runner and Lending shelf cases.
-- `text-storage-errors-native`: five files, 37 cases pass (1929 closed
-  zero), covering actual operations, register/destination hosts and Site
-  routes/host. Their existing TEST provider/transport boundaries stay
-  labelled; no live provider or deployment result follows.
-- `final-page-assets-build` and `final-page-assets-owning` pass after the
-  final Page changes. `git diff` confirms no existing test file changed.
-
-All originals have terminated, with source stable during each related
-process. The required gate, its natural terminal result and exact-head
-Source/review are next. This checkpoint is not that gate or an approval.
-
-Before that gate, the existing Main pretest compatibility script adopted
-the owned Cloudflare pool package view: version 0.22.0, copied false,
-bundle SHA-256
-`8d3d115037c749cce1e8cb26bc70ba08e215aaaa357e4eae9f0c1577277c5855`
-to `cd50d18adce92adb54a3f00410d646b2fe09b3f12c5b833c492bcf5857621b39`.
-The earlier focused runs precede this dependency adoption. A second
-verification reports the same cd50 hash before and after, so the required
-gate will use that stable adopted view. Both logs are retained as
-`pre-gate-pool-compat` and `pre-gate-pool-verified`. No package was installed
-and no lock or dependency manifest changed; the patch is to the private
-copy, outside any original process and before its gate snapshot.
-
-## Required gate: natural pass
-
-Original session 94836 naturally closed zero at clean code/test head
-`b1f611d78eabb01ffe7adbcb2fee458647645283`, tree
-`df1999f52724e7f4642c1658b111d347a798c4f1`. This is K1's first and only
-whole gate. It passes whitespace, the shared-helper check and the full
-typecheck, then 399 Vitest files and 1,926 cases; one recording file and
-three existing cases skip. The built-in Node list passes 33 cases,
-including the two new guard cases, and Counter's separate Node witnesses
-pass all 55. Existing test source/assertions and case deadlines are exact.
-The skips are Page and demo recording without their opt-in flags, and the
-Darwin exclusion for the long ARTROOM_HOME dead-reclaimer witness.
-
-`/tmp/artroom-k1-gate-20261019.log`, `...gate-time...log` and
-`...gate-process-closure...json` retain the original result and exact
-inputs. The raw step directory is
-`/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.5f5kEHAG8C`.
-Outer observed wall time is 483.89 seconds; user 601.91 plus system 100.47
-gives 702.38 seconds CPU for that actual pipeline. These are not sums of
-separate runs. Machine: macOS 27.0.1, Darwin 27.0.0, arm64, 18 reported
-logical CPUs; start load averages 1.554, 1.370 and 1.471. Private installed
-dependencies and recent focused/build caches were warm or partly warm.
-Other host work was not controlled. No product latency claim follows.
-
-Before/after snapshots retain all 2,300 tracked file hashes, 5,499 dependency
-regular-file hashes and 31 contained links. Head, tree, clean state, all
-tracked files, all 5,498 installed dependency files and every link are
-exact. The sole changed dependency-directory file is Vitest's existing
-results output cache at
-`node_modules/.vite/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/results.json`.
-It is reported explicitly, not silently excluded. The matching lock stamp
-skips installation. Pretest confirms the adopted cd50 pool bundle is
-unchanged. No source or installed dependency is edited during the gate.
-
-The raw passing log retains scripted reset and SQLite retention-fault
-injections, four Git advertisement text-decoding warnings, and one
-different-Durable-Object I/O / RefcountedCanceler diagnostic in Vitest's
-abort code. That last diagnostic is not attributed to a case. It remains
-an honest unclassified diagnostic, not an assertion failure or a general
-stability conclusion; there is no extra gate or broad rerun to relabel it.
-
-Gate assertion `799916a2c8aee02cb538fa1628b82c5977c7c1bf` records the natural
-pass and these qualifications. The final reporting candidate changes only
-this primary note after the passing code/test head. Its exact commit/tree,
-evidence map and SHA-256 are supplied by the Source artifact and formal
-review request, avoiding a self-referential hash in this note. The review
-must cover all changed paths against actual Main dba3e762, the complete
-helper semantic map and the original gate. No approval, landing, GitHub
-push or deployment has occurred for K1.
-
-
-## Current Main integration
-
-New owned worktree `/tmp/artroom-builder-k1-main-integration-20261020`
-starts from approved `5706ac22` and incorporates actual Main `8aad37bb`.
-Its original `git merge --no-commit` naturally exits one at eight conflicts:
-the generated Page asset; bytes package validation/projection; CLI scenarios
-and commands; Scope application admission/route and archive privacy.
-All 24 stage blobs are saved before resolution under
-`/tmp/builder-k1-main-conflict-stages-20261020/`.
-The original approved checkout, dependencies and tools stay permanently
-frozen. Exactly 5,499 granted dependency regular leaves and 31 contained
-links are copied into distinct inodes, with bytes/hashes checked and
-current physical modes preserved. Only owned-copy output caches are cleared.
-No package is installed and Main is not changed by this worktree.
-
-The seven source conflicts retain Main's feature code and existing K1
-helper imports/aliases. The source-only mapping verifies every remaining
-Main AST body and literal after explicit import/export-wrapper/helper
-normalization. It is not a runtime or complete API proof. All seven removed
-Main helper declarations are unchanged from the original reviewed base;
-shared values, responses, SQLite and archive-prefix implementations remain
-byte-exact to approved K1. Main's newer archive requirement, Device owner,
-capability fact kinds, creation context and cohort selection stay present.
-The exact `natural` predicates match after a parameter-name substitution,
-including rejection of negative zero. The Page asset is regenerated from
-this combined source with the copied pinned builder; no side of a stale
-asset is selected as the final bundle.
-
-The hygiene check initially finds two newer Grow `same` copies. Host and
-Tick now import the identical strict canonical equality helper. Tick and
-the command journal use `isLocalId` under their existing integer name;
-this preserves Main's acceptance of negative zero. A pure independent
-24-value migration probe agrees with both original/current predicates and
-detects the wrong stricter `natural` choice at negative zero. The simulation's
-min/max predicate keeps its distinct body as `simulationIntegerInRange`;
-Tick's own error/string refusals are `tickFailure` and `tickText`.
-No limit, deadline, state field, authority, trust setting or pin changes.
-
-The final source-only comparison covers eleven Main bodies: the seven
-conflict files and four Grow consumers. All remaining nodes and literals
-match after the explicit helper mappings; the four original shared
-implementation modules remain exact. Raw mappings use
-`/tmp/builder-k1-main-body-preservation-v5-20261020.json` and the two
-Grow follow-up records. Every pre-existing tracked `.test.ts` and
-`.test.mjs` file, 429 in total, remains completely byte-exact. The original
-two Node guard cases remain K1's only shipped test addition.
-
-The same disclosed rg inventory now compares the same published Main
-feature set with its integrated K1 source:
-
-| Name | Main 8aad37bb | Integrated K1 |
+| Name | Main | K1 |
 | --- | ---: | ---: |
 | isRecord | 9 | 1 |
 | natural | 12 | 1 |
@@ -493,27 +161,77 @@ feature set with its integrated K1 source:
 | bytesOf | 4 | 0 |
 | Total | 139 | 7 |
 
-The remaining Jam `keyOf`/`record` meanings stay distinct and unchanged.
-Counts include meaningful renames and imports; the unspecified original
-planner grep is not claimed. Exact command/output/counts are in
-`/tmp/builder-k1-current-main-helper-counts-v2-20261020.json` and its two
-raw outputs. The guard naturally exits zero after the actual cleanup;
-its v3 log/closure reports 528 source files and 174 exported helper names.
+Counts include imports and renaming different meanings. They do not mean
+132 identical implementations were removed. The planner's original
+unspecified grep is not claimed. Raw commands/output/counts are in
+`builder-k1-current-main-helper-counts-v2-20261020.json` and its two raw
+files. The original baseline's 132-to-seven comparison belongs to its
+older feature set.
 
-Source-only preparation tool failures are retained: an inherited-name
-lookup bug stopped before deferred repository writes; a metadata path
-lookup used a nonexistent SQL module name; the first normalization omitted
-the already-reviewed moved archive stop; and a Grow helper script syntax
-error stopped before execution. A chained guard after that syntax failure
-still saw the unchanged copies, so its original "after cleanup" qualification
-is explicitly corrected. Fixed versions use own-name lookup, the actual
-SQLite owner and the complete normalization. Expected missing-old-base
-Grow files are recorded as new since that baseline, not source failures.
-No result is silently overwritten or used as a passing runtime/gate claim.
+## Verification and retained limits
 
-Original integration/build/guard, source/probe records and closures use
-`/tmp/builder-k1-*20261020*`. K2 complete review remains separately open;
-this branch imports no unreviewed K2 source. Full new gate and exact-head
-review are required before any native K1 landing. Actual hosted Grow
-acceptance stays Planner's separately held milestone; builder performs no
-Cloudflare action.
+Original process `17498` naturally exits zero at saved `61a64457`: all
+owning compiler groups and both guard Node cases pass. Cost is 8.9713
+seconds outer elapsed / 32.8178 child CPU. Original `13837` naturally exits
+zero: twelve selected Node files pass 37 cases; five native files pass 13.
+They cover package/projection validation, pins, scenarios, generated assets,
+Grow predicates, actual Device installation, archive privacy, application
+HTTP/projection and native demo ticks. Cost is 26.4682 seconds outer elapsed
+/ 33.3150 child CPU. All 2,557 tracked source hashes stay exact before/after;
+the checkout stays clean and no package is installed. Node/SCRIPTED/native
+boundaries retain their original labels. No browser persistence, provider
+or hosted acceptance is inferred.
+
+Original process `23072` naturally exits zero for `npm run gate` at the
+saved code head/tree above. Whitespace, helper guard and every compiler
+group pass. Vitest passes 1,977 cases with three existing skips across
+413 passing files and one skipped file. Node passes 33 cases and Counter
+passes 55. Observed cost is 524.1319 seconds elapsed and 753.3125 seconds
+child CPU; outer time including inventories is 525.6743 seconds.
+
+The run uses macOS 27.0.1 arm64, Node 26.12.0 and npm 11.20.0. Starting
+load averages are 1.8896, 1.6904 and 1.4580. Dependencies are a warm private
+copy on a shared host; no exclusive-host claim applies. All 2,557 tracked
+source rows and 5,530 dependency rows stay exact except Vitest's results
+output cache. Lock/stamp stay exact, checkout stays clean and installs
+are zero. The final report changes only this note after the passing gate;
+its final tree is recorded in the review manifest, beside the gated tree.
+The gate is retained without an unchanged whole-suite rerun, as required
+by `docs/testing.md`.
+
+The original phase output is retained at
+`/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.WKasgfE0Ju`.
+It includes scripted reset and retention faults, four Git advertisement
+text warnings, an unclassified RPC result disposal warning and an
+unclassified different-Durable-Object I/O/RefcountedCanceler diagnostic
+in runner abort code. The natural zero exit and passing assertions do
+not classify those diagnostics or establish stability or physical drain.
+
+The original older gate `94836` passed 1,926 Vitest cases plus Node33 and
+Counter55, with three existing skips. It belongs to `b1f611d7`, not the
+current Main feature set. Its reset/retention injections, Git body warnings
+and unclassified different-DO/RefcountedCanceler diagnostic stay retained;
+no general stability or physical-draining claim follows.
+
+Earlier preparation failures remain: an ignored legacy workspace copy
+probe; alias module-resolution and unused-import compiler failures;
+Destination's unrelated record variable temporarily renamed then restored;
+a parser-span change dropping the `Check` annotation, corrected before
+passing compilers; sandbox HTTP listen refusal followed by a separately
+permitted unchanged HTTP-file pass. These are not silently promoted into
+passing observations. The old semantic controls and independent review
+remain historical evidence, not a new integrated-head approval.
+
+Current source-only tooling failures also remain: inherited-name lookup
+stopped before deferred writes; an incorrect SQL metadata path; an omitted
+already-moved archive stop in normalization; and a syntax error before
+Grow tool execution. A chained guard after that syntax error still saw
+unchanged copies; its "after cleanup" qualification is explicitly corrected.
+Fixed versions preserve exact source and do not replace any failed result.
+Expected absent Grow files in the old base are recorded as newly added,
+not candidate failures.
+
+The integrated Source needs its complete new exact-head review and native
+landing before publication. Actual hosted Grow acceptance remains Planner's
+separate held milestone. Builder performs no Cloudflare action and no
+unreviewed Source is imported from the pending K2/K3 work.
