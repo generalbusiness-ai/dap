@@ -62,7 +62,10 @@ export function fixtureArchiveProvider(ports: FixtureArchivePorts, host: Archive
       check(allowed);
       const id = journalId("sha1", object.id), maximum = object.maximum, type = object.type;
       if (!Number.isSafeInteger(maximum) || maximum < 1 || maximum > 8 * 1024 * 1024 || !["commit", "tree", "blob"].includes(type)) return bad();
-      const wire = maximum + 64 * 1024;
+      // A single-object exchange has a small, separately bounded allowance
+      // for advertisement and framing. Larger replies refuse; no closure
+      // fallback or unused transport allowance tops up the original budget.
+      const wire = maximum + 8 * 1024;
       // One exact-object HTTP negotiation/decode, with bounded advertisement
       // and wire work, spends the native pass's original allowance before I/O.
       budget.spend({ calls: 2, metadata: 1024, inputWork: wire * 32 });

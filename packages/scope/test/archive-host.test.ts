@@ -154,7 +154,7 @@ test.each(["github", "artifacts"] as const)("%s incremental parent reads one exa
   await expect(stopped.provider.readObject!(stopped.repository, { id: stopped.archive.commit, type: "commit", maximum: 1024 }, () => true,
     new ArchiveBudget({ inputWork: 1 }))).rejects.toMatchObject({ reason: "limit" });
   expect(stopped.calls).toEqual([]);
-  expect(budget.admitted().inputWork).toBeGreaterThanOrEqual(32 * (1024 + 64 * 1024));
+  expect(budget.admitted().inputWork).toBeGreaterThanOrEqual(32 * (1024 + 8 * 1024));
   const unsupported = fixture(host); unsupported.publish();
   await expect(unsupported.provider.readObject!(unsupported.repository, { id: unsupported.archive.commit, type: "commit", maximum: 1024 }, () => true,
     new ArchiveBudget())).rejects.toThrow();

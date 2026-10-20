@@ -295,3 +295,82 @@ witness decision (`03faada8`), later reuse of key 3,700 across restart,
 acceptance followed by one gate and review. Neither planner request has
 been answered at this checkpoint. No deployed or provider acceptance is
 claimed. No formal Source, review request, landing or push is filed here.
+
+## One original budget through the native driver and actual adapter
+
+The new owning case connects the real native driver to the Artifacts
+adapter with TEST binding identity, credentials and a scripted HTTP peer.
+Its exact-object read and incremental send observers require the identical
+ArchiveBudget instance allocated for that driver pass. Every counter stays
+inside the original ceiling. The peer decodes actual incoming packs,
+checks complete Git closure including stored parent ancestry, and uses
+one CAS ref. All repository bytes come from actual native turns. Offline
+Replay reads the assembled v2 archive and reaches `consistent` with the
+fixture's explicit as-recorded authority. An eviction does not change the
+receipt or cause a new budget within an outstanding pass.
+
+The first combined run sent genesis, then retried its first 128-entry
+append with `limit`. The counter diagnostic records input-work 67,077,929
+of the original 67,108,864-byte allowance, before send. Its exact parent
+reads had conservatively allowed an additional 64 KiB for every object's
+advertisement/framing. Stage counters show this fixed allowance dominates
+much of the pass. The current transport instead allows 8 KiB beyond the
+requested object maximum. Larger wire replies refuse; there is still no
+closure fallback. The same factor of 32 reserves work for each byte of
+that smaller actual allowance before I/O. No archive cap, original debit
+coefficient, key/entry debit, reset, top-up or cache bypass changed. The
+128-entry/128-KiB scheduling cutoff did not need to change.
+
+| Original attempt | Actual result | Full outer elapsed seconds | Full outer CPU seconds |
+| --- | --- | ---: | ---: |
+| `36051` | Test compiler passes; first combined append retries; result lacked detailed counters | 5.80 | 8.56 |
+| `73977` | Test compiler passes; counter diagnostic identifies original input-work limit | 5.25 | 8.53 |
+| `78871` | Test compiler passes; stage diagnostic identifies reserved transport and bookkeeping costs | 5.18 | 8.17 |
+| `43553` | Both Scope compilers, combined 301-entry case and two exact-object adapter cases pass with the smaller actual reply bound | 6.33 | 10.29 |
+| `25712` | Test compiler and combined 10,000-entry case pass under its unchanged original 30-second deadline | 16.05 | 19.56 |
+
+These figures come from each original `/usr/bin/time -p` invocation around
+the whole helper, including initial source capture, guards, commands and
+artifact work. CPU is that command's user plus system time, including its
+children. Internal receipts also distinguish Python self and child CPU.
+Each attempt captures 2,636 complete physical source files, exact modes and
+lock stamps, with zero installs. All failed attempts and original tool
+completions remain evidence; they were not overwritten or replayed.
+
+The final case creates 9,999 native checkpoints after genesis, then archives
+through actual position 9,999 in multiple original bounded passes. All
+adapter reads and sends use their driver pass's one original budget. It
+checks an eviction and complete offline replay. The HTTP peer and binding
+identity remain TEST stand-ins: this is no hosted read, remote repository,
+real Git CLI clone, production token or deployment acceptance. The smaller
+advertisement allowance may refuse a repository with many refs; no actual
+host compatibility was probed by the builder.
+
+The large-history same-budget adapter gap listed in the preceding section
+is now closed on the test host. Still outstanding: 10,000 confirmed native
+one-entry passes, the 512-new-key decision, key 3,700 reuse after restart,
+9a integration and its omitted-text decision, a real Git clone of the
+native closure, complete acceptance, one gate and review.
+
+## Planner decisions adopted after the full-budget checkpoint
+
+Planner decision `18ef695b`, adopted as `4150b218`, resolves the 512-key
+conflict without changing any budget or debit. Witness 2 now fills past
+4,608 retained files through native passes, each adding as many whole
+entries and inputs as its unchanged budget admits, then adds one more.
+Each cutoff must reflect the full entry, retained-read and tree cost, and
+the next pass starts at the following entry. A single entry that cannot
+fit reports `limit`. The current scalar scheduling bound is conservative;
+it is not yet that complete adaptive cutoff. The amended native witness
+and Grow throughput measurement remain implementation work. Slice 9 must
+use the measured entries per pass to choose a cadence at least three times
+Room A's 4,800-entry daily rate and state catch-up time from position zero.
+
+Planner decision `d61549b0`, adopted as `341abe1e`, answers the detached-text
+gap. Text bodies remain unexported and no separate caller text set is
+accepted. Each pass will record omitted digest, UTF-8 byte count and first
+naming entry. Replay takes that omission metadata on explicit trust,
+checks any journal-recorded size agreement, and still refuses unreferenced
+rows or reports `incomplete` for an unexplained missing text. This is a
+new implementation boundary for 9a integration, not work already done.
+The original incomplete replay and resource findings remain evidence.
