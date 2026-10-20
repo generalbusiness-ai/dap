@@ -5,13 +5,45 @@ Request `4fb21172`; builder promise `f75c6922`. Planner decision
 starts at Main `2a77bc5fe4458d219f2eca1d25ac2ff709ff30b2`.
 
 This work is in progress. It has no complete gate, review, landing or
-offline replay acceptance yet. Decisions `3e2761e6` and `bd3ace9f` answer
+offline replay acceptance yet. Decisions `3e2761e6` and `bd3ace9f` answered
 the original Membership copy and root anchor findings. Decision `74a99989`
-answers the later native-domain finding. All five fixture journals now
-export, and the required domain and credential negatives pass. Offline A2
-reaches a new missing dependency: Register entry 1, at Directory genesis,
-despite the sole allowed entry-2 anchor. Source registration or passing
-export checks do not satisfy the commissioned closure witness.
+answered the native-domain finding. Decision `5a642337` now replaces the
+single-anchor rule with an explicit list of admitted Register and Membership
+copies taken on the caller's word. The builder adopted it as `53576fd6`.
+The old single-anchor failures below remain evidence of the old contract.
+
+The new list contains Register positions 1, 2 and 3 and Membership positions
+0 and 5 in the native Grow fixture. All five journals export. Without the
+Register-1 anchor, replay reports that missing fact; a wrong hash reports
+`mismatch`. Complete replay now reaches Membership position 4 at Rules
+entry 2: this is an observation head, not one of the exported copies.
+Four target journals stop there; Destination alone replays `consistent`.
+No observation anchor, private journal or copied-body proof was added.
+The new finding must go back to planner under point 6 of `5a642337`.
+
+Read-only discovery finds Room, Site, Directory@16, Rules@10 and
+Destination@12 from the actual creator chain and bound Directory records.
+All five use the same recorded repository. Its five births and two item
+queries reserve 1,837,568 metadata bytes and 12,588,032 input-work bytes.
+Four existing target cases pass, including an incorrect Rules incarnation,
+the refused legacy cohort, excluded Membership history and no RPC after an
+exhausted budget. This is discovery, not automatic scheduled publication.
+
+Owning attempts retain complete physical inputs, source modes and lock
+stamps, with zero installs. Discovery attempt 1 stopped on a test-only
+implicit-array TypeScript error (1.073908042 wall / 4.080377 child CPU
+seconds). After correction, attempt 2 passed both Scope compilers and four
+target cases, then failed the old Grow single-anchor assertion
+(8.888451959 / 13.190751). The new anchor-list attempt passed both compilers,
+all five export checks, two domain refusals, three credential refusals,
+the ordinary-producer exclusion and both anchor negatives. Its final
+complete-replay assertion failed at Membership-4 (7.228675875 / 11.486929).
+These are separate attempts, not one passing pipeline. Measurements use
+the shared macOS arm64 host and owned dependency files; OS caches are
+uncontrolled, and each input receipt records the observed load.
+
+F1 is now commissioned as `dea67816`, promised as `33d11d65`, beside 9a.
+Neither the incremental writer nor deployed demo wiring is complete.
 
 The preserved pre-decision work is commit `61123d2b`. Its changes were
 carried as `edd17d37` into a separate worktree on published P1 Main

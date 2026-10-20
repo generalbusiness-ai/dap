@@ -4,7 +4,7 @@
  * Device replies are explicit TEST owner input, not physical execution. */
 import { env, runInDurableObject } from "cloudflare:test";
 import { expect, inject, test } from "vitest";
-import { DEVICE_COMMAND, PROPOSED_BOUNDS, type DeclaredDefinition, type Digest, type Input, type PlatformDefinition, type ScopeId } from "@generalbusiness/dap-contract";
+import { DEVICE_COMMAND, PROPOSED_BOUNDS, type DeclaredDefinition, type Digest, type FactRef, type Head, type Input, type PlatformDefinition, type ScopeId, type Sealed } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isEntry, isSeed, parseStrict, scopeIdOf, textDigest, timeOf, unb64url } from "@generalbusiness/artroom-bytes";
 import { readApplicationPackage2 } from "@generalbusiness/artroom-bytes/application-v2";
 import { outcomeValueDomains, ownersOf, validateDefinition, type OperationRules } from "@generalbusiness/dap-derive";
@@ -17,6 +17,8 @@ import { journalRef, type JournalArchive } from "@generalbusiness/artroom-git/jo
 import { readJournalArchive } from "@generalbusiness/artroom-git/journal-reader";
 import { ArchiveBudget } from "../src/archive-budget.ts";
 import { ArchiveForeignMetadata } from "../src/archive-foreign.ts";
+import { fixtureArchiveTargetIn } from "../src/archive-target.ts";
+import { archiveReplayAnchors } from "../src/archive-anchors.ts";
 import { planArchive } from "../src/archive-build.ts";
 import { ARCHIVE_SOURCE_PINS, FixtureArchiveSourcePins, type FixtureArchiveSourceBirth } from "../src/archive-source-pins.ts";
 import type { ReviewedArchivePolicy } from "../src/archive-inventory.ts";
@@ -121,7 +123,7 @@ test.each(["fixture", "Grow"])("installed %s scopes export genesis zero after a 
     const issued = await life.owner.required(() => requestSession(port.service, M.name, sessionRequest(membership, rita.secret, soon(60), crypto.randomUUID()), { fetch: routed }));
     if (!issued.ok) throw Error("Native membership must issue the fixture read session.");
     const handle = (scope: typeof rootScope.name) => new ScopeHandle(httpTransport(port.service, { fetch: routed }), scope, issued.session.reader());
-    const histories = [];
+    const histories: { scope: typeof rootScope; read: { value: readonly Sealed[]; at: Head } }[] = [];
     for (const scope of [rootScope, childScope]) {
       const read = await life.owner.required(() => handle(scope.name).history());
       if (!read.ok) throw Error("Issued session must read the installed journal.");
@@ -134,16 +136,37 @@ test.each(["fixture", "Grow"])("installed %s scopes export genesis zero after a 
       histories.push({ scope, read });
     }
     const declarations = new Map([[rootId, root], [childId, child]]), policies = new Map<Digest | PlatformDefinition, ReviewedArchivePolicy>([[rootId, reviewed(rootId, root)], [childId, reviewed(childId, child)]]);
+    const childBirth = histories[1]!.read.value[0]!.entry;
+    if (childBirth.input.type !== "genesis") throw Error("Actual installed child birth is required.");
+    const childSeed = childBirth.input.seed;
+    const discoveryBudget = new ArchiveBudget();
+    const discovery = kind === "Grow" ? await life.wait(() => fixtureArchiveTargetIn(env.PLATFORM, {
+      fixture: "archive-target-reader", value: issued.session.reader(),
+    }).discover(childBirth.at, childSeed, discoveryBudget)) : null;
+    if (kind === "Grow") {
+      expect(discovery?.repository).toEqual((await life.wait(() => D.item(0))).values["repository"]);
+      expect(discovery?.scopes.map(scope => ({ scope: scope.at.scope, named: scope.named, via: scope.via }))).toEqual([
+        { scope: childScope.name, named: childId, via: "self" },
+        { scope: rootScope.name, named: rootId, via: "creator" },
+        { scope: D.name, named: ARCHIVE_DEVICE_APPLICATION_COHORT.directory, via: "creator" },
+        { scope: A.name, named: ARCHIVE_DEVICE_APPLICATION_COHORT.rules, via: "rules" },
+        { scope: G.name, named: ARCHIVE_DEVICE_APPLICATION_COHORT.destination, via: "destination" },
+      ]);
+      if (!discovery) throw Error("The bound native producer graph must be discovered.");
+    }
     // Native TEST exports of the room's native producer scopes.
     // These self-journal reads use the fixture inspector, not a new grant.
     // Credential Membership history is deliberately absent.
     const nativeHistories = [];
-    for (const scope of kind === "Grow" ? [D, A, G] : []) {
+    for (const selected of discovery?.scopes.filter(selected => !histories.some(history => history.scope.name === selected.at.scope)) ?? []) {
+      const scope = life.platform(selected.at.scope);
+      expect(await life.wait(() => scope.at())).toEqual(selected.at);
       const value = await life.wait(() => scope.sealed()), last = value.at(-1);
       if (!last) throw Error("The native producer must have its actual genesis.");
       nativeHistories.push({ scope, read: { value, at: { seq: last.entry.seq, hash: last.hash } } });
     }
-    const allHistories = [...histories, ...nativeHistories];
+    const preparedHistories = [...histories, ...nativeHistories];
+    const allHistories = discovery ? discovery.scopes.map(selected => preparedHistories.find(history => history.scope.name === selected.at.scope)!) : preparedHistories;
     const sourceRefs = new Map(allHistories.flatMap(({ read }) => read.value.flatMap(sealed => sealed.entry.uses.map(use => [canonicalize(use.fact.at), use.fact.at] as const))));
     expect(sourceRefs.size).toBeGreaterThan(0); expect(sourceRefs.size).toBeLessThanOrEqual(ARCHIVE_SOURCE_PINS);
     const births: FixtureArchiveSourceBirth[] = [];
@@ -166,7 +189,7 @@ test.each(["fixture", "Grow"])("installed %s scopes export genesis zero after a 
       births.push({ at: source, birth: { bytes: birth.proof.bytes, hash: birth.proof.fact.hash }, ...(declaration ? { declaration: canonicalize(declaration) } : {}) });
       if (!policies.has(pin)) policies.set(pin, reviewed(pin, declaration));
     }
-    for (const scope of kind === "Grow" ? [D, A, G] : []) {
+    for (const { scope } of nativeHistories) {
       const pin = (await life.wait(() => scope.summary())).value.definition;
       if (!pin) throw Error("The native scope must pin its actual definition.");
       if (!policies.has(pin)) policies.set(pin, reviewed(pin));
@@ -202,6 +225,7 @@ test.each(["fixture", "Grow"])("installed %s scopes export genesis zero after a 
       expect(admitted).toContainEqual({ fact: copy.source, content: copy.content });
     }
     const diagnosticArchives = new Map<ScopeId, JournalArchive>();
+    const passAnchors = new Map<ScopeId, readonly FactRef[]>();
     if (kind === "Grow") {
       // Invariant: native domain permission belongs to its exact declared
       // place. A TEST owner table cannot relocate it or add another domain.
@@ -227,9 +251,12 @@ test.each(["fixture", "Grow"])("installed %s scopes export genesis zero after a 
       // binding. Source/policy configuration remains an explicit A2/A3 fixture.
       const at = await life.wait(() => scope.at());
       sourceLookups.length = 0;
-      const planned = await life.wait(() => runInDurableObject(scope.object, (_instance, state) => planArchive(archiveSql(state), { at, through: read.at, bounds: PROPOSED_BOUNDS, policies, format: "sha1", parent: null, markedAt: timeOf(life.now()), fixtureSources }, new ArchiveBudget())));
+      const planned = await life.wait(() => runInDurableObject(scope.object, (_instance, state) => planArchive(archiveSql(state), { at, through: read.at, bounds: PROPOSED_BOUNDS, policies, format: "sha1", parent: null, markedAt: timeOf(life.now()), fixtureSources,
+        ...(discovery ? { replayScopes: discovery.scopes.map(scope => scope.at) } : {}),
+      }, new ArchiveBudget())));
       expect(planned.ok, JSON.stringify({ kind, scope: scope.name, definition: (await life.wait(() => scope.summary())).value.definition, planned, sourceLookups, credentialCounts, credentialCopies })).toBe(true); if (!planned.ok) return;
       diagnosticArchives.set(scope.name, planned.archive);
+      if (planned.anchors) passAnchors.set(scope.name, planned.anchors);
       expect(planned.archive.selection.entries[0]!.seq).toBe(0);
       expect(planned.archive.manifest.foreignSources?.length).toBeGreaterThan(0);
       const objects = new Map(planned.archive.objects.map(object => [object.id, object])), budget = new ArchiveBudget(); let bytes = 0;
@@ -269,23 +296,44 @@ test.each(["fixture", "Grow"])("installed %s scopes export genesis zero after a 
       expect(refused).toEqual(Array.from({ length: 3 }, () => ({ ok: false, reason: "unsupported-credential-cohort" })));
     }
     if (kind === "fixture") return;
+    const directorySelection = diagnosticArchives.get(D.name)!.selection;
+    const replayScopes = discovery!.scopes.map(scope => scope.at);
+    // A missing ordinary producer cannot silently become caller trust.
+    expect(() => archiveReplayAnchors(directorySelection, replayScopes.filter(at => at.scope !== A.name), new ArchiveBudget()))
+      .toThrow("unsupported-foreign-copy");
     const directoryGenesis = (await life.wait(() => D.sealed()))[0]!.entry;
     if (directoryGenesis.input.type !== "genesis" || !directoryGenesis.input.source) throw Error("Native directory needs its actual register claim.");
     const claim = directoryGenesis.input.source;
-    const anchors = [{ scope: claim.at.scope, seq: claim.seq, hash: claim.hash }];
+    const anchorFacts = [...new Map([...passAnchors.values()].flat().map(fact => [canonicalize(fact), fact])).values()]
+      .sort((a, b) => a.at.scope < b.at.scope ? -1 : a.at.scope > b.at.scope ? 1 : a.seq - b.seq);
+    const registerEntries = await life.wait(() => R.sealed()), memberEntries = await life.wait(() => M.sealed());
+    // Independent fixture facts: three Register copies and two public
+    // Membership copies. Neither whole source journal enters the archive.
+    const expectedAnchors = [1, 2, 3].map(seq => registerEntries.find(entry => entry.entry.seq === seq)!)
+      .concat([0, 5].map(seq => memberEntries.find(entry => entry.entry.seq === seq)!))
+      .map(sealed => ({ at: sealed.entry.at, seq: sealed.entry.seq, hash: sealed.hash }))
+      .sort((a, b) => a.at.scope < b.at.scope ? -1 : a.at.scope > b.at.scope ? 1 : a.seq - b.seq);
+    expect(anchorFacts).toEqual(expectedAnchors);
+    expect(anchorFacts).toContainEqual(claim);
+    expect(anchorFacts.every(fact => !diagnosticArchives.has(fact.at.scope))).toBe(true);
+    const anchors = anchorFacts.map(fact => ({ scope: fact.at.scope, seq: fact.seq, hash: fact.hash }));
     // A2 reads exactly the five self-journal archives,
-    // without a service, with only the actual root-register claim anchor.
+    // without a service. All private-source copied facts are explicitly
+    // caller-trusted; copied bodies supply no source proof.
     const diagnosticObjects = new Map([...diagnosticArchives.values()].flatMap(archive => archive.objects.map(object => [object.id, object] as const)));
     const diagnosticRefs = new Map([...diagnosticArchives].map(([scope, archive]) => [journalRef(scope), archive.commit]));
     const probe = allHistories[0]!;
-    for (const supplied of [[], [{ ...anchors[0]!, hash: textDigest("TEST wrong root creation anchor") }]]) {
+    const missing = expectedAnchors.find(fact => fact.at.scope === claim.at.scope && fact.seq === 1)!;
+    for (const wrong of [false, true]) {
+      const supplied = anchors.flatMap(anchor => anchor.scope === missing.at.scope && anchor.seq === missing.seq
+        ? wrong ? [{ ...anchor, hash: textDigest("TEST wrong private source anchor") }] : [] : [anchor]);
       const offline = await life.wait(() => verifyArchive(archiveSource({ open: (at, work) => readJournalArchive({
         format: async () => "sha1", resolve: async ref => diagnosticRefs.get(ref) ?? null,
         object: async (id, limit) => { const object = diagnosticObjects.get(id); return object ? { type: object.type, size: object.data.length, data: object.data.length <= limit ? object.data : null } : null; },
       }, at, work) }), { mode: "replay", platform, capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE, grants: "proven", scope: probe.scope.name, head: probe.read.at, anchors: supplied }));
       expect(offline.kind).toBe("verification"); if (offline.kind !== "verification") return;
-      if (supplied.length === 0) expect(offline.verification.report).toMatchObject({ result: "missing-dependency", dependencies: { missing: [claim] } });
-      else expect(offline.verification.report).toMatchObject({ result: "mismatch", anchors: [], dependencies: { missing: [] } });
+      if (!wrong) expect(offline.verification.report).toMatchObject({ result: "missing-dependency", dependencies: { missing: [missing] } });
+      else expect(offline.verification.report).toMatchObject({ result: "mismatch", dependencies: { missing: [] } });
     }
     const offlineResults = [];
     for (const { scope, read } of allHistories) {
@@ -294,6 +342,9 @@ test.each(["fixture", "Grow"])("installed %s scopes export genesis zero after a 
         object: async (id, limit) => { const object = diagnosticObjects.get(id); return object ? { type: object.type, size: object.data.length, data: object.data.length <= limit ? object.data : null } : null; },
       }, at, work) }), { mode: "replay", platform, capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE, grants: "proven", scope: scope.name, head: read.at, anchors }));
       offlineResults.push({ scope: scope.name, head: read.at, offline });
+      if (offline.kind === "verification" && offline.verification.report.result === "consistent") {
+        expect(offline.verification.report.anchors.every(fact => anchorFacts.some(anchor => canonicalize(anchor) === canonicalize(fact)))).toBe(true);
+      }
     }
     const rootCopies = allHistories.flatMap(({ scope, read }) => read.value.flatMap(sealed => sealed.entry.uses
       .filter(use => use.fact.at.scope === claim.at.scope)
@@ -301,6 +352,9 @@ test.each(["fixture", "Grow"])("installed %s scopes export genesis zero after a 
     expect(offlineResults.every(result => result.offline.kind === "verification" && result.offline.verification.report.result === "consistent"),
       JSON.stringify({ kind, exported: allHistories.map(({ scope, read }) => ({ scope: scope.name, entries: read.value.length, head: read.at })),
         copyMetadataPassed: credentialCopies.length, domainRefusalsPassed: 2, credentialRefusalsPassed: 3, anchorRefusalsPassed: 2,
-        anchors, rootCopies, offlineResults })).toBe(true);
+        discovery, discoveryCost: discoveryBudget.admitted(),
+        anchorFacts, passAnchors: [...passAnchors], anchors, rootCopies, offlineResults })).toBe(true);
+    expect(new Set(offlineResults.flatMap(result => result.offline.kind === "verification" ? result.offline.verification.report.anchors.map(canonicalize) : [])))
+      .toEqual(new Set(anchorFacts.map(canonicalize)));
   } finally { life.release(); }
 }, 30_000);
