@@ -36,7 +36,7 @@ import {
   type Fetch, type Session, type CreationOffer, type ReadSigning, type Signing, type Transport,
 } from "@generalbusiness/artroom-client";
 import { TOKENS_FLOOR, capabilitiesOf, gitRead, holdCapability } from "@generalbusiness/dap-derive";
-import { APPLICATION_COHORT, FILE_PUBLICATION_COHORT, COUNTING_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, DIRECTORY_OF, SIBLINGS_OF, READ_TOKEN_HOURS, NEWEST, ROLE_LISTS, platform, type Role } from "@generalbusiness/dap-platform";
+import { APPLICATION_COHORT, FILE_PUBLICATION_COHORT, COUNTING_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, DIRECTORY_OF, SIBLINGS_OF, READ_TOKEN_HOURS, NEWEST, ROLE_LISTS, platform, type Role, DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { SourceError, httpSource, render, verify as replay, type HistorySource } from "@generalbusiness/artroom-replay";
 import { enrolAgentKey } from "./invitations.ts";
 import { AGENT_KEY_LINK } from "@generalbusiness/artroom-client";
@@ -368,7 +368,7 @@ async function createdBy(handle: ScopeHandle, seq: number): Promise<{ n: number;
 // ---------------------------------------------------------------- the commands
 
 /** Explicit selection only; omission retains the installed default cohort. */
-export type InstallCohort = "application" | "application-publication" | "trusted-application" | "declared-application" | "archive-application" | "archive-declared-application" | "invitation-key";
+export type InstallCohort = "application" | "application-publication" | "trusted-application" | "declared-application" | "device-application" | "archive-application" | "archive-declared-application" | "invitation-key";
 export interface InstallOptions { host?: string; namespace?: string; cohort?: InstallCohort }
 const INSTALL_COHORTS: Readonly<Record<InstallCohort, PlatformDefinition>> = {
   "invitation-key": INVITATION_KEY_COHORT.register,
@@ -378,6 +378,7 @@ const INSTALL_COHORTS: Readonly<Record<InstallCohort, PlatformDefinition>> = {
   "declared-application": DECLARED_APPLICATION_COHORT.register,
   "archive-application": ARCHIVE_APPLICATION_COHORT.register,
   "archive-declared-application": ARCHIVE_DECLARED_APPLICATION_COHORT.register,
+  "device-application": DEVICE_APPLICATION_COHORT.register,
 };
 function selectedRegister(cohort: unknown): PlatformDefinition | undefined {
   if (cohort === undefined) return undefined;
@@ -385,10 +386,11 @@ function selectedRegister(cohort: unknown): PlatformDefinition | undefined {
   if (cohort === "application-publication") return INSTALL_COHORTS["application-publication"];
   if (cohort === "application") return INSTALL_COHORTS.application;
   if (cohort === "trusted-application") return INSTALL_COHORTS["trusted-application"];
+  if (cohort === "device-application") return INSTALL_COHORTS["device-application"];
   if (cohort === "declared-application") return INSTALL_COHORTS["declared-application"];
   if (cohort === "archive-application") return INSTALL_COHORTS["archive-application"];
   if (cohort === "archive-declared-application") return INSTALL_COHORTS["archive-declared-application"];
-  return stop(usage("--cohort takes exactly application, application-publication, trusted-application, declared-application, archive-application, archive-declared-application or invitation-key; nothing was signed or sent."));
+  return stop(usage("--cohort takes exactly application, application-publication, trusted-application, declared-application, device-application, archive-application, archive-declared-application or invitation-key; nothing was signed or sent."));
 }
 const selectedPlan = (definition: PlatformDefinition): boolean =>
   Object.values(INSTALL_COHORTS).includes(definition);

@@ -2,13 +2,13 @@
 
 Request `f54185fb5b7ccacdf932248552127e4985b3f956`, promise
 `7993405b993bd00d857cb0d0798b44125ebd4b74`. Current mutable preparation
-incorporates reviewed Main `3ed2a08a`. It still needs the actual reviewed
-G5a landing, a corrected whole gate, exact-head Source review and landing
-audit. The first gate failed five shipped-version assertions; it remains
+now incorporates reviewed G5a Main `a00eda3b`. It still needs the combined
+Device/archive cohort, a corrected whole gate, exact-head Source review and
+landing audit. The first gate failed five shipped-version assertions; it remains
 failed evidence. No S2a publication, deployment or completion is claimed.
 
 The current implementation adds nine explicit archive-cohort pins and
-preserves all 45 previously shipped definition bodies. Existing rooms and
+preserves the 45 original shipped definition bodies and all four G5a pins. Existing rooms and
 default cohort choices keep their original meaning. Only the new cohorts
 admit the binding and archive-required package workflow. S2a reservations
 remain Register14/15, Directory13/14, Membership8, Rules7/8 and
@@ -31,6 +31,40 @@ position zero after late binding. Its preparation is separate. A2/A3
 fixture ports remain explicit; A0b production admission and consent remain
 outside both slices. Native replay and target resolution in S2a do not
 close the export obligation.
+
+## Actual G5a Main integration
+
+G5a landed at `a00eda3bdb6796be6b67e6095b7ef97219363976`, tree
+`44e96bc437c00a4dbfacf1d24eb02f91318f84a4`, through native receipt
+`3a3d64ce2aabba27ed95ccc192143da23a68a022`. Original merge85127 naturally
+exited zero; builder and independent checker auditbde77350 verify all83
+mode/blob paths, all9trailers,153retirements,83successors and36preserved
+siblings/carried records. The authorized atomic push75958 naturally exits
+zero and remote readback confirms Maina00eda3b and workroomc4573ec4.
+Publication assertione4e90938 records those exact heads. No CF deployment.
+This meets the actual reviewed Main prerequisite for the adopted composition.
+
+The saved mutable S2a checkout merges that Main, preserving the original
+17 conflict files in `/tmp/artroom-s2a-g5a-conflict-draft-20261019/`.
+Resolution keeps both archive and Device cohorts, their exact readers,
+proofs, invitation/session routes and owner selection. Page assets are
+regenerated from merged source; no generated JavaScript is hand-combined.
+All Platform, CLI, MCP and Scope compiler targets pass. Three native files
+pass four existing Device/archive install and target scenarios. Eight of
+nine initial Node cases pass; the version case stops at an old unsupported
+Destination11 example, which G5a has now shipped. Its golden digest
+comparison passes first, preserving all49shipped bodies plus nine S2a
+literals. The unsupported example now uses Destination13, beyond the
+reserved combined Destination12; the same null matcher and five malformed
+examples remain. That failed original is retained, with a whole-file
+follow-up after the fixture correction. These are focused integration
+checks, not a corrected full gate or combined-cohort acceptance.
+
+The new combined four pins are not implemented by this integration alone.
+Membership9 stays unused/reserved, and defaults are unchanged. Evidence
+uses `/tmp/artroom-s2a-g5a-*20261019*`. No sealed G5a project, dependency,
+tool or sealer was executed or edited; the integration reads its immutable
+Git commit into S2a's independent mutable checkout.
 
 ## Historical checkpoints
 

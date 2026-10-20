@@ -15,8 +15,8 @@ import { invitationRedemptionFields } from "@generalbusiness/artroom-client";
 import type { Answer, Beside, DeclaredDefinition, Digest, Entry, FieldValue, Item, PlatformDefinition, Read, Receipt, ScopeId, ScopeRef, Seed, Summary } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, digestBytes, intentDigest, isDigest, isPlatformDefinition, isScopeId, isScopeRef, isReceipt, entryHash, parseStrict, scopeIdOf, textDigest, timeOf, utf8 } from "@generalbusiness/artroom-bytes";
-import { TransportError, ScopeHandle, ApplicationPackageError, applicationScreenPath, readApplicationInstallOptions, readApplicationReleaseUri, signedApplicationInstall, signedApplicationInstall2, invitationOf, readCredential, signedIntent, wellFormedInvitation, type Fetch, type Signer } from "@generalbusiness/artroom-client";
-import { TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, platform } from "@generalbusiness/dap-platform";
+import { TransportError, ScopeHandle, ApplicationPackageError, applicationScreenPath, readApplicationInstallOptions, readDeviceApplicationInstallOptions, readApplicationReleaseUri, signedApplicationInstall, signedApplicationInstall2, signedDeviceApplicationInstall, invitationOf, readCredential, signedIntent, wellFormedInvitation, type Fetch, type Signer } from "@generalbusiness/artroom-client";
+import { TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, platform, DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { ApplicationHttpError, applicationGitHttpSource, readApplicationGitBlob } from "@generalbusiness/artroom-git/application";
 import { ACT_OUTPUT, actTool, bindingsOf, declarationDigest, describedOf, generationOf, listed, selected, type Binding, type Held, type Inventory, type Mode, type Tool } from "./catalogue.ts";
 import { Custody, CustodyError, Lost, meaningOf, validKey, type CustodyRecord, type CustodyStore, type Envelope, type Identity } from "./custody.ts";
@@ -567,7 +567,7 @@ export class McpService {
       tool("join", "Joins a room with an invitation link from dap invite (artroom-invite:...), as dap join does: signs membership's join with this server's key, keeps the exact request under custody before sending it, and on acceptance records the room in your configuration, so its tools are listed. After a lost reply, call again with the same link and idempotencyKey: the same request is sent again, never a new one. The link is private: this tool's result never repeats it. Legacy membership records the invitation secret in the join entry, visible through authorized history reads. The invitation-key cohort records a proof bound to this membership, invitation and joining key; its private invitation seed stays out of the entry.",
         { link: { type: "string", description: "The invitation link, artroom-invite:..." }, idempotencyKey: keyArg }, ["link", "idempotencyKey"], WRITE, (a) => this.#join(a), ACT_OUTPUT),
       tool("install_application", "Install an operator-trusted package in this room by immutable Git URI and independent expected release. Select default roles explicitly; values are the application genesis fields. Keeps one signed native envelope under idempotencyKey before submission. Repeating the same key and meaning retains that envelope. Acceptance records the install request; application_installation reads its pending, active or final refused result. The host fetches the URI independently.",
-        { uri: { type: "string", maxLength: 4096 }, release: { type: "string" }, roles: { type: "array", maxItems: 5, uniqueItems: true, items: { enum: ["admin", "maintainer", "member", "agent", "checker"] } }, values: { type: "object" }, idempotencyKey: keyArg },
+        { owner: { type: "object", description: "Existing full MemberRef chosen for a device package. Native installation checks its current membership." }, uri: { type: "string", maxLength: 4096 }, release: { type: "string" }, roles: { type: "array", maxItems: 5, uniqueItems: true, items: { enum: ["admin", "maintainer", "member", "agent", "checker"] } }, values: { type: "object" }, idempotencyKey: keyArg },
         ["uri", "release", "roles", "values", "idempotencyKey"], { ...WRITE, openWorldHint: true }, a => this.#installApplication(a)),
       tool("application_installation", "Read one native installation in the configured room, including its recorded phase and final refusal reason. Earlier committed activation and grants can remain after a later refusal. Active results include the exact generic screen address. This read signs no install or continuation and changes no native state.",
         { item: { type: "integer", minimum: 0 } }, ["item"], READ, a => this.#applicationInstallation(a)),
@@ -927,12 +927,12 @@ export class McpService {
    * room recorded in the configuration; the list is derived again on the next call.
    */
   /** The actual generic room and exact Rules sibling, never a caller alias. */
-  async #applicationRoom(): Promise<{ directory: ScopeRef; membership: ScopeRef; rules: ScopeRef; destination: ScopeRef; cohort: typeof TRUSTED_APPLICATION_COHORT | typeof DECLARED_APPLICATION_COHORT | typeof ARCHIVE_APPLICATION_COHORT | typeof ARCHIVE_DECLARED_APPLICATION_COHORT }> {
+  async #applicationRoom(): Promise<{ directory: ScopeRef; membership: ScopeRef; rules: ScopeRef; destination: ScopeRef; cohort: typeof TRUSTED_APPLICATION_COHORT | typeof DECLARED_APPLICATION_COHORT | typeof DEVICE_APPLICATION_COHORT | typeof ARCHIVE_APPLICATION_COHORT | typeof ARCHIVE_DECLARED_APPLICATION_COHORT }> {
     const config = await this.#port.config.read(), repository = config.repository;
     if (!repository || config.service !== this.#service) return stop({ error: "target", what: "configure a trusted-application room before installing" });
     const { summary: directory } = await this.#summary(repository.directory.scope, repository.membership);
     const row = directory.items.find(item => item.type === "repository" && item.state === "open"), rules = row?.refs["rules"], destination = row?.refs["destination"];
-    const cohort = [TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT].find(cohort => directory.definition === cohort.directory);
+    const cohort = [TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT].find(cohort => directory.definition === cohort.directory);
     if (!cohort || directory.status !== "active" || canonicalize(directory.scope) !== canonicalize(repository.directory)
       || !row || canonicalize(row.refs["membership"]) !== canonicalize(repository.membership)
       || !isScopeRef(rules) || rules.kind !== "rules" || rules.scope !== repository.rules
@@ -944,7 +944,7 @@ export class McpService {
 
   async #declaredInstallation(item: number): Promise<ApplicationInstallation | null> {
     const room = await this.#applicationRoom();
-    if (room.cohort.rules !== DECLARED_APPLICATION_COHORT.rules && room.cohort.rules !== ARCHIVE_DECLARED_APPLICATION_COHORT.rules) return null;
+    if (room.cohort.rules !== DECLARED_APPLICATION_COHORT.rules && room.cohort.rules !== DEVICE_APPLICATION_COHORT.rules && room.cohort.rules !== ARCHIVE_DECLARED_APPLICATION_COHORT.rules) return null;
     const read = await this.#reads.read(room.membership, (t, r) => new ScopeHandle(t, room.rules.scope, r).queryItems({ v: 1, scope: room.rules, type: "installation", states: ["active"], ids: [item], limit: 1, cursor: null }));
     if (!read.ok || !read.complete || read.next !== undefined) return null;
     const row = read.value.items[0];
@@ -959,9 +959,13 @@ export class McpService {
     const key = args["idempotencyKey"];
     if (!validKey(key)) return failed({ error: "shape", field: "idempotencyKey", what: "is missing or invalid", declared: "a key you choose and keep" });
     const room = await this.#applicationRoom();
-    let selected: ReturnType<typeof readApplicationInstallOptions>;
-    try { selected = readApplicationInstallOptions({ rules: room.rules, uri: args["uri"], release: args["release"], roles: args["roles"], values: args["values"] }); }
-    catch { return failed({ error: "shape", field: "installation", what: "needs an immutable Git URI, expected release, explicit unique roles and bounded genesis values", declared: "the install_application input" }); }
+    let selected: ReturnType<typeof readApplicationInstallOptions> | ReturnType<typeof readDeviceApplicationInstallOptions>;
+    try {
+      const ordinary = { rules: room.rules, uri: args["uri"], release: args["release"], roles: args["roles"], values: args["values"] };
+      selected = room.cohort.rules === DEVICE_APPLICATION_COHORT.rules ? readDeviceApplicationInstallOptions({ ...ordinary, owner: args["owner"] }) : readApplicationInstallOptions(ordinary);
+      if (room.cohort.rules !== DEVICE_APPLICATION_COHORT.rules && args["owner"] !== undefined) throw Error("this cohort has no owner selection");
+    }
+    catch { return failed({ error: "shape", field: "installation", what: "needs an immutable Git URI, expected release, explicit unique roles, bounded genesis values and a full existing owner for a device package", declared: "the install_application input" }); }
     const identity: Identity = { service: this.#service, membership: room.membership, signer: this.#port.signer.key, target: room.rules, key: key as string };
     const meaning = meaningOf(selected), pin = room.cohort.rules;
     const build = async () => {
@@ -970,7 +974,9 @@ export class McpService {
       try {
         const bytes = await readApplicationGitBlob(address, source.source, 4 * 1024 * 1024);
         const prepare = pin === DECLARED_APPLICATION_COHORT.rules || pin === ARCHIVE_DECLARED_APPLICATION_COHORT.rules ? signedApplicationInstall2 : signedApplicationInstall;
-        const prepared = await prepare(this.#port.signer, bytes, selected, { idempotencyKey: key as string, now: this.#now() });
+        const prepared = "owner" in selected
+          ? await signedDeviceApplicationInstall(this.#port.signer, bytes, readDeviceApplicationInstallOptions(selected), { idempotencyKey: key as string, now: this.#now() })
+          : await prepare(this.#port.signer, bytes, selected, { idempotencyKey: key as string, now: this.#now() });
         return { binding: { definition: "platform:rules", kind: "install-application", declaration: declarationDigest(platform(pin)!.data as unknown as DefinitionLike, "install-application", pin), pinned: pin }, envelope: { signed: prepared.signed, beside: prepared.beside } };
       } finally { await source.close(); }
     };

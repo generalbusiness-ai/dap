@@ -1,6 +1,6 @@
 /** Bounded projection declarations only. Native schema binding and actual
  * journal reads belong to the reader; this module performs neither. */
-import type { Digest, ScopeKind } from "@generalbusiness/dap-contract";
+import { CAPABILITIES, type Capability, type Digest, type ScopeKind } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, isDigest, isRecord, parseStrict, utf8 } from "./index.ts";
 import { applicationJson } from "./application-json.ts";
 import { ApplicationPackageError } from "./application-types.ts";
@@ -13,11 +13,20 @@ const fail = (reason: ApplicationProjectionError["reason"] = "invalid"): never =
 const object = (value: unknown, keys: string): Record<string, unknown> => isRecord(value) && Object.keys(value).sort().join() === keys ? value : fail();
 const name = (value: unknown): string => typeof value === "string" && NAME.test(value) ? value : fail();
 const integer = (value: unknown, min: number, max: number): number => typeof value === "number" && Number.isSafeInteger(value) && !Object.is(value, -0) && value >= min && value <= max ? value : fail();
-function names(value: unknown, most: number, ordered = false): readonly string[] {
+function names(value: unknown, most: number, ordered = false, read = name): readonly string[] {
   if (!Array.isArray(value) || value.length < 1 || value.length > most) return fail("limit");
-  const found = value.map(name);
+  const found = value.map(read);
   if (new Set(found).size !== found.length || ordered && found.some((item, i) => i > 0 && found[i - 1]! >= item)) return fail();
   return found;
+}
+/** Native preparation kinds may appear in fact slots; no caller-defined
+ * capability or step is introduced by projection metadata. */
+function entryKind(value: unknown): string {
+  if (typeof value !== "string") return fail();
+  if (NAME.test(value)) return value;
+  const split = value.indexOf(":"), capability = value.slice(0, split), step = value.slice(split + 1);
+  const table = CAPABILITIES as Readonly<Record<string, Capability>>;
+  return split > 0 && Object.hasOwn(table, capability) && Object.hasOwn(table[capability]!.steps, step) ? value : fail();
 }
 function record(value: unknown, most: number, minimum = 1): Record<string, unknown> {
   if (!isRecord(value)) return fail();
@@ -44,7 +53,7 @@ function fieldType(value: unknown, budget: { left: number }, depth = 0): void {
     }
     case "item": object(value, "of,type"); name(value["of"]); return;
     case "scope": object(value, "kind,type"); if (typeof value["kind"] !== "string" || !Object.hasOwn(KINDS, value["kind"])) return fail(); return;
-    case "fact": object(value, "kind,type,under"); name(value["under"]); names(value["kind"], 64); return;
+    case "fact": object(value, "kind,type,under"); name(value["under"]); names(value["kind"], 64, false, entryKind); return;
     case "list": object(value, "max,of,type"); integer(value["max"], 1, 64); fieldType(value["of"], budget, depth + 1); return;
     case "record": {
       object(value, "of,type");
