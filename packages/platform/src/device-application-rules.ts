@@ -11,9 +11,12 @@ import { INSTALL_DEFINITION_BYTES, INSTALL_DEFINITIONS, readInstallAdditions } f
 import { applicationValues } from "./application.ts";
 import { rulesMembership } from "./rules-scope.ts";
 import { deviceApplicationRequirement } from "./device-application-package.ts";
+import { ARCHIVE_DEVICE_APPLICATION_COHORT } from "./archive-binding-wire.ts";
+import { pinnedBy } from "./versions.ts";
 import { DEVICE_GENESIS_BYTES, DEVICE_GRANT_BYTES } from "./device-application-wire.ts";
 
 import { APPLICATION_SEMANTIC_VALUE2, APPLICATION_RELEASE_VALUE2 } from "./application-install-v2.ts";
+const archiveInstall = (given: RuleGiven): boolean => pinnedBy(given) === ARCHIVE_DEVICE_APPLICATION_COHORT.rules;
 const install = applicationInstallRulesScope.acts["install-application"]!;
 export const deviceApplicationRulesScope: PlatformData = {
   ...applicationInstallRulesScope,
@@ -33,7 +36,7 @@ function proof(given: RuleGiven): ApplicationReleaseProof2 | null {
   const release = given.value(APPLICATION_RELEASE_VALUE2.domain, fields["release"], APPLICATION_RELEASE_VALUE2.max);
   if (semantic === undefined || release === undefined) return null;
   const checked = readApplicationReleaseProof2(semantic, release, fields["release"], { bytes: APPLICATION_SEMANTIC_VALUE2.max + APPLICATION_RELEASE_VALUE2.max });
-  if (checked.ids.semantic !== fields["semantic"] || !deviceApplicationRequirement(checked.semantic) || checked.semantic.host.profiles.some(profile => profile !== "restricted@1")) throw Error("unsupported install proof");
+  if (checked.ids.semantic !== fields["semantic"] || !deviceApplicationRequirement(checked.semantic) || (!archiveInstall(given) && checked.semantic.host.requires !== undefined) || checked.semantic.host.profiles.some(profile => profile !== "restricted@1")) throw Error("unsupported install proof");
   for (let index = 0; index < checked.semantic.definitions.length; index++) {
     const part = checked.semantic.definitions[index]!;
     if (utf8(part.bytes).length > INSTALL_DEFINITION_BYTES || fields[`definitionText${index}`] !== textDigest(part.bytes)) throw Error("exact native declaration text required");
@@ -106,7 +109,7 @@ export const deviceApplicationRules: Rules = {
     return [
       { effect: "value", item: given.resolved.self, slot: "declarations", value: checked.semantic.definitions.map(part => ({ digest: part.id, text: textDigest(part.bytes), name: (parseStrict(part.bytes) as DeclaredDefinition).name })) },
       { effect: "value", item: given.resolved.self, slot: "additions", value: additions },
-      { effect: "value", item: given.resolved.self, slot: "needsDestination", value: genesis.needsDestination },
+      { effect: "value", item: given.resolved.self, slot: archiveInstall(given) ? "requirements" : "needsDestination", value: archiveInstall(given) ? { destination: genesis.needsDestination, archive: checked.semantic.host.requires?.includes("archive") === true } : genesis.needsDestination },
       { effect: "value", item: given.resolved.self, slot: "genesis", value: canonicalize({ fields: genesis.fields, deviceGrant: deviceGrant(given, checked) }) },
       { effect: "value", item: given.resolved.self, slot: "definition", value: checked.semantic.entry },
       { effect: "value", item: given.resolved.self, slot: "presentation", value: checked.ids.presentation },

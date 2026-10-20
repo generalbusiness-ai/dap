@@ -64,7 +64,7 @@ authorization to install a register remains unimplemented.
 The examples are from one run of the test in
 `packages/cli/test/story.scope.test.ts`, with long IDs cut short.
 
-**`dap install <base-url> [--host <git-host>] [--namespace <name>] [--cohort application|application-publication|trusted-application|declared-application|device-application|invitation-key]`**
+**`dap install <base-url> [--host <git-host>] [--namespace <name>] [--cohort application|application-publication|trusted-application|declared-application|device-application|archive-application|archive-declared-application|archive-device-application|invitation-key]`**
 creates the register with an `install` intent, signed by a new operator
 key, which is also the one creator key. The host defaults to `github.com`
 and the namespace to `artroom`. For the demo's host, the hosting's own Git
@@ -76,7 +76,7 @@ Installed: register sc_hinqqbm4....
 The operator key key_baqzbaDy... is kept in the config directory, readable only by you. It is the one founder key.
 ```
 
-**`dap install --plan <base-url> [--host <git-host>] [--namespace <name>] [--cohort application|application-publication|trusted-application|declared-application|device-application|invitation-key]`**
+**`dap install --plan <base-url> [--host <git-host>] [--namespace <name>] [--cohort application|application-publication|trusted-application|declared-application|device-application|archive-application|archive-declared-application|archive-device-application|invitation-key]`**
 signs the same `install` intent and creates nothing. A register's ID is a
 function of its seed, and the seed of the intent and the register's
 version alone, so the command prints the ID that the install will create,
@@ -93,7 +93,7 @@ Planned: register sc_4kq2v7..., under platform:register@2, on host artifacts, na
 Set registerScope to sc_4kq2v7... in the Worker's host setting, then run dap install --planned before 2026-10-08T09:14:00Z.
 ```
 
-**`dap install --planned [--cohort application|application-publication|trusted-application|declared-application|device-application|invitation-key]`** creates the planned register, with the kept
+**`dap install --planned [--cohort application|application-publication|trusted-application|declared-application|device-application|archive-application|archive-declared-application|archive-device-application|invitation-key]`** creates the planned register, with the kept
 intent and no other argument. Before anything is sent it checks the plan:
 a plan whose ID is not the one its intent and version make, or whose
 version is not supported by the installed catalog, is refused as
@@ -108,7 +108,10 @@ or delete the original config or keys.
 
 For example, set `DAP_HOME` to a new private directory, then run
 `dap install --plan <base-url> --cohort <cohort> --host <host>
---namespace <namespace>`, using `application`, `application-publication`, `trusted-application`, `declared-application`, `device-application` or `invitation-key`
+--namespace <namespace>`, using `application`, `application-publication`,
+`trusted-application`, `declared-application`, `device-application`,
+`archive-application`, `archive-declared-application`,
+`archive-device-application` or `invitation-key`
 for `<cohort>`. After configuring the new register ID,
 run `dap install --planned --cohort <cohort>` with the same
 `DAP_HOME`. This creates separate custody and a new operator key; it
@@ -138,7 +141,11 @@ register@13, directory@12, membership@7, rules@6, destination@8 and inbox@1.
 `--cohort device-application` selects `DEVICE_APPLICATION_COHORT`: register@16,
 directory@15, membership@7, rules@9, destination@11 and inbox@1. It accepts
 package v2 with the finite `device-command@1` requirement and an explicit
-existing owner. Other package v2 declared projections use the
+existing owner. `--cohort archive-device-application` selects
+`ARCHIVE_DEVICE_APPLICATION_COHORT`: register@17, directory@16,
+membership@8, rules@10, destination@12 and inbox@1. It combines the same
+Device owner and command protocol with archive binding at claim or later.
+Other package v2 declared projections use the
 declared-application cohort. Package v1 keeps
 the trusted-application cohort and its original proof format.
 The retired register@6, directory@6 and membership@5 cohort remains readable;
@@ -224,7 +231,9 @@ an independent review of the code are still required for this follow-up.
 records one application install in a room created with
 `--cohort trusted-application` for package v1, or
 `--cohort declared-application` for ordinary package v2. A device-command
-package uses `--cohort device-application` and requires `--owner` as the
+package uses `--cohort device-application`, or
+`--cohort archive-device-application` when its room needs archive binding.
+Both require `--owner` as the
 full JSON MemberRef, including its membership scope, incarnation and member
 handle. The native install checks that this member is active in the room
 membership. The signed package declares kinds and one owner requirement;
@@ -245,6 +254,18 @@ Each `--role` selects that role's defaults from the signed package. The
 roles are `admin`, `maintainer`, `member`, `agent`, and `checker`. Omission
 selects no default grants. Existing grants remain. `--values` is a JSON object
 of application genesis fields; its default is `{}`.
+
+A package whose signed host requirements include `archive` needs an
+archive-capable room: select `--cohort archive-application` for package v1
+or `--cohort archive-declared-application` for ordinary v2. A v2 package
+with `device-command@1` uses `--cohort archive-device-application` and an
+explicit existing owner. These are explicit new pins; they do not migrate
+an existing room. The package needs the room's
+Directory binding `archive: "journal"`. Without it, installation ends with
+`archive-unavailable` before granting roles or creating the application.
+An admin may set the binding at claim or later with `bind-archive`. Submit
+a new install request after binding; the original request retains its refusal.
+The binding is configuration, not an archive export receipt.
 
 Choose a request key and keep the exact command. CLI and MCP share persistent
 custody in the config directory's `private/mcp-custody/`. A lost reply is

@@ -11,6 +11,8 @@ import { rulesScope3, rulesScopeRules3 } from "./rules-scope.ts";
 import { applicationResultFields } from "./application-install-creation.ts";
 import { applicationValues } from "./application.ts";
 import { pinnedBy } from "./versions.ts";
+import { archiveInstallPin } from "./archive-binding-wire.ts";
+const archiveInstall = (given: RuleGiven): boolean => archiveInstallPin(pinnedBy(given));
 
 import { INSTALL_ADDITIONS_BYTES, INSTALL_DEFINITION_BYTES, INSTALL_DEFINITIONS, installDefinitionTextFields, installDeclarationsType, installGrantFields, readInstallAdditions } from "./application-install-wire.ts";
 export { APPLICATION_INSTALL_RULES } from "./application-install-wire.ts";
@@ -93,7 +95,7 @@ function proof(given: RuleGiven): ApplicationReleaseProof | null {
   const signed = given.value(APPLICATION_RELEASE_VALUE.domain, fields["release"], APPLICATION_RELEASE_VALUE.max);
   if (semantic === undefined || signed === undefined) return null;
   const result = readApplicationReleaseProof(semantic, signed, fields["release"], { bytes: APPLICATION_SEMANTIC_VALUE.max + APPLICATION_RELEASE_VALUE.max });
-  if (result.ids.semantic !== fields["semantic"] || result.semantic.capabilities.length || result.semantic.host.profiles.some(profile => profile !== "restricted@1")) throw Error("unsupported install proof");
+  if (result.ids.semantic !== fields["semantic"] || result.semantic.capabilities.length || (!archiveInstall(given) && result.semantic.host.requires !== undefined) || result.semantic.host.profiles.some(profile => profile !== "restricted@1")) throw Error("unsupported install proof");
   for (let index = 0; index < result.semantic.definitions.length; index++) {
     const part = result.semantic.definitions[index]!;
     if (utf8(part.bytes).length > INSTALL_DEFINITION_BYTES || fields[`definitionText${index}`] !== textDigest(part.bytes)) throw Error("exact native declaration text required");
@@ -173,7 +175,7 @@ export const applicationInstallRules: Rules = {
     return [
       { effect: "value", item: given.resolved.self, slot: "declarations", value: checked.semantic.definitions.map(part => ({ digest: part.id, text: textDigest(part.bytes), name: (parseStrict(part.bytes) as DeclaredDefinition).name })) },
       { effect: "value", item: given.resolved.self, slot: "additions", value: additions },
-      { effect: "value", item: given.resolved.self, slot: "needsDestination", value: genesis.needsDestination },
+      { effect: "value", item: given.resolved.self, slot: archiveInstall(given) ? "requirements" : "needsDestination", value: archiveInstall(given) ? { destination: genesis.needsDestination, archive: checked.semantic.host.requires?.includes("archive") === true } : genesis.needsDestination },
       { effect: "value", item: given.resolved.self, slot: "genesis", value: canonicalize(genesis.fields) },
       { effect: "value", item: given.resolved.self, slot: "definition", value: checked.semantic.entry },
       { effect: "value", item: given.resolved.self, slot: "presentation", value: checked.ids.presentation },
@@ -220,7 +222,7 @@ export const applicationInstallRules: Rules = {
     if (!job || !isScopeRef(directory) || !isMemberRef(installer)) throw Error("original checked install authority required");
     return { to: directory, message: { class: "request", type: "tell", body: { message: "application-create", fields: {
       job: job.id, definition: job.values["definition"], release: job.values["release"], semantic: job.values["semantic"], presentation: job.values["presentation"],
-      installer, genesis: job.values["genesis"], needsDestination: job.values["needsDestination"],
+      installer, genesis: job.values["genesis"], needsDestination: archiveInstall(given) ? isRecord(job.values["requirements"]) && job.values["requirements"]["destination"] === true : job.values["needsDestination"],
     } } } };
   } },
   "application-creation-matches": { place: "guard", refusals: ["invalid-application-result"], run: given => {
@@ -241,7 +243,7 @@ export const applicationInstallRules: Rules = {
     if (!job || !isScopeRef(directory)) throw Error("install retains its room directory");
     if (!activationAvailable(given, job)) return null;
     return { to: directory, message: { class: "request", type: "tell", body: { message: "application-stage", fields: {
-      name: rootName(job), declarations: job.values["declarations"],
+      name: rootName(job), declarations: job.values["declarations"], ...(archiveInstall(given) ? { needsArchive: isRecord(job.values["requirements"]) && job.values["requirements"]["archive"] === true } : {}),
       ...Object.fromEntries((job.values["declarations"] as unknown as { text: string }[]).map((part, index) => [`definitionText${index}`, part.text])),
       definition: job.values["definition"], job: job.id, release: job.values["release"], semantic: job.values["semantic"], additions: job.values["additions"],
     } } } };
@@ -260,7 +262,8 @@ export const applicationInstallRules: Rules = {
     const delivered = original?.type === "delivery" && original.message.class === "request" && isRecord(original.message.body) && isRecord(original.message.body["fields"]) ? original.message.body["fields"]["job"] : null;
     const job = original?.type === "outcome" ? installation(given, original.operation) : typeof delivered === "number" ? given.state.item(delivered) : null;
     if (!job || job.state !== "pending") return [];
-    return [{ effect: "state", item: job.id, state: "refused" }, { effect: "value", item: job.id, slot: "reason", value: "install-route-refused" }];
+    const reason = original?.type === "outcome" && isRecord(job.values["requirements"]) && job.values["requirements"]["archive"] === true && given.input.message.reason?.name === "archive-unavailable" ? "archive-unavailable" : "install-route-refused";
+    return [{ effect: "state", item: job.id, state: "refused" }, { effect: "value", item: job.id, slot: "reason", value: reason }];
   } },
   "application-fetch": { place: "outcome", rules: {
     selects: true, read: true,

@@ -13,11 +13,11 @@ import { TEST_DEPLOYMENT } from "../worker.ts";
 import { nativeFixtureLifetime, dispatchFixture, effectFixture } from "./native-fixture-lifetime.ts";
 
 export const sessionCohorts = Object.entries(DIRECTORY_OF).filter(([, directory], index, entries) => entries.findIndex(([, pin]) => pin === directory) === index).map(([register, directory]) => [register as PlatformDefinition, directory] as const);
-export async function sessionRoom(registerPin: PlatformDefinition = REGISTER) {
+export async function sessionRoom(registerPin: PlatformDefinition = REGISTER, archive?: "journal") {
   const secret = "a synthetic native reference test secret", owner = beginSessionFixture({ secret, sessions: false, inspector: null });
   const life = nativeFixtureLifetime(owner, { required: false });
   try {
-    const { R, D, children, directoryPin } = await sessionRepository(life, registerPin);
+    const { R, D, children, directoryPin } = await sessionRepository(life, registerPin, archive);
     const membership = await life.wait(() => children[0]!.at()), rules = await life.wait(() => children[1]!.at()), directory = await life.wait(() => D.at());
     const claims: SessionClaims = { v: 1, deployment: TEST_DEPLOYMENT, membership, member: rita.member.member, key: rita.key, reads: ["summary"], ends: soon(60) };
     return { life, R, D, children, membership, rules, directory, directoryPin, claims, secret, sessions: sessionsOf(secret, TEST_DEPLOYMENT)! };
@@ -26,7 +26,7 @@ export async function sessionRoom(registerPin: PlatformDefinition = REGISTER) {
 
 /** An additional real repository in the same owned native namespace fixture.
  * It shares no membership, directory, partition or role with another root. */
-export async function sessionRepository(life: ReturnType<typeof nativeFixtureLifetime>, registerPin: PlatformDefinition = REGISTER) {
+export async function sessionRepository(life: ReturnType<typeof nativeFixtureLifetime>, registerPin: PlatformDefinition = REGISTER, archive?: "journal") {
     const directoryPin = DIRECTORY_OF[registerPin]; if (!directoryPin) return expect.fail("no exact cohort");
     const demo = registerPin === "platform:register@7" || registerPin === "platform:register@8";
     const install: Intent = { v: 1, to: null, actor: rita.key, kind: "install", on: null, expected: {}, fields: { host: "git.example", namespace: "bounded-reference", ...(demo ? { policy: "open", purpose: DEMO_PURPOSE } : { policy: "keys", "founders": [rita.key] }) }, idempotencyKey: crypto.randomUUID(), notAfter: soon(60) };
@@ -34,7 +34,7 @@ export async function sessionRepository(life: ReturnType<typeof nativeFixtureLif
     const host = outsideOf(R.name); life.wire(R.name, () => ({ outside: host }));
     expect(await life.wait(() => R.stub.create(signIntent(install, rita.secret), registerPin))).toMatchObject({ answer: "accepted" });
     const register = await life.wait(() => R.at());
-    const matched = await life.wait(() => R.intent(rita, "found", { expected: { register: 1 }, fields: { branch: "main", "founderHandle": "@rita", recoveryKey: sam.key } }));
+    const matched = await life.wait(() => R.intent(rita, "found", { expected: { register: 1 }, fields: { branch: "main", "founderHandle": "@rita", recoveryKey: sam.key, ...(archive === undefined ? {} : { archive }) } }));
     const seed: Seed = { v: 1, kind: "directory", definition: directoryPin, creator: register, cause: intentDigest(matched.intent), ordinal: 0 };
     const D = life.platform(scopeIdOf(seed));
     host.answer("1:0" as OperationId, 1, { result: "confirmed", evidence: { basis: "own-answer", body: { name: repositoryName(seedDigest(seed), 1), id: "bounded-reference-repo" } } });

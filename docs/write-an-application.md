@@ -33,8 +33,23 @@ A definition without `level` uses recorded durability: the runtime commits
 its journal before answering with a receipt. You can declare that requirement
 explicitly with `level: { name: "recorded", version: 1 }`. The explicit member
 changes the definition's bytes and digest. It does not change an existing
-scope's pin. Live and Archived levels are not supported yet. Their declarations
+scope's pin. Live and Sequenced levels are not supported yet. Their declarations
 are refused as `unsupported-definition`, without creating a recorded fallback.
+
+An archive is a separate binding of the room. Create an archive-capable room
+with `--cohort archive-application` for package v1 or
+`--cohort archive-declared-application` for ordinary v2. A v2 package with
+`device-command@1` uses `--cohort archive-device-application` and an
+existing owner selected with `--owner`. A signed package can require the
+binding with `host.requires: ["archive"]`. In these cohorts, installation
+ends with `archive-unavailable` when the Directory has no archive binding,
+before adding roles or creating the application. The native claim can set
+`archive: "journal"`; an admin can set it later with `bind-archive`. A new
+install request can then succeed; retrying the original request keeps its
+recorded refusal. A binding does not prove that any journal has been exported.
+Earlier cohorts keep their original pins and refuse the new requirement.
+The archive engine still requires its reviewed policy and host configuration;
+the current engine runs under fixture-only admission.
 
 ## Declare the item types
 
@@ -278,8 +293,10 @@ A package v2 may require the host's finite `device-command@1` capability:
 ```
 
 List kinds in sorted order. The requirement names no owner identity. Install
-in the explicit device-application cohort and choose an existing full
-MemberRef with `--owner`; the native install checks its current membership.
+in the explicit `device-application` cohort, or
+`archive-device-application` when the room needs archive binding. Choose
+an existing full MemberRef with `--owner`; the native install checks its
+current membership.
 This cohort runs host capability code, never code supplied by the package.
 At most eight package definitions may use the capability. The installed
 root may delegate its grant to one permitted child generation, as Grow's

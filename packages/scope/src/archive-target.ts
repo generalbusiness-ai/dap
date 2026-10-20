@@ -52,6 +52,7 @@ export function fixtureArchiveTarget(reads: FixtureArchiveTargetReads): FixtureA
       if (at.kind === "directory") {
         if (!isOf(found.named, "platform:directory")) return null;
         const room = await one(at, "repository", ["open"], budget);
+        if (room?.values["archive"] !== "journal") return null;
         const configured = repository(room?.values["repository"]), destination = room?.refs["destination"];
         if (!configured || !isScopeRef(destination) || destination.kind !== "destination") return null;
         const target = await birth(destination, budget);
