@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2cf9e31bcd3a0f15bb4ad0f0b0729da3a6ae9e33","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/device-application-package.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2d00b1064a08297f1e50d6dd475532f18284f09f","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/application-local.ts."}
