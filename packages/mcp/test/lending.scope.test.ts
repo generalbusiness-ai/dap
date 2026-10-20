@@ -1,10 +1,11 @@
 import { expect, test } from "vitest";
 import type { FactRef, ScopeId } from "@generalbusiness/dap-contract";
-import { canonicalize, keyIdOfSecret } from "@generalbusiness/artroom-bytes";
+import { canonicalize } from "@generalbusiness/artroom-bytes";
 import { FILE_PUBLICATION_COHORT, FIRST_ACTIONS_OF } from "@generalbusiness/dap-platform";
 import { lending } from "../../../examples/lending/definition.ts";
 import { LENDING_DEFINITION } from "../../../examples/lending/pin.ts";
 import { mcpRoom, type Agent, type Room } from "./support/room.ts";
+import { activityRecipe, claimApplicationRoom } from "./fixtures.ts";
 import DOC from "../../../docs/mcp.md?raw";
 
 /** The library's definition name: the name room lists and the prefix of its act tools. */
@@ -12,25 +13,13 @@ const NAME = lending.name;
 
 /** docs/mcp.md's recipe for taking part in the lending library, by mode: the tools it names, in order, and its count. */
 function libraryRecipe(mode: "default" | "generic"): { tools: string[]; count: number } {
-  const at = DOC.indexOf("## Taking part in the lending library");
-  const row = DOC.slice(at, DOC.indexOf("\n## ", at + 5)).split("\n").find((l: string) => l.startsWith("| Take part in the lending library"))!;
-  const cell = row.split(" | ")[mode === "default" ? 1 : 2]!;
-  return { tools: [...cell.matchAll(/`([a-z][a-z0-9.-]*)`/g)].map((m) => m[1]!), count: Number([...cell.matchAll(/: (\d+)/g)].at(-1)![1]) };
+  return activityRecipe(DOC, "## Taking part in the lending library", "| Take part in the lending library", mode);
 }
 
 /** A room of the application-publication cohort, created by rita, with the library's definition active and its actions in the admin role. */
 async function libraryRoom(room: Room): Promise<Agent> {
   const rita = room.agent("rita");
-  const installed = await rita.ok("create", { definition: FILE_PUBLICATION_COHORT.register, kind: "install", fields: { host: "artifacts", namespace: "artroom-demo", policy: "keys", "founders": [rita.key] }, idempotencyKey: "install" });
-  const register = installed["scope"] as ScopeId;
-  await room.wireRegister(register);
-  const claimed = await rita.ok("room.create", { target: register, fields: { branch: "main", "founderHandle": "@rita", recoveryKey: keyIdOfSecret(crypto.getRandomValues(new Uint8Array(32))) }, idempotencyKey: "claim" });
-  expect(claimed["answer"], JSON.stringify(claimed)).toBe("accepted");
-  const w = await rita.ok("wait", { scope: register, entry: (claimed["fact"] as FactRef).seq });
-  expect(w["timedOut"], JSON.stringify(w)).toBe(false);
-  room.know(rita.config.repository!.destination);
-  const seat = await rita.ok("room.seat", { idempotencyKey: "seat" });
-  await rita.ok("room.first-key", { fields: { member: (seat["fact"] as FactRef).seq }, idempotencyKey: "first-key" });
+  await claimApplicationRoom(room, rita, FILE_PUBLICATION_COHORT.register);
   expect((await rita.ok("rules.activate", { fields: { digest: LENDING_DEFINITION, name: NAME }, values: [canonicalize(lending)], idempotencyKey: "activate" }))["answer"]).toBe("accepted");
   // The deployed library's admin role: every first admin action, and both of the library's.
   const actions = [...FIRST_ACTIONS_OF[FILE_PUBLICATION_COHORT.membership]!.admin, "lending.member", "lending.staff"];

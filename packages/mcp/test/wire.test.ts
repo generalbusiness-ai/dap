@@ -1,5 +1,5 @@
 import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
-import { request, type Server } from "node:http";
+import { createServer, request, type Server } from "node:http";
 import { PassThrough } from "node:stream";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -29,7 +29,7 @@ let service: string;
 
 beforeAll(async () => {
   standIn = new StandIn(signer.key);
-  const peer = loopbackScopePeer(standIn);
+  const peer = loopbackScopePeer(standIn, createServer);
   scopes = peer.server;
   service = await peer.ready;
 });

@@ -4,7 +4,7 @@
  * headers, the legacy session rules, the cases both revisions share, and the methods across eras. The scope service is the
  * STAND-IN of test/support/standin.ts.
  */
-import { request, type Server } from "node:http";
+import { createServer, request, type Server } from "node:http";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { secretSigner } from "@generalbusiness/artroom-client";
 import { McpService, MODERN, LEGACY, memoryStore, type McpConfig } from "../src/index.ts";
@@ -26,7 +26,7 @@ const holds: Promise<void>[] = [];
 
 beforeAll(async () => {
   standIn = new StandIn(signer.key);
-  const peer = loopbackScopePeer(standIn);
+  const peer = loopbackScopePeer(standIn, createServer);
   scopes = peer.server;
   service = await peer.ready;
   const config: McpConfig = { ...standIn.config(), service };
