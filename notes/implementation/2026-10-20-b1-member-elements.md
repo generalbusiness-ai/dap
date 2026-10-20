@@ -283,7 +283,7 @@ All B1 owning checks are now prepared/passing with the qualifications above;
 the full gate and exact-head Source review remain due. This mutable
 checkpoint is saved while the builder handles the commissioned public Grow
 host-link/config follow-up in a separate head with no runtime changes.
-# Incorporate published Main, 20 October
+## Incorporate published Main, 20 October
 
 From B1 checkpoint `0217aaa8`, the private worktree incorporates reviewed
 and published Main `c7aaa3ab`, retaining K2's fixture consolidation and
@@ -310,4 +310,3 @@ These local checks keep their TEST Git/clock/scheduler and native-owner
 fault boundaries. They do not repeat a full gate or establish a browser,
 provider, hosted, stability or drain result. Current-Main incorporation
 continues before B1's one final ordinary gate and complete Source review.
-
