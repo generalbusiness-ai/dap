@@ -1,7 +1,7 @@
 /** Development-only local scope: genuine native Core + SqliteStore, with
  * explicit scripted authority. No enrollment/freshness proof, dispatcher,
  * provider call, hosted durability or screen isolation is claimed here. */
-import { bindApplicationProjection, ApplicationProjectionError, readApplicationPackage2, type AnyPackedApplication, type ApplicationReadProjection } from "@generalbusiness/artroom-bytes/application-v2";
+import { bindApplicationProjection, ApplicationProjectionError, readPublishedApplicationPackage2, type AnyPackedApplication, type ApplicationReadProjection } from "@generalbusiness/artroom-bytes/application-v2";
 import { DatabaseSync } from "node:sqlite";
 import type { Answer, ApplicationProjectionData, Beside, DeclaredDefinition, Digest, FreshnessProof, Grant, KeyId, MemberRef, ScopeId, ScopeRef, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
 import { HISTORY_PAGE_ENTRIES, PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
@@ -85,7 +85,7 @@ export class LocalApplicationScope {
    * No handmade genesis, activation entry or folded application state is used. */
   static async found(packet: AnyPackedApplication, founding: SignedIntent, actors: readonly LocalActor[], now: Timestamp, selected?: Digest, scriptedOwner?: MemberRef): Promise<LocalApplicationScope> {
     if (timeMs(now) === null || new Set(actors.map(actor => actor.key)).size !== actors.length) throw new LocalApplicationError("Choose a valid local time and distinct explicit actor keys.");
-    const owned = packet.package.v === 2 ? readApplicationPackage2(packet.bytes, packet.ids.release) : readApplicationPackage(packet.bytes, packet.ids.release);
+    const owned = packet.package.v === 2 ? readPublishedApplicationPackage2(packet.bytes, packet.ids.release) : readApplicationPackage(packet.bytes, packet.ids.release);
     // Developer scenarios may select a definition already inside the verified
     // closure. This is still a scripted single root, not child transport.
     const root = selected ?? owned.package.semantic.entry;

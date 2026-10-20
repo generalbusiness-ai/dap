@@ -1,14 +1,15 @@
+import { emptyPackageComposition } from "@generalbusiness/artroom-package-graph";
 /** Signed TEST package only. It supplies no owner identity, grant or archive authority. */
 import { DEVICE_COMMAND } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest } from "@generalbusiness/artroom-bytes";
 import { packApplication2, readApplicationProjection } from "@generalbusiness/artroom-bytes/application-v2";
 import { secretSigner } from "@generalbusiness/artroom-client";
-import { deviceCommandFixture } from "../../../derive/test/fixtures-device-command.ts";
+import { devicePackageFixture as deviceCommandFixture } from "../../../derive/test/fixtures-device-command.ts";
 
 export async function deviceApplicationPacket(requiresArchive = false, withView = false) {
   const id = definitionDigest(deviceCommandFixture);
   return packApplication2({ name: "test.device-native", version: "1", semantic: {
-    v: 2, entry: id, definitions: [{ id, bytes: canonicalize(deviceCommandFixture) }],
+    ...emptyPackageComposition(), v: 2, entry: id, definitions: [{ id, bytes: canonicalize(deviceCommandFixture) }],
     host: { execution: "recorded-do", profiles: ["restricted@1"], ...(requiresArchive ? { requires: ["archive"] as const } : {}) },
     capabilities: [{ name: DEVICE_COMMAND, bounds: { kinds: ["heater"], owners: 1 } }],
     roles: { admin: ["command", "start"] }, projections: { root: readApplicationProjection({ v: 1, definition: id, revision: "revision",

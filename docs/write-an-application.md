@@ -195,9 +195,10 @@ The signed semantic value carries seven composition places:
 
 In `dap.application.json`, references to definitions are paths already
 listed in `definitions`. Packing resolves them to the captured definitions'
-exact digests. An empty composition place may be omitted in this source
-file; the writer includes it explicitly in the signed version 2 value.
-The reader requires all seven places on that wire value.
+exact digests. Include all seven composition places in the source file and
+the signed version 2 value, using explicit empty arrays or objects where
+appropriate. Both `packApplication2` and `validatePackage` refuse a missing
+place. Packing never fills in omitted places.
 
 For example, the [Grow source](../examples/grow/check/dap.application.json)
 connects the Site's child slot to the Room definition:
@@ -268,6 +269,31 @@ handler `spacing`, timed sends, derivation and parameters refuse with
 native `late` handlers remain available. Package validation here does not
 claim the later install-time activation guard; a local scenario's TEST
 authority is separate from installation, live membership and a provider.
+
+### Consume the existing published Grow release
+
+The existing signed [Grow demo](../examples/grow/demo/application.dap.json)
+predates these seven places. Its exact release `71e10ca9` and publisher
+are recorded in [demo-release.ts](../examples/grow/demo-release.ts).
+Consumption uses `readPublishedApplicationPackage2` or
+`readPublishedApplicationReleaseProof2` for verification, installation,
+screens and replay. The earlier shape must have its exact nine semantic
+keys and match that one full release digest and publisher. The reader
+still checks canonical bytes, all hashes, signature, closure, bounds,
+projections and views. It adds no fields to the signed value.
+
+This is an explicit shape selection before validation. There is no retry
+after a strict failure, publisher-only exception or caller option to admit
+another earlier-shaped release. Complete composition shapes still pass
+all graph checks. New authoring and `validatePackage` use the strict
+reader and cannot produce or admit the earlier shape. The simulator also
+keeps the published release's exact Site and Room definition pins; other
+releases keep its current-source identity check.
+
+Retire this bounded consumption path only after a separately reviewed
+replacement release, its trust row and the installed-room upgrade have
+been commissioned. P1 changes no existing signed packet, release identity,
+private publisher key or deployed installation.
 
 ## Pin the definition's bytes
 

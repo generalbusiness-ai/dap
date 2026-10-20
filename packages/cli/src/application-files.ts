@@ -7,7 +7,8 @@ import { basename, dirname, join, resolve } from "node:path";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, isRecord, parseStrictBytes } from "@generalbusiness/artroom-bytes";
 import { APPLICATION_PACKAGE_LIMITS as LIMITS, packApplication, type ApplicationDefinition, type ApplicationPackageInput, type Signer } from "@generalbusiness/artroom-client";
-import { packApplication2, type ApplicationPackageInput2, type AnyPackedApplication } from "@generalbusiness/artroom-bytes/application-v2";
+import { packApplication2, type ApplicationPackageInput2, type PackedApplication2 } from "@generalbusiness/artroom-bytes/application-v2";
+import type { PackedApplication } from "@generalbusiness/artroom-bytes/application";
 import { validateDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { bundleApplicationBrowser } from "./application-browser.ts";
@@ -59,7 +60,8 @@ async function source(directory: string, configPath: string): Promise<{ input: A
   if (!(await lstat(root)).isDirectory()) return refuse("The application root must be a directory.");
   const captured = parseStrictBytes(await readSource(root, pathOf(configPath), LIMITS.metadataBytes));
   const compositionKeys = ["connections", "rights", "exercises", "groups", "order", "derivation", "parameters"] as const;
-  const config = object(captured, "capabilities,definitions,entry,host,name,predecessor,presentation,projections,roles,v,version", ["scenarios", ...(isRecord(captured) && captured["v"] === 2 ? compositionKeys : [])]);
+  const config = object(captured, "capabilities,definitions,entry,host,name,predecessor,presentation,projections,roles,v,version"
+    + (isRecord(captured) && captured["v"] === 2 ? "," + compositionKeys.join(",") : ""), ["scenarios"]);
   const givenScenarios = Object.hasOwn(config, "scenarios") ? config["scenarios"] : [];
   if (!Array.isArray(givenScenarios) || givenScenarios.length > 32) return refuse("List at most 32 local scenario files.");
   const scenarios = givenScenarios.map(pathOf);
@@ -136,7 +138,7 @@ async function source(directory: string, configPath: string): Promise<{ input: A
 
 /** Local check/dev can prepare exactly the same package without publishing an
  * output. Scenario files are developer inputs and never change package ids. */
-export async function prepareApplicationDirectory(directory: string, signer: Signer, options: { config?: string } = {}): Promise<{ packet: AnyPackedApplication; root: string; scenarios: readonly string[] }> {
+export async function prepareApplicationDirectory(directory: string, signer: Signer, options: { config?: string } = {}): Promise<{ packet: PackedApplication | PackedApplication2; root: string; scenarios: readonly string[] }> {
   const prepared = await source(directory, options.config ?? "dap.application.json");
   const packet = prepared.input.semantic.v === 2 ? await packApplication2(prepared.input as ApplicationPackageInput2, signer) : await packApplication(prepared.input as ApplicationPackageInput, signer);
   return { packet, root: prepared.root, scenarios: prepared.scenarios };
@@ -163,7 +165,7 @@ async function publish(path: string, bytes: Uint8Array): Promise<void> {
 
 /** No output is published until every source, native definition and package
  * signature has passed. A package URI can be assigned after this file is committed. */
-export async function packDirectory(directory: string, output: string, signer: Signer, options: { config?: string } = {}): Promise<AnyPackedApplication> {
+export async function packDirectory(directory: string, output: string, signer: Signer, options: { config?: string } = {}): Promise<PackedApplication | PackedApplication2> {
   const { packet: packed } = await prepareApplicationDirectory(directory, signer, options);
   await publish(resolve(output), packed.bytes);
   return packed;

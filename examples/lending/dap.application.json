@@ -426,5 +426,11 @@
       "slot": "destination",
       "to": "outside"
     }
-  ]
+  ],
+  "rights": {},
+  "exercises": [],
+  "groups": [],
+  "order": [],
+  "derivation": {},
+  "parameters": {}
 }

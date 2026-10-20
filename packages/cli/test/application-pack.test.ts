@@ -14,6 +14,7 @@ import { memoryStore } from "../src/store.ts";
 import { fileStore } from "../src/files.ts";
 import { readApplicationPackage2 } from "@generalbusiness/artroom-bytes/application-v2";
 import { runApplicationScenario } from "../src/application-scenarios.ts";
+import { emptyPackageComposition } from "@generalbusiness/artroom-package-graph";
 
 const secret = new Uint8Array(32).fill(23), signer = secretSigner(secret);
 async function fixture(kind: "counter" | "lending" = "lending") {
@@ -39,7 +40,7 @@ async function refused(work: () => Promise<unknown>): Promise<unknown> {
 test("explicit v2 sources bind projections to captured definition paths and run native local replay", async () => {
   const f = await fixture("counter");
   try {
-    const config = { ...f.config, v: 2, roles: { ...f.config.roles, admin: ["counting.control", "counting.establish", "counting.join", "counting.leave"] }, projections: { board: { v: 1, definition: "definition.json", revision: "revision", sources: {
+    const config = { ...f.config, ...emptyPackageComposition(), v: 2, roles: { ...f.config.roles, admin: ["counting.control", "counting.establish", "counting.join", "counting.leave"] }, projections: { board: { v: 1, definition: "definition.json", revision: "revision", sources: {
       board: { item: "board", read: "one", states: ["finished", "paused", "running"], limit: 1, fields: {
         lastNumber: { from: { kind: "value", name: "lastNumber" }, of: { type: "int", min: 0, max: 100 }, nullable: false },
       } },
@@ -48,6 +49,11 @@ test("explicit v2 sources bind projections to captured definition paths and run 
       acts: [], context: "Board {id} v{revision}", fallback: "Board {id}: {state}", waiting: {}, refresh: 3000, display: "inline", back: null,
     } } } };
     const save = () => writeFile(join(f.root, "dap.application.json"), JSON.stringify(config));
+    Reflect.deleteProperty(config, "connections"); await save();
+    let signatures = 0;
+    expect(await refused(() => prepareApplicationDirectory(f.root, { key: signer.key, sign: bytes => { signatures++; return signer.sign(bytes); } }))).toBeInstanceOf(ApplicationSourceError);
+    expect(signatures).toBe(0);
+    config.connections = [];
     await save();
     const packed = await packDirectory(f.root, f.output, signer);
     expect(packed.package.v).toBe(2);
@@ -293,7 +299,7 @@ test("v2 CLI reports proved item keys and escapes the same refusal rows through 
         note: { step: "comment", on: "note", grant: "app.comment", fields: { text: { type: "text", max: 80, required: true } }, also: {}, guards: [], effects: [], sends: [], attention: [] },
       } as Record<string, unknown>, receives: {}, timed: {}, rules: {},
     };
-    const config = { ...f.config, v: 2, roles: { author: ["app.configure", "app.comment"] }, scenarios: ["scenario.json"],
+    const config = { ...f.config, ...emptyPackageComposition(), v: 2, roles: { author: ["app.configure", "app.comment"] }, scenarios: ["scenario.json"],
       projections: { note: { v: 1, definition: "definition.json", revision: "revision", sources: {
         note: { item: "note", read: "one", states: ["open"], limit: 1, fields: { label: { from: { kind: "value", name: "label" }, of: { type: "text", max: 80 }, nullable: false } } },
       } } }, presentation: { ...f.config.presentation, resources: {}, views: {} } };

@@ -1,3 +1,4 @@
+import { emptyPackageComposition } from "@generalbusiness/artroom-package-graph";
 /** Real native Counter scenarios; only the final test's verifier reports are
  * deliberately faulted, to show the scenario cannot hide failed replay. */
 import { mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
@@ -10,7 +11,7 @@ import type { DeclaredDefinition, FactRef, FieldValue, SignedIntent } from "@gen
 import { canonicalize, definitionDigest } from "@generalbusiness/artroom-bytes";
 import { packApplication, secretSigner, signedIntent } from "@generalbusiness/artroom-client";
 import { packApplication2, readApplicationProjection } from "@generalbusiness/artroom-bytes/application-v2";
-import { deviceCommandFixture } from "../../derive/test/fixtures-device-command.ts";
+import { devicePackageFixture as deviceCommandFixture } from "../../derive/test/fixtures-device-command.ts";
 import { LocalApplicationScope } from "../src/application-local.ts";
 import { ApplicationScenarioError, openApplicationScenario, runApplicationScenario, supportsLocalSqlite } from "../src/application-scenarios.ts";
 
@@ -260,9 +261,9 @@ test("a mismatched or integrity-only verifier report cannot become a successful 
 test("scripted-parent device scenarios keep their anchor explicit and execute native owner preparations once", async () => {
   const id = definitionDigest(deviceCommandFixture);
   const packed = await packApplication2({ name: "test.local-device", version: "1", semantic: {
-    v: 2, entry: id, definitions: [{ id, bytes: canonicalize(deviceCommandFixture) }],
+    ...emptyPackageComposition(), v: 2, entry: id, definitions: [{ id, bytes: canonicalize(deviceCommandFixture) }],
     host: { execution: "recorded-do", profiles: ["restricted@1"] }, capabilities: [{ name: "device-command@1", bounds: { kinds: ["heater"], owners: 1 } }],
-    roles: {}, predecessor: null, projections: { root: readApplicationProjection({ v: 1, definition: id, revision: "revision",
+    roles: { operator: ["command", "start"] }, predecessor: null, projections: { root: readApplicationProjection({ v: 1, definition: id, revision: "revision",
       sources: { root: { item: "root", read: "one", states: ["ready"], limit: 1, fields: {} } } }) },
   }, presentation: { v: 2, entry: "index.html", assets: [{ path: "index.html", mediaType: "text/html", bytes: "VEVTVA" }], descriptions: {}, views: {}, resources: {} } }, secretSigner(new Uint8Array(32).fill(83)));
   const position = (name: string) => ({ $position: name }), revision = (name: string) => ({ $revision: position(name) });

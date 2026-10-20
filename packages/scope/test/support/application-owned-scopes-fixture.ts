@@ -1,3 +1,4 @@
+import { emptyPackageComposition } from "@generalbusiness/artroom-package-graph";
 /** Public TEST package. Root genesis creates its child through the existing
  * native create form; no handmade genesis, identity or grant stands behind it. */
 import type { DeclaredDefinition, Digest } from "@generalbusiness/dap-contract";
@@ -37,7 +38,7 @@ export async function applicationOwnedScopesPacket(label = "test-owned-root", ve
     context: "Owned row {id} v{revision}: {count}", fallback: "Owned row {id}: {count}", waiting: {}, refresh: 2000, display: "inline" as const, back: null };
   const secret = new Uint8Array(32).fill(67), signer = { key: keyIdOfSecret(secret), sign: (bytes: Uint8Array) => sign(secret, bytes) };
   const packet = await packApplication2({ name: "test.owned-scopes", version, semantic: {
-    v: 2, entry: rootId, definitions: [{ id: rootId, bytes: canonicalize(root) }, { id: childId, bytes: canonicalize(child) }],
+    ...emptyPackageComposition(), v: 2, entry: rootId, definitions: [{ id: rootId, bytes: canonicalize(root) }, { id: childId, bytes: canonicalize(child) }],
     connections: [{ from: rootId, item: "root", slot: "child", to: childId }],
     host: { execution: "recorded-do", profiles: ["restricted@1"] }, capabilities: [], roles: { admin: [grant] }, predecessor: null,
     projections: { root: projection(rootId, true), child: projection(childId, false) },

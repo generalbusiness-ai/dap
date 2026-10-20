@@ -1,3 +1,4 @@
+import { emptyPackageComposition } from "@generalbusiness/artroom-package-graph";
 /** Public TEST Counter packet with one declared board read. No native
  * install or browser is constructed by this fixture. */
 import { b64url, canonicalize, definitionDigest, keyIdOfSecret, sign, utf8 } from "@generalbusiness/artroom-bytes";
@@ -7,7 +8,7 @@ const secret = new Uint8Array(32).fill(67), signer = { key: keyIdOfSecret(secret
 export async function applicationCounterPacket2(when = "state = 'open'", version = "1") {
   const id = definitionDigest(countingCommitments);
   return packApplication2({ name: "test.declared-host", version, semantic: {
-    v: 2, entry: id, definitions: [{ id, bytes: canonicalize(countingCommitments) }],
+    ...emptyPackageComposition(), v: 2, entry: id, definitions: [{ id, bytes: canonicalize(countingCommitments) }],
     host: { execution: "recorded-do", profiles: ["restricted@1"] }, capabilities: [], roles: { admin: ["counting.control"], member: ["counting.fulfill"],
       setup: ["counting.activity", "counting.commit", "counting.establish", "counting.fail", "counting.participate"],
     }, predecessor: null,

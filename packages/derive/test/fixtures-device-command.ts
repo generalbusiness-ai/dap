@@ -32,3 +32,8 @@ export const deviceCommandFixture: DeclaredDefinition = {
     fields: { device: { type: "item", of: "device", required: true } }, also: { device: { item: "device", by: "device" } }, guards: [], effects: [], sends: [], attention: [] } },
   timed: { expire: { on: "device", states: ["active"], deadline: "due", effects: [{ state: "closed" }], attention: [] } }, rules: {},
 };
+
+/** The installation witness sends no external lane messages. Its standalone
+ * package therefore omits the pure-judgment fixture's unconnected receiver.
+ * Keep the original fixture above for delivery and validator witnesses. */
+export const devicePackageFixture: DeclaredDefinition = { ...deviceCommandFixture, receives: {} };

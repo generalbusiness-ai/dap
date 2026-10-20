@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { readFileSync } from "node:fs";
 import { b64url, canonicalize, definitionDigest, digestBytes, sign, utf8, verify } from "@generalbusiness/artroom-bytes";
-import { ApplicationPackageValidationError, packApplication2, readApplicationProjection, type ApplicationPackageInput2 } from "@generalbusiness/artroom-bytes/application-v2";
+import { ApplicationPackageValidationError, packApplication2, readApplicationProjection, readApplicationPackage2, readPublishedApplicationPackage2, readPublishedApplicationReleaseProof2, type ApplicationPackageInput2 } from "@generalbusiness/artroom-bytes/application-v2";
 import { PROPOSED_BOUNDS, type DeclaredDefinition } from "@generalbusiness/dap-contract";
 import { checkPackageGraph, type PackageGraphInput } from "@generalbusiness/artroom-package-graph";
 import { validateDefinition, validatePackage } from "../src/index.ts";
@@ -9,6 +9,7 @@ import { RULE_PROFILES } from "../src/rule/index.ts";
 import { room } from "../../../examples/grow/room.ts";
 import { keys } from "./fixtures.ts";
 import { grow } from "./fixtures-package-graph.ts";
+import { DEMO_RELEASE, DEMO_PUBLISHER } from "../../../examples/grow/demo-release.ts";
 const maintained = JSON.parse(readFileSync(new URL("../../../examples/grow/check/dap.application.json", import.meta.url), "utf8")) as {
   capabilities: ApplicationPackageInput2["semantic"]["capabilities"];
 };
@@ -75,9 +76,10 @@ function lifetimeVariants(): { name: string; input: PackageGraphInput }[] {
 // Deliberately unchecked TEST producer: this tests hostile signed input at
 // the byte boundary, independently of pack's refusal before signing. The
 // literal topology has exactly one Site -> Room creation edge in every case.
-function signedGrowWire(input: PackageGraphInput) {
+function signedGrowWire(input: PackageGraphInput, omitComposition = false) {
   expect(input.definitions).toHaveLength(2);
   const source = packageInput(input), semantic = { ...source.semantic, creates: [{ from: input.entry, to: input.definitions[1]!.id }] };
+  if (omitComposition) for (const key of ["connections", "rights", "exercises", "groups", "order", "derivation", "parameters"]) Reflect.deleteProperty(semantic, key);
   const domain = (tag: string, value: unknown) => utf8(`${tag}\n${canonicalize(value)}`);
   const semanticId = digestBytes(domain("dap-application-semantics-2", semantic));
   const presentation = { ...source.presentation, semantic: semanticId };
@@ -88,6 +90,35 @@ function signedGrowWire(input: PackageGraphInput) {
   const release = { manifest, sig };
   return { bytes: utf8(canonicalize({ v: 2, semantic, presentation, release })), release: digestBytes(domain("dap-application-release-2", release)) };
 }
+
+// The only earlier-shape exception is the already published Grow release.
+// No operator key, trust mutation, new signing or network access is involved.
+test("published consumption preserves the exact old Grow packet while new pack and validation require composition", async () => {
+  const bytes = new Uint8Array(readFileSync(new URL("../../../examples/grow/demo/application.dap.json", import.meta.url)));
+  const published = readPublishedApplicationPackage2(bytes, DEMO_RELEASE);
+  expect(published.bytes).toEqual(bytes);
+  expect(published.ids.release).toBe(DEMO_RELEASE);
+  expect(published.package.release.manifest.publisher).toBe(DEMO_PUBLISHER);
+  expect(Object.keys(published.package.semantic).sort()).toEqual(["capabilities", "creates", "definitions", "entry", "host", "predecessor", "projections", "roles", "v"]);
+  expect(readPublishedApplicationPackage2(bytes, null).ids).toEqual(published.ids);
+  expect(readPublishedApplicationReleaseProof2(published.package.semantic, published.package.release, DEMO_RELEASE))
+    .toEqual({ semantic: published.package.semantic, release: published.package.release, ids: published.ids });
+  expect(() => readApplicationPackage2(bytes, DEMO_RELEASE)).toThrow("application-package-invalid");
+  expect(validatePackage(bytes, PROPOSED_BOUNDS, RULE_PROFILES, {}, DEMO_RELEASE)).toMatchObject({ ok: false, kind: "codec", reason: "invalid" });
+  expect(() => readPublishedApplicationPackage2(bytes, digestBytes(utf8("another release")))).toThrow("application-package-integrity");
+  const absent = packageInput(grow()); Reflect.deleteProperty(absent.semantic, "connections");
+  let signatures = 0;
+  await expect(packApplication2(absent, { key: keys.rita.key, sign: bytes => { signatures++; return sign(keys.rita.secret, bytes); } }))
+    .rejects.toThrow("application-package-invalid");
+  expect(signatures).toBe(0);
+  const unrelated = signedGrowWire(grow(), true);
+  expect(validatePackage(unrelated.bytes, PROPOSED_BOUNDS, RULE_PROFILES, {}, unrelated.release)).toMatchObject({ ok: false, kind: "codec", reason: "invalid" });
+  expect(() => readPublishedApplicationPackage2(unrelated.bytes, unrelated.release)).toThrow("application-package-invalid");
+  const unproved = signedGrowWire(grow(parent => { parent.receives["room-summary"]!.copies = 2; }));
+  expect(() => readPublishedApplicationPackage2(unproved.bytes, unproved.release)).toThrow(ApplicationPackageValidationError);
+  const complete = signedGrowWire(grow());
+  expect(readPublishedApplicationPackage2(complete.bytes, complete.release).ids).toEqual(readApplicationPackage2(complete.bytes, complete.release).ids);
+});
 
 test("Grow's three retained child slots prove three lifetime relation keys, rather than live maxima alone", async () => {
   const input = grow(), checked = checkPackageGraph(input);

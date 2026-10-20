@@ -606,3 +606,103 @@ compiler projects also pass naturally in
 `/tmp/p1-integrated-focused-v4-20261020*`. These compile the merged native
 sender-pin path but do not execute it. Source remains distinct from the
 pending production format transition and from a native runtime witness.
+
+## Bounded published-release consumption, 20 October
+
+Planner decision `b966ef3f`, ratified `48471bbb`, selects the explicit
+earlier-v2 reader boundary. The strict pack input now requires all seven
+composition members. The byte packer fills none in; the source reader
+requires them before reading definitions or assets. Counter and Lending
+sources and the affected TEST pack fixtures now state their empty places
+explicitly. Lending's existing outside connection is preserved. V1
+fixtures keep their original semantic shape by excluding only the new
+composition places before calling the unchanged v1 codec.
+
+`readPublishedApplicationPackage2` and its proof counterpart select the
+earlier nine-key semantic shape only for the full existing demo release
+`71e10ca9` and its exact public publisher. Every full-composition shape
+still uses all strict graph refusals. Both branches check the original
+canonical bytes, hashes, signature, closure, projections and presentation;
+the earlier branch invents no composition data. Pack and the public
+`validatePackage` remain strict. Published consumption is used by the
+existing host, client install, native install/projection proof, generic
+view, local replay and simulator consumers. The host-side common type
+does not falsely promise composition members on an earlier packet; new
+source authoring retains its stronger return type.
+
+The simulator's exact published Site/Room pins are selected by the same
+full release and publisher. Its ordinary current-source comparison stays
+in place for other releases, including TEST packages. This preserves the
+existing signed demo while P1's maintained declarations change metadata.
+The packet and `demo-release.ts` keep their actual Main bytes. Retirement
+requires a separately reviewed replacement release/trust row and an
+installed-room upgrade when planner commissions them. No actual publisher
+key is read or used; no deployment, activation or hosted completion occurs.
+
+Six owning test compiler projects pass. The first pass correctly catches
+the affected TEST inputs' omitted composition; exact inputs are retained
+in `/tmp/p1-published-boundary-compiler-v1-input-20261020`. The corrected
+compiler results are `...focused-v2-20261020*`. That wrapper's two Vitest
+commands use the wrong working directory and find no files: these are
+startup failures, not passing tests. Corrected package-directory commands
+in `...cases-v3-20261020*` naturally pass five bytes cases and eleven graph
+cases. The graph boundary case verifies the actual committed demo bytes,
+strict pack/validation refusal with zero signatures, refusal of a valid
+TEST-signed earlier-shaped release and preservation of graph refusals for
+complete shapes.
+
+One targeted control removes only the exact publication-identity guard.
+The unchanged boundary case then fails with an assertion because the
+unrelated, correctly TEST-signed earlier shape is accepted. The baseline
+passes and exact source bytes are restored. The original control closes
+naturally zero with `distinguishes`; its evidence is
+`/tmp/p1-published-boundary-control-20261020*`. No sweep or whole-suite
+control is run.
+
+The first native run stops in Node capture because the old Counter source
+omits the newly required fields; no native case executes. After explicit
+source preparation, five native files run twelve cases: seven pass and
+five fail. The signed demo installs, but its simulator still compares
+against evolving maintained definition digests; three Device cases refuse
+the old standalone TEST fixture's unconnected receiver. These actual
+failures and input snapshots are retained in `...native-v4-20261020*` and
+`...native-v5-20261020*`. They are not gate passes.
+
+The standalone Device package now uses a separately named TEST definition
+that omits that unrelated receiver. The original pure-judgment/delivery
+fixture and all its handlers remain unchanged. Native install and local
+scenario cases use the package fixture's actual digest without removing
+an assertion. With that preparation and the exact published simulator
+pins, the two affected native files pass all five cases naturally in
+17.300439125 seconds wall / 19.319401 seconds child CPU
+(`...native-v7-20261020*`). The seven earlier passing cases remain a
+separate run; this is a composite, not one passing pipeline or a full gate.
+The owning CLI pack file separately passes all eleven cases, including
+refusal of omitted source composition before signing; original process
+10397 closes naturally zero (`...cli-pack-v6-20261020.log`).
+
+The private dependency pool guard recognizes the copied pinned 0.22.0
+bundle, hash `cd50d18adce92adb54a3f00410d646b2fe09b3f12c5b833c492bcf5857621b39`,
+without copying or patching it. These local checks read no frozen original
+and install nothing. Native tests retain their stated TEST Git/HTTP,
+clock, scheduler and owner-actor boundaries; they establish no provider,
+browser or hosted acceptance. Final current-Main incorporation, remaining
+owning checks, one ordinary gate, Source and complete review are still due.
+
+Follow-up `...consumers-v8-20261020*` passes all five selected compiler
+projects, four platform proof cases, seventeen MCP cases and the simulator
+release case. CLI scenarios pass ten cases and refuse the scripted device
+fixture's empty default-role map before execution. Its exact failed input
+is `/tmp/p1-published-boundary-cli-v8-input-20261020.ts`. That TEST package
+now declares `operator: ["command", "start"]`, matching the scenario's
+existing explicit actor actions; no production or native membership grant
+changes. Its selected unchanged scenario then naturally passes in
+`...cli-device-v9-20261020.log` (one pass, ten outside the explicit
+selection). The earlier ten cases are not rerun or merged into a claim
+that v8 passed. No whole gate has run at this cutover checkpoint.
+
+The archive-install consumer of the standalone Device TEST package also
+passes its two unchanged native cases naturally: 4.702404500 seconds wall,
+5.897221 seconds child CPU, original process 38627
+(`...archive-v10-20261020*`). This checks that consumer after its shared
+fixture changes; it repeats no whole suite.

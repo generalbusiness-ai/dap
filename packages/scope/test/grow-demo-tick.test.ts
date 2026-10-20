@@ -4,7 +4,7 @@
 import { env } from "cloudflare:test";
 import { expect, inject, test } from "vitest";
 import { b64url, canonicalize, isSeed, scopeIdOf, timeOf, unb64url } from "@generalbusiness/artroom-bytes";
-import { readApplicationPackage2 } from "@generalbusiness/artroom-bytes/application-v2";
+import { readPublishedApplicationPackage2 } from "@generalbusiness/artroom-bytes/application-v2";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT as C, platform } from "@generalbusiness/dap-platform";
 import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-mcp";
 import { invitationIssueFields, invitationRedemptionFields, requestSession, secretSigner, sessionRequest } from "@generalbusiness/artroom-client";
@@ -23,7 +23,7 @@ import type {} from "./support/maintained-applications.ts";
 async function fixture() {
   const captured = inject("maintainedApplications").growDemo, bytes = unb64url(captured.bytes);
   if (!bytes) throw Error("The separate TEST demo packet must be captured.");
-  const packet = readApplicationPackage2(bytes, captured.release), siteId = packet.package.semantic.entry;
+  const packet = readPublishedApplicationPackage2(bytes, captured.release), siteId = packet.package.semantic.entry;
   const roomId = packet.package.semantic.projections["grid"]!.definition;
   const { life, R, D, children } = await sessionRoom(C.register), [M, A, G] = children;
   if (!M || !A || !G) { life.release(); throw Error("The exact native siblings are required."); }

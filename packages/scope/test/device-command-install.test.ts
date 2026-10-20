@@ -14,7 +14,7 @@ import { CAPABILITY_CODE } from "../src/ports.ts";
 import { net } from "../src/testing.ts";
 import { SqliteStore } from "../src/sqlite.ts";
 import { deviceApplicationPacket } from "./support/device-application-fixture.ts";
-import { deviceCommandFixture } from "../../derive/test/fixtures-device-command.ts";
+import { devicePackageFixture as deviceCommandFixture } from "../../derive/test/fixtures-device-command.ts";
 import { outsideOf as hostOutside } from "../src/worker.ts";
 import { applicationResolverFixture } from "./support/application-fixture.ts";
 import { applicationHttpPeer } from "./support/application-http-peer.ts";

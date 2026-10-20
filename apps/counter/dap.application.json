@@ -584,5 +584,12 @@
   },
   "scenarios": [
     "apps/counter/scenarios/application.json"
-  ]
+  ],
+  "connections": [],
+  "rights": {},
+  "exercises": [],
+  "groups": [],
+  "order": [],
+  "derivation": {},
+  "parameters": {}
 }

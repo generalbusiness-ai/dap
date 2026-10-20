@@ -4,7 +4,7 @@
 import type { Bounds, Digest, KeyId } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isKeyId, isRecord, parseStrict, parseStrictBytes, utf8 } from "@generalbusiness/artroom-bytes";
 import { ApplicationPackageError, readApplicationPackage } from "@generalbusiness/artroom-bytes/application";
-import { readApplicationPackage2, type AnyPackedApplication } from "@generalbusiness/artroom-bytes/application-v2";
+import { readPublishedApplicationPackage2, type AnyPackedApplication } from "@generalbusiness/artroom-bytes/application-v2";
 import { validateDefinition } from "@generalbusiness/dap-derive";
 import { deviceApplicationRequirement, INSTALL_DEFINITION_BYTES, INSTALL_SEMANTIC_BYTES } from "@generalbusiness/dap-platform";
 import { admit, RuleEvalError, RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
@@ -45,7 +45,7 @@ export function readTrustedApplication(bytes: Uint8Array, release: Digest, trust
   catch { throw new ApplicationPackageError("invalid"); }
   let packet: AnyPackedApplication;
   if (version === 1) packet = readApplicationPackage(owned, release, { bytes: APPLICATION_HOST_PACKAGE_BYTES });
-  else if (version === 2) packet = readApplicationPackage2(owned, release, { bytes: APPLICATION_HOST_PACKAGE_BYTES });
+  else if (version === 2) packet = readPublishedApplicationPackage2(owned, release, { bytes: APPLICATION_HOST_PACKAGE_BYTES });
   else throw new ApplicationPackageError("invalid");
   if (packet.package.release.manifest.publisher !== allowed.publisher) return fail("untrusted-release");
   // Only the finite native device-command version is supported beside ordinary

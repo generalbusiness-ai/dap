@@ -3,7 +3,7 @@ import { DEVICE_APPLICATION_COHORT as D } from "./device-application-wire.ts";
  * declaration metadata, never authority, item data or a fallback to R2/Git. */
 import type { Digest, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize } from "@generalbusiness/artroom-bytes";
-import { readApplicationReleaseProof2, type ApplicationProjectionDeclaration } from "@generalbusiness/artroom-bytes/application-v2";
+import { readPublishedApplicationReleaseProof2, type ApplicationProjectionDeclaration } from "@generalbusiness/artroom-bytes/application-v2";
 import type { StateView } from "@generalbusiness/dap-derive";
 import { applicationInstallation } from "./application-install-reader.ts";
 import { APPLICATION_RELEASE_VALUE2, APPLICATION_SEMANTIC_VALUE2 } from "./application-install-v2.ts";
@@ -18,7 +18,7 @@ export function applicationProjectionDeclaration(state: StateView, named: string
     const semantic = value(APPLICATION_SEMANTIC_VALUE2.domain, installation.ids.semantic, APPLICATION_SEMANTIC_VALUE2.max);
     const release = value(APPLICATION_RELEASE_VALUE2.domain, installation.ids.release, APPLICATION_RELEASE_VALUE2.max);
     if (semantic === undefined || release === undefined) return null;
-    const proof = readApplicationReleaseProof2(semantic, release, installation.ids.release, { bytes: APPLICATION_SEMANTIC_VALUE2.max + APPLICATION_RELEASE_VALUE2.max });
+    const proof = readPublishedApplicationReleaseProof2(semantic, release, installation.ids.release, { bytes: APPLICATION_SEMANTIC_VALUE2.max + APPLICATION_RELEASE_VALUE2.max });
     if (canonicalize(proof.ids) !== canonicalize(installation.ids) || proof.semantic.entry !== installation.definition
       || proof.release.manifest.publisher !== state.item(item)?.values["publisher"] || !Object.hasOwn(proof.semantic.projections, name)) return null;
     const projection = proof.semantic.projections[name]!;
