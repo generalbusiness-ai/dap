@@ -248,12 +248,15 @@ The check puts each tracked file in one class. The first match wins:
 1. **record**: under `notes/`;
 2. **history**: under a `history/` directory of a package or application;
 3. **fixture**: under a `test/` directory, or named `*.test.*`;
-4. **active source**: every other file of a listed package or
-   application, and the root files that the manifest lists.
+4. **listed document**: a guide that the manifest lists, the generated
+   index `docs/current.md`, and the root files that the manifest lists;
+5. **active source**: every other file of a listed package or
+   application.
 
 It refuses:
 
-1. a tracked file in no class;
+1. a tracked file in no class, for example a file under `docs/` that
+   the manifest does not list;
 2. an import of a history home from any file except the home's own files,
    its `history/test/` files and its one entry module;
 3. a source file in a history home without the marker line, or a
@@ -263,10 +266,15 @@ It refuses:
 5. in active source only, a literal `platform:<name>@<n>` outside
    `packages/platform`;
 6. in active source only, a file name with a generation mark: `-v<n>`,
-   a lane generation such as `change3`, or `legacy`.
+   a lane generation such as `change3`, or `legacy`. The rule starts in
+   two parts. H6 turns it on for `packages/bytes` and
+   `packages/platform`, after it renames the install and codec files.
+   H7 turns it on for the lanes, after it renames `change3.ts` and
+   `digests3.ts`. Each slice passes every rule that it turns on.
 
 Examples. `notes/2026-10-05-x.md` names `platform:rules@4`: allowed, a
-record. `packages/scope/test/a.test.ts` names `platform:destination@3`:
+record. `docs/README.md` and `docs/current.md`: allowed, listed
+documents; rules 5 and 6 do not apply to them. `packages/scope/test/a.test.ts` names `platform:destination@3`:
 allowed, a fixture. `packages/scope/src/reads.ts` names
 `platform:destination@8`: refused by rule 5.
 `packages/platform/history/destination1.ts` without its marker: refused
@@ -307,7 +315,7 @@ did before the move.
 
 **Witness for data.** `packages/platform/test/versions.test.ts` holds a
 digest of each version's data (the `DIGESTS` table at
-`versions.test.ts:24`, checked at `:100-102`). A slice that moves code
+`versions.test.ts:24`, computed at `:102` and compared at `:103`). A slice that moves code
 to a history home leaves every digest unchanged.
 
 **Witness for behavior.** The data digest does not cover the code that
@@ -381,8 +389,8 @@ list is empty.
 | H3 | Active manifest, file classes, the gate check of 3.5 (rules 1 to 4), the generated index | builder | 2 days | H1, H2 |
 | H4 | Version questions replace the literal lists outside `packages/platform`. Each question answers for all 62 pins, and the lists that stop early today (`scope/src/reads.ts:219`, `apps/room/page/src/data.ts:461`, `cli/src/commands.ts:1523`, `replay/src/verify.ts:1671`) answer for the current pins, with native, CLI, page and replay acceptance on the current cohort. The behavior witness of section 4. Gate rule 5 | builder | 3 days | H3 |
 | H5 | Platform history home: every history pin, cohort and test moved; `CURRENT` and the CLI default; saved-plan recognition (3.7) with a saved-plan, restart and readback witness; current files without version numbers; data digests and behavior rows unchanged | builder | 3 days | H4 |
-| H6 | Install and bytes parallel forms (2.2): shared current code kept, the superseded codec to the bytes history home behind one dispatcher; the existing exact v1 and v2 packet and retained-input tests unchanged. Gate rule 6 | builder | 2 days | H5 |
-| H7 | Lane generation 1 and the lending service configuration to their history homes | builder | 1 day | H5, the layout note's room-host slice |
+| H6 | Install and bytes parallel forms (2.2): shared current code kept, the superseded codec to the bytes history home behind one dispatcher; the existing exact v1 and v2 packet and retained-input tests unchanged. Gate rule 6 for `packages/bytes` and `packages/platform` | builder | 2 days | H5 |
+| H7 | Lane generation 1 and the lending service configuration to their history homes; `change3.ts` and `digests3.ts` lose their suffix. Gate rule 6 for the lanes | builder | 1 day | H5, the layout note's room-host slice |
 | H8 | Deletion of history pins with empty user lists | builder | 1 day | section 5's answer |
 
 H1 and H2 go first. They need no compatibility decision, and they change
