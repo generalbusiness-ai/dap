@@ -5,7 +5,9 @@ import type { Display, PageKind } from "../src/views/types.ts";
 import { viewToolName } from "../src/views/names.ts";
 import { seriesPanel } from "./series.ts";
 import { SurfacePanels } from "./surface.ts";
+import { memberElement, memberStyleElement } from "./member.ts";
 import "./style.css";
+document.head.append(memberStyleElement());
 
 const root = document.querySelector<HTMLElement>("#card-root")!;
 const bridge = new AppBridge();
@@ -223,11 +225,12 @@ function render() {
     nav.append(button("← Back", back, "quiet")); root.append(nav);
   }
   const surface = surfaceOf(), data = card?.declared?.data ?? display.data;
+  if (display.members?.overflow) root.append(node("p", `${display.members.overflow} member reference${display.members.overflow === 1 ? " exceeds" : "s exceed"} the 32-member display limit.`, "notice"));
   if (surface && data) {
     try {
       const panel = surfaces.show(surface, data, async (name, items, scope) => {
         if (!busy && alive && display?.active) await openDeclared(surface.opens[name]!, items, scope ?? data.scope);
-      }, () => alive && !!display?.active && surfaceOf()?.screen === surface.screen && scopeKey(display.card?.declared?.scope ?? display.scope ?? display.data?.scope) === scopeKey(data.scope));
+      }, () => alive && !!display?.active && surfaceOf()?.screen === surface.screen && scopeKey(display.card?.declared?.scope ?? display.scope ?? display.data?.scope) === scopeKey(data.scope), display.members);
       panel.inert = busy || !display.active;
       root.append(panel);
     } catch (error) { root.append(node("p", error instanceof Error ? error.message : "The declared surface is unavailable.", "notice")); }
@@ -258,7 +261,13 @@ function render() {
     actor.append(glyph, document.createTextNode(` ${card.actor.name}${card.actor.controller ? ` · controlled by ${card.actor.controller}` : ""} · ${card.actor.kind}`));
     article.append(actor);
   }
-  if (card.declared?.actor !== null && card.declared?.actor !== undefined) article.append(node("p", `Member ${isMemberRef(card.declared.actor) ? card.declared.actor.member : JSON.stringify(card.declared.actor)}`, "actor"));
+  if (card.declared?.actor !== null && card.declared?.actor !== undefined) {
+    const actor = node("div", undefined, "declared-members");
+    const refs = isMemberRef(card.declared.actor) ? [card.declared.actor] : Array.isArray(card.declared.actor) ? card.declared.actor.filter(isMemberRef) : [];
+    for (const ref of refs) actor.append(memberElement(ref, display.members));
+    if (!refs.length) actor.textContent = "Member unavailable";
+    article.append(actor);
+  }
   article.append(node("p", card.summary, "summary"));
   if (display.status === "unavailable" && card.declared?.routed) {
     const evidence = node("details", undefined, "read-points");
@@ -272,7 +281,11 @@ function render() {
   }
   if (card.reasons.length && card.declared?.kind !== "log") {
     const reasons = node("ul", undefined, "reasons");
-    for (const reason of card.reasons) reasons.append(node("li", reason));
+    for (const [index, reason] of card.reasons.entries()) {
+      const memberFact = card.declared?.memberFacts?.[index], line = node("li", memberFact ? `${memberFact.label}: ` : reason);
+      for (const ref of memberFact?.refs ?? []) line.append(memberElement(ref, display.members));
+      reasons.append(line);
+    }
     article.append(reasons);
   }
   if (!summary) {
@@ -280,7 +293,11 @@ function render() {
       const section = node("section", undefined, "entry projected-entry");
       section.append(node("h2", `Entry ${row.entry.seq}: ${row.title}`), node("p", row.time, "muted"));
       if (row.summary) section.append(node("p", row.summary));
-      for (const fact of row.facts) section.append(node("p", fact));
+      for (const [index, fact] of row.facts.entries()) {
+        const memberFact = row.memberFacts?.[index], line = node("p", memberFact ? `${memberFact.label}: ` : fact);
+        for (const ref of memberFact?.refs ?? []) line.append(memberElement(ref, display.members));
+        section.append(line);
+      }
       article.append(section);
     }
     if (card.body) article.append(node(display.query.page === "diff" ? "pre" : "p", card.body, display.query.page === "diff" ? "diff" : "body"));

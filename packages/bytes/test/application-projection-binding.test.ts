@@ -68,3 +68,20 @@ test("fact-time binds only to an optionality-matched same-definition native fact
   native.items["alert"]!.refs["seen"]!.to = { type: "fact", under: "foreign", kind: ["touch"] };
   expect(() => bindApplicationProjection(input(), native)).toThrow(ApplicationProjectionError);
 });
+
+// Invariant: a signer projection names an exact local native fact slot,
+// never an arbitrary value, foreign fact or guessed current key identity.
+test("fact-signer binds only a matching member output to the local fact slot", () => {
+  const native = definition();
+  native.items["alert"]!.refs["seen"] = { fixed: false, required: false, to: { type: "fact", under: native.name, kind: ["touch"] } };
+  const field = { from: { kind: "fact-signer", name: "seen" }, of: { type: "member" }, nullable: true };
+  const input = (given: unknown = field) => ({ ...projection(native), sources: { alerts: { ...projection(native).sources.alerts, fields: { seenBy: given } } } });
+  expect(bindApplicationProjection(input(), native).sources["alerts"]!.fields["seenBy"]).toEqual(field);
+  native.items["alert"]!.refs["seen"]!.required = true;
+  expect(bindApplicationProjection(input(), native).sources["alerts"]!.fields["seenBy"]).toEqual(field);
+  expect(() => bindApplicationProjection(input({ ...field, of: { type: "time" } }), native)).toThrow(ApplicationProjectionError);
+  expect(() => bindApplicationProjection(input({ ...field, nullable: false }), native)).toThrow(ApplicationProjectionError);
+  expect(() => bindApplicationProjection(input({ ...field, from: { ...field.from, name: "parent" } }), native)).toThrow(ApplicationProjectionError);
+  native.items["alert"]!.refs["seen"]!.to = { type: "fact", under: "foreign", kind: ["touch"] };
+  expect(() => bindApplicationProjection(input(), native)).toThrow(ApplicationProjectionError);
+});

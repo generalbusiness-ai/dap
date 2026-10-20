@@ -36,6 +36,7 @@ import { ViewSessions } from "./views/session.ts";
 import { toolsForHost, viewTools } from "./views/tools.ts";
 import type { ViewSource } from "./views/types.ts";
 import { DeclaredViewSource } from "./views/declared.ts";
+import { readMembershipDisplay } from "./views/member-reads.ts";
 import type { ApplicationInstallation } from "@generalbusiness/artroom-bytes/application";
 
 export interface ServerPort {
@@ -220,6 +221,7 @@ export class McpService {
       now,
       installation: () => this.#declaredInstallation(item!),
       projection: async query => this.#reads.projection((await this.#applicationRoom()).membership, query),
+      members: scope => readMembershipDisplay(this.#reads, scope),
       viewer: async () => {
         const room = await this.#applicationRoom(), session = await this.#reads.session(room.membership);
         if (!session || session.claims.key !== this.key || canonicalize(session.claims.membership) !== canonicalize(room.membership)) return null;

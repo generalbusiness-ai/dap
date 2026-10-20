@@ -143,7 +143,7 @@ item revision. A reader can resolve that known position directly to its
 entry and hash; a refused, missing or unavailable lookup supplies no fact.
 Provisioning leaves the room and report slots null.
 
-## Fact timestamps and display ages
+## Fact timestamps, signers and display ages
 
 An item projection can select the recorded time of one native fact-ref slot:
 
@@ -167,6 +167,27 @@ projection head, within the source's existing budget. There is no journal
 window or foreign lookup. This relies on the owner's immutable metadata;
 it does not independently verify an entry body. The timestamp remains
 projected data and does not become a new native value or ref slot.
+
+An item can also select the member recorded as signing its named local fact:
+
+```json
+"lastProber": {
+  "from": { "kind": "fact-signer", "name": "lastProbe" },
+  "of": { "type": "member" },
+  "nullable": true
+}
+```
+
+The same native fact-slot and scope rules apply. A signer field must be
+nullable even when its native fact slot is required. This field uses the
+entry's recorded authority subject for its actor key. It never resolves a
+key through current membership. A missing fact, mismatched hash, absent
+recorded member or unavailable index gives null; the surface should say
+"Last prober unavailable". The rest of the item remains visible.
+The native owner writes this bounded metadata with new entries and removes
+it when the entry is deleted. Existing entries are not scanned or backfilled;
+their signer remains unavailable. Reads use the source's existing metadata
+budget, select no entry bodies, and require the same item visibility.
 
 A view fact can display a timestamp as an age:
 
@@ -207,8 +228,9 @@ A surface view names that resource, its projection and its permitted opens:
 The host validates projection names, source names, resource ownership and
 opening targets when it reads the package. A surface declares no acts.
 The kit retains its MCP connection, context reporting and native act
-dispatch. The surface receives the same projection object as the SDK and
-MCP read, including its native scope and head. It supplies no read adapter.
+dispatch. The surface receives the native projection, including its scope
+and head, with a member display table beside its rows. It supplies no read
+adapter. The table is display evidence; it grants no authority.
 
 ## Browser API
 
@@ -221,13 +243,35 @@ and inline styles in a shadow root. During script initialization,
 | --- | --- |
 | `root` | The resource's shadow root |
 | `signal` | An abort signal for resource teardown |
-| `onData(render)` | Registers one callback for cloned native projection data |
-| `open(name, items?)` | Opens a name in the view's `opens` map |
+| `onData(render)` | Registers one callback for cloned native projection data and `data.members` |
+| `member(ref)` | Returns the kit's identity and standing element for a full member reference |
+| `open(name, items?, scope?)` | Opens a name in the view's `opens` map, optionally at a full scope reference |
 
 The initialization property is removed after the scripts run. A resource
 keeps its API reference in a closure. It does not receive a signer, token
 or arbitrary tool callback. The integration assumes trusted package code.
 Hostile-code containment is outside this contract.
+
+The service resolves typed party and journal signer fields into
+`data.members.records`, keyed by the canonical full member reference.
+Membership incarnation is part of that key. The table holds at most 32
+distinct references, including controllers. `data.members.overflow` counts
+references beyond the limit, and the kit shows that count. A reference
+outside the table, or one the service cannot read, renders as Member
+unavailable with its full raw reference. The element never guesses a name.
+
+Use `surface.member(row.fields.lastProber)` for a projected member field.
+The kit shares its stylesheet with the shadow root and inherits the host's
+fonts and tokens. `onData` runs again when the display table changes, even
+when the native projection has not changed. The API offers no membership
+act or presence write. Member-record screens and their controls are the
+separate B2 milestone.
+
+Resolution uses one authenticated membership window of at most 100 member
+items, including final states, and one roster item. It follows no cursor.
+A member outside that window remains unavailable. A roster from another
+read head leaves action eligibility unknown. These limits do not turn the
+table into a complete membership list or admission evidence.
 
 ```html
 <p id="head"></p>

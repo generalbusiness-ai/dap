@@ -4,7 +4,7 @@
  * provider, deployed host, arbitrary package containment or browser runs. */
 import { env, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
-import { canonicalize, isSeed, scopeIdOf } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isSeed, scopeIdOf, textDigest } from "@generalbusiness/artroom-bytes";
 import { encodeApplicationProjectionQuery, readApplicationProjectionReply } from "@generalbusiness/artroom-bytes/application-v2";
 import { DOMAINS, ITEM_QUERY_BOUNDS, PROPOSED_BOUNDS, type ApplicationProjectionQuery, type ScopeRef } from "@generalbusiness/dap-contract";
 import { DECLARED_APPLICATION_COHORT as C } from "@generalbusiness/dap-platform";
@@ -25,6 +25,35 @@ import { ApplicationProjections } from "../src/applications/projection.ts";
 import { applicationDeclarationsIn } from "../src/applications/projection-source.ts";
 import { SqliteStore, type SqlValue } from "../src/sqlite.ts";
 import { authenticateSession, mintSession, readerOf, type Sessions } from "../src/sessions.ts";
+import { create } from "./support.ts";
+import { ItemQueryBudget } from "../src/item-query-budget.ts";
+import { applicationProjectionFactSigners } from "../src/applications/projection-fact-signers.ts";
+
+// Invariant: all 100 exact local fact references fit native SQLite's binding
+// limit, without entry bodies or more than the existing source allowance.
+// Authenticated remarks use the repository's TEST authority and clock.
+test("fact signer metadata reads 100 exact references on native SQLite", async () => {
+  const lane = await create();
+  for (let i = 0; i < 100; i++) await lane.did(rita, "remark", { on: 0, fields: { text: `TEST signer fact ${i}` } });
+  const head = await lane.head();
+  await lane.inside(state => {
+    const sql = state.storage.sql;
+    const refs = sql.exec("SELECT seq,hash FROM entry WHERE seq>0 ORDER BY seq LIMIT 100").toArray().map(row => ({ seq: row["seq"] as number, hash: row["hash"] as `sha256:${string}` }));
+    expect(refs).toHaveLength(100);
+    const reader = { exec(query: string, ...args: SqlValue[]) {
+      expect(query).not.toMatch(/\bbytes\b/);
+      return sql.exec(query, ...args);
+    } };
+    const frame = { scope: { at: lane.at, head } } as Parameters<typeof applicationProjectionFactSigners>[1];
+    const budget = new ItemQueryBudget("session", () => true);
+    let result: ReturnType<typeof applicationProjectionFactSigners> = null, failure: unknown = null;
+    try { result = applicationProjectionFactSigners(reader, frame, refs, budget); }
+    catch (error) { failure = error; }
+    expect(failure, "100 exact references must fit native SQLite's binding limit").toBeNull();
+    expect(result?.entries.map(({ seq, hash }) => ({ seq, hash }))).toEqual(refs);
+    expect(budget.admitted().total).toMatchObject({ candidates: 100, metadata: 76800, calls: 2, bodies: 0, payloadBytes: 0 });
+  });
+}, 30000);
 
 test("native installed projection reads exact journal state and survives R2 deletion and eviction", async () => {
   const room = await sessionRoom(C.register), { life, R, D, children } = room, [M, A, G] = children;
@@ -118,6 +147,7 @@ test("native installed projection reads exact journal state and survives R2 dele
     expect(clock.status, clock.raw).toBe(200);
     expect(clock.value).toMatchObject({ ok: true, value: { at: first.value.value.at, sources: { board: [{ fields: {
       seenTime: activity.value.value.sources["events"]![0]!.time,
+      seenBy: { membership, member: actual.claims.member },
     } }] } } });
     // Fact timestamps expose item metadata, with the same item visibility.
     // A journal window still requires history, as checked above.
@@ -175,6 +205,46 @@ test("native installed projection reads exact journal state and survives R2 dele
     expect(finalAuthority.map(row => row.bodies)).toEqual([1, 1, first.value.value.at.seq + 1, first.value.value.at.seq + 1, 0, 1, 1, 1]);
     expect(finalAuthority.map(row => row.metadata)).toEqual([0, 0, 0, 0, 0, 1, 1, 1]);
     const board = first.value.value.sources["board"]![0]!;
+    const signerQuery = { ...query, projection: "signer" };
+    const signerFields = async () => {
+      const result = await read(signerQuery, noHistory);
+      expect(result.status, result.raw).toBe(200);
+      expect(result.value?.ok, result.raw).toBe(true);
+      return result.value?.ok ? result.value.value.sources["board"]![0]!.fields : null;
+    };
+    expect(await signerFields()).toEqual({ seenBy: { membership, member: actual.claims.member } });
+    // Actual SQLite retention/index faults, restored byte-for-byte before
+    // the original scenario continues. No history scan or key lookup is
+    // substituted for an absent exact fact or a legacy unindexed entry.
+    const seen = first.value.value.at;
+    const retained = await life.wait(() => runInDurableObject(app.object, (_instance, state) => ({
+      entry: state.storage.sql.exec("SELECT * FROM entry WHERE seq=?", seen.seq).toArray()[0]!,
+      signer: state.storage.sql.exec("SELECT * FROM entry_fact_signer WHERE seq=?", seen.seq).toArray()[0]!,
+      item: state.storage.sql.exec("SELECT record FROM item WHERE id=?", board.id).one()['record'] as string,
+    })));
+    try {
+      await life.wait(() => runInDurableObject(app.object, (_instance, state) => state.storage.sql.exec("DELETE FROM entry_fact_signer WHERE seq=?", seen.seq).toArray()));
+      await life.wait(() => app.restart());
+      expect(await signerFields()).toEqual({ seenBy: null });
+      await life.wait(() => runInDurableObject(app.object, (_instance, state) => state.storage.sql.exec("INSERT INTO entry_fact_signer (seq,hash,member) VALUES (?,?,?)", retained.signer['seq']!, retained.signer['hash']!, retained.signer['member']!).toArray()));
+      const altered = JSON.parse(retained.item); altered.refs.seen = { at: query.scope, seq: seen.seq, hash: textDigest("PUBLIC TEST changed probe fact hash") };
+      await life.wait(() => runInDurableObject(app.object, (_instance, state) => state.storage.sql.exec("UPDATE item SET record=? WHERE id=?", canonicalize(altered), board.id).toArray()));
+      expect(await signerFields()).toEqual({ seenBy: null });
+      await life.wait(() => runInDurableObject(app.object, (_instance, state) => state.storage.sql.exec("UPDATE item SET record=? WHERE id=?", retained.item, board.id).toArray()));
+      await life.wait(() => runInDurableObject(app.object, (_instance, state) => {
+        state.storage.sql.exec("DELETE FROM entry WHERE seq=?", seen.seq).toArray();
+        expect(state.storage.sql.exec("SELECT seq FROM entry_fact_signer WHERE seq=?", seen.seq).toArray()).toEqual([]);
+      }));
+      expect(await signerFields()).toEqual({ seenBy: null });
+    } finally {
+      await life.wait(() => runInDurableObject(app.object, (_instance, state) => state.storage.transactionSync(() => {
+        state.storage.sql.exec("UPDATE item SET record=? WHERE id=?", retained.item, board.id).toArray();
+        const e = retained.entry, s = retained.signer;
+        state.storage.sql.exec("INSERT OR REPLACE INTO entry (seq,hash,time,bytes,size,actor,idem,intent) VALUES (?,?,?,?,?,?,?,?)", e['seq']!, e['hash']!, e['time']!, e['bytes']!, e['size']!, e['actor']!, e['idem']!, e['intent']!).toArray();
+        state.storage.sql.exec("INSERT OR REPLACE INTO entry_fact_signer (seq,hash,member) VALUES (?,?,?)", s['seq']!, s['hash']!, s['member']!).toArray();
+      })));
+    }
+    expect(await signerFields()).toEqual({ seenBy: { membership, member: actual.claims.member } });
     await life.wait(() => app.did(rita, "reset", { on: board.id, expected: { on: board.revision }, fields: { generation: 1 } }));
     const updated = await read(); expect(updated.status, updated.raw).toBe(200); if (!updated.value?.ok) return;
     expect(updated.value.value.sources["board"]![0]!.revision).toBe(board.revision + 1);

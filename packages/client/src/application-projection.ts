@@ -34,6 +34,7 @@ export function applicationItemSnapshot(declaration: ApplicationReadProjection, 
         // A timestamp resolved from a fact is derived read data, not a new
         // native value/ref slot available to subject or guard resolution.
         if (field.from.kind === "fact-time") { if (value !== null && timeMs(value) === null) return fail(); continue; }
+        if (field.from.kind === "fact-signer") { if (value !== null && !isMemberRef(value)) return fail(); continue; }
         const slots = groups[field.from.kind] as Record<string, FieldValue | null>;
         if (Object.hasOwn(slots, field.from.name) && canonicalize(slots[field.from.name]) !== canonicalize(value)) return fail();
         if (field.from.kind === "party" && value !== null && !isMemberRef(value) && !(Array.isArray(value) && value.every(isMemberRef))) return fail();
