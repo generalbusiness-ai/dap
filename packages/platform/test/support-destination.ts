@@ -35,12 +35,13 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { DeclaredDefinition, Entry, Evidence, FactRef, FieldValue, Input, MemberObservation, HoldersObservation, Observation, ObservationUse, OperationId, Request, RulesObservation, ScopeRef, Seed, Send, Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalize, factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/artroom-bytes";
 import { PROFILES, clockOf, contentStates, valueDigest, outcomeValueDomains, judgeDelivery, judgeGenesis, settleOutcome, validateDefinition } from "@generalbusiness/dap-derive";
-import type { ActJudgment, Fetched, Judgment, OutcomeJudgment, Observing, PlatformRules, Source, ValidDefinition } from "@generalbusiness/dap-derive";
+import type { ActJudgment, Fetched, Judgment, OutcomeJudgment, Observing, PlatformRules, Source } from "@generalbusiness/dap-derive";
 import { Ledger, Scope, T0, creation as creationRequest, d, keys, laneDefinition, sent, t, type Actor, type Context, type Over } from "@generalbusiness/dap-derive/testing";
 import { DESTINATION, DESTINATION_KINDS, destination2, destinationReceipt, destinationRules2, destinationRulesWith, type LaneRead } from "../src/destination.ts";
 import { firstExtents } from "../src/extents.ts";
 import { rulesScope } from "../src/rules-scope.ts";
 import type { JudgeEvidence, ReservationRead } from "../src/reservation.ts";
+import { checkedDefinition as checked, written } from "./fixtures.ts";
 
 export const { rita, una } = keys;
 /** Three commits and a tree, as text: the first head, an integration commit, a commit that another writer made, and the integration commit's tree. */
@@ -97,10 +98,6 @@ export const reading = (at: Timestamp, over: Partial<ReservationRead> = {}): Res
  */
 export type Hand = Pick<ReservationRead, "merger" | "rules" | "manifest" | "verdicts" | "checks">;
 
-const checked = (result: ReturnType<typeof validateDefinition>): ValidDefinition => {
-  if (!result.ok) throw new Error(`a definition of test support is refused: ${JSON.stringify(result.problems)}`);
-  return result.definition;
-};
 /** The destination's data, validated as a runtime validates it. */
 export const destinationDefinition = checked(validateDefinition(JSON.parse(JSON.stringify(destination2)), PROPOSED_BOUNDS, PROFILES, { platform: true, outcomeValues: outcomeValueDomains(destination2, destinationRules2) }));
 
@@ -412,9 +409,4 @@ export class Branch extends Ledger {
     const { effects, seq } = this.last;
     return effects.flatMap((effect): [string, number, boolean][] => (effect.effect === "operation" ? [[effect.kind, effect.attempts, (this.state.operation(`${seq}:${effect.k}`)?.attempts.length ?? 0) === 1]] : []));
   }
-}
-
-function written(judgment: Judgment): Extract<Judgment, { result: "write" }>["draft"] {
-  if (judgment.result !== "write") throw new Error(`not written: ${JSON.stringify(judgment)}`);
-  return judgment.draft;
 }
