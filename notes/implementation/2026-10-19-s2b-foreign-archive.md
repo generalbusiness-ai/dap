@@ -1,563 +1,205 @@
-# S2b: foreign archive inputs
-
-Request `c8c6ff6b6277fd103c30f80d0b76fd40a60ca8bb`, promise
-`ea3d761900e434f096adbb83e46ff1af3a86fe1f`. Current development incorporates
-actual reviewed Main `13193f31` in the separate owned worktree
-`/tmp/artroom-builder-s2b-main-integration-20261020`, including K1, K2 and
-the Grow public host link. Earlier merge `18e15a75` incorporated Main
-`8aad37bb` with required G5a and S2a landings. The integrated metadata,
-foreign-copy and installed-scope checks pass. The installed witnesses now
-use actual Membership8 archive cohorts and native late directory binding;
-the maintained Grow Site and Room include a real DeviceCommand record and
-an explicit TEST owner answer. Policies and source configuration remain
-A2/A3 fixtures. No full gate, review, landing, provider action, deployment
-or production admission/consent is claimed at this checkpoint.
-
-The adopted S2 split `75060e2d` gives S2a the room binding and manifest
-requirement. S2b owes foreign-source privacy metadata, the reviewed policy
-configuration path, and export of an installed application's scopes,
-including genesis position zero when binding happens later. The A2/A3
-fixture boundary remains. A0b production admission and consent are separate.
-
-## Initial refusal boundaries
-
-Before this slice, copied entries refused at several interfaces. The table
-records that starting point. Removing `uses != 0` alone cannot deliver it.
-
-| Interface | Current boundary |
-|---|---|
-| [Privacy metadata](../../packages/scope/src/archive-privacy.ts) | The selected local prefix is classified without returning entry or retained payload bodies. Any foreign use refuses `unsupported-foreign-copy`. Operation owners, record kinds, preparation steps and custom domains are checked against finite support metadata. |
-| [Inventory](../../packages/scope/src/archive-inventory.ts) | Every local inline class needs explicit reviewed coverage before body planning. Delivery planning that needs an exact `under` selection refuses. Definition closures are classified before selecting rule, snapshot or value payloads. |
-| [Retained reader](../../packages/scope/src/archive-retained.ts) | Entry copies refuse before retained-body fetch. Other admitted kinds retain canonical, domain, digest, size and budget checks. |
-| [Immutable input selection](../../packages/scope/src/archive-input.ts) | An entry-copy key is rejected at construction. Restart reads only the marked selection; it does not select against current retention. |
-| [Git selection](../../packages/git/src/journal-selection.ts) | The path/wire grammar can name an entry copy, but current native selection refuses it. Parsing a parent key grants no export permission. |
-| [Git layout](../../packages/git/src/journal-layout.ts) | Selected entry copies refuse before input reads. Other selected inputs undergo exact bytes and canonical digest checks. |
-
-The existing journal reader already parses and hashes entry-copy files.
-That format support is separate from native selection or privacy admission.
-The journal manifest and retained paths therefore need examination before
-choosing any new format; a format change is not assumed.
-
-## Adopted identity and policy boundary
-
-`core.used` retains each selected foreign entry's canonical bytes and its
-producer name. `retained_input.under` is that name, not an exact definition
-digest, native birth proof or permission to export. Receiver aliases are
-transient; `receiver-facts.ts` preserves the original producer name. This
-is useful handler metadata and cannot be promoted into stronger provenance.
-
-A non-genesis foreign entry does not carry its producer's seed. The
-implementation must obtain exact producer scope/incarnation and pin
-metadata through an explicit trusted configuration or verified native birth
-path before choosing its reviewed policy. Missing or conflicting provenance
-must refuse. A declaration digest in an allowlist, an `under` string, or a
-caller-supplied owner table alone is insufficient coverage of inline signed
-fields, founding claims, outcome evidence and custom domains.
-
-The existing inventory is one synchronous, caller-owned transaction frame.
-Any asynchronous native birth work belongs before that frame, with bounded
-owned metadata and explicit provenance; it cannot become an unbounded read
-inside selection. The final choice must preserve scope/incarnation binding
-and the existing final pin/cutoff fence. No new policy certificate, request
-parameter, public read bypass or production credential is proposed here.
-
-Planner report `b5584b262c2a9eb2fed7cb79c81758f143d4c24a`, adopted as
-`e63673f7b5a0e2739120a4b3deb549ed34056923`, answers decision request
-`992b2b650b1f929274a50bc080874a0070513ddb`. The fixture configuration
-route is approved with these fixed points:
-
-1. Read the producer's exact ScopeRef from the retained copy's own canonical
-   entry header through bounded metadata. A producer name, alias, digest
-   allowlist, fixture tag or owner table supplies neither identity nor
-   privacy coverage.
-2. Supply an immutable, bounded ScopeRef-to-pin/declaration map through an
-   explicitly fixture-named configuration port before the synchronous
-   inventory frame opens. The fixture builds it from actual installed-graph
-   native births at genesis 0 read through the existing reader. Record the
-   bound and provenance at the call site. Persisting provenance at retention
-   time is outside S2b; it remains an A0b open question.
-3. Keep reviewed policy separate, keyed by pin and covering every inline
-   class, owner, record, preparation step and custom domain. Join every
-   direct copy header to its pin and classify every selected local and
-   foreign class before fetching any copied, value, rule or snapshot body.
-   Missing identity, map entry or policy, or a conflict with a retained
-   genesis seed or retained declaration digest, refuses the whole prefix
-   with a named reason. Later body selection verifies canonical bytes, raw
-   content digest and the consumer's exact FactRef.
-4. Mark each foreign source's full ScopeRef and classified pin in the
-   immutable selection. Restart/rebuild checks the same pair and refuses a
-   changed configuration. Name that ScopeRef/pin policy basis in the archive
-   pass manifest. Keep the same pass budgets, one synchronous inventory
-   transaction and final scope/pin/cutoff fences. No foreign copy recursively
-   brings in its producer's other history.
-5. Actual native birth/setup are trusted fixture preparation under A2/A3,
-   not a public RPC, request-supplied policy, production certificate or
-   consent. Integrated export includes an installed application's late-bound
-   genesis 0 and structural readback through the existing reader. It proves
-   neither production admission nor complete offline foreign-history
-   verification. Incorporate actual reviewed G5a and S2a Main before the
-   final integration gate, and name that Main in the final note.
-
-The later G5 request `78fba9fc` puts the hosted demo ahead of S2b runtime,
-while S2a continues. This note records the adopted decision now; runtime
-work has not started and no pending approval is inferred from that priority.
-
-### A0b open question
-
-Whether production retention should persist independently verified exact
-source-pin provenance is a store/runtime and admission question for A0b.
-The fixture map is not a production provenance certificate or consent.
-
-## Verification plan
-
-Strengthen existing boundary witnesses where they expose the invariant:
-
-- An uncovered or unsupported foreign source in the last selected local
-  position refuses the whole prefix before any selected payload-body read.
-  Named unknown owners, capabilities, steps, custom domains and inline
-  classes remain refusals. Cover missing and mismatched producer provenance.
-- An explicitly covered source selects only the exact locally retained
-  copy named by the consumer. Validate its native entry shape, canonical
-  bytes, raw content digest and full fact binding; an alias cannot substitute
-  for any of these checks. Separate privacy classification from integrity,
-  authority and replay conclusions.
-- Every new metadata query, cache hit, definition closure and input read
-  spends the same finite pass budget. Overflow, timeout and incomplete
-  retention publish no partial selection. Detached texts keep their existing
-  omission rule; no recursive foreign-history traversal is implied.
-- After Mark, eviction/restart rebuilds the same commit from the same
-  immutable selection. New retention or a changed head cannot enlarge it.
-  Tampered or missing selected copies refuse rather than replan.
-- Use actual native install, Membership, Directory and application journals
-  for the integrated export witness. Bind after application genesis, export
-  from position zero, and inspect the resulting archive with the existing
-  reader. Label TEST Git, host, read and policy/provider ports. Export and
-  structural readback do not establish production permission or a complete
-  offline foreign-history verification result.
-
-No new tests have been added or run for this preparation. Final witnesses
-must state their actual boundaries; one owning gate and exact-head review
-remain required before landing.
-
-
-## Private dependency preparation
-
-An idle S2a dependency view was copied with APFS `cp -cR` into this
-checkout, retaining independent regular-file inodes and only internal
-relative links. No install ran and no manifest or lock changed. The
-copy audit covers 127 package.json files, including embedded subpackage
-metadata; 106 installed package versions match the lock. All missing
-lock entries are optional and also absent from the donor. This is no
-claim about every optional absence's cause or tarball integrity.
-
-Audit `/tmp/artroom-s2b-dependency-view-20261019.json`, SHA-256
-`787158d16647b8e8543229187c528f65ee8778838dced971a8009a19a4110a1b`.
-The locked-version and cache-cleanup receipt is
-`/tmp/artroom-s2b-dependency-versions-20261019.json`, SHA-256
-`1a45cd4019dda8b48bc6311e798b8a67ea97ef7f53928b224698039ec1d2b5de`.
-Six copied Vite cache directories were cleared before any execution.
-Lock and retained install stamp both equal
-`3546b5384c9245fb646c4f7c22cabde0f4351b05dfcec704d1bdeb170666361a`.
-The receipt retains two stopped validation attempts: the first tried an
-absent optional package; the second assumed every optional absence had
-platform metadata. The corrected audit records those absences explicitly.
-No test, build or dependency process ran during copying or cleanup. No
-S2b tests or runtime implementation have run yet.
-
-
-## Initial fixture source-identity implementation
-
-While G5 awaits actual reviewed G5a for its installed integration, the new
-archive-source-pins.ts prepares the adopted immutable fixture map. It takes
-bounded actual genesis 0 bytes/hash and exact declaration bytes from the
-fixture's existing native reader. It checks canonical entry bytes, seal
-hash, full scope/incarnation/kind, matching genesis incarnation, and the
-seed-derived scope ID. Digest pins require the exact declaration; native
-platform pins use finite registry data and their declared outcome domains.
-It owns frozen metadata and exposes no birth payload. A later get uses the
-full ScopeRef only and charges the pass even on a repeated lookup. The map
-itself grants no reviewed privacy coverage, production provenance or consent.
-It has not been wired into inventory, export, a driver or a public route.
-
-The focused case uses actual native creation/SQLite and an existing genesis
-read under TEST authority, clock and reader. It checks the owned map,
-unknown source, declaration/identity conflicts, repeated lookup cost, map
-count/lookup bounds and malformed input. Tampered configuration bytes are
-never inserted into the native journal. One allowed original process 33705
-ended 0: one file/one case, 34 ms tests, 4.06 s overall. The earlier sandbox run
-stopped at loopback EPERM before tests. Logs:
-`/tmp/artroom-s2b-source-pins-first-owning-20261019.log` and
-`/tmp/artroom-s2b-source-pins-allowed-owning-20261019.log`.
-
-A one-line seed-to-scope check bypass gives one pass to one unchanged
-boolean assertion failure, followed by exact source restoration; original
-process 51232 ends 0. The control log is
-`/tmp/artroom-s2b-source-seed-control-20261019.log`.
-A later extension adds named malformed-object/JSON refusals: one case
-passes, 32 ms tests/2.60 s overall, original 88646 ends 0 in
-`/tmp/artroom-s2b-source-pins-shape-owning-20261019.log`. Its compiler caught
-an index-signature narrowing in the inline shape check; an equivalent typed
-shape predicate fixes that. The corrected source/test compiler exits 0 in
-`/tmp/artroom-s2b-source-pins-shape-corrected-types-20261019.log`.
-The earlier compiler failure is retained. No whole gate or installed Grow
-export is claimed. Current reviewed Main 715e97f0 adds the planner's sprint
-report only; actual reviewed G5a/S2a Main incorporation remains required
-before final integration. Earlier preparation-only statements above are
-historical to this initial implementation checkpoint.
-
-## Shared and foreign metadata classification
-
-The local header/owner/record/step classifier is now shared in
-archive-entry-metadata.ts. archive-privacy.ts retains the exact default
-foreign-copy refusal when no fixture foreign classifier is supplied. The
-existing inventory/export driver still takes that default path. This stage
-has not enabled payload selection or export.
-
-archive-foreign.ts classifies only direct copied entries. It joins each
-selected local use to the retained copy's own full header, then to the
-immutable fixture pin map and a separate exact-pin reviewed policy. It
-checks inline class coverage, native support metadata, owner/step/record
-coverage and domains, and refuses legacy membership pins. A retained
-genesis copy must match the mapped genesis fact and seed pin/incarnation/
-kind. Source names and receiver aliases choose neither identity nor policy.
-The metadata descriptors name the exact fact/content/byte size and source
-pin; they fetch no nested foreign history. Copied JSON work reserves the
-same 64 full-entry equivalents before inspection; caches and metadata
-lookups spend the original pass allowance. New named source failures are
-foreign-source-unavailable and foreign-source-mismatch.
-
-After the first shared extraction, the compiler caught a moved domain set;
-restored it before the owning run. Three native files/15 cases pass,
-original 95861 exit 0, 309 ms tests/2.95 s overall:
-`/tmp/artroom-s2b-shared-metadata-owning-20261019.log`. Corrected compiler is
-`...shared-metadata-corrected-types...log`.
-
-The new two-case foreign witness initially used the simple TestScope
-fixture, whose resolver is deliberately scripted and has no peer value:
-both foreign acts correctly returned dependency-unavailable. No metadata
-assertion ran, and that first failure is retained in
-`/tmp/artroom-s2b-foreign-metadata-first-owning-20261019.log`. The corrected
-fixture selects the real namespace resolver for actual peer source reads;
-no foreign entry is invented. Genuine native assignment and genesis copies
-are retained through accepted acts. Their own producer name is deliberately
-the same as the receiver's, with a different exact pin. A body-read tripwire
-checks successful metadata admission, missing source/policy/class coverage
-and a conflicting retained genesis pin. The corruption case changes only
-the retained copy, never either native journal.
-
-Both cases pass, original 78947 exit 0, 120 ms tests/2.69 s overall, in
-`/tmp/artroom-s2b-foreign-namespace-owning-20261019.log`. Final source/test
-compiler passes in `...foreign-namespace-types...log`. The initial compiler
-also caught one unused type import before that witness ran. Scope/pin
-metadata and trusted fixture policy are still distinct from archive payload
-integrity, production permission and offline foreign-history verification.
-At that checkpoint inventory/body selection and immutable rebuild were
-still pending. The following checkpoint adds them. The actual installed
-application export still awaits reviewed G5a/S2a Main incorporation.
-
-## Direct-copy inventory, immutable rebuild and structural readback
-
-The optional `fixtureSources` configuration reaches inventory, planning,
-rebuild and the fixture driver. Without it the default privacy pass still
-refuses foreign uses. Every selected local and foreign inline class must
-pass metadata checks before any local entry or copied/rule/snapshot/value
-body read. The retained reader then verifies the copy's canonical bytes,
-raw digest, size, full producer ScopeRef, sequence and consumer FactRef.
-It checks a genesis copy against the configured pin. No copied entry's own
-dependencies are selected recursively.
-
-The immutable selection records `foreign: { fact, pin }` on each copied
-entry and a sorted, unique `foreignSources: [{ at, pin }]` basis. Rebuild
-joins every stored pair to the immutable fixture map before any SQL input
-read. Missing configuration returns `foreign-source-unavailable`; a
-different marked pair returns `foreign-source-mismatch`. This named rebuild
-refusal prevents the driver from reducing it to a generic retry. Reads
-after construction remain restricted to the marked positions and keys.
-
-The existing inventory/v1 manifest grammar now has an explicit optional,
-nonempty `foreignSources` extension. Local-only descriptions and manifests
-omit it. The new `foreign-use` selection consumer admits only entry-copy
-keys with exact source metadata. Layout binds every copy consumer to an
-actual direct use in its selected native entry, verifies copied bodies and
-preserves the appropriate source basis when checking an earlier parent.
-The cumulative manifest carries ScopeRef/pin pairs; private consumer facts,
-work counters and policy review strings remain in selection/configuration.
-This vocabulary/schema extension needs review with S2b. It supplies no new
-certificate or permission.
-
-The existing structural reader returns the descriptive source basis. For
-extended manifests it checks every direct use against the copied body,
-rejects missing/orphan source metadata and checks a copied genesis's own
-pin. Legacy manifests retain their existing read grammar. The replay
-archive data interface can carry the same descriptive basis; no replay
-judge, trust rule or foreign-history traversal changed.
-
-The native witness uses real assignment and genesis copies from the earlier
-fixture. It proves final-class policy refusal before any entry body,
-successful direct-copy selection, post-admission body tampering refusal,
-later-act/restart reads and missing/mismatched source configuration. In
-both SHA-1 and SHA-256 it persists a real native Mark, appends another act,
-evicts/restarts, reconstructs identical objects and reads the original
-cutoff through the existing structural reader. A changed consumer fact
-refuses before any retained body read. A mechanically altered manifest
-with freshly valid Git objects but a false source pin refuses at its real
-retained genesis. The graph is two native test scopes, not an installed
-application; grants, policy and map setup are explicit TEST fixtures.
-There is no provider send, production admission or complete offline replay
-claim.
-
-Checks, with every original process terminal before subsequent edits:
-
-- Native inventory/retained regression: original 69277 exit 0, three files,
-  18 cases, 3.07 s, `...foreign-inventory-owning...log`.
-- Native immutable-input regression: original 74099 exit 0, two files,
-  five cases, 2.77 s, `...foreign-input-owning...log`.
-- Native build/driver and Git layout/reader: original 17501 exit 0, five
-  files, 35 cases, 11.04 s, `...foreign-build-owning...log`.
-- Named rebuild refusal: original 61254 exit 0, five cases, 2.89 s,
-  `...foreign-rebuild-refusal-owning...log`.
-- Independent pin-corruption readback: original 92864 exit 0, two cases,
-  2.78 s, `...foreign-reader-pin-owning...log`.
-- One targeted control: original 41787 exit 0, one unchanged case passed;
-  disabling only foreign inline-class coverage made its final-genesis
-  refusal assertion fail. The helper restored the exact source. Full log:
-  `/tmp/artroom-s2b-foreign-final-class-control-20261019.log`.
-
-Logs above have prefix `/tmp/artroom-s2b-` and suffix `-20261019.log`.
-Source/test compilers pass for Scope, Git and Replay. The first driver
-compiler rejected an explicitly undefined optional configuration property;
-the corrected call omits that property when absent. Final compiler logs
-include `...foreign-reader-pin-types...log`, `...foreign-git-test-types...log`
-and `...foreign-replay-types...log`. No package or lockfile changed. These
-focused checks are not a combined gate or installed-application acceptance.
-
-The actual native alarm also preserves a named stop when the graph map is
-removed after Mark and eviction. Its first pass persists the real Mark;
-an explicit TEST provider returns no credential. After restart with the
-same reviewed policy but no source map, the alarm records
-`foreign-source-unavailable`, preserves the pending Mark, clears its wake,
-and makes no second mint or send. The native head is unchanged. Original
-28927 exits 0: one case, 102 ms tests/2.72 s overall, in
-`/tmp/artroom-s2b-foreign-alarm-owning-20261019.log`; its source/test compiler
-passes in `...foreign-alarm-types...log`. This is a real alarm/storage
-witness with a scripted host, not evidence of a provider adapter or token.
-
-## Installed native fixture preparation
-
-`archive-installed.test.ts` installs the existing signed TEST root/child
-package through the real MCP installer, native Rules/Directory/Membership,
-create/confirm dispatch and SQLite. Its root genuinely creates its child
-from the declared genesis form; neither birth, identity, source nor grant
-is handmade. The package peer, clock, scheduler and archive review policy
-remain explicit fixtures. The native membership issues the read session.
-That session reads each installed journal and every source birth at zero
-through the existing HTTP reader before inventory opens. The source map
-owns at most `ARCHIVE_SOURCE_PINS` (64) unique full references, built only
-from the actually used graph sources. Policy remains a separate exact-pin
-table over validated declarations and finite actual native owner rules.
-
-Both root and child perform later native `bump` acts before archive
-configuration is supplied. Planning includes their original genesis zero
-and all entries through the issued-session cutoff. The existing structural
-reader opens the resulting SHA-1 object sets, returns the source basis and
-matches every entry byte against the native session read. This is late
-fixture configuration, with no provider or deployment. It does not replace
-the actual S2a directory binding, the G5 Grow graph or final integration on
-reviewed G5a/S2a Main. All existing pin refusals, including the exact
-membership cohort restriction, remain unchanged.
-
-The first compiler caught a millisecond clock passed where Mark needs a
-timestamp; `timeOf` supplies the existing representation. The first native
-run, original 26238 exit 1, stopped at the later `bump`: the root's child
-confirmation had already advanced its item revision. The corrected fixture
-reads that actual revision instead of assuming one. No archive assertion
-ran in that failed setup; its log is
-`/tmp/artroom-s2b-installed-first-owning-20261019.log`.
-The corrected native run, original 26093 exit 0, passes one case in 423 ms
-tests/3.08 s overall (`...installed-native-revision-owning...log`). Adding
-complete issued-history and structural-readback checks passes, original
-51627 exit 0, one case in 443 ms/3.10 s
-(`/tmp/artroom-s2b-installed-readback-owning-20261019.log`). Source/test
-compiler passes in `...installed-readback-types...log`. The case's explicit
-30 s functional allowance bounds its native installation and reads; no
-existing timeout was changed and no speed/stability claim follows.
-
-The direct-copy witness also extends an existing archive after a later
-native act introduces a second real producer. A new immutable source map
-preserves the old source's pair and adds the new birth. In both Git formats
-the cumulative archive names two sources while parent validation retains
-the parent's original single-source basis. Manual component confirmation
-stands in for host custody and writes no journal entry. Original 73312
-exit 0, two cases, 259 ms tests/2.87 s overall, in
-`/tmp/artroom-s2b-foreign-parent-basis-owning-20261019.log`; source/test
-compiler passes in `...foreign-parent-basis-types...log`.
-
-The foreign-copy path also preserves the credential-cohort exclusion. A
-real native Counting repository creates membership version 5 and accepts
-its `seat` act. A real namespace read lets a separate fixture consumer
-retain that fact through an accepted act. Actual native birth metadata and
-an explicit caller policy still cannot admit the excluded membership pin:
-inventory returns `unsupported-credential-cohort` before any local entry or
-retained payload body. Neither journal is edited. The host, clock, setup
-reader, consumer authority and proposed review policy are TEST fixtures;
-membership creation and the retained fact are native. Original 66352
-exit 0, one case, 189 ms tests/2.85 s overall, in
-`/tmp/artroom-s2b-foreign-legacy-owning-20261019.log`; source/test compiler
-passes in `...foreign-legacy-types...log`.
-
-## Shared declaration-node accounting
-
-Self-review found an omission in this development slice: foreign policy
-declarations spent lookup and byte work but did not spend a distinct node
-in inventory's existing aggregate declaration ledger. Inventory now shares
-its visited-digest set with foreign classification. A newly visited foreign
-declaration spends one node before declaration comparison and support
-classification; local closures and other sources using that declaration
-reuse the same distinct node. Repeated lookups and validation still spend
-their existing work. The source-map count and every pass ceiling are
-unchanged. This corrects accounting before review; it is not a Main or gate
-failure.
-
-The native case admits the receiver and producer under an exact two-node
-allowance, although it uses two copies of that producer. A one-node
-allowance refuses `limit` before any entry body. Extending to a second real
-producer of the same declaration still fits two nodes, including checked
-parent handling in both Git formats. The installed root/child readback and
-existing local inventory cases continue to pass.
-
-- Original 28804 exits 0: three files, 18 cases, 1.27 s tests/4.39 s overall,
-  `/tmp/artroom-s2b-foreign-shared-nodes-owning-20261019.log`.
-- Exact allowance witness, original 1725 exit 0: one case, 99 ms/2.91 s,
-  `...foreign-exact-nodes-owning...log`.
-- One targeted node control, original 81101 exit 0: one unchanged case
-  passes; skipping only the foreign node charge makes the actual one-node
-  refusal assertion fail with an admitted inventory. The helper restores
-  the exact source. Log: `...foreign-node-budget-control...log`.
-- Repeated declaration across two actual sources, original 95612 exit 0:
-  two cases, 273 ms/3.10 s, `...foreign-repeat-source-nodes-owning...log`.
-
-Source/test compiler passes in `...foreign-shared-nodes-types...log`.
-The unsubmitted review-conditions draft is
-`/tmp/artroom-review-s2b-draft-conditions-20261019.txt`. It grants no access
-and requests no review. Actual reviewed G5a/S2a Main, actual late directory
-binding and the final gate remain required.
-
-## Actual Main and late-bound Grow integration, 20 October
-
-The new integration starts from `d93cdd71` and merges actual Main
-`8aad37bb`. Its original merge naturally exits one in 0.265369959 seconds
-with one conflict, `archive-privacy.ts`. All three stages are retained in
-`/tmp/s2b-current-main-conflict-stages-20261020`. The resolution keeps S2b's
-shared local/foreign classifier and moves Main's complete, byte-exact
-`archiveSupportMetadata` function plus finite DeviceCommand record and
-preparation sets into that shared module. The public privacy exports stay
-available to Main's callers. Function SHA-256 is
-`61af7cfb298a1a1f38d47e7a6a849f993e78611a24501cceae8fefdc3c3dc27a`.
-No pass budget, credential-cohort refusal or privacy policy is widened.
-The raw merge, closure and exact resolution are
-`/tmp/s2b-integrate-current-main-20261020*` and
-`/tmp/s2b-current-main-conflict-resolution-20261020.json`.
-
-The current K1 finite dependency grant supplies an owned physical copy of
-5,499 regular leaves and 31 contained links. Bytes, hashes, modes and
-distinct inodes are checked; all original leaves are rechecked unchanged.
-Only the owned Vitest result cache is removed. The copied lock stamp
-matches this branch's unchanged lock. No package is installed. Receipt:
-`/tmp/s2b-private-dependency-copy-20261020.json`.
-
-Original `90494` naturally exits zero: Git, replay and Scope owning
-compiler commands pass, followed by five native archive files and all
-24 cases. These cover source pins, foreign metadata, local inventory,
-privacy including DeviceCommand, and the initial installed application.
-The native phase takes 6.257504833 seconds wall and 6.463397 CPU. Raw output
-and closure are `/tmp/s2b-integrated-focused-20261020*`.
-
-The installed witness now covers two actual native realms: Register15 /
-Directory14 and the combined Register17 / Directory16, both with
-Membership8. The first installs the existing root/child TEST application.
-The second installs the maintained Grow TEST packet through MCP custody,
-genuinely creates Site and Room, commissions a zone and heater, records a
-heater command and accepts a TEST owner answer. No physical device runs.
-
-Both scopes' genesis and later acts exist before the Directory's actual
-`bind-archive` act. The bind changes no Site/Room or root/child summary or
-journal head. An issued Membership8 session then reads each complete
-native history from genesis zero. Before archive inventory opens, that
-reader supplies the exact native births for the bounded source map.
-Separate exact-pin TEST policies use actual declarations and native owner
-rules; Grow's DeviceCommand support is the finite record/answer metadata
-already reviewed on Main. Planning includes the original genesis and all
-entries through the session head. The structural SHA-1 reader opens the
-objects and matches every entry byte and head to the native session read.
-This is structural readback, not a replay or provider claim. The direct
-membership-copy exclusion remains unchanged.
-
-Original `3161` naturally exits one: the generic Membership8 binding and
-export passes, but Grow stops at the TEST owner reply's missing
-idempotency key, before archive planning. Original `61795` naturally exits
-one again at preparation acceptance; the fixture used `message` where the
-real answer schema uses `description`. The pre-correction file is retained
-as `/tmp/s2b-installed-grow-v3-input-20261020.ts`. No production guard or
-acceptance assertion is weakened. Correcting those two fixture fields
-makes original `44739` naturally exit zero, both cases passing in
-5.769465625 seconds wall / 6.969375 CPU for the native phase. The logs and
-natural closures are `/tmp/s2b-integrated-focused-v2-20261020*`, `...v3...`
-and `...v4...`. Earlier failures remain failures; these are separate runs,
-not one passing gate.
-
-The final Grow-specific selection also asserts that its issued native
-history contains both the DeviceCommand `command` record effect and the
-`answer` preparation entry. Original `37534` naturally exits zero: the
-changed Grow case passes, while the other parameter case is outside the
-explicit `-t` selection and had already passed in v4. Scope's owning
-compiler projects pass. Native wall / CPU are 5.278303250 / 6.452376 seconds.
-Raw output and closure are `/tmp/s2b-integrated-focused-v5-20261020*`.
-A full gate remains due once before Source review. The checkpoint stays
-mutable while the builder returns to B1's now-decided source boundary.
-
-
-## Current K1, K2 and host-link Main incorporation
-
-The original merge of Main `13193f31`, tree `2bee1aff`, into checkpoint
-`bb90233f` closes naturally one in 1.004551666 seconds: five conflicts,
-fifteen original stages. Exact argv/log/closure are
-`/tmp/s2b-integrate-k1-main-20261020*`; all stages are retained under
-`/tmp/s2b-k1-main-conflict-stages-20261020`. The helper's old pending-audit
-caption is historical: independent K1 native audit was already adopted as
-`2aa5c91b` before this merge. This changes no receiving Main ref.
-
-Resolution retains S2b's local/foreign metadata, exact source map and copy
-selection. It incorporates Main's `decodeGitText`, `natural`, shared
-`stopArchivePrefix` and `sqlJsonText`. The new entry-metadata module keeps
-its public text helper as an alias of the shared SQL helper. Both new
-foreign/source-pin readers also use Main's shared canonical JSON equality.
-No budget, pin, credential-cohort exclusion, permission or test deadline
-changes. Resolution and subsequent import ordering are recorded in
-`/tmp/s2b-k1-main-conflict-resolution-20261020.json` and
-`/tmp/s2b-k1-main-import-order-20261020.json`.
-
-The first focused process naturally fails at the helper guard: the two
-new readers still defined canonical equality locally. No compiler, Node
-or native phase ran. Its exact source inventory, diagnostic and closure
-remain `/tmp/s2b-k1-main-focused-20261020*`; the two failed inputs are saved
-under `/tmp/s2b-k1-main-helper-v1-input-20261020`. The correction uses the
-existing shared implementation with identical canonical-refusal semantics.
-Receipt: `/tmp/s2b-k1-main-shared-equality-correction-20261020.json`.
-
-The separate corrected process closes naturally zero. The helper guard,
-all Git/Replay/Scope compiler configurations, two Node files with twelve
-cases and seven native files with thirty-two cases pass. Native checks
-include source pins, foreign classification, input/retained/inventory/
-privacy boundaries and both actual late-bound Membership8 application
-exports. Native wall and child CPU are 7.471352959 and 8.803412 seconds.
-All 2,575 tracked files keep their bytes and modes throughout this run;
-the lock stamp stays exact and zero packages are installed. The warm
-owned dependency copy runs on shared macOS 27.0.1 arm64, Node 26.12.0,
-initial load 2.65/3.17/3.04; no exclusive-host claim. Closed raw argv,
-logs, input inventory and natural result are
-`/tmp/s2b-k1-main-focused-v2-20261020*`.
-
-One ordinary gate and complete exact-head Source review remain due.
-Earlier failed runs remain failed; separate focused phases are not one
-passing gate. No production admission, consent, provider, deployment or
-offline replay result follows from these fixture exports.
+# S2b: bounded foreign archive inputs
+
+Request `c8c6ff6b6277fd103c30f80d0b76fd40a60ca8bb`, builder promise
+`ea3d761900e434f096adbb83e46ff1af3a86fe1f`.
+
+This implementation selects explicitly covered, directly retained foreign
+entries in an archive without traversing their producers' other history.
+It includes actual late-bound installed application journals from genesis
+zero. Its one ordinary gate passes at `05224c900f50907154df444e44f4d34c4f8b8ddb`,
+tree `cc3bb6456c41ef6cf6925bff50ec01356d9b1b57`. This final change updates
+only this report. Complete exact-head Source review and native landing
+audits remain due. Production admission and consent remain A0b work.
+
+## Identity and admission
+
+Adopted planner decision `b5584b26` / builder adoption `e63673f7` permits
+the explicitly fixture-named configuration route under A2/A3:
+
+- Each direct copy supplies its own canonical producer ScopeRef, sequence
+  and hash. Its recorded producer name or a receiver alias supplies no pin
+  or export permission.
+- Before the synchronous inventory frame opens, the fixture supplies an
+  immutable map of at most 64 full ScopeRefs to exact pins/declarations.
+  It constructs that map from actual native genesis-zero reads through
+  the existing reader. Source-ID derivation, canonical bytes, genesis
+  seal, incarnation, kind and declaration are checked.
+- A separate, exact-pin reviewed policy covers every local and foreign
+  inline class, operation owner, record kind, preparation step and domain.
+  A map, owner table, allowlisted digest or declaration alone grants no
+  coverage. No dynamic package is loaded for classification.
+- Every selected local position and direct copy passes bounded metadata
+  classification before any selected entry/copy/value/rule/snapshot body
+  is fetched. Missing or conflicting identity, map or policy refuses the
+  whole prefix. Default callers without fixture configuration still
+  refuse foreign uses.
+- All metadata reads, cache lookups, input reads and declaration nodes
+  spend the original aggregate pass allowance. Foreign declarations share
+  inventory's distinct-node ledger with local closures. The original
+  synchronous frame, scope/pin/cutoff fences and timeout/overflow refusals
+  remain. Copies reserve the same 64 full-entry JSON-work equivalents.
+
+Native metadata extraction in `archive-entry-metadata.ts` serves both
+local entries and retained copies. No body, recursive history, policy
+certificate, public configuration RPC or production birth proof is added.
+DeviceCommand coverage remains Main's finite `command` record and `answer`
+preparation support. Unknown owners, steps, domains and classes refuse.
+
+The direct credential-membership exclusion is unchanged: Membership5/7/8
+copies refuse, and only the preexisting Membership6 archive cohort remains
+admissible through that boundary. The installed Membership8 witnesses
+export application data scopes below a Directory; they do not export a
+credential-membership body or widen that exclusion.
+
+## Exact selection and rebuild
+
+After metadata admission, the retained reader verifies each selected
+copy's canonical native entry, raw content digest, byte size and complete
+consumer FactRef. A retained genesis must also agree with its configured
+source pin. The consumer's named copy is selected; new retention cannot
+enlarge a marked archive and a copied entry does not recursively bring
+its own foreign dependencies.
+
+The immutable selection records each copy's fact and pin plus a sorted,
+unique `foreignSources` basis of full ScopeRef/pin pairs. Rebuild checks
+the same map and every marked pair before SQL input reads. Missing or
+changed configuration keeps the named `foreign-source-unavailable` or
+`foreign-source-mismatch` refusal; the alarm retains the original Mark and
+makes no replacement mint or send.
+
+The existing inventory/v1 manifest gains an optional nonempty
+`foreignSources` extension. Local-only descriptions omit it. The new
+`foreign-use` consumer names only exact entry copies. Layout verifies a
+consumer against an actual selected native use and preserves an earlier
+parent's original basis when a later pass adds a producer. The structural
+Git reader checks direct uses, bodies, source metadata and retained
+genesis pins, refusing missing or orphan metadata. Replay carries this
+descriptive basis without changing its judge or trust rules. Neither the
+manifest nor structural readback establishes complete offline history
+verification, access or consent.
+
+## Actual installed witnesses
+
+The installed cases use actual Rules, Directory, Membership8, MCP install
+custody, create/confirm dispatch, native journals and SQLite. One realm is
+Register15/Directory14 with a genuinely created TEST root and child. The
+other is Register17/Directory16 with the maintained Grow TEST package,
+genuinely created Site and Room, commissioned zone/heater, native
+DeviceCommand `command` record and accepted TEST owner `answer`. No
+physical device runs. Host, clock, scheduler, archive policy/configuration
+and owner answer are explicitly TEST boundaries.
+
+Both scopes' births and later acts precede the Directory's actual
+`bind-archive` act. Binding changes no application summary or journal
+head. A native Membership8 session reads complete histories from zero and
+supplies the actual bounded source births before inventory opens. Planning
+and structural SHA-1 readback preserve every selected byte and head. Other
+direct-copy witnesses cover SHA-1/SHA-256, final-position policy refusal
+before payload reads, body/fact/pin tampering, new producer/parent handling,
+distinct-node accounting, restart and the native alarm's named stop.
+
+The three targeted original controls distinguish seed-to-scope binding,
+foreign inline-class coverage and the shared foreign declaration-node
+charge. Each baseline passes, its unchanged assertion fails when that one
+guard is bypassed, and exact source is restored. Those guard invariants
+remain; no mutation sweep or unchanged control rerun is performed.
+
+## Reviewed Main and focused checks
+
+The owned checkout is `/tmp/artroom-builder-s2b-main-integration-20261020`,
+branch `request/s2b-foreign-main-20261020`. It incorporates actual reviewed
+Main `13193f31`, including G5a, S2a, K1, K2 and the Grow public host link.
+K1's independent native audit was already adopted as `2aa5c91b`.
+
+That merge naturally exits one in 1.004551666 seconds: five conflicts,
+fifteen original stages retained under
+`/tmp/s2b-k1-main-conflict-stages-20261020`. Resolution retains S2b's
+behavior and uses Main's `decodeGitText`, `natural`, canonical `same`,
+`stopArchivePrefix` and `sqlJsonText`; the metadata text export is an alias
+of that SQL helper. No assertion, budget, cohort, grant or pin is weakened.
+The integration helper's old pending-audit caption is historical and is
+corrected explicitly in the resolution record. Logs and exact resolutions
+use `/tmp/s2b-integrate-k1-main-20261020*` and
+`/tmp/s2b-k1-main-conflict-resolution-20261020.json`.
+
+The first focused process fails at the helper guard's two duplicate local
+canonical-equality definitions; all subsequent phases are unrun. Its full
+input inventory and two failed modules remain. After importing Main's
+existing equality, the separate corrected process naturally passes the
+helper guard, all Git/Replay/Scope compiler configurations, twelve Node
+cases in two files and thirty-two native cases in seven files. Native
+wall/child CPU are 7.471352959 / 8.803412 seconds. All 2,575 tracked bytes
+and modes stay exact; the lock stamp matches and zero packages install.
+The warm shared macOS 27.0.1 arm64 host runs Node 26.12.0, starting load
+2.65/3.17/3.04. No exclusive-machine claim.
+
+Closed evidence uses `/tmp/s2b-k1-main-focused-20261020*` and the separate
+`...focused-v2-20261020*`. Complete physical source reconstructions of both
+actual pre-execution hash/size/mode inventories are retained under
+`/tmp/s2b-k1-main-focused-inputs-20261020/{v1,v2}`. Only exact hash matches
+are used; the old report comes from Git and the failed equality modules
+come from their original snapshots. Current bytes are not mislabeled as
+failed historical inputs. The reconstruction never executes project code.
+
+The owned Page preflight build naturally exits zero and leaves its module
+byte-exact to Main. There is no generated Page delta in this slice.
+The dependency view is an independent physical copy of the explicit K1
+finite grant: 5,499 regular leaves and 31 contained relative links, exact
+bytes/hashes/modes, distinct inodes and originals rechecked unchanged.
+Only owned output caches are cleared; no install or lock change occurs.
+Receipts are `/tmp/s2b-private-dependency-copy-20261020.json` and
+`/tmp/builder-current-main-page-assets-preflight-20261020.json`.
+
+## One original gate
+
+Original process `42667` naturally exits zero at clean `05224c900f50`,
+tree `cc3bb645`: all compiler, whitespace and helper checks pass; 416 Vitest
+files pass and one skips, with 1,987 passed cases and three existing skips.
+All 33 Node and 55 Counter Node cases pass. No full-suite retry is run.
+
+The measured `npm run gate` takes 552.712308417 seconds elapsed and
+822.734176000 child CPU seconds. Its test step reports 542.6 seconds and
+786.3 CPU seconds; these are that run's step figures, not summed separate
+runs. The shared warm macOS 27.0.1 arm64 host uses Node 26.12.0/npm 11.20.0,
+starting load 4.85/3.81/3.33. All 2,575 source rows keep exact bytes/modes;
+all 5,530 dependency rows remain exact except the owned Vitest result
+cache. The lock stamp stays exact, the checkout stays clean and zero
+packages install. Exact argv, inputs, outputs and natural closure are
+`/tmp/s2b-k1-current-main-gate-20261020*`; raw phase logs are under
+`/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.rCjkmyWJlc`.
+
+Raw logs retain deliberate reset/retention faults, four Git body text
+warnings and an unclassified different-Durable-Object I/O /
+RefcountedCanceler diagnostic in the runner's abort path. No case
+attribution, infrastructure classification, clean-output, general
+stability or physical-draining conclusion is inferred from passing cases
+or zero exit.
+
+Main subsequently advances to wording-only `248aab8f`. Its nine new paths
+do not overlap these nineteen authored paths. That read-only comparison
+is `/tmp/s2b-tagline-main-path-independence-20261020.json`; the eventual
+native plan/audit must still prove every Source byte and all preserved
+Main content. It grants no landing or publication authorization.
+
+## Retained history and review boundary
+
+The full earlier report is preserved in Git at `05224c90` and as
+`/tmp/s2b-prior-primary-20261020.md`. Earlier compiler, fixture, copy-tool
+and native failures remain failures. In particular, the first foreign
+fixture had no real peer; the installed root first used a stale revision;
+the later Grow owner reply first lacked idempotency and then used the
+wrong answer field. Corrected separate runs do not rewrite those inputs
+or become one passing pipeline. Original raw controls/logs use
+`/tmp/artroom-s2b-*20261019*`; current integration records use
+`/tmp/s2b-*20261020*`. The complete finite Source map names exact files;
+these prefixes are locators, not adjacent-directory grants.
+
+Every granted original source, dependency, script, helper, sealer and log
+is permanently frozen: never execute or edit originals, including after
+approval or landing. Reviewers may independently physically copy only
+explicit named leaves and contained links, preserve modes, retarget paths
+and use matching historical inputs before copied execution. Nested maps
+grant no additional paths. Unrecorded older historical modes or exact
+inputs are not invented from current copies. No private operator,
+publisher or agent custody, provider, deployment, A0b admission/consent or
+hosted acceptance is part of this work. Planner owns Cloudflare.
