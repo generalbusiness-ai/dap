@@ -95,12 +95,15 @@ guard input. Existing fact-time and journal completeness rules stay in
 force: if other selected evidence is unavailable, those rules can still
 refuse the whole projection.
 
-Planner request `49f0b30b` remains open. The maintained package currently
-declares only admin, so the actual native fixture's attempted agent-role
-installation refuses. Adding `grow.tend` to the TEST membership roster
-alone cannot bypass the package role declaration. Builder requests a
-specific decision before changing those maintained role grants. The signed
-demo packet and `DEMO_RELEASE` remain unchanged.
+Planner report `8d3585a3`, adopted by `b572b939`, amends the required
+last-prober witnesses to a person, missing retained history and a mismatched
+fact hash. The maintained role map stays byte-exact Main; agents gain no
+`grow.tend` by default. The actual native Grow witness therefore uses its
+existing person/admin and restores the original unmodified membership and
+installation grants. The raising agent and controller stay witnessed by
+the actual card renderer over the explicitly scripted Core/identity fixture.
+The browser's extra agent probe is a TEST grant stand-in, not admission by
+the maintained package. No production packet, release or custody changes.
 
 ## Focused verification
 
@@ -246,3 +249,37 @@ raising-agent display and bench hash/retention/legacy boundary are prepared
 but remain unrun pending the role-map decision. The bench fault checks use
 a signer-only selection at the native owner boundary; other selected
 journal and timestamp completeness rules can still refuse a full grid.
+
+## Apply the planner's authority boundary
+
+After checkpoint `fbc7b1ac`, report `8d3585a3` resolves the role question.
+The native witness drops its attempted agent enrollment/roster grant and
+returns to the original admin-only installation. Its actual person probe
+feeds the declared layers field and resolved member table. The same real
+bench is selected at the native owner boundary for restored hash,
+retention and legacy-index faults. This source is now ready for its
+focused native run. The earlier agent-role refusal remains in its
+retained logs and source snapshot; it is not relabelled as a pass. The
+existing native membership/controller read and the raising-agent browser
+witness retain their separate authority and fixture qualifications.
+
+Final native person witness: original `57127` naturally exits one at the
+member-table assertion because the test reads the grid snapshot opened
+before the probe. `ViewSessions.read` retains that captured display unless
+navigation/refresh is requested. The expected current identity is not
+weakened: the test opens a fresh grid after the new fact. Its exact earlier
+input is `/tmp/b1-person-view-captured-snapshot-input-20261020.ts`.
+Original `69853` then naturally exits zero: the one unchanged owning Grow
+scenario, including the new native person projection/member resolution,
+actual-bench hash/retention/legacy-index faults with transaction rollback,
+and every original Device/related-view/replay assertion. Native wall/CPU
+are 8.003437334 / 9.388839 seconds. Scope's three compiler projects pass.
+Logs and natural closures are `/tmp/b1-final-grow-person-native-20261020*`
+and `/tmp/b1-final-grow-person-native-v2-20261020*`.
+
+The maintained descriptor's role map is checked equal to Main. `work.ts`,
+the committed signed demo packet and `DEMO_RELEASE` remain byte-exact Main.
+All B1 owning checks are now prepared/passing with the qualifications above;
+the full gate and exact-head Source review remain due. This mutable
+checkpoint is saved while the builder handles the commissioned public Grow
+host-link/config follow-up in a separate head with no runtime changes.
