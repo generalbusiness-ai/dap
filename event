@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b9c1c5c06541cb690088578a7891af1ee3ce57d3","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/directory-partition-factory.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ba44209a7677ab4f12b373ccdf26df6d8a5f1bf2","text":"Merge retired a covered predecessor; the successor is at packages/platform/test/destination.test.ts."}
