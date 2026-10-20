@@ -17,9 +17,64 @@ original harness/report/log hashes still match. Fonts and tokens are also
 unchanged. This was an integrity check, not another browser run.
 `/tmp/artroom-d1-main-integration-20261019.json` records it.
 
-The required gate has not yet run. The packet remains unfiled for review,
-and G5a, S2a and G5 retain priority. The design note's approval is design
-authority for this packet, not D1 visual approval or runtime acceptance.
+The first required gate passed at `2339307d4fc53117b3b30030dc9580fa9318d6ff`,
+tree `4c0f0b73c6264ec83e76a936f71f8270175c6985`: 1,926 Vitest cases passed,
+three existing cases skipped, and all 31 Node and 55 Counter cases passed.
+The reporting candidate changes only this note afterward. G5a, S2a and G5
+retain priority. The design note's approval is authority to prepare this
+packet, not D1 visual approval or runtime acceptance.
+
+## Final gate and review scope
+
+Original session 71924 naturally exited zero with a clean head/tree before
+and after the run. Whitespace and typechecking passed; 399 Vitest files
+passed and one recording file skipped. The existing skipped cases are the
+Page recorder, demo recorder and Darwin long-path MCP dead-reclaimer case.
+No test, assertion, deadline or whole-suite retry was added for this design.
+
+The outer gate took 491.45 seconds wall and 707.09 CPU seconds (607.42 user
+plus 99.67 system). Its test step reported 482.6 seconds wall and 675.0
+CPU; typechecking reported 8.7 and 31.9 respectively. These are the outer
+measurement and reported steps of that run, not summed independent runs.
+The machine was arm64 macOS 27.0.1, Darwin 27.0.0, 18 logical CPUs; starting
+load averages were 1.0391, 1.4565 and 1.5400. The private COW dependency
+view came from unsealed Main. Filesystem hashing, pool adoption and recent
+host work warmed caches in part; D1 had no prior Vitest results cache in
+this view. This is not a controlled cache or load benchmark. Read-only
+task surveys, review-packaging preparation and a separate CLI branch's
+document integration ran during the gate; D1 source/dependencies stayed
+unchanged.
+
+Snapshots preserve all 2,503 tracked files, 5,498 installed regular files
+and 31 contained links exactly. Vitest created only its `results.json`
+output cache, giving 5,499 regular dependency-directory files afterward.
+No install occurred. Before the gate, the existing compatibility script
+adopted the private pool0.22.0 bundle from `8d3d1150…` to `cd50d18a…`;
+pretest then verified that final bundle unchanged. Lock/stamp SHA256 is
+`3546b5384c9245fb646c4f7c22cabde0f4351b05dfcec704d1bdeb170666361a`.
+
+Passing raw logs retain labelled reset/SQLite fault injections, four Git
+advertisement `.text()` warnings and one unclassified different-Durable-
+Object I/O / `RefcountedCanceler` diagnostic in Vitest's abort path, without
+a case attribution. This is no general stability conclusion or fix; the
+separate stability request remains `1d3a13e385d2b1f4b914e651e5463ba948730b2a`.
+
+Raw gate output is
+`/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.2JqXfKXu1P`;
+the Counter output is `artroom-counting-node-2hkwBK` in that same temporary
+parent. Closure, snapshots, timing and diagnostics use
+`/tmp/artroom-d1-gate-*20261019*`. Gate assertion:
+`afde99ef19cbeb8f50cad693c4d0ffcf296e53de`.
+
+The complete Source has two actual artifact bindings: the packet directory
+with all 209 Git leaves and this primary note. The formal request supplies
+the finite map and digest. All listed source, generated pages, screenshots,
+private dependencies, logs, tools and sealer originals freeze forever;
+read or independently copy them, never execute or edit originals. Historical
+tools contain original source/output and user npm-cache paths; review
+execution must independently retarget those paths and obtain pinned scratch
+tools. No npm-cache/browser-profile access, runtime/native acceptance,
+D1 approval, landing or deployment is granted or claimed.
 
 ## Preparation history and original browser evidence
 
