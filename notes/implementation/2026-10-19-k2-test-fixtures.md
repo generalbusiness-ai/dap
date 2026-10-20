@@ -7,6 +7,8 @@ with both owning compiler targets passing. Scope's explicit application
 builders pass 28 existing cases in 11 files. Platform's common judgment
 helpers pass 170 existing cases in 18 affected files. Derive shares its
 native clone-and-change setup and passes 406 cases in 40 affected files.
+MCP now has separate Node-safe and Worker-only entries: its two transport
+files pass 21 cases and all eleven native entry consumers pass 30.
 Remaining fixture consolidation and the final module layout remain ahead.
 
 The first preparation moved the identical loopback transport out of
@@ -221,6 +223,41 @@ clean matching checkpoint use
 `/tmp/artroom-k2-scope-final-builders-*20261019*`. This is a focused
 follow-up after real source changes, not a repeated gate. Final K2 fixture-entry work, gate and Source remain ahead.
 
+## MCP entry boundaries
+
+Code checkpoint `4d9676e14f68dbf8e224ef0e82f782d6aa9fb347`, tree
+`fecd5cf71aedef3e5a5d0d067ecf695df2b9673a`, implements the adopted two-entry
+boundary. `packages/mcp/test/fixtures.ts` supplies the Node-safe loopback
+peer and recipe parser. It has no Worker or test-framework runtime import.
+`fixtures-native.ts` supplies the common claim builder and re-exports the
+existing private room/story adapters. All eleven native consumers import
+that entry; its private modules retain their ownership and lifetimes.
+Counter/lending keep their explicit cohorts and activation steps.
+
+The common claim's implementation is byte-exact except one final EOF blank
+line; its two setup assertions remain exact. All 569 outer expectation
+expressions in the eleven consumer files are byte-for-byte exact. Both
+owning compiler projects pass. The Node compiler excludes only the new
+Worker fixture entry beside its existing Worker adapters; the Worker
+project checks that entry. No ambient type allowance or production
+compiler option is widened.
+
+Original process 76785 naturally exits zero. The two existing Node
+transport files pass 21 cases, 5.36 seconds wall/4.61 CPU. All eleven
+changed native consumers pass 30 cases, 46.74 seconds wall/50.07 CPU.
+The raw native log retains the deliberately scripted complete-reset fault;
+these local tests retain their existing TEST/stand-in boundaries. No case,
+assertion, limit or deadline changes.
+
+The existing pinned esbuild bundles the Node entry as standalone ESM,
+which imports successfully under Node outside Vitest and exports exactly
+`activityRecipe` and `loopbackScopePeer`. No tool is installed. This is a
+module-loading check, not browser, provider or native admission evidence.
+All fourteen changed draft hashes match before/after the focused command
+and their saved Git blobs; the checkpoint is verified clean. Logs, source
+snapshots, assertion inventories and checkpoint use
+`/tmp/artroom-k2-mcp-entries-*20261019*`. No final K2 gate or Source yet.
+
 ## Scope and counts
 
 Before counts include every `.ts` file under each package's `test/`
@@ -232,14 +269,14 @@ inventory, not a claim that every domain scenario is duplicated.
 | Derive | 10,312 | 10,316 | +4 |
 | Platform | 5,851 | 5,841 | -10 |
 | Scope | 21,402 | 21,434 | +32 |
-| MCP | 7,829 | 7,850 | +21 |
+| MCP | 7,829 | 7,844 | +15 |
 
 The first peer extraction adds five lines overall; the portable shared
 MCP module now adds 21 in total, including explicit runtime ports and
 boundary comments. The Scope application builders add 29; the Platform
 helpers remove 10; the Derive helper adds four. The current combined
-increase is 47 after the Scope follow-up adds three lines. No overall line
-reduction is claimed.
+increase is 41 after the Scope follow-up adds three lines and the MCP
+entry split removes six. No overall line reduction is claimed.
 Full per-file baseline counts/hashes are in
 `/tmp/artroom-k2-before-lines-20261019.json`; the selected assertion
 inventories and tool are `/tmp/artroom-k2-expect-*20261019*`.
