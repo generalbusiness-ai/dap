@@ -10,6 +10,7 @@ import { archiveEntryHeader, archiveEntryPrivacy, archiveSupportMetadata } from 
 import type { ArchivePolicyRegistry, ReviewedArchivePolicy } from "./archive-inventory.ts";
 import { stopArchivePrefix as stop, type ArchivePosition } from "./archive-prefix.ts";
 import type { FixtureArchiveSourcePins, ArchiveSourceBasis, ArchiveSourcePin } from "./archive-source-pins.ts";
+import { archiveMembershipCopy, membershipCopyConsumer } from "./archive-membership-copy.ts";
 import { sqlJsonText as text, type Sql } from "./sqlite.ts";
 
 export interface ArchiveForeignCopy {
@@ -26,13 +27,14 @@ export class ArchiveForeignMetadata {
   readonly #sources = new Map<string, Readonly<ArchiveSourceBasis>>();
   constructor(readonly sql: Pick<Sql, "exec">, readonly sources: FixtureArchiveSourcePins,
     readonly policies: ArchivePolicyRegistry, readonly bounds: Bounds, readonly budget: ArchiveBudget,
-    readonly visitedDeclarations = new Set<Digest>()) {
+    readonly visitedDeclarations = new Set<Digest>(), readonly consumer?: Digest | PlatformDefinition) {
     if (sources.fixture !== "archive-source-pins") return stop("foreign-source-unavailable");
     budget.check();
   }
   #policy(source: ArchiveSourcePin): ReviewedArchivePolicy {
     const pin = source.pin;
-    if (!isDigest(pin) && pin.startsWith("platform:membership@") && pin !== INVITATION_KEY_MEMBERSHIP) return stop("unsupported-credential-cohort");
+    if (!isDigest(pin) && pin.startsWith("platform:membership@") && pin !== INVITATION_KEY_MEMBERSHIP
+      && !(pin === "platform:membership@8" && membershipCopyConsumer(this.consumer))) return stop("unsupported-credential-cohort");
     const policy = this.policies.get(pin);
     if (!policy || !policy.review || policy.review.length > 512 || policy.support.named !== pin) return stop("unsupported-archive-cohort");
     if (isDigest(pin) ? policy.support.definition.digest !== pin : policy.support.definition.declared.name !== platformName(pin)) return stop("foreign-source-mismatch");
@@ -66,6 +68,7 @@ export class ArchiveForeignMetadata {
     const source = this.sources.get(header.at, this.budget);
     if (!source) return stop("foreign-source-unavailable");
     const policy = this.#policy(source);
+    if (source.pin === "platform:membership@8") archiveMembershipCopy(this.sql, content, size, header, this.consumer, this.budget);
     if (!policy.entryTypes.has(header.input)) return stop("unsupported-archive-cohort");
     if (header.uses > this.bounds.usesPerEntry) return stop("limit");
     if (header.seq === 0) {

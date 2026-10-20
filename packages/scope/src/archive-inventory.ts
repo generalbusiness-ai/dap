@@ -20,7 +20,8 @@ import type { ArchiveSourceBasis, FixtureArchiveSourcePins } from "./archive-sou
  * owner evidence, in addition to the exact definition's policy. A supplied
  * support table or a digest in a set alone does not supply this coverage.
  * This module configures no new certificate, including for declarations.
- * The existing pin policy still excludes every legacy membership version. */
+ * Membership journals remain excluded. Two public Membership8 copy kinds
+ * have a separate native-consumer check before any body selection. */
 export interface ReviewedArchivePolicy {
   readonly review: string;
   readonly entryTypes: ReadonlySet<Input["type"]>;
@@ -128,7 +129,7 @@ export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: 
         platformClosure = closureOf(definition.digest, definition);
         if (!platformClosure.complete) return stop("incomplete");
       }
-      const foreign = fixtureSources ? new ArchiveForeignMetadata(sql, fixtureSources, reviewed, bounds, budget, visited) : undefined;
+      const foreign = fixtureSources ? new ArchiveForeignMetadata(sql, fixtureSources, reviewed, bounds, budget, visited, prefix.pin.seed.definition) : undefined;
       const admitted = archivePrivacyMetadata(sql, prefix, { ...rootPolicy.support, definition }, budget, foreign);
       // First finish admission of ALL inline local-entry classes. A trusted
       // owner table/root certificate alone cannot authorize their bodies.

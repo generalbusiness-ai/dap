@@ -8,11 +8,14 @@ import { canonicalize, isDigest, isFactRef, isPlatformDefinition, isScopeRef, pa
 import { archiveRetainedPath, type ArchiveRetainedName } from "./journal-path.ts";
 import { journalByteOrder } from "./journal-objects.ts";
 import { JournalWork, refuseJournal, type JournalCost } from "./journal-work.ts";
+import { ARCHIVE_NATIVE_VALUE_DOMAINS } from "./archive-policy.ts";
 
 export const JOURNAL_SELECTION_BYTES = 1024 * 1024;
 const inventoryCeilings: Readonly<JournalCost> = { entries: 4096, attempts: 512, nodes: 64, calls: 16384, metadata: 4 * 1024 * 1024, inputWork: 64 * 1024 * 1024 };
 const inputs: readonly string[] = ["genesis", "act", "delivery", "diagnosis", "timed", "preparation", "outcome", "checkpoint"];
-const domains: ReadonlySet<string> = new Set(Object.values(DOMAINS));
+// Format vocabulary only; this descriptive serializer grants no export
+// admission. The native inventory checks the exact pin/data/place first.
+const domains: ReadonlySet<string> = new Set([...Object.values(DOMAINS), ...ARCHIVE_NATIVE_VALUE_DOMAINS]);
 /** The current native consumer serialization vocabulary, not a second
  * dependency planner. New consumers need an explicit format review. */
 const requiredKinds: Readonly<Record<string, readonly string[]>> = {

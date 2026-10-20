@@ -11,10 +11,13 @@ import { ARCHIVE_BOUNDS, ArchiveBudget } from "./archive-budget.ts";
 import { ArchivePrefixStopped } from "./archive-prefix.ts";
 import type { Sql } from "./sqlite.ts";
 import type { ArchiveForeignCopy } from "./archive-foreign.ts";
+import { ARCHIVE_NATIVE_VALUE_DOMAINS } from "@generalbusiness/artroom-git/archive-policy";
 
 export interface ArchiveRetainedValue { readonly bytes: string; readonly value: unknown }
 export type ArchiveRetainedCopy = Pick<ArchiveForeignCopy, "content" | "bytes" | "fact" | "pin">;
-const nativeDomains: ReadonlySet<string> = new Set(Object.values(DOMAINS));
+// Supported decoding vocabulary, not permission to read/export. The owning
+// whole-prefix classifier checks every exact native pin/data/place first.
+const nativeDomains: ReadonlySet<string> = new Set([...Object.values(DOMAINS), ...ARCHIVE_NATIVE_VALUE_DOMAINS]);
 const keyName = (key: RetainedKey): string => JSON.stringify(key.kind === "value" ? [key.kind, key.domain, key.digest] : [key.kind, key.digest]);
 
 export class ArchiveRetainedReader {

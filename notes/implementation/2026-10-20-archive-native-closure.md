@@ -5,10 +5,22 @@ Request `4fb21172`; builder promise `f75c6922`. Planner decision
 starts at Main `2a77bc5fe4458d219f2eca1d25ac2ff709ff30b2`.
 
 This work is in progress. It has no complete gate, review, landing or
-offline replay acceptance yet. Two findings need planner decisions:
-`3c5f3a9b` on retained Membership@8 copies and `0dcfdc62` on the exact root
-register anchor. Source registration or a passing policy case does not
-satisfy the commissioned closure witness.
+offline replay acceptance yet. Decisions `3e2761e6` and `bd3ace9f` answer
+the original Membership copy and root anchor findings. Decision `74a99989`
+answers the later native-domain finding. All five fixture journals now
+export, and the required domain and credential negatives pass. Offline A2
+reaches a new missing dependency: Register entry 1, at Directory genesis,
+despite the sole allowed entry-2 anchor. Source registration or passing
+export checks do not satisfy the commissioned closure witness.
+
+The preserved pre-decision work is commit `61123d2b`. Its changes were
+carried as `edd17d37` into a separate worktree on published P1 Main
+`be63c49b03324639d3e7623a24ec7a48a3a95860`. Before execution, preparation
+verified 2,612 source files, 5,499 distinct regular dependency copies and
+32 contained relative links, with exact bytes and modes and zero installs.
+The first preparation stopped while checking a link before its chained
+target link existed. The corrected preparation verified all files again
+and checked the complete link set together, in 1.862291416 wall seconds.
 
 ## Admission implemented so far
 
@@ -45,7 +57,7 @@ device command and binds the archive later. Native creation, SQLite and
 issued session reads run on the test host. Package content, device owner
 answers, scheduler and policy coverage remain explicit TEST fixtures.
 
-After the new exact pin admission, Directory@16 export stops at
+Before decision `3e2761e6`, Directory@16 export stopped at
 `unsupported-credential-cohort`. The recorded five-journal candidate has
 three direct Membership@8 retained copies in three consumer entries:
 
@@ -78,16 +90,155 @@ lifecycle and authority are scripted. Register act 1 creates no Directory.
 Register outcome 2, `create-repository`, sends the Directory creation, and
 Directory genesis names that outcome as its source.
 
-The current verifier proves an exact source position and hash. A caller
+The verifier proves an exact source position and hash. A caller
 anchor for act 1 does not cover source 2. Planner decision `08e261c4` names
 hosted Register entry 1. Request `0dcfdc62` asks planner to check the hosted
 Directory's actual genesis source and clarify the sole allowed anchor.
 The local probe does not read or contradict the hosted bytes. No anchor
 was added or substituted, and Register export remains refused.
 
-The current diagnostic test collects the Directory genesis source as a
-candidate anchor. Its A2 stage remains unreached because of the credential
-refusal; it is not acceptance of the decision's entry-1 anchor.
+Decision `bd3ace9f` replaces the entry-1 instruction. The sole anchor is
+the exact fact named by Directory genesis `input.source`. Planner's hosted
+read identifies Register entry 2, hash
+`sha256:8682b3bb6c0dc2cc04a2e1ef65bb3e518657e6d20aa490b2c09b2d6ba9c97c5d`.
+Fixture references stay fixture references; the hosted hash is not inserted
+into the test graph. At that stage A2 remained unreached because of the
+domain refusal. The new offline result appears below. No additional
+anchor or Register journal is admitted.
+
+## Public Membership copy proposal and historical domain refusal
+
+The proposed code list contains only two entry kinds:
+
+| Entry kind | Exact declaration and effects |
+| --- | --- |
+| Genesis `establish` | `membership.ts`, `membership.acts.establish`: founder and recovery public keys, founder handle and Directory reference; effects retain those values and the role table. `invitation-key.ts` and `application-install-grants.ts` inherit this act unchanged. |
+| Delivery `request/tell/application-grants` | `application-install-grants.ts`, `membership7.receives.application-grants`: `installGrantFields` from `application-install-wire.ts` plus the Rules reference. `membershipRules7` unions action names and returns the public install context and result. |
+
+No other kind is listed. In particular, join, enrol and invitation kinds
+remain refused. The list applies only to copies inside the three admitted
+native consumer pins, after exact native pin/data admission. Membership@8
+journals remain refused. Existing source identity, policy, owner and
+inline checks still apply.
+
+Before body selection, one native SQL query checks the kind and uses
+`json_tree` to find any decoded object key named `secret`, including nested
+and escaped keys. It returns scalar metadata only. Sixteen additional
+full-entry JSON work equivalents are reserved before the query; existing per-pass
+budgets are unchanged. Failure refuses the whole export, without skipping,
+redacting or rewriting an entry.
+
+Before the domain decision, the native witness separately scanned all three retained
+copies and confirmed each was selected by the new metadata checks. It then
+tried the five-journal export. Site and Room exports passed, but Directory
+export refused `unsupported-custom-domain`. The bounded source-lookup
+trace ends with Membership@8, then Rules@10. The copied Rules declaration
+names `artroom-check-configuration-1`, `dap-application-release-2` and
+`dap-application-semantics-2`, outside the current `DOMAINS` allowlist.
+Destination@12 also declares `artroom-rules-extents-1`; its `judge` owner
+declares `artroom-changed-set-1`. These are source findings, not newly
+allowed domains. No domain policy has changed.
+
+Constructed enrol and listed-kind secret-field whole-export assertions are
+present but have not reached their required boundary. The first attempt
+ran them before the positive export; all three encountered the earlier
+custom-domain refusal. They now follow successful whole exports. The
+offline A2 stage is also unreached. No minimum closure or replay claim is
+made.
+
+New original owning attempts use full physical source inputs and the
+separate dependency copies. Shared OS caches and other host work remain
+uncontrolled; there are no installs or gate runs.
+
+| Attempt | Outcome | Wall seconds | Child CPU seconds |
+| --- | --- | ---: | ---: |
+| `54639`, v1 | Compatibility and source/test compilers pass; Vitest cannot open its local listener in the sandbox, `EPERM`; no case runs | 2.708933083 | 4.989966 |
+| `46683`, v2 | One Grow case fails at the earlier custom-domain refusal instead of the expected credential refusal; one filter skip | 6.990134417 | 7.271817 |
+| `50724`, v3 | Test compiler passes; three actual copy metadata assertions pass; Directory whole export fails at custom-domain refusal; one filter skip | 6.128335417 | 9.221428 |
+| `80357`, v4 | Test compiler passes; same three actual copies pass; bounded trace identifies Rules@10 as the last lookup before the domain refusal; one filter skip | 6.111554417 | 9.414246 |
+
+Each attempt verifies unchanged source bytes/modes and the lock stamp after
+natural completion. A small bundled native-data diagnostic confirms the
+domain names above. Its first bundle failed because the diagnostic named
+the wrong rule-module path; the corrected bundle and run exit 0. Those
+diagnostic wall and CPU times were not captured. Separate runs are not one
+passing pipeline.
+
+The follow-up increases the extra JSON reservation from six to sixteen
+full-entry equivalents to cover the repeated type, byte-length and value
+expressions of each scalar projection. The new domain attempts below run
+with sixteen; v1–v4 above used six and remain historical.
+
+## Native domains and the first offline cutoff
+
+Decision `74a99989`, adopted as `453c2012`, permits five additional native
+value domains at exact places. The code table includes the exact pin,
+native data digest, domain, place and byte bound, with a source citation
+for each row:
+
+| Pin | Domain | Place |
+| --- | --- | --- |
+| Rules@10 | `artroom-check-configuration-1` | `acts.keep-configuration.fields.digest.value` |
+| Rules@10 | `dap-application-release-2` | `acts.install-application.fields.release.value` |
+| Rules@10 | `dap-application-semantics-2` | `acts.install-application.fields.semantic.value` |
+| Destination@12 | `artroom-rules-extents-1` | `outcomes.judge.observes[0].retains[0]` |
+| Destination@12 | `artroom-changed-set-1` | Native Destination `judge` owner `valueDomains` |
+
+The whole-prefix classifier checks each custom-domain occurrence and owner
+place. A domain in a TEST policy table supplies no permission. The
+retained-value reader and Git selection format also understand these five
+strings as a mechanical vocabulary; those mechanisms require prior
+whole-prefix privacy admission. Vocabulary is not an export certificate.
+The checker must review that every row is public platform configuration
+readable by every repository reader, without member-private values, a
+narrower audience or credentials. This is not yet an approval.
+
+Both new attempts export all five complete fixture journals from position
+zero, open their object-only archives, and compare exact journal bytes and
+heads. Actual Rules@10 and Destination@12 exports pass the domain checks.
+A listed domain at an unlisted Rules owner place, and an unlisted domain
+under Rules@10, each refuse the whole export `unsupported-custom-domain`.
+All three actual Membership copies pass. A constructed enrol without a
+secret, a listed delivery with a nested secret field, and that field with
+an escaped JSON key each refuse the whole export
+`unsupported-credential-cohort`. No entry is skipped or rewritten.
+
+| Original attempt | Outcome | Wall seconds | Child CPU seconds |
+| --- | --- | ---: | ---: |
+| `49014`, domain v1 | Compatibility, Git and Scope source/test compilers pass; exports and all five refusal variants pass; first offline Site replay reports missing Register entry 1 | 7.515348958 | 12.345082 |
+| `46625`, domain v2 | Test compiler passes; same exports and negatives pass; all five offline attempts report the same first missing Register entry 1 | 6.611659125 | 9.792300 |
+
+Each attempt has a complete physical source input and unchanged source
+bytes/modes and lock stamp afterward, with zero installs. The v2 native
+test phase alone is 5.921612875 wall / 7.149501 child CPU seconds. These
+are shared warm host measurements, not a gate or a passing replay.
+
+| Exported journal | Entries | Through sequence |
+| --- | ---: | ---: |
+| Grow Site | 4 | 3 |
+| Grow Room | 6 | 5 |
+| Directory@16 | 14 | 13 |
+| Rules@10 | 11 | 10 |
+| Destination@12 | 2 | 1 |
+
+All five replay attempts stop at Directory genesis, position 0, with
+`missing-dependency` for the same Register entry 1. The caller supplies only
+the actual Directory genesis source, Register entry 2. Exact fixture scope,
+incarnation, anchor hash, missing hash and per-journal reports are in
+`archive-native-Register1-replay-finding-20261020.json`. Fixture references
+are not the hosted references.
+
+The selected journals directly retain seven Register copies, representing
+three facts: entry 1 appears five times, entry 2 once and entry 3 once.
+Directory genesis retains entries 2 and 1; Directory position 1 retains
+entry 3; Directory positions 2, 3 and 4 retain entry 1; Destination genesis
+retains entry 1. Copies do not themselves prove their source history.
+Entry 3 and later Membership proof needs have not been reached by replay,
+so this is the first cutoff, not the complete missing closure. No extra
+anchor, Register self-journal, copied-body proof shortcut or trust change
+has been made. Planner disposition is required before changing that
+contract. Automatic closure discovery and per-scope archiver wiring remain
+unfinished; the witness selects the five known fixture journals explicitly.
 
 ## Original checks
 
@@ -146,7 +297,7 @@ matching historical inputs retargeted first. Nested maps and path prefixes
 grant no adjacent or transitive rights. The current worktree and its
 dependencies are excluded from both grants and remain mutable.
 
-After the two decisions, finish bounded dependency discovery and per-scope
+After the root-dependency disposition, finish bounded discovery and per-scope
 export to the room's recorded repository, the sole anchor rule and its
 trust report, the actual clone-only replay pairs, required controls and one
 ordinary gate before complete exact-head review. Slice 9 deployment still

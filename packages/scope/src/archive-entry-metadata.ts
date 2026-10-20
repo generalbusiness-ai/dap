@@ -2,14 +2,15 @@
  * Returns headers/classes only. Payload reads and export admission belong
  * to the owning whole-prefix inventory, inside its synchronous frame. */
 import { natural } from "@generalbusiness/artroom-bytes";
-import { DEVICE_COMMAND, DOMAINS, RETAINED_INPUT_BYTES } from "@generalbusiness/dap-contract";
+import { DEVICE_COMMAND, RETAINED_INPUT_BYTES } from "@generalbusiness/dap-contract";
 import type { Digest, Input, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
 import { isDigest, isPlatformDefinition, isScopeRef } from "@generalbusiness/artroom-bytes";
 import { ArchiveBudget } from "./archive-budget.ts";
 import { ARCHIVE_PRIVACY_JSON_PASSES, stopArchivePrefix as stop, type ArchivePosition } from "./archive-prefix.ts";
-import { declarationValueDomains, type Capabilities, type OperationRules, type ValidDefinition } from "@generalbusiness/dap-derive";
+import { type Capabilities, type OperationRules, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { platform } from "@generalbusiness/dap-platform";
 import { sqlJsonText as text, type Sql } from "./sqlite.ts";
+import { archiveDeclarationValuePlaces, archiveValuePlace } from "./archive-value-policy.ts";
 export { sqlJsonText as archiveMetadataText } from "./sqlite.ts";
 
 /** Trusted native code/registry metadata. A request cannot supply this map;
@@ -30,7 +31,6 @@ export interface ArchiveEntryHeader {
   readonly prev: Digest | null; readonly uses: number; readonly effects: number;
 }
 const variants: readonly unknown[] = ["genesis", "act", "delivery", "timed", "diagnosis", "outcome", "preparation", "checkpoint"];
-const nativeDomains: ReadonlySet<string> = new Set(Object.values(DOMAINS));
 const OWNER_LIMIT = 65;
 /** Finite native metadata. Device commands own no outside operation kind. */
 export const DEVICE_COMMAND_ARCHIVE_RECORDS: ReadonlySet<string> = new Set(["command"]);
@@ -71,7 +71,7 @@ export function archiveEntryPrivacy(sql: Pick<Sql, "exec">, source: ArchiveMetad
     if (typeof name !== "string" || typeof kind !== "string") return stop("unavailable");
     const rules = support.owners.get(name)?.get(kind);
     if (!rules || rules.values !== undefined && rules.valueDomains === undefined) return stop("unsupported-archive-cohort");
-    if (rules.valueDomains?.some(domain => !nativeDomains.has(domain.domain))) return stop("unsupported-custom-domain");
+    if (rules.valueDomains?.some(domain => !archiveValuePlace(support, domain.domain, domain.max, `owners.${name}.${kind}`))) return stop("unsupported-custom-domain");
   };
   if (header.effects > OWNER_LIMIT - 1) return stop("limit");
   const opened = header.effects === 0 ? [] : read((header.effects + 1) * 512).exec(`SELECT ${text("$.effect", 16, "value")} AS effect, ${text("$.owner", 128, "value")} AS owner, ${text("$.capability", 128, "value")} AS capability, ${text("$.kind", 128, "value")} AS kind FROM ${held.table}, json_each(${held.table}.bytes, '$.effects') WHERE ${held.where} LIMIT ?`, ...held.args, OWNER_LIMIT).toArray();
@@ -99,7 +99,7 @@ export function archiveEntryPrivacy(sql: Pick<Sql, "exec">, source: ArchiveMetad
  * its presence does not create a certificate or load package code. */
 export function archiveSupportMetadata(support: ArchiveSupport, budget: ArchiveBudget): void {
   budget.check();
-  if (declarationValueDomains(support.definition).some(domain => !nativeDomains.has(domain))) return stop("unsupported-custom-domain");
+  archiveDeclarationValuePlaces(support, budget);
   const known = (name: string) => name === "hold@1" || name === "git-read@1" || isPlatformDefinition(name) && platform(name) !== null;
   if (support.owners.size > 64 || support.preparations.size > 64 || support.records.size > 64) return stop("limit");
   for (const [name, kinds] of support.owners) {
@@ -111,7 +111,7 @@ export function archiveSupportMetadata(support: ArchiveSupport, budget: ArchiveB
       if (rules.valueDomains !== undefined && (!Array.isArray(rules.valueDomains) || rules.valueDomains.length > 64)) return stop("limit");
       for (const domain of rules.valueDomains ?? []) {
         budget.spend({ inputWork: 512 });
-        if (!nativeDomains.has(domain.domain)) return stop("unsupported-custom-domain");
+        if (!archiveValuePlace(support, domain.domain, domain.max, `owners.${name}.${kind}`)) return stop("unsupported-custom-domain");
         if (!Number.isSafeInteger(domain.max) || domain.max < 1 || domain.max > 1024 * 1024) return stop("unavailable");
       }
     }
