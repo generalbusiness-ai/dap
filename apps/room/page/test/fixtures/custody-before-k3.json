@@ -1,0 +1,66 @@
+{
+  "source_head": "dba3e76237250b6ce205d511691554de3d809baf",
+  "boundary": "Actual old Page writers/codecs/public readers over the existing SCRIPTED storage, locking, CLI and service fixtures. Fictional test keys only. No native/browser/provider evidence.",
+  "records": [
+    {
+      "kind": "connection",
+      "origin": "https://connection-custody.test",
+      "key": "artroom-page-connections:[\"https://connection-custody.test\",{\"inc\":\"in_aqcaibaeaqcaibaeaqcaibaeaq\",\"kind\":\"membership\",\"scope\":\"sc_mw3s3swtzykmjcngoot2jw7t5t6ygnsrzpbmss6c7ldno4bqrsva\"},\"key_4oqJcHUzMr1y_vQT5rCy7xtKrdp6osFB8jNxKmh2s1E\",\"50000000-0000-4000-8000-000000000001\"]",
+      "raw": "{\"active\":\"75b6c93e-f17c-406f-810e-e5fff7429052\",\"binding\":\"[\\\"https://connection-custody.test\\\",{\\\"inc\\\":\\\"in_aqcaibaeaqcaibaeaqcaibaeaq\\\",\\\"kind\\\":\\\"membership\\\",\\\"scope\\\":\\\"sc_mw3s3swtzykmjcngoot2jw7t5t6ygnsrzpbmss6c7ldno4bqrsva\\\"},\\\"key_4oqJcHUzMr1y_vQT5rCy7xtKrdp6osFB8jNxKmh2s1E\\\",\\\"50000000-0000-4000-8000-000000000001\\\"]\",\"rows\":{\"75b6c93e-f17c-406f-810e-e5fff7429052\":{\"config\":{\"handle\":\"@founder\",\"key\":\"browser\",\"register\":{\"inc\":\"in_aqcaibaeaqcaibaeaqcaibaeaq\",\"kind\":\"register\",\"scope\":\"sc_knadzkltxofgexyozzq4f7cicd4gh3knqlwlnxnoutvj5emybu6q\"},\"repository\":{\"destination\":\"sc_mw3s3swtzykmjcngoot2jw7t5t6ygnsrzpbmss6c7ldno4bqrsva\",\"directory\":{\"inc\":\"in_aqcaibaeaqcaibaeaqcaibaeaq\",\"kind\":\"directory\",\"scope\":\"sc_smffj3ondoylyuirojqcau2jotptnmhcnh5ywabakjbquylozpfq\"},\"membership\":{\"inc\":\"in_aqcaibaeaqcaibaeaqcaibaeaq\",\"kind\":\"membership\",\"scope\":\"sc_mw3s3swtzykmjcngoot2jw7t5t6ygnsrzpbmss6c7ldno4bqrsva\"},\"rules\":\"sc_smffj3ondoylyuirojqcau2jotptnmhcnh5ywabakjbquylozpfq\"},\"service\":\"https://connection-custody.test\",\"v\":1},\"input\":{\"handle\":\"@guest\",\"hours\":24,\"kind\":\"person\",\"role\":\"member\"},\"operation\":\"75b6c93e-f17c-406f-810e-e5fff7429052\",\"private\":{},\"state\":\"reserved\"}},\"v\":1}",
+      "publicState": {
+        "operation": "75b6c93e-f17c-406f-810e-e5fff7429052",
+        "kind": "person",
+        "handle": "@guest",
+        "state": "reserved"
+      },
+      "expected": {
+        "key": "key_4oqJcHUzMr1y_vQT5rCy7xtKrdp6osFB8jNxKmh2s1E",
+        "operation": "50000000-0000-4000-8000-000000000001",
+        "membership": {
+          "scope": "sc_mw3s3swtzykmjcngoot2jw7t5t6ygnsrzpbmss6c7ldno4bqrsva",
+          "inc": "in_aqcaibaeaqcaibaeaqcaibaeaq",
+          "kind": "membership"
+        }
+      }
+    },
+    {
+      "kind": "join",
+      "origin": "https://page-custody.test",
+      "key": "artroom-page-enrollment:https://page-custody.test",
+      "raw": "{\"origin\":\"https://page-custody.test\",\"phase\":\"prepared\",\"prepared\":{\"definition\":\"platform:membership@2\",\"handle\":\"@ada\",\"link\":\"sha256:a1f699251b29bf9a9b2f4cd90ac18c8a444178f5c1ea64a839a5852e98143e17\",\"place\":{\"directory\":\"sc_gal4wm2icopy5gtb7oakwjtijpaljekhgnl6sgj5jibkvhjehorq\",\"membership\":{\"inc\":\"in_a4dqobyha4dqobyha4dqobyha4\",\"kind\":\"membership\",\"scope\":\"sc_zwewdcf56deuaoutiia4i5ndnghz7gvm5a2twbwwgp2ektrukwxq\"}},\"signed\":{\"intent\":{\"actor\":\"key_bVkZYBL7v4xReY6uJ9Hc8PMUbiIJryBhkiVw5ZXslps\",\"expected\":{},\"fields\":{\"invitation\":1,\"secret\":\"TEST invitation secret\"},\"idempotencyKey\":\"YCWASiZnWts-btLXLTdGwg\",\"kind\":\"join\",\"notAfter\":\"2026-10-12T00:05:00Z\",\"on\":null,\"to\":{\"inc\":\"in_a4dqobyha4dqobyha4dqobyha4\",\"kind\":\"membership\",\"scope\":\"sc_zwewdcf56deuaoutiia4i5ndnghz7gvm5a2twbwwgp2ektrukwxq\"},\"v\":1},\"sig\":\"aZmCzi8d8VbZ-QP6c2C5l3cXfS-88L9PfwkyLVxejauafu4RFxTCxk3-wcQ_t_W6jlXeQQdcL09OwHSdoPQnBQ\"}},\"secret\":\"EyXbiqG0y6QkEJlpJ25J0REB8EIJ2zrcIk2mgHl5nxk\",\"v\":1}",
+      "publicState": {
+        "status": "prepared",
+        "key": "key_bVkZYBL7v4xReY6uJ9Hc8PMUbiIJryBhkiVw5ZXslps",
+        "place": {
+          "directory": "sc_gal4wm2icopy5gtb7oakwjtijpaljekhgnl6sgj5jibkvhjehorq",
+          "membership": {
+            "inc": "in_a4dqobyha4dqobyha4dqobyha4",
+            "kind": "membership",
+            "scope": "sc_zwewdcf56deuaoutiia4i5ndnghz7gvm5a2twbwwgp2ektrukwxq"
+          }
+        },
+        "handle": "@ada"
+      }
+    },
+    {
+      "kind": "start",
+      "origin": "https://start-custody.test",
+      "key": "artroom-page-start:https://start-custody.test",
+      "raw": "{\"configured\":{\"definition\":\"platform:register@8\",\"register\":{\"inc\":\"in_aydambqgaydambqgaydambqgay\",\"kind\":\"register\",\"scope\":\"sc_s62u3xzjkmlgp52u2aftqecliyombefnborz2terqvztjsruypjq\"}},\"handle\":\"@founder\",\"label\":\"Room\",\"origin\":\"https://start-custody.test\",\"secret\":\"wMJyw9Y5lh65fcHV6zgzB8t94UClW_BJ0k05C6_eXTE\",\"v\":1}",
+      "publicState": {
+        "key": "key_ZHMUXSYScZy-xxDMZWtjxht90pXHo9UE8R43ue7Ujx8",
+        "configured": {
+          "definition": "platform:register@8",
+          "register": {
+            "inc": "in_aydambqgaydambqgaydambqgay",
+            "kind": "register",
+            "scope": "sc_s62u3xzjkmlgp52u2aftqecliyombefnborz2terqvztjsruypjq"
+          }
+        },
+        "label": "Room",
+        "handle": "@founder",
+        "state": "prepared"
+      }
+    }
+  ]
+}
