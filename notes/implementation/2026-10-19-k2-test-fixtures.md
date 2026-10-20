@@ -98,8 +98,8 @@ invalid strings. Existing tests keep their own environment lifetime and
 extra fields. Trust serialization retains release/publisher order and the
 explicit publisher argument; a provided packet still uses its own manifest
 publisher. Fixed seeds 61, 62, 63, 64 and 254 retain their exact keys. The
-malformed/partial trust inputs remain explicit. Three inline Worker
-environments inside existing assertion expressions are not yet factored.
+malformed/partial trust inputs remain explicit. The later follow-up below
+factors the remaining three inline Worker environments.
 
 All expectation-expression hashes in the 121 existing Scope case files
 remain exact. The owning Scope compiler passes. Original process 8671
@@ -188,24 +188,58 @@ Logs, selection, source hashes and the clean matching checkpoint use
 `/tmp/artroom-k2-derive-draft-*20261019*`. No case, assertion or deadline
 changed. No final K2 gate or Source is claimed.
 
+## Remaining Scope binding and signer copies
+
+Code checkpoint `01c9446866b6cefa2a0b8bf4c3192c79911dabed`, tree
+`43e3251797f14f506ce57cbdf155062a3200d292`, replaces the last three
+identical application Worker environments with the shared builder. It
+also shares the fixed signer construction in the v2, owned-scope and
+fact-time packet helpers and the unrelated native query signer. Seeds
+67 and 5 stay exact. The existing client's `secretSigner` implementation
+is the same key/sign closure those packet helpers previously built by
+hand. Each caller keeps its original initialization time and fresh seed.
+
+All 14 native cases in five affected files and all 17 Node cases in three
+MCP packet-consumer files pass. Both owning compiler projects pass. The
+original command naturally exits zero, with all five changed source
+hashes exact before/after and equal to their saved Git blobs. Native time
+was 10.53 seconds wall/12.24 CPU; Node time was 1.39 wall/2.66 CPU.
+No case, deadline, native ownership or peer behavior changed.
+
+Of the 82 expectation expressions in the install-custody file, three
+change only the inline environment argument. Substituting the exact
+shared builder makes every complete expression byte-exact; requests,
+expected statuses and matchers are unchanged. All 14 expressions in the
+query-lifetime file remain byte-exact. The assertion map explicitly
+retains the original and replacement hashes; it does not claim raw text
+identity for those three expressions. Other affected case files are
+unchanged. These checks retain the existing native and scripted-peer
+boundaries and make no provider or browser acceptance claim.
+
+Original source, assertion map, selection, compiler/runtime logs and the
+clean matching checkpoint use
+`/tmp/artroom-k2-scope-final-builders-*20261019*`. This is a focused
+follow-up after real source changes, not a repeated gate. Final K2 gate,
+fixture-layout decision and Source remain ahead.
+
 ## Scope and counts
 
 Before counts include every `.ts` file under each package's `test/`
 directory, including case files and support files. They are an explicit
 inventory, not a claim that every domain scenario is duplicated.
 
-| Package | Before | First peer | Shared MCP | Scope builders | Platform helpers | Derive draft |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Derive | 10,312 | 10,312 | 10,312 | 10,312 | 10,312 | 10,316 |
-| Platform | 5,851 | 5,851 | 5,851 | 5,851 | 5,841 | 5,841 |
-| Scope | 21,402 | 21,402 | 21,402 | 21,431 | 21,431 | 21,431 |
-| MCP | 7,829 | 7,834 | 7,850 | 7,850 | 7,850 | 7,850 |
+| Package | Before | Current | Change |
+| --- | ---: | ---: | ---: |
+| Derive | 10,312 | 10,316 | +4 |
+| Platform | 5,851 | 5,841 | -10 |
+| Scope | 21,402 | 21,434 | +32 |
+| MCP | 7,829 | 7,850 | +21 |
 
 The first peer extraction adds five lines overall; the portable shared
 MCP module now adds 21 in total, including explicit runtime ports and
 boundary comments. The Scope application builders add 29; the Platform
 helpers remove 10; the Derive helper adds four. The current combined
-increase is 44. No overall line
+increase is 47 after the Scope follow-up adds three lines. No overall line
 reduction is claimed.
 Full per-file baseline counts/hashes are in
 `/tmp/artroom-k2-before-lines-20261019.json`; the selected assertion
