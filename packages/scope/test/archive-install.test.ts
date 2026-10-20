@@ -10,12 +10,8 @@ import { validateDefinition } from "@generalbusiness/dap-derive";
 import { httpSource, verify } from "@generalbusiness/artroom-replay";
 import { secretSigner, signedApplicationInstall } from "@generalbusiness/artroom-client";
 import { outsideOf as hostOutside } from "../src/worker.ts";
-import { applicationResolverFixture } from "./support/application-fixture.ts";
-import { applicationHttpPeer } from "./support/application-http-peer.ts";
-import { sessionRoom } from "./support/session-room.ts";
-import { dispatchFixture, driveFixture, effectFixture } from "./support/native-fixture-lifetime.ts";
+import { applicationResolverFixture, applicationHttpPeer, sessionRoom, dispatchFixture, driveFixture, effectFixture, reader, applicationContentBindings } from "./fixtures-native.ts";
 import { rita, routed } from "./repository.ts";
-import { reader } from "./support.ts";
 import { ArchiveBudget } from "../src/archive-budget.ts";
 import { archivePrefixMetadata } from "../src/archive-prefix.ts";
 import { archivePrivacyMetadata } from "../src/archive-privacy.ts";
@@ -25,7 +21,7 @@ test("a native install requiring archive refuses an unbound room before grants, 
   const [M, A, G] = children;
   if (!M || !A || !G) return expect.fail("the actual room siblings must exist");
   const f = await applicationResolverFixture("sha1", undefined, { member: ["counting.fulfill"] }, undefined, undefined, true);
-  const peer = applicationHttpPeer(f), bindings = { APPLICATION_CONTENT: env.APPLICATION_CONTENT, APPLICATION_TRUST: JSON.stringify(f.trust) };
+  const peer = applicationHttpPeer(f), bindings = applicationContentBindings(env.APPLICATION_CONTENT, JSON.stringify(f.trust));
   try {
     const seatExpected = await life.wait(() => M.expected({ roster: 0 }));
     const seat = await life.wait(() => M.did(rita, "seat", { expected: seatExpected }));

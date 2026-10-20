@@ -9,11 +9,7 @@ import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-m
 import { applicationScreenPath, readApplicationScreenAddress, readApplicationScreenContext, secretSigner } from "@generalbusiness/artroom-client";
 import worker from "../../../apps/room/worker.ts";
 import { outsideOf as hostOutside } from "../src/worker.ts";
-import { applicationOwnedScopesPacket } from "./support/application-owned-scopes-fixture.ts";
-import { applicationResolverFixture } from "./support/application-fixture.ts";
-import { applicationHttpPeer } from "./support/application-http-peer.ts";
-import { sessionRoom } from "./support/session-room.ts";
-import { dispatchFixture, driveFixture, effectFixture } from "./support/native-fixture-lifetime.ts";
+import { applicationOwnedScopesPacket, applicationResolverFixture, applicationHttpPeer, sessionRoom, dispatchFixture, driveFixture, effectFixture, applicationWorkerBindings } from "./fixtures-native.ts";
 import { rita, routed } from "./repository.ts";
 
 test.each([ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT])("native %s MCP install and screen retain Membership8, then bind the running application later", async cohort => {
@@ -22,7 +18,7 @@ test.each([ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT])("na
   const { life, R, D, children } = await sessionRoom(cohort.register), [M, A, G] = children;
   if (!M || !A || !G) throw Error("The native archive siblings are required.");
   const f = await applicationResolverFixture("sha1", undefined, { admin: ["counting.control"] }, undefined, v2?.packet), peer = applicationHttpPeer(f);
-  const bindings = { SCOPES: env.PLATFORM, APPLICATION_CONTENT: env.APPLICATION_CONTENT, APPLICATION_TRUST: JSON.stringify(f.trust) };
+  const bindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(f.trust));
   try {
     const seat = await life.wait(() => M.did(rita, "seat", { expected: { roster: 1 } }));
     await life.wait(async () => M.did(rita, "first-key", { fields: { member: seat }, expected: await M.expected({ roster: 0, member: seat }) }));

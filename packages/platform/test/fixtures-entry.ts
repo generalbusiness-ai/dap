@@ -8,3 +8,4 @@ export { scriptedPartitionOrigin } from "./support-partition-origin.ts";
 export { publicationJourney } from "./support-publication-journey.ts";
 export { BRANCH, lanePointingAt, memberOf, Rulebook, rulesScopeDefinition, rules as rulesScopeRules, standing } from "./support-rules.ts";
 export { paul as membershipPaul, rita as membershipRita, sam as membershipSam, una as membershipUna, vic as membershipVic, Roster } from "./support.ts";
+export { installGraph } from "./support-application-install.ts";

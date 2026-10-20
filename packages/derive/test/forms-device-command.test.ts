@@ -2,9 +2,8 @@ import { expect, test } from "vitest";
 import { newIncarnation } from "@generalbusiness/artroom-bytes";
 import { DEVICE_COMMAND, PROPOSED_BOUNDS, type DeviceCommandGrant, type EffectForm, type FactRef, type FieldValue, type Grant, type SignedIntent } from "@generalbusiness/dap-contract";
 import { capabilitiesOf, clockOf, deviceCommand, fits, holdCapability, judgeGenesis, judgePreparation, ownerReservations, reserved, validateDefinition, type Own, type PreparationJudgment, type Steps, type ValidDefinition } from "../src/index.ts";
-import { Ledger, T0, creation, created, deliver, grantOf, keys, valid } from "./fixtures.ts";
+import { Ledger, T0, creation, created, deliver, grantOf, keys, valid, deviceCommandFixture as scope, deviceCommandRow as row } from "./fixtures-entry.ts";
 
-import { deviceCommandFixture as scope, deviceCommandRow as row } from "./fixtures-device-command.ts";
 
 
 test("capability-owned outcomes reject ordinary act, receive, timed and opaque rule writers by name", () => {

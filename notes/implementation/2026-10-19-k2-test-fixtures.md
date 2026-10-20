@@ -1,15 +1,16 @@
 # Shared test fixtures
 
-K2's MCP preparation shares the scope-service loopback transport, native
-application-room claim and recipe-row parser in `test/fixtures.ts`.
-The current selected checks pass 21 Node cases and five native cases,
-with both owning compiler targets passing. Scope's explicit application
-builders pass 28 existing cases in 11 files. Platform's common judgment
-helpers pass 170 existing cases in 18 affected files. Derive shares its
-native clone-and-change setup and passes 406 cases in 40 affected files.
-MCP now has separate Node-safe and Worker-only entries: its two transport
-files pass 21 cases and all eleven native entry consumers pass 30.
-Remaining fixture consolidation and the final module layout remain ahead.
+K2 now has supported internal fixture entries for Derive and Platform,
+plus separate Node-safe and Worker-only entries for Scope and MCP.
+Actual reviewed S2a Main `fb390d88` is integrated at `f856a6ee9`.
+The newer Device/archive consumers use the same entries and explicit
+builders. All four owning compiler groups, a portable Node entry import,
+nine selected Node cases and 25 selected native cases pass after integration.
+These are focused checks. Actual G5 Main integration, the final gate and
+complete Source/review remain ahead. The earlier grouped MCP HTTP failure
+remains unclassified; its isolated pass is a separate observation.
+
+The following preparation history starts from the original Main baseline.
 
 The first preparation moved the identical loopback transport out of
 `http.test.ts` and `wire.test.ts`. Each caller keeps its own stand-in, server, hook,
@@ -21,7 +22,8 @@ existing SCRIPTED scope service, not native scope evidence.
 
 Request: `6578efa9e9da839bf0bbb0961ba00b243a8ea06c`.
 Builder promise: `d387f722298edf53bf9d6776d9445b930900d422`.
-Base: actual Main `dba3e76237250b6ce205d511691554de3d809baf`.
+Original base: Main `dba3e76237250b6ce205d511691554de3d809baf`.
+Current integrated base: reviewed S2a Main `fb390d88`.
 This is interruptible work behind G5a, S2a and G5. No frozen review view
 was executed or changed. Dependencies are a private COW copy of unsealed
 Main; no package was installed.
@@ -338,13 +340,15 @@ checkpoints. Evidence uses `/tmp/artroom-k2-scope-node-entry-*20261019*`
 and `/tmp/artroom-k2-scope-native-entry-*20261019*`. Final gate and Source
 remain ahead.
 
-## Scope and counts
+## Pre-Main-integration scope and counts
 
-Before counts include every `.ts` file under each package's `test/`
-directory, including case files and support files. They are an explicit
-inventory, not a claim that every domain scenario is duplicated.
+The following table compares saved checkpoint `7aec0e789` with the original
+survey at `dba3e762`. It includes every `.ts` file under each package's
+`test/` directory, both cases and support. Current integrated-base counts
+are recorded below. These are inventories, not claims that every domain
+scenario is duplicated.
 
-| Package | Before | Current | Change |
+| Package | Original survey | Saved 7aec0e789 | Change |
 | --- | ---: | ---: | ---: |
 | Derive | 10,312 | 10,309 | -3 |
 | Platform | 5,851 | 5,848 | -3 |
@@ -354,8 +358,8 @@ inventory, not a claim that every domain scenario is duplicated.
 The first peer extraction adds five lines overall; the portable shared
 MCP module now adds 21 in total, including explicit runtime ports and
 boundary comments. The Scope application builders add 29; the Platform
-helpers remove 10; the Derive helper adds four. The current combined
-increase is 26 after the four packages' fixture-entry work. The Scope Node
+helpers remove 10; the Derive helper adds four. The combined
+increase at `7aec0e789` is 26 after the four packages' fixture-entry work. The Scope Node
 entry adds four lines and the Worker entry removes27 by coalescing imports;
 MCP signer sharing adds eight. No overall line reduction is claimed.
 Full per-file baseline counts/hashes are in
@@ -467,3 +471,61 @@ separate roles. Actual Main/S2a/G5 integration, accounting for their newer
 cases and import consumers, remains ahead of K2's final gate and complete
 Source. The earlier grouped MCP HTTP failure remains unclassified; its
 unchanged isolated file pass is a separate observation.
+
+
+## Actual S2a Main integration
+
+Merge `f856a6ee98513175f0feb986fbf7d7c2f1059d53`, tree
+`1e9d80752637fc577cb45e28a2445191927f3834`, integrates actual reviewed,
+audited and pushed Main `fb390d88` into K2. It includes G5a and S2a;
+no unlanded G5 code is imported. The original merge stops with four
+conflicts, and all 12 base/ours/theirs stage blobs are retained under
+`/tmp/artroom-k2-integrate-s2a-conflicts-20261020/` before resolution.
+The three case conflicts preserve Main's nonimport source byte-exact:
+versions, archive privacy and archive target. K2's supported-entry imports
+remain, along with Main's exact repository actor import. The application
+fixture keeps K2's identical fixed signer/trust builders and Main's new
+`requireArchive` parameter and host requirement. Main's new version bodies,
+cohorts, case matrices, assertions and deadlines remain.
+
+New Main consumers now use the internal entries: Derive's Device-command
+case, Platform's archive-binding case and four native archive/Device
+installation cases. The entry additions name the existing private builders;
+case imports are coalesced. Fresh content/Worker environments use the
+existing exact bindings builders and the Device packet keeps its public
+TEST seed 81 through the private signer core. All 165 outer expectation
+chains in the ten affected files remain exact. The parser report is
+`/tmp/artroom-k2-main-entry-followup-20261020.json`; the three conflict-case
+body comparisons are in
+`/tmp/artroom-k2-integrated-conflict-case-preservation-20261020.json`.
+
+Original process 95191 naturally exits zero. Derive, Platform, Scope and
+MCP owning compiler groups all pass. The portable Scope entry loads in
+plain Node without Worker/Vitest runtime. Its loader's existing DEP0205
+warning remains in the log. Three selected Node files/nine cases pass;
+eight selected native files/25 cases pass, including both archive-target
+cohorts, all Device installation variants, archive contexts/privacy,
+installation custody and the maintained Grow installation. This checks
+both resolved conflicts and the new entry consumers. Cost is 22.0705
+seconds outer elapsed and 34.0911 seconds child CPU on the shared warm
+macOS arm64 host. No install or repeated whole gate. Original phase logs
+and natural closure use
+`/tmp/artroom-k2-main-integration-focused-20261020-`.
+
+The current line inventory compares the same actual Main before/after,
+so G5a/S2a's new cases are counted on both sides:
+
+| Package | Actual Main fb390d88 | Integrated K2 | Change |
+| --- | ---: | ---: | ---: |
+| Derive | 10,632 | 10,629 | -3 |
+| Platform | 5,942 | 5,940 | -2 |
+| Scope | 21,942 | 21,934 | -8 |
+| MCP | 7,831 | 7,854 | +23 |
+
+The combined increase is ten lines. No overall line reduction is claimed.
+`/tmp/artroom-k2-integrated-line-counts-20261020.json` records the counts.
+Current actual Main's passing Vitest count is 1,963 with three existing
+skips; the original 1,926 count above belongs to the earlier baseline.
+G5's 1,977-case passing code head remains unlanded and is not counted as
+current Main. Actual G5 Main integration still precedes K2's final gate
+and complete Source. The grouped HTTP failure remains unclassified.

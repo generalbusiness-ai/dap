@@ -4,3 +4,4 @@ export { fixedSigner, applicationTrust, applicationContentBindings, applicationW
 export { applicationCounterPacket2, applicationCounterNavigationPacket2, applicationCounterJournalPacket2 } from "./support/application-v2-fixture.ts";
 export { applicationCounterFactTimePacket2 } from "./support/application-fact-time-fixture.ts";
 export { applicationOwnedScopesPacket } from "./support/application-owned-scopes-fixture.ts";
+export { deviceApplicationPacket } from "./support/device-application-fixture.ts";

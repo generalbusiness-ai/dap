@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { keys } from "@generalbusiness/dap-derive/testing";
 import { ARCHIVE_APPLICATION_COHORT as C, ARCHIVE_DEVICE_APPLICATION_COHORT as DC } from "../src/index.ts";
-import { installGraph } from "./support-application-install.ts";
+import { installGraph } from "./fixtures-entry.ts";
 
 // Actual register/directory rules, native judges and MemoryState. Child
 // genesis entries and per-key grants are scripted; no object/provider claim.

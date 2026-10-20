@@ -14,3 +14,4 @@ export { futurePlatformRequests, platformRequestRules, platformRequests, settlin
 export { PIN_BOUNDS, receiverPinData, receiverPinDefinition } from "./fixtures-receiver-pins.ts";
 export { sourceOrderDefinition, sourceOrderFixture } from "./fixtures-source-order.ts";
 export { standingData } from "./fixtures-standing.ts";
+export { deviceCommandFixture, deviceCommandRow } from "./fixtures-device-command.ts";
