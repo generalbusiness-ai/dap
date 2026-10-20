@@ -216,7 +216,7 @@ export function observing(config: Observing): Authority {
   return {
     further,
     async read(asked: Asked, seconds: number): Promise<Standing | null> {
-      const { window, action, scope } = asked;
+      const { window, action, scope, scopeGrant } = asked;
       // No act of that kind, or no window stated for it: no commit could judge on a read, so none is made.
       const of = action === null || window === null ? null : config.membership(scope);
       if (action === null || window === null || !of) return null;
@@ -227,7 +227,7 @@ export function observing(config: Observing): Authority {
        * this run's entries retain are enough to decide whether to read again, and the commit decides.
        */
       const judge = (read: Read, clock: Reading, view?: StateView, recorded: RecordedRef = of): GrantJudgment =>
-        judgeGrant(useOf(read), { scope, membership: recorded, key, action, window, clock, last: read.last, highest: view ? highestHead(view, read.observation) : (retained.get(key) ?? null) });
+        judgeGrant(useOf(read), { scope, membership: recorded, key, action, window, clock, last: read.last, highest: view ? highestHead(view, read.observation) : (retained.get(key) ?? null), ...(scopeGrant ? { scopeGrant: true } : {}) });
       /** An observation that failed a guard is not used again: the next act of the key reads again. A revoked answer fails none. */
       const discard = (read: Read): void => { if (kept.get(key) === read) kept.delete(key); };
 
@@ -329,7 +329,7 @@ export function ownStanding(random: Random, genesis: Repository["genesis"]): Aut
         membership: scope,
         held(view, clock) {
           const named = genesis()?.seed.definition;
-          const observation = (named === "platform:membership@1" || named === "platform:membership@2" || named === "platform:membership@4" || named === "platform:membership@5" || named === "platform:membership@6" || named === "platform:membership@7") && platform(named)
+          const observation = (named === "platform:membership@1" || named === "platform:membership@2" || named === "platform:membership@4" || named === "platform:membership@5" || named === "platform:membership@6" || named === "platform:membership@7" || named === "platform:membership@8") && platform(named)
             ? observationOf(standingOf(view, { of: scope, key }, named), clock.reading) : null;
           // No answer: the scope is not an active membership scope at this head, so no grant rests on it (section 12.1.3, case e).
           if (!observation) return null;

@@ -13,7 +13,7 @@ import { command, enrolAgentKey, issueInvitation, linkOf, memoryStore, type Cont
 // Real SDK/envelopes/followReceipt/CLI Store and pinned membership rules in memory.
 // Scripted HTTP/session authority/read pages/inbox confirmation; no native session,
 // Durable Object, browser, host, provider or full parent acceptance is proved.
-test.each([[MEMBERSHIP,"platform:directory@3"],["platform:membership@4","platform:directory@5"],["platform:membership@5","platform:directory@6"],["platform:membership@6","platform:directory@9"],["platform:membership@7","platform:directory@11"],["platform:membership@7","platform:directory@12"]] as const)("retained native agent opening and key invitation survive loss; independent enrollment Checks without replacement, follows exact native facts and preserves legacy person custody (HTTP and inbox STAND-INs, %s with %s)", async (named,directoryDefinition) => {
+test.each([[MEMBERSHIP,"platform:directory@3"],["platform:membership@4","platform:directory@5"],["platform:membership@5","platform:directory@6"],["platform:membership@6","platform:directory@9"],["platform:membership@7","platform:directory@11"],["platform:membership@7","platform:directory@12"],["platform:membership@8","platform:directory@13"],["platform:membership@8","platform:directory@14"]] as const)("retained native agent opening and key invitation survive loss; independent enrollment Checks without replacement, follows exact native facts and preserves legacy person custody (HTTP and inbox STAND-INs, %s with %s)", async (named,directoryDefinition) => {
   const home = await mkdtemp(pathJoin(tmpdir(), "artroom-agent-custody-"));
   try {
   const m = new Roster(named).seated(), service = "https://agents.test";
@@ -71,7 +71,7 @@ test.each([[MEMBERSHIP,"platform:directory@3"],["platform:membership@4","platfor
     }
     if (url.includes(directory.scope)) {
       expect(init?.headers?.["authorization"]?.startsWith("Session ")).toBe(true); crossReads++;
-      const definition = wrongDirectoryPin ? "platform:directory@13" : directoryDefinition;
+      const definition = wrongDirectoryPin ? named === "platform:membership@8" ? "platform:directory@12" : "platform:directory@13" : directoryDefinition;
       return reply({ ok: true, at: { seq: 0, hash: textDigest("SCRIPTED directory head") }, complete: true, value: { scope: directory, status: "active", definition, time: m.now, counts: [["repository", "ready", 1]], items: [{ id: 0, type: "repository", state: "ready", revision: 1, opened: textDigest("SCRIPTED repository"), attributed: [], parties: {}, values: {}, refs: { membership: m.at, rules: { ...directory, kind: "rules" }, destination: { ...directory, scope: wrongDirectory ? m.at.scope : directory.scope, kind: "destination" } } }] } });
     }
     if (path.includes("/entries/")) {
@@ -185,7 +185,7 @@ test.each([[MEMBERSHIP,"platform:directory@3"],["platform:membership@4","platfor
   expect((await enrolAgentKey(receiving, link)).code).toBe(1);
   expect((await receiver.config())!.repository).toBeUndefined();
   wrongDirectory = false;
-  if(named==="platform:membership@7"){
+  if(named==="platform:membership@7" || named==="platform:membership@8"){
     const beforeFuture=sent.length;
     wrongDirectoryPin=true;
     expect((await enrolAgentKey(receiving,link,{mode:"check"})).code).toBe(1);
@@ -213,7 +213,7 @@ test.each([[MEMBERSHIP,"platform:directory@3"],["platform:membership@4","platfor
   expect((await command(receiving, ["join", person.link!])).code).toBe(1);
   expect((await receiver.config())!.join!.kind).toBe("enrol");
   expect(sessionRequests > 0 && crossReads > 0).toBe(true);
-  if (named === "platform:membership@6" || named === "platform:membership@7") {
+  if (named === "platform:membership@6" || named === "platform:membership@7" || named === "platform:membership@8") {
     expect(JSON.stringify(m.entries)).not.toContain('"secret"');
     expect(JSON.stringify(m.entries)).not.toContain(agentKeyInvitationOf(link)!.secret);
     expect(JSON.stringify(m.entries)).not.toContain(linkOf(person.link!)!.secret);

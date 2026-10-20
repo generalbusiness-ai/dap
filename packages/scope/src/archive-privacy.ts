@@ -2,7 +2,7 @@
  * body is returned here. Successful classification is not integrity,
  * replay, access/consent admission or permission to export. */
 import { natural } from "@generalbusiness/artroom-bytes";
-import { DOMAINS } from "@generalbusiness/dap-contract";
+import { DEVICE_COMMAND, DOMAINS } from "@generalbusiness/dap-contract";
 import type { Digest, Input, PlatformDefinition } from "@generalbusiness/dap-contract";
 import { isDigest, isPlatformDefinition, platformName } from "@generalbusiness/artroom-bytes";
 import { declarationValueDomains, type Capabilities, type OperationRules, type ValidDefinition } from "@generalbusiness/dap-derive";
@@ -30,6 +30,9 @@ const nativeDomains: ReadonlySet<string> = new Set(Object.values(DOMAINS));
 // the 64 full-entry equivalents reserved by archivePrefixMetadata.
 const HEADER = `SELECT json_extract(bytes, '$.seq') AS seq, ${text("$.at.scope", 71)} AS scope, ${text("$.at.inc", 64)} AS inc, ${text("$.at.kind", 16)} AS kind, ${text("$.input.type", 16)} AS input, ${text("$.prev", 71)} AS prev, json_type(bytes, '$.prev') AS prevType, json_type(bytes, '$.uses') AS usesType, json_array_length(bytes, '$.uses') AS uses, json_type(bytes, '$.effects') AS effectsType, json_array_length(bytes, '$.effects') AS effects FROM entry WHERE seq = ? AND hash = ? AND size = ? AND octet_length(bytes) = ? LIMIT 1`;
 const OWNER_LIMIT = 65;
+/** Finite native metadata. Device commands own no outside operation kind. */
+export const DEVICE_COMMAND_ARCHIVE_RECORDS: ReadonlySet<string> = new Set(["command"]);
+export const DEVICE_COMMAND_ARCHIVE_PREPARATIONS: ReadonlySet<string> = new Set(["answer"]);
 
 /** Complete trusted support metadata, including owners/domains on selected
  * declarations with no entries in this prefix. The registry is finite;
@@ -54,9 +57,13 @@ export function archiveSupportMetadata(support: ArchiveSupport, budget: ArchiveB
     }
   }
   for (const table of [support.preparations, support.records]) for (const [name, kinds] of table) {
-    if (!["hold@1", "git-read@1"].includes(name)) return stop("unsupported-archive-cohort");
+    if (!["hold@1", "git-read@1", DEVICE_COMMAND].includes(name)) return stop("unsupported-archive-cohort");
     if (kinds.size > 64) return stop("limit");
-    for (const kind of kinds) { budget.spend({ inputWork: 256 }); if (!kind || kind.length > 128) return stop("unavailable"); }
+    for (const kind of kinds) {
+      budget.spend({ inputWork: 256 });
+      if (!kind || kind.length > 128) return stop("unavailable");
+      if (name === DEVICE_COMMAND && !(table === support.records ? DEVICE_COMMAND_ARCHIVE_RECORDS : DEVICE_COMMAND_ARCHIVE_PREPARATIONS).has(kind)) return stop("unsupported-archive-cohort");
+    }
   }
   budget.check();
 }

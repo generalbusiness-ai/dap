@@ -1356,6 +1356,10 @@ Install an operator-trusted package in this room by immutable Git URI and indepe
   "inputSchema": {
     "type": "object",
     "properties": {
+      "owner": {
+        "type": "object",
+        "description": "Existing full MemberRef chosen for a device package. Native installation checks its current membership."
+      },
       "uri": {
         "type": "string",
         "maxLength": 4096
@@ -1404,6 +1408,11 @@ Install an operator-trusted package in this room by immutable Git URI and indepe
   }
 }
 ```
+
+The device-application cohort requires `owner` as a full MemberRef for a
+package declaring `device-command@1`. Its native Rules checks current
+membership before issuing the bounded grant. Other cohorts reject this
+owner selection. The owner is part of the kept signed request's meaning.
 
 ### `application_installation`
 

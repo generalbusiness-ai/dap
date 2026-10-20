@@ -38,6 +38,7 @@ export type ProblemCode =
   | "redactable-read"    // a guard, a rule, a send to a scope that is no lane, or an index send reads a detached text (section 6.2)
   | "bound-source"       // a `bound.of` whose source may not bind a request, or a mark at place 2 that states `index` or `key` and is no binding selector (section 17.2a)
   | "unsupported-definition" // an `indexes` that is stated ill (section 17.2a, check 6)
+  | "capability-slot-owned" // only the declared capability may write this item slot
   | "capability" | "profile" | "rule";
 
 export interface Problem { code: ProblemCode; path: string; message: string }

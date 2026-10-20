@@ -12,7 +12,7 @@
 import type { NativeBirthSource } from "./native-birth.ts";
 import type { ProofSource } from "./proof-bytes.ts";
 import type { Digest, Entry, FactRef, Grant, KeyId, ObservationUse, PlatformDefinition, Prepared, RoutingRefusal, ScopeRef, SignedIntent, Timestamp, UnavailableReason } from "@generalbusiness/dap-contract";
-import { TOKENS_FLOOR, capabilitiesOf, gitRead, holdCapability, timeOf, type Capabilities, type HoldOptions, type Clock as Reading, type Delivered, type Fetched, type Owners, type Presented, type RuleInput, type StateView, type Needed, type Observing, type Window } from "@generalbusiness/dap-derive";
+import { TOKENS_FLOOR, capabilitiesOf, deviceCommand, gitRead, holdCapability, timeOf, type Capabilities, type HoldOptions, type Clock as Reading, type Delivered, type Fetched, type Owners, type Presented, type RuleInput, type StateView, type Needed, type Observing, type Window } from "@generalbusiness/dap-derive";
 import { evaluateRules } from "@generalbusiness/dap-derive/rule";
 import { platform, type Platform } from "@generalbusiness/dap-platform";
 import { toConsole, type DiagnosisSink } from "./diag.ts";
@@ -35,6 +35,8 @@ export interface Asked {
   signed: SignedIntent;
   /** The action that the act's row names in `grant`, or that the capability names for the step. Null: the pinned definition has no act of that kind. */
   action: string | null;
+  /** Only Core's trusted scope-granted preparation path sets this. The recorded grant keeps its actual role actions. */
+  scopeGrant?: true;
   /** The grants presented beside the intent, each of a grant's form. Nothing signs them. */
   grants: readonly Grant[];
   /** The freshness window of this kind of commit, which the pinned definition and the scope's kind give (derive's `windowOf`), or which the capability names for the step. Null: none is stated for it. */
@@ -311,7 +313,7 @@ export const HOLD_VERSION: HoldOptions = { tokensPerHold: TOKENS_FLOOR, rootRete
  * the operations that `hold@1` and `git-read@1` own (`owners`). It is derive's code: pure
  * functions that hold no state and read no port.
  */
-export const CAPABILITY_CODE = capabilitiesOf(holdCapability(HOLD_VERSION), gitRead());
+export const CAPABILITY_CODE = capabilitiesOf(holdCapability(HOLD_VERSION), gitRead(), deviceCommand());
 
 /**
  * The production defaults. The clock and the random source are the

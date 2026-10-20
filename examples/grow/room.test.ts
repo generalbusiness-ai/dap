@@ -120,7 +120,8 @@ test("four-zone climate fault holds, refuses stale authority, authorizes only ta
   expect(ledger.item(alert).state).toBe("closed"); expect(ledger.item(incident)).toMatchObject({ state: "closed", refs: { first: alert, last: ledger.last.seq } });
   expect(ledger.item(zone.fan).values["reported"]).toBe("error"); expect(outcomes).toHaveLength(8);
   expect(new Set(outcomes.map(record => record.command.hash)).size).toBe(8);
-  expect(ledger.item(zone.heater).values).not.toHaveProperty("outcome");
+  expect(ledger.item(zone.heater).values["outcome"]).toBeNull();
+  expect(ledger.state.recordCount("device-command@1", "command")).toBe(0); // no installed grant in this fixture
   await publishCount(0);
   parent.now = ledger.now; wrote(await submit(parent, day, "leave", on(parent, dayPresence, { room: rows[0]! }))); expect(sitePresence(parent.state.all().items, position => parent.fact(position))).toEqual([]);
   ledger.now = t(172800); expect(ledger.drain()).toHaveLength(1); expect(ledger.item(c4).state).toBe("stale"); expect(ledger.item(d4).state).toBe("fresh");

@@ -28,6 +28,29 @@ const of = (change: Partial<Observation>, use: ObservationUse = fresh): Observat
 const said = (judged: GrantJudgment) => (judged.result === "current" ? "current" : `${judged.result}: ${judged.failed}`);
 
 describe("the grant guard and the commit guards of an observation (authority note, section 3.3; section 16.1; T45)", () => {
+  test("a scope-granted device answer uses current identity without adding a target action to the member's role", () => {
+    const identity = of({ actions: [] });
+    const answer: GrantAsked = { ...asked, action: "device-command@1:answer", scopeGrant: true };
+    const { scopeGrant: _scopeGrant, ...ordinary } = answer;
+    expect(said(judgeGrant(identity, ordinary))).toBe("unauthorized: action");
+    const current = judgeGrant(identity, answer);
+    expect(current.result).toBe("current");
+    if (current.result !== "current") throw new Error("current identity required");
+    expect(current.grant.actions).toEqual([]);
+    expect(agrees(current.grant)).toBe(true);
+    const cases: readonly [ObservationUse, Partial<GrantAsked>, string][] = [
+      [of({ actions: [], keyState: "retired" }), {}, "unauthorized: revoked"],
+      [of({ actions: [], memberState: "removed" }), {}, "unauthorized: revoked"],
+      [identity, { key: una.key }, "unauthorized: key"],
+      [of({ actions: [], within: { membership: reborn } }), {}, "unauthorized: within"],
+      [of({ actions: [], notAfter: t(299) }), {}, "unauthorized: not-after"],
+      [of({ actions: [], controller: "@paul", controllerActive: false }), {}, "unauthorized: controller"],
+      [identity, { clock: at(300) }, "authority-unavailable: age"],
+      [identity, { highest: 41 }, "authority-unavailable: older"],
+    ];
+    expect(cases.map(([use, change]) => said(judgeGrant(use, { ...answer, ...change })))).toEqual(cases.map(([, , expected]) => expected));
+  });
+
   test("one table: the window and its edge, whose answer it is, a revocation, the role's actions, a reuse, and the order of heads", () => {
     const cases: readonly (readonly [name: string, use: ObservationUse, asked: Partial<GrantAsked>, expected: string])[] = [
       ["inside the window, one second before its end", fresh, {}, "current"],

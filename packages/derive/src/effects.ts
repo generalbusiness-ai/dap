@@ -228,6 +228,7 @@ export function deriveEffects(j: Judging, forms: readonly EffectForm[], attentio
       // refuses a written effect that could do otherwise, so no input makes one: from a rule it is a fault, and no refusal. An
       // item's ID is the `seq` of the entry that opened it, so the item that this entry opens is the one whose ID is `self`.
       const declared = effect.effect === "state" ? undefined : effect.effect === "ref" ? own(type.refs, effect.slot) : effect.effect === "value" ? own(type.values, effect.slot) : own(type.parties, effect.slot);
+      if (declared?.capability) throw outside(mark, "capability-slot-owned: an ordinary rule effect cannot write this slot");
       if (declared?.fixed && item.id !== j.self) throw outside(mark, `an effect on a fixed slot of item ${item.id}, which its entry does not open`);
       // Section 6.4, revisions 21 and 22: a mark is set only to `true`, and a rule of a form that declares `settles` changes no state.
       const may = ruleMayNot(j.definition, j.settling === true, item.type, effect);
@@ -323,8 +324,8 @@ export function deriveEffects(j: Judging, forms: readonly EffectForm[], attentio
     }
     const subject = form.of ?? "on";
     if ("capability" in form) {
-      // Section 6.11: a capability's effect changes the capability's own records and no item. It is applied when its condition
-      // lets it through, and when the subject it names is bound. Its arguments read each subject as the effects before it left it.
+      // Capability records and declared owned slots follow the ordinary effects.
+      // Arguments read each bound subject as preceding effects left it.
       if (form.of !== undefined && !working.has(subject)) continue;
       const through = lets(form);
       if (through === false) continue;
@@ -476,7 +477,13 @@ export function deriveEffects(j: Judging, forms: readonly EffectForm[], attentio
   if (j.self !== 0) paired();
   // Section 6.8: a hold ends with what it is under. These are the capability's own effects, after the written ones (section 4.1):
   // first the records of each written capability effect, then the ends.
-  effects.push(...records);
+  for (const effect of records) {
+    if (effect.effect === "value" || effect.effect === "ref") {
+      const subject = [...working].find(([, item]) => item.id === effect.item)?.[0];
+      if (subject === undefined) throw new Error("a capability item effect names no bound subject");
+      apply(subject, effect);
+    } else effects.push(effect);
+  }
   // An item that a rule changed and that is no subject of the row is read as the rule left it, under a name that no subject has:
   // a hold ends with such an item too, when a rule took it to a final state.
   const left = new Map<string, Item>([...[...others].map(([id, item]) => [`item ${id}`, item] as const), ...working]);

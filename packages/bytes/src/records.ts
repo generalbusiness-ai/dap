@@ -151,7 +151,7 @@ const send = recordShape({ n: isLocalId, to: (v) => scopeRef(v) || seed(v), mess
 export const isSend = (v: unknown): v is Send => send(v);
 
 /** A capability's name and version, of the one form `name@version`. */
-const capabilityName: Check = (v) => typeof v === "string" && /^(hold|git-read)@(0|[1-9][0-9]*)$/.test(v);
+const capabilityName: Check = (v) => typeof v === "string" && /^(hold|git-read|device-command)@(0|[1-9][0-9]*)$/.test(v);
 
 const effect = variant("effect", {
   open: recordShape({ effect: any, item: isLocalId, type: wellFormedText, state: wellFormedText }),

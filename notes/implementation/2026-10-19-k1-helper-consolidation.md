@@ -1,10 +1,19 @@
 # K1: consolidate shared helpers
 
-The implementation is complete and its required gate passed at
-`b1f611d78eabb01ffe7adbcb2fee458647645283`. Exact-head review remains
-required. The reporting candidate changes only this note after that
-code/test head; the final section records the gate and its qualifications.
-The earlier sections retain the development checkpoints and failed probes.
+K1 is now integrated in an independent worktree on published Main
+`8aad37bb`, which adds the D1 design packet to published Grow Main `7594822`.
+The source hygiene check passes: 528 source files against 174 bytes exports.
+The refreshed, explicitly specified inventory is 139 matching declarations
+before and seven after; this includes distinct domain names, not 132
+identical implementations removed. All 429 existing test files stay
+byte-exact to that Main. Owning compiler/runtime checks, the new integrated
+head's gate and complete review remain ahead.
+
+The previous exact-head approval `c79f05e9` / adoption `c82bdbab` applies to
+`5706ac22`, not this new integration. Its original passing code/test head
+was `b1f611d78eabb01ffe7adbcb2fee458647645283`. The following history retains
+that implementation, original gate and all failed probes. The final
+integration section records the newer Main preservation checks.
 
 Request `b1212999e370e4936b14138e381446047b18d92d`, builder promise
 `1b758ab79406a126c390fca8a5e14b0b76fa9405`. This is interruptible filler
@@ -415,3 +424,96 @@ review request, avoiding a self-referential hash in this note. The review
 must cover all changed paths against actual Main dba3e762, the complete
 helper semantic map and the original gate. No approval, landing, GitHub
 push or deployment has occurred for K1.
+
+
+## Current Main integration
+
+New owned worktree `/tmp/artroom-builder-k1-main-integration-20261020`
+starts from approved `5706ac22` and incorporates actual Main `8aad37bb`.
+Its original `git merge --no-commit` naturally exits one at eight conflicts:
+the generated Page asset; bytes package validation/projection; CLI scenarios
+and commands; Scope application admission/route and archive privacy.
+All 24 stage blobs are saved before resolution under
+`/tmp/builder-k1-main-conflict-stages-20261020/`.
+The original approved checkout, dependencies and tools stay permanently
+frozen. Exactly 5,499 granted dependency regular leaves and 31 contained
+links are copied into distinct inodes, with bytes/hashes checked and
+current physical modes preserved. Only owned-copy output caches are cleared.
+No package is installed and Main is not changed by this worktree.
+
+The seven source conflicts retain Main's feature code and existing K1
+helper imports/aliases. The source-only mapping verifies every remaining
+Main AST body and literal after explicit import/export-wrapper/helper
+normalization. It is not a runtime or complete API proof. All seven removed
+Main helper declarations are unchanged from the original reviewed base;
+shared values, responses, SQLite and archive-prefix implementations remain
+byte-exact to approved K1. Main's newer archive requirement, Device owner,
+capability fact kinds, creation context and cohort selection stay present.
+The exact `natural` predicates match after a parameter-name substitution,
+including rejection of negative zero. The Page asset is regenerated from
+this combined source with the copied pinned builder; no side of a stale
+asset is selected as the final bundle.
+
+The hygiene check initially finds two newer Grow `same` copies. Host and
+Tick now import the identical strict canonical equality helper. Tick and
+the command journal use `isLocalId` under their existing integer name;
+this preserves Main's acceptance of negative zero. A pure independent
+24-value migration probe agrees with both original/current predicates and
+detects the wrong stricter `natural` choice at negative zero. The simulation's
+min/max predicate keeps its distinct body as `simulationIntegerInRange`;
+Tick's own error/string refusals are `tickFailure` and `tickText`.
+No limit, deadline, state field, authority, trust setting or pin changes.
+
+The final source-only comparison covers eleven Main bodies: the seven
+conflict files and four Grow consumers. All remaining nodes and literals
+match after the explicit helper mappings; the four original shared
+implementation modules remain exact. Raw mappings use
+`/tmp/builder-k1-main-body-preservation-v5-20261020.json` and the two
+Grow follow-up records. Every pre-existing tracked `.test.ts` and
+`.test.mjs` file, 429 in total, remains completely byte-exact. The original
+two Node guard cases remain K1's only shipped test addition.
+
+The same disclosed rg inventory now compares the same published Main
+feature set with its integrated K1 source:
+
+| Name | Main 8aad37bb | Integrated K1 |
+| --- | ---: | ---: |
+| isRecord | 9 | 1 |
+| natural | 12 | 1 |
+| same | 23 | 1 |
+| text | 23 | 0 |
+| fail | 15 | 0 |
+| record | 9 | 1 |
+| freeze | 9 | 1 |
+| keyOf | 8 | 1 |
+| integer | 11 | 0 |
+| json | 6 | 0 |
+| ascii | 6 | 1 |
+| stop | 4 | 0 |
+| bytesOf | 4 | 0 |
+| Total | 139 | 7 |
+
+The remaining Jam `keyOf`/`record` meanings stay distinct and unchanged.
+Counts include meaningful renames and imports; the unspecified original
+planner grep is not claimed. Exact command/output/counts are in
+`/tmp/builder-k1-current-main-helper-counts-v2-20261020.json` and its two
+raw outputs. The guard naturally exits zero after the actual cleanup;
+its v3 log/closure reports 528 source files and 174 exported helper names.
+
+Source-only preparation tool failures are retained: an inherited-name
+lookup bug stopped before deferred repository writes; a metadata path
+lookup used a nonexistent SQL module name; the first normalization omitted
+the already-reviewed moved archive stop; and a Grow helper script syntax
+error stopped before execution. A chained guard after that syntax failure
+still saw the unchanged copies, so its original "after cleanup" qualification
+is explicitly corrected. Fixed versions use own-name lookup, the actual
+SQLite owner and the complete normalization. Expected missing-old-base
+Grow files are recorded as new since that baseline, not source failures.
+No result is silently overwritten or used as a passing runtime/gate claim.
+
+Original integration/build/guard, source/probe records and closures use
+`/tmp/builder-k1-*20261020*`. K2 complete review remains separately open;
+this branch imports no unreviewed K2 source. Full new gate and exact-head
+review are required before any native K1 landing. Actual hosted Grow
+acceptance stays Planner's separately held milestone; builder performs no
+Cloudflare action.
