@@ -189,8 +189,17 @@ asset and this note differ from its eight-path Source. No assertion,
 legacy record, storage key, refusal, default, pin, grant or deadline changes.
 
 Build/provenance records use `/tmp/builder-k3-main-*20261020*` and
-`/tmp/builder-k3-integrate-main-20261020*`. Owning Page compilers and selected
-custody/workflow/asset checks, the new integrated-head gate and complete
-review remain ahead. K2 review remains separately open at frozen `cbe0d44d`.
+`/tmp/builder-k3-integrate-main-20261020*`. Focused process `43650` naturally
+exits zero at saved merge `6a6434ab` / tree `25e4f5b7`: all three owning
+Page compiler targets and eight selected files/twenty cases pass. The
+selection covers all custody kinds, old-writer compatibility, join, Start,
+sending and generated assets. All 2,344 tracked source hashes stay exact
+before/after; the checkout stays clean. Cost is 3.4364 seconds outer elapsed
+and 8.1075 child CPU on the shared warm macOS arm64 host. No install.
+These are Node checks with the existing SCRIPTED storage/UI/service
+boundaries; they establish no browser persistence or native admission.
+Original logs/closure use `/tmp/builder-k3-integrated-page-focused-20261020-`.
+The new integrated-head gate and complete review remain ahead. K2 review
+remains separately open at frozen `cbe0d44d`.
 Actual hosted Grow acceptance remains Planner's separate `cc069da1` /
 `2fcf3c3a` milestone; this work performs no Cloudflare operation.
