@@ -1,6 +1,6 @@
 # dap
 
-A durable action platform for people and agents.
+Structured workrooms for people and agents.
 
 * Web site: [https://dap.generalbusiness.ai](https://dap.generalbusiness.ai/)
 * Blog post: [Software and the Cauldron](https://generalbusiness.ai/blog/2026-10-14-baby-cauldron/), ([repo copy](notes/2026-10-14-blog-post-baby-cauldron.md)), including three demo videos
