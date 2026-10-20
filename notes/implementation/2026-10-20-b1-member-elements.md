@@ -296,3 +296,31 @@ commands/logs/closures are
 `/tmp/b1-fact-signer-repair-incorporate-main-20261020*` and
 `/tmp/b1-fact-signer-repair-incorporate-main-v2-20261020*`. No compiler,
 native test or build runs during either isolated merge preparation.
+
+The new ordinary repair gate closes naturally zero at
+`5eec8f090130e1a5cd51d3fff0f421006d4d6567`, tree
+`099bcec3e365e2eb1ca411f7bb2d0c222ea88dae`: 1,986 Vitest cases pass,
+three existing cases skip, 415 files pass and one skips, followed by 33
+Node and 55 Counter Node checks. All compiler/helper/whitespace phases
+pass. Original `7472` takes 538.427622542 wall and 781.666306 CPU seconds,
+on shared warm macOS 27.0.1 arm64, Node 26.12/npm 11.20, starting load
+2.2163/2.3081/2.3281. All 2,581 tracked source bytes/modes remain exact;
+among 5,530 dependency rows only the owned Vitest results cache changes.
+The lock stamp matches, the checkout stays clean and no package installs.
+Original commands, inventories, phase logs and closure are
+`/tmp/b1-fact-signer-repair-gate-20261020*`. The raw different-Durable-Object
+RefcountedCanceler diagnostic, deliberate fixture faults and four Git
+body-text warnings remain without case/cause attribution, infrastructure,
+stability or physical-draining inference. Exact physical control and gate
+source inputs also match their recorded inventories at
+`/tmp/b1-fact-signer-repair-final-inputs-20261020/{control,gate}`.
+
+While that gate ran, separately approved S2b landed on actual Main
+`7bc1490c286a360a1198d144674998b704c167ad`, tree `d6782922`.
+Its 20 paths are disjoint from these 44 authored paths; exact comparison
+is `/tmp/b1-fact-signer-repair-new-Main-disjoint-20261020.json`. This
+gate is at the B1 candidate above, not at a composed Main tree. A later
+native merge plan and independent landing audit must preserve all actual
+Main content, including S2b. No Source approval is extended to changed
+code and no unchanged suite is repeated. This final update changes only
+the primary report after the passing gate; complete fresh review remains.
