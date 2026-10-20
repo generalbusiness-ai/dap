@@ -5,7 +5,7 @@ Request `f54185fb5b7ccacdf932248552127e4985b3f956`, promise
 addresses the one required finding from complete review `5f7c1241` of
 Source `b83ca24c`. The combined room's real HTTP context now reports
 Membership8. The old Device control and both combined invitation cases
-pass. A new ordinary gate and complete exact-head review remain. The
+pass, and the new ordinary gate passes. Complete exact-head review remains. The
 previous Source is unapproved and frozen forever. Its adopted composite
 is historical evidence, not a gate pass for this production repair. No
 S2a landing, publication, deployment or completion is claimed.
@@ -97,9 +97,28 @@ The probe is read as evidence and never executed as an original. No
 adjacent checker path is accessed.
 
 The governing amendment requires a new gate for this production repair.
-The previous failed gate and accepted sum remain qualified history. The
-new gate result and final Source tree will be recorded separately after
-the clean repair checkpoint. S2b export and A0b production admission
+Original process91689 naturally exits zero at the clean repair checkpoint
+`9fbbc84789e1ec66b60e6c299b353f2d3907d8d7`, tree
+`488bb0bb9c3a6107f1603ce5912848c8d063cfab`. Whitespace, the full
+repository typecheck and the complete test pipeline pass: 1,963 Vitest
+cases, 31 Node checks and 55 Counting checks, with three existing Vitest
+skips. No install occurs. The gate's source and installed dependency
+inventories remain exact; only the Vitest results cache changes.
+
+The gate's original log and closure are
+`/tmp/artroom-s2a-http-gate-20261020.log` and
+`/tmp/artroom-s2a-http-gate-20261020-closure.json`; raw phase logs are in
+`/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.ssqIsmZj50`.
+Machine, load, warm-cache qualifications and the measured outer elapsed
+and CPU costs are in the preflight, timing and closure files. The later
+change records that outcome in this note only. All source and tests
+remain exact to the passing gate, so the document-only rule does not
+require another run. The supplied Source record and evidence map bind
+the final report head and tree separately.
+
+The previous failed gate and accepted sum remain qualified history. This
+new ordinary pass is the validation for F1. Full replacement review and
+native landing audit remain. S2b export and A0b production admission
 remain outside S2a.
 
 ## Earlier G5a Main integration checkpoint
