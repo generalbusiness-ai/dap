@@ -2,7 +2,7 @@
  * whole prefix; this neither reads bodies nor grants export permission. */
 import type { Bounds, Digest, FieldValue, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize } from "@generalbusiness/artroom-bytes";
-import { actValueDependencies, isDetachedTextField, textDependency, textsNamed, valuePlaces, type PlannedRetainedDependency, type ValidDefinition } from "@generalbusiness/dap-derive";
+import { actValueDependencies, boundedRetainedDependencies, isDetachedTextField, textDependency, textsNamed, valuePlaces, type PlannedRetainedDependency, type ValidDefinition } from "@generalbusiness/dap-derive";
 import type { ArchiveBudget } from "./archive-budget.ts";
 import { ARCHIVE_DIGEST_FIELD_BATCH, checkArchiveFieldSource, readArchiveDigestFields } from "./archive-digest-fields.ts";
 import { stopArchivePrefix as stop, type ArchivePosition } from "./archive-prefix.ts";
@@ -16,7 +16,7 @@ export class ArchiveActFields {
   readonly #kinds: string;
   readonly #kindCount: number;
   constructor(readonly sql: Pick<Sql, "exec">, readonly definition: ValidDefinition,
-    readonly budget: ArchiveBudget, bounds: Pick<Bounds, "definitionBytes">) {
+    readonly budget: ArchiveBudget, readonly bounds: Pick<Bounds, "definitionBytes">) {
     // The owning admission supplies validated finite definition metadata.
     // Reserve before enumerating it or allocating the reusable schema.
     budget.spend({ metadata: bounds.definitionBytes, inputWork: bounds.definitionBytes * 16 });
@@ -57,6 +57,6 @@ export class ArchiveActFields {
     const origin = { at: { at: { ...at }, seq: position.seq, hash: position.hash }, input: "act" as const };
     const dependencies: PlannedRetainedDependency[] = textsNamed(schema.act.fields, given).map(digest => ({ dependency: textDependency(origin, digest), max: 0 }));
     for (const { dependency, place } of actValueDependencies(this.definition, origin, kind, given)) dependencies.push({ dependency, max: place.max });
-    return { kind, dependencies };
+    return { kind, dependencies: boundedRetainedDependencies(dependencies, this.bounds) };
   }
 }

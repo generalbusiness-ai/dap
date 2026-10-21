@@ -1,7 +1,7 @@
 /** Closed native retained consumers, shared by replay and local inventory.
  * A plan names a read. Selection still requires the consumer's byte checks;
  * a plan is neither privacy admission nor a replay/custody verdict. */
-import type { Bounds, Digest, Entry, Evidence, FactRef, FieldValue, Input, ObservationUse } from "@generalbusiness/dap-contract";
+import type { Bounds, Digest, Entry, Evidence, FactRef, FieldValue, Input, ObservationUse, Prepared } from "@generalbusiness/dap-contract";
 import { DOMAINS, RETAINED_INPUT_BYTES } from "@generalbusiness/dap-contract";
 import { isDigest, isFactRef, retainedValueKey } from "@generalbusiness/artroom-bytes";
 
@@ -102,6 +102,13 @@ export function actValueDependencies(definition: ValidDefinition, origin: Depend
   }));
 }
 
+export function preparedRuleDependencies(definition: ValidDefinition, origin: DependencyOrigin, prepared: readonly Pick<Prepared, "rule" | "input">[]): readonly PlannedRetainedDependency[] {
+  return prepared.map(record => {
+    if (!Object.hasOwn(definition.declared.rules, record.rule)) return unsupported();
+    return { dependency: requiredDependency(origin, "rule-input", { kind: "rule", digest: record.input }), max: RETAINED_INPUT_BYTES };
+  });
+}
+
 export function observedValueDependencies(definition: ValidDefinition, origin: DependencyOrigin, observed: readonly ObservationUse[]) {
   if (!definition.observing) return [];
   const domains = retainsOf(definition);
@@ -140,6 +147,11 @@ export function declarationValueDomains(definition: ValidDefinition): readonly s
 }
 
 export interface PlannedRetainedDependency { readonly dependency: RetainedDependency; readonly max: number }
+/** A definition value still uses the native definition ceiling even when
+ * its declared value place permits a larger retained reply. */
+export function boundedRetainedDependencies(plans: readonly PlannedRetainedDependency[], bounds: Pick<Bounds, "definitionBytes">): readonly PlannedRetainedDependency[] {
+  return plans.map(plan => plan.dependency.mode === "required" && plan.dependency.key.kind === "definition" ? { ...plan, max: Math.min(plan.max, bounds.definitionBytes) } : plan);
+}
 export interface LocalRetainedPlan {
   readonly dependencies: readonly PlannedRetainedDependency[];
   readonly ancestry: AncestryCheck | null;
@@ -153,10 +165,7 @@ export function localRetainedPlan(definition: ValidDefinition, entry: Entry, has
   const dependencies: PlannedRetainedDependency[] = [];
   const add = (dependency: RetainedDependency, max: number) => dependencies.push({ dependency, max });
   for (const use of entry.uses) add(requiredDependency(origin, "foreign-use", { kind: "entry", digest: use.content }), RETAINED_INPUT_BYTES);
-  for (const prepared of entry.prepared) {
-    if (!Object.hasOwn(definition.declared.rules, prepared.rule)) return unsupported();
-    add(requiredDependency(origin, "rule-input", { kind: "rule", digest: prepared.input }), RETAINED_INPUT_BYTES);
-  }
+  dependencies.push(...preparedRuleDependencies(definition, origin, entry.prepared));
   for (const text of detachedTextDependencies(definition, origin, input, deliveryUnder)) add(text, 0);
   if (input.type === "act") for (const { dependency, place } of actValueDependencies(definition, origin, input.signed.intent.kind, input.signed.intent.fields)) add(dependency, place.max);
   if ("observed" in input) for (const { dependency } of observedValueDependencies(definition, origin, input.observed ?? [])) add(dependency, RETAINED_INPUT_BYTES);
@@ -173,5 +182,5 @@ export function localRetainedPlan(definition: ValidDefinition, entry: Entry, has
   }
   // Definitions are validated under their own native ceiling, even when a
   // value place or observation permits a larger retained reply.
-  return { dependencies: dependencies.map(plan => plan.dependency.mode === "required" && plan.dependency.key.kind === "definition" ? { ...plan, max: Math.min(plan.max, bounds.definitionBytes) } : plan), ancestry };
+  return { dependencies: boundedRetainedDependencies(dependencies, bounds), ancestry };
 }

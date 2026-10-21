@@ -686,3 +686,46 @@ compute a complete pass forecast or change the production cutoff. Whole
 prefix privacy admission must still finish before entry or retained
 payload reads. No new export permission, completed adaptive pass, full gate
 or formal review is claimed.
+
+## Native value place and prepared-rule projection
+
+Act-field projection now shares the byte planner's final definition-size
+ceiling. A genuine native Register3 repository creates its Directory and
+Rules2 children. After the founder's actual membership seat and first key,
+Rules accepts `activate` with the fixture notes definition beside it. The
+projector must return exactly one definition key, with the owning archive's
+tighter definition bound. Only the trusted act name and digest cross its
+SQL boundary. The native definitions and production Rules code are real;
+the host, clock and setup inspector remain session-room fixtures.
+
+Prepared-rule references also have a scalar projector. It reads the exact
+entry's prepared-record count, matches rule names against the trusted
+declaration's name table, and extracts only the corresponding input
+digests. The shared `preparedRuleDependencies` selector supplies the same
+ordered rule keys as the byte planner. Every repeated request pays its
+actual SQL and work charges. An entry with more prepared records than the
+original attempt ceiling cannot fit even when each retained read is a
+cache hit, so it refuses before allocating that list.
+
+The native witness assigns a real fixture commitment under its declared
+`not-self` rule. Its scalar plan must name the actual retained rule input,
+match the byte planner and handle an empty prepared list. It returns no
+retained-input body or evaluation result. The fixture definition and
+authority are explicit TEST data, not platform policy or export permission.
+
+| Original | Result | Outer elapsed seconds | Outer CPU seconds |
+|---|---|---:|---:|
+| `57106` | Four compilers pass; native Rules correctly refuses the test actor before seat/key setup | 6.97 | 11.77 |
+| `33856` | Corrected native membership setup: four compilers and three act-field cases pass | 6.38 | 11.75 |
+| `12639` | Compiling shared-bound control widens the ceiling; the native case's literal bound assertion fails | 4.93 | 8.32 |
+| `11601` | Four compilers and all four native act/prepared cases pass | 8.83 | 16.99 |
+| `35655` | Compiling prepared-reference control omits the reference; its dependency assertion fails | 4.88 | 8.01 |
+
+Original act-value runs capture 2,648 source files; the prepared runs
+capture 2,650. All preserve bytes, modes and the lock stamp with zero
+installs; controls restore them exactly and use their original passing
+baseline. The failed authorization attempt stays preserved. The receipts
+state machine, shared load and uncontrolled OS caches. These are separate
+full outer measurements. This extends the foundations only: creation and
+delivery text, observation and outcome references, complete cost planning
+and the adaptive driver remain open. No full gate or formal review has run.
