@@ -22,3 +22,34 @@ function table(count: number, work: number): Readonly<ArchiveCost> {
 export const forecastArchiveForeignSelection = (copies: number): Readonly<ArchiveCost> => table(copies, ARCHIVE_FOREIGN_SELECTION_WORK);
 /** Includes original per-source canonical-key and ordering reservation. */
 export const forecastArchiveForeignBasis = (sources: number): Readonly<ArchiveCost> => table(sources, ARCHIVE_FOREIGN_BASIS_WORK);
+
+export const ARCHIVE_FOREIGN_COPY_REQUEST_WORK = 512;
+export const ARCHIVE_FOREIGN_COPY_SIZE_METADATA = 128;
+export const ARCHIVE_FOREIGN_GENESIS_METADATA = 512;
+export const ARCHIVE_FOREIGN_USE_METADATA = 768;
+export const archiveForeignRepeatWork = (bytes: number): number => bytes * 64;
+export const archiveForeignUseMetadata = (uses: number): number => (uses + 1) * ARCHIVE_FOREIGN_USE_METADATA;
+
+/** SQL metadata is folded into input work by the native ledger. */
+function foreignNativeMetadata(metadata: number): Readonly<ArchiveCost> {
+  if (!natural(metadata)) throw new ArchiveStopped("unavailable");
+  return Object.freeze({ entries: 0, attempts: 0, nodes: 0, calls: 1, metadata, inputWork: metadata });
+}
+/** Only the local direct-uses projection. Per-copy admission is separate. */
+export function forecastArchiveForeignScan(uses: number): Readonly<ArchiveCost> {
+  if (!natural(uses)) throw new ArchiveStopped("unavailable");
+  return foreignNativeMetadata(archiveForeignUseMetadata(uses));
+}
+/** Every cold or repeated copied-content request pays this attempt. */
+export const forecastArchiveForeignCopyRequest = (): Readonly<ArchiveCost> =>
+  Object.freeze({ entries: 0, attempts: 1, nodes: 0, calls: 0, metadata: 0, inputWork: ARCHIVE_FOREIGN_COPY_REQUEST_WORK });
+/** Repeated copies add the original full-byte comparison reservation;
+ * earlier metadata admission gives no attempt or validation credit. */
+export function forecastArchiveForeignRepeat(bytes: number): Readonly<ArchiveCost> {
+  const inputWork = ARCHIVE_FOREIGN_COPY_REQUEST_WORK + archiveForeignRepeatWork(bytes);
+  if (!natural(bytes) || bytes === 0 || !natural(inputWork)) throw new ArchiveStopped("unavailable");
+  return Object.freeze({ entries: 0, attempts: 1, nodes: 0, calls: 0, metadata: 0, inputWork });
+}
+/** Cold keyed size and genesis binding only, not header/privacy/support. */
+export const forecastArchiveForeignCopySize = (): Readonly<ArchiveCost> => foreignNativeMetadata(ARCHIVE_FOREIGN_COPY_SIZE_METADATA);
+export const forecastArchiveForeignGenesis = (): Readonly<ArchiveCost> => foreignNativeMetadata(ARCHIVE_FOREIGN_GENESIS_METADATA);

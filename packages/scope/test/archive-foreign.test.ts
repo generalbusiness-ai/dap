@@ -10,7 +10,7 @@ import { variant } from "@generalbusiness/dap-derive/testing";
 import { outcomeValueDomains, validateDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { COUNTING_COHORT, platform } from "@generalbusiness/dap-platform";
-import { forecastArchiveForeignLookup, forecastArchiveForeignSelection, forecastArchiveForeignBasis } from "../src/archive-foreign-cost.ts";
+import { forecastArchiveForeignLookup, forecastArchiveForeignSelection, forecastArchiveForeignBasis, forecastArchiveForeignScan, forecastArchiveForeignRepeat, forecastArchiveForeignCopyRequest, forecastArchiveForeignCopySize, forecastArchiveForeignGenesis } from "../src/archive-foreign-cost.ts";
 import { ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
 import { buildJournalArchive, journalRef, JournalWork } from "@generalbusiness/artroom-git/journal";
 import { JournalObjectReader, JournalObjects } from "../../git/src/journal-objects.ts";
@@ -68,6 +68,17 @@ async function fixture() {
     let mapCosts: { basis: ArchiveCost; selection: ArchiveCost; lookups: ArchiveCost[] } | null = null;
     const difference = (before: ArchiveCost, after: ArchiveCost): ArchiveCost =>
       Object.fromEntries(Object.keys(before).map(key => [key, after[key as keyof ArchiveCost] - before[key as keyof ArchiveCost]])) as ArchiveCost;
+    const nativeCosts: { query: string; cost: ArchiveCost }[] = [];
+    let repeatCost: { bytes: number; cost: ArchiveCost } | null = null;
+    const native = budget.native.bind(budget);
+    budget.native = (port, reservation) => {
+      const guarded = native(port, reservation);
+      return { exec: (query, ...args) => {
+        const before = budget.admitted(), rows = guarded.exec(query, ...args);
+        nativeCosts.push({ query, cost: difference(before, budget.admitted()) });
+        return rows;
+      } };
+    };
     try {
       const foreign = new ArchiveForeignMetadata(sql, pins, reviewed, PROPOSED_BOUNDS, budget);
       const prefix = archivePrefixMetadata(sql, consumer.at, through, PROPOSED_BOUNDS, budget, new Set([receiver.digest]));
@@ -85,9 +96,13 @@ async function fixture() {
       });
       expect(selection).toEqual(copies);
       mapCosts = { basis: basisCost, selection: selectionCost, lookups };
+      const alreadyRead = selection.find(copy => copy.fact.seq > 0)!;
+      const beforeRepeat = budget.admitted();
+      foreign.scan(prefix.positions[1]!, 1); // Same native direct use, same original ledger.
+      repeatCost = { bytes: alreadyRead.bytes, cost: difference(beforeRepeat, budget.admitted()) };
     } catch (error) { reason = (error as { reason: string }).reason; }
     expect(forbidden).toEqual([]);
-    return { reason, positions, basis, copies, queries, cost: budget.admitted(), mapCosts };
+    return { reason, positions, basis, copies, queries, cost: budget.admitted(), mapCosts, nativeCosts, repeatCost };
   });
   const inventory = (pins: FixtureArchiveSourcePins | undefined = sources, reviewed = policies, damageBody = false, limits: Partial<ArchiveCost> = {}) => consumer.inside(state => {
     const calls: { query: string; key: unknown }[] = [];
@@ -125,6 +140,27 @@ test("direct foreign copies classify their own full headers against fixture pins
   }
   expect(forecastArchiveForeignBasis(result.basis.length)).toEqual(result.mapCosts!.basis);
   expect(forecastArchiveForeignSelection(result.copies.length)).toEqual(result.mapCosts!.selection);
+  const useReads = result.nativeCosts.filter(row => row.query.includes("json_each(entry.bytes, '$.uses')"));
+  const sizeReads = result.nativeCosts.filter(row => row.query.startsWith("SELECT octet_length(bytes) AS size"));
+  const genesisReads = result.nativeCosts.filter(row => row.query.includes("$.input.seed.definition"));
+  expect(useReads).toHaveLength(3); expect(sizeReads).toHaveLength(2); expect(genesisReads).toHaveLength(1);
+  for (const row of useReads) {
+    expect(row.cost).toEqual({ ...fixed, calls: 1, metadata: 1536, inputWork: 1536 });
+    expect(forecastArchiveForeignScan(1)).toEqual(row.cost);
+  }
+  for (const row of sizeReads) {
+    expect(row.cost).toEqual({ ...fixed, calls: 1, metadata: 128, inputWork: 128 });
+    expect(forecastArchiveForeignCopySize()).toEqual(row.cost);
+  }
+  expect(genesisReads[0]!.cost).toEqual({ ...fixed, calls: 1, metadata: 512, inputWork: 512 });
+  expect(forecastArchiveForeignGenesis()).toEqual(genesisReads[0]!.cost);
+  expect(result.repeatCost).not.toBeNull();
+  const repeat = result.repeatCost!;
+  expect(repeat.cost).toEqual({ ...fixed, attempts: 1, calls: 1, metadata: 1536, inputWork: 2048 + repeat.bytes * 64 });
+  const quote = forecastArchiveForeignRepeat(repeat.bytes), scan = forecastArchiveForeignScan(1);
+  for (const key of Object.keys(quote) as (keyof ArchiveCost)[]) expect(quote[key] + scan[key]).toBe(repeat.cost[key]);
+  expect(forecastArchiveForeignCopyRequest()).toEqual({ ...fixed, attempts: 1, metadata: 0, inputWork: 512 });
+
 
 });
 

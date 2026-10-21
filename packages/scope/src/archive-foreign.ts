@@ -5,7 +5,7 @@ import { INVITATION_KEY_MEMBERSHIP } from "@generalbusiness/dap-contract";
 import type { Bounds, Digest, FactRef, PlatformDefinition } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isFactRef, platformName } from "@generalbusiness/artroom-bytes";
 import { derivable } from "@generalbusiness/dap-derive";
-import { forecastArchiveForeignLookup, forecastArchiveForeignSelection, forecastArchiveForeignBasis } from "./archive-foreign-cost.ts";
+import { forecastArchiveForeignLookup, forecastArchiveForeignSelection, forecastArchiveForeignBasis, ARCHIVE_FOREIGN_COPY_REQUEST_WORK, ARCHIVE_FOREIGN_COPY_SIZE_METADATA, ARCHIVE_FOREIGN_GENESIS_METADATA, archiveForeignRepeatWork, archiveForeignUseMetadata } from "./archive-foreign-cost.ts";
 import { ArchiveBudget } from "./archive-budget.ts";
 import { archiveEntryHeader, archiveEntryPrivacy, archiveSupportMetadata } from "./archive-entry-metadata.ts";
 import type { ArchivePolicyRegistry, ReviewedArchivePolicy } from "./archive-inventory.ts";
@@ -50,16 +50,16 @@ export class ArchiveForeignMetadata {
     return policy;
   }
   #copy(fact: FactRef, content: Digest): void {
-    this.budget.spend({ attempts: 1, inputWork: 512 });
+    this.budget.spend({ attempts: 1, inputWork: ARCHIVE_FOREIGN_COPY_REQUEST_WORK });
     const prior = this.#copies.get(content);
     if (prior) {
-      this.budget.spend({ inputWork: prior.bytes * 64 });
+      this.budget.spend({ inputWork: archiveForeignRepeatWork(prior.bytes) });
       if (!same(prior.fact, fact)) return stop("foreign-source-mismatch");
       return;
     }
     const key = canonicalize(fact), priorContent = this.#facts.get(key);
     if (priorContent !== undefined && priorContent !== content) return stop("foreign-source-mismatch");
-    const sizes = this.budget.native(this.sql, () => ({ metadata: 128, inputWork: 0 })).exec("SELECT octet_length(bytes) AS size, typeof(bytes) AS type FROM retained_input WHERE kind = 'entry' AND digest = ? LIMIT 1", content).toArray();
+    const sizes = this.budget.native(this.sql, () => ({ metadata: ARCHIVE_FOREIGN_COPY_SIZE_METADATA, inputWork: 0 })).exec("SELECT octet_length(bytes) AS size, typeof(bytes) AS type FROM retained_input WHERE kind = 'entry' AND digest = ? LIMIT 1", content).toArray();
     if (sizes.length === 0) return stop("incomplete");
     const size = sizes[0]?.["size"];
     if (sizes.length !== 1 || sizes[0]?.["type"] !== "text" || !natural(size) || size === 0) return stop("unavailable");
@@ -74,7 +74,7 @@ export class ArchiveForeignMetadata {
     if (header.uses > this.bounds.usesPerEntry) return stop("limit");
     if (header.seq === 0) {
       if (fact.hash !== source.genesis) return stop("foreign-source-mismatch");
-      const rows = this.budget.native(this.sql, () => ({ metadata: 512, inputWork: 0 })).exec(`SELECT ${text("$.input.seed.definition", 128)} AS pin, ${text("$.input.inc", 64)} AS inc, ${text("$.input.seed.kind", 16)} AS kind FROM retained_input WHERE kind = 'entry' AND digest = ? AND octet_length(bytes) = ? LIMIT 1`, content, size).toArray();
+      const rows = this.budget.native(this.sql, () => ({ metadata: ARCHIVE_FOREIGN_GENESIS_METADATA, inputWork: 0 })).exec(`SELECT ${text("$.input.seed.definition", 128)} AS pin, ${text("$.input.inc", 64)} AS inc, ${text("$.input.seed.kind", 16)} AS kind FROM retained_input WHERE kind = 'entry' AND digest = ? AND octet_length(bytes) = ? LIMIT 1`, content, size).toArray();
       if (rows.length !== 1 || rows[0]?.["pin"] !== source.pin || rows[0]?.["inc"] !== source.at.inc || rows[0]?.["kind"] !== source.at.kind) return stop("foreign-source-mismatch");
     }
     archiveEntryPrivacy(this.sql, location, header, policy.support, this.budget);
@@ -90,7 +90,7 @@ export class ArchiveForeignMetadata {
   scan(position: ArchivePosition, count: number): void {
     this.budget.check();
     if (!natural(count) || count > this.bounds.usesPerEntry) return stop("limit");
-    const rows = this.budget.native(this.sql, () => ({ metadata: (count + 1) * 768, inputWork: 0 })).exec(`SELECT ${text("$.fact.at.scope", 71, "value")} AS scope, ${text("$.fact.at.inc", 64, "value")} AS inc, ${text("$.fact.at.kind", 16, "value")} AS kind, json_extract(value, '$.fact.seq') AS seq, ${text("$.fact.hash", 71, "value")} AS hash, ${text("$.content", 71, "value")} AS content FROM entry, json_each(entry.bytes, '$.uses') WHERE entry.seq = ? AND entry.hash = ? AND entry.size = ? AND octet_length(entry.bytes) = ? LIMIT ?`, position.seq, position.hash, position.bytes, position.bytes, count + 1).toArray();
+    const rows = this.budget.native(this.sql, () => ({ metadata: archiveForeignUseMetadata(count), inputWork: 0 })).exec(`SELECT ${text("$.fact.at.scope", 71, "value")} AS scope, ${text("$.fact.at.inc", 64, "value")} AS inc, ${text("$.fact.at.kind", 16, "value")} AS kind, json_extract(value, '$.fact.seq') AS seq, ${text("$.fact.hash", 71, "value")} AS hash, ${text("$.content", 71, "value")} AS content FROM entry, json_each(entry.bytes, '$.uses') WHERE entry.seq = ? AND entry.hash = ? AND entry.size = ? AND octet_length(entry.bytes) = ? LIMIT ?`, position.seq, position.hash, position.bytes, position.bytes, count + 1).toArray();
     if (rows.length !== count) return stop("unavailable");
     for (const row of rows) {
       const fact = { at: { scope: row["scope"], inc: row["inc"], kind: row["kind"] }, seq: row["seq"], hash: row["hash"] };
