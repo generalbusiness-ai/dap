@@ -10,10 +10,12 @@ import type { OperationRules, ValidDefinition } from "@generalbusiness/dap-deriv
 import { MemorySource, verify } from "@generalbusiness/artroom-replay";
 import { variant } from "@generalbusiness/dap-derive/testing";
 import { ArchivePrefixStopped } from "../src/archive-prefix.ts";
+import { ArchiveDeclarationPlan } from "../src/archive-declaration-plan.ts";
 import { ArchiveDeclarations } from "../src/archive-declarations.ts";
 import { archiveDefinitionPresenceForecast, ArchiveRetainedReader } from "../src/archive-retained.ts";
 import { recordArchiveCurrentDeclarationClosure, forecastArchiveDeclarationClosure, recordArchivePotentialDeclarationClosure, forecastArchivePotentialDeclarationClosure } from "../src/archive-declaration-scout.ts";
 import { ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
+import { archivePrefixMetadata } from "../src/archive-prefix.ts";
 import { inventoryArchive, type ArchivePolicyRegistry, type ReviewedArchivePolicy } from "../src/archive-inventory.ts";
 import { definition, create, rita, type Lane } from "./fixtures-native.ts";
 
@@ -182,6 +184,50 @@ test("a complete declaration scout pays its own work and covers fresh and repeat
   });
   expect(changed.complete).toBe(false); expect(changed.unscouted).toBe("mismatch");
   expect(changed.bodies).toEqual([]);
+});
+
+// Explicit declaration requests exercise this scalar planning boundary.
+// Actual entry-dependency admission remains with full inventory; no offer
+// is claimed to name these roots merely because its position is used.
+test("declaration plans retain repeated native validation work and missing-candidate prefix sizes", async () => {
+  const child = leaf("planned-declaration-child");
+  const parent = variant(base.declared, data => { data.acts["link"].sends.push({ create: { kind: "lane", definition: child.digest, fields: {}, result: {} } }); });
+  const lane = await create({}, {}, parent); await keep(lane, [child]);
+  await lane.did(rita, "offer", { fields: { intent: 0 }, expected: { intent: 1 } });
+  const through = await lane.head(), missing = textDigest("TEST absent potential declaration");
+  const result = await lane.inside(state => {
+    const queries: string[] = [], budget = new ArchiveBudget();
+    const sql = { exec(query: string, ...args: (string | number | null | ArrayBuffer)[]) { queries.push(query); return state.storage.sql.exec(query, ...args); } };
+    const policies = new Map([[parent.digest, policy(parent)], [child.digest, policy(child)]]);
+    const prefix = archivePrefixMetadata(sql, lane.at, through, PROPOSED_BOUNDS, budget, new Set(policies.keys()));
+    const admission = new ArchiveDeclarations(new ArchiveRetainedReader(sql, budget), PROPOSED_BOUNDS, policies, new Set());
+    admission.root(parent.digest);
+    const root = recordArchiveCurrentDeclarationClosure(admission, parent.digest);
+    const plan = new ArchiveDeclarationPlan(0, root, budget);
+    plan.append(prefix.positions[0]!, []);
+    const repeated = recordArchivePotentialDeclarationClosure(admission, parent.digest);
+    const absent = recordArchivePotentialDeclarationClosure(admission, missing);
+    plan.append(prefix.positions[1]!, [repeated, absent]);
+    const scouted = budget.admitted(), first = prefix.positions[0]!, beforeMap = budget.admitted();
+    const oldSizes = plan.sizes({ seq: first.seq, hash: first.hash }), afterMap = budget.admitted();
+    expect(oldSizes.size).toBe(2); expect(oldSizes.has(missing)).toBe(false);
+    const sizes = plan.sizes(through);
+    expect(sizes.size).toBe(3); expect(sizes.get(missing)).toBeNull();
+    const fresh = new ArchiveDeclarations(new ArchiveRetainedReader(sql, budget), PROPOSED_BOUNDS, policies, new Set(), sizes);
+    const rootQuote = plan.quote({ seq: first.seq, hash: first.hash }), fullQuote = plan.quote(through);
+    const before = budget.admitted(); fresh.root(parent.digest); const afterRoot = budget.admitted();
+    for (const key of Object.keys(rootQuote.work) as (keyof typeof rootQuote.work)[]) expect(rootQuote.work[key]).toBeGreaterThanOrEqual(afterRoot[key] - before[key]);
+    fresh.walk(parent.digest); expect(fresh.walk(missing).complete).toBe(false); const after = budget.admitted();
+    for (const key of Object.keys(fullQuote.work) as (keyof typeof fullQuote.work)[]) expect(fullQuote.work[key]).toBeGreaterThanOrEqual(after[key] - before[key]);
+    expect(fullQuote.work.attempts).toBe(5); expect(rootQuote.work.attempts).toBe(2);
+    expect(rootQuote.declarations).toEqual([parent.digest, child.digest]);
+    expect(fullQuote.declarations).toEqual([parent.digest, child.digest, missing]);
+    const handoff = plan.handoffCost();
+    for (const key of Object.keys(handoff) as (keyof ArchiveCost)[]) expect(afterMap[key] - beforeMap[key]).toBe(handoff[key]);
+    return { scouted, final: budget.admitted(), queries, rootQuote, fullQuote };
+  });
+  expect(result.scouted.nodes).toBe(3); expect(result.final.nodes).toBe(6);
+  expect(result.queries.filter(query => query.startsWith("SELECT bytes FROM entry") || query.startsWith("SELECT bytes FROM retained_value"))).toEqual([]);
 });
 
 test("missing declaration probes retain their distinct native costs and refuse newly present bodies after a native turn", async () => {
