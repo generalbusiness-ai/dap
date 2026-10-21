@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9fcc9347bcbd51e0144825aae037627be0e75ffd","text":"Merge retired a covered predecessor; the successor is at notes/plans/002-retain-unknown-fork-effects.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a0033aef30bd6400375e0722ab566faf9b8b8d0c","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-09-offline-and-sync-design.md."}
