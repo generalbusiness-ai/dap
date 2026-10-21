@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5a83300fda34f49a14cedc1271228f9c0298fa79","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-input-cost.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5bb48f9f152d06728aaa2de787975244a0ff78cb","text":"Merge retired a covered predecessor; the successor is at vitest.config.ts."}
