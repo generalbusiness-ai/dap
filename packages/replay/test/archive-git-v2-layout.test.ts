@@ -3,18 +3,18 @@
 import { afterAll, expect, test } from "vitest";
 import { canonicalize, entryHash, parseStrict } from "@generalbusiness/artroom-bytes";
 import type { Entry } from "@generalbusiness/dap-contract";
-import { archiveSource, verifyArchive } from "@generalbusiness/artroom-replay";
-import { gitSource } from "@generalbusiness/artroom-replay/git";
+import { archiveSource, verifyArchive } from "../src/index.ts";
+import { gitSource } from "../src/git.ts";
 import { ArchiveBudget } from "../../scope/src/archive-budget.ts";
-import { buildJournalPass } from "../src/journal-v2-layout.ts";
-import { prepareJournalPass, type JournalPassPreparation } from "../src/journal-v2-preparation.ts";
-import { readJournalArchiveV2 } from "../src/journal-v2-reader.ts";
-import { journalRef } from "../src/journal-path.ts";
-import type { JournalReadResult } from "../src/journal-reader.ts";
-import { journalV2PassPath, journalV2SegmentPath } from "../src/journal-v2-path.ts";
-import { ArchiveSegmentCursor } from "../src/journal-segments.ts";
-import { archiveObjectSource, archiveRepository, selectedInput, syntheticJournal, writeArchiveObjects } from "./support/journal.ts";
-import { cleanup, git } from "./support/repo.ts";
+import { buildJournalPass } from "../../git/src/journal-v2-layout.ts";
+import { prepareJournalPass, type JournalPassPreparation } from "../../git/src/journal-v2-preparation.ts";
+import { readJournalArchiveV2 } from "../../git/src/journal-v2-reader.ts";
+import { journalRef } from "../../git/src/journal-path.ts";
+import type { JournalReadResult } from "../../git/src/journal-reader.ts";
+import { journalV2PassPath, journalV2SegmentPath } from "../../git/src/journal-v2-path.ts";
+import { ArchiveSegmentCursor } from "../../git/src/journal-segments.ts";
+import { archiveObjectSource, archiveRepository, selectedInput, syntheticJournal, writeArchiveObjects } from "../../git/test/support/journal.ts";
+import { cleanup, git } from "../../git/test/support/repo.ts";
 
 afterAll(cleanup);
 test("three v2 passes cover ten thousand entries without rereading old entries or rewriting earlier files", async () => {

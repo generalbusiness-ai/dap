@@ -3,14 +3,14 @@
 import { afterAll, expect, test } from "vitest";
 import type { Entry } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, entryHash, parseStrict, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
-import { archiveSource, verifyArchive } from "@generalbusiness/artroom-replay";
+import { archiveSource, verifyArchive } from "../src/index.ts";
 import { ArchiveBudget } from "../../scope/src/archive-budget.ts";
-import { buildJournalPass } from "../src/journal-v2-layout.ts";
-import { readJournalRepositoryArchive } from "../src/journal-reader.ts";
-import { journalKeyName } from "../src/journal-selection.ts";
-import { journalV2PassPath, journalV2RetainedPath, journalV2SegmentPath, readJournalV2Path } from "../src/journal-v2-path.ts";
-import { archiveObjectSource, archiveRepository, selectedInput, syntheticJournal, writeArchiveObjects } from "./support/journal.ts";
-import { cleanup, git } from "./support/repo.ts";
+import { buildJournalPass } from "../../git/src/journal-v2-layout.ts";
+import { readJournalRepositoryArchive } from "../../git/src/journal-reader.ts";
+import { journalKeyName } from "../../git/src/journal-selection.ts";
+import { journalV2PassPath, journalV2RetainedPath, journalV2SegmentPath, readJournalV2Path } from "../../git/src/journal-v2-path.ts";
+import { archiveObjectSource, archiveRepository, selectedInput, syntheticJournal, writeArchiveObjects } from "../../git/test/support/journal.ts";
+import { cleanup, git } from "../../git/test/support/repo.ts";
 
 afterAll(cleanup);
 // Invariant: the shared path parser binds the numeric pairs and every

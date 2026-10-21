@@ -2,15 +2,15 @@
  * archive confirmation, provider or deployment acceptance is claimed. */
 import { afterAll, expect, test } from "vitest";
 import { canonicalize } from "@generalbusiness/artroom-bytes";
-import { archiveSource, verifyArchive } from "@generalbusiness/artroom-replay";
+import { archiveSource, verifyArchive } from "../src/index.ts";
 import { ArchiveBudget } from "../../scope/src/archive-budget.ts";
-import { buildJournalArchive } from "../src/journal-layout.ts";
-import { convertJournalArchiveV1 } from "../src/journal-v2-convert.ts";
-import { buildJournalPass } from "../src/journal-v2-layout.ts";
-import { readJournalArchiveV2 } from "../src/journal-v2-reader.ts";
-import { journalV2RetainedPath, journalV2SegmentPath } from "../src/journal-v2-path.ts";
-import { archiveObjectSource, archiveRepository, described, rewriteArchiveFile, selectedInput, syntheticJournal, writeArchiveObjects } from "./support/journal.ts";
-import { cleanup, git } from "./support/repo.ts";
+import { buildJournalArchive } from "../../git/src/journal-layout.ts";
+import { convertJournalArchiveV1 } from "../../git/src/journal-v2-convert.ts";
+import { buildJournalPass } from "../../git/src/journal-v2-layout.ts";
+import { readJournalArchiveV2 } from "../../git/src/journal-v2-reader.ts";
+import { journalV2RetainedPath, journalV2SegmentPath } from "../../git/src/journal-v2-path.ts";
+import { archiveObjectSource, archiveRepository, described, rewriteArchiveFile, selectedInput, syntheticJournal, writeArchiveObjects } from "../../git/test/support/journal.ts";
+import { cleanup, git } from "../../git/test/support/repo.ts";
 
 afterAll(cleanup);
 test("a v1 conversion preserves every old body and receipt before a v2 append, without fetching old files or ancestry", async () => {
