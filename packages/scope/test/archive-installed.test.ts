@@ -17,6 +17,9 @@ import { buildJournalPass, journalRef, verifyJournalAppend, type JournalArchive,
 import { readJournalRepositoryArchive } from "@generalbusiness/artroom-git/journal-reader";
 import { archiveInput } from "../src/archive-input.ts";
 import { ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
+import { archiveEntryHeader, archiveEntryPrivacy } from "../src/archive-entry-metadata.ts";
+import { archivePrefixMetadata } from "../src/archive-prefix.ts";
+import { forecastArchiveEntryPrivacy } from "../src/archive-entry-privacy-cost.ts";
 import { ArchiveForeignMetadata } from "../src/archive-foreign.ts";
 import { fixtureArchiveTargetIn } from "../src/archive-target.ts";
 import { archiveReplayAnchors } from "../src/archive-anchors.ts";
@@ -230,6 +233,7 @@ test.for(["fixture", "Grow"])("installed %s scopes export genesis zero after a l
     const passAnchors = new Map<ScopeId, readonly FactRef[]>();
     const passSelections = new Map<ScopeId, string>();
     const sharedPassFootprints: unknown[] = [], sharedWholePassFootprints: unknown[] = [];
+    const entryPrivacyComponents: { scope: string; seq: number; input: Input["type"]; effects: number; delta: ArchiveCost }[] = [];
     if (kind === "Grow") {
       // Invariant: native domain permission belongs to its exact declared
       // place. A TEST owner table cannot relocate it or add another domain.
@@ -282,6 +286,9 @@ test.for(["fixture", "Grow"])("installed %s scopes export genesis zero after a l
         const held = new Map<string, JournalObject>(); let parent: string | null = null, after: Head | null = null;
         const written = new Set<string>(), expected = new Set(planned.archive.selection.objects.map(row =>
           row.key.kind === "value" ? `value/${row.key.domain}` : row.key.kind));
+        const birth = read.value[0]!.entry.input;
+        if (birth.type !== "genesis") throw Error("The real fixture must begin at genesis.");
+        const privacySupport = policies.get(birth.seed.definition)!.support;
         for (const sealed of read.value) {
           const through = { seq: sealed.entry.seq, hash: sealed.hash };
           const old: string | null = parent, receipt: Head | null = after;
@@ -293,6 +300,28 @@ test.for(["fixture", "Grow"])("installed %s scopes export genesis zero after a l
             one: Extract<Awaited<ReturnType<typeof planArchivePass>>, { ok: true }>;
             appended: Awaited<ReturnType<typeof verifyJournalAppend>> | null; inventoryNodes: number; cost: ArchiveCost };
           const result: Footprint = await life.wait((): Promise<Footprint> => runInDurableObject(scope.object, async (_instance, state): Promise<Footprint> => {
+            // Independent component receipt before fee extraction. The
+            // separate original budget pays its own fresh prefix and JSON
+            // allowance; neither scout work nor validation is credited.
+            const sql = archiveSql(state), privacyBudget = new ArchiveBudget();
+            const prefix = archivePrefixMetadata(sql, at, through, PROPOSED_BOUNDS, privacyBudget,
+              { has: digest => policies.has(digest) }, receipt);
+            const position = prefix.positions[0]!;
+            expect(prefix.positions.map(row => row.seq)).toEqual([through.seq]);
+            const beforePrivacy = privacyBudget.admitted(), sourceRow = { kind: "local" as const, position };
+            const header = archiveEntryHeader(sql, sourceRow, privacyBudget);
+            archiveEntryPrivacy(sql, sourceRow, header, privacySupport, privacyBudget);
+            const afterPrivacy = privacyBudget.admitted(), delta = Object.fromEntries(Object.keys(afterPrivacy).map(key => [key,
+              afterPrivacy[key as keyof ArchiveCost] - beforePrivacy[key as keyof ArchiveCost]])) as ArchiveCost;
+            const quote = forecastArchiveEntryPrivacy({ input: header.input, effects: header.effects });
+            expect(quote.ok).toBe(true); if (quote.ok) expect(quote.cost).toEqual(delta);
+            // Literal receipts from the distinct original-function run.
+            // Shared future and actual prices changing together must fail.
+            const independent: Readonly<Record<string, readonly [number, number]>> = {
+              "delivery:0": [1, 512], "genesis:11": [2, 6656], "outcome:1": [3, 1856], "preparation:3": [3, 2880] };
+            const pinned = independent[`${header.input}:${header.effects}`];
+            if (pinned) expect(delta).toEqual({ entries: 0, attempts: 0, nodes: 0, calls: pinned[0], metadata: pinned[1], inputWork: pinned[1] });
+            entryPrivacyComponents.push({ scope: scope.name, seq: through.seq, input: header.input, effects: header.effects, delta });
             const budget = new ArchiveBudget();
             const one = await planArchivePass(archiveSql(state), { at, through, after: receipt, bounds: PROPOSED_BOUNDS, policies,
               format: "sha1", parent: old ? { id: old, source } : null, markedAt: timeOf(life.now()), fixtureSources,
@@ -320,8 +349,12 @@ test.for(["fixture", "Grow"])("installed %s scopes export genesis zero after a l
         expect([...written].sort()).toEqual([...expected].sort());
       }
     }
+    if (kind === "Grow") for (const [input, effects] of [["delivery", 0], ["genesis", 11], ["outcome", 1], ["preparation", 3]] as const) {
+      expect(entryPrivacyComponents.some(row => row.input === input && row.effects === effects), `${input}:${effects} original receipt is exercised`).toBe(true);
+    }
     if (kind === "Grow") (context.task.meta as Record<string, unknown>)["sharedPassNativeFootprints"] = {
       passes: sharedPassFootprints, wholePasses: sharedWholePassFootprints,
+      entryPrivacyComponents, entryPrivacyQualification: "Actual native header and entry-privacy calls before extraction, each component has its own unchanged default budget and fresh prefix/JSON reservation. Delta excludes that separately paid prefix, trusted support validation, foreign classification, and all payload reads; no whole-export or driver admission claimed.",
       qualification: "Actual installed Grow and its discovered native Directory16, Rules10 and Destination12 histories. Each diagnostic one-entry pass uses one original default30s ledger for fresh native inventory, canonical Git build and, for each noninitial pass, append validation. Genesis has no prior append and no append-validator claim. Real fixture entries and retained bytes; explicit TEST package peer, owner input, policy/source/authority configuration and scheduler. No remote confirmation, production admission or deployed cadence claim. Kind/domain counts concern these fixture entries, not all theoretically possible native entries."
     };
     if (kind === "Grow") {

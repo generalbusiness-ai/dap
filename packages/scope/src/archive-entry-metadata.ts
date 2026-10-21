@@ -11,6 +11,7 @@ import { type Capabilities, type OperationRules, type ValidDefinition } from "@g
 import { platform } from "@generalbusiness/dap-platform";
 import { sqlJsonText as text, type Sql } from "./sqlite.ts";
 import { archiveDeclarationValuePlaces, archiveValuePlace } from "./archive-value-policy.ts";
+import { ARCHIVE_ENTRY_DETAIL_METADATA, ARCHIVE_ENTRY_HEADER_METADATA, archiveEntryEffectsMetadata } from "./archive-entry-privacy-cost.ts";
 export { sqlJsonText as archiveMetadataText } from "./sqlite.ts";
 
 /** Trusted native code/registry metadata. A request cannot supply this map;
@@ -54,7 +55,7 @@ export function archiveEntryHeader(sql: Pick<Sql, "exec">, source: ArchiveMetada
     budget.spend({ inputWork: source.bytes * ARCHIVE_PRIVACY_JSON_PASSES });
   }
   const held = location(source);
-  const rows = budget.native(sql, () => ({ metadata: 512, inputWork: 0 })).exec(`SELECT ${HEADER} FROM ${held.table} WHERE ${held.where} LIMIT 1`, ...held.args).toArray(), row = rows[0];
+  const rows = budget.native(sql, () => ({ metadata: ARCHIVE_ENTRY_HEADER_METADATA, inputWork: 0 })).exec(`SELECT ${HEADER} FROM ${held.table} WHERE ${held.where} LIMIT 1`, ...held.args).toArray(), row = rows[0];
   const at = { scope: row?.["scope"], inc: row?.["inc"], kind: row?.["kind"] };
   if (rows.length !== 1 || !row || !natural(row["seq"]) || !isScopeRef(at) || !variants.includes(row["input"])
     || row["usesType"] !== "array" || !natural(row["uses"]) || row["effectsType"] !== "array" || !natural(row["effects"])) return stop("unavailable");
@@ -74,7 +75,7 @@ export function archiveEntryPrivacy(sql: Pick<Sql, "exec">, source: ArchiveMetad
     if (rules.valueDomains?.some(domain => !archiveValuePlace(support, domain.domain, domain.max, `owners.${name}.${kind}`))) return stop("unsupported-custom-domain");
   };
   if (header.effects > OWNER_LIMIT - 1) return stop("limit");
-  const opened = header.effects === 0 ? [] : read((header.effects + 1) * 512).exec(`SELECT ${text("$.effect", 16, "value")} AS effect, ${text("$.owner", 128, "value")} AS owner, ${text("$.capability", 128, "value")} AS capability, ${text("$.kind", 128, "value")} AS kind FROM ${held.table}, json_each(${held.table}.bytes, '$.effects') WHERE ${held.where} LIMIT ?`, ...held.args, OWNER_LIMIT).toArray();
+  const opened = header.effects === 0 ? [] : read(archiveEntryEffectsMetadata(header.effects)).exec(`SELECT ${text("$.effect", 16, "value")} AS effect, ${text("$.owner", 128, "value")} AS owner, ${text("$.capability", 128, "value")} AS capability, ${text("$.kind", 128, "value")} AS kind FROM ${held.table}, json_each(${held.table}.bytes, '$.effects') WHERE ${held.where} LIMIT ?`, ...held.args, OWNER_LIMIT).toArray();
   if (opened.length >= OWNER_LIMIT) return stop("limit");
   const effects = new Set(["open", "state", "party", "ref", "value", "list", "hold", "redact", "relation", "record", "activate", "operation", "attempt", "index", "attention"]);
   if (opened.length !== header.effects) return stop("unavailable");
@@ -84,11 +85,11 @@ export function archiveEntryPrivacy(sql: Pick<Sql, "exec">, source: ArchiveMetad
     if (effect["effect"] === "record" && (typeof effect["capability"] !== "string" || typeof effect["kind"] !== "string" || !support.records.get(effect["capability"])?.has(effect["kind"]))) return stop("unsupported-archive-cohort");
   }
   if (header.input === "outcome") {
-    const outcomes = read(320).exec(`SELECT ${text("$.input.owner", 128)} AS owner, ${text("$.input.kind", 128)} AS kind FROM ${held.table} WHERE ${held.where} LIMIT 1`, ...held.args).toArray();
+    const outcomes = read(ARCHIVE_ENTRY_DETAIL_METADATA).exec(`SELECT ${text("$.input.owner", 128)} AS owner, ${text("$.input.kind", 128)} AS kind FROM ${held.table} WHERE ${held.where} LIMIT 1`, ...held.args).toArray();
     if (outcomes.length !== 1) return stop("unavailable");
     owner(outcomes[0]!["owner"], outcomes[0]!["kind"]);
   } else if (header.input === "preparation") {
-    const preparations = read(320).exec(`SELECT ${text("$.input.capability", 128)} AS capability, ${text("$.input.step", 128)} AS step FROM ${held.table} WHERE ${held.where} LIMIT 1`, ...held.args).toArray(), preparation = preparations[0];
+    const preparations = read(ARCHIVE_ENTRY_DETAIL_METADATA).exec(`SELECT ${text("$.input.capability", 128)} AS capability, ${text("$.input.step", 128)} AS step FROM ${held.table} WHERE ${held.where} LIMIT 1`, ...held.args).toArray(), preparation = preparations[0];
     if (preparations.length !== 1 || typeof preparation?.["capability"] !== "string" || typeof preparation["step"] !== "string" || !support.preparations.get(preparation["capability"])?.has(preparation["step"])) return stop("unsupported-archive-cohort");
   }
   budget.check();

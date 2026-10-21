@@ -3,10 +3,11 @@
  * test fail-closed classification, not history integrity or authority. */
 import { expect, test } from "vitest";
 import type { Entry } from "@generalbusiness/dap-contract";
-import { DEVICE_COMMAND, DOMAINS, PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
+import { DEVICE_COMMAND, DOMAINS, PROPOSED_BOUNDS, RETAINED_INPUT_BYTES } from "@generalbusiness/dap-contract";
 import { canonicalize } from "@generalbusiness/artroom-bytes";
 import type { OperationRules } from "@generalbusiness/dap-derive";
 import { ArchiveBudget } from "../src/archive-budget.ts";
+import { forecastArchiveEntryPrivacy } from "../src/archive-entry-privacy-cost.ts";
 import { archivePrefixMetadata } from "../src/archive-prefix.ts";
 import { DEVICE_COMMAND_ARCHIVE_PREPARATIONS, DEVICE_COMMAND_ARCHIVE_RECORDS, archivePrivacyMetadata, type ArchiveSupport } from "../src/archive-privacy.ts";
 import { definition, create, rita, type Lane } from "./fixtures-native.ts";
@@ -93,4 +94,13 @@ test("changed incarnation, an unknown consumer variant and a stopped scan never 
   const stopped = await scan(await create(), support, 7);
   expect(stopped.reason).toBe("limit"); expect(stopped.positions).toEqual([]);
   expect(stopped.queries.filter(row => row.query.includes("AS usesType"))).toEqual([]);
+});
+
+// Scalar price boundary, not a native foreign copy or admission witness.
+test("entry privacy quotes keep the original copy JSON charge and finite owner bound", () => {
+  expect(forecastArchiveEntryPrivacy({ input: "outcome", effects: 64, copyBytes: 1557 })).toEqual({ ok: true,
+    cost: { entries: 0, attempts: 0, nodes: 0, calls: 3, metadata: 34112, inputWork: 133760 } });
+  expect(forecastArchiveEntryPrivacy({ input: "outcome", effects: 65 })).toEqual({ ok: false, reason: "limit" });
+  expect(forecastArchiveEntryPrivacy({ input: "act", effects: 0, copyBytes: RETAINED_INPUT_BYTES + 1 })).toEqual({ ok: false, reason: "limit" });
+  expect(() => forecastArchiveEntryPrivacy({ input: "act", effects: -1 })).toThrow("archive-unavailable");
 });
