@@ -15,7 +15,7 @@ import type { Sql } from "./sqlite.ts";
  * operation-owner inspection. Body fetch/parse/hash are charged separately.
  * This intentionally limits dense/large prefixes below the row ceiling. */
 export const ARCHIVE_PRIVACY_JSON_PASSES = 64;
-const POSITION_METADATA_BYTES = 192;
+export const ARCHIVE_POSITION_METADATA_BYTES = 192;
 export type ArchivePrefixReason = ArchiveExportRefusal | "unavailable" | "incomplete" | "mismatch" | "limit" | "foreign-source-unavailable" | "foreign-source-mismatch";
 export class ArchivePrefixStopped extends Error { constructor(readonly reason: ArchivePrefixReason) { super(`archive-${reason}`); } }
 export const stopArchivePrefix = (reason: ArchivePrefixReason): never => { throw new ArchivePrefixStopped(reason); };
@@ -31,7 +31,7 @@ export interface ArchivePrefix {
 
 /** `expected` and certificates come from native caller-owned context and
  * trusted reviewer configuration, never a request's claimed safe flags. */
-export function archivePrefixMetadata(sql: Pick<Sql, "exec">, expected: ScopeRef, through: Head, bounds: Pick<Bounds, "entryBytes" | "sendsPerEntry" | "definitionBytes">, budget: ArchiveBudget, certified: Pick<ReadonlySet<Digest>, "has">, after?: Head | null): ArchivePrefix {
+export function archivePrefixMetadata(sql: Pick<Sql, "exec">, expected: ScopeRef, cutoff: Head | "next", bounds: Pick<Bounds, "entryBytes" | "sendsPerEntry" | "definitionBytes">, budget: ArchiveBudget, certified: Pick<ReadonlySet<Digest>, "has">, after?: Head | null): ArchivePrefix {
   budget.check();
   if (after !== undefined && after !== null && (!isHead(after) || after.seq >= JOURNAL_V2_LAST_POSITION)) return stopArchivePrefix("unavailable");
   const predecessor = after ? { ...after } : null, first = predecessor ? predecessor.seq + 1 : 0;
@@ -49,6 +49,15 @@ export function archivePrefixMetadata(sql: Pick<Sql, "exec">, expected: ScopeRef
   }
   const admittedPin = admitArchivePin(pin.seed.definition, certified, nativeData);
   if (!admittedPin.ok) return stopArchivePrefix(admittedPin.reason);
+  // A scalar window asks for its first position only after pin admission.
+  // This adds one ordinary charged lookup, never an earlier history probe.
+  let through: Head;
+  if (cutoff === "next") {
+    const rows = budget.native(sql, () => ({ metadata: ARCHIVE_POSITION_METADATA_BYTES, inputWork: 0 })).exec(
+      "SELECT hash FROM entry WHERE seq = ? AND typeof(hash) = 'text' AND octet_length(hash) = 71 LIMIT 1", first).toArray();
+    if (rows.length !== 1 || !isDigest(rows[0]?.["hash"])) return stopArchivePrefix("incomplete");
+    through = { seq: first, hash: rows[0]["hash"] };
+  } else through = cutoff;
   if (!natural(through.seq) || through.seq < first || !isDigest(through.hash) || !natural(bounds.entryBytes) || bounds.entryBytes === 0) return stopArchivePrefix("unavailable");
   // At most one overflow sentinel; never scan an arbitrary future range.
   if (through.seq - first > ARCHIVE_BOUNDS.entries || after !== undefined && through.seq > JOURNAL_V2_LAST_POSITION) return stopArchivePrefix("limit");
@@ -68,7 +77,7 @@ export function archivePrefixMetadata(sql: Pick<Sql, "exec">, expected: ScopeRef
   if (through.seq > head.seq) return stopArchivePrefix("incomplete");
   if (through.seq === head.seq && through.hash !== head.hash) return stopArchivePrefix("mismatch");
   const limit = Math.min(through.seq - first + 1, ARCHIVE_BOUNDS.entries + 1);
-  const positionsSql = budget.native(sql, () => ({ metadata: limit * POSITION_METADATA_BYTES, inputWork: 0 }));
+  const positionsSql = budget.native(sql, () => ({ metadata: limit * ARCHIVE_POSITION_METADATA_BYTES, inputWork: 0 }));
   // Column byte lengths use SQLite metadata. No entry JSON operation or
   // value projection occurs until the whole input work has been admitted.
   const columns = "SELECT seq, CASE WHEN typeof(hash) = 'text' AND octet_length(hash) = 71 THEN hash ELSE NULL END AS hash, CASE WHEN typeof(size) = 'integer' THEN size ELSE NULL END AS size, octet_length(bytes) AS actual, typeof(bytes) AS type FROM entry ";

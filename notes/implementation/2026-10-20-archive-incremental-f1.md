@@ -580,3 +580,57 @@ scheduler and the local bridge remain TEST fixtures. It supplies no hosted
 transport, provider, credential, deployment or full F1 acceptance claim.
 The adaptive cutoff, amended large native pass witnesses and throughput
 work remain open. No full gate or formal Source review has run.
+
+## Scalar lookahead for full-cost planning
+
+The next local foundation adds a non-stopping `ArchiveBudget.canSpend`
+check and a scalar `ArchiveWindow`. A forecast compares against the same
+original limits and used counters; it is not spent, prepaid, refunded or a
+second allowance. Actual work still calls `spend`. Its insufficient-cost
+behavior remains stopping, with every original limit and debit unchanged.
+
+The window advances through keyed native positions without returning entry
+JSON or retained bodies. Before each query it checks that the metadata work
+will leave the forecast available. Before admitting another entry's JSON
+work it checks that unchanged debit too. A limited step keeps the original
+budget usable for finishing the chosen whole prefix. Work spent examining
+a candidate is never refunded when an earlier boundary is chosen.
+
+Opening a window uses the prefix reader's new internal `next` mode. Pin
+admission happens before its first-position lookup; the existing explicit
+Head path keeps its original query and debit sequence. The first entry's
+JSON reservation is already paid by that prefix read. Its hash and size
+must still match when the window reads it, so drift cannot borrow the
+earlier reservation. Later entries pay the same 64-pass JSON-work debit.
+
+Native tests select actual entries 0 and 1, leave room for the next scalar
+read but no next entry's JSON work, and retain the complete forecast. The
+same original budget then spends that forecast to its exact ceiling; it
+cannot spend one byte more. All entry reads in the window are scalar. A
+corrupt size change after initial metadata admission refuses before JSON.
+An unadmitted pin also refuses a new interval after an actual supplied
+predecessor without reading any entry. The predecessor is fixture context,
+not a claimed confirmed archive receipt.
+
+| Original | Result | Outer elapsed seconds | Outer CPU seconds |
+|---|---|---:|---:|
+| `97276` | First foundation: both Scope compilers and ten budget/prefix cases pass | 6.38 | 9.95 |
+| `30669` | Stronger whole-prefix selection and headroom case pass | 5.98 | 10.03 |
+| `56120` | Compilers pass; overstrict test disallows the pin's legitimate genesis-hash lookup | 6.23 | 9.88 |
+| `7403` | Corrected predecessor-specific ordering witness and all ten cases pass | 5.69 | 9.74 |
+| `38415` | Compiling control ignores the finishing forecast: limited-step assertion fails | 5.14 | 8.25 |
+| `98211` | Compiling control ignores the first size change: refusal assertion fails | 4.81 | 7.99 |
+| `56163` | Compiling control moves lookup before pin refusal: the final refusal stays correct, but the no-entry-read assertion fails | 5.07 | 8.20 |
+
+Each original captures all 2,644 source files and exact modes and lock
+stamp, with zero installs. The controls restore them exactly and use the
+original passing baseline without repeating it. The first two controls
+precede the pin-ordering refactor; their target guards and test cases stay
+unchanged. Machine, load and uncontrolled OS-cache statements are in each
+input receipt. These are separate complete outer measurements.
+
+This foundation does not choose a production pass. The driver still uses
+the conservative 128-entry/128-KiB cap. The next boundary must account for
+retained-input discovery, probes, declarations, layout, tree and finishing
+work while keeping whole-prefix privacy admission before body reads. No
+complete adaptive cutoff, new acceptance, gate or formal review is claimed.

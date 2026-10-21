@@ -37,13 +37,19 @@ export class ArchiveBudget {
     this.#last = time;
     if (time >= this.#until) this.stop("timeout");
   }
-  spend(cost: Partial<ArchiveCost>): void {
+  /** Scheduling check against this same original allowance. A false result
+   * spends nothing and does not stop the pass. It grants no I/O admission. */
+  canSpend(cost: Partial<ArchiveCost>): boolean {
     this.check();
     if (Object.keys(cost).some(key => !(keys as readonly string[]).includes(key))) this.stop("limit");
     for (const key of keys) {
       const n = cost[key] ?? 0;
-      if (!natural(n) || n > this.#limits[key] - this.#used[key]) this.stop("limit");
+      if (!natural(n)) this.stop("limit");
     }
+    return keys.every(key => (cost[key] ?? 0) <= this.#limits[key] - this.#used[key]);
+  }
+  spend(cost: Partial<ArchiveCost>): void {
+    if (!this.canSpend(cost)) this.stop("limit");
     for (const key of keys) this.#used[key] += cost[key] ?? 0;
   }
   /** Includes projected metadata in the same cumulative input-work ledger.

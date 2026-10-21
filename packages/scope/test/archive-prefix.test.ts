@@ -5,12 +5,55 @@ import { expect, test } from "vitest";
 import type { Head, ScopeRef } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize, newIncarnation, textDigest } from "@generalbusiness/artroom-bytes";
-import { ArchiveBudget } from "../src/archive-budget.ts";
-import { archivePrefixMetadata } from "../src/archive-prefix.ts";
+import { ARCHIVE_BOUNDS, ArchiveBudget } from "../src/archive-budget.ts";
+import { ARCHIVE_POSITION_METADATA_BYTES, archivePrefixMetadata } from "../src/archive-prefix.ts";
+import { openArchiveWindow } from "../src/archive-window.ts";
 import { definition, create, rita } from "./fixtures-native.ts";
 
 const syntheticHash = textDigest("synthetic prefix row, not a verified entry");
 const certified = new Set([definition.digest]);
+test("native scalar lookahead stops before a whole entry would consume the owner's remaining work, without poisoning or refilling the budget", async () => {
+  const lane = await create();
+  await lane.did(rita, "remark", { on: 0, fields: { text: "genuine selected native entry" } });
+  const selected = await lane.head();
+  await lane.did(rita, "remark", { on: 0, fields: { text: "genuine later native entry" } });
+  const head = await lane.head();
+  const result = await lane.inside(state => {
+    const queries: string[] = [], budget = new ArchiveBudget();
+    const sql = { exec(query: string, ...args: (string | number | null)[]) { queries.push(query); return state.storage.sql.exec(query, ...args); } };
+    const window = openArchiveWindow(sql, lane.at, head, null, PROPOSED_BOUNDS, budget, certified);
+    const first = window.next();
+    if (first.kind !== "position") return expect.fail("The first native position must fit.");
+    const second = window.next();
+    if (second.kind !== "position") return expect.fail("The second native position must fit.");
+    const used = budget.admitted(), reserve = { inputWork: ARCHIVE_BOUNDS.inputWork - used.inputWork - ARCHIVE_POSITION_METADATA_BYTES };
+    const next = window.next(reserve), after = budget.admitted();
+    expect(next).toEqual({ kind: "limited" });
+    const prefix = window.prefix({ seq: second.position.seq, hash: second.position.hash });
+    const finalWorkFits = budget.canSpend(reserve);
+    budget.spend(reserve);
+    return { first, next, prefix, used, after, finalWorkFits, full: budget.admitted(), extraFits: budget.canSpend({ inputWork: 1 }), queries };
+  });
+  expect(result.prefix.positions.map(row => row.seq)).toEqual([0, 1]);
+  expect(result.prefix.through).toEqual(selected);
+  expect(result.after.entries).toBe(result.used.entries);
+  expect(result.after.inputWork).toBeGreaterThan(result.used.inputWork);
+  expect(result.finalWorkFits).toBe(true);
+  expect(result.full.inputWork).toBe(ARCHIVE_BOUNDS.inputWork);
+  expect(result.extraFits).toBe(false);
+  expect(result.queries.filter(query => query.includes("FROM entry")).every(query => !/json_|SELECT bytes|SELECT \*/.test(query))).toBe(true);
+});
+
+test("a native first-position size change cannot reuse the earlier JSON-work reservation", async () => {
+  const lane = await create(), head = await lane.head();
+  await lane.inside(state => {
+    const budget = new ArchiveBudget(), window = openArchiveWindow(state.storage.sql, lane.at, head, null, PROPOSED_BOUNDS, budget, certified);
+    // Corrupt native metadata/body after scalar admission; no fake positive.
+    state.storage.sql.exec("UPDATE entry SET bytes = bytes || ' ', size = size + 1 WHERE seq = 0");
+    expect(() => window.next()).toThrow("archive-mismatch");
+  });
+});
+
 test("native prefix admission binds the original cutoff and full pin before entry JSON/body reads", async () => {
   const lane = await create(), through = await lane.head();
   await lane.did(rita, "remark", { on: 0, fields: { text: "later unrelated input" } });
@@ -64,13 +107,22 @@ test("native incarnation, cutoff, gap and size damage cannot yield prefix admiss
   // The declaration is a genuine native pin, not an asserted flag.
   // No certificate is granted to it. It fails before any prefix projection.
   const legacy = await create();
-  const refusal = await legacy.inside(state => {
-    const queries: string[] = [];
-    try { archivePrefixMetadata({ exec(query, ...args) { queries.push(query); return state.storage.sql.exec(query, ...args); } }, legacy.at, legacy.genesis.fact, PROPOSED_BOUNDS, new ArchiveBudget(), new Set()); return { reason: "admitted", queries }; }
-    catch (error) { return { reason: (error as { reason: string }).reason, queries }; }
-  });
-  expect(refusal.reason).toBe("unsupported-archive-cohort");
-  expect(refusal.queries.some(query => query.includes("octet_length(bytes)"))).toBe(false);
+  await legacy.did(rita, "remark", { on: 0, fields: { text: "native entry after supplied predecessor" } });
+  const legacyHead = await legacy.head();
+  for (const streaming of [false, true]) {
+    const refusal = await legacy.inside(state => {
+      const queries: string[] = [];
+      const sql = { exec(query: string, ...args: (string | number | null | ArrayBuffer)[]) { queries.push(query); return state.storage.sql.exec(query, ...args); } };
+      try {
+        if (streaming) openArchiveWindow(sql, legacy.at, legacyHead, { seq: 0, hash: legacy.genesis.fact.hash }, PROPOSED_BOUNDS, new ArchiveBudget(), new Set());
+        else archivePrefixMetadata(sql, legacy.at, legacy.genesis.fact, PROPOSED_BOUNDS, new ArchiveBudget(), new Set());
+        return { reason: "admitted", queries };
+      }
+      catch (error) { return { reason: (error as { reason: string }).reason, queries }; }
+    });
+    expect(refusal.reason).toBe("unsupported-archive-cohort");
+    expect(refusal.queries.some(query => streaming ? query.includes("FROM entry") : query.includes("octet_length(bytes)"))).toBe(false);
+  }
 });
 
 test("real scalar rows admit exactly 4096 positions and refuse 4097 without JSON inspection", async () => {
