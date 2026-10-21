@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:85ec9463d41d2913f767e1764adf79a4608ce26e","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/archive-cadence.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:87763cd7ef218eb79b0b12bce79981aabf467dc6","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-transfer-cost.ts."}
