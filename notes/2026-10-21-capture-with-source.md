@@ -77,7 +77,7 @@ item types:
 
 | Item | Opened by | States | Holds |
 |---|---|---|---|
-| `source` | `capture` or `read`: one for each channel and external identity, chat upload or reading | `open`, `withdrawn` | `channel`, `external`, `address`, every field of the first version, and the current version: `current` (its fact), `currentRevision` and `currentTime` |
+| `source` | `capture` or `read`: one for each channel and external identity, chat upload or reading | `open`, `withdrawn` | `capturer` (a party: the signer of the act that opened it), `channel`, `external`, `address`, every field of the first version, and the current version: `current` (its fact), `currentRevision` and `currentTime` |
 | `version` | `recapture`: one for each later version | `kept` | a ref to its source, and every field of the version |
 
 The first version of a source is the `capture` or `read` that opened it.
@@ -88,8 +88,8 @@ Each later version is a `recapture`.
 | Act | Effect |
 |---|---|
 | `capture` | Opens a `source` with its first version, which is current. Refused `already-captured` when a source with the same `channel` and `external` exists, in either state (section 5). A chat upload with no `external` is never refused for this. |
-| `recapture` | Opens a `version` of an `open` source, and makes it current. Refused `withdrawn` when the source is withdrawn. Refused `same-revision` when the source's first version, or any of its versions, has the same `revision`. Refused `stale` when `sourceTime` is earlier than the source's `currentTime`. |
-| `observe` | Makes an existing version of an `open` source current again, named by its fact, with the observation's `sourceTime`. Opens no item. Refused `withdrawn`, `already-current` when that version is current, and `stale` when `sourceTime` is earlier than `currentTime`. |
+| `recapture` | Opens a `version` of an `open` source, and makes it current. Refused `withdrawn` when the source is withdrawn. Refused `same-revision` when the source's first version, or any of its versions, has the same `revision`. Refused `revision-moved` when the source item has moved since the connector read it (section 5). |
+| `observe` | Makes an existing version of an `open` source current again, named by its fact, with the observation's `sourceTime`. Opens no item. Refused `withdrawn`, `already-current` when that version is current, `not-capturer` for a signer other than the capturer, and `revision-moved` when the source item has moved (section 5). |
 | `read` | Opens a `source` with `channel: reading`, no `external`, and `statement: reading`. `derivedFrom` is required. |
 | `withdraw` | Sets a source `withdrawn`. Its versions stay. |
 | `reopen` | Sets a withdrawn source `open` again. It needs the action `capture.manage` (section 4). No connector delivery reopens a source. |
@@ -144,8 +144,11 @@ judgment is the person's own act.
 ## 4. Who captures
 
 - **Actions.** The package declares two actions. `capture.take` allows
-  `capture`, `recapture`, `read` and `redact` of one's own versions; its
-  default roles are `admin`, `maintainer`, `member` and `agent`.
+  `capture`, `read`, and `recapture`, `observe` and `redact` on a source
+  the signer captured; its default roles are `admin`, `maintainer`,
+  `member` and `agent`. The source keeps its capturer as a party, and
+  `recapture`, `observe` and `redact` are refused `not-capturer` for any
+  other signer.
   `capture.manage` allows `withdraw` and `reopen`; its default roles are
   `admin` and `maintainer`. An admin can change
   the room's roles, as for any package (`notes/2026-10-15-self-contained-applications.md:241-243`).
@@ -159,8 +162,8 @@ judgment is the person's own act.
   (`membership.ts:100-114`), and every agent shares one list
   (`membership.ts:472-478`). A narrower list for connectors needs a later
   membership version. Until then, the connector's role preset performs only
-  `capture` and `recapture` (`notes/2026-10-21-roles-flow-and-instances.md`,
-  section 2, request `89a543d3`).
+  `capture`, `recapture` and `observe`, on its own sources
+  (`notes/2026-10-21-roles-flow-and-instances.md`, section 2).
 - **What the record shows.** Every capture entry keeps the member, the key
   and the controller (`packages/contract/src/observation.ts:17-32`).
 - **Revocation.** Retiring the connector's key stops its captures. Removing
@@ -199,10 +202,25 @@ for each revision, and its current state is a separate record:
   exact or with only new delivery metadata. `recapture` is refused
   `same-revision`, and `observe` is refused `already-current`. Nothing
   changes.
-- **Order.** `recapture` and `observe` are refused `stale` when their
-  `sourceTime` is earlier than the source's `currentTime`. So a delayed
-  delivery of old content never overwrites a later state. The order lives
-  in the source item, and a restart keeps it.
+- **Order.** Order comes from the source item's revision, not from
+  source times. Every act names the revision it expects of each item it
+  touches, and the scope refuses `revision-moved` when the item has moved
+  (`packages/contract/src/intent.ts:40`, `packages/derive/src/judge.ts:299-303`).
+  The connector keeps one observation in flight for each source, and does
+  four steps:
+  1. Read the source item and keep its revision R.
+  2. Read the external source, and compute its content projection.
+  3. Sign `recapture` or `observe`, or nothing when the content is current,
+     with R as the expected revision of the source item.
+  4. On `revision-moved`, discard the result and start again at step 1.
+
+  So an observation counts only when no other observation of that source
+  took effect between its fence and its admission. A read that started
+  before a later state was recorded can never overwrite it, whatever the
+  two reads' source times, equal or missing. A restart loses only the
+  observation in flight, and the connector starts again at step 1.
+  `sourceTime` is for display and for order between sources. It decides
+  nothing.
 
 The `same-revision` check is two guards: the field `revision` differs from
 the source's own first `revision`, and a `none` over `version` items whose
@@ -241,11 +259,15 @@ source again, not as an ordered journal
 (`notes/2026-10-15-github-repository-import.md:256-262`).
 
 **Echoes.** When the room writes to a channel, through the outbox (section
-6, journey 4), the outbound act records the external revision that the
-write produced: the digest of the content projection that the write
-leaves at the source. A later capture of that revision is an echo. The connector
-reads the source's recorded outbound revisions, and signs no `recapture`
-and no `observe` for an echo (`github-repository-import.md:273-274`).
+6, journey 4), the outbound act records its operation and the revision it
+produced: the digest of the content projection that the write leaves at
+the source. An echo is the first observation after that operation, of
+that revision, while the outbound operation is the source's latest. The
+connector signs nothing for it (`github-repository-import.md:273-274`).
+A later observation of the same content, after another version became
+current, is a genuine return, and goes through `observe`. The outbox is a
+follow-up. Its design keeps this rule, so that echo suppression never
+undoes the return to old content.
 
 **Authority.** A change of state at the source is an observation. A GitHub
 issue closed on GitHub does not close the room's issue. The room's own act
@@ -357,15 +379,27 @@ connector as an `outside` result.
    after its capture takes effect leaves a complete source, and the caller
    learns the outcome by reading it.
 
+7. **Order.** An issue is observed open (A), closed (B) and reopened to
+   the same content (A), with a restart before the reopen. It ends with A
+   current, two versions and three source entries. Two reads of one source
+   at the same update time, A then B, complete in reverse order: the
+   observation fenced before B's admission is refused `revision-moved`, and
+   its retry records nothing new. A duplicate delivery of A while B is
+   current records nothing. A local branch, with no source time, orders its
+   versions by the same fence.
+8. **Grant.** The connector observes its own source. A member who did not
+   capture a source is refused `not-capturer` for `recapture`, `observe`
+   and `redact` on it.
+
 ## 11. Slices
 
 The slices start after retained files RF1 to RF4.
 
 | Slice | Content | Done when |
 |---|---|---|
-| CS1 | The capture package: the capture scope, the `source` and `version` items (one opened per act), the acts and actions of sections 2 and 4, the deduplication guards, statement kinds, and the `notify` attention. RF4's minimal capture package becomes this package. | Journey 1 runs on a hosted Worker. Witnesses 1, 2, 3, 5 and 6 of section 10 pass. |
+| CS1 | The capture package: the capture scope, the `source` and `version` items (one opened per act), the acts and actions of sections 2 and 4, the deduplication guards, statement kinds, and the `notify` attention. RF4's minimal capture package becomes this package. | Journey 1 runs on a hosted Worker. Witnesses 1, 2, 3, 5, 6 and 8 of section 10 pass. |
 | CS2 | The issue lane's `captured` field in a new lane version, and the source line in the room's views. | An issue filed from a capture shows its source line, and the capture stays the capturer's act. |
 | CS3 | The local-branch capture with `dap propose`. | Witness 4 of section 10 passes. |
-| CS4 | The GitHub inbound connector package: the connector member and preset, the host's read credential, delivery records, watermark reconciliation, the content projections of section 5, `observe`, and issue filing from captures. | A test repository's issues and comments arrive once each. An exact redelivery, and a redelivery with only new delivery metadata, change nothing. Two observations with the same external identity and update time but different bodies are two versions. An issue observed open (A), closed (B) and reopened to the same content (A), with a restart before the reopen, ends with A current, two versions and three source entries; a duplicate delivery of the first A changes nothing, and a delayed delivery of A with an earlier update time is refused `stale`. A close on GitHub does not close the room's issue. |
+| CS4 | The GitHub inbound connector package: the connector member and preset, the host's read credential, delivery records, watermark reconciliation, the content projections and the revision fence of section 5, `observe`, and issue filing from captures. | A test repository's issues and comments arrive once each. An exact redelivery, and a redelivery with only new delivery metadata, change nothing. Two observations with the same external identity and update time but different bodies are two versions. Witness 7 of section 10 passes. A close on GitHub does not close the room's issue. |
 
 Each slice is reviewed and landed before the next one starts.
