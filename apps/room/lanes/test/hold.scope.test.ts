@@ -5,6 +5,7 @@ import { localRetainedPlan, outcomeSnapshotDependencies, timeMs } from "@general
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { ArchiveBudget } from "../../../../packages/scope/src/archive-budget.ts";
 import { projectArchiveSnapshots } from "../../../../packages/scope/src/archive-snapshots.ts";
+import { ArchiveLocalReferences } from "../../../../packages/scope/src/archive-local-references.ts";
 import { CAPABILITY_CODE } from "../../../../packages/scope/src/ports.ts";
 import type { SqlValue } from "../../../../packages/scope/src/sqlite.ts";
 import { graph, net, onCode, rita, soon, una, vic } from "./support/graph.ts";
@@ -146,13 +147,20 @@ test("T4, a handover: the same accepted commitment gets a new performer only whe
         stops: [{ kind: "own-root", commit: COMMIT, root: 1, state: "live", checked: terms }], F: [{ commit: COMMIT, ref: opaque, start: true }, { commit: COMMIT, via: COMMIT }] });
       invalid = probe({ ...record, F: [{ commit: COMMIT, via: COMMIT, ref: opaque }] });
     } finally { stored.storage.sql.exec("UPDATE entry SET bytes = ?, size = ? WHERE seq = ?", row.bytes, row.size, position.seq); }
-    return { projected, repeated, before, after, cells, nonempty, invalid, opaque };
+    const snapshotCells = [...cells];
+    const references = new ArchiveLocalReferences(sql, { named: G.valid.digest, definition: G.valid,
+      owners: new Map([[input.owner, new Map([[input.kind, rules]])]]), records: new Map(), preparations: new Map() }, PROPOSED_BOUNDS, budget);
+    // Uses and outcome context are this oracle's actual classified values;
+    // the composer supplies no independent privacy/pin admission.
+    const composed = references.project(G.at, { ...position, input: "outcome" }, { input: "outcome", owner: input.owner, kind: input.kind, result: input.result }, sealed.entry.uses.map(use => use.content));
+    return { projected, repeated, before, after, cells: snapshotCells, nonempty, invalid, opaque, composed };
   });
   expect(projection.projected.dependencies).toEqual(expected.dependencies);
   expect(projection.projected.dependencies).toEqual(native.dependencies.filter(p => p.dependency.consumer === "outcome-snapshot").map(p => p.dependency));
   expect(projection.projected.dependencies).toHaveLength(2);
   expect(projection.projected.dependencies.map(d => d.key)).toEqual([{ kind: "snapshot", digest: expected.record!.snapshot.digest }, { kind: "snapshot", digest: expected.record!.snapshot.digest }]);
   expect(projection.projected.ancestrySnapshot).toEqual(expected.record!.snapshot);
+  expect(projection.composed).toEqual({ dependencies: native.dependencies, ancestrySnapshot: expected.record!.snapshot });
   expect(projection.repeated).toEqual(projection.projected);
   expect(projection.after.calls).toBeGreaterThan(projection.before.calls);
   expect(projection.after.inputWork).toBeGreaterThan(projection.before.inputWork);

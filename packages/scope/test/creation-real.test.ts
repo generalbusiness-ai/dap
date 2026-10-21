@@ -18,6 +18,7 @@ import { beginSessionChild, beginSessionFixture, sessionSettings } from "./sessi
 import { ArchiveBudget } from "../src/archive-budget.ts";
 import { ArchiveObserved } from "../src/archive-observed.ts";
 import { ArchiveOutcomeValues } from "../src/archive-outcome-values.ts";
+import { ArchiveLocalReferences } from "../src/archive-local-references.ts";
 import type { SqlValue } from "../src/sqlite.ts";
 
 const { paul } = keys;
@@ -499,6 +500,7 @@ describe("a founding on real scopes under the deployed class (authority note, se
     const projectionOwner = ownersOf(definition.definition, { named: DESTINATION, rules: native.rules }, null)?.rules(judged.input.owner, judged.input.kind);
     if (!projectionOwner || !currentRules || !("subject" in currentRules.observation) || currentRules.observation.subject !== "rules" || currentRules.observation.content.asked !== "rules" || currentRules.observation.content.extents === undefined) return expect.fail("The native owner and actual Rules extents are required.");
     const extents = currentRules.observation.content.extents;
+    const projectionInput = judged.input;
     const projectionOwners = new Map<string, ReadonlyMap<string, OperationRules>>([[judged.input.owner, new Map([[judged.input.kind, projectionOwner]])]]);
     const unknownProjectionOwners = new Map<string, ReadonlyMap<string, OperationRules>>([[judged.input.owner, new Map([[judged.input.kind, { ...projectionOwner, values: () => [] }]])]]);
     const projection = await runInDurableObject(G.object, (_instance, state) => {
@@ -518,13 +520,20 @@ describe("a founding on real scopes under the deployed class (authority note, se
       const beforeUnknown = budget.admitted();
       expect(() => new ArchiveOutcomeValues(sql, unknownProjectionOwners, budget, PROPOSED_BOUNDS)).toThrow("unsupported-archive-cohort");
       expect(budget.admitted().calls).toBe(beforeUnknown.calls); // Unknown callbacks run no SQL or value selector.
-      return { projected, projectedValues, expected, expectedValues, repeated, repeatedValues, before, after, cells };
+      const fieldCells = [...cells];
+      const references = new ArchiveLocalReferences(sql, { named: definition.definition.digest, definition: definition.definition,
+        owners: projectionOwners, records: new Map(), preparations: new Map() }, PROPOSED_BOUNDS, budget);
+      // This oracle supplies actual classified context/uses. This comparison
+      // does not supply the owning pass's privacy or declaration admission.
+      const composed = references.project(judged.at, position, { input: "outcome", owner: projectionInput.owner, kind: projectionInput.kind, result: projectionInput.result }, judged.uses.map(use => use.content));
+      return { projected, projectedValues, expected, expectedValues, repeated, repeatedValues, before, after, cells: fieldCells, composed, all };
     });
     expect(projection.projected).toEqual(projection.expected);
     expect(projection.projected).toHaveLength(1);
     expect(projection.projected[0]).toMatchObject({ dependency: { mode: "probe", consumer: "observation-value", choices: [{ domain: RULES_EXTENTS_VALUE.domain, key: { kind: "value", domain: RULES_EXTENTS_VALUE.domain, digest: extents } }] } });
     expect(projection.projectedValues).toEqual(projection.expectedValues);
     expect(projection.projectedValues).toHaveLength(1);
+    expect(projection.composed).toEqual({ dependencies: projection.all, ancestrySnapshot: null });
     expect(projection.projectedValues[0]).toMatchObject({ dependency: { mode: "required", consumer: "outcome-value", key: { kind: "value", domain: DESTINATION_CHANGED_SET.domain, digest: changed } }, max: DESTINATION_CHANGED_SET.max });
     expect(projection.repeated).toEqual(projection.projected);
     expect(projection.repeatedValues).toEqual(projection.projectedValues);
