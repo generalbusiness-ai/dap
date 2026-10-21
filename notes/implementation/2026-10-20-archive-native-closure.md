@@ -1,5 +1,27 @@
 # Native archive admission and dependency closure
 
+Requests `4fb21172` (9a) and `dea67816` (F1) are now integrated under
+builder promise `33d11d65`, based on Main `184ba58d`. The focused native
+checks export and replay all five admitted journals consistently using
+only exported bytes, the declared caller anchors and the omitted-text
+metadata contract. Register and Membership copies and their observed
+values remain caller trust. For each omitted text, nothing shows that its
+bytes were the text its digest names, or that they were within its field's
+bound. No private source journal is exported or read for those anchors.
+
+The incremental writer, native admission, one-entry scale and cadence
+checks are implemented. The latest full gate completes with one shared-clock
+cost fixture failure; its monotonic fixture repair passes the focused
+comparison. A full gate on the repaired source is required before review.
+This branch has no formal review, landing or deployment claim. Slice 9
+production wiring remains separate.
+
+## Historical admission checkpoints
+
+The following notes preserve earlier decisions, failures and intermediate
+acceptance boundaries. Their incomplete-replay and pending-writer statements
+are superseded by the later checkpoints and current status above.
+
 Request `4fb21172`; builder promise `f75c6922`. Planner decision
 `08e261c4` defines this prerequisite of demo archive slice 9. The worktree
 starts at Main `2a77bc5fe4458d219f2eca1d25ac2ff709ff30b2`.

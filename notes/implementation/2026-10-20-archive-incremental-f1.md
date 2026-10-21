@@ -1,21 +1,34 @@
 # Incremental archive passes
 
-Request `dea67816`; builder promise `33d11d65`. The source is the landed
-floor design at Main `d92cd85e`, section 2 and witnesses 1 to 4. This work
-starts from that Main in an isolated checkout. It contains no 9a admission
-changes and no floor entry or deployment configuration.
+Requests `dea67816` (F1) and `4fb21172` (9a); integrated builder promise
+`33d11d65`. The current branch combines the incremental writer and native
+admission work, including decisions `066e49b3`, `d61549b0` and `f651f6c3`.
+It is based on Main `184ba58d`. Demo slice 9 wiring and deployment remain
+separate.
 
-This is work in progress. There is no full gate, review, landing or complete
-F1 acceptance. Test-host confirmation and replay below use explicit TEST
-host, policy and authority.
+The implementation and focused native acceptance checks are complete.
+The latest full gate fails one exact-cost fixture assertion; the shared
+clock repair described at the end now passes its focused native comparison.
+A gate on that repaired source is still required before review. There is
+no formal review, landing or deployment claim for this branch. Host,
+policy, authority and device answers in these checks are explicit TEST
+inputs.
 
-## Implemented boundary
+Current v2 paths have five two-digit directory groups, then a twelve-digit
+first position. Each pass owns its manifest, segments and newly written
+retained files. Earlier files keep their paths and object IDs; only the
+head changes. Each numeric directory has at most 100 names and each pass
+owner directory has at most 4,096. The original archive budgets remain.
 
-The new v2 paths include three groups of three digits and a twelve-digit
-position. A pass owns its manifest, segments and newly written retained
-files. An earlier file cannot be replaced; only `head.json` changes.
-The tree writer reads and rewrites the paths it changes, retaining other
-edges by object ID. It does not inspect old pass manifests or payloads.
+## Historical foundation checkpoint
+
+The following foundation notes preserve the earlier implementation and
+its checks. Their three-group layout and pending-work statements are
+superseded by the later checkpoints and the current status above.
+
+The initial v2 paths used three groups of three digits and a twelve-digit
+position. The tree writer read and rewrote the paths it changed, retaining
+other edges by object ID, without inspecting old pass manifests or payloads.
 
 The v2 selection decoder keeps the original per-pass ceilings. It adds an
 explicit previous receipt and each retained key's original pass. The v1
@@ -25,7 +38,7 @@ entry against that receipt's hash. It reads only its new entry interval
 and the retained bodies that it writes in this pass. The common entry
 and retained-byte checks also serve the original v1 writer.
 
-## Checks so far
+## Historical foundation checks
 
 All attempts preserve full physical input snapshots, modes, original
 logs and process exits. Dependencies are owned physical files with 32
@@ -55,7 +68,7 @@ OS caches are uncontrolled; each receipt records its observed load.
   seconds. The original verbose failing log is preserved at 7,621,186
   bytes. No mutation sweep or whole-suite repeat was run.
 
-## Work remaining
+## Work remaining at the foundation checkpoint
 
 Replace the writer's whole-parent provider read with bounded object reads
 and verify unchanged parent edges at send. Implement v1 conversion, then
@@ -1069,3 +1082,44 @@ all 14 passed cases. The optional reporter now records a separate final
 state for every case at run end. Missing incremental events are reporting
 gaps, not evidence that those cases remain active. A whole gate on the
 changed source is still required before review.
+
+## Completed gate failure and shared-clock repair
+
+The gate at `07ce3a0a` completes naturally with exit 1: 2,071 Vitest cases
+pass, one Grow cost assertion fails and three recorder cases skip. Of 441
+files, 439 pass, one fails and one skips. There are no unhandled errors at
+run end. The later Node and Counting steps are not reached. The outer
+run takes 841.48 seconds and 1,125.23 CPU seconds. All 2,695 source files,
+modes, head, tree and lock stamp remain exact; no packages are installed.
+The native scale case passes in 154.638 seconds, the cadence case in
+48.924 seconds and the transport case in 29.871 seconds under its original
+30-second timeout. The latter has little margin; this run establishes no
+broader stability claim.
+
+The failed Grow child receipt differs only by 56 metadata bytes and 9,256
+input-work bytes. The earlier GitHub edit witness leaves fractional
+milliseconds on the shared clock. Intervening handoff cases restore their
+saved clock. A fractional timestamp occupies four more bytes than the
+whole-second representation used by the original receipts. The child
+entries gain 52 bytes, the native scope frame gains four and selected
+parent entries gain 16. The resulting input charge difference is
+`52 * 133 + 4 * 9 + 16 * 144 = 9256`.
+
+A focused native comparison confirms that account. The original Grow case
+passes at a whole second (10.730 seconds outer), fails the original child
+receipt at `.001` with those exact differences (5.700 seconds), and passes
+again after advancing that fractional clock to the next whole second
+(10.360 seconds). Both passing stages retain all five original whole-pass
+receipts, all 37 native confirmed entries and the independent clone and
+replay checks. The complete comparison takes 28.78 seconds and 33.07 CPU
+seconds on the shared macOS arm64 host; OS caches are uncontrolled.
+An earlier harness attempt stops on reporter configuration before running
+any test and restores source bytes. Both attempts and their original
+inputs and exits are preserved separately.
+
+The final fixture advances the existing clock monotonically to a whole
+second before creating any Grow scope. It keeps the same clock object and
+does not rewind it. Original cost literals, archive prices, budgets,
+assertions and the 30-second case timeout are unchanged. Temporary injection
+and logging are removed. The focused Scope test compiler passes. A full
+gate on this changed source is the remaining pre-review check.

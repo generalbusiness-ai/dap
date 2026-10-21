@@ -5,7 +5,7 @@
 import { env, runInDurableObject } from "cloudflare:test";
 import { expect, inject, test } from "vitest";
 import { DEVICE_COMMAND, PROPOSED_BOUNDS, type DeclaredDefinition, type Digest, type FactRef, type Head, type Input, type PlatformDefinition, type ScopeId, type Sealed } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, isDigest, isEntry, isSeed, parseStrict, scopeIdOf, textDigest, timeOf, unb64url, utf8 } from "@generalbusiness/artroom-bytes";
+import { b64url, canonicalize, isDigest, isEntry, isSeed, parseStrict, scopeIdOf, textDigest, timeMs, timeOf, unb64url, utf8 } from "@generalbusiness/artroom-bytes";
 import { readApplicationPackage2 } from "@generalbusiness/artroom-bytes/application-v2";
 import { outcomeValueDomains, ownersOf, validateDefinition, type OperationRules } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
@@ -45,7 +45,7 @@ import { readNativeBirth } from "../src/native-birth.ts";
 import { DEVICE_COMMAND_ARCHIVE_PREPARATIONS, DEVICE_COMMAND_ARCHIVE_RECORDS } from "../src/archive-privacy.ts";
 import { CAPABILITY_CODE } from "../src/ports.ts";
 import { rita, routed } from "./repository.ts";
-import { soon } from "./net.ts";
+import { net, soon } from "./net.ts";
 import type {} from "./support/maintained-applications.ts";
 
 const inline = new Set<Input["type"]>(["genesis", "act", "delivery", "timed", "diagnosis", "outcome", "preparation", "checkpoint"]);
@@ -84,6 +84,10 @@ test.for(["fixture", "Grow"])("installed %s scopes export genesis zero after a l
   })();
   const { packet, root, child, rootId, childId } = prepared;
   const C = kind === "fixture" ? ARCHIVE_DECLARED_APPLICATION_COHORT : ARCHIVE_DEVICE_APPLICATION_COHORT;
+  // Original byte-cost receipts use whole-second timestamps. Other native
+  // witnesses may advance this shared clock by milliseconds. Advance it
+  // monotonically before creating any scope; keep its identity and history.
+  if (kind === "Grow") net.clock.now = timeOf(Math.ceil(timeMs(net.clock.now)! / 1000) * 1000);
   const { life, R, D, children } = await sessionRoom(C.register), [M, A, G] = children;
   if (!M || !A || !G) throw Error("The declared cohort requires three siblings.");
   const f = await applicationResolverFixture("sha1", undefined, {}, undefined, packet), peer = applicationHttpPeer(f);
