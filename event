@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/plans/029-2026-10-11-artifacts-forks.md","body":{"commit":"25323213ab6cad69fe7588ea870f157510b9e667","path":"notes/plans/029-2026-10-11-artifacts-forks.md"}}
+{"kind":"promise","text":"Checker will perform the bounded immutable Git/native landing audit of 25323213, preserve evidence in a new owned scratch root and report exact limits. Archive review retains priority."}
