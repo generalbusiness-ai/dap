@@ -8,15 +8,25 @@ import { ArchiveSegmentCursor, journalV2SegmentPath, journalV2RetainedPath, prep
 import type { RetainedKey } from "@generalbusiness/dap-derive";
 import { planArchive, planArchivePass, planArchiveConversion, rebuildArchive, rebuildArchivePass } from "../src/archive-build.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
-import { ArchiveBudget } from "../src/archive-budget.ts";
+import { ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
 import { inventoryArchive } from "../src/archive-inventory.ts";
 import { archivePrefixMetadata } from "../src/archive-prefix.ts";
 import { archivePrivacyMetadata } from "../src/archive-privacy.ts";
 import { ArchiveLocalReferences, type ArchiveLocalReferencePlan } from "../src/archive-local-references.ts";
 import { ArchivePlanFence } from "../src/archive-plan-fence.ts";
+import { forecastArchiveInventoryEntry, forecastArchiveInventoryFinal } from "../src/archive-inventory-cost.ts";
 import { readRetainedArchivePass } from "../src/archive-retained-pass.ts";
 import type { Sql } from "../src/sqlite.ts";
 import { at, create, rita, una, type Lane } from "./fixtures-native.ts";
+class RecordingInventoryBudget extends ArchiveBudget {
+  readonly charges: Partial<ArchiveCost>[] = [];
+  override spend(cost: Partial<ArchiveCost>): void { super.spend(cost); this.charges.push({ ...cost }); }
+}
+const sumCharges = (charges: readonly Partial<ArchiveCost>[]): ArchiveCost => {
+  const total: ArchiveCost = { entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0, inputWork: 0 };
+  for (const cost of charges) for (const key of Object.keys(total) as (keyof ArchiveCost)[]) total[key] += cost[key] ?? 0;
+  return total;
+};
 import { archiveDefinition as base, archivePolicies as policies, archiveRepository as repository, archiveSql as sqlOf } from "./support/archive.ts";
 
 async function first(lane: Lane, format: JournalFormat) {
@@ -112,7 +122,19 @@ test("v2 native inventory and restart read only the marked new interval and keep
   const through = await lane.head(), parent = parentOf(first.archive);
   const planned = await lane.inside(async state => {
     const sql = sqlOf(state), queried: number[] = [];
+    let recording: RecordingInventoryBudget | undefined, pinStart = -1;
+    const entryReads: { bytes: unknown; cost: ArchiveCost }[] = [];
+    let finalRead: ArchiveCost | undefined;
     const exact: Sql = { transaction: action => state.storage.transactionSync(action), exec(query, ...args) {
+      if (recording) {
+        if (query.startsWith("SELECT k, octet_length(v) AS bytes, typeof(v) AS type FROM meta ")) pinStart = recording.charges.length - 2;
+        if (query.startsWith("SELECT bytes FROM entry WHERE seq = ? AND hash = ? AND size = ?")) {
+          entryReads.push({ bytes: args[2], cost: sumCharges(recording.charges.slice(-2)) });
+        }
+        if (query.startsWith("SELECT hash, size, octet_length(bytes) AS actual FROM entry WHERE seq = ?")) {
+          finalRead = sumCharges(recording.charges.slice(pinStart));
+        }
+      }
       if (/\bFROM entry\b/.test(query)) {
         // Metadata table joins bind trusted names/JSON paths before seq.
         const source = /\b(?:entry\.)?seq\s*(?:=|>=)\s*\?/.exec(query);
@@ -197,7 +219,7 @@ test("v2 native inventory and restart read only the marked new interval and keep
     expect(smallerBudget.admitted().metadata).toBeGreaterThan(beforeSmaller.metadata);
     expect(smaller.fence.comparisonMetadata).toBe(smaller.comparison.metadata);
     expect(smaller.fence.comparisonInputWork).toBe(smaller.comparison.inputWork);
-    const budget = new ArchiveBudget();
+    const budget = new RecordingInventoryBudget(); recording = budget;
     const prepared = await prepareJournalPass({ format: "sha1", at: lane.at, after: initial, parent, budget });
     expect(prepared.ok, JSON.stringify(prepared)).toBe(true); if (!prepared.ok) return { value: prepared, queried };
     // The actual projection frame closes before parent I/O. This remains
@@ -224,10 +246,17 @@ test("v2 native inventory and restart read only the marked new interval and keep
       expect(budget.admitted()).toEqual(value.archive.cost);
       expect(prepared.preparation.metadataCost()).toEqual(attributed); // Payload work was not attributed.
     }
-    return { value, queried, comparison: { metadata: held.fence.comparisonMetadata, inputWork: held.fence.comparisonInputWork } };
+    return { value, queried, comparison: { metadata: held.fence.comparisonMetadata, inputWork: held.fence.comparisonInputWork }, entryReads, finalRead };
   });
   (context.task.meta as Record<string, unknown>)["archivePlanFenceComparison"] = { cost: planned.comparison,
     qualification: "Actual native SQLite fresh inventory invokes the original plan fence start/check methods on the same original budget as metadata preparation and build. Test subclass only observes exact super calls. Genuine native prepared-rule input; TESTpolicy/authority/manual component receipt. No host, adaptive cutoff, export or full-pass claim." };
+  (context.task.meta as Record<string, unknown>)["archiveInventoryFixedCost"] = { entryReads: planned.entryReads, finalRead: planned.finalRead,
+    qualification: "Observed exact original spend spans before real native inventory entry queries and the final pin/cutoff fence. Same original preparation/build ledger, no second budget or skipped validation. Genuine SQLite/turns/prepared rule, TESTpolicy/authority/manual component receipt, no host/adaptive/export/full-pass claim." };
+  expect(planned.entryReads?.map(row => row.bytes)).toEqual([1551, 1552, 1876, 2296]);
+  expect(planned.entryReads?.map(row => row.cost.inputWork)).toEqual([51183, 51216, 61908, 75768]);
+  for (const read of planned.entryReads ?? []) expect(forecastArchiveInventoryEntry(read.bytes as number)).toEqual(read.cost);
+  expect(planned.finalRead).toEqual({ entries: 0, attempts: 0, nodes: 0, calls: 4, metadata: 52352, inputWork: 121984 });
+  expect(forecastArchiveInventoryFinal(true)).toEqual(planned.finalRead);
   const next = planned.value;
   expect(next.ok, JSON.stringify(next)).toBe(true); if (!next.ok) return;
   expect(planned.queried.length).toBeGreaterThan(0);

@@ -7,6 +7,7 @@ import type { DependencyOrigin, LocalRetainedPlan, RequiredDependency, RetainedD
 import { platform } from "@generalbusiness/dap-platform";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { ArchiveBudget, ArchiveStopped, type ArchiveCost } from "./archive-budget.ts";
+import { archivePinValidationWork, archiveNativeDataReservation, archiveInventoryEntryWork } from "./archive-inventory-cost.ts";
 import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, readArchivePin, readArchivePinAfterReceipt } from "./archive-pin.ts";
 import { stopArchivePrefix as stop, archivePrefixMetadata, ArchivePrefixStopped, type ArchivePrefixReason } from "./archive-prefix.ts";
 import { archivePrivacyMetadata, archiveSupportMetadata, type ArchiveSupport } from "./archive-privacy.ts";
@@ -121,7 +122,7 @@ export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: 
       } else {
         // The supplied native platform data is trusted reviewed code; its
         // fixed native maximum is reserved before inspecting that object.
-        budget.spend({ nodes: 1, inputWork: bounds.definitionBytes * 16 });
+        budget.spend(archiveNativeDataReservation(bounds.definitionBytes));
         const supplied = platform(prefix.pin.seed.definition);
         if (!supplied) return stop("unsupported-archive-cohort");
         const nativeBytes = canonicalize(supplied.data);
@@ -147,7 +148,7 @@ export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: 
       if (copies.length) reader = new ArchiveRetainedReader(sql, budget, copies);
       const plans: { origin: DependencyOrigin; plan: LocalRetainedPlan }[] = [];
       for (const position of admitted.positions) {
-        budget.spend({ inputWork: position.bytes * 32 });
+        budget.spend({ inputWork: archiveInventoryEntryWork(position.bytes) });
         const rows = budget.native(sql, () => ({ metadata: 0, inputWork: position.bytes })).exec("SELECT bytes FROM entry WHERE seq = ? AND hash = ? AND size = ? AND typeof(bytes) = 'text' AND octet_length(bytes) = ? LIMIT 1", position.seq, position.hash, position.bytes, position.bytes).toArray();
         const bytes = rows[0]?.["bytes"];
         if (rows.length !== 1 || typeof bytes !== "string" || bytes.length > position.bytes || utf8(bytes).length !== position.bytes) return stop("mismatch");
@@ -244,7 +245,7 @@ export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: 
       }
       // Rebind native scope/pin/cutoff before the only result. No await or
       // mutation can occur between this fence and returning the descriptor.
-      budget.spend({ inputWork: 4 * (ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES) });
+      budget.spend({ inputWork: archivePinValidationWork() });
       const finalPin = (after ? readArchivePinAfterReceipt : readArchivePin)(budget.native(sql, () => ({ metadata: ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES, inputWork: 0 })), at);
       budget.check();
       if (!finalPin || canonicalize(finalPin) !== canonicalize(prefix.pin)) return stop("mismatch");

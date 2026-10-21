@@ -10,12 +10,10 @@ import { timeMs, type ScopeState } from "@generalbusiness/dap-derive";
 import { ARCHIVE_BOUNDS, ArchiveBudget } from "./archive-budget.ts";
 import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, readArchivePin, readArchivePinAfterReceipt, type ArchivePin } from "./archive-pin.ts";
 import type { Sql } from "./sqlite.ts";
+import { ARCHIVE_PRIVACY_JSON_PASSES, ARCHIVE_POSITION_METADATA_BYTES, ARCHIVE_FRAME_SIZE_METADATA,
+  archivePinValidationWork, archiveNativeDataReservation, archiveScopeFrameReservation } from "./archive-inventory-cost.ts";
+export { ARCHIVE_PRIVACY_JSON_PASSES, ARCHIVE_POSITION_METADATA_BYTES } from "./archive-inventory-cost.ts";
 
-/** Reserve up front for the later fixed metadata JSON expressions and
- * operation-owner inspection. Body fetch/parse/hash are charged separately.
- * This intentionally limits dense/large prefixes below the row ceiling. */
-export const ARCHIVE_PRIVACY_JSON_PASSES = 64;
-export const ARCHIVE_POSITION_METADATA_BYTES = 192;
 export type ArchivePrefixReason = ArchiveExportRefusal | "unavailable" | "incomplete" | "mismatch" | "limit" | "foreign-source-unavailable" | "foreign-source-mismatch";
 export class ArchivePrefixStopped extends Error { constructor(readonly reason: ArchivePrefixReason) { super(`archive-${reason}`); } }
 export const stopArchivePrefix = (reason: ArchivePrefixReason): never => { throw new ArchivePrefixStopped(reason); };
@@ -35,11 +33,11 @@ export interface ArchivePrefix {
 export function readArchiveScopeFrame(sql: Pick<Sql, "exec">, expected: ScopeRef, pin: ArchivePin,
   bounds: Pick<Bounds, "sendsPerEntry">, budget: ArchiveBudget): ScopeState {
   budget.check();
-  const sizeSql = budget.native(sql, () => ({ metadata: 64, inputWork: 0 }));
+  const sizeSql = budget.native(sql, () => ({ metadata: ARCHIVE_FRAME_SIZE_METADATA, inputWork: 0 }));
   const sizes = sizeSql.exec("SELECT octet_length(v) AS size, typeof(v) AS type FROM meta WHERE k = 'scope' LIMIT 1").toArray();
   const size = sizes[0]?.["size"];
   if (sizes.length !== 1 || sizes[0]?.["type"] !== "text" || !natural(size) || size > ARCHIVE_SCOPE_METADATA_BYTES) return stopArchivePrefix("unavailable");
-  const frameSql = budget.native(sql, () => ({ metadata: size + 128, inputWork: size * 8 }));
+  const frameSql = budget.native(sql, () => archiveScopeFrameReservation(size));
   const frames = frameSql.exec("SELECT v FROM meta WHERE k = 'scope' AND typeof(v) = 'text' AND octet_length(v) = ? LIMIT 1", size).toArray(), frameBytes = frames[0]?.["v"];
   if (frames.length !== 1 || typeof frameBytes !== "string" || frameBytes.length > size || utf8(frameBytes).length !== size) return stopArchivePrefix("unavailable");
   const frame: unknown = parseStrict(frameBytes);
@@ -57,13 +55,13 @@ export function archivePrefixMetadata(sql: Pick<Sql, "exec">, expected: ScopeRef
   if (after !== undefined && after !== null && (!isHead(after) || after.seq >= JOURNAL_V2_LAST_POSITION)) return stopArchivePrefix("unavailable");
   const predecessor = after ? { ...after } : null, first = predecessor ? predecessor.seq + 1 : 0;
   // Reserve validation as well as raw metadata replies, including cache hits.
-  budget.spend({ inputWork: 4 * (ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES) });
+  budget.spend({ inputWork: archivePinValidationWork() });
   const pinSql = budget.native(sql, () => ({ metadata: ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES, inputWork: 0 }));
   const pin = predecessor ? readArchivePinAfterReceipt(pinSql, expected) : readArchivePin(pinSql, expected);
   if (!pin) { budget.check(); return stopArchivePrefix("unavailable"); }
   let nativeData: Digest | undefined;
   if (Object.hasOwn(ARCHIVE_NATIVE_DATA, pin.seed.definition)) {
-    budget.spend({ nodes: 1, inputWork: bounds.definitionBytes * 16 });
+    budget.spend(archiveNativeDataReservation(bounds.definitionBytes));
     const native = platform(pin.seed.definition);
     if (!native || utf8(canonicalize(native.data)).length > bounds.definitionBytes) return stopArchivePrefix("unsupported-archive-cohort");
     nativeData = digestBytes(domainBytes(DOMAINS.definition, native.data));
