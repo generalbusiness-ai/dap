@@ -28,6 +28,8 @@ land the changes that meet the rules. The room publishes each landed change to a
 
 Dap was built with the help of several concurrent coding agents, using
 [gitseq](https://github.com/generalbusiness-ai/gitseq), which is a locally-hosted precursor to dap.
+Dap runs on Cloudflare Workers, Durable Objects and Artifacts. It can also
+be self-hosted on other services using workerd and celld.
 
 ## What is dap, technically?
 
@@ -38,7 +40,7 @@ participant did, judges every request against those definitions, and lets
 anyone with the record check it again.
 
 This is more general-purpose than just a software-development coordination system.
-My hope is that dap-style applications are useful for a very broad set of things.
+My hope is that dap-style applications are useful for a [very broad](docs/use-cases.md) set of things.
 
 [![The dap model. A person or an agent signs an act and sends it over the command line, MCP or HTTP. A scope judges it against its pinned definition, with guards, rule expressions in a restricted JSONata, and the signer's grants. An act that takes effect becomes an entry in the journal, and its declared effects are folded into the scope's items. The journal can be replayed, entries send messages to other scopes, and a destination scope publishes the files it is sent to a Git repository on Cloudflare Artifacts or GitHub, which serves pages. Dashed lines are planned.](docs/assets/dap-architecture.svg)](docs/architecture.md)
 
@@ -71,13 +73,6 @@ My hope is that dap-style applications are useful for a very broad set of things
   [Grow design note](notes/2026-10-17-grow-operation-application-design.md).
 
 You can [try them out](https://dap.generalbusiness.ai/) on the hosted service.
-
-To see how an application is made: 
-* [build a counter](docs/build-a-counter.md)
-* [build a lending library](docs/build-a-lending-library.md)
-
-dap runs on Cloudflare Workers, Durable Objects and Artifacts. It can also
-be self-hosted on other services using workerd and celld.
 
 ## Where to read next
 
