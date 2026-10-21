@@ -381,12 +381,17 @@ identity:
    renews and then releases the hold, and the record shows both keys.
 8. **Incomplete read.** A read refused, or stopped by its budget before
    `complete`, shows as an incomplete read, not as no eligible work.
-9. **Reported work.** A builder instance reports, and its hold is then
-   released, and in a second run ends at its time. Two builder instances
-   run, and the team object restarts. While the report is `reported`, and
-   then `accepted`, no builder assignment, change or report appears. The
-   requester then refuses the report. One builder instance is admitted by
-   `take-hold`, reads the refusal, and works the commitment again.
+9. **Reported work.** Two branches, each run once after a hold release and
+   once after a hold ends at its time, with two builder instances and a
+   restart of the team object:
+   - **Accepted.** A builder instance reports, and the requester accepts
+     the report. While the report is `reported`, and after it is
+     `accepted`, no builder assignment, change or report appears. An
+     accepted report is final (`issue.ts:70-71`).
+   - **Refused.** In a separate run, a builder instance reports, and the
+     requester refuses the report while it is `reported`
+     (`issue.ts:614-625`). Exactly one builder instance is admitted by
+     `take-hold`. It reads the refusal and works the commitment again.
 
 ## 10. Slices
 
