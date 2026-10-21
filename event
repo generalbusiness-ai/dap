@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/plans/test-invariants.md","body":{"commit":"25323213ab6cad69fe7588ea870f157510b9e667","path":"notes/plans/test-invariants.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:056377cd6d37d862b0d074dee031a49dc0f2444a","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-02-acts-review.md."}
