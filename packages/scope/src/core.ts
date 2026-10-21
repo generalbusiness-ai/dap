@@ -430,7 +430,7 @@ export class Scope {
    * genesis.
    *
    * No grant is asked for: who may create a repository is the authority
-   * note's (section 7.1).
+   * note's (section 3.8).
    */
   async create(creation: SignedIntent, definition: DeclaredDefinition | Digest | PlatformDefinition, definitions: readonly DeclaredDefinition[] = [], beside: Beside = {}): Promise<Created> {
     const refused = (reason: Extract<Created, { answer: "refused" }>["reason"]): Created => ({ answer: "refused", reason });
