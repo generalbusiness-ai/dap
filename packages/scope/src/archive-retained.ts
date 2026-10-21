@@ -44,11 +44,26 @@ export class ArchiveRetainedReader {
   constructor(readonly sql: Pick<Sql, "exec">, readonly budget: ArchiveBudget, copies: readonly Readonly<ArchiveRetainedCopy>[] = []) {
     if (copies.length > ARCHIVE_BOUNDS.attempts) budget.stop("limit");
     budget.spend({ metadata: copies.length * 512, inputWork: copies.length * 1024 });
-    for (const copy of copies) {
-      if (!isDigest(copy.content) || !isFactRef(copy.fact) || !isDigest(copy.pin) && !isPlatformDefinition(copy.pin)
-        || !natural(copy.bytes) || copy.bytes === 0 || copy.bytes > RETAINED_INPUT_BYTES || this.#copies.has(copy.content)) budget.stop("unavailable");
-      this.#copies.set(copy.content, Object.freeze({ ...copy, fact: Object.freeze({ ...copy.fact, at: Object.freeze({ ...copy.fact.at }) }) }));
+    for (const copy of copies) this.#rememberCopy(copy, false);
+  }
+  #rememberCopy(copy: Readonly<ArchiveRetainedCopy>, repeated: boolean): void {
+    if (!isDigest(copy.content) || !isFactRef(copy.fact) || !isDigest(copy.pin) && !isPlatformDefinition(copy.pin)
+      || !natural(copy.bytes) || copy.bytes === 0 || copy.bytes > RETAINED_INPUT_BYTES) this.budget.stop("unavailable");
+    const prior = this.#copies.get(copy.content);
+    if (prior) {
+      if (!repeated || prior.bytes !== copy.bytes || prior.pin !== copy.pin || canonicalize(prior.fact) !== canonicalize(copy.fact)) this.budget.stop("unavailable");
+      return;
     }
+    if (this.#copies.size === ARCHIVE_BOUNDS.attempts) this.budget.stop("limit");
+    this.#copies.set(copy.content, Object.freeze({ ...copy, fact: Object.freeze({ ...copy.fact, at: Object.freeze({ ...copy.fact.at }) }) }));
+  }
+  /** Add only an already classified descriptor inside the owner's native
+   * metadata frame. This does not grant privacy or body-read admission.
+   * Pay the original copy-table price even for an identical registration;
+   * conflicting facts/sizes/pins can never replace a descriptor. */
+  registerCopy(copy: Readonly<ArchiveRetainedCopy>): void {
+    this.budget.spend({ metadata: 512, inputWork: 1024 });
+    this.#rememberCopy(copy, true);
   }
   /** An unconfigured potential definition probe may be genuinely absent.
    * Inspect only its native keyed existence before requesting policy; an

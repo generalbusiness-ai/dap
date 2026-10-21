@@ -3,7 +3,7 @@
  * frozen scalar result grants no payload or later inventory admission. */
 import type { Digest } from "@generalbusiness/dap-contract";
 import type { ArchiveBudget, ArchiveCost } from "./archive-budget.ts";
-import type { ArchiveDeclarations } from "./archive-declarations.ts";
+import type { ArchiveDeclarations, ArchiveDeclarationClosure } from "./archive-declarations.ts";
 import { recordArchiveSupportMetadata } from "./archive-entry-metadata.ts";
 import { forecastArchiveDeclarationValidation } from "./archive-inventory-cost.ts";
 import { stopArchivePrefix as stop } from "./archive-prefix.ts";
@@ -19,9 +19,21 @@ export interface ArchiveDeclarationFootprint {
  * Missing potential probes need separate admission and are not represented
  * by an empty closure. No retained entry/rule/snapshot/value is fetched. */
 export function recordArchiveDeclarationClosure(admission: ArchiveDeclarations, root: Digest): ArchiveDeclarationFootprint {
+  admission.reader.budget.spend({ metadata: 256, inputWork: 512 });
+  return collectDeclarationClosure(admission, admission.walk(root));
+}
+
+/** Record the root/children walk already completed in this synchronous
+ * native frame. Only scalar sizing/support leaves it. Fresh inventory
+ * still reads and validates every declaration request in full. */
+export function recordArchiveCurrentDeclarationClosure(admission: ArchiveDeclarations, root: Digest): ArchiveDeclarationFootprint {
+  admission.reader.budget.spend({ metadata: 256, inputWork: 512 });
+  const closure = admission.closure(root);
+  if (!closure) return stop("unavailable");
+  return collectDeclarationClosure(admission, closure);
+}
+function collectDeclarationClosure(admission: ArchiveDeclarations, closure: ArchiveDeclarationClosure): ArchiveDeclarationFootprint {
   const { reader, bounds, reviewed } = admission, budget = reader.budget;
-  budget.spend({ metadata: 256, inputWork: 512 });
-  const closure = admission.walk(root);
   if (!closure.complete) return stop("incomplete");
   const declarations: ArchiveDeclarationFootprint["declarations"][number][] = [];
   for (const digest of closure.nodes) {
@@ -34,7 +46,7 @@ export function recordArchiveDeclarationClosure(admission: ArchiveDeclarations, 
     declarations.push(Object.freeze({ digest, bytes, support }));
   }
   budget.check();
-  return Object.freeze({ root, declarations: Object.freeze(declarations) });
+  return Object.freeze({ root: closure.root, declarations: Object.freeze(declarations) });
 }
 
 /** Future reads, validation and support checks for this complete request.

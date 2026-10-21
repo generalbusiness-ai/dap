@@ -11,6 +11,7 @@ import { outcomeValueDomains, validateDefinition } from "@generalbusiness/dap-de
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { COUNTING_COHORT, platform } from "@generalbusiness/dap-platform";
 import { forecastArchiveForeignLookup, forecastArchiveForeignSelection, forecastArchiveForeignBasis, forecastArchiveForeignScan, forecastArchiveForeignRepeat, forecastArchiveForeignCopyRequest, forecastArchiveForeignCopySize, forecastArchiveForeignGenesis, forecastArchiveForeignColdCopy } from "../src/archive-foreign-cost.ts";
+import { ArchiveRetainedReader } from "../src/archive-retained.ts";
 import { ArchiveForeignPlan } from "../src/archive-foreign-plan.ts";
 import { ARCHIVE_BOUNDS, ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
 import { buildJournalArchive, journalRef, JournalWork } from "@generalbusiness/artroom-git/journal";
@@ -200,7 +201,22 @@ test("native foreign recording pays scout work and fences fresh metadata after a
     } };
     const recorder = new ArchiveForeignMetadata(sql, f.sources, f.policies, PROPOSED_BOUNDS, budget, new Set(), receiver.digest, { record: true });
     const scans: Readonly<ArchiveForeignRecordedScan>[] = [], scan = recorder.scan.bind(recorder);
-    recorder.scan = (position, count) => { scan(position, count); scans.push(recorder.recorded(position)); };
+    const measuring = new ArchiveRetainedReader(sql, budget);
+    recorder.scan = (position, count) => {
+      scan(position, count); const held = recorder.recorded(position); scans.push(held);
+      for (const request of held.requests) if (request.kind === "cold") {
+        const descriptor = { content: request.content, bytes: request.copy.bytes, fact: request.copy.fact, pin: request.copy.pin };
+        // Both first and repeated registration pay full original table work.
+        for (let repeat = 0; repeat < 2; repeat++) {
+          const before = budget.admitted(); measuring.registerCopy(descriptor); const after = budget.admitted();
+          expect(after.metadata - before.metadata).toBe(512); expect(after.inputWork - before.inputWork).toBe(1024);
+          expect(after.attempts).toBe(before.attempts); expect(after.calls).toBe(before.calls);
+        }
+        expect(measuring.measure({ kind: "entry", digest: request.content }, request.copy.bytes)).toBe(request.copy.bytes);
+        const tight = new ArchiveRetainedReader(sql, new ArchiveBudget(), [descriptor]);
+        expect(() => tight.registerCopy({ ...descriptor, bytes: descriptor.bytes + 1 })).toThrow("archive-unavailable");
+      }
+    };
     const prefix = archivePrefixMetadata(sql, f.consumer.at, f.through,
       PROPOSED_BOUNDS, budget, new Set([receiver.digest]));
     archivePrivacyMetadata(sql, prefix, policy(receiver).support, budget, recorder);

@@ -12,7 +12,7 @@ import { variant } from "@generalbusiness/dap-derive/testing";
 import { ArchivePrefixStopped } from "../src/archive-prefix.ts";
 import { ArchiveDeclarations } from "../src/archive-declarations.ts";
 import { archiveDefinitionPresenceForecast, ArchiveRetainedReader } from "../src/archive-retained.ts";
-import { recordArchiveDeclarationClosure, forecastArchiveDeclarationClosure, recordArchivePotentialDeclarationClosure, forecastArchivePotentialDeclarationClosure } from "../src/archive-declaration-scout.ts";
+import { recordArchiveCurrentDeclarationClosure, forecastArchiveDeclarationClosure, recordArchivePotentialDeclarationClosure, forecastArchivePotentialDeclarationClosure } from "../src/archive-declaration-scout.ts";
 import { ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
 import { inventoryArchive, type ArchivePolicyRegistry, type ReviewedArchivePolicy } from "../src/archive-inventory.ts";
 import { definition, create, rita, type Lane } from "./fixtures-native.ts";
@@ -140,7 +140,8 @@ test("a complete declaration scout pays its own work and covers fresh and repeat
     } };
     const policies = new Map([[parent.digest, policy(parent)], [child.digest, policy(child)]]);
     const admission = new ArchiveDeclarations(new ArchiveRetainedReader(sql, budget), PROPOSED_BOUNDS, policies, new Set());
-    const footprint = recordArchiveDeclarationClosure(admission, parent.digest);
+    admission.root(parent.digest);
+    const footprint = recordArchiveCurrentDeclarationClosure(admission, parent.digest);
     const quote = forecastArchiveDeclarationClosure(footprint, budget), scouted = budget.admitted();
     const delta = (work: () => unknown) => {
       const before = budget.admitted(); work(); const after = budget.admitted();
