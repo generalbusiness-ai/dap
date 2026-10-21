@@ -71,15 +71,34 @@ export function sectionHeadings(source) {
   return result;
 }
 
-function documentNames(text, file, files) {
+/** A Markdown link supplies its own document, including when the section
+ * number is inside the label. Bare destinations are relative to that file;
+ * a fragment alone names the same file. External URLs stay unresolved. */
+function documentLinks(text, file, files) {
   const rows = [];
+  for (const match of text.matchAll(/\[([^\]]*)\]\(\s*(?:<([^>\r\n]+)>|([^\s)]+))(?:\s+["'][^\r\n]*?["'])?\s*\)/g)) {
+    const destination = match[2] ?? match[3];
+    if (/^[a-z][a-z\d+.-]*:|^\/\//i.test(destination)) continue;
+    const path = destination.split(/[?#]/, 1)[0];
+    if (path && !path.endsWith(".md")) continue;
+    if (!path && !destination.startsWith("#")) continue;
+    const target = !path ? file : path.startsWith("/") ? posix.normalize(path.slice(1)) : posix.normalize(posix.join(posix.dirname(file), path));
+    rows.push({ start: match.index, end: match.index + match[0].length, labelStart: match.index + 1,
+      labelEnd: match.index + 1 + match[1].length, target, known: files.has(target) });
+  }
+  return rows;
+}
+
+function documentNames(text, file, files) {
+  const links = documentLinks(text, file, files), rows = [...links];
   for (const match of text.matchAll(/\bscope\s+contract\b|\bthe\s+contract(?=['’]s\s+(?:revision\s+\d+\s*,?\s*)?sections?\b)|\bauthority\s+note\b|\bauthority\s+revision\s+\d+\b|(?:\.\.\/|\.\/)?(?:[\w.-]+\/)+[\w.-]+\.md\b/gi)) {
+    if (links.some(link => match.index >= link.start && match.index < link.end)) continue;
     const value = match[0];
     const target = /^(?:scope|the)\s+contract$/i.test(value) ? REFERENCES.contract : /^authority\s+(?:note|revision\s+\d+)$/i.test(value) ? REFERENCES.authority
       : value.startsWith(".") ? posix.normalize(posix.join(posix.dirname(file), value)) : value;
     rows.push({ start: match.index, end: match.index + value.length, target, known: files.has(target) });
   }
-  return rows;
+  return rows.sort((a, b) => a.start - b.start);
 }
 
 function targetOf(text, offset, end, file, files, defaultDocument) {
@@ -88,19 +107,21 @@ function targetOf(text, offset, end, file, files, defaultDocument) {
   const start = separator < 0 ? 0 : separator + 2, finish = paragraphEnd < 0 ? text.length : paragraphEnd;
   const paragraph = text.slice(start, finish), at = offset - start;
   const names = documentNames(paragraph, file, files);
+  const linked = names.find(row => row.labelStart <= at && row.labelEnd >= end - start);
+  if (linked) return linked.known ? { target: linked.target, nameStart: start + linked.start } : { reason: "named document is not present: " + linked.target };
   const before = names.filter(row => row.end <= at).at(-1);
   const after = names.find(row => row.start >= end - start);
   // A named document immediately after the number is also explicit: section
   // 3.3 of the authority note. An unrelated later paragraph supplies no owner.
   const following = after && /^\s+of\s+(?:the\s+)?$/i.test(paragraph.slice(end - start, after.start)) ? after : null;
   const prelude = before ? paragraph.slice(before.end, at) : "";
-  const binding = /^(?:['’]s\s*\(?\s*)?[\s`,:]*(?:revision\s+\d+\s*,?\s*)?(?:\([a-f\d]{7,40}\)\s*,?\s*)?$/i;
+  const binding = /^(?:['’]s\s*)?[\s`,:(]*(?:revision\s+\d+\s*,?\s*)?(?:\([a-f\d]{7,40}\)\s*,?\s*)?$/i;
   const bound = before && binding.test(prelude) ? before : null;
   const chosen = following ?? bound;
   const since = chosen ? paragraph.slice(chosen.end, at) : paragraph.slice(0, at);
   // A different unnamed plan, review, or note breaks inherited ownership.
   // The checker never chooses a document because its section number fits.
-  const other = /\b(?:RFC\s+\d+|I[123]\s+(?:plan|deltas)|proof plan|plan\s+\d+|facts file|review|(?:the\s+)?(?:note|design)|lane forms)\b/i.test(since);
+  const other = /\b(?:RFC\s+\d+|ISO\s+[\d/-]+|I[123]\s+(?:plan|deltas)|facts file|review|notes?|design|plan|manual|spec(?:ification)?|guide|standard|handbook|white\s?paper|proposal|protocol|report|lane forms)\b/i.test(since);
   if (other) return { reason: "another document is named without an exact path" };
   if (chosen) return chosen.known ? { target: chosen.target, nameStart: start + chosen.start } : { reason: "named document is not present: " + chosen.target };
   return defaultDocument ? { target: defaultDocument } : { reason: "no unambiguous document name" };

@@ -73,6 +73,52 @@ test("historical notes are inventoried without guessing from nearby document nam
   assert.equal(result.resolved.length, 0);
 });
 
+// Invariant: an explicit Markdown link chooses its actual destination,
+// including bare relative names and same-file fragments, before a nearby
+// document name or a similarly named root file can influence the citation.
+test("broken Markdown section links fail against their actual document", () => {
+  const files = references();
+  files.set("other.md", "## 999 The wrong root document has this section\n");
+  files.set("docs/other.md", "## 6.1 The relative document\n");
+  files.set("docs/guide.md", [
+    "## 6.1 This document",
+    "",
+    `See [section 999](../${REFERENCES.contract}).`,
+    "See [section 999](other.md#999).",
+    "See [section 999](#999).",
+    "See [the other guide](other.md), section 999.",
+    `See [section 6.1](../${REFERENCES.contract}).`,
+  ].join("\n"));
+  const result = checkCitations(files);
+  assert.equal(result.ok, false);
+  assert.deepEqual(result.broken.map(row => [row.line, row.document, row.missing]), [
+    [3, REFERENCES.contract, ["999"]], [4, "docs/other.md", ["999"]],
+    [5, "docs/guide.md", ["999"]], [6, "docs/other.md", ["999"]],
+  ]);
+  assert.deepEqual(result.ambiguous, []);
+  assert.deepEqual(result.resolved.map(row => [row.document, row.sections]), [[REFERENCES.contract, ["6.1"]]]);
+});
+
+// Invariant: a parenthesis does not hide an explicitly named broken section,
+// and a file's one introductory reference cannot claim another manual's
+// section just because its number also exists in the introductory document.
+test("parenthesized names bind while unknown manuals break introductory defaults", () => {
+  const files = references();
+  files.set("docs/guide.md", "Scope contract (section 999).\n\nAuthority note (section 999).\n");
+  files.set("packages/example.ts", [
+    "/** Scope contract, section 6.1. */", "",
+    "// Widget manual, section 6.1.", "",
+    "// Widget specification, section 6.1.", "",
+    "// Widget guide, section 6.1.", "",
+    "// A bare section 6.1 still uses the introductory reference.",
+  ].join("\n"));
+  const result = checkCitations(files);
+  assert.equal(result.ok, false);
+  assert.deepEqual(result.broken.map(row => [row.document, row.missing]), [[REFERENCES.contract, ["999"]], [REFERENCES.authority, ["999"]]]);
+  assert.deepEqual(result.ambiguous.map(row => [row.file, row.line]), [["packages/example.ts", 3], ["packages/example.ts", 5], ["packages/example.ts", 7]]);
+  assert.equal(result.resolved.length, 2);
+});
+
 // Invariant: an exact listed finding remains visible, and cannot admit a
 // changed, duplicated or stale citation. A list never broadens a document's
 // accepted section numbers or exempts another historical file.
