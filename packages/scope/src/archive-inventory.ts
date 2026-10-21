@@ -59,7 +59,7 @@ const nameOf = (key: RetainedKey) => JSON.stringify(key.kind === "value" ? [key.
  * context. The caller supplies its real Sql.transaction (transactionSync).
  * All work is synchronous: no provider task can outlive this frame. The
  * same one budget is used across every stage and every cache hit. */
-export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: Bounds, reviewed: ArchivePolicyRegistry, budget = new ArchiveBudget(), fixtureSources?: FixtureArchiveSourcePins, after?: Head | null, forecast?: ArchivePlanFence): ArchiveInventoryResult {
+export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: Bounds, reviewed: ArchivePolicyRegistry, budget = new ArchiveBudget(), fixtureSources?: FixtureArchiveSourcePins, after?: Head | null, forecast?: ArchivePlanFence, declarationSizes?: ReadonlyMap<Digest, number>): ArchiveInventoryResult {
   try {
     return sql.transaction(() => {
       budget.check();
@@ -69,7 +69,7 @@ export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: 
       if (!rootPolicy || !rootPolicy.review || rootPolicy.review.length > 512 || rootPolicy.support.named !== prefix.pin.seed.definition) return stop("unsupported-archive-cohort");
       let reader = new ArchiveRetainedReader(sql, budget);
       const visited = new Set<Digest>();
-      const declarations = new ArchiveDeclarations(reader, bounds, reviewed, visited);
+      const declarations = new ArchiveDeclarations(reader, bounds, reviewed, visited, declarationSizes);
       const { definition, platformClosure } = declarations.root(prefix.pin.seed.definition);
       const foreign = fixtureSources ? new ArchiveForeignMetadata(sql, fixtureSources, reviewed, bounds, budget, visited, prefix.pin.seed.definition) : undefined;
       const admitted = archivePrivacyMetadata(sql, prefix, { ...rootPolicy.support, definition }, budget, foreign);

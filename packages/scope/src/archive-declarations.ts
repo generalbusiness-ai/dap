@@ -3,7 +3,7 @@
  * caller owns one aggregate visited set shared with foreign admission.
  * This selects no entry, rule, snapshot or value body. */
 import type { Bounds, Digest, PlatformDefinition } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isDigest, natural, utf8 } from "@generalbusiness/artroom-bytes";
 import { creates, derivable, validateDefinition, runnable, outcomeValueDomains, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { archiveDeclarationValidationWork, archiveNativeDataReservation } from "./archive-inventory-cost.ts";
@@ -19,7 +19,10 @@ export class ArchiveDeclarations {
   readonly #metadata = new Map<Digest, DefinitionMetadata | null>();
   readonly #closures = new Map<Digest, ArchiveDeclarationClosure>();
   constructor(readonly reader: ArchiveRetainedReader, readonly bounds: Bounds,
-    readonly reviewed: ArchivePolicyRegistry, readonly visited: Set<Digest>) {}
+    readonly reviewed: ArchivePolicyRegistry, readonly visited: Set<Digest>,
+    /** Trusted scout sizes only narrow original reads. A missing key refuses
+     * before its body; every permitted read still validates afresh. */
+    readonly declarationSizes?: ReadonlyMap<Digest, number>) {}
   definition(digest: Digest): DefinitionMetadata | null | undefined { return this.#metadata.get(digest); }
   closure(digest: Digest): ArchiveDeclarationClosure | undefined { return this.#closures.get(digest); }
   /** Re-admit the exact local root and all archive-only children before
@@ -62,7 +65,9 @@ export class ArchiveDeclarations {
     if (!this.visited.has(digest)) { this.reader.budget.spend({ nodes: 1 }); this.visited.add(digest); }
     if (!this.reviewed.has(digest) && !this.reader.definitionPresent(digest)) { this.#metadata.set(digest, null); return null; }
     const policy = this.#policyOf(digest);
-    const got = this.reader.read({ kind: "definition", digest }, this.bounds.definitionBytes);
+    const maximum = this.declarationSizes === undefined ? this.bounds.definitionBytes : this.declarationSizes.get(digest);
+    if (maximum === undefined || !natural(maximum) || maximum === 0 || maximum > this.bounds.definitionBytes) return stop("mismatch");
+    const got = this.reader.read({ kind: "definition", digest }, maximum);
     if (!got) { this.#metadata.set(digest, null); return null; }
     this.reader.budget.spend({ inputWork: archiveDeclarationValidationWork(got.bytes.length) });
     const checked = validateDefinition(got.value, this.bounds, RULE_PROFILES);

@@ -9,6 +9,7 @@ import { canonicalize, digestBytes, entryHash, textDigest, utf8 } from "@general
 import type { OperationRules, ValidDefinition } from "@generalbusiness/dap-derive";
 import { MemorySource, verify } from "@generalbusiness/artroom-replay";
 import { variant } from "@generalbusiness/dap-derive/testing";
+import { ArchivePrefixStopped } from "../src/archive-prefix.ts";
 import { ArchiveDeclarations } from "../src/archive-declarations.ts";
 import { ArchiveRetainedReader } from "../src/archive-retained.ts";
 import { recordArchiveDeclarationClosure, forecastArchiveDeclarationClosure } from "../src/archive-declaration-scout.ts";
@@ -146,7 +147,7 @@ test("a complete declaration scout pays its own work and covers fresh and repeat
       return Object.fromEntries(Object.keys(before).map(key => [key, after[key as keyof ArchiveCost] - before[key as keyof ArchiveCost]])) as ArchiveCost;
     };
     const repeated = delta(() => admission.walk(parent.digest));
-    const fresh = delta(() => new ArchiveDeclarations(new ArchiveRetainedReader(sql, budget), PROPOSED_BOUNDS, policies, new Set()).walk(parent.digest));
+    const fresh = delta(() => new ArchiveDeclarations(new ArchiveRetainedReader(sql, budget), PROPOSED_BOUNDS, policies, new Set(), new Map(footprint.declarations.map(row => [row.digest, row.bytes]))).walk(parent.digest));
     return { footprint, quote, scouted, repeated, fresh, final: budget.admitted(), calls };
   });
   expect(result.footprint.declarations.map(row => row.digest)).toEqual([parent.digest, child.digest]);
@@ -161,6 +162,25 @@ test("a complete declaration scout pays its own work and covers fresh and repeat
   expect(entryReads(result.calls)).toEqual([]); expect(payloadReads(result.calls)).toEqual([]);
   expect(Object.keys(result.footprint).sort()).toEqual(["declarations", "root"]);
   expect(result.footprint.declarations.every(row => Object.keys(row).sort().join(",") === "bytes,digest,support")).toBe(true);
+  // A later native turn changes retained bytes. The old scalar quote must
+  // narrow the next real read before allocating that larger declaration.
+  await lane.inside(state => { state.storage.sql.exec("UPDATE retained_input SET bytes = bytes || ' ' WHERE kind = 'definition' AND digest = ?", parent.digest); });
+  const changed = await lane.inside(state => {
+    const budget = new ArchiveBudget(), bodies: string[] = [];
+    const sql = { exec(query: string, ...args: (string | number | null | ArrayBuffer)[]) {
+      if (query.startsWith("SELECT bytes FROM retained_input")) bodies.push(query);
+      return state.storage.sql.exec(query, ...args);
+    } };
+    const policies = new Map([[parent.digest, policy(parent)], [child.digest, policy(child)]]);
+    const sizes = new Map(result.footprint.declarations.map(row => [row.digest, row.bytes]));
+    const held = new ArchiveDeclarations(new ArchiveRetainedReader(sql, budget), PROPOSED_BOUNDS, policies, new Set(), sizes).walk(parent.digest);
+    let unscouted: string | null = null;
+    try { new ArchiveDeclarations(new ArchiveRetainedReader(sql, budget), PROPOSED_BOUNDS, policies, new Set(), new Map()).walk(parent.digest); }
+    catch (error) { if (!(error instanceof ArchivePrefixStopped)) throw error; unscouted = error.reason; }
+    return { complete: held.complete, bodies, unscouted };
+  });
+  expect(changed.complete).toBe(false); expect(changed.unscouted).toBe("mismatch");
+  expect(changed.bodies).toEqual([]);
 });
 
 test("archive-only closure requires a missing unused child; later bytes complete the same cutoff while ordinary replay and later unrelated inputs remain unchanged", async () => {
