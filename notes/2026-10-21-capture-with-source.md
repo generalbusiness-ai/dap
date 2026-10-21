@@ -77,7 +77,7 @@ item types:
 
 | Item | Opened by | States | Holds |
 |---|---|---|---|
-| `source` | `capture` or `read`: one for each channel and external identity, chat upload or reading | `open`, `withdrawn` | `channel`, `external`, `address`, and every field of the first version |
+| `source` | `capture` or `read`: one for each channel and external identity, chat upload or reading | `open`, `withdrawn` | `channel`, `external`, `address`, every field of the first version, and the current version: `current` (its fact), `currentRevision` and `currentTime` |
 | `version` | `recapture`: one for each later version | `kept` | a ref to its source, and every field of the version |
 
 The first version of a source is the `capture` or `read` that opened it.
@@ -87,8 +87,9 @@ Each later version is a `recapture`.
 
 | Act | Effect |
 |---|---|
-| `capture` | Opens a `source` with its first version. Refused `already-captured` when a source with the same `channel` and `external` exists, in either state (section 5). A chat upload with no `external` is never refused for this. |
-| `recapture` | Opens a `version` of an `open` source. Refused `withdrawn` when the source is withdrawn. Refused `same-revision` when the source's first version, or any of its versions, has the same `revision`. |
+| `capture` | Opens a `source` with its first version, which is current. Refused `already-captured` when a source with the same `channel` and `external` exists, in either state (section 5). A chat upload with no `external` is never refused for this. |
+| `recapture` | Opens a `version` of an `open` source, and makes it current. Refused `withdrawn` when the source is withdrawn. Refused `same-revision` when the source's first version, or any of its versions, has the same `revision`. Refused `stale` when `sourceTime` is earlier than the source's `currentTime`. |
+| `observe` | Makes an existing version of an `open` source current again, named by its fact, with the observation's `sourceTime`. Opens no item. Refused `withdrawn`, `already-current` when that version is current, and `stale` when `sourceTime` is earlier than `currentTime`. |
 | `read` | Opens a `source` with `channel: reading`, no `external`, and `statement: reading`. `derivedFrom` is required. |
 | `withdraw` | Sets a source `withdrawn`. Its versions stay. |
 | `reopen` | Sets a withdrawn source `open` again. It needs the action `capture.manage` (section 4). No connector delivery reopens a source. |
@@ -183,12 +184,30 @@ This is the form the change lane uses for links (`apps/room/lanes/src/change.ts:
 A connector that receives a known source reads `already-captured`. It then
 signs `recapture` when the source's `revision` is new.
 
-**Every revision once.** `recapture` is refused `same-revision` when the
-source's first version, or any later version, holds the same `revision`,
-not only the latest. Two guards do this: the field `revision` differs from
-the source's own `revision` slot, and a `none` over `version` items whose
-source is this source and whose revision equals the field. So a delivery
-that repeats an old revision changes nothing.
+**Content once, observations in order.** A source's content is stored once
+for each revision, and its current state is a separate record:
+
+- **New content.** A revision that no version of the source holds is a
+  `recapture`. It opens a version and makes it current.
+- **Content seen before.** A revision that an earlier version holds, and
+  that is not current, is a return to old content: an issue reopened, or a
+  comment edited back. `recapture` is refused `same-revision`, so the
+  content is not stored twice. The connector then signs `observe`, naming
+  that version's fact. The journal records the return, and the source's
+  current version changes.
+- **A redelivery.** A revision that is current already is a redelivery,
+  exact or with only new delivery metadata. `recapture` is refused
+  `same-revision`, and `observe` is refused `already-current`. Nothing
+  changes.
+- **Order.** `recapture` and `observe` are refused `stale` when their
+  `sourceTime` is earlier than the source's `currentTime`. So a delayed
+  delivery of old content never overwrites a later state. The order lives
+  in the source item, and a restart keeps it.
+
+The `same-revision` check is two guards: the field `revision` differs from
+the source's own first `revision`, and a `none` over `version` items whose
+source is this source and whose revision equals the field. A withdrawn
+source refuses both acts with `withdrawn`, so no delivery revives it.
 
 **What a revision is.** The revision is the digest of the version's
 captured content: the SHA-256 of the canonical JSON of a content projection
@@ -226,7 +245,7 @@ source again, not as an ordered journal
 write produced: the digest of the content projection that the write
 leaves at the source. A later capture of that revision is an echo. The connector
 reads the source's recorded outbound revisions, and signs no `recapture`
-for an echo (`github-repository-import.md:273-274`).
+and no `observe` for an echo (`github-repository-import.md:273-274`).
 
 **Authority.** A change of state at the source is an observation. A GitHub
 issue closed on GitHub does not close the room's issue. The room's own act
@@ -315,8 +334,10 @@ connector as an `outside` result.
    fact. Then recapture v3, and redact v2. R1 still names v2, and R2 still
    names R1. A read of v2 answers `redacted`. An issue filed with
    `captured` naming v2 keeps that reference.
-2. **Every revision once.** Recapture v2's revision again after v3: refused
-   `same-revision`. A delivery that repeats v1's revision changes nothing.
+2. **Content once.** After v3, a recapture of v2's revision is refused
+   `same-revision`. An `observe` naming v2 makes v2 current again, and no
+   version opens. A delivery that repeats the current revision changes
+   nothing.
 3. **Withdrawal.** Withdraw a source. A redelivery of its external identity
    is refused `already-captured`. A genuine new revision is refused
    `withdrawn`. After `reopen` by a member with `capture.manage`, the new
@@ -345,6 +366,6 @@ The slices start after retained files RF1 to RF4.
 | CS1 | The capture package: the capture scope, the `source` and `version` items (one opened per act), the acts and actions of sections 2 and 4, the deduplication guards, statement kinds, and the `notify` attention. RF4's minimal capture package becomes this package. | Journey 1 runs on a hosted Worker. Witnesses 1, 2, 3, 5 and 6 of section 10 pass. |
 | CS2 | The issue lane's `captured` field in a new lane version, and the source line in the room's views. | An issue filed from a capture shows its source line, and the capture stays the capturer's act. |
 | CS3 | The local-branch capture with `dap propose`. | Witness 4 of section 10 passes. |
-| CS4 | The GitHub inbound connector package: the connector member and preset, the host's read credential, delivery records, watermark reconciliation, the content projections of section 5, and issue filing from captures. | A test repository's issues and comments arrive once each. An exact redelivery, and a redelivery with only new delivery metadata, are refused `same-revision`. Two observations with the same external identity and update time but different bodies are two versions. A close on GitHub does not close the room's issue. |
+| CS4 | The GitHub inbound connector package: the connector member and preset, the host's read credential, delivery records, watermark reconciliation, the content projections of section 5, `observe`, and issue filing from captures. | A test repository's issues and comments arrive once each. An exact redelivery, and a redelivery with only new delivery metadata, change nothing. Two observations with the same external identity and update time but different bodies are two versions. An issue observed open (A), closed (B) and reopened to the same content (A), with a restart before the reopen, ends with A current, two versions and three source entries; a duplicate delivery of the first A changes nothing, and a delayed delivery of A with an earlier update time is refused `stale`. A close on GitHub does not close the room's issue. |
 
 Each slice is reviewed and landed before the next one starts.
