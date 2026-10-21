@@ -2,6 +2,7 @@
 export { buildJournalArchive, type JournalArchive, type JournalLayoutResult, type JournalInputSource } from "./journal-layout.ts";
 export { JOURNAL_SELECTION_BYTES, journalSelection, journalPassSelection, type JournalSelection, type JournalPassSelection } from "./journal-selection.ts";
 export { forecastJournalSelection, journalOrderingInputWork, type JournalSelectionFootprint, type JournalSelectionForecast } from "./journal-selection-cost.ts";
+export { forecastJournalCommit, type JournalCommitForecast } from "./journal-commit-cost.ts";
 export { buildJournalPass, type JournalPassArchive, type JournalPassResult } from "./journal-v2-layout.ts";
 export { prepareJournalPass, JournalPassPreparation, type JournalPassPreparationOptions, type JournalPassPreparationResult } from "./journal-v2-preparation.ts";
 export { ArchiveSegmentCursor } from "./journal-segments.ts";
