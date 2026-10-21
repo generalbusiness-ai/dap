@@ -27,9 +27,10 @@ const ENV = {
   GIT_COMMITTER_DATE: "@1700000000 +0000",
 };
 
-/** Run the real `git` in `dir`, with an argument array and no shell. Its output, trimmed. */
+/** Run the real `git` in `dir`, with an argument array and no shell. Its output, trimmed.
+ * Match program()'s 30-second limit; a stalled fixture command must not wait indefinitely. */
 export const git = (dir: string, args: readonly string[], input?: string | Uint8Array): string =>
-  execFileSync("git", ["-C", dir, ...args], { env: ENV, input, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] }).trim();
+  execFileSync("git", ["-C", dir, ...args], { env: ENV, input, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"], timeout: 30_000, killSignal: "SIGKILL" }).trim();
 
 const made: string[] = [];
 

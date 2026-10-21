@@ -265,6 +265,35 @@ guard. The first focused MCP compiler failure is preserved. The final focused
 run's source, dependency, tool and stamp guards are exact. These results do
 not replace the corrected combined full gate or formal review, both pending.
 
+The gate at `06bda121` was interrupted at 22:03:48 after an observed direct
+fixture Git command stalled on standard input. Its natural exit status is
+null; it received SIGTERM (15), and the wrapper exited 2. All 2,730 source
+and 5,530 dependency guards stayed exact. The reporter recorded 1,461 pass
+events and one skip, all nonterminal. No native result was recorded; downstream checks had
+not run. This is an interrupted run, not a gate pass.
+
+The coordinator supplied the sealed V5 metadata: descriptor
+`/private/tmp/artroom-f2-d2-final-gate-v5-seal-20261021/closed-descriptor.json`,
+888,774 bytes, mode 292 (`0444`), SHA-256
+`047e9ff4aa141089e732cf486dc4f96d81e58bb4959631831d7de30f0477a18d`.
+Its failure report, `gate-report.json`, is 10,028 bytes, mode 420 (`0644`),
+SHA-256
+`64344b04c9b41a05a64476ed2d14302be586418330f8b59b11a1ffc355b8745a`.
+Those original artifacts remain frozen.
+
+The test repository helper now bounds its direct `execFileSync` Git calls
+with the existing `GitProgram` allowance of 30 seconds and `SIGKILL`. There
+is no catch or retry, and no archive or Vitest limit, deadline or price
+changes. A stalled direct Git call now fails visibly; its underlying cause
+remains unknown. In a fresh disposable repository, the updated helper's
+`hash-object -w` against a FIFO with no writer returned `ETIMEDOUT` and
+`SIGKILL` after 30,001.65 ms. Its exact direct child was absent (`ESRCH`)
+afterward. The fixture was abandoned after the kill. One existing real-Git
+positive case also passed. Raw error fields, timing, and exact source,
+dependency, tool and stamp guards are retained. No earlier unbounded helper
+or frozen gate original was executed for this control. A clean corrected
+head still needs the coordinated full gate and formal review.
+
 The actual Room A count of applied-create sending entries retained at F3 is
 an operational measurement for the planner. This change neither queries
 Cloudflare nor substitutes a fixture count for that measurement.
