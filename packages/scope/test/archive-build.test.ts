@@ -15,6 +15,7 @@ import { archivePrivacyMetadata } from "../src/archive-privacy.ts";
 import { ArchiveLocalReferences, type ArchiveLocalReferencePlan } from "../src/archive-local-references.ts";
 import { ArchivePlanFence } from "../src/archive-plan-fence.ts";
 import { forecastArchiveInventoryEntry, forecastArchiveInventoryFinal } from "../src/archive-inventory-cost.ts";
+import { forecastArchiveRetainedPass } from "../src/archive-row-cost.ts";
 import { readRetainedArchivePass } from "../src/archive-retained-pass.ts";
 import type { Sql } from "../src/sqlite.ts";
 import { at, create, rita, una, type Lane } from "./fixtures-native.ts";
@@ -172,7 +173,9 @@ test("v2 native inventory and restart read only the marked new interval and keep
       budget.spend({ metadata: 256, inputWork: 512 });
       const paths = new Set<string>();
       const retain = (key: RetainedKey) => {
-        const pass = readRetainedArchivePass(source, key, budget);
+        const beforePass = budget.admitted(), pass = readRetainedArchivePass(source, key, budget), afterPass = budget.admitted();
+        expect(Object.fromEntries(Object.keys(afterPass).map(axis => [axis,
+          afterPass[axis as keyof ArchiveCost] - beforePass[axis as keyof ArchiveCost]]))).toEqual(forecastArchiveRetainedPass());
         if (pass !== null && pass < initial.seq + 1) return;
         budget.spend({ metadata: 2048, inputWork: 4096 });
         paths.add(journalV2RetainedPath(initial.seq + 1, key));

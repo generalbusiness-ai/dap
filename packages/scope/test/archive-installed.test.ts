@@ -281,7 +281,7 @@ test.for(["fixture", "Grow"])("installed %s scopes export genesis zero after a l
         // Invariant: every actual fixture entry fits alone, with its own
         // retained paths and original native inventory plus append charges.
         // These diagnostic commits are not marked or remotely confirmed.
-        sharedWholePassFootprints.push({ scope: scope.name, entries: planned.archive.selection.entries.length,
+        sharedWholePassFootprints.push({ scope: scope.name, role: scope.name === rootScope.name ? "root" : scope.name === childScope.name ? "child" : "native", entries: planned.archive.selection.entries.length,
           cost: planned.archive.cost, inventoryNodes: (JSON.parse(planned.mark.manifest) as { cost: { nodes: number } }).cost.nodes,
           qualification: "Original default budget pays native inventory and writing. Initial whole-prefix pass, no append validator or remote confirmation." });
         const held = new Map<string, JournalObject>(); let parent: string | null = null, after: Head | null = null;
@@ -290,6 +290,18 @@ test.for(["fixture", "Grow"])("installed %s scopes export genesis zero after a l
         const birth = read.value[0]!.entry.input;
         if (birth.type !== "genesis") throw Error("The real fixture must begin at genesis.");
         const privacySupport = policies.get(birth.seed.definition)!.support;
+        // Independent original whole-pass receipts from the closed support
+        // checkpoint. Later shared price extraction must not move both the
+        // actual charges and the future formulas unnoticed.
+        const originalPassCosts: Readonly<Record<string, ArchiveCost>> = {
+          "sha256:5e2d34fa9965662aa508aaaffd83bdcd4198746ae8d4a8dd24654d74289529a4":
+            { entries: 6, attempts: 30, nodes: 20, calls: 87, metadata: 265580, inputWork: 13291923 },
+          "sha256:69424c1bbbf7c2f81528fcc6c910b1230a88d061ac3655c5bde916aaa2572c56":
+            { entries: 4, attempts: 35, nodes: 20, calls: 79, metadata: 255134, inputWork: 18673194 },
+          "platform:directory@16": { entries: 14, attempts: 128, nodes: 23, calls: 223, metadata: 474298, inputWork: 34957641 },
+          "platform:rules@10": { entries: 11, attempts: 80, nodes: 23, calls: 164, metadata: 373104, inputWork: 36436351 },
+          "platform:destination@12": { entries: 2, attempts: 26, nodes: 20, calls: 54, metadata: 234024, inputWork: 17754830 } };
+        expect(planned.archive.cost).toEqual(originalPassCosts[birth.seed.definition]);
         for (const sealed of read.value) {
           const through = { seq: sealed.entry.seq, hash: sealed.hash };
           const old: string | null = parent, receipt: Head | null = after;
@@ -325,7 +337,8 @@ test.for(["fixture", "Grow"])("installed %s scopes export genesis zero after a l
               "platform:directory@16": 1024, "platform:rules@10": 272640, "platform:destination@12": 378112 };
             expect(originalSupport).toEqual({ entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0,
               inputWork: independentSupport[privacySupport.named] });
-            supportComponents.push({ named: privacySupport.named, digest: privacySupport.definition.digest,
+            supportComponents.push({ named: privacySupport.named, semanticName: privacySupport.definition.declared.name,
+              role: scope.name === rootScope.name ? "root" : scope.name === childScope.name ? "child" : "native", digest: privacySupport.definition.digest,
               counts, delta: originalSupport, recordedDelta: { metadata: recorded.metadata - afterSupport.metadata,
                 inputWork: recorded.inputWork - afterSupport.inputWork } });
             const beforePrivacy = privacyBudget.admitted(), sourceRow = { kind: "local" as const, position };

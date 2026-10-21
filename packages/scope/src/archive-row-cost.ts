@@ -9,6 +9,12 @@ export const ARCHIVE_ROW_SIZE_METADATA = 96;
 export const ARCHIVE_RETAINED_PASS_METADATA = 96;
 export const ARCHIVE_RETAINED_PASS_WORK = 128;
 export const ARCHIVE_RETAINED_CONFIRM_WORK = 256;
+/** One original keyed pass lookup, including the native metadata fold.
+ * This does not select a body, confirm a receipt or create an allowance. */
+export function forecastArchiveRetainedPass(): Readonly<ArchiveCost> {
+  return Object.freeze({ entries: 0, attempts: 0, nodes: 0, calls: 1, metadata: ARCHIVE_RETAINED_PASS_METADATA,
+    inputWork: ARCHIVE_RETAINED_PASS_WORK + ARCHIVE_RETAINED_PASS_METADATA });
+}
 export const archiveRowLoadWork = (bytes: number): number => bytes * 12;
 export const archivePendingManifestWork = (units: number): number => units * 8;
 export const archiveMarkWork = (units: number): number => units * 12 + 4096;

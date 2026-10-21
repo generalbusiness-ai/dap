@@ -16,6 +16,17 @@ export const archiveNativeDataReservation = (definitionBytes: number): Pick<Arch
 export const archiveScopeFrameReservation = (bytes: number): Pick<ArchiveCost, "metadata" | "inputWork"> =>
   ({ metadata: bytes + 128, inputWork: bytes * 8 });
 export const archiveInventoryEntryWork = (bytes: number): number => bytes * 32;
+export const archiveDeclarationValidationWork = (units: number): number => units * 3 * 16;
+
+/** Post-read declaration validation only. Use measured UTF-16 units, or
+ * UTF-8 bytes as an upper bound. The original retained read, distinct-node
+ * accounting, closure traversal and trusted support checks are separate.
+ * Fresh inventory still validates each request, including repeat requests. */
+export function forecastArchiveDeclarationValidation(units: number): Readonly<ArchiveCost> {
+  const inputWork = archiveDeclarationValidationWork(units);
+  if (!natural(units) || units === 0 || !natural(inputWork)) throw new ArchiveStopped("unavailable");
+  return Object.freeze({ entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0, inputWork });
+}
 
 export interface ArchivePrefixFootprint {
   readonly entries: number;

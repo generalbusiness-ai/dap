@@ -7,7 +7,7 @@ import type { DependencyOrigin, LocalRetainedPlan, RequiredDependency, RetainedD
 import { platform } from "@generalbusiness/dap-platform";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { ArchiveBudget, ArchiveStopped, type ArchiveCost } from "./archive-budget.ts";
-import { archivePinValidationWork, archiveNativeDataReservation, archiveInventoryEntryWork } from "./archive-inventory-cost.ts";
+import { archivePinValidationWork, archiveNativeDataReservation, archiveInventoryEntryWork, archiveDeclarationValidationWork } from "./archive-inventory-cost.ts";
 import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, readArchivePin, readArchivePinAfterReceipt } from "./archive-pin.ts";
 import { stopArchivePrefix as stop, archivePrefixMetadata, ArchivePrefixStopped, type ArchivePrefixReason } from "./archive-prefix.ts";
 import { archivePrivacyMetadata, archiveSupportMetadata, type ArchiveSupport } from "./archive-privacy.ts";
@@ -87,7 +87,7 @@ export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: 
         const policy = policyOf(digest);
         const got = reader.read({ kind: "definition", digest }, bounds.definitionBytes);
         if (!got) { metadata.set(digest, null); return null; }
-        budget.spend({ inputWork: got.bytes.length * 3 * 16 });
+        budget.spend({ inputWork: archiveDeclarationValidationWork(got.bytes.length) });
         const checked = validateDefinition(got.value, bounds, RULE_PROFILES);
         budget.check();
         if (!checked.ok || checked.definition.digest !== digest || canonicalize(policy.support.definition.declared) !== got.bytes) return stop("mismatch");

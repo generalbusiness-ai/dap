@@ -7,6 +7,8 @@ import { DEVICE_COMMAND, DOMAINS, PROPOSED_BOUNDS, RETAINED_INPUT_BYTES } from "
 import { canonicalize } from "@generalbusiness/artroom-bytes";
 import type { OperationRules } from "@generalbusiness/dap-derive";
 import { ArchiveBudget } from "../src/archive-budget.ts";
+import { forecastArchiveDeclarationValidation } from "../src/archive-inventory-cost.ts";
+import { forecastArchiveRetainedPass } from "../src/archive-row-cost.ts";
 import { forecastArchiveEntryPrivacy } from "../src/archive-entry-privacy-cost.ts";
 import { archivePrefixMetadata } from "../src/archive-prefix.ts";
 import { DEVICE_COMMAND_ARCHIVE_PREPARATIONS, DEVICE_COMMAND_ARCHIVE_RECORDS, archivePrivacyMetadata, type ArchiveSupport } from "../src/archive-privacy.ts";
@@ -103,4 +105,14 @@ test("entry privacy quotes keep the original copy JSON charge and finite owner b
   expect(forecastArchiveEntryPrivacy({ input: "outcome", effects: 65 })).toEqual({ ok: false, reason: "limit" });
   expect(forecastArchiveEntryPrivacy({ input: "act", effects: 0, copyBytes: RETAINED_INPUT_BYTES + 1 })).toEqual({ ok: false, reason: "limit" });
   expect(() => forecastArchiveEntryPrivacy({ input: "act", effects: -1 })).toThrow("archive-unavailable");
+});
+
+// Scalar prices, not declaration validity, closure completeness or a receipt.
+test("declaration validation and retained pass quotes keep the original work", () => {
+  expect(forecastArchiveDeclarationValidation(1024)).toEqual({ entries: 0, attempts: 0, nodes: 0, calls: 0,
+    metadata: 0, inputWork: 49152 });
+  expect(forecastArchiveRetainedPass()).toEqual({ entries: 0, attempts: 0, nodes: 0, calls: 1,
+    metadata: 96, inputWork: 224 });
+  expect(() => forecastArchiveDeclarationValidation(0)).toThrow("archive-unavailable");
+  expect(() => forecastArchiveDeclarationValidation(Number.MAX_SAFE_INTEGER)).toThrow("archive-unavailable");
 });
