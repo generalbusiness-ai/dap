@@ -6,6 +6,7 @@ import type { JournalFormat } from "@generalbusiness/artroom-git/journal";
 import type { ArchiveBudget } from "../../src/archive-budget.ts";
 import { ArchiveDriver } from "../../src/archive-driver.ts";
 import type { ArchivePolicyRegistry } from "../../src/archive-inventory.ts";
+import type { Sql } from "../../src/sqlite.ts";
 import { at, type Lane } from "../fixtures-native.ts";
 import { ScriptedArchiveHost } from "./archive-provider.ts";
 import { archivePolicies, archiveRepository, archiveSql } from "./archive.ts";
@@ -14,8 +15,7 @@ export class ScriptedHost extends ScriptedArchiveHost {
   constructor(format: JournalFormat) { super(format, () => atTime); }
 }
 const atTime = at(0);
-export function driver(lane: Lane, state: DurableObjectState, host: ScriptedHost, budget?: () => ArchiveBudget, after?: number, policies: ArchivePolicyRegistry = archivePolicies) {
-  const sql = archiveSql(state);
+export function driver(lane: Lane, state: DurableObjectState, host: ScriptedHost, budget?: () => ArchiveBudget, after?: number, policies: ArchivePolicyRegistry = archivePolicies, sql: Sql = archiveSql(state)) {
   return new ArchiveDriver({
     sql: after === undefined ? sql : { transaction: sql.transaction, exec(query, ...args) {
       if (/\bFROM entry\b/.test(query)) {

@@ -1153,3 +1153,80 @@ prohibition and the portable Replay restrictions remain. This is test
 placement, with no production or budget change. Exact body comparisons,
 focused results and the next gate are recorded against the repaired
 commit in Gitseq; they are not attributed to the failed gate above.
+
+## Completed integrated gate and acceptance review
+
+The gate at `be0c40b5` completes naturally with exit 0. Vitest reports
+2,072 passed cases and three skipped recorder cases, with zero unhandled
+errors. Repository Node checks pass 33/33 and Counting Node checks pass
+55/55. Outer time is 804.78 seconds and 1,093.50 CPU seconds. All 2,703
+physical source files, modes, head, tree and lock stamp remain exact, with
+zero installs. The original logs and inputs remain frozen separately.
+This is the historical passing gate at that head, not a gate for the later
+witness repair.
+
+Joint F1/9a review `52b4bd01` requests changes for native witness 2. The
+10,001 confirmed passes use the explicitly lowered entry cap of two;
+they do not show dense retained-input growth under the default budget.
+The old-only repeat after eviction also does not show one later pass
+containing both an old retained key and a genuinely new key. No additional
+architecture or security finding is recorded. The original passing gate
+and all lower-cap assertions remain as additional evidence.
+
+The repair extends that same native scenario with 4,609 additional real
+signed acts and retained rule inputs. Passes use new unchanged default
+ledgers, stop at whole-entry boundaries, and continue at the next entry.
+A later eviction precedes a single default-budget pass that names the old
+pass-3,700 key and one new key. The witness checks the current manifest,
+exact keyed SQLite reads, current-pass path, preserved old path, bounded
+tree work, and absence of old Git payload or manifest reads. Referenced
+local rule bodies still receive their original charged canonical payload
+validation; each body and owner lookup is an exact one-row key read. The
+witness forbids retained-table scans and old Git blob resends.
+
+The first focused attempt fails a new assertion that incorrectly forbids
+reading the referenced old rule body locally. That read is required for
+payload validation, before looking up its existing archive owner. The
+case takes 166.707 seconds and its original process exits 1. The wrapper
+takes 173.15 seconds and 178.90 CPU seconds, then its post-guard also flags
+Vitest's generated results cache. A separate complete audit confirms all
+2,703 source files and 5,530 installed dependency rows stay exact; only
+that generated cache file changes. Both failures and the original inputs
+remain preserved. Subsequent helpers separate only that exact generated
+cache output and record its before and after identities. No installed
+package is excluded from the guards. The test correction verifies the
+required bounded local body reads and retains the old Git read controls.
+
+The repository identity guard is the actual native
+`ArchiveRows.target(otherRepository)` refusal. A separate driver attempt
+against a different scripted repository/ref shows ref conflict. Both
+leave retained-pass values unchanged. The driver keeps its persisted
+immutable target; the test does not claim it resolves a new identity for
+an already bound row. Checker clarification `0b4a8b48` agrees with this
+distinction in principle; exact source and evidence still require review.
+
+The authority, provider, policy and repository ports remain explicit test
+fixtures. Original debit rules, prices, caps, payload admission and
+30-second per-pass deadline are unchanged. This is a preparation checkpoint.
+A new exact-head gate and fresh joint review remain required. The final
+gate result will be attached to the tested commit through Gitseq; this
+checkpoint does not predict that result.
+
+The corrected focused case passes naturally in 157.392 seconds. Its complete
+wrapper takes 163.23 seconds and 168.59 CPU seconds; the test child takes
+161.126 seconds. All 2,703 captured physical source files, head, tree,
+lock stamp and 5,530 installed dependency rows remain exact. Only the one
+explicit generated Vitest results cache may change and its identities are
+recorded separately. Zero installs. The complete original 7,321-byte
+10,001-pass body remains byte-identical before the extension (SHA-256
+`983b3db7e1de80b0775b5e0f8da85c8ee39626ada5397250e01ec2c4f69cb821`).
+The actual case confirms 14,609 distinct retained rule inputs, including
+one new key after the large-history restart. The identity and ref-conflict
+checks also pass, preserving every recorded pass value. This is one focused
+case, not a whole gate or deployment acceptance.
+
+The scoped test compiler passes before both focused attempts. After the
+successful focused run, one final console observation is added after all
+assertions so the exact dense-pass costs and mixed read receipts will be
+preserved in the gate's raw log. It changes no assertion, ledger, input or
+case deadline. The final exact-head gate exercises that observation.

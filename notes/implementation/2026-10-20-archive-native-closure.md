@@ -519,3 +519,28 @@ The next gate, complete exact-head review and guarded landing remain
 pending. Slice 9's production coordination, binding, credentials,
 deployment and hosted readbacks remain separate work, with deployment
 owned by planner.
+
+## F1 acceptance-evidence continuation
+
+The integrated gate at `be0c40b5` later passes naturally: 2,072 Vitest
+cases pass and three recorder cases skip, with zero unhandled errors;
+Node passes 33/33 and Counting passes 55/55. Joint review `52b4bd01`
+requests the missing F1 native witness 2 evidence. It records no additional
+native-closure architecture or security finding.
+
+The existing scale case now preserves the complete original 10,001-pass
+body and adds default-budget dense retained growth, a post-history restart
+with one mixed old/new-key pass, and both native repository-identity and
+driver ref-conflict checks. The corrected focused case passes naturally
+in 157.392 seconds (163.23 seconds outer, 168.59 CPU seconds). Local
+referenced rule bodies still receive their required charged validation;
+old Git payloads and manifests are not read or resent. The failed first
+assertion, exact cache-only wrapper difference and correction remain in
+the F1 note and separate original evidence. The final console receipt is
+an observation after all assertions.
+
+This note is a pre-gate checkpoint. A new gate on the committed repair and
+a fresh joint exact-head review are still required. The prior clone,
+caller-anchor, omitted-text, fixture authority and production limitations
+remain unchanged. Slice 9's production source and planner operations, and
+F2/F3 retained-floor acceptance, remain separate duties.
