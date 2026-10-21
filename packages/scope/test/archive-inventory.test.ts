@@ -9,6 +9,9 @@ import { canonicalize, digestBytes, entryHash, textDigest, utf8 } from "@general
 import type { OperationRules, ValidDefinition } from "@generalbusiness/dap-derive";
 import { MemorySource, verify } from "@generalbusiness/artroom-replay";
 import { variant } from "@generalbusiness/dap-derive/testing";
+import { ArchiveDeclarations } from "../src/archive-declarations.ts";
+import { ArchiveRetainedReader } from "../src/archive-retained.ts";
+import { recordArchiveDeclarationClosure, forecastArchiveDeclarationClosure } from "../src/archive-declaration-scout.ts";
 import { ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
 import { inventoryArchive, type ArchivePolicyRegistry, type ReviewedArchivePolicy } from "../src/archive-inventory.ts";
 import { definition, create, rita, type Lane } from "./fixtures-native.ts";
@@ -120,6 +123,45 @@ const leaf = (name: string, child?: Digest) => variant({
 async function keep(lane: Lane, definitions: readonly ValidDefinition[]) {
   await lane.inside(state => { for (const definition of definitions) state.storage.sql.exec("INSERT OR REPLACE INTO retained_input (kind, digest, bytes) VALUES ('definition', ?, ?)", definition.digest, canonicalize(definition.declared)); });
 }
+
+
+// Native SQLite and shared admission are real; declarations and review
+// policies remain this file's explicit TEST stand-ins.
+test("a complete declaration scout pays its own work and covers fresh and repeated native validation without payloads", async () => {
+  const child = leaf("scouted-child");
+  const parent = variant(base.declared, data => { data.acts["link"].sends.push({ create: { kind: "lane", definition: child.digest, fields: {}, result: {} } }); });
+  const lane = await create({}, {}, parent);
+  await keep(lane, [child]);
+  const result = await lane.inside(state => {
+    const budget = new ArchiveBudget(), calls: { query: string; key: unknown }[] = [];
+    const sql = { exec(query: string, ...args: (string | number | null | ArrayBuffer)[]) {
+      calls.push({ query, key: args[0] }); return state.storage.sql.exec(query, ...args);
+    } };
+    const policies = new Map([[parent.digest, policy(parent)], [child.digest, policy(child)]]);
+    const admission = new ArchiveDeclarations(new ArchiveRetainedReader(sql, budget), PROPOSED_BOUNDS, policies, new Set());
+    const footprint = recordArchiveDeclarationClosure(admission, parent.digest);
+    const quote = forecastArchiveDeclarationClosure(footprint, budget), scouted = budget.admitted();
+    const delta = (work: () => unknown) => {
+      const before = budget.admitted(); work(); const after = budget.admitted();
+      return Object.fromEntries(Object.keys(before).map(key => [key, after[key as keyof ArchiveCost] - before[key as keyof ArchiveCost]])) as ArchiveCost;
+    };
+    const repeated = delta(() => admission.walk(parent.digest));
+    const fresh = delta(() => new ArchiveDeclarations(new ArchiveRetainedReader(sql, budget), PROPOSED_BOUNDS, policies, new Set()).walk(parent.digest));
+    return { footprint, quote, scouted, repeated, fresh, final: budget.admitted(), calls };
+  });
+  expect(result.footprint.declarations.map(row => row.digest)).toEqual([parent.digest, child.digest]);
+  expect(result.scouted.attempts).toBe(4); // two real reads and two additional keyed size scouts
+  expect(result.scouted.nodes).toBe(2);
+  expect(result.repeated.nodes).toBe(0); expect(result.fresh.nodes).toBe(2);
+  for (const actual of [result.repeated, result.fresh]) {
+    for (const key of ["attempts", "calls", "metadata", "inputWork"] as const) expect(result.quote[key]).toBeGreaterThanOrEqual(actual[key]);
+    expect(actual.attempts).toBe(2); expect(actual.inputWork).toBeGreaterThan(0);
+  }
+  expect(result.final.inputWork).toBe(result.scouted.inputWork + result.repeated.inputWork + result.fresh.inputWork);
+  expect(entryReads(result.calls)).toEqual([]); expect(payloadReads(result.calls)).toEqual([]);
+  expect(Object.keys(result.footprint).sort()).toEqual(["declarations", "root"]);
+  expect(result.footprint.declarations.every(row => Object.keys(row).sort().join(",") === "bytes,digest,support")).toBe(true);
+});
 
 test("archive-only closure requires a missing unused child; later bytes complete the same cutoff while ordinary replay and later unrelated inputs remain unchanged", async () => {
   const child = leaf("late-child");
