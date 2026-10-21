@@ -12,6 +12,7 @@ import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { COUNTING_COHORT, platform } from "@generalbusiness/dap-platform";
 import { forecastArchiveForeignLookup, forecastArchiveForeignSelection, forecastArchiveForeignBasis, forecastArchiveForeignScan, forecastArchiveForeignRepeat, forecastArchiveForeignCopyRequest, forecastArchiveForeignCopySize, forecastArchiveForeignGenesis, forecastArchiveForeignColdCopy } from "../src/archive-foreign-cost.ts";
 import { ArchiveRetainedReader } from "../src/archive-retained.ts";
+import { ArchiveScout } from "../src/archive-scout.ts";
 import { ArchiveForeignPlan } from "../src/archive-foreign-plan.ts";
 import { ARCHIVE_BOUNDS, ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
 import { buildJournalArchive, journalRef, JournalWork } from "@generalbusiness/artroom-git/journal";
@@ -342,6 +343,42 @@ test("foreign plans quote native whole prefixes and retain an earlier boundary a
   expect(result.quoteBefore).toEqual(result.quoteAfter);
   expect(result.scouted.nodes).toBe(1); expect(result.final.nodes).toBe(2);
   expect(result.queries.some(query => /^SELECT (?:\*|bytes)(?:\s|,)/.test(query))).toBe(false);
+});
+
+// Invariant: real direct-copy scouting may cross Native turns, while
+// fresh inventory still classifies every copy and byte-compares each plan.
+test("Native scout carries direct-copy metadata across a closed frame and prices fresh cold/repeat admission", async () => {
+  const f = await fixture(true), budget = new ArchiveBudget();
+  let scout!: ArchiveScout;
+  const first = await f.consumer.inside(state => {
+    const frame = ArchiveScout.open(state.storage.sql, f.consumer.at, f.through, null, PROPOSED_BOUNDS, f.policies, budget, f.sources);
+    expect(frame.next().kind).toBe("position"); expect(frame.next().kind).toBe("position");
+    scout = frame.close(); return budget.admitted();
+  });
+  await f.consumer.did(rita, "offer", { fields: { intent: 0 }, expected: { intent: 1 } });
+  const result = await f.consumer.inside(state => {
+    const queries: string[] = []; let fresh = false;
+    const sql = { exec(query: string, ...args: (string | number | null | ArrayBuffer)[]) {
+      if (!fresh && query.startsWith("SELECT bytes FROM retained_input") && args[0] !== "definition") return expect.fail("Scout cannot read retained copy/rule/snapshot bodies.");
+      queries.push(query); return state.storage.sql.exec(query, ...args);
+    }, transaction: <T>(work: () => T) => state.storage.transactionSync(work) };
+    const frame = scout.resume(sql);
+    expect(frame.next().kind).toBe("position"); expect(frame.next().kind).toBe("position");
+    expect(frame.next()).toEqual({ kind: "end" }); frame.close();
+    expect(queries.some(query => query.startsWith("SELECT bytes FROM entry") || query.startsWith("SELECT bytes FROM retained_value") || query.startsWith("SELECT bytes FROM retained_input") && !query.includes("kind = ?"))).toBe(false);
+    const forecast = scout.inventoryCost(f.through), constraints = scout.select(f.through), before = budget.admitted();
+    expect(constraints.expectedCopies.size).toBe(2); fresh = true;
+    const selected = inventoryArchive(sql, f.consumer.at, f.through, PROPOSED_BOUNDS, f.policies, budget, f.sources, null,
+      constraints.forecast, constraints.declarationSizes, constraints.expectedCopies);
+    expect(selected.ok).toBe(true); if (!selected.ok) return expect.fail(selected.reason);
+    const after = budget.admitted();
+    for (const key of Object.keys(forecast) as (keyof ArchiveCost)[]) expect(forecast[key]).toBeGreaterThanOrEqual(after[key] - before[key]);
+    expect(selected.inventory.objects.filter(object => object.key.kind === "entry").map(object => object.key.digest)).toEqual([...new Set(f.uses.map(use => use.content))]);
+    expect(selected.inventory.entries.map(entry => entry.seq)).toEqual([0, 1, 2, 3]);
+    return after;
+  });
+  expect(result.entries).toBe(8); expect(result.nodes).toBe(4);
+  expect(result.attempts).toBeGreaterThan(first.attempts);
 });
 
 test("missing source or inline policy and a conflicting retained genesis pin refuse the whole prefix before payloads", async () => {

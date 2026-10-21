@@ -10,11 +10,12 @@ import type { OperationRules, ValidDefinition } from "@generalbusiness/dap-deriv
 import { MemorySource, verify } from "@generalbusiness/artroom-replay";
 import { variant } from "@generalbusiness/dap-derive/testing";
 import { ArchivePrefixStopped } from "../src/archive-prefix.ts";
+import { ArchiveScout, type ArchiveScoutFrame } from "../src/archive-scout.ts";
 import { ArchiveDeclarationPlan } from "../src/archive-declaration-plan.ts";
 import { ArchiveDeclarations } from "../src/archive-declarations.ts";
 import { archiveDefinitionPresenceForecast, ArchiveRetainedReader } from "../src/archive-retained.ts";
 import { recordArchiveCurrentDeclarationClosure, forecastArchiveDeclarationClosure, recordArchivePotentialDeclarationClosure, forecastArchivePotentialDeclarationClosure } from "../src/archive-declaration-scout.ts";
-import { ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
+import { ARCHIVE_BOUNDS, ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
 import { archivePrefixMetadata } from "../src/archive-prefix.ts";
 import { inventoryArchive, type ArchivePolicyRegistry, type ReviewedArchivePolicy } from "../src/archive-inventory.ts";
 import { definition, create, rita, type Lane } from "./fixtures-native.ts";
@@ -228,6 +229,83 @@ test("declaration plans retain repeated native validation work and missing-candi
   });
   expect(result.scouted.nodes).toBe(3); expect(result.final.nodes).toBe(6);
   expect(result.queries.filter(query => query.startsWith("SELECT bytes FROM entry") || query.startsWith("SELECT bytes FROM retained_value"))).toEqual([]);
+});
+
+// Invariant: actual scalar scouting across Native turns grants no body
+// admission, and its quote covers a fresh, byte-compared whole inventory.
+test("Native scout resumes on a fresh port and re-admits the whole selected prefix on its original ledger", async () => {
+  const lane = await create({}, {}, base), body = "scouted detached text", digest = textDigest(body);
+  expect(await lane.stub.submit(lane.intent(rita, "remark", { on: 0, fields: { text: digest } }), lane.grants(), { texts: [body] })).toMatchObject({ answer: "accepted" });
+  const through = await lane.head(), budget = new ArchiveBudget(), queries: string[] = [];
+  let closed!: ArchiveScoutFrame, scout!: ArchiveScout, oldCalls = 0, fresh = false;
+  await lane.inside(state => {
+    const sql = { exec(query: string, ...args: (string | number | null | ArrayBuffer)[]) {
+      if (query.startsWith("SELECT bytes FROM retained_input") && args[0] !== "definition") return expect.fail("Scout cannot read retained copy/rule/snapshot bodies.");
+      oldCalls++; queries.push(query); return state.storage.sql.exec(query, ...args);
+    } };
+    closed = ArchiveScout.open(sql, lane.at, through, null, PROPOSED_BOUNDS, registry, budget);
+    const first = closed.next(); expect(first.kind).toBe("position");
+    scout = closed.close(); expect(() => closed.next()).toThrow("archive-unavailable");
+  });
+  const old = oldCalls, spent = budget.admitted();
+  // A real commit in the gap changes the live head, outside the fixed cutoff.
+  await lane.did(rita, "offer", { fields: { intent: 0 }, expected: { intent: 1 } });
+  const result = await lane.inside(state => {
+    const sql = { exec(query: string, ...args: (string | number | null | ArrayBuffer)[]) {
+      if (!fresh && query.startsWith("SELECT bytes FROM retained_input") && args[0] !== "definition") return expect.fail("Scout cannot read retained copy/rule/snapshot bodies.");
+      queries.push(query); return state.storage.sql.exec(query, ...args);
+    }, transaction: <T>(work: () => T) => state.storage.transactionSync(work) };
+    const frame = scout.resume(sql); expect(() => scout.resume(sql)).toThrow("archive-unavailable");
+    const second = frame.next(); expect(second.kind).toBe("position");
+    if (second.kind !== "position") return expect.fail("Original second position must fit.");
+    expect(second.position.seq).toBe(through.seq);
+    expect(second.measurements.find(row => row.plan.dependency.mode === "text")?.textBytes).toBeGreaterThan(0);
+    expect(frame.next()).toEqual({ kind: "end" }); frame.close();
+    expect(queries.filter(query => query.startsWith("SELECT bytes FROM entry") || query.startsWith("SELECT bytes FROM retained_value") || query.startsWith("SELECT bytes FROM retained_input") && !query.includes("kind = ?"))).toEqual([]);
+    const cost = scout.inventoryCost(through), constraints = scout.select(through), before = budget.admitted();
+    fresh = true;
+    const inventory = inventoryArchive(sql, lane.at, through, PROPOSED_BOUNDS, registry, budget, undefined, null, constraints.forecast, constraints.declarationSizes, constraints.expectedCopies);
+    expect(inventory.ok).toBe(true); if (!inventory.ok) return expect.fail(inventory.reason);
+    const after = budget.admitted();
+    for (const key of Object.keys(cost) as (keyof ArchiveCost)[]) expect(cost[key]).toBeGreaterThanOrEqual(after[key] - before[key]);
+    expect(inventory.inventory.entries.map(position => position.seq)).toEqual([0, through.seq]);
+    expect(inventory.inventory.omittedTexts.map(text => text.key.digest)).toEqual([digest]);
+    expect(() => scout.select(through)).toThrow("archive-unavailable");
+    return { before, after };
+  });
+  expect(oldCalls).toBe(old); expect(result.after.inputWork).toBeGreaterThan(spent.inputWork);
+  expect(result.after.entries).toBe(4); // Two scouted, then two freshly admitted.
+});
+
+test("Native scout preserves an earlier whole prefix after a refused lookahead debit", async () => {
+  const lane = await create({}, {}, base);
+  await lane.did(rita, "offer", { fields: { intent: 0 }, expected: { intent: 1 } });
+  expect(await lane.stub.submit(lane.intent(rita, "remark", { on: 0, fields: { text: textDigest("later unselected entry") } }), lane.grants(), { texts: ["later unselected entry"] })).toMatchObject({ answer: "accepted" });
+  const head = await lane.head();
+  await lane.inside(state => {
+    const budget = new ArchiveBudget(), queries: string[] = [];
+    const sql = { exec(query: string, ...args: (string | number | null | ArrayBuffer)[]) { queries.push(query); return state.storage.sql.exec(query, ...args); },
+      transaction: <T>(work: () => T) => state.storage.transactionSync(work) };
+    const frame = ArchiveScout.open(sql, lane.at, head, null, PROPOSED_BOUNDS, registry, budget);
+    expect(frame.next().kind).toBe("position"); const second = frame.next();
+    if (second.kind !== "position") return expect.fail("Native second entry must fit.");
+    const through = { seq: second.position.seq, hash: second.position.hash }, forecast = frame.scout.inventoryCost(through);
+    const before = budget.admitted(), calls = queries.length;
+    // Leave exactly one scalar position query. Its debit remains spent;
+    // the following header debit refuses before Native JSON/SQL work.
+    expect(frame.next({ metadata: ARCHIVE_BOUNDS.metadata - before.metadata - 192 })).toEqual({ kind: "limited" });
+    const after = budget.admitted(); expect(after.metadata - before.metadata).toBe(192);
+    expect(after.entries - before.entries).toBe(1); expect(queries.length - calls).toBe(1);
+    expect(() => frame.next()).toThrow("archive-unavailable");
+    const scout = frame.close(), constraints = scout.select(through), beforeFresh = budget.admitted();
+    const selected = inventoryArchive(sql, lane.at, through, PROPOSED_BOUNDS, registry, budget, undefined, null,
+      constraints.forecast, constraints.declarationSizes, constraints.expectedCopies);
+    expect(selected.ok).toBe(true); if (!selected.ok) return expect.fail(selected.reason);
+    const complete = budget.admitted();
+    for (const key of Object.keys(forecast) as (keyof ArchiveCost)[]) expect(forecast[key]).toBeGreaterThanOrEqual(complete[key] - beforeFresh[key]);
+    expect(selected.inventory.entries.map(entry => entry.seq)).toEqual([0, 1]);
+    expect(complete.entries).toBe(5); // Discarded third scout is never refunded.
+  });
 });
 
 test("missing declaration probes retain their distinct native costs and refuse newly present bodies after a native turn", async () => {

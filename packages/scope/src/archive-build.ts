@@ -1,7 +1,7 @@
 /** Selection-to-layout boundary. A rebuild spends a new pass's finite
  * allowance on the stored manifest and exact immutable dependencies. */
 import { same, natural } from "@generalbusiness/artroom-bytes";
-import type { Bounds, FactRef, Head, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
+import type { Bounds, Digest, FactRef, Head, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalize, isRecord, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
 import { buildJournalArchive, buildJournalPass, convertJournalArchiveV1, JOURNAL_SELECTION_BYTES, journalSelection, journalPassSelection, JournalPassPreparation, JournalWork, type JournalArchive, type JournalPassArchive, type JournalSelection, type JournalPassSelection, type JournalCost, type JournalFormat, type JournalLayoutResult, type JournalObjectSource } from "@generalbusiness/artroom-git/journal";
 import { ARCHIVE_BOUNDS, ArchiveBudget, ArchiveStopped } from "./archive-budget.ts";
@@ -14,6 +14,7 @@ import type { FixtureArchiveSourcePins } from "./archive-source-pins.ts";
 import { ArchiveReplayAnchors } from "./archive-anchors.ts";
 import { readArchiveTextBytes } from "./archive-text.ts";
 import type { ArchivePlanFence } from "./archive-plan-fence.ts";
+import type { ArchiveForeignExpectedCopy } from "./archive-foreign.ts";
 
 type LayoutFailure = Extract<JournalLayoutResult, { ok: false }>;
 export type ArchiveBuildFailure = LayoutFailure | { readonly ok: false; readonly reason: ArchivePrefixReason | "rebuild-mismatch" | "manifest" };
@@ -117,13 +118,13 @@ function storedSelection(manifest: string, budget: ArchiveBudget, incremental = 
 
 /** A bounded new interval, with the previous confirmed position explicit.
  * Every old retained key is named by its stored original pass. */
-export async function planArchivePass(sql: Sql, context: { readonly at: ScopeRef; readonly through: Head; readonly after: Head | null; readonly bounds: Bounds; readonly policies: ArchivePolicyRegistry; readonly format: JournalFormat; readonly parent: Parent; readonly markedAt: Timestamp; readonly fixtureSources?: FixtureArchiveSourcePins; readonly replayScopes?: readonly ScopeRef[]; readonly preparation?: JournalPassPreparation; readonly forecast?: ArchivePlanFence }, budget: ArchiveBudget): Promise<ArchiveBuildFailure | { readonly ok: true; readonly archive: JournalPassArchive; readonly mark: ArchiveMark; readonly anchors?: readonly FactRef[] }> {
+export async function planArchivePass(sql: Sql, context: { readonly at: ScopeRef; readonly through: Head; readonly after: Head | null; readonly bounds: Bounds; readonly policies: ArchivePolicyRegistry; readonly format: JournalFormat; readonly parent: Parent; readonly markedAt: Timestamp; readonly fixtureSources?: FixtureArchiveSourcePins; readonly replayScopes?: readonly ScopeRef[]; readonly preparation?: JournalPassPreparation; readonly forecast?: ArchivePlanFence; readonly declarationSizes?: ReadonlyMap<Digest, number | null>; readonly expectedCopies?: ReadonlyMap<Digest, Readonly<ArchiveForeignExpectedCopy>> }, budget: ArchiveBudget): Promise<ArchiveBuildFailure | { readonly ok: true; readonly archive: JournalPassArchive; readonly mark: ArchiveMark; readonly anchors?: readonly FactRef[] }> {
   const at = { ...context.at }, through = { ...context.through }, after = context.after ? { ...context.after } : null;
   const parent = context.parent ? { ...context.parent } : null, format = context.format, markedAt = context.markedAt, fixtureSources = context.fixtureSources;
   const preparation = context.preparation;
   if (preparation !== undefined && (!(preparation instanceof JournalPassPreparation) || preparation.work.budget !== budget
     || preparation.format !== format || preparation.parent !== (parent?.id ?? null) || !same(preparation.at, at) || !same(preparation.after, after))) return { ok: false, reason: "parent" };
-  const selected = inventoryArchive(sql, at, through, context.bounds, context.policies, budget, fixtureSources, after, context.forecast);
+  const selected = inventoryArchive(sql, at, through, context.bounds, context.policies, budget, fixtureSources, after, context.forecast, context.declarationSizes, context.expectedCopies);
   if (!selected.ok) return selected;
   // This stored cost reserves the native inventory on restart. The actual
   // layout metadata is rebuilt and charged again then. Attribute only the
