@@ -180,39 +180,45 @@ that holds the same digest. The slot keeps its file reference.
 
 ## 4. Keeper
 
-A keeper holds file bytes by scope reference, byte domain and digest. It has
-four operations:
+A keeper holds file bytes under a keeper key. It has four operations:
 
 | Operation | Effect |
 |---|---|
-| `put(ref, digest, size, media, bytes)` | Streams the bytes in, computes the digest and size, and keeps them only when both match. A keeper that cannot verify before it stores, as a bucket cannot, deletes what it stored and then reports the mismatch. A file already held under the key is not written again. |
-| `get(ref, digest)` | Streams the bytes, with the size and media type. |
-| `head(ref, digest)` | The size and media type, or absent. |
-| `delete(ref, digest)` | Removes the bytes, for redaction and for the sweep (section 5). A delete of an absent key succeeds. A repeated delete removes nothing twice. |
+| `put(key, bytes)` | Streams the bytes in under `key`, and returns the digest and size that it computed. |
+| `get(key)` | Streams the bytes. |
+| `head(key)` | The size, or absent. |
+| `delete(key)` | Removes the bytes. A delete of an absent key succeeds, so a repeat is harmless. |
 
-**Identity.** `ref` is the scope reference: the scope ID and the
-incarnation. The scope passes its current incarnation, read from its store.
-So the key holds the scope ID, the incarnation and the digest. Two scopes
-that hold the same bytes hold two copies. Two incarnations of one scope ID
-hold two separate sets of files, and a delete in one never touches the
-other. Each file row (section 5) carries the incarnation it was made
-under, and the scope reads, writes, sweeps and deletes only the rows of its
-current incarnation. So a new incarnation starts with no rows and no keys
-of its own, and an earlier incarnation's rows are never read and never
-swept.
+**Identity.** Every keeper key holds the scope ID and the incarnation. The
+scope passes its current incarnation, read from its store. Two scopes that
+hold the same bytes hold two copies. Two incarnations of one scope ID hold
+two separate sets of files, and a delete in one never touches the other.
+Each file row (section 5) carries its incarnation, and the scope reads,
+writes, sweeps and deletes only the rows of its current incarnation. So a
+new incarnation starts with no rows and no keys of its own.
 
 **Implementations.**
 
-1. **Scope SQLite.** A new table `retained_file (digest TEXT, size INTEGER,
-   media TEXT, bytes BLOB, PRIMARY KEY (digest)) WITHOUT ROWID` in each
-   scope's own store. It holds files up to the SQLite threshold (section 11).
-   A deployment with no bucket keeps every file here, and its file maximum
-   is that threshold. Its `put` and `delete` run inside a transaction.
+1. **Scope SQLite.** A new table in each scope's own store:
+
+   ```sql
+   retained_file (inc TEXT, digest TEXT, bytes BLOB,
+                  PRIMARY KEY (inc, digest)) WITHOUT ROWID
+   ```
+
+   The keeper key is the incarnation and the digest. Every `get`, `head`,
+   `put` and `delete` names both. It holds files up to the SQLite threshold
+   (section 11). A deployment with no bucket keeps every file here, and its
+   file maximum is that threshold. A `put` or `delete` here runs inside the
+   transaction that changes the file row (section 5). So this keeper needs
+   no delete order, and no write to it is ever out of step with its row.
 2. **R2 on Cloudflare.** A new private bucket binding, `FILES`, separate
-   from `APPLICATION_CONTENT`. The object key is
-   `files/<scope id>/<incarnation>/<digest hex>`. Files above the SQLite
-   threshold go here. There is no public route to the bucket. Its `put` and
-   `delete` are calls to another service, outside every transaction.
+   from `APPLICATION_CONTENT`. The keeper key is
+   `files/<scope id>/<incarnation>/<digest hex>/<transfer>`: one object for
+   each upload transfer (section 5). The file row records the key of the
+   object that holds its verified bytes. Files above the SQLite threshold go
+   here. There is no public route to the bucket. Its `put` and `delete` are
+   calls to another service, outside every transaction.
 3. **Self-hosted on celld.** celld serves an R2 binding from the fleet
    bucket, on Google Cloud Storage and on S3-compatible stores
    (`notes/2026-10-19-self-hosting-on-celld.md:172-182`). So the R2 keeper
@@ -230,37 +236,48 @@ moved with it, under the same scope ID and incarnation, with its file rows.
 ## 5. Write
 
 A file reaches the keeper before the act that names it is judged. There is
-no transaction across the keeper and the journal. So the scope keeps a file
-row for each digest, and every keeper call comes before or after a row
-change that the sweep or a delete order can repair.
+no transaction across a bucket and the journal. So the scope keeps a file
+row for each digest. Every bucket call comes before or after a row change,
+and the row says which transfer owns the bucket object.
 
-**File rows.** The scope's store gains a table
-`file (digest, inc, size, media, state, at, tombstone)`, one row per
-digest and incarnation. `state` is one of:
+**File rows.** The scope's store gains a table:
+
+```sql
+file (inc TEXT, digest TEXT, size INTEGER, media TEXT, state TEXT,
+      at TEXT, owner TEXT, lease TEXT, object TEXT, tombstone INTEGER,
+      PRIMARY KEY (inc, digest)) WITHOUT ROWID
+```
+
+`state` is one of:
 
 | State | Meaning |
 |---|---|
-| `pending` | An upload reserved the digest. The bytes can be in flight, or in the keeper and not yet verified. |
+| `pending` | One upload transfer owns the row: `owner` is its transfer ID, and `lease` is the end of its lease. |
 | `held` | The keeper holds the verified bytes. No entry names the digest yet. |
 | `named` | An entry names the digest. |
-| `redacted` | A tombstone covers the digest. The bytes are deleted, or a delete order is open for them. |
+| `redacted` | A tombstone covers the digest. Its bytes are deleted, or a delete order is open for them. |
 
-Every change of a row is one transaction, run in the scope's turn order
-with judgment, the sweep and redaction (`turn.ts:171`). So no turn sees a
-row half-changed, and two turns never change one row at the same time.
+`object` is the bucket key of the verified bytes, and null for a file in
+SQLite. Every change of a row is one transaction, run in the scope's turn
+order with judgment, the sweep and redaction (`turn.ts:171`). So no turn
+sees a row half-changed.
 
 **Beside the intent.** The act's request body gains `files`: a list of
 `{ media, bytes }`, with `bytes` in base64. This is for small files only. The
 whole body is at most 1 MiB now (`packages/scope/src/worker.ts:247`), and
 base64 adds a third. The scope takes at most one file for each file field
 of the act, and computes each digest. A file beside the intent is never
-above the SQLite threshold (section 11). So the commit of the entry that
-names it writes the bytes into `retained_file` and the row in state
-`named`, as the commit keeps a text. A row already `held` or `named` keeps
-its bytes and becomes `named`. A row `pending` takes the bytes from the
-intent and becomes `named`; the upload that reserved it then finds the row
-`named` and answers `200`. A row `redacted` refuses the act with
-`bad-field`. A refused act leaves nothing: no bytes and no row.
+above the SQLite threshold (section 11). The commit of the entry that names
+it does three things in one transaction:
+
+- No row, or a row `pending`: it writes the bytes into `retained_file`, and
+  writes the row `named` with no owner. The charge becomes the file's size.
+  A pending transfer of the same digest becomes stale (below).
+- A row `held` or `named`: it keeps the bytes it has, and the row becomes
+  `named`.
+- A row `redacted`: the act is refused `bad-field`.
+
+A refused act leaves nothing: no bytes and no row.
 
 **Upload first.** For a larger file:
 
@@ -272,75 +289,93 @@ Content-Length: <size>
 ```
 
 The session must list the read name `file-upload`, and member sessions
-list it (`packages/scope/src/sessions.ts:108`). The upload has four steps.
+list it (`packages/scope/src/sessions.ts:108`). Each PUT is one transfer,
+with a new random 128-bit transfer ID `T`. The upload has three steps.
 
 1. **Reserve.** Without `Content-Length` the upload answers `411`. In one
-   transaction, the scope reads the row for the digest.
-   - No row: it inserts a row `pending` with the declared size and media
-     type, and charges the declared size against `scopeFileBytes` and the
-     pending bound (section 7). When either bound would be passed, it
-     inserts nothing and answers `413`. When a delete order is open for the
-     key (below), it inserts nothing and answers `409`, and the client
-     retries after the order completes.
-   - Row `pending`: an earlier upload of this digest did not finish. The
-     scope refreshes `at`, keeps the charge, and continues. This is the
-     retry of an interrupted upload.
-   - Row `held` or `named`: the scope answers `200` at once. It reads no
-     bytes, changes no row and adds no charge.
-   - Row `redacted`: the scope answers `410` and stores nothing.
-2. **Store.** The scope streams the bytes into the keeper under the scope's
-   key, and computes the digest and size as they arrive. The SQLite keeper
-   takes files up to the threshold. Files above it go to the bucket, and a
-   deployment without a bucket answers `413` for them at step 1.
-3. **Verify.** When the computed digest or size differs from the request,
-   the keeper keeps nothing (section 4). In one transaction the scope
-   removes the row, releases the charge and adds a delete order for the
-   key, in case the keeper stopped between its store and its delete. It
-   answers `400` with `bad-field`.
-4. **Hold.** In one transaction, the scope sets the row from `pending` to
-   `held`, with the verified size and media type, and the charge becomes
-   the verified size. It answers `201`. When the row is `named` by then
-   (an act carried the same bytes beside its intent), it answers `200`.
+   transaction, the scope reads the row for the digest:
+   - No row: it inserts a row `pending` with `owner` T and `lease` now plus
+     the upload lease (section 11). It charges the declared size against
+     `scopeFileBytes` and the pending bound (section 7). When either bound
+     would be passed, it inserts nothing and answers `413`.
+   - Row `pending` with its lease not ended: it answers `409` with
+     `upload-in-progress` and the lease end. Nothing changes.
+   - Row `pending` with its lease ended: T takes the row over. The row's
+     `owner` becomes T, and its lease starts again. The same transaction
+     adds a delete order for the earlier owner's bucket key. The earlier
+     transfer is now stale.
+   - Row `held` or `named`: it answers `200` at once. It reads no bytes and
+     changes nothing.
+   - Row `redacted`: it answers `410` and stores nothing.
+2. **Store.** A file up to the SQLite threshold is read into memory, and
+   nothing is written yet. A file above it is streamed to the bucket key
+   `files/<scope id>/<incarnation>/<digest hex>/T`. A deployment without a
+   bucket answers `413` for it at step 1. The scope computes the digest and
+   size as the bytes arrive. It stops reading at the lease end, and the
+   transfer then fails at step 3.
+3. **Complete.** In one transaction, the scope reads the row again. T owns
+   the row only when the row is `pending`, its `owner` is T, and its lease
+   has not ended.
+   - T owns the row, and the digest and size match: a small file goes into
+     `retained_file` in this transaction. A bucket file's key becomes the
+     row's `object`. The row becomes `held` with the verified size and media
+     type, and the charge becomes the verified size. It answers `201`.
+   - T owns the row, and the digest or size differs: the row is removed,
+     its charge is released, and a delete order is added for T's bucket
+     key. It answers `400` with `bad-field`.
+   - T does not own the row: T is stale. The scope changes no row and no
+     `retained_file` entry. It adds a delete order for T's own bucket key
+     only. It answers `200` when the row is `held` or `named`, `410` when it
+     is `redacted`, and `409` otherwise.
+
+**The fence.** After step 1, a transfer writes a row or `retained_file`
+only at step 3, and only while it owns the row. A transfer deletes only its own bucket key,
+named by its own transfer ID. So a stale transfer, late or failed, never
+deletes bytes that another transfer or an act stored. It never removes or
+replaces a row that is `held`, `named`, `redacted`, or owned by a newer
+transfer.
 
 The act then names the digest, and judgment reads the row (section 3). An
-act is judged against the row only: the keeper was verified at step 4, and
-no keeper call runs inside a turn.
+act is judged against the row only. No keeper call runs inside a turn.
 
-**Stops and repeats.** A process can stop between any two steps. The row
-is written before any keeper call, so every object in the keeper has a row
-or a delete order, and nothing is orphaned without a record:
+**Stops and repeats.** A process can stop between any two steps. A row is
+written before any bucket call, and every bucket key holds its transfer ID.
+So every object in the bucket has a row that names it as `object`, an owner
+row with a lease, or a delete order:
 
-- Stop after step 1: row `pending`, no object. The sweep removes the row
-  and orders a delete of the absent key, and the delete succeeds.
-- Stop during or after step 2: row `pending`, object whole or absent (a
-  bucket put is whole or nothing). A retry within the window completes it
-  through step 4. Without one, the sweep removes the row and the object.
+- Stop after step 1: row `pending`, no object. After the lease ends, a new
+  PUT takes the row over, or the sweep removes it.
+- Stop during or after step 2: row `pending`, T's object whole or absent (a
+  bucket put is whole or nothing). After the lease ends, a new PUT takes the
+  row over and orders T's key deleted. Without a new PUT, the sweep removes
+  the row and orders T's key deleted.
 - Repeated upload of a `held` or `named` digest: `200` at step 1, no new
-  row, no new charge. The file stays as long as its row stays.
+  row, no new charge.
 
-**Sweep.** The scope's alarm turn (`turn.ts:187`, `:412-423`) runs the
-sweep. In one transaction it takes each row `pending` or `held` with `at`
-older than the sweep window, removes the row, releases its charge, and adds
-a delete order for its key. A row `named` or `redacted` is never swept. The
-sweep is a turn of the scope, so it runs before or after any judgment, never
-during one. An act that names a `held` digest either commits first, and the
-sweep then leaves the row `named`, or runs after the sweep removed the row,
-and is refused `bad-field`. A reservation refreshes `at`, and an upload
-runs for at most the Worker's request time, far less than the window. So
-the sweep never takes a row whose upload is in flight.
+**Sweep.** The scope's alarm turn (`turn.ts:187`, `:412-423`) runs the sweep.
+In one transaction it takes each row `pending` whose lease has ended, and
+each row `held` whose `at` is older than the sweep window. It removes the
+row and releases its charge. For a file in SQLite it deletes the bytes in
+the same transaction. For a bucket file it adds a delete order for the
+row's `object`, or for the owner's key of a `pending` row. A row `named` or
+`redacted` is never swept. An act and the sweep can reach one `held` row together.
+When the act commits first, the row is `named` and the sweep leaves it.
+When the sweep runs first, the act is refused `bad-field`.
+
+**Redaction.** The commit that seals the tombstone sets the row `redacted`
+and releases its charge. A file in SQLite leaves `retained_file` in that
+commit. For a bucket file, the commit adds a delete order for the row's
+`object`.
 
 **Delete orders.** The scope's store gains a table
-`file_delete (digest, inc, since)`. A redaction, the sweep and a failed
-verification each add an order in their own commit. After the commit, the
-same turn calls `delete` for each open order, and removes the order in a
-transaction when the call succeeds. A failed call leaves the order open. The alarm retries open
-orders with the drain's retry delay (`turn.ts:423`). A process that stops
-after the commit leaves the order open, and the next turn of the scope
-retries it. A delete is idempotent, so a repeat is harmless. While an order
-is open, a reservation for the same digest answers `409` (step 1), so no
-new object appears under a key that an open order will delete. A digest
-with a `redacted` row never reaches step 2 again, so its order never races
-an upload.
+`file_delete (key TEXT PRIMARY KEY, since TEXT)`. Each order names one bucket
+key. A takeover, a failed or stale transfer, the sweep and a redaction add
+orders in their own commits. After the commit, the same turn calls `delete`
+for each open order, and removes the order in a transaction when the call
+succeeds. A failed call leaves the order open, and the alarm retries it
+with the drain's retry delay (`turn.ts:423`). A process that stops after the
+commit leaves the order open, and the next turn retries it. Each key holds
+one transfer ID, so an order never deletes the bytes of another transfer.
 
 ## 6. Read
 
@@ -473,6 +508,9 @@ value is recorded in that slice's report:
    the time to read it back. Measured by RF3 on a test Worker with a
    bucket.
 4. **Sweep window.** Proposed: 24 hours. Set by RF2.
+5. **Upload lease.** The time a transfer owns a `pending` row. Proposed: 5
+   minutes. RF2 sets it. RF3 checks that it is at least three times the
+   upload time of bound 3, and raises it if not.
 
 ## 12. Witnesses
 
@@ -504,10 +542,12 @@ value is recorded in that slice's report:
 9. **Repeated upload.** After the capture of witness 1, a second PUT of the
    PDF's digest answers `200`, adds no row and no charge. The sweep window
    passes, and the PDF stays.
-10. **Stop after put.** The process stops after the bucket holds the object
-    and before the row turns `held`. The read answers `404`. A PUT within
-    the window completes the row to `held` with `201`. Without one, the
-    sweep removes the row, the charge and the object.
+10. **Stop after put.** The process stops after the bucket holds T's object
+    and before the row turns `held`. The read answers `404`. A PUT before
+    the lease ends answers `409`. A PUT after it takes the row over, orders
+    T's key deleted, and completes the row to `held` with `201`. Without a
+    new PUT, the sweep removes the row and the charge, and orders T's key
+    deleted.
 11. **Capture against the sweep.** A `held` row reaches the end of the
     window as an act names it. In one run the act commits first, and the
     sweep leaves the file. In the other the sweep runs first, and the act is
@@ -518,15 +558,31 @@ value is recorded in that slice's report:
     reservation.
 13. **Two incarnations.** A scope reaches its final state, and a new
     incarnation is created from the same seed. The new incarnation's member
-    session reads the old PDF's digest: `404`. The same PDF uploaded into
-    the new incarnation is a separate key, and a redaction there leaves the
-    earlier incarnation's bytes in place.
+    session reads the old file's digest: `404`. The same file stored in the
+    new incarnation has a separate key, and a redaction there leaves the
+    earlier incarnation's bytes in place. This witness runs once with a
+    file in SQLite and once with a file in the bucket.
 14. **Replay.** A replay of the witness 1 and 4 journal derives the same
     state without file bytes and lists the trust `files`. With file checks
     on, it reads both files, reports the PDF as redacted, and reports a
     deleted unredacted file as `incomplete`.
 15. **Keepers.** Witness 1 passes with the SQLite keeper alone (files under
     the threshold), and with SQLite and R2 together.
+16. **Late failure after a capture.** PUT A reserves digest D. While A
+    reads its body, an act carries D beside its intent and commits it
+    `named`. A then fails its digest check. The row stays `named`,
+    `retained_file` keeps the bytes, and no delete order names them. In a
+    second run, a redaction of D commits before A completes. The row stays
+    `redacted` with its tombstone, and the read stays `410`.
+17. **Overlapping uploads.** PUT A reserves D. PUT B of D answers `409`
+    during A's lease. After the lease ends, B takes the row over and
+    completes `201`. A then completes, once with the right bytes and once
+    with wrong bytes. In both runs, A's answer reports the row as it is, the
+    row stays `held` by B's object, A's own object is ordered deleted, and
+    B's object stays.
+18. **Lease end.** An upload still sending at its lease end stops reading.
+    It changes no row, and its own object is ordered deleted. A later PUT
+    takes the row over.
 
 ## 13. Not in this note
 
@@ -544,8 +600,8 @@ value is recorded in that slice's report:
 | Slice | Content | Done when |
 |---|---|---|
 | RF1 | The `file` field type, the file reference value, the byte domain `artroom-file-1`, validation and `redactable-read`, the `redact` effect's `files` list, judgment against file rows, and replay without bytes with the `files` trust. Fixture-only, with an in-memory store. | Witnesses 2 and 3, the judgment part of 7, and the replay part of 14 pass. |
-| RF2 | File rows and their transitions, the SQLite keeper, the beside-the-intent write, the upload route for files up to the SQLite threshold, the read route, `scopeFileBytes`, the pending bound, the sweep, delete orders, and redaction. The CLI's `dap act … --file <field>=<path>`, and a local `dap mcp` tool argument that names a local path. | Witnesses 1 (with files up to the threshold on both paths), 4, 7, 8, 9, 10, 11, 12, 13 and 15 (SQLite) pass on a local Worker. Bounds 1, 2 and 4 are set and recorded. |
-| RF3 | The R2 keeper, the `FILES` binding, files above the threshold through the same upload route, delete orders against the bucket, and the keeper quota. Operator configuration in the runbook. | Witnesses 1 (the 5 MiB PDF), 5, 6, 10 and 15 (R2) pass on a test Worker with a bucket. Bound 3 is measured. The planner deploys after review. |
+| RF2 | File rows and their transitions, the SQLite keeper, the beside-the-intent write, the upload route for files up to the SQLite threshold, the read route, `scopeFileBytes`, the pending bound, the sweep, delete orders, and redaction. The CLI's `dap act … --file <field>=<path>`, and a local `dap mcp` tool argument that names a local path. | Witnesses 1 (with files up to the threshold on both paths), 4, 7, 8, 9, 11, 12, 13 (SQLite), 15 (SQLite), 16 and 17 (SQLite) pass on a local Worker. Bounds 1, 2, 4 and 5 are set and recorded. |
+| RF3 | The R2 keeper, the `FILES` binding, files above the threshold through the same upload route, delete orders against the bucket, and the keeper quota. Operator configuration in the runbook. | Witnesses 1 (the 5 MiB PDF), 5, 6, 10, 13 (bucket), 15 (R2), 17 (bucket) and 18 pass on a test Worker with a bucket. Bound 3 is measured, and bound 5 is checked against it. The planner deploys after review. |
 | RF4 | Exit test: a minimal capture package in `examples/` with the fields of section 10. From a chat session, a person captures drawings and photos into a room and invites a second person, whose agent reads them. The person then redacts one photo. | The run passes on a hosted Worker, recorded in the slice report. |
 
 The slices run in this order. Each one is reviewed and landed before the
