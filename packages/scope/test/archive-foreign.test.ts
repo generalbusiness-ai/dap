@@ -10,6 +10,7 @@ import { variant } from "@generalbusiness/dap-derive/testing";
 import { outcomeValueDomains, validateDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { COUNTING_COHORT, platform } from "@generalbusiness/dap-platform";
+import { forecastArchiveForeignLookup, forecastArchiveForeignSelection, forecastArchiveForeignBasis } from "../src/archive-foreign-cost.ts";
 import { ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
 import { buildJournalArchive, journalRef, JournalWork } from "@generalbusiness/artroom-git/journal";
 import { JournalObjectReader, JournalObjects } from "../../git/src/journal-objects.ts";
@@ -64,14 +65,29 @@ async function fixture() {
       return state.storage.sql.exec(query, ...args);
     } };
     let reason = "admitted", positions: number[] = [], basis: ReturnType<ArchiveForeignMetadata["basis"]> = [], copies: unknown[] = [];
+    let mapCosts: { basis: ArchiveCost; selection: ArchiveCost; lookups: ArchiveCost[] } | null = null;
+    const difference = (before: ArchiveCost, after: ArchiveCost): ArchiveCost =>
+      Object.fromEntries(Object.keys(before).map(key => [key, after[key as keyof ArchiveCost] - before[key as keyof ArchiveCost]])) as ArchiveCost;
     try {
       const foreign = new ArchiveForeignMetadata(sql, pins, reviewed, PROPOSED_BOUNDS, budget);
       const prefix = archivePrefixMetadata(sql, consumer.at, through, PROPOSED_BOUNDS, budget, new Set([receiver.digest]));
       positions = archivePrivacyMetadata(sql, prefix, policy(receiver).support, budget, foreign).positions.map(position => position.seq);
-      basis = foreign.basis(); copies = uses.map(use => foreign.get(use.content));
+      const beforeBasis = budget.admitted(); basis = foreign.basis();
+      const basisCost = difference(beforeBasis, budget.admitted()), beforeSelection = budget.admitted();
+      const selection = foreign.selection(), selectionCost = difference(beforeSelection, budget.admitted());
+      const lookups: ArchiveCost[] = [];
+      copies = uses.map(use => {
+        let before = budget.admitted(); const copy = foreign.get(use.content);
+        lookups.push(difference(before, budget.admitted()));
+        before = budget.admitted(); const from = foreign.source(use.fact);
+        lookups.push(difference(before, budget.admitted()));
+        expect(from).toEqual(copy); return copy;
+      });
+      expect(selection).toEqual(copies);
+      mapCosts = { basis: basisCost, selection: selectionCost, lookups };
     } catch (error) { reason = (error as { reason: string }).reason; }
     expect(forbidden).toEqual([]);
-    return { reason, positions, basis, copies, queries, cost: budget.admitted() };
+    return { reason, positions, basis, copies, queries, cost: budget.admitted(), mapCosts };
   });
   const inventory = (pins: FixtureArchiveSourcePins | undefined = sources, reviewed = policies, damageBody = false, limits: Partial<ArchiveCost> = {}) => consumer.inside(state => {
     const calls: { query: string; key: unknown }[] = [];
@@ -99,6 +115,17 @@ test("direct foreign copies classify their own full headers against fixture pins
   expect(result.copies).toEqual(f.uses.map(use => expect.objectContaining({ content: use.content, fact: use.fact, pin: definition.digest, under: definition.declared.name })));
   expect(result.queries.some(query => query.includes("json_each(entry.bytes, '$.uses')"))).toBe(true);
   expect(result.cost.attempts).toBeGreaterThan(0);
+  expect(result.mapCosts).not.toBeNull();
+  const fixed = { entries: 0, attempts: 0, nodes: 0, calls: 0 };
+  expect(result.mapCosts!.basis).toEqual({ ...fixed, metadata: 512, inputWork: 4096 });
+  expect(result.mapCosts!.selection).toEqual({ ...fixed, metadata: 1024, inputWork: 2048 });
+  for (const lookup of result.mapCosts!.lookups) {
+    expect(lookup).toEqual({ ...fixed, attempts: 1, metadata: 256, inputWork: 512 });
+    expect(forecastArchiveForeignLookup()).toEqual(lookup);
+  }
+  expect(forecastArchiveForeignBasis(result.basis.length)).toEqual(result.mapCosts!.basis);
+  expect(forecastArchiveForeignSelection(result.copies.length)).toEqual(result.mapCosts!.selection);
+
 });
 
 test("missing source or inline policy and a conflicting retained genesis pin refuse the whole prefix before payloads", async () => {

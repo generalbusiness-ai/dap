@@ -5,6 +5,7 @@ import { INVITATION_KEY_MEMBERSHIP } from "@generalbusiness/dap-contract";
 import type { Bounds, Digest, FactRef, PlatformDefinition } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isFactRef, platformName } from "@generalbusiness/artroom-bytes";
 import { derivable } from "@generalbusiness/dap-derive";
+import { forecastArchiveForeignLookup, forecastArchiveForeignSelection, forecastArchiveForeignBasis } from "./archive-foreign-cost.ts";
 import { ArchiveBudget } from "./archive-budget.ts";
 import { archiveEntryHeader, archiveEntryPrivacy, archiveSupportMetadata } from "./archive-entry-metadata.ts";
 import type { ArchivePolicyRegistry, ReviewedArchivePolicy } from "./archive-inventory.ts";
@@ -99,20 +100,20 @@ export class ArchiveForeignMetadata {
     this.budget.check();
   }
   get(content: Digest): Readonly<ArchiveForeignCopy> | null {
-    this.budget.spend({ attempts: 1, metadata: 256, inputWork: 512 });
+    this.budget.spend(forecastArchiveForeignLookup());
     return this.#copies.get(content) ?? null;
   }
   source(fact: FactRef): Readonly<ArchiveForeignCopy> | null {
-    this.budget.spend({ attempts: 1, metadata: 256, inputWork: 512 });
+    this.budget.spend(forecastArchiveForeignLookup());
     const content = this.#facts.get(canonicalize(fact));
     return content === undefined ? null : this.#copies.get(content) ?? null;
   }
   selection(): readonly Readonly<ArchiveForeignCopy>[] {
-    this.budget.spend({ metadata: this.#copies.size * 512, inputWork: this.#copies.size * 1024 });
+    this.budget.spend(forecastArchiveForeignSelection(this.#copies.size));
     return Object.freeze([...this.#copies.values()]);
   }
   basis(): readonly Readonly<ArchiveSourceBasis>[] {
-    this.budget.spend({ metadata: this.#sources.size * 512, inputWork: this.#sources.size * 4096 });
+    this.budget.spend(forecastArchiveForeignBasis(this.#sources.size));
     const rows = [...this.#sources.values()].map(source => ({ source, key: canonicalize(source.at) }));
     rows.sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
     return Object.freeze(rows.map(row => row.source));
