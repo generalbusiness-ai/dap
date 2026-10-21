@@ -1,6 +1,6 @@
 import { stringOrNull as text } from "@generalbusiness/artroom-bytes";
 import { isRecord as record } from "@generalbusiness/artroom-bytes";
-import { invitationRedemptionFields } from "@generalbusiness/artroom-client";
+import { invitationRedemptionFields, isInvitationMembership } from "@generalbusiness/artroom-client";
 /**
  * The page's data functions: what it reads from a room and the one thing it
  * writes, a signed act. Each takes a `Session`, the scope service's base URL
@@ -197,6 +197,7 @@ export function placeOf(typed: string): Place | null {
 /** Encoding checks before signing, not provenance or server authority.
  * Routing stays on the configured service; normalization matches httpTransport. */
 function admittedInvitation(session: Pick<Session, "service">, link: NonNullable<ReturnType<typeof linkOf>>): boolean {
+  const membership = isInvitationMembership(link.definition) ? platform(link.definition) : null;
   return typeof session.service === "string" && typeof link.service === "string"
     && session.service.replace(/\/+$/, "").length > 0
     && link.service.replace(/\/+$/, "") === session.service.replace(/\/+$/, "")
@@ -204,8 +205,7 @@ function admittedInvitation(session: Pick<Session, "service">, link: NonNullable
     && fullScopeRef(link.repository?.directory) && link.repository.directory.kind === "directory"
     && fullScopeRef(link.repository?.membership) && link.repository.membership.kind === "membership"
     && isScopeId(link.repository?.rules) && isScopeId(link.repository?.destination)
-    && (link.definition === "platform:membership@1" || link.definition === "platform:membership@2" || link.definition === "platform:membership@6")
-    && platform(link.definition)?.data.name === "platform:membership";
+    && membership?.data.name === "platform:membership" && membership.data.acts["join"] !== undefined;
 }
 
 /** Enrollment custody follows the actual target and signing key, independently

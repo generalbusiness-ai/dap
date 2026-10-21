@@ -166,9 +166,9 @@ test("scripted archived A refusal cannot hide an unknown current B enrollment on
 });
 
 // SCRIPTED service/storage, actual new-cohort proof and retained Page signer.
-test("new-cohort Page custody retains a proof without its invitation seed across lost reply and reload", async () => {
-  const f = fixture("platform:membership@6"), seed = b64url(new Uint8Array(32).fill(82));
-  const link = "artroom-invite:" + b64url(utf8(JSON.stringify({ v: 1, service: origin, repository: { directory, membership, rules: ref("rules").scope, destination: ref("destination").scope }, invitation: 1, secret: seed, handle: "@ada", definition: "platform:membership@6" })));
+test.each(["platform:membership@6", "platform:membership@8"] as const)("%s Page custody retains a proof without its invitation seed across lost reply and reload", async definition => {
+  const f = fixture(definition), seed = b64url(new Uint8Array(32).fill(82));
+  const link = "artroom-invite:" + b64url(utf8(JSON.stringify({ v: 1, service: origin, repository: { directory, membership, rules: ref("rules").scope, destination: ref("destination").scope }, invitation: 1, secret: seed, handle: "@ada", definition })));
   f.lose();
   const first = await joinInvitation(origin, link, f.storage, { fetch: f.fetch, now, lock });
   expect(first.status).toBe("unknown");

@@ -2,23 +2,23 @@ import { answerText, nonacceptedAnswerText } from "../src/view.ts";
 import { expect, test, vi } from "vitest";
 import type { SignedIntent, SignedRead } from "@generalbusiness/dap-contract";
 import * as bytes from "@generalbusiness/artroom-bytes";
-import { b64url, definitionDigest, intentDigest, keyIdOfSecret, newIncarnation, textDigest, utf8, verifySignedIntent } from "@generalbusiness/artroom-bytes";
+import { b64url, definitionDigest, intentDigest, keyIdOfSecret, newIncarnation, textDigest, utf8, verifyInvitationProof, verifySignedIntent } from "@generalbusiness/artroom-bytes";
 import { changeDemo } from "@generalbusiness/dap-lanes";
-import { Session as ReadSession, type Fetch } from "@generalbusiness/artroom-client";
+import { INVITATION_MEMBERSHIPS, Session as ReadSession, type Fetch } from "@generalbusiness/artroom-client";
 import { invitationTarget, prepareJoin, joinAssociation, joinRoom, placeOf, type Session } from "../src/index.ts";
 
 // One client boundary, with a SCRIPTED service acknowledgment. No scope,
 // membership judgment, provider or durable enrollment/recovery runs.
 // Invalid invitation encodings must stop before signing/submission; explicit
-// supported native/@2 encodings submit to the configured service only.
-test("page join refuses mismatched encoding before submission and accepts scripted native/@2 replies on the configured service", async () => {
+// supported membership encodings submit to the configured service only.
+test("page join refuses mismatched encoding before submission and accepts scripted supported-version replies on the configured service", async () => {
   const repository = {
     directory: { scope: `sc_${"a".repeat(52)}` as const, inc: newIncarnation(new Uint8Array(16).fill(1)), kind: "directory" as const },
     membership: { scope: `sc_${"b".repeat(51)}a` as const, inc: newIncarnation(new Uint8Array(16).fill(2)), kind: "membership" as const },
     rules: `sc_${"c".repeat(51)}a` as const,
     destination: `sc_${"d".repeat(51)}a` as const,
   };
-  const original = { v: 1, service: "https://page.test/", repository, invitation: 3, secret: "scripted-invitation", handle: "@scripted", definition: "platform:membership@2" };
+  const original = { v: 1, service: "https://page.test/", repository, invitation: 3, secret: b64url(new Uint8Array(32).fill(17)), handle: "@scripted", definition: "platform:membership@2" };
   const encode = (value: unknown) => `artroom-invite:${b64url(utf8(JSON.stringify(value)))}`;
   const submissions: SignedIntent[] = [];
   let replyDefinition = original.definition;
@@ -28,8 +28,11 @@ test("page join refuses mismatched encoding before submission and accepts script
     submissions.push(signed);
     expect(verifySignedIntent(signed)).toBe(true);
     expect([signed.intent.to, signed.intent.kind, signed.intent.expected, signed.intent.fields]).toEqual([
-      repository.membership, "join", {}, { invitation: 3, secret: original.secret },
+      repository.membership, "join", {}, ["platform:membership@6", "platform:membership@7", "platform:membership@8"].includes(replyDefinition)
+        ? { invitation: 3, proof: expect.any(String) } : { invitation: 3, secret: original.secret },
     ]);
+    if ("proof" in signed.intent.fields) expect(verifyInvitationProof(keyIdOfSecret(new Uint8Array(32).fill(17)),
+      signed.intent.fields["proof"], repository.membership, 3, signed.intent.actor)).toBe(true);
     return new Response(JSON.stringify({ answer: "accepted", receipt: {
       fact: { at: repository.membership, seq: 4, hash: textDigest("scripted join acknowledgment") },
       definition: replyDefinition, intent: intentDigest(signed.intent), effects: [], sends: [], epoch: 0,
@@ -58,12 +61,12 @@ test("page join refuses mismatched encoding before submission and accepts script
   expect(submissions).toEqual([]); // Preparation alone must not dispatch.
   await expect(joinRoom(session, encode(original), () => { throw new Error("Page context changed before join submission"); })).rejects.toThrow("Page context changed before join submission");
   expect(submissions).toEqual([]);
-  for (const definition of ["platform:membership@1", "platform:membership@2"]) {
+  for (const definition of INVITATION_MEMBERSHIPS) {
     replyDefinition = definition;
     const joined = await joinRoom(session, encode({ ...original, definition }));
     expect([joined.answer.answer, joined.place]).toEqual(["accepted", { directory: repository.directory.scope, membership: repository.membership }]);
   }
-  expect(submissions).toHaveLength(2);
+  expect(submissions).toHaveLength(INVITATION_MEMBERSHIPS.length);
   const policyRefusal = { answer: "refused", reason: "guard-failed", name: "founding-policy", judgedAt: { seq: 0, hash: textDigest("scripted policy refusal") } } as const;
   expect(nonacceptedAnswerText(policyRefusal)).toBe("Refused: guard-failed (creation-policy). The request was refused.");
   expect(nonacceptedAnswerText({ ...policyRefusal, name: "founding-key" })).toBe("Refused: guard-failed (initial-key). The request was refused.");
