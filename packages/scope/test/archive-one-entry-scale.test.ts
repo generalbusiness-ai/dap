@@ -92,4 +92,3 @@ test("the Native driver confirms ten thousand one-entry passes and preserves ret
     elapsedSeconds: (performance.now() - started) / 1000, exactParentReads: host.objectReads.length,
     qualification: "Actual Native signed acts and real rule evaluation, SQLite retention, 10000 confirmed one-entry passes plus one and eviction at3700. Each pass has one original30s ledger; trusted entry cap lowered to2 for scout1+fresh1, all other original caps unchanged. Production SHA1 incremental send copy/hash/validator/pack uses scripted HTTP/token/repository; policy/source/authority are TEST fixtures. Receipt inspections are separate test observations, no archive phase reset. 9999 distinct actual Native rule inputs; extra repeats the3700 rule input without resending its blob; unreferenced negative row remains unconfirmed. Offline current-tree clone/replay is separate; no real Git clone, external provider, deployed custody or cadence claim." };
 }, 1_200_000);
-
