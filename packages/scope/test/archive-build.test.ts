@@ -3,10 +3,18 @@
  * no host, token, adapter send or production export admission is claimed. */
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { ArchiveSegmentCursor, journalV2SegmentPath, prepareJournalPass, type JournalArchive, type JournalFormat } from "@generalbusiness/artroom-git/journal";
+import { textDigest } from "@generalbusiness/artroom-bytes";
+import { ArchiveSegmentCursor, journalV2SegmentPath, journalV2RetainedPath, prepareJournalPass, type JournalArchive, type JournalFormat } from "@generalbusiness/artroom-git/journal";
+import type { RetainedKey } from "@generalbusiness/dap-derive";
 import { planArchive, planArchivePass, planArchiveConversion, rebuildArchive, rebuildArchivePass } from "../src/archive-build.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
 import { ArchiveBudget } from "../src/archive-budget.ts";
+import { inventoryArchive } from "../src/archive-inventory.ts";
+import { archivePrefixMetadata } from "../src/archive-prefix.ts";
+import { archivePrivacyMetadata } from "../src/archive-privacy.ts";
+import { ArchiveLocalReferences, type ArchiveLocalReferencePlan } from "../src/archive-local-references.ts";
+import { ArchivePlanFence } from "../src/archive-plan-fence.ts";
+import { readRetainedArchivePass } from "../src/archive-retained-pass.ts";
 import type { Sql } from "../src/sqlite.ts";
 import { at, create, rita, una, type Lane } from "./fixtures-native.ts";
 import { archiveDefinition as base, archivePolicies as policies, archiveRepository as repository, archiveSql as sqlOf } from "./support/archive.ts";
@@ -99,36 +107,81 @@ test("v2 native inventory and restart read only the marked new interval and keep
   await lane.inside(state => { const rows = new ArchiveRows(sqlOf(state), lane.at); rows.target(repository, "sha1"); rows.mark(first.mark); rows.confirm(first.mark.commit); });
   await lane.submit(lane.remark("first new entry"));
   await lane.submit(lane.remark("second new entry"));
+  const offer = await lane.did(rita, "offer", { fields: { intent: 0 }, expected: { intent: 1 } });
+  await lane.did(rita, "assign", { on: offer.fact.seq, expected: { on: 1 }, fields: { performer: una.member } });
   const through = await lane.head(), parent = parentOf(first.archive);
   const planned = await lane.inside(async state => {
     const sql = sqlOf(state), queried: number[] = [];
     const exact: Sql = { transaction: action => state.storage.transactionSync(action), exec(query, ...args) {
       if (/\bFROM entry\b/.test(query)) {
-        expect(typeof args[0]).toBe("number");
-        expect(args[0] as number).toBeGreaterThan(initial.seq);
-        queried.push(args[0] as number);
+        // Metadata table joins bind trusted names/JSON paths before seq.
+        const source = /\b(?:entry\.)?seq\s*(?:=|>=)\s*\?/.exec(query);
+        const index = source ? (query.slice(0, source.index).match(/\?/g) ?? []).length : -1;
+        queried.push(args[index] as number);
       }
       return sql.exec(query, ...args);
     } };
+    const forecast = (source: Sql, budget: ArchiveBudget, damage?: "position" | "plan") => source.transaction(() => {
+      const prefix = archivePrefixMetadata(source, lane.at, through, PROPOSED_BOUNDS, budget, new Set([base.digest]), initial);
+      const support = policies.get(base.digest)!.support;
+      const admitted = archivePrivacyMetadata(source, prefix, support, budget);
+      const references = new ArchiveLocalReferences(source, support, PROPOSED_BOUNDS, budget), fence = new ArchivePlanFence(prefix, budget);
+      budget.spend({ metadata: 256, inputWork: 512 });
+      const paths = new Set<string>();
+      const retain = (key: RetainedKey) => {
+        const pass = readRetainedArchivePass(source, key, budget);
+        if (pass !== null && pass < initial.seq + 1) return;
+        budget.spend({ metadata: 2048, inputWork: 4096 });
+        paths.add(journalV2RetainedPath(initial.seq + 1, key));
+      };
+      let borrowed: ArchiveLocalReferencePlan | undefined;
+      for (const position of admitted.positions) {
+        const plan = references.read(lane.at, position);
+        borrowed = plan;
+        if (damage === "plan" && position.seq === through.seq) expect(plan.dependencies.length).toBeGreaterThan(0);
+        fence.append(damage === "position" && position.seq === initial.seq + 1 ? { ...position, hash: textDigest("TEST incorrect forecast footprint") } : position,
+          damage === "plan" && position.seq === through.seq ? { ...plan, dependencies: [] } : plan);
+        for (const { dependency } of plan.dependencies) {
+          if (dependency.mode === "required") retain(dependency.key);
+          else if (dependency.mode === "probe") for (const choice of dependency.choices) retain(choice.key);
+        }
+      }
+      fence.seal(through);
+      return { fence, positions: admitted.positions, borrowed, paths };
+    });
+    for (const damage of ["position", "plan"] as const) {
+      const budget = new ArchiveBudget(); let entryBodies = 0, payloadQueries = 0;
+      const tracked: Sql = { transaction: exact.transaction, exec(query, ...args) {
+        if (query.startsWith("SELECT bytes FROM entry ")) entryBodies++;
+        if ((query.includes("FROM retained_input ") && args[0] !== "definition") || query.includes("FROM retained_value ")) payloadQueries++;
+        return exact.exec(query, ...args);
+      } };
+      const held = forecast(tracked, budget, damage); entryBodies = 0; payloadQueries = 0;
+      const refused = inventoryArchive(tracked, lane.at, through, PROPOSED_BOUNDS, policies, budget, undefined, initial, held.fence);
+      expect(refused).toEqual({ ok: false, reason: "mismatch" });
+      if (damage === "position") expect(entryBodies).toBe(0);
+      else expect(entryBodies).toBeGreaterThan(0);
+      expect(payloadQueries).toBe(0);
+    }
     const budget = new ArchiveBudget();
     const prepared = await prepareJournalPass({ format: "sha1", at: lane.at, after: initial, parent, budget });
     expect(prepared.ok, JSON.stringify(prepared)).toBe(true); if (!prepared.ok) return { value: prepared, queried };
-    // Scalar metadata frame closes before parent I/O. This is the actual
-    // two-remark native interval, not an adaptive cutoff/host-send witness.
-    const count = through.seq - initial.seq;
-    const positions = exact.transaction(() => budget.native(exact, () => ({ metadata: count * 192, inputWork: 0 }))
-      .exec("SELECT seq, size FROM entry WHERE seq >= ? AND seq <= ? ORDER BY seq LIMIT ?", initial.seq + 1, through.seq, count).toArray());
-    expect(positions).toHaveLength(count);
+    // The actual projection frame closes before parent I/O. This remains
+    // a four-entry fixture, not an adaptive cutoff or host-send witness.
+    const held = forecast(exact, budget);
     prepared.preparation.work.metadata(256);
     const grouping = new ArchiveSegmentCursor(64 * 1024 * 1024);
-    for (const row of positions) {
-      expect(typeof row["seq"]).toBe("number"); expect(typeof row["size"]).toBe("number");
-      const firstSegment = grouping.append(row["seq"] as number, row["size"] as number);
+    for (const row of held.positions) {
+      const firstSegment = grouping.append(row.seq, row.bytes);
       if (firstSegment !== null) await prepared.preparation.prepare([journalV2SegmentPath(firstSegment)]);
     }
+    for (const path of held.paths) await prepared.preparation.prepare([path]);
+    // The caller still has this reference after parent awaits. It cannot
+    // change the captured forecast through a borrowed dependency array.
+    try { (held.borrowed!.dependencies as unknown[]).length = 0; } catch { /* Frozen metadata. */ }
     const attributed = prepared.preparation.metadataCost();
     const value = await planArchivePass(exact, { at: lane.at, through, after: initial, bounds: PROPOSED_BOUNDS,
-      policies, format: "sha1", parent, markedAt: at(1), preparation: prepared.preparation }, budget);
+      policies, format: "sha1", parent, markedAt: at(1), preparation: prepared.preparation, forecast: held.fence }, budget);
     if (value.ok) {
       expect(attributed.nodes).toBeGreaterThan(0);
       expect(value.archive.cost.nodes).toBe(value.archive.selection.inventoryCost.nodes + attributed.nodes);
@@ -140,6 +193,7 @@ test("v2 native inventory and restart read only the marked new interval and keep
   const next = planned.value;
   expect(next.ok, JSON.stringify(next)).toBe(true); if (!next.ok) return;
   expect(planned.queried.length).toBeGreaterThan(0);
+  expect(planned.queried.every(position => typeof position === "number" && position > initial.seq)).toBe(true);
   expect(next.archive.newInterval).toEqual([initial.seq + 1, through.seq]);
   expect(next.archive.selection.objects.find(object => object.key.kind === "definition" && object.key.digest === base.digest)?.pass).toBe(0);
   const oldBlobs = new Set(first.archive.objects.filter(object => object.type === "blob").map(object => object.id));

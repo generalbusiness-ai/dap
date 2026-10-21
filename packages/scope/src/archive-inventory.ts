@@ -16,6 +16,7 @@ import { ArchiveForeignMetadata } from "./archive-foreign.ts";
 import type { ArchiveSourceBasis, FixtureArchiveSourcePins } from "./archive-source-pins.ts";
 import { readRetainedArchivePass } from "./archive-retained-pass.ts";
 import { readArchiveTextBytes } from "./archive-text.ts";
+import type { ArchivePlanFence } from "./archive-plan-fence.ts";
 
 /** Loaded only from trusted reviewer/native configuration, never request
  * input. `entryTypes` is the reviewed coverage of inline signed fields and
@@ -60,7 +61,7 @@ const nameOf = (key: RetainedKey) => JSON.stringify(key.kind === "value" ? [key.
  * context. The caller supplies its real Sql.transaction (transactionSync).
  * All work is synchronous: no provider task can outlive this frame. The
  * same one budget is used across every stage and every cache hit. */
-export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: Bounds, reviewed: ArchivePolicyRegistry, budget = new ArchiveBudget(), fixtureSources?: FixtureArchiveSourcePins, after?: Head | null): ArchiveInventoryResult {
+export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: Bounds, reviewed: ArchivePolicyRegistry, budget = new ArchiveBudget(), fixtureSources?: FixtureArchiveSourcePins, after?: Head | null, forecast?: ArchivePlanFence): ArchiveInventoryResult {
   try {
     return sql.transaction(() => {
       budget.check();
@@ -139,6 +140,7 @@ export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: 
       // First finish admission of ALL inline local-entry classes. A trusted
       // owner table/root certificate alone cannot authorize their bodies.
       if (admitted.positions.some(position => !rootPolicy.entryTypes.has(position.input))) return stop("unsupported-archive-cohort");
+      forecast?.start(admitted, budget);
       // No copied/value/rule/snapshot body is available to this reader until
       // every selected local and foreign inline class has passed metadata.
       const copies = foreign?.selection() ?? [];
@@ -165,9 +167,11 @@ export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: 
         const rules = entry.input.type === "outcome" ? rootPolicy.support.owners.get(entry.input.owner)?.get(entry.input.kind) ?? null : null;
         const origin: DependencyOrigin = { at: { at, seq: entry.seq, hash: position.hash }, input: entry.input.type };
         const plan = localRetainedPlan(definition, entry, position.hash, rules, bounds, deliveryUnder);
+        forecast?.check(position, plan);
         budget.check();
         plans.push({ origin, plan });
       }
+      forecast?.finish();
       // The local-entry planning stage publishes no bodies or partial plan.
       // Classify every required and potential definition root/closure before
       // selecting ANY rule/snapshot/value payload. Potential probe roots may
