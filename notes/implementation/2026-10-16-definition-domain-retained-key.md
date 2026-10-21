@@ -1,5 +1,7 @@
 # Definition-domain retained keys
 
+Status, 21 October 2026: Approved and merged at `77e570a1`. Statements below that say review or landing is owed are as of the handoff.
+
 Source child `a1622876`, promise `2661cab6`, is a bounded prerequisite of
 archive inventory request `02252148` under durability request `e871ba09`.
 It implements checker decision `78127fe6`, point 4. Its base is local main

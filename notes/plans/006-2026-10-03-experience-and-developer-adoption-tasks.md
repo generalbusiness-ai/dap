@@ -1,5 +1,8 @@
 # Experience and developer-adoption commissioning ledger
 
+Status: retired; no work follows from it. Its seven requests were for the
+Room model, which was parked at `42873516`.
+
 Dated 2026-10-03, following planning request
 `2262034df901fca771f57e065f275e7cca00fcfc`.
 

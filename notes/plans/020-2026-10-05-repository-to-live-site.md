@@ -1,5 +1,8 @@
 # Plan 020: repository to live site, through the lane
 
+Status: retired; no work follows from it. Plan 024 cut it to a slide, and
+no later plan schedules it.
+
 Date: 2026-10-05. Hugh's direction, recorded by the planner. A small demo
 slice that shows a developer going from a repository to a live site with
 nothing but the GitHub-familiar surface, each step a recorded act. It is

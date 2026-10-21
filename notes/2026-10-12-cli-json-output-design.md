@@ -1,6 +1,9 @@
 # JSON output for the dap command line
 
-Builder revision 5, for independent design review. Request `f319c428`,
+Status, 21 October 2026: approved (`53b0335e`) and merged at `dafb5c16`.
+Not built: the CLI has no `--json` flag.
+
+Builder revision 5. Request `f319c428`,
 promise `a6d5ee53`, under `92d6dddb` and `c1cacd1a`. This replaces the
 retained planner draft at `65609bac` and builder revision 2 at `58889d54`,
 addressing checker review `4a15bc25` against current local Main

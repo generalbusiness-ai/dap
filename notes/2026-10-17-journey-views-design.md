@@ -3,8 +3,10 @@
 Design packet, 17 October 2026. Request `a9a3585c`, clarified by `9b70e9b6`.
 Source `b410d2f0`, promise `355b9a8b`, starts from Main `2637e6bb`.
 The packet contains static HTML mockups, concepts and browser PNGs.
-Exact-head checker approval and planner read remain due. These examples
-implement no production view or live act.
+Exact-head checker approval (`9f014ba8`) and the planner read cover this
+design, and it landed at `92bedfda`. The compact cards design (`df806354`)
+revises its presentation. These examples implement no production view or
+live act.
 
 The person starts work, leaves, and returns to the same shared record.
 They can understand a decision, inspect an exact change, and confirm its
@@ -333,8 +335,8 @@ Document-only gate handling follows [the testing guide](../docs/testing.md).
 Capacity choices `4dccae54` were answered by planner report `63195bdd`
 and accepted by `cd5d2265`. The full capacity runtime task `113a54bd`,
 actual journey implementation and earlier operational or gate-stability
-obligations remain open. Exact-head checker approval and planner read
-remain required for this design.
+obligations remain open. Checker approval and the planner read later
+covered this design (`92bedfda`).
 
 ## Open and reproduce the examples
 
@@ -479,7 +481,7 @@ The reviewed head's render report is retained as
 `verification/reviewed-bef83-render-report.json`. The current render index
 and PNGs describe the successor. Previous passing browser checks did not
 detect these two issues and do not count as proof of their repair.
-Fresh exact-head checker approval and a planner read remain due.
+A fresh exact-head approval and the planner read followed (`92bedfda`).
 
 
 ### Planner catch-up correction
@@ -487,8 +489,8 @@ Fresh exact-head checker approval and a planner read remain due.
 Checker approval `9203bb23` covers only `fce231e0`. Planner report
 `360efc4e` then found P1: a count alone showed none of the changes it
 claimed the person had inspected. That earlier approval and browser pass
-do not establish this successor's completion. The planner read remains
-required after a fresh checker approval.
+do not establish this successor's completion. A fresh checker approval and
+the planner read followed (`92bedfda`).
 
 Needs you now has two distinct parts: current open obligations, followed
 by **Since your last review**. The top **Read changes** link reaches the

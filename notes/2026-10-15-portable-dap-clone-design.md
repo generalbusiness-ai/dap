@@ -1,7 +1,7 @@
 # A portable dap clone
 
-15 October 2026. Discussion draft 2 for review.
-Revised 16 October 2026 against main `cf07ac85b`.
+15 October 2026. Design note, draft 2, revised 16 October 2026 against main
+`cf07ac85b`. It is approved (`05ce3331`) and landed at `dacf4df4`.
 
 Request `35ee8372`, planner promise `35f875e4`. Draft 1 was read against
 main `bc95110e1`. Gap investigation: `e398c623`. Archive privacy decision:
@@ -9,8 +9,8 @@ main `bc95110e1`. Gap investigation: `e398c623`. Archive privacy decision:
 decision `4cfc2230` (section 6).
 
 This note states what a clone must contain to carry the readable state of
-a dap room, and what main still lacks. It has no checker approval and
-authorizes no archive writer, disclosure change or rehosting. Draft 2
+a dap room, and what main still lacks. It authorizes no archive writer,
+disclosure change or rehosting. Draft 2
 marks each gap **resolved**, **partly addressed** or **open**, links to the
 per-scope archive contract instead of restating it, and keeps only the
 remaining delivery work.
@@ -67,9 +67,16 @@ Builder request `e871ba09` holds the work as slices A0 to A5. Landed so far:
 | Definition-domain retained key (A1c prerequisite) | `77e570a1a` | [Retained key](implementation/2026-10-16-definition-domain-retained-key.md) |
 | Invitation-key membership and v1 export admission | `f41ab63c1` | [Invitation-key membership](implementation/2026-10-15-invitation-key-membership.md) |
 
-The archive helpers are internal and have no runtime caller
-(`packages/git/src/journal-path.ts:7` names the ref prefix). No archive is
-written, read or cloned. The export admission helper is
+This table is as of `cf07ac85b`. Since then these have landed: the
+inventory prerequisite (`4994af74`), the archive layout (`698a3d71`),
+fixture-only A2 (`0e63ba92`) and A3 (`6dac9c76`), the archive binding
+(`fb390d88`) and foreign archive inputs (`7bc1490c`). No real room is
+exported or cloned yet. The sequenced-level note (`3dad6109`, section 4)
+replaces stage 5's archive permission with a room binding.
+
+As of `cf07ac85b`, the archive helpers were internal and had no runtime
+caller (`packages/git/src/journal-path.ts:7` names the ref prefix), and no
+archive was written, read or cloned. The export admission helper is
 `admitArchiveExport` (`packages/git/src/archive-policy.ts:14-23`); its only
 caller is its test.
 

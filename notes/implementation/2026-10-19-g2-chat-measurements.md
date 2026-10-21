@@ -1,5 +1,7 @@
 # G2: measurements from chat
 
+Status, 21 October 2026: Landed at `4b4d58b0`. Statements below that say review or landing is owed are as of the handoff.
+
 Request `321c54ee381f5453b6a6073ca433505115c5d6df`, promise
 `3f6dbedaa6828f3d85823ac83177a47efb588440`. This head starts at audited and
 published G1 Main `b54f8880`. G2 takes priority over further P1–P3 work.

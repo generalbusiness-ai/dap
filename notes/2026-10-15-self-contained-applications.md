@@ -1,11 +1,16 @@
 # Self-contained applications: the destination and the work to reach it
 
-15 October 2026. Design direction for review. Draft 2 answered checker review
+15 October 2026. Design direction, draft 3. Draft 2 answered checker review
 `9a293839` (findings F1 to F4); draft 3 answers review `949a9010` (F3a).
+It is approved (`e9d79a9a`, ratified `f704fc14`) and landed at `40e37d85`.
 
 Source baseline: main `bc95110e1`, dap-spike main `9d738e2e`. This note is
-for the request that carries it. It commissions no implementation. A
-separate request will commission each milestone in section 7.
+for the request that carries it. It commissions no implementation.
+Separate requests commission each milestone in section 7. M1 landed in
+three parts (`feccbbcf`, `bfa02edd`, `ad39fdf1`). M2a (`4d8c878c`) and M2b
+(`4b794cf5`) landed. The rest of M2, M3 and M4 are not built. The packages
+note (`165d5a86`, section 11) and the sequenced-level note (`3dad6109`,
+section 8) amend sections 4 and 7.
 
 ## 1. Purpose
 
@@ -441,7 +446,7 @@ Hugh agreed to decisions 1 to 4 on 15 October 2026, and made decision 5.
 - **The `apps/` consolidation, `38064e13`.** Separates application source.
   M1 builds on it and removes the build-time composition.
 - **The unified forge direction** (`notes/2026-10-15-unified-forge-design.md`,
-  draft, request `f088256e`). Its possible deployment and observation
+  request `a1889c73`, landed at `d5cb3123`). Its possible deployment and observation
   records could later describe application releases. Neither note depends
   on the other.
 - **The roadmap.** Gaps 7, 10 and 13 are roadmap items already. When this

@@ -1,5 +1,10 @@
 # 013: A reviewed first release for Jam
 
+Status: retired; no work follows from it. The packed release (`1e444739`)
+landed at `4a44231e` on 4 October 2026, and its packages were parked at
+`42873516` the same day. The public SDK replaced it (`fef67109`,
+`c4d98848`).
+
 Date: 2026-10-04. Draft 1, proposed for independent planning review.
 Planner decisions requested in gitseq `18060abc` (integration),
 `a49b78ab` (authenticated UI entry) and `1d4e5b39` (package availability).

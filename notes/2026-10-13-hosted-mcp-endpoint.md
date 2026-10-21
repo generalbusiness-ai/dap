@@ -1,6 +1,11 @@
 # The hosted MCP endpoint: plan 031, stage 2
 
-Date: 2026-10-13. Status: Draft 5, for checker review (Draft 1 was
+Status, 21 October 2026: draft 5 is approved (`4a0af914`) and landed at
+`77d9cca0`. `POST /mcp` is built (`3bd0ef1c`), and MCP Apps UI resources
+came with the card kit (`6e309b6b`). Not built: export, OAuth, pinned diff
+and file reads, prompts and Start join parity.
+
+Date: 2026-10-13. Status: Draft 5 (Draft 1 was
 20e2344d, Draft 2 d69b46ba, Draft 3 d8324363, Draft 4 698df2d0; the
 checker's reviews 6a262c93, 89ec44b0, e1463db8 and 5688e533 are answered
 in section 10).

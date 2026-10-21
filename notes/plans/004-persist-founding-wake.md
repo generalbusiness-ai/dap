@@ -1,12 +1,15 @@
 # Plan 004: Persist a cleanup wake before founding remote effects
 
+Status: landed `93a2552e`; describes work that is done. The code it
+changed was parked at `42873516` on 4 October 2026.
+
 > Executor: work under a gitseq request and promise and obtain exact-head checker review of every changed artifact. This plan does not authorize landing without that review.
 >
 > Drift check: `git diff --stat bd520fb926f8161a722c6f1e23ae4aac29e41a66..HEAD -- packages/git/src/workspace/workspaces.ts packages/git/test/workspaces.test.ts packages/room/src/core.ts packages/room/src/room.ts packages/room/test/workerd/founding-gaps.test.ts packages/room/test/node/deploy.test.ts`. Compare changed excerpts before continuing.
 
 ## Status
 
-- Status: DONE, pending review. Implemented under gitseq request `b2509b23` on branch `request/cc-workspace`; see the implementation report in [README.md](README.md).
+- Earlier status (2 October 2026): done, pending review. Implemented under gitseq request `b2509b23` on branch `request/cc-workspace`; see the implementation report in [README.md](README.md).
 - Priority: P2
 - Effort: M; no functionality is cut to fit this estimate.
 - Risk: MED — preserve the Room's shared alarm ordering and recovery behavior.

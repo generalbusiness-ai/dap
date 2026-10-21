@@ -1,7 +1,8 @@
 # A declared landing policy
 
-Status: design note, draft 3, 16 October 2026. It is illustrative and
-commissions no implementation. Repository facts cite `path:line` at main
+Status: design note, draft 3, 16 October 2026. It is approved (`3b25bfc7`)
+and landed at `4f7b07ee`. It is illustrative and commissions no
+implementation. Repository facts cite `path:line` at main
 `aeebc18cb`. Section 8 answers the reviews of drafts 1 and 2.
 
 Agent-coordination systems often hard-code when a change lands: a test
@@ -11,7 +12,7 @@ version it or review a change to it. This note shows how, in dap, the same
 policy can be a definition that the repository's room owns, versions and
 reviews, and which parts need support that does not exist yet. It depends
 on the [evidence rules design](2026-10-16-evidence-rules-design.md)
-(unlanded, branch `planner/evidence-rules-design-20261016`) and the
+(draft 3, landed at `d09cc918`) and the
 [MVP plan](2026-10-16-repo-in-ai-mvp-plan.md), and repeats neither.
 
 ## 1. The example policy

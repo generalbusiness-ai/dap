@@ -1,5 +1,10 @@
 # Repository extents in the coding demo
 
+Status: retired; no work follows from it. Extents were built in I3
+(`0006bd1d`, `952cbb11`) and are in `packages/platform/src/rules-scope.ts`
+and `apps/room/lanes/src/change.ts`. Later extents work comes from
+security request `0716e75a` (R7).
+
 2026-10-05. Draft 1. Proposal for request `1cc4283f`, promised in
 `60690113`, paired with builder request `42de9e34`. Independent review
 and adoption are required. This note changes no source or lane digest.
