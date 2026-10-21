@@ -192,16 +192,16 @@ test.for(["github", "artifacts"] as const)("%s incremental send validates exact 
   const shape = { objects: request.objects.length, bytes: request.objects.reduce((n, row) => n + row.data.length, 0), maximum: 64 * 1024 };
   const forecast = forecastArchiveTransfer({ ...shape, incremental: true });
   expect(await f.provider.sendArchive(request)).toEqual({ send: "accepted" }); expect(f.posts).toHaveLength(1);
-  // Original adapter counter pins, recorded before shared price extraction.
-  expect(shape).toEqual({ objects: 34, bytes: 4118, maximum: 65536 });
-  expect(budget.charges[0]).toEqual({ metadata: 4352, inputWork: 16472 });
-  expect(budget.charges.at(-1)).toEqual({ inputWork: 32944 });
-  expect(budget.admitted()).toEqual({ entries: 0, attempts: 35, nodes: 17, calls: 70, metadata: 35574, inputWork: 112515 });
+  // Actual adapter pins for the reviewed shared v2 layout; unit prices stay unchanged.
+  expect(shape).toEqual({ objects: 27, bytes: 3789, maximum: 65536 });
+  expect(budget.charges[0]).toEqual({ metadata: 3456, inputWork: 15156 });
+  expect(budget.charges.at(-1)).toEqual({ inputWork: 30312 });
+  expect(budget.admitted()).toEqual({ entries: 0, attempts: 32, nodes: 16, calls: 64, metadata: 27766, inputWork: 98310 });
   // Future transfer includes one outgoing driver copy in addition to the
   // adapter's copy/pack. Append validation remains priced separately.
-  expect(forecast).toEqual({ ok: true, cost: { entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 8704, inputWork: 65888 } });
+  expect(forecast).toEqual({ ok: true, cost: { entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 6912, inputWork: 60624 } });
   expect(forecastArchiveTransfer({ ...shape, incremental: false })).toEqual({ ok: true,
-    cost: { entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 4352, inputWork: 16472 } });
+    cost: { entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 3456, inputWork: 15156 } });
   expect(forecastArchiveTransfer({ ...shape, incremental: true, maximum: shape.bytes - 1 })).toEqual({ ok: false, reason: "limit" });
   expect(forecastArchiveTransfer({ ...shape, incremental: true, objects: 8193 })).toEqual({ ok: false, reason: "limit" });
   (context.task.meta as Record<string, unknown>)["archiveTransferCost"] = {

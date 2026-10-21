@@ -436,7 +436,14 @@ npm run gate
 ```
 
 The gate runs `node scripts/check-shared-helpers.mjs` before typechecking.
-It parses source declarations and the bytes package's actual runtime
+For a gate that needs a durable list of started and finished cases, set
+`ARTROOM_TEST_PROGRESS` to a new file in an existing evidence directory.
+Vitest then uses verbose output and writes a JSON line for each case start,
+result and the run's end. An existing file is refused. This observes the
+same cases, workers, assertions and deadlines; a start without a result
+identifies unfinished work, not its cause.
+
+The helper check parses source declarations and the bytes package's actual runtime
 exports, without executing those files. A local function that redefines
 an exported bytes helper must import its existing implementation. If it
 has a different meaning, give it a distinct name. Imports and public

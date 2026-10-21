@@ -975,3 +975,53 @@ and planner notes. The combined candidate still needs its one full gate,
 complete exact-head review and guarded landing. Floor entries belong to
 F2. Cloudflare provisioning, binding, credentials, deployment and hosted
 readbacks remain with planner.
+
+## First integrated gate and targeted repair
+
+The first actual full gate runs at `a34f3d85`, tree
+`8942f50f751f522dc847e6a3e8e8d0513ac57733`. Whitespace, helper checking and
+all typechecks pass; installation is skipped. It reports a stale generated
+page bundle and two host-send assertion failures, then stops making visible
+progress. Two native timeout-abort diagnostics carry no test identity.
+Native worker CPU stays at 2:28.60 across observations about 140 seconds
+apart; a one-second read-only sample finds its main event loop waiting in
+`kevent`. After more than 400 seconds without test-log progress, the builder
+sends SIGINT to Vitest only. The wrapper returns 1. The test run is
+interrupted and incomplete, with no final case count or autonomous test
+completion. Node and Counting checks are not reached. This proves no
+specific stalled actor, causal interaction or stability result.
+
+Full outer time is 545.26 seconds, with 225.40 user and 72.75 system
+seconds, or 298.15 CPU seconds. The shared 18-core macOS arm64 machine's
+initial load is 1.74/1.45/1.56; dependencies have prior focused use and OS
+caches are uncontrolled. All 2,691 tracked input bytes and modes, head,
+tree and dependency stamp remain unchanged, with zero installs. Original
+logs, source snapshots, interruption receipt, sample and outer timing are
+retained. A preceding preparation attempt failed on sandbox `sysctl`
+before starting npm or any gate step; it is not a gate run.
+
+The unchanged two-file diagnostic completes naturally: 10 cases pass and
+3 fail with exact assertions. Both actual sends succeed, but their old
+layout pins expect 34 objects and 4,118 bytes; the revised shared layout
+actually has 27 objects and 3,789 bytes. A temporary logging-only diagnostic
+records the actual copy, pack, validation and transfer counters for both
+hosts, with the original assertions intact. The log is removed and the
+test restored before updating those pins. No unit price, cap or guard
+changes. The page's normal build regenerates its committed bundle from the
+integrated sources. Scope's test compiler and all 13 affected cases then
+pass, including expiry fencing. Their separate full outer time is 5.04
+seconds and 8.49 CPU seconds.
+
+One further unchanged-file diagnostic runs only the native transport
+witness. It passes naturally in 24.172 seconds, within its original
+30-second case deadline. Its full outer time is 28.58 seconds and 30.23
+CPU seconds. This isolated pass does not establish the original stall's
+cause or a successful whole gate. Its separate 100-second outer diagnostic
+watchdog is never used.
+
+The root config now offers an optional progress reporter, controlled only
+by `ARTROOM_TEST_PROGRESS`. It records each case's start and result, plus
+run completion, to a new external file. The existing page freshness case
+passes with an actual start, passed result and successful run-end record.
+The reporter changes no test, worker, assertion or deadline. A new gate on
+the repaired source is still required; the interrupted run remains intact.

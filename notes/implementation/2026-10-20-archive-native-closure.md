@@ -444,3 +444,54 @@ Room, Site and Directory report it at Directory entry 5; Rules reports it
 at Rules entry 2. The archive inventory records detached-text omissions;
 the test gives Replay no external text port. The missing-body result is
 preserved rather than silently satisfying it from the live test host.
+
+## Integrated closure acceptance
+
+Later planner decisions `066e49b3` and `d61549b0` settle the remaining
+anchor and omitted-text boundaries. The collector derives all exact
+unarchived Register and Membership references from exported bytes only,
+including fact copies and observation heads. It reads no private source
+journal or export-time live head. The installed Grow fixture needs seven
+exact references: Register 1, 2 and 3, and Membership 0, 4, 5 and 6.
+The caller supplies these anchors. They do not establish the private
+source's history, birth or authority; copied definition names and observed
+values remain explicit caller trust. Credential Membership journals and
+Register journals remain excluded from archive admission.
+
+Each omitted text records its digest, canonical retained-JSON UTF-8 byte
+count and first naming entry. There is no external text port. The exact
+qualification is: each text that the archive omits: its digest, its byte
+count and the first entry that names it; nothing shows that the bytes were
+the text its digest names, or that they were within the bound of their
+field. Already redacted text retains its tombstone behavior. A missing
+omission row is incomplete; a row unrelated to any entry is refused.
+Recorded conflicting sizes remain a mismatch.
+
+All five actual native exports (Room, Site, Directory16, Rules10 and
+Destination12) replay consistently with those stated anchors and
+omissions. Removing the needed Membership 4 anchor makes Rules entry 2
+incomplete; a wrong anchor hash mismatches. Existing code/data-cohort,
+credential refusal and ordinary-producer controls remain. The two actual
+omitted-text byte counts are independently observed as 4,998 and 45,750.
+No omitted text body is exported.
+
+The native export's 140 SHA-1 objects are independently hashed in Node and
+confirmed by Git, materialized as a local repository, cloned with actual
+`git clone --mirror --no-local`, checked with strict full `fsck`, and read
+from the clone with binary `cat-file`. The clone contains exactly the five
+journal refs and 140 reachable objects. The original export map is emptied
+before replay; all five complete reports from clone bytes equal the
+earlier consistent reports, including trust and omission statements.
+A compiling wrong-source control fails the unchanged positive assertion.
+This is a real local Git clone, not hosted provider or production custody
+acceptance.
+
+The integrated F1 implementation subsequently confirms all 37 native
+one-entry cohort passes within the original budgets, plus the scale and
+alarm witnesses recorded in the F1 report. Reviewed Main through
+`afe0c319` is integrated. The first combined gate is interrupted and
+incomplete; its precise failures and targeted repairs are recorded there.
+The next gate, complete exact-head review and guarded landing remain
+pending. Slice 9's production coordination, binding, credentials,
+deployment and hosted readbacks remain separate work, with deployment
+owned by planner.
