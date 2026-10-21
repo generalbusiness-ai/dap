@@ -1,6 +1,6 @@
 /** Internal selected-prefix layout only. No route, alarm, exporter,
  * certificate, provider/write token or history/replay verdict. */
-import type { Entry } from "@generalbusiness/dap-contract";
+import type { Entry, Head } from "@generalbusiness/dap-contract";
 import { DOMAINS } from "@generalbusiness/dap-contract";
 import { canonicalize, domainRetainedJSON, entryHash, isEntry, parseStrict, rawRetainedJSON, scopeIdOf, timeMs, utf8 } from "@generalbusiness/artroom-bytes";
 import { journalObjectClosure, type JournalClosure } from "./journal-closure.ts";
@@ -11,6 +11,7 @@ import { journalHead, journalManifest, manifestOfSelection, type JournalManifest
 import { JournalObjectReader, JournalObjects, journalFormat, journalId, type JournalFormat, type JournalObject, type JournalObjectSource } from "./journal-objects.ts";
 import { JOURNAL_SELECTION_BYTES, journalKeyName, journalSelection, sameJournalScope, type JournalEntrySelection, type JournalSelection } from "./journal-selection.ts";
 import { JournalLayoutRefusal, JournalWork, refuseJournal, type JournalBudget, type JournalCost, type JournalLayoutLimits, type JournalLayoutReason } from "./journal-work.ts";
+import { journalNamedInputCost, journalEntryRowsMetadata, journalOriginsMetadata, journalRetainedNameMetadata, journalSegmentReservation } from "./journal-pass-cost.ts";
 
 export interface JournalInputSource {
   /** Exact selected local position/key only. No head, enumeration, foreign
@@ -48,14 +49,14 @@ async function namedBytes(work: JournalWork, size: number, where: string, read: 
   // Reserve the bound before calling the source, including encoding,
   // hashing, canonical parsing and validation work. String length is an
   // early lower bound, so an oversized returned string is not encoded.
-  work.budget.spend({ calls: 1, inputWork: size * 8 });
+  work.budget.spend(journalNamedInputCost(size));
   const bytes = await work.budget.wait(read);
   if (bytes === null) return refuseJournal("missing-input", where);
   if (typeof bytes !== "string" || bytes.length > size || utf8(bytes).length !== size) return refuseJournal("input-mismatch", where);
   return bytes;
 }
-async function selectedEntries(selection: JournalSelection, input: JournalInputSource, work: JournalWork): Promise<readonly SelectedEntry[]> {
-  work.metadata(selection.entries.length * 128);
+export async function selectedEntries(selection: JournalSelection & { readonly after?: Head | null }, input: JournalInputSource, work: JournalWork): Promise<readonly SelectedEntry[]> {
+  work.metadata(journalEntryRowsMetadata(selection.entries.length));
   const rows: SelectedEntry[] = [];
   for (const descriptor of selection.entries) {
     const where = `entry:${descriptor.seq}`;
@@ -63,13 +64,13 @@ async function selectedEntries(selection: JournalSelection, input: JournalInputS
     let entry: unknown;
     try { entry = parseStrict(bytes); if (canonicalize(entry) !== bytes) return refuseJournal("input-mismatch", where); }
     catch { return refuseJournal("input-mismatch", where); }
-    if (!isEntry(entry) || entry.seq !== descriptor.seq || !sameJournalScope(entry.at, selection.at) || entryHash(entry) !== descriptor.hash || entry.prev !== (rows.at(-1)?.descriptor.hash ?? null)) return refuseJournal("input-mismatch", where);
+    if (!isEntry(entry) || entry.seq !== descriptor.seq || !sameJournalScope(entry.at, selection.at) || entryHash(entry) !== descriptor.hash || entry.prev !== (rows.at(-1)?.descriptor.hash ?? selection.after?.hash ?? null)) return refuseJournal("input-mismatch", where);
     if (descriptor.seq === 0) {
       if (entry.input.type !== "genesis" || scopeIdOf(entry.input.seed) !== entry.at.scope || entry.input.seed.kind !== entry.at.kind || entry.input.inc !== entry.at.inc) return refuseJournal("input-mismatch", where);
     } else if (entry.input.type === "genesis") return refuseJournal("input-mismatch", where);
     work.check(); rows.push({ descriptor, entry, bytes });
   }
-  work.metadata((selection.objects.reduce((n, row) => n + row.consumers.length, 0) + selection.omitted.reduce((n, row) => n + row.consumers.length, 0) + selection.ancestryUnwalked.length) * 32);
+  work.metadata(journalOriginsMetadata(selection.objects.reduce((n, row) => n + row.consumers.length, 0) + selection.omitted.reduce((n, row) => n + row.consumers.length, 0) + selection.ancestryUnwalked.length));
   const origins = [
     ...selection.objects.flatMap(row => row.consumers.map(c => c.origin)),
     ...selection.omitted.flatMap(row => row.consumers.map(c => c.origin)),
@@ -79,12 +80,12 @@ async function selectedEntries(selection: JournalSelection, input: JournalInputS
   // its actual native input variant, without running a dependency planner.
   for (const origin of origins) {
     work.check();
-    if (rows[origin.at.seq]?.entry.input.type !== origin.input) return refuseJournal("input-mismatch", `origin:${origin.at.seq}`);
+    if (rows[origin.at.seq - (selection.after ? selection.after.seq + 1 : 0)]?.entry.input.type !== origin.input) return refuseJournal("input-mismatch", `origin:${origin.at.seq}`);
   }
   const copies = new Map(selection.objects.filter(object => object.key.kind === "entry").map(object => [object.key.digest, object]));
   const bindings = new Set<string>();
   for (const [content, copy] of copies) for (const consumer of copy.consumers) {
-    const entry = rows[consumer.origin.at.seq]?.entry;
+    const entry = rows[consumer.origin.at.seq - (selection.after ? selection.after.seq + 1 : 0)]?.entry;
     if (!copy.foreign || !entry?.uses.some(use => use.content === content && canonicalize(use.fact) === canonicalize(copy.foreign!.fact))) return refuseJournal("input-mismatch", `foreign-use:${consumer.origin.at.seq}`);
     bindings.add(`${consumer.origin.at.seq}:${content}`);
   }
@@ -95,14 +96,14 @@ async function selectedEntries(selection: JournalSelection, input: JournalInputS
   }
   return rows;
 }
-async function selectedRetained(selection: JournalSelection, input: JournalInputSource, work: JournalWork): Promise<ReadonlyMap<string, JournalRetainedFile>> {
+export async function selectedRetained(selection: JournalSelection, input: JournalInputSource, work: JournalWork): Promise<ReadonlyMap<string, JournalRetainedFile>> {
   const rows = new Map<string, JournalRetainedFile>();
   for (const selected of selection.objects) {
     const key = selected.key, where = journalKeyName(key);
     // Each new native retained read, including a later reconstruction,
     // spends the same pass's attempt allowance. No cache bypass is used.
     work.budget.spend({ attempts: 1 });
-    work.metadata(where.length + 128);
+    work.metadata(journalRetainedNameMetadata(where.length));
     const requested = { ...key };
     const bytes = await namedBytes(work, selected.bytes, where, () => input.retained(requested, selected.bytes));
     const parsed = key.kind === "rule" || key.kind === "entry" ? rawRetainedJSON(key.digest, bytes)
@@ -113,16 +114,16 @@ async function selectedRetained(selection: JournalSelection, input: JournalInput
       if (!foreign || !isEntry(parsed) || !sameJournalScope(parsed.at, foreign.fact.at) || parsed.seq !== foreign.fact.seq || entryHash(parsed) !== foreign.fact.hash) return refuseJournal("input-mismatch", where);
       if (parsed.seq === 0 ? parsed.input.type !== "genesis" || parsed.prev !== null || parsed.input.seed.definition !== foreign.pin || parsed.input.inc !== parsed.at.inc || scopeIdOf(parsed.input.seed) !== parsed.at.scope || parsed.input.seed.kind !== parsed.at.kind : parsed.input.type === "genesis") return refuseJournal("input-mismatch", where);
     }
-    work.check(); work.metadata(where.length + 128);
+    work.check(); work.metadata(journalRetainedNameMetadata(where.length));
     rows.set(where, { key, data: utf8(bytes) });
   }
   return rows;
 }
 function segments(rows: readonly SelectedEntry[], work: JournalWork): readonly ArchiveSegment[] {
-  const size = rows.reduce((n, row) => n + row.descriptor.bytes, 0) + Math.max(0, rows.length - 1);
+  const cost = journalSegmentReservation(rows.length, rows.reduce((n, row) => n + row.descriptor.bytes, 0)), size = cost.outputWork;
   // Grouping owns a segment buffer before the object writer makes its own
   // copy. Reserve that work too, even for a repeated parent-prefix check.
-  work.spend({ outputWork: size }); work.input(size, 8); work.metadata(rows.length * 64);
+  work.spend({ outputWork: size }); work.input(cost.inputWork); work.metadata(cost.metadata);
   const out = archiveSegments(rows.map(row => ({ seq: row.descriptor.seq, bytes: row.bytes })), size);
   work.check(); return out;
 }

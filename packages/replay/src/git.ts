@@ -5,14 +5,14 @@ import type { FileHandle } from "node:fs/promises";
 import { join } from "node:path";
 import type { FactRef } from "@generalbusiness/dap-contract";
 import { isDigest, isFactRef, parseStrict, textDigest } from "@generalbusiness/artroom-bytes";
-import { readJournalArchive } from "@generalbusiness/artroom-git/journal-reader";
+import { readJournalRepositoryArchive } from "@generalbusiness/artroom-git/journal-reader";
 import { localJournalRepository, type JournalLocalOptions } from "@generalbusiness/artroom-git/journal-local";
 import { archiveSource, type ArchiveReadWork, type ArchiveSource, type ArchiveSourceOptions, type ArchiveTextPort } from "./archive.ts";
 
 export interface GitSourceOptions extends ArchiveSourceOptions { readonly local?: JournalLocalOptions }
 export function gitSource(directory: string, options: GitSourceOptions = {}): ArchiveSource {
   const repository = localJournalRepository(directory, options.local);
-  return archiveSource({ open: (scope, work) => readJournalArchive(repository, scope, work), settle: () => repository.settle?.() ?? Promise.resolve() }, options);
+  return archiveSource({ open: (scope, work) => readJournalRepositoryArchive(repository, scope, work), settle: () => repository.settle?.() ?? Promise.resolve() }, options);
 }
 
 export class ArchiveFileFailure extends Error {

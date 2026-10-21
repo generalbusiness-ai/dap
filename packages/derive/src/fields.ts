@@ -110,6 +110,9 @@ export function factsNamed(types: ActType["fields"], fields: Readonly<Record<str
   return [...named.values()];
 }
 
+/** Shared by byte selectors and native reference projection. */
+export const isDetachedTextField = (type: FieldType | undefined): boolean => !!(type?.type === "text" && type.detached);
+
 /**
  * The digest of each detached text that the given fields name (section
  * 6.2), once each, in the byte order of the field names. `given` is as an
@@ -121,7 +124,7 @@ export function textsNamed(types: ActType["fields"], given: Readonly<Record<stri
   const named = new Set<Digest>();
   for (const name of Object.keys(given ?? {}).sort(byteOrder)) {
     const [type, value] = [own(types, name), given![name]];
-    if (type?.type === "text" && type.detached && isDigest(value)) named.add(value);
+    if (isDetachedTextField(type) && isDigest(value)) named.add(value);
   }
   return [...named];
 }

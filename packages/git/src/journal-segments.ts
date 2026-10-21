@@ -10,6 +10,39 @@ const DIRECTORY_NAMES = 4096;
 export interface ArchiveLine { readonly seq: number; readonly bytes: string }
 export interface ArchiveSegment { readonly first: number; readonly last: number; readonly path: string; readonly bytes: Uint8Array }
 
+/** Scalar grouping only, not a claim about the bytes or their admission.
+ * Native callers reserve this fixed state before allocation. Failed adds
+ * leave the cursor unchanged so an already selected prefix can finish. */
+export class ArchiveSegmentCursor {
+  readonly #allowance: number;
+  #last: number | null = null;
+  #lines = 0;
+  #size = 0;
+  #total = 0;
+  #segments = 0;
+  constructor(allowance: number) {
+    if (!Number.isSafeInteger(allowance) || allowance < 0) throw new GitRefusal("too-large", "journal segment allowance");
+    this.#allowance = allowance;
+  }
+  get bytes(): number { return this.#total; }
+  get segmentBytes(): number { return this.#size; }
+  get segments(): number { return this.#segments; }
+  /** Returns the first position of a new segment, otherwise null. */
+  append(seq: number, bytes: number): number | null {
+    archiveSegmentPath(seq);
+    if (this.#last !== null && seq !== this.#last + 1) throw new GitRefusal("bad-path", "journal entry sequence");
+    if (!Number.isSafeInteger(bytes) || bytes <= 0 || bytes > ARCHIVE_OBJECT_BYTES) throw new GitRefusal("too-large", "journal entry line");
+    const starts = this.#lines === 0 || this.#lines === SEGMENT_LINES || this.#size + 1 + bytes > ARCHIVE_OBJECT_BYTES;
+    const addition = bytes + (starts ? 0 : 1);
+    if (addition > this.#allowance - this.#total) throw new GitRefusal("too-large", "journal segment allowance");
+    this.#lines = starts ? 1 : this.#lines + 1;
+    this.#size = starts ? bytes : this.#size + addition;
+    this.#total += addition; this.#last = seq;
+    if (starts) this.#segments++;
+    return starts ? seq : null;
+  }
+}
+
 /**
  * Group an already selected contiguous cohort. The caller supplies a total
  * output allowance. Canonical JSON objects are checked here; native entry
@@ -17,9 +50,9 @@ export interface ArchiveSegment { readonly first: number; readonly last: number;
  * later layout builder. LF separates lines; there is no trailing LF.
  */
 export function archiveSegments(lines: readonly ArchiveLine[], allowance: number): readonly ArchiveSegment[] {
-  if (!Number.isSafeInteger(allowance) || allowance < 0) throw new GitRefusal("too-large", "journal segment allowance");
+  const grouping = new ArchiveSegmentCursor(allowance);
   const segments: ArchiveSegment[] = [];
-  let total = 0, size = 0, first = 0, last = 0;
+  let size = 0, first = 0, last = 0;
   let parts: Uint8Array[] = [];
   const close = () => {
     if (parts.length === 0) return;
@@ -44,11 +77,8 @@ export function archiveSegments(lines: readonly ArchiveLine[], allowance: number
       if (value === null || typeof value !== "object" || Array.isArray(value) || canonicalize(value) !== line.bytes) throw new Error("noncanonical");
     } catch { throw new GitRefusal("bad-path", "journal entry bytes"); }
     const bytes = utf8(line.bytes);
-    if (bytes.length > ARCHIVE_OBJECT_BYTES) throw new GitRefusal("too-large", "journal entry line");
-    if (parts.length === SEGMENT_LINES || size + (parts.length > 0 ? 1 : 0) + bytes.length > ARCHIVE_OBJECT_BYTES) close();
+    if (grouping.append(line.seq, bytes.length) !== null) close();
     const addition = bytes.length + (parts.length > 0 ? 1 : 0);
-    if (addition > allowance - total) throw new GitRefusal("too-large", "journal segment allowance");
-    total += addition;
     if (parts.length === 0) first = line.seq;
     parts.push(bytes); size += addition; last = line.seq;
   }

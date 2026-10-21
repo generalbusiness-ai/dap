@@ -105,8 +105,11 @@ export function contentChecked(o: RulesObservation, states: ContentStates | null
 }
 
 /** The digests of the values that an observation names, which are kept apart from the entry (section 16.1, "The extents, in an observation of the rules"). */
+export function observationValueDigests(subject: RulesObservation["subject"] | undefined, content: { readonly asked: unknown; readonly extents?: Digest }): Digest[] {
+  return subject === "rules" && content.asked === "rules" && content.extents !== undefined ? [content.extents] : [];
+}
 export const namedBy = (o: ObservationUse["observation"]): Digest[] =>
-  ("subject" in o && o.subject === "rules" && o.content.asked === "rules" && o.content.extents !== undefined ? [o.content.extents] : []);
+  ("subject" in o && o.subject === "rules" ? observationValueDigests(o.subject, o.content) : []);
 
 /**
  * What the commit holds for the rows of one input, beside the observations

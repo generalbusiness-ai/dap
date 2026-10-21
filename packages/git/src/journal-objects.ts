@@ -3,6 +3,7 @@
 import { decodeGitText } from "./wire-text.ts";
 import { hex, sha1, sha256, utf8 } from "@generalbusiness/artroom-bytes";
 import { JournalWork, refuseJournal } from "./journal-work.ts";
+import { journalObjectReservation, journalResultMetadata, journalTreeRowMetadata } from "./journal-object-cost.ts";
 
 export type JournalFormat = "sha1" | "sha256";
 export type JournalObjectType = "blob" | "tree" | "commit";
@@ -10,6 +11,10 @@ export interface JournalObject { readonly id: string; readonly type: JournalObje
 export interface JournalObjectSource {
   /** limit zero is a metadata probe. Nonempty bodies must not be loaded. */
   object(id: string, limit: number): Promise<{ type: string; size: number; data: Uint8Array | null } | null>;
+  /** An isolated transport may lack metadata-only reads. The reader first
+   * reserves the whole explicit maximum, then this port may load one body.
+   * It never substitutes a closure fetch or an unbounded object request. */
+  boundedObject?(id: string, type: JournalObjectType, maximum: number): ReturnType<JournalObjectSource["object"]>;
 }
 export interface JournalTreeRow { readonly mode: "100644" | "40000"; readonly name: string; readonly id: string }
 export interface JournalCommit { readonly tree: string; readonly parent: string | null; readonly seconds: number }
@@ -72,10 +77,10 @@ export class JournalObjects {
   constructor(format: JournalFormat, work: JournalWork) { journalFormat(format); this.format = format; this.work = work; }
   #reserve(type: JournalObjectType, size: number): void {
     this.work.size(size);
-    const header = `${type} ${size}\0`;
-    this.work.spend({ objects: 1, outputWork: header.length + size });
-    this.work.metadata(256);
-    this.work.input(header.length + size, 3);
+    const cost = journalObjectReservation(type, size);
+    this.work.spend({ objects: 1, outputWork: cost.outputWork });
+    this.work.metadata(cost.metadata);
+    this.work.input(cost.inputWork);
   }
   make(type: JournalObjectType, input: Uint8Array): JournalObject {
     const size = byteCount(input);
@@ -99,7 +104,7 @@ export class JournalObjects {
     this.work.spend({ trees: 1, names: rows.length });
     if (rows.length > 4096) this.work.stop();
     // Reserve row metadata before cloning/sorting the caller's list.
-    this.work.metadata(rows.length * 512);
+    this.work.metadata(journalTreeRowMetadata(rows.length));
     const ordered = rows.map(row => {
       if (row.mode !== "100644" && row.mode !== "40000") refuseJournal("tree");
       name(row.name); journalId(this.format, row.id);
@@ -132,7 +137,7 @@ export class JournalObjects {
     return this.#keep("commit", utf8(body), body.length);
   }
   /** A result is exposed only by the caller after the complete build fence. */
-  objects(): readonly JournalObject[] { this.work.metadata(this.#objects.size * 64); return [...this.#objects.values()]; }
+  objects(): readonly JournalObject[] { this.work.metadata(journalResultMetadata(this.#objects.size)); return [...this.#objects.values()]; }
 }
 
 /** Reads exact named objects, with a metadata probe before reserving body
@@ -146,6 +151,21 @@ export class JournalObjectReader {
     journalId(this.format, id);
     this.work.maximumSize(maximum);
     this.work.spend({ objects: 1 });
+    if (this.source.boundedObject) {
+      this.work.budget.spend({ attempts: 1, calls: 1, metadata: 128, inputWork: maximum * 4 + 128 });
+      const got = await this.work.budget.wait(() => this.source.boundedObject!(id, type, maximum));
+      if (!got) return refuseJournal("missing-object");
+      const gotType = got.type, size = got.size;
+      if (gotType !== type || !Number.isSafeInteger(size) || size < 0 || Object.is(size, -0)) return refuseJournal("object-mismatch");
+      this.work.size(size);
+      if (size > maximum) return this.work.stop();
+      const data = got.data;
+      if (!(data instanceof Uint8Array) || byteCount(data) !== size) return refuseJournal("object-mismatch");
+      const body = ownedCopy(data, size);
+      if (hash(this.format, type, body) !== id) return refuseJournal("object-mismatch");
+      this.work.check();
+      return body;
+    }
     this.work.budget.spend({ attempts: 1, calls: 1, metadata: 128, inputWork: 128 });
     const probe = await this.work.budget.wait(() => this.source.object(id, 0));
     if (!probe) return refuseJournal("missing-object");

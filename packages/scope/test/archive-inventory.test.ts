@@ -9,7 +9,14 @@ import { canonicalize, digestBytes, entryHash, textDigest, utf8 } from "@general
 import type { OperationRules, ValidDefinition } from "@generalbusiness/dap-derive";
 import { MemorySource, verify } from "@generalbusiness/artroom-replay";
 import { variant } from "@generalbusiness/dap-derive/testing";
-import { ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
+import { ArchivePrefixStopped } from "../src/archive-prefix.ts";
+import { ArchiveScout, type ArchiveScoutFrame } from "../src/archive-scout.ts";
+import { ArchiveDeclarationPlan } from "../src/archive-declaration-plan.ts";
+import { ArchiveDeclarations } from "../src/archive-declarations.ts";
+import { archiveDefinitionPresenceForecast, ArchiveRetainedReader } from "../src/archive-retained.ts";
+import { recordArchiveCurrentDeclarationClosure, forecastArchiveDeclarationClosure, recordArchivePotentialDeclarationClosure, forecastArchivePotentialDeclarationClosure } from "../src/archive-declaration-scout.ts";
+import { ARCHIVE_BOUNDS, ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
+import { archivePrefixMetadata } from "../src/archive-prefix.ts";
 import { inventoryArchive, type ArchivePolicyRegistry, type ReviewedArchivePolicy } from "../src/archive-inventory.ts";
 import { definition, create, rita, type Lane } from "./fixtures-native.ts";
 
@@ -120,6 +127,255 @@ const leaf = (name: string, child?: Digest) => variant({
 async function keep(lane: Lane, definitions: readonly ValidDefinition[]) {
   await lane.inside(state => { for (const definition of definitions) state.storage.sql.exec("INSERT OR REPLACE INTO retained_input (kind, digest, bytes) VALUES ('definition', ?, ?)", definition.digest, canonicalize(definition.declared)); });
 }
+
+
+// Native SQLite and shared admission are real; declarations and review
+// policies remain this file's explicit TEST stand-ins.
+test("a complete declaration scout pays its own work and covers fresh and repeated native validation without payloads", async () => {
+  const child = leaf("scouted-child");
+  const parent = variant(base.declared, data => { data.acts["link"].sends.push({ create: { kind: "lane", definition: child.digest, fields: {}, result: {} } }); });
+  const lane = await create({}, {}, parent);
+  await keep(lane, [child]);
+  const result = await lane.inside(state => {
+    const budget = new ArchiveBudget(), calls: { query: string; key: unknown }[] = [];
+    const sql = { exec(query: string, ...args: (string | number | null | ArrayBuffer)[]) {
+      calls.push({ query, key: args[0] }); return state.storage.sql.exec(query, ...args);
+    } };
+    const policies = new Map([[parent.digest, policy(parent)], [child.digest, policy(child)]]);
+    const admission = new ArchiveDeclarations(new ArchiveRetainedReader(sql, budget), PROPOSED_BOUNDS, policies, new Set());
+    admission.root(parent.digest);
+    const footprint = recordArchiveCurrentDeclarationClosure(admission, parent.digest);
+    const quote = forecastArchiveDeclarationClosure(footprint, budget), scouted = budget.admitted();
+    const delta = (work: () => unknown) => {
+      const before = budget.admitted(); work(); const after = budget.admitted();
+      return Object.fromEntries(Object.keys(before).map(key => [key, after[key as keyof ArchiveCost] - before[key as keyof ArchiveCost]])) as ArchiveCost;
+    };
+    const repeated = delta(() => admission.walk(parent.digest));
+    const fresh = delta(() => new ArchiveDeclarations(new ArchiveRetainedReader(sql, budget), PROPOSED_BOUNDS, policies, new Set(), new Map(footprint.declarations.map(row => [row.digest, row.bytes]))).walk(parent.digest));
+    return { footprint, quote, scouted, repeated, fresh, final: budget.admitted(), calls };
+  });
+  expect(result.footprint.declarations.map(row => row.digest)).toEqual([parent.digest, child.digest]);
+  expect(result.scouted.attempts).toBe(4); // two real reads and two additional keyed size scouts
+  expect(result.scouted.nodes).toBe(2);
+  expect(result.repeated.nodes).toBe(0); expect(result.fresh.nodes).toBe(2);
+  for (const actual of [result.repeated, result.fresh]) {
+    for (const key of ["attempts", "calls", "metadata", "inputWork"] as const) expect(result.quote[key]).toBeGreaterThanOrEqual(actual[key]);
+    expect(actual.attempts).toBe(2); expect(actual.inputWork).toBeGreaterThan(0);
+  }
+  expect(result.final.inputWork).toBe(result.scouted.inputWork + result.repeated.inputWork + result.fresh.inputWork);
+  expect(entryReads(result.calls)).toEqual([]); expect(payloadReads(result.calls)).toEqual([]);
+  expect(Object.keys(result.footprint).sort()).toEqual(["declarations", "root"]);
+  expect(result.footprint.declarations.every(row => Object.keys(row).sort().join(",") === "bytes,digest,support")).toBe(true);
+  // A later native turn changes retained bytes. The old scalar quote must
+  // narrow the next real read before allocating that larger declaration.
+  await lane.inside(state => { state.storage.sql.exec("UPDATE retained_input SET bytes = bytes || ' ' WHERE kind = 'definition' AND digest = ?", parent.digest); });
+  const changed = await lane.inside(state => {
+    const budget = new ArchiveBudget(), bodies: string[] = [];
+    const sql = { exec(query: string, ...args: (string | number | null | ArrayBuffer)[]) {
+      if (query.startsWith("SELECT bytes FROM retained_input")) bodies.push(query);
+      return state.storage.sql.exec(query, ...args);
+    } };
+    const policies = new Map([[parent.digest, policy(parent)], [child.digest, policy(child)]]);
+    const sizes = new Map(result.footprint.declarations.map(row => [row.digest, row.bytes]));
+    const held = new ArchiveDeclarations(new ArchiveRetainedReader(sql, budget), PROPOSED_BOUNDS, policies, new Set(), sizes).walk(parent.digest);
+    let unscouted: string | null = null;
+    try { new ArchiveDeclarations(new ArchiveRetainedReader(sql, budget), PROPOSED_BOUNDS, policies, new Set(), new Map()).walk(parent.digest); }
+    catch (error) { if (!(error instanceof ArchivePrefixStopped)) throw error; unscouted = error.reason; }
+    return { complete: held.complete, bodies, unscouted };
+  });
+  expect(changed.complete).toBe(false); expect(changed.unscouted).toBe("mismatch");
+  expect(changed.bodies).toEqual([]);
+});
+
+// Explicit declaration requests exercise this scalar planning boundary.
+// Actual entry-dependency admission remains with full inventory; no offer
+// is claimed to name these roots merely because its position is used.
+test("declaration plans retain repeated native validation work and missing-candidate prefix sizes", async () => {
+  const child = leaf("planned-declaration-child");
+  const parent = variant(base.declared, data => { data.acts["link"].sends.push({ create: { kind: "lane", definition: child.digest, fields: {}, result: {} } }); });
+  const lane = await create({}, {}, parent); await keep(lane, [child]);
+  await lane.did(rita, "offer", { fields: { intent: 0 }, expected: { intent: 1 } });
+  const through = await lane.head(), missing = textDigest("TEST absent potential declaration");
+  const result = await lane.inside(state => {
+    const queries: string[] = [], budget = new ArchiveBudget();
+    const sql = { exec(query: string, ...args: (string | number | null | ArrayBuffer)[]) { queries.push(query); return state.storage.sql.exec(query, ...args); } };
+    const policies = new Map([[parent.digest, policy(parent)], [child.digest, policy(child)]]);
+    const prefix = archivePrefixMetadata(sql, lane.at, through, PROPOSED_BOUNDS, budget, new Set(policies.keys()));
+    const admission = new ArchiveDeclarations(new ArchiveRetainedReader(sql, budget), PROPOSED_BOUNDS, policies, new Set());
+    admission.root(parent.digest);
+    const root = recordArchiveCurrentDeclarationClosure(admission, parent.digest);
+    const plan = new ArchiveDeclarationPlan(0, root, budget);
+    plan.append(prefix.positions[0]!, []);
+    const repeated = recordArchivePotentialDeclarationClosure(admission, parent.digest);
+    const absent = recordArchivePotentialDeclarationClosure(admission, missing);
+    plan.append(prefix.positions[1]!, [repeated, absent]);
+    const scouted = budget.admitted(), first = prefix.positions[0]!, beforeMap = budget.admitted();
+    const oldSizes = plan.sizes({ seq: first.seq, hash: first.hash }), afterMap = budget.admitted();
+    expect(oldSizes.size).toBe(2); expect(oldSizes.has(missing)).toBe(false);
+    const sizes = plan.sizes(through);
+    expect(sizes.size).toBe(3); expect(sizes.get(missing)).toBeNull();
+    const fresh = new ArchiveDeclarations(new ArchiveRetainedReader(sql, budget), PROPOSED_BOUNDS, policies, new Set(), sizes);
+    const rootQuote = plan.quote({ seq: first.seq, hash: first.hash }), fullQuote = plan.quote(through);
+    const before = budget.admitted(); fresh.root(parent.digest); const afterRoot = budget.admitted();
+    for (const key of Object.keys(rootQuote.work) as (keyof typeof rootQuote.work)[]) expect(rootQuote.work[key]).toBeGreaterThanOrEqual(afterRoot[key] - before[key]);
+    fresh.walk(parent.digest); expect(fresh.walk(missing).complete).toBe(false); const after = budget.admitted();
+    for (const key of Object.keys(fullQuote.work) as (keyof typeof fullQuote.work)[]) expect(fullQuote.work[key]).toBeGreaterThanOrEqual(after[key] - before[key]);
+    expect(fullQuote.work.attempts).toBe(5); expect(rootQuote.work.attempts).toBe(2);
+    expect(rootQuote.declarations).toEqual([parent.digest, child.digest]);
+    expect(fullQuote.declarations).toEqual([parent.digest, child.digest, missing]);
+    const handoff = plan.handoffCost();
+    for (const key of Object.keys(handoff) as (keyof ArchiveCost)[]) expect(afterMap[key] - beforeMap[key]).toBe(handoff[key]);
+    return { scouted, final: budget.admitted(), queries, rootQuote, fullQuote };
+  });
+  expect(result.scouted.nodes).toBe(3); expect(result.final.nodes).toBe(6);
+  expect(result.queries.filter(query => query.startsWith("SELECT bytes FROM entry") || query.startsWith("SELECT bytes FROM retained_value"))).toEqual([]);
+});
+
+// Invariant: actual scalar scouting across Native turns grants no body
+// admission, and its quote covers a fresh, byte-compared whole inventory.
+test("Native scout resumes on a fresh port and re-admits the whole selected prefix on its original ledger", async () => {
+  const lane = await create({}, {}, base), body = "scouted detached text", digest = textDigest(body);
+  expect(await lane.stub.submit(lane.intent(rita, "remark", { on: 0, fields: { text: digest } }), lane.grants(), { texts: [body] })).toMatchObject({ answer: "accepted" });
+  const through = await lane.head(), budget = new ArchiveBudget(), queries: string[] = [];
+  let closed!: ArchiveScoutFrame, scout!: ArchiveScout, oldCalls = 0, fresh = false;
+  await lane.inside(state => {
+    const sql = { exec(query: string, ...args: (string | number | null | ArrayBuffer)[]) {
+      if (query.startsWith("SELECT bytes FROM retained_input") && args[0] !== "definition") return expect.fail("Scout cannot read retained copy/rule/snapshot bodies.");
+      oldCalls++; queries.push(query); return state.storage.sql.exec(query, ...args);
+    } };
+    closed = ArchiveScout.open(sql, lane.at, through, null, PROPOSED_BOUNDS, registry, budget);
+    const first = closed.next(); expect(first.kind).toBe("position");
+    scout = closed.close(); expect(() => closed.next()).toThrow("archive-unavailable");
+  });
+  const old = oldCalls, spent = budget.admitted();
+  // A real commit in the gap changes the live head, outside the fixed cutoff.
+  await lane.did(rita, "offer", { fields: { intent: 0 }, expected: { intent: 1 } });
+  const result = await lane.inside(state => {
+    const sql = { exec(query: string, ...args: (string | number | null | ArrayBuffer)[]) {
+      if (!fresh && query.startsWith("SELECT bytes FROM retained_input") && args[0] !== "definition") return expect.fail("Scout cannot read retained copy/rule/snapshot bodies.");
+      queries.push(query); return state.storage.sql.exec(query, ...args);
+    }, transaction: <T>(work: () => T) => state.storage.transactionSync(work) };
+    const frame = scout.resume(sql); expect(() => scout.resume(sql)).toThrow("archive-unavailable");
+    const second = frame.next(); expect(second.kind).toBe("position");
+    if (second.kind !== "position") return expect.fail("Original second position must fit.");
+    expect(second.position.seq).toBe(through.seq);
+    expect(second.measurements.find(row => row.plan.dependency.mode === "text")?.textBytes).toBeGreaterThan(0);
+    expect(frame.next()).toEqual({ kind: "end" }); frame.close();
+    expect(queries.filter(query => query.startsWith("SELECT bytes FROM entry") || query.startsWith("SELECT bytes FROM retained_value") || query.startsWith("SELECT bytes FROM retained_input") && !query.includes("kind = ?"))).toEqual([]);
+    const cost = scout.inventoryCost(through), constraints = scout.select(through), before = budget.admitted();
+    fresh = true;
+    const inventory = inventoryArchive(sql, lane.at, through, PROPOSED_BOUNDS, registry, budget, undefined, null, constraints.forecast, constraints.declarationSizes, constraints.expectedCopies, constraints.retainedSizes);
+    expect(inventory.ok).toBe(true); if (!inventory.ok) return expect.fail(inventory.reason);
+    const after = budget.admitted();
+    for (const key of Object.keys(cost) as (keyof ArchiveCost)[]) expect(cost[key]).toBeGreaterThanOrEqual(after[key] - before[key]);
+    expect(inventory.inventory.entries.map(position => position.seq)).toEqual([0, through.seq]);
+    expect(inventory.inventory.omittedTexts.map(text => text.key.digest)).toEqual([digest]);
+    expect(() => scout.select(through)).toThrow("archive-unavailable");
+    return { before, after };
+  });
+  expect(oldCalls).toBe(old); expect(result.after.inputWork).toBeGreaterThan(spent.inputWork);
+  expect(result.after.entries).toBe(4); // Two scouted, then two freshly admitted.
+});
+
+test("Native scout preserves an earlier whole prefix after a refused lookahead debit", async () => {
+  const lane = await create({}, {}, base);
+  await lane.did(rita, "offer", { fields: { intent: 0 }, expected: { intent: 1 } });
+  expect(await lane.stub.submit(lane.intent(rita, "remark", { on: 0, fields: { text: textDigest("later unselected entry") } }), lane.grants(), { texts: ["later unselected entry"] })).toMatchObject({ answer: "accepted" });
+  const head = await lane.head();
+  await lane.inside(state => {
+    const budget = new ArchiveBudget(), queries: string[] = [];
+    const sql = { exec(query: string, ...args: (string | number | null | ArrayBuffer)[]) { queries.push(query); return state.storage.sql.exec(query, ...args); },
+      transaction: <T>(work: () => T) => state.storage.transactionSync(work) };
+    const frame = ArchiveScout.open(sql, lane.at, head, null, PROPOSED_BOUNDS, registry, budget);
+    expect(frame.next().kind).toBe("position"); const second = frame.next();
+    if (second.kind !== "position") return expect.fail("Native second entry must fit.");
+    const through = { seq: second.position.seq, hash: second.position.hash }, forecast = frame.scout.inventoryCost(through);
+    const before = budget.admitted(), calls = queries.length;
+    // Leave exactly one scalar position query. Its debit remains spent;
+    // the following header debit refuses before Native JSON/SQL work.
+    expect(frame.next({ metadata: ARCHIVE_BOUNDS.metadata - before.metadata - 192 })).toEqual({ kind: "limited" });
+    const after = budget.admitted(); expect(after.metadata - before.metadata).toBe(192);
+    expect(after.entries - before.entries).toBe(1); expect(queries.length - calls).toBe(1);
+    expect(() => frame.next()).toThrow("archive-unavailable");
+    const scout = frame.close(), constraints = scout.select(through), beforeFresh = budget.admitted();
+    const selected = inventoryArchive(sql, lane.at, through, PROPOSED_BOUNDS, registry, budget, undefined, null,
+      constraints.forecast, constraints.declarationSizes, constraints.expectedCopies, constraints.retainedSizes);
+    expect(selected.ok).toBe(true); if (!selected.ok) return expect.fail(selected.reason);
+    const complete = budget.admitted();
+    for (const key of Object.keys(forecast) as (keyof ArchiveCost)[]) expect(forecast[key]).toBeGreaterThanOrEqual(complete[key] - beforeFresh[key]);
+    expect(selected.inventory.entries.map(entry => entry.seq)).toEqual([0, 1]);
+    expect(complete.entries).toBe(5); // Discarded third scout is never refunded.
+  });
+});
+
+test("Native scout size fences refuse changed text omission evidence before publishing inventory", async () => {
+  const lane = await create({}, {}, base), body = "retained omission evidence", digest = textDigest(body);
+  expect(await lane.stub.submit(lane.intent(rita, "remark", { on: 0, fields: { text: digest } }), lane.grants(), { texts: [body] })).toMatchObject({ answer: "accepted" });
+  const through = await lane.head();
+  await lane.inside(state => {
+    const budget = new ArchiveBudget(), sql = { exec: state.storage.sql.exec.bind(state.storage.sql), transaction: <T>(work: () => T) => state.storage.transactionSync(work) };
+    const frame = ArchiveScout.open(sql, lane.at, through, null, PROPOSED_BOUNDS, registry, budget);
+    expect(frame.next().kind).toBe("position"); expect(frame.next().kind).toBe("position");
+    const scout = frame.close(), constraints = scout.select(through);
+    try {
+      // Restored negative only. No Native redaction/tombstone is invented.
+      state.storage.sql.exec("DELETE FROM retained_input WHERE kind = 'text' AND digest = ?", digest);
+      const result = inventoryArchive(sql, lane.at, through, PROPOSED_BOUNDS, registry, budget, undefined, null,
+        constraints.forecast, constraints.declarationSizes, constraints.expectedCopies, constraints.retainedSizes);
+      expect(result).toEqual({ ok: false, reason: "mismatch" });
+    } finally { state.storage.sql.exec("INSERT INTO retained_input (kind, digest, bytes) VALUES ('text', ?, ?)", digest, canonicalize(body)); }
+  });
+});
+
+test("missing declaration probes retain their distinct native costs and refuse newly present bodies after a native turn", async () => {
+  const child = leaf("missing-scout-child");
+  const parent = variant(base.declared, data => { data.acts["link"].sends.push({ create: { kind: "lane", definition: child.digest, fields: {}, result: {} } }); });
+  const lane = await create({}, {}, parent);
+  const results = [];
+  for (const covered of [true, false]) {
+    const result = await lane.inside(state => {
+      const budget = new ArchiveBudget(), sql = state.storage.sql;
+      const policies = new Map([[parent.digest, policy(parent)], ...(covered ? [[child.digest, policy(child)] as const] : [])]);
+      const admission = new ArchiveDeclarations(new ArchiveRetainedReader(sql, budget), PROPOSED_BOUNDS, policies, new Set());
+      const footprint = recordArchivePotentialDeclarationClosure(admission, parent.digest);
+      const quote = forecastArchivePotentialDeclarationClosure(footprint, budget);
+      const sizes = new Map(footprint.requests.map(row => [row.digest, row.bytes]));
+      const before = budget.admitted();
+      const fresh = new ArchiveDeclarations(new ArchiveRetainedReader(sql, budget), PROPOSED_BOUNDS, policies, new Set(), sizes).walk(parent.digest);
+      const after = budget.admitted();
+      const actual = Object.fromEntries(Object.keys(before).map(key => [key, after[key as keyof ArchiveCost] - before[key as keyof ArchiveCost]])) as ArchiveCost;
+      const reader = new ArchiveRetainedReader(sql, budget), presenceBefore = budget.admitted();
+      const present = reader.definitionPresent(child.digest), presenceAfter = budget.admitted();
+      const presence = Object.fromEntries(Object.keys(presenceBefore).map(key => [key, presenceAfter[key as keyof ArchiveCost] - presenceBefore[key as keyof ArchiveCost]])) as ArchiveCost;
+      return { footprint, quote, actual, freshComplete: fresh.complete, present, presence };
+    });
+    expect(result.footprint.complete).toBe(false); expect(result.freshComplete).toBe(false);
+    expect(result.footprint.requests[1]).toMatchObject({ digest: child.digest, reviewed: covered, bytes: null, support: null });
+    for (const key of ["attempts", "calls", "metadata", "inputWork"] as const) expect(result.quote[key]).toBeGreaterThanOrEqual(result.actual[key]);
+    expect(result.actual.nodes).toBe(2); expect(result.present).toBe(false);
+    expect(result.presence).toEqual({ entries: 0, attempts: 1, nodes: 0, calls: 1, metadata: 32, inputWork: 288 });
+    expect(archiveDefinitionPresenceForecast()).toEqual({ attempts: 1, calls: 1, metadata: 32, inputWork: 288 });
+    results.push({ covered, footprint: result.footprint });
+  }
+  await keep(lane, [child]); // A later native turn repairs the formerly missing declaration.
+  for (const { covered, footprint } of results) {
+    const repaired = await lane.inside(state => {
+      const budget = new ArchiveBudget(), bodies: unknown[] = [];
+      const sql = { exec(query: string, ...args: (string | number | null | ArrayBuffer)[]) {
+        if (query.startsWith("SELECT bytes FROM retained_input")) bodies.push(args[1]);
+        return state.storage.sql.exec(query, ...args);
+      } };
+      const policies = new Map([[parent.digest, policy(parent)], ...(covered ? [[child.digest, policy(child)] as const] : [])]);
+      const sizes = new Map(footprint.requests.map(row => [row.digest, row.bytes]));
+      let reason: string | null = null;
+      try { new ArchiveDeclarations(new ArchiveRetainedReader(sql, budget), PROPOSED_BOUNDS, policies, new Set(), sizes).walk(parent.digest); }
+      catch (error) { if (!(error instanceof ArchivePrefixStopped)) throw error; reason = error.reason; }
+      return { reason, bodies };
+    });
+    expect(repaired.reason).toBe(covered ? "mismatch" : "unsupported-archive-cohort");
+    expect(repaired.bodies).toEqual([parent.digest]);
+  }
+});
 
 test("archive-only closure requires a missing unused child; later bytes complete the same cutoff while ordinary replay and later unrelated inputs remain unchanged", async () => {
   const child = leaf("late-child");

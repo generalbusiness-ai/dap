@@ -1,0 +1,1232 @@
+# Incremental archive passes
+
+Requests `dea67816` (F1) and `4fb21172` (9a); integrated builder promise
+`33d11d65`. The current branch combines the incremental writer and native
+admission work, including decisions `066e49b3`, `d61549b0` and `f651f6c3`.
+It is based on Main `0de1f52a`. Demo slice 9 wiring and deployment remain
+separate.
+
+At this pre-gate checkpoint, implementation and focused native acceptance
+checks are complete. The gate at `e21b9d39` passes all Vitest cases, including
+the clock repair, then stops on two Node package-boundary checks. The
+cross-package witnesses now belong to the Replay test boundary; the final
+focused checks and the next gate are reported separately in Gitseq against
+their exact commits. This note preserves the preceding attempts. There is
+no formal review, landing or deployment claim at this checkpoint. Host,
+policy, authority and device answers in these checks are explicit TEST
+inputs.
+
+Current v2 paths have five two-digit directory groups, then a twelve-digit
+first position. Each pass owns its manifest, segments and newly written
+retained files. Earlier files keep their paths and object IDs; only the
+head changes. Each numeric directory has at most 100 names and each pass
+owner directory has at most 4,096. The original archive budgets remain.
+
+## Historical foundation checkpoint
+
+The following foundation notes preserve the earlier implementation and
+its checks. Their three-group layout and pending-work statements are
+superseded by the later checkpoints and the current status above.
+
+The initial v2 paths used three groups of three digits and a twelve-digit
+position. The tree writer read and rewrote the paths it changed, retaining
+other edges by object ID, without inspecting old pass manifests or payloads.
+
+The v2 selection decoder keeps the original per-pass ceilings. It adds an
+explicit previous receipt and each retained key's original pass. The v1
+decoder remains separate and refuses these extensions. The v2 writer
+checks the parent's head against the receipt and checks the first new
+entry against that receipt's hash. It reads only its new entry interval
+and the retained bodies that it writes in this pass. The common entry
+and retained-byte checks also serve the original v1 writer.
+
+## Historical foundation checks
+
+All attempts preserve full physical input snapshots, modes, original
+logs and process exits. Dependencies are owned physical files with 32
+contained relative links; preparation copied 5,499 files, verified 2,618
+Main source files and installed nothing. The shared macOS arm64 host and
+OS caches are uncontrolled; each receipt records its observed load.
+
+- Tree attempt 1 passed both Git compilers, then stopped because a legal
+  1,000-name tree exceeded the new helper's initial 40 KiB read bound:
+  4.572434916 wall seconds, 4.843787 child CPU seconds. The byte calculation
+  now covers 1,000 maximal legal names and SHA-256 IDs. The native pass
+  budgets and 1,000-name directory bound remain unchanged.
+- Tree attempt 2 passed both compilers and one mechanical witness after
+  10,000 passes and 4,608 retained files: 31.648205167 wall seconds,
+  34.196295 child CPU seconds. It reads only tree objects, keeps the earlier
+  retained path and refuses a replacement. It uses stand-in file bodies,
+  not native confirmations.
+- The layout attempt passed both compilers, the new 10,000-entry witness
+  and one existing v1 layout witness: 3.320016750 wall seconds, 4.767645
+  child CPU seconds. Three v2 commits cover intervals 0–4095, 4096–8191 and
+  8192–9999. Each reads only its new entries, preserves every earlier file
+  except the head and passes real Git `fsck`. Selections and judgments are
+  synthetic; this is not offline replay acceptance.
+- One receipt-chain control passed the fixed witness, removed that one
+  comparison and failed by assertion, then restored all source bytes,
+  modes and the lock stamp: 6.485900916 wall seconds, 7.348134 child CPU
+  seconds. The original verbose failing log is preserved at 7,621,186
+  bytes. No mutation sweep or whole-suite repeat was run.
+
+## Work remaining at the foundation checkpoint
+
+Replace the writer's whole-parent provider read with bounded object reads
+and verify unchanged parent edges at send. Implement v1 conversion, then
+run the commissioned native witnesses and the gate once before review.
+The large-history driver and density-aware cutoff remain to be connected.
+Planner decision `066e49b3` now answers the separate 9a observation-head
+finding; that branch still needs its positive replay check.
+
+## Complete clone reader
+
+The v2 reader checks the complete pass tiling, canonical segment boundaries,
+the chain across passes and the original pass of every retained file. Each
+pass must carry its own foreign-source basis. Every file must be listed;
+extra or misplaced files refuse the clone. Its default total limit is
+1,000,000 entries. The reader's tree counters follow that explicit total
+limit, while native writers keep their original per-pass limits. All reads
+still spend the caller's one budget and deadline.
+
+The `gitSource` router resolves the ref once, inspects two bounded trees and
+pins that immutable commit for its selected reader. It makes no fallback
+between layout versions. The original v1 reader's checks are unchanged.
+
+- Reader attempt 1 passed both Git compilers and the 10,000-entry portable
+  reader/A2 integrity witness: 4.954823458 wall seconds, 5.729255 child CPU.
+- Attempt 2 passed four Git and Replay compiler configurations and eight
+  cases over the v2 writer/reader and existing disconnected v1 clone file:
+  17.305623666 wall seconds, 22.587915 child CPU. The actual local
+  `gitSource` reads all 10,000 entries and A2 integrity reports `consistent`.
+  A configured 9,999-entry reader limit refuses that archive.
+- The corruption fixture's first two attempts passed the valid two-pass
+  archive but stopped on bare-repository index commands before reaching
+  malformed inputs. Their natural failures remain preserved. Direct Git
+  tree-object edits replace those index commands.
+- The corrected fixture passed all nine commissioned structural variants:
+  gap, overlap, unlisted retained file, future retained pass, absent file in
+  the named pass, missing copied-fact source basis, wrong directory, position
+  overflow and broken cross-pass chain. It took 8.895107709 wall seconds,
+  8.455574 child CPU.
+- An additional malformed-entry-JSON witness failed by assertion on the
+  pre-fix reader: it reported `unavailable`, where corrupt bytes require
+  `mismatch`. After correction, that witness and all nine structural
+  variants pass: 9.737741291 wall seconds, 9.115754 child CPU. The baseline
+  and fixed attempts each preserve all inputs and their original exits.
+
+These are integrity and corruption checks over synthetic entry judgments
+and real Git objects. They do not establish native replay or confirmation,
+production export permission, provider behavior or deployment readiness.
+
+## Native interval and confirmation
+
+The native inventory now has a separate v2 interval mode. After a confirmed
+receipt it uses the stored append-derived pin and scope metadata, starts at
+the next position and checks the first new entry's previous hash against the
+receipt. It does not query the old genesis entry. V1 still starts at genesis.
+Reconstruction decodes the marked interval and retained-pass references;
+it does not inventory today's entries or retained set.
+
+Both retained tables gain a nullable `pass` column. Existing schemas migrate
+without changing folded state. Each lookup uses the exact primary key and a
+fixed metadata reservation. Confirmation updates only the new pass's keys,
+in the same native transaction as the archive receipt. A reused key keeps
+its original pass. V2 receipts cannot return to v1. The bookkeeping permits
+the same-cutoff v1-to-v2 confirmation, but the actual conversion builder is
+not implemented yet.
+
+The Git object reader also has an explicit bounded-body port for isolated
+transports that cannot probe metadata alone. It reserves the full maximum
+before the one read, validates the returned size/type/hash and owns its
+bytes. The existing metadata-first port is unchanged.
+
+- The bounded-body owning check passed both Git compilers and the existing
+  strengthened budget witness: 1.243210292 wall seconds, 2.111053 child CPU.
+  A single removed-reservation control passed fixed code, failed by
+  assertion and restored all bytes, modes and the lock stamp: 2.339820042
+  wall seconds, 3.117805 child CPU. The later native owning check also
+  verifies the witness after its assertion was narrowed to the required
+  reservation lower bound.
+- Native bookkeeping passed four Git/Scope compilers and four focused
+  cases: 6.611932875 wall seconds, 10.207228 child CPU. The existing row
+  witness now simulates old schemas, checks unchanged folded state, forces
+  a receipt-save failure after key updates and proves atomic rollback.
+- The strengthened confirmation witness also checks reused and new keys,
+  repository conflict, restart persistence and refusal to return to v1.
+  Removing the confirmation updates fails by assertion; fixed code passes
+  and the control restores all inputs: 9.117292542 wall seconds, 14.399880
+  child CPU.
+- Native interval inventory and exact reconstruction pass alongside one
+  existing v1 reconstruction case: 5.401619416 wall seconds, 9.815736 child
+  CPU. A later turn and eviction do not alter the marked commit. Its query
+  port refuses every old entry read, including a genesis-hash lookup.
+  Forcing that old lookup fails by assertion, with fixed and mutant inputs
+  preserved and restored: 9.004768083 wall seconds, 14.505001 child CPU.
+
+The SQLite storage, turns, transaction and restart are real. The policy,
+authority, component confirmations and conversion metadata in these small
+witnesses are explicit TEST stand-ins. No provider runs, no actual v1
+conversion is built, and the commissioned 10,000-entry and 10,000-confirmed-
+pass native scenarios remain unrun. Every attempt used zero installs and
+kept source, modes and lock stamp exact after execution.
+
+## V1 conversion and the 512-key witness boundary
+
+`convertJournalArchiveV1` now re-admits the bounded local prefix of a
+confirmed v1 receipt. It reads only the old commit object. It regenerates
+the complete canonical v1 tree, including the original manifest parent,
+omissions and S2b basis, and requires its ID to equal that commit's tree.
+This binds every old file and byte without fetching old payloads or Git
+ancestry. It then writes exactly those segment and retained bytes under
+v2 paths, with the old commit as parent and the same cutoff. Conversion
+adds no native journal entry. Both constructions spend the original budget.
+
+Native `planArchiveConversion` refuses an outstanding v1 attempt. A marked
+conversion rebuilds from its stored selection after eviction and later
+native turns. Its confirmation sets the written keys' pass to zero in the
+same native transaction as the v2 receipt. A later v2 pass uses that receipt
+and those original retained paths. This is a tested component boundary;
+the asynchronous driver and actual provider are still not wired to it.
+
+| Original attempt | Actual result | Wall seconds | Child CPU seconds |
+| --- | --- | ---: | ---: |
+| `53607`, Git conversion v1 | Compilers pass; positive conversion passes; corrupt-parent negative used an unreserved test budget and fails with `input` | 2.893891709 | 3.372054 |
+| `18701`, Git conversion v2 | Compilers and conversion/append/integrity case pass after fixing the test budget | 3.711792875 | 4.113436 |
+| `32388`, native conversion | Both Scope compilers and two native cases pass: conversion/restart/confirmation and existing marked-interval reconstruction | 5.203660292 | 8.525980 |
+| `98143`, one tree-binding control | Outer 0; fixed 0; missing-comparison mutant fails at direct corrupt-parent assertion; all source restored | 7.610860833 | 9.441573 |
+| `83744`, 512-key diagnostic | Outer 0; expected child 1, direct acceptance assertion fails with `limit`; all original source restored | 2.154997791 | 3.150489 |
+
+Each ordinary/control phase captures 2,631 complete source files with modes.
+The temporary 512-key diagnostic captures 2,632, including its diagnostic
+test, and then removes that temporary test. All original source bytes and
+modes and the dependency lock stamp remain exact, with zero installs.
+Each input receipt records machine, tools and load; OS caches are uncontrolled.
+The measurements are separate attempts, not one gate. The Git conversion
+case uses actual local Git, strict fsck and the v2 reader, with synthetic
+admitted selections. The native cases use actual SQLite, native turns and
+eviction, with TEST policy/authority/manual confirmation. No real provider,
+10,000 confirmed native passes, deployed closure or complete F1 acceptance
+is claimed.
+
+The 512-key diagnostic exposes a contract conflict before any accounting
+change. The unchanged original allowance is 512 attempts for the whole pass.
+Inventory's retained reader spends one attempt per key, including cache
+hits and probes. `archiveInput.entry` also spends an attempt per native
+entry; layout spends another per selected retained input, and the native
+retained port spends an attempt again. Therefore a pass cannot write 512
+new keys inside that allowance. The diagnostic understates the full native
+cost: one synthetic genesis, 512 small valid rule bodies, only the inventory's
+512 minimum debits reserved, and a synthetic input port charging no native
+read attempts. `buildJournalPass` still refuses `limit` at its first retained
+attempt. Its measured used counters are attempts 512, entries 1, calls 1,
+nodes 0, metadata 898,133 and input-work 9,123,801. The temporary test's
+expectation remains acceptance, and its direct assertion is preserved as a
+failure, not recast as a passing witness. No original cap or cache debit
+was changed. Witness 2 needs a planner decision; other integration can
+continue within the existing counters.
+
+## Driver, exact transport and append validation
+
+The driver now writes v2 from its first pass. It selects a contiguous new
+interval from scalar size metadata, with no entry JSON or old-prefix read.
+Its current conservative cutoff is at most 128 entries or 128 KiB of body
+bytes, with a single larger first entry left to normal admission. These are
+lower scheduling limits inside the unchanged 4,096-entry and original work
+ceilings. Inventory still performs full privacy admission; cutoff sizing is
+no permission or prepaid body read. A position above the twelve-digit
+layout bound reports `limit`.
+
+After a confirmed v2 receipt, both pin loading and inventory avoid entry
+zero. Pending attempts rebuild from their exact stored selection. A pending
+v1 attempt follows its original rules first. Its confirmation schedules a
+separate same-cutoff v1 conversion even if no new entry arrived. Only after
+that v2 receipt does a new incremental interval follow. All receipt, retry,
+ref read-back, credential and native-turn fences remain in place.
+
+The parent port reads exact objects rather than a complete old closure.
+Actual fixture adapters use explicit isolated upload-pack negotiation with
+no closure fallback. The original pass allowance reserves bounded wire work
+before identity/HTTP I/O. Fixed root tree paths now reserve their finite
+name grammar, rather than a thousand maximal names; larger tree paths keep
+their legal bounds. No archive cap or whole-pass attempt debit increased.
+
+A v2 append's send validator compares hash-checked old and new tree edges.
+An old edge may remain unread only at the same path, mode and ID. Every
+changed edge needs its supplied, hash-checked object. No old file except
+head.json may change, and no old edge may disappear. It takes no arbitrary
+caller stop set or complete-closure certificate. Initial v2 and conversion
+sends still use the generic full-new-closure send. Generic destination
+sends keep their original rule. Credential/ref/incarnation binding and the
+final smart-HTTP send fence apply to both paths.
+
+| Original attempt | Actual result | Wall seconds | Child CPU seconds |
+| --- | --- | ---: | ---: |
+| `53734`, append edges | Both Git compilers and one exact-parent-edge case pass, including missing new body and overwritten old manifest refusals | 2.988090917 | 3.393511 |
+| `63423`, bounded provider | Four compilers, two Git cases (including changed path maxima after 10,000 mechanical passes) and two native adapter read cases pass | 36.307991917 | 43.611017 |
+| `54446`, append adapters | Both Scope compilers and all twelve owning adapter cases pass, including native-body append send and expiry fence | 4.975032083 | 8.544444 |
+| `21371`, native driver | Both Scope compilers and eleven driver cases pass, including 10,000 actual checkpoint entries and replay | 11.421463500 | 15.200512 |
+| `77230`, v1 handoff | Test compiler and the new pending-v1/confirmation/conversion/v2 case pass | 4.567422166 | 7.502227 |
+| `30461`, old-path control | Fixed 0; omitted old-file guard causes the direct overwritten-manifest assertion to fail; original source restored | 6.882776084 | 8.650130 |
+| `59647`, wire-work control | Fixed 0; zeroed work reservation makes the direct pre-I/O limit assertion fail; original source restored | 10.747915541 | 18.534680 |
+| `80089`, final classification | Source compiler passes after classifying an overlarge cutoff position as `limit`; compiler only | 0.613076458 | 1.133638 |
+
+Timing qualification for this section: the helper's elapsed window starts
+after its initial source snapshot. It includes command-boundary unchanged
+checks, commands and final checks, but excludes initial snapshot creation.
+Its child CPU counter excludes the Python helper's own work. These are
+phase-window elapsed and child CPU figures; full outer elapsed and total CPU
+were not measured. The conversion-section helper figures have the same
+boundary. Future acceptance runs must measure the complete outer invocation.
+The closed data view predates this clarification; its original receipts
+remain unchanged and this paragraph corrects their interpretation.
+
+These independent attempts preserve full physical source snapshots, source
+modes and lock stamps, with zero installs. Counts grow from 2,633 to 2,635
+files. Each control phase has its own full snapshot. Measurements use the
+shared macOS arm64 host and uncontrolled OS caches, with actual tools and
+load recorded in each input receipt. The adapter read fixture's text-body
+console warnings in `63423` are retained; the fixture now decodes protocol
+bytes explicitly and the later owning adapter log has no such warning.
+
+The native large-history case creates 9,999 checkpoints through the real
+Scope object, yielding 10,000 entries. Multiple original bounded passes
+confirm through its head, including an eviction after the thirtieth pass.
+A SQL guard refuses any entry query at or before the confirmed receipt.
+The host records zero complete-parent-closure reads. The v2 reader and
+Replay reach `consistent` through the actual final head. This uses a TEST
+object repository, credentials, policy and authority, with grants explicitly
+`as-recorded`. Its raw report confirms the case passed; console forwarding
+did not retain the proposed detailed receipt line, so no exact measured
+pass count or receipt list is claimed. The separate adapter cases use real
+transport/send/pack code with TEST HTTP replies; they do not establish that
+the entire large-history driver used that adapter or one combined measured
+network budget. A real Git clone of the native closure is still outstanding.
+
+The current remaining boundaries include a full-budget driver run through
+the actual adapter, 10,000 confirmed native one-entry passes, the 512-new-key
+witness decision (`03faada8`), later reuse of key 3,700 across restart,
+9a integration and its omitted-text decision (`d072cb9b`), and complete F1
+acceptance followed by one gate and review. Neither planner request has
+been answered at this checkpoint. No deployed or provider acceptance is
+claimed. No formal Source, review request, landing or push is filed here.
+
+## One original budget through the native driver and actual adapter
+
+The new owning case connects the real native driver to the Artifacts
+adapter with TEST binding identity, credentials and a scripted HTTP peer.
+Its exact-object read and incremental send observers require the identical
+ArchiveBudget instance allocated for that driver pass. Every counter stays
+inside the original ceiling. The peer decodes actual incoming packs,
+checks complete Git closure including stored parent ancestry, and uses
+one CAS ref. All repository bytes come from actual native turns. Offline
+Replay reads the assembled v2 archive and reaches `consistent` with the
+fixture's explicit as-recorded authority. An eviction does not change the
+receipt or cause a new budget within an outstanding pass.
+
+The first combined run sent genesis, then retried its first 128-entry
+append with `limit`. The counter diagnostic records input-work 67,077,929
+of the original 67,108,864-byte allowance, before send. Its exact parent
+reads had conservatively allowed an additional 64 KiB for every object's
+advertisement/framing. Stage counters show this fixed allowance dominates
+much of the pass. The current transport instead allows 8 KiB beyond the
+requested object maximum. Larger wire replies refuse; there is still no
+closure fallback. The same factor of 32 reserves work for each byte of
+that smaller actual allowance before I/O. No archive cap, original debit
+coefficient, key/entry debit, reset, top-up or cache bypass changed. The
+128-entry/128-KiB scheduling cutoff did not need to change.
+
+| Original attempt | Actual result | Full outer elapsed seconds | Full outer CPU seconds |
+| --- | --- | ---: | ---: |
+| `36051` | Test compiler passes; first combined append retries; result lacked detailed counters | 5.80 | 8.56 |
+| `73977` | Test compiler passes; counter diagnostic identifies original input-work limit | 5.25 | 8.53 |
+| `78871` | Test compiler passes; stage diagnostic identifies reserved transport and bookkeeping costs | 5.18 | 8.17 |
+| `43553` | Both Scope compilers, combined 301-entry case and two exact-object adapter cases pass with the smaller actual reply bound | 6.33 | 10.29 |
+| `25712` | Test compiler and combined 10,000-entry case pass under its unchanged original 30-second deadline | 16.05 | 19.56 |
+
+These figures come from each original `/usr/bin/time -p` invocation around
+the whole helper, including initial source capture, guards, commands and
+artifact work. CPU is that command's user plus system time, including its
+children. Internal receipts also distinguish Python self and child CPU.
+Each attempt captures 2,636 complete physical source files, exact modes and
+lock stamps, with zero installs. All failed attempts and original tool
+completions remain evidence; they were not overwritten or replayed.
+
+The final case creates 9,999 native checkpoints after genesis, then archives
+through actual position 9,999 in multiple original bounded passes. All
+adapter reads and sends use their driver pass's one original budget. It
+checks an eviction and complete offline replay. The HTTP peer and binding
+identity remain TEST stand-ins: this is no hosted read, remote repository,
+real Git CLI clone, production token or deployment acceptance. The smaller
+advertisement allowance may refuse a repository with many refs; no actual
+host compatibility was probed by the builder.
+
+The large-history same-budget adapter gap listed in the preceding section
+is now closed on the test host. Still outstanding: 10,000 confirmed native
+one-entry passes, the 512-new-key decision, key 3,700 reuse after restart,
+9a integration and its omitted-text decision, a real Git clone of the
+native closure, complete acceptance, one gate and review.
+
+## Planner decisions adopted after the full-budget checkpoint
+
+Planner decision `18ef695b`, adopted as `4150b218`, resolves the 512-key
+conflict without changing any budget or debit. Witness 2 now fills past
+4,608 retained files through native passes, each adding as many whole
+entries and inputs as its unchanged budget admits, then adds one more.
+Each cutoff must reflect the full entry, retained-read and tree cost, and
+the next pass starts at the following entry. A single entry that cannot
+fit reports `limit`. The current scalar scheduling bound is conservative;
+it is not yet that complete adaptive cutoff. The amended native witness
+and Grow throughput measurement remain implementation work. Slice 9 must
+use the measured entries per pass to choose a cadence at least three times
+Room A's 4,800-entry daily rate and state catch-up time from position zero.
+
+Planner decision `d61549b0`, adopted as `341abe1e`, answers the detached-text
+gap. Text bodies remain unexported and no separate caller text set is
+accepted. Each pass will record omitted digest, UTF-8 byte count and first
+naming entry. Replay takes that omission metadata on explicit trust,
+checks any journal-recorded size agreement, and still refuses unreferenced
+rows or reports `incomplete` for an unexplained missing text. This is a
+new implementation boundary for 9a integration, not work already done.
+The original incomplete replay and resource findings remain evidence.
+
+## Integrated omission metadata, first boundary
+
+Local integration merges the F1 checkpoint `dae5549e` with 9a `7c70f19f`
+as `3a20501c`. The two conflicts combine incremental positions and actual
+native-pin admission. Fresh preparation physically copied 5,499 dependency
+files and 32 contained relative links, verified all 2,640 source files and
+workspace bindings, and installed nothing. Original preparation `25824`
+exits zero, full outer 2.71 seconds / 2.19 CPU seconds. Baseline `19150`
+passes six compiler closures and three selected existing replay/conversion
+cases, full outer 9.98 / 14.81, with exact source modes and lock stamp.
+
+The v2 inventory now records the UTF-8 length of the native canonical
+retained JSON string for a detached text, using only SQLite scalar size
+metadata. This is the existing native retainedSize/ByteUsage measure.
+It is not the decoded field's length, and must not be used to pretend its
+field bound was derived. The new omission trust will state that limit.
+A missing retained row invents no count; its actual journal tombstone or
+an incomplete result must answer for it. Every metadata request spends
+an original attempt and fixed metadata work.
+
+V2 selection and pass schemas carry the count and first naming position.
+Their v1 equivalents retain their closed original shape. A conversion
+re-admits the complete legacy omission set to match the original v1 tree,
+then adds available count metadata; tombstones already in the converted
+journal remove the corresponding new omission rows. No text body is read
+for that operation. Native test `archive-text.test.ts` writes an actual
+detached text beside a signed native act, verifies encoded and decoded
+byte counts differ, guards every SQL result against returning either text
+body, checks fresh v2 metadata and unchanged v1 omission, and checks exact
+legacy conversion. Policy and authority are TEST stand-ins.
+
+The first metadata attempt `77330` stopped at the Git compiler's callback
+narrowing error before any native test (full outer 1.29 / 1.19 CPU).
+After fixing it and preserving conversion's legacy set, `85927` passes four
+Git/Scope compiler closures and the native metadata case (6.27 / 10.95).
+Each captures all 2,642 source files, exact modes and lock stamp, zero
+installs. These are complete outer time measurements, not phase sums.
+No omission-aware reader, Replay trust, completed Grow closure or adaptive
+cutoff is claimed at this boundary; those remain implementation work.
+
+## Integrated omission reader and Replay checkpoint
+
+The next boundary implements decision `d61549b0`. The v2 reader checks the
+omission's scope, pass position and explicit digest claim in that entry's
+input. An unrelated claim refuses the archive read. The producer's shared
+typed dependency selector still discovers text dependencies; the reader's
+claim check does not discover new dependencies. Conflicting counts for a
+digest are a mismatch. Old unmeasured omission rows supply no new trust.
+
+Replay obtains count metadata through a bounded optional source port. A
+measured omission cannot call the legacy external-text hook. Its canonical
+retained byte count supplies logical capacity accounting; the decoded
+field size stays unknown. It supplies neither a body nor evidence of the
+digest or field bound. The report lists digest, count and the full first
+naming fact, with the planner's exact omission trust. A missing body with
+no count or tombstone remains incomplete. A report with no omissions keeps
+its old shape.
+
+Native `archive-text.test.ts` now opts into whole-scope capacity. Its actual
+signed act retains an escaped, multiline, non-ASCII text. The native v2
+export replays consistently without incomplete byte spans and never calls
+the supplied external-text trap. Removing the count row yields incomplete
+at entry 1 with an incomplete byte span. Adding an unrelated row refuses
+the archive read. The same case preserves v1's original omission shape
+and checks conversion against the actual v1 tree.
+
+V2 planning and conversion also collect the private-source anchors from
+the entry bytes actually read by the builder. This uses the same original
+budget as inventory and layout. Legacy planning uses the same collector.
+No private source journal, observed live head or body-as-proof is added.
+
+`archive-installed.test.ts` exports the five native Grow journals through
+`planArchivePass` and reads them through the v1/v2 router. Room, Site,
+Directory, Rules and Destination all replay consistently. The four targets
+that previously lacked text now report digest
+`sha256:9e0a5a28346594dcd3a95794d1d66951691e6de65adc1582e788ba5ef3085530`.
+Every reported omission matches the native exported metadata, whose count
+is also checked against independent scalar SQLite size reads. The union
+of reports covers every omission. No report has incomplete byte spans.
+The seven export-derived private anchors and all four missing/wrong-anchor
+controls remain in place. Removing the Directory row from a clone of the
+native export yields incomplete at Directory entry 5; adding an unrelated
+row refuses the archive read. Only clone metadata changes for these two
+negatives; the native entry and input bytes remain unchanged.
+
+Focused original attempts, on the shared macOS arm64 host with uncontrolled
+OS caches, are recorded below. CPU is user plus system over the full outer
+command; these are separate runs, not a sum presented as one run.
+
+| Original process | Result | Outer elapsed seconds | Outer CPU seconds |
+|---|---|---:|---:|
+| `44891` | Seven compilers, recovered-byte cases and native text case pass | See qualification below | See qualification below |
+| `24146` | Scope compiler rejects the collector's overly narrow selection type; native tests do not start | 2.57 | 5.21 |
+| `83155` | Source compilers pass; test compiler rejects a union of callback promises; native tests do not start | 3.24 | 8.32 |
+| `11788` | All compilers pass; sandbox refuses the localhost listener before native tests start | 3.95 | 9.15 |
+| `46013` | All compilers and the three native text/installed cases pass | 10.97 | 17.29 |
+| `96495` | Stronger omission counts, capacity and native Grow metadata negatives pass | 11.19 | 17.53 |
+| `43124` | Compiling omission guard control fails the consistent-replay assertion as intended | 4.81 | 5.93 |
+| `13036` | Compiling reference guard control fails the refused-read assertion as intended | 5.13 | 5.88 |
+
+Each attempt captures all 2,642 source files, exact modes and dependency
+lock stamp, with zero installs. Actual machine, load and cache statements
+are in its input receipt. Controls restore all source bytes and modes and
+the dependency stamp exactly. The control runs use the original passing
+baseline rather than repeating it. These are two focused faults, not a
+mutation sweep. Earlier control `91502` observed the intended assertion,
+but its removed local use would fail the unused-local compiler setting;
+it is not counted as a compiling control. `43124` retains that local use,
+compiles, and observes the same intended assertion.
+
+The full external completion output for `44891` was lost after truncation.
+Its original closure and log record natural zero and all selected passes.
+Its internal window starts before source capture: 8.356146 seconds elapsed,
+1.502777 Python CPU seconds and 13.541061 child CPU seconds. Those figures
+are not full external timing. The original command is not replayed to
+repair that gap.
+
+This is a local implementation checkpoint. The complete adaptive full-cost
+cutoff, amended native retained-file witness, 10,000 confirmed one-entry
+passes, key-3,700 restart, measured Grow cadence, actual Git clone and Slice
+9 coordinator/publication wiring remain work. No full gate, formal Source
+review, approval, landing, push or deployment is claimed.
+
+The native Grow case now emits a test annotation for a retained JSON
+receipt. Its first two annotation-only attempts stop at the test compiler:
+`38086` uses the wrong `each` context signature (1.77 outer seconds, 3.80
+CPU seconds), and `54652` retains the old positional timeout with `for`
+(1.58 / 3.83). With the context and unchanged 30-second timeout passed in
+the supported form, `22214` passes the test compiler and selected native
+Grow case (9.90 / 13.37). It captures the same 2,642 source files exactly,
+with zero installs. The fixture case is deliberately outside this receipt
+selection; it already passed in `96495`. The annotation changes no protocol
+or test assertion.
+
+The actual native receipt is
+`/private/tmp/archive-native-incremental-grow-text-native-receipt-v3-20261020.json`.
+It contains all five consistent results and seven private-source anchors.
+These are its four omission rows; each count is canonical retained JSON
+UTF-8 bytes, with the full scope, incarnation and hash in the receipt.
+
+| Digest | Bytes | First naming entry |
+|---|---:|---|
+| `sha256:6d4a86ea2640f5364515eaa7803ea4ba47c7636027e62e490d2be18b4d2e9110` | 4,998 | Directory 5 |
+| `sha256:9e0a5a28346594dcd3a95794d1d66951691e6de65adc1582e788ba5ef3085530` | 45,750 | Directory 5 |
+| `sha256:6d4a86ea2640f5364515eaa7803ea4ba47c7636027e62e490d2be18b4d2e9110` | 4,998 | Rules 2 |
+| `sha256:9e0a5a28346594dcd3a95794d1d66951691e6de65adc1582e788ba5ef3085530` | 45,750 | Rules 2 |
+
+## Real local Git clone of the native Grow archive
+
+The native Grow witness now round-trips its exact exported objects through
+the real Git program. The existing nonce-protected local test bridge
+materializes a temporary SHA-1 bare repository, checks every object with
+Git, installs the five journal refs, and runs strict full `fsck`. The
+independent Node SHA-1 must also agree with every exported object ID.
+`git clone --mirror --no-local` then transfers the repository through
+upload-pack. A second strict full `fsck` checks the clone. The bridge reads
+the clone's reachable objects with binary `cat-file --batch`; it returns
+those bytes and refs, with no original-map lookup.
+
+The Worker empties the original object map before replaying the clone.
+All five native targets must produce exactly their earlier verification
+reports, including coverage, anchors, omission rows and trust. Only then
+does the test restore its local map for the existing metadata negatives.
+No journal entry is fabricated, and no external text set is supplied.
+Temporary repositories are removed by the test bridge's teardown.
+
+Original `75387` passes the Scope source, test and Node-support compilers
+and the selected native Grow case. Its receipt records Git
+`2.54.0 (Apple Git-157)`, 140 source objects, 140 cloned reachable objects,
+the same five journal refs, strict `fsck` success and five equal offline
+reports. Full outer cost is 11.68 seconds elapsed, 14.24 user plus 2.19
+system seconds, or 16.43 CPU seconds. The unchanged 30-second case deadline
+remains in place. The receipt is
+`/private/tmp/archive-native-git-clone-native-receipt-v4-20261020.json`.
+
+Earlier original attempts are preserved. `49704` stops at the test compiler
+over binary-buffer types (2.12 seconds elapsed, 4.98 CPU seconds). `62399`
+passes all compilers but the bridge returns its generic failure (9.97 /
+14.75). A specific fixture diagnostic in `43021` identifies strict Git's
+`badHeadTarget`: the fixture's HEAD symbolically names a journal ref rather
+than a branch (10.14 / 15.04). Giving the temporary repository a detached
+HEAD fixes that fixture error without adding a fabricated branch or
+changing the native object closure.
+
+One compiling control, original `50754`, directs clone Replay to the
+emptied original map instead of the clone. The unchanged native Grow case
+fails its verification assertion with `archive-failure`, as intended. Its
+full outer cost is 9.03 elapsed and 10.85 user plus 1.57 system seconds, or
+12.42 CPU seconds. It uses the original passing clone baseline rather than
+repeating it and restores source bytes, modes and the lock stamp exactly.
+
+Each owning attempt and control captures all 2,643 source files exactly,
+with zero installs. These are separate runs on the shared macOS arm64
+host; machine, load and uncontrolled OS-cache statements are in the input
+receipts. Helpers and the annotation reporter were copied from explicit
+verified rows of the closed omission grant into distinct regular files,
+then all matching aliases were retargeted before execution. Frozen
+originals remain unchanged.
+
+This proves a local SHA-1 Git clone of the actual native Grow closure and
+offline Replay of its returned bytes. Host identity, package/owner policy,
+scheduler and the local bridge remain TEST fixtures. It supplies no hosted
+transport, provider, credential, deployment or full F1 acceptance claim.
+The adaptive cutoff, amended large native pass witnesses and throughput
+work remain open. No full gate or formal Source review has run.
+
+## Scalar lookahead for full-cost planning
+
+The next local foundation adds a non-stopping `ArchiveBudget.canSpend`
+check and a scalar `ArchiveWindow`. A forecast compares against the same
+original limits and used counters; it is not spent, prepaid, refunded or a
+second allowance. Actual work still calls `spend`. Its insufficient-cost
+behavior remains stopping, with every original limit and debit unchanged.
+
+The window advances through keyed native positions without returning entry
+JSON or retained bodies. Before each query it checks that the metadata work
+will leave the forecast available. Before admitting another entry's JSON
+work it checks that unchanged debit too. A limited step keeps the original
+budget usable for finishing the chosen whole prefix. Work spent examining
+a candidate is never refunded when an earlier boundary is chosen.
+
+Opening a window uses the prefix reader's new internal `next` mode. Pin
+admission happens before its first-position lookup; the existing explicit
+Head path keeps its original query and debit sequence. The first entry's
+JSON reservation is already paid by that prefix read. Its hash and size
+must still match when the window reads it, so drift cannot borrow the
+earlier reservation. Later entries pay the same 64-pass JSON-work debit.
+
+Native tests select actual entries 0 and 1, leave room for the next scalar
+read but no next entry's JSON work, and retain the complete forecast. The
+same original budget then spends that forecast to its exact ceiling; it
+cannot spend one byte more. All entry reads in the window are scalar. A
+corrupt size change after initial metadata admission refuses before JSON.
+An unadmitted pin also refuses a new interval after an actual supplied
+predecessor without reading any entry. The predecessor is fixture context,
+not a claimed confirmed archive receipt.
+
+| Original | Result | Outer elapsed seconds | Outer CPU seconds |
+|---|---|---:|---:|
+| `97276` | First foundation: both Scope compilers and ten budget/prefix cases pass | 6.38 | 9.95 |
+| `30669` | Stronger whole-prefix selection and headroom case pass | 5.98 | 10.03 |
+| `56120` | Compilers pass; overstrict test disallows the pin's legitimate genesis-hash lookup | 6.23 | 9.88 |
+| `7403` | Corrected predecessor-specific ordering witness and all ten cases pass | 5.69 | 9.74 |
+| `38415` | Compiling control ignores the finishing forecast: limited-step assertion fails | 5.14 | 8.25 |
+| `98211` | Compiling control ignores the first size change: refusal assertion fails | 4.81 | 7.99 |
+| `56163` | Compiling control moves lookup before pin refusal: the final refusal stays correct, but the no-entry-read assertion fails | 5.07 | 8.20 |
+
+Each original captures all 2,644 source files and exact modes and lock
+stamp, with zero installs. The controls restore them exactly and use the
+original passing baseline without repeating it. The first two controls
+precede the pin-ordering refactor; their target guards and test cases stay
+unchanged. Machine, load and uncontrolled OS-cache statements are in each
+input receipt. These are separate complete outer measurements.
+
+This foundation does not choose a production pass. The driver still uses
+the conservative 128-entry/128-KiB cap. The next boundary must account for
+retained-input discovery, probes, declarations, layout, tree and finishing
+work while keeping whole-prefix privacy admission before body reads. No
+complete adaptive cutoff, new acceptance, gate or formal review is claimed.
+
+## Typed scalar references and retained sizes
+
+Cost planning now has a scalar digest-field reader and an act-field
+projector. The owner supplies paths selected from the validated definition;
+the reader does not discover consumers by searching strings. Each native
+query matches the exact sequence, hash, recorded size and actual text size.
+Only digest-shaped cells or null cross that SQL boundary. The projector
+uses the same detached-text predicate, `textsNamed`, value-place grammar
+and act-value selector as the byte-based planner. A recognized act name
+comes from the trusted definition's name table. Inline digest-shaped text
+does not become a dependency.
+
+`ArchiveRetainedReader.measure` supplies keyed scalar sizes for subsequent
+forecasts. It shares the actual reader's key, domain, copy and size checks.
+Each measurement, repeat and miss spends an attempt and native call;
+measurement does not read a body or install a content cache value. A later
+actual read measures again and still checks canonical bytes and digest.
+The existing read and cache debit sequence is unchanged.
+
+The native act cases compare actual signed entries with their byte-based
+field plans, for both detached text and digest-shaped inline text. The
+retained case measures a corrupt rule, refuses it under a smaller bound,
+and shows the subsequent body read still rejects it. SQL result-cell
+observations check that the measurement returns no body. These are TEST
+definitions and grants, not native platform value-place acceptance.
+
+| Original | Result | Outer elapsed seconds | Outer CPU seconds |
+|---|---|---:|---:|
+| `49716` | Two Scope compilers and the native digest-field case pass | 8.98 | 12.59 |
+| `52251` | Compiling SQL-filter control: inline text crosses the boundary and its assertion fails | 5.93 | 8.37 |
+| `71809` | Compiling hash-binding control: wrong-source acceptance assertion fails | 5.62 | 8.69 |
+| `53261` | Four Derive/Scope compilers and three native field cases pass | 6.97 | 11.95 |
+| `9004` | Compiling act control drops a detached reference; the dependency assertion fails | 5.02 | 8.20 |
+| `57338` | Both Scope compilers pass; sandbox denies the native server's local listen before tests start | 3.35 | 6.75 |
+| `71665` | Both Scope compilers and six native retained-reader cases pass with local loopback access | 7.12 | 11.23 |
+| `60516` | Inconclusive bound control: compiler rejects its unused parameter | 1.35 | 3.83 |
+| `85267` | Compiling off-by-one bound control: the smaller-bound assertion fails | 5.21 | 8.37 |
+
+The generic controls precede the shared constant/source-validator extraction;
+their SQL predicates and test are unchanged. Each attempt captures all
+source files, exact modes and the lock stamp with zero installs. Counts are
+2,646 for the generic runs and 2,648 for the act and measurement runs. The
+controls restore source exactly and read their original passing baseline
+without repeating it. Input receipts state the shared macOS arm64 host,
+load and uncontrolled OS caches; the figures are separate full outer runs.
+
+These helpers are foundations. They do not yet project every consumer,
+compute a complete pass forecast or change the production cutoff. Whole
+prefix privacy admission must still finish before entry or retained
+payload reads. No new export permission, completed adaptive pass, full gate
+or formal review is claimed.
+
+## Native value place and prepared-rule projection
+
+Act-field projection now shares the byte planner's final definition-size
+ceiling. A genuine native Register3 repository creates its Directory and
+Rules2 children. After the founder's actual membership seat and first key,
+Rules accepts `activate` with the fixture notes definition beside it. The
+projector must return exactly one definition key, with the owning archive's
+tighter definition bound. Only the trusted act name and digest cross its
+SQL boundary. The native definitions and production Rules code are real;
+the host, clock and setup inspector remain session-room fixtures.
+
+Prepared-rule references also have a scalar projector. It reads the exact
+entry's prepared-record count, matches rule names against the trusted
+declaration's name table, and extracts only the corresponding input
+digests. The shared `preparedRuleDependencies` selector supplies the same
+ordered rule keys as the byte planner. Every repeated request pays its
+actual SQL and work charges. An entry with more prepared records than the
+original attempt ceiling cannot fit even when each retained read is a
+cache hit, so it refuses before allocating that list.
+
+The native witness assigns a real fixture commitment under its declared
+`not-self` rule. Its scalar plan must name the actual retained rule input,
+match the byte planner and handle an empty prepared list. It returns no
+retained-input body or evaluation result. The fixture definition and
+authority are explicit TEST data, not platform policy or export permission.
+
+| Original | Result | Outer elapsed seconds | Outer CPU seconds |
+|---|---|---:|---:|
+| `57106` | Four compilers pass; native Rules correctly refuses the test actor before seat/key setup | 6.97 | 11.77 |
+| `33856` | Corrected native membership setup: four compilers and three act-field cases pass | 6.38 | 11.75 |
+| `12639` | Compiling shared-bound control widens the ceiling; the native case's literal bound assertion fails | 4.93 | 8.32 |
+| `11601` | Four compilers and all four native act/prepared cases pass | 8.83 | 16.99 |
+| `35655` | Compiling prepared-reference control omits the reference; its dependency assertion fails | 4.88 | 8.01 |
+
+Original act-value runs capture 2,648 source files; the prepared runs
+capture 2,650. All preserve bytes, modes and the lock stamp with zero
+installs; controls restore them exactly and use their original passing
+baseline. The failed authorization attempt stays preserved. The receipts
+state machine, shared load and uncontrolled OS caches. These are separate
+full outer measurements. This extends the foundations only: creation and
+delivery text, observation and outcome references, complete cost planning
+and the adaptive driver remain open. No full gate or formal review has run.
+
+## Genesis and delivered text references
+
+Genesis projection selects the actual founding intent's fields, or the
+creator's message fields when no founding intent is present. It returns
+only the fixed route and typed detached-text digests. The existing native
+creation-text witness now supplies an actual founding text and compares
+both founding and child-creation projections with the genuine entries'
+byte plans. Repeated projections still spend their native calls and work.
+
+Delivery projection uses the actual shared `bound` and `textsNamed`
+selectors. The owning frame supplies its verified source fact and pinned
+definition name; SQL matches that source and the exact entry descriptor.
+It returns fixed class/type tokens, a message name from the trusted
+definition and structural flags. Message fields, relationship items and
+state strings are not returned. The flags preserve the predicates that
+`bound` and `updateOf` read; the selector-only shape is not a journal or a
+claim that any message was accepted. A handler requiring a pinned sender
+refuses missing source-pin context. Another pin selects no text.
+
+The existing native tell/redaction/repeat witness now declares the sender
+name and checks both matching and different pin contexts. A separate
+native relationship case uses a TEST definition to send `self`, then an
+earlier owned item, through real delivery. Both projections must name the
+actual text. A temporary opaque-body change gives that item another scope;
+metadata must then select no text. The test restores the exact original
+entry bytes and size before returning. That change is a metadata negative,
+not an accepted history or an integrity/replay witness. Advisory projection
+has no positive native witness here.
+
+| Original | Result | Outer elapsed seconds | Outer CPU seconds |
+|---|---|---:|---:|
+| `94013` | Both Scope compilers and strengthened native founding/creation case pass | 5.65 | 9.76 |
+| `71686` | Compiling dropped-genesis-reference control fails its dependency assertion | 4.81 | 7.89 |
+| `67942` | Both Scope compilers and all four existing native text cases pass with the sender-pin declaration | 6.73 | 10.67 |
+| `61583` | Compiling sender-pin control selects a different sender's field; its assertion fails | 4.95 | 8.22 |
+| `81934` | Relationship test compiler rejects an insufficiently narrowed delivery union | 2.32 | 5.06 |
+| `31335` | Compilers pass; validator refuses a fact slot where the sender needs a local item slot | 5.82 | 9.65 |
+| `20272` | Corrected local item slot: both compilers and the native relationship case pass | 6.00 | 10.08 |
+| `93363` | Compiling relationship-owner control selects the wrong owner's text; its assertion fails | 5.59 | 8.42 |
+
+Genesis runs capture 2,651 source files; delivery and relationship runs
+capture 2,652. Each preserves exact source bytes, modes and lock stamp with
+zero installs. Controls restore source and read their original passing
+baseline without replaying it. The genesis control precedes the sender-pin
+fixture addition; its target selector and founding/creation assertions are
+unchanged. Input receipts state the shared host, load and uncontrolled OS
+caches. All figures are separate full outer measurements, including failed
+attempts. No deadline changed. These are still planning foundations;
+observation/outcome references, complete cost forecasting, production
+adaptive selection and the remaining native acceptance witnesses are open.
+No full gate, formal review, landing or deployment is claimed.
+
+## Observed values and native outcome values
+
+Observation projection now selects the extents digest only when an actual
+observation has subject `rules` and content requested as `rules`. The
+scalar selector is shared with `namedBy`. The projector preserves the
+declaration's ordered domain choices and the byte planner's probe key. It
+charges the actual matching metadata count before allocating paths and
+plans; it does not impose a guessed retained-object target on other
+observations. The owning classifier still supplies the actual input tag
+and validated definition. Matching source sequence, hash and size remain
+required for its native queries.
+
+Outcome-value projection recognizes the actual Destination changed-set
+callback, including its ordinary `ownersOf` wrapper. The wrapper records
+the callback's identity, captures that function for its lookup and keeps
+the existing `run` call and receiver. This selects a decoder; it grants no
+owner, pin, place or privacy admission. Unknown callbacks refuse before
+SQL. The recognized callback reads only whether the evidence body is an
+object and its `changes` field is a digest, so the projector supplies those
+scalar facts to the same `outcomeValueDependencies` selector. The native
+callback's behavior and definition bytes are unchanged. Other outcome
+values and snapshots need their own actual consumer grammar.
+
+The existing native publication witness now compares both projections
+with its real Destination byte plan in one budget. Five actual Rules and
+Membership observations yield one extents probe; the same outcome yields
+one changed-set value key. Literal domain, digest and bound assertions
+accompany the comparison. Repeats pay their work again; SQL returns only
+fixed tags, slot numbers and digests. A substituted unknown callback
+refuses without SQL. Native platform definitions, authority and production
+rules are real here; the original witness's scripted lane entries, Git
+host and clock remain stand-ins, as its header states.
+
+| Original | Result | Outer elapsed seconds | Outer CPU seconds |
+|---|---|---:|---:|
+| `31602` | Three compilers pass; the test compiler catches a duplicate fixture-owner variable | 2.80 | 6.65 |
+| `32929` | Renamed variable: four compilers and native publication case pass | 7.32 | 12.49 |
+| `78700` | Compiling dropped-observation control fails the extents-probe assertion | 5.70 | 9.12 |
+| `47638` | Four compilers pass; Scope rejects constructor return-flow typing | 2.51 | 5.72 |
+| `93854` | Corrected constructor: six compilers and combined native publication case pass | 8.04 | 14.28 |
+| `74967` | Compiling dropped-outcome-value control fails its dependency assertion | 5.38 | 8.77 |
+| `70351` | Compiling unknown-callback control fails the required-refusal assertion | 5.38 | 8.80 |
+
+Observation runs capture 2,653 source files; combined runs capture 2,654.
+All preserve exact source bytes, modes and lock stamp, with zero installs;
+controls restore source and read their original passing baseline. Failed
+attempts remain preserved. The observation control precedes the outcome
+addition; its selector and probe assertion are unchanged. The following
+comment placement preserves executable declaration order. Machine, shared
+load and uncontrolled OS-cache statements are in the input receipts.
+These are separate full outer measurements. Variable schema allocation
+costs, snapshot/ancestry projection and the complete forecast and adaptive
+driver still need work. No full gate or formal review has run.
+
+## Reserve derived schema allocations
+
+The scalar helpers now reserve derived name arrays, encoded paths, lookup
+tables and field maps before constructing them. Charges depend on the
+actual name count and character count, including path prefixes. Repeated
+projections pay again for their derived structures. Trusted declaration
+enumeration keeps its existing initial reservation. Genesis moves its
+existing selected-name charge before filtering, with the same total debit.
+Outcome values also charge the declared domain count before the shared
+selector builds its domain map. Original archive bounds, retained-read
+debits and deadlines are unchanged.
+
+The native creation witness adds a separate lower-metadata refusal
+scenario. It has room for the existing SQL debits, but not the derived
+path/map allocation. It must stop after the fixed route query, before a
+field query. This uses an independent lower-bound budget, not a reset or
+continuation of the positive projection's allowance.
+
+Original `31715` passes both Scope compilers and all ten affected native
+cases across act fields, prepared rules, texts and publication. Full outer
+cost is 7.44 seconds elapsed and 9.46 user plus 1.97 system seconds, or
+11.43 CPU seconds. One compiling control, original `80735`, sets only the
+new variable metadata reservation to zero. The unchanged creation witness
+then fails its required-refusal assertion. Its full outer cost is 4.89
+elapsed and 6.69 user plus 1.27 system seconds, or 7.96 CPU seconds.
+
+Both originals capture 2,655 source files, exact modes and lock stamp with
+zero installs. The control restores source exactly and reads the original
+passing baseline. Input receipts state machine, shared load and
+uncontrolled OS caches. These are separate runs. This completes the
+variable allocation foundation; full-pass costing and adaptive selection
+remain open, along with snapshot/ancestry projection and the native pass
+acceptance witnesses. No full gate or formal review has run.
+
+## Integrated acceptance, 21 October
+
+The later checkpoints complete the pending projection, cost and selection
+work described above. The driver now selects a whole-entry prefix by its
+complete finish cost. It uses the original budget throughout scouting,
+discarded lookahead, fresh inventory, retained reads, Git preparation,
+transfer and native receipt confirmation. All original counters and the
+30-second per-pass deadline remain. The fixed 128-entry cutoff is no longer
+the driver's selection rule.
+
+Fresh native frames re-read scalar metadata after an asynchronous parent
+lookup. A fenced continuation closes before that lookup and resumes once.
+The final inventory checks every planned retained size or absence, and
+omitted text size, before publishing the selection. A stale comparison
+retries before marking a pass. An unsuccessful later candidate leaves an
+earlier, fully reserved prefix available. Expected sizes narrow fresh body
+reads; they do not admit bodies from a scout cache. Unicode over-bound
+cached reads keep their higher possible cost. Parent preparation uses the
+selected prefix's object IDs, excluding discarded lookahead.
+
+The shared v2 layout follows planner decision `f651f6c3`: five two-digit
+directories, then the owning 12-digit first position, with the manifest,
+segments and retained files under that owner. Numeric directories have at
+most 100 names. The owner directory has its existing 4,096-name bound.
+The maximum position remains 999,999,999,999. Conversion writes a fresh v2
+tree; the v1 reader and its grammar remain separate.
+
+The final adaptive focused run passes 15 selected cases and both Scope
+compilers. It includes 37 actual native one-entry confirmations across
+Grow child, Grow root, Directory16, Rules10 and Destination12. The largest
+input-work receipt is 66,340,076 of 67,108,864, at Rules10 entry 2; the
+largest node receipt is 39 of 64. Original whole-pass goldens remain.
+Four compiling controls fail the intended assertions when retained-size
+comparison, text-size comparison, native-row finish reservation or the
+earlier-covered-prefix behavior is removed. Source bytes and modes are
+restored. Earlier compiler, setup and conservative-forecast failures remain
+preserved; they establish no physical impossibility or runtime cause.
+
+The strengthened scale witness makes 10,001 actual native confirmed
+one-entry passes. Genesis is position 0; positions 1 through 9,999 retain
+9,999 distinct actual rule inputs of one kind. A restart at 3,700 preserves
+that key's owner. The extra pass repeats its actual fields and names the
+same input with `pass: 3700`, without sending its blob again. The witness
+observes 10,000 incremental sends, 109,899 exact parent-object reads and no
+old closure fetch. An unreferenced raw rule row stays unconfirmed. Its
+current-tree clone replays consistently offline. The trusted entry cap of
+2 makes one scout read plus one fresh read; every other original cap and
+the per-pass deadline remain. This is the native amended same-kind witness,
+not the earlier mechanical 4,608-file exercise.
+
+The cadence witness dispatches actual native Scope alarms under three
+virtual eight-hour windows. Each window adds 4,800 signed native entries.
+The original default budget is used for every pass, with no lower entry
+cap. Each window confirms its exact head, leaves no pending or stopped
+archive row, drains its wake and schedules no further alarm. Export changes
+no business entry. Receipt and wake inspections happen after completion as
+separate test observations, never as an archive phase allowance.
+
+| Window | Confirmed head | Passes | Generation seconds | Catch-up seconds | Backlog |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 1 | 4,800 | 117 | 9.501 | 3.704 | 0 |
+| 2 | 9,600 | 121 | 9.313 | 3.945 | 0 |
+| 3 | 14,400 | 117 | 9.396 | 3.817 | 0 |
+
+All 355 passes stay within the original limits. Peak input work is
+61,552,893; peak metadata is 3,725,382; peak nodes are 31. The witness
+records 354 incremental sends, 3,750 exact parent reads and no closure
+fetch. These are physical fixture timings against a virtual clock. They
+do not establish a deployed schedule or a real day's hosted operation.
+
+| Separate original focused run | Outer elapsed seconds | Outer CPU seconds |
+| --- | ---: | ---: |
+| Adaptive final owning run | 12.05 | 16.59 |
+| Four adaptive controls | 18.30 | 35.52 |
+| Native one-entry scale | 144.22 | 153.02 |
+| Native alarm cadence | 44.70 | 49.74 |
+
+These outer measurements include setup, guards and evidence work on the
+shared macOS arm64 machine, with uncontrolled OS caches. Actual load and
+tool versions are in each input receipt. They are separate runs, not a
+single pipeline total. Scale and cadence each pass both Scope compilers
+and their selected native case, preserving all source bytes and modes with
+zero installs. Their HTTP advertisements, host acceptance, tokens,
+repository, grants, policy and clock are explicitly scripted TEST inputs.
+SHA-1 incremental copy, hashing, validation, packing, send and native
+mark/attempt/readback/confirmation use production code. This proves no
+external provider, production custody or Cloudflare deployment.
+
+The closed grants for these checkpoints are respectively
+`archive-integration-adaptive-core-closed-grant-20261021.json`,
+`archive-integration-native-one-entry-scale-closed-grant-20261021.json` and
+`archive-integration-native-alarm-cadence-closed-grant-20261021.json`, under
+`/private/tmp`. Every explicitly mapped original remains permanently
+frozen for reading or verified stable copying only. Execution requires a
+distinct regular copy with exact bytes, mode and hash, with every alias
+and historical input retargeted first. There is no adjacent, prefix or
+transitive grant. The current integration checkout and its owned
+dependencies are excluded and remain mutable.
+
+Reviewed Main through `afe0c319` merges cleanly into the integrated
+candidate at `973cc109`. Its additions are the reviewed invitation flow
+and planner notes. The combined candidate still needs its one full gate,
+complete exact-head review and guarded landing. Floor entries belong to
+F2. Cloudflare provisioning, binding, credentials, deployment and hosted
+readbacks remain with planner.
+
+## First integrated gate and targeted repair
+
+The first actual full gate runs at `a34f3d85`, tree
+`8942f50f751f522dc847e6a3e8e8d0513ac57733`. Whitespace, helper checking and
+all typechecks pass; installation is skipped. It reports a stale generated
+page bundle and two host-send assertion failures, then stops making visible
+progress. Two native timeout-abort diagnostics carry no test identity.
+Native worker CPU stays at 2:28.60 across observations about 140 seconds
+apart; a one-second read-only sample finds its main event loop waiting in
+`kevent`. After more than 400 seconds without test-log progress, the builder
+sends SIGINT to Vitest only. The wrapper returns 1. The test run is
+interrupted and incomplete, with no final case count or autonomous test
+completion. Node and Counting checks are not reached. This proves no
+specific stalled actor, causal interaction or stability result.
+
+Full outer time is 545.26 seconds, with 225.40 user and 72.75 system
+seconds, or 298.15 CPU seconds. The shared 18-core macOS arm64 machine's
+initial load is 1.74/1.45/1.56; dependencies have prior focused use and OS
+caches are uncontrolled. All 2,691 tracked input bytes and modes, head,
+tree and dependency stamp remain unchanged, with zero installs. Original
+logs, source snapshots, interruption receipt, sample and outer timing are
+retained. A preceding preparation attempt failed on sandbox `sysctl`
+before starting npm or any gate step; it is not a gate run.
+
+The unchanged two-file diagnostic completes naturally: 10 cases pass and
+3 fail with exact assertions. Both actual sends succeed, but their old
+layout pins expect 34 objects and 4,118 bytes; the revised shared layout
+actually has 27 objects and 3,789 bytes. A temporary logging-only diagnostic
+records the actual copy, pack, validation and transfer counters for both
+hosts, with the original assertions intact. The log is removed and the
+test restored before updating those pins. No unit price, cap or guard
+changes. The page's normal build regenerates its committed bundle from the
+integrated sources. Scope's test compiler and all 13 affected cases then
+pass, including expiry fencing. Their separate full outer time is 5.04
+seconds and 8.49 CPU seconds.
+
+One further unchanged-file diagnostic runs only the native transport
+witness. It passes naturally in 24.172 seconds, within its original
+30-second case deadline. Its full outer time is 28.58 seconds and 30.23
+CPU seconds. This isolated pass does not establish the original stall's
+cause or a successful whole gate. Its separate 100-second outer diagnostic
+watchdog is never used.
+
+The root config now offers an optional progress reporter, controlled only
+by `ARTROOM_TEST_PROGRESS`. It records each case's start and result, plus
+run completion, to a new external file. The existing page freshness case
+passes with an actual start, passed result and successful run-end record.
+The reporter changes no test, worker, assertion or deadline. A new gate on
+the repaired source is still required; the interrupted run remains intact.
+
+## Split the native scale case
+
+The gate at `33f0fd87` also stalls after stdout reaches 10,000 native
+confirmations. After two raw process observations, the builder sends
+SIGINT only to Vitest. Worker CPU stays at 2:32.91 over 40 seconds; runner
+CPU increases by 0.01 seconds. The wrapper returns 1. This is another
+interrupted, incomplete gate, with no completed scale result, final suite
+count, Node check or Counting check claimed. Outer time is 360.86 seconds
+and 301.28 CPU seconds. All 2,692 source bytes and modes, head, tree and
+stamp remain exact, with zero installs.
+
+The unchanged smaller driver cases then pass together: 13 passed and the
+long scale case explicitly filtered, in 0.590 seconds of test time. Full
+outer time is 5.14 seconds and 6.23 CPU seconds. This narrows the observed
+boundary; it establishes no runtime cause or general stability.
+
+At `ccebd272`, the complete scale test block moves byte-for-byte from
+`archive-driver.test.ts` to `archive-one-entry-scale.test.ts`. Both files
+import the original driver fixture from `support/archive-driver.ts`.
+The helper body changes only its export keywords; its source projection
+tripwire and all original charges remain. The exact moved-block digest
+and case-count certificate are retained. No assertion, test timeout or
+archive deadline changes, and all 14 original cases remain. Initial
+extraction fails compiler checks before any test. Removing an unused clock
+constant and restoring the Lane type import makes the test compiler pass.
+
+One invocation then runs both split files. It completes naturally with
+14 passed, none skipped, the same 10,001 native confirmed passes and the
+same retained-input, pass-3,700 and offline-replay assertions. The scale
+case takes 145.584 seconds; full outer time is 151.52 seconds and 158.91
+CPU seconds. The separate 240-second diagnostic watchdog is unused.
+All 2,694 source bytes and modes remain exact, with zero installs. Load,
+machine and prior-run cache qualifications remain in its receipt.
+
+Two native timeout-abort diagnostics still appear in this passing paired
+run. The split therefore establishes completed paired coverage, not a
+fix for the unassigned native runtime behavior. It also reveals that
+incremental reporter callbacks can omit already passed cases: only four
+starts and four results arrive, while the built-in JSON result contains
+all 14 passed cases. The optional reporter now records a separate final
+state for every case at run end. Missing incremental events are reporting
+gaps, not evidence that those cases remain active. A whole gate on the
+changed source is still required before review.
+
+## Completed gate failure and shared-clock repair
+
+The gate at `07ce3a0a` completes naturally with exit 1: 2,071 Vitest cases
+pass, one Grow cost assertion fails and three recorder cases skip. Of 441
+files, 439 pass, one fails and one skips. There are no unhandled errors at
+run end. The later Node and Counting steps are not reached. The outer
+run takes 841.48 seconds and 1,125.23 CPU seconds. All 2,695 source files,
+modes, head, tree and lock stamp remain exact; no packages are installed.
+The native scale case passes in 154.638 seconds, the cadence case in
+48.924 seconds and the transport case in 29.871 seconds under its original
+30-second timeout. The latter has little margin; this run establishes no
+broader stability claim.
+
+The failed Grow child receipt differs only by 56 metadata bytes and 9,256
+input-work bytes. The earlier GitHub edit witness leaves fractional
+milliseconds on the shared clock. Intervening handoff cases restore their
+saved clock. A fractional timestamp occupies four more bytes than the
+whole-second representation used by the original receipts. The child
+entries gain 52 bytes, the native scope frame gains four and selected
+parent entries gain 16. The resulting input charge difference is
+`52 * 133 + 4 * 9 + 16 * 144 = 9256`.
+
+A focused native comparison confirms that account. The original Grow case
+passes at a whole second (10.730 seconds outer), fails the original child
+receipt at `.001` with those exact differences (5.700 seconds), and passes
+again after advancing that fractional clock to the next whole second
+(10.360 seconds). Both passing stages retain all five original whole-pass
+receipts, all 37 native confirmed entries and the independent clone and
+replay checks. The complete comparison takes 28.78 seconds and 33.07 CPU
+seconds on the shared macOS arm64 host; OS caches are uncontrolled.
+An earlier harness attempt stops on reporter configuration before running
+any test and restores source bytes. Both attempts and their original
+inputs and exits are preserved separately.
+
+The final fixture advances the existing clock monotonically to a whole
+second before creating any Grow scope. It keeps the same clock object and
+does not rewind it. Original cost literals, archive prices, budgets,
+assertions and the 30-second case timeout are unchanged. Temporary injection
+and logging are removed. The focused Scope test compiler passes. A full
+gate on this changed source is the remaining pre-review check.
+
+## Vitest completion and test dependency repair
+
+The next gate at `e21b9d39` completes naturally with exit 1 after Vitest
+passes: 2,072 cases pass and three recorder cases skip, across 440 passed
+files and one skipped file. Its terminal framework state reports zero
+unhandled errors. The repaired Grow case passes in 7.597 seconds. The
+10,001-pass native scale case passes in 141.974 seconds, the 1,000-birth
+case in 131.502 seconds, cadence in 51.262 seconds and native transport in
+26.014 seconds under its original 30-second timeout.
+
+The later Node step passes 31 cases and fails two package-boundary checks.
+Three new Git test files import Replay, against the existing rule that
+Git stays below Replay. Counting is not reached. The original whole gate
+takes 767.56 seconds and 1,043.37 CPU seconds: 910.38 user plus 132.99 system.
+All 2,695 source files, modes, head, tree and lock stamp stay exact, with
+zero installs. Earlier approximate durations in builder assert `7e9374a9`
+are corrected by the raw logs: Grow is 7.597 seconds and cadence 51.262.
+
+The repair moves those three whole files into Replay's explicit Git
+development-test boundary. It keeps the four case bodies, assertions,
+timeouts, actual budget class and fixture inputs unchanged. Imports name
+the original Git source and support files and the local Replay entry
+points. The boundary guard names only the three new test files; Git's
+prohibition and the portable Replay restrictions remain. This is test
+placement, with no production or budget change. Exact body comparisons,
+focused results and the next gate are recorded against the repaired
+commit in Gitseq; they are not attributed to the failed gate above.
+
+## Completed integrated gate and acceptance review
+
+The gate at `be0c40b5` completes naturally with exit 0. Vitest reports
+2,072 passed cases and three skipped recorder cases, with zero unhandled
+errors. Repository Node checks pass 33/33 and Counting Node checks pass
+55/55. Outer time is 804.78 seconds and 1,093.50 CPU seconds. All 2,703
+physical source files, modes, head, tree and lock stamp remain exact, with
+zero installs. The original logs and inputs remain frozen separately.
+This is the historical passing gate at that head, not a gate for the later
+witness repair.
+
+Joint F1/9a review `52b4bd01` requests changes for native witness 2. The
+10,001 confirmed passes use the explicitly lowered entry cap of two;
+they do not show dense retained-input growth under the default budget.
+The old-only repeat after eviction also does not show one later pass
+containing both an old retained key and a genuinely new key. No additional
+architecture or security finding is recorded. The original passing gate
+and all lower-cap assertions remain as additional evidence.
+
+The repair extends that same native scenario with 4,609 additional real
+signed acts and retained rule inputs. Passes use new unchanged default
+ledgers, stop at whole-entry boundaries, and continue at the next entry.
+A later eviction precedes a single default-budget pass that names the old
+pass-3,700 key and one new key. The witness checks the current manifest,
+exact keyed SQLite reads, current-pass path, preserved old path, bounded
+tree work, and absence of old Git payload or manifest reads. Referenced
+local rule bodies still receive their original charged canonical payload
+validation; each body and owner lookup is an exact one-row key read. The
+witness forbids retained-table scans and old Git blob resends.
+
+The first focused attempt fails a new assertion that incorrectly forbids
+reading the referenced old rule body locally. That read is required for
+payload validation, before looking up its existing archive owner. The
+case takes 166.707 seconds and its original process exits 1. The wrapper
+takes 173.15 seconds and 178.90 CPU seconds, then its post-guard also flags
+Vitest's generated results cache. A separate complete audit confirms all
+2,703 source files and 5,530 installed dependency rows stay exact; only
+that generated cache file changes. Both failures and the original inputs
+remain preserved. Subsequent helpers separate only that exact generated
+cache output and record its before and after identities. No installed
+package is excluded from the guards. The test correction verifies the
+required bounded local body reads and retains the old Git read controls.
+
+The repository identity guard is the actual native
+`ArchiveRows.target(otherRepository)` refusal. A separate driver attempt
+against a different scripted repository/ref shows ref conflict. Both
+leave retained-pass values unchanged. The driver keeps its persisted
+immutable target; the test does not claim it resolves a new identity for
+an already bound row. Checker clarification `0b4a8b48` agrees with this
+distinction in principle; exact source and evidence still require review.
+
+The authority, provider, policy and repository ports remain explicit test
+fixtures. Original debit rules, prices, caps, payload admission and
+30-second per-pass deadline are unchanged. This is a preparation checkpoint.
+A new exact-head gate and fresh joint review remain required. The final
+gate result will be attached to the tested commit through Gitseq; this
+checkpoint does not predict that result.
+
+The corrected focused case passes naturally in 157.392 seconds. Its complete
+wrapper takes 163.23 seconds and 168.59 CPU seconds; the test child takes
+161.126 seconds. All 2,703 captured physical source files, head, tree,
+lock stamp and 5,530 installed dependency rows remain exact. Only the one
+explicit generated Vitest results cache may change and its identities are
+recorded separately. Zero installs. The complete original 7,321-byte
+10,001-pass body remains byte-identical before the extension (SHA-256
+`983b3db7e1de80b0775b5e0f8da85c8ee39626ada5397250e01ec2c4f69cb821`).
+The actual case confirms 14,609 distinct retained rule inputs, including
+one new key after the large-history restart. The identity and ref-conflict
+checks also pass, preserving every recorded pass value. This is one focused
+case, not a whole gate or deployment acceptance.
+
+The scoped test compiler passes before both focused attempts. After the
+successful focused run, one final console observation is added after all
+assertions so the exact dense-pass costs and mixed read receipts will be
+preserved in the gate's raw log. It changes no assertion, ledger, input or
+case deadline. The final exact-head gate exercises that observation.

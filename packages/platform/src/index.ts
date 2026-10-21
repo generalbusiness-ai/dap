@@ -61,7 +61,7 @@ export { isOf, isStandingDestination, pinnedBy, pinnedOf, versionOf } from "./ve
 export { ACTIONS_MOST, FIRST_ACTIONS, FIRST_ACTIONS_OF, MEMBERSHIP, MEMBERSHIP_1, NO_MEMBER, ROLE_LISTS, ROLE_TABLE, ROLE_TABLE_OF, actionsIn, isActions, isHandle, standingOf, type Role } from "./membership.ts";
 export { CREATION_ATTEMPTS, DIRECTORY_OF, REGISTER, REPOSITORY, directoryIdOf, directorySeed, registerRules, repositoryName } from "./register.ts";
 export { DEFINITION_DOMAIN, DIRECTORY, IMPORT_ATTEMPTS, SEEN, SIBLINGS_OF, directoryMembership, directoryRules, directoryRulesScope } from "./directory.ts";
-export { COLLECT_MOST, DESTINATION, DESTINATION_1, DESTINATION_5, DESTINATION_ATTEMPTS, DESTINATION_KINDS, READ_TOKEN_HOURS, destinationMembership, destinationRulesScope, destinationReceipt, firstHeadCommit, initialCommitOf, revokedToken } from "./destination.ts";
+export { COLLECT_MOST, DESTINATION, DESTINATION_1, DESTINATION_5, DESTINATION_ATTEMPTS, DESTINATION_KINDS, READ_TOKEN_HOURS, destinationEvidenceValues, destinationMembership, destinationRulesScope, destinationReceipt, firstHeadCommit, initialCommitOf, revokedToken } from "./destination.ts";
 export { initialCommitObjects, readmeText, receiptObjects, receiptRef, importRef, type Readme, type DestinationObject, type DestinationCommit, type ObjectFormat } from "./destination-objects.ts";
 export { EDIT_PATH_BYTES, editCommit, editObjects, editPath, editTree, manifestCommit } from "./destination-objects.ts";
 export { PROPOSE_FILE, fileOf, sourcesOf, manifestFiles } from "./destination-reading.ts";

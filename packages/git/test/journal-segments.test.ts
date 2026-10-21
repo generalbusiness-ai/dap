@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { canonicalize, utf8 } from "@generalbusiness/artroom-bytes";
-import { ARCHIVE_OBJECT_BYTES as B, archiveSegments, archiveShards } from "../src/journal-segments.ts";
+import { ARCHIVE_OBJECT_BYTES as B, ArchiveSegmentCursor, archiveSegments, archiveShards } from "../src/journal-segments.ts";
 
 // Synthetic canonical objects test grouping, not native entries or archive authority.
 test("archive segments close at1000 lines and preserve canonical bytes and contiguous sequence", () => {
@@ -13,6 +13,11 @@ test("archive segments close at1000 lines and preserve canonical bytes and conti
   const decoded = segments.flatMap(s => new TextDecoder().decode(s.bytes).split("\n"));
   expect(decoded).toEqual(lines.map(line => line.bytes));
   expect(segments.every(s => s.bytes.at(-1) === 125)).toBe(true); // final }, no trailing LF
+  const grouping = new ArchiveSegmentCursor(100_000), starts: number[] = [];
+  for (const line of lines) { const first = grouping.append(line.seq, utf8(line.bytes).length); if (first !== null) starts.push(first); }
+  expect(starts).toEqual([0, 1000]);
+  expect(grouping.segments).toBe(2);
+  expect(grouping.bytes).toBe(segments.reduce((n, segment) => n + segment.bytes.length, 0));
   expect(archiveSegments(lines.slice(0, 1000), 100_000)).toHaveLength(1);
   expect(archiveSegments([], 0)).toEqual([]);
   for (const seq of [-1, 0.5, 1_000_000_000_000]) expect(() => archiveSegments([{ seq, bytes: "{}" }], 10)).toThrow("bad-path");
@@ -30,6 +35,14 @@ test("archive byte boundaries include only separating LF, stop oversized lines a
   const joined = archiveSegments([{ seq: 0, bytes: almost }, { seq: 1, bytes: "{}" }, { seq: 2, bytes: "{}" }], B + 2);
   expect(joined.map(s => s.bytes.length)).toEqual([B, 2]);
   expect(new TextDecoder().decode(joined[0]?.bytes)).toBe(almost + "\n{}");
+  const grouping = new ArchiveSegmentCursor(B + 2);
+  expect([grouping.append(0, B - 3), grouping.append(1, 2), grouping.append(2, 2)]).toEqual([0, null, 2]);
+  expect(grouping.bytes).toBe(B + 2); expect(grouping.segmentBytes).toBe(2); expect(grouping.segments).toBe(2);
+  const tight = new ArchiveSegmentCursor(5);
+  expect(tight.append(0, 2)).toBe(0);
+  expect(() => tight.append(1, 4)).toThrow("journal segment allowance");
+  expect(tight.bytes).toBe(2); expect(tight.segmentBytes).toBe(2); expect(tight.segments).toBe(1);
+  expect(tight.append(1, 2)).toBeNull(); expect(tight.bytes).toBe(5);
   expect(() => archiveSegments([{ seq: 0, bytes: exact + " " }], B + 1)).toThrow("journal entry line");
   expect(() => archiveSegments([{ seq: 0, bytes: canonicalize({ x: "é".repeat(B / 2) }) }], 2 * B)).toThrow("journal entry line");
   expect(() => archiveSegments([{ seq: 0, bytes: exact }, { seq: 1, bytes: "{}" }], B + 1)).toThrow("journal segment allowance");

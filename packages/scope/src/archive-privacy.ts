@@ -21,7 +21,7 @@ export function archivePrivacyMetadata(sql: Pick<Sql, "exec">, prefix: ArchivePr
   if (support.named !== named || (isDigest(named) ? support.definition.digest !== named : support.definition.declared.name !== platformName(named))) return stop("unavailable");
   archiveSupportMetadata(support, budget);
   const positions: ArchivePrivacyPosition[] = [];
-  let previous: Digest | null = null;
+  let previous: Digest | null = prefix.after?.hash ?? null;
   for (const position of prefix.positions) {
     const source = { kind: "local" as const, position }, header = archiveEntryHeader(sql, source, budget);
     if (header.seq !== position.seq || header.at.scope !== prefix.pin.at.scope || header.at.inc !== prefix.pin.at.inc || header.at.kind !== prefix.pin.at.kind) return stop("unavailable");

@@ -4,13 +4,17 @@
 import { expect, onTestFinished, test } from "vitest";
 import { env } from "cloudflare:test";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Input, SendForm } from "@generalbusiness/dap-contract";
-import { canonicalize, utf8 } from "@generalbusiness/artroom-bytes";
+import type { Digest, Input, SendForm } from "@generalbusiness/dap-contract";
+import { canonicalize, isEntry, parseStrict, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
 import { variant } from "@generalbusiness/dap-derive/testing";
 import { outcomeValueDomains, validateDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { COUNTING_COHORT, platform } from "@generalbusiness/dap-platform";
-import { ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
+import { forecastArchiveForeignLookup, forecastArchiveForeignSelection, forecastArchiveForeignBasis, forecastArchiveForeignScan, forecastArchiveForeignRepeat, forecastArchiveForeignCopyRequest, forecastArchiveForeignCopySize, forecastArchiveForeignGenesis, forecastArchiveForeignColdCopy } from "../src/archive-foreign-cost.ts";
+import { ArchiveRetainedReader } from "../src/archive-retained.ts";
+import { ArchiveScout } from "../src/archive-scout.ts";
+import { ArchiveForeignPlan } from "../src/archive-foreign-plan.ts";
+import { ARCHIVE_BOUNDS, ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
 import { buildJournalArchive, journalRef, JournalWork } from "@generalbusiness/artroom-git/journal";
 import { JournalObjectReader, JournalObjects } from "../../git/src/journal-objects.ts";
 import { readJournalArchive } from "@generalbusiness/artroom-git/journal-reader";
@@ -21,9 +25,10 @@ import { archiveRepository, archiveSql } from "./support/archive.ts";
 import { fixtureArchiveWiring } from "./worker.ts";
 import { sessionRoom } from "./support/session-room.ts";
 import { namespace } from "../src/namespace.ts";
-import { ArchiveForeignMetadata } from "../src/archive-foreign.ts";
+import { ArchiveForeignMetadata, type ArchiveForeignRecordedScan, type ArchiveForeignExpectedCopy } from "../src/archive-foreign.ts";
 import { archiveInput } from "../src/archive-input.ts";
-import { archivePrefixMetadata } from "../src/archive-prefix.ts";
+import { ArchivePrefixStopped, archivePrefixMetadata } from "../src/archive-prefix.ts";
+import { archiveEntryHeader, archiveEntryPrivacy, archiveSupportMetadata } from "../src/archive-entry-metadata.ts";
 import { archivePrivacyMetadata } from "../src/archive-privacy.ts";
 import { FixtureArchiveSourcePins } from "../src/archive-source-pins.ts";
 import { inventoryArchive, type ArchivePolicyRegistry, type ReviewedArchivePolicy } from "../src/archive-inventory.ts";
@@ -38,7 +43,7 @@ const receiver = variant(definition.declared, data => {
 });
 const policy = (def: typeof definition, entryTypes = variants): ReviewedArchivePolicy => ({ review: "TEST reviewed inline classes; no production certificate",
   entryTypes, support: { named: def.digest, definition: def, owners: new Map(), records: new Map(), preparations: new Map() } });
-async function fixture() {
+async function fixture(repeatUse = false) {
   const producer = await create(), consumer = await create({}, {}, receiver);
   const commitment = await producer.commitment(), assigned = (await producer.sealed()).find(sealed => sealed.entry.seq > commitment && sealed.entry.input.type === "act" && sealed.entry.input.signed.intent.kind === "assign")!;
   expect(assigned).toBeDefined();
@@ -49,10 +54,11 @@ async function fixture() {
     await consumer.restart();
     await consumer.did(rita, "remark", { on: 0, fields: { text: "actual foreign assignment", proof: { at: producer.at, seq: assigned.entry.seq, hash: assigned.hash } } });
     await consumer.did(rita, "remark", { on: 0, fields: { text: "actual foreign genesis", proof: producer.genesis.fact } });
+    if (repeatUse) await consumer.did(rita, "remark", { on: 0, fields: { text: "actual repeated foreign assignment", proof: { at: producer.at, seq: assigned.entry.seq, hash: assigned.hash } } });
   } finally { wired.delete(consumer.name); }
   const birth = await producer.stub.entry(reader, 0); expect(birth.ok).toBe(true); if (!birth.ok) return expect.fail("native birth read required");
   const entries = await consumer.sealed(), uses = entries.flatMap(sealed => sealed.entry.uses);
-  expect(uses).toHaveLength(2);
+  expect(uses).toHaveLength(repeatUse ? 3 : 2);
   const sources = new FixtureArchiveSourcePins([{ at: producer.at, birth: { bytes: canonicalize(birth.value.entry), hash: birth.value.hash }, declaration: canonicalize(definition.declared) }], PROPOSED_BOUNDS, new ArchiveBudget());
   const policies: ArchivePolicyRegistry = new Map([[receiver.digest, policy(receiver)], [definition.digest, policy(definition)]]);
   const through = await consumer.head();
@@ -64,14 +70,50 @@ async function fixture() {
       return state.storage.sql.exec(query, ...args);
     } };
     let reason = "admitted", positions: number[] = [], basis: ReturnType<ArchiveForeignMetadata["basis"]> = [], copies: unknown[] = [];
+    let mapCosts: { basis: ArchiveCost; selection: ArchiveCost; lookups: ArchiveCost[] } | null = null;
+    const difference = (before: ArchiveCost, after: ArchiveCost): ArchiveCost =>
+      Object.fromEntries(Object.keys(before).map(key => [key, after[key as keyof ArchiveCost] - before[key as keyof ArchiveCost]])) as ArchiveCost;
+    const nativeCosts: { query: string; cost: ArchiveCost }[] = [];
+    const scanCosts: { seq: number; count: number; cost: ArchiveCost }[] = [];
+    let repeatCost: { bytes: number; cost: ArchiveCost } | null = null;
+    const native = budget.native.bind(budget);
+    budget.native = (port, reservation) => {
+      const guarded = native(port, reservation);
+      return { exec: (query, ...args) => {
+        const before = budget.admitted(), rows = guarded.exec(query, ...args);
+        nativeCosts.push({ query, cost: difference(before, budget.admitted()) });
+        return rows;
+      } };
+    };
     try {
       const foreign = new ArchiveForeignMetadata(sql, pins, reviewed, PROPOSED_BOUNDS, budget);
+      const scan = foreign.scan.bind(foreign);
+      foreign.scan = (position, count) => {
+        const before = budget.admitted(); scan(position, count);
+        scanCosts.push({ seq: position.seq, count, cost: difference(before, budget.admitted()) });
+      };
       const prefix = archivePrefixMetadata(sql, consumer.at, through, PROPOSED_BOUNDS, budget, new Set([receiver.digest]));
       positions = archivePrivacyMetadata(sql, prefix, policy(receiver).support, budget, foreign).positions.map(position => position.seq);
-      basis = foreign.basis(); copies = uses.map(use => foreign.get(use.content));
+      const beforeBasis = budget.admitted(); basis = foreign.basis();
+      const basisCost = difference(beforeBasis, budget.admitted()), beforeSelection = budget.admitted();
+      const selection = foreign.selection(), selectionCost = difference(beforeSelection, budget.admitted());
+      const lookups: ArchiveCost[] = [];
+      copies = uses.map(use => {
+        let before = budget.admitted(); const copy = foreign.get(use.content);
+        lookups.push(difference(before, budget.admitted()));
+        before = budget.admitted(); const from = foreign.source(use.fact);
+        lookups.push(difference(before, budget.admitted()));
+        expect(from).toEqual(copy); return copy;
+      });
+      expect(selection).toEqual(copies);
+      mapCosts = { basis: basisCost, selection: selectionCost, lookups };
+      const alreadyRead = selection.find(copy => copy.fact.seq > 0)!;
+      const beforeRepeat = budget.admitted();
+      foreign.scan(prefix.positions[1]!, 1); // Same native direct use, same original ledger.
+      repeatCost = { bytes: alreadyRead.bytes, cost: difference(beforeRepeat, budget.admitted()) };
     } catch (error) { reason = (error as { reason: string }).reason; }
     expect(forbidden).toEqual([]);
-    return { reason, positions, basis, copies, queries, cost: budget.admitted() };
+    return { reason, positions, basis, copies, queries, cost: budget.admitted(), mapCosts, nativeCosts, repeatCost, scanCosts };
   });
   const inventory = (pins: FixtureArchiveSourcePins | undefined = sources, reviewed = policies, damageBody = false, limits: Partial<ArchiveCost> = {}) => consumer.inside(state => {
     const calls: { query: string; key: unknown }[] = [];
@@ -89,7 +131,7 @@ async function fixture() {
     }, transaction: work => state.storage.transactionSync(work) }, consumer.at, through, PROPOSED_BOUNDS, reviewed, new ArchiveBudget(limits), pins);
     return { result, calls, damaged };
   });
-  return { producer, consumer, birth: birth.value, uses, sources, policies, scan, inventory };
+  return { producer, consumer, birth: birth.value, assigned, uses, sources, policies, through, scan, inventory };
 }
 
 test("direct foreign copies classify their own full headers against fixture pins and separate reviewed policy before any payload body", async () => {
@@ -99,6 +141,244 @@ test("direct foreign copies classify their own full headers against fixture pins
   expect(result.copies).toEqual(f.uses.map(use => expect.objectContaining({ content: use.content, fact: use.fact, pin: definition.digest, under: definition.declared.name })));
   expect(result.queries.some(query => query.includes("json_each(entry.bytes, '$.uses')"))).toBe(true);
   expect(result.cost.attempts).toBeGreaterThan(0);
+  expect(result.mapCosts).not.toBeNull();
+  const fixed = { entries: 0, attempts: 0, nodes: 0, calls: 0 };
+  expect(result.mapCosts!.basis).toEqual({ ...fixed, metadata: 512, inputWork: 4096 });
+  expect(result.mapCosts!.selection).toEqual({ ...fixed, metadata: 1024, inputWork: 2048 });
+  for (const lookup of result.mapCosts!.lookups) {
+    expect(lookup).toEqual({ ...fixed, attempts: 1, metadata: 256, inputWork: 512 });
+    expect(forecastArchiveForeignLookup()).toEqual(lookup);
+  }
+  expect(forecastArchiveForeignBasis(result.basis.length)).toEqual(result.mapCosts!.basis);
+  expect(forecastArchiveForeignSelection(result.copies.length)).toEqual(result.mapCosts!.selection);
+  const useReads = result.nativeCosts.filter(row => row.query.includes("json_each(entry.bytes, '$.uses')"));
+  const sizeReads = result.nativeCosts.filter(row => row.query.startsWith("SELECT octet_length(bytes) AS size"));
+  const genesisReads = result.nativeCosts.filter(row => row.query.includes("$.input.seed.definition"));
+  expect(useReads).toHaveLength(3); expect(sizeReads).toHaveLength(2); expect(genesisReads).toHaveLength(1);
+  for (const row of useReads) {
+    expect(row.cost).toEqual({ ...fixed, calls: 1, metadata: 1536, inputWork: 1536 });
+    expect(forecastArchiveForeignScan(1)).toEqual(row.cost);
+  }
+  for (const row of sizeReads) {
+    expect(row.cost).toEqual({ ...fixed, calls: 1, metadata: 128, inputWork: 128 });
+    expect(forecastArchiveForeignCopySize()).toEqual(row.cost);
+  }
+  expect(genesisReads[0]!.cost).toEqual({ ...fixed, calls: 1, metadata: 512, inputWork: 512 });
+  expect(forecastArchiveForeignGenesis()).toEqual(genesisReads[0]!.cost);
+  expect(result.repeatCost).not.toBeNull();
+  const repeat = result.repeatCost!;
+  expect(repeat.cost).toEqual({ ...fixed, attempts: 1, calls: 1, metadata: 1536, inputWork: 2048 + repeat.bytes * 64 });
+  const quote = forecastArchiveForeignRepeat(repeat.bytes), scan = forecastArchiveForeignScan(1);
+  for (const key of Object.keys(quote) as (keyof ArchiveCost)[]) expect(quote[key] + scan[key]).toBe(repeat.cost[key]);
+  expect(forecastArchiveForeignCopyRequest()).toEqual({ ...fixed, attempts: 1, metadata: 0, inputWork: 512 });
+  expect(result.scanCosts).toHaveLength(3);
+  for (let index = 0; index < 2; index++) {
+    const use = f.uses[index]!, source = use.fact.seq === 0 ? f.birth.entry : f.assigned.entry;
+    const copy = result.copies[index] as { bytes: number };
+    const cold = forecastArchiveForeignColdCopy({ bytes: copy.bytes, input: source.input.type,
+      effects: source.effects.length, declarationUnits: canonicalize(definition.declared).length,
+      support: { declarationNodes: 0, ownerKinds: 0, ownerDomains: 0, capabilityKinds: 0 }, membership8: false });
+    expect(cold.ok).toBe(true);
+    if (cold.ok) {
+      const uses = forecastArchiveForeignScan(1), actual = result.scanCosts[index]!.cost;
+      for (const key of Object.keys(cold.work) as (keyof typeof cold.work)[]) expect(cold.work[key] + uses[key]).toBe(actual[key]);
+    }
+  }
+  expect(result.scanCosts.slice(0, 2).reduce((sum, row) => sum + row.cost.nodes, 0)).toBe(1);
+
+
+
+});
+
+// Native metadata admission and SQLite are real. Policy/source/clock/read
+// configuration stays the explicit TEST fixture above; no export is made.
+test("native foreign recording pays scout work and fences fresh metadata after a native turn", async () => {
+  const f = await fixture();
+  const result = await f.consumer.inside(state => {
+    const budget = new ArchiveBudget(), forbidden: string[] = [];
+    const sql = { exec(query: string, ...args: (string | number | null | ArrayBuffer)[]) {
+      if (/^SELECT (?:\*|bytes)(?:\s|,)/.test(query)) { forbidden.push(query); throw Error("body tripwire"); }
+      return state.storage.sql.exec(query, ...args);
+    } };
+    const recorder = new ArchiveForeignMetadata(sql, f.sources, f.policies, PROPOSED_BOUNDS, budget, new Set(), receiver.digest, { record: true });
+    const scans: Readonly<ArchiveForeignRecordedScan>[] = [], scan = recorder.scan.bind(recorder);
+    const measuring = new ArchiveRetainedReader(sql, budget);
+    recorder.scan = (position, count) => {
+      scan(position, count); const held = recorder.recorded(position); scans.push(held);
+      for (const request of held.requests) if (request.kind === "cold") {
+        const descriptor = { content: request.content, bytes: request.copy.bytes, fact: request.copy.fact, pin: request.copy.pin };
+        // Both first and repeated registration pay full original table work.
+        for (let repeat = 0; repeat < 2; repeat++) {
+          const before = budget.admitted(); measuring.registerCopy(descriptor); const after = budget.admitted();
+          expect(after.metadata - before.metadata).toBe(512); expect(after.inputWork - before.inputWork).toBe(1024);
+          expect(after.attempts).toBe(before.attempts); expect(after.calls).toBe(before.calls);
+        }
+        expect(measuring.measure({ kind: "entry", digest: request.content }, request.copy.bytes)).toBe(request.copy.bytes);
+        const tight = new ArchiveRetainedReader(sql, new ArchiveBudget(), [descriptor]);
+        expect(() => tight.registerCopy({ ...descriptor, bytes: descriptor.bytes + 1 })).toThrow("archive-unavailable");
+      }
+    };
+    const prefix = archivePrefixMetadata(sql, f.consumer.at, f.through,
+      PROPOSED_BOUNDS, budget, new Set([receiver.digest]));
+    archivePrivacyMetadata(sql, prefix, policy(receiver).support, budget, recorder);
+    recorder.scan(prefix.positions[1]!, 1); // An actual repeated direct use on this same scout ledger.
+    const scouted = budget.admitted(), cold = scans.flatMap(row => row.requests.filter(request => request.kind === "cold"));
+    budget.spend({ metadata: cold.length * 256, inputWork: cold.length * 512 });
+    const expected = new Map(cold.map(request => [request.content, request.copy]));
+    const fresh = new ArchiveForeignMetadata(sql, f.sources, f.policies, PROPOSED_BOUNDS, budget, new Set(), receiver.digest, { expected });
+    const receipts: ArchiveCost[] = [];
+    for (const recorded of scans) {
+      const quote = { attempts: 0, calls: 0, metadata: 0, inputWork: 0 }, uses = forecastArchiveForeignScan(recorded.uses);
+      for (const key of Object.keys(quote) as (keyof typeof quote)[]) quote[key] += uses[key];
+      for (const request of recorded.requests) {
+        const work = request.kind === "repeat" ? forecastArchiveForeignRepeat(request.bytes) : forecastArchiveForeignColdCopy(request.footprint);
+        if ("ok" in work && !work.ok) return expect.fail("The actual native cold copy must fit its scalar bounds.");
+        const cost = "ok" in work ? work.work : work;
+        for (const key of Object.keys(quote) as (keyof typeof quote)[]) quote[key] += cost[key];
+      }
+      const before = budget.admitted(); fresh.scan(recorded.position, recorded.uses); const after = budget.admitted();
+      const actual = Object.fromEntries(Object.keys(before).map(key => [key, after[key as keyof ArchiveCost] - before[key as keyof ArchiveCost]])) as ArchiveCost;
+      for (const key of Object.keys(quote) as (keyof typeof quote)[]) expect(quote[key]).toBe(actual[key]);
+      receipts.push(actual);
+    }
+    const metadataOnly = (value: unknown): boolean => value === null || ["string", "number", "boolean"].includes(typeof value)
+      || Array.isArray(value) && value.every(metadataOnly)
+      || typeof value === "object" && Object.getPrototypeOf(value) === Object.prototype && Object.values(value).every(metadataOnly);
+    return { scans, scouted, final: budget.admitted(), receipts, forbidden,
+      metadataOnly: metadataOnly(scans), frozen: scans.every(row => Object.isFrozen(row) && Object.isFrozen(row.requests)
+        && row.requests.every(request => Object.isFrozen(request) && (request.kind === "repeat" || Object.isFrozen(request.footprint.support)))) };
+  });
+  expect(result.scans).toHaveLength(3);
+  expect(result.scans[2]!.requests[0]!.kind).toBe("repeat");
+  expect(result.scans[2]!.requests[0]!.content).toBe(result.scans[0]!.requests[0]!.content);
+  expect(result.metadataOnly).toBe(true); expect(result.frozen).toBe(true);
+  expect(result.forbidden).toEqual([]); expect(result.scouted.nodes).toBe(1); expect(result.final.nodes).toBe(2);
+  expect(result.final.inputWork).toBeGreaterThan(result.scouted.inputWork);
+  const first = result.scans[0]!, second = result.scans[1]!;
+  for (const variant of ["size", "effects"] as const) {
+    const changed = await f.consumer.inside(state => {
+      const all = result.scans.flatMap(row => row.requests.filter(request => request.kind === "cold"));
+      const expected = new Map<Digest, Readonly<ArchiveForeignExpectedCopy>>(all.map(request => [request.content, request.copy]));
+      const selected = variant === "size" ? first : second, request = selected.requests[0]!;
+      if (request.kind !== "cold") return expect.fail("The fixture must first see each retained copy cold.");
+      const raw = state.storage.sql.exec<{ bytes: string }>("SELECT bytes FROM retained_input WHERE kind = 'entry' AND digest = ?", request.content).one().bytes;
+      let bytes = raw + " ";
+      if (variant === "effects") {
+        const entry = parseStrict(raw); if (!isEntry(entry) || entry.effects.length === 0) return expect.fail("The real genesis copy needs effects.");
+        bytes = canonicalize({ ...entry, effects: [] }); bytes += " ".repeat(utf8(raw).length - utf8(bytes).length);
+      }
+      const queries: string[] = [], budget = new ArchiveBudget();
+      const sql = { exec(query: string, ...args: (string | number | null | ArrayBuffer)[]) { queries.push(query); return state.storage.sql.exec(query, ...args); } };
+      let reason = "admitted";
+      try {
+        state.storage.sql.exec("UPDATE retained_input SET bytes = ? WHERE kind = 'entry' AND digest = ?", bytes, request.content);
+        new ArchiveForeignMetadata(sql, f.sources, f.policies, PROPOSED_BOUNDS, budget, new Set(), receiver.digest, { expected }).scan(selected.position, selected.uses);
+      } catch (error) { if (!(error instanceof ArchivePrefixStopped)) throw error; reason = error.reason; }
+      finally { state.storage.sql.exec("UPDATE retained_input SET bytes = ? WHERE kind = 'entry' AND digest = ?", raw, request.content); }
+      return { reason, queries, cost: budget.admitted() };
+    });
+    expect(changed.reason).toBe("foreign-source-mismatch");
+    expect(changed.queries.filter(query => query.includes("AS effects"))).toHaveLength(variant === "size" ? 0 : 1);
+    expect(changed.queries.some(query => query.startsWith("SELECT bytes"))).toBe(false);
+    expect(changed.cost.nodes).toBe(0);
+  }
+});
+
+// Each copied fact is a real native use. Rebuilding the scout between
+// entries gives a cold recorder cache, not another budget or admission.
+test("foreign plans quote native whole prefixes and retain an earlier boundary after failed lookahead", async () => {
+  const f = await fixture(true);
+  const result = await f.consumer.inside(state => {
+    const budget = new ArchiveBudget(), queries: string[] = [];
+    const sql = { exec(query: string, ...args: (string | number | null | ArrayBuffer)[]) {
+      queries.push(query);
+      if (/^SELECT (?:\*|bytes)(?:\s|,)/.test(query)) throw Error("body tripwire");
+      return state.storage.sql.exec(query, ...args);
+    } };
+    const prefix = archivePrefixMetadata(sql, f.consumer.at, f.through, PROPOSED_BOUNDS, budget, new Set([receiver.digest]));
+    const plan = new ArchiveForeignPlan(prefix.positions[0]!.seq, budget), visited = new Set<Digest>();
+    archiveSupportMetadata(policy(receiver).support, budget);
+    const counts: number[] = [], recordedKinds: string[] = [];
+    for (const position of prefix.positions) {
+      const source = { kind: "local" as const, position }, header = archiveEntryHeader(sql, source, budget);
+      archiveEntryPrivacy(sql, source, header, policy(receiver).support, budget);
+      counts.push(header.uses);
+      let recorded: Readonly<ArchiveForeignRecordedScan> | null = null;
+      if (header.uses) {
+        const scout = new ArchiveForeignMetadata(sql, f.sources, f.policies, PROPOSED_BOUNDS, budget, visited, receiver.digest, { record: true });
+        scout.scan(position, header.uses); recorded = scout.recorded(position);
+        recordedKinds.push(...recorded.requests.map(request => request.kind));
+      }
+      plan.append(position, header.uses, recorded);
+    }
+    const scouted = budget.admitted(), earlier = prefix.positions[1]!, head = { seq: earlier.seq, hash: earlier.hash };
+    const handoff = plan.handoffCost(), beforeMap = budget.admitted(), oldMap = plan.expectedCopies(head), afterMap = budget.admitted();
+    for (const key of Object.keys(handoff) as (keyof ArchiveCost)[]) expect(afterMap[key] - beforeMap[key]).toBe(handoff[key]);
+    expect(oldMap.size).toBe(1);
+    const expected = plan.expectedCopies(f.through);
+    const fresh = new ArchiveForeignMetadata(sql, f.sources, f.policies, PROPOSED_BOUNDS, budget, new Set(), receiver.digest, { expected });
+    const work = { attempts: 0, calls: 0, metadata: 0, inputWork: 0 };
+    for (const [index, position] of prefix.positions.entries()) {
+      const before = budget.admitted(); if (counts[index]) fresh.scan(position, counts[index]!); const after = budget.admitted();
+      for (const key of Object.keys(work) as (keyof typeof work)[]) work[key] += after[key] - before[key];
+      const quote = plan.quote({ seq: position.seq, hash: position.hash });
+      expect(quote.work).toEqual(work);
+      expect(quote.copies).toBe(Math.min(position.seq, 2));
+      expect(quote.declarations).toEqual(position.seq === 0 ? [] : [definition.digest]);
+    }
+    const quoteBefore = plan.quote(head), beforeFailed = budget.admitted();
+    // Synthetic extra position tests metadata-plan failure only. No native
+    // entry, scoped admission, payload or later journal is invented.
+    const extra = { seq: f.through.seq + 1, hash: textDigest("TEST uncommitted lookahead position"), bytes: 1 };
+    const failed = budget.lookahead({ metadata: ARCHIVE_BOUNDS.metadata - beforeFailed.metadata }, () => plan.append(extra, 0, null));
+    expect(failed.kind).toBe("limited");
+    const quoteAfter = plan.quote(head); expect(quoteAfter).toEqual(quoteBefore);
+    let uncommitted: string | null = null;
+    try { plan.quote(extra); } catch (error) { if (!(error instanceof ArchivePrefixStopped)) throw error; uncommitted = error.reason; }
+    expect(uncommitted).toBe("mismatch");
+    return { recordedKinds, scouted, final: budget.admitted(), quoteBefore, quoteAfter, expected: [...expected.keys()], oldExpected: [...oldMap.keys()], queries };
+  });
+  expect(result.recordedKinds).toEqual(["cold", "cold", "cold"]);
+  expect(result.expected).toHaveLength(2); expect(result.oldExpected).toEqual([f.uses[0]!.content]);
+  expect(result.quoteBefore).toEqual(result.quoteAfter);
+  expect(result.scouted.nodes).toBe(1); expect(result.final.nodes).toBe(2);
+  expect(result.queries.some(query => /^SELECT (?:\*|bytes)(?:\s|,)/.test(query))).toBe(false);
+});
+
+// Invariant: real direct-copy scouting may cross Native turns, while
+// fresh inventory still classifies every copy and byte-compares each plan.
+test("Native scout carries direct-copy metadata across a closed frame and prices fresh cold/repeat admission", async () => {
+  const f = await fixture(true), budget = new ArchiveBudget();
+  let scout!: ArchiveScout;
+  const first = await f.consumer.inside(state => {
+    const frame = ArchiveScout.open(state.storage.sql, f.consumer.at, f.through, null, PROPOSED_BOUNDS, f.policies, budget, f.sources);
+    expect(frame.next().kind).toBe("position"); expect(frame.next().kind).toBe("position");
+    scout = frame.close(); return budget.admitted();
+  });
+  await f.consumer.did(rita, "offer", { fields: { intent: 0 }, expected: { intent: 1 } });
+  const result = await f.consumer.inside(state => {
+    const queries: string[] = []; let fresh = false;
+    const sql = { exec(query: string, ...args: (string | number | null | ArrayBuffer)[]) {
+      if (!fresh && query.startsWith("SELECT bytes FROM retained_input") && args[0] !== "definition") return expect.fail("Scout cannot read retained copy/rule/snapshot bodies.");
+      queries.push(query); return state.storage.sql.exec(query, ...args);
+    }, transaction: <T>(work: () => T) => state.storage.transactionSync(work) };
+    const frame = scout.resume(sql);
+    expect(frame.next().kind).toBe("position"); expect(frame.next().kind).toBe("position");
+    expect(frame.next()).toEqual({ kind: "end" }); frame.close();
+    expect(queries.some(query => query.startsWith("SELECT bytes FROM entry") || query.startsWith("SELECT bytes FROM retained_value") || query.startsWith("SELECT bytes FROM retained_input") && !query.includes("kind = ?"))).toBe(false);
+    const forecast = scout.inventoryCost(f.through), constraints = scout.select(f.through), before = budget.admitted();
+    expect(constraints.expectedCopies.size).toBe(2); fresh = true;
+    const selected = inventoryArchive(sql, f.consumer.at, f.through, PROPOSED_BOUNDS, f.policies, budget, f.sources, null,
+      constraints.forecast, constraints.declarationSizes, constraints.expectedCopies, constraints.retainedSizes);
+    expect(selected.ok).toBe(true); if (!selected.ok) return expect.fail(selected.reason);
+    const after = budget.admitted();
+    for (const key of Object.keys(forecast) as (keyof ArchiveCost)[]) expect(forecast[key]).toBeGreaterThanOrEqual(after[key] - before[key]);
+    expect(selected.inventory.objects.filter(object => object.key.kind === "entry").map(object => object.key.digest)).toEqual([...new Set(f.uses.map(use => use.content))]);
+    expect(selected.inventory.entries.map(entry => entry.seq)).toEqual([0, 1, 2, 3]);
+    return after;
+  });
+  expect(result.entries).toBe(8); expect(result.nodes).toBe(4);
+  expect(result.attempts).toBeGreaterThan(first.attempts);
 });
 
 test("missing source or inline policy and a conflicting retained genesis pin refuse the whole prefix before payloads", async () => {

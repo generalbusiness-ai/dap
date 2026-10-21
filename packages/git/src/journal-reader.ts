@@ -11,6 +11,9 @@ import { archiveRetainedPath, firstOfArchiveSegment, journalRef } from "./journa
 import { archiveSegments, archiveShards } from "./journal-segments.ts";
 import { JOURNAL_SELECTION_BYTES, sameJournalScope, type JournalForeignSource } from "./journal-selection.ts";
 import { JournalLayoutRefusal, JournalWork, type JournalBudget } from "./journal-work.ts";
+import type { JournalTextOmission } from "./journal-v2-manifest.ts";
+export { readJournalRepositoryArchive } from "./journal-reader-any.ts";
+export { readJournalArchiveV2, type JournalV2ReadOptions } from "./journal-v2-reader.ts";
 
 export interface JournalReadBudget extends JournalBudget {
   /** Reserve physical object body bytes before asking the port to load them. */
@@ -39,6 +42,8 @@ export interface ReadJournal {
   readonly retained: readonly RetainedInput[];
   /** Descriptive classifier basis, not independently proven source history. */
   readonly foreignSources?: readonly JournalForeignSource[];
+  /** V2 canonical retained-text byte counts, taken on caller trust. */
+  readonly omittedTexts?: readonly JournalTextOmission[];
 }
 export type JournalReadResult = { readonly ok: true; readonly archive: ReadJournal } | JournalReadFailure;
 class InvalidArchive extends Error {

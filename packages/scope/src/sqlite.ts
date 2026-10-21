@@ -105,8 +105,8 @@ CREATE INDEX IF NOT EXISTS attempt_due ON attempt (next, seq, k, attempt) WHERE 
 CREATE TABLE IF NOT EXISTS record (capability TEXT NOT NULL, kind TEXT NOT NULL, key TEXT NOT NULL, state TEXT NOT NULL, value TEXT NOT NULL, PRIMARY KEY (capability, kind, key)) WITHOUT ROWID;
 CREATE INDEX IF NOT EXISTS record_by_state ON record (capability, kind, state);
 CREATE TABLE IF NOT EXISTS prepared (intent TEXT NOT NULL, capability TEXT NOT NULL, step TEXT NOT NULL, seq INTEGER NOT NULL, PRIMARY KEY (intent, capability, step)) WITHOUT ROWID;
-CREATE TABLE IF NOT EXISTS retained_input (kind TEXT NOT NULL, digest TEXT NOT NULL, bytes TEXT NOT NULL, under TEXT, PRIMARY KEY (kind, digest)) WITHOUT ROWID;
-CREATE TABLE IF NOT EXISTS retained_value (domain TEXT NOT NULL, digest TEXT NOT NULL, bytes TEXT NOT NULL, PRIMARY KEY (domain, digest)) WITHOUT ROWID;
+CREATE TABLE IF NOT EXISTS retained_input (kind TEXT NOT NULL, digest TEXT NOT NULL, bytes TEXT NOT NULL, under TEXT, pass INTEGER, PRIMARY KEY (kind, digest)) WITHOUT ROWID;
+CREATE TABLE IF NOT EXISTS retained_value (domain TEXT NOT NULL, digest TEXT NOT NULL, bytes TEXT NOT NULL, pass INTEGER, PRIMARY KEY (domain, digest)) WITHOUT ROWID;
 CREATE TABLE IF NOT EXISTS item_key (type TEXT NOT NULL, slot TEXT NOT NULL, key TEXT NOT NULL, id INTEGER NOT NULL, PRIMARY KEY (type, slot, key, id)) WITHOUT ROWID;
 `;
 
@@ -139,6 +139,11 @@ export class SqliteStore implements Store {
     this.#sql = sql;
     this.#spacing = spacing;
     this.#run(SCHEMA);
+    // Archive bookkeeping only. Existing rows start null; neither this
+    // column nor archive receipts participate in the folded state digest.
+    for (const table of ["retained_input", "retained_value"] as const) {
+      if (!this.#all(`PRAGMA table_info(${table})`).some(row => row["name"] === "pass")) this.#run(`ALTER TABLE ${table} ADD COLUMN pass INTEGER`);
+    }
     this.localSigners = new LocalSigners(sql, () => this.#signerScope());
   }
 
