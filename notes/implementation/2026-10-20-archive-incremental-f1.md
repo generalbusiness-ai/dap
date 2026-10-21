@@ -729,3 +729,55 @@ state machine, shared load and uncontrolled OS caches. These are separate
 full outer measurements. This extends the foundations only: creation and
 delivery text, observation and outcome references, complete cost planning
 and the adaptive driver remain open. No full gate or formal review has run.
+
+## Genesis and delivered text references
+
+Genesis projection selects the actual founding intent's fields, or the
+creator's message fields when no founding intent is present. It returns
+only the fixed route and typed detached-text digests. The existing native
+creation-text witness now supplies an actual founding text and compares
+both founding and child-creation projections with the genuine entries'
+byte plans. Repeated projections still spend their native calls and work.
+
+Delivery projection uses the actual shared `bound` and `textsNamed`
+selectors. The owning frame supplies its verified source fact and pinned
+definition name; SQL matches that source and the exact entry descriptor.
+It returns fixed class/type tokens, a message name from the trusted
+definition and structural flags. Message fields, relationship items and
+state strings are not returned. The flags preserve the predicates that
+`bound` and `updateOf` read; the selector-only shape is not a journal or a
+claim that any message was accepted. A handler requiring a pinned sender
+refuses missing source-pin context. Another pin selects no text.
+
+The existing native tell/redaction/repeat witness now declares the sender
+name and checks both matching and different pin contexts. A separate
+native relationship case uses a TEST definition to send `self`, then an
+earlier owned item, through real delivery. Both projections must name the
+actual text. A temporary opaque-body change gives that item another scope;
+metadata must then select no text. The test restores the exact original
+entry bytes and size before returning. That change is a metadata negative,
+not an accepted history or an integrity/replay witness. Advisory projection
+has no positive native witness here.
+
+| Original | Result | Outer elapsed seconds | Outer CPU seconds |
+|---|---|---:|---:|
+| `94013` | Both Scope compilers and strengthened native founding/creation case pass | 5.65 | 9.76 |
+| `71686` | Compiling dropped-genesis-reference control fails its dependency assertion | 4.81 | 7.89 |
+| `67942` | Both Scope compilers and all four existing native text cases pass with the sender-pin declaration | 6.73 | 10.67 |
+| `61583` | Compiling sender-pin control selects a different sender's field; its assertion fails | 4.95 | 8.22 |
+| `81934` | Relationship test compiler rejects an insufficiently narrowed delivery union | 2.32 | 5.06 |
+| `31335` | Compilers pass; validator refuses a fact slot where the sender needs a local item slot | 5.82 | 9.65 |
+| `20272` | Corrected local item slot: both compilers and the native relationship case pass | 6.00 | 10.08 |
+| `93363` | Compiling relationship-owner control selects the wrong owner's text; its assertion fails | 5.59 | 8.42 |
+
+Genesis runs capture 2,651 source files; delivery and relationship runs
+capture 2,652. Each preserves exact source bytes, modes and lock stamp with
+zero installs. Controls restore source and read their original passing
+baseline without replaying it. The genesis control precedes the sender-pin
+fixture addition; its target selector and founding/creation assertions are
+unchanged. Input receipts state the shared host, load and uncontrolled OS
+caches. All figures are separate full outer measurements, including failed
+attempts. No deadline changed. These are still planning foundations;
+observation/outcome references, complete cost forecasting, production
+adaptive selection and the remaining native acceptance witnesses are open.
+No full gate, formal review, landing or deployment is claimed.

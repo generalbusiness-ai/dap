@@ -2,13 +2,18 @@ import { env } from "cloudflare:workers";
 import { evictDurableObject, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import type { DeclaredDefinition, Digest, Entry, Seed } from "@generalbusiness/dap-contract";
-import { scopeIdOf, textDigest } from "@generalbusiness/artroom-bytes";
-import { timeMs } from "@generalbusiness/dap-derive";
+import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
+import { canonicalize, isEntry, isFactRef, parseStrict, scopeIdOf, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
+import { localRetainedPlan, timeMs } from "@generalbusiness/dap-derive";
 import { grantOf, variant } from "@generalbusiness/dap-derive/testing";
 import { create, httpTransport, secretSigner, signedIntent } from "@generalbusiness/artroom-client";
 import { TRUSTS, httpSource, verify } from "@generalbusiness/artroom-replay";
 import { Node, creation, later, net, rita, routed, settle } from "./net.ts";
 import { reader } from "./fixtures-native.ts";
+import { ArchiveBudget } from "../src/archive-budget.ts";
+import { ArchiveGenesisFields } from "../src/archive-genesis-fields.ts";
+import { ArchiveDeliveryFields } from "../src/archive-delivery-fields.ts";
+import type { SqlValue } from "../src/sqlite.ts";
 
 /**
  * A made-up definition with one detached text (section 6.2): a note whose
@@ -38,7 +43,7 @@ const notes = variant(base, (def) => {
     copy: act({ step: "transition", grant: "write", guards: kept, sends: [{ create: { kind: "lane", definition: "self", fields: { body: { slot: "body" } }, result: {} } }] }),
     share: act({ step: "transition", grant: "write", fields: { peer: { type: "scope", kind: "lane", required: true } }, guards: kept, effects: [{ ref: { slot: "peer", from: { field: "peer" } } }], sends: [{ tell: { to: { slot: "peer" }, message: "noted", fields: { body: { slot: "body" } }, result: {} } }] }),
   };
-  def.receives = { noted: { message: "noted", class: "tell", from: { kind: "lane" }, opens: "note", fields: { body: { ...body, required: true } }, also: {}, guards: [], effects: write, sends: [], attention: [] } };
+  def.receives = { noted: { message: "noted", class: "tell", from: { kind: "lane", under: "notes" }, opens: "note", fields: { body: { ...body, required: true } }, also: {}, guards: [], effects: write, sends: [], attention: [] } };
 });
 const source = httpSource("https://scopes.test", { fetch: routed });
 
@@ -101,9 +106,35 @@ test.each(["legacy", "whole-scope"] as const)("%s: a detached text over the real
 
 test("a detached text in a creation message: the child reads the bytes from its creator and keeps them; when the creator has redacted the text first, the creation is not decided", async () => {
   net.hold = net.deaf = null;
-  const { signed, name } = creation(notes, {});
+  const rootBody = "A root body.", rootDigest = textDigest(rootBody);
+  const { signed, name } = creation(notes, { body: rootDigest });
   const P = new Node(name, notes.declared);
-  expect(await P.stub.create(signed, notes.declared)).toMatchObject({ answer: "accepted" });
+  expect(await P.stub.create(signed, notes.declared, [], { texts: [rootBody] })).toMatchObject({ answer: "accepted" });
+  // Both founding and delivered creation use the actual native genesis.
+  // Only this test oracle reads the body; the projector returns scalars.
+  const projectedBirth = async (node: Node, route: string, digest: Digest) => {
+    const result = await runInDurableObject(node.object, (_instance, state) => {
+      const row = state.storage.sql.exec<{ bytes: string; hash: Digest; size: number }>("SELECT bytes, hash, size FROM entry WHERE seq = 0 LIMIT 1").one();
+      const entry = parseStrict(row.bytes); if (!isEntry(entry)) return expect.fail("The native genesis is required.");
+      const expected = localRetainedPlan(notes, entry, row.hash, null, PROPOSED_BOUNDS).dependencies.filter(({ dependency }) => dependency.mode === "text");
+      const cells: unknown[] = [], budget = new ArchiveBudget(), sql = { exec(query: string, ...args: SqlValue[]) {
+        const rows = state.storage.sql.exec(query, ...args).toArray();
+        for (const held of rows) cells.push(...Object.values(held));
+        return { toArray: () => rows };
+      } };
+      const projector = new ArchiveGenesisFields(sql, notes, budget, PROPOSED_BOUNDS), position = { seq: 0, hash: row.hash, bytes: row.size };
+      const projected = projector.project(entry.at, position), before = budget.admitted();
+      const repeated = projector.project(entry.at, position), after = budget.admitted();
+      return { projected, expected, repeated, before, after, cells };
+    });
+    expect(result.projected).toEqual(result.expected);
+    expect(result.projected.map(plan => plan.dependency.mode === "text" ? plan.dependency.key : null)).toEqual([{ kind: "text", digest }]);
+    expect(result.repeated).toEqual(result.projected);
+    expect(result.after.calls).toBeGreaterThan(result.before.calls);
+    expect(result.after.inputWork).toBeGreaterThan(result.before.inputWork);
+    expect(new Set(result.cells.filter(cell => typeof cell === "string"))).toEqual(new Set([route, digest]));
+  };
+  await projectedBirth(P, "founding", rootDigest);
   const write = async (text: string) => {
     const answer = await P.stub.submit(await P.intent(rita, "write", { fields: { body: textDigest(text) } }), await P.grants(), { texts: [text] });
     if (answer.answer !== "accepted") throw new Error(`not accepted: ${JSON.stringify(answer)}`);
@@ -128,6 +159,7 @@ test("a detached text in a creation message: the child reads the bytes from its 
   await serves(shared);
   await later(2, P, K);
   expect(genesis(await K.entries())).toMatchObject({ type: "genesis", decision: "applied", message: { body: { fields: { body: textDigest(shared) } } } });
+  await projectedBirth(K, "creation", textDigest(shared));
   expect(await (K.stub as unknown as { retained(reader: unknown, kind: string, digest: Digest): Promise<unknown> }).retained(reader, "text", textDigest(shared))).toMatchObject({ ok: true, value: { bytes: JSON.stringify(shared) } });
   expect((await verify(source, { mode: "replay", scope: K.name, grants: "as-recorded" })).report).toMatchObject({ result: "consistent", redacted: [] });
   // P answers for a text only to the receiver of a send that names it: the entry that wrote the note sent nothing.
@@ -168,6 +200,30 @@ test("a repeat of a decided send is answered from the entry that recorded it, an
   await settle(A, B);
   const told = (await B.sealed()).at(-1)!;
   expect(told.entry).toMatchObject({ input: { type: "delivery", from: shared.fact, decision: "applied" }, effects: [{ effect: "open" }, { effect: "value", slot: "body", value: textDigest(text) }] });
+  // The actual retained source pins notes. A matching name and sender kind
+  // alone cannot give a differently pinned sender's fields this meaning.
+  const projected = await runInDurableObject(B.object, (_instance, state) => {
+    const row = state.storage.sql.exec<{ size: number }>("SELECT size FROM entry WHERE seq = ? LIMIT 1", told.entry.seq).one();
+    const expected = localRetainedPlan(notes, told.entry, told.hash, null, PROPOSED_BOUNDS, "notes").dependencies.filter(({ dependency }) => dependency.mode === "text");
+    const cells: unknown[] = [], budget = new ArchiveBudget(), sql = { exec(query: string, ...args: SqlValue[]) {
+      const rows = state.storage.sql.exec(query, ...args).toArray();
+      for (const held of rows) cells.push(...Object.values(held));
+      return { toArray: () => rows };
+    } };
+    const projector = new ArchiveDeliveryFields(sql, notes, budget, PROPOSED_BOUNDS), position = { seq: told.entry.seq, hash: told.hash, bytes: row.size };
+    const correct = projector.project(told.entry.at, position, shared.fact, "notes"), before = budget.admitted();
+    const repeated = projector.project(told.entry.at, position, shared.fact, "notes"), after = budget.admitted();
+    const other = projector.project(told.entry.at, position, shared.fact, "other");
+    expect(() => projector.project(told.entry.at, position, shared.fact)).toThrow("unsupported-foreign-copy");
+    return { correct, repeated, other, expected, before, after, cells };
+  });
+  expect(projected.correct).toEqual(projected.expected);
+  expect(projected.correct.map(plan => plan.dependency.mode === "text" ? plan.dependency.key : null)).toEqual([{ kind: "text", digest: textDigest(text) }]);
+  expect(projected.repeated).toEqual(projected.correct); expect(projected.other).toEqual([]);
+  expect(projected.after.calls).toBeGreaterThan(projected.before.calls);
+  expect(projected.after.inputWork).toBeGreaterThan(projected.before.inputWork);
+  expect(new Set(projected.cells.filter(cell => typeof cell === "string"))).toEqual(new Set(["request", "tell", "noted", textDigest(text)]));
+  expect(projected.cells).not.toContain(text);
 
   // Both redact the text, so neither holds its bytes. The same envelope again is still that send of that entry of A. B answers it
   // with the fact of the entry that decided it, as it answered the first delivery, and its head does not move.
@@ -181,4 +237,72 @@ test("a repeat of a decided send is answered from the entry that recorded it, an
     await B.stub.deliver(await A.envelope(shared.fact.seq)),
     (await B.summary()).at,
   ]).toMatchObject([null, { ok: false }, { answer: "recorded", fact: { at: told.entry.at, seq: told.entry.seq, hash: told.hash } }, head]);
+});
+
+test("native related-text projection follows self and earlier owner items, and ignores another owner's item", async () => {
+  net.hold = net.deaf = null;
+  const linked = variant(notes.declared, data => {
+    data.items["note"]!.refs["origin"] = { fixed: true, required: false, to: { type: "item", of: "note" } };
+    data.acts["relate-body"] = { step: "open", on: "note", grant: "write", also: {},
+      fields: { peer: { type: "scope", kind: "lane", required: true }, body: { ...body, required: true } }, guards: [],
+      effects: [{ value: { slot: "body", from: { field: "body" } } }, { ref: { slot: "peer", from: { field: "peer" } } }, { ref: { slot: "origin", from: "self" } }],
+      sends: [{ relate: { to: { field: "peer" }, name: "linked", item: "self", state: "kept", detail: { body: { field: "body" } }, result: {} } }], attention: [] };
+    data.acts["revise-link"] = { step: "transition", on: "note", grant: "write", also: {}, fields: { body: { ...body, required: true } }, guards: [{ state: ["kept"] }],
+      effects: [{ value: { slot: "body", from: { field: "body" } } }],
+      sends: [{ relate: { to: { slot: "peer" }, name: "linked", item: { slot: "origin" }, state: "kept", detail: { body: { field: "body" } }, result: {} } }], attention: [] };
+    data.receives["linked"] = { message: "linked", class: "relate", from: { kind: "lane", under: "notes" }, copies: 2, opens: "note",
+      fields: { body: { ...body, required: true } }, also: {}, guards: [], effects: [{ value: { slot: "body", from: { field: "body" } } }], sends: [], attention: [] };
+  });
+  const seedBody = "A copied starting body.";
+  const { signed, name } = creation(linked, { body: textDigest(seedBody) }), P = new Node(name, linked.declared);
+  expect(await P.stub.create(signed, linked.declared, [], { texts: [seedBody] })).toMatchObject({ answer: "accepted" });
+  const copied = async () => {
+    const receipt = await P.did(rita, "copy", { on: 0, expected: { on: 1 } });
+    return new Node(scopeIdOf((await P.entries())[receipt.fact.seq]!.sends[0]!.to as Seed), linked.declared);
+  };
+  const A = await copied(), B = await copied(); await settle(P, A, B);
+  let opened = -1;
+  for (const [index, text] of ["A related body.", "A revised related body."].entries()) {
+    const answer = await A.stub.submit(await A.intent(rita, index === 0 ? "relate-body" : "revise-link", {
+      ...(index === 0 ? {} : { on: opened, expected: { on: 1 } }),
+      fields: { body: textDigest(text), ...(index === 0 ? { peer: await B.at() } : {}) },
+    }), await A.grants(), { texts: [text] });
+    expect(answer.answer, JSON.stringify(answer)).toBe("accepted"); if (answer.answer !== "accepted") return;
+    if (index === 0) opened = answer.receipt.fact.seq;
+    await settle(A, B);
+    const sealed = (await B.sealed()).at(-1)!, input = sealed.entry.input;
+    if (input.type !== "delivery" || !("decision" in input) || input.message.class !== "request" || input.message.type !== "relate") return expect.fail("The actual relationship delivery is required.");
+    const messageBody = input.message.body as Record<string, unknown>, item = messageBody["item"];
+    expect(index === 0 ? item : isFactRef(item)).toEqual(index === 0 ? { self: true } : true);
+    const result = await runInDurableObject(B.object, (_instance, state) => {
+      const row = state.storage.sql.exec<{ bytes: string; size: number }>("SELECT bytes, size FROM entry WHERE seq = ? LIMIT 1", sealed.entry.seq).one();
+      const expected = localRetainedPlan(linked, sealed.entry, sealed.hash, null, PROPOSED_BOUNDS, "notes").dependencies.filter(({ dependency }) => dependency.mode === "text");
+      const cells: unknown[] = [], sql = { exec(query: string, ...args: SqlValue[]) {
+        const rows = state.storage.sql.exec(query, ...args).toArray();
+        for (const held of rows) cells.push(...Object.values(held));
+        return { toArray: () => rows };
+      } };
+      const projector = new ArchiveDeliveryFields(sql, linked, new ArchiveBudget(), PROPOSED_BOUNDS);
+      const position = { seq: sealed.entry.seq, hash: sealed.hash, bytes: row.size };
+      const projected = projector.project(sealed.entry.at, position, input.from, "notes");
+      let other: unknown = null;
+      if (isFactRef(item)) {
+        // Negative metadata probe only: alter an opaque body item's owner,
+        // not an accepted native history. Restore its exact original bytes
+        // and size before returning; no integrity/export claim is made.
+        const bad: Entry = { ...sealed.entry, input: { ...input, message: { ...input.message, body: { ...messageBody, item: { ...item, at: { ...item.at, scope: B.name } } } } } };
+        const bytes = canonicalize(bad), size = utf8(bytes).length;
+        try {
+          state.storage.sql.exec("UPDATE entry SET bytes = ?, size = ? WHERE seq = ?", bytes, size, sealed.entry.seq);
+          other = projector.project(sealed.entry.at, { ...position, bytes: size }, input.from, "notes");
+        } finally { state.storage.sql.exec("UPDATE entry SET bytes = ?, size = ? WHERE seq = ?", row.bytes, row.size, sealed.entry.seq); }
+      }
+      return { projected, expected, other, cells };
+    });
+    expect(result.projected).toEqual(result.expected);
+    expect(result.projected.map(plan => plan.dependency.mode === "text" ? plan.dependency.key : null)).toEqual([{ kind: "text", digest: textDigest(text) }]);
+    expect(result.other).toEqual(index === 0 ? null : []);
+    expect(new Set(result.cells.filter(cell => typeof cell === "string"))).toEqual(new Set(["request", "relate", "linked", textDigest(text)]));
+    expect(result.cells).not.toContain(text);
+  }
 });
