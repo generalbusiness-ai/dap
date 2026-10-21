@@ -1,1 +1,1 @@
-{"kind":"request","text":"Status sweep: bring the status statements of design notes, plans, implementation notes and docs/roadmap.md in line with what has landed on main. Status text only; no design content changes.","body":{"conditions":"Status statements only; each claim backed by a landing commit or marked as history; checker review before landing.","target":"inherit","to":"20db43a245e9780b92a587425d387d393b17ffc90b89e036ff752399f88fc517"}}
+{"kind":"promise","text":"Planner lands the status sweep through checker review."}
