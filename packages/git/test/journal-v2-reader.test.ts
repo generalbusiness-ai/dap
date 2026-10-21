@@ -8,11 +8,23 @@ import { ArchiveBudget } from "../../scope/src/archive-budget.ts";
 import { buildJournalPass } from "../src/journal-v2-layout.ts";
 import { readJournalRepositoryArchive } from "../src/journal-reader.ts";
 import { journalKeyName } from "../src/journal-selection.ts";
-import { journalV2PassPath, journalV2RetainedPath, journalV2SegmentPath } from "../src/journal-v2-path.ts";
+import { journalV2PassPath, journalV2RetainedPath, journalV2SegmentPath, readJournalV2Path } from "../src/journal-v2-path.ts";
 import { archiveObjectSource, archiveRepository, selectedInput, syntheticJournal, writeArchiveObjects } from "./support/journal.ts";
 import { cleanup, git } from "./support/repo.ts";
 
 afterAll(cleanup);
+// Invariant: the shared path parser binds the numeric pairs and every
+// segment to the named pass before a writer can register the path.
+test("shared pass paths reject misplaced pairs and noncanonical names", () => {
+  const path = "journal/v2/passes/00/00/00/00/37/000000003700/000000003701.jsonl";
+  expect(readJournalV2Path(path)).toEqual({ kind: "segment", pass: 3700, first: 3701 });
+  for (const malformed of [path.replace("/37/", "/38/"), path.replace("/passes/00/", "/passes/0/"),
+    path.replace("3701.jsonl", "3699.jsonl"), path.replace("3701.jsonl", "3701.json"),
+    path.replace("000000003700/", "00000000370/"), path.replace("/passes/", "/segments/")]) {
+    expect(readJournalV2Path(malformed), malformed).toBeNull();
+  }
+});
+
 test("v2 refuses gaps, overlaps, unlisted retained files, invalid pass references, missing source basis, wrong directories, overflow and broken chains", async () => {
   const fixture = syntheticJournal(3), foreign = syntheticJournal(1, 2, 2), copied = foreign.bodies[0]!;
   const content = digestBytes(utf8(copied)), copyKey = { kind: "entry" as const, digest: content };
@@ -93,7 +105,11 @@ test("v2 refuses gaps, overlaps, unlisted retained files, invalid pass reference
   const noBasis = structuredClone(pass1); delete noBasis.foreignSources;
   cases.push({ label: "copy without its pass basis", edits: [[journalV2PassPath(1), canonicalize(noBasis)]] });
   const segment = journalV2SegmentPath(1);
-  cases.push({ label: "wrong directory", edits: [[segment, null], [segment.replace("/000/000/000/", "/000/000/001/"), file(segment)]] });
+  cases.push({ label: "wrong pair directories", edits: [[segment, null], [segment.replace("/00/00/00/00/00/", "/00/00/00/00/01/"), file(segment)]] });
+  cases.push({ label: "numeric directory is not two digits", edits: [[segment, null], [segment.replace("/passes/00/", "/passes/0/"), file(segment)]] });
+  cases.push({ label: "unknown name in pass directory", edits: [[segment.replace(/[^/]+$/, "unexpected.json"), "{}"]] });
+  cases.push({ label: "segment stored in a different pass", edits: [[segment, null], [journalV2SegmentPath(0, 1), file(segment)]] });
+  cases.push({ label: "segment first is outside its pass interval", edits: [[segment, null], [journalV2SegmentPath(1, 3), file(segment)]] });
   const high = JSON.parse(file("journal/v2/head.json")); high.through = 1_000_000_000_000;
   cases.push({ label: "position overflow", edits: [["journal/v2/head.json", canonicalize(high)]] });
   cases.push({ label: "malformed entry JSON is a mismatch", edits: [[segment, '{"v":']] });

@@ -6,7 +6,7 @@ import { isScopeRef } from "@generalbusiness/artroom-bytes";
 import { JournalObjectReader, journalFormat, journalId, type JournalFormat, type JournalObjectSource, type JournalTreeRow } from "./journal-objects.ts";
 import { sameJournalScope } from "./journal-selection.ts";
 import { journalV2Head } from "./journal-v2-manifest.ts";
-import { readJournalV2Path } from "./journal-v2-path.ts";
+import { journalV2Directory, readJournalV2Path } from "./journal-v2-path.ts";
 import { journalV2File, journalV2TreeBytes } from "./journal-v2-tree.ts";
 import { JournalLayoutRefusal, JournalWork, refuseJournal, type JournalBudget, type JournalLayoutReason } from "./journal-work.ts";
 
@@ -32,7 +32,7 @@ export async function verifyJournalAppend(options: { readonly format: JournalFor
       work.depth(depth); work.budget.spend({ nodes: 1 });
       const rows = async (key: string): Promise<readonly JournalTreeRow[]> => reader.tree(await reader.read(key, "tree", journalV2TreeBytes(prefix)));
       const was = oldId === null ? [] : await rows(oldId), now = await rows(newId);
-      const maximum = prefix === "" || prefix === "journal/" ? 1 : prefix === "journal/v2/" ? 4 : 1000;
+      const maximum = journalV2Directory(prefix)?.maximum ?? refuseJournal("tree", prefix);
       if (now.length === 0) return refuseJournal("tree");
       if (was.length > maximum || now.length > maximum) return work.stop();
       work.metadata((was.length + now.length) * 128);

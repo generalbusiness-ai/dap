@@ -43,7 +43,7 @@ test("a v1 conversion preserves every old body and receipt before a v2 append, w
   expect(newFiles.every(line => line.includes("\tjournal/v2/"))).toBe(true);
   for (const line of oldFiles) {
     const [meta, path] = line.split("\t") as [string, string];
-    if (path.includes("/segments/")) expect(newFiles).toContain(`${meta}\t${journalV2SegmentPath(Number(path.split("/").at(-1)!.split(".")[0]))}`);
+    if (path.includes("/segments/")) expect(newFiles).toContain(`${meta}\t${journalV2SegmentPath(0, Number(path.split("/").at(-1)!.split(".")[0]))}`);
     else if (path.includes("/retained/")) {
       const key = prefix.description.objects.find(row => path.endsWith(row.key.digest.slice(7)))!.key;
       expect(newFiles).toContain(`${meta}\t${journalV2RetainedPath(0, key)}`);

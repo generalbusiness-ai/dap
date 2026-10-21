@@ -58,7 +58,7 @@ export async function buildJournalPass(options: JournalPassOptions): Promise<Jou
     work.spend({ outputWork: size }); work.input(grouping.inputWork); work.metadata(grouping.metadata);
     const segments = archiveSegments(entries.map(row => ({ seq: row.descriptor.seq, bytes: row.bytes })), size);
     const files = [{ path: "journal/v2/head.json", data: utf8(headBytes) }, { path: journalV2PassPath(first), data: utf8(manifestBytes) },
-      ...segments.map(segment => ({ path: journalV2SegmentPath(segment.first), data: segment.bytes })),
+      ...segments.map(segment => ({ path: journalV2SegmentPath(first, segment.first), data: segment.bytes })),
       ...[...retained.values()].map(file => ({ path: journalV2RetainedPath(first, file.key), data: file.data }))];
     const maker = new JournalObjects(format, work), updated = patch ? patch.finish(files, maker) : await patchJournalV2Tree(reader, tree, files, maker, work);
     const last = entries.at(-1)!;

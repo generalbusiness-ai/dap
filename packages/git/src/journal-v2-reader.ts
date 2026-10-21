@@ -8,7 +8,7 @@ import { archiveSegments } from "./journal-segments.ts";
 import { JournalObjectReader, journalId, type JournalObjectSource } from "./journal-objects.ts";
 import { JOURNAL_SELECTION_BYTES, journalKeyName, sameJournalScope, type JournalForeignSource } from "./journal-selection.ts";
 import { journalV2Head, journalPassManifest, type JournalPassManifest, type JournalTextOmission } from "./journal-v2-manifest.ts";
-import { journalV2PassPath, journalV2Position, journalV2RetainedPath, journalV2SegmentPath, readJournalV2Path } from "./journal-v2-path.ts";
+import { journalV2Directory, journalV2PassPath, journalV2Position, journalV2RetainedPath, journalV2SegmentPath, readJournalV2Path } from "./journal-v2-path.ts";
 import { JournalLayoutRefusal, JournalWork, refuseJournal } from "./journal-work.ts";
 import type { JournalReadBudget, JournalReadRepository, JournalReadResult, ReadJournal } from "./journal-reader.ts";
 
@@ -39,8 +39,10 @@ export async function readJournalArchiveV2(repository: JournalReadRepository, sc
     const actual = new Map<string, string>();
     async function walk(tree: string, prefix: string, depth: number): Promise<void> {
       work.depth(depth); budget.spend({ nodes: 1 });
-      const rows = reader.tree(await read(tree, "tree", prefix, 1000 * 295));
-      if (rows.length === 0 || rows.length > (prefix === "" || prefix === "journal/" ? 1 : prefix === "journal/v2/" ? 4 : 1000)) return refuseJournal("tree", prefix);
+      const directory = journalV2Directory(prefix);
+      if (!directory) return refuseJournal("tree", prefix);
+      const rows = reader.tree(await read(tree, "tree", prefix, directory.bytes));
+      if (rows.length === 0 || rows.length > directory.maximum) return refuseJournal("tree", prefix);
       for (const row of rows) {
         work.check(); const path = prefix + row.name;
         if (path.length > 1024) return work.stop();
@@ -73,7 +75,7 @@ export async function readJournalArchiveV2(repository: JournalReadRepository, sc
     if (next !== head.through + 1 || passes.at(-1)?.through.hash !== head.hash || passes.at(-1)?.parent !== commit.parent) return mismatch("head");
     const segmentRows = [...actual].flatMap(([path, id]) => {
       const parsed = readJournalV2Path(path);
-      return parsed?.kind === "segment" ? [{ path, id, first: parsed.first }] : [];
+      return parsed?.kind === "segment" ? [{ path, id, first: parsed.first, pass: parsed.pass }] : [];
     });
     work.metadata(segmentRows.length * 128); work.input(segmentRows.length * 64 * (Math.ceil(Math.log2(segmentRows.length + 1)) + 1));
     segmentRows.sort((a, b) => a.first - b.first);
@@ -110,7 +112,7 @@ export async function readJournalArchiveV2(repository: JournalReadRepository, sc
       const segments: typeof segmentRows = [];
       while (segmentIndex < segmentRows.length && segmentRows[segmentIndex]!.first <= pass.through.seq) {
         const segment = segmentRows[segmentIndex++]!;
-        if (segment.first < first) return mismatch(segment.path);
+        if (segment.first < first || segment.pass !== first) return mismatch(segment.path);
         segments.push(segment);
       }
       const claimed = new Map<number, Set<Digest>>(), named = new Map<number, Set<Digest>>();
@@ -164,7 +166,7 @@ export async function readJournalArchiveV2(repository: JournalReadRepository, sc
       const size = local.reduce((sum, entry) => sum + utf8(entry.bytes).length, 0) + Math.max(0, local.length - 1);
       work.input(size, 8); work.metadata(local.length * 64);
       const canonical = archiveSegments(local, size);
-      if (canonical.length !== segments.length || canonical.some((segment, i) => journalV2SegmentPath(segment.first) !== segments[i]!.path)) return mismatch("segment layout");
+      if (canonical.length !== segments.length || canonical.some((segment, i) => journalV2SegmentPath(first, segment.first) !== segments[i]!.path)) return mismatch("segment layout");
       const copyNames = new Set(pass.retained.filter(key => key.kind === "entry").map(key => key.digest));
       if (copyNames.size !== uses.size) return mismatch("foreign copy count");
       for (const held of pass.retained) if (held.kind === "entry") {

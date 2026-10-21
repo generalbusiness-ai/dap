@@ -229,7 +229,7 @@ test("v2 native inventory and restart read only the marked new interval and keep
     const grouping = new ArchiveSegmentCursor(64 * 1024 * 1024);
     for (const row of held.positions) {
       const firstSegment = grouping.append(row.seq, row.bytes);
-      if (firstSegment !== null) await prepared.preparation.prepare([journalV2SegmentPath(firstSegment)]);
+      if (firstSegment !== null) await prepared.preparation.prepare([journalV2SegmentPath(prepared.preparation.first, firstSegment)]);
     }
     for (const path of held.paths) await prepared.preparation.prepare([path]);
     // The caller still has this reference after parent awaits. It cannot

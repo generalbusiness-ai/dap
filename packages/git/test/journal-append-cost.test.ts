@@ -11,7 +11,7 @@ import type { JournalObject } from "../src/journal-objects.ts";
 import { selectedInput, syntheticJournal } from "./support/journal.ts";
 import { forecastJournalAppendFixed } from "../src/journal-append-cost.ts";
 
-test("append forecasts charge repeated head walks and old and new changed edges", async () => {
+test("append forecasts charge repeated head walks and old and new changed edges", async context => {
   const fixture = syntheticJournal(4), setup = new ArchiveBudget();
   setup.spend({ entries: 3, attempts: 2 });
   const oldHead = { seq: 2, hash: fixture.description.entries[2]!.hash };
@@ -61,11 +61,16 @@ test("append forecasts charge repeated head walks and old and new changed edges"
   expect(await verifyJournalAppend({ format: "sha1", at: fixture.at, old: parent.id, commit: built.archive.commit, source, budget })).toEqual({ ok: true });
   const after = budget.admitted(), delta = Object.fromEntries(Object.keys(after).map(key => [key,
     after[key as keyof ArchiveCost] - before[key as keyof ArchiveCost]])) as ArchiveCost;
+  (context.task.meta as Record<string, unknown>)["sharedPassAppendGeometry"] = { delta, edges: edges.cost, fixed: fixed.cost,
+    objectReads: reads.length, distinctReadIds: new Set(reads).size,
+    qualification: "New f651 physical path geometry only, original append-validator fees unchanged. Mechanical selected metadata, not native receipts/export." };
   expect([held.get(parent.id)!.data.length, held.get(built.archive.commit)!.data.length,
     utf8(canonicalize({ v: 2, scope: fixture.at, through: oldHead.seq, hash: oldHead.hash })).length, utf8(head).length])
     .toEqual([199, 247, 232, 232]);
-  expect(delta).toEqual({ entries: 0, attempts: 35, nodes: 17, calls: 70, metadata: 31216, inputWork: 58133 });
-  expect([reads.length, new Set(reads).size]).toEqual([70, 28]);
+  // Separately measured shared-pass geometry; original per-unit fees and
+  // the fixed receipt above remain unchanged. Old layout evidence is kept.
+  expect(delta).toEqual({ entries: 0, attempts: 32, nodes: 16, calls: 64, metadata: 24304, inputWork: 47876 });
+  expect([reads.length, new Set(reads).size]).toEqual([64, 25]);
   expect(Object.fromEntries(Object.keys(delta).map(key => [key,
     edges.cost[key as keyof ArchiveCost] + fixed.cost[key as keyof ArchiveCost]]))).toEqual(delta);
   const upper = forecastJournalAppendFixed();

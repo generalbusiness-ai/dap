@@ -75,7 +75,8 @@ export class JournalPassPreparation {
         this.work.input(path.length, 4);
         const named = readJournalV2Path(path);
         if (!named || named.kind === "head" || named.kind === "pass"
-          || named.kind === "retained" && named.first !== this.first || named.kind === "segment" && named.first < this.first) return refuseJournal("parent", path);
+          || named.kind === "retained" && named.first !== this.first
+          || named.kind === "segment" && (named.pass !== this.first || named.first < this.first)) return refuseJournal("parent", path);
       }
       await this.#patch.prepare(paths);
     } finally {

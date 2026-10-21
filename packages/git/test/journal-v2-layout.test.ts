@@ -44,7 +44,7 @@ test("three v2 passes cover ten thousand entries without rereading old entries o
       const grouping = new ArchiveSegmentCursor(entries.reduce((n, entry) => n + entry.bytes, 0) + entries.length - 1);
       for (const entry of entries) {
         const firstSegment = grouping.append(entry.seq, entry.bytes);
-        if (firstSegment !== null) await preparation.prepare([journalV2SegmentPath(firstSegment)]);
+        if (firstSegment !== null) await preparation.prepare([journalV2SegmentPath(first, firstSegment)]);
       }
       const attributed = preparation.metadataCost(), live = budget.admitted();
       for (const key of Object.keys(before) as (keyof typeof before)[]) {

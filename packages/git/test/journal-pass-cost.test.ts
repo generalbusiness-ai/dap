@@ -13,7 +13,7 @@ import { manifestOfPass } from "../src/journal-v2-manifest.ts";
 import { journalV2PassPath, journalV2RetainedPath, journalV2SegmentPath } from "../src/journal-v2-path.ts";
 import { selectedInput, syntheticJournal } from "./support/journal.ts";
 
-test("future Git layout stages cover the actual finish on the same original budget", async () => {
+test("future Git layout stages cover the actual finish on the same original budget", async context => {
   const fixture = syntheticJournal(3), calls: string[] = [], budget = new ArchiveBudget();
   budget.spend({ entries: 3, attempts: 2 });
   const wire = canonicalize({ ...fixture.description, format: "artroom-local-inventory-2", after: null,
@@ -52,11 +52,14 @@ test("future Git layout stages cover the actual finish on the same original budg
   expect(built.ok, JSON.stringify(built)).toBe(true); if (!built.ok) return;
   const after = budget.admitted(), delta = Object.fromEntries(Object.keys(after).map(key => [key,
     after[key as keyof ArchiveCost] - before[key as keyof ArchiveCost]])) as ArchiveCost;
-  // Independent receipts captured from the original stages before price
-  // extraction. Future and actual formulas changing together must fail.
+  (context.task.meta as Record<string, unknown>)["sharedPassFinishGeometry"] = { delta, patch: patch.cost,
+    parser: parser.cost, body: forecast.cost, commit: commit.cost, qualification: "New f651 physical path geometry only; original per-unit fees unchanged, no native admission/export." };
+  // The body receipt predates fee extraction and stays unchanged. The
+  // total is a separately measured shared-pass geometry receipt; the old
+  // layout total is preserved in closed evidence, not silently repriced.
   expect(shape).toEqual({ entries: 3, entryBytes: 1874, origins: 3, newRetained: 2,
     retainedNameUnits: 164, retainedBytes: 48, manifestRows: 3, selectionUnits: 2347 });
-  expect(delta).toEqual({ entries: 0, attempts: 2, nodes: 0, calls: 5, metadata: 39054, inputWork: 162533 });
+  expect(delta).toEqual({ entries: 0, attempts: 2, nodes: 0, calls: 5, metadata: 34158, inputWork: 156777 });
   expect(forecast.cost).toEqual({ entries: 0, attempts: 2, nodes: 0, calls: 5, metadata: 11241, inputWork: 59803 });
   expect(forecast.layoutWork).toEqual({ outputWork: 1876 });
   const stages = [parser.cost, forecast.cost, patch.cost, commit.cost];

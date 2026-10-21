@@ -58,7 +58,7 @@ export async function convertJournalArchiveV1(options: JournalPassOptions): Prom
     if (utf8(manifestBytes).length > JOURNAL_SELECTION_BYTES) return work.stop();
     const files = [{ path: "journal/v2/head.json", data: utf8(headBytes) },
       { path: journalV2PassPath(0), data: utf8(manifestBytes) },
-      ...segments.map(segment => ({ path: journalV2SegmentPath(segment.first), data: segment.bytes })),
+      ...segments.map(segment => ({ path: journalV2SegmentPath(0, segment.first), data: segment.bytes })),
       ...[...retained.values()].map(file => ({ path: journalV2RetainedPath(0, file.key), data: file.data }))];
     const maker = new JournalObjects(format, work);
     const tree = await patchJournalV2Tree(null, null, files, maker, work);

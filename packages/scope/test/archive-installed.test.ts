@@ -13,10 +13,10 @@ import { ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT,
 import { ScopeHandle, httpTransport, requestSession, secretSigner, sessionRequest } from "@generalbusiness/artroom-client";
 import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-mcp";
 import { archiveSource, verifyArchive, TRUSTS } from "@generalbusiness/artroom-replay";
-import { buildJournalPass, journalRef, type JournalArchive, type JournalPassArchive } from "@generalbusiness/artroom-git/journal";
+import { buildJournalPass, journalRef, verifyJournalAppend, type JournalArchive, type JournalObject, type JournalPassArchive } from "@generalbusiness/artroom-git/journal";
 import { readJournalRepositoryArchive } from "@generalbusiness/artroom-git/journal-reader";
 import { archiveInput } from "../src/archive-input.ts";
-import { ArchiveBudget } from "../src/archive-budget.ts";
+import { ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
 import { ArchiveForeignMetadata } from "../src/archive-foreign.ts";
 import { fixtureArchiveTargetIn } from "../src/archive-target.ts";
 import { archiveReplayAnchors } from "../src/archive-anchors.ts";
@@ -229,6 +229,7 @@ test.for(["fixture", "Grow"])("installed %s scopes export genesis zero after a l
     const diagnosticArchives = new Map<ScopeId, JournalArchive | JournalPassArchive>();
     const passAnchors = new Map<ScopeId, readonly FactRef[]>();
     const passSelections = new Map<ScopeId, string>();
+    const sharedPassFootprints: unknown[] = [], sharedWholePassFootprints: unknown[] = [];
     if (kind === "Grow") {
       // Invariant: native domain permission belongs to its exact declared
       // place. A TEST owner table cannot relocate it or add another domain.
@@ -271,7 +272,58 @@ test.for(["fixture", "Grow"])("installed %s scopes export genesis zero after a l
       expect(opened.archive.entries.map(entry => entry.bytes)).toEqual(read.value.map(sealed => canonicalize(sealed.entry)));
       expect(opened.archive.foreignSources).toEqual(planned.archive.manifest.foreignSources);
       expect(opened.archive.head).toEqual(read.at);
+      if (kind === "Grow") {
+        // Invariant: every actual fixture entry fits alone, with its own
+        // retained paths and original native inventory plus append charges.
+        // These diagnostic commits are not marked or remotely confirmed.
+        sharedWholePassFootprints.push({ scope: scope.name, entries: planned.archive.selection.entries.length,
+          cost: planned.archive.cost, inventoryNodes: (JSON.parse(planned.mark.manifest) as { cost: { nodes: number } }).cost.nodes,
+          qualification: "Original default budget pays native inventory and writing. Initial whole-prefix pass, no append validator or remote confirmation." });
+        const held = new Map<string, JournalObject>(); let parent: string | null = null, after: Head | null = null;
+        const written = new Set<string>(), expected = new Set(planned.archive.selection.objects.map(row =>
+          row.key.kind === "value" ? `value/${row.key.domain}` : row.key.kind));
+        for (const sealed of read.value) {
+          const through = { seq: sealed.entry.seq, hash: sealed.hash };
+          const old: string | null = parent, receipt: Head | null = after;
+          const source = { object: async (id: string, limit: number) => {
+            const object = held.get(id); return object ? { type: object.type, size: object.data.length,
+              data: object.data.length <= limit ? object.data : null } : null;
+          } };
+          type Footprint = { ok: false; one: unknown; cost: ArchiveCost } | { ok: true;
+            one: Extract<Awaited<ReturnType<typeof planArchivePass>>, { ok: true }>;
+            appended: Awaited<ReturnType<typeof verifyJournalAppend>> | null; inventoryNodes: number; cost: ArchiveCost };
+          const result: Footprint = await life.wait((): Promise<Footprint> => runInDurableObject(scope.object, async (_instance, state): Promise<Footprint> => {
+            const budget = new ArchiveBudget();
+            const one = await planArchivePass(archiveSql(state), { at, through, after: receipt, bounds: PROPOSED_BOUNDS, policies,
+              format: "sha1", parent: old ? { id: old, source } : null, markedAt: timeOf(life.now()), fixtureSources,
+              replayScopes: discovery!.scopes.map(scope => scope.at) }, budget);
+            if (!one.ok) return { ok: false as const, one, cost: budget.admitted() };
+            const inventoryNodes = (JSON.parse(one.mark.manifest) as { cost: { nodes: number } }).cost.nodes;
+            for (const object of one.archive.objects) held.set(object.id, object);
+            const appended: Awaited<ReturnType<typeof verifyJournalAppend>> | null = old === null ? null : await verifyJournalAppend({ format: "sha1", at, old, commit: one.archive.commit, source, budget });
+            return { ok: true as const, one, appended, inventoryNodes, cost: budget.admitted() };
+          }));
+          expect(result.ok, JSON.stringify({ scope: scope.name, through, result })).toBe(true); if (!result.ok) return;
+          expect(result.appended, JSON.stringify({ scope: scope.name, through, result })).toEqual(old === null ? null : { ok: true });
+          expect(result.one.archive.selection.entries.map(row => row.seq)).toEqual([through.seq]);
+          const keys = result.one.archive.manifest.retained.filter(row => row.pass === through.seq);
+          const kinds = new Set(keys.map(row => row.kind)), domains = new Set(keys.flatMap(row => row.kind === "value" ? [row.domain] : []));
+          const namedKinds = new Set(result.one.archive.manifest.retained.map(row => row.kind));
+          const namedDomains = new Set(result.one.archive.manifest.retained.flatMap(row => row.kind === "value" ? [row.domain] : []));
+          for (const row of keys) written.add(row.kind === "value" ? `value/${row.domain}` : row.kind);
+          sharedPassFootprints.push({ scope: scope.name, seq: through.seq,
+            inventoryNodes: result.inventoryNodes, nodes: result.cost.nodes, cost: result.cost, appendValidated: old !== null,
+            kinds: [...kinds].sort(), domains: [...domains].sort(), kindAndDomainCount: kinds.size + domains.size,
+            namedKinds: [...namedKinds].sort(), namedDomains: [...namedDomains].sort(), namedKindAndDomainCount: namedKinds.size + namedDomains.size });
+          parent = result.one.archive.commit; after = through;
+        }
+        expect([...written].sort()).toEqual([...expected].sort());
+      }
     }
+    if (kind === "Grow") (context.task.meta as Record<string, unknown>)["sharedPassNativeFootprints"] = {
+      passes: sharedPassFootprints, wholePasses: sharedWholePassFootprints,
+      qualification: "Actual installed Grow and its discovered native Directory16, Rules10 and Destination12 histories. Each diagnostic one-entry pass uses one original default30s ledger for fresh native inventory, canonical Git build and, for each noninitial pass, append validation. Genesis has no prior append and no append-validator claim. Real fixture entries and retained bytes; explicit TEST package peer, owner input, policy/source/authority configuration and scheduler. No remote confirmation, production admission or deployed cadence claim. Kind/domain counts concern these fixture entries, not all theoretically possible native entries."
+    };
     if (kind === "Grow") {
       // A constructed enrol copy and a listed kind with a nested secret
       // must refuse the whole export before any body/integrity read. The
