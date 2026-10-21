@@ -4,7 +4,13 @@ import type { FieldValue, KeyId, ScopeRef } from "@generalbusiness/dap-contract"
 import { b64url, isRecord, isSignature, keyIdOfSecret, signInvitationProof, textDigest, unb64url } from "@generalbusiness/artroom-bytes";
 
 export { INVITATION_KEY_MEMBERSHIP, INVITATION_KEY_MEMBERSHIPS } from "@generalbusiness/dap-contract";
-const LEGACY = new Set(["platform:membership@1", "platform:membership@2", "platform:membership@4", "platform:membership@5"]);
+const LEGACY = ["platform:membership@1", "platform:membership@2", "platform:membership@4", "platform:membership@5"] as const;
+/** Exact person-invitation pins with an implemented redemption encoding.
+ * Callers must also have the native definition's join path. */
+export const INVITATION_MEMBERSHIPS = [...LEGACY, ...INVITATION_KEY_MEMBERSHIPS] as const;
+export type InvitationMembership = (typeof INVITATION_MEMBERSHIPS)[number];
+export const isInvitationMembership = (value: unknown): value is InvitationMembership =>
+  (INVITATION_MEMBERSHIPS as readonly unknown[]).includes(value);
 export const usesInvitationKey = (definition: unknown): boolean => (INVITATION_KEY_MEMBERSHIPS as readonly unknown[]).includes(definition);
 function privateSeed(secret: string): Uint8Array {
   const seed = unb64url(secret);
@@ -12,7 +18,7 @@ function privateSeed(secret: string): Uint8Array {
   return seed;
 }
 function supported(definition: string): void {
-  if (!usesInvitationKey(definition) && !LEGACY.has(definition)) throw new Error("Unsupported invitation membership version.");
+  if (!isInvitationMembership(definition)) throw new Error("Unsupported invitation membership version.");
 }
 /** Only the new cohort's public key, or the exact legacy digest, enters an invitation act. */
 export function invitationIssueFields(definition: string, secret: string): Record<string, FieldValue> {
@@ -33,7 +39,7 @@ export function invitationRedemptionFields(definition: string, scope: ScopeRef, 
 export function isInvitationRedemptionFields(definition: string, fields: unknown): boolean {
   if (!isRecord(fields) || !Number.isSafeInteger(fields["invitation"]) || Number(fields["invitation"]) < 1 || Number(fields["invitation"]) > 1_000_000_000) return false;
   const property = usesInvitationKey(definition) ? "proof" : "secret";
-  if (!usesInvitationKey(definition) && !LEGACY.has(definition)) return false;
+  if (!isInvitationMembership(definition)) return false;
   return Object.keys(fields).length === 2 && Object.hasOwn(fields, property)
     && (property === "proof" ? isSignature(fields[property]) : typeof fields[property] === "string");
 }

@@ -1,4 +1,4 @@
-import { isInvitationRedemptionFields } from "@generalbusiness/artroom-client";
+import { isInvitationMembership, isInvitationRedemptionFields } from "@generalbusiness/artroom-client";
 /** One bounded origin-private enrollment slot. Page's existing raw-key policy remains. */
 import type { Answer, KeyId, Receipt } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, intentDigest, isHead, isReceipt, isScopeId, isScopeRef, isSignedIntentShape, keyIdOfSecret, unb64url, verifySignedIntent } from "@generalbusiness/artroom-bytes";
@@ -23,7 +23,7 @@ function decode(raw: string, origin: string): RecordJoin {
     seed = unb64url(row["secret"]);
     if (!seed || seed.length !== 32 || b64url(seed) !== row["secret"]) throw error();
     const p = row["prepared"];
-    if (!closed(p, ["place", "definition", "handle", "link", "signed"]) || !closed(p["place"], ["directory", "membership"]) || !isScopeId(p["place"]["directory"]) || !isScopeRef(p["place"]["membership"]) || p["place"]["membership"].kind !== "membership" || !["platform:membership@1", "platform:membership@2", "platform:membership@6"].includes(String(p["definition"])) || typeof p["handle"] !== "string" || !p["handle"] || typeof p["link"] !== "string" || !/^sha256:[0-9a-f]{64}$/.test(p["link"]) || !isSignedIntentShape(p["signed"]) || !verifySignedIntent(p["signed"]) || p["signed"].intent.actor !== keyIdOfSecret(seed) || p["signed"].intent.kind !== "join" || canonicalize(p["signed"].intent.to) !== canonicalize(p["place"]["membership"]) || Object.keys(p["signed"].intent.expected).length !== 0 || !isInvitationRedemptionFields(String(p["definition"]), p["signed"].intent.fields)) throw error();
+    if (!closed(p, ["place", "definition", "handle", "link", "signed"]) || !closed(p["place"], ["directory", "membership"]) || !isScopeId(p["place"]["directory"]) || !isScopeRef(p["place"]["membership"]) || p["place"]["membership"].kind !== "membership" || !isInvitationMembership(p["definition"]) || typeof p["handle"] !== "string" || !p["handle"] || typeof p["link"] !== "string" || !/^sha256:[0-9a-f]{64}$/.test(p["link"]) || !isSignedIntentShape(p["signed"]) || !verifySignedIntent(p["signed"]) || p["signed"].intent.actor !== keyIdOfSecret(seed) || p["signed"].intent.kind !== "join" || canonicalize(p["signed"].intent.to) !== canonicalize(p["place"]["membership"]) || Object.keys(p["signed"].intent.expected).length !== 0 || !isInvitationRedemptionFields(String(p["definition"]), p["signed"].intent.fields)) throw error();
     seed.fill(0);
     if (row["receipt"] !== undefined && (!isReceipt(row["receipt"]) || row["receipt"].definition !== p["definition"] || row["receipt"].intent !== intentDigest(p["signed"].intent) || canonicalize(row["receipt"].fact.at) !== canonicalize(p["place"]["membership"]))) throw error();
     if (row["phase"] === "verified" && !row["receipt"]) throw error();
@@ -44,8 +44,11 @@ function decode(raw: string, origin: string): RecordJoin {
 }
 function locked<T>(origin: string, options: JoinOptions, work: () => Promise<T>): Promise<T> {
   if (options.lock) return options.lock.run(work);
-  if (typeof navigator === "undefined" || !navigator.locks) throw new Error("Private enrollment locking is unavailable. Nothing was submitted.");
-  return navigator.locks.request(`artroom-page-enrollment:${origin}`, work);
+  const locks = (globalThis as unknown as { navigator?: { locks?: {
+    request<T>(name: string, work: () => Promise<T>): Promise<T>;
+  } } }).navigator?.locks;
+  if (!locks) throw new Error("Private enrollment locking is unavailable. Nothing was submitted.");
+  return locks.request(`artroom-page-enrollment:${origin}`, work);
 }
 function publicOf(row: RecordJoin): OriginalJoin {
   const seed = unb64url(row.secret)!;

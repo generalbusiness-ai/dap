@@ -1,5 +1,5 @@
 import { INVITATION_KEY_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
-import { invitationIssueFields, invitationRedemptionFields } from "@generalbusiness/artroom-client";
+import { invitationIssueFields, invitationRedemptionFields, isInvitationMembership } from "@generalbusiness/artroom-client";
 /**
  * The commands, as functions over a scope service's base URL and a signing
  * key. Each takes a `Context` and returns an `Outcome`: an exit code and
@@ -939,7 +939,7 @@ export function join(ctx: Context, text: string): Promise<Outcome> {
       // their exact pin; missing tags never select the newest alias.
       const named = link.definition ?? "platform:membership@1";
       const loaded = platform(named);
-      if (!loaded || loaded.data.name !== "platform:membership") return failed(`The invitation is in ${named}, which this command does not know as membership.`);
+      if (!isInvitationMembership(named) || !loaded || loaded.data.name !== "platform:membership" || loaded.data.acts["join"] === undefined) return failed(`The invitation is in ${named}, which this command does not know as membership.`);
       const shape = loaded.data as unknown as DefinitionShape;
       const fields = invitationRedemptionFields(named, link.repository.membership, link.invitation, signer.key, link.secret);
       signed = await signedIntent(signer, { to: link.repository.membership, kind: "join", fields, expected: expectedOf(shape.acts["join"]!, [], null, fields) }, signing(ctx));
