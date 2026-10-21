@@ -29,7 +29,17 @@ test("one tree patch prepares parent metadata before payload, keeps original deb
   await patch.prepare([selected[3]!.path, journalV2RetainedPath(1, { kind: "rule", digest: textDigest("TEST discarded candidate") })]);
   expect(maker.objects()).toEqual([]); // Preparation has constructed no blob/tree payloads.
   const reads = read.length, prepared = budget.admitted();
+  const forecast = patch.forecast("sha1", selected.map(file => ({ path: file.path, bytes: file.data.length })));
+  expect(forecast.ok).toBe(true); if (!forecast.ok) return;
+  expect(read.length).toBe(reads); expect(maker.objects()).toEqual([]);
+  const beforeFinish = budget.admitted(), beforeLayout = { ...work.used };
   const tree = patch.finish(selected, maker), objects = maker.objects(), cost = budget.admitted();
+  // Recorded pre-forecast encoder delta plus the later 128*4 staging
+  // charge. These TEST constants do not use the new reservation helpers.
+  const finishCost: ArchiveCost = { entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 20444, inputWork: 25446 };
+  expect(forecast.cost).toEqual(finishCost);
+  for (const key of Object.keys(finishCost) as (keyof ArchiveCost)[]) expect(cost[key] - beforeFinish[key]).toBe(finishCost[key]);
+  for (const key of ["objects", "trees", "names", "outputWork"] as const) expect(work.used[key] - beforeLayout[key]).toBe(forecast.layoutWork[key]);
   // Pinned against the pre-split encoder on these TEST Git bodies. This is
   // not a journal, native confirmation or replay witness.
   expect(tree).toBe("fa69a1712244eadddb530fb92076b5ec00037b3c");
@@ -41,6 +51,24 @@ test("one tree patch prepares parent metadata before payload, keeps original deb
   const original: ArchiveCost = { entries: 0, attempts: 15, nodes: 17, calls: 30, metadata: 32266, inputWork: 42485 };
   for (const key of Object.keys(original) as (keyof ArchiveCost)[]) expect(cost[key]).toBeGreaterThanOrEqual(original[key]);
   expect(() => patch.finish(selected, maker)).toThrow("unavailable");
+});
+
+test.each(["sha1", "sha256"] as const)("a future patch ceiling leaves the same prepared session usable for a smaller whole file set in %s", async format => {
+  // A lowered layout ceiling, not a native cutoff/privacy witness. All
+  // candidate metadata work stays charged when the smaller set is chosen.
+  const budget = new ArchiveBudget({}, () => 0), work = new JournalWork(budget, { objects: 20 });
+  const patch = new JournalV2TreePatch(null, null, work), files = testPassFiles(0);
+  await patch.prepare(files.map(file => file.path));
+  const sizes = files.map(file => ({ path: file.path, bytes: file.data.length }));
+  expect(patch.forecast(format, sizes)).toEqual({ ok: false, reason: "limit" });
+  const spent = budget.admitted(), forecast = patch.forecast(format, sizes.slice(0, 3));
+  expect(forecast.ok).toBe(true); if (!forecast.ok) return;
+  expect(budget.admitted().metadata).toBeGreaterThan(spent.metadata);
+  const start = budget.admitted(), maker = new JournalObjects(format, work);
+  patch.finish(files.slice(0, 3), maker); const objects = maker.objects(), cost = budget.admitted();
+  expect(objects).toHaveLength(14); expect(work.used.files).toBe(4);
+  expect(objects.some(object => object.type === "blob" && new TextDecoder().decode(object.data) === "TEST retained 0")).toBe(false);
+  for (const key of Object.keys(start) as (keyof ArchiveCost)[]) expect(cost[key] - start[key]).toBeLessThanOrEqual(forecast.cost[key]);
 });
 
 test("the one-call tree encoder owns file paths and bytes before awaiting parent metadata", async () => {

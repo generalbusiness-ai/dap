@@ -3,6 +3,7 @@
 import { decodeGitText } from "./wire-text.ts";
 import { hex, sha1, sha256, utf8 } from "@generalbusiness/artroom-bytes";
 import { JournalWork, refuseJournal } from "./journal-work.ts";
+import { journalObjectReservation, journalResultMetadata, journalTreeRowMetadata } from "./journal-object-cost.ts";
 
 export type JournalFormat = "sha1" | "sha256";
 export type JournalObjectType = "blob" | "tree" | "commit";
@@ -76,10 +77,10 @@ export class JournalObjects {
   constructor(format: JournalFormat, work: JournalWork) { journalFormat(format); this.format = format; this.work = work; }
   #reserve(type: JournalObjectType, size: number): void {
     this.work.size(size);
-    const header = `${type} ${size}\0`;
-    this.work.spend({ objects: 1, outputWork: header.length + size });
-    this.work.metadata(256);
-    this.work.input(header.length + size, 3);
+    const cost = journalObjectReservation(type, size);
+    this.work.spend({ objects: 1, outputWork: cost.outputWork });
+    this.work.metadata(cost.metadata);
+    this.work.input(cost.inputWork);
   }
   make(type: JournalObjectType, input: Uint8Array): JournalObject {
     const size = byteCount(input);
@@ -103,7 +104,7 @@ export class JournalObjects {
     this.work.spend({ trees: 1, names: rows.length });
     if (rows.length > 4096) this.work.stop();
     // Reserve row metadata before cloning/sorting the caller's list.
-    this.work.metadata(rows.length * 512);
+    this.work.metadata(journalTreeRowMetadata(rows.length));
     const ordered = rows.map(row => {
       if (row.mode !== "100644" && row.mode !== "40000") refuseJournal("tree");
       name(row.name); journalId(this.format, row.id);
@@ -136,7 +137,7 @@ export class JournalObjects {
     return this.#keep("commit", utf8(body), body.length);
   }
   /** A result is exposed only by the caller after the complete build fence. */
-  objects(): readonly JournalObject[] { this.work.metadata(this.#objects.size * 64); return [...this.#objects.values()]; }
+  objects(): readonly JournalObject[] { this.work.metadata(journalResultMetadata(this.#objects.size)); return [...this.#objects.values()]; }
 }
 
 /** Reads exact named objects, with a metadata probe before reserving body

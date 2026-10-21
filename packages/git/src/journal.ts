@@ -4,6 +4,7 @@ export { JOURNAL_SELECTION_BYTES, journalSelection, journalPassSelection, type J
 export { buildJournalPass, type JournalPassArchive, type JournalPassResult } from "./journal-v2-layout.ts";
 export { prepareJournalPass, JournalPassPreparation, type JournalPassPreparationOptions, type JournalPassPreparationResult } from "./journal-v2-preparation.ts";
 export { ArchiveSegmentCursor } from "./journal-segments.ts";
+export type { JournalV2PlannedFile, JournalV2PatchForecast } from "./journal-v2-tree.ts";
 export { convertJournalArchiveV1 } from "./journal-v2-convert.ts";
 export { verifyJournalAppend } from "./journal-v2-append.ts";
 export type { JournalTextOmission } from "./journal-v2-manifest.ts";

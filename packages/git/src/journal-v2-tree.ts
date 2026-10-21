@@ -1,17 +1,24 @@
 /** Copy only changed paths from the confirmed parent tree. An unchanged
  * edge is kept by ID; no older pass manifest, segment or payload is read. */
 import type { JournalFile } from "./journal-files.ts";
-import { JournalObjectReader, JournalObjects, type JournalTreeRow } from "./journal-objects.ts";
+import { natural } from "@generalbusiness/artroom-bytes";
+import { JournalObjectReader, JournalObjects, journalFormat, type JournalFormat, type JournalObjectType, type JournalTreeRow } from "./journal-objects.ts";
+import { journalObjectReservation, journalResultMetadata, journalTreeRowMetadata } from "./journal-object-cost.ts";
 import { readJournalV2Path } from "./journal-v2-path.ts";
-import { JournalWork, refuseJournal } from "./journal-work.ts";
+import { JournalWork, refuseJournal, type JournalCost, type JournalLayoutLimits } from "./journal-work.ts";
+
+export interface JournalV2PlannedFile { readonly path: string; readonly bytes: number }
+type PatchLayoutWork = Pick<JournalLayoutLimits, "objects" | "trees" | "names" | "outputWork" | "objectBytes">;
+export type JournalV2PatchForecast = { readonly ok: true; readonly cost: Readonly<JournalCost>; readonly layoutWork: Readonly<PatchLayoutWork> }
+  | { readonly ok: false; readonly reason: "limit" };
 
 interface Change {
   readonly files: Map<string, string | null>; readonly children: Map<string, Change>;
   readonly previous: string | null; readonly prefix: string; readonly depth: number;
-  rows: Map<string, JournalTreeRow> | null; active: boolean;
+  rows: Map<string, JournalTreeRow> | null; baseBytes: number; active: boolean;
 }
 const change = (previous: string | null, prefix: string, depth: number): Change =>
-  ({ files: new Map(), children: new Map(), previous, prefix, depth, rows: null, active: false });
+  ({ files: new Map(), children: new Map(), previous, prefix, depth, rows: null, baseBytes: 0, active: false });
 const maximumRows = (prefix: string) => prefix === "" || prefix === "journal/" ? 1 : prefix === "journal/v2/" ? 4 : 1000;
 
 /** Pre-I/O maxima from the path grammar, including SHA-256 IDs. Isolated
@@ -68,9 +75,11 @@ export class JournalV2TreePatch {
     this.work.check();
     if (node.rows !== null) return;
     this.work.depth(node.depth); this.work.budget.spend({ nodes: 1 });
-    const before = node.previous === null ? [] : this.reader!.tree(await this.reader!.read(node.previous, "tree", journalV2TreeBytes(node.prefix)));
+    const body = node.previous === null ? null : await this.reader!.read(node.previous, "tree", journalV2TreeBytes(node.prefix));
+    const before = body === null ? [] : this.reader!.tree(body);
     if (before.length > maximumRows(node.prefix)) return this.work.stop();
     node.rows = new Map(before.map(row => [row.name, row]));
+    node.baseBytes = body?.length ?? 0;
   }
   /** New unique path deltas only. No file data is supplied or read here.
    * Await each call before starting another; no work may be detached. */
@@ -107,6 +116,76 @@ export class JournalV2TreePatch {
         node.files.set(leaf, null);
       }
     } finally { this.#preparing = false; }
+  }
+  /** Future finish with a fresh maker of this format, plus one objects()
+   * exposure. No commit, input validation, provider or at-send work is
+   * included. This reads only already prepared tree metadata. Forecast
+   * scratch work is charged now; estimated work is still owed in full.
+   * Unselected prepared paths receive no future emission charge or refund. */
+  forecast(format: JournalFormat, files: readonly JournalV2PlannedFile[]): JournalV2PatchForecast {
+    this.work.check(); journalFormat(format);
+    if (this.#finished || this.#preparing || this.#staged !== null || this.#root.rows === null) return refuseJournal("unavailable");
+    if (this.reader !== null && this.reader.format !== format) return refuseJournal("parent");
+    this.work.metadata(256 + files.length * 64);
+    const nodes = new Map<Change, { rows: number; bytes: number }>(), selected = new Set<string>();
+    const width = format === "sha1" ? 20 : 32;
+    const cost: JournalCost = { entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0, inputWork: 0 };
+    const layout: PatchLayoutWork = { objects: 0, trees: 0, names: 0, outputWork: 0, objectBytes: 0 };
+    let fits = true;
+    const metadata = (bytes: number) => { cost.metadata += bytes; cost.inputWork += bytes; };
+    const make = (type: JournalObjectType, bytes: number) => {
+      if (bytes > this.work.limits.objectBytes) fits = false;
+      const charge = journalObjectReservation(type, bytes);
+      metadata(charge.metadata); cost.inputWork += charge.inputWork;
+      layout.objects++; layout.outputWork += charge.outputWork;
+      layout.objectBytes = Math.max(layout.objectBytes, bytes);
+    };
+    const activate = (node: Change) => {
+      const prior = nodes.get(node); if (prior) return prior;
+      if (node.rows === null) return refuseJournal("tree", node.prefix);
+      this.work.metadata(128);
+      const value = { rows: node.rows.size, bytes: node.baseBytes }; nodes.set(node, value); return value;
+    };
+    for (const file of files) {
+      this.work.check();
+      const path = file.path, bytes = file.bytes;
+      if (typeof path !== "string" || path.length > 1024 || !readJournalV2Path(path)) return refuseJournal("tree");
+      if (!natural(bytes)) return refuseJournal("input", path);
+      this.work.metadata(128 + path.length * 4); this.work.input(path.length, 4);
+      if (selected.has(path)) return refuseJournal("tree", path);
+      selected.add(path);
+      const parts = path.split("/"), leaf = parts.pop()!;
+      let node = this.#root, state = activate(node);
+      for (const part of parts) {
+        const child = node.children.get(part);
+        if (!child) return refuseJournal("tree", path);
+        if (!nodes.has(child) && !node.rows!.has(part)) {
+          state.rows++; state.bytes += 7 + part.length + width; // 40000 SP name NUL raw-id
+        }
+        node = child; state = activate(node);
+      }
+      if (node.files.get(leaf) !== null) return refuseJournal("tree", path);
+      if (!node.rows!.has(leaf)) {
+        state.rows++; state.bytes += 8 + leaf.length + width; // 100644 SP name NUL raw-id
+      }
+      metadata(128); // Future staging list.
+      metadata(128 + path.length * 4); cost.inputWork += path.length * 4;
+      make("blob", bytes);
+    }
+    // An empty finish still emits the prepared root, as the actual patch does.
+    activate(this.#root);
+    for (const [node, state] of nodes) {
+      if (state.rows > maximumRows(node.prefix)) fits = false;
+      metadata(journalTreeRowMetadata(state.rows)); make("tree", state.bytes);
+      cost.inputWork += state.bytes;
+      layout.trees++; layout.names += state.rows;
+    }
+    metadata(journalResultMetadata(layout.objects)); // No content-deduplication credit.
+    for (const key of ["objects", "trees", "names", "outputWork"] as const) {
+      if (layout[key] > this.work.limits[key] - this.work.used[key]) fits = false;
+    }
+    this.work.check();
+    return fits ? { ok: true, cost: Object.freeze(cost), layoutWork: Object.freeze(layout) } : { ok: false, reason: "limit" };
   }
   /** Finish a subset of complete prepared paths once. Blob construction and
    * every new tree still use the original maker and its full debits. */

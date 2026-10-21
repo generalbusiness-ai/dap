@@ -6,7 +6,7 @@ import { JournalObjectReader, journalFormat, journalId, type JournalFormat, type
 import { readJournalPassParent } from "./journal-v2-parent.ts";
 import { JOURNAL_V2_LAST_POSITION, journalV2PassPath, readJournalV2Path } from "./journal-v2-path.ts";
 import { sameJournalScope } from "./journal-selection.ts";
-import { JournalV2TreePatch } from "./journal-v2-tree.ts";
+import { JournalV2TreePatch, type JournalV2PlannedFile, type JournalV2PatchForecast } from "./journal-v2-tree.ts";
 import { JournalLayoutRefusal, JournalWork, refuseJournal, type JournalBudget, type JournalCost, type JournalLayoutReason } from "./journal-work.ts";
 
 const preparationCostKeys = ["entries", "attempts", "nodes", "calls", "metadata", "inputWork"] as const;
@@ -82,11 +82,19 @@ export class JournalPassPreparation {
       addPreparationCost(this.#metadataCost, before, this.work.budget.admitted());
     }
   }
-  /** Exact work inside settled preparation calls only. Reporting this
+  /** Exact work inside settled preparation/forecast calls only. Reporting this
    * attribution never changes the live allowance. Work between calls and
    * final payload construction remain outside it. Await calls serially;
    * do not spend this budget on other work while a call is pending. */
   metadataCost(): Readonly<JournalCost> { return Object.freeze({ ...this.#metadataCost }); }
+  /** Patch construction only, under this same receipt/format/work. It is
+   * not the complete native pass's finish forecast or an allowance. */
+  forecast(files: readonly JournalV2PlannedFile[]): JournalV2PatchForecast {
+    this.work.check(); if (this.#used) return refuseJournal("unavailable");
+    const before = this.work.budget.admitted();
+    try { return this.#patch.forecast(this.format, files); }
+    finally { addPreparationCost(this.#metadataCost, before, this.work.budget.admitted()); }
+  }
   /** Builder handshake only. A checked handle is consumed, not serialized
    * as admission evidence. Every final payload/maker debit is still owed. */
   consume(format: JournalFormat, at: ScopeRef, after: Head | null, parent: string | null, budget: JournalBudget): JournalV2TreePatch {
