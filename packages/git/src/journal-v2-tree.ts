@@ -80,8 +80,10 @@ export class JournalV2TreePatch {
     this.#preparing = true;
     try {
       this.work.metadata(paths.length * 128);
+      this.work.metadata(paths.length * 32);
+      const owned = [...paths];
       await this.#load(this.#root);
-      for (const path of paths) {
+      for (const path of owned) {
         this.work.check(); this.work.spend({ files: 1 });
         if (!readJournalV2Path(path)) return refuseJournal("tree", path);
         const parts = path.split("/"), leaf = parts.pop()!;

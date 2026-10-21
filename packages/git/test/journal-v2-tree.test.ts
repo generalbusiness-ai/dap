@@ -23,7 +23,9 @@ test("one tree patch prepares parent metadata before payload, keeps original deb
     return object ? { type: object.type, size: object.data.length, data: object.data.length <= limit ? object.data : null } : null;
   } }, work);
   const selected = testPassFiles(1), patch = new JournalV2TreePatch(reader, parent, work);
-  await patch.prepare(selected.slice(0, 3).map(file => file.path));
+  const paths = selected.slice(0, 3).map(file => file.path), preparing = patch.prepare(paths);
+  paths.push(journalV2RetainedPath(1, { kind: "rule", digest: textDigest("TEST caller mutation during await") }));
+  await preparing;
   await patch.prepare([selected[3]!.path, journalV2RetainedPath(1, { kind: "rule", digest: textDigest("TEST discarded candidate") })]);
   expect(maker.objects()).toEqual([]); // Preparation has constructed no blob/tree payloads.
   const reads = read.length, prepared = budget.admitted();

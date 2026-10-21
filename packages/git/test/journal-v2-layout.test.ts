@@ -7,6 +7,7 @@ import { archiveSource, verifyArchive } from "@generalbusiness/artroom-replay";
 import { gitSource } from "@generalbusiness/artroom-replay/git";
 import { ArchiveBudget } from "../../scope/src/archive-budget.ts";
 import { buildJournalPass } from "../src/journal-v2-layout.ts";
+import { prepareJournalPass, type JournalPassPreparation } from "../src/journal-v2-preparation.ts";
 import { readJournalArchiveV2 } from "../src/journal-v2-reader.ts";
 import { journalRef } from "../src/journal-path.ts";
 import type { JournalReadResult } from "../src/journal-reader.ts";
@@ -32,9 +33,28 @@ test("three v2 passes cover ten thousand entries without rereading old entries o
       omittedTexts: first === 0 ? fixture.description.omittedTexts : [], cost: budget.admitted() });
     calls.length = 0;
     const parent = previous ? { id: previous.commit, source: archiveObjectSource(directory) } : null;
-    const built = await buildJournalPass({ format: "sha1", selection, input, parent, budget });
+    let preparation: JournalPassPreparation | undefined;
+    if (first === 8192) {
+      const prepared = await prepareJournalPass({ format: "sha1", at: fixture.at, after: previous!.through, parent, budget });
+      expect(prepared.ok, JSON.stringify(prepared)).toBe(true); if (!prepared.ok) return;
+      preparation = prepared.preparation;
+      // This fixture's final interval is below the object-byte bound and
+      // has exactly two segments at the original 1,000-line boundary.
+      await preparation.prepare([journalV2SegmentPath(8192), journalV2SegmentPath(9192)]);
+      expect(calls).toEqual([]); // No entry or retained input before metadata preparation.
+      expect(preparation.work.budget).toBe(budget);
+      expect(await buildJournalPass({ format: "sha1", selection, input, parent, budget: new ArchiveBudget({}, () => 0), preparation }))
+        .toEqual({ ok: false, reason: "parent" });
+      expect(calls).toEqual([]);
+    }
+    const built = await buildJournalPass({ format: "sha1", selection, input, parent, budget, ...(preparation ? { preparation } : {}) });
     expect(built.ok, JSON.stringify(built)).toBe(true); if (!built.ok) return;
     expect(built.archive.newInterval).toEqual([first, last]);
+    if (preparation) {
+      const beforeReuse = calls.length;
+      expect(await buildJournalPass({ format: "sha1", selection, input, parent, budget, preparation })).toEqual({ ok: false, reason: "unavailable" });
+      expect(calls.length).toBe(beforeReuse);
+    }
     expect(calls.filter(call => call.startsWith("entry:"))).toEqual(entries.map(entry => `entry:${entry.seq}`));
     if (first !== 0) expect(calls.every(call => call.startsWith("entry:"))).toBe(true);
     writeArchiveObjects(directory, built.archive.objects);
