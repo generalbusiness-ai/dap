@@ -55,11 +55,6 @@ My hope is that dap-style applications are useful for a [very broad](docs/use-ca
   Concurrent changes are settled by [reservation and judgment, not by merging](docs/demo.md#what-the-concurrency-shots-show).
   Its definitions are in [packages/platform](packages/platform) and
   [apps/room/lanes](apps/room/lanes).
-- **dap-counter** keeps a shared count. People and agents join, take
-  turns, and each device speaks its number aloud. The source is in
-  [apps/counter](apps/counter), and the tutorial
-  [Build a counter](docs/build-a-counter.md) builds a smaller version of
-  its definition.
 - **dap-library** is a lending library for kitchenware and tools. Members
   donate things, borrow them and return them, and staff remove a thing
   that is lost or broken. The source is in
@@ -67,6 +62,11 @@ My hope is that dap-style applications are useful for a [very broad](docs/use-ca
   [Build a lending library](docs/build-a-lending-library.md) writes its
   first definition. Each act also publishes the thing's page to the
   room's repository.
+- **dap-counter** keeps a shared count. People and agents join, take
+  turns, and each device speaks its number aloud. The source is in
+  [apps/counter](apps/counter), and the tutorial
+  [Build a counter](docs/build-a-counter.md) builds a smaller version of
+  its definition.
 - **dap-grow** simulates a growing operation; people with different roles
   share a workspace with sensors and agents. You can manage the operation
   within Claude or other tools, using [MCP-Apps](https://modelcontextprotocol.io/extensions/apps/overview) UI.
