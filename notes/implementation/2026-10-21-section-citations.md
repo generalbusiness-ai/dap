@@ -109,7 +109,7 @@ evidence directories are
 The integrated inventory and merge record are retained with the handoff.
 These are focused Node checks, not a final gate or native evidence.
 
-The final exact-head `npm run gate` is pending. Checker review, Main
-integration, and any later deployment remain separate obligations.
+The final exact-head `npm run gate` is pending. Checker review, landing on
+Main, and any later deployment remain separate obligations.
 This D2 change adds no runtime setting and requires no redeploy step.
 No builder deployment, push, Source act, or formal review is recorded here.

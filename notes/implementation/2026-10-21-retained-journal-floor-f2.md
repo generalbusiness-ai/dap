@@ -207,9 +207,10 @@ continuation under the original work bounds.
 
 The focused passing native runs have exact source, dependency, tool and
 lock-stamp guards. Raw failures, alarm times, per-pass counters, natural
-exits and corrected outcomes remain under the builder promise. The final
-F1 base incorporation, combined exact-head full gate and review are still
-pending; focused checks do not stand in for that gate.
+exits and corrected outcomes remain under the builder promise. These results
+were completed at checkpoint `3fc5fcb4`, before private integration with the
+landed F1 base and D2 citation check. The combined exact-head full gate and
+review are still pending; focused checks do not stand in for that gate.
 
 The actual Room A count of applied-create sending entries retained at F3 is
 an operational measurement for the planner. This change neither queries
