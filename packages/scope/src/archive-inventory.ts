@@ -2,21 +2,20 @@
  * certificate, provider lease, current authority or replay verdict. */
 import type { Bounds, Digest, FactRef, Head, Input, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, isDigest, isEntry, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
-import { creates, derivable, localRetainedPlan, requiredDependency, snapshotRead, runnable, outcomeValueDomains, UnsupportedConsumer, validateDefinition } from "@generalbusiness/dap-derive";
-import type { DependencyOrigin, LocalRetainedPlan, RequiredDependency, RetainedDependency, RetainedKey, TextDependency, ValidDefinition } from "@generalbusiness/dap-derive";
-import { platform } from "@generalbusiness/dap-platform";
-import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
+import { localRetainedPlan, requiredDependency, snapshotRead, UnsupportedConsumer } from "@generalbusiness/dap-derive";
+import type { DependencyOrigin, LocalRetainedPlan, RequiredDependency, RetainedDependency, RetainedKey, TextDependency } from "@generalbusiness/dap-derive";
 import { ArchiveBudget, ArchiveStopped, type ArchiveCost } from "./archive-budget.ts";
-import { archivePinValidationWork, archiveNativeDataReservation, archiveInventoryEntryWork, archiveDeclarationValidationWork } from "./archive-inventory-cost.ts";
+import { archivePinValidationWork, archiveInventoryEntryWork } from "./archive-inventory-cost.ts";
 import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, readArchivePin, readArchivePinAfterReceipt } from "./archive-pin.ts";
 import { stopArchivePrefix as stop, archivePrefixMetadata, ArchivePrefixStopped, type ArchivePrefixReason } from "./archive-prefix.ts";
-import { archivePrivacyMetadata, archiveSupportMetadata, type ArchiveSupport } from "./archive-privacy.ts";
+import { archivePrivacyMetadata, type ArchiveSupport } from "./archive-privacy.ts";
 import { ArchiveRetainedReader, readArchiveProbe } from "./archive-retained.ts";
 import type { Sql } from "./sqlite.ts";
 import { ArchiveForeignMetadata } from "./archive-foreign.ts";
 import type { ArchiveSourceBasis, FixtureArchiveSourcePins } from "./archive-source-pins.ts";
 import { readRetainedArchivePass } from "./archive-retained-pass.ts";
 import { readArchiveTextBytes } from "./archive-text.ts";
+import { ArchiveDeclarations } from "./archive-declarations.ts";
 import type { ArchivePlanFence } from "./archive-plan-fence.ts";
 
 /** Loaded only from trusted reviewer/native configuration, never request
@@ -54,8 +53,6 @@ export interface ArchiveInventory {
   readonly after?: Head | null;
 }
 export type ArchiveInventoryResult = { readonly ok: true; readonly inventory: ArchiveInventory } | { readonly ok: false; readonly reason: ArchivePrefixReason | "timeout" };
-interface DefinitionMetadata { readonly definition: ValidDefinition; readonly bytes: number }
-interface Closure { readonly root: Digest; readonly nodes: readonly Digest[]; readonly complete: boolean }
 const nameOf = (key: RetainedKey) => JSON.stringify(key.kind === "value" ? [key.kind, key.domain, key.digest] : [key.kind, key.digest]);
 
 /** Native Bounds and reviewed policies belong to the caller's trusted
@@ -71,69 +68,9 @@ export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: 
       const rootPolicy = reviewed.get(prefix.pin.seed.definition);
       if (!rootPolicy || !rootPolicy.review || rootPolicy.review.length > 512 || rootPolicy.support.named !== prefix.pin.seed.definition) return stop("unsupported-archive-cohort");
       let reader = new ArchiveRetainedReader(sql, budget);
-      const metadata = new Map<Digest, DefinitionMetadata | null>(), visited = new Set<Digest>();
-      const closures = new Map<Digest, Closure>();
-      const policyOf = (digest: Digest): ReviewedArchivePolicy => {
-        const policy = reviewed.get(digest);
-        if (!policy || !policy.review || policy.review.length > 512 || policy.support.named !== digest || policy.support.definition.digest !== digest) return stop("unsupported-archive-cohort");
-        return policy;
-      };
-      const declaration = (digest: Digest): DefinitionMetadata | null => {
-        budget.check();
-        // Even a cached/missing declaration request spends an attempt and
-        // validation allowance through the same reader.
-        if (!visited.has(digest)) { budget.spend({ nodes: 1 }); visited.add(digest); }
-        if (!reviewed.has(digest) && !reader.definitionPresent(digest)) { metadata.set(digest, null); return null; }
-        const policy = policyOf(digest);
-        const got = reader.read({ kind: "definition", digest }, bounds.definitionBytes);
-        if (!got) { metadata.set(digest, null); return null; }
-        budget.spend({ inputWork: archiveDeclarationValidationWork(got.bytes.length) });
-        const checked = validateDefinition(got.value, bounds, RULE_PROFILES);
-        budget.check();
-        if (!checked.ok || checked.definition.digest !== digest || canonicalize(policy.support.definition.declared) !== got.bytes) return stop("mismatch");
-        if (!derivable(checked.definition, policy.support.capabilities)) return stop("unsupported-archive-cohort");
-        archiveSupportMetadata({ ...policy.support, definition: checked.definition }, budget);
-        const value = { definition: checked.definition, bytes: utf8(got.bytes).length };
-        metadata.set(digest, value); return value;
-      };
-      const closureOf = (root: Digest, platformRoot?: ValidDefinition): Closure => {
-        // This is an actual closure request even on a cache hit. Read and
-        // validate again; a cache never enlarges per-root/aggregate bounds.
-        const asked = new Set<Digest>(platformRoot ? [root] : []), nodes: Digest[] = [], queue = platformRoot ? creates(platformRoot.declared) : [root];
-        let complete = true;
-        for (let digest = queue.shift(); digest !== undefined; digest = queue.shift()) {
-          budget.check();
-          if (asked.has(digest)) continue;
-          // Native convention: root plus at most namedDefinitions children.
-          if (asked.size > bounds.namedDefinitions) return stop("limit");
-          asked.add(digest); nodes.push(digest);
-          const matched = declaration(digest);
-          if (!matched) { complete = false; continue; }
-          queue.push(...creates(matched.definition.declared));
-        }
-        const value = { root, nodes, complete }; closures.set(root, value); return value;
-      };
-      let definition = rootPolicy.support.definition;
-      let platformClosure: Closure | null = null;
-      if (isDigest(prefix.pin.seed.definition)) {
-        const root = closureOf(prefix.pin.seed.definition);
-        if (!root.complete) return stop("incomplete");
-        definition = metadata.get(prefix.pin.seed.definition)!.definition;
-      } else {
-        // The supplied native platform data is trusted reviewed code; its
-        // fixed native maximum is reserved before inspecting that object.
-        budget.spend(archiveNativeDataReservation(bounds.definitionBytes));
-        const supplied = platform(prefix.pin.seed.definition);
-        if (!supplied) return stop("unsupported-archive-cohort");
-        const nativeBytes = canonicalize(supplied.data);
-        if (utf8(nativeBytes).length > bounds.definitionBytes) return stop("limit");
-        const checked = validateDefinition(supplied.data, bounds, RULE_PROFILES, { platform: true, outcomeValues: outcomeValueDomains(supplied.data, supplied.rules) });
-        if (!checked.ok || canonicalize(definition.declared) !== nativeBytes || !runnable(checked.definition, supplied.rules) || !derivable(checked.definition, rootPolicy.support.capabilities)) return stop("unsupported-archive-cohort");
-        definition = checked.definition;
-        visited.add(definition.digest);
-        platformClosure = closureOf(definition.digest, definition);
-        if (!platformClosure.complete) return stop("incomplete");
-      }
+      const visited = new Set<Digest>();
+      const declarations = new ArchiveDeclarations(reader, bounds, reviewed, visited);
+      const { definition, platformClosure } = declarations.root(prefix.pin.seed.definition);
       const foreign = fixtureSources ? new ArchiveForeignMetadata(sql, fixtureSources, reviewed, bounds, budget, visited, prefix.pin.seed.definition) : undefined;
       const admitted = archivePrivacyMetadata(sql, prefix, { ...rootPolicy.support, definition }, budget, foreign);
       const firstPosition = admitted.positions[0]!;
@@ -179,8 +116,8 @@ export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: 
       // be missing; only a subsequently selected root must be complete.
       for (const { plan } of plans) for (const { dependency } of plan.dependencies) {
         if (dependency.mode === "required" && dependency.key.kind === "definition") {
-          if (!closureOf(dependency.key.digest).complete) return stop("incomplete");
-        } else if (dependency.mode === "probe") for (const { key } of dependency.choices) if (key.kind === "definition") closureOf(key.digest);
+          if (!declarations.walk(dependency.key.digest).complete) return stop("incomplete");
+        } else if (dependency.mode === "probe") for (const { key } of dependency.choices) if (key.kind === "definition") declarations.walk(key.digest);
       }
       const objects = new Map<string, { key: RetainedKey; bytes: number; consumers: RetainedDependency[]; foreign?: { fact: FactRef; pin: Digest | PlatformDefinition }; pass?: number }>();
       const omittedTexts: (TextDependency & { readonly bytes?: number })[] = [], ancestryUnwalked: DependencyOrigin[] = [];
@@ -196,17 +133,17 @@ export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: 
         }
       };
       const selectClosure = (digest: Digest, consumer: RequiredDependency | Extract<RetainedDependency, { mode: "probe" }>) => {
-        const closure = closures.get(digest);
+        const closure = declarations.closure(digest);
         if (!closure?.complete) return stop("incomplete");
         for (const node of closure.nodes) {
-          const matched = metadata.get(node);
+          const matched = declarations.definition(node);
           if (!matched) return stop("incomplete");
           add({ kind: "definition", digest: node }, matched.bytes, node === digest ? consumer : requiredDependency(consumer.origin, "definition-child", { kind: "definition", digest: node }));
         }
       };
       if (isDigest(prefix.pin.seed.definition)) selectClosure(prefix.pin.seed.definition, requiredDependency(rootOrigin, "declaration", { kind: "definition", digest: prefix.pin.seed.definition }));
       else for (const child of platformClosure!.nodes) {
-        const matched = metadata.get(child);
+        const matched = declarations.definition(child);
         if (!matched) return stop("incomplete");
         add({ kind: "definition", digest: child }, matched.bytes, requiredDependency(rootOrigin, "definition-child", { kind: "definition", digest: child }));
       }
