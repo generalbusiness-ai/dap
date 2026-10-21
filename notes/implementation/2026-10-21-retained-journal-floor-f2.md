@@ -294,6 +294,60 @@ dependency, tool and stamp guards are retained. No earlier unbounded helper
 or frozen gate original was executed for this control. A clean corrected
 head still needs the coordinated full gate and formal review.
 
+The later joint gate at `15ef7921` passed: 2,111 cases passed, three skipped,
+with separate Node blocks of 7, 33 and 55 passing. Its source, dependencies
+and evidence remain frozen. The checker then requested one correction in
+`10837536`: the kept set could claim an opening payload that an earlier
+floor had already removed. That passing gate did not witness this case.
+
+The new distinguishing case uses actual Native turns, SQLite and eviction.
+Its declaration, authority, reader and clock are fixtures. It saves the
+same genuine journal before each prune and replays those bytes through an
+explicit test receipt-descriptor port; this supplies no Git custody proof.
+Floor 50 removes final item 1's opening. A fresh accepted act at 152 puts
+item-ref 1 on live item 0. Floor 200 explicitly keeps that act. Under the
+old logic, both kept sets included 1 although SQLite had no payload there:
+the native read returned `not-found`, its local fact was refused as
+`fact-mismatch`, and the complete clone exposed entry 1 again. The case
+failed its kept-set assertion after recording both observations. The pure
+missing-held-root control also failed under the old logic.
+
+The correction masks journal reads and walks against the previous floor
+before platform and causal traversal. A typed item identity may still name
+an archived final item, but cannot restore its opening payload. A required
+payload root that is archived or missing makes derivation unavailable:
+the writer offers nothing, the judge writes nothing, and a bypassed fold
+throws within its transaction. Historyless semantic analysis retains its
+prior behavior. SQLite checks every proposed kept position against its
+already-loaded bounded entry rows before its first mutation. There is no
+new wire reason, blanket folded-row retention, price or limit change.
+
+The corrected case passed: after restart, the folded final item and live
+reference still name 1, native and replay kept sets are `[0, 152]`, stored
+entry 1 is absent, its read returns the current archive receipt, and its
+local fact is refused as `archived`. The complete clone's sparse reader
+also hides 1. Replay of the same saved Native journal is consistent, and
+its complete checkpoint digest equals native storage. The pure control
+passes for missing required payloads, a platform hook given masked reads
+and positions despite a complete clone, and an explicit keep that tries to
+restore an archived payload.
+
+Raw source copies, dependency and tool guards, logs and natural exits are
+retained under `/private/tmp/artroom-f2-monotonic-control-20261021-v1`
+through `v4` and `/private/tmp/artroom-f2-monotonic-fixed-20261021-v1`
+through `v2`. The initial fixture index-access compiler failure, root
+reporter startup failures, missing nonfinal-state fixture guard, and later
+hook-fixture typing failure remain separate from the meaningful old-logic
+failures. The final focused run passed six remaining compiler configs,
+one Native/same-journal replay case and one selected pure case; the two
+other pure cases were unselected. The unchanged derive source compiler's
+earlier pass is retained. All 2,726 source files and 5,530 dependency
+entries, tools and lock stamp stayed exact during the final run. Independent
+source-only review of `a7fd01e0` found no concrete blocker; it supplies no
+runtime or formal approval. The corrected integrated head still needs the
+coordinated full gate and guarded review. No unchanged suite was repeated
+here, and the submitted candidate and V6 DATA were not changed.
+
 The actual Room A count of applied-create sending entries retained at F3 is
 an operational measurement for the planner. This change neither queries
 Cloudflare nor substitutes a fixture count for that measurement.
