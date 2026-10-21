@@ -64,7 +64,7 @@ function reviewed(pin: Digest | PlatformDefinition, declaration?: unknown): Revi
     } };
 }
 
-test.each(["fixture", "Grow"])("installed %s scopes export genesis zero after a late native Membership8 directory binding", async kind => {
+test.for(["fixture", "Grow"])("installed %s scopes export genesis zero after a late native Membership8 directory binding", { timeout: 30_000 }, async (kind, context) => {
   const prepared = kind === "fixture" ? await applicationOwnedScopesPacket() : (() => {
     const captured = inject("maintainedApplications").grow, bytes = unb64url(captured.bytes);
     if (!bytes) throw Error("The maintained TEST Grow packet must be captured.");
@@ -416,12 +416,12 @@ test.each(["fixture", "Grow"])("installed %s scopes export genesis zero after a 
       if (corruption === "missing") expect(replayed).toMatchObject({ kind: "verification", verification: { report: { result: "incomplete", at: { at: directory.read.value[5]!.entry.at, seq: 5, hash: directory.read.value[5]!.hash } } } });
       else expect(replayed).toMatchObject({ kind: "archive-failure", result: "refused" });
     }
-    console.info("TEST native archive closure", JSON.stringify({
+    await context.annotate(JSON.stringify({
       scopes: discovery!.scopes, repository: discovery!.repository, anchorFacts, omittedTexts: expectedOmissions,
       results: offlineResults.map(result => ({ scope: result.scope, head: result.head,
         result: result.offline.kind === "verification" ? result.offline.verification.report.result : result.offline.kind })),
       copies: credentialCounts, refusedDomains: 2, refusedCredentials: 3, anchorRefusals: 4,
       qualification: "Native test-host journals and issued reads; TEST package/owner/scheduler/policy/object repository. Explicit private facts and observed values on caller trust; no live private source read by collector, real Git clone, provider or deployment acceptance.",
-    }));
+    }), "native-archive-closure");
   } finally { life.release(); }
-}, 30_000);
+});

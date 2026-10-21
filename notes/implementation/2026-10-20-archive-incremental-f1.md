@@ -497,3 +497,27 @@ cutoff, amended native retained-file witness, 10,000 confirmed one-entry
 passes, key-3,700 restart, measured Grow cadence, actual Git clone and Slice
 9 coordinator/publication wiring remain work. No full gate, formal Source
 review, approval, landing, push or deployment is claimed.
+
+The native Grow case now emits a test annotation for a retained JSON
+receipt. Its first two annotation-only attempts stop at the test compiler:
+`38086` uses the wrong `each` context signature (1.77 outer seconds, 3.80
+CPU seconds), and `54652` retains the old positional timeout with `for`
+(1.58 / 3.83). With the context and unchanged 30-second timeout passed in
+the supported form, `22214` passes the test compiler and selected native
+Grow case (9.90 / 13.37). It captures the same 2,642 source files exactly,
+with zero installs. The fixture case is deliberately outside this receipt
+selection; it already passed in `96495`. The annotation changes no protocol
+or test assertion.
+
+The actual native receipt is
+`/private/tmp/archive-native-incremental-grow-text-native-receipt-v3-20261020.json`.
+It contains all five consistent results and seven private-source anchors.
+These are its four omission rows; each count is canonical retained JSON
+UTF-8 bytes, with the full scope, incarnation and hash in the receipt.
+
+| Digest | Bytes | First naming entry |
+|---|---:|---|
+| `sha256:6d4a86ea2640f5364515eaa7803ea4ba47c7636027e62e490d2be18b4d2e9110` | 4,998 | Directory 5 |
+| `sha256:9e0a5a28346594dcd3a95794d1d66951691e6de65adc1582e788ba5ef3085530` | 45,750 | Directory 5 |
+| `sha256:6d4a86ea2640f5364515eaa7803ea4ba47c7636027e62e490d2be18b4d2e9110` | 4,998 | Rules 2 |
+| `sha256:9e0a5a28346594dcd3a95794d1d66951691e6de65adc1582e788ba5ef3085530` | 45,750 | Rules 2 |
