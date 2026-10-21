@@ -10,8 +10,9 @@ import { journalByteOrder } from "./journal-objects.ts";
 import { JournalWork, refuseJournal, type JournalCost } from "./journal-work.ts";
 import { JOURNAL_V2_LAST_POSITION } from "./journal-v2-path.ts";
 import { ARCHIVE_NATIVE_VALUE_DOMAINS } from "./archive-policy.ts";
+import { JOURNAL_SELECTION_BYTES, JOURNAL_MEASURED_OMISSION_METADATA, journalOrderingInputWork, journalSelectionJSONReservation } from "./journal-selection-cost.ts";
 
-export const JOURNAL_SELECTION_BYTES = 1024 * 1024;
+export { JOURNAL_SELECTION_BYTES } from "./journal-selection-cost.ts";
 const inventoryCeilings: Readonly<JournalCost> = { entries: 4096, attempts: 512, nodes: 64, calls: 16384, metadata: 4 * 1024 * 1024, inputWork: 64 * 1024 * 1024 };
 const inputs: readonly string[] = ["genesis", "act", "delivery", "diagnosis", "timed", "preparation", "outcome", "checkpoint"];
 // Format vocabulary only; this descriptive serializer grants no export
@@ -63,7 +64,7 @@ export function journalList(value: unknown, max: number, work: JournalWork): unk
 }
 export function journalOrdered<T>(rows: readonly T[], key: (row: T) => string, work: JournalWork): T[] {
   const pairs = rows.map(row => ({ row, bytes: utf8(key(row)) }));
-  work.input(pairs.reduce((n, p) => n + p.bytes.length, 0), Math.ceil(Math.log2(rows.length + 1)) + 2);
+  work.input(journalOrderingInputWork(pairs.reduce((n, p) => n + p.bytes.length, 0), rows.length));
   return pairs.sort((a, b) => journalByteOrder(a.bytes, b.bytes)).map(p => p.row);
 }
 export function journalRetainedKey(value: unknown): ArchiveRetainedName {
@@ -112,8 +113,9 @@ export function journalForeignSources(value: unknown, work: JournalWork): Journa
 function readSelection(bytes: string, work: JournalWork, incremental: boolean): JournalSelection & { readonly after?: Head | null } {
   if (typeof bytes !== "string") return refuseJournal("input");
   if (bytes.length > JOURNAL_SELECTION_BYTES) return work.stop();
-  work.metadata(bytes.length * 3); // Reserve UTF-8 and metadata work before encoding/parsing.
-  work.input(bytes.length * 3, 8);
+  const json = journalSelectionJSONReservation(bytes.length);
+  work.metadata(json.metadata); // Reserve UTF-8 and metadata work before encoding/parsing.
+  work.input(json.inputWork);
   if (utf8(bytes).length > JOURNAL_SELECTION_BYTES) return work.stop();
   let value: unknown;
   try { value = parseStrict(bytes); if (canonicalize(value) !== bytes) return refuseJournal("input"); }
@@ -201,7 +203,7 @@ function readSelection(bytes: string, work: JournalWork, incremental: boolean): 
     const r = journalRecord(raw, ["mode", "origin", "consumer", "key", "archive", ...(measured ? ["bytes"] : [])]), key = journalRecord(r["key"], ["kind", "digest"]);
     if (r["mode"] !== "text" || r["consumer"] !== "detached-text" || r["archive"] !== "omit" || key["kind"] !== "text" || !isDigest(key["digest"])) return refuseJournal("input");
     if (measured && (!journalNatural(r["bytes"]) || r["bytes"] < 2)) return refuseJournal("input");
-    if (measured) work.metadata(256);
+    if (measured) work.metadata(JOURNAL_MEASURED_OMISSION_METADATA);
     const from = origin(r["origin"]), name = journalKeyName({ kind: "text", digest: key["digest"] });
     if (objects.has(name)) return refuseJournal("input");
     const prior = omissions.get(name);
