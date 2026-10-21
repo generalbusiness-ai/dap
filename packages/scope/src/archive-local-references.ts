@@ -39,7 +39,7 @@ export class ArchiveLocalReferences {
 
   /** Read actual context/uses from the classified exact row. This still
    * belongs to the owner's synchronous, whole-prefix metadata stage. */
-  read(at: ScopeRef, position: ArchivePrivacyPosition, foreign?: ArchiveForeignMetadata): ArchiveLocalReferencePlan {
+  read(at: ScopeRef, position: ArchivePrivacyPosition, foreign?: Pick<ArchiveForeignMetadata, "source">): ArchiveLocalReferencePlan {
     checkArchiveFieldSource(position);
     const source = "seq = ? AND hash = ? AND size = ? AND typeof(bytes) = 'text' AND octet_length(bytes) = ? AND json_extract(bytes, '$.input.type') = ?";
     const args = [position.seq, position.hash, position.bytes, position.bytes, position.input];
@@ -61,8 +61,7 @@ export class ArchiveLocalReferences {
       const { owner, kind, result } = this.#values.context(position);
       context = { input: "outcome", owner, kind, result };
     } else if (position.input === "delivery") {
-      const rows = this.budget.native(this.sql, () => ({ metadata: 1024, inputWork: position.bytes * 64 })).exec(`SELECT
-        json_type(bytes, '$.input.from') = 'object' AS object,
+      const rows = this.budget.native(this.sql, () => ({ metadata: 1024, inputWork: position.bytes * 64 })).exec(`SELECT json_type(bytes, '$.input.from') = 'object' AS object,
         (SELECT count(*) FROM json_each(bytes, '$.input.from')) AS keys,
         json_type(bytes, '$.input.from.at') = 'object' AS at_object,
         (SELECT count(*) FROM json_each(bytes, '$.input.from.at')) AS at_keys,

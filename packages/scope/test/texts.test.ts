@@ -13,6 +13,7 @@ import { reader } from "./fixtures-native.ts";
 import { ArchiveBudget } from "../src/archive-budget.ts";
 import { ArchiveGenesisFields } from "../src/archive-genesis-fields.ts";
 import { ArchiveDeliveryFields } from "../src/archive-delivery-fields.ts";
+import { ArchiveLocalReferences } from "../src/archive-local-references.ts";
 import type { SqlValue } from "../src/sqlite.ts";
 
 /**
@@ -211,7 +212,8 @@ test("a repeat of a decided send is answered from the entry that recorded it, an
   // alone cannot give a differently pinned sender's fields this meaning.
   const projected = await runInDurableObject(B.object, (_instance, state) => {
     const row = state.storage.sql.exec<{ size: number }>("SELECT size FROM entry WHERE seq = ? LIMIT 1", told.entry.seq).one();
-    const expected = localRetainedPlan(notes, told.entry, told.hash, null, PROPOSED_BOUNDS, "notes").dependencies.filter(({ dependency }) => dependency.mode === "text");
+    const all = localRetainedPlan(notes, told.entry, told.hash, null, PROPOSED_BOUNDS, "notes").dependencies;
+    const expected = all.filter(({ dependency }) => dependency.mode === "text");
     const cells: unknown[] = [], budget = new ArchiveBudget(), sql = { exec(query: string, ...args: SqlValue[]) {
       const rows = state.storage.sql.exec(query, ...args).toArray();
       for (const held of rows) cells.push(...Object.values(held));
@@ -222,9 +224,26 @@ test("a repeat of a decided send is answered from the entry that recorded it, an
     const repeated = projector.project(told.entry.at, position, shared.fact, "notes"), after = budget.admitted();
     const other = projector.project(told.entry.at, position, shared.fact, "other");
     expect(() => projector.project(told.entry.at, position, shared.fact)).toThrow("unsupported-foreign-copy");
-    return { correct, repeated, other, expected, before, after, cells };
+    const fieldCells = [...cells];
+    const references = new ArchiveLocalReferences(sql, { named: notes.digest, definition: notes,
+      owners: new Map(), records: new Map(), preparations: new Map() }, PROPOSED_BOUNDS, budget);
+    const copy = told.entry.uses.find(use => canonicalize(use.fact) === canonicalize(shared.fact));
+    if (!copy) return expect.fail("The native tell's retained source is required.");
+    const size = state.storage.sql.exec<{ size: number }>("SELECT octet_length(bytes) AS size FROM retained_input WHERE kind = 'entry' AND digest = ?", copy.content).one().size;
+    const senders: unknown[] = [];
+    // STAND-IN for the whole-prefix foreign classifier's lookup port. All
+    // returned metadata comes from this real peer, its exact definition and
+    // B's actual retained copy. No foreign privacy/policy proof is supplied.
+    const composed = references.read(told.entry.at, { ...position, input: "delivery" }, { source(from) {
+      senders.push(from);
+      return canonicalize(from) === canonicalize(shared.fact)
+        ? { fact: shared.fact, content: copy.content, bytes: size, pin: notes.digest, under: notes.declared.name } : null;
+    } });
+    return { correct, repeated, other, expected, before, after, cells: fieldCells, composed, all, senders };
   });
   expect(projected.correct).toEqual(projected.expected);
+  expect(projected.composed).toEqual({ dependencies: projected.all, ancestrySnapshot: null });
+  expect(projected.senders).toEqual([shared.fact]);
   expect(projected.correct.map(plan => plan.dependency.mode === "text" ? plan.dependency.key : null)).toEqual([{ kind: "text", digest: textDigest(text) }]);
   expect(projected.repeated).toEqual(projected.correct); expect(projected.other).toEqual([]);
   expect(projected.after.calls).toBeGreaterThan(projected.before.calls);
