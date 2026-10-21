@@ -356,3 +356,34 @@ here, and the submitted candidate and V6 DATA were not changed.
 The actual Room A count of applied-create sending entries retained at F3 is
 an operational measurement for the planner. This change neither queries
 Cloudflare nor substitutes a fixture count for that measurement.
+
+The corrected joint V7 gate at `14ad145e` closed naturally with exit 1:
+2,112 cases passed, one failed and three skipped, with zero unhandled
+errors. The original 30-second native transport case timed out. All source,
+dependency and tool guards stayed exact; the later Node 33 and Counting 55
+blocks were not reached. This is a workload diagnosis, not evidence that
+the F2 correction caused the timeout.
+
+The transport fixture now deliberately reduces its single backlog from
+9,999 to 4,097 checkpoints. Each checkpoint is admitted once by Scout and
+once by fresh inventory against the unchanged 4,096-entry cap, so 4,097
+still requires at least three incremental appends plus genesis. The send
+count assertion now requires more than three sends. The same fixed tree
+path and radix-100 boundary remain covered; 9,999 did not cross radix
+10,000. Actual HTTP parent reads and append sends, restart, full peer
+closure, offline verification, every budget cap and token accounting
+assertion remain, with the original 30,000 ms deadline. Other cadence and
+capacity cases cover large backlogs. No product behavior, fee or cap
+changes. At preparation, this reduced workload had not yet been tested.
+
+The later focused check passed under the maintained Scope package config:
+the owning test compiler exited 0, and the one selected Native transport
+case passed in 6,761 ms with its original 30,000 ms deadline. The test
+process closed naturally with exit 0 after 10.6658 seconds wall and 12.25
+seconds CPU. All 2,731 source files, 5,530 dependency leaves, 535 dependency
+directories, tools, bindings and lock stamp stayed exact before and after;
+the selected case had no skip. The machine was shared, and this is a
+focused result, not a benchmark or a full gate. The original V7 timeout
+remains evidence and does not establish an F2 cause. Raw commands, natural
+exits, complete selected-case results and guards are retained under
+`/private/tmp/artroom-f2-transport-focus-evidence-20261021`.

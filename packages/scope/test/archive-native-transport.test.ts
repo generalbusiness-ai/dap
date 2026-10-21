@@ -97,11 +97,15 @@ test("native driver parent reads and append sends use the same original budget t
   budget: () => { const budget = new ArchiveBudget(); budgets.push(budget); return budget; },
   }).run());
   expect(await pass()).toMatchObject({ state: "confirmed" });
+  // Each checkpoint is admitted once by Scout and once by fresh inventory.
+  // Against the unchanged 4096-entry cap, 4097 checkpoints require at least
+  // three incremental appends plus genesis. This keeps one backlog and the
+  // same fixed tree path and radix-100 boundary; 9999 did not cross radix 10000.
   await runInDurableObject(lane.object, async instance => {
-    for (let i = 0; i < 9999; i++) expect((await (instance as TestScope).checkpoint()).answer).toBe("written");
+    for (let i = 0; i < 4097; i++) expect((await (instance as TestScope).checkpoint()).answer).toBe("written");
   });
   const head = await lane.head(); let through = 0;
-  expect(head.seq).toBe(9999);
+  expect(head.seq).toBe(4097);
   while (through < head.seq && budgets.length <= head.seq + 1) {
     const result = await pass();
     expect(result, JSON.stringify({ result, used: budgets.at(-1)!.admitted(), uploads, sends, stages })).toMatchObject({ state: "confirmed" });
@@ -109,7 +113,7 @@ test("native driver parent reads and append sends use the same original budget t
     through = row.confirmed!.through.seq;
     if (budgets.length === 2) await lane.restart();
   }
-  expect(through).toBe(head.seq); expect(sends.length).toBeGreaterThan(2); expect(uploads.length).toBeGreaterThan(0);
+  expect(through).toBe(head.seq); expect(sends.length).toBeGreaterThan(3); expect(uploads.length).toBeGreaterThan(0);
   expect(minted).toBe(sends.length); expect(revoked).toBe(minted);
   for (const budget of budgets) for (const [key, ceiling] of Object.entries(ARCHIVE_BOUNDS)) {
     expect(budget.admitted()[key as keyof typeof ARCHIVE_BOUNDS]).toBeLessThanOrEqual(ceiling);
