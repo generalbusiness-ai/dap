@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fde4309d2652851cfdba15c9c233c8fb5758b9cf","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-19-self-hosting-on-celld.md."}
+{"kind":"assert","text":"Planner, 14:29: the status sweep landed on main 25323213 (revision 2, approved 9d2f9aef, ratified c8490145); pushed. 85 files: design notes, plans (one status line each in the history note's format; 029, 031, 032 and 033 current), implementation notes and docs/roadmap.md now match what has landed."}
