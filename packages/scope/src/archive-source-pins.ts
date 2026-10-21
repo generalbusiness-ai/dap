@@ -6,6 +6,8 @@ import { same, canonicalize, definitionDigest, entryHash, isDigest, isEntry, isR
 import { outcomeValueDomains, validateDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { platform } from "@generalbusiness/dap-platform";
+import { ARCHIVE_SOURCE_LOOKUP_METADATA, ARCHIVE_SOURCE_LOOKUP_WORK } from "./archive-source-cost.ts";
+import { archiveDeclarationValidationWork } from "./archive-inventory-cost.ts";
 import { ArchiveBudget } from "./archive-budget.ts";
 import { stopArchivePrefix as stop } from "./archive-prefix.ts";
 
@@ -73,13 +75,13 @@ export class FixtureArchiveSourcePins {
   /** Full scope/incarnation/kind only. Neither producer name nor receiver
    * alias is a key. Callers must separately join an explicit reviewed policy. */
   get(at: ScopeRef, budget: ArchiveBudget): Readonly<ArchiveSourcePin> | null {
-    budget.spend({ attempts: 1, metadata: 512, inputWork: 1024 });
+    budget.spend({ attempts: 1, metadata: ARCHIVE_SOURCE_LOOKUP_METADATA, inputWork: ARCHIVE_SOURCE_LOOKUP_WORK });
     if (!isScopeRef(at)) return stop("unavailable");
     const source = this.#sources.get(canonicalize(at));
     if (!source) return null;
     // Includes a repeated declaration comparison in the same pass allowance,
     // even when the caller already used this source or its policy.
-    budget.spend({ inputWork: source.declaration.length * 3 * 16 });
+    budget.spend({ inputWork: archiveDeclarationValidationWork(source.declaration.length) });
     return source;
   }
 }

@@ -40,6 +40,20 @@ describe("replay of a good history (sections 9.3 to 9.5)", () => {
     // I.2 used P.2, which no anchor names: the replay stops there, having covered I.0 and I.1 on the anchors alone.
     expect(report).toMatchObject({ result: "missing-dependency", at: { seq: 2 }, coverage: [{ scope: w.I.scope, from: 0, through: 1 }], dependencies: { verified: 0, anchored: 2 } });
     expect([report.anchors.map((a) => a.seq), report.trusts.includes(TRUSTS.anchors), report.trusts.includes(TRUSTS.head)]).toEqual([[4, 5], true, false]);
+    // A wrong hash at a required position is a mismatch when the source
+    // cannot be read. An absent anchor keeps the missing-dependency result.
+    const wrong = { ...anchors[0]!, hash: textDigest("TEST wrong source anchor") };
+    const readable = await replay(w, { anchors: [wrong, anchors[1]!] });
+    expect(readable.report.result).toBe("missing-dependency");
+    expect(readable.report.coverage.some(row => row.scope.scope === w.D.scope.scope)).toBe(true);
+    w.D.entries.length = 0;
+    const missing = await replay(w, { anchors: [anchors[1]!] });
+    expect(missing.report).toMatchObject({ result: "missing-dependency", dependencies: { missing: [{ at: w.D.scope, seq: 4, hash: anchors[0]!.hash }] } });
+    const mismatched = await replay(w, { anchors: [wrong, anchors[1]!] });
+    expect(mismatched.report).toMatchObject({ result: "mismatch", at: { seq: 0 }, anchors: [], dependencies: { missing: [] } });
+    expect(mismatched.why).toContain("the caller's anchor");
+    expect(mismatched.why).toContain(wrong.hash);
+    expect(mismatched.why).toContain(anchors[0]!.hash);
   });
 });
 

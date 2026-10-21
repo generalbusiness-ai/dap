@@ -3,12 +3,82 @@
 import { expect, test } from "vitest";
 import { DOMAINS, PROPOSED_BOUNDS, RETAINED_INPUT_BYTES } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, utf8 } from "@generalbusiness/artroom-bytes";
-import { ArchiveBudget } from "../src/archive-budget.ts";
+import { ARCHIVE_BOUNDS, ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
 import { observationDependency } from "@generalbusiness/dap-derive";
-import { ArchiveRetainedReader, readArchiveProbe } from "../src/archive-retained.ts";
-import { definition, create } from "./fixtures-native.ts";
+import { ArchiveRetainedReader, readArchiveProbe, archiveRetainedKeyName, archiveRetainedColdReadForecast, archiveRetainedReadForecast } from "../src/archive-retained.ts";
+import { measureArchiveReferences } from "../src/archive-reference-measurements.ts";
+import { definition, create, rita } from "./fixtures-native.ts";
 
 const missing = "sha256:" + "d".repeat(64) as `sha256:${string}`;
+test("native keyed measurement returns scalar sizes, charges repeats and does not validate corrupt bytes", async () => {
+  const lane = await create();
+  const result = await lane.inside(state => {
+    const queries: string[] = [], cells: unknown[] = [], budget = new ArchiveBudget();
+    const reader = new ArchiveRetainedReader({ exec(query, ...args) {
+      queries.push(query); const rows = state.storage.sql.exec(query, ...args).toArray();
+      for (const row of rows) cells.push(...Object.values(row));
+      return { toArray: () => rows };
+    } }, budget);
+    state.storage.sql.exec("INSERT INTO retained_input (kind, digest, bytes) VALUES ('rule', ?, 'false')", missing);
+    // The same digest in another native table must not satisfy this key.
+    state.storage.sql.exec("INSERT INTO retained_value (domain, digest, bytes) VALUES (?, ?, ?)", DOMAINS.entry, missing, '"TEST other table 🎵"');
+    const key = { kind: "rule" as const, digest: missing };
+    const measured = reader.measure(key, RETAINED_INPUT_BYTES), before = budget.admitted();
+    const repeated = reader.measure(key, RETAINED_INPUT_BYTES), after = budget.admitted();
+    const tooSmall = reader.measure(key, 4), absent = reader.measure({ kind: "snapshot", digest: missing }, RETAINED_INPUT_BYTES);
+    const measurementCells = [...cells], measurementQueries = [...queries];
+    const read = reader.read(key, RETAINED_INPUT_BYTES);
+    return { measured, repeated, before, after, tooSmall, absent, measurementCells, measurementQueries, read, queries };
+  });
+  expect(result.measured).toBe(5); expect(result.repeated).toBe(5);
+  expect(result.tooSmall).toBeNull(); expect(result.absent).toBeNull();
+  expect(result.after.attempts).toBe(result.before.attempts + 1);
+  expect(result.after.calls).toBe(result.before.calls + 1);
+  expect(result.after.inputWork).toBeGreaterThan(result.before.inputWork);
+  expect(result.measurementQueries).toHaveLength(4);
+  expect(new Set(result.measurementCells)).toEqual(new Set([5, "text"]));
+  expect(result.measurementQueries.every(query => query.includes("octet_length(bytes)") && query.includes("FROM retained_input"))).toBe(true);
+  expect(result.read).toBeNull();
+  expect(result.queries.filter(query => query.startsWith("SELECT bytes"))).toHaveLength(1);
+});
+
+// Native table rows below are explicit TEST payloads, not policy or export
+// admission. Only the first valid bytes have their correct raw hash.
+test("native retained size fences reject changed and newly present bodies across a Native turn", async () => {
+  const lane = await create(), budget = new ArchiveBudget(), bytes = canonicalize("🎵"), later = "true";
+  const key = { kind: "rule" as const, digest: digestBytes(utf8(bytes)) }, absent = { kind: "rule" as const, digest: digestBytes(utf8(later)) };
+  const expected = new Map<string, number | null>();
+  await lane.inside(state => {
+    state.storage.sql.exec("INSERT INTO retained_input (kind, digest, bytes) VALUES ('rule', ?, ?)", key.digest, bytes);
+    const reader = new ArchiveRetainedReader(state.storage.sql, budget);
+    expected.set(archiveRetainedKeyName(key), reader.measure(key, RETAINED_INPUT_BYTES));
+    expected.set(archiveRetainedKeyName(absent), reader.measure(absent, RETAINED_INPUT_BYTES));
+    const before = budget.admitted(); expect(reader.read(key, 6)?.bytes).toBe(bytes); const cold = budget.admitted();
+    expect(cold.inputWork - before.inputWork).toBe(550); // Original actual cold price for six UTF-8 bytes.
+    expect(archiveRetainedColdReadForecast(6).inputWork).toBe(550);
+    expect(reader.read(key, 4)).toBeNull(); const cached = budget.admitted();
+    expect(cached.inputWork - cold.inputWork).toBe(640); // Four UTF-16 units still pass the early length check.
+    expect(archiveRetainedReadForecast(6).inputWork).toBeGreaterThanOrEqual(640);
+    expect(archiveRetainedReadForecast(null).inputWork).toBeLessThan(640);
+  });
+  await lane.did(rita, "remark", { on: 0, fields: { text: "a real Native turn between reads" } });
+  await lane.inside(state => {
+    const queries: string[] = [];
+    const sql = { exec(query: string, ...args: (string | number | null | ArrayBuffer)[]) { queries.push(query); return state.storage.sql.exec(query, ...args); } };
+    try {
+      // Restored negative fixtures only; no corrupt journal is accepted.
+      state.storage.sql.exec("UPDATE retained_input SET bytes = 'null' WHERE kind = 'rule' AND digest = ?", key.digest);
+      state.storage.sql.exec("INSERT INTO retained_input (kind, digest, bytes) VALUES ('rule', ?, ?)", absent.digest, later);
+      const reader = new ArchiveRetainedReader(sql, budget, [], expected);
+      for (const candidate of [key, absent]) expect(() => reader.read(candidate, RETAINED_INPUT_BYTES)).toThrow("archive-mismatch");
+      expect(queries.filter(query => query.startsWith("SELECT bytes"))).toEqual([]);
+    } finally {
+      state.storage.sql.exec("UPDATE retained_input SET bytes = ? WHERE kind = 'rule' AND digest = ?", bytes, key.digest);
+      state.storage.sql.exec("DELETE FROM retained_input WHERE kind = 'rule' AND digest = ?", absent.digest);
+    }
+  });
+});
+
 test("native definition-key selection validates canonical bytes and charges cache hits without aliasing the value table", async () => {
   const lane = await create();
   const actual = await lane.inside(state => {
@@ -92,12 +162,20 @@ test("native ordered probes discard invalid-domain candidates, select the defini
     // Correct bytes in the wrong domain are not a valid first probe.
     state.storage.sql.exec("INSERT INTO retained_value (domain, digest, bytes) VALUES (?, ?, ?)", DOMAINS.entry, definition.digest, canonicalize(definition.declared));
     const probe = observationDependency({ at: lane.genesis.fact, input: "act" }, definition.digest, [DOMAINS.entry, DOMAINS.definition, DOMAINS.message]);
+    // A keyed size cannot validate the wrong-domain bytes, nor decide that
+    // the later definition is valid. Measure all choices in native order.
+    const measured = measureArchiveReferences(reader, [{ dependency: probe, max: RETAINED_INPUT_BYTES }], PROPOSED_BOUNDS);
+    const metadataQueries = [...queries], before = budget.admitted(); queries.length = 0;
     const selected = readArchiveProbe(reader, probe, RETAINED_INPUT_BYTES, PROPOSED_BOUNDS.definitionBytes);
-    return { key: selected?.key, bytes: selected?.value.bytes, queries, cost: budget.admitted() };
+    return { key: selected?.key, bytes: selected?.value.bytes, queries, cost: budget.admitted(), measured, metadataQueries, before };
   });
   expect(result.key).toEqual({ kind: "definition", digest: definition.digest });
   expect(result.bytes).toBe(canonicalize(definition.declared));
-  expect(result.cost.attempts).toBe(2);
+  expect(result.cost.attempts - result.before.attempts).toBe(2);
+  expect(result.measured.measurements[0]?.candidates.map(c => c.key.kind === "value" ? c.key.domain : c.key.kind)).toEqual([DOMAINS.entry, "definition", DOMAINS.message]);
+  expect(result.measured.measurements[0]?.candidates.map(c => c.bytes)).toEqual([utf8(canonicalize(definition.declared)).length, utf8(canonicalize(definition.declared)).length, null]);
+  expect(result.metadataQueries.every(q => q.query.startsWith("SELECT octet_length(bytes)"))).toBe(true);
+  for (const key of Object.keys(ARCHIVE_BOUNDS) as (keyof ArchiveCost)[]) expect(result.cost[key] - result.before[key]).toBeLessThanOrEqual(result.measured.reads[key] ?? 0);
   expect(result.queries.some(query => query.domain === DOMAINS.message)).toBe(false);
   expect(result.queries.filter(query => query.query.startsWith("SELECT bytes")).map(query => query.domain)).toEqual([DOMAINS.entry, "definition"]);
 });

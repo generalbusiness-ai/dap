@@ -1,16 +1,17 @@
 # Compact journey cards in the AI app
 
-Design revision for review, 17 October 2026. Request `a9551a6d`, guidance
+Design revision, 17 October 2026. Request `a9551a6d`, guidance
 `5eeea1be`, clarification `f89c614b`; design-only child `bc635338`,
 promise `87dee083`; base Main
 `95959b92`. This packet revises
 the presentation in the [landed journey design](2026-10-17-journey-views-design.md).
 Its facts and distinctions still apply. The examples are fictional. This
 packet contains concepts, 57 static states in two themes, an interaction
-specification and browser evidence. Checker review and planner read are
-still required. Full parent `a9551a6d` and its promise `3710cde8` remain
-open for the runtime resources, kit and S2 acceptance. Landing this design
-child closes none of those runtime obligations.
+specification and browser evidence. The checker approved exact head
+`af050668`, and the planner read `8606d518` is met. The design landed at
+`df806354` and closed design child `bc635338` only. The generic runtime
+code landed at `6e309b6b`. Parent `a9551a6d` and its promise `3710cde8`
+remain open for desktop and S2 acceptance.
 
 The card shows one thing that needs the person. Clicking its title opens
 its detail in full screen. An act advances the card in place and records

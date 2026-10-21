@@ -1,5 +1,8 @@
 # Wake and schedule: delivery, recovery and recorded outcomes
 
+Status: landed `4b6d42a7`; describes work that is done. Its content is in
+`notes/2026-10-01-wake-and-schedule.md`.
+
 2026-10-03. Draft 2, proposed for independent design review. Draft 1
 received changes review `f965c475dc2ef2999c1794f2d49a523d5cd0fcd3`;
 this revision distinguishes non-scoped action requests from informational

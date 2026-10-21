@@ -1,5 +1,9 @@
 # Durable browser coding across devices
 
+Status: superseded by
+`notes/plans/032-2026-10-17-journey-as-acceptance-target.md`. The Room
+model it planned for was parked at `42873516`.
+
 2026-10-03. Draft 2 for independent review. Planning request `b5f1fb3f`.
 Reconciles the six findings in independent Draft 1 review `25065edf`.
 Planned against main `e6e6782830e0ca8a68f0d11c4d4ece5e4e98c967`;

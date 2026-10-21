@@ -1,5 +1,10 @@
 # Acts review for self-hosting
 
+Status, 21 October 2026: revision 4 landed at `55b872d8` (approval
+`6561cd01`). This note is history. Declared-acts stages 2, 3 and 5 landed
+on 4 October (`08c6a0fa` to `b6a9c0b6`). The scope substrate (`f1c456ce`)
+then replaced the room model reviewed here, and `66eba017` deleted it.
+
 Started 2026-10-02. Revision 4, 2026-10-03. Request `9ea217bc`, promise
 `6d0528df`; review repairs `4d82c9a8` and `b12a7797`, current direction
 `2b1105bb`.

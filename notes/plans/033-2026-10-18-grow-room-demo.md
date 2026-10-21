@@ -1,5 +1,15 @@
 # 033: The grow room as the demo
 
+Status: current. Rows 1 to 7 landed: A2 and A3 (`0e63ba92`, `6dac9c76`,
+`fd198c72`), M1 (`feccbbcf`, `bfa02edd`, `ad39fdf1`), G0 (`9c32a384`), M2a
+(`4d8c878c`; M2b `4b794cf5`), G1 (`b54f8880`), G2 (`4b4d58b0`), G3
+(`426504d8`, `f6d402b0`) and G5a (`a00eda3b`). G5 landed at `7594822c`,
+with fixes at `c7aaa3ab` and `603220b9`, and runs on the hosted `dap-grow`
+Worker; a person's acceptance from an AI app is open. Row 9: the archive
+binding landed (`fb390d88`, `7bc1490c`); the demo-room archive (slice 9a
+and slice 9) and the journal floor are in progress. G4 and J3 have not
+started.
+
 Planner, 18 October 2026. A sequencing plan. It puts the grow-operation
 application of
 [the grow-operation design note](../2026-10-17-grow-operation-application-design.md)

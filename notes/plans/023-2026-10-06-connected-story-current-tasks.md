@@ -1,5 +1,8 @@
 # Connected browser coding current tasks
 
+Status: superseded by
+`notes/plans/032-2026-10-17-journey-as-acceptance-target.md`.
+
 2026-10-06. Planner task map for the three connected browser stories,
 updated after S3 publication and the capacity design adoption.
 

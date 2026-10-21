@@ -1,5 +1,8 @@
 # Plan 003: Retry token cleanup after publication has landed
 
+Status: landed `3ac55e96`; describes work that is done. The code was
+parked at `42873516` on 4 October 2026.
+
 > Executor: use gitseq for the request, promise, artifacts and exact-head checker invitation. Do not treat this plan as approval to land.
 >
 > Drift check: `git diff --stat bd520fb926f8161a722c6f1e23ae4aac29e41a66..HEAD -- packages/git/src/landing/core.ts packages/git/src/landing/engine.ts packages/git/test/landing.test.ts packages/git/test-workers/landing-do.test.ts`. Compare any changed excerpts before proceeding.

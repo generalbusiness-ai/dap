@@ -1,7 +1,8 @@
 # Evidence rules for landing
 
-Request `5648d0ab`, planner promise `b7496f05`. Draft 2. This note is a
-design. It commissions no implementation.
+Request `5648d0ab`, planner promise `b7496f05`. Draft 3. It is approved
+(`ba4184d0`) and landed at `d09cc918`. This note is a design. It
+commissions no implementation. Its first slice is not built.
 
 ## The problem
 

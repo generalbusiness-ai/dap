@@ -1,5 +1,8 @@
 # 024: The demo plan to the 14th
 
+Status: superseded by
+`notes/plans/030-2026-10-11-demo-plan-to-the-14th.md`.
+
 Date: 2026-10-06, 21:20 Eastern. Planner's record of hugh's decision on
 the demo's spine and the dated gates to the submission on 2026-10-14. It
 re-cuts the sprint commitments; it changes no design.

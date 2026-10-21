@@ -40,6 +40,15 @@ import { isFactRef, isLocalId, isObject, own, same } from "./values.ts";
  */
 export type OutcomeReading = Pick<Reading, "clock" | "bounds" | "own"> & { ran: { clock: boolean }; facts?: readonly Fetched[] | undefined; beside?: AtHand | undefined };
 
+type ValueSelector = NonNullable<OperationRules["values"]>;
+const valueSources = new WeakMap<ValueSelector, ValueSelector>();
+/** Identify the pure callback behind ownersOf's ordinary rule wrapper.
+ * This is code identity, not owner, domain or archive admission. */
+export function operationValueSelector(rules: Pick<OperationRules, "values">): ValueSelector | undefined {
+  const values = rules.values;
+  return values ? valueSources.get(values) ?? values : undefined;
+}
+
 /**
  * The owners' rules, with those of the platform definition that the scope
  * pins. `reading`: what the judge of an outcome gives a rule. Without it
@@ -76,10 +85,13 @@ export function ownersOf(definition: ValidDefinition, platform: PlatformRules | 
         if (typeof given !== "boolean") throw outside(mark, "no answer on an outcome");
         return given;
       };
+      const sourceValues = r.values;
+      const values: ValueSelector | undefined = sourceValues ? evidence => run(mark, () => sourceValues.call(r, evidence)) : undefined;
+      if (values && sourceValues) valueSources.set(values, valueSources.get(sourceValues) ?? sourceValues);
       return {
         ...(r.reservation ? { reservation: (pinned: ValidDefinition) => r.reservation!(pinned) } : {}),
         ...(r.valueDomains ? { valueDomains: r.valueDomains } : {}),
-        ...(r.values ? { values: (evidence) => run(mark, () => r.values!(evidence)) } : {}),
+        ...(values ? { values } : {}),
         selects: r.selects === true, read: r.read === true, ...(r.closure === undefined ? {} : { closure: r.closure }), ...(r.most === undefined ? {} : { most: r.most }),
         // The driver asks this outside a commit, as it asks `unknown`: the rule reads the state only.
         ...(r.ready ? { ready: (view: StateView, operation: Operation, attempt: number) => answer(run(mark, () => r.ready!(view, operation, attempt))) } : {}),

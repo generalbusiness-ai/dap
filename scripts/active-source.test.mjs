@@ -75,7 +75,11 @@ test("the platform package depends only on contract, bytes and derive, and only 
 // M1 preparation permits one explicit public immutable reader import. The
 // server's other modules and broad Git/provider/Node entry points stay closed.
 const applicationGitUsers = new Set(["packages/mcp/package.json", "packages/mcp/src/service.ts"]);
-const replayGitUsers = new Set(["packages/replay/src/git.ts", "packages/replay/test/archive-git.test.ts", "packages/replay/test/archive-git-fixture.ts", "packages/replay/package.json"]);
+// Replay's Node and integration test boundaries may depend on Git. The v2
+// witnesses combine real Git archives with offline Replay; Git itself stays
+// below Replay and imports none of it, including from its own tests.
+const replayGitUsers = new Set(["packages/replay/src/git.ts", "packages/replay/test/archive-git.test.ts", "packages/replay/test/archive-git-fixture.ts", "packages/replay/package.json",
+  "packages/replay/test/archive-git-v2-convert.test.ts", "packages/replay/test/archive-git-v2-layout.test.ts", "packages/replay/test/archive-git-v2-reader.test.ts"]);
 test("Git keeps its lower-layer dependencies; Replay names it only at its exact development boundaries", () => {
   assert.ok(files.includes("packages/git/package.json"), "the git package was listed");
   const source = (f) => packagePath(f).startsWith("packages/") && !f.endsWith(".md");

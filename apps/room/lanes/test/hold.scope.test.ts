@@ -1,5 +1,15 @@
 import { expect, test } from "vitest";
-import { timeMs } from "@generalbusiness/dap-derive";
+import { runInDurableObject } from "cloudflare:test";
+import { canonicalize, utf8 } from "@generalbusiness/artroom-bytes";
+import { localRetainedPlan, outcomeSnapshotDependencies, timeMs } from "@generalbusiness/dap-derive";
+import { PROPOSED_BOUNDS, RETAINED_INPUT_BYTES } from "@generalbusiness/dap-contract";
+import { ARCHIVE_BOUNDS, ArchiveBudget, type ArchiveCost } from "../../../../packages/scope/src/archive-budget.ts";
+import { projectArchiveSnapshots } from "../../../../packages/scope/src/archive-snapshots.ts";
+import { ArchiveLocalReferences } from "../../../../packages/scope/src/archive-local-references.ts";
+import { ArchiveRetainedReader } from "../../../../packages/scope/src/archive-retained.ts";
+import { measureArchiveReferences } from "../../../../packages/scope/src/archive-reference-measurements.ts";
+import { CAPABILITY_CODE } from "../../../../packages/scope/src/ports.ts";
+import type { SqlValue } from "../../../../packages/scope/src/sqlite.ts";
 import { graph, net, onCode, rita, soon, una, vic } from "./support/graph.ts";
 
 /** A commit and a tree, as a report names them. Nothing reads a repository here. */
@@ -102,4 +112,86 @@ test("T4, a handover: the same accepted commitment gets a new performer only whe
   expect([...host.asked].sort()).toEqual(["check", "mint", "mint", "revoke", "revoke", "stage"]);
   const state = await G.state();
   expect([state.record("hold@1", "root", [1])?.state, state.recordCount("hold@1", "token", "ended"), state.record("hold@1", "fork", [h2])?.state, state.outstanding().opened]).toEqual(["live", 2, "creating", 2]);
+
+  // The real outcome names one snapshot twice: its owner's retained list
+  // and its confirmed ancestry record. Forecast both native reads. The
+  // host above supplies the record; this still proves no Git walk.
+  const sealed = (await G.sealed()).find(s => s.entry.input.type === "outcome" && s.entry.input.owner === "hold@1" && s.entry.input.kind === "check");
+  if (!sealed || sealed.entry.input.type !== "outcome") return expect.fail("The native check outcome is required.");
+  const input = sealed.entry.input, rules = CAPABILITY_CODE.rules?.(input.owner, input.kind);
+  if (!rules) return expect.fail("The native hold rules are required.");
+  const origin = { at: { at: G.at, seq: sealed.entry.seq, hash: sealed.hash }, input: "outcome" as const };
+  const expected = outcomeSnapshotDependencies(origin, input, () => rules);
+  const native = localRetainedPlan(G.valid, sealed.entry, sealed.hash, rules, PROPOSED_BOUNDS);
+  const projection = await runInDurableObject(G.object, (_instance, stored) => {
+    const row = stored.storage.sql.exec<{ size: number; bytes: string }>("SELECT size, bytes FROM entry WHERE seq = ?", sealed.entry.seq).one();
+    const cells: unknown[] = [], budget = new ArchiveBudget(), sql = { exec(query: string, ...args: SqlValue[]) {
+      const rows = stored.storage.sql.exec(query, ...args).toArray();
+      for (const r of rows) cells.push(...Object.values(r));
+      return { toArray: () => rows };
+    } };
+    const position = { seq: sealed.entry.seq, hash: sealed.hash, bytes: row.size, input: "outcome" };
+    const read = () => projectArchiveSnapshots(sql, G.at, position, input, rules, budget);
+    const projected = read(), before = budget.admitted(), repeated = read(), after = budget.admitted();
+    // Restored metadata-only probes cover nonempty structural selectors.
+    // These altered rows are not accepted history or ancestry evidence.
+    const record = expected.record;
+    if (!record) return expect.fail("The host's ancestry record is required.");
+    const opaque = "opaque ref that must not cross SQL";
+    const probe = (changed: unknown) => {
+      const evidence = { ...input.evidence, body: { record: changed } }, bytes = canonicalize({ ...sealed.entry, input: { ...input, evidence } });
+      stored.storage.sql.exec("UPDATE entry SET bytes = ?, size = ? WHERE seq = ?", bytes, utf8(bytes).length, position.seq);
+      return projectArchiveSnapshots(sql, G.at, { ...position, bytes: utf8(bytes).length }, input, rules, budget);
+    };
+    let nonempty, invalid;
+    try {
+      nonempty = probe({ ...record, start: { foreign: opaque, basis: { kind: "input", input: terms } },
+        stops: [{ kind: "own-root", commit: COMMIT, root: 1, state: "live", checked: terms }], F: [{ commit: COMMIT, ref: opaque, start: true }, { commit: COMMIT, via: COMMIT }] });
+      invalid = probe({ ...record, F: [{ commit: COMMIT, via: COMMIT, ref: opaque }] });
+    } finally { stored.storage.sql.exec("UPDATE entry SET bytes = ?, size = ? WHERE seq = ?", row.bytes, row.size, position.seq); }
+    const snapshotCells = [...cells];
+    const references = new ArchiveLocalReferences({ named: G.valid.digest, definition: G.valid,
+      owners: new Map([[input.owner, new Map([[input.kind, rules]])]]), records: new Map(), preparations: new Map() }, PROPOSED_BOUNDS, budget);
+    // Read context and use digests from this exact native row. This supplies
+    // no independent privacy/pin admission.
+    const composed = references.read(sql, G.at, { ...position, input: "outcome" });
+    const queries: string[] = [], sizes: unknown[] = [], retained = new ArchiveRetainedReader({ exec(query, ...args) {
+      queries.push(query); const rows = stored.storage.sql.exec(query, ...args).toArray();
+      for (const r of rows) sizes.push(...Object.values(r));
+      return { toArray: () => rows };
+    } }, budget);
+    const measuredBefore = budget.admitted();
+    const measured = measureArchiveReferences(retained, projected.dependencies.map(dependency => ({ dependency, max: RETAINED_INPUT_BYTES })), PROPOSED_BOUNDS);
+    const measuredAfter = budget.admitted(), measurementQueries = [...queries], measurementCells = [...sizes];
+    // Oracle reads now exercise a real cold read followed by cached native
+    // validation. The measurement helper itself has read no body.
+    for (const request of projected.dependencies) expect(retained.read(request.key, RETAINED_INPUT_BYTES)).not.toBeNull();
+    const readAfter = budget.admitted();
+    return { projected, repeated, before, after, cells: snapshotCells, nonempty, invalid, opaque, composed,
+      measured, measuredBefore, measuredAfter, readAfter, measurementQueries, measurementCells };
+  });
+  expect(projection.projected.dependencies).toEqual(expected.dependencies);
+  expect(projection.projected.dependencies).toEqual(native.dependencies.filter(p => p.dependency.consumer === "outcome-snapshot").map(p => p.dependency));
+  expect(projection.projected.dependencies).toHaveLength(2);
+  expect(projection.projected.dependencies.map(d => d.key)).toEqual([{ kind: "snapshot", digest: expected.record!.snapshot.digest }, { kind: "snapshot", digest: expected.record!.snapshot.digest }]);
+  expect(projection.projected.ancestrySnapshot).toEqual(expected.record!.snapshot);
+  expect(projection.composed).toEqual({ dependencies: native.dependencies, ancestrySnapshot: expected.record!.snapshot });
+  expect(projection.measured.measurements).toHaveLength(2);
+  expect(projection.measured.measurements.map(m => m.candidates[0]?.key)).toEqual(projection.projected.dependencies.map(d => d.key));
+  expect(projection.measuredAfter.attempts - projection.measuredBefore.attempts).toBe(2);
+  expect(projection.measurementQueries).toHaveLength(2);
+  expect(projection.measurementQueries.every(q => q.startsWith("SELECT octet_length(bytes)") && !q.startsWith("SELECT bytes"))).toBe(true);
+  expect(projection.measurementCells.every(c => typeof c === "number" || c === "text")).toBe(true);
+  for (const key of Object.keys(ARCHIVE_BOUNDS) as (keyof ArchiveCost)[]) {
+    expect(projection.readAfter[key] - projection.measuredAfter[key]).toBeLessThanOrEqual(projection.measured.reads[key] ?? 0);
+  }
+  expect(projection.repeated).toEqual(projection.projected);
+  expect(projection.after.calls).toBeGreaterThan(projection.before.calls);
+  expect(projection.after.inputWork).toBeGreaterThan(projection.before.inputWork);
+  expect(projection.nonempty).toEqual(projection.projected);
+  expect(projection.invalid).toEqual({ dependencies: [], ancestrySnapshot: null });
+  expect(projection.cells).not.toContain(projection.opaque);
+  const scalarNames = new Set(["object", "text", "null", "array", "row", "own-check", "input", "own-root", "selected-report", "live", "retiring", "retired", "true", "absent", "invalid",
+    COMMIT, "0".repeat(40), expected.record!.snapshot.digest, terms.at.scope, terms.at.inc, terms.at.kind, terms.hash]);
+  expect(projection.cells.every(c => c === null || typeof c === "number" || typeof c === "string" && scalarNames.has(c))).toBe(true);
 });

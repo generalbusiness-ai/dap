@@ -1,8 +1,12 @@
 # Attention delivery for the durable coding runtime
 
+Status: superseded by
+`notes/plans/032-2026-10-17-journey-as-acceptance-target.md` (J5, not
+built).
+
 2026-10-03. Planning addendum for wake/schedule request `24711ceb99c3939c0217eb7e0cac7d2b2d21cde9` and production coding runtime request `13dfc613e8e3d9a1aed5f7492272fbf8c580d727`.
 
-Status: proposed handoff, Draft 2, pending independent design review. Draft 1 received changes review `40514a0a48b7b1fb29ddbf8b4a66b09eca13e789`; this revision addresses visibility catch-up, ingestion ordering and inherited prompt provenance. This does not amend the protocol, approve implementation, or add a Jam readiness gate. The approved browser/cloud design and experience map keep their reviewed bytes. Test-overhead reduction remains the highest implementation priority.
+Earlier status: proposed handoff, Draft 2, pending independent design review. Draft 1 received changes review `40514a0a48b7b1fb29ddbf8b4a66b09eca13e789`; this revision addresses visibility catch-up, ingestion ordering and inherited prompt provenance. This does not amend the protocol, approve implementation, or add a Jam readiness gate. The approved browser/cloud design and experience map keep their reviewed bytes. Test-overhead reduction remains the highest implementation priority.
 
 ## Why this needs a handoff
 

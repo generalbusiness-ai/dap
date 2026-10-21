@@ -1,6 +1,8 @@
 # Hosted agent teams for dap applications
 
-15 October 2026. Discussion draft, revision 2. Not independently reviewed.
+15 October 2026. Revision 3. Revision 2 is approved (`83702503`) and
+landed at `c464426c`. The revision 3 instance amendment is approved
+(`cf359f74`) and landed at `184ba58d`. Nothing in this note is built.
 
 Draft request `4b236bb2`, planner promise `4852347a`.
 Counter-first revision: request `2b90849c`, promise `65a39bbf`.

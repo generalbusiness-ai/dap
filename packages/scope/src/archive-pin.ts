@@ -40,7 +40,7 @@ export function archivePinBytes(entry: Entry, hash: Digest): string | null {
  * octet_length(column) uses SQLite's stored size metadata rather than
  * parsing a JSON body: https://www.sqlite.org/lang_corefunc.html#octet_length
  * Missing function support is unavailable, never a full-body fallback. */
-export function readArchivePin(sql: Pick<Sql, "exec">, expected: ScopeRef): ArchivePin | null {
+function readPin(sql: Pick<Sql, "exec">, expected: ScopeRef, genesis: boolean): ArchivePin | null {
   if (!isScopeRef(expected)) return null;
   try {
     const sizes = sql.exec("SELECT k, octet_length(v) AS bytes, typeof(v) AS type FROM meta WHERE k IN ('archive-pin-1', 'scope') ORDER BY k LIMIT 2").toArray();
@@ -60,7 +60,13 @@ export function readArchivePin(sql: Pick<Sql, "exec">, expected: ScopeRef): Arch
     if (!pin || !sameScope(pin.at, expected)) return null;
     const scope = read("scope", scopeSize["bytes"]!);
     if (!isRecord(scope) || Object.keys(scope).sort().join(",") !== "at,creator,genesis,head,held,status,time" || !isScopeRef(scope["at"]) || !sameScope(scope["at"], expected) || !isRecord(scope["genesis"]) || scope["genesis"]["hash"] !== pin.genesis) return null;
+    if (!genesis) return pin;
     const rows = sql.exec("SELECT hash FROM entry WHERE seq = 0 AND typeof(hash) = 'text' AND octet_length(hash) = 71 LIMIT 1").toArray();
     return rows.length === 1 && rows[0]!["hash"] === pin.genesis ? pin : null;
   } catch { return null; }
 }
+export function readArchivePin(sql: Pick<Sql, "exec">, expected: ScopeRef): ArchivePin | null { return readPin(sql, expected, true); }
+/** After a confirmed receipt, the stored append-derived pin and scope
+ * metadata supply identity. No old entry is read; the pass checks its first
+ * new prev against that receipt and binds the parent archive head to it. */
+export function readArchivePinAfterReceipt(sql: Pick<Sql, "exec">, expected: ScopeRef): ArchivePin | null { return readPin(sql, expected, false); }

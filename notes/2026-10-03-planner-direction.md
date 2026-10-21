@@ -1,5 +1,12 @@
 # Artroom direction and jam readiness
 
+Status, 21 October 2026: the planner's work record of 3 October; it landed
+at `9615f449` (approval `acd5f017`) and is history. Since then,
+declared-acts stages 2, 3 and 5 landed (`08c6a0fa` to `b6a9c0b6`), and the
+scope substrate (`f1c456ce`) replaced the room model. The wake design
+landed at `4b6d42a7`. Plan 031 replaced the MCP core (`e179059d`; built at
+`bd02ecff`). The current plans are 029, 031, 032 and 033.
+
 2026-10-03. Planner's current work record, based on Hugh's direction in
 the gitseq workroom. This note helps builder and checker choose the next
 work and distinguish readiness to start from work still owed.

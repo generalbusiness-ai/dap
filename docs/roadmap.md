@@ -25,6 +25,8 @@ below refer to.
 | Agents act in a room through MCP: a local server over stdio or loopback HTTP, and a hosted endpoint on the scope Worker. | [MCP](mcp.md), [The hosted endpoint](mcp.md#the-hosted-endpoint) |
 | A room created from the served page, with no email; or a whole service run on your own account. | [Run dap in 10 minutes](self-host.md) |
 | Published repositories served as pages. | [Pages](pages.md) |
+| dap-grow, a declared application of several scopes: a site that creates grow rooms, with operator views, probes from chat, routing, presence and device commands. A simulator runs the hosted demo room. | [The grow runbook](../examples/grow/runbook.md) |
+| Application packages: `dap new`, `dap dev`, `dap check` and `dap pack`; a room installs a trusted package in one act; package views run as cards in an AI app. | [Run your app](run-your-app.md), [Declared application views](application-views.md) |
 
 Each of those pages states its own evidence and limits. The table in
 [Scopes](scopes.md) under "What runs" is the most exact account.
@@ -47,7 +49,9 @@ Three limits shape everything below:
   change its rules afterwards.
 - **A declared application has no operation of its own on an outside
   system.** It can list the fixed capability forms that the contract
-  declares, `hold@1` and `git-read@1`, when their code is supplied. It
+  declares, `hold@1`, `git-read@1` and `device-command@1`, when their code
+  is supplied. `device-command@1` records a commanded target and the owner's
+  signed answer; it reaches no device. It
   cannot declare an application-specific operation, and no host adapter
   for one exists.
 
@@ -58,17 +62,21 @@ In order, nearest first.
 | Capability | State | Use cases that need it |
 |---|---|---|
 | [An application's own messages between scopes](#an-applications-own-messages-between-scopes) | Runs within one room: the grow site and its rooms; not yet across rooms | 21, 25, 31, 32, 33, 37, 39, 40, 41, 51, and parts of 08, 18, 19, 24 |
-| [Durability levels](#durability-levels) | Designed; not built | 36, 44, and the live part of every case |
+| [Durability levels](#durability-levels) | Recorded is declared; Live, Sequenced and the journal floor are designed, not built | 36, 44, and the live part of every case |
 | [A fork for each hold](#a-fork-for-each-hold) | Planned; a first measurement ran | 34 |
-| [Offline work and propose from a branch](#offline-work-and-propose-from-a-branch) | Direction set; not designed | 34 |
+| [Offline work and propose from a branch](#offline-work-and-propose-from-a-branch) | Proposing a branch's UTF-8 files is built; offline work is designed, not built; a pack upload protocol is not designed | 34 |
 | [Private views in one record](#private-views-in-one-record) | Not designed in dap; tested in the dap-spike | 42, and the club and the kanban board from the dap-spike's sweep |
-| [Evidence capture and private custody](#evidence-capture-and-private-custody) | Not designed | 01, 02, 04 to 19, 23, 24, 27, 28, and the custody part of every case |
+| [Evidence capture and private custody](#evidence-capture-and-private-custody) | Files and capture with a stated source designed, not built; custody narrower than a room not designed | 01, 02, 04 to 19, 23, 24, 27, 28, and the custody part of every case |
 | [Outside parties and systems](#outside-parties-and-systems) | Runs for Git publication only | 35, 37, 38, 39, 43, and all of group 5 |
 | [A personal account across records](#a-personal-account-across-records) | Not designed | All of group 5 |
 | [Rules that change after creation](#rules-that-change-after-creation) | Not designed in dap; tested in the dap-spike | 42; a sale that gains packages; a club that changes its policy |
 | [Expressions that compute effects](#expressions-that-compute-effects) | Not designed; a rule can check a proposed value today | Analytic pipelines such as Tailapps; chess and other games with many rules |
 | [Split and join](#split-and-join) | Not designed; a protocol is sketched in the dap-spike | A merger of two records |
 | [An authoring language](#an-authoring-language) | Not designed; one attempt in the dap-spike stopped | Every case, for its author |
+| [Hosted agent teams](../notes/2026-10-21-roles-flow-and-instances.md) | Designed; not built | Every case with agents in a team |
+| [Running dap off Cloudflare](../notes/2026-10-19-self-hosting-on-celld.md) | Designed; not built | Self-hosting |
+| [Sequence and event identifiers](../notes/2026-10-19-record-and-event-identifiers.md) | Designed; not built | Records read outside dap |
+| [Charts composed in chat](../notes/2026-10-20-chat-composed-views.md) | Designed; not built | Every case with measurements |
 
 ### An application's own messages between scopes
 
@@ -107,8 +115,8 @@ That fixture had one trusted writer, and the report states its limits on
 proof, disclosure and availability. It is not free composition of two
 records.
 
-**Next.** A two-scope declared application with one owner of a shared
-amount, with replay of both scopes.
+**Next.** Messages between an application's scopes in different rooms, as
+the [market note](../notes/2026-10-20-market-application-design.md) needs.
 
 ### Durability levels
 
@@ -132,7 +140,10 @@ every card of the catalogue.
 [sequenced level note](../notes/2026-10-18-sequenced-level-and-order-scope.md)
 supersedes the earlier Archived level. The room binding and manifest
 requirement are separate from the sequenced runtime and foreign-source
-archive work.
+archive work. The
+[journal floor note](../notes/2026-10-20-retained-journal-floor.md)
+designs incremental archive passes and a floor below which a scope drops
+archived entries. Its first slices are being built.
 
 ### A fork for each hold
 
@@ -154,7 +165,14 @@ it; what a fork costs in storage is not yet measured
 change from a branch when they return. An application shows a local
 result at once and reconciles it with the record.
 
-**State.** The direction is set. No design note exists.
+**State.** The
+[offline and sync note](../notes/2026-10-09-offline-and-sync-design.md)
+designs a signed local outbox, reconnection and the revision of stale
+drafts. Nothing in it is built. `dap propose` already proposes the
+supported UTF-8 files of a local branch, within its size, path and type
+limits (`packages/cli/src/commands.ts:1578-1665`, landed with
+`a1277d9c`). Proposing any other content needs a pack upload protocol,
+and the note leaves it undesigned.
 
 ### Private views in one record
 
@@ -229,6 +247,12 @@ helper can be given them.
 and is kept by digest. There is no capture with a stated source, no store
 for larger or binary evidence, and no custody that is private to some
 members.
+
+**State.** The [retained files note](../notes/2026-10-21-retained-files.md)
+designs a `file` retained input, kept in the scope or in R2. The
+[capture note](../notes/2026-10-21-capture-with-source.md) designs one
+capture act with a stated source for every channel. Nothing in them is
+built. Custody narrower than a room is not designed.
 
 **Use cases.** Group 5 of the
 [catalogue](use-cases.md#5-episodes-across-organisations), and the
@@ -410,5 +434,6 @@ Where dap stands on each idea:
 
 Written 13 October 2026 against main `d1b845f8` and dap-spike main
 `9d738e2e`, and revised 14 October 2026 against main `f20df342` after
-review. The states come from reading the documentation, the definitions
+review. Revised in part on 15, 16, 19, 20 and 21 October; rows that
+those revisions did not change still describe `f20df342`. The states come from reading the documentation, the definitions
 and the spike's reports. Nothing was run for this page.

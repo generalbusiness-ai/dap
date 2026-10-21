@@ -1,6 +1,10 @@
 # Import a GitHub repository into dap
 
-15 October 2026. Draft 1 for checker design review. Request `d7b9e504`,
+Status, 21 October 2026: draft 1 is approved (`3b331834`) and landed at
+`16235053`. Nothing is built. The section 9 decisions are owed before
+implementation.
+
+15 October 2026. Draft 1. Request `d7b9e504`,
 planner promise `f4bbdac2`. Source baseline: main
 `0157307b904c9afc75500b626fc565a152113cfa`.
 

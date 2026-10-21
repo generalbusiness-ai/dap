@@ -1,6 +1,7 @@
 # A grow operation as a dap application: the interaction and the build
 
-17 October 2026. Design note for review. It describes a second application
+17 October 2026. Design note. It is approved (`ea18571e`) and landed at
+`90c8c483`. It describes a second application
 on the same fabric as the journey: a growing operation whose people,
 agents and sensors share one room. It says what each member sees and does,
 and how the application is built once the
@@ -492,8 +493,8 @@ summary per room every five minutes, and a threshold entry when a zone
 leaves or enters the band: a few hundred entries a day. The live grid
 reads the gateway's latest samples through the bounded outside read, and
 the zone sparkline reads the recorded summaries. The whole-scope capacity
-bounds now being built (request `113a54bd`, under review, with provisional
-values) apply to each room scope. They admit new work against what the
+bounds of request `113a54bd` landed at `62423347`, with provisional values,
+and apply to each room scope. They admit new work against what the
 scope retains and the reservations of work already admitted; they reserve
 nothing for future acts. A finite daily rate still fills a finite budget
 in time, and new acts can then be refused. How much a room retains, how
@@ -560,6 +561,11 @@ Exit test: three people on their own devices, each in their own AI app,
 in one room, through the fault story, with the agents running under their
 controllers. The same shape as the journey's exit test, with different
 people.
+
+Status, 21 October 2026: G0 (`9c32a384`), G1 (`b54f8880`), G2
+(`4b4d58b0`) and G3 (`426504d8`, `f6d402b0`) have landed. Plan 033's G5a
+(`a00eda3b`) and G5 (`7594822c`) have landed, and G5 runs on the hosted
+`dap-grow` Worker. G4 is not built.
 
 ## 8. Open questions
 

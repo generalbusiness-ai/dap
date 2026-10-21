@@ -1,5 +1,7 @@
 # Directory partition Source preparation
 
+Status, 21 October 2026: Landed at `9a1238b7`. Statements below that say review or landing is owed are as of the handoff.
+
 Source child `e9943975`, promise `536af54f`, implements the approved
 Draft 4 under NOW request `e0292346`. It adopts technical reconciliation
 `d1543f97` and the subsequent bounded-proof and foreign-fixture advice.

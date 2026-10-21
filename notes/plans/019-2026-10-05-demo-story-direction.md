@@ -1,5 +1,9 @@
 # Plan 019: the demo story, as a GitHub user knows it
 
+Status: landed `7bb3a641`; describes work that is done. The issue,
+comment, change and merge story runs in I5 and in the demo runner
+(`6afa0377`).
+
 Date: 2026-10-05. Hugh's direction, recorded by the planner from the
 discussion after the 15:00 sprint report. Workroom acts `c2b574dc`,
 `d5ee570d` and this note. To be factored into the final designs: the

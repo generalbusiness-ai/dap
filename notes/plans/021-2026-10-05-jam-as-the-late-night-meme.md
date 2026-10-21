@@ -1,5 +1,8 @@
 # 021: The jam as the late-night meme
 
+Status: retired; no work follows from it. The jam ships as a procedural
+page in `apps/jam` (`029585db`).
+
 Date: 2026-10-05, 22:30 Eastern. Planner's record of hugh's direction for
 the jam demonstration, replacing the story in the jam room note
 (`notes/2026-10-01-jam-room.md`, revision 5) while keeping its record and

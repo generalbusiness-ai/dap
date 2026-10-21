@@ -4,7 +4,7 @@
  * mode, target, coverage and set of trusts.
  */
 
-import type { FactRef, ScopeRef } from "./scope.ts";
+import type { Digest, FactRef, ScopeRef } from "./scope.ts";
 
 export interface Report {
   mode: "integrity" | "replay";
@@ -15,6 +15,9 @@ export interface Report {
   trusts: readonly string[];                // for example "service clock", "delivery times", "Git host as read at T"
   /** Each text that a tombstone removed, and that was therefore not derived again: the tombstone entry, and the slot that held the text. */
   redacted: readonly { tombstone: FactRef; item: number; slot: string }[];
+  /** Omitted canonical retained-text byte counts, taken on caller trust.
+   * The text and its decoded field bound were not derived again. */
+  omittedTexts?: readonly { digest: Digest; bytes: number; first: FactRef }[];
   /** Historical whole-scope byte checks lacking text-size evidence.
    * Other capacity dimensions are checked throughout these inclusive spans. */
   incompleteBytes?: readonly { scope: ScopeRef; from: number; through: number; reason: "redacted size not retained" | "retained text unavailable" }[];

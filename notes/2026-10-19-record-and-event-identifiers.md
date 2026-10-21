@@ -718,6 +718,8 @@ did:seq:git256:6320f109df9ff94238c96c7a1c732aa7b9614589e74ef51bf382451f1c9e64a1
 
 dap adopts this in one change. There is no deployed history to keep
 compatible, so the change writes nothing twice and translates nothing.
+That change is not built. Its request, `05d618e2`, is paused until the
+level that the protocol targets is settled.
 
 | Term here | In dap |
 |---|---|

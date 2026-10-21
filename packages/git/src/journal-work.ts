@@ -46,11 +46,21 @@ export class JournalWork {
   #stopped = false;
   readonly used: JournalLayoutLimits = { objects: 0, trees: 0, files: 0, names: 0, depth: 0, objectBytes: 0, outputWork: 0 };
   readonly budget: JournalBudget;
-  constructor(budget: JournalBudget, limits: Partial<JournalLayoutLimits> = {}) {
+  constructor(budget: JournalBudget, limits: Partial<JournalLayoutLimits> = {}, clone?: { readonly entries: number }) {
     this.budget = budget;
     if (Object.keys(limits).some(k => !Object.hasOwn(JOURNAL_LAYOUT_LIMITS, k))) refuseJournal("limit");
-    const chosen = { ...JOURNAL_LAYOUT_LIMITS, ...limits };
-    for (const k of keys) if (!natural(chosen[k]) || chosen[k] > JOURNAL_LAYOUT_LIMITS[k]) refuseJournal("limit");
+    // A clone contains many bounded passes. Its explicit total entry limit
+    // bounds its complete tree walk; native writers still use the original
+    // fixed limits and the caller's one budget/deadline is never reset.
+    const ceilings = { ...JOURNAL_LAYOUT_LIMITS };
+    if (clone) {
+      if (!natural(clone.entries) || clone.entries === 0) refuseJournal("limit");
+      Object.assign(ceilings, { objects: clone.entries * 16 + 8192, trees: clone.entries * 16 + 2048,
+        files: clone.entries * 4 + 8192, names: clone.entries * 32 + 32768 });
+      if (Object.values(ceilings).some(value => !natural(value))) refuseJournal("limit");
+    }
+    const chosen = { ...ceilings, ...limits };
+    for (const k of keys) if (!natural(chosen[k]) || chosen[k] > ceilings[k]) refuseJournal("limit");
     this.limits = Object.freeze(chosen);
     budget.check();
   }

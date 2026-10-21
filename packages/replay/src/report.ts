@@ -36,7 +36,7 @@ export function render(report: Report, why: string | null = null): string {
   lines.push(`Target: ${scope(report.target.at)}, ${report.result === "consistent" ? "through" : "aiming for"} entry ${report.target.seq} (${report.target.hash}).`);
   lines.push(report.coverage.length === 0 ? "Coverage: no entry." : "Coverage:");
   for (const c of report.coverage) lines.push(`  - ${scope(c.scope)}: entries ${c.from} to ${c.through}`);
-  lines.push(report.anchors.length === 0 ? "Anchors: none." : "Anchors, taken on the caller's word:");
+  lines.push(report.anchors.length === 0 ? "Anchors: none." : "Anchors, taken on the caller's word (including values observed at these heads):");
   for (const a of report.anchors) lines.push(`  - ${fact(a)}`);
   const { verified, anchored, missing } = report.dependencies;
   lines.push(`Foreign facts: ${verified} shown by replay of their source scope, ${anchored} taken from an anchor, ${missing.length} missing.`);
@@ -44,6 +44,8 @@ export function render(report: Report, why: string | null = null): string {
   // Section 9.3: a text that a tombstone removed is not missing. It is reported, and nothing was derived from its bytes.
   if (report.redacted.length > 0) lines.push("Redacted texts, not derived again:");
   for (const r of report.redacted) lines.push(`  - the text of slot ${r.slot} of item ${r.item}, removed by ${fact(r.tombstone)}`);
+  if (report.omittedTexts?.length) lines.push("Omitted texts, taken on the caller's word; byte counts are canonical retained JSON:");
+  for (const row of report.omittedTexts ?? []) lines.push(`  - ${row.digest}: ${row.bytes} bytes, first named by ${fact(row.first)}`);
   if (report.incompleteBytes?.length) lines.push("Logical byte checks, incomplete; entries, items, records and requests were still checked:");
   for (const span of report.incompleteBytes ?? []) lines.push(`  - ${scope(span.scope)}: entries ${span.from} to ${span.through}: ${span.reason}`);
   lines.push("Trusts, which this report does not show:");

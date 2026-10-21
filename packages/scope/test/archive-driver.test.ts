@@ -2,69 +2,23 @@
  * admission/authority are explicit stand-ins. Actual adapter enforcement
  * and alarm wiring have separate obligations. No external provider runs. */
 import { expect, onTestFinished, test } from "vitest";
+import { runInDurableObject } from "cloudflare:test";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, timeMs, timeOf } from "@generalbusiness/artroom-bytes";
-import { journalRef, type JournalFormat, type JournalObject } from "@generalbusiness/artroom-git/journal";
-import { readJournalArchive } from "@generalbusiness/artroom-git/journal-reader";
+import { canonicalize, timeOf } from "@generalbusiness/artroom-bytes";
+import { journalRef } from "@generalbusiness/artroom-git/journal";
+import { readJournalRepositoryArchive } from "@generalbusiness/artroom-git/journal-reader";
 import { archiveSource, verifyArchive } from "@generalbusiness/artroom-replay";
-import { ArchiveBudget } from "../src/archive-budget.ts";
-import { ArchiveDriver, type ArchiveCredential, type FixtureArchiveProvider, type ArchiveSend } from "../src/archive-driver.ts";
+import { ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
+import { driver, ScriptedHost } from "./support/archive-driver.ts";
+import type { ArchivePolicyRegistry } from "../src/archive-inventory.ts";
+import { archiveHostGate as gate } from "./support/archive-provider.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
+import { planArchive } from "../src/archive-build.ts";
 import { at, create, rita, una, type Lane } from "./fixtures-native.ts";
 import { archiveDefinition, archivePolicies, archiveRepository, archiveSql } from "./support/archive.ts";
 import { fixtureArchiveWiring } from "./worker.ts";
+import type { TestScope } from "./worker.ts";
 
-function gate() { let release!: () => void; const promise = new Promise<void>(resolve => { release = resolve; }); return { promise, release }; }
-class ScriptedHost implements FixtureArchiveProvider {
-  readonly fixture = "archive-provider";
-  readonly data = new Map<string, JournalObject>();
-  readonly sends: string[] = [];
-  readonly tokens = new WeakMap<ArchiveCredential, ScopeRef>();
-  readonly started = gate();
-  formatName: JournalFormat;
-  pointer: string | null = null;
-  missingMint = false;
-  loseReply = false;
-  mintCalls = 0;
-  targets = 0;
-  revoked = 0;
-  blocked: ReturnType<typeof gate> | null = null;
-  lastAllowed: (() => boolean) | null = null;
-  constructor(format: JournalFormat) { this.formatName = format; }
-  async format() { return this.formatName; }
-  async ref() { return this.pointer; }
-  async objects() { return [...this.data.values()]; }
-  async mintArchive(_repository: unknown, at: ScopeRef, allowed: () => boolean) {
-    expect(allowed()).toBe(true); this.mintCalls++;
-    if (this.missingMint) { this.missingMint = false; return null; }
-    const credential = Object.freeze({ id: `fixture-${this.mintCalls}`, ends: timeOf(timeMs(atTime)! + 3_600_000), plaintext: "TEST ARCHIVE TOKEN" });
-    this.tokens.set(credential, { ...at }); return credential;
-  }
-  async sendArchive(request: ArchiveSend) {
-    this.lastAllowed = request.allowed; this.started.release();
-    await this.blocked?.promise;
-    if (!request.allowed()) return null;
-    // A stand-in's guard is not evidence of the actual provider adapter.
-    expect(request.ref).toBe(journalRef(request.at.scope));
-    expect(this.tokens.get(request.credential)).toEqual(request.at);
-    if (request.old !== this.pointer) return { send: "refused" };
-    for (const object of request.objects) this.data.set(object.id, { ...object, data: new Uint8Array(object.data) });
-    this.pointer = request.commit; this.sends.push(request.commit);
-    return this.loseReply ? null : { send: "accepted" };
-  }
-  async revokeArchive(credential: ArchiveCredential) { this.tokens.delete(credential); this.revoked++; }
-}
-const atTime = at(0);
-function driver(lane: Lane, state: DurableObjectState, host: ScriptedHost, budget?: () => ArchiveBudget) {
-  return new ArchiveDriver({
-    sql: archiveSql(state), current: () => {
-      const value = state.storage.sql.exec<{ v: string }>("SELECT v FROM meta WHERE k = 'scope'").one();
-      const scope = JSON.parse(value.v); return { at: scope.at, head: scope.head };
-    }, clock: () => lane.c.clock.now, bounds: PROPOSED_BOUNDS, policies: { fixture: "archive-policies", registry: archivePolicies },
-    target: { fixture: "archive-target", resolve: async () => { host.targets++; return archiveRepository; } }, provider: host, ...(budget ? { budget } : {}),
-  });
-}
 const row = (lane: Lane) => lane.inside(state => new ArchiveRows(archiveSql(state), lane.at).load());
 async function alarmFixture(host: ScriptedHost, resolve = async () => { host.targets++; return archiveRepository; }) {
   const lane = await create({}, {}, archiveDefinition);
@@ -139,6 +93,49 @@ test("confirms a lost reply by read-back with no second commit or journal entry"
   expect(host.sends).toHaveLength(1); expect(host.targets).toBe(1);
 });
 
+// Invariant: earlier whole entries can complete after actual lookahead has
+// spent work, including the real incremental-send code and Native receipt.
+test("adaptive Native passes reserve writing, incremental sending and confirmation before more lookahead", async context => {
+  const lane = await create({}, {}, archiveDefinition), host = new ScriptedHost("sha1");
+  await runInDurableObject(lane.object, async instance => {
+    for (let n = 0; n < 300; n++) expect(await (instance as TestScope).checkpoint()).toMatchObject({ answer: "written" });
+  });
+  const head = await lane.head(), budgets: ArchiveBudget[] = [], maximum = 40 * 1024 * 1024;
+  const quotes: { cost: Partial<ArchiveCost>; spent: ArchiveCost }[] = [];
+  const makeBudget = () => {
+    const budget = new ArchiveBudget({ inputWork: maximum }), canSpend = budget.canSpend.bind(budget);
+    budget.canSpend = cost => {
+      if ((cost.entries ?? 0) > 0 && (cost.inputWork ?? 0) > 16 * 1024 * 1024) { if (quotes.length === 8) quotes.shift(); quotes.push({ cost: { ...cost }, spent: budget.admitted() }); }
+      return canSpend(cost);
+    };
+    budgets.push(budget); return budget;
+  };
+  const initial = await lane.inside(state => driver(lane, state, host, makeBudget).run());
+  expect(initial, JSON.stringify({ initial, cost: budgets.map(budget => budget.admitted()), quotes })).toMatchObject({ state: "confirmed" });
+  const first = (await row(lane))!.confirmed!;
+  expect(first.through.seq).toBeGreaterThanOrEqual(0); expect(first.through.seq).toBeLessThan(128);
+  expect(await lane.inside(state => driver(lane, state, host, makeBudget, first.through.seq).run())).toMatchObject({ state: "confirmed" });
+  const second = (await row(lane))!;
+  expect(second.pending).toBeNull(); expect(second.confirmed!.through.seq).toBeGreaterThan(first.through.seq);
+  expect(second.confirmed!.through.seq).toBeLessThan(head.seq); expect(host.appendCalls).toBe(1);
+  expect(budgets).toHaveLength(2);
+  for (const budget of budgets) { expect(budget.admitted().inputWork).toBeLessThanOrEqual(maximum); expect(budget.admitted().entries).toBeGreaterThan(2); }
+  expect(await lane.head()).toEqual(head); expect(host.closureReads).toBe(0);
+  (context.task.meta as Record<string, unknown>)["adaptiveNative"] = { cap: maximum, first: first.through.seq, second: second.confirmed!.through.seq,
+    costs: budgets.map(budget => budget.admitted()), quotes, appendCalls: host.appendCalls,
+    qualification: "Actual Native checkpoint entries, adaptive scouting, fresh inventory, writer, driver copies, production incremental-send code including validator/copy/pack and Native row confirmation; HTTP/host/token/policies remain TEST stand-ins. Entry and other caps unchanged; input cap lowered to40MiB. Two passes only; no cadence/10000-one-entry claim." };
+});
+
+test("adaptive Native selection finishes a covered earlier prefix before an uncovered later class", async () => {
+  const lane = await create({}, {}, archiveDefinition), host = new ScriptedHost("sha1");
+  await lane.did(rita, "remark", { on: 0, fields: { text: "uncovered later native act" } });
+  const policy = archivePolicies.get(archiveDefinition.digest)!, policies: ArchivePolicyRegistry = new Map([[archiveDefinition.digest, { ...policy, entryTypes: new Set(["genesis"]) }]]);
+  expect(await lane.inside(state => driver(lane, state, host, undefined, undefined, policies).run())).toMatchObject({ state: "confirmed" });
+  const confirmed = (await row(lane))!.confirmed!; expect(confirmed.through.seq).toBe(0);
+  expect(await lane.inside(state => driver(lane, state, host, undefined, 0, policies).run())).toMatchObject({ state: "stopped", reason: "unsupported-archive-cohort" });
+  expect((await row(lane))!.confirmed).toEqual(confirmed); expect(host.sends).toHaveLength(1);
+});
+
 // Invariant: a persisted mark, not today's inventory, determines the first
 // send after actual eviction and a new native retained-input turn.
 test.each(["sha1", "sha256"] as const)("resumes marked %s bytes after eviction and then archives the later rule input", async format => {
@@ -156,7 +153,7 @@ test.each(["sha1", "sha256"] as const)("resumes marked %s bytes after eviction a
   expect(await lane.alarm()).toBe(true);
   expect(host.sends).toHaveLength(2); expect(host.sends[1]).not.toBe(marked.commit); expect(host.targets).toBe(1);
   expect((await row(lane))?.confirmed?.through).toEqual(later); expect(await lane.head()).toEqual(later);
-  const source = archiveSource({ open: (scope, work) => readJournalArchive({
+  const source = archiveSource({ open: (scope, work) => readJournalRepositoryArchive({
     format: async () => format, resolve: async ref => ref === journalRef(lane.at.scope) ? host.pointer : null,
     object: async (id, most) => { const object = host.data.get(id); return object ? { type: object.type, size: object.data.length, data: object.data.length <= most ? object.data : null } : null; },
   }, scope, work) });
@@ -196,3 +193,29 @@ test("a late host continuation cannot send or record after the original deadline
   const pending = await row(lane); expect(pending?.pending).not.toBeNull(); expect(pending?.confirmed).toBeNull();
   expect(canonicalize(pending)).not.toContain("TEST ARCHIVE TOKEN");
 });
+
+test("the native driver confirms a pending v1 attempt before a separate same-cutoff conversion and new v2 pass", async () => {
+  const lane = await create({}, {}, archiveDefinition), host = new ScriptedHost("sha1"), head = await lane.head();
+  const old = await lane.inside(state => planArchive(archiveSql(state), { at: lane.at, through: head, bounds: PROPOSED_BOUNDS,
+    policies: archivePolicies, format: "sha1", parent: null, markedAt: at(0) }, new ArchiveBudget()));
+  expect(old.ok ? "accepted" : old).toBe("accepted"); if (!old.ok) return;
+  await lane.inside(state => { const rows = new ArchiveRows(archiveSql(state), lane.at); rows.target(archiveRepository, "sha1"); rows.mark(old.mark); });
+  await lane.restart();
+  expect(await lane.inside(state => driver(lane, state, host).run())).toMatchObject({ state: "confirmed" });
+  expect(host.sends).toEqual([old.mark.commit]);
+  expect((await row(lane))!.confirmed).toEqual({ commit: old.mark.commit, through: head });
+  // Conversion must still be scheduled when no new entry arrived.
+  expect(await lane.inside(state => new ArchiveRows(archiveSql(state), lane.at).wake())).not.toBeNull();
+  await lane.restart();
+  expect(await lane.inside(state => driver(lane, state, host).run())).toMatchObject({ state: "confirmed" });
+  const converted = (await row(lane))!.confirmed!;
+  expect(converted).toMatchObject({ through: head, layout: 2 }); expect(converted.commit).not.toBe(old.mark.commit);
+  expect(new Set(host.objectReads)).toEqual(new Set([old.mark.commit]));
+  expect(host.sends).toHaveLength(2); expect(await lane.head()).toEqual(head);
+  await lane.submit(lane.remark("first post-conversion native entry"));
+  const later = await lane.head(); await lane.restart();
+  const appended = await lane.inside(state => driver(lane, state, host, undefined, head.seq).run());
+  expect(appended, JSON.stringify({ appended, stored: await row(lane) })).toMatchObject({ state: "confirmed" });
+  expect((await row(lane))!.confirmed).toMatchObject({ through: later, layout: 2 });
+  expect(host.sends).toHaveLength(3); expect(host.closureReads).toBe(0); expect(await lane.head()).toEqual(later);
+}, 20_000);

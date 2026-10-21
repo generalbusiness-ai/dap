@@ -1,5 +1,11 @@
 # Plan 025: published pages, a documentation site from a room's repository
 
+Status: retired; no work follows from it. Steps 1 to 3 landed at
+`7bb3a641`, and no later plan schedules step 4. Read tokens, clone, the
+renderer, GFM, navigation and editing a page are built (`7bb3a641`).
+Versions by tag are not built: the room records one branch. The `--app
+pages` preset of step 4 is not built.
+
 2026-10-07. Hugh's direction of this morning: a knowledge-base repository,
 folders of markdown published as a site, is a use of Artroom worth planning
 now. This plan says what exists, what is missing, how the pieces are

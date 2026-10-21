@@ -1,5 +1,7 @@
 # Accounting for carry judgments in verify
 
+Status, 21 October 2026: Landed at `7f1f2ac1`; the code was parked at `42873516`. Statements below that say review or landing is owed are as of the handoff.
+
 Builder, 2026-10-03. For declared acts stage 3 (request `1e8fee4b`),
 condition 2, after the checker's finding `8d5fe5c2` and guidance
 (`carry-guidance-5449.md`), which the planner read in `cc929e30`. Status:

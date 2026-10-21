@@ -1,5 +1,8 @@
 # Test invariants and their witnesses
 
+Status: retired; no work follows from it. It maps the tests of the earlier
+Room model, parked at `42873516`. `docs/testing.md` is the current guide.
+
 This file lists the invariants that Artroom's tests protect and, for each one, the test that is its witness. It is by group, not by case: a row names a `describe` block or one test, and stands for every case inside it. When you add an invariant, add a row. When you remove a witness, remove its row or name the witness that replaces it. [docs/testing.md](../../docs/testing.md) says what makes a test useful and where a test belongs. Timings are in [notes/plans/README.md](README.md).
 
 How to read a row. "Rule" is a rule of [docs/protocol.md](../../docs/protocol.md), or the request, review or plan that set the invariant. "Witness" is a test file and, in quotes, the start or a distinctive part of a `describe` or test title in it. A file with no title means the whole file. "Removed or replaced" says what request `ecbc722a` took out, why, and what still protects the invariant.

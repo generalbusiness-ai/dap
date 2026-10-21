@@ -31,6 +31,7 @@ const project = (name: string, dir: string, config: string, group: number, more:
 
 export default defineConfig({
   test: {
+    reporters: process.env["ARTROOM_TEST_PROGRESS"] ? ["verbose", "./scripts/test-progress.mjs"] : undefined,
     projects: [
       project("bytes", "packages/bytes", "vitest.config.ts", 0),
       project("derive", "packages/derive", "vitest.config.ts", 0),

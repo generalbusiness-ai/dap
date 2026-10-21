@@ -2,14 +2,17 @@
  * Returns headers/classes only. Payload reads and export admission belong
  * to the owning whole-prefix inventory, inside its synchronous frame. */
 import { natural } from "@generalbusiness/artroom-bytes";
-import { DEVICE_COMMAND, DOMAINS, RETAINED_INPUT_BYTES } from "@generalbusiness/dap-contract";
+import { DEVICE_COMMAND, RETAINED_INPUT_BYTES } from "@generalbusiness/dap-contract";
 import type { Digest, Input, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
 import { isDigest, isPlatformDefinition, isScopeRef } from "@generalbusiness/artroom-bytes";
 import { ArchiveBudget } from "./archive-budget.ts";
 import { ARCHIVE_PRIVACY_JSON_PASSES, stopArchivePrefix as stop, type ArchivePosition } from "./archive-prefix.ts";
-import { declarationValueDomains, type Capabilities, type OperationRules, type ValidDefinition } from "@generalbusiness/dap-derive";
+import { type Capabilities, type OperationRules, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { platform } from "@generalbusiness/dap-platform";
 import { sqlJsonText as text, type Sql } from "./sqlite.ts";
+import { archiveDeclarationValuePlaces, archiveValuePlace } from "./archive-value-policy.ts";
+import { ARCHIVE_ENTRY_DETAIL_METADATA, ARCHIVE_ENTRY_HEADER_METADATA, archiveEntryEffectsMetadata } from "./archive-entry-privacy-cost.ts";
+import { ARCHIVE_SUPPORT_CAPABILITY_WORK, ARCHIVE_SUPPORT_OWNER_WORK, type ArchiveSupportFootprint } from "./archive-support-cost.ts";
 export { sqlJsonText as archiveMetadataText } from "./sqlite.ts";
 
 /** Trusted native code/registry metadata. A request cannot supply this map;
@@ -30,7 +33,6 @@ export interface ArchiveEntryHeader {
   readonly prev: Digest | null; readonly uses: number; readonly effects: number;
 }
 const variants: readonly unknown[] = ["genesis", "act", "delivery", "timed", "diagnosis", "outcome", "preparation", "checkpoint"];
-const nativeDomains: ReadonlySet<string> = new Set(Object.values(DOMAINS));
 const OWNER_LIMIT = 65;
 /** Finite native metadata. Device commands own no outside operation kind. */
 export const DEVICE_COMMAND_ARCHIVE_RECORDS: ReadonlySet<string> = new Set(["command"]);
@@ -54,7 +56,7 @@ export function archiveEntryHeader(sql: Pick<Sql, "exec">, source: ArchiveMetada
     budget.spend({ inputWork: source.bytes * ARCHIVE_PRIVACY_JSON_PASSES });
   }
   const held = location(source);
-  const rows = budget.native(sql, () => ({ metadata: 512, inputWork: 0 })).exec(`SELECT ${HEADER} FROM ${held.table} WHERE ${held.where} LIMIT 1`, ...held.args).toArray(), row = rows[0];
+  const rows = budget.native(sql, () => ({ metadata: ARCHIVE_ENTRY_HEADER_METADATA, inputWork: 0 })).exec(`SELECT ${HEADER} FROM ${held.table} WHERE ${held.where} LIMIT 1`, ...held.args).toArray(), row = rows[0];
   const at = { scope: row?.["scope"], inc: row?.["inc"], kind: row?.["kind"] };
   if (rows.length !== 1 || !row || !natural(row["seq"]) || !isScopeRef(at) || !variants.includes(row["input"])
     || row["usesType"] !== "array" || !natural(row["uses"]) || row["effectsType"] !== "array" || !natural(row["effects"])) return stop("unavailable");
@@ -71,10 +73,10 @@ export function archiveEntryPrivacy(sql: Pick<Sql, "exec">, source: ArchiveMetad
     if (typeof name !== "string" || typeof kind !== "string") return stop("unavailable");
     const rules = support.owners.get(name)?.get(kind);
     if (!rules || rules.values !== undefined && rules.valueDomains === undefined) return stop("unsupported-archive-cohort");
-    if (rules.valueDomains?.some(domain => !nativeDomains.has(domain.domain))) return stop("unsupported-custom-domain");
+    if (rules.valueDomains?.some(domain => !archiveValuePlace(support, domain.domain, domain.max, `owners.${name}.${kind}`))) return stop("unsupported-custom-domain");
   };
   if (header.effects > OWNER_LIMIT - 1) return stop("limit");
-  const opened = header.effects === 0 ? [] : read((header.effects + 1) * 512).exec(`SELECT ${text("$.effect", 16, "value")} AS effect, ${text("$.owner", 128, "value")} AS owner, ${text("$.capability", 128, "value")} AS capability, ${text("$.kind", 128, "value")} AS kind FROM ${held.table}, json_each(${held.table}.bytes, '$.effects') WHERE ${held.where} LIMIT ?`, ...held.args, OWNER_LIMIT).toArray();
+  const opened = header.effects === 0 ? [] : read(archiveEntryEffectsMetadata(header.effects)).exec(`SELECT ${text("$.effect", 16, "value")} AS effect, ${text("$.owner", 128, "value")} AS owner, ${text("$.capability", 128, "value")} AS capability, ${text("$.kind", 128, "value")} AS kind FROM ${held.table}, json_each(${held.table}.bytes, '$.effects') WHERE ${held.where} LIMIT ?`, ...held.args, OWNER_LIMIT).toArray();
   if (opened.length >= OWNER_LIMIT) return stop("limit");
   const effects = new Set(["open", "state", "party", "ref", "value", "list", "hold", "redact", "relation", "record", "activate", "operation", "attempt", "index", "attention"]);
   if (opened.length !== header.effects) return stop("unavailable");
@@ -84,11 +86,11 @@ export function archiveEntryPrivacy(sql: Pick<Sql, "exec">, source: ArchiveMetad
     if (effect["effect"] === "record" && (typeof effect["capability"] !== "string" || typeof effect["kind"] !== "string" || !support.records.get(effect["capability"])?.has(effect["kind"]))) return stop("unsupported-archive-cohort");
   }
   if (header.input === "outcome") {
-    const outcomes = read(320).exec(`SELECT ${text("$.input.owner", 128)} AS owner, ${text("$.input.kind", 128)} AS kind FROM ${held.table} WHERE ${held.where} LIMIT 1`, ...held.args).toArray();
+    const outcomes = read(ARCHIVE_ENTRY_DETAIL_METADATA).exec(`SELECT ${text("$.input.owner", 128)} AS owner, ${text("$.input.kind", 128)} AS kind FROM ${held.table} WHERE ${held.where} LIMIT 1`, ...held.args).toArray();
     if (outcomes.length !== 1) return stop("unavailable");
     owner(outcomes[0]!["owner"], outcomes[0]!["kind"]);
   } else if (header.input === "preparation") {
-    const preparations = read(320).exec(`SELECT ${text("$.input.capability", 128)} AS capability, ${text("$.input.step", 128)} AS step FROM ${held.table} WHERE ${held.where} LIMIT 1`, ...held.args).toArray(), preparation = preparations[0];
+    const preparations = read(ARCHIVE_ENTRY_DETAIL_METADATA).exec(`SELECT ${text("$.input.capability", 128)} AS capability, ${text("$.input.step", 128)} AS step FROM ${held.table} WHERE ${held.where} LIMIT 1`, ...held.args).toArray(), preparation = preparations[0];
     if (preparations.length !== 1 || typeof preparation?.["capability"] !== "string" || typeof preparation["step"] !== "string" || !support.preparations.get(preparation["capability"])?.has(preparation["step"])) return stop("unsupported-archive-cohort");
   }
   budget.check();
@@ -98,20 +100,33 @@ export function archiveEntryPrivacy(sql: Pick<Sql, "exec">, source: ArchiveMetad
  * declarations with no entries in this prefix. The registry is finite;
  * its presence does not create a certificate or load package code. */
 export function archiveSupportMetadata(support: ArchiveSupport, budget: ArchiveBudget): void {
+  checkArchiveSupportMetadata(support, budget, false);
+}
+
+/** Scout the actual trusted metadata, paying all original validation work
+ * and new count bookkeeping on this same budget. Fresh inventory still
+ * calls archiveSupportMetadata in full; these counts grant no credit. */
+export function recordArchiveSupportMetadata(support: ArchiveSupport, budget: ArchiveBudget): Readonly<ArchiveSupportFootprint> {
+  budget.spend({ metadata: 128, inputWork: 256 });
+  return checkArchiveSupportMetadata(support, budget, true)!;
+}
+
+function checkArchiveSupportMetadata(support: ArchiveSupport, budget: ArchiveBudget, collect: boolean): Readonly<ArchiveSupportFootprint> | undefined {
   budget.check();
-  if (declarationValueDomains(support.definition).some(domain => !nativeDomains.has(domain))) return stop("unsupported-custom-domain");
+  const declarationNodes = archiveDeclarationValuePlaces(support, budget);
+  let ownerKinds = 0, ownerDomains = 0, capabilityKinds = 0;
   const known = (name: string) => name === "hold@1" || name === "git-read@1" || isPlatformDefinition(name) && platform(name) !== null;
   if (support.owners.size > 64 || support.preparations.size > 64 || support.records.size > 64) return stop("limit");
   for (const [name, kinds] of support.owners) {
     if (name.length > 128 || !known(name)) return stop("unsupported-archive-cohort");
     if (kinds.size > 64) return stop("limit");
     for (const [kind, rules] of kinds) {
-      budget.spend({ inputWork: 512 });
+      budget.spend({ inputWork: ARCHIVE_SUPPORT_OWNER_WORK }); ownerKinds++;
       if (!kind || kind.length > 128 || rules.values !== undefined && rules.valueDomains === undefined) return stop("unsupported-archive-cohort");
       if (rules.valueDomains !== undefined && (!Array.isArray(rules.valueDomains) || rules.valueDomains.length > 64)) return stop("limit");
       for (const domain of rules.valueDomains ?? []) {
-        budget.spend({ inputWork: 512 });
-        if (!nativeDomains.has(domain.domain)) return stop("unsupported-custom-domain");
+        budget.spend({ inputWork: ARCHIVE_SUPPORT_OWNER_WORK }); ownerDomains++;
+        if (!archiveValuePlace(support, domain.domain, domain.max, `owners.${name}.${kind}`)) return stop("unsupported-custom-domain");
         if (!Number.isSafeInteger(domain.max) || domain.max < 1 || domain.max > 1024 * 1024) return stop("unavailable");
       }
     }
@@ -120,10 +135,11 @@ export function archiveSupportMetadata(support: ArchiveSupport, budget: ArchiveB
     if (!["hold@1", "git-read@1", DEVICE_COMMAND].includes(name)) return stop("unsupported-archive-cohort");
     if (kinds.size > 64) return stop("limit");
     for (const kind of kinds) {
-      budget.spend({ inputWork: 256 });
+      budget.spend({ inputWork: ARCHIVE_SUPPORT_CAPABILITY_WORK }); capabilityKinds++;
       if (!kind || kind.length > 128) return stop("unavailable");
       if (name === DEVICE_COMMAND && !(table === support.records ? DEVICE_COMMAND_ARCHIVE_RECORDS : DEVICE_COMMAND_ARCHIVE_PREPARATIONS).has(kind)) return stop("unsupported-archive-cohort");
     }
   }
   budget.check();
+  return collect ? Object.freeze({ declarationNodes, ownerKinds, ownerDomains, capabilityKinds }) : undefined;
 }

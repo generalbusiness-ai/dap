@@ -4,12 +4,13 @@ import { same } from "@generalbusiness/artroom-bytes";
 import type { ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
 import { isScopeRef, timeMs } from "@generalbusiness/artroom-bytes";
 import { GitRefusal, READ_BOUNDS, Reader, type GitSource } from "@generalbusiness/artroom-git";
-import { journalRef, type JournalObject } from "@generalbusiness/artroom-git/journal";
+import { journalId, journalRef, type JournalObject } from "@generalbusiness/artroom-git/journal";
 import { SmartHttpSource } from "@generalbusiness/artroom-git/http-read";
 import type { SmartHttpOptions } from "@generalbusiness/artroom-git/http";
 import type { ArchiveCredential, FixtureArchiveProvider } from "./archive-driver.ts";
 import type { DestinationRepository } from "./destination-host.ts";
 import { sendOnce } from "./github-host.ts";
+import { sendArchiveAppend } from "./archive-send.ts";
 
 /** Explicit stand-ins. Production credentials cannot be selected by config. */
 export interface FixtureArchiveTokens {
@@ -36,12 +37,15 @@ export function fixtureArchiveProvider(ports: FixtureArchivePorts, host: Archive
   if (ports.fixture !== "archive-ports" || ports.tokens.fixture !== "archive-tokens") return bad();
   const { tokens, clock } = ports;
   const held = new WeakMap<ArchiveCredential, { repository: DestinationRepository; at: ScopeRef; ref: string; original: ArchiveCredential }>();
-  const source = async (repository: DestinationRepository, allowed: () => boolean, most?: { bytes: number; objects: number }): Promise<SmartHttpSource> => {
+  const source = async (repository: DestinationRepository, allowed: () => boolean, most?: { bytes: number; objects: number }, isolated = false): Promise<SmartHttpSource> => {
     check(allowed); repository = { ...repository }; host.transport(repository); // Validate before the first port call.
     const plaintext = await tokens.read({ ...repository }, allowed); check(allowed);
     await host.identity(repository, plaintext, allowed); check(allowed);
     const transport = host.transport(repository, plaintext);
-    return new SmartHttpSource({ ...transport, ...(most === undefined ? {} : { maxBytes: Math.min(transport.maxBytes, most.bytes), bounds: { ...(transport.bounds ?? READ_BOUNDS), closureObjects: Math.min(transport.bounds?.closureObjects ?? READ_BOUNDS.closureObjects, most.objects) } }) });
+    const maxBytes = Math.min(transport.maxBytes, most?.bytes ?? transport.maxBytes);
+    return new SmartHttpSource({ ...transport, maxBytes,
+      ...(most === undefined ? {} : { bounds: { ...(transport.bounds ?? READ_BOUNDS), closureObjects: Math.min(transport.bounds?.closureObjects ?? READ_BOUNDS.closureObjects, most.objects) } }),
+      ...(isolated ? { isolateObjects: { ownedBytes: maxBytes * 17 } } : {}) });
   };
   const ref = async (repository: DestinationRepository, name: string, allowed: () => boolean): Promise<string | null> => {
     const input = await source(repository, allowed);
@@ -54,6 +58,22 @@ export function fixtureArchiveProvider(ports: FixtureArchivePorts, host: Archive
       await input.refs("refs/heads/", 8192); check(allowed); return "sha1";
     },
     ref,
+    async readObject(repository, object, allowed, budget) {
+      check(allowed);
+      const id = journalId("sha1", object.id), maximum = object.maximum, type = object.type;
+      if (!Number.isSafeInteger(maximum) || maximum < 1 || maximum > 8 * 1024 * 1024 || !["commit", "tree", "blob"].includes(type)) return bad();
+      // A single-object exchange has a small, separately bounded allowance
+      // for advertisement and framing. Larger replies refuse; no closure
+      // fallback or unused transport allowance tops up the original budget.
+      const wire = maximum + 8 * 1024;
+      // One exact-object HTTP negotiation/decode, with bounded advertisement
+      // and wire work, spends the native pass's original allowance before I/O.
+      budget.spend({ calls: 2, metadata: 1024, inputWork: wire * 32 });
+      const input = await source(repository, allowed, { bytes: wire, objects: 1 }, true);
+      const value = await input.object(id, maximum); check(allowed);
+      if (value.type !== type) return bad();
+      return value;
+    },
     async objects(repository, commit, most, allowed) {
       const maximum = { ...most };
       if (!Number.isSafeInteger(maximum.bytes) || maximum.bytes < 32 || maximum.bytes > 8 * 1024 * 1024 || !Number.isSafeInteger(maximum.objects) || maximum.objects < 1 || maximum.objects > 8192) return bad();
@@ -100,6 +120,7 @@ export function fixtureArchiveProvider(ports: FixtureArchivePorts, host: Archive
       check(valid);
       if (!Array.isArray(request.objects) || request.objects.length > 8192) return bad();
       const transport = host.transport(repository, credential.plaintext);
+      if (request.incremental) return sendArchiveAppend({ ...request, repository, at, ref: name, old, commit, allowed: valid }, transport, () => ref(repository, name, valid));
       // sendOnce owns all supplied object bytes before its first await and
       // checks this binding again through SmartHttpGit.beforeSend after discovery.
       return sendOnce({ ref: name, old, commit, objects: request.objects.map(object => ({ id: object.id, kind: object.type, body: object.data })), requireParentless: old === null, allowed: valid }, transport, () => ref(repository, name, valid));

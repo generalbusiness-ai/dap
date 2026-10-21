@@ -1,5 +1,12 @@
 # Artroom: waking agents on events and on a schedule
 
+Status, 21 October 2026: revision 3 is reviewed and landed at `4b6d42a7`
+(approval `8e35ab4a`). Schedules, wake addresses, the watcher and
+pi-durable wake are not built. The `notify` rule that this note says
+exists belonged to the earlier policy runtime, deleted at `66eba017`;
+today `notify` is a definition attention form
+(`packages/contract/src/definition.ts`).
+
 2026-10-01. Revision 2, recording hugh's decisions (section 9).
 Revision 3, 2026-10-04: reconciled with the reviewed clarification
 `notes/plans/008-2026-10-03-wake-and-schedule-clarification.md` and the

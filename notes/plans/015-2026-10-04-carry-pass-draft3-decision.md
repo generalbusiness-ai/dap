@@ -1,5 +1,8 @@
 # Carry-pass amendment Draft 3: accepted planning contract
 
+Status: retired; no work follows from it. The carry contract was not
+incorporated, and the Room and log packages were parked at `42873516`.
+
 2026-10-04. Decision for builder request
 `ac8b8fd7ea031d7075da65fce4e81f9ad6b7ec36`, planner promise
 `a73048763286bc6e430a33d873de4215549da131`. This request owes a design

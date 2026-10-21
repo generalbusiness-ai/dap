@@ -1,10 +1,12 @@
 # Offline work and synchronization
 
+Status, 21 October 2026: this design is reviewed and landed at `31584fd9`
+(approval `49cc6d2c`). No stage of section 8 is built.
+
 Design for the plan after 2026-10-14. Written for request
 `479234608afbf0e87e04e1091e1b813d46ad8f50`, under builder promise
 `4950af44f65b6cb4ccfeeece35ec758910be0597`, covering items 2 and 3 of R5
-(`af0086ff38a2f58952fe3e7613fc4929a05b50de`). This is a proposal for design
-review. Landing this document adopts no protocol, dispatches no implementation
+(`af0086ff38a2f58952fe3e7613fc4929a05b50de`). Landing this document adopts no protocol, dispatches no implementation
 and changes no application interface.
 
 ## 1. The model

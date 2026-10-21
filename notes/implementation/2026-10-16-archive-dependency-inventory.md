@@ -1,5 +1,7 @@
 # Local archive dependency inventory
 
+Status, 21 October 2026: Approved and merged at `4994af74`. Statements below that say review or landing is owed are as of the handoff.
+
 Source request `7e39eb4b`, promise `c248de8d`. Design `1815b3dd` and technical
 decisions `9f5b0a32` and `372ff6c0` govern this implementation. Native pin
 prerequisite `b40f8765` is independently approved and locally merged as

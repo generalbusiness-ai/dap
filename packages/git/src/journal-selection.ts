@@ -8,11 +8,16 @@ import { canonicalize, isDigest, isFactRef, isPlatformDefinition, isScopeRef, pa
 import { archiveRetainedPath, type ArchiveRetainedName } from "./journal-path.ts";
 import { journalByteOrder } from "./journal-objects.ts";
 import { JournalWork, refuseJournal, type JournalCost } from "./journal-work.ts";
+import { JOURNAL_V2_LAST_POSITION } from "./journal-v2-path.ts";
+import { ARCHIVE_NATIVE_VALUE_DOMAINS } from "./archive-policy.ts";
+import { JOURNAL_SELECTION_BYTES, JOURNAL_MEASURED_OMISSION_METADATA, journalOrderingInputWork, journalSelectionJSONReservation } from "./journal-selection-cost.ts";
 
-export const JOURNAL_SELECTION_BYTES = 1024 * 1024;
+export { JOURNAL_SELECTION_BYTES } from "./journal-selection-cost.ts";
 const inventoryCeilings: Readonly<JournalCost> = { entries: 4096, attempts: 512, nodes: 64, calls: 16384, metadata: 4 * 1024 * 1024, inputWork: 64 * 1024 * 1024 };
 const inputs: readonly string[] = ["genesis", "act", "delivery", "diagnosis", "timed", "preparation", "outcome", "checkpoint"];
-const domains: ReadonlySet<string> = new Set(Object.values(DOMAINS));
+// Format vocabulary only; this descriptive serializer grants no export
+// admission. The native inventory checks the exact pin/data/place first.
+const domains: ReadonlySet<string> = new Set([...Object.values(DOMAINS), ...ARCHIVE_NATIVE_VALUE_DOMAINS]);
 /** The current native consumer serialization vocabulary, not a second
  * dependency planner. New consumers need an explicit format review. */
 const requiredKinds: Readonly<Record<string, readonly string[]>> = {
@@ -27,7 +32,7 @@ export interface JournalConsumer { readonly origin: JournalOrigin; readonly desc
 export interface JournalForeignSource { readonly at: ScopeRef; readonly pin: Digest | PlatformDefinition }
 export interface JournalForeignCopy { readonly fact: FactRef; readonly pin: Digest | PlatformDefinition }
 export interface JournalSelectedObject { readonly key: ArchiveRetainedName; readonly bytes: number; readonly consumers: readonly JournalConsumer[]; readonly foreign?: JournalForeignCopy }
-export interface JournalOmission { readonly kind: "text"; readonly digest: Digest; readonly reason: "detached-text"; readonly consumers: readonly JournalConsumer[] }
+export interface JournalOmission { readonly kind: "text"; readonly digest: Digest; readonly reason: "detached-text"; readonly consumers: readonly JournalConsumer[]; readonly bytes?: number }
 export interface JournalSelection {
   readonly at: ScopeRef;
   readonly through: Head;
@@ -37,6 +42,10 @@ export interface JournalSelection {
   readonly ancestryUnwalked: readonly JournalOrigin[];
   readonly inventoryCost: Readonly<JournalCost>;
   readonly foreignSources?: readonly JournalForeignSource[];
+}
+export interface JournalPassSelection extends Omit<JournalSelection, "objects"> {
+  readonly after: Head | null;
+  readonly objects: readonly (JournalSelectedObject & { readonly pass: number })[];
 }
 export const journalKeyName = (key: ArchiveRetainedName | { kind: "text"; digest: Digest }): string =>
   canonicalize(key.kind === "value" ? [key.kind, key.domain, key.digest] : [key.kind, key.digest]);
@@ -55,7 +64,7 @@ export function journalList(value: unknown, max: number, work: JournalWork): unk
 }
 export function journalOrdered<T>(rows: readonly T[], key: (row: T) => string, work: JournalWork): T[] {
   const pairs = rows.map(row => ({ row, bytes: utf8(key(row)) }));
-  work.input(pairs.reduce((n, p) => n + p.bytes.length, 0), Math.ceil(Math.log2(rows.length + 1)) + 2);
+  work.input(journalOrderingInputWork(pairs.reduce((n, p) => n + p.bytes.length, 0), rows.length));
   return pairs.sort((a, b) => journalByteOrder(a.bytes, b.bytes)).map(p => p.row);
 }
 export function journalRetainedKey(value: unknown): ArchiveRetainedName {
@@ -101,31 +110,39 @@ export function journalForeignSources(value: unknown, work: JournalWork): Journa
  * caller references. Its cost and original budget must already include
  * the selected native prefix. Neither matching shape nor these counters
  * prove that the caller ran native admission. */
-export function journalSelection(bytes: string, work: JournalWork): JournalSelection {
+function readSelection(bytes: string, work: JournalWork, incremental: boolean): JournalSelection & { readonly after?: Head | null } {
   if (typeof bytes !== "string") return refuseJournal("input");
   if (bytes.length > JOURNAL_SELECTION_BYTES) return work.stop();
-  work.metadata(bytes.length * 3); // Reserve UTF-8 and metadata work before encoding/parsing.
-  work.input(bytes.length * 3, 8);
+  const json = journalSelectionJSONReservation(bytes.length);
+  work.metadata(json.metadata); // Reserve UTF-8 and metadata work before encoding/parsing.
+  work.input(json.inputWork);
   if (utf8(bytes).length > JOURNAL_SELECTION_BYTES) return work.stop();
   let value: unknown;
   try { value = parseStrict(bytes); if (canonicalize(value) !== bytes) return refuseJournal("input"); }
   catch { return refuseJournal("input"); }
   work.check();
   const extended = value !== null && typeof value === "object" && Object.hasOwn(value, "foreignSources");
-  const top = journalRecord(value, ["format", "at", "through", "entries", "objects", "omittedTexts", "ancestryUnwalked", "replay", "retention", "cost", ...(extended ? ["foreignSources"] : [])]);
+  const top = journalRecord(value, ["format", "at", "through", "entries", "objects", "omittedTexts", "ancestryUnwalked", "replay", "retention", "cost", ...(extended ? ["foreignSources"] : []), ...(incremental ? ["after"] : [])]);
   const foreignSources = extended ? journalForeignSources(top["foreignSources"], work) : [];
   const sources = new Map(foreignSources.map(source => [canonicalize(source.at), source.pin])), usedSources = new Set<string>();
-  if (top["format"] !== "artroom-local-inventory-1" || top["replay"] !== "unchecked" || top["retention"] !== "observed-local" || !isScopeRef(top["at"])) return refuseJournal("input");
+  if (top["format"] !== (incremental ? "artroom-local-inventory-2" : "artroom-local-inventory-1") || top["replay"] !== "unchecked" || top["retention"] !== "observed-local" || !isScopeRef(top["at"])) return refuseJournal("input");
+  let after: Head | null = null;
+  if (incremental && top["after"] !== null) {
+    const previous = journalRecord(top["after"], ["seq", "hash"]);
+    if (!journalNatural(previous["seq"]) || previous["seq"] >= JOURNAL_V2_LAST_POSITION || !isDigest(previous["hash"])) return refuseJournal("input");
+    after = { seq: previous["seq"], hash: previous["hash"] };
+  }
+  const first = after === null ? 0 : after.seq + 1;
   const at = { ...top["at"] }, head = journalRecord(top["through"], ["seq", "hash"]);
-  if (!journalNatural(head["seq"]) || head["seq"] >= inventoryCeilings.entries || !isDigest(head["hash"])) return refuseJournal("input");
+  if (!journalNatural(head["seq"]) || head["seq"] > (incremental ? JOURNAL_V2_LAST_POSITION : inventoryCeilings.entries - 1) || head["seq"] < first || head["seq"] - first >= inventoryCeilings.entries || !isDigest(head["hash"])) return refuseJournal("input");
   const through = { seq: head["seq"], hash: head["hash"] };
   const table = new Map<number, JournalEntrySelection>();
   const rawEntries = journalList(top["entries"], inventoryCeilings.entries, work);
-  if (rawEntries.length !== through.seq + 1) return refuseJournal("input");
+  if (rawEntries.length !== through.seq - first + 1) return refuseJournal("input");
   for (const raw of rawEntries) {
     work.check();
     const r = journalRecord(raw, ["seq", "hash", "bytes"]);
-    if (!journalNatural(r["seq"]) || r["seq"] > through.seq || !isDigest(r["hash"]) || !journalNatural(r["bytes"]) || r["bytes"] === 0 || r["bytes"] > work.limits.objectBytes || table.has(r["seq"])) return refuseJournal("input");
+    if (!journalNatural(r["seq"]) || r["seq"] < first || r["seq"] > through.seq || !isDigest(r["hash"]) || !journalNatural(r["bytes"]) || r["bytes"] === 0 || r["bytes"] > work.limits.objectBytes || table.has(r["seq"])) return refuseJournal("input");
     table.set(r["seq"], { seq: r["seq"], hash: r["hash"], bytes: r["bytes"] });
   }
   const entries = [...table.values()].sort((a, b) => a.seq - b.seq);
@@ -155,11 +172,12 @@ export function journalSelection(bytes: string, work: JournalWork): JournalSelec
     } else return refuseJournal("input");
     return { origin: from, description: canonicalize(raw) };
   }
-  const objects = new Map<string, { key: ArchiveRetainedName; bytes: number; consumers: Map<string, JournalConsumer>; foreign?: JournalForeignCopy }>();
+  const objects = new Map<string, { key: ArchiveRetainedName; bytes: number; consumers: Map<string, JournalConsumer>; foreign?: JournalForeignCopy; pass?: number }>();
   for (const raw of journalList(top["objects"], 1024, work)) {
     work.check();
     const copy = raw !== null && typeof raw === "object" && Object.hasOwn(raw, "foreign");
-    const r = journalRecord(raw, ["key", "bytes", "consumers", ...(copy ? ["foreign"] : [])]), key = currentRetained(r["key"]), name = journalKeyName(key);
+    const r = journalRecord(raw, ["key", "bytes", "consumers", ...(copy ? ["foreign"] : []), ...(incremental ? ["pass"] : [])]), key = currentRetained(r["key"]), name = journalKeyName(key);
+    if (incremental && (!journalNatural(r["pass"]) || r["pass"] > first)) return refuseJournal("input");
     let foreign: JournalForeignCopy | undefined;
     if (key.kind === "entry") {
       const row = journalRecord(r["foreign"], ["fact", "pin"]), fact = row["fact"];
@@ -169,8 +187,8 @@ export function journalSelection(bytes: string, work: JournalWork): JournalSelec
     } else if (copy) return refuseJournal("input");
     if (!journalNatural(r["bytes"]) || r["bytes"] === 0 || r["bytes"] > RETAINED_INPUT_BYTES) return refuseJournal("input");
     const previous = objects.get(name);
-    if (previous && (previous.bytes !== r["bytes"] || canonicalize(previous.foreign ?? null) !== canonicalize(foreign ?? null))) return refuseJournal("input");
-    const chosen = previous ?? { key, bytes: r["bytes"], consumers: new Map<string, JournalConsumer>(), ...(foreign ? { foreign } : {}) };
+    if (previous && (previous.bytes !== r["bytes"] || canonicalize(previous.foreign ?? null) !== canonicalize(foreign ?? null) || incremental && previous.pass !== r["pass"])) return refuseJournal("input");
+    const chosen = previous ?? { key, bytes: r["bytes"], consumers: new Map<string, JournalConsumer>(), ...(foreign ? { foreign } : {}), ...(incremental ? { pass: r["pass"] as number } : {}) };
     const reasons = journalList(r["consumers"], 4096, work);
     if (reasons.length === 0) return refuseJournal("input");
     for (const rawReason of reasons) { const reason = consumer(rawReason, key); chosen.consumers.set(reason.description, reason); }
@@ -178,14 +196,19 @@ export function journalSelection(bytes: string, work: JournalWork): JournalSelec
     if (objects.size > inventoryCeilings.attempts) return work.stop();
   }
   if (usedSources.size !== sources.size) return refuseJournal("input");
-  const omissions = new Map<string, { kind: "text"; digest: Digest; reason: "detached-text"; consumers: Map<string, JournalConsumer> }>();
+  const omissions = new Map<string, { kind: "text"; digest: Digest; reason: "detached-text"; consumers: Map<string, JournalConsumer>; bytes?: number }>();
   for (const raw of journalList(top["omittedTexts"], 8192, work)) {
     work.check();
-    const r = journalRecord(raw, ["mode", "origin", "consumer", "key", "archive"]), key = journalRecord(r["key"], ["kind", "digest"]);
+    const measured = incremental && raw !== null && typeof raw === "object" && Object.hasOwn(raw, "bytes");
+    const r = journalRecord(raw, ["mode", "origin", "consumer", "key", "archive", ...(measured ? ["bytes"] : [])]), key = journalRecord(r["key"], ["kind", "digest"]);
     if (r["mode"] !== "text" || r["consumer"] !== "detached-text" || r["archive"] !== "omit" || key["kind"] !== "text" || !isDigest(key["digest"])) return refuseJournal("input");
+    if (measured && (!journalNatural(r["bytes"]) || r["bytes"] < 2)) return refuseJournal("input");
+    if (measured) work.metadata(JOURNAL_MEASURED_OMISSION_METADATA);
     const from = origin(r["origin"]), name = journalKeyName({ kind: "text", digest: key["digest"] });
     if (objects.has(name)) return refuseJournal("input");
-    const chosen = omissions.get(name) ?? { kind: "text" as const, digest: key["digest"], reason: "detached-text" as const, consumers: new Map<string, JournalConsumer>() };
+    const prior = omissions.get(name);
+    if (prior && prior.bytes !== (measured ? r["bytes"] : undefined)) return refuseJournal("input");
+    const chosen = prior ?? { kind: "text" as const, digest: key["digest"], reason: "detached-text" as const, consumers: new Map<string, JournalConsumer>(), ...(measured ? { bytes: r["bytes"] as number } : {}) };
     const description = canonicalize(raw); chosen.consumers.set(description, { origin: from, description }); omissions.set(name, chosen);
   }
   const ancestryUnwalked = journalList(top["ancestryUnwalked"], inventoryCeilings.entries, work).map(origin);
@@ -197,8 +220,13 @@ export function journalSelection(bytes: string, work: JournalWork): JournalSelec
     inventoryCost[k] = n;
   }
   if (inventoryCost.entries < entries.length || inventoryCost.attempts < objects.size) return refuseJournal("input");
-  const chosenObjects = journalOrdered([...objects.values()], r => journalKeyName(r.key), work).map(r => ({ key: r.key, bytes: r.bytes, consumers: journalOrdered([...r.consumers.values()], c => c.description, work), ...(r.foreign ? { foreign: r.foreign } : {}) }));
-  const omitted = journalOrdered([...omissions.values()], journalKeyName, work).map(r => ({ kind: r.kind, digest: r.digest, reason: r.reason, consumers: journalOrdered([...r.consumers.values()], c => c.description, work) }));
+  const chosenObjects = journalOrdered([...objects.values()], r => journalKeyName(r.key), work).map(r => ({ key: r.key, bytes: r.bytes, consumers: journalOrdered([...r.consumers.values()], c => c.description, work), ...(r.foreign ? { foreign: r.foreign } : {}), ...(incremental ? { pass: r.pass! } : {}) }));
+  const omitted = journalOrdered([...omissions.values()], journalKeyName, work).map(r => ({ kind: r.kind, digest: r.digest, reason: r.reason, consumers: journalOrdered([...r.consumers.values()], c => c.description, work), ...(r.bytes === undefined ? {} : { bytes: r.bytes }) }));
   work.check();
-  return { at, through, entries, objects: chosenObjects, omitted, ancestryUnwalked, inventoryCost, ...(foreignSources.length ? { foreignSources } : {}) };
+  return { at, through, entries, objects: chosenObjects, omitted, ancestryUnwalked, inventoryCost, ...(foreignSources.length ? { foreignSources } : {}), ...(incremental ? { after } : {}) };
 }
+
+/** Closed v1 decoding remains the default and refuses every v2 extension. */
+export function journalSelection(bytes: string, work: JournalWork): JournalSelection { return readSelection(bytes, work, false); }
+/** Only this explicit decoder accepts a bounded interval after a receipt. */
+export function journalPassSelection(bytes: string, work: JournalWork): JournalPassSelection { return readSelection(bytes, work, true) as JournalPassSelection; }

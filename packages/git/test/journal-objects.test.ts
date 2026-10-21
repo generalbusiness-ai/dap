@@ -3,6 +3,7 @@ import { afterAll, expect, test } from "vitest";
 import { ArchiveBudget, ArchiveStopped } from "../../scope/src/archive-budget.ts";
 import { isObjectId } from "../src/names.ts";
 import { JournalLayoutRefusal, JournalWork } from "../src/journal-work.ts";
+import { forecastJournalCommit } from "../src/journal-commit-cost.ts";
 import { JOURNAL_LAST_SECOND, JournalObjectReader, JournalObjects, journalId, type JournalFormat, type JournalObjectSource } from "../src/journal-objects.ts";
 import { cleanup, git, scratch } from "./support/repo.ts";
 
@@ -40,9 +41,33 @@ test("explicit SHA-1 and SHA-256 archive objects have deterministic Git ordering
     const rows = [{ name: "a", mode: "40000", id: sub.id }, { name: "a.b", mode: "100644", id: blob.id }, { name: "a-b", mode: "100644", id: blob.id }] as const;
     const tree = maker.tree(rows);
     expect(maker.tree([...rows].reverse()).id).toBe(tree.id);
-    const commits = [0, 2_147_483_648, JOURNAL_LAST_SECOND].map(seconds => maker.commit(tree.id, null, seconds));
-    const child = maker.commit(tree.id, commits[0]!.id, 1_700_000_000);
-    for (const object of maker.objects()) {
+    // Pin the original constructor charges independently of future prices.
+    // These are ASCII commit lengths, not selected native journal data.
+    const expected = format === "sha1"
+      ? [[181, 192, 832], [199, 210, 886], [203, 214, 898], [247, 258, 1030]]
+      : [[205, 216, 904], [223, 234, 958], [227, 238, 970], [295, 306, 1174]];
+    const makeCommit = (parent: string | null, seconds: number, index: number) => {
+      const before = maker.work.budget.admitted(), outputBefore = maker.work.used.outputWork;
+      const commit = maker.commit(tree.id, parent, seconds), after = maker.work.budget.admitted();
+      const [bodyBytes, outputWork, inputWork] = expected[index]!;
+      expect([commit.data.length, maker.work.used.outputWork - outputBefore]).toEqual([bodyBytes, outputWork]);
+      expect({ metadata: after.metadata - before.metadata, inputWork: after.inputWork - before.inputWork })
+        .toEqual({ metadata: 256, inputWork });
+      const forecast = forecastJournalCommit(format, parent !== null, seconds);
+      expect(forecast).toEqual({ cost: { entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 320, inputWork: inputWork! + 64 },
+        layoutWork: { objects: 1, outputWork, objectBytes: bodyBytes } });
+      const upper = forecastJournalCommit(format, parent !== null);
+      expect(upper.layoutWork.objectBytes).toBeGreaterThanOrEqual(commit.data.length);
+      expect(upper.cost.inputWork).toBeGreaterThanOrEqual(forecast.cost.inputWork);
+      if (seconds === JOURNAL_LAST_SECOND) expect(upper).toEqual(forecast);
+      return commit;
+    };
+    const commits = [0, 2_147_483_648, JOURNAL_LAST_SECOND].map((seconds, index) => makeCommit(null, seconds, index));
+    const child = makeCommit(commits[0]!.id, 1_700_000_000, 3);
+    const resultBefore = maker.work.budget.admitted(), objects = maker.objects(), resultAfter = maker.work.budget.admitted();
+    expect([resultAfter.metadata - resultBefore.metadata, resultAfter.inputWork - resultBefore.inputWork])
+      .toEqual([objects.length * 64, objects.length * 64]);
+    for (const object of objects) {
       expect(git(dir, ["hash-object", "-w", "-t", object.type, "--stdin"], object.data)).toBe(object.id);
       expect(rawGit(dir, ["cat-file", object.type, object.id])).toEqual(object.data);
     }
@@ -79,6 +104,7 @@ test("archive primitives refuse executable, symlink and gitlink modes, duplicate
   const noncanonicalTime = new TextDecoder().decode(maker.commit(valid.id, null, 0).data).replaceAll("+0000\n", "+0000\r\n");
   expect(() => reader.commit(utf8.encode(noncanonicalTime))).toThrow("journal-layout-timestamp");
   for (const seconds of [-1, -0, NaN, Infinity, 0.5, JOURNAL_LAST_SECOND + 1]) expect(() => maker.commit(valid.id, null, seconds)).toThrow("journal-layout-timestamp");
+  for (const seconds of [-1, -0, NaN, Infinity, 0.5, JOURNAL_LAST_SECOND + 1]) expect(() => forecastJournalCommit("sha1", false, seconds)).toThrow("journal-layout-timestamp");
   const directory = new JournalObjects("sha1", work());
   const rows = Array.from({ length: 4096 }, (_, n) => ({ mode: "100644" as const, name: `f${String(n).padStart(4, "0")}`, id: blob.id }));
   const full = directory.tree(rows);
@@ -143,6 +169,32 @@ test("the original native allowance is not reset, object metadata precedes body 
   } }, new JournalWork(new ArchiveBudget({}, () => 0), { objectBytes: 16 }));
   const captured = await getters.read(bigId, "blob").then(() => "accepted", error => error instanceof JournalLayoutRefusal ? error.reason : "unexpected-error");
   expect(captured).toBe("object-mismatch"); expect(dataReads).toBe(1);
+  // Isolated HTTP has no metadata-only body probe. Reserve its complete
+  // maximum before the one read, without changing preceding inventory cost.
+  const isolatedBudget = new ArchiveBudget({}, () => 0), observed: number[] = [], wire = new Uint8Array(blob.data);
+  isolatedBudget.spend({ entries: 7, inputWork: 100 });
+  const isolatedSource: JournalObjectSource = { object: async () => expect.fail("isolated read must use its bounded port"),
+    boundedObject: async (id, type, maximum) => {
+      expect([id, type, maximum]).toEqual([blob.id, "blob", 64]);
+      observed.push(isolatedBudget.admitted().inputWork);
+      return { type, size: wire.length, data: wire };
+    },
+  };
+  const isolated = await new JournalObjectReader("sha256", isolatedSource, work(isolatedBudget)).read(blob.id, "blob", 64);
+  expect(observed[0]).toBeGreaterThanOrEqual(100 + 64 * 4);
+  expect(isolatedBudget.admitted()).toMatchObject({ entries: 7, attempts: 1, calls: 1 });
+  wire[0] = 0;
+  expect(isolated[0]).toBe(blob.data[0]);
+  const corruptIsolated = new JournalObjectReader("sha256", { ...isolatedSource,
+    boundedObject: async () => ({ type: "blob", size: blob.data.length, data: new Uint8Array(blob.data.length) }),
+  }, work());
+  await expect(corruptIsolated.read(blob.id, "blob", 64)).rejects.toMatchObject({ reason: "object-mismatch" });
+  let isolatedCalls = 0;
+  const blockedIsolated = new JournalObjectReader("sha256", { ...isolatedSource,
+    boundedObject: async () => { isolatedCalls++; return null; },
+  }, work(new ArchiveBudget({ inputWork: 128 }, () => 0)));
+  await expect(blockedIsolated.read(blob.id, "blob", 64)).rejects.toBeInstanceOf(ArchiveStopped);
+  expect(isolatedCalls).toBe(0);
   const limited = new JournalWork(new ArchiveBudget({}, () => 0), { outputWork: 7 });
   const tiny = new JournalObjects("sha1", limited);
   expect(tiny.make("blob", new Uint8Array()).data.length).toBe(0); // seven header bytes.

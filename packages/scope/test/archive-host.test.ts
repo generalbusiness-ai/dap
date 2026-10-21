@@ -1,28 +1,39 @@
 /** Actual adapter/send code; all identity, token and HTTP replies are explicit
  * fixture stand-ins. No real credential is minted and no network is used. */
 import { expect, test } from "vitest";
-import type { ScopeRef } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type ScopeRef } from "@generalbusiness/dap-contract";
 import { isScopeRef, timeOf, utf8 } from "@generalbusiness/artroom-bytes";
 import { snapshotCommit } from "@generalbusiness/artroom-git";
 import { buildPack } from "@generalbusiness/artroom-git/http";
-import { journalRef } from "@generalbusiness/artroom-git/journal";
+import { journalRef, type JournalPassArchive } from "@generalbusiness/artroom-git/journal";
 import { GitHubProvider } from "../src/github-host.ts";
 import { ArtifactsProvider } from "../src/artifacts-host.ts";
 import type { FixtureArchivePorts } from "../src/archive-host.ts";
 import type { ArchiveSend } from "../src/archive-driver.ts";
+import { ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
+import { forecastArchiveTransfer } from "../src/archive-transfer-cost.ts";
+import { planArchivePass } from "../src/archive-build.ts";
+import { ArchiveRows } from "../src/archive-row.ts";
+import { create, at as nativeTime } from "./fixtures-native.ts";
+import { archiveDefinition, archivePolicies, archiveRepository, archiveSql } from "./support/archive.ts";
 
 const at: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "destination" };
+class RecordingSendBudget extends ArchiveBudget {
+  readonly charges: Partial<ArchiveCost>[] = [];
+  override spend(cost: Partial<ArchiveCost>): void { super.spend(cost); this.charges.push({ ...cost }); }
+}
 const other: ScopeRef = { ...at, scope: `sc_${"b".repeat(51)}a` };
 const pkt = (text: string) => `${(utf8(text).length + 4).toString(16).padStart(4, "0")}${text}`;
 const reply = (text: string, media: string) => new Response(text, { headers: { "content-type": `application/x-git-${media}` } });
 function latch() { let release!: () => void; const promise = new Promise<void>(resolve => { release = resolve; }); return { release, promise }; }
-function fixture(host: "github" | "artifacts") {
+function fixture(host: "github" | "artifacts", isolated = false, actual?: { at: ScopeRef; previous: JournalPassArchive; archive: JournalPassArchive }) {
   const repository = host === "github" ? { host: "github.com", namespace: "demo", name: "repo", id: "71" } : { host: "artifacts", namespace: "demo", name: "repo", id: "repo" };
   const remote = host === "github" ? "https://github.com/demo/repo.git" : "https://service.invalid/git/demo/repo.git";
-  let now = Date.parse("2026-10-18T00:00:00Z"), pointer: string | null = null, revoked = 0;
+  const scope = actual?.at ?? at;
+  let now = Date.parse("2026-10-18T00:00:00Z"), pointer: string | null = actual?.previous.commit ?? null, revoked = 0;
   let blocked: ReturnType<typeof latch> | null = null;
   const started = latch(), posts: Uint8Array[] = [], calls: string[] = [];
-  const archive = snapshotCommit([], "fixture archive boundary\n");
+  const archive = actual?.archive ?? snapshotCommit([], "fixture archive boundary\n");
   const fetch = async (request: Request): Promise<Response> => {
     calls.push(request.url);
     if (new URL(request.url).hostname === "api.github.com") {
@@ -31,20 +42,23 @@ function fixture(host: "github" | "artifacts") {
     }
     if (request.method === "POST") {
       if (request.url === `${remote}/git-upload-pack`) {
-        const pack = await buildPack(archive.objects, { maxBytes: 64 * 1024 });
-        const prefix = utf8(pkt("NAK\n")), body = new Uint8Array(prefix.length + pack.length); body.set(prefix); body.set(pack, prefix.length);
+        const wanted = isolated ? /want ([0-9a-f]{40})/.exec(new TextDecoder().decode(await request.arrayBuffer()))?.[1] : null;
+        const pack = await buildPack(isolated ? archive.objects.filter(object => object.id === wanted) : archive.objects, { maxBytes: 64 * 1024 });
+        const prefix = utf8((isolated ? "0000" : "") + pkt("NAK\n")), body = new Uint8Array(prefix.length + pack.length); body.set(prefix); body.set(pack, prefix.length);
         return new Response(body, { headers: { "content-type": "application/x-git-upload-pack-result" } });
       }
       expect(request.url).toBe(`${remote}/git-receive-pack`);
       posts.push(new Uint8Array(await request.arrayBuffer())); pointer = archive.commit;
-      return reply(`${pkt("unpack ok\n")}${pkt(`ok ${journalRef(at.scope)}\n`)}0000`, "receive-pack-result");
+      return reply(`${pkt("unpack ok\n")}${pkt(`ok ${journalRef(scope.scope)}\n`)}0000`, "receive-pack-result");
     }
     if (request.url.endsWith("service=git-receive-pack")) {
       started.release(); await blocked?.promise;
-      return reply(`${pkt("# service=git-receive-pack\n")}0000${pkt(`${"0".repeat(40)} capabilities^{}\0report-status\n`)}0000`, "receive-pack-advertisement");
+      const ref = pointer ? `${pointer} ${journalRef(scope.scope)}` : `${"0".repeat(40)} capabilities^{}`;
+      return reply(`${pkt("# service=git-receive-pack\n")}0000${pkt(`${ref}\0report-status\n`)}0000`, "receive-pack-advertisement");
     }
     expect(request.url).toBe(`${remote}/info/refs?service=git-upload-pack`);
-    const line = pointer ? `${pointer} ${journalRef(at.scope)}\0ofs-delta\n` : `${"0".repeat(40)} capabilities^{}\0ofs-delta\n`;
+    const capabilities = isolated ? "shallow filter allow-reachable-sha1-in-want" : "ofs-delta";
+    const line = pointer ? `${pointer} ${journalRef(scope.scope)}\0${capabilities}\n` : `${"0".repeat(40)} capabilities^{}\0${capabilities}\n`;
     return reply(`${pkt("# service=git-upload-pack\n")}0000${pkt(line)}0000`, "upload-pack-advertisement");
   };
   const ports: FixtureArchivePorts = {
@@ -63,10 +77,13 @@ function fixture(host: "github" | "artifacts") {
     binding: { get: async () => ({ info: async () => ({ remote }), createToken: async () => { throw new Error("real mint must not run"); }, revokeToken: async () => { throw new Error("ledger revoke must not run"); } }), create: async () => { throw new Error("no create"); }, delete: async () => { throw new Error("no delete"); } },
     credentialHandle: async () => { throw new Error("ledger custody must not run"); },
   }).fixtureArchive(ports);
-  const request = async (): Promise<ArchiveSend> => {
-    const credential = await provider.mintArchive(repository, at, () => true);
+  const request = async (budget?: ArchiveBudget): Promise<ArchiveSend> => {
+    const credential = await provider.mintArchive(repository, scope, () => true);
     if (!credential) throw new Error("fixture credential missing");
-    return { repository: { ...repository }, at: { ...at }, ref: journalRef(at.scope), old: null, commit: archive.commit, objects: archive.objects.map(object => ({ ...object, data: new Uint8Array(object.data) })), credential, allowed: () => true };
+    const prior = actual?.previous.objects.filter(object => object.type !== "blob" || new TextDecoder().decode(object.data).startsWith('{"hash":')) ?? [];
+    const objects = [...new Map([...prior, ...archive.objects].map(object => [object.id, { ...object, data: new Uint8Array(object.data) }])).values()];
+    return { repository: { ...repository }, at: { ...scope }, ref: journalRef(scope.scope), old: actual?.previous.commit ?? null, commit: archive.commit, objects, credential, allowed: () => true,
+      ...(actual ? { incremental: { budget: budget ?? new ArchiveBudget() } } : {}) };
   };
   return { provider, repository, archive, posts, calls, started, request, publish: () => { pointer = archive.commit; }, block: () => { blocked = latch(); return blocked; }, expire: () => { now += 60_000; }, revoked: () => revoked };
 }
@@ -128,4 +145,72 @@ test.each(["github", "artifacts"] as const)("%s parent reads cap decoded objects
   await expect(f.provider.objects(f.repository, f.archive.commit, { bytes: 64 * 1024, objects: 1 }, () => true)).rejects.toThrow();
   await expect(f.provider.objects(f.repository, f.archive.commit, { bytes: 32, objects: 2 }, () => true)).rejects.toThrow();
   expect(f.posts).toEqual([]);
+});
+
+// Actual isolated upload/decode, with TEST identity/token/HTTP. A full
+// closure is never a fallback when exact-object negotiation is absent.
+test.each(["github", "artifacts"] as const)("%s incremental parent reads one exact object after reserving the original pass work", async host => {
+  const f = fixture(host, true); f.publish();
+  const budget = new ArchiveBudget();
+  const actual = await f.provider.readObject!(f.repository, { id: f.archive.commit, type: "commit", maximum: 1024 }, () => true, budget);
+  const expected = f.archive.objects.find(object => object.id === f.archive.commit)!;
+  expect(actual).toEqual({ type: "commit", size: expected.data.length, data: expected.data });
+  const stopped = fixture(host, true); stopped.publish();
+  await expect(stopped.provider.readObject!(stopped.repository, { id: stopped.archive.commit, type: "commit", maximum: 1024 }, () => true,
+    new ArchiveBudget({ inputWork: 1 }))).rejects.toMatchObject({ reason: "limit" });
+  expect(stopped.calls).toEqual([]);
+  expect(budget.admitted().inputWork).toBeGreaterThanOrEqual(32 * (1024 + 8 * 1024));
+  const unsupported = fixture(host); unsupported.publish();
+  await expect(unsupported.provider.readObject!(unsupported.repository, { id: unsupported.archive.commit, type: "commit", maximum: 1024 }, () => true,
+    new ArchiveBudget())).rejects.toThrow();
+  expect(unsupported.calls.some(call => call.endsWith("/git-upload-pack"))).toBe(false);
+  expect(f.posts).toEqual([]); expect(stopped.posts).toEqual([]); expect(unsupported.posts).toEqual([]);
+});
+
+// Native entries/SQLite and real smart-HTTP send/pack validation. The policy,
+// credentials, identity and HTTP host remain TEST stand-ins; no remote send.
+test.for(["github", "artifacts"] as const)("%s incremental send validates exact parent edges and keeps its final credential fence", async (host, context) => {
+  const lane = await create({}, {}, archiveDefinition), head = await lane.head();
+  const first = await lane.inside(state => planArchivePass(archiveSql(state), { at: lane.at, through: head, after: null,
+    bounds: PROPOSED_BOUNDS, policies: archivePolicies, format: "sha1", parent: null, markedAt: nativeTime(0) }, new ArchiveBudget()));
+  expect(first.ok ? "accepted" : first).toBe("accepted"); if (!first.ok) return;
+  // Manual component receipt/pass metadata, not host-confirmed native driver.
+  await lane.inside(state => {
+    const rows = new ArchiveRows(archiveSql(state), lane.at); rows.target(archiveRepository, "sha1"); rows.mark(first.mark); rows.confirm(first.mark.commit);
+  });
+  await lane.submit(lane.remark("native append through actual send adapter"));
+  const through = await lane.head(), held = new Map(first.archive.objects.map(object => [object.id, object]));
+  const next = await lane.inside(state => planArchivePass(archiveSql(state), { at: lane.at, through, after: head,
+    bounds: PROPOSED_BOUNDS, policies: archivePolicies, format: "sha1", markedAt: nativeTime(1), parent: {
+      id: first.archive.commit, source: { object: async (id, limit) => {
+        const object = held.get(id); return object ? { type: object.type, size: object.data.length, data: object.data.length <= limit ? object.data : null } : null;
+      } },
+    } }, new ArchiveBudget()));
+  expect(next.ok ? "accepted" : next).toBe("accepted"); if (!next.ok) return;
+  const actual = { at: lane.at, previous: first.archive, archive: next.archive };
+  const f = fixture(host, false, actual), budget = new RecordingSendBudget(), request = await f.request(budget);
+  const shape = { objects: request.objects.length, bytes: request.objects.reduce((n, row) => n + row.data.length, 0), maximum: 64 * 1024 };
+  const forecast = forecastArchiveTransfer({ ...shape, incremental: true });
+  expect(await f.provider.sendArchive(request)).toEqual({ send: "accepted" }); expect(f.posts).toHaveLength(1);
+  // Actual adapter pins for the reviewed shared v2 layout; unit prices stay unchanged.
+  expect(shape).toEqual({ objects: 27, bytes: 3789, maximum: 65536 });
+  expect(budget.charges[0]).toEqual({ metadata: 3456, inputWork: 15156 });
+  expect(budget.charges.at(-1)).toEqual({ inputWork: 30312 });
+  expect(budget.admitted()).toEqual({ entries: 0, attempts: 32, nodes: 16, calls: 64, metadata: 27766, inputWork: 98310 });
+  // Future transfer includes one outgoing driver copy in addition to the
+  // adapter's copy/pack. Append validation remains priced separately.
+  expect(forecast).toEqual({ ok: true, cost: { entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 6912, inputWork: 60624 } });
+  expect(forecastArchiveTransfer({ ...shape, incremental: false })).toEqual({ ok: true,
+    cost: { entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 3456, inputWork: 15156 } });
+  expect(forecastArchiveTransfer({ ...shape, incremental: true, maximum: shape.bytes - 1 })).toEqual({ ok: false, reason: "limit" });
+  expect(forecastArchiveTransfer({ ...shape, incremental: true, objects: 8193 })).toEqual({ ok: false, reason: "limit" });
+  (context.task.meta as Record<string, unknown>)["archiveTransferCost"] = {
+    objects: request.objects.length, bytes: request.objects.reduce((n, row) => n + row.data.length, 0),
+    first: budget.charges[0], last: budget.charges.at(-1), total: budget.admitted(),
+    qualification: "Actual adapters, native prepared entry bytes, append validator and HTTP pack. Fresh original component send budget; native planning/manual receipts used separate setup budgets. Policy, tokens, repository identity and HTTP peer are TEST stand-ins. No network, real host receipt, full native pass, deployment or export claim.",
+  };
+  const fenced = fixture(host, false, actual), pending = await fenced.request(), blocked = fenced.block();
+  const sending = fenced.provider.sendArchive(pending); await fenced.started.promise;
+  fenced.expire(); blocked.release();
+  expect(await sending).toEqual({ send: "not-sent" }); expect(fenced.posts).toEqual([]);
 });

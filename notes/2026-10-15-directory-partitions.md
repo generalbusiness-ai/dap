@@ -1,6 +1,12 @@
 # Directory partitions
 
-**Proposed design for checker review; no Source change.** Request
+Status, 21 October 2026: draft 4 is approved (`703733db`) and landed at
+`108aee7e`; section 4.10 was amended with D1 at `0c704221`. Built: C2
+(`23f15670`), C1 (`dfd15042`), D1 (`5caa62f3`), and the partition cohort
+with its CLI, page and MCP readers (`9a1238b7`). Not built: A1. The
+cohort's hosted delivery was held at landing.
+
+**Design note; this note itself changed no Source.** Request
 `6aa3bc30`, owned by the planner, from builder act `49c7c811` and checker
 decision `c9a2c676` ("Directory lifetime"). Read against main
 `0548b726d0`. This note ran no tests, gate or provider operation.

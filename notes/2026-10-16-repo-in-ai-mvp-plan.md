@@ -33,7 +33,8 @@ supports before any real-run claim. External facts cite pages checked on
    now, or by M1 install if that is deployed in time. The brief lives in
    the package.
 7. **Views** use only the open MCP Apps standard. Slack is out.
-8. **Queue:** MVP slices follow the existing builder sequence.
+8. **Queue:** plan 032 (`532b1d0d`) places the MVP slices in the journey,
+   and plan 033 (`bb3d3062`) puts the grow demo first.
 
 ## 1. The user test
 
@@ -420,7 +421,10 @@ one-host fallback.
 
 ## 6. Order and the existing sequence
 
-The builder sequence stands as it is:
+This order was current at draft 4. Plans 032 (`532b1d0d`) and 033
+(`bb3d3062`) replace it. No MVP slice is complete. S2's compact-card
+runtime code landed at `6e309b6b`, and S2's acceptance is open. The order
+at draft 4 was:
 
 1. the NOW work (e029, e871);
 2. hosted Counter slices 1 to 4 with M1's developer half, with

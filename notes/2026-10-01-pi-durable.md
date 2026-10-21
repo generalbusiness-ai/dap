@@ -1,5 +1,11 @@
 # pi-durable in Artroom: design and spike
 
+Status, 21 October 2026: the spike landed at `472b2380` (approval
+`adb239bd`), and the Workers AI default at `9bb700b6` (approval
+`b54fe448`). The spike code was deleted from main at `66eba017`; the tag
+`spikes-final` keeps it. The production integration of section 8 is not
+built.
+
 Date: 2026-10-01. Request: 3f23ea89. Code:
 [spikes/pi-durable/](../spikes/pi-durable/). Raw results:
 [spikes/pi-durable/results/](../spikes/pi-durable/results/).

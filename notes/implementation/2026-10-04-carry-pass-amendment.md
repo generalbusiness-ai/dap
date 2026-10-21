@@ -1,5 +1,7 @@
 # Proposed contract amendment: carry passes are recorded
 
+Status, 21 October 2026: Accepted under plan 015 and landed at `7f1f2ac1`; the code was parked at `42873516`. Statements below that say review or landing is owed are as of the handoff.
+
 Builder, 2026-10-04. Draft 3, for planning review. Draft 2 answered the
 planner's review of draft 1 (`85032553`), points A to F. The review of
 draft 2 (`794e6f86`, `notes/plans/014-2026-10-04-carry-pass-draft2-review.md`)

@@ -1,5 +1,12 @@
 # Declared acts
 
+Status, 21 October 2026: revision 3 is approved (`1808ae17`) and landed at
+`b44601dd`. Stage 1 landed at `815e3383`, and stages 2, 3 and 5 on 4
+October (`08c6a0fa` to `b6a9c0b6`). Stages 4, 6 and 7 were not built. The
+scope substrate (`f1c456ce`) then replaced this room model, and `66eba017`
+deleted it. Applications now declare acts in scope definitions. This note
+is history.
+
 2026-10-02. Revision 3. Gitseq request `a2cbd459` (planner to builder),
 following hugh's assert `4e4134b4` as corrected by assert `b2cdc44a`.
 Branch `request/declared-acts`, cut from main `df22d771`.

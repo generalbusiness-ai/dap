@@ -1,6 +1,11 @@
 # Observability for dap: a design
 
-2026-10-12. Draft 6, for checker review. Hugh's direction, 2026-10-12 17:36
+Status, 21 October 2026: draft 6 is approved (`4db1d74b`) and landed at
+`db95fb9a`, amended at `da96238e`. Head 1 landed at `e444edf8`, head 2 at
+`aeebc18c`, and head 3 at `02a91803`. Head 3's live calibration and full
+acceptance are not done.
+
+2026-10-12. Draft 6. Hugh's direction, 2026-10-12 17:36
 Eastern: draft a dated design in `notes/`, send it to the checker, and tell
 the planner that it is to be prioritized soon after the demo. Written
 against main `013fac7a5`. Draft 1 (`baa0e21e`) received changes requested

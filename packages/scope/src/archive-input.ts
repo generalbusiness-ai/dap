@@ -10,6 +10,7 @@ import { ArchiveRetainedReader, type ArchiveRetainedCopy } from "./archive-retai
 import { ArchivePrefixStopped } from "./archive-prefix.ts";
 import { ARCHIVE_SOURCE_PINS, type ArchiveSourceBasis, type FixtureArchiveSourcePins } from "./archive-source-pins.ts";
 import type { Sql } from "./sqlite.ts";
+import { ARCHIVE_INPUT_REQUEST_WORK, ARCHIVE_ENTRY_SIZE_METADATA, archiveEntryBodyWork, archiveInputBaseReservation, archiveInputRetainedPostWork } from "./archive-input-cost.ts";
 
 export interface ArchiveInputSelection {
   readonly entries: readonly { readonly seq: number; readonly hash: Digest; readonly bytes: number }[];
@@ -28,7 +29,7 @@ export interface ArchiveInput {
 export function archiveInput(sql: Sql, selection: ArchiveInputSelection, budget: ArchiveBudget, fixtureSources?: FixtureArchiveSourcePins): ArchiveInput {
   budget.check();
   if (selection.entries.length > ARCHIVE_BOUNDS.entries || selection.objects.length > ARCHIVE_BOUNDS.attempts) budget.stop("limit");
-  budget.spend({ metadata: selection.entries.length * 128 + selection.objects.length * 256, inputWork: selection.entries.length * 256 + selection.objects.length * 512 });
+  budget.spend(archiveInputBaseReservation(selection.entries.length, selection.objects.length));
   const entries = new Map<number, { readonly hash: string; readonly bytes: number }>();
   for (const entry of selection.entries) {
     if (!natural(entry.seq) || !natural(entry.bytes) || entry.bytes === 0 || !isDigest(entry.hash) || entries.has(entry.seq)) budget.stop("unavailable");
@@ -64,15 +65,15 @@ export function archiveInput(sql: Sql, selection: ArchiveInputSelection, budget:
   const retained = new ArchiveRetainedReader(sql, budget, copies);
   return {
     async entry(seq, limit) {
-      budget.spend({ attempts: 1, inputWork: 256 });
+      budget.spend({ attempts: 1, inputWork: ARCHIVE_INPUT_REQUEST_WORK });
       const selected = entries.get(seq);
       if (!selected || !natural(seq) || limit !== selected.bytes) return null;
       return sql.transaction(() => {
-        const sizes = budget.native(sql, () => ({ metadata: 128, inputWork: 0 })).exec("SELECT hash, octet_length(bytes) AS size, typeof(bytes) AS type FROM entry WHERE seq = ? LIMIT 1", seq).toArray();
+        const sizes = budget.native(sql, () => ({ metadata: ARCHIVE_ENTRY_SIZE_METADATA, inputWork: 0 })).exec("SELECT hash, octet_length(bytes) AS size, typeof(bytes) AS type FROM entry WHERE seq = ? LIMIT 1", seq).toArray();
         if (sizes.length === 0) return null;
         const row = sizes[0];
         if (sizes.length !== 1 || row?.["hash"] !== selected.hash || row["size"] !== selected.bytes || row["type"] !== "text") return null;
-        budget.spend({ inputWork: selected.bytes * 8 });
+        budget.spend({ inputWork: archiveEntryBodyWork(selected.bytes) });
         const bodies = budget.native(sql, () => ({ metadata: 0, inputWork: selected.bytes })).exec("SELECT bytes FROM entry WHERE seq = ? AND hash = ? AND typeof(bytes) = 'text' AND octet_length(bytes) = ? LIMIT 1", seq, selected.hash, selected.bytes).toArray();
         const bytes = bodies[0]?.["bytes"];
         if (bodies.length !== 1 || typeof bytes !== "string" || bytes.length > selected.bytes || utf8(bytes).length !== selected.bytes) return null;
@@ -83,11 +84,11 @@ export function archiveInput(sql: Sql, selection: ArchiveInputSelection, budget:
       budget.check();
       key = checkedRetainedKey(key);
       const selected = objects.get(nameOf(key));
-      if (!selected || limit !== selected.bytes) { budget.spend({ attempts: 1, inputWork: 256 }); return null; }
+      if (!selected || limit !== selected.bytes) { budget.spend({ attempts: 1, inputWork: ARCHIVE_INPUT_REQUEST_WORK }); return null; }
       return sql.transaction(() => {
         const read = retained.read(selected.key, selected.bytes);
         if (read === null) return null;
-        budget.spend({ inputWork: read.bytes.length * 3 });
+        budget.spend({ inputWork: archiveInputRetainedPostWork(read.bytes.length) });
         return utf8(read.bytes).length === selected.bytes ? read.bytes : null;
       });
     },

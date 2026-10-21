@@ -1,5 +1,9 @@
 # Current manual inventory and feature dependencies
 
+Status: superseded by `notes/plans/028-2026-10-11-dap-rename-and-docs.md`.
+The documentation was rebuilt one mode for each page (`6198b199`), with
+tutorials at `693e8f67`.
+
 2026-10-06. Planning handoff for the existing full manual, not delivered
 manual pages or a claim that a tested release exists.
 

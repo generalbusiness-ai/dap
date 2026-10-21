@@ -1,5 +1,8 @@
 # jj and Artroom: dated clarification
 
+Status: landed `4b6d42a7`; describes work that is done. Its content is in
+`notes/2026-10-01-research-jj.md`.
+
 2026-10-04. Draft 1 for independent planning review. Planning clarification
 request `63be1105161fb4d0c0c390fbba34c30929781932`, promise
 `152a3b84ec731df68c058a61b333396f9e2ddcfc`. Written against Artroom main

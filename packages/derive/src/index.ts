@@ -11,6 +11,7 @@ export { counted, derivable, maximumOf, type Capabilities, type CapabilityForm, 
 export * from "./sends.ts";
 export * from "./timed.ts";
 export * from "./fields.ts";
+export { valuePlaces } from "./validate/fields.ts";
 export * from "./handlers.ts";
 export * from "./judge.ts";
 export * from "./delivery.ts";

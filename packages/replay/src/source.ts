@@ -12,12 +12,14 @@
  */
 
 import { DOMAINS, HISTORY_PAGE_BYTES, HISTORY_PAGE_ENTRIES, RETAINED_INPUT_BYTES } from "@generalbusiness/dap-contract";
-import type { Digest, Head, RetainedInput, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
+import type { Digest, FactRef, Head, RetainedInput, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import { LATE, digestOfHash, positionOf, retainedReadArgument, sha256, takeBytes, utf8, within, type ByteStream, type Expiry } from "@generalbusiness/artroom-bytes";
 import { isLocalId, isObject, isScopeRef } from "@generalbusiness/dap-derive";
 
 /** One entry as stored: its canonical JSON text, and the hash the source gives for it. */
 export interface Stored { seq: number; hash: Digest; bytes: string }
+/** Metadata for an archived text, never a body or a decoded field size. */
+export interface TextOmission { readonly digest: Digest; readonly bytes: number; readonly first: FactRef }
 
 /**
  * A page of one scope's entries, in order from the sequence number asked
@@ -56,6 +58,7 @@ export interface HistorySource {
   /** One retained input of a scope, by kind and digest. `bytes`: the raw bytes that were read for it. */
   /** `domain`: for the kind `value`, the byte domain that the value is kept under (section 9.2, revision 19). A read of one value asks by the kind, the domain and the digest. */
   retained(scope: ScopeId, kind: RetainedInput["kind"], digest: Digest, allow: Pick<Allow, "bytes">, domain?: string): Promise<{ ok: true; input: RetainedInput; bytes: number } | Unread>;
+  omittedText?(scope: ScopeId, digest: Digest, allow: Pick<Allow, "bytes">): Promise<{ ok: true; omission: TextOmission; bytes: number } | Unread>;
 }
 
 /** The hash of an entry, from its stored bytes alone: SHA-256 over the entry domain's tag, a newline, and the bytes (section 2.1). */
