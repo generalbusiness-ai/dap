@@ -11,6 +11,7 @@ import { patchJournalV2Tree } from "./journal-v2-tree.ts";
 import { readJournalPassParent } from "./journal-v2-parent.ts";
 import { JournalPassPreparation } from "./journal-v2-preparation.ts";
 import { JournalLayoutRefusal, JournalWork, refuseJournal, type JournalBudget, type JournalCost, type JournalLayoutLimits, type JournalLayoutReason } from "./journal-work.ts";
+import { journalPassSerializationMetadata, journalSegmentReservation } from "./journal-pass-cost.ts";
 
 export interface JournalPassArchive {
   readonly commit: string;
@@ -49,11 +50,12 @@ export async function buildJournalPass(options: JournalPassOptions): Promise<Jou
     const entries = await selectedEntries(selection, input, work), first = selection.after ? selection.after.seq + 1 : 0;
     const retained = await selectedRetained({ ...selection, objects: selection.objects.filter(row => row.pass === first) }, input, work);
     const manifest = manifestOfPass(selection, format, parent?.id ?? null, work);
-    work.metadata(selectionBytes.length * 3 + 2048); work.input(selectionBytes.length * 3 + 2048, 2);
+    const serialization = journalPassSerializationMetadata(selectionBytes.length);
+    work.metadata(serialization); work.input(serialization, 2);
     const manifestBytes = canonicalize(manifest), headBytes = canonicalize({ v: 2, scope: selection.at, through: selection.through.seq, hash: selection.through.hash });
     if (utf8(manifestBytes).length > JOURNAL_SELECTION_BYTES || utf8(headBytes).length > 1024) return work.stop();
-    const size = entries.reduce((sum, row) => sum + row.descriptor.bytes, 0) + Math.max(0, entries.length - 1);
-    work.spend({ outputWork: size }); work.input(size, 8); work.metadata(entries.length * 64 + 256);
+    const grouping = journalSegmentReservation(entries.length, entries.reduce((sum, row) => sum + row.descriptor.bytes, 0)), size = grouping.outputWork;
+    work.spend({ outputWork: size }); work.input(grouping.inputWork); work.metadata(grouping.metadata);
     const segments = archiveSegments(entries.map(row => ({ seq: row.descriptor.seq, bytes: row.bytes })), size);
     const files = [{ path: "journal/v2/head.json", data: utf8(headBytes) }, { path: journalV2PassPath(first), data: utf8(manifestBytes) },
       ...segments.map(segment => ({ path: journalV2SegmentPath(segment.first), data: segment.bytes })),

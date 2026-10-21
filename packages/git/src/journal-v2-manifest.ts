@@ -7,6 +7,7 @@ import { journalFormat, journalId, type JournalFormat } from "./journal-objects.
 import { JOURNAL_SELECTION_BYTES, journalForeignSources, journalKeyName, journalList, journalNatural, journalOrdered, journalRecord, journalRetainedKey, type JournalForeignSource, type JournalPassSelection } from "./journal-selection.ts";
 import { JOURNAL_V2_LAST_POSITION } from "./journal-v2-path.ts";
 import { JournalWork, refuseJournal } from "./journal-work.ts";
+import { journalManifestRowsMetadata } from "./journal-pass-cost.ts";
 
 export type JournalPassRetained = ArchiveRetainedName & { readonly pass: number };
 export interface JournalTextOmission { readonly digest: Digest; readonly bytes: number; readonly first: { readonly scope: ScopeId; readonly seq: number } }
@@ -66,7 +67,7 @@ export function journalPassManifest(body: Uint8Array, expected: JournalFormat, w
 }
 export function manifestOfPass(selection: JournalPassSelection, format: JournalFormat, parent: string | null, work: JournalWork): JournalPassManifest {
   journalFormat(format); if (parent !== null) journalId(format, parent);
-  work.metadata((selection.objects.length + selection.omitted.length) * 128);
+  work.metadata(journalManifestRowsMetadata(selection.objects.length + selection.omitted.length));
   return { v: 2, through: { ...selection.through }, parent, format,
     entries: [selection.after ? selection.after.seq + 1 : 0, selection.through.seq],
     retained: selection.objects.map(row => ({ ...row.key, pass: row.pass })),
