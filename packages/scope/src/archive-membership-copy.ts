@@ -3,6 +3,7 @@
  * Membership journal, a credential entry or another consumer cohort. */
 import type { Digest, PlatformDefinition } from "@generalbusiness/dap-contract";
 import { ARCHIVE_NATIVE_DATA } from "@generalbusiness/artroom-git/archive-policy";
+import { ARCHIVE_MEMBERSHIP_COPY_METADATA, archiveMembershipCopyWork } from "./archive-foreign-cost.ts";
 import type { ArchiveBudget } from "./archive-budget.ts";
 import type { ArchiveEntryHeader } from "./archive-entry-metadata.ts";
 import { stopArchivePrefix as stop } from "./archive-prefix.ts";
@@ -29,8 +30,8 @@ export function archiveMembershipCopy(sql: Pick<Sql, "exec">, content: Digest, b
   // Reserve repeated type/length/value projections and the full-tree pass.
   // json_tree decodes escaped object keys and covers nested objects/arrays;
   // only bounded scalar metadata leaves SQLite, never a copied entry body.
-  budget.spend({ inputWork: bytes * 16 });
-  const rows = budget.native(sql, () => ({ metadata: 512, inputWork: 0 })).exec(`SELECT ${text("$.input.kind", 64)} AS genesisKind, ${text("$.input.message.class", 16)} AS class, ${text("$.input.message.type", 16)} AS type, ${text("$.input.message.body.message", 64)} AS message, EXISTS (SELECT 1 FROM json_tree(retained_input.bytes) WHERE key = 'secret') AS secret FROM retained_input WHERE kind = 'entry' AND digest = ? AND typeof(bytes) = 'text' AND octet_length(bytes) = ? LIMIT 1`, content, bytes).toArray();
+  budget.spend({ inputWork: archiveMembershipCopyWork(bytes) });
+  const rows = budget.native(sql, () => ({ metadata: ARCHIVE_MEMBERSHIP_COPY_METADATA, inputWork: 0 })).exec(`SELECT ${text("$.input.kind", 64)} AS genesisKind, ${text("$.input.message.class", 16)} AS class, ${text("$.input.message.type", 16)} AS type, ${text("$.input.message.body.message", 64)} AS message, EXISTS (SELECT 1 FROM json_tree(retained_input.bytes) WHERE key = 'secret') AS secret FROM retained_input WHERE kind = 'entry' AND digest = ? AND typeof(bytes) = 'text' AND octet_length(bytes) = ? LIMIT 1`, content, bytes).toArray();
   const row = rows[0];
   const listed = row && (header.input === "genesis" && row["genesisKind"] === "establish"
     || header.input === "delivery" && row["class"] === "request" && row["type"] === "tell" && row["message"] === "application-grants");

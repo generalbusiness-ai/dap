@@ -5,7 +5,7 @@
 import { env, runInDurableObject } from "cloudflare:test";
 import { expect, inject, test } from "vitest";
 import { DEVICE_COMMAND, PROPOSED_BOUNDS, type DeclaredDefinition, type Digest, type FactRef, type Head, type Input, type PlatformDefinition, type ScopeId, type Sealed } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, isDigest, isEntry, isSeed, parseStrict, scopeIdOf, textDigest, timeOf, unb64url } from "@generalbusiness/artroom-bytes";
+import { b64url, canonicalize, isDigest, isEntry, isSeed, parseStrict, scopeIdOf, textDigest, timeOf, unb64url, utf8 } from "@generalbusiness/artroom-bytes";
 import { readApplicationPackage2 } from "@generalbusiness/artroom-bytes/application-v2";
 import { outcomeValueDomains, ownersOf, validateDefinition, type OperationRules } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
@@ -21,6 +21,8 @@ import { archiveEntryHeader, archiveEntryPrivacy, archiveSupportMetadata, record
 import { archivePrefixMetadata } from "../src/archive-prefix.ts";
 import { forecastArchiveEntryPrivacy } from "../src/archive-entry-privacy-cost.ts";
 import { forecastArchiveSupportMetadata } from "../src/archive-support-cost.ts";
+import { forecastArchiveMembershipCopy } from "../src/archive-foreign-cost.ts";
+import { archiveMembershipCopy } from "../src/archive-membership-copy.ts";
 import { ArchiveForeignMetadata } from "../src/archive-foreign.ts";
 import { fixtureArchiveTargetIn } from "../src/archive-target.ts";
 import { archiveReplayAnchors } from "../src/archive-anchors.ts";
@@ -404,6 +406,17 @@ test.for(["fixture", "Grow"])("installed %s scopes export genesis zero after a l
         if (typeof held !== "string") throw Error("Actual retained Membership bytes are required.");
         const entry = parseStrict(held);
         if (!isEntry(entry) || entry.input.type !== "delivery") throw Error("The native grant reply copy is required.");
+        // Independent component measurement on the actual public grant
+        // reply. This budget pays its own header JSON work before the delta;
+        // it supplies no credit to any diagnostic export budget above.
+        const componentBudget = new ArchiveBudget(), bytes = utf8(held).length;
+        const header = archiveEntryHeader(sql, { kind: "copy", content: copy.content, bytes }, componentBudget);
+        const before = componentBudget.admitted();
+        archiveMembershipCopy(sql, copy.content, bytes, header, "platform:directory@16", componentBudget);
+        const after = componentBudget.admitted(), membershipCopyCost = Object.fromEntries(Object.keys(before).map(key =>
+          [key, after[key as keyof ArchiveCost] - before[key as keyof ArchiveCost]])) as ArchiveCost;
+        expect(membershipCopyCost).toEqual({ entries: 0, attempts: 0, nodes: 0, calls: 1, metadata: 512, inputWork: 512 + bytes * 16 });
+        expect(forecastArchiveMembershipCopy(bytes)).toEqual(membershipCopyCost);
         const enrol = canonicalize({ ...entry, input: { type: "act", signed: { ...act.signed, intent: { ...act.signed.intent, kind: "enrol", fields: { invitation: 1, proof: "TEST" } } }, authority: [], presented: {} } });
         const secret = canonicalize({ ...entry, input: { ...entry.input, extra: [{ secret: "TEST must never be exported" }] } });
         const results = [];
@@ -414,9 +427,10 @@ test.for(["fixture", "Grow"])("installed %s scopes export genesis zero after a l
               bounds: PROPOSED_BOUNDS, policies, format: "sha1", parent: null, markedAt: timeOf(life.now()), fixtureSources }, new ArchiveBudget()));
           }
         } finally { sql.exec("UPDATE retained_input SET bytes = ? WHERE kind = 'entry' AND digest = ?", held, copy.content); }
-        return results;
+        return { results, membershipCopyCost, bytes };
       }));
-      expect(refused).toEqual(Array.from({ length: 3 }, () => ({ ok: false, reason: "unsupported-credential-cohort" })));
+      (context.task.meta as Record<string, unknown>)["membershipCopyCostReceipt"] = { bytes: refused.bytes, cost: refused.membershipCopyCost, qualification: "Actual native public Membership8 application-grants copy in Directory16; independent component budget pays its own original header JSON first. Delta is only original kind/secret-field scan; no diagnostic export credit, new policy or full driver claim." };
+      expect(refused.results).toEqual(Array.from({ length: 3 }, () => ({ ok: false, reason: "unsupported-credential-cohort" })));
     }
     if (kind === "fixture") return;
     const directorySelection = diagnosticArchives.get(D.name)!.selection;

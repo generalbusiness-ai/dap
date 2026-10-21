@@ -10,7 +10,7 @@ import { variant } from "@generalbusiness/dap-derive/testing";
 import { outcomeValueDomains, validateDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { COUNTING_COHORT, platform } from "@generalbusiness/dap-platform";
-import { forecastArchiveForeignLookup, forecastArchiveForeignSelection, forecastArchiveForeignBasis, forecastArchiveForeignScan, forecastArchiveForeignRepeat, forecastArchiveForeignCopyRequest, forecastArchiveForeignCopySize, forecastArchiveForeignGenesis } from "../src/archive-foreign-cost.ts";
+import { forecastArchiveForeignLookup, forecastArchiveForeignSelection, forecastArchiveForeignBasis, forecastArchiveForeignScan, forecastArchiveForeignRepeat, forecastArchiveForeignCopyRequest, forecastArchiveForeignCopySize, forecastArchiveForeignGenesis, forecastArchiveForeignColdCopy } from "../src/archive-foreign-cost.ts";
 import { ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
 import { buildJournalArchive, journalRef, JournalWork } from "@generalbusiness/artroom-git/journal";
 import { JournalObjectReader, JournalObjects } from "../../git/src/journal-objects.ts";
@@ -69,6 +69,7 @@ async function fixture() {
     const difference = (before: ArchiveCost, after: ArchiveCost): ArchiveCost =>
       Object.fromEntries(Object.keys(before).map(key => [key, after[key as keyof ArchiveCost] - before[key as keyof ArchiveCost]])) as ArchiveCost;
     const nativeCosts: { query: string; cost: ArchiveCost }[] = [];
+    const scanCosts: { seq: number; count: number; cost: ArchiveCost }[] = [];
     let repeatCost: { bytes: number; cost: ArchiveCost } | null = null;
     const native = budget.native.bind(budget);
     budget.native = (port, reservation) => {
@@ -81,6 +82,11 @@ async function fixture() {
     };
     try {
       const foreign = new ArchiveForeignMetadata(sql, pins, reviewed, PROPOSED_BOUNDS, budget);
+      const scan = foreign.scan.bind(foreign);
+      foreign.scan = (position, count) => {
+        const before = budget.admitted(); scan(position, count);
+        scanCosts.push({ seq: position.seq, count, cost: difference(before, budget.admitted()) });
+      };
       const prefix = archivePrefixMetadata(sql, consumer.at, through, PROPOSED_BOUNDS, budget, new Set([receiver.digest]));
       positions = archivePrivacyMetadata(sql, prefix, policy(receiver).support, budget, foreign).positions.map(position => position.seq);
       const beforeBasis = budget.admitted(); basis = foreign.basis();
@@ -102,7 +108,7 @@ async function fixture() {
       repeatCost = { bytes: alreadyRead.bytes, cost: difference(beforeRepeat, budget.admitted()) };
     } catch (error) { reason = (error as { reason: string }).reason; }
     expect(forbidden).toEqual([]);
-    return { reason, positions, basis, copies, queries, cost: budget.admitted(), mapCosts, nativeCosts, repeatCost };
+    return { reason, positions, basis, copies, queries, cost: budget.admitted(), mapCosts, nativeCosts, repeatCost, scanCosts };
   });
   const inventory = (pins: FixtureArchiveSourcePins | undefined = sources, reviewed = policies, damageBody = false, limits: Partial<ArchiveCost> = {}) => consumer.inside(state => {
     const calls: { query: string; key: unknown }[] = [];
@@ -120,7 +126,7 @@ async function fixture() {
     }, transaction: work => state.storage.transactionSync(work) }, consumer.at, through, PROPOSED_BOUNDS, reviewed, new ArchiveBudget(limits), pins);
     return { result, calls, damaged };
   });
-  return { producer, consumer, birth: birth.value, uses, sources, policies, scan, inventory };
+  return { producer, consumer, birth: birth.value, assigned, uses, sources, policies, scan, inventory };
 }
 
 test("direct foreign copies classify their own full headers against fixture pins and separate reviewed policy before any payload body", async () => {
@@ -160,6 +166,21 @@ test("direct foreign copies classify their own full headers against fixture pins
   const quote = forecastArchiveForeignRepeat(repeat.bytes), scan = forecastArchiveForeignScan(1);
   for (const key of Object.keys(quote) as (keyof ArchiveCost)[]) expect(quote[key] + scan[key]).toBe(repeat.cost[key]);
   expect(forecastArchiveForeignCopyRequest()).toEqual({ ...fixed, attempts: 1, metadata: 0, inputWork: 512 });
+  expect(result.scanCosts).toHaveLength(3);
+  for (let index = 0; index < 2; index++) {
+    const use = f.uses[index]!, source = use.fact.seq === 0 ? f.birth.entry : f.assigned.entry;
+    const copy = result.copies[index] as { bytes: number };
+    const cold = forecastArchiveForeignColdCopy({ bytes: copy.bytes, input: source.input.type,
+      effects: source.effects.length, declarationUnits: canonicalize(definition.declared).length,
+      support: { declarationNodes: 0, ownerKinds: 0, ownerDomains: 0, capabilityKinds: 0 }, membership8: false });
+    expect(cold.ok).toBe(true);
+    if (cold.ok) {
+      const uses = forecastArchiveForeignScan(1), actual = result.scanCosts[index]!.cost;
+      for (const key of Object.keys(cold.work) as (keyof typeof cold.work)[]) expect(cold.work[key] + uses[key]).toBe(actual[key]);
+    }
+  }
+  expect(result.scanCosts.slice(0, 2).reduce((sum, row) => sum + row.cost.nodes, 0)).toBe(1);
+
 
 
 });
