@@ -8,6 +8,7 @@ import { ARCHIVE_DIGEST_FIELD_BATCH, checkArchiveFieldSource, readArchiveDigestF
 import { stopArchivePrefix as stop } from "./archive-prefix.ts";
 import type { ArchivePrivacyPosition } from "./archive-privacy.ts";
 import type { Sql } from "./sqlite.ts";
+import { reserveArchiveNames } from "./archive-schema-cost.ts";
 
 export class ArchivePrepared {
   readonly #rules: string;
@@ -16,6 +17,7 @@ export class ArchivePrepared {
     readonly budget: ArchiveBudget, bounds: Pick<Bounds, "definitionBytes">) {
     budget.spend({ metadata: bounds.definitionBytes, inputWork: bounds.definitionBytes * 16 });
     const names = Object.keys(definition.declared.rules);
+    reserveArchiveNames(names, budget);
     this.#rules = canonicalize(names); this.#ruleCount = names.length;
   }
   project(at: ScopeRef, position: ArchivePrivacyPosition): readonly PlannedRetainedDependency[] {

@@ -8,6 +8,7 @@ import type { ArchiveBudget } from "./archive-budget.ts";
 import { ARCHIVE_DIGEST_FIELD_BATCH, checkArchiveFieldSource, readArchiveDigestFields } from "./archive-digest-fields.ts";
 import { stopArchivePrefix as stop, type ArchivePosition } from "./archive-prefix.ts";
 import type { Sql } from "./sqlite.ts";
+import { reserveArchiveNames } from "./archive-schema-cost.ts";
 
 type Handler = ValidDefinition["declared"]["receives"][string];
 export class ArchiveDeliveryFields {
@@ -17,9 +18,15 @@ export class ArchiveDeliveryFields {
   constructor(readonly sql: Pick<Sql, "exec">, readonly definition: ValidDefinition, readonly budget: ArchiveBudget, bounds: Pick<Bounds, "definitionBytes">) {
     budget.spend({ metadata: bounds.definitionBytes, inputWork: bounds.definitionBytes * 16 });
     const handlers = Object.values(definition.declared.receives);
-    const names = [...new Set(handlers.map(handler => handler.message))];
+    const messages = handlers.map(handler => handler.message);
+    reserveArchiveNames(messages, budget);
+    const names = [...new Set(messages)];
     this.#names = canonicalize(names); this.#count = handlers.length;
-    for (const handler of handlers) this.#schemas.set(handler, Object.keys(handler.fields).filter(name => isDetachedTextField(handler.fields[name])));
+    for (const handler of handlers) {
+      const fields = Object.keys(handler.fields);
+      reserveArchiveNames(fields, budget);
+      this.#schemas.set(handler, fields.filter(name => isDetachedTextField(handler.fields[name])));
+    }
   }
   project(at: ScopeRef, position: ArchivePosition, from: FactRef, under?: string): readonly PlannedRetainedDependency[] {
     checkArchiveFieldSource(position);
@@ -87,6 +94,7 @@ export class ArchiveDeliveryFields {
     if (matched.handler.from.under !== undefined && under === undefined) return stop("unsupported-foreign-copy");
     const names = this.#schemas.get(matched.handler); if (!names) return stop("mismatch");
     this.budget.spend({ metadata: names.length * 256, inputWork: names.length * 512 });
+    reserveArchiveNames(names, this.budget, 40);
     const base = type === "relate" ? "$.input.message.body.detail" : "$.input.message.body.fields", cells: (Digest | null)[] = [];
     for (let offset = 0; offset < names.length; offset += ARCHIVE_DIGEST_FIELD_BATCH) {
       cells.push(...readArchiveDigestFields(this.sql, position, names.slice(offset, offset + ARCHIVE_DIGEST_FIELD_BATCH).map(field => `${base}.${JSON.stringify(field)}`), this.budget));

@@ -50,7 +50,8 @@ export class ArchiveOutcomeValues {
     if (!natural(slot) || !this.#owners[slot]) return stop("mismatch");
     const rules = this.#owners[slot]!.rules;
     knownValues(rules); // A mutable caller table cannot change the callback behind a compiled slot.
-    this.budget.spend({ metadata: 512, inputWork: 1024 });
+    const domains = rules.valueDomains?.length ?? 0;
+    this.budget.spend({ metadata: 512 + domains * 256, inputWork: 1024 + domains * 512 });
     let digest: Digest | null = null;
     if (rules.values !== undefined) digest = readArchiveDigestFields(this.sql, position, ["$.input.evidence.body.changes"], this.budget)[0] ?? null;
     const origin = { at: { at: { ...at }, seq: position.seq, hash: position.hash }, input: "outcome" as const };

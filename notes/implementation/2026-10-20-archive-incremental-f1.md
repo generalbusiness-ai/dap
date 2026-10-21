@@ -835,3 +835,37 @@ load and uncontrolled OS-cache statements are in the input receipts.
 These are separate full outer measurements. Variable schema allocation
 costs, snapshot/ancestry projection and the complete forecast and adaptive
 driver still need work. No full gate or formal review has run.
+
+## Reserve derived schema allocations
+
+The scalar helpers now reserve derived name arrays, encoded paths, lookup
+tables and field maps before constructing them. Charges depend on the
+actual name count and character count, including path prefixes. Repeated
+projections pay again for their derived structures. Trusted declaration
+enumeration keeps its existing initial reservation. Genesis moves its
+existing selected-name charge before filtering, with the same total debit.
+Outcome values also charge the declared domain count before the shared
+selector builds its domain map. Original archive bounds, retained-read
+debits and deadlines are unchanged.
+
+The native creation witness adds a separate lower-metadata refusal
+scenario. It has room for the existing SQL debits, but not the derived
+path/map allocation. It must stop after the fixed route query, before a
+field query. This uses an independent lower-bound budget, not a reset or
+continuation of the positive projection's allowance.
+
+Original `31715` passes both Scope compilers and all ten affected native
+cases across act fields, prepared rules, texts and publication. Full outer
+cost is 7.44 seconds elapsed and 9.46 user plus 1.97 system seconds, or
+11.43 CPU seconds. One compiling control, original `80735`, sets only the
+new variable metadata reservation to zero. The unchanged creation witness
+then fails its required-refusal assertion. Its full outer cost is 4.89
+elapsed and 6.69 user plus 1.27 system seconds, or 7.96 CPU seconds.
+
+Both originals capture 2,655 source files, exact modes and lock stamp with
+zero installs. The control restores source exactly and reads the original
+passing baseline. Input receipts state machine, shared load and
+uncontrolled OS caches. These are separate runs. This completes the
+variable allocation foundation; full-pass costing and adaptive selection
+remain open, along with snapshot/ancestry projection and the native pass
+acceptance witnesses. No full gate or formal review has run.

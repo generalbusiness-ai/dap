@@ -7,6 +7,7 @@ import type { ArchiveBudget } from "./archive-budget.ts";
 import { ARCHIVE_DIGEST_FIELD_BATCH, checkArchiveFieldSource, readArchiveDigestFields } from "./archive-digest-fields.ts";
 import { stopArchivePrefix as stop, type ArchivePosition } from "./archive-prefix.ts";
 import type { Sql } from "./sqlite.ts";
+import { reserveArchiveNames } from "./archive-schema-cost.ts";
 
 type Act = ValidDefinition["declared"]["acts"][string];
 interface Schema { readonly act: Act; readonly names: readonly string[]; readonly paths: readonly string[]; readonly fields: number }
@@ -21,9 +22,11 @@ export class ArchiveActFields {
     // Reserve before enumerating it or allocating the reusable schema.
     budget.spend({ metadata: bounds.definitionBytes, inputWork: bounds.definitionBytes * 16 });
     const kinds = Object.keys(definition.declared.acts);
+    reserveArchiveNames(kinds, budget);
     this.#kindCount = kinds.length; this.#kinds = canonicalize(kinds);
     for (const kind of kinds) {
       const act = definition.declared.acts[kind]!, fields = Object.keys(act.fields);
+      reserveArchiveNames(fields, budget, 32);
       const names = [...new Set([...fields.filter(name => isDetachedTextField(act.fields[name])), ...valuePlaces(act.fields).map(place => place.field)])];
       this.#schemas.set(kind, { act, fields: fields.length, names,
         paths: names.map(name => `$.input.signed.intent.fields.${JSON.stringify(name)}`) });
@@ -49,6 +52,7 @@ export class ArchiveActFields {
     const schema = this.#schemas.get(kind);
     if (!schema) return stop("mismatch");
     this.budget.spend({ metadata: schema.names.length * 256, inputWork: schema.fields * 256 + schema.names.length * 512 });
+    reserveArchiveNames(schema.names, this.budget);
     const cells: (Digest | null)[] = [];
     for (let offset = 0; offset < schema.paths.length; offset += ARCHIVE_DIGEST_FIELD_BATCH) {
       cells.push(...readArchiveDigestFields(this.sql, position, schema.paths.slice(offset, offset + ARCHIVE_DIGEST_FIELD_BATCH), this.budget));

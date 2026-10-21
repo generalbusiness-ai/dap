@@ -125,13 +125,20 @@ test("a detached text in a creation message: the child reads the bytes from its 
       const projector = new ArchiveGenesisFields(sql, notes, budget, PROPOSED_BOUNDS), position = { seq: 0, hash: row.hash, bytes: row.size };
       const projected = projector.project(entry.at, position), before = budget.admitted();
       const repeated = projector.project(entry.at, position), after = budget.admitted();
-      return { projected, expected, repeated, before, after, cells };
+      // Separate lower-bound refusal scenario, not a reset or continuation
+      // of the positive projection budget. There is room for the old SQL
+      // debits but not for the derived path/map allocation.
+      const tight = new ArchiveBudget({ metadata: PROPOSED_BOUNDS.definitionBytes + 256 + 512 });
+      const limited = new ArchiveGenesisFields(sql, notes, tight, PROPOSED_BOUNDS);
+      expect(() => limited.project(entry.at, position)).toThrow("archive-limit");
+      return { projected, expected, repeated, before, after, cells, tight: tight.admitted() };
     });
     expect(result.projected).toEqual(result.expected);
     expect(result.projected.map(plan => plan.dependency.mode === "text" ? plan.dependency.key : null)).toEqual([{ kind: "text", digest }]);
     expect(result.repeated).toEqual(result.projected);
     expect(result.after.calls).toBeGreaterThan(result.before.calls);
     expect(result.after.inputWork).toBeGreaterThan(result.before.inputWork);
+    expect(result.tight.calls).toBe(1); // Fixed route only; no field query after allocation refusal.
     expect(new Set(result.cells.filter(cell => typeof cell === "string"))).toEqual(new Set([route, digest]));
   };
   await projectedBirth(P, "founding", rootDigest);

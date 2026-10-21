@@ -6,6 +6,7 @@ import type { ArchiveBudget } from "./archive-budget.ts";
 import { ARCHIVE_DIGEST_FIELD_BATCH, checkArchiveFieldSource, readArchiveDigestFields } from "./archive-digest-fields.ts";
 import { stopArchivePrefix as stop, type ArchivePosition } from "./archive-prefix.ts";
 import type { Sql } from "./sqlite.ts";
+import { reserveArchiveNames } from "./archive-schema-cost.ts";
 
 export class ArchiveGenesisFields {
   readonly #fields: ValidDefinition["declared"]["acts"][string]["fields"];
@@ -14,8 +15,11 @@ export class ArchiveGenesisFields {
     budget.spend({ metadata: bounds.definitionBytes, inputWork: bounds.definitionBytes * 16 });
     this.#fields = definition.declared.acts[definition.declared.genesis]!.fields;
     const names = Object.keys(this.#fields);
+    budget.spend({ inputWork: names.length * 256 });
+    let selected = 0;
+    for (const name of names) if (isDetachedTextField(this.#fields[name])) selected++;
+    budget.spend({ metadata: selected * 256, inputWork: selected * 512 });
     this.#names = names.filter(name => isDetachedTextField(this.#fields[name]));
-    budget.spend({ metadata: this.#names.length * 256, inputWork: names.length * 256 + this.#names.length * 512 });
   }
   project(at: ScopeRef, position: ArchivePosition): readonly PlannedRetainedDependency[] {
     checkArchiveFieldSource(position);
@@ -37,6 +41,7 @@ export class ArchiveGenesisFields {
     if (route === null) return [];
     if (route !== "founding" && route !== "creation") return stop("mismatch");
     const base = route === "founding" ? "$.input.founding.intent.fields" : "$.input.message.body.fields";
+    reserveArchiveNames(this.#names, this.budget, 40);
     const cells: (Digest | null)[] = [];
     for (let offset = 0; offset < this.#names.length; offset += ARCHIVE_DIGEST_FIELD_BATCH) {
       cells.push(...readArchiveDigestFields(this.sql, position, this.#names.slice(offset, offset + ARCHIVE_DIGEST_FIELD_BATCH).map(name => `${base}.${JSON.stringify(name)}`), this.budget));
