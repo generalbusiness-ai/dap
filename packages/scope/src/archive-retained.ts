@@ -45,10 +45,8 @@ export class ArchiveRetainedReader {
     if (rows.length !== 1 || rows[0]?.["present"] !== 1) return this.budget.stop("unavailable");
     return true;
   }
-  /** Every request spends an attempt, including failed probes and cache
-   * hits. Decode/hash work is reserved again before repeat validation. */
-  read(key: RetainedKey, max: number): ArchiveRetainedValue | null {
-    key = checkedRetainedKey(key);
+  #request(key: RetainedKey, max: number): Readonly<ArchiveRetainedCopy> | undefined {
+    checkedRetainedKey(key);
     this.budget.spend({ attempts: 1, inputWork: 256 });
     const copy = key.kind === "entry" ? this.#copies.get(key.digest) : undefined;
     if (key.kind === "entry" && !copy) throw new ArchivePrefixStopped("unsupported-foreign-copy");
@@ -57,18 +55,36 @@ export class ArchiveRetainedReader {
     if (!["definition", "entry", "rule", "snapshot", "value"].includes(key.kind)) throw new ArchivePrefixStopped("unavailable");
     if (key.kind === "value" && (!nativeDomains.has(key.domain) || key.domain === DOMAINS.definition)) throw new ArchivePrefixStopped("unsupported-custom-domain");
     if (!natural(max) || max === 0 || max > RETAINED_INPUT_BYTES) return this.budget.stop("limit");
+    return copy;
+  }
+  #size(key: RetainedKey, max: number, copy: Readonly<ArchiveRetainedCopy> | undefined): number | null {
+    const value = key.kind === "value", where = value ? "domain = ? AND digest = ?" : "kind = ? AND digest = ?", table = value ? "retained_value" : "retained_input";
+    const rows = this.budget.native(this.sql, () => ({ metadata: 96, inputWork: 0 })).exec(`SELECT octet_length(bytes) AS size, typeof(bytes) AS type FROM ${table} WHERE ${where} LIMIT 1`, key.kind === "value" ? key.domain : key.kind, key.digest).toArray();
+    if (rows.length === 0) return null;
+    const row = rows[0];
+    if (rows.length !== 1 || row?.["type"] !== "text" || !natural(row["size"]) || row["size"] === 0 || row["size"] > max) return null;
+    if (copy && row["size"] !== copy.bytes) return null;
+    return row["size"];
+  }
+  /** Scalar keyed metadata for a cost forecast, never content validation
+   * or permission to select a body. A later read measures again. Repeated
+   * measurements and missing keys each spend an attempt and native call. */
+  measure(key: RetainedKey, max: number): number | null {
+    return this.#size(key, max, this.#request(key, max));
+  }
+  /** Every request spends an attempt, including failed probes and cache
+   * hits. Decode/hash work is reserved again before repeat validation. */
+  read(key: RetainedKey, max: number): ArchiveRetainedValue | null {
+    const copy = this.#request(key, max);
     const cacheKey = keyName(key);
     let bytes = this.#cache.get(cacheKey);
     let size: number;
     if (bytes === undefined) {
       const value = key.kind === "value", where = value ? "domain = ? AND digest = ?" : "kind = ? AND digest = ?", table = value ? "retained_value" : "retained_input";
       const bindings = [key.kind === "value" ? key.domain : key.kind, key.digest];
-      const rows = this.budget.native(this.sql, () => ({ metadata: 96, inputWork: 0 })).exec(`SELECT octet_length(bytes) AS size, typeof(bytes) AS type FROM ${table} WHERE ${where} LIMIT 1`, ...bindings).toArray();
-      if (rows.length === 0) return null;
-      const row = rows[0];
-      if (rows.length !== 1 || row?.["type"] !== "text" || !natural(row["size"]) || row["size"] === 0 || row["size"] > max) return null;
-      size = row["size"];
-      if (copy && size !== copy.bytes) return null;
+      const measured = this.#size(key, max, copy);
+      if (measured === null) return null;
+      size = measured;
       this.budget.spend({ inputWork: size * 32 });
       const body = this.budget.native(this.sql, () => ({ metadata: 0, inputWork: size })).exec(`SELECT bytes FROM ${table} WHERE ${where} AND typeof(bytes) = 'text' AND octet_length(bytes) = ? LIMIT 1`, ...bindings, size).toArray();
       if (body.length !== 1 || typeof body[0]?.["bytes"] !== "string") return this.budget.stop("unavailable");

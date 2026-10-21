@@ -634,3 +634,55 @@ the conservative 128-entry/128-KiB cap. The next boundary must account for
 retained-input discovery, probes, declarations, layout, tree and finishing
 work while keeping whole-prefix privacy admission before body reads. No
 complete adaptive cutoff, new acceptance, gate or formal review is claimed.
+
+## Typed scalar references and retained sizes
+
+Cost planning now has a scalar digest-field reader and an act-field
+projector. The owner supplies paths selected from the validated definition;
+the reader does not discover consumers by searching strings. Each native
+query matches the exact sequence, hash, recorded size and actual text size.
+Only digest-shaped cells or null cross that SQL boundary. The projector
+uses the same detached-text predicate, `textsNamed`, value-place grammar
+and act-value selector as the byte-based planner. A recognized act name
+comes from the trusted definition's name table. Inline digest-shaped text
+does not become a dependency.
+
+`ArchiveRetainedReader.measure` supplies keyed scalar sizes for subsequent
+forecasts. It shares the actual reader's key, domain, copy and size checks.
+Each measurement, repeat and miss spends an attempt and native call;
+measurement does not read a body or install a content cache value. A later
+actual read measures again and still checks canonical bytes and digest.
+The existing read and cache debit sequence is unchanged.
+
+The native act cases compare actual signed entries with their byte-based
+field plans, for both detached text and digest-shaped inline text. The
+retained case measures a corrupt rule, refuses it under a smaller bound,
+and shows the subsequent body read still rejects it. SQL result-cell
+observations check that the measurement returns no body. These are TEST
+definitions and grants, not native platform value-place acceptance.
+
+| Original | Result | Outer elapsed seconds | Outer CPU seconds |
+|---|---|---:|---:|
+| `49716` | Two Scope compilers and the native digest-field case pass | 8.98 | 12.59 |
+| `52251` | Compiling SQL-filter control: inline text crosses the boundary and its assertion fails | 5.93 | 8.37 |
+| `71809` | Compiling hash-binding control: wrong-source acceptance assertion fails | 5.62 | 8.69 |
+| `53261` | Four Derive/Scope compilers and three native field cases pass | 6.97 | 11.95 |
+| `9004` | Compiling act control drops a detached reference; the dependency assertion fails | 5.02 | 8.20 |
+| `57338` | Both Scope compilers pass; sandbox denies the native server's local listen before tests start | 3.35 | 6.75 |
+| `71665` | Both Scope compilers and six native retained-reader cases pass with local loopback access | 7.12 | 11.23 |
+| `60516` | Inconclusive bound control: compiler rejects its unused parameter | 1.35 | 3.83 |
+| `85267` | Compiling off-by-one bound control: the smaller-bound assertion fails | 5.21 | 8.37 |
+
+The generic controls precede the shared constant/source-validator extraction;
+their SQL predicates and test are unchanged. Each attempt captures all
+source files, exact modes and the lock stamp with zero installs. Counts are
+2,646 for the generic runs and 2,648 for the act and measurement runs. The
+controls restore source exactly and read their original passing baseline
+without repeating it. Input receipts state the shared macOS arm64 host,
+load and uncontrolled OS caches; the figures are separate full outer runs.
+
+These helpers are foundations. They do not yet project every consumer,
+compute a complete pass forecast or change the production cutoff. Whole
+prefix privacy admission must still finish before entry or retained
+payload reads. No new export permission, completed adaptive pass, full gate
+or formal review is claimed.

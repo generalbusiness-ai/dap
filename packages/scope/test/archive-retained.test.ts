@@ -9,6 +9,38 @@ import { ArchiveRetainedReader, readArchiveProbe } from "../src/archive-retained
 import { definition, create } from "./fixtures-native.ts";
 
 const missing = "sha256:" + "d".repeat(64) as `sha256:${string}`;
+test("native keyed measurement returns scalar sizes, charges repeats and does not validate corrupt bytes", async () => {
+  const lane = await create();
+  const result = await lane.inside(state => {
+    const queries: string[] = [], cells: unknown[] = [], budget = new ArchiveBudget();
+    const reader = new ArchiveRetainedReader({ exec(query, ...args) {
+      queries.push(query); const rows = state.storage.sql.exec(query, ...args).toArray();
+      for (const row of rows) cells.push(...Object.values(row));
+      return { toArray: () => rows };
+    } }, budget);
+    state.storage.sql.exec("INSERT INTO retained_input (kind, digest, bytes) VALUES ('rule', ?, 'false')", missing);
+    // The same digest in another native table must not satisfy this key.
+    state.storage.sql.exec("INSERT INTO retained_value (domain, digest, bytes) VALUES (?, ?, ?)", DOMAINS.entry, missing, '"TEST other table 🎵"');
+    const key = { kind: "rule" as const, digest: missing };
+    const measured = reader.measure(key, RETAINED_INPUT_BYTES), before = budget.admitted();
+    const repeated = reader.measure(key, RETAINED_INPUT_BYTES), after = budget.admitted();
+    const tooSmall = reader.measure(key, 4), absent = reader.measure({ kind: "snapshot", digest: missing }, RETAINED_INPUT_BYTES);
+    const measurementCells = [...cells], measurementQueries = [...queries];
+    const read = reader.read(key, RETAINED_INPUT_BYTES);
+    return { measured, repeated, before, after, tooSmall, absent, measurementCells, measurementQueries, read, queries };
+  });
+  expect(result.measured).toBe(5); expect(result.repeated).toBe(5);
+  expect(result.tooSmall).toBeNull(); expect(result.absent).toBeNull();
+  expect(result.after.attempts).toBe(result.before.attempts + 1);
+  expect(result.after.calls).toBe(result.before.calls + 1);
+  expect(result.after.inputWork).toBeGreaterThan(result.before.inputWork);
+  expect(result.measurementQueries).toHaveLength(4);
+  expect(new Set(result.measurementCells)).toEqual(new Set([5, "text"]));
+  expect(result.measurementQueries.every(query => query.includes("octet_length(bytes)") && query.includes("FROM retained_input"))).toBe(true);
+  expect(result.read).toBeNull();
+  expect(result.queries.filter(query => query.startsWith("SELECT bytes"))).toHaveLength(1);
+});
+
 test("native definition-key selection validates canonical bytes and charges cache hits without aliasing the value table", async () => {
   const lane = await create();
   const actual = await lane.inside(state => {
