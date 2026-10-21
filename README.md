@@ -81,15 +81,10 @@ You can [try them out](https://dap.generalbusiness.ai/) on the hosted service.
 
 - [What is dap?](docs/what-is-dap.md) explains the framework, the actor
   model and the applications.
-- [Build a counter](docs/build-a-counter.md) is a tutorial. You write a
-  small definition and watch each act take effect.
-- [Build a lending library](docs/build-a-lending-library.md) is a second
-  tutorial, on items with states, final states and grants.
 - [The architecture of a dap application](docs/architecture.md) explains
   scopes, acts, entries, delivery and where the record is kept.
 - [Write an application](docs/write-an-application.md) shows how to
   declare item types, acts and invariants, then validate and pin them.
-- [Scopes](docs/scopes.md) is the full description of the runtime.
 - [The roadmap](docs/roadmap.md) says what runs today and what is not
   yet built, and [Use cases](docs/use-cases.md) is the catalogue behind
   it.
