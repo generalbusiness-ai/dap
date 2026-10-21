@@ -1,0 +1,287 @@
+# Roles, flow and instances for hosted agent teams
+
+Design note. Proposed: nothing here is built.
+
+A room is worked by people and agents. Each one acts as a member of the
+room's membership, and signs with a key. The journal keeps every act, with
+the member and the key that signed it. A hosted agent team puts several
+agents to work on one app's lanes: one plans, one builds, one checks. A
+person decides what counts.
+
+This note answers two questions for such a team. First, what a role is: what
+an agent can do, how it behaves, and where it sits in the flow of work.
+Second, how a team runs several copies of one agent at the same time. A copy
+is an instance: one more key of the same member. The note amends the hosted
+agent teams design (`notes/2026-10-15-hosted-agent-teams-design.md`).
+
+## 1. Terms
+
+- **Member**: an identity in the room's membership, with a kind (person,
+  agent or checker), a roster role, and keys
+  (`packages/platform/src/membership.ts`).
+- **Key**: one signing key of a member. A member can hold several active
+  keys at once (`membership.ts:587-591`). There is no bound on keys for one
+  member; the bound is on the scope's live keys (`membership.ts:245, 261`).
+- **Controller**: the active person who answers for an agent member. A
+  checker member has no controller (`membership.ts:415-451`). An act of an
+  agent is refused when its controller is not active (`packages/derive/src/grant.ts:311`).
+- **Roster role** and **action**: a roster role is a list of actions. An act
+  needs its action in the signer's role (`membership.ts:100-114`).
+- **Observation**: what each entry keeps about its signer: member, key, key
+  state, role, actions, controller, and whether the controller was active
+  (`packages/contract/src/observation.ts:17-32`).
+- **Role revision**: a model, a system prompt and operating defaults, fixed
+  once made (agent teams note, section 2).
+- **Role preset**: a role revision together with the authority it needs and
+  its place in the flow of work (section 2).
+- **Identity**: one member that a team uses for one preset.
+- **Instance**: one active key of that member, held by one host process.
+- **Slot**: a place in a team configuration for one instance. A slot is a
+  key, not a member.
+- **Assignment**: one unit of app work that an instance claims, works and
+  reports.
+- **Attempt**: one try at an assignment by one instance, with a generation
+  that fences older tries. The agent teams note calls this an "execution
+  instance". This note renames it, so that "instance" means a key.
+
+## 2. Role preset
+
+A role preset has three parts.
+
+| Part | Field | Content |
+|---|---|---|
+| Authority | `kind` | `agent` or `checker`. |
+| | `controller` | The person who answers for the identity. Required for `agent`, absent for `checker`. |
+| | `actions` | The actions the preset needs. Each must be in the roster role of `kind` (`membership.ts:100-114`). |
+| Behaviour | `revision` | A role revision: model, system prompt and defaults. |
+| | `skills` | The tools and skills the host gives the instance, by name. |
+| Flow | `pickup` | A canonical item query, the form that `dap items --query` takes (`docs/cli.md:438`), that selects eligible work. |
+| | `claim` | The act that claims one item of the pickup, such as `take-hold`. |
+| | `performs` | The acts the preset takes on claimed work. |
+| | `hands off` | The item state that the preset leaves for the next role or for a person. |
+
+A preset is host configuration. A team configuration names presets and a
+count for each. The host checks a preset against the installed app before it
+starts any instance:
+
+- each act in `claim` and `performs` exists in the app's definitions;
+- each item type in `pickup` exists;
+- each act's action is in the roster role of `kind`. A preset never grants an action. Authority comes from
+membership, as before (agent teams note, section 3).
+
+An application package declares default roles and their actions
+(`notes/2026-10-15-self-contained-applications.md:88`). It holds no model,
+prompt or spending, because those belong to the host (agent teams note,
+section 6).
+
+## 3. Planner, builder and checker
+
+The three presets below work the issue lane (`apps/room/lanes/src/issue.ts`)
+and the change lane (`apps/room/lanes/src/change.ts`). The `agent` roster
+role holds `issue.open`, `issue.request`, `issue.promise`, `issue.work`,
+`change.open`, `change.propose` and `change.edit-own`. It does not hold
+`issue.plan`, `change.review` or `change.merge`. The `checker` role holds
+`change.check` (`membership.ts:101-108`).
+
+**Planner** (kind `agent`):
+
+- Pickup: issues with no commitment, and reports waiting for the
+  requester.
+- Performs: `file` an issue; `offer` a commitment with its conditions;
+  `accept-report` or `refuse-report`; `ask` and comments.
+- Hands off: an offered commitment to the builder; an accepted report, with
+  its change, to the person.
+
+**Builder** (kind `agent`):
+
+- Pickup: commitments offered to it, and accepted commitments with no held
+  hold.
+- Claim: `take-hold` on the commitment.
+- Performs: `propose-terms` and `accept`; `open` a change and
+  `propose-manifest` on an exact base; `request-review-own` on that change;
+  `report`; `block` and `input`; `renew-hold` and `release-hold`.
+- Hands off: a report to the planner, and a manifest with a review request
+  for checks and review.
+
+**Checker** (kind `checker`, no controller):
+
+- Pickup: check jobs in state `requested`.
+- Performs: `check` with its result, or `check-error`.
+- Hands off: the check result. A required check of the rules consumes it.
+
+**Where a person decides.** Three acts stay with people, because the
+`agent` and `checker` roles do not hold them:
+
+1. The counted approval: `review-verdict` (`change.review`) by the owner.
+   When the agents are the owner's, the rules set `ownerMayReview: true`
+   so that the owner's approval counts (`notes/2026-10-16-repo-in-ai-mvp-plan.md:111-117`).
+2. The merge: `merge` (`change.merge`).
+3. Plans: `open-plan` and `decision` (`issue.plan`). A planner agent drafts a
+   plan as a comment or a proposed change, and a person opens it.
+
+Each handoff is an item state in the journal. No handoff is a private
+message between instances (agent teams note, section 5).
+
+## 4. Instances
+
+**Rule.** Same mandate, same member, more keys. Different mandate,
+different member.
+
+- A team configuration lists, for each preset, one identity and a desired
+  count of instances.
+- The desired count is the number of active keys of that member.
+- Each slot is one key. The host runs one process for each key.
+- Each key holds at most one active assignment.
+
+**Enrol the Nth instance.** The host asks for a key with membership's
+`invite-key` for the existing member, with kind `agent` or `checker`
+(`membership.ts:360-379`). The new key signs `enrol` (`membership.ts:399-414`).
+`invite-key` needs `membership.invite`, and only `admin` holds it by default.
+So in the first version, an admin signs `invite-key`, and the controller
+starts the host operation with a control request, as for hosted agent
+creation (`docs/mcp.md:1743-1786`). Today no tool issues `invite-key` for an
+existing agent member. `dap invite --kind agent-key` always adds a new member
+first (`packages/cli/src/invitations.ts:269-270`), and hosted `create` makes a
+new member each time (`packages/mcp/src/hosted.ts:213-256`). Slice RI1 adds
+both.
+
+**Claim.** Lanes see members, not keys. A hold is keyed by its commitment,
+and its performer and holder are members (`issue.ts:530-549`;
+`apps/room/lanes/src/shared.ts:29`). Two instances of one member race to
+take a hold. One succeeds. The other is refused `hold-held`, rereads the
+board, and picks other eligible work (agent teams note, section 5, step 3).
+The host keeps one assignment for each key, so an instance never claims a
+second item while it holds one.
+
+**What a second instance reads.** It reads the hold as held by its own
+member. The entry that took the hold shows which key signed it. The second
+instance does not work that commitment. It leaves it to the instance that
+holds the assignment.
+
+**Drain and stop.**
+
+- Drain one instance: the host stops new claims for its key. When the
+  current assignment ends, an admin signs `revoke-key` with `as: retired`
+  (`membership.ts:498-523`). The member and its other keys stay.
+- Lower the count from three to two: drain one instance.
+- Stop the identity: drain every instance. Remove the member only when the
+  preset leaves the team. Raising the count again enrols a new key for the
+  same member; it never reuses a revoked key.
+
+**Recovery when a key is lost mid-assignment.** The host fences the lost
+instance's attempt by its generation. An admin revokes the key: `retired`
+when the key is gone, `compromised` when it leaked. A sibling instance of the
+same member takes the assignment. It can renew or release the hold, because
+the holder is the member (`shared.ts:128-156`). With no sibling, the hold
+ends at its time (`shared.ts:177-182`), and the work returns to the board.
+
+**What the record shows.** Every entry keeps the member and the key
+(`observation.ts:17-32`). So the journal already tells one instance from
+another, with no change.
+
+**What the views show.** The member record lists the member's keys and their
+states (`notes/2026-10-18-member-and-presence-ui.md:287-288`). Presence stays
+one badge for each member (`member-and-presence-ui.md:89`). The badge gains a
+line under it: instances active and working, for example "3 instances, 2
+working". The team view lists each slot with its key, state and current
+assignment.
+
+## 5. Independence and limits
+
+- **Approvals count by member.** A change's approvals are counted as distinct
+  members (`packages/scope/src/reservation.ts:270-274`). So instances of one
+  member are one approval at most.
+- **One controller is one owner.** Agents do not hold `change.review`, so an
+  agent's approval never counts. A later membership version that lets agents
+  review must also refuse to count an agent whose controller controls an
+  author. This is not in the first version.
+- **No lane guard needs the key.** Lane guards and rules read the signer's
+  member (`packages/derive/src/guards.ts:183-184`). Holds stay per
+  commitment, held by the member, so that a sibling instance can recover
+  one. Independence is by member and controller. Per-key rules are not
+  needed for any act in this note.
+- **Shared limits.** The app ceiling and a preset's budget are shared by
+  all instances of the identity (agent teams note, section 6). The first
+  version has no limit for one key. The host's one assignment for each key
+  bounds how many run at once.
+- **A prompt is not independence.** A reviewer or checker prompt does not
+  make a review independent. The checker kind, with no controller, is the
+  recorded independence (agent teams note, section 3).
+- **Scope caps.** Under `platform:membership@5`, a scope holds at most 16
+  members and 32 keys, invitations included (`membership.ts:550-558`). Under
+  `membership@6`, the bound is 10,000 each. A team that needs many instances
+  uses `membership@6` or later.
+
+## 6. The Counter as the first test
+
+The Counter's participant row is keyed by member. `participate` refuses a
+second live row for the same member, and the definition holds at most 16
+participant rows (`apps/counter/commitments.ts:45-53`, `:134-150`). So
+instances do not use participant rows: one identity with three instances has
+one row.
+
+A pledge needs no other pledge open, and needs the signer to differ from the
+last speaker unless one participant is active (`commitments.ts:270-290`). So:
+
+- With the agent identity as the only active participant, its instances take
+  turns in any order. Each pledge is signed by one instance's key.
+- With a person also active, the identity and the person take turns. Two
+  instances of the identity never take two turns in a row, because they are
+  one speaker.
+- Instances race to pledge. One succeeds, and the others reread the board.
+
+This is the first exit test: one agent identity with three instances counts
+through a game, and the journal shows each turn's key. The Counter contracts
+change in revision 4 (section 8).
+
+The second exit test is a Room team: a planner, a builder with two
+instances, and a checker, on one issue through review, with the owner's
+counted approval and merge.
+
+## 7. Amendments to the agent teams note
+
+This head amends `notes/2026-10-15-hosted-agent-teams-design.md`:
+
+- **Demo 1.** The hosted agents join the Counter as instances of one
+  identity, not as distinct participants. The 16-participant limit counts
+  members, so instances do not use it. The link to the old Counter path is
+  corrected to `apps/counter/`.
+- **Section 2.** "Agent" is an identity: one member. A new row, "Instance",
+  is one active key of that member. "Execution instance" is renamed
+  "Attempt". One active assignment is held per instance, not per agent.
+- **Section 4.** A desired count is a number of active keys of one member. A
+  slot is a key. Reducing the count drains an instance and retires its key.
+  Increasing it enrols a new key for the same member.
+- **Section 5.** The losing contender is another instance of the same member
+  or another member. Each instance holds one assignment.
+- **Acceptance.** Racing two agents for one assignment becomes racing two
+  instances of one identity, and two identities. Revoking an agent becomes
+  two cases. Retiring one instance's key stops that instance, and the
+  identity and its other instances continue. Removing the member or its
+  controller stops every instance.
+
+## 8. Changes to the Counter contracts
+
+Revision 4 of `notes/2026-10-15-hosted-counter-contracts.md` follows this
+note, after it lands:
+
+- The `agent` item is one identity for each role, with a desired instance
+  count, not one row for each agent with an ordinal (contracts, section 4).
+- Enrolment adds keys to that member: "No second key is enrolled" becomes
+  "each slot enrols one key of the identity" (contracts, section 5).
+- The runtime picks one eligible instance for each turn, and the other
+  instances reread (contracts, section 7.2).
+- The witnesses check one member with three keys, instead of one member and
+  one key for each row (contracts, section 8).
+
+## 9. Slices
+
+| Slice | Content | Done when |
+|---|---|---|
+| RI1 | Enrol a further key for an existing agent or checker member: `dap invite --kind agent-key --member @handle` signs only `invite-key`; hosted MCP enrols a further key for an existing member through a control request; docs/mcp.md recipe. | A member with three active keys acts with each one; each entry's observation names its key; retiring one key leaves the member and the other two working. |
+| RI2 | The Counter contracts revision 4 slices. They carry the team runtime: presets, slots as keys, one assignment per key, drain, recovery by a sibling instance. | Exit test 1 (section 6) passes on a hosted Worker. |
+| RI3 | Views: the instance line under the member badge, and the team view's slots. | The member and team views show three instances of one member, with their keys and states. |
+| RI4 | The Room team: the planner, builder and checker presets of section 3 on the issue and change lanes. | Exit test 2 (section 6) passes on a hosted Worker. |
+
+The slices run in this order. RI2 follows the Counter contracts revision 4.
+The planner writes that revision after this note lands.

@@ -5,6 +5,8 @@
 Draft request `4b236bb2`, planner promise `4852347a`.
 Counter-first revision: request `2b90849c`, promise `65a39bbf`.
 Preceding investigation: `cf79fef5`, reported in `65267d24`.
+Instance amendment (revision 3, 21 October 2026): request `89a543d3`, with
+[roles, flow and instances](2026-10-21-roles-flow-and-instances.md).
 Source baseline: main `3f1c9b2fae26b46d62d66dc53f6366fff7f18b93`.
 
 Hugh's direction is to host agents on Cloudflare and make their setup a
@@ -94,8 +96,9 @@ inference call. An empty intersection leaves the setup unavailable, with
 no external fallback. Changing a prompt, bypassing the form, or calling a
 runtime route directly cannot bypass these checks.
 
-The hosted agents join the Counter as distinct participants and take
-eligible turns through its admitted acts. The model receives actual app
+The hosted agents join the Counter as instances of one agent identity: one
+member with several keys ([roles, flow and instances](2026-10-21-roles-flow-and-instances.md), section 6). They take eligible turns
+through its admitted acts. The model receives actual app
 context and uses the agent's permitted tools. A scripted counting loop
 without real Workers AI calls does not establish the hosted-agent demo.
 Race losers reread the board instead of inventing a successful turn.
@@ -106,7 +109,7 @@ native dap state. A current installation path that happens to create a
 repository is a platform gap, not a Counter requirement or a reason to
 create an empty repository for the agents.
 
-The [current Counter](../examples/counting/README.md) uses a commitment to
+The [current Counter](../apps/counter/README.md) uses a commitment to
 say a number and a later report of completion. Its browser owns speech
 completion separately from model output. The demo design must either supply
 a genuine supported output adapter or use an explicitly reviewed headless
@@ -114,7 +117,8 @@ Counter definition. A generated number alone must not be reported as
 completed speech. This choice does not introduce a repository requirement.
 
 The current commitments definition permits at most 16 non-removed
-participants, including humans. Validate configured quantities against the
+participants, including humans. It counts members. The instances of one
+identity share one participant row and do not use the limit. Validate configured quantities against the
 selected definition and current population. Two role rows do not imply
 unlimited agents or grant permission to change the Counter's native rules.
 
@@ -127,9 +131,10 @@ These are requirements for a schema design, not newly adopted schemas.
 |---|---|
 | Role revision | Immutable model selection, system prompt, and declared operating defaults |
 | Team configuration | Desired counts of role revisions attached to one exact app, under a controller and budget |
-| Agent | Stable participant identity, enrollment, control, and lifecycle |
+| Agent identity | One member: stable participant identity, enrollment, control, and lifecycle |
+| Instance | One active key of that member, run by one host process ([roles, flow and instances](2026-10-21-roles-flow-and-instances.md), section 4) |
 | Assignment | One unit of app work, its claim, conversation, result, and disposition |
-| Execution instance | One current attempt to run an assignment, with a generation that fences old instances |
+| Attempt | One current try at an assignment by one instance, with a generation that fences old attempts |
 | Workspace | A particular source fork, checkout, and saved files owned by the assignment |
 | Operation | One retained control request, model attempt, tool request, or provider effect and its observed outcome |
 
@@ -138,8 +143,8 @@ scope incarnations, and the authority domain used for enrollment. Display
 names and role labels are insufficient identity. A later app upgrade does
 not silently reinterpret an already prepared operation.
 
-Start with one active assignment per agent and one app attachment per
-agent. A role preset can be reused across apps, but another attachment gets
+Start with one active assignment per instance and one app attachment per
+agent identity. A role preset can be reused across apps, but another attachment gets
 its own participant and work context. This avoids accidental cross-app
 authority and conversation sharing. Multi-app agents are later design work.
 
@@ -196,7 +201,8 @@ to six is a new configuration revision. Repeating the same setup operation
 continues its existing allocations.
 
 Before crossing a durable boundary, retain the authorized configuration,
-operation identity, intended agent slots, and child creation identities.
+operation identity, intended slots, and child creation identities. A slot
+is one key of an identity ([roles, flow and instances](2026-10-21-roles-flow-and-instances.md), section 4).
 Reuse those identities through enrollment, runtime creation, and lost
 responses. A retry must not consume another invitation or enroll another
 key for an already allocated slot.
@@ -211,10 +217,12 @@ paused, draining, and stopped. Waiting names a reason such as no eligible
 work, another participant, unavailable model, exhausted allowance, or
 unsupported app. A short status is linked to its durable detail.
 
-Reducing a count normally selects agents to drain, stops new claims, and
-lets them finish or save their current assignments. A specific agent can
-also be selected. Increasing the count again does not silently reactivate
-a retired membership identity or reuse a removed handle.
+A desired count is the number of active keys of one identity. Reducing a
+count drains instances: the host stops new claims for a key, lets its
+current assignment finish or save, and then retires the key. A specific
+instance can also be selected. Increasing the count enrols a new key for
+the same identity. It never reactivates a retired key or reuses a removed
+handle.
 
 Target changes are explicit detach and attach operations. They do not move
 an existing participant's authority, workspace credentials, or conversation
@@ -238,11 +246,12 @@ The initial dispatch sequence is:
 1. Read a bounded page of authorized candidate work and its coverage.
 2. Filter by the role's declared selection and actual app eligibility.
 3. Claim the work through an admitted app operation. A losing contender
-   rereads the outcome and chooses other eligible work.
+   rereads the outcome and chooses other eligible work. The contender can
+   be another instance of the same identity.
 4. Retain the assignment identity, input provenance, role revision, and
-   budget reservation before starting its execution instance.
+   budget reservation before starting its attempt.
 5. Recheck relevant current authority and assignment ownership before each
-   new effectful tool. Fence an expired or replaced execution instance.
+   new effectful tool. Fence an expired or replaced attempt.
 6. Report the actual result through the app. A worker's report does not
    replace requester judgment, a qualified review, or publication evidence.
 
@@ -631,8 +640,9 @@ The acceptance journey needs the following distinguishing cases:
   Recovery resumes the same intended agents without hidden duplicates.
 - Change a role revision while one assignment is running. Existing work and
   prepared acts retain their exact bindings. New work uses the new revision.
-- Race two agents for one exclusive assignment. The app records one owner,
-  and the loser can pick up other work without an invented completion.
+- Race two instances of one identity, and two identities, for one
+  exclusive assignment. The app records one owner, and the loser can pick
+  up other work without an invented completion.
 - Drop and duplicate a wake, change visibility, and restart during input
   retention. Bounded catch-up preserves inputs and separate progress cursors.
 - Close the browser during work, then return from another authorized device.
@@ -657,8 +667,10 @@ The acceptance journey needs the following distinguishing cases:
   Move main meanwhile and demonstrate explicit integration or conflict handling.
 - Dispose during creation, during an unknown push, and after an unmerged
   report. Cleanup stays pending where necessary, and retained evidence survives.
-- Revoke an agent or remove its controller. New affected operations stop
-  under the specified session and controller policy; earlier outcomes persist.
+- Retire one instance's key. That instance stops, and the identity and its
+  other instances continue. Remove the member or its controller. Every
+  instance stops under the specified session and controller policy; earlier
+  outcomes persist.
 
 Synthetic fixtures can inform the design. They do not establish deployment,
 model quality, actual provider cleanup, workspace durability, or usability.
