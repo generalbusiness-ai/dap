@@ -3,8 +3,7 @@
  * Every selected prefix still requires fresh whole-prefix inventory. */
 import type { Bounds, Digest, FactRef, Head, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isHead, natural } from "@generalbusiness/artroom-bytes";
-import type { RetainedKey } from "@generalbusiness/dap-derive";
-import { ARCHIVE_BOUNDS, type ArchiveBudget, type ArchiveCost } from "./archive-budget.ts";
+import { type ArchiveBudget, type ArchiveCost } from "./archive-budget.ts";
 import { ArchiveDeclarations } from "./archive-declarations.ts";
 import { ArchiveDeclarationPlan } from "./archive-declaration-plan.ts";
 import { recordArchiveCurrentDeclarationClosure, recordArchivePotentialDeclarationClosure, type ArchiveDeclarationFootprint } from "./archive-declaration-scout.ts";
@@ -20,15 +19,15 @@ import { ArchivePlanFence } from "./archive-plan-fence.ts";
 import { stopArchivePrefix as stop } from "./archive-prefix.ts";
 import type { ArchivePrivacyPosition } from "./archive-privacy.ts";
 import { measureArchiveReferences, type ArchiveReferenceMeasurement } from "./archive-reference-measurements.ts";
-import { ArchiveRetainedReader } from "./archive-retained.ts";
+import { ArchiveRetainedReader, archiveRetainedExpectationCost } from "./archive-retained.ts";
 import { forecastArchiveRetainedPass } from "./archive-row-cost.ts";
+import { ArchiveScoutLayout, type ArchiveScoutLayoutQuote } from "./archive-scout-layout.ts";
+import { forecastArchiveSourceLookup } from "./archive-source-cost.ts";
 import type { FixtureArchiveSourcePins } from "./archive-source-pins.ts";
 import { forecastArchiveSupportMetadata } from "./archive-support-cost.ts";
 import { ArchiveWindow, openArchiveWindow, type ArchiveWindowCheckpoint } from "./archive-window.ts";
 import type { Sql } from "./sqlite.ts";
 
-type Key = Exclude<RetainedKey, { kind: "text" }>;
-const nameOf = (key: Key) => key.kind === "value" ? `value:${key.domain}:${key.digest}` : `${key.kind}:${key.digest}`;
 const empty = (): ArchiveCost => ({ entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0, inputWork: 0 });
 function add(target: ArchiveCost, cost: Partial<ArchiveCost>, times = 1): void {
   for (const key of Object.keys(target) as (keyof ArchiveCost)[]) {
@@ -38,7 +37,7 @@ function add(target: ArchiveCost, cost: Partial<ArchiveCost>, times = 1): void {
 }
 interface Row {
   readonly hash: Digest; readonly entryBytes: number; readonly objects: number;
-  readonly work: Readonly<ArchiveCost>; readonly uses: number; readonly sources: number;
+  readonly work: Readonly<ArchiveCost>; readonly uses: number; readonly sources: number; readonly sourceWork: Readonly<ArchiveCost>;
 }
 export type ArchiveScoutStep = { readonly kind: "end" | "limited" }
   | { readonly kind: "position"; readonly position: ArchivePrivacyPosition;
@@ -55,7 +54,8 @@ export interface ArchiveScoutFrame {
 
 export class ArchiveScout {
   readonly #rows = new Map<number, Row>();
-  readonly #objects = new Map<string, { readonly key: Key; readonly bytes: number; readonly first: number }>();
+  readonly #layout: ArchiveScoutLayout;
+  readonly #sourceWork = empty();
   readonly #copies = new Map<Digest, Readonly<ArchiveForeignCopy>>();
   readonly #facts = new Map<string, Digest>();
   readonly #sources = new Set<string>();
@@ -71,6 +71,7 @@ export class ArchiveScout {
   #checkpoint: ArchiveWindowCheckpoint | null = null;
   #blocked = false;
   #finished = false;
+  #frameOpen = false;
   private constructor(readonly at: ScopeRef, readonly head: Head, readonly after: Head | null,
     readonly bounds: Bounds, readonly reviewed: ArchivePolicyRegistry, readonly budget: ArchiveBudget,
     window: ArchiveWindow, support: ArchiveSupport, root: ArchiveDeclarationFootprint, visited: Set<Digest>,
@@ -86,7 +87,7 @@ export class ArchiveScout {
     if (!isDigest(support.named)) add(work, archiveNativeDataReservation(bounds.definitionBytes));
     add(work, forecastArchiveSupportMetadata(recordArchiveSupportMetadata(support, budget)));
     this.#rootWork = Object.freeze(work);
-    for (const node of root.declarations) this.#remember({ kind: "definition", digest: node.digest }, node.bytes, this.#first);
+    this.#layout = new ArchiveScoutLayout(this.at, this.#first, root, window.sql, budget);
   }
   static open(sql: Pick<Sql, "exec">, at: ScopeRef, head: Head, after: Head | null, bounds: Bounds,
     reviewed: ArchivePolicyRegistry, budget: ArchiveBudget, fixtureSources?: FixtureArchiveSourcePins): ArchiveScoutFrame {
@@ -99,13 +100,6 @@ export class ArchiveScout {
     const scout = new ArchiveScout(Object.freeze({ ...at }), Object.freeze({ ...head }), after && Object.freeze({ ...after }),
       Object.freeze({ ...bounds }), reviewed, budget, window, { ...policy.support, definition }, root, visited, fixtureSources);
     return scout.#frame(window);
-  }
-  #remember(key: Key, bytes: number, first: number): void {
-    const name = nameOf(key), prior = this.#objects.get(name);
-    if (prior) { if (prior.bytes !== bytes) return stop("mismatch"); return; }
-    if (this.#objects.size === ARCHIVE_BOUNDS.attempts) return stop("limit");
-    this.budget.spend({ metadata: 512, inputWork: 1024 });
-    this.#objects.set(name, { key: Object.freeze({ ...key }), bytes, first });
   }
   #source(fact: FactRef): Readonly<ArchiveForeignCopy> | null {
     this.budget.spend(forecastArchiveForeignLookup());
@@ -126,7 +120,13 @@ export class ArchiveScout {
       this.budget.spend({ metadata: 1024, inputWork: 2048 });
       this.#copies.set(request.content, Object.freeze({ content: request.content, bytes: copy.bytes, fact: copy.fact,
         pin: copy.pin, under: policy.support.definition.declared.name }));
-      this.#facts.set(key, request.content); this.#sources.add(canonicalize(copy.fact.at));
+      this.#facts.set(key, request.content);
+      const source = canonicalize(copy.fact.at);
+      if (!this.#sources.has(source)) {
+        this.budget.spend({ metadata: 128, inputWork: 256 });
+        add(this.#sourceWork, forecastArchiveSourceLookup(request.footprint.declarationUnits));
+        this.#sources.add(source);
+      }
     }
   }
   #advance(window: ArchiveWindow, reader: ArchiveRetainedReader, declarations: ArchiveDeclarations,
@@ -156,7 +156,6 @@ export class ArchiveScout {
       } else if (dependency.mode === "probe") for (const { key } of dependency.choices) if (key.kind === "definition") roots.push(recordArchivePotentialDeclarationClosure(declarations, key.digest));
     }
     this.declarations.append(position, roots);
-    for (const root of roots) for (const node of root.requests) if (node.bytes !== null) this.#remember({ kind: "definition", digest: node.digest }, node.bytes, position.seq);
     for (const { dependency } of plan.dependencies) {
       const keys = dependency.mode === "text" ? [] : dependency.mode === "probe" ? dependency.choices.map(choice => choice.key) : [dependency.key];
       for (const key of keys) if (key.kind === "entry") {
@@ -164,18 +163,19 @@ export class ArchiveScout {
         if (!copy) return stop("unsupported-foreign-copy"); reader.registerCopy(copy);
       }
     }
-    const measured = measureArchiveReferences(reader, plan.dependencies, this.bounds);
-    for (const measurement of measured.measurements) for (const candidate of measurement.candidates) if (candidate.bytes !== null) this.#remember(candidate.key, candidate.bytes, position.seq);
+    const measured = measureArchiveReferences(reader, plan.dependencies, this.bounds, true);
     this.fence.append(classified, plan);
+    const reads = this.#layout.append(window.sql, classified, plan, measured.measurements, roots);
     const privacy = forecastArchiveEntryPrivacy(header);
     if (!privacy.ok) return stop("limit");
     const work = { ...(previous?.work ?? this.#rootWork) };
-    add(work, privacy.cost); add(work, forecastArchiveInventoryEntry(position.bytes)); add(work, measured.reads);
+    add(work, privacy.cost); add(work, forecastArchiveInventoryEntry(position.bytes)); add(work, reads);
     const deliveryLookup = header.input === "delivery" && Object.values(this.#support.definition.declared.receives).some(handler => handler.from.under !== undefined);
     add(work, forecastArchiveForeignLookup(), header.uses + Number(deliveryLookup));
     budget.spend({ metadata: 384, inputWork: 768 });
     this.#rows.set(position.seq, { hash: position.hash, entryBytes: (previous?.entryBytes ?? 0) + position.bytes,
-      objects: this.#objects.size, work: Object.freeze(work), uses: (previous?.uses ?? 0) + header.uses, sources: this.#sources.size });
+      objects: this.#layout.objects, work: Object.freeze(work), uses: (previous?.uses ?? 0) + header.uses, sources: this.#sources.size,
+      sourceWork: Object.freeze({ ...this.#sourceWork }) });
     return { kind: "position", position: classified, plan, measurements: measured.measurements };
   }
   #frame(window: ArchiveWindow): ArchiveScoutFrame {
@@ -185,6 +185,7 @@ export class ArchiveScout {
     const declarations = new ArchiveDeclarations(reader, this.bounds, this.reviewed, this.#visited);
     const foreign = this.fixtureSources ? new ArchiveForeignMetadata(window.sql, this.fixtureSources, this.reviewed, this.bounds,
       this.budget, this.#visited, this.#named, { record: true }) : undefined;
+    this.#frameOpen = true;
     return Object.freeze({ scout: this,
       next: (reserve: Partial<ArchiveCost> = {}): ArchiveScoutStep => {
         check(); if (this.#blocked) return stop("unavailable");
@@ -195,7 +196,7 @@ export class ArchiveScout {
           return result.value;
         } catch (error) { this.#blocked = true; throw error; }
       },
-      close: (): ArchiveScout => { check(); this.#checkpoint = window.checkpoint(); closed = true; return this; },
+      close: (): ArchiveScout => { check(); this.#checkpoint = window.checkpoint(); closed = true; this.#frameOpen = false; return this; },
     });
   }
   resume(sql: Pick<Sql, "exec">): ArchiveScoutFrame {
@@ -223,6 +224,9 @@ export class ArchiveScout {
       inputWork: 256 * (declarations.declarations.length + foreign.declarations.length) });
     const nodes = new Set([...declarations.declarations, ...foreign.declarations]);
     if (!isDigest(this.#named)) nodes.delete(this.#support.definition.digest);
+    // Every narrowed final read/omission pays the new size fence. Extra
+    // lookup attempts in row.work are conservatively included as well.
+    add(work, archiveRetainedExpectationCost(), declarations.work.attempts + row.work.attempts);
     add(work, { nodes: nodes.size }); add(work, prefix.cost); add(work, declarations.work); add(work, foreign.work);
     add(work, this.fence.comparisonCost(through)); add(work, forecastArchiveRetainedPass(), row.objects);
     add(work, forecastArchiveForeignSelection(foreign.copies));
@@ -231,15 +235,32 @@ export class ArchiveScout {
     add(work, forecastArchiveForeignBasis(row.sources)); add(work, forecastArchiveInventoryFinal(this.after !== null));
     return Object.freeze(work);
   }
+  /** Possible Git output and Native immutable-input work. This retains
+   * every present probe choice; final byte validation alone selects keys. */
+  layout(through: Head): ArchiveScoutLayoutQuote {
+    const row = this.#row(through), quote = this.#layout.quote(through, row.sources), copies = this.foreign.quote(through).copies;
+    const input = empty(); add(input, quote.input); add(input, row.sourceWork);
+    add(input, { metadata: row.sources * 512 + copies * 512, inputWork: row.sources * 1024 + copies * 1024 });
+    return Object.freeze({ ...quote, input: Object.freeze(input) });
+  }
+  /** Exact handoff/pruning work after the final candidate. Earlier-prefix
+   * lookahead must instead protect the fixed maximum cardinalities. */
+  selectionCost(through: Head): Readonly<ArchiveCost> {
+    this.#row(through);
+    const work = empty();
+    add(work, this.declarations.handoffCost()); add(work, this.foreign.handoffCost());
+    add(work, this.#layout.handoffCost()); add(work, this.fence.sealCost(through));
+    return Object.freeze(work);
+  }
   /** Choose once, after closing the last frame. Discarded candidate state
    * remains charged. Caller must separately reserve handoffs and pruning. */
   select(through: Head): { readonly forecast: ArchivePlanFence;
     readonly declarationSizes: ReadonlyMap<Digest, number | null>;
-    readonly expectedCopies: ReturnType<ArchiveForeignPlan["expectedCopies"]> } {
+    readonly expectedCopies: ReturnType<ArchiveForeignPlan["expectedCopies"]>; readonly retainedSizes: ReadonlyMap<string, number | null> } {
     this.#row(through);
-    if (!this.#checkpoint || this.#finished) return stop("unavailable");
-    const declarationSizes = this.declarations.sizes(through), expectedCopies = this.foreign.expectedCopies(through);
+    if (this.#frameOpen || this.#finished) return stop("unavailable");
+    const declarationSizes = this.declarations.sizes(through), expectedCopies = this.foreign.expectedCopies(through), retainedSizes = this.#layout.sizes(through);
     this.fence.seal(through); this.#finished = true; this.#checkpoint = null;
-    return { forecast: this.fence, declarationSizes, expectedCopies };
+    return { forecast: this.fence, declarationSizes, expectedCopies, retainedSizes };
   }
 }

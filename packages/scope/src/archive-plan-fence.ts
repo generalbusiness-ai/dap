@@ -102,6 +102,12 @@ export class ArchivePlanFence {
     return Object.freeze({ entries: 0, attempts: 0, nodes: 0, calls: 0,
       metadata: row.comparisonMetadata, inputWork: row.comparisonInputWork });
   }
+  sealCost(through: Head): Partial<ArchiveCost> {
+    this.#budget.spend({ metadata: 128, inputWork: 256 });
+    const row = this.#rows.get(through.seq);
+    if (this.#started || this.#through !== null || !row || row.position.hash !== through.hash) return stop("mismatch");
+    return { inputWork: (this.#first + this.#rows.size - 1 - through.seq) * 32 };
+  }
   /** Select an earlier whole boundary after metadata lookahead. Discarded
    * projections grant no refund: all their reads, seals and quotes remain
    * spent on the original ledger. The selected prefix is consumed once. */

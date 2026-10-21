@@ -264,7 +264,7 @@ test("Native scout resumes on a fresh port and re-admits the whole selected pref
     expect(queries.filter(query => query.startsWith("SELECT bytes FROM entry") || query.startsWith("SELECT bytes FROM retained_value") || query.startsWith("SELECT bytes FROM retained_input") && !query.includes("kind = ?"))).toEqual([]);
     const cost = scout.inventoryCost(through), constraints = scout.select(through), before = budget.admitted();
     fresh = true;
-    const inventory = inventoryArchive(sql, lane.at, through, PROPOSED_BOUNDS, registry, budget, undefined, null, constraints.forecast, constraints.declarationSizes, constraints.expectedCopies);
+    const inventory = inventoryArchive(sql, lane.at, through, PROPOSED_BOUNDS, registry, budget, undefined, null, constraints.forecast, constraints.declarationSizes, constraints.expectedCopies, constraints.retainedSizes);
     expect(inventory.ok).toBe(true); if (!inventory.ok) return expect.fail(inventory.reason);
     const after = budget.admitted();
     for (const key of Object.keys(cost) as (keyof ArchiveCost)[]) expect(cost[key]).toBeGreaterThanOrEqual(after[key] - before[key]);
@@ -299,12 +299,31 @@ test("Native scout preserves an earlier whole prefix after a refused lookahead d
     expect(() => frame.next()).toThrow("archive-unavailable");
     const scout = frame.close(), constraints = scout.select(through), beforeFresh = budget.admitted();
     const selected = inventoryArchive(sql, lane.at, through, PROPOSED_BOUNDS, registry, budget, undefined, null,
-      constraints.forecast, constraints.declarationSizes, constraints.expectedCopies);
+      constraints.forecast, constraints.declarationSizes, constraints.expectedCopies, constraints.retainedSizes);
     expect(selected.ok).toBe(true); if (!selected.ok) return expect.fail(selected.reason);
     const complete = budget.admitted();
     for (const key of Object.keys(forecast) as (keyof ArchiveCost)[]) expect(forecast[key]).toBeGreaterThanOrEqual(complete[key] - beforeFresh[key]);
     expect(selected.inventory.entries.map(entry => entry.seq)).toEqual([0, 1]);
     expect(complete.entries).toBe(5); // Discarded third scout is never refunded.
+  });
+});
+
+test("Native scout size fences refuse changed text omission evidence before publishing inventory", async () => {
+  const lane = await create({}, {}, base), body = "retained omission evidence", digest = textDigest(body);
+  expect(await lane.stub.submit(lane.intent(rita, "remark", { on: 0, fields: { text: digest } }), lane.grants(), { texts: [body] })).toMatchObject({ answer: "accepted" });
+  const through = await lane.head();
+  await lane.inside(state => {
+    const budget = new ArchiveBudget(), sql = { exec: state.storage.sql.exec.bind(state.storage.sql), transaction: <T>(work: () => T) => state.storage.transactionSync(work) };
+    const frame = ArchiveScout.open(sql, lane.at, through, null, PROPOSED_BOUNDS, registry, budget);
+    expect(frame.next().kind).toBe("position"); expect(frame.next().kind).toBe("position");
+    const scout = frame.close(), constraints = scout.select(through);
+    try {
+      // Restored negative only. No Native redaction/tombstone is invented.
+      state.storage.sql.exec("DELETE FROM retained_input WHERE kind = 'text' AND digest = ?", digest);
+      const result = inventoryArchive(sql, lane.at, through, PROPOSED_BOUNDS, registry, budget, undefined, null,
+        constraints.forecast, constraints.declarationSizes, constraints.expectedCopies, constraints.retainedSizes);
+      expect(result).toEqual({ ok: false, reason: "mismatch" });
+    } finally { state.storage.sql.exec("INSERT INTO retained_input (kind, digest, bytes) VALUES ('text', ?, ?)", digest, canonicalize(body)); }
   });
 });
 

@@ -2,7 +2,7 @@
  * request and ordered probe choice: size/existence chooses no valid body.
  * The owning synchronous frame separately admits declarations/privacy and
  * protects its selected prefix's finish forecast during lookahead. */
-import type { Bounds } from "@generalbusiness/dap-contract";
+import { RETAINED_INPUT_BYTES, type Bounds } from "@generalbusiness/dap-contract";
 import type { PlannedRetainedDependency, RetainedKey } from "@generalbusiness/dap-derive";
 import { ARCHIVE_BOUNDS, type ArchiveCost } from "./archive-budget.ts";
 import { ArchiveRetainedReader, archiveRetainedReadForecast } from "./archive-retained.ts";
@@ -11,11 +11,11 @@ import { readArchiveTextBytes } from "./archive-text.ts";
 
 export interface ArchiveReferenceMeasurement {
   readonly plan: PlannedRetainedDependency;
-  readonly candidates: readonly { readonly key: RetainedKey; readonly bytes: number | null }[];
+  readonly candidates: readonly { readonly key: RetainedKey; readonly bytes: number | null; readonly heldBytes?: number | null }[];
   readonly textBytes?: number | null;
 }
 export function measureArchiveReferences(reader: ArchiveRetainedReader, plans: readonly PlannedRetainedDependency[],
-  bounds: Pick<Bounds, "definitionBytes">): { readonly measurements: readonly ArchiveReferenceMeasurement[]; readonly reads: Partial<ArchiveCost> } {
+  bounds: Pick<Bounds, "definitionBytes">, allSizes = false): { readonly measurements: readonly ArchiveReferenceMeasurement[]; readonly reads: Partial<ArchiveCost> } {
   const budget = reader.budget, measurements: ArchiveReferenceMeasurement[] = [], reads: Partial<ArchiveCost> = {};
   const add = (cost: Partial<ArchiveCost>) => {
     for (const key of Object.keys(ARCHIVE_BOUNDS) as (keyof ArchiveCost)[]) reads[key] = (reads[key] ?? 0) + (cost[key] ?? 0);
@@ -32,11 +32,12 @@ export function measureArchiveReferences(reader: ArchiveRetainedReader, plans: r
     }
     const keys = dependency.mode === "probe" ? dependency.choices : [{ key: dependency.key }];
     budget.spend({ metadata: keys.length * 512, inputWork: keys.length * 1024 });
-    const candidates: { key: RetainedKey; bytes: number | null }[] = [];
+    const candidates: { key: RetainedKey; bytes: number | null; heldBytes?: number | null }[] = [];
     for (const { key } of keys) {
       const max = key.kind === "definition" ? Math.min(plan.max, bounds.definitionBytes) : plan.max;
-      const bytes = reader.measure(key, max);
-      candidates.push({ key, bytes });
+      const heldBytes = reader.measure(key, allSizes ? RETAINED_INPUT_BYTES : max);
+      const bytes = heldBytes !== null && heldBytes <= max ? heldBytes : null;
+      candidates.push({ key, bytes, ...(allSizes ? { heldBytes } : {}) });
       add(archiveRetainedReadForecast(bytes));
     }
     // A present but invalid candidate remains undecided until byte validation.

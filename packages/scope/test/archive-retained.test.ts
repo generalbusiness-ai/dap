@@ -5,9 +5,9 @@ import { DOMAINS, PROPOSED_BOUNDS, RETAINED_INPUT_BYTES } from "@generalbusiness
 import { canonicalize, digestBytes, utf8 } from "@generalbusiness/artroom-bytes";
 import { ARCHIVE_BOUNDS, ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
 import { observationDependency } from "@generalbusiness/dap-derive";
-import { ArchiveRetainedReader, readArchiveProbe } from "../src/archive-retained.ts";
+import { ArchiveRetainedReader, readArchiveProbe, archiveRetainedKeyName, archiveRetainedColdReadForecast, archiveRetainedReadForecast } from "../src/archive-retained.ts";
 import { measureArchiveReferences } from "../src/archive-reference-measurements.ts";
-import { definition, create } from "./fixtures-native.ts";
+import { definition, create, rita } from "./fixtures-native.ts";
 
 const missing = "sha256:" + "d".repeat(64) as `sha256:${string}`;
 test("native keyed measurement returns scalar sizes, charges repeats and does not validate corrupt bytes", async () => {
@@ -40,6 +40,43 @@ test("native keyed measurement returns scalar sizes, charges repeats and does no
   expect(result.measurementQueries.every(query => query.includes("octet_length(bytes)") && query.includes("FROM retained_input"))).toBe(true);
   expect(result.read).toBeNull();
   expect(result.queries.filter(query => query.startsWith("SELECT bytes"))).toHaveLength(1);
+});
+
+// Native table rows below are explicit TEST payloads, not policy or export
+// admission. Only the first valid bytes have their correct raw hash.
+test("native retained size fences reject changed and newly present bodies across a Native turn", async () => {
+  const lane = await create(), budget = new ArchiveBudget(), bytes = canonicalize("🎵"), later = "true";
+  const key = { kind: "rule" as const, digest: digestBytes(utf8(bytes)) }, absent = { kind: "rule" as const, digest: digestBytes(utf8(later)) };
+  const expected = new Map<string, number | null>();
+  await lane.inside(state => {
+    state.storage.sql.exec("INSERT INTO retained_input (kind, digest, bytes) VALUES ('rule', ?, ?)", key.digest, bytes);
+    const reader = new ArchiveRetainedReader(state.storage.sql, budget);
+    expected.set(archiveRetainedKeyName(key), reader.measure(key, RETAINED_INPUT_BYTES));
+    expected.set(archiveRetainedKeyName(absent), reader.measure(absent, RETAINED_INPUT_BYTES));
+    const before = budget.admitted(); expect(reader.read(key, 6)?.bytes).toBe(bytes); const cold = budget.admitted();
+    expect(cold.inputWork - before.inputWork).toBe(550); // Original actual cold price for six UTF-8 bytes.
+    expect(archiveRetainedColdReadForecast(6).inputWork).toBe(550);
+    expect(reader.read(key, 4)).toBeNull(); const cached = budget.admitted();
+    expect(cached.inputWork - cold.inputWork).toBe(640); // Four UTF-16 units still pass the early length check.
+    expect(archiveRetainedReadForecast(6).inputWork).toBeGreaterThanOrEqual(640);
+    expect(archiveRetainedReadForecast(null).inputWork).toBeLessThan(640);
+  });
+  await lane.did(rita, "remark", { on: 0, fields: { text: "a real Native turn between reads" } });
+  await lane.inside(state => {
+    const queries: string[] = [];
+    const sql = { exec(query: string, ...args: (string | number | null | ArrayBuffer)[]) { queries.push(query); return state.storage.sql.exec(query, ...args); } };
+    try {
+      // Restored negative fixtures only; no corrupt journal is accepted.
+      state.storage.sql.exec("UPDATE retained_input SET bytes = 'null' WHERE kind = 'rule' AND digest = ?", key.digest);
+      state.storage.sql.exec("INSERT INTO retained_input (kind, digest, bytes) VALUES ('rule', ?, ?)", absent.digest, later);
+      const reader = new ArchiveRetainedReader(sql, budget, [], expected);
+      for (const candidate of [key, absent]) expect(() => reader.read(candidate, RETAINED_INPUT_BYTES)).toThrow("archive-mismatch");
+      expect(queries.filter(query => query.startsWith("SELECT bytes"))).toEqual([]);
+    } finally {
+      state.storage.sql.exec("UPDATE retained_input SET bytes = ? WHERE kind = 'rule' AND digest = ?", bytes, key.digest);
+      state.storage.sql.exec("DELETE FROM retained_input WHERE kind = 'rule' AND digest = ?", absent.digest);
+    }
+  });
 });
 
 test("native definition-key selection validates canonical bytes and charges cache hits without aliasing the value table", async () => {

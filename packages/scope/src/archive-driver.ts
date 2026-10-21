@@ -6,8 +6,8 @@ import { isScopeRef, timeMs, timeOf } from "@generalbusiness/artroom-bytes";
 import { journalId, journalRef, type JournalArchive, type JournalPassArchive, type JournalFormat, type JournalObject, type JournalObjectSource } from "@generalbusiness/artroom-git/journal";
 import { ArchiveBudget, ArchiveStopped } from "./archive-budget.ts";
 import { ARCHIVE_TRANSFER_OBJECTS, archiveObjectListMetadata, archiveObjectCopyWork } from "./archive-transfer-cost.ts";
-import { planArchivePass, planArchiveConversion, rebuildArchive, rebuildArchivePass } from "./archive-build.ts";
-import { archiveCutoff } from "./archive-cutoff.ts";
+import { planArchiveConversion, rebuildArchive, rebuildArchivePass } from "./archive-build.ts";
+import { planAdaptiveArchivePass } from "./archive-adaptive.ts";
 import type { FixtureArchiveSourcePins } from "./archive-source-pins.ts";
 import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, readArchivePin, readArchivePinAfterReceipt } from "./archive-pin.ts";
 import type { ArchivePolicyRegistry } from "./archive-inventory.ts";
@@ -209,6 +209,7 @@ export class ArchiveDriver {
       }
       const previous = await this.#parent(row, budget, allowed);
       let archive: JournalArchive | JournalPassArchive;
+      let selectedParentObjects: readonly string[] | undefined;
       if (row.pending) {
         const rebuild = row.pending.layout === 2 ? rebuildArchivePass : rebuildArchive;
         const rebuilt = await rebuild(this.#options.sql, row, previous.parent, budget, this.#options.fixtureSources);
@@ -217,20 +218,26 @@ export class ArchiveDriver {
       } else {
         const common = { bounds: this.#options.bounds, policies: this.#options.policies.registry, parent: previous.parent,
           markedAt: this.#options.clock(), ...(this.#options.fixtureSources ? { fixtureSources: this.#options.fixtureSources } : {}) };
-        const planned = row.confirmed && row.confirmed.layout !== 2
-          ? await planArchiveConversion(this.#options.sql, { ...common, row }, budget)
-          : await planArchivePass(this.#options.sql, { ...common, at,
-            through: archiveCutoff(this.#options.sql, through, row.confirmed?.through ?? null, this.#options.bounds, budget),
-            after: row.confirmed?.through ?? null, format: row.format }, budget);
+        let planned: Awaited<ReturnType<typeof planArchiveConversion>>;
+        if (row.confirmed && row.confirmed.layout !== 2) planned = await planArchiveConversion(this.#options.sql, { ...common, row }, budget);
+        else {
+          const adaptive = await planAdaptiveArchivePass(this.#options.sql, { ...common, at, through,
+            after: row.confirmed?.through ?? null, format: row.format, row,
+            parentHeld: previous.held, parentUsed: previous.used, maximum: this.#maximum }, budget);
+          if (adaptive.ok) selectedParentObjects = adaptive.parentObjects;
+          else if (adaptive.reason === "mismatch") return { state: "retry", next: scheduled ?? this.#later(0), reason: adaptive.reason };
+          planned = adaptive;
+        }
         if (!planned.ok) { rows.stop(planned.reason, "where" in planned ? planned.where ?? null : null, budget); return { state: "stopped", next: null, reason: planned.reason }; }
-        archive = planned.archive; row = rows.mark(planned.mark, budget);
+        archive = planned.archive;
+        row = rows.mark(planned.mark, budget);
       }
       const next = scheduled ?? this.#later(row.attempts);
       if (next === null) { budget.stop("unavailable"); return { state: "retry", next: null, reason: "unavailable" }; }
       if (row.attempts === 0) row = rows.attempt(next, budget);
       scheduled = next;
       const all = new Map<string, JournalObject>();
-      for (const id of previous.used) all.set(id, previous.held.get(id)!);
+      for (const id of selectedParentObjects ?? previous.used) all.set(id, previous.held.get(id)!);
       for (const object of archive.objects) all.set(object.id, object);
       const objects = [...this.#copy([...all.values()], row.format, budget).values()];
       credential = await budget.wait(() => this.#options.provider.mintArchive({ ...row!.repository }, { ...at }, allowed));

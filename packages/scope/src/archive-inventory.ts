@@ -9,7 +9,7 @@ import { archivePinValidationWork, archiveInventoryEntryWork } from "./archive-i
 import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, readArchivePin, readArchivePinAfterReceipt } from "./archive-pin.ts";
 import { stopArchivePrefix as stop, archivePrefixMetadata, ArchivePrefixStopped, type ArchivePrefixReason } from "./archive-prefix.ts";
 import { archivePrivacyMetadata, type ArchiveSupport } from "./archive-privacy.ts";
-import { ArchiveRetainedReader, readArchiveProbe } from "./archive-retained.ts";
+import { ArchiveRetainedReader, readArchiveProbe, archiveRetainedExpectedSize } from "./archive-retained.ts";
 import type { Sql } from "./sqlite.ts";
 import { ArchiveForeignMetadata, type ArchiveForeignExpectedCopy } from "./archive-foreign.ts";
 import type { ArchiveSourceBasis, FixtureArchiveSourcePins } from "./archive-source-pins.ts";
@@ -59,7 +59,7 @@ const nameOf = (key: RetainedKey) => JSON.stringify(key.kind === "value" ? [key.
  * context. The caller supplies its real Sql.transaction (transactionSync).
  * All work is synchronous: no provider task can outlive this frame. The
  * same one budget is used across every stage and every cache hit. */
-export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: Bounds, reviewed: ArchivePolicyRegistry, budget = new ArchiveBudget(), fixtureSources?: FixtureArchiveSourcePins, after?: Head | null, forecast?: ArchivePlanFence, declarationSizes?: ReadonlyMap<Digest, number | null>, expectedCopies?: ReadonlyMap<Digest, Readonly<ArchiveForeignExpectedCopy>>): ArchiveInventoryResult {
+export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: Bounds, reviewed: ArchivePolicyRegistry, budget = new ArchiveBudget(), fixtureSources?: FixtureArchiveSourcePins, after?: Head | null, forecast?: ArchivePlanFence, declarationSizes?: ReadonlyMap<Digest, number | null>, expectedCopies?: ReadonlyMap<Digest, Readonly<ArchiveForeignExpectedCopy>>, retainedSizes?: ReadonlyMap<string, number | null>): ArchiveInventoryResult {
   try {
     return sql.transaction(() => {
       budget.check();
@@ -67,7 +67,7 @@ export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: 
       const prefix = archivePrefixMetadata(sql, at, through, bounds, budget, certified, after);
       const rootPolicy = reviewed.get(prefix.pin.seed.definition);
       if (!rootPolicy || !rootPolicy.review || rootPolicy.review.length > 512 || rootPolicy.support.named !== prefix.pin.seed.definition) return stop("unsupported-archive-cohort");
-      let reader = new ArchiveRetainedReader(sql, budget);
+      let reader = new ArchiveRetainedReader(sql, budget, [], retainedSizes);
       const visited = new Set<Digest>();
       const declarations = new ArchiveDeclarations(reader, bounds, reviewed, visited, declarationSizes);
       const { definition, platformClosure } = declarations.root(prefix.pin.seed.definition);
@@ -82,7 +82,7 @@ export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: 
       // No copied/value/rule/snapshot body is available to this reader until
       // every selected local and foreign inline class has passed metadata.
       const copies = foreign?.selection() ?? [];
-      if (copies.length) reader = new ArchiveRetainedReader(sql, budget, copies);
+      if (copies.length) reader = new ArchiveRetainedReader(sql, budget, copies, retainedSizes);
       const plans: { origin: DependencyOrigin; plan: LocalRetainedPlan }[] = [];
       for (const position of admitted.positions) {
         budget.spend({ inputWork: archiveInventoryEntryWork(position.bytes) });
@@ -153,7 +153,9 @@ export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: 
           if (dependency.mode === "text") {
             if (after === undefined) omittedTexts.push(dependency);
             else {
+              const expected = retainedSizes ? archiveRetainedExpectedSize(dependency.key, retainedSizes, budget) : undefined;
               const bytes = readArchiveTextBytes(sql, dependency.key.digest, budget);
+              if (retainedSizes && expected !== bytes) return stop("mismatch");
               if (bytes !== null) omittedTexts.push({ ...dependency, bytes });
             }
             continue;

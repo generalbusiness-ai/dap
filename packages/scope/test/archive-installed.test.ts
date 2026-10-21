@@ -16,6 +16,9 @@ import { archiveSource, verifyArchive, TRUSTS } from "@generalbusiness/artroom-r
 import { buildJournalPass, journalRef, verifyJournalAppend, type JournalArchive, type JournalObject, type JournalPassArchive } from "@generalbusiness/artroom-git/journal";
 import { readJournalRepositoryArchive } from "@generalbusiness/artroom-git/journal-reader";
 import { archiveInput } from "../src/archive-input.ts";
+import { ArchiveDriver } from "../src/archive-driver.ts";
+import { ArchiveRows } from "../src/archive-row.ts";
+import { ScriptedArchiveHost } from "./support/archive-provider.ts";
 import { ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
 import { archiveEntryHeader, archiveEntryPrivacy, archiveSupportMetadata, recordArchiveSupportMetadata } from "../src/archive-entry-metadata.ts";
 import { archivePrefixMetadata } from "../src/archive-prefix.ts";
@@ -36,7 +39,7 @@ import { applicationHttpPeer } from "./support/application-http-peer.ts";
 import { localClone } from "./support/local-clone.ts";
 import { sessionRoom } from "./support/session-room.ts";
 import { dispatchFixture, driveFixture, effectFixture } from "./support/native-fixture-lifetime.ts";
-import { archiveSql } from "./support/archive.ts";
+import { archiveRepository, archiveSql } from "./support/archive.ts";
 import { namespace } from "../src/namespace.ts";
 import { readNativeBirth } from "../src/native-birth.ts";
 import { DEVICE_COMMAND_ARCHIVE_PREPARATIONS, DEVICE_COMMAND_ARCHIVE_RECORDS } from "../src/archive-privacy.ts";
@@ -393,6 +396,46 @@ test.for(["fixture", "Grow"])("installed %s scopes export genesis zero after a l
       entryPrivacyComponents, entryPrivacyQualification: "Actual native header and entry-privacy calls before extraction, each component has its own unchanged default budget and fresh prefix/JSON reservation. Delta excludes that separately paid prefix, trusted support validation, foreign classification, and all payload reads; no whole-export or driver admission claimed.",
       qualification: "Actual installed Grow and its discovered native Directory16, Rules10 and Destination12 histories. Each diagnostic one-entry pass uses one original default30s ledger for fresh native inventory, canonical Git build and, for each noninitial pass, append validation. Genesis has no prior append and no append-validator claim. Real fixture entries and retained bytes; explicit TEST package peer, owner input, policy/source/authority configuration and scheduler. No remote confirmation, production admission or deployed cadence claim. Kind/domain counts concern these fixture entries, not all theoretically possible native entries."
     };
+    if (kind === "Grow") {
+      // Invariant: each actual installed/native entry fits a confirmed
+      // one-entry driver pass on one unchanged default all-work allowance.
+      // The TEST owner supplies that entry's actual fixed cutoff, not an
+      // alarm cadence. HTTP/token/repository/policy remain explicit fixtures.
+      const passes: unknown[] = [];
+      (context.task.meta as Record<string, unknown>)["adaptiveNativeCohorts"] = { passes,
+        qualification: "Actual Grow root/child and discovered Directory16/Rules10/Destination12. Each TEST owner cutoff names one existing actual Native entry. One default30s ledger pays scouting, preparation, fresh inventory, writer, outgoing copies, production incremental validator/copy/pack/send code and Native mark/attempt/confirmation. Native receipt inspections use separate test-observation budgets; no archive phase reset. HTTP replies/credentials/repository/policies/source preparation are TEST fixtures. No live alarm/cadence/10000-one-entry claim." };
+      for (const { scope, read } of allHistories) {
+        const at = await life.wait(() => scope.at()), host = new ScriptedArchiveHost("sha1", () => timeOf(life.now()));
+        for (const sealed of read.value) {
+          const cutoff = { seq: sealed.entry.seq, hash: sealed.hash };
+          const outcome = await life.wait(() => runInDurableObject(scope.object, async (_instance, state) => {
+            const sql = archiveSql(state); let passBudget: ArchiveBudget | undefined;
+            const quotes: { requested: Partial<ArchiveCost>; spent: ArchiveCost }[] = [];
+            const driver = new ArchiveDriver({ sql, current: () => ({ at, head: cutoff }), clock: () => timeOf(life.now()),
+              bounds: PROPOSED_BOUNDS, policies: { fixture: "archive-policies", registry: policies }, fixtureSources,
+              target: { fixture: "archive-target", resolve: async () => archiveRepository }, provider: host,
+              budget: () => {
+                const budget = new ArchiveBudget(), canSpend = budget.canSpend.bind(budget); passBudget = budget;
+                budget.canSpend = cost => {
+                  if ((cost.entries ?? 0) > 0 && (cost.inputWork ?? 0) > 20 * 1024 * 1024) { if (quotes.length === 2) quotes.shift(); quotes.push({ requested: { ...cost }, spent: budget.admitted() }); }
+                  return canSpend(cost);
+                };
+                return budget;
+              } });
+            const result = await driver.run();
+            return { result, cost: passBudget!.admitted(), quotes, confirmed: new ArchiveRows(sql, at).load()?.confirmed ?? null };
+          }));
+          passes.push({ scope: scope.name, named: read.value[0]!.entry.input.type === "genesis" ? read.value[0]!.entry.input.seed.definition : null,
+            seq: cutoff.seq, role: scope.name === rootScope.name ? "root" : scope.name === childScope.name ? "child" : "native", ...outcome });
+          expect(outcome.result, JSON.stringify(passes.at(-1))).toMatchObject({ state: "confirmed" });
+          expect(outcome.confirmed?.through).toEqual(cutoff); expect(outcome.cost.entries).toBe(2);
+          expect(outcome.cost.inputWork).toBeLessThanOrEqual(64 * 1024 * 1024);
+        }
+        expect(host.appendCalls).toBe(read.value.length - 1); expect(host.sends).toHaveLength(read.value.length);
+        expect((await life.wait(() => scope.sealed())).map(row => row.hash)).toEqual(read.value.map(row => row.hash));
+      }
+      expect(passes).toHaveLength(allHistories.reduce((count, history) => count + history.read.value.length, 0));
+    }
     if (kind === "Grow") {
       // A constructed enrol copy and a listed kind with a nested secret
       // must refuse the whole export before any body/integrity read. The

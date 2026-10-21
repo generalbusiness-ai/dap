@@ -18,7 +18,7 @@ export type ArchiveRetainedCopy = Pick<ArchiveForeignCopy, "content" | "bytes" |
 // Supported decoding vocabulary, not permission to read/export. The owning
 // whole-prefix classifier checks every exact native pin/data/place first.
 const nativeDomains: ReadonlySet<string> = new Set([...Object.values(DOMAINS), ...ARCHIVE_NATIVE_VALUE_DOMAINS]);
-const keyName = (key: RetainedKey): string => JSON.stringify(key.kind === "value" ? [key.kind, key.domain, key.digest] : [key.kind, key.digest]);
+export const archiveRetainedKeyName = (key: RetainedKey | { readonly kind: "text"; readonly digest: Digest }): string => JSON.stringify(key.kind === "value" ? [key.kind, key.domain, key.digest] : [key.kind, key.digest]);
 const REQUEST_WORK = 256, SIZE_METADATA = 96, DEFINITION_PRESENCE_METADATA = 32;
 /** Original unreviewed declaration existence check only, never a body. */
 export const archiveDefinitionPresenceForecast = (): Readonly<Partial<ArchiveCost>> =>
@@ -36,12 +36,34 @@ export function archiveRetainedReadForecast(bytes: number | null): Partial<Archi
     inputWork: REQUEST_WORK + SIZE_METADATA + (bytes === null ? 0 : Math.max(coldWork(bytes) + bytes, cachedWork(bytes))) };
 }
 
+/** An actually fresh reader's first request for a key. This prices the
+ * original cold mechanism; no scout cache or validation credit is used. */
+export function archiveRetainedColdReadForecast(bytes: number | null): Partial<ArchiveCost> {
+  if (bytes !== null && (!natural(bytes) || bytes === 0 || bytes > RETAINED_INPUT_BYTES)) throw new ArchiveStopped("unavailable");
+  return { attempts: 1, calls: bytes === null ? 1 : 2, metadata: SIZE_METADATA,
+    inputWork: REQUEST_WORK + SIZE_METADATA + (bytes === null ? 0 : coldWork(bytes) + bytes) };
+}
+
+/** New metadata-fence bookkeeping; original request/read fees remain.
+ * Keys include text omissions, whose expected sizes are checked by inventory. */
+export const archiveRetainedExpectationCost = (): Partial<ArchiveCost> => ({ metadata: 1024, inputWork: 2048 });
+export function archiveRetainedExpectedSize(key: RetainedKey | { readonly kind: "text"; readonly digest: Digest }, sizes: ReadonlyMap<string, number | null>, budget: ArchiveBudget): number | null {
+  budget.spend(archiveRetainedExpectationCost());
+  const name = archiveRetainedKeyName(key);
+  if (!sizes.has(name)) throw new ArchivePrefixStopped("mismatch");
+  return sizes.get(name)!;
+}
+export function archiveRetainedHandoffCost(keys: number): Partial<ArchiveCost> {
+  if (!natural(keys) || keys > ARCHIVE_BOUNDS.attempts) throw new ArchiveStopped("unavailable");
+  return { metadata: 128 + keys * 256, inputWork: 256 + keys * 512 };
+}
+
 export class ArchiveRetainedReader {
   readonly #cache = new Map<string, string>();
   readonly #copies = new Map<Digest, Readonly<ArchiveRetainedCopy>>();
   /** The owning pass supplies descriptors only after every local/foreign
    * policy class is admitted, or from its exact immutable marked selection. */
-  constructor(readonly sql: Pick<Sql, "exec">, readonly budget: ArchiveBudget, copies: readonly Readonly<ArchiveRetainedCopy>[] = []) {
+  constructor(readonly sql: Pick<Sql, "exec">, readonly budget: ArchiveBudget, copies: readonly Readonly<ArchiveRetainedCopy>[] = [], readonly expectedSizes?: ReadonlyMap<string, number | null>) {
     if (copies.length > ARCHIVE_BOUNDS.attempts) budget.stop("limit");
     budget.spend({ metadata: copies.length * 512, inputWork: copies.length * 1024 });
     for (const copy of copies) this.#rememberCopy(copy, false);
@@ -79,6 +101,7 @@ export class ArchiveRetainedReader {
   #request(key: RetainedKey, max: number): Readonly<ArchiveRetainedCopy> | undefined {
     checkedRetainedKey(key);
     this.budget.spend({ attempts: 1, inputWork: REQUEST_WORK });
+    if (this.expectedSizes) archiveRetainedExpectedSize(key, this.expectedSizes, this.budget);
     const copy = key.kind === "entry" ? this.#copies.get(key.digest) : undefined;
     if (key.kind === "entry" && !copy) throw new ArchivePrefixStopped("unsupported-foreign-copy");
     // Runtime check as well as the closed TypeScript key; never fall through
@@ -91,11 +114,12 @@ export class ArchiveRetainedReader {
   #size(key: RetainedKey, max: number, copy: Readonly<ArchiveRetainedCopy> | undefined): number | null {
     const value = key.kind === "value", where = value ? "domain = ? AND digest = ?" : "kind = ? AND digest = ?", table = value ? "retained_value" : "retained_input";
     const rows = this.budget.native(this.sql, () => ({ metadata: SIZE_METADATA, inputWork: 0 })).exec(`SELECT octet_length(bytes) AS size, typeof(bytes) AS type FROM ${table} WHERE ${where} LIMIT 1`, key.kind === "value" ? key.domain : key.kind, key.digest).toArray();
-    if (rows.length === 0) return null;
-    const row = rows[0];
-    if (rows.length !== 1 || row?.["type"] !== "text" || !natural(row["size"]) || row["size"] === 0 || row["size"] > max) return null;
-    if (copy && row["size"] !== copy.bytes) return null;
-    return row["size"];
+    const row = rows[0], bytes = rows.length === 1 && row?.["type"] === "text" && natural(row["size"])
+      && row["size"] > 0 && row["size"] <= RETAINED_INPUT_BYTES ? row["size"] : null;
+    if (this.expectedSizes && this.expectedSizes.get(archiveRetainedKeyName(key)) !== bytes) throw new ArchivePrefixStopped("mismatch");
+    if (bytes === null || bytes > max) return null;
+    if (copy && bytes !== copy.bytes) return null;
+    return bytes;
   }
   /** Scalar keyed metadata for a cost forecast, never content validation
    * or permission to select a body. A later read measures again. Repeated
@@ -107,7 +131,7 @@ export class ArchiveRetainedReader {
    * hits. Decode/hash work is reserved again before repeat validation. */
   read(key: RetainedKey, max: number): ArchiveRetainedValue | null {
     const copy = this.#request(key, max);
-    const cacheKey = keyName(key);
+    const cacheKey = archiveRetainedKeyName(key);
     let bytes = this.#cache.get(cacheKey);
     let size: number;
     if (bytes === undefined) {

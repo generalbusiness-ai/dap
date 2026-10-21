@@ -369,7 +369,7 @@ test("Native scout carries direct-copy metadata across a closed frame and prices
     const forecast = scout.inventoryCost(f.through), constraints = scout.select(f.through), before = budget.admitted();
     expect(constraints.expectedCopies.size).toBe(2); fresh = true;
     const selected = inventoryArchive(sql, f.consumer.at, f.through, PROPOSED_BOUNDS, f.policies, budget, f.sources, null,
-      constraints.forecast, constraints.declarationSizes, constraints.expectedCopies);
+      constraints.forecast, constraints.declarationSizes, constraints.expectedCopies, constraints.retainedSizes);
     expect(selected.ok).toBe(true); if (!selected.ok) return expect.fail(selected.reason);
     const after = budget.admitted();
     for (const key of Object.keys(forecast) as (keyof ArchiveCost)[]) expect(forecast[key]).toBeGreaterThanOrEqual(after[key] - before[key]);

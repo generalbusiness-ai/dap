@@ -3,7 +3,7 @@
  * configured source-pin work remain separate. */
 import { natural } from "@generalbusiness/artroom-bytes";
 import { ArchiveStopped, type ArchiveCost } from "./archive-budget.ts";
-import { archiveRetainedReadForecast } from "./archive-retained.ts";
+import { archiveRetainedColdReadForecast, archiveRetainedReadForecast } from "./archive-retained.ts";
 
 export const ARCHIVE_INPUT_REQUEST_WORK = 256;
 export const ARCHIVE_ENTRY_SIZE_METADATA = 128;
@@ -30,6 +30,14 @@ export function archiveEntryReadForecast(bytes: number): Readonly<Partial<Archiv
  * no cached-validation credit or assumed cache state is supplied. */
 export function archiveInputRetainedReadForecast(bytes: number): Readonly<Partial<ArchiveCost>> {
   const read = archiveRetainedReadForecast(bytes), inputWork = (read.inputWork ?? 0) + archiveInputRetainedPostWork(bytes);
+  if (!natural(inputWork)) throw new ArchiveStopped("unavailable");
+  return Object.freeze({ ...read, inputWork });
+}
+
+/** The normalized new-key loop calls each key once on a newly constructed
+ * input reader. The original cold read and final UTF-8 check are still paid. */
+export function archiveInputColdRetainedReadForecast(bytes: number): Readonly<Partial<ArchiveCost>> {
+  const read = archiveRetainedColdReadForecast(bytes), inputWork = (read.inputWork ?? 0) + archiveInputRetainedPostWork(bytes);
   if (!natural(inputWork)) throw new ArchiveStopped("unavailable");
   return Object.freeze({ ...read, inputWork });
 }
