@@ -4,8 +4,8 @@
 import { expect, onTestFinished, test } from "vitest";
 import { env } from "cloudflare:test";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Input, SendForm } from "@generalbusiness/dap-contract";
-import { canonicalize, utf8 } from "@generalbusiness/artroom-bytes";
+import type { Digest, Input, SendForm } from "@generalbusiness/dap-contract";
+import { canonicalize, isEntry, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
 import { variant } from "@generalbusiness/dap-derive/testing";
 import { outcomeValueDomains, validateDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
@@ -22,9 +22,9 @@ import { archiveRepository, archiveSql } from "./support/archive.ts";
 import { fixtureArchiveWiring } from "./worker.ts";
 import { sessionRoom } from "./support/session-room.ts";
 import { namespace } from "../src/namespace.ts";
-import { ArchiveForeignMetadata } from "../src/archive-foreign.ts";
+import { ArchiveForeignMetadata, type ArchiveForeignRecordedScan, type ArchiveForeignExpectedCopy } from "../src/archive-foreign.ts";
 import { archiveInput } from "../src/archive-input.ts";
-import { archivePrefixMetadata } from "../src/archive-prefix.ts";
+import { ArchivePrefixStopped, archivePrefixMetadata } from "../src/archive-prefix.ts";
 import { archivePrivacyMetadata } from "../src/archive-privacy.ts";
 import { FixtureArchiveSourcePins } from "../src/archive-source-pins.ts";
 import { inventoryArchive, type ArchivePolicyRegistry, type ReviewedArchivePolicy } from "../src/archive-inventory.ts";
@@ -126,7 +126,7 @@ async function fixture() {
     }, transaction: work => state.storage.transactionSync(work) }, consumer.at, through, PROPOSED_BOUNDS, reviewed, new ArchiveBudget(limits), pins);
     return { result, calls, damaged };
   });
-  return { producer, consumer, birth: birth.value, assigned, uses, sources, policies, scan, inventory };
+  return { producer, consumer, birth: birth.value, assigned, uses, sources, policies, through, scan, inventory };
 }
 
 test("direct foreign copies classify their own full headers against fixture pins and separate reviewed policy before any payload body", async () => {
@@ -183,6 +183,85 @@ test("direct foreign copies classify their own full headers against fixture pins
 
 
 
+});
+
+// Native metadata admission and SQLite are real. Policy/source/clock/read
+// configuration stays the explicit TEST fixture above; no export is made.
+test("native foreign recording pays scout work and fences fresh metadata after a native turn", async () => {
+  const f = await fixture();
+  const result = await f.consumer.inside(state => {
+    const budget = new ArchiveBudget(), forbidden: string[] = [];
+    const sql = { exec(query: string, ...args: (string | number | null | ArrayBuffer)[]) {
+      if (/^SELECT (?:\*|bytes)(?:\s|,)/.test(query)) { forbidden.push(query); throw Error("body tripwire"); }
+      return state.storage.sql.exec(query, ...args);
+    } };
+    const recorder = new ArchiveForeignMetadata(sql, f.sources, f.policies, PROPOSED_BOUNDS, budget, new Set(), receiver.digest, { record: true });
+    const scans: Readonly<ArchiveForeignRecordedScan>[] = [], scan = recorder.scan.bind(recorder);
+    recorder.scan = (position, count) => { scan(position, count); scans.push(recorder.recorded(position)); };
+    const prefix = archivePrefixMetadata(sql, f.consumer.at, f.through,
+      PROPOSED_BOUNDS, budget, new Set([receiver.digest]));
+    archivePrivacyMetadata(sql, prefix, policy(receiver).support, budget, recorder);
+    recorder.scan(prefix.positions[1]!, 1); // An actual repeated direct use on this same scout ledger.
+    const scouted = budget.admitted(), cold = scans.flatMap(row => row.requests.filter(request => request.kind === "cold"));
+    budget.spend({ metadata: cold.length * 256, inputWork: cold.length * 512 });
+    const expected = new Map(cold.map(request => [request.content, request.copy]));
+    const fresh = new ArchiveForeignMetadata(sql, f.sources, f.policies, PROPOSED_BOUNDS, budget, new Set(), receiver.digest, { expected });
+    const receipts: ArchiveCost[] = [];
+    for (const recorded of scans) {
+      const quote = { attempts: 0, calls: 0, metadata: 0, inputWork: 0 }, uses = forecastArchiveForeignScan(recorded.uses);
+      for (const key of Object.keys(quote) as (keyof typeof quote)[]) quote[key] += uses[key];
+      for (const request of recorded.requests) {
+        const work = request.kind === "repeat" ? forecastArchiveForeignRepeat(request.bytes) : forecastArchiveForeignColdCopy(request.footprint);
+        if ("ok" in work && !work.ok) return expect.fail("The actual native cold copy must fit its scalar bounds.");
+        const cost = "ok" in work ? work.work : work;
+        for (const key of Object.keys(quote) as (keyof typeof quote)[]) quote[key] += cost[key];
+      }
+      const before = budget.admitted(); fresh.scan(recorded.position, recorded.uses); const after = budget.admitted();
+      const actual = Object.fromEntries(Object.keys(before).map(key => [key, after[key as keyof ArchiveCost] - before[key as keyof ArchiveCost]])) as ArchiveCost;
+      for (const key of Object.keys(quote) as (keyof typeof quote)[]) expect(quote[key]).toBe(actual[key]);
+      receipts.push(actual);
+    }
+    const metadataOnly = (value: unknown): boolean => value === null || ["string", "number", "boolean"].includes(typeof value)
+      || Array.isArray(value) && value.every(metadataOnly)
+      || typeof value === "object" && Object.getPrototypeOf(value) === Object.prototype && Object.values(value).every(metadataOnly);
+    return { scans, scouted, final: budget.admitted(), receipts, forbidden,
+      metadataOnly: metadataOnly(scans), frozen: scans.every(row => Object.isFrozen(row) && Object.isFrozen(row.requests)
+        && row.requests.every(request => Object.isFrozen(request) && (request.kind === "repeat" || Object.isFrozen(request.footprint.support)))) };
+  });
+  expect(result.scans).toHaveLength(3);
+  expect(result.scans[2]!.requests[0]!.kind).toBe("repeat");
+  expect(result.scans[2]!.requests[0]!.content).toBe(result.scans[0]!.requests[0]!.content);
+  expect(result.metadataOnly).toBe(true); expect(result.frozen).toBe(true);
+  expect(result.forbidden).toEqual([]); expect(result.scouted.nodes).toBe(1); expect(result.final.nodes).toBe(2);
+  expect(result.final.inputWork).toBeGreaterThan(result.scouted.inputWork);
+  const first = result.scans[0]!, second = result.scans[1]!;
+  for (const variant of ["size", "effects"] as const) {
+    const changed = await f.consumer.inside(state => {
+      const all = result.scans.flatMap(row => row.requests.filter(request => request.kind === "cold"));
+      const expected = new Map<Digest, Readonly<ArchiveForeignExpectedCopy>>(all.map(request => [request.content, request.copy]));
+      const selected = variant === "size" ? first : second, request = selected.requests[0]!;
+      if (request.kind !== "cold") return expect.fail("The fixture must first see each retained copy cold.");
+      const raw = state.storage.sql.exec<{ bytes: string }>("SELECT bytes FROM retained_input WHERE kind = 'entry' AND digest = ?", request.content).one().bytes;
+      let bytes = raw + " ";
+      if (variant === "effects") {
+        const entry = parseStrict(raw); if (!isEntry(entry) || entry.effects.length === 0) return expect.fail("The real genesis copy needs effects.");
+        bytes = canonicalize({ ...entry, effects: [] }); bytes += " ".repeat(utf8(raw).length - utf8(bytes).length);
+      }
+      const queries: string[] = [], budget = new ArchiveBudget();
+      const sql = { exec(query: string, ...args: (string | number | null | ArrayBuffer)[]) { queries.push(query); return state.storage.sql.exec(query, ...args); } };
+      let reason = "admitted";
+      try {
+        state.storage.sql.exec("UPDATE retained_input SET bytes = ? WHERE kind = 'entry' AND digest = ?", bytes, request.content);
+        new ArchiveForeignMetadata(sql, f.sources, f.policies, PROPOSED_BOUNDS, budget, new Set(), receiver.digest, { expected }).scan(selected.position, selected.uses);
+      } catch (error) { if (!(error instanceof ArchivePrefixStopped)) throw error; reason = error.reason; }
+      finally { state.storage.sql.exec("UPDATE retained_input SET bytes = ? WHERE kind = 'entry' AND digest = ?", raw, request.content); }
+      return { reason, queries, cost: budget.admitted() };
+    });
+    expect(changed.reason).toBe("foreign-source-mismatch");
+    expect(changed.queries.filter(query => query.includes("AS effects"))).toHaveLength(variant === "size" ? 0 : 1);
+    expect(changed.queries.some(query => query.startsWith("SELECT bytes"))).toBe(false);
+    expect(changed.cost.nodes).toBe(0);
+  }
 });
 
 test("missing source or inline policy and a conflicting retained genesis pin refuse the whole prefix before payloads", async () => {

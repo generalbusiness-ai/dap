@@ -11,7 +11,7 @@ import { stopArchivePrefix as stop, archivePrefixMetadata, ArchivePrefixStopped,
 import { archivePrivacyMetadata, type ArchiveSupport } from "./archive-privacy.ts";
 import { ArchiveRetainedReader, readArchiveProbe } from "./archive-retained.ts";
 import type { Sql } from "./sqlite.ts";
-import { ArchiveForeignMetadata } from "./archive-foreign.ts";
+import { ArchiveForeignMetadata, type ArchiveForeignExpectedCopy } from "./archive-foreign.ts";
 import type { ArchiveSourceBasis, FixtureArchiveSourcePins } from "./archive-source-pins.ts";
 import { readRetainedArchivePass } from "./archive-retained-pass.ts";
 import { readArchiveTextBytes } from "./archive-text.ts";
@@ -59,7 +59,7 @@ const nameOf = (key: RetainedKey) => JSON.stringify(key.kind === "value" ? [key.
  * context. The caller supplies its real Sql.transaction (transactionSync).
  * All work is synchronous: no provider task can outlive this frame. The
  * same one budget is used across every stage and every cache hit. */
-export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: Bounds, reviewed: ArchivePolicyRegistry, budget = new ArchiveBudget(), fixtureSources?: FixtureArchiveSourcePins, after?: Head | null, forecast?: ArchivePlanFence, declarationSizes?: ReadonlyMap<Digest, number | null>): ArchiveInventoryResult {
+export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: Bounds, reviewed: ArchivePolicyRegistry, budget = new ArchiveBudget(), fixtureSources?: FixtureArchiveSourcePins, after?: Head | null, forecast?: ArchivePlanFence, declarationSizes?: ReadonlyMap<Digest, number | null>, expectedCopies?: ReadonlyMap<Digest, Readonly<ArchiveForeignExpectedCopy>>): ArchiveInventoryResult {
   try {
     return sql.transaction(() => {
       budget.check();
@@ -71,7 +71,7 @@ export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: 
       const visited = new Set<Digest>();
       const declarations = new ArchiveDeclarations(reader, bounds, reviewed, visited, declarationSizes);
       const { definition, platformClosure } = declarations.root(prefix.pin.seed.definition);
-      const foreign = fixtureSources ? new ArchiveForeignMetadata(sql, fixtureSources, reviewed, bounds, budget, visited, prefix.pin.seed.definition) : undefined;
+      const foreign = fixtureSources ? new ArchiveForeignMetadata(sql, fixtureSources, reviewed, bounds, budget, visited, prefix.pin.seed.definition, expectedCopies ? { expected: expectedCopies } : undefined) : undefined;
       const admitted = archivePrivacyMetadata(sql, prefix, { ...rootPolicy.support, definition }, budget, foreign);
       const firstPosition = admitted.positions[0]!;
       const rootOrigin: DependencyOrigin = { at: { at, seq: firstPosition.seq, hash: firstPosition.hash }, input: firstPosition.input };
