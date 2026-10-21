@@ -5,13 +5,14 @@ import { expect, onTestFinished, test } from "vitest";
 import { env } from "cloudflare:test";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Digest, Input, SendForm } from "@generalbusiness/dap-contract";
-import { canonicalize, isEntry, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isEntry, parseStrict, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
 import { variant } from "@generalbusiness/dap-derive/testing";
 import { outcomeValueDomains, validateDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { COUNTING_COHORT, platform } from "@generalbusiness/dap-platform";
 import { forecastArchiveForeignLookup, forecastArchiveForeignSelection, forecastArchiveForeignBasis, forecastArchiveForeignScan, forecastArchiveForeignRepeat, forecastArchiveForeignCopyRequest, forecastArchiveForeignCopySize, forecastArchiveForeignGenesis, forecastArchiveForeignColdCopy } from "../src/archive-foreign-cost.ts";
-import { ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
+import { ArchiveForeignPlan } from "../src/archive-foreign-plan.ts";
+import { ARCHIVE_BOUNDS, ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
 import { buildJournalArchive, journalRef, JournalWork } from "@generalbusiness/artroom-git/journal";
 import { JournalObjectReader, JournalObjects } from "../../git/src/journal-objects.ts";
 import { readJournalArchive } from "@generalbusiness/artroom-git/journal-reader";
@@ -25,6 +26,7 @@ import { namespace } from "../src/namespace.ts";
 import { ArchiveForeignMetadata, type ArchiveForeignRecordedScan, type ArchiveForeignExpectedCopy } from "../src/archive-foreign.ts";
 import { archiveInput } from "../src/archive-input.ts";
 import { ArchivePrefixStopped, archivePrefixMetadata } from "../src/archive-prefix.ts";
+import { archiveEntryHeader, archiveEntryPrivacy, archiveSupportMetadata } from "../src/archive-entry-metadata.ts";
 import { archivePrivacyMetadata } from "../src/archive-privacy.ts";
 import { FixtureArchiveSourcePins } from "../src/archive-source-pins.ts";
 import { inventoryArchive, type ArchivePolicyRegistry, type ReviewedArchivePolicy } from "../src/archive-inventory.ts";
@@ -39,7 +41,7 @@ const receiver = variant(definition.declared, data => {
 });
 const policy = (def: typeof definition, entryTypes = variants): ReviewedArchivePolicy => ({ review: "TEST reviewed inline classes; no production certificate",
   entryTypes, support: { named: def.digest, definition: def, owners: new Map(), records: new Map(), preparations: new Map() } });
-async function fixture() {
+async function fixture(repeatUse = false) {
   const producer = await create(), consumer = await create({}, {}, receiver);
   const commitment = await producer.commitment(), assigned = (await producer.sealed()).find(sealed => sealed.entry.seq > commitment && sealed.entry.input.type === "act" && sealed.entry.input.signed.intent.kind === "assign")!;
   expect(assigned).toBeDefined();
@@ -50,10 +52,11 @@ async function fixture() {
     await consumer.restart();
     await consumer.did(rita, "remark", { on: 0, fields: { text: "actual foreign assignment", proof: { at: producer.at, seq: assigned.entry.seq, hash: assigned.hash } } });
     await consumer.did(rita, "remark", { on: 0, fields: { text: "actual foreign genesis", proof: producer.genesis.fact } });
+    if (repeatUse) await consumer.did(rita, "remark", { on: 0, fields: { text: "actual repeated foreign assignment", proof: { at: producer.at, seq: assigned.entry.seq, hash: assigned.hash } } });
   } finally { wired.delete(consumer.name); }
   const birth = await producer.stub.entry(reader, 0); expect(birth.ok).toBe(true); if (!birth.ok) return expect.fail("native birth read required");
   const entries = await consumer.sealed(), uses = entries.flatMap(sealed => sealed.entry.uses);
-  expect(uses).toHaveLength(2);
+  expect(uses).toHaveLength(repeatUse ? 3 : 2);
   const sources = new FixtureArchiveSourcePins([{ at: producer.at, birth: { bytes: canonicalize(birth.value.entry), hash: birth.value.hash }, declaration: canonicalize(definition.declared) }], PROPOSED_BOUNDS, new ArchiveBudget());
   const policies: ArchivePolicyRegistry = new Map([[receiver.digest, policy(receiver)], [definition.digest, policy(definition)]]);
   const through = await consumer.head();
@@ -262,6 +265,67 @@ test("native foreign recording pays scout work and fences fresh metadata after a
     expect(changed.queries.some(query => query.startsWith("SELECT bytes"))).toBe(false);
     expect(changed.cost.nodes).toBe(0);
   }
+});
+
+// Each copied fact is a real native use. Rebuilding the scout between
+// entries gives a cold recorder cache, not another budget or admission.
+test("foreign plans quote native whole prefixes and retain an earlier boundary after failed lookahead", async () => {
+  const f = await fixture(true);
+  const result = await f.consumer.inside(state => {
+    const budget = new ArchiveBudget(), queries: string[] = [];
+    const sql = { exec(query: string, ...args: (string | number | null | ArrayBuffer)[]) {
+      queries.push(query);
+      if (/^SELECT (?:\*|bytes)(?:\s|,)/.test(query)) throw Error("body tripwire");
+      return state.storage.sql.exec(query, ...args);
+    } };
+    const prefix = archivePrefixMetadata(sql, f.consumer.at, f.through, PROPOSED_BOUNDS, budget, new Set([receiver.digest]));
+    const plan = new ArchiveForeignPlan(prefix.positions[0]!.seq, budget), visited = new Set<Digest>();
+    archiveSupportMetadata(policy(receiver).support, budget);
+    const counts: number[] = [], recordedKinds: string[] = [];
+    for (const position of prefix.positions) {
+      const source = { kind: "local" as const, position }, header = archiveEntryHeader(sql, source, budget);
+      archiveEntryPrivacy(sql, source, header, policy(receiver).support, budget);
+      counts.push(header.uses);
+      let recorded: Readonly<ArchiveForeignRecordedScan> | null = null;
+      if (header.uses) {
+        const scout = new ArchiveForeignMetadata(sql, f.sources, f.policies, PROPOSED_BOUNDS, budget, visited, receiver.digest, { record: true });
+        scout.scan(position, header.uses); recorded = scout.recorded(position);
+        recordedKinds.push(...recorded.requests.map(request => request.kind));
+      }
+      plan.append(position, header.uses, recorded);
+    }
+    const scouted = budget.admitted(), earlier = prefix.positions[1]!, head = { seq: earlier.seq, hash: earlier.hash };
+    const handoff = plan.handoffCost(), beforeMap = budget.admitted(), oldMap = plan.expectedCopies(head), afterMap = budget.admitted();
+    for (const key of Object.keys(handoff) as (keyof ArchiveCost)[]) expect(afterMap[key] - beforeMap[key]).toBe(handoff[key]);
+    expect(oldMap.size).toBe(1);
+    const expected = plan.expectedCopies(f.through);
+    const fresh = new ArchiveForeignMetadata(sql, f.sources, f.policies, PROPOSED_BOUNDS, budget, new Set(), receiver.digest, { expected });
+    const work = { attempts: 0, calls: 0, metadata: 0, inputWork: 0 };
+    for (const [index, position] of prefix.positions.entries()) {
+      const before = budget.admitted(); if (counts[index]) fresh.scan(position, counts[index]!); const after = budget.admitted();
+      for (const key of Object.keys(work) as (keyof typeof work)[]) work[key] += after[key] - before[key];
+      const quote = plan.quote({ seq: position.seq, hash: position.hash });
+      expect(quote.work).toEqual(work);
+      expect(quote.copies).toBe(Math.min(position.seq, 2));
+      expect(quote.declarations).toEqual(position.seq === 0 ? [] : [definition.digest]);
+    }
+    const quoteBefore = plan.quote(head), beforeFailed = budget.admitted();
+    // Synthetic extra position tests metadata-plan failure only. No native
+    // entry, scoped admission, payload or later journal is invented.
+    const extra = { seq: f.through.seq + 1, hash: textDigest("TEST uncommitted lookahead position"), bytes: 1 };
+    const failed = budget.lookahead({ metadata: ARCHIVE_BOUNDS.metadata - beforeFailed.metadata }, () => plan.append(extra, 0, null));
+    expect(failed.kind).toBe("limited");
+    const quoteAfter = plan.quote(head); expect(quoteAfter).toEqual(quoteBefore);
+    let uncommitted: string | null = null;
+    try { plan.quote(extra); } catch (error) { if (!(error instanceof ArchivePrefixStopped)) throw error; uncommitted = error.reason; }
+    expect(uncommitted).toBe("mismatch");
+    return { recordedKinds, scouted, final: budget.admitted(), quoteBefore, quoteAfter, expected: [...expected.keys()], oldExpected: [...oldMap.keys()], queries };
+  });
+  expect(result.recordedKinds).toEqual(["cold", "cold", "cold"]);
+  expect(result.expected).toHaveLength(2); expect(result.oldExpected).toEqual([f.uses[0]!.content]);
+  expect(result.quoteBefore).toEqual(result.quoteAfter);
+  expect(result.scouted.nodes).toBe(1); expect(result.final.nodes).toBe(2);
+  expect(result.queries.some(query => /^SELECT (?:\*|bytes)(?:\s|,)/.test(query))).toBe(false);
 });
 
 test("missing source or inline policy and a conflicting retained genesis pin refuse the whole prefix before payloads", async () => {
