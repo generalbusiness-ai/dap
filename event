@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a1e5cdf257cfe08211364e33fddc40ce7fdf794f","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-input.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a330ba833620c82ed01de9ef85bafc53f88485dd","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/archive-source-pins.test.ts."}
