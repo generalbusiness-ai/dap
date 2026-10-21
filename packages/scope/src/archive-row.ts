@@ -8,12 +8,12 @@ import type { DestinationRepository } from "./destination-host.ts";
 import { ArchiveBudget } from "./archive-budget.ts";
 import type { Sql } from "./sqlite.ts";
 import { confirmRetainedArchivePass } from "./archive-retained-pass.ts";
+import { ARCHIVE_ROW_MANIFEST_BYTES as MANIFEST_BYTES, ARCHIVE_ROW_BYTES, ARCHIVE_ROW_SIZE_METADATA,
+  archiveRowLoadWork, archivePendingManifestWork, archiveMarkWork, archiveRowSaveReservation } from "./archive-row-cost.ts";
+export { ARCHIVE_ROW_BYTES } from "./archive-row-cost.ts";
 
 const KEY = "archive-row-1";
 const WAKE = "archive-wake-1";
-const MANIFEST_BYTES = 1024 * 1024;
-// A canonical manifest's quotes and escapes can double when embedded in JSON.
-export const ARCHIVE_ROW_BYTES = 2 * MANIFEST_BYTES + 16 * 1024;
 type Format = "sha1" | "sha256";
 export interface ArchivedPosition { readonly commit: string; readonly through: Head; readonly layout?: 2 }
 export interface ArchiveMark extends ArchivedPosition {
@@ -62,7 +62,7 @@ function checked(value: unknown, at: ScopeRef, budget: ArchiveBudget): ArchiveRo
     if (!isRecord(pending) || !fields(pending, Object.hasOwn(pending, "layout") ? "commit,layout,manifest,markedAt,parent,through" : "commit,manifest,markedAt,parent,through")
       || Object.hasOwn(pending, "layout") && pending["layout"] !== 2
       || !position({ commit: pending["commit"], through: pending["through"] }, format) || pending["parent"] !== null && !objectId(pending["parent"], format) || typeof pending["manifest"] !== "string" || pending["manifest"].length === 0 || pending["manifest"].length > MANIFEST_BYTES || typeof pending["markedAt"] !== "string" || timeMs(pending["markedAt"]) === null) return refuse("unavailable");
-    budget.spend({ inputWork: pending["manifest"].length * 8 });
+    budget.spend({ inputWork: archivePendingManifestWork(pending["manifest"].length) });
     if (utf8(pending["manifest"]).length > MANIFEST_BYTES) return refuse("limit");
     if (pending["parent"] !== (confirmed === null ? null : confirmed.commit)) return refuse("unavailable");
     const through = pending["through"] as Head;
@@ -82,13 +82,13 @@ export class ArchiveRows {
     this.#sql = sql; this.#at = { ...at };
   }
   #load(budget: ArchiveBudget): { row: ArchiveRow; bytes: string } | null {
-    const sql = budget.native(this.#sql, () => ({ metadata: 96, inputWork: 0 }));
+    const sql = budget.native(this.#sql, () => ({ metadata: ARCHIVE_ROW_SIZE_METADATA, inputWork: 0 }));
     const sizes = sql.exec("SELECT octet_length(v) AS size, typeof(v) AS type FROM meta WHERE k = ? LIMIT 1", KEY).toArray();
     if (!sizes.length) return null;
     const size = sizes[0]?.["size"];
     if (sizes.length !== 1 || sizes[0]?.["type"] !== "text" || !natural(size) || size === 0) return refuse("unavailable");
     if (size > ARCHIVE_ROW_BYTES) return refuse("limit");
-    budget.spend({ inputWork: size * 12 });
+    budget.spend({ inputWork: archiveRowLoadWork(size) });
     const bodies = budget.native(this.#sql, () => ({ metadata: size, inputWork: 0 })).exec("SELECT v FROM meta WHERE k = ? AND typeof(v) = 'text' AND octet_length(v) = ? LIMIT 1", KEY, size).toArray();
     const bytes = bodies[0]?.["v"];
     if (bodies.length !== 1 || typeof bytes !== "string" || bytes.length > size || utf8(bytes).length !== size) return refuse("unavailable");
@@ -99,7 +99,7 @@ export class ArchiveRows {
   }
   #save(value: ArchiveRow, budget: ArchiveBudget, afterConfirmation: Timestamp | null = null): ArchiveRow {
     checked(value, this.#at, budget);
-    budget.spend({ inputWork: ARCHIVE_ROW_BYTES * 3 + 4096, calls: 2 });
+    budget.spend(archiveRowSaveReservation());
     const bytes = canonicalize(value);
     if (bytes.length > ARCHIVE_ROW_BYTES || utf8(bytes).length > ARCHIVE_ROW_BYTES) return refuse("limit");
     budget.check();
@@ -130,7 +130,7 @@ export class ArchiveRows {
       if (!previous) return refuse("unavailable");
       if (previous.stopped) return refuse("stopped");
       checked({ ...previous, pending: mark }, this.#at, budget);
-      budget.spend({ inputWork: mark.manifest.length * 12 + 4096 });
+      budget.spend({ inputWork: archiveMarkWork(mark.manifest.length) });
       if (previous.pending) { if (!same(previous.pending, mark)) return refuse("outstanding"); return previous; }
       const converting = previous.confirmed && previous.confirmed.layout !== 2 && mark.layout === 2 && same(mark.through, previous.confirmed.through);
       if (mark.parent !== (previous.confirmed?.commit ?? null) || previous.confirmed && mark.through.seq <= previous.confirmed.through.seq && !converting) return refuse("conflict");

@@ -9,6 +9,7 @@ import { at, create, type Lane } from "./fixtures-native.ts";
 import { SqliteStore } from "../src/sqlite.ts";
 import { readRetainedArchivePass } from "../src/archive-retained-pass.ts";
 import { archiveSql } from "./support/archive.ts";
+import { archivePendingRowBytesUpper, forecastArchiveBookkeeping } from "../src/archive-row-cost.ts";
 
 const repository = { host: "fixture-host", namespace: "fixture-room", name: "archive-fixture", id: "fixture-repository" };
 const rows = <T>(lane: Lane, work: (store: ArchiveRows) => T) => lane.inside(state => work(new ArchiveRows({ exec: (query, ...args) => state.storage.sql.exec(query, ...args), transaction: action => state.storage.transactionSync(action) }, lane.at)));
@@ -21,7 +22,7 @@ async function refusal(action: Promise<unknown>, reason: string): Promise<void> 
 
 // Invariant: one exact outstanding mark survives eviction and later native
 // entries; a stale/other confirmation cannot clear it or advance the prefix.
-test("preserves a single immutable mark across a native restart and later turn", async () => {
+test("preserves a single immutable mark across a native restart and later turn", async context => {
   const lane = await create(), head = await lane.head();
   const mark: ArchiveMark = { commit: "a".repeat(40), parent: null, through: { ...head }, manifest: canonicalize({ fixture: "named metadata only", entries: [{ seq: head.seq, hash: head.hash }], retained: [] }), markedAt: at(0) };
   expect(await rows(lane, store => store.load())).toBeNull();
@@ -84,10 +85,31 @@ test("preserves a single immutable mark across a native restart and later turn",
   await lane.inside(state => { state.storage.sql.exec("INSERT INTO retained_input(kind,digest,bytes) VALUES (?,?,?)", nextKey.kind, nextKey.digest, nextBytes); });
   const nextMark: ArchiveMark = { commit: "d".repeat(40), parent: conversion.commit, through: later, layout: 2, markedAt: at(0),
     manifest: canonicalize({ format: "artroom-local-inventory-2", after: head, objects: [{ key: rule, pass: 0 }, { key: value, pass: 0 }, { key: nextKey, pass: head.seq + 1 }] }) };
-  await rows(lane, store => store.mark(nextMark));
+  // Price only these real bookkeeping transitions. The mark and retained
+  // rows are explicit test metadata, not an admitted or exported archive.
+  const finishBudget = new ArchiveBudget();
+  const sizes = await rows(lane, store => {
+    const previous = store.load(); // Test setup, outside the measured ledger.
+    const oldRowBytes = utf8(canonicalize(previous)).length;
+    const upper = archivePendingRowBytesUpper(oldRowBytes, utf8(nextMark.manifest).length);
+    const forecast = forecastArchiveBookkeeping({ oldRowBytes, markedRowBytes: upper, attemptedRowBytes: upper,
+      manifestUnits: nextMark.manifest.length, newRetained: 1 });
+    expect(forecast.ok).toBe(true); if (!forecast.ok) throw Error("bookkeeping forecast refused");
+    const marked = store.mark(nextMark, finishBudget), markedRowBytes = utf8(canonicalize(marked)).length;
+    const attempted = store.attempt(at(1), finishBudget), attemptedRowBytes = utf8(canonicalize(attempted)).length;
+    expect(Math.max(markedRowBytes, attemptedRowBytes)).toBeLessThanOrEqual(upper);
+    return { oldRowBytes, markedRowBytes, attemptedRowBytes, manifestUnits: nextMark.manifest.length, newRetained: 1 };
+  });
   await expect(rows(lane, store => store.target({ ...repository, id: "other-repository" }, "sha1"))).rejects.toThrow("archive-row-conflict");
   expect(await lane.inside(state => [rule, value, nextKey].map(key => readRetainedArchivePass(archiveSql(state), key, new ArchiveBudget())))).toEqual([0, 0, null]);
-  await rows(lane, store => store.confirm(nextMark.commit));
+  await rows(lane, store => store.confirm(nextMark.commit, finishBudget));
+  // Captured from the actual original native ledger before extraction.
+  const original = { entries: 0, attempts: 0, nodes: 0, calls: 14, metadata: 5175, inputWork: 19120795 };
+  expect(sizes).toEqual({ oldRowBytes: 501, markedRowBytes: 1344, attemptedRowBytes: 1362, manifestUnits: 528, newRetained: 1 });
+  expect(finishBudget.admitted()).toEqual(original);
+  expect(forecastArchiveBookkeeping(sizes)).toEqual({ ok: true, cost: original });
+  (context.task.meta as Record<string, unknown>)["archiveRowCost"] = { sizes, cost: finishBudget.admitted(),
+    qualification: "Actual SQLite mark, attempt and confirm only on one original default ledger. Test-authored marks and retained rows are not native archive admission, built commits, host receipts or export. Setup row read uses a separate setup budget; no full-pass claim." };
   await lane.restart();
   expect(await lane.inside(state => [rule, value, nextKey].map(key => readRetainedArchivePass(archiveSql(state), key, new ArchiveBudget())))).toEqual([0, 0, head.seq + 1]);
   await expect(rows(lane, store => store.mark({ ...mark, parent: nextMark.commit, through: { seq: later.seq + 1, hash: later.hash } }))).rejects.toThrow("archive-row-unavailable");
