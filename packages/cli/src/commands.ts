@@ -318,6 +318,7 @@ const unavailableAnswer = (reason: string, scope: ScopeId | null): Outcome => fa
 const mismatchAnswer = (reason: string, scope: ScopeId | null): Outcome => failed(`Mismatch: ${reason}. The idempotency key names another recorded intent. Inspect ${inspectBeforeMutation(scope)} and the original request before another mutation.`);
 function answered(scope: ScopeId, answer: Answer, took: string): Outcome {
   switch (answer.answer) {
+    case "archived": return done(`${took}: recorded at entry ${scope}:${answer.fact.seq}, now archived in commit ${answer.archived.commit}. Verify the archive clone against through entry ${answer.archived.through.seq} before reading its receipt.`);
     case "accepted": return done(`${took}: entry ${scope}:${answer.receipt.fact.seq}, hash ${answer.receipt.fact.hash.slice(0, 19)}.`);
     case "refused": return failed(`Refused: ${answer.reason}${"name" in answer && answer.name ? ` (${answer.name === "founding-policy" ? "creation-policy" : answer.name === "founding-key" ? "initial-key" : answer.name})` : ""}, judged at entry ${scope}:${answer.judgedAt.seq}. The request was refused.`);
     case "unavailable": return unavailableAnswer(answer.reason, scope);
@@ -327,6 +328,7 @@ function answered(scope: ScopeId, answer: Answer, took: string): Outcome {
 
 function accepted(answer: Answer | Created, scope: ScopeId | null, took: string): Extract<Answer, { answer: "accepted" }> {
   if (answer.answer === "accepted") return answer;
+  if (answer.answer === "archived") return stopCommand(failed(`The exact intent was accepted at entry ${answer.fact.at.scope}:${answer.fact.seq}, now archived in commit ${answer.archived.commit}. Verify the clone against its floor receipt before continuing; do not sign a replacement request.`));
   if (answer.answer === "unavailable") return stopCommand(unavailableAnswer(answer.reason, scope));
   if (answer.answer === "mismatch") return stopCommand(mismatchAnswer(answer.reason, scope));
   return stopCommand("judgedAt" in answer ? answered(scope!, answer, took) : failed(`Refused: ${answer.reason}. The request was refused.`));

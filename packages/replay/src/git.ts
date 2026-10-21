@@ -6,13 +6,32 @@ import { join } from "node:path";
 import type { FactRef } from "@generalbusiness/dap-contract";
 import { isDigest, isFactRef, parseStrict, textDigest } from "@generalbusiness/artroom-bytes";
 import { readJournalRepositoryArchive } from "@generalbusiness/artroom-git/journal-reader";
+import { journalId } from "@generalbusiness/artroom-git/journal";
 import { localJournalRepository, type JournalLocalOptions } from "@generalbusiness/artroom-git/journal-local";
 import { archiveSource, type ArchiveReadWork, type ArchiveSource, type ArchiveSourceOptions, type ArchiveTextPort } from "./archive.ts";
 
 export interface GitSourceOptions extends ArchiveSourceOptions { readonly local?: JournalLocalOptions }
 export function gitSource(directory: string, options: GitSourceOptions = {}): ArchiveSource {
   const repository = localJournalRepository(directory, options.local);
-  return archiveSource({ open: (scope, work) => readJournalRepositoryArchive(repository, scope, work), settle: () => repository.settle?.() ?? Promise.resolve() }, options);
+  return archiveSource({
+    open: (scope, work) => readJournalRepositoryArchive(repository, scope, work),
+    async floorReceipt(scope, commit, work) {
+      const format = await repository.format(work);
+      try { journalId(format, commit); } catch { return { ok: false, reason: "floor-commit-mismatch" }; }
+      const object = await repository.object(commit, 0, work);
+      if (!object) return { ok: false, reason: "floor-commit-missing" };
+      if (object.type !== "commit") return { ok: false, reason: "floor-commit-mismatch" };
+      // The existing complete reader checks object IDs, grammar and head.json
+      // against this exact immutable commit, under the original read budget.
+      const read = await readJournalRepositoryArchive({
+        format: async () => format, resolve: async () => commit,
+        object: (id, most, budget) => repository.object(id, most, budget),
+      }, scope, work);
+      if (!read.ok) return { ok: false, reason: read.result === "mismatch" || read.result === "refused" ? "floor-commit-mismatch" : read.result };
+      return { ok: true, scope: read.archive.scope, through: read.archive.head };
+    },
+    settle: () => repository.settle?.() ?? Promise.resolve(),
+  }, options);
 }
 
 export class ArchiveFileFailure extends Error {

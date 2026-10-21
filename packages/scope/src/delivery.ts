@@ -1,3 +1,4 @@
+import { countedEntries } from "@generalbusiness/dap-derive";
 /**
  * Receiving (scope contract, sections 7.2 and 7.4): one delivered message,
  * from the source checks to the entry that records it and the answer
@@ -137,7 +138,8 @@ export class Deliveries {
       && message.class === "request" && message.type === "tell" && isObject(message.body) && message.body["message"] === "reserve";
     const file = ["platform:destination@4", "platform:destination@5", "platform:destination@6", "platform:destination@7", "platform:destination@8"].includes(receiving?.named ?? "") && message.class === "request" && message.type === "tell"
       && isObject(message.body) && message.body["message"] === "publish-file";
-    const known = store.decided(from.at, from.seq, delivered.n) !== null;
+    const previous = store.decided(from.at, from.seq, delivered.n);
+    const known = previous !== null;
     const creates = message.class === "request" && message.type === "create" && !isScopeRef(delivered.to);
     if (creates && !isSeed(delivered.to)) return UNVERIFIED;
     let reader = !known && message.class !== "control" && receiving?.definition ? await this.#scope.receiverReads() : null;
@@ -150,6 +152,13 @@ export class Deliveries {
     const read = probe?.source ? { entry: probe.source, under: "" }
       : await within(() => reader && message.class === "result" ? reader.result(delivered, bounds.fetchSeconds) : (reader ?? this.#ports.resolver).read(from, bounds.fetchSeconds, !!reserve || file), bounds.fetchSeconds);
     if (read === LATE || read === null) return retry("dependency-unavailable");
+    if ("archived" in read && previous?.hash === from.hash) {
+      // The original source hash/send ordinal were checked when this inbox
+      // decision was admitted. An archived source cannot cause a new
+      // decision; the exact recorded send may still receive its old ACK.
+      const receipt = store.stored(previous.by) ?? store.decidedReceipt?.(from, delivered.n);
+      if (receipt && receipt.seq === previous.by) return { answer: "recorded", fact: { at: store.scope()!.at, seq: receipt.seq, hash: receipt.hash } };
+    }
     if (!("entry" in read) || !isEntryOf(read.entry, from)) return UNVERIFIED;
     let source: Fetched = carryProducerName({ fact: from, entry: read.entry, under: read.under }, read);
 
@@ -214,7 +223,7 @@ export class Deliveries {
       // The scope has no genesis yet, so no fact can name it: every fact a creation names is foreign.
       const named = fields?.ok ? factsNamed(act.fields, fields.fields, null) : [];
       const fetched = named.length > bounds.usesPerEntry ? null : await fetchFacts(resolver, bounds, named);
-      if (!fetched) return retry("dependency-unavailable");
+      if (!Array.isArray(fetched)) return retry("dependency-unavailable");
       facts = fetched;
     } else if (message.class === "result" && isObject(message.of) && isFactRef(message.of.from)) {
       const kept = store.stored(message.of.from.seq);
@@ -234,7 +243,7 @@ export class Deliveries {
       // the judge refuses that message, `bad-field`, before it reads any.
       const wanted = messageFacts(store, pinned.definition, message, from, bounds, source.under);
       const fetched = wanted.length >= bounds.usesPerEntry ? [] : await fetchFacts(resolver, bounds, wanted);
-      if (!fetched) return retry("dependency-unavailable");
+      if (!Array.isArray(fetched)) return retry("dependency-unavailable");
       facts = fetched;
       carried = messageTexts(pinned.definition, message, from, source.under);
     }
@@ -272,7 +281,7 @@ export class Deliveries {
         switch (judged.result) {
           case "write": {
             // Section 9.2: an entry that settles nothing is written only while the scope has room; one that settles is counted for.
-            if (!definition().declared.capacity && (view.scope()?.head.seq ?? -1) + 1 >= bounds.scopeEntries) return said(retry("scope-full"));
+            if (!definition().declared.capacity && countedEntries(view) >= bounds.scopeEntries) return said(retry("scope-full"));
             // Section 16.1, "A value that a row may retain": each value that a retained observation names is kept with the entry.
             const retain: Retained[] = [...used(judged.draft, [source, ...facts]), ...texts.retain(definition(), judged.draft, source.under), ...valuesOf(judged.draft)];
             if (genesis && creation) {
@@ -290,8 +299,10 @@ export class Deliveries {
           }
           // A first decision and a repeat are answered alike: with the fact of the entry that recorded the message.
           case "repeat": {
-            const kept = store.stored(judged.seq)!;
-            return said({ answer: "recorded", fact: { at: view.scope()!.at, seq: kept.seq, hash: kept.hash } });
+            const kept = store.stored(judged.seq);
+            const receipt = kept ?? store.decidedReceipt?.(from, delivered.n);
+            if (!receipt || receipt.seq !== judged.seq) return said(retry("unavailable"));
+            return said({ answer: "recorded", fact: { at: view.scope()!.at, seq: receipt.seq, hash: receipt.hash } });
           }
           case "due": return { verdict: "stop" };
           case "routing": return said({ answer: "routing", reason: judged.reason });

@@ -1,3 +1,4 @@
+import { offerFloor } from "./floor-writer.ts";
 import { applicationRoom, applicationInstallation, applicationProjectionDeclaration } from "@generalbusiness/dap-platform";
 /**
  * One scope as one Durable Object (scope contract, section 2.3): the object
@@ -39,7 +40,7 @@ import { isEntryOf, timeMs, timeOf, type Item } from "@generalbusiness/dap-deriv
 import { sourceName } from "@generalbusiness/dap-platform";
 import type { ScopeState } from "@generalbusiness/dap-derive";
 import type { Delivered, StateView } from "@generalbusiness/dap-derive";
-import { Scope, type Checkpointed, type Created } from "./core.ts";
+import { Scope, ownOf, type Checkpointed, type Created } from "./core.ts";
 import { Deliveries } from "./delivery.ts";
 import { declaredBy, observedAt, routed, sentText, sourced, sourceOrigin, type Sourced } from "./namespace.ts";
 import { JoinLimits, isJoin, type LimitConfig } from "./limits.ts";
@@ -122,6 +123,7 @@ export interface Wiring {
 
 export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   readonly #archive: ArchiveDriver | null;
+  readonly #floorOffer: (() => import("@generalbusiness/dap-contract").FloorInput | null) | null;
   readonly #name: ScopeId | null;
   readonly #store: SqliteStore;
   readonly #readSql: Pick<Sql, "exec">;
@@ -246,6 +248,12 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
       ...wiring.fixtureArchive, sql: { ...this.#readSql, transaction: closure => ctx.storage.transactionSync(closure) },
       current: () => store.scope(), clock: () => ports.clock.read(), bounds,
     }) : null;
+    const floorEnabled = wiring.fixtureArchive && [...wiring.fixtureArchive.policies.registry.values()].some(policy => policy.floor !== undefined);
+    this.#floorOffer = floorEnabled ? () => {
+      const pinned = this.#scope.pinned(), pin = pinned?.named, policy = pin ? wiring.fixtureArchive!.policies.registry.get(pin)?.floor : null;
+      return policy && pinned?.definition ? offerFloor({ sql: { ...this.#readSql, transaction: closure => ctx.storage.transactionSync(closure) }, store,
+        own: ownOf(store), definition: pinned.definition, platform: pinned.platform ?? undefined, bounds, now: () => ports.clock.read(), discoveries: () => this.#chains.discoveries() }, policy) : null;
+    } : null;
     // Every commit that seals an entry is followed at once, whoever asked for its turn: a pass in the background and a late answer
     // of an outside operation write their entries in no caller's request, and nothing guarantees an alarm after the last of them.
     this.#scope.turns.measureWith(() => this.#context("dispatch"));
@@ -585,6 +593,10 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
       await this.dispatch();
       await this.effect();
       await this.#archive?.run();
+      if (this.#floorOffer) {
+        await this.#chains.update();
+        await this.#scope.floor(this.#floorOffer);
+      }
       this.#followed();
     } finally { await this.#wakes.set(); }
     });

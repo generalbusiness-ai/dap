@@ -648,7 +648,7 @@ export const directoryRules: Rules = {
       const head = state.scope()?.head.seq;
       if (!repository || head === undefined || typeof repository.values["import"] !== "string" || (repository.values["imported"] ?? null) !== null) return refused;
       let imports = 0;
-      for (let seq = 0; seq <= head; seq++) {
+      for (const seq of own.positions?.(head + 1) ?? (function* () { for (let seq = 0; seq <= head; seq++) yield seq; })()) {
         const entry = own(seq)?.entry;
         if (!entry) return refused;
         for (const effect of entry.effects) {

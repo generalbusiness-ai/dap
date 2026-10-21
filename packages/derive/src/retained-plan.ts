@@ -22,7 +22,7 @@ export type RetainedKey =
   | { readonly kind: "value"; readonly domain: string; readonly digest: Digest };
 export interface DependencyOrigin { readonly at: FactRef; readonly input: Input["type"] }
 export type DependencyPurpose = "replay-required" | "archive-closure";
-const ALL = ["genesis", "act", "delivery", "timed", "diagnosis", "outcome", "preparation", "checkpoint"] as const;
+const ALL = ["genesis", "act", "delivery", "timed", "diagnosis", "outcome", "preparation", "checkpoint", "floor"] as const;
 const REQUIRED = {
   declaration: { inputs: ALL, kinds: ["definition"] },
   "birth-definition": { inputs: ["genesis"], kinds: ["definition"] },

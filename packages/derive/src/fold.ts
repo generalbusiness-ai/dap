@@ -26,6 +26,7 @@ import { checkStandingEntry, StandingError } from "./standing.ts";
 import { updateItemDuties } from "./item-duties.ts";
 import { requestReservation } from "./request-duties.ts";
 import { itemSettledBy, itemSettlementBinding } from "./handlers.ts";
+import { nextFloorState } from "./floor.ts";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 
 /** An entry that this state cannot take: out of sequence, or with an effect on nothing. */
@@ -77,7 +78,12 @@ export function applyEntry(writer: StateWriter, definition: ValidDefinition, ent
   const itemSettlement = definition.declared.capacity?.name === "whole-scope" ? itemSettlementBinding(writer, definition, entry, {
     bounds: options.bounds ?? PROPOSED_BOUNDS, facts: options.facts ?? [], prepared: entry.prepared,
     clock: { reading: entry.time, asOf: entry.time, behind: entry.clamped === true },
-    own: options.own ? seq => seq < entry.seq ? options.own!(seq) : null : undefined,
+    own: options.own ? Object.assign((seq: number) => seq < entry.seq ? options.own!(seq) : null, {
+      ...(options.own.retained ? { retained: options.own.retained } : {}),
+      ...(options.own.positions ? { positions: (before: number) => options.own!.positions!(Math.min(before, entry.seq)) } : {}),
+      ...(options.own.sizeProofs ? { sizeProofs: () => options.own!.sizeProofs!().filter(proof => proof.seq < entry.seq) } : {}),
+      ...(options.own.archived ? { archived: (seq: number) => seq < entry.seq ? options.own!.archived!(seq) : null } : {}),
+    }) : undefined,
     // Applied acts/handlers already proved these sizes. A later redaction
     // may hide them; it cannot change their subject binding.
     texts: options.texts ?? (() => null), platform: options.platform, snapshot: options.snapshot,
@@ -258,6 +264,11 @@ export function applyEntry(writer: StateWriter, definition: ValidDefinition, ent
   for (const item of touched) {
     const [held, kept] = [writer.holder(item), released(writer, definition, item)];
     if (held !== null && !same(held, kept)) writer.putHolder(item, kept);
+  }
+
+  if (input.type === "floor") {
+    if (!writer.putFloor || !options.own) throw new FoldError("a floor requires the held journal and floor state writer");
+    writer.putFloor(nextFloorState(writer, definition, input, options.own, options.platform));
   }
 
   const genesis = scope?.genesis ?? { hash, source: input.type === "genesis" ? input.source : null, n: input.type === "genesis" ? input.n : null };

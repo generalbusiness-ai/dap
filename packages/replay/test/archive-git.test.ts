@@ -149,3 +149,13 @@ test("bounds caller text and receipt ports and connects CLI receipt inference", 
   const receiptLink = join(root, "receipt-link.json"); symlinkSync(receiptPath, receiptLink); await expect(readArchiveReceipt(receiptLink)).rejects.toMatchObject({ reason: "refused" });
   expect(await main(["https://archive-fixture.invalid", fixture.options.scope, "--receipt", receiptPath], io)).toBe(2);
 }, 20_000);
+
+// The floor receipt's exact commit is checked independently of the current
+// archive ref, for both local object formats. No network fetch is allowed.
+test.each(["sha1", "sha256"] as const)("reads an exact %s floor commit and reports an absent local commit", async format => {
+  const fixture = declaredGenesisFixture(), scope = fixture.scopes[0]!;
+  const dir = clone(fixture.scopes, format), commit = git(dir, ["rev-parse", journalRef(scope.scope.scope)]);
+  const source = gitSource(dir);
+  expect(await source.floorReceipt(scope.scope.scope, commit, { bytes: 4096 })).toMatchObject({ ok: true, scope: scope.scope, through: fixture.options.head });
+  expect(await source.floorReceipt(scope.scope.scope, "f".repeat(format === "sha1" ? 40 : 64), { bytes: 4096 })).toEqual({ ok: false, reason: "floor-commit-missing" });
+});

@@ -1,3 +1,4 @@
+import { countedEntries } from "@generalbusiness/dap-derive";
 /**
  * Sending (scope contract, sections 7.2 and 7.4): the dispatcher of the
  * outbox rows that each entry wrote with its sends, and the one alarm that
@@ -213,7 +214,7 @@ export class Dispatcher {
           switch (judged.result) {
             case "write":
               // Room for this entry was counted when the request was sent (section 9.2).
-              if (view.scope()!.head.seq + 1 >= bounds.scopeEntries) return { verdict: "answer", answer: false };
+              if (countedEntries(view) >= bounds.scopeEntries) return { verdict: "answer", answer: false };
               return { verdict: "write", draft: judged.draft, retain: used(judged.draft, facts), sealed: () => true, unfit: () => false, full: () => false };
             case "repeat": return { verdict: "answer", answer: true };
             case "due": return { verdict: "stop" };

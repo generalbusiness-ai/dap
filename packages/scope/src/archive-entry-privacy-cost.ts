@@ -23,7 +23,7 @@ export interface ArchiveEntryPrivacyFootprint {
 export function forecastArchiveEntryPrivacy(shape: ArchiveEntryPrivacyFootprint):
   { readonly ok: true; readonly cost: Readonly<ArchiveCost> } | { readonly ok: false; readonly reason: "limit" } {
   const { input, effects, copyBytes } = shape;
-  if (!["genesis", "act", "delivery", "timed", "diagnosis", "outcome", "preparation", "checkpoint"].includes(input)
+  if (!["genesis", "act", "delivery", "timed", "diagnosis", "outcome", "preparation", "checkpoint", "floor"].includes(input)
     || !natural(effects) || copyBytes !== undefined && (!natural(copyBytes) || copyBytes === 0)) throw new ArchiveStopped("unavailable");
   if (effects > 64 || copyBytes !== undefined && copyBytes > RETAINED_INPUT_BYTES) return { ok: false, reason: "limit" };
   const detail = input === "outcome" || input === "preparation";

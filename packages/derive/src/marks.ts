@@ -23,7 +23,7 @@ import type { BindingSelect } from "./binding.ts";
 import type { Own } from "./fields.ts";
 import type { Fetched, GuardResult, Judging } from "./guards.ts";
 import type { Most, Opening } from "./ledger.ts";
-import type { Item, Operation, StateView } from "./state.ts";
+import type { Item, Operation, StateSnapshot, StateView } from "./state.ts";
 import { observedName, subjectName, type RowStatus } from "./observes.ts";
 import { valuePlaces } from "./validate/fields.ts";
 import type { MarkKind, ValidDefinition } from "./validate/index.ts";
@@ -418,7 +418,11 @@ export type PlatformRule = { clock?: boolean } & (
 export type Rules = Readonly<Record<string, PlatformRule>>;
 
 /** The rules that a judge is given for the platform definition that the scope pins: its name and version, and its rules. */
-export interface PlatformRules { named: PlatformDefinition; rules: Rules }
+export interface PlatformRules {
+  named: PlatformDefinition; rules: Rules;
+  /** Typed native positions that current rules/host readers follow. */
+  floorReferences?(snapshot: StateSnapshot, definition: import("./validate/index.ts").ValidDefinition, own: Own): Iterable<number>;
+}
 
 /** The rule that a mark names, when it is of the kind of the mark's place. */
 export function ruleAt<K extends MarkKind>(rules: Rules | null | undefined, code: string, kind: K): Extract<PlatformRule, { place: K }> | null {

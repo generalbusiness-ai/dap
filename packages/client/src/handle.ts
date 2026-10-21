@@ -15,7 +15,7 @@
  */
 
 import type {
-  Answer, Beside, Cursor, DeclaredDefinition, Digest, OutboxItem, OutboxId, Entry, Created, Grant, Head, Item, PlatformDefinition, Read, ReadRefusal, Receipt, ScopeApi, ScopeId, Sealed, Settlement,
+  Archived, Answer, Beside, Cursor, DeclaredDefinition, Digest, OutboxItem, OutboxId, Entry, Created, Grant, Head, Item, PlatformDefinition, Read, ReadRefusal, Receipt, ScopeApi, ScopeId, Sealed, Settlement,
   SignedIntent, Summary, ItemQuery, ItemQueryRead, ApplicationProjectionQuery, ApplicationProjectionRead,
 } from "@generalbusiness/dap-contract";
 import { definitionDigest, entryHash, encodeItemQueryParameter, readItemQueryParameter, itemQueryReadFor, within, LATE, isDigest, parseStrict, textDigest } from "@generalbusiness/artroom-bytes";
@@ -37,7 +37,7 @@ export class TransportError extends Error {
  * position. `hash-mismatch`: its bytes do not hash to the receipt's fact. In
  * each case the receipt is not of this history.
  */
-export type Followed = { ok: true; at: Head; entry: Entry } | { ok: false; reason: ReadRefusal | "hash-mismatch" | "reference-mismatch" };
+export type Followed = { ok: true; at: Head; entry: Entry } | { ok: false; reason: "archived"; archived: Archived } | { ok: false; reason: Exclude<ReadRefusal, "archived"> | "hash-mismatch" | "reference-mismatch" };
 
 export class ScopeHandle {
   readonly scope: ScopeId;
@@ -128,7 +128,7 @@ export class ScopeHandle {
     const { at, seq, hash } = receipt.fact;
     if (at.scope !== this.scope) return { ok: false, reason: "not-found" };
     const read = await this.entry(seq);
-    if (!read.ok) return { ok: false, reason: read.reason };
+    if (!read.ok) return read.reason === "archived" ? { ok: false, reason: "archived", archived: read.archived } : { ok: false, reason: read.reason };
     const entry = read.value.entry;
     if (entry.at?.scope !== at.scope || entry.at.kind !== at.kind || entry.seq !== seq) return { ok: false, reason: "reference-mismatch" };
     if (entry.at.inc !== at.inc) return { ok: false, reason: "wrong-incarnation" };

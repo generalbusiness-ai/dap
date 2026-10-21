@@ -8,9 +8,10 @@ import type { Phase, Step } from "./custody.ts";
 export const MCP_METRIC_SCHEMA = "mcp-metrics-v1";
 const MAX = 0x7fffffff;
 const TOOLS = new Set(["list", "room", "inspect", "create", "join", "prepare", "items", "steps", "step", "record", "sends", "text", "wait", "settle", "credential", "actions", "act", "install_application", "application_installation", "enrol"]);
-const PHASES = new Set(["prepared", "sent", "unknown", "accepted", "refused", "mismatch", "settled"]);
+const PHASES = new Set(["prepared", "sent", "unknown", "accepted", "archived", "refused", "mismatch", "settled"]);
 const STEP_PHASES = new Set(["prepared", "sent", "unknown", "answered"]);
 const NATIVE: Record<RefusalReason | UnavailableReason | MismatchReason | ReadRefusal | SessionRefusal, true> = {
+  "archived": true, "floor-receipt": true, "floor-ahead": true, "floor-back": true, "floor-step": true, "floor-recent": true, "floor-keep": true, "floor-kept": true,
   "wrong-pin": true,
   late: true,
   "revision-moved": true, alias: true, "duplicate-relation": true, "required-unset": true, "scope-full": true,
