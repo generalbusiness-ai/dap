@@ -53,7 +53,13 @@ test("metadata lookahead keeps completed debits and refuses before SQL would con
   expect(budget.admitted()).toMatchObject({ calls: 1, metadata: 3, inputWork: 5 });
   // The forecast is a copied value; changing the caller's object during a
   // later attempt cannot release the protected allowance.
-  const second = budget.lookahead(reserve, () => { reserve.metadata = 0; sql.exec("SELECT 3"); });
+  const second = budget.lookahead(reserve, () => {
+    reserve.metadata = 0;
+    // Native metadata helpers may translate a caught SQL error to missing.
+    // That cannot turn this refused request into a usable candidate result.
+    try { sql.exec("SELECT 3"); } catch { /* Simulate that boundary. */ }
+    return "must not escape the pending shortage";
+  });
   expect(second).toEqual({ kind: "limited" });
   expect(calls).toBe(1);
   expect(budget.lookahead({ metadata: 10 }, () => "unreachable")).toEqual({ kind: "limited" });

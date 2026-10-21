@@ -23,6 +23,7 @@ export class ArchiveBudget {
   #last: number;
   #stopped: ArchiveStopReason | null = null;
   #reserve: ArchiveCost | null = null;
+  #lookaheadBlocked = false;
   constructor(limits: Partial<ArchiveCost> = {}, readonly now: () => number = () => performance.now(), milliseconds = ARCHIVE_SECONDS * 1000) {
     if (!natural(milliseconds) || milliseconds > ARCHIVE_SECONDS * 1000 || Object.keys(limits).some(key => !(keys as readonly string[]).includes(key))) throw new ArchiveStopped("limit");
     this.#limits = { ...ARCHIVE_BOUNDS, ...limits };
@@ -38,6 +39,7 @@ export class ArchiveBudget {
     if (!Number.isFinite(time) || time < this.#last) this.stop("unavailable");
     this.#last = time;
     if (time >= this.#until) this.stop("timeout");
+    if (this.#lookaheadBlocked) throw new ArchiveLookaheadLimited();
   }
   /** Scheduling check against this same original allowance. A false result
    * spends nothing and does not stop the pass. It grants no I/O admission. */
@@ -53,7 +55,10 @@ export class ArchiveBudget {
   spend(cost: Partial<ArchiveCost>): void {
     const fits = this.canSpend(cost);
     if (this.#reserve !== null) {
-      if (!fits || keys.some(key => (cost[key] ?? 0) + this.#reserve![key] > this.#limits[key] - this.#used[key])) throw new ArchiveLookaheadLimited();
+      if (!fits || keys.some(key => (cost[key] ?? 0) + this.#reserve![key] > this.#limits[key] - this.#used[key])) {
+        this.#lookaheadBlocked = true;
+        throw new ArchiveLookaheadLimited();
+      }
     } else if (!fits) this.stop("limit");
     for (const key of keys) this.#used[key] += cost[key] ?? 0;
   }
@@ -72,9 +77,16 @@ export class ArchiveBudget {
       this.check();
       return { kind: "read", value };
     } catch (error) {
-      if (error instanceof ArchiveLookaheadLimited) return { kind: "limited" };
+      if (error instanceof ArchiveLookaheadLimited || this.#lookaheadBlocked) {
+        // A helper may catch its own SQL failure or translate it to missing.
+        // Preserve any real timeout/unavailable stop before treating the
+        // pending reservation shortage as a nonterminal lookahead limit.
+        try { this.check(); }
+        catch (pending) { if (!(pending instanceof ArchiveLookaheadLimited)) throw pending; }
+        return { kind: "limited" };
+      }
       throw error;
-    } finally { this.#reserve = null; }
+    } finally { this.#reserve = null; this.#lookaheadBlocked = false; }
   }
   /** Includes projected metadata in the same cumulative input-work ledger.
    * The caller separately reserves repeated parsing/hashing work. */
