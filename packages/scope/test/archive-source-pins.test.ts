@@ -3,9 +3,10 @@
  * not foreign privacy admission, production provenance or installed export. */
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash } from "@generalbusiness/artroom-bytes";
+import { canonicalize, entryHash, utf8 } from "@generalbusiness/artroom-bytes";
 import { variant } from "@generalbusiness/dap-derive/testing";
-import { ArchiveBudget } from "../src/archive-budget.ts";
+import { forecastArchiveSourceLookup } from "../src/archive-source-cost.ts";
+import { ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
 import { FixtureArchiveSourcePins, type FixtureArchiveSourceBirth } from "../src/archive-source-pins.ts";
 import { create, definition, reader } from "./support.ts";
 
@@ -18,7 +19,16 @@ test("fixture source pins bind an actual native birth and declaration to its ful
   expect(first).toEqual({ at: lane.at, pin: definition.digest, genesis: lane.genesis.fact.hash, declaration: input.declaration });
   expect(Object.keys(first!).sort()).toEqual(["at", "declaration", "genesis", "pin"]);
   expect(map.get(other.at, budget)).toBeNull();
+  const missing = budget.admitted();
   expect(map.get(lane.at, budget)).toBe(first);
+  const repeated = budget.admitted();
+  const quote = forecastArchiveSourceLookup(utf8(first!.declaration).length);
+  for (const [start, end] of [[before, one], [missing, repeated]] as const) {
+    for (const key of Object.keys(quote) as (keyof ArchiveCost)[]) expect(quote[key]).toBeGreaterThanOrEqual(end[key] - start[key]);
+  }
+  const miss = Object.fromEntries(Object.keys(one).map(key => [key, missing[key as keyof ArchiveCost] - one[key as keyof ArchiveCost]]));
+  expect(miss).toEqual({ entries: 0, attempts: 1, nodes: 0, calls: 0, metadata: 512, inputWork: 1024 });
+  expect(forecastArchiveSourceLookup(null)).toEqual(miss);
   expect(budget.admitted().attempts - before.attempts).toBe(3);
   expect(budget.admitted().inputWork - one.inputWork).toBeGreaterThan(one.inputWork - before.inputWork);
   inputs.length = 0;
