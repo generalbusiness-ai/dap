@@ -37,6 +37,33 @@ test("native reservations include returned metadata and input work before SQL, a
   expect(() => failing.spend({})).toThrow("archive-unavailable");
 });
 
+test("metadata lookahead keeps completed debits and refuses before SQL would consume the selected prefix's finish allowance", () => {
+  // A counted SQL port, not a SQLite/privacy witness: the invariant is the
+  // budget's before-call debit and the unchanged final cumulative limit.
+  const budget = new ArchiveBudget({ calls: 3, metadata: 12, inputWork: 30 }, () => 0);
+  const reserve = { calls: 1, metadata: 8, inputWork: 20 }; let calls = 0;
+  const sql = budget.native({ exec() { calls++; return { toArray: () => [{ n: 1 }] }; } }, () => ({ metadata: 3, inputWork: 2 }));
+  const limited = budget.lookahead(reserve, () => {
+    sql.exec("SELECT 1");
+    sql.exec("SELECT 2"); // This would take metadata needed by the finish.
+    return "must not finish lookahead";
+  });
+  expect(limited).toEqual({ kind: "limited" });
+  expect(calls).toBe(1);
+  expect(budget.admitted()).toMatchObject({ calls: 1, metadata: 3, inputWork: 5 });
+  // The forecast is a copied value; changing the caller's object during a
+  // later attempt cannot release the protected allowance.
+  const second = budget.lookahead(reserve, () => { reserve.metadata = 0; sql.exec("SELECT 3"); });
+  expect(second).toEqual({ kind: "limited" });
+  expect(calls).toBe(1);
+  expect(budget.lookahead({ metadata: 10 }, () => "unreachable")).toEqual({ kind: "limited" });
+  expect(budget.lookahead({ inputWork: 20 }, () => 7)).toEqual({ kind: "read", value: 7 });
+  budget.spend({ calls: 2, metadata: 9, inputWork: 25 });
+  expect(budget.admitted()).toMatchObject({ calls: 3, metadata: 12, inputWork: 30 });
+  expect(() => budget.spend({ metadata: 1 })).toThrow("archive-limit");
+  expect(() => budget.spend({})).toThrow("archive-limit");
+});
+
 test("original deadline and monotone clock fence later work and reject a delayed value before cache or SQL continuation", async () => {
   let now = 0, resolve!: (value: number) => void, calls = 0, cached = false;
   const budget = new ArchiveBudget({}, () => now, 10);
