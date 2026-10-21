@@ -702,6 +702,13 @@ const ownEntry = (own: Own, seq: number) => {
   return kept.entry;
 };
 
+/** Sparse native history preserves the order of every held causal entry.
+ * No-floor callers keep the original dense walk. */
+function positions(own: Own, from: number, before: number): Iterable<number> {
+  if (own.positions) return (function* () { for (const seq of own.positions!(before)) if (seq >= from) yield seq; })();
+  return (function* () { for (let seq = from; seq < before; seq++) yield seq; })();
+}
+
 /**
  * The push operations that were opened for a publication, in the order of
  * their opening (section 12.1.5, "What an operation is for"; entry ER6). No
@@ -715,7 +722,7 @@ function pushesOf(state: Pick<StateView, "operation">, own: Own, publication: It
   const from = publication.values["reservedAt"];
   if (typeof from !== "number") return [];
   const matched: Operation[] = [];
-  for (let seq = from; seq < before; seq += 1) {
+  for (const seq of positions(own, from, before)) {
     const { input } = ownEntry(own, seq);
     const checked = ["platform:destination@3", "platform:destination@4", "platform:destination@5", "platform:destination@6", "platform:destination@7", "platform:destination@8"].includes(pinnedOf(own) ?? "") && ((input.type === "delivery" && input.message.class === "request" && input.message.type === "tell" && isObject(input.message.body) && input.message.body["message"] === "checked") || (input.type === "outcome" && ["check-judge", "reservation-stage"].includes(input.kind)));
     const about = seq === from || checked || (input.type === "act" && input.signed.intent.kind === "resend" && input.signed.intent.on === publication.id);
@@ -734,7 +741,7 @@ function pushesOf(state: Pick<StateView, "operation">, own: Own, publication: It
  */
 function receiptWrites(state: Pick<StateView, "operation">, own: Own, receipt: Item, before: number): Operation[] {
   const matched: Operation[] = [];
-  for (let seq = receipt.id; seq < before; seq += 1) {
+  for (const seq of positions(own, receipt.id, before)) {
     const { input } = ownEntry(own, seq);
     const about = seq === receipt.id || (input.type === "act" && input.signed.intent.kind === "resend-receipt" && input.signed.intent.fields["receipt"] === receipt.id);
     if (about) matched.push(...openedIn(state, seq).filter((operation) => isOf(operation.owner, NAME_OF) && operation.kind === DESTINATION_KINDS.receipt));
@@ -921,7 +928,7 @@ export function mintRevoked(state: Pick<StateView, "operation" | "item">, own: O
   const publication = emptied?.effect === "value" ? publicationAt(state, emptied.item) : null;
   const from = publication?.values["reservedAt"];
   if (!publication || typeof from !== "number") return null;
-  for (let at = seq - 1; at >= from; at -= 1) {
+  for (const at of Array.from(positions(own, from, seq)).reverse()) {
     const set = ownEntry(own, at).effects.find((effect) => effect.effect === "value" && effect.item === publication.id && effect.slot === "token");
     if (set?.effect === "value") return typeof set.value === "string" ? state.operation(set.value as OperationId) : null;
   }
@@ -1703,7 +1710,7 @@ const WRITTEN: Rules = {
       if (input.type !== "delivery" || input.message.class !== "request" || input.message.type !== "relate") throw new Error("open-first-head stands in a `relate` handler, and reads its update");
       const state = isObject(input.message.body) ? input.message.body["state"] : null;
       const branch = branchOf(view)!;
-      for (let seq = branch.id; seq < resolved.self; seq += 1) {
+      for (const seq of positions(own, branch.id, resolved.self)) {
         if (own(seq)?.entry.effects.some((effect) => effect.effect === "operation" && isOf(effect.owner, NAME_OF) && effect.kind === DESTINATION_KINDS.firstHead)) return [];
       }
       return state === "done" && typeof resolved.fields["commit"] === "string" ? [...opened(given, 0, DESTINATION_KINDS.firstHead, DESTINATION_ATTEMPTS.firstHead, branchOf(view)!.id), ...opened(given, 1, DESTINATION_KINDS.mint, DESTINATION_ATTEMPTS.mint, branchOf(view)!.id)] : [];
@@ -2197,7 +2204,7 @@ export const destinationRules2: Rules = destinationRulesWith(READ_LANE, 2);
  * authentic results on its jobs open publication only when every check passed. */
 interface CheckGeneration { name: string; job: FactRef; passed: boolean }
 const stagedOwn = (given: Pick<RuleGiven, "state" | "own">, publication: Item, before: number): boolean => {
-  for (let seq = publication.values["reservedAt"] as number; seq < before; seq++) {
+  for (const seq of positions(given.own, publication.values["reservedAt"] as number, before)) {
     const entry = given.own(seq)?.entry;
     if (entry?.input.type === "outcome" && entry.input.kind === "reservation-stage" && entry.input.result === "confirmed") {
       const operation = given.state.operation(entry.input.operation);
@@ -2208,7 +2215,7 @@ const stagedOwn = (given: Pick<RuleGiven, "state" | "own">, publication: Item, b
   return false;
 };
 const stageMayRemain = (given: Pick<RuleGiven, "state" | "own">, publication: Item, before: number): boolean => {
-  for (let seq = publication.values["reservedAt"] as number; seq < before; seq++) {
+  for (const seq of positions(given.own, publication.values["reservedAt"] as number, before)) {
     for (const operation of openedIn(given.state, seq)) {
       if (operation.kind !== "reservation-stage" || operation.for !== publication.id) continue;
       if (operation.sent === true || operation.attempts.some((attempt) => attempt.outcomes.some((outcome) => outcome.result === "unknown" || outcome.result === "confirmed"))) return true;
@@ -2225,7 +2232,7 @@ function cleanupPublication(state: Pick<StateView, "item">, mint: Operation): It
 /** Every known minted token of this reservation has its own confirmed revoke.
  * The offered current revoke is counted only when its own answer confirms it. */
 function cleanupTokensClosed(given: RuleGiven, publication: Item, current: Operation): boolean {
-  const operations = Array.from({ length: given.resolved.self - (publication.values["reservedAt"] as number) }, (_, n) => openedIn(given.state, n + (publication.values["reservedAt"] as number))).flat().filter((operation) => operation.for === publication.id);
+  const operations = Array.from(positions(given.own, publication.values["reservedAt"] as number, given.resolved.self), seq => openedIn(given.state, seq)).flat().filter((operation) => operation.for === publication.id);
   return operations.filter((operation) => operation.kind === "mint").every((mint) => {
     const outcomes = mint.attempts.flatMap((attempt) => attempt.outcomes);
     if (!outcomes.some((outcome) => outcome.result === "confirmed")) return outcomes.length > 0 && outcomes.every((outcome) => outcome.result === "refused");
@@ -2233,7 +2240,7 @@ function cleanupTokensClosed(given: RuleGiven, publication: Item, current: Opera
   });
 }
 function cleanupTokensExhausted(given: RuleGiven, publication: Item, current: Operation): "reservation-token" | "reservation-token-unknown" | null {
-  for (let seq = publication.values["reservedAt"] as number; seq < given.resolved.self; seq++) for (const operation of openedIn(given.state, seq)) {
+  for (const seq of positions(given.own, publication.values["reservedAt"] as number, given.resolved.self)) for (const operation of openedIn(given.state, seq)) {
     if (operation.for !== publication.id || operation.kind !== "revoke" || (operation.id === current.id && given.input.type === "outcome" && given.input.result === "confirmed")) continue;
     if (!operation.attempts.some((attempt) => attempt.outcomes.some((outcome) => outcome.result === "confirmed")) && operation.attempts.length === operation.most && operation.attempts.every((attempt) => attempt.outcomes.length > 0)) return operation.attempts.some((attempt) => attempt.outcomes.some((outcome) => outcome.result === "unknown")) ? "reservation-token-unknown" : "reservation-token";
   }
@@ -2241,7 +2248,7 @@ function cleanupTokensExhausted(given: RuleGiven, publication: Item, current: Op
 }
 function cleanupAttempt(given: RuleGiven, publication: Item, current: Operation): number {
   let opened = 0;
-  for (let seq = publication.values["reservedAt"] as number; seq < given.resolved.self; seq++) for (const operation of openedIn(given.state, seq)) {
+  for (const seq of positions(given.own, publication.values["reservedAt"] as number, given.resolved.self)) for (const operation of openedIn(given.state, seq)) {
     if (operation.for === publication.id && operation.kind === "reservation-delete") opened += operation.attempts.length;
   }
   const input = given.input;
@@ -2249,7 +2256,7 @@ function cleanupAttempt(given: RuleGiven, publication: Item, current: Operation)
   return Math.max(publication.values["cleanupAttempts"] as number, opened);
 }
 function cleanupMintUnknown(given: RuleGiven, publication: Item): boolean {
-  for (let seq = publication.values["reservedAt"] as number; seq < given.resolved.self; seq++) for (const operation of openedIn(given.state, seq)) {
+  for (const seq of positions(given.own, publication.values["reservedAt"] as number, given.resolved.self)) for (const operation of openedIn(given.state, seq)) {
     if (operation.for !== publication.id || operation.kind !== "mint") continue;
     const outcomes = operation.attempts.flatMap((attempt) => attempt.outcomes);
     if (!outcomes.some((outcome) => outcome.result === "confirmed") && outcomes.some((outcome) => outcome.result === "unknown")) return true;

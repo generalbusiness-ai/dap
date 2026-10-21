@@ -13,6 +13,8 @@
  * the canonical bytes.
  */
 
+import { ACCEPTED_KEY_OVERHEAD_BYTES } from "@generalbusiness/dap-contract";
+import type { JournalFloor } from "@generalbusiness/dap-contract";
 import type { CapabilityName, Digest, Entry, FactRef, FieldValue, Held, Incarnation, KeyId, OperationId, ScopeId, ScopeKind, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
 import { DOMAINS } from "@generalbusiness/dap-contract";
 import { RETAINED_BYTE_DOMAINS, canonicalize, isDigest, isScopeRef, parseStrict } from "@generalbusiness/artroom-bytes";
@@ -81,6 +83,9 @@ export interface Sql {
  */
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT NOT NULL) WITHOUT ROWID;
+CREATE TABLE IF NOT EXISTS journal_kept (seq INTEGER PRIMARY KEY);
+CREATE TABLE IF NOT EXISTS size_proof (digest TEXT NOT NULL, seq INTEGER NOT NULL, bound INTEGER NOT NULL, PRIMARY KEY (digest,seq)) WITHOUT ROWID;
+CREATE TABLE IF NOT EXISTS accepted_key (actor TEXT NOT NULL, idem TEXT NOT NULL, seq INTEGER NOT NULL, hash TEXT NOT NULL, intent TEXT NOT NULL, PRIMARY KEY (actor,idem)) WITHOUT ROWID;
 CREATE TABLE IF NOT EXISTS entry (seq INTEGER PRIMARY KEY, hash TEXT NOT NULL, time TEXT NOT NULL, bytes TEXT NOT NULL, size INTEGER NOT NULL, actor TEXT, idem TEXT, intent TEXT);
 CREATE TABLE IF NOT EXISTS entry_fact_signer (seq INTEGER PRIMARY KEY, hash TEXT NOT NULL, member TEXT NOT NULL);
 CREATE TRIGGER IF NOT EXISTS forget_entry_fact_signer AFTER DELETE ON entry BEGIN DELETE FROM entry_fact_signer WHERE seq=OLD.seq; END;
@@ -91,10 +96,10 @@ CREATE TABLE IF NOT EXISTS item_count (type TEXT NOT NULL, state TEXT NOT NULL, 
 CREATE TABLE IF NOT EXISTS item_slot (id INTEGER NOT NULL, slot TEXT NOT NULL, type TEXT NOT NULL, state TEXT NOT NULL, value TEXT NOT NULL, PRIMARY KEY (id, slot)) WITHOUT ROWID;
 CREATE INDEX IF NOT EXISTS item_by_slot ON item_slot (type, slot, value, state, id);
 CREATE TABLE IF NOT EXISTS outbox (seq INTEGER NOT NULL, n INTEGER NOT NULL, target TEXT NOT NULL, class TEXT NOT NULL, message TEXT NOT NULL, held INTEGER NOT NULL DEFAULT 0,
-  attempts TEXT NOT NULL DEFAULT '[]', next INTEGER NOT NULL, ack TEXT, request TEXT, result TEXT, diagnosis TEXT, PRIMARY KEY (seq, n)) WITHOUT ROWID;
+  attempts TEXT NOT NULL DEFAULT '[]', next INTEGER NOT NULL, ack TEXT, request TEXT, result TEXT, diagnosis TEXT, hash TEXT, PRIMARY KEY (seq, n)) WITHOUT ROWID;
 CREATE INDEX IF NOT EXISTS outbox_due ON outbox (next, seq, n) WHERE held = 0 AND ack IS NULL AND result IS NULL AND diagnosis IS NULL;
 CREATE INDEX IF NOT EXISTS outbox_open ON outbox (seq, n) WHERE request IS NOT NULL AND result IS NULL;
-CREATE TABLE IF NOT EXISTS inbox (scope TEXT NOT NULL, inc TEXT NOT NULL, seq INTEGER NOT NULL, n INTEGER NOT NULL, hash TEXT NOT NULL, by INTEGER NOT NULL, PRIMARY KEY (scope, inc, seq, n)) WITHOUT ROWID;
+CREATE TABLE IF NOT EXISTS inbox (scope TEXT NOT NULL, inc TEXT NOT NULL, seq INTEGER NOT NULL, n INTEGER NOT NULL, hash TEXT NOT NULL, by INTEGER NOT NULL, deciding_hash TEXT, decision TEXT, PRIMARY KEY (scope, inc, seq, n)) WITHOUT ROWID;
 CREATE TABLE IF NOT EXISTS source_order (scope TEXT NOT NULL, inc TEXT NOT NULL, handler TEXT NOT NULL, seq INTEGER NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (scope, inc, handler)) WITHOUT ROWID;
 CREATE TABLE IF NOT EXISTS folded (kind TEXT NOT NULL, key TEXT NOT NULL, value TEXT NOT NULL, PRIMARY KEY (kind, key)) WITHOUT ROWID;
 CREATE TABLE IF NOT EXISTS operation (seq INTEGER NOT NULL, k INTEGER NOT NULL, value TEXT NOT NULL, opened INTEGER NOT NULL, unknown INTEGER NOT NULL, unopened INTEGER NOT NULL, PRIMARY KEY (seq, k)) WITHOUT ROWID;
@@ -117,7 +122,7 @@ const DUE = "o.held = 0 AND o.ack IS NULL AND o.result IS NULL AND o.diagnosis I
 const OPEN = "opened + unknown + unopened > 0";
 
 /** Request bookkeeping is joined to its existing outbox key; it is no new logical record. */
-const REQUEST_ROWS = "SELECT o.seq, o.n, o.target, o.request, o.result, o.diagnosis, e.hash, r.value AS reservation FROM outbox o JOIN entry e ON e.seq = o.seq LEFT JOIN folded r ON r.kind = 'capacity-request' AND r.key = json_array(o.seq, o.n)";
+const REQUEST_ROWS = "SELECT o.seq, o.n, o.target, o.request, o.result, o.diagnosis, COALESCE(e.hash,o.hash) AS hash, r.value AS reservation FROM outbox o LEFT JOIN entry e ON e.seq = o.seq LEFT JOIN folded r ON r.kind = 'capacity-request' AND r.key = json_array(o.seq, o.n)";
 
 type Row = Record<string, SqlValue>;
 /** The entry that opened an operation and its ordinal there, from its ID. */
@@ -143,6 +148,10 @@ export class SqliteStore implements Store {
     // column nor archive receipts participate in the folded state digest.
     for (const table of ["retained_input", "retained_value"] as const) {
       if (!this.#all(`PRAGMA table_info(${table})`).some(row => row["name"] === "pass")) this.#run(`ALTER TABLE ${table} ADD COLUMN pass INTEGER`);
+    }
+    for (const [table, columns] of [["outbox", ["hash"]], ["inbox", ["deciding_hash", "decision"]]] as const) {
+      const held = this.#all(`PRAGMA table_info(${table})`);
+      for (const column of columns) if (!held.some(row => row["name"] === column)) this.#run(`ALTER TABLE ${table} ADD COLUMN ${column} TEXT`);
     }
     this.localSigners = new LocalSigners(sql, () => this.#signerScope());
   }
@@ -178,6 +187,51 @@ export class SqliteStore implements Store {
   // ---------------------------------------------------------------- the view (derive's StateView)
 
   scope(): ScopeState | null { return orNull<ScopeState>(this.#one("SELECT v FROM meta WHERE k = 'scope'")?.["v"]); }
+  floor(): JournalFloor | null {
+    const meta = orNull<Pick<JournalFloor, "floor" | "receipt">>(this.#one("SELECT v FROM meta WHERE k = 'journal-floor'")?.["v"]);
+    if (meta === null) return null;
+    const kept = this.#all("SELECT seq FROM journal_kept ORDER BY seq").map(row => row["seq"] as number);
+    const sizeProofs = this.#all("SELECT digest, seq, bound FROM size_proof ORDER BY digest, seq").map(row => ({ digest: row["digest"] as Digest, seq: row["seq"] as number, bound: row["bound"] as number }));
+    return { ...meta, kept, sizeProofs };
+  }
+  heldEntryCount(): number {
+    if (!this.#one("SELECT 1 AS held FROM meta WHERE k = 'journal-floor'")) return (this.scope()?.head.seq ?? -1) + 1;
+    return this.#one("SELECT COUNT(*) AS n FROM entry")!["n"] as number;
+  }
+  /** Called by the shared fold, inside the entry's one sealing transaction. */
+  putFloor(floor: JournalFloor): void {
+    const kept = new Set(floor.kept);
+    const below = this.#all("SELECT seq,hash,actor,idem,intent FROM entry WHERE seq < ? ORDER BY seq", floor.floor);
+    if (below.length > 8192) throw new Error("floor exceeds the bounded deletion window");
+    for (const row of below) {
+      const seq = row["seq"] as number;
+      if (kept.has(seq)) continue;
+      if (row["actor"] !== null) this.#run("INSERT INTO accepted_key (actor,idem,seq,hash,intent) VALUES (?,?,?,?,?)", row["actor"]!, row["idem"]!, seq, row["hash"]!, row["intent"]!);
+      this.#run("UPDATE outbox SET hash = ? WHERE seq = ?", row["hash"]!, seq);
+      // Old inbox rows predate the copy columns; save their acknowledgement
+      // evidence before the deciding payload disappears.
+      const deciding = this.stored(seq);
+      if (deciding) {
+        const input = (parseStrict(deciding.bytes) as Entry).input;
+        const decision = input.type === "genesis" || input.type === "delivery" && "decision" in input ? input.decision : input.type === "delivery" && "clause" in input ? input.clause : "recorded";
+        this.#run("UPDATE inbox SET deciding_hash = ?, decision = ? WHERE by = ?", row["hash"]!, decision, seq);
+      }
+      this.#run("DELETE FROM entry WHERE seq = ?", seq);
+    }
+    this.#run("DELETE FROM journal_kept");
+    for (const seq of floor.kept) this.#run("INSERT INTO journal_kept (seq) VALUES (?)", seq);
+    this.#run("DELETE FROM size_proof");
+    for (const proof of floor.sizeProofs) this.#run("INSERT INTO size_proof (digest,seq,bound) VALUES (?,?,?)", proof.digest, proof.seq, proof.bound);
+    this.#run("INSERT INTO meta (k,v) VALUES ('journal-floor',?) ON CONFLICT (k) DO UPDATE SET v=excluded.v", canonicalize({ floor: floor.floor, receipt: floor.receipt }));
+  }
+  acceptedEntryHash(actor: KeyId, idempotencyKey: string): Digest | null {
+    const row = this.#one("SELECT hash FROM entry WHERE actor=? AND idem=? UNION ALL SELECT hash FROM accepted_key WHERE actor=? AND idem=? LIMIT 1", actor, idempotencyKey, actor, idempotencyKey);
+    return row?.["hash"] as Digest ?? null;
+  }
+  decidedReceipt(from: FactRef, n: number): { seq: number; hash: Digest; decision: string } | null {
+    const row = this.#one("SELECT by,deciding_hash,decision FROM inbox WHERE scope=? AND inc=? AND seq=? AND n=?", from.at.scope, from.at.inc, from.seq, n);
+    return row && typeof row["deciding_hash"] === "string" && typeof row["decision"] === "string" ? { seq: row["by"] as number, hash: row["deciding_hash"] as Digest, decision: row["decision"] } : null;
+  }
   /** Derive logical key counts from the stored rows; final states and transport ACKs do not erase keys. */
   keyCounts() {
     const row = this.#one(`SELECT
@@ -197,11 +251,12 @@ export class SqliteStore implements Store {
     ), counted AS (
       SELECT domain,digest,MAX(size) AS size,COUNT(DISTINCT size)>1 AS conflict FROM sources GROUP BY domain,digest
     ) SELECT COALESCE(SUM(size),0) AS bytes,COALESCE(MAX(conflict),0) AS conflict,
+      (SELECT COALESCE(SUM(? + octet_length(idem)),0) FROM accepted_key) AS accepted,
       (SELECT COUNT(*) FROM retained_input WHERE kind NOT IN (${kinds.map(() => "?").join(",")}))
       + (SELECT COUNT(*) FROM retained_value WHERE domain='') AS invalid FROM counted`,
-    DOMAINS.entry, ...kinds.flatMap(([kind, domain]) => [kind, domain]), ...kinds.map(([kind]) => kind))!;
+    DOMAINS.entry, ...kinds.flatMap(([kind, domain]) => [kind, domain]), ACCEPTED_KEY_OVERHEAD_BYTES, ...kinds.map(([kind]) => kind))!;
     if (row["invalid"] !== 0 || row["conflict"] !== 0) throw new AmountError("stored retained-byte identity is inconsistent");
-    const bytes = row["bytes"] as number;
+    const bytes = (row["bytes"] as number) + (row["accepted"] as number);
     naturalAmount({ ...NOTHING, bytes });
     return bytes;
   }
@@ -252,7 +307,7 @@ export class SqliteStore implements Store {
     return this.#one(`SELECT COUNT(*) AS n FROM folded WHERE kind = 'relation' AND json_extract(value, '$.name') = ? AND json_extract(value, '$.owner.kind') = ?${among}`, name, kind, ...(states ?? []))!["n"] as number;
   }
   accepted(actor: KeyId, idempotencyKey: string): Accepted | null {
-    const row = this.#one("SELECT seq, intent FROM entry WHERE actor = ? AND idem = ?", actor, idempotencyKey);
+    const row = this.#one("SELECT seq,intent FROM entry WHERE actor=? AND idem=? UNION ALL SELECT seq,intent FROM accepted_key WHERE actor=? AND idem=? LIMIT 1", actor, idempotencyKey, actor, idempotencyKey);
     return row && { seq: row["seq"] as number, intent: row["intent"] as Digest };
   }
   request(seq: number, n: number): OwnRequest | null {
@@ -359,6 +414,8 @@ export class SqliteStore implements Store {
    */
   all(): StateSnapshot {
     const memory = new MemoryState();
+    const floor = this.floor();
+    if (floor) memory.putFloor(floor);
     const scope = this.scope();
     if (scope) memory.setScope(scope);
     for (const row of this.#all("SELECT record FROM item ORDER BY id")) memory.putItem(rowJson<Item>(row["record"]));
@@ -379,7 +436,7 @@ export class SqliteStore implements Store {
     for (const row of this.#all("SELECT value FROM operation ORDER BY seq, k")) memory.putOperation(rowJson(row["value"]));
     for (const row of this.#all("SELECT value FROM record")) memory.putRecord(rowJson(row["value"]));
     for (const row of this.#all("SELECT intent, capability, step, seq FROM prepared")) memory.putPrepared({ intent: row["intent"] as Digest, capability: row["capability"] as CapabilityName, step: row["step"] as string, seq: row["seq"] as number });
-    for (const row of this.#all("SELECT seq, actor, idem, intent FROM entry WHERE actor IS NOT NULL")) memory.putAccepted(row["actor"] as KeyId, row["idem"] as string, { seq: row["seq"] as number, intent: row["intent"] as Digest });
+    for (const row of this.#all("SELECT seq,actor,idem,intent FROM entry WHERE actor IS NOT NULL UNION ALL SELECT seq,actor,idem,intent FROM accepted_key")) memory.putAccepted(row["actor"] as KeyId, row["idem"] as string, { seq: row["seq"] as number, intent: row["intent"] as Digest });
     for (const row of this.#all(`${REQUEST_ROWS} WHERE o.request IS NOT NULL`)) memory.putRequest(requestOf(row));
     for (const row of this.#all("SELECT scope, inc, seq, n, hash, by FROM inbox")) {
       // The record keeps the source's scope and incarnation; its kind is not part of the key and is not read.

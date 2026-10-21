@@ -14,13 +14,19 @@
  * and it computes the hash itself.
  */
 
-import type { Answer, DeliveryRefusal, Created, MismatchReason, RefusalReason, ScopeApi, UnavailableReason } from "@generalbusiness/dap-contract";
+import type { Answer, DeliveryRefusal, Created, MismatchReason, RefusalReason, Read, ScopeApi, UnavailableReason } from "@generalbusiness/dap-contract";
 import { isScopeBoundName } from "@generalbusiness/dap-contract";
-import { REFUSAL_REASONS, isItemQueryRead, among, isOutboxItem, isHead, isItem, isListOf, isLogPage, isRead, isReceipt, isRecord, isRetainedInput, isSealed, isSummary } from "@generalbusiness/artroom-bytes";
+import { REFUSAL_REASONS, isItemQueryRead, among, isOutboxItem, isFactRef, isHead, isItem, isListOf, isLogPage, isRead, isReceipt, isRecord, isRetainedInput, isSealed, isSummary } from "@generalbusiness/artroom-bytes";
+import { isArchived } from "./journal-tail.ts";
 import { readApplicationProjectionReplyText } from "@generalbusiness/artroom-bytes/application-v2";
 
 // Each table has every member of its union, and the compiler says so when the contract gains or loses one.
-/** Why an act is refused (`Answer`). A source check and a platform definition are a creation's to answer, and are not here. */
+/** Archived reads carry a covered position and the exact archive receipt. */
+const readAnswer = <T>(guard: (v: unknown) => v is T) => {
+  const read = isRead(guard);
+  return (v: unknown): v is Read<T> => read(v) && (v.ok || v.reason !== "archived" || isArchived(v.archived) && (v.fact === undefined || v.fact.seq < v.archived.floor));
+};
+/** Why an act is refused (`Answer`). Source checks belong to creation. */
 const ACT_REFUSED: Record<RefusalReason, true> = REFUSAL_REASONS;
 /** Why a creation is refused (`Created`). */
 const CREATION_REFUSED: Record<RefusalReason | DeliveryRefusal | "unsupported-definition", true> = { ...REFUSAL_REASONS, "source-unverified": true, "unsupported-definition": true };
@@ -46,6 +52,7 @@ function isAnswer(v: unknown): v is Answer {
   if (!isRecord(v)) return false;
   switch (v["answer"]) {
     case "accepted": return only(v, "answer", "receipt") && isReceipt(v["receipt"]);
+    case "archived": return only(v, "answer", "archived", "fact") && isArchived(v["archived"]) && isFactRef(v["fact"]) && v["fact"].seq < v["archived"].floor;
     // A refusal may carry the name that the failed guard declares.
     case "refused": return (only(v, "answer", "reason", "judgedAt") || (only(v, "answer", "reason", "name", "judgedAt") && typeof v["name"] === "string")) && among(ACT_REFUSED)(v["reason"]) && isHead(v["judgedAt"]);
     case "unavailable": return only(v, "answer", "reason") && among(UNAVAILABLE)(v["reason"]);
@@ -59,15 +66,15 @@ export const ANSWERS: { [K in keyof ScopeApi]: (reply: unknown) => reply is Awai
   create: isCreated,
   submit: isAnswer,
   prepare: isAnswer,
-  settle: isRead(isReceipt),
-  summary: isRead(isSummary),
-  items: isRead(isListOf(isItem)),
+  settle: readAnswer(isReceipt),
+  summary: readAnswer(isSummary),
+  items: readAnswer(isListOf(isItem)),
   queryItems: isItemQueryRead,
   applicationProjection: (reply): reply is string => readApplicationProjectionReplyText(reply) !== null,
-  history: isRead(isListOf(isSealed)),
-  entry: isRead(isSealed),
-  outbox: isRead(isListOf(isOutboxItem)),
-  outboxItem: isRead(isOutboxItem),
-  log: isRead(isLogPage),
-  retained: isRead(isRetainedInput),
+  history: readAnswer(isListOf(isSealed)),
+  entry: readAnswer(isSealed),
+  outbox: readAnswer(isListOf(isOutboxItem)),
+  outboxItem: readAnswer(isOutboxItem),
+  log: readAnswer(isLogPage),
+  retained: readAnswer(isRetainedInput),
 };

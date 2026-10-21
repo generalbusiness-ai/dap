@@ -78,6 +78,10 @@ export interface Store extends StateWriter {
   /** Remove the bytes of one retained input. Only a redaction does: the entry that holds the `redact` effect is the tombstone (section 6.6). */
   forget(kind: Retained["kind"], digest: Digest): void;
 
+  /** Archived accepted-key evidence; no journal payload is reconstructed. */
+  acceptedEntryHash?(actor: import("@generalbusiness/dap-contract").KeyId, idempotencyKey: string): Digest | null;
+  /** Stable acknowledgement for a stale repeated delivery after its entry is archived. */
+  decidedReceipt?(from: FactRef, n: number): { seq: number; hash: Digest; decision: string } | null;
   stored(seq: number): Stored | null;
   /** At most `limit` entries from `seq` on, in order. */
   storedFrom(seq: number, limit: number): Stored[];

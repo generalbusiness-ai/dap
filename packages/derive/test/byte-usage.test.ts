@@ -60,3 +60,51 @@ test("duplicate sizes remain exact near the safe-integer ceiling; inconsistent s
   expect(usage.count()).toEqual({ complete: true, bytes: Number.MAX_SAFE_INTEGER });
   expect(() => usage.journal(1, a, -0)).toThrow(AmountError);
 });
+
+// A floor releases the journal source only. A same-domain retained value
+// still holds the payload; a raw retained entry occupies its separate domain.
+test("dropping journal positions preserves retained byte identities and releases only the last journal source", () => {
+  const usage = new ByteUsage();
+  usage.journal(1, a, 12);
+  usage.journal(2, a, 12);
+  usage.retain({ kind: "entry", digest: a }, 12);
+  usage.retain({ kind: "value", domain: DOMAINS.entry, digest: b }, 8);
+  usage.journal(3, b, 8);
+  expect(usage.count()).toEqual({ complete: true, bytes: 32 });
+  usage.dropJournal(1);
+  expect(usage.count()).toEqual({ complete: true, bytes: 32 });
+  usage.dropJournal(2);
+  expect(usage.count()).toEqual({ complete: true, bytes: 20 });
+  usage.dropJournal(3);
+  usage.dropJournal(3);
+  expect(usage.count()).toEqual({ complete: true, bytes: 20 });
+  expect(() => usage.dropJournal(-1)).toThrow(AmountError);
+});
+
+// A migrated row is charged by UTF-8 storage, once per actor and key. Its
+// price is independent of the digest identity of any retained payload.
+test("migrated Unicode accepted keys charge their UTF-8 row once across repeated floors", () => {
+  const usage = new ByteUsage(), actor = "key_fixture-a", other = "key_fixture-b";
+  usage.journal(1, a, 1000);
+  usage.retain({ kind: "value", domain: DOMAINS.entry, digest: a }, 1000);
+  usage.dropJournal(1);
+  usage.migrateAccepted(actor, "é😀"); // two UTF-8 bytes plus four, not three UTF-16 code units
+  expect(usage.count()).toEqual({ complete: true, bytes: 1262 });
+  usage.dropJournal(1);
+  usage.migrateAccepted(actor, "é😀");
+  expect(usage.count()).toEqual({ complete: true, bytes: 1262 });
+  usage.migrateAccepted(other, "é😀");
+  expect(usage.count()).toEqual({ complete: true, bytes: 1524 });
+  usage.migrateAccepted(actor, "");
+  expect(usage.count()).toEqual({ complete: true, bytes: 1780 });
+});
+
+test("a failed accepted-key charge leaves both bytes and migration identity unchanged", () => {
+  const usage = new ByteUsage();
+  usage.journal(0, a, Number.MAX_SAFE_INTEGER - 261);
+  expect(() => usage.migrateAccepted("key_fixture", "é😀")).toThrow(AmountError);
+  expect(usage.count()).toEqual({ complete: true, bytes: Number.MAX_SAFE_INTEGER - 261 });
+  usage.dropJournal(0);
+  usage.migrateAccepted("key_fixture", "é😀");
+  expect(usage.count()).toEqual({ complete: true, bytes: 262 });
+});

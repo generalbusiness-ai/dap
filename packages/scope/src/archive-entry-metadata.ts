@@ -32,7 +32,7 @@ export interface ArchiveEntryHeader {
   readonly seq: number; readonly at: ScopeRef; readonly input: Input["type"];
   readonly prev: Digest | null; readonly uses: number; readonly effects: number;
 }
-const variants: readonly unknown[] = ["genesis", "act", "delivery", "timed", "diagnosis", "outcome", "preparation", "checkpoint"];
+const variants: readonly unknown[] = ["genesis", "act", "delivery", "timed", "diagnosis", "outcome", "preparation", "checkpoint", "floor"];
 const OWNER_LIMIT = 65;
 /** Finite native metadata. Device commands own no outside operation kind. */
 export const DEVICE_COMMAND_ARCHIVE_RECORDS: ReadonlySet<string> = new Set(["command"]);

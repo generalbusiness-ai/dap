@@ -160,6 +160,7 @@ export const failed = (f: Finding): CallResult => {
  */
 export function projectAnswer(answer: Answer): Record<string, unknown> {
   switch (answer.answer) {
+    case "archived": return { answer: "archived", archived: answer.archived, fact: answer.fact };
     case "accepted": return { answer: "accepted", fact: answer.receipt.fact, outboxIds: answer.receipt.sends, effects: answer.receipt.effects.length };
     case "refused": return { answer: "refused", reason: answer.reason, ...(answer.name ? { name: answer.name } : {}), judgedAt: answer.judgedAt };
     default: return { answer: answer.answer, reason: answer.reason };
@@ -538,6 +539,7 @@ export class McpService {
   #answerOf(answer: Answer, at: { scope: string; kind: string; tool: string; retained: boolean; said: { sentence: string; next: string }; phase: string }): Record<string, unknown> {
     const base = { answer: answer.answer, sentence: at.retained ? `${at.said.sentence} This outcome was kept under custody; nothing was sent.` : at.said.sentence, next: at.retained && answer.answer === "refused" ? `${at.said.next} To send the same envelope again, deliberately: resubmit: true.` : at.said.next, scope: at.scope, kind: at.kind, tool: at.tool, retained: at.retained, phase: at.phase };
     switch (answer.answer) {
+      case "archived": return { ...base, archived: answer.archived, fact: answer.fact };
       case "accepted": return { ...base, fact: answer.receipt.fact, outboxIds: answer.receipt.sends };
       case "refused": return { ...base, reason: answer.reason, ...(answer.name ? { name: answer.name } : {}), judgedAt: answer.judgedAt };
       default: return { ...base, reason: answer.reason };

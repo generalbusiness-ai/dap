@@ -1,3 +1,4 @@
+import { countedEntries, archivedPosition, heldPositions, judgeFloor } from "@generalbusiness/dap-derive";
 /**
  * One scope's surface (scope contract, sections 4.2, 7.1 and 9.2): found a
  * directory, submit an act, settle an accepted act, run an alarm's turn,
@@ -8,7 +9,7 @@
  */
 
 import type { ActType, Answer, Beside, Bounds, ScopeBoundName, CapabilityName, DeclaredDefinition, Digest, OutboxId, Entry, FactRef, Created, Grant, ObservationUse, PlatformDefinition, Receipt, RefusalReason, ScopeId, Seed, Settlement, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, intentDigest, isDigest, isGrant, isPlatformDefinition, newIncarnation, parseStrict, platformName, retainedValueKey, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, definitionDigest, intentDigest, isDigest, isEntry, isGrant, rawRetainedJSON, isPlatformDefinition, newIncarnation, parseStrict, platformName, retainedValueKey, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
 import { actNeeds, actionOf, outcomeValueDomains, checkpointOf, clockOf, counted, derivable, factsNamed, genesisBodiesPresent, ownersOf, inputTexts, isObject, judgeAct, judgeCheckpoint, judgeGenesis, judgePreparation, own, placesOf, preparationScopeGrant, prepareRules, presentedTypes, readFields, runnable, stepsOf, validateDefinition, windowOf } from "@generalbusiness/dap-derive";
 import type { ActJudgment, Clock as Reading, Draft, Fetched, SignedCreation, GrantDecision, JudgeContext, Needed, Observing, Own, Owners, Placed, PlatformRules, Presented, Snapshots, StateView, Texts, ValidDefinition, Window } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
@@ -17,7 +18,7 @@ import { producerName } from "./receiver-facts.ts";
 import { namedBy } from "./definitions.ts";
 import type { Asked, DefinitionRead, Further, Ports, Standing } from "./ports.ts";
 import type { Retained, Sealed, Store } from "./store.ts";
-import { LATE, Turns, fetchFacts, isSigned, within, type Verdict } from "./turn.ts";
+import { LATE, ARCHIVED_FACT, Turns, fetchFacts, isSigned, within, type Verdict } from "./turn.ts";
 
 export type { Created };
 
@@ -51,10 +52,10 @@ export function receiptOf({ entry, hash }: Sealed, definition: Digest | Platform
 /** The snapshots of staged refs that the scope retains, by digest, as the guard `ancestry` reads them (section 16.4). */
 export const snapshotsOf = (store: Store): Snapshots => (digest) => store.retained("snapshot", digest)?.bytes ?? null;
 
-export const ownOf = (store: Store): Own => (seq) => {
+export const ownOf = (store: Store): Own => Object.assign((seq: number) => {
   const kept = store.stored(seq);
   return kept ? { entry: JSON.parse(kept.bytes) as Entry, hash: kept.hash } : null;
-};
+}, { retained: (use: import("@generalbusiness/dap-contract").FactUse) => { const held = store.retained("entry", use.content); const entry = held && rawRetainedJSON(use.content, held.bytes); return isEntry(entry) ? entry : null; }, positions: (before: number) => heldPositions(store, before), sizeProofs: () => store.floor?.()?.sizeProofs ?? [], archived: (seq: number) => archivedPosition(store, seq) });
 
 /** Section 9.2: the bytes of each foreign entry the draft's `uses` name, under its content digest. */
 export function used(draft: Pick<Draft, "uses">, facts: readonly Fetched[]): Retained[] {
@@ -365,7 +366,7 @@ export class Scope {
       // Section 6.1, "A mark with no rule: the whole scope": every mark needs a rule of that name, of the kind of the mark's place.
       if (!runnable(checked.definition, supplied.rules)) return null;
       // A scope whose every rule is supplied runs every row of its definition: the judges run each rule at the place of its mark.
-      return { definition: checked.definition, platform: { named, rules: supplied.rules } };
+      return { definition: checked.definition, platform: { named, rules: supplied.rules, ...(supplied.floorReferences ? { floorReferences: supplied.floorReferences } : {}) } };
     } catch {
       return null;
     }
@@ -495,6 +496,7 @@ export class Scope {
     // No scope exists yet, so no fact can name it: every fact a creation names is foreign.
     const named = fields.ok && !this.#store.scope() ? factsNamed(act.fields, fields.fields, null) : [];
     const facts = named.length > bounds.usesPerEntry ? null : await fetchFacts(resolver, bounds, named);
+    if (facts === ARCHIVED_FACT) return refused("archived");
     if (!facts) return unavailable("dependency-unavailable");
 
     const asked = (inc: SignedCreation["inc"]): SignedCreation => ({ name, inc, seed, creation: creation });
@@ -589,6 +591,7 @@ export class Scope {
     const reader = wanted.length ? await this.receiverReads() : resolver;
     if (!reader) return unavailable("dependency-unavailable");
     const facts = await fetchFacts(reader, bounds, wanted);
+    if (facts === ARCHIVED_FACT) return { answer: "refused", reason: "archived", judgedAt: scope.head };
     if (!facts) return unavailable("dependency-unavailable");
 
     // Section 5.1, held authority, in two phases. Phase one is here, the last read before the turn: what the judgment of this
@@ -640,7 +643,12 @@ export class Scope {
             };
           }
           case "due": return { verdict: "stop" };
-          case "accepted-before": return said<Answer>({ answer: "accepted", receipt: this.#receipt(judged.seq, named) });
+          case "accepted-before": {
+            const archived = archivedPosition(view, judged.seq);
+            const hash = archived && this.#store.acceptedEntryHash?.(intent.actor, intent.idempotencyKey);
+            if (archived && hash) return said<Answer>({ answer: "archived", archived, fact: { at: scope.at, seq: judged.seq, hash } });
+            return said<Answer>({ answer: "accepted", receipt: this.#receipt(judged.seq, named) });
+          }
           case "refused": return said<Answer>({ answer: "refused", reason: judged.reason, ...(judged.name === undefined ? {} : { name: judged.name }), judgedAt: judged.judgedAt });
           case "unavailable":
             // Section 16.1, "In the commit": the list names a subject with no observation at hand. The commit stops, the scope
@@ -764,7 +772,31 @@ export class Scope {
     if (to.inc !== scope.at.inc) return { ok: false, reason: "wrong-incarnation" };
     const accepted = this.#store.accepted(actor, idempotencyKey);
     if (!accepted || accepted.intent !== intentDigest(signed.intent)) return { ok: false, reason: "not-found" };
+    const archived = archivedPosition(this.#store, accepted.seq);
+    if (archived) {
+      const hash = this.#store.acceptedEntryHash?.(actor, idempotencyKey);
+      return { ok: false, reason: "archived", archived, ...(hash ? { fact: { at: scope.at, seq: accepted.seq, hash } } : {}) };
+    }
     return { ok: true, at: scope.head, value: this.#receipt(accepted.seq, pinned.named), complete: true };
+  }
+
+  /** Trusted internal alarm input only. No act or public route offers a floor. */
+  async floor(offered: import("@generalbusiness/dap-contract").FloorInput | (() => import("@generalbusiness/dap-contract").FloorInput | null)): Promise<Checkpointed> {
+    const definition = this.pinned()?.definition;
+    if (!definition) return unavailable("unavailable");
+    const end = await this.#turns.run<Checkpointed>({
+      asks: () => [],
+      judge: (view, clock) => {
+        const input = typeof offered === "function" ? offered() : offered;
+        if (!input) return said<Checkpointed>(unavailable("unavailable"));
+        const judged = judgeFloor(view, definition, input, { clock, bounds: this.#bounds, own: ownOf(this.#store), platform: this.pinned()?.platform ?? undefined });
+        if (judged.result === "write") return { verdict: "write", draft: judged.draft, retain: [], sealed: ({ entry, hash }) => ({ answer: "written", fact: { at: entry.at, seq: entry.seq, hash } }), unfit: () => unavailable("unavailable"), full: (_head, bound) => ({ answer: "refused", reason: "scope-full", name: bound }) };
+        if (judged.result === "due") return { verdict: "stop" };
+        if (judged.result === "refused") return said<Checkpointed>({ answer: "refused", reason: judged.reason });
+        return said<Checkpointed>(unavailable(judged.result === "unavailable" ? judged.reason : "unavailable"));
+      },
+    });
+    return end.end === "answer" ? end.answer : unavailable(end.end === "idle" ? "unavailable" : end.end);
   }
 
   /** An alarm's turn (section 5.2): no input waits, and the drain runs alone under the same budget. It has no answer. */
@@ -792,7 +824,7 @@ export class Scope {
         const judged = judgeCheckpoint(view, definition, checkpointOf(view), { clock, bounds });
         switch (judged.result) {
           case "write":
-            if (!definition.declared.capacity && view.scope()!.head.seq + 1 >= bounds.scopeEntries) return said<Checkpointed>(unavailable("unavailable"));
+            if (!definition.declared.capacity && countedEntries(view) >= bounds.scopeEntries) return said<Checkpointed>(unavailable("unavailable"));
             return { verdict: "write", draft: judged.draft, retain: [], sealed: ({ entry, hash }) => ({ answer: "written", fact: { at: entry.at, seq: entry.seq, hash } }), unfit: () => unavailable("unavailable"), full: (_head, bound) => definition.declared.capacity ? { answer: "refused", reason: "scope-full", name: bound } : unavailable("unavailable") };
           case "due": return { verdict: "stop" };
           case "refused": return said<Checkpointed>({ answer: "refused", reason: judged.reason });

@@ -1,3 +1,4 @@
+import { archivedPosition } from "@generalbusiness/dap-derive";
 /**
  * The one scope namespace (scope contract, section 2.3): a scope's Durable
  * Object is the object named by its scope ID, and by nothing else. This file
@@ -18,7 +19,7 @@
  * read of a membership scope.
  */
 
-import type { Digest, Entry, FactRef, ObservationRequest, ObservedScope, RoutingRefusal, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
+import type { Archived, Digest, Entry, FactRef, ObservationRequest, ObservedScope, RoutingRefusal, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, textDigest, isDigest, isFactRef, isKeyId, isMemberId, isPlatformDefinition, isScopeId, parseStrict, scopeIdOf, utf8 } from "@generalbusiness/artroom-bytes";
 import { isEntryOf, isObject, isScopeRef, type Delivered, type Fetched, type ScopeState } from "@generalbusiness/dap-derive";
 import { INSTALL_DEFINITION_BYTES, isOf, platform, sourceName } from "@generalbusiness/dap-platform";
@@ -32,7 +33,7 @@ import { readNativeBirth, type NativeBirth, type NativeBirthSource } from "./nat
 import { operational, type OperationalIdentity } from "./operational.ts";
 
 /** What the object at a name answers to a read of one of its entries. `bytes` null: it has no entry at that sequence number. */
-export interface Sourced { at: ScopeRef; under: string; bytes: string | null; origin?: readonly { fact: FactRef; under: string; bytes: string }[] }
+export interface Sourced { at: ScopeRef; under: string; bytes: string | null; archived?: Archived; origin?: readonly { fact: FactRef; under: string; bytes: string }[] }
 
 /** The five calls one scope's object takes from another's. `observe` is asked of a membership scope or of a rules scope. */
 export interface Peer {
@@ -148,7 +149,8 @@ export function sourced(store: Store, pinned: Pinned | null, seq: number, origin
   const proof = authenticatedOrigin ?? [];
   const under = nameUnder(pinned, proof);
   if (under === null) throw new Error("the pinned definition or native origin cannot be read, so its identity cannot be stated");
-  const answer: Sourced = { at: scope.at, under, bytes: (Number.isSafeInteger(seq) ? store.stored(seq) : null)?.bytes ?? null };
+  const archived = archivedPosition(store, seq);
+  const answer: Sourced = { at: scope.at, under, ...(archived ? { archived } : {}), bytes: (Number.isSafeInteger(seq) ? store.stored(seq) : null)?.bytes ?? null };
   if (origin) {
     answer.origin = proof.map((copy, index) => ({ fact: copy.fact, under: index === 0 ? under : copy.under, bytes: canonicalize(copy.entry) }));
   }
@@ -278,7 +280,9 @@ export function namespace<Id>(binding: Binding<Id>): { resolver: Resolver; proof
           return null;
         }
         // Section 7.4: the incarnation in the answer is checked against the one the fact names.
-        if (!answer || answer.at.inc !== fact.at.inc || answer.bytes === null) return { absent: true };
+        if (!answer || answer.at.inc !== fact.at.inc) return { absent: true };
+        if (answer.archived) return { archived: answer.archived };
+        if (answer.bytes === null) return { absent: true };
         try {
           const proof: Fetched[] = [];
           if (origin && answer.origin) {

@@ -1,3 +1,4 @@
+import { countedEntries } from "@generalbusiness/dap-derive";
 /**
  * Outside effects (scope contract, section 4.3; authority note, sections
  * 5.4 and 8.1): the driver of the attempts that entries opened. It sits
@@ -723,7 +724,7 @@ export class Operations {
         switch (judged.result) {
           case "write":
             // Room for this entry was reserved when its operation was opened (sections 17.2, row 5, and 17.3). A scope with no room at all writes nothing.
-            if (!definition.declared.capacity && view.scope()!.head.seq + 1 >= bounds.scopeEntries) return said({ recorded: "unavailable" });
+            if (!definition.declared.capacity && countedEntries(view) >= bounds.scopeEntries) return said({ recorded: "unavailable" });
             return {
               // Section 16.1, "A value that a row may retain": each value that a retained observation names is kept with the entry.
               verdict: "write", draft: judged.draft, ...(interpreted ? { facts: interpreted } : {}), retain: [...retain.filter((given) => given.kind === "snapshot" && named.includes(given.digest)), ...valuesOf(judged.draft)],

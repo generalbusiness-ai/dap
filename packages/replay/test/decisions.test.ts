@@ -2,13 +2,14 @@ import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Digest, FieldValue, PlatformData, PlatformDefinition, Request, Seed } from "@generalbusiness/dap-contract";
 import { canonicalize, factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
-import { MemoryState, applyEntry, checkpointOf, clockOf, judgeCheckpoint, judgeDelivery, judgeGenesis, owed, ownersOf, stateDigest, validateDefinition } from "@generalbusiness/dap-derive";
+import { MemoryState, applyEntry, checkpointOf, clockOf, judgeCheckpoint, judgeDelivery, judgeGenesis, judgeFloor, decisionBinding, isUnprovenDecisionBinding, owed, ownersOf, stateDigest, validateDefinition } from "@generalbusiness/dap-derive";
 import { Ledger, T0, arriving, forged, keys, otherLane, t, valid } from "@generalbusiness/dap-derive/testing";
 import { MemorySource, verify } from "../src/index.ts";
 import type { Rules, StateView } from "@generalbusiness/dap-derive";
 import type { MemoryScope } from "../src/index.ts";
 import { register, registerRules } from "../../../packages/platform/src/index.ts";
 import { Register, registerPlatform } from "../../../packages/platform/test/support-creation.ts";
+import { floorOwn } from "../src/floor.ts";
 import { served } from "./world.ts";
 
 test("replay admission counts the actual register's legacy cleanup closure and preserves scripted external reservations", async () => {
@@ -181,5 +182,68 @@ test("ordinary redacted replay keeps applied, named-guard, definitive early-fiel
     const replay = await verify(new MemorySource([scope.served()]), options);
     expect([replay.report.result, replay.why, replay.report.coverage.find((coverage) => coverage.scope.scope === scope.at.scope)?.through, count]).toEqual(["consistent", null, scope.head.seq, decision === "invalid" ? { decisions: { stop: 1 } } : null]);
     expect(replay.report.redacted.length).toBeGreaterThan(0);
+  }
+});
+
+// A cold binding uses the logical state before the decision, but only the
+// sparse history/proofs that the current floor still holds. This is the
+// pure consumer boundary of witness 8.12, not its native restart witness.
+test("a floor's proof at 200 cannot bind deciding entry 100, while its proof at 50 can", () => {
+  for (const proving of [200, 50]) {
+    const data = structuredClone(DATA), text = "ok", digest = textDigest(text);
+    const memo = { type: "text", max: 16, detached: true } as const;
+    data.items["board"]!.values["memo"] = { fixed: false, required: true, of: memo };
+    data.items["job"]!.values["amount"] = { fixed: false, required: true, default: 0, of: { type: "int", min: 0, max: 1 } };
+    data.acts["found"]!.fields = { ...data.acts["found"]!.fields, memo: { ...memo, required: true } };
+    data.acts["found"]!.effects = [...data.acts["found"]!.effects, { value: { slot: "memo", from: { field: "memo" } } }];
+    data.acts["prove"] = { ...form, step: "transition", on: "board", grant: "prove", fields: { note: { type: "text", max: 2, detached: true, required: true } } };
+    data.acts["erase"] = { ...form, step: "transition", on: "board", grant: "erase", effects: [{ redact: { slot: "memo" } }] };
+    data.receives["stop"]!.fields = { note: { type: "text", max: 2, detached: true, required: true } };
+    data.receives["stop"]!.guards = [];
+    data.receives["stop"]!.effects = [{ code: "invalid-value", row: "P15" }];
+    const rules: Rules = { "invalid-value": { place: "effect", most: 1, run: ({ resolved }) => [{ effect: "value", item: resolved.subjects.get("also.job")!.id, slot: "amount", value: "wrong" }] } };
+    const scope = new Deciding(data, rules, text);
+    scope.delivery("start");
+    const checkpoint = () => {
+      const judged = judgeCheckpoint(scope.state, scope.definition, checkpointOf(scope.state), scope.context());
+      if (judged.result !== "write") throw new Error(JSON.stringify(judged));
+      scope.seal(judged.draft);
+    };
+    let before!: StateView, deciding!: ReturnType<Deciding["delivery"]>;
+    while (scope.head.seq < 349) {
+      const next = scope.head.seq + 1;
+      if (next === proving) {
+        const checked = scope.act(keys.rita, "prove", { on: 0, expected: { on: scope.item(0).revision }, fields: { note: digest } }, { texts: scope.sizes, platform: { named: NAMED, rules } });
+        if (checked.result !== "write") throw new Error(JSON.stringify(checked));
+      }
+      else if (next === 100) {
+        // Capture the genuine pre-decision folded state while text exists.
+        before = scope.replay();
+        deciding = scope.delivery("stop", { note: digest });
+        expect(deciding.entry.input).toMatchObject({ decision: "refused", reason: { code: "bad-field" } });
+      } else checkpoint();
+    }
+    scope.did(keys.rita, "erase", { on: 0, expected: { on: scope.item(0).revision } });
+    scope.texts.delete(digest);
+    scope.now = t(1200);
+    const input = { type: "floor" as const, floor: 250, receipt: { commit: "a".repeat(40), through: { ...scope.head } }, keep: [100] };
+    const floor = judgeFloor(scope.state, scope.definition, input, { ...scope.context(), own: floorOwn(scope.state, scope.entries) });
+    if (floor.result !== "write") throw new Error(JSON.stringify(floor));
+    scope.seal(floor.draft);
+    expect(scope.state.floor()!.sizeProofs).toEqual([{ digest, seq: proving, bound: 2 }]);
+    const own = floorOwn(scope.state, scope.entries);
+    expect(own(proving)).toBeNull();
+    expect(own(100)?.entry).toEqual(deciding.entry);
+    const source = scope.foreign.find(copy => factRefOf(copy.entry).hash === (deciding.entry.input as { from: { hash: Digest } }).from.hash)!;
+    const run = () => decisionBinding(before, scope.definition, deciding.entry, {
+      clock: clockOf(before, deciding.entry.time), bounds: PROPOSED_BOUNDS,
+      own, prepared: [], texts: () => null, facts: [{ fact: factRefOf(source.entry), entry: source.entry, under: "lane" }],
+      platform: { named: NAMED, rules },
+    });
+    if (proving === 200) {
+      let failure: unknown;
+      try { run(); } catch (error) { failure = error; }
+      expect(isUnprovenDecisionBinding(failure)).toBe(true);
+    } else expect(run()).toEqual({ item: 1, message: "stop" });
   }
 });

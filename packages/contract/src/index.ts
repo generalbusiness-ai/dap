@@ -19,3 +19,5 @@ export * from "./session.ts";
 
 export type * from "./reservation-snapshot.ts";
 export * from "./invitation.ts";
+
+export * from "./floor.ts";

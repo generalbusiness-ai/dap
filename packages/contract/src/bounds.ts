@@ -60,7 +60,7 @@ export interface Bounds {
   routingRefusals: number;         // before a sender stops and writes a diagnosis; a retry policy, not a proof
 
   // Sections 9.2 and 17.1: logical scope budgets. R4 owes measured values; all defaults remain temporary.
-  scopeEntries: number;            // entries one scope may hold. An entry that admits pending work is refused `scope-full` unless every admitted task still has an entry to settle in
+  scopeEntries: number;            // entries at or above one scope's floor, plus its kept entries. An entry that admits pending work is refused `scope-full` unless every admitted task still has an entry to settle in
   scopeBytes: number;              // canonical entries and retained inputs, once per byte domain/digest; whole-scope opt-in only
   scopeItems: number;              // first item keys, including retained final items; whole-scope opt-in only
   scopeRecords: number;            // capability records and relationship copies, including final states; whole-scope opt-in only

@@ -209,7 +209,7 @@ const objectOf = (name: string): DurableObjectStub => env.NET.get(env.NET.idFrom
 
 /** How an act was answered, in one text: `accepted`; or the refusal's code, with the name when the failed guard or the capability declares one. */
 export const answered = (answer: Answer): string =>
-  (answer.answer === "refused" ? (answer.name === undefined ? answer.reason : `${answer.reason}: ${answer.name}`) : answer.answer === "accepted" ? "accepted" : `${answer.answer}: ${answer.reason}`);
+  (answer.answer === "refused" ? (answer.name === undefined ? answer.reason : `${answer.reason}: ${answer.name}`) : answer.answer === "accepted" ? "accepted" : answer.answer === "archived" ? `archived: ${answer.fact.seq}` : `${answer.answer}: ${answer.reason}`);
 
 /** One real scope of the graph, with the client's handle on it: typed from the definition's own data, and checked against the digest the scope publishes. */
 export class Node<D extends DeclaredDefinition> {

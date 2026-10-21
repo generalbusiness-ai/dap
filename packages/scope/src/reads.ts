@@ -1,3 +1,4 @@
+import { heldPositions, archivedPosition } from "@generalbusiness/dap-derive";
 /**
  * Reads (scope contract, section 9.1). Every read is bounded, is a statement
  * about `at`, the head it was read at, and says whether it is complete. A
@@ -29,7 +30,7 @@
  */
 
 import { DOMAINS, ENTRY_READ_BYTES, HISTORY_PAGE_BYTES, HISTORY_PAGE_ENTRIES, OUTBOX_PAGE_ITEMS, RETAINED_INPUT_BYTES, RETAINED_ITEMS_PAGE } from "@generalbusiness/dap-contract";
-import type { Cursor, Digest, OutboxId, Entry, FieldValue, KeyId, LogPage, OperationId, Read, ReadRefusal, RetainedInput, Summary } from "@generalbusiness/dap-contract";
+import type { Cursor, Digest, OutboxId, Entry, FieldValue, KeyId, LogPage, OperationId, Read, ReadRefusal as ContractReadRefusal, RetainedInput, Summary } from "@generalbusiness/dap-contract";
 import { isDigest, isOutboxId, isOperationId, isSeed, positionOf, retainedReadArgument, timeMs } from "@generalbusiness/artroom-bytes";
 import { bound, byteOrder, creationFields, evidenceValues, inputTexts, namedBy, own, placesOf, retainsOf, same, type Item, type Owners, type ScopeState, type ValidDefinition } from "@generalbusiness/dap-derive";
 import type { Pinned } from "./core.ts";
@@ -43,6 +44,8 @@ import type { OutboxItem, OperationStatus, Sealed, Store, Stored } from "./store
 export const READABLE: readonly RetainedInput["kind"][] = ["definition", "entry", "rule", "text", "snapshot", "value"];
 
 /** The bound of each read. The defaults are the contract's table, and for a retained input the history page's byte bound. */
+type ReadRefusal = Exclude<ContractReadRefusal, "archived">;
+
 export interface ReadBounds { retainedItems: number; historyEntries: number; historyBytes: number; entryBytes: number; outboxItems: number; retainedBytes: number }
 export const READ_BOUNDS: ReadBounds = {
   retainedItems: RETAINED_ITEMS_PAGE, historyEntries: HISTORY_PAGE_ENTRIES, historyBytes: HISTORY_PAGE_BYTES, entryBytes: ENTRY_READ_BYTES, outboxItems: OUTBOX_PAGE_ITEMS,
@@ -184,7 +187,7 @@ export class Reads {
   }
   /** Whether an authorized entry names this exact retained input. */
   #carried(limit: Limit, head: number, kind: RetainedInput["kind"], digest: Digest, domain?: string): boolean {
-    for (let seq = 0; seq <= head; seq++) {
+    for (const seq of heldPositions(this.#store, head + 1)) {
       const row = this.#store.stored(seq);
       if (row && this.#mine(limit, row) && this.#names(JSON.parse(row.bytes) as Entry, kind, digest, domain)) return true;
     }
@@ -262,6 +265,8 @@ export class Reads {
     if (open.limit && "key" in open.limit && !open.limit.scoped && !this.#signed?.chains?.has(open.limit.key, open.limit.since)) return no("forbidden");
     const from = position(cursor, 0);
     if (from === undefined || from === null) return no("not-found");
+    const floor = this.#store.floor?.();
+    if (floor && from < floor.floor) return { ok: false, reason: "archived", archived: { floor: floor.floor, ...floor.receipt }, next: String(floor.floor) };
     const { rows, more } = this.#page(from);
     return { ok: true, at: open.scope.head, value: rows.filter((row) => this.#mine(open.limit, row)).map((row) => ({ entry: JSON.parse(row.bytes) as Entry, hash: row.hash })), complete: !more, ...(more ? { next: String(from + rows.length) } : {}) };
   }
@@ -278,6 +283,8 @@ export class Reads {
     if (open.limit && "key" in open.limit && !open.limit.scoped && !this.#signed?.chains?.has(open.limit.key, open.limit.since)) return no("forbidden");
     const from = position(cursor, 0);
     if (from === undefined || from === null) return no("not-found");
+    const floor = this.#store.floor?.();
+    if (floor && from < floor.floor) return { ok: false, reason: "archived", archived: { floor: floor.floor, ...floor.receipt }, next: String(floor.floor) };
     const { rows, more } = this.#page(from);
     const value: LogPage = { scope: open.scope.at, definition: open.pinned.named, entries: rows.filter((row) => this.#mine(open.limit, row)).map((row) => ({ seq: row.seq, hash: row.hash, bytes: row.bytes })) };
     return { ok: true, at: open.scope.head, value, complete: !more, ...(more ? { next: String(from + rows.length) } : {}) };
@@ -307,6 +314,8 @@ export class Reads {
   entry(reader: unknown, seq: number): Read<Sealed> {
     const open = this.#open(reader, "entry", String(seq));
     if (!("scope" in open)) return open;
+    const archived = archivedPosition(this.#store, seq);
+    if (archived) return { ok: false, reason: "archived", archived };
     const row = Number.isSafeInteger(seq) ? this.#store.stored(seq) : null;
     if (!row) return no(open.limit && "key" in open.limit && !open.limit.scoped ? "forbidden" : "not-found");
     if (!this.#mine(open.limit, row)) return no("forbidden");

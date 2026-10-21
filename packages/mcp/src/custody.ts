@@ -91,8 +91,8 @@ export interface Envelope {
  * `settled` is the terminal phase of a record that holds only standalone capability steps (steps with no act): every step it
  * holds has a decisive answer from its resource. It is never an act's acceptance: no act is kept under such a record.
  */
-export type Phase = "prepared" | "sent" | "unknown" | "accepted" | "refused" | "mismatch" | "settled";
-export const TERMINAL: ReadonlySet<Phase> = new Set(["accepted", "refused", "mismatch", "settled"]);
+export type Phase = "prepared" | "sent" | "unknown" | "accepted" | "archived" | "refused" | "mismatch" | "settled";
+export const TERMINAL: ReadonlySet<Phase> = new Set(["accepted", "archived", "refused", "mismatch", "settled"]);
 
 /** One outcome of one sending, in its attempt. `lost`: no answer could be read. */
 export type Outcome = ({ at: string; answer: Answer } | { at: string; lost: true } | { at: string; settled: Receipt }) & { attempt: number };

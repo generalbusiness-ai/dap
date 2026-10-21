@@ -48,6 +48,25 @@ test("native append signer evidence preserves every classifier variant, inclusiv
   expect(partial.after).toEqual([{ state: "positive", seq: 5, time: at(0) }, { state: "positive", seq: 3, time: at(0) }, { state: "negative" }]);
 });
 
+test("floor anchors count only candidate-prefix signer rows and expose the first excess row", async () => {
+  const scope = await create(); await scope.commitment();
+  const got = await scope.inside(state => {
+    const sql = state.storage.sql, store = new SqliteStore(sqlOf(state));
+    const sample = sql.exec("SELECT generation,time,hash FROM latest_local_signer LIMIT 1").one();
+    // Synthetic derived-index cardinality only. These rows grant no signer
+    // evidence and add no native entries; the native control/tail are real.
+    for (let n = 0; n < 1025; n++) sql.exec("INSERT INTO latest_local_signer(actor,generation,seq,time,hash) VALUES(?,?,?,?,?)", `tail-${n}`, sample["generation"], 2, sample["time"], sample["hash"]);
+    const prefix = store.localSigners.floorAnchors(2);
+    const crowded = store.localSigners.floorAnchors(3);
+    return { prefix, crowded, missing: store.localSigners.proof(vic.key, timeMs(at(0))!) };
+  });
+  expect(got.prefix).not.toBeNull();
+  expect(got.prefix!.every(seq => seq < 2)).toBe(true);
+  expect(got.crowded).not.toBeNull();
+  expect(got.crowded!.filter(seq => seq === 2)).toHaveLength(1025);
+  expect(got.missing).toEqual({ state: "negative" });
+});
+
 /** Synthetic canonical/hash-linked journal extension on real isolated SQLite.
  * No judgment/replay or public authority is claimed for these extra records. */
 async function journal(count: number, padding = 0): Promise<Lane> {

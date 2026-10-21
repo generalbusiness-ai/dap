@@ -46,7 +46,10 @@ export interface Reason { code: RefusalReason; name?: string }
  * the code of a platform definition reads one.
  */
 
+import type { FloorInput } from "./floor.ts";
+
 export type Input =
+  | FloorInput
   | { type: "genesis"; seed: Seed; inc: Incarnation;
       kind: string;                             // the genesis act of the pinned definition (section 4.1)
       "founding": SignedIntent | null;            // a repository's directory only

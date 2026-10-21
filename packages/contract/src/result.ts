@@ -4,6 +4,8 @@
  */
 
 import type { Digest } from "./scope.ts";
+import type { Archived, FloorRefusal } from "./floor.ts";
+import type { FactRef } from "./scope.ts";
 import type { Receipt } from "./entry.ts";
 
 /**
@@ -12,7 +14,7 @@ import type { Receipt } from "./entry.ts";
  * guard, for missing authority or for an input that names nothing the scope
  * has; the rest are the derivation step's names for those.
  */
-export type RefusalReason =
+export type RefusalReason = FloorRefusal | "archived"
   | "revision-moved" | "alias" | "duplicate-relation" | "required-unset" | "scope-full"
   | "bad-intent"        // the signature, the shape, `expected` or `notAfter` is not what an intent must be
   | "misaddressed"      // `to` is not this scope and incarnation
@@ -47,7 +49,7 @@ export type UnavailableReason = "dependency-unavailable" | "busy" | "clock-behin
 export type MismatchReason = "idempotency-mismatch";
 
 /** Why a read gave no value (section 9.1). */
-export type ReadRefusal = "not-found" | "wrong-incarnation" | "forbidden" | "scope-provisional" | "unsupported-definition" | "history-unavailable" | "too-large" | "unavailable"
+export type ReadRefusal = "archived" | "not-found" | "wrong-incarnation" | "forbidden" | "scope-provisional" | "unsupported-definition" | "history-unavailable" | "too-large" | "unavailable"
   | "sessions-unavailable"   // a read session was presented, and the scope has no usable session secret, so it accepts none (authority note, section 5.5)
   | "clock-behind";          // an authentic read session was presented, and the scope's clock reads earlier than its previous entry's time (authority note, sections 3.9 and 3.12, W6)
 
@@ -67,6 +69,7 @@ export type CreationConflict = "incarnation-conflict";
 export interface Head { seq: number; hash: Digest }
 
 export type Answer =
+  | { answer: "archived"; archived: Archived; fact: FactRef }
   | { answer: "accepted"; receipt: Receipt }
   | { answer: "refused"; reason: RefusalReason; name?: string; judgedAt: Head }   // `name`: a declared guard reason or the exhausted whole-scope budget
   | { answer: "unavailable"; reason: UnavailableReason }

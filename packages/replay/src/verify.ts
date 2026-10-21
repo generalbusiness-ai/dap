@@ -42,13 +42,14 @@ import type { Bounds, CapabilityName, Digest, Entry, FactRef, Grant, Head, KeyId
 import { rawRetainedJSON, domainRetainedJSON, canonicalize, intentDigest, isDigest, isEntry, isObservationUse, isPlatformDefinition, natural, parseStrict, platformName, scopeIdOf, utf8, verifySignedIntent } from "@generalbusiness/artroom-bytes";
 import {
   AmountError, ByteUsage, bound, capacityFull, namedDeclarations, amountMath, subtract, NOTHING, reserved, actValueDependencies, observedValueDependencies, detachedTextDependencies, outcomeValueDependencies, outcomeSnapshotDependencies, requiredDependency, textDependency, MISMATCHES, MemoryState, WINDOWS, actionOf, agrees, applyEntry, drawsOf, clockOf, contentStates, entryOf, fits, observedName, headsOf, highestHead, isFactRef, isLocalId, isObject, isScopeRef, isUnprovenDecisionBinding, judgeAct, judgeCheckpoint, judgeDelivery,
-  judgeDiagnosis, outcomeValueDomains, fixedBy, judgeGenesis, judgeGrant, judgeOutcome, judgePreparation, judgeTimed, membershipOf, nextDue, observedOf, own, ownersOf, preparationScopeGrant, ruleAt, same, snapshotRead, stepsOf, timeMs, updateOf, sentBy, validateDefinition, windowOf, checkedTextBounds,
+  archivedPosition, countedEntries, heldPositions, judgeFloor, judgeDiagnosis, outcomeValueDomains, fixedBy, judgeGenesis, judgeGrant, judgeOutcome, judgePreparation, judgeTimed, membershipOf, nextDue, observedOf, own, ownersOf, preparationScopeGrant, ruleAt, same, snapshotRead, stepsOf, timeMs, updateOf, sentBy, validateDefinition, windowOf, checkedTextBounds,
 } from "@generalbusiness/dap-derive";
-import type { DependencyOrigin, RequiredDependency, ActJudgment, Capabilities, Clock, DrawOptions, Fetched, Judgment, Observing, Owners, PlatformRules, PreparationJudgment, RecordedRef, Retains, Rules, StateView, Texts, TimedJudgment, ValidDefinition, Window } from "@generalbusiness/dap-derive";
+import type { DependencyOrigin, RequiredDependency, ActJudgment, Capabilities, Clock, DrawOptions, Fetched, Judgment, Observing, Owners, PlatformRules, PreparationJudgment, Own, RecordedRef, Retains, Rules, StateView, Texts, TimedJudgment, ValidDefinition, Window } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES, evaluateRules } from "@generalbusiness/dap-derive/rule";
 import { PAGE_ENTRIES, PAGE_REPLY_BYTES, RETAINED_REPLY_BYTES, hashOfBytes, type HistorySource, type Stored } from "./source.ts";
 import { IdentityEvidence, type IdentityFrame, type ReceiverIdentityCode } from "./identity.ts";
 import { View } from "./view.ts";
+import { floorOwn } from "./floor.ts";
 
 /**
  * The bounds of one traversal (section 9.4). A limit reached is `incomplete`,
@@ -139,6 +140,8 @@ export interface Options {
  * history (section 16.1, "Replay").
  */
 export interface Coded {
+  /** Typed own-entry references followed by this supplied native version. */
+  floorReferences?: PlatformRules["floorReferences"];
   receiverIdentity?: ReceiverIdentityCode;
   data: PlatformData;
   rules: Rules;
@@ -309,6 +312,8 @@ interface Run {
   sealed: { entry: Entry; hash: Digest }[];
   /** Existing retained inputs, checked with each entry, reused when an observation view folds that entry. No wire metadata. */
   foldInputs: Map<number, DrawOptions>;
+  /** Content-checked retained copies, available to typed floor closure. */
+  retainedEntries: Map<Digest, Entry>;
   /** Entries read and not yet checked, by `seq`, and where the next page begins. */
   read: Map<number, Stored>;
   next: number | null;
@@ -550,7 +555,16 @@ class Verifier {
     return !!run.definition?.declared.capacity || !(birth?.type === "genesis" && birth.founding !== null && birth.decision === "refused" && run.unknownByteTexts.get(digest) === 0);
   }
 
-  #textBound(run: Run, digest: Digest, before: number): number {
+  #textBound(run: Run, digest: Digest, before: number, view: StateView = run.state): number {
+    if (view.floor?.()) {
+      let bound = Infinity;
+      for (const proof of view.floor()!.sizeProofs) if (proof.digest === digest && proof.seq < before) bound = Math.min(bound, proof.bound);
+      for (const seq of heldPositions(view, before)) {
+        const input = run.sealed[seq]?.entry.input;
+        if (input) bound = Math.min(bound, checkedTextBounds(run.definition!, input).get(digest) ?? Infinity);
+      }
+      return bound;
+    }
     const limits = this.#textBounds.get(run.id)?.get(digest) ?? [];
     let low = 0, high = limits.length;
     while (low < high) {
@@ -683,7 +697,7 @@ class Verifier {
     if (this.#runs.size >= this.#limits.scopes) throw new Stop("incomplete", `the limit of ${this.#limits.scopes} scopes was reached`);
     const got = await this.#page(id, 0);
     if (!got.ok) return got.reason;
-    const run: Run = { id, said: got.page.scope, head: got.page.head, at: null, named: null, definition: null, platform: null, state: new MemoryState(), sealed: [], foldInputs: new Map(), read: new Map(), next: 0, busy: false, depth: Number.POSITIVE_INFINITY, owed: new Map(), bytes: new ByteUsage(), unknownByteTexts: new Map(), byteIntervals: [], redactions: new Map(), byteHeads: new Map(), textJudgments: new Map(), reads: new Map(), runs: { seen: new Set(), last: null }, observed: undefined, viewed: null, membership: undefined, rulesScope: undefined, revised: null, snapshots: new Map() };
+    const run: Run = { id, said: got.page.scope, head: got.page.head, at: null, named: null, definition: null, platform: null, state: new MemoryState(), sealed: [], foldInputs: new Map(), retainedEntries: new Map(), read: new Map(), next: 0, busy: false, depth: Number.POSITIVE_INFINITY, owed: new Map(), bytes: new ByteUsage(), unknownByteTexts: new Map(), byteIntervals: [], redactions: new Map(), byteHeads: new Map(), textJudgments: new Map(), reads: new Map(), runs: { seen: new Set(), last: null }, observed: undefined, viewed: null, membership: undefined, rulesScope: undefined, revised: null, snapshots: new Map() };
     if (!this.#take(run, 0, got.page.entries, got.page.next)) return "the source's first page is not the entries from the genesis in order";
     this.#runs.set(id, run);
     return run;
@@ -699,8 +713,8 @@ class Verifier {
   async #page(id: ScopeId, from: number) {
     const left = this.#limits.bytes - this.#bytes;
     const got = await this.#source.page(id, from, { bytes: Math.min(left, PAGE_REPLY_BYTES), entries: PAGE_ENTRIES });
-    if (got.ok) this.#count(got.bytes);
-    else this.#unread(got.reason, left < PAGE_REPLY_BYTES, `a page of ${id} from entry ${from}`);
+    if (got.bytes !== undefined) this.#count(got.bytes);
+    if (!got.ok) this.#unread(got.reason, left < PAGE_REPLY_BYTES, `a page of ${id} from entry ${from}`);
     return got;
   }
 
@@ -944,6 +958,18 @@ class Verifier {
     // Section 9.5: a preparation entry carries a signed intent too, and owes the same check in both modes.
     if (input.type === "preparation" && !verifySignedIntent(input.signed)) throw mismatch("the preparation's signature is not its actor's over its intent");
 
+    if (input.type === "floor") {
+      const receipt = this.#source.floorReceipt;
+      if (!receipt) throw new Stop("incomplete", "floor-commit-missing: this source cannot read the named clone commit", where);
+      const left = this.#limits.bytes - this.#bytes;
+      const proof = await receipt.call(this.#source, run.id, input.receipt.commit, { bytes: Math.min(left, PAGE_REPLY_BYTES) });
+      if (!proof.ok) {
+        this.#unread(proof.reason, left < PAGE_REPLY_BYTES, "the floor's clone commit");
+        throw new Stop(proof.reason === "floor-commit-mismatch" ? "mismatch" : "incomplete", `${proof.reason === "floor-commit-mismatch" ? "floor-commit-mismatch" : "floor-commit-missing"}: the named clone commit could not establish its archive head`, where);
+      }
+      this.#count(proof.bytes);
+      if (!sameScope(proof.scope, entry.at) || !same(proof.through, input.receipt.through)) throw new Stop("mismatch", "floor-commit-mismatch: the clone commit's archive head differs from the floor receipt", where);
+    }
     if (this.#mode === "replay") {
       this.#checking.push(where);
       try {
@@ -1026,7 +1052,7 @@ class Verifier {
       if (this.#applicationPublicationOrigin && this.#applicationPublicationOrigin !== supplied.applicationPublicationOrigin) throw new Stop("unsupported-definition", "the supplied native versions disagree on their application publication policy", where);
       this.#applicationPublicationOrigin = supplied.applicationPublicationOrigin;
     }
-    run.platform = { named, rules: supplied.rules };
+    run.platform = { named, rules: supplied.rules, ...(supplied.floorReferences ? { floorReferences: supplied.floorReferences } : {}) };
     run.observed = supplied.observed;
     run.membership = supplied.membership;
     run.rulesScope = supplied.rulesScope;
@@ -1520,6 +1546,7 @@ class Verifier {
       const copy = rawRetainedJSON(use.content, kept.bytes);
       if (copy === undefined) throw new Stop("incomplete", `a retained input is not the one named: the foreign entry ${use.fact.seq} of ${use.fact.at.scope}`, where);
       if (!isEntry(copy)) throw mismatch("a used foreign entry is not an entry");
+      run.retainedEntries.set(use.content, copy);
       facts.push({ fact: use.fact, entry: copy, under: kept.under ?? "" });
     }
 
@@ -1602,8 +1629,9 @@ class Verifier {
     // inputs or in the caller's bounds.
     // Section 16.4: the guard `ancestry` reads a snapshot of staged refs from the bytes that the scope retains. Here they are the
     // bytes that an earlier outcome entry of this scope named, which were read and checked against their digest at that entry.
+    const ownEntry: Own = floorOwn(state, run.sealed, use => run.retainedEntries.get(use.content) ?? null);
     const reading = {
-      clock, bounds, facts, prepared: entry.prepared, own: (at: number) => run.sealed[at] ?? null, texts: (digest: Digest) => texts.get(digest) ?? null, snapshot: (digest: Digest) => run.snapshots.get(digest) ?? null,
+      clock, bounds, facts, prepared: entry.prepared, own: ownEntry, texts: (digest: Digest) => texts.get(digest) ?? null, snapshot: (digest: Digest) => run.snapshots.get(digest) ?? null,
       capabilities: this.#capabilities, platform: run.platform ?? undefined,
     };
     // Section 17.2a, "What a verifier does": the counts of each holder, the account of each entry and each `for` are derived again
@@ -1614,7 +1642,7 @@ class Verifier {
     const drawn = drawsOf(state, definition, entry, foldInputs);
     if ("fault" in drawn) throw mismatch(`${drawn.fault === "past-count" ? "draw-past-count" : "held-without-holder"}: ${drawn.detail}`);
     const copyOf = (fact: FactRef | null) => facts.find((f) => f.fact.hash === fact?.hash) ?? null;
-    const sealed = (seq: unknown): Entry | null => (isLocalId(seq) ? (run.sealed[seq]?.entry ?? null) : null);
+    const sealed = (seq: unknown): Entry | null => (isLocalId(seq) ? (ownEntry(seq)?.entry ?? null) : null);
     let judged: ActJudgment | Judgment | TimedJudgment | PreparationJudgment;
     let judgeText: ((view: StateView, texts: Texts) => ActJudgment | Judgment) | null = null;
     const unknown = [...texts].filter(([, size]) => size === null).map(([digest]) => digest);
@@ -1637,7 +1665,7 @@ class Verifier {
       // comparison classes; never invent a number or put one in byte
       // accounting. Earlier successful checks exclude impossible classes.
       for (const [digest, maxima] of limits) for (const max of maxima) {
-        if (this.#textBound(run, digest, entry.seq) <= max) continue;
+        if (this.#textBound(run, digest, entry.seq, view) <= max) continue;
         const conditional: Texts = named => lookup(named);
         conditional.redactedOver = (named, bound) => named === digest && bound <= max;
         try {
@@ -1816,6 +1844,9 @@ class Verifier {
         if (kindRows) await this.#byRows(run, entry, judged, kindRows.observed, where, depth);
         break;
       }
+      case "floor":
+        judged = judgeFloor(state, definition, input, { clock, bounds, own: ownEntry, platform: run.platform ?? undefined });
+        break;
       case "checkpoint":
         // Checked against the fold through that sequence. It is never taken as proof of the prefix (section 9.2).
         judged = judgeCheckpoint(state, definition, { through: input.through, state: input.state }, { clock, bounds });
@@ -1845,8 +1876,14 @@ class Verifier {
       } });
     }
     const foldedWith: DrawOptions = { ...foldInputs, values: judged.draft.values?.map(value => value.bytes) };
+    const previousPositions = input.type === "floor" ? [...heldPositions(state, input.floor)] : [];
     applyEntry(state, definition, entry, hash, foldedWith);
-    if (definition.declared.capacity?.name === "whole-scope" || input.type === "delivery" && input.message.class === "request" || identity?.mode === "partition-v1" && facts.length > 0) run.foldInputs.set(entry.seq, foldedWith);
+    if (input.type === "floor") for (const seq of previousPositions) if (archivedPosition(state, seq)) {
+      run.bytes.dropJournal(seq);
+      const migrated = run.sealed[seq]!.entry.input;
+      if (migrated.type === "act") run.bytes.migrateAccepted(migrated.signed.intent.actor, migrated.signed.intent.idempotencyKey);
+    }
+    if (state.floor() || definition.declared.capacity?.name === "whole-scope" || input.type === "delivery" && input.message.class === "request" || identity?.mode === "partition-v1" && facts.length > 0) run.foldInputs.set(entry.seq, foldedWith);
     if (definition.declared.capacity?.name === "whole-scope") {
       run.bytes.journal(entry.seq, hash, utf8(bytes).length);
       for (const effect of entry.effects) if (effect.effect === "redact") for (const digest of effect.texts) {
@@ -1854,9 +1891,9 @@ class Verifier {
         if (!run.bytes.unknownText(digest)) this.#endUnknownBytes(run, digest, entry.seq - 1);
       }
       const counted = run.bytes.count();
-      const used = { entries: entry.seq + 1, ...state.keyCounts(), bytes: counted.complete ? counted.bytes : null };
+      const used = { entries: countedEntries(state), ...state.keyCounts(), bytes: counted.complete ? counted.bytes : null };
       const pending = reserved(state, definition, input, ownersOf(definition, run.platform, this.#owners));
-      const bound = capacityFull(used, pending, bounds);
+      const bound = input.type === "floor" && used.entries >= bounds.scopeEntries ? "scopeEntries" : capacityFull(used, pending, bounds);
       if (bound) throw mismatch(`the entry exceeds ${bound}: Used plus Reserved is over its ceiling`);
       if (!counted.complete) {
         run.byteHeads.set(entry.seq, { known: counted.knownBytes, missing: counted.missing, pending: pending.bytes });

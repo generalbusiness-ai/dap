@@ -6,6 +6,7 @@
  * `Status`, are the contract's, and are exported here again.
  */
 
+import type { JournalFloor } from "@generalbusiness/dap-contract";
 import type { CapabilityName, Digest, FactRef, FieldValue, Head, Held, Incarnation, Item, KeyId, OperationId, Party, PlatformDefinition, Request, ScopeId, ScopeKind, ScopeRef, Seed, Status, Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalBytes, canonicalize, digestBytes } from "@generalbusiness/artroom-bytes";
 import { pendingOf } from "./ledger.ts";
@@ -171,6 +172,7 @@ export interface Page { items: readonly Item[]; more: boolean }
  * A count of zero is left out. Two states with one snapshot are equal.
  */
 export interface StateSnapshot {
+  floor?: JournalFloor;
   sourceOrder?: readonly SourceOrder[];
   v: 1;
   scope: ScopeState | null;
@@ -219,6 +221,10 @@ export function stateDigest(snapshot: StateSnapshot): Digest {
 }
 
 export interface StateView {
+  /** Absent until the first floor; no-floor views keep their previous bytes. */
+  floor?(): JournalFloor | null;
+  /** Native stores may count held rows without loading floor proof bodies. */
+  heldEntryCount?(): number;
   holderSettled(item: number): boolean;
   itemDuties(item?: number): readonly ItemDuty[];
   /** Null before the genesis entry. */
@@ -322,6 +328,7 @@ export interface StateView {
 
 /** The changes an entry makes. Only the fold calls these. */
 export interface StateWriter extends StateView {
+  putFloor?(floor: JournalFloor): void;
   settleHolder(item: number): void;
   putItemDuties(item: number, duties: readonly ItemDuty[]): void;
   setScope(scope: ScopeState): void;
@@ -373,6 +380,9 @@ function firstAbove(ids: readonly number[], after: number): number {
 
 /** The state in memory, for a verifier and for tests. */
 export class MemoryState implements StateWriter {
+  #floor: JournalFloor | null = null;
+  floor(): JournalFloor | null { return this.#floor; }
+  putFloor(floor: JournalFloor): void { this.#floor = floor; }
   #scope: ScopeState | null = null;
   readonly #items = new Map<number, Item>();
   /**
@@ -571,6 +581,7 @@ export class MemoryState implements StateWriter {
     const sorted = <T>(values: Iterable<T>, of: (value: T) => Key) => [...values].sort((a, b) => keyOrder(of(a), of(b)));
     return {
       v: 1, scope: this.#scope,
+      ...(this.#floor === null ? {} : { floor: this.#floor }),
       items: sorted(this.#items.values(), (i) => [i.id]),
       counts: sorted(this.#counts.values(), ([type, state]) => [type, state]).filter(([, , n]) => n !== 0),
       relations: sorted(this.#relations.values(), (r) => [r.owner.scope, r.owner.inc, r.name, r.item]),

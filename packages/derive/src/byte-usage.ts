@@ -4,17 +4,21 @@
  * A replay can retain an explicit unknown size until that text's redaction;
  * it cannot mistake the known subtotal for a complete byte check.
  */
-import { DOMAINS, type Digest, type RetainedInput } from "@generalbusiness/dap-contract";
-import { canonicalize, retainedByteDomain } from "@generalbusiness/artroom-bytes";
+import { ACCEPTED_KEY_OVERHEAD_BYTES, DOMAINS, type Digest, type KeyId, type RetainedInput } from "@generalbusiness/dap-contract";
+import { canonicalize, retainedByteDomain, utf8 } from "@generalbusiness/artroom-bytes";
 import { AmountError, naturalAmount, NOTHING } from "./held.ts";
 
 export type ByteCount = { complete: true; bytes: number } | { complete: false; knownBytes: number; missing: number };
 type Key = Pick<RetainedInput, "kind" | "digest" | "domain">;
 interface Counted { size: number | null; sources: Set<string> }
 
+/** Planner dc426978: the migrated row's fixed overhead and its UTF-8 key. */
+export const archivedAcceptedKeyBytes = (idempotencyKey: string): number => ACCEPTED_KEY_OVERHEAD_BYTES + utf8(idempotencyKey).length;
+
 export class ByteUsage {
   readonly #sources = new Map<string, string>();
   readonly #counted = new Map<string, Counted>();
+  readonly #accepted = new Set<string>();
   #bytes = 0;
   #missing = 0;
 
@@ -44,15 +48,24 @@ export class ByteUsage {
     this.#keep(canonicalize(["entry", seq]), DOMAINS.entry, hash, size);
   }
 
+  /** A migrated accepted key is a durable row, independent of payload
+   * deduplication. Repeating a floor cannot charge its actor/key again. */
+  migrateAccepted(actor: KeyId, idempotencyKey: string): void {
+    const key = canonicalize([actor, idempotencyKey]);
+    if (this.#accepted.has(key)) return;
+    const bytes = this.#natural(this.#bytes + archivedAcceptedKeyBytes(idempotencyKey));
+    this.#accepted.add(key);
+    this.#bytes = bytes;
+  }
+
   retain(input: Key, size: number | null): void {
     if (size === null && input.kind !== "text") throw new AmountError("only a historical detached text may have an unknown byte size");
     const domain = retainedByteDomain(input.kind, input.domain);
     this.#keep(this.#source(input), domain, input.digest, size);
   }
 
-  /** Only detached-text sources are redacted. Other retained copies keep their bytes. */
-  redact(digest: Digest): void {
-    const source = this.#source({ kind: "text", digest }), key = this.#sources.get(source);
+  #drop(source: string): void {
+    const key = this.#sources.get(source);
     if (key === undefined) return;
     const held = this.#counted.get(key)!;
     if (held.sources.size === 1) {
@@ -64,6 +77,13 @@ export class ByteUsage {
     } else held.sources.delete(source);
     this.#sources.delete(source);
   }
+
+  /** A floor drops only the journal's source; retained copies of the same
+   * byte-domain/digest keep their one charge. */
+  dropJournal(seq: number): void { this.#drop(canonicalize(["entry", this.#natural(seq)])); }
+
+  /** Only detached-text retained sources are redacted. */
+  redact(digest: Digest): void { this.#drop(this.#source({ kind: "text", digest })); }
 
   /** Constant-time identity check for a historical missing-text interval. */
   unknownText(digest: Digest): boolean {
