@@ -1,5 +1,7 @@
 # S1: late handlers
 
+Status, 21 October 2026: Landed at `bdda6bd0`. Statements below that say review or landing is owed are as of the handoff.
+
 This correction passed its gate and awaits review under request `4353d842ce797515e7a369ceae6515c9efaa547b`,
 promise `6201d371095659784d6c68f4e5dfbeb5c4c5eac6`, and parent S1 request
 `b42d3b741986eb8f171e353ad3cb3704f202be9b`. The first review requested the

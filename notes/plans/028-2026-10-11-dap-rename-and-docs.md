@@ -1,5 +1,10 @@
 # Plan 028: rename to dap and put the framework first
 
+Status: landed in part; plan 030 superseded its dates. The documentation
+head landed at `6198b199`, the minimal rename at `b5d15349` and the
+package release record at `c4d98848`. The rename kept directory names;
+`0548b726` later moved lanes and page under `apps/room`.
+
 Planner, 11 October 2026. Direction from Hugh, 11 October: the project is
 named dap. Its documentation presents dap as a framework for building
 collaborative applications for people and agents, based on an event-sourced

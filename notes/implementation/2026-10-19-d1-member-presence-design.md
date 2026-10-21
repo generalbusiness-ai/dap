@@ -1,5 +1,7 @@
 # D1: member and presence design
 
+Status, 21 October 2026: Landed at `8aad37bb`. Statements below that say review or landing is owed are as of the handoff.
+
 The static packet is complete: 40 member-state examples in both themes,
 their supporting member records and kit-owned screens make 192 HTML pages.
 The original 384 desktop/phone browser checks passed, with 192 retained

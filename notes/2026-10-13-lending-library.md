@@ -1,7 +1,12 @@
 # A lending library on dap
 
-13 October 2026. **Proposed design, Draft 5. Design only: no source, no
-test and no deployment was written or run for this note.** Baseline main
+Status, 21 October 2026: draft 5 is approved (`78b4b447`) and landed at
+`3ca42192`. Built: the definition (`dedcb14b`), shelf publication
+(`5e11ca03`), labels and staff-only cancellation (`475665be`), and the
+homepage page. Hosted outputs are recorded at `94c85cc3`.
+
+13 October 2026. **Design, Draft 5. No source, test or deployment was written or run for
+this note itself.** Baseline main
 `562357458b0b3f44873efc6c21429194b60a00f7`.
 
 This note designs a small lending library for kitchenware and tools, as a

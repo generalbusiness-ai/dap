@@ -1,9 +1,13 @@
 # Demo-first composable lanes: task and retargeting ledger
 
+Status: superseded by the scope model. It was built from I1 (`f1c456ce`)
+through the I3 milestones (`b452882f` to `68ffd637`) and I5 (`7bb3a641`).
+The earlier packages were parked at `42873516`.
+
 Date: 2026-10-04. Planner reconciliation under request
 `5c716a5c35bfdbdcef89e1e4fbe82df4aab0b8fd`, promise
 `efc0d86cc329025353f8e2dd21957b0f60ce68d8`.
-Status: proposed architecture and effective design tasks; independent
+Earlier status: proposed architecture and effective design tasks; independent
 review, source implementation and complete removal remain outstanding.
 
 The governing direction is Hugh's

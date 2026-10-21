@@ -1,5 +1,9 @@
 # Composable authority scopes, lanes, and the GitHub demo
 
+Status: superseded by the scope model. It was built from I1 (`f1c456ce`)
+through the I3 milestones (`b452882f` to `68ffd637`) and I5 (`7bb3a641`).
+The earlier packages were parked at `42873516`.
+
 Date: 2026-10-04. Draft 2 for planner reconciliation and
 independent review. Written against Artroom main
 `e6e6782830e0ca8a68f0d11c4d4ece5e4e98c967`.

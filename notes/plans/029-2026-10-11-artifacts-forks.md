@@ -1,5 +1,9 @@
 # Plan 029: a fork for each hold
 
+Status: current. Item 0 ran on 13 October 2026 (`bb817174`); storage and
+billing are still unmeasured. Items 1 to 4 are not built. Plan 032 builds
+item 1 as J4, after plan 033's grow demo.
+
 Planner, 11 October 2026, 14:00 Eastern. Direction from Hugh, recorded in
 planner request `06089f04`: build a detailed plan for the forks work on
 Cloudflare Artifacts. This plan is a document. It names the builder

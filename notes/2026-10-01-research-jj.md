@@ -1,5 +1,10 @@
 # Research: jj compared with Artroom
 
+Status, 21 October 2026: landed at `4b6d42a7` (approval `8e35ab4a`). The
+adopted directions below are not built on main. The partial support that
+this note cites belonged to the earlier room model; it was parked at
+`42873516` and deleted at `66eba017`.
+
 2026-10-01. Request `966aeaad`, promise `bfb563fe`. Answers hugh's
 research question: how does `jj` (Jujutsu) compare with the proposed
 Artroom?

@@ -1,5 +1,7 @@
 # Native Page tasks and retained text editing
 
+Status, 21 October 2026: Landed at `a1277d9c`. Statements below that say review or landing is owed are as of the handoff.
+
 Work in progress under primary-task request `12cc35cd`, promise `e2803da6`,
 and editor request `bc78fa68`, promise `39a31779`. Planner amendments `2028c8f5`,
 `561fce0b` and `d3f96a4e` govern local response feedback, the one-file LIST1

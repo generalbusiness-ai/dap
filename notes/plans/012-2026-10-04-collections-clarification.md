@@ -1,5 +1,8 @@
 # Collections of Rooms: managing services at scale
 
+Status: landed `4b6d42a7`; describes work that is done. Its content is in
+`notes/2026-10-02-collections-of-rooms.md`.
+
 Date: 2026-10-04. Complete clarification Draft 2 for independent planning
 review, under no-Git request `b98775076f5786fc1ba51c261658c3f046de6455`,
 promise `7184dd20c75409488194667159dc8b8342095346`. It adopts nothing.

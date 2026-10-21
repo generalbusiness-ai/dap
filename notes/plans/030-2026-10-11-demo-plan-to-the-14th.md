@@ -1,5 +1,9 @@
 # Plan 030: the demo plan to the 14th, re-cut
 
+Status: retired; no work follows from it. Steps 1 to 6, 8 and 9 landed
+(`0e8d5b5e`, `61e70379`, `58f25812`, `622c76fe`, `b5d15349`, `6198b199`,
+`c4d98848`, `bb817174`). No later plan names step 7.
+
 Planner, 11 October 2026, 14:10 Eastern. Successor to plan 024. Direction
 from Hugh, recorded in planner request `36372c32`: record the positioning,
 re-order the video, and add the rules requirements for the concurrent-edit

@@ -1,12 +1,15 @@
 # Plan 001: Require complete token inventories before issuing access
 
+Status: landed `93a2552e`; describes work that is done. The code it
+changed was parked at `42873516` on 4 October 2026.
+
 > Executor: use a gitseq request and promise for this work. Follow the steps and verification gates. Submit the exact head and every changed artifact for checker review. This plan is a handoff, not approval to land.
 >
 > Drift check: `git diff --stat bd520fb926f8161a722c6f1e23ae4aac29e41a66..HEAD -- packages/git/src/artifacts.ts packages/git/src/workspace/workspaces.ts packages/git/src/snapshot/repos.ts packages/git/test/workspaces.test.ts packages/git/test/snapshots.test.ts`. Compare changed code with the excerpts before continuing.
 
 ## Status
 
-- Status: DONE, pending review. Implemented under gitseq request `b2509b23` on branch `request/cc-workspace`; see the implementation report in [README.md](README.md).
+- Earlier status (2 October 2026): done, pending review. Implemented under gitseq request `b2509b23` on branch `request/cc-workspace`; see the implementation report in [README.md](README.md).
 - Priority: P2
 - Effort: M (sequencing only; retain all functionality)
 - Risk: MED — the current lease token must survive a workspace sweep.

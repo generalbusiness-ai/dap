@@ -1,5 +1,11 @@
 # 032: The journey as acceptance target
 
+Status: current; section 2b waits for plan 033. Section 2a is done: A2 and
+A3 landed to the fixture-only cutoff (`0e63ba92`, `6dac9c76`, `fd198c72`),
+the Judge at `02a91803` and the capacity budgets at `62423347`. In section
+2c, M1 moved to plan 033 and landed (`feccbbcf`, `bfa02edd`, `ad39fdf1`);
+hosted Counter agents are designed (`5cfbaae7`) and not built.
+
 Planner, 17 October 2026. A sequencing plan. It commissions nothing; each
 piece below needs its own request. Source facts cite `path:line` at main
 `698a3d713`.

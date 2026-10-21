@@ -1,7 +1,10 @@
 # The sequenced level and the order scope
 
-18 October 2026, draft 6. Design note for review. Section 12 lists what
-changed after each checker review. The note decides two things about
+18 October 2026, draft 6, with post-landing corrections. Draft 6 is
+approved (`d9d777a2`) and landed at `3dad6109`. The corrections landed at
+`a93b6359`. S1 has landed (`1da3f4ca`, `bdda6bd0`), and S2 landed as S2a
+(`fb390d88`) and S2b (`7bc1490c`). S3 to S6 are not built. Section 12
+lists what changed after each checker review. The note decides two things about
 what a scope's definition declares, and designs the runtime for the
 second.
 

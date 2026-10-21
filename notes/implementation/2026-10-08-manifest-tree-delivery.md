@@ -1,5 +1,7 @@
 # Manifest tree and branch proposal delivery
 
+Status, 21 October 2026: Landed at `a1277d9c`. Statements below that say review or landing is owed are as of the handoff.
+
 Work in progress for request `b8c5a3c8d9a8f4b9c34d8609b9e779ceef86419a`
 and builder promise `1721118488413cc0d65f8ab3ef2d28b9c054c02d`.
 This note is not a completed delivery, gate result or deployment claim.
