@@ -69,6 +69,11 @@ is the first test of that model.
 - The scope contract, revision 23, and the authority note, revision 28
   (`1a19b5ae`): code comments cite these two documents by section. They
   are now on `main`, with five supporting files.
+- Counter contracts, revision 4 (`d0a556e6`): the hosted Counter agents
+  on the instance model, with one member for each role and one key for
+  each instance. A retiring instance keeps the participant row that its
+  siblings share, and drain retires the instance and revokes its key.
+  Draft 1's review found these two points; draft 2 answered them.
 - Status sweep (`25323213`), revision 2: a status statement for 36 design
   notes, 34 plans, the plans index, the test invariants, 14
   implementation notes and the roadmap. Each plan now has one of four
@@ -119,7 +124,8 @@ Recorded in the workroom.
 - Retained files RF1 to RF4 (`7a912d5c`, `313b25d7`, `01b7ab9b`,
   `760b702e`), and capture CS1 to CS4 after them (`6f425ed4`,
   `98e0cfae`, `7a173b0f`, `24a92150`).
-- Agent teams RI1 (`cad348ea`). RI2 to RI4 follow the Counter contracts.
+- Agent teams RI1 (`cad348ea`), and RI2's first part, the Counter
+  definitions (`ecc3ff15`).
 - A sign-in address that a person who joined from an agent CLI opens in
   a browser (`abe69eeb`), after slice 9.
 - Verification time (`7783018d`): measure the scope tests at 1, 2, 4 and
@@ -135,10 +141,6 @@ Recorded in the workroom.
   the builder's observed runs, 1 worker passed in 721 s; 2 workers took
   417 s and 4 workers 230 s, and both exited with failures. The failures
   are recorded with their causes.
-- **Counter contracts revision 4**, draft 2 (`29c58c73`), in review. It
-  answers two findings: retiring one instance must not deactivate the
-  participant row that its sibling instances share, and lowering the
-  count must retire the key, not keep it for reuse.
 - **Security D2**, the citation check (`a35e4c2e`), before review.
 - **The grow demo's acceptance** by a person in a chat. The browser join
   works after the page fix.
@@ -173,7 +175,7 @@ after checker review of the exact head.
 | Builder | Verification time, beside the archive work | `7783018d` |
 | Builder | Security D2 to review; then D1, admission and sandbox | `0270882b`, `51bd88c6`, `954bf397`, `8ced57e3` |
 | Checker | F2, slice 9, Counter revision 4, D2 | — |
-| Planner | Land Counter revision 4 when approved; file RI2 to RI4 | `9400a9f7` |
+| Planner | File the Counter slices 2 to 6 as each lands, then RI3 and RI4 | `ecc3ff15` |
 | Planner | The floor note's text for the layout and F2 decisions | to be filed |
 | Planner | Provision, bind and deploy slice 9 after its review; file F3, then G4 | `2fcf3c3a` |
 | Planner | History slice H1 | `c98b5c99` |
