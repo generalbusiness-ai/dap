@@ -102,9 +102,13 @@ role holds `issue.open`, `issue.request`, `issue.promise`, `issue.work`,
 `change.check` (`membership.ts:101-108`).
 
 Each issue is its own scope. Its `file` act sends an index row to the
-room's directory (`issue.ts:206`). So every candidate read of an issue
-preset starts with the directory's index rows of kind `issue`, and then
-reads each listed issue scope.
+room's directory (`issue.ts:206`). An index row is a `lane` item in state
+`listed`, with `kind` and `state` as values and the lane's scope as a ref
+(`packages/platform/src/directory.ts:196-214`). So every issue preset
+starts with one candidate query: the directory's `lane` items in state
+`listed`. Its eligibility filters keep the rows with `kind` `issue` and
+`state` `open`. The index is advisory. The preset then reads each kept
+lane scope itself, for its current state and coverage.
 
 **Admission.** Two kinds of admission exist.
 
@@ -134,7 +138,7 @@ on every kind of work.
 
 | Branch | Candidate reads | Eligible when | Admit | Performs |
 |---|---|---|---|---|
-| P1 | Index rows of kind `issue`, state `open`; each issue's `commitment` items, all states | The issue has no commitment in a state that is not final: `offered`, `proposed` or `accepted` (`issue.ts:55`) | Assignment record for the issue | `offer`, with `offeree` the builder identity when the team has one |
+| P1 | The directory's `lane` items in state `listed`, kept when `kind` is `issue` and `state` is `open`; then each issue's `commitment` items, all states | The issue has no commitment in a state that is not final: `offered`, `proposed` or `accepted` (`issue.ts:55`) | Assignment record for the issue | `offer`, with `offeree` the builder identity when the team has one |
 | P2 | Each open issue's `report` items in state `reported` (`issue.ts:70`) | The commitment's `requester` is this member | Assignment record for the report | `accept-report` or `refuse-report` |
 
 Hands off: an offered commitment to the builder; an accepted report, with
@@ -145,10 +149,29 @@ its change, to the person.
 | Branch | Candidate reads | Eligible when | Admit | Performs |
 |---|---|---|---|---|
 | B1 | Each open issue's `commitment` items in state `offered` | `offeree` is this member, or unset | `accept` | then branch B2 |
-| B2 | Each open issue's `commitment` items in state `accepted`, and its `hold` items in state `held` | `performer` is this member, and no hold is held under the commitment | `take-hold` | `open` a change and `propose-manifest` on an exact base; `request-review-own`; `report`; `block` and `input`; `renew-hold` and `release-hold` |
+| B2 | Each open issue's `commitment` items in state `accepted`, its `hold` items in state `held`, and its `report` items in every state | `performer` is this member; no hold is held under the commitment; and no report under the commitment is `reported` or `accepted` | `take-hold` | `open` a change and `propose-manifest` on an exact base; `request-review-own`; `report`; `block` and `input`; `renew-hold` and `release-hold` |
 
 A B1 admission leaves the commitment `accepted`, with this member as its
-performer. The same instance then goes on to B2. A sibling that lost the
+performer. The same instance then goes on to B2.
+
+**After a report.** `report` opens a report and leaves the commitment
+`accepted` (`issue.ts:551-591`). `accept-report` and `refuse-report` change
+only the report (`issue.ts:592-635`). A hold can end while a report waits
+(`shared.ts:145-156`, `:177-182`). So B2 reads the commitment's reports, and
+the reports decide:
+
+- A report `reported` is handed off to the planner. B2 is not eligible.
+- A report `accepted` is handed off to the person, for review and merge. B2
+  is not eligible.
+- When the latest report is `refused`, the work is open again. B2 is
+  eligible, and the instance reads the refusal before it starts.
+- With no report, a commitment with no held hold is work that stopped
+  before it reported: a released hold, an ended hold or a lost key. B2 is
+  eligible, so a sibling instance recovers it.
+
+Eligibility reads only the app's items. So after a restart of the team
+object, the host reads the reports again and reaches the same decision.
+The host keeps nothing that the app does not show. A sibling that lost the
 `accept` can still win the `take-hold` race. That is correct: both are the
 same member, with the same mandate.
 
@@ -358,6 +381,12 @@ identity:
    renews and then releases the hold, and the record shows both keys.
 8. **Incomplete read.** A read refused, or stopped by its budget before
    `complete`, shows as an incomplete read, not as no eligible work.
+9. **Reported work.** A builder instance reports, and its hold is then
+   released, and in a second run ends at its time. Two builder instances
+   run, and the team object restarts. While the report is `reported`, and
+   then `accepted`, no builder assignment, change or report appears. The
+   requester then refuses the report. One builder instance is admitted by
+   `take-hold`, reads the refusal, and works the commitment again.
 
 ## 10. Slices
 
@@ -366,7 +395,7 @@ identity:
 | RI1 | Enrol a further key for an existing agent or checker member: `dap invite --kind agent-key --member @handle` signs only `invite-key`; hosted MCP enrols a further key for an existing member through a control request; docs/mcp.md recipe. | A member with three active keys acts with each one; each entry's observation names its key; retiring one key leaves the member and the other two working. |
 | RI2 | The Counter contracts revision 4 slices. They carry the team runtime: presets, slots as keys, the assignment record, one assignment per key, drain, recovery by a sibling instance. | Exit test 1 (section 6) passes on a hosted Worker, with witnesses 6, 7 and 8 of section 9. |
 | RI3 | Views: the instance line under the member badge, and the team view's slots. | The member and team views show three instances of one member, with their keys and states. |
-| RI4 | The Room team: the planner, builder and checker presets of section 3 on the issue and change lanes. | Witnesses 1 to 5 of section 9 pass, and exit test 2 (section 6) passes on a hosted Worker. |
+| RI4 | The Room team: the planner, builder and checker presets of section 3 on the issue and change lanes. | Witnesses 1 to 5 and 9 of section 9 pass, and exit test 2 (section 6) passes on a hosted Worker. |
 
 The slices run in this order. RI2 follows the Counter contracts revision 4.
 The planner writes that revision after this note lands.
