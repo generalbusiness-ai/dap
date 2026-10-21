@@ -11,7 +11,7 @@
  * beside the scope, is attributed to the server.
  */
 
-import type { Answer, Head, MismatchReason, ReadRefusal, RefusalReason, UnavailableReason } from "@generalbusiness/dap-contract";
+import type { Answer, Archived, FactRef, Head, MismatchReason, ReadRefusal, RefusalReason, UnavailableReason } from "@generalbusiness/dap-contract";
 import { inline, sentenceNamed, type Sentence } from "./describe.ts";
 
 /** What was asked, for the sentence. */
@@ -94,6 +94,14 @@ export const READ_NOTES: Readonly<Record<ReadRefusal, Said>> = {
 
 const at = (head: Head): string => `judged at head ${head.seq}`;
 
+/** Archive location only; an absent settlement fact is never invented. */
+export function archivedAnswer(archived: Archived, fact?: FactRef): Said {
+  const original = fact ? `Original entry ${fact.at.scope}:${fact.seq}, hash ${fact.hash}, incarnation ${fact.at.inc}, is archived.`
+    : "The original entry is archived; the settlement supplied no fact.";
+  return { sentence: `${original} Journal floor ${archived.floor}; archive commit ${archived.commit}, through entry ${archived.through.seq}, hash ${archived.through.hash}.`,
+    next: "Verify the archive clone against this receipt before confirming the original result. Keep the original signed envelope; do not sign or resend a replacement request." };
+}
+
 /**
  * The sentence for a scope's answer to an act. `guards`: the act's guard
  * sentences, from the complete text, so a refusal that names a guard always
@@ -101,7 +109,7 @@ const at = (head: Head): string => `judged at head ${head.seq}`;
  */
 export function answered(answer: Answer, asked: Asked, guards: readonly Sentence[] | null): Said {
   switch (answer.answer) {
-    case "archived": return { sentence: `${asked.scope} accepted this key at entry ${answer.fact.seq}; its receipt is now in archive commit ${answer.archived.commit}.`, next: "Verify the archive clone against the floor receipt before reading the old entry." };
+    case "archived": return archivedAnswer(answer.archived, answer.fact);
     case "accepted": return { sentence: `${asked.scope} accepted ${asked.kind}: entry ${answer.receipt.fact.seq}${answer.receipt.sends.length > 0 ? `, with sends ${answer.receipt.sends.join(", ")}` : ""}.`, next: answer.receipt.sends.length > 0 ? "Call wait with this entry to see what it created or sent." : "Nothing more is needed." };
     case "refused": {
       if (answer.reason === "guard-failed" || answer.reason === "capability-refused") {

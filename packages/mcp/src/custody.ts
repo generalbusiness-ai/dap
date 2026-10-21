@@ -16,7 +16,9 @@
  *   another meaning is refused as `conflicting`, and nothing is sent.
  * - **Phase**: `prepared`, `sent` and `unknown` are unresolved, and are
  *   recovered by resending the same bytes. `accepted`, `refused` and
- *   `mismatch` are terminal. `accepted` and `mismatch` are never sent again,
+ *   `mismatch` and `archived` are terminal. An archived settlement keeps its
+ *   location and optional fact separately from a native Answer; it proves no
+ *   receipt before clone verification. `accepted`, `archived` and `mismatch` are never sent again,
  *   even with `resubmit: true`. A `refused` record is sent again only when
  *   the caller asks with `resubmit: true`: the server first keeps a new
  *   attempt, unresolved (`sent`), with the refusal kept as history, so a lost
@@ -57,7 +59,7 @@
  * and the file store of `node.ts` under `ARTROOM_HOME/private/mcp-custody/`.
  */
 
-import type { Answer, Beside, DeclaredDefinition, Digest, KeyId, PlatformDefinition, Receipt, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
+import type { Answer, Beside, DeclaredDefinition, Digest, KeyId, PlatformDefinition, Receipt, ScopeRef, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, intentDigest, utf8 } from "@generalbusiness/artroom-bytes";
 import { custodyTransition, custodyStepTransition } from "./metrics.ts";
 
@@ -94,8 +96,13 @@ export interface Envelope {
 export type Phase = "prepared" | "sent" | "unknown" | "accepted" | "archived" | "refused" | "mismatch" | "settled";
 export const TERMINAL: ReadonlySet<Phase> = new Set(["accepted", "archived", "refused", "mismatch", "settled"]);
 
+/** A settlement read can omit its fact. It is not a native Answer or receipt. */
+export type ArchivedSettlement = Extract<Settlement, { reason: "archived" }>;
+export type Decided = { at: string; answer: Answer; archivedSettlement?: never }
+  | { at: string; archivedSettlement: ArchivedSettlement; answer?: never };
 /** One outcome of one sending, in its attempt. `lost`: no answer could be read. */
-export type Outcome = ({ at: string; answer: Answer } | { at: string; lost: true } | { at: string; settled: Receipt }) & { attempt: number };
+export type Outcome = ({ at: string; answer: Answer } | { at: string; lost: true } | { at: string; settled: Receipt }
+  | { at: string; archivedSettlement: ArchivedSettlement }) & { attempt: number };
 
 export interface Step {
   intent: Digest;
@@ -190,18 +197,21 @@ const keyBytes = (key: unknown): boolean => typeof key === "string" && utf8(key)
 export const validKey = keyBytes;
 
 /** What a call under custody gives back: the outcome, and whether it was sent now or kept from before. */
-export type Sent = { record: CustodyRecord; answer: Answer; retained: boolean } | { record: CustodyRecord; lost: true };
+export type Sent = { record: CustodyRecord; answer: Answer; retained: boolean }
+  | { record: CustodyRecord; archivedSettlement: ArchivedSettlement; retained: true }
+  | { record: CustodyRecord; lost: true };
 
 /** Bytes a record keeps beside its envelope: identity, binding, phase, times, and room for its first outcome. */
 const RECORD_OVERHEAD = 64 * 1024;
 const envelopeBytes = (value: unknown): number => utf8(canonicalize(value as never)).length;
 
 /** The newest decisive outcome of the record's current attempt, chronologically; null while the attempt is unresolved. */
-export function decisive(outcomes: readonly Outcome[], attempt: number): { at: string; answer: Answer } | null {
+export function decisive(outcomes: readonly Outcome[], attempt: number): Decided | null {
   for (let i = outcomes.length - 1; i >= 0; i--) {
     const o = outcomes[i]!;
     if (o.attempt !== attempt) return null;
     if ("settled" in o) return { at: o.at, answer: { answer: "accepted", receipt: o.settled } };
+    if ("archivedSettlement" in o) return { at: o.at, archivedSettlement: o.archivedSettlement };
     if ("answer" in o && o.answer.answer !== "unavailable") return { at: o.at, answer: o.answer };
   }
   return null;
@@ -270,15 +280,16 @@ export class Custody {
   }
 
   /** The decisive outcome of a record's current attempt, reading the segment only when the inline outcomes do not reach back far enough. */
-  async decided(id: string, record: CustodyRecord): Promise<{ at: string; answer: Answer } | null> {
+  async decided(id: string, record: CustodyRecord): Promise<Decided | null> {
     // Newest first: the inline outcomes, then the segment's slices from its end backward, one slice held at a time. The search
     // stops at the newest decisive outcome of the current attempt, or at an outcome of an older attempt, which ends it.
     const inSegment = record.count - record.outcomes.length;
-    const search = (list: readonly Outcome[]): { at: string; answer: Answer } | "older" | null => {
+    const search = (list: readonly Outcome[]): Decided | "older" | null => {
       for (let i = list.length - 1; i >= 0; i--) {
         const o = list[i]!;
         if (o.attempt !== record.attempt) return "older";
         if ("settled" in o) return { at: o.at, answer: { answer: "accepted", receipt: o.settled } };
+        if ("archivedSettlement" in o) return { at: o.at, archivedSettlement: o.archivedSettlement };
         if ("answer" in o && o.answer.answer !== "unavailable") return { at: o.at, answer: o.answer };
       }
       return null;
@@ -355,7 +366,8 @@ export class Custody {
         const last = await this.decided(id, record);
         if (record.phase !== "refused" || !options.resubmit) {
           if (!last) throw new CustodyError({ held: "unreadable" });
-          return { record, answer: last.answer, retained: true };
+          return last.archivedSettlement ? { record, archivedSettlement: last.archivedSettlement, retained: true }
+            : { record, answer: last.answer, retained: true };
         }
         // A deliberate resubmission of a refusal makes the record unresolved again: it is admitted against the capacity under the
         // shared lease, and the new attempt is kept there, before anything is sent. A store that is full keeps the refusal as it was.
@@ -390,11 +402,12 @@ export class Custody {
 
   /**
    * Settle: a terminal record's outcome, or the scope's settlement of the
-   * recorded envelope. A receipt resolves the record as accepted; `not-found`
-   * and a lost reply resolve nothing. Signs nothing, sends no act. The
+   * recorded envelope. A receipt resolves the record as accepted; an archived
+   * read retains its distinct evidence and prevents resend without inferring
+   * acceptance. `not-found` and a lost reply resolve nothing. Signs nothing, sends no act. The
    * outcome given is always the newest decisive one of the current attempt.
    */
-  async settle(identity: Identity, read: (envelope: Envelope) => Promise<Receipt | null>): Promise<{ record: CustodyRecord; receipt: Receipt | null; decided: { at: string; answer: Answer } | null } | null> {
+  async settle(identity: Identity, read: (envelope: Envelope) => Promise<Receipt | ArchivedSettlement | null>): Promise<{ record: CustodyRecord; receipt: Receipt | null; decided: Decided | null } | null> {
     const id = identityId(identity);
     const record = await this.#read(id);
     if (!record) return null;
@@ -402,12 +415,15 @@ export class Custody {
     return this.#locked(id, record.envelope.signed.intent.notAfter, async () => {
       const fresh = (await this.#read(id))!;
       if (TERMINAL.has(fresh.phase)) return { record: fresh, receipt: null, decided: await this.decided(id, fresh) };
-      let receipt: Receipt | null = null;
-      try { receipt = await read(fresh.envelope); } catch (error) { if (!(error instanceof Lost)) throw error; }
-      if (receipt) {
+      let observed: Receipt | ArchivedSettlement | null = null;
+      try { observed = await read(fresh.envelope); } catch (error) { if (!(error instanceof Lost)) throw error; }
+      const receipt = observed && !("archived" in observed) ? observed : null;
+      if (observed) {
         const previous = fresh.phase;
-        fresh.phase = "accepted";
-        await this.#outcome(id, fresh, { at: this.now(), settled: receipt, attempt: fresh.attempt });
+        fresh.phase = "archived" in observed ? "archived" : "accepted";
+        await this.#outcome(id, fresh, "archived" in observed
+          ? { at: this.now(), archivedSettlement: observed, attempt: fresh.attempt }
+          : { at: this.now(), settled: observed, attempt: fresh.attempt });
         fresh.updated = this.now();
         await this.#write(id, fresh, false, previous);
       }

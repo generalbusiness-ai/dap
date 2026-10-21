@@ -20,9 +20,9 @@ import { TransportError, ScopeHandle, ApplicationPackageError, applicationScreen
 import { TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, platform, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { ApplicationHttpError, applicationGitHttpSource, readApplicationGitBlob } from "@generalbusiness/artroom-git/application";
 import { ACT_OUTPUT, actTool, bindingsOf, declarationDigest, describedOf, generationOf, listed, selected, type Binding, type Held, type Inventory, type Mode, type Tool } from "./catalogue.ts";
-import { Custody, CustodyError, Lost, meaningOf, validKey, type CustodyRecord, type CustodyStore, type Envelope, type Identity } from "./custody.ts";
+import { Custody, CustodyError, Lost, meaningOf, validKey, type ArchivedSettlement, type CustodyRecord, type CustodyStore, type Envelope, type Identity } from "./custody.ts";
 import { AT_INPUT, describeAct, grantAction, onOf, schemaOf, type DefinitionLike } from "./describe.ts";
-import { answered, clip, finding, type Finding } from "./errors.ts";
+import { answered, archivedAnswer, clip, finding, type Finding } from "./errors.ts";
 import { Kept, definitionOf, readInventory, readPartitionIndexes, standingIn, type ConfigPort, type McpConfig, type Read_, type Root } from "./inventory.ts";
 import { KIB, bytesOf, cursorOf, fromCursor, pageBy, sliceText } from "./paging.ts";
 import { Reads } from "./reads.ts";
@@ -527,6 +527,7 @@ export class McpService {
     }, { ...(args["resubmit"] === true ? { resubmit: true } : {}), notAfter, bytes: carried });
     const tool = binding?.name ?? "act";
     if ("lost" in kept) return failed({ error: "transport", scope, submitted: true });
+    if ("archivedSettlement" in kept) return ok(this.#archivedSettlementOf(kept.archivedSettlement, { scope, kind, tool }));
     const said = answered(kept.answer, asked, guards);
     if (kept.answer.answer === "accepted" && !kept.retained) {
       // An accepted act on a membership can change whether it gives this key a session: ask again on the next read.
@@ -544,6 +545,11 @@ export class McpService {
       case "refused": return { ...base, reason: answer.reason, ...(answer.name ? { name: answer.name } : {}), judgedAt: answer.judgedAt };
       default: return { ...base, reason: answer.reason };
     }
+  }
+
+  #archivedSettlementOf(read: ArchivedSettlement, at: { scope: string; kind: string; tool: string }): Record<string, unknown> {
+    return { answer: "archived", phase: "archived", archived: read.archived, ...(read.fact ? { fact: read.fact } : {}),
+      ...at, retained: true, ...archivedAnswer(read.archived, read.fact) };
   }
 
   /** The bytes of a value a field names by digest: a definition's, read from the rules scope that retained it. */
@@ -834,18 +840,21 @@ export class McpService {
         const created = scopeIdOf({ v: 1, kind, definition, creator: null, cause: intentDigest(envelope.signed.intent), ordinal: 0 } as Seed);
         try {
           const read = await this.#reads.transport.settle(created, envelope.signed);
-          return read.ok ? read.value : null;
+          return read.ok ? read.value : read.reason === "archived" ? read : null;
         } catch (error) { if (error instanceof TransportError) throw new Lost(); throw error; }
       }
       try {
         const read = await this.#reads.transport.settle(scope!, envelope.signed);
-        return read.ok ? read.value : null;
+        return read.ok ? read.value : read.reason === "archived" ? read : null;
       } catch (error) { if (error instanceof TransportError) throw new Lost(); throw error; }
     });
     if (!settled) return ok({ answer: "not-found", sentence: `No record is kept under key ${String(key)} for that target.`, next: "Nothing was sent under this key from this server; sign with it." });
     const record = settled.record;
     const last = settled.decided;
-    const receipt: Receipt | null = settled.receipt ?? (last?.answer.answer === "accepted" ? last.answer.receipt : null);
+    const receipt: Receipt | null = settled.receipt ?? (last?.answer?.answer === "accepted" ? last.answer.receipt : null);
+    const archived: ArchivedSettlement | null = last?.archivedSettlement ?? (last?.answer?.answer === "archived"
+      ? { ok: false, reason: "archived", archived: last.answer.archived, fact: last.answer.fact } : null);
+    if (record.phase === "archived" && !archived) throw new CustodyError({ held: "unreadable" });
     // Each step by its latest answer, projected, and how many it has had; the steps paged by bytes with a cursor.
     const allSteps = Object.entries(record.steps).sort(([a], [b]) => (a < b ? -1 : 1)).map(([, st]) => {
       const latest = st.answers.at(-1)?.answer ?? null;
@@ -853,13 +862,17 @@ export class McpService {
     });
     const fromStep = fromCursor<{ i: number }>(args["cursor"])?.i ?? 0;
     const { page: steps, next: nextStep } = pageBy(allSteps, fromStep, pageOf(BOUNDS.act) - 1536);
-    const answer = record.phase === "accepted" ? "accepted" : record.phase === "refused" ? "refused" : record.phase === "mismatch" ? "mismatch" : record.phase === "settled" ? "settled" : "unknown";
+    const answer = record.phase === "archived" ? "archived" : record.phase === "accepted" ? "accepted" : record.phase === "refused" ? "refused" : record.phase === "mismatch" ? "mismatch" : record.phase === "settled" ? "settled" : "unknown";
     const sentence = answer === "settled" ? `Under key ${String(key)}, every capability step is decided; no act is kept under this key.`
       : answer === "accepted" ? `The act under key ${String(key)} was accepted: entry ${receipt?.fact.seq}.`
       : answer === "refused" ? `The act under key ${String(key)} was refused; the refusal is kept.`
       : answer === "mismatch" ? `The key ${String(key)} is on another intent of your key at that scope.`
       : `The outcome under key ${String(key)} is unknown: the scope gave no receipt for the exact envelope. The record stays unknown.`;
-    return ok({ answer, phase: record.phase, sentence, next: answer === "unknown" ? "Call the same tool again with the same idempotencyKey: it resends the same envelope." : "Nothing more is needed.", ...(receipt ? { fact: receipt.fact, outboxIds: receipt.sends } : {}), outcomes: record.count, attempt: record.attempt, last: last ? { at: last.at, ...projectAnswer(last.answer) } : null, steps, ...(nextStep !== null ? { cursor: cursorOf({ i: nextStep }), more: `Steps ${fromStep + 1} to ${nextStep} of ${allSteps.length}; call settle with cursor for the rest.` } : {}) });
+    return ok({ answer, phase: record.phase, sentence, next: answer === "unknown" ? "Call the same tool again with the same idempotencyKey: it resends the same envelope." : "Nothing more is needed.",
+      ...(archived ? { ...archivedAnswer(archived.archived, archived.fact), archived: archived.archived, ...(archived.fact ? { fact: archived.fact } : {}) } : {}),
+      ...(receipt ? { fact: receipt.fact, outboxIds: receipt.sends } : {}), outcomes: record.count, attempt: record.attempt,
+      last: last ? { at: last.at, ...(last.archivedSettlement ? { answer: "archived", archived: last.archivedSettlement.archived, ...(last.archivedSettlement.fact ? { fact: last.archivedSettlement.fact } : {}) } : projectAnswer(last.answer)) } : null,
+      steps, ...(nextStep !== null ? { cursor: cursorOf({ i: nextStep }), more: `Steps ${fromStep + 1} to ${nextStep} of ${allSteps.length}; call settle with cursor for the rest.` } : {}) });
   }
 
   async #membershipRef(given: unknown): Promise<ScopeRef | null> {
@@ -913,6 +926,7 @@ export class McpService {
       } catch (error) { if (error instanceof TransportError) throw new Lost(); throw error; }
     }, { ...(args["resubmit"] === true ? { resubmit: true } : {}), notAfter, bytes: bytesOf({ definition: args["definition"], fields: fieldsGiven, texts: textsGiven, definitions }) });
     if ("lost" in kept) return failed({ error: "transport", scope: "the creation", submitted: true });
+    if ("archivedSettlement" in kept) return ok(this.#archivedSettlementOf(kept.archivedSettlement, { scope: "the creation", kind, tool: "create" }));
     if (kept.answer.answer === "accepted") {
       const scope = kept.answer.receipt.fact.at.scope;
       const config = await this.#port.config.read();
@@ -995,6 +1009,7 @@ export class McpService {
       return failed({ error: "target", what: error instanceof ApplicationHttpError && error.reason === "unsupported-object-format" ? "the public HTTPS Git transport does not support SHA-256 repositories; nothing was submitted" : error instanceof ApplicationPackageError ? "package bytes do not match the expected signed release or install bounds; nothing was submitted" : "the exact Git package could not be prepared; nothing was submitted" });
     }
     if ("lost" in kept) return failed({ error: "transport", scope: room.rules.scope, submitted: true });
+    if ("archivedSettlement" in kept) return ok(this.#archivedSettlementOf(kept.archivedSettlement, { scope: room.rules.scope, kind: "install-application", tool: "install_application" }));
     if (kept.answer.answer !== "accepted") return ok({ ...projectAnswer(kept.answer), retained: kept.retained, phase: kept.record.phase });
     const receipt = kept.answer.receipt;
     if (!isReceipt(receipt) || receipt.definition !== pin || receipt.intent !== intentDigest(kept.record.envelope.signed.intent) || canonicalize(receipt.fact.at) !== canonicalize(room.rules)) return failed({ error: "target", what: "the install acknowledgement does not match the retained native request" });
@@ -1048,6 +1063,7 @@ export class McpService {
       catch (error) { if (error instanceof TransportError) throw new Lost(); throw error; }
     }, { notAfter, bytes: bytesOf(fields) });
     if ("lost" in kept) return failed({ error: "transport", scope: M.scope, submitted: true });
+    if ("archivedSettlement" in kept) return ok(this.#archivedSettlementOf(kept.archivedSettlement, { scope: M.scope, kind: "join", tool: "join" }));
     const asked = { scope: M.scope, kind: "join", on: null, action: null };
     if (kept.answer.answer !== "accepted") return ok(this.#answerOf(kept.answer, { scope: M.scope, kind: "join", tool: "join", retained: kept.retained, said: answered(kept.answer, asked, []), phase: kept.record.phase }));
     // The admitted entry, read as the member the join made: it must hold the exact request kept, and it names the inbox.

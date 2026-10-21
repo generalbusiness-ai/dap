@@ -438,6 +438,10 @@ export class HostedAgent {
       throw error;
     }
     if ("lost" in kept) return answer(503, { error: "unresolved", op });
+    if ("archivedSettlement" in kept) return answer(410, { error: "archived", op, archived: kept.archivedSettlement.archived,
+      ...(kept.archivedSettlement.fact ? { fact: kept.archivedSettlement.fact } : {}), next: "Verify the original enrollment in its archive clone before continuing; do not sign or send a replacement request." });
+    if (kept.answer.answer === "archived") return answer(410, { error: "archived", op, archived: kept.answer.archived, fact: kept.answer.fact,
+      next: "Verify the original enrollment in its archive clone before continuing; do not sign or send a replacement request." });
     if (kept.answer.answer !== "accepted") {
       const given = kept.answer as { answer: string; reason?: string };
       if (given.answer === "unavailable") return answer(503, { error: "unresolved", op });

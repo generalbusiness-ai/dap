@@ -228,6 +228,43 @@ clone verification or custody claim. The original gate failure, an additional
 CLI compiler finding and a pre-collection test-harness failure are preserved.
 The corrected joint full gate and formal review remain pending.
 
+The next joint gate ended naturally with 2,103 passing cases, five failures,
+three skips and no unhandled errors. All 649 native cases passed. Three
+failures came from the raw Node replay executable loading a writer barrel:
+Node rejected a parameter property in `journal-v2-tree.ts:64` before the
+command ran. Replay now imports the existing `journalId` binding through
+the existing reader entry point, which already used it. No validator is
+copied, and no package export, dependency or lockfile changes.
+
+The other two failures found stale generated page and MCP resources. The
+maintained page and MCP generators now update `apps/room/page/assets.ts`
+and `packages/mcp/src/views/generated.ts`. Their generation pass changed
+only those two tracked outputs; dependencies, tools and lock stamp stayed
+exact. The omitted generation step and the original failed gate remain
+preserved.
+
+Source review also found an MCP propagation gap that those tests had not
+covered. Settlement now preserves an archived read as its own typed custody
+outcome, including a fact only when the scope supplied one. It does not
+construct a native mandatory-fact Answer or a receipt from that read.
+Archived custody remains terminal across reopen and deliberate resubmit.
+Act, creation, join and application-install consumers return its location
+without a new signature, dispatch, package fetch or accepted callback.
+Hosted enrollment answers 410 before receipt read-back, standing observation
+or bearer issuance. Settlement and error prose identify the archive and
+require verification, without claiming acceptance or suggesting a resend.
+
+Ten affected compiler configurations pass across the two focused stages.
+Thirteen focused Node cases pass, including the five gate failures, exact
+floor-commit reads, actual file-custody reopen, scripted settlement projection
+with an absent fact, and retained-install continuation. The install fixture
+starts with an explicitly kept envelope; it proves no package preparation or
+native admission. An independent source-only reviewer found the missing
+install consumer during this correction and reviewed its fix and the hosted
+guard. The first focused MCP compiler failure is preserved. The final focused
+run's source, dependency, tool and stamp guards are exact. These results do
+not replace the corrected combined full gate or formal review, both pending.
+
 The actual Room A count of applied-create sending entries retained at F3 is
 an operational measurement for the planner. This change neither queries
 Cloudflare nor substitutes a fixture count for that measurement.

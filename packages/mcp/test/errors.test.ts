@@ -1,13 +1,93 @@
 import { describe, expect, test } from "vitest";
 import type { Answer, DeclaredDefinition, MismatchReason, ReadRefusal, RefusalReason, UnavailableReason } from "@generalbusiness/dap-contract";
 import { REFUSAL_REASONS, READ_REFUSALS, b64url, utf8 } from "@generalbusiness/artroom-bytes";
-import { secretSigner } from "@generalbusiness/artroom-client";
-import { McpService, MISMATCH_NOTES, UNAVAILABLE_NOTES, answered, finding, guardSentences, memoryStore, type DefinitionLike, type Finding } from "../src/index.ts";
+import { readApplicationInstallOptions, secretSigner, signedIntent, TransportError } from "@generalbusiness/artroom-client";
+import { TRUSTED_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
+import { McpService, MISMATCH_NOTES, UNAVAILABLE_NOTES, answered, finding, guardSentences, meaningOf, memoryStore, type DefinitionLike, type Finding } from "../src/index.ts";
 import { READ_CREDENTIAL, SERVICE, SESSION_TOKEN, StandIn } from "./support/standin.ts";
 import { fixedSigner } from "./fixtures.ts";
 
 const head = { seq: 41, hash: `sha256:${"c".repeat(64)}` } as const;
 const asked = { scope: "sc_the_scope", kind: "close-own", on: 3, action: "issue.close-own" };
+
+// Real MCP custody/projection and scripted transport only. These archive
+// locations prove no native judgment, clone verification or provider custody.
+test("archived submit and settlement stay explicit and terminal without inventing missing facts", async () => {
+  const signer = fixedSigner(21), stand = new StandIn(signer.key), store = memoryStore();
+  const at = stand.destination, fact = { at, seq: 3, hash: head.hash };
+  const archived = { floor: 5, commit: "b".repeat(40), through: { seq: 6, hash: head.hash } };
+  let posts = 0, settlements = 0;
+  const service = new McpService({ service: SERVICE, signer, custody: store, now: () => Date.parse("2099-01-01T00:00:00Z"),
+    config: { read: async () => stand.config(), addRoot: async () => { throw Error("must not grant a root"); } },
+    fetch: async (url, init) => {
+      if (url.endsWith("/acts")) {
+        posts++;
+        const key = JSON.parse(init!.body!).signed.intent.idempotencyKey;
+        if (key === "native-archived") return Response.json({ answer: "archived", archived, fact }, { status: 410 });
+        throw new TransportError("scripted lost original reply");
+      }
+      if (url.endsWith("/settle")) { settlements++; return Response.json({ ok: false, reason: "archived", archived }, { status: 410 }); }
+      return stand.fetch(url, init);
+    } });
+  await service.page();
+  for (const key of ["native-archived", "settlement-archived"]) {
+    const args = { on: 0, fields: { hours: 1 }, idempotencyKey: key };
+    const first = await service.call("repository.read-token", args);
+    if (key === "native-archived") expect(first.structuredContent["answer"]).toBe("archived");
+    const settled = (await service.call("settle", { target: "destination", idempotencyKey: key })).structuredContent;
+    expect([settled["answer"], settled["phase"], settled["archived"]]).toEqual(["archived", "archived", archived]);
+    expect(Object.hasOwn(settled, "fact")).toBe(key === "native-archived");
+    if (key === "native-archived") expect(settled["fact"]).toEqual(fact);
+    expect(settled).not.toHaveProperty("outboxIds");
+    expect(String(settled["sentence"])).not.toMatch(/accepted|record stays unknown/);
+    expect(String(settled["next"])).toContain("Verify the archive clone");
+    expect(String(settled["next"])).not.toContain("resends the same envelope");
+    const repeated = await service.call("repository.read-token", { ...args, resubmit: true });
+    expect([repeated.structuredContent["answer"], repeated.structuredContent["archived"]]).toEqual(["archived", archived]);
+    expect(Object.hasOwn(repeated.structuredContent, "fact")).toBe(key === "native-archived");
+    await service.call("settle", { target: "destination", idempotencyKey: key });
+  }
+  expect([posts, settlements, (await store.unresolved()).length]).toEqual([2, 1, 0]);
+  const said = answered({ answer: "archived", archived, fact }, asked, null);
+  expect(said.sentence).toContain(`hash ${fact.hash}, incarnation ${fact.at.inc}`);
+  expect(said.sentence).toContain(`through entry 6, hash ${head.hash}`);
+  expect(said.sentence).not.toContain("accepted");
+});
+
+// Existing retained envelope and scripted room/settlement only. This tests
+// install's custody consumer, not Git package preparation or native admission.
+test("install_application returns its archived settlement on repeat without fetching or submitting again", async () => {
+  const signer = fixedSigner(22), stand = new StandIn(signer.key), store = memoryStore();
+  stand.scopes.get(stand.directory.scope)!.definition = TRUSTED_APPLICATION_COHORT.directory;
+  stand.scopes.get(stand.rules.scope)!.definition = TRUSTED_APPLICATION_COHORT.rules;
+  const args = { uri: `git+https://packages.test/apps.git/@${"c".repeat(40)}/application.dap.json`, release: head.hash, roles: [], values: {}, idempotencyKey: "retained-install" };
+  const selected = readApplicationInstallOptions({ rules: stand.rules, uri: args.uri, release: args.release, roles: args.roles, values: args.values });
+  const archived = { floor: 5, commit: "b".repeat(40), through: { seq: 6, hash: head.hash } };
+  let posts = 0, settlements = 0, packages = 0;
+  const service = new McpService({ service: SERVICE, signer, custody: store, now: () => Date.parse("2099-01-01T00:00:00Z"),
+    config: { read: async () => stand.config(), addRoot: async () => { throw Error("must not grant a root"); } },
+    applicationFetch: async () => { packages++; throw Error("retained request must not rebuild a package"); },
+    fetch: async (url, init) => {
+      if (url.endsWith("/acts")) { posts++; throw new TransportError("scripted lost install reply"); }
+      if (url.endsWith("/settle")) { settlements++; return Response.json({ ok: false, reason: "archived", archived }, { status: 410 }); }
+      return stand.fetch(url, init);
+    } });
+  const identity = { service: SERVICE, membership: stand.membership, signer: signer.key, target: stand.rules, key: args.idempotencyKey };
+  await service.custody.keep(identity, meaningOf(selected), async () => ({
+    binding: { definition: "platform:rules", kind: "install-application", declaration: null, pinned: TRUSTED_APPLICATION_COHORT.rules },
+    envelope: { signed: await signedIntent(signer, { to: stand.rules, kind: "install-application", fields: {}, expected: {} }, { idempotencyKey: args.idempotencyKey, now: Date.parse("2099-01-01T00:00:00Z") }), beside: {} },
+  }), "2099-01-01T00:15:00Z");
+  const original = (await service.custody.find(identity))!.envelope;
+  await service.call("install_application", args);
+  const settled = await service.call("settle", { target: stand.rules.scope, idempotencyKey: args.idempotencyKey });
+  expect(settled.structuredContent["answer"]).toBe("archived");
+  const repeated = (await service.call("install_application", args)).structuredContent;
+  expect([repeated["answer"], repeated["phase"], repeated["archived"], repeated["retained"]]).toEqual(["archived", "archived", archived, true]);
+  expect(repeated).not.toHaveProperty("fact"); expect(repeated).not.toHaveProperty("outboxIds");
+  expect(String(repeated["sentence"])).not.toContain("accepted");
+  expect((await service.custody.find(identity))!.envelope).toEqual(original);
+  expect([posts, settlements, packages]).toEqual([1, 1, 0]);
+});
 
 describe("errors say who said what, from what the judge returned", () => {
   // Invariant: every refusal reason of the contract has a sentence that names the scope, the kind and the judged head, and a next step.

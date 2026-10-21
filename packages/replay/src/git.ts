@@ -5,8 +5,7 @@ import type { FileHandle } from "node:fs/promises";
 import { join } from "node:path";
 import type { FactRef } from "@generalbusiness/dap-contract";
 import { isDigest, isFactRef, parseStrict, textDigest } from "@generalbusiness/artroom-bytes";
-import { readJournalRepositoryArchive } from "@generalbusiness/artroom-git/journal-reader";
-import { journalId } from "@generalbusiness/artroom-git/journal";
+import { journalId, readJournalRepositoryArchive } from "@generalbusiness/artroom-git/journal-reader";
 import { localJournalRepository, type JournalLocalOptions } from "@generalbusiness/artroom-git/journal-local";
 import { archiveSource, type ArchiveReadWork, type ArchiveSource, type ArchiveSourceOptions, type ArchiveTextPort } from "./archive.ts";
 

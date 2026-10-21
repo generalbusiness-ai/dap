@@ -85,6 +85,33 @@ describe("custody keeps the exact envelope under the caller's key", () => {
     expect((await custody.store.unresolved()).map((u) => u.key)).toEqual(["k2"]);
   });
 
+  // SCRIPTED settlement reads, actual file custody and reopen. Optional
+  // settlement facts are not converted into native mandatory-fact Answers.
+  test("archived settlement survives reopen and never resends or fabricates a fact", async () => {
+    const { custody, make } = setup();
+    for (const includeFact of [false, true]) {
+      const key = `archived-${includeFact}`, id = identity(key), meaning = meaningOf(key);
+      let builds = 0, sends = 0;
+      const original = build(key);
+      const keptBuild = async () => { builds++; return original(); };
+      await custody.send(id, meaning, keptBuild, async () => { sends++; throw new Lost(); }, { notAfter });
+      const fact = receiptOf((await custody.find(id))!.envelope.signed, 3).fact;
+      const observed = { ok: false, reason: "archived", archived: { floor: 5, commit: "b".repeat(40), through: { seq: 6, hash: fact.hash } }, ...(includeFact ? { fact } : {}) } as const;
+      const settled = await custody.settle(id, async () => observed);
+      expect([settled!.record.phase, settled!.receipt, settled!.decided?.archivedSettlement]).toEqual(["archived", null, observed]);
+      expect(settled!.record.outcomes.at(-1)).toMatchObject({ archivedSettlement: observed, attempt: 1 });
+      expect(settled!.record.outcomes.at(-1)).not.toHaveProperty("answer");
+      const reopened = make();
+      expect((await reopened.settle(id, async () => { throw Error("must not read"); }))!.decided?.archivedSettlement).toEqual(observed);
+      const repeated = await reopened.send(id, meaning, keptBuild, async () => { sends++; throw Error("must not send"); }, { notAfter, resubmit: true });
+      expect("archivedSettlement" in repeated && repeated.archivedSettlement).toEqual(observed);
+      expect([builds, sends, repeated.record.attempt]).toEqual([1, 1, 1]);
+      expect(repeated.record.envelope).toEqual(settled!.record.envelope);
+      expect(Object.hasOwn(observed, "fact")).toBe(includeFact);
+      expect((await reopened.store.unresolved()).length).toBe(0);
+    }
+  });
+
   // Invariant: a refused record returns its kept refusal and sends nothing; only resubmit: true sends the same envelope again, and
   // both outcomes stay in the record.
   test("a terminal refusal is kept; resubmit sends the same bytes and keeps both outcomes", async () => {
@@ -204,7 +231,7 @@ describe("custody keeps the exact envelope under the caller's key", () => {
     expect((await custody.store.unresolved()).map((u) => u.key)).toEqual(["r1"]);
     let asked = 0;
     const settled = await custody.settle(identity("r1"), async (e) => { asked++; return receiptOf(e.signed, 8); });
-    expect([asked, settled!.record.phase, settled!.decided?.answer.answer]).toEqual([1, "accepted", "accepted"]);
+    expect([asked, settled!.record.phase, settled!.decided?.answer?.answer]).toEqual([1, "accepted", "accepted"]);
     expect(settled!.record.outcomes.map((o) => [Object.keys(o).find((k) => k !== "at" && k !== "attempt"), o.attempt])).toEqual([["answer", 1], ["lost", 2], ["settled", 2]]);
     expect(sent.map((x) => canonicalize(x))).toEqual([canonicalize(sent[0]), canonicalize(sent[0])]);
     // Accepted is terminal: resubmit sends nothing, and the kept acceptance is returned.
@@ -220,10 +247,10 @@ describe("custody keeps the exact envelope under the caller's key", () => {
     const unavailable = await custody.send(identity("r2"), meaningOf("m"), build("r2"), async () => ({ answer: "unavailable", reason: "busy" }), { notAfter });
     expect("answer" in unavailable && [unavailable.answer.answer, unavailable.record.phase]).toEqual(["unavailable", "unknown"]);
     const settled = await custody.settle(identity("r2"), async (e) => receiptOf(e.signed, 4));
-    expect(settled!.decided?.answer.answer).toBe("accepted");
+    expect(settled!.decided?.answer?.answer).toBe("accepted");
     const later = await custody.send(identity("r2"), meaningOf("m"), build("r2"), async () => { throw new Error("must not send"); }, { notAfter });
     expect("answer" in later && [later.retained, later.answer.answer]).toEqual([true, "accepted"]);
-    expect((await custody.settle(identity("r2"), async () => { throw new Error("must not read"); }))!.decided?.answer.answer).toBe("accepted");
+    expect((await custody.settle(identity("r2"), async () => { throw new Error("must not read"); }))!.decided?.answer?.answer).toBe("accepted");
   });
 
   // Invariant: a mismatch is terminal and is never sent again, even with resubmit.
@@ -314,7 +341,7 @@ describe("custody keeps the exact envelope under the caller's key", () => {
     hanging.kill();
     await hanging.done;
     const settled = await make().settle(identity("dies"), async (e) => receiptOf(e.signed, 6));
-    expect([settled!.record.phase, settled!.decided?.answer.answer]).toEqual(["accepted", "accepted"]);
+    expect([settled!.record.phase, settled!.decided?.answer?.answer]).toEqual(["accepted", "accepted"]);
   }, 60_000);
 
   // Invariant: a resubmitted refusal is admitted against the capacity like a new record: two processes resubmitting distinct
@@ -349,7 +376,7 @@ describe("custody keeps the exact envelope under the caller's key", () => {
     expect([record.outcomes.length, record.count, record.phase]).toEqual([0, 1, "accepted"]);
     const again = await custody.send(identity("spilled"), meaningOf("s"), async () => { throw new Error("must not sign"); }, async () => { throw new Error("must not send"); }, { notAfter, resubmit: true });
     expect("answer" in again && [again.retained, again.answer.answer, again.answer.answer === "accepted" && again.answer.receipt.fact.seq]).toEqual([true, "accepted", 9]);
-    expect((await custody.settle(identity("spilled"), async () => { throw new Error("must not read"); }))!.decided?.answer.answer).toBe("accepted");
+    expect((await custody.settle(identity("spilled"), async () => { throw new Error("must not read"); }))!.decided?.answer?.answer).toBe("accepted");
     expect(delivered).toBe(1);
   });
 
@@ -381,7 +408,7 @@ describe("custody keeps the exact envelope under the caller's key", () => {
     await custody.send(identity("found"), meaningOf("f"), build("found", body), async (e) => big(e.signed), { notAfter, bytes: body.length });
     const matched = (await custody.find(identity("found")))!;
     reads.length = 0;
-    expect([matched.outcomes.length, (await custody.decided(identityId(identity("found")), matched))?.answer.answer]).toEqual([0, "accepted"]);
+    expect([matched.outcomes.length, (await custody.decided(identityId(identity("found")), matched))?.answer?.answer]).toEqual([0, "accepted"]);
     expect(reads).toEqual([{ from: 0, limit: 1 }]);
   });
 

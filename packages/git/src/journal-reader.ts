@@ -7,6 +7,7 @@ import { GitRefusal } from "./names.ts";
 import { journalPhysicalFiles, journalTreeFiles, type JournalRetainedFile } from "./journal-files.ts";
 import { journalHead, journalManifest } from "./journal-manifest.ts";
 import { JournalObjectReader, journalId, type JournalFormat, type JournalObjectSource } from "./journal-objects.ts";
+export { journalId };
 import { archiveRetainedPath, firstOfArchiveSegment, journalRef } from "./journal-path.ts";
 import { archiveSegments, archiveShards } from "./journal-segments.ts";
 import { JOURNAL_SELECTION_BYTES, sameJournalScope, type JournalForeignSource } from "./journal-selection.ts";
