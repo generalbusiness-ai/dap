@@ -1025,3 +1025,47 @@ run completion, to a new external file. The existing page freshness case
 passes with an actual start, passed result and successful run-end record.
 The reporter changes no test, worker, assertion or deadline. A new gate on
 the repaired source is still required; the interrupted run remains intact.
+
+## Split the native scale case
+
+The gate at `33f0fd87` also stalls after stdout reaches 10,000 native
+confirmations. After two raw process observations, the builder sends
+SIGINT only to Vitest. Worker CPU stays at 2:32.91 over 40 seconds; runner
+CPU increases by 0.01 seconds. The wrapper returns 1. This is another
+interrupted, incomplete gate, with no completed scale result, final suite
+count, Node check or Counting check claimed. Outer time is 360.86 seconds
+and 301.28 CPU seconds. All 2,692 source bytes and modes, head, tree and
+stamp remain exact, with zero installs.
+
+The unchanged smaller driver cases then pass together: 13 passed and the
+long scale case explicitly filtered, in 0.590 seconds of test time. Full
+outer time is 5.14 seconds and 6.23 CPU seconds. This narrows the observed
+boundary; it establishes no runtime cause or general stability.
+
+At `ccebd272`, the complete scale test block moves byte-for-byte from
+`archive-driver.test.ts` to `archive-one-entry-scale.test.ts`. Both files
+import the original driver fixture from `support/archive-driver.ts`.
+The helper body changes only its export keywords; its source projection
+tripwire and all original charges remain. The exact moved-block digest
+and case-count certificate are retained. No assertion, test timeout or
+archive deadline changes, and all 14 original cases remain. Initial
+extraction fails compiler checks before any test. Removing an unused clock
+constant and restoring the Lane type import makes the test compiler pass.
+
+One invocation then runs both split files. It completes naturally with
+14 passed, none skipped, the same 10,001 native confirmed passes and the
+same retained-input, pass-3,700 and offline-replay assertions. The scale
+case takes 145.584 seconds; full outer time is 151.52 seconds and 158.91
+CPU seconds. The separate 240-second diagnostic watchdog is unused.
+All 2,694 source bytes and modes remain exact, with zero installs. Load,
+machine and prior-run cache qualifications remain in its receipt.
+
+Two native timeout-abort diagnostics still appear in this passing paired
+run. The split therefore establishes completed paired coverage, not a
+fix for the unassigned native runtime behavior. It also reveals that
+incremental reporter callbacks can omit already passed cases: only four
+starts and four results arrive, while the built-in JSON result contains
+all 14 passed cases. The optional reporter now records a separate final
+state for every case at run end. Missing incremental events are reporting
+gaps, not evidence that those cases remain active. A whole gate on the
+changed source is still required before review.

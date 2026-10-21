@@ -438,10 +438,12 @@ npm run gate
 The gate runs `node scripts/check-shared-helpers.mjs` before typechecking.
 For a gate that needs a durable list of started and finished cases, set
 `ARTROOM_TEST_PROGRESS` to a new file in an existing evidence directory.
-Vitest then uses verbose output and writes a JSON line for each case start,
-result and the run's end. An existing file is refused. This observes the
-same cases, workers, assertions and deadlines; a start without a result
-identifies unfinished work, not its cause.
+Vitest then uses verbose output and writes JSON lines for case callbacks,
+each case's final framework state and the run's end. Native incremental
+callbacks can omit cases that later report passed, so a start without a
+result marks a reporting gap. It does not prove that a case is still
+running or identify a cause. An existing file is refused. This observes
+the same cases, workers, assertions and deadlines.
 
 The helper check parses source declarations and the bytes package's actual runtime
 exports, without executing those files. A local function that redefines
