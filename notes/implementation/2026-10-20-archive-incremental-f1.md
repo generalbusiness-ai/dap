@@ -869,3 +869,109 @@ uncontrolled OS caches. These are separate runs. This completes the
 variable allocation foundation; full-pass costing and adaptive selection
 remain open, along with snapshot/ancestry projection and the native pass
 acceptance witnesses. No full gate or formal review has run.
+
+## Integrated acceptance, 21 October
+
+The later checkpoints complete the pending projection, cost and selection
+work described above. The driver now selects a whole-entry prefix by its
+complete finish cost. It uses the original budget throughout scouting,
+discarded lookahead, fresh inventory, retained reads, Git preparation,
+transfer and native receipt confirmation. All original counters and the
+30-second per-pass deadline remain. The fixed 128-entry cutoff is no longer
+the driver's selection rule.
+
+Fresh native frames re-read scalar metadata after an asynchronous parent
+lookup. A fenced continuation closes before that lookup and resumes once.
+The final inventory checks every planned retained size or absence, and
+omitted text size, before publishing the selection. A stale comparison
+retries before marking a pass. An unsuccessful later candidate leaves an
+earlier, fully reserved prefix available. Expected sizes narrow fresh body
+reads; they do not admit bodies from a scout cache. Unicode over-bound
+cached reads keep their higher possible cost. Parent preparation uses the
+selected prefix's object IDs, excluding discarded lookahead.
+
+The shared v2 layout follows planner decision `f651f6c3`: five two-digit
+directories, then the owning 12-digit first position, with the manifest,
+segments and retained files under that owner. Numeric directories have at
+most 100 names. The owner directory has its existing 4,096-name bound.
+The maximum position remains 999,999,999,999. Conversion writes a fresh v2
+tree; the v1 reader and its grammar remain separate.
+
+The final adaptive focused run passes 15 selected cases and both Scope
+compilers. It includes 37 actual native one-entry confirmations across
+Grow child, Grow root, Directory16, Rules10 and Destination12. The largest
+input-work receipt is 66,340,076 of 67,108,864, at Rules10 entry 2; the
+largest node receipt is 39 of 64. Original whole-pass goldens remain.
+Four compiling controls fail the intended assertions when retained-size
+comparison, text-size comparison, native-row finish reservation or the
+earlier-covered-prefix behavior is removed. Source bytes and modes are
+restored. Earlier compiler, setup and conservative-forecast failures remain
+preserved; they establish no physical impossibility or runtime cause.
+
+The strengthened scale witness makes 10,001 actual native confirmed
+one-entry passes. Genesis is position 0; positions 1 through 9,999 retain
+9,999 distinct actual rule inputs of one kind. A restart at 3,700 preserves
+that key's owner. The extra pass repeats its actual fields and names the
+same input with `pass: 3700`, without sending its blob again. The witness
+observes 10,000 incremental sends, 109,899 exact parent-object reads and no
+old closure fetch. An unreferenced raw rule row stays unconfirmed. Its
+current-tree clone replays consistently offline. The trusted entry cap of
+2 makes one scout read plus one fresh read; every other original cap and
+the per-pass deadline remain. This is the native amended same-kind witness,
+not the earlier mechanical 4,608-file exercise.
+
+The cadence witness dispatches actual native Scope alarms under three
+virtual eight-hour windows. Each window adds 4,800 signed native entries.
+The original default budget is used for every pass, with no lower entry
+cap. Each window confirms its exact head, leaves no pending or stopped
+archive row, drains its wake and schedules no further alarm. Export changes
+no business entry. Receipt and wake inspections happen after completion as
+separate test observations, never as an archive phase allowance.
+
+| Window | Confirmed head | Passes | Generation seconds | Catch-up seconds | Backlog |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 1 | 4,800 | 117 | 9.501 | 3.704 | 0 |
+| 2 | 9,600 | 121 | 9.313 | 3.945 | 0 |
+| 3 | 14,400 | 117 | 9.396 | 3.817 | 0 |
+
+All 355 passes stay within the original limits. Peak input work is
+61,552,893; peak metadata is 3,725,382; peak nodes are 31. The witness
+records 354 incremental sends, 3,750 exact parent reads and no closure
+fetch. These are physical fixture timings against a virtual clock. They
+do not establish a deployed schedule or a real day's hosted operation.
+
+| Separate original focused run | Outer elapsed seconds | Outer CPU seconds |
+| --- | ---: | ---: |
+| Adaptive final owning run | 12.05 | 16.59 |
+| Four adaptive controls | 18.30 | 35.52 |
+| Native one-entry scale | 144.22 | 153.02 |
+| Native alarm cadence | 44.70 | 49.74 |
+
+These outer measurements include setup, guards and evidence work on the
+shared macOS arm64 machine, with uncontrolled OS caches. Actual load and
+tool versions are in each input receipt. They are separate runs, not a
+single pipeline total. Scale and cadence each pass both Scope compilers
+and their selected native case, preserving all source bytes and modes with
+zero installs. Their HTTP advertisements, host acceptance, tokens,
+repository, grants, policy and clock are explicitly scripted TEST inputs.
+SHA-1 incremental copy, hashing, validation, packing, send and native
+mark/attempt/readback/confirmation use production code. This proves no
+external provider, production custody or Cloudflare deployment.
+
+The closed grants for these checkpoints are respectively
+`archive-integration-adaptive-core-closed-grant-20261021.json`,
+`archive-integration-native-one-entry-scale-closed-grant-20261021.json` and
+`archive-integration-native-alarm-cadence-closed-grant-20261021.json`, under
+`/private/tmp`. Every explicitly mapped original remains permanently
+frozen for reading or verified stable copying only. Execution requires a
+distinct regular copy with exact bytes, mode and hash, with every alias
+and historical input retargeted first. There is no adjacent, prefix or
+transitive grant. The current integration checkout and its owned
+dependencies are excluded and remain mutable.
+
+Reviewed Main through `afe0c319` merges cleanly into the integrated
+candidate at `973cc109`. Its additions are the reviewed invitation flow
+and planner notes. The combined candidate still needs its one full gate,
+complete exact-head review and guarded landing. Floor entries belong to
+F2. Cloudflare provisioning, binding, credentials, deployment and hosted
+readbacks remain with planner.
