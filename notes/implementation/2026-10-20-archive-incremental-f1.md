@@ -3,14 +3,16 @@
 Requests `dea67816` (F1) and `4fb21172` (9a); integrated builder promise
 `33d11d65`. The current branch combines the incremental writer and native
 admission work, including decisions `066e49b3`, `d61549b0` and `f651f6c3`.
-It is based on Main `184ba58d`. Demo slice 9 wiring and deployment remain
+It is based on Main `0de1f52a`. Demo slice 9 wiring and deployment remain
 separate.
 
-The implementation and focused native acceptance checks are complete.
-The latest full gate fails one exact-cost fixture assertion; the shared
-clock repair described at the end now passes its focused native comparison.
-A gate on that repaired source is still required before review. There is
-no formal review, landing or deployment claim for this branch. Host,
+At this pre-gate checkpoint, implementation and focused native acceptance
+checks are complete. The gate at `e21b9d39` passes all Vitest cases, including
+the clock repair, then stops on two Node package-boundary checks. The
+cross-package witnesses now belong to the Replay test boundary; the final
+focused checks and the next gate are reported separately in Gitseq against
+their exact commits. This note preserves the preceding attempts. There is
+no formal review, landing or deployment claim at this checkpoint. Host,
 policy, authority and device answers in these checks are explicit TEST
 inputs.
 
@@ -1123,3 +1125,31 @@ does not rewind it. Original cost literals, archive prices, budgets,
 assertions and the 30-second case timeout are unchanged. Temporary injection
 and logging are removed. The focused Scope test compiler passes. A full
 gate on this changed source is the remaining pre-review check.
+
+## Vitest completion and test dependency repair
+
+The next gate at `e21b9d39` completes naturally with exit 1 after Vitest
+passes: 2,072 cases pass and three recorder cases skip, across 440 passed
+files and one skipped file. Its terminal framework state reports zero
+unhandled errors. The repaired Grow case passes in 7.597 seconds. The
+10,001-pass native scale case passes in 141.974 seconds, the 1,000-birth
+case in 131.502 seconds, cadence in 51.262 seconds and native transport in
+26.014 seconds under its original 30-second timeout.
+
+The later Node step passes 31 cases and fails two package-boundary checks.
+Three new Git test files import Replay, against the existing rule that
+Git stays below Replay. Counting is not reached. The original whole gate
+takes 767.56 seconds and 1,043.37 CPU seconds: 910.38 user plus 132.99 system.
+All 2,695 source files, modes, head, tree and lock stamp stay exact, with
+zero installs. Earlier approximate durations in builder assert `7e9374a9`
+are corrected by the raw logs: Grow is 7.597 seconds and cadence 51.262.
+
+The repair moves those three whole files into Replay's explicit Git
+development-test boundary. It keeps the four case bodies, assertions,
+timeouts, actual budget class and fixture inputs unchanged. Imports name
+the original Git source and support files and the local Replay entry
+points. The boundary guard names only the three new test files; Git's
+prohibition and the portable Replay restrictions remain. This is test
+placement, with no production or budget change. Exact body comparisons,
+focused results and the next gate are recorded against the repaired
+commit in Gitseq; they are not attributed to the failed gate above.

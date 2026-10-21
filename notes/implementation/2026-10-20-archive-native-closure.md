@@ -1,7 +1,7 @@
 # Native archive admission and dependency closure
 
 Requests `4fb21172` (9a) and `dea67816` (F1) are now integrated under
-builder promise `33d11d65`, based on Main `184ba58d`. The focused native
+builder promise `33d11d65`, based on Main `0de1f52a`. The focused native
 checks export and replay all five admitted journals consistently using
 only exported bytes, the declared caller anchors and the omitted-text
 metadata contract. Register and Membership copies and their observed
@@ -10,11 +10,13 @@ bytes were the text its digest names, or that they were within its field's
 bound. No private source journal is exported or read for those anchors.
 
 The incremental writer, native admission, one-entry scale and cadence
-checks are implemented. The latest full gate completes with one shared-clock
-cost fixture failure; its monotonic fixture repair passes the focused
-comparison. A full gate on the repaired source is required before review.
-This branch has no formal review, landing or deployment claim. Slice 9
-production wiring remains separate.
+checks are implemented. At this pre-gate checkpoint, the gate at `e21b9d39`
+passes all Vitest cases, including the shared-clock repair, and stops on
+two Node test-placement boundary checks. The cross-package witnesses now
+belong to Replay's explicit development-test boundary. Focused checks and
+the next gate are reported separately in Gitseq against their exact
+commits. There is no formal review, landing or deployment claim at this
+checkpoint. Slice 9 production wiring remains separate.
 
 ## Historical admission checkpoints
 
