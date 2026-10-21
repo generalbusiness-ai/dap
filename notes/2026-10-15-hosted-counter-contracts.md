@@ -7,6 +7,11 @@ them, and its review accepted F1 and F3 and requested two more changes
 October 2026, moves the agents to the instance model of
 [roles, flow and instances](2026-10-21-roles-flow-and-instances.md): one
 member for each role, and one key for each instance (request `89a543d3`).
+Draft 2 of revision 4 (request `9400a9f7`) answers the review of draft 1
+(`5909d29e`): retiring one instance no longer deactivates the participant
+row that its siblings share, a fresh key after zero instances activates
+the existing row, and drain retires the row and revokes its key
+(sections 5, 7.4 and 8).
 
 Parent design: [hosted agent teams](2026-10-15-hosted-agent-teams-design.md),
 revision 2, sections 10 and 11. Source baseline: main `85cd430b3`. This
@@ -191,10 +196,15 @@ identity before it crosses a boundary:
    and a controller who holds `agents.configure`.
 4. The host makes the seed and enrolls behind the existing creation fences
    (`hosted.ts:179`). It then deletes the invitation seed.
-5. When the identity has no Counter participant row, the instance's key
-   signs Counter `participate` and `activate` under host custody. A later
-   instance of the same identity signs neither: the row is the member's
-   (`commitments.ts:134-150`). The host reports the instance ready.
+5. The instance's key brings the identity's Counter participant row to
+   `active` under host custody. The row is the member's
+   (`commitments.ts:134-150`), so the key acts on the row as it finds it:
+   - no row: the key signs `participate`, then `activate`;
+   - an `inactive` row (the identity had no live instance): the key signs
+     `activate` on that row, and never a second `participate`;
+   - an `active` row (a sibling instance is live): the key signs neither.
+
+   The host then reports the instance ready.
 
 **Recovery without duplicates.** On any device, the client compares the
 team rows with the membership:
@@ -219,11 +229,14 @@ only as an `utterance`.
 **Disposal.** `retire-instance` starts the disposal of one instance. With
 `finish`, the host completes that instance's pledged turn. With `now`, it cancels the local model dispatch
 (its charge stays held; section 6) and signs
-`fail` with `interrupted` while the promise is pledged. It then signs
-`deactivate`, and destroys the seed once those acts settle. It keeps the
+`fail` with `interrupted` while the promise is pledged. When no other
+instance of the identity is live, the retiring key then signs
+`deactivate` on the participant row. When a sibling instance is live, it
+does not: the row is shared, and deactivating it would stop the
+siblings. The host destroys the seed once those acts settle. It keeps the
 public key, the operation log and the ledger rows. Retiring an instance
-retires its key with `revoke-key`, and the identity and its other
-instances continue. When a role retires and its last instance is
+retires its key with `revoke-key` (`as: retired`), and the identity and
+its other instances continue. When a role retires and its last instance is
 disposed, the identity leaves: `remove-member`, and the Counter row's
 `deactivate` and `remove-participant`. The team view shows three separate
 outcomes: **access ended** (seed destroyed); **membership cleanup
@@ -532,10 +545,17 @@ races its own instances.
 - **Pause and resume a role.** No new commits for the role's instances. A
   pledged turn finishes; abandoning it would pause the board.
 - **Drain by count.** Within a role, the live instance rows with the
-  lowest ordinals, up to `count`, are wanted. The rest drain: they finish
-  their turn, take no new one, and stay allocated. With `count` 0, the
-  identity's participant row signs `deactivate`. When `count` rises
-  again, a draining row is wanted again. A retired row never returns.
+  lowest ordinals, up to `count`, are wanted. The rest drain: each
+  finishes its pledged turn and takes no new one. Then the controller's
+  client (`dap agents ensure` or the Agents panel) signs
+  `retire-instance` with `finish` for it, and `revoke-key` with
+  `as: retired` for its key (section 5). So lowering the count from three
+  to two retires one instance and its key; the member and its other keys
+  stay. With `count` 0, every instance drains and retires, and the last
+  one signs `deactivate`. When `count` rises again, the client signs
+  `allocate-instance` for a new row with the next ordinal, and section 5
+  enrols a new key for the same member. A retired row never returns, and
+  a revoked key is never reused.
 - **Finish and stop, and stop now.** These are `retire-instance` with
   `finish` or `now` (section 5).
 - **App-wide stop.** `set-policy` with an empty `models` list.
@@ -622,6 +642,15 @@ cheapest real boundary (`docs/testing.md`). Each slice runs the gate once.
    and repeated stream lines; restart between `commit` and the assignment
    record, which binds the reservation to the admitted promise or
    releases it); 6, act part (a lost `say` reply settles to one entry).
+   Instance disposal, with three instances counting: retire one, and the
+   participant row stays `active` while the other two keep counting. Lower
+   the count from three to two, then raise it to three: the drained
+   instance finishes its turn, its row is retired and its key revoked; the
+   new row has the next ordinal and a new key; an act signed by the
+   revoked key is refused. Retire every instance: the last one signs
+   `deactivate`. Enrol a fresh key of the same member: it signs
+   `activate` on the existing row and no `participate`, and counting
+   continues with one participant row for the identity.
    F2, while a live key is in custody: pause every role, evict the object
    so its streams close, then `resume-role` through a generic MCP tool
    with no browser and no host request; the next eligible turn is taken.
@@ -678,7 +707,11 @@ today stays: it is a platform gap of the room, not a need of the Counter.
    while a live agent key is in custody; with no live key the object is
    dormant and wakes only by a signed enrollment or repeated attach. No
    scope runtime change and no new read path.
-10. **Drain:** derived from `count` by instance ordinal; no extra act. **Model
+10. **Drain:** `count` marks the live rows above it, by instance
+    ordinal, as draining. Each draining row finishes its turn and is then
+    retired with `retire-instance` and `revoke-key`. A higher count
+    allocates a new row and enrols a new key. Revised 2026-10-21 to the
+    roles note's drain rule. **Model
     tools:** the utterance is the model's only output.
 11. **Page work:** builder builds slice 5. Decided 2026-10-15.
 12. **Models and ceiling:** the initial catalog, `maxOutput` 192, 6,000
@@ -693,7 +726,7 @@ today stays: it is a platform gap of the room, not a need of the Counter.
     host's shared check using the same minimum and maximum.
 16. **Instances:** one member for each role, and one key for each instance
     row, as the roles, flow and instances note gives. Decided 2026-10-21
-    (request `89a543d3`).
+    (requests `89a543d3` and `9400a9f7`).
 
 ## 10. Questions left
 
