@@ -344,7 +344,12 @@ other pure cases were unselected. The unchanged derive source compiler's
 earlier pass is retained. All 2,726 source files and 5,530 dependency
 entries, tools and lock stamp stayed exact during the final run. Independent
 source-only review of `a7fd01e0` found no concrete blocker; it supplies no
-runtime or formal approval. The corrected integrated head still needs the
+runtime or formal approval. These observations came from a shared machine.
+A short Slice9 compiler was allocated during collection preparation; the old
+v3 runner had already launched when the hold message arrived, so overlap is
+not excluded. The corrected v2 run followed Slice9's explicit Native slot
+release. These timings describe the recorded runs, not isolated benchmarks.
+The corrected integrated head still needs the
 coordinated full gate and guarded review. No unchanged suite was repeated
 here, and the submitted candidate and V6 DATA were not changed.
 
