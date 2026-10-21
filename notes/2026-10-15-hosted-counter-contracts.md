@@ -1,9 +1,12 @@
 # Hosted Counter agents: contracts for the first demo
 
-15 October 2026. Planner draft, revision 3. Revision 1 (`abc7dcd0`) had
+15 October 2026. Planner draft, revision 4. Revision 1 (`abc7dcd0`) had
 checker changes requested (F1 to F3); revision 2 (`c2a93883`) answered
 them, and its review accepted F1 and F3 and requested two more changes
-(an F2 follow-up and F4). This revision answers those. Not yet re-reviewed.
+(an F2 follow-up and F4). Revision 3 answered those. Revision 4, of 21
+October 2026, moves the agents to the instance model of
+[roles, flow and instances](2026-10-21-roles-flow-and-instances.md): one
+member for each role, and one key for each instance (request `89a543d3`).
 
 Parent design: [hosted agent teams](2026-10-15-hosted-agent-teams-design.md),
 revision 2, sections 10 and 11. Source baseline: main `85cd430b3`. This
@@ -15,15 +18,18 @@ needs its own reviewed request.
 ## 1. Summary
 
 - A new app scope, `agent-team`, attached to one exact Counter, holds the
-  policy (allowed models, app ceiling), one or two roles, and agent rows.
+  policy (allowed models, app ceiling), one or two roles, and instance
+  rows. Each role is one agent identity: one member. Each instance row is
+  one key of that member.
 - A new Counter definition, `counting-utterances`, adds the act `say`. Its
   admitted entry is the agent's output: the checked integer `n` is the
   number said, and `utterance` is the agent's free text. `fulfill` still
   means speech.
 - Rooms use the existing invitation-key cohort. No platform definition or
   existing pin changes.
-- An admin creates each agent member and invitation and is its controller.
-  The host creates and enrolls the agent's key.
+- An admin creates one agent member for each role and is its controller.
+  The admin issues one key invitation for each instance. The host creates
+  and enrolls each instance's key.
 - One host Durable Object for each attached Counter holds the agent keys,
   the ledger and the turn loop. It has no bearer and no signing route.
 - The unit is the estimated Neuron, for the life of the attachment. Each
@@ -36,7 +42,7 @@ needs its own reviewed request.
 | A Counter turn is open to any active participant. The scope accepts one `commit` and refuses the others. With more than one active participant, the last speaker cannot commit next | `apps/counter/commitments.ts:268-290` |
 | A commitment sets a 30-second deadline. `fulfill` must take effect before it. Timers then expire the promise and pause the board | `commitments.ts:300-303`, `:324`, `:453-467` |
 | Fail and cancel pause the board. Only the controller can start it again | `commitments.ts:370-376`, `:228-244` |
-| The Counter allows 16 live participants, humans included | `commitments.ts:45-53` |
+| The Counter allows 16 live participants, humans included. It counts members, so the instances of one identity share one participant row | `commitments.ts:45-53`, `:134-150` |
 | The browser fulfils only after speech ends | `apps/counter/browser/voice-controller.ts:394-401` |
 | The Counter page accepts only directory@6 and membership@5 | `apps/counter/browser/device-key.ts:19` |
 | The invitation-key cohort is the application cohort with register@10, directory@9 and membership@6 | `packages/platform/src/invitation-key.ts:9-12` |
@@ -120,21 +126,21 @@ Counter of this room, so the host verifies that at attachment (section
 | Item | Live | States | Holds |
 |---|---|---|---|
 | `team` | 1 | `ready` | Controller (opener), fixed `app` scope reference, fixed `tag` (2 to 12 of `[a-z0-9]`), `models` (list of up to 8 model IDs), `ceiling`, `allocated`, `policy` (revision), `slots` (last ordinal) |
-| `role` | 2 | `running`, `paused`, `retired` (final) | `label`, `model`, `prompt` (up to 4,000 bytes), `revision`, `count` (0 to 8), `allocation`, `live`, and `revisedAt`, the fact of the act that set the model and prompt |
-| `agent` | 16 | `allocated`, `retired` (final) | Fixed `role` reference, fixed `ordinal`, fixed planned member as party `agent`, and `mode` once retired |
+| `role` | 2 | `running`, `paused`, `retired` (final) | Fixed `index` (1 or 2), fixed planned member as party `agent` (the role's identity), `label`, `model`, `prompt` (up to 4,000 bytes), `revision`, `count` (0 to 8 instances), `allocation`, `live`, and `revisedAt`, the fact of the act that set the model and prompt |
+| `instance` | 16 | `allocated`, `retired` (final) | Fixed `role` reference, fixed `ordinal`, and `mode` once retired |
 
 | Act | Grant | Rule, beside the state guards |
 |---|---|---|
 | `establish` | factory | Opens `team` with no models, ceiling 0, policy 0 |
 | `set-policy` | `agents.administer` | `policy` = old + 1; `ceiling` ≥ `allocated` |
-| `add-role` | `agents.configure` | `model in` team models; `allocated` = old + `allocation` ≤ `ceiling`; revision 1 |
+| `add-role` | `agents.configure` | `model in` team models; `allocated` = old + `allocation` ≤ `ceiling`; revision 1; `index` is 1 or 2 and unused; member handle = `"@" & tag & "-r" & index` |
 | `revise-role` | `agents.configure` | `model in` team models; `revision` = old + 1 |
 | `set-count` | `agents.configure` | 0 to 8 |
 | `set-allocation` | `agents.configure` | `allocated` = old − role's old allocation + new ≤ `ceiling`; may go below the role's charges (section 6) |
 | `pause-role`, `resume-role` | `agents.configure` | `running` to `paused`, and back |
 | `retire-role` | `agents.configure` | `live` = 0. The allocation stays counted |
-| `allocate-agent` | `agents.configure` | `ordinal` = `slots` + 1; role `live` + 1 ≤ `count`; member handle = `"@" & tag & "-" & ordinal` |
-| `retire-agent` | `agents.configure` | `mode` is `finish` or `now`; role `live` − 1 |
+| `allocate-instance` | `agents.configure` | `ordinal` = `slots` + 1; role `live` + 1 ≤ `count` |
+| `retire-instance` | `agents.configure` | `mode` is `finish` or `now`; role `live` − 1 |
 
 Every computed value is a proposal that a rule checks, as the Counter's
 serial is (`commitments.ts:471`). Two devices that race for one ordinal
@@ -161,9 +167,11 @@ the next call, not a call in flight or its charge.
 
 ## 5. Enrollment, custody and disposal
 
-**Identity.** Each agent is a membership member of kind `agent`, with its
-own Ed25519 key. Its handle is fixed by its `agent` row before any
-membership act, and is never reused (`membership.ts:197`). Its controller
+**Identity.** Each role has one identity: a membership member of kind
+`agent`. Its handle is fixed by its `role` row before any membership act,
+and is never reused (`membership.ts:197`). Each instance is one Ed25519 key
+of that member, with key kind `agent`. A member can hold several active
+keys at once (`membership.ts:587-591`). Its controller
 is the person who created it. That person must hold `agents.configure`,
 `membership.manage` and `membership.invite`. In the first version this is
 an admin.
@@ -171,10 +179,11 @@ an admin.
 **Setup of one row.** Each step can be repeated, and each retains its
 identity before it crosses a boundary:
 
-1. The client signs `allocate-agent`. The idempotency key is derived from
-   the team, role and ordinal.
-2. It signs `add-member` with the handle, kind `agent` and controller
-   self. It then signs `invite-key` for that member. Both use the existing
+1. The client signs `allocate-instance`. The idempotency key is derived
+   from the team, role and ordinal.
+2. When the role's member does not exist yet, it signs `add-member` with
+   the role's handle, kind `agent` and controller self. It then signs
+   `invite-key` for that member, with kind `agent`, for this instance. Both use the existing
    retained issuance chain (`packages/cli/src/invitations.ts:181-302`).
    With membership@6, no secret enters a signed entry.
 3. It sends the private link to the host's enrol route (section 7.1). The
@@ -182,39 +191,46 @@ identity before it crosses a boundary:
    and a controller who holds `agents.configure`.
 4. The host makes the seed and enrolls behind the existing creation fences
    (`hosted.ts:179`). It then deletes the invitation seed.
-5. The agent's key signs Counter `participate` and `activate` under host
-   custody. The host reports the row ready.
+5. When the identity has no Counter participant row, the instance's key
+   signs Counter `participate` and `activate` under host custody. A later
+   instance of the same identity signs neither: the row is the member's
+   (`commitments.ts:134-150`). The host reports the instance ready.
 
 **Recovery without duplicates.** On any device, the client compares the
 team rows with the membership:
 
-- A row with no member resumes at step 2. A `handle-in-use` refusal is
-  adopted only for a kind `agent` member, controlled by the signer, with
-  no active key. Otherwise the person retires the row and allocates the
-  next ordinal.
+- A role with no member resumes at step 2. A `handle-in-use` refusal is
+  adopted only for a kind `agent` member, controlled by the signer. An
+  instance row with no key resumes at `invite-key`.
 - A live invitation whose seed is in no reachable custody is not
   reissued. `dap agents ensure` issues agent invitations for 30 minutes.
   The row waits until `key-invitation-end` lapses it
-  (`membership.ts:542`), then step 2 issues a fresh one. No second key is
-  enrolled.
-- A row with an enrolled key resumes at step 5 in the host, without a
-  browser. The host refuses a second link for a row that has a key.
+  (`membership.ts:542`), then step 2 issues a fresh one. No instance row
+  enrolls a second key.
+- An instance row with an enrolled key resumes at step 5 in the host,
+  without a browser. The host refuses a second link for an instance row
+  that has a key.
 
-**Custody.** The agent's private seed exists only in that Counter's team
-object (section 7). No bearer, MCP session or signing route exists. There
+**Custody.** Each instance's private seed exists only in that Counter's
+team object (section 7). No bearer, MCP session or signing route exists. There
 is no sandbox or model-controlled code. The model's output is data, used
 only as an `utterance`.
 
-**Disposal.** `retire-agent` starts disposal. With `finish`, the host
-completes a pledged turn. With `now`, it cancels the local model dispatch
+**Disposal.** `retire-instance` starts the disposal of one instance. With
+`finish`, the host completes that instance's pledged turn. With `now`, it cancels the local model dispatch
 (its charge stays held; section 6) and signs
 `fail` with `interrupted` while the promise is pledged. It then signs
 `deactivate`, and destroys the seed once those acts settle. It keeps the
-public key, the operation log and the ledger rows. The team view shows
-three separate outcomes: **access ended** (seed destroyed); **membership
-cleanup pending**, until the controller's client signs `revoke-key` and
-`remove-member`; and **Counter row pending**, until the Counter controller
-signs `remove-participant`, because an inactive row counts toward the 16.
+public key, the operation log and the ledger rows. Retiring an instance
+retires its key with `revoke-key`, and the identity and its other
+instances continue. When a role retires and its last instance is
+disposed, the identity leaves: `remove-member`, and the Counter row's
+`deactivate` and `remove-participant`. The team view shows three separate
+outcomes: **access ended** (seed destroyed); **membership cleanup
+pending**, until the controller's client signs `revoke-key`, and
+`remove-member` for a retired role; and **Counter row pending**, until the
+Counter controller signs `remove-participant` for a retired role, because
+an inactive row counts toward the 16.
 
 **Controller loss.** If the controller is removed or loses their last
 active key, the scope already refuses the agents' acts
@@ -320,7 +336,7 @@ and re-adding roles do not reset spending, because the ledger is keyed by
 the full Counter ScopeRef (section 7.1).
 
 **Ledger.** One table in the team object's SQLite holds one row for each
-attempt. Its identity is the Counter ScopeRef, the agent's ordinal, and
+attempt. Its identity is the Counter ScopeRef, the instance's ordinal, and
 the board generation and serial that its `commit` proposes, plus the
 attempt number. That tuple is fixed before `commit` and is the commit's
 idempotency key, so it names one promise once admitted (section 7.3). A
@@ -399,7 +415,7 @@ standing, as `hosted.ts:93-102` does:
 | Route | Who | Effect |
 |---|---|---|
 | `POST /agents/teams` `{team}` | holder of `agents.configure` | Attach, after the checks below. A repeat for the same team is accepted and acts as a wake (section 7.2) |
-| `POST /agents/teams/<counter>/agents/<ordinal>/enrol` `{link}` | the row's controller | Section 5, steps 3 to 5 |
+| `POST /agents/teams/<counter>/instances/<ordinal>/enrol` `{link}` | the role's controller | Section 5, steps 3 to 5 |
 | `GET /agents/teams/<counter>` | holder of `agents.configure` or `agents.administer` | Rows, progress, assignments, ledger totals and waiting reasons |
 
 **Attachment checks.** The host does not trust the `app` value alone. It
@@ -464,19 +480,22 @@ alarm is what makes `resume-role` and other controls take effect after a
 stream is lost. A dormant object has no agent that could act, so it has
 no work to miss; its next work begins with an enrollment (F2).
 
-An agent is eligible when the board is open with no pledge, its
+An identity is eligible when the board is open with no pledge, its
 participant row is active, the count is below the target, and it is not
 the last speaker or is the only active participant. These are the
-browser's conditions (`apps/counter/browser/model.ts:86-89`). The host
-adds three: its role is running, its row is wanted (section 7.4), and its
-controller is active. For each board state the object picks at most one
-eligible agent, the one that spoke least recently, so it never races its
-own agents.
+browser's conditions (`apps/counter/browser/model.ts:86-89`). The
+instances of one identity are one speaker, so they never take two turns
+in a row while another participant is active. The host adds three: the
+role is running, at least one of its instance rows is wanted (section
+7.4), and its controller is active. For each board state the object picks
+at most one eligible identity, the one that spoke least recently, and
+within it the wanted instance that took a turn least recently. So it never
+races its own instances.
 
 ### 7.3 One turn
 
 1. Reserve the bound (section 6) under the provisional identity: Counter
-   ScopeRef, ordinal, the generation and serial the commit will propose,
+   ScopeRef, instance ordinal, the generation and serial the commit will propose,
    attempt 1. If refused, wait under the named reason.
 2. Sign and keep `commit`, with that same tuple as its idempotency key. If
    refused, release the reservation and reread. A lost reply is settled
@@ -510,13 +529,14 @@ own agents.
 
 ### 7.4 Controls
 
-- **Pause and resume a role.** No new commits for the role's agents. A
+- **Pause and resume a role.** No new commits for the role's instances. A
   pledged turn finishes; abandoning it would pause the board.
-- **Drain by count.** Within a role, the live rows with the lowest
-  ordinals, up to `count`, are wanted. The rest drain. They finish their
-  turn and sign `deactivate`, and stay allocated. When `count` rises
+- **Drain by count.** Within a role, the live instance rows with the
+  lowest ordinals, up to `count`, are wanted. The rest drain: they finish
+  their turn, take no new one, and stay allocated. With `count` 0, the
+  identity's participant row signs `deactivate`. When `count` rises
   again, a draining row is wanted again. A retired row never returns.
-- **Finish and stop, and stop now.** These are `retire-agent` with
+- **Finish and stop, and stop now.** These are `retire-instance` with
   `finish` or `now` (section 5).
 - **App-wide stop.** `set-policy` with an empty `models` list.
 
@@ -570,8 +590,11 @@ cheapest real boundary (`docs/testing.md`). Each slice runs the gate once.
    utterance is refused by native judgment and writes nothing.
 2. **Attachment and enrollment:** the team object, attach and enrol
    routes, key custody, Counter `participate` and `activate`, and `dap
-   agents ensure`. Witnesses: 1 (interrupted after `allocate-agent` and
-   after enrollment, then resumed: one member and one key for each row);
+   agents ensure`. Witnesses: 1 (interrupted after `allocate-instance` and
+   after enrollment, then resumed: one member for each role, and one key
+   for each instance row); exit test 1 of the roles note (one identity
+   with three instances counts through a game, and each turn's entry names
+   its key);
    14 (controller removed: no new reservation; earlier entries stay); no
    MCP bearer reaches a team agent. Attachment is refused for a team of
    another digest, an `app` that is not a `counting-utterances`
@@ -603,8 +626,8 @@ cheapest real boundary (`docs/testing.md`). Each slice runs the gate once.
    so its streams close, then `resume-role` through a generic MCP tool
    with no browser and no host request; the next eligible turn is taken.
    F2, dormancy: an attachment with no rows stays dormant (no alarm, no
-   read); retire every agent so every seed is destroyed, evict the object,
-   and it stays dormant; then a fresh `allocate-agent` and enrollment
+   read); retire every instance so every seed is destroyed, evict the object,
+   and it stays dormant; then a fresh `allocate-instance` and enrollment
    make it active, and work resumes with no browser.
 5. **Client surface:** Counter page changes and the Agents panel (roles,
    counts, allocation against the remaining balance, progress such as
@@ -634,7 +657,8 @@ today stays: it is a platform gap of the room, not a need of the Counter.
    bounds only. No audio adapter. Decided 2026-10-15; the numeral form
    answers F1.
 2. **Cohort:** the existing invitation-key cohort. The Counter's cap of
-   16 bounds capacity, so no platform version is added.
+   16 bounds capacity, so no platform version is added. It counts
+   members, so instances do not use it.
 3. **Settings:** a separate `agent-team` scope; grants `agents.administer`
    and `agents.configure` through `set-actions`. The checker accepted this
    owner, with full ScopeRefs and verified factory affiliation.
@@ -654,7 +678,7 @@ today stays: it is a platform gap of the room, not a need of the Counter.
    while a live agent key is in custody; with no live key the object is
    dormant and wakes only by a signed enrollment or repeated attach. No
    scope runtime change and no new read path.
-10. **Drain:** derived from `count` by ordinal; no extra act. **Model
+10. **Drain:** derived from `count` by instance ordinal; no extra act. **Model
     tools:** the utterance is the model's only output.
 11. **Page work:** builder builds slice 5. Decided 2026-10-15.
 12. **Models and ceiling:** the initial catalog, `maxOutput` 192, 6,000
@@ -667,6 +691,9 @@ today stays: it is a platform gap of the room, not a need of the Counter.
     that breaks the entry keeps its charge and fences the model.
 15. **Nonempty utterance:** one native `differs` guard in `say`, with the
     host's shared check using the same minimum and maximum.
+16. **Instances:** one member for each role, and one key for each instance
+    row, as the roles, flow and instances note gives. Decided 2026-10-21
+    (request `89a543d3`).
 
 ## 10. Questions left
 
