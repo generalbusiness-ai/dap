@@ -1,1 +1,1 @@
-{"kind":"promise","text":"Planner writes Counter contracts revision 4, draft 2, with both findings answered, and files the exact head for review.","body":{"request":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9400a9f76e07945599ebc3f26e72f949b8f273be"}}
+{"kind":"promise","text":"Planner binds the Counter head to a fresh request and promise, answers both findings and replaces review d3b43136.","body":{"request":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d8ba9d749ed681f79c8cfec52d91e71886fae6be"}}
