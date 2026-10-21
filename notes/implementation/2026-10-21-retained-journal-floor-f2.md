@@ -212,6 +212,22 @@ were completed at checkpoint `3fc5fcb4`, before private integration with the
 landed F1 base and D2 citation check. The combined exact-head full gate and
 review are still pending; focused checks do not stand in for that gate.
 
+The first joint gate stopped at typecheck before Vitest: the page answer
+renderer lacked the new archived variant. The follow-up adds an explicit
+archived message with the original fact, archive commit and through hash.
+Page redraw and submit fences keep that result unresolved until the archive
+is verified; they invoke no accepted callback and sign no replacement.
+CLI generic acts and commands requiring a receipt return exit code 1, as
+for an unknown outcome, with the same original-envelope guidance. The local
+development HTTP adapter uses the existing Worker status 410. Four focused
+page/CLI source and test compilers pass. Five scripted Node cases cover the
+formatter, mounted shell handlers and CLI command boundaries; affected
+formatters also pass after their final hash/incarnation wording. These are
+explicit fixture replies and a minimal DOM, with no browser, native scope,
+clone verification or custody claim. The original gate failure, an additional
+CLI compiler finding and a pre-collection test-harness failure are preserved.
+The corrected joint full gate and formal review remain pending.
+
 The actual Room A count of applied-create sending entries retained at F3 is
 an operational measurement for the planner. This change neither queries
 Cloudflare nor substitutes a fixture count for that measurement.

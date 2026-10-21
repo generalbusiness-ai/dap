@@ -176,7 +176,7 @@ function syncCurrentFences(): void {
   for (const host of hosts) for (const marker of host.querySelectorAll<HTMLElement>("[data-request-context]")) {
     const context = marker.getAttribute("data-request-context")!;
     const last = lastActs.get(context);
-    if (sending.get(context) || last && (last.answer.answer === "unavailable" || last.answer.answer === "mismatch" || last.observation !== null)) fenceCurrentScope(context);
+    if (sending.get(context) || last && (last.answer.answer === "archived" || last.answer.answer === "unavailable" || last.answer.answer === "mismatch" || last.observation !== null)) fenceCurrentScope(context);
   }
 }
 
@@ -317,7 +317,7 @@ function reconcileReview(context: string, room: Room, change: Awaited<ReturnType
   if (selected?.kind !== "review" || selected.context !== context || selected.route !== location.hash) return;
   selected.review = { room, change, blocked, offered, requestOffered };
   const last = lastActs.get(context);
-  const requestBlocked = blocked || !!sending.get(context) || !!last && (last.answer.answer === "unavailable" || last.answer.answer === "mismatch" || last.observation !== null);
+  const requestBlocked = blocked || !!sending.get(context) || !!last && (last.answer.answer === "archived" || last.answer.answer === "unavailable" || last.answer.answer === "mismatch" || last.observation !== null);
   const extent = selected.body.querySelector<HTMLInputElement | HTMLSelectElement>('[name="field:extent"]')?.value ?? "";
   const request = selected.body.querySelector<HTMLInputElement | HTMLSelectElement>('[name="field:request"]')?.value;
   const problem = !requestOffered ? "The native review request field is unavailable. This draft is kept." : reviewSelectionProblem(room, change, selected.manifest!, extent, selectedReviewRequest(selected, request));
@@ -380,7 +380,7 @@ function proposeFromRecordedSource(room: Room, rows: Awaited<ReturnType<typeof l
         }
         const sourceContext = actAssociation(room, change.scope);
         const settled = () => {
-          const unsettled = [lastActs.get(sourceContext), lastActs.get(association)].some(last => last && (last.answer.answer === "unavailable" || last.answer.answer === "mismatch" || last.observation !== null));
+          const unsettled = [lastActs.get(sourceContext), lastActs.get(association)].some(last => last && (last.answer.answer === "archived" || last.answer.answer === "unavailable" || last.answer.answer === "mismatch" || last.observation !== null));
           return !sending.get(association) && !sending.get(sourceContext) && !unsettled;
         };
         content.replaceChildren(retainedEditor(room, change, { current: () => current() && settled(), recorded: lane => { if (current()) location.hash = `#/change/${lane}`; } }));
@@ -537,7 +537,7 @@ async function panelFor(room: Room, scope: ScopeId, context: ActionContext = {},
   };
   const send: Send = (kind, on, typed, accepted, beforeSign) => {
     const previous = lastActs.get(association);
-    if (context.uncertain || context.blockedKinds?.includes(kind) || previous && (previous.answer.answer === "unavailable" || previous.answer.answer === "mismatch" || previous.observation !== null)) return;
+    if (context.uncertain || context.blockedKinds?.includes(kind) || previous && (previous.answer.answer === "archived" || previous.answer.answer === "unavailable" || previous.answer.answer === "mismatch" || previous.observation !== null)) return;
     if (!sending.begin(association, kind)) return;
     cancelCreationFollow();
     if (refusalDialog?.context === association) closeRefusal();
@@ -555,7 +555,7 @@ async function panelFor(room: Room, scope: ScopeId, context: ActionContext = {},
         const target = /^\d+$/.test(on) ? Number(on) : null;
         const result = await act(room, scope, kind, { on: target, fields }, (known) => {
           lastActs.set(association, known); sending.answered(association);
-          showLocally(answerLine(known), true, known.answer.answer === "accepted" ? "Request accepted" : known.answer.answer === "refused" ? `Request refused: ${known.answer.reason}` : "Request outcome unknown");
+          showLocally(answerLine(known), true, known.answer.answer === "accepted" ? "Request accepted" : known.answer.answer === "refused" ? `Request refused: ${known.answer.reason}` : known.answer.answer === "archived" ? "Request archived; verify the original result" : "Request outcome unknown");
           if (known.answer.answer === "accepted") accepted?.();
           else if (known.answer.answer === "refused" && activeView()) showRefusal(known, association);
         }, () => {
@@ -579,7 +579,7 @@ async function panelFor(room: Room, scope: ScopeId, context: ActionContext = {},
   const last = lastActs.get(association);
   const fence = sending.get(association);
   const pending = !!fence && fence.state !== "unknown";
-  const uncertain = fence?.state === "unknown" || context.uncertain || !!last && (last.answer.answer === "unavailable" || last.answer.answer === "mismatch" || last.observation !== null);
+  const uncertain = fence?.state === "unknown" || context.uncertain || !!last && (last.answer.answer === "archived" || last.answer.answer === "unavailable" || last.answer.answer === "mismatch" || last.observation !== null);
   const taskContext = { ...context, pending, uncertain, draftKey: association, refresh: () => { void draw(); }, current: () => location.hash === capturedRoute && currentContext() };
   const represented = options.tasks?.(offered, send, taskContext) ?? [];
   const remaining = { ...offered, acts: offered.acts.filter((act) => !options.represented?.includes(act.kind) && !represented.includes(act.kind)) };
@@ -977,7 +977,7 @@ async function draw(focus = false): Promise<void> {
         const capturedHash = location.hash;
         const capturedContext = settingsContext(kept);
         const priorMutation = lastActs.get(actAssociation(loaded, change.scope));
-        const mutationUnsettled = () => !!sending.get(actAssociation(loaded, change.scope)) || !!priorMutation && (priorMutation.answer.answer === "unavailable" || priorMutation.answer.answer === "mismatch" || priorMutation.observation !== null);
+        const mutationUnsettled = () => !!sending.get(actAssociation(loaded, change.scope)) || !!priorMutation && (priorMutation.answer.answer === "archived" || priorMutation.answer.answer === "unavailable" || priorMutation.answer.answer === "mismatch" || priorMutation.observation !== null);
         screen.querySelector('[data-action-slot="edit"]')?.append(mutationUnsettled() ? h("p", { class: "muted" }, "The current request must be confirmed before proposing an edit.") : retainedEditor(room, change, {
           current: () => location.hash === capturedHash && settingsContext(settings() ?? { place: null, secret: "" }) === capturedContext && !mutationUnsettled(),
           recorded: (lane) => { location.hash = `#/change/${lane}`; },

@@ -315,10 +315,11 @@ export function valueOf(config: Pick<Config, "repository">, field: { type?: stri
 /** The answer to an act, in one or two lines. A refusal names its reason and, when the failed guard has one, its name. */
 const inspectBeforeMutation = (scope: ScopeId | null): string => scope === null ? "the configured service's history" : `dap log ${scope}`;
 const unavailableAnswer = (reason: string, scope: ScopeId | null): Outcome => failed(`Unavailable: ${reason}. Outcome unknown; no acceptance is confirmed. Inspect ${inspectBeforeMutation(scope)} before another mutation. Recovery requires the same original signed envelope; repeating a generic command signs a new request.`);
+const archivedAnswer = (answer: Extract<Answer, { answer: "archived" }>): Outcome => failed(`Archived: original entry ${answer.fact.at.scope}:${answer.fact.seq}, hash ${answer.fact.hash}, incarnation ${answer.fact.at.inc}, is below journal floor ${answer.archived.floor}. Verify archive commit ${answer.archived.commit} against through entry ${answer.archived.through.seq}, hash ${answer.archived.through.hash}, before confirming the original result or another mutation. Recovery requires the same original signed envelope; do not sign a replacement request.`);
 const mismatchAnswer = (reason: string, scope: ScopeId | null): Outcome => failed(`Mismatch: ${reason}. The idempotency key names another recorded intent. Inspect ${inspectBeforeMutation(scope)} and the original request before another mutation.`);
 function answered(scope: ScopeId, answer: Answer, took: string): Outcome {
   switch (answer.answer) {
-    case "archived": return done(`${took}: recorded at entry ${scope}:${answer.fact.seq}, now archived in commit ${answer.archived.commit}. Verify the archive clone against through entry ${answer.archived.through.seq} before reading its receipt.`);
+    case "archived": return archivedAnswer(answer);
     case "accepted": return done(`${took}: entry ${scope}:${answer.receipt.fact.seq}, hash ${answer.receipt.fact.hash.slice(0, 19)}.`);
     case "refused": return failed(`Refused: ${answer.reason}${"name" in answer && answer.name ? ` (${answer.name === "founding-policy" ? "creation-policy" : answer.name === "founding-key" ? "initial-key" : answer.name})` : ""}, judged at entry ${scope}:${answer.judgedAt.seq}. The request was refused.`);
     case "unavailable": return unavailableAnswer(answer.reason, scope);
@@ -328,7 +329,7 @@ function answered(scope: ScopeId, answer: Answer, took: string): Outcome {
 
 function accepted(answer: Answer | Created, scope: ScopeId | null, took: string): Extract<Answer, { answer: "accepted" }> {
   if (answer.answer === "accepted") return answer;
-  if (answer.answer === "archived") return stopCommand(failed(`The exact intent was accepted at entry ${answer.fact.at.scope}:${answer.fact.seq}, now archived in commit ${answer.archived.commit}. Verify the clone against its floor receipt before continuing; do not sign a replacement request.`));
+  if (answer.answer === "archived") return stopCommand(archivedAnswer(answer));
   if (answer.answer === "unavailable") return stopCommand(unavailableAnswer(answer.reason, scope));
   if (answer.answer === "mismatch") return stopCommand(mismatchAnswer(answer.reason, scope));
   return stopCommand("judgedAt" in answer ? answered(scope!, answer, took) : failed(`Refused: ${answer.reason}. The request was refused.`));

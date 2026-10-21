@@ -72,6 +72,18 @@ test("page join refuses mismatched encoding before submission and accepts script
   expect(nonacceptedAnswerText({ ...policyRefusal, name: "founding-key" })).toBe("Refused: guard-failed (initial-key). The request was refused.");
   expect(policyRefusal.name).toBe("founding-policy"); // Presentation must not rewrite the recorded refusal.
 
+  const archived = { answer: "archived", fact: { at: repository.membership, seq: 4, hash: textDigest("scripted archived fact") },
+    archived: { floor: 10, commit: "a".repeat(40), through: { seq: 12, hash: textDigest("scripted archive head") } } } as const;
+  const archivedLines = answerText({ service: session.service, directory: repository.directory.scope, membership: repository.membership,
+    key: keyIdOfSecret(session.secret), answer: archived, scope: repository.membership.scope, kind: "join", on: null,
+    before: { seq: 12, hash: archived.archived.through.hash }, after: null, observation: null });
+  expect(archivedLines[0]).toContain(`Archived: original entry ${repository.membership.scope}:4`);
+  expect(archivedLines[0]).toContain(`hash ${archived.fact.hash}, incarnation ${repository.membership.inc}`);
+  expect(archivedLines[0]).toContain(`through entry 12, hash ${archived.archived.through.hash}`);
+  expect(archivedLines.join(" ")).toContain(`Verify archive commit ${archived.archived.commit}`);
+  expect(archivedLines.join(" ")).toContain("same signed envelope; this page does not retain it");
+  expect(archivedLines.join(" ")).not.toMatch(/Accepted|Request accepted|Nothing was written/);
+
   for (const answer of [{ answer: "unavailable", reason: "busy" }, { answer: "mismatch", reason: "idempotency-mismatch" }, { answer: "refused", reason: "unauthorized", judgedAt: { seq: 0, hash: textDigest("scripted refused head") } }] as const) {
     expect(nonacceptedAnswerText(answer)).toMatch(new RegExp(`^${answer.answer === "unavailable" ? "Unavailable" : answer.answer === "mismatch" ? "Mismatch" : "Refused"}:`));
     expect(nonacceptedAnswerText(answer)).not.toContain("Nothing was written");

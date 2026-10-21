@@ -202,6 +202,7 @@ export function rulesScreen(room: Room, rules: RulesView, editable = false): HTM
 /** Actual nonaccepted category; no claim that a timed drain wrote nothing. */
 export function nonacceptedAnswerText(answer: Exclude<Answer, { answer: "accepted" }>): string {
   switch (answer.answer) {
+    case "archived": return `Archived: original entry ${answer.fact.at.scope}:${answer.fact.seq}, hash ${answer.fact.hash}, incarnation ${answer.fact.at.inc}, is below journal floor ${answer.archived.floor}. Verify archive commit ${answer.archived.commit} against through entry ${answer.archived.through.seq}, hash ${answer.archived.through.hash}, before confirming the original result.`;
     case "refused": return `Refused: ${answer.reason}${"name" in answer && answer.name ? ` (${answer.name === "founding-policy" ? "creation-policy" : answer.name === "founding-key" ? "initial-key" : answer.name})` : ""}. The request was refused.`;
     case "unavailable": return `Unavailable: ${answer.reason}. Outcome unknown; no acceptance is confirmed.`;
     case "mismatch": return `Mismatch: ${answer.reason}. The idempotency key names another recorded intent.`;
@@ -214,9 +215,9 @@ export function answerText(acted: Acted): string[] {
   let known: string;
   switch (a.answer) {
     case "accepted": known = `Accepted ${acted.kind}: ${a.receipt.fact.at.scope}:${a.receipt.fact.seq}, hash ${a.receipt.fact.hash}, incarnation ${a.receipt.fact.at.inc}.`; break;
-    case "refused": case "unavailable": case "mismatch": known = nonacceptedAnswerText(a); break;
+    case "archived": case "refused": case "unavailable": case "mismatch": known = nonacceptedAnswerText(a); break;
   }
-  const recovery = a.answer === "unavailable" || a.answer === "mismatch" ? [`Inspect artroom log ${acted.scope} and the original request before another act. Recovery requires the same signed envelope; this page does not retain it.`] : [];
+  const recovery = a.answer === "archived" || a.answer === "unavailable" || a.answer === "mismatch" ? [`Inspect artroom log ${acted.scope} and the original request before another act. Recovery requires the same signed envelope; this page does not retain it.`] : [];
   return [known, ...recovery, ...(acted.observation === null ? [] : [`Observation unknown: ${acted.observation} Inspect artroom log ${acted.scope}${a.answer === "accepted" ? ` and artroom show ${a.receipt.fact.at.scope}:${a.receipt.fact.seq}` : ""} before submitting another act; do not resubmit to recover observation.`])];
 }
 export function answerLine(acted: Acted): HTMLElement {
