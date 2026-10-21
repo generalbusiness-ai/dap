@@ -122,7 +122,7 @@ function segments(rows: readonly SelectedEntry[], work: JournalWork): readonly A
   const size = rows.reduce((n, row) => n + row.descriptor.bytes, 0) + Math.max(0, rows.length - 1);
   // Grouping owns a segment buffer before the object writer makes its own
   // copy. Reserve that work too, even for a repeated parent-prefix check.
-  work.spend({ outputWork: size }); work.input(size, 8); work.metadata(rows.length * 64);
+  work.spend({ outputWork: size }); work.input(size, 8); work.metadata(rows.length * 64 + 256);
   const out = archiveSegments(rows.map(row => ({ seq: row.descriptor.seq, bytes: row.bytes })), size);
   work.check(); return out;
 }

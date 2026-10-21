@@ -12,6 +12,7 @@ import { readJournalArchiveV2 } from "../src/journal-v2-reader.ts";
 import { journalRef } from "../src/journal-path.ts";
 import type { JournalReadResult } from "../src/journal-reader.ts";
 import { journalV2PassPath, journalV2SegmentPath } from "../src/journal-v2-path.ts";
+import { ArchiveSegmentCursor } from "../src/journal-segments.ts";
 import { archiveObjectSource, archiveRepository, selectedInput, syntheticJournal, writeArchiveObjects } from "./support/journal.ts";
 import { cleanup, git } from "./support/repo.ts";
 
@@ -38,9 +39,13 @@ test("three v2 passes cover ten thousand entries without rereading old entries o
       const prepared = await prepareJournalPass({ format: "sha1", at: fixture.at, after: previous!.through, parent, budget });
       expect(prepared.ok, JSON.stringify(prepared)).toBe(true); if (!prepared.ok) return;
       preparation = prepared.preparation;
-      // This fixture's final interval is below the object-byte bound and
-      // has exactly two segments at the original 1,000-line boundary.
-      await preparation.prepare([journalV2SegmentPath(8192), journalV2SegmentPath(9192)]);
+      preparation.work.metadata(256);
+      const grouping = new ArchiveSegmentCursor(entries.reduce((n, entry) => n + entry.bytes, 0) + entries.length - 1);
+      for (const entry of entries) {
+        const firstSegment = grouping.append(entry.seq, entry.bytes);
+        if (firstSegment !== null) await preparation.prepare([journalV2SegmentPath(firstSegment)]);
+      }
+      expect(grouping.segments).toBe(2);
       expect(calls).toEqual([]); // No entry or retained input before metadata preparation.
       expect(preparation.work.budget).toBe(budget);
       expect(await buildJournalPass({ format: "sha1", selection, input, parent, budget: new ArchiveBudget({}, () => 0), preparation }))

@@ -53,7 +53,7 @@ export async function buildJournalPass(options: JournalPassOptions): Promise<Jou
     const manifestBytes = canonicalize(manifest), headBytes = canonicalize({ v: 2, scope: selection.at, through: selection.through.seq, hash: selection.through.hash });
     if (utf8(manifestBytes).length > JOURNAL_SELECTION_BYTES || utf8(headBytes).length > 1024) return work.stop();
     const size = entries.reduce((sum, row) => sum + row.descriptor.bytes, 0) + Math.max(0, entries.length - 1);
-    work.spend({ outputWork: size }); work.input(size, 8); work.metadata(entries.length * 64);
+    work.spend({ outputWork: size }); work.input(size, 8); work.metadata(entries.length * 64 + 256);
     const segments = archiveSegments(entries.map(row => ({ seq: row.descriptor.seq, bytes: row.bytes })), size);
     const files = [{ path: "journal/v2/head.json", data: utf8(headBytes) }, { path: journalV2PassPath(first), data: utf8(manifestBytes) },
       ...segments.map(segment => ({ path: journalV2SegmentPath(segment.first), data: segment.bytes })),
