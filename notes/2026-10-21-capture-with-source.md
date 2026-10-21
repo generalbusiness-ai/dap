@@ -53,10 +53,11 @@ types and the rules below, and nothing more.
 | `channel` | `text`, at most 64 bytes | The channel: `chat`, `file`, `email`, `github-issue`, `github-comment`, `local-branch`, and others. |
 | `address` | `text`, at most 1,024 bytes | Where the source is: a URL, a message ID, a path. |
 | `external` | `text`, at most 512 bytes | The external identity (section 5). Optional for a chat upload. |
-| `revision` | `text`, at most 128 bytes | The identity of this version's content in its channel (section 5). |
+| `revision` | `digest` | The digest of this version's content projection (section 5). |
 | `base` | `text`, at most 128 bytes | What the content was made against, such as a base commit. Provenance only. |
 | `author` | `text`, at most 256 bytes | The author as the source states it, such as a GitHub login. It is text, never a member. |
 | `observedAt` | `time` | When the capturer read the source. |
+| `sourceTime` | `time` | The source's own update time, when the channel gives one. Order and display only; never part of the revision. |
 | `derivedFrom` | `list`, at most 32, of `fact` of kind `capture`, `recapture` or `read` | The exact versions that a reading or a derived file comes from. |
 | `proposal` | `fact` of kind `propose-manifest` under `change` | For a local branch: the proposal's manifest fact. Provenance only. |
 
@@ -189,17 +190,25 @@ the source's own `revision` slot, and a `none` over `version` items whose
 source is this source and whose revision equals the field. So a delivery
 that repeats an old revision changes nothing.
 
-**What a revision is.** The revision identifies the content of the version
-in its channel:
+**What a revision is.** The revision is the digest of the version's
+captured content: the SHA-256 of the canonical JSON of a content projection
+that each channel states. Delivery metadata never enters it: no delivery
+ID, request ID, journal reference or update time.
 
-- a GitHub issue or comment: its update time with its node ID;
-- an email: its message ID;
-- a local branch: the digest of its content projection (section 6,
-  journey 2);
-- a chat upload: the file's digest.
+| Channel | Content projection |
+|---|---|
+| `github-issue` | `{ title, body, state, labels }`, with `labels` sorted |
+| `github-comment` | `{ body }` |
+| `email` | the digest of the raw message bytes |
+| `local-branch` | `{ base, files }` (section 6, journey 2) |
+| `chat`, `file` | the digest of the file's bytes |
+| `reading` | the digest of the reading's text or file |
 
-Two versions with the same revision have the same content. Two different
-contents never share a revision.
+So two versions with the same revision have the same captured content, and
+a change to any field of the projection gives a new revision. The source's
+own update time goes in the field `sourceTime`, for order and display only.
+A source can change twice within one update time, and the content digest
+still tells the two versions apart.
 
 **Withdrawal.** A withdrawn source keeps its channel and external identity.
 A redelivery of it is refused `already-captured`, and a new revision is
@@ -214,7 +223,8 @@ source again, not as an ordered journal
 
 **Echoes.** When the room writes to a channel, through the outbox (section
 6, journey 4), the outbound act records the external revision that the
-write produced. A later capture of that revision is an echo. The connector
+write produced: the digest of the content projection that the write
+leaves at the source. A later capture of that revision is an echo. The connector
 reads the source's recorded outbound revisions, and signs no `recapture`
 for an echo (`github-repository-import.md:273-274`).
 
@@ -321,8 +331,10 @@ connector as an `outside` result.
    `author` matches no member.
 6. **One item for each act.** Two first deliveries of one source arrive
    together. One source opens, with the first `capture` as its first
-   version, and the other is refused `already-captured`. An interrupted
-   delivery leaves no source.
+   version, and the other is refused `already-captured`. A delivery stopped
+   before its capture takes effect leaves no source. A delivery stopped
+   after its capture takes effect leaves a complete source, and the caller
+   learns the outcome by reading it.
 
 ## 11. Slices
 
@@ -333,6 +345,6 @@ The slices start after retained files RF1 to RF4.
 | CS1 | The capture package: the capture scope, the `source` and `version` items (one opened per act), the acts and actions of sections 2 and 4, the deduplication guards, statement kinds, and the `notify` attention. RF4's minimal capture package becomes this package. | Journey 1 runs on a hosted Worker. Witnesses 1, 2, 3, 5 and 6 of section 10 pass. |
 | CS2 | The issue lane's `captured` field in a new lane version, and the source line in the room's views. | An issue filed from a capture shows its source line, and the capture stays the capturer's act. |
 | CS3 | The local-branch capture with `dap propose`. | Witness 4 of section 10 passes. |
-| CS4 | The GitHub inbound connector package: the connector member and preset, the host's read credential, delivery records, watermark reconciliation, and issue filing from captures. | A test repository's issues and comments arrive once each. A redelivery changes nothing. A close on GitHub does not close the room's issue. |
+| CS4 | The GitHub inbound connector package: the connector member and preset, the host's read credential, delivery records, watermark reconciliation, the content projections of section 5, and issue filing from captures. | A test repository's issues and comments arrive once each. An exact redelivery, and a redelivery with only new delivery metadata, are refused `same-revision`. Two observations with the same external identity and update time but different bodies are two versions. A close on GitHub does not close the room's issue. |
 
 Each slice is reviewed and landed before the next one starts.
