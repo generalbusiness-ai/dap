@@ -7,7 +7,7 @@ import { natural } from "@generalbusiness/artroom-bytes";
 import { DOMAINS, RETAINED_INPUT_BYTES, type Digest } from "@generalbusiness/dap-contract";
 import { canonicalize, domainRetainedJSON, entryHash, isDigest, isEntry, isFactRef, isPlatformDefinition, rawRetainedJSON, utf8 } from "@generalbusiness/artroom-bytes";
 import { checkedRetainedKey, type ProbeDependency, type RetainedKey } from "@generalbusiness/dap-derive";
-import { ARCHIVE_BOUNDS, ArchiveBudget } from "./archive-budget.ts";
+import { ARCHIVE_BOUNDS, ArchiveBudget, ArchiveStopped, type ArchiveCost } from "./archive-budget.ts";
 import { ArchivePrefixStopped } from "./archive-prefix.ts";
 import type { Sql } from "./sqlite.ts";
 import type { ArchiveForeignCopy } from "./archive-foreign.ts";
@@ -19,6 +19,19 @@ export type ArchiveRetainedCopy = Pick<ArchiveForeignCopy, "content" | "bytes" |
 // whole-prefix classifier checks every exact native pin/data/place first.
 const nativeDomains: ReadonlySet<string> = new Set([...Object.values(DOMAINS), ...ARCHIVE_NATIVE_VALUE_DOMAINS]);
 const keyName = (key: RetainedKey): string => JSON.stringify(key.kind === "value" ? [key.kind, key.domain, key.digest] : [key.kind, key.digest]);
+const REQUEST_WORK = 256, SIZE_METADATA = 96;
+const coldWork = (bytes: number) => bytes * 32;
+const cachedWork = (units: number) => units * 3 * 32;
+
+/** Future read only: the keyed measurement has already spent its own
+ * attempt/call. Cover both cold bytes and cached UTF-16 validation without
+ * assuming a cache hit or crediting any original debit. A size does not
+ * validate content or select a probe. */
+export function archiveRetainedReadForecast(bytes: number | null): Partial<ArchiveCost> {
+  if (bytes !== null && (!natural(bytes) || bytes === 0 || bytes > RETAINED_INPUT_BYTES)) throw new ArchiveStopped("unavailable");
+  return { attempts: 1, calls: bytes === null ? 1 : 2, metadata: SIZE_METADATA,
+    inputWork: REQUEST_WORK + SIZE_METADATA + (bytes === null ? 0 : Math.max(coldWork(bytes) + bytes, cachedWork(bytes))) };
+}
 
 export class ArchiveRetainedReader {
   readonly #cache = new Map<string, string>();
@@ -39,7 +52,7 @@ export class ArchiveRetainedReader {
    * uncovered present candidate still refuses before any body fetch. */
   definitionPresent(digest: Digest): boolean {
     checkedRetainedKey({ kind: "definition", digest });
-    this.budget.spend({ attempts: 1, inputWork: 256 });
+    this.budget.spend({ attempts: 1, inputWork: REQUEST_WORK });
     const rows = this.budget.native(this.sql, () => ({ metadata: 32, inputWork: 0 })).exec("SELECT 1 AS present FROM retained_input WHERE kind = 'definition' AND digest = ? LIMIT 1", digest).toArray();
     if (rows.length === 0) return false;
     if (rows.length !== 1 || rows[0]?.["present"] !== 1) return this.budget.stop("unavailable");
@@ -47,7 +60,7 @@ export class ArchiveRetainedReader {
   }
   #request(key: RetainedKey, max: number): Readonly<ArchiveRetainedCopy> | undefined {
     checkedRetainedKey(key);
-    this.budget.spend({ attempts: 1, inputWork: 256 });
+    this.budget.spend({ attempts: 1, inputWork: REQUEST_WORK });
     const copy = key.kind === "entry" ? this.#copies.get(key.digest) : undefined;
     if (key.kind === "entry" && !copy) throw new ArchivePrefixStopped("unsupported-foreign-copy");
     // Runtime check as well as the closed TypeScript key; never fall through
@@ -59,7 +72,7 @@ export class ArchiveRetainedReader {
   }
   #size(key: RetainedKey, max: number, copy: Readonly<ArchiveRetainedCopy> | undefined): number | null {
     const value = key.kind === "value", where = value ? "domain = ? AND digest = ?" : "kind = ? AND digest = ?", table = value ? "retained_value" : "retained_input";
-    const rows = this.budget.native(this.sql, () => ({ metadata: 96, inputWork: 0 })).exec(`SELECT octet_length(bytes) AS size, typeof(bytes) AS type FROM ${table} WHERE ${where} LIMIT 1`, key.kind === "value" ? key.domain : key.kind, key.digest).toArray();
+    const rows = this.budget.native(this.sql, () => ({ metadata: SIZE_METADATA, inputWork: 0 })).exec(`SELECT octet_length(bytes) AS size, typeof(bytes) AS type FROM ${table} WHERE ${where} LIMIT 1`, key.kind === "value" ? key.domain : key.kind, key.digest).toArray();
     if (rows.length === 0) return null;
     const row = rows[0];
     if (rows.length !== 1 || row?.["type"] !== "text" || !natural(row["size"]) || row["size"] === 0 || row["size"] > max) return null;
@@ -85,7 +98,7 @@ export class ArchiveRetainedReader {
       const measured = this.#size(key, max, copy);
       if (measured === null) return null;
       size = measured;
-      this.budget.spend({ inputWork: size * 32 });
+      this.budget.spend({ inputWork: coldWork(size) });
       const body = this.budget.native(this.sql, () => ({ metadata: 0, inputWork: size })).exec(`SELECT bytes FROM ${table} WHERE ${where} AND typeof(bytes) = 'text' AND octet_length(bytes) = ? LIMIT 1`, ...bindings, size).toArray();
       if (body.length !== 1 || typeof body[0]?.["bytes"] !== "string") return this.budget.stop("unavailable");
       bytes = body[0]["bytes"];
@@ -93,7 +106,7 @@ export class ArchiveRetainedReader {
       // UTF-16 length is a lower bound before allocating UTF-8. The
       // reservation is conservative for up to three bytes per code unit.
       if (bytes.length > max) return null;
-      this.budget.spend({ inputWork: bytes.length * 3 * 32 });
+      this.budget.spend({ inputWork: cachedWork(bytes.length) });
       size = utf8(bytes).length;
     }
     if (bytes.length > max || utf8(bytes).length !== size || size > max) return null;

@@ -2,10 +2,12 @@ import { expect, test } from "vitest";
 import { runInDurableObject } from "cloudflare:test";
 import { canonicalize, utf8 } from "@generalbusiness/artroom-bytes";
 import { localRetainedPlan, outcomeSnapshotDependencies, timeMs } from "@generalbusiness/dap-derive";
-import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { ArchiveBudget } from "../../../../packages/scope/src/archive-budget.ts";
+import { PROPOSED_BOUNDS, RETAINED_INPUT_BYTES } from "@generalbusiness/dap-contract";
+import { ARCHIVE_BOUNDS, ArchiveBudget, type ArchiveCost } from "../../../../packages/scope/src/archive-budget.ts";
 import { projectArchiveSnapshots } from "../../../../packages/scope/src/archive-snapshots.ts";
 import { ArchiveLocalReferences } from "../../../../packages/scope/src/archive-local-references.ts";
+import { ArchiveRetainedReader } from "../../../../packages/scope/src/archive-retained.ts";
+import { measureArchiveReferences } from "../../../../packages/scope/src/archive-reference-measurements.ts";
 import { CAPABILITY_CODE } from "../../../../packages/scope/src/ports.ts";
 import type { SqlValue } from "../../../../packages/scope/src/sqlite.ts";
 import { graph, net, onCode, rita, soon, una, vic } from "./support/graph.ts";
@@ -153,7 +155,20 @@ test("T4, a handover: the same accepted commitment gets a new performer only whe
     // Uses and outcome context are this oracle's actual classified values;
     // the composer supplies no independent privacy/pin admission.
     const composed = references.project(G.at, { ...position, input: "outcome" }, { input: "outcome", owner: input.owner, kind: input.kind, result: input.result }, sealed.entry.uses.map(use => use.content));
-    return { projected, repeated, before, after, cells: snapshotCells, nonempty, invalid, opaque, composed };
+    const queries: string[] = [], sizes: unknown[] = [], retained = new ArchiveRetainedReader({ exec(query, ...args) {
+      queries.push(query); const rows = stored.storage.sql.exec(query, ...args).toArray();
+      for (const r of rows) sizes.push(...Object.values(r));
+      return { toArray: () => rows };
+    } }, budget);
+    const measuredBefore = budget.admitted();
+    const measured = measureArchiveReferences(retained, projected.dependencies.map(dependency => ({ dependency, max: RETAINED_INPUT_BYTES })), PROPOSED_BOUNDS);
+    const measuredAfter = budget.admitted(), measurementQueries = [...queries], measurementCells = [...sizes];
+    // Oracle reads now exercise a real cold read followed by cached native
+    // validation. The measurement helper itself has read no body.
+    for (const request of projected.dependencies) expect(retained.read(request.key, RETAINED_INPUT_BYTES)).not.toBeNull();
+    const readAfter = budget.admitted();
+    return { projected, repeated, before, after, cells: snapshotCells, nonempty, invalid, opaque, composed,
+      measured, measuredBefore, measuredAfter, readAfter, measurementQueries, measurementCells };
   });
   expect(projection.projected.dependencies).toEqual(expected.dependencies);
   expect(projection.projected.dependencies).toEqual(native.dependencies.filter(p => p.dependency.consumer === "outcome-snapshot").map(p => p.dependency));
@@ -161,6 +176,15 @@ test("T4, a handover: the same accepted commitment gets a new performer only whe
   expect(projection.projected.dependencies.map(d => d.key)).toEqual([{ kind: "snapshot", digest: expected.record!.snapshot.digest }, { kind: "snapshot", digest: expected.record!.snapshot.digest }]);
   expect(projection.projected.ancestrySnapshot).toEqual(expected.record!.snapshot);
   expect(projection.composed).toEqual({ dependencies: native.dependencies, ancestrySnapshot: expected.record!.snapshot });
+  expect(projection.measured.measurements).toHaveLength(2);
+  expect(projection.measured.measurements.map(m => m.candidates[0]?.key)).toEqual(projection.projected.dependencies.map(d => d.key));
+  expect(projection.measuredAfter.attempts - projection.measuredBefore.attempts).toBe(2);
+  expect(projection.measurementQueries).toHaveLength(2);
+  expect(projection.measurementQueries.every(q => q.startsWith("SELECT octet_length(bytes)") && !q.startsWith("SELECT bytes"))).toBe(true);
+  expect(projection.measurementCells.every(c => typeof c === "number" || c === "text")).toBe(true);
+  for (const key of Object.keys(ARCHIVE_BOUNDS) as (keyof ArchiveCost)[]) {
+    expect(projection.readAfter[key] - projection.measuredAfter[key]).toBeLessThanOrEqual(projection.measured.reads[key] ?? 0);
+  }
   expect(projection.repeated).toEqual(projection.projected);
   expect(projection.after.calls).toBeGreaterThan(projection.before.calls);
   expect(projection.after.inputWork).toBeGreaterThan(projection.before.inputWork);

@@ -3,9 +3,10 @@
 import { expect, test } from "vitest";
 import { DOMAINS, PROPOSED_BOUNDS, RETAINED_INPUT_BYTES } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, utf8 } from "@generalbusiness/artroom-bytes";
-import { ArchiveBudget } from "../src/archive-budget.ts";
+import { ARCHIVE_BOUNDS, ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
 import { observationDependency } from "@generalbusiness/dap-derive";
 import { ArchiveRetainedReader, readArchiveProbe } from "../src/archive-retained.ts";
+import { measureArchiveReferences } from "../src/archive-reference-measurements.ts";
 import { definition, create } from "./fixtures-native.ts";
 
 const missing = "sha256:" + "d".repeat(64) as `sha256:${string}`;
@@ -124,12 +125,20 @@ test("native ordered probes discard invalid-domain candidates, select the defini
     // Correct bytes in the wrong domain are not a valid first probe.
     state.storage.sql.exec("INSERT INTO retained_value (domain, digest, bytes) VALUES (?, ?, ?)", DOMAINS.entry, definition.digest, canonicalize(definition.declared));
     const probe = observationDependency({ at: lane.genesis.fact, input: "act" }, definition.digest, [DOMAINS.entry, DOMAINS.definition, DOMAINS.message]);
+    // A keyed size cannot validate the wrong-domain bytes, nor decide that
+    // the later definition is valid. Measure all choices in native order.
+    const measured = measureArchiveReferences(reader, [{ dependency: probe, max: RETAINED_INPUT_BYTES }], PROPOSED_BOUNDS);
+    const metadataQueries = [...queries], before = budget.admitted(); queries.length = 0;
     const selected = readArchiveProbe(reader, probe, RETAINED_INPUT_BYTES, PROPOSED_BOUNDS.definitionBytes);
-    return { key: selected?.key, bytes: selected?.value.bytes, queries, cost: budget.admitted() };
+    return { key: selected?.key, bytes: selected?.value.bytes, queries, cost: budget.admitted(), measured, metadataQueries, before };
   });
   expect(result.key).toEqual({ kind: "definition", digest: definition.digest });
   expect(result.bytes).toBe(canonicalize(definition.declared));
-  expect(result.cost.attempts).toBe(2);
+  expect(result.cost.attempts - result.before.attempts).toBe(2);
+  expect(result.measured.measurements[0]?.candidates.map(c => c.key.kind === "value" ? c.key.domain : c.key.kind)).toEqual([DOMAINS.entry, "definition", DOMAINS.message]);
+  expect(result.measured.measurements[0]?.candidates.map(c => c.bytes)).toEqual([utf8(canonicalize(definition.declared)).length, utf8(canonicalize(definition.declared)).length, null]);
+  expect(result.metadataQueries.every(q => q.query.startsWith("SELECT octet_length(bytes)"))).toBe(true);
+  for (const key of Object.keys(ARCHIVE_BOUNDS) as (keyof ArchiveCost)[]) expect(result.cost[key] - result.before[key]).toBeLessThanOrEqual(result.measured.reads[key] ?? 0);
   expect(result.queries.some(query => query.domain === DOMAINS.message)).toBe(false);
   expect(result.queries.filter(query => query.query.startsWith("SELECT bytes")).map(query => query.domain)).toEqual([DOMAINS.entry, "definition"]);
 });
