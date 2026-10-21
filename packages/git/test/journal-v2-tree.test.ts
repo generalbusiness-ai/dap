@@ -2,11 +2,74 @@
  * update uses the native pass budget; file bodies are labelled stand-ins. */
 import { expect, test } from "vitest";
 import { textDigest, utf8 } from "@generalbusiness/artroom-bytes";
-import { ArchiveBudget } from "../../scope/src/archive-budget.ts";
+import { ArchiveBudget, type ArchiveCost } from "../../scope/src/archive-budget.ts";
 import { JournalObjectReader, JournalObjects, type JournalObject } from "../src/journal-objects.ts";
 import { JournalWork } from "../src/journal-work.ts";
 import { journalV2PassPath, journalV2RetainedPath, journalV2SegmentPath, readJournalV2Path } from "../src/journal-v2-path.ts";
-import { patchJournalV2Tree } from "../src/journal-v2-tree.ts";
+import { JournalV2TreePatch, patchJournalV2Tree } from "../src/journal-v2-tree.ts";
+
+const testPassFiles = (n: number) => [{ path: "journal/v2/head.json", data: utf8(`TEST head ${n}`) },
+  { path: journalV2PassPath(n), data: utf8(`TEST pass ${n}`) }, { path: journalV2SegmentPath(n), data: utf8(`TEST entry ${n}`) },
+  { path: journalV2RetainedPath(n, { kind: "rule", digest: textDigest(`TEST key ${n}`) }), data: utf8(`TEST retained ${n}`) }];
+
+test("one tree patch prepares parent metadata before payload, keeps original debits, and emits only the selected prepared paths", async () => {
+  const held = new Map<string, JournalObject>();
+  const baseWork = new JournalWork(new ArchiveBudget({}, () => 0)), baseMaker = new JournalObjects("sha1", baseWork);
+  const parent = await patchJournalV2Tree(null, null, testPassFiles(0), baseMaker, baseWork);
+  for (const object of baseMaker.objects()) held.set(object.id, object);
+  const read: string[] = [], budget = new ArchiveBudget({}, () => 0), work = new JournalWork(budget), maker = new JournalObjects("sha1", work);
+  const reader = new JournalObjectReader("sha1", { object: async (id, limit) => {
+    read.push(id); const object = held.get(id);
+    return object ? { type: object.type, size: object.data.length, data: object.data.length <= limit ? object.data : null } : null;
+  } }, work);
+  const selected = testPassFiles(1), patch = new JournalV2TreePatch(reader, parent, work);
+  await patch.prepare(selected.slice(0, 3).map(file => file.path));
+  await patch.prepare([selected[3]!.path, journalV2RetainedPath(1, { kind: "rule", digest: textDigest("TEST discarded candidate") })]);
+  expect(maker.objects()).toEqual([]); // Preparation has constructed no blob/tree payloads.
+  const reads = read.length, prepared = budget.admitted();
+  const tree = patch.finish(selected, maker), objects = maker.objects(), cost = budget.admitted();
+  // Pinned against the pre-split encoder on these TEST Git bodies. This is
+  // not a journal, native confirmation or replay witness.
+  expect(tree).toBe("fa69a1712244eadddb530fb92076b5ec00037b3c");
+  expect(objects).toHaveLength(21);
+  expect(read.length).toBe(reads); expect(reads).toBe(30);
+  expect(read.every(id => held.get(id)?.type === "tree")).toBe(true);
+  expect(cost.nodes).toBe(prepared.nodes); expect(cost.nodes).toBe(17);
+  expect(work.used.files).toBe(5); // The unselected path is not refunded.
+  const original: ArchiveCost = { entries: 0, attempts: 15, nodes: 17, calls: 30, metadata: 32266, inputWork: 42485 };
+  for (const key of Object.keys(original) as (keyof ArchiveCost)[]) expect(cost[key]).toBeGreaterThanOrEqual(original[key]);
+  expect(() => patch.finish(selected, maker)).toThrow("unavailable");
+});
+
+test("the one-call tree encoder owns file paths and bytes before awaiting parent metadata", async () => {
+  const held = new Map<string, JournalObject>(), baseWork = new JournalWork(new ArchiveBudget({}, () => 0)), baseMaker = new JournalObjects("sha1", baseWork);
+  const parent = await patchJournalV2Tree(null, null, testPassFiles(0), baseMaker, baseWork);
+  for (const object of baseMaker.objects()) held.set(object.id, object);
+  let release!: () => void, entered!: () => void;
+  const gate = new Promise<void>(resolve => { release = resolve; }), started = new Promise<void>(resolve => { entered = resolve; });
+  const work = new JournalWork(new ArchiveBudget({}, () => 0)), maker = new JournalObjects("sha1", work);
+  const reader = new JournalObjectReader("sha1", { object: async (id, limit) => {
+    entered(); await gate;
+    const object = held.get(id);
+    return object ? { type: object.type, size: object.data.length, data: object.data.length <= limit ? object.data : null } : null;
+  } }, work);
+  const files = testPassFiles(1), pending = patchJournalV2Tree(reader, parent, files, maker, work);
+  await started;
+  files[3]!.data.fill(0);
+  files[3]!.path = journalV2RetainedPath(2, { kind: "rule", digest: textDigest("TEST replacement path") });
+  release();
+  expect(await pending).toBe("fa69a1712244eadddb530fb92076b5ec00037b3c");
+  expect(maker.objects().some(object => object.type === "blob" && new TextDecoder().decode(object.data) === "TEST retained 1")).toBe(true);
+});
+
+test("a prepared tree patch refuses reader or maker counters from a different work session", async () => {
+  const work = new JournalWork(new ArchiveBudget({}, () => 0)), other = new JournalWork(new ArchiveBudget({}, () => 0));
+  const reader = new JournalObjectReader("sha1", { object: async () => null }, other);
+  expect(() => new JournalV2TreePatch(reader, "0".repeat(40), work)).toThrow("parent");
+  const patch = new JournalV2TreePatch(null, null, work);
+  await patch.prepare(["journal/v2/head.json"]);
+  expect(() => patch.finish([{ path: "journal/v2/head.json", data: utf8("TEST body") }], new JournalObjects("sha1", other))).toThrow("parent");
+});
 
 test("v2 edits only the new pass paths after ten thousand passes and never relocates earlier retained files", async () => {
   const held = new Map<string, JournalObject>(), read: string[] = [];
