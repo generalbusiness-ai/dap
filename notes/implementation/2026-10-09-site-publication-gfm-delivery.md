@@ -1,5 +1,7 @@
 # Site publication and Markdown delivery preparation
 
+Status, 21 October 2026: Landed at `a1277d9c`. Statements below that say review or landing is owed are as of the handoff.
+
 Work in progress under A1 request `6ec330fda2e3337b6626683bbe5c6ee024d33e38`
 and promise `74844f2cc415b293a3359837767baa20b2852297`, and A2 request
 `8aa398b21474940e726ea9183bf2987ddc914a5d` and promise

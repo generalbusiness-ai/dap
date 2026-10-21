@@ -1,5 +1,8 @@
 # 022: Self-hosting with the jam, measured, on a smaller vocabulary
 
+Status: superseded by
+`notes/plans/032-2026-10-17-journey-as-acceptance-target.md`, section 2d.
+
 Date: 2026-10-06, 08:55 Eastern. Planner's record of hugh's decisions of
 this morning, after two questions: whether the lanes' vocabulary (49 and
 51 acts) invites procedural confusion, and whether the jam's development

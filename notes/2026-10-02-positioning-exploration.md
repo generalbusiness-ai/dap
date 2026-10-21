@@ -1,5 +1,11 @@
 # Positioning exploration: how to present Artroom
 
+Status, 21 October 2026: revision 3 landed at `34465670` (approval
+`6044f680`), and the first round is done (`e6e67828`). No positioning
+design note was written. Plans 030 (`0acad1e0`) and 028 (`55b5f5e3`) set
+the positioning, and the website (`c4156177`) and the videos followed
+them. This note is history.
+
 Started 2026-10-02. Revision 3, 2026-10-03. Request `9c4d7b9b`, promise
 `0655d5da`; review repairs `68675642` and `fed383b7`. Exploration
 instructions. This note is not a positioning design or an asset. It records

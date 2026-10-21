@@ -1,5 +1,10 @@
 # Reconcile the complete experience and developer adoption work
 
+Status: retired; no work follows from it. It mapped work on the Room
+model, which was parked at `42873516`. The scope model replaced that model
+from I1 (`f1c456ce`), and package development now comes from M1
+(`feccbbcf`, `bfa02edd`, `ad39fdf1`).
+
 Dated 2026-10-03. Draft 1 for independent review. Planning request
 `2262034df901fca771f57e065f275e7cca00fcfc`; promise
 `4d8de5d7819bd4a8aa941f80866c43b3d3d68ede`.

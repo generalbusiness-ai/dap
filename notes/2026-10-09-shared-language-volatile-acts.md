@@ -1,6 +1,10 @@
 # Shared application language and volatile acts
 
-9 October 2026. **Proposed design and implementation plan; no runtime adoption.**
+Status, 21 October 2026: the note landed at `bb395d25` (approval
+`6a1705a8`). Sections 1 to 14 and 16 are not built. Section 15 is partly
+built; its own status line says what.
+
+9 October 2026. **Design and implementation plan.**
 Request `f5b286d71a3243c809d152fd7cd95e6d945e4256`, promise
 `1fcb44a526683a7ebbfabbd02331773518c69e09`, preserves original
 `8a13f7b84eae5d2656a49352300fccf66696280f`.
@@ -1345,7 +1349,12 @@ No claim of a full source audit, current deployed support or measured speedup.
 
 ## 15. Journal archive in Git (amendment, 12 October 2026)
 
-**Proposed design; no runtime adoption.** Request
+**Status, 21 October 2026:** draft 6 landed at `b7c54886` (approved
+`500fa4b9`). Section 15.3 was amended later by `c3efd0d9` (approved
+`1838cbe6`) and by A2 (`0e63ba92`). Built: A0a (`e987350d`), A1
+(`698a3d71`), A2 and A3 for fixtures only (`0e63ba92`, `6dac9c76`), the
+archive binding (`fb390d88`) and the reader repair (`7bc1490c`). Not
+built: A0b, A4 and A5. A room cannot declare the Archived level yet. Request
 `0d72a50b28c683046f6ea127d0ebe5b484f87822`, planner promise
 `fae322e0901ae73e961b1434c6fe55ec6d842b73`, resting on the durability
 request `578edf653772749b5fa9b47f6782f6db4d0ab720`. Read against main

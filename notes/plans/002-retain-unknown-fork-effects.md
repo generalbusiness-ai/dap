@@ -1,12 +1,15 @@
 # Plan 002: Keep unknown fork effects scheduled through provenance changes
 
+Status: landed `93a2552e`; describes work that is done. The code it
+changed was parked at `42873516` on 4 October 2026.
+
 > Executor: track work with a gitseq request and promise, and submit every changed artifact at one exact head for checker review. A plan is not a landing approval.
 >
 > Drift check: `git diff --stat bd520fb926f8161a722c6f1e23ae4aac29e41a66..HEAD -- packages/git/src/workspace/workspaces.ts packages/git/test/workspaces.test.ts`. Reconcile any changed excerpts before proceeding.
 
 ## Status
 
-- Status: DONE, pending review. Implemented under gitseq request `b2509b23` on branch `request/cc-workspace`; see the implementation report in [README.md](README.md).
+- Earlier status (2 October 2026): done, pending review. Implemented under gitseq request `b2509b23` on branch `request/cc-workspace`; see the implementation report in [README.md](README.md).
 - Priority: P2
 - Effort: M; estimates do not reduce scope.
 - Risk: LOW — retain debt while leaving the unrelated repository untouched.

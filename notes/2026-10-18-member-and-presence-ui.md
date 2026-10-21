@@ -1,6 +1,8 @@
 # Members and presence in the interface
 
-Draft 3, 19 October 2026. Design note for review. It sets a common
+Draft 3, 19 October 2026. It is approved at `c16fe0aa` and landed at
+`9554919b`. D1 (`8aad37bb`) and B1 (`9c6d344c`) have landed; B2, B3 and
+B4 are not built. It sets a common
 framework for showing a member anywhere in a dap interface, and for
 showing a member's presence from a recorded source now and from the live
 surface later. It fixes what the member element shows, where its data

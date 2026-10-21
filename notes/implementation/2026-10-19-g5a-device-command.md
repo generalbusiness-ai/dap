@@ -1,5 +1,7 @@
 # G5a: native device commands
 
+Status, 21 October 2026: Landed at `a00eda3b`. Statements below that say review or landing is owed are as of the handoff.
+
 Request: `5aae9b0ab67909ee49118dc49d465fe881a8037a`.
 Promise: `79f23cb727ca2ae086f49764b6b8ab7a69d2f950`.
 Base: actual Main `dba3e76237250b6ce205d511691554de3d809baf`.

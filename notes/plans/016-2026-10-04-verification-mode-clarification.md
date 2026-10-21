@@ -1,5 +1,8 @@
 # Verification modes: precise disclosure
 
+Status: retired; no work follows from it. The carry contract was not
+incorporated, and the Room and log packages were parked at `42873516`.
+
 2026-10-04. Clarification of the complete carry contract accepted in
 `7634a884`, adopted in `4fa3fe0c` / `1d2319ba`, and saved in 015.
 This changes only its verification-report wording. Every lifecycle rule,

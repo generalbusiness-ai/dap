@@ -1,6 +1,8 @@
 # A unified room interface: platform basis and design sequence
 
-15 October 2026. Design baseline for independent review.
+15 October 2026. Design baseline. It is reviewed (`78dbeea5`) and landed at
+`d5cb3123`. Its workroom evidence (`5d32a7de`) and section 7 carry-forward
+(`7bca56e3`) are approved and landed.
 
 Request `a1889c73`, planner promise `39439c9d`.
 Source inventory: main `40e37d8537aad5eecf8066fd426ae49842766526`.

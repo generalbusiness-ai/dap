@@ -1,5 +1,7 @@
 # Canonical token mints: who owns each token
 
+Status, 21 October 2026: Landed at `b803d210`. Statements below that say review or landing is owed are as of the handoff.
+
 2026-10-02. Gitseq request `10fcfe4e` (builder), from checker audit handoff
 `9f2d8808` ([notes/plans/README.md](../plans/README.md), "Canonical mint
 ownership"). Branch `request/mint-ownership`, cut from main `3ac55e96`.

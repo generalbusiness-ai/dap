@@ -1,7 +1,8 @@
 # Application packages, their checks, and the builder room
 
-18 October 2026, draft 8. Design note for review. Section 15 lists what
-changed after each checker review.
+18 October 2026, draft 8, with post-landing corrections. Draft 8 is
+approved (`4a701937`) and landed at `165d5a86`. The corrections landed at
+`a93b6359`. Section 15 lists what changed after each checker review.
 
 This note makes application authoring in dap easier to do and easier to
 verify, so that an agent can build and customize an application on
@@ -581,8 +582,8 @@ blocked on review.
 | P10 | Judgment preview (section 7) | S2, and A4 or A5 for a recorded room | A candidate version replayed over the demo room's journal reports the acts it would judge differently | 1 day |
 | P11 | Declared invariants: a design note | P6 | | |
 
-Filed: P1, P2, and P3 to the builder. The rest are filed as their
-predecessors land.
+P1 has landed (`be63c49b`). P2 and P3 are filed and not built. The rest
+are filed as their predecessors land.
 
 ## 13. Decisions
 

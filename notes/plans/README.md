@@ -1,5 +1,9 @@
 # Credential cleanup handoffs
 
+Status: retired; no work follows from it. This is the handoff log of 2 to
+18 October 2026. Each plan file carries its own status line; plans 029,
+031, 032 and 033 are current.
+
 ## Composable lanes and GitHub demonstration
 
 [017: Composable authority scopes, lanes, and the GitHub demo](017-2026-10-04-composable-lanes-and-github-demo.md)

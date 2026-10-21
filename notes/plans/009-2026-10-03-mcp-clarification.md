@@ -1,5 +1,8 @@
 # MCP for declared applications and durable work
 
+Status: superseded by `notes/plans/031-2026-10-12-generic-mcp-service.md`.
+Its content is in `notes/2026-10-01-mcp-plan.md` (`4b6d42a7`).
+
 2026-10-03. Draft 2, proposed for independent planning review.
 Planned against main `e6e6782830e0ca8a68f0d11c4d4ece5e4e98c967`.
 Evidence-only clarification request `7fc05f06`, promise `9e739dea`,

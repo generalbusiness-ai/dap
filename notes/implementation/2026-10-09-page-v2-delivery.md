@@ -1,5 +1,7 @@
 # Page v2 delivery
 
+Status, 21 October 2026: Landed at `d0a3bdcc`. Statements below that say review or landing is owed are as of the handoff.
+
 Request `3fd8cedfb065bbab93657dfb05c5385626a99a46`, builder promise
 `bac91cc6ae5eee91977aa28f6136b8d0745c749b`. Hugh directly clarified that
 the separate redesign was complete and this builder should implement
