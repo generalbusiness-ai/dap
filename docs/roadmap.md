@@ -64,7 +64,7 @@ In order, nearest first.
 | [An application's own messages between scopes](#an-applications-own-messages-between-scopes) | Runs within one room: the grow site and its rooms; not yet across rooms | 21, 25, 31, 32, 33, 37, 39, 40, 41, 51, and parts of 08, 18, 19, 24 |
 | [Durability levels](#durability-levels) | Recorded is declared; Live, Sequenced and the journal floor are designed, not built | 36, 44, and the live part of every case |
 | [A fork for each hold](#a-fork-for-each-hold) | Planned; a first measurement ran | 34 |
-| [Offline work and propose from a branch](#offline-work-and-propose-from-a-branch) | Offline work designed, not built; proposing from a branch not designed | 34 |
+| [Offline work and propose from a branch](#offline-work-and-propose-from-a-branch) | Proposing a branch's UTF-8 files is built; offline work is designed, not built; a pack upload protocol is not designed | 34 |
 | [Private views in one record](#private-views-in-one-record) | Not designed in dap; tested in the dap-spike | 42, and the club and the kanban board from the dap-spike's sweep |
 | [Evidence capture and private custody](#evidence-capture-and-private-custody) | Files and capture with a stated source designed, not built; custody narrower than a room not designed | 01, 02, 04 to 19, 23, 24, 27, 28, and the custody part of every case |
 | [Outside parties and systems](#outside-parties-and-systems) | Runs for Git publication only | 35, 37, 38, 39, 43, and all of group 5 |
@@ -168,8 +168,11 @@ result at once and reconciles it with the record.
 **State.** The
 [offline and sync note](../notes/2026-10-09-offline-and-sync-design.md)
 designs a signed local outbox, reconnection and the revision of stale
-drafts. Nothing in it is built. Proposing from a Git branch needs a pack
-upload protocol, and the note leaves it undesigned.
+drafts. Nothing in it is built. `dap propose` already proposes the
+supported UTF-8 files of a local branch, within its size, path and type
+limits (`packages/cli/src/commands.ts:1578-1665`, landed with
+`a1277d9c`). Proposing any other content needs a pack upload protocol,
+and the note leaves it undesigned.
 
 ### Private views in one record
 

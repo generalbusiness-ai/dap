@@ -1,6 +1,7 @@
 # Demo-first composable lanes: task and retargeting ledger
 
-Status: superseded by the scope model. It was built from I1 (`f1c456ce`)
+Status: superseded by `notes/2026-10-04-scope-and-replay-contract.md`.
+The scope model was built from I1 (`f1c456ce`)
 through the I3 milestones (`b452882f` to `68ffd637`) and I5 (`7bb3a641`).
 The earlier packages were parked at `42873516`.
 

@@ -1,6 +1,7 @@
 # Plan 028: rename to dap and put the framework first
 
-Status: landed in part; plan 030 superseded its dates. The documentation
+Status: superseded by `notes/plans/030-2026-10-11-demo-plan-to-the-14th.md`,
+which replaced its dates. The documentation
 head landed at `6198b199`, the minimal rename at `b5d15349` and the
 package release record at `c4d98848`. The rename kept directory names;
 `0548b726` later moved lanes and page under `apps/room`.
