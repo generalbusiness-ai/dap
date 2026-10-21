@@ -43,6 +43,8 @@ agent teams design (`notes/2026-10-15-hosted-agent-teams-design.md`).
 - **Attempt**: one try at an assignment by one instance, with a generation
   that fences older tries. The agent teams note calls this an "execution
   instance". This note renames it, so that "instance" means a key.
+- **Assignment record**: a row in the team object that admits one instance
+  to one unit of work (section 3).
 
 ## 2. Role preset
 
@@ -55,24 +57,40 @@ A role preset has three parts.
 | | `actions` | The actions the preset needs. Each must be in the roster role of `kind` (`membership.ts:100-114`). |
 | Behaviour | `revision` | A role revision: model, system prompt and defaults. |
 | | `skills` | The tools and skills the host gives the instance, by name. |
-| Flow | `pickup` | A canonical item query, the form that `dap items --query` takes (`docs/cli.md:438`), that selects eligible work. |
-| | `claim` | The act that claims one item of the pickup, such as `take-hold`. |
-| | `performs` | The acts the preset takes on claimed work. |
+| Flow | `reads` | The candidate reads: a list of item queries (below). |
+| | `eligible` | Named eligibility checks that the host's adapter runs on each candidate. |
+| | `admit` | How one instance gets the work before it starts: a lane act, or the host's assignment record (section 3). |
+| | `performs` | The acts the preset takes on admitted work. |
 | | `hands off` | The item state that the preset leaves for the next role or for a person. |
 
-A preset is host configuration. A team configuration names presets and a
-count for each. The host checks a preset against the installed app before it
-starts any instance:
+**Candidate reads.** Each read is one canonical item query: one scope, one
+item type, its states, a limit and a cursor
+(`packages/contract/src/item-query.ts:17-29`). The query has no party
+predicates and no joins. So a read only finds candidates. The eligibility
+checks decide which candidates are work for this identity. They read the
+candidate's parties, refs and related items, with further item queries when
+they need them.
 
-- each act in `claim` and `performs` exists in the app's definitions;
-- each item type in `pickup` exists;
-- each act's action is in the roster role of `kind`. A preset never grants an action. Authority comes from
-membership, as before (agent teams note, section 3).
+**Coverage.** A read answers with `complete` and an optional cursor
+(`item-query.ts:15`). The host follows the cursor to the end of each read on
+each wake, up to the attempt's read budget. When a read is refused, or the
+budget ends before `complete`, the result is "incomplete read". Only
+complete reads with no eligible candidate give "no eligible work". The host
+shows the two results apart, as the agent teams note requires (section 5).
 
-An application package declares default roles and their actions
-(`notes/2026-10-15-self-contained-applications.md:88`). It holds no model,
-prompt or spending, because those belong to the host (agent teams note,
-section 6).
+**Where a preset lives.** A preset is host configuration. A team
+configuration names presets and a count for each. The host checks a preset
+against the installed app before it starts any instance:
+
+- each act in `admit` and `performs` exists in the app's definitions;
+- each item type in `reads` exists;
+- each act's action is in the roster role of `kind`.
+
+A preset never grants an action. Authority comes from membership, as before
+(agent teams note, section 3). An application package declares default roles
+and their actions (`notes/2026-10-15-self-contained-applications.md:88`). It
+holds no model, prompt or spending, because those belong to the host (agent
+teams note, section 6).
 
 ## 3. Planner, builder and checker
 
@@ -83,31 +101,69 @@ role holds `issue.open`, `issue.request`, `issue.promise`, `issue.work`,
 `issue.plan`, `change.review` or `change.merge`. The `checker` role holds
 `change.check` (`membership.ts:101-108`).
 
+Each issue is its own scope. Its `file` act sends an index row to the
+room's directory (`issue.ts:206`). So every candidate read of an issue
+preset starts with the directory's index rows of kind `issue`, and then
+reads each listed issue scope.
+
+**Admission.** Two kinds of admission exist.
+
+- **A lane act.** When the first act on the work changes an item's state,
+  the lane admits one instance and refuses the others. `accept` needs the
+  commitment `offered` (`issue.ts:383-398`), and `take-hold` refuses
+  `hold-held` (`issue.ts:530-549`). The losing instance reads the refusal,
+  reads the board again, and takes other work.
+- **The host's assignment record.** Some work has no lane act before the
+  work is done. `offer` checks only that the issue is open
+  (`issue.ts:350-364`), so it does not stop a second offer. `check` and
+  `check-error` settle a job after the check has run (`change.ts:1038-1116`).
+  For such work, the team object keeps an assignment record: one row for
+  each identity and item reference, with the owning key, a generation and a
+  lease. The team object is one Durable Object for each team, and it changes
+  one row at a time. So the first instance that asks gets the row, and its
+  siblings read it and take other work. The row is the host's admission. It
+  grants nothing in the room, and the lane still judges every act. When an
+  instance stops renewing the lease, the row ends at the lease end. The
+  generation fences the old attempt. The record is durable, so a restart of
+  the team object keeps every row.
+
+No preset needs a lane claim that does not exist, and no preset needs a hold
+on every kind of work.
+
 **Planner** (kind `agent`):
 
-- Pickup: issues with no commitment, and reports waiting for the
-  requester.
-- Performs: `file` an issue; `offer` a commitment with its conditions;
-  `accept-report` or `refuse-report`; `ask` and comments.
-- Hands off: an offered commitment to the builder; an accepted report, with
-  its change, to the person.
+| Branch | Candidate reads | Eligible when | Admit | Performs |
+|---|---|---|---|---|
+| P1 | Index rows of kind `issue`, state `open`; each issue's `commitment` items, all states | The issue has no commitment in a state that is not final: `offered`, `proposed` or `accepted` (`issue.ts:55`) | Assignment record for the issue | `offer`, with `offeree` the builder identity when the team has one |
+| P2 | Each open issue's `report` items in state `reported` (`issue.ts:70`) | The commitment's `requester` is this member | Assignment record for the report | `accept-report` or `refuse-report` |
+
+Hands off: an offered commitment to the builder; an accepted report, with
+its change, to the person.
 
 **Builder** (kind `agent`):
 
-- Pickup: commitments offered to it, and accepted commitments with no held
-  hold.
-- Claim: `take-hold` on the commitment.
-- Performs: `propose-terms` and `accept`; `open` a change and
-  `propose-manifest` on an exact base; `request-review-own` on that change;
-  `report`; `block` and `input`; `renew-hold` and `release-hold`.
-- Hands off: a report to the planner, and a manifest with a review request
-  for checks and review.
+| Branch | Candidate reads | Eligible when | Admit | Performs |
+|---|---|---|---|---|
+| B1 | Each open issue's `commitment` items in state `offered` | `offeree` is this member, or unset | `accept` | then branch B2 |
+| B2 | Each open issue's `commitment` items in state `accepted`, and its `hold` items in state `held` | `performer` is this member, and no hold is held under the commitment | `take-hold` | `open` a change and `propose-manifest` on an exact base; `request-review-own`; `report`; `block` and `input`; `renew-hold` and `release-hold` |
+
+A B1 admission leaves the commitment `accepted`, with this member as its
+performer. The same instance then goes on to B2. A sibling that lost the
+`accept` can still win the `take-hold` race. That is correct: both are the
+same member, with the same mandate.
+
+Hands off: a report to the planner, and a manifest with a review request
+for checks and review.
 
 **Checker** (kind `checker`, no controller):
 
-- Pickup: check jobs in state `requested`.
-- Performs: `check` with its result, or `check-error`.
-- Hands off: the check result. A required check of the rules consumes it.
+| Branch | Candidate reads | Eligible when | Admit | Performs |
+|---|---|---|---|---|
+| C1 | Each change scope's `job` items in state `requested` (`change.ts:126-128`) | The job's check names this member as its checker in the rules | Assignment record for the job | `check` with its result, or `check-error` |
+
+Hands off: the check result. A required check of the rules consumes it.
+
+The item types and states above are the lanes' names at main `afe0c319`.
 
 **Where a person decides.** Three acts stay with people, because the
 `agent` and `checker` roles do not hold them:
@@ -147,11 +203,12 @@ both.
 
 **Claim.** Lanes see members, not keys. A hold is keyed by its commitment,
 and its performer and holder are members (`issue.ts:530-549`;
-`apps/room/lanes/src/shared.ts:29`). Two instances of one member race to
-take a hold. One succeeds. The other is refused `hold-held`, rereads the
-board, and picks other eligible work (agent teams note, section 5, step 3).
-The host keeps one assignment for each key, so an instance never claims a
-second item while it holds one.
+`apps/room/lanes/src/shared.ts:29`). Two instances of one member race for
+the same work through the admission of section 3: a lane act, or the host's
+assignment record. One instance is admitted. The other reads the refusal or
+the record, reads the board again, and picks other eligible work (agent
+teams note, section 5, step 3). The host keeps one assignment for each key,
+so an instance never takes a second item while it holds one.
 
 **What a second instance reads.** It reads the hold as held by its own
 member. The entry that took the hold shows which key signed it. The second
@@ -189,7 +246,7 @@ assignment.
 ## 5. Independence and limits
 
 - **Approvals count by member.** A change's approvals are counted as distinct
-  members (`packages/scope/src/reservation.ts:270-274`). So instances of one
+  members (`packages/platform/src/reservation.ts:270-274`). So instances of one
   member are one approval at most.
 - **One controller is one owner.** Agents do not hold `change.review`, so an
   agent's approval never counts. A later membership version that lets agents
@@ -253,7 +310,9 @@ This head amends `notes/2026-10-15-hosted-agent-teams-design.md`:
   slot is a key. Reducing the count drains an instance and retires its key.
   Increasing it enrols a new key for the same member.
 - **Section 5.** The losing contender is another instance of the same member
-  or another member. Each instance holds one assignment.
+  or another member. Each instance holds one assignment. Step 3's claim is
+  a lane act when the first act changes an item's state, and otherwise the
+  team object's assignment record (section 3 of this note).
 - **Acceptance.** Racing two agents for one assignment becomes racing two
   instances of one identity, and two identities. Revoking an agent becomes
   two cases. Retiring one instance's key stops that instance, and the
@@ -274,14 +333,40 @@ note, after it lands:
 - The witnesses check one member with three keys, instead of one member and
   one key for each row (contracts, section 8).
 
-## 9. Slices
+## 9. Witnesses
+
+Each admission branch of section 3 has a witness with two instances of one
+identity:
+
+1. **P1.** Two planner instances read one open issue with no commitment.
+   The assignment record admits one. One `offer` is recorded, and the other
+   instance takes no action on that issue.
+2. **P2.** Two planner instances read one `reported` report. The record
+   admits one, and one `accept-report` or `refuse-report` is recorded.
+3. **B1.** Two builder instances read one `offered` commitment. Both sign
+   `accept`. One takes effect, and the other is refused by the state guard
+   and reads the board again.
+4. **B2.** Two builder instances read one `accepted` commitment with no
+   hold. Both sign `take-hold`. One hold opens, and the other is refused
+   `hold-held`.
+5. **C1.** Two checker instances read one `requested` job. The record
+   admits one, and one `check` result is recorded.
+6. **Restart.** The team object restarts while a planner row is held. The
+   row stays. A sibling takes the work only after the lease ends, and the
+   old attempt's generation is refused after that.
+7. **Lost key.** A builder instance holding a hold loses its key. A sibling
+   renews and then releases the hold, and the record shows both keys.
+8. **Incomplete read.** A read refused, or stopped by its budget before
+   `complete`, shows as an incomplete read, not as no eligible work.
+
+## 10. Slices
 
 | Slice | Content | Done when |
 |---|---|---|
 | RI1 | Enrol a further key for an existing agent or checker member: `dap invite --kind agent-key --member @handle` signs only `invite-key`; hosted MCP enrols a further key for an existing member through a control request; docs/mcp.md recipe. | A member with three active keys acts with each one; each entry's observation names its key; retiring one key leaves the member and the other two working. |
-| RI2 | The Counter contracts revision 4 slices. They carry the team runtime: presets, slots as keys, one assignment per key, drain, recovery by a sibling instance. | Exit test 1 (section 6) passes on a hosted Worker. |
+| RI2 | The Counter contracts revision 4 slices. They carry the team runtime: presets, slots as keys, the assignment record, one assignment per key, drain, recovery by a sibling instance. | Exit test 1 (section 6) passes on a hosted Worker, with witnesses 6, 7 and 8 of section 9. |
 | RI3 | Views: the instance line under the member badge, and the team view's slots. | The member and team views show three instances of one member, with their keys and states. |
-| RI4 | The Room team: the planner, builder and checker presets of section 3 on the issue and change lanes. | Exit test 2 (section 6) passes on a hosted Worker. |
+| RI4 | The Room team: the planner, builder and checker presets of section 3 on the issue and change lanes. | Witnesses 1 to 5 of section 9 pass, and exit test 2 (section 6) passes on a hosted Worker. |
 
 The slices run in this order. RI2 follows the Counter contracts revision 4.
 The planner writes that revision after this note lands.

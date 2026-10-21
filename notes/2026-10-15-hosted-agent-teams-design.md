@@ -247,7 +247,10 @@ The initial dispatch sequence is:
 2. Filter by the role's declared selection and actual app eligibility.
 3. Claim the work through an admitted app operation. A losing contender
    rereads the outcome and chooses other eligible work. The contender can
-   be another instance of the same identity.
+   be another instance of the same identity. Where the app has no act that
+   changes state before the work, the claim is the team object's
+   assignment record ([roles, flow and instances](2026-10-21-roles-flow-and-instances.md),
+   section 3).
 4. Retain the assignment identity, input provenance, role revision, and
    budget reservation before starting its attempt.
 5. Recheck relevant current authority and assignment ownership before each
