@@ -19,7 +19,10 @@ export type ArchiveRetainedCopy = Pick<ArchiveForeignCopy, "content" | "bytes" |
 // whole-prefix classifier checks every exact native pin/data/place first.
 const nativeDomains: ReadonlySet<string> = new Set([...Object.values(DOMAINS), ...ARCHIVE_NATIVE_VALUE_DOMAINS]);
 const keyName = (key: RetainedKey): string => JSON.stringify(key.kind === "value" ? [key.kind, key.domain, key.digest] : [key.kind, key.digest]);
-const REQUEST_WORK = 256, SIZE_METADATA = 96;
+const REQUEST_WORK = 256, SIZE_METADATA = 96, DEFINITION_PRESENCE_METADATA = 32;
+/** Original unreviewed declaration existence check only, never a body. */
+export const archiveDefinitionPresenceForecast = (): Readonly<Partial<ArchiveCost>> =>
+  Object.freeze({ attempts: 1, calls: 1, metadata: DEFINITION_PRESENCE_METADATA, inputWork: REQUEST_WORK + DEFINITION_PRESENCE_METADATA });
 const coldWork = (bytes: number) => bytes * 32;
 const cachedWork = (units: number) => units * 3 * 32;
 
@@ -53,7 +56,7 @@ export class ArchiveRetainedReader {
   definitionPresent(digest: Digest): boolean {
     checkedRetainedKey({ kind: "definition", digest });
     this.budget.spend({ attempts: 1, inputWork: REQUEST_WORK });
-    const rows = this.budget.native(this.sql, () => ({ metadata: 32, inputWork: 0 })).exec("SELECT 1 AS present FROM retained_input WHERE kind = 'definition' AND digest = ? LIMIT 1", digest).toArray();
+    const rows = this.budget.native(this.sql, () => ({ metadata: DEFINITION_PRESENCE_METADATA, inputWork: 0 })).exec("SELECT 1 AS present FROM retained_input WHERE kind = 'definition' AND digest = ? LIMIT 1", digest).toArray();
     if (rows.length === 0) return false;
     if (rows.length !== 1 || rows[0]?.["present"] !== 1) return this.budget.stop("unavailable");
     return true;

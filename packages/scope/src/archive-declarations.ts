@@ -22,7 +22,7 @@ export class ArchiveDeclarations {
     readonly reviewed: ArchivePolicyRegistry, readonly visited: Set<Digest>,
     /** Trusted scout sizes only narrow original reads. A missing key refuses
      * before its body; every permitted read still validates afresh. */
-    readonly declarationSizes?: ReadonlyMap<Digest, number>) {}
+    readonly declarationSizes?: ReadonlyMap<Digest, number | null>) {}
   definition(digest: Digest): DefinitionMetadata | null | undefined { return this.#metadata.get(digest); }
   closure(digest: Digest): ArchiveDeclarationClosure | undefined { return this.#closures.get(digest); }
   /** Re-admit the exact local root and all archive-only children before
@@ -66,6 +66,10 @@ export class ArchiveDeclarations {
     if (!this.reviewed.has(digest) && !this.reader.definitionPresent(digest)) { this.#metadata.set(digest, null); return null; }
     const policy = this.#policyOf(digest);
     const maximum = this.declarationSizes === undefined ? this.bounds.definitionBytes : this.declarationSizes.get(digest);
+    if (maximum === null) {
+      if (this.reader.measure({ kind: "definition", digest }, this.bounds.definitionBytes) !== null) return stop("mismatch");
+      this.#metadata.set(digest, null); return null;
+    }
     if (maximum === undefined || !natural(maximum) || maximum === 0 || maximum > this.bounds.definitionBytes) return stop("mismatch");
     const got = this.reader.read({ kind: "definition", digest }, maximum);
     if (!got) { this.#metadata.set(digest, null); return null; }

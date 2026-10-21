@@ -59,7 +59,7 @@ const nameOf = (key: RetainedKey) => JSON.stringify(key.kind === "value" ? [key.
  * context. The caller supplies its real Sql.transaction (transactionSync).
  * All work is synchronous: no provider task can outlive this frame. The
  * same one budget is used across every stage and every cache hit. */
-export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: Bounds, reviewed: ArchivePolicyRegistry, budget = new ArchiveBudget(), fixtureSources?: FixtureArchiveSourcePins, after?: Head | null, forecast?: ArchivePlanFence, declarationSizes?: ReadonlyMap<Digest, number>): ArchiveInventoryResult {
+export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: Bounds, reviewed: ArchivePolicyRegistry, budget = new ArchiveBudget(), fixtureSources?: FixtureArchiveSourcePins, after?: Head | null, forecast?: ArchivePlanFence, declarationSizes?: ReadonlyMap<Digest, number | null>): ArchiveInventoryResult {
   try {
     return sql.transaction(() => {
       budget.check();
