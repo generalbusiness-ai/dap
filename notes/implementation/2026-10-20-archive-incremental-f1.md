@@ -521,3 +521,62 @@ UTF-8 bytes, with the full scope, incarnation and hash in the receipt.
 | `sha256:9e0a5a28346594dcd3a95794d1d66951691e6de65adc1582e788ba5ef3085530` | 45,750 | Directory 5 |
 | `sha256:6d4a86ea2640f5364515eaa7803ea4ba47c7636027e62e490d2be18b4d2e9110` | 4,998 | Rules 2 |
 | `sha256:9e0a5a28346594dcd3a95794d1d66951691e6de65adc1582e788ba5ef3085530` | 45,750 | Rules 2 |
+
+## Real local Git clone of the native Grow archive
+
+The native Grow witness now round-trips its exact exported objects through
+the real Git program. The existing nonce-protected local test bridge
+materializes a temporary SHA-1 bare repository, checks every object with
+Git, installs the five journal refs, and runs strict full `fsck`. The
+independent Node SHA-1 must also agree with every exported object ID.
+`git clone --mirror --no-local` then transfers the repository through
+upload-pack. A second strict full `fsck` checks the clone. The bridge reads
+the clone's reachable objects with binary `cat-file --batch`; it returns
+those bytes and refs, with no original-map lookup.
+
+The Worker empties the original object map before replaying the clone.
+All five native targets must produce exactly their earlier verification
+reports, including coverage, anchors, omission rows and trust. Only then
+does the test restore its local map for the existing metadata negatives.
+No journal entry is fabricated, and no external text set is supplied.
+Temporary repositories are removed by the test bridge's teardown.
+
+Original `75387` passes the Scope source, test and Node-support compilers
+and the selected native Grow case. Its receipt records Git
+`2.54.0 (Apple Git-157)`, 140 source objects, 140 cloned reachable objects,
+the same five journal refs, strict `fsck` success and five equal offline
+reports. Full outer cost is 11.68 seconds elapsed, 14.24 user plus 2.19
+system seconds, or 16.43 CPU seconds. The unchanged 30-second case deadline
+remains in place. The receipt is
+`/private/tmp/archive-native-git-clone-native-receipt-v4-20261020.json`.
+
+Earlier original attempts are preserved. `49704` stops at the test compiler
+over binary-buffer types (2.12 seconds elapsed, 4.98 CPU seconds). `62399`
+passes all compilers but the bridge returns its generic failure (9.97 /
+14.75). A specific fixture diagnostic in `43021` identifies strict Git's
+`badHeadTarget`: the fixture's HEAD symbolically names a journal ref rather
+than a branch (10.14 / 15.04). Giving the temporary repository a detached
+HEAD fixes that fixture error without adding a fabricated branch or
+changing the native object closure.
+
+One compiling control, original `50754`, directs clone Replay to the
+emptied original map instead of the clone. The unchanged native Grow case
+fails its verification assertion with `archive-failure`, as intended. Its
+full outer cost is 9.03 elapsed and 10.85 user plus 1.57 system seconds, or
+12.42 CPU seconds. It uses the original passing clone baseline rather than
+repeating it and restores source bytes, modes and the lock stamp exactly.
+
+Each owning attempt and control captures all 2,643 source files exactly,
+with zero installs. These are separate runs on the shared macOS arm64
+host; machine, load and uncontrolled OS-cache statements are in the input
+receipts. Helpers and the annotation reporter were copied from explicit
+verified rows of the closed omission grant into distinct regular files,
+then all matching aliases were retargeted before execution. Frozen
+originals remain unchanged.
+
+This proves a local SHA-1 Git clone of the actual native Grow closure and
+offline Replay of its returned bytes. Host identity, package/owner policy,
+scheduler and the local bridge remain TEST fixtures. It supplies no hosted
+transport, provider, credential, deployment or full F1 acceptance claim.
+The adaptive cutoff, amended large native pass witnesses and throughput
+work remain open. No full gate or formal Source review has run.

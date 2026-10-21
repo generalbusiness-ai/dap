@@ -5,13 +5,18 @@ export interface LocalCloneInspection {
   head: string; tree: string; expectedTree: string; paths: string; readme: string; origin: string;
   tokenInConfig: boolean; tokenInOutput: boolean; readRequests: number;
 }
+export interface LocalArchiveClone {
+  refs: readonly { ref: string; id: string }[];
+  objects: readonly { id: string; type: "blob" | "tree" | "commit"; data: string }[];
+  sourceObjects: number; fsckPassed: true; gitVersion: string;
+}
 declare module "vitest" { interface ProvidedContext { localClone: LocalCloneAddress } }
 
 export function localClone(at: LocalCloneAddress) {
   const headers = { "x-clone-fixture": at.nonce };
   const json = async <T>(path: string, body?: unknown): Promise<T> => {
     const response = await fetch(`${at.url}${path}`, { headers: { ...headers, "content-type": "application/json" }, ...(body === undefined ? {} : { method: "POST", body: JSON.stringify(body) }) });
-    if (!response.ok) throw new Error("local clone fixture refused");
+    if (!response.ok) throw new Error(path === "/archive-clone" ? `local archive clone fixture refused: ${(await response.text()).slice(0, 2048)}` : "local clone fixture refused");
     return response.json() as Promise<T>;
   };
   return {
@@ -20,6 +25,7 @@ export function localClone(at: LocalCloneAddress) {
     revoke: (name: string, plaintext: string) => json<boolean>("/revoke", { name, plaintext }),
     run: (args: readonly string[], env: Readonly<Record<string, string>>) => json<{ code: number | null; outputClean: boolean }>("/run", { args, env }),
     inspect: () => json<LocalCloneInspection>("/inspect"),
+    archive: (objects: LocalArchiveClone["objects"], refs: LocalArchiveClone["refs"]) => json<LocalArchiveClone>("/archive-clone", { objects, refs }),
     status: () => json<unknown>("/status"),
     forward: async (request: Request) => {
       // Fixed trusted test proxy, as Host.upstream's synthetic Response. The

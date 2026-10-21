@@ -16,6 +16,7 @@ import type { TestProject } from "vitest/node";
 import { Host } from "../../../git/test/support/host.ts";
 import { git } from "../../../git/test/support/repo.ts";
 import type { LocalCloneAddress } from "./local-clone.ts";
+import { cloneNativeArchive, cleanupNativeArchiveClones } from "./local-archive-clone.ts";
 
 const MAX = 1024 * 1024; // fixture-only buffer bound, not a product quota
 const controlled = { PATH: process.env["PATH"] ?? "/usr/bin:/bin", GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: "/dev/null", GIT_TERMINAL_PROMPT: "0" };
@@ -95,7 +96,13 @@ export default async function setup(project: TestProject) {
       }
       if (request.headers["x-clone-fixture"] !== nonce) { response.writeHead(403); response.end(); return; }
       const value = raw.length ? JSON.parse(raw.toString("utf8")) as Record<string, unknown> : {};
-      if (path === "/configure" && request.method === "POST" && typeof value["name"] === "string" && /^[A-Za-z0-9_.-]+$/.test(value["name"]) && (name === null || name === value["name"])) {
+      if (path === "/archive-clone" && request.method === "POST") {
+        try { send(cloneNativeArchive(value)); }
+        catch (error) {
+          response.writeHead(500, { "content-type": "text/plain" });
+          response.end(error instanceof Error ? error.message.slice(0, 2048) : "archive clone fixture failure");
+        }
+      } else if (path === "/configure" && request.method === "POST" && typeof value["name"] === "string" && /^[A-Za-z0-9_.-]+$/.test(value["name"]) && (name === null || name === value["name"])) {
         if (name === null) {
           // A failed initialization retains this allocation for the next
           // configure and for teardown; no retry loses its ownership.
@@ -133,5 +140,6 @@ export default async function setup(project: TestProject) {
   return async () => {
     await new Promise<void>((resolve) => server.close(() => resolve()));
     if (fixtureRoot !== null) rmSync(fixtureRoot, { recursive: true, force: true });
+    cleanupNativeArchiveClones();
   };
 }

@@ -5,7 +5,7 @@
 import { env, runInDurableObject } from "cloudflare:test";
 import { expect, inject, test } from "vitest";
 import { DEVICE_COMMAND, PROPOSED_BOUNDS, type DeclaredDefinition, type Digest, type FactRef, type Head, type Input, type PlatformDefinition, type ScopeId, type Sealed } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isEntry, isSeed, parseStrict, scopeIdOf, textDigest, timeOf, unb64url } from "@generalbusiness/artroom-bytes";
+import { b64url, canonicalize, isDigest, isEntry, isSeed, parseStrict, scopeIdOf, textDigest, timeOf, unb64url } from "@generalbusiness/artroom-bytes";
 import { readApplicationPackage2 } from "@generalbusiness/artroom-bytes/application-v2";
 import { outcomeValueDomains, ownersOf, validateDefinition, type OperationRules } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
@@ -27,6 +27,7 @@ import { outsideOf as hostOutside } from "../src/worker.ts";
 import { applicationOwnedScopesPacket } from "./support/application-owned-scopes-fixture.ts";
 import { applicationResolverFixture } from "./support/application-fixture.ts";
 import { applicationHttpPeer } from "./support/application-http-peer.ts";
+import { localClone } from "./support/local-clone.ts";
 import { sessionRoom } from "./support/session-room.ts";
 import { dispatchFixture, driveFixture, effectFixture } from "./support/native-fixture-lifetime.ts";
 import { archiveSql } from "./support/archive.ts";
@@ -391,6 +392,31 @@ test.for(["fixture", "Grow"])("installed %s scopes export genesis zero after a l
       .toEqual(new Set(anchorFacts.map(canonicalize)));
     expect(new Set(offlineResults.flatMap(result => result.offline.kind === "verification" ? (result.offline.verification.report.omittedTexts ?? []).map(canonicalize) : [])))
       .toEqual(new Set(expectedOmissions.map(canonicalize)));
+    // Real Git materializes and mirror-clones only the native export. The
+    // offline verifier below reads back the clone's objects, not this map.
+    const cloned = await life.wait(() => localClone(inject("localClone")).archive(
+      [...diagnosticObjects.values()].map(object => ({ id: object.id, type: object.type, data: b64url(object.data) })),
+      [...diagnosticRefs].map(([ref, id]) => ({ ref, id })),
+    ));
+    expect(cloned.fsckPassed).toBe(true);
+    expect([...cloned.refs].sort((a, b) => a.ref.localeCompare(b.ref))).toEqual([...diagnosticRefs].map(([ref, id]) => ({ ref, id })).sort((a, b) => a.ref.localeCompare(b.ref)));
+    const clonedRefs = new Map(cloned.refs.map(row => [row.ref, row.id]));
+    const clonedObjects = new Map(cloned.objects.map(object => {
+      const data = unb64url(object.data); if (!data) throw Error("Clone fixture must return binary Git bytes.");
+      return [object.id, { type: object.type, data }] as const;
+    }));
+    diagnosticObjects.clear();
+    for (const { scope, read } of allHistories) {
+      const replayed = await life.wait(() => verifyArchive(archiveSource({ open: (at, work) => readJournalRepositoryArchive({
+        format: async () => "sha1", resolve: async ref => clonedRefs.get(ref) ?? null,
+        object: async (id, limit) => { const object = clonedObjects.get(id); return object ? { type: object.type, size: object.data.length, data: object.data.length <= limit ? object.data : null } : null; },
+      }, at, work) }), { mode: "replay", platform, capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE, grants: "proven", scope: scope.name, head: read.at, anchors }));
+      expect(replayed.kind).toBe("verification"); if (replayed.kind !== "verification") return;
+      const original = offlineResults.find(result => result.scope === scope.name)!.offline;
+      expect(original.kind).toBe("verification"); if (original.kind !== "verification") return;
+      expect(replayed.verification.report).toEqual(original.verification.report);
+    }
+    for (const archive of diagnosticArchives.values()) for (const object of archive.objects) diagnosticObjects.set(object.id, object);
     // Corrupt only metadata of a native-produced Directory pass. The real
     // native entry/input port supplies unchanged bytes; no fake history.
     for (const corruption of ["missing", "extra"] as const) {
@@ -418,10 +444,11 @@ test.for(["fixture", "Grow"])("installed %s scopes export genesis zero after a l
     }
     await context.annotate(JSON.stringify({
       scopes: discovery!.scopes, repository: discovery!.repository, anchorFacts, omittedTexts: expectedOmissions,
+      clone: { gitVersion: cloned.gitVersion, sourceObjects: cloned.sourceObjects, clonedObjects: cloned.objects.length, refs: cloned.refs, fsckPassed: cloned.fsckPassed, offlineReportsEqual: allHistories.length },
       results: offlineResults.map(result => ({ scope: result.scope, head: result.head,
         result: result.offline.kind === "verification" ? result.offline.verification.report.result : result.offline.kind })),
       copies: credentialCounts, refusedDomains: 2, refusedCredentials: 3, anchorRefusals: 4,
-      qualification: "Native test-host journals and issued reads; TEST package/owner/scheduler/policy/object repository. Explicit private facts and observed values on caller trust; no live private source read by collector, real Git clone, provider or deployment acceptance.",
+      qualification: "Native test-host journals and issued reads; TEST package/owner/scheduler/policy/object repository. Explicit private facts and observed values on caller trust; Real local Git mirror clone and five offline reports; no live private source read by collector, provider, hosted transport or deployment acceptance.",
     }), "native-archive-closure");
   } finally { life.release(); }
 });
