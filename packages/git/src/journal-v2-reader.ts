@@ -7,7 +7,7 @@ import { journalRef } from "./journal-path.ts";
 import { archiveSegments } from "./journal-segments.ts";
 import { JournalObjectReader, journalId, type JournalObjectSource } from "./journal-objects.ts";
 import { JOURNAL_SELECTION_BYTES, journalKeyName, sameJournalScope, type JournalForeignSource } from "./journal-selection.ts";
-import { journalV2Head, journalPassManifest, type JournalPassManifest } from "./journal-v2-manifest.ts";
+import { journalV2Head, journalPassManifest, type JournalPassManifest, type JournalTextOmission } from "./journal-v2-manifest.ts";
 import { journalV2PassPath, journalV2Position, journalV2RetainedPath, journalV2SegmentPath, readJournalV2Path } from "./journal-v2-path.ts";
 import { JournalLayoutRefusal, JournalWork, refuseJournal } from "./journal-work.ts";
 import type { JournalReadBudget, JournalReadRepository, JournalReadResult, ReadJournal } from "./journal-reader.ts";
@@ -80,6 +80,7 @@ export async function readJournalArchiveV2(repository: JournalReadRepository, sc
     let segmentIndex = 0;
     const expected = new Set<string>(["journal/v2/head.json"]), entries: ReadJournal["entries"][number][] = [], retained = new Map<string, RetainedInput>();
     const origins = new Map<string, number>(), written = new Map<string, { pass: number; key: (typeof passes)[number]["retained"][number] }>();
+    const omittedTexts: JournalTextOmission[] = [], omittedSizes = new Map<Digest, number>();
     const sources = new Map<string, JournalForeignSource>();
     for (const pass of passes) {
       const first = pass.entries[0]; expected.add(journalV2PassPath(first));
@@ -112,6 +113,12 @@ export async function readJournalArchiveV2(repository: JournalReadRepository, sc
         if (segment.first < first) return mismatch(segment.path);
         segments.push(segment);
       }
+      const claimed = new Map<number, Set<Digest>>(), named = new Map<number, Set<Digest>>();
+      for (const row of pass.omitted) if (row.bytes !== undefined && row.first) {
+        if (row.first.scope !== scope) return refuseJournal("tree", "omission scope");
+        work.metadata(256);
+        const at = claimed.get(row.first.seq) ?? new Set<Digest>(); at.add(row.digest); claimed.set(row.first.seq, at);
+      }
       for (const segment of segments) {
         expected.add(segment.path);
         const body = await read(segment.id, "blob", segment.path); work.input(body.length, 12);
@@ -124,6 +131,19 @@ export async function readJournalArchiveV2(repository: JournalReadRepository, sc
           try { entry = parseStrict(bytes); } catch { return mismatch(segment.path); }
           if (!isEntry(entry) || canonicalize(entry) !== bytes || !sameJournalScope(entry.at, head.scope) || entry.seq !== entries.length || entry.seq > pass.through.seq || entry.prev !== (entries.at(-1)?.hash ?? null)) return mismatch(segment.path);
           if (entry.seq === 0 ? entry.input.type !== "genesis" || scopeIdOf(entry.input.seed) !== scope || entry.input.inc !== head.scope.inc || entry.input.seed.kind !== head.scope.kind : entry.input.type === "genesis") return mismatch(segment.path);
+          const asked = claimed.get(entry.seq);
+          if (asked) {
+            // Check explicit claims, not discover dependencies or body reads.
+            // The native text selector owns semantic consumption in Replay.
+            const size = utf8(bytes).length; work.metadata(size * 8); work.input(size, 2);
+            const pending: unknown[] = [entry.input], found = new Set<Digest>();
+            while (pending.length) {
+              work.check(); const value = pending.pop();
+              if (typeof value === "string" && asked.has(value as Digest)) found.add(value as Digest);
+              else if (value && typeof value === "object") for (const child of Object.values(value)) pending.push(child);
+            }
+            named.set(entry.seq, found);
+          }
           work.metadata(entry.uses.length * 512);
           for (const use of entry.uses) {
             const prior = uses.get(use.content);
@@ -134,6 +154,13 @@ export async function readJournalArchiveV2(repository: JournalReadRepository, sc
         }
       }
       if (entries.length !== pass.through.seq + 1 || entries.at(-1)?.hash !== pass.through.hash) return mismatch("pass head");
+      for (const row of pass.omitted) if (row.bytes !== undefined && row.first) {
+        if (!named.get(row.first.seq)?.has(row.digest)) return refuseJournal("tree", "unreferenced text omission");
+        const previous = omittedSizes.get(row.digest);
+        if (previous !== undefined && previous !== row.bytes) return mismatch("omission byte count");
+        omittedSizes.set(row.digest, row.bytes);
+        omittedTexts.push(Object.freeze({ digest: row.digest, bytes: row.bytes, first: Object.freeze({ ...row.first }) }));
+      }
       const size = local.reduce((sum, entry) => sum + utf8(entry.bytes).length, 0) + Math.max(0, local.length - 1);
       work.input(size, 8); work.metadata(local.length * 64);
       const canonical = archiveSegments(local, size);
@@ -169,6 +196,7 @@ export async function readJournalArchiveV2(repository: JournalReadRepository, sc
     work.check();
     return { ok: true, archive: Object.freeze({ scope: Object.freeze({ ...head.scope }), head: Object.freeze({ seq: head.through, hash: head.hash }), format, commit: id, name,
       entries: Object.freeze(entries.map(entry => Object.freeze(entry))), retained: Object.freeze([...retained.values()].map(input => Object.freeze(input))),
+      ...(omittedTexts.length ? { omittedTexts: Object.freeze(omittedTexts) } : {}),
       ...(sources.size ? { foreignSources: Object.freeze([...sources.values()].map(source => Object.freeze({ at: Object.freeze({ ...source.at }), pin: source.pin }))) } : {}) }) };
   } catch (error) {
     const reason = error && typeof error === "object" && "reason" in error ? error.reason : "unavailable";

@@ -20,10 +20,43 @@ export type ArchiveBuildResult = { readonly ok: true; readonly archive: JournalA
 export type ArchivePassBuildResult = { readonly ok: true; readonly archive: JournalPassArchive } | ArchiveBuildFailure;
 type Parent = { readonly id: string; readonly source: JournalObjectSource } | null;
 
+/** Collect only bytes that the native builder actually reads. The same
+ * pass budget pays for admission, anchors and layout. */
+function replayInput(native: ReturnType<typeof archiveInput>, selection: ConstructorParameters<typeof ArchiveReplayAnchors>[0],
+  scopes: readonly ScopeRef[] | undefined, budget: ArchiveBudget, sources?: FixtureArchiveSourcePins) {
+  let collector: ArchiveReplayAnchors | undefined;
+  try { if (scopes) collector = new ArchiveReplayAnchors(selection, scopes, budget, sources); }
+  catch (error) {
+    if (error instanceof ArchivePrefixStopped || error instanceof ArchiveStopped) return { ok: false as const, reason: error.reason };
+    throw error;
+  }
+  const gathered = collector, failed: { reason?: ArchiveBuildFailure["reason"] } = {};
+  const input = gathered ? { ...native, entry: async (seq: number, limit: number) => {
+    const bytes = await native.entry(seq, limit);
+    try { if (bytes !== null) gathered.entry(bytes, limit); }
+    catch (error) {
+      if (error instanceof ArchivePrefixStopped || error instanceof ArchiveStopped) failed.reason = error.reason;
+      throw error;
+    }
+    return bytes;
+  } } : native;
+  return { ok: true as const, input, finish: (success: boolean) => {
+    if (failed.reason) return { ok: false as const, reason: failed.reason };
+    if (!success) return { ok: true as const };
+    try {
+      const anchors = collector?.finish();
+      return { ok: true as const, ...(anchors ? { anchors } : {}) };
+    } catch (error) {
+      if (error instanceof ArchivePrefixStopped || error instanceof ArchiveStopped) return { ok: false as const, reason: error.reason };
+      throw error;
+    }
+  } };
+}
+
 /** Conversion is a bounded re-admission of the confirmed v1 prefix, never
  * a new cutoff or an outstanding v1 attempt. Matching its complete tree
  * establishes byte preservation before any new receipt can be marked. */
-export async function planArchiveConversion(sql: Sql, context: { readonly row: ArchiveRow; readonly bounds: Bounds; readonly policies: ArchivePolicyRegistry; readonly parent: Parent; readonly markedAt: Timestamp; readonly fixtureSources?: FixtureArchiveSourcePins }, budget: ArchiveBudget): Promise<ArchiveBuildFailure | { readonly ok: true; readonly archive: JournalPassArchive; readonly mark: ArchiveMark }> {
+export async function planArchiveConversion(sql: Sql, context: { readonly row: ArchiveRow; readonly bounds: Bounds; readonly policies: ArchivePolicyRegistry; readonly parent: Parent; readonly markedAt: Timestamp; readonly fixtureSources?: FixtureArchiveSourcePins; readonly replayScopes?: readonly ScopeRef[] }, budget: ArchiveBudget): Promise<ArchiveBuildFailure | { readonly ok: true; readonly archive: JournalPassArchive; readonly mark: ArchiveMark; readonly anchors?: readonly FactRef[] }> {
   const row = context.row, confirmed = row.confirmed;
   if (!confirmed || confirmed.layout === 2 || row.pending || row.stopped || context.parent?.id !== confirmed.commit) return { ok: false, reason: "manifest" };
   const at = { ...row.at }, through = { ...confirmed.through }, commit = confirmed.commit, format = row.format;
@@ -42,10 +75,13 @@ export async function planArchiveConversion(sql: Sql, context: { readonly row: A
   budget.spend({ inputWork: JOURNAL_SELECTION_BYTES * 3 });
   const manifest = canonicalize(inventory);
   if (manifest.length > JOURNAL_SELECTION_BYTES || utf8(manifest).length > JOURNAL_SELECTION_BYTES) budget.stop("limit");
-  const built = await convertJournalArchiveV1({ format, selection: manifest,
-    input: archiveInput(sql, inventory, budget, fixtureSources), parent, budget });
+  const replay = replayInput(archiveInput(sql, inventory, budget, fixtureSources), inventory, context.replayScopes, budget, fixtureSources);
+  if (!replay.ok) return replay;
+  const built = await convertJournalArchiveV1({ format, selection: manifest, input: replay.input, parent, budget });
+  const collected = replay.finish(built.ok);
+  if (!collected.ok) return collected;
   if (!built.ok) return built;
-  return { ...built, mark: { commit: built.archive.commit, parent: commit, through, manifest, markedAt, layout: 2 } };
+  return { ...built, mark: { commit: built.archive.commit, parent: commit, through, manifest, markedAt, layout: 2 }, ...(collected.anchors ? { anchors: collected.anchors } : {}) };
 }
 
 /** Bounds the metadata before parsing or encoding it. The recorded inventory
@@ -80,7 +116,7 @@ function storedSelection(manifest: string, budget: ArchiveBudget, incremental = 
 
 /** A bounded new interval, with the previous confirmed position explicit.
  * Every old retained key is named by its stored original pass. */
-export async function planArchivePass(sql: Sql, context: { readonly at: ScopeRef; readonly through: Head; readonly after: Head | null; readonly bounds: Bounds; readonly policies: ArchivePolicyRegistry; readonly format: JournalFormat; readonly parent: Parent; readonly markedAt: Timestamp; readonly fixtureSources?: FixtureArchiveSourcePins }, budget: ArchiveBudget): Promise<ArchiveBuildFailure | { readonly ok: true; readonly archive: JournalPassArchive; readonly mark: ArchiveMark }> {
+export async function planArchivePass(sql: Sql, context: { readonly at: ScopeRef; readonly through: Head; readonly after: Head | null; readonly bounds: Bounds; readonly policies: ArchivePolicyRegistry; readonly format: JournalFormat; readonly parent: Parent; readonly markedAt: Timestamp; readonly fixtureSources?: FixtureArchiveSourcePins; readonly replayScopes?: readonly ScopeRef[] }, budget: ArchiveBudget): Promise<ArchiveBuildFailure | { readonly ok: true; readonly archive: JournalPassArchive; readonly mark: ArchiveMark; readonly anchors?: readonly FactRef[] }> {
   const at = { ...context.at }, through = { ...context.through }, after = context.after ? { ...context.after } : null;
   const parent = context.parent ? { ...context.parent } : null, format = context.format, markedAt = context.markedAt, fixtureSources = context.fixtureSources;
   const selected = inventoryArchive(sql, at, through, context.bounds, context.policies, budget, fixtureSources, after);
@@ -88,9 +124,13 @@ export async function planArchivePass(sql: Sql, context: { readonly at: ScopeRef
   budget.spend({ inputWork: JOURNAL_SELECTION_BYTES * 3 });
   const manifest = canonicalize(selected.inventory);
   if (manifest.length > JOURNAL_SELECTION_BYTES || utf8(manifest).length > JOURNAL_SELECTION_BYTES) budget.stop("limit");
-  const built = await buildJournalPass({ format, selection: manifest, input: archiveInput(sql, selected.inventory, budget, fixtureSources), parent, budget });
+  const replay = replayInput(archiveInput(sql, selected.inventory, budget, fixtureSources), selected.inventory, context.replayScopes, budget, fixtureSources);
+  if (!replay.ok) return replay;
+  const built = await buildJournalPass({ format, selection: manifest, input: replay.input, parent, budget });
+  const collected = replay.finish(built.ok);
+  if (!collected.ok) return collected;
   if (!built.ok) return built;
-  return { ...built, mark: { commit: built.archive.commit, parent: parent?.id ?? null, through: { ...selected.inventory.through }, manifest, markedAt, layout: 2 } };
+  return { ...built, mark: { commit: built.archive.commit, parent: parent?.id ?? null, through: { ...selected.inventory.through }, manifest, markedAt, layout: 2 }, ...(collected.anchors ? { anchors: collected.anchors } : {}) };
 }
 
 /** Restart follows the marked interval and pass references exactly. It
@@ -123,36 +163,16 @@ export async function planArchive(sql: Sql, context: { readonly at: ScopeRef; re
   const fixtureSources = context.fixtureSources;
   const selected = inventoryArchive(sql, at, through, context.bounds, context.policies, budget, fixtureSources);
   if (!selected.ok) return selected;
-  let collector: ArchiveReplayAnchors | undefined;
-  try { if (context.replayScopes) collector = new ArchiveReplayAnchors(selected.inventory, context.replayScopes, budget, fixtureSources); }
-  catch (error) {
-    if (error instanceof ArchivePrefixStopped || error instanceof ArchiveStopped) return { ok: false, reason: error.reason };
-    throw error;
-  }
   budget.spend({ inputWork: JOURNAL_SELECTION_BYTES * 3 });
   const manifest = canonicalize(selected.inventory);
   if (manifest.length > JOURNAL_SELECTION_BYTES || utf8(manifest).length > JOURNAL_SELECTION_BYTES) budget.stop("limit");
-  const native = archiveInput(sql, selected.inventory, budget, fixtureSources);
-  const gathered = collector, failed: { reason?: ArchiveBuildFailure["reason"] } = {};
-  const input = gathered ? { ...native, entry: async (seq: number, limit: number) => {
-    const bytes = await native.entry(seq, limit);
-    try { if (bytes !== null) gathered.entry(bytes, limit); }
-    catch (error) {
-      if (error instanceof ArchivePrefixStopped || error instanceof ArchiveStopped) failed.reason = error.reason;
-      throw error;
-    }
-    return bytes;
-  } } : native;
-  const built = await buildJournalArchive({ format, selection: manifest, input, parent, budget });
-  if (failed.reason) return { ok: false, reason: failed.reason };
+  const replay = replayInput(archiveInput(sql, selected.inventory, budget, fixtureSources), selected.inventory, context.replayScopes, budget, fixtureSources);
+  if (!replay.ok) return replay;
+  const built = await buildJournalArchive({ format, selection: manifest, input: replay.input, parent, budget });
+  const collected = replay.finish(built.ok);
+  if (!collected.ok) return collected;
   if (!built.ok) return built;
-  let anchors: readonly FactRef[] | undefined;
-  try { anchors = collector?.finish(); }
-  catch (error) {
-    if (error instanceof ArchivePrefixStopped || error instanceof ArchiveStopped) return { ok: false, reason: error.reason };
-    throw error;
-  }
-  return { ...built, mark: { commit: built.archive.commit, parent: parent?.id ?? null, through: { ...selected.inventory.through }, manifest, markedAt }, ...(anchors ? { anchors } : {}) };
+  return { ...built, mark: { commit: built.archive.commit, parent: parent?.id ?? null, through: { ...selected.inventory.through }, manifest, markedAt }, ...(collected.anchors ? { anchors: collected.anchors } : {}) };
 }
 
 /** No new inventory is computed after Mark. The caller supplies only the

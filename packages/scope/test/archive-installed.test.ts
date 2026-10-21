@@ -12,14 +12,15 @@ import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, platform } from "@generalbusiness/dap-platform";
 import { ScopeHandle, httpTransport, requestSession, secretSigner, sessionRequest } from "@generalbusiness/artroom-client";
 import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-mcp";
-import { archiveSource, verifyArchive } from "@generalbusiness/artroom-replay";
-import { journalRef, type JournalArchive } from "@generalbusiness/artroom-git/journal";
-import { readJournalArchive } from "@generalbusiness/artroom-git/journal-reader";
+import { archiveSource, verifyArchive, TRUSTS } from "@generalbusiness/artroom-replay";
+import { buildJournalPass, journalRef, type JournalArchive, type JournalPassArchive } from "@generalbusiness/artroom-git/journal";
+import { readJournalRepositoryArchive } from "@generalbusiness/artroom-git/journal-reader";
+import { archiveInput } from "../src/archive-input.ts";
 import { ArchiveBudget } from "../src/archive-budget.ts";
 import { ArchiveForeignMetadata } from "../src/archive-foreign.ts";
 import { fixtureArchiveTargetIn } from "../src/archive-target.ts";
 import { archiveReplayAnchors } from "../src/archive-anchors.ts";
-import { planArchive } from "../src/archive-build.ts";
+import { planArchive, planArchivePass } from "../src/archive-build.ts";
 import { ARCHIVE_SOURCE_PINS, FixtureArchiveSourcePins, type FixtureArchiveSourceBirth } from "../src/archive-source-pins.ts";
 import type { ReviewedArchivePolicy } from "../src/archive-inventory.ts";
 import { outsideOf as hostOutside } from "../src/worker.ts";
@@ -224,8 +225,9 @@ test.each(["fixture", "Grow"])("installed %s scopes export genesis zero after a 
       }));
       expect(admitted).toContainEqual({ fact: copy.source, content: copy.content });
     }
-    const diagnosticArchives = new Map<ScopeId, JournalArchive>();
+    const diagnosticArchives = new Map<ScopeId, JournalArchive | JournalPassArchive>();
     const passAnchors = new Map<ScopeId, readonly FactRef[]>();
+    const passSelections = new Map<ScopeId, string>();
     if (kind === "Grow") {
       // Invariant: native domain permission belongs to its exact declared
       // place. A TEST owner table cannot relocate it or add another domain.
@@ -251,16 +253,17 @@ test.each(["fixture", "Grow"])("installed %s scopes export genesis zero after a 
       // binding. Source/policy configuration remains an explicit A2/A3 fixture.
       const at = await life.wait(() => scope.at());
       sourceLookups.length = 0;
-      const planned = await life.wait(() => runInDurableObject(scope.object, (_instance, state) => planArchive(archiveSql(state), { at, through: read.at, bounds: PROPOSED_BOUNDS, policies, format: "sha1", parent: null, markedAt: timeOf(life.now()), fixtureSources,
+      const planned = await life.wait(() => runInDurableObject(scope.object, async (_instance, state) => await (kind === "Grow" ? planArchivePass : planArchive)(archiveSql(state), { at, through: read.at, after: null, bounds: PROPOSED_BOUNDS, policies, format: "sha1", parent: null, markedAt: timeOf(life.now()), fixtureSources,
         ...(discovery ? { replayScopes: discovery.scopes.map(scope => scope.at) } : {}),
       }, new ArchiveBudget())));
       expect(planned.ok, JSON.stringify({ kind, scope: scope.name, definition: (await life.wait(() => scope.summary())).value.definition, planned, sourceLookups, credentialCounts, credentialCopies })).toBe(true); if (!planned.ok) return;
       diagnosticArchives.set(scope.name, planned.archive);
+      passSelections.set(scope.name, planned.mark.manifest);
       if (planned.anchors) passAnchors.set(scope.name, planned.anchors);
       expect(planned.archive.selection.entries[0]!.seq).toBe(0);
       expect(planned.archive.manifest.foreignSources?.length).toBeGreaterThan(0);
       const objects = new Map(planned.archive.objects.map(object => [object.id, object])), budget = new ArchiveBudget(); let bytes = 0;
-      const opened = await readJournalArchive({ format: async () => "sha1", resolve: async ref => ref === journalRef(scope.name) ? planned.archive.commit : null,
+      const opened = await readJournalRepositoryArchive({ format: async () => "sha1", resolve: async ref => ref === journalRef(scope.name) ? planned.archive.commit : null,
         object: async (id, limit) => { const object = objects.get(id); return object ? { type: object.type, size: object.data.length, data: object.data.length <= limit ? object.data : null } : null; },
       }, scope.name, Object.assign(budget, { bytes: (size: number) => { bytes += size; if (bytes > 8 * 1024 * 1024) budget.stop("limit"); }, scope: () => budget.spend({ nodes: 1 }) }));
       expect(opened.ok, JSON.stringify(opened)).toBe(true); if (!opened.ok) return;
@@ -323,13 +326,33 @@ test.each(["fixture", "Grow"])("installed %s scopes export genesis zero after a 
     // are caller-trusted; copied bodies supply no source proof.
     const diagnosticObjects = new Map([...diagnosticArchives.values()].flatMap(archive => archive.objects.map(object => [object.id, object] as const)));
     const diagnosticRefs = new Map([...diagnosticArchives].map(([scope, archive]) => [journalRef(scope), archive.commit]));
+    const omittedDigest = "sha256:9e0a5a28346594dcd3a95794d1d66951691e6de65adc1582e788ba5ef3085530";
+    const expectedOmissions = allHistories.flatMap(({ scope, read }) => {
+      const manifest = diagnosticArchives.get(scope.name)!.manifest;
+      if (manifest.v !== 2) throw Error("Grow must export native v2 passes.");
+      return manifest.omitted.map(row => {
+      if (!row.first || row.bytes === undefined) throw Error("A native unredacted omission must have count and first entry.");
+      const first = read.value.find(sealed => sealed.entry.seq === row.first!.seq)!;
+      return { digest: row.digest, bytes: row.bytes, first: { at: first.entry.at, seq: first.entry.seq, hash: first.hash } };
+      });
+    });
+    // Independent scalar reads of the native retained bodies; no text bytes
+    // are read or supplied to the offline verifier.
+    for (const { scope } of allHistories) {
+      const expected = expectedOmissions.filter(row => row.first.at.scope === scope.name);
+      const sizes = await life.wait(() => runInDurableObject(scope.object, (_instance, state) => expected.map(row => ({
+        digest: row.digest, size: archiveSql(state).exec("SELECT octet_length(bytes) AS size FROM retained_input WHERE kind = 'text' AND digest = ? LIMIT 1", row.digest).toArray()[0]?.["size"],
+      }))));
+      expect(sizes).toEqual(expected.map(row => ({ digest: row.digest, size: row.bytes })));
+    }
+    expect(expectedOmissions.some(row => row.digest === omittedDigest && row.first.at.scope === D.name && row.first.seq === 5)).toBe(true);
     const probe = allHistories[0]!;
     const memberHead = expectedAnchors.find(fact => fact.at.scope === M.name && fact.seq === 4)!;
     const rulesEntry = allHistories.find(history => history.scope.name === A.name)!.read.value[2]!;
     for (const missing of [expectedAnchors.find(fact => fact.at.scope === claim.at.scope && fact.seq === 1)!, memberHead]) for (const wrong of [false, true]) {
       const supplied = anchors.flatMap(anchor => anchor.scope === missing.at.scope && anchor.seq === missing.seq
         ? wrong ? [{ ...anchor, hash: textDigest("TEST wrong private source anchor") }] : [] : [anchor]);
-      const offline = await life.wait(() => verifyArchive(archiveSource({ open: (at, work) => readJournalArchive({
+      const offline = await life.wait(() => verifyArchive(archiveSource({ open: (at, work) => readJournalRepositoryArchive({
         format: async () => "sha1", resolve: async ref => diagnosticRefs.get(ref) ?? null,
         object: async (id, limit) => { const object = diagnosticObjects.get(id); return object ? { type: object.type, size: object.data.length, data: object.data.length <= limit ? object.data : null } : null; },
       }, at, work) }), { mode: "replay", platform, capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE, grants: "proven", scope: probe.scope.name, head: probe.read.at, anchors: supplied }));
@@ -340,7 +363,7 @@ test.each(["fixture", "Grow"])("installed %s scopes export genesis zero after a 
     }
     const offlineResults = [];
     for (const { scope, read } of allHistories) {
-      const offline = await life.wait(() => verifyArchive(archiveSource({ open: (at, work) => readJournalArchive({
+      const offline = await life.wait(() => verifyArchive(archiveSource({ open: (at, work) => readJournalRepositoryArchive({
         format: async () => "sha1", resolve: async ref => diagnosticRefs.get(ref) ?? null,
         object: async (id, limit) => { const object = diagnosticObjects.get(id); return object ? { type: object.type, size: object.data.length, data: object.data.length <= limit ? object.data : null } : null; },
       }, at, work) }), { mode: "replay", platform, capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE, grants: "proven", scope: scope.name, head: read.at, anchors }));
@@ -348,6 +371,12 @@ test.each(["fixture", "Grow"])("installed %s scopes export genesis zero after a 
       if (offline.kind === "verification" && offline.verification.report.result === "consistent") {
         expect(offline.verification.report.anchors.every(fact => anchorFacts.some(anchor => canonicalize(anchor) === canonicalize(fact)))).toBe(true);
         expect(offline.verification.report.trusts.some(trust => trust.includes("value observed at an anchored head"))).toBe(true);
+        expect(offline.verification.report.incompleteBytes).toBeUndefined();
+        for (const omission of offline.verification.report.omittedTexts ?? []) expect(expectedOmissions).toContainEqual(omission);
+        if (scope.name !== G.name) {
+          expect(offline.verification.report.omittedTexts?.some(row => row.digest === omittedDigest)).toBe(true);
+          expect(offline.verification.report.trusts).toContain(TRUSTS.omitted);
+        }
       }
     }
     const rootCopies = allHistories.flatMap(({ scope, read }) => read.value.flatMap(sealed => sealed.entry.uses
@@ -360,8 +389,35 @@ test.each(["fixture", "Grow"])("installed %s scopes export genesis zero after a 
         anchorFacts, passAnchors: [...passAnchors], anchors, rootCopies, offlineResults })).toBe(true);
     expect(new Set(offlineResults.flatMap(result => result.offline.kind === "verification" ? result.offline.verification.report.anchors.map(canonicalize) : [])))
       .toEqual(new Set(anchorFacts.map(canonicalize)));
+    expect(new Set(offlineResults.flatMap(result => result.offline.kind === "verification" ? (result.offline.verification.report.omittedTexts ?? []).map(canonicalize) : [])))
+      .toEqual(new Set(expectedOmissions.map(canonicalize)));
+    // Corrupt only metadata of a native-produced Directory pass. The real
+    // native entry/input port supplies unchanged bytes; no fake history.
+    for (const corruption of ["missing", "extra"] as const) {
+      const selection = JSON.parse(passSelections.get(D.name)!);
+      const omission = selection.omittedTexts.find((row: { key: { digest: string } }) => row.key.digest === omittedDigest);
+      expect(omission).toBeDefined();
+      if (corruption === "missing") selection.omittedTexts = selection.omittedTexts.filter((row: { key: { digest: string } }) => row.key.digest !== omittedDigest);
+      else selection.omittedTexts.push({ ...structuredClone(omission), key: { kind: "text", digest: textDigest("TEST unrelated Grow omission") } });
+      const corrupt = await life.wait(() => runInDurableObject(D.object, (_instance, state) => {
+        const budget = new ArchiveBudget(); budget.spend(selection.cost);
+        return buildJournalPass({ format: "sha1", selection: canonicalize(selection), input: archiveInput(archiveSql(state), selection, budget, fixtureSources), parent: null, budget });
+      }));
+      expect(corrupt.ok ? "accepted" : corrupt).toBe("accepted"); if (!corrupt.ok) return;
+      const objects = new Map(diagnosticObjects), refs = new Map(diagnosticRefs);
+      for (const object of corrupt.archive.objects) objects.set(object.id, object);
+      refs.set(journalRef(D.name), corrupt.archive.commit);
+      const source = archiveSource({ open: (scope, work) => readJournalRepositoryArchive({
+        format: async () => "sha1", resolve: async ref => refs.get(ref) ?? null,
+        object: async (id, limit) => { const object = objects.get(id); return object ? { type: object.type, size: object.data.length, data: object.data.length <= limit ? object.data : null } : null; },
+      }, scope, work) });
+      const directory = allHistories.find(history => history.scope.name === D.name)!;
+      const replayed = await life.wait(() => verifyArchive(source, { mode: "replay", platform, capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE, grants: "proven", scope: D.name, head: directory.read.at, anchors }));
+      if (corruption === "missing") expect(replayed).toMatchObject({ kind: "verification", verification: { report: { result: "incomplete", at: { at: directory.read.value[5]!.entry.at, seq: 5, hash: directory.read.value[5]!.hash } } } });
+      else expect(replayed).toMatchObject({ kind: "archive-failure", result: "refused" });
+    }
     console.info("TEST native archive closure", JSON.stringify({
-      scopes: discovery!.scopes, repository: discovery!.repository, anchorFacts,
+      scopes: discovery!.scopes, repository: discovery!.repository, anchorFacts, omittedTexts: expectedOmissions,
       results: offlineResults.map(result => ({ scope: result.scope, head: result.head,
         result: result.offline.kind === "verification" ? result.offline.verification.report.result : result.offline.kind })),
       copies: credentialCounts, refusedDomains: 2, refusedCredentials: 3, anchorRefusals: 4,

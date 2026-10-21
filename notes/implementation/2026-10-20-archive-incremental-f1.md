@@ -414,3 +414,86 @@ Each captures all 2,642 source files, exact modes and lock stamp, zero
 installs. These are complete outer time measurements, not phase sums.
 No omission-aware reader, Replay trust, completed Grow closure or adaptive
 cutoff is claimed at this boundary; those remain implementation work.
+
+## Integrated omission reader and Replay checkpoint
+
+The next boundary implements decision `d61549b0`. The v2 reader checks the
+omission's scope, pass position and explicit digest claim in that entry's
+input. An unrelated claim refuses the archive read. The producer's shared
+typed dependency selector still discovers text dependencies; the reader's
+claim check does not discover new dependencies. Conflicting counts for a
+digest are a mismatch. Old unmeasured omission rows supply no new trust.
+
+Replay obtains count metadata through a bounded optional source port. A
+measured omission cannot call the legacy external-text hook. Its canonical
+retained byte count supplies logical capacity accounting; the decoded
+field size stays unknown. It supplies neither a body nor evidence of the
+digest or field bound. The report lists digest, count and the full first
+naming fact, with the planner's exact omission trust. A missing body with
+no count or tombstone remains incomplete. A report with no omissions keeps
+its old shape.
+
+Native `archive-text.test.ts` now opts into whole-scope capacity. Its actual
+signed act retains an escaped, multiline, non-ASCII text. The native v2
+export replays consistently without incomplete byte spans and never calls
+the supplied external-text trap. Removing the count row yields incomplete
+at entry 1 with an incomplete byte span. Adding an unrelated row refuses
+the archive read. The same case preserves v1's original omission shape
+and checks conversion against the actual v1 tree.
+
+V2 planning and conversion also collect the private-source anchors from
+the entry bytes actually read by the builder. This uses the same original
+budget as inventory and layout. Legacy planning uses the same collector.
+No private source journal, observed live head or body-as-proof is added.
+
+`archive-installed.test.ts` exports the five native Grow journals through
+`planArchivePass` and reads them through the v1/v2 router. Room, Site,
+Directory, Rules and Destination all replay consistently. The four targets
+that previously lacked text now report digest
+`sha256:9e0a5a28346594dcd3a95794d1d66951691e6de65adc1582e788ba5ef3085530`.
+Every reported omission matches the native exported metadata, whose count
+is also checked against independent scalar SQLite size reads. The union
+of reports covers every omission. No report has incomplete byte spans.
+The seven export-derived private anchors and all four missing/wrong-anchor
+controls remain in place. Removing the Directory row from a clone of the
+native export yields incomplete at Directory entry 5; adding an unrelated
+row refuses the archive read. Only clone metadata changes for these two
+negatives; the native entry and input bytes remain unchanged.
+
+Focused original attempts, on the shared macOS arm64 host with uncontrolled
+OS caches, are recorded below. CPU is user plus system over the full outer
+command; these are separate runs, not a sum presented as one run.
+
+| Original process | Result | Outer elapsed seconds | Outer CPU seconds |
+|---|---|---:|---:|
+| `44891` | Seven compilers, recovered-byte cases and native text case pass | See qualification below | See qualification below |
+| `24146` | Scope compiler rejects the collector's overly narrow selection type; native tests do not start | 2.57 | 5.21 |
+| `83155` | Source compilers pass; test compiler rejects a union of callback promises; native tests do not start | 3.24 | 8.32 |
+| `11788` | All compilers pass; sandbox refuses the localhost listener before native tests start | 3.95 | 9.15 |
+| `46013` | All compilers and the three native text/installed cases pass | 10.97 | 17.29 |
+| `96495` | Stronger omission counts, capacity and native Grow metadata negatives pass | 11.19 | 17.53 |
+| `43124` | Compiling omission guard control fails the consistent-replay assertion as intended | 4.81 | 5.93 |
+| `13036` | Compiling reference guard control fails the refused-read assertion as intended | 5.13 | 5.88 |
+
+Each attempt captures all 2,642 source files, exact modes and dependency
+lock stamp, with zero installs. Actual machine, load and cache statements
+are in its input receipt. Controls restore all source bytes and modes and
+the dependency stamp exactly. The control runs use the original passing
+baseline rather than repeating it. These are two focused faults, not a
+mutation sweep. Earlier control `91502` observed the intended assertion,
+but its removed local use would fail the unused-local compiler setting;
+it is not counted as a compiling control. `43124` retains that local use,
+compiles, and observes the same intended assertion.
+
+The full external completion output for `44891` was lost after truncation.
+Its original closure and log record natural zero and all selected passes.
+Its internal window starts before source capture: 8.356146 seconds elapsed,
+1.502777 Python CPU seconds and 13.541061 child CPU seconds. Those figures
+are not full external timing. The original command is not replayed to
+repair that gap.
+
+This is a local implementation checkpoint. The complete adaptive full-cost
+cutoff, amended native retained-file witness, 10,000 confirmed one-entry
+passes, key-3,700 restart, measured Grow cadence, actual Git clone and Slice
+9 coordinator/publication wiring remain work. No full gate, formal Source
+review, approval, landing, push or deployment is claimed.

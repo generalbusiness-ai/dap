@@ -1,19 +1,23 @@
 /** Real native detached-text retention and export inventory. Policy and
- * authority are TEST stand-ins. This checks metadata, not omission replay. */
+ * authority are TEST stand-ins. Replay uses the native exported journal. */
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
 import { variant } from "@generalbusiness/dap-derive/testing";
+import { buildJournalPass, type JournalPassArchive } from "@generalbusiness/artroom-git/journal";
+import { readJournalRepositoryArchive } from "@generalbusiness/artroom-git/journal-reader";
+import { archiveSource, verifyArchive, render, TRUSTS, type ArchiveSourceOptions } from "@generalbusiness/artroom-replay";
 import { ArchiveBudget } from "../src/archive-budget.ts";
 import { planArchive, planArchivePass, planArchiveConversion } from "../src/archive-build.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
 import { readArchiveTextBytes } from "../src/archive-text.ts";
+import { archiveInput } from "../src/archive-input.ts";
 import type { Sql } from "../src/sqlite.ts";
 import { at, create, rita } from "./fixtures-native.ts";
 import { archiveDefinition, archivePolicies, archiveRepository, archiveSql } from "./support/archive.ts";
 
 test("v2 records the native canonical text byte count without reading its body while v1 keeps its old omission", async () => {
-  const definition = variant(archiveDefinition.declared, data => { data.acts["remark"]!.fields["text"] = { type: "text", max: 1024, detached: true, required: true }; });
+  const definition = variant(archiveDefinition.declared, data => { data.capacity = { name: "whole-scope", version: 1 }; data.acts["remark"]!.fields["text"] = { type: "text", max: 1024, detached: true, required: true }; });
   const base = archivePolicies.get(archiveDefinition.digest)!;
   const policies = new Map([[definition.digest, { ...base, support: { ...base.support, named: definition.digest, definition } }]]);
   const lane = await create({}, {}, definition), text = 'TEST omitted text: newline\nquote" music🎵', digest = textDigest(text);
@@ -62,4 +66,51 @@ test("v2 records the native canonical text byte count without reading its body w
   expect(built.converted.archive.manifest.omitted).toEqual(built.pass.archive.manifest.omitted);
   expect(built.pass.archive.objects.some(object => object.type === "blob" && new TextDecoder().decode(object.data) === canonicalize(text))).toBe(false);
   expect(built.legacy.archive.objects.some(object => object.type === "blob" && new TextDecoder().decode(object.data) === canonicalize(text))).toBe(false);
+  const read = (archive: JournalPassArchive) => {
+    const objects = new Map(archive.objects.map(object => [object.id, object])), budget = new ArchiveBudget(); let bytes = 0;
+    return readJournalRepositoryArchive({ format: async () => "sha1", resolve: async () => archive.commit,
+      object: async (id, maximum) => { const object = objects.get(id); return object ? { type: object.type, size: object.data.length, data: object.data.length <= maximum ? object.data : null } : null; },
+    }, lane.name, Object.assign(budget, { scope: () => budget.spend({ nodes: 1 }), bytes: (size: number) => { bytes += size; if (bytes > 8 * 1024 * 1024) budget.stop("limit"); } }));
+  };
+  const opened = await read(built.pass.archive);
+  expect(opened.ok ? "accepted" : opened).toBe("accepted"); if (!opened.ok) return;
+  expect(opened.archive.omittedTexts).toEqual([{ digest, bytes, first: { scope: lane.name, seq: 1 } }]);
+  const replay = (archive: JournalPassArchive, options: ArchiveSourceOptions = {}) => {
+    const objects = new Map(archive.objects.map(object => [object.id, object]));
+    return verifyArchive(archiveSource({ open: (scope, work) => readJournalRepositoryArchive({
+      format: async () => "sha1", resolve: async () => archive.commit,
+      object: async (id, maximum) => { const object = objects.get(id); return object ? { type: object.type, size: object.data.length, data: object.data.length <= maximum ? object.data : null } : null; },
+    }, scope, work) }, options), { mode: "replay", scope: lane.name, head: through, grants: "as-recorded" });
+  };
+  // A legacy external-text hook is deliberately supplied as a trap: a
+  // measured omission must never call it or pretend that it read the body.
+  let textReads = 0;
+  const offline = await replay(built.pass.archive, { texts: { read: async () => { textReads++; return { ok: true, text }; } } });
+  expect(offline).toMatchObject({ kind: "verification", verification: { report: { result: "consistent", omittedTexts: [
+    { digest, bytes, first: { at: lane.at, seq: 1, hash: through.hash } },
+  ] } } });
+  expect(textReads).toBe(0);
+  if (offline.kind === "verification") {
+    expect(offline.verification.report.incompleteBytes).toBeUndefined();
+    expect(offline.verification.report.trusts).toContain(TRUSTS.omitted);
+    expect(render(offline.verification.report)).toContain(`${digest}: ${bytes} bytes`);
+    expect(render(offline.verification.report)).not.toContain(text);
+  }
+  // Deliberately corrupt only clone metadata, starting from the actual
+  // native export and the same native entry/input port. No fake journal.
+  const selection = JSON.parse(built.pass.mark.manifest), extra = structuredClone(selection.omittedTexts[0]);
+  extra.key.digest = textDigest("TEST unrelated omission"); selection.omittedTexts.push(extra);
+  const corrupted = await lane.inside(state => {
+    const budget = new ArchiveBudget(); budget.spend(selection.cost);
+    return buildJournalPass({ format: "sha1", selection: canonicalize(selection), input: archiveInput(archiveSql(state), selection, budget), parent: null, budget });
+  });
+  expect(corrupted.ok ? "accepted" : corrupted).toBe("accepted"); if (!corrupted.ok) return;
+  expect(await read(corrupted.archive)).toMatchObject({ ok: false, result: "refused" });
+  selection.omittedTexts = [];
+  const missing = await lane.inside(state => {
+    const budget = new ArchiveBudget(); budget.spend(selection.cost);
+    return buildJournalPass({ format: "sha1", selection: canonicalize(selection), input: archiveInput(archiveSql(state), selection, budget), parent: null, budget });
+  });
+  expect(missing.ok ? "accepted" : missing).toBe("accepted"); if (!missing.ok) return;
+  expect(await replay(missing.archive)).toMatchObject({ kind: "verification", verification: { report: { result: "incomplete", at: { at: lane.at, seq: 1, hash: through.hash }, incompleteBytes: [{ scope: lane.at, from: 1, through: 1, reason: "retained text unavailable" }] } } });
 });

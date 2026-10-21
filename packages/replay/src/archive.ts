@@ -3,7 +3,7 @@
 import { natural } from "@generalbusiness/artroom-bytes";
 import { DOMAINS, type Digest, type Entry, type FactRef, type Head, type PlatformDefinition, type RetainedInput, type ScopeId, type ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, isDigest, isEntry, isFactRef, isScopeId, platformName, rawRetainedJSON, utf8 } from "@generalbusiness/artroom-bytes";
-import { PAGE_ENTRIES, PAGE_REPLY_BYTES, READ_SECONDS, RETAINED_REPLY_BYTES, type Allow, type HistorySource, type Page, type Stored, type Unread } from "./source.ts";
+import { PAGE_ENTRIES, PAGE_REPLY_BYTES, READ_SECONDS, RETAINED_REPLY_BYTES, type Allow, type HistorySource, type Page, type Stored, type TextOmission, type Unread } from "./source.ts";
 import { LIMITS, SourceError, TRUSTS, verify, type Limits, type Options, type Verification } from "./verify.ts";
 
 export interface ArchiveCost { entries: number; attempts: number; nodes: number; calls: number; metadata: number; inputWork: number }
@@ -27,6 +27,8 @@ export interface ArchiveData {
   readonly retained: readonly RetainedInput[];
   /** Archive-declared classifier basis; no source-history proof is implied. */
   readonly foreignSources?: readonly { readonly at: ScopeRef; readonly pin: Digest | PlatformDefinition }[];
+  /** Canonical retained JSON byte counts; no decoded text or field bound. */
+  readonly omittedTexts?: readonly { readonly digest: Digest; readonly bytes: number; readonly first: { readonly scope: ScopeId; readonly seq: number } }[];
 }
 export type ArchiveRead = { readonly ok: true; readonly archive: ArchiveData } | ArchiveFailure;
 export interface ArchiveReadPort {
@@ -123,6 +125,7 @@ class Session implements HistorySource {
   readonly #anchors = new Set<string>();
   readonly #anchorScopes = new Set<ScopeId>();
   readonly #privateNames = new Map<ScopeId, ReadonlyMap<string, string>>();
+  readonly #omissionRows = new Map<ScopeId, ReadonlyMap<Digest, TextOmission>>();
   failure: ArchiveFailure | null = null;
   readonly port: ArchiveReadPort;
   readonly work: Work;
@@ -186,12 +189,42 @@ class Session implements HistorySource {
     const next = from + entries.length < read.archive.entries.length ? from + entries.length : null;
     return { ok: true, page: { scope: read.archive.scope, head: read.archive.head, entries, next }, bytes };
   }
+  #omissions(archive: ArchiveData): ReadonlyMap<Digest, TextOmission> | null {
+    const prior = this.#omissionRows.get(archive.scope.scope); if (prior) return prior;
+    const selected = new Map<Digest, TextOmission>();
+    for (const row of archive.omittedTexts ?? []) {
+      this.work.spend({ metadata: 512, inputWork: 1024 });
+      const entry = row.first && archive.entries[row.first.seq];
+      if (!isDigest(row.digest) || !natural(row.bytes) || row.bytes < 2 || !row.first || row.first.scope !== archive.scope.scope
+        || !natural(row.first.seq) || !entry || entry.seq !== row.first.seq || !isDigest(entry.hash)) {
+        this.failure ??= { ok: false, result: "refused", reason: "invalid text omission metadata", location: { scope: archive.scope.scope } }; return null;
+      }
+      const known = selected.get(row.digest);
+      if (known && known.bytes !== row.bytes) {
+        this.failure ??= { ok: false, result: "mismatch", reason: "conflicting text omission byte counts", location: { scope: archive.scope.scope } }; return null;
+      }
+      if (!known || known.first.seq > row.first.seq) selected.set(row.digest, Object.freeze({ digest: row.digest, bytes: row.bytes,
+        first: Object.freeze({ at: Object.freeze({ ...archive.scope }), seq: row.first.seq, hash: entry.hash }) }));
+    }
+    this.#omissionRows.set(archive.scope.scope, selected); return selected;
+  }
+  async omittedText(scope: ScopeId, digest: Digest, allow: Pick<Allow, "bytes">): Promise<{ ok: true; omission: TextOmission; bytes: number } | Unread> {
+    const read = await this.open(scope); if (!read.ok) return unread(read.result);
+    if (!isDigest(digest) || !natural(allow.bytes)) return unread("unavailable");
+    const rows = this.#omissions(read.archive); if (!rows) return unread("refused");
+    const omission = rows.get(digest); if (!omission) return unread("not-found");
+    this.work.spend({ metadata: 1024, inputWork: 8192 });
+    const bytes = utf8(canonicalize(omission)).length;
+    if (bytes > Math.min(1024, allow.bytes)) return unread("too-large");
+    return { ok: true, omission, bytes };
+  }
   async retained(scope: ScopeId, kind: RetainedInput["kind"], digest: Digest, allow: Pick<Allow, "bytes">, domain?: string): Promise<{ ok: true; input: RetainedInput; bytes: number } | Unread> {
     const read = await this.open(scope); if (!read.ok) return unread(read.result);
     const maximum = Math.min(allow.bytes, RETAINED_REPLY_BYTES);
     if (!natural(maximum) || !isDigest(digest)) return unread("unavailable");
     let input = read.archive.retained.find(input => input.kind === kind && input.digest === digest && (kind !== "value" || input.domain === domain));
-    if (!input && this.texts && (kind === "text" || kind === "value" && domain === DOMAINS.text)) {
+    const omissions = this.#omissions(read.archive); if (!omissions) return unread("refused");
+    if (!input && this.texts && !omissions.has(digest) && (kind === "text" || kind === "value" && domain === DOMAINS.text)) {
       const supplied = await this.work.wait(() => this.texts!.read(digest, maximum, this.work));
       if (!supplied.ok) return supplied;
       if (typeof supplied.text !== "string" || supplied.text.length > maximum) return unread("too-large");
@@ -243,6 +276,7 @@ export class ArchiveSource implements HistorySource {
   #default(): Session { return this.#direct ??= this.#session(); }
   page(scope: ScopeId, from: number, allow: Allow): ReturnType<HistorySource["page"]> { return this.#default().page(scope, from, allow); }
   retained(scope: ScopeId, kind: RetainedInput["kind"], digest: Digest, allow: Pick<Allow, "bytes">, domain?: string): ReturnType<HistorySource["retained"]> { return this.#default().retained(scope, kind, digest, allow, domain); }
+  omittedText(scope: ScopeId, digest: Digest, allow: Pick<Allow, "bytes">): ReturnType<NonNullable<HistorySource["omittedText"]>> { return this.#default().omittedText(scope, digest, allow); }
   async verify(options: ArchiveVerifyOptions): Promise<ArchiveVerification> {
     let session: Session | null = null, native: Verification | undefined, outcome: ArchiveVerification;
     const scope = options.scope;

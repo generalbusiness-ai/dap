@@ -39,7 +39,7 @@
 
 import { DOMAINS, PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Bounds, CapabilityName, Digest, Entry, FactRef, Grant, Head, KeyId, Observation, ObservationRequest, ObservationUse, MismatchName, PlatformData, PlatformDefinition, Report, RetainedInput, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
-import { rawRetainedJSON, domainRetainedJSON, canonicalize, intentDigest, isDigest, isEntry, isObservationUse, isPlatformDefinition, parseStrict, platformName, scopeIdOf, utf8, verifySignedIntent } from "@generalbusiness/artroom-bytes";
+import { rawRetainedJSON, domainRetainedJSON, canonicalize, intentDigest, isDigest, isEntry, isObservationUse, isPlatformDefinition, natural, parseStrict, platformName, scopeIdOf, utf8, verifySignedIntent } from "@generalbusiness/artroom-bytes";
 import {
   AmountError, ByteUsage, bound, capacityFull, namedDeclarations, amountMath, subtract, NOTHING, reserved, actValueDependencies, observedValueDependencies, detachedTextDependencies, outcomeValueDependencies, outcomeSnapshotDependencies, requiredDependency, textDependency, MISMATCHES, MemoryState, WINDOWS, actionOf, agrees, applyEntry, drawsOf, clockOf, contentStates, entryOf, fits, observedName, headsOf, highestHead, isFactRef, isLocalId, isObject, isScopeRef, isUnprovenDecisionBinding, judgeAct, judgeCheckpoint, judgeDelivery,
   judgeDiagnosis, outcomeValueDomains, fixedBy, judgeGenesis, judgeGrant, judgeOutcome, judgePreparation, judgeTimed, membershipOf, nextDue, observedOf, own, ownersOf, preparationScopeGrant, ruleAt, same, snapshotRead, stepsOf, timeMs, updateOf, sentBy, validateDefinition, windowOf, checkedTextBounds,
@@ -241,6 +241,7 @@ export const TRUSTS = {
   anchors: "the caller's anchors, including any value observed at an anchored head and each retained definition name",
   bounds: "the bounds: each scope is taken to run under the bounds this replay was given",
   redacted: "each redacted text: its bytes are gone, so nothing shows that they were the text its digest names, or that they were within the bound of their field",
+  omitted: "each text that the archive omits: its digest, its byte count and the first entry that names it; nothing shows that the bytes were the text its digest names, or that they were within the bound of their field",
 } as const;
 type Trust = keyof typeof TRUSTS;
 
@@ -412,8 +413,11 @@ class Verifier {
   readonly #coded = new Set<PlatformDefinition>();
   /** The foreign facts proven, by scope, position and hash: by replay of their source, or by an anchor. */
   readonly #proven = new Map<string, "replayed" | "anchored">();
-  /** A content proof can recover a text size across retained aliases. */
-  readonly #knownTexts = new Map<Digest, { bytes: number; size: number | null }>();
+  /** Canonical body counts may also be explicit omission trust. A decoded
+   * field size is known only from actual content, never from that count. */
+  readonly #knownTexts = new Map<Digest, { bytes: number; size: number | null; omitted?: true }>();
+  readonly #textCounts = new Map<Digest, number>();
+  readonly #omittedTexts = new Map<string, NonNullable<Report["omittedTexts"]>[number]>();
   readonly #checking: FactRef[] = [];
   readonly #needs = new Map<ScopeId, Map<string, { seq: number; user: FactRef }>>();
   readonly #anchored: FactRef[] = [];
@@ -564,7 +568,7 @@ class Verifier {
       let failure: { seq: number; why: string } | null = null;
       const fail = (seq: number, why: string) => { if (seq < run.sealed.length && (failure === null || seq < failure.seq)) failure = { seq, why }; };
       for (const [seq, judgment] of run.textJudgments) {
-        if (seq >= run.sealed.length || !judgment.digests.some(digest => this.#recoverableText(run, digest))) continue;
+        if (seq >= run.sealed.length || !judgment.digests.some(digest => !this.#knownTexts.get(digest)?.omitted && this.#recoverableText(run, digest))) continue;
         let same = false;
         try { same = judgment.again(this.#viewAt(run, seq - 1)); } catch { /* a non-derivable recovered input is a mismatch */ }
         if (!same) fail(seq, "a recovered text changes the recorded judgment");
@@ -653,6 +657,7 @@ class Verifier {
       if (!entry) return false;
       return !run.definition?.declared.capacity || entry.effects.some(effect => effect.effect === "redact" && effect.item === redaction.item && effect.slot === redaction.slot && effect.texts.some(digest => typeof this.#knownTexts.get(digest)?.size !== "number"));
     });
+    const omittedTexts = [...this.#omittedTexts.values()].filter(row => row.first.seq < (this.#runs.get(row.first.at.scope)?.sealed.length ?? 0));
     const report: Report = {
       mode: this.#mode,
       // Consistent: the head checked through. Otherwise: the head the check was aiming for.
@@ -660,8 +665,9 @@ class Verifier {
       coverage: covered.map((run) => ({ scope: run.at!, from: 0, through: run.sealed.length - 1 })),
       anchors: this.#anchored,
       dependencies: { verified: proven.filter((how) => how === "replayed").length, anchored: proven.filter((how) => how === "anchored").length, missing: stop?.missing ? [stop.missing] : [] },
-      trusts: [...(Object.keys(TRUSTS) as Trust[]).filter((trust) => this.#trusts.has(trust) && (trust !== "redacted" || redacted.length > 0)).map((trust) => TRUSTS[trust]), ...[...this.#coded].sort().map(platformCode)],
+      trusts: [...(Object.keys(TRUSTS) as Trust[]).filter((trust) => this.#trusts.has(trust) && (trust !== "redacted" || redacted.length > 0) && (trust !== "omitted" || omittedTexts.length > 0)).map((trust) => TRUSTS[trust]), ...[...this.#coded].sort().map(platformCode)],
       redacted,
+      ...(omittedTexts.length ? { omittedTexts } : {}),
       ...(incompleteBytes.length > 0 ? { incompleteBytes } : {}),
       result: stop ? stop.result : "consistent",
       ...(stop?.at ? { at: stop.at } : {}),
@@ -749,6 +755,12 @@ class Verifier {
     if (before && !after) this.#endUnknownBytes(run, key.digest, seq - 1);
   }
 
+  #textCount(digest: Digest, bytes: number, where: FactRef): void {
+    const prior = this.#textCounts.get(digest);
+    if (prior !== undefined && prior !== bytes) throw new Stop("mismatch", "an archive text omission disagrees with another known canonical byte count", where);
+    this.#textCounts.set(digest, bytes);
+  }
+
   /** Section 9.2: an input an entry names by digest. One that is missing makes the replay `incomplete`. */
   async #retained(run: Run, dependency: RequiredDependency, what: string): Promise<RetainedInput> {
     const { key, origin: { at } } = dependency;
@@ -761,6 +773,7 @@ class Verifier {
       throw new Stop("incomplete", `a retained input is missing: ${what}, ${digest} (${got.reason})`, at);
     }
     this.#count(got.bytes);
+    if (this.#source.omittedText && kind === "value" && domain === DOMAINS.text && typeof domainRetainedJSON(DOMAINS.text, digest, got.input.bytes) === "string") this.#textCount(digest, utf8(got.input.bytes).length, at);
     if (run.definition === null || run.definition.declared.capacity) this.#retainBytes(run, key, utf8(got.input.bytes).length, at.seq, got.input.bytes);
     return got.input;
   }
@@ -777,11 +790,31 @@ class Verifier {
     const got = await this.#source.retained(run.id, key.kind, key.digest, { bytes: Math.min(left, RETAINED_REPLY_BYTES) });
     if (!got.ok) {
       this.#unread(got.reason, left < RETAINED_REPLY_BYTES, `a retained input of ${run.id}`);
+      const omitted = await this.#source.omittedText?.(run.id, digest, { bytes: Math.min(left, 1024) });
+      if (omitted?.ok) {
+        this.#count(omitted.bytes);
+        const row = omitted.omission;
+        if (row.digest !== digest || !natural(row.bytes) || row.bytes < 2 || !isFactRef(row.first) || !run.at || !sameScope(row.first.at, run.at)) throw new Stop("mismatch", "an archive text omission has invalid identity or byte count", origin.at);
+        // A later pass's first use cannot answer for an earlier missing use.
+        if (row.first.seq > origin.at.seq) return null;
+        const first = row.first.seq === origin.at.seq ? origin.at : run.sealed[row.first.seq] && { at: run.at, seq: row.first.seq, hash: run.sealed[row.first.seq]!.hash };
+        if (!first || canonicalize(first) !== canonicalize(row.first)) throw new Stop("mismatch", "an archive text omission differs from its first naming entry", origin.at);
+        this.#textCount(digest, row.bytes, origin.at);
+        const keyName = canonicalize([run.id, digest]);
+        this.#omittedTexts.set(keyName, { digest, bytes: row.bytes, first: { ...first, at: { ...first.at } } });
+        this.#trusts.add("omitted");
+        if (!this.#knownTexts.has(digest)) this.#knownTexts.set(digest, { bytes: row.bytes, size: null, omitted: true });
+        if (run.definition?.declared.capacity) this.#retainBytes(run, key, row.bytes, origin.at.seq);
+        // The canonical body count does not reveal a decoded field size.
+        return null;
+      }
+      if (omitted) this.#unread(omitted.reason, left < 1024, `text omission metadata of ${run.id}`);
       return null;
     }
     this.#count(got.bytes);
     const text = domainRetainedJSON(DOMAINS.text, digest, got.input.bytes);
     if (typeof text !== "string") return null;
+    if (this.#source.omittedText) this.#textCount(digest, utf8(got.input.bytes).length, origin.at);
     if (run.definition?.declared.capacity) this.#retainBytes(run, key, utf8(got.input.bytes).length, origin.at.seq, got.input.bytes);
     return utf8(text).length;
   }
@@ -1560,7 +1593,8 @@ class Verifier {
       texts.set(text, size);
       if (size === null) {
         if (definition.declared.capacity) this.#retainBytes(run, dependency.key, null, entry.seq);
-        if (!run.owed.has(text)) run.owed.set(text, where);
+        const omitted = this.#omittedTexts.get(canonicalize([run.id, text]));
+        if ((!omitted || omitted.first.seq > entry.seq) && !run.owed.has(text)) run.owed.set(text, where);
       }
     }
     // Section 6.2: a local fact, and a part of one, are read from this scope's own history: the entries checked so far.
