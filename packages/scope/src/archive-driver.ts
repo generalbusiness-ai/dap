@@ -5,6 +5,7 @@ import type { Bounds, Head, ScopeRef, Seed, Timestamp } from "@generalbusiness/d
 import { isScopeRef, timeMs, timeOf } from "@generalbusiness/artroom-bytes";
 import { journalId, journalRef, type JournalArchive, type JournalPassArchive, type JournalFormat, type JournalObject, type JournalObjectSource } from "@generalbusiness/artroom-git/journal";
 import { ArchiveBudget, ArchiveStopped } from "./archive-budget.ts";
+import { ARCHIVE_TRANSFER_OBJECTS, archiveObjectListMetadata, archiveObjectCopyWork } from "./archive-transfer-cost.ts";
 import { planArchivePass, planArchiveConversion, rebuildArchive, rebuildArchivePass } from "./archive-build.ts";
 import { archiveCutoff } from "./archive-cutoff.ts";
 import type { FixtureArchiveSourcePins } from "./archive-source-pins.ts";
@@ -105,15 +106,15 @@ export class ArchiveDriver {
     } catch { return null; }
   }
   #copy(objects: readonly JournalObject[], format: JournalFormat, budget: ArchiveBudget): Map<string, JournalObject> {
-    if (!Array.isArray(objects) || objects.length > 8192) budget.stop("limit");
-    budget.spend({ metadata: objects.length * 128 });
+    if (!Array.isArray(objects) || objects.length > ARCHIVE_TRANSFER_OBJECTS) budget.stop("limit");
+    budget.spend({ metadata: archiveObjectListMetadata(objects.length) });
     let size = 0;
     const owned = new Map<string, JournalObject>();
     for (const object of objects) {
       budget.check(); journalId(format, object.id);
       if (!(object.data instanceof Uint8Array) || !["commit", "tree", "blob"].includes(object.type) || owned.has(object.id)) budget.stop("unavailable");
       if (object.data.length > this.#maximum - size) budget.stop("limit");
-      size += object.data.length; budget.spend({ inputWork: object.data.length * 4 });
+      size += object.data.length; budget.spend({ inputWork: archiveObjectCopyWork(object.data.length) });
       owned.set(object.id, { id: object.id, type: object.type, data: new Uint8Array(object.data) });
     }
     return owned;

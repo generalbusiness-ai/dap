@@ -10,13 +10,18 @@ import { GitHubProvider } from "../src/github-host.ts";
 import { ArtifactsProvider } from "../src/artifacts-host.ts";
 import type { FixtureArchivePorts } from "../src/archive-host.ts";
 import type { ArchiveSend } from "../src/archive-driver.ts";
-import { ArchiveBudget } from "../src/archive-budget.ts";
+import { ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
+import { forecastArchiveTransfer } from "../src/archive-transfer-cost.ts";
 import { planArchivePass } from "../src/archive-build.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
 import { create, at as nativeTime } from "./fixtures-native.ts";
 import { archiveDefinition, archivePolicies, archiveRepository, archiveSql } from "./support/archive.ts";
 
 const at: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "destination" };
+class RecordingSendBudget extends ArchiveBudget {
+  readonly charges: Partial<ArchiveCost>[] = [];
+  override spend(cost: Partial<ArchiveCost>): void { super.spend(cost); this.charges.push({ ...cost }); }
+}
 const other: ScopeRef = { ...at, scope: `sc_${"b".repeat(51)}a` };
 const pkt = (text: string) => `${(utf8(text).length + 4).toString(16).padStart(4, "0")}${text}`;
 const reply = (text: string, media: string) => new Response(text, { headers: { "content-type": `application/x-git-${media}` } });
@@ -72,13 +77,13 @@ function fixture(host: "github" | "artifacts", isolated = false, actual?: { at: 
     binding: { get: async () => ({ info: async () => ({ remote }), createToken: async () => { throw new Error("real mint must not run"); }, revokeToken: async () => { throw new Error("ledger revoke must not run"); } }), create: async () => { throw new Error("no create"); }, delete: async () => { throw new Error("no delete"); } },
     credentialHandle: async () => { throw new Error("ledger custody must not run"); },
   }).fixtureArchive(ports);
-  const request = async (): Promise<ArchiveSend> => {
+  const request = async (budget?: ArchiveBudget): Promise<ArchiveSend> => {
     const credential = await provider.mintArchive(repository, scope, () => true);
     if (!credential) throw new Error("fixture credential missing");
     const prior = actual?.previous.objects.filter(object => object.type !== "blob" || new TextDecoder().decode(object.data).startsWith('{"hash":')) ?? [];
     const objects = [...new Map([...prior, ...archive.objects].map(object => [object.id, { ...object, data: new Uint8Array(object.data) }])).values()];
     return { repository: { ...repository }, at: { ...scope }, ref: journalRef(scope.scope), old: actual?.previous.commit ?? null, commit: archive.commit, objects, credential, allowed: () => true,
-      ...(actual ? { incremental: { budget: new ArchiveBudget() } } : {}) };
+      ...(actual ? { incremental: { budget: budget ?? new ArchiveBudget() } } : {}) };
   };
   return { provider, repository, archive, posts, calls, started, request, publish: () => { pointer = archive.commit; }, block: () => { blocked = latch(); return blocked; }, expire: () => { now += 60_000; }, revoked: () => revoked };
 }
@@ -164,7 +169,7 @@ test.each(["github", "artifacts"] as const)("%s incremental parent reads one exa
 
 // Native entries/SQLite and real smart-HTTP send/pack validation. The policy,
 // credentials, identity and HTTP host remain TEST stand-ins; no remote send.
-test.each(["github", "artifacts"] as const)("%s incremental send validates exact parent edges and keeps its final credential fence", async host => {
+test.for(["github", "artifacts"] as const)("%s incremental send validates exact parent edges and keeps its final credential fence", async (host, context) => {
   const lane = await create({}, {}, archiveDefinition), head = await lane.head();
   const first = await lane.inside(state => planArchivePass(archiveSql(state), { at: lane.at, through: head, after: null,
     bounds: PROPOSED_BOUNDS, policies: archivePolicies, format: "sha1", parent: null, markedAt: nativeTime(0) }, new ArchiveBudget()));
@@ -183,8 +188,27 @@ test.each(["github", "artifacts"] as const)("%s incremental send validates exact
     } }, new ArchiveBudget()));
   expect(next.ok ? "accepted" : next).toBe("accepted"); if (!next.ok) return;
   const actual = { at: lane.at, previous: first.archive, archive: next.archive };
-  const f = fixture(host, false, actual), request = await f.request();
+  const f = fixture(host, false, actual), budget = new RecordingSendBudget(), request = await f.request(budget);
+  const shape = { objects: request.objects.length, bytes: request.objects.reduce((n, row) => n + row.data.length, 0), maximum: 64 * 1024 };
+  const forecast = forecastArchiveTransfer({ ...shape, incremental: true });
   expect(await f.provider.sendArchive(request)).toEqual({ send: "accepted" }); expect(f.posts).toHaveLength(1);
+  // Original adapter counter pins, recorded before shared price extraction.
+  expect(shape).toEqual({ objects: 34, bytes: 4118, maximum: 65536 });
+  expect(budget.charges[0]).toEqual({ metadata: 4352, inputWork: 16472 });
+  expect(budget.charges.at(-1)).toEqual({ inputWork: 32944 });
+  expect(budget.admitted()).toEqual({ entries: 0, attempts: 35, nodes: 17, calls: 70, metadata: 35574, inputWork: 112515 });
+  // Future transfer includes one outgoing driver copy in addition to the
+  // adapter's copy/pack. Append validation remains priced separately.
+  expect(forecast).toEqual({ ok: true, cost: { entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 8704, inputWork: 65888 } });
+  expect(forecastArchiveTransfer({ ...shape, incremental: false })).toEqual({ ok: true,
+    cost: { entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 4352, inputWork: 16472 } });
+  expect(forecastArchiveTransfer({ ...shape, incremental: true, maximum: shape.bytes - 1 })).toEqual({ ok: false, reason: "limit" });
+  expect(forecastArchiveTransfer({ ...shape, incremental: true, objects: 8193 })).toEqual({ ok: false, reason: "limit" });
+  (context.task.meta as Record<string, unknown>)["archiveTransferCost"] = {
+    objects: request.objects.length, bytes: request.objects.reduce((n, row) => n + row.data.length, 0),
+    first: budget.charges[0], last: budget.charges.at(-1), total: budget.admitted(),
+    qualification: "Actual adapters, native prepared entry bytes, append validator and HTTP pack. Fresh original component send budget; native planning/manual receipts used separate setup budgets. Policy, tokens, repository identity and HTTP peer are TEST stand-ins. No network, real host receipt, full native pass, deployment or export claim.",
+  };
   const fenced = fixture(host, false, actual), pending = await fenced.request(), blocked = fenced.block();
   const sending = fenced.provider.sendArchive(pending); await fenced.started.promise;
   fenced.expire(); blocked.release();
