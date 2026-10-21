@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/2026-10-21-capture-with-source.md","body":{"commit":"0de1f52a7f9c9fedd43e2a3374b5d093a71a2a90","path":"notes/2026-10-21-capture-with-source.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:35ff5a11a0aa9df5bba1c22b89600590976e0645","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-21-capture-with-source.md."}
