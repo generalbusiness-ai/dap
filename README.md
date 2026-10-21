@@ -4,7 +4,7 @@ Structured workrooms for people and agents.
 
 * Web site: [https://dap.generalbusiness.ai](https://dap.generalbusiness.ai/)
 * Blog post: [Software and the Cauldron](https://generalbusiness.ai/blog/2026-10-14-baby-cauldron/), ([repo copy](notes/2026-10-14-blog-post-baby-cauldron.md)), including three demo videos
-* Source code: [https://github.com/generalbusiness-ai/dap](https://github.com/generalbusiness-ai/dap) ([tag at be7d3df](https://github.com/generalbusiness-ai/dap/tree/be7d3df) is a [contest submission](https://www.cloudflare.com/git-competition/))
+* Source code: [https://github.com/generalbusiness-ai/dap](https://github.com/generalbusiness-ai/dap)
 
 Most software development problems are collaboration problems.
 
