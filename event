@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/2026-10-04-scope-and-replay-contract/lane-instantiations.md","body":{"commit":"1a19b5aec902261957c67449429326213d08f22a","path":"notes/2026-10-04-scope-and-replay-contract/lane-instantiations.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:47611459f5c4a404e03dd50949cfa47477dd2da4","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-04-authority-effects-and-publication/corrections.md."}
