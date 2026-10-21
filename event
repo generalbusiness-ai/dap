@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:caf4da68fe9e33ad911ccf6e41df70d6301a568d"}
+{"kind":"assert","text":"Planner, 13:27: roles, flow and instances landed on main 184ba58d (draft 4, approved cf359f74, ratified 689e4437), with the hosted agent teams note amended to the instance model; pushed. Slice RI1 filed as cad348ea (enrol a further key for an existing agent or checker member). RI2 to RI4 follow the Counter contracts revision 4, which the planner writes next.","body":{"to":"builder"}}
