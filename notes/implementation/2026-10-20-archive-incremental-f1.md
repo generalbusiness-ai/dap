@@ -781,3 +781,57 @@ attempts. No deadline changed. These are still planning foundations;
 observation/outcome references, complete cost forecasting, production
 adaptive selection and the remaining native acceptance witnesses are open.
 No full gate, formal review, landing or deployment is claimed.
+
+## Observed values and native outcome values
+
+Observation projection now selects the extents digest only when an actual
+observation has subject `rules` and content requested as `rules`. The
+scalar selector is shared with `namedBy`. The projector preserves the
+declaration's ordered domain choices and the byte planner's probe key. It
+charges the actual matching metadata count before allocating paths and
+plans; it does not impose a guessed retained-object target on other
+observations. The owning classifier still supplies the actual input tag
+and validated definition. Matching source sequence, hash and size remain
+required for its native queries.
+
+Outcome-value projection recognizes the actual Destination changed-set
+callback, including its ordinary `ownersOf` wrapper. The wrapper records
+the callback's identity, captures that function for its lookup and keeps
+the existing `run` call and receiver. This selects a decoder; it grants no
+owner, pin, place or privacy admission. Unknown callbacks refuse before
+SQL. The recognized callback reads only whether the evidence body is an
+object and its `changes` field is a digest, so the projector supplies those
+scalar facts to the same `outcomeValueDependencies` selector. The native
+callback's behavior and definition bytes are unchanged. Other outcome
+values and snapshots need their own actual consumer grammar.
+
+The existing native publication witness now compares both projections
+with its real Destination byte plan in one budget. Five actual Rules and
+Membership observations yield one extents probe; the same outcome yields
+one changed-set value key. Literal domain, digest and bound assertions
+accompany the comparison. Repeats pay their work again; SQL returns only
+fixed tags, slot numbers and digests. A substituted unknown callback
+refuses without SQL. Native platform definitions, authority and production
+rules are real here; the original witness's scripted lane entries, Git
+host and clock remain stand-ins, as its header states.
+
+| Original | Result | Outer elapsed seconds | Outer CPU seconds |
+|---|---|---:|---:|
+| `31602` | Three compilers pass; the test compiler catches a duplicate fixture-owner variable | 2.80 | 6.65 |
+| `32929` | Renamed variable: four compilers and native publication case pass | 7.32 | 12.49 |
+| `78700` | Compiling dropped-observation control fails the extents-probe assertion | 5.70 | 9.12 |
+| `47638` | Four compilers pass; Scope rejects constructor return-flow typing | 2.51 | 5.72 |
+| `93854` | Corrected constructor: six compilers and combined native publication case pass | 8.04 | 14.28 |
+| `74967` | Compiling dropped-outcome-value control fails its dependency assertion | 5.38 | 8.77 |
+| `70351` | Compiling unknown-callback control fails the required-refusal assertion | 5.38 | 8.80 |
+
+Observation runs capture 2,653 source files; combined runs capture 2,654.
+All preserve exact source bytes, modes and lock stamp, with zero installs;
+controls restore source and read their original passing baseline. Failed
+attempts remain preserved. The observation control precedes the outcome
+addition; its selector and probe assertion are unchanged. The following
+comment placement preserves executable declaration order. Machine, shared
+load and uncontrolled OS-cache statements are in the input receipts.
+These are separate full outer measurements. Variable schema allocation
+costs, snapshot/ancestry projection and the complete forecast and adaptive
+driver still need work. No full gate or formal review has run.

@@ -25,7 +25,7 @@
 
 import type { FactRef, FieldValue, KeyId, Observation, OperationId, PlatformData, PlatformDefinition, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, factRefOf, isDigest, isFactRef, isScopeRef, timeOf, timeMs, utf8, textDigest } from "@generalbusiness/artroom-bytes";
-import type { Item, Opening, Operation, Own, PlatformRule, PublicationOrigin, RecordedRef, RuleEffect, RuleGiven, RuleRequest, Rules, StateView } from "@generalbusiness/dap-derive";
+import type { Item, Opening, Operation, OperationRules, Own, PlatformRule, PublicationOrigin, RecordedRef, RuleEffect, RuleGiven, RuleRequest, Rules, StateView } from "@generalbusiness/dap-derive";
 import { DESTINATION_CHANGED_SET, isJudgeChanges, isRecordedJudgeEvidence, isObjectId, judgeReservation, judgeReservationWithStanding, fileSound, type ReservationAsked, type ReservationRead, type ReservationStanding, type Statement } from "./reservation.ts";
 import { publicationStandingRecord, publicationStandingKeys, type PublicationStandingRecord } from "./publication-standing.ts";
 import { referenceOf } from "./rules-scope.ts";
@@ -1572,6 +1572,10 @@ const DECIDES: Readonly<Record<string, Decides>> = {
   [DESTINATION_KINDS.read]: (given, read) => (typeof readFor(given.state, given.own, read) === "string" ? NOTHING : readDecides(given, read)),
 };
 
+/** The native changed-set selector, shared by outcome reference planning. */
+export const destinationEvidenceValues: NonNullable<OperationRules["values"]> = evidence =>
+  isObject(evidence.body) && isDigest(evidence.body["changes"]) ? [{ domain: DESTINATION_CHANGED_SET.domain, digest: evidence.body["changes"], max: DESTINATION_CHANGED_SET.max }] : [];
+
 /**
  * Row 33, the outcome entries of `judge` (P19; section 12.1.5, "The rule
  * `open-judge`, and one `judge` at a time", and "The evidence of `judge`,
@@ -1596,7 +1600,7 @@ const judgeRule = (decides: Decides): PlatformRule => ({
   rules: {
     selects: false, read: false, most: { effects: 10, requests: 1, operations: 2 },
     valueDomains: [{ domain: DESTINATION_CHANGED_SET.domain, max: DESTINATION_CHANGED_SET.max }],
-    values: (evidence) => isObject(evidence.body) && isDigest(evidence.body["changes"]) ? [{ domain: DESTINATION_CHANGED_SET.domain, digest: evidence.body["changes"], max: DESTINATION_CHANGED_SET.max }] : [],
+    values: destinationEvidenceValues,
     origin: ({ state }) => publicationAt(state, branchOf(state)?.refs["judging"])?.id ?? null,
     subjects: (given, _operation, row, first) => {
       const publication = publicationAt(given.state, branchOf(given.state)?.refs["judging"]);

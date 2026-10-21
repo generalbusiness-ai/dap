@@ -4,7 +4,7 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Answer, Entry, Intent, Observation, ObservationUse, OperationId, Read, ScopeRef, Seed, SignedReadName } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, entryHash, factRefOf, hex, intentDigest, newIncarnation, platformName, scopeIdOf, seedDigest, signIntent, textDigest, timeOf, utf8 } from "@generalbusiness/artroom-bytes";
 import { requestSession, secretSigner, sessionRequest, signedReader, type Fetch } from "@generalbusiness/artroom-client";
-import { PROFILES, grantFrom, ruleAt, useOf, validateDefinition, valueDigest, type Fetched, type Item } from "@generalbusiness/dap-derive";
+import { PROFILES, grantFrom, localRetainedPlan, outcomeValueDomains, ownersOf, ruleAt, useOf, validateDefinition, valueDigest, type Fetched, type Item, type OperationRules } from "@generalbusiness/dap-derive";
 import { d, keys, ticket, ticketDefinition } from "@generalbusiness/dap-derive/testing";
 import { CONFIGURATION_DOMAIN, DESTINATION, DESTINATION_CHANGED_SET, DIRECTORY, PUBLISHING_LANE_DIGESTS, REGISTER, destinationReceipt, firstExtents, initialCommitObjects, platform, repositoryName, revokedToken, RULES_EXTENTS_VALUE } from "@generalbusiness/dap-platform";
 import { TRUSTS, httpSource, verify, type HistorySource, type MemoryScope } from "@generalbusiness/artroom-replay";
@@ -15,6 +15,10 @@ import { outsideOf } from "./outside.ts";
 import { Platform, rita, routed, sam } from "./repository.ts";
 import { reader, dispatchFixture, effectFixture, nativeFixtureLifetime } from "./fixtures-native.ts";
 import { beginSessionChild, beginSessionFixture, sessionSettings } from "./session-settings.ts";
+import { ArchiveBudget } from "../src/archive-budget.ts";
+import { ArchiveObserved } from "../src/archive-observed.ts";
+import { ArchiveOutcomeValues } from "../src/archive-outcome-values.ts";
+import type { SqlValue } from "../src/sqlite.ts";
 
 const { paul } = keys;
 const SERVICE = "https://scopes.test";
@@ -486,6 +490,47 @@ describe("a founding on real scopes under the deployed class (authority note, se
     if (judged.input.type !== "outcome") throw new Error("the judge recorded no outcome");
     const currentRules = judged.input.observed?.find((use) => "subject" in use.observation && use.observation.subject === "rules");
     expect(currentRules?.observation).toMatchObject({ content: { checks: [{ name: "unit", configuration: digest, required: true, checker: "@check" }] } });
+    // Invariant: scalar observation projection names the same actual
+    // retained extents as this native publication's byte-based consumer,
+    // without returning observations or any retained body across SQL.
+    const native = platform(DESTINATION)!;
+    const definition = validateDefinition(native.data, PROPOSED_BOUNDS, PROFILES, { platform: true, outcomeValues: outcomeValueDomains(native.data, native.rules) });
+    if (!definition.ok) return expect.fail("The actual Destination data must validate.");
+    const projectionOwner = ownersOf(definition.definition, { named: DESTINATION, rules: native.rules }, null)?.rules(judged.input.owner, judged.input.kind);
+    if (!projectionOwner || !currentRules || !("subject" in currentRules.observation) || currentRules.observation.subject !== "rules" || currentRules.observation.content.asked !== "rules" || currentRules.observation.content.extents === undefined) return expect.fail("The native owner and actual Rules extents are required.");
+    const extents = currentRules.observation.content.extents;
+    const projectionOwners = new Map<string, ReadonlyMap<string, OperationRules>>([[judged.input.owner, new Map([[judged.input.kind, projectionOwner]])]]);
+    const unknownProjectionOwners = new Map<string, ReadonlyMap<string, OperationRules>>([[judged.input.owner, new Map([[judged.input.kind, { ...projectionOwner, values: () => [] }]])]]);
+    const projection = await runInDurableObject(G.object, (_instance, state) => {
+      const row = state.storage.sql.exec<{ hash: `sha256:${string}`; size: number }>("SELECT hash, size FROM entry WHERE seq = ? LIMIT 1", judged.seq).one();
+      const all = localRetainedPlan(definition.definition, judged, row.hash, projectionOwner, PROPOSED_BOUNDS).dependencies;
+      const expected = all.filter(({ dependency }) => dependency.mode === "probe");
+      const expectedValues = all.filter(({ dependency }) => dependency.mode === "required" && dependency.consumer === "outcome-value");
+      const cells: unknown[] = [], budget = new ArchiveBudget(), sql = { exec(query: string, ...args: SqlValue[]) {
+        const rows = state.storage.sql.exec(query, ...args).toArray();
+        for (const held of rows) cells.push(...Object.values(held));
+        return { toArray: () => rows };
+      } };
+      const projector = new ArchiveObserved(sql, definition.definition, budget, PROPOSED_BOUNDS), valueProjector = new ArchiveOutcomeValues(sql, projectionOwners, budget, PROPOSED_BOUNDS);
+      const position = { seq: judged.seq, hash: row.hash, bytes: row.size, input: "outcome" as const };
+      const projected = projector.project(judged.at, position), projectedValues = valueProjector.project(judged.at, position), before = budget.admitted();
+      const repeated = projector.project(judged.at, position), repeatedValues = valueProjector.project(judged.at, position), after = budget.admitted();
+      const beforeUnknown = budget.admitted();
+      expect(() => new ArchiveOutcomeValues(sql, unknownProjectionOwners, budget, PROPOSED_BOUNDS)).toThrow("unsupported-archive-cohort");
+      expect(budget.admitted().calls).toBe(beforeUnknown.calls); // Unknown callbacks run no SQL or value selector.
+      return { projected, projectedValues, expected, expectedValues, repeated, repeatedValues, before, after, cells };
+    });
+    expect(projection.projected).toEqual(projection.expected);
+    expect(projection.projected).toHaveLength(1);
+    expect(projection.projected[0]).toMatchObject({ dependency: { mode: "probe", consumer: "observation-value", choices: [{ domain: RULES_EXTENTS_VALUE.domain, key: { kind: "value", domain: RULES_EXTENTS_VALUE.domain, digest: extents } }] } });
+    expect(projection.projectedValues).toEqual(projection.expectedValues);
+    expect(projection.projectedValues).toHaveLength(1);
+    expect(projection.projectedValues[0]).toMatchObject({ dependency: { mode: "required", consumer: "outcome-value", key: { kind: "value", domain: DESTINATION_CHANGED_SET.domain, digest: changed } }, max: DESTINATION_CHANGED_SET.max });
+    expect(projection.repeated).toEqual(projection.projected);
+    expect(projection.repeatedValues).toEqual(projection.projectedValues);
+    expect(projection.after.calls).toBeGreaterThan(projection.before.calls);
+    expect(projection.after.inputWork).toBeGreaterThan(projection.before.inputWork);
+    expect(new Set(projection.cells.filter(cell => typeof cell === "string"))).toEqual(new Set(["array", "rules", extents, changed]));
     expect((await storedPublication()).item).toMatchObject({ state: "reserved", values: { integration, reservedAt: judged.seq } });
     expect(await G.item(0)).toMatchObject({ refs: { slot: publication, judging: null } });
     expect(judged.sends[0]!.message).toMatchObject({ type: "relate", body: { name: "publication", state: "reserved", detail: { operation: factRefOf(merge), outcome: "committed", rules: checked.seq } } });
