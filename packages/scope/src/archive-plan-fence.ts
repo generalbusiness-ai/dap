@@ -3,7 +3,7 @@
 import type { Head } from "@generalbusiness/dap-contract";
 import { natural, same } from "@generalbusiness/artroom-bytes";
 import type { LocalRetainedPlan } from "@generalbusiness/dap-derive";
-import { ARCHIVE_BOUNDS, type ArchiveBudget } from "./archive-budget.ts";
+import { ARCHIVE_BOUNDS, type ArchiveBudget, type ArchiveCost } from "./archive-budget.ts";
 import type { ArchiveLocalReferencePlan } from "./archive-local-references.ts";
 import type { ArchivePrivacyPosition, ArchivePrivacyPrefix } from "./archive-privacy.ts";
 import { stopArchivePrefix as stop, type ArchivePrefix } from "./archive-prefix.ts";
@@ -44,6 +44,14 @@ function samePlanMetadata(left: unknown, leftSize: number, right: unknown, budge
   return same(left, right);
 }
 const prefixBasis = (prefix: ArchivePrefix) => ({ pin: prefix.pin, genesis: prefix.frame.genesis, after: prefix.after ?? null });
+/** Capture the original seal's actual work; fresh comparison must repeat
+ * that seal and pay both sides' original comparison reservation again. */
+function captureComparison(value: unknown, budget: ArchiveBudget): { size: number; metadata: number; inputWork: number } {
+  budget.spend({ metadata: 128, inputWork: 256 }); // New forecast bookkeeping.
+  const before = budget.admitted(), size = sealPlanMetadata(value, budget), after = budget.admitted();
+  return { size, metadata: after.metadata - before.metadata + size * 6,
+    inputWork: after.inputWork - before.inputWork + size * 16 };
+}
 
 /** One process-local forecast, consumed once by a fresh inventory. Plans
  * come from actual scalar projection; their frozen values confer no class,
@@ -52,8 +60,11 @@ export class ArchivePlanFence {
   readonly #budget: ArchiveBudget;
   readonly #basis: ReturnType<typeof prefixBasis>;
   readonly #basisSize: number;
+  readonly #basisMetadata: number;
+  readonly #basisInputWork: number;
   readonly #first: number;
-  readonly #rows = new Map<number, { readonly position: ArchivePrivacyPosition; readonly plan: ArchiveLocalReferencePlan; readonly size: number }>();
+  readonly #rows = new Map<number, { readonly position: ArchivePrivacyPosition; readonly plan: ArchiveLocalReferencePlan; readonly size: number;
+    readonly comparisonMetadata: number; readonly comparisonInputWork: number }>();
   #through: Head | null = null;
   #started = false;
   #checked = 0;
@@ -62,7 +73,9 @@ export class ArchivePlanFence {
     budget.spend({ metadata: 256, inputWork: 512 });
     if (prefix.after === undefined || prefix.positions.length === 0) stop("unavailable");
     this.#budget = budget; this.#first = prefix.positions[0]!.seq;
-    this.#basis = prefixBasis(prefix); this.#basisSize = sealPlanMetadata(this.#basis, budget);
+    this.#basis = prefixBasis(prefix);
+    const basis = captureComparison(this.#basis, budget);
+    this.#basisSize = basis.size; this.#basisMetadata = basis.metadata; this.#basisInputWork = basis.inputWork;
   }
   append(position: ArchivePrivacyPosition, plan: ArchiveLocalReferencePlan): void {
     const budget = this.#budget; budget.check();
@@ -71,16 +84,36 @@ export class ArchivePlanFence {
     if (position.seq !== this.#first + this.#rows.size) return stop("mismatch");
     if (this.#rows.size === ARCHIVE_BOUNDS.entries) return stop("limit");
     budget.spend({ metadata: 256, inputWork: 512 });
-    const size = sealPlanMetadata(plan, budget);
+    const captured = captureComparison(plan, budget), previous = this.#rows.get(position.seq - 1);
+    const comparisonMetadata = (previous?.comparisonMetadata ?? this.#basisMetadata) + captured.metadata;
+    const comparisonInputWork = (previous?.comparisonInputWork ?? this.#basisInputWork) + captured.inputWork;
+    if (!natural(comparisonMetadata) || !natural(comparisonInputWork)) return stop("limit");
     const owned = Object.freeze({ seq: position.seq, hash: position.hash, bytes: position.bytes, input: position.input });
-    this.#rows.set(position.seq, { position: owned, plan, size });
+    this.#rows.set(position.seq, { position: owned, plan, size: captured.size, comparisonMetadata, comparisonInputWork });
   }
+  /** Future start/check work for this whole prefix when its fresh plan
+   * matches. No comparison is skipped or prepaid. Mismatching metadata
+   * still fails through the real comparison and original allowance. */
+  comparisonCost(through: Head): Readonly<ArchiveCost> {
+    const budget = this.#budget; budget.spend({ metadata: 128, inputWork: 256 });
+    if (this.#started) return stop("unavailable");
+    const row = this.#rows.get(through.seq);
+    if (!row || row.position.hash !== through.hash) return stop("mismatch");
+    return Object.freeze({ entries: 0, attempts: 0, nodes: 0, calls: 0,
+      metadata: row.comparisonMetadata, inputWork: row.comparisonInputWork });
+  }
+  /** Select an earlier whole boundary after metadata lookahead. Discarded
+   * projections grant no refund: all their reads, seals and quotes remain
+   * spent on the original ledger. The selected prefix is consumed once. */
   seal(through: Head): void {
     this.#budget.check();
     if (this.#through !== null || this.#started) return stop("unavailable");
-    const last = this.#rows.get(this.#first + this.#rows.size - 1)?.position;
-    if (!last || through.seq !== last.seq || through.hash !== last.hash) return stop("mismatch");
-    this.#through = Object.freeze({ ...through });
+    const seq = through.seq, hash = through.hash, selected = this.#rows.get(seq)?.position;
+    if (!selected || selected.hash !== hash) return stop("mismatch");
+    const last = this.#first + this.#rows.size - 1;
+    this.#budget.spend({ inputWork: (last - seq) * 32 });
+    for (let next = seq + 1; next <= last; next++) { this.#budget.check(); this.#rows.delete(next); }
+    this.#through = Object.freeze({ seq, hash });
   }
   /** Called only after fresh whole-prefix privacy/classification, before
    * the first local entry body. Even a failed comparison consumes it. */

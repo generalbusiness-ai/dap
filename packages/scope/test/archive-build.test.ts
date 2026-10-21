@@ -99,7 +99,7 @@ test("an empty policy registry still refuses planning before any archive is retu
 
 // Invariant: a confirmed v2 receipt bounds both initial inventory and exact
 // restart reconstruction to the new interval, even after another turn.
-test("v2 native inventory and restart read only the marked new interval and keep earlier retained paths", async () => {
+test("v2 native inventory and restart read only the marked new interval and keep earlier retained paths", async context => {
   const lane = await create({}, {}, base), initial = await lane.head();
   const first = await lane.inside(state => planArchivePass(sqlOf(state), { at: lane.at, through: initial, after: null,
     bounds: PROPOSED_BOUNDS, policies, format: "sha1", parent: null, markedAt: at(0) }, new ArchiveBudget()));
@@ -121,11 +121,32 @@ test("v2 native inventory and restart read only the marked new interval and keep
       }
       return sql.exec(query, ...args);
     } };
-    const forecast = (source: Sql, budget: ArchiveBudget, damage?: "position" | "plan") => source.transaction(() => {
+    const forecast = (source: Sql, budget: ArchiveBudget, damage?: "position" | "plan",
+      cutoff: typeof through | "before-last" = through) => source.transaction(() => {
       const prefix = archivePrefixMetadata(source, lane.at, through, PROPOSED_BOUNDS, budget, new Set([base.digest]), initial);
       const support = policies.get(base.digest)!.support;
       const admitted = archivePrivacyMetadata(source, prefix, support, budget);
-      const references = new ArchiveLocalReferences(source, support, PROPOSED_BOUNDS, budget), fence = new ArchivePlanFence(prefix, budget);
+      const references = new ArchiveLocalReferences(source, support, PROPOSED_BOUNDS, budget);
+      // Observe original comparison charges only; every call still executes
+      // the real fence on this same native ledger, including failures.
+      const fence = new class extends ArchivePlanFence {
+        comparisonMetadata = 0;
+        comparisonInputWork = 0;
+        record(read: () => void): void {
+          const before = budget.admitted();
+          try { read(); } finally {
+            const after = budget.admitted();
+            this.comparisonMetadata += after.metadata - before.metadata;
+            this.comparisonInputWork += after.inputWork - before.inputWork;
+          }
+        }
+        override start(prefix: Parameters<ArchivePlanFence["start"]>[0], allowance: ArchiveBudget): void {
+          this.record(() => super.start(prefix, allowance));
+        }
+        override check(position: Parameters<ArchivePlanFence["check"]>[0], plan: Parameters<ArchivePlanFence["check"]>[1]): void {
+          this.record(() => super.check(position, plan));
+        }
+      }(prefix, budget);
       budget.spend({ metadata: 256, inputWork: 512 });
       const paths = new Set<string>();
       const retain = (key: RetainedKey) => {
@@ -146,8 +167,12 @@ test("v2 native inventory and restart read only the marked new interval and keep
           else if (dependency.mode === "probe") for (const choice of dependency.choices) retain(choice.key);
         }
       }
-      fence.seal(through);
-      return { fence, positions: admitted.positions, borrowed, paths };
+      const prior = admitted.positions.at(-2)!;
+      const selectedThrough = cutoff === "before-last" ? { seq: prior.seq, hash: prior.hash } : cutoff;
+      const comparison = fence.comparisonCost(selectedThrough), beforeSeal = budget.admitted();
+      fence.seal(selectedThrough);
+      expect(budget.admitted().inputWork).toBeGreaterThanOrEqual(beforeSeal.inputWork);
+      return { fence, positions: admitted.positions, borrowed, paths, comparison, through: selectedThrough };
     });
     for (const damage of ["position", "plan"] as const) {
       const budget = new ArchiveBudget(); let entryBodies = 0, payloadQueries = 0;
@@ -163,6 +188,15 @@ test("v2 native inventory and restart read only the marked new interval and keep
       else expect(entryBodies).toBeGreaterThan(0);
       expect(payloadQueries).toBe(0);
     }
+    // Later metadata was already inspected and paid. Choose an earlier
+    // whole prefix, then perform fresh native admission and comparisons.
+    const smallerBudget = new ArchiveBudget(), smaller = forecast(exact, smallerBudget, undefined, "before-last");
+    const beforeSmaller = smallerBudget.admitted();
+    const smallerInventory = inventoryArchive(exact, lane.at, smaller.through, PROPOSED_BOUNDS, policies, smallerBudget, undefined, initial, smaller.fence);
+    expect(smallerInventory.ok, JSON.stringify(smallerInventory)).toBe(true);
+    expect(smallerBudget.admitted().metadata).toBeGreaterThan(beforeSmaller.metadata);
+    expect(smaller.fence.comparisonMetadata).toBe(smaller.comparison.metadata);
+    expect(smaller.fence.comparisonInputWork).toBe(smaller.comparison.inputWork);
     const budget = new ArchiveBudget();
     const prepared = await prepareJournalPass({ format: "sha1", at: lane.at, after: initial, parent, budget });
     expect(prepared.ok, JSON.stringify(prepared)).toBe(true); if (!prepared.ok) return { value: prepared, queried };
@@ -183,13 +217,17 @@ test("v2 native inventory and restart read only the marked new interval and keep
     const value = await planArchivePass(exact, { at: lane.at, through, after: initial, bounds: PROPOSED_BOUNDS,
       policies, format: "sha1", parent, markedAt: at(1), preparation: prepared.preparation, forecast: held.fence }, budget);
     if (value.ok) {
+      expect(held.comparison).toEqual({ entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 43432, inputWork: 118976 });
+      expect([held.fence.comparisonMetadata, held.fence.comparisonInputWork]).toEqual([43432, 118976]);
       expect(attributed.nodes).toBeGreaterThan(0);
       expect(value.archive.cost.nodes).toBe(value.archive.selection.inventoryCost.nodes + attributed.nodes);
       expect(budget.admitted()).toEqual(value.archive.cost);
       expect(prepared.preparation.metadataCost()).toEqual(attributed); // Payload work was not attributed.
     }
-    return { value, queried };
+    return { value, queried, comparison: { metadata: held.fence.comparisonMetadata, inputWork: held.fence.comparisonInputWork } };
   });
+  (context.task.meta as Record<string, unknown>)["archivePlanFenceComparison"] = { cost: planned.comparison,
+    qualification: "Actual native SQLite fresh inventory invokes the original plan fence start/check methods on the same original budget as metadata preparation and build. Test subclass only observes exact super calls. Genuine native prepared-rule input; TESTpolicy/authority/manual component receipt. No host, adaptive cutoff, export or full-pass claim." };
   const next = planned.value;
   expect(next.ok, JSON.stringify(next)).toBe(true); if (!next.ok) return;
   expect(planned.queried.length).toBeGreaterThan(0);
