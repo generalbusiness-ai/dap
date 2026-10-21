@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:522dc0deb609ea495985c120c8ab054e819ef217","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/outcomes.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:53900ddabad004b243f017493c618a653bc84330","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-20-archive-incremental-f1.md."}
