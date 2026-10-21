@@ -17,9 +17,10 @@ import { buildJournalPass, journalRef, verifyJournalAppend, type JournalArchive,
 import { readJournalRepositoryArchive } from "@generalbusiness/artroom-git/journal-reader";
 import { archiveInput } from "../src/archive-input.ts";
 import { ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
-import { archiveEntryHeader, archiveEntryPrivacy } from "../src/archive-entry-metadata.ts";
+import { archiveEntryHeader, archiveEntryPrivacy, archiveSupportMetadata, recordArchiveSupportMetadata } from "../src/archive-entry-metadata.ts";
 import { archivePrefixMetadata } from "../src/archive-prefix.ts";
 import { forecastArchiveEntryPrivacy } from "../src/archive-entry-privacy-cost.ts";
+import { forecastArchiveSupportMetadata } from "../src/archive-support-cost.ts";
 import { ArchiveForeignMetadata } from "../src/archive-foreign.ts";
 import { fixtureArchiveTargetIn } from "../src/archive-target.ts";
 import { archiveReplayAnchors } from "../src/archive-anchors.ts";
@@ -232,7 +233,7 @@ test.for(["fixture", "Grow"])("installed %s scopes export genesis zero after a l
     const diagnosticArchives = new Map<ScopeId, JournalArchive | JournalPassArchive>();
     const passAnchors = new Map<ScopeId, readonly FactRef[]>();
     const passSelections = new Map<ScopeId, string>();
-    const sharedPassFootprints: unknown[] = [], sharedWholePassFootprints: unknown[] = [];
+    const sharedPassFootprints: unknown[] = [], sharedWholePassFootprints: unknown[] = [], supportComponents: unknown[] = [];
     const entryPrivacyComponents: { scope: string; seq: number; input: Input["type"]; effects: number; delta: ArchiveCost }[] = [];
     if (kind === "Grow") {
       // Invariant: native domain permission belongs to its exact declared
@@ -308,6 +309,25 @@ test.for(["fixture", "Grow"])("installed %s scopes export genesis zero after a l
               { has: digest => policies.has(digest) }, receipt);
             const position = prefix.positions[0]!;
             expect(prefix.positions.map(row => row.seq)).toEqual([through.seq]);
+            const beforeSupport = privacyBudget.admitted();
+            archiveSupportMetadata(privacySupport, privacyBudget);
+            const afterSupport = privacyBudget.admitted();
+            const originalSupport = Object.fromEntries(Object.keys(afterSupport).map(key => [key,
+              afterSupport[key as keyof ArchiveCost] - beforeSupport[key as keyof ArchiveCost]])) as ArchiveCost;
+            const counts = recordArchiveSupportMetadata(privacySupport, privacyBudget), recorded = privacyBudget.admitted();
+            expect(forecastArchiveSupportMetadata(counts)).toEqual(originalSupport);
+            expect(recorded.metadata - afterSupport.metadata).toBe(128);
+            expect(recorded.inputWork - afterSupport.inputWork).toBe(originalSupport.inputWork + 256);
+            // Literal receipts measured before shared price extraction.
+            const independentSupport: Readonly<Record<string, number>> = {
+              "sha256:5e2d34fa9965662aa508aaaffd83bdcd4198746ae8d4a8dd24654d74289529a4": 512,
+              "sha256:69424c1bbbf7c2f81528fcc6c910b1230a88d061ac3655c5bde916aaa2572c56": 0,
+              "platform:directory@16": 1024, "platform:rules@10": 272640, "platform:destination@12": 378112 };
+            expect(originalSupport).toEqual({ entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0,
+              inputWork: independentSupport[privacySupport.named] });
+            supportComponents.push({ named: privacySupport.named, digest: privacySupport.definition.digest,
+              counts, delta: originalSupport, recordedDelta: { metadata: recorded.metadata - afterSupport.metadata,
+                inputWork: recorded.inputWork - afterSupport.inputWork } });
             const beforePrivacy = privacyBudget.admitted(), sourceRow = { kind: "local" as const, position };
             const header = archiveEntryHeader(sql, sourceRow, privacyBudget);
             archiveEntryPrivacy(sql, sourceRow, header, privacySupport, privacyBudget);
@@ -354,6 +374,7 @@ test.for(["fixture", "Grow"])("installed %s scopes export genesis zero after a l
     }
     if (kind === "Grow") (context.task.meta as Record<string, unknown>)["sharedPassNativeFootprints"] = {
       passes: sharedPassFootprints, wholePasses: sharedWholePassFootprints,
+      supportComponents, supportQualification: "Original trusted support validation plus repeated actual counted scout; same component budget pays fresh prefix, both full support validations,128metadata/256input count bookkeeping and privacy. Scalar forecast matches the original validation delta only, no refund/credit; final native inventory validates support afresh. No declaration payload body is fetched by this trusted support walk. No fresh validation credit or complete driver admission claim.",
       entryPrivacyComponents, entryPrivacyQualification: "Actual native header and entry-privacy calls before extraction, each component has its own unchanged default budget and fresh prefix/JSON reservation. Delta excludes that separately paid prefix, trusted support validation, foreign classification, and all payload reads; no whole-export or driver admission claimed.",
       qualification: "Actual installed Grow and its discovered native Directory16, Rules10 and Destination12 histories. Each diagnostic one-entry pass uses one original default30s ledger for fresh native inventory, canonical Git build and, for each noninitial pass, append validation. Genesis has no prior append and no append-validator claim. Real fixture entries and retained bytes; explicit TEST package peer, owner input, policy/source/authority configuration and scheduler. No remote confirmation, production admission or deployed cadence claim. Kind/domain counts concern these fixture entries, not all theoretically possible native entries."
     };

@@ -12,6 +12,7 @@ import { platform } from "@generalbusiness/dap-platform";
 import { sqlJsonText as text, type Sql } from "./sqlite.ts";
 import { archiveDeclarationValuePlaces, archiveValuePlace } from "./archive-value-policy.ts";
 import { ARCHIVE_ENTRY_DETAIL_METADATA, ARCHIVE_ENTRY_HEADER_METADATA, archiveEntryEffectsMetadata } from "./archive-entry-privacy-cost.ts";
+import { ARCHIVE_SUPPORT_CAPABILITY_WORK, ARCHIVE_SUPPORT_OWNER_WORK, type ArchiveSupportFootprint } from "./archive-support-cost.ts";
 export { sqlJsonText as archiveMetadataText } from "./sqlite.ts";
 
 /** Trusted native code/registry metadata. A request cannot supply this map;
@@ -99,19 +100,32 @@ export function archiveEntryPrivacy(sql: Pick<Sql, "exec">, source: ArchiveMetad
  * declarations with no entries in this prefix. The registry is finite;
  * its presence does not create a certificate or load package code. */
 export function archiveSupportMetadata(support: ArchiveSupport, budget: ArchiveBudget): void {
+  checkArchiveSupportMetadata(support, budget, false);
+}
+
+/** Scout the actual trusted metadata, paying all original validation work
+ * and new count bookkeeping on this same budget. Fresh inventory still
+ * calls archiveSupportMetadata in full; these counts grant no credit. */
+export function recordArchiveSupportMetadata(support: ArchiveSupport, budget: ArchiveBudget): Readonly<ArchiveSupportFootprint> {
+  budget.spend({ metadata: 128, inputWork: 256 });
+  return checkArchiveSupportMetadata(support, budget, true)!;
+}
+
+function checkArchiveSupportMetadata(support: ArchiveSupport, budget: ArchiveBudget, collect: boolean): Readonly<ArchiveSupportFootprint> | undefined {
   budget.check();
-  archiveDeclarationValuePlaces(support, budget);
+  const declarationNodes = archiveDeclarationValuePlaces(support, budget);
+  let ownerKinds = 0, ownerDomains = 0, capabilityKinds = 0;
   const known = (name: string) => name === "hold@1" || name === "git-read@1" || isPlatformDefinition(name) && platform(name) !== null;
   if (support.owners.size > 64 || support.preparations.size > 64 || support.records.size > 64) return stop("limit");
   for (const [name, kinds] of support.owners) {
     if (name.length > 128 || !known(name)) return stop("unsupported-archive-cohort");
     if (kinds.size > 64) return stop("limit");
     for (const [kind, rules] of kinds) {
-      budget.spend({ inputWork: 512 });
+      budget.spend({ inputWork: ARCHIVE_SUPPORT_OWNER_WORK }); ownerKinds++;
       if (!kind || kind.length > 128 || rules.values !== undefined && rules.valueDomains === undefined) return stop("unsupported-archive-cohort");
       if (rules.valueDomains !== undefined && (!Array.isArray(rules.valueDomains) || rules.valueDomains.length > 64)) return stop("limit");
       for (const domain of rules.valueDomains ?? []) {
-        budget.spend({ inputWork: 512 });
+        budget.spend({ inputWork: ARCHIVE_SUPPORT_OWNER_WORK }); ownerDomains++;
         if (!archiveValuePlace(support, domain.domain, domain.max, `owners.${name}.${kind}`)) return stop("unsupported-custom-domain");
         if (!Number.isSafeInteger(domain.max) || domain.max < 1 || domain.max > 1024 * 1024) return stop("unavailable");
       }
@@ -121,10 +135,11 @@ export function archiveSupportMetadata(support: ArchiveSupport, budget: ArchiveB
     if (!["hold@1", "git-read@1", DEVICE_COMMAND].includes(name)) return stop("unsupported-archive-cohort");
     if (kinds.size > 64) return stop("limit");
     for (const kind of kinds) {
-      budget.spend({ inputWork: 256 });
+      budget.spend({ inputWork: ARCHIVE_SUPPORT_CAPABILITY_WORK }); capabilityKinds++;
       if (!kind || kind.length > 128) return stop("unavailable");
       if (name === DEVICE_COMMAND && !(table === support.records ? DEVICE_COMMAND_ARCHIVE_RECORDS : DEVICE_COMMAND_ARCHIVE_PREPARATIONS).has(kind)) return stop("unsupported-archive-cohort");
     }
   }
   budget.check();
+  return collect ? Object.freeze({ declarationNodes, ownerKinds, ownerDomains, capabilityKinds }) : undefined;
 }
