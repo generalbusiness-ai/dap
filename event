@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/2026-10-21-retained-files.md","body":{"commit":"afe0c3190d500f5936e7bd711be67ee4b980b4e0","path":"notes/2026-10-21-retained-files.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:05eb0d8afda351cae6dda265dca71f530ef4e359","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-21-retained-files.md."}
