@@ -70,11 +70,34 @@ test("metadata lookahead keeps completed debits and refuses before SQL would con
   expect(() => budget.spend({})).toThrow("archive-limit");
 });
 
-test("original deadline and monotone clock fence later work and reject a delayed value before cache or SQL continuation", async () => {
+test("structured asynchronous metadata lookahead keeps the finish reserve across an awaited gate and returns only after caught shortage settles", async () => {
+  // An explicit metadata-provider gate, not a Git/network/frame witness.
+  const budget = new ArchiveBudget({ calls: 3, metadata: 12, inputWork: 30 }, () => 0);
+  const reserve = { calls: 1, metadata: 8, inputWork: 20 }; let calls = 0, release!: () => void;
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  const pending = budget.lookaheadAsync(reserve, async () => {
+    budget.spend({ calls: 1, metadata: 3, inputWork: 5 }); calls++;
+    await budget.wait(() => gate);
+    try { budget.spend({ calls: 1, metadata: 3, inputWork: 5 }); calls++; }
+    catch { return "missing after caught shortage"; }
+    return "metadata";
+  });
+  expect(calls).toBe(1);
+  reserve.metadata = 0; // The guard owns its original copied forecast.
+  release();
+  expect(await pending).toEqual({ kind: "limited" });
+  expect(calls).toBe(1);
+  expect(budget.admitted()).toMatchObject({ calls: 1, metadata: 3, inputWork: 5 });
+  budget.spend({ calls: 2, metadata: 9, inputWork: 25 });
+  expect(budget.admitted()).toMatchObject({ calls: 3, metadata: 12, inputWork: 30 });
+  expect(() => budget.spend({ inputWork: 1 })).toThrow("archive-limit");
+});
+
+test("original deadline and monotone clock fence asynchronous lookahead and reject a delayed value before cache or SQL continuation", async () => {
   let now = 0, resolve!: (value: number) => void, calls = 0, cached = false;
   const budget = new ArchiveBudget({}, () => now, 10);
   const sql = budget.native({ exec() { calls++; return { toArray: () => [] }; } }, () => ({ metadata: 0, inputWork: 0 }));
-  const pending = budget.wait(() => new Promise<number>(done => { resolve = done; })).then(() => { sql.exec("SELECT 1"); cached = true; });
+  const pending = budget.lookaheadAsync({}, () => new Promise<number>(done => { resolve = done; })).then(() => { sql.exec("SELECT 1"); cached = true; });
   now = 10;
   await expect(pending).rejects.toThrow("archive-timeout");
   resolve(1); await Promise.resolve(); await Promise.resolve();
