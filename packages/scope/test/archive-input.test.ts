@@ -4,8 +4,13 @@ import { expect, test } from "vitest";
 import { canonicalize, utf8 } from "@generalbusiness/artroom-bytes";
 import { archiveInput } from "../src/archive-input.ts";
 import type { ArchiveInputSelection } from "../src/archive-input.ts";
-import { ArchiveBudget } from "../src/archive-budget.ts";
+import { ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
+import { archiveEntryReadForecast, archiveInputBaseReservation, archiveInputRetainedReadForecast } from "../src/archive-input-cost.ts";
 import { create, definition } from "./fixtures-native.ts";
+
+const difference = (after: ArchiveCost, before: ArchiveCost): ArchiveCost => Object.fromEntries(
+  Object.keys(after).map(key => [key, after[key as keyof ArchiveCost] - before[key as keyof ArchiveCost]]),
+) as ArchiveCost;
 
 // Invariant: rebuild input reads exactly named positions and keys, even after
 // a native turn appends new entries; every other request performs no SQL read.
@@ -16,8 +21,30 @@ test("reads only immutable selection keys from native SQLite", async () => {
   await lane.restart();
   const read = await lane.inside(async state => {
     const calls: { query: string; args: unknown[] }[] = [], budget = new ArchiveBudget();
+    const before = budget.admitted();
     const input = archiveInput({ exec(query, ...args) { calls.push({ query, args }); return state.storage.sql.exec(query, ...args); }, transaction: action => state.storage.transactionSync(action) }, selected, budget);
-    const entry = await input.entry(0, utf8(bytes).length), retained = await input.retained({ kind: "definition", digest: definition.digest }, utf8(declaration).length);
+    const initialized = budget.admitted();
+    const entry = await input.entry(0, utf8(bytes).length), entryEnd = budget.admitted();
+    const retained = await input.retained({ kind: "definition", digest: definition.digest }, utf8(declaration).length), retainedEnd = budget.admitted();
+    expect(await input.entry(0, utf8(bytes).length)).toBe(bytes); const repeatedEntryEnd = budget.admitted();
+    expect(await input.retained({ kind: "definition", digest: definition.digest }, utf8(declaration).length)).toBe(declaration);
+    const repeatedRetainedEnd = budget.admitted(), zero = { entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0, inputWork: 0 };
+    // Original counter formulas, captured before extracting input pricing.
+    // Retained cache hits still reserve all repeated validation work.
+    expect(difference(initialized, before)).toEqual({ ...zero, metadata: 384, inputWork: 768 });
+    const entryCost = { ...zero, attempts: 1, calls: 2, metadata: 128, inputWork: 384 + utf8(bytes).length * 9 };
+    expect(difference(entryEnd, initialized)).toEqual(entryCost);
+    expect(difference(repeatedEntryEnd, retainedEnd)).toEqual(entryCost);
+    expect(difference(retainedEnd, entryEnd)).toEqual({ ...zero, attempts: 1, calls: 2, metadata: 96,
+      inputWork: 352 + utf8(declaration).length * 33 + declaration.length * 3 });
+    expect(difference(repeatedRetainedEnd, repeatedEntryEnd)).toEqual({ ...zero, attempts: 1, inputWork: 256 + declaration.length * 99 });
+    expect(difference(initialized, before)).toEqual({ ...zero, ...archiveInputBaseReservation(1, 1) });
+    expect(difference(entryEnd, initialized)).toEqual({ ...zero, ...archiveEntryReadForecast(utf8(bytes).length) });
+    expect(difference(repeatedEntryEnd, retainedEnd)).toEqual({ ...zero, ...archiveEntryReadForecast(utf8(bytes).length) });
+    const retainedForecast = archiveInputRetainedReadForecast(utf8(declaration).length);
+    for (const cost of [difference(retainedEnd, entryEnd), difference(repeatedRetainedEnd, repeatedEntryEnd)]) {
+      for (const key of Object.keys(zero) as (keyof ArchiveCost)[]) expect(cost[key]).toBeLessThanOrEqual(retainedForecast[key] ?? 0);
+    }
     const allowedCalls = calls.length;
     expect(await input.entry(1, utf8(bytes).length)).toBeNull();
     expect(await input.entry(0, utf8(bytes).length + 1)).toBeNull();
@@ -26,7 +53,7 @@ test("reads only immutable selection keys from native SQLite", async () => {
     return { entry, retained, calls, cost: budget.admitted() };
   });
   expect(read.entry).toBe(bytes); expect(read.retained).toBe(declaration);
-  expect(read.cost.attempts).toBe(5);
+  expect(read.cost.attempts).toBe(7);
   expect(read.calls.every(call => call.query.includes(" WHERE ") && !call.query.includes("ORDER BY") && !call.query.includes("meta"))).toBe(true);
   for (const call of read.calls) expect(call.args[0]).toBe(call.query.includes(" FROM entry ") ? 0 : "definition");
 });
