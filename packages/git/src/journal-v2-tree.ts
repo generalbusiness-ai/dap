@@ -6,10 +6,13 @@ import { JournalObjectReader, JournalObjects, journalFormat, type JournalFormat,
 import { journalObjectReservation, journalResultMetadata, journalTreeRowMetadata } from "./journal-object-cost.ts";
 import { readJournalV2Path } from "./journal-v2-path.ts";
 import { JournalWork, refuseJournal, type JournalCost, type JournalLayoutLimits } from "./journal-work.ts";
+import { JOURNAL_LAYOUT_LIMITS } from "./journal-work.ts";
+import { journalAppendReadCost, type JournalAppendForecast, type JournalAppendLayoutWork } from "./journal-append-cost.ts";
 
 export interface JournalV2PlannedFile { readonly path: string; readonly bytes: number }
 type PatchLayoutWork = Pick<JournalLayoutLimits, "objects" | "trees" | "names" | "outputWork" | "objectBytes">;
-export type JournalV2PatchForecast = { readonly ok: true; readonly cost: Readonly<JournalCost>; readonly layoutWork: Readonly<PatchLayoutWork> }
+export type JournalV2PatchForecast = { readonly ok: true; readonly cost: Readonly<JournalCost>; readonly layoutWork: Readonly<PatchLayoutWork>;
+  readonly appendEdges: JournalAppendForecast | null }
   | { readonly ok: false; readonly reason: "limit" };
 
 interface Change {
@@ -118,8 +121,10 @@ export class JournalV2TreePatch {
     } finally { this.#preparing = false; }
   }
   /** Future finish with a fresh maker of this format, plus one objects()
-   * exposure. No commit, input validation, provider or at-send work is
-   * included. This reads only already prepared tree metadata. Forecast
+   * exposure. Separate appendEdges prices changed edges and both head tree
+   * walks when a parent and selected head exist. It excludes commit/head
+   * blob reads/parses (forecastJournalAppendFixed), source/body validation
+   * and provider work. This reads only prepared tree metadata. Forecast
    * scratch work is charged now; estimated work is still owed in full.
    * Unselected prepared paths receive no future emission charge or refund. */
   forecast(format: JournalFormat, files: readonly JournalV2PlannedFile[]): JournalV2PatchForecast {
@@ -131,7 +136,7 @@ export class JournalV2TreePatch {
     const width = format === "sha1" ? 20 : 32;
     const cost: JournalCost = { entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0, inputWork: 0 };
     const layout: PatchLayoutWork = { objects: 0, trees: 0, names: 0, outputWork: 0, objectBytes: 0 };
-    let fits = true;
+    let fits = true, appendBlobBytes = 0, appendBlobMaximum = 0;
     const metadata = (bytes: number) => { cost.metadata += bytes; cost.inputWork += bytes; };
     const make = (type: JournalObjectType, bytes: number) => {
       if (bytes > this.work.limits.objectBytes) fits = false;
@@ -151,6 +156,7 @@ export class JournalV2TreePatch {
       const path = file.path, bytes = file.bytes;
       if (typeof path !== "string" || path.length > 1024 || !readJournalV2Path(path)) return refuseJournal("tree");
       if (!natural(bytes)) return refuseJournal("input", path);
+      appendBlobBytes += bytes; appendBlobMaximum = Math.max(appendBlobMaximum, bytes);
       this.work.metadata(128 + path.length * 4); this.work.input(path.length, 4);
       if (selected.has(path)) return refuseJournal("tree", path);
       selected.add(path);
@@ -184,8 +190,56 @@ export class JournalV2TreePatch {
     for (const key of ["objects", "trees", "names", "outputWork"] as const) {
       if (layout[key] > this.work.limits[key] - this.work.used[key]) fits = false;
     }
+    let appendEdges: JournalAppendForecast | null = null;
+    if (fits && this.reader !== null && selected.has("journal/v2/head.json")) {
+      // This extra forecasting state is paid now, on the same ledger.
+      this.work.metadata(256);
+      const cost: JournalCost = { entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0, inputWork: 0 };
+      const used: JournalAppendLayoutWork = { objects: 0, trees: 0, names: 0, depth: 0, objectBytes: 0 };
+      const metadata = (bytes: number) => { cost.metadata += bytes; cost.inputWork += bytes; };
+      const read = (bytes: number, rows?: number) => {
+        const price = journalAppendReadCost(bytes);
+        cost.attempts += price.attempts; cost.calls += price.calls;
+        cost.metadata += price.metadata; cost.inputWork += price.inputWork;
+        used.objects++; used.objectBytes = Math.max(used.objectBytes, bytes);
+        if (rows !== undefined) {
+          metadata(journalTreeRowMetadata(rows)); cost.inputWork += bytes * 3;
+          used.trees++; used.names += rows;
+        }
+      };
+      // The validator creates both comparison maps, even for a new tree.
+      // Only an unchanged edge at this exact path can skip recursion. All
+      // selected active paths are conservatively treated as changed.
+      for (const [node, state] of nodes) {
+        this.work.check(); cost.nodes++; used.depth = Math.max(used.depth, node.depth);
+        const oldRows = node.previous === null ? 0 : node.rows!.size;
+        if (node.previous !== null) read(node.baseBytes, oldRows);
+        read(state.bytes, state.rows); metadata((oldRows + state.rows) * 128);
+      }
+      // Use the primitive sizes captured in the original validated loop,
+      // never revisit caller getters or the borrowed file list.
+      const blobs = journalAppendReadCost(appendBlobBytes, selected.size);
+      cost.attempts += blobs.attempts; cost.calls += blobs.calls;
+      cost.metadata += blobs.metadata; cost.inputWork += blobs.inputWork;
+      used.objects += selected.size; used.objectBytes = Math.max(used.objectBytes, appendBlobMaximum);
+      let node = this.#root;
+      for (const part of ["journal", "v2", null]) {
+        const state = nodes.get(node);
+        if (!state || node.previous === null || node.rows === null) return refuseJournal("parent");
+        cost.nodes += 2;
+        read(node.baseBytes, node.rows.size); read(state.bytes, state.rows);
+        if (part !== null) node = node.children.get(part)!;
+      }
+      // Append validation owns a fresh JournalWork but the SAME native
+      // budget. Its layout ceilings are the defaults, not a writer's
+      // possibly lowered remaining layout counts. Fixed reads add4objects.
+      const bounded = used.objects + 4 <= JOURNAL_LAYOUT_LIMITS.objects && used.trees <= JOURNAL_LAYOUT_LIMITS.trees
+        && used.names <= JOURNAL_LAYOUT_LIMITS.names && used.depth <= JOURNAL_LAYOUT_LIMITS.depth
+        && used.objectBytes <= JOURNAL_LAYOUT_LIMITS.objectBytes;
+      appendEdges = bounded ? { ok: true, cost: Object.freeze(cost), layoutWork: Object.freeze(used) } : { ok: false, reason: "limit" };
+    }
     this.work.check();
-    return fits ? { ok: true, cost: Object.freeze(cost), layoutWork: Object.freeze(layout) } : { ok: false, reason: "limit" };
+    return fits ? { ok: true, cost: Object.freeze(cost), layoutWork: Object.freeze(layout), appendEdges } : { ok: false, reason: "limit" };
   }
   /** Finish a subset of complete prepared paths once. Blob construction and
    * every new tree still use the original maker and its full debits. */
