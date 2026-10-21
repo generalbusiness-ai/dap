@@ -7,7 +7,7 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize, newIncarnation, textDigest } from "@generalbusiness/artroom-bytes";
 import { ARCHIVE_BOUNDS, ArchiveBudget } from "../src/archive-budget.ts";
 import { ARCHIVE_POSITION_METADATA_BYTES, archivePrefixMetadata } from "../src/archive-prefix.ts";
-import { openArchiveWindow } from "../src/archive-window.ts";
+import { ArchiveWindow, openArchiveWindow, type ArchiveWindowCheckpoint } from "../src/archive-window.ts";
 import { definition, create, rita } from "./fixtures-native.ts";
 
 const syntheticHash = textDigest("synthetic prefix row, not a verified entry");
@@ -52,6 +52,55 @@ test("a native first-position size change cannot reuse the earlier JSON-work res
     state.storage.sql.exec("UPDATE entry SET bytes = bytes || ' ', size = size + 1 WHERE seq = 0");
     expect(() => window.next()).toThrow("archive-mismatch");
   });
+});
+
+test("a one-use metadata checkpoint resumes in a fresh native frame without recounting entries or extending its captured head, and fences a changed reserved footprint", async () => {
+  const lane = await create();
+  await lane.did(rita, "remark", { on: 0, fields: { text: "first genuine native entry" } });
+  await lane.did(rita, "remark", { on: 0, fields: { text: "captured native head" } });
+  const head = await lane.head(), queries: string[] = [];
+  let checkpoint!: ArchiveWindowCheckpoint, budget!: ArchiveBudget;
+  const opened = await lane.inside(state => {
+    budget = new ArchiveBudget();
+    const sql = { exec(query: string, ...args: (string | number | null)[]) { queries.push(query); return state.storage.sql.exec(query, ...args); } };
+    const window = openArchiveWindow(sql, lane.at, head, null, PROPOSED_BOUNDS, budget, certified);
+    const first = window.next(), second = window.next();
+    if (first.kind !== "position" || second.kind !== "position") return expect.fail("Both native positions must fit.");
+    checkpoint = window.checkpoint();
+    expect(() => window.next()).toThrow("archive-unavailable");
+    expect(() => window.prefix({ seq: second.position.seq, hash: second.position.hash })).toThrow("archive-unavailable");
+    return { seqs: [first.position.seq, second.position.seq], cost: budget.admitted() };
+  });
+  // The first synchronous callback has returned. A real native commit occurs
+  // during the asynchronous gap; no old window/frame remains usable.
+  await lane.did(rita, "remark", { on: 0, fields: { text: "later native head outside this window" } });
+  const live = await lane.head();
+  const resumed = await lane.inside(state => {
+    const sql = { exec(query: string, ...args: (string | number | null)[]) { queries.push(query); return state.storage.sql.exec(query, ...args); } };
+    const window = ArchiveWindow.resume(sql, checkpoint);
+    expect(window.budget).toBe(budget);
+    expect(() => ArchiveWindow.resume(sql, checkpoint)).toThrow("archive-unavailable");
+    const next = window.next();
+    if (next.kind !== "position") return expect.fail("The next native position must fit.");
+    const prefix = window.prefix(head), end = window.next(), closed = window.checkpoint();
+    const beforeDamage = budget.admitted();
+    // Restored negative only: a coherent metadata/body-length increase must
+    // not reuse the earlier reservation. This is not accepted history.
+    const row = state.storage.sql.exec<{ bytes: string; size: number }>("SELECT bytes, size FROM entry WHERE seq = ?", head.seq).one();
+    try {
+      state.storage.sql.exec("UPDATE entry SET bytes = ?, size = ? WHERE seq = ?", row.bytes + " ", row.size + 1, head.seq);
+      expect(() => ArchiveWindow.resume(sql, closed)).toThrow("archive-mismatch");
+    } finally { state.storage.sql.exec("UPDATE entry SET bytes = ?, size = ? WHERE seq = ?", row.bytes, row.size, head.seq); }
+    return { seq: next.position.seq, prefix, end, beforeDamage, afterDamage: budget.admitted() };
+  });
+  expect(opened.seqs).toEqual([0, 1]); expect(opened.cost.entries).toBe(2);
+  expect(resumed.seq).toBe(2); expect(resumed.prefix.positions.map(p => p.seq)).toEqual([0, 1, 2]);
+  expect(resumed.prefix.through).toEqual(head); expect(resumed.prefix.frame.head).toEqual(live);
+  expect(resumed.end).toEqual({ kind: "end" });
+  expect(resumed.beforeDamage.entries).toBe(3); expect(resumed.afterDamage.entries).toBe(3);
+  expect(resumed.beforeDamage.calls).toBeGreaterThan(opened.cost.calls);
+  expect(resumed.beforeDamage.inputWork).toBeGreaterThan(opened.cost.inputWork);
+  expect(queries.filter(q => q.includes("FROM entry")).every(q => !/json_|SELECT bytes|SELECT \*/.test(q))).toBe(true);
 });
 
 test("native prefix admission binds the original cutoff and full pin before entry JSON/body reads", async () => {

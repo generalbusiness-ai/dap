@@ -29,6 +29,27 @@ export interface ArchivePrefix {
   readonly after?: Head | null;
 }
 
+/** Re-read bounded native scope metadata inside the caller's current
+ * synchronous frame. Identity is bound to this actual append-derived pin;
+ * this does not admit an entry class or any payload. */
+export function readArchiveScopeFrame(sql: Pick<Sql, "exec">, expected: ScopeRef, pin: ArchivePin,
+  bounds: Pick<Bounds, "sendsPerEntry">, budget: ArchiveBudget): ScopeState {
+  budget.check();
+  const sizeSql = budget.native(sql, () => ({ metadata: 64, inputWork: 0 }));
+  const sizes = sizeSql.exec("SELECT octet_length(v) AS size, typeof(v) AS type FROM meta WHERE k = 'scope' LIMIT 1").toArray();
+  const size = sizes[0]?.["size"];
+  if (sizes.length !== 1 || sizes[0]?.["type"] !== "text" || !natural(size) || size > ARCHIVE_SCOPE_METADATA_BYTES) return stopArchivePrefix("unavailable");
+  const frameSql = budget.native(sql, () => ({ metadata: size + 128, inputWork: size * 8 }));
+  const frames = frameSql.exec("SELECT v FROM meta WHERE k = 'scope' AND typeof(v) = 'text' AND octet_length(v) = ? LIMIT 1", size).toArray(), frameBytes = frames[0]?.["v"];
+  if (frames.length !== 1 || typeof frameBytes !== "string" || frameBytes.length > size || utf8(frameBytes).length !== size) return stopArchivePrefix("unavailable");
+  const frame: unknown = parseStrict(frameBytes);
+  if (!isRecord(frame) || Object.keys(frame).sort().join(",") !== "at,creator,genesis,head,held,status,time" || canonicalize(frame) !== frameBytes || !isScopeRef(frame["at"]) || canonicalize(frame["at"]) !== canonicalize(expected) || frame["creator"] !== null && !isScopeRef(frame["creator"]) || canonicalize(frame["creator"]) !== canonicalize(pin.seed.creator) || !isHead(frame["head"]) || !natural(frame["head"].seq) || typeof frame["time"] !== "string" || timeMs(frame["time"]) === null || !["active", "provisional", "refused"].includes(frame["status"] as string)) return stopArchivePrefix("unavailable");
+  const genesis = frame["genesis"], held = frame["held"];
+  if (!isRecord(genesis) || Object.keys(genesis).sort().join(",") !== "hash,n,source" || genesis["hash"] !== pin.genesis || genesis["source"] !== null && !isFactRef(genesis["source"]) || (genesis["source"] === null ? genesis["n"] !== null : !natural(genesis["n"])) || !Array.isArray(held) || held.length > bounds.sendsPerEntry || held.some((n, i) => !natural(n) || n >= bounds.sendsPerEntry || i > 0 && n <= held[i - 1])) return stopArchivePrefix("unavailable");
+  budget.check();
+  return frame as unknown as ScopeState;
+}
+
 /** `expected` and certificates come from native caller-owned context and
  * trusted reviewer configuration, never a request's claimed safe flags. */
 export function archivePrefixMetadata(sql: Pick<Sql, "exec">, expected: ScopeRef, cutoff: Head | "next", bounds: Pick<Bounds, "entryBytes" | "sendsPerEntry" | "definitionBytes">, budget: ArchiveBudget, certified: Pick<ReadonlySet<Digest>, "has">, after?: Head | null): ArchivePrefix {
@@ -61,18 +82,7 @@ export function archivePrefixMetadata(sql: Pick<Sql, "exec">, expected: ScopeRef
   if (!natural(through.seq) || through.seq < first || !isDigest(through.hash) || !natural(bounds.entryBytes) || bounds.entryBytes === 0) return stopArchivePrefix("unavailable");
   // At most one overflow sentinel; never scan an arbitrary future range.
   if (through.seq - first > ARCHIVE_BOUNDS.entries || after !== undefined && through.seq > JOURNAL_V2_LAST_POSITION) return stopArchivePrefix("limit");
-  const sizeSql = budget.native(sql, () => ({ metadata: 64, inputWork: 0 }));
-  const sizes = sizeSql.exec("SELECT octet_length(v) AS size, typeof(v) AS type FROM meta WHERE k = 'scope' LIMIT 1").toArray();
-  const size = sizes[0]?.["size"];
-  if (sizes.length !== 1 || sizes[0]?.["type"] !== "text" || !natural(size) || size > ARCHIVE_SCOPE_METADATA_BYTES) return stopArchivePrefix("unavailable");
-  const frameSql = budget.native(sql, () => ({ metadata: size + 128, inputWork: size * 8 }));
-  const frames = frameSql.exec("SELECT v FROM meta WHERE k = 'scope' AND typeof(v) = 'text' AND octet_length(v) = ? LIMIT 1", size).toArray(), frameBytes = frames[0]?.["v"];
-  if (frames.length !== 1 || typeof frameBytes !== "string" || frameBytes.length > size || utf8(frameBytes).length !== size) return stopArchivePrefix("unavailable");
-  const frame: unknown = parseStrict(frameBytes);
-  if (!isRecord(frame) || Object.keys(frame).sort().join(",") !== "at,creator,genesis,head,held,status,time" || canonicalize(frame) !== frameBytes || !isScopeRef(frame["at"]) || canonicalize(frame["at"]) !== canonicalize(expected) || frame["creator"] !== null && !isScopeRef(frame["creator"]) || canonicalize(frame["creator"]) !== canonicalize(pin.seed.creator) || !isHead(frame["head"]) || !natural(frame["head"].seq) || typeof frame["time"] !== "string" || timeMs(frame["time"]) === null || !["active", "provisional", "refused"].includes(frame["status"] as string)) return stopArchivePrefix("unavailable");
-  const genesis = frame["genesis"], held = frame["held"];
-  if (!isRecord(genesis) || Object.keys(genesis).sort().join(",") !== "hash,n,source" || genesis["hash"] !== pin.genesis || genesis["source"] !== null && !isFactRef(genesis["source"]) || (genesis["source"] === null ? genesis["n"] !== null : !natural(genesis["n"])) || !Array.isArray(held) || held.length > bounds.sendsPerEntry || held.some((n, i) => !natural(n) || n >= bounds.sendsPerEntry || i > 0 && n <= held[i - 1])) return stopArchivePrefix("unavailable");
-  budget.check();
+  const frame = readArchiveScopeFrame(sql, expected, pin, bounds, budget);
   const head = frame["head"];
   if (through.seq > head.seq) return stopArchivePrefix("incomplete");
   if (through.seq === head.seq && through.hash !== head.hash) return stopArchivePrefix("mismatch");
