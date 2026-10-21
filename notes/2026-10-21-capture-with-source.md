@@ -58,6 +58,7 @@ types and the rules below, and nothing more.
 | `author` | `text`, at most 256 bytes | The author as the source states it, such as a GitHub login. It is text, never a member. |
 | `observedAt` | `time` | When the capturer read the source. |
 | `derivedFrom` | `list`, at most 32, of `fact` of kind `capture`, `recapture` or `read` | The exact versions that a reading or a derived file comes from. |
+| `proposal` | `fact` of kind `propose-manifest` under `change` | For a local branch: the proposal's manifest fact. Provenance only. |
 
 A capture holds exactly one of `file` and `text`. The entry's own time and
 signer say when the room recorded the capture and who captured it. The
@@ -69,26 +70,33 @@ retained files note names four capture fields (its section 10). `file` and
 capture scope. The package installs that scope once for each room. A shared
 scope is needed for deduplication: each issue is its own scope, so a guard
 inside an issue cannot see another issue (`apps/room/lanes/src/issue.ts:23`).
-The capture scope has two item types:
+Each act opens at most one item, as every act does today
+(`packages/contract/src/definition.ts:93-104`). The capture scope has two
+item types:
 
-| Item | One for each | States | Holds |
+| Item | Opened by | States | Holds |
 |---|---|---|---|
-| `source` | channel and external identity | `open`, `withdrawn` | `channel`, `external`, `address`, and a ref to the latest version |
-| `version` | captured version | `kept`, `redacted` | a ref to its source, and every field of the act that opened it |
+| `source` | `capture` or `read`: one for each channel and external identity, chat upload or reading | `open`, `withdrawn` | `channel`, `external`, `address`, and every field of the first version |
+| `version` | `recapture`: one for each later version | `kept` | a ref to its source, and every field of the version |
 
-A chat upload with no `external` opens a source of its own, with no
-deduplication.
+The first version of a source is the `capture` or `read` that opened it.
+Each later version is a `recapture`.
 
 **Acts of the capture scope.**
 
 | Act | Effect |
 |---|---|
-| `capture` | Opens a `source` and its first `version`. Refused `already-captured` when a source with the same `channel` and `external` exists, in either state (section 5). |
-| `recapture` | Opens a new `version` of an `open` source. Refused `withdrawn` when the source is withdrawn. Refused `same-revision` when any version of the source has the same `revision`. |
-| `read` | Opens a source with `channel: reading` and no `external`, and its first `version`, with `statement: reading`. `derivedFrom` is required. |
+| `capture` | Opens a `source` with its first version. Refused `already-captured` when a source with the same `channel` and `external` exists, in either state (section 5). A chat upload with no `external` is never refused for this. |
+| `recapture` | Opens a `version` of an `open` source. Refused `withdrawn` when the source is withdrawn. Refused `same-revision` when the source's first version, or any of its versions, has the same `revision`. |
+| `read` | Opens a `source` with `channel: reading`, no `external`, and `statement: reading`. `derivedFrom` is required. |
 | `withdraw` | Sets a source `withdrawn`. Its versions stay. |
 | `reopen` | Sets a withdrawn source `open` again. It needs the action `capture.manage` (section 4). No connector delivery reopens a source. |
-| `redact` | Sets one version `redacted`, and removes its file or text as for any detached input (retained files, section 3). |
+| `redact` | Removes the file or text of one version: the first version's, on its source, or a later version's, on its version item. This is the redaction of any detached input (retained files, section 3). |
+
+Each act opens one item in one entry. So an interrupted delivery leaves no
+half-made source. The scope judges one act at a time. When two first
+deliveries of one source arrive together, the first `capture` opens the
+source, and the second is judged after it and refused `already-captured`.
 
 **Exact versions.** Each version is the entry that opened it: a `capture`,
 `recapture` or `read`. A reference to a version is a fact reference: scope,
@@ -174,19 +182,20 @@ This is the form the change lane uses for links (`apps/room/lanes/src/change.ts:
 A connector that receives a known source reads `already-captured`. It then
 signs `recapture` when the source's `revision` is new.
 
-**Every revision once.** `recapture` is refused `same-revision` when any
-version of the source holds the same `revision`, not only the latest. The
-guard is a `none` over `version` items whose source is this source and
-whose revision equals the field. So a delivery that repeats an old revision
-changes nothing.
+**Every revision once.** `recapture` is refused `same-revision` when the
+source's first version, or any later version, holds the same `revision`,
+not only the latest. Two guards do this: the field `revision` differs from
+the source's own `revision` slot, and a `none` over `version` items whose
+source is this source and whose revision equals the field. So a delivery
+that repeats an old revision changes nothing.
 
 **What a revision is.** The revision identifies the content of the version
 in its channel:
 
 - a GitHub issue or comment: its update time with its node ID;
 - an email: its message ID;
-- a local branch: the digest of the canonical manifest that the proposal
-  sends (section 6, journey 2);
+- a local branch: the digest of its content projection (section 6,
+  journey 2);
 - a chat upload: the file's digest.
 
 Two versions with the same revision have the same content. Two different
@@ -227,12 +236,18 @@ The journeys run in this order.
    as a proposal (`packages/cli/src/commands.ts:1578-1579`). A proposal made
    from a branch also signs a capture with `channel: local-branch`. Its
    `external` is the room's directory scope ID with the branch name, so the
-   identity is qualified by the repository. Its `revision` is the digest of
-   the canonical manifest that the proposal sends, and its `base` is the
-   base commit that `dap propose` read the files against
-   (`commands.ts:1578-1589`). A repeat of the same manifest is refused
-   `same-revision`. A different manifest from the same base and branch is a
-   new version. Durable intent
+   identity is qualified by the repository. Its `base` is the base commit
+   that `dap propose` read the files against (`commands.ts:1578-1589`).
+   Its `revision` is the SHA-256 of the canonical JSON of the content
+   projection `{ base, files }`. `files` lists `{ path, digest, size }` for
+   each changed file, sorted by path, with the digest of the file's bytes.
+   The projection holds no journal reference and no request ID: the
+   manifest that `dap propose` sends names a new fact for each file
+   (`commands.ts:1648-1663`), so its own digest changes on every run. The
+   proposal's manifest fact goes in `proposal`, as provenance. Two runs of
+   `dap propose` with the same files on the same base give the same
+   revision, and the second capture is refused `same-revision`. A change to
+   one file gives a new revision and a new version. Durable intent
    recovery while offline stays with the offline design
    (`notes/2026-10-09-offline-and-sync-design.md`, section 8).
 3. **GitHub issues inbound.** A connector package captures a repository's
@@ -296,12 +311,18 @@ connector as an `outside` result.
    is refused `already-captured`. A genuine new revision is refused
    `withdrawn`. After `reopen` by a member with `capture.manage`, the new
    revision is a new version of the same source.
-4. **Local branch.** Two proposals from one base and branch with different
-   files are two versions of one source, with different revisions. A
-   repeat of the first proposal's manifest is refused `same-revision`.
+4. **Local branch.** Two independent runs of `dap propose` on one base and
+   branch, with the same files, give the same revision. The second capture
+   is refused `same-revision`, and both proposals stay in the change lane.
+   A third run with one file changed gives a new revision and a new
+   version of the same source.
 5. **Guards.** An imported email that says the sender will start Monday
    satisfies no condition that needs the sender's own act. A capture's
    `author` matches no member.
+6. **One item for each act.** Two first deliveries of one source arrive
+   together. One source opens, with the first `capture` as its first
+   version, and the other is refused `already-captured`. An interrupted
+   delivery leaves no source.
 
 ## 11. Slices
 
@@ -309,7 +330,7 @@ The slices start after retained files RF1 to RF4.
 
 | Slice | Content | Done when |
 |---|---|---|
-| CS1 | The capture package: the capture scope, the `source` and `version` items, the acts and actions of sections 2 and 4, the deduplication guards, statement kinds, and the `notify` attention. RF4's minimal capture package becomes this package. | Journey 1 runs on a hosted Worker. Witnesses 1, 2, 3 and 5 of section 10 pass. |
+| CS1 | The capture package: the capture scope, the `source` and `version` items (one opened per act), the acts and actions of sections 2 and 4, the deduplication guards, statement kinds, and the `notify` attention. RF4's minimal capture package becomes this package. | Journey 1 runs on a hosted Worker. Witnesses 1, 2, 3, 5 and 6 of section 10 pass. |
 | CS2 | The issue lane's `captured` field in a new lane version, and the source line in the room's views. | An issue filed from a capture shows its source line, and the capture stays the capturer's act. |
 | CS3 | The local-branch capture with `dap propose`. | Witness 4 of section 10 passes. |
 | CS4 | The GitHub inbound connector package: the connector member and preset, the host's read credential, delivery records, watermark reconciliation, and issue filing from captures. | A test repository's issues and comments arrive once each. A redelivery changes nothing. A close on GitHub does not close the room's issue. |
