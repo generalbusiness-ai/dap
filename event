@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9efac8ff830d3497684a51dcbac83fd6db114272","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-16-directory-partitions-source.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9fcc9347bcbd51e0144825aae037627be0e75ffd","text":"Merge retired a covered predecessor; the successor is at notes/plans/002-retain-unknown-fork-effects.md."}
