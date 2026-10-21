@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4debba34baceaa730b1b8b9fff13aa2958031fbb","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-20-archive-native-closure.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:504e8a5f1de600fda3ce8eef259bc8a9e9920ff0","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/texts.test.ts."}
