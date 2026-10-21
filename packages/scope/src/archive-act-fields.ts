@@ -12,11 +12,13 @@ import { reserveArchiveNames } from "./archive-schema-cost.ts";
 type Act = ValidDefinition["declared"]["acts"][string];
 interface Schema { readonly act: Act; readonly names: readonly string[]; readonly paths: readonly string[]; readonly fields: number }
 
+/** Reusable schema state holds no SQL port. Each call uses the owning
+ * synchronous native frame's supplied port and the same original budget. */
 export class ArchiveActFields {
   readonly #schemas = new Map<string, Schema>();
   readonly #kinds: string;
   readonly #kindCount: number;
-  constructor(readonly sql: Pick<Sql, "exec">, readonly definition: ValidDefinition,
+  constructor(readonly definition: ValidDefinition,
     readonly budget: ArchiveBudget, readonly bounds: Pick<Bounds, "definitionBytes">) {
     // The owning admission supplies validated finite definition metadata.
     // Reserve before enumerating it or allocating the reusable schema.
@@ -34,9 +36,9 @@ export class ArchiveActFields {
   }
   /** A recognized kind is returned from the trusted name table, never as
    * an unbounded inline field. Each request still reads its exact source. */
-  project(at: ScopeRef, position: ArchivePosition): { readonly kind: string | null; readonly dependencies: readonly PlannedRetainedDependency[] } {
+  project(sql: Pick<Sql, "exec">, at: ScopeRef, position: ArchivePosition): { readonly kind: string | null; readonly dependencies: readonly PlannedRetainedDependency[] } {
     checkArchiveFieldSource(position);
-    const rows = this.budget.native(this.sql, () => ({ metadata: 256,
+    const rows = this.budget.native(sql, () => ({ metadata: 256,
       inputWork: position.bytes * (16 + this.#kindCount * 2) + this.#kinds.length * 24,
     })).exec(`SELECT entry.seq AS seq, known.value AS kind FROM entry
       LEFT JOIN json_each(?) AS known ON known.type = 'text'
@@ -55,7 +57,7 @@ export class ArchiveActFields {
     reserveArchiveNames(schema.names, this.budget);
     const cells: (Digest | null)[] = [];
     for (let offset = 0; offset < schema.paths.length; offset += ARCHIVE_DIGEST_FIELD_BATCH) {
-      cells.push(...readArchiveDigestFields(this.sql, position, schema.paths.slice(offset, offset + ARCHIVE_DIGEST_FIELD_BATCH), this.budget));
+      cells.push(...readArchiveDigestFields(sql, position, schema.paths.slice(offset, offset + ARCHIVE_DIGEST_FIELD_BATCH), this.budget));
     }
     const given: Record<string, FieldValue> = Object.fromEntries(schema.names.flatMap((name, index) => cells[index] === null ? [] : [[name, cells[index]!]]));
     const origin = { at: { at: { ...at }, seq: position.seq, hash: position.hash }, input: "act" as const };

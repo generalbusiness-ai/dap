@@ -150,11 +150,11 @@ test("T4, a handover: the same accepted commitment gets a new performer only whe
       invalid = probe({ ...record, F: [{ commit: COMMIT, via: COMMIT, ref: opaque }] });
     } finally { stored.storage.sql.exec("UPDATE entry SET bytes = ?, size = ? WHERE seq = ?", row.bytes, row.size, position.seq); }
     const snapshotCells = [...cells];
-    const references = new ArchiveLocalReferences(sql, { named: G.valid.digest, definition: G.valid,
+    const references = new ArchiveLocalReferences({ named: G.valid.digest, definition: G.valid,
       owners: new Map([[input.owner, new Map([[input.kind, rules]])]]), records: new Map(), preparations: new Map() }, PROPOSED_BOUNDS, budget);
     // Read context and use digests from this exact native row. This supplies
     // no independent privacy/pin admission.
-    const composed = references.read(G.at, { ...position, input: "outcome" });
+    const composed = references.read(sql, G.at, { ...position, input: "outcome" });
     const queries: string[] = [], sizes: unknown[] = [], retained = new ArchiveRetainedReader({ exec(query, ...args) {
       queries.push(query); const rows = stored.storage.sql.exec(query, ...args).toArray();
       for (const r of rows) sizes.push(...Object.values(r));

@@ -123,15 +123,15 @@ test("a detached text in a creation message: the child reads the bytes from its 
         for (const held of rows) cells.push(...Object.values(held));
         return { toArray: () => rows };
       } };
-      const projector = new ArchiveGenesisFields(sql, notes, budget, PROPOSED_BOUNDS), position = { seq: 0, hash: row.hash, bytes: row.size };
-      const projected = projector.project(entry.at, position), before = budget.admitted();
-      const repeated = projector.project(entry.at, position), after = budget.admitted();
+      const projector = new ArchiveGenesisFields(notes, budget, PROPOSED_BOUNDS), position = { seq: 0, hash: row.hash, bytes: row.size };
+      const projected = projector.project(sql, entry.at, position), before = budget.admitted();
+      const repeated = projector.project(sql, entry.at, position), after = budget.admitted();
       // Separate lower-bound refusal scenario, not a reset or continuation
       // of the positive projection budget. There is room for the old SQL
       // debits but not for the derived path/map allocation.
       const tight = new ArchiveBudget({ metadata: PROPOSED_BOUNDS.definitionBytes + 256 + 512 });
-      const limited = new ArchiveGenesisFields(sql, notes, tight, PROPOSED_BOUNDS);
-      expect(() => limited.project(entry.at, position)).toThrow("archive-limit");
+      const limited = new ArchiveGenesisFields(notes, tight, PROPOSED_BOUNDS);
+      expect(() => limited.project(sql, entry.at, position)).toThrow("archive-limit");
       return { projected, expected, repeated, before, after, cells, tight: tight.admitted() };
     });
     expect(result.projected).toEqual(result.expected);
@@ -219,13 +219,13 @@ test("a repeat of a decided send is answered from the entry that recorded it, an
       for (const held of rows) cells.push(...Object.values(held));
       return { toArray: () => rows };
     } };
-    const projector = new ArchiveDeliveryFields(sql, notes, budget, PROPOSED_BOUNDS), position = { seq: told.entry.seq, hash: told.hash, bytes: row.size };
-    const correct = projector.project(told.entry.at, position, shared.fact, "notes"), before = budget.admitted();
-    const repeated = projector.project(told.entry.at, position, shared.fact, "notes"), after = budget.admitted();
-    const other = projector.project(told.entry.at, position, shared.fact, "other");
-    expect(() => projector.project(told.entry.at, position, shared.fact)).toThrow("unsupported-foreign-copy");
+    const projector = new ArchiveDeliveryFields(notes, budget, PROPOSED_BOUNDS), position = { seq: told.entry.seq, hash: told.hash, bytes: row.size };
+    const correct = projector.project(sql, told.entry.at, position, shared.fact, "notes"), before = budget.admitted();
+    const repeated = projector.project(sql, told.entry.at, position, shared.fact, "notes"), after = budget.admitted();
+    const other = projector.project(sql, told.entry.at, position, shared.fact, "other");
+    expect(() => projector.project(sql, told.entry.at, position, shared.fact)).toThrow("unsupported-foreign-copy");
     const fieldCells = [...cells];
-    const references = new ArchiveLocalReferences(sql, { named: notes.digest, definition: notes,
+    const references = new ArchiveLocalReferences({ named: notes.digest, definition: notes,
       owners: new Map(), records: new Map(), preparations: new Map() }, PROPOSED_BOUNDS, budget);
     const copy = told.entry.uses.find(use => canonicalize(use.fact) === canonicalize(shared.fact));
     if (!copy) return expect.fail("The native tell's retained source is required.");
@@ -234,7 +234,7 @@ test("a repeat of a decided send is answered from the entry that recorded it, an
     // STAND-IN for the whole-prefix foreign classifier's lookup port. All
     // returned metadata comes from this real peer, its exact definition and
     // B's actual retained copy. No foreign privacy/policy proof is supplied.
-    const composed = references.read(told.entry.at, { ...position, input: "delivery" }, { source(from) {
+    const composed = references.read(sql, told.entry.at, { ...position, input: "delivery" }, { source(from) {
       senders.push(from);
       return canonicalize(from) === canonicalize(shared.fact)
         ? { fact: shared.fact, content: copy.content, bytes: size, pin: notes.digest, under: notes.declared.name } : null;
@@ -308,9 +308,9 @@ test("native related-text projection follows self and earlier owner items, and i
         for (const held of rows) cells.push(...Object.values(held));
         return { toArray: () => rows };
       } };
-      const projector = new ArchiveDeliveryFields(sql, linked, new ArchiveBudget(), PROPOSED_BOUNDS);
+      const projector = new ArchiveDeliveryFields(linked, new ArchiveBudget(), PROPOSED_BOUNDS);
       const position = { seq: sealed.entry.seq, hash: sealed.hash, bytes: row.size };
-      const projected = projector.project(sealed.entry.at, position, input.from, "notes");
+      const projected = projector.project(sql, sealed.entry.at, position, input.from, "notes");
       let other: unknown = null;
       if (isFactRef(item)) {
         // Negative metadata probe only: alter an opaque body item's owner,
@@ -320,7 +320,7 @@ test("native related-text projection follows self and earlier owner items, and i
         const bytes = canonicalize(bad), size = utf8(bytes).length;
         try {
           state.storage.sql.exec("UPDATE entry SET bytes = ?, size = ? WHERE seq = ?", bytes, size, sealed.entry.seq);
-          other = projector.project(sealed.entry.at, { ...position, bytes: size }, input.from, "notes");
+          other = projector.project(sql, sealed.entry.at, { ...position, bytes: size }, input.from, "notes");
         } finally { state.storage.sql.exec("UPDATE entry SET bytes = ?, size = ? WHERE seq = ?", row.bytes, row.size, sealed.entry.seq); }
       }
       return { projected, expected, other, cells };

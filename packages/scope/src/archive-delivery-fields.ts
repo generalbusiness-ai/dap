@@ -11,12 +11,14 @@ import type { Sql } from "./sqlite.ts";
 import { reserveArchiveNames } from "./archive-schema-cost.ts";
 
 type Handler = ValidDefinition["declared"]["receives"][string];
+/** Reusable schema state holds no SQL port. Each call uses the owning
+ * synchronous native frame's supplied port and the same original budget. */
 export class ArchiveDeliveryFields {
   readonly needsUnder: boolean;
   readonly #names: string;
   readonly #count: number;
   readonly #schemas = new Map<Handler, readonly string[]>();
-  constructor(readonly sql: Pick<Sql, "exec">, readonly definition: ValidDefinition, readonly budget: ArchiveBudget, bounds: Pick<Bounds, "definitionBytes">) {
+  constructor(readonly definition: ValidDefinition, readonly budget: ArchiveBudget, bounds: Pick<Bounds, "definitionBytes">) {
     budget.spend({ metadata: bounds.definitionBytes, inputWork: bounds.definitionBytes * 16 });
     const handlers = Object.values(definition.declared.receives);
     this.needsUnder = handlers.some(handler => handler.from.under !== undefined);
@@ -30,14 +32,14 @@ export class ArchiveDeliveryFields {
       this.#schemas.set(handler, fields.filter(name => isDetachedTextField(handler.fields[name])));
     }
   }
-  project(at: ScopeRef, position: ArchivePosition, from: FactRef, under?: string): readonly PlannedRetainedDependency[] {
+  project(sql: Pick<Sql, "exec">, at: ScopeRef, position: ArchivePosition, from: FactRef, under?: string): readonly PlannedRetainedDependency[] {
     checkArchiveFieldSource(position);
     this.budget.spend({ inputWork: this.#count * 512 + 512 });
     if (!isFactRef(from)) return stop("mismatch");
     // Only fixed class/type tokens, a name from the trusted declaration,
     // and structural flags cross SQL. An opaque relationship item's fields
     // never do. These flags preserve updateOf's exact self/fact shape.
-    const rows = this.budget.native(this.sql, () => ({ metadata: 512,
+    const rows = this.budget.native(sql, () => ({ metadata: 512,
       inputWork: position.bytes * (128 + this.#count * 16) + this.#names.length * 24,
     })).exec(`SELECT entry.seq AS seq,
       CASE WHEN json_extract(entry.bytes, '$.input.message.class') = 'request' THEN 'request'
@@ -99,7 +101,7 @@ export class ArchiveDeliveryFields {
     reserveArchiveNames(names, this.budget, 40);
     const base = type === "relate" ? "$.input.message.body.detail" : "$.input.message.body.fields", cells: (Digest | null)[] = [];
     for (let offset = 0; offset < names.length; offset += ARCHIVE_DIGEST_FIELD_BATCH) {
-      cells.push(...readArchiveDigestFields(this.sql, position, names.slice(offset, offset + ARCHIVE_DIGEST_FIELD_BATCH).map(field => `${base}.${JSON.stringify(field)}`), this.budget));
+      cells.push(...readArchiveDigestFields(sql, position, names.slice(offset, offset + ARCHIVE_DIGEST_FIELD_BATCH).map(field => `${base}.${JSON.stringify(field)}`), this.budget));
     }
     const given = Object.fromEntries(names.flatMap((field, index) => cells[index] === null ? [] : [[field, cells[index]!]]));
     const origin = { at: { at: { ...at }, seq: position.seq, hash: position.hash }, input: "delivery" as const };

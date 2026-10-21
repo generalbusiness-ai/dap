@@ -512,19 +512,19 @@ describe("a founding on real scopes under the deployed class (authority note, se
         for (const held of rows) cells.push(...Object.values(held));
         return { toArray: () => rows };
       } };
-      const projector = new ArchiveObserved(sql, definition.definition, budget, PROPOSED_BOUNDS), valueProjector = new ArchiveOutcomeValues(sql, projectionOwners, budget, PROPOSED_BOUNDS);
+      const projector = new ArchiveObserved(definition.definition, budget, PROPOSED_BOUNDS), valueProjector = new ArchiveOutcomeValues(projectionOwners, budget, PROPOSED_BOUNDS);
       const position = { seq: judged.seq, hash: row.hash, bytes: row.size, input: "outcome" as const };
-      const projected = projector.project(judged.at, position), projectedValues = valueProjector.project(judged.at, position), before = budget.admitted();
-      const repeated = projector.project(judged.at, position), repeatedValues = valueProjector.project(judged.at, position), after = budget.admitted();
+      const projected = projector.project(sql, judged.at, position), projectedValues = valueProjector.project(sql, judged.at, position), before = budget.admitted();
+      const repeated = projector.project(sql, judged.at, position), repeatedValues = valueProjector.project(sql, judged.at, position), after = budget.admitted();
       const beforeUnknown = budget.admitted();
-      expect(() => new ArchiveOutcomeValues(sql, unknownProjectionOwners, budget, PROPOSED_BOUNDS)).toThrow("unsupported-archive-cohort");
+      expect(() => new ArchiveOutcomeValues(unknownProjectionOwners, budget, PROPOSED_BOUNDS)).toThrow("unsupported-archive-cohort");
       expect(budget.admitted().calls).toBe(beforeUnknown.calls); // Unknown callbacks run no SQL or value selector.
       const fieldCells = [...cells];
-      const references = new ArchiveLocalReferences(sql, { named: definition.definition.digest, definition: definition.definition,
+      const references = new ArchiveLocalReferences({ named: definition.definition.digest, definition: definition.definition,
         owners: projectionOwners, records: new Map(), preparations: new Map() }, PROPOSED_BOUNDS, budget);
       // Read actual context/uses as scalar metadata from this exact row.
       // The owning pass's privacy/declaration admission remains separate.
-      const composed = references.read(judged.at, position);
+      const composed = references.read(sql, judged.at, position);
       return { projected, projectedValues, expected, expectedValues, repeated, repeatedValues, before, after, cells: fieldCells, composed, all };
     });
     expect(projection.projected).toEqual(projection.expected);

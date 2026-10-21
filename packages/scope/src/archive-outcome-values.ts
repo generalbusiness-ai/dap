@@ -15,10 +15,12 @@ const knownValues = (rules: OperationRules): void => {
   const selector = operationValueSelector(rules);
   if (rules.values !== undefined && (selector !== destinationEvidenceValues || rules.valueDomains === undefined)) return stop("unsupported-archive-cohort");
 };
+/** Reusable schema state holds no SQL port. Each call uses the owning
+ * synchronous native frame's supplied port and the same original budget. */
 export class ArchiveOutcomeValues {
   readonly #owners: readonly Owner[];
   readonly #names: string;
-  constructor(readonly sql: Pick<Sql, "exec">, owners: ReadonlyMap<string, ReadonlyMap<string, OperationRules>>,
+  constructor(owners: ReadonlyMap<string, ReadonlyMap<string, OperationRules>>,
     readonly budget: ArchiveBudget, readonly bounds: Pick<Bounds, "definitionBytes">) {
     budget.spend({ metadata: 512, inputWork: 512 });
     if (owners.size > 64) stop("limit");
@@ -36,9 +38,9 @@ export class ArchiveOutcomeValues {
   }
   /** Actual source owner/kind matched against the trusted native table.
    * Only its slot and a fixed result token cross SQLite. */
-  context(position: ArchivePosition): Pick<Extract<Input, { type: "outcome" }>, "owner" | "kind" | "result"> & { readonly rules: OperationRules } {
+  context(sql: Pick<Sql, "exec">, position: ArchivePosition): Pick<Extract<Input, { type: "outcome" }>, "owner" | "kind" | "result"> & { readonly rules: OperationRules } {
     checkArchiveFieldSource(position);
-    const rows = this.budget.native(this.sql, () => ({ metadata: 128,
+    const rows = this.budget.native(sql, () => ({ metadata: 128,
       inputWork: position.bytes * (16 + this.#owners.length * 8) + this.#names.length * 24,
     })).exec(`SELECT known.key AS slot,
       CASE json_extract(entry.bytes, '$.input.result') WHEN 'confirmed' THEN 'confirmed' WHEN 'refused' THEN 'refused' WHEN 'unknown' THEN 'unknown' ELSE NULL END AS result
@@ -63,12 +65,12 @@ export class ArchiveOutcomeValues {
     this.budget.spend({ metadata: 256, inputWork: 512 });
     return { owner, kind: this.#owners[slot]!.kind, result, rules };
   }
-  project(at: ScopeRef, position: ArchivePosition): readonly PlannedRetainedDependency[] {
-    const { rules } = this.context(position);
+  project(sql: Pick<Sql, "exec">, at: ScopeRef, position: ArchivePosition): readonly PlannedRetainedDependency[] {
+    const { rules } = this.context(sql, position);
     const domains = rules.valueDomains?.length ?? 0;
     this.budget.spend({ metadata: 512 + domains * 256, inputWork: 1024 + domains * 512 });
     let digest: Digest | null = null;
-    if (rules.values !== undefined) digest = readArchiveDigestFields(this.sql, position, ["$.input.evidence.body.changes"], this.budget)[0] ?? null;
+    if (rules.values !== undefined) digest = readArchiveDigestFields(sql, position, ["$.input.evidence.body.changes"], this.budget)[0] ?? null;
     const origin = { at: { at: { ...at }, seq: position.seq, hash: position.hash }, input: "outcome" as const };
     // The recognized native callback reads only this object/digest test;
     // basis and all other evidence fields have no role in value selection.

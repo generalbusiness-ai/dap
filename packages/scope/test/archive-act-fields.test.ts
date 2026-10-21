@@ -31,16 +31,21 @@ test.each([false, true])("native act field projection shares the byte selector w
     const entry = parseStrict(row.bytes); if (!isEntry(entry)) return expect.fail("Native fixture must have a genuine entry.");
     const expected = localRetainedPlan(declared, entry, row.hash, null, PROPOSED_BOUNDS).dependencies.filter(({ dependency }) => dependency.mode === "text" || dependency.mode === "required" && dependency.consumer === "act-value");
     const budget = new ArchiveBudget(), cells: unknown[] = [];
-    const sql = { exec(query: string, ...args: SqlValue[]) {
+    let firstCalls = 0, secondCalls = 0;
+    const read = (query: string, args: SqlValue[]) => {
       const rows = state.storage.sql.exec(query, ...args).toArray();
       for (const held of rows) cells.push(...Object.values(held));
       return { toArray: () => rows };
-    } };
-    const reader = new ArchiveActFields(sql, declared, budget, PROPOSED_BOUNDS);
-    const projected = reader.project(lane.at, { seq: 1, hash: row.hash, bytes: row.size });
-    const before = budget.admitted();
-    const repeated = reader.project(lane.at, { seq: 1, hash: row.hash, bytes: row.size }), after = budget.admitted();
-    return { projected, repeated, expected, before, after, cells };
+    };
+    const sql = { exec(query: string, ...args: SqlValue[]) { firstCalls++; return read(query, args); } };
+    const fresh = { exec(query: string, ...args: SqlValue[]) { secondCalls++; return read(query, args); } };
+    const reader = new ArchiveActFields(declared, budget, PROPOSED_BOUNDS);
+    const projected = reader.project(sql, lane.at, { seq: 1, hash: row.hash, bytes: row.size });
+    const before = budget.admitted(), oldCalls = firstCalls;
+    // Real native SQL through a distinct per-call port. Reusing paid schema
+    // metadata must never make the next projection use the previous port.
+    const repeated = reader.project(fresh, lane.at, { seq: 1, hash: row.hash, bytes: row.size }), after = budget.admitted();
+    return { projected, repeated, expected, before, after, cells, oldCalls, firstCalls, secondCalls };
   });
   expect(result.projected.kind).toBe("remark");
   expect(result.projected.dependencies).toEqual(result.expected);
@@ -51,6 +56,8 @@ test.each([false, true])("native act field projection shares the byte selector w
   expect(result.repeated).toEqual(result.projected);
   expect(result.after.calls).toBeGreaterThan(result.before.calls);
   expect(result.after.inputWork).toBeGreaterThan(result.before.inputWork);
+  expect(result.firstCalls).toBe(result.oldCalls); expect(result.secondCalls).toBe(result.oldCalls);
+  expect(result.after.metadata - result.before.metadata).toBeLessThan(PROPOSED_BOUNDS.definitionBytes);
 });
 
 test("native Rules activation projects the definition key under the owning definition ceiling", async () => {
@@ -82,7 +89,7 @@ test("native Rules activation projects the definition key under the owning defin
         for (const held of rows) cells.push(...Object.values(held));
         return { toArray: () => rows };
       } };
-      return { expected, projected: new ArchiveActFields(sql, checked.definition, new ArchiveBudget(), bounds).project(entry.at, { seq: entry.seq, hash: row.hash, bytes: row.size }), cells };
+      return { expected, projected: new ArchiveActFields(checked.definition, new ArchiveBudget(), bounds).project(sql, entry.at, { seq: entry.seq, hash: row.hash, bytes: row.size }), cells };
     }));
     expect(result.projected.dependencies).toEqual(result.expected);
     expect(result.projected.dependencies).toHaveLength(1);

@@ -24,14 +24,14 @@ test("native prepared-rule projection names the actual retained input without ex
       for (const held of rows) cells.push(...Object.values(held));
       return { toArray: () => rows };
     } };
-    const reader = new ArchivePrepared(sql, definition, budget, PROPOSED_BOUNDS), position = { seq: entry.seq, hash: row.hash, bytes: row.size, input: entry.input.type };
-    const projected = reader.project(lane.at, position), before = budget.admitted();
-    const repeated = reader.project(lane.at, position), after = budget.admitted();
-    const empty = reader.project(lane.at, { seq: 0, hash: lane.genesis.fact.hash, bytes: state.storage.sql.exec<{ size: number }>("SELECT size FROM entry WHERE seq = 0").one().size, input: "genesis" });
+    const reader = new ArchivePrepared(definition, budget, PROPOSED_BOUNDS), position = { seq: entry.seq, hash: row.hash, bytes: row.size, input: entry.input.type };
+    const projected = reader.project(sql, lane.at, position), before = budget.admitted();
+    const repeated = reader.project(sql, lane.at, position), after = budget.admitted();
+    const empty = reader.project(sql, lane.at, { seq: 0, hash: lane.genesis.fact.hash, bytes: state.storage.sql.exec<{ size: number }>("SELECT size FROM entry WHERE seq = 0").one().size, input: "genesis" });
     const preparedCells = [...cells];
-    const references = new ArchiveLocalReferences(sql, { named: definition.digest, definition,
+    const references = new ArchiveLocalReferences({ named: definition.digest, definition,
       owners: new Map(), records: new Map(), preparations: new Map() }, PROPOSED_BOUNDS, budget);
-    const composed = references.read(lane.at, position);
+    const composed = references.read(sql, lane.at, position);
     return { projected, repeated, before, after, expected, empty, cells: preparedCells, queries, input: entry.prepared[0]?.input, composed, all };
   });
   expect(result.projected).toEqual(result.expected);

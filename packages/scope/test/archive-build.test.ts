@@ -149,7 +149,7 @@ test("v2 native inventory and restart read only the marked new interval and keep
       const prefix = archivePrefixMetadata(source, lane.at, through, PROPOSED_BOUNDS, budget, new Set([base.digest]), initial);
       const support = policies.get(base.digest)!.support;
       const admitted = archivePrivacyMetadata(source, prefix, support, budget);
-      const references = new ArchiveLocalReferences(source, support, PROPOSED_BOUNDS, budget);
+      const references = new ArchiveLocalReferences(support, PROPOSED_BOUNDS, budget);
       // Observe original comparison charges only; every call still executes
       // the real fence on this same native ledger, including failures.
       const fence = new class extends ArchivePlanFence {
@@ -182,7 +182,7 @@ test("v2 native inventory and restart read only the marked new interval and keep
       };
       let borrowed: ArchiveLocalReferencePlan | undefined;
       for (const position of admitted.positions) {
-        const plan = references.read(lane.at, position);
+        const plan = references.read(source, lane.at, position);
         borrowed = plan;
         if (damage === "plan" && position.seq === through.seq) expect(plan.dependencies.length).toBeGreaterThan(0);
         fence.append(damage === "position" && position.seq === initial.seq + 1 ? { ...position, hash: textDigest("TEST incorrect forecast footprint") } : position,

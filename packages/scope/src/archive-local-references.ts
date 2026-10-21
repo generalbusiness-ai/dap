@@ -27,6 +27,8 @@ export interface ArchiveLocalReferencePlan {
   readonly ancestrySnapshot: { readonly digest: Digest; readonly count: number } | null;
 }
 
+/** Reusable schema state holds no SQL port. Each call uses the owning
+ * synchronous native frame's supplied port and the same original budget. */
 export class ArchiveLocalReferences {
   #prepared?: ArchivePrepared;
   #acts?: ArchiveActFields;
@@ -34,16 +36,16 @@ export class ArchiveLocalReferences {
   #delivery?: ArchiveDeliveryFields;
   #observed?: ArchiveObserved;
   #values?: ArchiveOutcomeValues;
-  constructor(readonly sql: Pick<Sql, "exec">, readonly support: ArchiveSupport,
+  constructor(readonly support: ArchiveSupport,
     readonly bounds: Bounds, readonly budget: ArchiveBudget) {}
 
   /** Read actual context/uses from the classified exact row. This still
    * belongs to the owner's synchronous, whole-prefix metadata stage. */
-  read(at: ScopeRef, position: ArchivePrivacyPosition, foreign?: Pick<ArchiveForeignMetadata, "source">): ArchiveLocalReferencePlan {
+  read(sql: Pick<Sql, "exec">, at: ScopeRef, position: ArchivePrivacyPosition, foreign?: Pick<ArchiveForeignMetadata, "source">): ArchiveLocalReferencePlan {
     checkArchiveFieldSource(position);
     const source = "seq = ? AND hash = ? AND size = ? AND typeof(bytes) = 'text' AND octet_length(bytes) = ? AND json_extract(bytes, '$.input.type') = ?";
     const args = [position.seq, position.hash, position.bytes, position.bytes, position.input];
-    const counts = this.budget.native(this.sql, () => ({ metadata: 128, inputWork: position.bytes * 16 })).exec(
+    const counts = this.budget.native(sql, () => ({ metadata: 128, inputWork: position.bytes * 16 })).exec(
       `SELECT json_type(bytes, '$.uses') AS type, json_array_length(bytes, '$.uses') AS count FROM entry WHERE ${source} LIMIT 1`, ...args).toArray();
     const count = counts[0]?.["count"];
     if (counts.length !== 1 || counts[0]?.["type"] !== "array" || !natural(count)) return stop("mismatch");
@@ -52,16 +54,16 @@ export class ArchiveLocalReferences {
     const uses: Digest[] = [];
     for (let offset = 0; offset < count; offset += ARCHIVE_DIGEST_FIELD_BATCH) {
       const length = Math.min(ARCHIVE_DIGEST_FIELD_BATCH, count - offset);
-      const digests = readArchiveDigestFields(this.sql, position, Array.from({ length }, (_, n) => `$.uses[${offset + n}].content`), this.budget);
+      const digests = readArchiveDigestFields(sql, position, Array.from({ length }, (_, n) => `$.uses[${offset + n}].content`), this.budget);
       for (const digest of digests) { if (digest === null) return stop("mismatch"); uses.push(digest); }
     }
     let context: ArchiveReferenceContext;
     if (position.input === "outcome") {
-      this.#values ??= new ArchiveOutcomeValues(this.sql, this.support.owners, this.budget, this.bounds);
-      const { owner, kind, result } = this.#values.context(position);
+      this.#values ??= new ArchiveOutcomeValues(this.support.owners, this.budget, this.bounds);
+      const { owner, kind, result } = this.#values.context(sql, position);
       context = { input: "outcome", owner, kind, result };
     } else if (position.input === "delivery") {
-      const rows = this.budget.native(this.sql, () => ({ metadata: 1024, inputWork: position.bytes * 64 })).exec(`SELECT json_type(bytes, '$.input.from') = 'object' AS object,
+      const rows = this.budget.native(sql, () => ({ metadata: 1024, inputWork: position.bytes * 64 })).exec(`SELECT json_type(bytes, '$.input.from') = 'object' AS object,
         (SELECT count(*) FROM json_each(bytes, '$.input.from')) AS keys,
         json_type(bytes, '$.input.from.at') = 'object' AS at_object,
         (SELECT count(*) FROM json_each(bytes, '$.input.from.at')) AS at_keys,
@@ -70,7 +72,7 @@ export class ArchiveLocalReferences {
         FROM entry WHERE ${source} LIMIT 1`, ...args).toArray();
       const row = rows[0], from = { at: { scope: row?.["scope"], inc: row?.["inc"], kind: row?.["kind"] }, seq: row?.["seq"], hash: row?.["hash"] };
       if (rows.length !== 1 || row?.["object"] !== 1 || row["keys"] !== 3 || row["at_object"] !== 1 || row["at_keys"] !== 3 || !isFactRef(from)) return stop("mismatch");
-      this.#delivery ??= new ArchiveDeliveryFields(this.sql, this.support.definition, this.budget, this.bounds);
+      this.#delivery ??= new ArchiveDeliveryFields(this.support.definition, this.budget, this.bounds);
       let under: string | undefined;
       if (this.#delivery.needsUnder) {
         const sender = foreign?.source(from);
@@ -79,10 +81,10 @@ export class ArchiveLocalReferences {
       }
       context = { input: "delivery", from, ...(under === undefined ? {} : { under }) };
     } else context = { input: position.input };
-    return this.project(at, position, context, uses);
+    return this.project(sql, at, position, context, uses);
   }
 
-  project(at: ScopeRef, position: ArchivePrivacyPosition, context: ArchiveReferenceContext,
+  project(sql: Pick<Sql, "exec">, at: ScopeRef, position: ArchivePrivacyPosition, context: ArchiveReferenceContext,
     uses: readonly Digest[]): ArchiveLocalReferencePlan {
     this.budget.check();
     if (position.input !== context.input) return stop("mismatch");
@@ -95,32 +97,32 @@ export class ArchiveLocalReferences {
     const origin = { at: { at: { ...at }, seq: position.seq, hash: position.hash }, input: position.input };
     this.budget.spend({ metadata: uses.length * 512, inputWork: uses.length * 1024 });
     for (const digest of uses) dependencies.push({ dependency: requiredDependency(origin, "foreign-use", { kind: "entry", digest }), max: RETAINED_INPUT_BYTES });
-    this.#prepared ??= new ArchivePrepared(this.sql, definition, this.budget, this.bounds);
-    append(this.#prepared.project(at, position));
+    this.#prepared ??= new ArchivePrepared(definition, this.budget, this.bounds);
+    append(this.#prepared.project(sql, at, position));
     if (context.input === "genesis") {
-      this.#genesis ??= new ArchiveGenesisFields(this.sql, definition, this.budget, this.bounds);
-      append(this.#genesis.project(at, position));
+      this.#genesis ??= new ArchiveGenesisFields(definition, this.budget, this.bounds);
+      append(this.#genesis.project(sql, at, position));
     } else if (context.input === "act") {
-      this.#acts ??= new ArchiveActFields(this.sql, definition, this.budget, this.bounds);
-      append(this.#acts.project(at, position).dependencies);
+      this.#acts ??= new ArchiveActFields(definition, this.budget, this.bounds);
+      append(this.#acts.project(sql, at, position).dependencies);
     } else if (context.input === "delivery") {
-      this.#delivery ??= new ArchiveDeliveryFields(this.sql, definition, this.budget, this.bounds);
-      append(this.#delivery.project(at, position, context.from, context.under));
+      this.#delivery ??= new ArchiveDeliveryFields(definition, this.budget, this.bounds);
+      append(this.#delivery.project(sql, at, position, context.from, context.under));
     }
     if (definition.observing && ["act", "delivery", "outcome"].includes(context.input)) {
-      this.#observed ??= new ArchiveObserved(this.sql, definition, this.budget, this.bounds);
-      append(this.#observed.project(at, position));
+      this.#observed ??= new ArchiveObserved(definition, this.budget, this.bounds);
+      append(this.#observed.project(sql, at, position));
     }
     let ancestrySnapshot: ArchiveLocalReferencePlan["ancestrySnapshot"] = null;
     if (context.input === "outcome") {
       const rules = this.support.owners.get(context.owner)?.get(context.kind);
       if (!rules) return stop("unsupported-archive-cohort");
-      const snapshots = projectArchiveSnapshots(this.sql, at, position, context, rules, this.budget);
+      const snapshots = projectArchiveSnapshots(sql, at, position, context, rules, this.budget);
       this.budget.spend({ metadata: snapshots.dependencies.length * 256, inputWork: snapshots.dependencies.length * 512 });
       append(snapshots.dependencies.map(dependency => ({ dependency, max: RETAINED_INPUT_BYTES })));
       ancestrySnapshot = snapshots.ancestrySnapshot;
-      this.#values ??= new ArchiveOutcomeValues(this.sql, this.support.owners, this.budget, this.bounds);
-      append(this.#values.project(at, position));
+      this.#values ??= new ArchiveOutcomeValues(this.support.owners, this.budget, this.bounds);
+      append(this.#values.project(sql, at, position));
     }
     // The native planner applies this same final definition ceiling.
     this.budget.spend({ metadata: dependencies.length * 256, inputWork: dependencies.length * 512 });
