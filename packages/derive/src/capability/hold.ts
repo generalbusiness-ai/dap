@@ -752,6 +752,10 @@ const basis = (confirmed: Evidence["basis"]) => (result: OutcomeInput["result"],
  */
 const isCheckEvidence = (body: unknown): body is { record: unknown } => isRecord(body) && Object.keys(body).length === 1 && (body["record"] === null || isAncestryCheck(body["record"]));
 
+/** The native snapshot selector, shared with metadata cost planning. */
+export const holdEvidenceSnapshots: NonNullable<OperationRules["retains"]> = (evidence) =>
+  (isCheckEvidence(evidence.body) && isAncestryCheck(evidence.body.record) ? [evidence.body.record.snapshot.digest] : []);
+
 /** The body of the evidence of a `confirmed` mint: the host's token ID and end time (authority note, section 5.7, "Evidence of each outside effect"; I3 deltas, entry EF5). */
 const minted = (body: unknown): { token: string; ends: Timestamp } | null => (isRecord(body) && typeof body["token"] === "string" && body["token"] !== "" && timeMs(body["ends"]) !== null ? { token: body["token"], ends: body["ends"] as Timestamp } : null);
 
@@ -821,7 +825,7 @@ const OPERATION_RULES: Readonly<Record<string, OperationRules>> = {
     selects: false, read: false, retries: () => false, wellFormed: (result, evidence) => basis("own-answer")(result, evidence) && (result !== "confirmed" || isCheckEvidence(evidence.body)),
     most: { effects: 1, requests: 0, operations: 0 },
     // Section 16.4: the record names its snapshot by digest, and the bytes are stored before the check entry.
-    retains: (evidence) => (isCheckEvidence(evidence.body) && isAncestryCheck(evidence.body.record) ? [evidence.body.record.snapshot.digest] : []),
+    retains: holdEvidenceSnapshots,
     derives: (view, operation, outcome) => {
       const pin = outcome.result === "confirmed" ? namedBy(view, "pin", ["provisional"], "check", operation) : null;
       const root = pin ? holdRecord(view, "root", [pin.values["root"] as number]) : null;

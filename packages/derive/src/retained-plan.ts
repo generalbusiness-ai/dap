@@ -129,7 +129,7 @@ export function outcomeValueDependencies(origin: DependencyOrigin, rules: Operat
 /** The native ancestry grammar names its snapshot even when the owner's
  * ordinary retained list omits it. This is selection only: neither the
  * record nor an owner's list proves the ancestry walk or snapshot count. */
-export function outcomeSnapshotDependencies(origin: DependencyOrigin, input: Extract<Input, { type: "outcome" }>, rules: () => OperationRules | null | undefined): { record: AncestryCheck | null; dependencies: readonly RequiredDependency[]; readable: boolean } {
+export function outcomeSnapshotDependencies(origin: DependencyOrigin, input: Pick<Extract<Input, { type: "outcome" }>, "owner" | "kind" | "result" | "evidence">, rules: () => OperationRules | null | undefined): { record: AncestryCheck | null; dependencies: readonly RequiredDependency[]; readable: boolean } {
   let readable = true;
   let named: readonly Digest[] = [];
   try { named = rules()?.retains?.(input.evidence) ?? []; }
