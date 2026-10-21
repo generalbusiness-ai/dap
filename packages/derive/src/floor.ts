@@ -39,10 +39,31 @@ export function heldPositions(view: Pick<StateView, "floor" | "scope">, before =
 
 /** The state-derived half of the kept set. No acknowledgement or runtime
  * index is visible here. All foreign positions remain foreign positions. */
-export function stateKept(snapshot: StateSnapshot, definition: ValidDefinition, floor: number, keep: readonly number[], history?: Own, platform?: import("./marks.ts").PlatformRules): number[] {
+export function stateKept(snapshot: StateSnapshot, definition: ValidDefinition, floor: number, keep: readonly number[], history?: Own, platform?: import("./marks.ts").PlatformRules): number[] | null {
+  const previous = snapshot.floor, previousKept = new Set(previous?.kept ?? []);
+  const archived = (seq: number): Archived | null => previous && natural(seq) && seq < previous.floor && !previousKept.has(seq)
+    ? { floor: previous.floor, commit: previous.receipt.commit, through: previous.receipt.through } : null;
+  let missing = false;
+  // A complete clone is not the runtime's held journal. Mask both direct
+  // reads and walks before any platform or causal reader can inspect it.
+  const heldHistory: Own | undefined = history && Object.assign((seq: number) => {
+    if (archived(seq)) return null;
+    const found = natural(seq) && seq <= (snapshot.scope?.head.seq ?? -1) ? history(seq) : null;
+    if (!found) missing = true;
+    return found;
+  }, {
+    archived, positions: (before: number) => heldPositions({ floor: () => previous ?? null, scope: () => snapshot.scope }, Math.min(before, (snapshot.scope?.head.seq ?? -1) + 1)),
+    ...(history.retained ? { retained: history.retained } : {}),
+    ...(history.sizeProofs ? { sizeProofs: history.sizeProofs } : {}),
+  });
   const held = new Set<number>(), queue: number[] = [], queued = new Set<number>();
-  const add = (seq: number) => {
+  const add = (seq: number, identity = false) => {
     if (!natural(seq)) return;
+    // A folded item identity can outlive its opening. It remains a valid
+    // value, but cannot restore an already-archived payload. Other roots
+    // actually require their payload and therefore fail closed.
+    if (heldHistory && archived(seq)) { if (!identity) missing = true; return; }
+    if (heldHistory && !heldHistory(seq)) return;
     if (seq < floor) held.add(seq);
     if (!queued.has(seq)) { queued.add(seq); queue.push(seq); }
   };
@@ -50,7 +71,7 @@ export function stateKept(snapshot: StateSnapshot, definition: ValidDefinition, 
     if (isFactRef(value) && value.at.scope === snapshot.scope?.at.scope && value.at.inc === snapshot.scope.at.inc) add(value.seq);
   };
   const typed = (type: FieldType, value: unknown): void => {
-    if ((type.type === "item" || type.type === "fact") && typeof value === "number") add(value);
+    if ((type.type === "item" || type.type === "fact") && typeof value === "number") add(value, type.type === "item");
     else if (type.type === "fact") local(value);
     else if (type.type === "list" && Array.isArray(value)) for (const part of value) typed(type.of, part);
     else if (type.type === "record" && isObject(value)) for (const [name, child] of Object.entries(type.of)) typed(child, value[name]);
@@ -77,10 +98,10 @@ export function stateKept(snapshot: StateSnapshot, definition: ValidDefinition, 
   // a platform's explicit reader hook follows them below.
   for (const record of snapshot.records ?? []) if (record.capability === "hold@1" && record.kind === "root" && record.state === "live") add(record.seq);
   for (const prepared of snapshot.prepared ?? []) add(prepared.seq);
-  if (history && platform?.floorReferences) for (const seq of platform.floorReferences(snapshot, definition, history)) add(seq);
+  if (heldHistory && platform?.floorReferences) for (const seq of platform.floorReferences(snapshot, definition, heldHistory)) add(seq);
   // Entries in the dense live tail can also have current causal readers.
   // The recorded keep list cannot name them (it lists positions below F).
-  if (history?.positions) for (const seq of history.positions((snapshot.scope?.head.seq ?? -1) + 1)) if (seq >= floor) add(seq);
+  if (heldHistory?.positions) for (const seq of heldHistory.positions((snapshot.scope?.head.seq ?? -1) + 1)) if (seq >= floor) add(seq);
   const foreign = new Set<string>();
   const visit = (entry: import("@generalbusiness/dap-contract").Entry) => {
     const here = entry.at.scope === snapshot.scope?.at.scope && entry.at.inc === snapshot.scope.at.inc;
@@ -99,18 +120,20 @@ export function stateKept(snapshot: StateSnapshot, definition: ValidDefinition, 
       if (use.fact.at.scope === snapshot.scope?.at.scope && use.fact.at.inc === snapshot.scope.at.inc) continue;
       if (foreign.has(use.content)) continue;
       foreign.add(use.content);
-      const copy = history?.retained?.(use);
+      const copy = heldHistory?.retained?.(use);
       if (copy && same(copy.at, use.fact.at) && copy.seq === use.fact.seq && entryHash(copy) === use.fact.hash) visit(copy);
     }
   };
-  for (let i = 0; i < queue.length && held.size <= FLOOR_KEPT; i++) { const entry = history?.(queue[i]!)?.entry; if (entry) visit(entry); }
-  return [...held].sort((a, b) => a - b);
+  for (let i = 0; i < queue.length && held.size <= FLOOR_KEPT; i++) { const entry = heldHistory?.(queue[i]!)?.entry; if (entry) visit(entry); }
+  return missing ? null : [...held].sort((a, b) => a - b);
 }
 
 /** Size evidence retains its proving position. Later proofs never bind an
  * earlier deciding entry, even when replay still has the complete clone. */
 export function nextFloorState(view: StateView, definition: ValidDefinition, input: FloorInput, ownEntry: Own, platform?: import("./marks.ts").PlatformRules): JournalFloor {
-  const kept = stateKept(view.all(), definition, input.floor, input.keep, ownEntry, platform), keptSet = new Set(kept);
+  const kept = stateKept(view.all(), definition, input.floor, input.keep, ownEntry, platform);
+  if (kept === null) throw new Error("a floor requires every held payload root");
+  const keptSet = new Set(kept);
   const candidates: SizeProof[] = [...(view.floor?.()?.sizeProofs ?? [])];
   const needed = new Set<Digest>();
   for (const seq of heldPositions(view)) {
@@ -147,6 +170,7 @@ export function judgeFloor(view: StateView, definition: ValidDefinition, input: 
   if (scope.head.seq + 2 - input.floor < FLOOR_WINDOW || now === null || previous === null || !preceding || now - previous < context.bounds.intentLifetimeSeconds * 1000) return refuse("floor-recent", "retain 100 entries and the intent-lifetime window");
   if (!Array.isArray(input.keep) || input.keep.length > FLOOR_KEEP || input.keep.some((seq, i) => !natural(seq) || seq >= input.floor || i > 0 && seq <= input.keep[i - 1]! || context.own(seq) === null)) return refuse("floor-keep", "keep must list at most 1024 held positions below the floor, ascending");
   const kept = stateKept(view.all(), definition, input.floor, input.keep, context.own, context.platform);
+  if (kept === null) return { result: "unavailable", reason: "unavailable" };
   if (kept.length > FLOOR_KEPT) return refuse("floor-kept", "the new kept set exceeds 4096 entries");
   if (context.clock.behind) return { result: "unavailable", reason: "clock-behind" };
   return { result: "write", draft: { input, uses: [], prepared: [], effects: [], sends: [], judgesTime: true } };

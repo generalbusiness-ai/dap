@@ -37,6 +37,7 @@ export function offerFloor(context: FloorWriterContext, policy: NonNullable<Revi
     keep = [...new Set([...unacknowledged.map(row => row["seq"] as number), ...anchors, ...context.discoveries()].filter(seq => seq < floor!))].sort((a, b) => a - b);
     if (keep.length > FLOOR_KEEP) { floor = keep[FLOOR_KEEP]!; continue; }
     const kept = stateKept(snapshot, context.definition, floor, keep, context.own, context.platform);
+    if (kept === null) return null;
     if (kept.length <= FLOOR_KEPT) break;
     // Moving F to the first excess position removes at least one below-F
     // obligation; the independent judge still recomputes the full closure.

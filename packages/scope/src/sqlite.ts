@@ -203,6 +203,8 @@ export class SqliteStore implements Store {
     const kept = new Set(floor.kept);
     const below = this.#all("SELECT seq,hash,actor,idem,intent FROM entry WHERE seq < ? ORDER BY seq", floor.floor);
     if (below.length > 8192) throw new Error("floor exceeds the bounded deletion window");
+    const present = new Set(below.map(row => row["seq"] as number));
+    if (floor.kept.some(seq => !present.has(seq))) throw new Error("a floor cannot keep an absent journal payload");
     for (const row of below) {
       const seq = row["seq"] as number;
       if (kept.has(seq)) continue;
