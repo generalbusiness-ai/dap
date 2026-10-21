@@ -2,6 +2,7 @@
  * caller supplies actual classified context inside its synchronous frame;
  * this grants no pin, privacy, body-read or export admission. */
 import { RETAINED_INPUT_BYTES, type Bounds, type Digest, type FactRef, type Input, type ScopeRef } from "@generalbusiness/dap-contract";
+import { isFactRef, natural } from "@generalbusiness/artroom-bytes";
 import { boundedRetainedDependencies, requiredDependency, type PlannedRetainedDependency } from "@generalbusiness/dap-derive";
 import type { ArchiveBudget } from "./archive-budget.ts";
 import { ArchiveActFields } from "./archive-act-fields.ts";
@@ -13,7 +14,9 @@ import { ArchivePrepared } from "./archive-prepared.ts";
 import { projectArchiveSnapshots } from "./archive-snapshots.ts";
 import { stopArchivePrefix as stop } from "./archive-prefix.ts";
 import type { ArchivePrivacyPosition, ArchiveSupport } from "./archive-privacy.ts";
-import type { Sql } from "./sqlite.ts";
+import { sqlJsonText as text, type Sql } from "./sqlite.ts";
+import { ARCHIVE_DIGEST_FIELD_BATCH, checkArchiveFieldSource, readArchiveDigestFields } from "./archive-digest-fields.ts";
+import type { ArchiveForeignMetadata } from "./archive-foreign.ts";
 
 export type ArchiveReferenceContext =
   | { readonly input: Exclude<Input["type"], "delivery" | "outcome"> }
@@ -33,6 +36,52 @@ export class ArchiveLocalReferences {
   #values?: ArchiveOutcomeValues;
   constructor(readonly sql: Pick<Sql, "exec">, readonly support: ArchiveSupport,
     readonly bounds: Bounds, readonly budget: ArchiveBudget) {}
+
+  /** Read actual context/uses from the classified exact row. This still
+   * belongs to the owner's synchronous, whole-prefix metadata stage. */
+  read(at: ScopeRef, position: ArchivePrivacyPosition, foreign?: ArchiveForeignMetadata): ArchiveLocalReferencePlan {
+    checkArchiveFieldSource(position);
+    const source = "seq = ? AND hash = ? AND size = ? AND typeof(bytes) = 'text' AND octet_length(bytes) = ? AND json_extract(bytes, '$.input.type') = ?";
+    const args = [position.seq, position.hash, position.bytes, position.bytes, position.input];
+    const counts = this.budget.native(this.sql, () => ({ metadata: 128, inputWork: position.bytes * 16 })).exec(
+      `SELECT json_type(bytes, '$.uses') AS type, json_array_length(bytes, '$.uses') AS count FROM entry WHERE ${source} LIMIT 1`, ...args).toArray();
+    const count = counts[0]?.["count"];
+    if (counts.length !== 1 || counts[0]?.["type"] !== "array" || !natural(count)) return stop("mismatch");
+    if (count > this.bounds.usesPerEntry) return stop("limit");
+    this.budget.spend({ metadata: count * 256, inputWork: count * 512 });
+    const uses: Digest[] = [];
+    for (let offset = 0; offset < count; offset += ARCHIVE_DIGEST_FIELD_BATCH) {
+      const length = Math.min(ARCHIVE_DIGEST_FIELD_BATCH, count - offset);
+      const digests = readArchiveDigestFields(this.sql, position, Array.from({ length }, (_, n) => `$.uses[${offset + n}].content`), this.budget);
+      for (const digest of digests) { if (digest === null) return stop("mismatch"); uses.push(digest); }
+    }
+    let context: ArchiveReferenceContext;
+    if (position.input === "outcome") {
+      this.#values ??= new ArchiveOutcomeValues(this.sql, this.support.owners, this.budget, this.bounds);
+      const { owner, kind, result } = this.#values.context(position);
+      context = { input: "outcome", owner, kind, result };
+    } else if (position.input === "delivery") {
+      const rows = this.budget.native(this.sql, () => ({ metadata: 1024, inputWork: position.bytes * 64 })).exec(`SELECT
+        json_type(bytes, '$.input.from') = 'object' AS object,
+        (SELECT count(*) FROM json_each(bytes, '$.input.from')) AS keys,
+        json_type(bytes, '$.input.from.at') = 'object' AS at_object,
+        (SELECT count(*) FROM json_each(bytes, '$.input.from.at')) AS at_keys,
+        ${text("$.input.from.at.scope", 71)} AS scope, ${text("$.input.from.at.inc", 64)} AS inc, ${text("$.input.from.at.kind", 16)} AS kind,
+        CASE WHEN json_type(bytes, '$.input.from.seq') IN ('integer', 'real') THEN json_extract(bytes, '$.input.from.seq') ELSE NULL END AS seq, ${text("$.input.from.hash", 71)} AS hash
+        FROM entry WHERE ${source} LIMIT 1`, ...args).toArray();
+      const row = rows[0], from = { at: { scope: row?.["scope"], inc: row?.["inc"], kind: row?.["kind"] }, seq: row?.["seq"], hash: row?.["hash"] };
+      if (rows.length !== 1 || row?.["object"] !== 1 || row["keys"] !== 3 || row["at_object"] !== 1 || row["at_keys"] !== 3 || !isFactRef(from)) return stop("mismatch");
+      this.#delivery ??= new ArchiveDeliveryFields(this.sql, this.support.definition, this.budget, this.bounds);
+      let under: string | undefined;
+      if (this.#delivery.needsUnder) {
+        const sender = foreign?.source(from);
+        if (!sender) return stop("unsupported-foreign-copy");
+        under = sender.under;
+      }
+      context = { input: "delivery", from, ...(under === undefined ? {} : { under }) };
+    } else context = { input: position.input };
+    return this.project(at, position, context, uses);
+  }
 
   project(at: ScopeRef, position: ArchivePrivacyPosition, context: ArchiveReferenceContext,
     uses: readonly Digest[]): ArchiveLocalReferencePlan {

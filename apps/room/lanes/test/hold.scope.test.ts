@@ -152,9 +152,9 @@ test("T4, a handover: the same accepted commitment gets a new performer only whe
     const snapshotCells = [...cells];
     const references = new ArchiveLocalReferences(sql, { named: G.valid.digest, definition: G.valid,
       owners: new Map([[input.owner, new Map([[input.kind, rules]])]]), records: new Map(), preparations: new Map() }, PROPOSED_BOUNDS, budget);
-    // Uses and outcome context are this oracle's actual classified values;
-    // the composer supplies no independent privacy/pin admission.
-    const composed = references.project(G.at, { ...position, input: "outcome" }, { input: "outcome", owner: input.owner, kind: input.kind, result: input.result }, sealed.entry.uses.map(use => use.content));
+    // Read context and use digests from this exact native row. This supplies
+    // no independent privacy/pin admission.
+    const composed = references.read(G.at, { ...position, input: "outcome" });
     const queries: string[] = [], sizes: unknown[] = [], retained = new ArchiveRetainedReader({ exec(query, ...args) {
       queries.push(query); const rows = stored.storage.sql.exec(query, ...args).toArray();
       for (const r of rows) sizes.push(...Object.values(r));

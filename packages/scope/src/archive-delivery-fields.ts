@@ -12,12 +12,14 @@ import { reserveArchiveNames } from "./archive-schema-cost.ts";
 
 type Handler = ValidDefinition["declared"]["receives"][string];
 export class ArchiveDeliveryFields {
+  readonly needsUnder: boolean;
   readonly #names: string;
   readonly #count: number;
   readonly #schemas = new Map<Handler, readonly string[]>();
   constructor(readonly sql: Pick<Sql, "exec">, readonly definition: ValidDefinition, readonly budget: ArchiveBudget, bounds: Pick<Bounds, "definitionBytes">) {
     budget.spend({ metadata: bounds.definitionBytes, inputWork: bounds.definitionBytes * 16 });
     const handlers = Object.values(definition.declared.receives);
+    this.needsUnder = handlers.some(handler => handler.from.under !== undefined);
     const messages = handlers.map(handler => handler.message);
     reserveArchiveNames(messages, budget);
     const names = [...new Set(messages)];

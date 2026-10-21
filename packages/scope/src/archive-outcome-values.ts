@@ -1,8 +1,8 @@
 /** Outcome values only; snapshots and ancestry are separate consumers.
  * The owner admits exact native pins, places and the whole prefix first.
  * Recognizing a callback here grants no permission to read/export bytes. */
-import type { Bounds, Digest, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, natural } from "@generalbusiness/artroom-bytes";
+import type { Bounds, Digest, Input, ScopeRef } from "@generalbusiness/dap-contract";
+import { canonicalize, isPlatformDefinition, natural } from "@generalbusiness/artroom-bytes";
 import { boundedRetainedDependencies, operationValueSelector, outcomeValueDependencies, type OperationRules, type PlannedRetainedDependency } from "@generalbusiness/dap-derive";
 import { destinationEvidenceValues } from "@generalbusiness/dap-platform";
 import type { ArchiveBudget } from "./archive-budget.ts";
@@ -34,11 +34,15 @@ export class ArchiveOutcomeValues {
     }
     this.#owners = rows; this.#names = canonicalize(names);
   }
-  project(at: ScopeRef, position: ArchivePosition): readonly PlannedRetainedDependency[] {
+  /** Actual source owner/kind matched against the trusted native table.
+   * Only its slot and a fixed result token cross SQLite. */
+  context(position: ArchivePosition): Pick<Extract<Input, { type: "outcome" }>, "owner" | "kind" | "result"> & { readonly rules: OperationRules } {
     checkArchiveFieldSource(position);
     const rows = this.budget.native(this.sql, () => ({ metadata: 128,
       inputWork: position.bytes * (16 + this.#owners.length * 8) + this.#names.length * 24,
-    })).exec(`SELECT known.key AS slot FROM entry LEFT JOIN json_each(?) AS known
+    })).exec(`SELECT known.key AS slot,
+      CASE json_extract(entry.bytes, '$.input.result') WHEN 'confirmed' THEN 'confirmed' WHEN 'refused' THEN 'refused' WHEN 'unknown' THEN 'unknown' ELSE NULL END AS result
+      FROM entry LEFT JOIN json_each(?) AS known
       ON json_extract(known.value, '$.owner') = json_extract(entry.bytes, '$.input.owner')
         AND json_extract(known.value, '$.kind') = json_extract(entry.bytes, '$.input.kind')
       WHERE entry.seq = ? AND entry.hash = ? AND entry.size = ? AND typeof(entry.bytes) = 'text' AND octet_length(entry.bytes) = ?
@@ -50,6 +54,17 @@ export class ArchiveOutcomeValues {
     if (!natural(slot) || !this.#owners[slot]) return stop("mismatch");
     const rules = this.#owners[slot]!.rules;
     knownValues(rules); // A mutable caller table cannot change the callback behind a compiled slot.
+    const result = rows[0]!["result"];
+    if (result !== "confirmed" && result !== "refused" && result !== "unknown") return stop("mismatch");
+    const owner = this.#owners[slot]!.name;
+    // Match the supported native owner families. Exact code/pin policy is
+    // checked separately; this creates no admission certificate.
+    if (owner !== "hold@1" && owner !== "git-read@1" && !isPlatformDefinition(owner)) return stop("unsupported-archive-cohort");
+    this.budget.spend({ metadata: 256, inputWork: 512 });
+    return { owner, kind: this.#owners[slot]!.kind, result, rules };
+  }
+  project(at: ScopeRef, position: ArchivePosition): readonly PlannedRetainedDependency[] {
+    const { rules } = this.context(position);
     const domains = rules.valueDomains?.length ?? 0;
     this.budget.spend({ metadata: 512 + domains * 256, inputWork: 1024 + domains * 512 });
     let digest: Digest | null = null;

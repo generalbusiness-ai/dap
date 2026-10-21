@@ -6,6 +6,7 @@ import { isEntry, parseStrict } from "@generalbusiness/artroom-bytes";
 import { localRetainedPlan } from "@generalbusiness/dap-derive";
 import { ArchiveBudget } from "../src/archive-budget.ts";
 import { ArchivePrepared } from "../src/archive-prepared.ts";
+import { ArchiveLocalReferences } from "../src/archive-local-references.ts";
 import type { SqlValue } from "../src/sqlite.ts";
 import { create, definition } from "./fixtures-native.ts";
 
@@ -15,7 +16,8 @@ test("native prepared-rule projection names the actual retained input without ex
     // Full-byte access belongs only to this oracle, not to the projector.
     const row = state.storage.sql.exec<{ bytes: string; hash: `sha256:${string}`; size: number }>("SELECT bytes, hash, size FROM entry WHERE seq = 2 LIMIT 1").one();
     const entry = parseStrict(row.bytes); if (!isEntry(entry)) return expect.fail("The genuine assignment entry is required.");
-    const expected = localRetainedPlan(definition, entry, row.hash, null, PROPOSED_BOUNDS).dependencies.filter(({ dependency }) => dependency.mode === "required" && dependency.consumer === "rule-input");
+    const all = localRetainedPlan(definition, entry, row.hash, null, PROPOSED_BOUNDS).dependencies;
+    const expected = all.filter(({ dependency }) => dependency.mode === "required" && dependency.consumer === "rule-input");
     const cells: unknown[] = [], queries: string[] = [], budget = new ArchiveBudget();
     const sql = { exec(query: string, ...args: SqlValue[]) {
       queries.push(query); const rows = state.storage.sql.exec(query, ...args).toArray();
@@ -26,9 +28,14 @@ test("native prepared-rule projection names the actual retained input without ex
     const projected = reader.project(lane.at, position), before = budget.admitted();
     const repeated = reader.project(lane.at, position), after = budget.admitted();
     const empty = reader.project(lane.at, { seq: 0, hash: lane.genesis.fact.hash, bytes: state.storage.sql.exec<{ size: number }>("SELECT size FROM entry WHERE seq = 0").one().size, input: "genesis" });
-    return { projected, repeated, before, after, expected, empty, cells, queries, input: entry.prepared[0]?.input };
+    const preparedCells = [...cells];
+    const references = new ArchiveLocalReferences(sql, { named: definition.digest, definition,
+      owners: new Map(), records: new Map(), preparations: new Map() }, PROPOSED_BOUNDS, budget);
+    const composed = references.read(lane.at, position);
+    return { projected, repeated, before, after, expected, empty, cells: preparedCells, queries, input: entry.prepared[0]?.input, composed, all };
   });
   expect(result.projected).toEqual(result.expected);
+  expect(result.composed).toEqual({ dependencies: result.all, ancestrySnapshot: null });
   expect(result.projected).toHaveLength(1);
   expect(result.projected[0]).toMatchObject({ dependency: { mode: "required", consumer: "rule-input", key: { kind: "rule", digest: result.input } } });
   expect(result.repeated).toEqual(result.projected); expect(result.empty).toEqual([]);

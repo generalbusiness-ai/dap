@@ -500,7 +500,6 @@ describe("a founding on real scopes under the deployed class (authority note, se
     const projectionOwner = ownersOf(definition.definition, { named: DESTINATION, rules: native.rules }, null)?.rules(judged.input.owner, judged.input.kind);
     if (!projectionOwner || !currentRules || !("subject" in currentRules.observation) || currentRules.observation.subject !== "rules" || currentRules.observation.content.asked !== "rules" || currentRules.observation.content.extents === undefined) return expect.fail("The native owner and actual Rules extents are required.");
     const extents = currentRules.observation.content.extents;
-    const projectionInput = judged.input;
     const projectionOwners = new Map<string, ReadonlyMap<string, OperationRules>>([[judged.input.owner, new Map([[judged.input.kind, projectionOwner]])]]);
     const unknownProjectionOwners = new Map<string, ReadonlyMap<string, OperationRules>>([[judged.input.owner, new Map([[judged.input.kind, { ...projectionOwner, values: () => [] }]])]]);
     const projection = await runInDurableObject(G.object, (_instance, state) => {
@@ -523,9 +522,9 @@ describe("a founding on real scopes under the deployed class (authority note, se
       const fieldCells = [...cells];
       const references = new ArchiveLocalReferences(sql, { named: definition.definition.digest, definition: definition.definition,
         owners: projectionOwners, records: new Map(), preparations: new Map() }, PROPOSED_BOUNDS, budget);
-      // This oracle supplies actual classified context/uses. This comparison
-      // does not supply the owning pass's privacy or declaration admission.
-      const composed = references.project(judged.at, position, { input: "outcome", owner: projectionInput.owner, kind: projectionInput.kind, result: projectionInput.result }, judged.uses.map(use => use.content));
+      // Read actual context/uses as scalar metadata from this exact row.
+      // The owning pass's privacy/declaration admission remains separate.
+      const composed = references.read(judged.at, position);
       return { projected, projectedValues, expected, expectedValues, repeated, repeatedValues, before, after, cells: fieldCells, composed, all };
     });
     expect(projection.projected).toEqual(projection.expected);
@@ -539,7 +538,7 @@ describe("a founding on real scopes under the deployed class (authority note, se
     expect(projection.repeatedValues).toEqual(projection.projectedValues);
     expect(projection.after.calls).toBeGreaterThan(projection.before.calls);
     expect(projection.after.inputWork).toBeGreaterThan(projection.before.inputWork);
-    expect(new Set(projection.cells.filter(cell => typeof cell === "string"))).toEqual(new Set(["array", "rules", extents, changed]));
+    expect(new Set(projection.cells.filter(cell => typeof cell === "string"))).toEqual(new Set(["array", "rules", "confirmed", extents, changed]));
     expect((await storedPublication()).item).toMatchObject({ state: "reserved", values: { integration, reservedAt: judged.seq } });
     expect(await G.item(0)).toMatchObject({ refs: { slot: publication, judging: null } });
     expect(judged.sends[0]!.message).toMatchObject({ type: "relate", body: { name: "publication", state: "reserved", detail: { operation: factRefOf(merge), outcome: "committed", rules: checked.seq } } });
