@@ -36,6 +36,7 @@ test("three v2 passes cover ten thousand entries without rereading old entries o
     const parent = previous ? { id: previous.commit, source: archiveObjectSource(directory) } : null;
     let preparation: JournalPassPreparation | undefined;
     if (first === 8192) {
+      const before = budget.admitted();
       const prepared = await prepareJournalPass({ format: "sha1", at: fixture.at, after: previous!.through, parent, budget });
       expect(prepared.ok, JSON.stringify(prepared)).toBe(true); if (!prepared.ok) return;
       preparation = prepared.preparation;
@@ -44,6 +45,10 @@ test("three v2 passes cover ten thousand entries without rereading old entries o
       for (const entry of entries) {
         const firstSegment = grouping.append(entry.seq, entry.bytes);
         if (firstSegment !== null) await preparation.prepare([journalV2SegmentPath(firstSegment)]);
+      }
+      const attributed = preparation.metadataCost(), live = budget.admitted();
+      for (const key of Object.keys(before) as (keyof typeof before)[]) {
+        expect(live[key] - attributed[key]).toBe(before[key] + (key === "metadata" || key === "inputWork" ? 256 : 0));
       }
       expect(grouping.segments).toBe(2);
       expect(calls).toEqual([]); // No entry or retained input before metadata preparation.

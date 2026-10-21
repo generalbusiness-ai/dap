@@ -3,7 +3,7 @@
  * no host, token, adapter send or production export admission is claimed. */
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { JournalArchive, JournalFormat } from "@generalbusiness/artroom-git/journal";
+import { ArchiveSegmentCursor, journalV2SegmentPath, prepareJournalPass, type JournalArchive, type JournalFormat } from "@generalbusiness/artroom-git/journal";
 import { planArchive, planArchivePass, planArchiveConversion, rebuildArchive, rebuildArchivePass } from "../src/archive-build.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
 import { ArchiveBudget } from "../src/archive-budget.ts";
@@ -110,8 +110,31 @@ test("v2 native inventory and restart read only the marked new interval and keep
       }
       return sql.exec(query, ...args);
     } };
+    const budget = new ArchiveBudget();
+    const prepared = await prepareJournalPass({ format: "sha1", at: lane.at, after: initial, parent, budget });
+    expect(prepared.ok, JSON.stringify(prepared)).toBe(true); if (!prepared.ok) return { value: prepared, queried };
+    // Scalar metadata frame closes before parent I/O. This is the actual
+    // two-remark native interval, not an adaptive cutoff/host-send witness.
+    const count = through.seq - initial.seq;
+    const positions = exact.transaction(() => budget.native(exact, () => ({ metadata: count * 192, inputWork: 0 }))
+      .exec("SELECT seq, size FROM entry WHERE seq >= ? AND seq <= ? ORDER BY seq LIMIT ?", initial.seq + 1, through.seq, count).toArray());
+    expect(positions).toHaveLength(count);
+    prepared.preparation.work.metadata(256);
+    const grouping = new ArchiveSegmentCursor(64 * 1024 * 1024);
+    for (const row of positions) {
+      expect(typeof row["seq"]).toBe("number"); expect(typeof row["size"]).toBe("number");
+      const firstSegment = grouping.append(row["seq"] as number, row["size"] as number);
+      if (firstSegment !== null) await prepared.preparation.prepare([journalV2SegmentPath(firstSegment)]);
+    }
+    const attributed = prepared.preparation.metadataCost();
     const value = await planArchivePass(exact, { at: lane.at, through, after: initial, bounds: PROPOSED_BOUNDS,
-      policies, format: "sha1", parent, markedAt: at(1) }, new ArchiveBudget());
+      policies, format: "sha1", parent, markedAt: at(1), preparation: prepared.preparation }, budget);
+    if (value.ok) {
+      expect(attributed.nodes).toBeGreaterThan(0);
+      expect(value.archive.cost.nodes).toBe(value.archive.selection.inventoryCost.nodes + attributed.nodes);
+      expect(budget.admitted()).toEqual(value.archive.cost);
+      expect(prepared.preparation.metadataCost()).toEqual(attributed); // Payload work was not attributed.
+    }
     return { value, queried };
   });
   const next = planned.value;
@@ -132,11 +155,14 @@ test("v2 native inventory and restart read only the marked new interval and keep
       else if (!query.includes(" FROM retained_input ") && !query.includes(" FROM retained_value ")) expect.fail(`unselected rebuild query: ${query}`);
       return sql.exec(query, ...args);
     } };
-    return rebuildArchivePass(exact, row, parent, new ArchiveBudget());
+    // A lowered test ceiling equal to the initial pass's measured nodes
+    // detects charging the same preparation twice on restart.
+    return rebuildArchivePass(exact, row, parent, new ArchiveBudget({ nodes: next.archive.cost.nodes }));
   });
   expect(rebuilt.ok, JSON.stringify(rebuilt)).toBe(true); if (!rebuilt.ok) return;
   expect(rebuilt.archive.commit).toBe(next.archive.commit);
   expect(rebuilt.archive.objects).toEqual(next.archive.objects);
+  expect(rebuilt.archive.cost.nodes).toBe(next.archive.cost.nodes);
   await lane.inside(state => new ArchiveRows(sqlOf(state), lane.at).confirm(next.mark.commit));
   expect(await lane.head()).not.toEqual(through);
 }, 20_000);
