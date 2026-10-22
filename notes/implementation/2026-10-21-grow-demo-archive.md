@@ -4,7 +4,7 @@ Request `63130d6c`, existing builder promise `3490bd81`. Original preparation
 started at `be0c40b5df299145f819ecde82d6baf055bb7db2`, while F1 and 9a awaited
 review. The sections below retain that history and its natural failures.
 
-## Current status: page asset regenerated; fresh verification pending
+## Current status: exact development Git boundary repaired; checks pending
 
 Root adopted the repaired source's owning lanes Node-test compiler, Scope
 test compiler and three D1 cases in `d7a45af8`; all passed. The next ordinary
@@ -33,11 +33,27 @@ The ignored dist files match those module exports exactly. Bounded offline
 diff samples show renamed minified aliases; they do not establish that
 every change is minifier-only or prove semantic equivalence.
 
-This checkpoint commits only that maintained generated asset and this
-necessary note. Page-focused verification and the new exact-head gate are
-pending; their actual outcomes belong in the final handoff, not another
-note-only commit. No environment, package, Worker configuration, deadline,
-price, assertion or archive cap changes. This is still a partial local
+The asset checkpoint committed only that maintained generated asset and its
+necessary note. The Page asset owning case then passed. The following ordinary
+gate, original owner `77196` at `adf673e075`, closed naturally with status 1.
+The full typecheck passed. Vitest reported 2,128 passes and three skips across
+459 files, with zero reported unhandled errors. The following Node block
+reported 35 passes and one failure out of 36 cases: the active-source guard
+did not list `apps/room/lanes/test/grow-archive.test.ts` as a development Git
+boundary. The downstream Counting Node 55-case stage was not reached.
+
+This repair adds only that exact test path to the guard's existing application
+Git exceptions. The fixture constructs a synthetic archive and exercises the
+actual Artifacts smart-HTTP send, ref and revocation guard with scripted host
+replies. It grants no production import permission or broader lanes exception.
+The owning Node guard remains pending. The checker confirmed that the
+document-only repair exception does not cover this code change: run the
+owning active-source Node file once, then one ordinary gate at this new head.
+That gate includes both Node blocks and Counting; do not run Counting,
+Vitest, compilers or the earlier Slice9 foci separately. No composed gate
+pass is claimed. The failed run and subsequent results remain separate evidence.
+No environment, package, Worker configuration, deadline, product assertion,
+price or archive cap changes. This is still a partial local
 archive delivery: no hosted acceptance, production floor/F3 closure or full
 held-journal bound follows from it. All earlier failures remain below.
 

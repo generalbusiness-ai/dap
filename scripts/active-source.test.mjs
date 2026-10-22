@@ -74,7 +74,9 @@ test("the platform package depends only on contract, bytes and derive, and only 
 // the same table of sends as the real repository does: no rule of a platform definition reads a repository.
 // M1 preparation permits one explicit public immutable reader import. The
 // server's other modules and broad Git/provider/Node entry points stay closed.
-const applicationGitUsers = new Set(["packages/mcp/package.json", "packages/mcp/src/service.ts"]);
+// Grow's exact development host fixture constructs a synthetic archive and
+// exercises the actual smart-HTTP send boundary with scripted host replies.
+const applicationGitUsers = new Set(["packages/mcp/package.json", "packages/mcp/src/service.ts", "apps/room/lanes/test/grow-archive.test.ts"]);
 // Replay's Node and integration test boundaries may depend on Git. The v2
 // witnesses combine real Git archives with offline Replay; Git itself stays
 // below Replay and imports none of it, including from its own tests.
