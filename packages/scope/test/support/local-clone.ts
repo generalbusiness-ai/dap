@@ -47,6 +47,7 @@ export function localClone(at: LocalCloneAddress) {
     archiveCommand: (objects: LocalArchiveClone["objects"], refs: LocalArchiveClone["refs"], remote: string) => json<{ id: string; remote: string; directory: string; token: string }>("/archive-command", { objects, refs, remote }),
     archiveRun: async (id: string, args: readonly string[], env: Readonly<Record<string, string>>) => (await json<{ code: number | null }>("/archive-command-run", { id, args, env })).code,
     archiveFinish: (id: string, lines: readonly string[]) => json<ArchiveCommandWitness>("/archive-command-finish", { id, lines }),
+    archiveClose: (id: string) => json<{ closed: true }>("/archive-command-close", { id }),
     status: () => json<unknown>("/status"),
     forward: async (request: Request) => {
       // Fixed trusted test proxy, as Host.upstream's synthetic Response. The

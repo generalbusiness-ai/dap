@@ -893,3 +893,41 @@ from `9363a6fcac0fbba798bbe77a129238d58aafb80f`, then commit removal before
 acceptance work. Retain this note and all original failures. A measured
 phase boundary can support an honest test split; it cannot justify a
 blind timeout increase.
+
+### Measured command boundary and strict trusted refusal
+
+Temporary phase owner 50068 naturally failed at the original 30-second
+production deadline. Scope test compilation and the first two cases
+passed, with exact input guards and no signals. The phase records put
+the first public finish call at 7,561 ms. The untrusted child then took
+about 10,714 ms and exited 1; the trusted child took about 11,900 ms and
+also exited 1 without a signal, ending after the Native test timeout.
+These instrumented elapsed values include observation overhead and do
+not establish general performance. They show this observed sequential
+path reached about 30,174 ms before its remaining assertions.
+
+Trusted exit 1 is a real unresolved failure: the existing expectation
+remains zero. Neither report was retained, so no per-journal reason or
+exact trusted failure category is claimed. The temporary phase test and
+helper were restored immediately in `51a280c90` to their exact
+`9363a6fca` source. The note and original failures remain.
+
+The proposed test split keeps the five original Native scenarios and
+their 30-second deadlines. Each successful production, warm-activation
+or evicted-activation producer hands its exact Node session and copied
+expected journal refs to one immediately following offline command case.
+The handoff is published only after all original Native comparisons and
+omission controls complete; it contains no private key or plaintext token.
+Missing or mismatched handoffs fail explicitly. Each follower keeps the
+original public command assertions and its own 30-second deadline, with
+useful bounded per-journal result, reason and location metadata. It adds
+no mint, clone, archive, trust or capacity. The static ledger changes from
+five cases to eight, interleaving each follower after its producer.
+
+The Node fixture joins finish and cleanup by the exact session ID. Each
+follower joins that cleanup in finally and its test-finish hook; global
+teardown remains a fallback. Native resources release at the producer
+boundary, without closing the retained Node clone. Original public child
+timers, output cap, token checks and strict trusted exit-zero expectation
+remain. This proposal is uncompiled and unrun; trusted replay, activation,
+heavy scenarios and the final gate remain pending.

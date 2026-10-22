@@ -5,7 +5,7 @@
 import { env, runDurableObjectAlarm, runInDurableObject } from "cloudflare:test";
 import { expect, inject, test } from "vitest";
 import { DEVICE_COMMAND, PROPOSED_BOUNDS, type DeclaredDefinition, type Digest, type FactRef, type Head, type Input, type PlatformDefinition, type ScopeId, type ScopeRef, type Sealed } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, encodeItemQueryParameter, isDigest, isEntry, isRecord, isSeed, parseStrict, scopeIdOf, textDigest, timeMs, timeOf, unb64url, utf8 } from "@generalbusiness/artroom-bytes";
+import { b64url, canonicalize, encodeItemQueryParameter, isDigest, isEntry, isFactRef, isScopeId, isRecord, isSeed, parseStrict, scopeIdOf, textDigest, timeMs, timeOf, unb64url, utf8 } from "@generalbusiness/artroom-bytes";
 import { readApplicationPackage2, readPublishedApplicationPackage2 } from "@generalbusiness/artroom-bytes/application-v2";
 import { inputTexts, outcomeValueDomains, ownersOf, validateDefinition, type OperationRules, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
@@ -96,7 +96,36 @@ function reviewed(pin: Digest | PlatformDefinition, declaration?: unknown): Revi
     } };
 }
 
-test.for(["fixture", "Grow", "Grow production", "Grow activation warm", "Grow activation evicted"])("installed %s scopes export genesis zero after a late native Membership8 directory binding", { timeout: 30_000 }, async (scenario, context) => {
+/** Metadata only from the public executable report, never journal bodies.
+ * Original token-output assertions run before this diagnostic is attached. */
+function commandReportDiagnostic(value: unknown) {
+  const object = (v: unknown): Record<string, unknown> => v !== null && typeof v === "object" && !Array.isArray(v) ? v as Record<string, unknown> : {};
+  const text = (v: unknown) => typeof v === "string" ? { text: v.slice(0, 512), truncated: v.length > 512 } : null;
+  const integer = (v: unknown) => typeof v === "number" && Number.isSafeInteger(v) && v >= 0 ? v : null;
+  const gitId = (v: unknown) => typeof v === "string" && /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/.test(v) ? v : null;
+  const results = ["consistent", "mismatch", "missing-dependency", "unsupported-definition", "incomplete", "refused", "unavailable", "anchors-unpublished", "anchor-unneeded", "limit", "timeout", "not-found"];
+  const result = (v: unknown) => typeof v === "string" && results.includes(v) ? v : "unknown";
+  const d = object(value), journals = Array.isArray(d["journals"]) ? d["journals"] : [];
+  return { publishedAnchorsTrusted: d["publishedAnchorsTrusted"] === true, journals: journals.slice(0, 5).map(raw => {
+    const row = object(raw), verification = object(row["verification"]), report = object(verification["report"]), archive = object(row["archive"]), location = object(row["location"]), range = object(location["range"]), dependencies = object(report["dependencies"]);
+    return { kind: row["kind"] === "verification" ? "verification" : row["kind"] === "archive-failure" ? "archive-failure" : "unknown",
+      result: result(row["kind"] === "verification" ? report["result"] : row["result"]), reason: text(row["kind"] === "verification" ? verification["why"] : row["reason"]),
+      scope: isScopeId(location["scope"]) ? location["scope"] : isScopeId(object(archive["scope"])["scope"]) ? object(archive["scope"])["scope"] : null,
+      at: isFactRef(report["at"]) ? report["at"] : null, target: isFactRef(report["target"]) ? report["target"] : null,
+      commit: gitId(location["commit"]), object: gitId(location["object"]), path: typeof location["path"] === "string" && /^[A-Za-z0-9_./:-]{1,256}$/.test(location["path"]) ? location["path"] : null,
+      anchor: isFactRef(location["anchor"]) ? location["anchor"] : null, range: { from: integer(range["from"]), through: integer(range["through"]), legacy: range["legacy"] === true },
+      anchors: Array.isArray(report["anchors"]) ? report["anchors"].length : null,
+      missing: Array.isArray(dependencies["missing"]) ? { count: dependencies["missing"].length, first: dependencies["missing"].slice(0, 2).filter(isFactRef) } : null };
+  }), journalCount: journals.length, journalsTruncated: journals.length > 5 };
+}
+
+// Each offline follower immediately follows its own native producer. No
+// Native owner, private key or plaintext read token crosses this boundary.
+interface NativeCommandHandoff { producer: string; id: string; lines: readonly string[]; refs: readonly { ref: string; id: string }[] }
+for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation warm", "Grow activation evicted"]) {
+  const producerTitle = `installed ${scenario} scopes export genesis zero after a late native Membership8 directory binding`;
+  let retainedCommand: NativeCommandHandoff | null = null;
+  test(producerTitle, { timeout: 30_000 }, async context => {
   const activationScenario = scenario.startsWith("Grow activation"), productionScenario = scenario === "Grow production" || activationScenario, kind = scenario === "fixture" ? "fixture" : "Grow";
   const prepared = kind === "fixture" ? await applicationOwnedScopesPacket() : (() => {
     const captured = inject("maintainedApplications")[productionScenario ? "growDemo" : "grow"], bytes = unb64url(captured.bytes);
@@ -120,6 +149,7 @@ test.for(["fixture", "Grow", "Grow production", "Grow activation warm", "Grow ac
   const { life, R, D, children } = await sessionRoom(C.register, undefined, platformHost), [M, A, G] = children;
   if (!M || !A || !G) throw Error("The declared cohort requires three siblings.");
   let productionPeer: ArchiveArtifactsPeer | undefined;
+  let commandHandoff: NativeCommandHandoff | undefined;
   const f = await applicationResolverFixture("sha1", undefined, {}, undefined, packet), peer = applicationHttpPeer(f);
   const bindings = { SCOPES: env.PLATFORM, APPLICATION_CONTENT: env.APPLICATION_CONTENT, APPLICATION_TRUST: JSON.stringify(f.trust) };
   try {
@@ -1113,23 +1143,8 @@ test.for(["fixture", "Grow", "Grow production", "Grow activation warm", "Grow ac
         git: { run: (args, env) => life.wait(() => bridge.archiveRun(commandSession.id, args, env)), archiveRun: (args, env) => life.wait(() => bridge.archiveRun(commandSession.id, args, env)) },
       }, ["clone", commandSession.directory, "--hours", "1", "--archive"]));
       expect(clonedCommand.code, clonedCommand.lines.join("\n")).toBe(0); expect(mints).toBe(1);
-      const command = await life.wait(() => bridge.archiveFinish(commandSession.id, clonedCommand.lines));
-      expect(command.cloneCode).toBe(0); expect(command.fetchCode).toBe(0);
-      expect(command.refs).toHaveLength(5);
-      expect([...command.refs].sort((a, b) => a.ref.localeCompare(b.ref))).toEqual([...diagnosticRefs].map(([ref, id]) => ({ ref, id })).sort((a, b) => a.ref.localeCompare(b.ref)));
-      expect(command.tokenInConfig).toBe(false); expect(command.tokenInArgv).toBe(false); expect(command.tokenInOutput).toBe(false);
-      expect(command.readRequests).toBeGreaterThan(1);
-      expect(command.withoutTrust.signal).toBeNull(); expect(command.withoutTrust.code).toBe(1);
-      const untrusted = command.withoutTrust.report as { journals: { kind: string; verification?: { report: { result: string } } }[]; publishedAnchorsTrusted: boolean };
-      expect(untrusted.publishedAnchorsTrusted).toBe(false);
-      expect(untrusted.journals).toHaveLength(5);
-      expect(untrusted.journals.some(result => result.kind === "verification" && result.verification?.report.result !== "consistent")).toBe(true);
-      expect(command.withTrust.signal).toBeNull(); expect(command.withTrust.code).toBe(0);
-      const trusted = command.withTrust.report as { journals: { kind: string; verification: { report: { result: string } } }[]; publishedAnchorsTrusted: boolean; secretCheck: { result: string } };
-      expect(trusted.publishedAnchorsTrusted).toBe(true);
-      expect(trusted.journals).toHaveLength(5);
-      expect(trusted.journals.every(result => result.kind === "verification" && result.verification.report.result === "consistent")).toBe(true);
-      expect(trusted.secretCheck.result).toBe("no-recognized-secret");
+      commandHandoff = { producer: producerTitle, id: commandSession.id, lines: [...clonedCommand.lines],
+        refs: [...diagnosticRefs].map(([ref, id]) => ({ ref, id })) };
     }
     expect(cloned.fsckPassed).toBe(true);
     expect([...cloned.refs].sort((a, b) => a.ref.localeCompare(b.ref))).toEqual([...diagnosticRefs].map(([ref, id]) => ({ ref, id })).sort((a, b) => a.ref.localeCompare(b.ref)));
@@ -1192,5 +1207,51 @@ test.for(["fixture", "Grow", "Grow production", "Grow activation warm", "Grow ac
       copies: credentialCounts, refusedDomains: 2, refusedCredentials: 3, anchorRefusals: 4,
       qualification: "Native test-host journals and issued reads; TEST package/owner/scheduler/policy/object repository. Explicit private facts and observed values on caller trust; Real local Git mirror clone and five offline reports; no live private source read by collector, provider, hosted transport or deployment acceptance.",
     }), "native-archive-closure");
+    if (productionScenario) {
+      expect(commandHandoff, "the successful native producer must retain its exact command session").toBeDefined();
+      if (!commandHandoff) expect.fail("missing native command session");
+      expect(retainedCommand, "a producer must publish its handoff once").toBeNull();
+      retainedCommand = commandHandoff;
+    }
   } finally { life.release(); }
-});
+  });
+
+  if (scenario === "Grow production" || scenario === "Grow activation warm" || scenario === "Grow activation evicted") {
+    test(`installed ${scenario} public archive command verifies its native producer clone`, { timeout: 30_000 }, async context => {
+      const basis = retainedCommand;
+      if (!basis) expect.fail("the immediately preceding native producer did not publish a command session");
+      retainedCommand = null;
+      const bridge = localClone(inject("localClone"));
+      let pending: ReturnType<typeof bridge.archiveFinish> | undefined;
+      const close = async () => {
+        if (pending) await pending.catch(() => undefined);
+        const closed = await bridge.archiveClose(basis.id);
+        expect(closed.closed, "the exact producer command session must be closed").toBe(true);
+      };
+      context.onTestFinished(close);
+      try {
+        expect(basis.producer).toBe(producerTitle);
+        expect(basis.refs).toHaveLength(5);
+        pending = bridge.archiveFinish(basis.id, basis.lines);
+        const command = await pending;
+        expect(command.cloneCode).toBe(0); expect(command.fetchCode).toBe(0);
+        expect(command.refs).toHaveLength(5);
+        expect([...command.refs].sort((a, b) => a.ref.localeCompare(b.ref))).toEqual([...basis.refs].sort((a, b) => a.ref.localeCompare(b.ref)));
+        expect(command.tokenInConfig).toBe(false); expect(command.tokenInArgv).toBe(false); expect(command.tokenInOutput).toBe(false);
+        expect(command.readRequests).toBeGreaterThan(1);
+        expect(command.withoutTrust.signal).toBeNull(); expect(command.withoutTrust.code).toBe(1);
+        const untrusted = command.withoutTrust.report as { journals: { kind: string; verification?: { report: { result: string } } }[]; publishedAnchorsTrusted: boolean };
+        expect(untrusted.publishedAnchorsTrusted).toBe(false);
+        expect(untrusted.journals).toHaveLength(5);
+        expect(untrusted.journals.some(result => result.kind === "verification" && result.verification?.report.result !== "consistent")).toBe(true);
+        Object.assign(context.task.meta, { archiveCommandReports: { withoutTrust: commandReportDiagnostic(command.withoutTrust.report), withTrust: commandReportDiagnostic(command.withTrust.report) } });
+        expect(command.withTrust.signal).toBeNull(); expect(command.withTrust.code, JSON.stringify(commandReportDiagnostic(command.withTrust.report))).toBe(0);
+        const trusted = command.withTrust.report as { journals: { kind: string; verification: { report: { result: string } } }[]; publishedAnchorsTrusted: boolean; secretCheck: { result: string } };
+        expect(trusted.publishedAnchorsTrusted).toBe(true);
+        expect(trusted.journals).toHaveLength(5);
+        expect(trusted.journals.every(result => result.kind === "verification" && result.verification.report.result === "consistent")).toBe(true);
+        expect(trusted.secretCheck.result).toBe("no-recognized-secret");
+      } finally { await close(); }
+    });
+  }
+}

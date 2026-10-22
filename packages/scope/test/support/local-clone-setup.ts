@@ -15,7 +15,7 @@ import { fileURLToPath } from "node:url";
 import type { TestProject } from "vitest/node";
 import { Host } from "../../../git/test/support/host.ts";
 import { git } from "../../../git/test/support/repo.ts";
-import type { LocalCloneAddress, LocalCloneRun } from "./local-clone.ts";
+import type { ArchiveCommandWitness, LocalCloneAddress, LocalCloneRun } from "./local-clone.ts";
 import { archiveCommandSession, type ArchiveCommandSession } from "./local-archive-command.ts";
 import { cloneNativeArchive, cleanupNativeArchiveClones } from "./local-archive-clone.ts";
 
@@ -32,6 +32,24 @@ export default async function setup(project: TestProject) {
   // Unrelated scope files need no Git process or temporary repository.
   // Only the nonce-protected fixed configure request allocates these paths.
   const commandSessions = new Map<string, ArchiveCommandSession>();
+  const commandFinishes = new Map<string, Promise<ArchiveCommandWitness>>();
+  const commandClosures = new Map<string, Promise<void>>();
+  const closeOnly = (id: string): Promise<void> => {
+    const existing = commandClosures.get(id); if (existing) return existing;
+    const session = commandSessions.get(id); if (!session) return Promise.reject(Error("TEST unknown command session"));
+    const closed = session.close().then(() => { commandSessions.delete(id); });
+    commandClosures.set(id, closed); return closed;
+  };
+  const closeCommand = async (id: string): Promise<void> => {
+    const pending = commandFinishes.get(id); if (pending) await pending.catch(() => undefined);
+    await closeOnly(id);
+  };
+  const finishCommand = (id: string, lines: readonly string[]): Promise<ArchiveCommandWitness> => {
+    const existing = commandFinishes.get(id); if (existing) return existing;
+    const session = commandSessions.get(id); if (!session) return Promise.reject(Error("TEST unknown command session"));
+    const finished = (async () => { try { return await session.finish(lines); } finally { await closeOnly(id); } })();
+    commandFinishes.set(id, finished); return finished;
+  };
   let repo: string | null = null;
   let directory: string | null = null;
   let fixtureRoot: string | null = null;
@@ -134,8 +152,9 @@ export default async function setup(project: TestProject) {
         send({ code: await session.run(value["args"] as string[], value["env"] as Record<string, string>) });
       } else if (path === "/archive-command-finish" && request.method === "POST" && typeof value["id"] === "string" && Array.isArray(value["lines"]) && value["lines"].every(line => typeof line === "string")) {
         const session = commandSessions.get(value["id"]); if (!session) throw Error("TEST unknown command session");
-        try { send(await session.finish(value["lines"] as string[])); }
-        finally { commandSessions.delete(value["id"]); await session.close(); }
+        send(await finishCommand(value["id"], value["lines"] as string[]));
+      } else if (path === "/archive-command-close" && request.method === "POST" && typeof value["id"] === "string") {
+        await closeCommand(value["id"]); send({ closed: true });
       } else if (path === "/configure" && request.method === "POST" && typeof value["name"] === "string" && /^[A-Za-z0-9_.-]+$/.test(value["name"]) && (name === null || name === value["name"])) {
         if (name === null) {
           // A failed initialization retains this allocation for the next
@@ -174,8 +193,9 @@ export default async function setup(project: TestProject) {
   return async () => {
     await new Promise<void>((resolve) => server.close(() => resolve()));
     if (fixtureRoot !== null) rmSync(fixtureRoot, { recursive: true, force: true });
-    for (const session of commandSessions.values()) await session.close();
-    commandSessions.clear();
+    const closed = await Promise.allSettled([...new Set([...commandSessions.keys(), ...commandFinishes.keys()])].map(closeCommand));
+    commandSessions.clear(); commandFinishes.clear(); commandClosures.clear();
     cleanupNativeArchiveClones();
+    if (closed.some(result => result.status === "rejected")) throw Error("TEST command session cleanup failed");
   };
 }
