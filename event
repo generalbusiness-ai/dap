@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4a32a633f7a3574f6178ad371dfd812ddde9493f","text":"Merge retired a covered predecessor; the successor is at docs/security/entry-points.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:50fba426b2593da0eb4742003e47233fd70b8da4","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-foreign-cost.ts."}
