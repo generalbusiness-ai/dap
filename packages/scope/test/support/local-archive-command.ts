@@ -71,16 +71,20 @@ export async function archiveCommandSession(objects: LocalArchiveClone["objects"
           const args = ["--import", createRequire(import.meta.url).resolve("tsx"), fileURLToPath(new URL("../../../replay/src/bin.ts", import.meta.url)), "--git", target, "--all", "--expect-journals", "5", "--json", ...(trusted ? ["--trust-published-anchors"] : [])];
           tokenInArgv ||= args.some(arg => arg.includes(token));
           const child = spawn(process.execPath, args, { cwd: root, env: { PATH: process.env["PATH"] ?? "/usr/bin:/bin", HOME: "/nonexistent" }, stdio: ["ignore", "pipe", "pipe"] });
-          const chunks: Buffer[] = []; let size = 0; let over = false;
-          const capture = (chunk: Buffer) => { size += chunk.length; if (size > 8 * 1024 * 1024) { over = true; child.kill("SIGKILL"); } else chunks.push(Buffer.from(chunk)); };
-          child.stdout.on("data", capture); child.stderr.on("data", capture);
+          const chunks: Buffer[] = [], stdoutChunks: Buffer[] = [], stderrChunks: Buffer[] = []; let size = 0; let over = false;
+          const capture = (stream: Buffer[], chunk: Buffer) => { size += chunk.length; if (size > 8 * 1024 * 1024) { over = true; child.kill("SIGKILL"); } else { const owned = Buffer.from(chunk); chunks.push(owned); stream.push(owned); } };
+          child.stdout.on("data", (chunk: Buffer) => capture(stdoutChunks, chunk)); child.stderr.on("data", (chunk: Buffer) => capture(stderrChunks, chunk));
           const timer = setTimeout(() => child.kill("SIGKILL"), 30_000);
           child.on("error", error => { clearTimeout(timer); reject(error); });
           child.on("close", (code, signal) => {
             clearTimeout(timer);
-            const output = Buffer.concat(chunks).toString("utf8"); tokenInOutput ||= output.includes(token);
+            const output = Buffer.concat(chunks).toString("utf8");
+            const stdout = Buffer.concat(stdoutChunks).toString("utf8"), stderr = Buffer.concat(stderrChunks).toString("utf8");
+            tokenInOutput ||= output.includes(token) || stdout.includes(token) || stderr.includes(token);
             if (over) { reject(Error("TEST command output bound")); return; }
-            try { resolve({ code, signal, report: JSON.parse(output) }); } catch { reject(Error("TEST public executable did not return JSON")); }
+            // The public executable writes its JSON report to stdout. Stderr
+            // is checked for secrets, but is not part of that JSON document.
+            try { resolve({ code, signal, report: JSON.parse(stdout) }); } catch { reject(Error("TEST public executable did not return JSON")); }
           });
         });
         const withoutTrust = await run(false), withTrust = await run(true);

@@ -840,3 +840,30 @@ before further acceptance work: `local-archive-command.ts`,
 `a204e6833e0fa2c0ee352b77d8f4787ab15e168f`, respectively. This temporary
 checkpoint must not be landed or counted as acceptance or performance
 evidence. Original failed attempts remain evidence.
+
+### Command output stream correction
+
+Temporary diagnostic owner 63719 naturally failed with exact input guards
+and no signals. The Scope test compiler and first two installed cases
+passed. Production reached the first public executable, without published
+anchor trust: exit 1, no signal, 15,628 stdout bytes and 191 stderr bytes.
+There was no spawn, timer or output-bound failure. The original combined
+stdout-and-stderr JSON parse failed. The diagnostic retained neither
+stream's contents, so valid stdout JSON and the stderr message are not
+yet established. The trusted executable and activation cases were not
+reached. This instrumented result is diagnostic, not acceptance or
+performance evidence.
+
+The three temporary helper changes were removed immediately in
+`1c4a362ec`, restoring their exact `42e4951e2` blobs. This note and the
+original evidence remain.
+
+The proposed permanent fixture correction parses the report from stdout,
+which is where the public replay entrypoint writes its JSON. The original
+combined 8 MiB output limit and timer still apply across both streams.
+Token checks inspect each stream and the original combined output; no raw
+text is returned or printed. Original child code and signal are preserved.
+The existing no-trust assertion requires exit 1; that status alone was not
+the failure. Trusted exit 0, exact five reports, all strict verification
+and credential checks remain. The correction is unrun and makes no claim
+that the eventual stdout report will parse or verify successfully.
