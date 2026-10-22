@@ -4,7 +4,44 @@ Request `63130d6c`, existing builder promise `3490bd81`. Original preparation
 started at `be0c40b5df299145f819ecde82d6baf055bb7db2`, while F1 and 9a awaited
 review. The sections below retain that history and its natural failures.
 
-## Current status: gate typecheck failed; structural type repair prepared
+## Current status: page asset regenerated; fresh verification pending
+
+Root adopted the repaired source's owning lanes Node-test compiler, Scope
+test compiler and three D1 cases in `d7a45af8`; all passed. The next ordinary
+gate at `2ae9e515` then closed naturally with status 1. All presteps and the
+full typecheck passed. Vitest reported 2,127 passes, three skips and one
+failure across 459 files, with zero reported unhandled errors. Only the
+page asset witness failed. The downstream Node 36/55 stages were not
+reached. Earlier live callback counts were not terminal totals.
+
+The page source and committed asset had stayed unchanged from CLI Main,
+but the live platform dependency graph changed with the native catalog
+extraction. The asset witness recomputes that graph with esbuild and
+compares the generated module byte-for-byte. Root ran exactly one maintained
+`npm run build --workspace @generalbusiness/dap-page`; original owner
+`33154` closed naturally with zero, no intervention or error, and all
+before/after guards passed. No test or compiler ran as part of this repair.
+
+The generated module changed from 875,365 bytes (`d5019464…`) to 875,369
+bytes (`649363b83f852ba2e024eb490428acc64de9ab522bfa44e66c6cd281bb5aa9af`),
+exactly the failed gate's expected output. Its HTML stayed byte-identical:
+26,184 UTF-8 bytes, SHA-256
+`0167e7334fb013b0787bd559c18836789cf06d36bb2b402f1044b72ebec386f8`.
+JavaScript changed from 819,381 to 819,385 UTF-8 bytes; its new SHA-256 is
+`d33c6286e9c42db6c7d867813b32f40b272744afded61ebdf4d23b975d708b6d`.
+The ignored dist files match those module exports exactly. Bounded offline
+diff samples show renamed minified aliases; they do not establish that
+every change is minifier-only or prove semantic equivalence.
+
+This checkpoint commits only that maintained generated asset and this
+necessary note. Page-focused verification and the new exact-head gate are
+pending; their actual outcomes belong in the final handoff, not another
+note-only commit. No environment, package, Worker configuration, deadline,
+price, assertion or archive cap changes. This is still a partial local
+archive delivery: no hosted acceptance, production floor/F3 closure or full
+held-journal bound follows from it. All earlier failures remain below.
+
+### Source integration and earlier focused evidence
 
 The current source view is integrated on landed CLI Main
 `5e8476a1fb4b79aa8fb611b8848e3ecaaf42d8a1`; the prior source-only
@@ -95,10 +132,11 @@ both maps. The other 29 unique owner hashes and the three complete D1 test
 bodies and negative controls remain byte-identical. No old parser helper,
 input or output is executed again.
 
-At this repair checkpoint the lanes Node-test compiler, Scope test compiler
-and three existing D1 cases remain unrun on the repaired source. Root will
-allocate those once, then a fresh final-head gate. The earlier focused
-passes above remain historical evidence for their own source. No unchanged
+At the type-repair checkpoint the lanes Node-test compiler, Scope test
+compiler and three existing D1 cases were still pending. Root subsequently
+adopted their passes in `d7a45af8`; the following gate and asset repair are
+recorded in the current status above. The earlier focused passes remain
+historical evidence for their own source. No unchanged
 focus suite is repeated by this checkpoint, and no final gate pass, Source
 publication, hosted acceptance or full held-journal bound is claimed. The
 new owning results and gate outcome belong in the final handoff rather
