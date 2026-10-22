@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:73cf49718d1cbdeb0ffc2d22df1ef7bd1a385212","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-21-section-citations.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:73d47d4be41f109819df227c841d27031348ed00","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/retained-plan.ts."}
