@@ -391,3 +391,23 @@ failure after the child's final work, exact input bytes, and the original
 nonzero exit. The HTTP case passed in the failed gate; the exact request
 that emitted `EPIPE` was not recorded. This repair does not classify that
 error as harmless or change the HTTP assertions or deadlines.
+
+The Git repair on `555d3592` passed its owning test compiler and all 23
+cases in six affected files, with no unhandled errors. Assertion `790d90ef`
+preserves that focused run and its unchanged source and dependency guards.
+
+The Join UI fixture had a different lifetime gap. Vitest can finish a
+timed-out test while its module import still runs. The test's later cleanup
+could remove globals during the next test's import. The final stack and
+source expose that hazard without proving the exact historical interleaving.
+A file-local queue now keeps each physical body and its cleanup together.
+The finish hook retires that owner, and guarded awaits stop its continuation
+after outstanding work settles. A successor cannot install globals before
+the old cleanup finishes. A test that retires while queued owns nothing and
+runs no cleanup. A permanently stalled import still blocks successors,
+which retain their existing deadlines; the queue does not cancel imports.
+
+All 35 original UI assertions remain in order. One deterministic control
+holds an import and cleanup, retires the original and a queued owner, and
+requires the successor to start only after cleanup. The fixture change is
+source-reviewed; its owning compiler, focused cases and final gate remain due.
