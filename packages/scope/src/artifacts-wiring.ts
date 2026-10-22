@@ -7,6 +7,7 @@
  * configuration leaves every outside effect unsent. No configuration, token
  * or plaintext belongs in a scope's history.
  */
+import type { Sql } from "./sqlite.ts";
 import type { ScopeId } from "@generalbusiness/dap-contract";
 import { canonicalize, isScopeId, parseStrict } from "@generalbusiness/artroom-bytes";
 import { destinationBranch, isOf } from "@generalbusiness/dap-platform";
@@ -14,7 +15,7 @@ import { ArtifactsProvider, type ArtifactsNamespace, type CreationCustody } from
 import { CredentialStore } from "./credential-store.ts";
 import { DestinationHost, type SnapshotReader, type DestinationRepository } from "./destination-host.ts";
 import { credentialHandle, exact, hostBound } from "./host-wiring.ts";
-import type { OutsideGiven } from "./object.ts";
+import type { OutsideGiven } from "./given.ts";
 import { NO_OUTSIDE, type EffectRequest, type Outside } from "./operations.ts";
 import { RegisterHost } from "./register-host.ts";
 
@@ -62,7 +63,7 @@ CREATE TABLE IF NOT EXISTS private_creation_credential (
  * storage, beside its history and never in it. A row's plaintext is dropped
  * when its revocation is confirmed. A row is written once.
  */
-function creationCustody(sql: Pick<SqlStorage, "exec">, current: () => string | null): CreationCustody {
+function creationCustody(sql: Pick<Sql, "exec">, current: () => string | null): CreationCustody {
   sql.exec(SCHEMA).toArray();
   return {
     hold: (handle, name, plaintext) => {
@@ -82,7 +83,7 @@ function creationCustody(sql: Pick<SqlStorage, "exec">, current: () => string | 
 }
 
 /** Factory for one object life. Its scope/state reads stay live across genesis and later entries. */
-export function artifactsOutside(given: OutsideGiven, sql: Pick<SqlStorage, "exec">, env: ArtifactsBindings, fetch?: (request: Request) => Promise<Response>, snapshotReader?: SnapshotReader): Outside {
+export function artifactsOutside(given: OutsideGiven, sql: Pick<Sql, "exec">, env: ArtifactsBindings, fetch?: (request: Request) => Promise<Response>, snapshotReader?: SnapshotReader): Outside {
   try {
     const config = configuration(env.ARTIFACTS_CONFIG);
     const namespaceBinding = binding(env.ARTIFACTS);

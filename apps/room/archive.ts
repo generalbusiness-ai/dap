@@ -11,7 +11,7 @@ import type { ArchiveHostConfiguration, ArchiveHostItemAsk } from "../../package
 import type { NativeItemQuery } from "../../packages/scope/src/item-queries.ts";
 import type { ArchiveBudget } from "../../packages/scope/src/archive-budget.ts";
 import type { ArchivePolicyRegistry } from "../../packages/scope/src/archive-inventory.ts";
-import type { OutsideGiven } from "../../packages/scope/src/object.ts";
+import type { OutsideGiven } from "../../packages/scope/src/given.ts";
 import type { RoomArchiveDriverOptions } from "../../packages/scope/src/archive-driver.ts";
 import { exact } from "../../packages/scope/src/host-wiring.ts";
 import { DEMO_RELEASE } from "../../examples/grow/demo-release.ts";

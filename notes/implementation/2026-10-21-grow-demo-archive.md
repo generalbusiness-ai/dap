@@ -4,7 +4,7 @@ Request `63130d6c`, existing builder promise `3490bd81`. Original preparation
 started at `be0c40b5df299145f819ecde82d6baf055bb7db2`, while F1 and 9a awaited
 review. The sections below retain that history and its natural failures.
 
-## Current status: integrated focused checks adopted; gate pending
+## Current status: gate typecheck failed; structural type repair prepared
 
 The current source view is integrated on landed CLI Main
 `5e8476a1fb4b79aa8fb611b8848e3ecaaf42d8a1`; the prior source-only
@@ -45,8 +45,9 @@ prices, assertions and archive caps remain unchanged.
 
 The original fixture/Grow five price vectors and the two warm/evicted
 activation cases, retained-floor and homepage coverage are delegated to
-one final gate. That gate is pending at this checkpoint; its actual result
-belongs in the final handoff rather than a further note-only commit. The
+one final gate. The first gate later failed as recorded below; the repaired
+head still awaits its fresh gate. Its actual result belongs in the final
+handoff rather than a further note-only commit. The
 focus helpers, shared inputs and bootstrap scratch are now permanent DATA
 and will not execute or import again.
 
@@ -57,6 +58,51 @@ Archiving alone still does not reduce held entries. Register/Membership
 journals remain excluded, and the caller-anchor and omitted-text trust
 qualifications remain. The historical V41 result below belongs to its own
 source and is retained alongside all earlier natural failures.
+
+### First integrated gate and the type boundary repair
+
+The one ordinary gate at `3569ce625` did not pass. Root adopted its failure
+as `ec6780dd9e540941e198ea18cab41cd72c8b5602`: the actual npm and time
+statuses were 1, and the owner closed naturally with 1. The whitespace,
+helper and citation prechecks and citation self-test had closed with zero.
+The gate stopped in the maintained lanes typecheck; tests were not reached.
+Before/after fixed-input guard records agreed apart from the expected
+post-run marker, with no guard error. The earlier v2 prelaunch refusal is
+kept separate from this actual npm failure. Collector and shell-variable
+diagnostics are not substituted for the npm result or a test outcome.
+
+The lanes command chains source, Node-test and Worker-scope TypeScript
+configurations; the raw command did not isolate the failing subcommand.
+The source graph identifies the new plain Node grow-archive test importing
+archive.ts, which reached the Worker ScopeObject through the host's
+OutsideGiven type and reached global SqlStorage through Artifacts wiring
+and credential storage. TypeScript follows those type imports even though
+they disappear at runtime.
+
+The repair moves the unchanged Given and OutsideGiven declarations into a
+Worker-free structural module. object.ts retains compatible type re-exports;
+pure host adapters import the structural module directly. Artifacts wiring
+and credential storage use the existing Pick<Sql, "exec"> interface for
+the methods they actually call. Worker globals and compiler configurations
+are not widened. Every change to production code is a type declaration,
+type import/re-export or annotation; runtime statements remain unchanged
+by source construction, not by a claimed emitted-JavaScript measurement.
+
+Root adopted a fresh owning-parser calculation as
+`7ced02aec1c450bfa30123fb5c85acb55345f6bf`. Only the five changed sealed
+owners receive new hashes, in six placements because object.ts occurs in
+both maps. The other 29 unique owner hashes and the three complete D1 test
+bodies and negative controls remain byte-identical. No old parser helper,
+input or output is executed again.
+
+At this repair checkpoint the lanes Node-test compiler, Scope test compiler
+and three existing D1 cases remain unrun on the repaired source. Root will
+allocate those once, then a fresh final-head gate. The earlier focused
+passes above remain historical evidence for their own source. No unchanged
+focus suite is repeated by this checkpoint, and no final gate pass, Source
+publication, hosted acceptance or full held-journal bound is claimed. The
+new owning results and gate outcome belong in the final handoff rather
+than another note-only commit.
 
 ### Historical V41: the local signed-packet case passed
 

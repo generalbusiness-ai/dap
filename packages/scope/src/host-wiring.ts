@@ -10,7 +10,7 @@ import { entryHash, isDigest, isFactRef, isOperationId, parseStrict } from "@gen
 import { isEntryOf, valueDigest } from "@generalbusiness/dap-derive";
 import { DESTINATION_KINDS, destinationBranch, destinationWrite, directoryIdOf, isOf } from "@generalbusiness/dap-platform";
 import type { DestinationBinding, DestinationRepository } from "./destination-host.ts";
-import type { OutsideGiven } from "./object.ts";
+import type { OutsideGiven } from "./given.ts";
 
 export function exact(value: unknown, keys: readonly string[]): Record<string, unknown> | null {
   if (typeof value !== "object" || value === null || Array.isArray(value)) return null;

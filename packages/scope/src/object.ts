@@ -38,7 +38,6 @@ import type { Answer, Beside, Bounds, Cursor, DeclaredDefinition, Digest, Outbox
 import { canonicalize, isRecord, digestBytes, isHead, isScopeId, isScopeRef, parseStrict, retainedReadArgument, utf8 } from "@generalbusiness/artroom-bytes";
 import { isEntryOf, timeMs, timeOf, type Item } from "@generalbusiness/dap-derive";
 import { sourceName } from "@generalbusiness/dap-platform";
-import type { ScopeState } from "@generalbusiness/dap-derive";
 import type { Delivered, StateView } from "@generalbusiness/dap-derive";
 import { Scope, ownOf, type Checkpointed, type Created } from "./core.ts";
 import { Deliveries } from "./delivery.ts";
@@ -68,7 +67,9 @@ import { READ_BOUNDS, Reads, type ReadBounds, type Summary } from "./reads.ts";
 import { Chains, checkLocalSignedRead, checkSignedReadRequest, presentsSignedRead, signerOf, type SignedReading, type SignedReadObserver } from "./signed-reads.ts";
 import { LATE, within } from "./turn.ts";
 import { SqliteStore, type Sql } from "./sqlite.ts";
-import type { OutboxItem, OperationStatus, Sealed, Store } from "./store.ts";
+import type { OutboxItem, OperationStatus, Sealed } from "./store.ts";
+import type { Given, OutsideGiven } from "./given.ts";
+export type { Given, OutsideGiven } from "./given.ts";
 import { siteDestination, sitePublication, sitePublishedCommit } from "./site/publication.ts";
 import { RequestIndex, requestQuery } from "./request-index.ts";
 import { background, inOperation, measured, measuredSync, metric, OBSERVED_METHODS, operational, operationContext, operationPlace, type MetricEnvironment, type OperationalIdentity, type ObservedMethod } from "./operational.ts";
@@ -92,18 +93,6 @@ import { background, inOperation, measured, measuredSync, metric, OBSERVED_METHO
  * writes or public RPC methods. With it, `ports.outside` is not used.
  * `limits`: the serving limits of a join, in place of the proposed ones.
  */
-export interface Given extends Pick<Ports, "clock" | "random"> {
-  genesis(): Extract<Input, { type: "genesis" }> | null;
-  state: StateView;
-  /** The scope's record: its reference, its head and the time of its previous entry. */
-  scope(): ScopeState | null;
-}
-export interface OutsideGiven extends Given {
-  /** One sealed entry of this scope, or null. No other scope is read. */
-  own(seq: number): Sealed | null;
-  /** One input already retained by this scope. No network read or storage write. */
-  retained: Store["retained"];
-}
 export interface Wiring {
   ports?: Partial<Ports>; bounds?: Bounds; reads?: ReadBounds;
   authority?: (given: Given) => Authority;

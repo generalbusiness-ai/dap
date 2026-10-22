@@ -6,7 +6,7 @@
 import type { FieldValue, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, intentDigest, isDigest, isOperationId, seedDigest, utf8 } from "@generalbusiness/artroom-bytes";
 import { DIRECTORY_OF, isOf, repositoryName } from "@generalbusiness/dap-platform";
-import type { OutsideGiven } from "./object.ts";
+import type { OutsideGiven } from "./given.ts";
 import type { EffectAnswer, EffectRequest, Outside } from "./operations.ts";
 
 /** Each method sends once. Missing, lost or malformed replies are no answer. */

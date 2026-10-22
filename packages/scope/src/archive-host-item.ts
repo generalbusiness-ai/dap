@@ -7,7 +7,7 @@ import type { ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import { isDigest, isEntry, isFactRef, isScopeRef, parseStrict, readItemQueryParameter, same } from "@generalbusiness/artroom-bytes";
 import { isEntryOf } from "@generalbusiness/dap-derive";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT as C, directoryIdOf } from "@generalbusiness/dap-platform";
-import type { OutsideGiven } from "./object.ts";
+import type { OutsideGiven } from "./given.ts";
 import { hostBound } from "./host-wiring.ts";
 import { itemQueryPage } from "./item-query-page.ts";
 import type { NativeItemQuery } from "./item-queries.ts";
