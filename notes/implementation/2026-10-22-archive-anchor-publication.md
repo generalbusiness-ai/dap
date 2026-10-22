@@ -787,3 +787,27 @@ canonical row and wake comparisons remain. Product code, prices, caps
 and deadlines are unchanged. Follow-up compilation and all seven row
 cases remain unrun; the earlier production compiler pass is separate
 evidence and need not repeat for this test-and-note change.
+
+### Compact-row owning checks and the next command boundary
+
+Owner 1057 naturally passed the Scope test compiler and all seven row
+cases at `46130a7ee`, with exact input guards and no signals. The earlier
+Scope production compiler pass remains separate evidence. These checks
+cover the compact reservation, full-price fallbacks and native rollback
+and restart controls; they do not establish production fit.
+
+Owner 58227 then naturally failed the whole installed file: the first two
+cases passed, and production passed the earlier Rules sequence 2 budget
+boundary before failing at its CLI clone assertion with Git exit 128. The
+activation cases remained pending. Full input guards passed, without
+signals. Git's hardened runner deliberately discarded bounded child
+output, so no exact stderr message or HTTP status was retained.
+
+Source tracing found that the TEST command bridge created `source.git`
+but sent its smart-HTTP requests to `/repo.git`. The native Git backend
+combines that path with the source repository's parent, so it selected a
+repository that the fixture had not created. The loopback URL now names
+`/source.git`. The public HTTPS remote, credential handling, strict clone
+assertion, trust controls, prices, capacities and deadlines are unchanged.
+This fixture correction is unrun; command replay and activation acceptance
+remain pending.

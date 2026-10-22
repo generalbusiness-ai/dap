@@ -46,7 +46,7 @@ export async function archiveCommandSession(objects: LocalArchiveClone["objects"
     for (const ref of refs) git(source, ["update-ref", ref.ref, ref.id]);
     git(source, ["update-ref", "--no-deref", "HEAD", refs[0]!.id]);
     await new Promise<void>(resolve => server.listen(0, "127.0.0.1", resolve));
-    const local = `http://127.0.0.1:${(server.address() as AddressInfo).port}/repo.git`;
+    const local = `http://127.0.0.1:${(server.address() as AddressInfo).port}/source.git`;
     const runner = nodeGit("git", root, { testRewrite: { from: remote, to: local } });
     let cloneCode: number | null = null, fetchCode: number | null = null;
     const close = async () => {
