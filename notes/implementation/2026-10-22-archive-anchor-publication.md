@@ -362,8 +362,8 @@ The follow-up at `209a25b5` passed all seven remaining compiler roots and the
 three Git publication cases. Its first Replay case failed before any
 judgment: the shared fixture had spread a comment act into `vouch` and then
 added a fact guard, which the validator correctly refuses. The other four
-Replay cases were unrun under the maintained bail setting. Owner91955 and its
-child naturally exited1 without a signal, with full guards stable. Its
+Replay cases were unrun under the maintained bail setting. Owner 91955 and its
+child naturally exited 1 without a signal, with full guards stable. Its
 owner-inclusive time was 6.680521625 seconds elapsed, 12.691451 user CPU, and
 2.571674 system CPU.
 
@@ -375,3 +375,40 @@ canonical content digest. No product source or earlier assertion changes.
 Only the Replay test compiler and complete five-case Replay file are planned
 next; the passed Git file and other compiler roots are not repeated. No
 further runtime result or broader acceptance is claimed.
+
+The Replay-only follow-up at `fa1667f7` passed its affected test compiler and
+all five Replay cases. Owner 95986 and its child naturally exited 0, with no
+signal or guard errors. Its owner-inclusive time was 4.197650542 seconds
+elapsed, 3.633985 user CPU and 1.192266 system CPU. Earlier compiler passes
+and the three Git cases remain separately attributed to their original
+attempts.
+
+The next full Native attempt (3 publication and 13 driver cases) stopped in
+its first case.
+The legacy publication confirmed layout 2 with published anchors, but the
+floor assertion found no floor at line 96. Owner 98344 and its child naturally
+exited 1 without a signal, with full guards stable; inclusive timing was
+9.003880833
+seconds elapsed, 6.953711 user CPU and 1.728606 system CPU. The failed case
+ran for 476 ms. The other 15 cases remained pending without completed
+acceptance;
+the maintained ledger labels them unfinished after bail. The original
+reports, including their aggregate counters, are preserved unchanged.
+
+Source inspection establishes a fixture error independent of the hidden floor
+answer: its head at position 9 left no room for the judge's required 100-entry
+live window, and its margin of 1 would still offer a near-head floor after
+adding history. The repair retains the original eight signed remarks, appends
+exactly the exported `FLOOR_WINDOW` genuine Native checkpoints, and sets only
+the fixture floor policy's margin to that same 100-entry window. The old
+prefix is still aged by the original 1000/1001-second clock steps, beyond the
+900-second intent lifetime. For the intended post-backfill head at 109, the
+policy
+can offer floor 10, which would retain the required live window. Removing old
+non-root entries can still make the original strict row-count decrease
+assertion meaningful despite the new remark and floor entry. These are source
+calculations, not an observed successful floor. The protocol, coverage
+assertions, floor/deletion
+assertions, the 30 s deadline and product bounds are unchanged. No repaired
+Native
+result is claimed until a separately allocated run.

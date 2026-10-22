@@ -7,6 +7,7 @@
 import { env, runInDurableObject } from "cloudflare:test";
 import { expect, inject, onTestFinished, test } from "vitest";
 import { PROPOSED_BOUNDS, type FactRef } from "@generalbusiness/dap-contract";
+import { FLOOR_WINDOW } from "@generalbusiness/dap-derive";
 import { canonicalize, intentDigest, isSeed, scopeIdOf, timeMs, timeOf, unb64url } from "@generalbusiness/artroom-bytes";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { growArchivePolicies } from "../../../apps/room/archive-policy.ts";
@@ -37,7 +38,12 @@ import type {} from "./support/maintained-applications.ts";
 test("Native legacy archive receipt blocks the floor until a real backfill pass confirms", async () => {
   const lane = await createNativeArchiveLane({}, {}, archiveDefinition);
   for (let n = 0; n < 8; n++) expect((await lane.submit(lane.remark(`old publication input ${n}`))).answer).toBe("accepted");
+  // Keep the independent floor judge's live window without replacing the
+  // signed history or manufacturing entries. Publication coverage must be
+  // the remaining obstacle to deleting this old prefix.
+  for (let n = 0; n < FLOOR_WINDOW; n++) expect(await lane.stub.checkpoint()).toMatchObject({ answer: "written" });
   const through = await lane.head();
+  expect(through.seq).toBe(8 + FLOOR_WINDOW);
   const legacy = await lane.inside(async state => {
     const sql = archiveSql(state), budget = new ArchiveBudget();
     const selected = inventoryArchive(sql, lane.at, through, lane.c.bounds, archivePolicies, budget);
@@ -70,7 +76,7 @@ test("Native legacy archive receipt blocks the floor until a real backfill pass 
     expect(new ArchiveRows(sql, lane.at).load()).toEqual(row);
   });
   const policies = new Map([...archivePolicies].map(([pin, policy]) => [pin, { ...policy,
-    entryTypes: new Set([...policy.entryTypes, "floor" as const]), floor: { margin: 1, minimum: 1 } }]));
+    entryTypes: new Set([...policy.entryTypes, "floor" as const]), floor: { margin: FLOOR_WINDOW, minimum: 1 } }]));
   fixtureArchiveWiring.set(lane.name, { fixtureSources: archiveAuthorityBasis(lane)!.pins, policies: { fixture: "archive-policies", registry: archiveAuthorityPolicies(lane, policies) },
     target: { fixture: "archive-target", resolve: async () => archiveRepository }, provider: host });
   onTestFinished(() => { fixtureArchiveWiring.delete(lane.name); });
