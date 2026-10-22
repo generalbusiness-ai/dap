@@ -41,7 +41,7 @@ const pendingArchiveSeals = {
   "packages/scope/src/archive-target.ts": "f23598cd54a6dea92e2b73ae4d144b7415aa98f379f76d9ff21fe4e59b431d5e",
   "packages/scope/src/archive-source-window.ts": "5ebf1d481081ae462374a33496b92310617a1bf3af1da675407f26017da3dfb1",
   "packages/scope/src/archive-publication.ts": "9c80517fd5de98545a0042f8fa7675769166de5a6387b9e6b60ddc9e5b68b2a5",
-  "packages/scope/src/archive-build.ts": "4848285269821fbc60214758ba2f0050e0a6e338d60f6d85dc63a3689b7d8448",
+  "packages/scope/src/archive-build.ts": "8ecba805ae96c5e8f854d429878d438f5bca17536fa3ace22152c12b017e9186",
   "packages/scope/src/archive-driver.ts": "b7c3a13a59e7aae8a7eae2d7f601dc6e9f697c55c18d0094ec7499d45dd11ece",
   "packages/scope/src/archive-row.ts": "c09e55ca926be59400a055a75013993203931c923f21e455bed62eb51f224549",
   "packages/scope/src/floor-writer.ts": "a55c28f393f59297fe952104b576b275c73c451456afced3d8cac33dc54f2ff4",

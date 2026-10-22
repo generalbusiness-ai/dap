@@ -667,3 +667,38 @@ admission. They retain the fractional numbers that exercise SQLite's
 `real` branch, all exact counts, precharge, refusal and lookahead checks.
 No product code, ledger format, cap, price, deadline or assertion changes.
 The corrected control has not been compiled or run.
+
+Owner 66346 then naturally exited 0 at `e1f9d044`, with stable full
+guards. The affected Scope test compiler and all 13 foreign-copy cases
+passed. The unchanged Scope source compiler's earlier pass remains
+separately attributed. Inclusive elapsed, user and system times were
+9.966899, 10.733221 and 2.303452 seconds.
+
+The maintained `sourceSeal` parser ran once under Owner 78750 and exited
+0 with stable full guards and unchanged cache. Only `archive-build.ts`
+had changed since its existing map entry's seal adoption. The parser's
+actual output now replaces that one stored value. No new owner mapping
+is added for the scalar helper, adaptive planner or scout files. This is
+source metadata, not a D1 test or archive acceptance result.
+
+The next whole installed run, Owner 49555, naturally exited 1 at the same
+head with stable full guards. The fixture and Grow cases passed. Grow
+production again stopped before the genuine Rules installation act at
+entry 2, with receipt through entry 1, no pending Mark and no source
+refusal. Its original ledger had spent 37,142,778 input units before the
+34,582,930 finish quote. Their sum, 71,725,708, exceeds the unchanged
+67,108,864 cap by 4,616,844. Final spent input was 43,495,287; this is not
+an overspend or a finish-component measurement. Inclusive elapsed, user
+and system times were 19.459163, 18.677566 and 2.219790 seconds.
+
+That run still records no Rules entry byte size or finish component
+table. Its independently captured Native installation fact identifies
+the exact Rules reference and hash. The only byte shape is the separate
+Directory entry 2 delivery. That Directory's older component observer
+reports itself incomplete because its capture cap overflowed and a later
+parent read invalidated its snapshot. It cannot explain this Rules
+refusal. Production command, replay and clone acceptance, both activation
+cases, the six heavy cases and the final gate remain pending. A bounded
+temporary diagnostic of original computed Rules finish components is
+being prepared for review. No further optimization or fit claim follows
+from these aggregate costs alone.
