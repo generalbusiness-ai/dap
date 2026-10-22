@@ -1,8 +1,9 @@
 # Published archive anchors
 
 This implements planner decisions `29fd51b5` and `f15e483c`. The writer and
-command are integrated on the R1 candidate `1793ca7d`. Compilation, owning
-tests and the final gate are pending. No hosted clone, custody, deployment,
+command are integrated on the R1 candidate `1793ca7d`. The owning compilers
+have passed after two retained type-boundary failures. Owning tests and the
+final gate remain pending. No hosted clone, custody, deployment,
 or budget-fit result is claimed.
 
 ## Publication is distinct from replay trust
@@ -153,3 +154,20 @@ from the reviewed lockfile without changing any source. The maintained
 source review. The inventory test records those outputs; unchanged R1
 owners retain their prior values. Seals detect source changes and do not
 prove runtime authority. The owning checks and final gate remain due.
+
+## First owning Node run and refusal-name correction
+
+The first owning Node run at `48e1bddd` closed naturally with status 1:
+51 cases passed and one failed across 16 files. All fixed source, dependency,
+tool and environment guards passed; only the bounded Vitest cache changed.
+The failed control expected `archive-limit` when one anchor exceeded zero
+retained entry copies. That branch calls `JournalWork.stop()`, whose typed
+refusal has always been `journal-layout-limit`. The correction changes only
+the expected refusal name. The zero-copy bound and refusal assertion remain;
+removing that bound would still make the control fail. Product behavior is
+unchanged. The 51 passing cases are not repeated. The changed Git file and
+Native publication, floor and public-command witnesses remain due.
+
+The raw failed run is retained at
+`/private/tmp/artroom-archive-owning-node-evidence-20261022`, with its original
+child and owner status 1. This is not a passing pipeline or a hosted result.
