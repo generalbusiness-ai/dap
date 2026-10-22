@@ -15,7 +15,7 @@ import { counting } from "../../../apps/counter/definition.ts";
 import { COUNTING_DEFINITION } from "../../../apps/counter/pin.ts";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import worker from "../../../apps/room/worker.ts";
-import { hostedTest } from "../../scope/test/worker.ts";
+import { creationTest, hostedTest } from "../../scope/test/worker.ts";
 import { BOUNDS, COMPLETION_BYTES, MODERN, MODERN_RESULT_EXTRA } from "../src/index.ts";
 import { INVITATION_LINK } from "@generalbusiness/artroom-client";
 import { mcpRoom, SERVICE, type Agent, type Room, created as createRoom } from "./fixtures-native.ts";
@@ -193,6 +193,33 @@ const mcp = async (bearer: string, method: string, headers: Record<string, strin
 const META = { "io.modelcontextprotocol/protocolVersion": MODERN, "io.modelcontextprotocol/clientCapabilities": {} };
 const modernCall = (bearer: string, name: string, args: Record<string, unknown>, id = 1) =>
   mcp(bearer, "POST", { "mcp-protocol-version": MODERN, "mcp-method": "tools/call", "mcp-name": name }, { jsonrpc: "2.0", id, method: "tools/call", params: { name, arguments: args, _meta: META } });
+// Invariant: an enrolled native hosted agent's production fetch port carries
+// deployment admission settings, so its signed parentless install is refused.
+// The existing room uses the TEST namespace/clock and a STAND-IN Git provider.
+test("hosted production fetch preserves deployed parentless creation admission", async () => {
+  const room = mcpRoom();
+  const previous = { settings: creationTest.settings, productionHostedFetch: creationTest.productionHostedFetch };
+  hostedTest.now = () => room.now();
+  hostedTest.pause = waiting => room.pause(waiting);
+  try {
+    const rita = room.agent("rita");
+    const { register } = await createRoom(room, rita);
+    creationTest.settings = { DEPLOYMENT: "native-hosted-creation-admission", ARTIFACTS_CONFIG: JSON.stringify({ registerScope: register, namespace: "artroom-demo", host: "scopes.test", maxBytes: 1024, credentialIdentity: "adapter-attempt" }) };
+    creationTest.productionHostedFetch = true;
+    // A unique real registry reservation constructs this agent under those
+    // explicit settings; ports() omits its fetch override for this case.
+    const agent = await hosted(room, rita, "@admission-bot", "creation-admission-agent");
+    const response = await room.wait(() => modernCall(agent.bearer, "create", { definition: "platform:register@3", kind: "install", fields: { host: "artifacts", namespace: "artroom-demo", policy: "keys", founders: [agent.key] }, idempotencyKey: "unplanned-hosted-install" }));
+    const body = await response.json() as { result?: { structuredContent?: Record<string, unknown> }; error?: unknown };
+    expect([response.status, body.error]).toEqual([200, undefined]);
+    expect(body.result?.structuredContent).toMatchObject({ answer: "refused", reason: "unauthorized" });
+  } finally {
+    creationTest.settings = previous.settings;
+    creationTest.productionHostedFetch = previous.productionHostedFetch;
+    done(room);
+  }
+});
+
 const LEGACY = "2025-11-25";
 /** A legacy session: initialized, listed once; its ID and the listed generation. */
 async function legacySession(bearer: string): Promise<string> {

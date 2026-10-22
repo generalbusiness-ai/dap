@@ -54,7 +54,14 @@ with no creator, a path that stays until a register's creation of a
 repository is whole. Every other scope is created by another scope: a
 register's creation of a repository creates its directory, and the directory
 creates membership, the rules scope and the destination. Three limits stand.
-Nothing yet checks the installation's authority to install. The Git host in
+The deployed parentless API admits only the exact signed register install
+pinned by `ARTIFACTS_CONFIG.registerScope`; it refuses an arbitrary install
+or a direct directory founding before addressing a scope object. The exact
+setting `ALLOW_OPEN_CREATION=true` opens that API for local and test
+deployments only; its default is unset. A Worker with no `DEPLOYMENT` keeps
+the local founding interface. Child creation still uses the verified
+namespace send and genesis judgment, not a caller's claim of a creator.
+The Git host in
 the creation witness is a stand-in. A scope Worker is deployed at
 <https://artroom-scope.inguz.workers.dev>; its API starts at `/v1/scopes`,
 and its root URL returns 404. The destination now

@@ -11,8 +11,16 @@ Refusals and unsupported methods are not additional routes.
 
 - **none**: no caller identity or membership proof. Publication and package
   trust checks can still restrict the bytes served.
+- **creation**: parentless serving admission followed by the native genesis
+  judgment. With `DEPLOYMENT` present and `ALLOW_OPEN_CREATION` not exactly
+  `true`, only the verified signed install naming the strict
+  `ARTIFACTS_CONFIG.registerScope` pin is admitted before object selection.
+  Missing or malformed pin settings fail closed. Without `DEPLOYMENT`, or
+  with the explicit local/test opening set to `true`, any key may submit a
+  signed parentless creation for the native judgment. This class describes
+  conditional source behavior; it does not attest live Worker settings.
 - **self-signed**: a valid signature, without a current membership grant.
-  Any fresh key can sign a creation. Signed reads additionally need an eligible
+  Signed reads additionally need an eligible
   local or causal signing history. A settlement needs the exact previously
   accepted signed intent. These restrictions do not establish membership. The six signed-read routes
   also accept scoped sessions for their ordinary complete reads.
@@ -26,6 +34,13 @@ Refusals and unsupported methods are not additional routes.
 - **bearer**: the hosted agent's opaque bearer, compared through its digest.
 - **control**: a signed MCP control request, bound to its action, body, service,
   deadline, repository, and current member authority.
+
+The parentless serving policy is also passed through `ScopeService.create`
+and the hosted agent's in-process scope fetch. A genuine child creation
+continues through namespace delivery, which resolves the creator's sealed
+send and judges genesis. This inventory does not claim that existing scope
+ancestry is checked against a newly configured register pin. The local/test
+opening is not a hosted deployment recommendation.
 
 `:scope` is a scope ID. Other colon names denote one path segment. `*`
 denotes the matched path family, including paths that the family later refuses.
@@ -120,7 +135,7 @@ valid required settings, not whether a particular public room exists.
 | `GET /site/*` | `none` | Publication proof, room and repository reads; render | Activation; provider read-token mint and attempted revoke | 1 MiB file; 64 path segments; 8 KiB path; bounded publication proof; no address rate limit | Scope RPC; configured Git host, including Artifacts token calls |
 | `GET, HEAD /applications/*` | `none` | Address, trust, room, installation and packet checks | Activation; bounded in-memory packet cache | 8 KiB path; fetchSeconds deadlines; two cached packets per bucket; PROPOSED_BOUNDS packet limits | Scope RPC; private R2 reads |
 | `GET /v1/demo/creation-offer` | `none` | Demo config and origin checks; register projection | Activation of configured register | Exact current or legacy register; GET only | Configured register RPC |
-| `POST /v1/scopes` | `self-signed` | JSON, seed computation, object selection, signature | Activation; genesis is written only after signature verification | 1 MiB body; turn bounds; no creation rate limit | Scope namespace; creation follow-up after sealing |
+| `POST /v1/scopes` | `creation` | JSON and seed; closed deployment pin and signature admission before object selection | Refused closed admission selects no object and writes no scope state; accepted or local/open paths activate and judge genesis | 1 MiB body; turn bounds; no creation rate limit | No scope RPC on closed admission refusal; admitted scope namespace and creation follow-up after sealing |
 | `GET /v1/scopes/:scope` | `self-signed` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
 | `GET /v1/scopes/:scope/retained/:kind/:digest` | `self-signed` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
 | `POST /v1/scopes/:scope/sessions` | `membership` | JSON, activation, restart retry; config, signature, scope, clock and key-standing checks | Activation; prior-work retry; replay row written only after standing passes | 1 MiB body; request lifetime 900 s; session 600 s; 64 answered requests per key | Prior-work retry only |
@@ -184,7 +199,7 @@ supply its authority boundary. The table below adds no public archive route.
 | `GET /site/*` | `none` | Publication proof, room and repository reads; render | Activation; provider read-token mint and attempted revoke | 1 MiB file; 64 path segments; 8 KiB path; bounded publication proof; no address rate limit | Scope RPC; configured Git host, including Artifacts token calls |
 | `GET, HEAD /applications/*` | `none` | Address, trust, room, installation and packet checks | Activation; bounded in-memory packet cache | 8 KiB path; fetchSeconds deadlines; two cached packets per bucket; PROPOSED_BOUNDS packet limits | Scope RPC; private R2 reads |
 | `GET /v1/demo/creation-offer` | `none` | Demo config and origin checks; register projection | Activation of configured register | Exact current or legacy register; GET only | Configured register RPC |
-| `POST /v1/scopes` | `self-signed` | JSON, seed computation, object selection, signature | Activation; genesis is written only after signature verification | 1 MiB body; turn bounds; no creation rate limit | Scope namespace; creation follow-up after sealing |
+| `POST /v1/scopes` | `creation` | JSON and seed; closed deployment pin and signature admission before object selection | Refused closed admission selects no object and writes no scope state; accepted or local/open paths activate and judge genesis | 1 MiB body; turn bounds; no creation rate limit | No scope RPC on closed admission refusal; admitted scope namespace and creation follow-up after sealing |
 | `GET /v1/scopes/:scope` | `self-signed` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
 | `GET /v1/scopes/:scope/retained/:kind/:digest` | `self-signed` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
 | `POST /v1/scopes/:scope/sessions` | `membership` | JSON, activation, restart retry; config, signature, scope, clock and key-standing checks | Activation; prior-work retry; replay row written only after standing passes | 1 MiB body; request lifetime 900 s; session 600 s; 64 answered requests per key | Prior-work retry only |
@@ -230,7 +245,7 @@ header or body authentication. Application screens need an uncommitted
 | `GET /site/*` | `none` | Publication proof, room and repository reads; render | Activation; provider read-token mint and attempted revoke | 1 MiB file; 64 path segments; 8 KiB path; bounded publication proof; no address rate limit | Scope RPC; configured Git host, including Artifacts token calls |
 | `GET, HEAD /applications/*` | `none` | Address, trust, room, installation and packet checks | Activation; bounded in-memory packet cache | 8 KiB path; fetchSeconds deadlines; two cached packets per bucket; PROPOSED_BOUNDS packet limits | Scope RPC; private R2 reads |
 | `GET /v1/demo/creation-offer` | `none` | Demo config and origin checks; register projection | Activation of configured register | Exact current or legacy register; GET only | Configured register RPC |
-| `POST /v1/scopes` | `self-signed` | JSON, seed computation, object selection, signature | Activation; genesis is written only after signature verification | 1 MiB body; turn bounds; no creation rate limit | Scope namespace; creation follow-up after sealing |
+| `POST /v1/scopes` | `creation` | JSON and seed; closed deployment pin and signature admission before object selection | Refused closed admission selects no object and writes no scope state; accepted or local/open paths activate and judge genesis | 1 MiB body; turn bounds; no creation rate limit | No scope RPC on closed admission refusal; admitted scope namespace and creation follow-up after sealing |
 | `GET /v1/scopes/:scope` | `self-signed` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
 | `GET /v1/scopes/:scope/retained/:kind/:digest` | `self-signed` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
 | `POST /v1/scopes/:scope/sessions` | `membership` | JSON, activation, restart retry; config, signature, scope, clock and key-standing checks | Activation; prior-work retry; replay row written only after standing passes | 1 MiB body; request lifetime 900 s; session 600 s; 64 answered requests per key | Prior-work retry only |

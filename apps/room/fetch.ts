@@ -22,7 +22,7 @@ export default {
     if (hosted) return hosted;
     const application = await applicationPage(request, env);
     if (application) return application;
-    return new URL(request.url).pathname === DEMO_OFFER_PATH ? demoCreationRoute(request, env) : isSite(request) ? site(request, env) : isPage(request) ? page(request) : isBrand(request) ? brand(request) : route(request, env.SCOPES);
+    return new URL(request.url).pathname === DEMO_OFFER_PATH ? demoCreationRoute(request, env) : isSite(request) ? site(request, env) : isPage(request) ? page(request) : isBrand(request) ? brand(request) : route(request, env.SCOPES, env);
     });
   },
 };

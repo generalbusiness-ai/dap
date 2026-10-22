@@ -44,6 +44,7 @@ or in the command line's config.
 | Name | Kind | What it is |
 |---|---|---|
 | `DEPLOYMENT` | setting | The deployment's name, 1 to 128 bytes. Every read session names it. |
+| `ALLOW_OPEN_CREATION` | setting | Local and test deployments only: the exact string `true` opens parentless creation. Default unset. With `DEPLOYMENT` set, every other value permits only the exact signed register install pinned by valid `ARTIFACTS_CONFIG.registerScope`; a direct directory founding is refused before namespace lookup. Never enable this on a hosted production Worker. |
 | `SESSION_SECRET` | secret | At least 32 bytes from a cryptographic random source. It signs read sessions. Without it, or without `DEPLOYMENT`, no session is issued or accepted. Replacing it ends every session at once. |
 | `GITHUB_APP_CONFIG` | setting | JSON with exactly the fields below. Without it, or if it is not valid, the Worker sends nothing to GitHub: attempts are recorded and wait. |
 | `GITHUB_APP_PRIVATE_KEY` | secret | The GitHub App's private key, as PKCS #8 PEM (`BEGIN PRIVATE KEY`). GitHub gives a PKCS #1 key (`BEGIN RSA PRIVATE KEY`); convert it, with no passphrase. The Worker uses it to mint short-lived tokens that let a destination push. |
@@ -112,8 +113,20 @@ artifacts`, `--namespace artroom-demo` and `ARTIFACTS_CONFIG`
 
 ### The earlier order, and its wait
 
+On a Worker with `DEPLOYMENT` set, the parentless creation API now requires
+the Artifacts register pin before installation. Preserve the original
+planned install bytes and set `ARTIFACTS_CONFIG.registerScope` before
+deploying this change; a missing or invalid setting refuses new parentless
+creation. Existing scopes keep their definitions and journals. The GitHub
+pin alone does not admit a new register on this deployed API. The planner
+must check the Artifacts pin and leave `ALLOW_OPEN_CREATION` unset on
+`artroom-scope`, `dap-grow` and `dap-lending`, then redeploy each reviewed
+Worker. A local or test deployment that needs arbitrary founding may set
+`ALLOW_OPEN_CREATION=true` explicitly; no builder deployment is implied.
+
 `dap install <base-url> --host ... --namespace ...` with no plan
-still works: it creates the register at once and prints the register ID, and the
+works only on an unconfigured local Worker or an explicitly opened local/test
+deployment: it creates the register at once and prints the register ID, and the
 setting is set after it. Then the register's object may have started
 before the setting took effect. A claim's creation is then recorded and
 not sent until the object sees the setting. Observed on 2026-10-07, that
