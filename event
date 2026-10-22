@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2807bdb111c1236cc1a6a41e534265a3322c5bed"}
+{"kind":"promise","text":"Implement current-pin verified creator ancestry after the partial parentless admission landing, preserving refusal before state writes. Checker review for each exact head; one final-head gate; no builder deployment."}
