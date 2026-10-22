@@ -1,12 +1,14 @@
 # Definition succession
 
-Design note, draft 3, for request `95d01d30`. Draft 2 answered review
+Design note, draft 4, for request `95d01d30`. Draft 2 answered review
 `f1e3ca14`: the journal after the cutoff, carried item identity, one
 successor for each cutoff, and what the genesis can refuse (sections 5 to
 8). Draft 3 answers review `10680d72`: a typed walk over every reference
 in a carried item (section 6.2), and a frozen application projection
-beside the ordinary state digest (section 7). Proposed: nothing here is
-built.
+beside the ordinary state digest (section 7). Draft 4 answers review
+`b922444a`: the export and the application projection have separate
+canonical inputs and digests (section 5 terms, section 7). Proposed:
+nothing here is built.
 
 A Counter has run in a room for four months. It holds sixteen
 participants, a board and a pledged promise that is due on Friday. Its
@@ -245,7 +247,12 @@ Terms:
 - **Cutoff entry**: the predecessor's entry for `retire`. The predecessor's
   items never change after it (section 7).
 - **Export**: the predecessor's live items at the cutoff entry, in
-  canonical form, ordered by item ID.
+  canonical form, ordered by item ID. Its digest, the export digest, is
+  the digest of that canonical list. It is what carries.
+- **Application projection**: every item of the predecessor at the cutoff
+  entry, live and final, in canonical form, ordered by item ID. Its digest,
+  the projection digest, is the digest of that canonical list. It is what
+  stays frozen (section 7).
 - **Mapping**: data that turns an export under the old definition into
   items under the new definition (section 6).
 - **ID table**: the pairs of old item ID and new item ID (section 6).
@@ -274,9 +281,9 @@ Steps:
    from its recorded creator (the seed's `creator`). It checks that no work
    is in flight (section 8) and that the mapping admits its export: every
    mapped item is valid under the successor definition, within its limits.
-   If both hold, the entry is the cutoff entry. It records the export and
-   its digest, the successor definition digest, the mapping digest, the
-   creator, and the status `retired`. It sends its result to the directory.
+   If both hold, the entry is the cutoff entry. It records the export, the
+   export digest, the projection digest, the successor definition digest,
+   the mapping digest, the creator, and the status `retired`. It sends its result to the directory.
 5. **Creation.** The directory records the result in one entry, D. D moves
    the application item to `creating-successor`, records the successor seed
    digest in the item, and sends `create` with the successor seed (section
@@ -486,12 +493,18 @@ the cutoff entry is not the predecessor's last entry. The rule:
   the successor's reference and no item change; and floor entries, validated as for any scope, with no application effect. The
   predecessor writes nothing else: no act takes effect, no timed rule runs,
   and no operation is open (section 8).
-- **Application projection.** The frozen part is named separately: every
-  item (live and final), with its ID, type, state, revision, opening hash,
-  parties, references, values and origin, and the next item ID. Its digest
-  is the export digest that the cutoff entry records. After the cutoff, the
-  projection and its digest stay equal to those at the cutoff entry.
-  Replay checks this.
+- **Application projection.** The frozen part is the application
+  projection of section 5: every item, live and final, with its ID, type,
+  state, revision, opening hash, parties, references, values and origin.
+  It holds no ID allocator: a new item's ID is the position of its opening
+  entry, and positions move on past later entries, so they are not part of
+  the frozen state. After the cutoff, the projection digest stays equal to
+  the one that the cutoff entry records. Replay checks this.
+- **Two digests, two purposes.** The export digest covers the live items
+  that carry, and the successor checks it. The projection digest covers
+  every item, final items included, and replay of the predecessor checks it
+  after the cutoff. With a final item they differ, and each has its own
+  name.
 - **Journal state moves on.** The ordinary state digest keeps its meaning
   (`packages/derive/src/state.ts:174-220`): it covers the head, the time,
   decided deliveries and the floor, and it changes with each later entry as
@@ -742,12 +755,14 @@ sets `target` between 1 and 100.
    the predecessor before its cutoff is refused `unknown-act`.
 7. **Deadline.** The promise's deadline passes during the handoff, and the
    successor's first timed drain after activation expires it.
-8. **Late delivery.** A delivery to the predecessor after the cutoff is
-   recorded refused `succeeded`. Its repeat is answered from the inbox row
-   with no new entry. Then `forward` and a floor entry follow. Through all
-   four, the application projection's digest stays equal to the cutoff's,
-   while the head, the inbox and the floor change as for any scope. Replay
-   agrees.
+8. **Late delivery.** The predecessor holds a final item at the cutoff,
+   for example a `fulfilled` promise, and the export leaves it out. A
+   delivery to the predecessor after the cutoff is recorded refused
+   `succeeded`. Its repeat is answered from the inbox row with no new entry.
+   Then `forward` and a floor entry follow. Through all four, the projection
+   digest stays equal to the cutoff's and includes the final item; the
+   export digest that the successor checked excludes it. The head, the inbox
+   and the floor change as for any scope. Replay agrees.
 9. **URI.** The predecessor's URI resolves. Its reads report `retired`
    and, after `forward`, the successor's reference. Its journal reads as
    before.
