@@ -9,7 +9,7 @@
  * and gives no other identifier. No plaintext is recorded in an outside
  * answer.
  */
-import type { RetainedInput } from "@generalbusiness/dap-contract";
+import type { RetainedInput, Timestamp } from "@generalbusiness/dap-contract";
 import { timeMs, timeOf } from "@generalbusiness/artroom-bytes";
 import type { DestinationObject, RecordedJudgeEvidence } from "@generalbusiness/dap-platform";
 import { GitRefusal, READ_BOUNDS, Reader, type GitSource, type ReadBounds } from "@generalbusiness/artroom-git";
@@ -17,7 +17,7 @@ import { SmartHttpSource } from "@generalbusiness/artroom-git/http-read";
 import type { DestinationBinding, DestinationInspection, DestinationProvider, DestinationRepository } from "./destination-host.ts";
 import { deleteRefOnce, inspectGit, sendOnce, type DestinationRefDeletion } from "./github-host.ts";
 import type { RegisterProvider } from "./register-host.ts";
-import { fixtureArchiveProvider, type FixtureArchivePorts } from "./archive-host.ts";
+import { archiveProvider, fixtureArchiveProvider, type FixtureArchivePorts } from "./archive-host.ts";
 
 /** A repository handle of the binding: the parts this port uses. */
 export interface ArtifactsRepository {
@@ -99,6 +99,48 @@ export class ArtifactsProvider implements RegisterProvider, DestinationProvider 
     if (!repositoryName(options.namespace) || !/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/.test(options.service) || !Number.isSafeInteger(options.maxBytes) || options.maxBytes < 32) bad();
     this.#options = { ...options };
     this.#bounds = { ...(options.bounds ?? READ_BOUNDS) };
+  }
+
+  /** Host-only archive authority, outside the destination operation ledger.
+   * The service binding mints actual expiring credentials for one repository.
+   * The shared adapter binds every write credential to one scope/ref/pass. */
+  archive(clock: () => Timestamp) {
+    const repositories = new WeakMap<object, DestinationRepository>();
+    const active = (allowed: () => boolean): void => { if (!allowed()) bad(); };
+    return archiveProvider({ clock, tokens: {
+      read: async (repository, allowed) => {
+        this.#remote(repository); active(allowed);
+        const remote = await this.#options.binding.get(repository.name); active(allowed);
+        const token = await remote.createToken("read", READ_TTL); active(allowed);
+        const now = timeMs(clock()), ends = timeMs(endsOf(own(token, "expiresAt")));
+        if (own(token, "scope") !== "read" || now === null || ends === null || ends <= now) return bad();
+        return plaintextOf(own(token, "plaintext"));
+      },
+      mint: async (repository, _at, allowed) => {
+        this.#remote(repository); active(allowed);
+        const remote = await this.#options.binding.get(repository.name); active(allowed);
+        const token = await remote.createToken("write", WRITE_TTL); active(allowed);
+        if (own(token, "scope") !== "write") return bad();
+        const credential = { id: crypto.randomUUID(), ends: endsOf(own(token, "expiresAt")), plaintext: plaintextOf(own(token, "plaintext")) };
+        repositories.set(credential, { ...repository });
+        return credential;
+      },
+      revoke: async credential => {
+        const repository = repositories.get(credential); repositories.delete(credential);
+        if (!repository) return;
+        const remote = await this.#options.binding.get(repository.name);
+        // A service without revoke still enforces its reported expiry.
+        if (typeof remote.revokeToken === "function") await remote.revokeToken(credential.plaintext);
+      },
+    } }, {
+      transport: (repository, plaintext) => ({ ...this.#transport(this.#remote(repository)), ...(plaintext === undefined ? {} : { authorization: `Bearer ${plaintextOf(plaintext)}` }) }),
+      identity: async (repository, _plaintext, allowed) => {
+        active(allowed);
+        const remote = await this.#options.binding.get(repository.name); active(allowed);
+        const info = await remote.info(); active(allowed);
+        if (own(info, "remote") !== this.#remote(repository)) return bad();
+      },
+    });
   }
 
   /** No binding token creation: archive credentials are fixture stand-ins. */

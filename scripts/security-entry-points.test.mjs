@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import { assertInventory, documentedInventory, servedInventory, sourceSeal } from "./security-entry-points.mjs";
+import { assertInventory, documentedInventory, servedInventory, sourceSeal, roomHttpEntry } from "./security-entry-points.mjs";
 
 // Reviewed matcher/gate owners. These are change tripwires, not runtime proof.
 const seals = {
@@ -32,10 +32,27 @@ const seals = {
   "examples/grow/simulator-worker.ts": "2d60dab3a9a5b204b69f15bc5ec3473fa48513888d7ffdb0c1fc179f6fe4883c",
   "examples/grow/simulator-host.ts": "53668f18cbfb33bf8ad38892fdbafd4aba3736b7987238e643e0d661cee6c1bf"
 };
+// SOURCE checkpoint only: compute and review these exact integrated AST seals
+// with the owning parser before any runtime acceptance or formal review.
+const pendingArchiveSeals = {
+  "packages/scope/src/object.ts": null, // Refresh existing owner after the F2/archive union.
+  "apps/room/worker.grow.ts": null,
+  "apps/room/archive-policy.ts": null,
+  "apps/room/archive.ts": null,
+  "packages/scope/src/archive-host-item.ts": null,
+  "packages/scope/src/archive-target.ts": null,
+  "packages/scope/src/archive-host.ts": null,
+  "packages/scope/src/artifacts-host.ts": null,
+  "packages/scope/src/artifacts-wiring.ts": null,
+};
 const document = () => documentedInventory(readFileSync(new URL("../docs/security/entry-points.md", import.meta.url), "utf8"));
 
 test("every served Worker route/method has exactly its reviewed gate-class row", async () => {
   assertInventory(await servedInventory(), document());
+  for (const [file, seal] of Object.entries(pendingArchiveSeals)) {
+    assert.equal(typeof seal, "string", `Integrated AST seal is pending review: ${file}`);
+    assert.equal(sourceSeal(file), seal, `Review changed archive authority owner: ${file}`);
+  }
   for (const [file, seal] of Object.entries(seals)) assert.equal(sourceSeal(file), seal, `Review changed matcher or gate owner: ${file}`);
 });
 
@@ -51,6 +68,22 @@ test("a real matcher change fails the inventory bijection with the page unchange
 });
 
 test("the bijection rejects a missing row, an extra row, and a changed gate", async () => {
+  // These in-memory composition controls never import a Worker module.
+  const grow = readFileSync(new URL("../apps/room/worker.grow.ts", import.meta.url), "utf8");
+  const forward = 'export { default } from "./worker.ts";';
+  assert.equal(grow.split(forward).length, 2);
+  assert.equal(roomHttpEntry("apps/room/worker.grow.ts"), "apps/room/fetch.ts");
+  const modeled = changed => roomHttpEntry("apps/room/worker.grow.ts", file =>
+    file === "apps/room/worker.grow.ts" ? changed : readFileSync(new URL("../" + file, import.meta.url), "utf8"));
+  for (const changed of [
+    grow.replace(forward, 'export { default } from "./other.ts";'),
+    grow.replace(forward, 'export { fetch as default } from "./worker.ts";'),
+    grow.replace(forward, 'export default {};'),
+  ]) assert.throws(() => modeled(changed), { code: "ERR_ASSERTION" });
+  // Duplicate defaults are invalid module syntax. Either the parser or the
+  // composition model must refuse; do not normalize production parse errors.
+  assert.throws(() => modeled(grow + '\nexport { default } from "./worker.ts";'));
+  assert.throws(() => roomHttpEntry("apps/room/unreviewed.ts"), { code: "ERR_ASSERTION" });
   const actual = await servedInventory();
   for (const fault of [rows => rows.slice(1), rows => [...rows, { route: "POST /unserved", gate: "none" }], rows => rows.map((row, i) => i === 0 ? { ...row, gate: "membership" } : row)]) {
     const docs = document(); docs.set("artroom-scope", fault(docs.get("artroom-scope")));

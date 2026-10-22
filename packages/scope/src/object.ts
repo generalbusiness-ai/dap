@@ -47,7 +47,8 @@ import { JoinLimits, isJoin, type LimitConfig } from "./limits.ts";
 import { Operations, type Outside } from "./operations.ts";
 import { OperatorRecord, sendAgain, type Incident, type Resent } from "./operator.ts";
 import { Dispatcher, Wakes } from "./outbox.ts";
-import { ArchiveDriver, type FixtureArchiveDriverOptions } from "./archive-driver.ts";
+import { ArchiveDriver, type FixtureArchiveDriverOptions, type RoomArchiveDriverOptions } from "./archive-driver.ts";
+import { archiveHostItem, type ArchiveHostConfiguration, type ArchiveHostItemAsk } from "./archive-host-item.ts";
 import { GenesisProofs, type ProofTimer } from "./genesis-proof.ts";
 import { EXACT_PROOF_RECEIVER_BOUNDS, ProofBytes } from "./proof-bytes.ts";
 import { PreparationFlights } from "./preparation-flight.ts";
@@ -119,11 +120,15 @@ export interface Wiring {
   /** Fixture milestone only. Absent from all deployed/default wiring. A0b
    * admission, policy ownership and production configuration remain due. */
   fixtureArchive?: Omit<FixtureArchiveDriverOptions, "sql" | "current" | "clock" | "bounds">;
+  /** Explicit trusted host admission; absent on the generic deployment. */
+  archiveHost?: ArchiveHostConfiguration;
+  archive?: (given: OutsideGiven, sql: Sql, bounds: Bounds) => Omit<RoomArchiveDriverOptions, "sql" | "current" | "clock" | "bounds"> | null;
 }
 
 export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   readonly #archive: ArchiveDriver | null;
   readonly #floorOffer: (() => import("@generalbusiness/dap-contract").FloorInput | null) | null;
+  readonly #archiveItem: (ask: ArchiveHostItemAsk) => import("./item-queries.ts").NativeItemQuery;
   readonly #name: ScopeId | null;
   readonly #store: SqliteStore;
   readonly #readSql: Pick<Sql, "exec">;
@@ -178,7 +183,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     const alarm: Alarm = { set: (at) => (at === null ? ctx.storage.deleteAlarm() : ctx.storage.setAlarm(timeMs(at)!)) };
     const given: Ports = { ...production(), alarm, ...wiring.ports };
     // The one alarm serves the earliest deadline, the next attempt of an outside operation and, with a transport, the next dispatch.
-    const wakes = new Wakes(store, given.alarm, given.transport !== null, wiring.fixtureArchive ? () => this.#archive?.wake() ?? null : undefined);
+    const wakes = new Wakes(store, given.alarm, given.transport !== null, wiring.fixtureArchive || wiring.archive ? () => this.#archive?.wake() ?? null : undefined);
     this.#wakes = wakes;
     // The authority of a deployed scope reads this scope's own genesis entry, for the membership scope that it records.
     const genesis = (): Extract<Input, { type: "genesis" }> | null => {
@@ -203,14 +208,15 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
       operationsFor: (...args) => store.operationsFor(...args), account: (...args) => store.account(...args), accountsOf: (...args) => store.accountsOf(...args),
       lookup: (...args) => store.lookup(...args), all: () => store.all(),
     };
-    const outside = wiring.outside?.({
+    const outsideGiven: OutsideGiven = {
       ...made, state: outsideState,
       retained: (...args) => store.retained(...args),
       own: (seq) => {
         const kept = Number.isSafeInteger(seq) && seq >= 0 ? store.stored(seq) : null;
         return kept ? { entry: JSON.parse(kept.bytes) as Entry, hash: kept.hash } : null;
       },
-    });
+    };
+    const outside = wiring.outside?.(outsideGiven);
     const ports: Ports = { ...given, alarm: wakes.deadline, ...(authority ? { authority } : {}), ...(readers ? { readers } : {}), ...(outside ? { outside } : {}) };
     // The operator's record: two tables of this object's storage that are no part of the store, and that no judgment is given.
     const record = new OperatorRecord({ exec: (query, ...bindings) => ctx.storage.sql.exec(query, ...bindings) }, ports.clock, () => store.scope()?.at ?? null);
@@ -219,6 +225,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     this.#proofBytes = new ProofBytes(this.#readSql);
     this.#genesisProofs = new GenesisProofs(this.#proofBytes, ports.proofs ?? null);
     this.#scope = new Scope(this.#name, store, ports, bounds);
+    this.#archiveItem = ask => archiveHostItem(this.#readSql, outsideGiven, this.#scope.pinned(), wiring.archiveHost ?? null, ask);
     // A signed read is judged on this scope's clock, within the authority window of an intent (`signed-reads.ts`).
     // An entry that an entry of a cause chain names: one of this scope's own, one it retains, or one read from its own scope.
     this.#chains = new Chains(store, async (use) => {
@@ -244,8 +251,11 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     this.#resolver = ports.resolver;
     this.#record = record;
     this.#streams = new Streams(ports.readers, () => store.scope()?.head ?? null);
-    this.#archive = wiring.fixtureArchive ? new ArchiveDriver({
-      ...wiring.fixtureArchive, sql: { ...this.#readSql, transaction: closure => ctx.storage.transactionSync(closure) },
+    const archiveSql: Sql = { ...this.#readSql, transaction: closure => ctx.storage.transactionSync(closure) };
+    if (wiring.fixtureArchive && wiring.archive) throw new Error("archive wiring must have one owner");
+    const archive = wiring.archive?.(outsideGiven, archiveSql, bounds) ?? wiring.fixtureArchive;
+    this.#archive = archive ? new ArchiveDriver({
+      ...archive, sql: archiveSql,
       current: () => store.scope(), clock: () => ports.clock.read(), bounds,
     }) : null;
     const floorEnabled = wiring.fixtureArchive && [...wiring.fixtureArchive.policies.registry.values()].some(policy => policy.floor !== undefined);
@@ -289,6 +299,19 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     if (pending || maintenance !== null) {
       // Preserve a durable earlier wake across repeated activation.
       ctx.waitUntil(Promise.resolve(wakes.maintenance.set(pending ? maintenance ?? this.#maintenanceAt() : null)));
+    }
+    // A running room may bind after its quiet scopes' last commit. Its busy
+    // child's checked target route activates Directory; its own charged full
+    // discovery activates the quiet Rules sibling. Schedule the existing
+    // prefix without awaiting host I/O or appending an
+    // entry. Generic/fixture deployments retain their old activation behavior.
+    if (archive && "production" in archive) {
+      const existing = store.scope(), birth = genesis();
+      if (existing?.status === "active" && birth?.decision === "applied" && archive.admit(existing.at, birth.seed)) {
+        this.#archive?.committed();
+        try { ctx.waitUntil(Promise.resolve(wakes.set()).catch(() => undefined)); }
+        catch { /* Archive scheduling cannot refuse an existing native scope. */ }
+      }
     }
   }
 
@@ -453,6 +476,8 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   }
   /** One owned bounded query; starts no activation turn or legacy read walk. */
   queryItems(encoded: unknown, reader: unknown) { return this.#itemQueries.read(encoded, reader); }
+  /** Namespace-only host capability; intentionally absent from HTTP routing. */
+  archiveItem(ask: ArchiveHostItemAsk) { return this.#archiveItem(ask); }
   applicationProjection(encoded: unknown, reader: unknown) { return this.#applicationProjections.read(encoded, reader); }
   /** Admission of identifiers precedes authority and storage work. */
   async requests(reader: unknown, request?: string, trace?: string, cursor?: string) {

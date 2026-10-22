@@ -331,4 +331,70 @@ not prove this person-in-AI acceptance.
 Record subsequent autonomous ticks between visits and the next fault cycle's
 incident evidence. Record the actual observer and times. Archive disclosure
 and the day/clone exit test wait for the separate demo-room archive slice;
-this runbook claims no S2b export or A0b production admission.
+this runbook records no hosted archive acceptance by itself.
+
+## Enable the reviewed room archive
+
+The planner performs these steps under promise `2fcf3c3a`, after exact-head
+review and Main publication. Keep the signed simulator running at its
+one-minute cadence throughout.
+
+1. Read the established repository item from Directory
+   `sc_ryghgistvpshbaznxlbleop5zqruy2kmogy4jeigr7j3yqlewceq` with the
+   operator's ordinary authenticated read. Check its recorded repository
+   name, `ryghgistvpshbaznxlbleop5zqruy2kmogy4jeigr7j3yqlewceq-1`, and
+   namespace, `artroom-demo`. Take the repository ID from that item.
+   Do not copy or infer the ID from the name or this runbook.
+2. Check the reviewed `ARTIFACTS_CONFIG` register, service hostname and
+   namespace against the actual binding. Check `GROW_ARCHIVE_CONFIG` names
+   this directory, repository name and exact signed demo release. It contains
+   no token or repository ID. The existing `DeployedScope` class name,
+   migrations and namespace stay intact; Grow uses `worker.grow.ts`.
+3. Deploy the reviewed scope Worker from a scratch directory:
+
+   ```sh
+   npx --yes --package wrangler@4.147.0 -- wrangler deploy --config "${GROW_CHECKOUT:?Set the reviewed checkout}/apps/room/wrangler.grow.jsonc"
+   ```
+
+   Record the actual Worker version and settings. Set no archive Worker
+   secret. Decision `9674108a` replaces the earlier secret requirement:
+   the Artifacts binding mints one write token for each pass, with a requested
+   lifetime of 900 seconds and the service's actual expiry. The adapter
+   revokes that token when the pass ends, or relies on service expiry when
+   the service offers no revocation. Archive tokens never enter a journal,
+   archive, command argument, source file, or public log.
+4. In the operator's established Grow context, inspect the directory's
+   current acts and submit the binding:
+
+   ```sh
+   dap act bind-archive --on sc_ryghgistvpshbaznxlbleop5zqruy2kmogy4jeigr7j3yqlewceq --target 0 --set archive=journal
+   ```
+
+   Retain the accepted entry and read back `archive: "journal"` from the
+   exact repository item. A binding is not an archive receipt. Keep an
+   uncertain answer distinct from an accepted one; use ordinary custody
+   recovery before submitting another request.
+5. Read back confirmed archive progress for Room A, its application root,
+   Directory16, Rules10 and Destination12. Check each journal begins at
+   position 0, including scopes created before binding. The refs are
+   `refs/artroom/journal/<scope ID>` in the room's own repository. Record
+   the five full scope references, commits and confirmed cutoffs.
+6. As a member, use `dap clone` with its short-lived read token. Include the
+   five archive refs in the local clone. Run A2's repository reader and
+   offline replay against that clone, with the explicitly recorded caller
+   anchors and omitted-text qualifications. Retain all five reports and
+   check the archive objects contain no secret. Register17 and Membership8
+   journals stay excluded: their referenced facts and observed values remain
+   on the caller's word. Omitted text metadata proves neither its omitted
+   bytes nor their bounds.
+7. After those hosted readbacks succeed, publish the `/grow/` disclosure:
+   the journal is archived in the room's repository, and members can clone
+   it for offline replay. There is no public clone URL. Record further
+   simulator ticks at their signed cadence.
+
+Archiving copies entries; it does not reduce Room A's held entry count.
+F2 supplies the retained floor and its witnesses. F3 separately enables
+the floor for Room A, with margin 10,000 and minimum 1,000, and proves the
+count falls after a confirmed pass. No production floor is enabled by this
+archive configuration. Copies, a clone, or offline replay alone do not
+complete the journal-bound obligation.

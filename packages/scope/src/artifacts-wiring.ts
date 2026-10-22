@@ -31,24 +31,25 @@ export interface ArtifactsBindings {
   /** The Worker's binding to one namespace of the service. */
   ARTIFACTS?: unknown;
 }
-interface Configuration { registerScope: ScopeId; namespace: string; host: string; maxBytes: number; credentialIdentity: "adapter-attempt" }
+export interface ArtifactsConfiguration { registerScope: ScopeId; namespace: string; host: string; maxBytes: number; credentialIdentity: "adapter-attempt" }
 
 /** The same nonsecret host selector used by the production wiring. */
 export function artifactsRegisterScope(raw: unknown): ScopeId | null {
   try { return configuration(typeof raw === "string" ? raw : undefined)?.registerScope ?? null; }
   catch { return null; }
 }
-function configuration(raw: string | undefined): Configuration | null {
+export function artifactsConfiguration(raw: string | undefined): ArtifactsConfiguration | null {
   if (typeof raw !== "string" || raw.length > 4096) return null;
   const value = exact(parseStrict(raw), ["registerScope", "namespace", "host", "maxBytes", "credentialIdentity"]);
   if (!value || !isScopeId(value["registerScope"]) || typeof value["namespace"] !== "string" || !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,99}$/.test(value["namespace"]) || typeof value["host"] !== "string" || value["host"].length > 253 || typeof value["maxBytes"] !== "number" || !Number.isSafeInteger(value["maxBytes"]) || value["maxBytes"] < 32 || value["credentialIdentity"] !== "adapter-attempt") return null;
-  return value as unknown as Configuration;
+  return value as unknown as ArtifactsConfiguration;
 }
-function binding(value: unknown): ArtifactsNamespace | null {
+export function artifactsBinding(value: unknown): ArtifactsNamespace | null {
   if ((typeof value !== "object" && typeof value !== "function") || value === null) return null;
   const binding = value as Record<string, unknown>;
   return typeof binding["get"] === "function" && typeof binding["create"] === "function" && typeof binding["delete"] === "function" ? value as ArtifactsNamespace : null;
 }
+const configuration = artifactsConfiguration, binding = artifactsBinding;
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS private_creation_credential (

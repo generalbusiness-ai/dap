@@ -12,6 +12,7 @@ import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { COUNTING_COHORT, platform } from "@generalbusiness/dap-platform";
 import { forecastArchiveForeignLookup, forecastArchiveForeignSelection, forecastArchiveForeignBasis, forecastArchiveForeignScan, forecastArchiveForeignRepeat, forecastArchiveForeignCopyRequest, forecastArchiveForeignCopySize, forecastArchiveForeignGenesis, forecastArchiveForeignColdCopy } from "../src/archive-foreign-cost.ts";
 import { ArchiveRetainedReader } from "../src/archive-retained.ts";
+import { forecastArchiveSupportMetadata } from "../src/archive-support-cost.ts";
 import { ArchiveScout } from "../src/archive-scout.ts";
 import { ArchiveForeignPlan } from "../src/archive-foreign-plan.ts";
 import { ARCHIVE_BOUNDS, ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
@@ -593,4 +594,30 @@ test("a genuine legacy membership copy refuses before body selection despite fix
       expect(result).toEqual({ ok: false, reason: "unsupported-credential-cohort" }); expect(bodies).toEqual([]);
     });
   } finally { life.release(); }
+});
+
+test("recorded cold foreign support uses one paid validation walk and keeps recording charges", async () => {
+  const f = await fixture();
+  const policies = new Map(f.policies), reviewed = policies.get(definition.digest)!;
+  policies.set(definition.digest, { ...reviewed, support: { ...reviewed.support,
+    records: new Map([["hold@1", new Set(["positive-support-control"])]]) } });
+  await f.consumer.inside(state => {
+    const sql = archiveSql(state), prefix = archivePrefixMetadata(sql, f.consumer.at, f.through,
+      PROPOSED_BOUNDS, new ArchiveBudget(), new Set([receiver.digest]));
+    const position = prefix.positions.find(position => archiveEntryHeader(sql, { kind: "local", position }, new ArchiveBudget()).uses === 1)!;
+    expect(position).toBeDefined();
+    const ordinaryBudget = new ArchiveBudget(), recordedBudget = new ArchiveBudget();
+    const ordinary = new ArchiveForeignMetadata(sql, f.sources, policies, PROPOSED_BOUNDS, ordinaryBudget, new Set(), receiver.digest);
+    const recorded = new ArchiveForeignMetadata(sql, f.sources, policies, PROPOSED_BOUNDS, recordedBudget, new Set(), receiver.digest, { record: true });
+    ordinary.scan(position, 1); recorded.scan(position, 1);
+    // Reading the immutable report has its own original charge, excluded here.
+    const ordinaryCost = ordinaryBudget.admitted(), recordedCost = recordedBudget.admitted();
+    const scan = recorded.recorded(position), cold = scan.requests.filter(request => request.kind === "cold");
+    expect(cold).toHaveLength(1);
+    expect(forecastArchiveSupportMetadata(cold[0]!.footprint.support).inputWork).toBeGreaterThan(0);
+    for (const key of ["entries", "attempts", "nodes", "calls"] as const) expect(recordedCost[key]).toBe(ordinaryCost[key]);
+    expect(recordedCost.metadata - ordinaryCost.metadata).toBe(512 + cold.length * 640);
+    expect(recordedCost.inputWork - ordinaryCost.inputWork).toBe(1024 + cold.length * 1280);
+    expect(Object.isFrozen(cold[0]!.footprint.support)).toBe(true);
+  });
 });

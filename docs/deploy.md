@@ -21,6 +21,15 @@ The config records `DEPLOYMENT=dap-grow-v1`, the exact register/Artifacts
 settings and the single signed demo release/publisher trust row.
 Set `SESSION_SECRET` separately from stdin.
 
+The reviewed Grow archive entry preserves the existing `DeployedScope`
+class and namespace. `GROW_ARCHIVE_CONFIG` pins its directory, repository
+name and signed demo release. The room's admitted `archive: "journal"`
+binding authorizes its archiver's two internal item reads; no member or
+session stands for host authority. The Artifacts binding mints short-lived
+archive tokens for individual passes. There is no archive Worker secret.
+The room repository remains private, and its repository ID comes from the
+directory item. Generic Worker configurations enable no archive.
+
 For a reviewed deployment, use pinned Wrangler 4.147.0 from a scratch
 directory and pass the absolute path to `wrangler.grow.jsonc`. The
 [Grow runbook](../examples/grow/runbook.md) gives the command, the planner's

@@ -7,18 +7,18 @@ import { GitRefusal, READ_BOUNDS, Reader, type GitSource } from "@generalbusines
 import { journalId, journalRef, type JournalObject } from "@generalbusiness/artroom-git/journal";
 import { SmartHttpSource } from "@generalbusiness/artroom-git/http-read";
 import type { SmartHttpOptions } from "@generalbusiness/artroom-git/http";
-import type { ArchiveCredential, FixtureArchiveProvider } from "./archive-driver.ts";
+import type { ArchiveCredential, ArchiveProvider, FixtureArchiveProvider } from "./archive-driver.ts";
 import type { DestinationRepository } from "./destination-host.ts";
 import { sendOnce } from "./github-host.ts";
 import { sendArchiveAppend } from "./archive-send.ts";
 
 /** Explicit stand-ins. Production credentials cannot be selected by config. */
-export interface FixtureArchiveTokens {
-  readonly fixture: "archive-tokens";
+export interface ArchiveTokens {
   read(repository: DestinationRepository, allowed: () => boolean): Promise<string | undefined>;
   mint(repository: DestinationRepository, at: ScopeRef, allowed: () => boolean): Promise<ArchiveCredential | null>;
   revoke(credential: ArchiveCredential): Promise<void>;
 }
+export interface FixtureArchiveTokens extends ArchiveTokens { readonly fixture: "archive-tokens" }
 export interface FixtureArchivePorts {
   readonly fixture: "archive-ports";
   readonly tokens: FixtureArchiveTokens;
@@ -35,6 +35,12 @@ const check = (allowed: () => boolean): void => { if (!allowed()) bad(); };
  * Fixture tags and injected token methods do not certify real-room admission. */
 export function fixtureArchiveProvider(ports: FixtureArchivePorts, host: ArchiveTransport): FixtureArchiveProvider {
   if (ports.fixture !== "archive-ports" || ports.tokens.fixture !== "archive-tokens") return bad();
+  return { fixture: "archive-provider", ...archiveProvider(ports, host) };
+}
+
+/** Trusted host construction only. The token authority remains in the host
+ * adapter; no request, ledger binding or fixture tag grants it. */
+export function archiveProvider(ports: { readonly tokens: ArchiveTokens; readonly clock: () => Timestamp }, host: ArchiveTransport): ArchiveProvider {
   const { tokens, clock } = ports;
   const held = new WeakMap<ArchiveCredential, { repository: DestinationRepository; at: ScopeRef; ref: string; original: ArchiveCredential }>();
   const source = async (repository: DestinationRepository, allowed: () => boolean, most?: { bytes: number; objects: number }, isolated = false): Promise<SmartHttpSource> => {
@@ -52,7 +58,6 @@ export function fixtureArchiveProvider(ports: FixtureArchivePorts, host: Archive
     const value = await new Reader(input).ref(name); check(allowed); return value;
   };
   return {
-    fixture: "archive-provider",
     async format(repository, allowed) {
       const input = await source(repository, allowed);
       await input.refs("refs/heads/", 8192); check(allowed); return "sha1";

@@ -4,10 +4,13 @@ import { natural, same } from "@generalbusiness/artroom-bytes";
 import { INVITATION_KEY_MEMBERSHIP } from "@generalbusiness/dap-contract";
 import type { Bounds, Digest, FactRef, Input, PlatformDefinition } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isFactRef, platformName } from "@generalbusiness/artroom-bytes";
+import { platform } from "@generalbusiness/dap-platform";
+import { forecastArchiveSourceLookup } from "./archive-source-cost.ts";
 import { derivable } from "@generalbusiness/dap-derive";
 import { forecastArchiveForeignLookup, forecastArchiveForeignSelection, forecastArchiveForeignBasis, ARCHIVE_FOREIGN_COPY_REQUEST_WORK, ARCHIVE_FOREIGN_COPY_SIZE_METADATA, ARCHIVE_FOREIGN_GENESIS_METADATA, archiveForeignRepeatWork, archiveForeignUseMetadata, type ArchiveForeignColdFootprint } from "./archive-foreign-cost.ts";
 import { ArchiveBudget } from "./archive-budget.ts";
-import { archiveEntryHeader, archiveEntryPrivacy, archiveSupportMetadata, recordArchiveSupportMetadata } from "./archive-entry-metadata.ts";
+import type { ArchiveSupportFootprint } from "./archive-support-cost.ts";
+import { archiveEntryHeader, archiveEntryPrivacy, archiveSupportMetadata, collectArchiveSupportMetadata } from "./archive-entry-metadata.ts";
 import type { ArchivePolicyRegistry, ReviewedArchivePolicy } from "./archive-inventory.ts";
 import { stopArchivePrefix as stop, type ArchivePosition } from "./archive-prefix.ts";
 import type { FixtureArchiveSourcePins, ArchiveSourceBasis, ArchiveSourcePin } from "./archive-source-pins.ts";
@@ -54,11 +57,13 @@ export class ArchiveForeignMetadata {
     budget.check();
     if (observation?.record) budget.spend({ metadata: 256, inputWork: 512 });
   }
-  #policy(source: ArchiveSourcePin): ReviewedArchivePolicy {
+  #policy(source: ArchiveSourcePin): { readonly policy: ReviewedArchivePolicy; readonly support?: Readonly<ArchiveSupportFootprint> } {
     const pin = source.pin;
     if (!isDigest(pin) && pin.startsWith("platform:membership@") && pin !== INVITATION_KEY_MEMBERSHIP
       && !(pin === "platform:membership@8" && membershipCopyConsumer(this.consumer))) return stop("unsupported-credential-cohort");
+    if (source.staticNative) this.budget.spend(forecastArchiveSourceLookup(null));
     const policy = this.policies.get(pin);
+    if (source.staticNative && (isDigest(pin) || !policy || policy.support.definition.declared !== platform(pin)?.data)) return stop("foreign-source-mismatch");
     if (!policy || !policy.review || policy.review.length > 512 || policy.support.named !== pin) return stop("unsupported-archive-cohort");
     if (isDigest(pin) ? policy.support.definition.digest !== pin : policy.support.definition.declared.name !== platformName(pin)) return stop("foreign-source-mismatch");
     // One aggregate declaration ledger includes local closures and foreign
@@ -68,8 +73,9 @@ export class ArchiveForeignMetadata {
     if (!this.visitedDeclarations.has(node)) { this.budget.spend({ nodes: 1 }); this.visitedDeclarations.add(node); }
     if (canonicalize(policy.support.definition.declared) !== source.declaration) return stop("foreign-source-mismatch");
     if (!derivable(policy.support.definition, policy.support.capabilities)) return stop("unsupported-archive-cohort");
+    if (this.observation?.record) return { policy, support: collectArchiveSupportMetadata(policy.support, this.budget) };
     archiveSupportMetadata(policy.support, this.budget);
-    return policy;
+    return { policy };
   }
   #copy(fact: FactRef, content: Digest): Readonly<ArchiveForeignRecordedRequest> | undefined {
     this.budget.spend({ attempts: 1, inputWork: ARCHIVE_FOREIGN_COPY_REQUEST_WORK });
@@ -97,7 +103,7 @@ export class ArchiveForeignMetadata {
     const source = this.sources.get(header.at, this.budget);
     if (!source) return stop("foreign-source-unavailable");
     if (expected && expected.pin !== source.pin) return stop("foreign-source-mismatch");
-    const policy = this.#policy(source);
+    const admitted = this.#policy(source), policy = admitted.policy;
     if (source.pin === "platform:membership@8") archiveMembershipCopy(this.sql, content, size, header, this.consumer, this.budget);
     if (!policy.entryTypes.has(header.input)) return stop("unsupported-archive-cohort");
     if (header.uses > this.bounds.usesPerEntry) return stop("limit");
@@ -115,10 +121,14 @@ export class ArchiveForeignMetadata {
     this.#facts.set(key, content);
     if (!this.observation?.record) return;
     this.budget.spend({ metadata: 512, inputWork: 1024 });
-    const support = recordArchiveSupportMetadata(policy.support, this.budget);
+    // Retain the original post-privacy recording charge. The complete support
+    // walk already ran for THIS cold copy at its original admission point.
+    this.budget.spend({ metadata: 128, inputWork: 256 });
+    const support = admitted.support;
+    if (!support) return stop("unavailable");
     const copy = Object.freeze({ fact: boundFact, pin: source.pin, bytes: size, input: header.input, effects: header.effects });
     const footprint = Object.freeze({ bytes: size, input: header.input, effects: header.effects,
-      declarationUnits: source.declaration.length, support, membership8: source.pin === "platform:membership@8" });
+      declarationUnits: source.declaration.length, support, ...(source.staticNative ? { staticNative: true } : {}), membership8: source.pin === "platform:membership@8" });
     return Object.freeze({ kind: "cold", content, copy, declaration: policy.support.definition.digest, footprint });
   }
   /** Only the selected local entry's direct uses. The copied entry's own

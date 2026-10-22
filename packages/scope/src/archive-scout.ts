@@ -25,8 +25,9 @@ import { ArchiveScoutLayout, type ArchiveScoutLayoutQuote } from "./archive-scou
 import { forecastArchiveSourceLookup } from "./archive-source-cost.ts";
 import type { FixtureArchiveSourcePins } from "./archive-source-pins.ts";
 import { forecastArchiveSupportMetadata } from "./archive-support-cost.ts";
-import { ArchiveWindow, openArchiveWindow, type ArchiveWindowCheckpoint } from "./archive-window.ts";
+import { ArchiveWindow, openArchiveWindow, openArchiveRootWindow, type ArchiveWindowCheckpoint } from "./archive-window.ts";
 import type { Sql } from "./sqlite.ts";
+import type { ArchiveRootMetadata } from "./archive-prefix.ts";
 
 const empty = (): ArchiveCost => ({ entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0, inputWork: 0 });
 function add(target: ArchiveCost, cost: Partial<ArchiveCost>, times = 1): void {
@@ -63,6 +64,7 @@ export class ArchiveScout {
   readonly #references: ArchiveLocalReferences;
   readonly #support: ArchiveSupport;
   readonly #rootWork: Readonly<ArchiveCost>;
+  readonly #rootCoupled: boolean;
   readonly #first: number;
   readonly #named: ArchiveSupport["named"];
   readonly declarations: ArchiveDeclarationPlan;
@@ -75,7 +77,8 @@ export class ArchiveScout {
   private constructor(readonly at: ScopeRef, readonly head: Head, readonly after: Head | null,
     readonly bounds: Bounds, readonly reviewed: ArchivePolicyRegistry, readonly budget: ArchiveBudget,
     window: ArchiveWindow, support: ArchiveSupport, root: ArchiveDeclarationFootprint, visited: Set<Digest>,
-    readonly fixtureSources?: FixtureArchiveSourcePins) {
+    readonly fixtureSources?: FixtureArchiveSourcePins, rootCoupled = false) {
+    this.#rootCoupled = rootCoupled;
     budget.spend({ metadata: 512, inputWork: 1024 });
     this.#support = support; this.#named = support.named; this.#visited = visited;
     this.#first = window.base.positions[0]!.seq;
@@ -91,15 +94,29 @@ export class ArchiveScout {
   }
   static open(sql: Pick<Sql, "exec">, at: ScopeRef, head: Head, after: Head | null, bounds: Bounds,
     reviewed: ArchivePolicyRegistry, budget: ArchiveBudget, fixtureSources?: FixtureArchiveSourcePins): ArchiveScoutFrame {
-    const window = openArchiveWindow(sql, at, head, after, bounds, budget, { has: digest => reviewed.has(digest) });
-    const named = window.base.pin.seed.definition, policy = reviewed.get(named);
-    if (!policy || !policy.review || policy.review.length > 512 || policy.support.named !== named) return stop("unsupported-archive-cohort");
-    const visited = new Set<Digest>(), declarations = new ArchiveDeclarations(new ArchiveRetainedReader(sql, budget), bounds, reviewed, visited);
-    const { definition } = declarations.root(named);
-    const root = recordArchiveCurrentDeclarationClosure(declarations, definition.digest);
-    const scout = new ArchiveScout(Object.freeze({ ...at }), Object.freeze({ ...head }), after && Object.freeze({ ...after }),
-      Object.freeze({ ...bounds }), reviewed, budget, window, { ...policy.support, definition }, root, visited, fixtureSources);
-    return scout.#frame(window);
+    return ArchiveScout.#open(sql, at, head, after, bounds, reviewed, budget, fixtureSources, false);
+  }
+  static openRoot(sql: Pick<Sql, "exec">, at: ScopeRef, head: Head, after: Head | null, bounds: Bounds,
+    reviewed: ArchivePolicyRegistry, budget: ArchiveBudget, fixtureSources?: FixtureArchiveSourcePins): ArchiveScoutFrame {
+    return ArchiveScout.#open(sql, at, head, after, bounds, reviewed, budget, fixtureSources, true);
+  }
+  static #open(sql: Pick<Sql, "exec">, at: ScopeRef, head: Head, after: Head | null, bounds: Bounds,
+    reviewed: ArchivePolicyRegistry, budget: ArchiveBudget, fixtureSources: FixtureArchiveSourcePins | undefined, coupled: boolean): ArchiveScoutFrame {
+    const finish = (window: ArchiveWindow, completed?: ArchiveRootMetadata): ArchiveScoutFrame => {
+      const named = window.base.pin.seed.definition, policy = reviewed.get(named);
+      if (!policy || !policy.review || policy.review.length > 512 || policy.support.named !== named) return stop("unsupported-archive-cohort");
+      const visited = completed?.visited ?? new Set<Digest>(), declarations = completed?.declarations ?? new ArchiveDeclarations(new ArchiveRetainedReader(sql, budget), bounds, reviewed, visited);
+      const { definition } = completed ?? declarations.root(named);
+      const root = recordArchiveCurrentDeclarationClosure(declarations, definition.digest);
+      const scout = new ArchiveScout(Object.freeze({ ...at }), Object.freeze({ ...head }), after && Object.freeze({ ...after }),
+        Object.freeze({ ...bounds }), reviewed, budget, window, { ...policy.support, definition }, root, visited, fixtureSources, completed !== undefined);
+      return scout.#frame(window);
+    };
+    if (coupled) {
+      const completed = openArchiveRootWindow(sql, at, head, after, bounds, budget, reviewed);
+      return finish(completed.window, completed.root);
+    }
+    return finish(openArchiveWindow(sql, at, head, after, bounds, budget, { has: digest => reviewed.has(digest) }));
   }
   #source(fact: FactRef): Readonly<ArchiveForeignCopy> | null {
     this.budget.spend(forecastArchiveForeignLookup());
@@ -217,7 +234,7 @@ export class ArchiveScout {
   inventoryCost(through: Head): Readonly<ArchiveCost> {
     this.budget.spend({ metadata: 256, inputWork: 512 });
     const row = this.#row(through), prefix = forecastArchivePrefix({ entries: through.seq - this.#first + 1,
-      entryBytes: row.entryBytes, afterReceipt: this.after !== null, nativeData: !isDigest(this.#named), definitionBytes: this.bounds.definitionBytes });
+      entryBytes: row.entryBytes, afterReceipt: this.after !== null, nativeData: !isDigest(this.#named) && !this.#rootCoupled, definitionBytes: this.bounds.definitionBytes });
     if (!prefix.ok) return stop("limit");
     const declarations = this.declarations.quote(through), foreign = this.foreign.quote(through), work = { ...row.work };
     this.budget.spend({ metadata: 128 * (declarations.declarations.length + foreign.declarations.length),

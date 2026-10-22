@@ -169,6 +169,30 @@ async function hostedInventory(source) {
   return [...result.values()];
 }
 
+// Exact reviewed deployment composition; never resolve arbitrary re-exports.
+export function roomHttpEntry(file, source = readSource) {
+  const hops = file === "apps/room/worker.grow.ts"
+    ? [[file, "./worker.ts"], ["apps/room/worker.ts", "./fetch.ts"]]
+    : file === "apps/room/worker.ts" ? [[file, "./fetch.ts"]] : null;
+  assert.ok(hops, "Unreviewed room Worker entry");
+  for (const [owner, target] of hops) {
+    const body = parse(source(owner)).body;
+    assert.ok(!body.some(node => node.type === "ExportDefaultDeclaration"), `${owner}: unexpected local default handler`);
+    const defaults = body.flatMap(node => (node.specifiers ?? []).filter(specifier =>
+      (specifier.exported?.name ?? specifier.exported?.value) === "default").map(specifier => ({ node, specifier })));
+    assert.equal(defaults.length, 1, `${owner}: exactly one default re-export`);
+    const { node, specifier } = defaults[0];
+    assert.equal(node.type, "ExportNamedDeclaration");
+    assert.equal(node.source?.value, target, `${owner}: reviewed HTTP target`);
+    assert.equal(specifier.type, "ExportSpecifier");
+    assert.equal(specifier.local?.name ?? specifier.local?.value, "default");
+    assert.equal(node.exportKind ?? "value", "value");
+    assert.equal(specifier.exportKind ?? "value", "value");
+    assert.equal((node.attributes ?? []).length, 0, "No default export attributes");
+  }
+  return "apps/room/fetch.ts";
+}
+
 function jsonc(file) { return JSON.parse(readSource(file).replace(/^\s*\/\/.*$/gm, "")); }
 export async function servedInventory({ scopeSource = readSource(scopeFile) } = {}) {
   const scope = await scopeRows(scopeSource);
@@ -184,9 +208,14 @@ export async function servedInventory({ scopeSource = readSource(scopeFile) } = 
   ];
   const hostedRows = await hostedInventory(scopeSource);
   const result = new Map();
-  for (const file of ["apps/room/wrangler.jsonc", "apps/room/wrangler.grow.jsonc", "apps/room/wrangler.lending.jsonc"]) {
+  for (const [file, entry] of [
+    ["apps/room/wrangler.jsonc", "worker.ts"],
+    ["apps/room/wrangler.grow.jsonc", "worker.grow.ts"],
+    ["apps/room/wrangler.lending.jsonc", "worker.ts"],
+  ]) {
     const config = jsonc(file), bindings = config.durable_objects.bindings.map(binding => binding.name);
-    assert.equal(config.main, "worker.ts");
+    assert.equal(config.main, entry, `${file}: reviewed Worker entry`);
+    assert.equal(roomHttpEntry(`apps/room/${entry}`), "apps/room/fetch.ts");
     result.set(config.name, [...publicRows, ...scope, ...(bindings.includes("REGISTRIES") && bindings.includes("AGENTS") ? hostedRows : [])]);
   }
   const simulator = jsonc("examples/grow/wrangler.jsonc");

@@ -6,7 +6,7 @@ import { canonicalize, same, utf8 } from "@generalbusiness/artroom-bytes";
 import { JournalPassPreparation, JOURNAL_SELECTION_BYTES, forecastJournalAppendFixed, forecastJournalCommit,
   forecastJournalPassBody, forecastJournalSelection, type JournalFormat, type JournalObject, type JournalObjectSource } from "@generalbusiness/artroom-git/journal";
 import { ARCHIVE_BOUNDS, ArchiveStopped, type ArchiveBudget, type ArchiveCost } from "./archive-budget.ts";
-import { planArchivePass, type ArchiveBuildFailure } from "./archive-build.ts";
+import { planArchivePass, planRootArchivePass, type ArchiveBuildFailure } from "./archive-build.ts";
 import { archiveDeclarationHandoffCost } from "./archive-declaration-plan.ts";
 import { archiveRetainedHandoffCost } from "./archive-retained.ts";
 import { archiveForeignHandoffCost } from "./archive-foreign-plan.ts";
@@ -32,7 +32,12 @@ export interface AdaptiveArchiveContext {
   readonly bounds: Bounds; readonly policies: ArchivePolicyRegistry; readonly format: JournalFormat;
   readonly parent: { readonly id: string; readonly source: JournalObjectSource } | null;
   readonly markedAt: Timestamp; readonly fixtureSources?: FixtureArchiveSourcePins;
+  /** Host source identity preparation for exactly the next candidate. It
+   * runs outside native frames and inside this owner's earlier-finish fence. */
+  readonly prepareSources?: (seq: number, budget: ArchiveBudget) => Promise<void>;
   readonly row: ArchiveRow;
+  /** The production driver performs these two logical steps in one save. */
+  readonly atomicFirstAttempt?: boolean;
   /** The driver's actual bounded parent cache. A selected prefix retains
    * its own outgoing ID snapshot, excluding later discarded lookahead. */
   readonly parentHeld: ReadonlyMap<string, JournalObject>; readonly parentUsed: ReadonlySet<string>;
@@ -68,7 +73,7 @@ function finishCost(context: AdaptiveArchiveContext, preparation: JournalPassPre
   if (context.parent && (!patch.appendEdges?.ok || !append?.ok)) return null;
   const pending = archivePendingRowBytesUpper(oldRowBytes, shape.selectionUnits);
   const rows = forecastArchiveBookkeeping({ oldRowBytes, markedRowBytes: pending, attemptedRowBytes: pending,
-    manifestUnits: shape.selectionUnits, newRetained: shape.newRetained });
+    manifestUnits: shape.selectionUnits, newRetained: shape.newRetained, atomicFirstAttempt: context.atomicFirstAttempt === true });
   const transfer = forecastArchiveTransfer({ objects: parent.objects + patch.layoutWork.objects + 1,
     bytes: parent.bytes + patch.layoutWork.outputWork + commit.layoutWork.outputWork,
     incremental: context.parent !== null, maximum: context.maximum });
@@ -77,7 +82,13 @@ function finishCost(context: AdaptiveArchiveContext, preparation: JournalPassPre
     patch.cost, commit.cost, context.parent && patch.appendEdges?.ok ? patch.appendEdges.cost : {},
     append?.ok ? append.cost : {}, transfer.cost, rows.cost);
 }
-export async function planAdaptiveArchivePass(sql: Sql, context: AdaptiveArchiveContext, budget: ArchiveBudget): Promise<
+export function planAdaptiveArchivePass(sql: Sql, context: AdaptiveArchiveContext, budget: ArchiveBudget) {
+  return adaptiveArchivePass(false, sql, context, budget);
+}
+export function planRootAdaptiveArchivePass(sql: Sql, context: AdaptiveArchiveContext, budget: ArchiveBudget) {
+  return adaptiveArchivePass(true, sql, context, budget);
+}
+async function adaptiveArchivePass(coupled: boolean, sql: Sql, context: AdaptiveArchiveContext, budget: ArchiveBudget): Promise<
   ArchiveBuildFailure | (Extract<Awaited<ReturnType<typeof planArchivePass>>, { ok: true }> & { readonly parentObjects: readonly string[] })> {
   try {
     if (context.row.pending !== null || context.row.confirmed !== null && context.row.confirmed.layout !== 2
@@ -93,15 +104,32 @@ export async function planAdaptiveArchivePass(sql: Sql, context: AdaptiveArchive
     if (!begun.ok) return begun;
     const preparation = begun.preparation, paths = new Set<string>();
     let scout: ArchiveScout | undefined;
+    let nextSource = (context.after?.seq ?? -1) + 1;
     let selected: { through: Head; cost: ArchiveCost; parent: ParentMetadata } | undefined;
     for (;;) {
       const reserve = selected ? sum(selected.cost, { metadata: 256, inputWork: 512 }) : {};
+      if (context.prepareSources && nextSource <= context.through.seq) {
+        const prepared = await budget.lookaheadAsync(reserve, async () => {
+          try { await context.prepareSources!(nextSource, budget); return { ok: true as const }; }
+          catch (error) {
+            // Carry an ordinary candidate refusal across wait() as data.
+            // Its timeout and original debit failures remain exceptions.
+            if (error instanceof ArchivePrefixStopped) return { ok: false as const, error };
+            throw error;
+          }
+        });
+        if (prepared.kind === "limited") break;
+        if (!prepared.value.ok) {
+          if (selected) break;
+          throw prepared.value.error;
+        }
+      }
       const step = sql.transaction(() => {
         // Resume/bootstrap is protected separately from next(), whose own
         // synchronous lookahead protects the same earlier finish cost.
         try {
           const opened = budget.lookahead(reserve, () => scout ? scout.resume(sql)
-            : ArchiveScout.open(sql, context.at, context.through, context.after, context.bounds, context.policies, budget, context.fixtureSources));
+            : (coupled ? ArchiveScout.openRoot : ArchiveScout.open)(sql, context.at, context.through, context.after, context.bounds, context.policies, budget, context.fixtureSources));
           if (opened.kind === "limited") return { kind: "limited" as const };
           const frame = opened.value; scout = frame.scout;
           try { return frame.next(reserve); }
@@ -115,6 +143,7 @@ export async function planAdaptiveArchivePass(sql: Sql, context: AdaptiveArchive
         }
       });
       if (step.kind !== "position") break;
+      nextSource = step.position.seq + 1;
       const through = { seq: step.position.seq, hash: step.position.hash };
       const quoted = budget.lookahead(selected?.cost ?? {}, () => ({ shape: scout!.layout(through), inventory: scout!.inventoryCost(through),
         setup: through.seq === context.through.seq ? scout!.selectionCost(through) : setupCost() }));
@@ -134,7 +163,7 @@ export async function planAdaptiveArchivePass(sql: Sql, context: AdaptiveArchive
     }
     if (!selected || !scout) return { ok: false, reason: "limit" };
     const constraints = scout.select(selected.through);
-    const built = await planArchivePass(sql, { at: context.at, through: selected.through, after: context.after,
+    const built = await (coupled ? planRootArchivePass : planArchivePass)(sql, { at: context.at, through: selected.through, after: context.after,
       bounds: context.bounds, policies: context.policies, format: context.format, parent: context.parent,
       markedAt: context.markedAt, ...(context.fixtureSources ? { fixtureSources: context.fixtureSources } : {}),
       preparation, ...constraints }, budget);
