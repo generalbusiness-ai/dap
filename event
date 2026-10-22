@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/2026-10-22-definition-succession.md","body":{"commit":"25e1248e949ec4da7be3635dc58b85c4085dc48a","path":"notes/2026-10-22-definition-succession.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:05f4407c7fdd3f42cee413c694dce41e8eba0865","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-22-definition-succession.md."}
