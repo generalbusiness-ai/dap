@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:05190d2ceaab5121c394de702404a45c6a9c2b1b","text":"Merge retired a covered predecessor; the successor is at docs/security/entry-points.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:05f24d1c6621d4d42253d9119856a547e9523eda","text":"Merge retired a covered predecessor; the successor is at packages/scope/wrangler.test.jsonc."}
