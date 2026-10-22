@@ -1,1 +1,1 @@
-{"kind":"promise","text":"Implement current-pin verified creator ancestry after the partial parentless admission landing, preserving refusal before state writes. Checker review for each exact head; one final-head gate; no builder deployment."}
+{"kind":"promise","text":"Carry existing R2 source design into index-gated lookups, verified genesis registration and the planner-decided register-only/backfill/enforcement sequence. Checker review for each exact head; one final-head gate; no builder deployment."}
