@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d234bd37d45ea0eec9bfee82bcae2db112502dfe","text":"Merge retired a covered predecessor; the successor is at docs/security/entry-points.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d29ea70996171fbcbdb5e3658bef48a5a1c0923a","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/credential-store.ts."}
