@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:aea5669fd9515fea0d9ffc40d9fa313ef13f3ed8"}
+{"kind":"assert","text":"Planner survey 03:13 (posted 03:17). Resident up; checkout clean; main = origin 5e8476a1. No questions to the planner; no open planner reviews. Slice 9: the first gate at 3569ce62 failed (closed 1; the checker's audit 917cc882 reconciles); a type-boundary repair at 2ae9e515 passed the checker's source review (7a55534b) and its focused stages; one fresh gate at 2ae9e515 is allocated. Queue ca3bfcf3 unchanged."}
