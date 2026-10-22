@@ -6,6 +6,7 @@ import { canonicalize } from "@generalbusiness/artroom-bytes";
 import { readMembershipDisplay } from "../src/views/member-reads.ts";
 import { mcpRoom } from "./support/room.ts";
 import { created, step } from "./support/story.ts";
+import { reader } from "../../scope/test/support.ts";
 
 // Invariant: bounded display reads preserve actual final member states and
 // controller facts, while a foreign incarnation or unjoined key reads none.
@@ -26,7 +27,14 @@ test("native member display reads include removed agents and refuse foreign or u
     expect(active?.scope).toEqual(membership);
     const agent = active?.members.find(item => item.id === on);
     expect(agent).toMatchObject({ type: "member", state: "active", values: { handle: "@probe-agent", kind: "agent" }, parties: { controller } });
-    expect(active?.roster?.at).toEqual(active?.at);
+    expect(active?.roster).toBeDefined();
+    // Each bounded read names its own native head; background deliveries may
+    // advance the membership between them. Neither head may be relabelled.
+    expect(active!.roster!.at.seq).toBeGreaterThanOrEqual(active!.at.seq);
+    for (const at of [active!.at, active!.roster!.at]) {
+      const entry = await room.platform(membership.scope).stub.entry(reader, at.seq);
+      expect(entry.ok && entry.value.hash).toBe(at.hash);
+    }
     expect(rita.requests.slice(requests).filter(request => request.startsWith("GET "))).toHaveLength(2);
     expect(rita.signedIntents).toHaveLength(signed);
     const removed = await step(rita, "generic", { tool: "member.remove", scope: "membership", kind: "remove-member" }, {

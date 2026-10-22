@@ -86,6 +86,7 @@ import { isSite, site } from "./site/route.ts";
 import { requestQuery, type RequestPage } from "./request-index.ts";
 import { measuredRequest, OBSERVED_METHODS, operational, operationPlace, unknownTurnMark, type MetricEnvironment, type OperationalIdentity, type ObservedMethod } from "./operational.ts";
 import type { MetricPoint } from "./metrics.ts";
+import { admitsParentlessCreation, type CreationAdmission } from "./creation-admission.ts";
 
 /**
  * The bindings of the deployed Worker (`wrangler.jsonc`): the one scope
@@ -94,7 +95,7 @@ import type { MetricPoint } from "./metrics.ts";
  * the operator sets it, and no file of this repository holds one.
  * `DEPLOYMENT` is the deployment's name, which a session's token names.
  */
-export interface Env extends GitHubBindings, ArtifactsBindings, ApplicationBindings, MetricEnvironment { SCOPES: DurableObjectNamespace; SESSION_SECRET?: string; DEPLOYMENT?: string }
+export interface Env extends GitHubBindings, ArtifactsBindings, ApplicationBindings, MetricEnvironment, CreationAdmission { SCOPES: DurableObjectNamespace; SESSION_SECRET?: string; DEPLOYMENT?: string }
 /** The two namespaces of the hosted MCP endpoint (`McpRegistry`, `McpAgent`): one registry per repository, one object per agent. */
 export interface McpEnv extends Env { REGISTRIES: DurableObjectNamespace; AGENTS: DurableObjectNamespace }
 
@@ -146,7 +147,7 @@ export interface Api extends ScopeApi {
  * scope ID names nothing. `address`: the caller's address, for the serving
  * limits of a join, or null when the caller has none.
  */
-export function api(binding: Binding, address: string | null = null): Api {
+export function api(binding: Binding, address: string | null = null, creationAdmission: CreationAdmission = {}): Api {
   const at = (scope: string): Remote | null => {
     if (!isScopeId(scope)) return null;
     const remote = binding.get(binding.idFromName(scope)) as Remote, context = operational();
@@ -184,6 +185,7 @@ export function api(binding: Binding, address: string | null = null): Api {
         const names = typeof definition === "string" ? definition : definitionDigest(definition);
         // Under the register's platform definition the scope is the creation register, of the kind `register` (I3 delta EP2).
         const seed: Seed = { v: 1, kind: creationKind(names), definition: names, creator: null, cause: intentDigest(creation.intent), ordinal: 0 };
+        if (!admitsParentlessCreation(creationAdmission, creation, seed)) return { answer: "refused", reason: "unauthorized" };
         name = scopeIdOf(seed);
       } catch {
         return { answer: "refused", reason: "source-unverified" };   // not values that have canonical bytes
@@ -294,15 +296,15 @@ function projectionResponse(result: NativeApplicationProjection): Response {
 }
 
 /** One request to the scope routes in docs/security/entry-points.md. */
-export async function route(request: Request, binding: Binding, env: MetricEnvironment = {}): Promise<Response> {
-  return measuredRequest(request, env, () => routedRequest(request, binding));
+export async function route(request: Request, binding: Binding, env: MetricEnvironment & CreationAdmission = {}): Promise<Response> {
+  return measuredRequest(request, env, () => routedRequest(request, binding, env));
 }
-async function routedRequest(request: Request, binding: Binding): Promise<Response> {
+async function routedRequest(request: Request, binding: Binding, env: CreationAdmission): Promise<Response> {
   if (!admittedRequestUrl(request.url)) return json(413, { error: "too-large" });
   const url = new URL(request.url);
   // Section 5.3: a credential in a URL is refused before anything is routed, and is not used. That does not undo the exposure.
   if (credentialInUrl(url)) return json(400, { error: "credential-in-url" });
-  const scopes = api(binding, request.headers.get("cf-connecting-ip"));
+  const scopes = api(binding, request.headers.get("cf-connecting-ip"), env);
   let parts: string[];
   try {
     parts = url.pathname.split("/").slice(1).map(decodeURIComponent);
@@ -507,7 +509,7 @@ export class DeployedScope<E extends Env = Env> extends ScopeObject<E> {
 export class ScopeService<E extends Env = Env> extends WorkerEntrypoint<E> implements ScopeApi {
   /** The one scope namespace. */
   protected scopes(): Binding { return this.env.SCOPES; }
-  create(creation: SignedIntent, definition: DeclaredDefinition | Digest | PlatformDefinition, definitions: readonly DeclaredDefinition[] = [], beside: Beside = {}): Promise<Created> { return api(this.scopes()).create(creation, definition, definitions, beside); }
+  create(creation: SignedIntent, definition: DeclaredDefinition | Digest | PlatformDefinition, definitions: readonly DeclaredDefinition[] = [], beside: Beside = {}): Promise<Created> { return api(this.scopes(), null, this.env).create(creation, definition, definitions, beside); }
   submit(scope: string, signed: SignedIntent, grants: readonly Grant[], beside: Beside = {}): Promise<Answer> { return api(this.scopes()).submit(scope, signed, grants, beside); }
   prepare(scope: string, signed: SignedIntent, grants: readonly Grant[], capability: string, step: string): Promise<Answer> { return api(this.scopes()).prepare(scope, signed, grants, capability, step); }
   settle(scope: string, signed: SignedIntent): Promise<Settlement> { return api(this.scopes()).settle(scope, signed); }
@@ -533,7 +535,7 @@ export default {
     if (healthy) return healthy;
     const hosted = await mcpRoute(request, env);
     const application = hosted ? null : await applicationPage(request, env);
-    return hosted ?? application ?? (isSite(request) ? site(request, env) : route(request, env.SCOPES));
+    return hosted ?? application ?? (isSite(request) ? site(request, env) : route(request, env.SCOPES, env));
     });
   },
 };
@@ -664,7 +666,7 @@ export class McpAgent<E extends McpEnv = McpEnv> extends DurableObject<E> {
     this.#agent = new HostedAgent(sqlOf(this.ctx), {
       id: this.ctx.id.toString(), now: () => Date.now(), random: (n) => crypto.getRandomValues(new Uint8Array(n)), observe: observeThrough(scopes),
       ...(this.env.METRICS ? { metrics: { deployment: this.env.DEPLOYMENT ?? "unknown", version: this.env.VERSION_METADATA?.id ?? "unknown", report: (point: MetricPoint) => this.env.METRICS?.writeDataPoint(point) } } : {}),
-      fetch: ((url: string, init?: RequestInit) => route(new Request(url, init), scopes)) as unknown as AgentPorts["fetch"],
+      fetch: ((url: string, init?: RequestInit) => route(new Request(url, init), scopes, this.env)) as unknown as AgentPorts["fetch"],
       ...this.ports(),
     });
     return this.#agent;

@@ -12,7 +12,9 @@ import { at, definition, creation, rita } from "./fixtures-native.ts";
 // Invariant: the real HTTP boundary reports actual native entry into Turns.run,
 // while direct RPC cannot balance HTTP counts; correlation stays operational.
 test("HTTP and direct RPC retain distinct native turn places and HTTP correlation reaches only the sidecar", async () => {
-  const points: MetricPoint[] = [], settings = { DEPLOYMENT: "metrics-http-test", METRICS: { writeDataPoint: (p: MetricPoint) => points.push(structuredClone(p)) } };
+  // DEPLOYMENT names the metric stream; this local fixture intentionally creates
+  // a made-up scope through the explicit test-only opening.
+  const points: MetricPoint[] = [], settings = { DEPLOYMENT: "metrics-http-test", ALLOW_OPEN_CREATION: "true", METRICS: { writeDataPoint: (p: MetricPoint) => points.push(structuredClone(p)) } };
   const { signed, name } = creation(), object = env.SCOPES.get(env.SCOPES.idFromName(name));
   metricBindings.set(object.id.toString(), settings);
   const trace = "abcdef0123456789abcdef0123456789";

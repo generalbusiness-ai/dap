@@ -1,6 +1,16 @@
 /** Test-only bridge to Node's real Git. Host identity/mint rights are stand-ins. */
 import type {} from "vitest";
 export interface LocalCloneAddress { url: string; nonce: string }
+export interface LocalCloneRunDiagnostic {
+  admission: "unconfigured" | "argv-env-token-refused" | "version" | "clone";
+  outerCode?: number | null; outerSignal?: string | null;
+  ipcResults?: number; gitCode?: number | null;
+  outputBytes?: number; outputBoundExceeded?: boolean; timedOut?: boolean;
+  spawnError?: boolean; stdinError?: boolean; outputHints?: readonly string[];
+}
+export interface LocalCloneRun {
+  code: number | null; outputClean: boolean; diagnostic?: LocalCloneRunDiagnostic;
+}
 export interface LocalCloneInspection {
   head: string; tree: string; expectedTree: string; paths: string; readme: string; origin: string;
   tokenInConfig: boolean; tokenInOutput: boolean; readRequests: number;
@@ -23,7 +33,7 @@ export function localClone(at: LocalCloneAddress) {
     configure: (name: string) => json<{ remote: string; directory: string }>("/configure", { name }),
     mint: (name: string, scope: "read" | "write", seconds: number) => json<{ id: string; scope: "read" | "write"; plaintext: string }>("/mint", { name, scope, seconds }),
     revoke: (name: string, plaintext: string) => json<boolean>("/revoke", { name, plaintext }),
-    run: (args: readonly string[], env: Readonly<Record<string, string>>) => json<{ code: number | null; outputClean: boolean }>("/run", { args, env }),
+    run: (args: readonly string[], env: Readonly<Record<string, string>>) => json<LocalCloneRun>("/run", { args, env }),
     inspect: () => json<LocalCloneInspection>("/inspect"),
     archive: (objects: LocalArchiveClone["objects"], refs: LocalArchiveClone["refs"]) => json<LocalArchiveClone>("/archive-clone", { objects, refs }),
     status: () => json<unknown>("/status"),

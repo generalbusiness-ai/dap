@@ -18,7 +18,7 @@ import { Platform, rita, routed, sam, settle } from "./repository.ts";
 import { beginSessionChild, beginSessionFixture } from "./session-settings.ts";
 import { reader } from "./fixtures-native.ts";
 import { platformOutside } from "./worker.ts";
-import { localClone } from "./support/local-clone.ts";
+import { localClone, type LocalCloneRunDiagnostic } from "./support/local-clone.ts";
 
 // Invariant: known @2 observations and current aged directory/session preparation
 // use the exact supplied implementation, without broad unknown-family lookup.
@@ -107,6 +107,7 @@ test("runtime exact @2 membership observations and aged destination/rules reads 
     await store.keep("device", rita.secret);
     await store.save({ v: 1, service: "https://scopes.test", key: "device", register: await inspected(() => R.at()), repository: { directory: directoryAt, membership: membershipAt, rules: rules.name, destination: G.name }, handle: "@rita" });
     let gitCalls = 0;
+    const gitDiagnostics: (LocalCloneRunDiagnostic | undefined)[] = [];
     const context: Context = {
       store, fetch: routed as unknown as Fetch, now: () => timeMs(net.clock.now)!,
       pause: async () => { await (G.stub as unknown as { effect(): Promise<number> }).effect(); },
@@ -122,12 +123,16 @@ test("runtime exact @2 membership observations and aged destination/rules reads 
           expect(callerToken.length > 0 && canonicalize(env) === canonicalize({ GIT_CONFIG_COUNT: "1", GIT_CONFIG_KEY_0: "http.extraHeader", GIT_CONFIG_VALUE_0: `Authorization: Bearer ${callerToken}` })).toBe(true);
         }
         const ran = await bridge.run(args, env);
+        if (gitDiagnostics.length < 2) gitDiagnostics.push(ran.diagnostic);
         expect(ran.outputClean).toBe(true);
+        // A bridge/Node preflight failure must not masquerade as Git clone's
+        // exit status after the CLI has requested a private read credential.
+        if (args[0] === "--version") expect(ran.code, JSON.stringify(ran.diagnostic)).toBe(0);
         return ran.code;
       } },
     };
     const cloned = await command(context, ["clone", directory]);
-    expect(cloned.code, cloned.lines.join("\n")).toBe(0);
+    expect(cloned.code, `${cloned.lines.join("\n")}\n${JSON.stringify(gitDiagnostics)}`).toBe(0);
     expect(gitCalls).toBe(2);
     expect(readMints).toBe(1);
     expect(cloned.lines).toContain(`Remote URL: ${remote}`);

@@ -3,12 +3,10 @@ import { defineConfig } from "vitest/config";
 /**
  * Every package's vitest suite as one run (`npm test` at the root): one
  * vitest process instead of one per package and runtime. Each project keeps
- * its package's own config. The projects that run in Node are one group and
- * run at the same time. The `scope` project runs after them, by itself: it
- * has one worker, and vitest lets projects share a group only when their
- * worker counts agree. Run one after another, the Node projects took about
- * half a second longer (5.1 seconds against 4.5 for the whole run; observed,
- * three runs each, on a shared machine with 18 cores).
+ * its package's own config. The Node projects share a group with at most
+ * four active file tasks in total. The `scope` and `scope-denial` groups
+ * follow in order, each retaining its explicit one-worker configuration.
+ * The file-task limit does not cap child processes or overlapping teardown.
  *
  * The lane scenarios on real scopes, `apps/room/lanes/test/*.scope.test.ts`,
  * run here inside the `scope` project: the same Worker, loaded once. A
@@ -31,6 +29,7 @@ const project = (name: string, dir: string, config: string, group: number, more:
 
 export default defineConfig({
   test: {
+    maxWorkers: 4,
     ...(process.env["ARTROOM_TEST_PROGRESS"] ? { reporters: ["verbose", "./scripts/test-progress.mjs"] } : {}),
     projects: [
       project("bytes", "packages/bytes", "vitest.config.ts", 0),

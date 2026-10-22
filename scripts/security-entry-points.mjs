@@ -69,7 +69,7 @@ const signedReads = strings(declaration(readSource("packages/scope/src/signed-re
 const adminReads = strings(declaration(readSource("packages/scope/src/sessions.ts"), "ADMIN_READS"));
 const readGate = name => adminReads.includes(name) ? "admin" : signedReads.includes(name) ? "self-signed" : "session";
 const gates = {
-  create: "self-signed", submit: "membership", prepare: "membership", settle: "self-signed", session: "membership", reservationSnapshot: "membership",
+  create: "creation", submit: "membership", prepare: "membership", settle: "self-signed", session: "membership", reservationSnapshot: "membership",
   summary: readGate("summary"), items: readGate("items"), history: readGate("history"), entry: readGate("entry"), outbox: readGate("outbox"), outboxItem: readGate("outbox"), log: readGate("log"), retained: readGate("retained"), queryItems: readGate("query-items"), applicationProjection: "session", stream: "session", credential: "session",
   incidents: readGate("incidents"), requests: readGate("requests"), waiting: readGate("waiting"),
 };

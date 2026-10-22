@@ -468,10 +468,14 @@ platform package depends on the lanes package or imports from it. It prints the 
 each step's elapsed and CPU time. It also fails on a whitespace error in
 what the branch changed. `npm run gate -- --ci` reinstalls first.
 
-The `scope` project runs in the workerd pool, against real Durable Objects
-with SQLite storage. The others run in Node, as one group at the same time,
-and the `scope` project runs after them, by itself: it has one worker, and
-vitest lets projects share a group only when their worker counts agree. The
+The Node projects share one group with at most four active file tasks in
+total. The root `test.maxWorkers: 4` sets this limit in the ordinary gate.
+The `scope` project follows in the workerd pool, against real Durable
+Objects with SQLite storage, with its explicit one-worker configuration.
+The later `scope-denial` group also keeps one worker. This limits active
+file tasks, not all live workers, child processes or overlapping teardown.
+Keep `VITEST_MAX_WORKERS` unset for the gate: that environment override
+also replaces the native projects' one-worker settings. The
 `git` project runs the real `git` program, as a client and as a server, on
 local repositories, and one file of the `checkers` project runs it for the
 runner's checkout. Nothing runs twice.

@@ -1,11 +1,14 @@
 /** Pure display resolution; membership reads below are explicit in-memory answers. */
 import { expect, test } from "vitest";
-import type { ApplicationProjectionData, Item, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isMemberRef } from "@generalbusiness/artroom-bytes";
+import type { ApplicationProjectionData, Item, ItemQueryRead, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
+import { canonicalize, isMemberRef, itemQueryArgument, itemQueryDigest, readItemQueryParameter } from "@generalbusiness/artroom-bytes";
 import type { ApplicationReadProjection } from "@generalbusiness/artroom-bytes/application-v2";
 import { projectionMemberFacts, projectionMembers } from "../src/views/members.ts";
 import type { MembershipDisplaySnapshot } from "../src/views/member-types.ts";
 import { memberText } from "../src/views/member-text.ts";
+import { readMembershipDisplay } from "../src/views/member-reads.ts";
+import type { Reads } from "../src/reads.ts";
+import { fixedSigner } from "./fixtures.ts";
 
 const membership: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "membership" };
 const at = { seq: 200, hash: `sha256:${"a".repeat(64)}` as const };
@@ -16,6 +19,50 @@ const item = (who: MemberRef, kind = "person", state = "active", controller: Mem
 });
 const roster: Item = { id: 0, type: "roster", state: "open", revision: 1, opened: at.hash, parties: {}, refs: {},
   values: { memberActions: ["room.read"], agentActions: ["grow.probe"] }, attributed: [] };
+
+// Invariant: the display's two bounded selections never contend for the
+// native object's single query slot. This transport is an in-memory stand-in,
+// not Native storage or authentication evidence.
+test("member display sequences its bounded queries and preserves member and optional-roster errors", async () => {
+  const signer = fixedSigner(31), calls: string[] = [], problem = new Error("scripted query failure");
+  let release!: () => void, started!: () => void, busy = false;
+  let fail: "member" | "roster" | null = null;
+  const held = new Promise<void>(resolve => { release = resolve; });
+  const entered = new Promise<void>(resolve => { started = resolve; });
+  const rosterAt = { seq: at.seq + 1, hash: `sha256:${"b".repeat(64)}` as const };
+  const reads = {
+    signer,
+    session: async () => ({ claims: { key: signer.key, membership }, reader: () => "scripted session" }),
+    transport: { queryItems: async (_scope: string, _reader: unknown, encoded: string): Promise<ItemQueryRead> => {
+      const query = readItemQueryParameter(encoded);
+      if (!query) throw new Error("The display must issue a valid bounded query");
+      calls.push(query.type);
+      if (busy) return { ok: false, reason: "unavailable" };
+      busy = true;
+      try {
+        if (query.type === fail) throw problem;
+        if (query.type === "member") { started(); await held; }
+        return { ok: true, at: query.type === "member" ? at : rosterAt, value: { v: 1, scope: membership, query: itemQueryDigest(query)!, argument: itemQueryArgument(query)!,
+          items: query.type === "member" ? [item(ref("@prober"), "agent")] : [roster] }, complete: true };
+      } finally { busy = false; }
+    } },
+  } as unknown as Reads;
+  const pending = readMembershipDisplay(reads, membership);
+  await entered;
+  const whileHeld = [...calls];
+  release();
+  const displayed = await pending;
+  expect(whileHeld).toEqual(["member"]);
+  expect(calls).toEqual(["member", "roster"]);
+  expect(displayed?.roster).toEqual({ item: roster, at: rosterAt });
+  expect(displayed?.at).toEqual(at);
+  fail = "member";
+  await expect(readMembershipDisplay(reads, membership)).rejects.toBe(problem);
+  fail = "roster";
+  const optional = await readMembershipDisplay(reads, membership);
+  expect(optional?.members).toEqual(displayed?.members);
+  expect(optional?.roster).toBeUndefined();
+});
 const declaration: ApplicationReadProjection = { v: 1, definition: at.hash, revision: "revision", sources: {
   benches: { item: "bench", read: "many", states: ["open"], limit: 100, fields: {
     prober: { from: { kind: "party", name: "prober" }, of: { type: "member" }, nullable: true },
