@@ -13,12 +13,14 @@ import { fixtureArchiveTargetIn } from "../src/archive-target.ts";
 import { archiveSourceReferences } from "../src/archive-source-window.ts";
 import { FixtureArchiveSourcePins, type FixtureArchiveSourceBirth } from "../src/archive-source-pins.ts";
 import { namespace } from "../src/namespace.ts";
+import { mintSession, readerOf } from "../src/sessions.ts";
+import { rita } from "./repository.ts";
 import { readNativeBirth } from "../src/native-birth.ts";
 import { archiveInput } from "../src/archive-input.ts";
 import { inventoryArchive } from "../src/archive-inventory.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
 import { SqliteStore, type Sql } from "../src/sqlite.ts";
-import { at, create, reader } from "./fixtures-native.ts";
+import { at, create } from "./fixtures-native.ts";
 import { archiveDefinition, archivePolicies, archiveRepository, archiveSql } from "./support/archive.ts";
 import { ScriptedArchiveHost } from "./support/archive-provider.ts";
 import { fixtureArchiveWiring } from "./worker.ts";
@@ -99,7 +101,8 @@ test("Native legacy archive receipt blocks the floor until a real backfill pass 
 // Both expected anchors come from the genuine Register founding act and
 // its Directory creation send, before archive output. No caller supplies a list.
 test("Native admitted Register17 fact publishes nonempty anchors and rebuilds the exact stored Mark", async context => {
-  const { life, R, D, children } = await sessionRoom(ARCHIVE_DEVICE_APPLICATION_COHORT.register, "journal");
+  const room = await sessionRoom(ARCHIVE_DEVICE_APPLICATION_COHORT.register, "journal");
+  const { life, R, D, children } = room;
   try {
     const [membership, rules, destination] = children;
     if (!membership || !rules || !destination) throw Error("Genuine native siblings required");
@@ -131,7 +134,10 @@ test("Native admitted Register17 fact publishes nonempty anchors and rebuilds th
     const packet = unb64url(inject("maintainedApplications").growDemo.bytes);
     if (!packet) throw Error("Exact deployed Grow policy packet required");
     const policies = growArchivePolicies(new TextDecoder().decode(packet));
-    const target = fixtureArchiveTargetIn(env.PLATFORM, { fixture: "archive-target-reader", value: reader });
+    const seat = await life.wait(async () => membership.did(rita, "seat", { expected: await membership.expected({ roster: 0 }) }));
+    await life.wait(async () => membership.did(rita, "first-key", { fields: { member: seat }, expected: await membership.expected({ roster: 0, member: seat }) }));
+    const memberReader = readerOf(mintSession(room.sessions, { ...room.claims, reads: ["summary", "items"] }));
+    const target = fixtureArchiveTargetIn(env.PLATFORM, { fixture: "archive-target-reader", value: memberReader });
     const prepare = async (sql: Sql, budget: ArchiveBudget) => {
       const source = sql.transaction(() => archiveSourceReferences(sql, 0, PROPOSED_BOUNDS, budget));
       expect(source.position).toEqual(through); expect(source.sources).toEqual([registerAt]);
@@ -209,7 +215,7 @@ test("Native admitted Register17 fact publishes nonempty anchors and rebuilds th
     for (const cost of [planned.cost, rebuilt.cost]) for (const key of Object.keys(ARCHIVE_BOUNDS) as (keyof typeof cost)[])
       expect(cost[key]).toBeLessThanOrEqual(ARCHIVE_BOUNDS[key]);
     const report = { expectedAnchors, through, publicScopes, initialCost: planned.cost, rebuildCost: rebuilt.cost, commit: rebuilt.commit,
-      qualification: "Genuine Native Register17 creation send and admitted Directory16 source copy; existing policy and original per-pass ledger. Actual source metadata/birth/pin preparation, stored nonempty publication/public identities, later checkpoint and eviction, exact rebuild. Trusted test reader and scripted repository creation; no hosted custody, production binding or full-driver acceptance claim." };
+      qualification: "Genuine Native Register17 creation send and admitted Directory16 source copy; existing policy and original per-pass ledger. Actual source metadata/birth/pin preparation, stored nonempty publication/public identities, later checkpoint and eviction, exact rebuild. Genuine Membership seat/key and fixture-minted member session reader; scripted repository creation; no hosted custody, production binding or full-driver acceptance claim." };
     (context.task.meta as Record<string, unknown>)["nativePrivateAnchorPublication"] = report;
     console.info("Native private anchor publication", JSON.stringify(report));
   } finally { life.release(); }

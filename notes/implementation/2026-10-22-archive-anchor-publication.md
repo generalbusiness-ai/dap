@@ -201,3 +201,23 @@ The owning Scope compiler, source inventory and six affected Native cases
 are pending for this correction. The seven passing Native cases and earlier
 51 passing Node cases are not repeated. No final gate or hosted result is
 claimed.
+
+## Affected focus and genuine member reader
+
+At `03e77823`, the owning Scope test compiler and three inventory cases
+passed. The affected Native run then closed naturally with status 1:
+all six selected cases failed, with six other cases filtered. Fixed guards
+passed. The two-fact oracle passed before the nonempty case reached target
+discovery. Production advanced through Room position 1 before position 2
+stopped at the original limit. Its cost is under separate diagnosis.
+The four synthetic publication/floor cases still returned unavailable;
+the original errors have not yet been identified. No passing gate is claimed.
+
+The nonempty fixture supplied the generic test reader to real PLATFORM
+item queries without enrolling its member. It now creates the existing
+Membership seat and first key through genuine Native acts, then mints the
+fixture room's ordinary summary/items session reader. Target discovery keeps
+its existing authorization, birth, pin, repository and binding checks.
+This is fixture token minting, not hosted issuance proof. The strict two-fact
+oracle, original budgets, cost assertions and 30-second deadline remain.
+The source change is independently reviewed; its Native run is pending.
