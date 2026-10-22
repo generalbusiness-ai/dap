@@ -1,9 +1,11 @@
 # Parentless creation admission: first security slice
 
-Request `954bf397`, promise `1961427e`, now integrates exactly 15 authored
-paths onto the actual Slice9 landing, Main `c40492ee`, tree `ef2c2b54`.
-The fresh isolated integration preserves the Slice9 and CLI changes.
-Focused checks on the integrated head and one exact-head gate remain pending.
+Request `954bf397`, promise `1961427e`, integrates the parentless creation
+policy onto the actual Slice9 landing, Main `c40492ee`, tree `ef2c2b54`.
+The isolated integration preserves the Slice9 and CLI changes. The first
+integrated focused checks passed, but its gate found two failures. The
+fixture and diagnostic repairs below require affected focused checks and
+one gate at their final head.
 No publication or deployment has run for this slice. No packages were installed.
 
 The sections below retain the historical preparation and evidence. That work
@@ -58,7 +60,8 @@ obligation before review.
 The rest of request `954bf397` remains open: R2 unknown-scope SQLite and
 registry admission; R3 pre-fetch/pre-drain authority ordering and the
 per-run observation bound; R12 creation/signed-read windows and addressless
-join accounting. Finding 3.12 also remains open: shared register versions
+join accounting. Planner decision `9d8f12a7` moves finding 3.12 to the R6 request
+`0716e75a`. It remains open: shared register versions
 1–6 permit the combination of `policy=open` and a `founders` list; demo
 versions 7 and 8 already refuse it in their install rule. A coherent new
 validation rule must cover direct shared judges and replay, not merely
@@ -241,3 +244,29 @@ from those evidence grants. At that checkpoint, Main integration and the
 exact-head gate were on hold for the archive landing. The current integration
 still needs its focused checks and one exact-head gate. Full R1, finding 1.1
 and descendant current-pin ancestry, R2, R3, R12 and finding 3.12 remain open.
+
+## Integrated gate failure and fixture repairs
+
+The first integrated candidate, `223b4c74` (tree `2e7bed6f`), passed the
+four selected admission cases, both owning test compilers and the three
+inventory cases. The gate then closed naturally with exit 1: 2,130 cases
+passed, two failed and three were skipped across 461 files. Typechecking
+and the preceding checks passed. The Node checks and Counting checks
+after Vitest were not reached. The original logs and outcomes remain
+preserved under assertion `4fcacaa3`; this is a real failed gate.
+
+The observability HTTP fixture set `DEPLOYMENT` to name its metric stream
+and created a made-up scope. The new admission policy correctly refused
+that creation. Its settings now explicitly enable the local/test creation
+opening. Its HTTP correlation and native turn assertions stay unchanged.
+
+The legacy-version clone witness received code 1 from its local bridge.
+That bridge collapsed request admission, Node startup and Git outcomes
+into the same code and discarded their diagnostic distinction. The CLI
+fixture also accepted a nonzero Git version preflight. The original log
+cannot establish which underlying phase failed. The repair records
+bounded diagnostics without tokens and requires a successful version
+preflight. It preserves the clone-success assertion, existing deadlines
+and all subsequent replay checks; it adds no retry. These diagnostic
+changes do not themselves establish that the clone succeeds. Affected
+focused verification and a final-head gate remain pending.
