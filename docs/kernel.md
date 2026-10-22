@@ -1,12 +1,14 @@
 # Kernel boundary
 
-Status: draft 1, for request `2ee805c5`. It describes main `c40492ee`. No
-code moves with this page.
+Status: draft 2, for request `2ee805c5`. Draft 2 answers review
+`3cd820f3`: three classes only, with tools as a kind of platform service,
+and the host statement limited to the code that has no host (sections 1, 3
+and 8). It describes main `c40492ee`. No code moves with this page.
 
 Applications on dap run for a long time, and they change more often than
 they are replaced. That works only if a small part of the system changes
 rarely and everything else can be replaced around it. This page names that
-part, the kernel. It places every package, app and example in one class,
+part, the kernel. It places every package, app and example in one of three classes,
 states the test it applied, and lists the parts that fail the test today.
 It ends with the kernel's promises and the rule for adding to the kernel.
 
@@ -19,11 +21,11 @@ It ends with the kernel's promises and the rule for adding to the kernel.
 - **Platform service.** Code that a deployment runs: the runtime host, the
   platform's own definitions, publication, the MCP service, checkers and
   package checks. A service can be replaced, and every recorded entry keeps
-  its meaning.
+  its meaning. Tools are platform services that a person or an agent runs
+  to sign, read or verify: the CLI, the client library and the replay
+  verifier. The table marks them as tools.
 - **Application.** A definition pinned in a scope, with its package, views
   and files. Retiring it changes nothing outside it.
-- **Tool.** Code that a person or an agent runs to sign, read or verify:
-  the CLI, the client library and the replay verifier.
 
 ## 2. Test
 
@@ -46,16 +48,16 @@ is not meant to be kernel, is listed in section 5 with what passing takes.
 |---|---|---|---|
 | `packages/contract` | Kernel | — | Entry, act, seed and definition forms. It also names platform and app vocabulary (section 5, K4). |
 | `packages/derive` | Kernel | — | Validator, judges, fold, rule expressions and the code of three capabilities. |
-| `packages/bytes` | Kernel | Fails in part | Canonical JSON, hashes, signatures and byte domains are kernel: entry hashes are its canonical bytes, and `derive` imports it. Its application package, view and projection codecs (`application-*.ts`, about 1,700 lines) are platform code (K3). |
+| `packages/bytes` | Kernel | Fails in part | Canonical JSON, hashes, signatures and byte domains are kernel: entry hashes are its canonical bytes, and `derive` imports it. Its application package, view and projection codecs (`application-*.ts`, about 1,600 lines) are platform code (K3). |
 | `packages/package-graph` | Platform service | Fails | `derive` imports it (K2). |
 | `packages/platform` | Platform service | Fails | Replay needs its code to derive platform scopes (K1). |
-| `packages/scope` | Platform service: the runtime host | Passes | It holds every host detail (section 8). The `hold@1` numbers that judgments use are chosen here (K7). |
+| `packages/scope` | Platform service: the runtime host | Passes | It holds the runtime's host details (section 8). The `hold@1` numbers that judgments use are chosen here (K7). |
 | `packages/mcp` | Platform service | Passes | The runtime imports it (`scope/src/worker.ts:60`). |
 | `packages/git` | Platform service | Passes | `derive` has its own commit parser for `git-read@1` (`derive/src/capability/ancestry.ts:192-197`). |
 | `packages/checkers` | Platform service | Passes | A checker signs ordinary intents (`checkers/src/signing.ts`). |
-| `packages/replay` | Tool: the independent verifier | Passes | It names platform versions and lane names (K6). |
-| `packages/cli` | Tool | Passes | It is the only caller that gives replay the platform and capability code (`cli/src/commands.ts:1180-1187`), and it leaves out `device-command@1` (K8). |
-| `packages/client` | Tool: the client library | Passes | — |
+| `packages/replay` | Platform service (tool): the independent verifier | Passes | It names platform versions and lane names (K6). Its local Git source is a Node adapter (section 8). |
+| `packages/cli` | Platform service (tool) | Passes | It is the only caller that gives replay the platform and capability code (`cli/src/commands.ts:1180-1187`), and it leaves out `device-command@1` (K8). |
+| `packages/client` | Platform service (tool): the client library | Passes | — |
 | `apps/counter` | Application | Passes | — |
 | `apps/jam` | Application | Passes | A static page with no scope. |
 | `apps/room` | Application | Passes for the kernel | Its lanes are definitions pinned by digest. It also holds the production entry of the platform Worker (`apps/room/worker.ts:2`, `wrangler.jsonc`), and the kernel names its lane actions (K4, K10). |
@@ -196,12 +198,23 @@ The second host ([self-hosting on celld](../notes/2026-10-19-self-hosting-on-cel
 is what keeps host details out of the kernel. A part that only one host can
 run cannot be kernel.
 
-Today the kernel holds no host detail. `packages/contract`,
-`packages/derive` and `packages/replay` name no host product, host storage
-or Git host. Host details sit in `packages/scope`: the Durable Object and
-Worker entry (`scope/src/object.ts`, `worker.ts`), the Git host wiring
-(`artifacts-wiring.ts`, `github-wiring.ts`), the content bucket
-(`applications/content.ts`), metrics (`metrics.ts`) and health
-(`health.ts`). The MCP service holds its own (`mcp/src/hosted.ts`). The
-self-hosting note places them in the same packages (lines 47 to 64). The
-rule in section 7 keeps the kernel this way.
+Today the kernel holds no host detail. `packages/contract` and
+`packages/derive` name no host product, host storage or Git host, and
+neither does the portable core of `packages/replay`, the part that judges
+and folds again. Host details sit in host adapters:
+
+- the runtime, in `packages/scope`: the Durable Object and Worker entry
+  (`scope/src/object.ts`, `worker.ts`), the Git host wiring
+  (`artifacts-wiring.ts`, `github-wiring.ts`), the content bucket
+  (`applications/content.ts`), metrics (`metrics.ts`) and health
+  (`health.ts`);
+- the MCP service (`mcp/src/hosted.ts`);
+- replay's local Git source (`replay/src/git.ts` and the command in
+  `replay/src/bin.ts`). It reads a clone through Node's file system
+  (`git.ts:2-5`) and is outside the portable package. It gives replay its
+  input and judges nothing.
+
+The self-hosting note places the runtime's details in the same packages
+(lines 47 to 64). A second host is evidence that the kernel needs no host;
+it is not evidence that every adapter is free of one. The rule in section 7
+keeps the kernel this way.
