@@ -771,3 +771,19 @@ and rollback after the second write followed by restart and exact-budget
 confirmation. The old ledger price control remains attributed to its
 original source, with only the bounded final save changed in its successor.
 These changes are uncompiled and unrun; they make no production fit claim.
+
+### First compact-row compiler attempt
+
+Owner 41658 naturally exited 1 at checkpoint `18b657814`. The Scope
+production compiler passed. The Scope test compiler rejected three new
+fixture reads that used the native cursor's generic `exec().one()` shape
+instead of the maintained Sql port's `exec().toArray()` result. No Native
+case ran; all source, dependency and context guards remained exact, and
+the generated cache was unchanged.
+
+The proposed fixture-only correction uses `toArray()` and explicitly
+requires one result row for each stored row or wake read. The exact
+canonical row and wake comparisons remain. Product code, prices, caps
+and deadlines are unchanged. Follow-up compilation and all seven row
+cases remain unrun; the earlier production compiler pass is separate
+evidence and need not repeat for this test-and-note change.

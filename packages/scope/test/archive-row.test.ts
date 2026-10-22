@@ -272,8 +272,12 @@ test("compact confirmation bounds escaped and Unicode metadata while target, pen
       expect(utf8(encoded).length).toBeLessThan(ARCHIVE_CONFIRMED_ROW_BYTES);
       expect(charges.filter(cost => cost.calls === 2 && cost.inputWork === 98_304)).toHaveLength(1);
       expect(charges.filter(cost => cost.inputWork === 4096 && cost.calls === undefined)).toHaveLength(1);
-      const stored = sql.exec<{ v: string }>("SELECT v FROM meta WHERE k = 'archive-row-1'").one().v;
-      const storedWake = sql.exec<{ v: string }>("SELECT v FROM meta WHERE k = 'archive-wake-1'").one().v;
+      const storedRows = sql.exec("SELECT v FROM meta WHERE k = 'archive-row-1'").toArray();
+      const wakeRows = sql.exec("SELECT v FROM meta WHERE k = 'archive-wake-1'").toArray();
+      expect(storedRows).toHaveLength(1);
+      expect(wakeRows).toHaveLength(1);
+      const stored = storedRows[0]?.['v'], storedWake = wakeRows[0]?.['v'];
+      if (typeof storedWake !== "string") expect.fail("the stored wake must be text");
       expect(stored).toBe(encoded);
       expect(storedWake).toBe(canonicalize({ pending: false, stopped: false, next: wake }));
       expect(utf8(storedWake).length).toBeLessThan(128);
@@ -286,7 +290,9 @@ test("compact confirmation bounds escaped and Unicode metadata while target, pen
       expect(() => store.target(badRepository, format, budget)).toThrow("archive-row-unavailable");
       expect(() => store.target({ ...repository, host: "x".repeat(1025) }, format, budget)).toThrow("archive-row-unavailable");
       expect(budget.admitted()).not.toEqual(beforeBad); // Actual guarded row loads still pay.
-      expect(sql.exec<{ v: string }>("SELECT v FROM meta WHERE k = 'archive-row-1'").one().v).toBe(canonicalize(store.load()));
+      const stoppedRows = sql.exec("SELECT v FROM meta WHERE k = 'archive-row-1'").toArray();
+      expect(stoppedRows).toHaveLength(1);
+      expect(stoppedRows[0]?.['v']).toBe(canonicalize(store.load()));
     });
     await lane.restart();
     expect(await lane.inside(state => new ArchiveRows(archiveSql(state), { ...lane.at, kind: "destination" }).load()?.stopped?.reason)).toBe("TEST stopped metadata");
