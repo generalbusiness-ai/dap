@@ -1,0 +1,1 @@
+Tests inspected as source only; WebCrypto/in-memory/lock/CLI stand-ins do not prove native browser IndexedDB durability or deployed acceptance. No fixes implemented while Slice9 landing is pending.
