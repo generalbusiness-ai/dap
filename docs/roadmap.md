@@ -46,7 +46,8 @@ Three limits shape everything below:
 - **Every member of a room reads the whole record.** A read session is
   bound to a repository, not to a participant's part of it.
 - **A definition is pinned when its scope is created.** A scope does not
-  change its rules afterwards.
+  change its rules afterwards. An application is designed to move to a new
+  definition by succession to a new scope; that is not built.
 - **A declared application has no operation of its own on an outside
   system.** It can list the fixed capability forms that the contract
   declares, `hold@1`, `git-read@1` and `device-command@1`, when their code
@@ -69,7 +70,7 @@ In order, nearest first.
 | [Evidence capture and private custody](#evidence-capture-and-private-custody) | Files and capture with a stated source designed, not built; custody narrower than a room not designed | 01, 02, 04 to 19, 23, 24, 27, 28, and the custody part of every case |
 | [Outside parties and systems](#outside-parties-and-systems) | Runs for Git publication only | 35, 37, 38, 39, 43, and all of group 5 |
 | [A personal account across records](#a-personal-account-across-records) | Not designed | All of group 5 |
-| [Rules that change after creation](#rules-that-change-after-creation) | Not designed in dap; tested in the dap-spike | 42; a sale that gains packages; a club that changes its policy |
+| [Rules that change after creation](#rules-that-change-after-creation) | Succession to a new scope designed, not built; change inside a running scope tested in the dap-spike | 42; a sale that gains packages; a club that changes its policy |
 | [Expressions that compute effects](#expressions-that-compute-effects) | Not designed; a rule can check a proposed value today | Analytic pipelines such as Tailapps; chess and other games with many rules |
 | [Split and join](#split-and-join) | Not designed; a protocol is sketched in the dap-spike | A merger of two records |
 | [An authoring language](#an-authoring-language) | Not designed; one attempt in the dap-spike stopped | Every case, for its author |
@@ -304,6 +305,13 @@ keeps its meaning.
 
 **Today.** A scope pins its definition for good. A room activates new
 definitions for new scopes. No scope moves to a new definition.
+
+**Designed, not built.** An application moves to a new definition by
+succession. The old scope ends with a final entry. A new scope under the
+new definition starts from it, through a mapping that is data, and the
+application's name moves to the new scope. The old scope stays readable and
+refuses new acts with a reason that names its successor. The design is
+[the definition succession note](../notes/2026-10-22-definition-succession.md).
 
 **The dap-spike's contribution.** This was the spike's first goal, and it
 held for the fixtures that ran: a package attached to a live record,
