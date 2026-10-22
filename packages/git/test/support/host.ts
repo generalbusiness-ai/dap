@@ -1,3 +1,4 @@
+import { Buffer } from "node:buffer";
 /**
  * Test support: a local HTTP endpoint that stands for a Git host. It is a
  * stand-in, and every test that uses it says so. Behind it is the real

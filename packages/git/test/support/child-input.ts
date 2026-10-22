@@ -1,3 +1,4 @@
+import { Buffer } from "node:buffer";
 import { execFile, type ExecFileOptionsWithBufferEncoding } from "node:child_process";
 
 /** Test fixture IO: own the input stream until it closes, and join the child.

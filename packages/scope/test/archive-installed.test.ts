@@ -15,7 +15,7 @@ import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-m
 import { archiveSource, verifyArchive, TRUSTS } from "@generalbusiness/artroom-replay";
 import { buildJournalPass, journalRef, verifyJournalAppend, type JournalArchive, type JournalObject, type JournalPassArchive } from "@generalbusiness/artroom-git/journal";
 import { readJournalRepositoryArchive } from "@generalbusiness/artroom-git/journal-reader";
-import { command as dapCommand, memoryStore as cliMemoryStore } from "../../../cli/src/index.ts";
+import { command as dapCommand, memoryStore as cliMemoryStore } from "../../cli/src/index.ts";
 import { artifactsOutside } from "../src/artifacts-wiring.ts";
 import type { ArtifactsNamespace } from "../src/artifacts-host.ts";
 import { archiveInput } from "../src/archive-input.ts";

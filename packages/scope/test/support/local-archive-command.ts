@@ -1,3 +1,4 @@
+import { Buffer } from "node:buffer";
 /** Genuine smart-HTTP/Git and public executable witness. Identity/token
  * authority and loopback transport are TEST stand-ins, not hosted proof. */
 import { spawn } from "node:child_process";
@@ -8,7 +9,7 @@ import type { AddressInfo } from "node:net";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, URL } from "node:url";
 import { nodeGit } from "../../../cli/src/git.ts";
 import { Host } from "../../../git/test/support/host.ts";
 import { git, put } from "../../../git/test/support/repo.ts";
