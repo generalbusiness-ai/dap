@@ -1,1 +1,0 @@
-Initial primitive only. In-memory commit/lock stand-in tests are not browser IDB durability proof. Synchronous localStorage get/set is not cross-tab compare-and-swap. Author is continuing approved orchestration and recovery work.
