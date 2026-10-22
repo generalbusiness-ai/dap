@@ -5,6 +5,11 @@ import { ArchiveStopped, type ArchiveCost } from "./archive-budget.ts";
 
 export const ARCHIVE_ROW_MANIFEST_BYTES = 1024 * 1024;
 export const ARCHIVE_ROW_BYTES = 2 * ARCHIVE_ROW_MANIFEST_BYTES + 16 * 1024;
+/** Only a checked confirmation post-state with no pending/stopped/next
+ * metadata qualifies. Its closed schema encodes to at most 25,087 bytes,
+ * including four maximally escaped 1024-unit repository strings. */
+export const ARCHIVE_CONFIRMED_ROW_BYTES = 32 * 1024;
+export const ARCHIVE_ROW_SAVE_FIXED_WORK = 4096;
 export const ARCHIVE_ROW_SIZE_METADATA = 96;
 export const ARCHIVE_RETAINED_PASS_METADATA = 96;
 export const ARCHIVE_RETAINED_PASS_WORK = 128;
@@ -19,7 +24,9 @@ export const archiveRowLoadWork = (bytes: number): number => bytes * 12;
 export const archivePendingManifestWork = (units: number): number => units * 8;
 export const archiveMarkWork = (units: number): number => units * 12 + 4096;
 export const archiveRowSaveReservation = (): Pick<ArchiveCost, "calls" | "inputWork"> =>
-  ({ calls: 2, inputWork: ARCHIVE_ROW_BYTES * 3 + 4096 });
+  ({ calls: 2, inputWork: ARCHIVE_ROW_BYTES * 3 + ARCHIVE_ROW_SAVE_FIXED_WORK });
+export const archiveConfirmedRowSaveReservation = (): Pick<ArchiveCost, "calls" | "inputWork"> =>
+  ({ calls: 2, inputWork: ARCHIVE_CONFIRMED_ROW_BYTES * 3 + ARCHIVE_ROW_SAVE_FIXED_WORK });
 export const archiveConfirmedSelectionReservation = (units: number): Pick<ArchiveCost, "metadata" | "inputWork"> =>
   ({ metadata: units * 3, inputWork: units * 24 });
 
@@ -59,17 +66,20 @@ export function forecastArchiveBookkeeping(shape: ArchiveBookkeepingFootprint): 
   if (Math.max(oldRowBytes, markedRowBytes, attemptedRowBytes) > ARCHIVE_ROW_BYTES
     || manifestUnits > ARCHIVE_ROW_MANIFEST_BYTES || publicationUnits > ARCHIVE_ROW_MANIFEST_BYTES || replayScopes > 64 || newRetained > 512) return { ok: false, reason: "limit" };
   // Atomic initial Mark+attempt eliminates the intermediate marked-row
-  // save and its later reload/validation. Unit prices are unchanged.
+  // save and its later reload/validation. Only the final confirmation
+  // save has the compact closed post-state; pending saves keep the full
+  // bound. All per-byte/fixed prices and both persistence cuts remain.
   const atomic = shape.atomicFirstAttempt === true, loads = atomic ? 2 : 3, saves = atomic ? 2 : 3;
   const bytes = oldRowBytes + (atomic ? 0 : markedRowBytes) + attemptedRowBytes, save = archiveRowSaveReservation();
+  const confirmedSave = archiveConfirmedRowSaveReservation();
   const confirmation = archiveConfirmedSelectionReservation(manifestUnits);
   const metadata = loads * ARCHIVE_ROW_SIZE_METADATA + bytes + confirmation.metadata + newRetained * ARCHIVE_RETAINED_PASS_METADATA
     + (atomic ? 3 : 5) * replayScopes * 512;
   const inputWork = loads * ARCHIVE_ROW_SIZE_METADATA + bytes + archiveRowLoadWork(bytes)
     + (atomic ? 3 : 5) * (archivePendingManifestWork(manifestUnits + publicationUnits) + replayScopes * 1024)
     + archiveMarkWork(manifestUnits + publicationUnits + replayScopes * 256)
-    + saves * save.inputWork + confirmation.inputWork
+    + (saves - 1) * save.inputWork + confirmedSave.inputWork + confirmation.inputWork
     + newRetained * (ARCHIVE_RETAINED_PASS_METADATA + ARCHIVE_RETAINED_PASS_WORK + ARCHIVE_RETAINED_CONFIRM_WORK);
   if (![metadata, inputWork].every(natural)) throw new ArchiveStopped("unavailable");
-  return { ok: true, cost: Object.freeze({ entries: 0, attempts: 0, nodes: 0, calls: loads * 2 + saves * save.calls + newRetained * 2, metadata, inputWork }) };
+  return { ok: true, cost: Object.freeze({ entries: 0, attempts: 0, nodes: 0, calls: loads * 2 + (saves - 1) * save.calls + confirmedSave.calls + newRetained * 2, metadata, inputWork }) };
 }

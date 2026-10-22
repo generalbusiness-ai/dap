@@ -9,8 +9,9 @@ import { ArchiveBudget } from "./archive-budget.ts";
 import type { Sql } from "./sqlite.ts";
 import { confirmRetainedArchivePass } from "./archive-retained-pass.ts";
 import { archiveReplayScopes, archiveReplayScopeUnits, readArchivePublication } from "./archive-publication.ts";
-import { ARCHIVE_ROW_MANIFEST_BYTES as MANIFEST_BYTES, ARCHIVE_ROW_BYTES, ARCHIVE_ROW_SIZE_METADATA,
-  archiveRowLoadWork, archivePendingManifestWork, archiveMarkWork, archiveRowSaveReservation } from "./archive-row-cost.ts";
+import { ARCHIVE_ROW_MANIFEST_BYTES as MANIFEST_BYTES, ARCHIVE_ROW_BYTES, ARCHIVE_CONFIRMED_ROW_BYTES, ARCHIVE_ROW_SIZE_METADATA,
+  ARCHIVE_ROW_SAVE_FIXED_WORK, archiveRowLoadWork, archivePendingManifestWork, archiveMarkWork,
+  archiveRowSaveReservation, archiveConfirmedRowSaveReservation } from "./archive-row-cost.ts";
 export { ARCHIVE_ROW_BYTES } from "./archive-row-cost.ts";
 
 const KEY = "archive-row-1";
@@ -113,9 +114,22 @@ export class ArchiveRows {
   }
   #save(value: ArchiveRow, budget: ArchiveBudget, afterConfirmation: Timestamp | null = null): ArchiveRow {
     checked(value, this.#at, budget);
-    budget.spend(archiveRowSaveReservation());
+    // Original fixed work precedes the bounded selector. checked() has
+    // already established every field/type/length and the closed schema.
+    // The compact schema's maximum UTF-8 size is 220 structure + 24,584
+    // repository strings + 248 other strings + 19 numbers + 4 boolean +
+    // 12 nulls = 25,087 bytes. Only the four repository strings need the
+    // six-bytes-per-UTF-16-unit escape bound; all other strings are fixed
+    // identifier/hex/format tokens. Neither pending nor stopped data enters.
+    budget.spend({ inputWork: ARCHIVE_ROW_SAVE_FIXED_WORK });
+    const compact = value.confirmed !== null && value.pending === null && value.stopped === null && value.next === null && value.attempts === 0;
+    const limit = compact ? ARCHIVE_CONFIRMED_ROW_BYTES : ARCHIVE_ROW_BYTES;
+    const reservation = compact ? archiveConfirmedRowSaveReservation() : archiveRowSaveReservation();
+    // Both persistence calls and the original three-per-byte price are
+    // reserved before serialization, UTF-8 allocation or owned parsing.
+    budget.spend({ calls: reservation.calls, inputWork: reservation.inputWork - ARCHIVE_ROW_SAVE_FIXED_WORK });
     const bytes = canonicalize(value);
-    if (bytes.length > ARCHIVE_ROW_BYTES || utf8(bytes).length > ARCHIVE_ROW_BYTES) return refuse("limit");
+    if (bytes.length > limit || utf8(bytes).length > limit) return refuse("limit");
     budget.check();
     this.#sql.exec("INSERT INTO meta (k, v) VALUES (?, ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v", KEY, bytes).toArray();
     // A small alarm index prevents a new turn from loading the manifest.

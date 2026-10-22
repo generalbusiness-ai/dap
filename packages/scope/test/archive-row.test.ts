@@ -1,15 +1,15 @@
 /** Real native SQLite bookkeeping and restart. Marks below are explicit
  * test-authored metadata, not admitted inventory, built commits or host proof. */
 import { expect, test } from "vitest";
-import { canonicalize, digestBytes, domainBytes, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, digestBytes, domainBytes, timeOf, utf8 } from "@generalbusiness/artroom-bytes";
 import { DOMAINS } from "@generalbusiness/dap-contract";
 import { ARCHIVE_ROW_BYTES, ArchiveRows, type ArchiveMark } from "../src/archive-row.ts";
-import { ArchiveBudget } from "../src/archive-budget.ts";
+import { ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
 import { at, create, type Lane } from "./fixtures-native.ts";
 import { SqliteStore } from "../src/sqlite.ts";
 import { readRetainedArchivePass } from "../src/archive-retained-pass.ts";
 import { archiveSql } from "./support/archive.ts";
-import { archivePendingRowBytesUpper, forecastArchiveBookkeeping } from "../src/archive-row-cost.ts";
+import { ARCHIVE_CONFIRMED_ROW_BYTES, archivePendingRowBytesUpper, forecastArchiveBookkeeping } from "../src/archive-row-cost.ts";
 
 const repository = { host: "fixture-host", namespace: "fixture-room", name: "archive-fixture", id: "fixture-repository" };
 const rows = <T>(lane: Lane, work: (store: ArchiveRows) => T) => lane.inside(state => work(new ArchiveRows({ exec: (query, ...args) => state.storage.sql.exec(query, ...args), transaction: action => state.storage.transactionSync(action) }, lane.at)));
@@ -106,9 +106,11 @@ test("preserves a single immutable mark across a native restart and later turn",
   // Captured from the actual original native ledger before extraction.
   const original = { entries: 0, attempts: 0, nodes: 0, calls: 14, metadata: 5175, inputWork: 19120795 };
   expect(sizes).toEqual({ oldRowBytes: 501, markedRowBytes: 1344, attemptedRowBytes: 1362, manifestUnits: 528, newRetained: 1 });
-  expect(finishBudget.admitted()).toEqual(original);
-  expect(forecastArchiveBookkeeping(sizes)).toEqual({ ok: true, cost: original });
-  (context.task.meta as Record<string, unknown>)["archiveRowCost"] = { sizes, cost: finishBudget.admitted(),
+  const compactConfirmation = { ...original, inputWork: 12_878_491 };
+  expect(finishBudget.admitted()).toEqual(compactConfirmation);
+  expect(original.inputWork - finishBudget.admitted().inputWork).toBe(6_242_304);
+  expect(forecastArchiveBookkeeping(sizes)).toEqual({ ok: true, cost: compactConfirmation });
+  (context.task.meta as Record<string, unknown>)["archiveRowCost"] = { sizes, original, cost: finishBudget.admitted(),
     qualification: "Actual SQLite mark, attempt and confirm only on one original default ledger. Test-authored marks and retained rows are not native archive admission, built commits, host receipts or export. Setup row read uses a separate setup budget; no full-pass claim." };
   await lane.restart();
   expect(await lane.inside(state => [rule, value, nextKey].map(key => readRetainedArchivePass(archiveSql(state), key, new ArchiveBudget())))).toEqual([0, 0, head.seq + 1]);
@@ -233,4 +235,121 @@ test("atomic initial persistence recovers a legacy attempts-zero Mark without ch
   // Ordinary pending retries keep their original separate transition.
   await rows(lane, store => store.attempt(at(60)));
   expect(await rows(lane, store => store.load())).toMatchObject({ pending: mark, attempts: 2, next: at(60) });
+});
+
+// Component metadata only: the maximum reference/position and padded Mark
+// below are not genuine entries, archive admission or a provider receipt.
+test("compact confirmation bounds escaped and Unicode metadata while target, pending and stopped saves keep the full reservation", async () => {
+  const fields = ["\u0000".repeat(1024), ("\u0000\"\\🎵é".repeat(170) + "safe")];
+  for (const [index, field] of fields.entries()) {
+    expect(field.length).toBe(1024);
+    const lane = await create();
+    await lane.inside(state => {
+      const sql = archiveSql(state), at = { ...lane.at, kind: "destination" as const };
+      const repository = { host: field, id: field, name: field, namespace: field };
+      const format = index === 0 ? "sha256" as const : "sha1" as const;
+      const through = { seq: Number.MAX_SAFE_INTEGER, hash: `sha256:${"f".repeat(64)}` as const };
+      const mark: ArchiveMark = { commit: "f".repeat(format === "sha256" ? 64 : 40), parent: null, through, layout: 2,
+        manifest: canonicalize({ format: "artroom-local-inventory-2", at, through, after: null, objects: [], padding: "x".repeat(64 * 1024) }),
+        anchorPublication: canonicalize({ anchors: [] }), replayScopes: [at], markedAt: timeOf(0) };
+      const charges: Partial<ArchiveCost>[] = [], budget = new class extends ArchiveBudget {
+        override spend(cost: Partial<ArchiveCost>): void { super.spend(cost); charges.push({ ...cost }); }
+      }();
+      const store = new ArchiveRows(sql, at);
+      store.target(repository, format, budget);
+      expect(charges.filter(cost => cost.calls === 2 && cost.inputWork === 6_340_608)).toHaveLength(1);
+      charges.length = 0;
+      const pending = store.markAttempt(mark, timeOf(1), budget);
+      expect(utf8(canonicalize(pending)).length).toBeGreaterThan(ARCHIVE_CONFIRMED_ROW_BYTES);
+      expect(charges.filter(cost => cost.calls === 2 && cost.inputWork === 6_340_608)).toHaveLength(1);
+      expect(charges.filter(cost => cost.inputWork === 4096 && cost.calls === undefined)).toHaveLength(1);
+      charges.length = 0;
+      const wake = timeOf(Date.UTC(9999, 11, 31, 23, 59, 59) + 1);
+      const confirmed = store.confirm(mark.commit, budget, wake), encoded = canonicalize(confirmed);
+      expect(confirmed).toEqual({ v: 1, at, repository, format,
+        confirmed: { commit: mark.commit, through, layout: 2, anchorsPublished: true }, pending: null, attempts: 0, next: null, stopped: null });
+      expect(utf8(encoded).length).toBeLessThanOrEqual(25_087);
+      expect(utf8(encoded).length).toBeLessThan(ARCHIVE_CONFIRMED_ROW_BYTES);
+      expect(charges.filter(cost => cost.calls === 2 && cost.inputWork === 98_304)).toHaveLength(1);
+      expect(charges.filter(cost => cost.inputWork === 4096 && cost.calls === undefined)).toHaveLength(1);
+      const stored = sql.exec<{ v: string }>("SELECT v FROM meta WHERE k = 'archive-row-1'").one().v;
+      const storedWake = sql.exec<{ v: string }>("SELECT v FROM meta WHERE k = 'archive-wake-1'").one().v;
+      expect(stored).toBe(encoded);
+      expect(storedWake).toBe(canonicalize({ pending: false, stopped: false, next: wake }));
+      expect(utf8(storedWake).length).toBeLessThan(128);
+      charges.length = 0;
+      store.stop("TEST stopped metadata", null, budget);
+      expect(charges.filter(cost => cost.calls === 2 && cost.inputWork === 6_340_608)).toHaveLength(1);
+      // Existing shape checks still refuse malformed/expanded metadata;
+      // no cheap path is available just because pending is null.
+      const beforeBad = budget.admitted(), badRepository = { ...repository, extra: "not in the row schema" };
+      expect(() => store.target(badRepository, format, budget)).toThrow("archive-row-unavailable");
+      expect(() => store.target({ ...repository, host: "x".repeat(1025) }, format, budget)).toThrow("archive-row-unavailable");
+      expect(budget.admitted()).not.toEqual(beforeBad); // Actual guarded row loads still pay.
+      expect(sql.exec<{ v: string }>("SELECT v FROM meta WHERE k = 'archive-row-1'").one().v).toBe(canonicalize(store.load()));
+    });
+    await lane.restart();
+    expect(await lane.inside(state => new ArchiveRows(archiveSql(state), { ...lane.at, kind: "destination" }).load()?.stopped?.reason)).toBe("TEST stopped metadata");
+  }
+});
+
+// Real native transaction, retained pass update and eviction. Marks are
+// explicit component fixtures, not admitted archives or remote receipts.
+test("compact confirmation rolls back both writes and retained updates, then accepts its exact budget after restart", async () => {
+  const lane = await create(), through = await lane.head();
+  const ruleBytes = canonicalize({ fixture: "confirmation retained rule" });
+  const key = { kind: "rule" as const, digest: digestBytes(utf8(ruleBytes)) };
+  const mark: ArchiveMark = { commit: "a".repeat(40), parent: null, through, layout: 2,
+    manifest: canonicalize({ format: "artroom-local-inventory-2", at: lane.at, through, after: null, objects: [{ key, pass: 0 }] }),
+    anchorPublication: canonicalize({ anchors: [] }), replayScopes: [lane.at], markedAt: at(0) };
+  await lane.inside(state => {
+    const sql = archiveSql(state), store = new ArchiveRows(sql, lane.at);
+    sql.exec("INSERT INTO retained_input(kind,digest,bytes) VALUES (?,?,?)", key.kind, key.digest, ruleBytes);
+    store.target(repository, "sha1"); store.markAttempt(mark, at(30));
+  });
+  const failedCost = await lane.inside(state => {
+    const sql = archiveSql(state), original = new ArchiveRows(sql, lane.at).load(), budget = new ArchiveBudget();
+    let writes = 0;
+    const failed = new ArchiveRows({ ...sql, exec(query, ...args) {
+      const result = sql.exec(query, ...args);
+      if (query.startsWith("INSERT INTO meta") && (args[0] === "archive-row-1" || args[0] === "archive-wake-1")) writes++;
+      if (query.startsWith("INSERT INTO meta") && args[0] === "archive-wake-1") throw Error("TEST after confirmation second write");
+      return result;
+    } }, lane.at);
+    expect(() => failed.confirm(mark.commit, budget)).toThrow("TEST after confirmation second write");
+    expect(writes).toBe(2);
+    expect(new ArchiveRows(sql, lane.at).load()).toEqual(original);
+    expect(readRetainedArchivePass(sql, key, new ArchiveBudget())).toBeNull();
+    expect(new ArchiveRows(sql, lane.at).wake()).toBe(at(30));
+    return budget.admitted();
+  });
+  await lane.restart();
+  await lane.inside(state => {
+    const sql = archiveSql(state), original = new ArchiveRows(sql, lane.at).load();
+    expect(original?.pending).toEqual(mark);
+    let writes = 0;
+    const store = new ArchiveRows({ ...sql, exec(query, ...args) {
+      if (query.startsWith("INSERT INTO meta")) writes++;
+      return sql.exec(query, ...args);
+    } }, lane.at);
+    const short = new ArchiveBudget({ inputWork: failedCost.inputWork - 1 });
+    expect(() => store.confirm(mark.commit, short)).toThrow("archive-limit");
+    expect(writes).toBe(0);
+    expect(new ArchiveRows(sql, lane.at).load()).toEqual(original);
+    expect(readRetainedArchivePass(sql, key, new ArchiveBudget())).toBeNull();
+    expect(new ArchiveRows(sql, lane.at).wake()).toBe(at(30));
+  });
+  await lane.restart();
+  const actual = await lane.inside(state => {
+    const sql = archiveSql(state), exact = new ArchiveBudget(failedCost), store = new ArchiveRows(sql, lane.at);
+    const confirmed = store.confirm(mark.commit, exact);
+    expect(confirmed.pending).toBeNull();
+    expect(confirmed.confirmed).toEqual({ commit: mark.commit, through, layout: 2, anchorsPublished: true });
+    expect(readRetainedArchivePass(sql, key, new ArchiveBudget())).toBe(0);
+    expect(store.wake()).toBeNull();
+    expect(exact.admitted()).toEqual(failedCost);
+    return confirmed;
+  });
+  await lane.restart();
+  expect(await rows(lane, store => store.load())).toEqual(actual);
 });

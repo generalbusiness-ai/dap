@@ -743,3 +743,31 @@ requires a concrete measurement or mechanism proposal for actual fixed
 reservations; lowering only their forecasts would be unsound. Installed
 production acceptance, both activation cases, the six heavy cases and the
 final exact-head gate remain pending.
+
+A proposed bookkeeping refinement retains both durable writes and both
+atomic cuts. After all existing row checks, only the exact confirmation
+post-state can use a smaller serialization reservation: a nonnull receipt,
+null pending, stopped and next fields, and zero attempts. The closed schema
+has at most 25,087 UTF-8 bytes, including four maximally escaped repository
+strings. Its reservation rounds up to 32 KiB. Target, pending and stopped
+rows retain the full existing bound.
+
+The existing fixed 4,096 input units are charged once, before the constant
+shape selector. Both SQL calls and the original three units per selected
+byte are then reserved before canonical serialization, UTF-8 conversion or
+the owned return parse. The actual serialized size must fit that selected
+bound before either write. No post-read top-up or rebate is allowed.
+The final confirmation forecast uses the same compact reservation; every
+earlier save retains the full reservation. Retained-pass and publication
+validation, canonical persisted bytes, transaction rollback, wake state,
+restart and retry semantics remain unchanged. This reduces reserved work
+for a provably smaller representation, without changing the fixed or
+per-byte prices, capacities or deadlines.
+
+The scratch proposal adds Native SQLite controls for maximal escaping and
+Unicode, both object formats, the full pending-save price, malformed and
+stopped fallbacks, refusal one input unit below actual confirmation cost,
+and rollback after the second write followed by restart and exact-budget
+confirmation. The old ledger price control remains attributed to its
+original source, with only the bounded final save changed in its successor.
+These changes are uncompiled and unrun; they make no production fit claim.
