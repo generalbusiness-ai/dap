@@ -45,38 +45,6 @@ export interface AdaptiveArchiveContext {
   readonly parentHeld: ReadonlyMap<string, JournalObject>; readonly parentUsed: ReadonlySet<string>;
   readonly maximum: number;
 }
-// TEMPORARY diagnostic Source only. Restored after its one allocated run.
-// The first eligible Rules append is unattributed until the independent
-// pre-archive TEST oracle matches its entire scope reference and fact.
-let rules2Owner: { readonly budget: ArchiveBudget; readonly at: ScopeRef; readonly after: Head; readonly through: Head } | undefined;
-let rules2Records = 0, rules2Repeated = false, rules2RepeatReported = false;
-function rules2Record(stage: "bound" | "components" | "incomplete", data: unknown): void {
-  // At most 30 normal records and one cap marker; the fixture contributes
-  // at most one additional metadata record, for a combined ceiling of 32.
-  if (rules2Records >= 30) {
-    if (rules2Records === 30) { rules2Records++; console.info("ARCHIVE_RULES2_COMPONENTS " + JSON.stringify({ stage: "incomplete", reason: "capture-cap" })); }
-    return;
-  }
-  rules2Records++;
-  console.info("ARCHIVE_RULES2_COMPONENTS " + JSON.stringify({ stage, repeated: rules2Repeated, data }));
-}
-function bindRules2(context: AdaptiveArchiveContext, budget: ArchiveBudget): void {
-  if (context.at.kind !== "rules" || context.after?.seq !== 1 || context.through.seq !== 2) return;
-  if (rules2Owner) {
-    rules2Repeated = true;
-    if (!rules2RepeatReported) { rules2RepeatReported = true; rules2Record("incomplete", { reason: "multiple-eligible-invocations" }); }
-    return;
-  }
-  rules2Owner = { budget, at: { ...context.at }, after: { ...context.after }, through: { ...context.through } };
-  rules2Record("bound", { at: rules2Owner.at, after: rules2Owner.after, through: rules2Owner.through,
-    qualification: "Pending exact independent pre-archive Native Rules authority fact match; diagnostic only." });
-}
-function matchesRules2(context: AdaptiveArchiveContext, budget: ArchiveBudget): boolean {
-  const held = rules2Owner;
-  return held !== undefined && held.budget === budget && context.at.scope === held.at.scope && context.at.inc === held.at.inc
-    && context.at.kind === held.at.kind && context.after?.seq === held.after.seq && context.after.hash === held.after.hash
-    && context.through.seq === held.through.seq && context.through.hash === held.through.hash;
-}
 function parentMetadata(context: AdaptiveArchiveContext, budget: ArchiveBudget): ParentMetadata {
   budget.spend({ metadata: 128 + context.parentUsed.size * 128, inputWork: 256 + context.parentUsed.size * 256 });
   const ids: string[] = []; let bytes = 0;
@@ -136,26 +104,9 @@ function finishCost(context: AdaptiveArchiveContext, preparation: JournalPassPre
     bytes: parent.bytes + patch.layoutWork.outputWork + commit.layoutWork.outputWork,
     incremental: context.parent !== null, maximum: context.maximum });
   if (!rows.ok || !transfer.ok) return null;
-  const cost = sum(setup, inventory, shape.input, publication, { inputWork: JOURNAL_SELECTION_BYTES * 3 }, selection.cost, body.cost,
+  return sum(setup, inventory, shape.input, publication, { inputWork: JOURNAL_SELECTION_BYTES * 3 }, selection.cost, body.cost,
     patch.cost, commit.cost, context.parent && patch.appendEdges?.ok ? patch.appendEdges.cost : {},
     append?.ok ? append.cost : {}, transfer.cost, rows.cost);
-  if (matchesRules2(context, budget)) rules2Record("components", {
-    at: context.at, after: context.after, through: context.through, repeated: rules2Repeated,
-    shape: { entries: shape.entries, entryBytes: shape.entryBytes, objects: shape.objects, copies: shape.copies,
-      anchorCandidates: shape.anchorCandidates, newRetained: shape.newRetained, retainedBytes: shape.retainedBytes,
-      retainedNameUnits: shape.retainedNameUnits, origins: shape.origins, manifestRows: shape.manifestRows,
-      selectionUnits: shape.selectionUnits, manifestBytes: shape.manifestBytes, measuredOmissions: shape.measuredOmissions,
-      orderingInputWork: shape.orderingInputWork },
-    anchors, legacyAnchors, publicationUnits, scopeBase, scopes, oldRowBytes, pendingRowBytesUpper: pending,
-    parent: { objects: parent.objects, bytes: parent.bytes },
-    patchLayout: { objects: patch.layoutWork.objects, trees: patch.layoutWork.trees, names: patch.layoutWork.names, outputWork: patch.layoutWork.outputWork },
-    components: { setup, inventory, nativeInput: shape.input, publication, selectionReservation: { inputWork: JOURNAL_SELECTION_BYTES * 3 },
-      selection: selection.cost, body: body.cost, patch: patch.cost, commit: commit.cost,
-      appendEdges: context.parent && patch.appendEdges?.ok ? patch.appendEdges.cost : {}, append: append?.ok ? append.cost : {},
-      transfer: transfer.cost, rows: rows.cost },
-    originalQuote: cost,
-    qualification: "Original computed component objects and the single original sum; no reconstructed forecast, Native/body read or scheduling input. Instrumented run is diagnostic, not acceptance or performance evidence." });
-  return cost;
 }
 export function planAdaptiveArchivePass(sql: Sql, context: AdaptiveArchiveContext, budget: ArchiveBudget) {
   return adaptiveArchivePass(false, sql, context, budget);
@@ -170,7 +121,6 @@ async function adaptiveArchivePass(coupled: boolean, sql: Sql, context: Adaptive
       || !same(context.row.at, context.at) || context.row.format !== context.format
       || !same(context.row.confirmed?.through ?? null, context.after)
       || (context.row.confirmed?.commit ?? null) !== (context.parent?.id ?? null)) return { ok: false, reason: "parent" };
-    bindRules2(context, budget);
     // A loaded canonical row has no pending manifest. Bound its four
     // repository strings before serializing the Native metadata snapshot.
     budget.spend({ metadata: 32 * 1024, inputWork: 256 * 1024 });

@@ -821,24 +821,6 @@ test.for(["fixture", "Grow", "Grow production", "Grow activation warm", "Grow ac
           }));
           if (!rebuildWitnessed) peer.failBeforeAccept = true;
           const initial = await run();
-          if (at.kind === "rules" && cutoff.seq === 2) {
-            // TEMPORARY one-record attribution, from Native data captured
-            // before ANY archive work. No archive output supplies this fact.
-            const oracle = nativeInstallOracle!.rulesEntry, input = sealed.entry.input, inputKeys = Object.keys(input);
-            const matched = at.scope === oracle.entry.at.scope && at.inc === oracle.entry.at.inc && at.kind === oracle.entry.at.kind
-              && cutoff.seq === oracle.entry.seq && cutoff.hash === oracle.hash;
-            const bounded = inputKeys.length <= 16 && inputKeys.every(key => key.length <= 64);
-            (context.task.meta as Record<string, unknown>)["rulesAppendDiagnosticReference"] = {
-              at, cutoff, authorityOracle: { at: oracle.entry.at, seq: oracle.entry.seq, hash: oracle.hash },
-              matchesAuthorityOracle: matched, incomplete: !matched || !bounded || initial.result.state !== "stopped" || initial.cost.entries !== 1 || input.type !== "act"
-                || input.signed.intent.kind !== "install-application",
-              state: initial.result.state, entries: initial.cost.entries, input: input.type, inputKeys: bounded ? inputKeys.sort() : null, inputKeyCount: inputKeys.length,
-              uses: sealed.entry.uses.length, effects: sealed.entry.effects.length, sends: sealed.entry.sends.length,
-              ...(input.type === "act" ? { act: input.signed.intent.kind === "install-application" ? "install-application" : "other",
-                authority: input.authority.length, observed: input.observed?.length ?? 0, presented: Object.keys(input.presented).length,
-                intentFieldCount: Object.keys(input.signed.intent.fields).length } : {}),
-              qualification: "One bounded post-settlement record of already-held metadata and exact pre-archive Native oracle; no new body serialization or read. Require exact full reference/hash equality with the original component record and rejected quote on all six axes; otherwise incomplete." };
-          }
           // Only settled TEST diagnostics inspect the already captured Native
           // history. This serialization does not schedule/admit any pass.
           const entryShape = at.kind === "directory" && cutoff.seq === 2 ? {
