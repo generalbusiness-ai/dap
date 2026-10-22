@@ -181,6 +181,24 @@ D1. No focused cases, compilers or generator are repeated during integration.
 One ordinary gate at the final integrated head and a full fresh review remain
 required before landing.
 
+## MCP invitation-version documentation precheck
+
+Before gate allocation, the integrated-source checker precheck finds four
+MCP guide descriptions that still name only Membership 6 and 7 for
+invitation proofs and public keys. The exact supported set in
+`packages/contract/src/invitation.ts` is Membership 6, 7 and 8; the client
+and CLI invitation code use that set. The guide now names all three in its
+join, custody and controller-enrolment descriptions. The legacy secret-based
+versions remain unchanged. This changes documentation only, with no code,
+test, packet, generated module, dependency or lock change.
+
+The metadata-only gate preparation for `53dd9186` was never allocated or
+executed. It remains frozen as superseded DATA. A fresh preparation must pin
+this corrected source checkpoint and preserve the original focused results
+and failures. Its owned execution helper stays held for root allocation;
+separate permanent DATA copies support review. The one ordinary final-head
+gate and full fresh review are still pending.
+
 The sections below preserve the earlier integration report from `a57ed7fa`.
 Its heads, counts, physical paths and outcomes describe that earlier work.
 

@@ -25,7 +25,7 @@ directory (`DAP_HOME`, or the legacy `ARTROOM_HOME`). Set the room up first
 with `dap install` and `dap create`; or start the server with an empty config directory
 and call its `join` tool with an invitation link, which records the room
 there as `dap join` does. The link holds the invitation's secret.
-`join`'s own result never repeats it. With membership@6 or @7, the signed join
+`join`'s own result never repeats it. With membership@6, @7 or @8, the signed join
 holds a proof made with the invitation's private key, bound to that
 membership scope, invitation and joining key; it does not hold the secret.
 Legacy membership@1, @2, @4 and @5 hold the secret in the signed join.
@@ -252,7 +252,7 @@ caller's `idempotencyKey`, in the config directory's
 `private/mcp-custody/`, readable only by its owner.
 
 - **Invitation contents and retention.** A join record keeps its exact
-  signed input: an invitation proof for membership@6 or @7, or the invitation
+  signed input: an invitation proof for membership@6, @7 or @8, or the invitation
   secret for legacy membership@1, @2, @4 and @5. An archived record keeps
   the same input. The invitation link remains secret in either case;
   hosts may also retain tool inputs. Neither intent expiry nor archival
@@ -1749,7 +1749,7 @@ Enrolment is the membership's own; nothing here grants a permission.
    person: `add-member` with `kind: agent`, the handle and `controller`.
 2. An admin invites a key for that member: `invite-key` with the member,
    `kind: agent`, `inviteEnds` and the membership version's invitation
-   field: `inviteKey`, the invitation's public key, for membership@6 or @7;
+   field: `inviteKey`, the invitation's public key, for membership@6, @7 or @8;
    `inviteHash`, the secret's digest, for legacy membership@2, @4 and @5.
    The CLI does not expose `dap invite --kind agent-key`. The retained
    issuer is `issueInvitation` in the [CLI API](../packages/cli/src/invitations.ts),
@@ -1768,8 +1768,8 @@ Enrolment is the membership's own; nothing here grants a permission.
    records the request under `op` and creates the agent's object.
 4. The agent's object makes its key, keeps the signed `enrol` under
    custody before sending it, reads the admitted entry back, confirms the
-   key is active, and mints the bearer. The signed `enrol` for membership@6
-   or @7 holds the invitation proof; legacy @2, @4 and @5 hold its secret.
+   key is active, and mints the bearer. The signed `enrol` for membership@6,
+   @7 or @8 holds the invitation proof; legacy @2, @4 and @5 hold its secret.
    Custody and the admitted journal entry retain those signed fields.
    Hosted custody archival does not delete them; see its budgets below.
 5. Give the agent host `https://<service>/mcp` and
