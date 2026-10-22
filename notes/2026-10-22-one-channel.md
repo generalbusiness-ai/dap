@@ -1,13 +1,15 @@
 # One channel
 
-Design note, draft 1, for request `1e8ef5d5`. Proposed: nothing here is
-built. It describes main `c40492ee`.
+Design note, draft 2, for request `1e8ef5d5`. Draft 2 answers review
+`b64354d7`: mixed reads are split, the checker's and gateway's local
+records are named, and D5, D13 and D21 are completed. Proposed: nothing
+here is built. It describes main `c40492ee`.
 
 An agent in a room changes an issue's title. It signs an act, the issue's
 scope judges it, and the journal keeps it. A week later a verifier replays
 the journal and finds the same title. Now the same agent reads the room's
-status, mints a clone token, and asks the hosted endpoint for a new bearer.
-None of those three steps is an entry. This note finds every such step,
+status, takes the plaintext of a clone token it minted, and asks the
+hosted endpoint for a new bearer. None of those three steps is an entry. This note finds every such step,
 says which class it belongs to, and gives each one a disposition: a design
 that brings it into the record, or a reason it stays outside, with its
 limits.
@@ -27,7 +29,7 @@ list of the kernel's promises.
 | Class | Meaning | Test |
 |---|---|---|
 | A. Act | A signed intent, judged in a turn, kept as an entry. | Replay derives it again. |
-| B. Read at a position | An answer from a scope's journal, items or summary, with the head it was read at. | The answer names `at` (`packages/contract/src/read.ts:18`), and the same read at the same head gives the same answer. |
+| B. Read at a position | An answer from a scope's journal, items or summary, with the head it was read at. | The answer names `at` (`packages/contract/src/read.ts:18`), and the same read at the same head gives the same answer. An answer that also holds advisory, custody or operational fields is mixed: its recorded part is B, and the rest is D (D7). A head label alone does not make a field B. |
 | C. Capability form | An outside effect under a declared capability or operation, whose outcome is its own entry. | The attempt and its outcome are entries (`packages/scope/src/operations.ts:9-35`). |
 | D. Something else | Any surface that reads or changes state outside A, B and C. | It has a disposition in section 4. |
 
@@ -47,9 +49,11 @@ The gitseq workroom is a different system and is outside this audit.
 | Surface | Class | Evidence | Note |
 |---|---|---|---|
 | 57 act tools (`change.*`, `issue.*`, `member.*`, `key.*`, `room.*`, `rules.*`, `repository.*`, `inbox.*`, `task.create`) | A | One tool for each act declaration (`packages/mcp/src/catalogue.ts:142-179`); each call signs one intent and submits it once (`service.ts:502`, `:524-527`); a retry resends the same bytes (`custody.ts:17-26`). | Each tool signs exactly one act. |
-| `inspect`, `items`, `steps`, `step`, `record`, `sends`, `text`, `application_installation` | B | Every answer names `at` (`service.ts:702`, `:721`, `:744`, `:753`). | `sends` also shows the dispatcher's attempts. They are bookkeeping, not entries (`read.ts:80-99`). |
+| `inspect`, `items`, `steps`, `step`, `record`, `text`, `application_installation` | B | Every answer names `at` (`service.ts:702`, `:721`, `:744`, `:753`). | — |
+| `sends` | B and D mixed | The sends are recorded (`read.ts:80-99`). | The dispatcher's attempts and acknowledgements change with no entry (`packages/scope/src/reads.ts:326-342`). D7. |
 | `room` | B, mixed heads | Reads several summaries, each at its own head (`packages/mcp/src/inventory.ts:165-180`). | It returns a generation, not the heads (`service.ts:639`). D2. |
-| `wait`, `settle` | B | `wait` polls once a second for at most 60 seconds (`service.ts:1094`, `:1132-1136`); `settle` looks up the accepted intent (`service.ts:819-876`). | `wait` writes local configuration although its description says it never writes (`service.ts:599`, `:1187-1200`). D13. |
+| `wait` | B, with local writes | Polls once a second for at most 60 seconds (`service.ts:1094`, `:1132-1136`). | It writes local configuration although its description says it never writes (`service.ts:599`, `:1187-1200`). D8. |
+| `settle` | B and D mixed | The accepted intent and its entry are B (`service.ts:819-876`). | It also returns the private custody phase, outcome, attempt and step, and it can write a custody outcome with no scope entry (`packages/mcp/src/custody.ts:410-428`). D7, D8. |
 | `create`, `join`, `prepare` | A | One creation (`service.ts:916-927`), one `join` (`:1056-1064`), one preparation entry (`packages/derive/src/prepare.ts:259`). | `create` and `join` also write local configuration. |
 | `install_application` | A, then C | One `install-application` act on the rules scope (`service.ts:1004`); the host's fetch and admission are operations with outcomes (`packages/scope/src/applications/outside.ts:36-60`). | The MCP server fetches the package URI itself before the act (`service.ts:990-993`). |
 | `credential` | D | Finds the `mint-read` outcome, then takes the token's plaintext once and clears it (`packages/scope/src/credential-store.ts:169-177`). | The take writes no entry. D1. |
@@ -93,7 +97,8 @@ The gitseq workroom is a different system and is outside this audit.
 | `device-command@1` | A | The answer is the owner's signed preparation, with no outside operation (`packages/derive/src/capability/device-command.ts:131-132`). | It reaches no device (`docs/roadmap.md`, lines 52 to 54). It is an attested answer, not class C. D16. |
 | Grow simulator | A | It signs acts and answers device commands through `prepare` (`examples/grow/simulator-host.ts:97`, `:113`). | It checks the signed release and does not record which one it ran. D16. |
 | Register host: create and delete a repository, revoke a credential | C | Outcomes carry the host's answer (`packages/scope/src/register-host.ts:1-16`). | The creation write token is kept beside the record. |
-| Token gateway and checker service | A | The checker signs ordinary acts (`packages/checkers/src/service.ts:1-18`); the gateway opens a grant only for a token that a sealed outcome made live (`packages/git/src/gateway.ts:44-56`). | Not wired in production (`packages/checkers/src/sandbox.ts:85-86`). |
+| Checker results | A | The checker's verdicts and results are signed acts (`packages/checkers/src/service.ts:1-18`). | — |
+| Checker run records and token gateway | D: service custody | The checker writes a run record before it calls a runner (`checkers/src/service.ts:13-18`). The gateway's `open`, `close`, `ended` and `forward` are local calls that write grant records (`packages/git/src/gateway.ts:95-121`, `:235-283`, `:315-338`). A grant opens only for a token that a sealed outcome made live (`gateway.ts:266`). | Not wired in production (`packages/checkers/src/sandbox.ts:85-86`). D23. |
 | Archive passes | D | "No entry, operation or public RPC" (`packages/scope/src/archive-driver.ts:1`). The binding is an act (`bind-archive`). | Passes push Git objects with a write token that no entry records. D17. |
 
 ### 3.5 Presence, files, agents and observability
@@ -114,13 +119,15 @@ The gitseq workroom is a different system and is outside this audit.
 | Surface | Class | Evidence | Note |
 |---|---|---|---|
 | `POST /v1/scopes`, `/acts`, `/preparations` | A | `packages/scope/src/worker.ts:348`, `:354`, `:360`. | — |
-| Summary, items, history, entries, log, retained, outbox, item queries, projections, settle | B | Every answer names `at` (`worker.ts:318-371`). | — |
+| Items, history, entries, log, retained, item queries, projections | B | Every answer names `at` (`worker.ts:318-371`). | — |
+| Summary, outbox, operation status, settle route | B and D mixed | The recorded fields name `at`. | The summary's `reservationExpiry` comes from a fresh clock at an unchanged head (`packages/scope/src/reads.ts:219-233`); the outbox carries dispatcher attempts (`reads.ts:326-342`); operation status carries driver bookkeeping (`reads.ts:345-359`). D7. |
 | `/v1/scopes/:s/stream` | B | Pushes each new head (`packages/scope/src/sessions.ts:499`). | Held in memory; a restart closes it. |
-| `/v1/scopes/:s/sessions` | D: authentication | Membership answers from its head, with no entry (`sessions.ts:52-56`). | A session lasts at most 600 seconds, and one secret covers every repository of a deployment (`sessions.ts:22-25`, `:42-49`). D21. |
+| `/v1/scopes/:s/sessions` | D: authentication | Membership answers from its head, with no entry (`sessions.ts:52-56`). | One secret covers every repository of a deployment (`sessions.ts:22-25`). The lifetime bound depends on two clocks (`sessions.ts:43-48`). D21. |
 | `/v1/scopes/:s/credential/:handle` | D | The route behind the `credential` tool (`worker.ts:375-379`). | D1. |
 | `/v1/demo/creation-offer` | B | A register projection with its head (`apps/room/demo-creation.ts:6-23`). | — |
 | `/page/*`, `/brand/*`, the homepage, the jam Worker | D: static | No scope is read. | The room page keeps keys in browser storage (`apps/room/page/src/claim.ts:12-14`). The jam Worker is missing from the entry-point inventory (`docs/security/entry-points.md`, line 3). D22. |
-| Internal object calls: `observe`, `nativeBirth`, `archiveItem`, `applicationRoom`, `jobState`, `readiness` | B, internal | No HTTP route (`worker.ts:55-56`). | `jobState` answers current state with no head. |
+| Internal object calls: `observe`, `nativeBirth`, `archiveItem`, `applicationRoom` | B, internal | No HTTP route (`worker.ts:55-56`). | — |
+| Internal object calls: `jobState`, `readiness` | D, internal | They answer current state with no head (`packages/scope/src/object.ts:314-320`, `:664-670`). | D7. |
 | Webhooks | — | Design only ([condition subscriptions](2026-10-09-condition-subscriptions-and-webhooks.md), line 3). | They do not exist. |
 
 ## 4. Dispositions
@@ -145,20 +152,48 @@ outside, has one disposition here.
   performs imports. Then the import is class C, and its outcome records the
   imported head and a digest of its file inventory.
 - **D5. Hosted endpoint custody.** The agent's seed, sessions and envelopes
-  stay outside the record as device custody, as a person's keys do. Three
-  changes: `retire` signs `revoke-key` for the agent's key and deletes the
-  seed; a bearer is stored by digest only, never in a stored answer; and
-  bearer issue is recorded by digest.
+  stay outside the record as device custody, as a person's keys do.
+  Retirement, as ruled for security request R15 (`b66b8f14`, ruling
+  `9f12029c`):
+  - *Signer.* Native `revoke-key` needs `membership.manage` or the recovery
+    key (`packages/platform/src/membership.ts:498-504`, `:620-631`). The
+    agent and an ordinary controller hold neither, and no agent is given
+    `membership.manage`. The retire control carries one exact signed
+    `revoke-key` intent (as: retired) by a key that membership admits for
+    it. A control signature is never reused as a revoke signature.
+  - *Controller-only retirement.* A controller without that grant can start
+    a retire (`packages/mcp/src/hosted.ts:90-103`). The endpoint erases the
+    seed and marks the agent retiring; completion waits for a manager's
+    revoke or for proof read from membership that the key is revoked.
+  - *Order and recovery.* The seed is erased first, in the transaction that
+    marks the agent retiring: the revoke is signed by another key, so the
+    seed is never needed again. The revoke envelope is stored before it is
+    submitted; a retry submits only the same envelope; `settle` recovers an
+    accepted receipt whose reply was lost.
+  - *Complete* means the seed is gone and membership shows the key revoked.
+  - *Bearer replay.* Security request R5 (`8a856f92`, item 5) changes the
+    guarantee: the first answer shows a bearer once, a replay of the same
+    operation says that it was shown, and a lost reply is answered by a new
+    bearer in a new operation. The endpoint keeps a bearer by digest only.
 - **D6. `dap clone`.** The clone compares its head with the recorded branch
   head, and reports the entry it matches or the mismatch. The clone then
   becomes a checked read of Git content at a recorded position.
-- **D7. Operational reads.** `requests`, `incidents` and `waiting` move to
-  `/v1/ops/...`, or answer with the label `operational`, so they do not
-  look like record reads. A runtime row that changes meaning, such as
+- **D7. Operational reads and mixed answers.** `requests`, `incidents` and
+  `waiting` move to `/v1/ops/...`, or answer with the label `operational`,
+  so they do not look like record reads. A mixed answer (the summary, the
+  outbox and `sends`, operation status, `settle`, `jobState` and
+  `readiness`) keeps its recorded fields as they are and puts the others in
+  a separate part labelled `advisory`: dispatcher attempts, driver
+  bookkeeping, custody phases and clock projections such as
+  `reservationExpiry`. A clock projection stays read-only, and no entry is
+  added for it. A runtime row that changes meaning, such as
   `outcome-conflict`, is sealed as a diagnosis entry. `dap status` labels
   each line as record or operational.
-- **D8. Local tools.** They hold no shared state and stay outside. A signed
-  packet from `dap pack` enters the record when a room installs it.
+- **D8. Local tools and local custody.** They hold no shared state and stay
+  outside. A signed packet from `dap pack` enters the record when a room
+  installs it. The MCP server's local configuration and custody records
+  (`wait`, `create`, `join`, `settle`) stay outside as the caller's own
+  custody; `wait`'s description is corrected.
 - **D9. Authority in deploy settings.** The register, the trusted releases
   and the archive policy become register acts, for example
   `trust-release`. The Worker accepts a setting only when it matches the
@@ -173,13 +208,19 @@ outside, has one disposition here.
   with only `onData` and `open`, and a per-instance nonce. Every change is
   already a signed act; this fixes whose intent it carries. Security item
   R8 (`8ced57e3`, screens on their own origin) carries the same isolation.
-- **D13. Publication from a fold.** Two changes. Path grants: a package
-  declares the path prefixes it writes, and the destination checks them
-  against the rules extents, so an application cannot write
-  `.github/workflows/` or a rules extent file. Rendered text: a send source
-  renders the text from the item's slots, so the scope checks the text
-  against its state. Until then, any application of a room can write any
-  path, and the text is the signer's claim.
+- **D13. Publication from a fold.** Today any application of a room can
+  write any path. That is the adopted policy of the fold publication note
+  (section 6): its trust boundary is the room's decision to activate and
+  install the application, and the Git host can still refuse a write. This
+  audit proposes a change to that policy, not a fix of code that breaks it.
+  The concern is what an installed application can do within the policy:
+  write `.github/workflows/`, or a file that the room's rules read as
+  control. No outside exploit is shown here. Two changes. Path grants: a
+  package declares the path prefixes it writes, and the destination checks
+  them against reserved paths and the rules extents (security request R16,
+  `b300dca1`). Rendered text: a send source renders the text from the
+  item's slots, so the scope checks the text against its state. Until
+  then, the text is the signer's claim.
 - **D14. Pages.** A read-only binding with no token minted for each read,
   and a rate limit. Pages stay class B.
 - **D15. Application code delivery.** It stays outside: bytes addressed by
@@ -204,25 +245,40 @@ outside, has one disposition here.
   reply. The spend ledger becomes a fold of those entries. The conversation
   stays private, as device custody. This design comes before the hosted
   Counter slices that spend money.
-- **D21. Read sessions.** They stay outside as authentication. Limits: 600
-  seconds, one secret for each deployment, and revocation takes effect at
-  the next session.
+- **D21. Read sessions.** They stay outside as authentication. Limits:
+  - *Lifetime.* Membership issues a session with its own clock, and the
+    reading scope accepts it with its own clock (`sessions.ts:43-48`). So a
+    session lasts up to 600 seconds plus the difference between those two
+    clocks. No real-time bound follows without a bound on that difference.
+  - *Revocation.* A revoked key or a removed member gets no new session,
+    and a role change takes effect at the next session. A session already
+    issued runs to its end.
+  - *Immediate end.* Replacing the deployment's session secret ends every
+    session at once. One secret covers every repository of a deployment
+    (`sessions.ts:22-25`).
 - **D22. Static routes and browser custody.** They stay outside. The page's
   keys move to a non-extractable store (R8). The jam Worker joins the
   entry-point inventory.
+- **D23. Checker run records and the token gateway.** They stay outside as
+  service custody. The checker's results are acts, and a gateway grant
+  opens only for a token that a sealed outcome made live. Limits: the run
+  record and the grant's open, close and forward count are not entries,
+  and neither is wired in production. When they are, the checker's signed
+  result reports the grant's forward count.
 
 ## 5. Slices
 
 Listed and not filed. Each line names its dispositions.
 
 1. Record the credential take as an act (D1).
-2. Hosted agent `retire` revokes the key and deletes the seed; bearers by
-   digest only (D5).
+2. Hosted agent `retire` revokes the key and erases the seed (D5): filed as
+   security request R15 (`b66b8f14`); bearers by digest are in R5.
 3. Hide import until a host performs it (D4).
 4. `adopt-head` judged as a manifest under the extents (D3).
-5. Publication path grants and text rendered from slots (D13).
-6. Operational reads on their own path, `outcome-conflict` sealed, `dap
-   status` labels (D7).
+5. Publication path grants (filed as security request R16, `b300dca1`)
+   and text rendered from slots (D13).
+6. Operational reads on their own path, `advisory` parts in mixed
+   answers, `outcome-conflict` sealed, `dap status` labels (D7).
 7. Authority-bearing deploy settings as register acts (D9).
 8. `dap clone` checks its head against the record (D6).
 9. Archive write token as a recorded operation (D17).
@@ -236,5 +292,5 @@ Listed and not filed. Each line names its dispositions.
     the inventory (D22), correct the `wait` description, and flag mixed
     heads (D2).
 
-Slices 2, 5 and 10 are security fixes. Slice 2 and slice 5 have no
-security request today.
+Slices 2, 5 and 10 are security fixes. Slices 2 and 5 are filed as R15
+and R16; slice 10 rides on R8.
