@@ -411,3 +411,32 @@ All 35 original UI assertions remain in order. One deterministic control
 holds an import and cleanup, retires the original and a queued owner, and
 requires the successor to start only after cleanup. The fixture change is
 source-reviewed; its owning compiler, focused cases and final gate remain due.
+
+## Final verification
+
+The Join UI focus on `1793ca7d` passed the Page test compiler and all three
+cases, with no skips or unhandled errors. Assertion `1d0fdd7b` preserves
+that run. The subsequent ordinary gate on the same head passed: 2,136
+Vitest cases passed, none failed, and three were skipped across 462 files.
+The later 36 built-in Node checks and 55 Counting Node cases also passed.
+Counting runs bundled browser-facing code in Node; this is not a browser run.
+
+The gate's original owner closed naturally with exit 0. Its elapsed time was
+985.15 seconds, with 1,083.51 user CPU seconds and 136.84 system CPU seconds.
+The recorded host had 18 logical CPUs and 64 GiB of memory. Before and after
+snapshots preserve load, memory, and cache context; they do not establish
+controlled host isolation or the cause of earlier failures. Source, Git
+identity, tool, and dependency guards passed. Only the Vitest result cache
+changed. Neither worker-count environment override was set.
+
+Assertion `261b32fc` preserves the finite final evidence and all earlier
+failed outcomes. The final ledger is authoritative: progress callbacks omit
+24 passed cases that appear in the final ledger. There were no unhandled
+errors. This outcome update changes only documentation; source and tests
+remain those of tested tree `89f1d36974f1441fb9ebd62214a26ac5dfe1b1a4`.
+The review handoff records the documentation tree separately, as required by
+the testing policy. No gate rerun is needed for this update.
+
+This result covers the partial parentless creation-admission change and its
+fixture repairs. It does not complete ancestry admission, the scope index,
+serving limits, or deployment acceptance.
