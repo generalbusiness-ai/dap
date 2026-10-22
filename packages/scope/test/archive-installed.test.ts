@@ -1216,7 +1216,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
   } finally { life.release(); }
   });
 
-  if (scenario === "Grow production" || scenario === "Grow activation warm" || scenario === "Grow activation evicted") {
+  if (scenario === "Grow production") {
     test(`installed ${scenario} public archive command verifies its native producer clone`, { timeout: 30_000 }, async context => {
       const basis = retainedCommand;
       if (!basis) expect.fail("the immediately preceding native producer did not publish a command session");

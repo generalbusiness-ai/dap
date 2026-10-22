@@ -931,3 +931,28 @@ boundary, without closing the retained Node clone. Original public child
 timers, output cap, token checks and strict trusted exit-zero expectation
 remain. This proposal is uncompiled and unrun; trusted replay, activation,
 heavy scenarios and the final gate remain pending.
+
+### Correct the offline follower registration
+
+Owner 74539 naturally failed with exact input guards and no signals. Scope
+test compilation passed. The fixture, Grow and production Native cases
+passed, followed by the production offline command case: the unchanged
+strict trusted exit-zero assertion and all five consistent report checks
+passed. Warm activation also passed. Its incorrectly registered offline
+follower failed immediately because no producer handoff existed; the
+evicted pair was not reached. The original failed eight-case ledger is
+retained. The current production success does not explain historical
+diagnostic owner 50068's trusted exit 1, whose report was not retained.
+
+The split author and reviewers missed the activation branch's existing
+early return. Both activation scenarios intentionally complete their
+activation-specific assertions before archive command setup; neither
+was a command producer in the original test. The correction registers
+an offline follower only for `Grow production`. No extra activation
+clone or fabricated handoff is added, and the explicit missing-handoff
+failure remains. Both activation bodies and every production command
+assertion are unchanged. The source ledger is now the five original
+Native scenarios plus one immediately following production offline case:
+six cases, with all original 30-second deadlines. This correction is
+uncompiled and unrun; evicted activation, heavy scenarios and the final
+gate remain pending.
