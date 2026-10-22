@@ -653,3 +653,17 @@ debit. The existing Native scout control also checks that later positions
 do not change an earlier prefix's count. These changes have not been
 compiled or run. Earlier failures and the remaining heavy cases and final
 gate remain separate obligations.
+
+At `835ccc21`, Owner 13926 and its child naturally exited 1 with stable
+full guards. Both Scope compilers and the first four foreign-copy cases
+passed. The new scalar metadata case then failed before SQL because
+`canonicalize` rejects its deliberately fractional false-positive numbers.
+The other eight cases had no completed acceptance. Inclusive elapsed,
+user and system times were 9.409482, 10.732344 and 2.478703 seconds.
+
+That control now uses `JSON.stringify` for its two synthetic raw JSON
+rows. These rows test SQLite metadata, not canonical ledger entry
+admission. They retain the fractional numbers that exercise SQLite's
+`real` branch, all exact counts, precharge, refusal and lookahead checks.
+No product code, ledger format, cap, price, deadline or assertion changes.
+The corrected control has not been compiled or run.

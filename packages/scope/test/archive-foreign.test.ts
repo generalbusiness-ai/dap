@@ -407,7 +407,7 @@ test("anchor forecast counts nested necessary keys without charging irrelevant b
     // keys deliberately increase the conservative bound by three. The
     // two real numbers also distinguish integer-only SQL counting.
     falsePositives: [{ at: {}, seq: 1.5, hash: "not a digest" }, { at: {}, seq: 2.5, hash: "also not a digest" }, { of: {}, head: {} }] };
-  const small = canonicalize(fields), large = canonicalize({ ...fields,
+  const small = JSON.stringify(fields), large = JSON.stringify({ ...fields,
     irrelevant: 'at seq hash of head {"at":{},"seq":1,"hash":"text"} '.repeat(512) });
   await lane.inside(state => {
     const raw = state.storage.sql;
