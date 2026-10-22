@@ -19,6 +19,7 @@ function inventoryRows(): { activity: string; cells: Record<Mode, string> }[] {
     .map((l) => l.split(" | ")).map((c) => ({ activity: c[0]!.slice(2), cells: { default: c[1]!, generic: c[2]! } }));
   const gaps = rows.filter((r) => r.activity.includes("(MCP gap:"));
   expect(gaps).toEqual([
+    { activity: "`dap apps [--cursor <cursor>]` (MCP gap: bounded application listing)", cells: { default: "Unavailable in MCP; use the CLI listing", generic: "Unavailable in MCP" } },
     { activity: "`dap items <scope> --query <canonical-item-query-JSON>` (MCP gap: public item query)", cells: { default: "Unavailable in MCP; use the SDK, CLI or Page query surface", generic: "Unavailable in MCP" } },
     { activity: "`dap status [<scope>] [--request <16-hex-id>]` (MCP gap: operational status)", cells: { default: "Unavailable in MCP; use the CLI or SDK operational reads", generic: "Unavailable in MCP" } },
   ]);

@@ -561,6 +561,9 @@ The earlier spikes were removed from main. They remain at the tag
 
 Do not run it again for a commit that changes only documents; say that the
 source and tests are unchanged, and give the two tree hashes.
+When a gate fails only in a test that reads a document and the repair changes
+only that document, rerun that test file and the steps the gate never reached,
+and report the failed run and follow-up together.
 
 ## Entry-point inventory
 

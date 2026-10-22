@@ -435,6 +435,20 @@ sc_p6xp2lmd...:9  2099-01-01T00:00:00Z  delivery result from inbox:0; 0 effects,
 10 entries in all.
 ```
 
+**`dap apps [--cursor <cursor>]`** reads one page of at most 25 created
+applications in the selected room's Directory. Each row shows its name,
+definition digest and full scope reference. Names come from content-checked
+retained declarations; unavailable names leave the recorded references
+visible. Control characters and line separators are escaped, and shortened
+names are counted. The command reads no application child or journal.
+
+The result states its Directory head and selected-suffix coverage. It
+prints an explicit next-page command when more rows remain. Follow that
+command yourself; it does not scan later pages automatically. A stale
+cursor refuses: start again with `dap apps`. A creating application is
+absent from this list; read its original Directory entry before considering
+another creation.
+
 **`dap items <scope> --query <canonical-item-query-JSON>`** reads one
 explicit bounded item selection. The canonical JSON has exactly `cursor`,
 `ids`, `limit`, `scope`, `states`, `type` and `v`; `scope` is the full scope

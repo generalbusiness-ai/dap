@@ -1,5 +1,6 @@
 import { INVITATION_KEY_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { invitationIssueFields, invitationRedemptionFields, isInvitationMembership } from "@generalbusiness/artroom-client";
+import { applicationList } from "./application-list.ts";
 /**
  * The commands, as functions over a scope service's base URL and a signing
  * key. Each takes a `Context` and returns an `Outcome`: an exit code and
@@ -1081,6 +1082,16 @@ export function act(ctx: Context, kind: string, options: { on?: string; target?:
     }
     const signed = await signedIntent(signer, { to: summary.scope, kind, on: target, fields, expected }, signing(ctx));
     return answered(scope, await handle.submit(signed, [], values.length > 0 ? { values } : {}), "Took effect");
+  });
+}
+
+/** One explicit bounded query page; no discovery scan or per-item detail reads. */
+export function apps(ctx: Context, cursor: string | null = null): Promise<Outcome> {
+  return run(async () => {
+    const config = await configOf(ctx);
+    if (!config.repository) return usage("Select a room before listing its applications.");
+    const reader = await readerOf(ctx, config);
+    return applicationList(await readTransportOf(ctx, config, reader), reader, config.repository.directory, cursor);
   });
 }
 

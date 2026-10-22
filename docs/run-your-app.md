@@ -130,10 +130,21 @@ If the answer is lost, do not run the command again: a second run would
 create a second counter. Read the directory's journal first, with
 `dap log directory`.
 
-The counter is a new scope with its own ID, `sc_...`. The command line
-does not list apps yet: find the entry that records the creation in
-`dap log directory` and read it with `dap show directory:<entry>`, or ask
-an agent's `room` tool. Below, `$COUNTER` stands for that ID.
+The counter is a new scope with its own ID, `sc_...`. List the created
+applications in the selected room:
+
+```sh
+dap apps
+```
+
+Each row shows the name, definition digest and full scope reference.
+Copy the counter's `scope` ID for the commands below, where `$COUNTER`
+stands for that ID. The command reads at most 25 rows per page and says
+whether the selected suffix is complete. Follow its printed
+`dap apps --cursor ...` command explicitly for another page. A cursor is
+bound to that Directory head; if it is stale, run `dap apps` again.
+Only scopes recorded as created are listed. An unfinished creation still
+belongs in `dap log directory`; an absent row is no reason to create again.
 
 ## Step 6: Say who may do what
 
