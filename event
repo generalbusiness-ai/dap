@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/scope/package.json","body":{"commit":"dac76e3d6a736616628a3027a68a87b73cb27a47","path":"packages/scope/package.json"}}
+{"kind":"artifact","text":"Merge published the current artifact at scripts/focused-check.mjs","body":{"commit":"dac76e3d6a736616628a3027a68a87b73cb27a47","path":"scripts/focused-check.mjs"}}
