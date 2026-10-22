@@ -1,0 +1,1 @@
+if (!done) { const buffer = value.buffer; if (!(buffer instanceof ArrayBuffer)) throw new TypeError('A native stream chunk requires an ArrayBuffer.'); return controller.enqueue(new Uint8Array(buffer, value.byteOffset, value.byteLength)); }
