@@ -15,7 +15,7 @@ import { fileURLToPath } from "node:url";
 import type { TestProject } from "vitest/node";
 import { Host } from "../../../git/test/support/host.ts";
 import { git } from "../../../git/test/support/repo.ts";
-import type { LocalCloneAddress } from "./local-clone.ts";
+import type { LocalCloneAddress, LocalCloneRun } from "./local-clone.ts";
 import { cloneNativeArchive, cleanupNativeArchiveClones } from "./local-archive-clone.ts";
 
 const MAX = 1024 * 1024; // fixture-only buffer bound, not a product quota
@@ -39,8 +39,8 @@ export default async function setup(project: TestProject) {
   let url = "";
   const requests: { path: string; method: string; bytes: number; status: number }[] = [];
   let failure: string | null = null;
-  const run = async (args: string[], env: Record<string, string>) => {
-    if (directory === null) return { code: 1, outputClean: true };
+  const run = async (args: string[], env: Record<string, string>): Promise<LocalCloneRun> => {
+    if (directory === null) return { code: 1, outputClean: true, diagnostic: { admission: "unconfigured" } };
     const targetDirectory = directory;
     const version = same(args, ["--version"]) && same(env, {});
     const token = env["GIT_CONFIG_VALUE_0"]?.replace(/^Authorization: Bearer /, "");
@@ -48,24 +48,43 @@ export default async function setup(project: TestProject) {
     const clone = same(args, ["clone", "--", remote, targetDirectory]) && Object.keys(env).sort().join() === "GIT_CONFIG_COUNT,GIT_CONFIG_KEY_0,GIT_CONFIG_VALUE_0"
       && env["GIT_CONFIG_COUNT"] === "1" && env["GIT_CONFIG_KEY_0"] === "http.extraHeader"
       && env["GIT_CONFIG_VALUE_0"] === `Authorization: Bearer ${token}` && held?.scope === "read" && held.seconds === 3600 && held.live;
-    if (!version && !clone) return { code: 1, outputClean: true };
+    if (!version && !clone) return { code: 1, outputClean: true, diagnostic: { admission: "argv-env-token-refused" } };
     // The clone still records the clean HTTPS argv remote in origin. Only
     // this trusted process environment maps its transport to the local host.
     const added = clone ? { ...env, GIT_CONFIG_COUNT: "2", GIT_CONFIG_KEY_1: `url.${url}/repo.git.insteadOf`, GIT_CONFIG_VALUE_1: remote } : env;
-    return new Promise<{ code: number | null; outputClean: boolean }>((resolve) => {
+    return new Promise<LocalCloneRun>((resolve) => {
       const child = spawn(process.execPath, ["--import", createRequire(import.meta.url).resolve("tsx"), fileURLToPath(new URL("./local-clone-child.ts", import.meta.url))], { cwd: dirname(targetDirectory), env: controlled, stdio: ["pipe", "pipe", "pipe", "ipc"] });
       const chunks: Buffer[] = []; let bytes = 0; let code: number | null = 1;
+      let ipcResults = 0; let timedOut = false; let spawnError = false; let stdinError = false;
       const capture = (chunk: Buffer) => { bytes += chunk.length; if (bytes > MAX) child.kill(); else chunks.push(Buffer.from(chunk)); };
       child.stdout!.on("data", capture); child.stderr!.on("data", capture);
-      child.on("message", (message) => { const value = message as { code?: unknown }; if (value.code === null || Number.isInteger(value.code)) code = value.code as number | null; });
-      const timer = setTimeout(() => child.kill(), 30_000);
-      child.on("error", () => resolve({ code: 1, outputClean: true }));
-      child.on("close", (exit) => {
+      child.on("message", (message) => {
+        if (message === null || typeof message !== "object") return;
+        const value = message as { code?: unknown };
+        if (value.code === null || Number.isInteger(value.code)) { code = value.code as number | null; ipcResults++; }
+      });
+      const timer = setTimeout(() => { timedOut = true; child.kill(); }, 30_000);
+      child.on("error", () => { spawnError = true; });
+      child.stdin!.on("error", () => { stdinError = true; });
+      child.on("close", (exit, signal) => {
         clearTimeout(timer);
         const output = Buffer.concat(chunks).toString("utf8");
         const clean = ![...tokens.keys()].some((secret) => output.includes(secret));
         tokenInOutput ||= !clean;
-        resolve({ code: exit === 0 && bytes <= MAX ? code : 1, outputClean: clean });
+        // Never return captured text, argv, environment or error messages.
+        // This fixed vocabulary is bounded and cannot contain a credential.
+        const outputHints = [
+          ["module-not-found", /ERR_MODULE_NOT_FOUND|MODULE_NOT_FOUND/],
+          ["typescript-syntax", /ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX|ERR_UNKNOWN_FILE_EXTENSION/],
+          ["syntax-error", /SyntaxError:/], ["type-error", /TypeError:/],
+          ["git-fatal", /fatal:/], ["authentication", /Authentication failed|could not read Username/],
+        ] as const;
+        resolve({ code: exit === 0 && bytes <= MAX ? code : 1, outputClean: clean, diagnostic: {
+          admission: version ? "version" : "clone", outerCode: exit, outerSignal: signal,
+          ipcResults, ...(ipcResults > 0 ? { gitCode: code } : {}), outputBytes: bytes,
+          outputBoundExceeded: bytes > MAX, timedOut, spawnError, stdinError,
+          outputHints: outputHints.filter(([, pattern]) => pattern.test(output)).map(([hint]) => hint),
+        } });
       });
       child.stdin!.end(JSON.stringify({ args, env: added }));
     });

@@ -40,6 +40,7 @@ import { sessionFields, testSessionBypass } from "./session-settings.ts";
 import scopeWorker, { DeployedScope, McpAgent, McpRegistry, ScopeService, route, sessionWiring, type Env, type McpEnv } from "../src/worker.ts";
 import type { AgentPorts, HostedAgent } from "@generalbusiness/dap-mcp";
 import { outsideOf, owners, wired } from "./outside.ts";
+import type { CreationAdmission } from "../src/creation-admission.ts";
 import type { MetricEnvironment } from "../src/operational.ts";
 
 export { ScopeObject };
@@ -197,9 +198,17 @@ export class PlatformScope extends DeployedScope<PlatformEnv> {
 export class NetService extends ScopeService<NetEnv> {
   protected override scopes() { return this.env.NET; }
 }
+/** Test-only deployment settings, captured when a native entrypoint is constructed.
+ * A case must restore these in finally; unique agent IDs keep captured settings local. */
+export const creationTest: { settings: CreationAdmission | null; productionHostedFetch: boolean } = { settings: null, productionHostedFetch: false };
 /** Real ScopeService RPC over the native platform test namespace. */
 export class PlatformService extends ScopeService<NetEnv & { PLATFORM: DurableObjectNamespace }> {
   protected override scopes() { return this.env.PLATFORM; }
+}
+/** A separate entrypoint/binding, used only by the admission witness after it
+ * installs its settings. Ordinary PLATFORM_API users never construct it. */
+export class CreationAdmissionService extends PlatformService {
+  constructor(ctx: ExecutionContext, env: NetEnv & { PLATFORM: DurableObjectNamespace }) { super(ctx, { ...env, ...creationTest.settings }); }
 }
 
 // Exercise the production entrypoint with the same NET namespace as before.
@@ -242,6 +251,11 @@ export class PlatformMcpRegistry extends McpRegistry<HostedEnv> {
   heldAnswers(): { op: string; answer: boolean }[] { return this.answers(); }
 }
 export class PlatformMcpAgent extends McpAgent<HostedEnv> {
+  readonly #productionHostedFetch: boolean;
+  constructor(ctx: DurableObjectState, env: HostedEnv) {
+    super(ctx, { ...env, ...creationTest.settings });
+    this.#productionHostedFetch = creationTest.productionHostedFetch;
+  }
   protected override scopes() { return this.env.PLATFORM; }
   /** The harness's instance reset: what an eviction leaves. */
   reset(): void { this.evict(); }
@@ -265,11 +279,11 @@ export class PlatformMcpAgent extends McpAgent<HostedEnv> {
       configHold: () => hostedTest.configHold ?? undefined,
       now: () => hostedTest.now?.() ?? Date.now(), every: () => () => {},
       pause: (waiting: readonly string[]) => hostedTest.pause?.(waiting) ?? new Promise<void>((r) => setTimeout(r, 50)),
-      fetch: (async (url: string, init?: RequestInit) => {
+      ...(this.#productionHostedFetch ? {} : { fetch: (async (url: string, init?: RequestInit) => {
         const response = await route(new Request(url, init), scopes);
         if (hostedTest.lose !== null && new URL(url).pathname.endsWith(hostedTest.lose)) { hostedTest.lose = null; await response.body?.cancel(); throw new Error("scripted loss of the reply"); }
         return response;
-      }) as never,
+      }) as never }),
     };
   }
 }

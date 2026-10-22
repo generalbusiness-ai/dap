@@ -6,11 +6,12 @@ import { assertInventory, documentedInventory, servedInventory, sourceSeal, room
 // Reviewed matcher/gate owners. These are change tripwires, not runtime proof.
 const seals = {
   "apps/room/worker.ts": "aba04e12dc206f0be6bda4a8edeac64569e0edd44b7a87772595d7db40bb8b67",
-  "apps/room/fetch.ts": "535711961fe74cb0a737cae219f4a29df5fcf56239ed0dd44013e7c75081c2f6",
+  "apps/room/fetch.ts": "aa7ec3ca7b1dd3241d3e367ee929d68e2d64c09330d9f02bad3953bf8b49d49c",
   "apps/room/demo-creation.ts": "8e2a4ccc7c203e2f6bdcdf874142eeae149e91267d02068d0135f2a423bd0d25",
   "apps/room/page/route.ts": "62c8f69b9f516f1b5acdaef57d7aed25268d8cf03283bdffdd4b1b5f20bb6b3d",
   "apps/room/brand/route.ts": "71b45ff9b41b3bea31c775a16525349591e0d4f7dfdc65da79f095816b1c343c",
-  "packages/scope/src/worker.ts": "bd40949f476ccc76c43da803a33ca542f9335d73e89926c41244e8f497f8c3c6",
+  "packages/scope/src/worker.ts": "aafe285c0e6245b242802c25cc4b4ae8b6d96ecfa928d16a90a4ed90bd1e57e4",
+  "packages/scope/src/creation-admission.ts": "c45a0ac9231356298e9e2724cc1154bdd40def91b5bdc1e1bf6d14c4331eb42e",
   "packages/scope/src/health.ts": "5da6a38c8c76199414f5a7ae57d3f57a0070347edd4b9512ab1430b8a4e1b401",
   "packages/scope/src/site/route.ts": "2957f45c6c0281fdd282dc42607c7650f6002e10bb6520127b42c7e6550a7039",
   "packages/scope/src/applications/route.ts": "5788ad312f08eeab53a8592398e23cb3bc8081061cb80f8879cf0816a4799226",

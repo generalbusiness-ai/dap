@@ -15,5 +15,7 @@ declare namespace Cloudflare {
     API: Fetcher;
     /** The same production ScopeService over the PLATFORM namespace. */
     PLATFORM_API: Fetcher;
+    /** Separate entrypoint used only by the parentless admission witness. */
+    CREATION_API: Fetcher;
   }
 }

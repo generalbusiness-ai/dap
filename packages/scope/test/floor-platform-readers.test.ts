@@ -45,10 +45,12 @@ test("Native live install and destination mint/read origins survive a floor and 
   const { life, R, D, children } = await sessionRoom(C.register);
   const [M, A, G] = children;
   if (!M || !A || !G) return expect.fail("the native room needs all three children");
+  let contentKey: string | null = null;
   try {
     const seat = await M.did(rita, "seat", { expected: { roster: 1 } });
     await M.did(rita, "first-key", { fields: { member: seat }, expected: await M.expected({ roster: 0, member: seat }) });
     const packet = await applicationResolverFixture("sha1", undefined, { admin: ["counting.control"], member: ["counting.fulfill"] });
+    contentKey = packet.key;
     const peer = applicationHttpPeer(packet), bindings = applicationContentBindings(env.APPLICATION_CONTENT, JSON.stringify(packet.trust));
     let admit = false, admissions = 0;
     life.outside(D.name, (given, sql) => hostOutside(given, sql, bindings, peer.fetch));
@@ -152,5 +154,10 @@ test("Native live install and destination mint/read origins survive a floor and 
     await driveFixture([R, D, M, A, G, child], life.wait);
     expect(await A.item(job)).toMatchObject({ state: "active", refs: { scope: await child.at() } });
     expect((await child.summary()).value).toMatchObject({ status: "active", definition: packet.packet.package.semantic.entry });
-  } finally { life.release(); }
+  } finally {
+    // The Worker and its R2 binding are shared across files. This exact
+    // deterministic release belongs to the fixture's cleanup obligation.
+    try { if (contentKey !== null) await env.APPLICATION_CONTENT.delete(contentKey); }
+    finally { life.release(); }
+  }
 }, 60_000);

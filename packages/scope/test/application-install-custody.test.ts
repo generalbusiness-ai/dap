@@ -46,6 +46,9 @@ test.each(installations)("$name: one signed native install settles through Direc
   const peer = applicationHttpPeer(f), bindings = applicationContentBindings(bucket, JSON.stringify(f.trust));
   let fetchSends = 0, admissionSends = 0, preparations = 0, recoveries = 0, forbiddenPreparations = 0;
   try {
+    // Counting the first real put requires a cold release, not a prior
+    // file's immutable cached copy. Refuse a leaked fixture explicitly.
+    expect(await env.APPLICATION_CONTENT.head(f.key), "Custody fixture release must start absent from shared R2").toBeNull();
     const seat = await life.wait(() => M.did(rita, "seat", { expected: { roster: 1 } }));
     const expected = await life.wait(() => M.expected({ roster: 0, member: seat }));
     await life.wait(() => M.did(rita, "first-key", { fields: { member: seat }, expected }));

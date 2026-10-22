@@ -7,6 +7,57 @@ import {
   textDigest,
 } from "@generalbusiness/artroom-bytes";
 
+type Wait = <T>(start: () => Promise<T>) => Promise<T>;
+
+// A Vitest timeout ends the test, not an in-flight module import. Keep the
+// retired body's globals until its physical work and cleanup finish. A later
+// fixture must not install its globals before that cleanup has completed.
+class FixtureQueue {
+  #tail: Promise<void> = Promise.resolve();
+
+  run(
+    onFinished: (retire: () => void) => void,
+    body: (wait: Wait) => Promise<void>,
+    cleanup: () => Promise<void>,
+  ): Promise<void> {
+    let retired = false;
+    onFinished(() => { retired = true; });
+    const current = () => {
+      if (retired) throw new Error("Join UI fixture has finished");
+    };
+    const wait: Wait = async (start) => {
+      current();
+      const value = await start();
+      current();
+      return value;
+    };
+    const running = this.#tail.then(async () => {
+      // A queued test can also finish before it acquires the globals. It owns
+      // nothing in that case and must not run another fixture's cleanup.
+      current();
+      try {
+        await body(wait);
+      } finally {
+        await cleanup();
+      }
+    });
+    this.#tail = running.then(() => {}, () => {});
+    return running;
+  }
+}
+
+const fixtures = new FixtureQueue();
+const drain = async () => {
+  for (let i = 0; i < 20; i++) await Promise.resolve();
+};
+const cleanup = async () => {
+  await drain();
+  vi.unstubAllGlobals();
+  vi.doUnmock("../src/join-custody.ts");
+  vi.doUnmock("../src/view.ts");
+  vi.resetModules();
+};
+
 class Element {
   children: (Element | string)[] = [];
   attrs: Record<string, string> = {};
@@ -78,7 +129,7 @@ class Element {
 
 // Actual entry handlers over scripted DOM/enrollment ports. Native exact
 // envelope persistence and verification belong to join-custody.test.ts.
-test("Invitation paste joins automatically once; Back and reload keep unknown enrollment fenced without premature room navigation", async () => {
+test("Invitation paste joins automatically once; Back and reload keep unknown enrollment fenced without premature room navigation", ({ onTestFinished }) => fixtures.run(onTestFinished, async (wait) => {
   const root = new Element("div"),
     location = { origin: "https://page.test", hash: "#/invitation" };
   const seed = new Uint8Array(32).fill(81),
@@ -133,8 +184,9 @@ test("Invitation paste joins automatically once; Back and reload keep unknown en
     originalJoin: original,
     checkOriginal: check,
   }));
-  const view =
-    await vi.importActual<typeof import("../src/view.ts")>("../src/view.ts");
+  const view = await wait(() =>
+    vi.importActual<typeof import("../src/view.ts")>("../src/view.ts"),
+  );
   vi.doMock("../src/view.ts", () => ({
     ...view,
     icon: () => new Element("svg"),
@@ -168,104 +220,150 @@ test("Invitation paste joins automatically once; Back and reload keep unknown en
       redraw = f;
     },
   });
-  const drain = async () => {
-    for (let i = 0; i < 20; i++) await Promise.resolve();
-  };
-  try {
-    await import("../src/main.ts");
-    const entryWordmarks = root.all().filter(element => element.tag === "a" && element.attrs["aria-label"] === "dap homepage");
-    expect(entryWordmarks).toHaveLength(1);
-    expect(entryWordmarks[0]!.attrs["href"]).toBe("https://dap.generalbusiness.ai/");
-    expect(entryWordmarks[0]!.children).toHaveLength(2);
-    const input = root.all().find((e) => e.attrs["name"] === "invitation")!;
-    expect(
-      root
-        .all()
-        .some((e) => e.attrs["name"] === "key" || e.attrs["name"] === "secret"),
-    ).toBe(false);
-    expect(
-      root
-        .all()
-        .filter((e) => e.tag === "button")
-        .map((e) => e.textContent),
-    ).toEqual(["Check status"]);
-    expect(root.textContent).not.toMatch(
-      /Settings|Save settings|Create key|Your key|Issues|Changes|Rules/,
-    );
-    input.value = "artroom-invite:SCRIPTED complete invitation";
-    input.fire("input");
-    input.fire("input");
-    expect(posts).toBe(1);
-    values.set("SCRIPTED-original", b64url(new Uint8Array([1]))); // Public fixture presence only; no real secret or envelope.
-    location.hash = "#/join";
-    redraw();
-    expect(root.all().find(e => e.tag === "h1")?.textContent).toBe("Join or create a room");
-    finish({
-      ...publicOriginal,
-      reason: "The original enrollment remains unknown.",
-    });
-    await drain();
-    expect(values.has("artroom-page")).toBe(false);
-    location.hash = "#/invitation";
-    redraw();
-    const restored = root.all().find((e) => e.attrs["name"] === "invitation")!;
-    expect(restored.hasAttribute("disabled")).toBe(true);
-    restored.fire("input");
-    expect(posts).toBe(1);
+  await wait(() => import("../src/main.ts"));
+  const entryWordmarks = root.all().filter(element => element.tag === "a" && element.attrs["aria-label"] === "dap homepage");
+  expect(entryWordmarks).toHaveLength(1);
+  expect(entryWordmarks[0]!.attrs["href"]).toBe("https://dap.generalbusiness.ai/");
+  expect(entryWordmarks[0]!.children).toHaveLength(2);
+  const input = root.all().find((e) => e.attrs["name"] === "invitation")!;
+  expect(
     root
       .all()
-      .find((e) => e.tag === "button" && e.textContent === "Check status")!
-      .fire("click");
-    await drain();
-    expect(checks).toBe(1);
-    expect(posts).toBe(1);
-    // A new module instance stands for reload; durable port presence survives.
-    vi.resetModules();
-    await import("../src/main.ts");
-    expect(
-      root
-        .all()
-        .find((e) => e.attrs["name"] === "invitation")!
-        .hasAttribute("disabled"),
-    ).toBe(true);
-    expect(posts).toBe(1);
-    expect(root.textContent).not.toMatch(/Your key|Issues|Changes|Rules/);
-    expect(document.title).toBe("dap - workroom");
-    let checked!: (result: unknown) => void;
-    check.mockImplementationOnce(
-      async () =>
-        new Promise((resolve) => {
-          checked = resolve;
-        }),
-    );
+      .some((e) => e.attrs["name"] === "key" || e.attrs["name"] === "secret"),
+  ).toBe(false);
+  expect(
     root
       .all()
-      .find((e) => e.tag === "button" && e.textContent === "Check status")!
-      .fire("click");
-    await drain();
-    location.hash = "#/join";
-    redraw();
-    checked({
-      ...publicOriginal,
-      status: "verified",
-      secret: seed,
-      answer: { answer: "accepted" },
-    });
-    await drain();
-    expect(values.has("artroom-page")).toBe(false);
-    expect(location.hash).toBe("#/join");
-  } finally {
-    await drain();
-    vi.unstubAllGlobals();
-    vi.doUnmock("../src/join-custody.ts");
-    vi.doUnmock("../src/view.ts");
-    vi.resetModules();
-  }
+      .filter((e) => e.tag === "button")
+      .map((e) => e.textContent),
+  ).toEqual(["Check status"]);
+  expect(root.textContent).not.toMatch(
+    /Settings|Save settings|Create key|Your key|Issues|Changes|Rules/,
+  );
+  input.value = "artroom-invite:SCRIPTED complete invitation";
+  input.fire("input");
+  input.fire("input");
+  expect(posts).toBe(1);
+  values.set("SCRIPTED-original", b64url(new Uint8Array([1]))); // Public fixture presence only; no real secret or envelope.
+  location.hash = "#/join";
+  redraw();
+  expect(root.all().find(e => e.tag === "h1")?.textContent).toBe("Join or create a room");
+  finish({
+    ...publicOriginal,
+    reason: "The original enrollment remains unknown.",
+  });
+  await wait(drain);
+  expect(values.has("artroom-page")).toBe(false);
+  location.hash = "#/invitation";
+  redraw();
+  const restored = root.all().find((e) => e.attrs["name"] === "invitation")!;
+  expect(restored.hasAttribute("disabled")).toBe(true);
+  restored.fire("input");
+  expect(posts).toBe(1);
+  root
+    .all()
+    .find((e) => e.tag === "button" && e.textContent === "Check status")!
+    .fire("click");
+  await wait(drain);
+  expect(checks).toBe(1);
+  expect(posts).toBe(1);
+  // A new module instance stands for reload; durable port presence survives.
+  vi.resetModules();
+  await wait(() => import("../src/main.ts"));
+  expect(
+    root
+      .all()
+      .find((e) => e.attrs["name"] === "invitation")!
+      .hasAttribute("disabled"),
+  ).toBe(true);
+  expect(posts).toBe(1);
+  expect(root.textContent).not.toMatch(/Your key|Issues|Changes|Rules/);
+  expect(document.title).toBe("dap - workroom");
+  let checked!: (result: unknown) => void;
+  check.mockImplementationOnce(
+    async () =>
+      new Promise((resolve) => {
+        checked = resolve;
+      }),
+  );
+  root
+    .all()
+    .find((e) => e.tag === "button" && e.textContent === "Check status")!
+    .fire("click");
+  await wait(drain);
+  location.hash = "#/join";
+  redraw();
+  checked({
+    ...publicOriginal,
+    status: "verified",
+    secret: seed,
+    answer: { answer: "accepted" },
+  });
+  await wait(drain);
+  expect(values.has("artroom-page")).toBe(false);
+  expect(location.hash).toBe("#/join");
+}, cleanup));
+
+test("A retired UI fixture keeps ownership through its in-flight work and cleanup", async () => {
+  const queue = new FixtureQueue();
+  const events: string[] = [];
+  let entered!: () => void, finishImport!: () => void,
+    cleaning!: () => void, finishCleanup!: () => void,
+    retireFirst!: () => void, retireQueued!: () => void;
+  const bodyEntered = new Promise<void>((resolve) => { entered = resolve; });
+  const importing = new Promise<void>((resolve) => { finishImport = resolve; });
+  const cleanupEntered = new Promise<void>((resolve) => { cleaning = resolve; });
+  const closing = new Promise<void>((resolve) => { finishCleanup = resolve; });
+  const first = queue.run(
+    (retire) => { retireFirst = retire; },
+    async (wait) => {
+      events.push("first globals");
+      entered();
+      await wait(() => importing);
+      events.push("retired continuation");
+    },
+    async () => {
+      events.push("first cleanup started");
+      cleaning();
+      await closing;
+      events.push("first cleanup finished");
+    },
+  );
+  const stopped = expect(first).rejects.toThrow("Join UI fixture has finished");
+  await bodyEntered;
+  // Model framework finish while the original physical import remains held.
+  retireFirst();
+  const queued = queue.run(
+    (retire) => { retireQueued = retire; },
+    async () => { events.push("retired queued body"); },
+    async () => { events.push("unowned cleanup"); },
+  );
+  const skipped = expect(queued).rejects.toThrow("Join UI fixture has finished");
+  retireQueued();
+  const second = queue.run(
+    () => {},
+    async () => { events.push("second globals"); },
+    async () => { events.push("second cleanup"); },
+  );
+  finishImport();
+  await cleanupEntered;
+  expect(events).toEqual(["first globals", "first cleanup started"]);
+  finishCleanup();
+  await stopped;
+  await skipped;
+  await second;
+  expect(events).toEqual([
+    "first globals",
+    "first cleanup started",
+    "first cleanup finished",
+    "second globals",
+    "second cleanup",
+  ]);
 });
 
 // Independent scripted first-refusal custody. This does not classify a later
 // refusal as settlement of the unknown original in the other UI scenario.
-test("A retained first refusal stays readable after reload and allows only a different invitation through the automatic handler", async () => {
+test("A retained first refusal stays readable after reload and allows only a different invitation through the automatic handler", ({ onTestFinished }) => fixtures.run(onTestFinished, async (wait) => {
   const root = new Element("div");
   const location = { origin: "https://page.test", hash: "#/invitation" };
   const membership = {
@@ -327,8 +425,9 @@ test("A retained first refusal stays readable after reload and allows only a dif
     joinInvitation: join,
     checkOriginal: check,
   }));
-  const view =
-    await vi.importActual<typeof import("../src/view.ts")>("../src/view.ts");
+  const view = await wait(() =>
+    vi.importActual<typeof import("../src/view.ts")>("../src/view.ts"),
+  );
   vi.doMock("../src/view.ts", () => ({
     ...view,
     icon: () => new Element("svg"),
@@ -355,56 +454,45 @@ test("A retained first refusal stays readable after reload and allows only a dif
   vi.stubGlobal("location", location);
   vi.stubGlobal("localStorage", { getItem: () => null, setItem: vi.fn() });
   vi.stubGlobal("window", { addEventListener: vi.fn() });
-  const drain = async () => {
-    for (let i = 0; i < 20; i++) await Promise.resolve();
-  };
   const field = () => root.all().find((e) => e.attrs["name"] === "invitation")!;
-  try {
-    await import("../src/main.ts");
-    expect(field().hasAttribute("disabled")).toBe(false);
-    expect(root.textContent).toContain("different invitation");
-    expect(root.textContent).toContain("retained key");
-    // Reload keeps the refusal and the same public identity, while leaving
-    // the paste path available. Merely loading the page sends no enrollment.
-    vi.resetModules();
-    await import("../src/main.ts");
-    expect(field().hasAttribute("disabled")).toBe(false);
-    expect(posts).toBe(0);
+  await wait(() => import("../src/main.ts"));
+  expect(field().hasAttribute("disabled")).toBe(false);
+  expect(root.textContent).toContain("different invitation");
+  expect(root.textContent).toContain("retained key");
+  // Reload keeps the refusal and the same public identity, while leaving
+  // the paste path available. Merely loading the page sends no enrollment.
+  vi.resetModules();
+  await wait(() => import("../src/main.ts"));
+  expect(field().hasAttribute("disabled")).toBe(false);
+  expect(posts).toBe(0);
+  root
+    .all()
+    .find((e) => e.tag === "button" && e.textContent === "Check status")!
+    .fire("click");
+  await wait(drain);
+  expect(checks).toBe(1);
+  expect(posts).toBe(0);
+  field().value = sameInvitation;
+  field().fire("input");
+  await wait(drain);
+  expect(posts).toBe(0);
+  expect(field().hasAttribute("disabled")).toBe(false);
+  field().value = otherInvitation;
+  field().fire("input");
+  await wait(drain);
+  expect(posts).toBe(1);
+  expect(join.mock.calls.map(([, typed]) => typed)).toEqual([
+    sameInvitation,
+    otherInvitation,
+  ]);
+  expect(original().key).toBe(key);
+  expect(field().hasAttribute("disabled")).toBe(true);
+  field().fire("input");
+  await wait(drain);
+  expect(posts, "the new unknown request stays fenced").toBe(1);
+  expect(
     root
       .all()
-      .find((e) => e.tag === "button" && e.textContent === "Check status")!
-      .fire("click");
-    await drain();
-    expect(checks).toBe(1);
-    expect(posts).toBe(0);
-    field().value = sameInvitation;
-    field().fire("input");
-    await drain();
-    expect(posts).toBe(0);
-    expect(field().hasAttribute("disabled")).toBe(false);
-    field().value = otherInvitation;
-    field().fire("input");
-    await drain();
-    expect(posts).toBe(1);
-    expect(join.mock.calls.map(([, typed]) => typed)).toEqual([
-      sameInvitation,
-      otherInvitation,
-    ]);
-    expect(original().key).toBe(key);
-    expect(field().hasAttribute("disabled")).toBe(true);
-    field().fire("input");
-    await drain();
-    expect(posts, "the new unknown request stays fenced").toBe(1);
-    expect(
-      root
-        .all()
-        .some((e) => e.attrs["name"] === "key" || e.attrs["name"] === "secret"),
-    ).toBe(false);
-  } finally {
-    await drain();
-    vi.unstubAllGlobals();
-    vi.doUnmock("../src/join-custody.ts");
-    vi.doUnmock("../src/view.ts");
-    vi.resetModules();
-  }
-});
+      .some((e) => e.attrs["name"] === "key" || e.attrs["name"] === "secret"),
+  ).toBe(false);
+}, cleanup));
