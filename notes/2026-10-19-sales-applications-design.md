@@ -1,7 +1,7 @@
 # Three sales applications: the prospect room, the bid response and the marketing calendar
 
-Design note, 19 October 2026. Proposed functionality: nothing here is
-built.
+Status: current. 19 October 2026. It landed at `3ed2a08a` (approval
+`583a9c2a`). Nothing here is built.
 
 We chose three sales use cases to design around, and this note designs
 them:

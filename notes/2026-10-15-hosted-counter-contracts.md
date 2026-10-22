@@ -1,17 +1,17 @@
 # Hosted Counter agents: contracts for the first demo
 
-15 October 2026. Planner draft, revision 4. Revision 1 (`abc7dcd0`) had
-checker changes requested (F1 to F3); revision 2 (`c2a93883`) answered
-them, and its review accepted F1 and F3 and requested two more changes
-(an F2 follow-up and F4). Revision 3 answered those. Revision 4, of 21
-October 2026, moves the agents to the instance model of
-[roles, flow and instances](2026-10-21-roles-flow-and-instances.md): one
-member for each role, and one key for each instance (request `89a543d3`).
-Draft 2 of revision 4 (request `9400a9f7`) answers the review of draft 1
-(`5909d29e`): retiring one instance no longer deactivates the participant
-row that its siblings share, a fresh key after zero instances activates
-the existing row, and drain retires the row and revokes its key
-(sections 5, 7.4 and 8).
+Status: current. 15 October 2026. Revision 4. Revision 1 (`abc7dcd0`) had
+checker changes requested (F1 to F3); revision 2 (`c2a93883`) answered them, and
+its review accepted F1 and F3 and requested two more changes (an F2 follow-up
+and F4). Revision 3 answered those. Revision 4, of 21 October 2026, moves the
+agents to the instance model of [roles, flow and
+instances](2026-10-21-roles-flow-and-instances.md): one member for each role,
+and one key for each instance (request `89a543d3`). Draft 2 of revision 4
+(request `9400a9f7`) answers the review of draft 1 (`5909d29e`): retiring one
+instance no longer deactivates the participant row that its siblings share, a
+fresh key after zero instances activates the existing row, and drain retires the
+row and revokes its key (sections 5, 7.4 and 8). Revision 3 landed at `5cfbaae7`
+(approval `8d778b02`), and revision 4 at `d0a556e6` (approval `6242074b`).
 
 Parent design: [hosted agent teams](2026-10-15-hosted-agent-teams-design.md),
 revision 2, sections 10 and 11. Source baseline: main `85cd430b3`. This

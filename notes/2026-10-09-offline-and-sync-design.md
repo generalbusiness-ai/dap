@@ -1,6 +1,6 @@
 # Offline work and synchronization
 
-Status, 21 October 2026: this design is reviewed and landed at `31584fd9`
+Status: current. This design is reviewed and landed at `31584fd9`
 (approval `49cc6d2c`). No stage of section 8 is built.
 
 Design for the plan after 2026-10-14. Written for request

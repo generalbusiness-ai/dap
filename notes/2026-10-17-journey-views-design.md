@@ -1,12 +1,12 @@
 # Journey views in the AI app
 
-Design packet, 17 October 2026. Request `a9a3585c`, clarified by `9b70e9b6`.
-Source `b410d2f0`, promise `355b9a8b`, starts from Main `2637e6bb`.
-The packet contains static HTML mockups, concepts and browser PNGs.
-Exact-head checker approval (`9f014ba8`) and the planner read cover this
-design, and it landed at `92bedfda`. The compact cards design (`df806354`)
-revises its presentation. These examples implement no production view or
-live act.
+Status: current. Design packet, 17 October 2026. Request `a9a3585c`,
+clarified by `9b70e9b6`. Source `b410d2f0`, promise `355b9a8b`, starts
+from Main `2637e6bb`. The packet contains static HTML mockups, concepts
+and browser PNGs. Exact-head checker approval (`9f014ba8`) and the
+planner read cover this design, and it landed at `92bedfda`. The compact
+cards design (`df806354`) revises its presentation. These examples
+implement no production view or live act.
 
 The person starts work, leaves, and returns to the same shared record.
 They can understand a decision, inspect an exact change, and confirm its

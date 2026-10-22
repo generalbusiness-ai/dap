@@ -1,6 +1,7 @@
 # Capture with a stated source
 
-Design note. Proposed: nothing here is built.
+Status: current. It landed at `0de1f52a` (approval `d56b6ab3`). Nothing
+here is built.
 
 Work reaches a room from many places. A person drops a PDF into their own
 chat. A phone photo shows a crack in a wall. A GitHub issue asks for a fix.

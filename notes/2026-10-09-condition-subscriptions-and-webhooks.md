@@ -1,14 +1,15 @@
 # Durable condition subscriptions and outbound webhooks
 
-9 October 2026. **Design only. Runtime implementation is NOT PRIORITIZED.**
-This note proposes contracts; it adopts no protocol, egress grant, definition,
-provider or deployment. Delegated request
+Status: current. 9 October 2026. **Design only. Runtime implementation is
+NOT PRIORITIZED.** This note proposes contracts; it adopts no protocol,
+egress grant, definition, provider or deployment. Delegated request
 `03d475b87fbde702957c54ce5392c7f79b440df6`, promise
-`12b83fdb1757a730b1ff3fe542d172206eb394e0`, preserves all conditions of original
-`22e8265a9167c96681a0b41c2e475d9db0a3a8f4`. Inspected source baseline:
-`f6d80b3996df7ad3e7d00feff88d48cf29877ddc`, tree
-`7b0e8ef8778051257ff98b078c959dffa8caf374`. Browsing below reads public primary
-documentation only; no endpoint, account, browser app or provider was probed.
+`12b83fdb1757a730b1ff3fe542d172206eb394e0`, preserves all conditions of
+original `22e8265a9167c96681a0b41c2e475d9db0a3a8f4`. Inspected source
+baseline: `f6d80b3996df7ad3e7d00feff88d48cf29877ddc`, tree
+`7b0e8ef8778051257ff98b078c959dffa8caf374`. Browsing below reads public
+primary documentation only; no endpoint, account, browser app or provider
+was probed. It landed at `15645517` (approval `961a1bf9`).
 
 ## 1. Goals, boundaries and terms
 

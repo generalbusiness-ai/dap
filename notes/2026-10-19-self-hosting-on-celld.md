@@ -1,8 +1,8 @@
 # Self-hosting dap on celld
 
-19 October 2026, draft 3. It is approved (`410a56a5`) and landed at
-`6eaae3f7`. Slices H1 to H5 are not built. Section 12 lists what changed
-after each checker review.
+Status: current. 19 October 2026, draft 3. It is approved (`410a56a5`)
+and landed at `6eaae3f7`. Slices H1 to H5 are not built. Section 12
+lists what changed after each checker review.
 
 Today dap runs only on Cloudflare: Workers, Durable Objects with SQLite,
 R2, and Cloudflare Artifacts as the git host. This note says how a

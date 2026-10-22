@@ -1,5 +1,8 @@
 # Design proposal: shared learning within your existing AI app
 
+Status: current. It landed at `60ab711f`. Draft 2 of its section
+"Connect to an expert" landed at `2127d5c5`.
+
 We propose a hosted dap service for a continuing learning project inside
 ChatGPT or Claude. A learner practises with their own agent and can invite
 a tutor or peer to review selected work. MCP Apps supplies the plan,

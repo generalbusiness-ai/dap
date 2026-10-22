@@ -1,14 +1,14 @@
 # A grow operation as a dap application: the interaction and the build
 
-17 October 2026. Design note. It is approved (`ea18571e`) and landed at
-`90c8c483`. It describes a second application
-on the same fabric as the journey: a growing operation whose people,
-agents and sensors share one room. It says what each member sees and does,
-and how the application is built once the
-[self-contained applications](2026-10-15-self-contained-applications.md)
-direction and a generic view description exist. It commissions nothing.
-Plan 033, of 18 October 2026, builds this application first, as the demo,
-after the archive milestone and before the journey's slices (section 7).
+Status: current. 17 October 2026. It is approved (`ea18571e`) and landed
+at `90c8c483`. It describes a second application on the same fabric as
+the journey: a growing operation whose people, agents and sensors share
+one room. It says what each member sees and does, and how the
+application is built once the [self-contained
+applications](2026-10-15-self-contained-applications.md) direction and a
+generic view description exist. It commissions nothing. Plan 033, of 18
+October 2026, builds this application first, as the demo, after the
+archive milestone and before the journey's slices (section 7).
 
 The direction was chosen on 17 October after two throwaway prototypes in a
 desktop AI app (section 5). The application is fictional. No grower, device

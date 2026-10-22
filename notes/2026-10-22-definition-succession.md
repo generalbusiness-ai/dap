@@ -1,14 +1,14 @@
 # Definition succession
 
-Design note, draft 4, for request `95d01d30`. Draft 2 answered review
+Status: current. Draft 4, for request `95d01d30`. Draft 2 answered review
 `f1e3ca14`: the journal after the cutoff, carried item identity, one
 successor for each cutoff, and what the genesis can refuse (sections 5 to
 8). Draft 3 answers review `10680d72`: a typed walk over every reference
 in a carried item (section 6.2), and a frozen application projection
 beside the ordinary state digest (section 7). Draft 4 answers review
 `b922444a`: the export and the application projection have separate
-canonical inputs and digests (section 5 terms, section 7). Proposed:
-nothing here is built.
+canonical inputs and digests (section 5 terms, section 7). Nothing here is
+built. It landed at `25e1248e` (approval `a990e92d`).
 
 A Counter has run in a room for four months. It holds sixteen
 participants, a board and a pledged promise that is due on Friday. Its

@@ -1,5 +1,8 @@
 # Design proposal: repo coordination within your existing AI app
 
+Status: current. It landed at `60ab711f`. The [MVP
+plan](2026-10-16-repo-in-ai-mvp-plan.md) plans its first version.
+
 We propose a hosted dap service that coordinates people and coding agents
 around a repo, through ChatGPT, Claude, or Slack. Each person uses their own
 conversation. MCP Apps supplies views for shared work and decisions.

@@ -1,5 +1,7 @@
 # Sequence and event identifiers
 
+Status: current. Draft 6 landed at `2fcd50ab`. Nothing here is built.
+
 Part one specifies a protocol for sequence and event identifiers. Part
 two describes how dap adopts this protocol.
 

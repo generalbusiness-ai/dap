@@ -1,6 +1,7 @@
 # A floor for a scope's journal
 
-Design note. Proposed: nothing here is built.
+Status: current. It landed at `d92cd85e` (approval `7f07c026`). Slices F1
+(`373f1e59`) and F2 (`2e228b3c`) are built; F3 is not.
 
 A scope is one Durable Object. It holds an ordered journal of entries,
 each linked to the one before it by hash, and the current state that

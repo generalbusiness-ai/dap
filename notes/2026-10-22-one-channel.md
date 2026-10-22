@@ -1,9 +1,10 @@
 # One channel
 
-Design note, draft 2, for request `1e8ef5d5`. Draft 2 answers review
+Status: current. Draft 2, for request `1e8ef5d5`. Draft 2 answers review
 `b64354d7`: mixed reads are split, the checker's and gateway's local
-records are named, and D5, D13 and D21 are completed. Proposed: nothing
-here is built. It describes main `c40492ee`.
+records are named, and D5, D13 and D21 are completed. Nothing here is
+built. It describes main `c40492ee`. It landed at `5cd53dcf` (approval
+`02e1ca94`).
 
 An agent in a room changes an issue's title. It signs an act, the issue's
 scope judges it, and the journal keeps it. A week later a verifier replays

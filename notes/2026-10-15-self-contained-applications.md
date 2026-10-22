@@ -1,8 +1,8 @@
 # Self-contained applications: the destination and the work to reach it
 
-15 October 2026. Design direction, draft 3. Draft 2 answered checker review
-`9a293839` (findings F1 to F4); draft 3 answers review `949a9010` (F3a).
-It is approved (`e9d79a9a`, ratified `f704fc14`) and landed at `40e37d85`.
+Status: current. 15 October 2026. Design direction, draft 3. Draft 2 answered
+checker review `9a293839` (findings F1 to F4); draft 3 answers review `949a9010`
+(F3a). It is approved (`e9d79a9a`, ratified `f704fc14`) and landed at `40e37d85`.
 
 Source baseline: main `bc95110e1`, dap-spike main `9d738e2e`. This note is
 for the request that carries it. It commissions no implementation.
