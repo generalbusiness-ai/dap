@@ -1,1 +1,0 @@
-Frozen DATA exact descriptor+row guards before every read; no execution/import/edit/chmod/adjacent rights.
