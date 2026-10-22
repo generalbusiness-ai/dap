@@ -97,6 +97,7 @@ These pages go from understanding to reference.
 | [The life of an act](manual/life-of-an-act.md) | A request, from the definition to the receipt. |
 | [Write an application](write-an-application.md) | Declare, validate and pin a definition, and create scopes under it. |
 | [Scopes](scopes.md) | The full description of the runtime: entries, definitions, composition and replay. |
+| [Kernel boundary](kernel.md) | Which parts are kernel, platform service or application, the kernel's promises, and the rule for adding to the kernel. |
 | [Use cases](use-cases.md) | A catalogue of situations dap is meant to serve, grouped by what each needs. |
 | [Roadmap](roadmap.md) | What runs today, what is not yet built, and what the dap-spike contributed. |
 
