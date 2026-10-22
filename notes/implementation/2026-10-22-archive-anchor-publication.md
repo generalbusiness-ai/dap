@@ -1034,3 +1034,17 @@ remain unchanged. This is parser provenance, not compiler or test
 acceptance. The scale fixture proposal above remains uncompiled and
 unrun. Its next owning attempt includes Scope test compilation and the
 separate Node-support compiler, then the complete six heavy cases.
+
+
+### Correct the scale fixture import boundary
+
+Owner 37260 naturally failed during Scope test compilation at `9511c6634`.
+The compiler reported TS2305 because `journalRef` is not exported by the
+Git package root. Complete input guards passed, with no signals or cache
+change. The Node-support compiler and all six heavy cases were not reached.
+
+The correction imports `journalRef` from its existing journal subpath,
+as the driver fixture already does. It changes no production exports,
+resolver behavior, assertion, workload, budget or deadline. The import
+error escaped the source review and remains recorded. Both owning compiler
+boundaries and the whole six-case heavy set remain pending a fresh attempt.

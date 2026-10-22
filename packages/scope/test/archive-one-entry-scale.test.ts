@@ -6,8 +6,8 @@
  * incremental send run over the fixture's scripted host and inline policy; Native Membership8 supplies authority. */
 import { expect, test } from "vitest";
 import { canonicalize, digestBytes, utf8 } from "@generalbusiness/artroom-bytes";
-import { idOf, journalRef, parseCommit, parseTree } from "@generalbusiness/artroom-git";
-import { journalV2PassPath, journalV2RetainedPath, journalV2SegmentPath, type JournalPassArchive } from "@generalbusiness/artroom-git/journal";
+import { idOf, parseCommit, parseTree } from "@generalbusiness/artroom-git";
+import { journalRef, journalV2PassPath, journalV2RetainedPath, journalV2SegmentPath, type JournalPassArchive } from "@generalbusiness/artroom-git/journal";
 import { readJournalRepositoryArchive } from "@generalbusiness/artroom-git/journal-reader";
 import { archiveSource, verifyArchive, TRUSTS } from "@generalbusiness/artroom-replay";
 import { ARCHIVE_BOUNDS, ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
