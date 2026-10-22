@@ -1,9 +1,12 @@
 # Definition succession
 
-Design note, draft 2, for request `95d01d30`. Draft 2 answers review
+Design note, draft 3, for request `95d01d30`. Draft 2 answered review
 `f1e3ca14`: the journal after the cutoff, carried item identity, one
 successor for each cutoff, and what the genesis can refuse (sections 5 to
-8). Proposed: nothing here is built.
+8). Draft 3 answers review `10680d72`: a typed walk over every reference
+in a carried item (section 6.2), and a frozen application projection
+beside the ordinary state digest (section 7). Proposed: nothing here is
+built.
 
 A Counter has run in a room for four months. It holds sixteen
 participants, a board and a pledged promise that is due on Friday. Its
@@ -28,7 +31,7 @@ references give the path and line numbers.
 A scope's definition never changes, and its history is never
 reinterpreted. An application moves to a new definition only by
 succession: an ordered cutoff entry in the old scope, with no change to
-its state after it, and a new scope whose genesis names that entry and
+its application state after it, and a new scope whose genesis names that entry and
 derives its state from it by a mapping that is data.
 
 The kernel boundary page (request `2ee805c5`) carries this sentence in its
@@ -427,45 +430,79 @@ opens at most one item (scope contract, lines 3276 to 3283;
   its opening entry in the predecessor. The item's `opened` is the hash of
   its carry entry, as for any item. A reader goes from a carried item to
   its history in the predecessor through its origin.
-- **Item references.** A reference slot of type `item` holds a local ID.
-  The carry entry rewrites it through the ID table. A reference to an item
-  that the export does not carry, such as a final item, is refused at the
-  cutoff with `mapping-refused`, unless the mapping clears it.
-- **Fact references.** A reference slot of type `fact` keeps its value.
-  It names an entry of the predecessor, and the predecessor stays readable.
-  The successor definition keeps the old definition's `name`, so an
-  `under` check on such a fact still passes
-  (`packages/derive/src/delivery.ts:273`).
+- **References.** Section 6.2 rewrites every reference that a carried
+  item holds.
 - **Outside names.** Outside its scope an item is named by the fact
   reference of its opening entry. A carried item has a new fact reference,
   its carry entry. A client that held the old one finds the new one
   through the ID table or the origin.
 
+### 6.2 Reference walk
+
+A carried item holds references in its reference slots and inside its
+values: a value can be a list or a record whose members are item or fact
+references. The Counter's promise holds both. Its `admittedAt` reference
+is a fact of its own scope, and its `basis` value is a list of records
+whose `id` members are participant item IDs
+(`apps/counter/commitments.ts:66-90`).
+
+The cutoff check and each carry entry run one typed walk. It visits every
+leaf of every reference slot and every value, through nested lists and
+records, by the leaf's declared type in the old definition:
+
+- **Local fact.** A fact of the predecessor's own scope is stored as its
+  position only (`packages/derive/src/fields.ts:220-224`). In the successor
+  that number would name a successor position. The walk expands it into
+  the full fact reference of that predecessor entry: scope, incarnation,
+  position and hash. The leaf then names the same entry it named before.
+- **Foreign fact.** A fact of another scope is already a full fact
+  reference. The walk keeps it.
+- **Local item.** An item ID is rewritten through the ID table, in a
+  reference slot or inside a value. The target must be carried, and its new
+  type must be the type that the leaf declares in the new definition. A
+  leaf whose target is not carried, such as a final item or an item of a
+  dropped type, refuses the cutoff with `mapping-refused`, unless the
+  mapping clears that leaf.
+- **Every other leaf** is kept as it is.
+
+A fact leaf in the successor keeps its `under` check: the successor
+definition keeps the old definition's `name`, and the predecessor's
+definition has that name, so a fact of the predecessor still passes
+(`packages/derive/src/delivery.ts:273`). The name check does not identify
+the scope; the expanded fact reference does.
+
 `dap check --predecessor` writes the identity part of the mapping and lists
 each choice the author must make: a renamed state, a renamed slot, a new
-required slot with no default, a type that is gone, and an item reference
-that can name a final item. The author writes only those choices.
+required slot with no default, a type that is gone, and an item leaf that
+can name a final item. The author writes only those choices.
 
 ## 7. Journal after the cutoff
 
 A refused delivery is an entry (scope contract, line 3427, and D1-7). So
 the cutoff entry is not the predecessor's last entry. The rule:
 
-- **Two kinds of entry after the cutoff.** A refused delivery, with the
-  reason `succeeded` and no effect, and the one `forward` entry of step 8.
-  The `forward` entry records the successor's reference and changes no
-  item. The
+- **Three kinds of entry after the cutoff.** A refused delivery, with the
+  reason `succeeded` and no effect; the one `forward` entry of step 8, with
+  the successor's reference and no item change; and floor entries, validated as for any scope, with no application effect. The
   predecessor writes nothing else: no act takes effect, no timed rule runs,
   and no operation is open (section 8).
-- **State is fixed.** The items and the state digest after any later entry
-  equal those at the cutoff entry. Replay checks this.
+- **Application projection.** The frozen part is named separately: every
+  item (live and final), with its ID, type, state, revision, opening hash,
+  parties, references, values and origin, and the next item ID. Its digest
+  is the export digest that the cutoff entry records. After the cutoff, the
+  projection and its digest stay equal to those at the cutoff entry.
+  Replay checks this.
+- **Journal state moves on.** The ordinary state digest keeps its meaning
+  (`packages/derive/src/state.ts:174-220`): it covers the head, the time,
+  decided deliveries and the floor, and it changes with each later entry as
+  for any scope. No second digest takes its name.
 - **Repeats.** A repeat of a delivery that was already refused is answered
   from its inbox row, with no new entry
   ([journal floor](2026-10-20-retained-journal-floor.md), section 6.6).
   Each new delivery writes one refused entry.
 - **Capacity.** The scope's entry bound applies as for any scope. A floor
-  can pass the refusal entries after the cutoff; the genesis and the cutoff
-  entry are kept below any floor.
+  entry can pass the refusal entries after the cutoff; the genesis and the
+  cutoff entry are kept below any floor.
 - **Archive.** Archive passes continue over the refusal entries and the
   `forward` entry, as over any entries. The export is fixed at the cutoff
   entry.
@@ -576,8 +613,8 @@ ordered directory entry, and the earlier binding stays in the record.
 - **Predecessor.** It replays under its own pin. The cutoff entry's
   judgment checks the mapping, so its closure holds the successor
   definition and the mapping, pinned by digest (rule 9). After the cutoff,
-  replay checks section 7: only refused deliveries and one `forward` entry,
-  and a fixed state digest.
+  replay checks section 7: only refused deliveries, one `forward` entry and
+  floor entries, and an application projection equal to the cutoff's.
 - **Successor.** Its genesis cites the cutoff entry by fact reference. The
   verifier reads that entry by hash, as it reads the source of a delivery.
   It checks the creation proof and section 5.2, and it derives each carry
@@ -658,6 +695,7 @@ roadmap.
 | `packages/contract/src/read.ts` (`Item`, `Status`) | No origin; three statuses. | `Item.origin`; the status `retired`. |
 | `packages/contract/src/result.ts` | No succession codes. | `succeeded`, `retired`, `activating`, `succession-busy`, `succession-too-large`, `succession-peers`, `mapping-refused`, `predecessor-mismatch`. |
 | `packages/derive/src/genesis.ts`, `fold.ts` | Ordinary genesis only; opens at the entry's position. | The succession genesis path; the carry open, with the ID table and origin. |
+| `packages/derive/src/fields.ts` (local facts as positions) | A local fact is stored as its position. | Unchanged inside a scope; the carry walk of section 6.2 expands each into a full predecessor fact reference. |
 | `packages/replay/src/verify.ts` | One definition for each history; no link. | The cutoff, carry and forward checks and the link of section 12. |
 | [Counter README](../apps/counter/README.md), line 202 | No scope moves from one definition to the other. | The Counter's succession. |
 
@@ -686,8 +724,11 @@ sets `target` between 1 and 100.
 2. **Carry.** The successor's genesis opens no item. Carry entries 1 to n
    open the carried items, so several old nonzero IDs become new IDs. The
    `inactive` participant is `standby`. The promise is `pledged` with the
-   same `until`. The board's `pledge` names the promise's new ID. Each
-   carried item's origin names its opening entry in the predecessor.
+   same `until`. The board's `pledge` names the promise's new ID. The
+   promise's `admittedAt` is the full fact reference of its original
+   `commit` entry in the predecessor, and resolves to it. Each `id` in the
+   promise's `basis` names the new ID of the matching carried participant.
+   Each carried item's origin names its opening entry in the predecessor.
 3. **No collision.** After activation, `participate` opens a new
    participant at the next position, and no ID collides.
 4. **Replay.** Both journals replay. The link checks of section 12 pass,
@@ -703,8 +744,10 @@ sets `target` between 1 and 100.
    successor's first timed drain after activation expires it.
 8. **Late delivery.** A delivery to the predecessor after the cutoff is
    recorded refused `succeeded`. Its repeat is answered from the inbox row
-   with no new entry. Replay finds the state digest unchanged after the
-   cutoff.
+   with no new entry. Then `forward` and a floor entry follow. Through all
+   four, the application projection's digest stays equal to the cutoff's,
+   while the head, the inbox and the floor change as for any scope. Replay
+   agrees.
 9. **URI.** The predecessor's URI resolves. Its reads report `retired`
    and, after `forward`, the successor's reference. Its journal reads as
    before.
