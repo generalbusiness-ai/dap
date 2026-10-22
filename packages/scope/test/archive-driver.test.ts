@@ -43,9 +43,26 @@ test("the real native alarm archives asynchronously while sixteen turns complete
   expect(replies.every(reply => reply.answer === "accepted")).toBe(true); expect(host.sends).toEqual([]);
   const later = await lane.head(); host.blocked.release(); expect(await running).toBe(true);
   expect((await row(lane))?.confirmed?.through).toEqual(before); expect(await lane.head()).toEqual(later);
-  expect(await lane.inside(state => state.storage.getAlarm())).not.toBeNull();
-  expect(await lane.alarm()).toBe(true); expect((await row(lane))?.confirmed?.through).toEqual(later);
-  expect(host.sends).toHaveLength(2); expect(host.targets).toBe(1); expect(await lane.head()).toEqual(later);
+  const remaining = later.seq - before.seq;
+  expect(remaining).toBe(16); expect(host.sends).toHaveLength(1);
+  let confirmed = before, sends = 1;
+  // The original budget can finish an earlier whole prefix. Each real
+  // scheduled continuation must advance, so at most one per remaining
+  // position is needed; neither a retry loop nor a larger budget is used.
+  for (let pass = 0; pass < remaining && confirmed.seq < later.seq; pass++) {
+    expect(await lane.inside(state => state.storage.getAlarm())).not.toBeNull();
+    expect(await lane.alarm()).toBe(true);
+    const advanced = await row(lane);
+    if (!advanced?.confirmed) expect.fail("a scheduled archive continuation must confirm a prefix");
+    expect(advanced.stopped).toBeNull(); expect(advanced.pending).toBeNull();
+    expect(advanced.confirmed.through.seq).toBeGreaterThan(confirmed.seq);
+    expect(advanced.confirmed.through.seq).toBeLessThanOrEqual(later.seq);
+    confirmed = advanced.confirmed.through;
+    expect(host.sends).toHaveLength(++sends);
+    expect(host.targets).toBe(1); expect(await lane.head()).toEqual(later);
+  }
+  expect(confirmed).toEqual(later);
+  expect(host.sends).toHaveLength(sends); expect(host.targets).toBe(1); expect(await lane.head()).toEqual(later);
   fixtureArchiveWiring.delete(lane.name);
 }, 20_000);
 

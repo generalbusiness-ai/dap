@@ -412,3 +412,30 @@ assertions, floor/deletion
 assertions, the 30 s deadline and product bounds are unchanged. No repaired
 Native
 result is claimed until a separately allocated run.
+
+At `1dda1f1c`, the affected Scope test compiler and all three publication
+cases passed (616, 453 and 343 ms). The first driver case then failed after
+390 ms: its second alarm confirmed position 8 rather than the captured head
+at 17. The remaining 12 driver cases had no completed acceptance after bail.
+Owner 23562 and child naturally exited 1 without a signal; full guards stayed
+stable. Inclusive timing was 10.232086 seconds elapsed, 11.249065 user CPU and
+2.261909 system CPU. Original reports remain unchanged.
+
+The source allows that earlier complete prefix: adaptive selection preserves
+a selected finish when later lookahead or its quote cannot proceed, and
+confirmation schedules the next alarm when the native head remains ahead.
+The observed position 8 does not identify a particular limiting budget axis,
+or show that the tail was lost. The old fixture's exact two-pass assumption
+was stronger than this driver contract under genuine authority accounting.
+
+The driver witness now retains the blocked first pass, all 16 accepted native
+turns, no send while blocked, the exact first receipt and the unchanged live
+head. It follows real scheduled alarms with strict positive confirmation
+progress, no pending or stopped row, a ceiling at the captured head and
+exactly one new send per pass. The loop is bounded by the number of remaining
+positions and still requires final exact head equality and a single target.
+The original 20 s deadline and all product budgets remain. No repaired driver
+result is claimed. The next checks need only the affected Scope test compiler
+and complete 13-case driver file; the unchanged publication file is not
+repeated. Production, large histories, command/clone and final gate remain
+separate obligations.
