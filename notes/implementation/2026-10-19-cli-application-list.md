@@ -1,17 +1,84 @@
 # CLI application listing integration after F2 and D2
 
-Request `520a8971`, builder promise `b202db36`. The current isolated
-integration starts at landed Main `2e228b3c`, tree `6bcc7cd6`, and takes the
-CLI additions from `a57ed7fa`. It keeps Main's invitation checks, archived
-answer handling, dependency lock and workspace configuration.
+Request `520a8971`, builder promise `b202db36`. The isolated integration
+starts at landed Main `2e228b3c`, tree `6bcc7cd6`, and takes the CLI additions
+from `a57ed7fa`. It keeps Main's invitation checks, archived-answer handling,
+dependency lock and workspace configuration. Source checkpoint `0180b3c1`
+contains eleven changed paths. The generated Page module remains exact Main.
 
-This is source preparation only. The generated Page module remains exact
-Main until its generator receives a separate runtime allocation. No
-compiler, generator, focused test or gate has run for this integration.
-Planner disposition `d819eafc`, ratified by `66b2c135`, requires one ordinary
-gate at the final integrated head and a full fresh review. Failed gate
-`17076` and follow-up `36282` remain historical evidence, not a passing gate
-for this integration. The earlier exact-head approvals do not approve it.
+No compiler, focused test or gate has run for this integration. Planner
+disposition `d819eafc`, ratified by `66b2c135`, requires one ordinary gate at
+the final integrated head and a full fresh review. Failed gate `17076` and
+follow-up `36282` remain historical evidence, not a passing gate for this
+integration. Earlier exact-head approvals do not approve this integration.
+
+## Dependency copy and one Page generator
+
+The first allocated dependency-copy helper, v2, exits naturally one during
+its selected-environment preflight. The tool's actual default context in
+the CLI checkout has a different LANG and PATH from the preparation context.
+The guard refuses before source, dependency or copy-body work. No target
+`node_modules` is created. Its original result, invocation and traceback
+remain unchanged; this is an actual helper preflight failure, not a copy-body
+or test failure. The helper is not retried.
+
+Fresh v3 source captures the intended default tool working directory and
+exact outer `/usr/bin/time -p` plus absolute Python 3.14 `-B` prefix. It
+restores no environment value and uses no launcher or shim. Its eleven
+selected values match the actual v2 invocation. Python `-B` prevents bytecode
+writes, but does not isolate startup or establish all customization inputs.
+
+The separately allocated v3 dependency copy exits naturally zero. It copies
+5,499 regular files before 32 contained relative links and records 539 real
+directories. The original relative link text is retained; fourteen workspace
+and export bindings resolve into the current CLI checkout. Captured source,
+dependency, tool, lock and stamp checks pass. All dependency file, link and directory inode
+identities differ between the source and owned target. The inert Vite cache is retained, with zero
+installs, cleanup operations or retries. The recorded inner copy wall time
+is 4.998588959 seconds.
+
+One actual Page generator then runs through absolute Node and
+`apps/room/page/scripts/assets.mjs`. The Node child exits naturally zero,
+without a signal, and reports the 819,381-byte script plus writes to dist
+and the asset module. Its wall time is 0.370435708 seconds; child user and
+system time are 0.066086 and 0.015843 seconds.
+
+The owning wrapper exits one because its additional predicate requires the
+asset hash to change. That predicate was wrong: a deterministic generator
+can reproduce an already current module. The wrapper's source, dependency
+and two-file dist checks complete before this predicate. The original
+`after.json` and final receipt rereads are not reached. The original wrapper
+failure stays a failure; no later observation supplies an original after
+receipt, and the generator is not rebuilt or retried.
+
+A later, separate read-only reconciliation compares all 2,734 source rows,
+5,531 dependency leaves and 539 directory identities with the original
+captures. They match, as do the three helper files. The asset module remains
+875,365 bytes, SHA-256
+`d5019464b793fc35c360b64b53f997081a3de2236af337f3c8424a2e891c555f`.
+Reading its two exports as JSON string literals, without executing TypeScript,
+gives the exact generated HTML and JavaScript bytes:
+
+- HTML: 26,184 bytes, SHA-256
+  `0167e7334fb013b0787bd559c18836789cf06d36bb2b402f1044b72ebec386f8`.
+- JavaScript: 819,381 bytes, SHA-256
+  `b6522512a8590a9f69ddb59e652177a1d7a1a6e3386afecac1a9d2a0f6026d73`.
+
+Independent DATA audit `0b47a334` verifies those bounded receipt and byte
+facts. Root adopts them in attributed builder assertion `4cb32449`. This is
+not formal review approval; the attempted builder ratification has no
+ratifier force. The audit keeps root-reported outer tool closures and timing
+outside its finite DATA scope. Root's outer wall observations are 0.05 seconds
+for v2 preflight, 5.04 seconds for v3 copy and 2.17 seconds for the generator
+wrapper. These overlap their inner scopes and are not summed or treated as
+isolated measurements. The shared host and retained dependency cache remain
+qualifications, with no stability or production latency claim.
+
+The final candidate still has eleven authored paths and no generated-asset
+delta. Fresh focused compilers and selected CLI, Page, dispatcher, invitation,
+clone, MCP and application-establishment witnesses are being prepared on the
+new note checkpoint. They have not run. One exact-head ordinary gate and full
+fresh review remain required before landing.
 
 The sections below preserve the earlier integration report from `a57ed7fa`.
 Its heads, counts, physical paths and outcomes describe that earlier work.
