@@ -146,6 +146,15 @@ export class LocalSigners {
       return { state: c.phase === "ready" ? "negative" : "unknown" };
     } catch { return { state: "unknown" }; }
   }
+  /** Writer bookkeeping anchors only, while the derived index is ready. */
+  floorAnchors(before = Number.MAX_SAFE_INTEGER): readonly number[] | null {
+    const c = this.#load();
+    if (c === null || c === "invalid" || c.phase !== "ready" || this.#fault(c) !== null) return null;
+    const rows = this.#sql.exec("SELECT generation,seq FROM latest_local_signer WHERE seq < ? ORDER BY seq,actor LIMIT 1025", before).toArray();
+    if (rows.some(row => row["generation"] !== this.#generation(c) || !integer(row["seq"]))) return null;
+    return [c.cutoff.seq, c.next - 1, ...rows.map(row => row["seq"] as number)].filter(seq => seq >= 0);
+  }
+
   /** One durable quantum; no resolver, judgment, native entry or outside effect. */
   maintain(): { rows: number; bytes: number; pending: boolean } {
     return this.#sql.transaction(() => {

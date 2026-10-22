@@ -1,3 +1,4 @@
+import { countedEntries } from "./floor.ts";
 /**
  * Room to settle (scope contract, sections 9.2 and 17, in the entries
  * dimension): a scope that admits a task must still be able to record how
@@ -234,16 +235,17 @@ export function reserved(view: StateView, definition: ValidDefinition, head: Inp
 export function fits(view: StateView, definition: ValidDefinition, bounds: Pick<Bounds, "scopeEntries">, input: Input, settled = false, owners?: Owners | null): boolean {
   const scope = view.scope();
   if (!scope) return true;
+  if (input.type === "floor") return countedEntries(view) < bounds.scopeEntries;
   if (definition.declared.capacity?.name === "whole-scope") {
     // A settlement spends its existing room; it cannot bypass the ceiling.
-    return amountMath(true).sum({ ...NOTHING, entries: scope.head.seq }, { ...NOTHING, entries: 1 }, reserved(view, definition, input, owners)).entries <= bounds.scopeEntries;
+    return amountMath(true).sum({ ...NOTHING, entries: countedEntries(view) }, reserved(view, definition, input, owners)).entries <= bounds.scopeEntries;
   }
   const settles = settled || input.type === "timed" || input.type === "diagnosis" || input.type === "outcome"
     || (input.type === "delivery" && (input.message.class === "control" || ("clause" in input && input.clause !== "conflict")));
   // Validate C1 state/arithmetic even when an owed settlement is exempt
   // from capacity admission. Old definitions keep their existing shortcut.
   const standing = definition.standing ? owed(view, definition, input, owners) : null;
-  return settles || scope.head.seq + 1 + (standing ?? owed(view, definition, input, owners)) <= bounds.scopeEntries;
+  return settles || countedEntries(view) + (standing ?? owed(view, definition, input, owners)) <= bounds.scopeEntries;
 }
 
 /** Null bytes explicitly omit that historical check; callers must report

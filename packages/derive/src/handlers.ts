@@ -123,10 +123,14 @@ export function checkedTextBounds(definition: ValidDefinition, input: Entry["inp
 /** A previous successful check of this same digest can prove its bound after erasure. */
 function priorDetachedBounds(definition: ValidDefinition, context: Reading, at: ScopeRef, before: number): Map<Digest, number> {
   const limits = new Map<Digest, number>();
-  if (context.own) for (let seq = 0; seq < before; seq++) {
-    const entry = context.own(seq)?.entry;
-    if (!entry || entry.seq !== seq || !same(entry.at, at)) continue;
-    for (const [digest, max] of checkedTextBounds(definition, entry.input)) limits.set(digest, Math.min(limits.get(digest) ?? Number.POSITIVE_INFINITY, max));
+  if (context.own) {
+    for (const proof of context.own.sizeProofs?.() ?? []) if (proof.seq < before) limits.set(proof.digest, Math.min(limits.get(proof.digest) ?? Infinity, proof.bound));
+    const positions = context.own.positions?.(before) ?? (function* () { for (let seq = 0; seq < before; seq++) yield seq; })();
+    for (const seq of positions) {
+      const entry = context.own(seq)?.entry;
+      if (!entry || entry.seq !== seq || !same(entry.at, at)) continue;
+      for (const [digest, max] of checkedTextBounds(definition, entry.input)) limits.set(digest, Math.min(limits.get(digest) ?? Infinity, max));
+    }
   }
   return limits;
 }

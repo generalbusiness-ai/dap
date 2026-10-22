@@ -91,6 +91,7 @@ export async function simulatorTick(config: SimulatorTick, port: SimulatorPorts)
     lastRequest = await signedIntent(config.signers[role], { to: config.scope, kind, on, fields, expected }, { now: config.now, lifetimeSeconds: 120 });
     const answer = await (owner ? port.answer(lastRequest) : port.submit(lastRequest));
     if (owner && answer.answer === "refused" && answer.reason === "capability-refused" && answer.name === "device-command-closed") { report.alreadyClosed++; return "already-closed"; }
+    if (answer.answer === "archived") return tickFailure(`archived:${answer.fact.seq}`);
     if (answer.answer !== "accepted") return tickFailure(`${answer.answer}:${answer.reason}${"name" in answer && answer.name ? ":" + answer.name : ""}`);
     const accepted = await acceptedTickFact(answer, config.scope, config.definition, lastRequest, owner, port.reader);
     report.accepted.push({ kind, fact: accepted }); return accepted;

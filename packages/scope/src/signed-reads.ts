@@ -1,3 +1,4 @@
+import { heldPositions, archivedPosition } from "@generalbusiness/dap-derive";
 /**
  * Signed reads: the second way a reader may read a scope, beside a read
  * session (the planner's decisions 61cc5e50, c6499e91, 70a0680e and ca8ad1cf). It is
@@ -244,14 +245,15 @@ export async function rootOf(start: Entry, read: (use: FactUse) => Promise<Entry
  * whose sends name the membership scope's seed.
  */
 export class Chains {
-  readonly #store: Pick<Store, "scope" | "stored">;
+  readonly #store: Pick<Store, "scope" | "stored" | "floor">;
   readonly #read: (use: FactUse) => Promise<Entry | null>;
   readonly #roots: (Root | null | undefined)[] = [];
   readonly #claims = new Map<ScopeId, number>();
+  readonly #discoveries = new Map<ScopeId, number>();
   readonly #retry = new Set<number>();
   #next = 0;
 
-  constructor(store: Pick<Store, "scope" | "stored">, read: (use: FactUse) => Promise<Entry | null>) {
+  constructor(store: Pick<Store, "scope" | "stored" | "floor">, read: (use: FactUse) => Promise<Entry | null>) {
     this.#store = store;
     this.#read = read;
   }
@@ -260,6 +262,8 @@ export class Chains {
   at(seq: number): Root | null | undefined { return this.#roots[seq]; }
   /** The position of the register's claim that caused the directory which created that membership scope, or null. */
   claimOf(membership: ScopeId): number | null { return this.#claims.get(membership) ?? null; }
+  /** Exact kept discovery entries needed to rebuild the authenticated claim index. */
+  discoveries(): readonly number[] { return [...new Set(this.#discoveries.values())]; }
   /** Whether any resolved entry gives this key a causal read at this time. */
   has(key: KeyId, since: number): boolean { return this.#roots.some((root) => leads(root, key, since)); }
 
@@ -271,15 +275,16 @@ export class Chains {
     const own = { scope: scope.at.scope, entry: entryAt };
     const find = async (seq: number): Promise<void> => {
       const entry = entryAt(seq);
-      if (!entry) { this.#retry.add(seq); return; }
+      if (!entry) { if (archivedPosition(this.#store, seq)) this.#retry.delete(seq); else this.#retry.add(seq); return; }
       const root = await rootOf(entry, this.#read, CHAIN_STEPS, own);
       if (root === "unavailable") { this.#retry.add(seq); return; }
-      if (scope.at.kind === "register" && root && root.scope === scope.at.scope) for (const membership of await this.#memberships(entry)) this.#claims.set(membership, root.seq);
+      if (scope.at.kind === "register" && root && root.scope === scope.at.scope) for (const membership of await this.#memberships(entry)) { this.#claims.set(membership, root.seq); this.#discoveries.set(membership, seq); }
       this.#roots[seq] = root;
       this.#retry.delete(seq);
     };
     for (const seq of [...this.#retry]) await find(seq);
-    while (this.#next <= scope.head.seq) await find(this.#next++);
+    for (const seq of heldPositions(this.#store, scope.head.seq + 1)) if (seq >= this.#next) await find(seq);
+    this.#next = scope.head.seq + 1;
   }
 
   /** The membership scopes whose seeds the directory's genesis that a delivery came from names, or none. */
@@ -323,7 +328,7 @@ export function checkSignedReadRequest(config: SignedReading, store: Pick<Store,
 }
 
 /** Request validation and local signer eligibility, with no cause reads. */
-export function checkLocalSignedRead(config: SignedReading, store: Pick<Store, "scope" | "stored">, reader: string, read: ReadName, arg: string): { key: KeyId; since: number } | { refused: false | "clock-behind" } | { root: { actor: KeyId; since: number } } {
+export function checkLocalSignedRead(config: SignedReading, store: Pick<Store, "scope" | "stored" | "floor">, reader: string, read: ReadName, arg: string): { key: KeyId; since: number } | { refused: false | "clock-behind" } | { root: { actor: KeyId; since: number } } {
   const checked = checkSignedReadRequest(config, store, reader, read, arg);
   if (!("key" in checked)) return checked;
   const { key: actor, since } = checked;
@@ -341,12 +346,12 @@ export function checkLocalSignedRead(config: SignedReading, store: Pick<Store, "
 }
 
 /** The full check, using a resolved root only when local eligibility needs it. */
-export function checkSignedRead(config: SignedReading, store: Pick<Store, "scope" | "stored">, reader: string, read: ReadName, arg: string): { key: KeyId; since: number; scoped: boolean; whole: boolean } | { refused: false | "clock-behind" } {
+export function checkSignedRead(config: SignedReading, store: Pick<Store, "scope" | "stored" | "floor">, reader: string, read: ReadName, arg: string): { key: KeyId; since: number; scoped: boolean; whole: boolean } | { refused: false | "clock-behind" } {
   const answer = checkedRead(config, store, reader, read, arg);
   metric({ kind: "signed-read", place: read === "entry" ? "entries" : read, end: "key" in answer ? "ok" : "refused", reason: "key" in answer ? "none" : answer.refused || "forbidden" });
   return answer;
 }
-function checkedRead(config: SignedReading, store: Pick<Store, "scope" | "stored">, reader: string, read: ReadName, arg: string): { key: KeyId; since: number; scoped: boolean; whole: boolean } | { refused: false | "clock-behind" } {
+function checkedRead(config: SignedReading, store: Pick<Store, "scope" | "stored" | "floor">, reader: string, read: ReadName, arg: string): { key: KeyId; since: number; scoped: boolean; whole: boolean } | { refused: false | "clock-behind" } {
   const checked = checkLocalSignedRead(config, store, reader, read, arg);
   if ("refused" in checked) { observed(config, reader, "request-refused"); return checked; }
   const { actor, since } = "key" in checked ? { actor: checked.key, since: checked.since } : checked.root;

@@ -105,3 +105,18 @@ test("shares traversal limits and drains an owned read after deadline", async ()
     expect(settled).toBe(true);
   } finally { vi.useRealTimers(); }
 });
+
+// Exact commit probes of the same history share its distinct-scope slot;
+// every physical receipt read still spends from the original work budget.
+test("floor commit probes share the already opened scope allowance", async () => {
+  const fixture = declaredGenesisFixture(), native = port(fixture.scopes), scope = fixture.scopes[0]!;
+  let reads = 0;
+  native.floorReceipt = async (_scope, _commit, work) => {
+    work.scope(); work.spend({ calls: 1 }); reads++;
+    return { ok: true, scope: scope.scope, through: fixture.options.head! };
+  };
+  const archived = archiveSource(native, { limits: { scopes: 1 } });
+  expect((await archived.page(scope.scope.scope, 0, { bytes: 4096, entries: 1 })).ok).toBe(true);
+  for (const commit of ["b".repeat(40), "c".repeat(40)]) expect(await archived.floorReceipt(scope.scope.scope, commit, { bytes: 4096 })).toMatchObject({ ok: true, through: fixture.options.head });
+  expect(reads).toBe(2);
+});

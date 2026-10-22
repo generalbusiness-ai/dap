@@ -71,11 +71,13 @@ const variant = (by: string, variants: Record<string, Check>): Check => (v) => {
 
 // Each table has every member of its union, and the compiler says so when the contract gains or loses one.
 export const REFUSAL_REASONS: Record<RefusalReason, true> = {
+  archived: true, "floor-receipt": true, "floor-ahead": true, "floor-back": true, "floor-step": true, "floor-recent": true, "floor-keep": true, "floor-kept": true,
   "revision-moved": true, alias: true, "duplicate-relation": true, "required-unset": true, "scope-full": true, "bad-intent": true, misaddressed: true, expired: true, "scope-refused": true,
   "unknown-act": true, "bad-field": true, "no-item": true, final: true, "fact-mismatch": true, unauthorized: true, "guard-failed": true, "capability-refused": true, "slot-full": true, "type-full": true, "entry-too-large": true, "send-unresolved": true,
   "unknown-message": true, "wrong-pin": true, "unsupported-definition": true, "bad-input": true, late: true,
 };
 export const READ_REFUSALS: Record<ReadRefusal, true> = {
+  archived: true,
   "not-found": true, "wrong-incarnation": true, forbidden: true, "scope-provisional": true, "unsupported-definition": true, "history-unavailable": true, "too-large": true, unavailable: true,
   "sessions-unavailable": true, "clock-behind": true,
 };
@@ -246,6 +248,7 @@ const deliveryOf: Record<Message["class"], Check> = {
   advisory: recordShape(delivered),
 };
 const input = variant("type", {
+  floor: recordShape({ type: any, floor: isLocalId, receipt: recordShape({ commit: (v) => typeof v === "string" && /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/.test(v), through: recordShape({ seq: isLocalId, hash: isDigest }) }), keep: listOf(isLocalId) }),
   genesis: recordShape({
     type: any, seed, inc: isIncarnation, kind: (v) => wellFormedText(v) && v !== "", "founding": orNull(signedIntent), source: orNull(factRef), n: orNull(isLocalId), message: orNull(request), decision: among({ applied: true, refused: true }),
   }),
@@ -308,9 +311,10 @@ export const isRetainedInput = (v: unknown): v is RetainedInput => {
 
 /** A read (section 9.1): a value of the route's shape at a stated head, or a refusal the contract names, with the reference it may carry. */
 export const isRead = <T>(value: (v: unknown) => v is T) => {
+  const archived = recordShape({ ok: is(false), reason: is("archived"), archived: recordShape({ floor: isLocalId, commit: (v) => typeof v === "string" && /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/.test(v), through: head }) }, { next: wellFormedText, fact: factRef });
   const unread = recordShape({ ok: is(false), reason: among(READ_REFUSALS) }, { detail: (v) => scopeRef(v) || factRef(v) });
   const read = recordShape({ ok: is(true), at: head, value, complete: flag }, { next: (v) => typeof v === "string" });
-  return (v: unknown): v is Read<T> => unread(v) || read(v);
+  return (v: unknown): v is Read<T> => archived(v) || (unread(v) && isRecord(v) && v["reason"] !== "archived") || read(v);
 };
 /** A list of such records, as a paged read returns. */
 export const isListOf = <T>(each: (v: unknown) => v is T) => (v: unknown): v is readonly T[] => Array.isArray(v) && v.every(each);

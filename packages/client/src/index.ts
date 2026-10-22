@@ -42,3 +42,5 @@ export * from "./application-install.ts";
 
 export * from "./application-screen.ts";
 export * from "./application-projection.ts";
+
+export * from "./journal-tail.ts";

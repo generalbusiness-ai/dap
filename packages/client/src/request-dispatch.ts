@@ -11,7 +11,7 @@ export type TrustedRequestFetch=(url:string,init:{method:"POST";headers:Record<s
 export interface RequestJournalRecord {readonly envelope:PreparedEnvelope;readonly journal?:AttemptJournal}
 export interface RequestJournalStore<T extends RequestJournalRecord> {load():Promise<T|null>;save(value:T):Promise<void>}
 const unknown=(reason="The exact original request remains unresolved."):RequestDispatchOutcome=>({status:"unknown",reason});
-const sameStatus=(answer:Answer,status:number):boolean=>status===(answer.answer==="accepted"?200:answer.answer==="unavailable"?503:answer.answer==="mismatch"?409:answer.reason==="unauthorized"?403:422);
+const sameStatus=(answer:Answer,status:number):boolean=>status===(answer.answer==="accepted"?200:answer.answer==="archived"?410:answer.answer==="unavailable"?503:answer.answer==="mismatch"?409:answer.reason==="unauthorized"?403:422);
 const cancel=(body:ByteStream|null):void=>{try{void body?.getReader().cancel().catch(()=>undefined);}catch{ /* Disposal cannot restore knowledge. */ }};
 
 /** Gateway owns every caller's lock acquisition. This helper never accepts a caller's knowledge/ticket assertion. */

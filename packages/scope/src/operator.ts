@@ -130,8 +130,9 @@ export class OperatorRecord {
    * reads those entries again, and may then write a row twice: the record
    * is a notice, and a row names its entry.
    */
-  follow(store: Pick<Store, "storedFrom">): void {
-    const from = (this.#sql.exec("SELECT v FROM operator_mark WHERE k = 'next'").toArray()[0]?.["v"] as number | undefined) ?? 0;
+  follow(store: Pick<Store, "storedFrom" | "floor">): void {
+    let from = (this.#sql.exec("SELECT v FROM operator_mark WHERE k = 'next'").toArray()[0]?.["v"] as number | undefined) ?? 0;
+    from = Math.max(from, store.floor?.()?.floor ?? 0);
     const rows = store.storedFrom(from, FOLLOW_ENTRIES);
     if (rows.length === 0) return;
     for (const row of rows) for (const incident of incidentsOf(JSON.parse(row.bytes) as Entry, row.hash)) this.record(incident.kind, incident.refs);

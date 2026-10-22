@@ -234,6 +234,25 @@ test("the shell fences the whole scope during a submit and keeps a lost reply re
     rendered = gate(); observation.resolve(); await rendered.promise;
     expect(panels.at(-1)?.uncertain).toBe(true);
     expect(root.textContent).toContain("Known held admission accepted");
+
+    // An archived reply is not an accepted callback, even when a later
+    // summary read succeeds. Redraw keeps this original request fenced.
+    location.hash = "#/issue/archived"; rendered = gate(); redraw(); await rendered.promise;
+    dataAct.mockImplementationOnce(async (...args: unknown[]) => {
+      (args[5] as () => void)();
+      const result = { kind: "comment", answer: { answer: "archived" }, observation: null };
+      (args[4] as (value: unknown) => void)(result); return result as never;
+    });
+    rendered = gate(); send("comment", "", { body: "Original archived request" }, retired); await rendered.promise;
+    expect(root.textContent).toContain("Known comment archived");
+    expect(panels.at(-1)?.uncertain).toBe(true);
+    expect(retired).toHaveBeenCalledTimes(2);
+    const afterArchived = dataAct.mock.calls.length;
+    send("comment", "", { body: "Do not sign a replacement" }, retired); await drain();
+    rendered = gate(); redraw(); await rendered.promise;
+    send("comment", "", {}, retired); await drain();
+    expect(dataAct).toHaveBeenCalledTimes(afterArchived);
+    expect(panels.at(-1)?.uncertain).toBe(true);
   } finally {
     // Controls may admit forbidden extra attempts. Reject and drain every
     // one while its DOM remains installed, so a distinguishing assertion

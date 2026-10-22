@@ -11,9 +11,12 @@ import type { ReadRefusal } from "./result.ts";
 /** An opaque, resumable position in a paged read. */
 export type Cursor = string;
 
+import type { Archived } from "./floor.ts";
+
 export type Read<T> =
+  | { ok: false; reason: "archived"; archived: Archived; fact?: FactRef; next?: Cursor }
   | { ok: true; at: { seq: number; hash: Digest }; value: T; complete: boolean; next?: Cursor }
-  | { ok: false; reason: ReadRefusal; detail?: FactRef | ScopeRef };
+  | { ok: false; reason: Exclude<ReadRefusal, "archived">; detail?: FactRef | ScopeRef };
 
 /** Settlement of one signed intent: one receipt or `not-found` (section 4.2). */
 export type Settlement = Read<Receipt>;

@@ -1,3 +1,4 @@
+import { countedEntries } from "@generalbusiness/dap-derive";
 /**
  * The turn: how one input takes effect (scope contract, sections 5.2 and
  * 5.3). The step numbers in the comments are the contract's.
@@ -57,12 +58,15 @@ export async function turnDeadline<T>(work: () => Promise<T>, seconds: number): 
  * could not be read, and the input is answered `dependency-unavailable`.
  * Nothing is held.
  */
-export async function fetchFacts(resolver: Resolver, bounds: Bounds, named: readonly FactRef[]): Promise<Fetched[] | null> {
-  const read = await Promise.all(named.map(async (fact): Promise<Fetched | null> => {
+export const ARCHIVED_FACT = Symbol("archived-fact");
+export async function fetchFacts(resolver: Resolver, bounds: Bounds, named: readonly FactRef[]): Promise<Fetched[] | typeof ARCHIVED_FACT | null> {
+  const read = await Promise.all(named.map(async (fact): Promise<Fetched | typeof ARCHIVED_FACT | null> => {
     const matched = await turnDeadline(() => resolver.read(fact, bounds.fetchSeconds), bounds.fetchSeconds);
+    if (matched !== LATE && matched !== null && "archived" in matched) return ARCHIVED_FACT;
     return matched !== LATE && matched !== null && "entry" in matched && isEntryOf(matched.entry, fact) ? carryProducerName({ fact, entry: matched.entry, under: matched.under }, matched) : null;
   }));
-  return read.every((f) => f !== null) ? read : null;
+  if (read.includes(ARCHIVED_FACT)) return ARCHIVED_FACT;
+  return read.every((f): f is Fetched => f !== null && f !== ARCHIVED_FACT) ? read : null;
 }
 
 // ---------------------------------------------------------------- the waiting input
@@ -263,7 +267,7 @@ export class Turns {
       if (!scope || !due) return null;
       if (turn.attempts >= this.#bounds.timedAttemptsPerTurn) return { end: "busy" };
       // Section 9.2: room for this entry was counted when its item was opened. A scope with no room at all writes nothing.
-      if (scope.head.seq + 1 >= this.#bounds.scopeEntries) {
+      if (countedEntries(this.#store) >= this.#bounds.scopeEntries) {
         if (definition.declared.capacity) turn.full = "scopeEntries";
         return { end: "unavailable" };
       }
@@ -364,7 +368,11 @@ export class Turns {
 
   #full(definition: ValidDefinition, input: Sealed["entry"]["input"], settles = false): ScopeBoundName | null {
     if (definition.declared.capacity?.name !== "whole-scope") return fits(this.#store, definition, this.#bounds, input, settles, this.#owners()) ? null : "scopeEntries";
-    const used = { entries: this.#store.scope()!.head.seq + 1, bytes: this.#store.logicalBytes(), ...this.#store.keyCounts() };
+    const used = { entries: countedEntries(this.#store), bytes: this.#store.logicalBytes(), ...this.#store.keyCounts() };
+    // A floor must reclaim room even when the old journal was at capacity.
+    // Its after-effect must leave an entry slot; all other dimensions and
+    // existing pending reservations retain their ordinary comparisons.
+    if (input.type === "floor" && used.entries >= this.#bounds.scopeEntries) return "scopeEntries";
     return capacityFull(used, reserved(this.#store, definition, input, this.#owners()), this.#bounds);
   }
 

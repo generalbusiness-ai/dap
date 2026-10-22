@@ -6,6 +6,8 @@
  * that every judge is given.
  */
 
+import { archivedPosition } from "./floor.ts";
+import type { Archived, SizeProof } from "@generalbusiness/dap-contract";
 import type { ActType, Bounds, Digest, Entry, FactRef, FactUse, FieldRecord, FieldType, FieldValue, Prepared, Request, ScopeRef, Sealed } from "@generalbusiness/dap-contract";
 import { canonicalBytes, digestBytes, entryHash, isDigest, isIntent } from "@generalbusiness/artroom-bytes";
 import type { Capabilities } from "./capability.ts";
@@ -21,7 +23,13 @@ import { byteOrder, isFactRef, isObject, isValue, own, same } from "./values.ts"
  * verifier from the chain it has checked, so the head check covers it
  * (section 6.2, a local fact).
  */
-export type Own = (seq: number) => Sealed | null;
+export interface Own {
+  (seq: number): Sealed | null;
+  retained?(use: import("@generalbusiness/dap-contract").FactUse): Entry | null;
+  positions?(before: number): Iterable<number>;
+  sizeProofs?(): readonly SizeProof[];
+  archived?(seq: number): Archived | null;
+}
 
 /**
  * The detached texts at hand for one input, by digest (section 6.2). A
@@ -141,7 +149,7 @@ export const presentedTypes = (presents: ActType["presents"]): ActType["fields"]
  */
 export type Facts =
   | { result: "read"; fields: Record<string, FieldValue>; facts: Map<Digest, Fetched>; uses: FactUse[] }
-  | { result: "no-item" | "fact-mismatch" | "bad-field"; detail: string; uses: FactUse[] }
+  | { result: "archived" | "no-item" | "fact-mismatch" | "bad-field"; detail: string; uses: FactUse[] }
   | { result: "unavailable" };
 
 /** The scope that judges an input, its own history, and the texts that came with the input: what tells a local fact from a foreign one, and checks it. */
@@ -196,6 +204,7 @@ export function readFacts(view: StateView, types: ActType["fields"], fields: Rea
       if (type.type !== "fact") continue;
       const ref = value as FactRef;
       if (isLocalFact(ref, local.at)) {
+        if (archivedPosition(view, ref.seq)) return { result: "archived", detail: `${name} names archived entry ${ref.seq}`, uses };
         if (!local.own) return { result: "unavailable" };
         if (ref.at.kind !== local.at.kind || local.own(ref.seq)?.hash !== ref.hash) return { result: "fact-mismatch", detail: `${name} names no entry of this scope: entry ${ref.seq} has another hash, or does not exist`, uses };
         continue;

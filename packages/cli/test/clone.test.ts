@@ -20,12 +20,15 @@ test("remote reads the recorded repository; missing Git and the pinned @1 withou
   await store.save(config);
   const calls: string[] = [];
   let definition: string = DESTINATION;
-  let category: "unavailable" | "mismatch" = "unavailable";
+  let category: "unavailable" | "mismatch" | "archived" = "unavailable";
   let sessionMode: "absent" | "issued" | "read-refused" = "absent";
   const readers: string[] = [];
   const fetch: Fetch = async (url, init) => {
     calls.push(url);
-    if (url.endsWith("/acts")) return Response.json({ answer: category, reason: category === "unavailable" ? "busy" : "idempotency-mismatch" });
+    if (url.endsWith("/acts")) return Response.json(category === "archived" ? { answer: "archived",
+      fact: { at, seq: 1, hash: `sha256:${"b".repeat(64)}` },
+      archived: { floor: 2, commit: "c".repeat(40), through: { seq: 3, hash: `sha256:${"d".repeat(64)}` } },
+    } : { answer: category, reason: category === "unavailable" ? "busy" : "idempotency-mismatch" });
     if (url.endsWith("/sessions")) {
       if (sessionMode === "absent") return new Response(JSON.stringify({ ok: false, reason: "sessions-unavailable" }));
       const asked = JSON.parse(init!.body!) as SignedSessionRequest;
@@ -83,5 +86,15 @@ test("remote reads the recorded repository; missing Git and the pinned @1 withou
       expect(result.lines.join("\n")).not.toMatch(/Nothing was written|Send the same command again/);
       if (value === "unavailable") expect(result.lines.join("\n")).toContain("same original signed envelope");
     }
+  }
+  category = "archived";
+  for (const result of [await command(running, ["clone"]), await command(running, ["act", "read-token", "--on", "destination", "--target", "0", "--set", "hours=1"])]) {
+    expect(result.code).toBe(1);
+    expect(result.lines[0]).toContain(`Archived: original entry ${at.scope}:1`);
+    expect(result.lines[0]).toContain(`hash sha256:${"b".repeat(64)}, incarnation ${at.inc}`);
+    expect(result.lines[0]).toContain(`through entry 3, hash sha256:${"d".repeat(64)}`);
+    expect(result.lines.join(" ")).toContain("before confirming the original result or another mutation");
+    expect(result.lines.join(" ")).toContain("same original signed envelope");
+    expect(result.lines.join(" ")).not.toMatch(/was accepted|Read token:|Nothing was written/);
   }
 });

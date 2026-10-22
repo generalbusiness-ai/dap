@@ -12,8 +12,8 @@
  */
 
 import { DOMAINS, HISTORY_PAGE_BYTES, HISTORY_PAGE_ENTRIES, RETAINED_INPUT_BYTES } from "@generalbusiness/dap-contract";
-import type { Digest, FactRef, Head, RetainedInput, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
-import { LATE, digestOfHash, positionOf, retainedReadArgument, sha256, takeBytes, utf8, within, type ByteStream, type Expiry } from "@generalbusiness/artroom-bytes";
+import type { Archived, Digest, FactRef, Head, RetainedInput, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
+import { isHead, isRecord, LATE, digestOfHash, positionOf, retainedReadArgument, sha256, takeBytes, utf8, within, type ByteStream, type Expiry } from "@generalbusiness/artroom-bytes";
 import { isLocalId, isObject, isScopeRef } from "@generalbusiness/dap-derive";
 
 /** One entry as stored: its canonical JSON text, and the hash the source gives for it. */
@@ -35,7 +35,9 @@ export interface Page { scope: ScopeRef; head: Head; entries: readonly Stored[];
  * in, and was not taken in. `timeout`: no whole reply came within the
  * deadline. Anything else: it could not be read.
  */
-export interface Unread { ok: false; reason: string }
+export interface Unread { ok: false; reason: string; archived?: Archived; bytes?: number }
+/** Exact immutable clone commit metadata, independently read from head.json. */
+export type FloorCommitRead = { ok: true; scope: ScopeRef; through: Head; bytes: number } | Unread;
 
 /**
  * What one read may take in. Everything a source returns is untrusted, so
@@ -53,6 +55,7 @@ export const PAGE_ENTRIES = HISTORY_PAGE_ENTRIES;
 export const READ_SECONDS = 30;
 
 export interface HistorySource {
+  floorReceipt?(scope: ScopeId, commit: string, allow: Pick<Allow, "bytes">): Promise<FloorCommitRead>;
   /** A page of the entries of a scope, from `from` on: `from`, `from + 1` and so on. `bytes`: the raw bytes that were read for it. */
   page(scope: ScopeId, from: number, allow: Allow): Promise<{ ok: true; page: Page; bytes: number } | Unread>;
   /** One retained input of a scope, by kind and digest. `bytes`: the raw bytes that were read for it. */
@@ -117,7 +120,16 @@ export function httpSource(service: string, options: { fetch?: Fetch; reader?: s
       if (!all) return unread("too-large");
       const body: unknown = JSON.parse(new TextDecoder("utf-8", { fatal: true, ignoreBOM: false }).decode(all));
       if (!isObject(body) || typeof body["ok"] !== "boolean") return unread("unavailable");
-      if (!body["ok"]) return unread(typeof body["reason"] === "string" ? body["reason"] : "unavailable");
+      if (!body["ok"]) {
+        if (body["reason"] === "archived") {
+          const receipt = body["archived"];
+          if (!isRecord(receipt) || Object.keys(receipt).length !== 3 || !isLocalId(receipt["floor"]) || receipt["floor"] === 0
+            || typeof receipt["commit"] !== "string" || !/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/.test(receipt["commit"])
+            || !isHead(receipt["through"]) || receipt["floor"] - 1 > receipt["through"].seq) return unread("unavailable");
+          return { ok: false, reason: "archived", archived: receipt as unknown as Archived, bytes: all.byteLength };
+        }
+        return unread(typeof body["reason"] === "string" ? body["reason"] : "unavailable");
+      }
       return { body, bytes: all.byteLength };
     };
     try {

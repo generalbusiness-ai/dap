@@ -26,6 +26,8 @@ import type { ArchivePlanFence } from "./archive-plan-fence.ts";
  * Membership journals remain excluded. Two public Membership8 copy kinds
  * have a separate native-consumer check before any body selection. */
 export interface ReviewedArchivePolicy {
+  /** Explicit reviewed opt-in; absent from every deployed/default policy. */
+  readonly floor?: { readonly margin: number; readonly minimum: number };
   readonly review: string;
   readonly entryTypes: ReadonlySet<Input["type"]>;
   readonly support: ArchiveSupport;

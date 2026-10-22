@@ -11,7 +11,7 @@
  * beside the scope, is attributed to the server.
  */
 
-import type { Answer, Head, MismatchReason, ReadRefusal, RefusalReason, UnavailableReason } from "@generalbusiness/dap-contract";
+import type { Answer, Archived, FactRef, Head, MismatchReason, ReadRefusal, RefusalReason, UnavailableReason } from "@generalbusiness/dap-contract";
 import { inline, sentenceNamed, type Sentence } from "./describe.ts";
 
 /** What was asked, for the sentence. */
@@ -29,6 +29,14 @@ const HINTS = {
 
 /** One plain sentence for each refusal reason of the contract, and its next step. `name` is what the answer carries. */
 export const REFUSALS: Readonly<Record<RefusalReason, (asked: Asked, name: string | undefined) => Said>> = {
+  archived: () => ({ sentence: "the fact is below the retained journal floor", next: "Read the verified archive clone named by the floor receipt." }),
+  "floor-receipt": () => ({ sentence: "the floor offer fails its floor-receipt check", next: "Ask the archive operator to inspect the floor offer and receipt." }),
+  "floor-ahead": () => ({ sentence: "the floor offer fails its floor-ahead check", next: "Ask the archive operator to inspect the floor offer and receipt." }),
+  "floor-back": () => ({ sentence: "the floor offer fails its floor-back check", next: "Ask the archive operator to inspect the floor offer and receipt." }),
+  "floor-step": () => ({ sentence: "the floor offer fails its floor-step check", next: "Ask the archive operator to inspect the floor offer and receipt." }),
+  "floor-recent": () => ({ sentence: "the floor offer fails its floor-recent check", next: "Ask the archive operator to inspect the floor offer and receipt." }),
+  "floor-keep": () => ({ sentence: "the floor offer fails its floor-keep check", next: "Ask the archive operator to inspect the floor offer and receipt." }),
+  "floor-kept": () => ({ sentence: "the floor offer fails its floor-kept check", next: "Ask the archive operator to inspect the floor offer and receipt." }),
   "revision-moved": () => ({ sentence: "an item this act names changed after it was read", next: HINTS.read }),
   alias: () => ({ sentence: "two names of the act name the same item", next: HINTS.fields }),
   "duplicate-relation": () => ({ sentence: "the relation this act asks for exists already", next: "Read the scope with inspect; nothing more is needed for that relation." }),
@@ -71,6 +79,7 @@ export const UNAVAILABLE_NOTES: Readonly<Record<UnavailableReason, string>> = {
 export const MISMATCH_NOTES: Readonly<Record<MismatchReason, string>> = { "idempotency-mismatch": "the key is on another intent" };
 
 export const READ_NOTES: Readonly<Record<ReadRefusal, Said>> = {
+  archived: { sentence: "the entry is below the retained journal floor", next: "Read the verified archive clone named by the floor receipt; resume the live log at its floor." },
   "not-found": { sentence: "no such scope, entry or value is readable", next: "Check the ID; call room for the scopes of the room." },
   "wrong-incarnation": { sentence: "the scope has another incarnation than the one named", next: "Call room; use the scope's current reference." },
   forbidden: { sentence: "your key may not read it", next: "Call room to see your standing; a signed read reads only what your key signed, within its window." },
@@ -85,6 +94,14 @@ export const READ_NOTES: Readonly<Record<ReadRefusal, Said>> = {
 
 const at = (head: Head): string => `judged at head ${head.seq}`;
 
+/** Archive location only; an absent settlement fact is never invented. */
+export function archivedAnswer(archived: Archived, fact?: FactRef): Said {
+  const original = fact ? `Original entry ${fact.at.scope}:${fact.seq}, hash ${fact.hash}, incarnation ${fact.at.inc}, is archived.`
+    : "The original entry is archived; the settlement supplied no fact.";
+  return { sentence: `${original} Journal floor ${archived.floor}; archive commit ${archived.commit}, through entry ${archived.through.seq}, hash ${archived.through.hash}.`,
+    next: "Verify the archive clone against this receipt before confirming the original result. Keep the original signed envelope; do not sign or resend a replacement request." };
+}
+
 /**
  * The sentence for a scope's answer to an act. `guards`: the act's guard
  * sentences, from the complete text, so a refusal that names a guard always
@@ -92,6 +109,7 @@ const at = (head: Head): string => `judged at head ${head.seq}`;
  */
 export function answered(answer: Answer, asked: Asked, guards: readonly Sentence[] | null): Said {
   switch (answer.answer) {
+    case "archived": return archivedAnswer(answer.archived, answer.fact);
     case "accepted": return { sentence: `${asked.scope} accepted ${asked.kind}: entry ${answer.receipt.fact.seq}${answer.receipt.sends.length > 0 ? `, with sends ${answer.receipt.sends.join(", ")}` : ""}.`, next: answer.receipt.sends.length > 0 ? "Call wait with this entry to see what it created or sent." : "Nothing more is needed." };
     case "refused": {
       if (answer.reason === "guard-failed" || answer.reason === "capability-refused") {

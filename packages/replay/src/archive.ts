@@ -3,7 +3,7 @@
 import { natural } from "@generalbusiness/artroom-bytes";
 import { DOMAINS, type Digest, type Entry, type FactRef, type Head, type PlatformDefinition, type RetainedInput, type ScopeId, type ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, isDigest, isEntry, isFactRef, isScopeId, platformName, rawRetainedJSON, utf8 } from "@generalbusiness/artroom-bytes";
-import { PAGE_ENTRIES, PAGE_REPLY_BYTES, READ_SECONDS, RETAINED_REPLY_BYTES, type Allow, type HistorySource, type Page, type Stored, type TextOmission, type Unread } from "./source.ts";
+import { PAGE_ENTRIES, PAGE_REPLY_BYTES, READ_SECONDS, RETAINED_REPLY_BYTES, type Allow, type HistorySource, type Page, type Stored, type TextOmission, type Unread, type FloorCommitRead } from "./source.ts";
 import { LIMITS, SourceError, TRUSTS, verify, type Limits, type Options, type Verification } from "./verify.ts";
 
 export interface ArchiveCost { entries: number; attempts: number; nodes: number; calls: number; metadata: number; inputWork: number }
@@ -32,6 +32,8 @@ export interface ArchiveData {
 }
 export type ArchiveRead = { readonly ok: true; readonly archive: ArchiveData } | ArchiveFailure;
 export interface ArchiveReadPort {
+  /** Read the exact local commit named by a floor, without fetching it. */
+  floorReceipt?(scope: ScopeId, commit: string, work: ArchiveReadWork): Promise<Omit<Extract<FloorCommitRead, { ok: true }>, "bytes"> | Unread>;
   /** Resolves one immutable current-commit snapshot, with no network fallback. */
   open(scope: ScopeId, work: ArchiveReadWork): Promise<ArchiveRead>;
   /** Waits for already-started owned I/O after a deadline; starts none. */
@@ -122,6 +124,8 @@ function readFailure(error: unknown, scope: ScopeId): ArchiveFailure {
 
 class Session implements HistorySource {
   readonly #opened = new Map<ScopeId, Promise<ArchiveRead>>();
+  readonly #receiptScopes = new Set<ScopeId>();
+  readonly #receipts = new Map<string, Promise<Omit<Extract<FloorCommitRead, { ok: true }>, "bytes"> | Unread>>();
   readonly #anchors = new Set<string>();
   readonly #anchorScopes = new Set<ScopeId>();
   readonly #privateNames = new Map<ScopeId, ReadonlyMap<string, string>>();
@@ -172,6 +176,31 @@ class Session implements HistorySource {
       this.#opened.set(scope, pending);
     }
     return pending;
+  }
+  async floorReceipt(scope: ScopeId, commit: string, allow: Pick<Allow, "bytes">): Promise<FloorCommitRead> {
+    if (!/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/.test(commit) || !natural(allow.bytes)) return unread("floor-commit-mismatch");
+    const key = canonicalize([scope, commit]);
+    let pending = this.#receipts.get(key);
+    if (!pending) {
+      // Reading another immutable commit of an already opened scope is
+      // physical work, but does not open a new scope in the traversal.
+      const receiptWork: ArchiveReadWork = {
+        check: () => this.work.check(), spend: cost => this.work.spend(cost),
+        wait: action => this.work.wait(action), admitted: () => this.work.admitted(),
+        bytes: size => this.work.bytes(size), remainingMilliseconds: () => this.work.remainingMilliseconds(),
+        scope: () => { this.work.check(); if (!this.#opened.has(scope) && !this.#receiptScopes.has(scope)) { this.work.scope(); this.#receiptScopes.add(scope); } },
+      };
+      pending = this.port.floorReceipt ? this.work.wait(() => this.port.floorReceipt!(scope, commit, receiptWork)) : (async () => {
+        const opened = await this.open(scope);
+        return opened.ok && opened.archive.commit === commit ? { ok: true as const, scope: opened.archive.scope, through: opened.archive.head } : unread("floor-commit-missing");
+      })();
+      this.#receipts.set(key, pending);
+    }
+    const proof = await pending;
+    if (!proof.ok) return proof;
+    const bytes = utf8(canonicalize(proof)).length;
+    this.work.spend({ metadata: bytes, inputWork: bytes });
+    return bytes > allow.bytes ? unread("too-large") : { ...proof, bytes };
   }
   async page(scope: ScopeId, from: number, allow: Allow): Promise<{ ok: true; page: Page; bytes: number } | Unread> {
     const read = await this.open(scope); if (!read.ok) return unread(read.result);
@@ -274,6 +303,7 @@ export class ArchiveSource implements HistorySource {
   constructor(port: ArchiveReadPort, options: ArchiveSourceOptions = {}) { this.port = port; this.#options = { ...options, ...(options.limits ? { limits: { ...options.limits } } : {}) }; }
   #session(limits?: Partial<Limits>, anchors?: Options["anchors"]): Session { return new Session(this.port, new Work({ ...LIMITS, ...this.#options.limits, ...limits }, this.#options.seconds), this.#options.texts, anchors); }
   #default(): Session { return this.#direct ??= this.#session(); }
+  floorReceipt(scope: ScopeId, commit: string, allow: Pick<Allow, "bytes">): Promise<FloorCommitRead> { return this.#default().floorReceipt(scope, commit, allow); }
   page(scope: ScopeId, from: number, allow: Allow): ReturnType<HistorySource["page"]> { return this.#default().page(scope, from, allow); }
   retained(scope: ScopeId, kind: RetainedInput["kind"], digest: Digest, allow: Pick<Allow, "bytes">, domain?: string): ReturnType<HistorySource["retained"]> { return this.#default().retained(scope, kind, digest, allow, domain); }
   omittedText(scope: ScopeId, digest: Digest, allow: Pick<Allow, "bytes">): ReturnType<NonNullable<HistorySource["omittedText"]>> { return this.#default().omittedText(scope, digest, allow); }

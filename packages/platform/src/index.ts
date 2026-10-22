@@ -1,3 +1,4 @@
+import { platformFloorReferences } from "./floor.ts";
 export { applicationRoom, applicationInstallation } from "./application-install-reader.ts";
 export { applicationProjectionDeclaration } from "./application-projection-reader.ts";
 import { TRUSTED_APPLICATION_COHORT, installDefinitionText } from "./application-install-wire.ts";
@@ -91,6 +92,7 @@ export type { Extent, ExtentClass, ExtentJudged, ExtentsAsked, ExtentsJudged, Ho
  */
 export interface Platform {
   readonly data: PlatformData;
+  readonly floorReferences?: import("@generalbusiness/dap-derive").PlatformRules["floorReferences"];
   /** Host-owned idempotent preparation; never generic mutation recovery. */
   readonly hostPreparationKinds?: readonly string[];
   /** This exact version locates a declaration in its retained native texts. */
@@ -223,7 +225,7 @@ const VERSION_DATA: Readonly<Record<string, Platform>> = {
 };
 
 /** Stable native code objects with the same source policy for runtime and replay. */
-export const VERSIONS: Readonly<Record<string, Platform>> = Object.fromEntries(Object.entries(VERSION_DATA).map(([named, code]) => [named, { ...code, sourceName, receiverIdentity: PARTITION_IDENTITY_POLICY }]));
+export const VERSIONS: Readonly<Record<string, Platform>> = Object.fromEntries(Object.entries(VERSION_DATA).map(([named, code]) => [named, { ...code, sourceName, receiverIdentity: PARTITION_IDENTITY_POLICY, floorReferences: platformFloorReferences }]));
 
 /** Existing default creation cohort. Supporting application scopes require explicit APPLICATION_COHORT pins. */
 export const NEWEST: Readonly<Record<string, PlatformDefinition>> = {

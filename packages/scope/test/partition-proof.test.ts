@@ -78,7 +78,8 @@ test("receiver interpretation promotes a proved lane while retention and a later
   const reader = await ReceiverReads.open({ ...sample.ports, resolver }, sample.fixture.partition);
   expect(reader).not.toBeNull();
   const fetched = await fetchFacts(reader!, PROPOSED_BOUNDS, [sample.fixture.from]);
-  expect(fetched?.[0]?.under).toBe("change");
+  if (!Array.isArray(fetched)) throw new Error("proved source did not return fetched entries");
+  expect(fetched[0]?.under).toBe("change");
   expect(producerCalls).toBe(0);
   expect(sample.calls).toHaveLength(8);
   const uses = [{ fact: sample.fixture.from, content: digestBytes(utf8(canonicalize(sample.fixture.genesis))) }];
@@ -89,7 +90,9 @@ test("receiver interpretation promotes a proved lane while retention and a later
   expect((await reader!.retained(retained))?.[0]?.under).toBe("change");
   expect(retained[0]?.under).toBe("declared:change");
   expect(producerCalls).toBe(0);
-  expect((await fetchFacts(resolver, PROPOSED_BOUNDS, [sample.fixture.from]))?.[0]?.under).toBe("declared:change");
+  const raw = await fetchFacts(resolver, PROPOSED_BOUNDS, [sample.fixture.from]);
+  if (!Array.isArray(raw)) throw new Error("producer source did not return fetched entries");
+  expect(raw[0]?.under).toBe("declared:change");
   expect(producerCalls).toBe(1);
   sample.advance(B.milliseconds + 1);
   expect(await reader!.retained(retained)).toBeNull();

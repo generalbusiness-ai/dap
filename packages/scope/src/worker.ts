@@ -249,11 +249,12 @@ const BODY_BYTES = 1024 * 1024;
 
 /** The status of an answer to a creation or an act (section 4.2). The body says which. */
 function answered(answer: Created | Answer, accepted: number): Response {
-  const status = answer.answer === "accepted" ? accepted : answer.answer === "unavailable" ? 503 : answer.answer === "mismatch" ? 409 : answer.reason === "unauthorized" ? 403 : 422;
+  const status = answer.answer === "archived" ? 410 : answer.answer === "accepted" ? accepted : answer.answer === "unavailable" ? 503 : answer.answer === "mismatch" ? 409 : answer.reason === "unauthorized" ? 403 : 422;
   return json(status, answer);
 }
 
 const READ_STATUS: Record<ReadRefusal, number> = {
+  archived: 410,
   "not-found": 404, "wrong-incarnation": 409, forbidden: 403, "scope-provisional": 409, "unsupported-definition": 501, "history-unavailable": 503, "too-large": 413, unavailable: 503,
   "sessions-unavailable": 503, "clock-behind": 503,
 };

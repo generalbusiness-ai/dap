@@ -1,0 +1,64 @@
+[
+  {
+    "file": "notes/2026-10-04-scope-and-replay-contract.md",
+    "line": 1530,
+    "target": "notes/2026-10-04-authority-effects-and-publication.md",
+    "missingSections": [
+      "17.2a",
+      "17.3"
+    ],
+    "excerpt": "  authority note's (sections 6.4, 17.2a and 17.3).",
+    "excerptSha256": "1022b68ce175bce137b9d9ec53f2331851f5b6c5b2792ed05cffeffbb6fc93cb",
+    "expectedOccurrences": 1,
+    "disposition": "Planner-owned mixed reference: the authority note does not have these sections. Normative prose is unchanged; this citation is unresolved."
+  },
+  {
+    "file": "notes/implementation/2026-10-04-carry-pass-amendment.md",
+    "line": 14,
+    "target": "docs/protocol.md",
+    "missingSections": [
+      "35"
+    ],
+    "excerpt": "Proposed place: docs/protocol.md section 35, contract amendment 8,",
+    "excerptSha256": "9caf1ec73652a2736cccda00cee33953ff10d2a0b73a21908fd824f2f2876c99",
+    "expectedOccurrences": 1,
+    "disposition": "Historical proposed placement, not a current protocol section. The unadopted proposal is retained unchanged and remains unresolved."
+  },
+  {
+    "file": "notes/plans/015-2026-10-04-carry-pass-draft3-decision.md",
+    "line": 62,
+    "target": "docs/protocol.md",
+    "missingSections": [
+      "35"
+    ],
+    "excerpt": "Placement: `docs/protocol.md`, section 35, contract amendment 8,",
+    "excerptSha256": "0936aecc5790273ed4f92becdf1a906822bbf9b2c96b89da1586b45f3732540c",
+    "expectedOccurrences": 1,
+    "disposition": "Historical proposed incorporation placement, not a current protocol section. The draft is retained unchanged and remains unresolved."
+  },
+  {
+    "file": "notes/2026-10-04-scope-and-replay-contract.md",
+    "line": 11424,
+    "target": "notes/2026-10-04-authority-effects-and-publication.md",
+    "missingSections": [
+      "15.3a"
+    ],
+    "excerpt": "| Every point addressed to this note has one disposition. | Section 15: 62 distinct points in sections 15.1 to 15.4, then R4's asks, I1's 152 deltas, eight findings on I1's source with their eleven repairs, five later repairs in eleven rows, and four security details. Revision 11 adds the fourteen asks of the authority note (section 15.3a), entries 115 to 152 (section 15.6g), and the corrections and shortfalls of section 15.6h. Revision 12 adds what the lane design's revision 14 asks (section 15.3b), entries 153 to 157 (section 15.6i), the joins of the recovery design (section 15.9) and the nine seams of its commission (section 15.10). Before its review it adds five entries of the I2 deltas note (section 15.6j). Each \"expressible\" row names the act that shows the mapping. Revision 13 adds a disposition for each of the 165 entries of the I2 deltas note at `744f2447`, by its ID (section 15.6l), with the 25 lines that the note addresses to this contract set out first (section 15.6k), and the thirteen forms that the authority note's revision 15 asks for (section 15.3c). A script checked that each of the 165 IDs has exactly one row in section 15.6l. |",
+    "excerptSha256": "dc0851a880fb4b27279dfcc54ced5b63c197489b761d157ca4ba88ff78447894",
+    "expectedOccurrences": 1,
+    "disposition": "The syntactic adjacent-document binding does not resolve. Source text is unchanged; document-owner review is needed. This listing makes no claim that code follows the cited rule."
+  },
+  {
+    "file": "notes/implementation/2026-10-05-i2-delivery.md",
+    "line": 25,
+    "target": "docs/lanes-reference.md",
+    "missingSections": [
+      "9"
+    ],
+    "excerpt": "   `docs/lanes.md` and a generated `docs/lanes-reference.md` (section 9).",
+    "excerptSha256": "223d3738976c479b49d3b1ed9c665a82f3138acbfe8f2b494e81f487694bf405",
+    "expectedOccurrences": 1,
+    "disposition": "The syntactic adjacent-document binding does not resolve. Source text is unchanged; document-owner review is needed. This listing makes no claim that code follows the cited rule."
+  }
+
+]
