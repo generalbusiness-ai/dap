@@ -562,6 +562,18 @@ The earlier spikes were removed from main. They remain at the tag
 Do not run it again for a commit that changes only documents; say that the
 source and tests are unchanged, and give the two tree hashes.
 
+## Entry-point inventory
+
+`node --test scripts/security-entry-points.test.mjs` checks the route, method,
+and gate-class bijection in [the Worker inventory](security/entry-points.md).
+It derives names from source matchers, using boundary stand-ins for scope and
+MCP dispatch. It checks binding-dependent MCP availability, the simulator's
+fixed HTTP refusal, and the homepage's static-assets configuration. Source
+seals require explicit review when matcher syntax, composition, or named gate
+owners change. This structural test supplies no native authority evidence.
+The in-memory control changes a real route matcher with the inventory fixed.
+The root `npm test` command includes this Node file once.
+
 ## Showing that a test distinguishes
 
 When you add or change a guard, show its witness fails without it. Break
