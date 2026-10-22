@@ -6,8 +6,9 @@ from `a57ed7fa`. It keeps Main's invitation checks, archived-answer handling,
 dependency lock and workspace configuration. Source checkpoint `0180b3c1`
 contains eleven changed paths. The generated Page module remains exact Main.
 
-No compiler, focused test or gate has run for this integration. Planner
-disposition `d819eafc`, ratified by `66b2c135`, requires one ordinary gate at
+The focused attempt below runs six compilers but stops during Vitest startup
+before any selected case. Planner disposition `d819eafc`, ratified by
+`66b2c135`, requires one ordinary gate at
 the final integrated head and a full fresh review. Failed gate `17076` and
 follow-up `36282` remain historical evidence, not a passing gate for this
 integration. Earlier exact-head approvals do not approve this integration.
@@ -74,11 +75,48 @@ wrapper. These overlap their inner scopes and are not summed or treated as
 isolated measurements. The shared host and retained dependency cache remain
 qualifications, with no stability or production latency claim.
 
-The final candidate still has eleven authored paths and no generated-asset
-delta. Fresh focused compilers and selected CLI, Page, dispatcher, invitation,
-clone, MCP and application-establishment witnesses are being prepared on the
-new note checkpoint. They have not run. One exact-head ordinary gate and full
-fresh review remain required before landing.
+The application-list integration has eleven authored paths and no
+generated-asset delta. The startup correction below adds the root Vitest
+configuration as a twelfth path. One exact-head ordinary gate and full fresh
+review remain required before landing.
+
+## Focused startup failure and reporter correction
+
+Root allocates one focused v2 pipeline at `ba4667e3`, tree `ad590ea4`.
+The maintained pool compatibility command passes without changing the pinned
+bundle; the shared-helper check and all six CLI/Page compiler configurations
+exit zero. The next, Node-focused process exits one without a signal during
+Vitest startup: `TypeError: resolved.reporters is not iterable`. The same-run
+ledger records no observed selection, module or case; all 27 expected cases
+are unrun, and the built-in JSON report is absent. The three config-directory
+Node cases and eight Native cases are not reached. This is a startup failure,
+not a failed test assertion or passing focused run. The unhandled-error count
+is unknown because no terminal report exists.
+
+The original owner exits one. Its 20 emitted boundary and final guards report
+the exact source head/tree and 2,734 source rows. Every captured dependency
+inventory equals the initial 5,531 leaves and 539 directories, including the
+result cache. No install or retry occurs, and no postguard failure is recorded.
+The finite read-only failure release preserves the raw startup stack,
+receipts, prepared sources and pre-correction note as distinct copies. Root's
+separate original tool observation is natural exit one with 19.27 seconds
+wall, 17.18 user and 6.42 system time; these overlap inner timings and are not
+summed.
+
+Independent source inspection identifies the configuration boundary: the root
+config supplies an explicit `reporters: undefined` when progress is disabled.
+That overwrites Vitest's default reporter array, which its explicit CLI
+reporter merge then tries to iterate. The narrow correction omits the property
+when progress is disabled. When enabled, the original `verbose` and
+`./scripts/test-progress.mjs` array stays exact. No environment restoration,
+dependency patch, selected-case change or startup probe is used. This source
+correction has not run.
+
+Fresh source-only recipes will contain only the unreached 27 Node Vitest
+cases, three built-in Node cases and eight Native cases, with new head/tree
+and complete input guards. They will not repeat the six passed compilers,
+pool compatibility or shared-helper commands. Their unchanged source and
+tool inputs remain pinned; actual execution needs a separate root allocation.
 
 The sections below preserve the earlier integration report from `a57ed7fa`.
 Its heads, counts, physical paths and outcomes describe that earlier work.
