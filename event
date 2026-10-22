@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f0c8e71de6501481e16fb63b0f666a8c5f583b83"}
+{"kind":"assert","text":"Root read both independent source assessments in full and adopts their bounded findings for held R3v2 and R5v3 source preparation. Neither is runtime evidence or formal approval; metadata, focus, controls and exact-head gate remain pending. The attempted ratification of assertion f0c8e71d was ineffective because builder lacks ratifier role; this adoption claims no such role.","body":{"no_git_artifact":"true"}}
