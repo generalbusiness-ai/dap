@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/2026-10-22-one-channel.md","body":{"commit":"5cd53dcffadbe38832d75ebdb1a5f46d34957d75","path":"notes/2026-10-22-one-channel.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:42504f8985fa54a6fab705331e56c3206728bd39","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-22-one-channel.md."}
