@@ -29,15 +29,14 @@ export function archiveSourceReferences(sql: Pick<Sql, "exec">, seq: number, bou
   // Only the contract's retained authority/observation slots supplement
   // admitted uses. Do not interpret similarly shaped user-field values as
   // a request to read another private scope's birth.
-  const identities = budget.native(sql, () => ({ metadata: (ARCHIVE_SOURCE_PINS + 1) * 256, inputWork: bytes * 32 })).exec(`WITH refs AS (
-    SELECT CASE WHEN type='object' THEN value ELSE '{}' END AS value
-    FROM entry,json_tree(entry.bytes) WHERE entry.seq=? AND (
-      fullkey GLOB '$.input.authority[[]*[]].issued.at'
-      OR fullkey GLOB '$.input.authority[[]*[]].fresh.observation.of'
-      OR fullkey GLOB '$.input.observed[[]*[]].observation.of')
-  ) SELECT ${text("$.scope", 71, "value")} AS scope,${text("$.inc", 64, "value")} AS inc,${text("$.kind", 16, "value")} AS kind
+  const identities = budget.native(sql, () => ({ metadata: (ARCHIVE_SOURCE_PINS + 1) * 256, inputWork: bytes * 32 })).exec(`SELECT ${text("$.scope", 71, "value")} AS scope,${text("$.inc", 64, "value")} AS inc,${text("$.kind", 16, "value")} AS kind
     ,(SELECT count(*) FROM json_each(refs.value)) AS keys
-    FROM refs WHERE json_extract(value,'$.kind') IN ('register','membership') LIMIT ?`, seq, ARCHIVE_SOURCE_PINS + 1).toArray();
+    FROM (SELECT CASE WHEN type='object' THEN value ELSE '{}' END AS value
+      FROM entry,json_tree(entry.bytes) WHERE entry.seq=? AND (
+        fullkey GLOB '$.input.authority[[]*[]].issued.at'
+        OR fullkey GLOB '$.input.authority[[]*[]].fresh.observation.of'
+        OR fullkey GLOB '$.input.observed[[]*[]].observation.of')) AS refs
+    WHERE json_extract(value,'$.kind') IN ('register','membership') LIMIT ?`, seq, ARCHIVE_SOURCE_PINS + 1).toArray();
   if (identities.length > ARCHIVE_SOURCE_PINS) return stopArchivePrefix("limit");
   for (const row of identities) {
     const at = { scope: row["scope"], inc: row["inc"], kind: row["kind"] };

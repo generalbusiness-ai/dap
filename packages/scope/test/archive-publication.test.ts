@@ -3,7 +3,7 @@
 import { env, runInDurableObject } from "cloudflare:test";
 import { expect, inject, onTestFinished, test } from "vitest";
 import { PROPOSED_BOUNDS, type FactRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isSeed, scopeIdOf, timeMs, timeOf, unb64url } from "@generalbusiness/artroom-bytes";
+import { canonicalize, intentDigest, isSeed, scopeIdOf, timeMs, timeOf, unb64url } from "@generalbusiness/artroom-bytes";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { growArchivePolicies } from "../../../apps/room/archive-policy.ts";
 import { buildJournalPass } from "@generalbusiness/artroom-git/journal";
@@ -96,23 +96,37 @@ test("Native legacy archive receipt blocks the floor until a real backfill pass 
   expect(await lane.inside(state => new ArchiveRows(archiveSql(state), lane.at).load()?.confirmed)).toEqual(observed.confirmed);
 }, 30_000);
 
-// The expected anchor comes from the genuine Register send that created
-// Directory, before any archive output. No caller supplies an anchor list.
+// Both expected anchors come from the genuine Register founding act and
+// its Directory creation send, before archive output. No caller supplies a list.
 test("Native admitted Register17 fact publishes nonempty anchors and rebuilds the exact stored Mark", async context => {
   const { life, R, D, children } = await sessionRoom(ARCHIVE_DEVICE_APPLICATION_COHORT.register, "journal");
   try {
     const [membership, rules, destination] = children;
     if (!membership || !rules || !destination) throw Error("Genuine native siblings required");
     const registerAt = await life.wait(() => R.at()), directoryAt = await life.wait(() => D.at());
-    const creations = (await life.wait(() => R.sealed())).filter(sealed => sealed.entry.sends.some(send => isSeed(send.to)
+    const registerHistory = await life.wait(() => R.sealed());
+    const creations = registerHistory.filter(sealed => sealed.entry.sends.some(send => isSeed(send.to)
       && send.to.kind === "directory" && scopeIdOf(send.to) === D.name));
     expect(creations).toHaveLength(1);
     const creation = creations[0]!, expected: FactRef = { at: registerAt, seq: creation.entry.seq, hash: creation.hash };
     const genesis = (await life.wait(() => D.sealed())).find(sealed => sealed.entry.seq === 0)!;
     expect(genesis.entry.input).toMatchObject({ type: "genesis", source: expected });
     if (genesis.entry.input.type !== "genesis") throw Error("Actual Directory genesis required");
-    expect(genesis.entry.uses.map(use => use.fact)).toEqual([expected]);
     const through = { seq: 0, hash: genesis.hash }, seed = genesis.entry.input.seed;
+    const founding = registerHistory.filter(sealed => sealed.entry.input.type === "act"
+      && sealed.entry.input.signed.intent.kind === "found"
+      && intentDigest(sealed.entry.input.signed.intent) === seed.cause);
+    expect(founding).toHaveLength(1);
+    const found = founding[0]!, foundingFact: FactRef = { at: registerAt, seq: found.entry.seq, hash: found.hash };
+    expect(found.entry.seq).toBeLessThan(creation.entry.seq);
+    expect(creation.entry.input.type).toBe("outcome");
+    if (creation.entry.input.type !== "outcome") throw Error("Actual creation outcome required");
+    const [opening, ordinal] = creation.entry.input.operation.split(":").map(Number);
+    expect(opening).toBe(found.entry.seq);
+    expect(found.entry.effects.some(effect => effect.effect === "operation" && effect.k === ordinal)).toBe(true);
+    expect(genesis.entry.input.message).toMatchObject({ body: { fields: { claim: foundingFact } } });
+    const expectedAnchors = [foundingFact, expected];
+    expect(genesis.entry.uses.map(use => use.fact)).toEqual([expected, foundingFact]);
     const publicScopes = [directoryAt, await life.wait(() => rules.at()), await life.wait(() => destination.at())];
     const packet = unb64url(inject("maintainedApplications").growDemo.bytes);
     if (!packet) throw Error("Exact deployed Grow policy packet required");
@@ -158,10 +172,10 @@ test("Native admitted Register17 fact publishes nonempty anchors and rebuilds th
       const result = await planRootPublishedArchivePass(sql, { at: directoryAt, through, after: null, bounds: PROPOSED_BOUNDS,
         policies, format: "sha1", parent: null, markedAt: timeOf(life.now()), fixtureSources: pins, replayScopes: discovered.publicScopes }, budget);
       if (!result.ok) throw Error(canonicalize({ result, cost: budget.admitted() }));
-      expect(result.archive.manifest.anchors).toEqual([expected]);
-      expect(result.mark.anchorPublication).toBe(canonicalize({ anchors: [expected] }));
+      expect(result.archive.manifest.anchors).toEqual(expectedAnchors);
+      expect(result.mark.anchorPublication).toBe(canonicalize({ anchors: expectedAnchors }));
       expect(result.mark.replayScopes).toEqual(publicScopes);
-      expect(result.archive.selection.objects.filter(object => object.key.kind === "entry").map(object => object.foreign?.fact)).toEqual([expected]);
+      expect(result.archive.selection.objects.filter(object => object.key.kind === "entry").map(object => object.foreign?.fact).sort((a, b) => a!.seq - b!.seq)).toEqual(expectedAnchors);
       const rows = new ArchiveRows(sql, directoryAt);
       rows.target(discovered.repository, "sha1", budget); rows.mark(result.mark, budget);
       const pending = rows.load(budget)!.pending;
@@ -182,7 +196,7 @@ test("Native admitted Register17 fact publishes nonempty anchors and rebuilds th
       } };
       const result = await rebuildArchivePass(selectedOnly, row, null, budget, pins);
       if (!result.ok) throw Error(canonicalize({ result, cost: budget.admitted() }));
-      expect(result.archive.manifest.anchors).toEqual([expected]);
+      expect(result.archive.manifest.anchors).toEqual(expectedAnchors);
       expect(result.archive.commit).toBe(planned.result.archive.commit);
       expect(result.archive.objects).toEqual(planned.result.archive.objects);
       expect(result.archive.manifestBytes).toBe(planned.result.archive.manifestBytes);
@@ -194,7 +208,7 @@ test("Native admitted Register17 fact publishes nonempty anchors and rebuilds th
     expect(later.seq).toBeGreaterThan(through.seq);
     for (const cost of [planned.cost, rebuilt.cost]) for (const key of Object.keys(ARCHIVE_BOUNDS) as (keyof typeof cost)[])
       expect(cost[key]).toBeLessThanOrEqual(ARCHIVE_BOUNDS[key]);
-    const report = { expected, through, publicScopes, initialCost: planned.cost, rebuildCost: rebuilt.cost, commit: rebuilt.commit,
+    const report = { expectedAnchors, through, publicScopes, initialCost: planned.cost, rebuildCost: rebuilt.cost, commit: rebuilt.commit,
       qualification: "Genuine Native Register17 creation send and admitted Directory16 source copy; existing policy and original per-pass ledger. Actual source metadata/birth/pin preparation, stored nonempty publication/public identities, later checkpoint and eviction, exact rebuild. Trusted test reader and scripted repository creation; no hosted custody, production binding or full-driver acceptance claim." };
     (context.task.meta as Record<string, unknown>)["nativePrivateAnchorPublication"] = report;
     console.info("Native private anchor publication", JSON.stringify(report));

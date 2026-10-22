@@ -39,7 +39,7 @@ const pendingArchiveSeals = {
   // Publication and floor owners were reviewed before these values were
   // computed by the maintained parser on the integrated source.
   "packages/scope/src/archive-target.ts": "f23598cd54a6dea92e2b73ae4d144b7415aa98f379f76d9ff21fe4e59b431d5e",
-  "packages/scope/src/archive-source-window.ts": "ff57280313895f5b948ac38dad2be4a5613c8bb8c4e8434d7aafbd7bd50aa34f",
+  "packages/scope/src/archive-source-window.ts": "5ebf1d481081ae462374a33496b92310617a1bf3af1da675407f26017da3dfb1",
   "packages/scope/src/archive-publication.ts": "9c80517fd5de98545a0042f8fa7675769166de5a6387b9e6b60ddc9e5b68b2a5",
   "packages/scope/src/archive-build.ts": "4848285269821fbc60214758ba2f0050e0a6e338d60f6d85dc63a3689b7d8448",
   "packages/scope/src/archive-driver.ts": "b7c3a13a59e7aae8a7eae2d7f601dc6e9f697c55c18d0094ec7499d45dd11ece",

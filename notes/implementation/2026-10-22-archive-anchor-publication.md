@@ -171,3 +171,33 @@ Native publication, floor and public-command witnesses remain due.
 The raw failed run is retained at
 `/private/tmp/artroom-archive-owning-node-evidence-20261022`, with its original
 child and owner status 1. This is not a passing pipeline or a hosted result.
+
+## First Native focus and bounded query correction
+
+After the refusal-name correction, the changed Git file passed all three
+cases with unchanged fixed inputs. The first Native focus at `33db1fc12`
+then closed naturally with child and owner status 1: seven cases passed,
+six failed and six were filtered. All fixed source, dependency, tool and
+environment guards passed; one owned workerd was observed. The raw failures
+remain at `/private/tmp/artroom-archive-owning-native-evidence-20261022`.
+
+The new identity query began with `WITH`. The existing read-only budget
+wrapper admits only `SELECT`, so it refused before executing that query.
+The repair uses the same bounded inner selection as a subquery of `SELECT`.
+It preserves the selected entry, three typed identity paths, output limit,
+and original metadata and input-work reservations. It does not broaden the
+budget's SQL admission or create another allowance.
+
+The nonempty Native case stopped earlier at its independent fixture oracle.
+Directory genesis retains both the Register founding act and the later send
+that creates Directory. The oracle now identifies the exact signed `found`
+act by the genesis seed's cause, and the unique actual Directory creation
+send. It requires both specific full facts in retained uses and sorted
+publication, rather than accepting an arbitrary nonempty list. Its actual
+initial and rebuild costs remain measured on their separate original
+ledgers and checked against every unchanged cap. No fit is assumed.
+
+The owning Scope compiler, source inventory and six affected Native cases
+are pending for this correction. The seven passing Native cases and earlier
+51 passing Node cases are not repeated. No final gate or hosted result is
+claimed.
