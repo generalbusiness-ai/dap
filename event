@@ -1,1 +1,1 @@
-{"kind":"promise","text":"I will answer this request with a planner ruling.","body":{"request":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:26e3767c5487827b86fbf3dcb2af3b9464656a3f"}}
+{"kind":"promise","text":"I will land the sweep's dependency changes as one reviewed head after one gate and checker review.","body":{"request":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:58f160db4b69ea0e505033c6b4ab62d0a4de6355"}}
