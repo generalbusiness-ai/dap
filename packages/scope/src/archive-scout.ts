@@ -28,6 +28,7 @@ import { forecastArchiveSupportMetadata } from "./archive-support-cost.ts";
 import { ArchiveWindow, openArchiveWindow, openArchiveRootWindow, type ArchiveWindowCheckpoint } from "./archive-window.ts";
 import type { Sql } from "./sqlite.ts";
 import type { ArchiveRootMetadata } from "./archive-prefix.ts";
+import { archiveEntryAnchorCandidates } from "./archive-anchor-candidates.ts";
 
 const empty = (): ArchiveCost => ({ entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0, inputWork: 0 });
 function add(target: ArchiveCost, cost: Partial<ArchiveCost>, times = 1): void {
@@ -38,6 +39,7 @@ function add(target: ArchiveCost, cost: Partial<ArchiveCost>, times = 1): void {
 }
 interface Row {
   readonly hash: Digest; readonly entryBytes: number; readonly objects: number;
+  readonly anchorCandidates: number;
   readonly work: Readonly<ArchiveCost>; readonly uses: number; readonly sources: number; readonly sourceWork: Readonly<ArchiveCost>;
 }
 export type ArchiveScoutStep = { readonly kind: "end" | "limited" }
@@ -162,6 +164,7 @@ export class ArchiveScout {
       foreign.scan(position, header.uses); scan = foreign.recorded(position); this.#recordCopies(scan);
     }
     archiveEntryPrivacy(window.sql, source, header, this.#support, budget);
+    const candidates = archiveEntryAnchorCandidates(window.sql, position, this.bounds.entryBytes, budget);
     this.foreign.append(position, header.uses, scan);
     const classified = Object.freeze({ ...position, input: header.input });
     const plan = this.#references.read(window.sql, this.at, classified, { source: fact => this.#source(fact) });
@@ -190,7 +193,10 @@ export class ArchiveScout {
     const deliveryLookup = header.input === "delivery" && Object.values(this.#support.definition.declared.receives).some(handler => handler.from.under !== undefined);
     add(work, forecastArchiveForeignLookup(), header.uses + Number(deliveryLookup));
     budget.spend({ metadata: 384, inputWork: 768 });
+    const anchorCandidates = (previous?.anchorCandidates ?? 0) + candidates;
+    if (!natural(anchorCandidates)) return stop("limit");
     this.#rows.set(position.seq, { hash: position.hash, entryBytes: (previous?.entryBytes ?? 0) + position.bytes,
+      anchorCandidates,
       objects: this.#layout.objects, work: Object.freeze(work), uses: (previous?.uses ?? 0) + header.uses, sources: this.#sources.size,
       sourceWork: Object.freeze({ ...this.#sourceWork }) });
     return { kind: "position", position: classified, plan, measurements: measured.measurements };
@@ -255,7 +261,7 @@ export class ArchiveScout {
   /** Possible Git output and Native immutable-input work. This retains
    * every present probe choice; final byte validation alone selects keys. */
   layout(through: Head): ArchiveScoutLayoutQuote {
-    const row = this.#row(through), quote = this.#layout.quote(through, row.sources), copies = this.foreign.quote(through).copies;
+    const row = this.#row(through), quote = this.#layout.quote(through, row.sources, row.anchorCandidates), copies = this.foreign.quote(through).copies;
     const input = empty(); add(input, quote.input); add(input, row.sourceWork);
     add(input, { metadata: row.sources * 512 + copies * 512, inputWork: row.sources * 1024 + copies * 1024 });
     return Object.freeze({ ...quote, input: Object.freeze(input) });

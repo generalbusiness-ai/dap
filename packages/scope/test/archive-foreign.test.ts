@@ -14,6 +14,7 @@ import { forecastArchiveForeignLookup, forecastArchiveForeignSelection, forecast
 import { ArchiveRetainedReader } from "../src/archive-retained.ts";
 import { forecastArchiveSupportMetadata } from "../src/archive-support-cost.ts";
 import { ArchiveScout } from "../src/archive-scout.ts";
+import { archiveEntryAnchorCandidates } from "../src/archive-anchor-candidates.ts";
 import { ArchiveForeignPlan } from "../src/archive-foreign-plan.ts";
 import { ARCHIVE_BOUNDS, ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
 import { buildJournalArchive, journalRef, JournalWork } from "@generalbusiness/artroom-git/journal";
@@ -359,11 +360,13 @@ test("foreign plans quote native whole prefixes and retain an earlier boundary a
 // fresh inventory still classifies every copy and byte-compares each plan.
 test("Native scout carries direct-copy metadata across a closed frame and prices fresh cold/repeat admission", async () => {
   const f = await fixture(true), budget = new ArchiveBudget();
+  const earlier = (await f.consumer.sealed())[1]!, earlierHead = { seq: earlier.entry.seq, hash: earlier.hash };
+  let earlierCandidates = 0;
   let scout!: ArchiveScout;
   const first = await f.consumer.inside(state => {
     const frame = ArchiveScout.open(state.storage.sql, f.consumer.at, f.through, null, PROPOSED_BOUNDS, f.policies, budget, f.sources);
     expect(frame.next().kind).toBe("position"); expect(frame.next().kind).toBe("position");
-    scout = frame.close(); return budget.admitted();
+    scout = frame.close(); earlierCandidates = scout.layout(earlierHead).anchorCandidates; return budget.admitted();
   });
   await f.consumer.did(rita, "offer", { fields: { intent: 0 }, expected: { intent: 1 } });
   const result = await f.consumer.inside(state => {
@@ -375,6 +378,8 @@ test("Native scout carries direct-copy metadata across a closed frame and prices
     const frame = scout.resume(sql);
     expect(frame.next().kind).toBe("position"); expect(frame.next().kind).toBe("position");
     expect(frame.next()).toEqual({ kind: "end" }); frame.close();
+    expect(scout.layout(earlierHead).anchorCandidates).toBe(earlierCandidates);
+    expect(scout.layout(f.through).anchorCandidates).toBeGreaterThanOrEqual(earlierCandidates);
     expect(queries.some(query => query.startsWith("SELECT bytes FROM entry") || query.startsWith("SELECT bytes FROM retained_value") || query.startsWith("SELECT bytes FROM retained_input") && !query.includes("kind = ?"))).toBe(false);
     const forecast = scout.inventoryCost(f.through), constraints = scout.select(f.through), before = budget.admitted();
     expect(constraints.expectedCopies.size).toBe(2); fresh = true;
@@ -389,6 +394,59 @@ test("Native scout carries direct-copy metadata across a closed frame and prices
   });
   expect(result.entries).toBe(8); expect(result.nodes).toBe(4);
   expect(result.attempts).toBeGreaterThan(first.attempts);
+});
+
+// Synthetic JSON exercises only real SQLite scalar metadata, not native
+// judgment, privacy admission or an authority fact. Production calls this
+// counter only after admitting the exact row's prefix and privacy class.
+test("anchor forecast counts nested necessary keys without charging irrelevant bytes as references and refuses before SQL", async () => {
+  const lane = await create(), hash = textDigest("TEST scalar anchor metadata row"), seq = 1_000_000;
+  const fact = { at: lane.at, seq: 7, hash: textDigest("TEST nested fact") }, head = { seq: 8, hash: textDigest("TEST observed head") };
+  const fields = { nested: [{ deep: [fact] }, { deeper: { of: lane.at, head } }],
+    // None of these objects is a real FactRef or observation. These necessary
+    // keys deliberately increase the conservative bound by three. The
+    // two real numbers also distinguish integer-only SQL counting.
+    falsePositives: [{ at: {}, seq: 1.5, hash: "not a digest" }, { at: {}, seq: 2.5, hash: "also not a digest" }, { of: {}, head: {} }] };
+  const small = canonicalize(fields), large = canonicalize({ ...fields,
+    irrelevant: 'at seq hash of head {"at":{},"seq":1,"hash":"text"} '.repeat(512) });
+  await lane.inside(state => {
+    const raw = state.storage.sql;
+    const read = (bytes: string) => {
+      const size = utf8(bytes).length, work = size * 64 + 128;
+      raw.exec("INSERT INTO entry (seq, hash, time, bytes, size) VALUES (?, ?, 'TEST metadata only', ?, ?)", seq, hash, bytes, size);
+      try {
+        const position = { seq, hash, bytes: size }, budget = new ArchiveBudget(); let calls = 0;
+        const sql = { exec(query: string, ...args: (string | number | null | ArrayBuffer)[]) {
+          calls++;
+          expect(budget.admitted()).toEqual({ entries: 0, attempts: 0, nodes: 0, calls: 1, metadata: 128, inputWork: work });
+          expect(query).toContain("json_tree(entry.bytes)"); expect(query).not.toContain("tree.value");
+          expect(query).not.toMatch(/^SELECT (?:bytes|\*)/);
+          return raw.exec(query, ...args);
+        } };
+        expect(archiveEntryAnchorCandidates(sql, position, PROPOSED_BOUNDS.entryBytes, budget)).toBe(5);
+        expect(calls).toBe(1);
+        let forbiddenCalls = 0;
+        const forbidden = { exec(query: string, ...args: (string | number | null | ArrayBuffer)[]) {
+          forbiddenCalls++; return raw.exec(query, ...args);
+        } };
+        expect(() => archiveEntryAnchorCandidates(forbidden, position, PROPOSED_BOUNDS.entryBytes,
+          new ArchiveBudget({ inputWork: work - 1 }))).toThrow(expect.objectContaining({ reason: "limit" }));
+        const protectedBudget = new ArchiveBudget();
+        expect(protectedBudget.lookahead({ inputWork: ARCHIVE_BOUNDS.inputWork - work + 1 }, () =>
+          archiveEntryAnchorCandidates(forbidden, position, PROPOSED_BOUNDS.entryBytes, protectedBudget))).toEqual({ kind: "limited" });
+        expect(forbiddenCalls).toBe(0); expect(protectedBudget.admitted().inputWork).toBe(0);
+        // A refused later read neither consumes its debit nor replaces any
+        // earlier prefix count. The same original budget can still finish.
+        expect(archiveEntryAnchorCandidates(forbidden, position, PROPOSED_BOUNDS.entryBytes, protectedBudget)).toBe(5);
+        expect(forbiddenCalls).toBe(1); expect(protectedBudget.admitted().inputWork).toBe(work);
+        expect(() => archiveEntryAnchorCandidates(forbidden, { ...position, hash: textDigest("TEST wrong exact row hash") },
+          PROPOSED_BOUNDS.entryBytes, new ArchiveBudget())).toThrow(expect.objectContaining({ reason: "mismatch" }));
+        expect(forbiddenCalls).toBe(2);
+      } finally { raw.exec("DELETE FROM entry WHERE seq = ?", seq); }
+    };
+    read(small); read(large);
+    expect(utf8(large).length).toBeGreaterThan(utf8(small).length * 16);
+  });
 });
 
 test("missing source or inline policy and a conflicting retained genesis pin refuse the whole prefix before payloads", async () => {

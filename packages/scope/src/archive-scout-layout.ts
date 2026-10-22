@@ -35,6 +35,7 @@ interface Row extends Counts {
 }
 export interface ArchiveScoutLayoutQuote {
   readonly entries: number; readonly entryBytes: number; readonly objects: number; readonly copies: number; readonly newRetained: number;
+  readonly anchorCandidates: number;
   readonly retainedBytes: number; readonly retainedNameUnits: number; readonly origins: number;
   readonly manifestRows: number; readonly selectionUnits: number; readonly manifestBytes: number;
   readonly measuredOmissions: number; readonly orderingInputWork: number;
@@ -179,9 +180,9 @@ export class ArchiveScoutLayout {
     for (const [key, held] of this.#sizes) if (held.first <= through.seq) sizes.set(key, held.bytes);
     return sizes;
   }
-  quote(through: Head, sources: number): ArchiveScoutLayoutQuote {
+  quote(through: Head, sources: number, anchorCandidates: number): ArchiveScoutLayoutQuote {
     this.budget.spend({ metadata: 512 + this.#objects.size * 128, inputWork: 1024 + this.#objects.size * 256 });
-    if (!isHead(through) || !natural(sources)) return stop("mismatch");
+    if (!isHead(through) || !natural(sources) || !natural(anchorCandidates)) return stop("mismatch");
     const row = this.#rows.get(through.seq);
     if (!row || row.hash !== through.hash) return stop("mismatch");
     const entries = through.seq - this.first + 1, keyRows = row.objects + row.omissions + sources;
@@ -197,7 +198,7 @@ export class ArchiveScoutLayout {
       ...row.segments.map(segment => ({ path: journalV2SegmentPath(this.first, segment.first), bytes: segment.bytes }))];
     for (const object of this.#objects.values()) if (object.first <= through.seq && (object.pass === null || object.pass === this.first)) files.push({ path: journalV2RetainedPath(this.first, object.key), bytes: object.bytes });
     const input = { ...row.input }; add(input, archiveInputBaseReservation(entries, row.objects));
-    return Object.freeze({ entries, entryBytes: row.entryBytes, objects: row.objects, copies: row.copies, newRetained: row.newRetained,
+    return Object.freeze({ entries, entryBytes: row.entryBytes, objects: row.objects, copies: row.copies, newRetained: row.newRetained, anchorCandidates,
       retainedBytes: row.retainedBytes, retainedNameUnits: row.retainedNameUnits, origins: row.origins, manifestRows: row.objects + row.omissions,
       selectionUnits, manifestBytes, measuredOmissions: row.omissions, orderingInputWork, input: Object.freeze(input), files: Object.freeze(files.map(file => Object.freeze(file))) });
   }

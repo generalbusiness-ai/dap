@@ -62,11 +62,11 @@ const setupCost = (): ArchiveCost => sum(archiveDeclarationHandoffCost(ARCHIVE_B
 function finishCost(context: AdaptiveArchiveContext, preparation: JournalPassPreparation, shape: ArchiveScoutLayoutQuote,
   inventory: ArchiveCost, oldRowBytes: number, parent: ParentMetadata, setup: ArchiveCost, legacyAnchors: number, budget: ArchiveBudget): ArchiveCost | null {
   // A copied fact can be needed without being written in a local entry.
-  // Every other candidate is a full FactRef or an of/head observation:
-  // scope(55), incarnation(29) and hash(71) alone exceed 128 UTF-8 bytes.
-  // The actual selected bytes therefore bound their count conservatively.
+  // The scout paid for a necessary-key count on each selected local row.
+  // It includes nested FactRefs and of/head observations independently of
+  // copied objects, with harmless false positives from unrelated keys.
   // Final paid collection, not this quote, chooses the published list.
-  const anchors = shape.copies + Math.floor(shape.entryBytes / 128), total = anchors + legacyAnchors;
+  const anchors = shape.copies + shape.anchorCandidates, total = anchors + legacyAnchors;
   const publicationUnits = archivePublicationBytesUpper(total);
   if (![anchors, total, publicationUnits].every(n => Number.isSafeInteger(n) && n >= 0)) return null;
   const sources = context.fixtureSources?.publicationFootprint(budget);

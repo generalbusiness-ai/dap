@@ -594,3 +594,62 @@ claimed. A new small Native direct-copy case starts with the producer
 omitted, checks the exact deduplicated closure and non-anchor treatment,
 rejects conflicting and private target references, and checks exact
 rebuild plus refusal of a truncated Mark. It has not been compiled or run.
+
+The producer-closure change was independently source-reviewed and merged
+with Main's dependency update at `d2daa46c`. The merge preserves Replay's
+existing Platform workspace dependency in both its manifest and the lockfile.
+Normal `npm ci` and the maintained pool compatibility command each exited
+0. Their owner exited 1 because its final metadata comparison rejected
+the lock stamp's expected change to the parent directory's link count.
+A later read-only reconciliation found only that stamp and parent change,
+with sources, tools and selected environment unchanged. Neither command
+was retried. The next owning run, Owner 55041, passed both Scope compilers
+and all 12 foreign-copy cases with stable full guards under Vitest 4.1.12.
+This includes the new producer-closure and truncated-Mark control.
+
+Owner 78521 then ran the whole installed file at the same head. It and its
+child naturally exited 1 with stable full guards. The fixture and Grow
+cases passed. Grow production passed the earlier Site dependency refusal,
+then stopped before Rules entry 2 with `limit`: its receipt remained at
+entry 1 and no Mark was pending. The independent pre-archive oracle
+identifies that exact entry as the real signed `install-application` act.
+The 2,122-byte delivery shape recorded elsewhere belongs to Directory
+entry 2, not this Rules entry. The rejected finish quote was 39,729,189
+input units after 36,602,490 units spent, exceeding the unchanged
+67,108,864 cap by 9,222,815. Final spent input was 42,954,999, which does
+not establish overspend or the size of a particular finish component.
+Rules entry bytes and component totals were not recorded. Production
+command, replay and clone checks, and both activation cases, still have
+no completed acceptance from this run.
+
+The finish forecast previously treated every 128 bytes of local entry
+text as another possible anchor. Scouting now pays for one additional
+SQLite metadata query after each exact row's prefix and privacy admission.
+Before SQL, that query charges the existing 64 input units per entry byte,
+one native call and 128 metadata units, including their native input fold.
+It returns only counts from `json_tree`, never a body or a tree value.
+The smaller count of object-valued `at`, numeric `seq` and text `hash`
+keys bounds full fact references. The smaller count of object-valued `of`
+and `head` keys bounds observations. Both integer and real SQL numbers
+are counted. Counts from unrelated objects can increase these bounds.
+All counts, their sum and the cumulative prefix count must be finite,
+nonnegative safe integers before use.
+
+Each completed scout position stores its own cumulative count. Selecting
+an earlier prefix uses that position's count, without refunding later
+work. The finish forecast adds copied-fact candidates separately and
+keeps the exact legacy count. Final anchor collection, source lookup,
+privacy, explicit trust, manifest and Mark checks remain unchanged.
+No capacity, price or deadline increases, removed validation or proven
+fit improvement are claimed.
+
+A new real-SQLite metadata control uses synthetic JSON only at the scalar
+query boundary. It includes nested fact references and observations,
+deliberate false-positive keys and a large irrelevant string. Both small
+and large rows must have the same conservative reference bound. It checks
+the full charge before SQL, refusal before SQL with one input unit missing,
+and an earlier-finish reserve that blocks the query without spending its
+debit. The existing Native scout control also checks that later positions
+do not change an earlier prefix's count. These changes have not been
+compiled or run. Earlier failures and the remaining heavy cases and final
+gate remain separate obligations.
