@@ -5,7 +5,7 @@ import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type FactRef, type PlatformData, type Seed, type Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, intentDigest, newIncarnation, scopeIdOf, signIntent, utf8 } from "@generalbusiness/artroom-bytes";
 import { clockOf, grantFrom, judgeGenesis, validateDefinition } from "@generalbusiness/dap-derive";
-import { deskDefinition, keys, lane, Ledger, membership, t } from "@generalbusiness/dap-derive/testing";
+import { deskDefinition, keys, lane, Ledger, membership, on, t } from "@generalbusiness/dap-derive/testing";
 import { buildJournalPass, type JournalAnchorPublication, type JournalObject } from "@generalbusiness/artroom-git/journal";
 import { readJournalArchiveV2 } from "@generalbusiness/artroom-git/journal-reader";
 import { ArchiveBudget } from "../../scope/src/archive-budget.ts";
@@ -27,7 +27,7 @@ function freshGrant(n: number, at: Timestamp) {
 function remarks(count: number, identity = "TEST anchor publication") {
   const data: PlatformData = { ...deskDefinition.declared, name: "platform:task", receives: {}, outcomes: {},
     acts: { found: deskDefinition.declared.acts["found"]!, remark: { ...lane.acts["remark"]!, on: "repo" },
-      vouch: { ...lane.acts["remark"]!, on: "repo", fields: {},
+      vouch: { ...lane.acts["remark"]!, step: "transition", on: "repo", fields: {},
         presents: { proof: { kind: ["remark"], under: "platform:task", required: true } }, guards: [{ fact: { presented: "proof" } }] } } };
   const checked = validateDefinition(data, PROPOSED_BOUNDS, undefined, { platform: true });
   if (!checked.ok) throw Error(JSON.stringify(checked));
@@ -156,10 +156,11 @@ test("nested public proofs use their own published ranges and name their own unu
     const fact = dependency.ledger.fact(1), entry = dependency.ledger.entries[1]!.entry;
     target.ledger.now = t(2);
     target.ledger.remember([{ fact, entry, under: "platform:task" }]);
-    const vouched = target.ledger.act(keys.rita, "vouch", { on: 0 }, { membership,
+    const vouched = target.ledger.act(keys.rita, "vouch", on(target.ledger, 0), { membership,
       grants: [{ grant: freshGrant(1, target.ledger.now), current: true }], platform: { named: NAMED, rules: target.rules },
       presented: { proof: fact }, facts: [{ fact, entry, under: "platform:task" }] });
     expect(vouched.result).toBe("write");
+    expect(target.ledger.last.uses).toEqual([{ fact, content: digestBytes(utf8(canonicalize(entry))) }]);
     const prior = await journal(dependency), own = await journal(target, [dependency]);
     const parent = await prior.append(0, 1, { anchors: needs });
     await own.append(0, 1, { anchors: [signer] });

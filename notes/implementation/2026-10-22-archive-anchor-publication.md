@@ -357,3 +357,21 @@ Replay test compiler, the six unrun Scope/CLI compiler roots, and the eight
 unrun cases. The eight passed compiler roots remain separately attributed to
 the first attempt. No follow-up result is claimed here; the Native,
 production, heavy-history, and final-gate obligations remain pending.
+
+The follow-up at `209a25b5` passed all seven remaining compiler roots and the
+three Git publication cases. Its first Replay case failed before any
+judgment: the shared fixture had spread a comment act into `vouch` and then
+added a fact guard, which the validator correctly refuses. The other four
+Replay cases were unrun under the maintained bail setting. Owner91955 and its
+child naturally exited1 without a signal, with full guards stable. Its
+owner-inclusive time was 6.680521625 seconds elapsed, 12.691451 user CPU, and
+2.571674 system CPU.
+
+The next fixture correction makes `vouch` a transition on the live repository
+item and uses the existing `on` helper to supply its current revision. The
+real presented-fact guard and validator remain. The nested case also checks
+that the judged entry retained exactly the presented foreign fact and its
+canonical content digest. No product source or earlier assertion changes.
+Only the Replay test compiler and complete five-case Replay file are planned
+next; the passed Git file and other compiler roots are not repeated. No
+further runtime result or broader acceptance is claimed.
