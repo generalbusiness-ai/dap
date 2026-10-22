@@ -230,12 +230,14 @@ async function legacySession(bearer: string): Promise<string> {
   return id;
 }
 /** A session's GET stream, read in the background: its events so far, and a way to stop reading. */
-function stream(bearer: string, session: string): { text: () => string; stop: () => void; ended: Promise<number> } {
+function stream(bearer: string, session: string): { text: () => string; stop: () => void; ready: Promise<number>; ended: Promise<number> } {
   const abort = new AbortController();
   const seen: string[] = [];
+  let respond!: (status: number) => void;
+  const ready = new Promise<number>(resolve => { respond = resolve; });
   const ended = routed(`${SERVICE}/mcp`, { method: "GET", signal: abort.signal, headers: { authorization: `Bearer ${bearer}`, "mcp-protocol-version": LEGACY, "mcp-session-id": session } })
-    .then(async (res) => { if (res.status !== 200 || !res.body) return res.status; const reader = res.body.getReader(); try { for (;;) { const r = await reader.read(); if (r.done) break; seen.push(new TextDecoder().decode(r.value)); } } catch { /* aborted */ } return res.status; }).catch(() => -1);
-  return { text: () => seen.join(""), stop: () => abort.abort(), ended };
+    .then(async (res) => { respond(res.status); if (res.status !== 200 || !res.body) return res.status; const reader = res.body.getReader(); try { for (;;) { const r = await reader.read(); if (r.done) break; seen.push(new TextDecoder().decode(r.value)); } } catch { /* aborted */ } return res.status; }).catch(() => { respond(-1); return -1; });
+  return { text: () => seen.join(""), stop: () => abort.abort(), ready, ended };
 }
 const settle = (ms = 30) => new Promise((r) => setTimeout(r, ms));
 const until = async (check: () => boolean, ms = 3000) => { for (let t = 0; t < ms && !check(); t += 25) await new Promise((r) => setTimeout(r, 25)); return check(); };
@@ -317,7 +319,7 @@ test("H2, H3 and H4: agents kept apart, control authority, the bearer and revoca
     expect((await mcp(bot.bearer, "POST", { "mcp-protocol-version": MODERN, "mcp-method": "tools/list" }, { jsonrpc: "2.0", id: 1, method: "tools/list", params: { _meta: META } })).status, "another address is served").toBe(200);
     // After bearer: the old bearer answers 401, the new one serves, and the sessions and streams open under the old one are gone.
     const open = stream(bot.bearer, botSession);
-    await settle();
+    expect(await open.ready, "the stream attached before bearer rotation").toBe(200);
     expect((await agentStub(bot.agent).counts()).streams).toBe(1);
     const reissued = await room.wait(() => post(`/mcp/agents/${bot.agent}/bearer`, control(room, rita.secret, "bearer", M, bot.agent, "", "rita-bearer-bot"), ""));
     const botNew = (await reissued.json() as { bearer: string }).bearer;
@@ -330,7 +332,7 @@ test("H2, H3 and H4: agents kept apart, control authority, the bearer and revoca
     const afterSession = await legacySession(botNew);
     const afterStream = stream(botNew, afterSession);
     const afterListen = listen(botNew);
-    await settle();
+    expect(await afterStream.ready, "the replacement stream attached before control replay").toBe(200);
     expect(await until(() => afterListen.text().includes("acknowledged"))).toBe(true);
     expect((await agentStub(bot.agent).counts()).streams).toBe(2);
     const replayed = await room.wait(() => post(`/mcp/agents/${bot.agent}/bearer`, control(room, rita.secret, "bearer", M, bot.agent, "", "rita-bearer-bot"), ""));

@@ -268,5 +268,47 @@ cannot establish which underlying phase failed. The repair records
 bounded diagnostics without tokens and requires a successful version
 preflight. It preserves the clone-success assertion, existing deadlines
 and all subsequent replay checks; it adds no retry. These diagnostic
-changes do not themselves establish that the clone succeeds. Affected
-focused verification and a final-head gate remain pending.
+changes did not themselves establish that the clone succeeds. On repaired
+head `8dae7497`, the owning compiler and all four affected cases passed.
+That focus used Node 26.12.1: the host had removed Node 26.12.0 while the
+earlier gate was running. The first attempted focus could not launch its
+compiler at the removed path. This transition is evidence of an external
+change, not proof of the original clone failure's cause. The original
+failure, failed launch and successful focus remain separate evidence.
+
+## Second gate and bounded read repairs
+
+The gate on `8dae7497` (tree `29ee3eb7`) also closed naturally with exit 1.
+Its final log records 2,130 passed, two failed and three skipped cases
+across 461 files. Typechecking and all preceding checks passed; the Node
+and Counting checks after Vitest were not reached. The progress reporter
+recorded 22 fewer passing results than the final summary; it is not the
+source of the final count. Assertion `8e3b3755` preserves the complete
+failure evidence and guards. Source bytes, Git identity and tool hashes
+stayed unchanged; only the dependency result cache changed.
+
+The H2/H3/H4 stream test received `404` where it expected `200` after bearer
+rotation. Its 30-millisecond wait and stream count did not establish
+attachment: the count includes a pending opening, and production correctly
+returns `404` when the session ends before that opening attaches. The
+helper now exposes the actual response through a nonrejecting `ready`
+promise. H4 requires `200` before rotation and before replay/retirement of
+the replacement stream. All stream counts, final events, closed-body
+checks, bearer checks and deadlines remain. No sleep or retry was added.
+
+The member-display case received the member list but no optional roster.
+The client issued both bounded queries concurrently, while the native
+query service permits only one pending preparation. A second overlapping
+query can therefore be unavailable. The client now completes its member
+query before requesting the roster, still once each. It keeps the actual
+heads, optional-roster failure behavior and unsigned read path. A held
+first query witnesses this ordering at the client boundary; the existing
+native case retains its roster-head, two-request, removed-member and
+foreign/unjoined assertions.
+
+These are concrete source-level scheduling defects. The failed gate did
+not record the missing roster's refusal reason or the exact stream
+interleaving, so neither diagnosis claims that historical detail. The
+repairs were made only after the gate closed. Their focused checks and
+the new head's gate are pending at this commit; the review evidence must
+report their actual outcomes separately.
