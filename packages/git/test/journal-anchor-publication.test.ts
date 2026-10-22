@@ -70,7 +70,8 @@ test("published lists refuse archived journals, duplicate positions, order chang
   expect(check([first, later])).toEqual([first, later]);
   for (const list of [[{ at: own.at, seq: 0, hash: own.description.entries[0]!.hash }], [first, first], [later, first],
     [{ ...first, extra: true }], [{ ...first, at: { ...first.at, kind: "lane" } }]]) expect(() => check(list)).toThrow();
-  expect(() => journalAnchors([first], 0, new JournalWork(new ArchiveBudget({}, () => 0)))).toThrow("journal-layout-limit");
+  expect(journalAnchors([first], 0, new JournalWork(new ArchiveBudget({}, () => 0)))).toEqual([first]);
+  expect(() => journalAnchors([first], 0, new JournalWork(new ArchiveBudget({ metadata: 511 }, () => 0)))).toThrow("limit");
 });
 
 test("a nonempty publication survives the actual reader, which refuses malformed integrity-bound lists", async () => {

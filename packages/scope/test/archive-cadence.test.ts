@@ -1,21 +1,27 @@
+/** Archive fixture authority uses genuine Native Membership8 observations.
+ * Its seat/key/role and source-birth preparation are external fixture setup;
+ * each pass still pays its existing pin lookups and original complete ledger.
+ * Inline Lane policy, clock and host/token/repository remain TEST fixtures. */
 /** Actual Native inputs, alarm dispatch, archive rows and incremental send
- * code. Clock, grants/policy and HTTP/repository/token are TEST fixtures;
+ * code. Clock, inline policy and HTTP/repository/token are TEST fixtures;
  * virtual-day throughput is not a deployed-provider or custody claim. */
 import { expect, onTestFinished, test } from "vitest";
 import { ArchiveBudget, ARCHIVE_BOUNDS, type ArchiveCost } from "../src/archive-budget.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
-import { create, at } from "./fixtures-native.ts";
+import { at } from "./fixtures-native.ts";
 import { archiveDefinition, archivePolicies, archiveRepository, archiveSql } from "./support/archive.ts";
 import { ScriptedArchiveHost } from "./support/archive-provider.ts";
+import { createNativeArchiveLane, archiveAuthorityBasis, archiveAuthorityPolicies } from "./support/archive-native-authority.ts";
 import { fixtureArchiveWiring } from "./worker.ts";
 
 // Invariant: real Native alarms clear three backlogs of4800entries within
 // their eight-hour windows, using the unchanged complete pass allowance.
 test("Native archive alarms clear three daily windows of4800entries without a backlog", async context => {
-  const lane = await create({}, {}, archiveDefinition), host = new ScriptedArchiveHost("sha1", () => lane.c.clock.now);
+  const lane = await createNativeArchiveLane({}, {}, archiveDefinition), host = new ScriptedArchiveHost("sha1", () => lane.c.clock.now);
   const budgets: ArchiveBudget[] = [], windows: unknown[] = [];
   fixtureArchiveWiring.set(lane.name, {
-    policies: { fixture: "archive-policies", registry: archivePolicies },
+    fixtureSources: archiveAuthorityBasis(lane)!.pins,
+    policies: { fixture: "archive-policies", registry: archiveAuthorityPolicies(lane, archivePolicies) },
     target: { fixture: "archive-target", resolve: async () => { host.targets++; return archiveRepository; } }, provider: host,
     budget: () => { const budget = new ArchiveBudget(); budgets.push(budget); return budget; },
   });
@@ -64,5 +70,5 @@ test("Native archive alarms clear three daily windows of4800entries without a ba
   expect(host.targets).toBe(1);
   (context.task.meta as Record<string, unknown>)["nativeArchiveCadence"] = { windows, totalNewEntries: 14_400,
     elapsedSeconds: (performance.now() - started) / 1000, actualAppendCalls: host.appendCalls, exactParentReads: host.objectReads.length,
-    qualification: "Actual Native signed comment inputs and actual Native alarm dispatch. Three virtual eight-hour windows each produce4800new entries then drain actual adaptive passes to Native confirmation; no journal entries are written by export and wake is empty afterwards. Each pass uses its one unchanged default30s ledger/all original caps for scout, preparation, fresh inventory, writer, copies, production incremental copy/hash/validator/pack/send and Native mark/attempt/confirmation. Post-alarm receipt/wake inspections are separate test observations, no archive phase allowance. HTTP/token/repository/grants/policy/clock are explicit TEST fixtures; no real external-provider, deployed scheduling/network throughput, Git custody or real-day duration claim." };
+    qualification: "Actual Native signed comment inputs and actual Native alarm dispatch. Three virtual eight-hour windows each produce4800new entries then drain actual adaptive passes to Native confirmation; no journal entries are written by export and wake is empty afterwards. Each pass uses its one unchanged default30s ledger/all original caps for scout, preparation, fresh inventory, writer, copies, production incremental copy/hash/validator/pack/send and Native mark/attempt/confirmation. Post-alarm receipt/wake inspections are separate test observations, no archive phase allowance. HTTP/token/repository/policy/clock are explicit TEST fixtures; genuine Membership8 authority/source setup is external fixture work; no real external-provider, deployed scheduling/network throughput, Git custody or real-day duration claim." };
 }, 600_000);

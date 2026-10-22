@@ -60,7 +60,7 @@ function resources<K, V extends object>(map: Map<K, V>) {
 
 /** Existing callers require real-session leases. Explicit older inspector
  * phases preserve their mode-off settings rather than acquiring one. */
-export function nativeFixtureLifetime(owner: SessionOwner, options: { required?: false } = {}) {
+export function nativeFixtureLifetime(owner: SessionOwner, options: { required?: false; finish?: "external" } = {}) {
   const clock = net.clock;
   const before = { hold: net.hold, deaf: net.deaf };
   let hold: NonNullable<typeof net.hold> = () => false;
@@ -110,7 +110,14 @@ export function nativeFixtureLifetime(owner: SessionOwner, options: { required?:
     if (cleanupFailed) throw new Error("Native fixture cleanup failed after releasing all owned resources.");
     // Same clock persists, including any legitimate advances. No physical drain.
   };
-  onTestFinished(release);
+  // An explicit parent fixture may own the sole join-before-release hook.
+  // Existing callers retain their automatic synchronous release unchanged.
+  if (options.finish !== "external") onTestFinished(release);
+  const ownedPlatforms = new Map<ScopeId, Platform>();
+  const platform = (name: ScopeId): Platform => {
+    active();
+    const node = new OwnedPlatform(name); ownedPlatforms.set(name, node); return node;
+  };
   class OwnedPlatform extends Platform {
     override get stub() {
       active();
@@ -124,7 +131,7 @@ export function nativeFixtureLifetime(owner: SessionOwner, options: { required?:
     override at(): ReturnType<Platform["at"]> { return wait(() => super.at()); }
     override intent(...args: Parameters<Platform["intent"]>): ReturnType<Platform["intent"]> { return wait(() => super.intent(...args)); }
     override restart(): Promise<void> { return wait(() => super.restart()); }
-    override async created(seq: number, n = 0): Promise<Platform> { const made = await super.created(seq, n); active(); return new OwnedPlatform(made.name); }
+    override async created(seq: number, n = 0): Promise<Platform> { const made = await super.created(seq, n); active(); return platform(made.name); }
   }
   return {
     owner, active, activeFor, wait, waitFor, release,
@@ -132,7 +139,9 @@ export function nativeFixtureLifetime(owner: SessionOwner, options: { required?:
     current(): boolean { return !released && owner.isCurrent() && net.clock === clock && net.hold === hold && net.deaf === deaf; },
     unWire: (name: string): void => ports.remove(name),
     unOutside: (name: string): void => outsides.remove(name),
-    platform: (name: ScopeId): Platform => { active(); return new OwnedPlatform(name); },
+    platform,
+    /** Known fixture handles, including dynamically discovered children. */
+    platforms: (): readonly Platform[] => [...ownedPlatforms.values()],
     cleanup(run: () => void): void { if (released) run(); else cleanups.add(run); },
     setHold(next: NonNullable<typeof net.hold>): void {
       active(); if (next === hold) return;

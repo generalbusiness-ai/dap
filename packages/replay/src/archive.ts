@@ -4,7 +4,7 @@ import { natural } from "@generalbusiness/artroom-bytes";
 import { DOMAINS, type Digest, type Entry, type FactRef, type Head, type PlatformDefinition, type RetainedInput, type ScopeId, type ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, isDigest, isEntry, isFactRef, isScopeId, platformName, rawRetainedJSON, utf8 } from "@generalbusiness/artroom-bytes";
 import { PAGE_ENTRIES, PAGE_REPLY_BYTES, READ_SECONDS, RETAINED_REPLY_BYTES, type Allow, type HistorySource, type Page, type Stored, type TextOmission, type Unread, type FloorCommitRead } from "./source.ts";
-import { LIMITS, SourceError, TRUSTS, verify, type Limits, type Options, type Verification } from "./verify.ts";
+import { LIMITS, SourceError, TRUSTS, verify, type Limits, type Options, type PublishedAnchorPolicy, type Verification } from "./verify.ts";
 
 export interface ArchiveCost { entries: number; attempts: number; nodes: number; calls: number; metadata: number; inputWork: number }
 /** One traversal's original counters and deadline, shared by every scope. */
@@ -17,14 +17,16 @@ export interface ArchiveReadWork {
   scope(): void;
   remainingMilliseconds(): number;
 }
-export interface ArchiveLocation { readonly scope?: ScopeId; readonly ref?: string; readonly commit?: string; readonly object?: string; readonly path?: string }
-export type ArchiveFailureKind = "mismatch" | "refused" | "unavailable" | "timeout" | "limit" | "not-found" | "anchors-unpublished";
+export interface ArchiveLocation { readonly scope?: ScopeId; readonly ref?: string; readonly commit?: string; readonly object?: string; readonly path?: string;
+  readonly anchor?: FactRef; readonly range?: { readonly from: number; readonly through: number; readonly legacy?: true } }
+export type ArchiveFailureKind = "mismatch" | "refused" | "unavailable" | "timeout" | "limit" | "not-found" | "anchors-unpublished" | "anchor-unneeded";
 export interface ArchiveFailure { readonly ok: false; readonly result: ArchiveFailureKind; readonly reason: string; readonly location: ArchiveLocation }
 export interface ArchiveData {
   readonly scope: ScopeRef; readonly head: Head; readonly format: "sha1" | "sha256"; readonly commit: string;
   readonly name: string | null;
   /** Reader-validated published lists; these are never trusted by default. */
   readonly publishedAnchors?: readonly FactRef[];
+  readonly anchorRanges?: readonly { readonly from: number; readonly through: number; readonly anchors: readonly FactRef[]; readonly legacy?: true }[];
   readonly anchorCoverage?: {
     readonly covered: boolean;
     readonly unpublished: readonly { readonly commit: string; readonly from: number; readonly through: number }[];
@@ -53,7 +55,12 @@ export interface ArchiveTextPort {
   settle?(): Promise<void>;
 }
 export interface ArchiveSourceOptions { readonly seconds?: number; readonly limits?: Partial<Limits>; readonly texts?: ArchiveTextPort }
-export interface ArchiveVerifyOptions extends Options { readonly receipt?: { readonly fact: FactRef }; readonly requirePublishedAnchors?: boolean }
+export interface ArchiveVerifyOptions extends Options {
+  readonly receipt?: { readonly fact: FactRef }; readonly requirePublishedAnchors?: boolean;
+  /** Explicit opt-in only. Each published list is scoped to its own pass
+   * or legacy prefix; caller anchors alone do not enable this policy. */
+  readonly trustPublishedAnchors?: boolean;
+}
 export type ArchivePublications = { readonly ok: true; readonly archives: readonly ArchiveDescriptor[]; readonly anchors: readonly FactRef[]; readonly coverage: readonly { readonly scope: ScopeId; readonly coverage: NonNullable<ArchiveData["anchorCoverage"]> }[] } | ArchiveFailure;
 export interface ArchiveReadStats { readonly objectBytes: number; readonly scopes: number; readonly cost: Readonly<ArchiveCost> }
 export interface ArchiveDescriptor { readonly scope: ScopeRef; readonly head: Head; readonly format: "sha1" | "sha256"; readonly commit: string }
@@ -131,6 +138,9 @@ function readFailure(error: unknown, scope: ScopeId): ArchiveFailure {
 }
 
 class Session implements HistorySource {
+  /** Populated from each actual validated snapshot before page/retained
+   * returns to the verifier; this map grants no trust by itself. */
+  readonly publications = new Map<ScopeId, PublishedAnchorPolicy>();
   readonly #opened = new Map<ScopeId, Promise<ArchiveRead>>();
   readonly #receiptScopes = new Set<ScopeId>();
   readonly #receipts = new Map<string, Promise<Omit<Extract<FloorCommitRead, { ok: true }>, "bytes"> | Unread>>();
@@ -142,7 +152,7 @@ class Session implements HistorySource {
   readonly port: ArchiveReadPort;
   readonly work: Work;
   readonly texts: ArchiveTextPort | undefined;
-  constructor(port: ArchiveReadPort, work: Work, texts?: ArchiveTextPort, anchors?: Options["anchors"]) {
+  constructor(port: ArchiveReadPort, work: Work, texts?: ArchiveTextPort, anchors?: Options["anchors"], readonly published = false) {
     this.port = port; this.work = work; this.texts = texts;
     for (const anchor of anchors ?? []) {
       work.spend({ metadata: 256, inputWork: 512 });
@@ -178,6 +188,14 @@ class Session implements HistorySource {
           this.work.check();
           const read = await this.work.wait(() => this.port.open(scope, this.work));
           if (!read.ok && read.result !== "not-found") this.failure ??= read;
+          if (read.ok && this.published) {
+            if (read.archive.scope.scope !== scope) throw new Stopped("unavailable");
+            // Existing per-anchor reader metadata pays for consultation
+            // marks. Pay this additional scope-map record before it exists.
+            this.work.spend({ metadata: 128, inputWork: 256 });
+            this.publications.set(scope, Object.freeze({ scope, commit: read.archive.commit,
+              ranges: read.archive.anchorCoverage?.covered ? read.archive.anchorRanges ?? [] : [] }));
+          }
           return read;
         } catch (error) { const failed = readFailure(error, scope); this.failure ??= failed; return failed; }
       })();
@@ -295,7 +313,7 @@ function provenance(native: Verification, selectedHead: boolean): Verification {
   if (selectedHead && !trusts.includes(ARCHIVE_HEAD_TRUST)) {
     const clock = trusts.indexOf(TRUSTS.clock); trusts.splice(clock < 0 ? 0 : clock + 1, 0, ARCHIVE_HEAD_TRUST);
   }
-  return { report: { ...native.report, trusts }, why: native.why };
+  return { ...native, report: { ...native.report, trusts } };
 }
 function receiptResult(fact: FactRef, archive: ArchiveData, integrity: Verification): ArchiveReceipt {
   if (integrity.report.result !== "consistent") return { fact, result: "unverified", reason: "archive integrity and continuity did not complete" };
@@ -309,7 +327,7 @@ export class ArchiveSource implements HistorySource {
   readonly #options: ArchiveSourceOptions;
   readonly port: ArchiveReadPort;
   constructor(port: ArchiveReadPort, options: ArchiveSourceOptions = {}) { this.port = port; this.#options = { ...options, ...(options.limits ? { limits: { ...options.limits } } : {}) }; }
-  #session(limits?: Partial<Limits>, anchors?: Options["anchors"]): Session { return new Session(this.port, new Work({ ...LIMITS, ...this.#options.limits, ...limits }, this.#options.seconds), this.#options.texts, anchors); }
+  #session(limits?: Partial<Limits>, anchors?: Options["anchors"], published = false): Session { return new Session(this.port, new Work({ ...LIMITS, ...this.#options.limits, ...limits }, this.#options.seconds), this.#options.texts, anchors, published); }
   #default(): Session { return this.#direct ??= this.#session(); }
   floorReceipt(scope: ScopeId, commit: string, allow: Pick<Allow, "bytes">): Promise<FloorCommitRead> { return this.#default().floorReceipt(scope, commit, allow); }
   page(scope: ScopeId, from: number, allow: Allow): ReturnType<HistorySource["page"]> { return this.#default().page(scope, from, allow); }
@@ -357,20 +375,31 @@ export class ArchiveSource implements HistorySource {
       if (options.head && (!natural(options.head.seq) || !isDigest(options.head.hash))) throw new Stopped("unavailable");
       if (options.receipt && !isFactRef(options.receipt.fact)) throw new Stopped("unavailable");
       const fact = options.receipt ? { ...options.receipt.fact, at: { ...options.receipt.fact.at } } : null;
-      session = this.#session(options.limits, options.anchors);
+      session = this.#session(options.limits, options.anchors, options.trustPublishedAnchors === true);
       const read = await session.open(scope);
       if (!read.ok) outcome = { kind: "archive-failure", ...read, read: session.work.stats() };
       else if (options.requirePublishedAnchors && !read.archive.anchorCoverage?.covered) outcome = { kind: "archive-failure", result: "anchors-unpublished", reason: "archive passes have no complete published anchor coverage", location: { scope, commit: read.archive.anchorCoverage?.unpublished[0]?.commit ?? read.archive.commit }, read: session.work.stats() };
       else {
         const selectedHead = options.head === undefined;
         const head = options.head ? { ...options.head } : read.archive.head;
-        const asked = { ...options, head };
+        // Integrity does not consult authority/dependency proofs, so it
+        // cannot establish exact-list acceptance under the trust option.
+        if (options.trustPublishedAnchors && (options.mode !== "replay" || !read.archive.anchorRanges)) throw new Stopped("unavailable");
+        const asked = { ...options, head, ...(options.trustPublishedAnchors ? {
+          publishedAnchorPolicies: session.publications,
+        } : {}) };
         let integrity: Verification | undefined;
         if (fact) integrity = provenance(await verify(session, { ...asked, mode: "integrity" }), selectedHead);
         native = integrity && options.mode === "integrity" ? integrity : provenance(await verify(session, asked), selectedHead);
         session.work.check();
         if (session.failure) outcome = { kind: "archive-failure", ...session.failure, read: session.work.stats(), native };
-        else outcome = { kind: "verification", archive: { scope: read.archive.scope, head: read.archive.head, format: read.archive.format, commit: read.archive.commit }, verification: native, ...(integrity ? { integrity } : {}), ...(fact && integrity ? { receipt: receiptResult(fact, read.archive, integrity) } : {}), read: session.work.stats() };
+        else if (native.unusedPublishedAnchors?.length) {
+          const unused = native.unusedPublishedAnchors[0]!;
+          outcome = { kind: "archive-failure", result: "anchor-unneeded", reason: "a published anchor was not consulted by replay of its range",
+            location: { scope: unused.scope, commit: unused.commit, anchor: unused.fact,
+              range: { from: unused.from, through: unused.through, ...(unused.legacy ? { legacy: true as const } : {}) } },
+            read: session.work.stats(), native };
+        } else outcome = { kind: "verification", archive: { scope: read.archive.scope, head: read.archive.head, format: read.archive.format, commit: read.archive.commit }, verification: native, ...(integrity ? { integrity } : {}), ...(fact && integrity ? { receipt: receiptResult(fact, read.archive, integrity) } : {}), read: session.work.stats() };
       }
     } catch (error) {
       const failed = session?.failure ?? readFailure(error instanceof SourceError ? { reason: error.reason ?? "unavailable" } : error, scope);

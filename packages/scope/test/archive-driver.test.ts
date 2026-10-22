@@ -1,28 +1,32 @@
+/** Archive fixture authority uses genuine Native Membership8 observations.
+ * Its seat/key/role and source-birth preparation are external fixture setup;
+ * each pass still pays its existing pin lookups and original complete ledger.
+ * Inline Lane policy, clock and host/token/repository remain TEST fixtures. */
 /** Real native SQLite/turns/eviction; the host, credentials and fixture
  * admission/authority are explicit stand-ins. Actual adapter enforcement
  * and alarm wiring have separate obligations. No external provider runs. */
 import { expect, onTestFinished, test } from "vitest";
-import { runInDurableObject } from "cloudflare:test";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize, timeOf } from "@generalbusiness/artroom-bytes";
 import { journalRef } from "@generalbusiness/artroom-git/journal";
 import { readJournalRepositoryArchive } from "@generalbusiness/artroom-git/journal-reader";
-import { archiveSource, verifyArchive } from "@generalbusiness/artroom-replay";
+import { archiveSource, verifyArchive, TRUSTS } from "@generalbusiness/artroom-replay";
 import { ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
 import { driver, ScriptedHost } from "./support/archive-driver.ts";
 import type { ArchivePolicyRegistry } from "../src/archive-inventory.ts";
 import { archiveHostGate as gate } from "./support/archive-provider.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
 import { planArchive } from "../src/archive-build.ts";
-import { at, create, rita, una, type Lane } from "./fixtures-native.ts";
+import { at, rita, una, type Lane } from "./fixtures-native.ts";
+import { createNativeArchiveLane, archiveAuthorityBasis, archiveAuthorityPolicies, archiveAuthorityAnchors } from "./support/archive-native-authority.ts";
 import { archiveDefinition, archivePolicies, archiveRepository, archiveSql } from "./support/archive.ts";
 import { fixtureArchiveWiring } from "./worker.ts";
 import type { TestScope } from "./worker.ts";
 
 const row = (lane: Lane) => lane.inside(state => new ArchiveRows(archiveSql(state), lane.at).load());
 async function alarmFixture(host: ScriptedHost, resolve = async () => { host.targets++; return archiveRepository; }) {
-  const lane = await create({}, {}, archiveDefinition);
-  fixtureArchiveWiring.set(lane.name, { policies: { fixture: "archive-policies", registry: archivePolicies }, target: { fixture: "archive-target", resolve }, provider: host });
+  const lane = await createNativeArchiveLane({}, {}, archiveDefinition);
+  fixtureArchiveWiring.set(lane.name, { policies: { fixture: "archive-policies", registry: archiveAuthorityPolicies(lane, archivePolicies) }, fixtureSources: archiveAuthorityBasis(lane)!.pins, target: { fixture: "archive-target", resolve }, provider: host });
   onTestFinished(() => { fixtureArchiveWiring.delete(lane.name); });
   await lane.restart();
   await lane.did(rita, "remark", { on: 0, fields: { text: "schedule the fixture archive" } });
@@ -84,7 +88,7 @@ test("a pre-Mark target failure survives eviction and new native input without l
 // Invariant: a lost own send answer is resolved from the ref, never by
 // creating a second commit, writing a journal entry or reminting on success.
 test("confirms a lost reply by read-back with no second commit or journal entry", async () => {
-  const lane = await create({}, {}, archiveDefinition), host = new ScriptedHost("sha1"), before = await lane.head(); host.loseReply = true;
+  const lane = await createNativeArchiveLane({}, {}, archiveDefinition), host = new ScriptedHost("sha1"), before = await lane.head(); host.loseReply = true;
   const result = await lane.inside(state => driver(lane, state, host).run());
   expect(result.state).toBe("confirmed"); expect(host.sends).toHaveLength(1); expect(host.mintCalls).toBe(1); expect(host.revoked).toBe(1);
   expect((await row(lane))?.confirmed?.commit).toBe(host.pointer);
@@ -96,8 +100,8 @@ test("confirms a lost reply by read-back with no second commit or journal entry"
 // Invariant: earlier whole entries can complete after actual lookahead has
 // spent work, including the real incremental-send code and Native receipt.
 test("adaptive Native passes reserve writing, incremental sending and confirmation before more lookahead", async context => {
-  const lane = await create({}, {}, archiveDefinition), host = new ScriptedHost("sha1");
-  await runInDurableObject(lane.object, async instance => {
+  const lane = await createNativeArchiveLane({}, {}, archiveDefinition), host = new ScriptedHost("sha1");
+  await lane.inside(async (_state, instance) => {
     for (let n = 0; n < 300; n++) expect(await (instance as TestScope).checkpoint()).toMatchObject({ answer: "written" });
   });
   const head = await lane.head(), budgets: ArchiveBudget[] = [], maximum = 40 * 1024 * 1024;
@@ -127,7 +131,7 @@ test("adaptive Native passes reserve writing, incremental sending and confirmati
 });
 
 test("adaptive Native selection finishes a covered earlier prefix before an uncovered later class", async () => {
-  const lane = await create({}, {}, archiveDefinition), host = new ScriptedHost("sha1");
+  const lane = await createNativeArchiveLane({}, {}, archiveDefinition), host = new ScriptedHost("sha1");
   await lane.did(rita, "remark", { on: 0, fields: { text: "uncovered later native act" } });
   const policy = archivePolicies.get(archiveDefinition.digest)!, policies: ArchivePolicyRegistry = new Map([[archiveDefinition.digest, { ...policy, entryTypes: new Set(["genesis"]) }]]);
   expect(await lane.inside(state => driver(lane, state, host, undefined, undefined, policies).run())).toMatchObject({ state: "confirmed" });
@@ -157,13 +161,17 @@ test.each(["sha1", "sha256"] as const)("resumes marked %s bytes after eviction a
     format: async () => format, resolve: async ref => ref === journalRef(lane.at.scope) ? host.pointer : null,
     object: async (id, most) => { const object = host.data.get(id); return object ? { type: object.type, size: object.data.length, data: object.data.length <= most ? object.data : null } : null; },
   }, scope, work) });
-  const verified = await verifyArchive(source, { mode: "replay", scope: lane.at.scope, head: later, grants: "as-recorded" });
-  expect(verified).toMatchObject({ kind: "verification", verification: { report: { result: "consistent", anchors: [] } } });
+  // Explicit caller words from actual Membership reads, independent of
+  // archive output. This does not export the private authority journal.
+  const anchors = archiveAuthorityAnchors(lane); expect(anchors.length).toBeGreaterThan(0);
+  const verified = await verifyArchive(source, { mode: "replay", scope: lane.at.scope, head: later, grants: "as-recorded",
+    anchors: anchors.map(fact => ({ scope: fact.at.scope, seq: fact.seq, hash: fact.hash })) });
+  expect(verified).toMatchObject({ kind: "verification", verification: { report: { result: "consistent", anchors, trusts: expect.arrayContaining([TRUSTS.anchors, TRUSTS.observed]) } } });
   fixtureArchiveWiring.delete(lane.name);
 });
 
 test("stops on an unexpected ref without overwriting it", async () => {
-  const lane = await create({}, {}, archiveDefinition), host = new ScriptedHost("sha1"); host.pointer = "f".repeat(40);
+  const lane = await createNativeArchiveLane({}, {}, archiveDefinition), host = new ScriptedHost("sha1"); host.pointer = "f".repeat(40);
   const before = await lane.head(), result = await lane.inside(state => driver(lane, state, host).run());
   expect(result).toMatchObject({ state: "stopped", reason: "conflict" }); expect(host.pointer).toBe("f".repeat(40)); expect(host.sends).toEqual([]);
   expect((await row(lane))?.stopped?.reason).toBe("conflict"); expect(await lane.head()).toEqual(before);
@@ -172,7 +180,7 @@ test("stops on an unexpected ref without overwriting it", async () => {
 // Invariant: pending host I/O and duplicate pass requests never hold a
 // native turn; only the original pass sends, and later entries stay queued.
 test("coalesces one host pass while a flood of native turns completes", async () => {
-  const lane = await create({}, {}, archiveDefinition), host = new ScriptedHost("sha1"); host.blocked = gate();
+  const lane = await createNativeArchiveLane({}, {}, archiveDefinition), host = new ScriptedHost("sha1"); host.blocked = gate();
   const running = lane.inside(state => { const writer = driver(lane, state, host); return Promise.all([writer.run(), writer.run()]); });
   await host.started.promise;
   const replies = await Promise.all(Array.from({ length: 16 }, (_, index) => lane.submit(lane.remark(`native turn ${index}`))));
@@ -186,7 +194,7 @@ test("coalesces one host pass while a flood of native turns completes", async ()
 // A fake elapsed clock drives the real deadline fence. No sleep, timeout
 // widening, actual token or provider is used.
 test("a late host continuation cannot send or record after the original deadline", async () => {
-  const lane = await create({}, {}, archiveDefinition), host = new ScriptedHost("sha1"); host.blocked = gate(); let elapsed = 0;
+  const lane = await createNativeArchiveLane({}, {}, archiveDefinition), host = new ScriptedHost("sha1"); host.blocked = gate(); let elapsed = 0;
   const running = lane.inside(state => driver(lane, state, host, () => new ArchiveBudget({}, () => elapsed, 1000)).run());
   await host.started.promise; elapsed = 1000; host.blocked.release();
   expect(await running).toMatchObject({ state: "retry", reason: "timeout" }); expect(host.sends).toEqual([]); expect(host.lastAllowed!()).toBe(false);
@@ -195,7 +203,7 @@ test("a late host continuation cannot send or record after the original deadline
 });
 
 test("the native driver confirms a pending v1 attempt before a separate same-cutoff conversion and new v2 pass", async () => {
-  const lane = await create({}, {}, archiveDefinition), host = new ScriptedHost("sha1"), head = await lane.head();
+  const lane = await createNativeArchiveLane({}, {}, archiveDefinition), host = new ScriptedHost("sha1"), head = await lane.head();
   const old = await lane.inside(state => planArchive(archiveSql(state), { at: lane.at, through: head, bounds: PROPOSED_BOUNDS,
     policies: archivePolicies, format: "sha1", parent: null, markedAt: at(0) }, new ArchiveBudget()));
   expect(old.ok ? "accepted" : old).toBe("accepted"); if (!old.ok) return;

@@ -103,7 +103,7 @@ export async function main(argv: readonly string[], io: Io): Promise<number> {
       const accepted = trustPublished ? publication.anchors.map(fact => ({ scope: fact.at.scope, seq: fact.seq, hash: fact.hash })) : [];
       const results = [];
       for (const archive of publication.archives) {
-        const result = await verifyArchive(source, { ...io.native, mode, scope: archive.scope.scope, anchors: accepted, grants: "proven", requirePublishedAnchors: true });
+        const result = await verifyArchive(source, { ...io.native, mode, scope: archive.scope.scope, anchors: accepted, grants: "proven", requirePublishedAnchors: true, trustPublishedAnchors: trustPublished });
         if (result.kind === "verification" && result.archive.commit !== archive.commit) { io.err("journal refs changed during verification"); return 2; }
         results.push(result);
       }

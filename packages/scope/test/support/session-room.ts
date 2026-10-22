@@ -14,15 +14,16 @@ import { nativeFixtureLifetime, dispatchFixture, effectFixture } from "./native-
 
 export const sessionCohorts = Object.entries(DIRECTORY_OF).filter(([, directory], index, entries) => entries.findIndex(([, pin]) => pin === directory) === index).map(([register, directory]) => [register as PlatformDefinition, directory] as const);
 export interface SessionRepositoryHost { readonly host: string; readonly namespace: string }
-export async function sessionRoom(registerPin: PlatformDefinition = REGISTER, archive?: "journal", host?: SessionRepositoryHost) {
+export async function sessionRoom(registerPin: PlatformDefinition = REGISTER, archive?: "journal", host?: SessionRepositoryHost, lifetime?: { finish: "external"; capture: (life: ReturnType<typeof nativeFixtureLifetime>) => void }) {
   const secret = "a synthetic native reference test secret", owner = beginSessionFixture({ secret, sessions: false, inspector: null });
-  const life = nativeFixtureLifetime(owner, { required: false });
+  const life = nativeFixtureLifetime(owner, { required: false, ...lifetime });
+  lifetime?.capture(life);
   try {
     const { R, D, children, directoryPin } = await sessionRepository(life, registerPin, archive, host);
     const membership = await life.wait(() => children[0]!.at()), rules = await life.wait(() => children[1]!.at()), directory = await life.wait(() => D.at());
     const claims: SessionClaims = { v: 1, deployment: TEST_DEPLOYMENT, membership, member: rita.member.member, key: rita.key, reads: ["summary"], ends: soon(60) };
     return { life, R, D, children, membership, rules, directory, directoryPin, claims, secret, sessions: sessionsOf(secret, TEST_DEPLOYMENT)! };
-  } catch (error) { life.release(); throw error; }
+  } catch (error) { if (lifetime?.finish !== "external") life.release(); throw error; }
 }
 
 /** An additional real repository in the same owned native namespace fixture.

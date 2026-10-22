@@ -1,9 +1,11 @@
 # Published archive anchors
 
-This implements planner decisions `29fd51b5` and `f15e483c`. The writer and
+This implements planner decisions `29fd51b5`, `f15e483c`, and the count-policy
+correction `a7d03336`. The writer and
 command are integrated on the R1 candidate `1793ca7d`. The owning compilers
-have passed after two retained type-boundary failures. Owning tests and the
-final gate remain pending. No hosted clone, custody, deployment,
+passed before the current policy and authority-fixture corrections, after two
+retained type-boundary failures. These new sources are uncompiled and unrun.
+Owning tests and the final gate remain pending. No hosted clone, custody, deployment,
 or budget-fit result is claimed.
 
 ## Publication is distinct from replay trust
@@ -12,11 +14,11 @@ Each new Native v2 pass writes `anchors` in its existing `pass.json`, including
 an empty list. The list contains only the actual planner's Register or
 Membership facts outside the public journal set. Facts are ordered by scope
 and position, with one fact per scope and position. An archived public journal
-cannot become an anchor. The list cannot exceed the pass's retained entry-copy
-count. Its bytes and all extra validation use the original metadata and work
+cannot become an anchor. Its count is independent of retained entry copies:
+a signer's authority head needs no copy. Its bytes and all extra validation use the original metadata and work
 allowances.
 
-The reader returns `publishedAnchors` and `anchorCoverage`. Missing fields in
+The reader returns `publishedAnchors`, each list's `anchorRanges`, and `anchorCoverage`. Missing fields in
 old passes remain readable and appear in `anchorCoverage.unpublished`. Reading
 a list does not grant replay trust. The separate public command requires an
 explicit trust option before it passes those facts to Replay.
@@ -32,8 +34,8 @@ distinct in the combined list.
 The first new pass after a legacy v2 receipt also writes `legacyAnchors` with
 `from: 0` and `through` equal to the previous confirmed position. The same
 Native planner reads the still-held prefix and validates the selected local
-entry bytes. The writer reads the receipt-bound earlier pass metadata to
-bound the list by their aggregate retained entry-copy count. It does not read
+entry bytes. The writer still validates the receipt-bound earlier pass metadata.
+The list has no aggregate retained entry-copy bound. It does not read
 old archived entry bodies as a substitute for missing Native inputs.
 
 There is no partial migration. A missing, pruned, unsupported, or overbudget
@@ -221,3 +223,118 @@ its existing authorization, birth, pin, repository and binding checks.
 This is fixture token minting, not hosted issuance proof. The strict two-fact
 oracle, original budgets, cost assertions and 30-second deadline remain.
 The source change is independently reviewed; its Native run is pending.
+
+
+### Pending genuine authority fixture migration
+
+The default Lane grant is a test-authority stand-in. Its synthetic Membership
+reference has no native source birth. The newly published path now requires the
+real private authority source identity, so the four synthetic publication/floor
+failures cannot establish a product failure independently of that fixture gap.
+The two diagnostic runs and their original natural failures remain evidence;
+neither diagnostic passed the product witness.
+
+The proposed fixture migration creates the existing native Register17/Directory16
+cohort with `sessionRoom`, then admits Membership8 seat, first-key and set-actions
+acts. Lane authority forwards the actual Membership observation unchanged. The
+existing `FixtureArchiveSourcePins` contract receives that source's actual native
+birth. The reported external fixture ledger covers source-birth reads and source-pin
+preparation only. It does not count all sessionRoom, seat, first-key, set-actions
+RPC or wall work. Those are additional external fixture setup. Each writer pays its
+existing lookup and validation charges. This is not a claim about production
+preparation cost or deployed throughput. Host, token, clock, declaration and
+inline Lane policy remain explicit test fixtures.
+
+All signed histories, original positions, admission/count/head/floor assertions,
+caps and deadlines remain. This includes the 30,000-entry floor history, exact
+2,000-entry ceiling with 10,000 real inputs, cadence windows, and retained-rule
+scale history. Legacy foreign inventory and literal-cost controls keep their
+original authority; only their published alarm opts in. The two TEST offline
+replay checks now explicitly supply caller anchors independently captured from
+the actual Membership observations, with exact fact and trust assertions. They
+do not trust archive publication output or export the private authority journal.
+
+The original policy conflict remains part of the failure history: authority heads
+were required while anchor count was bounded by retained entry-copy count. A
+signed scalar-field act can retain a real authority head with zero copied foreign
+entries. Planner reconciliation `a7d03336c27f80f56c6f13938dd8731129f8f5ad`
+withdraws that copy-count relationship and requires unused-anchor refusal per
+range. A separate source author owns that product change. This fixture migration
+does not invent copies, drop heads, widen budgets or set an empty-list override.
+
+The fixture now owns every asynchronous Lane entry used here, including direct
+stub calls, inside callbacks, alarms and eviction. It stops new calls before
+joining registered work. Admitted RPCs can complete their internal Membership
+reads, while retired top-level continuations refuse. The opt-in sessionRoom
+lifetime delegates its sole finish hook to the archive fixture; default callers
+keep their existing automatic cleanup. Setup itself is registered before its
+first await, and its lifetime is captured before native creation so failed setup
+remains owned. Known dynamically discovered native handles join their existing
+callbacks without dispatching effects or advancing clocks.
+
+Cleanup has a separate nine-second settlement bound, below the maintained
+ten-second hook allowance, and finite task/callback frontiers (64 rounds,
+4,096 aggregate callbacks). It does not extend a hook, test or archive deadline. If settlement is
+incomplete, cleanup fails and retains the owner, clock and resources; it does
+not claim cancellation, transitive quiescence or safe successor execution. Rita
+is the same derive testing key object in both Lane and native repository
+fixtures, checked explicitly.
+
+The migration is uncompiled and unrun. Runtime fit, genuine per-act RPC cost,
+cleanup behavior and all affected publication/floor acceptance remain unproved.
+
+## Exact anchor consultation under the corrected policy
+
+Decision `a7d03336` withdraws both copy-count bounds. The existing manifest byte
+ceiling and the existing per-anchor metadata charges remain. The Git helpers
+retain their count argument for source compatibility, but no longer use it as
+an admission bound. Register and Membership kinds, exact identity, sorted
+scope/position order, unique positions, and exclusion of public journals remain.
+
+The writer's byte scanner collects candidate references from admitted local
+entries and selected foreign facts. It is not evidence that replay needed a
+candidate. With explicit published-anchor trust, each replay proof uses the
+list for the scope and range of the entry that needs the fact. An anchor from
+another pass or another scope cannot fill an omission. A cached anchored proof
+must make the same range check and mark its consultation again.
+
+The archive session registers each actual opened snapshot's range metadata
+before returning its page or retained input. This includes dependency journals
+opened while classifying a copy. Missing or unpublished coverage provides no
+fallback to the aggregate list. The added scope-map record pays metadata and
+input work on the same read budget; the existing per-anchor metadata pays for
+consultation marks. Generic explicit caller anchors retain their old semantics
+when published trust is absent. The portable verifier gains optional range
+policy metadata; its ordinary contract report categories do not change.
+
+After replay completes a range, a listed fact that no proof consulted refuses
+archive acceptance as `anchor-unneeded`. The result names its full fact, owning
+scope, immutable commit, range, and whether the range is legacy. Earlier replay
+failures remain earlier failures: an absent required anchor still reports
+`missing-dependency`. Integrity-only checking cannot establish this exactness
+and is not accepted with the published-trust option. No list is trusted by
+default, and no source or anchor is invented.
+
+Adaptive fit reserves a conservative publication count from actual selected
+copy count plus selected entry bytes divided by 128. These are the scanner's
+only producers: selected-copy full facts, full facts in local JSON, and
+`of`/`head` observation objects. Each local occurrence contains its own 55-byte
+scope ID, 29-byte incarnation, and 71-byte hash: at least 155 bytes before
+punctuation. Shared in-memory identities do not share serialized JSON bytes.
+The quote checks safe-integer arithmetic and reserves collection, ordering,
+classification, manifest, Mark, and transfer work at the existing rates. This
+can shorten passes unnecessarily; it makes no throughput or fit claim. Final
+paid collection determines the actual list. An entry that cannot fit alone
+produces no new Mark or floor permission; no budget grows.
+
+The new Replay witnesses use actual Git encoders/readers and derive-judged
+in-memory remarks. Their task code, Membership observations, and admitted
+selection are explicit test stand-ins, not Native source-authority proof. They
+cover a one-remark pass with zero foreign copies and explicit signer-head
+trust, unused Register refusal, a remarks-only legacy prefix, cached proof
+reuse across ranges, and a nested public dependency's own range and commit.
+The same legacy case also refuses an unused legacy anchor. The Git parser
+control now accepts a zero-copy list but still refuses the unchanged metadata
+limit. These sources and the combined Native migration remain unrun. Parser
+seals, owning compilers, small semantic witnesses, original large histories,
+the five-journal command, and the final gate still require root allocation.

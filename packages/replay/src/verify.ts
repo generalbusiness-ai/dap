@@ -68,6 +68,14 @@ export const LIMITS: Limits = { scopes: 64, entries: 100_000, bytes: 256 * 1024 
 /** A fact the caller says it trusts: one entry of a source scope, by position and hash (section 9.4). */
 export interface Anchor { scope: ScopeId; seq: number; hash: Digest }
 
+/** Archive-only exact-list accounting. Generic caller anchors keep their
+ * existing semantics when this optional policy is absent. */
+export interface PublishedAnchorPolicy {
+  readonly scope: ScopeId;
+  readonly commit: string;
+  readonly ranges: readonly { readonly from: number; readonly through: number; readonly anchors: readonly FactRef[]; readonly legacy?: true }[];
+}
+
 export interface Options {
   mode: Report["mode"];
   /** The target: the scope whose history is checked. */
@@ -76,6 +84,7 @@ export interface Options {
   head?: Head | undefined;
   /** Facts taken on trust. An anchor covers exactly the entry it names. */
   anchors?: readonly Anchor[] | undefined;
+  publishedAnchorPolicies?: ReadonlyMap<ScopeId, PublishedAnchorPolicy> | undefined;
   limits?: Partial<Limits> | undefined;
   /** The bounds the scopes run under. A replay scans every range guard to its end, whatever `guardScan` says (section 9.3). */
   bounds?: Bounds | undefined;
@@ -209,7 +218,12 @@ export interface Coded {
 export interface Tally { folds: number; values: number; states: number; runs: number; owed: number }
 
 /** A report, and in words why its result is not `consistent`. */
-export interface Verification { report: Report; why: string | null }
+export interface Verification {
+  report: Report; why: string | null;
+  /** Only completed ranges are eligible; the archive adapter reports the
+   * named unused fact as anchor-unneeded rather than changing Report. */
+  unusedPublishedAnchors?: readonly { readonly scope: ScopeId; readonly commit: string; readonly fact: FactRef; readonly from: number; readonly through: number; readonly legacy?: true }[];
+}
 
 /**
  * The target's history could not be read at all, so there is nothing to
@@ -403,6 +417,8 @@ class Verifier {
   readonly #target: ScopeId;
   readonly #expected: Head | null;
   readonly #anchors: readonly Anchor[];
+  readonly #publications: ReadonlyMap<ScopeId, PublishedAnchorPolicy> | undefined;
+  readonly #consulted = new Map<ScopeId, Map<PublishedAnchorPolicy["ranges"][number], Set<FactRef>>>();
   readonly #limits: Limits;
   readonly #bounds: Bounds;
   readonly #capabilities: Capabilities | undefined;
@@ -450,6 +466,7 @@ class Verifier {
     this.#target = options.scope;
     this.#expected = options.head ?? null;
     this.#anchors = options.anchors ?? [];
+    this.#publications = options.publishedAnchorPolicies;
     this.#limits = { ...LIMITS, ...options.limits };
     // Section 9.3: each range guard is derived over every item it covers, so the scan never stops unfinished.
     this.#bounds = { ...(options.bounds ?? PROPOSED_BOUNDS), guardScan: Number.MAX_SAFE_INTEGER };
@@ -687,7 +704,13 @@ class Verifier {
       ...(stop?.at ? { at: stop.at } : {}),
       ...(stop ? nameOf(stop) : {}),
     };
-    return { report, why: stop ? stop.why : null };
+    const unused = !stop && this.#mode === "replay" ? [...(this.#publications?.values() ?? [])].flatMap(publication => publication.ranges.flatMap(range => {
+      if (range.through > (this.#runs.get(publication.scope)?.sealed.length ?? 0) - 1) return [];
+      const used = this.#consulted.get(publication.scope)?.get(range);
+      return range.anchors.filter(fact => !used?.has(fact)).map(fact => ({ scope: publication.scope, commit: publication.commit, fact, from: range.from, through: range.through,
+        ...(range.legacy ? { legacy: true as const } : {}) }));
+    })) : undefined;
+    return { report, why: stop ? stop.why : null, ...(unused?.length ? { unusedPublishedAnchors: unused } : {}) };
   }
 
   // ---------------------------------------------------------------- reading
@@ -1067,16 +1090,38 @@ class Verifier {
    * that entry, or by replay of the source scope up to it. `user` is the
    * entry that used the fact.
    */
+  #anchor(fact: FactRef, user: FactRef): boolean {
+    if (!this.#anchors.some(a => a.scope === fact.at.scope && a.seq === fact.seq && a.hash === fact.hash)) return false;
+    if (!this.#publications) return true;
+    const publication = this.#publications.get(user.at.scope);
+    // A newly opened dependency's validated metadata must be registered
+    // before its first proof. Missing publication never grants fallback
+    // to another scope's aggregate caller word.
+    if (!publication) return false;
+    const ranges = publication.ranges.filter(range => user.seq >= range.from && user.seq <= range.through);
+    const matches = ranges.map(range => range.anchors.find(a => a.seq === fact.seq && a.hash === fact.hash && sameScope(a.at, fact.at)));
+    if (!ranges.length || matches.some(anchor => !anchor)) return false;
+    let scope = this.#consulted.get(user.at.scope);
+    if (!scope) { scope = new Map(); this.#consulted.set(user.at.scope, scope); }
+    for (let i = 0; i < ranges.length; i++) {
+      const range = ranges[i]!, anchor = matches[i]!;
+      let used = scope.get(range);
+      if (!used) { used = new Set(); scope.set(range, used); }
+      used.add(anchor);
+    }
+    return true;
+  }
+
   async #prove(fact: FactRef, user: FactRef, depth: number): Promise<"replayed" | "anchored"> {
     const key = `${fact.at.scope}:${fact.seq}:${fact.hash}`;
     const known = this.#proven.get(key);
     const run = this.#runs.get(fact.at.scope);
-    if (known && (known === "anchored" || (run?.at && sameScope(run.at, fact.at)))) {
+    if (known && (known === "anchored" ? this.#anchor(fact, user) : run?.at && sameScope(run.at, fact.at))) {
       if (known === "replayed") this.#depend(fact.at.scope, fact.seq, user);
       return known;
     }
 
-    if (this.#anchors.some((a) => a.scope === fact.at.scope && a.seq === fact.seq && a.hash === fact.hash)) {
+    if (this.#anchor(fact, user)) {
       this.#proven.set(key, "anchored");
       this.#anchored.push(fact);
       this.#trusts.add("anchors");
@@ -1090,7 +1135,10 @@ class Verifier {
       // An unused anchor does not constrain a readable, replayable history.
       // When that history is absent, distinguish a conflicting caller hash
       // at the required position from having no anchor for the position.
-      const conflict = this.#anchors.find(anchor => anchor.scope === fact.at.scope && anchor.seq === fact.seq);
+      const eligible = this.#publications
+        ? (this.#publications.get(user.at.scope)?.ranges ?? []).filter(range => user.seq >= range.from && user.seq <= range.through).flatMap(range => range.anchors.map(anchor => ({ scope: anchor.at.scope, seq: anchor.seq, hash: anchor.hash })))
+        : this.#anchors;
+      const conflict = eligible.find(anchor => anchor.scope === fact.at.scope && anchor.seq === fact.seq);
       if (conflict) throw new Stop("mismatch", `the caller's anchor for entry ${fact.seq} of ${fact.at.scope} names hash ${conflict.hash}, but the required reference names ${fact.hash}`, user);
       throw new Stop("missing-dependency", `the history of the source scope ${fact.at.scope} cannot be read, and no anchor names its entry ${fact.seq}`, user, fact);
     }

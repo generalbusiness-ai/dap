@@ -89,7 +89,9 @@ export async function planLegacyArchiveAnchors(sql: Sql, context: { readonly row
   if (!old || old.layout !== 2 || old.anchorsPublished === true) return undefined;
   if (!context.parent || context.parent.id !== old.commit || old.through.seq + 1 > ARCHIVE_BOUNDS.entries) return budget.stop("limit");
   const through = { ...old.through }, at = { ...context.row.at };
-  const copies = await journalLegacyCopyCount({ format: context.row.format, at, through, parent: context.parent, budget });
+  // Retain the complete receipt-bound parent/range validation. Its copy
+  // count no longer bounds a signer's authority or an observation head.
+  await journalLegacyCopyCount({ format: context.row.format, at, through, parent: context.parent, budget });
   if (context.prepareSources) for (let seq = 0; seq <= through.seq; seq++) await context.prepareSources(seq, budget);
   const selected = inventoryArchiveRoot(sql, at, through, context.bounds, context.policies, budget, context.fixtureSources);
   if (!selected.ok) throw new ArchiveStopped(selected.reason === "limit" || selected.reason === "timeout" ? selected.reason : "unavailable");
@@ -104,7 +106,6 @@ export async function planLegacyArchiveAnchors(sql: Sql, context: { readonly row
   const collected = replay.finish(true);
   if (!collected.ok) throw new ArchiveStopped(collected.reason === "limit" || collected.reason === "timeout" ? collected.reason : "unavailable");
   const anchors = collected.anchors ?? [];
-  if (anchors.length > copies || anchors.length > journalAnchorCopyCount(inventory.objects, new JournalWork(budget))) return budget.stop("limit");
   return Object.freeze({ from: 0, through: through.seq, anchors });
 }
 

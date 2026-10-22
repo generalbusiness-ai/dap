@@ -13,7 +13,7 @@ import { archiveSegments, archiveShards } from "./journal-segments.ts";
 import { JOURNAL_SELECTION_BYTES, sameJournalScope, type JournalForeignSource } from "./journal-selection.ts";
 import { JournalLayoutRefusal, JournalWork, type JournalBudget } from "./journal-work.ts";
 import type { JournalTextOmission } from "./journal-v2-manifest.ts";
-import type { JournalAnchorCoverage } from "./journal-anchors.ts";
+import type { JournalAnchorCoverage, JournalAnchorRange } from "./journal-anchors.ts";
 export { readJournalRepositoryArchive } from "./journal-reader-any.ts";
 export { readJournalArchiveV2, type JournalV2ReadOptions } from "./journal-v2-reader.ts";
 
@@ -48,6 +48,7 @@ export interface ReadJournal {
   readonly omittedTexts?: readonly JournalTextOmission[];
   /** Validated published caller-word facts. No automatic trust is granted. */
   readonly publishedAnchors?: readonly FactRef[];
+  readonly anchorRanges?: readonly JournalAnchorRange[];
   readonly anchorCoverage?: JournalAnchorCoverage;
 }
 export type JournalReadResult = { readonly ok: true; readonly archive: ReadJournal } | JournalReadFailure;

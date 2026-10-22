@@ -7,7 +7,7 @@
 import { env } from "cloudflare:workers";
 import { evictDurableObject, runDurableObjectAlarm, runInDurableObject } from "cloudflare:test";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Answer, Bounds, Entry, Grant, Head, Intent, Read, Receipt, ScopeId, ScopeRef, Seed, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
+import type { Answer, Bounds, Entry, Grant, Head, Intent, MemberRef, Read, Receipt, ScopeId, ScopeRef, Seed, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
 import { intentDigest, scopeIdOf, signIntent } from "@generalbusiness/artroom-bytes";
 import { timeMs, timeOf, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { grantOf, keys, lane, variant, type Actor, type Over } from "@generalbusiness/dap-derive/testing";
@@ -43,8 +43,8 @@ const actions = Object.values(definition.declared.acts).map((a) => a.grant);
 export const reader = "a test reader";
 
 /** A creation intent signed by rita, the seed it asks for, and the name of the object that holds that scope. `under`: the definition, when it is not the one above. */
-export function creation(notAfter: Timestamp = at(60), under: ValidDefinition = definition): { signed: SignedIntent; seed: Seed; name: ScopeId } {
-  const intent: Intent = { v: 1, to: null, actor: rita.key, kind: "found", on: null, expected: {}, fields: { title: "A lane", opener: rita.member }, idempotencyKey: crypto.randomUUID(), notAfter };
+export function creation(notAfter: Timestamp = at(60), under: ValidDefinition = definition, opener: MemberRef = rita.member): { signed: SignedIntent; seed: Seed; name: ScopeId } {
+  const intent: Intent = { v: 1, to: null, actor: rita.key, kind: "found", on: null, expected: {}, fields: { title: "A lane", opener }, idempotencyKey: crypto.randomUUID(), notAfter };
   const seed: Seed = { v: 1, kind: "directory", definition: under.digest, creator: null, cause: intentDigest(intent), ordinal: 0 };
   return { signed: signIntent(intent, rita.secret), seed, name: scopeIdOf(seed) };
 }
@@ -133,9 +133,10 @@ export class Lane {
 }
 
 /** Create a scope on real storage, with its clock at the start. `bounds` and `reads` replace the defaults for this scope only. `under`: a variant of the definition above, with the same grants. */
-export async function create(bounds: Partial<Bounds> = {}, reads: Partial<ReadBounds> = {}, under: ValidDefinition = definition): Promise<Lane> {
-  const { signed, name } = creation(at(60), under);
+export async function create(bounds: Partial<Bounds> = {}, reads: Partial<ReadBounds> = {}, under: ValidDefinition = definition, native?: { opener: MemberRef; clock: Controls["clock"] }): Promise<Lane> {
+  const { signed, name } = creation(native ? timeOf(timeMs(native.clock.now)! + 60_000) : at(60), under, native?.opener);
   const c = controls(name, START);
+  if (native) c.clock = native.clock;
   c.bounds = { ...PROPOSED_BOUNDS, ...bounds };
   c.reads = { ...READ_BOUNDS, ...reads };
   const answer = await stubOf(name).create(signed, under.declared);

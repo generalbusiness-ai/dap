@@ -1,18 +1,23 @@
+/** Archive fixture authority uses genuine Native Membership8 observations.
+ * Its seat/key/role and source-birth preparation are external fixture setup;
+ * each pass still pays its existing pin lookups and original complete ledger.
+ * Inline Lane policy, clock and host/token/repository remain TEST fixtures. */
 /** Real native one-entry archive scale witness. The production driver and
- * incremental send run over the fixture's scripted host, grants and policy. */
+ * incremental send run over the fixture's scripted host and inline policy; Native Membership8 supplies authority. */
 import { expect, test } from "vitest";
 import { canonicalize, digestBytes, utf8 } from "@generalbusiness/artroom-bytes";
 import { idOf, parseCommit, parseTree } from "@generalbusiness/artroom-git";
 import { journalV2PassPath, journalV2RetainedPath, journalV2SegmentPath, type JournalPassArchive } from "@generalbusiness/artroom-git/journal";
 import { variant } from "@generalbusiness/dap-derive/testing";
 import { readJournalRepositoryArchive } from "@generalbusiness/artroom-git/journal-reader";
-import { archiveSource, verifyArchive } from "@generalbusiness/artroom-replay";
+import { archiveSource, verifyArchive, TRUSTS } from "@generalbusiness/artroom-replay";
 import { ARCHIVE_BOUNDS, ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
 import type { ArchivePolicyRegistry } from "../src/archive-inventory.ts";
 import { ArchivePrefixStopped } from "../src/archive-prefix.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
 import type { Sql, SqlValue } from "../src/sqlite.ts";
-import { create, rita } from "./fixtures-native.ts";
+import { rita } from "./fixtures-native.ts";
+import { createNativeArchiveLane, archiveAuthorityAnchors } from "./support/archive-native-authority.ts";
 import { archiveDefinition, archivePolicies, archiveRepository, archiveSql } from "./support/archive.ts";
 import { driver, ScriptedHost } from "./support/archive-driver.ts";
 
@@ -27,7 +32,7 @@ test("the Native driver confirms ten thousand one-entry passes and preserves ret
   });
   const original = archivePolicies.get(archiveDefinition.digest)!, policies: ArchivePolicyRegistry = new Map([[declared.digest,
     { ...original, support: { ...original.support, named: declared.digest, definition: declared } }]]);
-  const lane = await create({}, {}, declared), host = new ScriptedHost("sha1"), started = performance.now();
+  const lane = await createNativeArchiveLane({}, {}, declared), host = new ScriptedHost("sha1"), started = performance.now();
   let old!: { digest: `sha256:${string}`; bytes: string };
   const fields = (n: number) => ({ text: `actual retained rule input ${n}` });
   for (let seq = 1; seq < 10_000; seq++) {
@@ -87,13 +92,17 @@ test("the Native driver confirms ten thousand one-entry passes and preserves ret
     format: async () => "sha1", resolve: async () => host.pointer,
     object: async (id, limit) => { const object = host.data.get(id); return object ? { type: object.type, size: object.data.length, data: object.data.length <= limit ? object.data : null } : null; },
   }, scope, work) });
-  const verified = await verifyArchive(source, { mode: "replay", scope: lane.at.scope, head: later, grants: "as-recorded" });
-  expect(verified).toMatchObject({ kind: "verification", verification: { report: { result: "consistent", anchors: [] } } });
+  // Explicit caller words from actual Membership reads, independent of
+  // archive output. This does not export the private authority journal.
+  const anchors = archiveAuthorityAnchors(lane); expect(anchors.length).toBeGreaterThan(0);
+  const verified = await verifyArchive(source, { mode: "replay", scope: lane.at.scope, head: later, grants: "as-recorded",
+    anchors: anchors.map(fact => ({ scope: fact.at.scope, seq: fact.seq, hash: fact.hash })) });
+  expect(verified).toMatchObject({ kind: "verification", verification: { report: { result: "consistent", anchors, trusts: expect.arrayContaining([TRUSTS.anchors, TRUSTS.observed]) } } });
   expect(await lane.head()).toEqual(later);
   (context.task.meta as Record<string, unknown>)["nativeOneEntryScale"] = { confirmedPasses: host.sends.length, retainedRuleInputs: retained, samples, maximum,
     extra: extra.cost, pass3700: { digest: old.digest, blob: oldBlob, outgoingAgain: extraObjects.includes(oldBlob), pass: 3700 },
     elapsedSeconds: (performance.now() - started) / 1000, exactParentReads: host.objectReads.length,
-    qualification: "Actual Native signed acts and real rule evaluation, SQLite retention, 10000 confirmed one-entry passes plus one and eviction at3700. Each pass has one original30s ledger; trusted entry cap lowered to2 for scout1+fresh1, all other original caps unchanged. Production SHA1 incremental send copy/hash/validator/pack uses scripted HTTP/token/repository; policy/source/authority are TEST fixtures. Receipt inspections are separate test observations, no archive phase reset. 9999 distinct actual Native rule inputs; extra repeats the3700 rule input without resending its blob; unreferenced negative row remains unconfirmed. Offline current-tree clone/replay is separate; no real Git clone, external provider, deployed custody or cadence claim." };
+    qualification: "Actual Native signed acts and real rule evaluation, SQLite retention, 10000 confirmed one-entry passes plus one and eviction at3700. Each pass has one original30s ledger; trusted entry cap lowered to2 for scout1+fresh1, all other original caps unchanged. Production SHA1 incremental send copy/hash/validator/pack uses scripted HTTP/token/repository; Lane policy and source setup are TEST fixtures; authority is genuine Native Membership8 with external setup cost. Receipt inspections are separate test observations, no archive phase reset. 9999 distinct actual Native rule inputs; extra repeats the3700 rule input without resending its blob; unreferenced negative row remains unconfirmed. Offline current-tree clone/replay is separate; no real Git clone, external provider, deployed custody or cadence claim." };
   // Continue the same Native history with the unchanged default ledger. These
   // are distinct signed acts, not inserted retained rows or a lowered cap.
   const submit = async (seq: number, input = fields(seq)) => {

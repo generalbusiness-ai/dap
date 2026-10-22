@@ -1,3 +1,7 @@
+/** Archive fixture authority uses genuine Native Membership8 observations.
+ * Its seat/key/role and source-birth preparation are external fixture setup;
+ * each pass still pays its existing pin lookups and original complete ledger.
+ * Inline Lane policy, clock and host/token/repository remain TEST fixtures. */
 /** Real Native inputs, SQLite and writer confirmation; repository and
  * authority are the existing explicit test-host stand-ins. No hosted claim. */
 import { env, runInDurableObject } from "cloudflare:test";
@@ -20,9 +24,10 @@ import { archiveInput } from "../src/archive-input.ts";
 import { inventoryArchive } from "../src/archive-inventory.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
 import { SqliteStore, type Sql } from "../src/sqlite.ts";
-import { at, create } from "./fixtures-native.ts";
+import { at } from "./fixtures-native.ts";
 import { archiveDefinition, archivePolicies, archiveRepository, archiveSql } from "./support/archive.ts";
 import { ScriptedArchiveHost } from "./support/archive-provider.ts";
+import { createNativeArchiveLane, archiveAuthorityBasis, archiveAuthorityPolicies, archiveAuthorityAnchors } from "./support/archive-native-authority.ts";
 import { fixtureArchiveWiring } from "./worker.ts";
 import { sessionRoom } from "./support/session-room.ts";
 import type {} from "./support/maintained-applications.ts";
@@ -30,7 +35,7 @@ import type {} from "./support/maintained-applications.ts";
 // An old receipt cannot authorize deletion. Only a real new writer's
 // whole-held-prefix publication earns coverage and enables the floor.
 test("Native legacy archive receipt blocks the floor until a real backfill pass confirms", async () => {
-  const lane = await create({}, {}, archiveDefinition);
+  const lane = await createNativeArchiveLane({}, {}, archiveDefinition);
   for (let n = 0; n < 8; n++) expect((await lane.submit(lane.remark(`old publication input ${n}`))).answer).toBe("accepted");
   const through = await lane.head();
   const legacy = await lane.inside(async state => {
@@ -56,7 +61,7 @@ test("Native legacy archive receipt blocks the floor until a real backfill pass 
   host.pointer = legacy.commit;
   await lane.inside(async state => {
     const sql = archiveSql(state), row = new ArchiveRows(sql, lane.at).load()!;
-    await expect(planLegacyArchiveAnchors(sql, { row, bounds: lane.c.bounds, policies: archivePolicies,
+    await expect(planLegacyArchiveAnchors(sql, { row, bounds: lane.c.bounds, policies: archiveAuthorityPolicies(lane), fixtureSources: archiveAuthorityBasis(lane)!.pins,
       parent: { id: legacy.commit, source: { object: async (id, limit) => {
         const object = host.data.get(id);
         return object ? { type: object.type, size: object.data.length, data: object.data.length <= limit ? object.data : null } : null;
@@ -66,7 +71,7 @@ test("Native legacy archive receipt blocks the floor until a real backfill pass 
   });
   const policies = new Map([...archivePolicies].map(([pin, policy]) => [pin, { ...policy,
     entryTypes: new Set([...policy.entryTypes, "floor" as const]), floor: { margin: 1, minimum: 1 } }]));
-  fixtureArchiveWiring.set(lane.name, { policies: { fixture: "archive-policies", registry: policies },
+  fixtureArchiveWiring.set(lane.name, { fixtureSources: archiveAuthorityBasis(lane)!.pins, policies: { fixture: "archive-policies", registry: archiveAuthorityPolicies(lane, policies) },
     target: { fixture: "archive-target", resolve: async () => archiveRepository }, provider: host });
   onTestFinished(() => { fixtureArchiveWiring.delete(lane.name); });
   await lane.restart(); lane.c.clock.now = at(1000);
@@ -93,7 +98,8 @@ test("Native legacy archive receipt blocks the floor until a real backfill pass 
   const publication = [...host.data.values()].filter(object => object.type === "blob")
     .map(object => new TextDecoder().decode(object.data)).find(bytes => bytes.includes('"legacyAnchors"'));
   expect(publication).toBeDefined();
-  expect(JSON.parse(publication!)).toMatchObject({ anchors: [], legacyAnchors: { from: 0, through: through.seq, anchors: [] } });
+  const expectedAnchors = archiveAuthorityAnchors(lane); expect(expectedAnchors.length).toBeGreaterThan(0);
+  expect(JSON.parse(publication!)).toMatchObject({ anchors: expectedAnchors, legacyAnchors: { from: 0, through: through.seq, anchors: expectedAnchors } });
   await lane.restart();
   expect(await lane.inside(state => new ArchiveRows(archiveSql(state), lane.at).load()?.confirmed)).toEqual(observed.confirmed);
 }, 30_000);
@@ -222,16 +228,16 @@ test("Native admitted Register17 fact publishes nonempty anchors and rebuilds th
 }, 30_000);
 
 test("Native published Mark rebuilds its exact bytes after a later turn and eviction", async () => {
-  const lane = await create({}, {}, archiveDefinition);
+  const lane = await createNativeArchiveLane({}, {}, archiveDefinition);
   expect((await lane.submit(lane.remark("marked publication input"))).answer).toBe("accepted");
   const through = await lane.head();
   const planned = await lane.inside(async state => {
     const sql = archiveSql(state), budget = new ArchiveBudget();
     const result = await planPublishedArchivePass(sql, { at: lane.at, through, after: null, bounds: lane.c.bounds,
-      policies: archivePolicies, format: "sha1", parent: null, markedAt: lane.c.clock.now }, budget);
+      policies: archiveAuthorityPolicies(lane), fixtureSources: archiveAuthorityBasis(lane)!.pins, format: "sha1", parent: null, markedAt: lane.c.clock.now }, budget);
     if (!result.ok) throw Error(canonicalize(result));
     expect(result.archive.cost).toEqual(budget.admitted());
-    expect(result.archive.manifest.anchors).toEqual([]);
+    expect(result.archive.manifest.anchors).toEqual(archiveAuthorityAnchors(lane));
     const rows = new ArchiveRows(sql, lane.at); rows.target(archiveRepository, "sha1");
     // A caller cannot set the confirmation flag on a Mark.
     expect(() => rows.mark({ ...result.mark, anchorsPublished: true } as typeof result.mark)).toThrow("archive-row-unavailable");
@@ -247,7 +253,7 @@ test("Native published Mark rebuilds its exact bytes after a later turn and evic
       if (/\bFROM entry\b/.test(query)) expect([0, 1]).toContain(args[0]);
       return sql.exec(query, ...args);
     } };
-    const result = await rebuildArchivePass(exact, row, null, new ArchiveBudget());
+    const result = await rebuildArchivePass(exact, row, null, new ArchiveBudget(), archiveAuthorityBasis(lane)!.pins);
     expect(row.pending?.anchorPublication).toBe(planned.mark.anchorPublication);
     expect(row.pending?.replayScopes).toEqual([lane.at]);
     if (result.ok) expect(rows.confirm(result.archive.commit).confirmed).toMatchObject({ anchorsPublished: true, through });

@@ -24,6 +24,7 @@ import { ArchiveRows } from "../src/archive-row.ts";
 import type { FixtureArchiveProvider } from "../src/archive-driver.ts";
 import { archiveRepository, archiveSql } from "./support/archive.ts";
 import { fixtureArchiveWiring } from "./worker.ts";
+import { nativeArchiveFixture, archiveAuthorityBasis, archiveAuthorityPolicies } from "./support/archive-native-authority.ts";
 import { sessionRoom } from "./support/session-room.ts";
 import { namespace } from "../src/namespace.ts";
 import { ArchiveForeignMetadata, type ArchiveForeignRecordedScan, type ArchiveForeignExpectedCopy } from "../src/archive-foreign.ts";
@@ -44,8 +45,12 @@ const receiver = variant(definition.declared, data => {
 });
 const policy = (def: typeof definition, entryTypes = variants): ReviewedArchivePolicy => ({ review: "TEST reviewed inline classes; no production certificate",
   entryTypes, support: { named: def.digest, definition: def, owners: new Map(), records: new Map(), preparations: new Map() } });
-async function fixture(repeatUse = false) {
-  const producer = await create(), consumer = await create({}, {}, receiver);
+async function fixture(repeatUse = false, nativeAuthority = false) {
+  // Only the published alarm opts in; legacy inventory/cost controls retain
+  // their original TEST authority and exact literal work measurements.
+  const native = nativeAuthority ? await nativeArchiveFixture() : null;
+  const producer = native ? await native.create({}, {}, definition) : await create();
+  const consumer = native ? await native.create({}, {}, receiver) : await create({}, {}, receiver);
   const commitment = await producer.commitment(), assigned = (await producer.sealed()).find(sealed => sealed.entry.seq > commitment && sealed.entry.input.type === "act" && sealed.entry.input.signed.intent.kind === "assign")!;
   expect(assigned).toBeDefined();
   // The simple create fixture normally has a SCRIPTED foreign resolver.
@@ -60,8 +65,12 @@ async function fixture(repeatUse = false) {
   const birth = await producer.stub.entry(reader, 0); expect(birth.ok).toBe(true); if (!birth.ok) return expect.fail("native birth read required");
   const entries = await consumer.sealed(), uses = entries.flatMap(sealed => sealed.entry.uses);
   expect(uses).toHaveLength(repeatUse ? 3 : 2);
-  const sources = new FixtureArchiveSourcePins([{ at: producer.at, birth: { bytes: canonicalize(birth.value.entry), hash: birth.value.hash }, declaration: canonicalize(definition.declared) }], PROPOSED_BOUNDS, new ArchiveBudget());
-  const policies: ArchivePolicyRegistry = new Map([[receiver.digest, policy(receiver)], [definition.digest, policy(definition)]]);
+  const producerSource = { at: producer.at, birth: { bytes: canonicalize(birth.value.entry), hash: birth.value.hash }, declaration: canonicalize(definition.declared) };
+  const authority = archiveAuthorityBasis(consumer);
+  const sources = authority?.pins ?? new FixtureArchiveSourcePins([producerSource], PROPOSED_BOUNDS, new ArchiveBudget());
+  // Additional genuine source preparation is fixture setup, separately paid.
+  if (authority) sources.include([producerSource], PROPOSED_BOUNDS, new ArchiveBudget());
+  const policies: ArchivePolicyRegistry = archiveAuthorityPolicies(consumer, new Map([[receiver.digest, policy(receiver)], [definition.digest, policy(definition)]]));
   const through = await consumer.head();
   const scan = (pins = sources, reviewed = policies) => consumer.inside(state => {
     const forbidden: string[] = [], queries: string[] = [], budget = new ArchiveBudget();
@@ -539,7 +548,7 @@ test.each(["sha1", "sha256"] as const)("foreign copies retain their source basis
 });
 
 test("native alarm stops a marked foreign archive after source configuration disappears without another mint", async () => {
-  const f = await fixture(); let mints = 0, sends = 0;
+  const f = await fixture(false, true); let mints = 0, sends = 0;
   // Explicit TEST host/credential stand-in. The native alarm and persisted
   // archive row are real; no provider adapter or outside send runs.
   const provider: FixtureArchiveProvider = { fixture: "archive-provider", format: async () => "sha1", ref: async () => null, objects: async () => [],

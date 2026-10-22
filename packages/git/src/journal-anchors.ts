@@ -1,7 +1,7 @@
 /** Published caller-word facts, never source proof or automatic replay trust.
  * Only an integrity-bound v2 pass can publish these descriptive lists. */
 import type { FactRef, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isFactRef, isRecord, natural } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isFactRef, isRecord } from "@generalbusiness/artroom-bytes";
 import { JOURNAL_SELECTION_BYTES } from "./journal-selection-cost.ts";
 import { JournalWork, refuseJournal } from "./journal-work.ts";
 import type { JournalPassManifest } from "./journal-v2-manifest.ts";
@@ -14,6 +14,14 @@ export interface JournalLegacyAnchors {
 export interface JournalAnchorPublication {
   readonly anchors: readonly FactRef[];
   readonly legacyAnchors?: JournalLegacyAnchors;
+}
+/** Keep each list's range: aggregate caller trust cannot establish that a
+ * different pass actually needed the same fact. */
+export interface JournalAnchorRange {
+  readonly from: number;
+  readonly through: number;
+  readonly anchors: readonly FactRef[];
+  readonly legacy?: true;
 }
 /** Full fixed-width identities plus punctuation, including the optional
  * range. This is charged metadata, not an increased manifest allowance. */
@@ -39,9 +47,10 @@ function record(value: unknown, fields: readonly string[]): Record<string, unkno
 
 /** Check canonical order without silently sorting or removing duplicates.
  * A scope/position is unique even if another hash/incarnation is supplied. */
-export function journalAnchors(value: unknown, copies: number, work: JournalWork, archived: readonly ScopeRef[] = []): readonly FactRef[] {
-  if (!natural(copies) || !Array.isArray(value)) return refuseJournal("manifest");
-  if (value.length > copies) return work.stop();
+export function journalAnchors(value: unknown, _copies: number, work: JournalWork, archived: readonly ScopeRef[] = []): readonly FactRef[] {
+  // The compatibility argument is deliberately not a count bound. Lists
+  // are inside the unchanged manifest byte cap and pay metadata per fact.
+  if (!Array.isArray(value)) return refuseJournal("manifest");
   const rows = value;
   work.metadata(rows.length * 512);
   const result: FactRef[] = [];
@@ -59,8 +68,7 @@ export function journalAnchors(value: unknown, copies: number, work: JournalWork
   return Object.freeze(result);
 }
 
-/** The byte cap already bounds the parsed list. The complete reader later
- * checks the exact aggregate copy bound against the covered earlier passes. */
+/** The unchanged byte cap and per-anchor metadata bound this list too. */
 export function journalLegacyAnchors(value: unknown, first: number, work: JournalWork, archived: readonly ScopeRef[] = []): JournalLegacyAnchors {
   const row = record(value, ["from", "through", "anchors"]);
   if (first === 0 || row["from"] !== 0 || row["through"] !== first - 1) return refuseJournal("manifest", "legacy anchor range");
@@ -76,12 +84,13 @@ export function journalAnchorPublication(value: unknown, copies: number, first: 
 /** Coverage concerns publication in this immutable snapshot only. Missing
  * old fields remain visible; this function never reconstructs their lists. */
 export function readJournalAnchorPublication(passes: readonly JournalPassManifest[], archived: readonly ScopeRef[], commit: string, work: JournalWork):
-  { readonly publishedAnchors: readonly FactRef[]; readonly anchorCoverage: JournalAnchorCoverage } {
+  { readonly publishedAnchors: readonly FactRef[]; readonly anchorRanges: readonly JournalAnchorRange[]; readonly anchorCoverage: JournalAnchorCoverage } {
   const published = new Map<string, FactRef>();
+  const ranges: JournalAnchorRange[] = [];
   const legacy: JournalAnchorCoverage["legacy"][number][] = [];
-  let previousCopies = 0, legacyThrough = -1;
-  const add = (facts: readonly FactRef[], copies: number) => {
-    const checked = journalAnchors(facts, copies, work, archived);
+  let legacyThrough = -1;
+  const add = (facts: readonly FactRef[]) => {
+    const checked = journalAnchors(facts, 0, work, archived);
     for (const fact of checked) {
       work.metadata(128); work.input(1024);
       const key = canonicalize([fact.at, fact.seq]), prior = published.get(key);
@@ -91,17 +100,18 @@ export function readJournalAnchorPublication(passes: readonly JournalPassManifes
   };
   for (const pass of passes) {
     work.metadata(128);
-    const copies = journalAnchorCopyCount(pass.retained, work);
-    if (pass.anchors !== undefined) add(pass.anchors, copies);
+    if (pass.anchors !== undefined) {
+      add(pass.anchors);
+      ranges.push(Object.freeze({ from: pass.entries[0], through: pass.through.seq, anchors: pass.anchors }));
+    }
     if (pass.legacyAnchors) {
       const covered = pass.legacyAnchors;
       if (covered.from !== 0 || covered.through !== pass.entries[0] - 1 || pass.anchors === undefined) return refuseJournal("manifest", "legacy anchor range");
-      add(covered.anchors, previousCopies);
+      add(covered.anchors);
+      ranges.push(Object.freeze({ from: covered.from, through: covered.through, anchors: covered.anchors, legacy: true }));
       legacyThrough = Math.max(legacyThrough, covered.through);
       legacy.push(Object.freeze({ pass: pass.entries[0], commit, from: covered.from, through: covered.through }));
     }
-    previousCopies += copies;
-    if (!natural(previousCopies)) return refuseJournal("manifest");
   }
   const unpublished: JournalAnchorCoverage["unpublished"][number][] = [];
   for (const pass of passes) {
@@ -115,6 +125,6 @@ export function readJournalAnchorPublication(passes: readonly JournalPassManifes
   work.input(published.size * 1024 * (Math.ceil(Math.log2(published.size + 1)) + 1));
   const anchors = [...published.values()].sort((a, b) => a.at.scope < b.at.scope ? -1 : a.at.scope > b.at.scope ? 1 : a.seq - b.seq
     || (a.at.inc < b.at.inc ? -1 : a.at.inc > b.at.inc ? 1 : a.at.kind < b.at.kind ? -1 : a.at.kind > b.at.kind ? 1 : 0));
-  return Object.freeze({ publishedAnchors: Object.freeze(anchors), anchorCoverage: Object.freeze({ covered: unpublished.length === 0,
+  return Object.freeze({ publishedAnchors: Object.freeze(anchors), anchorRanges: Object.freeze(ranges), anchorCoverage: Object.freeze({ covered: unpublished.length === 0,
     unpublished: Object.freeze(unpublished), legacy: Object.freeze(legacy) }) });
 }
