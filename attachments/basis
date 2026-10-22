@@ -1,0 +1,1 @@
+packages/scope/src/{scope-index.ts,object.ts,worker.ts,applications/route.ts}; test/{worker.ts,support/session-room.ts,application-host-route.test.ts}; apps/room/fetch.ts at386ef9
