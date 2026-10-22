@@ -439,3 +439,28 @@ result is claimed. The next checks need only the affected Scope test compiler
 and complete 13-case driver file; the unchanged publication file is not
 repeated. Production, large histories, command/clone and final gate remain
 separate obligations.
+
+At `94a3e818`, Owner 90521 and its child naturally exited 1 without a
+signal; full guards stayed stable. The affected Scope test compiler and the
+first five driver cases passed, including the repaired 16-turn continuation.
+The sixth case stopped at its first candidate under its fixture-only 40 MiB
+input cap. Its finish quote was 27,350,962 input units, with 15,984,181 already
+spent: 43,335,143 exceeds 41,943,040 by 1,392,103. There was no selected earlier
+prefix for a finish reserve to protect. Final spent work was 22,333,401;
+that later total does not establish overspending. The remaining seven cases
+had no completed acceptance after bail. Inclusive elapsed, user and system
+times were 9.939571, 11.716492 and 2.103486 seconds. Original reports remain
+unchanged.
+
+The adaptive witness now uses `ArchiveBudget`'s unchanged production limits,
+including 64 MiB input work. This removes the reduced fixture cap; it does
+not change a product limit or select a new allowance to fit this result.
+The 300 genuine checkpoints, two passes, first-prefix bound below 128,
+second prefix below the native head, incremental append, no closure reread
+and original deadline remain. A bounded observer delegates each synchronous
+lookahead to the original method once and returns its result unchanged. It
+retains at most eight scalar records per budget, only under a positive
+finish reserve. Each confirmed pass must show charged work on a later
+discarded position or a limited lookahead, and all six final work axes must
+remain within their original caps. No repaired result is claimed before a
+separately allocated compiler and full driver-file run.

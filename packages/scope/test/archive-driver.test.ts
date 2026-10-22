@@ -11,7 +11,7 @@ import { canonicalize, timeOf } from "@generalbusiness/artroom-bytes";
 import { journalRef } from "@generalbusiness/artroom-git/journal";
 import { readJournalRepositoryArchive } from "@generalbusiness/artroom-git/journal-reader";
 import { archiveSource, verifyArchive, TRUSTS } from "@generalbusiness/artroom-replay";
-import { ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
+import { ARCHIVE_BOUNDS, ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
 import { driver, ScriptedHost } from "./support/archive-driver.ts";
 import type { ArchivePolicyRegistry } from "../src/archive-inventory.ts";
 import { archiveHostGate as gate } from "./support/archive-provider.ts";
@@ -121,10 +121,32 @@ test("adaptive Native passes reserve writing, incremental sending and confirmati
   await lane.inside(async (_state, instance) => {
     for (let n = 0; n < 300; n++) expect(await (instance as TestScope).checkpoint()).toMatchObject({ answer: "written" });
   });
-  const head = await lane.head(), budgets: ArchiveBudget[] = [], maximum = 40 * 1024 * 1024;
+  const head = await lane.head(), budgets: ArchiveBudget[] = [], maximum = ARCHIVE_BOUNDS.inputWork;
   const quotes: { cost: Partial<ArchiveCost>; spent: ArchiveCost }[] = [];
+  const lookaheads: { kind: "position" | "limited"; seq: number | null; reserve: Partial<ArchiveCost>; before: ArchiveCost; after: ArchiveCost }[][] = [];
   const makeBudget = () => {
-    const budget = new ArchiveBudget({ inputWork: maximum }), canSpend = budget.canSpend.bind(budget);
+    const observed: (typeof lookaheads)[number] = []; lookaheads.push(observed);
+    const budget = new class extends ArchiveBudget {
+      override lookahead<T>(reserve: Partial<ArchiveCost>, read: () => T) {
+        const before = this.admitted(), result = super.lookahead(reserve, read);
+        if ((reserve.inputWork ?? 0) > 0) {
+          let kind: "position" | "limited" | undefined, seq: number | null = null;
+          if (result.kind === "limited") kind = "limited";
+          else if (result.value && typeof result.value === "object" && "kind" in result.value) {
+            if (result.value.kind === "limited") kind = "limited";
+            else if (result.value.kind === "position" && "position" in result.value && result.value.position
+              && typeof result.value.position === "object" && "seq" in result.value.position && typeof result.value.position.seq === "number") {
+              kind = "position"; seq = result.value.position.seq;
+            }
+          }
+          if (kind) {
+            if (observed.length === 8) observed.shift();
+            observed.push({ kind, seq, reserve: { ...reserve }, before, after: this.admitted() });
+          }
+        }
+        return result;
+      }
+    }(), canSpend = budget.canSpend.bind(budget);
     budget.canSpend = cost => {
       if ((cost.entries ?? 0) > 0 && (cost.inputWork ?? 0) > 16 * 1024 * 1024) { if (quotes.length === 8) quotes.shift(); quotes.push({ cost: { ...cost }, spent: budget.admitted() }); }
       return canSpend(cost);
@@ -140,11 +162,17 @@ test("adaptive Native passes reserve writing, incremental sending and confirmati
   expect(second.pending).toBeNull(); expect(second.confirmed!.through.seq).toBeGreaterThan(first.through.seq);
   expect(second.confirmed!.through.seq).toBeLessThan(head.seq); expect(host.appendCalls).toBe(1);
   expect(budgets).toHaveLength(2);
-  for (const budget of budgets) { expect(budget.admitted().inputWork).toBeLessThanOrEqual(maximum); expect(budget.admitted().entries).toBeGreaterThan(2); }
+  for (const [index, budget] of budgets.entries()) {
+    const spent = budget.admitted(), through = index === 0 ? first.through.seq : second.confirmed!.through.seq;
+    for (const key of ["entries", "attempts", "nodes", "calls", "metadata", "inputWork"] as const) expect(spent[key]).toBeLessThanOrEqual(ARCHIVE_BOUNDS[key]);
+    expect(spent.entries).toBeGreaterThan(2);
+    expect(lookaheads[index]!.some(read => read.after.inputWork > read.before.inputWork
+      && (read.kind === "limited" || read.seq !== null && read.seq > through)), JSON.stringify({ through, lookaheads: lookaheads[index] })).toBe(true);
+  }
   expect(await lane.head()).toEqual(head); expect(host.closureReads).toBe(0);
   (context.task.meta as Record<string, unknown>)["adaptiveNative"] = { cap: maximum, first: first.through.seq, second: second.confirmed!.through.seq,
-    costs: budgets.map(budget => budget.admitted()), quotes, appendCalls: host.appendCalls,
-    qualification: "Actual Native checkpoint entries, adaptive scouting, fresh inventory, writer, driver copies, production incremental-send code including validator/copy/pack and Native row confirmation; HTTP/host/token/policies remain TEST stand-ins. Entry and other caps unchanged; input cap lowered to40MiB. Two passes only; no cadence/10000-one-entry claim." };
+    costs: budgets.map(budget => budget.admitted()), quotes, lookaheads, appendCalls: host.appendCalls,
+    qualification: "Actual Native checkpoint entries, adaptive scouting, fresh inventory, writer, driver copies, production incremental-send code including validator/copy/pack and Native row confirmation; HTTP/host/token/policies remain TEST stand-ins. Original production caps including 64 MiB input; bounded synchronous observations require charged discarded lookahead under a positive finish reserve. Two passes only; no cadence/10000-one-entry claim." };
 });
 
 test("adaptive Native selection finishes a covered earlier prefix before an uncovered later class", async () => {
