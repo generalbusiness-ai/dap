@@ -27,7 +27,7 @@ import { dispatchFixture } from "./native-fixture-lifetime.ts";
 import { archiveDefinition, archivePolicies } from "./archive.ts";
 import type {} from "./maintained-applications.ts";
 
-interface Basis { pins: FixtureArchiveSourcePins; policies: ArchivePolicyRegistry; observed: Map<string, FactRef>; setupCost: ReturnType<ArchiveBudget["admitted"]>; creator?: FactRef }
+interface Basis { pins: FixtureArchiveSourcePins; policies: ArchivePolicyRegistry; observed: Map<string, FactRef>; setupCost: ReturnType<ArchiveBudget["admitted"]>; creator?: FactRef; confirmation?: FactRef }
 const bases = new WeakMap<Lane, Basis>();
 let activeClockOwner: object | null = null;
 /** TEST declaration for the two factory-born resume/replay cases only.
@@ -67,7 +67,7 @@ class NativeArchiveLane extends Lane {
 export function archiveAuthorityAnchors(lane: Lane): readonly FactRef[] {
   const basis = bases.get(lane);
   if (!basis) throw Error("Actual Native authority basis required");
-  return [...(basis.creator ? [basis.creator] : []), ...[...basis.observed.values()].sort((a, b) => a.seq - b.seq || canonicalize(a.at).localeCompare(canonicalize(b.at)))];
+  return [...(basis.creator ? [basis.creator] : []), ...(basis.confirmation ? [basis.confirmation] : []), ...[...basis.observed.values()].sort((a, b) => a.seq - b.seq || canonicalize(a.at).localeCompare(canonicalize(b.at)))];
 }
 export function archiveAuthorityBasis(lane: Lane): Basis | undefined { return bases.get(lane); }
 export function archiveAuthorityPolicies(lane: Lane, policies: ArchivePolicyRegistry = archivePolicies): ArchivePolicyRegistry {
@@ -167,7 +167,7 @@ export async function nativeArchiveFixture() {
           ...Object.values(under.declared.acts).flatMap(act => typeof act.grant === "string" ? [act.grant] : []), ...(factory ? ["application.establish"] : [])])];
         await life.wait(async () => membership.did(rita, "set-actions", { on: 0, expected: await membership.expected({ on: 0 }), fields: { role: "admin", actions } }));
         const opener: MemberRef = { membership: at, member: rita.member.member };
-        let made: Lane, creator: FactRef | undefined;
+        let made: Lane, creator: FactRef | undefined, confirmation: FactRef | undefined;
         if (factory) {
           const rules = room.children[1]!;
           if (!rules) throw Error("Genuine native Rules required");
@@ -187,9 +187,30 @@ export async function nativeArchiveFixture() {
           creator = factRefOf(sealed.entry); expect(creator).toEqual(accepted.receipt.fact);
           expect(send.message).toMatchObject({ class: "request", type: "create", body: { membership: at, directory: await life.wait(() => room.D.at()), fields: { title: "A lane", opener } } });
           await dispatchFixture([room.D, child], life.wait);
-          const born = (await life.wait(() => child.sealed()))[0];
+          const childHistory = await life.wait(() => child.sealed()), born = childHistory[0];
           if (!born || born.entry.input.type !== "genesis" || born.entry.input.decision !== "applied") throw Error("Applied native child genesis required");
           expect(born.entry.input).toMatchObject({ source: creator, seed: send.to, n: send.n, message: send.message });
+          const bornFact = factRefOf(born.entry); expect(bornFact.hash).toBe(born.hash);
+          const results = (await life.wait(() => room.D.sealed())).filter(value => {
+            const input = value.entry.input;
+            return input.type === "delivery" && "clause" in input && input.clause === "applied"
+              && input.message.class === "result" && input.message.outcome === "applied"
+              && canonicalize(input.from) === canonicalize(bornFact)
+              && canonicalize(input.message.of) === canonicalize({ from: creator, n: send.n });
+          });
+          if (results.length !== 1) throw Error("One actual Directory result of this child birth required");
+          const result = results[0]!;
+          confirmation = factRefOf(result.entry); expect(confirmation.hash).toBe(result.hash);
+          const confirms = result.entry.sends.filter(value => value.message.class === "control" && value.message.type === "confirm"
+            && canonicalize(value.to) === canonicalize(born.entry.at) && canonicalize(value.message.genesis) === canonicalize(bornFact));
+          if (confirms.length !== 1) throw Error("One actual Directory confirmation send required");
+          const confirmed = confirms[0]!, activations = childHistory.filter(value => {
+            const input = value.entry.input;
+            return input.type === "delivery" && canonicalize(input.from) === canonicalize(confirmation)
+              && input.n === confirmed.n && canonicalize(input.message) === canonicalize(confirmed.message);
+          });
+          if (activations.length !== 1) throw Error("Actual child activation must retain the exact native confirmation");
+          expect(activations[0]!.entry.effects).toContainEqual({ effect: "activate" });
           const c = controls(child.name, START); c.clock = clock;
           made = new Lane(child.name, c, born.entry.at, receiptOf(born, under.digest), signed);
         } else made = await create(bounds, reads, under, { opener, clock });
@@ -235,7 +256,7 @@ export async function nativeArchiveFixture() {
           review: "TEST STAND-IN: factory-compatible inline archive classes", support: { named: under.digest, definition: under, owners: new Map(), records: new Map(), preparations: new Map() } });
         const registry: ArchivePolicyRegistry = policies;
         const pins = new FixtureArchiveSourcePins(births, lane.c.bounds, budget, registry);
-        bases.set(lane, { pins, policies: registry, observed, setupCost: budget.admitted(), ...(creator ? { creator } : {}) });
+        bases.set(lane, { pins, policies: registry, observed, setupCost: budget.admitted(), ...(creator ? { creator } : {}), ...(confirmation ? { confirmation } : {}) });
         console.info("Native archive source-birth/pin setup budget only", canonicalize(budget.admitted()));
         return lane;
         });

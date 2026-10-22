@@ -522,3 +522,27 @@ independent authority reads to external fixture setup. That setup is not an
 archive throughput or full preparation-cost measurement. All original
 deadlines and product caps remain; the new fixture has not been compiled or
 run, and no repaired acceptance is claimed.
+
+At `6bc79714`, Owner 35833 and its child naturally exited 1 with stable full
+guards and no signal. The Scope test compiler and first seven driver cases
+passed. The SHA-1 resume check passed the real factory genesis, then reported
+`missing-dependency` at child entry 1: it needed Directory entry 6, while the
+independent anchor list contained the creation action at entry 5. Target
+head was 4; coverage ended at genesis. Five cases had no completed acceptance.
+Inclusive elapsed, user and system times were 12.060912, 12.859269 and
+2.488918 seconds.
+
+Those are two distinct protocol facts. The Directory creates the child,
+then records its applied result and sends the control that activates it.
+The activation retains that second Directory entry. The fixture now selects
+exactly one actual sealed Directory result bound to this child's exact
+genesis and the original creation fact and send number. It checks the
+result's hash, its actual confirmation send and the child's matching
+activation entry and effect. This independently captured confirmation fact
+is explicit caller trust after the creation fact, before the Membership
+head; none is taken from archive output or a guessed next position. The
+existing Directory source pin and policy cover both facts. One additional
+bounded Directory history read belongs to external fixture setup; no native
+entry, dispatch, archive allowance or verifier rule is added. Strict replay,
+exact anchors, both formats, head/bytes, deadlines and caps remain unchanged.
+No repaired result is claimed before a separately allocated owning-file run.
