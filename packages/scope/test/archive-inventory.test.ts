@@ -13,8 +13,8 @@ import { ArchivePrefixStopped } from "../src/archive-prefix.ts";
 import { ArchiveScout, type ArchiveScoutFrame } from "../src/archive-scout.ts";
 import { ArchiveDeclarationPlan } from "../src/archive-declaration-plan.ts";
 import { ArchiveDeclarations } from "../src/archive-declarations.ts";
-import { archiveDefinitionPresenceForecast, ArchiveRetainedReader } from "../src/archive-retained.ts";
-import { recordArchiveCurrentDeclarationClosure, forecastArchiveDeclarationClosure, recordArchivePotentialDeclarationClosure, forecastArchivePotentialDeclarationClosure } from "../src/archive-declaration-scout.ts";
+import { archiveDefinitionPresenceForecast, archiveRetainedReadForecast, archiveRetainedColdReadForecast, ArchiveRetainedReader } from "../src/archive-retained.ts";
+import { ArchiveDeclarationReadForecast, recordArchiveCurrentDeclarationClosure, forecastArchiveDeclarationClosure, recordArchivePotentialDeclarationClosure, forecastArchivePotentialDeclarationClosure } from "../src/archive-declaration-scout.ts";
 import { ARCHIVE_BOUNDS, ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
 import { archivePrefixMetadata } from "../src/archive-prefix.ts";
 import { inventoryArchive, type ArchivePolicyRegistry, type ReviewedArchivePolicy } from "../src/archive-inventory.ts";
@@ -185,6 +185,86 @@ test("a complete declaration scout pays its own work and covers fresh and repeat
   });
   expect(changed.complete).toBe(false); expect(changed.unscouted).toBe("mismatch");
   expect(changed.bodies).toEqual([]);
+});
+
+// Native SQLite and the real declaration reader/validator are exercised;
+// requested roots and policies are TEST metadata, not entry admission.
+test("a fresh declaration forecast prices first reads cold and shared or repeated reads at the original maximum", async () => {
+  const child = variant(leaf("cold-read-child").declared, data => {
+    data.items["root"]!.values["label"] = { fixed: true, required: true, of: { type: "text", max: 32 }, default: "café 🎵" };
+  });
+  const parent = leaf("cold-read-parent", child.digest), sibling = leaf("cold-read-sibling", child.digest), missingDefinition = leaf("cold-read-absent");
+  const lane = await create({}, {}, base); await keep(lane, [parent, child, sibling]);
+  const missing = missingDefinition.digest;
+  const result = await lane.inside(state => {
+    const sql = state.storage.sql, policies = new Map([parent, child, sibling, missingDefinition].map(d => [d.digest, policy(d)]));
+    const scoutBudget = new ArchiveBudget(), scout = new ArchiveDeclarations(new ArchiveRetainedReader(sql, scoutBudget), PROPOSED_BOUNDS, policies, new Set());
+    scout.root(parent.digest);
+    const root = recordArchiveCurrentDeclarationClosure(scout, parent.digest);
+    const shared = recordArchivePotentialDeclarationClosure(scout, sibling.digest);
+    const repeated = recordArchivePotentialDeclarationClosure(scout, parent.digest);
+    const absent = recordArchivePotentialDeclarationClosure(scout, missing);
+    const quoteBudget = new ArchiveBudget(), reads = new ArchiveDeclarationReadForecast(quoteBudget);
+    const first = forecastArchiveDeclarationClosure(root, quoteBudget, reads);
+    const second = forecastArchivePotentialDeclarationClosure(shared, quoteBudget, reads);
+    const third = forecastArchivePotentialDeclarationClosure(repeated, quoteBudget, reads);
+    const absentQuote = forecastArchivePotentialDeclarationClosure(absent, quoteBudget, reads);
+    const oldFirst = forecastArchiveDeclarationClosure(root, quoteBudget);
+    const oldSecond = forecastArchivePotentialDeclarationClosure(shared, quoteBudget);
+    expect(oldFirst.inputWork - first.inputWork).toBe(root.declarations.reduce((n, row) => n + 63 * row.bytes, 0));
+    expect(oldSecond.inputWork - second.inputWork).toBe(63 * shared.requests.find(row => row.digest === sibling.digest)!.bytes!);
+    expect(third).toEqual(forecastArchivePotentialDeclarationClosure(repeated, quoteBudget));
+    expect(absentQuote).toEqual(forecastArchivePotentialDeclarationClosure(absent, quoteBudget));
+    const sizes = new Map([...root.declarations, ...shared.requests, ...absent.requests].map(row => [row.digest, row.bytes]));
+    // This fresh reader is the modeled identity. Root, shared and repeat
+    // walks retain that same reader; no scout cache enters this operation.
+    const actualBudget = new ArchiveBudget(), actual = new ArchiveDeclarations(new ArchiveRetainedReader(sql, actualBudget), PROPOSED_BOUNDS, policies, new Set(), sizes);
+    const measured = (work: () => void) => {
+      const before = actualBudget.admitted(); work(); const after = actualBudget.admitted();
+      return Object.fromEntries(Object.keys(before).map(key => [key, after[key as keyof ArchiveCost] - before[key as keyof ArchiveCost]])) as ArchiveCost;
+    };
+    const phases = [measured(() => { actual.root(parent.digest); }), measured(() => { actual.walk(sibling.digest); }),
+      measured(() => { actual.walk(parent.digest); }), measured(() => { expect(actual.walk(missing).complete).toBe(false); })];
+    for (const [index, quote] of [first, second, third, absentQuote].entries()) {
+      const full = { entries: 0, nodes: [2, 1, 0, 1][index]!, ...quote };
+      for (const key of Object.keys(full) as (keyof ArchiveCost)[]) expect(full[key]).toBeGreaterThanOrEqual(phases[index]![key]);
+    }
+    expect(phases.map(cost => cost.attempts)).toEqual([2, 2, 2, 1]);
+    expect(phases[2]!.inputWork).toBeGreaterThan(0);
+    const text = canonicalize(child.declared), bytes = utf8(text).length;
+    expect(bytes).toBeGreaterThan(text.length);
+    const maximum = archiveRetainedReadForecast(bytes), cold = archiveRetainedColdReadForecast(bytes);
+    expect(maximum.inputWork! - cold.inputWork!).toBe(63 * bytes);
+    // A missing reviewed candidate receives the unchanged maximum; an
+    // unknown caller without a fresh-reader frontier also keeps it.
+    const nullReads = new ArchiveDeclarationReadForecast(new ArchiveBudget());
+    expect(nullReads.read(child.digest, null)).toEqual(archiveRetainedReadForecast(null));
+    expect(nullReads.read(child.digest, bytes)).toEqual(cold);
+    expect(nullReads.read(child.digest, bytes)).toEqual(maximum);
+    const paid = new ArchiveBudget(), paidReads = new ArchiveDeclarationReadForecast(paid);
+    paidReads.read(child.digest, bytes); const afterFirst = paid.admitted();
+    paidReads.read(child.digest, bytes); const afterRepeat = paid.admitted();
+    expect(afterFirst).toMatchObject({ metadata: 256, inputWork: 512 });
+    expect(afterRepeat.metadata - afterFirst.metadata).toBe(128);
+    expect(afterRepeat.inputWork - afterFirst.inputWork).toBe(256);
+    const tight = new ArchiveBudget({ inputWork: 511 });
+    expect(() => new ArchiveDeclarationReadForecast(tight).read(child.digest, bytes)).toThrow("archive-limit");
+    expect(tight.admitted()).toMatchObject({ metadata: 128, inputWork: 256 });
+    // Real changed-size and newly present rows refuse before a body read.
+    const bodies: string[] = [], changedSql = { exec(query: string, ...args: (string | number | null | ArrayBuffer)[]) {
+      if (query.startsWith("SELECT bytes")) bodies.push(query);
+      return sql.exec(query, ...args);
+    } };
+    sql.exec("UPDATE retained_input SET bytes = bytes || ' ' WHERE kind = 'definition' AND digest = ?", parent.digest);
+    sql.exec("INSERT INTO retained_input (kind, digest, bytes) VALUES ('definition', ?, ?)", missing, canonicalize(missingDefinition.declared));
+    const negativeBudget = new ArchiveBudget();
+    const negative = new ArchiveDeclarations(new ArchiveRetainedReader(changedSql, negativeBudget), PROPOSED_BOUNDS, policies, new Set(), sizes);
+    expect(negative.walk(parent.digest).complete).toBe(false);
+    expect(() => negative.walk(missing)).toThrow("archive-mismatch");
+    expect(bodies).toEqual([]);
+    return { phases, first, second, third, absentQuote };
+  });
+  expect(result.phases.every(cost => cost.entries === 0)).toBe(true);
 });
 
 // Explicit declaration requests exercise this scalar planning boundary.

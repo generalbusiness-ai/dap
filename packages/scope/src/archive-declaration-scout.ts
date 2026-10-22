@@ -2,17 +2,40 @@
  * native validation and extra metadata work on the original ledger. Its
  * frozen scalar result grants no payload or later inventory admission. */
 import type { Digest } from "@generalbusiness/dap-contract";
+import { isDigest } from "@generalbusiness/artroom-bytes";
 import type { ArchiveBudget, ArchiveCost } from "./archive-budget.ts";
+import { ARCHIVE_BOUNDS } from "./archive-budget.ts";
 import type { ArchiveDeclarations, ArchiveDeclarationClosure } from "./archive-declarations.ts";
 import { recordArchiveSupportMetadata } from "./archive-entry-metadata.ts";
 import { forecastArchiveDeclarationValidation } from "./archive-inventory-cost.ts";
 import { stopArchivePrefix as stop } from "./archive-prefix.ts";
-import { archiveDefinitionPresenceForecast, archiveRetainedReadForecast } from "./archive-retained.ts";
+import { archiveDefinitionPresenceForecast, archiveRetainedColdReadForecast, archiveRetainedReadForecast } from "./archive-retained.ts";
 import { forecastArchiveSupportMetadata, type ArchiveSupportFootprint } from "./archive-support-cost.ts";
 
 export interface ArchiveDeclarationFootprint {
   readonly root: Digest;
   readonly declarations: readonly { readonly digest: Digest; readonly bytes: number; readonly support: Readonly<ArchiveSupportFootprint> }[];
+}
+
+/** Forecast only for one fresh inventory declaration reader. Its actual
+ * root walk precedes all ordered potential walks on that same reader.
+ * This records requests, never bytes, validation or permission. Callers
+ * without that ordering proof omit this object and keep the maximum.
+ * Missing/unreviewed requests and repeats keep their original forecast. */
+export class ArchiveDeclarationReadForecast {
+  readonly #requested = new Set<Digest>();
+  constructor(readonly budget: ArchiveBudget) {}
+  read(digest: Digest, bytes: number | null): Partial<ArchiveCost> {
+    this.budget.spend({ metadata: 128, inputWork: 256 });
+    if (!isDigest(digest)) return stop("mismatch");
+    if (bytes === null || this.#requested.has(digest) || this.#requested.size === ARCHIVE_BOUNDS.nodes) return archiveRetainedReadForecast(bytes);
+    // Pay before inserting. A full frontier falls back to the maximum,
+    // including every later request for a key it could not remember.
+    this.budget.spend({ metadata: 128, inputWork: 256 });
+    const cost = archiveRetainedColdReadForecast(bytes);
+    this.#requested.add(digest);
+    return cost;
+  }
 }
 
 /** One complete actual walk, plus keyed size and trusted support scouts.
@@ -55,12 +78,13 @@ function collectDeclarationClosure(admission: ArchiveDeclarations, closure: Arch
  * repeat this work in full. Platform-root work is separately priced.
  * Fresh inventory must re-admit and compare the exact closure; this quote
  * does not cover changes after the scout's synchronous read frame. */
-export function forecastArchiveDeclarationClosure(footprint: ArchiveDeclarationFootprint, budget: ArchiveBudget):
+export function forecastArchiveDeclarationClosure(footprint: ArchiveDeclarationFootprint, budget: ArchiveBudget, reads?: ArchiveDeclarationReadForecast):
   Readonly<Pick<ArchiveCost, "attempts" | "calls" | "metadata" | "inputWork">> {
+  if (reads && reads.budget !== budget) return stop("mismatch");
   budget.spend({ metadata: 128, inputWork: 256 + footprint.declarations.length * 128 });
   const work = { attempts: 0, calls: 0, metadata: 0, inputWork: 0 };
   for (const declaration of footprint.declarations) {
-    const read = archiveRetainedReadForecast(declaration.bytes);
+    const read = reads?.read(declaration.digest, declaration.bytes) ?? archiveRetainedReadForecast(declaration.bytes);
     const validation = forecastArchiveDeclarationValidation(declaration.bytes);
     const support = forecastArchiveSupportMetadata(declaration.support);
     work.attempts += read.attempts ?? 0;
@@ -106,12 +130,13 @@ export function recordArchivePotentialDeclarationClosure(admission: ArchiveDecla
  * declaration admission. A newly present reviewed body is refused at its
  * size check; a newly present unreviewed candidate still has no policy.
  * Distinct-node union, platform roots and changed closures stay separate. */
-export function forecastArchivePotentialDeclarationClosure(footprint: ArchivePotentialDeclarationFootprint, budget: ArchiveBudget):
+export function forecastArchivePotentialDeclarationClosure(footprint: ArchivePotentialDeclarationFootprint, budget: ArchiveBudget, reads?: ArchiveDeclarationReadForecast):
   Readonly<Pick<ArchiveCost, "attempts" | "calls" | "metadata" | "inputWork">> {
+  if (reads && reads.budget !== budget) return stop("mismatch");
   budget.spend({ metadata: 128, inputWork: 256 + footprint.requests.length * 128 });
   const work = { attempts: 0, calls: 0, metadata: 0, inputWork: 0 };
   for (const request of footprint.requests) {
-    const read = request.reviewed ? archiveRetainedReadForecast(request.bytes) : archiveDefinitionPresenceForecast();
+    const read = request.reviewed ? reads?.read(request.digest, request.bytes) ?? archiveRetainedReadForecast(request.bytes) : archiveDefinitionPresenceForecast();
     work.attempts += read.attempts ?? 0; work.calls += read.calls ?? 0;
     work.metadata += read.metadata ?? 0; work.inputWork += read.inputWork ?? 0;
     if (request.reviewed && request.bytes !== null) {
