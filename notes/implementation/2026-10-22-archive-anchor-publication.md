@@ -956,3 +956,23 @@ Native scenarios plus one immediately following production offline case:
 six cases, with all original 30-second deadlines. This correction is
 uncompiled and unrun; evicted activation, heavy scenarios and the final
 gate remain pending.
+
+
+### Corrected six-case installed file passes
+
+Owner 52329 naturally passed at `08bbee7b7`, with exact input guards and
+no signals. Scope test compilation and all six cases passed. The Native
+fixture, Grow, production, warm activation and evicted activation cases
+passed. The immediately following production offline case also passed,
+including strict trusted exit zero and all five consistent journal reports.
+The actual ledger recorded six starts and six passes, with no unexpected
+cases, issues, retries or repeats. Each case kept its original 30-second
+deadline. Owner wall time was 57.808 seconds, including guards and Git.
+
+This result completes the corrected owning set and evicted activation.
+It preserves owner 74539's failed eight-case history and does not explain
+owner 50068's historical trusted exit 1, whose report was not retained.
+The six heavy cases and the final gate remain pending. Their static scope
+is the complete floor file, cadence file and one-entry scale file. The
+scale case also owns the later dense retained-input, restart, mixed-input
+and provider-conflict checks. No heavy case or limit is removed.
