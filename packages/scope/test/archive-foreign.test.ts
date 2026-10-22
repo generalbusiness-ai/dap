@@ -5,7 +5,7 @@ import { expect, onTestFinished, test } from "vitest";
 import { env } from "cloudflare:test";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Digest, Input, SendForm } from "@generalbusiness/dap-contract";
-import { canonicalize, isEntry, parseStrict, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isEntry, newIncarnation, parseStrict, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
 import { variant } from "@generalbusiness/dap-derive/testing";
 import { outcomeValueDomains, validateDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
@@ -19,12 +19,12 @@ import { ARCHIVE_BOUNDS, ArchiveBudget, type ArchiveCost } from "../src/archive-
 import { buildJournalArchive, journalRef, JournalWork } from "@generalbusiness/artroom-git/journal";
 import { JournalObjectReader, JournalObjects } from "../../git/src/journal-objects.ts";
 import { readJournalArchive } from "@generalbusiness/artroom-git/journal-reader";
-import { planArchive, rebuildArchive } from "../src/archive-build.ts";
+import { planArchive, planPublishedArchivePass, rebuildArchive, rebuildArchivePass } from "../src/archive-build.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
 import type { FixtureArchiveProvider } from "../src/archive-driver.ts";
 import { archiveRepository, archiveSql } from "./support/archive.ts";
 import { fixtureArchiveWiring } from "./worker.ts";
-import { nativeArchiveFixture, archiveAuthorityBasis, archiveAuthorityPolicies } from "./support/archive-native-authority.ts";
+import { nativeArchiveFixture, archiveAuthorityBasis, archiveAuthorityPolicies, archiveAuthorityAnchors } from "./support/archive-native-authority.ts";
 import { sessionRoom } from "./support/session-room.ts";
 import { namespace } from "../src/namespace.ts";
 import { ArchiveForeignMetadata, type ArchiveForeignRecordedScan, type ArchiveForeignExpectedCopy } from "../src/archive-foreign.ts";
@@ -457,6 +457,48 @@ test("native inventory admits only classified direct copies and refuses a final 
 
 // Native direct-use scopes, not an installed application. This covers the
 // immutable Mark/layout/structural reader boundary; no host or replay claim.
+test("published replay closure adds only admitted public-copy producers and rebuilds the exact Mark", async () => {
+  const f = await fixture(true, true), through = await f.consumer.head();
+  // The target knows the consumer but omits its real copied producer.
+  // Only the completed inventory can contribute that additional full ref.
+  const targetScopes = [f.consumer.at], expected = [f.consumer.at, f.producer.at];
+  const plan = (replayScopes = targetScopes) => f.consumer.inside(state => planPublishedArchivePass(archiveSql(state), {
+    at: f.consumer.at, through, after: null, bounds: PROPOSED_BOUNDS, policies: f.policies,
+    format: "sha1", parent: null, markedAt: at(0), fixtureSources: f.sources, replayScopes,
+  }, new ArchiveBudget()));
+  const conflicting = { ...f.producer.at, inc: newIncarnation(new Uint8Array(16).fill(73)) };
+  expect(conflicting.inc).not.toBe(f.producer.at.inc);
+  expect(await plan([...targetScopes, conflicting])).toEqual({ ok: false, reason: "foreign-source-mismatch" });
+  const privateAt = archiveAuthorityAnchors(f.consumer).find(fact => fact.at.kind === "membership")!.at;
+  expect(await plan([...targetScopes, privateAt])).toEqual({ ok: false, reason: "unavailable" });
+  const planned = await plan();
+  expect(planned.ok, JSON.stringify(planned)).toBe(true); if (!planned.ok) return;
+  expect(planned.archive.selection.objects.some(object => object.foreign?.fact.at.scope === f.producer.name)).toBe(true);
+  expect(planned.mark.replayScopes).toEqual(expected);
+  expect(planned.archive.manifest.anchors?.some(fact => fact.at.scope === f.producer.name)).toBe(false);
+  expect(planned.mark.replayScopes?.some(where => ["membership", "register", "inbox"].includes(where.kind))).toBe(false);
+  for (const key of Object.keys(ARCHIVE_BOUNDS) as (keyof ArchiveCost)[]) expect(planned.archive.cost[key]).toBeLessThanOrEqual(ARCHIVE_BOUNDS[key]);
+  await f.consumer.inside(state => {
+    const rows = new ArchiveRows(archiveSql(state), f.consumer.at);
+    expect(rows.load()).toBeNull(); rows.target(archiveRepository, "sha1"); rows.mark(planned.mark);
+  });
+  await f.consumer.restart();
+  const rebuilt = await f.consumer.inside(async state => {
+    const sql = archiveSql(state), rows = new ArchiveRows(sql, f.consumer.at), row = rows.load()!;
+    expect(row.pending).toEqual(planned.mark);
+    expect(await rebuildArchivePass(sql, { ...row, pending: { ...row.pending!, replayScopes: targetScopes } },
+      null, new ArchiveBudget(), f.sources)).toEqual({ ok: false, reason: "rebuild-mismatch" });
+    const result = await rebuildArchivePass(sql, row, null, new ArchiveBudget(), f.sources);
+    expect(rows.load()!.pending).toEqual(planned.mark);
+    return result;
+  });
+  expect(rebuilt.ok, JSON.stringify(rebuilt)).toBe(true); if (!rebuilt.ok) return;
+  expect(rebuilt.archive.commit).toBe(planned.archive.commit);
+  expect(rebuilt.archive.objects).toEqual(planned.archive.objects);
+  expect(rebuilt.archive.manifestBytes).toBe(planned.archive.manifestBytes);
+});
+
+// Both immutable formats keep the original unpublished caller path below.
 test.each(["sha1", "sha256"] as const)("foreign copies retain their source basis in %s files and rebuild after eviction", async format => {
   const f = await fixture(), through = await f.consumer.head();
   const planned = await f.consumer.inside(state => planArchive(archiveSql(state), { at: f.consumer.at, through, bounds: PROPOSED_BOUNDS, policies: f.policies, format, parent: null, markedAt: at(0), fixtureSources: f.sources }, new ArchiveBudget()));

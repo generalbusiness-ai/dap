@@ -546,3 +546,51 @@ bounded Directory history read belongs to external fixture setup; no native
 entry, dispatch, archive allowance or verifier rule is added. Strict replay,
 exact anchors, both formats, head/bytes, deadlines and caps remain unchanged.
 No repaired result is claimed before a separately allocated owning-file run.
+
+At `85bbd775`, Owner 42755 and its child naturally exited 0. The affected
+Scope test compiler and all 13 driver cases passed with stable full input
+guards and no unhandled error. That includes both factory-born resume
+formats and the independently captured Directory confirmation fact. The
+inclusive elapsed, user and system times were 14.059652, 15.108460 and
+2.560432 seconds. Earlier publication, Git and Replay outcomes remain
+separately attributed; they were not repeated in this run.
+
+The next whole installed file ran under Owner 27600 at the same head. It
+naturally exited 1 with stable full guards. The fixture and Grow cases
+passed, including their local clone checks. Grow production stopped at
+Site entry 3 with `unsupported-foreign-copy`; its receipt remained at entry
+2 and no Mark was pending. The original ledger had spent 53,679,765 input
+units, within the 67,108,864 cap. The two activation cases and production
+command/clone phases had no completed acceptance. Inclusive elapsed, user
+and system times were 18.117168, 17.144838 and 2.136447 seconds.
+
+The Site entry needs an admitted Room copy. The production target returns
+its checked creator route, Directory, Rules and Destination, but that list
+does not include the child Room. Publication correctly refuses to turn a
+public lane dependency outside its replay closure into a private anchor.
+The earlier whole-prefix fixture supplied the complete five-scope list;
+the actual production pass supplied only its narrower target route.
+
+Published building now extends that descriptive route only with producer
+full references from copies already admitted by the selected inventory.
+It preserves conflicting-reference rejection and excludes Register,
+Membership and Inbox from this addition. The Room remains a dependency
+whose journal must be replayed. This grants no new source read, body,
+export or caller trust. Register17 and Membership8 anchor restrictions and
+generic explicit caller anchors are unchanged. The validated union is
+stored on the Mark; rebuild refuses a Mark that omits a producer instead
+of silently expanding its recorded closure. Its ordered full-reference
+comparison pays the existing 1,024 input units per reference before
+traversal and compares fields directly, without JSON scratch allocation.
+
+The extra bounded object walk pays the existing 1,024 input-unit visit
+price; each new map entry pays 512 metadata units before insertion. The
+adaptive finish quote reserves the target count plus one producer per
+copy, including conservative duplicate and private-copy overestimates,
+and the extra walk and map metadata. Checked arithmetic and the existing
+64-scope ceiling can refuse a candidate or shorten a pass. Original
+prices, caps and deadlines remain unchanged; no fit improvement is
+claimed. A new small Native direct-copy case starts with the producer
+omitted, checks the exact deduplicated closure and non-anchor treatment,
+rejects conflicting and private target references, and checks exact
+rebuild plus refusal of a truncated Mark. It has not been compiled or run.

@@ -31,15 +31,32 @@ function replayInput(native: ReturnType<typeof archiveInput>, selection: Constru
   let replayScopes: readonly ScopeRef[] | undefined;
   try {
     if (scopes || publish) {
+      if (publish && scopes && (!Array.isArray(scopes) || scopes.length === 0 || scopes.length > 64)) return budget.stop("limit");
       const identities = scopes ?? [selection.at, ...selection.objects.flatMap(object => object.foreign
         && object.foreign.fact.at.kind !== "register" && object.foreign.fact.at.kind !== "membership" ? [object.foreign.fact.at] : [])];
       const unique = new Map<string, ScopeRef>();
       for (const at of identities) {
         const prior = unique.get(at.scope);
         if (prior && !same(prior, at)) throw new ArchivePrefixStopped("foreign-source-mismatch");
+        if (publish && scopes && prior) return budget.stop("unavailable");
         unique.set(at.scope, at);
       }
-      replayScopes = publish ? archiveReplayScopes(scopes ?? [...unique.values()], selection.at, budget) : [...unique.values()];
+      if (publish && scopes) for (const object of selection.objects) {
+        // These copies already passed inventory's source pin, reviewed
+        // privacy and exact content admission. A public producer is a
+        // required replay dependency, never a new anchor or export right.
+        budget.spend({ inputWork: 1024 });
+        const at = object.foreign?.fact.at;
+        if (!at || ["register", "membership", "inbox"].includes(at.kind)) continue;
+        const prior = unique.get(at.scope);
+        if (prior && !same(prior, at)) throw new ArchivePrefixStopped("foreign-source-mismatch");
+        if (!prior) {
+          if (unique.size === 64) return budget.stop("limit");
+          budget.spend({ metadata: 512 });
+          unique.set(at.scope, at);
+        }
+      }
+      replayScopes = publish ? archiveReplayScopes([...unique.values()], selection.at, budget) : [...unique.values()];
       collector = new ArchiveReplayAnchors(selection, replayScopes, budget, sources);
     }
   }
@@ -254,6 +271,20 @@ export async function rebuildArchivePass(sql: Sql, row: ArchiveRow, parent: Pare
     journalAnchorCopyCount(selection.objects, new JournalWork(budget)), (selection.after?.seq ?? -1) + 1, budget, [at]);
   const replay = publication ? replayInput(input, selection, mark.replayScopes, budget, fixtureSources, true, publication.legacyAnchors) : null;
   if (replay && !replay.ok) return replay;
+  // A missing producer in a stored Mark must refuse, not be repaired by
+  // today's composition rule while silently accepting a different closure.
+  if (replay?.ok) {
+    const actual = replay.scopes, expected = mark.replayScopes;
+    if (!actual || !expected) return { ok: false, reason: "rebuild-mismatch" };
+    // Both lists were just validated at <=64 full refs. Pay the existing
+    // binding-comparison rate before visiting them; no JSON scratch is made.
+    budget.spend({ inputWork: actual.length * 1024 });
+    if (actual.length !== expected.length) return { ok: false, reason: "rebuild-mismatch" };
+    for (let index = 0; index < actual.length; index++) {
+      const a = actual[index]!, b = expected[index]!;
+      if (a.scope !== b.scope || a.inc !== b.inc || a.kind !== b.kind) return { ok: false, reason: "rebuild-mismatch" };
+    }
+  }
   const build = conversion ? convertJournalArchiveV1 : buildJournalPass;
   const built = await build({ format, selection: mark.manifest, input: replay?.ok ? replay.input : input, parent: base, budget,
     ...(replay?.ok && publication ? { publication: () => {
