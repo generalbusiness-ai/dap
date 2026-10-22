@@ -4,9 +4,9 @@ import { same } from "@generalbusiness/artroom-bytes";
 import type { Bounds, Head, ScopeRef, Seed, Timestamp } from "@generalbusiness/dap-contract";
 import { isScopeRef, timeMs, timeOf } from "@generalbusiness/artroom-bytes";
 import { journalId, journalRef, type JournalArchive, type JournalPassArchive, type JournalFormat, type JournalObject, type JournalObjectSource } from "@generalbusiness/artroom-git/journal";
-import { ArchiveBudget, ArchiveStopped } from "./archive-budget.ts";
+import { ARCHIVE_BOUNDS, ArchiveBudget, ArchiveStopped } from "./archive-budget.ts";
 import { ARCHIVE_TRANSFER_OBJECTS, archiveObjectListMetadata, archiveObjectCopyWork } from "./archive-transfer-cost.ts";
-import { planArchiveConversion, rebuildArchive, rebuildArchivePass } from "./archive-build.ts";
+import { planPublishedArchiveConversion, rebuildArchive, rebuildArchivePass } from "./archive-build.ts";
 import { planAdaptiveArchivePass, planRootAdaptiveArchivePass } from "./archive-adaptive.ts";
 import type { FixtureArchiveSourcePins } from "./archive-source-pins.ts";
 import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, readArchivePin, readArchivePinAfterReceipt } from "./archive-pin.ts";
@@ -54,7 +54,7 @@ export interface RoomArchiveDriverOptions extends Omit<FixtureArchiveDriverOptio
   readonly provider: ArchiveProvider;
   readonly admit: (at: ScopeRef, seed: Seed) => boolean;
   /** Fresh bounded source identity preparation, charged to the same pass. */
-  readonly sources?: (after: Head | null, through: Head, budget: ArchiveBudget, exact: boolean) => Promise<{ readonly pins: FixtureArchiveSourcePins; readonly prepare?: (seq: number, budget: ArchiveBudget) => Promise<void> }>;
+  readonly sources?: (after: Head | null, through: Head, budget: ArchiveBudget, exact: boolean) => Promise<{ readonly pins: FixtureArchiveSourcePins; readonly replayScopes?: readonly ScopeRef[]; readonly prepare?: (seq: number, budget: ArchiveBudget) => Promise<void> }>;
 }
 export interface FixtureArchiveDriverOptions {
   readonly sql: Sql;
@@ -257,7 +257,8 @@ export class ArchiveDriver {
       }
       const previous = await this.#parent(row, budget, allowed);
       const prepareSources = "production" in this.#options ? this.#options.sources : undefined;
-      const preparedSources = prepareSources ? await budget.wait(() => prepareSources(row!.confirmed?.through ?? null, row!.pending?.through ?? through, budget, !!row!.pending)) : null;
+      const preparedSources = prepareSources ? await budget.wait(() => prepareSources(row!.confirmed?.layout === 2 ? row!.confirmed.through : null,
+        row!.pending?.through ?? through, budget, !!row!.pending)) : null;
       const sources = preparedSources?.pins ?? this.#options.fixtureSources;
       let archive: JournalArchive | JournalPassArchive;
       let selectedParentObjects: readonly string[] | undefined;
@@ -268,9 +269,14 @@ export class ArchiveDriver {
         archive = rebuilt.archive;
       } else {
         const common = { bounds: this.#options.bounds, policies: this.#options.policies.registry, parent: previous.parent,
-          markedAt: this.#options.clock(), ...(sources ? { fixtureSources: sources } : {}) };
-        let planned: Awaited<ReturnType<typeof planArchiveConversion>>;
-        if (row.confirmed && row.confirmed.layout !== 2) planned = await planArchiveConversion(this.#options.sql, { ...common, row }, budget);
+          markedAt: this.#options.clock(), ...(sources ? { fixtureSources: sources } : {}),
+          ...(preparedSources?.replayScopes ? { replayScopes: preparedSources.replayScopes } : {}) };
+        let planned: Awaited<ReturnType<typeof planPublishedArchiveConversion>>;
+        if (row.confirmed && row.confirmed.layout !== 2) {
+          if (row.confirmed.through.seq >= ARCHIVE_BOUNDS.entries) return budget.stop("limit");
+          if (preparedSources?.prepare) for (let seq = 0; seq <= row.confirmed.through.seq; seq++) await preparedSources.prepare(seq, budget);
+          planned = await planPublishedArchiveConversion(this.#options.sql, { ...common, row }, budget);
+        }
         else {
           const adaptive = await ("production" in this.#options ? planRootAdaptiveArchivePass : planAdaptiveArchivePass)(this.#options.sql, { ...common, at, through,
             ...(preparedSources?.prepare ? { prepareSources: preparedSources.prepare } : {}),

@@ -36,7 +36,8 @@ const onlyMintRead = (port: Outside): Outside => ({ ...port, accepts: (owner, ki
 /** STAND-IN for the `git` program: it records each run's arguments and added environment, and exits 0. */
 function recordingGit(lifetime: ReturnType<typeof nativeFixtureLifetime>): Git & { runs: { args: readonly string[]; env: Readonly<Record<string, string>> }[] } {
   const runs: { args: readonly string[]; env: Readonly<Record<string, string>> }[] = [];
-  return { runs, run: async (args, env) => { lifetime.active(); runs.push({ args: [...args], env: { ...env } }); return 0; } };
+  const run: Git["run"] = async (args, env) => { lifetime.active(); runs.push({ args: [...args], env: { ...env } }); return 0; };
+  return { runs, run, archiveRun: run };
 }
 
 // Invariant: `dap clone` signs `read-token`, reads the token once, and gives it to git only as the header configuration in
@@ -149,6 +150,37 @@ async function story(lifetime: ReturnType<typeof nativeFixtureLifetime>): Promis
     const before = (await G.summary()).at;
     expect((await run(una, "clone", "--hours", "25")).code).toBe(2);
     expect((await G.summary()).at).toEqual(before);
+    // Archive refs use the very same one-shot member token as clone. Git is
+    // still a stand-in here; the separate command witness reads a real clone.
+    git.runs.length = 0;
+    const minted = service.minted.length;
+    const archived = ok(await run(una, "clone", "archive-copy", "--archive"));
+    expect(service.minted.length).toBe(minted + 1);
+    expect(git.runs.map(row => row.args)).toEqual([
+      ["--version"], ["clone", "--", remoteUrl, "archive-copy"],
+      ["-C", "archive-copy", "fetch", "--no-tags", "--", "origin", "+refs/artroom/journal/*:refs/artroom/journal/*"],
+    ]);
+    expect(git.runs[1]!.env).toEqual(git.runs[2]!.env);
+    for (const text of [JSON.stringify(git.runs.map(row => row.args)), archived.lines.join("\n"), JSON.stringify(await lifetime.wait(() => una.store.config()))]) expect(text).not.toContain("read-plaintext");
+    const saved = await lifetime.wait(() => una.store.config());
+    git.runs.length = 0;
+    const unsafe: Fetch = async (url, init) => {
+      const response = await fetch(url, init);
+      if (!String(url).includes("/credential/")) return response;
+      // This fixture fetch is routed()'s actual Response, behind the
+      // client's deliberately smaller Fetch interface.
+      const actual = response as unknown as Response;
+      const reply = await actual.json() as { ok: boolean; value: { token: string; remote: string } };
+      if (reply.ok) reply.value.remote = `https://host.invalid/repo.git?access_token=${reply.value.token}`;
+      return new Response(JSON.stringify(reply), { status: actual.status, headers: actual.headers });
+    };
+    const rejected = await run({ ...una, fetch: unsafe }, "clone", "unsafe-copy", "--archive");
+    expect(rejected.code).toBe(1);
+    expect(rejected.lines.join(" ")).toContain("no remote was saved or printed");
+    expect(rejected.lines.join(" ")).not.toContain(service.minted.at(-1)!);
+    expect(git.runs).toEqual([{ args: ["--version"], env: {} }]);
+    expect(await lifetime.wait(() => una.store.config())).toEqual(saved);
+
   } finally {
     lifetime.unOutside(G.name);
     lifetime.unWire(R.name);

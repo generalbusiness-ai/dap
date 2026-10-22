@@ -189,6 +189,13 @@ The internal `archiveItem` namespace port has no HTTP route. Its raw helper
 accepts trusted host input; the complete target birth walk and admitted binding
 supply its authority boundary. The table below adds no public archive route.
 
+New archive passes publish bounded descriptive replay anchors in their
+existing manifests. These lists do not grant trust. The alarm floor writer
+requires complete confirmed publication coverage before it offers deletion;
+legacy receipts default to uncovered. Pending Marks bind their exact public
+scope identities for retry, including the Directory-checked reference-only
+Rules identity in Room mode. This metadata replaces no source or host check.
+
 | Route and method | Gate class | Work before the gate | State written before the gate | Bounds | Outbound calls |
 |---|---|---|---|---|---|
 | `GET, HEAD /health` | `none` | Parse settings; cached register readiness lookup | Activation of configured register; probe cache | No query or body; 2 s probe; 5 s cache | Configured register RPC; no provider call |

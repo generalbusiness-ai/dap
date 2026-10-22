@@ -12,6 +12,8 @@ export type { JournalV2PlannedFile, JournalV2PatchForecast } from "./journal-v2-
 export { convertJournalArchiveV1 } from "./journal-v2-convert.ts";
 export { verifyJournalAppend } from "./journal-v2-append.ts";
 export type { JournalTextOmission } from "./journal-v2-manifest.ts";
+export { journalAnchors, journalAnchorCopyCount, journalAnchorPublication, journalPublicationUnits, type JournalLegacyAnchors, type JournalAnchorPublication, type JournalAnchorCoverage } from "./journal-anchors.ts";
+export { journalLegacyCopyCount, validateJournalPublicationEntries } from "./journal-anchor-legacy.ts";
 export { JOURNAL_V2_LAST_POSITION, journalV2PassPath, journalV2SegmentPath, journalV2RetainedPath } from "./journal-v2-path.ts";
 export { JournalWork, type JournalBudget, type JournalCost } from "./journal-work.ts";
 export { journalId, type JournalFormat, type JournalObject, type JournalObjectSource } from "./journal-objects.ts";

@@ -30,6 +30,7 @@ export * from "./capability/hold.ts";
 export * from "./capability/ancestry.ts";
 export * from "./capability/gitread.ts";
 export * from "./capability/device-command.ts";
+export * from "./capability/code.ts";
 export * from "./device-command-grant.ts";
 export * from "./creation-context.ts";
 export * from "./marks.ts";

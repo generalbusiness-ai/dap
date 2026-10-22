@@ -15,6 +15,9 @@ import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-m
 import { archiveSource, verifyArchive, TRUSTS } from "@generalbusiness/artroom-replay";
 import { buildJournalPass, journalRef, verifyJournalAppend, type JournalArchive, type JournalObject, type JournalPassArchive } from "@generalbusiness/artroom-git/journal";
 import { readJournalRepositoryArchive } from "@generalbusiness/artroom-git/journal-reader";
+import { command as dapCommand, memoryStore as cliMemoryStore } from "../../../cli/src/index.ts";
+import { artifactsOutside } from "../src/artifacts-wiring.ts";
+import type { ArtifactsNamespace } from "../src/artifacts-host.ts";
 import { archiveInput } from "../src/archive-input.ts";
 import { ArchiveDriver } from "../src/archive-driver.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
@@ -41,7 +44,7 @@ import { archiveHostItem, type ArchiveHostConfiguration, type ArchiveHostItemAsk
 import { Scope, type Checkpointed } from "../src/core.ts";
 import { SqliteStore, type Sql } from "../src/sqlite.ts";
 import { archiveReplayAnchors } from "../src/archive-anchors.ts";
-import { planArchive, planArchivePass } from "../src/archive-build.ts";
+import { planArchive, planArchivePass, planPublishedArchivePass } from "../src/archive-build.ts";
 import { ARCHIVE_SOURCE_PINS, FixtureArchiveSourcePins, type FixtureArchiveSourceBirth } from "../src/archive-source-pins.ts";
 import type { ReviewedArchivePolicy } from "../src/archive-inventory.ts";
 import { outsideOf as hostOutside } from "../src/worker.ts";
@@ -582,7 +585,7 @@ test.for(["fixture", "Grow", "Grow production", "Grow activation warm", "Grow ac
       // binding. Source/policy configuration remains an explicit A2/A3 fixture.
       const at = await life.wait(() => scope.at());
       sourceLookups.length = 0;
-      const planned = await life.wait(() => runInDurableObject(scope.object, async (_instance, state) => await (kind === "Grow" ? planArchivePass : planArchive)(archiveSql(state), { at, through: read.at, after: null, bounds: PROPOSED_BOUNDS, policies, format: "sha1", parent: null, markedAt: timeOf(life.now()), fixtureSources,
+      const planned = await life.wait(() => runInDurableObject(scope.object, async (_instance, state) => await (productionScenario ? planPublishedArchivePass : kind === "Grow" ? planArchivePass : planArchive)(archiveSql(state), { at, through: read.at, after: null, bounds: PROPOSED_BOUNDS, policies, format: "sha1", parent: null, markedAt: timeOf(life.now()), fixtureSources,
         ...(discovery ? { replayScopes: discovery.scopes.map(scope => scope.at) } : {}),
       }, new ArchiveBudget())));
       expect(planned.ok, JSON.stringify({ kind, scope: scope.name, definition: (await life.wait(() => scope.summary())).value.definition, planned, sourceLookups, credentialCounts, credentialCopies })).toBe(true); if (!planned.ok) return;
@@ -1077,6 +1080,57 @@ test.for(["fixture", "Grow", "Grow production", "Grow activation warm", "Grow ac
       [...diagnosticObjects.values()].map(object => ({ id: object.id, type: object.type, data: b64url(object.data) })),
       [...diagnosticRefs].map(([ref, id]) => ({ ref, id })),
     ));
+    if (productionScenario) {
+      // Actual dap parser/handler signs and retrieves the read credential on
+      // the native destination. Only the Artifacts binding/token authority
+      // and loopback transport are TEST stand-ins; Git and replay bin are real.
+      const bridge = localClone(inject("localClone"));
+      const repository = (await life.wait(() => D.item(0))).values["repository"] as unknown as DestinationRepository;
+      const commandSession = await life.wait(() => bridge.archiveCommand(
+        cloned.objects, cloned.refs, `https://archive-command.invalid/git/${repository.namespace}/${repository.name}.git`,
+      ));
+      let mints = 0;
+      const binding: ArtifactsNamespace = {
+        get: async name => ({
+          createToken: async (scope, seconds) => {
+            expect(scope).toBe("read"); expect(seconds).toBe(3600); expect(++mints).toBe(1);
+            return { id: "public-test-command-read", plaintext: commandSession.token, scope, expiresAt: timeOf(life.now() + seconds * 1000) };
+          },
+          revokeToken: async () => true,
+          info: async () => ({ name, remote: commandSession.remote }),
+        }),
+        create: async () => { throw Error("No creation in command witness"); }, delete: async () => false,
+      };
+      life.outside(G.name, (given, sql) => {
+        const outside = artifactsOutside(given, sql, { ARTIFACTS: binding, ARTIFACTS_CONFIG: canonicalize({ registerScope: R.name, namespace: repository.namespace, host: "archive-command.invalid", maxBytes: 8 * 1024 * 1024, credentialIdentity: "adapter-attempt" }) });
+        return { ...outside, accepts: (owner, operation) => operation === "mint-read" && outside.accepts(owner, operation), send: request => request.kind === "mint-read" ? outside.send(request) : Promise.resolve(null) };
+      });
+      await life.wait(() => G.restart());
+      const store = cliMemoryStore(); await store.keep("member", rita.secret);
+      await store.save({ v: 1, service: port.service, key: "member", repository: { directory, membership, rules: A.name, destination: G.name } });
+      const clonedCommand = await life.wait(() => dapCommand({ store, fetch: routed, now: life.now,
+        pause: async () => { await driveFixture([G], life.wait); },
+        git: { run: (args, env) => life.wait(() => bridge.archiveRun(commandSession.id, args, env)), archiveRun: (args, env) => life.wait(() => bridge.archiveRun(commandSession.id, args, env)) },
+      }, ["clone", commandSession.directory, "--hours", "1", "--archive"]));
+      expect(clonedCommand.code, clonedCommand.lines.join("\n")).toBe(0); expect(mints).toBe(1);
+      const command = await life.wait(() => bridge.archiveFinish(commandSession.id, clonedCommand.lines));
+      expect(command.cloneCode).toBe(0); expect(command.fetchCode).toBe(0);
+      expect(command.refs).toHaveLength(5);
+      expect([...command.refs].sort((a, b) => a.ref.localeCompare(b.ref))).toEqual([...diagnosticRefs].map(([ref, id]) => ({ ref, id })).sort((a, b) => a.ref.localeCompare(b.ref)));
+      expect(command.tokenInConfig).toBe(false); expect(command.tokenInArgv).toBe(false); expect(command.tokenInOutput).toBe(false);
+      expect(command.readRequests).toBeGreaterThan(1);
+      expect(command.withoutTrust.signal).toBeNull(); expect(command.withoutTrust.code).toBe(1);
+      const untrusted = command.withoutTrust.report as { journals: { kind: string; verification?: { report: { result: string } } }[]; publishedAnchorsTrusted: boolean };
+      expect(untrusted.publishedAnchorsTrusted).toBe(false);
+      expect(untrusted.journals).toHaveLength(5);
+      expect(untrusted.journals.some(result => result.kind === "verification" && result.verification?.report.result !== "consistent")).toBe(true);
+      expect(command.withTrust.signal).toBeNull(); expect(command.withTrust.code).toBe(0);
+      const trusted = command.withTrust.report as { journals: { kind: string; verification: { report: { result: string } } }[]; publishedAnchorsTrusted: boolean; secretCheck: { result: string } };
+      expect(trusted.publishedAnchorsTrusted).toBe(true);
+      expect(trusted.journals).toHaveLength(5);
+      expect(trusted.journals.every(result => result.kind === "verification" && result.verification.report.result === "consistent")).toBe(true);
+      expect(trusted.secretCheck.result).toBe("no-recognized-secret");
+    }
     expect(cloned.fsckPassed).toBe(true);
     expect([...cloned.refs].sort((a, b) => a.ref.localeCompare(b.ref))).toEqual([...diagnosticRefs].map(([ref, id]) => ({ ref, id })).sort((a, b) => a.ref.localeCompare(b.ref)));
     const clonedRefs = new Map(cloned.refs.map(row => [row.ref, row.id]));

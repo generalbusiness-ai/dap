@@ -9,7 +9,7 @@ import { nativeDeclarationText, platform } from "@generalbusiness/dap-platform";
 import { forecastArchiveSourceLookup, ARCHIVE_SOURCE_LOOKUP_METADATA, ARCHIVE_SOURCE_LOOKUP_WORK } from "./archive-source-cost.ts";
 import { archiveDeclarationValidationWork } from "./archive-inventory-cost.ts";
 import type { ArchivePolicyRegistry } from "./archive-inventory.ts";
-import { ArchiveBudget } from "./archive-budget.ts";
+import { ArchiveBudget, type ArchiveCost } from "./archive-budget.ts";
 import { stopArchivePrefix as stop } from "./archive-prefix.ts";
 
 export const ARCHIVE_SOURCE_PINS = 64;
@@ -103,5 +103,17 @@ export class FixtureArchiveSourcePins {
     // even when the caller already used this source or its policy.
     budget.spend({ inputWork: archiveDeclarationValidationWork(source.declaration.length) });
     return source;
+  }
+  /** Scalar finish reservation from this pass's validated immutable map.
+   * No lookup/admission is cached or waived by this observation. */
+  publicationFootprint(budget: ArchiveBudget): { readonly lookups: Readonly<ArchiveCost> } {
+    budget.spend({ metadata: this.#sources.size * 128, inputWork: this.#sources.size * 256 });
+    const lookups: ArchiveCost = { entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0, inputWork: 0 };
+    for (const source of this.#sources.values()) {
+      if (source.at.kind !== "register" && source.at.kind !== "membership") continue;
+      const cost = forecastArchiveSourceLookup(source.declaration.length);
+      for (const key of Object.keys(lookups) as (keyof ArchiveCost)[]) lookups[key] += cost[key];
+    }
+    return { lookups };
   }
 }

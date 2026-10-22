@@ -1,5 +1,5 @@
 /** A v2 manifest describes one bounded pass. It never indexes old passes. */
-import type { Digest, Head, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
+import type { Digest, FactRef, Head, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import { isDigest, isScopeId, isScopeRef } from "@generalbusiness/artroom-bytes";
 import type { ArchiveRetainedName } from "./journal-path.ts";
 import { journalJSON } from "./journal-manifest.ts";
@@ -8,6 +8,7 @@ import { JOURNAL_SELECTION_BYTES, journalForeignSources, journalKeyName, journal
 import { JOURNAL_V2_LAST_POSITION } from "./journal-v2-path.ts";
 import { JournalWork, refuseJournal } from "./journal-work.ts";
 import { journalManifestRowsMetadata } from "./journal-pass-cost.ts";
+import { journalAnchors, journalAnchorCopyCount, journalLegacyAnchors, type JournalLegacyAnchors } from "./journal-anchors.ts";
 
 export type JournalPassRetained = ArchiveRetainedName & { readonly pass: number };
 export interface JournalTextOmission { readonly digest: Digest; readonly bytes: number; readonly first: { readonly scope: ScopeId; readonly seq: number } }
@@ -20,6 +21,8 @@ export interface JournalPassManifest {
   readonly retained: readonly JournalPassRetained[];
   readonly omitted: readonly { readonly kind: "text"; readonly digest: Digest; readonly reason: "detached-text"; readonly bytes?: number; readonly first?: JournalTextOmission["first"] }[];
   readonly foreignSources?: readonly JournalForeignSource[];
+  readonly anchors?: readonly FactRef[];
+  readonly legacyAnchors?: JournalLegacyAnchors;
 }
 export interface JournalV2Head { readonly v: 2; readonly scope: ScopeRef; readonly through: number; readonly hash: Digest }
 export function journalV2Head(body: Uint8Array, work: JournalWork): JournalV2Head {
@@ -30,7 +33,10 @@ export function journalV2Head(body: Uint8Array, work: JournalWork): JournalV2Hea
 export function journalPassManifest(body: Uint8Array, expected: JournalFormat, work: JournalWork): JournalPassManifest {
   const value = journalJSON(body, JOURNAL_SELECTION_BYTES, work);
   const extended = value !== null && typeof value === "object" && Object.hasOwn(value, "foreignSources");
-  const row = journalRecord(value, ["v", "through", "parent", "format", "entries", "retained", "omitted", ...(extended ? ["foreignSources"] : [])]);
+  const published = value !== null && typeof value === "object" && Object.hasOwn(value, "anchors");
+  const legacy = value !== null && typeof value === "object" && Object.hasOwn(value, "legacyAnchors");
+  if (legacy && !published) return refuseJournal("manifest", "legacy anchors without current publication");
+  const row = journalRecord(value, ["v", "through", "parent", "format", "entries", "retained", "omitted", ...(extended ? ["foreignSources"] : []), ...(published ? ["anchors"] : []), ...(legacy ? ["legacyAnchors"] : [])]);
   const sources = extended ? journalForeignSources(row["foreignSources"], work) : [];
   const through = journalRecord(row["through"], ["seq", "hash"]), range = journalList(row["entries"], 2, work);
   if (row["v"] !== 2 || journalFormat(row["format"]) !== expected || !journalNatural(through["seq"]) || through["seq"] > JOURNAL_V2_LAST_POSITION
@@ -62,16 +68,20 @@ export function journalPassManifest(body: Uint8Array, expected: JournalFormat, w
   checkOrder(retained, journalKeyName); checkOrder(omitted, journalKeyName);
   const present = new Set(retained.map(journalKeyName));
   if (omitted.some(key => present.has(journalKeyName(key))) || (sources.length > 0) !== retained.some(key => key.kind === "entry")) return refuseJournal("manifest");
+  const anchors = published ? journalAnchors(row["anchors"], journalAnchorCopyCount(retained, work), work) : undefined;
+  const legacyAnchors = legacy ? journalLegacyAnchors(row["legacyAnchors"], first, work) : undefined;
   work.check();
-  return { v: 2, through: { seq: through["seq"], hash: through["hash"] }, parent, format: expected, entries: [first, through["seq"]], retained, omitted, ...(sources.length ? { foreignSources: sources } : {}) };
+  return { v: 2, through: { seq: through["seq"], hash: through["hash"] }, parent, format: expected, entries: [first, through["seq"]], retained, omitted, ...(sources.length ? { foreignSources: sources } : {}), ...(anchors ? { anchors } : {}), ...(legacyAnchors ? { legacyAnchors } : {}) };
 }
 export function manifestOfPass(selection: JournalPassSelection, format: JournalFormat, parent: string | null, work: JournalWork): JournalPassManifest {
   journalFormat(format); if (parent !== null) journalId(format, parent);
-  work.metadata(journalManifestRowsMetadata(selection.objects.length + selection.omitted.length));
+  work.metadata(journalManifestRowsMetadata(selection.objects.length + selection.omitted.length + (selection.anchors?.length ?? 0) + (selection.legacyAnchors?.anchors.length ?? 0)));
   return { v: 2, through: { ...selection.through }, parent, format,
     entries: [selection.after ? selection.after.seq + 1 : 0, selection.through.seq],
     retained: selection.objects.map(row => ({ ...row.key, pass: row.pass })),
     omitted: selection.omitted.map(row => ({ kind: row.kind, digest: row.digest, reason: row.reason,
       ...(row.bytes === undefined ? {} : { bytes: row.bytes, first: { scope: selection.at.scope, seq: Math.min(...row.consumers.map(consumer => consumer.origin.at.seq)) } }) })),
-    ...(selection.foreignSources?.length ? { foreignSources: selection.foreignSources.map(source => ({ at: { ...source.at }, pin: source.pin })) } : {}) };
+    ...(selection.foreignSources?.length ? { foreignSources: selection.foreignSources.map(source => ({ at: { ...source.at }, pin: source.pin })) } : {}),
+    ...(selection.anchors ? { anchors: journalAnchors(selection.anchors, journalAnchorCopyCount(selection.objects, work), work, [selection.at]) } : {}),
+    ...(selection.legacyAnchors ? { legacyAnchors: journalLegacyAnchors(selection.legacyAnchors, selection.after ? selection.after.seq + 1 : 0, work, [selection.at]) } : {}) };
 }

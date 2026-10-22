@@ -12,7 +12,7 @@
 import type { NativeBirthSource } from "./native-birth.ts";
 import type { ProofSource } from "./proof-bytes.ts";
 import type { Archived, Digest, Entry, FactRef, Grant, KeyId, ObservationUse, PlatformDefinition, Prepared, RoutingRefusal, ScopeRef, SignedIntent, Timestamp, UnavailableReason } from "@generalbusiness/dap-contract";
-import { TOKENS_FLOOR, capabilitiesOf, deviceCommand, gitRead, holdCapability, timeOf, type Capabilities, type HoldOptions, type Clock as Reading, type Delivered, type Fetched, type Owners, type Presented, type RuleInput, type StateView, type Needed, type Observing, type Window } from "@generalbusiness/dap-derive";
+import { CAPABILITY_CODE, timeOf, type Capabilities, type Clock as Reading, type Delivered, type Fetched, type Owners, type Presented, type RuleInput, type StateView, type Needed, type Observing, type Window } from "@generalbusiness/dap-derive";
 import { evaluateRules } from "@generalbusiness/dap-derive/rule";
 import { platform, type Platform } from "@generalbusiness/dap-platform";
 import { toConsole, type DiagnosisSink } from "./diag.ts";
@@ -305,15 +305,15 @@ const NO_GRANT: Standing = { held: () => [] };
  * contract's section 7.5, so they are stated here and are no member of
  * `Bounds` (I3 deltas, entry EL5).
  */
-export const HOLD_VERSION: HoldOptions = { tokensPerHold: TOKENS_FLOOR, rootRetentionSeconds: null };
+export { HOLD_VERSION } from "@generalbusiness/dap-derive";
 
 /**
- * The code of the two capability versions, as one value for the two ports
+ * The one shared table of the three capability versions, as one value for the two ports
  * that ask it: the forms and the steps (`capabilities`), and the rules of
- * the operations that `hold@1` and `git-read@1` own (`owners`). It is derive's code: pure
+ * the operations that `hold@1`, `git-read@1`, and `device-command@1` own (`owners`). It is derive's code: pure
  * functions that hold no state and read no port.
  */
-export const CAPABILITY_CODE = capabilitiesOf(holdCapability(HOLD_VERSION), gitRead(), deviceCommand());
+export { CAPABILITY_CODE };
 
 /**
  * The production defaults. The clock and the random source are the

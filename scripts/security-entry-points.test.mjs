@@ -34,14 +34,22 @@ const seals = {
   "examples/grow/simulator-host.ts": "53668f18cbfb33bf8ad38892fdbafd4aba3736b7987238e643e0d661cee6c1bf"
 };
 // Integrated archive owners computed by the maintained owning parser.
-// Root adopted the nine outputs; the historical map name is retained here.
+// Root adopted the reviewed outputs; the historical map name is retained here.
 const pendingArchiveSeals = {
+  // Publication and floor owners were reviewed before these values were
+  // computed by the maintained parser on the integrated source.
+  "packages/scope/src/archive-target.ts": "f23598cd54a6dea92e2b73ae4d144b7415aa98f379f76d9ff21fe4e59b431d5e",
+  "packages/scope/src/archive-source-window.ts": "ff57280313895f5b948ac38dad2be4a5613c8bb8c4e8434d7aafbd7bd50aa34f",
+  "packages/scope/src/archive-publication.ts": "9c80517fd5de98545a0042f8fa7675769166de5a6387b9e6b60ddc9e5b68b2a5",
+  "packages/scope/src/archive-build.ts": "4848285269821fbc60214758ba2f0050e0a6e338d60f6d85dc63a3689b7d8448",
+  "packages/scope/src/archive-driver.ts": "b7c3a13a59e7aae8a7eae2d7f601dc6e9f697c55c18d0094ec7499d45dd11ece",
+  "packages/scope/src/archive-row.ts": "c09e55ca926be59400a055a75013993203931c923f21e455bed62eb51f224549",
+  "packages/scope/src/floor-writer.ts": "a55c28f393f59297fe952104b576b275c73c451456afced3d8cac33dc54f2ff4",
   "packages/scope/src/object.ts": "3f89c484132ef3cf79b3fd3a76e058601201b630abf0e48cb550b0f7216ac365", // Same adopted value as the original owner map above.
   "apps/room/worker.grow.ts": "791c2bfcb8b2a62d8f0d8afec627ac76b63be4b9f1ee5de27d3f6c081959bc01",
   "apps/room/archive-policy.ts": "707d55642fa0a35075614d1f7b02149b8a33f5eb128f0e0ef4b54100aaa1897f",
-  "apps/room/archive.ts": "a1a468c4ea5f9cfdfd102dcc9873f93c2649179b2b802c57b8d5015a3e5975fc",
+  "apps/room/archive.ts": "fd0e00f874b6607728bc5a63842a64e41799f1041f9c5952978c2d86dfc048a2",
   "packages/scope/src/archive-host-item.ts": "70ac9b23e986d0f399d9e64748381f97ee6c5f7e39971b9dd3a1fa6d700bbf4e",
-  "packages/scope/src/archive-target.ts": "b002f81c556577d5e1d1a9682ca1ebb14a0296206b2253c66a577303afb59bf5",
   "packages/scope/src/archive-host.ts": "29e262731d46335cb9535b10e2c1de36b6b3a6f8ea42c77be4b628378704dfd7",
   "packages/scope/src/artifacts-host.ts": "3aaf075454b58ceae380bf9ab667d3a26d173776936ddd63d2bf01bbe865a698",
   "packages/scope/src/artifacts-wiring.ts": "3590510139ad5c73a6ff66396b77a83dae5d212bfbcebb332df80154961fd478",

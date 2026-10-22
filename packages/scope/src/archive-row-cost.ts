@@ -27,9 +27,9 @@ export const archiveConfirmedSelectionReservation = (units: number): Pick<Archiv
  * at most doubles its UTF-8 bytes; 1024 covers the mark's bounded commit,
  * parent, head, timestamp, punctuation and next-attempt timestamp fields.
  * This is a size upper bound, never a constructed or accepted mark. */
-export function archivePendingRowBytesUpper(currentRowBytes: number, manifestBytes: number): number {
-  const bytes = currentRowBytes + manifestBytes * 2 + 1024;
-  if (![currentRowBytes, manifestBytes, bytes].every(natural) || currentRowBytes === 0 || manifestBytes === 0) throw new ArchiveStopped("unavailable");
+export function archivePendingRowBytesUpper(currentRowBytes: number, manifestBytes: number, publicationBytes = 0, replayScopeBytes = 0): number {
+  const bytes = currentRowBytes + (manifestBytes + publicationBytes + replayScopeBytes) * 2 + 1024;
+  if (![currentRowBytes, manifestBytes, publicationBytes, replayScopeBytes, bytes].every(natural) || currentRowBytes === 0 || manifestBytes === 0) throw new ArchiveStopped("unavailable");
   return bytes;
 }
 export interface ArchiveBookkeepingFootprint {
@@ -37,6 +37,8 @@ export interface ArchiveBookkeepingFootprint {
   readonly markedRowBytes: number;
   readonly attemptedRowBytes: number;
   readonly manifestUnits: number;
+  readonly publicationUnits?: number;
+  readonly replayScopes?: number;
   readonly newRetained: number;
   readonly atomicFirstAttempt?: boolean;
 }
@@ -50,18 +52,22 @@ export type ArchiveBookkeepingForecast = { readonly ok: true; readonly cost: Rea
  * bounds; all actual operations still charge the original ledger. */
 export function forecastArchiveBookkeeping(shape: ArchiveBookkeepingFootprint): ArchiveBookkeepingForecast {
   const { oldRowBytes, markedRowBytes, attemptedRowBytes, manifestUnits, newRetained } = shape;
-  if (![oldRowBytes, markedRowBytes, attemptedRowBytes, manifestUnits, newRetained].every(natural)
+  const publicationUnits = shape.publicationUnits ?? 0;
+  const replayScopes = shape.replayScopes ?? 0;
+  if (![oldRowBytes, markedRowBytes, attemptedRowBytes, manifestUnits, publicationUnits, replayScopes, newRetained].every(natural)
     || oldRowBytes === 0 || markedRowBytes === 0 || attemptedRowBytes === 0 || manifestUnits === 0) throw new ArchiveStopped("unavailable");
   if (Math.max(oldRowBytes, markedRowBytes, attemptedRowBytes) > ARCHIVE_ROW_BYTES
-    || manifestUnits > ARCHIVE_ROW_MANIFEST_BYTES || newRetained > 512) return { ok: false, reason: "limit" };
+    || manifestUnits > ARCHIVE_ROW_MANIFEST_BYTES || publicationUnits > ARCHIVE_ROW_MANIFEST_BYTES || replayScopes > 64 || newRetained > 512) return { ok: false, reason: "limit" };
   // Atomic initial Mark+attempt eliminates the intermediate marked-row
   // save and its later reload/validation. Unit prices are unchanged.
   const atomic = shape.atomicFirstAttempt === true, loads = atomic ? 2 : 3, saves = atomic ? 2 : 3;
   const bytes = oldRowBytes + (atomic ? 0 : markedRowBytes) + attemptedRowBytes, save = archiveRowSaveReservation();
   const confirmation = archiveConfirmedSelectionReservation(manifestUnits);
-  const metadata = loads * ARCHIVE_ROW_SIZE_METADATA + bytes + confirmation.metadata + newRetained * ARCHIVE_RETAINED_PASS_METADATA;
+  const metadata = loads * ARCHIVE_ROW_SIZE_METADATA + bytes + confirmation.metadata + newRetained * ARCHIVE_RETAINED_PASS_METADATA
+    + (atomic ? 3 : 5) * replayScopes * 512;
   const inputWork = loads * ARCHIVE_ROW_SIZE_METADATA + bytes + archiveRowLoadWork(bytes)
-    + (atomic ? 3 : 5) * archivePendingManifestWork(manifestUnits) + archiveMarkWork(manifestUnits)
+    + (atomic ? 3 : 5) * (archivePendingManifestWork(manifestUnits + publicationUnits) + replayScopes * 1024)
+    + archiveMarkWork(manifestUnits + publicationUnits + replayScopes * 256)
     + saves * save.inputWork + confirmation.inputWork
     + newRetained * (ARCHIVE_RETAINED_PASS_METADATA + ARCHIVE_RETAINED_PASS_WORK + ARCHIVE_RETAINED_CONFIRM_WORK);
   if (![metadata, inputWork].every(natural)) throw new ArchiveStopped("unavailable");

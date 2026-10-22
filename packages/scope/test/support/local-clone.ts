@@ -36,6 +36,9 @@ export function localClone(at: LocalCloneAddress) {
     run: (args: readonly string[], env: Readonly<Record<string, string>>) => json<LocalCloneRun>("/run", { args, env }),
     inspect: () => json<LocalCloneInspection>("/inspect"),
     archive: (objects: LocalArchiveClone["objects"], refs: LocalArchiveClone["refs"]) => json<LocalArchiveClone>("/archive-clone", { objects, refs }),
+    archiveCommand: (objects: LocalArchiveClone["objects"], refs: LocalArchiveClone["refs"], remote: string) => json<{ id: string; remote: string; directory: string; token: string }>("/archive-command", { objects, refs, remote }),
+    archiveRun: async (id: string, args: readonly string[], env: Readonly<Record<string, string>>) => (await json<{ code: number | null }>("/archive-command-run", { id, args, env })).code,
+    archiveFinish: (id: string, lines: readonly string[]) => json<import("./local-archive-command.ts").ArchiveCommandWitness>("/archive-command-finish", { id, lines }),
     status: () => json<unknown>("/status"),
     forward: async (request: Request) => {
       // Fixed trusted test proxy, as Host.upstream's synthetic Response. The

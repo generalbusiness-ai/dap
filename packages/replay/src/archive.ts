@@ -18,11 +18,18 @@ export interface ArchiveReadWork {
   remainingMilliseconds(): number;
 }
 export interface ArchiveLocation { readonly scope?: ScopeId; readonly ref?: string; readonly commit?: string; readonly object?: string; readonly path?: string }
-export type ArchiveFailureKind = "mismatch" | "refused" | "unavailable" | "timeout" | "limit" | "not-found";
+export type ArchiveFailureKind = "mismatch" | "refused" | "unavailable" | "timeout" | "limit" | "not-found" | "anchors-unpublished";
 export interface ArchiveFailure { readonly ok: false; readonly result: ArchiveFailureKind; readonly reason: string; readonly location: ArchiveLocation }
 export interface ArchiveData {
   readonly scope: ScopeRef; readonly head: Head; readonly format: "sha1" | "sha256"; readonly commit: string;
   readonly name: string | null;
+  /** Reader-validated published lists; these are never trusted by default. */
+  readonly publishedAnchors?: readonly FactRef[];
+  readonly anchorCoverage?: {
+    readonly covered: boolean;
+    readonly unpublished: readonly { readonly commit: string; readonly from: number; readonly through: number }[];
+    readonly legacy: readonly { readonly pass: number; readonly commit: string; readonly from: number; readonly through: number }[];
+  };
   readonly entries: readonly Stored[];
   readonly retained: readonly RetainedInput[];
   /** Archive-declared classifier basis; no source-history proof is implied. */
@@ -46,7 +53,8 @@ export interface ArchiveTextPort {
   settle?(): Promise<void>;
 }
 export interface ArchiveSourceOptions { readonly seconds?: number; readonly limits?: Partial<Limits>; readonly texts?: ArchiveTextPort }
-export interface ArchiveVerifyOptions extends Options { readonly receipt?: { readonly fact: FactRef } }
+export interface ArchiveVerifyOptions extends Options { readonly receipt?: { readonly fact: FactRef }; readonly requirePublishedAnchors?: boolean }
+export type ArchivePublications = { readonly ok: true; readonly archives: readonly ArchiveDescriptor[]; readonly anchors: readonly FactRef[]; readonly coverage: readonly { readonly scope: ScopeId; readonly coverage: NonNullable<ArchiveData["anchorCoverage"]> }[] } | ArchiveFailure;
 export interface ArchiveReadStats { readonly objectBytes: number; readonly scopes: number; readonly cost: Readonly<ArchiveCost> }
 export interface ArchiveDescriptor { readonly scope: ScopeRef; readonly head: Head; readonly format: "sha1" | "sha256"; readonly commit: string }
 export interface ArchiveReceipt { readonly fact: FactRef; readonly result: "archived" | "behind" | "mismatch" | "unverified"; readonly reason: string | null }
@@ -307,6 +315,40 @@ export class ArchiveSource implements HistorySource {
   page(scope: ScopeId, from: number, allow: Allow): ReturnType<HistorySource["page"]> { return this.#default().page(scope, from, allow); }
   retained(scope: ScopeId, kind: RetainedInput["kind"], digest: Digest, allow: Pick<Allow, "bytes">, domain?: string): ReturnType<HistorySource["retained"]> { return this.#default().retained(scope, kind, digest, allow, domain); }
   omittedText(scope: ScopeId, digest: Digest, allow: Pick<Allow, "bytes">): ReturnType<NonNullable<HistorySource["omittedText"]>> { return this.#default().omittedText(scope, digest, allow); }
+  /** Inspect every named immutable snapshot under one original read budget.
+   * Returning published facts does not grant them authority. */
+  async publications(scopes: readonly ScopeId[]): Promise<ArchivePublications> {
+    const session = this.#session();
+    let outcome: ArchivePublications;
+    try {
+      const archives: ArchiveDescriptor[] = [], anchors = new Map<string, FactRef>();
+      const coverage: Extract<ArchivePublications, { ok: true }>["coverage"][number][] = [];
+      if (!scopes.length || new Set(scopes).size !== scopes.length || scopes.some(scope => !isScopeId(scope))) throw new Stopped("unavailable");
+      for (const scope of scopes) {
+        const read = await session.open(scope);
+        if (!read.ok) { outcome = read; return outcome; }
+        const a = read.archive;
+        if (!a.anchorCoverage?.covered || !a.publishedAnchors) return { ok: false, result: "anchors-unpublished", reason: "archive passes have no complete published anchor coverage", location: { scope, commit: a.anchorCoverage?.unpublished[0]?.commit ?? a.commit } };
+        archives.push({ scope: a.scope, head: a.head, format: a.format, commit: a.commit });
+        coverage.push({ scope, coverage: a.anchorCoverage });
+        for (const fact of a.publishedAnchors) {
+          // A full source reference includes its incarnation. This operator
+          // refuses contradictory publications; the generic caller-anchor
+          // verifier keeps its existing explicit caller-word semantics.
+          const key = canonicalize([fact.at, fact.seq]), previous = anchors.get(key);
+          if (previous && previous.hash !== fact.hash) return { ok: false, result: "mismatch", reason: "published anchor lists contradict one full source reference and position", location: { scope, commit: a.commit } };
+          anchors.set(key, fact);
+        }
+      }
+      const publicScopes = new Set(archives.map(archive => archive.scope.scope));
+      if ([...anchors.values()].some(fact => publicScopes.has(fact.at.scope))) return { ok: false, result: "mismatch", reason: "published anchor names a journal in the public archive set", location: {} };
+      const compare = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0;
+      const published = [...anchors.values()].sort((a, b) => compare(a.at.scope, b.at.scope) || a.seq - b.seq || compare(canonicalize(a.at), canonicalize(b.at)));
+      outcome = { ok: true, archives, anchors: published, coverage };
+    } catch (error) { outcome = readFailure(error, scopes[0]!); }
+    finally { await session.settle(); }
+    return outcome;
+  }
   async verify(options: ArchiveVerifyOptions): Promise<ArchiveVerification> {
     let session: Session | null = null, native: Verification | undefined, outcome: ArchiveVerification;
     const scope = options.scope;
@@ -318,6 +360,7 @@ export class ArchiveSource implements HistorySource {
       session = this.#session(options.limits, options.anchors);
       const read = await session.open(scope);
       if (!read.ok) outcome = { kind: "archive-failure", ...read, read: session.work.stats() };
+      else if (options.requirePublishedAnchors && !read.archive.anchorCoverage?.covered) outcome = { kind: "archive-failure", result: "anchors-unpublished", reason: "archive passes have no complete published anchor coverage", location: { scope, commit: read.archive.anchorCoverage?.unpublished[0]?.commit ?? read.archive.commit }, read: session.work.stats() };
       else {
         const selectedHead = options.head === undefined;
         const head = options.head ? { ...options.head } : read.archive.head;

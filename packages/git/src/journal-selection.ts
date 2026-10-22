@@ -11,6 +11,7 @@ import { JournalWork, refuseJournal, type JournalCost } from "./journal-work.ts"
 import { JOURNAL_V2_LAST_POSITION } from "./journal-v2-path.ts";
 import { ARCHIVE_NATIVE_VALUE_DOMAINS } from "./archive-policy.ts";
 import { JOURNAL_SELECTION_BYTES, JOURNAL_MEASURED_OMISSION_METADATA, journalOrderingInputWork, journalSelectionJSONReservation } from "./journal-selection-cost.ts";
+import { journalAnchors, journalAnchorCopyCount, journalLegacyAnchors, type JournalLegacyAnchors } from "./journal-anchors.ts";
 
 export { JOURNAL_SELECTION_BYTES } from "./journal-selection-cost.ts";
 const inventoryCeilings: Readonly<JournalCost> = { entries: 4096, attempts: 512, nodes: 64, calls: 16384, metadata: 4 * 1024 * 1024, inputWork: 64 * 1024 * 1024 };
@@ -46,6 +47,8 @@ export interface JournalSelection {
 export interface JournalPassSelection extends Omit<JournalSelection, "objects"> {
   readonly after: Head | null;
   readonly objects: readonly (JournalSelectedObject & { readonly pass: number })[];
+  readonly anchors?: readonly FactRef[];
+  readonly legacyAnchors?: JournalLegacyAnchors;
 }
 export const journalKeyName = (key: ArchiveRetainedName | { kind: "text"; digest: Digest }): string =>
   canonicalize(key.kind === "value" ? [key.kind, key.domain, key.digest] : [key.kind, key.digest]);
@@ -122,7 +125,10 @@ function readSelection(bytes: string, work: JournalWork, incremental: boolean): 
   catch { return refuseJournal("input"); }
   work.check();
   const extended = value !== null && typeof value === "object" && Object.hasOwn(value, "foreignSources");
-  const top = journalRecord(value, ["format", "at", "through", "entries", "objects", "omittedTexts", "ancestryUnwalked", "replay", "retention", "cost", ...(extended ? ["foreignSources"] : []), ...(incremental ? ["after"] : [])]);
+  const published = incremental && value !== null && typeof value === "object" && Object.hasOwn(value, "anchors");
+  const legacy = incremental && value !== null && typeof value === "object" && Object.hasOwn(value, "legacyAnchors");
+  if (legacy && !published) return refuseJournal("input");
+  const top = journalRecord(value, ["format", "at", "through", "entries", "objects", "omittedTexts", "ancestryUnwalked", "replay", "retention", "cost", ...(extended ? ["foreignSources"] : []), ...(incremental ? ["after"] : []), ...(published ? ["anchors"] : []), ...(legacy ? ["legacyAnchors"] : [])]);
   const foreignSources = extended ? journalForeignSources(top["foreignSources"], work) : [];
   const sources = new Map(foreignSources.map(source => [canonicalize(source.at), source.pin])), usedSources = new Set<string>();
   if (top["format"] !== (incremental ? "artroom-local-inventory-2" : "artroom-local-inventory-1") || top["replay"] !== "unchecked" || top["retention"] !== "observed-local" || !isScopeRef(top["at"])) return refuseJournal("input");
@@ -222,8 +228,10 @@ function readSelection(bytes: string, work: JournalWork, incremental: boolean): 
   if (inventoryCost.entries < entries.length || inventoryCost.attempts < objects.size) return refuseJournal("input");
   const chosenObjects = journalOrdered([...objects.values()], r => journalKeyName(r.key), work).map(r => ({ key: r.key, bytes: r.bytes, consumers: journalOrdered([...r.consumers.values()], c => c.description, work), ...(r.foreign ? { foreign: r.foreign } : {}), ...(incremental ? { pass: r.pass! } : {}) }));
   const omitted = journalOrdered([...omissions.values()], journalKeyName, work).map(r => ({ kind: r.kind, digest: r.digest, reason: r.reason, consumers: journalOrdered([...r.consumers.values()], c => c.description, work), ...(r.bytes === undefined ? {} : { bytes: r.bytes }) }));
+  const anchors = published ? journalAnchors(top["anchors"], journalAnchorCopyCount(chosenObjects, work), work, [at]) : undefined;
+  const legacyAnchors = legacy ? journalLegacyAnchors(top["legacyAnchors"], first, work) : undefined;
   work.check();
-  return { at, through, entries, objects: chosenObjects, omitted, ancestryUnwalked, inventoryCost, ...(foreignSources.length ? { foreignSources } : {}), ...(incremental ? { after } : {}) };
+  return { at, through, entries, objects: chosenObjects, omitted, ancestryUnwalked, inventoryCost, ...(foreignSources.length ? { foreignSources } : {}), ...(incremental ? { after } : {}), ...(anchors ? { anchors } : {}), ...(legacyAnchors ? { legacyAnchors } : {}) };
 }
 
 /** Closed v1 decoding remains the default and refuses every v2 extension. */

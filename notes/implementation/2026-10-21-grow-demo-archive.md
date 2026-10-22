@@ -366,9 +366,30 @@ After the production contract and exact candidate pass review:
    Retain the accepted entry and read back that exact item.
 5. Confirm that each of the five admitted journals starts at position 0,
    advances through confirmed receipts, and shares the reviewed destination.
-6. Clone the actual destination and run A2 offline. Retain the five reports,
-   the explicit caller anchors, omitted-text qualifications, and a check
-   that the archive contains no secret.
+6. From an authenticated member's existing connection, clone the actual
+   destination with one short-lived read credential. Do not pass a token
+   in a command argument or save it in a file:
+
+   ```sh
+   dap clone ./grow-archive --hours 1 --archive
+   artroom-replay --git ./grow-archive --all --expect-journals 5 --trust-published-anchors --json
+   artroom-replay --git ./grow-archive --check-secrets --json
+   ```
+
+   Retain the five journal reports, their exact archive commit IDs, the
+   anchor coverage and explicit `publishedAnchorsTrusted: true` choice,
+   and the omitted-text qualification. The explicit trust option takes
+   validated pass-published anchor lists on the caller's word; it does not
+   prove those private facts. Without that option, replay must establish
+   the facts itself. An `anchors-unpublished` result names the current
+   snapshot and missing pass range: obtain a new coverage publication
+   before accepting the archive. Do not infer an anchor list from entries.
+   Require all five results to be `consistent`, including the Directory
+   at version 16 and device-command at version 1. The secret check reports
+   `no-recognized-secret` only for its finite recognizers and bounded Git
+   closure; it is not proof that arbitrary secrets are absent. These
+   commands and report fields are source-prepared and remain unverified
+   until the real test-host command witness and reviewed gate pass.
 7. Publish disclosure that names the verified location and describes actual
    archive progress. Record continuing simulator ticks at the signed cadence.
 

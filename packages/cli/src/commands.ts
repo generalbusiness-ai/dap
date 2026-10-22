@@ -1,4 +1,4 @@
-import { INVITATION_KEY_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
+import { ARCHIVE_REPLAY_CODE, INVITATION_KEY_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { invitationIssueFields, invitationRedemptionFields, isInvitationMembership } from "@generalbusiness/artroom-client";
 import { applicationList } from "./application-list.ts";
 /**
@@ -36,7 +36,7 @@ import {
   ScopeHandle, ShapeError, TransportError, activeDirectory, partitionIndexes, wellFormedInvitation, isCreationOffer, readCredential, declaredHandle, create, httpTransport, requestSession, secretSigner, sessionRequest, shapeDeclaredAct, signedIntent, signedLogReader, signedReads,
   type Fetch, type Session, type CreationOffer, type ReadSigning, type Signing, type Transport,
 } from "@generalbusiness/artroom-client";
-import { TOKENS_FLOOR, capabilitiesOf, gitRead, holdCapability } from "@generalbusiness/dap-derive";
+import { CAPABILITY_CODE as REPLAY_CAPABILITY_CODE } from "@generalbusiness/dap-derive";
 import { APPLICATION_COHORT, FILE_PUBLICATION_COHORT, COUNTING_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, DIRECTORY_OF, SIBLINGS_OF, READ_TOKEN_HOURS, NEWEST, ROLE_LISTS, platform, type Role, DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { SourceError, httpSource, render, verify as replay, type HistorySource } from "@generalbusiness/artroom-replay";
 import { enrolAgentKey } from "./invitations.ts";
@@ -48,6 +48,7 @@ import { outcomeFetch, outcomeWaitLines, pauseOutcome, waitOutcome, type CloneWa
 import { readTokenEntry, readTokenOpening, readTokenOutcome, readTokenReceipt } from "./clone-proof.ts";
 import { observeCleanup } from "./verify-cleanup.ts";
 import { statusReport } from "./status-report.ts";
+import { archiveRemote, archiveValue } from "./archive-remote.ts";
 
 export interface Context {
   /** An explicit runtime port with persistent request custody. The browser
@@ -89,6 +90,8 @@ export interface Context {
  */
 export interface Git {
   run(args: readonly string[], env: Readonly<Record<string, string>>): Promise<number | null>;
+  /** Credential-bearing archive clone/fetch only: fresh environment, fixed config, no raw child output. */
+  archiveRun?(args: readonly string[], env: Readonly<Record<string, string>>): Promise<number | null>;
   files?(base: string, branch: string): Promise<{ ok: true; tip: string; files: readonly { path: string; bytes: Uint8Array }[] } | { ok: false; reason: string }>;
 }
 
@@ -1172,19 +1175,15 @@ function sessionFirst(session: HistorySource, signed: HistorySource): HistorySou
   };
 }
 
-/**
- * The code of the lanes' two capability versions, `hold@1` and `git-read@1`, with the numbers of `hold@1` that the runtime runs
- * (`CAPABILITY_CODE` and `HOLD_VERSION` of the scope package's `ports.ts`). It is derive's code: pure functions, which let the
- * verifier derive a lane's entries again.
- */
-const CAPABILITIES = capabilitiesOf(holdCapability({ tokensPerHold: TOKENS_FLOOR, rootRetentionSeconds: null }), gitRead());
+/** The same capability instances and hold numbers as the serving runtime. */
+export { REPLAY_CAPABILITY_CODE };
 
 /** The replay of one scope's history over the read routes: with the caller's session first, then by signed reads. */
 async function replayOf(ctx: Context, config: Config, reader: string | null, scope: ScopeId) {
   const options = ctx.fetch ? { fetch: ctx.fetch } : {};
   const signed = httpSource(config.service, { ...options, reader: signedLogReader(secretSigner(await signerOf(ctx, config)), readSigning(ctx)) });
   const source = reader === null ? signed : sessionFirst(httpSource(config.service, { ...options, reader }), signed);
-  return replay(source, { mode: "replay", scope, platform, grants: "proven", capabilities: CAPABILITIES, owners: CAPABILITIES });
+  return replay(source, { mode: "replay", scope, platform, sourceName: ARCHIVE_REPLAY_CODE.sourceName, receiverIdentity: ARCHIVE_REPLAY_CODE.receiverIdentity, grants: "proven", capabilities: REPLAY_CAPABILITY_CODE, owners: REPLAY_CAPABILITY_CODE });
 }
 
 export function verifyScopeCommand(ctx: Context, named: string | undefined, options: { all?: boolean } = {}): Promise<Outcome> {
@@ -1338,9 +1337,13 @@ const headerEnv = (value: string): Record<string, string> => ({ GIT_CONFIG_COUNT
  * 4. It runs `git clone -- <remote> [directory]`, with the header in git's environment configuration. The token is in no
  *    argument, command-printed line or command-written file. Ambient Git
  *    configuration and Git's own output remain trusted.
+ * 5. With --archive and an explicit directory, fetch exactly the journal
+ *    namespace into that clone with the same token, still only in memory.
  */
-export function clone(ctx: Context, directory: string | undefined, options: { hours?: number } = {}): Promise<Outcome> {
+export function clone(ctx: Context, directory: string | undefined, options: { hours?: number; archive?: boolean } = {}): Promise<Outcome> {
   return run(async () => {
+    if (options.archive && !directory) return usage("clone --archive needs an explicit directory.");
+    if (options.archive && !ctx.git?.archiveRun) return failed("Archive clone needs the hardened Git runner. No read token was requested.");
     const hours = options.hours ?? 1;
     if (!Number.isSafeInteger(hours) || hours < READ_TOKEN_HOURS.min || hours > READ_TOKEN_HOURS.max) return usage(`--hours is a whole number from ${READ_TOKEN_HOURS.min} to ${READ_TOKEN_HOURS.max}.`);
     const config = await configOf(ctx);
@@ -1388,10 +1391,21 @@ export function clone(ctx: Context, directory: string | undefined, options: { ho
     const answer = await readCredential(config.service, scope, reader, handle, ctx.fetch ? { fetch: ctx.fetch } : {});
     if (!answer.ok) return failed(`Cannot read the read token ${handle}: ${answer.reason}.`);
     const value = answer.value;
+    if (options.archive && (!archiveRemote(value.remote) || !archiveValue(value.remote, [value.token]))) return failed("The archive credential named an unsafe remote. The one-time credential may have been consumed; no remote was saved or printed and no Git command was started.");
     if (value.remote !== config.remote) await ctx.store.save({ ...config, remote: value.remote });
-    const code = await ctx.git.run(args(value.remote), headerEnv(authorization(repository, value.token)));
+    const environment = headerEnv(authorization(repository, value.token));
+    const runGit = options.archive ? ctx.git.archiveRun!.bind(ctx.git) : ctx.git.run.bind(ctx.git);
+    const code = await runGit(args(value.remote), environment);
     const lines = [`Read token: ${scope}:${seq}, until ${value.ends}.`, `Remote URL: ${value.remote}`];
-    if (code === 0) return done(...lines, `Cloned into ${directory ?? value.remote.replace(/\.git$/, "").split("/").at(-1)}.`);
+    if (code === 0) {
+      if (options.archive) {
+        // Same one-shot credential, still only in child environment. No
+        // ambient fetch refspec or credential file is needed for journals.
+        const fetched = await runGit(["-C", directory!, "fetch", "--no-tags", "--", "origin", "+refs/artroom/journal/*:refs/artroom/journal/*"], environment);
+        if (fetched !== 0) return failed(...lines, "The working clone exists, but fetching archive journal refs failed. No replay was attempted; the read token is not kept.");
+      }
+      return done(...lines, `Cloned into ${directory ?? value.remote.replace(/\.git$/, "").split("/").at(-1)}.`, ...(options.archive ? ["Fetched refs/artroom/journal/* with the same read token. Verify the expected journal set offline before accepting the archive."] : []));
+    }
     return failed(...lines, code === null ? "git could not be run; the token was read and is not kept." : `git clone exited with ${code}; the token was read and is not kept.`);
   });
 }

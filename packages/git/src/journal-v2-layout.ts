@@ -12,6 +12,7 @@ import { readJournalPassParent } from "./journal-v2-parent.ts";
 import { JournalPassPreparation } from "./journal-v2-preparation.ts";
 import { JournalLayoutRefusal, JournalWork, refuseJournal, type JournalBudget, type JournalCost, type JournalLayoutLimits, type JournalLayoutReason } from "./journal-work.ts";
 import { journalPassSerializationMetadata, journalSegmentReservation } from "./journal-pass-cost.ts";
+import { journalAnchorPublication, journalAnchorCopyCount, journalPublicationUnits, type JournalAnchorPublication } from "./journal-anchors.ts";
 
 export interface JournalPassArchive {
   readonly commit: string;
@@ -33,6 +34,9 @@ export interface JournalPassOptions {
   readonly parent: { readonly id: string; readonly source: JournalObjectSource } | null;
   readonly budget: JournalBudget;
   readonly preparation?: JournalPassPreparation;
+  /** Metadata finalization only, once after selected entry integrity/chain
+   * validation. It cannot change the admitted source selection or input. */
+  readonly publication?: () => JournalAnchorPublication;
 }
 export async function buildJournalPass(options: JournalPassOptions): Promise<JournalPassResult> {
   try {
@@ -49,8 +53,10 @@ export async function buildJournalPass(options: JournalPassOptions): Promise<Jou
     const tree = !prepared && parent ? await readJournalPassParent(reader!, parent.id, selection.at, selection.after!, work) : null;
     const entries = await selectedEntries(selection, input, work), first = selection.after ? selection.after.seq + 1 : 0;
     const retained = await selectedRetained({ ...selection, objects: selection.objects.filter(row => row.pass === first) }, input, work);
-    const manifest = manifestOfPass(selection, format, parent?.id ?? null, work);
-    const serialization = journalPassSerializationMetadata(selectionBytes.length);
+    const publication = options.publication ? journalAnchorPublication(options.publication(), journalAnchorCopyCount(selection.objects, work), first, work, [selection.at]) : null;
+    const annotated = publication ? { ...selection, ...publication } : selection;
+    const manifest = manifestOfPass(annotated, format, parent?.id ?? null, work);
+    const serialization = journalPassSerializationMetadata(selectionBytes.length + (publication ? journalPublicationUnits(publication.anchors.length + (publication.legacyAnchors?.anchors.length ?? 0)) : 0));
     work.metadata(serialization); work.input(serialization, 2);
     const manifestBytes = canonicalize(manifest), headBytes = canonicalize({ v: 2, scope: selection.at, through: selection.through.seq, hash: selection.through.hash });
     if (utf8(manifestBytes).length > JOURNAL_SELECTION_BYTES || utf8(headBytes).length > 1024) return work.stop();
@@ -66,7 +72,7 @@ export async function buildJournalPass(options: JournalPassOptions): Promise<Jou
     if (milliseconds === null || milliseconds < 0) return refuseJournal("timestamp");
     const commit = maker.commit(updated, parent?.id ?? null, Math.floor(milliseconds / 1000));
     const objects = maker.objects(); work.check();
-    return { ok: true, archive: { commit: commit.id, tree: updated, manifest, manifestBytes, objects, selection,
+    return { ok: true, archive: { commit: commit.id, tree: updated, manifest, manifestBytes, objects, selection: annotated,
       newInterval: [first, selection.through.seq], cost: options.budget.admitted(), layoutWork: { ...work.used } } };
   } catch (error) {
     if (error instanceof JournalLayoutRefusal) return { ok: false, reason: error.reason, ...(error.where ? { where: error.where } : {}) };
