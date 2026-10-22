@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"package-lock.json at exact 8678c50b3d47d3209e3a67209405f6053639594a on planner/security-deps-20261022, under promise git:sha1…15bfdb5 on request git:sha1…4de6355","body":{"commit":"8678c50b3d47d3209e3a67209405f6053639594a","path":"package-lock.json"}}
+{"kind":"artifact","text":"package.json at exact 8678c50b3d47d3209e3a67209405f6053639594a on planner/security-deps-20261022, under promise git:sha1…15bfdb5 on request git:sha1…4de6355","body":{"commit":"8678c50b3d47d3209e3a67209405f6053639594a","path":"package.json"}}
