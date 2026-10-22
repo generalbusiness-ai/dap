@@ -37,6 +37,14 @@ export const archiveFactoryDefinition = variant(archiveDefinition.declared, data
   data.capabilities = []; delete data.items.hold;
   delete data.acts["take-hold"]; delete data.acts.renew; delete data.timed["hold-end"];
 });
+/** TEST declaration for genuine factory-born retained-input scale replay.
+ * The same archive-text transition is retained. Unused hold capability forms
+ * remain absent so the production factory admits the declaration. */
+export const archiveScaleFactoryDefinition = variant(archiveFactoryDefinition.declared, data => {
+  data.acts.remark.step = "transition"; // No effects: the primary item stays unchanged.
+  data.rules["archive-text"] = 'fields.text != ""';
+  data.acts.remark.guards.push({ rule: "archive-text" });
+});
 /** Every public asynchronous Lane entry used by these fixtures is owned.
  * The inherited convenience methods dispatch through these fenced methods. */
 class NativeArchiveLane extends Lane {
@@ -162,7 +170,7 @@ export async function nativeArchiveFixture() {
     return {
       create(bounds: Partial<Bounds> = {}, reads: Partial<ReadBounds> = {}, under: ValidDefinition = archiveDefinition, factory = false): Promise<Lane> {
         return run(async () => {
-        if (factory && (under !== archiveFactoryDefinition || Object.keys(bounds).length || Object.keys(reads).length)) throw Error("Exact native factory archive fixture required");
+        if (factory && ((under !== archiveFactoryDefinition && under !== archiveScaleFactoryDefinition) || Object.keys(bounds).length || Object.keys(reads).length)) throw Error("Exact native factory archive fixture required");
         const actions = [...new Set([...FIRST_ACTIONS_OF[ARCHIVE_DEVICE_APPLICATION_COHORT.membership]!.admin,
           ...Object.values(under.declared.acts).flatMap(act => typeof act.grant === "string" ? [act.grant] : []), ...(factory ? ["application.establish"] : [])])];
         await life.wait(async () => membership.did(rita, "set-actions", { on: 0, expected: await membership.expected({ on: 0 }), fields: { role: "admin", actions } }));
@@ -268,6 +276,6 @@ export async function nativeArchiveFixture() {
 export async function createNativeArchiveLane(bounds: Partial<Bounds> = {}, reads: Partial<ReadBounds> = {}, under: ValidDefinition = archiveDefinition): Promise<Lane> {
   return (await nativeArchiveFixture()).create(bounds, reads, under);
 }
-export async function createNativeArchiveApplicationLane(): Promise<Lane> {
-  return (await nativeArchiveFixture()).create({}, {}, archiveFactoryDefinition, true);
+export async function createNativeArchiveApplicationLane(under: ValidDefinition = archiveFactoryDefinition): Promise<Lane> {
+  return (await nativeArchiveFixture()).create({}, {}, under, true);
 }

@@ -976,3 +976,61 @@ The six heavy cases and the final gate remain pending. Their static scope
 is the complete floor file, cadence file and one-entry scale file. The
 scale case also owns the later dense retained-input, restart, mixed-input
 and provider-conflict checks. No heavy case or limit is removed.
+
+
+### Heavy scale replay exposes a fixture birth mismatch
+
+Owner 31454 naturally failed with full input guards and no signals. The
+scale case ran first and confirmed 10,000 one-entry passes at 142.663
+seconds. Its strict replay assertion failed at 149.112 seconds with
+`mismatch` and no consulted anchors. This was not a deadline failure.
+The report reason was not retained. The other five heavy cases and the
+scale case's later dense, mixed-input, restart and conflict phases were
+not reached. No heavy acceptance result follows from the progress count.
+
+Source tracing finds a deterministic fixture defect. The scale case used
+a root-found directory, with no authoritative creation body naming its
+Membership. A test adapter supplied genuine Membership observations to
+runtime. Replay instead reads the Membership association from genesis.
+Its first fresh grant therefore cannot pass that required association
+check, before any caller anchor is consulted. This source-supported cause
+matches the observed result but is not a recovered report reason.
+
+The proposed repair uses the existing genuine Native factory and its
+checked Directory creation, child genesis, Directory confirmation and
+activation, plus independently observed Membership authority. The new
+TEST declaration keeps the same archive-text transition and rule. It
+removes only unused hold capability forms, as the existing factory resume
+fixture does. Explicit creator, confirmation and Membership caller anchors
+remain independent of archive output. The repository resolver serves only
+the exact lane journal ref. Replay still requires consistent and the exact
+anchors and trusts. Bounded reason and location metadata accompanies that
+unchanged assertion if another failure occurs.
+
+Actual activation occupies journal position 1. All 9,999 distinct signed
+rule inputs remain, at positions 2 through 10,000. The initial archive
+phase therefore requires 10,001 one-entry passes, rather than deleting an
+input or ignoring activation. Position 3,700 still names the actual stored
+rule input repeated later. Every later journal position moves by one:
+the repeated input is at 10,001, the 4,609 dense inputs span 10,002 through
+14,610, the mixed pair spans 14,611 through 14,612, and the conflict input
+is at 14,613. Retained-input counts and all old-content, keyed-read,
+provider, restart and conflict assertions remain. Factory proof setup adds
+external fixture work. Archive caps, prices, per-pass allowance and the
+original 20-minute case deadline remain unchanged. Compilation, all scale
+phases, the other heavy cases and the final gate remain unrun for this
+proposal. No fit or performance claim is made.
+
+
+### Adopt the actual archive-row source seal
+
+The one-owner parser session 54166 naturally passed at unchanged
+`baaa7c822`. Complete source, dependency, tool and environment guards
+passed, with no signal or mutable-input change. Root adopted its actual
+archive-row seal, `6387b60a8ecd09a7dd3166ca1dac7f5c3749e61d7e02adf64878cbd8c9cf4412`,
+under outcome `163a3b5d8ce22923814f744c1e6339bfd2130feb`. The map replaces
+only the earlier archive-row value. Archive-build and every other seal
+remain unchanged. This is parser provenance, not compiler or test
+acceptance. The scale fixture proposal above remains uncompiled and
+unrun. Its next owning attempt includes Scope test compilation and the
+separate Node-support compiler, then the complete six heavy cases.
