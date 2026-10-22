@@ -867,3 +867,29 @@ The existing no-trust assertion requires exit 1; that status alone was not
 the failure. Trusted exit 0, exact five reports, all strict verification
 and credential checks remain. The correction is unrun and makes no claim
 that the eventual stdout report will parse or verify successfully.
+
+### Temporary phase ledger after the installed timeout
+
+Owner 8088 naturally failed at `9363a6fca`: the first two installed cases
+passed, production exceeded its original 30-second framework deadline
+and both activation cases remained pending. Exact input guards passed
+without signals. The existing metadata does not identify the pending
+phase. This timeout does not establish that stdout parsing or either
+public replay completed. No host-load or precise cost cause is claimed.
+
+A temporary phase ledger now records fixed metadata immediately around
+the existing production awaits. The first command session also emits at
+most four fixed child begin/end records with monotonic elapsed times and
+the original code and signal at close. It emits no payload, body, token,
+argument, environment or raw child output. Existing assignment expressions,
+await order, actual child work, assertions and 30-second deadlines are
+unchanged. Metadata and logging add observation work and can affect timing
+and interleaving. Phase elapsed records are diagnostic, not pure performance
+measurements. The ledger is unrun, not acceptance or performance evidence.
+
+After that diagnostic attempt closes, restore `archive-installed.test.ts`
+and `support/local-archive-command.ts` under `packages/scope/test/` exactly
+from `9363a6fcac0fbba798bbe77a129238d58aafb80f`, then commit removal before
+acceptance work. Retain this note and all original failures. A measured
+phase boundary can support an honest test split; it cannot justify a
+blind timeout increase.

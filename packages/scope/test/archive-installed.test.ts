@@ -98,6 +98,11 @@ function reviewed(pin: Digest | PlatformDefinition, declaration?: unknown): Revi
 
 test.for(["fixture", "Grow", "Grow production", "Grow activation warm", "Grow activation evicted"])("installed %s scopes export genesis zero after a late native Membership8 directory binding", { timeout: 30_000 }, async (scenario, context) => {
   const activationScenario = scenario.startsWith("Grow activation"), productionScenario = scenario === "Grow production" || activationScenario, kind = scenario === "fixture" ? "fixture" : "Grow";
+  const commandPhaseStarted = performance.now(), commandPhases: { phase: string; elapsedMilliseconds: number }[] = [];
+  if (scenario === "Grow production") {
+    Object.assign(context.task.meta, { archiveCommandPhases: commandPhases });
+    commandPhases.push({ phase: "native:begin", elapsedMilliseconds: performance.now() - commandPhaseStarted });
+  }
   const prepared = kind === "fixture" ? await applicationOwnedScopesPacket() : (() => {
     const captured = inject("maintainedApplications")[productionScenario ? "growDemo" : "grow"], bytes = unb64url(captured.bytes);
     if (!bytes) throw Error("The maintained TEST Grow packet must be captured.");
@@ -1076,19 +1081,23 @@ test.for(["fixture", "Grow", "Grow production", "Grow activation warm", "Grow ac
       .toEqual(new Set(expectedOmissions.map(canonicalize)));
     // Real Git materializes and mirror-clones only the native export. The
     // offline verifier below reads back the clone's objects, not this map.
+    if (scenario === "Grow production") commandPhases.push({ phase: "mirror-clone:begin", elapsedMilliseconds: performance.now() - commandPhaseStarted });
     const cloned = await life.wait(() => localClone(inject("localClone")).archive(
       [...diagnosticObjects.values()].map(object => ({ id: object.id, type: object.type, data: b64url(object.data) })),
       [...diagnosticRefs].map(([ref, id]) => ({ ref, id })),
     ));
+    if (scenario === "Grow production") commandPhases.push({ phase: "mirror-clone:end", elapsedMilliseconds: performance.now() - commandPhaseStarted });
     if (productionScenario) {
       // Actual dap parser/handler signs and retrieves the read credential on
       // the native destination. Only the Artifacts binding/token authority
       // and loopback transport are TEST stand-ins; Git and replay bin are real.
       const bridge = localClone(inject("localClone"));
       const repository = (await life.wait(() => D.item(0))).values["repository"] as unknown as DestinationRepository;
+      if (scenario === "Grow production") commandPhases.push({ phase: "command-session:begin", elapsedMilliseconds: performance.now() - commandPhaseStarted });
       const commandSession = await life.wait(() => bridge.archiveCommand(
         cloned.objects, cloned.refs, `https://archive-command.invalid/git/${repository.namespace}/${repository.name}.git`,
       ));
+      if (scenario === "Grow production") commandPhases.push({ phase: "command-session:end", elapsedMilliseconds: performance.now() - commandPhaseStarted });
       let mints = 0;
       const binding: ArtifactsNamespace = {
         get: async name => ({
@@ -1108,12 +1117,16 @@ test.for(["fixture", "Grow", "Grow production", "Grow activation warm", "Grow ac
       await life.wait(() => G.restart());
       const store = cliMemoryStore(); await store.keep("member", rita.secret);
       await store.save({ v: 1, service: port.service, key: "member", repository: { directory, membership, rules: A.name, destination: G.name } });
+      if (scenario === "Grow production") commandPhases.push({ phase: "dap-clone-fetch:begin", elapsedMilliseconds: performance.now() - commandPhaseStarted });
       const clonedCommand = await life.wait(() => dapCommand({ store, fetch: routed, now: life.now,
         pause: async () => { await driveFixture([G], life.wait); },
         git: { run: (args, env) => life.wait(() => bridge.archiveRun(commandSession.id, args, env)), archiveRun: (args, env) => life.wait(() => bridge.archiveRun(commandSession.id, args, env)) },
       }, ["clone", commandSession.directory, "--hours", "1", "--archive"]));
+      if (scenario === "Grow production") commandPhases.push({ phase: "dap-clone-fetch:end", elapsedMilliseconds: performance.now() - commandPhaseStarted });
       expect(clonedCommand.code, clonedCommand.lines.join("\n")).toBe(0); expect(mints).toBe(1);
+      if (scenario === "Grow production") commandPhases.push({ phase: "public-finish:begin", elapsedMilliseconds: performance.now() - commandPhaseStarted });
       const command = await life.wait(() => bridge.archiveFinish(commandSession.id, clonedCommand.lines));
+      if (scenario === "Grow production") commandPhases.push({ phase: "public-finish:end", elapsedMilliseconds: performance.now() - commandPhaseStarted });
       expect(command.cloneCode).toBe(0); expect(command.fetchCode).toBe(0);
       expect(command.refs).toHaveLength(5);
       expect([...command.refs].sort((a, b) => a.ref.localeCompare(b.ref))).toEqual([...diagnosticRefs].map(([ref, id]) => ({ ref, id })).sort((a, b) => a.ref.localeCompare(b.ref)));
@@ -1139,6 +1152,7 @@ test.for(["fixture", "Grow", "Grow production", "Grow activation warm", "Grow ac
       return [object.id, { type: object.type, data }] as const;
     }));
     diagnosticObjects.clear();
+    if (scenario === "Grow production") commandPhases.push({ phase: "clone-replays:begin", elapsedMilliseconds: performance.now() - commandPhaseStarted });
     for (const { scope, read } of allHistories) {
       const replayed = await life.wait(() => verifyArchive(archiveSource({ open: (at, work) => readJournalRepositoryArchive({
         format: async () => "sha1", resolve: async ref => clonedRefs.get(ref) ?? null,
@@ -1149,12 +1163,14 @@ test.for(["fixture", "Grow", "Grow production", "Grow activation warm", "Grow ac
       expect(original.kind).toBe("verification"); if (original.kind !== "verification") return;
       expect(replayed.verification.report).toEqual(original.verification.report);
     }
+    if (scenario === "Grow production") commandPhases.push({ phase: "clone-replays:end", elapsedMilliseconds: performance.now() - commandPhaseStarted });
     // Keep the original transport map cleared. The already verified clone
     // supplies a coherent complete object/ref pair for both negative controls.
     const omissionControls: unknown[] = [];
     (context.task.meta as Record<string, unknown>)["omissionControls"] = omissionControls;
     // Corrupt only metadata of a native-produced Directory pass. The real
     // native entry/input port supplies unchanged bytes; no fake history.
+    if (scenario === "Grow production") commandPhases.push({ phase: "omission-controls:begin", elapsedMilliseconds: performance.now() - commandPhaseStarted });
     for (const corruption of ["missing", "extra"] as const) {
       const selection = JSON.parse(passSelections.get(D.name)!);
       const omission = selection.omittedTexts.find((row: { key: { digest: string } }) => row.key.digest === omittedDigest);
@@ -1184,6 +1200,7 @@ test.for(["fixture", "Grow", "Grow production", "Grow activation warm", "Grow ac
       if (corruption === "missing") expect(replayed).toMatchObject({ kind: "verification", verification: { report: { result: "incomplete", at: expectedAt } } });
       else expect(replayed).toMatchObject({ kind: "archive-failure", result: "refused" });
     }
+    if (scenario === "Grow production") commandPhases.push({ phase: "omission-controls:end", elapsedMilliseconds: performance.now() - commandPhaseStarted });
     await context.annotate(JSON.stringify({
       scopes: discovery!.scopes, repository: discovery!.repository, anchorFacts, omittedTexts: expectedOmissions,
       clone: { gitVersion: cloned.gitVersion, sourceObjects: cloned.sourceObjects, clonedObjects: cloned.objects.length, refs: cloned.refs, fsckPassed: cloned.fsckPassed, offlineReportsEqual: allHistories.length },
@@ -1192,5 +1209,6 @@ test.for(["fixture", "Grow", "Grow production", "Grow activation warm", "Grow ac
       copies: credentialCounts, refusedDomains: 2, refusedCredentials: 3, anchorRefusals: 4,
       qualification: "Native test-host journals and issued reads; TEST package/owner/scheduler/policy/object repository. Explicit private facts and observed values on caller trust; Real local Git mirror clone and five offline reports; no live private source read by collector, provider, hosted transport or deployment acceptance.",
     }), "native-archive-closure");
+    if (scenario === "Grow production") commandPhases.push({ phase: "native:end", elapsedMilliseconds: performance.now() - commandPhaseStarted });
   } finally { life.release(); }
 });

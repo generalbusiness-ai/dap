@@ -15,6 +15,9 @@ import { Host } from "../../../git/test/support/host.ts";
 import { git, put } from "../../../git/test/support/repo.ts";
 import type { ArchiveCommandWitness, LocalArchiveClone } from "./local-clone.ts";
 
+// Temporary diagnostic: only the first command session owns at most four records.
+let phaseSessionClaimed = false;
+
 export interface ArchiveCommandSession {
   readonly remote: string; readonly directory: string; readonly token: string;
   run(args: readonly string[], env: Readonly<Record<string, string>>): Promise<number | null>;
@@ -23,6 +26,8 @@ export interface ArchiveCommandSession {
 }
 export async function archiveCommandSession(objects: LocalArchiveClone["objects"], refs: LocalArchiveClone["refs"], remote: string): Promise<ArchiveCommandSession> {
   if (!/^https:\/\/archive-command\.invalid\/git\/artroom-demo\/[A-Za-z0-9_.-]+\.git$/.test(remote)) throw Error("TEST command remote");
+  const phaseOwner = !phaseSessionClaimed, phaseStarted = performance.now(); let phaseRecords = 0;
+  phaseSessionClaimed = true;
   const root = mkdtempSync(join(tmpdir(), "artroom-archive-command-"));
   const source = join(root, "source.git"), target = join(root, "member-clone");
   const token = `public-test-${randomBytes(24).toString("hex")}`;
@@ -70,6 +75,7 @@ export async function archiveCommandSession(objects: LocalArchiveClone["objects"
         const run = (trusted: boolean) => new Promise<ArchiveCommandWitness["withTrust"]>((resolve, reject) => {
           const args = ["--import", createRequire(import.meta.url).resolve("tsx"), fileURLToPath(new URL("../../../replay/src/bin.ts", import.meta.url)), "--git", target, "--all", "--expect-journals", "5", "--json", ...(trusted ? ["--trust-published-anchors"] : [])];
           tokenInArgv ||= args.some(arg => arg.includes(token));
+          if (phaseOwner && phaseRecords < 4) { phaseRecords++; try { console.info("archive-command-child-phase " + JSON.stringify({ phase: "begin", trusted, elapsedMilliseconds: performance.now() - phaseStarted })); } catch { /* Diagnostic output must not replace child behavior. */ } }
           const child = spawn(process.execPath, args, { cwd: root, env: { PATH: process.env["PATH"] ?? "/usr/bin:/bin", HOME: "/nonexistent" }, stdio: ["ignore", "pipe", "pipe"] });
           const chunks: Buffer[] = [], stdoutChunks: Buffer[] = [], stderrChunks: Buffer[] = []; let size = 0; let over = false;
           const capture = (stream: Buffer[], chunk: Buffer) => { size += chunk.length; if (size > 8 * 1024 * 1024) { over = true; child.kill("SIGKILL"); } else { const owned = Buffer.from(chunk); chunks.push(owned); stream.push(owned); } };
@@ -78,6 +84,7 @@ export async function archiveCommandSession(objects: LocalArchiveClone["objects"
           child.on("error", error => { clearTimeout(timer); reject(error); });
           child.on("close", (code, signal) => {
             clearTimeout(timer);
+            if (phaseOwner && phaseRecords < 4) { phaseRecords++; try { console.info("archive-command-child-phase " + JSON.stringify({ phase: "end", trusted, elapsedMilliseconds: performance.now() - phaseStarted, code, signal })); } catch { /* Diagnostic output must not replace child behavior. */ } }
             const output = Buffer.concat(chunks).toString("utf8");
             const stdout = Buffer.concat(stdoutChunks).toString("utf8"), stderr = Buffer.concat(stderrChunks).toString("utf8");
             tokenInOutput ||= output.includes(token) || stdout.includes(token) || stderr.includes(token);
