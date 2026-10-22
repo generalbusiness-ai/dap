@@ -464,3 +464,22 @@ finish reserve. Each confirmed pass must show charged work on a later
 discarded position or a limited lookahead, and all six final work axes must
 remain within their original caps. No repaired result is claimed before a
 separately allocated compiler and full driver-file run.
+
+At `ce48c3f7`, Owner 62355 and its child naturally exited 1 without a
+signal; full guards stayed stable. The Scope test compiler and first seven
+driver cases passed, including the default-budget adaptive reserve witness
+with charged discarded lookahead and the covered earlier-prefix control.
+The SHA-1 resume case then reached offline verification but reported
+`mismatch`, with no consulted anchors, instead of the required `consistent`
+result. Five later cases had no completed acceptance after bail. Inclusive
+elapsed, user and system times were 10.787299, 12.615306 and 2.192077 seconds.
+
+The original assertion output omits the verifier's reason and location, so
+it does not establish a cause or a product defect. The offline check still
+uses explicit caller anchors from actual independent Membership reads;
+published-anchor trust is not enabled implicitly. Its strict assertion now
+includes only the existing outcome's reason (at most 2048 characters, with
+a truncation flag), result, target/failure references, at most four coverage
+ranges and counts. It reads no additional archive object and changes no
+verification option or expectation. The original failed evidence remains
+unchanged; a separately allocated owning-file run is needed to diagnose it.

@@ -211,7 +211,14 @@ test.each(["sha1", "sha256"] as const)("resumes marked %s bytes after eviction a
   const anchors = archiveAuthorityAnchors(lane); expect(anchors.length).toBeGreaterThan(0);
   const verified = await verifyArchive(source, { mode: "replay", scope: lane.at.scope, head: later, grants: "as-recorded",
     anchors: anchors.map(fact => ({ scope: fact.at.scope, seq: fact.seq, hash: fact.hash })) });
-  expect(verified).toMatchObject({ kind: "verification", verification: { report: { result: "consistent", anchors, trusts: expect.arrayContaining([TRUSTS.anchors, TRUSTS.observed]) } } });
+  const reason = (verified.kind === "verification" ? verified.verification.why : verified.reason) ?? "";
+  const diagnostic = { kind: verified.kind, reason: reason.slice(0, 2048), reasonTruncated: reason.length > 2048,
+    ...(verified.kind === "verification" ? { result: verified.verification.report.result, at: verified.verification.report.at,
+      target: verified.verification.report.target, coverage: verified.verification.report.coverage.slice(0, 4),
+      coverageCount: verified.verification.report.coverage.length, anchorCount: verified.verification.report.anchors.length,
+      missingCount: verified.verification.report.dependencies.missing.length }
+      : { result: verified.result, scope: verified.location.scope, commit: verified.location.commit }) };
+  expect(verified, JSON.stringify(diagnostic)).toMatchObject({ kind: "verification", verification: { report: { result: "consistent", anchors, trusts: expect.arrayContaining([TRUSTS.anchors, TRUSTS.observed]) } } });
   fixtureArchiveWiring.delete(lane.name);
 });
 
