@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:176d2541068233b774058c3ee8f1719384cd4e09","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-21-grow-demo-archive.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:19fcba26ef26ea214aabfa366bbbb5694d45f511","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/native-catalog.ts."}
