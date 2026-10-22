@@ -811,3 +811,32 @@ repository that the fixture had not created. The loopback URL now names
 assertion, trust controls, prices, capacities and deadlines are unchanged.
 This fixture correction is unrun; command replay and activation acceptance
 remain pending.
+
+### Temporary command-finish diagnostic
+
+Owner 9428 naturally failed at `42e4951e2`, with exact input guards and no
+signals. The first two installed cases passed. Production completed its
+initial real clone, fsck and five offline report comparisons. Its actual
+dap clone and journal fetch then returned zero, but the later
+`archiveFinish` request received a generic fixture refusal. The activation
+cases remained pending. The original response erased the finish stage
+and public child status, so its exact inner cause is not established.
+
+A temporary TEST-only diagnostic records fixed finish stages, original
+public executable code and signal, separate bounded stream byte counts
+and fixed error hints. It returns no raw child output, error message,
+credential, argument or environment. The original combined-output JSON
+parse, process limits, deadlines, returns, throws and strict assertions
+remain. This locates a refusal; it supplies no semantic correction or
+acceptance evidence. The diagnostic is unrun.
+
+After the diagnostic attempt closes, restore these three helper files
+exactly from `42e4951e29ba05e99e1d5625740b15568e1ea835` and commit removal
+before further acceptance work: `local-archive-command.ts`,
+`local-clone-setup.ts` and `local-clone.ts`, all under
+`packages/scope/test/support/`. Their original blob identities are
+`9497b765d98e3f2601ca9f97d543980ce7733d88`,
+`cd25d94dac1910a756f8a7dfcb7dab529240f7ac` and
+`a204e6833e0fa2c0ee352b77d8f4787ab15e168f`, respectively. This temporary
+checkpoint must not be landed or counted as acceptance or performance
+evidence. Original failed attempts remain evidence.

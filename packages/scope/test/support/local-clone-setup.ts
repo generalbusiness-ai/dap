@@ -92,6 +92,7 @@ export default async function setup(project: TestProject) {
     });
   };
   const server = createServer((request, response) => {
+    let finishing: ArchiveCommandSession | null = null;
     void (async () => {
       const path = new URL(request.url ?? "/", url).pathname;
       const raw = await body(request);
@@ -134,6 +135,7 @@ export default async function setup(project: TestProject) {
         send({ code: await session.run(value["args"] as string[], value["env"] as Record<string, string>) });
       } else if (path === "/archive-command-finish" && request.method === "POST" && typeof value["id"] === "string" && Array.isArray(value["lines"]) && value["lines"].every(line => typeof line === "string")) {
         const session = commandSessions.get(value["id"]); if (!session) throw Error("TEST unknown command session");
+        finishing = session;
         try { send(await session.finish(value["lines"] as string[])); }
         finally { commandSessions.delete(value["id"]); await session.close(); }
       } else if (path === "/configure" && request.method === "POST" && typeof value["name"] === "string" && /^[A-Za-z0-9_.-]+$/.test(value["name"]) && (name === null || name === value["name"])) {
@@ -166,7 +168,7 @@ export default async function setup(project: TestProject) {
         const expectedTree = object("tree", Buffer.concat([Buffer.from("100644 README.md\0"), object("blob", readme)])).toString("hex");
         send({ head: git(directory, ["rev-parse", "HEAD"]), tree: git(directory, ["rev-parse", "HEAD^{tree}"]), expectedTree, paths: git(directory, ["ls-tree", "-r", "--name-only", "HEAD"]), readme: readme.toString("utf8"), origin: git(directory, ["config", "--get", "remote.origin.url"]), tokenInConfig: [...tokens.keys()].some((secret) => config.includes(secret)), tokenInOutput, readRequests });
       } else { response.writeHead(400); response.end(); }
-    })().catch((error) => { failure = error instanceof TypeError ? "type" : "fixture"; response.writeHead(500); response.end("local fixture failure"); });
+    })().catch((error) => { failure = error instanceof TypeError ? "type" : "fixture"; response.writeHead(500); response.end(finishing === null ? "local fixture failure" : JSON.stringify(finishing.finishDiagnostic())); });
   });
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   url = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;

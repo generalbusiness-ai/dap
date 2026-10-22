@@ -20,6 +20,23 @@ export interface LocalArchiveClone {
   objects: readonly { id: string; type: "blob" | "tree" | "commit"; data: string }[];
   sourceObjects: number; fsckPassed: true; gitVersion: string;
 }
+/** Temporary fixed-field diagnostic. No child output, argv, environment or token. */
+export interface ArchiveFinishDiagnostic {
+  stage: "not-started" | "clone-fetch-check" | "refs" | "config" | "without-trust" | "with-trust" | "complete";
+  runs: { trusted: boolean; code: number | null; signal: string | null; stdoutBytes: number; stderrBytes: number;
+    spawnError: boolean; timedOut: boolean; outputBoundExceeded: boolean; hints: ("module" | "syntax" | "read" | "json")[] }[];
+}
+function finishSummary(value: unknown): string {
+  const object = (v: unknown): Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v) ? v as Record<string, unknown> : {};
+  const d = object(value), stages = ["not-started", "clone-fetch-check", "refs", "config", "without-trust", "with-trust", "complete"];
+  const count = (v: unknown) => typeof v === "number" && Number.isSafeInteger(v) && v >= 0 && v <= 8 * 1024 * 1024 + 1 ? v : null;
+  return JSON.stringify({ stage: typeof d["stage"] === "string" && stages.includes(d["stage"]) ? d["stage"] : "unknown", runs: (Array.isArray(d["runs"]) ? d["runs"] : []).slice(0, 2).map(value => {
+    const r = object(value);
+    return { trusted: r["trusted"] === true, code: r["code"] === null ? null : count(r["code"]), signal: typeof r["signal"] === "string" && ["SIGKILL", "SIGTERM", "SIGINT"].includes(r["signal"]) ? r["signal"] : null,
+      stdoutBytes: count(r["stdoutBytes"]), stderrBytes: count(r["stderrBytes"]), spawnError: r["spawnError"] === true, timedOut: r["timedOut"] === true, outputBoundExceeded: r["outputBoundExceeded"] === true,
+      hints: (Array.isArray(r["hints"]) ? r["hints"] : []).filter(hint => ["module", "syntax", "read", "json"].includes(hint)).slice(0, 4) };
+  }) });
+}
 export interface ArchiveCommandWitness {
   cloneCode: number | null; fetchCode: number | null;
   refs: readonly { ref: string; id: string }[];
@@ -34,7 +51,14 @@ export function localClone(at: LocalCloneAddress) {
   const headers = { "x-clone-fixture": at.nonce };
   const json = async <T>(path: string, body?: unknown): Promise<T> => {
     const response = await fetch(`${at.url}${path}`, { headers: { ...headers, "content-type": "application/json" }, ...(body === undefined ? {} : { method: "POST", body: JSON.stringify(body) }) });
-    if (!response.ok) throw new Error(path === "/archive-clone" ? `local archive clone fixture refused: ${(await response.text()).slice(0, 2048)}` : "local clone fixture refused");
+    if (!response.ok) {
+      if (path === "/archive-command-finish") {
+        const text = (await response.text()).slice(0, 2048); let diagnostic: unknown = null;
+        try { diagnostic = JSON.parse(text); } catch { /* No raw response is printed. */ }
+        throw new Error(`local archive command finish refused: ${finishSummary(diagnostic)}`);
+      }
+      throw new Error(path === "/archive-clone" ? `local archive clone fixture refused: ${(await response.text()).slice(0, 2048)}` : "local clone fixture refused");
+    }
     return response.json() as Promise<T>;
   };
   return {
