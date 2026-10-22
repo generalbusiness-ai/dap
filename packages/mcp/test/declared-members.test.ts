@@ -29,6 +29,7 @@ test("member display sequences its bounded queries and preserves member and opti
   let fail: "member" | "roster" | null = null;
   const held = new Promise<void>(resolve => { release = resolve; });
   const entered = new Promise<void>(resolve => { started = resolve; });
+  const rosterAt = { seq: at.seq + 1, hash: `sha256:${"b".repeat(64)}` as const };
   const reads = {
     signer,
     session: async () => ({ claims: { key: signer.key, membership }, reader: () => "scripted session" }),
@@ -41,7 +42,7 @@ test("member display sequences its bounded queries and preserves member and opti
       try {
         if (query.type === fail) throw problem;
         if (query.type === "member") { started(); await held; }
-        return { ok: true, at, value: { v: 1, scope: membership, query: itemQueryDigest(query)!, argument: itemQueryArgument(query)!,
+        return { ok: true, at: query.type === "member" ? at : rosterAt, value: { v: 1, scope: membership, query: itemQueryDigest(query)!, argument: itemQueryArgument(query)!,
           items: query.type === "member" ? [item(ref("@prober"), "agent")] : [roster] }, complete: true };
       } finally { busy = false; }
     } },
@@ -53,7 +54,7 @@ test("member display sequences its bounded queries and preserves member and opti
   const displayed = await pending;
   expect(whileHeld).toEqual(["member"]);
   expect(calls).toEqual(["member", "roster"]);
-  expect(displayed?.roster).toEqual({ item: roster, at });
+  expect(displayed?.roster).toEqual({ item: roster, at: rosterAt });
   expect(displayed?.at).toEqual(at);
   fail = "member";
   await expect(readMembershipDisplay(reads, membership)).rejects.toBe(problem);

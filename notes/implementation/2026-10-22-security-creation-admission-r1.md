@@ -312,3 +312,49 @@ interleaving, so neither diagnosis claims that historical detail. The
 repairs were made only after the gate closed. Their focused checks and
 the new head's gate are pending at this commit; the review evidence must
 report their actual outcomes separately.
+
+## Third gate and fixture repairs
+
+The focused checks on `40c006c6` passed: two test compilers, four client
+cases and the two selected native cases. Its gate then closed naturally
+with exit 1: 2,129 passed, four failed and three skipped cases across 461
+files. All checks before Vitest passed; later Node and Counting checks
+were not reached. Assertion `55c3fb45` preserves the full evidence. Source,
+Git identity and tool guards stayed unchanged; only the Vitest cache
+changed. The final ledger, rather than incremental callbacks, supplies
+these counts.
+
+The native member-display test observed member head 5 and roster head 6.
+Two separate reads can legitimately see different heads; the display
+contract already keeps both and refuses to infer actions across different
+heads. The fixture now checks that each head names its actual native
+entry, that the roster exists and that its position does not go backward.
+The client witness deliberately supplies different heads and requires
+both to survive. The two authenticated reads, removed-member checks and
+foreign/unjoined refusals remain.
+
+H8 inspected stream text after a fixed 30-millisecond wait. The helper
+now exposes arrival of the complete opening frame across body chunks, or
+completion without one.
+H8 awaits the actual successful response and that event before checking
+the unchanged opening frame. Its session replacement and protocol checks
+and test deadline remain.
+
+The Counter custody case counted zero bucket writes because the preceding
+floor-reader fixture left the same deterministic application release in
+shared R2 storage. The content store correctly reuses an existing checked
+release. The floor fixture now deletes its exact release in cleanup and
+always releases its owner, even if deletion fails. The custody fixture
+requires a cold release before starting; its lost-reply, single-write and
+recovery assertions remain.
+
+The Grow long-gap case exceeded its 30-second deadline. Its setup used
+811 signed sensor-report acts to create distance beyond the 800-entry
+journal window. That padding now uses 811 actual native checkpoints in
+one fixture callback, with an exact head-delta assertion. The 12 signed
+commands and every tick, hash, cursor, answer and cost assertion remain;
+their consecutive positions are also checked. This removes unrelated
+sensor authority work from the fixture. The failed run has no subphase
+timings, so it does not establish where the timeout occurred. The deadline
+is unchanged. These fixture repairs have not yet been executed at this
+commit; focused and gate outcomes must be reported separately.

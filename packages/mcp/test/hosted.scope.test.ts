@@ -230,14 +230,29 @@ async function legacySession(bearer: string): Promise<string> {
   return id;
 }
 /** A session's GET stream, read in the background: its events so far, and a way to stop reading. */
-function stream(bearer: string, session: string): { text: () => string; stop: () => void; ready: Promise<number>; ended: Promise<number> } {
+function stream(bearer: string, session: string): { text: () => string; stop: () => void; ready: Promise<number>; opening: Promise<void>; ended: Promise<number> } {
   const abort = new AbortController();
   const seen: string[] = [];
   let respond!: (status: number) => void;
   const ready = new Promise<number>(resolve => { respond = resolve; });
+  let received!: () => void;
+  const opening = new Promise<void>(resolve => { received = resolve; });
   const ended = routed(`${SERVICE}/mcp`, { method: "GET", signal: abort.signal, headers: { authorization: `Bearer ${bearer}`, "mcp-protocol-version": LEGACY, "mcp-session-id": session } })
-    .then(async (res) => { respond(res.status); if (res.status !== 200 || !res.body) return res.status; const reader = res.body.getReader(); try { for (;;) { const r = await reader.read(); if (r.done) break; seen.push(new TextDecoder().decode(r.value)); } } catch { /* aborted */ } return res.status; }).catch(() => { respond(-1); return -1; });
-  return { text: () => seen.join(""), stop: () => abort.abort(), ready, ended };
+    .then(async (res) => {
+      respond(res.status);
+      if (res.status !== 200 || !res.body) { received(); return res.status; }
+      const reader = res.body.getReader();
+      try {
+        for (;;) {
+          const r = await reader.read();
+          if (r.done) break;
+          seen.push(new TextDecoder().decode(r.value));
+          if (seen.join("").includes(": stream\n\n")) received();
+        }
+      } catch { /* aborted */ } finally { received(); }
+      return res.status;
+    }).catch(() => { respond(-1); received(); return -1; });
+  return { text: () => seen.join(""), stop: () => abort.abort(), ready, opening, ended };
 }
 const settle = (ms = 30) => new Promise((r) => setTimeout(r, ms));
 const until = async (check: () => boolean, ms = 3000) => { for (let t = 0; t < ms && !check(); t += 25) await new Promise((r) => setTimeout(r, 25)); return check(); };
@@ -646,7 +661,8 @@ test("H8 through the route: the matrix, the modern headers, the legacy rules, an
     }
     expect((await list({ "mcp-protocol-version": LEGACY, "mcp-session-id": S })).status, "S serves after the July attempts").toBe(200);
     const open = stream(B, S);
-    await settle();
+    expect(await open.ready, "S attaches its stream after the July attempts").toBe(200);
+    await open.opening;
     expect(open.text(), "S opens its stream after the July attempts").toContain(": stream");
     const second = await mcp(B, "GET", { "mcp-protocol-version": LEGACY, "mcp-session-id": S });
     expect(second.status, "a 2nd stream replaces the 1st").toBe(200);

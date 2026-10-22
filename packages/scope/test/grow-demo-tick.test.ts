@@ -1,7 +1,7 @@
 /** Actual native install, Membership, Device owner preparation, SQLite and
  * HTTP simulator client. Package/Git peer, clock, scheduler and setup reads
  * are TEST fixtures. No hosted resource or physical device is contacted. */
-import { env } from "cloudflare:test";
+import { env, runInDurableObject } from "cloudflare:test";
 import { expect, inject, test } from "vitest";
 import { b64url, canonicalize, isSeed, scopeIdOf, timeOf, unb64url } from "@generalbusiness/artroom-bytes";
 import { readPublishedApplicationPackage2 } from "@generalbusiness/artroom-bytes/application-v2";
@@ -15,6 +15,7 @@ import { CAPABILITY_CODE } from "../src/ports.ts";
 import { applicationResolverFixture, applicationHttpPeer, sessionRoom, dispatchFixture, driveFixture, effectFixture, reader, applicationWorkerBindings } from "./fixtures-native.ts";
 import { rita, una, vic, routed } from "./repository.ts";
 import type {} from "./support/maintained-applications.ts";
+import type { TestScope } from "./worker.ts";
 
 async function fixture() {
   const captured = inject("maintainedApplications").growDemo, bytes = unb64url(captured.bytes);
@@ -176,12 +177,21 @@ test("the separately installed Grow demo runs native owner ticks under its disti
 test("a native demo tick crosses a long gap in bounded prefixes and drains its owner queue without a private cursor", async () => {
   const { life, room, firstFan, start, tick } = await fixture();
   try {
-    for (let n = 0; n < 811; n++) await life.wait(async () => room.did(una, "report-device", { on: firstFan,
-      expected: await room.expected({ on: firstFan }), fields: { reported: "off", level: 0, description: "" } }));
+    const beforeGap = (await life.wait(() => room.summary())).at;
+    // History padding crosses the 800-entry public window, not 811 sensor
+    // authority rounds. One TEST callback still writes every checkpoint
+    // through the actual native turn and SQLite store.
+    await life.wait(() => runInDurableObject(room.object, async instance => {
+      for (let n = 0; n < 811; n++) expect((await (instance as TestScope).checkpoint()).answer).toBe("written");
+    }));
+    const afterGap = (await life.wait(() => room.summary())).at;
+    expect(afterGap.seq - beforeGap.seq).toBe(811);
     const commands: number[] = [];
     for (let n = 0; n < 12; n++) commands.push(await life.wait(async () => room.did(vic, "set-fan", { on: firstFan,
       expected: await room.expected({ on: firstFan }), fields: { target: n % 2 ? "off" : "on", level: n % 2 ? 0 : 100 } })));
     const frontier = (await life.wait(() => room.summary())).at;
+    expect(commands).toEqual(Array.from({ length: 12 }, (_, n) => afterGap.seq + n + 1));
+    expect(frontier.seq).toBe(afterGap.seq + 12);
     let previous = -1, bounded = false, ownerTicks = 0, answers = 0, complete = false;
     for (let minute = 0; minute < 8; minute++) {
       const result = await tick(minute);
