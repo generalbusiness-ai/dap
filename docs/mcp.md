@@ -25,7 +25,7 @@ directory (`DAP_HOME`, or the legacy `ARTROOM_HOME`). Set the room up first
 with `dap install` and `dap create`; or start the server with an empty config directory
 and call its `join` tool with an invitation link, which records the room
 there as `dap join` does. The link holds the invitation's secret.
-`join`'s own result never repeats it. With membership@6, the signed join
+`join`'s own result never repeats it. With membership@6 or @7, the signed join
 holds a proof made with the invitation's private key, bound to that
 membership scope, invitation and joining key; it does not hold the secret.
 Legacy membership@1, @2, @4 and @5 hold the secret in the signed join.
@@ -252,7 +252,7 @@ caller's `idempotencyKey`, in the config directory's
 `private/mcp-custody/`, readable only by its owner.
 
 - **Invitation contents and retention.** A join record keeps its exact
-  signed input: an invitation proof for membership@6, or the invitation
+  signed input: an invitation proof for membership@6 or @7, or the invitation
   secret for legacy membership@1, @2, @4 and @5. An archived record keeps
   the same input. The invitation link remains secret in either case;
   hosts may also retain tool inputs. Neither intent expiry nor archival
@@ -1561,8 +1561,8 @@ refused when the server starts.
 
 Every command of the command line and every action of the page, with the
 tool calls that perform it in each launch mode and the count of calls.
-The public item query and operational status are not yet available through
-MCP. Their marked gap rows have no execution recipe. The local package
+The public item query, application listing and operational status are not
+yet available through MCP. Their marked gap rows have no execution recipe. The local package
 commands operate on files outside MCP and have no server recipe.
 The two trusted-application rows are exercised by
 `packages/scope/test/application-install-custody.test.ts` on the new native
@@ -1584,6 +1584,7 @@ works; the count given is the default recipe's.
 | `dap pack [<directory>]` (local command) | Local files and an existing named publisher key; no MCP tool | Local only | Local only |
 | `dap install <git+https-uri>` (trusted-application room) | `install_application` with URI, release, selected roles, genesis values and the retained request key: 1 | `install_application`: 1 | 1 |
 | `dap application <install-item>` (trusted-application room) | `application_installation` with the recorded item: 1 | `application_installation`: 1 | 1 |
+| `dap apps [--cursor <cursor>]` (MCP gap: bounded application listing) | Unavailable in MCP; use the CLI listing | Unavailable in MCP | Unavailable in MCP |
 | `dap install <base-url>`, `--plan`, `--planned` | `create` with `platform:register@3` (or the cohort's register), kind install, the host, namespace, policy and creator keys: 1. The signed intent is kept before it is sent, which is what --plan keeps; after a lost reply, settle adds 1 | `create`: 1 | 1 |
 | `dap create <name>` | `room.create` on the register with the branch, the creator's handle and a recovery key, `wait` with the entry for the created directory and its children, `room.seat`, `room.first-key` with the seat's entry, `wait` for the inbox: 5 | `actions` on the register, `act`, `wait`, `actions` on membership, `act` seat, `act` first-key, `wait`: 7 | 5 |
 | Page: Create room | the same calls as `dap create`: `room.create`, `wait`, `room.seat`, `room.first-key`, `wait`: 5 | the same calls as `dap create`: 7 | 5 |
@@ -1733,7 +1734,7 @@ operator and a controller need.
 
 | Route | Authorization | What it does |
 |---|---|---|
-| `POST /mcp/agents` | `Control`, action `create` | Creates and enrols an agent. Body: `{ "link": "<artroom-agent-key:…>" }`, the agent-key invitation from `dap invite --kind agent-key`. Answers `201` once with `{ agent, key, handle, member, bearer }`; the bearer is shown this once, and again only to the same `op` |
+| `POST /mcp/agents` | `Control`, action `create` | Creates and enrols an agent. Body: `{ "link": "<artroom-agent-key:…>" }`, the private agent-key invitation described below. Answers `201` once with `{ agent, key, handle, member, bearer }`; the bearer is shown this once, and again only to the same `op` |
 | `POST /mcp/agents/<agent>/bearer` | `Control`, action `bearer` | A new bearer. Every session of the agent ends, every 2025-11-25 stream closes with a final event and every listen completes with its result. A replay of a completed `op` returns its answer and ends nothing |
 | `DELETE /mcp/agents/<agent>` | `Control`, action `retire` | Retires the bearer; sessions and streams end the same way. A retired agent answers `401` from then on, and no later `bearer` or unfinished `create` revives it. An enrolment still unfinished can be retired |
 | `POST /mcp` | `Bearer <agent>.<secret>` | One JSON-RPC request or notification, either revision |
@@ -1745,13 +1746,18 @@ operator and a controller need.
 Enrolment is the membership's own; nothing here grants a permission.
 
 1. An admin adds the agent as a member with its controller, an active
-   person: `member.add` with `kind: agent`, the handle and `controller`.
-2. An admin invites a key for that member: `key.invite` with the member,
+   person: `add-member` with `kind: agent`, the handle and `controller`.
+2. An admin invites a key for that member: `invite-key` with the member,
    `kind: agent`, `inviteEnds` and the membership version's invitation
-   field: `inviteKey`, the invitation's public key, for membership@6;
+   field: `inviteKey`, the invitation's public key, for membership@6 or @7;
    `inviteHash`, the secret's digest, for legacy membership@2, @4 and @5.
-   `dap invite --kind agent-key` performs both and prints the invitation
-   link, which holds the secret: keep it private.
+   The CLI does not expose `dap invite --kind agent-key`. The retained
+   issuer is `issueInvitation` in the [CLI API](../packages/cli/src/invitations.ts),
+   with `kind: "agent-key"`, the full controller reference and an explicit
+   private custody store. It keeps both signed requests before submission,
+   checks their native results and encodes the private tagged invitation.
+   A controller-owned client must supply that custody; there is no MCP
+   invitation tool implied here. Keep the link's secret private.
 3. The controller (or an admin) signs a **control request** with their own
    member key and sends `create` with the link as the body. The Worker's
    registry checks the signature, that the request is for this service and
@@ -1762,8 +1768,8 @@ Enrolment is the membership's own; nothing here grants a permission.
    records the request under `op` and creates the agent's object.
 4. The agent's object makes its key, keeps the signed `enrol` under
    custody before sending it, reads the admitted entry back, confirms the
-   key is active, and mints the bearer. Membership@6's signed `enrol`
-   holds the invitation proof; legacy @2, @4 and @5 hold its secret.
+   key is active, and mints the bearer. The signed `enrol` for membership@6
+   or @7 holds the invitation proof; legacy @2, @4 and @5 hold its secret.
    Custody and the admitted journal entry retain those signed fields.
    Hosted custody archival does not delete them; see its budgets below.
 5. Give the agent host `https://<service>/mcp` and

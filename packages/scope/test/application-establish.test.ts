@@ -109,6 +109,8 @@ test.each([{ name: "application", cohort: APPLICATION_COHORT }, { name: "applica
     const seat = await M.did(rita, "seat", { expected: await M.expected({ roster: 0 }) });
     await M.did(rita, "first-key", { fields: { member: seat }, expected: await M.expected({ roster: 0, member: seat }) });
     const membership = await M.at();
+    await lifetime.wait(() => store.save({ ...kept!, handle: "@rita", repository: { directory: creator, membership, rules: Q.name, destination: G.name } }));
+    expect((await run("apps")).lines).toContain("0 created applications in this page; selected suffix complete.");
 
     // Actual authenticated birth-session reads must select the exact directory pin even
     // though its destination@2 pin is also used by the legacy directory@2.
@@ -175,6 +177,7 @@ test.each([{ name: "application", cohort: APPLICATION_COHORT }, { name: "applica
     expect(parent.sends[0]!.message).toMatchObject({ class: "request", type: "create", body: { membership, creationContext: { v: 1 }, directory: await D.at(), fields: { opener: { membership, member: "@rita" }, target: 7 } } });
     expect(await D.stub.retained(reader, "definition", COUNTING_DEFINITION)).toMatchObject({ ok: true, value: { bytes } });
     expect((await D.item(accepted.receipt.fact.seq)).state).toBe("creating");
+    expect((await run("apps")).lines).toContain("0 created applications in this page; selected suffix complete.");
     expect((await C.stub.summary(reader)).ok).toBe(false);
     await settle(D, C);
     await lifetime.wait(() => D!.restart());
@@ -184,6 +187,10 @@ test.each([{ name: "application", cohort: APPLICATION_COHORT }, { name: "applica
     lifetime.advance(2);
     await settle(D, C);
     expect(await D.item(accepted.receipt.fact.seq)).toMatchObject({ state: "created", refs: { scope: await C.at() } });
+    const listed = await run("apps");
+    expect(listed.code, listed.lines.join("\n")).toBe(0);
+    expect(listed.lines).toContain(`counting | ${COUNTING_DEFINITION} | ${canonicalize(await C.at())}`);
+    expect(listed.lines).toContain("1 created applications in this page; selected suffix complete.");
     expect((await C.summary()).value).toMatchObject({ definition: COUNTING_DEFINITION, status: "active", items: [{ type: "configuration", state: "ready", values: { target: 7 }, parties: { controller: { membership, member: "@rita" } } }] });
     expect(await C.stub.retained(reader, "definition", COUNTING_DEFINITION)).toMatchObject({ ok: true, value: { bytes } });
     expect((await C.entries())[0]!.input).toMatchObject({ type: "genesis", seed: childSeed, source: accepted.receipt.fact });
@@ -215,8 +222,6 @@ test.each([{ name: "application", cohort: APPLICATION_COHORT }, { name: "applica
     }
     const publicationChildren: Platform[] = [];
     if (name === "application-publication") {
-      const directory = await D.at();
-      await lifetime.wait(() => store.save({ ...kept!, handle: "@rita", repository: { directory, membership, rules: Q.name, destination: G.name } }));
       const invite = await lifetime.wait(() => issueInvitation(context, { kind: "person", handle: "@reader", hours: 1, role: "member" }, { privateRequests: [], mode: "new", operation: crypto.randomUUID(), current: () => { lifetime.active(); return true; } }));
       expect(invite.state).toBe("verified");
       const published: DeclaredDefinition = { ...counting,

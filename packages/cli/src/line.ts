@@ -7,7 +7,7 @@ import { parseStrict } from "@generalbusiness/artroom-bytes";
 import { applicationInstallation, installApplication } from "./application-install.ts";
 import { enrolAgentKey, invitePerson } from "./invitations.ts";
 import { AGENT_KEY_LINK } from "@generalbusiness/artroom-client";
-import { act, acts, claim, clone, edit, install, installPlanned, invite, issueAssign, issueClose, issueComment, issueOpen, issues, items, join, log, merge, planInstall, propose, remote, show, status, verify, type Context, type InstallCohort, type Outcome } from "./commands.ts";
+import { act, acts, apps, claim, clone, edit, install, installPlanned, invite, issueAssign, issueClose, issueComment, issueOpen, issues, items, join, log, merge, planInstall, propose, remote, show, status, verify, type Context, type InstallCohort, type Outcome } from "./commands.ts";
 
 export const USAGE = [
   "Usage:",
@@ -16,6 +16,7 @@ export const USAGE = [
   "  dap install --planned [--cohort application|application-publication|trusted-application|declared-application|device-application|archive-application|archive-declared-application|archive-device-application|invitation-key]",
   "  dap install <git+https-uri> --release <release-id> --request <kept-key> [--role <default-role> ...] [--values <genesis-JSON>] [--owner <full-member-JSON>]",
   "  dap application <install-item>",
+  "  dap apps [--cursor <cursor>]",
   "  dap check [<directory>] [--config <relative-file>]",
   "  dap dev [<directory>] [--config <relative-file>] [--port <loopback-port>] [--scenario <listed-file>]",
   "  dap new <directory>",
@@ -72,7 +73,7 @@ export function parse(argv: readonly string[]): { words: string[]; flags: Map<st
 }
 
 const KNOWN: Record<string, readonly string[]> = {
-  install: ["host", "namespace", "plan", "planned", "cohort", "release", "request", "role", "values", "owner"], application: [], create: ["handle", "branch", "again"], claim: ["handle", "branch", "again"], invite: ["role", "acts", "hours", "keep", "check", "continue"], join: ["check"], acts: [], act: ["on", "target", "set", "value"], log: ["limit"], items: ["query"], show: [], verify: ["all"], status: ["request"], remote: [], clone: ["hours"], edit: ["file", "title", "closes"], propose: ["title"], merge: ["closes"], issue: ["title", "body"], issues: [],
+  install: ["host", "namespace", "plan", "planned", "cohort", "release", "request", "role", "values", "owner"], application: [], apps: ["cursor"], create: ["handle", "branch", "again"], claim: ["handle", "branch", "again"], invite: ["role", "acts", "hours", "keep", "check", "continue"], join: ["check"], acts: [], act: ["on", "target", "set", "value"], log: ["limit"], items: ["query"], show: [], verify: ["all"], status: ["request"], remote: [], clone: ["hours"], edit: ["file", "title", "closes"], propose: ["title"], merge: ["closes"], issue: ["title", "body"], issues: [],
 };
 
 /** Runs one command line with the given context. */
@@ -108,6 +109,7 @@ export async function command(ctx: Context, argv: readonly string[]): Promise<Ou
       return flag("plan") ? planInstall(ctx, first, where) : install(ctx, first, where);
     }
     case "application": return first !== undefined && /^(0|[1-9][0-9]*)$/.test(first) && Number.isSafeInteger(Number(first)) ? applicationInstallation(ctx, Number(first)) : needs("a nonnegative install item");
+    case "apps": return first !== undefined || (parsed.flags.get("cursor")?.length ?? 0) > 1 ? { code: 2, lines: ["apps takes no argument and at most one --cursor.", USAGE] } : apps(ctx, flag("cursor") ?? null);
     case "create":
     case "claim": {
       return first === undefined ? needs("a name") : claim(ctx, first, { ...(flag("handle") ? { handle: flag("handle")! } : {}), ...(flag("branch") ? { branch: flag("branch")! } : {}), ...(flag("again") ? { again: true } : {}) });
