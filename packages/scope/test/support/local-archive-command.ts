@@ -13,16 +13,8 @@ import { fileURLToPath, URL } from "node:url";
 import { nodeGit } from "../../../cli/src/git.ts";
 import { Host } from "../../../git/test/support/host.ts";
 import { git, put } from "../../../git/test/support/repo.ts";
-import type { LocalArchiveClone } from "./local-clone.ts";
+import type { ArchiveCommandWitness, LocalArchiveClone } from "./local-clone.ts";
 
-export interface ArchiveCommandWitness {
-  cloneCode: number | null; fetchCode: number | null;
-  refs: readonly { ref: string; id: string }[];
-  tokenInConfig: boolean; tokenInArgv: boolean; tokenInOutput: boolean;
-  readRequests: number;
-  withoutTrust: { code: number | null; signal: string | null; report: unknown };
-  withTrust: { code: number | null; signal: string | null; report: unknown };
-}
 export interface ArchiveCommandSession {
   readonly remote: string; readonly directory: string; readonly token: string;
   run(args: readonly string[], env: Readonly<Record<string, string>>): Promise<number | null>;

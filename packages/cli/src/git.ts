@@ -1,4 +1,3 @@
-import { Buffer } from "node:buffer";
 /**
  * The `git` program under Node, for `clone`: one run with the arguments
  * given, its own output to the person's terminal, and the environment of
