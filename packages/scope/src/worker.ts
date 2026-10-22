@@ -31,25 +31,9 @@ import { health } from "./health.ts";
  * Nothing here reaches a test port. A test builds its own Worker from
  * `route`, and its own classes from these, in its own files.
  *
- * | Route | Operation |
- * |---|---|
- * | `POST /v1/scopes` | Create a scope with no creator: under `platform:register@1` the initial register, by an `install` intent; under another definition a directory. Body `{ creation, definition, definitions?, texts? }`. |
- * | `POST /v1/scopes/:scope/acts` | Submit an act. Body `{ signed, grants, texts?, presented?, values? }`. `texts`: each detached text that a field names by digest. `presented`: the facts presented beside the intent, by name. `values`: each value that a place of the act names by digest, as its canonical bytes; only an act of a platform definition has a place. |
- * | `POST /v1/scopes/:scope/preparations` | Ask for one step of a capability. Body `{ signed, grants, capability, step }`. `signed`: the signed intent that the step prepares for. |
- * | `POST /v1/scopes/:scope/settle` | The receipt of an accepted act. Body `{ signed }`. |
- * | `GET /v1/scopes/:scope` | The summary. |
- * | `GET /v1/scopes/:scope/items/:type?cursor=` | A page of retained final items. |
- * | `GET /v1/scopes/:scope/history?cursor=` | A page of the history. |
- * | `GET /v1/scopes/:scope/entries/:seq` | One entry. |
- * | `GET /v1/scopes/:scope/outbox?cursor=` | A page of the outbox. |
- * | `GET /v1/scopes/:scope/outbox/:duty` | The outbox status of one send. |
- * | `GET /v1/scopes/:scope/log?cursor=` | A page of the history as stored: each entry's canonical bytes. |
- * | `GET /v1/scopes/:scope/retained/:kind/:digest` | One retained input. For `value`, `?domain=` names its byte domain. |
- * | `POST /v1/scopes/:scope/sessions` | Ask a membership scope for a read session. Body: a signed session request, `{ request, sig }`. The answer holds the token, and is marked not to be stored. |
- * | `GET /v1/scopes/:scope/stream` | A stream of the scope's head, one line of JSON for each, for a read session. |
- * | `GET /v1/scopes/:scope/incidents?cursor=` | A page of the operator's record of the scope, for the session of an admin. |
- * | `GET /v1/scopes/:scope/waiting/:list?cursor=` | One page of the list `diagnosed` or `unanswered` of the requests that wait, for the session of an admin. |
- * | `GET /v1/scopes/:destination/credential/:handle` | A member's read token, once, for the session of the key that signed its `read-token` act. The answer holds a credential, and is marked not to be stored. |
+ * The deployed entry points, complete route inventory and gate classes are
+ * in `docs/security/entry-points.md`. The room deployment starts at
+ * `apps/room/fetch.ts`, through `apps/room/worker.ts`.
  *
  * A reader presents a read session in the `Authorization` header, as
  * `Session <token>`, set from memory. A reader with no session may present
@@ -309,7 +293,7 @@ function projectionResponse(result: NativeApplicationProjection): Response {
     headers: { "content-type": "application/json", "cache-control": "no-store" } });
 }
 
-/** One request to the routes in the table above. */
+/** One request to the scope routes in docs/security/entry-points.md. */
 export async function route(request: Request, binding: Binding, env: MetricEnvironment = {}): Promise<Response> {
   return measuredRequest(request, env, () => routedRequest(request, binding));
 }

@@ -565,6 +565,18 @@ When a gate fails only in a test that reads a document and the repair changes
 only that document, rerun that test file and the steps the gate never reached,
 and report the failed run and follow-up together.
 
+## Entry-point inventory
+
+`node --test scripts/security-entry-points.test.mjs` checks the route, method,
+and gate-class bijection in [the Worker inventory](security/entry-points.md).
+It derives names from source matchers, using boundary stand-ins for scope and
+MCP dispatch. It checks binding-dependent MCP availability, the simulator's
+fixed HTTP refusal, and the homepage's static-assets configuration. Source
+seals require explicit review when matcher syntax, composition, or named gate
+owners change. This structural test supplies no native authority evidence.
+The in-memory control changes a real route matcher with the inventory fixed.
+The root `npm test` command includes this Node file once.
+
 ## Showing that a test distinguishes
 
 When you add or change a guard, show its witness fails without it. Break

@@ -159,10 +159,27 @@ the owning tool's natural exit one with 23.17 seconds wall, 23.87 user and
 5.17 system time. Its scopes overlap the inner measurements and are not
 summed or treated as isolated performance evidence.
 
-This note-only checkpoint follows the tested source. It will remain clean
-while actual Main and the pending D1 landing are reconciled. One ordinary gate
-at the final integrated head and full fresh review remain required; the
-qualified focused evidence is not that gate or a hosted/stability claim.
+The note-only checkpoint `5e49d207` follows the tested source. Its qualified
+focused evidence is not an integrated-head gate or a hosted/stability claim.
+
+## Integration with landed D1 Main
+
+The next source integration merges actual landed Main `efc79bf1`, tree
+`f5df209c`, into CLI checkpoint `5e49d207`. The original Git merge exits zero
+and stops before commit. It automatically combines `docs/testing.md` without
+a conflict; no manual conflict resolution or discarded parent text is needed.
+
+The integration preserves D1's entry-point inventory, its Node test and root
+test-list addition, and the Worker's checked route source. The testing guide
+keeps both D1's inventory instructions and the CLI resolver coverage and
+document-only failed-gate follow-up guidance. CLI application-list behavior,
+invitation checks, archived-answer guards and the reporter correction remain.
+The generated Page module, lock and workspace configuration stay exact Main.
+
+The previous focused cases describe `c58f3812`, not this new combination with
+D1. No focused cases, compilers or generator are repeated during integration.
+One ordinary gate at the final integrated head and a full fresh review remain
+required before landing.
 
 The sections below preserve the earlier integration report from `a57ed7fa`.
 Its heads, counts, physical paths and outcomes describe that earlier work.
