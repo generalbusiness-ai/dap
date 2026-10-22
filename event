@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at docs/roadmap.md","body":{"commit":"6e963c2b1b88263adfabf53da43d9ff365289cb1","path":"docs/roadmap.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:37e0e651d198c10db7bcb29d4d34d4881a7594f4","text":"Merge retired a covered predecessor; the successor is at docs/roadmap.md."}
