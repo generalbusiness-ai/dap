@@ -47,7 +47,7 @@ function guard(plan) {
   const pinned = path => sources.has(realpathSync(path)) || inputs.has(realpathSync(path));
   for (const tool of [plan.node, plan.tsc, plan.vitest, ...plan.tools]) requireFact(realpathSync(tool.path) === tool.path && sha(tool.path) === tool.sha256, "Reviewed tool bytes or path changed");
   const vitestPackage = resolve(dirname(plan.vitest.path), "package.json");
-  requireFact(plan.tools.some(t => t.path === vitestPackage) && json(vitestPackage).version === "4.1.11", "The reviewed Vitest reporter API version must be pinned");
+  requireFact(plan.tools.some(t => t.path === vitestPackage) && json(vitestPackage).version === "4.1.12", "The reviewed Vitest reporter API version must be pinned");
   requireFact(sha(resolve(root, "package-lock.json")) === plan.lock_sha256 && readFileSync(resolve(root, "node_modules/.artroom-lock-sha256"), "utf8").trim() === plan.lock_sha256, "Existing-lock dependency view is missing or changed");
   for (const path of ["node_modules", "node_modules/@generalbusiness", "node_modules/.bin", "node_modules/.vite", "node_modules/.vite-temp"]) {
     const owned = lstatSync(resolve(root, path));

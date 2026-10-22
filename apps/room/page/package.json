@@ -27,7 +27,7 @@
     "@generalbusiness/dap-lanes": "0.1.0-dev.1",
     "@generalbusiness/artroom-scope": "0.1.0-dev.1",
     "esbuild": "0.28.1",
-    "vitest": "4.1.11"
+    "vitest": "4.1.12"
   },
   "engines": {
     "node": ">=22"
