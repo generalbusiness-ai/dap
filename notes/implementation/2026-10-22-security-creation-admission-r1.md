@@ -340,10 +340,11 @@ H8 awaits the actual successful response and that event before checking
 the unchanged opening frame. Its session replacement and protocol checks
 and test deadline remain.
 
-The Counter custody case counted zero bucket writes because the preceding
+The Counter custody case counted zero bucket writes. The preceding
 floor-reader fixture left the same deterministic application release in
-shared R2 storage. The content store correctly reuses an existing checked
-release. The floor fixture now deletes its exact release in cleanup and
+shared R2 storage, and the content store reuses an existing checked release.
+Source and test order support this explanation; no per-operation R2 trace
+was captured. The floor fixture now deletes its exact release in cleanup and
 always releases its owner, even if deletion fails. The custody fixture
 requires a cold release before starting; its lost-reply, single-write and
 recovery assertions remain.
@@ -358,3 +359,35 @@ sensor authority work from the fixture. The failed run has no subphase
 timings, so it does not establish where the timeout occurred. The deadline
 is unchanged. These fixture repairs have not yet been executed at this
 commit; focused and gate outcomes must be reported separately.
+
+## Fourth gate and bounded test scheduling
+
+The focus on `83c3c34c` passed all three owning test compilers, four client
+cases and 24 native cases. The custody case ran before the floor reader
+in that focus, so it did not reproduce the earlier producer/consumer order.
+The subsequent gate closed naturally with exit 1: 2,101 cases passed,
+32 failed and three were skipped across 461 files. The failures comprise
+31 timeouts and a Join UI `window is not defined` error. The run also
+reported an unhandled Git fixture `EPIPE`. All checks before Vitest passed;
+later Node and Counting checks were not reached. Assertion `147813f3`
+preserves the final evidence. Source, Git identity and tool guards remained
+stable, with only the Vitest result cache changing.
+
+The root configuration now limits the Node group to four active file tasks
+in total. The native groups keep their explicit one-worker settings.
+The installed Vitest 4.1.11 source confirms that the root limit is shared
+across the Node projects. It does not cap child processes, concurrent
+callbacks or overlapping teardown. Four is a chosen bound, not a measured
+optimum or proof that scheduling caused the failures. The failed run did
+not capture its effective launch concurrency; its later host snapshot
+cannot establish that history. No cases, assertions or deadlines change.
+Focused checks and a gate on the final changed head remain due.
+
+The Git HTTP fixture previously resolved from the child process callback
+without owning errors on the child's stdin. The fixture now joins input
+closure with the process result and rejects either failure. If both fail,
+it retains both errors. Real child-process controls require an owned pipe
+failure after the child's final work, exact input bytes, and the original
+nonzero exit. The HTTP case passed in the failed gate; the exact request
+that emitted `EPIPE` was not recorded. This repair does not classify that
+error as harmless or change the HTTP assertions or deadlines.

@@ -19,12 +19,12 @@
  * from Git's recorded report.
  */
 
-import { execFile } from "node:child_process";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { dirname } from "node:path";
 import type { Gateway } from "../../src/gateway.ts";
 import { setRef } from "./repo.ts";
+import { childInput } from "./child-input.ts";
 
 export type Fault = { kind: "moved"; ref: string; to: string };
 
@@ -56,8 +56,7 @@ export class Host {
       this.fault = null;
     }
     if (fault !== null) setRef(this.#repo, fault.ref, fault.to);
-    const out = await new Promise<Buffer>((resolve, reject) => {
-      const child = execFile("git", ["http-backend"], {
+    const out = await childInput("git", ["http-backend"], {
         encoding: "buffer",
         maxBuffer: 1 << 28,
         env: {
@@ -76,9 +75,7 @@ export class Host {
           ...(request.headers.has("git-protocol") ? { GIT_PROTOCOL: request.headers.get("git-protocol")! } : {}),
           ...(request.headers.has("content-encoding") ? { HTTP_CONTENT_ENCODING: request.headers.get("content-encoding")! } : {}),
         },
-      }, (error, stdout) => (error === null ? resolve(stdout) : reject(error)));
-      child.stdin?.end(Buffer.from(body));
-    });
+      }, body);
     const split = out.indexOf("\r\n\r\n");
     const headers = new Headers();
     let status = 200;
