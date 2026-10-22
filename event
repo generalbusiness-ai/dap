@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2eb9cb66281beefbc73c8b8d7faea84ee5f2bf24","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/service.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2f068a45b71273a39a8a218a2092f45553f8b7b0","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/metrics.ts."}
