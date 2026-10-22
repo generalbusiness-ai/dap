@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c8f30a74de4609e03b102a8e5eaa0b4ce933e019","text":"Merge retired a covered predecessor; the successor is at packages/scope/package.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d278cde105a001a8a36695cb39ef958b023b396b","text":"Merge retired a covered predecessor; the successor is at packages/cli/package.json."}
