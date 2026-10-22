@@ -5,9 +5,10 @@ import type { Bounds, Digest, PlatformDefinition, ScopeRef } from "@generalbusin
 import { same, canonicalize, definitionDigest, entryHash, isDigest, isEntry, isRecord, isScopeRef, parseStrict, scopeIdOf, utf8 } from "@generalbusiness/artroom-bytes";
 import { outcomeValueDomains, validateDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
-import { platform } from "@generalbusiness/dap-platform";
-import { ARCHIVE_SOURCE_LOOKUP_METADATA, ARCHIVE_SOURCE_LOOKUP_WORK } from "./archive-source-cost.ts";
+import { nativeDeclarationText, platform } from "@generalbusiness/dap-platform";
+import { forecastArchiveSourceLookup, ARCHIVE_SOURCE_LOOKUP_METADATA, ARCHIVE_SOURCE_LOOKUP_WORK } from "./archive-source-cost.ts";
 import { archiveDeclarationValidationWork } from "./archive-inventory-cost.ts";
+import type { ArchivePolicyRegistry } from "./archive-inventory.ts";
 import { ArchiveBudget } from "./archive-budget.ts";
 import { stopArchivePrefix as stop } from "./archive-prefix.ts";
 
@@ -22,7 +23,7 @@ export interface FixtureArchiveSourceBirth {
   readonly declaration?: string;
 }
 export interface ArchiveSourceBasis { readonly at: ScopeRef; readonly pin: Digest | PlatformDefinition }
-export interface ArchiveSourcePin extends ArchiveSourceBasis { readonly genesis: Digest; readonly declaration: string }
+export interface ArchiveSourcePin extends ArchiveSourceBasis { readonly genesis: Digest; readonly declaration: string; readonly staticNative?: true }
 const json = (bytes: string): unknown => { try { return parseStrict(bytes); } catch { return stop("mismatch"); } };
 const birthInput = (value: unknown): value is FixtureArchiveSourceBirth => isRecord(value) && isRecord(value["birth"])
   && isScopeRef(value["at"]) && isDigest(value["birth"]["hash"]) && typeof value["birth"]["bytes"] === "string";
@@ -33,9 +34,15 @@ const birthInput = (value: unknown): value is FixtureArchiveSourceBirth => isRec
 export class FixtureArchiveSourcePins {
   readonly fixture = "archive-source-pins" as const;
   readonly #sources = new Map<string, Readonly<ArchiveSourcePin>>();
-  constructor(sources: readonly FixtureArchiveSourceBirth[], bounds: Bounds, budget: ArchiveBudget) {
+  constructor(sources: readonly FixtureArchiveSourceBirth[], bounds: Bounds, budget: ArchiveBudget, private readonly policies?: ArchivePolicyRegistry) {
+    this.include(sources, bounds, budget);
+  }
+  /** Host-only append during per-candidate preparation, outside inventory's
+   * synchronous frame. Existing identity rows are immutable and cannot be
+   * replaced. Every newly included source pays its complete validation. */
+  include(sources: readonly FixtureArchiveSourceBirth[], bounds: Bounds, budget: ArchiveBudget): void {
     budget.check();
-    if (!Array.isArray(sources) || sources.length > ARCHIVE_SOURCE_PINS) budget.stop("limit");
+    if (!Array.isArray(sources) || sources.length + this.#sources.size > ARCHIVE_SOURCE_PINS) budget.stop("limit");
     for (const source of sources) {
       budget.check();
       if (!birthInput(source)) return stop("unavailable");
@@ -50,13 +57,26 @@ export class FixtureArchiveSourcePins {
       const pin = entry.input.seed.definition;
       const native = isDigest(pin) ? null : platform(pin);
       let declaration: string;
+      let staticDigest: string | undefined;
       if (isDigest(pin)) {
         if (typeof source.declaration !== "string") return stop("unavailable");
         declaration = source.declaration;
       } else {
         if (!native) return stop("unsupported-archive-cohort");
-        budget.spend({ inputWork: bounds.definitionBytes * 16 });
-        declaration = canonicalize(native.data);
+        // Eligibility is fresh and paid even for a missing/nonalias policy.
+        budget.spend(forecastArchiveSourceLookup(null));
+        const reviewed = this.policies?.get(pin);
+        if (reviewed?.support.definition.declared === native.data) {
+          budget.spend(forecastArchiveSourceLookup(71));
+          const projected = nativeDeclarationText(pin);
+          if (!projected || !isDigest(projected.digest)) return stop("unsupported-archive-cohort");
+          declaration = projected.text;
+          staticDigest = projected.digest;
+        } else {
+          // Conservative original path for fixtures and independently owned policies.
+          budget.spend({ inputWork: bounds.definitionBytes * 16 });
+          declaration = canonicalize(native.data);
+        }
         if (source.declaration !== undefined && source.declaration !== declaration) return stop("mismatch");
       }
       if (!declaration.length || declaration.length > bounds.definitionBytes) budget.stop("limit");
@@ -64,11 +84,11 @@ export class FixtureArchiveSourcePins {
       if (utf8(declaration).length > bounds.definitionBytes) budget.stop("limit");
       const raw = json(declaration), checked = validateDefinition(raw, bounds, RULE_PROFILES,
         native ? { platform: true, outcomeValues: outcomeValueDomains(native.data, native.rules) } : {});
-      if (!checked.ok || canonicalize(raw) !== declaration || isDigest(pin) && definitionDigest(checked.definition.declared) !== pin) return stop("mismatch");
+      if (!checked.ok || staticDigest !== undefined && checked.definition.digest !== staticDigest || canonicalize(raw) !== declaration || isDigest(pin) && definitionDigest(checked.definition.declared) !== pin) return stop("mismatch");
       const key = canonicalize(source.at);
       if (this.#sources.has(key)) return stop("mismatch");
       const at = Object.freeze({ ...source.at });
-      this.#sources.set(key, Object.freeze({ at, pin, genesis: source.birth.hash, declaration }));
+      this.#sources.set(key, Object.freeze({ at, pin, genesis: source.birth.hash, declaration, ...(staticDigest !== undefined ? { staticNative: true as const } : {}) }));
     }
     budget.check();
   }

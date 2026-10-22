@@ -151,11 +151,28 @@ valid required settings, not whether a particular public room exists.
 
 Configuration: [apps/room/wrangler.grow.jsonc](../../apps/room/wrangler.grow.jsonc).
 
-Entry: `apps/room/worker.ts` → `apps/room/fetch.ts`. Hosted MCP is reachable
+Entry: `apps/room/worker.grow.ts` → `apps/room/worker.ts` →
+`apps/room/fetch.ts`. The Grow wrapper forwards the same default HTTP handler.
+Hosted MCP is reachable
 when both committed namespaces are bound. Application screens also require
 `APPLICATION_TRUST`; demo offers require `DEMO_START_CONFIG`. Missing or invalid
 settings refuse those families. The table records source reachability with
 valid required settings, not whether a particular public room exists.
+
+The wrapper also supplies explicit archive wiring to its Durable Object class.
+For admitted public journals, object activation and sealed entries schedule
+bounded archive work through the existing alarm. That work can read checked
+births and the admitted directory/destination items, persist retry and Mark
+bookkeeping, mint a short-lived Artifacts write token, send Git objects and
+read back the ref. It uses the existing archive bounds and the original
+per-pass allowance. These background effects can follow an activation even
+when the caller's HTTP read is refused; they do not grant the caller archive
+access. Register and Membership journals remain excluded. Generic and lending
+entries do not enable this wiring, and production retained floors remain off.
+
+The internal `archiveItem` namespace port has no HTTP route. Its raw helper
+accepts trusted host input; the complete target birth walk and admitted binding
+supply its authority boundary. The table below adds no public archive route.
 
 | Route and method | Gate class | Work before the gate | State written before the gate | Bounds | Outbound calls |
 |---|---|---|---|---|---|
@@ -282,6 +299,11 @@ with boundary stand-ins, enumerates the scoped matcher's literal path partitions
 and reads public prefix, equality, switch, and method matchers. Rows must match
 in both directions, including the reviewed operation's gate class. Missing,
 extra, duplicate, or differently gated rows fail.
+
+The room entry model accepts only the exact generic/lending entry and the
+Grow wrapper’s two-hop default re-export chain. It does not follow arbitrary
+module re-exports. Whole-owner seals separately cover the wrapper and archive
+configuration, target, host-item and provider boundaries.
 
 Source seals guard the finite extraction grammar, deployed composition, and
 reviewed gate owners. A matcher or gate-owner edit fails closed for inventory

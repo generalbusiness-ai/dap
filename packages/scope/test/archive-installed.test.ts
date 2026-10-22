@@ -2,15 +2,15 @@
  * session reads and SQLite. Package peer, clock, scheduler and reviewed
  * archive policy are explicit fixtures. No provider or production admission.
  * Device replies are explicit TEST owner input, not physical execution. */
-import { env, runInDurableObject } from "cloudflare:test";
+import { env, runDurableObjectAlarm, runInDurableObject } from "cloudflare:test";
 import { expect, inject, test } from "vitest";
-import { DEVICE_COMMAND, PROPOSED_BOUNDS, type DeclaredDefinition, type Digest, type FactRef, type Head, type Input, type PlatformDefinition, type ScopeId, type Sealed } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, isDigest, isEntry, isSeed, parseStrict, scopeIdOf, textDigest, timeMs, timeOf, unb64url, utf8 } from "@generalbusiness/artroom-bytes";
-import { readApplicationPackage2 } from "@generalbusiness/artroom-bytes/application-v2";
-import { outcomeValueDomains, ownersOf, validateDefinition, type OperationRules } from "@generalbusiness/dap-derive";
+import { DEVICE_COMMAND, PROPOSED_BOUNDS, type DeclaredDefinition, type Digest, type FactRef, type Head, type Input, type PlatformDefinition, type ScopeId, type ScopeRef, type Sealed } from "@generalbusiness/dap-contract";
+import { b64url, canonicalize, encodeItemQueryParameter, isDigest, isEntry, isRecord, isSeed, parseStrict, scopeIdOf, textDigest, timeMs, timeOf, unb64url, utf8 } from "@generalbusiness/artroom-bytes";
+import { readApplicationPackage2, readPublishedApplicationPackage2 } from "@generalbusiness/artroom-bytes/application-v2";
+import { inputTexts, outcomeValueDomains, ownersOf, validateDefinition, type OperationRules, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, platform } from "@generalbusiness/dap-platform";
-import { ScopeHandle, httpTransport, requestSession, secretSigner, sessionRequest } from "@generalbusiness/artroom-client";
+import { ScopeHandle, httpTransport, invitationIssueFields, invitationRedemptionFields, requestSession, secretSigner, sessionRequest } from "@generalbusiness/artroom-client";
 import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-mcp";
 import { archiveSource, verifyArchive, TRUSTS } from "@generalbusiness/artroom-replay";
 import { buildJournalPass, journalRef, verifyJournalAppend, type JournalArchive, type JournalObject, type JournalPassArchive } from "@generalbusiness/artroom-git/journal";
@@ -18,7 +18,16 @@ import { readJournalRepositoryArchive } from "@generalbusiness/artroom-git/journ
 import { archiveInput } from "../src/archive-input.ts";
 import { ArchiveDriver } from "../src/archive-driver.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
-import { ScriptedArchiveHost } from "./support/archive-provider.ts";
+import { archiveSourceReferences, archiveSourceWindow } from "../src/archive-source-window.ts";
+import { stopArchivePrefix } from "../src/archive-prefix.ts";
+import { ArchiveArtifactsPeer } from "./support/archive-artifacts.ts";
+import { observeDirectoryFinish } from "./support/archive-finish-observer.ts";
+import { growArchivePolicies, GROW_ARCHIVE_DEFINITIONS } from "../../../apps/room/archive-policy.ts";
+import { growArchiveDriver } from "../../../apps/room/archive.ts";
+import { DEMO_RELEASE, DEMO_PUBLISHER } from "../../../examples/grow/demo-release.ts";
+import { archiveHostWiring, roomArchiveWiring, roomArchiveConstructions } from "./worker.ts";
+import type { OutsideGiven } from "../src/object.ts";
+import type { DestinationRepository } from "../src/destination-host.ts";
 import { ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
 import { archiveEntryHeader, archiveEntryPrivacy, archiveSupportMetadata, recordArchiveSupportMetadata } from "../src/archive-entry-metadata.ts";
 import { archivePrefixMetadata } from "../src/archive-prefix.ts";
@@ -27,7 +36,10 @@ import { forecastArchiveSupportMetadata } from "../src/archive-support-cost.ts";
 import { forecastArchiveMembershipCopy } from "../src/archive-foreign-cost.ts";
 import { archiveMembershipCopy } from "../src/archive-membership-copy.ts";
 import { ArchiveForeignMetadata } from "../src/archive-foreign.ts";
-import { fixtureArchiveTargetIn } from "../src/archive-target.ts";
+import { archiveTarget } from "../src/archive-target.ts";
+import { archiveHostItem, type ArchiveHostConfiguration, type ArchiveHostItemAsk } from "../src/archive-host-item.ts";
+import { Scope, type Checkpointed } from "../src/core.ts";
+import { SqliteStore, type Sql } from "../src/sqlite.ts";
 import { archiveReplayAnchors } from "../src/archive-anchors.ts";
 import { planArchive, planArchivePass } from "../src/archive-build.ts";
 import { ARCHIVE_SOURCE_PINS, FixtureArchiveSourcePins, type FixtureArchiveSourceBirth } from "../src/archive-source-pins.ts";
@@ -37,18 +49,24 @@ import { applicationOwnedScopesPacket } from "./support/application-owned-scopes
 import { applicationResolverFixture } from "./support/application-fixture.ts";
 import { applicationHttpPeer } from "./support/application-http-peer.ts";
 import { localClone } from "./support/local-clone.ts";
-import { sessionRoom } from "./support/session-room.ts";
+import { sessionRoom, sessionRepository } from "./support/session-room.ts";
 import { dispatchFixture, driveFixture, effectFixture } from "./support/native-fixture-lifetime.ts";
-import { archiveRepository, archiveSql } from "./support/archive.ts";
+import { archiveSql } from "./support/archive.ts";
 import { namespace } from "../src/namespace.ts";
 import { readNativeBirth } from "../src/native-birth.ts";
 import { DEVICE_COMMAND_ARCHIVE_PREPARATIONS, DEVICE_COMMAND_ARCHIVE_RECORDS } from "../src/archive-privacy.ts";
-import { CAPABILITY_CODE } from "../src/ports.ts";
-import { rita, routed } from "./repository.ts";
+import { CAPABILITY_CODE, production } from "../src/ports.ts";
+import { rita, una, vic, routed } from "./repository.ts";
 import { net, soon } from "./net.ts";
 import type {} from "./support/maintained-applications.ts";
 
 const inline = new Set<Input["type"]>(["genesis", "act", "delivery", "timed", "diagnosis", "outcome", "preparation", "checkpoint"]);
+function archiveGiven(store: SqliteStore): OutsideGiven {
+  const own = (seq: number) => { const row = store.stored(seq); return row ? { entry: parseStrict(row.bytes) as Sealed["entry"], hash: row.hash } : null; };
+  const input = own(0)?.entry.input;
+  return { ...production(), clock: net.clock, state: store, scope: () => store.scope(),
+    genesis: () => input?.type === "genesis" ? input : null, own, retained: (...args) => store.retained(...args) };
+}
 // Finite actual declaration/native-owner metadata. This explicit TEST
 // registry is separate from source identity and supplies no certificate.
 function reviewed(pin: Digest | PlatformDefinition, declaration?: unknown): ReviewedArchivePolicy {
@@ -67,6 +85,7 @@ function reviewed(pin: Digest | PlatformDefinition, declaration?: unknown): Revi
   }
   const device = checked.definition.declared.capabilities.some(capability => `${capability.name}@${capability.version}` === DEVICE_COMMAND);
   return { review: "TEST fixture inline class/owner coverage; no production permission", entryTypes: inline,
+    ...(isDigest(pin) ? { declaration: canonicalize(checked.definition.declared) } : {}),
     support: { named: pin, definition: checked.definition, owners,
       ...(device ? { capabilities: CAPABILITY_CODE } : {}),
       records: device ? new Map([[DEVICE_COMMAND, DEVICE_COMMAND_ARCHIVE_RECORDS]]) : new Map(),
@@ -74,22 +93,30 @@ function reviewed(pin: Digest | PlatformDefinition, declaration?: unknown): Revi
     } };
 }
 
-test.for(["fixture", "Grow"])("installed %s scopes export genesis zero after a late native Membership8 directory binding", { timeout: 30_000 }, async (kind, context) => {
+test.for(["fixture", "Grow", "Grow production", "Grow activation warm", "Grow activation evicted"])("installed %s scopes export genesis zero after a late native Membership8 directory binding", { timeout: 30_000 }, async (scenario, context) => {
+  const activationScenario = scenario.startsWith("Grow activation"), productionScenario = scenario === "Grow production" || activationScenario, kind = scenario === "fixture" ? "fixture" : "Grow";
   const prepared = kind === "fixture" ? await applicationOwnedScopesPacket() : (() => {
-    const captured = inject("maintainedApplications").grow, bytes = unb64url(captured.bytes);
+    const captured = inject("maintainedApplications")[productionScenario ? "growDemo" : "grow"], bytes = unb64url(captured.bytes);
     if (!bytes) throw Error("The maintained TEST Grow packet must be captured.");
-    const packet = readApplicationPackage2(bytes, captured.release), rootId = packet.package.semantic.entry, childId = packet.package.semantic.projections["grid"]!.definition;
+    const packet = (productionScenario ? readPublishedApplicationPackage2 : readApplicationPackage2)(bytes, captured.release), rootId = packet.package.semantic.entry, childId = packet.package.semantic.projections["grid"]!.definition;
     const definition = (id: Digest) => parseStrict(packet.package.semantic.definitions.find(part => part.id === id)!.bytes) as DeclaredDefinition;
     return { packet, rootId, childId, root: definition(rootId), child: definition(childId) };
   })();
   const { packet, root, child, rootId, childId } = prepared;
+  if (productionScenario) {
+    expect(packet.ids.release).toBe(DEMO_RELEASE);
+    expect(packet.package.release.manifest.publisher).toBe(DEMO_PUBLISHER);
+    expect([rootId, childId]).toEqual(GROW_ARCHIVE_DEFINITIONS);
+  }
   const C = kind === "fixture" ? ARCHIVE_DECLARED_APPLICATION_COHORT : ARCHIVE_DEVICE_APPLICATION_COHORT;
   // Original byte-cost receipts use whole-second timestamps. Other native
   // witnesses may advance this shared clock by milliseconds. Advance it
   // monotonically before creating any scope; keep its identity and history.
   if (kind === "Grow") net.clock.now = timeOf(Math.ceil(timeMs(net.clock.now)! / 1000) * 1000);
-  const { life, R, D, children } = await sessionRoom(C.register), [M, A, G] = children;
+  const platformHost = productionScenario ? { host: "artifacts", namespace: "artroom-demo" } : undefined;
+  const { life, R, D, children } = await sessionRoom(C.register, undefined, platformHost), [M, A, G] = children;
   if (!M || !A || !G) throw Error("The declared cohort requires three siblings.");
+  let productionPeer: ArchiveArtifactsPeer | undefined;
   const f = await applicationResolverFixture("sha1", undefined, {}, undefined, packet), peer = applicationHttpPeer(f);
   const bindings = { SCOPES: env.PLATFORM, APPLICATION_CONTENT: env.APPLICATION_CONTENT, APPLICATION_TRUST: JSON.stringify(f.trust) };
   try {
@@ -98,37 +125,247 @@ test.for(["fixture", "Grow"])("installed %s scopes export genesis zero after a l
     for (const node of [D, A]) { life.outside(node.name, (given, sql) => hostOutside(given, sql, bindings, peer.fetch)); await life.wait(() => node.restart()); }
     const membership = await life.wait(() => M.at()), directory = await life.wait(() => D.at());
     expect((await life.wait(() => M.summary())).value.definition).toBe("platform:membership@8");
+    const operator = { membership, member: "@rita" as const };
+    const demoMembers = { operator, sensors: { membership, member: "@demo-sensors" as const }, climate: { membership, member: "@demo-climate" as const } };
+    if (productionScenario) {
+      // Same native distinct-agent enrolment as grow-demo-tick. These are
+      // TEST principals, not hosted operator or simulator credentials.
+      for (const [actor, handle, fill] of [[una, "@demo-sensors", 92], [vic, "@demo-climate", 93]] as const) {
+        const member = await life.wait(() => M.did(rita, "add-member", { fields: { handle, kind: "agent", controller: operator } }));
+        const secret = b64url(new Uint8Array(32).fill(fill));
+        const invitation = await life.wait(async () => M.did(rita, "invite-key", { fields: { member, kind: "agent", inviteEnds: timeOf(life.now() + 3_600_000), ...invitationIssueFields(C.membership, secret) }, expected: await M.expected({ member }) }));
+        await life.wait(async () => M.did(actor, "enrol", { on: 0, fields: invitationRedemptionFields(C.membership, membership, invitation, actor.key, secret), expected: await M.expected({ on: 0, member }) }));
+      }
+    }
     const port: ServerPort = { service: "https://scopes.test", signer: secretSigner(rita.secret), custody: memoryStore(), now: life.now,
       config: { read: async () => ({ service: "https://scopes.test", repository: { directory, membership, rules: A.name, destination: G.name } }), addRoot: async () => { throw Error("Use the native install."); } },
       applicationFetch: peer.fetch, fetch: (url, init) => life.wait(() => routed(url, init)) };
     const mcp = new McpService(port);
-    const installed = await life.wait(() => mcp.call("install_application", { uri: f.uri, release: packet.ids.release, roles: ["admin"],
-      values: kind === "Grow" ? { label: "TEST archive Grow Site" } : {},
-      ...(kind === "Grow" ? { owner: { membership, member: "@rita" } } : {}), idempotencyKey: "TEST-archive-installed-scopes" }));
+    const membershipBeforeInstall = (await life.wait(() => M.summary())).at;
+    const installed = await life.wait(() => mcp.call("install_application", { uri: f.uri, release: packet.ids.release, roles: productionScenario ? ["admin", "agent"] : ["admin"],
+      values: kind === "Grow" ? { label: "TEST archive Grow Site", ...(productionScenario ? demoMembers : {}) } : {},
+      ...(kind === "Grow" ? { owner: productionScenario ? demoMembers.sensors : operator } : {}), idempotencyKey: "TEST-archive-installed-scopes" }));
     expect(installed.structuredContent).toMatchObject({ answer: "accepted", phase: "recorded" });
     await effectFixture([A], life.wait); await dispatchFixture([R, D, M, A, G], life.wait);
+    // Independent Native setup oracle, captured BEFORE any archive output.
+    // A pre-MCP summary is diagnostic only: standing authority is read later.
+    const nativeInstallOracle = productionScenario ? await (async () => {
+      const rulesAt = await life.wait(() => A.at());
+      const installs = (await life.wait(() => A.sealed())).filter(sealed => {
+        const input = sealed.entry.input;
+        return input.type === "act" && input.signed.intent.kind === "install-application"
+          && input.signed.intent.idempotencyKey === "TEST-archive-installed-scopes"
+          && input.signed.intent.actor === rita.key && canonicalize(input.signed.intent.to) === canonicalize(rulesAt)
+          && input.signed.intent.fields["release"] === packet.ids.release;
+      });
+      expect(installs).toHaveLength(1);
+      const rulesEntry = installs[0]!, input = rulesEntry.entry.input;
+      if (input.type !== "act") throw Error("Actual Native installation act required.");
+      const observations = input.authority.map(grant => grant.fresh.observation).filter(observed =>
+        canonicalize(observed.of) === canonicalize(membership) && "key" in observed && observed.key === rita.key);
+      expect(observations).toHaveLength(1);
+      const observed = observations[0]!;
+      const memberHead: FactRef = { at: { ...observed.of }, seq: observed.head.seq, hash: observed.head.hash };
+      const nativeMembers = (await life.wait(() => M.sealed())).filter(sealed =>
+        canonicalize(sealed.entry.at) === canonicalize(memberHead.at) && sealed.entry.seq === memberHead.seq && sealed.hash === memberHead.hash);
+      expect(nativeMembers).toHaveLength(1);
+      const memberInput = nativeMembers[0]!.entry.input;
+      (context.task.meta as Record<string, unknown>)["nativeInstallAuthorityOracle"] = {
+        preMcpSummary: membershipBeforeInstall, rulesAct: { at: rulesEntry.entry.at, seq: rulesEntry.entry.seq, hash: rulesEntry.hash },
+        memberHead, memberInput: { type: memberInput.type, ...(memberInput.type === "act" ? { kind: memberInput.signed.intent.kind } : {}) },
+        qualification: "Actual Native install act and exact local Membership sealed fact, before archive processing; no archive-derived expectation or notification-cause claim.",
+      };
+      return { rulesEntry, memberHead };
+    })() : null;
+    const nativeStageOracle = productionScenario ? await (async () => {
+      const catalog = packet.package.semantic.definitions.map(part => ({
+        digest: part.id, text: textDigest(part.bytes), name: (parseStrict(part.bytes) as DeclaredDefinition).name,
+      }));
+      const stages = (await life.wait(() => D.sealed())).filter(sealed => {
+        const input = sealed.entry.input;
+        if (input.type !== "delivery" || input.message.class !== "request" || input.message.type !== "tell"
+          || canonicalize(sealed.entry.at) !== canonicalize(directory)
+          || canonicalize(input.from.at) !== canonicalize(nativeInstallOracle!.rulesEntry.entry.at)
+          || !isRecord(input.message.body) || input.message.body["message"] !== "application-stage") return false;
+        const fields = input.message.body["fields"];
+        return isRecord(fields) && fields["job"] === nativeInstallOracle!.rulesEntry.entry.seq
+          && fields["definition"] === rootId && fields["release"] === packet.ids.release && fields["semantic"] === packet.ids.semantic;
+      });
+      expect(stages).toHaveLength(1);
+      const stage = stages[0]!, input = stage.entry.input;
+      if (input.type !== "delivery" || input.message.class !== "request" || input.message.type !== "tell" || !isRecord(input.message.body) || !isRecord(input.message.body["fields"])) throw Error("Actual Native staging fields required.");
+      const fields = input.message.body["fields"];
+      expect(fields["declarations"]).toEqual(catalog);
+      for (const [index, part] of catalog.entries()) expect(fields[`definitionText${index}`]).toBe(part.text);
+      expect(Object.keys(fields).filter(key => /^definitionText[0-9]+$/.test(key)).sort()).toEqual(catalog.map((_part, index) => `definitionText${index}`).sort());
+      const fact: FactRef = { at: { ...stage.entry.at }, seq: stage.entry.seq, hash: stage.hash };
+      expect(fact.at).toEqual(directory);
+      (context.task.meta as Record<string, unknown>)["nativeStageOracle"] = { fact, declarations: catalog.map(({ digest, text }) => ({ digest, text })),
+        qualification: "Unique actual Native Directory staging delivery with exact sender/recipient/job/release/semantic/root and signed declaration text fields, before archive processing." };
+      return { fact, catalog };
+    })() : null;
     const rootCreate = (await life.wait(() => D.entries())).flatMap(entry => entry.sends).find(send => isSeed(send.to) && send.to.definition === rootId);
     if (!rootCreate || !isSeed(rootCreate.to)) throw Error("Directory must genuinely create the installed root.");
+    if (productionScenario) expect(rootCreate.message).toMatchObject({ body: { creationContext: { v: 2, delegate: true, deviceCommand: { owner: demoMembers.sensors, root: rootId, definitions: [childId] } } } });
     const rootScope = life.platform(scopeIdOf(rootCreate.to)); await driveFixture([R, D, M, A, G, rootScope], life.wait);
     if (kind === "Grow") {
-      await life.wait(() => rootScope.did(rita, "create-room", { fields: { label: "TEST archive Grow Room" } }));
+      await life.wait(() => rootScope.did(rita, "create-room", { fields: { label: "TEST archive Grow Room" }, ...(productionScenario ? { expected: { demoSite: 1 } } : {}) }));
       await dispatchFixture([R, D, M, A, G, rootScope], life.wait);
     }
     const childCreate = (await life.wait(() => rootScope.entries())).flatMap(entry => entry.sends).find(send => isSeed(send.to) && send.to.definition === childId);
     if (!childCreate || !isSeed(childCreate.to)) throw Error("Installed root must genuinely create its child.");
+    if (productionScenario) expect(childCreate.message).toMatchObject({ body: { creationContext: { v: 2, delegate: false, deviceCommand: { owner: demoMembers.sensors, root: rootId, definitions: [childId] } } } });
     const childScope = life.platform(scopeIdOf(childCreate.to)); await driveFixture([R, D, M, A, G, rootScope, childScope], life.wait);
+    if (productionScenario) {
+      expect(await life.wait(() => childScope.item(0))).toMatchObject({ parties: demoMembers });
+      for (const actor of [una, vic]) expect(await life.wait(() => M.stub.observe({ of: membership, key: actor.key })))
+        .toMatchObject({ keyState: "active", role: "agent", actions: expect.arrayContaining(["grow.climate", "grow.sense"]) });
+    }
     if (kind === "fixture") for (const scope of [rootScope, childScope]) await life.wait(async () => scope.did(rita, "bump", { on: 0, expected: await scope.expected({ on: 0 }) }));
     else {
       const zone = await life.wait(() => childScope.did(rita, "commission-zone", { fields: { label: "TEST Zone", setpoint: 2400, band: 200 } }));
       const heater = await life.wait(async () => childScope.did(rita, "commission-device", { fields: { zone, kind: "heater", label: "TEST Heater", minLevel: 0, maxLevel: 100, target: "off", level: 0 }, expected: await childScope.expected({ zone }) }));
       const command = await life.wait(async () => childScope.did(rita, "set-heater", { on: heater, fields: { target: "on", level: 100 }, expected: await childScope.expected({ on: heater }) }));
       const sealed = (await life.wait(() => childScope.sealed())).find(entry => entry.entry.seq === command)!;
-      const answer = await life.wait(() => mcp.call("prepare", { resource: childScope.name, capability: DEVICE_COMMAND, step: "answer", idempotencyKey: "TEST-archive-Grow-owner-answer",
+      const ownerMcp = productionScenario ? new McpService({ ...port, signer: secretSigner(una.secret), custody: memoryStore() }) : mcp;
+      const answer = await life.wait(() => ownerMcp.call("prepare", { resource: childScope.name, capability: DEVICE_COMMAND, step: "answer", idempotencyKey: "TEST-archive-Grow-owner-answer",
         fields: { command: { at: sealed.entry.at, seq: command, hash: sealed.hash }, outcome: "confirmed", description: "TEST native owner reply" },
       }));
       expect(answer.isError, JSON.stringify(answer.structuredContent)).toBe(false);
       expect(answer.structuredContent).toMatchObject({ step: { answer: { answer: "accepted" } } });
       expect(await life.wait(() => childScope.item(heater))).toMatchObject({ values: { outcome: "confirmed" } });
+    }
+    const configuredRepository = (await life.wait(() => D.item(0))).values["repository"] as { host: string; namespace: string };
+    const hostConfig: ArchiveHostConfiguration = { registerScope: R.name, host: configuredRepository.host, namespace: configuredRepository.namespace, directory: D.name };
+    const hostQueries: string[] = [];
+    const hostRead = (where: ScopeRef, ask: ArchiveHostItemAsk, config = hostConfig) => life.wait(() => runInDurableObject(life.platform(where.scope).object, (_instance, state) => {
+      const sql = archiveSql(state), store = new SqliteStore(sql), ports = production();
+      return archiveHostItem(sql, archiveGiven(store), new Scope(where.scope, store, ports, PROPOSED_BOUNDS).pinned(), config, ask);
+    }));
+    const productionTarget = archiveTarget({ births: namespace(env.PLATFORM).births,
+      query: (where, query, archiving, directory) => { hostQueries.push(where.kind); return hostRead(where, { query, archiving, directory }); },
+    });
+    if (kind === "Grow") {
+      const first = (await life.wait(() => childScope.sealed()))[0]!.entry;
+      if (first.input.type !== "genesis") return expect.fail("Actual Grow child genesis is required");
+      expect(await productionTarget.discover(first.at, first.input.seed, new ArchiveBudget())).toBeNull();
+      expect(hostQueries).toEqual(["directory"]); // no destination item query without binding
+      hostQueries.length = 0;
+      if (productionScenario) {
+        expect(await productionTarget.resolveRoom(first.at, first.input.seed, new ArchiveBudget())).toBeNull();
+        expect(hostQueries).toEqual(["directory"]);
+        hostQueries.length = 0;
+      }
+    }
+    if (activationScenario) {
+      // This separate story runs the real ScopeObject production factory and
+      // scheduled alarms. It never substitutes manual driver invocations.
+      const repository = (await life.wait(() => D.item(0))).values["repository"] as unknown as DestinationRepository;
+      const host = new ArchiveArtifactsPeer(repository, life.now), policies = growArchivePolicies(new TextDecoder().decode(packet.bytes));
+      const environment = { ARTIFACTS: host.binding,
+        ARTIFACTS_CONFIG: canonicalize({ registerScope: R.name, namespace: repository.namespace, host: "service.invalid", maxBytes: 8 * 1024 * 1024, credentialIdentity: "adapter-attempt" }),
+        GROW_ARCHIVE_CONFIG: canonicalize({ policy: "grow-room-archive-1", release: DEMO_RELEASE, directory: D.name, repositoryName: repository.name }) };
+      const reads: { owner: string; source: string }[] = [];
+      let threwPrebindTarget = false, interruptedFirstSources = false;
+      const ledgers: { owner: string; budget: ArchiveBudget; targetBefore?: ArchiveCost; targetAfter?: ArchiveCost; resolved?: boolean }[] = [];
+      for (const scope of [rootScope, childScope, D, A, G]) {
+        roomArchiveConstructions.set(scope.name, 0);
+        roomArchiveWiring.set(scope.name, (given, sql, bounds) => {
+          roomArchiveConstructions.set(scope.name, roomArchiveConstructions.get(scope.name)! + 1);
+          let ownLedger: (typeof ledgers)[number] | undefined;
+          const binding = { idFromName: (name: string) => env.PLATFORM.idFromName(name), get: (id: DurableObjectId) => {
+            const peer = env.PLATFORM.get(id);
+            return new Proxy(peer, { get(target, key) {
+              if (key !== "nativeBirth") return Reflect.get(target, key);
+              return async (where: ScopeRef, milliseconds: number, maxBytes: number) => {
+                reads.push({ owner: scope.name, source: where.scope });
+                return (target as unknown as { nativeBirth(at: ScopeRef, ms: number, bytes: number): Promise<unknown> }).nativeBirth(where, milliseconds, maxBytes);
+              };
+            } });
+          } };
+          const options = growArchiveDriver(given, sql, binding, environment, policies, bounds, host.fetch);
+          if (!options) throw Error("Actual exact Grow archive wiring must be present");
+          return { ...options,
+            sources: async (...args) => {
+              if (scope.name === D.name && !interruptedFirstSources) {
+                interruptedFirstSources = true;
+                // The real initial target save has completed. Interrupt at
+                // its first source await, before Mark, then reconstruct below.
+                await Promise.resolve();
+                throw Error("TEST first source unavailable after durable target");
+              }
+              return options.sources!(...args);
+            },
+            budget: () => { ownLedger = { owner: scope.name, budget: new ArchiveBudget() }; ledgers.push(ownLedger); return ownLedger.budget; },
+            target: { resolve: async (...args) => {
+              expect(args[2]).toBe(ownLedger!.budget); ownLedger!.targetBefore = args[2].admitted();
+              const repository = await options.target.resolve(...args);
+              ownLedger!.targetAfter = args[2].admitted(); ownLedger!.resolved = repository !== null;
+              if (scope.name === D.name && repository === null && scenario === "Grow activation evicted" && !threwPrebindTarget) {
+                threwPrebindTarget = true; throw Error("TEST target unavailable after real unbound lookup");
+              }
+              return repository;
+            } },
+          };
+        });
+        life.cleanup(() => { roomArchiveWiring.delete(scope.name); roomArchiveConstructions.delete(scope.name); });
+        await life.wait(() => scope.restart());
+      }
+      for (const scope of [D, G]) {
+        archiveHostWiring.set(scope.name, hostConfig); life.cleanup(() => { archiveHostWiring.delete(scope.name); });
+      }
+      const alarm = (scope: typeof D) => life.wait(() => runInDurableObject(scope.object, async (_instance, state) => state.storage.getAlarm()));
+      const wakeIndex = (scope: typeof D) => life.wait(() => runInDurableObject(scope.object, (_instance, state) => {
+        const bytes = state.storage.sql.exec<{ v: string }>("SELECT v FROM meta WHERE k='archive-wake-1'").one().v;
+        return parseStrict(bytes);
+      }));
+      // Warm Directory's actual configured instance before binding. Its
+      // missing-binding pass must retain a real retry wake, without a row.
+      await life.wait(() => (D.object as unknown as { readiness(): Promise<unknown> }).readiness());
+      expect(await life.wait(() => runDurableObjectAlarm(D.object))).toBe(true);
+      const retry = await alarm(D); expect(retry).not.toBeNull(); expect(retry).toBeGreaterThan(life.now());
+      const deferredWake = { pending: true, stopped: false, next: timeOf(retry!) };
+      expect(await wakeIndex(D)).toEqual(deferredWake);
+      expect(threwPrebindTarget).toBe(scenario === "Grow activation evicted");
+      expect(await life.wait(() => runInDurableObject(D.object, (_instance, state) => new ArchiveRows(archiveSql(state), directory).load()))).toBeNull();
+      expect(roomArchiveConstructions.get(A.name)).toBe(0);
+      await life.wait(async () => D.did(rita, "bind-archive", { on: 0, fields: { archive: "journal" }, expected: await D.expected({ on: 0 }) }));
+      expect(await alarm(D)).toBe(retry); // warm onSealed must not shorten retry
+      expect(await wakeIndex(D)).toEqual(deferredWake);
+      const directoryConstructions = roomArchiveConstructions.get(D.name)!;
+      if (scenario === "Grow activation evicted") await life.wait(() => D.restart());
+      const readStart = reads.length;
+      await life.wait(() => childScope.did(rita, "commission-zone", { fields: { label: "TEST actual Room activation", setpoint: 2400, band: 200 } }));
+      expect(await life.wait(() => runDurableObjectAlarm(childScope.object))).toBe(true);
+      expect(reads.slice(readStart).some(read => read.owner === childScope.name && read.source === D.name)).toBe(true);
+      expect(reads.slice(readStart).some(read => read.owner === childScope.name && read.source === A.name)).toBe(false);
+      expect(roomArchiveConstructions.get(A.name)).toBe(0);
+      expect(roomArchiveConstructions.get(D.name)).toBe(directoryConstructions + (scenario === "Grow activation evicted" ? 1 : 0));
+      const directoryWake = await alarm(D); expect(directoryWake).toBe(retry);
+      expect(await wakeIndex(D)).toEqual(deferredWake);
+      life.active(); net.clock.now = timeOf(Math.max(life.now(), directoryWake!));
+      expect(await life.wait(() => runDurableObjectAlarm(D.object))).toBe(true);
+      expect(reads.some(read => read.owner === D.name && read.source === A.name)).toBe(true);
+      expect(ledgers.some(row => row.owner === D.name && row.resolved && row.targetBefore && row.targetAfter
+        && row.targetAfter.calls > row.targetBefore.calls && row.targetAfter.inputWork > row.targetBefore.inputWork)).toBe(true);
+      // Count before the inspection: that inspection must not be the first
+      // activation of the otherwise quiet real Rules object.
+      expect(roomArchiveConstructions.get(A.name)).toBe(1);
+      const rulesWake = await alarm(A); expect(rulesWake).not.toBeNull();
+      expect(roomArchiveConstructions.get(A.name)).toBe(1);
+      expect(interruptedFirstSources).toBe(true);
+      const sourceRetry = await alarm(D); expect(sourceRetry).not.toBeNull(); expect(sourceRetry).toBeGreaterThan(life.now());
+      const sourceWake = { pending: true, stopped: false, next: timeOf(sourceRetry!) };
+      expect(await wakeIndex(D)).toEqual(sourceWake);
+      const targetOnly = await life.wait(() => runInDurableObject(D.object, (_instance, state) => new ArchiveRows(archiveSql(state), directory).load()));
+      expect(targetOnly).toMatchObject({ repository, pending: null, confirmed: null });
+      await life.wait(() => D.restart());
+      await life.wait(() => (D.object as unknown as { readiness(): Promise<unknown> }).readiness());
+      expect(await alarm(D)).toBe(sourceRetry); expect(await wakeIndex(D)).toEqual(sourceWake);
+      (context.task.meta as Record<string, unknown>)["productionActivation"] = { scenario, retry, deferredWake, threwPrebindTarget, directoryWake, rulesWake, sourceRetry, sourceWake, reads,
+        ledgers: ledgers.map(({ owner, budget, ...row }) => ({ owner, ...row, cost: budget.admitted() })),
+        qualification: "Exact signed packet and genuine native distinct agents/creation/binding. Real ScopeObject production constructor, native sealed Room activity, scheduled alarms, warm Directory retry and optional eviction. Each object's actual pass pays its original ledger; no manual ArchiveDriver substitutes this activation path. Namespace/clock/Artifacts HTTP peer/scheduler are TEST stand-ins; no hosted acceptance or complete five-ref archive claim." };
+      return;
     }
     const beforeBinding = await Promise.all([rootScope, childScope].map(scope => life.wait(() => scope.summary())));
     expect((await life.wait(() => D.item(0))).values["archive"]).toBeNull();
@@ -150,15 +387,14 @@ test.for(["fixture", "Grow"])("installed %s scopes export genesis zero after a l
       }
       histories.push({ scope, read });
     }
-    const declarations = new Map([[rootId, root], [childId, child]]), policies = new Map<Digest | PlatformDefinition, ReviewedArchivePolicy>([[rootId, reviewed(rootId, root)], [childId, reviewed(childId, child)]]);
+    const declarations = new Map([[rootId, root], [childId, child]]), policies = new Map<Digest | PlatformDefinition, ReviewedArchivePolicy>(productionScenario ? growArchivePolicies(new TextDecoder().decode(packet.bytes)) : [[rootId, reviewed(rootId, root)], [childId, reviewed(childId, child)]]);
     const childBirth = histories[1]!.read.value[0]!.entry;
     if (childBirth.input.type !== "genesis") throw Error("Actual installed child birth is required.");
     const childSeed = childBirth.input.seed;
     const discoveryBudget = new ArchiveBudget();
-    const discovery = kind === "Grow" ? await life.wait(() => fixtureArchiveTargetIn(env.PLATFORM, {
-      fixture: "archive-target-reader", value: issued.session.reader(),
-    }).discover(childBirth.at, childSeed, discoveryBudget)) : null;
+    const discovery = kind === "Grow" ? await productionTarget.discover(childBirth.at, childSeed, discoveryBudget) : null;
     if (kind === "Grow") {
+      expect(hostQueries).toEqual(["directory", "destination"]);
       expect(discovery?.repository).toEqual((await life.wait(() => D.item(0))).values["repository"]);
       expect(discovery?.scopes.map(scope => ({ scope: scope.at.scope, named: scope.named, via: scope.via }))).toEqual([
         { scope: childScope.name, named: childId, via: "self" },
@@ -168,6 +404,33 @@ test.for(["fixture", "Grow"])("installed %s scopes export genesis zero after a l
         { scope: G.name, named: ARCHIVE_DEVICE_APPLICATION_COHORT.destination, via: "destination" },
       ]);
       if (!discovery) throw Error("The bound native producer graph must be discovered.");
+      // The same production gate admits no other item or pinned register.
+      // No public reader, test inspector or session is passed to this port.
+      const repositoryQuery = encodeItemQueryParameter({ v: 1, scope: directory, type: "repository", states: ["open"], ids: null, limit: 1, cursor: null })!;
+      const ask = { query: repositoryQuery, archiving: childBirth.at, directory };
+      expect(await hostRead(directory, ask, { ...hostConfig, registerScope: D.name })).toEqual({ ok: false, reason: "forbidden" });
+      const otherItem = encodeItemQueryParameter({ v: 1, scope: directory, type: "application", states: [], ids: null, limit: 1, cursor: null })!;
+      expect(await hostRead(directory, { ...ask, query: otherItem })).toEqual({ ok: false, reason: "forbidden" });
+      expect(await productionTarget.discover({ ...childBirth.at, scope: D.name }, childSeed, new ArchiveBudget())).toBeNull();
+      expect(hostQueries).toEqual(["directory", "destination"]); // substitution refused before either query
+      const wrongRegister = archiveTarget({ births: namespace(env.PLATFORM).births,
+        query: (where, query, archiving, directory) => hostRead(where, { query, archiving, directory }, { ...hostConfig, registerScope: D.name }),
+      });
+      expect(await wrongRegister.discover(childBirth.at, childSeed, new ArchiveBudget())).toBeNull();
+      if (productionScenario) {
+        expect(await wrongRegister.resolveRoom(childBirth.at, childSeed, new ArchiveBudget())).toBeNull();
+        expect(await productionTarget.resolveRoom({ ...childBirth.at, scope: D.name }, childSeed, new ArchiveBudget())).toBeNull();
+        expect(await productionTarget.resolveRoom(childBirth.at, { ...childSeed, definition: rootId }, new ArchiveBudget())).toBeNull();
+      }
+      const wrongScopeQuery = encodeItemQueryParameter({ v: 1, scope: await life.wait(() => G.at()), type: "repository", states: ["open"], ids: null, limit: 1, cursor: null })!;
+      const wrongQueryScope = archiveTarget({ births: namespace(env.PLATFORM).births,
+        query: (where, _query, archiving, directory) => hostRead(where, { query: wrongScopeQuery, archiving, directory }),
+      });
+      expect(await wrongQueryScope.discover(childBirth.at, childSeed, new ArchiveBudget())).toBeNull();
+      if (productionScenario) expect(await wrongQueryScope.resolveRoom(childBirth.at, childSeed, new ArchiveBudget())).toBeNull();
+      const unrelated = await sessionRepository(life, C.register, "journal", platformHost), unrelatedDirectory = await life.wait(() => unrelated.D.at());
+      const unrelatedQuery = encodeItemQueryParameter({ v: 1, scope: unrelatedDirectory, type: "repository", states: ["open"], ids: null, limit: 1, cursor: null })!;
+      expect(await hostRead(unrelatedDirectory, { ...ask, query: unrelatedQuery, directory: unrelatedDirectory }, { ...hostConfig, directory: unrelated.D.name })).toEqual({ ok: false, reason: "forbidden" });
     }
     // Native TEST exports of the room's native producer scopes.
     // These self-journal reads use the fixture inspector, not a new grant.
@@ -182,8 +445,58 @@ test.for(["fixture", "Grow"])("installed %s scopes export genesis zero after a l
     }
     const preparedHistories = [...histories, ...nativeHistories];
     const allHistories = discovery ? discovery.scopes.map(selected => preparedHistories.find(history => history.scope.name === selected.at.scope)!) : preparedHistories;
+    // Native retention semantics over actual complete inputs, independently
+    // of archive SQL selectors, selection records, manifests or outputs.
+    const nativeTextFirsts = new Map<string, FactRef>();
+    if (productionScenario) {
+      const schemas = new Map<string, ValidDefinition>();
+      const nativeSchemas = [...allHistories.map(history => history.read.value), await life.wait(() => R.sealed()), await life.wait(() => M.sealed())];
+      for (const history of nativeSchemas) {
+        const first = history[0];
+        if (!first || first.entry.seq !== 0 || first.entry.input.type !== "genesis") throw Error("Actual Native genesis schema required.");
+        const pin = first.entry.input.seed.definition, coded = isDigest(pin) ? null : platform(pin);
+        const declared = isDigest(pin) ? declarations.get(pin) : coded?.data;
+        if (!declared) throw Error("Exact signed or native schema required for omission oracle.");
+        const checked = validateDefinition(declared, PROPOSED_BOUNDS, RULE_PROFILES,
+          coded ? { platform: true, outcomeValues: outcomeValueDomains(coded.data, coded.rules) } : {});
+        if (!checked.ok) throw Error("Actual Native schema must validate for omission oracle.");
+        schemas.set(canonicalize(first.entry.at), checked.definition);
+      }
+      const knownTexts = new Set(packet.package.semantic.definitions.map(part => textDigest(part.bytes)));
+      for (const { read } of allHistories) for (const sealed of read.value) {
+        const schema = schemas.get(canonicalize(sealed.entry.at));
+        if (!schema) throw Error("Exact receiver schema required for Native text naming.");
+        const input = sealed.entry.input;
+        const sender = input.type === "delivery" ? schemas.get(canonicalize(input.from.at)) : undefined;
+        if (input.type === "delivery" && (input.message.class === "request" || input.message.class === "advisory") && !sender) throw Error("Exact sender schema required for Native text naming.");
+        // inputTexts covers declared act fields, founding/creation genesis
+        // fields, and matched delivery fields. Result/control inputs name none.
+        for (const digest of inputTexts(schema, input, sender?.declared.name)) {
+          if (!knownTexts.has(digest)) throw Error("Native fixture names a detached text outside its signed declaration oracle.");
+          const key = canonicalize([sealed.entry.at, digest]);
+          if (!nativeTextFirsts.has(key)) nativeTextFirsts.set(key, { at: { ...sealed.entry.at }, seq: sealed.entry.seq, hash: sealed.hash });
+        }
+      }
+      for (const part of nativeStageOracle!.catalog) expect(nativeTextFirsts.get(canonicalize([directory, part.text]))).toEqual(nativeStageOracle!.fact);
+    }
     const sourceRefs = new Map(allHistories.flatMap(({ read }) => read.value.flatMap(sealed => sealed.entry.uses.map(use => [canonicalize(use.fact.at), use.fact.at] as const))));
     expect(sourceRefs.size).toBeGreaterThan(0); expect(sourceRefs.size).toBeLessThanOrEqual(ARCHIVE_SOURCE_PINS);
+    if (kind === "Grow") {
+      const discovered = new Set<string>();
+      for (const { scope, read } of allHistories) {
+        const window = await life.wait(() => runInDurableObject(scope.object, (_instance, state) => {
+          const native = archiveSql(state);
+          const metadata = { ...native, exec: (query: string, ...args: Parameters<typeof native.exec> extends [string, ...infer Rest] ? Rest : never) => {
+            if (/SELECT\s+(?:entry\.)?bytes\b/i.test(query) || /FROM retained_/i.test(query)) return expect.fail("Source lookahead must read metadata only");
+            return native.exec(query, ...args);
+          } };
+          return archiveSourceWindow(metadata, null, read.at, PROPOSED_BOUNDS, new ArchiveBudget());
+        }));
+        expect(window.through).toEqual(read.at);
+        for (const source of window.sources) discovered.add(canonicalize(source));
+      }
+      expect([...discovered].sort()).toEqual([...sourceRefs.keys()].sort());
+    }
     const births: FixtureArchiveSourceBirth[] = [];
     for (const source of sourceRefs.values()) {
       if (kind === "fixture") {
@@ -193,7 +506,7 @@ test.for(["fixture", "Grow"])("installed %s scopes export genesis zero after a l
         if (!birth.ok || birth.value.entry.input.type !== "genesis") throw Error("Actual native graph birth is required.");
         const pin = birth.value.entry.input.seed.definition, declaration = isDigest(pin) ? declarations.get(pin) : undefined;
         births.push({ at: source, birth: { bytes: canonicalize(birth.value.entry), hash: birth.value.hash }, ...(declaration ? { declaration: canonicalize(declaration) } : {}) });
-        if (!policies.has(pin)) policies.set(pin, reviewed(pin, declaration));
+        if (!policies.has(pin)) { if (productionScenario) throw Error("Production source pin has no signed-policy coverage"); policies.set(pin, reviewed(pin, declaration)); }
         continue;
       }
       // Existing bounded native metadata port, before inventory. It is not
@@ -202,12 +515,12 @@ test.for(["fixture", "Grow"])("installed %s scopes export genesis zero after a l
       if (!birth) throw Error("Actual native graph birth is required.");
       const pin = birth.named, declaration = isDigest(pin) ? declarations.get(pin) : undefined;
       births.push({ at: source, birth: { bytes: birth.proof.bytes, hash: birth.proof.fact.hash }, ...(declaration ? { declaration: canonicalize(declaration) } : {}) });
-      if (!policies.has(pin)) policies.set(pin, reviewed(pin, declaration));
+      if (!policies.has(pin)) { if (productionScenario) throw Error("Production source pin has no signed-policy coverage"); policies.set(pin, reviewed(pin, declaration)); }
     }
     for (const { scope } of nativeHistories) {
       const pin = (await life.wait(() => scope.summary())).value.definition;
       if (!pin) throw Error("The native scope must pin its actual definition.");
-      if (!policies.has(pin)) policies.set(pin, reviewed(pin));
+      if (!policies.has(pin)) { if (productionScenario) throw Error("Production journal pin has no signed-policy coverage"); policies.set(pin, reviewed(pin)); }
     }
     const fixtureSources = new FixtureArchiveSourcePins(births, PROPOSED_BOUNDS, new ArchiveBudget());
     const sourceLookups: (Digest | PlatformDefinition | "missing")[] = [], sourceGet = fixtureSources.get.bind(fixtureSources);
@@ -286,7 +599,7 @@ test.for(["fixture", "Grow"])("installed %s scopes export genesis zero after a l
       expect(opened.archive.entries.map(entry => entry.bytes)).toEqual(read.value.map(sealed => canonicalize(sealed.entry)));
       expect(opened.archive.foreignSources).toEqual(planned.archive.manifest.foreignSources);
       expect(opened.archive.head).toEqual(read.at);
-      if (kind === "Grow") {
+      if (kind === "Grow" && !productionScenario) {
         // Invariant: every actual fixture entry fits alone, with its own
         // retained paths and original native inventory plus append charges.
         // These diagnostic commits are not marked or remotely confirmed.
@@ -310,7 +623,9 @@ test.for(["fixture", "Grow"])("installed %s scopes export genesis zero after a l
           "platform:directory@16": { entries: 14, attempts: 128, nodes: 23, calls: 223, metadata: 474298, inputWork: 34957641 },
           "platform:rules@10": { entries: 11, attempts: 80, nodes: 23, calls: 164, metadata: 373104, inputWork: 36436351 },
           "platform:destination@12": { entries: 2, attempts: 26, nodes: 20, calls: 54, metadata: 234024, inputWork: 17754830 } };
-        expect(planned.archive.cost).toEqual(originalPassCosts[birth.seed.definition]);
+        // Preserve the original fixture byte receipts verbatim. The separate
+        // production scenario uses different recorded repository identity bytes.
+        if (!productionScenario) expect(planned.archive.cost).toEqual(originalPassCosts[birth.seed.definition]);
         for (const sealed of read.value) {
           const through = { seq: sealed.entry.seq, hash: sealed.hash };
           const old: string | null = parent, receipt: Head | null = after;
@@ -391,61 +706,218 @@ test.for(["fixture", "Grow"])("installed %s scopes export genesis zero after a l
         expect([...written].sort()).toEqual([...expected].sort());
       }
     }
-    if (kind === "Grow") for (const [input, effects] of [["delivery", 0], ["genesis", 11], ["outcome", 1], ["preparation", 3]] as const) {
+    if (kind === "Grow" && !productionScenario) for (const [input, effects] of [["delivery", 0], ["genesis", 11], ["outcome", 1], ["preparation", 3]] as const) {
       expect(entryPrivacyComponents.some(row => row.input === input && row.effects === effects), `${input}:${effects} original receipt is exercised`).toBe(true);
     }
-    if (kind === "Grow") (context.task.meta as Record<string, unknown>)["sharedPassNativeFootprints"] = {
+    if (kind === "Grow" && !productionScenario) (context.task.meta as Record<string, unknown>)["sharedPassNativeFootprints"] = {
       passes: sharedPassFootprints, wholePasses: sharedWholePassFootprints,
       supportComponents, supportQualification: "Original trusted support validation plus repeated actual counted scout; same component budget pays fresh prefix, both full support validations,128metadata/256input count bookkeeping and privacy. Scalar forecast matches the original validation delta only, no refund/credit; final native inventory validates support afresh. No declaration payload body is fetched by this trusted support walk. No fresh validation credit or complete driver admission claim.",
       entryPrivacyComponents, entryPrivacyQualification: "Actual native header and entry-privacy calls before extraction, each component has its own unchanged default budget and fresh prefix/JSON reservation. Delta excludes that separately paid prefix, trusted support validation, foreign classification, and all payload reads; no whole-export or driver admission claimed.",
       qualification: "Actual installed Grow and its discovered native Directory16, Rules10 and Destination12 histories. Each diagnostic one-entry pass uses one original default30s ledger for fresh native inventory, canonical Git build and, for each noninitial pass, append validation. Genesis has no prior append and no append-validator claim. Real fixture entries and retained bytes; explicit TEST package peer, owner input, policy/source/authority configuration and scheduler. No remote confirmation, production admission or deployed cadence claim. Kind/domain counts concern these fixture entries, not all theoretically possible native entries."
     };
-    if (kind === "Grow") {
+    if (productionScenario) {
       // Invariant: each actual installed/native entry fits a confirmed
       // one-entry driver pass on one unchanged default all-work allowance.
       // The TEST owner supplies that entry's actual fixed cutoff, not an
       // alarm cadence. HTTP/token/repository/policy remain explicit fixtures.
       const passes: unknown[] = [];
+      const repository = (await life.wait(() => D.item(0))).values["repository"] as unknown as DestinationRepository;
+      productionPeer = new ArchiveArtifactsPeer(repository, life.now);
+      const peer = productionPeer;
+      const environment = { ARTIFACTS: peer.binding,
+        ARTIFACTS_CONFIG: canonicalize({ registerScope: R.name, namespace: repository.namespace, host: "service.invalid", maxBytes: 8 * 1024 * 1024, credentialIdentity: "adapter-attempt" }),
+        GROW_ARCHIVE_CONFIG: canonicalize({ policy: "grow-room-archive-1", release: DEMO_RELEASE, directory: D.name, repositoryName: repository.name }),
+      };
+      const defaultAsk = { query: encodeItemQueryParameter({ v: 1, scope: directory, type: "repository", states: ["open"], ids: null, limit: 1, cursor: null })!, archiving: childBirth.at, directory };
+      expect(await life.wait(() => (D.object as unknown as { archiveItem(ask: ArchiveHostItemAsk): Promise<unknown> }).archiveItem(defaultAsk))).toEqual({ ok: false, reason: "forbidden" });
+      for (const scope of [D, G]) {
+        archiveHostWiring.set(scope.name, hostConfig);
+        life.cleanup(() => { archiveHostWiring.delete(scope.name); });
+        await life.wait(() => scope.restart());
+      }
       (context.task.meta as Record<string, unknown>)["adaptiveNativeCohorts"] = { passes,
-        qualification: "Actual Grow root/child and discovered Directory16/Rules10/Destination12. Each TEST owner cutoff names one existing actual Native entry. One default30s ledger pays scouting, preparation, fresh inventory, writer, outgoing copies, production incremental validator/copy/pack/send code and Native mark/attempt/confirmation. Native receipt inspections use separate test-observation budgets; no archive phase reset. HTTP replies/credentials/repository/policies/source preparation are TEST fixtures. No live alarm/cadence/10000-one-entry claim." };
+        qualification: "Actual installed Grow root/child and Directory16/Rules10/Destination12, with native production host-item RPC, growArchiveDriver target/source preparation, adaptive writer, Mark and pending rebuild, actual Artifacts token adapter and smart-HTTP pack/send/readback. Exact committed signed demo packet and growArchivePolicies; TEST namespace, distinct enrolled agents, binding/HTTP peer, clock and scheduler; no real provider, alarm cadence or hosted acceptance. Every individual pass owns its default original30s ledger; first lost send and later rebuild retain separate costs. No source frame survives peer await." };
+      let rebuildWitnessed = false;
       for (const { scope, read } of allHistories) {
-        const at = await life.wait(() => scope.at()), host = new ScriptedArchiveHost("sha1", () => timeOf(life.now()));
+        const at = await life.wait(() => scope.at());
         for (const sealed of read.value) {
           const cutoff = { seq: sealed.entry.seq, hash: sealed.hash };
-          const outcome = await life.wait(() => runInDurableObject(scope.object, async (_instance, state) => {
-            const sql = archiveSql(state); let passBudget: ArchiveBudget | undefined;
-            const quotes: { requested: Partial<ArchiveCost>; spent: ArchiveCost }[] = [];
-            const driver = new ArchiveDriver({ sql, current: () => ({ at, head: cutoff }), clock: () => timeOf(life.now()),
-              bounds: PROPOSED_BOUNDS, policies: { fixture: "archive-policies", registry: policies }, fixtureSources,
-              target: { fixture: "archive-target", resolve: async () => archiveRepository }, provider: host,
-              budget: () => {
-                const budget = new ArchiveBudget(), canSpend = budget.canSpend.bind(budget); passBudget = budget;
-                budget.canSpend = cost => {
-                  if ((cost.entries ?? 0) > 0 && (cost.inputWork ?? 0) > 20 * 1024 * 1024) { if (quotes.length === 2) quotes.shift(); quotes.push({ requested: { ...cost }, spent: budget.admitted() }); }
-                  return canSpend(cost);
+          const later = read.value.find(row => row.entry.seq === cutoff.seq + 1);
+          const ownerHead = !rebuildWitnessed && later ? { seq: later.entry.seq, hash: later.hash } : cutoff;
+          const run = () => life.wait(() => runInDurableObject(scope.object, async (_instance, state) => {
+            const native = archiveSql(state); let depth = 0, birthCalls = 0, sourceRefused = false, nativeRootReservations = 0;
+            const phases: unknown[] = [];
+            const sql: Sql = { ...native, transaction: work => { depth++; try { return native.transaction(work); } finally { depth--; } } };
+            const binding = { idFromName: (name: string) => env.PLATFORM.idFromName(name), get: (id: DurableObjectId) => {
+              const stub = env.PLATFORM.get(id);
+              return new Proxy(stub, { get(target, key) {
+                const value = Reflect.get(target, key);
+                if (typeof value !== "function") return value;
+                return async (...args: unknown[]) => {
+                  if (key === "nativeBirth") { expect(depth).toBe(0); birthCalls++; }
+                  try {
+                    // RPC callables expose remote properties: .apply would itself
+                    // become a remote method. Invoke the actual named RPC.
+                    const reply = await (target as unknown as Record<PropertyKey, (...args: unknown[]) => Promise<unknown>>)[key]!(...args);
+                    if (key === "nativeBirth") phases.push({ birth: { scope: (args[0] as ScopeRef).scope, reply: reply ? { named: (reply as { named: unknown }).named, native: (reply as { native: unknown }).native, birthUnits: (reply as { proof: { bytes: string } }).proof.bytes.length, birthBytes: utf8((reply as { proof: { bytes: string } }).proof.bytes).length } : null } });
+                    return reply;
+                  } catch (error) { phases.push({ rpc: String(key), error: String(error) }); throw error; }
                 };
-                return budget;
               } });
-            const result = await driver.run();
-            return { result, cost: passBudget!.admitted(), quotes, confirmed: new ArchiveRows(sql, at).load()?.confirmed ?? null };
+            } };
+            const store = new SqliteStore(sql); let passBudget: ArchiveBudget | undefined;
+            const options = growArchiveDriver(archiveGiven(store), sql, binding, environment, policies, PROPOSED_BOUNDS, peer.fetch);
+            if (!options) return expect.fail("The explicit native TEST host configuration must be admitted");
+            const sourcePreparation = options.sources!;
+            const finishObserver = at.kind === "directory" && cutoff.seq === 2 ? observeDirectoryFinish(at, () => passBudget, cutoff, peer.data) : undefined;
+            try {
+            const driver = new ArchiveDriver({ ...options, target: { resolve: async (...args) => { const value = await options.target.resolve(...args); phases.push({ target: value, cost: args[2].admitted() }); return value; } }, sql, current: () => ({ at, head: ownerHead }), clock: () => timeOf(life.now()), bounds: PROPOSED_BOUNDS,
+              sources: async (after, through, budget, exact) => {
+                expect(budget).toBe(passBudget); phases.push({ sources: { after, through, exact }, cost: budget.admitted() });
+                const prepared = await sourcePreparation(after, through, budget, exact);
+                phases.push({ sourceReturn: { exact, rebuildWitnessed, keys: Object.keys(prepared), prepareType: typeof prepared.prepare } });
+                if (exact) return prepared;
+                return { ...prepared, prepare: async (seq, original) => {
+                  phases.push({ prepareEntered: seq, budgetSame: original === passBudget });
+                  expect(original).toBe(passBudget);
+                  if (!rebuildWitnessed && seq > cutoff.seq) {
+                    // TEST unavailable source after actual bounded metadata;
+                    // its spent work stays on the original finish-fenced ledger.
+                    sql.transaction(() => archiveSourceReferences(sql, seq, PROPOSED_BOUNDS, original));
+                    sourceRefused = true; return stopArchivePrefix("foreign-source-unavailable");
+                  }
+                  const before = original.admitted();
+                  await prepared.prepare!(seq, original);
+                  phases.push({ sourcePrepared: seq, before, after: original.admitted() });
+                } };
+              },
+              budget: () => {
+                passBudget = new class extends ArchiveBudget {
+                  override canSpend(cost: Partial<ArchiveCost>): boolean {
+                    const fits = super.canSpend(cost);
+                    if (!fits && phases.length < 64) {
+                      const used = this.admitted(); phases.push({ rejectedFit: { cost, used } }); finishObserver?.rejected(cost, used);
+                    }
+                    return fits;
+                  }
+                  override spend(cost: Partial<ArchiveCost>): void {
+                    if (cost.nodes === 1 && cost.inputWork === PROPOSED_BOUNDS.definitionBytes * 16) nativeRootReservations++;
+                    const before = this.admitted();
+                    try { super.spend(cost); }
+                    catch (error) { if (phases.length < 64) phases.push({ rejectedDebit: { cost, used: before, error: String(error) } }); throw error; }
+                  }
+                }(); return passBudget;
+              } });
+            let result: Awaited<ReturnType<ArchiveDriver["run"]>>;
+            try { result = await driver.run(); }
+            finally { finishObserver?.restore(); }
+            const finishDiagnostic = finishObserver?.report(), row = new ArchiveRows(sql, at).load();
+            return { result, cost: passBudget!.admitted(), confirmed: row?.confirmed ?? null, pending: row?.pending ?? null, sourceRefused, birthCalls, phases, nativeRootReservations,
+              ...(finishDiagnostic ? { finishDiagnostic } : {}) };
+            } finally { finishObserver?.restore(); }
           }));
-          passes.push({ scope: scope.name, named: read.value[0]!.entry.input.type === "genesis" ? read.value[0]!.entry.input.seed.definition : null,
-            seq: cutoff.seq, role: scope.name === rootScope.name ? "root" : scope.name === childScope.name ? "child" : "native", ...outcome });
+          if (!rebuildWitnessed) peer.failBeforeAccept = true;
+          const initial = await run();
+          // Only settled TEST diagnostics inspect the already captured Native
+          // history. This serialization does not schedule/admit any pass.
+          const entryShape = at.kind === "directory" && cutoff.seq === 2 ? {
+            input: sealed.entry.input.type, inputKeys: Object.keys(sealed.entry.input).sort(),
+            entryBytes: utf8(canonicalize(sealed.entry)).length,
+            qualification: "Already captured genuine Native entry; post-run shape only, no new journal read or body output." } : undefined;
+          if (entryShape) (context.task.meta as Record<string, unknown>)["directoryAppendEntryShape"] = { at, cutoff, ...entryShape };
+          expect(initial.cost.entries, JSON.stringify({ scope: scope.name, cutoff, initial, ...(entryShape ? { entryShape } : {}) })).toBe(2);
+          let outcome = initial;
+          if (!rebuildWitnessed) {
+            expect(initial.sourceRefused).toBe(true);
+            expect(initial.result).toMatchObject({ state: "retry" });
+            expect(initial.pending?.through).toEqual(cutoff);
+            const commit = initial.pending!.commit;
+            await life.wait(() => scope.restart());
+            life.active(); net.clock.now = timeOf(life.now() + PROPOSED_BOUNDS.dispatchRetrySeconds * 1000);
+            outcome = await run();
+            expect(outcome.confirmed?.commit).toBe(commit);
+            expect(peer.posts[1]).toEqual(peer.posts[0]);
+            rebuildWitnessed = true;
+          }
+          passes.push({ scope: scope.name, seq: cutoff.seq, initial, ...(outcome === initial ? {} : { rebuilt: outcome }) });
           expect(outcome.result, JSON.stringify(passes.at(-1))).toMatchObject({ state: "confirmed" });
-          expect(outcome.confirmed?.through).toEqual(cutoff); expect(outcome.cost.entries).toBe(2);
+          expect(outcome.confirmed?.through).toEqual(cutoff);
+          if (at.kind === "directory" && cutoff.seq === 0) expect(initial.nativeRootReservations).toBe(2); // fresh Scout + fresh final inventory
+          expect(initial.cost.inputWork).toBeLessThanOrEqual(64 * 1024 * 1024);
           expect(outcome.cost.inputWork).toBeLessThanOrEqual(64 * 1024 * 1024);
         }
-        expect(host.appendCalls).toBe(read.value.length - 1); expect(host.sends).toHaveLength(read.value.length);
         expect((await life.wait(() => scope.sealed())).map(row => row.hash)).toEqual(read.value.map(row => row.hash));
       }
-      expect(passes).toHaveLength(allHistories.reduce((count, history) => count + history.read.value.length, 0));
+      const entries = allHistories.reduce((count, history) => count + history.read.value.length, 0);
+      expect(passes).toHaveLength(entries); expect(peer.sends).toHaveLength(entries);
+      expect(peer.minted.filter(token => token.scope === "write")).toHaveLength(entries + 1);
+      expect(peer.revoked).toHaveLength(entries + 1);
+      // Install the actual production factory on an already confirmed,
+      // quiescent native Destination. A real alarm must clear idle work.
+      roomArchiveWiring.set(G.name, (given, sql, bounds) => {
+        const options = growArchiveDriver(given, sql, env.PLATFORM, environment, policies, bounds, peer.fetch);
+        if (!options) throw Error("Exact Grow archive factory is required"); return options;
+      });
+      life.cleanup(() => { roomArchiveWiring.delete(G.name); });
+      await life.wait(() => G.restart());
+      await life.wait(() => (G.object as unknown as { readiness(): Promise<unknown> }).readiness());
+      expect(await life.wait(() => runDurableObjectAlarm(G.object))).toBe(true);
+      const idleNativeWake = await life.wait(() => runInDurableObject(G.object, async (_instance, state) => ({
+        archive: new ArchiveRows(archiveSql(state), await G.at()).wake(), alarm: await state.storage.getAlarm(),
+      })));
+      expect(idleNativeWake.archive).toBeNull();
+      // Hold a second target reply while a genuine checkpoint seals and its
+      // real production onSealed callback signals the index. No row is forged.
+      const writesBeforeIdleGuard = peer.minted.filter(token => token.scope === "write").length;
+      const concurrentIdle = await life.wait(() => runInDurableObject(G.object, async (_instance, state) => {
+        const sql = archiveSql(state), store = new SqliteStore(sql);
+        const options = growArchiveDriver(archiveGiven(store), sql, env.PLATFORM, environment, policies, PROPOSED_BOUNDS, peer.fetch);
+        if (!options) throw Error("Exact Grow archive wiring is required");
+        let checkpoint: Checkpointed | undefined; const budget = new ArchiveBudget();
+        const driver = new ArchiveDriver({ ...options, sql, current: () => store.scope(), clock: () => timeOf(life.now()), bounds: PROPOSED_BOUNDS, budget: () => budget,
+          target: { resolve: async (...args) => {
+            const repository = await options.target.resolve(...args);
+            checkpoint = await (G.object as unknown as { checkpoint(): Promise<Checkpointed> }).checkpoint();
+            expect(checkpoint).toMatchObject({ answer: "written" }); return repository;
+          } },
+        });
+        const result = await driver.run(), wake = new ArchiveRows(sql, (await G.at())).wake();
+        const index = sql.exec("SELECT v FROM meta WHERE k='archive-wake-1'").toArray()[0]?.["v"];
+        return { result, wake, index: typeof index === "string" ? parseStrict(index) : null, checkpoint, cost: budget.admitted() };
+      }));
+      expect(concurrentIdle.result.state).toBe("retry"); expect(concurrentIdle.result.next).toBe(concurrentIdle.wake);
+      expect(timeMs(concurrentIdle.wake!)).toBeGreaterThan(life.now());
+      expect(concurrentIdle.index).toEqual({ pending: true, stopped: false, next: concurrentIdle.wake });
+      expect(peer.minted.filter(token => token.scope === "write")).toHaveLength(writesBeforeIdleGuard);
+      (context.task.meta as Record<string, unknown>)["productionIdleWake"] = { idleNativeWake, concurrentIdle,
+        qualification: "An actual production ScopeObject alarm cleared its archive wake on confirmed idle. During another real target await a genuine checkpoint/onSealed advanced the Native head; a charged fresh identity/head frame preserved the actual pending index. No Mark, write token or send for that tail. The global alarm can independently belong to another Native owner." };
+      for (const excluded of [R, M]) {
+        const writes = peer.minted.filter(token => token.scope === "write").length;
+        const result = await life.wait(() => runInDurableObject(excluded.object, (_instance, state) => {
+          const sql = archiveSql(state), store = new SqliteStore(sql);
+          const options = growArchiveDriver(archiveGiven(store), sql, env.PLATFORM, environment, policies, PROPOSED_BOUNDS, peer.fetch);
+          if (!options) return expect.fail("The explicit host configuration exists");
+          return new ArchiveDriver({ ...options, sql, current: () => store.scope(), clock: () => timeOf(life.now()), bounds: PROPOSED_BOUNDS }).run();
+        }));
+        expect(result).toEqual({ state: "disabled", next: null });
+        expect(peer.minted.filter(token => token.scope === "write")).toHaveLength(writes);
+        expect(peer.refs.has(journalRef(excluded.name))).toBe(false);
+      }
+      for (const object of peer.data.values()) expect(new TextDecoder().decode(object.data)).not.toContain("TEST-write-");
     }
+
     if (kind === "Grow") {
       // A constructed enrol copy and a listed kind with a nested secret
       // must refuse the whole export before any body/integrity read. The
       // copied digest is intentionally unchanged: this is the earlier
       // metadata refusal boundary, not a forged journal acceptance test.
-      const copy = credentialCopies.find(copy => copy.journal === D.name && copy.source.seq === 5);
+      const membershipGrants = productionScenario ? (await life.wait(() => M.sealed())).filter(sealed => {
+        const input = sealed.entry.input;
+        return input.type === "delivery" && input.message.class === "request" && input.message.type === "tell"
+          && (input.message.body as { message?: unknown })["message"] === "application-grants";
+      }) : [];
+      if (productionScenario) expect(membershipGrants).toHaveLength(1);
+      const copy = credentialCopies.find(copy => copy.journal === D.name && copy.source.seq === (productionScenario ? membershipGrants[0]!.entry.seq : 5));
       const act = (await life.wait(() => M.sealed())).find(sealed => sealed.entry.input.type === "act")?.entry.input;
       if (!copy || act?.type !== "act") throw Error("Native Membership copy and signed act are required.");
       const refused = await life.wait(() => runInDurableObject(D.object, async (_instance, state) => {
@@ -491,13 +963,23 @@ test.for(["fixture", "Grow"])("installed %s scopes export genesis zero after a l
     const anchorFacts = [...new Map([...passAnchors.values()].flat().map(fact => [canonicalize(fact), fact])).values()]
       .sort((a, b) => a.at.scope < b.at.scope ? -1 : a.at.scope > b.at.scope ? 1 : a.seq - b.seq);
     const registerEntries = await life.wait(() => R.sealed()), memberEntries = await life.wait(() => M.sealed());
-    // Independent fixture facts: three Register copies, two public
-    // Membership copies and actual retained observation heads 4 and 6. These
-    // expected fixture reads do not feed the export-derived anchor list.
+    // Independent Native facts: the original variants retain literal heads
+    // 4 and 6; production uses its captured install authority fact. These
+    // expected reads do not feed the export-derived anchor list.
+    const productionGrants = productionScenario ? memberEntries.filter(sealed => {
+      const input = sealed.entry.input;
+      return input.type === "delivery" && input.message.class === "request" && input.message.type === "tell"
+        && (input.message.body as { message?: unknown })["message"] === "application-grants";
+    }) : [];
+    if (productionScenario) expect(productionGrants).toHaveLength(1);
+    // Actual install authority head and public grant delivery, not exported
+    // anchors or a summary captured before the install authority read.
+    const expectedMemberPositions = productionScenario ? [0, nativeInstallOracle!.memberHead.seq, productionGrants[0]!.entry.seq, memberEntries.at(-1)!.entry.seq] : [0, 4, 5, 6];
     const expectedAnchors = [1, 2, 3].map(seq => registerEntries.find(entry => entry.entry.seq === seq)!)
-      .concat([0, 4, 5, 6].map(seq => memberEntries.find(entry => entry.entry.seq === seq)!))
+      .concat([...new Set(expectedMemberPositions)].map(seq => memberEntries.find(entry => entry.entry.seq === seq)!))
       .map(sealed => ({ at: sealed.entry.at, seq: sealed.entry.seq, hash: sealed.hash }))
       .sort((a, b) => a.at.scope < b.at.scope ? -1 : a.at.scope > b.at.scope ? 1 : a.seq - b.seq);
+    if (productionScenario) { expect(expectedAnchors).toHaveLength(7); expect(expectedAnchors).toContainEqual(nativeInstallOracle!.memberHead); }
     expect(anchorFacts).toEqual(expectedAnchors);
     expect(anchorFacts).toContainEqual(claim);
     expect(anchorFacts.every(fact => !diagnosticArchives.has(fact.at.scope))).toBe(true);
@@ -505,10 +987,25 @@ test.for(["fixture", "Grow"])("installed %s scopes export genesis zero after a l
     // A2 reads exactly the five self-journal archives,
     // without a service. Private facts and values observed at their heads
     // are caller-trusted; copied bodies supply no source proof.
-    const diagnosticObjects = new Map([...diagnosticArchives.values()].flatMap(archive => archive.objects.map(object => [object.id, object] as const)));
-    const diagnosticRefs = new Map([...diagnosticArchives].map(([scope, archive]) => [journalRef(scope), archive.commit]));
-    const omittedDigest = "sha256:9e0a5a28346594dcd3a95794d1d66951691e6de65adc1582e788ba5ef3085530";
-    const expectedOmissions = allHistories.flatMap(({ scope, read }) => {
+    const diagnosticObjects = productionPeer?.data ?? new Map([...diagnosticArchives.values()].flatMap(archive => archive.objects.map(object => [object.id, object] as const)));
+    const diagnosticRefs = productionPeer?.refs ?? new Map([...diagnosticArchives].map(([scope, archive]) => [journalRef(scope), archive.commit]));
+    const omittedDigest = productionScenario ? textDigest(packet.package.semantic.definitions.find(part => part.id === childId)!.bytes)
+      : "sha256:9e0a5a28346594dcd3a95794d1d66951691e6de65adc1582e788ba5ef3085530";
+    const knownDeclarationTexts = packet.package.semantic.definitions.map(part => ({ digest: textDigest(part.bytes), bytes: utf8(canonicalize(part.bytes)).length }));
+    const nativeExpectedOmissions = productionScenario ? (await Promise.all(allHistories.map(async ({ scope, read }) => {
+      // Exact signed installation inputs, with direct Native scalar sizes
+      // and first naming entries. No archive manifest supplies this oracle.
+      const rows = await life.wait(() => runInDurableObject(scope.object, (_instance, state) => knownDeclarationTexts.map(text => ({ ...text,
+        actual: archiveSql(state).exec("SELECT octet_length(bytes) AS size FROM retained_input WHERE kind = 'text' AND digest = ? LIMIT 1", text.digest).toArray()[0]?.["size"],
+      }))));
+      return rows.filter(row => row.actual !== undefined).map(row => {
+        expect(row.actual).toBe(row.bytes);
+        const at = read.value[0]!.entry.at, first = nativeTextFirsts.get(canonicalize([at, row.digest]));
+        if (!first) throw Error("Native retained declaration text needs a declared detached-field naming entry");
+        return { digest: row.digest, bytes: row.bytes, first };
+      });
+    }))).flat() : [];
+    const expectedOmissions = productionScenario ? nativeExpectedOmissions : allHistories.flatMap(({ scope, read }) => {
       const manifest = diagnosticArchives.get(scope.name)!.manifest;
       if (manifest.v !== 2) throw Error("Grow must export native v2 passes.");
       return manifest.omitted.map(row => {
@@ -526,10 +1023,12 @@ test.for(["fixture", "Grow"])("installed %s scopes export genesis zero after a l
       }))));
       expect(sizes).toEqual(expected.map(row => ({ digest: row.digest, size: row.bytes })));
     }
-    expect(expectedOmissions.some(row => row.digest === omittedDigest && row.first.at.scope === D.name && row.first.seq === 5)).toBe(true);
+    const declarationFirst = productionScenario ? nativeStageOracle!.fact.seq : 5;
+    expect(expectedOmissions.some(row => row.digest === omittedDigest && row.first.at.scope === D.name && row.first.seq === declarationFirst)).toBe(true);
     const probe = allHistories[0]!;
-    const memberHead = expectedAnchors.find(fact => fact.at.scope === M.name && fact.seq === 4)!;
-    const rulesEntry = allHistories.find(history => history.scope.name === A.name)!.read.value[2]!;
+    const memberHead = productionScenario ? nativeInstallOracle!.memberHead : expectedAnchors.find(fact => fact.at.scope === M.name && fact.seq === 4)!;
+    const nativeRulesRows = allHistories.find(history => history.scope.name === A.name)!.read.value;
+    const rulesEntry = productionScenario ? nativeInstallOracle!.rulesEntry : nativeRulesRows[2]!;
     for (const missing of [expectedAnchors.find(fact => fact.at.scope === claim.at.scope && fact.seq === 1)!, memberHead]) for (const wrong of [false, true]) {
       const supplied = anchors.flatMap(anchor => anchor.scope === missing.at.scope && anchor.seq === missing.seq
         ? wrong ? [{ ...anchor, hash: textDigest("TEST wrong private source anchor") }] : [] : [anchor]);
@@ -540,7 +1039,7 @@ test.for(["fixture", "Grow"])("installed %s scopes export genesis zero after a l
       expect(offline.kind).toBe("verification"); if (offline.kind !== "verification") return;
       if (!wrong) expect(offline.verification.report).toMatchObject({ result: "missing-dependency", dependencies: { missing: [missing] } });
       else expect(offline.verification.report).toMatchObject({ result: "mismatch", dependencies: { missing: [] } });
-      if (missing === memberHead) expect(offline.verification.report.at).toEqual({ at: rulesEntry.entry.at, seq: 2, hash: rulesEntry.hash });
+      if (missing === memberHead) expect(offline.verification.report.at).toEqual({ at: rulesEntry.entry.at, seq: productionScenario ? rulesEntry.entry.seq : 2, hash: rulesEntry.hash });
     }
     const offlineResults = [];
     for (const { scope, read } of allHistories) {
@@ -596,7 +1095,10 @@ test.for(["fixture", "Grow"])("installed %s scopes export genesis zero after a l
       expect(original.kind).toBe("verification"); if (original.kind !== "verification") return;
       expect(replayed.verification.report).toEqual(original.verification.report);
     }
-    for (const archive of diagnosticArchives.values()) for (const object of archive.objects) diagnosticObjects.set(object.id, object);
+    // Keep the original transport map cleared. The already verified clone
+    // supplies a coherent complete object/ref pair for both negative controls.
+    const omissionControls: unknown[] = [];
+    (context.task.meta as Record<string, unknown>)["omissionControls"] = omissionControls;
     // Corrupt only metadata of a native-produced Directory pass. The real
     // native entry/input port supplies unchanged bytes; no fake history.
     for (const corruption of ["missing", "extra"] as const) {
@@ -610,7 +1112,7 @@ test.for(["fixture", "Grow"])("installed %s scopes export genesis zero after a l
         return buildJournalPass({ format: "sha1", selection: canonicalize(selection), input: archiveInput(archiveSql(state), selection, budget, fixtureSources), parent: null, budget });
       }));
       expect(corrupt.ok ? "accepted" : corrupt).toBe("accepted"); if (!corrupt.ok) return;
-      const objects = new Map(diagnosticObjects), refs = new Map(diagnosticRefs);
+      const objects = new Map(clonedObjects), refs = new Map(clonedRefs);
       for (const object of corrupt.archive.objects) objects.set(object.id, object);
       refs.set(journalRef(D.name), corrupt.archive.commit);
       const source = archiveSource({ open: (scope, work) => readJournalRepositoryArchive({
@@ -619,7 +1121,13 @@ test.for(["fixture", "Grow"])("installed %s scopes export genesis zero after a l
       }, scope, work) });
       const directory = allHistories.find(history => history.scope.name === D.name)!;
       const replayed = await life.wait(() => verifyArchive(source, { mode: "replay", platform, capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE, grants: "proven", scope: D.name, head: directory.read.at, anchors }));
-      if (corruption === "missing") expect(replayed).toMatchObject({ kind: "verification", verification: { report: { result: "incomplete", at: { at: directory.read.value[5]!.entry.at, seq: 5, hash: directory.read.value[5]!.hash } } } });
+      const expectedAt = productionScenario ? nativeStageOracle!.fact : { at: directory.read.value[5]!.entry.at, seq: 5, hash: directory.read.value[5]!.hash };
+      // At most two metadata-only results; record BEFORE any assertion so an
+      // unexpected category retains its actual reason without payload bodies.
+      omissionControls.push({ corruption, expectedAt, result: replayed.kind === "archive-failure"
+        ? { kind: replayed.kind, result: replayed.result, reason: replayed.reason.slice(0, 2048), reasonTruncated: replayed.reason.length > 2048, location: replayed.location }
+        : { kind: replayed.kind, result: replayed.verification.report.result, at: replayed.verification.report.at } });
+      if (corruption === "missing") expect(replayed).toMatchObject({ kind: "verification", verification: { report: { result: "incomplete", at: expectedAt } } });
       else expect(replayed).toMatchObject({ kind: "archive-failure", result: "refused" });
     }
     await context.annotate(JSON.stringify({

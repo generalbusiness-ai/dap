@@ -7,13 +7,14 @@ import { journalId, journalRef, type JournalArchive, type JournalPassArchive, ty
 import { ArchiveBudget, ArchiveStopped } from "./archive-budget.ts";
 import { ARCHIVE_TRANSFER_OBJECTS, archiveObjectListMetadata, archiveObjectCopyWork } from "./archive-transfer-cost.ts";
 import { planArchiveConversion, rebuildArchive, rebuildArchivePass } from "./archive-build.ts";
-import { planAdaptiveArchivePass } from "./archive-adaptive.ts";
+import { planAdaptiveArchivePass, planRootAdaptiveArchivePass } from "./archive-adaptive.ts";
 import type { FixtureArchiveSourcePins } from "./archive-source-pins.ts";
 import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, readArchivePin, readArchivePinAfterReceipt } from "./archive-pin.ts";
 import type { ArchivePolicyRegistry } from "./archive-inventory.ts";
 import { ArchiveRows, type ArchiveRow } from "./archive-row.ts";
 import type { DestinationRepository } from "./destination-host.ts";
 import type { Sql } from "./sqlite.ts";
+import { readArchiveScopeFrame } from "./archive-prefix.ts";
 
 export interface ArchiveCredential { readonly id: string; readonly ends: Timestamp; readonly plaintext: string }
 export interface ArchiveSend {
@@ -43,6 +44,18 @@ export interface FixtureArchiveTarget {
   readonly fixture: "archive-target";
   resolve(at: ScopeRef, seed: Seed, budget: ArchiveBudget): Promise<DestinationRepository | null>;
 }
+export interface ArchiveTarget {
+  resolve(at: ScopeRef, seed: Seed, budget: ArchiveBudget): Promise<DestinationRepository | null>;
+}
+export interface RoomArchiveDriverOptions extends Omit<FixtureArchiveDriverOptions, "policies" | "provider" | "target"> {
+  readonly production: "room-binding";
+  readonly policies: { readonly registry: ArchivePolicyRegistry };
+  readonly target: ArchiveTarget;
+  readonly provider: ArchiveProvider;
+  readonly admit: (at: ScopeRef, seed: Seed) => boolean;
+  /** Fresh bounded source identity preparation, charged to the same pass. */
+  readonly sources?: (after: Head | null, through: Head, budget: ArchiveBudget, exact: boolean) => Promise<{ readonly pins: FixtureArchiveSourcePins; readonly prepare?: (seq: number, budget: ArchiveBudget) => Promise<void> }>;
+}
 export interface FixtureArchiveDriverOptions {
   readonly sql: Sql;
   readonly current: () => { readonly at: ScopeRef; readonly head: Head } | null;
@@ -60,15 +73,18 @@ export interface FixtureArchiveDriverOptions {
 export interface ArchivePass { readonly state: "idle" | "disabled" | "retry" | "stopped" | "confirmed"; readonly next: Timestamp | null; readonly reason?: string }
 
 export class ArchiveDriver {
-  readonly #options: FixtureArchiveDriverOptions;
+  readonly #options: FixtureArchiveDriverOptions | RoomArchiveDriverOptions;
   readonly #maximum: number;
   #rows: ArchiveRows | null = null;
   #running: Promise<ArchivePass> | null = null;
   #disabled = false;
   #fallback: Timestamp | null = null;
-  constructor(options: FixtureArchiveDriverOptions) {
-    if (options.policies.fixture !== "archive-policies" || options.target.fixture !== "archive-target" || options.provider.fixture !== "archive-provider") throw new Error("archive fixture ports required");
-    this.#options = { ...options, bounds: { ...options.bounds }, policies: { ...options.policies }, target: { fixture: "archive-target", resolve: options.target.resolve.bind(options.target) } };
+  constructor(options: FixtureArchiveDriverOptions | RoomArchiveDriverOptions) {
+    if (!("production" in options) && (options.policies.fixture !== "archive-policies" || options.target.fixture !== "archive-target" || options.provider.fixture !== "archive-provider")) throw new Error("archive fixture ports required");
+    if ("production" in options && options.production !== "room-binding") throw new Error("archive room binding required");
+    this.#options = "production" in options
+      ? { ...options, bounds: { ...options.bounds }, policies: { ...options.policies }, target: { resolve: options.target.resolve.bind(options.target) } }
+      : { ...options, bounds: { ...options.bounds }, policies: { ...options.policies }, target: { fixture: "archive-target", resolve: options.target.resolve.bind(options.target) } };
     this.#maximum = options.maxBytes ?? 8 * 1024 * 1024;
     if (!Number.isSafeInteger(this.#maximum) || this.#maximum < 1 || this.#maximum > 8 * 1024 * 1024) throw new Error("archive byte allowance is out of range");
   }
@@ -158,7 +174,7 @@ export class ArchiveDriver {
   }
   async #pass(): Promise<ArchivePass> {
     const budget = this.#options.budget?.() ?? new ArchiveBudget();
-    let active = true, credential: ArchiveCredential | null = null, scheduled: Timestamp | null = null;
+    let active = true, credential: ArchiveCredential | null = null, scheduled: Timestamp | null = null, deferred = false, attempted = false;
     const allowed = (): boolean => { if (!active) return false; try { budget.check(); return true; } catch { return false; } };
     try {
       const rows = this.#store();
@@ -172,6 +188,7 @@ export class ArchiveDriver {
       const pin = readPin(budget.native(this.#options.sql, () => ({ metadata: ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES, inputWork: 0 })), at);
       budget.check();
       if (!pin) return { state: "retry", next: this.#later(0), reason: "unavailable" };
+      if ("production" in this.#options && !this.#options.admit(at, pin.seed)) { this.#disabled = true; return { state: "disabled", next: null }; }
       const policy = this.#options.policies.registry.get(pin.seed.definition);
       if (!policy || !policy.review || policy.support.named !== pin.seed.definition) { this.#disabled = true; return { state: "disabled", next: null }; }
       const now = timeMs(this.#options.clock());
@@ -179,50 +196,86 @@ export class ArchiveDriver {
       if (row?.next && timeMs(row.next)! > now) return { state: "retry", next: row.next };
       const indexed = rows.wake(budget);
       if (!row?.pending && indexed && timeMs(indexed)! > now) return { state: "retry", next: indexed };
+      // Production resolves its binding every pass. Preserve the original
+      // pre-I/O retry contract before that additional await, even without a
+      // payload row. A due pending Mark gets exactly its existing attempt
+      // transition/backoff, once; a pre-Mark pass only updates the wake index.
+      if ("production" in this.#options) {
+        if (row?.pending) {
+          scheduled = this.#later(row.attempts);
+          if (scheduled === null) return { state: "retry", next: null, reason: "unavailable" };
+          row = rows.attempt(scheduled, budget); attempted = true;
+        } else {
+          scheduled = this.#later(0);
+          if (scheduled === null) return { state: "retry", next: null, reason: "unavailable" };
+          rows.defer(scheduled, budget); deferred = true;
+        }
+      }
+      const productionTarget = "production" in this.#options ? await budget.wait(() => this.#options.target.resolve(at, { ...pin.seed, creator: pin.seed.creator ? { ...pin.seed.creator } : null }, budget)) : null;
+      if ("production" in this.#options && (!productionTarget || row && !same(row.repository, productionTarget))) return { state: "retry", next: scheduled, reason: "unavailable" };
       if (!row) {
-        scheduled = this.#later(0);
-        if (scheduled === null) return { state: "retry", next: null, reason: "unavailable" };
-        rows.defer(scheduled, budget);
-        const repository = await budget.wait(() => this.#options.target.resolve(at, { ...pin.seed, creator: pin.seed.creator ? { ...pin.seed.creator } : null }, budget));
+        if (!deferred) {
+          scheduled = this.#later(0);
+          if (scheduled === null) return { state: "retry", next: null, reason: "unavailable" };
+          rows.defer(scheduled, budget); deferred = true;
+        }
+        const repository = productionTarget ?? await budget.wait(() => this.#options.target.resolve(at, { ...pin.seed, creator: pin.seed.creator ? { ...pin.seed.creator } : null }, budget));
         if (!repository) return { state: "retry", next: this.#later(0), reason: "unavailable" };
         const captured = { ...repository };
         const format = await budget.wait(() => this.#options.provider.format({ ...captured }, allowed));
         row = rows.target(captured, format, budget);
+        // Initial target persistence replaces the wake index. Reestablish
+        // its charged retry before any parent/source await.
+        deferred = false;
       }
       if (!same(row.at, at)) budget.stop("unavailable");
       const ref = journalRef(at.scope);
       // Resolve an outstanding attempt before reconstructing or minting again.
       if (row.pending) {
-        const next = this.#later(row.attempts);
-        if (next === null) { budget.stop("unavailable"); return { state: "retry", next: null, reason: "unavailable" }; }
-        row = rows.attempt(next, budget); scheduled = next;
+        if (!attempted) {
+          const next = this.#later(row.attempts);
+          if (next === null) { budget.stop("unavailable"); return { state: "retry", next: null, reason: "unavailable" }; }
+          row = rows.attempt(next, budget); scheduled = next; attempted = true;
+        }
         const seen = await budget.wait(() => this.#options.provider.ref({ ...row!.repository }, ref, allowed));
         if (seen === row.pending!.commit) return this.#confirmed(rows, row, budget);
         if (seen !== row.pending!.parent) { rows.stop("conflict", ref, budget); return { state: "stopped", next: null, reason: "conflict" }; }
       } else if (row.confirmed?.layout === 2 && row.confirmed.through.seq >= through.seq) {
+        if ("production" in this.#options) {
+          // Target I/O may have let a genuine turn seal after the initial
+          // cutoff. Recheck charged Native identity/head in a fresh frame;
+          // never clear its pending wake from the old snapshot.
+          const latest = this.#options.sql.transaction(() => readArchiveScopeFrame(this.#options.sql, at, pin, this.#options.bounds, budget));
+          if (latest.head.seq > row.confirmed.through.seq) return { state: "retry", next: scheduled };
+        }
         rows.clearWake(budget); this.#fallback = null; return { state: "idle", next: null };
       }
-      if (!row.pending) {
+      if (!row.pending && !deferred) {
         scheduled ??= this.#later(0);
         if (scheduled === null) return { state: "retry", next: null, reason: "unavailable" };
-        rows.defer(scheduled, budget);
+        rows.defer(scheduled, budget); deferred = true;
       }
       const previous = await this.#parent(row, budget, allowed);
+      const prepareSources = "production" in this.#options ? this.#options.sources : undefined;
+      const preparedSources = prepareSources ? await budget.wait(() => prepareSources(row!.confirmed?.through ?? null, row!.pending?.through ?? through, budget, !!row!.pending)) : null;
+      const sources = preparedSources?.pins ?? this.#options.fixtureSources;
       let archive: JournalArchive | JournalPassArchive;
       let selectedParentObjects: readonly string[] | undefined;
       if (row.pending) {
         const rebuild = row.pending.layout === 2 ? rebuildArchivePass : rebuildArchive;
-        const rebuilt = await rebuild(this.#options.sql, row, previous.parent, budget, this.#options.fixtureSources);
+        const rebuilt = await rebuild(this.#options.sql, row, previous.parent, budget, sources);
         if (!rebuilt.ok) { rows.stop(rebuilt.reason, "where" in rebuilt ? rebuilt.where ?? null : null, budget); return { state: "stopped", next: null, reason: rebuilt.reason }; }
         archive = rebuilt.archive;
       } else {
         const common = { bounds: this.#options.bounds, policies: this.#options.policies.registry, parent: previous.parent,
-          markedAt: this.#options.clock(), ...(this.#options.fixtureSources ? { fixtureSources: this.#options.fixtureSources } : {}) };
+          markedAt: this.#options.clock(), ...(sources ? { fixtureSources: sources } : {}) };
         let planned: Awaited<ReturnType<typeof planArchiveConversion>>;
         if (row.confirmed && row.confirmed.layout !== 2) planned = await planArchiveConversion(this.#options.sql, { ...common, row }, budget);
         else {
-          const adaptive = await planAdaptiveArchivePass(this.#options.sql, { ...common, at, through,
+          const adaptive = await ("production" in this.#options ? planRootAdaptiveArchivePass : planAdaptiveArchivePass)(this.#options.sql, { ...common, at, through,
+            ...(preparedSources?.prepare ? { prepareSources: preparedSources.prepare } : {}),
             after: row.confirmed?.through ?? null, format: row.format, row,
+            atomicFirstAttempt: "production" in this.#options,
             parentHeld: previous.held, parentUsed: previous.used, maximum: this.#maximum }, budget);
           if (adaptive.ok) selectedParentObjects = adaptive.parentObjects;
           else if (adaptive.reason === "mismatch") return { state: "retry", next: scheduled ?? this.#later(0), reason: adaptive.reason };
@@ -230,7 +283,11 @@ export class ArchiveDriver {
         }
         if (!planned.ok) { rows.stop(planned.reason, "where" in planned ? planned.where ?? null : null, budget); return { state: "stopped", next: null, reason: planned.reason }; }
         archive = planned.archive;
-        row = rows.mark(planned.mark, budget);
+        if ("production" in this.#options) {
+          const first = scheduled ?? this.#later(0);
+          if (first === null) { budget.stop("unavailable"); return { state: "retry", next: null, reason: "unavailable" }; }
+          row = rows.markAttempt(planned.mark, first, budget); scheduled = first;
+        } else row = rows.mark(planned.mark, budget);
       }
       const next = scheduled ?? this.#later(row.attempts);
       if (next === null) { budget.stop("unavailable"); return { state: "retry", next: null, reason: "unavailable" }; }

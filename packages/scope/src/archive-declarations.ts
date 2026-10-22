@@ -4,10 +4,10 @@
  * This selects no entry, rule, snapshot or value body. */
 import type { Bounds, Digest, PlatformDefinition } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, natural, utf8 } from "@generalbusiness/artroom-bytes";
-import { creates, derivable, validateDefinition, runnable, outcomeValueDomains, type ValidDefinition } from "@generalbusiness/dap-derive";
+import { creates, derivable, validateDefinition, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
-import { archiveDeclarationValidationWork, archiveNativeDataReservation } from "./archive-inventory-cost.ts";
-import { platform } from "@generalbusiness/dap-platform";
+import { archiveDeclarationValidationWork } from "./archive-inventory-cost.ts";
+import { validateArchiveNativeRoot } from "./archive-native-root.ts";
 import type { ArchivePolicyRegistry, ReviewedArchivePolicy } from "./archive-inventory.ts";
 import { archiveSupportMetadata } from "./archive-privacy.ts";
 import { stopArchivePrefix as stop } from "./archive-prefix.ts";
@@ -37,16 +37,7 @@ export class ArchiveDeclarations {
       if (!root.complete) return stop("incomplete");
       definition = this.definition(named)!.definition;
     } else {
-      // The supplied native platform data is trusted reviewed code; its
-      // fixed native maximum is reserved before inspecting that object.
-      this.reader.budget.spend(archiveNativeDataReservation(this.bounds.definitionBytes));
-      const supplied = platform(named);
-      if (!supplied) return stop("unsupported-archive-cohort");
-      const nativeBytes = canonicalize(supplied.data);
-      if (utf8(nativeBytes).length > this.bounds.definitionBytes) return stop("limit");
-      const checked = validateDefinition(supplied.data, this.bounds, RULE_PROFILES, { platform: true, outcomeValues: outcomeValueDomains(supplied.data, supplied.rules) });
-      if (!checked.ok || canonicalize(definition.declared) !== nativeBytes || !runnable(checked.definition, supplied.rules) || !derivable(checked.definition, rootPolicy.support.capabilities)) return stop("unsupported-archive-cohort");
-      definition = checked.definition;
+      definition = validateArchiveNativeRoot(named, this.bounds, this.reviewed, this.reader.budget);
       this.visited.add(definition.digest);
       platformClosure = this.walk(definition.digest, definition);
       if (!platformClosure.complete) return stop("incomplete");

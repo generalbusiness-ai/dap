@@ -108,6 +108,13 @@ export function archiveSupportMetadata(support: ArchiveSupport, budget: ArchiveB
  * calls archiveSupportMetadata in full; these counts grant no credit. */
 export function recordArchiveSupportMetadata(support: ArchiveSupport, budget: ArchiveBudget): Readonly<ArchiveSupportFootprint> {
   budget.spend({ metadata: 128, inputWork: 256 });
+  return collectArchiveSupportMetadata(support, budget);
+}
+
+/** Complete the same paid validation while collecting only its scalar counts.
+ * The caller pays recording bookkeeping separately at its original point.
+ * These counts do not admit a later call, entry, policy or inventory frame. */
+export function collectArchiveSupportMetadata(support: ArchiveSupport, budget: ArchiveBudget): Readonly<ArchiveSupportFootprint> {
   return checkArchiveSupportMetadata(support, budget, true)!;
 }
 

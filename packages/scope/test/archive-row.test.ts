@@ -154,3 +154,83 @@ test("persists retries and stops with a small wake index", async () => {
   expect(await rows(lane, store => store.load())).toMatchObject({ pending: mark, stopped: { reason: "conflict" } });
   await expect(rows(lane, store => store.confirm(mark.commit))).rejects.toThrow("archive-row-stopped");
 });
+
+// Real SQLite transaction cutoffs. Metadata Marks below are TEST-authored;
+// this proves bookkeeping atomicity, not inventory admission or host custody.
+test("atomic initial Mark and attempt preserve the target on rollback and recover exact committed bytes", async context => {
+  const lane = await create(), head = await lane.head();
+  const mark: ArchiveMark = { commit: "e".repeat(40), parent: null, through: head, layout: 2,
+    manifest: canonicalize({ format: "artroom-local-inventory-2", after: null, objects: [] }), markedAt: at(0) };
+  await rows(lane, store => { store.target(repository, "sha1"); store.defer(at(30)); });
+  const target = await rows(lane, store => store.load()), failures: unknown[] = [];
+  for (const cut of ["before-row", "after-row", "after-wake"] as const) {
+    const receipt = await lane.inside(state => {
+      const sql = archiveSql(state), budget = new ArchiveBudget(); let writes = 0;
+      const interrupted = new ArchiveRows({ ...sql, exec(query, ...args) {
+        const rowWrite = query.startsWith("INSERT INTO meta") && args[0] === "archive-row-1";
+        const wakeWrite = query.startsWith("INSERT INTO meta") && args[0] === "archive-wake-1";
+        if (rowWrite && cut === "before-row") throw Error("TEST atomic cutoff");
+        const result = sql.exec(query, ...args);
+        if (rowWrite || wakeWrite) writes++;
+        if (rowWrite && cut === "after-row" || wakeWrite && cut === "after-wake") throw Error("TEST atomic cutoff");
+        return result;
+      } }, lane.at);
+      expect(() => interrupted.markAttempt(mark, at(30), budget)).toThrow("TEST atomic cutoff");
+      expect(new ArchiveRows(sql, lane.at).load()).toEqual(target);
+      expect(new ArchiveRows(sql, lane.at).wake()).toBe(at(30));
+      // SQL rollback never refunds work already charged before that cut.
+      expect(budget.admitted().inputWork).toBeGreaterThan(6_344_704);
+      return { cut, writes, cost: budget.admitted() };
+    });
+    failures.push(receipt); await lane.restart();
+    expect(await rows(lane, store => store.load())).toEqual(target);
+    expect(await rows(lane, store => store.wake())).toBe(at(30));
+  }
+  const budget = new ArchiveBudget();
+  const sizes = await rows(lane, store => {
+    const oldRowBytes = utf8(canonicalize(store.load())).length;
+    const attempted = store.markAttempt(mark, at(30), budget), attemptedRowBytes = utf8(canonicalize(attempted)).length;
+    expect(attempted).toMatchObject({ repository, pending: mark, attempts: 1, next: at(30) });
+    return { oldRowBytes, markedRowBytes: attemptedRowBytes, attemptedRowBytes, manifestUnits: mark.manifest.length,
+      newRetained: 0, atomicFirstAttempt: true };
+  });
+  await lane.restart();
+  expect(await rows(lane, store => store.load())).toMatchObject({ pending: mark, attempts: 1, next: at(30) });
+  expect(await rows(lane, store => store.wake())).toBe(at(30));
+  await rows(lane, store => {
+    // A duplicate logical initial call cannot increment or replace backoff.
+    expect(store.markAttempt({ ...mark }, at(60))).toMatchObject({ pending: mark, attempts: 1, next: at(30) });
+    expect(() => store.markAttempt({ ...mark, commit: "f".repeat(40) }, at(60))).toThrow("archive-row-outstanding");
+    expect(() => store.markAttempt({ ...mark, parent: "f".repeat(40) }, at(60))).toThrow();
+    expect(() => store.markAttempt({ ...mark, commit: "invalid-format" }, at(60))).toThrow();
+    expect(() => store.markAttempt({ ...mark, manifest: "" }, at(60))).toThrow();
+    expect(() => store.markAttempt(mark, "invalid" as typeof mark.markedAt)).toThrow();
+  });
+  await rows(lane, store => store.confirm(mark.commit, budget));
+  expect(forecastArchiveBookkeeping(sizes)).toEqual({ ok: true, cost: budget.admitted() });
+  // The prior separate-operation price control is preserved; this forecast
+  // differs only by the actually absent intermediate load/checks/save.
+  const separate = forecastArchiveBookkeeping({ ...sizes, atomicFirstAttempt: false });
+  expect(separate.ok).toBe(true);
+  if (separate.ok) expect(separate.cost.inputWork - budget.admitted().inputWork).toBe(
+    6_344_704 + 96 + sizes.markedRowBytes * 13 + sizes.manifestUnits * 16);
+  (context.task.meta as Record<string, unknown>)["atomicArchiveMark"] = { failures, sizes, cost: budget.admitted(),
+    qualification: "Actual SQLite row/wake writes, rollback after each persistence boundary, eviction and exact metadata recovery; TEST-authored Mark is not archive admission or provider acceptance. Target persisted before all measured transitions. No work refunded on rollback." };
+  await rows(lane, store => store.stop("conflict"));
+  await expect(rows(lane, store => store.markAttempt(mark, at(60)))).rejects.toThrow("archive-row-stopped");
+});
+
+test("atomic initial persistence recovers a legacy attempts-zero Mark without changing its identity", async () => {
+  const lane = await create(), head = await lane.head();
+  const mark: ArchiveMark = { commit: "a".repeat(40), parent: null, through: head,
+    manifest: canonicalize({ fixture: "legacy metadata only" }), markedAt: at(0) };
+  await rows(lane, store => { store.target(repository, "sha1"); store.mark(mark); });
+  await lane.restart();
+  expect(await rows(lane, store => store.load())).toMatchObject({ pending: mark, attempts: 0, next: null });
+  await rows(lane, store => store.markAttempt(mark, at(30)));
+  await lane.restart();
+  expect(await rows(lane, store => store.load())).toMatchObject({ pending: mark, attempts: 1, next: at(30) });
+  // Ordinary pending retries keep their original separate transition.
+  await rows(lane, store => store.attempt(at(60)));
+  expect(await rows(lane, store => store.load())).toMatchObject({ pending: mark, attempts: 2, next: at(60) });
+});

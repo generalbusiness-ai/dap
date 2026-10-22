@@ -7,6 +7,7 @@
  * configuration leaves every outside effect unsent. No configuration, token
  * or plaintext belongs in a scope's history.
  */
+import type { Sql } from "./sqlite.ts";
 import type { ScopeId } from "@generalbusiness/dap-contract";
 import { canonicalize, isScopeId, parseStrict } from "@generalbusiness/artroom-bytes";
 import { destinationBranch, isOf } from "@generalbusiness/dap-platform";
@@ -14,7 +15,7 @@ import { ArtifactsProvider, type ArtifactsNamespace, type CreationCustody } from
 import { CredentialStore } from "./credential-store.ts";
 import { DestinationHost, type SnapshotReader, type DestinationRepository } from "./destination-host.ts";
 import { credentialHandle, exact, hostBound } from "./host-wiring.ts";
-import type { OutsideGiven } from "./object.ts";
+import type { OutsideGiven } from "./given.ts";
 import { NO_OUTSIDE, type EffectRequest, type Outside } from "./operations.ts";
 import { RegisterHost } from "./register-host.ts";
 
@@ -31,24 +32,25 @@ export interface ArtifactsBindings {
   /** The Worker's binding to one namespace of the service. */
   ARTIFACTS?: unknown;
 }
-interface Configuration { registerScope: ScopeId; namespace: string; host: string; maxBytes: number; credentialIdentity: "adapter-attempt" }
+export interface ArtifactsConfiguration { registerScope: ScopeId; namespace: string; host: string; maxBytes: number; credentialIdentity: "adapter-attempt" }
 
 /** The same nonsecret host selector used by the production wiring. */
 export function artifactsRegisterScope(raw: unknown): ScopeId | null {
   try { return configuration(typeof raw === "string" ? raw : undefined)?.registerScope ?? null; }
   catch { return null; }
 }
-function configuration(raw: string | undefined): Configuration | null {
+export function artifactsConfiguration(raw: string | undefined): ArtifactsConfiguration | null {
   if (typeof raw !== "string" || raw.length > 4096) return null;
   const value = exact(parseStrict(raw), ["registerScope", "namespace", "host", "maxBytes", "credentialIdentity"]);
   if (!value || !isScopeId(value["registerScope"]) || typeof value["namespace"] !== "string" || !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,99}$/.test(value["namespace"]) || typeof value["host"] !== "string" || value["host"].length > 253 || typeof value["maxBytes"] !== "number" || !Number.isSafeInteger(value["maxBytes"]) || value["maxBytes"] < 32 || value["credentialIdentity"] !== "adapter-attempt") return null;
-  return value as unknown as Configuration;
+  return value as unknown as ArtifactsConfiguration;
 }
-function binding(value: unknown): ArtifactsNamespace | null {
+export function artifactsBinding(value: unknown): ArtifactsNamespace | null {
   if ((typeof value !== "object" && typeof value !== "function") || value === null) return null;
   const binding = value as Record<string, unknown>;
   return typeof binding["get"] === "function" && typeof binding["create"] === "function" && typeof binding["delete"] === "function" ? value as ArtifactsNamespace : null;
 }
+const configuration = artifactsConfiguration, binding = artifactsBinding;
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS private_creation_credential (
@@ -61,7 +63,7 @@ CREATE TABLE IF NOT EXISTS private_creation_credential (
  * storage, beside its history and never in it. A row's plaintext is dropped
  * when its revocation is confirmed. A row is written once.
  */
-function creationCustody(sql: Pick<SqlStorage, "exec">, current: () => string | null): CreationCustody {
+function creationCustody(sql: Pick<Sql, "exec">, current: () => string | null): CreationCustody {
   sql.exec(SCHEMA).toArray();
   return {
     hold: (handle, name, plaintext) => {
@@ -81,7 +83,7 @@ function creationCustody(sql: Pick<SqlStorage, "exec">, current: () => string | 
 }
 
 /** Factory for one object life. Its scope/state reads stay live across genesis and later entries. */
-export function artifactsOutside(given: OutsideGiven, sql: Pick<SqlStorage, "exec">, env: ArtifactsBindings, fetch?: (request: Request) => Promise<Response>, snapshotReader?: SnapshotReader): Outside {
+export function artifactsOutside(given: OutsideGiven, sql: Pick<Sql, "exec">, env: ArtifactsBindings, fetch?: (request: Request) => Promise<Response>, snapshotReader?: SnapshotReader): Outside {
   try {
     const config = configuration(env.ARTIFACTS_CONFIG);
     const namespaceBinding = binding(env.ARTIFACTS);

@@ -38,6 +38,7 @@ export interface ArchiveBookkeepingFootprint {
   readonly attemptedRowBytes: number;
   readonly manifestUnits: number;
   readonly newRetained: number;
+  readonly atomicFirstAttempt?: boolean;
 }
 export type ArchiveBookkeepingForecast = { readonly ok: true; readonly cost: Readonly<ArchiveCost> }
   | { readonly ok: false; readonly reason: "limit" };
@@ -53,13 +54,16 @@ export function forecastArchiveBookkeeping(shape: ArchiveBookkeepingFootprint): 
     || oldRowBytes === 0 || markedRowBytes === 0 || attemptedRowBytes === 0 || manifestUnits === 0) throw new ArchiveStopped("unavailable");
   if (Math.max(oldRowBytes, markedRowBytes, attemptedRowBytes) > ARCHIVE_ROW_BYTES
     || manifestUnits > ARCHIVE_ROW_MANIFEST_BYTES || newRetained > 512) return { ok: false, reason: "limit" };
-  const bytes = oldRowBytes + markedRowBytes + attemptedRowBytes, save = archiveRowSaveReservation();
+  // Atomic initial Mark+attempt eliminates the intermediate marked-row
+  // save and its later reload/validation. Unit prices are unchanged.
+  const atomic = shape.atomicFirstAttempt === true, loads = atomic ? 2 : 3, saves = atomic ? 2 : 3;
+  const bytes = oldRowBytes + (atomic ? 0 : markedRowBytes) + attemptedRowBytes, save = archiveRowSaveReservation();
   const confirmation = archiveConfirmedSelectionReservation(manifestUnits);
-  const metadata = 3 * ARCHIVE_ROW_SIZE_METADATA + bytes + confirmation.metadata + newRetained * ARCHIVE_RETAINED_PASS_METADATA;
-  const inputWork = 3 * ARCHIVE_ROW_SIZE_METADATA + bytes + archiveRowLoadWork(bytes)
-    + 5 * archivePendingManifestWork(manifestUnits) + archiveMarkWork(manifestUnits)
-    + 3 * save.inputWork + confirmation.inputWork
+  const metadata = loads * ARCHIVE_ROW_SIZE_METADATA + bytes + confirmation.metadata + newRetained * ARCHIVE_RETAINED_PASS_METADATA;
+  const inputWork = loads * ARCHIVE_ROW_SIZE_METADATA + bytes + archiveRowLoadWork(bytes)
+    + (atomic ? 3 : 5) * archivePendingManifestWork(manifestUnits) + archiveMarkWork(manifestUnits)
+    + saves * save.inputWork + confirmation.inputWork
     + newRetained * (ARCHIVE_RETAINED_PASS_METADATA + ARCHIVE_RETAINED_PASS_WORK + ARCHIVE_RETAINED_CONFIRM_WORK);
   if (![metadata, inputWork].every(natural)) throw new ArchiveStopped("unavailable");
-  return { ok: true, cost: Object.freeze({ entries: 0, attempts: 0, nodes: 0, calls: 6 + 3 * save.calls + newRetained * 2, metadata, inputWork }) };
+  return { ok: true, cost: Object.freeze({ entries: 0, attempts: 0, nodes: 0, calls: loads * 2 + saves * save.calls + newRetained * 2, metadata, inputWork }) };
 }

@@ -9,6 +9,7 @@
  * original mint reply metadata remains, even after expiry or revocation,
  * so a restarted outside port can recover that attempt's own evidence.
  */
+import type { Sql } from "./sqlite.ts";
 import type { OperationId, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalize } from "@generalbusiness/artroom-bytes";
 import { timeMs } from "@generalbusiness/dap-derive";
@@ -48,11 +49,11 @@ END;
 `;
 
 export class CredentialStore {
-  readonly #sql: Pick<SqlStorage, "exec">;
+  readonly #sql: Pick<Sql, "exec">;
   readonly #current: () => ScopeRef | null;
 
   /** `sql` is the object's SQLite storage; `current` reads its current scope and incarnation. */
-  constructor(sql: Pick<SqlStorage, "exec">, current: () => ScopeRef | null) {
+  constructor(sql: Pick<Sql, "exec">, current: () => ScopeRef | null) {
     this.#sql = sql;
     this.#current = current;
     sql.exec(SCHEMA).toArray();

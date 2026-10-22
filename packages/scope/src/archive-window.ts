@@ -7,6 +7,8 @@ import { ArchiveBudget, type ArchiveCost } from "./archive-budget.ts";
 import { ARCHIVE_POSITION_METADATA_BYTES, ARCHIVE_PRIVACY_JSON_PASSES, archivePrefixMetadata, readArchiveScopeFrame, stopArchivePrefix as stop, type ArchivePosition, type ArchivePrefix } from "./archive-prefix.ts";
 import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, readArchivePin, readArchivePinAfterReceipt } from "./archive-pin.ts";
 import type { Sql } from "./sqlite.ts";
+import { archiveRootMetadata } from "./archive-prefix.ts";
+import type { ArchivePolicyRegistry } from "./archive-inventory.ts";
 
 type Step = { readonly kind: "position"; readonly position: ArchivePosition } | { readonly kind: "end" | "limited" };
 /** Process-local, opaque and one-use. This holds metadata and the original
@@ -124,4 +126,13 @@ export function openArchiveWindow(sql: Pick<Sql, "exec">, at: ScopeRef, head: He
   if (head.seq > base.frame.head.seq) return stop("incomplete");
   if (head.seq === base.frame.head.seq && head.hash !== base.frame.head.hash) return stop("mismatch");
   return new ArchiveWindow(sql, Object.freeze({ ...head }), base, Object.freeze({ ...bounds }), budget);
+}
+
+/** Fresh full root and closure finish before a window is returned. */
+export function openArchiveRootWindow(sql: Pick<Sql, "exec">, at: ScopeRef, head: Head, after: Head | null,
+  bounds: Bounds, budget: ArchiveBudget, reviewed: ArchivePolicyRegistry) {
+  if (!isHead(head) || after !== null && (!isHead(after) || after.seq >= head.seq)) return stop("unavailable");
+  if (head.seq > JOURNAL_V2_LAST_POSITION) return stop("limit");
+  const root = archiveRootMetadata(sql, at, "next", bounds, budget, reviewed, after, undefined, undefined, head), base = root.prefix;
+  return { window: new ArchiveWindow(sql, Object.freeze({ ...head }), base, Object.freeze({ ...bounds }), budget), root };
 }

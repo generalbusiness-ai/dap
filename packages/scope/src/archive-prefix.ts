@@ -1,11 +1,16 @@
 /** Native metadata sizing before JSON inspection. This is not a complete
  * privacy inventory or permission to select/export payload bodies. */
 import { natural } from "@generalbusiness/artroom-bytes";
-import { DOMAINS, type Bounds, type Digest, type Head, type ScopeRef } from "@generalbusiness/dap-contract";
+import { DOMAINS, type Bounds, type Digest, type Head, type PlatformDefinition, type ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, domainBytes, isDigest, isFactRef, isHead, isRecord, isScopeRef, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
 import { ARCHIVE_NATIVE_DATA, admitArchivePin, type ArchiveExportRefusal } from "@generalbusiness/artroom-git/archive-policy";
 import { JOURNAL_V2_LAST_POSITION } from "@generalbusiness/artroom-git/journal";
 import { platform } from "@generalbusiness/dap-platform";
+import { validateArchiveNativeRoot } from "./archive-native-root.ts";
+import { ArchiveDeclarations, type ArchiveDeclarationClosure } from "./archive-declarations.ts";
+import { ArchiveRetainedReader } from "./archive-retained.ts";
+import type { ValidDefinition } from "@generalbusiness/dap-derive";
+import type { ArchivePolicyRegistry } from "./archive-inventory.ts";
 import { timeMs, type ScopeState } from "@generalbusiness/dap-derive";
 import { ARCHIVE_BOUNDS, ArchiveBudget } from "./archive-budget.ts";
 import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, readArchivePin, readArchivePinAfterReceipt, type ArchivePin } from "./archive-pin.ts";
@@ -51,14 +56,7 @@ export function readArchiveScopeFrame(sql: Pick<Sql, "exec">, expected: ScopeRef
 /** `expected` and certificates come from native caller-owned context and
  * trusted reviewer configuration, never a request's claimed safe flags. */
 export function archivePrefixMetadata(sql: Pick<Sql, "exec">, expected: ScopeRef, cutoff: Head | "next", bounds: Pick<Bounds, "entryBytes" | "sendsPerEntry" | "definitionBytes">, budget: ArchiveBudget, certified: Pick<ReadonlySet<Digest>, "has">, after?: Head | null): ArchivePrefix {
-  budget.check();
-  if (after !== undefined && after !== null && (!isHead(after) || after.seq >= JOURNAL_V2_LAST_POSITION)) return stopArchivePrefix("unavailable");
-  const predecessor = after ? { ...after } : null, first = predecessor ? predecessor.seq + 1 : 0;
-  // Reserve validation as well as raw metadata replies, including cache hits.
-  budget.spend({ inputWork: archivePinValidationWork() });
-  const pinSql = budget.native(sql, () => ({ metadata: ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES, inputWork: 0 }));
-  const pin = predecessor ? readArchivePinAfterReceipt(pinSql, expected) : readArchivePin(pinSql, expected);
-  if (!pin) { budget.check(); return stopArchivePrefix("unavailable"); }
+  const pin = prefixPin(sql, expected, budget, after);
   let nativeData: Digest | undefined;
   if (Object.hasOwn(ARCHIVE_NATIVE_DATA, pin.seed.definition)) {
     budget.spend(archiveNativeDataReservation(bounds.definitionBytes));
@@ -66,6 +64,60 @@ export function archivePrefixMetadata(sql: Pick<Sql, "exec">, expected: ScopeRef
     if (!native || utf8(canonicalize(native.data)).length > bounds.definitionBytes) return stopArchivePrefix("unsupported-archive-cohort");
     nativeData = digestBytes(domainBytes(DOMAINS.definition, native.data));
   }
+  return prefixAfterPin(sql, expected, cutoff, bounds, budget, certified, pin, nativeData, after);
+}
+
+/** Completed native frame only: no callback or prepared admission leaves
+ * this operation. Like ordinary inventory, this requires trusted reviewed
+ * configuration, truthful Budget and actual synchronous Native SQL ports.
+ * Hostile virtual ports are outside that original authority/ledger contract. */
+export interface ArchiveRootMetadata {
+  readonly prefix: ArchivePrefix;
+  readonly definition: ValidDefinition;
+  readonly platformClosure: ArchiveDeclarationClosure | null;
+  readonly declarations: ArchiveDeclarations;
+  readonly reader: ArchiveRetainedReader;
+  readonly visited: Set<Digest>;
+}
+export function archiveRootMetadata(sql: Pick<Sql, "exec">, expected: ScopeRef, cutoff: Head | "next", bounds: Bounds,
+  budget: ArchiveBudget, reviewed: ArchivePolicyRegistry, after?: Head | null,
+  declarationSizes?: ReadonlyMap<Digest, number | null>, retainedSizes?: ReadonlyMap<string, number | null>, windowHead?: Head): ArchiveRootMetadata {
+  const pin = prefixPin(sql, expected, budget, after), named = pin.seed.definition;
+  const native = Object.hasOwn(ARCHIVE_NATIVE_DATA, named);
+  // Every unique semantic/support check completes before constant admission.
+  const checked = native ? validateArchiveNativeRoot(named as PlatformDefinition, bounds, reviewed, budget) : undefined;
+  const prefix = prefixAfterPin(sql, expected, cutoff, bounds, budget, { has: digest => reviewed.has(digest) }, pin, checked?.digest, after);
+  // Preserve the scalar window's original head fence before child reads.
+  if (windowHead && windowHead.seq > prefix.frame.head.seq) return stopArchivePrefix("incomplete");
+  if (windowHead && windowHead.seq === prefix.frame.head.seq && windowHead.hash !== prefix.frame.head.hash) return stopArchivePrefix("mismatch");
+  const visited = new Set<Digest>(), reader = new ArchiveRetainedReader(sql, budget, [], retainedSizes);
+  const declarations = new ArchiveDeclarations(reader, bounds, reviewed, visited, declarationSizes);
+  let definition: ValidDefinition, platformClosure: ArchiveDeclarationClosure | null;
+  if (checked) {
+    definition = checked; visited.add(checked.digest);
+    platformClosure = declarations.walk(checked.digest, checked);
+    if (!platformClosure.complete) return stopArchivePrefix("incomplete");
+  } else ({ definition, platformClosure } = declarations.root(named));
+  // No caller regains control until the ordinary local closure is complete.
+  return { prefix, definition, platformClosure, declarations, reader, visited };
+}
+
+function prefixPin(sql: Pick<Sql, "exec">, expected: ScopeRef, budget: ArchiveBudget, after?: Head | null): ArchivePin {
+  budget.check();
+  if (after !== undefined && after !== null && (!isHead(after) || after.seq >= JOURNAL_V2_LAST_POSITION)) return stopArchivePrefix("unavailable");
+  const predecessor = after ? { ...after } : null;
+  // Reserve validation as well as raw metadata replies, including cache hits.
+  budget.spend({ inputWork: archivePinValidationWork() });
+  const pinSql = budget.native(sql, () => ({ metadata: ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES, inputWork: 0 }));
+  const pin = predecessor ? readArchivePinAfterReceipt(pinSql, expected) : readArchivePin(pinSql, expected);
+  if (!pin) { budget.check(); return stopArchivePrefix("unavailable"); }
+  return pin;
+}
+
+function prefixAfterPin(sql: Pick<Sql, "exec">, expected: ScopeRef, cutoff: Head | "next",
+  bounds: Pick<Bounds, "entryBytes" | "sendsPerEntry" | "definitionBytes">, budget: ArchiveBudget,
+  certified: Pick<ReadonlySet<Digest>, "has">, pin: ArchivePin, nativeData: Digest | undefined, after?: Head | null): ArchivePrefix {
+  const predecessor = after ? { ...after } : null, first = predecessor ? predecessor.seq + 1 : 0;
   const admittedPin = admitArchivePin(pin.seed.definition, certified, nativeData);
   if (!admittedPin.ok) return stopArchivePrefix(admittedPin.reason);
   // A scalar window asks for its first position only after pin admission.

@@ -124,17 +124,30 @@ export class ArchiveRows {
       return this.#save({ v: 1, at: this.#at, repository, format, confirmed: null, pending: null, attempts: 0, next: null, stopped: null }, budget);
     });
   }
-  mark(mark: ArchiveMark, budget = new ArchiveBudget()): ArchiveRow {
+  mark(mark: ArchiveMark, budget = new ArchiveBudget()): ArchiveRow { return this.#mark(mark, undefined, budget); }
+  /** Initial Mark and its first attempt share one durable cut. Before it,
+   * the target/retry remain unchanged; after it, exact Mark/attempt/wake
+   * survive together. An already attempted identical Mark is idempotent. */
+  markAttempt(mark: ArchiveMark, next: Timestamp, budget = new ArchiveBudget()): ArchiveRow {
+    if (timeMs(next) === null) return refuse("unavailable");
+    return this.#mark(mark, next, budget);
+  }
+  #mark(mark: ArchiveMark, next: Timestamp | undefined, budget: ArchiveBudget): ArchiveRow {
     return this.#sql.transaction(() => {
       const previous = this.#load(budget)?.row;
       if (!previous) return refuse("unavailable");
       if (previous.stopped) return refuse("stopped");
       checked({ ...previous, pending: mark }, this.#at, budget);
       budget.spend({ inputWork: archiveMarkWork(mark.manifest.length) });
-      if (previous.pending) { if (!same(previous.pending, mark)) return refuse("outstanding"); return previous; }
+      if (previous.pending) {
+        if (!same(previous.pending, mark)) return refuse("outstanding");
+        if (next === undefined || previous.attempts !== 0) return previous;
+        // Legacy persisted attempts-zero Marks keep their exact bytes.
+        return this.#save({ ...previous, attempts: 1, next }, budget);
+      }
       const converting = previous.confirmed && previous.confirmed.layout !== 2 && mark.layout === 2 && same(mark.through, previous.confirmed.through);
       if (mark.parent !== (previous.confirmed?.commit ?? null) || previous.confirmed && mark.through.seq <= previous.confirmed.through.seq && !converting) return refuse("conflict");
-      return this.#save({ ...previous, pending: mark }, budget);
+      return this.#save({ ...previous, pending: mark, ...(next === undefined ? {} : { attempts: 1, next }) }, budget);
     });
   }
   confirm(commit: string, budget = new ArchiveBudget(), afterConfirmation: Timestamp | null = null): ArchiveRow {

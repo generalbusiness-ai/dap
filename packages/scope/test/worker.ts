@@ -50,6 +50,12 @@ export const metricWiring = new Map<string, () => Partial<NonNullable<Wiring["po
 /** Explicit archive fixture wiring, absent unless a witness supplies it.
  * The map survives object eviction; it is not production configuration. */
 export const fixtureArchiveWiring = new Map<string, NonNullable<Wiring["fixtureArchive"]>>();
+/** Trusted host configuration supplied by a native production-port witness.
+ * No reader token or inspector is turned into host permission. */
+export const archiveHostWiring = new Map<string, NonNullable<Wiring["archiveHost"]>>();
+/** Genuine production factory injection for alarm/activation witnesses only. */
+export const roomArchiveWiring = new Map<string, NonNullable<Wiring["archive"]>>();
+export const roomArchiveConstructions = new Map<string, number>();
 
 export class TestScope extends ScopeObject {
   protected override metricEnvironment(): MetricEnvironment { return metricBindings.get(this.ctx.id.toString()) ?? super.metricEnvironment(); }
@@ -160,6 +166,8 @@ export class PlatformScope extends DeployedScope<PlatformEnv> {
       ...(net.sized.has(name ?? "") ? { bounds: net.sized.get(name ?? "")! } : {}),
       ...(outside ? { outside: (given: OutsideGiven) => outside(given, this.ctx.storage.sql) } : {}),
       sessions: session.sessions,
+      ...(archiveHostWiring.has(name ?? "") ? { archiveHost: archiveHostWiring.get(name ?? "")! } : {}),
+      ...(roomArchiveWiring.has(name ?? "") ? { archive: roomArchiveWiring.get(name ?? "")! } : {}),
       ...(signedReadObserver ? { signedReadObserver } : {}),
       readers: (given) => {
         const real = session.readers(given);

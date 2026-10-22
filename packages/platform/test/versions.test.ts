@@ -1,9 +1,10 @@
 import { expect, test } from "vitest";
 import type { DeclaredDefinition, PlatformDefinition, Seed } from "@generalbusiness/dap-contract";
-import { definitionDigest } from "@generalbusiness/artroom-bytes";
+import { canonicalize, definitionDigest, parseStrict } from "@generalbusiness/artroom-bytes";
 import type { PlatformRule, RuleGiven } from "@generalbusiness/dap-derive";
 import { d } from "@generalbusiness/dap-derive/testing";
-import { TRUSTED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, INVITATION_KEY_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, PARTITION_COHORT, COUNTING_COHORT, DEMO_REGISTER, FIRST_ACTIONS_OF, NEWEST, ROLE_LISTS, ROLE_TABLE_OF, VERSIONS, WEB_DEMO_COHORT, WEB_DEMO_REGISTER, directorySeed, platform, versionOf, type Role, DEVICE_APPLICATION_COHORT } from "../src/index.ts";
+import { TRUSTED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, INVITATION_KEY_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, PARTITION_COHORT, COUNTING_COHORT, DEMO_REGISTER, FIRST_ACTIONS_OF, NEWEST, ROLE_LISTS, ROLE_TABLE_OF, VERSIONS, WEB_DEMO_COHORT, WEB_DEMO_REGISTER, directorySeed, platform, versionOf, type Role, nativeDeclarationText, DEVICE_APPLICATION_COHORT } from "../src/index.ts";
+import { NATIVE_DECLARATION_PINS, NATIVE_DECLARATION_TEXT } from "../src/native-declarations.generated.ts";
 import { creationRita as rita } from "./fixtures-entry.ts";
 import { DECLARED_APPLICATION_RULES } from "../src/application-install-v2.ts";
 import { DECLARED_APPLICATION_COHORT } from "../src/application-install-v2-wire.ts";
@@ -148,4 +149,19 @@ test("a rule reads its own version from the scope's genesis: the register of eac
       expect([...FIRST_ACTIONS_OF[named]![role]].sort()).toEqual(ROLE_TABLE_OF[named]!.flatMap(([actions, roles]) => (roles.includes(role) ? actions : [])).sort());
     }
   }
+});
+
+
+test("generated native bytes cover exactly the live catalog and independent digest goldens", () => {
+  expect(NATIVE_DECLARATION_PINS).toEqual(DIGESTS);
+  expect(Object.keys(NATIVE_DECLARATION_PINS).sort()).toEqual(Object.keys(VERSIONS).sort());
+  expect(Object.keys(NATIVE_DECLARATION_TEXT).sort()).toEqual([...new Set(Object.values(DIGESTS))].sort());
+  for (const [named, supplied] of Object.entries(VERSIONS)) {
+    const projection = nativeDeclarationText(named);
+    expect(projection).not.toBeNull();
+    expect(projection!.digest).toBe(DIGESTS[named]);
+    expect(projection!.text).toBe(canonicalize(supplied.data));
+    expect(definitionDigest(parseStrict(projection!.text) as DeclaredDefinition)).toBe(DIGESTS[named]);
+  }
+  for (const named of ["toString", "__proto__", "platform:membership@999", "platform:membership@08"]) expect(nativeDeclarationText(named)).toBeNull();
 });

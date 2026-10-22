@@ -74,6 +74,8 @@ export interface ArchiveForeignColdFootprint {
   readonly declarationUnits: number;
   readonly support: ArchiveSupportFootprint;
   readonly membership8: boolean;
+  /** Internally selected source provenance; every cold policy join rebinds it. */
+  readonly staticNative?: boolean;
 }
 /** One cold copy request after direct-use projection. Includes original
  * size/header/privacy, source lookup/comparison, support and optional native
@@ -84,7 +86,7 @@ export interface ArchiveForeignColdFootprint {
 export function forecastArchiveForeignColdCopy(shape: ArchiveForeignColdFootprint):
   { readonly ok: true; readonly work: Readonly<Pick<ArchiveCost, "attempts" | "calls" | "metadata" | "inputWork">> }
   | { readonly ok: false; readonly reason: "limit" } {
-  if (typeof shape.membership8 !== "boolean") throw new ArchiveStopped("unavailable");
+  if (typeof shape.membership8 !== "boolean" || shape.staticNative !== undefined && typeof shape.staticNative !== "boolean") throw new ArchiveStopped("unavailable");
   const privacy = forecastArchiveEntryPrivacy({ input: shape.input, effects: shape.effects, copyBytes: shape.bytes });
   if (!privacy.ok) return privacy;
   const work = { attempts: 0, calls: 0, metadata: 0, inputWork: 0 };
@@ -92,7 +94,8 @@ export function forecastArchiveForeignColdCopy(shape: ArchiveForeignColdFootprin
     for (const key of Object.keys(work) as (keyof typeof work)[]) work[key] += cost[key];
   };
   add(forecastArchiveForeignCopyRequest()); add(forecastArchiveForeignCopySize()); add(privacy.cost);
-  add(forecastArchiveSourceLookup(shape.declarationUnits)); add(forecastArchiveSupportMetadata(shape.support));
+  add(forecastArchiveSourceLookup(shape.declarationUnits));
+  if (shape.staticNative) add(forecastArchiveSourceLookup(null)); add(forecastArchiveSupportMetadata(shape.support));
   if (shape.input === "genesis") add(forecastArchiveForeignGenesis());
   if (shape.membership8) add(forecastArchiveMembershipCopy(shape.bytes));
   if (!Object.values(work).every(natural)) throw new ArchiveStopped("unavailable");
