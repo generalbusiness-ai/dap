@@ -4,7 +4,7 @@
 import type { Digest, Head } from "@generalbusiness/dap-contract";
 import { isDigest, isHead, natural } from "@generalbusiness/artroom-bytes";
 import { ARCHIVE_BOUNDS, type ArchiveBudget, type ArchiveCost } from "./archive-budget.ts";
-import { ArchiveDeclarationReadForecast, forecastArchiveDeclarationClosure, forecastArchivePotentialDeclarationClosure,
+import { forecastArchiveDeclarationClosure, forecastArchivePotentialDeclarationClosure,
   type ArchiveDeclarationFootprint, type ArchivePotentialDeclarationFootprint } from "./archive-declaration-scout.ts";
 import { stopArchivePrefix as stop, type ArchivePosition } from "./archive-prefix.ts";
 
@@ -21,18 +21,11 @@ export class ArchiveDeclarationPlan {
   readonly #sizes = new Map<Digest, DefinitionSize>();
   readonly #rootWork: Readonly<Work>;
   readonly #rootDeclarations: readonly Digest[];
-  readonly #reads: ArchiveDeclarationReadForecast;
   #blocked = false;
   constructor(readonly first: number, root: ArchiveDeclarationFootprint, readonly budget: ArchiveBudget) {
     budget.spend({ metadata: 256, inputWork: 512 });
     if (!natural(first)) stop("unavailable");
-    // Final inventory creates one fresh declaration reader in either
-    // archiveRootMetadata or collect(). Its root closure completes before
-    // the entry-ordered potential walks; neither route replaces that
-    // ArchiveDeclarations.reader, even when copy selection changes the
-    // separate retained-body reader. No actual admission is reused here.
-    this.#reads = new ArchiveDeclarationReadForecast(budget);
-    this.#rootWork = forecastArchiveDeclarationClosure(root, budget, this.#reads);
+    this.#rootWork = forecastArchiveDeclarationClosure(root, budget);
     let declarations: readonly Digest[] = Object.freeze([]);
     for (const node of root.declarations) declarations = this.#remember(node.digest, node.bytes, first, declarations);
     this.#rootDeclarations = declarations;
@@ -63,7 +56,7 @@ export class ArchiveDeclarationPlan {
       const previous = this.#rows.get(position.seq - 1), work = { ...(previous?.work ?? this.#rootWork) };
       let declarations = previous?.declarations ?? this.#rootDeclarations;
       for (const root of roots) {
-        const cost = forecastArchivePotentialDeclarationClosure(root, this.budget, this.#reads);
+        const cost = forecastArchivePotentialDeclarationClosure(root, this.budget);
         for (const key of Object.keys(work) as (keyof Work)[]) work[key] += cost[key];
         for (const node of root.requests) declarations = this.#remember(node.digest, node.bytes, position.seq, declarations);
       }

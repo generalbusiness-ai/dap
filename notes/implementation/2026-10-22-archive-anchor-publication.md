@@ -702,3 +702,44 @@ cases, the six heavy cases and the final gate remain pending. A bounded
 temporary diagnostic of original computed Rules finish components is
 being prepared for review. No further optimization or fit claim follows
 from these aggregate costs alone.
+
+The temporary Rules diagnostic, Owner 31024, naturally exited 1 with
+stable full guards and no signals. Exactly one binding and one component
+record matched the independent Native Rules installation fact. All six
+component sums matched the original rejected quote. The 8,440-byte
+installation act had 14 effects and no sends. Its largest finish input
+components were row bookkeeping at 13,377,462 and inventory at 9,325,680.
+The original quote and spent work remained those reported above. This
+instrumented run establishes attribution, not acceptance or performance.
+Both temporary files were restored exactly to `96528d87` and their removal
+was committed at `a15d9034`, whose product tree is identical to that source.
+
+A separately reviewed forecast refinement then priced a provably first
+declaration read on a fresh inventory reader at its existing cold-read fee.
+Repeated and unknown reads retained the maximum. Owner 14492 at `90f04da2`
+naturally exited 0: both affected Scope compilers and the whole 17-case
+inventory file passed with clean full guards and no signals. These results
+remain separately attributed to that source, including its added case.
+
+Owner 78187 then naturally exited 1 at the same clean head with stable full
+guards and no signals. The fixture and Grow cases passed. Grow production
+stopped at the same Rules entry 2 with the same 34,582,930 finish quote and
+37,142,778 spent input. Receipt through entry 1, no pending Mark and no
+source refusal were unchanged. Both activation cases remained pending.
+
+Source tracing explains the lack of effect. This native Rules root has no
+inline digest creation edges. The installation act's semantic and release
+inputs are retained values; its declaration texts are detached omissions.
+It requests no eligible declaration body. The two retained value inputs
+already receive cold-read forecasts in final inventory and, separately,
+the later immutable-input reader. Neither phase can be discounted again.
+
+The unrelated three-path declaration refinement is now explicitly reverted
+to the exact `a15d9034` source. All pre-existing inventory cases, actual
+read and row-save fees, assertions, capacities and deadlines remain intact.
+The original refinement commit and its focused pass remain in history.
+No additional run is claimed for this exact restoration. Further work
+requires a concrete measurement or mechanism proposal for actual fixed
+reservations; lowering only their forecasts would be unsound. Installed
+production acceptance, both activation cases, the six heavy cases and the
+final exact-head gate remain pending.
