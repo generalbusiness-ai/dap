@@ -10,6 +10,9 @@ The page gives states and an order, and no dates. The
 [use cases](use-cases.md) page holds the catalogue that the case numbers
 below refer to.
 
+The [kernel boundary](kernel.md) page says which parts every later design
+must keep stable, and lists the parts that fail its test today.
+
 ## What runs today
 
 | What | Where to read and check it |
