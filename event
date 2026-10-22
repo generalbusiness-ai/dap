@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0eaaae96b42ee6546ac17b09a9d524194f9f5bec","text":"Merge retired a covered predecessor; the successor is at examples/grow/simulator-tick.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0f188c6a2925ceb604c3424508b837e6df2e4fea","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-inventory.ts."}
