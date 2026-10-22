@@ -169,6 +169,7 @@ export class PlatformScope extends DeployedScope<PlatformEnv> {
       sessions: session.sessions,
       ...(archiveHostWiring.has(name ?? "") ? { archiveHost: archiveHostWiring.get(name ?? "")! } : {}),
       ...(roomArchiveWiring.has(name ?? "") ? { archive: roomArchiveWiring.get(name ?? "")! } : {}),
+      ...(fixtureArchiveWiring.has(name ?? "") ? { fixtureArchive: fixtureArchiveWiring.get(name ?? "")! } : {}),
       ...(signedReadObserver ? { signedReadObserver } : {}),
       readers: (given) => {
         const real = session.readers(given);

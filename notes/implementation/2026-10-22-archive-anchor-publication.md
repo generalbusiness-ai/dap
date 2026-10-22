@@ -483,3 +483,42 @@ a truncation flag), result, target/failure references, at most four coverage
 ranges and counts. It reads no additional archive object and changes no
 verification option or expectation. The original failed evidence remains
 unchanged; a separately allocated owning-file run is needed to diagnose it.
+
+At `80ce6ae6`, Owner 26384 and its child naturally exited 1 with stable full
+guards and no signal. The Scope test compiler and first seven driver cases
+passed. The bounded diagnostic located the same SHA-1 mismatch at entry 1,
+the remark: the grant had no action, recorded Membership or authority
+window. Source resolves that disjunction. The remark names an action and
+has the ordinary window, but this fixture's signed founding has no creation
+message. Its runtime injected a real Membership read through test controls;
+the immutable genesis does not record that Membership association. Replay
+correctly refuses to infer it from an opener or an anchor. Coverage ended
+at genesis, with no missing dependency and no consulted anchor. Five later
+cases had no completed acceptance. Inclusive elapsed, user and system times
+were 12.655340, 12.735925 and 2.532682 seconds.
+
+Only the two resume/replay cases now opt into a genuine native Directory16
+factory birth. A TEST-labelled capability-free Lane declaration preserves
+their remark, offer, assign and `not-self` rule; its unused hold capability,
+hold item, hold acts and timed hold rule are absent. The real Rules10
+activates that exact declaration, and an authorized signed Directory action
+creates the child. Dispatch records an applied genesis with the exact sealed
+create source, seed, ordinal, message and authoritative Membership8 full
+reference. The fixture facade fetches fresh stubs in the actual `PLATFORM`
+namespace after eviction; authority stays the production authority. A
+name-bound test archive hook supplies only the existing stand-in provider,
+target and reviewed fixture policies. Other fixture births are unchanged.
+
+The Directory creator fact is independently captured before archive output
+and supplied as explicit caller trust, alongside the independent Membership
+head. Its real birth is pinned under the Directory16 policy, in addition to
+the Membership8 source pin. No verifier trust default, private-name policy,
+creation validator or archive budget changes. The later assign must retain
+an actual `not-self` rule input. Pending-Mark bytes, actual eviction/resume,
+both Git formats, final exact head and strict consistent/anchor/trust checks
+remain. The factory adds a Rules activation, a Directory application action,
+their actual dispatch/child birth, an extra bounded source-birth read and
+independent authority reads to external fixture setup. That setup is not an
+archive throughput or full preparation-cost measurement. All original
+deadlines and product caps remain; the new fixture has not been compiled or
+run, and no repaired acceptance is claimed.

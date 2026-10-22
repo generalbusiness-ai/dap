@@ -18,14 +18,14 @@ import { archiveHostGate as gate } from "./support/archive-provider.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
 import { planArchive } from "../src/archive-build.ts";
 import { at, rita, una, type Lane } from "./fixtures-native.ts";
-import { createNativeArchiveLane, archiveAuthorityBasis, archiveAuthorityPolicies, archiveAuthorityAnchors } from "./support/archive-native-authority.ts";
+import { createNativeArchiveLane, createNativeArchiveApplicationLane, archiveAuthorityBasis, archiveAuthorityPolicies, archiveAuthorityAnchors } from "./support/archive-native-authority.ts";
 import { archiveDefinition, archivePolicies, archiveRepository, archiveSql } from "./support/archive.ts";
 import { fixtureArchiveWiring } from "./worker.ts";
 import type { TestScope } from "./worker.ts";
 
 const row = (lane: Lane) => lane.inside(state => new ArchiveRows(archiveSql(state), lane.at).load());
-async function alarmFixture(host: ScriptedHost, resolve = async () => { host.targets++; return archiveRepository; }) {
-  const lane = await createNativeArchiveLane({}, {}, archiveDefinition);
+async function alarmFixture(host: ScriptedHost, resolve = async () => { host.targets++; return archiveRepository; }, factory = false) {
+  const lane = factory ? await createNativeArchiveApplicationLane() : await createNativeArchiveLane({}, {}, archiveDefinition);
   fixtureArchiveWiring.set(lane.name, { policies: { fixture: "archive-policies", registry: archiveAuthorityPolicies(lane, archivePolicies) }, fixtureSources: archiveAuthorityBasis(lane)!.pins, target: { fixture: "archive-target", resolve }, provider: host });
   onTestFinished(() => { fixtureArchiveWiring.delete(lane.name); });
   await lane.restart();
@@ -189,13 +189,17 @@ test("adaptive Native selection finishes a covered earlier prefix before an unco
 // send after actual eviction and a new native retained-input turn.
 test.each(["sha1", "sha256"] as const)("resumes marked %s bytes after eviction and then archives the later rule input", async format => {
   const host = new ScriptedHost(format); host.missingMint = true;
-  const lane = await alarmFixture(host);
+  const lane = await alarmFixture(host, undefined, true);
   expect(await lane.alarm()).toBe(true);
   const initial = (await row(lane))!, marked = initial.pending!;
   expect(marked).not.toBeNull(); expect(host.data.size).toBe(0); expect(host.sends).toEqual([]);
   await lane.restart(); lane.c.clock.now = initial.next!;
   const offered = await lane.did(rita, "offer", { fields: { intent: 0 }, expected: { intent: 1 } });
-  await lane.did(rita, "assign", { on: offered.fact.seq, expected: { on: 1 }, fields: { performer: una.member } });
+  const assigned = await lane.did(rita, "assign", { on: offered.fact.seq, expected: { on: 1 }, fields: { performer: una.member } });
+  const rule = (await lane.entries(assigned.fact.seq))[0]?.prepared.find(prepared => prepared.rule === "not-self");
+  expect(rule).toBeDefined();
+  if (!rule) expect.fail("the later genuine native assign must retain its rule input");
+  expect(await lane.inside(state => state.storage.sql.exec<{ n: number }>("SELECT COUNT(*) AS n FROM retained_input WHERE kind = 'rule' AND digest = ?", rule.input).one().n)).toBe(1);
   const later = await lane.head(); await lane.restart();
   expect(await lane.alarm()).toBe(true); expect(host.sends).toEqual([marked.commit]);
   expect((await row(lane))?.confirmed?.through).toEqual(marked.through);
@@ -206,8 +210,8 @@ test.each(["sha1", "sha256"] as const)("resumes marked %s bytes after eviction a
     format: async () => format, resolve: async ref => ref === journalRef(lane.at.scope) ? host.pointer : null,
     object: async (id, most) => { const object = host.data.get(id); return object ? { type: object.type, size: object.data.length, data: object.data.length <= most ? object.data : null } : null; },
   }, scope, work) });
-  // Explicit caller words from actual Membership reads, independent of
-  // archive output. This does not export the private authority journal.
+  // Explicit caller words from the actual Directory create entry and an
+  // independent Membership read. No anchor comes from archive output.
   const anchors = archiveAuthorityAnchors(lane); expect(anchors.length).toBeGreaterThan(0);
   const verified = await verifyArchive(source, { mode: "replay", scope: lane.at.scope, head: later, grants: "as-recorded",
     anchors: anchors.map(fact => ({ scope: fact.at.scope, seq: fact.seq, hash: fact.hash })) });
