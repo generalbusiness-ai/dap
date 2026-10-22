@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e9b15e85325dae469168be7ce04b049a66e62f7b","text":"Merge retired a covered predecessor; the successor is at packages/platform/scripts/pin-native-declarations.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ea1959c27efc683c72d528a7820472731c19c881","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/artifacts-wiring.ts."}
