@@ -6,8 +6,10 @@ from `a57ed7fa`. It keeps Main's invitation checks, archived-answer handling,
 dependency lock and workspace configuration. Source checkpoint `0180b3c1`
 contains eleven changed paths. The generated Page module remains exact Main.
 
-The focused attempt below runs six compilers but stops during Vitest startup
-before any selected case. Planner disposition `d819eafc`, ratified by
+The first focused attempt below runs six compilers but stops during Vitest
+startup before any selected case. A later remaining-case run has passing
+actual cases and a separate expected-name ledger failure. Planner
+disposition `d819eafc`, ratified by
 `66b2c135`, requires one ordinary gate at
 the final integrated head and a full fresh review. Failed gate `17076` and
 follow-up `36282` remain historical evidence, not a passing gate for this
@@ -110,13 +112,57 @@ reporter merge then tries to iterate. The narrow correction omits the property
 when progress is disabled. When enabled, the original `verbose` and
 `./scripts/test-progress.mjs` array stays exact. No environment restoration,
 dependency patch, selected-case change or startup probe is used. This source
-correction has not run.
+correction has not run at that source checkpoint.
 
-Fresh source-only recipes will contain only the unreached 27 Node Vitest
-cases, three built-in Node cases and eight Native cases, with new head/tree
-and complete input guards. They will not repeat the six passed compilers,
-pool compatibility or shared-helper commands. Their unchanged source and
-tool inputs remain pinned; actual execution needs a separate root allocation.
+Fresh recipes contain only the unreached 27 Node Vitest cases, three built-in
+Node cases and eight Native cases, with new head/tree and complete input
+guards. They do not repeat the six passed compilers, pool compatibility or
+shared-helper commands. Their unchanged source and tool inputs remain pinned.
+
+## Remaining cases and separate expected-name correction
+
+Root allocates one remaining-case v3 pipeline at source `c58f3812`, tree
+`e6efc430`. The Node Vitest process and its collector both exit zero, with
+27 passing cases in ten files. The three config-directory built-in Node cases
+then pass with their own zero-exit process and TAP ledger.
+
+The actual Native Vitest child also exits zero without a signal: eight cases
+pass in four files, with zero errors, retries, repeats or unhandled errors.
+Its built-in JSON contains five passing suites because it also counts the
+clone describe suite; that is distinct from the four-file terminal count.
+The original focused collector exits one solely because two expected names
+omit quotes. The owning wrapper consequently exits one. Both failures and
+their original expected ledger remain unchanged in the frozen DATA release.
+
+The test uses an object table and `$name`. The pinned Vitest formatter applies
+`objDisplay`, whose string representation adds single quotes, so the two
+actual names begin `'application' establishes` and
+`'application-publication' establishes`. This correction changes two expected
+name strings only. It changes no test source, assertions, case selection or
+runtime result, and it does not turn either original collector or wrapper
+into a zero exit.
+
+Independent DATA audit `1a51b563` compares the accepted four-file Native pool
+selection, collected and terminal records, progress events, raw output and
+built-in JSON. With those two exact source-derived names, it finds eight
+unique passing cases with no extra or missing case. It also verifies the
+original Node 27-case and built-in Node three-case results. Root adopts this
+qualified actual-case evidence in attributed assertion `f675d669`; this is
+not formal review approval. The original pipeline failure stays preserved,
+and no test, compiler, generator or startup probe is repeated.
+
+All eight emitted v3 boundary/final guards pass at the tested head/tree. The
+source count remains 2,734; noncache dependency rows and existing directory
+identities remain exact, with only the original bounded owned Vitest result
+cache allowance. There are zero installs or retries. Root separately observes
+the owning tool's natural exit one with 23.17 seconds wall, 23.87 user and
+5.17 system time. Its scopes overlap the inner measurements and are not
+summed or treated as isolated performance evidence.
+
+This note-only checkpoint follows the tested source. It will remain clean
+while actual Main and the pending D1 landing are reconciled. One ordinary gate
+at the final integrated head and full fresh review remain required; the
+qualified focused evidence is not that gate or a hosted/stability claim.
 
 The sections below preserve the earlier integration report from `a57ed7fa`.
 Its heads, counts, physical paths and outcomes describe that earlier work.
