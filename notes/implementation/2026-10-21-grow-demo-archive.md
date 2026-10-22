@@ -4,7 +4,7 @@ Request `63130d6c`, existing builder promise `3490bd81`. Original preparation
 started at `be0c40b5df299145f819ecde82d6baf055bb7db2`, while F1 and 9a awaited
 review. The sections below retain that history and its natural failures.
 
-## Current status: source integration and owning seals adopted
+## Current status: integrated focused checks adopted; gate pending
 
 The current source view is integrated on landed CLI Main
 `5e8476a1fb4b79aa8fb611b8848e3ecaaf42d8a1`; the prior source-only
@@ -19,11 +19,44 @@ seconds, with an empty log. Nine computed owner seals replaced nine nulls;
 the object owner was also refreshed in the original map. The other 25
 original hashes and all three Node cases remain unchanged.
 
-This checkpoint records those adopted values, removes only the extra EOF
-blank line identified by P2d385 in archive-native-root.ts, and updates this
-note. Integrated compilers, generator/bootstrap checks, Node and Native
-cases, and the final gate have not run. The historical V41 result below
-remains evidence for its own source, not a pass for this new integration.
+Source checkpoint `8530ddfe4` recorded those adopted seals and removed only
+the extra EOF blank line identified by P2d385 in archive-native-root.ts.
+Root has now adopted all eight focused stages, each with a natural zero
+exit, as `06ee7edc9f08d275647806cf38819b2c08ef56d9`:
+
+- The three existing D1 Node cases passed. Node emitted its experimental
+  TypeScript stripping warning.
+- The maintained Platform and Scope test compilers closed with zero.
+- The generator check matched 62 identities, 33 declarations and 499,848
+  bytes. A physically distinct owned source view, copied without the
+  artifact, regenerated exactly the original `b5ff79…` bytes.
+- The two selected catalog and independent-golden cases passed; the third
+  case was unselected.
+- The exact signed production case passed in 8,431 ms; four other cases
+  were unselected. Its child used 13.730454541975632 seconds wall time and
+  14.41144 CPU seconds. The local Git clone retained 559 objects and five
+  refs, passed fsck and yielded five exactly equal offline reports.
+
+The fixed input and cache guards stayed unchanged, installs were zero and
+no retry ran. Root observed no errors in the raw focus logs. The JSON
+reporter supplies no unhandled-error counter, so these receipts make no
+zero-counter claim. The original 30 s deadline, default workers, literal
+prices, assertions and archive caps remain unchanged.
+
+The original fixture/Grow five price vectors and the two warm/evicted
+activation cases, retained-floor and homepage coverage are delegated to
+one final gate. That gate is pending at this checkpoint; its actual result
+belongs in the final handoff rather than a further note-only commit. The
+focus helpers, shared inputs and bootstrap scratch are now permanent DATA
+and will not execute or import again.
+
+These are local TEST/native and local Git witnesses with the documented
+namespace, clock, host and provider stand-ins. They establish neither hosted
+acceptance nor F3 closure or a bound on all future journal histories.
+Archiving alone still does not reduce held entries. Register/Membership
+journals remain excluded, and the caller-anchor and omitted-text trust
+qualifications remain. The historical V41 result below belongs to its own
+source and is retained alongside all earlier natural failures.
 
 ### Historical V41: the local signed-packet case passed
 
