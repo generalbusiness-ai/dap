@@ -338,3 +338,22 @@ control now accepts a zero-copy list but still refuses the unchanged metadata
 limit. These sources and the combined Native migration remain unrun. Parser
 seals, owning compilers, small semantic witnesses, original large histories,
 the five-journal command, and the final gate still require root allocation.
+
+The first combined focused attempt at `9dd7cf66` stopped in the Replay test
+compiler. The eight preceding compiler roots passed: Derive source/test,
+Platform source/test, Git source/test, and Replay source/Node. Replay test
+reported 12 diagnostics: the new fixture supplied a `Map` where native rules
+use a record, and typed its serialized inventory consumers as the parsed
+journal consumer representation. The remaining Scope and CLI compiler roots
+and all eight selected Git/Replay cases were unrun. The outer owner and child
+both exited 1 without a signal; source, installed dependencies, tools, and
+selected environment stayed unchanged. Owner-inclusive time was 4.892557
+seconds elapsed, 7.925183 user CPU, and 2.134711 system CPU.
+
+The follow-up uses the existing empty rules record and the actual native
+inventory's selected-object type. It preserves every consumer field and test
+assertion; no type cast bypasses those APIs. It schedules only the failed
+Replay test compiler, the six unrun Scope/CLI compiler roots, and the eight
+unrun cases. The eight passed compiler roots remain separately attributed to
+the first attempt. No follow-up result is claimed here; the Native,
+production, heavy-history, and final-gate obligations remain pending.

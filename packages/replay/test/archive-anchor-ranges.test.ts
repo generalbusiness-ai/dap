@@ -6,9 +6,10 @@ import { PROPOSED_BOUNDS, type FactRef, type PlatformData, type Seed, type Times
 import { canonicalize, digestBytes, intentDigest, newIncarnation, scopeIdOf, signIntent, utf8 } from "@generalbusiness/artroom-bytes";
 import { clockOf, grantFrom, judgeGenesis, validateDefinition } from "@generalbusiness/dap-derive";
 import { deskDefinition, keys, lane, Ledger, membership, t } from "@generalbusiness/dap-derive/testing";
-import { buildJournalPass, type JournalAnchorPublication, type JournalObject, type JournalPassSelection } from "@generalbusiness/artroom-git/journal";
+import { buildJournalPass, type JournalAnchorPublication, type JournalObject } from "@generalbusiness/artroom-git/journal";
 import { readJournalArchiveV2 } from "@generalbusiness/artroom-git/journal-reader";
 import { ArchiveBudget } from "../../scope/src/archive-budget.ts";
+import type { ArchiveSelectedObject } from "../../scope/src/archive-inventory.ts";
 import { archiveSource, type ArchiveReadWork } from "../src/archive.ts";
 import { main } from "../src/cli.ts";
 import { proofOf, STANDING } from "./staging.ts";
@@ -30,7 +31,7 @@ function remarks(count: number, identity = "TEST anchor publication") {
         presents: { proof: { kind: ["remark"], under: "platform:task", required: true } }, guards: [{ fact: { presented: "proof" } }] } } };
   const checked = validateDefinition(data, PROPOSED_BOUNDS, undefined, { platform: true });
   if (!checked.ok) throw Error(JSON.stringify(checked));
-  const ledger = new Ledger(checked.definition), rules = new Map();
+  const ledger = new Ledger(checked.definition), rules = {};
   const founding = signIntent({ v: 1, to: null, actor: keys.rita.key, kind: "found", on: null, expected: {},
     fields: { source: "TEST remarks" }, idempotencyKey: identity, notAfter: t(60) }, keys.rita.secret);
   const seed: Seed = { v: 1, kind: "directory", definition: NAMED, creator: null, cause: intentDigest(founding.intent), ordinal: 0 };
@@ -62,7 +63,7 @@ async function journal(fixture: ReturnType<typeof remarks>, dependencies: readon
   return {
     async append(from: number, through: number, publication?: JournalAnchorPublication) {
       const budget = new ArchiveBudget({}, () => 0), entries = ledger.entries.slice(from, through + 1);
-      const retained = new Map<string, string>(), copies: JournalPassSelection["objects"][number][] = [];
+      const retained = new Map<string, string>(), copies: ArchiveSelectedObject[] = [];
       for (const { entry } of entries) for (const use of entry.uses) {
         const owner = dependencies.find(dependency => dependency.ledger.at.scope === use.fact.at.scope);
         if (!owner) throw Error("An actual judged foreign source is required");
