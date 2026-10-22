@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a668a2edf206aa0beb7c59d37ffb4ac9bc0002d5","text":"Merge retired a covered predecessor; the successor is at packages/contract/src/result.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a6858d141f00f36f479288ce06c20e6d0f91991e","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-21-retained-journal-floor-f2.md."}
