@@ -27,4 +27,3 @@ function checkNative(named: PlatformDefinition, bounds: Bounds, reviewed: Archiv
 export function validateArchiveNativeRoot(named: PlatformDefinition, bounds: Bounds, reviewed: ArchivePolicyRegistry, budget: ArchiveBudget): ValidDefinition {
   return checkNative(named, bounds, reviewed, budget).definition;
 }
-

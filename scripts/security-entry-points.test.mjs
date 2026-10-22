@@ -16,7 +16,7 @@ const seals = {
   "packages/scope/src/applications/route.ts": "5788ad312f08eeab53a8592398e23cb3bc8081061cb80f8879cf0816a4799226",
   "packages/scope/src/item-query-wire.ts": "18c860286adefc1afab7cf14ceceea44c59e78031042aed3d781c5576b73ecea",
   "packages/scope/src/applications/projection-wire.ts": "cecaa88f08db6745013a9cb9fbcb9edee6939b0859c201e0c8057286529f1cdc",
-  "packages/scope/src/object.ts": "b8b9bcf3c0592bf34edb765648571c38b626fac3c0ffdcbbd44724a5b37a965a",
+  "packages/scope/src/object.ts": "52037f760d672a7d7e6af10a585b98c6bb798109805d164ca46231c4d6c30642",
   "packages/scope/src/core.ts": "189ad7c56b9b772fc241fb10b78ba219627bdb04bef4e8d0ec9c1c3e07c992db",
   "packages/derive/src/genesis.ts": "3cedd7e1124a234aef7f04fb48c25e34c482e6fded7d4423ec666ae41e39c586",
   "packages/derive/src/judge.ts": "222d6d89be14fd62f59857778b0bf7e52f1f0b3d2f5df8d50b533a8f20d8cb14",
@@ -32,18 +32,18 @@ const seals = {
   "examples/grow/simulator-worker.ts": "2d60dab3a9a5b204b69f15bc5ec3473fa48513888d7ffdb0c1fc179f6fe4883c",
   "examples/grow/simulator-host.ts": "53668f18cbfb33bf8ad38892fdbafd4aba3736b7987238e643e0d661cee6c1bf"
 };
-// SOURCE checkpoint only: compute and review these exact integrated AST seals
-// with the owning parser before any runtime acceptance or formal review.
+// Integrated archive owners computed by the maintained owning parser.
+// Root adopted the nine outputs; the historical map name is retained here.
 const pendingArchiveSeals = {
-  "packages/scope/src/object.ts": null, // Refresh existing owner after the F2/archive union.
-  "apps/room/worker.grow.ts": null,
-  "apps/room/archive-policy.ts": null,
-  "apps/room/archive.ts": null,
-  "packages/scope/src/archive-host-item.ts": null,
-  "packages/scope/src/archive-target.ts": null,
-  "packages/scope/src/archive-host.ts": null,
-  "packages/scope/src/artifacts-host.ts": null,
-  "packages/scope/src/artifacts-wiring.ts": null,
+  "packages/scope/src/object.ts": "52037f760d672a7d7e6af10a585b98c6bb798109805d164ca46231c4d6c30642", // Same adopted value as the original owner map above.
+  "apps/room/worker.grow.ts": "791c2bfcb8b2a62d8f0d8afec627ac76b63be4b9f1ee5de27d3f6c081959bc01",
+  "apps/room/archive-policy.ts": "707d55642fa0a35075614d1f7b02149b8a33f5eb128f0e0ef4b54100aaa1897f",
+  "apps/room/archive.ts": "6edd80ccf47e6a62c1fe9af209bbb6aa9d22daddb43315c7ac8b75a4b483486a",
+  "packages/scope/src/archive-host-item.ts": "b337a0619bbe7001877ea24b37af3dc7e5ba845cceca973683a33338ef2c6171",
+  "packages/scope/src/archive-target.ts": "b002f81c556577d5e1d1a9682ca1ebb14a0296206b2253c66a577303afb59bf5",
+  "packages/scope/src/archive-host.ts": "29e262731d46335cb9535b10e2c1de36b6b3a6f8ea42c77be4b628378704dfd7",
+  "packages/scope/src/artifacts-host.ts": "3aaf075454b58ceae380bf9ab667d3a26d173776936ddd63d2bf01bbe865a698",
+  "packages/scope/src/artifacts-wiring.ts": "e4c0080d785d7880896c2778c7a1ba347e9f348b54afc49b282ea7ec665d4952",
 };
 const document = () => documentedInventory(readFileSync(new URL("../docs/security/entry-points.md", import.meta.url), "utf8"));
 

@@ -4,7 +4,28 @@ Request `63130d6c`, existing builder promise `3490bd81`. Original preparation
 started at `be0c40b5df299145f819ecde82d6baf055bb7db2`, while F1 and 9a awaited
 review. The sections below retain that history and its natural failures.
 
-## Current status: the local signed-packet case passed
+## Current status: source integration and owning seals adopted
+
+The current source view is integrated on landed CLI Main
+`5e8476a1fb4b79aa8fb611b8848e3ecaaf42d8a1`; the prior source-only
+integration is preserved as `5bd90359c`. R1 is not claimed landed.
+Root adopted the physically distinct dependency copy as
+`615c9254a91ff9afcd95d5b3ca9a5794151d54cd`: 5,498 files, 534 directories
+and 32 relative links, with no shared captured inode, no cache copy and zero
+installs. Root then adopted the maintained owning-parser operation as
+`dffe61aca46ed65fd5ee4b1c043f6f4f9c7b8f5e`. Its Node child closed
+naturally with zero after 0.543260667 seconds wall time and 0.21185 CPU
+seconds, with an empty log. Nine computed owner seals replaced nine nulls;
+the object owner was also refreshed in the original map. The other 25
+original hashes and all three Node cases remain unchanged.
+
+This checkpoint records those adopted values, removes only the extra EOF
+blank line identified by P2d385 in archive-native-root.ts, and updates this
+note. Integrated compilers, generator/bootstrap checks, Node and Native
+cases, and the final gate have not run. The historical V41 result below
+remains evidence for its own source, not a pass for this new integration.
+
+### Historical V41: the local signed-packet case passed
 
 The v41 owning Scope compiler and the exact signed Grow production case
 both closed naturally with exit zero. The case ran once: one selected pass,
@@ -41,8 +62,9 @@ acceptance. Archiving alone still does not reduce held journal entries.
 The original fixture and maintained Grow cases were unselected in v41, so
 the five unchanged literal price vectors were source-guarded, not rerun.
 Warm and evicted activation coverage must also be preserved at integration.
-The candidate is not yet integrated with current Main and has no final
-integrated-head gate or formal checker verdict. Those steps remain with
+At V41 the candidate was not yet integrated with current Main. The current
+source integration still has no final integrated-head gate or formal checker
+verdict. Those steps remain with
 root; actual operator binding, deployment, readbacks and F3 remain with the
 planner. No Source filing or landing follows from this local pass.
 
@@ -853,3 +875,14 @@ import-closure handoff accompanies this checkpoint so reviewers can inspect
 the generator bootstrap edge without executing modules. AST seals and all
 integrated runtime checks remain pending; there are no dependency copies,
 imports, parser runs, compilers, generators or tests in this view.
+
+
+### Adopted copy and seals checkpoint
+
+The dependency-copy and parser stages described in the current status are
+complete; earlier pending statements above describe their source-preparation
+checkpoints. All actual helper sources, plans, context files and baselines
+used by those stages are now permanent DATA and will not execute again.
+The generated declaration artifact, signed packet, literal prices, production
+logic and the four reviewed semantic unions remain unchanged. Fresh focused
+recipes and root allocation are required for every remaining runtime stage.
