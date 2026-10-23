@@ -1,7 +1,7 @@
 {
   "format": "dap-workspace-rename-preservation-1",
   "basis": "919710c2155b35438eb2d454066a00e9443b2854",
-  "qualification": "Preservation counters bind current accepted Main919710 and the exact reviewed rename composition, including the approved seven-package SDK publication closure and exact internal application-install exclusion. The earlier Main5253 evidence remains historical on its original checkpoint. Actual 54-owner parser output remains the original Main12d run; owner source, map values and maintained parser bytes are carried by exact equality, with no new parser execution. The909 mechanical rowset and22 protected leaves remain fixed; only the two explicitly reviewed mechanical before/after/projection hashes are refreshed for accepted status diagnostics. No parser or product execution is established by this Source composition.",
+  "qualification": "Preservation counters bind current accepted Main919710 and the exact reviewed rename composition, including the approved seven-package SDK publication closure and exact internal application-install exclusion. The earlier Main5253 evidence remains historical on its original checkpoint. Actual 54-owner parser output remains the original Main12d run; owner source, map values and maintained parser bytes are carried by exact equality, with no new parser execution. The909 mechanical rowset and22 protected leaves remain fixed; only the two explicitly reviewed mechanical before/after/projection hashes are refreshed for accepted status diagnostics. No parser or product execution is established by this Source composition. The existing CLI browser resolver row also includes the exact reviewed client-package regex policy span; no general regex replacement or retired-alias fallback is permitted.",
   "protectedLeaves": [
     {
       "path": "apps/counter/commitments-pin.ts",
@@ -4348,16 +4348,22 @@
     {
       "path": "packages/cli/src/application-browser.ts",
       "before": "8026c8066eb1b3fab22b233fa2e0e4220694ced2e075cf26d7f3fc88e9335e8a",
-      "after": "c7d4e042074e52d8d7b88125e2a9c8bdcbcde6cbc2b5799d595b7f4f37bcb665",
+      "after": "413cb1bfd360bcc32c7b8b316c3962c6fdeea1582ea7a74040bcf51d1f8a23c3",
       "spans": [
         {
           "start": 308,
           "end": 339,
           "kind": "module",
           "replacement": "@generalbusiness/dap-client"
+        },
+        {
+          "start": 2059,
+          "end": 2104,
+          "kind": "package-policy",
+          "replacement": "/^@generalbusiness\\/dap-client(?:\\/.*)?$/"
         }
       ],
-      "dataProjection": "6185c3d20390be8837597daa92d7009c9b56c8735061383f35cf591c640adadf",
+      "dataProjection": "cc376973f364ea3def888ebfc0a6fe0cfccb2d514411429af781367b5e300ec4",
       "digests": []
     },
     {

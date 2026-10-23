@@ -362,6 +362,9 @@ function sourceEdits(path, text) {
     const firstCommentEnd = text.indexOf("*/") + 2;
     edits.push(...docEdits(text.slice(0, firstCommentEnd)).map(edit => ({ ...edit, kind: "workspace-documentation" })));
   }
+  if (path === "packages/cli/src/application-browser.ts") {
+    edits.push(...anchoredEdits(text, "/^@generalbusiness\\/artroom-client(?:\\/.*)?$/", "/^@generalbusiness\\/dap-client(?:\\/.*)?$/", "package-policy"));
+  }
   if (path === "scripts/active-source.test.mjs") {
     for (const [before, after] of [
       ["(?:artroom-bytes|dap-(?:contract|derive))", "dap-(?:bytes|contract|derive)"],

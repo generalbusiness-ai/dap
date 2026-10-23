@@ -24,7 +24,7 @@ export async function bundleApplicationBrowser(root: string, entryAsset: string,
     bundle: true, platform: "browser", format: "esm", target: "es2022", minify: true,
     legalComments: "none", write: false, logLevel: "silent",
     plugins: [{ name: "owned-browser-client", setup(builder) {
-      builder.onResolve({ filter: /^@generalbusiness\/artroom-client(?:\/.*)?$/ }, args => ({ path: fileURLToPath(import.meta.resolve(args.path)) }));
+      builder.onResolve({ filter: /^@generalbusiness\/dap-client(?:\/.*)?$/ }, args => ({ path: fileURLToPath(import.meta.resolve(args.path)) }));
     } }],
   });
   const base = posix.dirname(entryAsset), prefix = base === "." ? "" : base + "/";
