@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { inflateSync } from "node:zlib";
 import { afterAll, expect, test, vi } from "vitest";
-import { decodePack, SmartHttpSource } from "../src/http-read.ts";
+import { advertisementRefusalDetail, decodePack, SmartHttpSource } from "../src/http-read.ts";
 import { GitRefusal } from "../src/names.ts";
 import { READ_BOUNDS, Reader } from "../src/reader.ts";
 import { Host } from "./support/host.ts";
@@ -449,13 +449,31 @@ test("opt-in v2 requires its complete bounded capability advertisement without a
     () => new Response(Buffer.concat([pkt("# service=git-upload-pack\n"), Buffer.from("0000"), pkt(`${id} ${REF}\0shallow filter allow-reachable-sha1-in-want\n`), Buffer.from("0000")]), { headers: { "content-type": "application/x-git-upload-pack-advertisement" } }),
     () => new Response(Buffer.concat([pkt("version 2\n"), pkt("fetch=shallow filter\n"), Buffer.from("00000002")]), { headers: { "content-type": "application/x-git-upload-pack-advertisement" } }),
   ];
-  for (const response of cases) {
+  const expectedDetails = [
+    { subtype: "first-frame-version", firstFrame: "other" },
+    { subtype: "capability-value-character", firstFrame: "version-2" },
+    { subtype: "first-frame-version", firstFrame: "other" },
+    undefined, undefined, undefined,
+    { subtype: "duplicate-fetch", firstFrame: "version-2" }, undefined,
+    { subtype: "duplicate-object-format", firstFrame: "version-2" },
+    { subtype: "capability-name-character", firstFrame: "version-2" },
+    { subtype: "first-frame-version", firstFrame: "service-upload" },
+    { subtype: "trailing-data", firstFrame: "version-2" },
+  ];
+  for (const [index, response] of cases.entries()) {
     let calls = 0;
     const source = new SmartHttpSource({ ...v2Options, fetch: request => {
       calls++; expect(request.method).toBe("GET"); expect(request.headers.get("git-protocol")).toBe("version=2");
       return Promise.resolve(response());
     } });
-    await expect(source.object(id, 1024)).rejects.toBeInstanceOf(GitRefusal);
+    const error = await source.object(id, 1024).then(() => undefined, error => error);
+    expect(error).toBeInstanceOf(GitRefusal);
+    expect(advertisementRefusalDetail(error)).toEqual(expectedDetails[index]);
+    if (expectedDetails[index]) {
+      expect(error).toMatchObject({ reason: "unreadable", what: index === 0 || index === 2 || index >= 10 ? "upload advertisement" : "upload capabilities" });
+      expect(error.message).toBe(`${error.reason}: ${error.what}`);
+      expect(Object.isFrozen(advertisementRefusalDetail(error))).toBe(true);
+    }
     expect(calls).toBe(1);
   }
   let calls = 0;

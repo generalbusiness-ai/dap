@@ -1,5 +1,6 @@
 /** Temporary, pass-owned observations only. No authority, body, clock or I/O. */
 import { GitRefusal } from "@generalbusiness/artroom-git";
+import { advertisementRefusalDetail, type AdvertisementRefusalDetail } from "@generalbusiness/artroom-git/http-read";
 import type { ArchiveBudget } from "./archive-budget.ts";
 
 type Phase = "none" | "source" | "token" | "identity" | "object"
@@ -12,6 +13,7 @@ interface Snapshot {
   readonly maximum: number;
   readonly phase: Phase;
   readonly refusal: Refusal;
+  readonly advertisement?: Readonly<AdvertisementRefusalDetail>;
 }
 interface State { closed: boolean; value: Snapshot }
 const held = new WeakMap<ArchiveBudget, State>();
@@ -58,14 +60,17 @@ export function beginArchiveParentRead(budget: ArchiveBudget, type: "commit" | "
   // finite call budget also bounds this scalar ordinal, without a new cap.
   const value: Snapshot = { ordinal: owner.value.ordinal + 1, type, maximum, phase: "source", refusal: "none" };
   if (!owner.closed) owner.value = value;
-  const update = (change: Partial<Pick<Snapshot, "phase" | "refusal">>) => {
+  const update = (change: Partial<Pick<Snapshot, "phase" | "refusal" | "advertisement">>) => {
     if (!owner.closed && owner.value.ordinal === value.ordinal) owner.value = { ...owner.value, ...change };
   };
   return {
     phase: (phase: Exclude<Phase, "none">): void => update({ phase }),
     refused: (error: unknown): void => {
       if (!owner.closed) {
-        try { update({ refusal: refusal(error) }); }
+        try {
+          const advertisement = advertisementRefusalDetail(error);
+          update({ refusal: refusal(error), ...(advertisement ? { advertisement } : {}) });
+        }
         catch { update({ refusal: "other" }); }
       }
     },
