@@ -1,0 +1,19 @@
+// Explicit hosted rollout input; always name this file with --config.
+// The conservative default wrangler.jsonc remains unchanged and fails closed.
+// Add only descriptors confirmed against their active installation and release,
+// with an exact matching APPLICATION_SCREEN_HOSTS row in the fixed room service.
+{
+  "name": "dap-application-sandbox",
+  "main": "worker.ts",
+  "compatibility_date": "2026-08-15",
+  "workers_dev": false,
+  "routes": [{ "pattern": "*.inguz.space/*", "zone_name": "inguz.space" }],
+  "services": [
+    { "binding": "ROOM", "service": "artroom-scope", "entrypoint": "ApplicationScreenService" },
+    { "binding": "GROW", "service": "dap-grow", "entrypoint": "ApplicationScreenService" },
+    { "binding": "LENDING", "service": "dap-lending", "entrypoint": "ApplicationScreenService" }
+  ],
+  // Only Grow's confirmed item 2 is mapped. Room and Lending remain closed.
+  "vars": { "SCREEN_HOSTS": "[{\"host\":{\"v\":1,\"screenOrigin\":\"https://grow.inguz.space\",\"roomOrigin\":\"https://dap-grow.inguz.workers.dev\",\"directory\":\"sc_ryghgistvpshbaznxlbleop5zqruy2kmogy4jeigr7j3yqlewceq\",\"item\":2,\"presentation\":\"sha256:5bd818a796771c0b6bdd6eac7d5b0fe6ed70358ddc2c33dec82bfd11cd558cf4\"},\"service\":\"GROW\"}]" },
+  "observability": { "enabled": false }
+}
