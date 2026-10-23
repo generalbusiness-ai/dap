@@ -3,7 +3,8 @@
 Status: draft 2, for request `2ee805c5`. Draft 2 answers review
 `3cd820f3`: three classes only, with tools as a kind of platform service,
 and the host statement limited to the code that has no host (sections 1, 3
-and 8). It describes main `c40492ee`. No code moves with this page.
+and 8). It describes main `c40492ee`, except where it says that K7 and K8
+are closed at main `b52ca7e3`. No code moves with this page.
 
 Applications on dap run for a long time, and they change more often than
 they are replaced. That works only if a small part of the system changes
@@ -51,12 +52,12 @@ is not meant to be kernel, is listed in section 5 with what passing takes.
 | `packages/bytes` | Kernel | Fails in part | Canonical JSON, hashes, signatures and byte domains are kernel: entry hashes are its canonical bytes, and `derive` imports it. Its application package, view and projection codecs (`application-*.ts`, about 1,600 lines) are platform code (K3). |
 | `packages/package-graph` | Platform service | Fails | `derive` imports it (K2). |
 | `packages/platform` | Platform service | Fails | Replay needs its code to derive platform scopes (K1). |
-| `packages/scope` | Platform service: the runtime host | Passes | It holds the runtime's host details (section 8). The `hold@1` numbers that judgments use are chosen here (K7). |
+| `packages/scope` | Platform service: the runtime host | Passes | It holds the runtime's host details (section 8). It re-exports the `hold@1` numbers that judgments use; `derive` chooses them (K7, closed). |
 | `packages/mcp` | Platform service | Passes | The runtime imports it (`scope/src/worker.ts:60`). |
 | `packages/git` | Platform service | Passes | `derive` has its own commit parser for `git-read@1` (`derive/src/capability/ancestry.ts:192-197`). |
 | `packages/checkers` | Platform service | Passes | A checker signs ordinary intents (`checkers/src/signing.ts`). |
 | `packages/replay` | Platform service (tool): the independent verifier | Passes | It names platform versions and lane names (K6). Its local Git source is a Node adapter (section 8). |
-| `packages/cli` | Platform service (tool) | Passes | It is the only caller that gives replay the platform and capability code (`cli/src/commands.ts:1180-1187`), and it leaves out `device-command@1` (K8). |
+| `packages/cli` | Platform service (tool) | Passes | It is the only caller that gives replay the platform and capability code (`cli/src/commands.ts:1179-1187` at main `b52ca7e3`). The capability code is `derive`'s one table, with `device-command@1` (K8, closed). |
 | `packages/client` | Platform service (tool): the client library | Passes | — |
 | `apps/counter` | Application | Passes | — |
 | `apps/jam` | Application | Passes | A static page with no scope. |
@@ -83,12 +84,12 @@ whether it is one, or a special case that the kernel knows.
 | Register, directory, directory partition, membership, rules, destination, inbox, task | Special cases | Their kinds are a closed list (`contract/src/scope.ts:19`), and the kind is in every seed, so in every scope ID. Their `platform:` names (`scope.ts:41`). Parts of their rules: a register opens only by `install` and a directory with no creator only by `found` (`derive/src/genesis.ts:49`, `:132-133`); only membership issues grants (`derive/src/grant.ts:123-129`); a literal `platform:destination@3` (`derive/src/judge.ts:427-429`). Their own rules are code in `packages/platform`. | Their rules as declared forms, or as code pinned by digest (K1), and their kinds out of the closed list. |
 | Issue and change lanes | Definitions pinned by digest | `derive` names their actions: `issue.comment` and `change.comment` (`grant.ts:84`), `work.export` and `change.check` (`grant.ts:53-58`). Replay names the lanes (`replay/src/identity.ts:95-157`). | Move those names into the lane definitions as data (K4, K6). |
 | `hold@1`, `git-read@1`, `device-command@1` | Capability code in the kernel | Closed names (`contract/src/capability.ts:19`), code in `derive/src/capability/`. | A capability is kernel by review (section 7). `device-command@1` also carries the grow device kinds (K4). |
-| Runtime host, MCP service, Git code, checkers, package checks | Services | Nothing, except K2 and K7. | Replace the service; entries keep their meaning. |
+| Runtime host, MCP service, Git code, checkers, package checks | Services | Nothing, except K2. | Replace the service; entries keep their meaning. |
 
 ## 5. Parts that fail the test today
 
 Each item says what passing takes, and names the request that covers it.
-K4 has no request yet.
+K4 has no request yet. K7 and K8 are closed.
 
 - **K1. Platform rules are code that replay needs.** A platform scope pins
   `platform:<name>@<n>`. Replay derives it only with code that its caller
@@ -128,14 +129,17 @@ K4 has no request yet.
   with register 17 (`replay/src/archive.ts:157-158`). A replacement
   verifier would have to copy them. Passing takes these names into platform
   data that the verifier reads. Request `50133470` covers it with K1.
-- **K7. `hold@1` numbers sit outside the capability.** The runtime chooses
-  them (`scope/src/ports.ts:308`) and the CLI copies them by hand
-  (`cli/src/commands.ts:1180`). Passing takes them into `derive`'s
-  `hold@1`. Request `7b19837c` covers it.
-- **K8. `dap verify` cannot replay `device-command@1`.** The runtime runs it
-  (`scope/src/ports.ts:316`), and the CLI does not give it to replay. A grow
-  room's scopes are reported `unsupported-definition`. The grow archive's
-  offline step found the same gap (request `7b19837c`).
+- **K7. `hold@1` numbers sit outside the capability.** Closed by request
+  `7b19837c` at main `b52ca7e3`. The numbers are now `derive`'s
+  `HOLD_VERSION` (`derive/src/capability/hold.ts:267`). The runtime
+  re-exports them (`scope/src/ports.ts:308`), and the CLI copies no number.
+  Before, the runtime chose them and the CLI copied them by hand.
+- **K8. `dap verify` cannot replay `device-command@1`.** Closed by request
+  `7b19837c` at main `b52ca7e3`. `derive` has one capability table, with
+  `device-command@1` (`derive/src/capability/code.ts:6`). The runtime
+  serves it, and the CLI gives the same table to replay
+  (`cli/src/commands.ts:1186`). Before, the CLI left `device-command@1`
+  out, and replay reported a grow room's scopes `unsupported-definition`.
 - **K9. The validator has no version.** Replay checks each pinned
   definition with today's validator (`verify.ts:1010-1017`). A stricter
   validator would make an old history unsupported. Passing takes a
@@ -155,8 +159,8 @@ K4 has no request yet.
 1. **The record is the interface.** Everything a person, an agent or a
    verifier needs to know about what happened is in the record.
 2. **Every entry form ever written stays replayable by the same derivation
-   code.** Replay refuses no entry kind today (`verify.ts:1680-1850`). K1,
-   K8 and K9 are the ways this promise can fail.
+   code.** Replay refuses no entry kind today (`verify.ts:1680-1850`). K1
+   and K9 are the ways this promise can fail. K8 was one, until it closed.
 3. **The definition schema is versioned.** The format is
    `artroom-definition-1` (`contract/src/definition.ts:32`). Its optional
    parts carry their own versions: `level`, `capacity`, `profile` and each
