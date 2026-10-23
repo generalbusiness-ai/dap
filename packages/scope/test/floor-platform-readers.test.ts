@@ -5,8 +5,8 @@
 import { env, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type FloorInput } from "@generalbusiness/dap-contract";
-import { isSeed, scopeIdOf } from "@generalbusiness/artroom-bytes";
-import { secretSigner, signedApplicationInstall } from "@generalbusiness/artroom-client";
+import { isSeed, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { secretSigner, signedApplicationInstall } from "@generalbusiness/dap-client";
 import type { Own } from "@generalbusiness/dap-derive";
 import { TRUSTED_APPLICATION_COHORT as C, destinationRead, firstHeadCommit, revokedToken } from "@generalbusiness/dap-platform";
 import { Scope, ownOf, type Checkpointed } from "../src/core.ts";

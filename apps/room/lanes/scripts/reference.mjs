@@ -15,7 +15,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { canonicalize } from "@generalbusiness/artroom-bytes";
+import { canonicalize } from "@generalbusiness/dap-bytes";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { validateDefinition } from "@generalbusiness/dap-derive";
 import { change } from "../src/change.ts";

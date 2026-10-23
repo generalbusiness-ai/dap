@@ -4,7 +4,7 @@
 import { env } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { clockOf, judgeOutcome } from "@generalbusiness/dap-derive";
 import { platform } from "@generalbusiness/dap-platform";
 import { keys, membership } from "@generalbusiness/dap-derive/testing";

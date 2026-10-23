@@ -1,12 +1,12 @@
 /** Fixture-only archive credentials over the actual smart-HTTP send path.
  * No ledger operation, production mint or credential custody is involved. */
-import { same } from "@generalbusiness/artroom-bytes";
+import { same } from "@generalbusiness/dap-bytes";
 import type { ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
-import { isScopeRef, timeMs } from "@generalbusiness/artroom-bytes";
-import { GitRefusal, READ_BOUNDS, Reader, type GitSource } from "@generalbusiness/artroom-git";
-import { journalId, journalRef, type JournalObject } from "@generalbusiness/artroom-git/journal";
-import { SmartHttpSource } from "@generalbusiness/artroom-git/http-read";
-import type { SmartHttpOptions } from "@generalbusiness/artroom-git/http";
+import { isScopeRef, timeMs } from "@generalbusiness/dap-bytes";
+import { GitRefusal, READ_BOUNDS, Reader, type GitSource } from "@generalbusiness/dap-git";
+import { journalId, journalRef, type JournalObject } from "@generalbusiness/dap-git/journal";
+import { SmartHttpSource } from "@generalbusiness/dap-git/http-read";
+import type { SmartHttpOptions } from "@generalbusiness/dap-git/http";
 import type { ArchiveCredential, ArchiveProvider, FixtureArchiveProvider } from "./archive-driver.ts";
 import type { DestinationRepository } from "./destination-host.ts";
 import { sendOnce } from "./github-host.ts";

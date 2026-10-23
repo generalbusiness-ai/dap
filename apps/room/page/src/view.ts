@@ -1,5 +1,5 @@
 /** Native screens built only from the room's recorded observations. */
-import { timeMs } from "@generalbusiness/artroom-bytes";
+import { timeMs } from "@generalbusiness/dap-bytes";
 import { editPath, matches } from "@generalbusiness/dap-platform";
 import type { Answer } from "@generalbusiness/dap-contract";
 import { siteAddress, Unreadable, type Acted, type ChangeView, type IssueView, type LaneRow, type Room, type RulesView } from "./data.ts";

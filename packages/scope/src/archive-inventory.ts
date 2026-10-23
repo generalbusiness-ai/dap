@@ -1,7 +1,7 @@
 /** One local, caller-owned synchronous read frame. No route, writer,
  * certificate, provider lease, current authority or replay verdict. */
 import type { Bounds, Digest, FactRef, Head, Input, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, isDigest, isEntry, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, entryHash, isDigest, isEntry, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import { localRetainedPlan, requiredDependency, snapshotRead, UnsupportedConsumer } from "@generalbusiness/dap-derive";
 import type { DependencyOrigin, LocalRetainedPlan, RequiredDependency, RetainedDependency, RetainedKey, TextDependency } from "@generalbusiness/dap-derive";
 import { ArchiveBudget, ArchiveStopped, type ArchiveCost } from "./archive-budget.ts";

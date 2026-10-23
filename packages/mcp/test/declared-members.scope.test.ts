@@ -2,7 +2,7 @@
  * The shared fixture's Git host/scheduler remain their labelled stand-ins. */
 import { expect, test } from "vitest";
 import type { MemberRef } from "@generalbusiness/dap-contract";
-import { canonicalize } from "@generalbusiness/artroom-bytes";
+import { canonicalize } from "@generalbusiness/dap-bytes";
 import { readMembershipDisplay } from "../src/views/member-reads.ts";
 import { mcpRoom } from "./support/room.ts";
 import { created, step } from "./support/story.ts";

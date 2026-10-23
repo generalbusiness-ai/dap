@@ -1,8 +1,8 @@
 /** Scripted upload-pack peer emitting real one-object Git packs. No remote
  * repository, provider, credentials or network connection is involved. */
 import { expect } from "vitest";
-import { objectId } from "@generalbusiness/artroom-git";
-import { buildPack, type RawGitObject } from "@generalbusiness/artroom-git/http";
+import { objectId } from "@generalbusiness/dap-git";
+import { buildPack, type RawGitObject } from "@generalbusiness/dap-git/http";
 import type { applicationResolverFixture } from "./application-fixture.ts";
 const utf8 = new TextEncoder();
 export const packetLine = (line: string) => { const bytes = utf8.encode(line); return concatBytes(utf8.encode((bytes.length + 4).toString(16).padStart(4, "0")), bytes); };

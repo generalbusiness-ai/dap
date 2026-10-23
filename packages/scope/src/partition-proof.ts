@@ -1,7 +1,7 @@
 /** Raw immutable partition birth evidence. No frame is a judged `Fetched`
  * identity: receiver policy must validate the complete chain separately. */
 import type { DeclaredDefinition, FactRef, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, isDigest, isPlatformDefinition, isFactRef, isScopeRef, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, definitionDigest, isDigest, isPlatformDefinition, isFactRef, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
 import { isObject, same } from "@generalbusiness/dap-derive";
 import { PARTITION_COHORT, PARTITION_IDENTITY_BOUNDS, partitionReceiverPolicy, partitionCreationPolicy, partitionDeclaredCreationPolicy, partitionSourceName, partitionNativeCreationPolicy, partitionProducerName, type PartitionCreationSelection, type PartitionCreation, type PartitionCreationPolicy, type PartitionNativeFrame, type PartitionReceiverPolicy } from "@generalbusiness/dap-platform";
 import type { NativeBirth, NativeBirthSource } from "./native-birth.ts";

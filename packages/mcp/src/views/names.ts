@@ -1,6 +1,6 @@
 /** Stable tool names for declared views. Simple names stay readable. Other
  * names include their exact spelling's digest, including punctuation. */
-import { digestBytes, utf8 } from "@generalbusiness/artroom-bytes";
+import { digestBytes, utf8 } from "@generalbusiness/dap-bytes";
 
 export function viewInputToolName(screen: string, action: string): string {
   const label = action.replace(/[^A-Za-z0-9]/g, "_").slice(0, 16);

@@ -1,7 +1,7 @@
 /** Canonical screen addresses and owned routing metadata. A context is not
  * authority: read sessions and acts still use the native membership checks. */
 import type { Digest, ScopeId } from "@generalbusiness/dap-contract";
-import { isDigest, isRecord, isScopeId, isScopeRef, parseStrict } from "@generalbusiness/artroom-bytes";
+import { isDigest, isRecord, isScopeId, isScopeRef, parseStrict } from "@generalbusiness/dap-bytes";
 import { applicationJson } from "./application-json.ts";
 import type { ApplicationScreenContext } from "./application-types.ts";
 export interface ApplicationScreenAddress { readonly directory: ScopeId; readonly item: number; readonly presentation: Digest; readonly base: string; readonly asset: string }

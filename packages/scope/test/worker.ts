@@ -32,8 +32,8 @@
 
 import { platform } from "@generalbusiness/dap-platform";
 import { lacking } from "@generalbusiness/dap-platform/testing";
-import { scopeIdOf } from "@generalbusiness/artroom-bytes";
-import { readApplicationScreenHost } from "@generalbusiness/artroom-client/application";
+import { scopeIdOf } from "@generalbusiness/dap-bytes";
+import { readApplicationScreenHost } from "@generalbusiness/dap-client/application";
 import { ScopeObject, type Outside, type OutsideGiven, type Wiring } from "../src/index.ts";
 import { sessionsOf, type LimitConfig } from "../src/index.ts";
 import { codeLost, controls, net, netPorts, testPorts } from "../src/testing.ts";

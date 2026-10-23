@@ -89,10 +89,10 @@ test("Git keeps its lower-layer dependencies; Replay names it only at its exact 
   const inside = files.filter((f) => source(f) && packagePath(f).startsWith("packages/git/"));
   assert.deepEqual(inside.filter((f) => /(?:artroom|dap)-(derive|platform|scope|replay|client|lanes|checkers)/.test(text(f))), []);
   const named = files.filter((f) => source(f) && !replayGitUsers.has(f) && !applicationGitUsers.has(f) && !/^packages\/(git|scope|checkers)\/|^packages\/platform\/test\//.test(packagePath(f)));
-  assert.deepEqual(named.filter((f) => /artroom-git/.test(text(f))), []);
+  assert.deepEqual(named.filter((f) => /dap-git/.test(text(f))), []);
   const replay = JSON.parse(text("packages/replay/package.json"));
-  assert.equal(replay.dependencies?.["@generalbusiness/artroom-git"], undefined);
-  assert.equal(replay.devDependencies?.["@generalbusiness/artroom-git"], replay.version);
+  assert.equal(replay.dependencies?.["@generalbusiness/dap-git"], undefined);
+  assert.equal(replay.devDependencies?.["@generalbusiness/dap-git"], replay.version);
 });
 
 const nodeReplayInputs = new Set(["packages/replay/src/git.ts", "packages/replay/src/bin.ts"]);
@@ -102,14 +102,14 @@ function portableReplayImport(file, specifier) {
     const target = edgeTarget(file, specifier);
     return target.startsWith("packages/replay/src/") && target.endsWith(".ts") && !nodeReplayInputs.has(target);
   }
-  return /^@generalbusiness\/(?:artroom-bytes|dap-(?:contract|derive))(?:\/[^.][^\n]*)?$/.test(specifier)
+  return /^@generalbusiness\/dap-(?:bytes|contract|derive)(?:\/[^.][^\n]*)?$/.test(specifier)
     && !specifier.split("/").some(part => part === "." || part === "..");
 }
 function archiveEdgeAllowed(file, specifier) {
   const target = edgeTarget(file, specifier);
   if (file.startsWith("packages/git/")) return !/^(?:packages\/replay\/|@generalbusiness\/(?:artroom|dap)-replay(?:\/|$))/.test(target);
   if (file.startsWith("packages/replay/src/") && !nodeReplayInputs.has(file)) return portableReplayImport(file, specifier);
-  if (file.startsWith("packages/replay/") && /^(?:packages\/git\/|@generalbusiness\/artroom-git(?:\/|$))/.test(target)) return replayGitUsers.has(file);
+  if (file.startsWith("packages/replay/") && /^(?:packages\/git\/|@generalbusiness\/dap-git(?:\/|$))/.test(target)) return replayGitUsers.has(file);
   return true;
 }
 
@@ -118,14 +118,14 @@ function archiveEdgeAllowed(file, specifier) {
 test("archive Node exceptions are exact and preserve portable and Git dependency directions", () => {
   const portable = "packages/replay/src/archive.ts";
   assert.equal(archiveEdgeAllowed(portable, "./verify.ts"), true);
-  assert.equal(archiveEdgeAllowed("packages/replay/src/git.ts", "@generalbusiness/artroom-git/journal-reader"), true);
-  for (const specifier of ["node:fs", "fs", "@generalbusiness/artroom-git", "../../git/src/journal-reader.ts", "./git.ts", "./bin.ts"]) {
+  assert.equal(archiveEdgeAllowed("packages/replay/src/git.ts", "@generalbusiness/dap-git/journal-reader"), true);
+  for (const specifier of ["node:fs", "fs", "@generalbusiness/dap-git", "../../git/src/journal-reader.ts", "./git.ts", "./bin.ts"]) {
     for (const body of [`import type { X } from '${specifier}';`, `export * from '${specifier}';`, `const load = () => import('${specifier}');`]) {
       const refs = moduleSpecifierSpans(body); assert.equal(refs.length, 1);
       assert.equal(archiveEdgeAllowed(portable, refs[0].value), false, body);
     }
   }
-  for (const specifier of ["@generalbusiness/artroom-replay", "../../replay/src/archive.ts"]) assert.equal(archiveEdgeAllowed("packages/git/src/journal-reader.ts", specifier), false);
+  for (const specifier of ["@generalbusiness/dap-replay", "../../replay/src/archive.ts"]) assert.equal(archiveEdgeAllowed("packages/git/src/journal-reader.ts", specifier), false);
   assert.equal(archiveEdgeAllowed("packages/replay/test/unlisted.test.ts", "../../git/src/journal-reader.ts"), false);
   assert.equal(archiveEdgeAllowed("packages/replay/src/extra-node.ts", "node:fs"), false);
   const governed = files.filter(file => /^packages\/(?:git|replay)\/.*\.ts$/.test(file));
@@ -142,7 +142,7 @@ test("the checkers package depends only on contract, bytes and git, and no packa
   const inside = files.filter((f) => source(f) && packagePath(f).startsWith("packages/checkers/"));
   assert.deepEqual(inside.filter((f) => /(?:artroom|dap)-(derive|platform|scope|replay|client|lanes)/.test(text(f))), []);
   const named = files.filter((f) => source(f) && !packagePath(f).startsWith("packages/checkers/"));
-  assert.deepEqual(named.filter((f) => /artroom-checkers/.test(text(f))), []);
+  assert.deepEqual(named.filter((f) => /dap-checkers/.test(text(f))), []);
   const reaches = files.filter((f) => source(f) && !packagePath(f).startsWith("packages/checkers/") && /(?:[.\/]\/|packages\/)checkers\//.test(text(f)));
   assert.deepEqual(reaches, ["apps/room/lanes/test/checks.scope.test.ts", "apps/room/lanes/test/manifest-tree.scope.test.ts"]);
 });
@@ -151,25 +151,25 @@ test("the checkers package depends only on contract, bytes and git, and no packa
 // the platform and the derivation, and never a lane definition, an example, the page, the checker service or the runtime. Its
 // tests may run the runtime's test Worker and read the lanes and examples, as the page's do.
 function mcpImportAllowed(file, specifier) {
-  if (file === "packages/mcp/src/service.ts" && specifier === "@generalbusiness/artroom-git/application") return true;
+  if (file === "packages/mcp/src/service.ts" && specifier === "@generalbusiness/dap-git/application") return true;
   if (specifier.startsWith("./") || specifier.startsWith("../")) {
     const target = normalize(join(dirname(file), specifier));
     return target.startsWith("packages/mcp/src/") && /\.(ts|json)$/.test(target) && files.includes(target);
   }
-  return /^(@generalbusiness\/(artroom-(bytes|client)|dap-(contract|platform|derive))(\/.*)?|node:[a-z_/]+)$/.test(specifier)
+  return /^(@generalbusiness\/dap-(bytes|client|contract|platform|derive)(\/.*)?|node:[a-z_/]+)$/.test(specifier)
     && !specifier.split("/").some(part => part === "." || part === "..");
 }
 
 // Invariant: a nested server module may reach its own tracked source, but never a test, browser entry or another package.
 test("MCP relative imports stay inside tracked server source", () => {
   assert.equal(mcpImportAllowed("packages/mcp/src/service.ts", "./views/session.ts"), true);
-  assert.equal(mcpImportAllowed("packages/mcp/src/service.ts", "@generalbusiness/artroom-git/application"), true);
-  assert.equal(mcpImportAllowed("packages/mcp/src/views/session.ts", "@generalbusiness/artroom-git/application"), false);
-  for (const specifier of ["@generalbusiness/artroom-git", "@generalbusiness/artroom-git/node", "@generalbusiness/artroom-git/http", "@generalbusiness/artroom-git/github", "@generalbusiness/artroom-git/application/../node"]) {
+  assert.equal(mcpImportAllowed("packages/mcp/src/service.ts", "@generalbusiness/dap-git/application"), true);
+  assert.equal(mcpImportAllowed("packages/mcp/src/views/session.ts", "@generalbusiness/dap-git/application"), false);
+  for (const specifier of ["@generalbusiness/dap-git", "@generalbusiness/dap-git/node", "@generalbusiness/dap-git/http", "@generalbusiness/dap-git/github", "@generalbusiness/dap-git/application/../node"]) {
     assert.equal(mcpImportAllowed("packages/mcp/src/service.ts", specifier), false, specifier);
   }
   assert.equal(mcpImportAllowed("packages/mcp/src/views/session.ts", "../custody.ts"), true);
-  for (const specifier of ["../../test/support/room.ts", "../../browser/main.ts", "../../../scope/src/object.ts", "/tmp/other.ts", "@generalbusiness/dap-lanes", "@generalbusiness/artroom-client/../scope"]) {
+  for (const specifier of ["../../test/support/room.ts", "../../browser/main.ts", "../../../scope/src/object.ts", "/tmp/other.ts", "@generalbusiness/dap-lanes", "@generalbusiness/dap-client/../scope"]) {
     assert.equal(mcpImportAllowed("packages/mcp/src/views/session.ts", specifier), false, specifier);
   }
 });
@@ -181,7 +181,7 @@ test("the MCP server imports its lower layers and the exact public application G
   assert.deepEqual(inside.flatMap((file) => moduleSpecifierSpans(text(file)).filter(({ value }) => !mcpImportAllowed(file, value)).map(({ value }) => `${file}: ${value}`)), []);
   assert.deepEqual(inside.filter((f) => /(?:artroom|dap)-(lanes|page|checkers|scope|replay)|examples\//.test(text(f))), []);
   const mcp = JSON.parse(text("packages/mcp/package.json") || "{}");
-  assert.deepEqual(Object.keys(mcp.dependencies ?? {}).filter((d) => d !== "@generalbusiness/artroom-git" && !/^@generalbusiness\/(artroom-(bytes|client)|dap-(contract|platform|derive))$/.test(d)), []);
+  assert.deepEqual(Object.keys(mcp.dependencies ?? {}).filter((d) => d !== "@generalbusiness/dap-git" && !/^@generalbusiness\/dap-(bytes|client|contract|platform|derive)$/.test(d)), []);
 });
 
 // Invariant: reusable runtime modules never require application source or page assets.

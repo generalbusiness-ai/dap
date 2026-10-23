@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { Digest, FieldValue, OperationId, RetainedInput, ScopeId } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, factRefOf, newIncarnation, signIntent } from "@generalbusiness/artroom-bytes";
+import { canonicalize, entryHash, factRefOf, newIncarnation, signIntent } from "@generalbusiness/dap-bytes";
 import { t } from "@generalbusiness/dap-derive/testing";
 import { DESTINATION_5, destination5, destinationRules5, destinationReceipt, initialCommitObjects, type DestinationObject, type RecordedJudgeEvidence } from "@generalbusiness/dap-platform";
 import { useOf } from "@generalbusiness/dap-derive";

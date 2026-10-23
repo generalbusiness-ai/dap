@@ -2,11 +2,11 @@ import { scriptedDeviceParentDefinition } from "./application-local-device-paren
 /** Developer-only scripted parent proof, explicitly anchored in replay.
  * This is not a native installation, membership, or production issuer. */
 import { DEVICE_COMMAND, PROPOSED_BOUNDS, type DeclaredDefinition, type DeviceCommandGrant, type Digest, type FactRef, type MemberRef, type RetainedInput, type ScopeRef, type Sealed, type Seed, type SignedIntent, type Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, factRefOf, intentDigest, isSeed, newIncarnation, parseStrict, scopeIdOf, utf8 } from "@generalbusiness/artroom-bytes";
-import type { AnyPackedApplication } from "@generalbusiness/artroom-bytes/application-v2";
+import { canonicalize, entryHash, factRefOf, intentDigest, isSeed, newIncarnation, parseStrict, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
+import type { AnyPackedApplication } from "@generalbusiness/dap-bytes/application-v2";
 import { applyEntry, clockOf, entryOf, judgeDelivery, judgeGenesis, MemoryState, validateDefinition, type Draft } from "@generalbusiness/dap-derive";
 import { deviceApplicationRequirement } from "@generalbusiness/dap-platform";
-import { MemorySource } from "@generalbusiness/artroom-replay";
+import { MemorySource } from "@generalbusiness/dap-replay";
 
 export interface ScriptedDeviceGrantEvidence {
   readonly authority: "scripted-parent-creation";

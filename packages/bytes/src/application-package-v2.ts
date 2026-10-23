@@ -9,7 +9,7 @@ import { declarations, fail, limits, only, presentation as presentation1, releas
 import { bindApplicationProjection } from "./application-projection-binding.ts";
 import { bindApplicationViews } from "./application-view-binding.ts";
 import { isApplicationViewResource } from "./application-view.ts";
-import { checkPackageGraph, PackageCompositionError, readPackageComposition } from "@generalbusiness/artroom-package-graph";
+import { checkPackageGraph, PackageCompositionError, readPackageComposition } from "@generalbusiness/dap-package-graph";
 import { ApplicationPackageValidationError } from "./application-v2-types.ts";
 import type { Signer } from "./signer.ts";
 import type { ApplicationPackage2, ApplicationPackageInput2, ApplicationPresentation2, ApplicationRelease2, ApplicationReleaseProof2, ApplicationSemantics2, PackedApplication2, PublishedApplicationSemantics2, PublishedApplicationReleaseProof2, PublishedPackedApplication2 } from "./application-v2-types.ts";

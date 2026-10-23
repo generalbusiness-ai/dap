@@ -3,7 +3,7 @@
  * a plan is neither privacy admission nor a replay/custody verdict. */
 import type { Bounds, Digest, Entry, Evidence, FactRef, FieldValue, Input, ObservationUse, Prepared } from "@generalbusiness/dap-contract";
 import { DOMAINS, RETAINED_INPUT_BYTES } from "@generalbusiness/dap-contract";
-import { isDigest, isFactRef, retainedValueKey } from "@generalbusiness/artroom-bytes";
+import { isDigest, isFactRef, retainedValueKey } from "@generalbusiness/dap-bytes";
 
 import type { ValidDefinition } from "./validate/index.ts";
 import type { OperationRules } from "./ledger.ts";

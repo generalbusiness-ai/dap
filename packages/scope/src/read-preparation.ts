@@ -1,7 +1,7 @@
 /** Bounded private content and state preparation. No read authority here. */
 import { DOMAINS } from "@generalbusiness/dap-contract";
 import type { Digest, Input, PlatformDefinition } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, digestBytes, domainBytes, isDigest, isPlatformDefinition, utf8, wellFormed } from "@generalbusiness/artroom-bytes";
+import { canonicalize, definitionDigest, digestBytes, domainBytes, isDigest, isPlatformDefinition, utf8, wellFormed } from "@generalbusiness/dap-bytes";
 import { same, type ScopeState, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { platform as exactPlatform } from "@generalbusiness/dap-platform";
 import type { Pinned, Supplied } from "./core.ts";

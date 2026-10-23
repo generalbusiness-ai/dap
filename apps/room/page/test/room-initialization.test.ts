@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import type { Head, Item, ScopeRef, Summary } from "@generalbusiness/dap-contract";
-import { canonicalize, readItemQueryParameter, itemQueryDigest, itemQueryArgument, digestBytes, keyIdOfSecret, newIncarnation, scopeIdOf } from "@generalbusiness/artroom-bytes";
-import { Session as ReadSession } from "@generalbusiness/artroom-client";
+import { canonicalize, readItemQueryParameter, itemQueryDigest, itemQueryArgument, digestBytes, keyIdOfSecret, newIncarnation, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { Session as ReadSession } from "@generalbusiness/dap-client";
 import { roomInitialization, initializationStillCurrent, type Room } from "../src/data.ts";
 import { initializationMessage } from "../src/shell.ts";
 

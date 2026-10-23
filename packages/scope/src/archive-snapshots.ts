@@ -2,7 +2,7 @@
  * Selector views preserve the native shape tests; they are neither ancestry
  * records nor evidence of a walk. No retained body is read here. */
 import type { Digest, Input, ScopeRef } from "@generalbusiness/dap-contract";
-import { isDigest, natural } from "@generalbusiness/artroom-bytes";
+import { isDigest, natural } from "@generalbusiness/dap-bytes";
 import { HOLD, HOLD_KINDS, holdEvidenceSnapshots, outcomeSnapshotDependencies, type OperationRules } from "@generalbusiness/dap-derive";
 import type { ArchiveBudget } from "./archive-budget.ts";
 import { checkArchiveFieldSource } from "./archive-digest-fields.ts";

@@ -25,7 +25,7 @@
 
 import type { Bounds, Effect, Entry, Held } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { isPlatformDefinition } from "@generalbusiness/artroom-bytes";
+import { isPlatformDefinition } from "@generalbusiness/dap-bytes";
 import { operationSettled } from "./ledger.ts";
 import { decisionBinding } from "./handlers.ts";
 import type { PlatformRules } from "./marks.ts";

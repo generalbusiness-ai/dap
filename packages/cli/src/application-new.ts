@@ -3,7 +3,7 @@
 import { mkdir, realpath, writeFile } from "node:fs/promises";
 import { basename, dirname, join, resolve } from "node:path";
 import type { ActType, DeclaredDefinition } from "@generalbusiness/dap-contract";
-import { canonicalize } from "@generalbusiness/artroom-bytes";
+import { canonicalize } from "@generalbusiness/dap-bytes";
 
 const act = (body: Pick<ActType, "step" | "on" | "grant" | "fields" | "effects"> & Partial<ActType>): ActType =>
   ({ also: {}, guards: [], sends: [], attention: [], ...body });
@@ -41,7 +41,7 @@ export async function newApplicationDirectory(directory: string): Promise<string
       { assert: { item: 1, state: "done", parties: { writer: { $member: "alice" } }, values: { text: "A first note." } } },
     ] };
   const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${name}</title></head><body><main><h1>${name}</h1><p>A browser starter for your application. The native notes scenario runs with dap check.</p><button id="device">Set up this browser</button><p id="status" role="status">Set up this browser to create or reuse a local device key.</p></main><script type="module" src="./main.ts"></script></body></html>\n`;
-  const browser = `import { browserPrivateSlots, generateBrowserDeviceKey } from "@generalbusiness/artroom-client";
+  const browser = `import { browserPrivateSlots, generateBrowserDeviceKey } from "@generalbusiness/dap-client";
 import "./main.css";
 const slots = browserPrivateSlots({ database: "dap-${name}-private-1", store: "slots", lock: "dap-${name}-private-1" });
 const button = document.querySelector<HTMLButtonElement>("#device")!, status = document.querySelector<HTMLElement>("#status")!;

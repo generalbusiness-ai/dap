@@ -1,7 +1,7 @@
 /** Derived native admission metadata only. No history-body fallback,
  * archive inventory, privacy certificate or export permission. */
 import type { Digest, Entry, ScopeRef, Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isRecord, isScopeRef, isSeed, parseStrict, scopeIdOf, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isDigest, isRecord, isScopeRef, isSeed, parseStrict, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import type { Sql, SqlValue } from "./sqlite.ts";
 
 export const ARCHIVE_PIN_KEY = "archive-pin-1";

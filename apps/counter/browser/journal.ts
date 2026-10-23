@@ -1,14 +1,14 @@
 /** Counting-specific completion/audio custody around the shared strict
  * request journal. Its act list remains the pinned Counting definition. */
-import { canonicalize, isRecord } from "@generalbusiness/artroom-bytes";
-import { requestJournal, activeRequestAttempt as activeAttempt, fitsRequestPending as fitsPending } from "@generalbusiness/artroom-client";
-import type { RequestAttemptJournal as AttemptJournal } from "@generalbusiness/artroom-client";
+import { canonicalize, isRecord } from "@generalbusiness/dap-bytes";
+import { requestJournal, activeRequestAttempt as activeAttempt, fitsRequestPending as fitsPending } from "@generalbusiness/dap-client";
+import type { RequestAttemptJournal as AttemptJournal } from "@generalbusiness/dap-client";
 import { countingCommitments as counting } from "../commitments.ts";
 import type { ActorIdentity, AudioStart, PendingReport, PreparedEnvelope } from "./voice-controller.ts";
 export { REQUEST_MAX_ATTEMPTS as MAX_ATTEMPTS, REQUEST_SLOT_BYTES as SLOT_BYTES, activeRequestAttempt as activeAttempt,
   appendPreparedRequest as appendPrepared, markRequestAttempt as markActive, unknownLegacyRequest as legacyUnknown,
-  fitsRequestPending as fitsPending, requestEnvelopeKey as envelopeKey, requestContextKey as contextKey, requestActURL as actURL } from "@generalbusiness/artroom-client";
-export type { RequestDispatchPhase as DispatchPhase, RequestRefusalJudgment as RefusalJudgment, RequestAttempt as Attempt, RequestAttemptJournal as AttemptJournal } from "@generalbusiness/artroom-client";
+  fitsRequestPending as fitsPending, requestEnvelopeKey as envelopeKey, requestContextKey as contextKey, requestActURL as actURL } from "@generalbusiness/dap-client";
+export type { RequestDispatchPhase as DispatchPhase, RequestRefusalJudgment as RefusalJudgment, RequestAttempt as Attempt, RequestAttemptJournal as AttemptJournal } from "@generalbusiness/dap-client";
 const protocol = requestJournal(Object.keys(counting.acts));
 export const { validEnvelope, requestBody, validJournal, knownRefusal, terminalJournal } = protocol;
 const closed=(value:unknown,required:readonly string[],optional:readonly string[]=[]):boolean=>isRecord(value)&&required.every(key=>Object.hasOwn(value,key))&&Object.keys(value).every(key=>required.includes(key)||optional.includes(key));

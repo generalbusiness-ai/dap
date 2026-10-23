@@ -1,7 +1,7 @@
 /** Published caller-word facts, never source proof or automatic replay trust.
  * Only an integrity-bound v2 pass can publish these descriptive lists. */
 import type { FactRef, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isFactRef, isRecord } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isFactRef, isRecord } from "@generalbusiness/dap-bytes";
 import { JOURNAL_SELECTION_BYTES } from "./journal-selection-cost.ts";
 import { JournalWork, refuseJournal } from "./journal-work.ts";
 import type { JournalPassManifest } from "./journal-v2-manifest.ts";

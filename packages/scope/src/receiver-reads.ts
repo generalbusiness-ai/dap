@@ -1,7 +1,7 @@
 /** One receiver's read interpretation. The receiver's checked native birth
  * selects its policy, and all promotion proofs share that operation's budget. */
 import type { DeclaredDefinition, Digest, Entry, FactRef, Input, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
-import { isPlatformDefinition, isScopeRef, scopeIdOf } from "@generalbusiness/artroom-bytes";
+import { isPlatformDefinition, isScopeRef, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { PARTITION_COHORT as C, partitionPublicationOrigin, type PartitionCreation } from "@generalbusiness/dap-platform";
 import { isEntryOf, isFactRef, isLocalId, isObject, same, sentBy, type Delivered, type Fetched } from "@generalbusiness/dap-derive";
 import { PartitionProofOperation, type PartitionProofPorts } from "./partition-proof.ts";

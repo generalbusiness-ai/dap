@@ -7,7 +7,7 @@
 import { invitationServiceUrl } from "./invitation-service.ts";
 import { usesInvitationKey } from "./invitation-fields.ts";
 import type { ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
-import { b64url, isScopeId, isScopeRef, unb64url } from "@generalbusiness/artroom-bytes";
+import { b64url, isScopeId, isScopeRef, unb64url } from "@generalbusiness/dap-bytes";
 
 /** The repository's scopes as a link names them: no inbox, which `join` creates. */
 export interface InvitedRepository { directory: ScopeRef; membership: ScopeRef; rules: ScopeId; destination: ScopeId }

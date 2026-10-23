@@ -1,6 +1,6 @@
 /** Demo import and browser-held signing capability. Enrollment remains native. */
-import { b64url, canonicalize, isKeyId, isMemberRef, isRecord, isScopeRef, keyIdOfSecret, unb64url } from "@generalbusiness/artroom-bytes";
-import { storedWebCryptoSigner, type Signer } from "@generalbusiness/artroom-client";
+import { b64url, canonicalize, isKeyId, isMemberRef, isRecord, isScopeRef, keyIdOfSecret, unb64url } from "@generalbusiness/dap-bytes";
+import { storedWebCryptoSigner, type Signer } from "@generalbusiness/dap-client";
 import { COUNTING_COMMITMENTS_DEFINITION } from "../commitments-pin.ts";
 import type { ActorIdentity } from "./voice-controller.ts";
 

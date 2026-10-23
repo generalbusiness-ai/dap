@@ -1,10 +1,10 @@
 /** Host orchestration only: exact Git address and blob, signed release and
  * native admission, then immutable private storage. No native installation
  * or HTTP route is created here. A cached release never proves another URI. */
-import type { AnyPackedApplication } from "@generalbusiness/artroom-bytes/application-v2";
+import type { AnyPackedApplication } from "@generalbusiness/dap-bytes/application-v2";
 import type { Bounds, Digest } from "@generalbusiness/dap-contract";
-import { readApplicationReleaseUri, type ApplicationReleaseUri } from "@generalbusiness/artroom-client";
-import { readApplicationGitBlob, type ApplicationGitSource } from "@generalbusiness/artroom-git";
+import { readApplicationReleaseUri, type ApplicationReleaseUri } from "@generalbusiness/dap-client";
+import { readApplicationGitBlob, type ApplicationGitSource } from "@generalbusiness/dap-git";
 import { APPLICATION_HOST_PACKAGE_BYTES, ApplicationAdmissionError, readTrustedApplication, type ApplicationTrust } from "./admission.ts";
 import type { ApplicationContentStore } from "./content.ts";
 

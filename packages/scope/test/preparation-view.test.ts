@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { Item, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, newIncarnation, scopeIdOf } from "@generalbusiness/artroom-bytes";
+import { canonicalize, newIncarnation, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { VERSIONS } from "@generalbusiness/dap-platform";
 import { PREPARATION_BOUNDS as B, PreparationBudget } from "../src/preparation-budget.ts";
 import { preparationScope } from "../src/preparation-scope.ts";

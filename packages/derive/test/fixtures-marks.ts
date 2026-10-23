@@ -18,7 +18,7 @@
 
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { PlatformDefinition } from "@generalbusiness/dap-contract";
-import { textDigest } from "@generalbusiness/artroom-bytes";
+import { textDigest } from "@generalbusiness/dap-bytes";
 import { PROFILES, validateDefinition, type PlatformRule, type PlatformRules, type RuleGiven, type Rules, type ValidDefinition } from "../src/index.ts";
 import { changedDraft, valid } from "./fixtures.ts";
 

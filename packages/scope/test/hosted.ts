@@ -21,7 +21,7 @@ import { scopeStagedChange } from "./definition-corpus-data.ts";
  */
 
 import type { Answer, Entry, OperationId, Read } from "@generalbusiness/dap-contract";
-import { TokenDriver } from "@generalbusiness/artroom-git";
+import { TokenDriver } from "@generalbusiness/dap-git";
 import { variant } from "@generalbusiness/dap-derive/testing";
 // I3 merge: from the git package's `./testing` export, once its manifest has one and the scope's manifest names the package.
 import { TokenHost, Vault } from "../../git/test/support/tokens.ts";

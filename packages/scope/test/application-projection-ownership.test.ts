@@ -3,7 +3,7 @@
  * ownership/creation/replay witness is application-owned-scopes.test.ts. */
 import { expect, test } from "vitest";
 import type { ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/artroom-bytes";
+import { canonicalize, entryHash, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import { created, directory } from "@generalbusiness/dap-derive/testing";
 import { APPLICATION_OWNERSHIP_BOUNDS as B, projectionScopeOwned } from "../src/applications/projection-ownership.ts";
 import { readNativeBirth, type NativeBirth } from "../src/native-birth.ts";

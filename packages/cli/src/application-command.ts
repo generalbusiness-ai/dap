@@ -1,11 +1,11 @@
 /** Local package commands run under Node; they do not contact a room. */
 import { resolve } from "node:path";
-import { canonicalize } from "@generalbusiness/artroom-bytes";
-import { ApplicationPackageValidationError } from "@generalbusiness/artroom-bytes/application-v2";
+import { canonicalize } from "@generalbusiness/dap-bytes";
+import { ApplicationPackageValidationError } from "@generalbusiness/dap-bytes/application-v2";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { validatePackage, type PackageValidationFinding } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
-import { ApplicationPackageError, secretSigner } from "@generalbusiness/artroom-client";
+import { ApplicationPackageError, secretSigner } from "@generalbusiness/dap-client";
 import type { Outcome } from "./commands.ts";
 import type { Store } from "./store.ts";
 import { parse } from "./line.ts";

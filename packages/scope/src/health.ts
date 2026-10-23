@@ -1,6 +1,6 @@
 /** Public operational readiness, without a scope read or provider call. */
 import type { ScopeId } from "@generalbusiness/dap-contract";
-import { utf8 } from "@generalbusiness/artroom-bytes";
+import { utf8 } from "@generalbusiness/dap-bytes";
 import { artifactsRegisterScope } from "./artifacts-wiring.ts";
 import { gitHubRegisterScope } from "./github-wiring.ts";
 import type { Binding } from "./namespace.ts";

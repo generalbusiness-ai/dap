@@ -33,7 +33,7 @@
  */
 
 import type { Bounds, ClauseObserves, Digest, KeyId, MemberId, MemberRef, Observe, ObservationUse, ObservingClause, Operand, PlatformData, PlatformDefinition, Retained, RulesObservation, SendForm } from "@generalbusiness/dap-contract";
-import { canonicalize, isKeyId, isMemberId, isMemberRef, isObservationUse, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isKeyId, isMemberId, isMemberRef, isObservationUse, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import { headsOf } from "./fold.ts";
 import { observedOf, type Discarded, type RecordedRef, type Retains, type Window } from "./grant.ts";
 import { operand, type Judging } from "./guards.ts";

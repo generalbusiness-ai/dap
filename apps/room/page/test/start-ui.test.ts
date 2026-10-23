@@ -1,6 +1,6 @@
 import { expect, test, vi } from "vitest";
-import { b64url, keyIdOfSecret, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/artroom-bytes";
-import { secretSigner, type CreationOffer } from "@generalbusiness/artroom-client";
+import { b64url, keyIdOfSecret, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
+import { secretSigner, type CreationOffer } from "@generalbusiness/dap-client";
 import type { StartedRoom, StartOptions, StartStatus } from "../src/start-custody.ts";
 
 class Element {
@@ -103,7 +103,7 @@ test("Start is explicit; Back fences late discovery, reload only offers Check an
     return { key, configured: original.configured, handle: "@founder", operation: "original", label: "Personal intent", pending: !complete, repository: complete ? { directory: selectedDirectory, membership, rules: directory.scope, destination: membership.scope } : null, outcome: { code: complete ? 0 : 1, lines: ["SCRIPTED original pending"] }, ...(complete ? { signer } : {}) };
   });
   const save = vi.fn((name: string, text: string) => { values.set(name, text); });
-  vi.doMock("@generalbusiness/artroom-client", async () => ({ ...await vi.importActual<typeof import("@generalbusiness/artroom-client")>("@generalbusiness/artroom-client"), creationOffer: offerRead }));
+  vi.doMock("@generalbusiness/dap-client", async () => ({ ...await vi.importActual<typeof import("@generalbusiness/dap-client")>("@generalbusiness/dap-client"), creationOffer: offerRead }));
   vi.doMock("../src/page-key-migration.ts", () => ({ migratePageOperations: async () => {} }));
   vi.doMock("../src/connection-custody.ts", () => ({ connectInvitation: issue, originalConnection: () => connection, creatorConnectionFiles: files, saveCreatorRecoveryOnce: recovery }));
   vi.doMock("../src/start-custody.ts", () => ({ originalStart: () => original, startRoom: start }));
@@ -224,7 +224,7 @@ test("Start is explicit; Back fences late discovery, reload only offers Check an
     try { await opening; }
     finally {
       createUrl.mockRestore(); revokeUrl.mockRestore(); vi.unstubAllGlobals();
-      for (const path of ["@generalbusiness/artroom-client", "../src/start-custody.ts", "../src/connection-custody.ts", "../src/page-key-migration.ts", "../src/data.ts", "../src/view.ts"]) vi.doUnmock(path);
+      for (const path of ["@generalbusiness/dap-client", "../src/start-custody.ts", "../src/connection-custody.ts", "../src/page-key-migration.ts", "../src/data.ts", "../src/view.ts"]) vi.doUnmock(path);
     }
   }
 });

@@ -3,9 +3,9 @@
  * owner authority, install, reservation or settlement runs in this fixture. */
 import { expect, test } from "vitest";
 import type { Entry, Sealed } from "@generalbusiness/dap-contract";
-import { entryHash, intentDigest } from "@generalbusiness/artroom-bytes";
-import { signedIntent, secretSigner } from "@generalbusiness/artroom-client";
-import { receiptOf } from "@generalbusiness/artroom-scope/runtime";
+import { entryHash, intentDigest } from "@generalbusiness/dap-bytes";
+import { signedIntent, secretSigner } from "@generalbusiness/dap-client";
+import { receiptOf } from "@generalbusiness/dap-scope/runtime";
 import { otherLane, d, T0, keys } from "@generalbusiness/dap-derive/testing";
 import { acceptedTickFact } from "./simulator-tick.ts";
 

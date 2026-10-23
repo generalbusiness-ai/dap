@@ -4,7 +4,7 @@ import { floorRootsData } from "../../derive/test/definition-corpus/scope-capaci
  * fixtures. Every journal row is admitted by the normal input path. */
 import { expect, onTestFinished, test } from "vitest";
 import { PROPOSED_BOUNDS, type Beside, type Created, type PlatformDefinition, type Seed, type SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalize, intentDigest, scopeIdOf, signIntent, textDigest } from "@generalbusiness/artroom-bytes";
+import { canonicalize, intentDigest, scopeIdOf, signIntent, textDigest } from "@generalbusiness/dap-bytes";
 import { countedEntries, pendingOf, validateDefinition, type Rules } from "@generalbusiness/dap-derive";
 import { valid } from "@generalbusiness/dap-derive/testing";
 import { Scope } from "../src/core.ts";

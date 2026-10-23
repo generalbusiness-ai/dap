@@ -1,7 +1,7 @@
 /** Finite routing syntax only. Decode/hash belongs to the Scope-owned operation. */
 import { ITEM_QUERY_WIRE_BOUNDS } from "@generalbusiness/dap-contract";
-import { isScopeId, utf8 } from "@generalbusiness/artroom-bytes";
-export { readItemQueryParameter as decodeItemQueryWire } from "@generalbusiness/artroom-bytes";
+import { isScopeId, utf8 } from "@generalbusiness/dap-bytes";
+export { readItemQueryParameter as decodeItemQueryWire } from "@generalbusiness/dap-bytes";
 
 export const REQUEST_URL_BYTES = ITEM_QUERY_WIRE_BOUNDS.commonUrlBytes;
 export const ITEM_QUERY_URL_BYTES = ITEM_QUERY_WIRE_BOUNDS.urlBytes;

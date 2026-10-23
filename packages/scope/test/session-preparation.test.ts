@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { ScopeRef, SessionClaims } from "@generalbusiness/dap-contract";
-import { newIncarnation } from "@generalbusiness/artroom-bytes";
+import { newIncarnation } from "@generalbusiness/dap-bytes";
 import { Scope } from "../src/core.ts";
 import { production } from "../src/ports.ts";
 import { ReadPreparation } from "../src/read-preparation.ts";

@@ -4,7 +4,7 @@ import { archiveWrongProducerChange } from "./definition-corpus-data.ts";
  * not foreign privacy admission, production provenance or installed export. */
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, entryHash, utf8 } from "@generalbusiness/dap-bytes";
 import { variant } from "@generalbusiness/dap-derive/testing";
 import { forecastArchiveSourceLookup } from "../src/archive-source-cost.ts";
 import { ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";

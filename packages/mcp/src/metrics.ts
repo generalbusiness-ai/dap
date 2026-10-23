@@ -1,7 +1,7 @@
 /** Closed operational MCP observations. No metric is a native input. */
-import { natural } from "@generalbusiness/artroom-bytes";
+import { natural } from "@generalbusiness/dap-bytes";
 import { AsyncLocalStorage } from "node:async_hooks";
-import type { Fetch } from "@generalbusiness/artroom-client";
+import type { Fetch } from "@generalbusiness/dap-client";
 import type { MismatchReason, ReadRefusal, RefusalReason, SessionRefusal, UnavailableReason } from "@generalbusiness/dap-contract";
 import type { Phase, Step } from "./custody.ts";
 

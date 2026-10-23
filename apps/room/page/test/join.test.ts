@@ -1,10 +1,10 @@
 import { answerText, nonacceptedAnswerText } from "../src/view.ts";
 import { expect, test, vi } from "vitest";
 import type { SignedIntent, SignedRead } from "@generalbusiness/dap-contract";
-import * as bytes from "@generalbusiness/artroom-bytes";
-import { b64url, definitionDigest, intentDigest, keyIdOfSecret, newIncarnation, textDigest, utf8, verifyInvitationProof, verifySignedIntent } from "@generalbusiness/artroom-bytes";
+import * as bytes from "@generalbusiness/dap-bytes";
+import { b64url, definitionDigest, intentDigest, keyIdOfSecret, newIncarnation, textDigest, utf8, verifyInvitationProof, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { changeDemo } from "@generalbusiness/dap-lanes";
-import { INVITATION_MEMBERSHIPS, Session as ReadSession, type Fetch } from "@generalbusiness/artroom-client";
+import { INVITATION_MEMBERSHIPS, Session as ReadSession, type Fetch } from "@generalbusiness/dap-client";
 import { sessionKey, invitationTarget, prepareJoin, joinAssociation, joinRoom, placeOf, type Session } from "../src/index.ts";
 
 // One client boundary, with a SCRIPTED service acknowledgment. No scope,

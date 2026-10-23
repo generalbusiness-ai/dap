@@ -1,7 +1,7 @@
 /** Explicit new cohort. Existing pins retain secret-bearing invitation semantics. */
 import { INVITATION_KEY_MEMBERSHIP } from "@generalbusiness/dap-contract";
 import type { PlatformData } from "@generalbusiness/dap-contract";
-import { isKeyId, verifyInvitationProof } from "@generalbusiness/artroom-bytes";
+import { isKeyId, verifyInvitationProof } from "@generalbusiness/dap-bytes";
 import type { Rules } from "@generalbusiness/dap-derive";
 import { APPLICATION_COHORT, directory5, directoryRules5 } from "./application.ts";
 import { membership, membershipRules } from "./membership.ts";

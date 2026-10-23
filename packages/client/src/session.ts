@@ -27,7 +27,7 @@
 import { SESSION_DOMAINS } from "@generalbusiness/dap-contract";
 import type { Signer } from "./intent.ts";
 import type { ScopeId, ScopeRef, SessionAnswer, SessionClaims, SessionRefusal, SessionRequest, SignedSessionRequest, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalBytes, parseStrictBytes, taggedBytes, LATE, isKeyId, isMemberId, keyIdOfSecret, signSessionRequest, takeBytes, timeMs, within } from "@generalbusiness/artroom-bytes";
+import { canonicalBytes, parseStrictBytes, taggedBytes, LATE, isKeyId, isMemberId, keyIdOfSecret, signSessionRequest, takeBytes, timeMs, within } from "@generalbusiness/dap-bytes";
 import { TransportError } from "./handle.ts";
 import { REPLY_SECONDS, type Fetch } from "./http.ts";
 

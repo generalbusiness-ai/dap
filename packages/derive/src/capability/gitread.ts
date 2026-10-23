@@ -31,7 +31,7 @@
  */
 
 import type { CapabilityName, Digest, Evidence, FactRef, FieldValue, Intent, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
-import { isDigest, isFactRef, isLocalId, isRecord, timeMs } from "@generalbusiness/artroom-bytes";
+import { isDigest, isFactRef, isLocalId, isRecord, timeMs } from "@generalbusiness/dap-bytes";
 import type { Capabilities, CapabilityGiven, Maximum, Recorded } from "../capability.ts";
 import { isLocalFact, type Own } from "../fields.ts";
 import { WINDOWS, type Window } from "../grant.ts";

@@ -1,6 +1,6 @@
 import { expect, test, vi } from "vitest";
-import { canonicalize, keyIdOfSecret, newIncarnation, scopeIdOf, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
-import { secretSigner, type Signer } from "@generalbusiness/artroom-client";
+import { canonicalize, keyIdOfSecret, newIncarnation, scopeIdOf, textDigest, utf8 } from "@generalbusiness/dap-bytes";
+import { secretSigner, type Signer } from "@generalbusiness/dap-client";
 import type { Context, InvitationIssueInput, InvitationIssueResult } from "@generalbusiness/dap-cli";
 import type { ClaimStorage } from "../src/claim.ts";
 const shared = vi.hoisted(() => ({ issueInvitation: vi.fn() }));

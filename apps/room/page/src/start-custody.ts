@@ -1,7 +1,7 @@
 /** Public key references for one explicit Start; private keys live in IDB. */
 import type { KeyId } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, isKeyId, isRecord, isScopeRef, keyIdOfSecret, unb64url } from "@generalbusiness/artroom-bytes";
-import { isCreationOffer, isCurrentCreationOffer, type CreationOffer, type Fetch, type Signer } from "@generalbusiness/artroom-client";
+import { b64url, canonicalize, isKeyId, isRecord, isScopeRef, keyIdOfSecret, unb64url } from "@generalbusiness/dap-bytes";
+import { isCreationOffer, isCurrentCreationOffer, type CreationOffer, type Fetch, type Signer } from "@generalbusiness/dap-client";
 import { pageKeyStore } from "./browser-key-store.ts";
 import { custodyKind } from "./custody.ts";
 import { claimRoom, claimStatus, migrateRecoveryCustody, type ClaimOptions, type ClaimRegister, type ClaimStorage, type ClaimedRoom } from "./claim.ts";

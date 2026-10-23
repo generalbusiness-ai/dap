@@ -3,8 +3,8 @@
  * no host, token, adapter send or production export admission is claimed. */
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { textDigest } from "@generalbusiness/artroom-bytes";
-import { ArchiveSegmentCursor, journalV2SegmentPath, journalV2RetainedPath, prepareJournalPass, type JournalArchive, type JournalFormat } from "@generalbusiness/artroom-git/journal";
+import { textDigest } from "@generalbusiness/dap-bytes";
+import { ArchiveSegmentCursor, journalV2SegmentPath, journalV2RetainedPath, prepareJournalPass, type JournalArchive, type JournalFormat } from "@generalbusiness/dap-git/journal";
 import type { RetainedKey } from "@generalbusiness/dap-derive";
 import { planArchive, planArchivePass, planArchiveConversion, rebuildArchive, rebuildArchivePass } from "../src/archive-build.ts";
 import { ArchiveRows } from "../src/archive-row.ts";

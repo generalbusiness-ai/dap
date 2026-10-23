@@ -2,7 +2,7 @@
  * boundary only, never native issuance, authority or owner settlement. */
 import { expect, test } from "vitest";
 import type { Entry, MemberRef, ScopeRef, Sealed } from "@generalbusiness/dap-contract";
-import { canonicalBytes, entryHash, scopeIdOf } from "@generalbusiness/artroom-bytes";
+import { canonicalBytes, entryHash, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { openCommands, readCommandJournal } from "./command-journal.ts";
 const scope: ScopeRef = { scope: scopeIdOf({ v: 1, kind: "lane", creator: null, cause: `sha256:${"2".repeat(64)}`, ordinal: 0, definition: `sha256:${"1".repeat(64)}` }), inc: "in_aaaaaaaaaaaaaaaaaaaaaaaaaa", kind: "lane" };
 const owner: MemberRef = { membership: { ...scope, kind: "membership" }, member: "@sensors" };

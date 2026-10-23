@@ -19,13 +19,13 @@ import { WorkbenchWork } from "./workbench-work.ts";
  * trusted code can still invoke signing: screens must use the sandbox host.
  */
 
-import { creationOffer, type Signer } from "@generalbusiness/artroom-client";
+import { creationOffer, type Signer } from "@generalbusiness/dap-client";
 import { legacySettingsKey, pageKeyStore } from "./browser-key-store.ts";
 import { migratePageOperations } from "./page-key-migration.ts";
 import { connectInvitation, originalConnection, creatorConnectionFiles, type CreatorBinding } from "./connection-custody.ts";
 import { originalStart, startRoom, type StartedRoom } from "./start-custody.ts";
 import type { Answer, FieldValue, MemberRef, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, isKeyId, isScopeRef, unb64url } from "@generalbusiness/artroom-bytes";
+import { b64url, canonicalize, isKeyId, isScopeRef, unb64url } from "@generalbusiness/dap-bytes";
 import { act, actAssociation, actsOn, issueCreation, fieldValue, listLanes, loadChange, loadIssue, loadRules, roomInitialization, initializationStillCurrent, openRoom, placeOf, sessionKey, siteAddress, type Acted, type Place, type Room, type Session } from "./data.ts";
 import { bindDisclosures, openDialog, releaseDialog } from "./popups.ts";
 import { actsPanel, answerLine, nonacceptedAnswerText, changeScreen, failureScreen, h, icon, whoLine, issueScreen, roomScreen, rulesScreen } from "./view.ts";

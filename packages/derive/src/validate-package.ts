@@ -1,10 +1,10 @@
 /** The package byte boundary composes native definition admission with the
  * shared package graph. It grants no runtime or installation authority. */
 import type { Bounds, Digest } from "@generalbusiness/dap-contract";
-import { fitsFieldType, parseStrict } from "@generalbusiness/artroom-bytes";
-import { ApplicationPackageError, type ApplicationPackageLimits } from "@generalbusiness/artroom-bytes/application";
-import { ApplicationPackageValidationError, readApplicationPackage2, type PackedApplication2 } from "@generalbusiness/artroom-bytes/application-v2";
-import { checkPackageGraph, type PackageFinding, type PackageGraphReport } from "@generalbusiness/artroom-package-graph";
+import { fitsFieldType, parseStrict } from "@generalbusiness/dap-bytes";
+import { ApplicationPackageError, type ApplicationPackageLimits } from "@generalbusiness/dap-bytes/application";
+import { ApplicationPackageValidationError, readApplicationPackage2, type PackedApplication2 } from "@generalbusiness/dap-bytes/application-v2";
+import { checkPackageGraph, type PackageFinding, type PackageGraphReport } from "@generalbusiness/dap-package-graph";
 import { PROFILES, validateDefinition, type Profile, type ProblemCode, type ValidDefinition } from "./validate/index.ts";
 
 export type PackageValidationFinding = Omit<PackageFinding, "reason"> & { readonly reason: PackageFinding["reason"] | ProblemCode };

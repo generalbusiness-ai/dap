@@ -3,11 +3,11 @@ import { archiveTextChange } from "./definition-corpus-data.ts";
  * authority are TEST stand-ins. Replay uses the native exported journal. */
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { variant } from "@generalbusiness/dap-derive/testing";
-import { buildJournalPass, type JournalPassArchive } from "@generalbusiness/artroom-git/journal";
-import { readJournalRepositoryArchive } from "@generalbusiness/artroom-git/journal-reader";
-import { archiveSource, verifyArchive, render, TRUSTS, type ArchiveSourceOptions } from "@generalbusiness/artroom-replay";
+import { buildJournalPass, type JournalPassArchive } from "@generalbusiness/dap-git/journal";
+import { readJournalRepositoryArchive } from "@generalbusiness/dap-git/journal-reader";
+import { archiveSource, verifyArchive, render, TRUSTS, type ArchiveSourceOptions } from "@generalbusiness/dap-replay";
 import { ArchiveBudget } from "../src/archive-budget.ts";
 import { planArchive, planArchivePass, planArchiveConversion } from "../src/archive-build.ts";
 import { ArchiveRows } from "../src/archive-row.ts";

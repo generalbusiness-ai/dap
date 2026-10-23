@@ -1,8 +1,8 @@
 /** Reviewed Grow-only export coverage. Exact signed deployed declarations;
  * current maintained source declarations grant no production permission. */
 import { DEVICE_COMMAND, PROPOSED_BOUNDS, type Digest, type Input, type PlatformDefinition } from "@generalbusiness/dap-contract";
-import { isDigest, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
-import { readPublishedApplicationPackage2 } from "@generalbusiness/artroom-bytes/application-v2";
+import { isDigest, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
+import { readPublishedApplicationPackage2 } from "@generalbusiness/dap-bytes/application-v2";
 import { outcomeValueDomains, ownersOf, validateDefinition, type OperationRules } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT as C, platform } from "@generalbusiness/dap-platform";

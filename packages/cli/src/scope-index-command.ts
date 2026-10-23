@@ -3,7 +3,7 @@ import { constants } from "node:fs";
 import { open, link, unlink } from "node:fs/promises";
 import { dirname, join, basename } from "node:path";
 import { randomUUID } from "node:crypto";
-import { canonicalize, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, utf8 } from "@generalbusiness/dap-bytes";
 import { scopeIndexAccess, type Context, type Outcome } from "./commands.ts";
 import { captureIndexManifest, INDEX_INVENTORY_BOUNDS, readIndexManifest, verifyIndexManifest } from "./scope-index-manifest.ts";
 

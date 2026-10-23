@@ -1,6 +1,6 @@
 /** Scripted archive v2 framing, not evidence of hosted protocol support.
  * Real interoperability belongs to the Git package's local http-backend test. */
-import { utf8 } from "@generalbusiness/artroom-bytes";
+import { utf8 } from "@generalbusiness/dap-bytes";
 
 export function scriptedArchiveV2Pack(pack: Uint8Array): Uint8Array {
   const header = utf8("000dpackfile\n"), packets = Math.ceil(pack.length / 65515);

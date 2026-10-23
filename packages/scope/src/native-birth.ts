@@ -1,6 +1,6 @@
 /** Bounded raw birth metadata. This supplies no derived identity or read grant. */
 import type { Digest, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
-import { isDigest, isFactRef, isPlatformDefinition, isScopeRef, scopeIdOf, utf8, wellFormed } from "@generalbusiness/artroom-bytes";
+import { isDigest, isFactRef, isPlatformDefinition, isScopeRef, scopeIdOf, utf8, wellFormed } from "@generalbusiness/dap-bytes";
 import { same } from "@generalbusiness/dap-derive";
 import { PreparationBudget } from "./preparation-budget.ts";
 import type { ReadPreparation } from "./read-preparation.ts";

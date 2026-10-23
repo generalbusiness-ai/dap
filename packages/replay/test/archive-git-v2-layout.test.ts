@@ -1,7 +1,7 @@
 /** Synthetic selections over real entry bytes and Git objects. No native
  * admission, confirmation, floor, service or provider is claimed here. */
 import { afterAll, expect, test } from "vitest";
-import { canonicalize, entryHash, parseStrict } from "@generalbusiness/artroom-bytes";
+import { canonicalize, entryHash, parseStrict } from "@generalbusiness/dap-bytes";
 import type { Entry } from "@generalbusiness/dap-contract";
 import { archiveSource, verifyArchive } from "../src/index.ts";
 import { gitSource } from "../src/git.ts";

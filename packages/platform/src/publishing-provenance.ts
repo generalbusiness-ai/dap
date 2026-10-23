@@ -1,7 +1,7 @@
 /** Native identities are established by immutable creation facts, not declared names. */
-import { same } from "@generalbusiness/artroom-bytes";
+import { same } from "@generalbusiness/dap-bytes";
 import type { Digest, FactRef, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, deliveryCauseDigest, intentDigest, isMemberRef, messageDigest, parseStrict, isDigest, isPlatformDefinition, isSeed, platformName, scopeIdOf, verifySignedIntent } from "@generalbusiness/artroom-bytes";
+import { canonicalize, deliveryCauseDigest, intentDigest, isMemberRef, messageDigest, parseStrict, isDigest, isPlatformDefinition, isSeed, platformName, scopeIdOf, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { creationContextOf, isEntryOf, isFactRef, isObject, isScopeRef, sentBy, type Fetched } from "@generalbusiness/dap-derive";
 
 export const PUBLISHING_LANE_DIGESTS = [

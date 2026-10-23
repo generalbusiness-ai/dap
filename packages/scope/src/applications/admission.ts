@@ -2,9 +2,9 @@
  * exact release/publisher trust and native host support; it creates no scope,
  * grant, installation or content-store entry. It is no screen isolation. */
 import type { Bounds, Digest, KeyId } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isKeyId, isRecord, parseStrict, parseStrictBytes, utf8 } from "@generalbusiness/artroom-bytes";
-import { ApplicationPackageError, readApplicationPackage } from "@generalbusiness/artroom-bytes/application";
-import { readPublishedApplicationPackage2, type AnyPackedApplication } from "@generalbusiness/artroom-bytes/application-v2";
+import { canonicalize, isDigest, isKeyId, isRecord, parseStrict, parseStrictBytes, utf8 } from "@generalbusiness/dap-bytes";
+import { ApplicationPackageError, readApplicationPackage } from "@generalbusiness/dap-bytes/application";
+import { readPublishedApplicationPackage2, type AnyPackedApplication } from "@generalbusiness/dap-bytes/application-v2";
 import { validateDefinition } from "@generalbusiness/dap-derive";
 import { deviceApplicationRequirement, INSTALL_DEFINITION_BYTES, INSTALL_SEMANTIC_BYTES } from "@generalbusiness/dap-platform";
 import { admit, RuleEvalError, RULE_PROFILES } from "@generalbusiness/dap-derive/rule";

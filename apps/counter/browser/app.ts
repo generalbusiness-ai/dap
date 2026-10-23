@@ -1,7 +1,7 @@
 /** One independently enrolled device owns this mounted stage. No shared Settings identity. */
 import type { MemberRef } from "@generalbusiness/dap-contract";
-import { canonicalize } from "@generalbusiness/artroom-bytes";
-import type { Observation, ObservationState } from "@generalbusiness/artroom-client";
+import { canonicalize } from "@generalbusiness/dap-bytes";
+import type { Observation, ObservationState } from "@generalbusiness/dap-client";
 import { countingView, assignedTurn, canCommit, ownedParticipant, same, type CountingRead, type CountingView, type Control, type ProposalOptions } from "./model.ts";
 import { createVoiceController, type ActorIdentity, type PendingStore, type SpeechPort, type CustodyLock, type VoiceState } from "./voice-controller.ts";
 import type { StageGateway, CommandOutcome } from "./client.ts";

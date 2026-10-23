@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type DeclaredDefinition } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, isObservationUse, newIncarnation } from "@generalbusiness/artroom-bytes";
+import { canonicalize, definitionDigest, isObservationUse, newIncarnation } from "@generalbusiness/dap-bytes";
 import { PROFILES, derivable, runnable, validateDefinition, valueDigest } from "@generalbusiness/dap-derive";
 import type { ActJudgment, Judgment } from "@generalbusiness/dap-derive";
 import { d, desk, deskDefinition, directory, keys, membership, ticket, ticketDefinition } from "@generalbusiness/dap-derive/testing";

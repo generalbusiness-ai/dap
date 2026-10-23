@@ -2,12 +2,12 @@ import { capacityBoundSenderData } from "../../derive/test/definition-corpus/sco
 import { env } from "cloudflare:workers";
 import { expect, test } from "vitest";
 import type { Entry, FactRef, Seed } from "@generalbusiness/dap-contract";
-import { intentDigest, parseStrict, scopeIdOf, signIntent } from "@generalbusiness/artroom-bytes";
+import { intentDigest, parseStrict, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import { reserved, validateDefinition, type Delivered, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { valid } from "../../derive/test/fixtures.ts";
 import { boundRecordData, boundRecordDefinition } from "../../derive/test/fixtures-bound-records.ts";
 import { PIN_BOUNDS } from "../../derive/test/fixtures-receiver-pins.ts";
-import { httpSource, verify } from "@generalbusiness/artroom-replay";
+import { httpSource, verify } from "@generalbusiness/dap-replay";
 import { SqliteStore, type Delivery } from "../src/index.ts";
 import { CAPABILITY_CODE } from "../src/ports.ts";
 import { controls } from "../src/testing.ts";

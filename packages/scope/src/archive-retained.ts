@@ -3,15 +3,15 @@
  * before value/rule/snapshot selection; declaration metadata is permitted
  * earlier. Copies need exact already-classified descriptors; detached texts
  * are never read here. */
-import { natural } from "@generalbusiness/artroom-bytes";
+import { natural } from "@generalbusiness/dap-bytes";
 import { DOMAINS, RETAINED_INPUT_BYTES, type Digest } from "@generalbusiness/dap-contract";
-import { canonicalize, domainRetainedJSON, entryHash, isDigest, isEntry, isFactRef, isPlatformDefinition, rawRetainedJSON, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, domainRetainedJSON, entryHash, isDigest, isEntry, isFactRef, isPlatformDefinition, rawRetainedJSON, utf8 } from "@generalbusiness/dap-bytes";
 import { checkedRetainedKey, type ProbeDependency, type RetainedKey } from "@generalbusiness/dap-derive";
 import { ARCHIVE_BOUNDS, ArchiveBudget, ArchiveStopped, type ArchiveCost } from "./archive-budget.ts";
 import { ArchivePrefixStopped } from "./archive-prefix.ts";
 import type { Sql } from "./sqlite.ts";
 import type { ArchiveForeignCopy } from "./archive-foreign.ts";
-import { ARCHIVE_NATIVE_VALUE_DOMAINS } from "@generalbusiness/artroom-git/archive-policy";
+import { ARCHIVE_NATIVE_VALUE_DOMAINS } from "@generalbusiness/dap-git/archive-policy";
 
 export interface ArchiveRetainedValue { readonly bytes: string; readonly value: unknown }
 export type ArchiveRetainedCopy = Pick<ArchiveForeignCopy, "content" | "bytes" | "fact" | "pin">;

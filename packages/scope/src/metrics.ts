@@ -1,7 +1,7 @@
 /** Operational metrics-v1. Nothing here is an input to a native decision. */
-import { natural } from "@generalbusiness/artroom-bytes";
+import { natural } from "@generalbusiness/dap-bytes";
 import { SCOPE_BOUNDS } from "@generalbusiness/dap-contract";
-import { isScopeId, utf8 } from "@generalbusiness/artroom-bytes";
+import { isScopeId, utf8 } from "@generalbusiness/dap-bytes";
 import type { MismatchReason, ReadRefusal, RefusalReason, SessionRefusal, UnavailableReason } from "@generalbusiness/dap-contract";
 
 /** Cloudflare Analytics Engine: 250 data points per invocation (2026-10-16). */

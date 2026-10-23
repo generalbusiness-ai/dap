@@ -14,7 +14,7 @@
  */
 
 import type { PlatformDefinition } from "@generalbusiness/dap-contract";
-import { isPlatformDefinition, platformName } from "@generalbusiness/artroom-bytes";
+import { isPlatformDefinition, platformName } from "@generalbusiness/dap-bytes";
 import type { Own, RuleGiven } from "@generalbusiness/dap-derive";
 
 /** True when the value is a version of the platform definition of that name, such as `platform:destination@2` of `platform:destination`. */

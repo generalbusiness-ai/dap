@@ -2,9 +2,9 @@
  * metadata frames close before parent I/O; failed/discarded scouting stays
  * spent. Final inventory and every body/writer/send operation still run. */
 import type { Bounds, Head, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, same, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, same, utf8 } from "@generalbusiness/dap-bytes";
 import { JournalPassPreparation, JOURNAL_SELECTION_BYTES, forecastJournalAppendFixed, forecastJournalCommit,
-  forecastJournalPassBody, forecastJournalSelection, type JournalFormat, type JournalObject, type JournalObjectSource } from "@generalbusiness/artroom-git/journal";
+  forecastJournalPassBody, forecastJournalSelection, type JournalFormat, type JournalObject, type JournalObjectSource } from "@generalbusiness/dap-git/journal";
 import { ARCHIVE_BOUNDS, ArchiveStopped, type ArchiveBudget, type ArchiveCost } from "./archive-budget.ts";
 import { planPublishedArchivePass, planRootPublishedArchivePass, planLegacyArchiveAnchors, type ArchiveBuildFailure } from "./archive-build.ts";
 import { archivePublicationBytesUpper, archiveReplayScopeUnits } from "./archive-publication.ts";

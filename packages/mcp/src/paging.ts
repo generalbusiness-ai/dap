@@ -1,6 +1,6 @@
 /** Pages by bytes, and the cursors that continue them. A cursor is opaque to a caller and holds no secret. */
 
-import { b64url, unb64url, utf8 } from "@generalbusiness/artroom-bytes";
+import { b64url, unb64url, utf8 } from "@generalbusiness/dap-bytes";
 
 export const KIB = 1024;
 

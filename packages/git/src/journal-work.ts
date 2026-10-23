@@ -1,6 +1,6 @@
 /** Internal archive layout work. The native caller owns the original
  * inventory allowance/deadline; layout never creates or tops it up. */
-import { natural } from "@generalbusiness/artroom-bytes";
+import { natural } from "@generalbusiness/dap-bytes";
 export interface JournalCost {
   entries: number;
   attempts: number;

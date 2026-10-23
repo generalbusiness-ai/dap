@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { definitionDigest, isPlatformDefinition, newIncarnation } from "@generalbusiness/artroom-bytes";
+import { definitionDigest, isPlatformDefinition, newIncarnation } from "@generalbusiness/dap-bytes";
 import { sourceName } from "../src/publishing-provenance.ts";
 import { partitionApplicationPublicationOrigin, partitionPublishingLaneOrigin, partitionSourceName, partitionCreationPolicy, partitionDeclaredCreationPolicy, type PartitionNativeFrame } from "../src/partition-provenance.ts";
 import { small } from "@generalbusiness/dap-derive/testing";

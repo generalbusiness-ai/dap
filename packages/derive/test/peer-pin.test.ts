@@ -1,7 +1,7 @@
 import { peerNativePinData } from "./definition-corpus/late-pin-variants.ts";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { factRefOf } from "@generalbusiness/artroom-bytes";
+import { factRefOf } from "@generalbusiness/dap-bytes";
 import { holdCapability, judgeDelivery, ownerReservations, validateDefinition } from "../src/index.ts";
 import { arriving, created, d, deliver, forged, keys, valid } from "./fixtures.ts";
 import { boundRecordData } from "./fixtures-bound-records.ts";

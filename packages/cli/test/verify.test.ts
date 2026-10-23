@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import type { Entry, ScopeRef, Seed } from "@generalbusiness/dap-contract";
-import { entryHash, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/artroom-bytes";
-import type { Fetch } from "@generalbusiness/artroom-client";
+import { entryHash, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
+import type { Fetch } from "@generalbusiness/dap-client";
 import { command, memoryStore } from "../src/index.ts";
 
 // Invariant: `verify --all` cannot report a whole-room result when creation discovery exhausts its page bound with a cursor left.

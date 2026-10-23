@@ -5,7 +5,7 @@ import {
   newIncarnation,
   scopeIdOf,
   textDigest,
-} from "@generalbusiness/artroom-bytes";
+} from "@generalbusiness/dap-bytes";
 
 type Wait = <T>(start: () => Promise<T>) => Promise<T>;
 

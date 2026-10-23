@@ -2,7 +2,7 @@
  * SQLite. Text bodies are never selected or exported. This is the same
  * logical-byte size as native retainedSize, not a decoded field bound. */
 import type { Digest } from "@generalbusiness/dap-contract";
-import { natural } from "@generalbusiness/artroom-bytes";
+import { natural } from "@generalbusiness/dap-bytes";
 import type { Sql } from "./sqlite.ts";
 import type { ArchiveBudget } from "./archive-budget.ts";
 import { stopArchivePrefix } from "./archive-prefix.ts";

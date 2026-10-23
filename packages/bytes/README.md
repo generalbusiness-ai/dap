@@ -1,4 +1,4 @@
-# @generalbusiness/artroom-bytes
+# @generalbusiness/dap-bytes
 
 The one implementation of bytes for every Artroom package: canonical JSON,
 SHA-256, text encodings, Ed25519, and the eight byte domains of the
@@ -22,7 +22,7 @@ stream, set a timer and abort a signal, and no scope calls them.
 | `facttext` | A fact reference outside an entry (scope contract, section 3): `factText` and `factOfText`, its canonical JSON on one line, at most `FACT_TEXT_MOST` bytes; `factRefName`, `factOfRefName` and `isFactRefParts`, the name of a public ref that holds the 64 hexadecimal characters of the entry hash between two fixed parts; `factHex`. A refusal is null. The destination uses `factText` in creation and receipt commits and `factRefName` for import and receipt refs (`platform/src/destination-objects.ts`). Local Git checks their object bytes; the creation/publication scope witness uses a stand-in host and proves no provider or deployment. |
 | `take` | `takeBytes(body, most, exchange)`: the bytes of a reply's body, read chunk by chunk; null when they pass `most`, with the body cancelled; `LATE` when the exchange expired. `within(seconds, run)`: `run` with a deadline and an abort signal, or `LATE`. `ByteStream`, `Expiry`. The section below says what the reader guarantees. The one bounded reader of the client's HTTP transport and of the replay package's source. |
 
-The entry `@generalbusiness/artroom-bytes/web` is the declarations of the
+The entry `@generalbusiness/dap-bytes/web` is the declarations of the
 Web text coders, the timer and the abort signal these sources compile against. A package that needs no
 wider library names it in its `tsconfig`.
 
@@ -99,6 +99,6 @@ Signing:
 ## How to test
 
 ```
-npm test --workspace @generalbusiness/artroom-bytes
-npm run typecheck --workspace @generalbusiness/artroom-bytes
+npm test --workspace @generalbusiness/dap-bytes
+npm run typecheck --workspace @generalbusiness/dap-bytes
 ```

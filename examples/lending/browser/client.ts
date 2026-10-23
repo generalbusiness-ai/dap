@@ -7,10 +7,10 @@
  * original envelope. Nothing here signs a replacement.
  */
 import type { ApplicationProjectionData, Receipt } from "@generalbusiness/dap-contract";
-import type { ApplicationInstallation } from "@generalbusiness/artroom-bytes/application";
-import { b64url, canonicalize, intentDigest, timeMs, timeOf } from "@generalbusiness/artroom-bytes";
+import type { ApplicationInstallation } from "@generalbusiness/dap-bytes/application";
+import { b64url, canonicalize, intentDigest, timeMs, timeOf } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, completeSummary, completeApplicationProjection, httpTransport, observeScope, openHttpHeadStream, requestSession, shapeDeclaredAct, signedIntent, signerSessionRequest,
-  type CompleteSnapshot, type Fetch, type HeadStreamFetch, type Observation, type Session, type Signer } from "@generalbusiness/artroom-client";
+  type CompleteSnapshot, type Fetch, type HeadStreamFetch, type Observation, type Session, type Signer } from "@generalbusiness/dap-client";
 import { lending } from "../definition.ts";
 import { LENDING_DEFINITION } from "../pin.ts";
 import { advance, envelopeKey, lendingBinding, validKept, type CustodyLock, type Envelope, type Kept, type KeptStore, type LendingIdentity, type Ports, type Settled } from "./custody.ts";

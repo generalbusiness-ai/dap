@@ -1,6 +1,6 @@
 /** Bounded immutable declaration custody for serving lineage, not authority.
  * The caller separately authenticates the Directory's birth and exact send. */
-import { canonicalize, definitionDigest, isDigest, isScopeRef, parseStrict, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, definitionDigest, isDigest, isScopeRef, parseStrict, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { same } from "@generalbusiness/dap-derive";
 import { APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, platform } from "@generalbusiness/dap-platform";
 import type { Pinned } from "./core.ts";

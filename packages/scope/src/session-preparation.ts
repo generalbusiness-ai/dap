@@ -1,5 +1,5 @@
 /** Session policy over an admitted operation frame. No roster or grant read. */
-import { freeze } from "@generalbusiness/artroom-bytes";
+import { freeze } from "@generalbusiness/dap-bytes";
 import type { ScopeRef } from "@generalbusiness/dap-contract";
 import { isScopeRef, same, type Page, type StateView } from "@generalbusiness/dap-derive";
 import { recordedMembership, repositorySessionBirth } from "./authority.ts";

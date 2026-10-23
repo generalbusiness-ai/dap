@@ -15,9 +15,9 @@
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
-    "@generalbusiness/artroom-bytes": "0.1.0-dev.1",
+    "@generalbusiness/dap-bytes": "0.1.0-dev.1",
     "@generalbusiness/dap-cli": "0.1.0-dev.1",
-    "@generalbusiness/artroom-client": "0.1.0-dev.1",
+    "@generalbusiness/dap-client": "0.1.0-dev.1",
     "@generalbusiness/dap-contract": "0.1.0-dev.1",
     "@generalbusiness/dap-platform": "0.1.0-dev.1"
   },
@@ -25,7 +25,7 @@
     "@cloudflare/vitest-pool-workers": "0.22.0",
     "@cloudflare/workers-types": "5.20260815.1",
     "@generalbusiness/dap-lanes": "0.1.0-dev.1",
-    "@generalbusiness/artroom-scope": "0.1.0-dev.1",
+    "@generalbusiness/dap-scope": "0.1.0-dev.1",
     "esbuild": "0.28.1",
     "vitest": "4.1.12"
   },

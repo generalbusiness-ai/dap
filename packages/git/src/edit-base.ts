@@ -1,5 +1,5 @@
 /** Internal partial base acquisition for the existing editor, never a closure or custody proof. */
-import { EDIT_PATH_BYTES, editPath, hex, utf8, wellFormed } from "@generalbusiness/artroom-bytes";
+import { EDIT_PATH_BYTES, editPath, hex, utf8, wellFormed } from "@generalbusiness/dap-bytes";
 import { SmartHttpSource } from "./http-read.ts";
 import { GitRefusal, objectId } from "./names.ts";
 import { parseCommit, parseTree, READ_BOUNDS, Reader, type TreeEntry } from "./reader.ts";

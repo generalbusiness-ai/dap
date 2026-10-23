@@ -3,7 +3,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { canonicalize, isRecord, parseStrictBytes } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isRecord, parseStrictBytes } from "@generalbusiness/dap-bytes";
 import { demoDefinitions } from "./demo-definitions.ts";
 import { prepareGrowCheck } from "./prepare-check.ts";
 

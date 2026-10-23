@@ -1,6 +1,6 @@
 /** Future prices for the actual at-send validator's two-call object port.
  * Repeated objects are charged again. No provider or validation credit. */
-import { natural } from "@generalbusiness/artroom-bytes";
+import { natural } from "@generalbusiness/dap-bytes";
 import { refuseJournal, type JournalCost, type JournalLayoutLimits } from "./journal-work.ts";
 
 export type JournalAppendLayoutWork = Pick<JournalLayoutLimits, "objects" | "trees" | "names" | "depth" | "objectBytes">;

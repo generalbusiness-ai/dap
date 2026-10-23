@@ -7,7 +7,7 @@ import { mkdirSync, symlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Digest, FactRef, ScopeId } from "@generalbusiness/dap-contract";
-import { canonicalize, textDigest } from "@generalbusiness/artroom-bytes";
+import { canonicalize, textDigest } from "@generalbusiness/dap-bytes";
 import { created, keys, notesDefinition, on } from "@generalbusiness/dap-derive/testing";
 import { journalRef } from "../../git/src/journal-path.ts";
 import { ARCHIVE_HEAD_TRUST, ARCHIVE_SOURCE_TRUST, verifyArchive, type ArchiveReadWork } from "../src/archive.ts";

@@ -3,7 +3,7 @@
  * local-hold behavior claim. Canonical bytes, guards and source shape are
  * unchanged. This is no shipped lane revision or canonical repair. */
 import type { DeclaredDefinition } from "@generalbusiness/dap-contract";
-import { definitionDigest } from "@generalbusiness/artroom-bytes";
+import { definitionDigest } from "@generalbusiness/dap-bytes";
 import { change } from "../../src/index.ts";
 
 const manifest = change.acts["propose-manifest"];

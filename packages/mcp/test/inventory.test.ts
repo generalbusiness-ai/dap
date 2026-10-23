@@ -2,7 +2,7 @@ import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
 import type { DeclaredDefinition, PlatformDefinition } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { definitionDigest } from "@generalbusiness/artroom-bytes";
+import { definitionDigest } from "@generalbusiness/dap-bytes";
 import { validateDefinition } from "@generalbusiness/dap-derive";
 import { VERSIONS } from "@generalbusiness/dap-platform";
 import { change, change3, changeDemo, changeDemo3, issue, issueDemo } from "@generalbusiness/dap-lanes";

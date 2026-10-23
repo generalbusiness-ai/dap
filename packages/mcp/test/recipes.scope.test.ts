@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import type { FactRef, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, definitionDigest, digestBytes, keyIdOfSecret, textDigest, timeOf, utf8 } from "@generalbusiness/artroom-bytes";
-import { INVITATION_LINK } from "@generalbusiness/artroom-client";
+import { b64url, canonicalize, definitionDigest, digestBytes, keyIdOfSecret, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { INVITATION_LINK } from "@generalbusiness/dap-client";
 import { firstExtents } from "@generalbusiness/dap-platform";
 import { DEMO_DIGESTS, changeDemo, changeDemo3, issueDemo } from "@generalbusiness/dap-lanes";
 import DOC from "../../../docs/mcp.md?raw";

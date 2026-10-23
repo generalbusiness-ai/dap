@@ -19,7 +19,7 @@
  */
 
 import type { Digest, DomainTag } from "@generalbusiness/dap-contract";
-import { canonicalBytes, canonicalize, digestBytes, digestOfHash, domainBytes, isDigest, isRecord, parseStrict, sha256, utf8, wellFormed } from "@generalbusiness/artroom-bytes";
+import { canonicalBytes, canonicalize, digestBytes, digestOfHash, domainBytes, isDigest, isRecord, parseStrict, sha256, utf8, wellFormed } from "@generalbusiness/dap-bytes";
 
 /** The byte domain of a configuration's digest (section 3.11). The rules definition declares it (`packages/platform/src/rules-scope.ts`). */
 export const CONFIGURATION_DOMAIN = "artroom-check-configuration-1";

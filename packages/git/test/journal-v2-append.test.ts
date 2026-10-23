@@ -1,7 +1,7 @@
 /** Exact Git-edge boundary over synthetic selections. No native policy,
  * real provider credentials, hosted read or archive confirmation. */
 import { afterAll, expect, test } from "vitest";
-import { canonicalize } from "@generalbusiness/artroom-bytes";
+import { canonicalize } from "@generalbusiness/dap-bytes";
 import { ArchiveBudget } from "../../scope/src/archive-budget.ts";
 import { verifyJournalAppend } from "../src/journal-v2-append.ts";
 import { buildJournalPass } from "../src/journal-v2-layout.ts";

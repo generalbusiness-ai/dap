@@ -1,9 +1,9 @@
 /** Exact native value places. Neither a TEST owner table nor knowledge of
  * a domain name supplies an exception to whole-prefix privacy admission. */
 import { DOMAINS } from "@generalbusiness/dap-contract";
-import { isRecord } from "@generalbusiness/artroom-bytes";
+import { isRecord } from "@generalbusiness/dap-bytes";
 import { declarationValueDomains } from "@generalbusiness/dap-derive";
-import { ARCHIVE_NATIVE_VALUE_PLACES, admitArchiveNativeValuePlace } from "@generalbusiness/artroom-git/archive-policy";
+import { ARCHIVE_NATIVE_VALUE_PLACES, admitArchiveNativeValuePlace } from "@generalbusiness/dap-git/archive-policy";
 import type { ArchiveSupport } from "./archive-entry-metadata.ts";
 import type { ArchiveBudget } from "./archive-budget.ts";
 import { stopArchivePrefix as stop } from "./archive-prefix.ts";

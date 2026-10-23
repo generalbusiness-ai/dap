@@ -4,7 +4,7 @@ import { evictDurableObject, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import type { Intent, PlatformDefinition, ScopeRef, Seed } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, intentDigest, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/artroom-bytes";
+import { canonicalize, intentDigest, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import { grantOf } from "@generalbusiness/dap-derive/testing";
 import { standingData } from "../../derive/test/fixtures-standing.ts";
 import { ARCHIVE_PIN_BYTES, ARCHIVE_PIN_KEY, ARCHIVE_SCOPE_METADATA_BYTES, readArchivePin } from "../src/archive-pin.ts";

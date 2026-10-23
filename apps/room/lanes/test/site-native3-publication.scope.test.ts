@@ -2,7 +2,7 @@ import { env } from "cloudflare:workers";
 import { runInDurableObject, runDurableObjectAlarm } from "cloudflare:test";
 import { expect, test } from "vitest";
 import type { Entry, ScopeId } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, scopeIdOf, timeMs, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, definitionDigest, scopeIdOf, timeMs, utf8 } from "@generalbusiness/dap-bytes";
 import { command, memoryStore, type Context, type Outcome } from "../../../../packages/cli/src/index.ts";
 import { changeDemo3 } from "../src/index.ts";
 import { firstExtents } from "@generalbusiness/dap-platform";

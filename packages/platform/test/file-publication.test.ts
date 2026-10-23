@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import type { Entry, FactRef, FieldValue, Item, ScopeRef } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, newIncarnation, scopeIdOf, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, newIncarnation, scopeIdOf, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { MemoryState, PROFILES, validateDefinition, type Operation, type Own, type StateView } from "@generalbusiness/dap-derive";
 import { destination4, destinationPublicationAt, filePublicationCause, filePublicationCurrent, fileSupersededOutcome, newestFilePublication } from "../src/destination.ts";
 import { filePublicationCommit, fileReceiptObjects, fileReceiptRef } from "../src/destination-objects.ts";

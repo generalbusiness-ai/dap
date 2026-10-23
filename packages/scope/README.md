@@ -1,4 +1,4 @@
-# @generalbusiness/artroom-scope
+# @generalbusiness/dap-scope
 
 The runtime of an Artroom scope: its storage, the commit protocol, delivery
 between scopes, the outbox dispatcher, its reads, and the Worker that routes
@@ -44,9 +44,9 @@ what a judge drafts, in one storage transaction for each entry.
 | `authority` | `observing(config)`: the authority port over reads of a membership scope. The read is made before the turn, is counted by run and number, and is kept only in memory: at most one observation for each key, and a revoked answer for the run. `Membership` is the port that reads a membership scope; further reads also reach the recorded rules scope. `repositoryAuthority(config)`: the authority of the deployed class. A membership scope judges its own acts on its own head, and every other scope reads the membership scope that it records, with `observing`. A scope that records none reads nothing. |
 | `namespace` | `namespace(binding)`: the production `Resolver`, `Transport`, `Definitions` and `SentTexts`, each one RPC call on the object a scope ID names. `membershipIn(binding)`: observation reads of membership and rules scopes, which the objects answer as `observe`. `routed`: the resolver of a name, which refuses a wrong address before any judgment. `sourced`: the answer to a read of one entry. `declaredBy`: the answer to a read of one retained declaration. `sentText`: the answer to a read of one detached text that a send of this scope names. |
 | `object` | `ScopeObject`: the Durable Object class. It wires the store, the ports, the core, receiving, the dispatcher and the reads, and exposes them over RPC: `found`, `submit`, `settle`, `checkpoint`, the reads, `deliver`, `source`, `declared`, `text`, `dispatch` and `effect`. Its `alarm()` runs the alarm's turn, then a dispatch pass, then a pass of the operations driver. With no transport, which is its default, nothing is dispatched. With the outside port of `production()`, which sends nothing, nothing is sent outside the service. |
-| `worker` (its own entry, `@generalbusiness/artroom-scope/worker`) | `route(request, binding)`: the HTTP routes. `ScopeService`: the same operations over a service binding; it implements the contract's `ScopeApi`, which a client's transport also is. `DeployedScope`: the object class with the namespace as its resolver, its transport and its source of declarations, with `repositoryAuthority` as its authority and read sessions as its readers port. `api(binding)`: what both call. The default export is the deployed Worker. |
+| `worker` (its own entry, `@generalbusiness/dap-scope/worker`) | `route(request, binding)`: the HTTP routes. `ScopeService`: the same operations over a service binding; it implements the contract's `ScopeApi`, which a client's transport also is. `DeployedScope`: the object class with the namespace as its resolver, its transport and its source of declarations, with `repositoryAuthority` as its authority and read sessions as its readers port. `api(binding)`: what both call. The default export is the deployed Worker. |
 
-`@generalbusiness/artroom-scope/testing` is for tests only: a test
+`@generalbusiness/dap-scope/testing` is for tests only: a test
 authority, which is a stand-in that reads no membership scope and calls
 every presented grant current, a scripted membership, which is a stand-in
 for the membership scope under the real observation read, a test readers
@@ -66,7 +66,7 @@ receiver reads such an entry as it reads any source entry, and nothing
 judged it. `net.sized` gives one scope of the namespace its own bounds, by
 the name of its object.
 
-`@generalbusiness/artroom-scope/testing/worker` is this package's test
+`@generalbusiness/dap-scope/testing/worker` is this package's test
 Worker, `test/worker.ts`, as an export. The lanes package loads it to run
 its scenarios alone. From the root, those scenarios run inside this
 package's own test project, which the root `vitest.config.ts` arranges:
@@ -505,8 +505,8 @@ which has no route.
 ## How to test
 
 ```
-npm test --workspace @generalbusiness/artroom-scope
-npm run typecheck --workspace @generalbusiness/artroom-scope
+npm test --workspace @generalbusiness/dap-scope
+npm run typecheck --workspace @generalbusiness/dap-scope
 ```
 
 The tests run in the workerd test pool, against the real Durable Object
@@ -534,9 +534,9 @@ so neither of those imports the runtime in its source:
 
 - `test/replay.test.ts`: histories that real scopes wrote are read through
   the Worker's read routes and replayed by
-  `@generalbusiness/artroom-replay`.
+  `@generalbusiness/dap-replay`.
 - `test/client.test.ts`: a scope handle of
-  `@generalbusiness/artroom-client` over the Worker's routes and over its
+  `@generalbusiness/dap-client` over the Worker's routes and over its
   service-binding entrypoint.
 - `test/conformance.types.ts`: typechecked only. The entrypoint and the
   client's transport satisfy one interface, the contract's `ScopeApi`.

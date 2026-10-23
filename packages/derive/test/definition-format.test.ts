@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalBytes, definitionDigest } from "@generalbusiness/artroom-bytes";
+import { canonicalBytes, definitionDigest } from "@generalbusiness/dap-bytes";
 import { PROFILES, validateDefinition, type Validation } from "../src/index.ts";
 import { small, ticket } from "./definition-corpus/fixture-data.ts";
 

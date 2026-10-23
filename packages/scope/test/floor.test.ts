@@ -4,7 +4,7 @@ import { floorPendingChange } from "./definition-corpus-data.ts";
  * floor call here is not evidence of the alarm writer or archive custody. */
 import { expect, test } from "vitest";
 import type { FloorInput } from "@generalbusiness/dap-contract";
-import { signIntent } from "@generalbusiness/artroom-bytes";
+import { signIntent } from "@generalbusiness/dap-bytes";
 import { countedEntries, stateDigest } from "@generalbusiness/dap-derive";
 import { Scope } from "../src/core.ts";
 import { production } from "../src/ports.ts";
@@ -83,7 +83,7 @@ test("Native floor refusals preserve the transaction and archived keys survive t
 // journal byte sources; retained text keeps its existing independent charge.
 test("Native floors charge migrated Unicode keys once and preserve retained bytes and reservations", async () => {
   const { variant } = await import("@generalbusiness/dap-derive/testing");
-  const { textDigest } = await import("@generalbusiness/artroom-bytes");
+  const { textDigest } = await import("@generalbusiness/dap-bytes");
   const { reserved } = await import("@generalbusiness/dap-derive");
   const definition = variant(archiveDefinition.declared, floorPendingChange());
   const lane = await create({}, {}, definition), text = "retained across both floors", digest = textDigest(text);

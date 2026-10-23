@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { canonicalize, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, utf8 } from "@generalbusiness/dap-bytes";
 import { ARCHIVE_OBJECT_BYTES as B, ArchiveSegmentCursor, archiveSegments, archiveShards } from "../src/journal-segments.ts";
 
 // Synthetic canonical objects test grouping, not native entries or archive authority.

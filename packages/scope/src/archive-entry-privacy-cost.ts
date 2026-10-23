@@ -1,6 +1,6 @@
 /** Original entry classification prices. Scalar shapes grant no privacy,
  * integrity, body-read or export admission; classification still runs. */
-import { natural } from "@generalbusiness/artroom-bytes";
+import { natural } from "@generalbusiness/dap-bytes";
 import { RETAINED_INPUT_BYTES, type Input } from "@generalbusiness/dap-contract";
 import { ArchiveStopped, type ArchiveCost } from "./archive-budget.ts";
 import { ARCHIVE_PRIVACY_JSON_PASSES } from "./archive-inventory-cost.ts";

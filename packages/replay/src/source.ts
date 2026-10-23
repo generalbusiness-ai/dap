@@ -13,7 +13,7 @@
 
 import { DOMAINS, HISTORY_PAGE_BYTES, HISTORY_PAGE_ENTRIES, RETAINED_INPUT_BYTES } from "@generalbusiness/dap-contract";
 import type { Archived, Digest, FactRef, Head, RetainedInput, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
-import { isHead, isRecord, LATE, digestOfHash, positionOf, retainedReadArgument, sha256, takeBytes, utf8, within, type ByteStream, type Expiry } from "@generalbusiness/artroom-bytes";
+import { isHead, isRecord, LATE, digestOfHash, positionOf, retainedReadArgument, sha256, takeBytes, utf8, within, type ByteStream, type Expiry } from "@generalbusiness/dap-bytes";
 import { isLocalId, isObject, isScopeRef } from "@generalbusiness/dap-derive";
 
 /** One entry as stored: its canonical JSON text, and the hash the source gives for it. */

@@ -2,8 +2,8 @@
  * Native Directory/install/authority behavior belongs to the Scope witness. */
 import { expect, test } from "vitest";
 import { ITEM_QUERY_BOUNDS, ITEM_QUERY_ORDER, type Item, type ItemQuery, type ItemQueryRead, type ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, encodeItemQueryCursor, itemQueryArgument, itemQueryDigest, newIncarnation, readItemQueryParameter, scopeIdOf, textDigest } from "@generalbusiness/artroom-bytes";
-import type { Transport } from "@generalbusiness/artroom-client";
+import { canonicalize, definitionDigest, encodeItemQueryCursor, itemQueryArgument, itemQueryDigest, newIncarnation, readItemQueryParameter, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
+import type { Transport } from "@generalbusiness/dap-client";
 import { counting } from "../../../apps/counter/definition.ts";
 import { applicationList, APPLICATION_LIST_ROWS } from "../src/application-list.ts";
 import { command, type Context } from "../src/index.ts";

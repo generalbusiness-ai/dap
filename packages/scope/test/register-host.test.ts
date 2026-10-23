@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { Entry, OperationId } from "@generalbusiness/dap-contract";
-import { entryHash, newIncarnation } from "@generalbusiness/artroom-bytes";
+import { entryHash, newIncarnation } from "@generalbusiness/dap-bytes";
 import { d } from "@generalbusiness/dap-derive/testing";
 import { repositoryName } from "@generalbusiness/dap-platform";
 import { Register, rita } from "../../../packages/platform/test/support-creation.ts";

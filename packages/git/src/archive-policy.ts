@@ -2,7 +2,7 @@
  * selecting archive bodies. This module neither inventories nor exports. */
 import { INVITATION_KEY_MEMBERSHIP } from "@generalbusiness/dap-contract";
 import type { Digest } from "@generalbusiness/dap-contract";
-import { isDigest } from "@generalbusiness/artroom-bytes";
+import { isDigest } from "@generalbusiness/dap-bytes";
 
 export type ArchiveExportRefusal = "unsupported-credential-cohort" | "unsupported-archive-cohort" | "unsupported-custom-domain" | "unsupported-foreign-copy";
 export type ArchiveExportAdmission = { ok: true } | { ok: false; reason: ArchiveExportRefusal };

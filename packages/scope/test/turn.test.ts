@@ -1,7 +1,7 @@
 import { turnWholeChange, turnAbandonChange, turnTargetChange, turnRequestsChange } from "./definition-corpus-data.ts";
 import { describe, expect, test, vi } from "vitest";
 import { DOMAINS, PROPOSED_BOUNDS, type Receipt} from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, rawRetainedJSON, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, digestBytes, rawRetainedJSON, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { AmountError, MemoryState, applyEntry, checkpointOf, reserved, stateDigest, timeMs } from "@generalbusiness/dap-derive";
 import { SqliteStore, Turns, Wakes, production } from "../src/index.ts";
 import { variant } from "@generalbusiness/dap-derive/testing";

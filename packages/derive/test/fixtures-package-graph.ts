@@ -1,7 +1,7 @@
 /** Actual Grow declarations with their existing native validation. */
 import { expect } from "vitest";
 import { PROPOSED_BOUNDS, type DeclaredDefinition, type Digest } from "@generalbusiness/dap-contract";
-import type { PackageGraphInput } from "@generalbusiness/artroom-package-graph";
+import type { PackageGraphInput } from "@generalbusiness/dap-package-graph";
 import { validateDefinition } from "../src/index.ts";
 import { RULE_PROFILES } from "../src/rule/index.ts";
 import { growData, preFailureRelationData } from "./definition-corpus/package-graph-data.ts";

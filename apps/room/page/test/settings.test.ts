@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import type { Signer } from "@generalbusiness/artroom-client";
+import type { Signer } from "@generalbusiness/dap-client";
 import { scriptedPageKeys } from "./scripted-page-key-store.ts";
 import {
   b64url,
@@ -7,7 +7,7 @@ import {
   newIncarnation,
   scopeIdOf,
   textDigest,
-} from "@generalbusiness/artroom-bytes";
+} from "@generalbusiness/dap-bytes";
 
 // Actual config entry handlers; DOM, native reads and storage failures are
 // stand-ins. A readable config alone supplies no verified room membership.

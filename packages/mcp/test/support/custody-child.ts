@@ -9,7 +9,7 @@
  * - `resubmit`: resubmit the refused record under `key`, whose reply is lost; prints `admitted` or why it was held back.
  * - `lease`: take the lock file at `path`; prints `entered` and holds it for 300 ms, or `refused`.
  */
-import { timeOf } from "@generalbusiness/artroom-bytes";
+import { timeOf } from "@generalbusiness/dap-bytes";
 import { Custody, CustodyError, Lost, meaningOf } from "../../src/index.ts";
 import { fileStore, releaseLock, takeLock } from "../../src/node.ts";
 import { T0, accepted, build, identity, notAfter } from "./custody.ts";

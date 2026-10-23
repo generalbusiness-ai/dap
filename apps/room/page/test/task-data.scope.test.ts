@@ -1,10 +1,10 @@
 import { expect, onTestFinished, test } from "vitest";
-import { canonicalize, digestBytes, entryHash, intentDigest, isSeed, scopeIdOf, textDigest, timeMs, takeBytes, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, digestBytes, entryHash, intentDigest, isSeed, scopeIdOf, textDigest, timeMs, takeBytes, utf8 } from "@generalbusiness/dap-bytes";
 import { DEMO_DIGESTS, DIGESTS, change, issue } from "@generalbusiness/dap-lanes";
 import { firstExtents } from "@generalbusiness/dap-platform";
 import { sessionSigner, act, actsOn, issueCreation, createdIssue, fieldValue, listLanes, loadChange, loadChangeSelection, loadIssue, loadRules, openRoom, placeOf, type Room } from "../src/index.ts";
 import { demo, type Demo } from "./support/demo.ts";
-import { ScopeHandle, httpTransport, signedReads, REPLY_BYTES, REPLY_SECONDS } from "@generalbusiness/artroom-client";
+import { ScopeHandle, httpTransport, signedReads, REPLY_BYTES, REPLY_SECONDS } from "@generalbusiness/dap-client";
 import { PROPOSED_BOUNDS, type ScopeId, type FactRef } from "@generalbusiness/dap-contract";
 import { driveFixture } from "../../../../packages/scope/test/support/native-fixture-lifetime.ts";
 import { Platform } from "../../../../packages/scope/test/repository.ts";

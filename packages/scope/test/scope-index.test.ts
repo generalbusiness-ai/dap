@@ -1,8 +1,8 @@
 import { expect, test } from "vitest";
 import { env } from "cloudflare:workers";
 import type { ControlRequest, ScopeRef } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, digestBytes, newIncarnation, signControl, utf8 } from "@generalbusiness/artroom-bytes";
-import { applicationScreenPath } from "@generalbusiness/artroom-client/application";
+import { b64url, canonicalize, digestBytes, newIncarnation, signControl, utf8 } from "@generalbusiness/dap-bytes";
+import { applicationScreenPath } from "@generalbusiness/dap-client/application";
 import { indexedScopes, ScopeIndexRows, SCOPE_INDEX_NAME, type ScopeIndexPort, type ScopeRegistration } from "../src/scope-index.ts";
 import scopeWorker, { api, mcpRoute } from "../src/worker.ts";
 import { applicationSandboxPage } from "../src/applications/route.ts";

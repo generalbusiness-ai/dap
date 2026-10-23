@@ -1,7 +1,7 @@
 /** Clone plus live journal pages (floor note, section 7). The caller owns
  * fetching and bounded clone reads; a receipt supplies no network address. */
 import { DOMAINS, type Archived, type Head, type LogPage, type Read, type ScopeRef } from "@generalbusiness/dap-contract";
-import { digestBytes, isHead, isLocalId, isLogPage, isRead, isRecord, isScopeRef, utf8 } from "@generalbusiness/artroom-bytes";
+import { digestBytes, isHead, isLocalId, isLogPage, isRead, isRecord, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
 
 export function isArchived(value: unknown): value is Archived {
   return isRecord(value) && Object.keys(value).length === 3 && isLocalId(value["floor"]) && value["floor"] > 0

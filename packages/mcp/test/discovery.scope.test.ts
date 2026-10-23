@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { FactRef, ScopeId } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest } from "@generalbusiness/artroom-bytes";
+import { canonicalize, definitionDigest } from "@generalbusiness/dap-bytes";
 import { firstExtents } from "@generalbusiness/dap-platform";
 import { DEMO_DIGESTS, issueDemo } from "@generalbusiness/dap-lanes";
 import { ListRestart } from "../src/index.ts";

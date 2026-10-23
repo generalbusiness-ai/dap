@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest";
 import type { Intent, PlatformDefinition, Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, factRefOf, intentDigest, scopeIdOf, seedDigest, signIntent } from "@generalbusiness/artroom-bytes";
+import { canonicalize, factRefOf, intentDigest, scopeIdOf, seedDigest, signIntent } from "@generalbusiness/dap-bytes";
 import { keys, ticketDefinition } from "@generalbusiness/dap-derive/testing";
 import { firstExtents, initialCommitObjects, platform, repositoryName } from "@generalbusiness/dap-platform";
-import { httpSource, verify } from "@generalbusiness/artroom-replay";
+import { httpSource, verify } from "@generalbusiness/dap-replay";
 import { soon } from "./net.ts";
 import { outsideOf } from "./outside.ts";
 import { initialPublication } from "./publication.ts";

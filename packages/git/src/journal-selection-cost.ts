@@ -1,6 +1,6 @@
 /** Pure work arithmetic for descriptive selection metadata. No records,
  * policy, consumers or bodies are validated or admitted by this module. */
-import { natural } from "@generalbusiness/artroom-bytes";
+import { natural } from "@generalbusiness/dap-bytes";
 import { refuseJournal, type JournalCost } from "./journal-work.ts";
 
 export const JOURNAL_SELECTION_BYTES = 1024 * 1024;

@@ -4,8 +4,8 @@ import type { ApplicationIds, ApplicationManifest, ApplicationPresentation, Appl
 import type { ApplicationReadProjection } from "./application-projection-types.ts";
 import type { ApplicationViews } from "./application-view.ts";
 import { ApplicationPackageError } from "./application-types.ts";
-import type { PackageComposition, PackageFinding } from "@generalbusiness/artroom-package-graph";
-export type { PackageComposition, PackageFinding } from "@generalbusiness/artroom-package-graph";
+import type { PackageComposition, PackageFinding } from "@generalbusiness/dap-package-graph";
+export type { PackageComposition, PackageFinding } from "@generalbusiness/dap-package-graph";
 export class ApplicationPackageValidationError extends ApplicationPackageError {
   readonly findings: readonly PackageFinding[];
   constructor(findings: readonly PackageFinding[]) { super("invalid"); this.findings = findings; }

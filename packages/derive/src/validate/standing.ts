@@ -1,5 +1,5 @@
 /** C1's closed platform declaration and its bounded native read plan. */
-import { natural } from "@generalbusiness/artroom-bytes";
+import { natural } from "@generalbusiness/dap-bytes";
 import type { StandingReservation } from "@generalbusiness/dap-contract";
 import { AmountError, type Amount } from "../held.ts";
 import { StandingError, standingAmount } from "../standing.ts";

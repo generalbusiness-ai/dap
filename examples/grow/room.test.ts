@@ -2,7 +2,7 @@
  * scripted and outcomes are separately labelled scenario-owner records. */
 import { expect, test } from "vitest";
 import type { FactRef, SignedIntent } from "@generalbusiness/dap-contract";
-import { keyIdOfSecret } from "@generalbusiness/artroom-bytes";
+import { keyIdOfSecret } from "@generalbusiness/dap-bytes";
 import { t, keys, member, deliver } from "@generalbusiness/dap-derive/testing";
 import { room } from "./room.ts";
 import { site } from "./site.ts";

@@ -3,7 +3,7 @@
 import { env } from "cloudflare:test";
 import { expect, test } from "vitest";
 import type { Intent, Seed, ScopeApi } from "@generalbusiness/dap-contract";
-import { intentDigest, scopeIdOf, seedDigest, signIntent } from "@generalbusiness/artroom-bytes";
+import { intentDigest, scopeIdOf, seedDigest, signIntent } from "@generalbusiness/dap-bytes";
 import { keys } from "@generalbusiness/dap-derive/testing";
 import { DIRECTORY, REGISTER, repositoryName } from "@generalbusiness/dap-platform";
 import { creationTest } from "./worker.ts";

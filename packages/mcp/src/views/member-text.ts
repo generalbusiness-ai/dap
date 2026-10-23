@@ -1,5 +1,5 @@
 import type { FieldValue, MemberRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isMemberRef } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isMemberRef } from "@generalbusiness/dap-bytes";
 import type { MemberDisplay, MemberTable } from "./member-types.ts";
 
 export function memberDescription(member: MemberDisplay, table?: MemberTable): string {

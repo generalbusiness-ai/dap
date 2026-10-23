@@ -1,11 +1,11 @@
 import { expect, onTestFinished, test } from "vitest";
 import type { Entry, Intent, Seed } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, entryHash, intentDigest, isSeed, scopeIdOf, seedDigest, textDigest, timeMs, utf8 } from "@generalbusiness/artroom-bytes";
-import { INVITATION_LINK, requestSession, sessionRequest, type Fetch } from "@generalbusiness/artroom-client";
+import { b64url, canonicalize, entryHash, intentDigest, isSeed, scopeIdOf, seedDigest, textDigest, timeMs, utf8 } from "@generalbusiness/dap-bytes";
+import { INVITATION_LINK, requestSession, sessionRequest, type Fetch } from "@generalbusiness/dap-client";
 import { command, memoryStore, type Context } from "../../cli/src/index.ts";
 import { keys, type Actor } from "@generalbusiness/dap-derive/testing";
 import { FILE_PUBLICATION_COHORT, FIRST_ACTIONS_OF, platform, repositoryName } from "@generalbusiness/dap-platform";
-import { httpSource, verify } from "@generalbusiness/artroom-replay";
+import { httpSource, verify } from "@generalbusiness/dap-replay";
 import { lendingGateway, SETTLED_AFTER_MS } from "../../../examples/lending/browser/client.ts";
 import type { Kept, KeptStore } from "../../../examples/lending/browser/custody.ts";
 import { findLending, joining, newDeviceKey, readInvitation, ROOM_MEMBERSHIP, type JoinStore, type KeptJoin } from "../../../examples/lending/browser/join.ts";
@@ -220,7 +220,7 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
       const lock = { run: <T>(work: () => Promise<T>): Promise<T> => { const next = chain.then(work, work); chain = next.catch(() => undefined); return next; } };
       const open = (): ReturnType<typeof lendingGateway> => lendingGateway(
         { origin: SERVICE, deployment: "lending-fixture", scope: scopeOfLending, definition: LENDING_DEFINITION, membership, member: { membership, member: handle }, publicKey: who.key },
-        { key: who.key, sign: async (bytes: Uint8Array) => (await import("@generalbusiness/artroom-client")).secretSigner(who.secret).sign(bytes) },
+        { key: who.key, sign: async (bytes: Uint8Array) => (await import("@generalbusiness/dap-client")).secretSigner(who.secret).sign(bytes) },
         { current, lock, store, application, fetch: legacyLendingProjection(SERVICE, application, readFetch), now: () => timeMs(soon(0))! + skew.ms,
           actFetch: async (url, init) => { posts++; envelopes.push(String(init?.body)); const response = await fetch(url, init); if (lose.reply) throw new Error("the reply was lost"); return response as never; } });
       return { open, store, posts: () => posts, kept: () => slot, envelopes };

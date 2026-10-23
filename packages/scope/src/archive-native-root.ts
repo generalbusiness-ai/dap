@@ -1,6 +1,6 @@
 /** Complete native root check on one fresh synchronous frame. */
 import type { Bounds, PlatformDefinition } from "@generalbusiness/dap-contract";
-import { canonicalize, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, utf8 } from "@generalbusiness/dap-bytes";
 import { derivable, outcomeValueDomains, runnable, validateDefinition, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { platform } from "@generalbusiness/dap-platform";

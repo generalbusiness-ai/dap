@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 import { readFileSync } from "node:fs";
 import type { FieldValue, SignedIntent } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, parseStrict } from "@generalbusiness/artroom-bytes";
+import { canonicalize, definitionDigest, parseStrict } from "@generalbusiness/dap-bytes";
 import { prepareRules, validateDefinition } from "@generalbusiness/dap-derive";
 import { evaluateRules, RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { created, keys, Ledger, on, t, valid, type Actor } from "@generalbusiness/dap-derive/testing";

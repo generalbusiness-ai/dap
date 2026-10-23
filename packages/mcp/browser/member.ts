@@ -1,5 +1,5 @@
 import type { MemberRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isMemberRef } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isMemberRef } from "@generalbusiness/dap-bytes";
 import type { MemberTable } from "../src/views/member-types.ts";
 import { memberDescription } from "../src/views/member-text.ts";
 

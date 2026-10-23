@@ -1,9 +1,9 @@
 /** Bounded current-generation standing provenance for the explicit D1
  * cohort. This reads native own records, never a history range or host.
  * A record/key list supplied by a request is not provenance. */
-import { natural } from "@generalbusiness/artroom-bytes";
+import { natural } from "@generalbusiness/dap-bytes";
 import type { FactRef, KeyId, OperationId, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, isFactRef, isKeyId, isRecord, isScopeRef, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, entryHash, isFactRef, isKeyId, isRecord, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
 import type { Item, Operation, Own } from "@generalbusiness/dap-derive";
 import type { ReservationStanding } from "./reservation.ts";
 import { isStandingDestination } from "./versions.ts";

@@ -1,6 +1,6 @@
 import type { PresentationPackage, ViewKind } from "./resources.ts";
 import type { ApplicationProjectionData, FactRef, FieldValue, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
-import type { ApplicationView, ApplicationViewParameters } from "@generalbusiness/artroom-bytes/application-v2";
+import type { ApplicationView, ApplicationViewParameters } from "@generalbusiness/dap-bytes/application-v2";
 import type { MemberTable } from "./member-types.ts";
 
 export type PageKind = "summary" | "item" | "diff" | "updates";

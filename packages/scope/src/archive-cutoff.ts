@@ -1,8 +1,8 @@
 /** Choose a contiguous new interval from scalar size metadata only.
  * This is scheduling, not privacy admission or a prepaid body read. */
-import { natural, isDigest, isHead } from "@generalbusiness/artroom-bytes";
+import { natural, isDigest, isHead } from "@generalbusiness/dap-bytes";
 import type { Bounds, Head } from "@generalbusiness/dap-contract";
-import { JOURNAL_V2_LAST_POSITION } from "@generalbusiness/artroom-git/journal";
+import { JOURNAL_V2_LAST_POSITION } from "@generalbusiness/dap-git/journal";
 import { ArchiveBudget } from "./archive-budget.ts";
 import type { Sql } from "./sqlite.ts";
 

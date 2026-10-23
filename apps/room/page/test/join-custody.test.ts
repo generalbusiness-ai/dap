@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import type { Entry, PlatformDefinition, Receipt, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, entryHash, intentDigest, newIncarnation, scopeIdOf, textDigest, utf8, verifySignedIntent } from "@generalbusiness/artroom-bytes";
-import type { Fetch } from "@generalbusiness/artroom-client";
+import { b64url, entryHash, intentDigest, newIncarnation, scopeIdOf, textDigest, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import type { Fetch } from "@generalbusiness/dap-client";
 import { checkOriginal as actualCheckOriginal, joinInvitation as actualJoinInvitation, originalJoin, type JoinStorage } from "../src/join-custody.ts";
 import { memoryPageKeys } from "./private-key-fixture.ts";
 const keys = memoryPageKeys();

@@ -2,7 +2,7 @@ import { settlesChanges, settlesThreeChange, settlesTimedData, settlesHolderData
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { PlatformData, PlatformDefinition } from "@generalbusiness/dap-contract";
-import { canonicalBytes, entryHash, factRefOf, parseStrictBytes } from "@generalbusiness/artroom-bytes";
+import { canonicalBytes, entryHash, factRefOf, parseStrictBytes } from "@generalbusiness/dap-bytes";
 import { AmountError, PROFILES, applyEntry, clockOf, entryOf, fits, itemAwaits, judgeDelivery, markerAmounts, markerReservations, owed, reserved, validateDefinition } from "../src/index.ts";
 import type { Draft, PlatformRules, RuleEffect, ValidDefinition } from "../src/index.ts";
 import { Scope, arriving, directory, fields, forged, keys, on, valid, type Over } from "./fixtures-entry.ts";

@@ -1,4 +1,4 @@
-import { canonicalize, digestBytes, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, digestBytes, utf8 } from "@generalbusiness/dap-bytes";
 import type { Digest } from "@generalbusiness/dap-contract";
 import { sandboxDomain } from "./hosts.ts";
 

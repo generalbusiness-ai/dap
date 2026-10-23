@@ -1,5 +1,5 @@
 /** A sandbox changes transport location, never the room that owns an identity. */
-import { isDigest, isRecord, isScopeId, parseStrict } from "@generalbusiness/artroom-bytes";
+import { isDigest, isRecord, isScopeId, parseStrict } from "@generalbusiness/dap-bytes";
 import type { Digest, ScopeId } from "@generalbusiness/dap-contract";
 import { applicationJson } from "./application-json.ts";
 import { readApplicationScreenAddress } from "./application-route.ts";

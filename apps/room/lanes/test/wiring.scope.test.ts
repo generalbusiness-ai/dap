@@ -1,9 +1,9 @@
 import { expect, test } from "vitest";
 import { CONFIGURATION_DOMAIN, firstExtents, platform } from "@generalbusiness/dap-platform";
-import { canonicalize, textDigest } from "@generalbusiness/artroom-bytes";
+import { canonicalize, textDigest } from "@generalbusiness/dap-bytes";
 import { valueDigest } from "@generalbusiness/dap-derive";
-import { MemorySource, httpSource, verify, type HistorySource, type MemoryScope } from "@generalbusiness/artroom-replay";
-import { CAPABILITY_CODE } from "@generalbusiness/artroom-scope";
+import { MemorySource, httpSource, verify, type HistorySource, type MemoryScope } from "@generalbusiness/dap-replay";
+import { CAPABILITY_CODE } from "@generalbusiness/dap-scope";
 import { DIGESTS, change, issue } from "../src/index.ts";
 import type { Node } from "./support/graph.ts";
 import { Platform, copied, merged, oid, paul, proposed, publicationOf, reported, rewritten, rita, room, routed, checkerKey, soon, una, vic, type Room } from "./support/room.ts";

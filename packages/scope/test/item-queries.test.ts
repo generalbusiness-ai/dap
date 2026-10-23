@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import type { ItemQuery, ItemQueryRead, SessionAnswer, SessionClaims } from "@generalbusiness/dap-contract";
-import { canonicalize, encodeItemQueryParameter, itemQueryArgument } from "@generalbusiness/artroom-bytes";
-import { secretSigner, signedReader, sessionRequest, ScopeHandle, httpTransport, bindingTransport, signedReads } from "@generalbusiness/artroom-client";
+import { canonicalize, encodeItemQueryParameter, itemQueryArgument } from "@generalbusiness/dap-bytes";
+import { secretSigner, signedReader, sessionRequest, ScopeHandle, httpTransport, bindingTransport, signedReads } from "@generalbusiness/dap-client";
 import type { NativeItemQuery } from "../src/item-queries.ts";
 import { sessionRoom, at, create, rita, una, type Lane } from "./fixtures-native.ts";
 import { mintSession, readerOf } from "../src/sessions.ts";

@@ -2,9 +2,9 @@
  * A caller confirms these updates in its archive receipt transaction. */
 import type { RetainedKey } from "@generalbusiness/dap-derive";
 import { checkedRetainedKey } from "@generalbusiness/dap-derive";
-import { canonicalize, isHead, isRecord, isScopeRef, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isHead, isRecord, isScopeRef, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import type { Head, ScopeRef } from "@generalbusiness/dap-contract";
-import { JOURNAL_SELECTION_BYTES, JOURNAL_V2_LAST_POSITION, archiveRetainedPath } from "@generalbusiness/artroom-git/journal";
+import { JOURNAL_SELECTION_BYTES, JOURNAL_V2_LAST_POSITION, archiveRetainedPath } from "@generalbusiness/dap-git/journal";
 import { ArchiveBudget } from "./archive-budget.ts";
 import type { Sql, SqlValue } from "./sqlite.ts";
 import { ARCHIVE_RETAINED_PASS_METADATA, ARCHIVE_RETAINED_PASS_WORK, ARCHIVE_RETAINED_CONFIRM_WORK, archiveConfirmedSelectionReservation } from "./archive-row-cost.ts";

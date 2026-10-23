@@ -2,7 +2,7 @@
  * admission check. Output allowances are the portable package's limits. */
 import { basename, dirname, join, posix } from "node:path";
 import { fileURLToPath } from "node:url";
-import { APPLICATION_PACKAGE_LIMITS as LIMITS } from "@generalbusiness/artroom-client";
+import { APPLICATION_PACKAGE_LIMITS as LIMITS } from "@generalbusiness/dap-client";
 
 export interface ApplicationBrowserSource { entry: string; html: string; script: string }
 export interface ApplicationBrowserAsset { path: string; mediaType: string; bytes: Uint8Array }
@@ -24,7 +24,7 @@ export async function bundleApplicationBrowser(root: string, entryAsset: string,
     bundle: true, platform: "browser", format: "esm", target: "es2022", minify: true,
     legalComments: "none", write: false, logLevel: "silent",
     plugins: [{ name: "owned-browser-client", setup(builder) {
-      builder.onResolve({ filter: /^@generalbusiness\/artroom-client(?:\/.*)?$/ }, args => ({ path: fileURLToPath(import.meta.resolve(args.path)) }));
+      builder.onResolve({ filter: /^@generalbusiness\/dap-client(?:\/.*)?$/ }, args => ({ path: fileURLToPath(import.meta.resolve(args.path)) }));
     } }],
   });
   const base = posix.dirname(entryAsset), prefix = base === "." ? "" : base + "/";

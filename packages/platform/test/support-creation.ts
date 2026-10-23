@@ -19,7 +19,7 @@
 
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Digest, Entry, FactRef, Request, ScopeRef, Seed, Send, SignedIntent } from "@generalbusiness/dap-contract";
-import { factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/artroom-bytes";
+import { factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import { clockOf, judgeDelivery, judgeGenesis, judgeOutcome, ownersOf } from "@generalbusiness/dap-derive";
 import type { ActJudgment, Judgment, PlatformRules, Source, ValidDefinition } from "@generalbusiness/dap-derive";
 import { Ledger, T0, forged, keys, t, type Actor, type Context, type Over } from "@generalbusiness/dap-derive/testing";

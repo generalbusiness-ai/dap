@@ -1,10 +1,10 @@
 /** The generic host interpreter for a verified declared presentation. It
  * runs no package code. Its ports are native reads, not application adapters. */
 import type { ApplicationProjectionData, ApplicationProjectionQuery, ApplicationProjectionRead, ApplicationProjectionRow, Digest, FieldValue, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
-import { applicationItemSnapshot } from "@generalbusiness/artroom-client";
-import { canonicalize, isLocalId, isMemberRef, parseStrict, unb64url } from "@generalbusiness/artroom-bytes";
-import type { ApplicationInstallation } from "@generalbusiness/artroom-bytes/application";
-import { applicationProjectionId, applicationViewFactField, isApplicationJournalSource, readPublishedApplicationPackage2, type ApplicationView, type ApplicationViewAct, type PublishedPackedApplication2 } from "@generalbusiness/artroom-bytes/application-v2";
+import { applicationItemSnapshot } from "@generalbusiness/dap-client";
+import { canonicalize, isLocalId, isMemberRef, parseStrict, unb64url } from "@generalbusiness/dap-bytes";
+import type { ApplicationInstallation } from "@generalbusiness/dap-bytes/application";
+import { applicationProjectionId, applicationViewFactField, isApplicationJournalSource, readPublishedApplicationPackage2, type ApplicationView, type ApplicationViewAct, type PublishedPackedApplication2 } from "@generalbusiness/dap-bytes/application-v2";
 import { admit, evaluate, RuleEvalError } from "@generalbusiness/dap-derive/rule";
 import { ViewError } from "./session.ts";
 import type { Card, CardAction, DeclaredSurface, Projection, ViewQuery, ViewSource } from "./types.ts";
@@ -14,7 +14,7 @@ import { effectiveFields, expectedOf } from "../shape.ts";
 import { formatInteger } from "./numbers.ts";
 import { formatFact } from "./facts.ts";
 import { orderedViewRows } from "./ordering.ts";
-import { decodeViewParameters } from "@generalbusiness/artroom-bytes/application-v2";
+import { decodeViewParameters } from "@generalbusiness/dap-bytes/application-v2";
 import { projectionMemberFacts, projectionMembers } from "./members.ts";
 import type { MemberTable, MembershipDisplayRead } from "./member-types.ts";
 import { memberValueText } from "./member-text.ts";

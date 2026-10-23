@@ -4,7 +4,7 @@ import { indexedIntegerChange } from "./definition-corpus-data.ts";
 import { evictDurableObject, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import type { Answer, FieldValue, Intent, PlatformDefinition, Seed } from "@generalbusiness/dap-contract";
-import { intentDigest, scopeIdOf, signIntent, textDigest } from "@generalbusiness/artroom-bytes";
+import { intentDigest, scopeIdOf, signIntent, textDigest } from "@generalbusiness/dap-bytes";
 import { grantOf } from "@generalbusiness/dap-derive/testing";
 import { gateRules, gateWith } from "../../derive/test/fixtures-marks.ts";
 import { SqliteStore } from "../src/sqlite.ts";

@@ -1,4 +1,4 @@
-// Six portable SDK packages only. No package loading or external service calls here.
+// Seven portable SDK packages only. No package loading or external service calls here.
 import { createHash } from "node:crypto";
 import { moduleSpecifierSpans } from "./public-release-modules.mjs";
 import { execFileSync } from "node:child_process";
@@ -17,29 +17,7 @@ export const PUBLIC_TESTING_INPUTS = Object.freeze([
 ]);
 const PUBLIC_TESTING_OUTPUTS = new Set(PUBLIC_TESTING_INPUTS.flatMap(input =>
   [".js", ".d.ts"].map(extension => input.replace(/^packages\/derive\//, "dist/").replace(/\.ts$/, extension))));
-const DAP_PACKAGES = new Set(["contract", "derive", "lanes", "page", "platform", "cli"]);
-export const sourceNameOf = (dir) => `@generalbusiness/${DAP_PACKAGES.has(dir) ? "dap" : "artroom"}-${dir}`;
 export const nameOf = (dir) => `@generalbusiness/dap-${dir}`;
-const publishedDependency = (name) => {
-  const spec = PLAN.packages.find(spec => name === sourceNameOf(spec.dir));
-  return spec ? nameOf(spec.dir) : name;
-};
-const publishedDependencies = (spec) => Object.fromEntries(Object.entries(spec.dependencies).map(([name, pin]) => [publishedDependency(name), pin]));
-/** Only module literals change in copied SDK inputs; protocol and ordinary strings remain exact. */
-export function rewritePublishedRefs(text) {
-  let rewritten = text;
-  for (const span of moduleSpecifierSpans(text).reverse()) {
-    const parts = span.value.split("/");
-    const dependency = parts.slice(0, span.value.startsWith("@") ? 2 : 1).join("/");
-    const mapped = publishedDependency(dependency);
-    if (mapped === dependency) continue;
-    const value = mapped + span.value.slice(dependency.length);
-    let encoded = JSON.stringify(value).slice(1, -1).replace(/'/g, span.quote === "'" ? "\\'" : "'");
-    if (span.quote === "`") encoded = encoded.replace(/`/g, "\\`").replace(/\$\{/g, "\\${");
-    rewritten = rewritten.slice(0, span.start) + encoded + rewritten.slice(span.end);
-  }
-  return rewritten;
-}
 export const digest = (bytes, algorithm = "sha256") => createHash(algorithm).update(bytes).digest("hex");
 export const refusal = (code) => { throw new Error(code); };
 export const json = (file) => JSON.parse(readFileSync(file, "utf8"));
@@ -102,18 +80,21 @@ export function copiedDependency(sourceRoot, outputRoot, name, expected, lock) {
 }
 export function publishManifest(spec, source, selected) {
   const excluded = spec.excludedSourceExports ?? {};
-  if (JSON.stringify(excluded) !== JSON.stringify(spec.dir === "platform" ? { "./testing": "./test/support.ts" } : spec.dir === "replay" ? { "./git": "./src/git.ts" } : {})) refusal("source-export-exclusions");
+  if (JSON.stringify(excluded) !== JSON.stringify(spec.dir === "platform" ? { "./testing": "./test/support.ts", "./application-install": "./src/application-install.ts" } : spec.dir === "replay" ? { "./git": "./src/git.ts" } : {})) refusal("source-export-exclusions");
+  const excludedDependencies = spec.excludedSourceDependencies ?? {};
+  if (JSON.stringify(excludedDependencies) !== JSON.stringify(spec.dir === "replay" ? { "@generalbusiness/dap-platform": "coordinated" } : {})) refusal("source-dependency-exclusions");
+  for (const name of Object.keys(excludedDependencies)) if (source.dependencies?.[name] !== source.version) refusal("source-only-dependency-pin");
   const keys = Object.keys(source.exports ?? {});
-  if (JSON.stringify(keys.sort()) !== JSON.stringify([...Object.keys(spec.exports), ...Object.keys(excluded)].sort()) || source.name !== sourceNameOf(spec.dir) || source.type !== "module" || source.license !== "Apache-2.0") refusal("unsupported-source-manifest");
+  if (JSON.stringify(keys.sort()) !== JSON.stringify([...Object.keys(spec.exports), ...Object.keys(excluded)].sort()) || source.name !== nameOf(spec.dir) || source.type !== "module" || source.license !== "Apache-2.0") refusal("unsupported-source-manifest");
   for (const [key, value] of Object.entries(excluded)) if (source.exports[key] !== value) refusal("unsupported-source-export");
   if (spec.dir === "replay" && JSON.stringify(source.bin) !== JSON.stringify({ "artroom-replay": "./src/bin.ts" })) refusal("unsupported-source-bin");
-  if (spec.dir === "replay" && source.devDependencies?.["@generalbusiness/artroom-git"] !== source.version) refusal("source-git-development-pin");
+  if (spec.dir === "replay" && source.devDependencies?.["@generalbusiness/dap-git"] !== source.version) refusal("source-git-development-pin");
   for (const [key, path] of Object.entries(spec.exports)) {
     const old = source.exports[key];
     if (path.endsWith(".d.ts") ? JSON.stringify(old) !== JSON.stringify({ types: `./${path}` }) : old !== `./${path}.ts`) refusal("unsupported-source-export");
   }
-  if (JSON.stringify(Object.keys(source.dependencies ?? {}).sort()) !== JSON.stringify(Object.keys(spec.dependencies).sort())) refusal("unsupported-source-dependencies");
-  for (const [name, pin] of Object.entries(spec.dependencies)) if (pin !== "coordinated" && source.dependencies[name] !== pin) refusal("dependency-pin");
+  if (JSON.stringify(Object.keys(source.dependencies ?? {}).sort()) !== JSON.stringify([...Object.keys(spec.dependencies), ...Object.keys(excludedDependencies)].sort())) refusal("unsupported-source-dependencies");
+  for (const [name, pin] of Object.entries(spec.dependencies)) if (source.dependencies[name] !== (pin === "coordinated" ? source.version : pin)) refusal("dependency-pin");
   return {
     name: nameOf(spec.dir), version: version(selected), description: source.description, license: source.license,
     type: "module", sideEffects: false, engines: source.engines,
@@ -121,7 +102,7 @@ export function publishManifest(spec, source, selected) {
     exports: Object.fromEntries(Object.entries(spec.exports).map(([key, path]) => [key, path.endsWith(".d.ts")
       ? { types: `./dist/${path}` } : { types: `./dist/${path}.d.ts`, default: `./dist/${path}.js` }])),
     files: ["dist", "README.md", "LICENSE", "NOTICE"], publishConfig: { access: "public" },
-    ...(Object.keys(spec.dependencies).length ? { dependencies: Object.fromEntries(Object.entries(publishedDependencies(spec)).map(([name, pin]) => [name, pin === "coordinated" ? selected : pin])) } : {}),
+    ...(Object.keys(spec.dependencies).length ? { dependencies: Object.fromEntries(Object.entries(spec.dependencies).map(([name, pin]) => [name, pin === "coordinated" ? selected : pin])) } : {}),
   };
 }
 /** Exactly the repository's Node command and clone composition are omitted. */
@@ -169,7 +150,7 @@ export function outputClosure(stage, spec, selected) {
         if (!contained(stage, actual) || ref.endsWith(".ts") && !ref.endsWith(".d.ts") || !existsSync(actual) || !lstatSync(actual).isFile()) refusal("relative-output-closure");
       } else {
         const packageName = ref.split("/").slice(0, ref.startsWith("@") ? 2 : 1).join("/");
-        if (!(packageName in publishedDependencies(spec)) || /^(?:node:|cloudflare:)/.test(ref) || ref.includes("/testing")) refusal("bare-output-closure");
+        if (!(packageName in spec.dependencies) || /^(?:node:|cloudflare:)/.test(ref) || ref.includes("/testing")) refusal("bare-output-closure");
       }
     }
   }

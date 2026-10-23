@@ -2,7 +2,7 @@
  * the existing TEST lane fixtures; no privacy or export admission claim. */
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { isEntry, parseStrict } from "@generalbusiness/artroom-bytes";
+import { isEntry, parseStrict } from "@generalbusiness/dap-bytes";
 import { localRetainedPlan } from "@generalbusiness/dap-derive";
 import { ArchiveBudget } from "../src/archive-budget.ts";
 import { ArchivePrepared } from "../src/archive-prepared.ts";

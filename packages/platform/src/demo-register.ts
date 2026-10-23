@@ -1,6 +1,6 @@
 /** Explicit demo creation version. Existing registers and defaults keep their pins. */
 import type { PlatformData } from "@generalbusiness/dap-contract";
-import { intentDigest } from "@generalbusiness/artroom-bytes";
+import { intentDigest } from "@generalbusiness/dap-bytes";
 import type { Rules } from "@generalbusiness/dap-derive";
 import { register, registerRules } from "./register.ts";
 export const DEMO_REGISTER = "platform:register@7" as const;

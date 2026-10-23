@@ -4,8 +4,8 @@
 import { fileURLToPath } from "node:url";
 import { rm } from "node:fs/promises";
 import { expect, test } from "vitest";
-import { isRecord } from "@generalbusiness/artroom-bytes";
-import { secretSigner } from "@generalbusiness/artroom-client";
+import { isRecord } from "@generalbusiness/dap-bytes";
+import { secretSigner } from "@generalbusiness/dap-client";
 import { COUNTING_COMMITMENTS_DEFINITION } from "../../../apps/counter/commitments-pin.ts";
 import { LENDING_DEFINITION } from "../../../examples/lending/pin.ts";
 import { prepareApplicationDirectory, readApplicationScenario } from "../src/application-files.ts";

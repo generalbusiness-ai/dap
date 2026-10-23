@@ -1,9 +1,9 @@
 /** Explicit private agent-key handoff. Encoding is not native authority. */
-import { same } from "@generalbusiness/artroom-bytes";
+import { same } from "@generalbusiness/dap-bytes";
 import { invitationServiceUrl } from "./invitation-service.ts";
 import { INVITATION_KEY_MEMBERSHIPS } from "@generalbusiness/dap-contract";
 import type { FactRef, MemberRef, ScopeRef, ScopeId } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, isFactRef, isMemberRef, isRecord, isScopeId, isScopeRef, parseStrict, unb64url, utf8 } from "@generalbusiness/artroom-bytes";
+import { b64url, canonicalize, isFactRef, isMemberRef, isRecord, isScopeId, isScopeRef, parseStrict, unb64url, utf8 } from "@generalbusiness/dap-bytes";
 export const AGENT_KEY_LINK = "artroom-agent-key:";
 /** The membership definitions an agent-key invitation may name: each is the exact pin of the membership scope it was issued at. */
 export const AGENT_KEY_MEMBERSHIPS = ["platform:membership@2", "platform:membership@4", "platform:membership@5", ...INVITATION_KEY_MEMBERSHIPS] as const;

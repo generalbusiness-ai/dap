@@ -1,6 +1,6 @@
 /** Small deployment-internal session reference witness; no public route. */
 import type { PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isPlatformDefinition, parseStrict, utf8, wellFormed } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isPlatformDefinition, parseStrict, utf8, wellFormed } from "@generalbusiness/dap-bytes";
 import { isObject, isScopeRef, same, type StateView } from "@generalbusiness/dap-derive";
 import { platform, SIBLINGS_OF } from "@generalbusiness/dap-platform";
 import type { Clock } from "./ports.ts";

@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Intent, type Seed } from "@generalbusiness/dap-contract";
-import { intentDigest, newIncarnation, scopeIdOf, signIntent, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
+import { intentDigest, newIncarnation, scopeIdOf, signIntent, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { clockOf, judgeGenesis } from "../src/index.ts";
 import { Ledger, T0, keys, t, genesisBodyDefinition } from "./fixtures-entry.ts";
 

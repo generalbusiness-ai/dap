@@ -22,7 +22,7 @@
  */
 
 import { ascii } from "./ascii.ts";
-import { hex } from "@generalbusiness/artroom-bytes";
+import { hex } from "@generalbusiness/dap-bytes";
 import { sha1 } from "@noble/hashes/legacy.js";
 import { GitRefusal, objectId, refName, type GitReason, type ObjectId } from "./names.ts";
 

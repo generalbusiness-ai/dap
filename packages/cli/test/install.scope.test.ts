@@ -1,10 +1,10 @@
 import { describe, expect, test, onTestFinished } from "vitest";
 import type { Entry, OperationId, Receipt, Seed } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, entryHash, intentDigest, newIncarnation, scopeIdOf, seedDigest, textDigest, timeMs, timeOf } from "@generalbusiness/artroom-bytes";
+import { b64url, canonicalize, entryHash, intentDigest, newIncarnation, scopeIdOf, seedDigest, textDigest, timeMs, timeOf } from "@generalbusiness/dap-bytes";
 import type { EffectRequest } from "../../scope/src/operations.ts";
-import type { Fetch } from "@generalbusiness/artroom-client";
+import type { Fetch } from "@generalbusiness/dap-client";
 import { DIRECTORY_OF, repositoryName } from "@generalbusiness/dap-platform";
-import { net } from "@generalbusiness/artroom-scope/testing";
+import { net } from "@generalbusiness/dap-scope/testing";
 import { beginSessionFixture } from "../../scope/test/session-settings.ts";
 import { Platform, routed, settle } from "../../scope/test/repository.ts";
 import { outsideOf, wired } from "../../scope/test/outside.ts";

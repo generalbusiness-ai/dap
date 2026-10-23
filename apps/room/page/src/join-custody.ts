@@ -1,8 +1,8 @@
-import { isInvitationMembership, isInvitationRedemptionFields } from "@generalbusiness/artroom-client";
+import { isInvitationMembership, isInvitationRedemptionFields } from "@generalbusiness/dap-client";
 /** One bounded origin-private enrollment slot; private signing keys live in IDB. */
 import type { Answer, KeyId, Receipt } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, intentDigest, isHead, isKeyId, isReceipt, isScopeId, isScopeRef, isSignedIntentShape, keyIdOfSecret, unb64url, verifySignedIntent } from "@generalbusiness/artroom-bytes";
-import type { Fetch, Signer } from "@generalbusiness/artroom-client";
+import { b64url, canonicalize, intentDigest, isHead, isKeyId, isReceipt, isScopeId, isScopeRef, isSignedIntentShape, keyIdOfSecret, unb64url, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import type { Fetch, Signer } from "@generalbusiness/dap-client";
 import { pageKeyStore } from "./browser-key-store.ts";
 import { closedCustodyRecord as closed, custodyKind } from "./custody.ts";
 import { invitationTarget, prepareJoin, settleJoin, submitJoin, verifyJoinReceipt, type Place, type PreparedJoin, type Session } from "./data.ts";

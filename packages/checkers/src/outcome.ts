@@ -23,7 +23,7 @@
  */
 
 import type { Digest, FactRef } from "@generalbusiness/dap-contract";
-import { canonicalBytes, digestBytes, isDigest, utf8, wellFormed } from "@generalbusiness/artroom-bytes";
+import { canonicalBytes, digestBytes, isDigest, utf8, wellFormed } from "@generalbusiness/dap-bytes";
 import { environmentDigest, exactly, type Configuration, type Variable } from "./configuration.ts";
 
 /** The reasons of a `check-error` that names no step. */

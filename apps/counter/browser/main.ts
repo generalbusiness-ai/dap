@@ -5,8 +5,8 @@ import { mountCountingStage } from "./app.ts";
 import { deviceSigner, importDemoBundle, importLegacyDevice, type SavedDevice } from "./device-key.ts";
 import { browserSpeech } from "./speech.ts";
 import { browserLock, privateCommandStore, privateDeviceStore, privatePendingStore } from "./storage.ts";
-import { canonicalize } from "@generalbusiness/artroom-bytes";
-import { applicationScreenTransport, loadApplicationScreenContext } from "@generalbusiness/artroom-client";
+import { canonicalize } from "@generalbusiness/dap-bytes";
+import { applicationScreenTransport, loadApplicationScreenContext } from "@generalbusiness/dap-client";
 import { counterEnrollment } from "./installed.ts";
 import type { TrustedActFetch } from "./dispatcher.ts";
 async function main() {

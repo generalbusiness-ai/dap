@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import type { Answer, DeclaredDefinition, MismatchReason, ReadRefusal, RefusalReason, UnavailableReason } from "@generalbusiness/dap-contract";
-import { REFUSAL_REASONS, READ_REFUSALS, b64url, utf8 } from "@generalbusiness/artroom-bytes";
-import { readApplicationInstallOptions, secretSigner, signedIntent, TransportError } from "@generalbusiness/artroom-client";
+import { REFUSAL_REASONS, READ_REFUSALS, b64url, utf8 } from "@generalbusiness/dap-bytes";
+import { readApplicationInstallOptions, secretSigner, signedIntent, TransportError } from "@generalbusiness/dap-client";
 import { TRUSTED_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { McpService, MISMATCH_NOTES, UNAVAILABLE_NOTES, answered, finding, guardSentences, meaningOf, memoryStore, type DefinitionLike, type Finding } from "../src/index.ts";
 import { READ_CREDENTIAL, SERVICE, SESSION_TOKEN, StandIn } from "./support/standin.ts";

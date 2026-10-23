@@ -3,7 +3,7 @@
  * actual Native Membership authority with separately prepared fixture pins. */
 import { expect } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { JournalFormat } from "@generalbusiness/artroom-git/journal";
+import type { JournalFormat } from "@generalbusiness/dap-git/journal";
 import type { ArchiveBudget } from "../../src/archive-budget.ts";
 import { ArchiveDriver } from "../../src/archive-driver.ts";
 import type { ArchivePolicyRegistry } from "../../src/archive-inventory.ts";

@@ -4,7 +4,7 @@
  */
 
 import type { Bounds, FieldType } from "@generalbusiness/dap-contract";
-import { canonicalize, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, utf8 } from "@generalbusiness/dap-bytes";
 
 /** The canonical bytes of a value that the definition states. */
 export const stated = (v: unknown): number => utf8(canonicalize(v)).length;

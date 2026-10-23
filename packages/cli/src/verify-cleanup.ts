@@ -1,6 +1,6 @@
 /** Read-only cleanup observation, separate from the historical replay result. */
 import type { FactRef, Head, Item, Read, Summary } from "@generalbusiness/dap-contract";
-import { canonicalize } from "@generalbusiness/artroom-bytes";
+import { canonicalize } from "@generalbusiness/dap-bytes";
 
 interface CleanupReader {
   summary(): Promise<Read<Summary>>;

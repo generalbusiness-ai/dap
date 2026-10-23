@@ -1,5 +1,5 @@
 /** Exact pins and bounded messages of the M1 install cohort. */
-import { canonicalize, isRecord, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isRecord, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import { isActions, type Role } from "./membership.ts";
 export const APPLICATION_INSTALL_RULES = "platform:rules@5" as const;
 export const TRUSTED_APPLICATION_COHORT = {

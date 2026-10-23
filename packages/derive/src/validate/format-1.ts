@@ -7,7 +7,7 @@
 
 import { hasWorkspace } from "../capability/workspace.ts";
 import type { Bounds, DeclaredDefinition } from "@generalbusiness/dap-contract";
-import { definitionDigest } from "@generalbusiness/artroom-bytes";
+import { definitionDigest } from "@generalbusiness/dap-bytes";
 import { isObject, own } from "../values.ts";
 import { capabilities } from "./capability.ts";
 import { capacityOf } from "./capacity.ts";

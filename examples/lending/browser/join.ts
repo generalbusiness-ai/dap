@@ -2,14 +2,14 @@
  * joining owns exact request custody; this adapter keeps the historical
  * membership pin and the application's own discovery/identity validation. */
 import type { KeyId, ScopeRef, Summary } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, timeOf } from "@generalbusiness/artroom-bytes";
+import { b64url, canonicalize, timeOf } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, httpTransport, requestSession, signerSessionRequest, storedWebCryptoSigner, generateBrowserDeviceKey,
-  applicationDeviceIdentity, readApplicationInvitation, browserJoining, readBrowserInvitation, type ApplicationScreenContext, type BrowserJoining, type BrowserJoiningOptions, type Fetch, type Signer } from "@generalbusiness/artroom-client";
+  applicationDeviceIdentity, readApplicationInvitation, browserJoining, readBrowserInvitation, type ApplicationScreenContext, type BrowserJoining, type BrowserJoiningOptions, type Fetch, type Signer } from "@generalbusiness/dap-client";
 import { LENDING_DEFINITION } from "../pin.ts";
 import { memberForKey } from "./model.ts";
 import type { LendingIdentity } from "./custody.ts";
-import type { BrowserJoinSeat as Seat } from "@generalbusiness/artroom-client";
-export type { BrowserJoinSeat as Seat, BrowserInvitation as Invited, BrowserKeptJoin as KeptJoin, BrowserJoinStore as JoinStore, BrowserJoinOutcome as JoinOutcome, BrowserJoining as Joining } from "@generalbusiness/artroom-client";
+import type { BrowserJoinSeat as Seat } from "@generalbusiness/dap-client";
+export type { BrowserJoinSeat as Seat, BrowserInvitation as Invited, BrowserKeptJoin as KeptJoin, BrowserJoinStore as JoinStore, BrowserJoinOutcome as JoinOutcome, BrowserJoining as Joining } from "@generalbusiness/dap-client";
 export const ROOM_MEMBERSHIP = "platform:membership@4";
 export interface DeviceKey { publicKey: KeyId; pair: CryptoKeyPair }
 export async function newDeviceKey(): Promise<DeviceKey> { return await generateBrowserDeviceKey() as DeviceKey; }

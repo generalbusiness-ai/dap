@@ -15,7 +15,7 @@
 
 import type { Bounds, Observe } from "@generalbusiness/dap-contract";
 import { RETAINED_INPUT_BYTES } from "@generalbusiness/dap-contract";
-import { isMemberRef } from "@generalbusiness/artroom-bytes";
+import { isMemberRef } from "@generalbusiness/dap-bytes";
 import { isObject } from "../values.ts";
 import type { Ctx, Defining } from "./context.ts";
 import { operand } from "./operands.ts";

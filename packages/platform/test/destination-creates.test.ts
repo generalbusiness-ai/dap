@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { OperationId, Request, Result } from "@generalbusiness/dap-contract";
-import { factRefOf } from "@generalbusiness/artroom-bytes";
+import { factRefOf } from "@generalbusiness/dap-bytes";
 import { destinationReceipt, firstHeadCommit } from "../src/destination.ts";
 import { Branch, HEAD, NEXT, OTHER, handMade, said } from "./fixtures-entry.ts";
 import { t } from "@generalbusiness/dap-derive/testing";

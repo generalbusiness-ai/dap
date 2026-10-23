@@ -1,7 +1,7 @@
 /** Real signatures over labelled stand-in addresses. No service/native
  * authority is inferred from this private local journal. */
 import { expect, test } from "vitest";
-import { keyIdOfSecret, newIncarnation, scopeIdOf, signIntent, textDigest } from "@generalbusiness/artroom-bytes";
+import { keyIdOfSecret, newIncarnation, scopeIdOf, signIntent, textDigest } from "@generalbusiness/dap-bytes";
 import { requestJournal, appendPreparedRequest, markRequestAttempt, type RequestActorIdentity, type RequestEnvelope } from "../src/index.ts";
 const seed = new Uint8Array(32).fill(71), publicKey = keyIdOfSecret(seed), definition = textDigest("PUBLIC TEST journal definition");
 const ref = (kind: "lane" | "membership") => ({ kind, scope: scopeIdOf({ v: 1, kind, definition, creator: null, cause: textDigest("PUBLIC TEST journal address " + kind), ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(9)) });

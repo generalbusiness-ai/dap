@@ -2,7 +2,7 @@
  * represented tree, distinct from the new interval processed by a pass. */
 import { decodeGitText } from "./wire-text.ts";
 import type { Digest, Head, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isScopeRef, parseStrict } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isDigest, isScopeRef, parseStrict } from "@generalbusiness/dap-bytes";
 import type { ArchiveRetainedName } from "./journal-path.ts";
 import { journalFormat, journalId, type JournalFormat } from "./journal-objects.ts";
 import { JOURNAL_SELECTION_BYTES, journalForeignSources, journalKeyName, journalList, journalNatural, journalOrdered, journalRecord, journalRetainedKey, type JournalForeignSource, type JournalSelection } from "./journal-selection.ts";

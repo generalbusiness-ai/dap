@@ -1,5 +1,5 @@
 /** Raw peer-pinned declarations; their actual child digest uses unchanged raw bytes. */
-import { definitionDigest } from "@generalbusiness/artroom-bytes";
+import { definitionDigest } from "@generalbusiness/dap-bytes";
 import { sourceOrderDefinition } from "./source-order-data.ts";
 export function peerPinData() {
   const sender = structuredClone(sourceOrderDefinition), alternate = structuredClone(sourceOrderDefinition);

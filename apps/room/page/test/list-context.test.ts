@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { keyIdOfSecret, newIncarnation } from "@generalbusiness/artroom-bytes";
+import { keyIdOfSecret, newIncarnation } from "@generalbusiness/dap-bytes";
 import { ListContexts, type ListContext, type ListStorage } from "../src/list-context.ts";
 
 // Made-up public contexts. No native permission, membership or browser runs.

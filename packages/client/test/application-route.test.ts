@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { b64url, canonicalize, keyIdOfSecret, newIncarnation, scopeIdOf, utf8 } from "@generalbusiness/artroom-bytes";
+import { b64url, canonicalize, keyIdOfSecret, newIncarnation, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import type { Digest, ScopeKind, ScopeRef } from "@generalbusiness/dap-contract";
 import { applicationDeviceIdentity, loadApplicationScreenContext, readApplicationInvitation } from "../src/application-screen.ts";
 import { applicationScreenPath, readApplicationScreenAddress, readApplicationScreenContext } from "../src/application-route.ts";

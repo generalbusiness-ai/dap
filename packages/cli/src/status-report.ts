@@ -1,7 +1,7 @@
 /** Bounded operational readings. Each column owns its native head. */
 import type { Head, Read, ScopeId } from "@generalbusiness/dap-contract";
-import { isScopeRef, scopeIdOf } from "@generalbusiness/artroom-bytes";
-import type { OperationalApi, Transport } from "@generalbusiness/artroom-client";
+import { isScopeRef, scopeIdOf } from "@generalbusiness/dap-bytes";
+import type { OperationalApi, Transport } from "@generalbusiness/dap-client";
 
 export const STATUS_PAGES = 20;
 export const STATUS_SCOPES = 1000;

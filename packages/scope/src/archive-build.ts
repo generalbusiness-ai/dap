@@ -1,9 +1,9 @@
 /** Selection-to-layout boundary. A rebuild spends a new pass's finite
  * allowance on the stored manifest and exact immutable dependencies. */
-import { same, natural } from "@generalbusiness/artroom-bytes";
+import { same, natural } from "@generalbusiness/dap-bytes";
 import type { Bounds, Digest, FactRef, Head, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, isRecord, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
-import { buildJournalArchive, buildJournalPass, convertJournalArchiveV1, JOURNAL_SELECTION_BYTES, journalSelection, journalPassSelection, journalAnchorCopyCount, journalLegacyCopyCount, validateJournalPublicationEntries, JournalPassPreparation, JournalWork, type JournalArchive, type JournalPassArchive, type JournalSelection, type JournalPassSelection, type JournalCost, type JournalFormat, type JournalLayoutResult, type JournalObjectSource, type JournalAnchorPublication, type JournalLegacyAnchors } from "@generalbusiness/artroom-git/journal";
+import { canonicalize, isRecord, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
+import { buildJournalArchive, buildJournalPass, convertJournalArchiveV1, JOURNAL_SELECTION_BYTES, journalSelection, journalPassSelection, journalAnchorCopyCount, journalLegacyCopyCount, validateJournalPublicationEntries, JournalPassPreparation, JournalWork, type JournalArchive, type JournalPassArchive, type JournalSelection, type JournalPassSelection, type JournalCost, type JournalFormat, type JournalLayoutResult, type JournalObjectSource, type JournalAnchorPublication, type JournalLegacyAnchors } from "@generalbusiness/dap-git/journal";
 import { ARCHIVE_BOUNDS, ArchiveBudget, ArchiveStopped } from "./archive-budget.ts";
 import { archiveInput } from "./archive-input.ts";
 import { inventoryArchive, inventoryArchiveRoot, type ArchivePolicyRegistry } from "./archive-inventory.ts";

@@ -5,7 +5,7 @@
  */
 
 import type { FieldType } from "@generalbusiness/dap-contract";
-import { isScopeKind } from "@generalbusiness/artroom-bytes";
+import { isScopeKind } from "@generalbusiness/dap-bytes";
 import { isObject, isValue, own } from "../values.ts";
 import { stepKind } from "./capability.ts";
 import { mark, marked, type Defining } from "./context.ts";
@@ -23,7 +23,7 @@ const FIELD_SHAPES: Readonly<Record<string, readonly string[]>> = {
  * `from` is one of `to`, and `to` requires none that `from` may lack. A copy
  * needs this; a comparison does not.
  */
-export { fieldAssignable as assignable } from "@generalbusiness/artroom-package-graph";
+export { fieldAssignable as assignable } from "@generalbusiness/dap-package-graph";
 
 /** The rule that checks a type which is a mark, in platform data (section 6.1, place 3). Null: the type is one that the forms write. */
 export const codeOf = (type: FieldType | null | undefined): string | null => (marked(type) ? String((type as Record<string, unknown>)["code"]) : null);

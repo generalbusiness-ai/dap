@@ -33,8 +33,8 @@
  * to the request it forwards (section 5.3).
  */
 
-import { utf8 } from "@generalbusiness/artroom-bytes";
-import { hex } from "@generalbusiness/artroom-bytes";
+import { utf8 } from "@generalbusiness/dap-bytes";
+import { hex } from "@generalbusiness/dap-bytes";
 import { sha1 } from "@noble/hashes/legacy.js";
 import { GitRefusal, branchRef, objectId, refName, remoteUrl, type ObjectId } from "./names.ts";
 import { GitFailure, directory, repositorySource, type GitProgram } from "./program.ts";

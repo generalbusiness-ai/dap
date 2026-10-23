@@ -1,7 +1,7 @@
 /** One deployment's serving action. A rate result is never native authority. */
 import type { SignedIntent } from "@generalbusiness/dap-contract";
-import { isSignedIntentShape, parseStrict, verifySignedIntent } from "@generalbusiness/artroom-bytes";
-import { applicationJson } from "@generalbusiness/artroom-bytes/application";
+import { isSignedIntentShape, parseStrict, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { applicationJson } from "@generalbusiness/dap-bytes/application";
 import { signedReadForLimits } from "./signed-reads.ts";
 import { SCOPE_INDEX_NAME, type ScopeIndexEnvironment } from "./scope-index.ts";
 import { ServingLimits, servingLimitConfig, type ServingLimitSettings } from "./serving-limits.ts";

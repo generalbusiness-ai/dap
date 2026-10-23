@@ -4,7 +4,7 @@
  * ask.archiving's lineage. The production target's checked birth walk does
  * that before either item query. Namespace RPC access alone is no proof. */
 import type { ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
-import { isDigest, isEntry, isFactRef, isScopeRef, parseStrict, readItemQueryParameter, same } from "@generalbusiness/artroom-bytes";
+import { isDigest, isEntry, isFactRef, isScopeRef, parseStrict, readItemQueryParameter, same } from "@generalbusiness/dap-bytes";
 import { isEntryOf } from "@generalbusiness/dap-derive";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT as C, directoryIdOf } from "@generalbusiness/dap-platform";
 import type { OutsideGiven } from "./given.ts";

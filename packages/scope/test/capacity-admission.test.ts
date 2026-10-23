@@ -1,6 +1,6 @@
 import { capacityLaneChange, capacityRequestChange } from "./definition-corpus-data.ts";
 import { env } from "cloudflare:workers";
-import { httpSource, verify } from "@generalbusiness/artroom-replay";
+import { httpSource, verify } from "@generalbusiness/dap-replay";
 import { fixtureRoute as route } from "./support/serving-route.ts";
 import { CAPABILITY_CODE } from "../src/ports.ts";
 import { expect, test } from "vitest";

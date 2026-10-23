@@ -1,7 +1,7 @@
 /** Shared raw Grow graph variants; importing this module performs no validation. */
 import { expect } from "vitest";
 import type { DeclaredDefinition, Guard } from "@generalbusiness/dap-contract";
-import type { PackageGraphInput } from "@generalbusiness/artroom-package-graph";
+import type { PackageGraphInput } from "@generalbusiness/dap-package-graph";
 import { room } from "../../../../examples/grow/room.ts";
 import { growData as grow } from "./package-graph-data.ts";
 type GraphChange = (parent: DeclaredDefinition, child: DeclaredDefinition) => void;

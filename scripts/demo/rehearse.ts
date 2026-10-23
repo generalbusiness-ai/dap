@@ -11,8 +11,8 @@
  * one, and nothing else that it prints holds a secret (a read token is never printed by `dap clone`; a key is printed by its ID).
  */
 
-import { b64url, digestBytes, entryHash, canonicalize, intentDigest, isPlatformDefinition, isReceipt, isScopeId, isScopeRef, isSignedIntentShape, keyIdOfSecret, platformName, scopeIdOf, timeOf, utf8, verifySignedIntent } from "@generalbusiness/artroom-bytes";
-import { ScopeHandle, httpTransport, requestSession, secretSigner, sessionRequest, signedReads } from "@generalbusiness/artroom-client";
+import { b64url, digestBytes, entryHash, canonicalize, intentDigest, isPlatformDefinition, isReceipt, isScopeId, isScopeRef, isSignedIntentShape, keyIdOfSecret, platformName, scopeIdOf, timeOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { ScopeHandle, httpTransport, requestSession, secretSigner, sessionRequest, signedReads } from "@generalbusiness/dap-client";
 import { command, type Context, type Outcome } from "@generalbusiness/dap-cli";
 import { DEMO_DIGESTS, MANIFEST_DIGESTS, changeDemo, changeDemo3, issueDemo } from "@generalbusiness/dap-lanes";
 import { firstExtents, platform } from "@generalbusiness/dap-platform";

@@ -1,7 +1,7 @@
 /** The current metadata row is bounded before any transfer or parsing. */
-import { isLocalId as integer } from "@generalbusiness/artroom-bytes";
-import { freeze } from "@generalbusiness/artroom-bytes";
-import { canonicalize, isDigest, isFactRef, isScopeRef, parseStrict } from "@generalbusiness/artroom-bytes";
+import { isLocalId as integer } from "@generalbusiness/dap-bytes";
+import { freeze } from "@generalbusiness/dap-bytes";
+import { canonicalize, isDigest, isFactRef, isScopeRef, parseStrict } from "@generalbusiness/dap-bytes";
 import { isObject, timeMs, type ScopeState } from "@generalbusiness/dap-derive";
 import { PreparationBudget } from "./preparation-budget.ts";
 import type { Sql } from "./sqlite.ts";

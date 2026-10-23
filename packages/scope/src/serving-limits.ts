@@ -2,7 +2,7 @@
  * object owns one instance. Restart or actual object eviction loses it.
  * No active window is removed to admit a new identity. */
 import type { KeyId } from "@generalbusiness/dap-contract";
-import { isKeyId } from "@generalbusiness/artroom-bytes";
+import { isKeyId } from "@generalbusiness/dap-bytes";
 import { addressKey } from "./limits.ts";
 
 export const SERVING_WINDOW_CAPACITY = 8192;

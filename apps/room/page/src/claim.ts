@@ -2,8 +2,8 @@
  * A typed label is local intent, not the repository name selected by the host.
  * This module never installs a register or imports an operator key. */
 import type { KeyId, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isKeyId, isScopeRef, parseStrict, unb64url } from "@generalbusiness/artroom-bytes";
-import { ScopeHandle, httpTransport, signedReads, isCreationOffer, type Fetch } from "@generalbusiness/artroom-client";
+import { canonicalize, isKeyId, isScopeRef, parseStrict, unb64url } from "@generalbusiness/dap-bytes";
+import { ScopeHandle, httpTransport, signedReads, isCreationOffer, type Fetch } from "@generalbusiness/dap-client";
 import { claim, checkClaim, type Config, type Context, type Outcome, type PendingClaim, type Repository, type Store } from "@generalbusiness/dap-cli";
 import { DIRECTORY_OF } from "@generalbusiness/dap-platform";
 import { sessionKey, sessionSigner, type Session } from "./data.ts";

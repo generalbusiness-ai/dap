@@ -1,7 +1,7 @@
 /** Bounded reads for one already accepted mint-read operation. This waiter
  * never submits an act or retrieves a plaintext, including after cancellation. */
 import type { Entry, Input, OperationId, Read, ScopeId } from "@generalbusiness/dap-contract";
-import { TransportError, type Fetch } from "@generalbusiness/artroom-client";
+import { TransportError, type Fetch } from "@generalbusiness/dap-client";
 
 export const CLONE_ENTRIES_PER_POLL = 64;
 export const CLONE_WAIT_SECONDS = 120;

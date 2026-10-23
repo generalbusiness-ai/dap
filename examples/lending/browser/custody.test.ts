@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { Answer, Receipt } from "@generalbusiness/dap-contract";
-import { signIntent } from "@generalbusiness/artroom-bytes";
+import { signIntent } from "@generalbusiness/dap-bytes";
 import { keys, t } from "@generalbusiness/dap-derive/testing";
 import { LENDING_DEFINITION } from "../pin.ts";
 import { advance, lendingBinding, validKept, type Envelope, type Kept, type KeptStore, type LendingIdentity, type Ports } from "./custody.ts";

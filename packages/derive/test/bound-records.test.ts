@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { canonicalBytes } from "@generalbusiness/artroom-bytes";
+import { canonicalBytes } from "@generalbusiness/dap-bytes";
 import { validateDefinition } from "../src/index.ts";
 import { boundRecordData, boundRecordDefinition, PIN_BOUNDS } from "./fixtures-entry.ts";
 

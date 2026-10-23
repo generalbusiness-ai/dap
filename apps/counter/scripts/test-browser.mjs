@@ -26,7 +26,7 @@ const output=realpathSync(await mkdtemp(resolve(tmpdir(),"artroom-counting-node-
 const aliases={};
 for(const name of ["client","bytes","contract"]){
   const directory=resolve(root,`packages/${name}`),pkg=JSON.parse(await readFile(resolve(directory,"package.json"),"utf8"));
-  const expected=`@generalbusiness/${name === "contract" ? "dap" : "artroom"}-${name}`;
+  const expected=`@generalbusiness/dap-${name}`;
   if(pkg.name!==expected)throw new Error("Counting witness workspace name differs from its source.");
   for(const [entry,target]of Object.entries(pkg.exports)){
     if(typeof target!=="string")continue; // types-only entries do not enter a runtime bundle

@@ -4,11 +4,11 @@
 import { readFile } from "node:fs/promises";
 import { expect, test } from "vitest";
 import { DEVICE_COMMAND, PROPOSED_BOUNDS, type DeviceCommandGrant, type SignedIntent } from "@generalbusiness/dap-contract";
-import { definitionDigest } from "@generalbusiness/artroom-bytes";
-import { secretSigner } from "@generalbusiness/artroom-client";
+import { definitionDigest } from "@generalbusiness/dap-bytes";
+import { secretSigner } from "@generalbusiness/dap-client";
 import { clockOf, deviceCommand, judgePreparation, prepareRules, validateDefinition } from "@generalbusiness/dap-derive";
 import { evaluateRules } from "@generalbusiness/dap-derive/rule";
-import { receiptOf } from "@generalbusiness/artroom-scope/runtime";
+import { receiptOf } from "@generalbusiness/dap-scope/runtime";
 import { created, deliver, grantOf, t, valid } from "@generalbusiness/dap-derive/testing";
 import { simulatorTickParentDefinition } from "./definition-corpus-data.ts";
 import { demoDefinitions } from "./demo-definitions.ts";

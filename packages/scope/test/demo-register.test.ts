@@ -4,7 +4,7 @@
 import { env, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import type { Intent, OperationId } from "@generalbusiness/dap-contract";
-import { factRefOf, intentDigest, isSeed, scopeIdOf, seedDigest, signIntent } from "@generalbusiness/artroom-bytes";
+import { factRefOf, intentDigest, isSeed, scopeIdOf, seedDigest, signIntent } from "@generalbusiness/dap-bytes";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT, DEMO_PURPOSE, DEMO_REGISTER, WEB_DEMO_REGISTER, DIRECTORY_OF, repositoryName } from "@generalbusiness/dap-platform";
 import { api } from "../src/worker.ts";
 import { indexedScopes, scopeIndex } from "../src/scope-index.ts";

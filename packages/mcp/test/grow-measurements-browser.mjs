@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { secretSigner } from '@generalbusiness/artroom-client';
+import { secretSigner } from '@generalbusiness/dap-client';
 import { prepareGrowCheck } from '../../../examples/grow/prepare-check.ts';
 import { prepareApplicationDirectory } from '../../cli/src/application-files.ts';
 import { openOwnedGrowScenario } from './support/grow-owned-session.ts';

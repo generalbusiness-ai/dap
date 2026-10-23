@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, parseStrict } from "@generalbusiness/artroom-bytes";
+import { canonicalize, definitionDigest, parseStrict } from "@generalbusiness/dap-bytes";
 import { validateDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { grantOf, keys, type Ledger } from "@generalbusiness/dap-derive/testing";

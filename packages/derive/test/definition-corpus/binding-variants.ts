@@ -1,7 +1,7 @@
 /** Exact positive callbacks from forms-binding.test.ts, without eager validation. */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalBytes, parseStrictBytes } from "@generalbusiness/artroom-bytes";
+import { canonicalBytes, parseStrictBytes } from "@generalbusiness/dap-bytes";
 import { PROFILES } from "../../src/validate/index.ts";
 import { M, M51, TICKET, OWNER, JOB_OF } from "./forms-binding-data.ts";
 import type { DefinitionCorpusRow } from "./row.ts";

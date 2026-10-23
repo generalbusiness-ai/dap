@@ -1,7 +1,7 @@
 /** Mechanical Git-object witness, not native confirmation or replay. Each
  * update uses the native pass budget; file bodies are labelled stand-ins. */
 import { expect, test } from "vitest";
-import { textDigest, utf8 } from "@generalbusiness/artroom-bytes";
+import { textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { ArchiveBudget, type ArchiveCost } from "../../scope/src/archive-budget.ts";
 import { JournalObjectReader, JournalObjects, type JournalObject, type JournalTreeRow } from "../src/journal-objects.ts";
 import { JournalWork } from "../src/journal-work.ts";

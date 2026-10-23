@@ -3,7 +3,7 @@
  * real @5 admission, fresh standing or a provider send. */
 import { expect, test } from "vitest";
 import type { Entry, FactRef, FieldValue, Input, KeyId } from "@generalbusiness/dap-contract";
-import { entryHash, keyIdOfSecret, newIncarnation } from "@generalbusiness/artroom-bytes";
+import { entryHash, keyIdOfSecret, newIncarnation } from "@generalbusiness/dap-bytes";
 import type { Item, Operation } from "@generalbusiness/dap-derive";
 import { d, directory, otherLane, t } from "@generalbusiness/dap-derive/testing";
 import { MEMBERSHIP, keyObserved, retained, destinationRita as rita } from "./fixtures-entry.ts";

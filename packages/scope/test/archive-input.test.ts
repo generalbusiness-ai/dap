@@ -1,7 +1,7 @@
 /** Native journal/retention rows and real SQLite. Selection descriptors in
  * these focused port tests are test-authored, not export policy admission. */
 import { expect, test } from "vitest";
-import { canonicalize, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, utf8 } from "@generalbusiness/dap-bytes";
 import { archiveInput } from "../src/archive-input.ts";
 import type { ArchiveInputSelection } from "../src/archive-input.ts";
 import { ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";

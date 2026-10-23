@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test } from "vitest";
-import { sha1 } from "@generalbusiness/artroom-bytes";
+import { sha1 } from "@generalbusiness/dap-bytes";
 import { decodePack, SmartHttpSource } from "../src/http-read.ts";
 import { GitRefusal } from "../src/names.ts";
 import { Reader } from "../src/reader.ts";

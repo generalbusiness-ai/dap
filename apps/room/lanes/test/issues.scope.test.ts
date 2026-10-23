@@ -1,11 +1,11 @@
 import { describe, expect, test, onTestFinished } from "vitest";
 import type { ScopeId } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, scopeIdOf, textDigest, timeMs, utf8 } from "@generalbusiness/artroom-bytes";
-import type { Fetch } from "@generalbusiness/artroom-client";
+import { b64url, canonicalize, scopeIdOf, textDigest, timeMs, utf8 } from "@generalbusiness/dap-bytes";
+import type { Fetch } from "@generalbusiness/dap-client";
 import { firstExtents } from "@generalbusiness/dap-platform";
-import { net } from "@generalbusiness/artroom-scope/testing";
+import { net } from "@generalbusiness/dap-scope/testing";
 import { beginSessionFixture } from "../../../../packages/scope/test/session-settings.ts";
-import { platformOutside } from "@generalbusiness/artroom-scope/testing/worker";
+import { platformOutside } from "@generalbusiness/dap-scope/testing/worker";
 import { ownHost, type Stand } from "../../../../packages/scope/test/hosts.ts";
 import { Platform, routed, settle } from "../../../../packages/scope/test/repository.ts";
 import { command, memoryStore, type Context, type Outcome } from "../../../../packages/cli/src/index.ts";

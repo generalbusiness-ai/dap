@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { isSealed } from "@generalbusiness/artroom-bytes";
+import { isSealed } from "@generalbusiness/dap-bytes";
 import { derivable, validateDefinition, type Capabilities, type ProblemCode } from "../src/index.ts";
 import { Scope, keys, laneDefinition, on, smallDefinition, valid } from "./fixtures-entry.ts";
 

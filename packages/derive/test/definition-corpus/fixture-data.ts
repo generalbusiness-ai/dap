@@ -1,6 +1,6 @@
 /** Raw shared declarations. Importing these data does not run validation or a history. */
 import type { ActType, DeclaredDefinition, Digest, Guard } from "@generalbusiness/dap-contract";
-import { definitionDigest } from "@generalbusiness/artroom-bytes";
+import { definitionDigest } from "@generalbusiness/dap-bytes";
 
 const d = (c: string): Digest => `sha256:${c.repeat(64)}`;
 

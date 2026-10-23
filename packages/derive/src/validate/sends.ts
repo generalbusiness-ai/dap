@@ -2,7 +2,7 @@
 
 import type { Notify } from "@generalbusiness/dap-contract";
 import type { FieldType } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isPlatformDefinition, isScopeKind } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isDigest, isPlatformDefinition, isScopeKind } from "@generalbusiness/dap-bytes";
 import { isObject, own } from "../values.ts";
 import { mark, marked, subject, type ClauseSet, type Ctx, type Defining, type PendingWork, type Type } from "./context.ts";
 import { effects } from "./effects.ts";

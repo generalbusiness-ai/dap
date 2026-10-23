@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Entry, FieldValue, OperationId, Request } from "@generalbusiness/dap-contract";
-import { canonicalize, factRefOf, parseStrict } from "@generalbusiness/artroom-bytes";
+import { canonicalize, factRefOf, parseStrict } from "@generalbusiness/dap-bytes";
 import { derivable, operationSettled, runnable, type Item, type JudgedInput, type PlatformRule, type RuleGiven } from "@generalbusiness/dap-derive";
 import { t } from "@generalbusiness/dap-derive/testing";
 // The data and the rules of the newest version, `platform:destination@2`, which every test here creates on.

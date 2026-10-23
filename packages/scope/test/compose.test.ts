@@ -3,7 +3,7 @@ import { describe, expect, test } from "vitest";
 import { runInDurableObject } from "cloudflare:test";
 import type { Entry, Input, Seed } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { messageDigest, parseStrict, scopeIdOf } from "@generalbusiness/artroom-bytes";
+import { messageDigest, parseStrict, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { reserved, timeMs } from "@generalbusiness/dap-derive";
 import { deskDefinition, ticketDefinition, variant } from "@generalbusiness/dap-derive/testing";
 import { SqliteStore } from "../src/index.ts";

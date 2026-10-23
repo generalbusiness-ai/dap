@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { RetainedInput } from "@generalbusiness/dap-contract";
-import { canonicalBytes, canonicalize, digestBytes, entryHash } from "@generalbusiness/artroom-bytes";
+import { canonicalBytes, canonicalize, digestBytes, entryHash } from "@generalbusiness/dap-bytes";
 import { deliver, t } from "@generalbusiness/dap-derive/testing";
 import { lateFixture } from "../../derive/test/fixtures-late.ts";
 import { MemorySource, verify } from "../src/index.ts";

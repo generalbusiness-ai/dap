@@ -2,7 +2,7 @@
  * may remain absent only at the same path, mode and ID in the old tree.
  * This is no complete parent closure, privacy certificate or replay. */
 import type { ScopeRef } from "@generalbusiness/dap-contract";
-import { isScopeRef } from "@generalbusiness/artroom-bytes";
+import { isScopeRef } from "@generalbusiness/dap-bytes";
 import { JournalObjectReader, journalFormat, journalId, type JournalFormat, type JournalObjectSource, type JournalTreeRow } from "./journal-objects.ts";
 import { sameJournalScope } from "./journal-selection.ts";
 import { journalV2Head } from "./journal-v2-manifest.ts";

@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { runInDurableObject } from "cloudflare:test";
 import type { SessionClaims } from "@generalbusiness/dap-contract";
-import { canonicalize } from "@generalbusiness/artroom-bytes";
+import { canonicalize } from "@generalbusiness/dap-bytes";
 import { SqliteStore } from "../src/sqlite.ts";
 import { mintSession, readerOf, sessionsOf } from "../src/sessions.ts";
 import { sessionReferenceReply } from "../src/session-reference.ts";

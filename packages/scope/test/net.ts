@@ -9,7 +9,7 @@
 import { env } from "cloudflare:workers";
 import { evictDurableObject, runDurableObjectAlarm, runInDurableObject } from "cloudflare:test";
 import type { Answer, DeclaredDefinition, Entry, Grant, Intent, Read, Receipt, ScopeId, ScopeRef, Seed, SignedIntent } from "@generalbusiness/dap-contract";
-import { intentDigest, scopeIdOf, signIntent } from "@generalbusiness/artroom-bytes";
+import { intentDigest, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import { timeMs, timeOf, type Delivered, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { deskDefinition, grantOf, keys, ticketDefinition, type Actor, type Over } from "@generalbusiness/dap-derive/testing";
 import type { Delivery, OutboxItem, Sealed, Summary } from "../src/index.ts";

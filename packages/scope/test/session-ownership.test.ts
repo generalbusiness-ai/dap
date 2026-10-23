@@ -1,5 +1,5 @@
 import { expect, onTestFinished, test } from "vitest";
-import { b64url, entryHash, timeMs } from "@generalbusiness/artroom-bytes";
+import { b64url, entryHash, timeMs } from "@generalbusiness/dap-bytes";
 import { command, memoryStore } from "@generalbusiness/dap-cli";
 import { Gate, net } from "../src/testing.ts";
 import { routed } from "./repository.ts";

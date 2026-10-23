@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { Answer, Head, Intent, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
-import { newIncarnation, scopeIdOf, signIntent, textDigest } from "@generalbusiness/artroom-bytes";
+import { newIncarnation, scopeIdOf, signIntent, textDigest } from "@generalbusiness/dap-bytes";
 import { d } from "@generalbusiness/dap-derive/testing";
 import { JoinLimits, addressKey, isJoin, type LimitConfig } from "../src/index.ts";
 import { soon } from "./net.ts";

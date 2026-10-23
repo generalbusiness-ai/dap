@@ -4,7 +4,7 @@
  * call and accepts only that call's own answer. No listing settles an attempt.
  */
 import type { FieldValue, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, intentDigest, isDigest, isOperationId, seedDigest, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, entryHash, intentDigest, isDigest, isOperationId, seedDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { DIRECTORY_OF, isOf, repositoryName } from "@generalbusiness/dap-platform";
 import type { OutsideGiven } from "./given.ts";
 import type { EffectAnswer, EffectRequest, Outside } from "./operations.ts";

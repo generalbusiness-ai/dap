@@ -2,10 +2,10 @@ import { capacityRecoveredTextChange, recoveredAliasData } from "./definition-co
 import { env } from "cloudflare:workers";
 import { expect, test } from "vitest";
 import { DOMAINS, PROPOSED_BOUNDS, type Entry, type PlatformData, type PlatformDefinition, type Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, intentDigest, scopeIdOf, signIntent, textDigest } from "@generalbusiness/artroom-bytes";
+import { canonicalize, intentDigest, scopeIdOf, signIntent, textDigest } from "@generalbusiness/dap-bytes";
 import { reserved, validateDefinition, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { grantOf, notesDefinition, valid, variant } from "@generalbusiness/dap-derive/testing";
-import { httpSource, verify } from "@generalbusiness/artroom-replay";
+import { httpSource, verify } from "@generalbusiness/dap-replay";
 import { controls } from "../src/testing.ts";
 import { SqliteStore } from "../src/index.ts";
 import { fixtureRoute as route } from "./support/serving-route.ts";

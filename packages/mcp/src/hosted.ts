@@ -1,5 +1,5 @@
-import { isRecord, same } from "@generalbusiness/artroom-bytes";
-import { invitationRedemptionFields } from "@generalbusiness/artroom-client";
+import { isRecord, same } from "@generalbusiness/dap-bytes";
+import { invitationRedemptionFields } from "@generalbusiness/dap-client";
 /**
  * The hosted MCP endpoint (notes/2026-10-13-hosted-mcp-endpoint.md): the
  * registry of one repository's agents and the object of one agent, each over
@@ -30,8 +30,8 @@ import { invitationRedemptionFields } from "@generalbusiness/artroom-client";
 
 import type { ControlAction, ControlRequest, Digest, KeyId, MemberId, ScopeRef, Seed, SignedControl } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, digestBytes, isKeyId, isScopeRef, keyIdOfSecret, parseStrict, scopeIdOf, timeMs, timeOf, unb64url, utf8, verifyControl } from "@generalbusiness/artroom-bytes";
-import { TransportError, agentKeyInvitationOf, secretSigner, signedIntent, type AgentKeyInvitation, type Fetch } from "@generalbusiness/artroom-client";
+import { b64url, canonicalize, digestBytes, isKeyId, isScopeRef, keyIdOfSecret, parseStrict, scopeIdOf, timeMs, timeOf, unb64url, utf8, verifyControl } from "@generalbusiness/dap-bytes";
+import { TransportError, agentKeyInvitationOf, secretSigner, signedIntent, type AgentKeyInvitation, type Fetch } from "@generalbusiness/dap-client";
 import { CustodyError, Lost, meaningOf, type Envelope, type Identity } from "./custody.ts";
 import { McpHttp, SessionFull, type SessionRow } from "./http.ts";
 import type { McpConfig, Root } from "./inventory.ts";

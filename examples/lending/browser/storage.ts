@@ -5,7 +5,7 @@
  * anywhere. A Web Lock keeps other tabs out of a slot while one tab uses it.
  * No session token is stored.
  */
-import { browserPrivateSlots } from "@generalbusiness/artroom-client";
+import { browserPrivateSlots } from "@generalbusiness/dap-client";
 import type { CustodyLock, Kept, KeptStore, LendingIdentity } from "./custody.ts";
 import type { DeviceKey, JoinStore, KeptJoin, Seat } from "./join.ts";
 

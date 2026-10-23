@@ -1,8 +1,8 @@
 import { afterEach, expect, test, vi } from "vitest";
-import { canonicalize, definitionDigest, digestBytes, keyIdOfSecret, newIncarnation, scopeIdOf, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, definitionDigest, digestBytes, keyIdOfSecret, newIncarnation, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import type { Item, ScopeRef, Summary } from "@generalbusiness/dap-contract";
 import { changeDemo } from "@generalbusiness/dap-lanes";
-import { secretSigner, signedIntent, type Fetch } from "@generalbusiness/artroom-client";
+import { secretSigner, signedIntent, type Fetch } from "@generalbusiness/dap-client";
 import * as data from "../src/data.ts";
 import { actAssociation, type ChangeView, type Room } from "../src/data.ts";
 import { retainedEditor } from "../src/retained-editor.ts";

@@ -1,6 +1,6 @@
 import { customListDefinition } from "./definition-corpus-data.ts";
 import { expect, test } from "vitest";
-import { definitionDigest } from "@generalbusiness/artroom-bytes";
+import { definitionDigest } from "@generalbusiness/dap-bytes";
 import { change3, changeDemo3, MANIFEST_DIGESTS } from "@generalbusiness/dap-lanes";
 import { knownLIST1 } from "../src/source-support.ts";
 

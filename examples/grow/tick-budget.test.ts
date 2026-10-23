@@ -2,7 +2,7 @@
  * refusal or cancellation of a remotely accepted act is claimed. */
 import { createServer, type Server } from "node:http";
 import { expect, test } from "vitest";
-import { scopeIdOf } from "@generalbusiness/artroom-bytes";
+import { scopeIdOf } from "@generalbusiness/dap-bytes";
 import { tickBudget, TICK_LIMITS } from "./tick-budget.ts";
 const scope = scopeIdOf({ v: 1, kind: "lane", creator: null, cause: `sha256:${"1".repeat(64)}`, ordinal: 0, definition: `sha256:${"2".repeat(64)}` });
 

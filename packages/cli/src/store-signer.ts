@@ -1,6 +1,6 @@
 /** Signing-capability seam. Filesystem stores keep their original seed path;
  * browser stores never need to disclose private key material. */
-import { secretSigner, type Signer } from "@generalbusiness/artroom-client";
+import { secretSigner, type Signer } from "@generalbusiness/dap-client";
 import type { Store } from "./store.ts";
 
 export async function storedSigner(store: Store, name: string): Promise<Signer | null> {

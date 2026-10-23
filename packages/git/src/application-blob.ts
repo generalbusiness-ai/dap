@@ -2,7 +2,7 @@
  * refs, parse a package or admit a publisher. The supplied transport owns its
  * wire/decompression limits and must honor each object byte allowance. */
 import { ascii } from "./ascii.ts";
-import { hex } from "@generalbusiness/artroom-bytes";
+import { hex } from "@generalbusiness/dap-bytes";
 import { sha1 } from "@noble/hashes/legacy.js";
 import { sha256 } from "@noble/hashes/sha2.js";
 

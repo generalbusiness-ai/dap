@@ -1,6 +1,6 @@
 import { workbenchFixtures } from "./workbench-fixture.ts";
 import { expect, test, vi } from "vitest";
-import { keyIdOfSecret } from "@generalbusiness/artroom-bytes";
+import { keyIdOfSecret } from "@generalbusiness/dap-bytes";
 
 
 // Scripted UI ports: migration/key persistence have separate custody/browser

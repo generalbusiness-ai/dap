@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { expect, test } from "vitest";
-import { digestBytes, utf8 } from "@generalbusiness/artroom-bytes";
+import { digestBytes, utf8 } from "@generalbusiness/dap-bytes";
 import { LEGACY, MODERN, McpService, ViewResources, Wire, memoryStore, newSession, type PresentationPackage } from "../src/index.ts";
 import { sandboxDomain } from "../src/views/hosts.ts";
 import { PRESENTATION } from "../src/views/generated.ts";

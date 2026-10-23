@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Bounds, DeclaredDefinition } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, parseStrict } from "@generalbusiness/artroom-bytes";
+import { canonicalize, definitionDigest, parseStrict } from "@generalbusiness/dap-bytes";
 import { capabilitiesOf, counted, derivable, gitRead, holdCapability, validateDefinition, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { reference } from "../scripts/reference.mjs";
 import { ISSUE_LANE_DIGESTS, PUBLISHING_LANE_DIGESTS } from "@generalbusiness/dap-platform";

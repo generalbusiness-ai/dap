@@ -4,7 +4,7 @@
 import { runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import type { OperationId } from "@generalbusiness/dap-contract";
-import { canonicalize, factRefOf, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, factRefOf, utf8 } from "@generalbusiness/dap-bytes";
 import { DESTINATION_5, destination5, destinationRules5, destinationReceipt } from "@generalbusiness/dap-platform";
 import { publicationJourney } from "../../platform/test/support-publication-journey.ts";
 import { HEAD, TREE } from "../../platform/test/support-destination.ts";

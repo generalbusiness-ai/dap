@@ -38,7 +38,7 @@
  *   identity and one for admission.
  */
 
-import { canonicalize, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, utf8 } from "@generalbusiness/dap-bytes";
 import { CustodyError, OUTCOMES_INLINE, RECORD_BYTES, TERMINAL, type CustodyRecord, type CustodyStore, type Outcome } from "./custody.ts";
 
 export type SqlValue = string | number | null | ArrayBuffer | Uint8Array;

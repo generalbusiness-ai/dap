@@ -1,7 +1,7 @@
 import { expect } from "vitest";
 import type { Entry, Evidence, FieldValue, OperationId, RulesContent, PlatformData, PlatformDefinition, Request, ScopeRef, Seed } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, factRefOf, intentDigest, isFactRef, newIncarnation, scopeIdOf, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, digestBytes, factRefOf, intentDigest, isFactRef, newIncarnation, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { clockOf, contentStates, judgeDelivery, judgeGenesis, PROFILES, settleOutcome, validateDefinition, valueDigest, type Judgment, type PlatformRules, type Rules } from "@generalbusiness/dap-derive";
 import { d, grantOf, keys, Ledger, T0, type Actor } from "@generalbusiness/dap-derive/testing";
 import { destination4, destinationRules4 } from "../src/destination.ts";

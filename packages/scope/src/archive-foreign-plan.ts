@@ -2,7 +2,7 @@
  * admission is held here. Actual scouting and fresh admission both pay
  * the original budget; these cumulative costs grant no validation credit. */
 import type { Digest, Head } from "@generalbusiness/dap-contract";
-import { isDigest, isHead, natural, same } from "@generalbusiness/artroom-bytes";
+import { isDigest, isHead, natural, same } from "@generalbusiness/dap-bytes";
 import { ARCHIVE_BOUNDS, type ArchiveBudget, type ArchiveCost } from "./archive-budget.ts";
 import type { ArchiveForeignExpectedCopy, ArchiveForeignRecordedScan } from "./archive-foreign.ts";
 import { forecastArchiveForeignColdCopy, forecastArchiveForeignRepeat, forecastArchiveForeignScan } from "./archive-foreign-cost.ts";

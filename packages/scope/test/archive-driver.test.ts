@@ -7,10 +7,10 @@
  * and alarm wiring have separate obligations. No external provider runs. */
 import { expect, onTestFinished, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, timeOf } from "@generalbusiness/artroom-bytes";
-import { journalRef } from "@generalbusiness/artroom-git/journal";
-import { readJournalRepositoryArchive } from "@generalbusiness/artroom-git/journal-reader";
-import { archiveSource, verifyArchive, TRUSTS } from "@generalbusiness/artroom-replay";
+import { canonicalize, timeOf } from "@generalbusiness/dap-bytes";
+import { journalRef } from "@generalbusiness/dap-git/journal";
+import { readJournalRepositoryArchive } from "@generalbusiness/dap-git/journal-reader";
+import { archiveSource, verifyArchive, TRUSTS } from "@generalbusiness/dap-replay";
 import { ARCHIVE_BOUNDS, ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
 import { driver, ScriptedHost } from "./support/archive-driver.ts";
 import type { ArchivePolicyRegistry } from "../src/archive-inventory.ts";

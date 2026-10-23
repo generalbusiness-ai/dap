@@ -4,11 +4,11 @@
  * are explicit fixtures. No browser, provider effect or deployment runs. */
 import { env } from "cloudflare:test";
 import { expect, inject, onTestFinished, test, vi } from "vitest";
-import { canonicalize, factRefOf, isRecord, isScopeRef, isSeed, same, scopeIdOf, unb64url } from "@generalbusiness/artroom-bytes";
-import { readPublishedApplicationPackage2 } from "@generalbusiness/artroom-bytes/application-v2";
+import { canonicalize, factRefOf, isRecord, isScopeRef, isSeed, same, scopeIdOf, unb64url } from "@generalbusiness/dap-bytes";
+import { readPublishedApplicationPackage2 } from "@generalbusiness/dap-bytes/application-v2";
 import { DECLARED_APPLICATION_COHORT as C } from "@generalbusiness/dap-platform";
 import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-mcp";
-import { ScopeHandle, httpTransport, requestSession, secretSigner, sessionRequest, type Fetch, type Observation } from "@generalbusiness/artroom-client";
+import { ScopeHandle, httpTransport, requestSession, secretSigner, sessionRequest, type Fetch, type Observation } from "@generalbusiness/dap-client";
 import nativeWorker from "../../../apps/room/worker.ts";
 import { nativeGateway, type CommandStore } from "../../../apps/counter/browser/client.ts";
 import { lendingGateway } from "../../../examples/lending/browser/client.ts";

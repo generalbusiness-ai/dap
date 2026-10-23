@@ -21,7 +21,7 @@
  */
 
 import type { Digest, PlatformDefinition, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, hex, isPlatformDefinition, sha256, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, digestBytes, hex, isPlatformDefinition, sha256, utf8 } from "@generalbusiness/dap-bytes";
 import { actInputSchema, describeAct, grantAction, type ActLike, type DefinitionLike, type Described, type Who } from "./describe.ts";
 import { surfaceOf, wordsDigest, type Words } from "./words.ts";
 import { markRefusals, markText } from "./marks.ts";

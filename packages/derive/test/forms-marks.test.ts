@@ -2,7 +2,7 @@ import { markRuntimeChange0, markRuntimeChange2, markRuntimeChange3, markRuntime
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Bounds, MemberId, ObservationUse, OperationId, PlatformDefinition, Request, ScopeRef, Seed, Send } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, factRefOf, intentDigest, isEntry, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/artroom-bytes";
+import { canonicalize, entryHash, factRefOf, intentDigest, isEntry, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import { PROFILES, clockOf, judgeDelivery, settleOutcome, validateDefinition, valueDigest, type ActJudgment, type OutcomeRule, type PlatformRule, type RuleGiven } from "../src/index.ts";
 import { Scope, T0, arriving, d, forged, keys, membership, otherLane, small, t, type Actor, gate, gateRules, gateWith } from "./fixtures-entry.ts";
 

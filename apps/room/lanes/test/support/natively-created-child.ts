@@ -1,8 +1,8 @@
 /** Actual Native issue children. Git/clock/scheduler remain the Room fixture's labelled stand-ins. */
 import { env } from "cloudflare:workers";
 import { onTestFinished } from "vitest";
-import { canonicalize, factRefOf, intentDigest, isSeed, scopeIdOf } from "@generalbusiness/artroom-bytes";
-import { ScopeHandle, declaredHandle, type Signed } from "@generalbusiness/artroom-client";
+import { canonicalize, factRefOf, intentDigest, isSeed, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { ScopeHandle, declaredHandle, type Signed } from "@generalbusiness/dap-client";
 import type { Receipt, Seed } from "@generalbusiness/dap-contract";
 import { issue } from "../../src/index.ts";
 import { Platform } from "../../../../../packages/scope/test/repository.ts";

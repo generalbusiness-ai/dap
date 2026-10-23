@@ -1,7 +1,7 @@
 /** Operational read extensions. These are outside the native ScopeApi. */
-import { natural } from "@generalbusiness/artroom-bytes";
+import { natural } from "@generalbusiness/dap-bytes";
 import type { Cursor, Digest, OutboxItem, OutboxId, OperationId, Read, ScopeId, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
-import { isDigest, isOutboxItem, isOutboxId, isListOf, isOperationId, isRead, isRecord, isScopeRef, timeMs } from "@generalbusiness/artroom-bytes";
+import { isDigest, isOutboxItem, isOutboxId, isListOf, isOperationId, isRead, isRecord, isScopeRef, timeMs } from "@generalbusiness/dap-bytes";
 
 export type IncidentKind = "outcome-conflict" | "ref-mismatch" | "incarnation-conflict" | "pin-confirm-no-pin" | "unpin-never-admitted" | "token-unowned" | "branch-moved" | "bad-input" | "sent-again";
 export type IncidentReference = { entry: number; hash?: Digest } | { operation: OperationId; attempt: number } | { outboxId: OutboxId };

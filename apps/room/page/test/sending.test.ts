@@ -1,6 +1,6 @@
 import { workbenchFixtures } from "./workbench-fixture.ts";
 import { expect, test, vi } from "vitest";
-import { keyIdOfSecret, digestBytes, newIncarnation, scopeIdOf } from "@generalbusiness/artroom-bytes";
+import { keyIdOfSecret, digestBytes, newIncarnation, scopeIdOf } from "@generalbusiness/dap-bytes";
 
 
 // Scripted UI ports: migration/key persistence have separate custody/browser
@@ -96,7 +96,7 @@ test("the shell fences the whole scope during a submit and keeps a lost reply re
   const issueRead = vi.fn(async () => ({ state: "closed", intent: 0, requesterRef: room.me.ref }));
   // The captured send returns the actual owned action promise, including
   // its final redraw. A refused synchronous admission returns immediately.
-  vi.doMock("@generalbusiness/artroom-bytes", async () => ({ ...await vi.importActual<typeof import("@generalbusiness/artroom-bytes")>("@generalbusiness/artroom-bytes"), b64url: () => "device", unb64url: () => new Uint8Array(32), keyIdOfSecret: () => "key", isScopeRef: (value: unknown) => !!value && typeof value === "object" && "kind" in value }));
+  vi.doMock("@generalbusiness/dap-bytes", async () => ({ ...await vi.importActual<typeof import("@generalbusiness/dap-bytes")>("@generalbusiness/dap-bytes"), b64url: () => "device", unb64url: () => new Uint8Array(32), keyIdOfSecret: () => "key", isScopeRef: (value: unknown) => !!value && typeof value === "object" && "kind" in value }));
   vi.doMock("../src/data.ts", async () => {
     const { sessionKey, Unreadable } = await vi.importActual<typeof import("../src/data.ts")>("../src/data.ts");
     return { sessionKey, Unreadable,
@@ -289,7 +289,7 @@ test("the shell fences the whole scope during a submit and keeps a lost reply re
     // and joins actual draw/action work before restoring globals.
     await fixture.retire();
     vi.unstubAllGlobals();
-    vi.doUnmock("../src/browser-key-store.ts"); vi.doUnmock("../src/page-key-migration.ts"); vi.doUnmock("../src/data.ts"); vi.doUnmock("../src/view.ts"); vi.doUnmock("@generalbusiness/artroom-bytes");
+    vi.doUnmock("../src/browser-key-store.ts"); vi.doUnmock("../src/page-key-migration.ts"); vi.doUnmock("../src/data.ts"); vi.doUnmock("../src/view.ts"); vi.doUnmock("@generalbusiness/dap-bytes");
   }
   expect(unexpectedKeyOperation).not.toHaveBeenCalled();
 }));
@@ -382,7 +382,7 @@ test("retained dialogs use the live scope; accepted draft retirement and refresh
     if(args[2]==='close-own'){const result={kind:'close-own',scope:issue.scope,on:0,answer:{answer:'refused',reason:'guard-failed',name:'scripted-owner-guard',judgedAt:issue.head},before:issue.head,after:issue.head,observation:null};(args[4]as(value:unknown)=>void)(result);return Promise.resolve(result);}
     return new Promise((resolve,reject)=>attempts.push({args,finish:answer=>{const result={kind:args[2],scope:args[1],on:null,answer:answer==='accepted'?{answer,receipt:{fact:{at:{scope:args[1],inc:'one',kind:'lane'},seq:3,hash:'hash'}}}:{answer,reason:'guard-failed',name:'scripted-review-boundary',judgedAt:{seq:2,hash:fixtureDigest}},before:{seq:2,hash:'old'},after:{seq:3,hash:'new'},observation:null};(args[4]as(value:unknown)=>void)(result);resolve(result);},lose:()=>reject(new Error('Reply lost'))}));
   });
-  vi.doMock('@generalbusiness/artroom-bytes',async()=>({...await vi.importActual<typeof import('@generalbusiness/artroom-bytes')>('@generalbusiness/artroom-bytes'),b64url:()=> 'device',unb64url:()=>new Uint8Array(32),keyIdOfSecret:()=> 'key'}));
+  vi.doMock('@generalbusiness/dap-bytes',async()=>({...await vi.importActual<typeof import('@generalbusiness/dap-bytes')>('@generalbusiness/dap-bytes'),b64url:()=> 'device',unb64url:()=>new Uint8Array(32),keyIdOfSecret:()=> 'key'}));
   // resetModules keeps cached manual mocks. Use this case's actual view.
   vi.doMock('../src/view.ts', async () => vi.importActual<typeof import('../src/view.ts')>('../src/view.ts'));
   vi.doMock('../src/data.ts',async()=>{
@@ -569,7 +569,7 @@ test("retained dialogs use the live scope; accepted draft retirement and refresh
   } finally {
     await fixture.retire();
     vi.clearAllTimers();vi.useRealTimers();
-    vi.unstubAllGlobals();vi.doUnmock('../src/browser-key-store.ts');vi.doUnmock('../src/page-key-migration.ts');vi.doUnmock('../src/view.ts');vi.doUnmock('../src/data.ts');vi.doUnmock('../src/retained-editor.ts');vi.doUnmock('@generalbusiness/artroom-bytes');vi.resetModules();
+    vi.unstubAllGlobals();vi.doUnmock('../src/browser-key-store.ts');vi.doUnmock('../src/page-key-migration.ts');vi.doUnmock('../src/view.ts');vi.doUnmock('../src/data.ts');vi.doUnmock('../src/retained-editor.ts');vi.doUnmock('@generalbusiness/dap-bytes');vi.resetModules();
   }
   expect(unexpectedKeyOperation).not.toHaveBeenCalled();
 }));

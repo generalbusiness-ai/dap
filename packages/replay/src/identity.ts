@@ -2,7 +2,7 @@
  * capability; each receiving run selects its mode from normally proved birth
  * frames. Neither a retained alias nor callback installation order selects it. */
 import type { DeclaredDefinition, Digest, Entry, FactRef, PlatformDefinition, Request, ScopeRef, Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, isFactRef, isScopeRef, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isFactRef, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
 import { isEntryOf, isObject, same } from "@generalbusiness/dap-derive";
 
 export interface IdentityFrame { fact: FactRef; entry: Entry; named: Digest | PlatformDefinition; declarationName: string; native: boolean }

@@ -5,8 +5,8 @@
 import { env } from "cloudflare:workers";
 import { expect, test } from "vitest";
 import type { Seed, SignedIntent, ScopeId } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, intentDigest, isSeed, keyIdOfSecret, newIncarnation, scopeIdOf } from "@generalbusiness/artroom-bytes";
-import { agentKeyInvitationOf, creationOffer, secretSigner, signedIntent, type Fetch, type CreationOfferFetch, type Signer } from "@generalbusiness/artroom-client";
+import { b64url, canonicalize, intentDigest, isSeed, keyIdOfSecret, newIncarnation, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { agentKeyInvitationOf, creationOffer, secretSigner, signedIntent, type Fetch, type CreationOfferFetch, type Signer } from "@generalbusiness/dap-client";
 import { DEMO_REGISTER, ARCHIVE_DEVICE_APPLICATION_COHORT, DEMO_PURPOSE } from "@generalbusiness/dap-platform";
 import worker from "../../worker.ts";
 import { beginSessionFixture } from "../../../../packages/scope/test/session-settings.ts";

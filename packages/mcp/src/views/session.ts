@@ -1,7 +1,7 @@
-import { canonicalize, isScopeRef, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
 import type { ScopeRef } from "@generalbusiness/dap-contract";
 import { validKey } from "../custody.ts";
-import { decodeViewParameters } from "@generalbusiness/artroom-bytes/application-v2";
+import { decodeViewParameters } from "@generalbusiness/dap-bytes/application-v2";
 import { capturedExpected, shapeAt } from "../shape.ts";
 import type { CallResult } from "../service.ts";
 import type { ViewKind } from "./resources.ts";

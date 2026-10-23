@@ -3,10 +3,10 @@
  * No hosted API, deployed Artifacts binding or MCP service runs. */
 import { env } from "cloudflare:test";
 import { expect, test } from "vitest";
-import { b64url, canonicalize } from "@generalbusiness/artroom-bytes";
+import { b64url, canonicalize } from "@generalbusiness/dap-bytes";
 import type { Digest, OperationId, Read } from "@generalbusiness/dap-contract";
 import type { Item } from "@generalbusiness/dap-derive";
-import type { Fetch } from "@generalbusiness/artroom-client";
+import type { Fetch } from "@generalbusiness/dap-client";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT as C, repositoryName } from "@generalbusiness/dap-platform";
 import { demoCreationRoute } from "../../../apps/room/demo-creation.ts";
 import type { Binding } from "../../scope/src/namespace.ts";

@@ -1,6 +1,6 @@
 /** Real digest-addressed raw child declarations, without validation. */
 import type { Digest } from "@generalbusiness/dap-contract";
-import { definitionDigest } from "@generalbusiness/artroom-bytes";
+import { definitionDigest } from "@generalbusiness/dap-bytes";
 import { notes } from "./fixture-data.ts";
 
 export function childDeclaration(name: string, children: readonly Digest[], whole = false) {

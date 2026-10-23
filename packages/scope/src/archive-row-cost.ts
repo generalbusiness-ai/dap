@@ -1,6 +1,6 @@
 /** Original native bookkeeping prices only. No SQL, mark, receipt,
  * selection admission, host work or extra allowance is supplied here. */
-import { natural } from "@generalbusiness/artroom-bytes";
+import { natural } from "@generalbusiness/dap-bytes";
 import { ArchiveStopped, type ArchiveCost } from "./archive-budget.ts";
 
 export const ARCHIVE_ROW_MANIFEST_BYTES = 1024 * 1024;

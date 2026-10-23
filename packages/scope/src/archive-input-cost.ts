@@ -1,7 +1,7 @@
 /** Native immutable-input work only. These prices neither admit a selected
  * record nor change the original budget. Foreign basis/copy setup and
  * configured source-pin work remain separate. */
-import { natural } from "@generalbusiness/artroom-bytes";
+import { natural } from "@generalbusiness/dap-bytes";
 import { ArchiveStopped, type ArchiveCost } from "./archive-budget.ts";
 import { archiveRetainedColdReadForecast, archiveRetainedReadForecast } from "./archive-retained.ts";
 

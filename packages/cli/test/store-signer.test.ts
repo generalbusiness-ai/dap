@@ -1,9 +1,9 @@
 import { expect, test } from "vitest";
-import { keyIdOfSecret, verify } from "@generalbusiness/artroom-bytes";
+import { keyIdOfSecret, verify } from "@generalbusiness/dap-bytes";
 import { memoryStore, type Store } from "../src/store.ts";
 import { install, planInstall, installPlanned, type Context } from "../src/commands.ts";
-import { secretSigner } from "@generalbusiness/artroom-client";
-import { canonicalize, intentDigest, newIncarnation, textDigest } from "@generalbusiness/artroom-bytes";
+import { secretSigner } from "@generalbusiness/dap-client";
+import { canonicalize, intentDigest, newIncarnation, textDigest } from "@generalbusiness/dap-bytes";
 import type { Receipt, SignedIntent } from "@generalbusiness/dap-contract";
 import { newStoredSigner, storedSigner } from "../src/store-signer.ts";
 
@@ -28,7 +28,7 @@ test("a missing capability-store signer never falls back to its raw-seed methods
 
 test("get-or-create returns the retained capability and does not replace a pending identity", async () => {
   const store = memoryStore(), seed = new Uint8Array(32).fill(11);
-  const { secretSigner } = await import("@generalbusiness/artroom-client");
+  const { secretSigner } = await import("@generalbusiness/dap-client");
   const original = secretSigner(seed); let retained = false, creates = 0;
   store.signer = async () => retained ? original : null;
   store.newSigner = async () => { creates++; retained = true; return original; };

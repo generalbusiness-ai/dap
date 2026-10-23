@@ -1,6 +1,6 @@
 import { lateIgnoredGuardData, lateRelationshipData, lateResultData, lateRenamedPinData, lateOrdinaryLicenseData, lateTrustedData, lateNativePinData, lateNormalRuleData, lateOpeningData, lateOpeningEffects } from "./definition-corpus/late-pin-variants.ts";
 import { expect, test } from "vitest";
-import { factRefOf, isEntry } from "@generalbusiness/artroom-bytes";
+import { factRefOf, isEntry } from "@generalbusiness/dap-bytes";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { holdCapability, judgeDelivery, ownerReservations, prepareRules, validateDefinition } from "../src/index.ts";
 import { RULE_PROFILES } from "../src/rule/index.ts";

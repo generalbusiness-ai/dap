@@ -1,3 +1,3 @@
 /** Stable client names for the shared application wire types. */
-export { APPLICATION_PACKAGE_LIMITS, ApplicationPackageError } from "@generalbusiness/artroom-bytes/application";
-export type { ApplicationPackageLimits, ApplicationDefinition, ApplicationCreation, ApplicationCapability, ApplicationSemantics, ApplicationAsset, ApplicationPresentation, ApplicationManifest, ApplicationRelease, ApplicationPackage, ApplicationIds, ApplicationReleaseProof, PackedApplication, ApplicationPackageInput, ApplicationRoom, ApplicationInstallation, ApplicationScreenContext } from "@generalbusiness/artroom-bytes/application";
+export { APPLICATION_PACKAGE_LIMITS, ApplicationPackageError } from "@generalbusiness/dap-bytes/application";
+export type { ApplicationPackageLimits, ApplicationDefinition, ApplicationCreation, ApplicationCapability, ApplicationSemantics, ApplicationAsset, ApplicationPresentation, ApplicationManifest, ApplicationRelease, ApplicationPackage, ApplicationIds, ApplicationReleaseProof, PackedApplication, ApplicationPackageInput, ApplicationRoom, ApplicationInstallation, ApplicationScreenContext } from "@generalbusiness/dap-bytes/application";

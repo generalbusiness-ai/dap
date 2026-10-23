@@ -3,8 +3,8 @@ import { configureInputDefinition } from "./support/definition-corpus-data.ts";
  * host's pre-sign boundary, not an LLM, native submit or membership journal. */
 import { expect, test } from "vitest";
 import type { DeclaredDefinition, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, keyIdOfSecret, parseStrict, sign } from "@generalbusiness/artroom-bytes";
-import { applicationProjectionId, applicationProjectionQueryDigest, isApplicationJournalSource, packApplication2 } from "@generalbusiness/artroom-bytes/application-v2";
+import { canonicalize, definitionDigest, keyIdOfSecret, parseStrict, sign } from "@generalbusiness/dap-bytes";
+import { applicationProjectionId, applicationProjectionQueryDigest, isApplicationJournalSource, packApplication2 } from "@generalbusiness/dap-bytes/application-v2";
 import { applicationCounterPacket2 } from "../../scope/test/fixtures.ts";
 import { DeclaredViewSource } from "../src/views/declared.ts";
 import { ViewSessions } from "../src/views/session.ts";

@@ -1,12 +1,12 @@
 /** One native application-install envelope. Keep it unchanged for submission
  * and settlement; host fetch/admission remains a separate authority. */
 import type { Beside, Digest, FieldValue, MemberRef, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
-import { isDigest, isMemberRef, isRecord, isScopeRef, parseStrict, textDigest } from "@generalbusiness/artroom-bytes";
+import { isDigest, isMemberRef, isRecord, isScopeRef, parseStrict, textDigest } from "@generalbusiness/dap-bytes";
 import { applicationJson } from "./application-json.ts";
 import { readApplicationPackage } from "./application-package.ts";
 import { readApplicationReleaseUri } from "./application-uri.ts";
 import { ApplicationPackageError, type ApplicationIds } from "./application-types.ts";
-import { readPublishedApplicationPackage2, type AnyPackedApplication } from "@generalbusiness/artroom-bytes/application-v2";
+import { readPublishedApplicationPackage2, type AnyPackedApplication } from "@generalbusiness/dap-bytes/application-v2";
 import { signedIntent, type Signer, type Signing } from "./intent.ts";
 
 export type ApplicationInstallRole = "admin" | "maintainer" | "member" | "agent" | "checker";

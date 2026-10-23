@@ -1,10 +1,10 @@
 /** Shared bounded classification of local rows and retained foreign copies.
  * Returns headers/classes only. Payload reads and export admission belong
  * to the owning whole-prefix inventory, inside its synchronous frame. */
-import { natural } from "@generalbusiness/artroom-bytes";
+import { natural } from "@generalbusiness/dap-bytes";
 import { DEVICE_COMMAND, RETAINED_INPUT_BYTES } from "@generalbusiness/dap-contract";
 import type { Digest, Input, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
-import { isDigest, isPlatformDefinition, isScopeRef } from "@generalbusiness/artroom-bytes";
+import { isDigest, isPlatformDefinition, isScopeRef } from "@generalbusiness/dap-bytes";
 import { ArchiveBudget } from "./archive-budget.ts";
 import { ARCHIVE_PRIVACY_JSON_PASSES, stopArchivePrefix as stop, type ArchivePosition } from "./archive-prefix.ts";
 import { type Capabilities, type OperationRules, type ValidDefinition } from "@generalbusiness/dap-derive";

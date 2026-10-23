@@ -1,8 +1,8 @@
 import { expect, inject, onTestFinished, test } from "vitest";
-import { b64url, canonicalize, intentDigest, scopeIdOf, seedDigest, signIntent, timeMs, timeOf } from "@generalbusiness/artroom-bytes";
+import { b64url, canonicalize, intentDigest, scopeIdOf, seedDigest, signIntent, timeMs, timeOf } from "@generalbusiness/dap-bytes";
 import type { Intent, Seed } from "@generalbusiness/dap-contract";
 import { keys } from "@generalbusiness/dap-derive/testing";
-import { readCredential, requestSession, sessionRequest, type Fetch } from "@generalbusiness/artroom-client";
+import { readCredential, requestSession, sessionRequest, type Fetch } from "@generalbusiness/dap-client";
 import { platform, repositoryName } from "@generalbusiness/dap-platform";
 // Test-only orchestration import; the scope production package has no CLI dependency.
 import { command, memoryStore, type Context } from "../../cli/src/index.ts";

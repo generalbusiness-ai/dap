@@ -1,6 +1,6 @@
 import { runInDurableObject } from "cloudflare:test";
 import type { Entry } from "@generalbusiness/dap-contract";
-import { SqliteStore } from "@generalbusiness/artroom-scope";
+import { SqliteStore } from "@generalbusiness/dap-scope";
 import { Platform } from "../../../../packages/scope/test/repository.ts";
 import { expect, test } from "vitest";
 import { act, actsOn, fieldValue, listLanes, loadChange, loadIssue, openRoom, placeOf } from "../src/data.ts";

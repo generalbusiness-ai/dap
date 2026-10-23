@@ -4,7 +4,7 @@
  * beyond the explicit entry/object descriptors. No producer calls this yet. */
 import type { Digest, FactRef, Head, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
 import { DOMAINS, RETAINED_INPUT_BYTES } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isFactRef, isPlatformDefinition, isScopeRef, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isDigest, isFactRef, isPlatformDefinition, isScopeRef, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import { archiveRetainedPath, type ArchiveRetainedName } from "./journal-path.ts";
 import { journalByteOrder } from "./journal-objects.ts";
 import { JournalWork, refuseJournal, type JournalCost } from "./journal-work.ts";

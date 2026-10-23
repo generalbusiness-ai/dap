@@ -3,7 +3,7 @@ import { mkdtemp, readFile, rm, symlink, truncate, writeFile } from "node:fs/pro
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Entry, ScopeRef, Seed, Sealed } from "@generalbusiness/dap-contract";
-import { canonicalize, factRefOf, newIncarnation, scopeIdOf, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, factRefOf, newIncarnation, scopeIdOf, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { captureIndexManifest, INDEX_INVENTORY_BOUNDS, readIndexManifest, verifyIndexManifest, type IndexReads } from "../src/scope-index-manifest.ts";
 import { readIndexFile, saveIndexFile, scopeIndexCommand, type IndexFiles } from "../src/scope-index-command.ts";
 import { memoryStore } from "../src/store.ts";

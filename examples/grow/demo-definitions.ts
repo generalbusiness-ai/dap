@@ -1,7 +1,7 @@
 /** Demo-only data over the maintained declarations. Native host data and the
  * local check fixture keep their own bytes. Site forwards fixed principals. */
 import type { ActType, DeclaredDefinition, FieldType, Guard } from "@generalbusiness/dap-contract";
-import { definitionDigest } from "@generalbusiness/artroom-bytes";
+import { definitionDigest } from "@generalbusiness/dap-bytes";
 import { room as maintainedRoom } from "./room.ts";
 import { site as maintainedSite } from "./site.ts";
 

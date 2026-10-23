@@ -1,7 +1,7 @@
 /** Package bounds are requirements, never a member identity or authority. */
 import { DEVICE_COMMAND, DEVICE_COMMAND_DEFINITIONS, type DeclaredDefinition, type DeviceCommandBounds, type Digest } from "@generalbusiness/dap-contract";
-import { parseStrict } from "@generalbusiness/artroom-bytes";
-import type { ApplicationSemantics } from "@generalbusiness/artroom-bytes/application";
+import { parseStrict } from "@generalbusiness/dap-bytes";
+import type { ApplicationSemantics } from "@generalbusiness/dap-bytes/application";
 import { readDeviceCommandBounds } from "@generalbusiness/dap-derive";
 
 /** Both package versions have these fields. Only the new native cohort

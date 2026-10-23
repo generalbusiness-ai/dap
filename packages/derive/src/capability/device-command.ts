@@ -1,6 +1,6 @@
 /** Local command facts, shared by production and replay. Performs no device write. */
 import { DEVICE_COMMAND, type DeviceCommandGrant, type DeviceCommandOutcome, type FactRef, type Intent } from "@generalbusiness/dap-contract";
-import { isFactRef, isLocalId, utf8 } from "@generalbusiness/artroom-bytes";
+import { isFactRef, isLocalId, utf8 } from "@generalbusiness/dap-bytes";
 import type { Capabilities, CapabilityDerived, CapabilityGiven, CapabilityItemEffect, Recorded } from "../capability.ts";
 import { creationContextOf } from "../creation-context.ts";
 import type { Own } from "../fields.ts";

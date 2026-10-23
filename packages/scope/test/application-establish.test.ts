@@ -2,12 +2,12 @@ import { countingContainerData, countingPublicationData } from "./definition-cor
 import { runInDurableObject } from "cloudflare:test";
 import { expect, onTestFinished, test } from "vitest";
 import type { Intent, Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, intentDigest, isSeed, scopeIdOf, seedDigest, textDigest, timeMs } from "@generalbusiness/artroom-bytes";
-import { requestSession, sessionRequest, type Fetch } from "@generalbusiness/artroom-client";
+import { canonicalize, definitionDigest, intentDigest, isSeed, scopeIdOf, seedDigest, textDigest, timeMs } from "@generalbusiness/dap-bytes";
+import { requestSession, sessionRequest, type Fetch } from "@generalbusiness/dap-client";
 import { command, issueInvitation, memoryStore, type Context } from "../../cli/src/index.ts";
 import { keys } from "@generalbusiness/dap-derive/testing";
 import { APPLICATION_COHORT, FILE_PUBLICATION_COHORT, APPLICATION_VALUES_BYTES, FIRST_ACTIONS_OF, platform, repositoryName } from "@generalbusiness/dap-platform";
-import { httpSource, verify } from "@generalbusiness/artroom-replay";
+import { httpSource, verify } from "@generalbusiness/dap-replay";
 import { counting } from "../../../apps/counter/definition.ts";
 import { COUNTING_DEFINITION } from "../../../apps/counter/pin.ts";
 import { NO_OUTSIDE } from "../src/index.ts";

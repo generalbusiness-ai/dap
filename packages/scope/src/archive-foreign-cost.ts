@@ -4,7 +4,7 @@ import type { Input } from "@generalbusiness/dap-contract";
 import { forecastArchiveEntryPrivacy } from "./archive-entry-privacy-cost.ts";
 import { forecastArchiveSourceLookup } from "./archive-source-cost.ts";
 import { forecastArchiveSupportMetadata, type ArchiveSupportFootprint } from "./archive-support-cost.ts";
-import { natural } from "@generalbusiness/artroom-bytes";
+import { natural } from "@generalbusiness/dap-bytes";
 import { ArchiveStopped, type ArchiveCost } from "./archive-budget.ts";
 
 export const ARCHIVE_FOREIGN_LOOKUP_METADATA = 256;

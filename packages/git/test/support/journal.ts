@@ -3,7 +3,7 @@
  * judgment, SQL inventory, privacy admission or export is claimed. */
 import { execFileSync } from "node:child_process";
 import type { Entry, Intent, Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, entryHash, intentDigest, keyIdOfSecret, newIncarnation, scopeIdOf, signIntent, timeOf, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, digestBytes, entryHash, intentDigest, keyIdOfSecret, newIncarnation, scopeIdOf, signIntent, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { ArchiveBudget } from "../../../scope/src/archive-budget.ts";
 import { journalKeyName } from "../../src/journal-selection.ts";
 import type { JournalFormat, JournalObject, JournalObjectSource } from "../../src/journal-objects.ts";

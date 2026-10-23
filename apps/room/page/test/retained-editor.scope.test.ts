@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { takeBytes, utf8 } from "@generalbusiness/artroom-bytes";
+import { takeBytes, utf8 } from "@generalbusiness/dap-bytes";
 import { act, joinRoom, listLanes, loadChange, openRoom, placeOf } from "../src/data.ts";
 import { checkEditRequest, continueEdit, prepareEdit } from "../src/retained-editor-data.ts";
 import { demo } from "./support/demo.ts";

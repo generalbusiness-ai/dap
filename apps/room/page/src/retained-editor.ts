@@ -1,6 +1,6 @@
 /** Task-specific retained-text editor. All names/source are inert DOM text. Loaded-Page memory only. */
 import type { ScopeId } from "@generalbusiness/dap-contract";
-import { canonicalize } from "@generalbusiness/artroom-bytes";
+import { canonicalize } from "@generalbusiness/dap-bytes";
 import { editPath } from "@generalbusiness/dap-platform";
 import { actAssociation, type ChangeView, type Room } from "./data.ts";
 import { h } from "./view.ts";

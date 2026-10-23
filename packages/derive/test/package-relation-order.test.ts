@@ -2,7 +2,7 @@
  * delivery. This deliberately bypasses package admission for the negative
  * declaration; it proves ordering, not SQLite, installation or a provider. */
 import { expect, test } from "vitest";
-import { checkPackageGraph } from "@generalbusiness/artroom-package-graph";
+import { checkPackageGraph } from "@generalbusiness/dap-package-graph";
 import { deliver } from "./fixtures.ts";
 import { preFailureRelation } from "./fixtures-package-graph.ts";
 import { nativeCreatedSite, nativeChild, devicePermissions, operator, replay, submit } from "../../../examples/grow/test-support.ts";

@@ -52,10 +52,10 @@
  * entries EQ1 to EQ11 and FB1 to FB5.
  */
 
-import { isRecord } from "@generalbusiness/artroom-bytes";
+import { isRecord } from "@generalbusiness/dap-bytes";
 import type { DeclaredDefinition, Digest, MemberId, MemberObservation, ObservationRequest, PlatformData, PlatformDefinition, RulesObservation, ScopeId } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isMemberRef, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isDigest, isMemberRef, utf8 } from "@generalbusiness/dap-bytes";
 import { definitionClosure, definitionDependencies } from "./definition-input.ts";
 import { byteOrder, validateDefinition, valueDigest } from "@generalbusiness/dap-derive";
 import type { GuardRule, Item, RecordedRef, RuleGiven, Rules, StateView } from "@generalbusiness/dap-derive";

@@ -1,6 +1,6 @@
 /** Raw values shared with the format corpus; no validation or test registration. */
 import type { DeclaredDefinition } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest } from "@generalbusiness/artroom-bytes";
+import { canonicalize, definitionDigest } from "@generalbusiness/dap-bytes";
 import type { ApplicationDefinition } from "../src/index.ts";
 
 export const clientNotes = {

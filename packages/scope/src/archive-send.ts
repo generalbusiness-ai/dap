@@ -1,9 +1,9 @@
 /** A v2 append's exact parent edges replace a full old-tree fetch. The
  * credential/ref binding remains owned by archive-host, and generic
  * destination sends retain their complete-closure rule. */
-import { GitRefusal, READ_BOUNDS, idOf, objectId } from "@generalbusiness/artroom-git";
-import { verifyJournalAppend } from "@generalbusiness/artroom-git/journal";
-import { SmartHttpGit, type RawGitObject, type SmartHttpOptions } from "@generalbusiness/artroom-git/http";
+import { GitRefusal, READ_BOUNDS, idOf, objectId } from "@generalbusiness/dap-git";
+import { verifyJournalAppend } from "@generalbusiness/dap-git/journal";
+import { SmartHttpGit, type RawGitObject, type SmartHttpOptions } from "@generalbusiness/dap-git/http";
 import type { ArchiveSend } from "./archive-driver.ts";
 import { archiveSendCopyReservation, archiveSendPackWork } from "./archive-transfer-cost.ts";
 

@@ -1,5 +1,5 @@
 /**
- * @generalbusiness/artroom-git
+ * @generalbusiness/dap-git
  *
  * Everything of Artroom that touches a Git repository or a Git host (I3
  * plan, section 3.1). It runs outside a scope's commit. The review that each retained part passed is

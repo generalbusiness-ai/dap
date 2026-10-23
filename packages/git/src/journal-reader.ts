@@ -2,7 +2,7 @@
  * export admission or service fallback. The caller owns one read budget. */
 import { decodeGitText } from "./wire-text.ts";
 import { DOMAINS, type Digest, type FactRef, type Head, type RetainedInput, type ScopeId, type ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, domainRetainedJSON, entryHash, isEntry, parseStrict, rawRetainedJSON, scopeIdOf, timeMs, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, domainRetainedJSON, entryHash, isEntry, parseStrict, rawRetainedJSON, scopeIdOf, timeMs, utf8 } from "@generalbusiness/dap-bytes";
 import { GitRefusal } from "./names.ts";
 import { journalPhysicalFiles, journalTreeFiles, type JournalRetainedFile } from "./journal-files.ts";
 import { journalHead, journalManifest } from "./journal-manifest.ts";

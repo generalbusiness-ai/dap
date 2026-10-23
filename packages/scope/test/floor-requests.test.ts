@@ -6,9 +6,9 @@ import { floorReceiverChange, floorSenderChange } from "./definition-corpus-data
 import { env } from "cloudflare:workers";
 import { expect, onTestFinished, test } from "vitest";
 import type { FactRef, FloorInput } from "@generalbusiness/dap-contract";
-import { canonicalize } from "@generalbusiness/artroom-bytes";
+import { canonicalize } from "@generalbusiness/dap-bytes";
 import { variant } from "@generalbusiness/dap-derive/testing";
-import { cloneTailSource, httpSource, MemorySource, verify, type MemoryScope } from "@generalbusiness/artroom-replay";
+import { cloneTailSource, httpSource, MemorySource, verify, type MemoryScope } from "@generalbusiness/dap-replay";
 import { Scope } from "../src/core.ts";
 import { namespace } from "../src/namespace.ts";
 import { production, type Delivery } from "../src/ports.ts";

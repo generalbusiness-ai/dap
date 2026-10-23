@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, symlinkSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { ROOT, PLAN, PUBLIC_TESTING_INPUTS, args, childEnv, compilerTool, compile, contained, copiedDependency, copyFileVerified, digest, json, outputClosure, productionInputs, publishManifest, references, refusal, rewriteDeclarationRefs, rewritePublishedRefs, sourceIdentity, version, writeJson } from "./public-release-lib.mjs";
+import { ROOT, PLAN, PUBLIC_TESTING_INPUTS, args, childEnv, compilerTool, compile, contained, copiedDependency, copyFileVerified, digest, json, outputClosure, productionInputs, publishManifest, references, refusal, rewriteDeclarationRefs, sourceIdentity, version, writeJson } from "./public-release-lib.mjs";
 
 export function produce(options) {
   const source = realpathSync(options.source), selected = version(options.version);
@@ -38,7 +38,7 @@ export function produce(options) {
       inputs.push({ path: name, copy: original, ...copyFileVerified(join(source, name), original) });
       const copied = join(input, relativeName);
       mkdirSync(dirname(copied), { recursive: true });
-      writeFileSync(copied, rewritePublishedRefs(readFileSync(original, "utf8")), { flag: "wx" });
+      copyFileVerified(original, copied);
     }
     const sourceManifest = json(join(source, `packages/${spec.dir}/package.json`));
     const manifest = publishManifest(spec, sourceManifest, selected);
@@ -92,7 +92,7 @@ export function produce(options) {
   if ([...inputs, ...excludedInputs].some(input => digest(readFileSync(join(source, input.path))) !== input.sha256 || digest(readFileSync(input.copy)) !== input.sha256)) refusal("input-changed");
   for (const input of inputs.filter(input => /\.ts$/.test(input.path))) {
     const [, dir, ...parts] = input.path.split("/");
-    if (readFileSync(join(output, "inputs", dir, ...parts), "utf8") !== rewritePublishedRefs(readFileSync(input.copy, "utf8"))) refusal("renamed-input-changed");
+    if (!readFileSync(join(output, "inputs", dir, ...parts)).equals(readFileSync(input.copy))) refusal("renamed-input-changed");
   }
   const result = { format: "artroom-public-sdk-release-1", status: "producer-output-only-not-published", source: identity, version: selected,
     lockSha256: digest(readFileSync(join(source, "package-lock.json"))), planSha256: digest(readFileSync(join(ROOT, "scripts/public-release.json"))),

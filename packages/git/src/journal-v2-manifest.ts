@@ -1,6 +1,6 @@
 /** A v2 manifest describes one bounded pass. It never indexes old passes. */
 import type { Digest, FactRef, Head, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
-import { isDigest, isScopeId, isScopeRef } from "@generalbusiness/artroom-bytes";
+import { isDigest, isScopeId, isScopeRef } from "@generalbusiness/dap-bytes";
 import type { ArchiveRetainedName } from "./journal-path.ts";
 import { journalJSON } from "./journal-manifest.ts";
 import { journalFormat, journalId, type JournalFormat } from "./journal-objects.ts";

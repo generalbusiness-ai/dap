@@ -1,8 +1,8 @@
 /** One loaded-Page text proposal task. No automatic merge, durable outbox or replacement signature. */
-import { freeze } from "@generalbusiness/artroom-bytes";
+import { freeze } from "@generalbusiness/dap-bytes";
 import type { Answer, Beside, DeclaredDefinition, Digest, FactRef, FieldValue, Grant, Head, KeyId, ScopeId, ScopeRef, Seed, SignedIntent, Summary } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, digestBytes, entryHash, isFactRef, scopeIdOf, utf8, verifySignedIntent, wellFormed } from "@generalbusiness/artroom-bytes";
-import { ScopeHandle, declaredHandle, httpTransport, shapeDeclaredAct, signedIntent, signedReads } from "@generalbusiness/artroom-client";
+import { canonicalize, definitionDigest, digestBytes, entryHash, isFactRef, scopeIdOf, utf8, verifySignedIntent, wellFormed } from "@generalbusiness/dap-bytes";
+import { ScopeHandle, declaredHandle, httpTransport, shapeDeclaredAct, signedIntent, signedReads } from "@generalbusiness/dap-client";
 import { expectedOf, heldActs, type DefinitionShape } from "@generalbusiness/dap-cli";
 import { editPath, fileSound, platform } from "@generalbusiness/dap-platform";
 import { knownLIST1 } from "./source-support.ts";

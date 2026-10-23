@@ -17,7 +17,7 @@
  */
 
 import type { Digest, EffectForm, OutcomeMark, PlatformData, Send, SendForm } from "@generalbusiness/dap-contract";
-import { intentDigest } from "@generalbusiness/artroom-bytes";
+import { intentDigest } from "@generalbusiness/dap-bytes";
 import { deriveEffects } from "./effects.ts";
 import type { Own, Reading } from "./fields.ts";
 import type { Fetched, Judging } from "./guards.ts";

@@ -3,7 +3,7 @@
  * It repeats fresh final authentication before releasing these bytes. */
 import { ITEM_QUERY_BOUNDS as B, ITEM_QUERY_ORDER } from "@generalbusiness/dap-contract";
 import type { Item, ItemQuery, ItemQueryRead } from "@generalbusiness/dap-contract";
-import { canonicalize, encodeItemQuery, encodeItemQueryCursor, isItem, itemQueryArgument, itemQueryContinuation, itemQueryDigest, parseStrict, readItemQuery, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, encodeItemQuery, encodeItemQueryCursor, isItem, itemQueryArgument, itemQueryContinuation, itemQueryDigest, parseStrict, readItemQuery, utf8 } from "@generalbusiness/dap-bytes";
 import { itemCandidates } from "./item-candidates.ts";
 import type { PreparedRead } from "./read-preparation.ts";
 import type { Sql } from "./sqlite.ts";

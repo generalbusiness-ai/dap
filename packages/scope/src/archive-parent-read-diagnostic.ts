@@ -1,6 +1,6 @@
 /** Temporary, pass-owned observations only. No authority, body, clock or I/O. */
-import { GitRefusal } from "@generalbusiness/artroom-git";
-import { advertisementRefusalDetail, httpResponseRefusalDetail, type AdvertisementRefusalDetail, type HttpResponseRefusalDetail } from "@generalbusiness/artroom-git/http-read";
+import { GitRefusal } from "@generalbusiness/dap-git";
+import { advertisementRefusalDetail, httpResponseRefusalDetail, type AdvertisementRefusalDetail, type HttpResponseRefusalDetail } from "@generalbusiness/dap-git/http-read";
 import type { ArchiveBudget } from "./archive-budget.ts";
 
 type Phase = "none" | "source" | "token" | "identity" | "object"

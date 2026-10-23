@@ -2,7 +2,7 @@ import { expect, test, vi } from "vitest";
 import type { Digest, Entry, ScopeId } from "@generalbusiness/dap-contract";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { retainedReadArgument } from "@generalbusiness/artroom-bytes";
+import { retainedReadArgument } from "@generalbusiness/dap-bytes";
 import { SourceError, httpSource, main, verify, type Fetch, type MemoryScope, type MemorySource } from "../src/index.ts";
 import { rewrite, sourceOf, world } from "./world.ts";
 

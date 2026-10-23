@@ -6,7 +6,7 @@
  */
 
 import type { Prepared } from "@generalbusiness/dap-contract";
-import { canonicalBytes, digestBytes } from "@generalbusiness/artroom-bytes";
+import { canonicalBytes, digestBytes } from "@generalbusiness/dap-bytes";
 import type { Profile, RuleInput } from "../index.ts";
 import { RuleEvalError } from "./errors.ts";
 import { admit, evaluate } from "./evaluator.ts";

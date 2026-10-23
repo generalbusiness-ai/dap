@@ -3,7 +3,7 @@ import { archiveObservation, archiveOutcomeValue, replayArchiveEvidenceValue, ar
  * privacy admission or real-room export. Made-up owner rules and recorded
  * fixture authority are explicit; no caller anchor supplies a dependency. */
 import { PROPOSED_BOUNDS, type Digest, type PlatformData, type RetainedInput, type Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, intentDigest, newIncarnation, scopeIdOf, signIntent, textDigest } from "@generalbusiness/artroom-bytes";
+import { canonicalize, intentDigest, newIncarnation, scopeIdOf, signIntent, textDigest } from "@generalbusiness/dap-bytes";
 import { RETIRE_ACTION, actionOf, clockOf, contentStates, judgeDelivery, judgeGenesis, settleOutcome, valueDigest, type Judgment, type OutcomeRule } from "@generalbusiness/dap-derive";
 import { arriving, created, deskDefinition, deliver, grantOf, keys, Ledger, membership, notesDefinition, sent, T0, t, variant, type Actor } from "@generalbusiness/dap-derive/testing";
 import { C, cap, clean, snapshots, staging } from "../../derive/test/fixtures-hold.ts";

@@ -9,7 +9,7 @@
  * canonical form.
  */
 
-import { utf8, wellFormed } from "@generalbusiness/artroom-bytes";
+import { utf8, wellFormed } from "@generalbusiness/dap-bytes";
 import { PROFILE } from "./profile.ts";
 import { RuleEvalError } from "./errors.ts";
 

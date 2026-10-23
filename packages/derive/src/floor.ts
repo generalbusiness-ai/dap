@@ -1,7 +1,7 @@
 /** The retained-journal floor. Judges read journal/state only; host archive
  * receipts and transport acknowledgement timing remain writer obligations. */
 import type { Archived, FieldType, Bounds, Digest, FloorInput, FloorRefusal, JournalFloor, SizeProof } from "@generalbusiness/dap-contract";
-import { entryHash, isDigest, natural } from "@generalbusiness/artroom-bytes";
+import { entryHash, isDigest, natural } from "@generalbusiness/dap-bytes";
 import type { Own } from "./fields.ts";
 import { checkedTextBounds } from "./handlers.ts";
 import type { Judgment } from "./judge.ts";

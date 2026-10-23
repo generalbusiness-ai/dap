@@ -1,5 +1,5 @@
 /** Only the read methods used by the supported native reference callbacks. */
-import { canonicalize, isItem, parseStrict, utf8, wellFormed } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isItem, parseStrict, utf8, wellFormed } from "@generalbusiness/dap-bytes";
 import { byteOrder, type Page, type ScopeState, type StateView } from "@generalbusiness/dap-derive";
 import { incarnationEvidence } from "./incarnation-evidence.ts";
 import { itemCandidates, ITEM_CANDIDATE_BOUNDS } from "./item-candidates.ts";

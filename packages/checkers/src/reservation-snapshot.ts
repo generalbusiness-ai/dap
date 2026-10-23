@@ -1,7 +1,7 @@
 /** Verify the readonly object overlay before giving it to a runner. */
 import type { ReservationSnapshot } from "@generalbusiness/dap-contract";
-import { utf8 } from "@generalbusiness/artroom-bytes";
-import { Reader, READ_BOUNDS, idOf, snapshotFiles } from "@generalbusiness/artroom-git";
+import { utf8 } from "@generalbusiness/dap-bytes";
+import { Reader, READ_BOUNDS, idOf, snapshotFiles } from "@generalbusiness/dap-git";
 
 export async function verifyReservationObjects(snapshot: ReservationSnapshot): Promise<boolean> {
   try {

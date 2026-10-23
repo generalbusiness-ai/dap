@@ -2,7 +2,7 @@
  * are synthetic; this witnesses the clone reader, not export admission. */
 import { afterAll, expect, test } from "vitest";
 import type { Entry } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, entryHash, parseStrict, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, digestBytes, entryHash, parseStrict, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { archiveSource, verifyArchive } from "../src/index.ts";
 import { ArchiveBudget } from "../../scope/src/archive-budget.ts";
 import { buildJournalPass } from "../../git/src/journal-v2-layout.ts";

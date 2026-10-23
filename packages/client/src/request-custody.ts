@@ -4,7 +4,7 @@
  * This format currently admits no grants, detached texts or presented facts.
  * It neither signs nor clears a kept request. */
 import type { Answer, Beside, Digest, Grant, KeyId, Receipt, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalize, isRecord, textDigest, verifySignedIntent } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isRecord, textDigest, verifySignedIntent } from "@generalbusiness/dap-bytes";
 
 /** The exact scope, key and permitted act kinds for this custody slot. */
 export interface Binding { readonly scope: ScopeRef; readonly publicKey: KeyId; readonly kinds: readonly string[] }

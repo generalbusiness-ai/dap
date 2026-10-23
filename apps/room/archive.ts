@@ -1,6 +1,6 @@
 /** Grow's explicit host-owned archive wiring. No member or Worker secret. */
 import type { Bounds, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isScopeId, isScopeRef, parseStrict, readItemQueryParameter, readItemQueryReply, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isScopeId, isScopeRef, parseStrict, readItemQueryParameter, readItemQueryReply, utf8 } from "@generalbusiness/dap-bytes";
 import { ARTIFACTS_HOST, ARTIFACTS_NAMESPACE, artifactsBinding, artifactsConfiguration, type ArtifactsBindings } from "../../packages/scope/src/artifacts-wiring.ts";
 import { ArtifactsProvider } from "../../packages/scope/src/artifacts-host.ts";
 import { archiveTarget } from "../../packages/scope/src/archive-target.ts";

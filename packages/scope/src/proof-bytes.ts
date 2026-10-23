@@ -1,7 +1,7 @@
 /** Read-only native byte admission for exact causal entry proofs. */
-import { isLocalId as integer } from "@generalbusiness/artroom-bytes";
+import { isLocalId as integer } from "@generalbusiness/dap-bytes";
 import type { Entry, FactRef, FactUse, Head } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, entryHash, isDigest, isEntry, isFactRef, isFactUse, isScopeRef, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, digestBytes, entryHash, isDigest, isEntry, isFactRef, isFactUse, isScopeRef, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import { isObject, same } from "@generalbusiness/dap-derive";
 import type { Sql, SqlValue } from "./sqlite.ts";
 

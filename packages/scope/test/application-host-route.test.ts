@@ -1,8 +1,8 @@
 /** Retired hosted routes have no public assets. Generic exact-release serving
  * is witnessed on real installed scopes in application-install-custody. */
 import { env } from "cloudflare:test";
-import { newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/artroom-bytes";
-import { applicationScreenPath } from "@generalbusiness/artroom-client/application";
+import { newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
+import { applicationScreenPath } from "@generalbusiness/dap-client/application";
 import type { ScopeKind, ScopeRef } from "@generalbusiness/dap-contract";
 import { applicationResolverFixture, applicationWorkerBindings } from "./fixtures-native.ts";
 import { expect, test } from "vitest";

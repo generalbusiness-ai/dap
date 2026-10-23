@@ -2,7 +2,7 @@
  * CryptoKey references stay in this process: workerd cannot structured-clone
  * them. This does not prove browser key cloning, IndexedDB durability or
  * multi-process locking. */
-import type { BrowserPrivateSlots } from "@generalbusiness/artroom-client";
+import type { BrowserPrivateSlots } from "@generalbusiness/dap-client";
 import { pageKeyStore } from "../src/browser-key-store.ts";
 function copyRecord(value: unknown): unknown {
   if (value && typeof value === "object" && Object.hasOwn(value, "privateKey")) {

@@ -18,8 +18,8 @@
 import { env } from "cloudflare:workers";
 import { evictDurableObject, runInDurableObject } from "cloudflare:test";
 import type { Answer, Beside, Digest, Entry, FactRef, FieldValue, Grant, Intent, PlatformDefinition, Read, RetainedInput, ScopeId, ScopeRef, Seed, SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, factRefOf, intentDigest, isDigest, isScopeRef, newIncarnation, scopeIdOf, signIntent, textDigest, timeMs, timeOf } from "@generalbusiness/artroom-bytes";
-import { hashOfBytes, type MemoryScope } from "@generalbusiness/artroom-replay";
+import { canonicalize, entryHash, factRefOf, intentDigest, isDigest, isScopeRef, newIncarnation, scopeIdOf, signIntent, textDigest, timeMs, timeOf } from "@generalbusiness/dap-bytes";
+import { hashOfBytes, type MemoryScope } from "@generalbusiness/dap-replay";
 import type { Delivered, Item } from "@generalbusiness/dap-derive";
 import { d, keys, type Actor } from "@generalbusiness/dap-derive/testing";
 import { MEMBERSHIP, platform } from "@generalbusiness/dap-platform";

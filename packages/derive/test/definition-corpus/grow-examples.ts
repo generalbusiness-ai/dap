@@ -1,7 +1,7 @@
 /** Grow examples' complete positive declarations and native launcher variants.
  * All construction is lazy; this shard imports no validated fixture or history. */
 import { PROPOSED_BOUNDS, type FieldValue, type ScopeRef } from "@generalbusiness/dap-contract";
-import { newIncarnation, scopeIdOf } from "@generalbusiness/artroom-bytes";
+import { newIncarnation, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { RULE_PROFILES } from "../../src/rule/index.ts";
 import { demoDefinitions } from "../../../../examples/grow/demo-definitions.ts";
 import { deviceTestDefinition, zoneTestDefinition, simulatorTickParentDefinition, growSiteLauncherDefinition, siteForRoomDefinition, misaddressedRoomDefinition } from "../../../../examples/grow/definition-corpus-data.ts";

@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { timeMs } from "@generalbusiness/artroom-bytes";
+import { timeMs } from "@generalbusiness/dap-bytes";
 import { Gate, net } from "../../../../packages/scope/src/testing.ts";
 import { graph, onCode, rita, una } from "./support/graph.ts";
 import { siteFixtureLifetime } from "../../../../packages/scope/test/support/site-fixture-lifetime.ts";

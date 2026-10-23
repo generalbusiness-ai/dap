@@ -2,7 +2,7 @@
  * certificate, provider/write token or history/replay verdict. */
 import type { Entry, Head } from "@generalbusiness/dap-contract";
 import { DOMAINS } from "@generalbusiness/dap-contract";
-import { canonicalize, domainRetainedJSON, entryHash, isEntry, parseStrict, rawRetainedJSON, scopeIdOf, timeMs, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, domainRetainedJSON, entryHash, isEntry, parseStrict, rawRetainedJSON, scopeIdOf, timeMs, utf8 } from "@generalbusiness/dap-bytes";
 import { journalObjectClosure, type JournalClosure } from "./journal-closure.ts";
 import { archiveSegments, type ArchiveSegment } from "./journal-segments.ts";
 import type { ArchiveRetainedName } from "./journal-path.ts";

@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { scopeIdOf, seedDigest } from "@generalbusiness/artroom-bytes";
+import { scopeIdOf, seedDigest } from "@generalbusiness/dap-bytes";
 import { MemoryState, PROFILES, runnable, standingEntries, validateDefinition, type RuleGiven } from "@generalbusiness/dap-derive";
 import { directory10, directoryPartition1, directoryRules10, directoryPartitionRules1, MAX_GENERATIONS, partitionLane, partitionSeedKey, PARTITION_COHORT } from "../src/directory-partitions.ts";
 

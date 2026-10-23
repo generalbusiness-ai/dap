@@ -1,5 +1,5 @@
 /** C1's bounded singleton selection and shared prospective counter check. */
-import { natural } from "@generalbusiness/artroom-bytes";
+import { natural } from "@generalbusiness/dap-bytes";
 import type { Effect, StandingReservation } from "@generalbusiness/dap-contract";
 import { NOTHING, amountMath, type Amount } from "./held.ts";
 import { changeItem, newItem } from "./item-effects.ts";

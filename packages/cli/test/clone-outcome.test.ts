@@ -1,6 +1,6 @@
 import { expect, test, vi } from "vitest";
 import type { Entry, Input, OperationId, Read } from "@generalbusiness/dap-contract";
-import { httpTransport, TransportError, type Fetch } from "@generalbusiness/artroom-client";
+import { httpTransport, TransportError, type Fetch } from "@generalbusiness/dap-client";
 import { CLONE_ENTRIES_PER_POLL, outcomeFetch, outcomeWaitLines, pauseOutcome, waitOutcome } from "../src/clone-outcome.ts";
 
 const operation: OperationId = "1:0";

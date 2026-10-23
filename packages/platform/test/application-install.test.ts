@@ -2,8 +2,8 @@
  * authority are fixtures; admission answers below are scripted, with no Git,
  * storage, retry driver, or hosted install running in this witness. */
 import { expect, test } from "vitest";
-import { canonicalize, definitionDigest, textDigest, utf8, keyIdOfSecret, sign } from "@generalbusiness/artroom-bytes";
-import { packApplication } from "@generalbusiness/artroom-bytes/application";
+import { canonicalize, definitionDigest, textDigest, utf8, keyIdOfSecret, sign } from "@generalbusiness/dap-bytes";
+import { packApplication } from "@generalbusiness/dap-bytes/application";
 import { clockOf, judgeOutcome, runnable, validateDefinition } from "@generalbusiness/dap-derive";
 import { d, keys, membership } from "@generalbusiness/dap-derive/testing";
 import { countingCommitments } from "../../../apps/counter/commitments.ts";

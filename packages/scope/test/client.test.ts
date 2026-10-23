@@ -1,8 +1,8 @@
 import { env } from "cloudflare:workers";
 import { SELF } from "cloudflare:test";
 import { expect, test } from "vitest";
-import { ScopeHandle, bindingTransport, create, httpTransport, secretSigner, signedIntent, type ServiceBinding, type Transport } from "@generalbusiness/artroom-client";
-import { newIncarnation } from "@generalbusiness/artroom-bytes";
+import { ScopeHandle, bindingTransport, create, httpTransport, secretSigner, signedIntent, type ServiceBinding, type Transport } from "@generalbusiness/dap-client";
+import { newIncarnation } from "@generalbusiness/dap-bytes";
 import { timeMs } from "@generalbusiness/dap-derive";
 import { deskDefinition, grantOf, ticketDefinition } from "@generalbusiness/dap-derive/testing";
 import { net, rita } from "./net.ts";

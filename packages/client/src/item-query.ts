@@ -1,7 +1,7 @@
 /** Explicit finite collection. Default: one page, with visible suffix coverage. */
 import { ITEM_QUERY_BOUNDS as B } from "@generalbusiness/dap-contract";
 import type { Head, Item, ItemQuery, ItemQueryRefusal } from "@generalbusiness/dap-contract";
-import { canonicalize, encodeItemQueryParameter, readItemQueryParameter, utf8, within, LATE } from "@generalbusiness/artroom-bytes";
+import { canonicalize, encodeItemQueryParameter, readItemQueryParameter, utf8, within, LATE } from "@generalbusiness/dap-bytes";
 import type { ScopeHandle } from "./handle.ts";
 export const ITEM_QUERY_COLLECTION_BOUNDS = Object.freeze({ pages: 4, bytes: 1024 * 1024, milliseconds: 10_000, restarts: 1 });
 export interface ItemQueryCollectionOptions { pages?: number; bytes?: number; milliseconds?: number; restarts?: number }

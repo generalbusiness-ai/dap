@@ -24,7 +24,7 @@
  */
 
 import type { FieldType } from "@generalbusiness/dap-contract";
-import { canonicalize } from "@generalbusiness/artroom-bytes";
+import { canonicalize } from "@generalbusiness/dap-bytes";
 import { INDEXED_TYPES, INDEXES_MOST } from "../binding.ts";
 import { isObject, own } from "../values.ts";
 import { mark, type Defining, type Slot, type Type } from "./context.ts";

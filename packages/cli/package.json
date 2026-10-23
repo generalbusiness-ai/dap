@@ -18,10 +18,10 @@
     "test": "vitest run --config vitest.config.ts && node --test test/config-dir.test.mjs"
   },
   "dependencies": {
-    "@generalbusiness/artroom-bytes": "0.1.0-dev.1",
-    "@generalbusiness/artroom-client": "0.1.0-dev.1",
-    "@generalbusiness/artroom-replay": "0.1.0-dev.1",
-    "@generalbusiness/artroom-scope": "0.1.0-dev.1",
+    "@generalbusiness/dap-bytes": "0.1.0-dev.1",
+    "@generalbusiness/dap-client": "0.1.0-dev.1",
+    "@generalbusiness/dap-replay": "0.1.0-dev.1",
+    "@generalbusiness/dap-scope": "0.1.0-dev.1",
     "@generalbusiness/dap-contract": "0.1.0-dev.1",
     "@generalbusiness/dap-derive": "0.1.0-dev.1",
     "@generalbusiness/dap-mcp": "0.1.0-dev.1",

@@ -1,7 +1,7 @@
 /** Shared raw positive settlement variants; no validator runs on import. */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { PROPOSED_BOUNDS, type PlatformData, type DeclaredDefinition } from "@generalbusiness/dap-contract";
-import { canonicalBytes, parseStrictBytes } from "@generalbusiness/artroom-bytes";
+import { canonicalBytes, parseStrictBytes } from "@generalbusiness/dap-bytes";
 import { PROFILES } from "../../src/validate/index.ts";
 import { M, act, MARK, set } from "./forms-settles-data.ts";
 import type { DefinitionCorpusRow } from "./row.ts";

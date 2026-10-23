@@ -1,10 +1,10 @@
 /** Native metadata sizing before JSON inspection. This is not a complete
  * privacy inventory or permission to select/export payload bodies. */
-import { natural } from "@generalbusiness/artroom-bytes";
+import { natural } from "@generalbusiness/dap-bytes";
 import { DOMAINS, type Bounds, type Digest, type Head, type PlatformDefinition, type ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, domainBytes, isDigest, isFactRef, isHead, isRecord, isScopeRef, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
-import { ARCHIVE_NATIVE_DATA, admitArchivePin, type ArchiveExportRefusal } from "@generalbusiness/artroom-git/archive-policy";
-import { JOURNAL_V2_LAST_POSITION } from "@generalbusiness/artroom-git/journal";
+import { canonicalize, digestBytes, domainBytes, isDigest, isFactRef, isHead, isRecord, isScopeRef, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
+import { ARCHIVE_NATIVE_DATA, admitArchivePin, type ArchiveExportRefusal } from "@generalbusiness/dap-git/archive-policy";
+import { JOURNAL_V2_LAST_POSITION } from "@generalbusiness/dap-git/journal";
 import { platform } from "@generalbusiness/dap-platform";
 import { validateArchiveNativeRoot } from "./archive-native-root.ts";
 import { ArchiveDeclarations, type ArchiveDeclarationClosure } from "./archive-declarations.ts";

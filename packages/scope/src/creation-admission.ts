@@ -1,7 +1,7 @@
 /** Serving policy before a parentless creation addresses a Durable Object.
  * This is not a genesis judgment or a substitute for verified child delivery. */
 import type { Seed, SignedIntent } from "@generalbusiness/dap-contract";
-import { isSignedIntentShape, scopeIdOf, verifySignedIntent } from "@generalbusiness/artroom-bytes";
+import { isSignedIntentShape, scopeIdOf, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { artifactsRegisterScope } from "./artifacts-wiring.ts";
 
 export interface CreationAdmission {

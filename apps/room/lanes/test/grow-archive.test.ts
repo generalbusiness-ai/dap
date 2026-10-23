@@ -3,10 +3,10 @@
 import { readFileSync } from "node:fs";
 import { URL as NodeURL } from "node:url";
 import { expect, test } from "vitest";
-import { utf8 } from "@generalbusiness/artroom-bytes";
-import { snapshotCommit } from "@generalbusiness/artroom-git";
-import { journalRef } from "@generalbusiness/artroom-git/journal";
-import { admitArchivePin } from "@generalbusiness/artroom-git/archive-policy";
+import { utf8 } from "@generalbusiness/dap-bytes";
+import { snapshotCommit } from "@generalbusiness/dap-git";
+import { journalRef } from "@generalbusiness/dap-git/journal";
+import { admitArchivePin } from "@generalbusiness/dap-git/archive-policy";
 import type { ScopeRef } from "@generalbusiness/dap-contract";
 import { growArchivePolicies, GROW_ARCHIVE_DEFINITIONS } from "../../archive-policy.ts";
 import { growArchiveConfiguration } from "../../archive.ts";

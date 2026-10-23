@@ -20,7 +20,7 @@
  */
 
 import type { CapabilityName, Digest, Effect, Entry, Evidence, FactRef, Input, OperationId, PlatformDefinition, ScopeRef, Send, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalBytes, digestBytes, isEvidence, isPlatformDefinition } from "@generalbusiness/artroom-bytes";
+import { canonicalBytes, digestBytes, isEvidence, isPlatformDefinition } from "@generalbusiness/dap-bytes";
 import type { Own } from "./fields.ts";
 import type { Draft } from "./judge.ts";
 import type { FirstStep } from "./marks.ts";

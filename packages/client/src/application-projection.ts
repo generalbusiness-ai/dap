@@ -1,8 +1,8 @@
 /** Item fields selected by a declared native read. These adapters add no
  * opened/attributed fields, Summary reply or native authority proof. */
 import type { ApplicationProjectionData, ApplicationProjectionRead, FieldValue, Item, Read } from "@generalbusiness/dap-contract";
-import { canonicalize, isMemberRef, parseStrict, timeMs } from "@generalbusiness/artroom-bytes";
-import { applicationProjectionId, isApplicationJournalSource, readApplicationProjection, type ApplicationReadProjection } from "@generalbusiness/artroom-bytes/application-v2";
+import { canonicalize, isMemberRef, parseStrict, timeMs } from "@generalbusiness/dap-bytes";
+import { applicationProjectionId, isApplicationJournalSource, readApplicationProjection, type ApplicationReadProjection } from "@generalbusiness/dap-bytes/application-v2";
 import type { CompleteSnapshot } from "./observe.ts";
 
 export type ProjectedItem = Pick<Item, "id" | "type" | "state" | "revision" | "parties" | "refs" | "values">;

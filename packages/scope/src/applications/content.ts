@@ -1,8 +1,8 @@
 /** Private immutable release bytes. This has no HTTP route, listing, delete or
  * arbitrary object key. It creates no native installation or authority. */
 import type { Bounds, Digest } from "@generalbusiness/dap-contract";
-import { isDigest } from "@generalbusiness/artroom-bytes";
-import type { AnyPackedApplication } from "@generalbusiness/artroom-bytes/application-v2";
+import { isDigest } from "@generalbusiness/dap-bytes";
+import type { AnyPackedApplication } from "@generalbusiness/dap-bytes/application-v2";
 import { APPLICATION_HOST_PACKAGE_BYTES, ApplicationAdmissionError, readTrustedApplication, type ApplicationTrust } from "./admission.ts";
 
 export class ApplicationContentError extends Error {

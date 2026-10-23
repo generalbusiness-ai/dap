@@ -2,7 +2,7 @@
  * These caller-word lists confer no Native privacy or authority proof. */
 import { expect, test } from "vitest";
 import type { Entry, FactRef } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, entryHash, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, digestBytes, entryHash, utf8 } from "@generalbusiness/dap-bytes";
 import { ArchiveBudget } from "../../scope/src/archive-budget.ts";
 import { buildJournalPass } from "../src/journal-v2-layout.ts";
 import { readJournalArchiveV2 } from "../src/journal-v2-reader.ts";

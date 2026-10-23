@@ -26,7 +26,7 @@ import type { ValidDefinition } from "./validate/index.ts";
 import { LAST_MS, timeMs, timeOf } from "./time.ts";
 import { unsupported } from "./unsupported.ts";
 import { isFactRef, isLocalId, isMemberRef, isObject, isValue, memberFits, own, same } from "./values.ts";
-import { isDigest, isEffect } from "@generalbusiness/artroom-bytes";
+import { isDigest, isEffect } from "@generalbusiness/dap-bytes";
 
 /**
  * What a derivation gives: its result, a refusal, or `unavailable`. The last

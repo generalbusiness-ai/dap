@@ -1,8 +1,8 @@
 /** Scalar lookahead for an adaptive pass. This is not dependency, privacy
  * or payload admission. The owner still classifies the selected prefix. */
 import type { Bounds, Digest, Head, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isHead, natural, timeMs } from "@generalbusiness/artroom-bytes";
-import { JOURNAL_V2_LAST_POSITION } from "@generalbusiness/artroom-git/journal";
+import { canonicalize, isDigest, isHead, natural, timeMs } from "@generalbusiness/dap-bytes";
+import { JOURNAL_V2_LAST_POSITION } from "@generalbusiness/dap-git/journal";
 import { ArchiveBudget, type ArchiveCost } from "./archive-budget.ts";
 import { ARCHIVE_POSITION_METADATA_BYTES, ARCHIVE_PRIVACY_JSON_PASSES, archivePrefixMetadata, readArchiveScopeFrame, stopArchivePrefix as stop, type ArchivePosition, type ArchivePrefix } from "./archive-prefix.ts";
 import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, readArchivePin, readArchivePinAfterReceipt } from "./archive-pin.ts";

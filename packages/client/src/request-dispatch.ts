@@ -2,7 +2,7 @@
  * mint its one-use transport closure. Restore/unknown recovery never posts.
  * The caller holds the identity lock and verifies accepted native receipts. */
 import type { Answer, Receipt } from "@generalbusiness/dap-contract";
-import { canonicalize, type ByteStream } from "@generalbusiness/artroom-bytes";
+import { canonicalize, type ByteStream } from "@generalbusiness/dap-bytes";
 import { httpTransport } from "./http.ts";
 import { ScopeHandle } from "./handle.ts";
 import { activeAttempt, actURL, contextKey, envelopeKey, fitsPending, legacyUnknown, markActive, requestJournal, type AttemptJournal, type RefusalJudgment, type RequestActorIdentity, type RequestEnvelope as PreparedEnvelope } from "./request-attempts.ts";

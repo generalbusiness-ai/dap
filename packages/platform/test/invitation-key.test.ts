@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { b64url, keyIdOfSecret, signInvitationProof } from "@generalbusiness/artroom-bytes";
+import { b64url, keyIdOfSecret, signInvitationProof } from "@generalbusiness/dap-bytes";
 import { PROFILES, runnable, validateDefinition } from "@generalbusiness/dap-derive";
 import { t } from "@generalbusiness/dap-derive/testing";
 import { INVITATION_KEY_COHORT as C, DIRECTORY_OF, SIBLINGS_OF, platform } from "../src/index.ts";

@@ -1,7 +1,7 @@
 /** Native probe/tender fixtures. Grants, readings and root setup are scripted;
  * text reports are member statements, with no photo custody or device effect. */
 import { expect, test } from "vitest";
-import { keyIdOfSecret } from "@generalbusiness/artroom-bytes";
+import { keyIdOfSecret } from "@generalbusiness/dap-bytes";
 import { keys, member, t } from "@generalbusiness/dap-derive/testing";
 import { room } from "./room.ts";
 import { nativeScenario, devicePermissions, operator, climate, sensors, on, replay, submit, type Actor, type Ledger } from "./test-support.ts";

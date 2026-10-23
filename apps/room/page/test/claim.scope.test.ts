@@ -3,8 +3,8 @@ import { nativeFixtureLifetime, driveFixture } from "../../../../packages/scope/
 import type { Platform } from "../../../../packages/scope/test/repository.ts";
 import { expect, test } from "vitest";
 import type { ScopeId, SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, isKeyId, scopeIdOf, verify } from "@generalbusiness/artroom-bytes";
-import type { Fetch } from "@generalbusiness/artroom-client";
+import { b64url, isKeyId, scopeIdOf, verify } from "@generalbusiness/dap-bytes";
+import type { Fetch } from "@generalbusiness/dap-client";
 import { routed } from "../../../../packages/scope/test/repository.ts";
 import { claimRoom as nativeClaimRoom, claimStatus, type ClaimOptions, type ClaimStorage } from "../src/claim.ts";
 import { command, memoryStore, type Context } from "@generalbusiness/dap-cli";

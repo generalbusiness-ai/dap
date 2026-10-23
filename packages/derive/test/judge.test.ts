@@ -2,7 +2,7 @@ import { judge_change0, judge_change1, judge_change2, judge_change3, judge_chang
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Effect, MemberRef, RefusalReason } from "@generalbusiness/dap-contract";
-import { canonicalBytes, digestBytes, intentDigest } from "@generalbusiness/artroom-bytes";
+import { canonicalBytes, digestBytes, intentDigest } from "@generalbusiness/dap-bytes";
 import { type ActJudgment } from "../src/index.ts";
 import { Scope, d, directory, fields, grantOf, keys, lane, laneDefinition, on, otherLane, small, smallDefinition, t, variant, type Actor } from "./fixtures-entry.ts";
 

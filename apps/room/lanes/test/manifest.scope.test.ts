@@ -1,12 +1,12 @@
 import { expect, test } from "vitest";
-import { textDigest } from "@generalbusiness/artroom-bytes";
+import { textDigest } from "@generalbusiness/dap-bytes";
 import { answered, Peer, net, paul, rita, soon, una, vic } from "./support/graph.ts";
 
 import { routed } from "./support/room.ts";
 import { delegatedRoom } from "./support/native-delegated-room.ts";
 import { DIGESTS, change, issue } from "../src/index.ts";
 import { nativelyCreatedChild, settleNativeChildren } from "./support/natively-created-child.ts";
-import { httpTransport } from "@generalbusiness/artroom-client";
+import { httpTransport } from "@generalbusiness/dap-client";
 import { env } from "cloudflare:workers";
 import { namespace, type Transport as NativeTransport } from "../../../../packages/scope/src/index.ts";
 /** A Git object ID. No repository exists here: the Git host is a stand-in. */

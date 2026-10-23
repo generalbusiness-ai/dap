@@ -3,7 +3,7 @@
  * are not proof of native execution. Old destination policies remain separate. */
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { DeclaredDefinition, Digest, Entry, FactRef, PlatformDefinition, Request, ScopeRef, Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, deliveryCauseDigest, intentDigest, isDigest, isPlatformDefinition, isSeed, messageDigest, platformName, scopeIdOf, seedDigest, utf8, verifySignedIntent } from "@generalbusiness/artroom-bytes";
+import { canonicalize, definitionDigest, deliveryCauseDigest, intentDigest, isDigest, isPlatformDefinition, isSeed, messageDigest, platformName, scopeIdOf, seedDigest, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { isEntryOf, isFactRef, isObject, isScopeRef, same, sentBy, type Fetched } from "@generalbusiness/dap-derive";
 import { sourceName as legacySourceName } from "./publishing-provenance.ts";
 import { PARTITION_COHORT as COHORT, MAX_GENERATIONS, PARTITION_SPAN } from "./directory-partitions.ts";

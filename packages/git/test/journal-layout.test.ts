@@ -1,6 +1,6 @@
 import { afterAll, expect, test } from "vitest";
 import { DOMAINS } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, domainBytes, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, digestBytes, domainBytes, utf8 } from "@generalbusiness/dap-bytes";
 import { ArchiveBudget } from "../../scope/src/archive-budget.ts";
 import { buildJournalArchive, type JournalArchive, type JournalLayoutResult, type JournalLayoutOptions } from "../src/journal-layout.ts";
 import { journalKeyName } from "../src/journal-selection.ts";

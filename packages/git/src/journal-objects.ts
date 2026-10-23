@@ -1,7 +1,7 @@
 /** Strict, explicit-format archive primitives. Legacy Reader, objectId,
  * idOf, snapshots and provider contracts retain their original behavior. */
 import { decodeGitText } from "./wire-text.ts";
-import { hex, sha1, sha256, utf8 } from "@generalbusiness/artroom-bytes";
+import { hex, sha1, sha256, utf8 } from "@generalbusiness/dap-bytes";
 import { JournalWork, refuseJournal } from "./journal-work.ts";
 import { journalObjectReservation, journalResultMetadata, journalTreeRowMetadata } from "./journal-object-cost.ts";
 

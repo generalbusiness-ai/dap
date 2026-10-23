@@ -2,7 +2,7 @@
  * The owner admits exact native pins, places and the whole prefix first.
  * Recognizing a callback here grants no permission to read/export bytes. */
 import type { Bounds, Digest, Input, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isPlatformDefinition, natural } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isPlatformDefinition, natural } from "@generalbusiness/dap-bytes";
 import { boundedRetainedDependencies, operationValueSelector, outcomeValueDependencies, type OperationRules, type PlannedRetainedDependency } from "@generalbusiness/dap-derive";
 import { destinationEvidenceValues } from "@generalbusiness/dap-platform";
 import type { ArchiveBudget } from "./archive-budget.ts";

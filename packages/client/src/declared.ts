@@ -24,7 +24,7 @@
 import type {
   Answer, Beside, DeclaredDefinition, Digest, FactRef, FieldType, FieldValue, Grant, MemberRef, PlatformDefinition, ReadRefusal, ScopeRef, SignedIntent, Timestamp,
 } from "@generalbusiness/dap-contract";
-import { definitionDigest, isDigest, isFactRef, isLocalId, isMemberRef, isRecord, isScopeRef, textDigest, timeMs, utf8, wellFormed } from "@generalbusiness/artroom-bytes";
+import { definitionDigest, isDigest, isFactRef, isLocalId, isMemberRef, isRecord, isScopeRef, textDigest, timeMs, utf8, wellFormed } from "@generalbusiness/dap-bytes";
 import type { ScopeHandle } from "./handle.ts";
 import { signedIntent, type Signer, type Signing } from "./intent.ts";
 

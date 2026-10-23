@@ -1,15 +1,15 @@
 /** Development-only local scope: genuine native Core + SqliteStore, with
  * explicit scripted authority. No enrollment/freshness proof, dispatcher,
  * provider call, hosted durability or screen isolation is claimed here. */
-import { bindApplicationProjection, ApplicationProjectionError, readPublishedApplicationPackage2, type AnyPackedApplication, type ApplicationReadProjection } from "@generalbusiness/artroom-bytes/application-v2";
+import { bindApplicationProjection, ApplicationProjectionError, readPublishedApplicationPackage2, type AnyPackedApplication, type ApplicationReadProjection } from "@generalbusiness/dap-bytes/application-v2";
 import { DatabaseSync } from "node:sqlite";
 import type { Answer, ApplicationProjectionData, Beside, DeclaredDefinition, Digest, FreshnessProof, Grant, KeyId, MemberRef, ScopeId, ScopeRef, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
 import { HISTORY_PAGE_ENTRIES, PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, intentDigest, parseStrict, scopeIdOf, utf8 } from "@generalbusiness/artroom-bytes";
-import { readApplicationPackage } from "@generalbusiness/artroom-client";
+import { canonicalize, definitionDigest, intentDigest, parseStrict, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
+import { readApplicationPackage } from "@generalbusiness/dap-client";
 import { timeMs, type StateView } from "@generalbusiness/dap-derive";
-import { verify, type HistorySource, type Verification } from "@generalbusiness/artroom-replay";
-import { CAPABILITY_CODE, Deliveries, PreparationFlights, Reads, ReadPreparation, applicationProjectionData, declaredBy, namespace, nativeBirth, projectionScopeOwned, sourced, sentText, Scope, SqliteStore, production, type Binding, type Peer, type Ports, type Sql, type SqlValue } from "@generalbusiness/artroom-scope/runtime";
+import { verify, type HistorySource, type Verification } from "@generalbusiness/dap-replay";
+import { CAPABILITY_CODE, Deliveries, PreparationFlights, Reads, ReadPreparation, applicationProjectionData, declaredBy, namespace, nativeBirth, projectionScopeOwned, sourced, sentText, Scope, SqliteStore, production, type Binding, type Peer, type Ports, type Sql, type SqlValue } from "@generalbusiness/dap-scope/runtime";
 import { scriptedDeviceParent, type ScriptedDeviceGrantEvidence } from "./application-local-device-fixture.ts";
 
 /** An explicit scenario/development grant list. It is never inferred from all

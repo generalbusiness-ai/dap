@@ -1,8 +1,8 @@
 import { expect, test, onTestFinished } from "vitest";
 import type { SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, factRefOf, timeMs, timeOf, utf8 } from "@generalbusiness/artroom-bytes";
-import { invitationIssueFields, invitationRedemptionFields, secretSigner, signedIntent, type Fetch } from "@generalbusiness/artroom-client";
-import { net } from "@generalbusiness/artroom-scope/testing";
+import { b64url, factRefOf, timeMs, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { invitationIssueFields, invitationRedemptionFields, secretSigner, signedIntent, type Fetch } from "@generalbusiness/dap-client";
+import { net } from "@generalbusiness/dap-scope/testing";
 import { beginSessionFixture } from "../../scope/test/session-settings.ts";
 import { office, Platform, rita, routed, settle, una } from "../../scope/test/repository.ts";
 import { command, memoryStore, type Context } from "../src/index.ts";

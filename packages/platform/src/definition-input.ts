@@ -1,6 +1,6 @@
 /** Supporting cohort's explicit bounded declaration closure, using existing value places. */
 import { PROPOSED_BOUNDS, type DeclaredDefinition, type Digest } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { validateDefinition, type RuleGiven } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 

@@ -27,7 +27,7 @@
  */
 
 import type { ReservationSnapshot, FactRef, SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, unb64url, canonicalize } from "@generalbusiness/artroom-bytes";
+import { b64url, unb64url, canonicalize } from "@generalbusiness/dap-bytes";
 import type { Details, Outcome } from "./outcome.ts";
 
 /** The storage's side. Each call is atomic for its key, and resolves only when its effect is durable. */

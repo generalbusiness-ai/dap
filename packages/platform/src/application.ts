@@ -1,7 +1,7 @@
 /** Explicit supporting application cohort; legacy room pins and defaults stay unchanged. */
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Bounds, DeclaredDefinition, Digest, FieldType, MemberRef, PlatformData, RulesObservation, ScopeRef, Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, intentDigest, isScopeRef, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, intentDigest, isScopeRef, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import { isObject, readFields, same, type RuleGiven, type Rules } from "@generalbusiness/dap-derive";
 import { definitionClosure, definitionDependencies } from "./definition-input.ts";
 import { DEFINITION_DOMAIN, directory2, directoryMembership, directoryRules, directoryRulesScope } from "./directory.ts";

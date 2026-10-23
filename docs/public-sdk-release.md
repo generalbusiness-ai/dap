@@ -1,9 +1,13 @@
 # Produce the public SDK
 
-This is the active six-package producer boundary. It builds and inspects
-JavaScript and declarations for contract, bytes, client, derive, platform and replay. It does
-not publish, install application packages, configure accounts or deploy a
-service. The earlier release guide is historical and inactive.
+This is the active seven-package producer boundary: contract, package-graph,
+bytes, client, derive, platform and replay. Planner approved this seven-package
+policy. The updated producer and checker
+have not run at this source delivery. No new staged release, public package
+or consumer acceptance is claimed. The tools build and inspect JavaScript
+and declarations; they do not publish, install application packages,
+configure accounts or deploy a service. Recorded six-package outcomes below
+remain historical evidence.
 
 The six-package amendment is request `fecf7160fd4a8c4b9219d7713a11036ff48db85e`,
 promise `ffae23e0f56d0a17d773264588f98940f04cd963`. It follows the public
@@ -30,26 +34,30 @@ node scripts/public-release.mjs --source /absolute/clean/checkout --head <full-c
 node scripts/check-public-release.mjs --manifest /private/tmp/fresh-sdk-stage/release-manifest.json --native-capture /private/tmp/reviewed-native-capture.json --native-capture-sha256 <reviewed-SHA256> --esbuild /absolute/pinned-native-esbuild/bin/esbuild --esbuild-sha256 <reviewed-SHA256>
 ```
 
-The six published SDK packages, in build order, are
-`@generalbusiness/dap-contract`, `@generalbusiness/dap-bytes`,
+The seven SDK packages, in build order, are
+`@generalbusiness/dap-contract`, `@generalbusiness/dap-package-graph`,
+`@generalbusiness/dap-bytes`,
 `@generalbusiness/dap-client`, `@generalbusiness/dap-derive`,
 `@generalbusiness/dap-platform`, and `@generalbusiness/dap-replay`, all at
 `0.1.0-dev.2`.
 
-The command is `dap`. `artroom` remains an alias. The contract, derive,
-lanes, page, platform, and cli workspaces use `@generalbusiness/dap-*`
-names. Inside this repository, scope, git, checkers, bytes, client, and
-replay still use `@generalbusiness/artroom-*` workspace names, with public
-SDK names mapped at publication. The `artroom-replay` command,
-`ARTROOM_HOME`, `refs/artroom/`, and Worker names are unchanged.
+The command is `dap`. `artroom` remains an alias. All workspace package names
+use `@generalbusiness/dap-*`, including bytes, client and replay. The existing
+six SDK names are unchanged; package-graph is the seventh name. The `artroom-replay` command,
+`ARTROOM_HOME`, `refs/artroom/`, protocol names and Worker names are unchanged.
 
-The producer keeps an exact original
-copy of each tracked SDK input, then changes only genuine module literals
-in its separate compiler inputs to the distribution names. Ordinary strings,
-protocol names, package directories and source workspace versions remain
-unchanged. Staged manifests use the six distribution names and coordinated
-dependencies at the selected version, plus the dap repository and homepage.
-The checker verifies both the original copies and the exact module rewrites.
+The producer keeps exact original and compiler-input copies of each tracked
+SDK input. Package names need no publication mapping. Staged manifests use
+the seven planned names and coordinated dependencies at the selected version,
+plus the dap repository and homepage. The checker verifies both copies
+against the original bytes. The public export and dependency allowlists
+are exact and reject unknown additions. The release plan includes the existing
+bytes `./application` and `./application-v2` and client `./application` source
+exports in the public map. Bytes and derive depend on the coordinated
+package-graph stage; package-graph depends on contract. Every coordinated
+source dependency must equal its source package version before it is mapped
+to the selected release version. The source-only install exclusion does not establish fresh
+producer or consumer acceptance.
 
 The producer copies tracked inputs to an owned external build root and
 verifies their bytes. Every package compiles from its actual copied source
@@ -65,21 +73,29 @@ its file set and input hashes must match that preflight. Consumer `noEmit`
 checks keep their single pass. The checkout's HEAD, clean state and copied bytes are
 checked again before the release manifest is sealed.
 
-Build order is contract, bytes, client, derive, platform, replay. TypeScript 7.0.2 emits ES2022
+Build order is contract, package-graph, bytes, client, derive, platform, replay. TypeScript 7.0.2 emits ES2022
 ESM plus declarations without maps. Relative JavaScript extensions are
 rewritten by the compiler. Relative declaration module specifiers are
 converted to `.js` where needed and checked against real `.d.ts` files in
 the same stage. The manifest records each such declaration rewrite. Neither
 an extension flag nor a source typecheck proves declaration closure.
 
-Platform publishes only its production root. The source manifest's exact
-`./testing` export is accounted for but excluded; an extra source export still
-refuses. Replay publishes its existing portable library and pure command
+Platform publishes its production root and `./membership-actions`.
+The source-only exports `./testing` (`./test/support.ts`) and
+`./application-install` (`./src/application-install.ts`) are accounted for
+and excluded from the published export map. The install rules stay internal
+to the hosting Worker. This exclusion does not omit their production code
+from the compiled platform closure. An unknown source export or a changed
+excluded path still refuses. Replay publishes its existing portable library and pure command
 function. Its Node process wrapper `src/bin.ts` is copied only into an
-excluded evidence directory, hashed, and omitted from compiler ancestry and
-public output. This release supplies no `artroom-replay` executable. The checker
-compares the complete included source inventory and that one exclusion. Both
-packages depend on the coordinated contract, bytes and derive stages. Their
+excluded evidence directory together with `src/git.ts`, hashed, and omitted
+from compiler ancestry and public output. This release supplies no `artroom-replay` executable. The checker
+compares the complete included source inventory and both exact exclusions.
+Replay alone has a source-only platform dependency, used by its excluded Node
+wrapper. Its exact source-version pin is checked and that dependency is omitted
+from the published Replay manifest. Any unknown dependency, changed pin,
+extra export or changed exclusion refuses. Both packages depend on the
+coordinated contract, bytes and derive stages. Their
 input compilation uses the opt-in bytes/web declaration, as client and derive
 do; it does not inject default consumer globals or broad Node/DOM types.
 
@@ -196,7 +212,7 @@ The release owner assembles and verifies source/artifacts. A separately
 verified namespace administrator/publisher controls publication. A deployed
 operator controls the HTTPS URL, version, bindings, migration and real
 membership/definition/read provisioning. GitHub App authority does not
-establish npm publishing rights. Publishing six packages is not atomic;
+establish npm publishing rights. Publishing the seven packages is not atomic;
 complete the set and verify all public versions/integrities before calling
 it an available coordinated release.
 
@@ -217,6 +233,23 @@ read custody, durable adapters, browser hosting and local-versus-hosted
 fidelity remain separately owned and open. Browser cross-origin access is
 not established by packaging. This producer adds no CORS, grant, hosting,
 onboarding or universal durable-outbox protocol.
+
+## Seven-package closure checks
+
+The actual-manifest witness remains positive for every planned package. It
+checks the graph contract dependency, bytes application subpaths, client
+application subpath, coordinated graph dependencies and Replay's exact
+source-only platform omission. Unknown exports or dependencies and changed
+excluded paths or pins still refuse. Only Replay bin/git inputs and outputs
+are excluded; bytes v2 source remains in the production closure.
+
+The producer already compiles packages in plan order and admits only completed
+predecessor stages. Its generic loop needs no alternate resolver or source
+alias. The checker adds package-graph to its finite input set and requires it
+in the real compiled browser closure. Its compiled journey exercises graph
+field inclusion in both directions and resolves the bytes application codecs
+and client compatibility export. NodeNext and Bundler type contexts use the
+same public subpaths. These updated witnesses are unrun at this source delivery.
 
 ## Module-reference repair
 

@@ -3,7 +3,7 @@
  * scheduler are explicit stand-ins.
  * No deployed invitation or outside provider is used. */
 import { expect, test } from "vitest";
-import { b64url, canonicalize, keyIdOfSecret, timeOf, utf8 } from "@generalbusiness/artroom-bytes";
+import { b64url, canonicalize, keyIdOfSecret, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT, INVITATION_KEY_COHORT } from "@generalbusiness/dap-platform";
 import { joinInvitation } from "../src/join-custody.ts";
 import { memoryPageKeys } from "./private-key-fixture.ts";

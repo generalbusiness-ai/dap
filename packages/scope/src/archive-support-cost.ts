@@ -1,6 +1,6 @@
 /** Original trusted support work, separate from declaration-body reads,
  * native data validation, entry classification and export admission. */
-import { natural } from "@generalbusiness/artroom-bytes";
+import { natural } from "@generalbusiness/dap-bytes";
 import { ArchiveStopped, type ArchiveCost } from "./archive-budget.ts";
 
 export const ARCHIVE_SUPPORT_OWNER_WORK = 512;

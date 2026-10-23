@@ -2,7 +2,7 @@ import { sourceArrival, sourceTime, sourceOnlyOne } from "./definition-corpus/ge
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { DeclaredDefinition } from "@generalbusiness/dap-contract";
-import { newIncarnation } from "@generalbusiness/artroom-bytes";
+import { newIncarnation } from "@generalbusiness/dap-bytes";
 import { validateDefinition } from "../src/index.ts";
 import { created, deliver, keys, t, sourceOrderDefinition, sourceOrderFixture } from "./fixtures-entry.ts";
 

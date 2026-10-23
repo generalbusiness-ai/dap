@@ -1,8 +1,8 @@
 /** Separate scheduled Worker. All progress lives in the application's
  * journal. Environment bindings contain public references and two secrets. */
 import type { Digest, KeyId, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
-import { same, definitionDigest, entryHash, isMemberRef, isRecord, isScopeRef, parseStrict, timeOf, unb64url } from "@generalbusiness/artroom-bytes";
-import { httpTransport, newIdempotencyKey, requestSession, ScopeHandle, secretSigner, sessionRequest, type Fetch, type Signer, type Transport } from "@generalbusiness/artroom-client";
+import { same, definitionDigest, entryHash, isMemberRef, isRecord, isScopeRef, parseStrict, timeOf, unb64url } from "@generalbusiness/dap-bytes";
+import { httpTransport, newIdempotencyKey, requestSession, ScopeHandle, secretSigner, sessionRequest, type Fetch, type Signer, type Transport } from "@generalbusiness/dap-client";
 import { demoDefinitions } from "./demo-definitions.ts";
 import { simulatorRelease } from "./simulator-release.ts";
 import { simulatorTick } from "./simulator-tick.ts";

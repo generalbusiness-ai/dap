@@ -14,7 +14,7 @@
  */
 
 import jsonata from "jsonata";
-import { digestBytes, utf8 } from "@generalbusiness/artroom-bytes";
+import { digestBytes, utf8 } from "@generalbusiness/dap-bytes";
 import { ENGINE_NAMES, PROFILE } from "./profile.ts";
 import { RuleEvalError, RuleRuntimeFailure } from "./errors.ts";
 import { PreparedInput, canonicalJson, inspectIntermediate, jsonCopy, prepareInput, safeName, type Json } from "./values.ts";

@@ -1,6 +1,6 @@
 /** Bounded append after a confirmed receipt. No old entry, pass manifest,
  * retained-body enumeration or complete ancestor closure is read. */
-import { canonicalize, timeMs, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, timeMs, utf8 } from "@generalbusiness/dap-bytes";
 import { archiveSegments } from "./journal-segments.ts";
 import { selectedEntries, selectedRetained, type JournalInputSource } from "./journal-layout.ts";
 import { JournalObjectReader, JournalObjects, journalFormat, journalId, type JournalFormat, type JournalObject, type JournalObjectSource } from "./journal-objects.ts";

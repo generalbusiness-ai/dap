@@ -2,7 +2,7 @@
  * session answers, storage and locks are SCRIPTED, not native enrollment. */
 import { expect, test } from "vitest";
 import type { Entry, Receipt, ScopeKind, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, entryHash, intentDigest, keyIdOfSecret, newIncarnation, scopeIdOf, textDigest, utf8, verifyInvitationProof, verifySignedIntent } from "@generalbusiness/artroom-bytes";
+import { b64url, canonicalize, entryHash, intentDigest, keyIdOfSecret, newIncarnation, scopeIdOf, textDigest, utf8, verifyInvitationProof, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { browserJoining, generateBrowserDeviceKey, readBrowserInvitation, storedWebCryptoSigner, type BrowserJoinStore, type BrowserKeptJoin, type Fetch, type InvitationLink } from "../src/index.ts";
 const origin = "https://browser.test", start = Date.parse("2026-10-18T12:00:00Z"), seed = new Uint8Array(32).fill(66);
 type Version = "platform:membership@4" | "platform:membership@6" | "platform:membership@7" | "platform:membership@8";

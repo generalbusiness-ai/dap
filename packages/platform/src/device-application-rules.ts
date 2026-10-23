@@ -1,9 +1,9 @@
 /** Explicit device-command package proof under Rules9. Older pins keep their proofs. */
 import type { DeclaredDefinition, FieldValue, MemberObservation, PlatformData } from "@generalbusiness/dap-contract";
 import { DEVICE_COMMAND } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isMemberRef, isRecord, parseStrict, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
-import { readApplicationReleaseUri } from "@generalbusiness/artroom-bytes/application";
-import { readPublishedApplicationReleaseProof2, type PublishedApplicationReleaseProof2 } from "@generalbusiness/artroom-bytes/application-v2";
+import { canonicalize, isDigest, isMemberRef, isRecord, parseStrict, textDigest, utf8 } from "@generalbusiness/dap-bytes";
+import { readApplicationReleaseUri } from "@generalbusiness/dap-bytes/application";
+import { readPublishedApplicationReleaseProof2, type PublishedApplicationReleaseProof2 } from "@generalbusiness/dap-bytes/application-v2";
 import { same, validateDefinition, type GuardRule, type RuleGiven, type Rules } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { applicationInstallRulesScope, applicationInstallRules } from "./application-install.ts";

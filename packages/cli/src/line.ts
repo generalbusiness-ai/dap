@@ -3,10 +3,10 @@
  * no state of a process, so a test runs the same lines as a person types.
  */
 
-import { parseStrict } from "@generalbusiness/artroom-bytes";
+import { parseStrict } from "@generalbusiness/dap-bytes";
 import { applicationInstallation, installApplication } from "./application-install.ts";
 import { enrolAgentKey, invitePerson } from "./invitations.ts";
-import { AGENT_KEY_LINK } from "@generalbusiness/artroom-client";
+import { AGENT_KEY_LINK } from "@generalbusiness/dap-client";
 import { act, acts, apps, claim, clone, edit, install, installPlanned, invite, issueAssign, issueClose, issueComment, issueOpen, issues, items, join, log, merge, planInstall, propose, remote, show, status, verify, type Context, type InstallCohort, type RegisterPolicy, type Outcome } from "./commands.ts";
 
 export const USAGE = [

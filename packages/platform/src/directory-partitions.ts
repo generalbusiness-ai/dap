@@ -1,6 +1,6 @@
 /** Explicit partition cohort. Existing directories keep their original code. */
 import type { Digest, FieldValue, PlatformData, ScopeId, Seed } from "@generalbusiness/dap-contract";
-import { deliveryCauseDigest, hex, intentDigest, isScopeRef, messageDigest, seedDigest, unbase32 } from "@generalbusiness/artroom-bytes";
+import { deliveryCauseDigest, hex, intentDigest, isScopeRef, messageDigest, seedDigest, unbase32 } from "@generalbusiness/dap-bytes";
 import { same, type Item, type RuleEffect, type RuleGiven, type Rules } from "@generalbusiness/dap-derive";
 import { directory8, directoryRules8 } from "./application.ts";
 import { SEEN } from "./directory.ts";

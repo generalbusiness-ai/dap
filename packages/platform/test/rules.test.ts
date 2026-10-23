@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Grant, SignedIntent } from "@generalbusiness/dap-contract";
-import { keyIdOfSecret, textDigest } from "@generalbusiness/artroom-bytes";
+import { keyIdOfSecret, textDigest } from "@generalbusiness/dap-bytes";
 import type { ActJudgment, Item, PlatformRule, RuleGiven } from "@generalbusiness/dap-derive";
 import { d, t } from "@generalbusiness/dap-derive/testing";
 import { definitions } from "../src/index.ts";

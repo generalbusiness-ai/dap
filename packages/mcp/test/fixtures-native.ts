@@ -2,7 +2,7 @@
 export { activityRecipe } from "./fixtures.ts";
 import { expect } from "vitest";
 import type { FactRef, PlatformDefinition, ScopeId } from "@generalbusiness/dap-contract";
-import { keyIdOfSecret } from "@generalbusiness/artroom-bytes";
+import { keyIdOfSecret } from "@generalbusiness/dap-bytes";
 export * from "./support/room.ts";
 export * from "./support/story.ts";
 

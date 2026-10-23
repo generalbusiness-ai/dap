@@ -11,7 +11,7 @@
 
 import { DOMAINS, PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { FieldValue, Intent, ScopeRef, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
-import { b64url, canonicalBytes, domainBytes, keyIdOf, keyIdOfSecret, parseStrictBytes, sign } from "@generalbusiness/artroom-bytes";
+import { b64url, canonicalBytes, domainBytes, keyIdOf, keyIdOfSecret, parseStrictBytes, sign } from "@generalbusiness/dap-bytes";
 
 import type { Signer } from "./signer.ts";
 export type { Signer } from "./signer.ts";

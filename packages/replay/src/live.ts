@@ -1,7 +1,7 @@
 /** A complete local clone followed by a live service tail. Fetching stays
  * with the caller; archived receipts carry no URL and grant no authority. */
 import type { Archived, ScopeId } from "@generalbusiness/dap-contract";
-import { isHead, isScopeRef, natural } from "@generalbusiness/artroom-bytes";
+import { isHead, isScopeRef, natural } from "@generalbusiness/dap-bytes";
 import { hashOfBytes, PAGE_REPLY_BYTES, type Allow, type HistorySource, type Page, type Unread } from "./source.ts";
 
 /** Every refresh returns a new immutable local snapshot. The three-repeat

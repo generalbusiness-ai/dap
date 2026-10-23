@@ -4,8 +4,8 @@
 import { env, evictDurableObject, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import type { Seed, ScopeId } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, intentDigest, isSeed, scopeIdOf } from "@generalbusiness/artroom-bytes";
-import { creationOffer, secretSigner, signedIntent, type CreationOfferFetch, type Fetch, type Signer } from "@generalbusiness/artroom-client";
+import { b64url, canonicalize, intentDigest, isSeed, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { creationOffer, secretSigner, signedIntent, type CreationOfferFetch, type Fetch, type Signer } from "@generalbusiness/dap-client";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import worker from "../../worker.ts";
 import { startRoom } from "../src/start-custody.ts";

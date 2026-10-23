@@ -1,11 +1,11 @@
 import { runInDurableObject } from "cloudflare:test";
 import { describe, expect, test } from "vitest";
 import type { Entry, Observation, ObservationUse } from "@generalbusiness/dap-contract";
-import { canonicalize, isScopeRef, textDigest } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isScopeRef, textDigest } from "@generalbusiness/dap-bytes";
 import { grantFrom } from "@generalbusiness/dap-derive";
 import { MEMBERSHIP, actionsIn, platform } from "@generalbusiness/dap-platform";
 import { grantOf } from "@generalbusiness/dap-derive/testing";
-import { MemorySource, TRUSTS, httpSource, platformCode, verify, type MemoryScope } from "@generalbusiness/artroom-replay";
+import { MemorySource, TRUSTS, httpSource, platformCode, verify, type MemoryScope } from "@generalbusiness/dap-replay";
 import { later, net, soon } from "./net.ts";
 import { copied, inboxConfirmation, notify, office, repository, rewritten, rita, routed, settle, una, vic, type Platform } from "./repository.ts";
 import { reader } from "./fixtures-native.ts";

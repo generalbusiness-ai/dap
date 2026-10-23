@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import type { Digest, Entry, FactRef, FieldValue, Observation, OperationId } from "@generalbusiness/dap-contract";
 import { derivable, grantFrom, runnable } from "@generalbusiness/dap-derive";
 import { keys, T0, t, type Actor } from "@generalbusiness/dap-derive/testing";
-import { digestBytes, entryHash, factRefOf, keyIdOfSecret, newIncarnation, utf8 } from "@generalbusiness/artroom-bytes";
+import { digestBytes, entryHash, factRefOf, keyIdOfSecret, newIncarnation, utf8 } from "@generalbusiness/dap-bytes";
 import { DESTINATION_5, destination5, destination6, destinationReceipt, destinationRules5, destinationRules6, readFor, revokedToken } from "../src/destination.ts";
 import { NEWEST, platform } from "../src/index.ts";
 import { handMade, keyObserved, MEMBERSHIP, retained, HEAD, publicationJourney } from "./fixtures-entry.ts";

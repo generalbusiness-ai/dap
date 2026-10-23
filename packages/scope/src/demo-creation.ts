@@ -1,8 +1,8 @@
 /** One configured Register17 projection; grants nothing and wakes no work. */
 import type { ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isRecord as record, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isRecord as record, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import { isScopeRef } from "@generalbusiness/dap-derive";
-import type { CreationOffer } from "@generalbusiness/artroom-client";
+import type { CreationOffer } from "@generalbusiness/dap-client";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT, DEMO_PURPOSE, DEMO_REGISTER, WEB_DEMO_REGISTER } from "@generalbusiness/dap-platform";
 import { artifactsConfiguration, ARTIFACTS_HOST, ARTIFACTS_NAMESPACE, type ArtifactsBindings } from "./artifacts-wiring.ts";
 import type { Store } from "./store.ts";

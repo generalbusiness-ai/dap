@@ -1,6 +1,6 @@
 import { receiverClosureData, receiverExtendChange, receiverInertChange, receiverLegacyCounterChange } from "./definition-corpus/late-pin-variants.ts";
 import { expect, test } from "vitest";
-import { factRefOf, textDigest } from "@generalbusiness/artroom-bytes";
+import { factRefOf, textDigest } from "@generalbusiness/dap-bytes";
 import { holdCapability, judgeDelivery, ownerReservations, reserved, validateDefinition } from "../src/index.ts";
 import { arriving, created, forged, keys, valid, PIN_BOUNDS, receiverPinData, receiverPinDefinition } from "./fixtures-entry.ts";
 

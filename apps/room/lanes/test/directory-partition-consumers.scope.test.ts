@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Seed, type ScopeId } from "@generalbusiness/dap-contract";
-import { b64url, intentDigest, scopeIdOf, timeMs } from "@generalbusiness/artroom-bytes";
-import { secretSigner, type Fetch } from "@generalbusiness/artroom-client";
+import { b64url, intentDigest, scopeIdOf, timeMs } from "@generalbusiness/dap-bytes";
+import { secretSigner, type Fetch } from "@generalbusiness/dap-client";
 import { PARTITION_COHORT as C } from "@generalbusiness/dap-platform";
 import { command, memoryStore, type Context } from "../../../../packages/cli/src/index.ts";
 import { beginSessionFixture } from "../../../../packages/scope/test/session-settings.ts";

@@ -1,4 +1,4 @@
-# @generalbusiness/artroom-client
+# @generalbusiness/dap-client
 
 A client for an Artroom scope service: build and sign an intent, hold a
 typed handle on one scope, and hold a handle whose act kinds and fields are
@@ -207,8 +207,8 @@ bytes package verifies, which is the one check a scope makes.
 ## How to test
 
 ```
-npm test --workspace @generalbusiness/artroom-client
-npm run typecheck --workspace @generalbusiness/artroom-client
+npm test --workspace @generalbusiness/dap-client
+npm run typecheck --workspace @generalbusiness/dap-client
 ```
 
 `test/intent.test.ts` shows that an intent signed by the WebCrypto signer

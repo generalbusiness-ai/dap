@@ -26,13 +26,13 @@ import { SELF, runDurableObjectAlarm, runInDurableObject } from "cloudflare:test
 import { expect, onTestFinished } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Answer, Bounds, DeclaredDefinition, Digest, OutboxItem, Entry, FactRef, FieldValue, Grant, Input, Message, Receipt, ScopeId, ScopeRef, Sealed, Seed, SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, entryHash, intentDigest, isScopeRef, newIncarnation, scopeIdOf, signIntent, textDigest } from "@generalbusiness/artroom-bytes";
-import { ScopeHandle, declaredHandle, create, httpTransport, secretSigner, signedIntent, type AskedOf, type DeclaredHandle, type Kind, type Signed, type Transport } from "@generalbusiness/artroom-client";
+import { canonicalize, definitionDigest, entryHash, intentDigest, isScopeRef, newIncarnation, scopeIdOf, signIntent, textDigest } from "@generalbusiness/dap-bytes";
+import { ScopeHandle, declaredHandle, create, httpTransport, secretSigner, signedIntent, type AskedOf, type DeclaredHandle, type Kind, type Signed, type Transport } from "@generalbusiness/dap-client";
 import { MemoryState, alsoItems, applyEntry, isFactRef, snapshotInput, stagedRefName, timeMs, timeOf, validateDefinition, type AncestryCheck, type Delivered, type Item, type StagedRef, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { grantOf, keys, type Actor } from "@generalbusiness/dap-derive/testing";
-import type { Checkpointed, Delivery, EffectAnswer, EffectRequest } from "@generalbusiness/artroom-scope";
-import { CODE, net, type CapabilityScript } from "@generalbusiness/artroom-scope/testing";
-import { api, route } from "@generalbusiness/artroom-scope/worker";
+import type { Checkpointed, Delivery, EffectAnswer, EffectRequest } from "@generalbusiness/dap-scope";
+import { CODE, net, type CapabilityScript } from "@generalbusiness/dap-scope/testing";
+import { api, route } from "@generalbusiness/dap-scope/worker";
 import { DIGESTS, change, definitions, issue } from "../../src/index.ts";
 
 export { net };

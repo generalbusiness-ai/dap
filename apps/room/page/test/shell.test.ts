@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { digestBytes, newIncarnation, scopeIdOf } from "@generalbusiness/artroom-bytes";
+import { digestBytes, newIncarnation, scopeIdOf } from "@generalbusiness/dap-bytes";
 import type { MemberRef } from "@generalbusiness/dap-contract";
 import { RoomOpening, ScopeSending, changeActions, issueActions, roomContext, routeOf } from "../src/shell.ts";
 

@@ -3,7 +3,7 @@ import { constants, closeSync, fstatSync, lstatSync, openSync, readFileSync, wri
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
-import { canonicalize, keyIdOfSecret, textDigest } from "@generalbusiness/artroom-bytes";
+import { canonicalize, keyIdOfSecret, textDigest } from "@generalbusiness/dap-bytes";
 import type { Context } from "../../packages/cli/src/commands.ts";
 import type { Room } from "./rehearse.ts";
 import { captureBinding, type CaptureObservations } from "./capture-binding.ts";

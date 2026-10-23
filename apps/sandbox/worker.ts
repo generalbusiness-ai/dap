@@ -1,8 +1,8 @@
 /** inguz.space's fixed installation gateway. No arbitrary URL, cookie jar,
  * publisher key or signing capability belongs to this Worker. */
-import { canonicalize, isRecord, parseStrict, within, LATE } from "@generalbusiness/artroom-bytes";
-import { REPLY_SECONDS } from "@generalbusiness/artroom-client";
-import { APPLICATION_SCREEN_HOST_PATH, applicationGatewayRoute, applicationScreenHostMatches, readApplicationScreenHost, type ApplicationScreenHost } from "@generalbusiness/artroom-client/application";
+import { canonicalize, isRecord, parseStrict, within, LATE } from "@generalbusiness/dap-bytes";
+import { REPLY_SECONDS } from "@generalbusiness/dap-client";
+import { APPLICATION_SCREEN_HOST_PATH, applicationGatewayRoute, applicationScreenHostMatches, readApplicationScreenHost, type ApplicationScreenHost } from "@generalbusiness/dap-client/application";
 
 interface NativeStreamExchange { response: Response; lifetime: { close(): Promise<void> }; [Symbol.dispose]?(): void }
 interface ScreenService {

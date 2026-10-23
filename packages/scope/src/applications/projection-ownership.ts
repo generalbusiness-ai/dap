@@ -1,9 +1,9 @@
 /** A bounded native birth chain, anchored at the exact active installation.
  * The package codec already closes all declared create edges; matching a
  * selected definition alone grants no ownership. No application state is read. */
-import { same } from "@generalbusiness/artroom-bytes";
+import { same } from "@generalbusiness/dap-bytes";
 import type { Digest, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isScopeRef } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isDigest, isScopeRef } from "@generalbusiness/dap-bytes";
 import { readNativeBirth, type NativeBirthSource } from "../native-birth.ts";
 import { proofEntry } from "../proof-bytes.ts";
 import type { PreparationRun } from "../preparation-flight.ts";

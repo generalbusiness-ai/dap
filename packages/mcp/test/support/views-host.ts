@@ -10,7 +10,7 @@ import { LEGACY, MODERN, McpService, Wire, memoryStore, newSession, type Card, t
 import { StandIn, SERVICE } from "./standin.ts";
 import { applicationCounterNavigationPacket2 } from "../../../scope/test/fixtures.ts";
 import { viewToolName } from "../../src/views/names.ts";
-import { applicationProjectionId, applicationProjectionQueryDigest } from "@generalbusiness/artroom-bytes/application-v2";
+import { applicationProjectionId, applicationProjectionQueryDigest } from "@generalbusiness/dap-bytes/application-v2";
 import { DeclaredViewSource } from "../../src/views/declared.ts";
 import { fixedSigner } from "../fixtures.ts";
 

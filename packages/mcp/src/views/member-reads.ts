@@ -1,6 +1,6 @@
 import type { ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize } from "@generalbusiness/artroom-bytes";
-import { ScopeHandle } from "@generalbusiness/artroom-client";
+import { canonicalize } from "@generalbusiness/dap-bytes";
+import { ScopeHandle } from "@generalbusiness/dap-client";
 import type { Reads } from "../reads.ts";
 import type { MembershipDisplaySnapshot } from "./member-types.ts";
 

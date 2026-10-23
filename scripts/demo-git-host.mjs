@@ -24,8 +24,8 @@ import { basename, dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, intentDigest, isFactRef, isMemberId, keyIdOfSecret, parseStrict, scopeIdOf, seedDigest, signIntent, timeMs, timeOf, unb64url, verifySignedIntent } from "@generalbusiness/artroom-bytes";
-import { httpTransport } from "@generalbusiness/artroom-client";
+import { b64url, canonicalize, intentDigest, isFactRef, isMemberId, keyIdOfSecret, parseStrict, scopeIdOf, seedDigest, signIntent, timeMs, timeOf, unb64url, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { httpTransport } from "@generalbusiness/dap-client";
 import { REGISTER } from "@generalbusiness/dap-platform";
 
 const PRIVATE_FILE = "private-state.json";

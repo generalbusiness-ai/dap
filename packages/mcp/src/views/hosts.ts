@@ -1,5 +1,5 @@
 /** Host-specific names stay here. The resource and app protocols use standard MCP Apps fields. */
-import { base32, isDigest } from "@generalbusiness/artroom-bytes";
+import { base32, isDigest } from "@generalbusiness/dap-bytes";
 import type { Digest } from "@generalbusiness/dap-contract";
 
 export function sandboxDomain(declared: string | undefined, presentation: Digest): string {

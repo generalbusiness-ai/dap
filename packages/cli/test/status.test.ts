@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import type { OutboxItem, Read, Summary } from "@generalbusiness/dap-contract";
-import type { OperationalApi, Transport } from "@generalbusiness/artroom-client";
-import { newIncarnation, textDigest } from "@generalbusiness/artroom-bytes";
+import type { OperationalApi, Transport } from "@generalbusiness/dap-client";
+import { newIncarnation, textDigest } from "@generalbusiness/dap-bytes";
 import { statusReport, STATUS_PAGES } from "../src/status-report.ts";
 const at = { scope: `sc_${"a".repeat(52)}` as const, kind: "membership" as const, inc: newIncarnation(new Uint8Array(16).fill(1)) };
 const head = { seq: 9, hash: textDigest("head") }, time = "2099-01-01T00:00:00Z";

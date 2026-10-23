@@ -12,7 +12,7 @@
  */
 
 import type { Digest, Entry, OperationId } from "@generalbusiness/dap-contract";
-import { intentDigest, seedDigest } from "@generalbusiness/artroom-bytes";
+import { intentDigest, seedDigest } from "@generalbusiness/dap-bytes";
 import { UNDER, historyOf } from "./attribution.ts";
 import { drawsOf, released, type DrawOptions } from "./draws.ts";
 import { indexRows } from "./binding.ts";

@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { Entry, FactRef, Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, factRefOf, intentDigest, scopeIdOf, seedDigest, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, entryHash, factRefOf, intentDigest, scopeIdOf, seedDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { useOf } from "@generalbusiness/dap-derive";
 import { GenesisProofs, GENESIS_PROOF_BOUNDS as B, type ProofTimer } from "../src/genesis-proof.ts";
 import { ProofBytes, type ProofBody, type ProofSource } from "../src/proof-bytes.ts";

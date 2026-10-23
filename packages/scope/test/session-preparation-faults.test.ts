@@ -3,7 +3,7 @@ import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { ScopeId } from "@generalbusiness/dap-contract";
-import { canonicalize, newIncarnation } from "@generalbusiness/artroom-bytes";
+import { canonicalize, newIncarnation } from "@generalbusiness/dap-bytes";
 import { Scope } from "../src/core.ts";
 import { sessionReferencesIn } from "../src/namespace.ts";
 import { production } from "../src/ports.ts";

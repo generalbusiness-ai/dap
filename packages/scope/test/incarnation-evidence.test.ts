@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { canonicalize, newIncarnation, scopeIdOf } from "@generalbusiness/artroom-bytes";
+import { canonicalize, newIncarnation, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { incarnationEvidence } from "../src/incarnation-evidence.ts";
 import { PREPARATION_BOUNDS as B, PreparationBudget } from "../src/preparation-budget.ts";
 import { SqliteStore, type Sql } from "../src/sqlite.ts";

@@ -1,7 +1,7 @@
 /** Plain text presentation of parsed, schema-bound declared facts. */
 import type { FieldValue } from "@generalbusiness/dap-contract";
-import { canonicalize, timeMs } from "@generalbusiness/artroom-bytes";
-import type { ApplicationViewFact } from "@generalbusiness/artroom-bytes/application-v2";
+import { canonicalize, timeMs } from "@generalbusiness/dap-bytes";
+import type { ApplicationViewFact } from "@generalbusiness/dap-bytes/application-v2";
 import { formatInteger } from "./numbers.ts";
 import { ViewError } from "./session.ts";
 import type { MemberTable } from "./member-types.ts";

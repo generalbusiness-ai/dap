@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { b64url, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/artroom-bytes";
+import { b64url, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import { AGENT_KEY_LINK, agentKeyInvitationOf, encodeAgentKeyInvitation, type AgentKeyInvitation } from "../src/index.ts";
 // Encoding only. Full native agent/controller/key admission is a separate witness.
 test("agent-key invitations are explicitly closed private handoffs, preserve full native context and cannot be mistaken for a person invitation or a signing-key config", () => {

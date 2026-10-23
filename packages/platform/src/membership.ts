@@ -49,9 +49,9 @@
  * plan owns. They are written as the note has them.
  */
 
-import { stringOrNull as text } from "@generalbusiness/artroom-bytes";
+import { stringOrNull as text } from "@generalbusiness/dap-bytes";
 import type { HoldersObservation, KeyId, MemberId, MemberObservation, Observation, ObservationRequest, PlatformData, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
-import { textDigest } from "@generalbusiness/artroom-bytes";
+import { textDigest } from "@generalbusiness/dap-bytes";
 import { firstHolders } from "@generalbusiness/dap-derive";
 import type { Item, PlatformRule, RuleGiven, Rules, StateView } from "@generalbusiness/dap-derive";
 import { pinnedBy } from "./versions.ts";

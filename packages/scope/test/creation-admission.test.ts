@@ -3,7 +3,7 @@
 import { expect, test } from "vitest";
 import { env } from "cloudflare:workers";
 import type { Intent, Seed } from "@generalbusiness/dap-contract";
-import { intentDigest, keyIdOfSecret, scopeIdOf, signIntent } from "@generalbusiness/artroom-bytes";
+import { intentDigest, keyIdOfSecret, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import room from "../../../apps/room/fetch.ts";
 import worker, { api, route, type Env } from "../src/worker.ts";
 import type { Binding } from "../src/namespace.ts";

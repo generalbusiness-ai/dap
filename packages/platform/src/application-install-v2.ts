@@ -2,9 +2,9 @@
  * reader and domains. Shared later phases retain their original semantics. */
 import type { DeclaredDefinition, FieldValue, PlatformData } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isRecord, parseStrict, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
-import { readApplicationReleaseUri } from "@generalbusiness/artroom-bytes/application";
-import { readPublishedApplicationReleaseProof2, type PublishedApplicationReleaseProof2 } from "@generalbusiness/artroom-bytes/application-v2";
+import { canonicalize, isDigest, isRecord, parseStrict, textDigest, utf8 } from "@generalbusiness/dap-bytes";
+import { readApplicationReleaseUri } from "@generalbusiness/dap-bytes/application";
+import { readPublishedApplicationReleaseProof2, type PublishedApplicationReleaseProof2 } from "@generalbusiness/dap-bytes/application-v2";
 import { validateDefinition, type GuardRule, type RuleGiven, type Rules } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { applicationInstallRulesScope, applicationInstallRules } from "./application-install.ts";

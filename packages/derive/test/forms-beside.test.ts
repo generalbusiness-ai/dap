@@ -1,7 +1,7 @@
 import { forms_beside_change0 } from "./definition-corpus/forms-beside-variants.ts";
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { isSealed } from "@generalbusiness/artroom-bytes";
+import { isSealed } from "@generalbusiness/dap-bytes";
 import { isValue, validateDefinition, type Fetched, type ProblemCode } from "../src/index.ts";
 import { Scope, d, keys, laneDefinition, notes, on, small, variant } from "./fixtures-entry.ts";
 

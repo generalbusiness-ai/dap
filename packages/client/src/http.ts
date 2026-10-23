@@ -22,8 +22,8 @@
 
 import { ITEM_QUERY_BOUNDS, ITEM_QUERY_WIRE_BOUNDS, APPLICATION_PROJECTION_WIRE_BOUNDS } from "@generalbusiness/dap-contract";
 import type { ItemQuery, ScopeApi, ApplicationProjectionQuery } from "@generalbusiness/dap-contract";
-import { LATE, takeBytes, within, readItemQueryParameter, readItemQueryReply, type ByteStream } from "@generalbusiness/artroom-bytes";
-import { readApplicationProjectionQuery, readApplicationProjectionReply } from "@generalbusiness/artroom-bytes/application-v2";
+import { LATE, takeBytes, within, readItemQueryParameter, readItemQueryReply, type ByteStream } from "@generalbusiness/dap-bytes";
+import { readApplicationProjectionQuery, readApplicationProjectionReply } from "@generalbusiness/dap-bytes/application-v2";
 import { ANSWERS } from "./answers.ts";
 import { OPERATIONAL_ANSWERS, type OperationalApi } from "./operational.ts";
 type HttpApi = ScopeApi & OperationalApi;

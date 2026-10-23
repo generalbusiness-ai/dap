@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { deflateSync } from "node:zlib";
 import { afterAll, expect, test, vi } from "vitest";
-import { utf8 } from "@generalbusiness/artroom-bytes";
+import { utf8 } from "@generalbusiness/dap-bytes";
 import { editTree } from "../../platform/src/destination-objects.ts";
 import { readEditBase, type EditBaseAllowance } from "../src/edit-base.ts";
 import { SmartHttpSource } from "../src/http-read.ts";

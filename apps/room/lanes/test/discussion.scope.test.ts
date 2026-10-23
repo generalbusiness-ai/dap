@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
-import { textDigest } from "@generalbusiness/artroom-bytes";
-import { ShapeError } from "@generalbusiness/artroom-client";
+import { textDigest } from "@generalbusiness/dap-bytes";
+import { ShapeError } from "@generalbusiness/dap-client";
 import { answered, graph, paul, rita, sam, una, vic } from "./support/graph.ts";
 
 test("T6, bounded attention inside the application: a comment tells the members it names, each once, and nobody else; it sends nothing out of the lane; a seventeenth mention is refused by the client's handle and by the scope", async () => {

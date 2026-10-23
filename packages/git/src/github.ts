@@ -10,7 +10,7 @@
  * https://docs.github.com/en/rest/apps/installations#revoke-an-installation-access-token
  * https://docs.github.com/en/rest/repos/repos
  */
-import { isRecord } from "@generalbusiness/artroom-bytes";
+import { isRecord } from "@generalbusiness/dap-bytes";
 
 export type GitHubPermission = "read" | "write";
 export type GitHubPermissions = Readonly<Record<string, GitHubPermission>>;

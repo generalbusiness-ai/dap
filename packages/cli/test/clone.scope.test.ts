@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import type { Digest, Item, OperationId, Read } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, timeOf, utf8 } from "@generalbusiness/artroom-bytes";
-import type { Fetch } from "@generalbusiness/artroom-client";
+import { b64url, canonicalize, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import type { Fetch } from "@generalbusiness/dap-client";
 import { repositoryName } from "@generalbusiness/dap-platform";
 import { beginSessionFixture } from "../../scope/test/session-settings.ts";
 import { nativeFixtureLifetime, driveFixture } from "../../scope/test/support/native-fixture-lifetime.ts";

@@ -1,5 +1,5 @@
 {
-  "name": "@generalbusiness/artroom-package-graph",
+  "name": "@generalbusiness/dap-package-graph",
   "version": "0.1.0-dev.1",
   "description": "Shared package composition data and bounded graph checks for codecs and native validation.",
   "license": "Apache-2.0",

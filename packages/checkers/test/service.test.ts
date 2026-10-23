@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, hex, verifySignedIntent } from "@generalbusiness/artroom-bytes";
+import { b64url, canonicalize, hex, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { CheckerService, Outcomes, REPORT_BOUNDS, configurationDigest, detailsDigest, environmentDigest, judge, readConfiguration, readReport, type Configuration, type Delivered, type JobRecord, type Notice, type RunReport } from "../src/index.ts";
 import { Lane, MemoryDurable, ScriptedRunner, T0, configuration, digest, lane, newKey, otherLane, refusedFor, report, world } from "./support.ts";
 
