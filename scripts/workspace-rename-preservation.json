@@ -18180,5 +18180,855 @@
     },
     "carryReceiptSha256": "30e48b30170c551252b597f73aa56e8be1a8ac458641e01cd7742c8083a21a1c",
     "carryHead": "6e1c9cf9d25d460c33a660a653c4b3be23dd2689"
+  },
+  "sourceSealMetadata": {
+    "sha256": "952d141810785d8c9578e7a9ab71581df20ba4b5471e7c7c3ee794cd485564be",
+    "record": {
+      "format": "dap-workspace-source-seals-1",
+      "basis": "12d30573c5b70c1acb90d0e732654ff768586448",
+      "file": "scripts/security-entry-points.test.mjs",
+      "beforeSha256": "33def0e6126500a5104189455b70a5a0a5ee2be238419de3d734ff55c901e3a2",
+      "afterSha256": "557a0fb9dca78e25a885160f5d985a4748c9c082a83d8693113e49fc586d215d",
+      "outsideValueProjectionSha256": "e1c99f613250eba46d5d30a964cef9fa2108e1fe5b3d22f0fedc53e4fe6bd085",
+      "maps": {
+        "seals": [
+          "apps/room/worker.ts",
+          "apps/room/fetch.ts",
+          "apps/room/demo-creation.ts",
+          "apps/room/page/route.ts",
+          "apps/room/brand/route.ts",
+          "packages/scope/src/worker.ts",
+          "packages/scope/src/scope-index.ts",
+          "packages/scope/src/creation-admission.ts",
+          "packages/scope/src/creation-lineage.ts",
+          "packages/scope/src/creation-declaration.ts",
+          "packages/scope/src/namespace.ts",
+          "packages/scope/src/health.ts",
+          "packages/scope/src/site/route.ts",
+          "packages/scope/src/applications/route.ts",
+          "packages/scope/src/item-query-wire.ts",
+          "packages/scope/src/applications/projection-wire.ts",
+          "packages/scope/src/object.ts",
+          "packages/scope/src/core.ts",
+          "packages/derive/src/genesis.ts",
+          "packages/derive/src/judge.ts",
+          "packages/scope/src/sessions.ts",
+          "packages/scope/src/reads.ts",
+          "packages/scope/src/signed-reads.ts",
+          "packages/scope/src/limits.ts",
+          "packages/scope/src/serving-limits.ts",
+          "packages/scope/src/serving-admission.ts",
+          "packages/bytes/src/records.ts",
+          "packages/scope/src/session-preparation.ts",
+          "packages/scope/src/item-queries.ts",
+          "packages/scope/src/applications/projection.ts",
+          "packages/scope/src/destination-host.ts",
+          "packages/mcp/src/hosted.ts",
+          "packages/mcp/src/http.ts",
+          "examples/grow/simulator-worker.ts",
+          "examples/grow/simulator-host.ts"
+        ],
+        "pendingArchiveSeals": [
+          "packages/scope/src/archive-target.ts",
+          "packages/scope/src/archive-source-window.ts",
+          "packages/scope/src/archive-publication.ts",
+          "packages/scope/src/archive-build.ts",
+          "packages/scope/src/archive-driver.ts",
+          "packages/scope/src/archive-row.ts",
+          "packages/scope/src/floor-writer.ts",
+          "packages/scope/src/object.ts",
+          "apps/room/worker.grow.ts",
+          "apps/room/archive-policy.ts",
+          "apps/room/archive.ts",
+          "packages/scope/src/archive-host-item.ts",
+          "packages/scope/src/archive-host.ts",
+          "packages/scope/src/artifacts-host.ts",
+          "packages/scope/src/artifacts-wiring.ts"
+        ],
+        "pendingR8Seals": [
+          "packages/cli/src/commands.ts",
+          "apps/sandbox/worker.ts",
+          "packages/client/src/application-gateway.ts",
+          "packages/client/src/application-route.ts",
+          "packages/scope/src/applications/bindings.ts"
+        ]
+      },
+      "entries": [
+        {
+          "map": "seals",
+          "owner": "apps/room/worker.ts",
+          "beforeValue": "aba04e12dc206f0be6bda4a8edeac64569e0edd44b7a87772595d7db40bb8b67",
+          "afterValue": "aba04e12dc206f0be6bda4a8edeac64569e0edd44b7a87772595d7db40bb8b67",
+          "valueStartUtf16": 384,
+          "valueEndUtf16": 448
+        },
+        {
+          "map": "seals",
+          "owner": "apps/room/fetch.ts",
+          "beforeValue": "5661bfc33c21e9c0390f9897edb6948d05c1de42e3df559a8e8d16d16e8c1089",
+          "afterValue": "5661bfc33c21e9c0390f9897edb6948d05c1de42e3df559a8e8d16d16e8c1089",
+          "valueStartUtf16": 476,
+          "valueEndUtf16": 540
+        },
+        {
+          "map": "seals",
+          "owner": "apps/room/demo-creation.ts",
+          "beforeValue": "514b127aac2bc5bc2ec7b00341984b352a5801c7684fa5596cb3728d2bde5e1d",
+          "afterValue": "cbc8c23034bc6c83f45bd7664cb158c7f452d2eb4f9e6bf406ff36c003a6fff7",
+          "valueStartUtf16": 631,
+          "valueEndUtf16": 695
+        },
+        {
+          "map": "seals",
+          "owner": "apps/room/page/route.ts",
+          "beforeValue": "62c8f69b9f516f1b5acdaef57d7aed25268d8cf03283bdffdd4b1b5f20bb6b3d",
+          "afterValue": "62c8f69b9f516f1b5acdaef57d7aed25268d8cf03283bdffdd4b1b5f20bb6b3d",
+          "valueStartUtf16": 728,
+          "valueEndUtf16": 792
+        },
+        {
+          "map": "seals",
+          "owner": "apps/room/brand/route.ts",
+          "beforeValue": "71b45ff9b41b3bea31c775a16525349591e0d4f7dfdc65da79f095816b1c343c",
+          "afterValue": "71b45ff9b41b3bea31c775a16525349591e0d4f7dfdc65da79f095816b1c343c",
+          "valueStartUtf16": 826,
+          "valueEndUtf16": 890
+        },
+        {
+          "map": "seals",
+          "owner": "packages/scope/src/worker.ts",
+          "beforeValue": "9ee48699b984552477c84373f81fcc42a9c88963b4591655ecbe3c9d5df7fef2",
+          "afterValue": "2e3546e4c7a70ce17ae42c8e1367287277b26a7a67fa6dfe4fa2d83c4b5eedca",
+          "valueStartUtf16": 928,
+          "valueEndUtf16": 992
+        },
+        {
+          "map": "seals",
+          "owner": "packages/scope/src/scope-index.ts",
+          "beforeValue": "c7abd0c5c5a148630ac4ede762fa951169a6d912a89eb58cadb747ab7544a2ca",
+          "afterValue": "98a91329fbe8926127aab2db555970278e898cec347fd4f20569b19f1f879d54",
+          "valueStartUtf16": 1081,
+          "valueEndUtf16": 1145
+        },
+        {
+          "map": "seals",
+          "owner": "packages/scope/src/creation-admission.ts",
+          "beforeValue": "c45a0ac9231356298e9e2724cc1154bdd40def91b5bdc1e1bf6d14c4331eb42e",
+          "afterValue": "5fe79f1b3a9f760c318cd5f9c66d768fe8a1815e47454e351826443b617ead58",
+          "valueStartUtf16": 1241,
+          "valueEndUtf16": 1305
+        },
+        {
+          "map": "seals",
+          "owner": "packages/scope/src/creation-lineage.ts",
+          "beforeValue": "fc478ab58d801383fc29f1cab65bd03fc6aa07118a0d6c8376bafe2ead03b404",
+          "afterValue": "3786e04db4627fa7bfa07f8edefd3fd1125305da80b96b3d9132b671d9f21ef0",
+          "valueStartUtf16": 1403,
+          "valueEndUtf16": 1467
+        },
+        {
+          "map": "seals",
+          "owner": "packages/scope/src/creation-declaration.ts",
+          "beforeValue": "f14aac1ac8bce20cb8bc254b790ec5e66614ce13e9a72b42ab1a097aee837e72",
+          "afterValue": "ec719181ce0cff0048165e27bd108b8b728e9f78a858033155b670ab82e93c2b",
+          "valueStartUtf16": 1574,
+          "valueEndUtf16": 1638
+        },
+        {
+          "map": "seals",
+          "owner": "packages/scope/src/namespace.ts",
+          "beforeValue": "d1d8a4b6648c6c7914916b662f8d8829ac954f205644c669865ad5daad1d9dd5",
+          "afterValue": "1f65de08e11d85c204b671b8605b132f506cf06f2e87843e90eb0d1884f428e3",
+          "valueStartUtf16": 1741,
+          "valueEndUtf16": 1805
+        },
+        {
+          "map": "seals",
+          "owner": "packages/scope/src/health.ts",
+          "beforeValue": "5da6a38c8c76199414f5a7ae57d3f57a0070347edd4b9512ab1430b8a4e1b401",
+          "afterValue": "b1c5240a6ca05b247ed54766ba25448d02057267d8342a4df6908969a57acb23",
+          "valueStartUtf16": 1900,
+          "valueEndUtf16": 1964
+        },
+        {
+          "map": "seals",
+          "owner": "packages/scope/src/site/route.ts",
+          "beforeValue": "2957f45c6c0281fdd282dc42607c7650f6002e10bb6520127b42c7e6550a7039",
+          "afterValue": "f57a2415c997ce17fb6fcf254944b0237bae598adffca64eda123faf0fcc1084",
+          "valueStartUtf16": 2006,
+          "valueEndUtf16": 2070
+        },
+        {
+          "map": "seals",
+          "owner": "packages/scope/src/applications/route.ts",
+          "beforeValue": "0f780b2b47a665f74dd1c65ce4a0b7d6d89e5fdc5973d62f9655ded2c8bd93ed",
+          "afterValue": "2e75a4a1ed4edc78697f740da1c7957fe365e3c5c179a00dbbb5d2a933ddfb8a",
+          "valueStartUtf16": 2120,
+          "valueEndUtf16": 2184
+        },
+        {
+          "map": "seals",
+          "owner": "packages/scope/src/item-query-wire.ts",
+          "beforeValue": "18c860286adefc1afab7cf14ceceea44c59e78031042aed3d781c5576b73ecea",
+          "afterValue": "8206b9a6531ca30cae1bc49cc249eea08c70a658305f41b3ebea6eda042055a8",
+          "valueStartUtf16": 2277,
+          "valueEndUtf16": 2341
+        },
+        {
+          "map": "seals",
+          "owner": "packages/scope/src/applications/projection-wire.ts",
+          "beforeValue": "cecaa88f08db6745013a9cb9fbcb9edee6939b0859c201e0c8057286529f1cdc",
+          "afterValue": "2e07df5447469dc09aff0d4017e010634150f49c92f614221402cf46a869c6d0",
+          "valueStartUtf16": 2401,
+          "valueEndUtf16": 2465
+        },
+        {
+          "map": "seals",
+          "owner": "packages/scope/src/object.ts",
+          "beforeValue": "ee8009861e1b87f4932fe617e062cf016b90ad67e4585d29eca6957538edfc45",
+          "afterValue": "b403bba2d72425b252488d960a7cbb557d1bcc38fb9390760e39b49ac4299df4",
+          "valueStartUtf16": 2503,
+          "valueEndUtf16": 2567
+        },
+        {
+          "map": "seals",
+          "owner": "packages/scope/src/core.ts",
+          "beforeValue": "189ad7c56b9b772fc241fb10b78ba219627bdb04bef4e8d0ec9c1c3e07c992db",
+          "afterValue": "c7f2e49246b1e784981337ee13af53b17bab424a13112d5a40ff76b75fb7a128",
+          "valueStartUtf16": 2644,
+          "valueEndUtf16": 2708
+        },
+        {
+          "map": "seals",
+          "owner": "packages/derive/src/genesis.ts",
+          "beforeValue": "3cedd7e1124a234aef7f04fb48c25e34c482e6fded7d4423ec666ae41e39c586",
+          "afterValue": "df7722143f01c8084b8f045ef959b203ae1756c4dfde170d0454cfe0b0392843",
+          "valueStartUtf16": 2748,
+          "valueEndUtf16": 2812
+        },
+        {
+          "map": "seals",
+          "owner": "packages/derive/src/judge.ts",
+          "beforeValue": "222d6d89be14fd62f59857778b0bf7e52f1f0b3d2f5df8d50b533a8f20d8cb14",
+          "afterValue": "c0ed325bc2fa84693b40d3d53a9ad54a9a9786dab39dd3b9c6039ac553488f63",
+          "valueStartUtf16": 2850,
+          "valueEndUtf16": 2914
+        },
+        {
+          "map": "seals",
+          "owner": "packages/scope/src/sessions.ts",
+          "beforeValue": "2c39578d800619bd232c3f375cbd523bcbf3ea22ffa99a052b16f93fc72fe585",
+          "afterValue": "7206983eedd0ff821afee7c6032f2a9b461c36e31b9ac186a4c2cc8b8a897de2",
+          "valueStartUtf16": 2954,
+          "valueEndUtf16": 3018
+        },
+        {
+          "map": "seals",
+          "owner": "packages/scope/src/reads.ts",
+          "beforeValue": "aeee3abca293fd90aaabc605890258f05b935b358ddb08073a1b073edfe426f4",
+          "afterValue": "1d4bb75e2b71f10f140990b7537d626f93eb8c3679057ba700ddeda96faa5e1a",
+          "valueStartUtf16": 3055,
+          "valueEndUtf16": 3119
+        },
+        {
+          "map": "seals",
+          "owner": "packages/scope/src/signed-reads.ts",
+          "beforeValue": "08adcdf224ad69b7818c288f3a81178621256f242bec1992cd723ca745a4c8b7",
+          "afterValue": "6c4c4c81f44994c2ac9e4ca921c8f34184977a1256d6574e78514b814512eaf0",
+          "valueStartUtf16": 3163,
+          "valueEndUtf16": 3227
+        },
+        {
+          "map": "seals",
+          "owner": "packages/scope/src/limits.ts",
+          "beforeValue": "f71cd0690fb1e715e7b7db9a6bc714b47a8a558bd0910505d1103e0c6610387b",
+          "afterValue": "6d4966a12e86067c39f61a243601d0d3a78a66850ee07f4ae80e97e22ab3639e",
+          "valueStartUtf16": 3326,
+          "valueEndUtf16": 3390
+        },
+        {
+          "map": "seals",
+          "owner": "packages/scope/src/serving-limits.ts",
+          "beforeValue": "e8f4655a8d9d17e9120bff9404849187721bb5db555abeaba9ae4fc186deca1a",
+          "afterValue": "3a9f410f926f1e3711b78a750dd7dfb055f418fa9904be55ccb3f8cea869a987",
+          "valueStartUtf16": 3477,
+          "valueEndUtf16": 3541
+        },
+        {
+          "map": "seals",
+          "owner": "packages/scope/src/serving-admission.ts",
+          "beforeValue": "061d72828998343976f3e128bcb561a49629c10b676e401708777d948c632e9b",
+          "afterValue": "18a5d6991a769647cd14d3e8985585c6746f5df1c3d1d5c639f34d0eb6f4da5e",
+          "valueStartUtf16": 3644,
+          "valueEndUtf16": 3708
+        },
+        {
+          "map": "seals",
+          "owner": "packages/bytes/src/records.ts",
+          "beforeValue": "bc4e65e75215c2d940b0884a6810d5d90969455ba956c1e9731a3ed0d3c1b6af",
+          "afterValue": "bc4e65e75215c2d940b0884a6810d5d90969455ba956c1e9731a3ed0d3c1b6af",
+          "valueStartUtf16": 3798,
+          "valueEndUtf16": 3862
+        },
+        {
+          "map": "seals",
+          "owner": "packages/scope/src/session-preparation.ts",
+          "beforeValue": "614c8f3825508f2271f7c25e06e090d71d2697b2ebdd3e214f4155de2ccdf8b7",
+          "afterValue": "4b9699cb1ee06234162dc2088c5c37be1804e1e9f15985fa1f0dc3151170bd85",
+          "valueStartUtf16": 3973,
+          "valueEndUtf16": 4037
+        },
+        {
+          "map": "seals",
+          "owner": "packages/scope/src/item-queries.ts",
+          "beforeValue": "3d4cc1bdc183f14f7a813d4fa7ef377ea5b2b66e8d6d7e01793cae9486b39530",
+          "afterValue": "61ead9996d2c338a26331e04b8576c52425d8d2c88dc86173a7d79108c2ee418",
+          "valueStartUtf16": 4081,
+          "valueEndUtf16": 4145
+        },
+        {
+          "map": "seals",
+          "owner": "packages/scope/src/applications/projection.ts",
+          "beforeValue": "53d2294f6caff609b39bac2becbaaa7b3563435898be14241540ef4d12c17b01",
+          "afterValue": "31a3db04f3912ee3fb5bbd4cc3c658344f265f30d224ac95be2ba3b17f8622bd",
+          "valueStartUtf16": 4200,
+          "valueEndUtf16": 4264
+        },
+        {
+          "map": "seals",
+          "owner": "packages/scope/src/destination-host.ts",
+          "beforeValue": "759fcad46e39eec94de43513f972006590cb5681fbc64128e779ea218eb59a29",
+          "afterValue": "b86198499cadddaf47f439ed39f7e44f8da78fbed120e185b787b153f0dc66eb",
+          "valueStartUtf16": 4312,
+          "valueEndUtf16": 4376
+        },
+        {
+          "map": "seals",
+          "owner": "packages/mcp/src/hosted.ts",
+          "beforeValue": "d18b3b62646d858ea1460a92633dfacf208f4e99bb20bec14211907c7d5caf3e",
+          "afterValue": "337b73c8773a5ce3424fc67b5746710d800ca1e4d4074ba6819f94560817641d",
+          "valueStartUtf16": 4412,
+          "valueEndUtf16": 4476
+        },
+        {
+          "map": "seals",
+          "owner": "packages/mcp/src/http.ts",
+          "beforeValue": "c8148a169abdbbfcf86ce446752a792c9f8ac5bc78038f973d5906913188fc8b",
+          "afterValue": "9a1450bef9f94b55b4751a3368032dfc480555628b48ccfdd55fd43e9c853af8",
+          "valueStartUtf16": 4510,
+          "valueEndUtf16": 4574
+        },
+        {
+          "map": "seals",
+          "owner": "examples/grow/simulator-worker.ts",
+          "beforeValue": "2d60dab3a9a5b204b69f15bc5ec3473fa48513888d7ffdb0c1fc179f6fe4883c",
+          "afterValue": "2d60dab3a9a5b204b69f15bc5ec3473fa48513888d7ffdb0c1fc179f6fe4883c",
+          "valueStartUtf16": 4617,
+          "valueEndUtf16": 4681
+        },
+        {
+          "map": "seals",
+          "owner": "examples/grow/simulator-host.ts",
+          "beforeValue": "53668f18cbfb33bf8ad38892fdbafd4aba3736b7987238e643e0d661cee6c1bf",
+          "afterValue": "26a8521b98737cae3d80a9fe3b9ac17fb10b11fcf2f8ce973251253bdbf2b7df",
+          "valueStartUtf16": 4722,
+          "valueEndUtf16": 4786
+        },
+        {
+          "map": "pendingArchiveSeals",
+          "owner": "packages/scope/src/archive-target.ts",
+          "beforeValue": "f23598cd54a6dea92e2b73ae4d144b7415aa98f379f76d9ff21fe4e59b431d5e",
+          "afterValue": "33826c2966d39df7f4d46aa74365f55b9e7e2a2317f26f9f98a735792ccb4a39",
+          "valueStartUtf16": 5153,
+          "valueEndUtf16": 5217
+        },
+        {
+          "map": "pendingArchiveSeals",
+          "owner": "packages/scope/src/archive-source-window.ts",
+          "beforeValue": "5ebf1d481081ae462374a33496b92310617a1bf3af1da675407f26017da3dfb1",
+          "afterValue": "4db3f5885e7541f713b9668d1cde655e42be1950dd6af77d5711a323b3582e1c",
+          "valueStartUtf16": 5270,
+          "valueEndUtf16": 5334
+        },
+        {
+          "map": "pendingArchiveSeals",
+          "owner": "packages/scope/src/archive-publication.ts",
+          "beforeValue": "9c80517fd5de98545a0042f8fa7675769166de5a6387b9e6b60ddc9e5b68b2a5",
+          "afterValue": "d8c39d220bc7eea59301478aa553960267aac16f06502b4103a85647c71eb457",
+          "valueStartUtf16": 5385,
+          "valueEndUtf16": 5449
+        },
+        {
+          "map": "pendingArchiveSeals",
+          "owner": "packages/scope/src/archive-build.ts",
+          "beforeValue": "8ecba805ae96c5e8f854d429878d438f5bca17536fa3ace22152c12b017e9186",
+          "afterValue": "e82bffde8d5e6ce26b1dbd80f0659ec15a48dd461f9e02f4a235c19fbc1a4201",
+          "valueStartUtf16": 5494,
+          "valueEndUtf16": 5558
+        },
+        {
+          "map": "pendingArchiveSeals",
+          "owner": "packages/scope/src/archive-driver.ts",
+          "beforeValue": "35510dbb61c75496ac3e0e363d49d1137284671cc4c383582222cca8ee0a3e6d",
+          "afterValue": "3dd46755edd501d2f4bb614648a3d0358fbe72635c4a734403da3f98317aceac",
+          "valueStartUtf16": 5604,
+          "valueEndUtf16": 5668
+        },
+        {
+          "map": "pendingArchiveSeals",
+          "owner": "packages/scope/src/archive-row.ts",
+          "beforeValue": "6387b60a8ecd09a7dd3166ca1dac7f5c3749e61d7e02adf64878cbd8c9cf4412",
+          "afterValue": "b3b4f7fed29152a60ba76dc58a09529b18fc7b9ea737f986d7fc2803a42d8dab",
+          "valueStartUtf16": 5780,
+          "valueEndUtf16": 5844
+        },
+        {
+          "map": "pendingArchiveSeals",
+          "owner": "packages/scope/src/floor-writer.ts",
+          "beforeValue": "a55c28f393f59297fe952104b576b275c73c451456afced3d8cac33dc54f2ff4",
+          "afterValue": "fb8fd859844b8d10ba43b477bcaf07ab32fe1bfa1b6684ad9ae70b930d328a11",
+          "valueStartUtf16": 5888,
+          "valueEndUtf16": 5952
+        },
+        {
+          "map": "pendingArchiveSeals",
+          "owner": "packages/scope/src/object.ts",
+          "beforeValue": "ee8009861e1b87f4932fe617e062cf016b90ad67e4585d29eca6957538edfc45",
+          "afterValue": "b403bba2d72425b252488d960a7cbb557d1bcc38fb9390760e39b49ac4299df4",
+          "valueStartUtf16": 5990,
+          "valueEndUtf16": 6054
+        },
+        {
+          "map": "pendingArchiveSeals",
+          "owner": "apps/room/worker.grow.ts",
+          "beforeValue": "791c2bfcb8b2a62d8f0d8afec627ac76b63be4b9f1ee5de27d3f6c081959bc01",
+          "afterValue": "791c2bfcb8b2a62d8f0d8afec627ac76b63be4b9f1ee5de27d3f6c081959bc01",
+          "valueStartUtf16": 6153,
+          "valueEndUtf16": 6217
+        },
+        {
+          "map": "pendingArchiveSeals",
+          "owner": "apps/room/archive-policy.ts",
+          "beforeValue": "707d55642fa0a35075614d1f7b02149b8a33f5eb128f0e0ef4b54100aaa1897f",
+          "afterValue": "07ea72db6bc58257d3f280ac1e1c7db9296868016493fa926e473ddeb9b6f486",
+          "valueStartUtf16": 6254,
+          "valueEndUtf16": 6318
+        },
+        {
+          "map": "pendingArchiveSeals",
+          "owner": "apps/room/archive.ts",
+          "beforeValue": "fd0e00f874b6607728bc5a63842a64e41799f1041f9c5952978c2d86dfc048a2",
+          "afterValue": "36b2250301a217b6e1c74cd1cea1a65a45390be3679e4a2fd2e809890eb6abf5",
+          "valueStartUtf16": 6348,
+          "valueEndUtf16": 6412
+        },
+        {
+          "map": "pendingArchiveSeals",
+          "owner": "packages/scope/src/archive-host-item.ts",
+          "beforeValue": "70ac9b23e986d0f399d9e64748381f97ee6c5f7e39971b9dd3a1fa6d700bbf4e",
+          "afterValue": "0f9eaddc4000574a1575466592f88c57beecc11efb93e402a568a84fab8ef903",
+          "valueStartUtf16": 6461,
+          "valueEndUtf16": 6525
+        },
+        {
+          "map": "pendingArchiveSeals",
+          "owner": "packages/scope/src/archive-host.ts",
+          "beforeValue": "f16f3972e28d1f2bbdc1e98f60f21bc38be82b2d3a3b851e552e6391eb94d0cd",
+          "afterValue": "8e573b3b8f5a5fdc6f677fdcc1a2e28fe4078f1f149083db568d950c4c2d2539",
+          "valueStartUtf16": 6569,
+          "valueEndUtf16": 6633
+        },
+        {
+          "map": "pendingArchiveSeals",
+          "owner": "packages/scope/src/artifacts-host.ts",
+          "beforeValue": "80aac5184db427e83c369ab4d0222276fd7e3fe9792edcacc6d2c3ba6e9e8f2a",
+          "afterValue": "378eca9b5c3c197f738cb88f59a5df51d83d52929f614735d0fdc3917df06ac0",
+          "valueStartUtf16": 6748,
+          "valueEndUtf16": 6812
+        },
+        {
+          "map": "pendingArchiveSeals",
+          "owner": "packages/scope/src/artifacts-wiring.ts",
+          "beforeValue": "3590510139ad5c73a6ff66396b77a83dae5d212bfbcebb332df80154961fd478",
+          "afterValue": "937bedd41f5f21953c2fe659634ca732b44620cc98e33e5a43f7945601c58963",
+          "valueStartUtf16": 6860,
+          "valueEndUtf16": 6924
+        },
+        {
+          "map": "pendingR8Seals",
+          "owner": "packages/cli/src/commands.ts",
+          "beforeValue": "41adfb2b673df5ec2046fe401e65d97fab580c2c9e4331a18b1a6bf73d9b9bd5",
+          "afterValue": "7ccaa015aff104d009dc4fcd0fd37faf718fb822535f6a88764585c4ed69cb76",
+          "valueStartUtf16": 7075,
+          "valueEndUtf16": 7139
+        },
+        {
+          "map": "pendingR8Seals",
+          "owner": "apps/sandbox/worker.ts",
+          "beforeValue": "e1e91663d3b1e6b1751f526c02770e7459fbe08c455385bda2daeec65ae84010",
+          "afterValue": "d354c1740d51e2b83e0b93272384607c609c65386c3fc4b8d977edfb89b6636a",
+          "valueStartUtf16": 7226,
+          "valueEndUtf16": 7290
+        },
+        {
+          "map": "pendingR8Seals",
+          "owner": "packages/client/src/application-gateway.ts",
+          "beforeValue": "c24b17dfa7f31f16386bb2e921ca78e2f58640de26618144d06cca4aa0343fc8",
+          "afterValue": "daa1d28c02085bd6be7a9698a7120cd106cc7233aad92565aaa05e67427878ef",
+          "valueStartUtf16": 7342,
+          "valueEndUtf16": 7406
+        },
+        {
+          "map": "pendingR8Seals",
+          "owner": "packages/client/src/application-route.ts",
+          "beforeValue": "f78d183f082f52de545cc1ef0cd9c33b0944260f782a53188f05c3545ba246c1",
+          "afterValue": "dcb686835049af3043e1cb8c73a989545636ea5bac2d85aaee6be92b6cd3abcc",
+          "valueStartUtf16": 7456,
+          "valueEndUtf16": 7520
+        },
+        {
+          "map": "pendingR8Seals",
+          "owner": "packages/scope/src/applications/bindings.ts",
+          "beforeValue": "8212d318f058035a580c945f1140717fe31ea42638024e1099069cf654400888",
+          "afterValue": "8212d318f058035a580c945f1140717fe31ea42638024e1099069cf654400888",
+          "valueStartUtf16": 7573,
+          "valueEndUtf16": 7637
+        }
+      ],
+      "owners": [
+        {
+          "path": "apps/room/worker.ts",
+          "beforeSourceSha256": "1ab2c2941203ee01376f0bc3e6430f1f4d04be848da3740dc73c2a3a87eb2e76",
+          "afterSourceSha256": "1ab2c2941203ee01376f0bc3e6430f1f4d04be848da3740dc73c2a3a87eb2e76",
+          "actualSourceSeal": "aba04e12dc206f0be6bda4a8edeac64569e0edd44b7a87772595d7db40bb8b67"
+        },
+        {
+          "path": "apps/room/fetch.ts",
+          "beforeSourceSha256": "496bdcd2aa8bb598a4b12fcb229fbb63cec109217b6f9436dc24fd5181f994bf",
+          "afterSourceSha256": "496bdcd2aa8bb598a4b12fcb229fbb63cec109217b6f9436dc24fd5181f994bf",
+          "actualSourceSeal": "5661bfc33c21e9c0390f9897edb6948d05c1de42e3df559a8e8d16d16e8c1089"
+        },
+        {
+          "path": "apps/room/demo-creation.ts",
+          "beforeSourceSha256": "4c5941b87da57216a81116d682bca39e21b32b48042da48b23876f4af5503071",
+          "afterSourceSha256": "b52a87f5991c8460a79984db27d0a324d5193eea9a944a0178880468ac9183af",
+          "actualSourceSeal": "cbc8c23034bc6c83f45bd7664cb158c7f452d2eb4f9e6bf406ff36c003a6fff7"
+        },
+        {
+          "path": "apps/room/page/route.ts",
+          "beforeSourceSha256": "952a0b3f91119027c7324e5138f770b491f6e808c04931afad7fc2a6b1e7c7c6",
+          "afterSourceSha256": "952a0b3f91119027c7324e5138f770b491f6e808c04931afad7fc2a6b1e7c7c6",
+          "actualSourceSeal": "62c8f69b9f516f1b5acdaef57d7aed25268d8cf03283bdffdd4b1b5f20bb6b3d"
+        },
+        {
+          "path": "apps/room/brand/route.ts",
+          "beforeSourceSha256": "437263c68055ac7d4f11fb1e9964495ab6fbe2e1b80f2684370020f916be4608",
+          "afterSourceSha256": "437263c68055ac7d4f11fb1e9964495ab6fbe2e1b80f2684370020f916be4608",
+          "actualSourceSeal": "71b45ff9b41b3bea31c775a16525349591e0d4f7dfdc65da79f095816b1c343c"
+        },
+        {
+          "path": "packages/scope/src/worker.ts",
+          "beforeSourceSha256": "881f6437c8b08522043751e962f60f74ca94d109f73bef7906e6d99c0a5f4d9a",
+          "afterSourceSha256": "8b4949c8d98dcffde77358c27a17131a18b2e4f965efbac031c7717ff739719d",
+          "actualSourceSeal": "2e3546e4c7a70ce17ae42c8e1367287277b26a7a67fa6dfe4fa2d83c4b5eedca"
+        },
+        {
+          "path": "packages/scope/src/scope-index.ts",
+          "beforeSourceSha256": "d3005e0f1b159469824743ddb7046bbfabe3008da7964c5d2585405c6f6b1183",
+          "afterSourceSha256": "2d8f3b6bf66b9831fbe23e25918941cf0903046b6533af56f41693e6b8c04e58",
+          "actualSourceSeal": "98a91329fbe8926127aab2db555970278e898cec347fd4f20569b19f1f879d54"
+        },
+        {
+          "path": "packages/scope/src/creation-admission.ts",
+          "beforeSourceSha256": "16bf0b6bec8c78552e68773a044639aa29e7e9affea6fb51e789eca7955f0c46",
+          "afterSourceSha256": "05aa7b337d76dfafcbf25ea1459e9c9118f938a1060e60f69a89690caa154973",
+          "actualSourceSeal": "5fe79f1b3a9f760c318cd5f9c66d768fe8a1815e47454e351826443b617ead58"
+        },
+        {
+          "path": "packages/scope/src/creation-lineage.ts",
+          "beforeSourceSha256": "4b6e0f7d0943e63370b14c578f9bed2a21621447c5bd9747b6da4e07ac15a92f",
+          "afterSourceSha256": "ed0a35e2e621f2a81a6794b9a716333437d30b3602a9e0865d5204a17cd54f58",
+          "actualSourceSeal": "3786e04db4627fa7bfa07f8edefd3fd1125305da80b96b3d9132b671d9f21ef0"
+        },
+        {
+          "path": "packages/scope/src/creation-declaration.ts",
+          "beforeSourceSha256": "9dd03f9db68c9a917894393b0f4ce2ca2bbae5d2e56fa0629a5f25d8140841e9",
+          "afterSourceSha256": "26c3241ebe00e59ab983b893a32dd849cf74d17190d953489c0b6e44592dee03",
+          "actualSourceSeal": "ec719181ce0cff0048165e27bd108b8b728e9f78a858033155b670ab82e93c2b"
+        },
+        {
+          "path": "packages/scope/src/namespace.ts",
+          "beforeSourceSha256": "23e1015b0248b9a85aec3d2ae69118778592b9a4301d2d1a05e7e18886945b2a",
+          "afterSourceSha256": "12df836ccadd2dbe44a87a6210301bb0bf1614b9a27b4db863094f4d652cfa07",
+          "actualSourceSeal": "1f65de08e11d85c204b671b8605b132f506cf06f2e87843e90eb0d1884f428e3"
+        },
+        {
+          "path": "packages/scope/src/health.ts",
+          "beforeSourceSha256": "ca86e01af95fba58a3429716bf67a361f6e27b6bdb09a184491ec829bfd3bd54",
+          "afterSourceSha256": "c54802c8de08a4ae5d80acaf535d7bc3aef05eb5cf7f5c88aaff2b9b575eef08",
+          "actualSourceSeal": "b1c5240a6ca05b247ed54766ba25448d02057267d8342a4df6908969a57acb23"
+        },
+        {
+          "path": "packages/scope/src/site/route.ts",
+          "beforeSourceSha256": "fea92388128c0409e576984f7881f4b54d2e242dc525246e95b2c5789a22bbe1",
+          "afterSourceSha256": "e9a83e7661525c763f3679adf8e74e270cb7855d2415165998a1fa67b4b486e6",
+          "actualSourceSeal": "f57a2415c997ce17fb6fcf254944b0237bae598adffca64eda123faf0fcc1084"
+        },
+        {
+          "path": "packages/scope/src/applications/route.ts",
+          "beforeSourceSha256": "a6d30b214f8b7f3f5f57b92880bba29e1acfa7420cbe4015c3d4fcf825688771",
+          "afterSourceSha256": "6c25ddbfff1094d9e695a290830a0073b7cbe0b24ba2693e24b7aa49094e82a7",
+          "actualSourceSeal": "2e75a4a1ed4edc78697f740da1c7957fe365e3c5c179a00dbbb5d2a933ddfb8a"
+        },
+        {
+          "path": "packages/scope/src/item-query-wire.ts",
+          "beforeSourceSha256": "e2c009adcf3e992698a99b77125f458304dfa73cfba36fcf1aa9d310531fea47",
+          "afterSourceSha256": "8cd15a505906dac0db1d85a1de21384a5bf03982aa1c645e940a37b8253827f6",
+          "actualSourceSeal": "8206b9a6531ca30cae1bc49cc249eea08c70a658305f41b3ebea6eda042055a8"
+        },
+        {
+          "path": "packages/scope/src/applications/projection-wire.ts",
+          "beforeSourceSha256": "25e7615cf75ec287f3cd696b4eeb9ba436f356d546d49c6c45691e70df20a0fd",
+          "afterSourceSha256": "32475097c83745fbc65dfe6a0acf6b640b28330d36acdb2230f8ad8b0c9c2d61",
+          "actualSourceSeal": "2e07df5447469dc09aff0d4017e010634150f49c92f614221402cf46a869c6d0"
+        },
+        {
+          "path": "packages/scope/src/object.ts",
+          "beforeSourceSha256": "b901bbeeda354fbfcbf54d2ae93f7ceef7941cb8b81854b01897ec5dc0a50b1c",
+          "afterSourceSha256": "e2751e9a8578a42870642d8d0dc4e5f1af6a3c96acd4911e851b549a3134f3f8",
+          "actualSourceSeal": "b403bba2d72425b252488d960a7cbb557d1bcc38fb9390760e39b49ac4299df4"
+        },
+        {
+          "path": "packages/scope/src/core.ts",
+          "beforeSourceSha256": "c41bb7e5debe5e6eeaa073565f8fac86b5efb3446ae707b56cb91e1cde36cec9",
+          "afterSourceSha256": "e92dc886b0146f6717f3ab73898c897f140aee71ea8fedfe2adc318ebd94a7c2",
+          "actualSourceSeal": "c7f2e49246b1e784981337ee13af53b17bab424a13112d5a40ff76b75fb7a128"
+        },
+        {
+          "path": "packages/derive/src/genesis.ts",
+          "beforeSourceSha256": "e0ac6aed10e5a49f49460d3e572290a5c6778c72317ed0889fa1092967bd3597",
+          "afterSourceSha256": "311e75d50656dd020ab2bbb631301bb1c26a14ce41b305a090917f0200f80215",
+          "actualSourceSeal": "df7722143f01c8084b8f045ef959b203ae1756c4dfde170d0454cfe0b0392843"
+        },
+        {
+          "path": "packages/derive/src/judge.ts",
+          "beforeSourceSha256": "705a2ea7e35f7f66db92694d17476f514d1f1333a9b9e2eb78aea3aaf000c2fc",
+          "afterSourceSha256": "ac4fc9628873dd1aa4679c07e5a322aa837a4f725df7bf730bf67848213c2a81",
+          "actualSourceSeal": "c0ed325bc2fa84693b40d3d53a9ad54a9a9786dab39dd3b9c6039ac553488f63"
+        },
+        {
+          "path": "packages/scope/src/sessions.ts",
+          "beforeSourceSha256": "7221e62ed4c7765785ac307df8a4d1e538700e8a6488336d462356f12090f62e",
+          "afterSourceSha256": "c05bbe8de67a8f02e926d2f6134b1c54a58195b0ac8731f35a0f8560dc7aec35",
+          "actualSourceSeal": "7206983eedd0ff821afee7c6032f2a9b461c36e31b9ac186a4c2cc8b8a897de2"
+        },
+        {
+          "path": "packages/scope/src/reads.ts",
+          "beforeSourceSha256": "dd9cf6fee05faf1e571bb559b1ef39260c99d1b6f469192796bcfc49af9d45c6",
+          "afterSourceSha256": "4dc07523962c0f2b1aa6b16b551e35266a87791bcdaae32d3533ec6f1e6aa0e4",
+          "actualSourceSeal": "1d4bb75e2b71f10f140990b7537d626f93eb8c3679057ba700ddeda96faa5e1a"
+        },
+        {
+          "path": "packages/scope/src/signed-reads.ts",
+          "beforeSourceSha256": "f14dce75720e9da1e192b134d5f34488d695fa154b35d93a31153f81f9f6e43e",
+          "afterSourceSha256": "c5038294fc23343a90d4071e0ab0cf4c9618dc8359fb9f4af872022a55fdbb83",
+          "actualSourceSeal": "6c4c4c81f44994c2ac9e4ca921c8f34184977a1256d6574e78514b814512eaf0"
+        },
+        {
+          "path": "packages/scope/src/limits.ts",
+          "beforeSourceSha256": "f5c5e364aa55fc55cfb994076a0d72673a6480978f89d100c791f16c6c80b741",
+          "afterSourceSha256": "6f61df9e1228fcdd563eb9040dc0e99a905fc9475a9beac596dd59fb25a95046",
+          "actualSourceSeal": "6d4966a12e86067c39f61a243601d0d3a78a66850ee07f4ae80e97e22ab3639e"
+        },
+        {
+          "path": "packages/scope/src/serving-limits.ts",
+          "beforeSourceSha256": "0501f0f464bc1385634c68158be128a447701b5c3de89d939b15b8c06ed787f2",
+          "afterSourceSha256": "41692df832a31bfc612d55fd95842549a62f31ee24be499b2ca83e347441e7ed",
+          "actualSourceSeal": "3a9f410f926f1e3711b78a750dd7dfb055f418fa9904be55ccb3f8cea869a987"
+        },
+        {
+          "path": "packages/scope/src/serving-admission.ts",
+          "beforeSourceSha256": "f507cd7dcd8d1c663ffeb45bc1f9669b2b25ff03ea014463fd878a1c03213917",
+          "afterSourceSha256": "6e1146e1cea8989ba7f965dbb3468d5518599cc133e190dcf7168713c0678eaa",
+          "actualSourceSeal": "18a5d6991a769647cd14d3e8985585c6746f5df1c3d1d5c639f34d0eb6f4da5e"
+        },
+        {
+          "path": "packages/bytes/src/records.ts",
+          "beforeSourceSha256": "291579dd9ae5755808096d9bf24df10f4ec89890eb7caddbe6f299d8df29eaed",
+          "afterSourceSha256": "291579dd9ae5755808096d9bf24df10f4ec89890eb7caddbe6f299d8df29eaed",
+          "actualSourceSeal": "bc4e65e75215c2d940b0884a6810d5d90969455ba956c1e9731a3ed0d3c1b6af"
+        },
+        {
+          "path": "packages/scope/src/session-preparation.ts",
+          "beforeSourceSha256": "a2e6700808d59675b9f83d08561963bd5a8e18497742f10d071f784b41ced887",
+          "afterSourceSha256": "9f7a4e85111c3b612f8878bae3faf06d7808f076cd22e8532e9cd68450451c02",
+          "actualSourceSeal": "4b9699cb1ee06234162dc2088c5c37be1804e1e9f15985fa1f0dc3151170bd85"
+        },
+        {
+          "path": "packages/scope/src/item-queries.ts",
+          "beforeSourceSha256": "59b955466c82255c2715548ca59b0807351c5b12726f9abcdb5f0e165a539224",
+          "afterSourceSha256": "616659321bc9eae09d7b2f6d5ef6b1912f17be539babc96b577a02db1bedc092",
+          "actualSourceSeal": "61ead9996d2c338a26331e04b8576c52425d8d2c88dc86173a7d79108c2ee418"
+        },
+        {
+          "path": "packages/scope/src/applications/projection.ts",
+          "beforeSourceSha256": "9a00318ec307220ed1ae362eea27658c49374bf6dd3f4dfd7078be06bba925c6",
+          "afterSourceSha256": "3fa3b93c38760044091d57c66b41d1ea5c0ebadb535e0faad9f209fd11d99757",
+          "actualSourceSeal": "31a3db04f3912ee3fb5bbd4cc3c658344f265f30d224ac95be2ba3b17f8622bd"
+        },
+        {
+          "path": "packages/scope/src/destination-host.ts",
+          "beforeSourceSha256": "ff2f77cfddc1f6c07e1b86614ac679adbed37c54c90e445dd5a451be5772529e",
+          "afterSourceSha256": "a6fa3e8c785da4262b6683015684cface9195f1c143d8e6ab91d0736ae0ffe4d",
+          "actualSourceSeal": "b86198499cadddaf47f439ed39f7e44f8da78fbed120e185b787b153f0dc66eb"
+        },
+        {
+          "path": "packages/mcp/src/hosted.ts",
+          "beforeSourceSha256": "f8ff3e5c653117af7f2de76089883a8850cafb5ac79e5f221188f4ad2de73f0b",
+          "afterSourceSha256": "0abd85f57e43eb4be5982efb8b0306a8f4535d2c80d715ac437082b8345be1ac",
+          "actualSourceSeal": "337b73c8773a5ce3424fc67b5746710d800ca1e4d4074ba6819f94560817641d"
+        },
+        {
+          "path": "packages/mcp/src/http.ts",
+          "beforeSourceSha256": "4dded808d2e7fb108b01b015c04b4356e7d00e3d91eb574aa45891b96f335797",
+          "afterSourceSha256": "3636c92c1a5efa86ab41c3a5aca262ff66a8fb21d19af1f09c2bd677d42138fe",
+          "actualSourceSeal": "9a1450bef9f94b55b4751a3368032dfc480555628b48ccfdd55fd43e9c853af8"
+        },
+        {
+          "path": "examples/grow/simulator-worker.ts",
+          "beforeSourceSha256": "4f44c449bb48bd92efb1469644705a8386fe29d34537a3048a2901fc46cfce32",
+          "afterSourceSha256": "4f44c449bb48bd92efb1469644705a8386fe29d34537a3048a2901fc46cfce32",
+          "actualSourceSeal": "2d60dab3a9a5b204b69f15bc5ec3473fa48513888d7ffdb0c1fc179f6fe4883c"
+        },
+        {
+          "path": "examples/grow/simulator-host.ts",
+          "beforeSourceSha256": "1f569b679cf52e3d924a1bd8f0a5809b9118d158a7206e02e35a34148a9ba9f8",
+          "afterSourceSha256": "2b7413b8861da0329e536a8951faf53b643c800e93322387869f3ca233c10ac9",
+          "actualSourceSeal": "26a8521b98737cae3d80a9fe3b9ac17fb10b11fcf2f8ce973251253bdbf2b7df"
+        },
+        {
+          "path": "packages/scope/src/archive-target.ts",
+          "beforeSourceSha256": "2e88c3f9a3d90dd287b811b8ad94fcaa343a37aff133807fd5a32dc520fe1faf",
+          "afterSourceSha256": "a399cf622bc222ab5ffaa510e2325bdbd373432e18f6397402d2e22dffac1843",
+          "actualSourceSeal": "33826c2966d39df7f4d46aa74365f55b9e7e2a2317f26f9f98a735792ccb4a39"
+        },
+        {
+          "path": "packages/scope/src/archive-source-window.ts",
+          "beforeSourceSha256": "a4173227146bde89e446d3a5d296fc085da20c649cbb6a5faffd446aa4381b2d",
+          "afterSourceSha256": "75458ba91216bf3682c4ef9f7d52169a7b2e30c75af8b6cab75bdfdbd8059cda",
+          "actualSourceSeal": "4db3f5885e7541f713b9668d1cde655e42be1950dd6af77d5711a323b3582e1c"
+        },
+        {
+          "path": "packages/scope/src/archive-publication.ts",
+          "beforeSourceSha256": "d61c2d62928ed882429e663b9d431f7053e4845ee0d45952763afe415186652b",
+          "afterSourceSha256": "74ce75f531cfc30d476949a2785947702c37d5e39a370b0efc1d4643109ef2d3",
+          "actualSourceSeal": "d8c39d220bc7eea59301478aa553960267aac16f06502b4103a85647c71eb457"
+        },
+        {
+          "path": "packages/scope/src/archive-build.ts",
+          "beforeSourceSha256": "121b0f5ee559b22b09f017711aa96d1de424cd7892b1611425dd099491aecd40",
+          "afterSourceSha256": "193766616d3df4b3d8c8ad85171c1a8a61a90637fb4ecd6965882d0f451aa447",
+          "actualSourceSeal": "e82bffde8d5e6ce26b1dbd80f0659ec15a48dd461f9e02f4a235c19fbc1a4201"
+        },
+        {
+          "path": "packages/scope/src/archive-driver.ts",
+          "beforeSourceSha256": "aba408c356e4f438c556dea74060eb5ced1942898f6147561b8edd404880147a",
+          "afterSourceSha256": "671ba9efbcb93c651cbd40265df75ff78cebaabb3d5c4bf26590586753e2707d",
+          "actualSourceSeal": "3dd46755edd501d2f4bb614648a3d0358fbe72635c4a734403da3f98317aceac"
+        },
+        {
+          "path": "packages/scope/src/archive-row.ts",
+          "beforeSourceSha256": "c342685b6703ac7c87754ef8847eb7b765d310dd783e5cfe2ae845750d865ed8",
+          "afterSourceSha256": "88de1f73e5b2e28d392a1d310f9ded5bcfb462bcfe23420b847d77ab7df396f5",
+          "actualSourceSeal": "b3b4f7fed29152a60ba76dc58a09529b18fc7b9ea737f986d7fc2803a42d8dab"
+        },
+        {
+          "path": "packages/scope/src/floor-writer.ts",
+          "beforeSourceSha256": "ca31e28addce5c32dc5e0825ab4fddd2c9abc6e6c3779a7b47989da91620bbd9",
+          "afterSourceSha256": "b5e121224f4fe1b24a5ce548df67abd29f35d003eecdd14b1e48862189caaddc",
+          "actualSourceSeal": "fb8fd859844b8d10ba43b477bcaf07ab32fe1bfa1b6684ad9ae70b930d328a11"
+        },
+        {
+          "path": "apps/room/worker.grow.ts",
+          "beforeSourceSha256": "d1962cc212732af7e4fa5f4520493667add3e51a4b39bbeb60b76662ebce03bf",
+          "afterSourceSha256": "d1962cc212732af7e4fa5f4520493667add3e51a4b39bbeb60b76662ebce03bf",
+          "actualSourceSeal": "791c2bfcb8b2a62d8f0d8afec627ac76b63be4b9f1ee5de27d3f6c081959bc01"
+        },
+        {
+          "path": "apps/room/archive-policy.ts",
+          "beforeSourceSha256": "7722ee04e5226c0c497116c29036c6b24996907014a5f0185503599ec5613dcd",
+          "afterSourceSha256": "849543d1e694d4f6ed52146cb8f2d1b802e50c730083084206603e6d710becc3",
+          "actualSourceSeal": "07ea72db6bc58257d3f280ac1e1c7db9296868016493fa926e473ddeb9b6f486"
+        },
+        {
+          "path": "apps/room/archive.ts",
+          "beforeSourceSha256": "ace52909a462fa00a276b25c9f1438669b9121a33a3721ec481133c9829f0c79",
+          "afterSourceSha256": "b01eb75987fdbc766de500d3c2666c27d47abd92567b81bbb3ead5e1de4c24ba",
+          "actualSourceSeal": "36b2250301a217b6e1c74cd1cea1a65a45390be3679e4a2fd2e809890eb6abf5"
+        },
+        {
+          "path": "packages/scope/src/archive-host-item.ts",
+          "beforeSourceSha256": "dc05c0b7f7134012e368d8cc90febec163053f1fbbd098bc04e8403cefc23151",
+          "afterSourceSha256": "f0461b0d7d7804a3da5c3005d41708ad368b422870ea1ab0ddaefb0add8d27a5",
+          "actualSourceSeal": "0f9eaddc4000574a1575466592f88c57beecc11efb93e402a568a84fab8ef903"
+        },
+        {
+          "path": "packages/scope/src/archive-host.ts",
+          "beforeSourceSha256": "07767acc8d384981f6480b585ee71e19a34ed4a351739d216faa556c1cb40239",
+          "afterSourceSha256": "7aff0e38a81b255b3abe81088c6bec8e3fc6fbf163531b84f945d52b14b918d7",
+          "actualSourceSeal": "8e573b3b8f5a5fdc6f677fdcc1a2e28fe4078f1f149083db568d950c4c2d2539"
+        },
+        {
+          "path": "packages/scope/src/artifacts-host.ts",
+          "beforeSourceSha256": "324510cd146c1bb27d0dd1b4a709146475f9d5f39edd0eda46df6d3035d0827c",
+          "afterSourceSha256": "7125e7b8f0119444319eb2aefc7daa4364441c7d379f60ec4c6a20343cae62c7",
+          "actualSourceSeal": "378eca9b5c3c197f738cb88f59a5df51d83d52929f614735d0fdc3917df06ac0"
+        },
+        {
+          "path": "packages/scope/src/artifacts-wiring.ts",
+          "beforeSourceSha256": "f8c105e19286a1cb9a0e05b2d94a31610d3324745da57c19c7a11957ff335943",
+          "afterSourceSha256": "865e8e292f7499c81bcadc68eff6e0e060b3d576f58666dd6ecd834771327b81",
+          "actualSourceSeal": "937bedd41f5f21953c2fe659634ca732b44620cc98e33e5a43f7945601c58963"
+        },
+        {
+          "path": "packages/cli/src/commands.ts",
+          "beforeSourceSha256": "3f56ec7e5bf94a3025a05e93b604d4e1e32eeb705a7caedac16cb7638b211932",
+          "afterSourceSha256": "2d4e55c8ecb961e67ddc7935ecac33fc52fc7e1a310631157f7edcc18d442ea8",
+          "actualSourceSeal": "7ccaa015aff104d009dc4fcd0fd37faf718fb822535f6a88764585c4ed69cb76"
+        },
+        {
+          "path": "apps/sandbox/worker.ts",
+          "beforeSourceSha256": "335682bbdab59d7d1bc0c4ee36658fde700c1ce265b67c7a4e76dc5e8aab8ce4",
+          "afterSourceSha256": "3f8e91a411f4dead07ca2333aab7d8bef6623dd1ba4c8bfda90b77a0001ca34e",
+          "actualSourceSeal": "d354c1740d51e2b83e0b93272384607c609c65386c3fc4b8d977edfb89b6636a"
+        },
+        {
+          "path": "packages/client/src/application-gateway.ts",
+          "beforeSourceSha256": "7577c85d0d1e8a52e1c240aebea982431a7e49bdee7c5a1f57d659f9b18db676",
+          "afterSourceSha256": "08ce0940c3d752d518eb58523e6dd54a802e5d26772d4c573274e9d3714d613f",
+          "actualSourceSeal": "daa1d28c02085bd6be7a9698a7120cd106cc7233aad92565aaa05e67427878ef"
+        },
+        {
+          "path": "packages/client/src/application-route.ts",
+          "beforeSourceSha256": "bfc495ad1b1147d8bdc9903c7c32f44da9a43720f1dbc16fe0ded8de59fe9d17",
+          "afterSourceSha256": "7cd86c041ed8eea6792f9fd4da6999949603bebef861ef294447661e2f4a5155",
+          "actualSourceSeal": "dcb686835049af3043e1cb8c73a989545636ea5bac2d85aaee6be92b6cd3abcc"
+        },
+        {
+          "path": "packages/scope/src/applications/bindings.ts",
+          "beforeSourceSha256": "0c6e45edce057541a6d57a414d5d28c637e537954de9053a1de80376e5b8697c",
+          "afterSourceSha256": "0c6e45edce057541a6d57a414d5d28c637e537954de9053a1de80376e5b8697c",
+          "actualSourceSeal": "8212d318f058035a580c945f1140717fe31ea42638024e1099069cf654400888"
+        }
+      ],
+      "parser": {
+        "maintainedToolSourceSha256": "6211e9d63c50bc8686ddebbc4d211fceedb4acd3303849ea29137c031517e167",
+        "rootRunReference": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:cba70c5ef4d82bfbbefacca178c5305382592220",
+        "outputPath": "/private/tmp/artroom-rename-source-seal-main12d-evidence-20261023-v1/parser-output.json",
+        "outputBytes": 7710,
+        "outputSha256": "aab95f824947d6a25cc04802beaad887f3d9cf455c5c9423f399d03f08fb7462",
+        "outputText": "[\n  {\n    \"path\": \"apps/room/worker.ts\",\n    \"sourceSeal\": \"aba04e12dc206f0be6bda4a8edeac64569e0edd44b7a87772595d7db40bb8b67\"\n  },\n  {\n    \"path\": \"apps/room/fetch.ts\",\n    \"sourceSeal\": \"5661bfc33c21e9c0390f9897edb6948d05c1de42e3df559a8e8d16d16e8c1089\"\n  },\n  {\n    \"path\": \"apps/room/demo-creation.ts\",\n    \"sourceSeal\": \"cbc8c23034bc6c83f45bd7664cb158c7f452d2eb4f9e6bf406ff36c003a6fff7\"\n  },\n  {\n    \"path\": \"apps/room/page/route.ts\",\n    \"sourceSeal\": \"62c8f69b9f516f1b5acdaef57d7aed25268d8cf03283bdffdd4b1b5f20bb6b3d\"\n  },\n  {\n    \"path\": \"apps/room/brand/route.ts\",\n    \"sourceSeal\": \"71b45ff9b41b3bea31c775a16525349591e0d4f7dfdc65da79f095816b1c343c\"\n  },\n  {\n    \"path\": \"packages/scope/src/worker.ts\",\n    \"sourceSeal\": \"2e3546e4c7a70ce17ae42c8e1367287277b26a7a67fa6dfe4fa2d83c4b5eedca\"\n  },\n  {\n    \"path\": \"packages/scope/src/scope-index.ts\",\n    \"sourceSeal\": \"98a91329fbe8926127aab2db555970278e898cec347fd4f20569b19f1f879d54\"\n  },\n  {\n    \"path\": \"packages/scope/src/creation-admission.ts\",\n    \"sourceSeal\": \"5fe79f1b3a9f760c318cd5f9c66d768fe8a1815e47454e351826443b617ead58\"\n  },\n  {\n    \"path\": \"packages/scope/src/creation-lineage.ts\",\n    \"sourceSeal\": \"3786e04db4627fa7bfa07f8edefd3fd1125305da80b96b3d9132b671d9f21ef0\"\n  },\n  {\n    \"path\": \"packages/scope/src/creation-declaration.ts\",\n    \"sourceSeal\": \"ec719181ce0cff0048165e27bd108b8b728e9f78a858033155b670ab82e93c2b\"\n  },\n  {\n    \"path\": \"packages/scope/src/namespace.ts\",\n    \"sourceSeal\": \"1f65de08e11d85c204b671b8605b132f506cf06f2e87843e90eb0d1884f428e3\"\n  },\n  {\n    \"path\": \"packages/scope/src/health.ts\",\n    \"sourceSeal\": \"b1c5240a6ca05b247ed54766ba25448d02057267d8342a4df6908969a57acb23\"\n  },\n  {\n    \"path\": \"packages/scope/src/site/route.ts\",\n    \"sourceSeal\": \"f57a2415c997ce17fb6fcf254944b0237bae598adffca64eda123faf0fcc1084\"\n  },\n  {\n    \"path\": \"packages/scope/src/applications/route.ts\",\n    \"sourceSeal\": \"2e75a4a1ed4edc78697f740da1c7957fe365e3c5c179a00dbbb5d2a933ddfb8a\"\n  },\n  {\n    \"path\": \"packages/scope/src/item-query-wire.ts\",\n    \"sourceSeal\": \"8206b9a6531ca30cae1bc49cc249eea08c70a658305f41b3ebea6eda042055a8\"\n  },\n  {\n    \"path\": \"packages/scope/src/applications/projection-wire.ts\",\n    \"sourceSeal\": \"2e07df5447469dc09aff0d4017e010634150f49c92f614221402cf46a869c6d0\"\n  },\n  {\n    \"path\": \"packages/scope/src/object.ts\",\n    \"sourceSeal\": \"b403bba2d72425b252488d960a7cbb557d1bcc38fb9390760e39b49ac4299df4\"\n  },\n  {\n    \"path\": \"packages/scope/src/core.ts\",\n    \"sourceSeal\": \"c7f2e49246b1e784981337ee13af53b17bab424a13112d5a40ff76b75fb7a128\"\n  },\n  {\n    \"path\": \"packages/derive/src/genesis.ts\",\n    \"sourceSeal\": \"df7722143f01c8084b8f045ef959b203ae1756c4dfde170d0454cfe0b0392843\"\n  },\n  {\n    \"path\": \"packages/derive/src/judge.ts\",\n    \"sourceSeal\": \"c0ed325bc2fa84693b40d3d53a9ad54a9a9786dab39dd3b9c6039ac553488f63\"\n  },\n  {\n    \"path\": \"packages/scope/src/sessions.ts\",\n    \"sourceSeal\": \"7206983eedd0ff821afee7c6032f2a9b461c36e31b9ac186a4c2cc8b8a897de2\"\n  },\n  {\n    \"path\": \"packages/scope/src/reads.ts\",\n    \"sourceSeal\": \"1d4bb75e2b71f10f140990b7537d626f93eb8c3679057ba700ddeda96faa5e1a\"\n  },\n  {\n    \"path\": \"packages/scope/src/signed-reads.ts\",\n    \"sourceSeal\": \"6c4c4c81f44994c2ac9e4ca921c8f34184977a1256d6574e78514b814512eaf0\"\n  },\n  {\n    \"path\": \"packages/scope/src/limits.ts\",\n    \"sourceSeal\": \"6d4966a12e86067c39f61a243601d0d3a78a66850ee07f4ae80e97e22ab3639e\"\n  },\n  {\n    \"path\": \"packages/scope/src/serving-limits.ts\",\n    \"sourceSeal\": \"3a9f410f926f1e3711b78a750dd7dfb055f418fa9904be55ccb3f8cea869a987\"\n  },\n  {\n    \"path\": \"packages/scope/src/serving-admission.ts\",\n    \"sourceSeal\": \"18a5d6991a769647cd14d3e8985585c6746f5df1c3d1d5c639f34d0eb6f4da5e\"\n  },\n  {\n    \"path\": \"packages/bytes/src/records.ts\",\n    \"sourceSeal\": \"bc4e65e75215c2d940b0884a6810d5d90969455ba956c1e9731a3ed0d3c1b6af\"\n  },\n  {\n    \"path\": \"packages/scope/src/session-preparation.ts\",\n    \"sourceSeal\": \"4b9699cb1ee06234162dc2088c5c37be1804e1e9f15985fa1f0dc3151170bd85\"\n  },\n  {\n    \"path\": \"packages/scope/src/item-queries.ts\",\n    \"sourceSeal\": \"61ead9996d2c338a26331e04b8576c52425d8d2c88dc86173a7d79108c2ee418\"\n  },\n  {\n    \"path\": \"packages/scope/src/applications/projection.ts\",\n    \"sourceSeal\": \"31a3db04f3912ee3fb5bbd4cc3c658344f265f30d224ac95be2ba3b17f8622bd\"\n  },\n  {\n    \"path\": \"packages/scope/src/destination-host.ts\",\n    \"sourceSeal\": \"b86198499cadddaf47f439ed39f7e44f8da78fbed120e185b787b153f0dc66eb\"\n  },\n  {\n    \"path\": \"packages/mcp/src/hosted.ts\",\n    \"sourceSeal\": \"337b73c8773a5ce3424fc67b5746710d800ca1e4d4074ba6819f94560817641d\"\n  },\n  {\n    \"path\": \"packages/mcp/src/http.ts\",\n    \"sourceSeal\": \"9a1450bef9f94b55b4751a3368032dfc480555628b48ccfdd55fd43e9c853af8\"\n  },\n  {\n    \"path\": \"examples/grow/simulator-worker.ts\",\n    \"sourceSeal\": \"2d60dab3a9a5b204b69f15bc5ec3473fa48513888d7ffdb0c1fc179f6fe4883c\"\n  },\n  {\n    \"path\": \"examples/grow/simulator-host.ts\",\n    \"sourceSeal\": \"26a8521b98737cae3d80a9fe3b9ac17fb10b11fcf2f8ce973251253bdbf2b7df\"\n  },\n  {\n    \"path\": \"packages/scope/src/archive-target.ts\",\n    \"sourceSeal\": \"33826c2966d39df7f4d46aa74365f55b9e7e2a2317f26f9f98a735792ccb4a39\"\n  },\n  {\n    \"path\": \"packages/scope/src/archive-source-window.ts\",\n    \"sourceSeal\": \"4db3f5885e7541f713b9668d1cde655e42be1950dd6af77d5711a323b3582e1c\"\n  },\n  {\n    \"path\": \"packages/scope/src/archive-publication.ts\",\n    \"sourceSeal\": \"d8c39d220bc7eea59301478aa553960267aac16f06502b4103a85647c71eb457\"\n  },\n  {\n    \"path\": \"packages/scope/src/archive-build.ts\",\n    \"sourceSeal\": \"e82bffde8d5e6ce26b1dbd80f0659ec15a48dd461f9e02f4a235c19fbc1a4201\"\n  },\n  {\n    \"path\": \"packages/scope/src/archive-driver.ts\",\n    \"sourceSeal\": \"3dd46755edd501d2f4bb614648a3d0358fbe72635c4a734403da3f98317aceac\"\n  },\n  {\n    \"path\": \"packages/scope/src/archive-row.ts\",\n    \"sourceSeal\": \"b3b4f7fed29152a60ba76dc58a09529b18fc7b9ea737f986d7fc2803a42d8dab\"\n  },\n  {\n    \"path\": \"packages/scope/src/floor-writer.ts\",\n    \"sourceSeal\": \"fb8fd859844b8d10ba43b477bcaf07ab32fe1bfa1b6684ad9ae70b930d328a11\"\n  },\n  {\n    \"path\": \"apps/room/worker.grow.ts\",\n    \"sourceSeal\": \"791c2bfcb8b2a62d8f0d8afec627ac76b63be4b9f1ee5de27d3f6c081959bc01\"\n  },\n  {\n    \"path\": \"apps/room/archive-policy.ts\",\n    \"sourceSeal\": \"07ea72db6bc58257d3f280ac1e1c7db9296868016493fa926e473ddeb9b6f486\"\n  },\n  {\n    \"path\": \"apps/room/archive.ts\",\n    \"sourceSeal\": \"36b2250301a217b6e1c74cd1cea1a65a45390be3679e4a2fd2e809890eb6abf5\"\n  },\n  {\n    \"path\": \"packages/scope/src/archive-host-item.ts\",\n    \"sourceSeal\": \"0f9eaddc4000574a1575466592f88c57beecc11efb93e402a568a84fab8ef903\"\n  },\n  {\n    \"path\": \"packages/scope/src/archive-host.ts\",\n    \"sourceSeal\": \"8e573b3b8f5a5fdc6f677fdcc1a2e28fe4078f1f149083db568d950c4c2d2539\"\n  },\n  {\n    \"path\": \"packages/scope/src/artifacts-host.ts\",\n    \"sourceSeal\": \"378eca9b5c3c197f738cb88f59a5df51d83d52929f614735d0fdc3917df06ac0\"\n  },\n  {\n    \"path\": \"packages/scope/src/artifacts-wiring.ts\",\n    \"sourceSeal\": \"937bedd41f5f21953c2fe659634ca732b44620cc98e33e5a43f7945601c58963\"\n  },\n  {\n    \"path\": \"packages/cli/src/commands.ts\",\n    \"sourceSeal\": \"7ccaa015aff104d009dc4fcd0fd37faf718fb822535f6a88764585c4ed69cb76\"\n  },\n  {\n    \"path\": \"apps/sandbox/worker.ts\",\n    \"sourceSeal\": \"d354c1740d51e2b83e0b93272384607c609c65386c3fc4b8d977edfb89b6636a\"\n  },\n  {\n    \"path\": \"packages/client/src/application-gateway.ts\",\n    \"sourceSeal\": \"daa1d28c02085bd6be7a9698a7120cd106cc7233aad92565aaa05e67427878ef\"\n  },\n  {\n    \"path\": \"packages/client/src/application-route.ts\",\n    \"sourceSeal\": \"dcb686835049af3043e1cb8c73a989545636ea5bac2d85aaee6be92b6cd3abcc\"\n  },\n  {\n    \"path\": \"packages/scope/src/applications/bindings.ts\",\n    \"sourceSeal\": \"8212d318f058035a580c945f1140717fe31ea42638024e1099069cf654400888\"\n  }\n]\n"
+      }
+    }
   }
 }
