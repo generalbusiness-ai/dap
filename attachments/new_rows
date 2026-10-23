@@ -1,0 +1,1 @@
+R030-R035: result.json, before.json, after.json, command.json, focused.stdout, focused.stderr; R036-R042: focused result.json, vitest.json, coverage-ledger.json, coverage.jsonl, body.log, scope-node-support.log, manifest.json
