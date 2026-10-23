@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3fcb3b7c3d0cfb69ef345f064b2f9a2f7d246f4e","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/reserve.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3fd0e4129b7e07b556f35837c2805bb8a4302eff","text":"Merge retired a covered predecessor; the successor is at apps/room/lanes/test/directory-partition-handoff.scope.test.ts."}
