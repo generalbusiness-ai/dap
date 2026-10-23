@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/scope/test/archive-host.test.ts","body":{"commit":"919710c2155b35438eb2d454066a00e9443b2854","path":"packages/scope/test/archive-host.test.ts"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0221254b7e3f39143589ecb8eb15086ff8c17769","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/archive-host.test.ts."}
