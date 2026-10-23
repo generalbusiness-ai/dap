@@ -182,6 +182,6 @@ test("legacy v2 parent work preserves partial Native checkpoint progress and dra
   const publications = [...peer.data.values()].filter(object => object.type === "blob")
     .map(object => new TextDecoder().decode(object.data)).filter(text => text.includes('"legacyAnchors"'));
   expect(publications).toHaveLength(1); const publication = JSON.parse(publications[0]!);
-  expect(publication).toMatchObject({ legacyAnchors: { from: 0, through: originalHead.seq, anchors: expect.arrayContaining(expectedAnchors) } });
+  expect(publication).toMatchObject({ legacyAnchors: { from: 0, through: originalHead.seq, anchors: expect.arrayContaining([...expectedAnchors]) } });
   expect(publication.legacyAnchors.anchors).toHaveLength(expectedAnchors.length);
 }, 30_000);
