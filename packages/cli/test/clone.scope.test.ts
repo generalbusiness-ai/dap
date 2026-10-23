@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { Digest, Item, OperationId, Read } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize } from "@generalbusiness/artroom-bytes";
+import { b64url, canonicalize, timeOf, utf8 } from "@generalbusiness/artroom-bytes";
 import type { Fetch } from "@generalbusiness/artroom-client";
 import { repositoryName } from "@generalbusiness/dap-platform";
 import { beginSessionFixture } from "../../scope/test/session-settings.ts";
@@ -204,6 +204,64 @@ async function story(lifetime: ReturnType<typeof nativeFixtureLifetime>): Promis
     lifetime.advance(16 * 60_000);
     expect(await run(vic, "remote")).toEqual({ code: 0, lines: ["Host: github.com", "Namespace: generalbusiness-ai", `Name: ${hub.name}`, `Remote URL: https://github.com/generalbusiness-ai/${hub.name}.git`] });
     expect(await run({ ...vic, git: { run: async () => null } }, "clone")).toEqual({ code: 1, lines: ["git is not installed here, so nothing was signed. With git installed, run dap clone again; it runs:", `git -c http.extraHeader="Authorization: Basic <x-access-token:read token, base64>" clone -- https://github.com/generalbusiness-ai/${hub.name}.git`] });
+
+    // STAND-IN GitHub mint/read host only: the existing native destination,
+    // membership, signed act, sealed outcome and session route remain real.
+    // This port answers one credential to the actual read-token actor once.
+    const D = lifetime.platform((await lifetime.wait(() => vic.store.config()))!.repository!.destination);
+    let held: { handle: string; key: string; token: string; ends: string } | null = null;
+    let issued = 0, credentialReads = 0;
+    lifetime.outside(D.name, (): Outside => ({
+      accepts: (_owner, kind) => kind === "mint-read",
+      send: async (request) => {
+        lifetime.active();
+        const input = request.origin.entry.input;
+        if (input.type !== "act" || input.signed.intent.kind !== "read-token") return expect.fail("Only the native read-token opens this host fixture");
+        held = { handle: `github-read-${++issued}`, key: input.signed.intent.actor, token: `github-read-plaintext-${issued}`, ends: timeOf(now() + 60 * 60_000) };
+        return { result: "confirmed", evidence: { basis: "own-answer", body: { token: held.handle, ends: held.ends } } };
+      },
+      credential: (handle, key) => {
+        lifetime.active();
+        if (!held || held.handle !== handle || held.key !== key) return null;
+        const value = held; held = null; credentialReads++;
+        return { token: value.token, ends: value.ends, remote: `https://github.com/generalbusiness-ai/${hub.name}.git` };
+      },
+    }));
+    await D.restart();
+    destinations.length = 0; destinations.push(D);
+    try {
+      for (const spelling of ["literal", "percent"] as const) {
+        const saved = await lifetime.wait(() => vic.store.config());
+        const beforeReads = credentialReads;
+        let token = "", payload = "";
+        const unsafeGithub: Fetch = async (url, init) => {
+          const response = await fetch(url, init);
+          if (!String(url).includes("/credential/")) return response;
+          const actual = response as unknown as Response;
+          const reply = await actual.json() as { ok: boolean; value: { token: string; remote: string } };
+          expect(reply.ok).toBe(true);
+          token = reply.value.token;
+          payload = btoa(String.fromCharCode(...utf8(`x-access-token:${token}`)));
+          reply.value.remote = `https://github.com/generalbusiness-ai/${spelling === "literal" ? payload : encodeURIComponent(payload)}.git`;
+          expect(new URL(reply.value.remote).href).toBe(reply.value.remote);
+          expect(reply.value.remote).not.toContain(token);
+          return new Response(JSON.stringify(reply), { status: actual.status, headers: actual.headers });
+        };
+        git.runs.length = 0;
+        const rejected = await run({ ...vic, git, fetch: unsafeGithub }, "clone", "unsafe-github-copy", "--archive");
+        // This custody oracle distinguishes the old raw-token-only guard,
+        // even if a later hardened runner refuses to start a child.
+        expect(await lifetime.wait(() => vic.store.config()), "Archive credential remote must not change saved configuration").toEqual(saved);
+        expect(git.runs).toEqual([{ args: ["--version"], env: {} }]);
+        expect(credentialReads).toBe(beforeReads + 1);
+        expect(token).not.toBe(""); expect(payload).not.toBe("");
+        expect(rejected.code).toBe(1);
+        expect(rejected.lines.join(" ")).toContain("no remote was saved or printed");
+        for (const secret of [token, payload, encodeURIComponent(payload)]) expect(rejected.lines.join(" ")).not.toContain(secret);
+      }
+    } finally {
+      lifetime.unOutside(D.name);
+    }
   } finally {
     lifetime.unWire(H.name);
   }

@@ -1391,9 +1391,11 @@ export function clone(ctx: Context, directory: string | undefined, options: { ho
     const answer = await readCredential(config.service, scope, reader, handle, ctx.fetch ? { fetch: ctx.fetch } : {});
     if (!answer.ok) return failed(`Cannot read the read token ${handle}: ${answer.reason}.`);
     const value = answer.value;
-    if (options.archive && (!archiveRemote(value.remote) || !archiveValue(value.remote, [value.token]))) return failed("The archive credential named an unsafe remote. The one-time credential may have been consumed; no remote was saved or printed and no Git command was started.");
+    const header = authorization(repository, value.token);
+    const payload = header.slice(header.indexOf(" ") + 1);
+    if (options.archive && (!archiveRemote(value.remote) || !archiveValue(value.remote, [value.token, payload]))) return failed("The archive credential named an unsafe remote. The one-time credential may have been consumed; no remote was saved or printed and no Git command was started.");
     if (value.remote !== config.remote) await ctx.store.save({ ...config, remote: value.remote });
-    const environment = headerEnv(authorization(repository, value.token));
+    const environment = headerEnv(header);
     const runGit = options.archive ? ctx.git.archiveRun!.bind(ctx.git) : ctx.git.run.bind(ctx.git);
     const code = await runGit(args(value.remote), environment);
     const lines = [`Read token: ${scope}:${seq}, until ${value.ends}.`, `Remote URL: ${value.remote}`];

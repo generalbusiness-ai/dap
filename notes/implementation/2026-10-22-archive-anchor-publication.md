@@ -1,5 +1,27 @@
 # Published archive anchors
 
+A blocking source review of historical head `7cdc1ec78` found that the
+archive clone rejected a raw token in a credential-supplied remote before
+saving it, but did not reject the actual GitHub Basic authorization payload
+at that boundary. A canonical URL path could therefore save and print that
+encoded credential before the later hardened runner refused it.
+
+The reviewed successor computes the existing authorization header once,
+checks both the raw token and its actual payload before saving or printing
+the remote, and reuses the same header for Git. Canonical URL rules,
+default clone behavior and the hardened runner remain unchanged. The
+existing native GitHub story now includes literal and percent-spelled
+credential-response regressions, with an explicitly labelled one-shot host
+stand-in and a named saved-configuration custody assertion.
+
+This correction is source-reviewed but unrun. Its affected compiler roots,
+whole native clone story and old-guard distinguishing control remain
+pending root allocation. Any required CLI command owner seal remains
+pending an actual maintained parser result and review; no hash is inferred
+or invented here. The historical review artifact at `7cdc1ec78` remains
+immutable and is not silently retargeted. The separately attributed
+pre-correction results and original failures follow.
+
 This implements planner decisions `29fd51b5`, `f15e483c`, and the count-policy
 correction `a7d03336`. The ordinary gate at `56a6119d1` naturally failed:
 2,156 cases passed, four failed and three skipped. Three real Node entry
@@ -1247,3 +1269,37 @@ ordinary gate or the intervening 34-pass, two-failure Node attempt. The
 four compiler and 22-case correction pass remains separate evidence. No
 whole gate, healthy Vitest cohort or heavy suite was rerun for these final
 corrections. Exact-head review and landing remain pending.
+
+### Review finding: refuse the actual authorization payload before persistence
+
+Blocking finding `aa2c6c8fcd256b1d847a3fe3d4d9d87c9929ef23` traced the
+credential reply through clone's configuration save and returned remote
+line before the later runner's stricter argument refusal. It concerns the
+exact Basic payload used for GitHub transport, not arbitrary encodings.
+The correction derives that payload from the existing actual header and
+checks it alongside the raw token at the pre-persistence boundary. The
+header is constructed once and reused. The default clone's guard and the
+existing canonical URL policy are not broadened.
+
+Source review `9ecd4e0ef2b87e3db607c6b3d362376e04ad6ccd` cleared the two-path
+proposal; its successor adds only the fixed first-oracle message, “Archive
+credential remote must not change saved configuration”. Root's application
+authorization is `d356cf1e175fa2ad5bf9cf93fcca09e5590928a8`.
+
+The regression reuses the existing genuine GitHub installation, claim,
+membership, destination and session routes. Its added mint/read host is a
+stand-in that returns one credential only to the actual read-token actor.
+It claims no real GitHub provider or deployed custody behavior. Literal
+and percent spellings place the actual Basic payload in an otherwise
+canonical HTTPS path. The first post-command oracle requires unchanged
+saved configuration; later assertions require no archive invocation and
+no raw token or payload in the safe refusal lines. Existing Artifacts
+negative controls and all original assertions and deadlines remain.
+
+These changes have not been compiled or run. The planned negative control
+restores only the old raw-token-only pre-save guard, requires the named
+custody assertion to fail within the original deadline, and restores the
+exact reviewed source afterward. The positive whole-file result is not
+repeated merely to prepare the control. Page equality and any required
+CLI owner seal also remain separate pending obligations. No earlier pass
+is relabelled as acceptance of this new correction.
