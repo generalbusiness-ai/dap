@@ -10,9 +10,10 @@ The corrected installed six-case file passed at `08bbee7b7` under outcome
 and all five consistent journal reports. Later executable changes are the
 scale fixture and its import correction, not a production trust change.
 
-The stored Page bundle is stale against its imported source. Its maintained
-build, output comparison and owning assets check remain pending, followed
-by the exact-source final gate and review. These local Native and Node
+The maintained Page build and separate output comparison have passed under
+outcome `a30b7daf4`. The generated module matches its dist outputs, and its
+HTML matches maintained source. The owning assets check, exact-source final
+gate and review remain pending. These local Native and Node
 fixture results do not establish hosted custody, deployment or provider
 throughput. The writer and command's initial integration at `1793ca7d`
 and every failed attempt recorded below are historical. Their original
@@ -1089,3 +1090,27 @@ current CLI dependencies. The maintained Page build, output comparison
 and owning assets check must run against this source before the final
 freeze. The final gate and review also remain pending. No Page output is
 changed merely by this note checkpoint.
+
+
+### Refresh and compare the maintained Page outputs
+
+Owner 58151 naturally passed the maintained Page build at `75ccfeb30`,
+with complete input guards and no signal or startup error. The original
+npm dispatcher took 0.323 seconds. Outer elapsed time was 2.24 seconds,
+including guards. Only the allowed generated module and ignored dist
+outputs changed. The generator was not edited, and no generated literal
+was changed by hand.
+
+Root separately allocated the DATA-only comparator. It naturally passed
+and accepted the exact six-line module envelope, headers, JSON literal
+spelling and content hashes. The module's JavaScript equals dist output;
+its HTML equals both dist output and maintained source. The generated
+module is 850,654 bytes with SHA-256
+`a5fdf3b336188b966dbde1e176ddae297dea58b7ed7ded282df525909d1dfd13`.
+JavaScript is 795,368 bytes, and HTML is 26,184 bytes. Root adopted build
+and comparison under `a30b7daf451d283b2a8139616b1d5b8ee71fc6d8`.
+
+The comparator imports no generated code. Content equality alone does
+not establish behavior or fresh esbuild equivalence. The whole owning
+Page assets test still regenerates the expected module from source.
+That test, the final exact-source gate and review remain pending.
