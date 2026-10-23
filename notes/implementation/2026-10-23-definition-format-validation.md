@@ -6,7 +6,7 @@ Request `2e714fd7fdaa4427f3a6cf7790ee11211c2b3a86`, under promise
 new format, scope kind, platform name, capability, tool family or record model.
 Kernel placement follows [docs/kernel.md, section 7](../../docs/kernel.md#7-rule-for-adding-to-the-kernel).
 The ordinary gate and exact-candidate review report are filed separately.
-The prior head's passing gate does not cover the packaging correction below.
+The prior head's passing gate does not cover the packaging and context corrections below.
 No hosted result is claimed here.
 
 ## Compatible validation
@@ -58,7 +58,9 @@ Scope history. Its asynchronous constructor defers that history and its
 prerequisite validation until the named row runs. This is an explicit
 history-dependent constructor, not a claim that every constructor is pure.
 
-Complete fixed validation contexts are registered. Bounds calculated from
+The corpus registers named fixed validation contexts found in the source audit.
+The follow-up below corrects omitted default-profile and native cohort contexts.
+Bounds calculated from
 actual history sizes or post-construction quotas remain in the owning history
 witnesses with their source locators. The corpus neither invents those values
 nor substitutes defaults for only part of a measured bound tuple. Its finite
@@ -141,3 +143,62 @@ The corrected candidate's gate and exact-head review remain external
 acceptance steps. This note does not replace them or erase the initial
 compiler and corpus failures, the packaging finding or the separate SDK
 manifest failure.
+
+## Checker follow-up: exact validation contexts
+
+Checker finding `8e75ff087f6c882dfba98e5bd11ae027ad8609e5` identified two
+positive calls whose declarations were registered only with `RULE_PROFILES`.
+The maintained Room checks in `grow-owned-scopes.test.ts` and the unchanged
+Counting commitments packet in `archive-install.test.ts` omit profiles and
+options. Two lazy rows now retain those exact default inputs under
+`PROPOSED_BOUNDS`. Counting keeps its existing commitments pin. Room gains no
+invented pin. The existing rule-profile rows stay in place.
+
+The bounded follow-up also found native cohort calls in the platform tests
+that use `RULE_PROFILES` with only `{ platform: true }`. The existing native
+rows supply owner outcome domains, while the generic shape rows use `PROFILES`.
+Neither is the exact caller context. The new finite caller table records 34
+native aliases reached by the application, Counting, trusted installation,
+file-publication, declared installation and archive installation tests. Repeated
+callers of one alias share a row with their combined source origins. The five
+native siblings created by each `installGraph` call are retained separately
+from cohorts whose direct table also validates Inbox. The retained-snapshot
+control in `sessions.test.ts` supplies the same platform-only rule context for
+`platform:membership@1`; its existing pin is retained too. Existing catalog pins
+and owner-domain rows remain unchanged.
+
+Omitting owner domains can change validation: the reservation check counts no
+evidence-domain bytes for an absent domain, while a supplied domain contributes
+its stated maximum. Equal current acceptance does not make those options
+interchangeable. No declaration, pin, owning test, validator or runtime behavior
+changes in this correction.
+
+The additional source review checked the unchanged direct default-profile
+call sites, their named fixture aliases and the platform cohort call matrices.
+Other matches resolve to already registered default contexts, deliberate
+negative shapes, or the documented measured-history witnesses. This bounded
+classification is not an exhaustive proof over future dynamic callers.
+
+These edits add 36 named registration rows: two default contexts and 34 native
+contexts. The earlier 1,218 executed checks remain historical results. The affected
+derive test compiler and complete corpus file now pass as recorded below.
+The final candidate gate and exact-head review remain owed; only the prior
+`14690284` gate is recorded above. No additional healthy whole-suite run is
+part of this correction.
+
+The bounded follow-up ran once at the uncommitted three-path correction on
+`b7b7a9726a7ba06b534cc78777e3611b18fd64b9`. The derive test compiler returned
+exit 0, then the complete corpus file returned exit 0 with 1,254 passes and
+no failed or pending cases. Child wall times were 0.387877375 seconds for the
+compiler and 2.168438833 seconds for the corpus. Their user and system times
+were 1.557391 and 0.217491 seconds, and 2.567433 and 0.298652 seconds,
+respectively. Inclusive outer-owner timing was not separately measured.
+
+The complete before and after Source, tool, environment, head, tree and status
+snapshots match. All three run-input hashes match their held V3 copies. The
+only dependency change is the existing Vitest results cache. Raw commands,
+child PIDs, exit and timing receipts, logs, complete corpus JSON and snapshots
+remain in `/private/tmp/artroom-k9-context-owning-20261023-v1`. The result
+belongs to those run-input bytes; this later note records it without claiming
+another run. Initial failures and the separate SDK manifest failure remain
+recorded above. No full gate has run at this corrected candidate yet.

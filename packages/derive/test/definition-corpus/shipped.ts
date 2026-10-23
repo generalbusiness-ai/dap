@@ -34,6 +34,19 @@ const retainedGrowPins = [
   ["Site", "sha256:d2bc830e74caaabab32dbad17adae6812050fb4d36b67e97145d39c2a4cfe2ea"],
 ] as const;
 export const shippedDefinitions: readonly DefinitionCorpusRow[] = [
+  // These owning callers deliberately omit profiles/options. Keep their
+  // default validator inputs separate from the rule-profile rows below.
+  { name: "shipped/Grow Room default profiles", origins: [
+    "packages/scope/test/grow-owned-scopes.test.ts#maintained Room projection validation",
+    "packages/scope/test/grow-owned-scopes.test.ts#maintained Room command validation",
+    "packages/scope/test/support/maintained-applications-child.ts#prepareGrowCheck",
+    "examples/grow/prepare-check.ts#canonical maintained room",
+  ], declaration: () => structuredClone(room), bounds: PROPOSED_BOUNDS },
+  { name: "shipped/Counting commitments default profiles", origins: [
+    "packages/scope/test/archive-install.test.ts#installed TEST application declaration",
+    "packages/scope/test/support/application-fixture.ts#applicationResolverFixture default declaration",
+  ], declaration: () => structuredClone(countingCommitments), bounds: PROPOSED_BOUNDS,
+    expectedDigest: COUNTING_COMMITMENTS_DEFINITION },
   ...([ ["change", change, DIGESTS.change], ["issue", issue, DIGESTS.issue], ["changeDemo", changeDemo, DEMO_DIGESTS.change],
     ["issueDemo", issueDemo, DEMO_DIGESTS.issue], ["change3", change3, MANIFEST_DIGESTS.change], ["changeDemo3", changeDemo3, MANIFEST_DIGESTS.demo] ] as const)
     .map(([name, declaration, expectedDigest]) => ({ name: `lanes/native/${name}`,
