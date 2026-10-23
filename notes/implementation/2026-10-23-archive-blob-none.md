@@ -79,6 +79,27 @@ segment per pass. With no retained entry files, all trees total 8,382 bytes at
 files per pass, they total 8,448 bytes at 24 passes and 8,786 at 25. These are
 concrete reconstruction examples, not a universal pass-count threshold.
 
+Checker clarification `1532420d01aa60f28f3bfb87e782ca68a14b64fd` gives the
+layout growth: about 122 tree bytes per pass, plus 92 per retained file and
+46 per extra segment. Retained-file count matters as well as pass count.
+In the same real-Git reconstruction with a 4,096-entry pass, one pass with
+86 retained files has 8,344 tree bytes, while 90 has 8,712. Two passes with
+42 files each have 8,343 tree bytes; two with 44 each have 8,711. The latter
+member of each pair exceeds the unchanged 8,487-byte allowance. These are
+reconstructed layout sizes, not authenticated measurements of the hosted
+journals or a guarantee for every pass shape.
+
+The first Room A pass may already exceed this bound. Planner ruling
+`7f1c7d6cae26cddf118adda558af1d7ef3a723ee` reports confirmed positions of
+zero or one in the 13:23 and 15:21 tails, more than 13,031 Room A entries and
+a 4,096-entry maximum per pass. A small confirmed sequence does not establish
+a small retained-file or tree-byte count. The checker asks for an authenticated
+sum of all tree sizes in each current journal commit before or immediately
+after deployment. That measurement is not recorded here. If a journal is
+already over the tree-byte ceiling, the stopgap cannot advance it; smaller
+journals may still advance. Hosted size and the post-deploy pass count and
+rate remain planner-owned measurements, not observations from these tests.
+
 Companions are discarded, so later reads do not avoid this cost through the
 source cache. Once the original aggregate limit is exceeded, the read refuses
 with `inflated bytes` and has no fallback. The focused Scope fixture uses an
@@ -89,10 +110,12 @@ does not remove the separate aggregate tree-byte ceiling.
 This change is a bounded stopgap that addresses the reported host-filter
 refusal for young archives within the existing limits. It does not make parent
 read cost independent of the whole archive, and it cannot promise continued
-hosted progress as the archive grows. The planner is deciding whether to accept
-the stopgap and which tracked follow-up to pursue. Current hosted pass count
-and pass frequency are not established by this report. No budget increase,
-companion-cache change or alternative host protocol is implemented here.
+hosted progress as the archive grows. Planner ruling
+`7f1c7d6cae26cddf118adda558af1d7ef3a723ee` accepts this bounded stopgap and
+keeps the P2 liveness limit nonblocking. Follow-up request
+`fc2548ae1ab9c7c5e859d422611f8a34fd0ff13c` tracks parent reads whose per-pass
+cost does not grow with the archive. No budget increase, companion-cache
+change or alternative host protocol is implemented here.
 
 ## Reviewed Source and accepted Main
 
@@ -414,8 +437,32 @@ Copied programs and bindings remain permanently inert DATA. No successful final
 gate, hosted archive pass, native Mark advance, physical teardown drain or
 general archive-size guarantee is claimed.
 
-The planner's decision on the stopgap and exception remains pending.
-The measured P2 liveness limit remains. This report records no planner approval
-of the bounded stopgap and no selected follow-up that removes the cumulative
-tree cost. Fixture adoption and evidence release do not resolve that separate
-policy and liveness question.
+## Planner ruling and remaining work
+
+Checker report `4ea57f05d54f507bc209c776d5f55daf6876b523` approves exact
+head `b76a318f30691b5aea96a72a525675c191fe4feb`, subject to the planner's
+ruling. Ruling `7f1c7d6cae26cddf118adda558af1d7ef3a723ee` accepts the
+bounded stopgap and the finite continuation instead of a second whole gate.
+This exception is specific to the reviewed tree: relative to the gated tree,
+only the scripted archive peer, this implementation note and the sprint report
+equal to Main de522 changed. The whole installed file, Scope test compiler
+and previously unreached Node 37 and Counting 55 are covered as recorded above.
+A subsequent production change requires a new gate. The original failed gate
+and its Main-ref qualification remain unchanged.
+
+The ruling orders archive landing before rename integration and leaves
+deployment to the planner. The planner will monitor archive tails for the first
+hour after deployment and report pass count, rate and remaining headroom.
+The later checker clarification warns that the existing Room A archive may
+already have no headroom; the authenticated tree-size measurement is still
+pending in this report. Neither policy acceptance nor the local continuation
+establishes a hosted pass or Mark advance.
+
+Follow-up request `fc2548ae1ab9c7c5e859d422611f8a34fd0ff13c` requires fixed
+per-pass parent-read cost past the stopgap bound, a host-shaped 200-pass witness
+with two retained files per pass, and a control that fails on the stopgap code,
+without widening response guards or existing byte limits. The planner prefers
+bounded native parent-path state if it fits the v2 layout bounds. That design
+choice and implementation belong to the follow-up; they are not delivered by
+this stopgap. The measured P2 liveness limit and all hosted qualifications
+remain in force.
