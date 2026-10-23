@@ -11,7 +11,8 @@ const root = new URL("../", import.meta.url);
 test("SDK module references preserve genuine imports and rewrite declarations without treating capability data as modules", () => {
   // Workspace names are already the public names; no publication alias is needed.
   for (const dir of ["contract", "derive", "lanes", "page", "platform", "cli", "bytes", "client", "replay", "scope", "git", "checkers"]) {
-    const manifest = JSON.parse(readFileSync(new URL(`packages/${dir}/package.json`, root), "utf8"));
+    const workspace = dir === "lanes" || dir === "page" ? `apps/room/${dir}` : `packages/${dir}`;
+    const manifest = JSON.parse(readFileSync(new URL(`${workspace}/package.json`, root), "utf8"));
     assert.equal(manifest.name, `@generalbusiness/dap-${dir}`);
   }
   assert.deepEqual(PLAN.packages.map(spec => nameOf(spec.dir)), ["@generalbusiness/dap-contract", "@generalbusiness/dap-bytes", "@generalbusiness/dap-client", "@generalbusiness/dap-derive", "@generalbusiness/dap-platform", "@generalbusiness/dap-replay"]);

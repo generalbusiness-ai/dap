@@ -93,7 +93,7 @@ const PUBLICATION_REPLACEMENTS = [
   {
     "path": "scripts/public-release-modules.test.mjs",
     "before": "  assert.deepEqual([\"contract\", \"derive\", \"lanes\", \"page\", \"platform\", \"cli\", \"bytes\", \"client\", \"replay\", \"scope\", \"git\", \"checkers\"].map(sourceNameOf), [\"@generalbusiness/dap-contract\", \"@generalbusiness/dap-derive\", \"@generalbusiness/dap-lanes\", \"@generalbusiness/dap-page\", \"@generalbusiness/dap-platform\", \"@generalbusiness/dap-cli\", \"@generalbusiness/artroom-bytes\", \"@generalbusiness/artroom-client\", \"@generalbusiness/artroom-replay\", \"@generalbusiness/artroom-scope\", \"@generalbusiness/artroom-git\", \"@generalbusiness/artroom-checkers\"]);\n",
-    "after": "  // Workspace names are already the public names; no publication alias is needed.\n  for (const dir of [\"contract\", \"derive\", \"lanes\", \"page\", \"platform\", \"cli\", \"bytes\", \"client\", \"replay\", \"scope\", \"git\", \"checkers\"]) {\n    const manifest = JSON.parse(readFileSync(new URL(`packages/${dir}/package.json`, root), \"utf8\"));\n    assert.equal(manifest.name, `@generalbusiness/dap-${dir}`);\n  }\n"
+    "after": "  // Workspace names are already the public names; no publication alias is needed.\n  for (const dir of [\"contract\", \"derive\", \"lanes\", \"page\", \"platform\", \"cli\", \"bytes\", \"client\", \"replay\", \"scope\", \"git\", \"checkers\"]) {\n    const workspace = dir === \"lanes\" || dir === \"page\" ? `apps/room/${dir}` : `packages/${dir}`;\n    const manifest = JSON.parse(readFileSync(new URL(`${workspace}/package.json`, root), \"utf8\"));\n    assert.equal(manifest.name, `@generalbusiness/dap-${dir}`);\n  }\n"
   },
   {
     "path": "scripts/public-release-modules.test.mjs",
