@@ -654,7 +654,7 @@ function startScreen(): HTMLElement {
   restore();
   const moved = location.origin === "https://artroom-scope.inguz.workers.dev" ? h("section", { class: "entry-moved" },
     h("p", {}, "Create new rooms on dap-demo. Existing rooms and saved creation requests stay on this service."),
-    h("a", { href: "https://dap-demo.inguz.workers.dev/#/start" }, "Start a new room on dap-demo")) : null;
+    h("a", { href: "https://dap-demo.inguz.workers.dev/page/#/start" }, "Start a new room on dap-demo")) : null;
   if (moved && !original && !blocked) return h("main", { class: "screen entry-screen entry-start" },
     h("a", { class: "entry-back", href: "#/join" }, "‹", "Back"), heading, moved);
   if (original) tell("Your original Start and creator key are retained. Check status only reads; Continue creation explicitly resumes its original requests.");

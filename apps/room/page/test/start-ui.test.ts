@@ -132,7 +132,7 @@ test("Start is explicit; Back fences late discovery, reload only offers Check an
     location.origin = "https://artroom-scope.inguz.workers.dev"; location.hash = "#/start"; redraw(); await flush();
     expect(root.textContent).toContain("Create new rooms on dap-demo.");
     const moved = find("a", "Start a new room on dap-demo");
-    expect(moved.attrs["href"]).toBe("https://dap-demo.inguz.workers.dev/#/start");
+    expect(moved.attrs["href"]).toBe("https://dap-demo.inguz.workers.dev/page/#/start");
     expect(root.all().some(element => element.tag === "form")).toBe(false);
     expect(start).not.toHaveBeenCalled(); expect(offerRead).not.toHaveBeenCalled(); expect(save).not.toHaveBeenCalled();
     // A retained old request keeps its original controls on the old service.
@@ -141,7 +141,7 @@ test("Start is explicit; Back fences late discovery, reload only offers Check an
     redraw(); await flush();
     expect(find("button", "Continue creation")).toBeDefined(); expect(find("button", "Check status").hasAttribute("hidden")).toBe(false);
     expect(find("input").hasAttribute("disabled")).toBe(true);
-    expect(find("a", "Start a new room on dap-demo").attrs["href"]).toBe("https://dap-demo.inguz.workers.dev/#/start");
+    expect(find("a", "Start a new room on dap-demo").attrs["href"]).toBe("https://dap-demo.inguz.workers.dev/page/#/start");
     expect(start).not.toHaveBeenCalled(); expect(offerRead).not.toHaveBeenCalled(); expect(save).not.toHaveBeenCalled();
     original = null; location.origin = freshOrigin;
     location.hash = choices[0]!.attrs["href"]!; redraw(); await flush();
