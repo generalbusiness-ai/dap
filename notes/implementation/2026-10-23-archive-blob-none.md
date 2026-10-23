@@ -7,7 +7,14 @@ The archive reader now requests the host-supported `blob:none` filter and
 returns only the exact wanted object from a bounded response pack. The change
 also reserves logical decoder work from the pack's actual object count before
 allocating its object records. Existing wire, byte, count and deadline limits
-remain in force. Hosted acceptance and the next archive Mark are not claimed.
+remain in force. The ordinary gate failed and its evidence is now independently
+audited and released. At the corrected fixture checkpoint
+`5f9048c4724337b14c3353d5794cf904f34e2832`, the installed six-case file and
+the previously unreached Node 37 and Counting 55 checks now pass in a separate
+continuation. An earlier continuation stopped before any test body because of
+an incorrect pool selector. The original whole-gate result remains failed.
+The passing continuation is now independently audited and its frozen evidence
+is released. Hosted acceptance and the next archive Mark are not claimed.
 
 ## Host finding and bounded response handling
 
@@ -55,6 +62,37 @@ count. It does not guarantee that a larger archive fits. `deepen 1` limits
 commit ancestry, not the number of descendant trees in a cumulative archive.
 Wire, aggregate byte, actual-count and remaining metadata limits can still
 refuse a valid but oversized response before decoding allocations.
+
+## Measured liveness limit for growing archives
+
+Checker assessment `d2a8427aff150e0df945be55c6481ff984df01e7` found no
+security or correctness defect and identified a nonblocking P2 liveness limit.
+Its measurement reconstructs the journal-v2 layout with real Git. It is not a
+hosted read, a measurement of the current Grow archive, or a deployed success.
+
+The root-tree parent read has a wanted-object maximum of 295 bytes plus an
+8,192-byte allowance, giving an 8,487-byte cap on aggregate inflated trees.
+A `blob:none` response includes descendant trees, and the v2 layout adds trees
+as passes accumulate. The checker reconstruction uses one pass.json and one
+segment per pass. With no retained entry files, all trees total 8,382 bytes at
+65 passes and 8,504 at 66, crossing the 8,487-byte limit. With two retained entry
+files per pass, they total 8,448 bytes at 24 passes and 8,786 at 25. These are
+concrete reconstruction examples, not a universal pass-count threshold.
+
+Companions are discarded, so later reads do not avoid this cost through the
+source cache. Once the original aggregate limit is exceeded, the read refuses
+with `inflated bytes` and has no fallback. The focused Scope fixture uses an
+empty tree; the passing focused checks do not demonstrate a multi-pass archive
+at this boundary. Actual-count metadata admission remains important, but it
+does not remove the separate aggregate tree-byte ceiling.
+
+This change is a bounded stopgap that addresses the reported host-filter
+refusal for young archives within the existing limits. It does not make parent
+read cost independent of the whole archive, and it cannot promise continued
+hosted progress as the archive grows. The planner is deciding whether to accept
+the stopgap and which tracked follow-up to pursue. Current hosted pass count
+and pass frequency are not established by this report. No budget increase,
+companion-cache change or alternative host protocol is implemented here.
 
 ## Reviewed Source and accepted Main
 
@@ -135,6 +173,25 @@ is 7,579 bytes, SHA-256
 `a12f3203ac60c1910bfc189853e61cadb28ef04cef6d0670d025cec67880fa69`.
 No command was retried or healthy whole suite repeated to produce this note.
 
+The owning evidence is released separately at
+`/private/tmp/artroom-archive-blob-none-owning-review-data-20261023-v1`.
+Its 55,702-byte manifest has SHA-256
+`baea2d2a6790f8fd9b803c6a6cfdabd8d53e0c96c47433cbe4feb9ab8559e07f`.
+The packet retains 69 copied inputs totaling 110,148,632 payload bytes and
+70 files including its manifest. Release record
+`e1a22cdd4797ef8271f84133e0d01c623dbaff90` records that boundary.
+Root observed freeze `c71325` close naturally 0 under allocation
+`8cdb8258769dee0a9b31a30ca0f017f4f6a89333`.
+
+The independent frozen-copy audit is
+`/private/tmp/artroom-archive-blob-none-owning-frozen-independent-audit-20261023-v1.json`,
+17,967 bytes, SHA-256
+`22958f22a536f14256d0e6f8b67787817af4f65694bfd58c8b475861eaeea4a1`,
+recorded under durable prefix `218b029a`. It establishes copy and namespace
+preservation, separately from the closed outcome audit above. Copied Source,
+helpers and bindings are permanently inert DATA; the packet grants no program
+execution, imports, transitive access, hosted acceptance or final gate result.
+
 Existing case registrations and deadlines remain unchanged. The real
 local Git witness checks request bytes and commit/tree/blob responses, and
 proves a companion is not cached by reading it later. Other existing cases
@@ -144,9 +201,221 @@ and refusal when only the base metadata reservation fits. Host fixtures remain
 stand-ins where declared. The HTTP 400 text is an unread-body privacy specimen,
 not permission to log provider response contents.
 
-The final ordinary gate remains pending and must bind the final report
-checkpoint after review of the owning evidence. Its expected ledger is carried by immutable Source correspondence
-from accepted Main: 3,505 identities across 489 files, 3,502 expected passes and
-three existing skips, with Node blocks of 4, 7, 37 and 55. That is an expectation,
-not a result. No gate, deployment, hosted archive pass, native Mark advance,
-physical teardown drain or general archive-size guarantee is claimed.
+## Failed ordinary gate and fixture diagnosis
+
+The ordinary gate ran at clean `4485f1961ff85cfc3993e88e706d6b65d92cbac1`,
+tree `f66196dd4dae227705583a1f79152d033359450a`. Root observed original
+session 22951 close naturally 1, tool `c7963e`, allocation
+`b8a17fe02c8cb8f1ce1e9826cf21c24d4ee0d350`. Child 64288 exited 1 without
+a signal. Root closure is `dc6a15b0fdca4da5b2639820cdc6687b0a36c29f`.
+
+All seven prerequisite stages exited 0, including the early Node blocks of
+four and seven cases. The test stage failed. Its complete framework terminal
+ledger records 3,500 passed, two failed and three skipped across 3,505 identities
+and 489 files, with zero unhandled errors. Downstream Node 37 and Counting 55
+were not reached. The earlier focused 26-case pass and controls remain their
+original observations; they do not turn this gate into a pass.
+
+Both failures are in `packages/scope/test/archive-installed.test.ts`:
+
+- “installed Grow production scopes export genesis zero after a late native
+  Membership8 directory binding” expected two initial entries but received
+  zero at line 861, column 135. Its retained observation reports retry with
+  reason `unavailable`.
+- “installed Grow production public archive command verifies its native
+  producer clone” failed at line 1222, column 26 because “the immediately
+  preceding native producer did not publish a command session”.
+
+The second failure records the absent producer handoff; it is not an observed
+independent clone or command execution failure. Source investigation has found
+that the scripted peer still requires exact `tree:0` request bytes while
+production now sends `blob:none`. That assertion is caught and presented as
+`http-request`, so it is a Source-established fixture incompatibility, not a
+raw captured assertion from the gate. The original retry alone does not prove
+this as its inner cause. This distinction remains part of the failed-run
+record. The fixture correction described below is adopted Source. Its separate
+continuation now passes the installed file and the unreached tails, as recorded
+below. No validator weakening or successful whole-gate rerun is claimed.
+
+The outer postguard also failed: accepted Main and origin refs moved from
+`93f761c4fe6d0e79d9234e789a222977e45236a3` to
+`de52252f18a7afdc97486bf00d743981814d8980` during the run. Candidate head,
+tree and clean status remained those recorded above; merge base remained
+`93f761c4fe6d0e79d9234e789a222977e45236a3`. The owner retained
+`postguard RuntimeError: fixed input changed: mainRefs`. This is an additional
+observer-input failure and is not omitted because the test stage already
+failed. No complete fixed-guard pass is asserted for this gate.
+
+The child measured 1,190.499754 seconds wall, 1,228.754019 seconds user CPU
+and 152.583447 seconds system CPU. The owner measured 1,192.716567 seconds wall
+and 1,383.019281 seconds inclusive CPU. Nested costs overlap those totals.
+The closed result
+`/private/tmp/artroom-archive-blob-none-final-gate-evidence-20261023-v1/result.json`
+is 1,507,188 bytes, SHA-256
+`ea00030171d55013da88c97fc674ac0779bdcc0fb6bbd1285c98ad0e8feb1164`.
+The independent complete outcome audit is now available at
+`/private/tmp/artroom-archive-blob-none-final-gate-independent-audit-20261023-v1.json`,
+23,558 bytes, SHA-256
+`b1d72580b8664b91259fe9a82f4044c747a71f95aef72dbe6078c908321d9fa0`.
+It reconciles the full terminal ledger, raw stages, bindings, guard changes and
+costs. The only fixed-input changes were the Main refs described above; the
+separately permitted cache changed while its physical identity remained stable.
+The audit retains 18 missing ready callbacks and 21 missing result callbacks.
+The complete terminal ledger supplies the outcome counts despite those gaps.
+The copied section-citation evidence retains its original recorded mode
+qualification. No successful final gate or downstream tail is claimed.
+
+## Released failed-gate evidence
+
+The failed gate is released separately at
+`/private/tmp/artroom-archive-blob-none-failed-gate-review-data-20261023-v1`.
+Its 36,180-byte manifest has SHA-256
+`362ca54cd2f64b84f07754fca2434a4b4d2de52eabae3fa39d090e6297f68df7`.
+The packet contains 44 copies totaling 36,134,298 payload bytes, and 45 files
+including its manifest. The 41 descriptor inputs comprise the closed raw
+leaves, used Source and manifests, two bindings, the outcome audit and the gate
+Source review. The recipe, executed freezer Source and root-authored closure
+add three copies. These are evidence-file counts, not case counts. The earlier
+owning packet remains a separate 69-copy packet; neither packet adds test runs.
+
+Root observed the freeze close naturally 0, tool `39a8b0`, under allocation
+`94b9ff356f784f43b2a41e8b2848e95614b97b31`. The independent copy audit is
+`/private/tmp/artroom-archive-blob-none-failed-gate-frozen-independent-audit-20261023-v1.json`,
+24,542 bytes, SHA-256
+`8111046103a010937d9636a7ba39e05510e6216d01950d13c9fd100b996dbbfb`.
+It verifies exact copied bytes, preserved original physical identities, unique
+single-link copies with mode 0444, the exact namespace, and the first checked
+root-closure version. Durable audit
+`8212e171a5388985325bc8095c71c10aa0256a51` and root release
+`7b4c5dd482e4f3e08f1c4f06a021b5a047b91e98` record that boundary.
+Copied programs remain permanently inert DATA. A successful freeze preserves
+the failed gate; it does not replace its outcome.
+
+## Adopted fixture correction and separate continuation
+
+The adopted checkpoint is `5f9048c4724337b14c3353d5794cf904f34e2832`,
+tree `c7233239794cf15b8663fa573544606a812a1ba3`. Its ordered parents are the
+failed-gate head `4485f1961ff85cfc3993e88e706d6b65d92cbac1` and Main
+`de52252f18a7afdc97486bf00d743981814d8980`. Relative to the failed-gate
+head, it adds the sprint report and changes only
+`packages/scope/test/support/archive-artifacts.ts` among test or product files.
+The production reader, limits and original test assertions are unchanged.
+
+The scripted v2 peer now requires the exact `filter blob:none` request. Its
+response includes the wanted object and every descendant tree held by the
+fixture, with no parent commits or unrequested blobs. A commit response adds
+the exact wanted shallow boundary. The peer no longer models `blob:none` with
+an unconditional one-object response. Its v0 path retains the original
+one-object pack behavior. This is a more faithful local fixture, not a hosted
+server observation or an enlargement of production limits.
+
+This support-file change adds no test registration. The failed gate still
+records its original 3,505 identities and 489 files. The earlier focused
+26-case pass belongs to its earlier checkpoint; it does not validate this
+new fixture. The continuation below supplies separate observations for the
+installed file and the previously unreached tails. It does not revise the
+original 3,505-case gate ledger or claim a successful whole-gate rerun.
+
+## Continuation V2 stopped before test bodies
+
+Root observed V2 session 47440 close naturally 1, tool `3daf15`, under root
+closure `f39b2ec04221f36754d4daa066f05a0c70f88c6b`. Compatibility passed as
+an exact no-op, and the Scope test compiler passed. The focused runner then
+expected pool `workers`, but the maintained project selected `cloudflare-pool`.
+Selection refused before global setup or any test body. All six installed
+cases were unrun, and Node 37 and Counting 55 were unreached. The raw runner
+reported one unhandled error. This was a runner-selection failure, not a test
+assertion failure or a product result.
+
+The independent V2 audit is
+`/private/tmp/artroom-archive-blob-none-followup-v2-prebody-independent-audit-20261023-v1.json`,
+15,762 bytes, SHA-256
+`24f30bf241cd9ce9c4a432ab656a41126128b1215f5e13909d83d201cd518eac`.
+V3 carries the successful Scope test compiler result without repeating it.
+V2's original failure remains retained rather than replaced by V3.
+
+## Continuation V3 passed the required remaining checks
+
+Root observed V3 session 35490 close naturally 0, tool `8d89e2`, under
+allocation `65dcd028c6c8e3d12418ef5a7b3c663eede3ceb9`. Root closure is
+`8fff8bea453867b5579080b247a5fbca09b72e03`. The tested checkpoint remains
+`5f9048c4724337b14c3353d5794cf904f34e2832`, tree
+`c7233239794cf15b8663fa573544606a812a1ba3`. Production bytes are unchanged
+from the failed-gate checkpoint. The test support fixture is the correction
+above, so the passing continuation is attributed to this later tree.
+
+The V3 result records four children, each exiting 0:
+
+1. Maintained compatibility passed as a no-op.
+2. The whole installed archive file passed all six cases, including the Grow
+   production producer and its public command. Each case records zero errors,
+   retries and repeats.
+3. The previously unreached Node block passed all 37 cases.
+4. Counting passed all 55 cases.
+
+The owner records no errors or signals. It measured 55.32230866700411 seconds
+wall and 69.182834 seconds inclusive CPU. Child intervals are nested within
+the owner interval and must not be added to those totals. Counting used external
+OS-temporary bundle outputs; the result establishes no physical cleanup drain.
+No healthy gate, compiler, parser or unrelated test cohort was repeated.
+
+The closed result is
+`/private/tmp/artroom-archive-blob-none-followup-owning-evidence-20261023-v3/result.json`,
+17,850 bytes, SHA-256
+`1b302469ad506d336b09a66471d9a61c772fe0254f9eff4cb9d644e29ba31174`.
+These observations retain root's original natural-closure attribution. The
+completed independent V3 outcome audit is
+`/private/tmp/artroom-archive-blob-none-followup-v3-independent-outcome-audit-20261023-v1.json`,
+22,039 bytes, SHA-256
+`a96f65a0a7a447e56c17406efd9a4f8e48a4db3eb899ec8fb34e9e3c09f1612e`,
+recorded under durable prefix `aa21c0e6`. It reconciles all six exact installed
+case identities and callbacks, with no unexpected case, unhandled error, retry
+or repeat. The Node 37 and Counting 55 names and counts match exactly.
+
+The audit confirms the carried Scope test compiler used the same head, tree,
+Source, dependencies and lock. All fixed guards match except the declared
+results-cache transition: one installed-file cache cell changed, together with
+cache file counters and timestamps and the existing empty `.vite-temp`
+directory's timestamps. File identities, modes and link counts remain exact.
+The Node tails and final snapshot equal the post-focused snapshot. This is
+separate continuation evidence, not a revised outcome for the failed gate.
+
+## Released continuation evidence
+
+The V2 failure and V3 successful continuation are released together at
+`/private/tmp/artroom-archive-blob-none-followup-review-data-20261023-v1`.
+Its 60,336-byte manifest has SHA-256
+`42e3e4f534edb152e46a3d27a714a77ec11d79e94177a7edc0842c3b2d3700c8`.
+The packet contains 94 descriptor inputs and three extra copies of the recipe,
+used freezer and root-authored closure. Its 97 copies and manifest make 98
+files totaling 54,757,598 bytes, including the manifest. These are evidence-file
+counts. They add no test execution and do not replace the separate failed-gate
+packet.
+
+Root observed freeze tool `b696a2` close naturally 0 under allocation
+`4457f22545d635b3285acc7ce502e0c8ade1707f`. The independent copy audit is
+`/private/tmp/artroom-archive-blob-none-followup-copy-independent-audit-20261023-v1.json`,
+6,087 bytes, SHA-256
+`8765664b757d5e5da8a9924481547c2dd5ae2bb170d9a9e240dc57ba989c3931`.
+Durable audit `45bc5d9024109fcb28edc4b02fa25f417622a903` and root release
+`a4e770377aef81fd79027fc856351e28b4db4133` record that copy boundary.
+
+All 94 recorded original physical identities and byte hashes match. Copies
+are unique single-link files with mode 0444, and the file and directory
+namespace is exact. The three extras have historical byte and hash bindings,
+with current stable reads. Their historical original physical identities were
+not recorded and are not inferred. The root-closure copy matches its first
+pinned version. V2's original null-checkpoint manifest and separately filled
+checkpoint remain distinct; V3 retains its already filled checkpoint manifest.
+No historical manifest is rewritten. Counting's external temporary artifacts
+are excluded and were not followed.
+
+Copied programs and bindings remain permanently inert DATA. No successful final
+gate, hosted archive pass, native Mark advance, physical teardown drain or
+general archive-size guarantee is claimed.
+
+The planner's decision on the stopgap and exception remains pending.
+The measured P2 liveness limit remains. This report records no planner approval
+of the bounded stopgap and no selected follow-up that removes the cumulative
+tree cost. Fixture adoption and evidence release do not resolve that separate
+policy and liveness question.
