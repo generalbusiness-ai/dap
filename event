@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:689577e3d2ff394b5062349e410af3125a53d9eb","text":"Merge retired a covered predecessor; the successor is at examples/lending/tsconfig.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:68af9dc2dae84e54b3fd7056426fb95666d69620","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/native-birth.ts."}
