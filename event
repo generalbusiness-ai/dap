@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8d271c8ba0b212d40e545e8ffd36d07fc052af55","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-22-scope-index-admission.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8e230e7c80184cdda1d6a8ad6a413163634e42de","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/application-dev.ts."}
