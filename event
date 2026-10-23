@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at docs/kernel.md","body":{"commit":"4e4515a677019683a888e6a5745deb55d5fbb815","path":"docs/kernel.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9a65cab84dd28103bbbcc5cd14fdbb2976784c16","text":"Merge retired a covered predecessor; the successor is at docs/kernel.md."}
