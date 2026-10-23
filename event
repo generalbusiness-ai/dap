@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/public-release.mjs","body":{"commit":"84213a7b8c08089fe5afb60ed163d7a484e7ee84","path":"scripts/public-release.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:00ae4803baeb109f159f53e59eea4fc50805db60","text":"Merge retired a covered predecessor; the successor is at packages/replay/test/staging.ts."}
