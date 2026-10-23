@@ -4,8 +4,9 @@ Status: draft 2, for request `2ee805c5`. Draft 2 answers review
 `3cd820f3`: three classes only, with tools as a kind of platform service,
 and the host statement limited to the code that has no host (sections 1, 3
 and 8). It describes main `c40492ee`, except where it says that K7 and K8
-are closed at main `b52ca7e3`. Section 7.2 records the K9 implementation
-under review; its validation evidence is not complete.
+are closed at main `b52ca7e3`. Section 7.2 records the implemented K9
+binding and its passed owning checks and control. The exact-head gate and
+review remain separate requirements.
 
 Applications on dap run for a long time, and they change more often than
 they are replaced. That works only if a small part of the system changes
@@ -145,8 +146,8 @@ K4 has no request yet. K7 and K8 are closed.
   checked each pinned definition with the current validator. A stricter
   validator could make an old history unsupported. Request `2e714fd7`
   binds the compatible check set to `artroom-definition-1` (section 7.2).
-  Corpus coverage, the paired stricter-check control, owning checks and
-  review are still required before K9 closes.
+  The named corpus, owning checks and paired stricter-check control passed.
+  The exact-head gate and review are still required before K9 closes.
 - **K10. The platform Worker's entry lives in an application.**
   `apps/room/worker.ts` re-exports the runtime's Worker, and its
   configuration is the platform's. Passing takes the entry and its
@@ -166,7 +167,8 @@ K4 has no request yet. K7 and K8 are closed.
 3. **The definition schema is versioned.** The format is
    `artroom-definition-1` (`contract/src/definition.ts:32`). Its optional
    parts carry their own versions: `level`, `capacity`, `profile` and each
-   capability. K9 is the gap.
+   capability. K9 binds the compatible validation checks to that format
+   (section 7.2).
 4. **A judgment is about one head.** A scope judges each act against its
    own whole head.
 5. **Delivery is the only channel between scopes.** No guard reads another
@@ -255,8 +257,8 @@ The public validator keeps its bounded preamble and dispatches by the
 declaration's `format`. `artroom-definition-1` selects the compatible checks
 in `derive/src/validate/format-1.ts`, including the grammar and shared pure
 semantic helpers that those checks call. Moving a check to another helper
-does not remove it from this compatibility rule. Unknown string formats
-are refused as `unsupported-definition`, with the actual format in the
+does not remove it from this compatibility rule. Unknown nonempty string
+formats are refused as `unsupported-definition`, with the actual format in the
 reason. The public API, caller-supplied bounds, profiles and native owner
 options retain their existing roles.
 
@@ -276,9 +278,18 @@ validation contexts and existing pin witnesses. Valid declarations used
 in refused actions or package graphs remain included. Raw constructors
 defer validation until each named test runs, so the paired stricter-check
 control can fail at a known corpus row rather than during module import.
-The corpus and control are evidence for the registered declarations, not
-proof about every possible format-1 value. Their execution, the owning
-checks, gate and exact-head review remain required for this draft.
+The corrected corpus passed 1,217 named declaration rows and its registration
+check. The other 66 owning Node files passed 618 checks, including the format
+and replay boundaries; the full owning typecheck passed. A single paired
+control added a six-character name minimum. The raw `derive/shared/small`
+row passed without that change and failed by its named corpus assertion
+with the change. The exact validator source was restored.
+
+These checks support the registered declarations and contexts, not every
+possible format-1 value or every history-dependent bound. The
+[implementation note](../notes/implementation/2026-10-23-definition-format-validation.md)
+records the original failures, exclusions and evidence limits. The ordinary
+gate at the exact candidate and its review remain separate requirements.
 
 ## 8. Second host
 
