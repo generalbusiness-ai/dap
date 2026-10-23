@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5c29faff2d804ed136a5be2b1d9f6df83e53739a","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/definition-corpus/holds-variants.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5c3460676c72fdfe31e20fba1c2660b016c2e870","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-local-references.ts."}
