@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fef1b58c643dec88d96fb6dad9f130c422f897c6","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/definition-corpus/general-creation-mapping.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ffb48f193bf3cc4091f3259b6d4f76d4f940352c","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/support/archive-native-authority.ts."}
