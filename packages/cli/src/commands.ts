@@ -31,10 +31,10 @@ import { applicationList } from "./application-list.ts";
  */
 
 import { PROPOSED_BOUNDS, type Answer, type DeclaredDefinition, type Digest, type EffectForm, type Entry, type FactRef, type FieldValue, type Created, type Item, type KeyId, type PlatformDefinition, type ScopeId, type ScopeRef, type Seed, type SignedIntent, type Summary } from "@generalbusiness/dap-contract";
-import { READ_REFUSALS, readItemQuery, b64url, canonicalize, definitionDigest, digestBytes, factRefOf, intentDigest, isReceipt, isSignedIntentShape, isDigest, isFactRef, isIncarnation, isScopeId, keyIdOfSecret, parseStrict, scopeIdOf, seedDigest, textDigest, timeMs, timeOf, unb64url, utf8, verifySignedIntent } from "@generalbusiness/artroom-bytes";
+import { READ_REFUSALS, readItemQuery, b64url, canonicalize, definitionDigest, digestBytes, factRefOf, intentDigest, isReceipt, isSignedIntentShape, isDigest, isFactRef, isIncarnation, isScopeId, parseStrict, scopeIdOf, seedDigest, textDigest, timeMs, timeOf, unb64url, utf8, verifySignedIntent } from "@generalbusiness/artroom-bytes";
 import {
-  ScopeHandle, ShapeError, TransportError, activeDirectory, partitionIndexes, wellFormedInvitation, isCreationOffer, readCredential, declaredHandle, create, httpTransport, requestSession, secretSigner, sessionRequest, shapeDeclaredAct, signedIntent, signedLogReader, signedReads,
-  type Fetch, type Session, type CreationOffer, type ReadSigning, type Signing, type Transport,
+  ScopeHandle, ShapeError, TransportError, activeDirectory, partitionIndexes, wellFormedInvitation, isCreationOffer, readCredential, declaredHandle, create, httpTransport, requestSession, signerSessionRequest, shapeDeclaredAct, signedIntent, signedLogReader, signedReads,
+  type Fetch, type Session, type CreationOffer, type ReadSigning, type Signer, type Signing, type Transport,
 } from "@generalbusiness/artroom-client";
 import { CAPABILITY_CODE as REPLAY_CAPABILITY_CODE } from "@generalbusiness/dap-derive";
 import { APPLICATION_COHORT, FILE_PUBLICATION_COHORT, COUNTING_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, DIRECTORY_OF, SIBLINGS_OF, READ_TOKEN_HOURS, NEWEST, ROLE_LISTS, platform, type Role, DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
@@ -49,6 +49,7 @@ import { readTokenEntry, readTokenOpening, readTokenOutcome, readTokenReceipt } 
 import { observeCleanup } from "./verify-cleanup.ts";
 import { statusReport } from "./status-report.ts";
 import { archiveRemote, archiveValue } from "./archive-remote.ts";
+import { storedSigner, newStoredSigner } from "./store-signer.ts";
 
 export interface Context {
   /** An explicit runtime port with persistent request custody. The browser
@@ -133,17 +134,8 @@ async function configOf(ctx: Context): Promise<Config> {
   return config ?? stopCommand(usage("No room is set up here. Run: dap install <base-url>, or dap join <link>."));
 }
 
-/** The named key, made and kept when it does not exist yet. */
-async function keyOf(ctx: Context, name: string): Promise<Uint8Array> {
-  const kept = await ctx.store.secret(name);
-  if (kept) return kept;
-  const secret = fresh(32);
-  await ctx.store.keep(name, secret);
-  return secret;
-}
-
-async function signerOf(ctx: Context, config: Config): Promise<Uint8Array> {
-  return (await ctx.store.secret(config.key)) ?? stopCommand(failed(`The key ${config.key} is missing from the config directory; nothing was signed.`));
+async function signerOf(ctx: Context, config: Config): Promise<Signer> {
+  return (await storedSigner(ctx.store, config.key)) ?? stopCommand(failed(`The key ${config.key} is missing from the config directory; nothing was signed.`));
 }
 
 const signing = (ctx: Context): Signing => (ctx.now ? { now: ctx.now() } : {});
@@ -153,8 +145,20 @@ const transportOf = (ctx: Context, service: string): Transport => httpTransport(
 /** A known session needs no read signer; still require the configured key. */
 async function readTransportOf(ctx: Context, config: Config, reader?: string | null): Promise<Transport> {
   const transport = transportOf(ctx, config.service);
-  const secret = await signerOf(ctx, config);
-  return typeof reader === "string" ? transport : signedReads(transport, secretSigner(secret), readSigning(ctx));
+  if (typeof reader === "string") {
+    // The session request already used the configured signing identity. Check
+    // current custody without deriving a filesystem signer that is not used.
+    // Capability stores own their namespace and must never fall back to seeds.
+    if (ctx.store.signer) {
+      if (await ctx.store.signer(config.key) == null) stopCommand(failed(`The key ${config.key} is missing from the config directory; nothing was signed.`));
+    } else {
+      const held = await ctx.store.secret(config.key);
+      if (held === null) stopCommand(failed(`The key ${config.key} is missing from the config directory; nothing was signed.`));
+      if (!(held instanceof Uint8Array) || held.length !== 32) throw new Error(`The key ${config.key} holds no 32-byte key.`);
+    }
+    return transport;
+  }
+  return signedReads(transport, await signerOf(ctx, config), readSigning(ctx));
 }
 
 /**
@@ -167,10 +171,10 @@ async function readTransportOf(ctx: Context, config: Config, reader?: string | n
  */
 async function sessionOf(ctx: Context, config: Config): Promise<Session | null> {
   const membership = config.repository?.membership;
-  const secret = await ctx.store.secret(config.key);
-  if (!membership || !secret) return null;
+  const signer = await storedSigner(ctx.store, config.key);
+  if (!membership || !signer) return null;
   const now = ctx.now?.() ?? Date.now();
-  const asked = sessionRequest(membership, secret, timeOf(Math.floor(now / 1000) * 1000 + 60_000), b64url(fresh(16)));
+  const asked = await signerSessionRequest(membership, signer, timeOf(Math.floor(now / 1000) * 1000 + 60_000), b64url(fresh(16)));
   const answer = await requestSession(config.service, membership.scope, asked, ctx.fetch ? { fetch: ctx.fetch } : {});
   return answer.ok ? answer.session : null;
 }
@@ -186,6 +190,36 @@ async function readerOf(ctx: Context, config: Config): Promise<string | null> {
 async function handleOf(ctx: Context, config: Config, scope: ScopeId, reader?: string | null): Promise<ScopeHandle> {
   const transport = await readTransportOf(ctx, config, reader);
   return new ScopeHandle(transport, scope, reader === undefined ? await readerOf(ctx, config) : reader);
+}
+
+/** Node operator adapter. Constructing it reads local configuration only;
+ * authentication starts lazily, after a manifest's local validation. */
+export async function scopeIndexAccess(ctx: Context): Promise<{ service: string; root: ScopeRef; reads: import("./scope-index-manifest.ts").IndexReads }> {
+  const config = await configOf(ctx);
+  const root = config.repository?.directory;
+  if (!root) throw Error("No configured room Directory for scope inventory");
+  let transport: Promise<Transport> | undefined;
+  const connection = () => transport ??= (async () => {
+    const reader = await readerOf(ctx, config);
+    const base = await readTransportOf(ctx, config, reader);
+    // Preserve the existing session-first authorization. A session refusal
+    // may be read again by this caller's key, never with elevated authority.
+    const signed = await readTransportOf(ctx, config, null);
+    return { ...base,
+      entry: async (scope: ScopeId, _reader: unknown, seq: number) => {
+        const got = await base.entry(scope, reader, seq);
+        return !got.ok && got.reason === "forbidden" && reader !== null ? signed.entry(scope, null, seq) : got;
+      },
+      history: async (scope: ScopeId, _reader: unknown, cursor?: string) => {
+        const got = await base.history(scope, reader, cursor);
+        return !got.ok && got.reason === "forbidden" && reader !== null ? signed.history(scope, null, cursor) : got;
+      },
+    };
+  })();
+  return { service: config.service, root: { ...root }, reads: {
+    entry: async (scope, seq) => (await connection()).entry(scope, null, seq),
+    history: async (scope, cursor) => (await connection()).history(scope, null, cursor),
+  } };
 }
 
 async function summaryOf(handle: ScopeHandle): Promise<Summary> {
@@ -426,7 +460,9 @@ export function install(ctx: Context, service: string, options: InstallOptions =
 
 /** The signed `install` intent, by the operator key, which is made and kept when it does not exist yet. */
 async function installing(ctx: Context, options: { host?: string; namespace?: string }, at: Signing): Promise<{ signed: SignedIntent; key: KeyId }> {
-  const signer = secretSigner(await keyOf(ctx, "operator"));
+  const signer = ctx.store.signer && !ctx.store.newSigner
+    ? (await storedSigner(ctx.store, "operator")) ?? stopCommand(failed("The operator signing key is unavailable; nothing was signed or sent."))
+    : await newStoredSigner(ctx.store, "operator");
   const fields = { host: options.host ?? "github.com", namespace: options.namespace ?? "artroom", policy: "keys", "founders": [signer.key] };
   return { signed: await signedIntent(signer, { to: null, kind: "install", fields }, at), key: signer.key };
 }
@@ -550,13 +586,13 @@ async function executePlannedInstall(ctx: Context, cohort?: InstallCohort, expec
   if (expected && canonicalize(kept) !== canonicalize(expected)) return failed("Held: the selected install plan changed before delivery. Nothing was sent; restore the original request.");
   const strictCustody = selectedPlan(kept.definition);
   const plan = strictCustody ? parseStrict(canonicalize(kept)) as PlannedInstall : kept;
-  const operator = await ctx.store.secret("operator");
+  const operator = await storedSigner(ctx.store, "operator");
   const now = ctx.now?.() ?? Date.now();
   if (!knownPlatform(plan.definition, "platform:register")) return failed("Unsupported install provenance: this command cannot serve the plan's exact pinned register version. The pending plan is kept; nothing was sent.");
   const valid = isSignedIntentShape(plan["founding"]) && verifySignedIntent(plan["founding"])
     && plan["founding"].intent.kind === "install" && plan["founding"].intent.to === null && plan["founding"].intent.on === null
     && Object.keys(plan["founding"].intent.expected).length === 0
-    && before!.key === "operator" && operator instanceof Uint8Array && operator.length === 32 && plan["founding"].intent.actor === keyIdOfSecret(operator)
+    && before!.key === "operator" && operator !== null && plan["founding"].intent.actor === operator.key
     && typeof plan.service === "string" && plan.service === before!.service
     && isScopeId(plan.register) && registerIdOf(plan["founding"], plan.definition) === plan.register
     && timeMs(plan["founding"].intent.notAfter)! - now <= PROPOSED_BOUNDS.intentLifetimeSeconds * 1000;
@@ -676,8 +712,7 @@ function walkClaim(ctx: Context, name: string, options: { handle?: string; branc
     if (readOnly && !config.claim) return failed("No original claim is retained. Check prepares and submits nothing.");
     // A status check reads once and invokes no injected scheduler/pause hook.
     const waiting = readOnly ? { ...ctx, tries: 1, pause: async () => {} } : ctx;
-    const secret = await signerOf(ctx, config);
-    const signer = secretSigner(secret);
+    const signer = await signerOf(ctx, config);
     const R = await handleOf(ctx, config, register.scope, null);
     // A resumed accepted envelope obtains its exact pin from checked
     // settlement, before any aged summary is needed for routing.
@@ -697,7 +732,7 @@ function walkClaim(ctx: Context, name: string, options: { handle?: string; branc
         offered = JSON.parse(canonicalize(value)) as CreationOffer;
         if (!DIRECTORY_OF[offered.definition] || !platform(offered.definition)) return failed("The demo register version is unsupported here. Nothing was prepared or submitted.");
       }
-      const recovery = keyIdOfSecret(await keyOf(ctx, "recovery"));
+      const recovery = (await newStoredSigner(ctx.store, "recovery")).key;
       const handle = options.handle ?? "@founder";
       let definition: Digest | PlatformDefinition;
       let items: readonly Item[];
@@ -891,7 +926,7 @@ export function invite(ctx: Context, member: string, options: { role?: string; a
     if (!options.role || !(options.role in ROLE_LISTS)) return usage(`Name a role with --role: one of ${Object.keys(ROLE_LISTS).join(", ")}.`);
     const config = await configOf(ctx);
     const repository = config.repository ?? stopCommand(usage("No repository is known here. Run: dap create <name>."));
-    const signer = secretSigner(await signerOf(ctx, config));
+    const signer = await signerOf(ctx, config);
     const M = await handleOf(ctx, config, repository.membership.scope);
     const summary = await summaryOf(M);
     const shape = (await definitionOf(M, summary)).shape;
@@ -936,7 +971,7 @@ export function join(ctx: Context, text: string): Promise<Outcome> {
     const shared = pending && (({ inbox: _inbox, ...repository }) => repository)(pending.repository);
     if (pending && (pending.link !== linkDigest || before!.service !== link.service || canonicalize(shared) !== canonicalize(link.repository) || pending.handle !== link.handle)) return failed("The invitation link does not match the pending join; nothing was submitted. Retry the original invitation link.");
     const base: Config = before ? { v: 1, service: before.service, key: before.key } : { v: 1, service: link.service, key: "device" };
-    const signer = secretSigner(pending ? await signerOf(ctx, base) : await keyOf(ctx, base.key));
+    const signer = pending ? await signerOf(ctx, base) : await newStoredSigner(ctx.store, base.key);
     let signed: SignedIntent;
     const keep = async (next: PendingJoin) => { await ctx.store.save({ ...base, join: next }); pending = next; };
     if (!pending) {
@@ -1038,7 +1073,7 @@ export function acts(ctx: Context, named?: string): Promise<Outcome> {
     const reader = await readerOf(ctx, config);
     const handle = await handleOf(ctx, config, scope, reader);
     const { shape, named: definition } = await definitionOf(handle, await summaryOf(handle));
-    const key = keyIdOfSecret(await signerOf(ctx, config));
+    const key = (await signerOf(ctx, config)).key;
     const held = config.repository ? standing((await summaryOf(await handleOf(ctx, config, config.repository.membership.scope, reader))).items, key) : null;
     const { acts: listed, hidden } = heldActs(shape, held);
     const shown = listed.map(([kind, act]) => `  ${describe(kind, act)}`);
@@ -1061,8 +1096,7 @@ export function act(ctx: Context, kind: string, options: { on?: string; target?:
     const values: string[] = [];
     for (const path of options.value ?? []) values.push(textOf(await fileOf(ctx, path), path));
     const scope = scopeNamed(config, options.on);
-    const secret = await signerOf(ctx, config);
-    const signer = secretSigner(secret);
+    const signer = await signerOf(ctx, config);
     const handle = await handleOf(ctx, config, scope);
     const summary = await summaryOf(handle);
     const { shape, declared } = await definitionOf(handle, summary);
@@ -1181,7 +1215,7 @@ export { REPLAY_CAPABILITY_CODE };
 /** The replay of one scope's history over the read routes: with the caller's session first, then by signed reads. */
 async function replayOf(ctx: Context, config: Config, reader: string | null, scope: ScopeId) {
   const options = ctx.fetch ? { fetch: ctx.fetch } : {};
-  const signed = httpSource(config.service, { ...options, reader: signedLogReader(secretSigner(await signerOf(ctx, config)), readSigning(ctx)) });
+  const signed = httpSource(config.service, { ...options, reader: signedLogReader(await signerOf(ctx, config), readSigning(ctx)) });
   const source = reader === null ? signed : sessionFirst(httpSource(config.service, { ...options, reader }), signed);
   return replay(source, { mode: "replay", scope, platform, sourceName: ARCHIVE_REPLAY_CODE.sourceName, receiverIdentity: ARCHIVE_REPLAY_CODE.receiverIdentity, grants: "proven", capabilities: REPLAY_CAPABILITY_CODE, owners: REPLAY_CAPABILITY_CODE });
 }
@@ -1356,7 +1390,7 @@ export function clone(ctx: Context, directory: string | undefined, options: { ho
     if (!platform(summary.definition as PlatformDefinition)?.data.acts["read-token"]) return failed(`The destination definition ${summary.definition} does not support read-token. An explicitly versioned destination and membership integration is required.`);
     // The act: `read-token` on the branch, at the revision the summary has now. The scope judges the grant and the field.
     const scope = summary.scope.scope;
-    const signer = secretSigner(await signerOf(ctx, config));
+    const signer = await signerOf(ctx, config);
     const branch = summary.items.find((item) => item.type === "branch")!;
     const signed = await signedIntent(signer, { to: summary.scope, kind: "read-token", on: branch.id, fields: { hours }, expected: { on: branch.revision } }, signing(ctx));
     const receipt = accepted(await (await handleOf(ctx, config, scope, null)).submit(signed), scope, "Read token").receipt;
@@ -1543,7 +1577,7 @@ export function edit(ctx: Context, path: string, options: { file?: string; title
     const content = textOf(bytes, options.file);
     const config = await configOf(ctx);
     const repository = config.repository ?? stopCommand(usage("No repository is known here. Run: dap create <name>, or dap join <link>."));
-    const signer = secretSigner(await signerOf(ctx, config));
+    const signer = await signerOf(ctx, config);
     const reader = await readerOf(ctx, config);
     // The issue that the change closes is found before anything is signed.
     const closes = options.closes === undefined ? null : await issueNamed(ctx, config, reader, options.closes);
@@ -1645,7 +1679,7 @@ async function proposingFiles(ctx: Context, config: Config, base: string, files:
   } catch {
     return failed("Cannot propose: unsupported-workflow. This command's required act inputs do not fit the active definition; no change was opened.");
   }
-  const signer = secretSigner(await signerOf(ctx, config));
+  const signer = await signerOf(ctx, config);
   const { D, summary, target } = await openingDirectory(ctx, config, reader);
   const shape = (await definitionOf(D, summary)).shape;
   const fields = { definition: change.digest, title, draft: false };
@@ -1749,7 +1783,7 @@ export function merge(ctx: Context, named: string, options: { closes?: string } 
  */
 async function merging(ctx: Context, config: Config, lane: ScopeId, reader: string | null, declared: DeclaredDefinition): Promise<Outcome> {
   const repository = config.repository ?? stopCommand(usage("No repository is known here. Run: dap create <name>, or dap join <link>."));
-  const signer = secretSigner(await signerOf(ctx, config));
+  const signer = await signerOf(ctx, config);
   const L = await handleOf(ctx, config, lane, reader);
   const items = (await summaryOf(L)).items;
   const version = items.find((item) => item.type === "manifest" && item.state === "current") ?? stopCommand(failed(`The change ${lane} has no current version.`));
@@ -1879,7 +1913,7 @@ function issueAct(ctx: Context, named: string, choose: (issue: Issue, handle: st
     const declaration = read.value.acts[kind] ?? stopCommand(failed(`The issue ${issue.lane} is under ${read.value.name}, which has no act ${kind}.`));
     const items = (await summaryOf(L)).items;
     const I = await laneOf(ctx, config, issue.lane, reader, read.value);
-    const signer = secretSigner(await signerOf(ctx, config));
+    const signer = await signerOf(ctx, config);
     const { signed, beside } = await I.intent(signer, kind as never, { on, fields, expected: expectedOf(declaration as unknown as ActShape, items, on, fields as Record<string, FieldValue>) } as never, signing(ctx));
     return answered(issue.lane, await I.submit(signed, [], beside), took);
   });
@@ -1896,7 +1930,7 @@ export function issueOpen(ctx: Context, options: { title?: string; body?: string
     if (options.title === undefined) return usage("issue open needs --title <text>.");
     const config = await configOf(ctx);
     if (!config.repository) return usage("No repository is known here. Run: dap create <name>, or dap join <link>.");
-    const signer = secretSigner(await signerOf(ctx, config));
+    const signer = await signerOf(ctx, config);
     const reader = await readerOf(ctx, config);
     const issue = await activeDefinition(ctx, config, reader, "issue");
     const { D, summary, target } = await openingDirectory(ctx, config, reader);
@@ -1952,7 +1986,7 @@ async function linking(ctx: Context, config: Config, lane: ScopeId, reader: stri
   const fields = { issue: issue.ref, how: "keyword" } as Record<string, FieldValue>;
   const items = (await summaryOf(await handleOf(ctx, config, lane, reader))).items;
   const C = await laneOf(ctx, config, lane, reader, declared);
-  const signer = secretSigner(await signerOf(ctx, config));
+  const signer = await signerOf(ctx, config);
   const { signed, beside } = await C.intent(signer, "link-own" as never, { on: null, fields, expected: expectedOf(declaration as unknown as ActShape, items, null, fields) } as never, signing(ctx));
   const answer = await C.submit(signed, [], beside);
   if (answer.answer !== "accepted") return answered(lane, answer, "Linked");

@@ -1,9 +1,9 @@
 # Scope and replay contract
 
-Status, 21 October 2026: normative reference. Code comments cite this
-document by section number. It lands on main unchanged from revision
-23, the revision in force (branch `request/scope-contract-r15`, `3b3e394f`). Where the code
-no longer follows a cited section, the citation check of request
+Status: current. This note is a normative reference. Code comments cite this
+document by section number. It lands on main unchanged from revision 23, the
+revision in force (branch `request/scope-contract-r15`, `3b3e394f`). Where
+the code no longer follows a cited section, the citation check of request
 `0270882b` lists it. `docs/scopes.md` is the reader's guide.
 
 Date: 2026-10-04. Design only. Written for request R1. The current

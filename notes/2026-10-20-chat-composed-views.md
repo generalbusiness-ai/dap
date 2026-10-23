@@ -1,5 +1,7 @@
 # Chat-composed views
 
+Status: current. Draft 3 landed at `a9094eb1`. Nothing here is built.
+
 This note describes how a person gets a live chart of a room's data in an
 AI chat. The chat model writes a small view declaration. The host checks it
 and shows it in the current view kit. The person can keep the view in the

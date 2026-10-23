@@ -7,7 +7,7 @@ import { isScopeRef, isSeed, scopeIdOf } from "@generalbusiness/artroom-bytes";
 import { ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-mcp";
 import { applicationScreenPath, readApplicationScreenAddress, readApplicationScreenContext, secretSigner } from "@generalbusiness/artroom-client";
-import worker from "../../../apps/room/worker.ts";
+import { applicationSandboxPage } from "../src/applications/route.ts";
 import { outsideOf as hostOutside } from "../src/worker.ts";
 import { applicationOwnedScopesPacket, applicationResolverFixture, applicationHttpPeer, sessionRoom, dispatchFixture, driveFixture, effectFixture, applicationWorkerBindings } from "./fixtures-native.ts";
 import { rita, routed } from "./repository.ts";
@@ -18,7 +18,7 @@ test.each([ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT])("na
   const { life, R, D, children } = await sessionRoom(cohort.register), [M, A, G] = children;
   if (!M || !A || !G) throw Error("The native archive siblings are required.");
   const f = await applicationResolverFixture("sha1", undefined, { admin: ["counting.control"] }, undefined, v2?.packet), peer = applicationHttpPeer(f);
-  const bindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(f.trust));
+  const bindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(f.trust), env.SCOPE_INDEX);
   try {
     const seat = await life.wait(() => M.did(rita, "seat", { expected: { roster: 1 } }));
     await life.wait(async () => M.did(rita, "first-key", { fields: { member: seat }, expected: await M.expected({ roster: 0, member: seat }) }));
@@ -43,7 +43,7 @@ test.each([ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT])("na
     const current = await life.wait(() => mcp.call("application_installation", { item: job }));
     expect(current.structuredContent).toMatchObject({ state: "active", scope: await application.at() });
     const base = applicationScreenPath(D.name, job, f.packet.ids.presentation);
-    const response = await life.wait(() => worker.fetch(new Request(port.service + base + "_/context"), bindings));
+    const response = await life.wait(async () => (await applicationSandboxPage(new Request(port.service + base + "_/context"), bindings))!);
     expect(response.status).toBe(200);
     const context = readApplicationScreenContext(await response.json(), readApplicationScreenAddress(base + "_/context")!, port.service);
     expect(context.membershipDefinition).toBe(cohort.membership); expect(context.membership).toEqual(membership);

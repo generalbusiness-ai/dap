@@ -1,6 +1,6 @@
 # Directory partitions
 
-Status, 21 October 2026: draft 4 is approved (`703733db`) and landed at
+Status: current. Draft 4 is approved (`703733db`) and landed at
 `108aee7e`; section 4.10 was amended with D1 at `0c704221`. Built: C2
 (`23f15670`), C1 (`dfd15042`), D1 (`5caa62f3`), and the partition cohort
 with its CLI, page and MCP readers (`9a1238b7`). Not built: A1. The

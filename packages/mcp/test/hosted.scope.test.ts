@@ -4,18 +4,22 @@
  * Worker's default fetch, with the pinned MCP client where a client is named. rita creates the room through her own MCP service
  * and performs the admin's acts; the agent is created by a control request she signs.
  */
-import { env } from "cloudflare:test";
+import { env, evictDurableObject, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import type { ControlRequest, Digest, FactRef, KeyId, MemberId, ScopeRef } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, digestBytes, keyIdOfSecret, newIncarnation, signControl, textDigest, timeOf, utf8 } from "@generalbusiness/artroom-bytes";
-import { invitationIssueFields, encodeAgentKeyInvitation, type AgentKeyInvitation } from "@generalbusiness/artroom-client";
-import { FIRST_ACTIONS_OF, firstExtents } from "@generalbusiness/dap-platform";
+import { invitationIssueFields, encodeAgentKeyInvitation, secretSigner, type AgentKeyInvitation } from "@generalbusiness/artroom-client";
+import { ARCHIVE_DEVICE_APPLICATION_COHORT, FIRST_ACTIONS_OF, firstExtents } from "@generalbusiness/dap-platform";
 import { DEMO_DIGESTS, changeDemo, issueDemo } from "@generalbusiness/dap-lanes";
 import { counting } from "../../../apps/counter/definition.ts";
 import { COUNTING_DEFINITION } from "../../../apps/counter/pin.ts";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
+import { McpService, memoryStore } from "../src/index.ts";
 import worker from "../../../apps/room/worker.ts";
-import { creationTest, hostedTest } from "../../scope/test/worker.ts";
+import { creationTest, hostedTest, platformNet, type PlatformMcpAgent, type PlatformScope } from "../../scope/test/worker.ts";
+import { startupTest, StartupOwner, startupSnapshot, startupReport, type StartupServingIndex } from "../../scope/test/support/serving-startup.ts";
+import { DEFAULT_SERVING_LIMITS } from "../../scope/src/serving-limits.ts";
+import { SCOPE_INDEX_NAME, type ScopeIndexPort } from "../../scope/src/scope-index.ts";
 import { BOUNDS, COMPLETION_BYTES, MODERN, MODERN_RESULT_EXTRA } from "../src/index.ts";
 import { INVITATION_LINK } from "@generalbusiness/artroom-client";
 import { mcpRoom, SERVICE, type Agent, type Room, created as createRoom } from "./fixtures-native.ts";
@@ -23,7 +27,10 @@ import { MCP_METRIC_SCHEMA, type McpMetricPoint } from "../src/metrics.ts";
 
 /** Production default dispatch, in this isolate. The actual native PLATFORM namespace is this fixture's Scope binding;
  * REGISTRIES and AGENTS keep their existing native subclasses, clocks, custody and control fences. */
-const routed = (url: string | URL, init?: RequestInit): Promise<Response> => worker.fetch(new Request(url, init), { ...env, SCOPES: env.PLATFORM });
+const routed = (url: string | URL, init?: RequestInit): Promise<Response> => {
+  const action = () => worker.fetch(new Request(url, init), { ...env, SCOPES: env.PLATFORM, ...(startupTest.index ? { SCOPE_INDEX: startupTest.index } : {}) });
+  return startupTest.owner ? startupTest.owner.wait(action) : action();
+};
 const fetchLike = ((url: string | URL | Request, init?: RequestInit) => routed(url instanceof Request ? url.url : url, init)) as unknown as typeof fetch;
 
 /** Every step of a scope, across the steps tool's pages. */
@@ -163,9 +170,9 @@ test.each(["platform:register@3", "platform:register@10"] as const)("H1, the who
 });
 
 /** A room created by rita with the issue definition active, and one agent created under `op`; the agent's answer. */
-async function hosted(room: Room, rita: Agent, handle: string, op: string, signer: Uint8Array = rita.secret): Promise<{ agent: string; key: KeyId; bearer: string; link: string }> {
+async function hosted(room: Room, rita: Agent, handle: string, op: string, signer: Uint8Array = rita.secret, definition: AgentKeyInvitation["definition"] = "platform:membership@2"): Promise<{ agent: string; key: KeyId; bearer: string; link: string }> {
   const M = rita.config.repository!.membership;
-  const { link } = await invite(room, rita, handle);
+  const { link } = await invite(room, rita, handle, definition);
   const body = JSON.stringify({ link });
   const created = await room.wait(() => post("/mcp/agents", control(room, signer, "create", M, null, body, op), body));
   const answer = await created.json() as { agent: string; key: KeyId; bearer: string };
@@ -217,6 +224,130 @@ test("hosted production fetch preserves deployed parentless creation admission",
     creationTest.settings = previous.settings;
     creationTest.productionHostedFetch = previous.productionHostedFetch;
     done(room);
+  }
+});
+
+// A hosted key is already enrolled and meets the earlier key-in-use guard.
+// Fresh, unconfigured MCP services exercise native invitation failures through
+// the production Worker without a transport address. Git/clock/token setup
+// remain the room fixture's; no hosted bearer is claimed to be an unknown key.
+test("fresh MCP services' addressless native join failures count by verified key while an enrolled hosted key meets its earlier guard", async () => {
+  const room = mcpRoom(), previous = { production: creationTest.productionHostedFetch, limits: platformNet.limits };
+  platformNet.limits = { windowSeconds: 60, failures: 2, windows: 4096, waiting: 8, joinBytes: 16 * 1024 };
+  hostedTest.now = () => room.now(); hostedTest.pause = waiting => room.pause(waiting);
+  try {
+    const rita = room.agent("rita");
+    await createRoom(room, rita);
+    creationTest.productionHostedFetch = true;
+    const agent = await hosted(room, rita, "@limited-bot", "r12-join-agent");
+    const M = rita.config.repository!.membership, expectedSeed = crypto.getRandomValues(new Uint8Array(32));
+    const expectedSecret = b64url(expectedSeed), wrongSeed = expectedSeed.slice(); wrongSeed[0] = wrongSeed[0]! ^ 1;
+    const invitation = await rita.ok("member.invite", { fields: { handle: "@r12-visitor", role: "member", inviteHash: textDigest(expectedSecret), inviteEnds: timeOf(room.now() + 3_600_000) }, idempotencyKey: "r12-person-invitation" });
+    const { inbox: _inbox, ...repository } = rita.config.repository!;
+    const wrongLink = INVITATION_LINK + b64url(utf8(JSON.stringify({ v: 1, service: SERVICE, repository,
+      invitation: (invitation["fact"] as FactRef).seq, secret: b64url(wrongSeed), handle: "@r12-visitor", definition: "platform:membership@2" })));
+    const fresh = () => {
+      const signer = secretSigner(crypto.getRandomValues(new Uint8Array(32)));
+      return { key: signer.key, service: new McpService({ service: SERVICE, signer, custody: memoryStore(), now: room.now,
+        fetch: (url, init) => room.wait(() => routed(url, init)), every: () => () => {},
+        config: { read: async () => ({ service: SERVICE }), addRoot: async () => { throw Error("A refused join must not add a root"); } } }) };
+    };
+    const visitor = fresh(), otherVisitor = fresh();
+    for (const key of [visitor.key, otherVisitor.key])
+      expect(await room.wait(() => room.platform(M.scope).stub.observe({ of: M, key }))).toMatchObject({ of: M, key, keyState: "unknown" });
+    const before = (await room.platform(M.scope).summary()).at;
+    // Actual hosted control/enrolment remains covered, but its known key must
+    // not be mistaken for a wrong-secret failure that charges the join window.
+    const enrolledResponse = await room.wait(() => modernCall(agent.bearer, "join", { link: wrongLink, idempotencyKey: "r12-enrolled-key" }));
+    const enrolled = await enrolledResponse.json() as { error?: unknown; result?: { structuredContent?: Record<string, unknown> } };
+    expect([enrolledResponse.status, enrolled.error, enrolled.result?.structuredContent?.["answer"], enrolled.result?.structuredContent?.["name"]])
+      .toEqual([200, undefined, "refused", "key-in-use"]);
+    const replies: Record<string, unknown>[] = [];
+    for (let n = 0; n < 3; n++) {
+      const reply = await room.wait(() => visitor.service.call("join", { link: wrongLink, idempotencyKey: `r12-bad-join-${n}` }));
+      expect(reply.isError).toBe(false); replies.push(reply.structuredContent);
+    }
+    expect(replies.map(reply => [reply["answer"], reply["name"] ?? reply["reason"]]))
+      .toEqual([["refused", "invitation-refused"], ["refused", "invitation-refused"], ["unavailable", "rate-limited"]]);
+    expect((await room.platform(M.scope).summary()).at).toEqual(before);
+    const other = await room.wait(() => otherVisitor.service.call("join", { link: wrongLink, idempotencyKey: "r12-other-key" }));
+    expect([other.isError, other.structuredContent["answer"], other.structuredContent["name"]]).toEqual([false, "refused", "invitation-refused"]);
+    expect((await room.platform(M.scope).summary()).at).toEqual(before);
+  } finally {
+    creationTest.productionHostedFetch = previous.production; platformNet.limits = previous.limits; done(room);
+  }
+});
+
+test.for(["legacy", "modern"] as const)("R12 default-limit hosted MCP %s connect, listTools and initial room count actual Signed admissions separately from sessions", async (revision, context) => {
+  expect(startupTest.index).toBeNull();
+  const owned = new StartupOwner(env.STARTUP_INDEX);
+  const previous = creationTest.productionHostedFetch;
+  let client: Client | undefined;
+  let failed = false;
+  try { await owned.run(async () => {
+    const index = env.STARTUP_INDEX.get(env.STARTUP_INDEX.idFromName(SCOPE_INDEX_NAME));
+    const port = index as unknown as ScopeIndexPort;
+    // Activate without admission or index writes before the initial cold reset.
+    await runInDurableObject(index, instance => startupSnapshot(instance as StartupServingIndex));
+    await evictDurableObject(index);
+    owned.assertOpen();
+    const room = mcpRoom({ finish: "external", capture: life => owned.attach(life, () => { creationTest.productionHostedFetch = previous; done(room); }) });
+    hostedTest.now = () => room.now(); hostedTest.pause = waiting => room.pause(waiting);
+    const rita = room.agent("rita");
+    const { register } = await createRoom(room, rita, "default", ARCHIVE_DEVICE_APPLICATION_COHORT.register);
+    creationTest.productionHostedFetch = true;
+    const made = await hosted(room, rita, `@startup-${revision}`, `r12-startup-${revision}`, rita.secret, ARCHIVE_DEVICE_APPLICATION_COHORT.membership);
+    const membership = rita.config.repository!.membership;
+    expect((await room.platform(membership.scope).summary()).value.definition).toBe(ARCHIVE_DEVICE_APPLICATION_COHORT.membership);
+    // Join actual registration callbacks from the genuine setup, without inserting index rows.
+    const repository = rita.config.repository!;
+    const inbox = repository.inbox;
+    if (!inbox) throw new Error("The actual native first-key inbox is required.");
+    for (const scope of [register, repository.directory.scope, membership.scope, repository.rules, repository.destination, inbox])
+      await room.wait(() => runInDurableObject(env.PLATFORM.get(env.PLATFORM.idFromName(scope)), instance => (instance as PlatformScope).awaitScheduledCallbacks()));
+    expect(await port.has(membership.scope, "membership")).toBe(true); // actual native registration callback
+    const setup = await runInDurableObject(index, instance => startupSnapshot(instance as StartupServingIndex));
+    const agent = env.AGENTS.get(env.AGENTS.idFromString(made.agent));
+    await evictDurableObject(agent); // actual cold startup from the enrolled durable state
+    await evictDurableObject(index); // actual rate-memory reset; keep registered native scopes
+    expect(await port.has(membership.scope, "membership")).toBe(true);
+    const before = await runInDurableObject(index, instance => startupSnapshot(instance as StartupServingIndex));
+    expect(before.instance).not.toBe(setup.instance);
+    client = new Client({ name: "r12-startup", version: "1" }, revision === "modern" ? { versionNegotiation: { mode: { pin: MODERN } } } : {});
+    owned.closeWith(() => room.wait(() => client!.close()));
+    const startupFetch = ((url: string | URL | Request, init?: RequestInit) => owned.wait(() => routed(url instanceof Request ? url.url : url, init))) as unknown as typeof fetch;
+    const transport = new StreamableHTTPClientTransport(new URL(`${SERVICE}/mcp`), { requestInit: { headers: { authorization: `Bearer ${made.bearer}` } }, fetch: startupFetch } as never);
+    await room.wait(() => client!.connect(transport));
+    const tools = await room.wait(() => client!.listTools());
+    expect(tools.tools.some(tool => tool.name === "room")).toBe(true);
+    const initial = await room.wait(() => client!.callTool({ name: "room", arguments: {} }));
+    expect(initial.isError).not.toBe(true);
+    await owned.quiesce(); // includes original native scheduled callbacks, not just Client completion
+    const after = await runInDurableObject(index, instance => startupSnapshot(instance as StartupServingIndex));
+    const reads = await runInDurableObject(agent, instance => (instance as PlatformMcpAgent).startupReads.snapshot());
+    const report = startupReport(before, after, reads);
+    // Actual post-phase cohort observations, not caller startup requests.
+    const cohort = {
+      register: (await room.platform(register).summary()).value.definition,
+      directory: (await room.platform(repository.directory.scope).summary()).value.definition,
+      membership: (await room.platform(repository.membership.scope).summary()).value.definition,
+      rules: (await room.platform(repository.rules).summary()).value.definition,
+      destination: (await room.platform(repository.destination).summary()).value.definition,
+      inbox: (await room.platform(inbox).summary()).value.definition,
+    };
+    const actual = { ...report, setup, path: `Hosted MCP ${revision} cold connect/listTools/room`,
+      cohort, transportAddress: null,
+      qualification: report.qualification + " Actual Client and original hosted production fetch; Native local scopes. Git, clock, scheduler and token setup are existing fixtures. No hosted deployment or browser/provider claim." };
+    console.info("R12 default startup", JSON.stringify(actual));
+    (context.task.meta as Record<string, unknown>)["r12Startup"] = actual;
+    expect(cohort).toEqual(ARCHIVE_DEVICE_APPLICATION_COHORT);
+    expect([report.complete, report.requiresDefaultAdjustment, after.defaults, reads.calls > 0])
+      .toEqual([true, false, DEFAULT_SERVING_LIMITS, true]);
+    expect(after.counts.some(row => row.by === "address")).toBe(false);
+  }); } catch (error) { failed = true; throw error; }
+  finally {
+    try { await owned.finish(); }
+    catch (error) { if (!failed) throw error; console.error("R12 startup cleanup incomplete; original failure retained and ownership not reset"); }
   }
 });
 

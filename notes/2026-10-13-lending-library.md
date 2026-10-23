@@ -1,6 +1,6 @@
 # A lending library on dap
 
-Status, 21 October 2026: draft 5 is approved (`78b4b447`) and landed at
+Status: current. Draft 5 is approved (`78b4b447`) and landed at
 `3ca42192`. Built: the definition (`dedcb14b`), shelf publication
 (`5e11ca03`), labels and staff-only cancellation (`475665be`), and the
 homepage page. Hosted outputs are recorded at `94c85cc3`.

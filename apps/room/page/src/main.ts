@@ -1,3 +1,4 @@
+import { WorkbenchWork } from "./workbench-work.ts";
 /**
  * The page in a browser: the connection kept in local storage, and one screen
  * for each address after `#`.
@@ -12,18 +13,20 @@
  *
  * The page is served by the scope Worker at `/page/` and reads that Worker.
  *
- * The key is a 32-byte Ed25519 secret, kept in this browser's local storage
- * under `artroom-page`, as unpadded base64url. It is never shown: only its
- * key ID is. Any script that runs on the page's origin can read local
- * storage, so serve the page from an origin that runs nothing else.
+ * The signing key is nonextractable WebCrypto custody in IndexedDB. Settings
+ * and resumable operations retain public key references; legacy seeds move
+ * only after the same key commits and passes durable readback. Same-origin
+ * trusted code can still invoke signing: screens must use the sandbox host.
  */
 
-import { creationOffer } from "@generalbusiness/artroom-client";
-import { connectInvitation, originalConnection, creatorConnectionFiles, saveCreatorRecoveryOnce, type CreatorBinding } from "./connection-custody.ts";
+import { creationOffer, type Signer } from "@generalbusiness/artroom-client";
+import { legacySettingsKey, pageKeyStore } from "./browser-key-store.ts";
+import { migratePageOperations } from "./page-key-migration.ts";
+import { connectInvitation, originalConnection, creatorConnectionFiles, type CreatorBinding } from "./connection-custody.ts";
 import { originalStart, startRoom, type StartedRoom } from "./start-custody.ts";
 import type { Answer, FieldValue, MemberRef, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, isScopeRef, keyIdOfSecret, unb64url } from "@generalbusiness/artroom-bytes";
-import { act, actAssociation, actsOn, issueCreation, fieldValue, listLanes, loadChange, loadIssue, loadRules, roomInitialization, initializationStillCurrent, openRoom, placeOf, siteAddress, type Acted, type Place, type Room, type Session } from "./data.ts";
+import { b64url, canonicalize, isKeyId, isScopeRef, unb64url } from "@generalbusiness/artroom-bytes";
+import { act, actAssociation, actsOn, issueCreation, fieldValue, listLanes, loadChange, loadIssue, loadRules, roomInitialization, initializationStillCurrent, openRoom, placeOf, sessionKey, siteAddress, type Acted, type Place, type Room, type Session } from "./data.ts";
 import { bindDisclosures, openDialog, releaseDialog } from "./popups.ts";
 import { actsPanel, answerLine, nonacceptedAnswerText, changeScreen, failureScreen, h, icon, whoLine, issueScreen, roomScreen, rulesScreen } from "./view.ts";
 import { initializationMessage, RoomOpening, ScopeSending, changeActions, issueActions, roomContext, routeOf, type Destination } from "./shell.ts";
@@ -39,6 +42,22 @@ import { allowedClaim, claimRoom, claimStatus, type ClaimRegister } from "./clai
 import { joinInvitation, checkOriginal, originalJoin, type JoinResult } from "./join-custody.ts";
 
 const KEPT = "artroom-page";
+// This owner covers rendering, workbench submissions/source loads and native
+// creation-follow reads. Entry enrollment/connection and clipboard handlers
+// are not a whole-page shutdown contract.
+const workbenchWork = new WorkbenchWork(() => { drawing++; cancelCreationFollow(); });
+export const workbenchLifecycle = {
+  idle: () => workbenchWork.idle(),
+  retire: () => workbenchWork.retire(),
+};
+function startWorkbench(start: () => Promise<void>): Promise<void> {
+  if (!workbenchWork.active) return Promise.resolve();
+  const work = workbenchWork.run(start);
+  // Preserve reporting of an unexpected detached rejection. This observer
+  // fulfills; it creates no rejected bookkeeping promise.
+  void work.catch(error => { queueMicrotask(() => { throw error; }); });
+  return work;
+}
 /** The room text survives a key-generation redraw in memory only. It can hold an invitation secret. */
 let invitationDraft = "";
 let configDraft = "";
@@ -47,7 +66,9 @@ let connectionBusy = false;
 /** What this browser keeps: the room (no secret of it) and the key. */
 interface LocalLabel { text: string; place: Place; register?: ScopeRef }
 interface ClaimSelection { operation: string; place: Place; register: ScopeRef; origin: string; key: string }
-interface Settings { place: Place | null; secret: string; register?: ScopeRef; label?: LocalLabel; claimSelection?: ClaimSelection }
+interface Settings { place: Place | null; publicKey: string; register?: ScopeRef; label?: LocalLabel; claimSelection?: ClaimSelection }
+const privateKeys = pageKeyStore();
+const signers = new Map<string, Signer>();
 function labelFor(value: unknown, place: Place | null, register?: ScopeRef): LocalLabel | undefined {
   if (!value || typeof value !== "object" || !place) return undefined;
   const label = value as LocalLabel;
@@ -61,27 +82,24 @@ let ignoredSavedAddress = false;
 function settings(): Settings | null {
   ignoredSavedAddress = false;
   try {
-    const kept = JSON.parse(localStorage.getItem(KEPT) ?? "null") as (Settings & { service?: unknown }) | null;
+    const kept = JSON.parse(localStorage.getItem(KEPT) ?? "null") as (Settings & { service?: unknown; secret?: unknown }) | null;
     // Migration only: an obsolete saved address never chooses where this page reads or signs.
     ignoredSavedAddress = !!kept && Object.hasOwn(kept, "service");
-    if (!kept || typeof kept.secret !== "string") return null;
+    if (!kept || !isKeyId(kept.publicKey) || kept.secret !== undefined) return null;
     const place = kept.place ?? null;
     const register = isScopeRef(kept.register) && kept.register.kind === "register" ? kept.register : undefined;
     const label = labelFor(kept.label, place, register);
     const selected = kept.claimSelection;
-    const secret = unb64url(kept.secret);
-    const claimSelection = selected && typeof selected.operation === "string" && selected.operation.length > 0 && selected.origin === location.origin && secret?.length === 32 && selected.key === keyIdOfSecret(secret) && labelFor({ text: "selection", place: selected.place, register: selected.register }, place, register) ? selected : undefined;
-    return { place, secret: kept.secret, ...(register ? { register } : {}), ...(label ? { label } : {}), ...(claimSelection ? { claimSelection } : {}) };
+    const claimSelection = selected && typeof selected.operation === "string" && selected.operation.length > 0 && selected.origin === location.origin && selected.key === kept.publicKey && labelFor({ text: "selection", place: selected.place, register: selected.register }, place, register) ? selected : undefined;
+    return { place, publicKey: kept.publicKey, ...(register ? { register } : {}), ...(label ? { label } : {}), ...(claimSelection ? { claimSelection } : {}) };
   } catch {
     return null;
   }
 }
 
-function keep(kept: Settings): boolean {
+async function keep(kept: Settings, current: () => boolean): Promise<boolean> {
   try {
-    const bytes = JSON.stringify(kept);
-    localStorage.setItem(KEPT, bytes);
-    if (localStorage.getItem(KEPT) !== bytes) throw new Error("The browser did not retain these settings.");
+    await privateKeys.saveSettings(localStorage, KEPT, kept, current);
     return true;
   } catch {
     return false;
@@ -89,10 +107,22 @@ function keep(kept: Settings): boolean {
 }
 
 const sessionOf = (kept: Settings): Session => {
-  const secret = unb64url(kept.secret);
-  if (!secret || secret.length !== 32) throw new Error("The saved connection key is invalid. Join with an invitation or matching config and key.");
-  return { service: location.origin, secret };
+  const signer = signers.get(kept.publicKey);
+  if (!signer) throw new Error("The browser signing key is unavailable. Restore its private browser custody before continuing.");
+  return { service: location.origin, signer };
 };
+async function prepareSettings(): Promise<void> {
+  await migratePageOperations(location.origin, localStorage, privateKeys);
+  const raw = localStorage.getItem(KEPT);
+  if (raw === null) return;
+  const value: unknown = JSON.parse(raw);
+  if (value && typeof value === "object" && typeof (value as { secret?: unknown }).secret === "string") {
+    const signer = await privateKeys.migrate(legacySettingsKey(localStorage, KEPT));
+    signers.set(signer.key, signer);
+  }
+  const kept = settings();
+  if (kept && isKeyId(kept.publicKey)) signers.set(kept.publicKey, await privateKeys.load(kept.publicKey));
+}
 
 const root = (): HTMLElement => document.getElementById("page")!;
 /** The number of the latest draw: a slower, earlier draw that ends after a later one shows nothing. */
@@ -129,7 +159,7 @@ async function followCreatedIssue(room: Room, result: Acted, current: () => bool
   const owned: CreationFollow = { result, active: true, current };
   creationFollow = owned;
   let reads = 0;
-  const active = () => owned.active && creationFollow === owned && lastActs.get(actAssociation(room, room.directory)) === result && owned.current();
+  const active = () => workbenchWork.active && owned.active && creationFollow === owned && lastActs.get(actAssociation(room, room.directory)) === result && owned.current();
   const check = async (): Promise<void> => {
     if (!active()) { if (creationFollow === owned) cancelCreationFollow(); return; }
     const read = await issueCreation(room, result, active); reads++;
@@ -139,7 +169,7 @@ async function followCreatedIssue(room: Room, result: Acted, current: () => bool
       location.hash = `#/issue/${read.child.scope}`;
       await draw();
     } else if (read.state === "pending") {
-      owned.timer = setTimeout(() => { void check(); }, Math.min(500 * 2 ** Math.min(reads - 1, 4), 5_000));
+      owned.timer = setTimeout(() => { void startWorkbench(check); }, Math.min(500 * 2 ** Math.min(reads - 1, 4), 5_000));
     } else cancelCreationFollow(); // Unavailable/malformed: retain the known Answer and manual read action.
   };
   await check();
@@ -158,7 +188,7 @@ interface WorkbenchDialog {
   reviewBinding?: { scope: ScopeRef | null; member: MemberRef | null; fixed: string | undefined; choices: readonly string[] };
 }
 let workbenchDialog: WorkbenchDialog | null = null;
-const settingsContext = (kept: Settings): string => JSON.stringify([location.origin, kept.place, kept.secret, kept.register ?? null]);
+const settingsContext = (kept: Settings): string => JSON.stringify([location.origin, kept.place, kept.publicKey, kept.register ?? null]);
 let claimOffer: { kept: Settings; configured: ClaimRegister } | undefined;
 function unknownRequest(kind: string): HTMLElement {
   return h("p", { class: "muted" }, `The ${kind} request may have been recorded. Checking status only reads the scope; a changed head does not settle this request. This page does not retain the exact signed request for automatic recovery. Keep this session open and inspect the original request before recovery; do not send a replacement.`);
@@ -188,14 +218,14 @@ function closeWorkbench(restore = true): void {
   if (!current) return;
   workbenchDialog = null;
   releaseDialog(current.dialog); current.dialog.close(); current.dialog.remove();
-  if (restore && location.hash === current.route && current.binding === settingsContext(settings() ?? { place: null, secret: "" })) returnToControl(current.opener);
+  if (restore && location.hash === current.route && current.binding === settingsContext(settings() ?? { place: null, publicKey: "" })) returnToControl(current.opener);
 }
 function openWorkbench(title: string, body: HTMLElement, context: string, opener: string, kind: WorkbenchDialog["kind"], subject?: { manifest: number; action: string }): void {
   closeWorkbench(false);
   const close = h("button", { type: "button", class: "icon-button dialog-close", "aria-label": "Close dialog", "data-focus-key": controlKey(context, "dialog-close") }, icon("close"));
   const message = h("p", { role: "status", "aria-live": "polite", hidden: "" });
   const dialog = h("dialog", { class: "room-dialog", "aria-labelledby": "workbench-dialog-title" }, close, h("h1", { id: "workbench-dialog-title" }, title), body, message) as HTMLDialogElement;
-  workbenchDialog = { dialog, body, message, context, route: location.hash, kind, opener, binding: settingsContext(settings() ?? { place: null, secret: "" }), ...subject };
+  workbenchDialog = { dialog, body, message, context, route: location.hash, kind, opener, binding: settingsContext(settings() ?? { place: null, publicKey: "" }), ...subject };
   close.addEventListener("click", () => closeWorkbench());
   dialog.addEventListener("cancel", event => { event.preventDefault(); closeWorkbench(); });
   document.body.append(dialog); openDialog(dialog, restore => closeWorkbench(restore));
@@ -212,7 +242,7 @@ function closeRefusal(): void {
 function showRefusal(known: Acted, context: string): void {
   if (known.answer.answer !== "refused") return;
   closeRefusal();
-  const route = location.hash, binding = settingsContext(settings() ?? { place: null, secret: "" });
+  const route = location.hash, binding = settingsContext(settings() ?? { place: null, publicKey: "" });
   const focus = keepFocus(document.body);
   const dismiss = h("button", { type: "button", class: "primary" }, "Dismiss");
   const dialog = h("dialog", { class: "room-dialog", "aria-labelledby": "request-refusal-title", "data-refusal-context": context },
@@ -224,7 +254,7 @@ function showRefusal(known: Acted, context: string): void {
   const close = (restore = true) => {
     if (refusalDialog?.dialog !== dialog) return;
     closeRefusal();
-    if (restore && route === location.hash && binding === settingsContext(settings() ?? { place: null, secret: "" })) {
+    if (restore && route === location.hash && binding === settingsContext(settings() ?? { place: null, publicKey: "" })) {
       if (!restoreFocus(document.body, focus)) document.getElementById("page-main")?.focus();
     }
   };
@@ -355,12 +385,12 @@ function proposeFromRecordedSource(room: Room, rows: Awaited<ReturnType<typeof l
   if (!permitted) host.append(h("p", { class: "muted small" }, "Your current member cannot propose a text change."));
   button.addEventListener("click", () => {
     if (button.hasAttribute("disabled")) return;
-    const binding = settingsContext(settings() ?? { place: null, secret: "" });
+    const binding = settingsContext(settings() ?? { place: null, publicKey: "" });
     const route = location.hash;
     const content = h("div");
     openWorkbench("Propose change", content, association, key, "source");
     const owned = workbenchDialog!;
-    const current = () => workbenchDialog === owned && location.hash === route && settingsContext(settings() ?? { place: null, secret: "" }) === binding;
+    const current = () => workbenchDialog === owned && location.hash === route && settingsContext(settings() ?? { place: null, publicKey: "" }) === binding;
     const message = h("p", { role: "status", "aria-live": "polite" });
     const load = async (scope: ScopeId) => {
       if (!current()) return;
@@ -386,7 +416,7 @@ function proposeFromRecordedSource(room: Room, rows: Awaited<ReturnType<typeof l
         content.replaceChildren(retainedEditor(room, change, { current: () => current() && settled(), recorded: lane => { if (current()) location.hash = `#/change/${lane}`; } }));
       } catch (error) { if (current()) message.textContent = error instanceof Error ? error.message : "The recorded source could not be read."; }
     };
-    if (rows.length === 1) { void load(rows[0]!.scope); return; }
+    if (rows.length === 1) { void startWorkbench(() => load(rows[0]!.scope)); return; }
     const selection = h("select", { "aria-label": "Recorded source change", "data-focus-key": controlKey(association, "source-choice") },
       h("option", { value: "" }, "Choose a recorded source"), rows.map(row => h("option", { value: row.scope }, `#${row.number ?? "?"} · ${row.title ?? "Untitled"}`))) as HTMLSelectElement;
     const choose = h("button", { type: "button", class: "primary" }, "Use source");
@@ -394,7 +424,7 @@ function proposeFromRecordedSource(room: Room, rows: Awaited<ReturnType<typeof l
     selection.addEventListener("change", () => { if (selection.value) choose.removeAttribute("disabled"); else choose.setAttribute("disabled", ""); });
     choose.addEventListener("click", () => {
       const row = rows.find(row => row.scope === selection.value);
-      if (row) void load(row.scope);
+      if (row) void startWorkbench(() => load(row.scope));
     });
     content.replaceChildren(h("label", {}, "Source change", selection), choose);
     selection.focus();
@@ -403,12 +433,12 @@ function proposeFromRecordedSource(room: Room, rows: Awaited<ReturnType<typeof l
 }
 
 async function roomOf(kept: Settings, place: Place): Promise<Room> {
-  return opened.get(roomContext(location.origin, place, kept.secret), () => openRoom(sessionOf(kept), place));
+  return opened.get(roomContext(location.origin, place, kept.publicKey), () => openRoom(sessionOf(kept), place));
 }
 
 /** Actual membership standing and the current key establish room context. */
 function verifiedRoom(room: Room | null): room is Room & { me: NonNullable<Room["me"]> } {
-  return !!room?.me?.handle && room.key === keyIdOfSecret(room.session.secret);
+  return !!room?.me?.handle && room.key === sessionKey(room.session);
 }
 const wordmark = () => h("a", { class: "wordmark", href: "https://dap.generalbusiness.ai/", "aria-label": "dap homepage" }, h("img", { class: "wordmark-light", src: "/brand/dap-wordmark.svg", alt: "dap", width: "432", height: "256" }), h("img", { class: "wordmark-dark", src: "/brand/dap-wordmark-white.svg", alt: "dap", width: "432", height: "256" }));
 function entryShell(...content: HTMLElement[]): HTMLElement[] {
@@ -445,7 +475,7 @@ function shell(destination: Destination, room: Room | null, ...content: HTMLElem
 
 function claimDialog(room: Room, kept: Settings, configured: ClaimRegister, opener: HTMLElement): void {
   const binding = settingsContext(kept);
-  if (settingsContext(settings() ?? { place: null, secret: "" }) !== binding) return;
+  if (settingsContext(settings() ?? { place: null, publicKey: "" }) !== binding) return;
   if (roomDialog) releaseDialog(roomDialog);
   roomDialog?.close(); roomDialog?.remove();
   let status: ReturnType<typeof claimStatus>;
@@ -471,19 +501,19 @@ function claimDialog(room: Room, kept: Settings, configured: ClaimRegister, open
   if (claiming.has(binding)) { submit.setAttribute("disabled", ""); name.setAttribute("disabled", ""); }
   form.addEventListener("submit", (event) => {
     event.preventDefault();
-    if (claiming.has(binding) || !name.value.trim() || settingsContext(settings() ?? { place: null, secret: "" }) !== binding) return;
+    if (claiming.has(binding) || !name.value.trim() || settingsContext(settings() ?? { place: null, publicKey: "" }) !== binding) return;
     claiming.add(binding); claimDrafts.set(binding, name.value); submit.setAttribute("disabled", ""); name.setAttribute("disabled", "");
     message.textContent = "Creating room"; message.removeAttribute("hidden");
     void (async () => {
       try {
-        const result = await claimRoom(sessionOf(kept), configured, localStorage, name.value, { mode, ...(operation ? { operation } : {}), handle: room.me!.handle, current: () => settingsContext(settings() ?? { place: null, secret: "" }) === binding });
+        const result = await claimRoom(sessionOf(kept), configured, localStorage, name.value, { mode, ...(operation ? { operation } : {}), handle: room.me!.handle, current: () => settingsContext(settings() ?? { place: null, publicKey: "" }) === binding });
         operation = result.operation; mode = "resume";
-        if (settingsContext(settings() ?? { place: null, secret: "" }) !== binding) return;
+        if (settingsContext(settings() ?? { place: null, publicKey: "" }) !== binding) return;
         if (result.repository) {
           const place = { directory: result.repository.directory.scope, membership: result.repository.membership };
           const label: LocalLabel = { text: result.label, place, ...(kept.register ? { register: kept.register } : {}) };
-          const claimSelection: ClaimSelection = { operation: result.operation, place, register: configured.register, origin: location.origin, key: keyIdOfSecret(room.session.secret) };
-          if (!keep({ ...kept, place, label, claimSelection })) {
+          const claimSelection: ClaimSelection = { operation: result.operation, place, register: configured.register, origin: location.origin, key: sessionKey(room.session) };
+          if (!await keep({ ...kept, place, label, claimSelection }, () => settingsContext(settings() ?? { place: null, publicKey: "" }) === binding)) {
             message.textContent = `Creation is recorded, but storage of the room settings could not be verified. Check the saved room and key before another action. Directory ${result.repository.directory.scope}; membership ${result.repository.membership.scope}. Keep the private claim record. Resume creation to verify the original proof before trying to save again.`;
             submit.textContent = "Resume creation";
             return;
@@ -494,7 +524,7 @@ function claimDialog(room: Room, kept: Settings, configured: ClaimRegister, open
           if (result.pending) name.setAttribute("disabled", ""); else name.removeAttribute("disabled");
         }
       } catch (error) {
-        if (settingsContext(settings() ?? { place: null, secret: "" }) !== binding) return;
+        if (settingsContext(settings() ?? { place: null, publicKey: "" }) !== binding) return;
         try {
           const retained = claimStatus(sessionOf(kept), configured, localStorage);
           if (retained) { operation = retained.operation; mode = "resume"; name.value = retained.label; name.setAttribute("disabled", ""); }
@@ -531,18 +561,20 @@ async function panelFor(room: Room, scope: ScopeId, context: ActionContext = {},
     if (blocked) fenceCurrentScope(association);
   };
   const currentContext = () => {
+    if (!workbenchWork.active) return false;
     const current = settings();
     if (!current?.place) return false;
-    return roomContext(location.origin, current.place, current.secret) === roomContext(room.session.service, { directory: room.directory, membership: room.membership }, b64url(room.session.secret));
+    return roomContext(location.origin, current.place, current.publicKey) === roomContext(room.session.service, { directory: room.directory, membership: room.membership }, sessionKey(room.session));
   };
   const send: Send = (kind, on, typed, accepted, beforeSign) => {
+    if (!workbenchWork.active) return;
     const previous = lastActs.get(association);
     if (context.uncertain || context.blockedKinds?.includes(kind) || previous && (previous.answer.answer === "archived" || previous.answer.answer === "unavailable" || previous.answer.answer === "mismatch" || previous.observation !== null)) return;
     if (!sending.begin(association, kind)) return;
     cancelCreationFollow();
     if (refusalDialog?.context === association) closeRefusal();
     showLocally(h("p", { role: "status" }, "Sending request"), true, "Sending request");
-    void (async () => {
+    return startWorkbench(async () => {
       try {
         if (!currentContext()) throw new Error("The room or key changed. Open this view again before sending.");
         const offered = (await actsOn(room, scope)).acts.find((a) => a.kind === kind);
@@ -573,14 +605,14 @@ async function panelFor(room: Room, scope: ScopeId, context: ActionContext = {},
         else if (activeView()) showLocally(h("p", { role: "status" }, error instanceof Error ? error.message : String(error)), false, error instanceof Error ? error.message : "The request could not be prepared.");
       }
       if (activeView()) await draw();
-    })();
+    });
   };
   const offered = options.offered ?? await actsOn(room, scope);
   const last = lastActs.get(association);
   const fence = sending.get(association);
   const pending = !!fence && fence.state !== "unknown";
   const uncertain = fence?.state === "unknown" || context.uncertain || !!last && (last.answer.answer === "archived" || last.answer.answer === "unavailable" || last.answer.answer === "mismatch" || last.observation !== null);
-  const taskContext = { ...context, pending, uncertain, draftKey: association, refresh: () => { void draw(); }, current: () => location.hash === capturedRoute && currentContext() };
+  const taskContext = { ...context, pending, uncertain, draftKey: association, refresh: () => { void startWorkbench(() => draw()); }, current: () => location.hash === capturedRoute && currentContext() };
   const represented = options.tasks?.(offered, send, taskContext) ?? [];
   const remaining = { ...offered, acts: offered.acts.filter((act) => !options.represented?.includes(act.kind) && !represented.includes(act.kind)) };
   const advancedContext = { ...taskContext };
@@ -600,8 +632,8 @@ async function panelFor(room: Room, scope: ScopeId, context: ActionContext = {},
 /** Start shares the adopted entry layout. Reads never trigger Start/Continue. */
 function startScreen(): HTMLElement {
   const capturedDraw = drawing, capturedRoute = location.hash;
-  const capturedContext = settingsContext(settings() ?? { place: null, secret: "" });
-  const current = () => drawing === capturedDraw && location.hash === capturedRoute && settingsContext(settings() ?? { place: null, secret: "" }) === capturedContext;
+  const capturedContext = settingsContext(settings() ?? { place: null, publicKey: "" });
+  const current = () => drawing === capturedDraw && location.hash === capturedRoute && settingsContext(settings() ?? { place: null, publicKey: "" }) === capturedContext;
   const message = h("p", { class: "entry-answer", role: "status", "aria-live": "polite" });
   const tell = (text: string, bad = false) => { if (current()) { message.textContent = text; message.className = `entry-answer${bad ? " bad" : ""}`; message.removeAttribute("hidden"); } };
   const name = h("input", { name: "room", required: "", maxlength: "256", autocomplete: "off", value: startDraft }) as HTMLInputElement;
@@ -628,25 +660,23 @@ function startScreen(): HTMLElement {
     finally { URL.revokeObjectURL(url); }
   };
   const showResult = async (result: StartedRoom) => {
-    if (!current()) { result.secret?.fill(0); return; }
-    if (!result.repository || !result.secret) { result.secret?.fill(0); tell(result.outcome.lines.join(" ") || "The original creation remains unresolved. Check status before continuing.", true); return; }
-    const secret = result.secret;
-    try {
+    if (!current()) return;
+    if (!result.repository || !result.signer) { tell(result.outcome.lines.join(" ") || "The original creation remains unresolved. Check status before continuing.", true); return; }
+    const signer = result.signer;
+    signers.set(signer.key, signer);
+    {
       const place: Place = { directory: result.repository.directory.scope, membership: result.repository.membership };
-      const room = await openRoom({ service: location.origin, secret }, place);
+      const room = await openRoom({ service: location.origin, signer }, place);
       if (!current()) return;
       if (!verifiedRoom(room) || room.key !== result.key || room.me.handle !== result.handle) { tell("The created room has not verified this original creator key. Check status before opening it.", true); return; }
-      // This is the actual enrolled creator seed; the journal's internal
-      // recovery key is never exposed as a usable member/device key.
-      const encoded = b64url(secret);
-      const next: Settings = { place, secret: encoded, register: result.configured.register,
+      const next: Settings = { place, publicKey: signer.key, register: result.configured.register,
         label: { text: result.label, place, register: result.configured.register },
         claimSelection: { operation: result.operation, place, register: result.configured.register, origin: location.origin, key: result.key } };
       const open = h("button", { type: "button", class: "primary start-open" }, "Open room");
-      open.addEventListener("click", () => {
+      open.addEventListener("click", async () => {
         if (!current()) return;
-        if (!keep(next)) { tell("The room is verified, but connection storage could not be read back. Check the saved original before another request.", true); return; }
-        opened.clear(); startDraft = ""; location.hash = "#/"; void draw(true);
+        if (!await keep(next, current)) { tell("The room is verified, but connection storage could not be read back. Check the saved original before another request.", true); return; }
+        opened.clear(); startDraft = ""; location.hash = "#/"; void startWorkbench(() => draw(true));
       });
       const expected: CreatorBinding = { key: result.key, operation: result.operation, membership: result.repository.membership };
       const connectionPanel = h("section", { class: "start-connection-panel", hidden: "", "aria-live": "polite" });
@@ -717,25 +747,19 @@ function startScreen(): HTMLElement {
         button.addEventListener("click", action);
         return h("div", { class: "start-connection" }, h("div", {}, h("h2", {}, title), h("p", {}, description)), button);
       };
-      const files = () => { if (!current() || connectionBusy) return; connectionBusy = true; void creatorConnectionFiles(location.origin, localStorage, expected, connectionOptions).then(value => { if (current()) { download("config.json", value.config, "application/json"); download("device.key", value.key, "text/plain"); connectionPanel.replaceChildren(h("h2", {}, "Connect command line"), h("p", {}, "Use an owner-only ARTROOM_HOME directory. Put config.json in that directory and device.key in its keys/device.key path. Keep the key private."), h("pre", {}, "dap issues")); connectionPanel.removeAttribute("hidden"); } }).catch(error => tell(error instanceof Error ? error.message : "The original creator connection could not be verified.", true)).finally(() => { connectionBusy = false; }); };
-      const recovery = h("button", { type: "button", class: "link-button" }, "Save a recovery file");
-      try { if (originalStart(location.origin, localStorage)?.recoverySaved) recovery.setAttribute("disabled", ""); } catch { recovery.setAttribute("disabled", ""); }
-      recovery.addEventListener("click", () => {
-        if (!current() || connectionBusy || recovery.hasAttribute("disabled")) return;
-        connectionBusy = true; recovery.setAttribute("disabled", "");
-        void saveCreatorRecoveryOnce(location.origin, localStorage, expected, connectionOptions).then(value => { if (current()) download("recovery.key", value, "text/plain"); }).catch(error => tell(error instanceof Error ? error.message : "The recovery file could not be saved. Its original key remains in private custody.", true)).finally(() => { connectionBusy = false; });
-      });
+      const files = () => { if (!current() || connectionBusy) return; connectionBusy = true; void creatorConnectionFiles(location.origin, localStorage, expected, connectionOptions).then(value => { if (current()) { download("config.json", value.config, "application/json"); connectionPanel.replaceChildren(h("h2", {}, "Public room configuration"), h("p", {}, "Your creator key stays in this browser and cannot be downloaded. Clearing this browser’s saved data removes its access to the room. The public configuration alone grants no access.")); connectionPanel.removeAttribute("hidden"); } }).catch(error => tell(error instanceof Error ? error.message : "The original creator connection could not be verified.", true)).finally(() => { connectionBusy = false; }); };
+      const recovery = h("p", { class: "muted small" }, "This browser signing key cannot be exported as a device or recovery file. The separately enrolled recovery identity remains in private browser custody.");
       form.setAttribute("hidden", ""); check.setAttribute("hidden", "");
       heading.textContent = "Your room is ready"; intro.setAttribute("hidden", "");
       ready.replaceChildren(h("p", { class: "start-room-title" }, room.name ?? "Your verified room"),
         h("p", { class: "muted small" }, `Personal label: ${result.label}`), open,
         h("section", { class: "start-connections", "aria-label": "Connect to your room" },
           row("Invite people", "Send a link to join this room.", "Create invitation", () => showConnection("person")),
-          row("Connect command line", "Use this room from your computer.", "Get connection files", files),
+          row("Room configuration", "Download public room references. Another device needs its own invitation and key.", "Get public configuration", files),
           row("Connect an agent", "Give an agent its own access.", "Create agent invitation", () => showConnection("agent-key"))), connectionPanel, recovery);
       ready.removeAttribute("hidden"); about.setAttribute("hidden", ""); document.title = room.name ? `dap - workroom ${room.name}` : "dap - workroom";
       message.textContent = ""; message.setAttribute("hidden", "");
-    } finally { secret.fill(0); }
+    }
   };
   const run = async (mode: "new" | "continue" | "check") => {
     if (!current() || connectionBusy || blocked) return;
@@ -756,14 +780,14 @@ function startScreen(): HTMLElement {
   };
   form.addEventListener("submit", event => { event.preventDefault(); void run(original ? "continue" : "new"); });
   check.addEventListener("click", () => { void run("check"); });
-  const about = h("details", {}, h("summary", {}, "About your account"), h("p", {}, "Your browser creates and retains your creator key when you explicitly start. Keep the recovery file to reconnect to the same room."));
+  const about = h("details", {}, h("summary", {}, "About your account"), h("p", {}, "Your creator key stays in this browser and cannot be downloaded. Clearing this browser’s saved data removes its access to the room."));
   return h("main", { class: "screen entry-screen entry-start" }, h("a", { class: "entry-back", href: "#/join" }, "‹", "Back"),
     heading, intro, form, message, check, ready, about);
 }
 
 function connectionScreen(path: "join" | "invitation" | "config", connected: Room | null = null): HTMLElement {
-  const capturedDraw = drawing, capturedRoute = location.hash, capturedContext = settingsContext(settings() ?? { place: null, secret: "" });
-  const current = () => drawing === capturedDraw && location.hash === capturedRoute && settingsContext(settings() ?? { place: null, secret: "" }) === capturedContext;
+  const capturedDraw = drawing, capturedRoute = location.hash, capturedContext = settingsContext(settings() ?? { place: null, publicKey: "" });
+  const current = () => drawing === capturedDraw && location.hash === capturedRoute && settingsContext(settings() ?? { place: null, publicKey: "" }) === capturedContext;
   const back = () => h("a", { class: "entry-back", href: "#/join" }, h("span", { "aria-hidden": "true" }, "‹"), "Back");
   if (path === "join") return h("main", { class: "screen entry-screen" },
     connected ? h("a", { class: "entry-back", href: "#/" }, h("span", { "aria-hidden": "true" }, "‹"), `Back to ${connected.name}`) : null,
@@ -779,10 +803,10 @@ function connectionScreen(path: "join" | "invitation" | "config", connected: Roo
     const room = await openRoom(sessionOf(next), next.place!);
     if (!current()) return false;
     if (!verifiedRoom(room) || expectedHandle !== undefined && room.me.handle !== expectedHandle) { tell("Refused because this key has no matching verified membership in this room.", true); return false; }
-    if (!keep(next)) {
+    if (!await keep(next, current)) {
       // A failed readback can follow a successful write. Only this still-open
       // screen may report it, and it promises no previous selection survived.
-      const selectedContext = settingsContext(settings() ?? { place: null, secret: "" });
+      const selectedContext = settingsContext(settings() ?? { place: null, publicKey: "" });
       if (drawing === capturedDraw && location.hash === capturedRoute && (selectedContext === capturedContext || selectedContext === settingsContext(next))) {
         message.textContent = "The connection was verified, but its storage could not be read back. Check the original saved connection before another request.";
         message.className = "entry-answer bad";
@@ -790,7 +814,7 @@ function connectionScreen(path: "join" | "invitation" | "config", connected: Roo
       return false;
     }
     opened.clear(); invitationDraft = ""; configDraft = "";
-    location.hash = "#/"; void draw(true); return true;
+    location.hash = "#/"; void startWorkbench(() => draw(true)); return true;
   };
   if (path === "config") {
     const config = h("textarea", { name: "config", required: "", spellcheck: "false", placeholder: "Paste the contents of config.json" }, configDraft) as HTMLTextAreaElement;
@@ -808,7 +832,9 @@ function connectionScreen(path: "join" | "invitation" | "config", connected: Roo
         if (!typed || typed.startsWith("artroom-invite:") || !place || !secret || secret.length !== 32) { tell("Refused because config.json and its matching 32-byte device key are both required. Use the invitation path for an invitation link.", true); return; }
         const parsed = JSON.parse(typed) as { register?: unknown };
         if (parsed.register !== undefined && (!isScopeRef(parsed.register) || parsed.register.kind !== "register")) { tell("Refused because the config register reference is invalid.", true); return; }
-        if (await selectRoom({ place, secret: b64url(secret), ...(parsed.register ? { register: parsed.register as ScopeRef } : {}) })) key.value = "";
+        const signer = await privateKeys.migrate({ seed: b64url(secret), current, removeSecret: () => {} });
+        signers.set(signer.key, signer);
+        if (await selectRoom({ place, publicKey: signer.key, ...(parsed.register ? { register: parsed.register as ScopeRef } : {}) })) key.value = "";
       } catch (error) { tell(error instanceof Error ? error.message : "The room could not verify this config and key.", true); }
       finally { decodedSecret?.fill(0); connectionBusy = false; if (current()) submit.removeAttribute("disabled"); }
     })(); });
@@ -819,9 +845,9 @@ function connectionScreen(path: "join" | "invitation" | "config", connected: Roo
   const form = h("form", { class: "entry-form" }, h("label", {}, "Invitation link", invitation));
   form.addEventListener("submit", event => event.preventDefault());
   const resultOf = async (result: JoinResult | null) => {
-    if (!current()) { if (result?.status === "verified") result.secret.fill(0); return; }
+    if (!current()) return;
     if (!result) { tell("No original enrollment is retained. Paste an invitation to join."); return; }
-    if (result.status === "verified") { try { await selectRoom({ place: result.place, secret: b64url(result.secret) }, result.handle); } finally { result.secret.fill(0); } return; }
+    if (result.status === "verified") { signers.set(result.signer.key, result.signer); await selectRoom({ place: result.place, publicKey: result.signer.key }, result.handle); return; }
     const unknown = result.status === "unknown" || result.status === "blocked";
     tell(result.status === "refused" ? `${result.reason} That invitation remains refused. Paste a different invitation to join with the retained key; Check status only reads the original result.` : result.reason ?? "The original join is unresolved. Check status without sending a replacement.", true);
     if (unknown) {
@@ -849,15 +875,28 @@ function connectionScreen(path: "join" | "invitation" | "config", connected: Roo
   return h("main", { class: "screen entry-screen" }, back(), h("h1", {}, "Join with an invitation"), h("p", { class: "entry-intro" }, "Paste your invitation link to join automatically."), form, message, check);
 }
 
-async function draw(focus = false): Promise<void> {
+function draw(focus = false): Promise<void> {
+  if (!workbenchWork.active) return Promise.resolve();
+  return workbenchWork.run(() => drawWorkbench(focus));
+}
+async function drawWorkbench(focus: boolean): Promise<void> {
   const currentDraw = ++drawing;
+  try { await prepareSettings(); }
+  catch (error) {
+    if (currentDraw === drawing) {
+      root().setAttribute("data-entry", "true");
+      root().replaceChildren(...entryShell(h("main", { class: "screen entry-screen" }, h("h1", {}, "Browser key unavailable"), h("p", { class: "entry-intro" }, "Private key storage did not complete. The original connection is retained. Close other tabs or restore browser storage, then reload."))));
+    }
+    return;
+  }
+  if (currentDraw !== drawing) return;
   claimOffer = undefined;
   reconcileIssueDialogs();
-  if (refusalDialog && (refusalDialog.route !== location.hash || refusalDialog.binding !== settingsContext(settings() ?? { place: null, secret: "" }))) closeRefusal();
-  if (roomDialog && (roomDialogBinding?.settings !== settingsContext(settings() ?? { place: null, secret: "" }) || roomDialogBinding?.route !== location.hash)) {
+  if (refusalDialog && (refusalDialog.route !== location.hash || refusalDialog.binding !== settingsContext(settings() ?? { place: null, publicKey: "" }))) closeRefusal();
+  if (roomDialog && (roomDialogBinding?.settings !== settingsContext(settings() ?? { place: null, publicKey: "" }) || roomDialogBinding?.route !== location.hash)) {
     releaseDialog(roomDialog); roomDialog.close(); roomDialog.remove(); roomDialog = null; roomDialogBinding = null;
   }
-  if (workbenchDialog && (workbenchDialog.route !== location.hash || workbenchDialog.binding !== settingsContext(settings() ?? { place: null, secret: "" }))) closeWorkbench(false);
+  if (workbenchDialog && (workbenchDialog.route !== location.hash || workbenchDialog.binding !== settingsContext(settings() ?? { place: null, publicKey: "" }))) closeWorkbench(false);
   const route = routeOf(location.hash);
   const kept = settings();
   const publish = showFor(currentDraw, focus);
@@ -866,7 +905,7 @@ async function draw(focus = false): Promise<void> {
   const show = (...children: HTMLElement[]) => {
     const current = settings();
     if (currentDraw !== drawing) return;
-    if ((current ? settingsContext(current) : null) !== originalContext) { void draw(focus); return; }
+    if ((current ? settingsContext(current) : null) !== originalContext) { void startWorkbench(() => draw(focus)); return; }
     lastVerifiedContext = verifiedRoom(selectedRoom) ? originalContext : null;
     document.title = verifiedRoom(selectedRoom) && selectedRoom.name ? `dap - workroom ${selectedRoom.name}` : "dap - workroom";
     publish(...children);
@@ -878,7 +917,7 @@ async function draw(focus = false): Promise<void> {
     if (path === "join" && kept?.place && !ignoredSavedAddress) {
       try {
         const connected = await roomOf(kept, kept.place);
-        if (currentDraw !== drawing || settingsContext(settings() ?? { place: null, secret: "" }) !== originalContext) return;
+        if (currentDraw !== drawing || settingsContext(settings() ?? { place: null, publicKey: "" }) !== originalContext) return;
         if (verifiedRoom(connected)) { selectedRoom = connected; show(...entryShell(connectionScreen(path, connected))); }
       } catch { /* An unreadable saved connection cannot identify a current room. Joining remains available. */ }
     }
@@ -894,16 +933,16 @@ async function draw(focus = false): Promise<void> {
       try {
         const configured = await allowedClaim(sessionOf(kept), kept.register);
         claimStatus(sessionOf(kept), configured, localStorage); // A corrupt private recovery record offers no fresh creation.
-        if (currentDraw !== drawing || settingsContext(settings() ?? { place: null, secret: "" }) !== settingsContext(kept)) return;
+        if (currentDraw !== drawing || settingsContext(settings() ?? { place: null, publicKey: "" }) !== settingsContext(kept)) return;
         claimOffer = { kept, configured };
       } catch { /* No founding control is offered without a current native eligibility read. */ }
     }
-    if (currentDraw !== drawing || settingsContext(settings() ?? { place: null, secret: "" }) !== settingsContext(kept)) return;
+    if (currentDraw !== drawing || settingsContext(settings() ?? { place: null, publicKey: "" }) !== settingsContext(kept)) return;
     const { destination, scope } = route;
     const loaded = room;
     const viewCurrent = (): boolean => {
       if (currentDraw !== drawing) return false;
-      if (settingsContext(settings() ?? { place: null, secret: "" }) !== settingsContext(kept)) { void draw(focus); return false; }
+      if (settingsContext(settings() ?? { place: null, publicKey: "" }) !== settingsContext(kept)) { void startWorkbench(() => draw(focus)); return false; }
       return true;
     };
     let initialization = await roomInitialization(room);
@@ -979,7 +1018,7 @@ async function draw(focus = false): Promise<void> {
         const priorMutation = lastActs.get(actAssociation(loaded, change.scope));
         const mutationUnsettled = () => !!sending.get(actAssociation(loaded, change.scope)) || !!priorMutation && (priorMutation.answer.answer === "archived" || priorMutation.answer.answer === "unavailable" || priorMutation.answer.answer === "mismatch" || priorMutation.observation !== null);
         screen.querySelector('[data-action-slot="edit"]')?.append(mutationUnsettled() ? h("p", { class: "muted" }, "The current request must be confirmed before proposing an edit.") : retainedEditor(room, change, {
-          current: () => location.hash === capturedHash && settingsContext(settings() ?? { place: null, secret: "" }) === capturedContext && !mutationUnsettled(),
+          current: () => location.hash === capturedHash && settingsContext(settings() ?? { place: null, publicKey: "" }) === capturedContext && !mutationUnsettled(),
           recorded: (lane) => { location.hash = `#/change/${lane}`; },
         }));
       }
@@ -1048,7 +1087,7 @@ async function draw(focus = false): Promise<void> {
     const original = lastActs.get(actAssociation(loaded, loaded.directory));
     if (original?.kind === "open-issue" && original.answer.answer === "accepted" && original.observation === null) {
       const check = h("button", { type: "button" }, "Check created issue");
-      check.addEventListener("click", () => { if (currentDraw !== drawing || settingsContext(settings() ?? { place: null, secret: "" }) !== originalContext || location.hash !== capturedListRoute) return; void followCreatedIssue(loaded, original, () => currentDraw === drawing && settingsContext(settings() ?? { place: null, secret: "" }) === originalContext && location.hash === capturedListRoute); });
+      check.addEventListener("click", () => { if (currentDraw !== drawing || settingsContext(settings() ?? { place: null, publicKey: "" }) !== originalContext || location.hash !== capturedListRoute) return; void startWorkbench(() => followCreatedIssue(loaded, original, () => currentDraw === drawing && settingsContext(settings() ?? { place: null, publicKey: "" }) === originalContext && location.hash === capturedListRoute)); });
       screen.append(h("p", {}, check));
     }
     return showRoom(inspectedScreen(screen, panel, actAssociation(room, room.directory), "Room record"));
@@ -1067,5 +1106,5 @@ async function draw(focus = false): Promise<void> {
   }
 }
 
-window.addEventListener("hashchange", () => { cancelCreationFollow(); void draw(true); });
-void draw();
+window.addEventListener("hashchange", () => { if (!workbenchWork.active) return; cancelCreationFollow(); void startWorkbench(() => draw(true)); });
+void startWorkbench(() => draw());

@@ -6,6 +6,7 @@ import { expect, test } from "vitest";
 import { b64url, canonicalize, keyIdOfSecret, timeOf, utf8 } from "@generalbusiness/artroom-bytes";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT, INVITATION_KEY_COHORT } from "@generalbusiness/dap-platform";
 import { joinInvitation } from "../src/join-custody.ts";
+import { memoryPageKeys } from "./private-key-fixture.ts";
 import { sessionRoom } from "../../../../packages/scope/test/support/session-room.ts";
 import { rita, routed } from "../../../../packages/scope/test/repository.ts";
 
@@ -22,9 +23,13 @@ test.each([INVITATION_KEY_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT])("page join
       handle: "@page-visitor", role: "member", inviteKey: keyIdOfSecret(seed), inviteEnds: timeOf(life.now() + 60_000),
     } }));
     const secret = b64url(seed), service = "https://page-invitation.test", sent: unknown[] = [];
-    const key = crypto.getRandomValues(new Uint8Array(32)), kept = new Map<string, string>();
+    const keys = memoryPageKeys(), signer = await keys.create(), kept = new Map<string, string>();
+    // Real nonextractable WebCrypto key; only the fresh-key selection is a
+    // stand-in, returning this independently captured, already persisted key.
+    // Native workerd cannot validate imported keys through browser accessors;
+    // this case does not claim legacy migration or IndexedDB durability.
     const storage = { getItem: (name: string) => kept.get(name) ?? null, setItem: (name: string, value: string) => { kept.set(name, value); } };
-    const options = { secret: key, now: life.now, lock: { run: <T>(work: () => Promise<T>) => work() },
+    const options = { keys: { ...keys, create: async () => signer }, now: life.now, lock: { run: <T>(work: () => Promise<T>) => work() },
       fetch: (url: string, init?: Parameters<typeof routed>[1]) => {
         if (new URL(url).pathname.endsWith("/acts")) sent.push(JSON.parse(init!.body as string));
         return routed(url, init);
@@ -49,7 +54,7 @@ test.each([INVITATION_KEY_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT])("page join
     expect(last.entry.input.type).toBe("act");
     if (last.entry.input.type === "act") {
       expect(last.entry.input.signed.intent.fields).toEqual({ invitation, proof: expect.any(String) });
-      expect(last.entry.input.signed.intent.actor).toBe(keyIdOfSecret(key));
+      expect(last.entry.input.signed.intent.actor).toBe(signer.key);
     }
     expect(canonicalize(history)).not.toContain(secret);
     expect((await life.wait(() => membership.item(invitation))).state).toBe("active");

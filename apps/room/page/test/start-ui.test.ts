@@ -1,6 +1,6 @@
 import { expect, test, vi } from "vitest";
 import { b64url, keyIdOfSecret, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/artroom-bytes";
-import type { CreationOffer } from "@generalbusiness/artroom-client";
+import { secretSigner, type CreationOffer } from "@generalbusiness/artroom-client";
 import type { StartedRoom, StartOptions, StartStatus } from "../src/start-custody.ts";
 
 class Element {
@@ -8,7 +8,7 @@ class Element {
   attrs: Record<string, string> = {};
   value = "";
   className = "";
-  handlers = new Map<string, (event: { preventDefault(): void }) => void>();
+  handlers = new Map<string, (event: { preventDefault(): void }) => unknown>();
   constructor(readonly tag: string) {}
   setAttribute(k: string, v: string) {
     this.attrs[k] = v;
@@ -32,11 +32,11 @@ class Element {
   replaceChildren(...c: (Element | string)[]) {
     this.children = c;
   }
-  addEventListener(k: string, f: (event: { preventDefault(): void }) => void) {
+  addEventListener(k: string, f: (event: { preventDefault(): void }) => unknown) {
     this.handlers.set(k, f);
   }
   fire(k: string) {
-    this.handlers.get(k)?.({ preventDefault() {} });
+    return this.handlers.get(k)?.({ preventDefault() {} });
   }
   focus() {}
   click() { this.fire("click"); }
@@ -75,36 +75,39 @@ class Element {
 
 // Real Start handlers over SCRIPTED DOM, discovery/custody and room reads.
 // Actual key/journal custody is in start-custody.test; native admission is separate.
-test("Start is explicit; Back fences late discovery, reload only offers Check and Continue, and recovery uses the verified founder key", async () => {
+// Startup migration is a stand-in here; this case owns the rendered Start controls.
+test("Start is explicit; Back fences late discovery, reload only offers Check and Continue, and public configuration never exports the browser key", async () => {
   const root = new Element("div"), location = { origin: "https://start-ui.test", hash: "#/join" };
   const ref = (kind: "register" | "directory" | "membership") => ({ scope: scopeIdOf({ v: 1, kind, definition: kind === "register" ? "platform:register@8" : kind === "directory" ? "platform:directory@7" : "platform:membership@2", creator: null, cause: textDigest("SCRIPTED Start UI " + kind), ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(5)), kind });
   const register = ref("register"), directory = ref("directory"), membership = ref("membership");
   const legacyRegister = { ...register, scope: scopeIdOf({ v: 1, kind: "register", definition: "platform:register@7", creator: null, cause: textDigest("SCRIPTED retained UI register"), ordinal: 0 }) };
   let selectedDirectory = directory;
   const offer: CreationOffer = { v: 1, origin: location.origin, register, definition: "platform:register@8", at: { seq: 0, hash: textDigest("SCRIPTED head") }, registerItem: { id: 0, revision: 1, state: "open", host: "artifacts", namespace: "SCRIPTED", policy: "open", purpose: "demo-start" } };
-  const seed = new Uint8Array(32).fill(63), key = keyIdOfSecret(seed);
+  const seed = new Uint8Array(32).fill(63), key = keyIdOfSecret(seed), signer = secretSigner(seed);
   const values = new Map<string, string>(), blobs: Blob[] = [];
   let original: StartStatus | null = null, verified = false, complete = false, redraw!: () => void;
   let connection: { operation: string; kind: "person" | "agent-key"; handle: string; state: "unknown" | "verified" } | null = null;
   let invitationVerified = false;
+  let opening: Promise<unknown> | null = null;
   const issue = vi.fn(async (_origin: string, _storage: unknown, _expected: unknown, input: { kind: "person" | "agent-key"; handle: string }, options: { mode: string }) => {
     if (options.mode === "new") connection = { operation: "SCRIPTED connection", kind: input.kind, handle: input.handle, state: "unknown" };
     if (connection && invitationVerified) connection.state = "verified";
     return { ...connection!, ...(invitationVerified ? { link: "artroom-agent-key:SCRIPTED-private-link" } : { reason: "SCRIPTED original invitation reply lost" }) };
   });
-  const files = vi.fn(async () => ({ config: JSON.stringify({ repository: { directory: selectedDirectory, membership }, handle: "@founder" }), key: b64url(seed) + "\n" }));
-  const recovery = vi.fn(async () => { if (original) original = { ...original, recoverySaved: true }; return b64url(seed) + "\n"; });
+  const files = vi.fn(async () => ({ config: JSON.stringify({ repository: { directory: selectedDirectory, membership }, handle: "@founder" }) }));
+  const recovery = vi.fn(async () => { throw new Error("The browser signing key must not be exported."); });
   let finishOffer!: (value: CreationOffer) => void;
   const offerRead = vi.fn(() => new Promise<CreationOffer>(resolve => { finishOffer = resolve; }));
   const start = vi.fn(async (_origin: string, _storage: unknown, _options: StartOptions): Promise<StartedRoom> => {
     original = { key, configured: _options.mode === "new" ? { register, definition: "platform:register@8" } : original!.configured, handle: "@founder", label: "Personal intent", operation: "original", state: complete ? "complete" : "pending" };
-    return { key, configured: original.configured, handle: "@founder", operation: "original", label: "Personal intent", pending: !complete, repository: complete ? { directory: selectedDirectory, membership, rules: directory.scope, destination: membership.scope } : null, outcome: { code: complete ? 0 : 1, lines: ["SCRIPTED original pending"] }, ...(complete ? { secret: seed.slice() } : {}) };
+    return { key, configured: original.configured, handle: "@founder", operation: "original", label: "Personal intent", pending: !complete, repository: complete ? { directory: selectedDirectory, membership, rules: directory.scope, destination: membership.scope } : null, outcome: { code: complete ? 0 : 1, lines: ["SCRIPTED original pending"] }, ...(complete ? { signer } : {}) };
   });
   const save = vi.fn((name: string, text: string) => { values.set(name, text); });
   vi.doMock("@generalbusiness/artroom-client", async () => ({ ...await vi.importActual<typeof import("@generalbusiness/artroom-client")>("@generalbusiness/artroom-client"), creationOffer: offerRead }));
+  vi.doMock("../src/page-key-migration.ts", () => ({ migratePageOperations: async () => {} }));
   vi.doMock("../src/connection-custody.ts", () => ({ connectInvitation: issue, originalConnection: () => connection, creatorConnectionFiles: files, saveCreatorRecoveryOnce: recovery }));
   vi.doMock("../src/start-custody.ts", () => ({ originalStart: () => original, startRoom: start }));
-  vi.doMock("../src/data.ts", async () => ({ ...await vi.importActual<typeof import("../src/data.ts")>("../src/data.ts"), openRoom: async (session: { service: string; secret: Uint8Array }) => ({ session, directory: selectedDirectory.scope, membership, key, name: "Recorded host name", me: verified ? { handle: "@founder", role: "admin", actions: [], ref: { membership, member: "@founder" } } : null }) }));
+  vi.doMock("../src/data.ts", async () => ({ ...await vi.importActual<typeof import("../src/data.ts")>("../src/data.ts"), openRoom: async (session: import("../src/data.ts").Session) => ({ session, directory: selectedDirectory.scope, membership, key, name: "Recorded host name", me: verified ? { handle: "@founder", role: "admin", actions: [], ref: { membership, member: "@founder" } } : null }) }));
   vi.doMock("../src/view.ts", async () => ({ ...await vi.importActual<typeof import("../src/view.ts")>("../src/view.ts"), h: (tag: string, attrs: Record<string, string> = {}, ...children: unknown[]) => { const element = new Element(tag); for (const [k, v] of Object.entries(attrs)) element.setAttribute(k, v); element.children = children.flat().filter(child => child !== null && child !== undefined && child !== false) as (Element | string)[]; return element; } }));
   vi.stubGlobal("document", { title: "", getElementById: () => root, activeElement: null, createElement: () => new Element("a") });
   vi.stubGlobal("location", location); vi.stubGlobal("localStorage", { getItem: (name: string) => values.get(name) ?? null, setItem: save });
@@ -137,7 +140,7 @@ test("Start is explicit; Back fences late discovery, reload only offers Check an
     expect(offerRead).toHaveBeenCalledTimes(2);
     location.hash = "#/join"; redraw(); finishOffer(offer); await flush();
     expect(start).not.toHaveBeenCalled(); expect(root.textContent).toContain("Join with an invitation link"); expect(root.textContent).toContain("Join with a config and key");
-    location.hash = "#/start"; redraw(); find("input").value = "Personal intent"; find("form").fire("submit"); finishOffer(offer); await flush();
+    location.hash = "#/start"; redraw(); await flush(); find("input").value = "Personal intent"; find("form").fire("submit"); finishOffer(offer); await flush();
     expect(start).toHaveBeenCalledTimes(1); expect(start.mock.calls[0]![2].mode).toBe("new");
     expect(start.mock.calls[0]![2].offer?.definition).toBe("platform:register@8");
     // Reloaded legacy custody is not retargeted to the current fresh offer.
@@ -161,14 +164,15 @@ test("Start is explicit; Back fences late discovery, reload only offers Check an
     expect(save).not.toHaveBeenCalled(); expect(root.textContent).toContain("has not verified"); expect(document.title).toBe("dap - workroom");
     verified = true; find("button", "Check status").fire("click"); await flush();
     expect(root.textContent).toContain("Your room is ready"); expect(document.title).toBe("dap - workroom Recorded host name");
-    expect(root.textContent).toContain("Invite people"); expect(root.textContent).toContain("Connect command line"); expect(root.textContent).toContain("Connect an agent");
-    root.all().find(e => e.tag === "button" && e.textContent.startsWith("Get connection files"))!.fire("click"); await flush();
-    expect(files).toHaveBeenCalledTimes(1); expect(blobs).toHaveLength(2);
-    expect((await blobs[1]!.text()).trim() === b64url(seed)).toBe(true);
-    const config = JSON.parse(await blobs[0]!.text()); expect(config.repository.membership).toEqual(membership); expect(config.handle).toBe("@founder");
-    find("button", "Save a recovery file").fire("click"); await flush();
-    find("button", "Save a recovery file").fire("click"); await flush();
-    expect(recovery).toHaveBeenCalledTimes(1); expect(blobs).toHaveLength(3); expect((await blobs[2]!.text()).trim() === b64url(seed)).toBe(true);
+    expect(root.textContent).toContain("Invite people"); expect(root.textContent).toContain("Room configuration"); expect(root.textContent).toContain("Connect an agent");
+    root.all().find(e => e.tag === "button" && e.textContent.startsWith("Get public configuration"))!.fire("click"); await flush();
+    expect(files).toHaveBeenCalledTimes(1); expect(blobs).toHaveLength(1);
+    const configText = await blobs[0]!.text();
+    const config = JSON.parse(configText); expect(config.repository.membership).toEqual(membership); expect(config.handle).toBe("@founder");
+    expect(configText).not.toContain(b64url(seed));
+    expect(root.textContent).toContain("Your creator key stays in this browser and cannot be downloaded.");
+    expect(root.all().some(e => e.tag === "button" && e.textContent.includes("Save a recovery file"))).toBe(false);
+    expect(recovery).not.toHaveBeenCalled();
     root.all().find(e => e.tag === "button" && e.textContent.startsWith("Create invitation"))!.fire("click");
     const connectionForm = root.all().filter(e => e.tag === "form").at(-1)!;
     root.all().find(e => e.attrs["name"] === "handle")!.value = "@guest";
@@ -191,10 +195,19 @@ test("Start is explicit; Back fences late discovery, reload only offers Check an
     expect(root.textContent).toContain("dap join <same-private-link> --check");
     expect(root.textContent).toContain("new owner-only ARTROOM_HOME directory");
     // A late ready-screen action cannot replace a newly selected connection.
-    values.set("artroom-page", JSON.stringify({ place: null, secret: b64url(new Uint8Array(32).fill(64)) }));
-    find("button", "Open room").fire("click"); expect(save).not.toHaveBeenCalled();
+    const changedSettings = JSON.stringify({ place: null, publicKey: keyIdOfSecret(new Uint8Array(32).fill(64)) });
+    values.set("artroom-page", changedSettings);
+    opening = Promise.resolve(find("button", "Open room").fire("click"));
+    await opening;
+    expect(save).not.toHaveBeenCalled();
+    expect(values.get("artroom-page")).toBe(changedSettings);
   } finally {
-    createUrl.mockRestore(); revokeUrl.mockRestore(); vi.unstubAllGlobals();
-    for (const path of ["@generalbusiness/artroom-client", "../src/start-custody.ts", "../src/connection-custody.ts", "../src/data.ts", "../src/view.ts"]) vi.doUnmock(path);
+    // Retain globals until the actual async click callback settles, even if
+    // an assertion fails. A rejected callback remains a test failure.
+    try { await opening; }
+    finally {
+      createUrl.mockRestore(); revokeUrl.mockRestore(); vi.unstubAllGlobals();
+      for (const path of ["@generalbusiness/artroom-client", "../src/start-custody.ts", "../src/connection-custody.ts", "../src/page-key-migration.ts", "../src/data.ts", "../src/view.ts"]) vi.doUnmock(path);
+    }
   }
 });

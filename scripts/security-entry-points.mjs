@@ -66,6 +66,7 @@ const methodRows = (methods, paths, gate) => methods.flatMap(method => paths.map
 // Gate classes concern the effective read or operation, rather than the
 // Authorization header's spelling. A signature alone certifies any fresh key.
 const signedReads = strings(declaration(readSource("packages/scope/src/signed-reads.ts"), "SIGNED_READS"));
+const { presentsSignedRead } = load(readSource("packages/scope/src/signed-reads.ts"), ["SCHEME", "presentsSignedRead"], {});
 const adminReads = strings(declaration(readSource("packages/scope/src/sessions.ts"), "ADMIN_READS"));
 const readGate = name => adminReads.includes(name) ? "admin" : signedReads.includes(name) ? "self-signed" : "session";
 const gates = {
@@ -95,7 +96,7 @@ async function scopeRows(text) {
   const binding = { idFromName: value => value, get: () => remote };
   const globals = {
     URL, Response, ReadableStream, TextDecoder, read: () => new Response(), answered: () => new Response(), MISSING: {}, isObject: value => value !== null && typeof value === "object" && !Array.isArray(value), BODY_BYTES: 1024 * 1024,
-    admittedRequestUrl: () => true, credentialInUrl: () => false,
+    admittedRequestUrl: () => true, credentialInUrl: () => false, presentsSignedRead,
     api: () => remote, json: status => new Response(null, { status }),
     requestQuery: () => true, positionOf: value => /^\d+$/.test(value ?? "") ? Number(value) : null,
     ITEM_QUERY_WIRE_BOUNDS, APPLICATION_PROJECTION_WIRE_BOUNDS,
@@ -136,6 +137,7 @@ async function scopeRows(text) {
 
 async function hostedInventory(source) {
   const text = declaration(source, "mcpRoute"), agent = "a".repeat(64), paths = strings(text, value => value.startsWith("/") && !value.endsWith("/"));
+  const { SCOPE_INDEX_NAME, scopeIndex } = load(readSource("packages/scope/src/scope-index.ts"), ["SCOPE_INDEX_NAME", "scopeIndex"], {});
   walk(parse(text), node => {
     if (node.type !== "VariableDeclarator" || node.id.name !== "agentPath") return;
     const pattern = node.init.callee.object.regex.pattern;
@@ -150,16 +152,24 @@ async function hostedInventory(source) {
   const result = new Map(), marker = dispatch => { throw { dispatch }; };
   let action;
   const { mcpRoute } = load(source, ["mcpRoute", "boundedBytes"], {
-    admittedRequestUrl: () => true, URL, Response, Uint8Array, CONTROL_BODY_BYTES: 64 * 1024,
+    admittedRequestUrl: () => true, URL, Response, Uint8Array, CONTROL_BODY_BYTES: 64 * 1024, scopeIndex,
     json: status => new Response(null, { status }),
     controlOf: () => ({ request: { action, agent: action === "create" ? null : agent, membership: { scope: "witness" } } }),
   });
   const object = { create: () => marker("control"), control: () => marker("control"), fetch: () => marker("bearer") };
   const namespace = { idFromName: name => name, idFromString: name => name, get: () => object };
+  // A known-index stand-in reaches the actual control matcher; this is
+  // structural route coverage, not native index or authority evidence.
+  const index = {
+    idFromName(name) { assert.equal(name, SCOPE_INDEX_NAME); return name; },
+    get(name) { assert.equal(name, SCOPE_INDEX_NAME); return { has(scope, kind) {
+      assert.equal(scope, "witness"); assert.equal(kind, "membership"); return true;
+    } }; },
+  };
   const methods = new Set([...methodsIn(text), ...methodsIn(readSource("packages/mcp/src/http.ts"))]);
   for (const path of paths) for (const method of methods) for (action of ["create", "bearer", "retire"]) {
     const request = new Request(`https://inventory.invalid${path}`, { method, headers: { authorization: `Bearer ${agent}.witness` } });
-    try { await mcpRoute(request, { REGISTRIES: namespace, AGENTS: namespace }); }
+    try { await mcpRoute(request, { REGISTRIES: namespace, AGENTS: namespace, SCOPE_INDEX: index }); }
     catch (error) {
       if (!error?.dispatch) throw error;
       const route = row(method, path.replace(agent, ":agent"), error.dispatch);
@@ -193,8 +203,76 @@ export function roomHttpEntry(file, source = readSource) {
   return "apps/room/fetch.ts";
 }
 
+// Execute the actual finite sandbox HTTP matcher with fixed service stand-ins.
+// This witnesses dispatch composition, not native membership or packet trust.
+export async function sandboxInventory({ sandboxSource = readSource("apps/sandbox/worker.ts"), gatewaySource = readSource("packages/client/src/application-gateway.ts"), nativeRows } = {}) {
+  const scope = "sc_" + "a".repeat(52), digest = "sha256:" + "a".repeat(64);
+  const host = { v: 1, screenOrigin: "https://inventory.inguz.space", roomOrigin: "https://inventory.invalid", directory: scope, item: 0, presentation: digest };
+  // The actual Worker handler forwards a stream body. Node's Request alone
+  // requires duplex for that initializer; workerd's Request does not. Keep
+  // this runtime adapter inside the Node inventory witness, not the Worker.
+  class InventoryRequest extends Request {
+    constructor(input, init) {
+      super(input, init?.body instanceof ReadableStream ? { ...init, duplex: "half" } : init);
+    }
+  }
+  const globals = { URL, Response, Request: InventoryRequest, Headers, TextEncoder, TextDecoder, isScopeId: value => value === scope, isDigest: value => value === digest };
+  const addresses = load(readSource("packages/client/src/application-route.ts"), ["applicationScreenPath", "readApplicationScreenAddress"], globals);
+  const gateway = load(gatewaySource, ["APPLICATION_SCREEN_HOST_PATH", "applicationScreenHostMatches", "applicationGatewayRoute"], { ...globals, ...addresses });
+  const support = load(sandboxSource, ["mappings", "refused", "discard"], {
+    ...globals, parseStrict: JSON.parse, isRecord: value => value !== null && typeof value === "object" && !Array.isArray(value), readApplicationScreenHost: value => value,
+  });
+  const defaults = parse(sandboxSource).body.filter(node => node.type === "ExportDefaultDeclaration");
+  assert.equal(defaults.length, 1, "One sandbox HTTP entry");
+  const expression = sandboxSource.slice(defaults[0].declaration.start, defaults[0].declaration.end);
+  const names = { ...globals, ...gateway, ...support, canonicalize: JSON.stringify, within: async (_seconds, run) => run(), LATE: Symbol("late"), REPLY_SECONDS: 10 };
+  const handler = Function(...Object.keys(names), `return (${stripTypeScriptTypes("(" + expression + ")")});`)(...Object.values(names));
+  const dispatched = kind => new Response(null, { status: 200, headers: { "x-inventory-dispatch": kind } });
+  const service = { screenHost: async () => host, screen: async () => dispatched("screen"), native: async () => dispatched("native"), nativeStream: async () => ({ response: dispatched("native"), lifetime: { close: async () => undefined } }) };
+  const env = { SCREEN_HOSTS: JSON.stringify([{ host, service: "ROOM" }]), ROOM: service };
+  const screenPath = `/applications/${scope}/0/${encodeURIComponent(digest)}/`;
+  const candidates = [
+    ...(nativeRows ?? await scopeRows(readSource(scopeFile))),
+    ...methodRows(methodsIn(declaration(readSource("packages/scope/src/site/route.ts"), "site")), ["/site/*"], "none"),
+    ...methodRows(["GET", "HEAD"], ["/applications/*"], "none"),
+    row("GET", gateway.APPLICATION_SCREEN_HOST_PATH, "none"),
+  ];
+  const rows = [];
+  for (const candidate of candidates) {
+    const [method, path] = candidate.route.split(" ");
+    const actual = path === "/applications/*" ? screenPath : path === "/site/*" ? `/site/${scope}/HEAD/index.html`
+      : path.replace(":scope", scope).replace(":seq", "0").replace(":type", "item").replace(/:[A-Za-z]+/g, "witness");
+    const query = actual.endsWith("/query-items") ? "?q=e30" : actual.endsWith("/application-projection") ? "?p=e30" : "";
+    const background = [];
+    const response = await handler.fetch(new Request(host.screenOrigin + actual + query, { method, ...(method === "POST" ? { body: "{}" } : {}) }), env, { waitUntil: work => { background.push(work); } });
+    await Promise.all(background);
+    if ((response.status === 200 && path === gateway.APPLICATION_SCREEN_HOST_PATH) || response.headers.has("x-inventory-dispatch")) rows.push(candidate);
+  }
+  return rows;
+}
+
+function sandboxBindings() {
+  const config = jsonc("apps/sandbox/wrangler.jsonc");
+  assert.equal(config.main, "worker.ts");
+  assert.equal(config.name, "dap-application-sandbox");
+  assert.equal(config.workers_dev, false);
+  assert.deepEqual(config.vars, { SCREEN_HOSTS: "[]" });
+  assert.deepEqual(config.routes, [{ pattern: "*.inguz.space/*", zone_name: "inguz.space" }]);
+  assert.deepEqual(config.services, [
+    { binding: "ROOM", service: "artroom-scope", entrypoint: "ApplicationScreenService" },
+    { binding: "GROW", service: "dap-grow", entrypoint: "ApplicationScreenService" },
+    { binding: "LENDING", service: "dap-lending", entrypoint: "ApplicationScreenService" },
+  ]);
+  // No HTTP dispatcher can reach these methods directly. Seal the complete
+  // owner in addition to checking its finite named RPC surface.
+  const service = parse(readSource(scopeFile)).body.map(node => node.declaration ?? node).find(node => node.id?.name === "ApplicationScreenService");
+  assert.ok(service, "Named sandbox RPC entry");
+  assert.deepEqual(service.body.body.map(node => node.key.name), ["screenHost", "screen", "nativeStream", "native"]);
+  return config.name;
+}
+
 function jsonc(file) { return JSON.parse(readSource(file).replace(/^\s*\/\/.*$/gm, "")); }
-export async function servedInventory({ scopeSource = readSource(scopeFile) } = {}) {
+export async function servedInventory({ scopeSource = readSource(scopeFile), applicationSource = readSource("packages/scope/src/applications/route.ts") } = {}) {
   const scope = await scopeRows(scopeSource);
   const page = readSource("apps/room/page/route.ts"), pagePaths = [];
   walk(parse(declaration(page, "page")), node => { if (node.type === "SwitchCase" && typeof node.test?.value === "string") pagePaths.push(node.test.value); });
@@ -203,7 +281,7 @@ export async function servedInventory({ scopeSource = readSource(scopeFile) } = 
     ...methodRows(methodsIn(declaration(page, "page")), pagePaths, "none"),
     ...methodRows(methodsIn(declaration(readSource("apps/room/brand/route.ts"), "brand")), prefixesIn(declaration(readSource("apps/room/brand/route.ts"), "isBrand")).map(prefix => prefix + "*"), "none"),
     ...methodRows(methodsIn(declaration(readSource("packages/scope/src/site/route.ts"), "site")), prefixesIn(declaration(readSource("packages/scope/src/site/route.ts"), "isSite")).map(prefix => prefix + "*"), "none"),
-    ...methodRows(methodsIn(declaration(readSource("packages/scope/src/applications/route.ts"), "screenResponse")), prefixesIn(declaration(readSource("packages/scope/src/applications/route.ts"), "screenResponse")).map(prefix => prefix + "*"), "none"),
+    ...methodRows(methodsIn(declaration(applicationSource, "applicationPage")), prefixesIn(declaration(applicationSource, "applicationPage")).map(prefix => prefix + "*"), "none"),
     ...methodRows(methodsIn(declaration(readSource("apps/room/demo-creation.ts"), "demoCreationRoute")), strings(declaration(readSource("apps/room/demo-creation.ts"), "DEMO_OFFER_PATH")), "none"),
   ];
   const hostedRows = await hostedInventory(scopeSource);
@@ -218,6 +296,7 @@ export async function servedInventory({ scopeSource = readSource(scopeFile) } = 
     assert.equal(roomHttpEntry(`apps/room/${entry}`), "apps/room/fetch.ts");
     result.set(config.name, [...publicRows, ...scope, ...(bindings.includes("REGISTRIES") && bindings.includes("AGENTS") ? hostedRows : [])]);
   }
+  result.set(sandboxBindings(), await sandboxInventory({ nativeRows: scope }));
   const simulator = jsonc("examples/grow/wrangler.jsonc");
   assert.equal(simulator.main, "simulator-worker.ts");
   const hostSource = declaration(readSource("examples/grow/simulator-host.ts"), "simulatorHost");
@@ -242,7 +321,7 @@ export function documentedInventory(text) {
   const tables = new Map();
   let table;
   for (const line of text.split("\n")) {
-    const heading = /^## (artroom-scope|dap-grow|dap-lending|dap-grow-simulator|dap-home)$/.exec(line);
+    const heading = /^## (artroom-scope|dap-grow|dap-lending|dap-grow-simulator|dap-home|dap-application-sandbox)$/.exec(line);
     if (heading) { table = []; assert.ok(!tables.has(heading[1]), "Duplicate Worker table"); tables.set(heading[1], table); }
     if (!line.startsWith("| `")) continue;
     const cells = line.split("|").slice(1, -1).map(cell => cell.trim());

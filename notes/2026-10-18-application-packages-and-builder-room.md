@@ -1,8 +1,8 @@
 # Application packages, their checks, and the builder room
 
-18 October 2026, draft 8, with post-landing corrections. Draft 8 is
-approved (`4a701937`) and landed at `165d5a86`. The corrections landed at
-`a93b6359`. Section 15 lists what changed after each checker review.
+Status: current. 18 October 2026, draft 8, with post-landing corrections.
+Draft 8 is approved (`4a701937`) and landed at `165d5a86`. The corrections
+landed at `a93b6359`. Section 15 lists what changed after each checker review.
 
 This note makes application authoring in dap easier to do and easier to
 verify, so that an agent can build and customize an application on

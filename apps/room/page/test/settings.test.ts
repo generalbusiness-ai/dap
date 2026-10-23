@@ -1,4 +1,6 @@
 import { expect, test, vi } from "vitest";
+import type { Signer } from "@generalbusiness/artroom-client";
+import { scriptedPageKeys } from "./scripted-page-key-store.ts";
 import {
   b64url,
   keyIdOfSecret,
@@ -10,6 +12,8 @@ import {
 // Actual config entry handlers; DOM, native reads and storage failures are
 // stand-ins. A readable config alone supplies no verified room membership.
 test("Config and key select a room only after matching standing and exact storage readback; legacy Settings shows only the chooser", async () => {
+  vi.doMock("../src/browser-key-store.ts", async () => ({ ...await vi.importActual<typeof import("../src/browser-key-store.ts")>("../src/browser-key-store.ts"), pageKeyStore: scriptedPageKeys }));
+  vi.doMock("../src/page-key-migration.ts", () => ({ migratePageOperations: async () => {} }));
   class Element {
     children: (Element | string)[] = [];
     attrs: Record<string, string> = {};
@@ -135,13 +139,13 @@ test("Config and key select a room only after matching standing and exact storag
     saved: string | null = null,
     readFails = false;
   const writes = vi.fn(),
-    open = vi.fn(async (session: { service: string; secret: Uint8Array }) => ({
+    open = vi.fn(async (session: { service: string; signer: Signer }) => ({
       session,
       directory: place.directory,
       membership,
       rules: place.directory,
       destination: place.directory,
-      key: keyIdOfSecret(session.secret),
+      key: session.signer.key,
       name: "Studio",
       me:
         mode === "verified"
@@ -234,12 +238,14 @@ test("Config and key select a room only after matching standing and exact storag
       .fire("submit");
   try {
     await import("../src/main.ts");
+    await drain();
     expect(root.all().find(e => e.tag === "h1")?.textContent).toBe("Join or create a room");
     expect(root.textContent).not.toMatch(
       /Save settings|Create key|Your key|Issues|Changes|Rules/,
     );
     location.hash = "#/config";
     redraw();
+    await drain();
     expect(
       root
         .all()
@@ -267,7 +273,7 @@ test("Config and key select a room only after matching standing and exact storag
     storageMode = "readback";
     submit();
     await drain();
-    expect(JSON.parse(saved!)).toEqual({ place, secret });
+    expect(JSON.parse(saved!)).toEqual({ place, publicKey: keyIdOfSecret(seed) });
     expect(location.hash).toBe("#/config");
     expect(root.textContent).toContain("Check the original saved connection");
     storageMode = "ok";
@@ -275,8 +281,10 @@ test("Config and key select a room only after matching standing and exact storag
     // Its old handler must stay fenced. Reopen the chooser's config path.
     location.hash = "#/join";
     redraw();
+    await drain();
     location.hash = "#/config";
     redraw();
+    await drain();
     fill();
     submit();
     await drain();
@@ -284,7 +292,7 @@ test("Config and key select a room only after matching standing and exact storag
     expect(
       open.mock.calls.every(([session]) => session.service === location.origin),
     ).toBe(true);
-    expect(JSON.parse(saved!)).toEqual({ place, secret });
+    expect(JSON.parse(saved!)).toEqual({ place, publicKey: keyIdOfSecret(seed) });
     expect(document.title).toBe("dap - workroom Studio");
     expect(root.all().some((e) => e.attrs["class"] === "rail")).toBe(true);
     viewUnavailable = true;
@@ -305,6 +313,7 @@ test("Config and key select a room only after matching standing and exact storag
     vi.unstubAllGlobals();
     vi.doUnmock("../src/data.ts");
     vi.doUnmock("../src/view.ts");
+    vi.doUnmock("../src/browser-key-store.ts"); vi.doUnmock("../src/page-key-migration.ts");
     vi.resetModules();
   }
 });

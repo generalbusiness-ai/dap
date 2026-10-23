@@ -43,6 +43,8 @@ export interface Peer {
   proofSource?(fact: FactRef, maxBytes: number, milliseconds?: number): Promise<ProofBody | null>;
   /** Raw checked birth only; never a producer-selected privileged identity. */
   nativeBirth?(at: ScopeRef, milliseconds: number, maxBytes?: number): Promise<NativeBirth | null>;
+  /** Bounded immutable declaration bytes, only from an authenticated native Directory. */
+  creationDeclaration?(at: ScopeRef, digest: Digest, maxBytes: number, milliseconds: number): Promise<string | null>;
   /** Optional bounded native directory witness; never fall back to summary. */
   sessionReference?(request: string): Promise<string | null>;
   declared(digest: Digest): Promise<string | null>;

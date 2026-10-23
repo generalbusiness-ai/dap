@@ -1,12 +1,12 @@
 # Artroom: plan for the Cloudflare Git platform competition
 
-Status, 21 October 2026: revision 4 is approved (`8ab80c18`) and landed at
-`de52c98d`; one paragraph of section 3 changed at `b878fee9`, landed at
-`4b6d42a7`. This plan is history. Declared acts replaced the seven fixed
+Status: retired; no work follows from it. Revision 4 is approved
+(`8ab80c18`) and landed at `de52c98d`; one paragraph of section 3 changed
+at `b878fee9`, landed at `4b6d42a7`. Declared acts replaced the seven fixed
 acts of section 4 (`b44601dd`), and the scope substrate replaced the room,
-lanes and policy runtime (`f1c456ce`); the earlier packages were deleted
-at `66eba017`. The spikes of section 13 landed (`5b23bc91`, `89c682c7`).
-The open points of section 14 are settled: the packages use the
+lanes and policy runtime (`f1c456ce`); the earlier packages were deleted at
+`66eba017`. The spikes of section 13 landed (`5b23bc91`, `89c682c7`). The
+open points of section 14 are settled: the packages use the
 `@generalbusiness` scope, and the service runs at dap.generalbusiness.ai.
 
 2026-10-01. Revision 4, answering checker's reviews `c31169e9` (of head

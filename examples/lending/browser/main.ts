@@ -6,7 +6,7 @@
  * Each act keeps its page text in the signed request. Published text is read separately.
  */
 import "./style.css";
-import { applicationDeviceIdentity, loadApplicationScreenContext } from "@generalbusiness/artroom-client";
+import { applicationDeviceIdentity, applicationScreenTransport, loadApplicationScreenContext } from "@generalbusiness/artroom-client";
 import { LENDING_DEFINITION } from "../pin.ts";
 import { canonicalize } from "@generalbusiness/artroom-bytes";
 import { lendingGateway, type ActOutcome, type LendingGateway, type LendingState, type Pending } from "./client.ts";
@@ -18,6 +18,8 @@ import { lendingStorage, type Remembered } from "./storage.ts";
 
 async function main() {
 const screen = await loadApplicationScreenContext(location.href);
+const screenTransport = screen ? applicationScreenTransport(screen) : null;
+const serviceOrigin = screen?.origin ?? location.origin;
 if (screen && screen.definition !== LENDING_DEFINITION) throw Error("This presentation does not match the installed library definition.");
 const { actStore, browserLock, joinStore, remembered } = lendingStorage(screen ? canonicalize(screen.scope) : undefined);
 type Notice = { kind: "plain" | "refusal"; text: string } | null;
@@ -37,7 +39,7 @@ async function pages(view: LendingView, version: number, at: number): Promise<vo
   published = new Map();
   const identity=memory?.identity, directory=memory?.seat?.directory.scope;
   if(!identity || !directory) return;
-  const rows=await Promise.all(view.things.map(async thing => [thing.id,await readPage(identity.origin,directory,thing,view.record,controller.signal)] as const));
+  const rows=await Promise.all(view.things.map(async thing => [thing.id,await readPage(identity.origin,directory,thing,view.record,controller.signal,screenTransport?.request)] as const));
   if(at!==epoch || version!==reading || controller.signal.aborted) return;
   published=new Map(rows); draw();
 }
@@ -103,7 +105,7 @@ async function open(next: Remembered): Promise<void> {
   if (timer !== undefined) clearInterval(timer);
   if (!next.identity) return;
   const at = epoch;
-  gateway = lendingGateway(next.identity, deviceSigner(next.device), { current: () => at === epoch, lock: browserLock, store: actStore(next.identity), ...(screen?{application:screen}:{}) });
+  gateway = lendingGateway(next.identity, deviceSigner(next.device), { current: () => at === epoch, lock: browserLock, store: actStore(next.identity), ...(screen?{application:screen}:{}), ...(screenTransport ? { fetch: screenTransport.fetch, headFetch: screenTransport.headFetch, actFetch: screenTransport.fetch } : {}) });
   await look();
   if (at !== epoch) return;
   timer = window.setInterval(() => { if (!busy && document.visibilityState === "visible") void look(); }, 15_000);
@@ -112,7 +114,7 @@ async function open(next: Remembered): Promise<void> {
 const rememberedContext = (value: Remembered | null) => value === null ? null : canonicalize({ key: value.device.publicKey, seat: value.seat ?? null, identity: value.identity ?? null });
 async function seated(device: DeviceKey, seat: Seat, expectedEpoch = epoch): Promise<void> {
   const previous = rememberedContext(memory ?? { v: 1, device });
-  const matched = await findLending(seat, device, screen ? { context: screen } : {});
+  const matched = await findLending(seat, device, { ...(screen ? { context: screen } : {}), ...(screenTransport ? { fetch: screenTransport.fetch } : {}) });
   if (expectedEpoch !== epoch) return;
   await browserLock.run(async () => {
     if (expectedEpoch !== epoch) return;
@@ -144,7 +146,7 @@ async function joined(device: DeviceKey, outcome: JoinOutcome | null, expectedEp
   if (outcome.status === "unknown" && outcome.seat) keptJoin = outcome.seat;
 }
 function joinFor(device: DeviceKey, expectedEpoch = epoch) {
-  return joining(device, { origin: location.origin, lock: browserLock, store: joinStore, ...(screen ? { membershipDefinition: screen.membershipDefinition } : {}), current: () => expectedEpoch === epoch });
+  return joining(device, { origin: serviceOrigin, lock: browserLock, store: joinStore, ...(screen ? { membershipDefinition: screen.membershipDefinition } : {}), ...(screenTransport ? { fetch: screenTransport.fetch, actFetch: screenTransport.fetch } : {}), current: () => expectedEpoch === epoch });
 }
 /** The device key of this browser, made on first need and remembered before it is used. */
 async function device(): Promise<DeviceKey> {
@@ -173,7 +175,7 @@ function drawJoin(): Node[] {
     button("Check the join", () => void work(async () => { const at = epoch, key = await device(); if (at !== epoch) return; await joined(key, await joinFor(key, at).check(), at); })),
     button("Continue the join", () => void work(async () => { const at = epoch, key = await device(); if (at !== epoch) return; await joined(key, await joinFor(key, at).continueOriginal(), at); }))));
   else nodes.push(field("Invitation link", link), button("Join", () => void work(async () => {
-    const invited = readInvitation(link.value, location.origin, screen ?? undefined);
+    const invited = readInvitation(link.value, serviceOrigin, screen ?? undefined);
     if (!invited.ok) { notice = { kind: "plain", text: `${invited.reason} Nothing was sent.` }; return; }
     const at = epoch, key = await device();
     if (at !== epoch) return;
@@ -289,7 +291,7 @@ void (async () => {
     if (screen && memory?.identity) {
       if (!memory.seat || canonicalize(applicationDeviceIdentity(screen, memory.seat, memory.device.publicKey)) !== canonicalize(memory.identity)) throw Error("The remembered seat does not match this installed library.");
     }
-    if (memory) { keptJoin = await joining(memory.device, { origin: location.origin, lock: browserLock, store: joinStore, ...(screen ? { membershipDefinition: screen.membershipDefinition } : {}) }).pending(); if (memory.seat) await open(memory); }
+    if (memory) { keptJoin = await joining(memory.device, { origin: serviceOrigin, lock: browserLock, store: joinStore, ...(screen ? { membershipDefinition: screen.membershipDefinition } : {}), ...(screenTransport ? { fetch: screenTransport.fetch, actFetch: screenTransport.fetch } : {}) }).pending(); if (memory.seat) await open(memory); }
   } catch (error) { notice = { kind: "plain", text: error instanceof Error ? error.message : "This browser's private storage is unavailable." }; }
   draw();
 })();

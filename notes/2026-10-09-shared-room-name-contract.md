@@ -1,13 +1,14 @@
 # Shared room names and room-issued version labels
 
-9 October 2026. **Proposed design Source; no protocol or runtime adoption.**
-Request `576411c5ffd3ef7d8862134209f130539e82e2e8`, promise
-`f7946f7b24f51046717487b6b2c9a6462aa03a79`. This makes planning report
-`32c28687569ebfeb46a3f1cb6ab45fcdc00c1e35` precise, with directions
+Status: current. 9 October 2026. **Proposed design Source; no protocol or
+runtime adoption.** Request `576411c5ffd3ef7d8862134209f130539e82e2e8`,
+promise `f7946f7b24f51046717487b6b2c9a6462aa03a79`. This makes planning
+report `32c28687569ebfeb46a3f1cb6ab45fcdc00c1e35` precise, with directions
 `a2537179e00d77e866ccea9675991945a638efd5` and
 `3ddeeaff1350a077ffa1fc1a818e9b738d716ad8`. Independent design/authority
-review and planner adoption precede implementation. Existing C1/A1 approval
-supplies no approval for this contract.
+review and planner adoption precede implementation. Existing C1/A1
+approval supplies no approval for this contract. It landed at `9d7e4c27`
+(approval `718b52f4`).
 
 ## Identity and exact naming rows
 

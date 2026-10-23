@@ -17,7 +17,7 @@ import { deviceApplicationPacket, applicationResolverFixture, applicationHttpPee
 import { devicePackageFixture as deviceCommandFixture } from "../../derive/test/fixtures-device-command.ts";
 import { outsideOf as hostOutside } from "../src/worker.ts";
 import { rita, routed } from "./repository.ts";
-import worker from "../../../apps/room/worker.ts";
+import { applicationSandboxPage } from "../src/applications/route.ts";
 
 test.each([["device", C, undefined, false], ["device/archive bound", AC, "journal", true], ["device/archive unbound", AC, undefined, false]] as const)("a native install checks its existing owner and preserves its command grant through SQLite restart (%s)", async (_label, C, archive, requiresArchive) => {
   const id = definitionDigest(deviceCommandFixture);
@@ -25,7 +25,7 @@ test.each([["device", C, undefined, false], ["device/archive bound", AC, "journa
   const room = await sessionRoom(C.register, archive), { life, R, D, children } = room, [M, A, G] = children;
   if (!M || !A || !G) throw Error("The device cohort needs its exact siblings.");
   const f = await applicationResolverFixture("sha1", undefined, {}, undefined, packet), peer = applicationHttpPeer(f);
-  const bindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(f.trust));
+  const bindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(f.trust), env.SCOPE_INDEX);
   try {
     const seat = await life.wait(() => M.did(rita, "seat", { expected: { roster: 1 } }));
     await life.wait(async () => M.did(rita, "first-key", { fields: { member: seat }, expected: await M.expected({ roster: 0, member: seat }) }));
@@ -90,11 +90,11 @@ test.each([["device", C, undefined, false], ["device/archive bound", AC, "journa
       } } });
     }
     expect(await life.wait(() => A.item(job))).toMatchObject({ state: "active", refs: { scope } });
-    // Invariant: the real HTTP context names this cohort's Membership pin,
+    // Invariant: the private screen renderer names this cohort's Membership pin,
     // so its production invitation reader accepts an actually issued link.
     // Parsing a link here is not enrollment; the native CLI owns that story.
     const screen = applicationScreenPath(directory.scope, job, packet.ids.presentation);
-    const response = await life.wait(() => worker.fetch(new Request(port.service + screen + "_/context"), bindings));
+    const response = await life.wait(async () => (await applicationSandboxPage(new Request(port.service + screen + "_/context"), bindings))!);
     expect(response.status).toBe(200);
     const context = readApplicationScreenContext(await response.json(), readApplicationScreenAddress(screen)!, port.service);
     expect(context).toMatchObject({ directory, membership, scope, membershipDefinition: C.membership });

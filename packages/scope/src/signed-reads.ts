@@ -129,6 +129,13 @@ function openSignedRead(reader: string): SignedRead | null {
     return null;
   }
 }
+/** Bounded custody check for serving counters only. It grants no read,
+ * target, time window or root authority; all original checks still run. */
+export function signedReadForLimits(reader: unknown): { actor: KeyId; verified: boolean } | null {
+  if (typeof reader !== "string" || reader.length > SCHEME.length + SIGNED_CHARS || !presentsSignedRead(reader)) return null;
+  const signed = openSignedRead(reader);
+  return signed ? { actor: signed.request.actor, verified: verifySignedRead(signed) } : null;
+}
 /** Pure admission before protected storage. Fresh clock/frame checks still follow at preparation and release. */
 export function scopedSignedRead(reader: unknown, to: ScopeId, read: SignedReadName, arg: string): SignedRead | null {
   if (typeof reader !== "string" || reader.length > SCHEME.length + SIGNED_CHARS || !presentsSignedRead(reader)) return null;

@@ -45,7 +45,7 @@ export const checkerKey: Signer = { secret: checkerSecret, key: keyIdOfSecret(ch
 export const oid = (c: string) => c.repeat(40);
 
 /** The scope service's own operations over the namespace `PLATFORM`, in the test's isolate. */
-export const platformTransport = api(env.PLATFORM);
+export const platformTransport = api(env.PLATFORM, null, { SCOPE_INDEX: env.SCOPE_INDEX });
 
 /** What the destination's outside port is asked, by kind, and what the test answers each kind with. */
 type Driven = "mint" | "first-head" | "receipt" | "revoke" | "push" | "judge";

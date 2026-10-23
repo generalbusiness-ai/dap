@@ -9,7 +9,7 @@ import { standingData } from "../../derive/test/fixtures-standing.ts";
 import { httpSource, verify } from "@generalbusiness/artroom-replay";
 import { SqliteStore } from "../src/index.ts";
 import { controls } from "../src/testing.ts";
-import { route } from "../src/worker.ts";
+import { fixtureRoute as route } from "./support/serving-route.ts";
 import { wired } from "./outside.ts";
 import { Lane, START, at, objectOf, reader, rita, stubOf } from "./fixtures-native.ts";
 

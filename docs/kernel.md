@@ -3,7 +3,8 @@
 Status: draft 2, for request `2ee805c5`. Draft 2 answers review
 `3cd820f3`: three classes only, with tools as a kind of platform service,
 and the host statement limited to the code that has no host (sections 1, 3
-and 8). It describes main `c40492ee`. No code moves with this page.
+and 8). It describes main `c40492ee`, except where it says that K7 and K8
+are closed at main `b52ca7e3`. No code moves with this page.
 
 Applications on dap run for a long time, and they change more often than
 they are replaced. That works only if a small part of the system changes
@@ -51,12 +52,12 @@ is not meant to be kernel, is listed in section 5 with what passing takes.
 | `packages/bytes` | Kernel | Fails in part | Canonical JSON, hashes, signatures and byte domains are kernel: entry hashes are its canonical bytes, and `derive` imports it. Its application package, view and projection codecs (`application-*.ts`, about 1,600 lines) are platform code (K3). |
 | `packages/package-graph` | Platform service | Fails | `derive` imports it (K2). |
 | `packages/platform` | Platform service | Fails | Replay needs its code to derive platform scopes (K1). |
-| `packages/scope` | Platform service: the runtime host | Passes | It holds the runtime's host details (section 8). The `hold@1` numbers that judgments use are chosen here (K7). |
+| `packages/scope` | Platform service: the runtime host | Passes | It holds the runtime's host details (section 8). It re-exports the `hold@1` numbers that judgments use; `derive` chooses them (K7, closed). |
 | `packages/mcp` | Platform service | Passes | The runtime imports it (`scope/src/worker.ts:60`). |
 | `packages/git` | Platform service | Passes | `derive` has its own commit parser for `git-read@1` (`derive/src/capability/ancestry.ts:192-197`). |
 | `packages/checkers` | Platform service | Passes | A checker signs ordinary intents (`checkers/src/signing.ts`). |
 | `packages/replay` | Platform service (tool): the independent verifier | Passes | It names platform versions and lane names (K6). Its local Git source is a Node adapter (section 8). |
-| `packages/cli` | Platform service (tool) | Passes | It is the only caller that gives replay the platform and capability code (`cli/src/commands.ts:1180-1187`), and it leaves out `device-command@1` (K8). |
+| `packages/cli` | Platform service (tool) | Passes | It is the only caller that gives replay the platform and capability code (`cli/src/commands.ts:1179-1187` at main `b52ca7e3`). The capability code is `derive`'s one table, with `device-command@1` (K8, closed). |
 | `packages/client` | Platform service (tool): the client library | Passes | — |
 | `apps/counter` | Application | Passes | — |
 | `apps/jam` | Application | Passes | A static page with no scope. |
@@ -83,12 +84,12 @@ whether it is one, or a special case that the kernel knows.
 | Register, directory, directory partition, membership, rules, destination, inbox, task | Special cases | Their kinds are a closed list (`contract/src/scope.ts:19`), and the kind is in every seed, so in every scope ID. Their `platform:` names (`scope.ts:41`). Parts of their rules: a register opens only by `install` and a directory with no creator only by `found` (`derive/src/genesis.ts:49`, `:132-133`); only membership issues grants (`derive/src/grant.ts:123-129`); a literal `platform:destination@3` (`derive/src/judge.ts:427-429`). Their own rules are code in `packages/platform`. | Their rules as declared forms, or as code pinned by digest (K1), and their kinds out of the closed list. |
 | Issue and change lanes | Definitions pinned by digest | `derive` names their actions: `issue.comment` and `change.comment` (`grant.ts:84`), `work.export` and `change.check` (`grant.ts:53-58`). Replay names the lanes (`replay/src/identity.ts:95-157`). | Move those names into the lane definitions as data (K4, K6). |
 | `hold@1`, `git-read@1`, `device-command@1` | Capability code in the kernel | Closed names (`contract/src/capability.ts:19`), code in `derive/src/capability/`. | A capability is kernel by review (section 7). `device-command@1` also carries the grow device kinds (K4). |
-| Runtime host, MCP service, Git code, checkers, package checks | Services | Nothing, except K2 and K7. | Replace the service; entries keep their meaning. |
+| Runtime host, MCP service, Git code, checkers, package checks | Services | Nothing, except K2. | Replace the service; entries keep their meaning. |
 
 ## 5. Parts that fail the test today
 
-Each item says what passing takes. They are candidates for later requests,
-and this page files none.
+Each item says what passing takes, and names the request that covers it.
+K4 has no request yet. K7 and K8 are closed.
 
 - **K1. Platform rules are code that replay needs.** A platform scope pins
   `platform:<name>@<n>`. Replay derives it only with code that its caller
@@ -97,11 +98,13 @@ and this page files none.
   versions (`platform/src/native-catalog.ts:100-163`). Passing takes one of
   three things: pin each version's rules by digest and archive the code;
   move the shipped versions into a frozen part of the kernel; or replace
-  the marks with declared forms.
+  the marks with declared forms. Design request `50133470` covers K1 and
+  K6.
 - **K2. `derive` imports `package-graph`.** `derive/src/validate/fields.ts:26`
   re-exports `fieldAssignable`, a grammar rule, and
   `derive/src/validate-package.ts:7` imports `checkPackageGraph`. Passing
   takes `fieldAssignable` into `derive`, and package validation out of it.
+  Request `30c7c3ec` covers K2, K3 and K11.
 - **K3. Application codecs in `bytes`.** Passing takes the
   `application-*.ts` codecs into a platform package.
 - **K4. Platform and app vocabulary in `contract` and `derive`.** Examples:
@@ -125,23 +128,28 @@ and this page files none.
   versions 4 to 7 (`replay/src/verify.ts:1740`, `:1817`) and membership 8
   with register 17 (`replay/src/archive.ts:157-158`). A replacement
   verifier would have to copy them. Passing takes these names into platform
-  data that the verifier reads.
-- **K7. `hold@1` numbers sit outside the capability.** The runtime chooses
-  them (`scope/src/ports.ts:308`) and the CLI copies them by hand
-  (`cli/src/commands.ts:1180`). Passing takes them into `derive`'s
-  `hold@1`.
-- **K8. `dap verify` cannot replay `device-command@1`.** The runtime runs it
-  (`scope/src/ports.ts:316`), and the CLI does not give it to replay. A grow
-  room's scopes are reported `unsupported-definition`. The grow archive's
-  offline step found the same gap (request `7b19837c`).
+  data that the verifier reads. Request `50133470` covers it with K1.
+- **K7. `hold@1` numbers sit outside the capability.** Closed by request
+  `7b19837c` at main `b52ca7e3`. The numbers are now `derive`'s
+  `HOLD_VERSION` (`derive/src/capability/hold.ts:267`). The runtime
+  re-exports them (`scope/src/ports.ts:308`), and the CLI copies no number.
+  Before, the runtime chose them and the CLI copied them by hand.
+- **K8. `dap verify` cannot replay `device-command@1`.** Closed by request
+  `7b19837c` at main `b52ca7e3`. `derive` has one capability table, with
+  `device-command@1` (`derive/src/capability/code.ts:6`). The runtime
+  serves it, and the CLI gives the same table to replay
+  (`cli/src/commands.ts:1186`). Before, the CLI left `device-command@1`
+  out, and replay reported a grow room's scopes `unsupported-definition`.
 - **K9. The validator has no version.** Replay checks each pinned
   definition with today's validator (`verify.ts:1010-1017`). A stricter
   validator would make an old history unsupported. Passing takes a
-  validator version tied to the definition format.
+  validator version tied to the definition format. Request `2e714fd7`
+  covers it.
 - **K10. The platform Worker's entry lives in an application.**
   `apps/room/worker.ts` re-exports the runtime's Worker, and its
   configuration is the platform's. Passing takes the entry and its
-  configuration into a platform home.
+  configuration into a platform home. Design request `1fcd6692` takes it
+  into its scope.
 - **K11. A dead example.** `examples/demo-repo` imports a package that no
   longer exists. Passing takes its deletion and the two references in
   `docs/policy-pack.md`.
@@ -151,8 +159,8 @@ and this page files none.
 1. **The record is the interface.** Everything a person, an agent or a
    verifier needs to know about what happened is in the record.
 2. **Every entry form ever written stays replayable by the same derivation
-   code.** Replay refuses no entry kind today (`verify.ts:1680-1850`). K1,
-   K8 and K9 are the ways this promise can fail.
+   code.** Replay refuses no entry kind today (`verify.ts:1680-1850`). K1
+   and K9 are the ways this promise can fail. K8 was one, until it closed.
 3. **The definition schema is versioned.** The format is
    `artroom-definition-1` (`contract/src/definition.ts:32`). Its optional
    parts carry their own versions: `level`, `capacity`, `profile` and each
@@ -168,11 +176,21 @@ and this page files none.
    scope's URI, and that URI resolves.
 9. **The runtime and the verifier call the same functions.** Both judge
    and fold with `derive`.
+10. **A scope's definition never changes, and its history is never
+   reinterpreted.** An application moves to a new definition only by
+   succession: an ordered cutoff entry in the old scope, with no change to
+   its application state after it, and a new scope whose genesis names
+   that entry and derives its state from it by a mapping that is data
+   ([definition succession](../notes/2026-10-22-definition-succession.md),
+   section 1).
+11. **Every change is an act judged in a turn.** Every read is of the
+   record at a named position. Every effect on an outside system is a
+   declared capability form whose outcome is its own entry. Any other
+   surface is named in the [one-channel audit](../notes/2026-10-22-one-channel.md),
+   with its limits.
 
-This list grows only by review. Two notes in progress each propose one
-more promise: definition succession (request `95d01d30`) and the
-one-channel audit (request `1e8ef5d5`). Each promise joins this list when
-its note lands.
+This list grows only by review. Promises 10 and 11 joined it when their
+notes landed (`25e1248e` and `5cd53dcf`).
 
 ## 7. Rule for adding to the kernel
 
@@ -191,6 +209,38 @@ A head adds to the kernel when it does any of these:
 
 The checker checks this rule on every head that touches these packages.
 A head that removes a kernel promise also needs this review.
+
+### 7.1 Filing while parts fail the test
+
+While any of K1 to K11 (section 5) is open, a design note, a plan or a
+request waits when it adds one of these, unless it names the K item that
+it closes:
+
+- a scope kind;
+- a platform definition name;
+- a capability name or form;
+- a tool family: a new group of MCP tools or of CLI commands;
+- a new model of the record: a new entry kind, a new level, a new field
+  type, or a new kind of reference between scopes.
+
+A head closes a K item when it does what section 5 says passing takes for
+that item. The checker judges that at the head. A filing that adds a new
+part that fails the test in section 2 waits in every case.
+
+These do not wait:
+
+- work that only uses existing forms: applications, packages, views,
+  documents, tests and fixes;
+- a new version of an existing platform definition. It is not a new name,
+  but its head says that it adds one to K1's count;
+- fixes for the filed security findings, R1 to R16 and D1 to D6. They
+  still follow section 7 and add no K item.
+
+Work filed before this rule took effect (22 October 2026, workroom assert
+`1bd7dde8`) states its kernel placement when it reaches the front of the
+queue. A head that adds to the kernel names the K item that it closes, or
+the planner holds it. Assert `1bd7dde8` records how the rule applies to
+each item filed at that time.
 
 ## 8. Second host
 

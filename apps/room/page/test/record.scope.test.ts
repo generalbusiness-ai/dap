@@ -1,10 +1,10 @@
 import { expect, inject, test } from "vitest";
 import { b64url } from "@generalbusiness/artroom-bytes";
 import type { Fetch } from "@generalbusiness/artroom-client";
-import { ScopeHandle, httpTransport, secretSigner, signedReads } from "@generalbusiness/artroom-client";
+import { ScopeHandle, httpTransport, signedReads } from "@generalbusiness/artroom-client";
 import { DEMO_DIGESTS } from "@generalbusiness/dap-lanes";
 import worker, { type Env } from "../../worker.ts";
-import { act, actsOn, joinRoom, listLanes, loadChange, loadIssue, loadRules, loadSite, openRoom, placeOf, type Room } from "../src/index.ts";
+import { sessionSigner, act, actsOn, joinRoom, listLanes, loadChange, loadIssue, loadRules, loadSite, openRoom, placeOf, type Room } from "../src/index.ts";
 import { prepareEdit } from "../src/retained-editor-data.ts";
 import { SERVICE, demo } from "./support/demo.ts";
 
@@ -96,7 +96,7 @@ test.skipIf(!inject("pageRecord"))("record the Worker's answers to the page's re
     // The page itself, as the deployed Worker's one entry serves it.
     for (const path of ["/page/", "/page/page.js"]) await keep(`GET ${path}`, await worker.fetch(new Request(`${SERVICE}${path}`), {} as Env));
 
-    const destination = await new ScopeHandle(signedReads(httpTransport(SERVICE, { fetch: seen.session.fetch! }), secretSigner(seen.session.secret), { now: seen.session.now! }), seen.destination, seen.reader?.reader() ?? null).summary();
+    const destination = await new ScopeHandle(signedReads(httpTransport(SERVICE, { fetch: seen.session.fetch! }), sessionSigner(seen.session), { now: seen.session.now! }), seen.destination, seen.reader?.reader() ?? null).summary();
     expect(destination.ok).toBe(true);
     if (!destination.ok) throw new Error("The capture actor could not read its destination.");
     const record = {

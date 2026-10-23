@@ -7,6 +7,8 @@ import { soon } from "./net.ts";
 import { office, rita, routed, settle, una, vic, type Platform } from "./repository.ts";
 import type { MetricPoint } from "../src/metrics.ts";
 import { metricBindings, platformNet } from "./worker.ts";
+import { env } from "cloudflare:workers";
+import type { Api } from "../src/worker.ts";
 
 // The plan's T39 (authority note, section 3.6, "The limits"; review rows M3 and M4; the proof plan's row for O10). The numbers are FIXTURE
 // VALUES: no adopted text proposes one.
@@ -42,6 +44,45 @@ function membership() {
 }
 
 describe("serving limits of a join (authority note, section 3.6; `limits.ts`)", () => {
+  test("verified join failures count by key without an address; forged victim signatures count no key", async () => {
+    const limits = new JoinLimits({ ...FIXTURE, failures: 2, windows: 4 });
+    const { state, submit } = membership();
+    const serve = async (signed: SignedIntent) => said(await limits.serve({ address: null, now: 0, head: HEAD }, signed, submit(signed)));
+    for (let n = 0; n < 6; n++) expect(await serve(junk())).toBe("bad-intent");
+    expect(state.calls).toBe(0);
+    expect([await serve(join(vic, `${SECRET}?`)), await serve(join(vic, `${SECRET}!`)), await serve(join(vic)), state.calls])
+      .toEqual(["invitation-refused", "invitation-refused", "rate-limited", 2]);
+    // The forged victim is still served; the key window is neither an
+    // invitation lock nor one shared bucket for all addressless callers.
+    expect(await serve(join(una))).toBe("accepted");
+    const afterExpiry = join(vic);
+    expect(await limits.serve({ address: null, now: 60_000, head: HEAD }, afterExpiry, submit(afterExpiry)))
+      .toMatchObject({ answer: "refused", name: "invitation-used" });
+  });
+
+  test("the actual ScopeService's addressless joins count failed native invitation checks by verified key", async () => {
+    platformNet.limits = { ...FIXTURE, failures: 2, windows: 4 };
+    try {
+      const { M } = await office();
+      const seat = await M.did(rita, "seat", { expected: { roster: 1 } });
+      await M.did(rita, "first-key", { fields: { member: seat }, expected: await M.expected({ roster: 0, member: seat }) });
+      // Finish setup's genuine inbox create/result/confirmation before
+      // pinning the membership head around the refused native joins.
+      const inbox = await M.created(seat);
+      await settle(M, inbox);
+      expect((await inbox.summary()).value.status).toBe("active");
+      const invitation = await M.did(rita, "invite-member", { fields: { handle: "@una", role: "member", inviteHash: textDigest(SECRET), inviteEnds: soon(3600) } });
+      const api = env.PLATFORM_API as unknown as Api;
+      const failed = async () => api.submit(M.name, await M.intent(una, "join", { fields: { invitation, secret: `${SECRET}?` } }), []);
+      const before = (await M.summary()).at;
+      expect([said(await failed()), said(await failed()), said(await failed())]).toEqual(["invitation-refused", "invitation-refused", "rate-limited"]);
+      expect([(await M.summary()).at, (await M.item(invitation)).state]).toEqual([before, "invited"]);
+      // Another verified key has a separate window even though both calls
+      // have no transport address. Native authority still refuses its secret.
+      expect(said(await api.submit(M.name, await M.intent(vic, "join", { fields: { invitation, secret: `${SECRET}!` } }), []))).toBe("invitation-refused");
+    } finally { platformNet.limits = null; }
+  });
+
   test("T39, the limits alone: one address cannot block an invitation; a failed join is counted after its check and never against an invitation; a full table drops its oldest window and locks nobody out; a dropped or lost window decides nothing; and the waiting bound answers `busy` to a join only", async () => {
     const limits = new JoinLimits(FIXTURE);
     const { state, submit } = membership();

@@ -1,10 +1,11 @@
+import { env } from "cloudflare:test";
 import { expect, test } from "vitest";
 import worker, { type Env } from "../../../apps/room/worker.ts";
 import { BRAND_ASSETS } from "../../../apps/room/brand/assets.ts";
 
 // Invariant: public binary files survive Worker GET/HEAD without opening a private path.
 test("the Worker serves only allowlisted public brand bytes and refuses URL credentials before dispatch", async () => {
-  const get = (path: string, method = "GET") => worker.fetch(new Request(`https://scopes.test${path}`, { method }), {} as Env);
+  const get = (path: string, method = "GET") => worker.fetch(new Request(`https://scopes.test${path}`, { method }), { SCOPES: env.PLATFORM, SCOPE_INDEX: env.SCOPE_INDEX } as Env);
   for (const [name, asset] of Object.entries(BRAND_ASSETS)) {
     const response = await get(`/brand/${name}`);
     expect(response.status).toBe(200);

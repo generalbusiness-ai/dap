@@ -5,7 +5,7 @@ import { INVITATION_KEY_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION
  * Callers serialize one Store and fence their captured Page context. */
 import type { Answer, Entry, FactRef, MemberRef, Receipt, SignedIntent, Summary, ScopeRef } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, entryHash, factRefOf, intentDigest, isMemberRef, isScopeRef, isScopeId, isRecord, isHead, isKeyId, REFUSAL_REASONS, unb64url, timeMs, isReceipt, isSignedIntentShape, keyIdOfSecret, parseStrict, scopeIdOf, textDigest, timeOf, utf8, verifySignedIntent } from "@generalbusiness/artroom-bytes";
-import { agentKeyInvitationOf, encodeAgentKeyInvitation, httpTransport, isAgentKeyMembership, ScopeHandle, secretSigner, signedIntent, requestSession, sessionRequest, type AgentKeyMembership } from "@generalbusiness/artroom-client";
+import { agentKeyInvitationOf, encodeAgentKeyInvitation, httpTransport, isAgentKeyMembership, ScopeHandle, secretSigner, signedIntent, requestSession, signerSessionRequest, type AgentKeyMembership, type Signer } from "@generalbusiness/artroom-client";
 import { APPLICATION_COHORT, FILE_PUBLICATION_COHORT, COUNTING_COHORT, DEMO_REGISTER, DIRECTORY_OF, WEB_DEMO_COHORT, isHandle, platform } from "@generalbusiness/dap-platform";
 import { expectedOf, LINK, linkOf, type Context, type DefinitionShape, type Link, type Outcome } from "./commands.ts";
 import type { Config, PendingInvitationIssue, Repository } from "./store.ts";
@@ -22,10 +22,11 @@ const uuid = (v: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0
 const now = (ctx: Context) => ctx.now?.() ?? Date.now();
 function check(options: InvitationIssueOptions): void { if (options.current?.() === false) throw blocked(); }
 const wait = async <T>(options: InvitationIssueOptions, work: () => Promise<T>): Promise<T> => { check(options); const result = await work(); check(options); return result; };
-async function readerFor(ctx: Context, service: string, membership: ScopeRef, secret: Uint8Array): Promise<string> {
-  const signed = sessionRequest(membership, secret, timeOf(Math.floor(now(ctx) / 1000) * 1000 + 60_000), b64url(crypto.getRandomValues(new Uint8Array(16))));
+async function readerFor(ctx: Context, service: string, membership: ScopeRef, key: Uint8Array | Signer): Promise<string> {
+  const signer = key instanceof Uint8Array ? secretSigner(key) : key;
+  const signed = await signerSessionRequest(membership, signer, timeOf(Math.floor(now(ctx) / 1000) * 1000 + 60_000), b64url(crypto.getRandomValues(new Uint8Array(16))));
   const answer = await requestSession(service, membership.scope, signed, ctx.fetch ? { fetch: ctx.fetch } : {});
-  if (!answer.ok || answer.session.claims.key !== keyIdOfSecret(secret) || !sameOptional(answer.session.claims.membership, membership)) throw blocked();
+  if (!answer.ok || answer.session.claims.key !== signer.key || !sameOptional(answer.session.claims.membership, membership)) throw blocked();
   return answer.session.reader(); // Volatile only; never stored or used as act authority.
 }
 function handle(ctx: Context, service: string, scope: import("@generalbusiness/dap-contract").ScopeId, reader: string): ScopeHandle {
@@ -185,12 +186,13 @@ export async function issueInvitation(ctx: Context, input: InvitationIssueInput,
   if (!uuid(options.operation) || !isInvitationIssueInput(input)) throw blocked();
   let config = await wait(options, () => ctx.store.config());
   if (!config?.repository || config.claim || config.join || config.plan && !config.register) throw blocked();
-  const secret = await wait(options, () => ctx.store.secret(config!.key));
-  if (!secret || secret.length !== 32) throw blocked();
-  // Work on an owned copy: a memory Store may return its original key array.
-  const key = secret.slice();
+  // Retain the old owned-copy/wipe lifetime for seed stores. Capability
+  // stores never call secret(), including when their signer is missing.
+  const seed = ctx.store.signer ? null : (await wait(options, () => ctx.store.secret(config!.key)))?.slice() ?? null;
+  const key = ctx.store.signer ? await wait(options, () => ctx.store.signer!(config!.key)) : seed ? secretSigner(seed) : null;
+  if (!key) { seed?.fill(0); throw blocked(); }
   try {
-    const actor = keyIdOfSecret(key);
+    const actor = key.key;
     let reader: string | undefined, currentHandle: ScopeHandle | undefined;
     const membershipHandle = async (): Promise<ScopeHandle> => {
       if (!currentHandle) { reader = await wait(options, () => readerFor(ctx, config!.service, config!.repository!.membership, key)); currentHandle = handle(ctx, config!.service, config!.repository!.membership.scope, reader); }
@@ -241,7 +243,7 @@ export async function issueInvitation(ctx: Context, input: InvitationIssueInput,
       const roster = s.items.find(i => i.type === "roster" && i.state === "open");
       const role = member?.values["role"], actions = typeof role === "string" ? roster?.values[role + "Actions"] : null;
       if (!activeKey || !member || member.values["kind"] !== "person" || !Array.isArray(actions) || !actions.includes("membership.invite") || row.input.kind === "agent-key" && (!actions.includes("membership.manage") || !sameOptional(row.input.controller, member.parties["member"]))) throw blocked();
-      const signed = await wait(options, () => signedIntent(secretSigner(key), { to: row.repository.membership, kind, fields, expected: expectedOf(shape.acts[kind]!, s.items, null, fields) }, { now: now(ctx) }));
+      const signed = await wait(options, () => signedIntent(key, { to: row.repository.membership, kind, fields, expected: expectedOf(shape.acts[kind]!, s.items, null, fields) }, { now: now(ctx) }));
       return { signed, attempted: false };
     };
     const advance = async (stage: Stage): Promise<"verified" | "unknown" | "refused"> => {
@@ -300,11 +302,15 @@ export async function issueInvitation(ctx: Context, input: InvitationIssueInput,
     }
     if (!row.link) { row.link = link; await persist(); }
     return { ...status("verified"), link: row.link };
-  } finally { key.fill(0); }
+  } finally { seed?.fill(0); }
 }
 
 /** Separate receiver; a tagged key invitation never runs native person join. */
 export async function enrolAgentKey(ctx: Context, text: string, options: { mode?: "continue" | "check" } = {}): Promise<Outcome> {
+  // This receiver retains a raw-key/envelope pair in filesystem custody.
+  // Capability stores require a separate supported receiver; never bypass
+  // their signing namespace by reading or creating a seed here.
+  if (ctx.store.signer) return { code: 1, lines: ["Agent-key enrollment in this command requires filesystem key custody. No signing key was read or created and nothing was submitted."] };
   const bad = (): Outcome => ({ code: 1, lines: ["The original agent enrollment is unavailable or unverified. Nothing was replaced."] });
   try {
     const link = agentKeyInvitationOf(text);

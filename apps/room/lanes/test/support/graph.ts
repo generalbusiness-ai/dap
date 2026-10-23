@@ -54,10 +54,10 @@ export const reader = "a test reader";
  * and 321 after 150 more, while 300 calls of `api` took 150 each time. The
  * scope package's own tests show both wire transports.
  */
-export const transport: Transport = api(env.NET);
+export const transport: Transport = api(env.NET, null, { SCOPE_INDEX: env.SCOPE_INDEX });
 export const http = httpTransport("https://scopes.test", { fetch: (url, init) => SELF.fetch(url, init) });
 /** The Worker's routes called in the test's isolate, for a verifier that reads the history over HTTP: the same `route` the Worker runs, without the pool's entrypoint. */
-export const routed = (url: string, init?: RequestInit): Promise<Response> => route(new Request(url, init), env.NET);
+export const routed = (url: string, init?: RequestInit): Promise<Response> => route(new Request(url, init), env.NET, { SCOPE_INDEX: env.SCOPE_INDEX });
 
 /** `seconds` after the shared clock's `now`. */
 export const soon = (seconds: number) => timeOf(timeMs(net.clock.now)! + seconds * 1000);

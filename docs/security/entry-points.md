@@ -1,6 +1,6 @@
 # Worker entry points and gates
 
-This reference inventories the five Worker configurations named by D1 in this repository.
+This reference inventories the six Worker configurations named by D1 in this repository.
 It describes source at this revision, not a probe of deployed settings. It closes
 security finding 2.5 in request `6dd06d03`.
 
@@ -36,11 +36,20 @@ Refusals and unsupported methods are not additional routes.
   deadline, repository, and current member authority.
 
 The parentless serving policy is also passed through `ScopeService.create`
-and the hosted agent's in-process scope fetch. A genuine child creation
-continues through namespace delivery, which resolves the creator's sealed
-send and judges genesis. This inventory does not claim that existing scope
-ancestry is checked against a newly configured register pin. The local/test
-opening is not a hosted deployment recommendation.
+and the hosted agent's in-process scope fetch. In closed deployed mode,
+child creation additionally passes a whole-lineage serving check before
+the child's raw namespace `idFromName` or `get`: the configured register's
+applied genesis selects one of the two reviewed exact cohorts, and every
+creator birth and sealed create send is checked back to that root. Every
+ancestor read first requires a fresh fixed-index `has`, even in register
+mode. Missing or archived proof, unavailable declaration custody and a
+spent deadline return `retry/dependency-unavailable` before child activation.
+Malformed or wrong-root creation is refused; no archive or `source()`
+fallback is used. The single attempt allows at most 16 bodies, 1 MiB combined bytes,
+64 source attempts, 512 visits and one monotonic ten-second deadline.
+The receiving scope still makes its ordinary full genesis judgment. This
+does not revalidate existing scopes for ordinary reads or acts against a
+new register pin. The local/test opening is not a deployment recommendation.
 
 `:scope` is a scope ID. Other colon names denote one path segment. `*`
 denotes the matched path family, including paths that the family later refuses.
@@ -69,8 +78,9 @@ The scope rows use these shared descriptions:
 - **Turn bounds**: `PROPOSED_BOUNDS` in
   [bounds.ts](../../packages/contract/src/bounds.ts). Submit reads foreign facts
   and runs the timed drain before check 9 can refuse authority. Rule expression
-  evaluation follows that check. There is no general creation or signed-read
-  address limit. Join limits apply only when a usable caller address exists.
+  evaluation follows that check. Public parentless creation and signed reads
+  first use the fixed serving windows below. Joins retain their membership-local
+  failed-address window and also count verified-key failures without an address.
 
 For preparation requests, [core.ts](../../packages/scope/src/core.ts) verifies
 the signature before starting the turn. [turn.ts](../../packages/scope/src/turn.ts)
@@ -86,6 +96,29 @@ and grant checks.
 Every room request first runs measured-request setup, URL-byte admission, and
 credential-in-URL refusal. Measurement can write operational metrics; scope
 invocation instrumentation can retain bounded request-index control data.
+A fixed `ScopeIndex` instance also owns a separate memory-only serving action.
+It does not change `has()`, registration or ancestry admission. Parentless
+creation counts bounded attempts at 10 per verified key and 30 per trusted edge
+address per hour; signed reads count 240 per key and 600 per address per minute.
+A valid signature proves custody for accounting, not native authority. Invalid
+signatures charge no claimed key. Every eligible request is counted once before
+index/target lookup or protected proof work; native checks still run fresh.
+Actual outer edge fetch supplies the platform address out-of-band. ScopeService
+and hosted in-process fetch supply null and ignore synthetic forwarded headers.
+The table holds at most 8192 windows, removes only expired entries and refuses
+new identities at capacity. Churn cannot evict a live address counter. Actual
+object restart/eviction resets memory; this is not durable global accounting.
+Invalid settings or missing serving binding fail closed. Rate-limited creation
+and signed reads answer 429; original join serving status remains unchanged.
+Session issuance/session reads and internal verified child delivery keep their
+existing semantics. No public counter/index/admin/status route is added.
+The three Worker configs name the four nonsecret `SERVING_*` overrides; the
+implementation note records bounds, kernel review and the original local
+startup measurements: Page had 10 fixed-owner Signed admissions; hosted MCP
+legacy and modern had 3 and 2. Session dispatch is counted separately. These
+are attributed native fixture observations, not browser DOM, production
+address or throughput measurements; union startup verification is pending.
+
 Tables describe route work in addition to that shared setup. HTTP POST bodies
 on the scope API are read as JSON within 1 MiB before object dispatch. A
 verified creation can retain its genesis even when its founding act is refused. Its
@@ -120,8 +153,9 @@ the deployed room fetch.
 Configuration: [apps/room/wrangler.jsonc](../../apps/room/wrangler.jsonc).
 
 Entry: `apps/room/worker.ts` → `apps/room/fetch.ts`. Hosted MCP is reachable
-when both committed namespaces are bound. Application screens also require
-`APPLICATION_TRUST`; demo offers require `DEMO_START_CONFIG`. Missing or invalid
+when both committed namespaces are bound. Application redirects require
+`APPLICATION_SCREEN_HOSTS`; sandbox rendering additionally requires
+`APPLICATION_TRUST`. Demo offers require `DEMO_START_CONFIG`. Missing or invalid
 settings refuse those families. The table records source reachability with
 valid required settings, not whether a particular public room exists.
 
@@ -133,14 +167,14 @@ valid required settings, not whether a particular public room exists.
 | `GET, HEAD /page/page.js` | `none` | Method and path checks; embedded asset lookup | None | Fixed embedded assets | None |
 | `GET, HEAD /brand/*` | `none` | Method and asset-name lookup; base64 decode | None | Fixed embedded asset map | None |
 | `GET /site/*` | `none` | Publication proof, room and repository reads; render | Activation; provider read-token mint and attempted revoke | 1 MiB file; 64 path segments; 8 KiB path; bounded publication proof; no address rate limit | Scope RPC; configured Git host, including Artifacts token calls |
-| `GET, HEAD /applications/*` | `none` | Address, trust, room, installation and packet checks | Activation; bounded in-memory packet cache | 8 KiB path; fetchSeconds deadlines; two cached packets per bucket; PROPOSED_BOUNDS packet limits | Scope RPC; private R2 reads |
+| `GET, HEAD /applications/*` | `none` | Address and exact configured sandbox descriptor; redirect or refuse, never package bytes | None | 8 KiB path; at most 32 configured descriptors | None |
 | `GET /v1/demo/creation-offer` | `none` | Demo config and origin checks; register projection | Activation of configured register | Exact current or legacy register; GET only | Configured register RPC |
-| `POST /v1/scopes` | `creation` | JSON and seed; closed deployment pin and signature admission before object selection | Refused closed admission selects no object and writes no scope state; accepted or local/open paths activate and judge genesis | 1 MiB body; turn bounds; no creation rate limit | No scope RPC on closed admission refusal; admitted scope namespace and creation follow-up after sealing |
-| `GET /v1/scopes/:scope` | `self-signed` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
-| `GET /v1/scopes/:scope/retained/:kind/:digest` | `self-signed` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
+| `POST /v1/scopes` | `creation` | JSON and seed; closed deployment pin and signature admission before object selection | Refused closed admission selects no object and writes no scope state; accepted or local/open paths activate and judge genesis | 1 MiB body; turn bounds; fixed creation key/address window before target lookup | No scope RPC on closed admission refusal; admitted scope namespace and creation follow-up after sealing |
+| `GET /v1/scopes/:scope` | `self-signed` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
+| `GET /v1/scopes/:scope/retained/:kind/:digest` | `self-signed` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
 | `POST /v1/scopes/:scope/sessions` | `membership` | JSON, activation, restart retry; config, signature, scope, clock and key-standing checks | Activation; prior-work retry; replay row written only after standing passes | 1 MiB body; request lifetime 900 s; session 600 s; 64 answered requests per key | Prior-work retry only |
 | `GET /v1/scopes/:scope/stream` | `session` | Activation, restart retry; legacy read preparation; session check | Activation; prior-work retry; subscription after gate | 64 streams per scope; one pending head per stream; session checked before send | Membership-reference RPC; prior-work retry |
-| `GET /v1/scopes/:scope/incidents` | `admin` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
+| `GET /v1/scopes/:scope/incidents` | `admin` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
 | `GET /v1/scopes/:scope/requests` | `admin` | Query identifiers, activation; session preparation and admin check | Activation; no legacy restart retry in this method | 100 rows per page; bounded request-index retention | Membership-reference RPC; no direct Git provider |
 | `GET /v1/scopes/:scope/application-projection` | `session` | Wire admission; session-header bound; bounded flight and session preparation | Activation; bounded flight and preparation caches | APPLICATION_PROJECTION_WIRE_BOUNDS; projection, source and SQL budgets | Bounded membership, birth and declaration RPC; no Git provider |
 | `GET /v1/scopes/:scope/query-items` | `self-signed` | Wire admission; header bound; signed or session authentication; bounded query flight | Activation; bounded flight and preparation caches | ITEM_QUERY_WIRE_BOUNDS and query budgets; no legacy activation turn | Bounded membership or causal-proof RPC; no Git provider |
@@ -148,14 +182,14 @@ valid required settings, not whether a particular public room exists.
 | `POST /v1/scopes/:scope/preparations` | `membership` | JSON, pinned definition and signature verification; capability grant observation; timed drain before final capability and grant decision | Activation; due timed entries can be sealed before capability or authority refusal | 1 MiB body; turn and capability-step bounds | Authority scope RPC before grant decision; driver and dispatch may call configured providers for sealed timed work even when preparation is refused |
 | `POST /v1/scopes/:scope/settle` | `self-signed` | JSON, activation, restart retry; exact accepted-intent lookup | Activation; prior-work retry | 1 MiB body; exact actor and idempotency digest | Prior-work retry only |
 | `POST /v1/scopes/:scope/reservation-snapshot` | `membership` | JSON, activation, restart retry; signed job and current checker verification | Activation; prior-work retry; no new staging or publication write | 1 MiB body; signed deadline up to 900 s; checker read up to 10 s; provider bounds | Job and membership RPC before checker decision; Git reads after it; prior-work retry |
-| `GET /v1/scopes/:scope/items/:type` | `session` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
-| `GET /v1/scopes/:scope/history` | `self-signed` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
-| `GET /v1/scopes/:scope/entries/:seq` | `self-signed` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
-| `GET /v1/scopes/:scope/outbox` | `session` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
-| `GET /v1/scopes/:scope/outbox/:duty` | `session` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
-| `GET /v1/scopes/:scope/log` | `self-signed` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
-| `GET /v1/scopes/:scope/waiting/diagnosed` | `admin` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
-| `GET /v1/scopes/:scope/waiting/unanswered` | `admin` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
+| `GET /v1/scopes/:scope/items/:type` | `session` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
+| `GET /v1/scopes/:scope/history` | `self-signed` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
+| `GET /v1/scopes/:scope/entries/:seq` | `self-signed` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
+| `GET /v1/scopes/:scope/outbox` | `session` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
+| `GET /v1/scopes/:scope/outbox/:duty` | `session` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
+| `GET /v1/scopes/:scope/log` | `self-signed` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
+| `GET /v1/scopes/:scope/waiting/diagnosed` | `admin` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
+| `GET /v1/scopes/:scope/waiting/unanswered` | `admin` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
 | `GET /v1/scopes/:scope/credential/:handle` | `session` | Activation, restart retry; legacy read preparation and holder-key check | Activation; prior-work retry; credential consumed only after holder passes | Read bounds; one read before credential end | Membership-reference RPC; prior-work retry |
 | `POST, DELETE, GET /mcp` | `bearer` | Origin refusal, bearer ID parse, agent activation, failure-window check, bearer digest | Agent schema initialization; in-memory bearer-failure windows | 10 failures per address per minute; 1 MiB hosted body after bearer; MCP session and stream bounds | Agent RPC; authenticated tools can call scope and configured Git hosts |
 | `POST /mcp/agents` | `control` | Control header shape and action binding; bounded raw body; object activation; expiry sweep; signature and authority | Registry or agent schema; expired control-answer cleanup before signature | 64 KiB body; 16 MiB control budget with 1 MiB retirement reserve; no control rate limit | Registry or agent RPC; authority RPC; enrolment follows authorized creation |
@@ -169,8 +203,9 @@ Configuration: [apps/room/wrangler.grow.jsonc](../../apps/room/wrangler.grow.jso
 Entry: `apps/room/worker.grow.ts` → `apps/room/worker.ts` →
 `apps/room/fetch.ts`. The Grow wrapper forwards the same default HTTP handler.
 Hosted MCP is reachable
-when both committed namespaces are bound. Application screens also require
-`APPLICATION_TRUST`; demo offers require `DEMO_START_CONFIG`. Missing or invalid
+when both committed namespaces are bound. Application redirects require
+`APPLICATION_SCREEN_HOSTS`; sandbox rendering additionally requires
+`APPLICATION_TRUST`. Demo offers require `DEMO_START_CONFIG`. Missing or invalid
 settings refuse those families. The table records source reachability with
 valid required settings, not whether a particular public room exists.
 
@@ -204,14 +239,14 @@ Rules identity in Room mode. This metadata replaces no source or host check.
 | `GET, HEAD /page/page.js` | `none` | Method and path checks; embedded asset lookup | None | Fixed embedded assets | None |
 | `GET, HEAD /brand/*` | `none` | Method and asset-name lookup; base64 decode | None | Fixed embedded asset map | None |
 | `GET /site/*` | `none` | Publication proof, room and repository reads; render | Activation; provider read-token mint and attempted revoke | 1 MiB file; 64 path segments; 8 KiB path; bounded publication proof; no address rate limit | Scope RPC; configured Git host, including Artifacts token calls |
-| `GET, HEAD /applications/*` | `none` | Address, trust, room, installation and packet checks | Activation; bounded in-memory packet cache | 8 KiB path; fetchSeconds deadlines; two cached packets per bucket; PROPOSED_BOUNDS packet limits | Scope RPC; private R2 reads |
+| `GET, HEAD /applications/*` | `none` | Address and exact configured sandbox descriptor; redirect or refuse, never package bytes | None | 8 KiB path; at most 32 configured descriptors | None |
 | `GET /v1/demo/creation-offer` | `none` | Demo config and origin checks; register projection | Activation of configured register | Exact current or legacy register; GET only | Configured register RPC |
-| `POST /v1/scopes` | `creation` | JSON and seed; closed deployment pin and signature admission before object selection | Refused closed admission selects no object and writes no scope state; accepted or local/open paths activate and judge genesis | 1 MiB body; turn bounds; no creation rate limit | No scope RPC on closed admission refusal; admitted scope namespace and creation follow-up after sealing |
-| `GET /v1/scopes/:scope` | `self-signed` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
-| `GET /v1/scopes/:scope/retained/:kind/:digest` | `self-signed` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
+| `POST /v1/scopes` | `creation` | JSON and seed; closed deployment pin and signature admission before object selection | Refused closed admission selects no object and writes no scope state; accepted or local/open paths activate and judge genesis | 1 MiB body; turn bounds; fixed creation key/address window before target lookup | No scope RPC on closed admission refusal; admitted scope namespace and creation follow-up after sealing |
+| `GET /v1/scopes/:scope` | `self-signed` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
+| `GET /v1/scopes/:scope/retained/:kind/:digest` | `self-signed` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
 | `POST /v1/scopes/:scope/sessions` | `membership` | JSON, activation, restart retry; config, signature, scope, clock and key-standing checks | Activation; prior-work retry; replay row written only after standing passes | 1 MiB body; request lifetime 900 s; session 600 s; 64 answered requests per key | Prior-work retry only |
 | `GET /v1/scopes/:scope/stream` | `session` | Activation, restart retry; legacy read preparation; session check | Activation; prior-work retry; subscription after gate | 64 streams per scope; one pending head per stream; session checked before send | Membership-reference RPC; prior-work retry |
-| `GET /v1/scopes/:scope/incidents` | `admin` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
+| `GET /v1/scopes/:scope/incidents` | `admin` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
 | `GET /v1/scopes/:scope/requests` | `admin` | Query identifiers, activation; session preparation and admin check | Activation; no legacy restart retry in this method | 100 rows per page; bounded request-index retention | Membership-reference RPC; no direct Git provider |
 | `GET /v1/scopes/:scope/application-projection` | `session` | Wire admission; session-header bound; bounded flight and session preparation | Activation; bounded flight and preparation caches | APPLICATION_PROJECTION_WIRE_BOUNDS; projection, source and SQL budgets | Bounded membership, birth and declaration RPC; no Git provider |
 | `GET /v1/scopes/:scope/query-items` | `self-signed` | Wire admission; header bound; signed or session authentication; bounded query flight | Activation; bounded flight and preparation caches | ITEM_QUERY_WIRE_BOUNDS and query budgets; no legacy activation turn | Bounded membership or causal-proof RPC; no Git provider |
@@ -219,14 +254,14 @@ Rules identity in Room mode. This metadata replaces no source or host check.
 | `POST /v1/scopes/:scope/preparations` | `membership` | JSON, pinned definition and signature verification; capability grant observation; timed drain before final capability and grant decision | Activation; due timed entries can be sealed before capability or authority refusal | 1 MiB body; turn and capability-step bounds | Authority scope RPC before grant decision; driver and dispatch may call configured providers for sealed timed work even when preparation is refused |
 | `POST /v1/scopes/:scope/settle` | `self-signed` | JSON, activation, restart retry; exact accepted-intent lookup | Activation; prior-work retry | 1 MiB body; exact actor and idempotency digest | Prior-work retry only |
 | `POST /v1/scopes/:scope/reservation-snapshot` | `membership` | JSON, activation, restart retry; signed job and current checker verification | Activation; prior-work retry; no new staging or publication write | 1 MiB body; signed deadline up to 900 s; checker read up to 10 s; provider bounds | Job and membership RPC before checker decision; Git reads after it; prior-work retry |
-| `GET /v1/scopes/:scope/items/:type` | `session` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
-| `GET /v1/scopes/:scope/history` | `self-signed` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
-| `GET /v1/scopes/:scope/entries/:seq` | `self-signed` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
-| `GET /v1/scopes/:scope/outbox` | `session` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
-| `GET /v1/scopes/:scope/outbox/:duty` | `session` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
-| `GET /v1/scopes/:scope/log` | `self-signed` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
-| `GET /v1/scopes/:scope/waiting/diagnosed` | `admin` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
-| `GET /v1/scopes/:scope/waiting/unanswered` | `admin` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
+| `GET /v1/scopes/:scope/items/:type` | `session` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
+| `GET /v1/scopes/:scope/history` | `self-signed` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
+| `GET /v1/scopes/:scope/entries/:seq` | `self-signed` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
+| `GET /v1/scopes/:scope/outbox` | `session` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
+| `GET /v1/scopes/:scope/outbox/:duty` | `session` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
+| `GET /v1/scopes/:scope/log` | `self-signed` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
+| `GET /v1/scopes/:scope/waiting/diagnosed` | `admin` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
+| `GET /v1/scopes/:scope/waiting/unanswered` | `admin` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
 | `GET /v1/scopes/:scope/credential/:handle` | `session` | Activation, restart retry; legacy read preparation and holder-key check | Activation; prior-work retry; credential consumed only after holder passes | Read bounds; one read before credential end | Membership-reference RPC; prior-work retry |
 | `POST, DELETE, GET /mcp` | `bearer` | Origin refusal, bearer ID parse, agent activation, failure-window check, bearer digest | Agent schema initialization; in-memory bearer-failure windows | 10 failures per address per minute; 1 MiB hosted body after bearer; MCP session and stream bounds | Agent RPC; authenticated tools can call scope and configured Git hosts |
 | `POST /mcp/agents` | `control` | Control header shape and action binding; bounded raw body; object activation; expiry sweep; signature and authority | Registry or agent schema; expired control-answer cleanup before signature | 64 KiB body; 16 MiB control budget with 1 MiB retirement reserve; no control rate limit | Registry or agent RPC; authority RPC; enrolment follows authorized creation |
@@ -250,14 +285,14 @@ header or body authentication. Application screens need an uncommitted
 | `GET, HEAD /page/page.js` | `none` | Method and path checks; embedded asset lookup | None | Fixed embedded assets | None |
 | `GET, HEAD /brand/*` | `none` | Method and asset-name lookup; base64 decode | None | Fixed embedded asset map | None |
 | `GET /site/*` | `none` | Publication proof, room and repository reads; render | Activation; provider read-token mint and attempted revoke | 1 MiB file; 64 path segments; 8 KiB path; bounded publication proof; no address rate limit | Scope RPC; configured Git host, including Artifacts token calls |
-| `GET, HEAD /applications/*` | `none` | Address, trust, room, installation and packet checks | Activation; bounded in-memory packet cache | 8 KiB path; fetchSeconds deadlines; two cached packets per bucket; PROPOSED_BOUNDS packet limits | Scope RPC; private R2 reads |
+| `GET, HEAD /applications/*` | `none` | Address and exact configured sandbox descriptor; redirect or refuse, never package bytes | None | 8 KiB path; at most 32 configured descriptors | None |
 | `GET /v1/demo/creation-offer` | `none` | Demo config and origin checks; register projection | Activation of configured register | Exact current or legacy register; GET only | Configured register RPC |
-| `POST /v1/scopes` | `creation` | JSON and seed; closed deployment pin and signature admission before object selection | Refused closed admission selects no object and writes no scope state; accepted or local/open paths activate and judge genesis | 1 MiB body; turn bounds; no creation rate limit | No scope RPC on closed admission refusal; admitted scope namespace and creation follow-up after sealing |
-| `GET /v1/scopes/:scope` | `self-signed` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
-| `GET /v1/scopes/:scope/retained/:kind/:digest` | `self-signed` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
+| `POST /v1/scopes` | `creation` | JSON and seed; closed deployment pin and signature admission before object selection | Refused closed admission selects no object and writes no scope state; accepted or local/open paths activate and judge genesis | 1 MiB body; turn bounds; fixed creation key/address window before target lookup | No scope RPC on closed admission refusal; admitted scope namespace and creation follow-up after sealing |
+| `GET /v1/scopes/:scope` | `self-signed` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
+| `GET /v1/scopes/:scope/retained/:kind/:digest` | `self-signed` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
 | `POST /v1/scopes/:scope/sessions` | `membership` | JSON, activation, restart retry; config, signature, scope, clock and key-standing checks | Activation; prior-work retry; replay row written only after standing passes | 1 MiB body; request lifetime 900 s; session 600 s; 64 answered requests per key | Prior-work retry only |
 | `GET /v1/scopes/:scope/stream` | `session` | Activation, restart retry; legacy read preparation; session check | Activation; prior-work retry; subscription after gate | 64 streams per scope; one pending head per stream; session checked before send | Membership-reference RPC; prior-work retry |
-| `GET /v1/scopes/:scope/incidents` | `admin` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
+| `GET /v1/scopes/:scope/incidents` | `admin` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
 | `GET /v1/scopes/:scope/requests` | `admin` | Query identifiers, activation; session preparation and admin check | Activation; no legacy restart retry in this method | 100 rows per page; bounded request-index retention | Membership-reference RPC; no direct Git provider |
 | `GET /v1/scopes/:scope/application-projection` | `session` | Wire admission; session-header bound; bounded flight and session preparation | Activation; bounded flight and preparation caches | APPLICATION_PROJECTION_WIRE_BOUNDS; projection, source and SQL budgets | Bounded membership, birth and declaration RPC; no Git provider |
 | `GET /v1/scopes/:scope/query-items` | `self-signed` | Wire admission; header bound; signed or session authentication; bounded query flight | Activation; bounded flight and preparation caches | ITEM_QUERY_WIRE_BOUNDS and query budgets; no legacy activation turn | Bounded membership or causal-proof RPC; no Git provider |
@@ -265,15 +300,70 @@ header or body authentication. Application screens need an uncommitted
 | `POST /v1/scopes/:scope/preparations` | `membership` | JSON, pinned definition and signature verification; capability grant observation; timed drain before final capability and grant decision | Activation; due timed entries can be sealed before capability or authority refusal | 1 MiB body; turn and capability-step bounds | Authority scope RPC before grant decision; driver and dispatch may call configured providers for sealed timed work even when preparation is refused |
 | `POST /v1/scopes/:scope/settle` | `self-signed` | JSON, activation, restart retry; exact accepted-intent lookup | Activation; prior-work retry | 1 MiB body; exact actor and idempotency digest | Prior-work retry only |
 | `POST /v1/scopes/:scope/reservation-snapshot` | `membership` | JSON, activation, restart retry; signed job and current checker verification | Activation; prior-work retry; no new staging or publication write | 1 MiB body; signed deadline up to 900 s; checker read up to 10 s; provider bounds | Job and membership RPC before checker decision; Git reads after it; prior-work retry |
-| `GET /v1/scopes/:scope/items/:type` | `session` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
-| `GET /v1/scopes/:scope/history` | `self-signed` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
-| `GET /v1/scopes/:scope/entries/:seq` | `self-signed` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
-| `GET /v1/scopes/:scope/outbox` | `session` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
-| `GET /v1/scopes/:scope/outbox/:duty` | `session` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
-| `GET /v1/scopes/:scope/log` | `self-signed` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
-| `GET /v1/scopes/:scope/waiting/diagnosed` | `admin` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
-| `GET /v1/scopes/:scope/waiting/unanswered` | `admin` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; no signed-read address limit | Membership and causal-chain scope RPC; prior-work retry |
+| `GET /v1/scopes/:scope/items/:type` | `session` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
+| `GET /v1/scopes/:scope/history` | `self-signed` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
+| `GET /v1/scopes/:scope/entries/:seq` | `self-signed` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
+| `GET /v1/scopes/:scope/outbox` | `session` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
+| `GET /v1/scopes/:scope/outbox/:duty` | `session` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
+| `GET /v1/scopes/:scope/log` | `self-signed` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
+| `GET /v1/scopes/:scope/waiting/diagnosed` | `admin` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
+| `GET /v1/scopes/:scope/waiting/unanswered` | `admin` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
 | `GET /v1/scopes/:scope/credential/:handle` | `session` | Activation, restart retry; legacy read preparation and holder-key check | Activation; prior-work retry; credential consumed only after holder passes | Read bounds; one read before credential end | Membership-reference RPC; prior-work retry |
+
+## dap-application-sandbox
+
+Configuration: [apps/sandbox/wrangler.jsonc](../../apps/sandbox/wrangler.jsonc).
+Entry: `apps/sandbox/worker.ts`. Only exact configured HTTPS installation hosts
+under `*.inguz.space` are reachable; `SCREEN_HOSTS=[]` refuses by default.
+`ROOM`, `GROW` and `LENDING` bind fixed services and the named
+`ApplicationScreenService` entrypoint. Each request checks the complete descriptor
+against `screenHost` before `screen`, `native` or the stream-only `nativeStream`. Those RPC methods have no
+public Room HTTP route. `screen` verifies the room origin and installation path
+before private rendering; `native` repeats the finite gateway matcher before
+ordinary native dispatch. All three native-reading service methods use the
+same fixed indexed namespace as the room routes. Eligible Signed reads retain
+the verified-key serving admission; synthetic service calls have no trusted
+address. Both stream entry paths refuse Signed readers before target lookup.
+They confer no new membership authority.
+
+The native rows below retain their ordinary gate classes. The sandbox cannot
+forward parentless creation, arbitrary upstream URLs or unrelated methods.
+Browser cookies and response Set-Cookie are not forwarded. Native authorization
+headers and signed bodies retain the canonical room origin. A forwarded address
+is Cloudflare edge metadata, not caller identity.
+
+| Route and method | Gate class | Work before the gate | State written before the gate | Bounds | Outbound calls |
+|---|---|---|---|---|---|
+| `GET /_application-host` | `none` | Exact host mapping and matching service descriptor | None | 32 mappings; 128 KiB URL; 10 s descriptor wait | Fixed service screenHost RPC |
+| `GET, HEAD /applications/*` | `none` | Descriptor; private renderer checks native installation, trust and packet | Scope activation; bounded packet cache | 8 KiB screen path; two cached packets; existing packet bounds | Fixed screenHost and screen RPC; renderer Scope/R2 reads |
+| `GET /site/*` | `none` | Descriptor then ordinary Site proof and repository reads | Ordinary Site activation/token lifecycle | Exact installation directory; finite path; existing Site bounds | Fixed screenHost and native RPC; configured Git host |
+| `GET /v1/scopes/:scope` | `self-signed` | Descriptor then ordinary native admission | Ordinary native activation and protocol state only | 128 KiB URL; exact query keys; existing native bounds | Fixed screenHost and native RPC; ordinary authority reads |
+| `POST /v1/scopes/:scope/acts` | `membership` | Descriptor then ordinary native admission | Ordinary native activation and protocol state only | 128 KiB URL; exact query keys; existing native bounds | Fixed screenHost and native RPC; ordinary authority reads |
+| `POST /v1/scopes/:scope/settle` | `self-signed` | Descriptor then ordinary native admission | Ordinary native activation and protocol state only | 128 KiB URL; exact query keys; existing native bounds | Fixed screenHost and native RPC; ordinary authority reads |
+| `POST /v1/scopes/:scope/sessions` | `membership` | Descriptor then ordinary native admission | Ordinary native activation and protocol state only | 128 KiB URL; exact query keys; existing native bounds | Fixed screenHost and native RPC; ordinary authority reads |
+| `GET /v1/scopes/:scope/history` | `self-signed` | Descriptor then ordinary native admission | Ordinary native activation and protocol state only | 128 KiB URL; exact query keys; existing native bounds | Fixed screenHost and native RPC; ordinary authority reads |
+| `GET /v1/scopes/:scope/outbox` | `session` | Descriptor then ordinary native admission | Ordinary native activation and protocol state only | 128 KiB URL; exact query keys; existing native bounds | Fixed screenHost and native RPC; ordinary authority reads |
+| `GET /v1/scopes/:scope/log` | `self-signed` | Descriptor then ordinary native admission | Ordinary native activation and protocol state only | 128 KiB URL; exact query keys; existing native bounds | Fixed screenHost and native RPC; ordinary authority reads |
+| `GET /v1/scopes/:scope/stream` | `session` | Descriptor then ordinary native admission | Ordinary native activation and protocol state only | 128 KiB URL; exact query keys; existing native bounds | Fixed screenHost and native RPC; ordinary authority reads |
+| `GET /v1/scopes/:scope/query-items` | `self-signed` | Descriptor then ordinary native admission | Ordinary native activation and protocol state only | 128 KiB URL; exact query keys; existing native bounds | Fixed screenHost and native RPC; ordinary authority reads |
+| `GET /v1/scopes/:scope/application-projection` | `session` | Descriptor then ordinary native admission | Ordinary native activation and protocol state only | 128 KiB URL; exact query keys; existing native bounds | Fixed screenHost and native RPC; ordinary authority reads |
+| `GET /v1/scopes/:scope/entries/:seq` | `self-signed` | Descriptor then ordinary native admission | Ordinary native activation and protocol state only | 128 KiB URL; exact query keys; existing native bounds | Fixed screenHost and native RPC; ordinary authority reads |
+| `GET /v1/scopes/:scope/items/:type` | `session` | Descriptor then ordinary native admission | Ordinary native activation and protocol state only | 128 KiB URL; exact query keys; existing native bounds | Fixed screenHost and native RPC; ordinary authority reads |
+
+This is structural source coverage. The separate R8 branch records adopted
+owner seals, scoped compilation and inventory checks, native binding checks,
+nine local browser custody cases and four rendered Page cases. R12 records
+its own scoped index, serving and startup checks. Those branch outcomes do not
+validate this source union. The union now has its actual adopted owner seals;
+four affected compiler roots and 14 cases across seven whole files passed.
+Its maintained Page build, separate DATA comparison and four rendered Page
+checks also passed. Its original ordinary gate passed hosted startup and
+Page freshness, but failed two MCP documentation-inventory assertions.
+Final review must record the narrow correction and downstream Node stages
+separately. These local outcomes and their original heads are recorded in the
+[union implementation note](../../notes/implementation/2026-10-22-security-union.md).
+Hosted deployment and operator rollout remain separate
+obligations; no hosted isolation claim follows from the local browser cases.
 
 ## dap-grow-simulator
 
@@ -352,3 +442,5 @@ Gate owners: [core.ts](../../packages/scope/src/core.ts),
 [applications/projection.ts](../../packages/scope/src/applications/projection.ts),
 [destination-host.ts](../../packages/scope/src/destination-host.ts), and
 [hosted.ts](../../packages/mcp/src/hosted.ts).
+
+The sandbox stream-only named RPC returns the ordinary response plus a close capability for that exact already-authorized subscription. The capability accepts no target or stream ID. Gateway cancellation waits, within the existing transport window, for its idempotent release acknowledgement before completion; RPC stub disposal is separate and is not an acknowledgement. No public HTTP route, header or general ScopeService operation is added.

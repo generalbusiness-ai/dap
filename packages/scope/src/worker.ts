@@ -1,5 +1,8 @@
 import { jsonReply as json } from "./response.ts";
-import { applicationPage } from "./applications/route.ts";
+import { applicationPage, applicationSandboxPage, applicationScreenHosts } from "./applications/route.ts";
+import { applicationGatewayRoute, applicationScreenHostMatches } from "@generalbusiness/artroom-client/application";
+import { REPLY_SECONDS } from "@generalbusiness/artroom-client";
+import { within as boundedWait } from "@generalbusiness/artroom-bytes";
 import { applicationHostOutside } from "./applications/wiring.ts";
 import { applicationAnnouncementOutside } from "./applications/announce.ts";
 import type { ApplicationBindings } from "./applications/bindings.ts";
@@ -56,10 +59,10 @@ import { health } from "./health.ts";
  * observation read of a membership scope. It has no route here.
  */
 
-import { DurableObject, WorkerEntrypoint } from "cloudflare:workers";
+import { DurableObject, RpcTarget, WorkerEntrypoint } from "cloudflare:workers";
 import { CONTROL_BODY_BYTES, HostedAgent, HostedRegistry, controlOf, type AgentPorts, type ControlAnswer, type RegistryPorts } from "@generalbusiness/dap-mcp";
 import { PROPOSED_BOUNDS, ITEM_QUERY_WIRE_BOUNDS } from "@generalbusiness/dap-contract";
-import type { FactRef, Entry, ItemQueryRead, ItemQueryRefusal, Answer, Beside, Cursor, DeclaredDefinition, Digest, OutboxId, Grant, LogPage, PlatformDefinition, Read, ReadRefusal, RetainedInput, ScopeApi, ScopeId, Seed, SessionAnswer, SessionRefusal, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
+import type { FactRef, Entry, ItemQueryRead, ItemQueryRefusal, Answer, Beside, Cursor, DeclaredDefinition, Digest, OutboxId, Grant, LogPage, PlatformDefinition, Read, ReadRefusal, RetainedInput, ScopeApi, ScopeId, ScopeKind, Seed, SessionAnswer, SessionRefusal, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
 import { b64url, parseStrict, readItemQueryReply, utf8, definitionDigest, intentDigest, isScopeId, positionOf, scopeIdOf } from "@generalbusiness/artroom-bytes";
 import { isObject, type Item } from "@generalbusiness/dap-derive";
 import { creationKind, type Created } from "./core.ts";
@@ -87,6 +90,9 @@ import { requestQuery, type RequestPage } from "./request-index.ts";
 import { measuredRequest, OBSERVED_METHODS, operational, operationPlace, unknownTurnMark, type MetricEnvironment, type OperationalIdentity, type ObservedMethod } from "./operational.ts";
 import type { MetricPoint } from "./metrics.ts";
 import { admitsParentlessCreation, type CreationAdmission } from "./creation-admission.ts";
+import { indexedScopes, scopeIndex, ScopeIndexRows, type ScopeIndexEnvironment, type ScopeRegistration } from "./scope-index.ts";
+import { admitServing, boundedParentlessIntent, ServingAdmission, type ServingEnvironment, type ServingRequest } from "./serving-admission.ts";
+import { presentsSignedRead } from "./signed-reads.ts";
 
 /**
  * The bindings of the deployed Worker (`wrangler.jsonc`): the one scope
@@ -95,7 +101,17 @@ import { admitsParentlessCreation, type CreationAdmission } from "./creation-adm
  * the operator sets it, and no file of this repository holds one.
  * `DEPLOYMENT` is the deployment's name, which a session's token names.
  */
-export interface Env extends GitHubBindings, ArtifactsBindings, ApplicationBindings, MetricEnvironment, CreationAdmission { SCOPES: DurableObjectNamespace; SESSION_SECRET?: string; DEPLOYMENT?: string }
+export interface Env extends GitHubBindings, ArtifactsBindings, ApplicationBindings, MetricEnvironment, CreationAdmission, ScopeIndexEnvironment, ServingEnvironment { SCOPES: DurableObjectNamespace; SESSION_SECRET?: string; DEPLOYMENT?: string }
+
+/** Only the fixed internal binding exposes this class; there is no HTTP index route. */
+export class ScopeIndex extends DurableObject<Env> {
+  readonly #rows = new ScopeIndexRows(this.ctx.storage.sql);
+  readonly #serving = new ServingAdmission(this.env);
+  has(scope: string, kind?: ScopeKind) { return this.#rows.has(scope, kind); }
+  register(proof: ScopeRegistration) { return this.#rows.register(proof); }
+  /** Separate synchronous memory-only action; has() remains SQL-read-only. */
+  admitServing(request: ServingRequest, address: string | null) { return this.#serving.admit(request, address, Date.now()); }
+}
 /** The two namespaces of the hosted MCP endpoint (`McpRegistry`, `McpAgent`): one registry per repository, one object per agent. */
 export interface McpEnv extends Env { REGISTRIES: DurableObjectNamespace; AGENTS: DurableObjectNamespace }
 
@@ -129,11 +145,14 @@ interface Remote {
 const MISSING = { ok: false, reason: "not-found" } as const;
 
 /** The contract's operations, and the four that sessions and the operator's lists add. None of the four writes an entry. */
+interface StreamExchange { body: ReadableStream<Uint8Array>; close(): Promise<void> }
 export interface Api extends ScopeApi {
   reservationSnapshot(scope: string, asked: SignedIntent): Promise<import("@generalbusiness/dap-contract").ReservationSnapshot | { refused: "reservation-stage-missing" | "reservation-stage-mismatch" } | null>;
   session(scope: string, asked: unknown): Promise<SessionAnswer>;
   /** The body is the reader's side of the stream (`relay`): cancelling it releases the scope's subscription at once. */
   stream(scope: string, reader: unknown): Promise<ReadableStream<Uint8Array> | StreamRefusal | typeof MISSING>;
+  /** Internal route ownership, not a ScopeService or public HTTP operation. */
+  streamExchange(scope: string, reader: unknown): Promise<StreamExchange | StreamRefusal | typeof MISSING>;
   incidents(scope: string, reader: unknown, cursor?: Cursor): Promise<Read<readonly Incident[]>>;
   waiting(scope: string, reader: unknown, list: "diagnosed" | "unanswered", cursor?: Cursor): Promise<Read<readonly OutboxItem[]>>;
   /** A member's read token at a destination, once (I5). */
@@ -147,7 +166,14 @@ export interface Api extends ScopeApi {
  * scope ID names nothing. `address`: the caller's address, for the serving
  * limits of a join, or null when the caller has none.
  */
-export function api(binding: Binding, address: string | null = null, creationAdmission: CreationAdmission = {}): Api {
+export function api(binding: Binding, address: string | null = null, creationAdmission: CreationAdmission & ServingEnvironment = {}): Api {
+  const readGate = async (reader: unknown): Promise<{ ok: false; reason: "rate-limited" | "unavailable" | "forbidden" } | null> => {
+    if (!presentsSignedRead(reader)) return null;
+    // Bound before serializing the RPC. The owner independently verifies it.
+    if (typeof reader !== "string" || reader.length > ITEM_QUERY_WIRE_BOUNDS.signedChars) return { ok: false, reason: "forbidden" };
+    const decision = await admitServing(creationAdmission, { kind: "signed-read", reader }, address);
+    return decision === "admitted" ? null : { ok: false, reason: decision === "invalid" ? "forbidden" : decision };
+  };
   const at = (scope: string): Remote | null => {
     if (!isScopeId(scope)) return null;
     const remote = binding.get(binding.idFromName(scope)) as Remote, context = operational();
@@ -170,6 +196,20 @@ export function api(binding: Binding, address: string | null = null, creationAdm
       };
     } });
   };
+  const openStream = async (scope: string, reader: unknown): Promise<StreamExchange | StreamRefusal | typeof MISSING> => {
+    // Both public streaming and the private sandbox exchange retain the
+    // session-only boundary before any native target lookup.
+    if (presentsSignedRead(reader)) return { ok: false, reason: "forbidden" };
+    const object = at(scope), opened = await object?.stream(reader);
+    if (!object || !opened) return MISSING;
+    if (!("body" in opened)) return opened;
+    // The only capability is to close this exact already-authorized opening.
+    // Every caller waits for the same actual release RPC, including overlap
+    // with relay cancellation/EOF. No caller supplies an ID or another target.
+    let closing: Promise<void> | undefined;
+    const close = (): Promise<void> => closing ??= Promise.resolve().then(() => object.release(opened.id)).then(() => undefined);
+    return { body: relay(opened, close), close };
+  };
   return {
     /**
      * Section 7.1: the service computes the seed from the signed intent and
@@ -180,6 +220,13 @@ export function api(binding: Binding, address: string | null = null, creationAdm
      * `beside`: the detached texts that the creation intent's fields name.
      */
     async create(creation: SignedIntent, definition: DeclaredDefinition | Digest | PlatformDefinition, definitions: readonly DeclaredDefinition[] = [], beside: Beside = {}): Promise<Created> {
+      const owned = boundedParentlessIntent(creation);
+      if (!owned) return { answer: "refused", reason: "source-unverified" };
+      const decision = await admitServing(creationAdmission, { kind: "creation", signed: owned }, address);
+      if (decision === "rate-limited" || decision === "unavailable") return { answer: "unavailable", reason: decision };
+      // Invalid custody earns no key charge. The unchanged R1 admission and
+      // native judge still give their original refusal; this result is no grant.
+      creation = owned;
       let name: ScopeId;
       try {
         const names = typeof definition === "string" ? definition : definitionDigest(definition);
@@ -195,9 +242,10 @@ export function api(binding: Binding, address: string | null = null, creationAdm
     async submit(scope: string, signed: SignedIntent, grants: readonly Grant[], beside: Beside = {}): Promise<Answer> { return (await at(scope)?.submit(signed, grants, beside, address)) ?? { answer: "unavailable", reason: "unavailable" }; },
     async prepare(scope: string, signed: SignedIntent, grants: readonly Grant[], capability: string, step: string): Promise<Answer> { return (await at(scope)?.prepare(signed, grants, capability, step)) ?? { answer: "unavailable", reason: "unavailable" }; },
     async settle(scope: string, signed: SignedIntent): Promise<Settlement> { return (await at(scope)?.settle(signed)) ?? MISSING; },
-    async summary(scope: string, reader: unknown): Promise<Read<Summary>> { return (await at(scope)?.summary(reader)) ?? MISSING; },
-    async items(scope: string, reader: unknown, type: string, cursor?: Cursor): Promise<Read<readonly Item[]>> { return (await at(scope)?.items(reader, type, cursor)) ?? MISSING; },
+    async summary(scope: string, reader: unknown): Promise<Read<Summary>> { const limited = await readGate(reader); if (limited) return limited; return (await at(scope)?.summary(reader)) ?? MISSING; },
+    async items(scope: string, reader: unknown, type: string, cursor?: Cursor): Promise<Read<readonly Item[]>> { const limited = await readGate(reader); if (limited) return limited; return (await at(scope)?.items(reader, type, cursor)) ?? MISSING; },
     async queryItems(scope: string, reader: unknown, encoded: string): Promise<ItemQueryRead> {
+      const limited = await readGate(reader); if (limited) return limited;
       const result = await at(scope)?.queryItems(encoded, reader);
       return result?.ok ? readItemQueryReply(utf8(result.serialized)) ?? { ok: false, reason: "unavailable" } : result ?? { ok: false, reason: "invalid-query" };
     },
@@ -206,24 +254,23 @@ export function api(binding: Binding, address: string | null = null, creationAdm
       const result = await at(scope)?.applicationProjection(encoded, reader);
       return result?.ok ? result.serialized : JSON.stringify(result ?? { ok: false, reason: "invalid-query" });
     },
-    async history(scope: string, reader: unknown, cursor?: Cursor): Promise<Read<readonly Sealed[]>> { return (await at(scope)?.history(reader, cursor)) ?? MISSING; },
-    async entry(scope: string, reader: unknown, seq: number): Promise<Read<Sealed>> { return (await at(scope)?.entry(reader, seq)) ?? MISSING; },
-    async outbox(scope: string, reader: unknown, cursor?: Cursor): Promise<Read<readonly OutboxItem[]>> { return (await at(scope)?.outbox(reader, cursor)) ?? MISSING; },
-    async outboxItem(scope: string, reader: unknown, outboxId: OutboxId): Promise<Read<OutboxItem>> { return (await at(scope)?.outboxItem(reader, outboxId)) ?? MISSING; },
-    async log(scope: string, reader: unknown, cursor?: Cursor): Promise<Read<LogPage>> { return (await at(scope)?.log(reader, cursor)) ?? MISSING; },
-    async retained(scope: string, reader: unknown, kind: RetainedInput["kind"], digest: Digest, domain?: string): Promise<Read<RetainedInput>> { return (await at(scope)?.retained(reader, kind, digest, domain)) ?? MISSING; },
+    async history(scope: string, reader: unknown, cursor?: Cursor): Promise<Read<readonly Sealed[]>> { const limited = await readGate(reader); if (limited) return limited; return (await at(scope)?.history(reader, cursor)) ?? MISSING; },
+    async entry(scope: string, reader: unknown, seq: number): Promise<Read<Sealed>> { const limited = await readGate(reader); if (limited) return limited; return (await at(scope)?.entry(reader, seq)) ?? MISSING; },
+    async outbox(scope: string, reader: unknown, cursor?: Cursor): Promise<Read<readonly OutboxItem[]>> { const limited = await readGate(reader); if (limited) return limited; return (await at(scope)?.outbox(reader, cursor)) ?? MISSING; },
+    async outboxItem(scope: string, reader: unknown, outboxId: OutboxId): Promise<Read<OutboxItem>> { const limited = await readGate(reader); if (limited) return limited; return (await at(scope)?.outboxItem(reader, outboxId)) ?? MISSING; },
+    async log(scope: string, reader: unknown, cursor?: Cursor): Promise<Read<LogPage>> { const limited = await readGate(reader); if (limited) return limited; return (await at(scope)?.log(reader, cursor)) ?? MISSING; },
+    async retained(scope: string, reader: unknown, kind: RetainedInput["kind"], digest: Digest, domain?: string): Promise<Read<RetainedInput>> { const limited = await readGate(reader); if (limited) return limited; return (await at(scope)?.retained(reader, kind, digest, domain)) ?? MISSING; },
     async session(scope: string, asked: unknown): Promise<SessionAnswer> { return (await at(scope)?.session(asked)) ?? MISSING; },
+    streamExchange: openStream,
     async stream(scope: string, reader: unknown) {
-      const object = at(scope);
-      const opened = await object?.stream(reader);
-      if (!object || !opened) return MISSING;
-      return "body" in opened ? relay(opened, () => object.release(opened.id)) : opened;
+      const opened = await openStream(scope, reader);
+      return "body" in opened ? opened.body : opened;
     },
-    async incidents(scope: string, reader: unknown, cursor?: Cursor): Promise<Read<readonly Incident[]>> { return (await at(scope)?.incidents(reader, cursor)) ?? MISSING; },
-    async waiting(scope: string, reader: unknown, list: "diagnosed" | "unanswered", cursor?: Cursor): Promise<Read<readonly OutboxItem[]>> { return (await at(scope)?.waiting(reader, list, cursor)) ?? MISSING; },
+    async incidents(scope: string, reader: unknown, cursor?: Cursor): Promise<Read<readonly Incident[]>> { const limited = await readGate(reader); if (limited) return limited; return (await at(scope)?.incidents(reader, cursor)) ?? MISSING; },
+    async waiting(scope: string, reader: unknown, list: "diagnosed" | "unanswered", cursor?: Cursor): Promise<Read<readonly OutboxItem[]>> { const limited = await readGate(reader); if (limited) return limited; return (await at(scope)?.waiting(reader, list, cursor)) ?? MISSING; },
     async reservationSnapshot(scope: string, asked: SignedIntent) { return (await at(scope)?.reservationSnapshot(asked)) ?? null; },
-    async credential(scope: string, reader: unknown, handle: string): Promise<Read<ReadCredential>> { return (await at(scope)?.credential(reader, handle)) ?? MISSING; },
-    async requests(scope: string, reader: unknown, request?: string, trace?: string, cursor?: string) { return requestQuery(request, trace, cursor) ? (await at(scope)?.requests(reader, request, trace, cursor)) ?? MISSING : MISSING; },
+    async credential(scope: string, reader: unknown, handle: string): Promise<Read<ReadCredential>> { const limited = await readGate(reader); if (limited) return limited; return (await at(scope)?.credential(reader, handle)) ?? MISSING; },
+    async requests(scope: string, reader: unknown, request?: string, trace?: string, cursor?: string) { const limited = await readGate(reader); if (limited) return limited; return requestQuery(request, trace, cursor) ? (await at(scope)?.requests(reader, request, trace, cursor)) ?? MISSING : MISSING; },
   };
 }
 
@@ -235,11 +282,12 @@ const BODY_BYTES = 1024 * 1024;
 
 /** The status of an answer to a creation or an act (section 4.2). The body says which. */
 function answered(answer: Created | Answer, accepted: number): Response {
-  const status = answer.answer === "archived" ? 410 : answer.answer === "accepted" ? accepted : answer.answer === "unavailable" ? 503 : answer.answer === "mismatch" ? 409 : answer.reason === "unauthorized" ? 403 : 422;
+  const status = answer.answer === "archived" ? 410 : answer.answer === "accepted" ? accepted : answer.answer === "unavailable" ? (accepted === 201 && answer.reason === "rate-limited" ? 429 : 503) : answer.answer === "mismatch" ? 409 : answer.reason === "unauthorized" ? 403 : 422;
   return json(status, answer);
 }
 
 const READ_STATUS: Record<ReadRefusal, number> = {
+  "rate-limited": 429,
   archived: 410,
   "not-found": 404, "wrong-incarnation": 409, forbidden: 403, "scope-provisional": 409, "unsupported-definition": 501, "history-unavailable": 503, "too-large": 413, unavailable: 503,
   "sessions-unavailable": 503, "clock-behind": 503,
@@ -278,6 +326,7 @@ async function body(request: Request): Promise<Record<string, unknown> | null> {
 }
 
 const QUERY_STATUS: Record<ItemQueryRefusal, number> = {
+  "rate-limited": 429,
   "invalid-query": 400, "wrong-scope": 409, "invalid-cursor": 400, "stale-cursor": 409, "query-mismatch": 409,
   "unknown-type": 400, "unknown-state": 400, "query-not-ready": 409, "too-large": 413, "invalid-metadata": 503,
   "invalid-item": 503, "row-too-large": 413, forbidden: 403, "sessions-unavailable": 503, "clock-behind": 503, unavailable: 503,
@@ -296,15 +345,18 @@ function projectionResponse(result: NativeApplicationProjection): Response {
 }
 
 /** One request to the scope routes in docs/security/entry-points.md. */
-export async function route(request: Request, binding: Binding, env: MetricEnvironment & CreationAdmission = {}): Promise<Response> {
-  return measuredRequest(request, env, () => routedRequest(request, binding, env));
+/** address is trusted transport metadata supplied only by an actual edge
+ * fetch. Synthetic/service/hosted callers leave it null; forwarded headers
+ * are not promoted into trusted identities here. */
+export async function route(request: Request, binding: Binding, env: MetricEnvironment & CreationAdmission & ServingEnvironment = {}, address: string | null = null): Promise<Response> {
+  return measuredRequest(request, env, () => routedRequest(request, binding, env, address));
 }
-async function routedRequest(request: Request, binding: Binding, env: CreationAdmission): Promise<Response> {
+async function routedRequest(request: Request, binding: Binding, env: CreationAdmission & ServingEnvironment, address: string | null): Promise<Response> {
   if (!admittedRequestUrl(request.url)) return json(413, { error: "too-large" });
   const url = new URL(request.url);
   // Section 5.3: a credential in a URL is refused before anything is routed, and is not used. That does not undo the exposure.
   if (credentialInUrl(url)) return json(400, { error: "credential-in-url" });
-  const scopes = api(binding, request.headers.get("cf-connecting-ip"), env);
+  const scopes = api(binding, address, env);
   let parts: string[];
   try {
     parts = url.pathname.split("/").slice(1).map(decodeURIComponent);
@@ -330,6 +382,10 @@ async function routedRequest(request: Request, binding: Binding, env: CreationAd
     // Fixed header admission before namespace lookup; decoding, hashing and
     // all protected work belong to the object's one owned flight.
     if (typeof reader !== "string" || reader.length > (reader.startsWith("Signed ") ? ITEM_QUERY_WIRE_BOUNDS.signedChars : ITEM_QUERY_WIRE_BOUNDS.sessionChars)) return queryResponse({ ok: false, reason: "forbidden" });
+    if (presentsSignedRead(reader)) {
+      const decision = await admitServing(env, { kind: "signed-read", reader }, address);
+      if (decision !== "admitted") return queryResponse({ ok: false, reason: decision === "invalid" ? "forbidden" : decision });
+    }
     const object = binding.get(binding.idFromName(scope!)) as Remote;
     return queryResponse(await object.queryItems(wire.encoded, reader));
   }
@@ -487,9 +543,10 @@ export function snapshotReaderOf(binding: Binding): import("./destination-host.t
 
 export class DeployedScope<E extends Env = Env> extends ScopeObject<E> {
   /** The one scope namespace. */
-  protected scopes(): Binding { return this.env.SCOPES; }
+  protected scopes(): Binding { return indexedScopes(this.env.SCOPES, this.env); }
   protected override wiring(_name: string | undefined): Wiring {
     return {
+      registerGenesis: async proof => scopeIndex(this.env)?.register(proof) ?? false,
       ports: namespace(this.scopes()),
       authority: (given) => repositoryAuthority({ ...given, reader: membershipIn(this.scopes()) }),
       // Wired whether or not a host is configured now: `outsideOf` reads the settings at each call, and with neither it sends nothing.
@@ -506,36 +563,83 @@ export class DeployedScope<E extends Env = Env> extends ScopeObject<E> {
  * them, and presents a session it got over the HTTP route as its reader
  * (I3 deltas, entry ES9).
  */
+/** Bound only to the sandbox Worker. No HTTP route reaches these methods.
+ * The room's existing native parsers/gates still judge the forwarded request. */
+class ApplicationStreamLifetime extends RpcTarget {
+  readonly #close: () => Promise<void>;
+  readonly #retain: (work: Promise<unknown>) => void;
+  constructor(close: () => Promise<void>, retain: (work: Promise<unknown>) => void) { super(); this.#close = close; this.#retain = retain; }
+  close(): Promise<void> { return this.#close(); }
+  [Symbol.dispose](): void {
+    // Disposal cannot acknowledge remote work. It is a fallback when the
+    // exchange is abandoned; callers that need completion await close().
+    this.#retain(boundedWait(REPLY_SECONDS, () => this.#close()).then(() => undefined, () => undefined));
+  }
+}
+export class ApplicationScreenService<E extends Env = Env> extends WorkerEntrypoint<E> {
+  screenHost(screenOrigin: string) {
+    return applicationScreenHosts(this.env.APPLICATION_SCREEN_HOSTS).find(host => host.screenOrigin === screenOrigin) ?? null;
+  }
+  async screen(screenOrigin: string, request: Request): Promise<Response> {
+    const host = this.screenHost(screenOrigin), url = new URL(request.url);
+    if (!host || url.origin !== host.roomOrigin || !applicationScreenHostMatches(host, url.pathname)) return json(404, { error: "not-found" });
+    return await applicationSandboxPage(request, { ...this.env, SCOPES: indexedScopes(this.env.SCOPES, this.env) }) ?? json(404, { error: "not-found" });
+  }
+  /** Stream-only named RPC exchange. Ordinary native() remains Response-only. */
+  async nativeStream(screenOrigin: string, request: Request): Promise<{ response: Response; lifetime: ApplicationStreamLifetime }> {
+    let close = (): Promise<void> => Promise.resolve();
+    const response = await measuredRequest(request, this.env, async () => {
+      const host = this.screenHost(screenOrigin), url = new URL(request.url), parts = url.pathname.split("/");
+      if (!host || !applicationGatewayRoute(host, request.url, request.method)
+        || request.method !== "GET" || parts.length !== 5 || parts[1] !== "v1" || parts[2] !== "scopes" || parts[4] !== "stream") return json(404, { error: "not-found" });
+      if (!admittedRequestUrl(request.url)) return json(413, { error: "too-large" });
+      if (credentialInUrl(url)) return json(400, { error: "credential-in-url" });
+      const opened = await api(indexedScopes(this.env.SCOPES, this.env), null, this.env).streamExchange(parts[3]!, request.headers.get("authorization"));
+      if (!("body" in opened)) return read(opened);
+      close = opened.close;
+      return new Response(opened.body, { status: 200, headers: { "content-type": "application/x-ndjson", "cache-control": "no-store" } });
+    });
+    return { response, lifetime: new ApplicationStreamLifetime(close, work => this.ctx.waitUntil(work)) };
+  }
+  async native(screenOrigin: string, request: Request): Promise<Response> {
+    const host = this.screenHost(screenOrigin);
+    if (!host || !applicationGatewayRoute(host, request.url, request.method)) return json(404, { error: "not-found" });
+    if (credentialInUrl(new URL(request.url))) return json(400, { error: "credential-in-url" });
+    return isSite(request) ? site(request, { ...this.env, SCOPES: indexedScopes(this.env.SCOPES, this.env) }) : route(request, indexedScopes(this.env.SCOPES, this.env), this.env);
+  }
+}
+
 export class ScopeService<E extends Env = Env> extends WorkerEntrypoint<E> implements ScopeApi {
   /** The one scope namespace. */
-  protected scopes(): Binding { return this.env.SCOPES; }
+  protected scopes(): Binding { return indexedScopes(this.env.SCOPES, this.env); }
   create(creation: SignedIntent, definition: DeclaredDefinition | Digest | PlatformDefinition, definitions: readonly DeclaredDefinition[] = [], beside: Beside = {}): Promise<Created> { return api(this.scopes(), null, this.env).create(creation, definition, definitions, beside); }
-  submit(scope: string, signed: SignedIntent, grants: readonly Grant[], beside: Beside = {}): Promise<Answer> { return api(this.scopes()).submit(scope, signed, grants, beside); }
-  prepare(scope: string, signed: SignedIntent, grants: readonly Grant[], capability: string, step: string): Promise<Answer> { return api(this.scopes()).prepare(scope, signed, grants, capability, step); }
-  settle(scope: string, signed: SignedIntent): Promise<Settlement> { return api(this.scopes()).settle(scope, signed); }
-  summary(scope: string, reader: unknown): Promise<Read<Summary>> { return api(this.scopes()).summary(scope, reader); }
-  items(scope: string, reader: unknown, type: string, cursor?: Cursor): Promise<Read<readonly Item[]>> { return api(this.scopes()).items(scope, reader, type, cursor); }
-  queryItems(scope: string, reader: unknown, encoded: string): Promise<ItemQueryRead> { return api(this.scopes()).queryItems(scope, reader, encoded); }
-  applicationProjection(scope: string, reader: unknown, encoded: string): Promise<string> { return api(this.scopes()).applicationProjection(scope, reader, encoded); }
-  history(scope: string, reader: unknown, cursor?: Cursor): Promise<Read<readonly Sealed[]>> { return api(this.scopes()).history(scope, reader, cursor); }
-  entry(scope: string, reader: unknown, seq: number): Promise<Read<Sealed>> { return api(this.scopes()).entry(scope, reader, seq); }
-  outbox(scope: string, reader: unknown, cursor?: Cursor): Promise<Read<readonly OutboxItem[]>> { return api(this.scopes()).outbox(scope, reader, cursor); }
-  outboxItem(scope: string, reader: unknown, outboxId: OutboxId): Promise<Read<OutboxItem>> { return api(this.scopes()).outboxItem(scope, reader, outboxId); }
-  log(scope: string, reader: unknown, cursor?: Cursor): Promise<Read<LogPage>> { return api(this.scopes()).log(scope, reader, cursor); }
-  retained(scope: string, reader: unknown, kind: RetainedInput["kind"], digest: Digest, domain?: string): Promise<Read<RetainedInput>> { return api(this.scopes()).retained(scope, reader, kind, digest, domain); }
+  submit(scope: string, signed: SignedIntent, grants: readonly Grant[], beside: Beside = {}): Promise<Answer> { return api(this.scopes(), null, this.env).submit(scope, signed, grants, beside); }
+  prepare(scope: string, signed: SignedIntent, grants: readonly Grant[], capability: string, step: string): Promise<Answer> { return api(this.scopes(), null, this.env).prepare(scope, signed, grants, capability, step); }
+  settle(scope: string, signed: SignedIntent): Promise<Settlement> { return api(this.scopes(), null, this.env).settle(scope, signed); }
+  summary(scope: string, reader: unknown): Promise<Read<Summary>> { return api(this.scopes(), null, this.env).summary(scope, reader); }
+  items(scope: string, reader: unknown, type: string, cursor?: Cursor): Promise<Read<readonly Item[]>> { return api(this.scopes(), null, this.env).items(scope, reader, type, cursor); }
+  queryItems(scope: string, reader: unknown, encoded: string): Promise<ItemQueryRead> { return api(this.scopes(), null, this.env).queryItems(scope, reader, encoded); }
+  applicationProjection(scope: string, reader: unknown, encoded: string): Promise<string> { return api(this.scopes(), null, this.env).applicationProjection(scope, reader, encoded); }
+  history(scope: string, reader: unknown, cursor?: Cursor): Promise<Read<readonly Sealed[]>> { return api(this.scopes(), null, this.env).history(scope, reader, cursor); }
+  entry(scope: string, reader: unknown, seq: number): Promise<Read<Sealed>> { return api(this.scopes(), null, this.env).entry(scope, reader, seq); }
+  outbox(scope: string, reader: unknown, cursor?: Cursor): Promise<Read<readonly OutboxItem[]>> { return api(this.scopes(), null, this.env).outbox(scope, reader, cursor); }
+  outboxItem(scope: string, reader: unknown, outboxId: OutboxId): Promise<Read<OutboxItem>> { return api(this.scopes(), null, this.env).outboxItem(scope, reader, outboxId); }
+  log(scope: string, reader: unknown, cursor?: Cursor): Promise<Read<LogPage>> { return api(this.scopes(), null, this.env).log(scope, reader, cursor); }
+  retained(scope: string, reader: unknown, kind: RetainedInput["kind"], digest: Digest, domain?: string): Promise<Read<RetainedInput>> { return api(this.scopes(), null, this.env).retained(scope, reader, kind, digest, domain); }
 }
 
 /** Generic Scope, Site and MCP dispatch. Application pages and demo offers belong to apps/room. */
 export default {
   fetch: async (request: Request, env: Env & Partial<Pick<McpEnv, "REGISTRIES" | "AGENTS">>): Promise<Response> => {
     return measuredRequest(request, env, async () => {
+    const scopes = indexedScopes(env.SCOPES, env), lookups = { ...env, SCOPES: scopes };
     if (!admittedRequestUrl(request.url)) return json(413, { error: "too-large" });
     if (credentialInUrl(new URL(request.url))) return json(400, { error: "credential-in-url" });
-    const healthy = await health(request, env);
+    const healthy = await health(request, lookups);
     if (healthy) return healthy;
     const hosted = await mcpRoute(request, env);
-    const application = hosted ? null : await applicationPage(request, env);
-    return hosted ?? application ?? (isSite(request) ? site(request, env) : route(request, env.SCOPES, env));
+    const application = hosted ? null : await applicationPage(request, lookups);
+    return hosted ?? application ?? (isSite(request) ? site(request, lookups) : route(request, scopes, env, request.headers.get("cf-connecting-ip")));
     });
   },
 };
@@ -556,7 +660,7 @@ export default {
  * | `DELETE /mcp/agents/<id>` | `Control`, action `retire` | the agent |
  * | `POST`, `GET`, `DELETE /mcp` | `Bearer <id>.<secret>` | the agent |
  */
-export async function mcpRoute(request: Request, env: Partial<Pick<McpEnv, "REGISTRIES" | "AGENTS">>): Promise<Response | null> {
+export async function mcpRoute(request: Request, env: Partial<Pick<McpEnv, "REGISTRIES" | "AGENTS" | "SCOPES">> & ScopeIndexEnvironment): Promise<Response | null> {
   if (!admittedRequestUrl(request.url)) return json(413, { error: "too-large" });
   const url = new URL(request.url);
   const path = url.pathname;
@@ -581,6 +685,19 @@ export async function mcpRoute(request: Request, env: Partial<Pick<McpEnv, "REGI
   const signed = controlOf(request.headers.get("authorization"));
   if (!signed) return json(400, { error: "control", rule: "header" });
   if (signed.request.action !== control.action || signed.request.agent !== control.agent) return json(400, { error: "control", rule: "binding" });
+  if (control.action === "create") {
+    let known = false;
+    try {
+      const index = scopeIndex(env);
+      if (!index) return json(404, { error: "not-found" });
+      known = await index.has(signed.request.membership.scope, "membership") === true;
+      if (!known && env.SCOPE_INDEX_MODE === "register" && env.SCOPES) {
+        const target = env.SCOPES.get(env.SCOPES.idFromName(signed.request.membership.scope)) as unknown as { registerKnown(): Promise<boolean> };
+        known = await target.registerKnown() === true && await index.has(signed.request.membership.scope, "membership") === true;
+      }
+    } catch { return json(404, { error: "not-found" }); }
+    if (!known) return json(404, { error: "not-found" });
+  }
   // The body, within its bound, as the exact bytes the object digests against the request's binding: read in chunks and
   // cancelled at the chunk that passes the bound, before anything is authenticated or any object is reached.
   const bytes = await boundedBytes(request, CONTROL_BODY_BYTES);
@@ -635,7 +752,7 @@ export class McpRegistry<E extends McpEnv = McpEnv> extends DurableObject<E> {
   protected answers(): { op: string; answer: boolean }[] {
     return this.ctx.storage.sql.exec(`SELECT op, answer IS NOT NULL AS held FROM control ORDER BY created`).toArray().map((r) => ({ op: String(r["op"]), answer: Number(r["held"]) === 1 }));
   }
-  protected scopes(): Binding { return this.env.SCOPES; }
+  protected scopes(): Binding { return indexedScopes(this.env.SCOPES, this.env); }
   protected now(): number { return Date.now(); }
   protected ports(): Partial<RegistryPorts> { return {}; }
   /** Drop this instance's memory, as an eviction would. For a test's subclass. */
@@ -658,7 +775,7 @@ export class McpRegistry<E extends McpEnv = McpEnv> extends DurableObject<E> {
 /** One hosted agent: its key, bearer, sessions, custody and control identities. */
 export class McpAgent<E extends McpEnv = McpEnv> extends DurableObject<E> {
   #agent: HostedAgent | null = null;
-  protected scopes(): Binding { return this.env.SCOPES; }
+  protected scopes(): Binding { return indexedScopes(this.env.SCOPES, this.env); }
   protected ports(): Partial<AgentPorts> { return {}; }
   #of(): HostedAgent {
     if (this.#agent) return this.#agent;

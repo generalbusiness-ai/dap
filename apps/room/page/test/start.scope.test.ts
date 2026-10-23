@@ -5,8 +5,8 @@
 import { env } from "cloudflare:workers";
 import { expect, test } from "vitest";
 import type { Seed, SignedIntent, ScopeId } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, intentDigest, keyIdOfSecret, newIncarnation, scopeIdOf, unb64url } from "@generalbusiness/artroom-bytes";
-import { agentKeyInvitationOf, creationOffer, secretSigner, signedIntent, type Fetch, type CreationOfferFetch } from "@generalbusiness/artroom-client";
+import { b64url, canonicalize, intentDigest, keyIdOfSecret, newIncarnation, scopeIdOf } from "@generalbusiness/artroom-bytes";
+import { agentKeyInvitationOf, creationOffer, secretSigner, signedIntent, type Fetch, type CreationOfferFetch, type Signer } from "@generalbusiness/artroom-client";
 import { DEMO_REGISTER, WEB_DEMO_REGISTER, WEB_DEMO_COHORT, DEMO_PURPOSE } from "@generalbusiness/dap-platform";
 import worker from "../../worker.ts";
 import { beginSessionFixture } from "../../../../packages/scope/test/session-settings.ts";
@@ -14,7 +14,10 @@ import { nativeFixtureLifetime, driveFixture } from "../../../../packages/scope/
 import { TEST_DEPLOYMENT } from "../../../../packages/scope/test/worker.ts";
 import { reader } from "../../../../packages/scope/test/support.ts";
 import { ownHost } from "../../../../packages/scope/test/hosts.ts";
-import { originalStart, startRoom } from "../src/start-custody.ts";
+import { originalStart, startRoom as actualStartRoom } from "../src/start-custody.ts";
+import { memoryPageKeys } from "./private-key-fixture.ts";
+const keys = memoryPageKeys();
+const startRoom: typeof actualStartRoom = (origin, storage, options) => actualStartRoom(origin, storage, { ...options, keys });
 import { connectInvitation, creatorConnectionFiles, originalConnection, saveCreatorRecoveryOnce } from "../src/connection-custody.ts";
 import { command, enrolAgentKey, linkOf, memoryStore, type Config, type Context } from "@generalbusiness/dap-cli";
 import { openRoom } from "../src/data.ts";
@@ -36,7 +39,7 @@ function locksOf(): ClaimLocks {
 test("fresh Page Start discovers native web register@8 and exact retained legacy7, retains before dispatch, Checks a lost accepted reply without mutation and explicitly Continues the original through enrolled room recovery (host, scheduler, storage and loss STAND-INs)", async () => {
   const owner = beginSessionFixture({ secret: b64url(crypto.getRandomValues(new Uint8Array(32))), sessions: true, inspector: reader });
   const lifetime = nativeFixtureLifetime(owner);
-  let recovered: Uint8Array | undefined;
+  let recovered: Signer | undefined;
   try {
     const origin = "https://artroom-rehearsal.inguz.workers.dev";
     const host = ownHost();
@@ -58,7 +61,7 @@ test("fresh Page Start discovers native web register@8 and exact retained legacy
     const L = lifetime.platform(scopeIdOf(legacySeed));
     expect((await lifetime.wait(() => L.stub.create(legacyInstall, DEMO_REGISTER))).answer).toBe("accepted");
     const legacyRegister = await lifetime.wait(() => L.at());
-    const bindings = { SCOPES: env.PLATFORM, DEPLOYMENT: TEST_DEPLOYMENT, DEMO_START_CONFIG: canonicalize({ v: 2, origin, deployment: TEST_DEPLOYMENT, register, definition: WEB_DEMO_REGISTER, legacy: { register: legacyRegister, definition: DEMO_REGISTER } }) };
+    const bindings = { SCOPE_INDEX: env.SCOPE_INDEX, SCOPES: env.PLATFORM, DEPLOYMENT: TEST_DEPLOYMENT, DEMO_START_CONFIG: canonicalize({ v: 2, origin, deployment: TEST_DEPLOYMENT, register, definition: WEB_DEMO_REGISTER, legacy: { register: legacyRegister, definition: DEMO_REGISTER } }) };
     const native: Fetch = (url, init) => lifetime.wait(() => worker.fetch(new Request(url, init), bindings));
     const anonymous = await native(`${origin}/v1/scopes/${register.scope}`);
     expect(anonymous.status).toBe(403);
@@ -102,9 +105,8 @@ test("fresh Page Start discovers native web register@8 and exact retained legacy
       const signed = new URL(url).pathname.endsWith("/acts") && typeof init?.body === "string" ? (JSON.parse(init.body) as { signed?: SignedIntent }).signed : undefined;
       if (signed) {
         const descriptorKey = `artroom-page-start:${origin}`, descriptorBytes = values.get(descriptorKey)!;
-        const descriptor = JSON.parse(descriptorBytes) as { secret: string; operation: string };
-        const creator = unb64url(descriptor.secret)!;
-        try { expect([creator.length, keyIdOfSecret(creator) === installer.key, signed.intent.actor === keyIdOfSecret(creator)]).toEqual([32, false, true]); } finally { creator.fill(0); }
+        const descriptor = JSON.parse(descriptorBytes) as { publicKey: string; secret?: string; operation: string };
+        expect([descriptor.secret === undefined, descriptor.publicKey === installer.key, signed.intent.actor === descriptor.publicKey]).toEqual([true, false, true]);
         const journalKey = [...values.keys()].find(key => key.startsWith("artroom-page-claim:"))!;
         const journalBytes = values.get(journalKey)!, journal = JSON.parse(journalBytes);
         const kept = JSON.parse(journal.claims[descriptor.operation]);
@@ -166,25 +168,21 @@ test("fresh Page Start discovers native web register@8 and exact retained legacy
     expect((await lifetime.wait(() => R.entries())).filter(e => e.input.type === "act" && e.input.signed.intent.kind === "found")).toHaveLength(1);
     expect((await lifetime.wait(() => M.entries())).filter(e => e.input.type === "act" && e.input.signed.intent.kind === "seat")).toHaveLength(1);
     expect((await lifetime.wait(() => M.entries())).filter(e => e.input.type === "act" && e.input.signed.intent.kind === "first-key")).toHaveLength(1);
-    recovered = completed.secret;
-    expect(recovered?.length).toBe(32);
-    const room = await lifetime.wait(() => openRoom({ service: origin, secret: recovered!, fetch, now: lifetime.now }, { directory: O.name, membership: completed.repository!.membership }));
+    recovered = completed.signer;
+    expect(recovered?.key).toBe(status.key);
+    const room = await lifetime.wait(() => openRoom({ service: origin, signer: recovered!, fetch, now: lifetime.now }, { directory: O.name, membership: completed.repository!.membership }));
     expect([room.directory, room.membership, room.key, room.me?.handle, room.reader !== null]).toEqual([O.name, completed.repository!.membership, status.key, "@founder", true]);
     expect(originalStart(origin, reload)?.state).toBe("complete");
     // The SAME native room now exercises every ready connection. No installer
     // key or inspector credential is supplied to Page/CLI callers.
     const binding = { key: status.key, operation: fresh.operation, membership: completed.repository!.membership };
-    const ready = { fetch: native, now: lifetime.now, locks, pause, tries: 16 };
+    const ready = { fetch: native, now: lifetime.now, locks, pause, tries: 16, keys };
     const files = await lifetime.wait(() => creatorConnectionFiles(origin, reload, binding, ready));
-    const exportedConfig = JSON.parse(files.config) as Config, exportedSeed = unb64url(files.key.trim())!;
-    try {
-      expect([exportedConfig.key, keyIdOfSecret(exportedSeed) === status.key, keyIdOfSecret(exportedSeed) === installer.key]).toEqual(["device", true, false]);
-      const cliCreator = memoryStore(); await cliCreator.keep("device", exportedSeed); await cliCreator.save(exportedConfig);
-      expect((await lifetime.wait(() => command({ store: cliCreator, fetch: native, now: lifetime.now }, ["acts", "membership"]))).code).toBe(0);
-    } finally { exportedSeed.fill(0); }
-    const savedRecovery = await lifetime.wait(() => saveCreatorRecoveryOnce(origin, reload, binding, ready));
-    expect(savedRecovery.trim() === files.key.trim()).toBe(true); // Native creator backup, not the internal CLI recovery key.
-    await expect(lifetime.wait(() => saveCreatorRecoveryOnce(origin, reload, binding, ready))).rejects.toThrow("already offered");
+    const exportedConfig = JSON.parse(files.config) as Config;
+    expect(exportedConfig.key).toBe("device"); expect(Object.keys(files)).toEqual(["config"]);
+    const cliCreator = memoryStore(); cliCreator.signer = async name => name === "device" ? recovered! : null; await cliCreator.save(exportedConfig);
+    expect((await lifetime.wait(() => command({ store: cliCreator, fetch: native, now: lifetime.now }, ["acts", "membership"]))).code).toBe(0);
+    await expect(lifetime.wait(() => saveCreatorRecoveryOnce(origin, reload, binding, ready))).rejects.toThrow("nonextractable");
     const creatorSent: SignedIntent[] = [], creatorMutationPaths: string[] = [], creatorReplies: { kind: string; answer: string; reason: string | null; name: string | null }[] = [];
     let creatorSessions = 0;
     let loseCreator: "add-member" | "invite-key" | null = "add-member", creatorCheck = false;
@@ -293,5 +291,5 @@ test("fresh Page Start discovers native web register@8 and exact retained legacy
     expect((await personStore.config())?.handle).toBe("@native-person");
     expect((await lifetime.wait(() => M.summary())).value.items.find(item => item.type === "member" && item.values["handle"] === "@native-person")?.values["kind"]).toBe("person");
 
-  } finally { recovered?.fill(0); lifetime.release(); }
+  } finally { lifetime.release(); }
 });

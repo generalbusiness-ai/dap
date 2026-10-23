@@ -30,7 +30,12 @@ const stubOf = (name: string): DurableObjectStub => env.NET.get(env.NET.idFromNa
  * `SELF.fetch` or the service binding takes longer the more of them one run has made (notes/implementation/2026-10-05-scope-test-cost.md),
  * so `routes.test.ts` and `client.test.ts` keep the one test for each of those two paths.
  */
-export const routed = (url: string, init?: RequestInit): Promise<Response> => route(new Request(url, init), env.NET);
+/** Explicit simulated edge metadata for this fixture; internal hosted calls
+ * use route's null transport address instead. */
+export const routed = (url: string, init?: RequestInit): Promise<Response> => {
+  const request = new Request(url, init);
+  return route(request, env.NET, { SCOPE_INDEX: env.SCOPE_INDEX }, request.headers.get("cf-connecting-ip"));
+};
 
 /** `seconds` after the shared clock's `now`. */
 export const soon = (seconds: number) => timeOf(timeMs(net.clock.now)! + seconds * 1000);

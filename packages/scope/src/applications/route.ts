@@ -1,11 +1,11 @@
 /** Generic trusted screen bytes, bound to one native active installation and
  * its exact presentation. This serves no application state and grants no
- * member authority. Same-origin delivery is not an isolation boundary. */
+ * member authority. Only the dedicated sandbox service serves package bytes. */
 import { jsonReply } from "../response.ts";
 import type { AnyPackedApplication } from "@generalbusiness/artroom-bytes/application-v2";
 import { PROPOSED_BOUNDS, type ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, unb64url } from "@generalbusiness/artroom-bytes";
-import { readApplicationScreenAddress, readApplicationScreenContext, type ApplicationInstallation, type ApplicationRoom } from "@generalbusiness/artroom-client/application";
+import { canonicalize, parseStrict, unb64url } from "@generalbusiness/artroom-bytes";
+import { applicationScreenHostMatches, readApplicationScreenHost, readApplicationScreenAddress, readApplicationScreenContext, type ApplicationScreenHost, type ApplicationInstallation, type ApplicationRoom } from "@generalbusiness/artroom-client/application";
 import { LATE, within } from "../turn.ts";
 import { ApplicationAdmissionError, readApplicationTrust, type ApplicationTrust } from "./admission.ts";
 import { ApplicationContentStore } from "./content.ts";
@@ -14,9 +14,23 @@ interface Peer {
   applicationRoom(): Promise<ApplicationRoom | null>;
   applicationInstallation(directory: ScopeRef, item: number): Promise<ApplicationInstallation | null>;
 }
-type Binding = Pick<DurableObjectNamespace, "get" | "idFromName">;
+import type { Binding } from "../namespace.ts";
 const POLICY = "default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'self'; form-action 'self'";
 const applicationJsonReply = (status: number, body: unknown) => jsonReply(status, body, { "x-content-type-options": "nosniff" });
+/** Missing, duplicate or malformed mappings admit no sandbox. A hostname is
+ * stable for one installation; a reviewed presentation update replaces its
+ * descriptor, without moving that installation's browser key storage. */
+export function applicationScreenHosts(setting: string | undefined): readonly ApplicationScreenHost[] {
+  try {
+    if (!setting || setting.length > 32 * 4096) return [];
+    const rows: unknown = parseStrict(setting);
+    if (!Array.isArray(rows) || rows.length > 32) return [];
+    const hosts = rows.map(readApplicationScreenHost);
+    if (new Set(hosts.map(host => host.screenOrigin)).size !== hosts.length
+      || new Set(hosts.map(host => `${host.roomOrigin}/${host.directory}/${host.item}`)).size !== hosts.length) return [];
+    return hosts;
+  } catch { return []; }
+}
 /** Two immutable packet entries per bucket. Concurrent reads of one release
  * share a load. Pending loads count toward the two entries; a third distinct
  * release waits for a later request. This is not a measured heap allowance. */
@@ -79,10 +93,23 @@ async function screenResponse(request: Request, env: ApplicationBindings & { SCO
 }
 
 
-export async function applicationPage(request: Request, env: ApplicationBindings & { SCOPES: Binding; DEPLOYMENT?: string }): Promise<Response | null> {
+export async function applicationSandboxPage(request: Request, env: ApplicationBindings & { SCOPES: Binding; DEPLOYMENT?: string }): Promise<Response | null> {
   const response = await screenResponse(request, env);
   if (request.method === "HEAD" && response?.body) {
     await response.body.cancel(); return new Response(null, { status: response.status, headers: response.headers });
   }
   return response;
+}
+
+/** Public room dispatch cannot serve a package script, even without sandbox
+ * configuration. Configuration-only redirect precedes every scope/R2 read. */
+export async function applicationPage(request: Request, env: ApplicationBindings): Promise<Response | null> {
+  const url = new URL(request.url);
+  if (!url.pathname.startsWith("/applications/")) return null;
+  if (request.method !== "GET" && request.method !== "HEAD") return new Response(null, { status: 405, headers: { allow: "GET, HEAD", "cache-control": "no-store" } });
+  const address = readApplicationScreenAddress(url.pathname);
+  if (!address || url.search || url.hash || url.username || url.password) return applicationJsonReply(404, { error: "not-found" });
+  const host = applicationScreenHosts(env.APPLICATION_SCREEN_HOSTS).find(candidate => candidate.roomOrigin === url.origin && applicationScreenHostMatches(candidate, url.pathname));
+  return host ? new Response(null, { status: 302, headers: { location: host.screenOrigin + url.pathname, "cache-control": "no-store", "referrer-policy": "no-referrer" } })
+    : applicationJsonReply(404, { error: "not-found" });
 }

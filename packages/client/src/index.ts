@@ -41,6 +41,7 @@ export * from "./application-route.ts";
 export * from "./application-install.ts";
 
 export * from "./application-screen.ts";
+export { applicationScreenTransport, type ApplicationGatewayFetch } from "./application-gateway.ts";
 export * from "./application-projection.ts";
 
 export * from "./journal-tail.ts";

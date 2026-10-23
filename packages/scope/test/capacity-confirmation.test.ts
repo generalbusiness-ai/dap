@@ -11,7 +11,7 @@ import { SqliteStore, type Delivery } from "../src/index.ts";
 import type { NativeBirth } from "../src/native-birth.ts";
 import type { ProofBody } from "../src/proof-bytes.ts";
 import { controls } from "../src/testing.ts";
-import { route } from "../src/worker.ts";
+import { fixtureRoute as route } from "./support/serving-route.ts";
 import { wired } from "./outside.ts";
 import { Lane, START, at, objectOf, reader, rita, stubOf } from "./fixtures-native.ts";
 

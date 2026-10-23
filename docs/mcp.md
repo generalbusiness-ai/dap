@@ -1562,8 +1562,12 @@ refused when the server starts.
 Every command of the command line and every action of the page, with the
 tool calls that perform it in each launch mode and the count of calls.
 The public item query, application listing and operational status are not
-yet available through MCP. Their marked gap rows have no execution recipe. The local package
-commands operate on files outside MCP and have no server recipe.
+yet available through MCP. Their marked gap rows have no execution recipe.
+Rows marked `(local command)` run in Node outside MCP; the marker does not
+imply offline or read-only work. Package commands use local files and their
+stated native scenarios. The scope-index operator uses authenticated native
+reads and can write registrations in register mode. These rows have no MCP
+server recipe.
 The two trusted-application rows are exercised by
 `packages/scope/test/application-install-custody.test.ts` on the new native
 cohort, including CLI-to-MCP original-request recovery and the default and
@@ -1605,6 +1609,7 @@ works; the count given is the default recipe's.
 | `dap show <scope>:<seq>` | `step`: 1 | `step`: 1 | 1 |
 | `dap verify <scope>` | `record`, one per page; the server verifies nothing, so a verifier outside it replays the canonical bytes, such as dap verify itself: 1 | `record`: 1 | 1 |
 | `dap verify --all` | `room`, then `record` for each scope it names: 1 + n | `room`, then `record` for each scope: 1 + n | 1 + n |
+| `dap scope-index inventory --out FILE`, `sweep --manifest FILE`, `verify --manifest FILE` (Node operator only) (local command) | No MCP tool. Saves or checks an exact manifest through authenticated native reads; register-mode reads can write registrations. No deployment mode or complete index is inferred. | Node operator only | Node operator only |
 | `dap status [<scope>] [--request <16-hex-id>]` (MCP gap: operational status) | Unavailable in MCP; use the CLI or SDK operational reads | Unavailable in MCP | Unavailable in MCP |
 | `dap remote` | `inspect` on the destination, whose branch item names the host, namespace and name: 1 | `inspect`: 1 | 1 |
 | `dap clone [<directory>]` | `repository.read-token` with the hours, `wait` for the outcome entry, `credential` with the act's entry, then Git: git clone with the credential as the header: 3 and Git | `actions` on the destination, `act`, `wait`, `credential`, then Git: 4 and Git | 3 and Git |

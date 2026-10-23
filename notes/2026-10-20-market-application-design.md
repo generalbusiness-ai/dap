@@ -1,7 +1,7 @@
 # A brokered market as a dap application: the market room and the provider rooms
 
-Design note, 20 October 2026, draft 2. Proposed functionality: nothing
-here is built.
+Status: current. 20 October 2026, draft 2. It landed at `7a148325`
+(approval `df3b3b31`). Nothing here is built.
 
 A person runs a small matching business: night nurses in one city,
 plumbers in another, used instruments in a third. Buyers post needs and

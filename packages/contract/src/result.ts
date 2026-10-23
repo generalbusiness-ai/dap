@@ -43,7 +43,7 @@ export type RefusalReason = FloorRefusal | "archived"
  * a grant, and nothing about its signer was read that the commit can judge on (sections 4.2, check 9, and 16.1).
  */
 export type UnavailableReason = "dependency-unavailable" | "busy" | "clock-behind" | "scope-provisional" | "guard-incomplete" | "authority-unavailable" | "unavailable"
-  | "rate-limited";     // a serving answer to a join: nothing was judged, nothing is recorded and no invitation changes (authority note, section 3.6, "The limits")
+  | "rate-limited";     // a serving answer to creation or join: nothing was judged or recorded and no invitation changes (authority note, section 3.6; R12)
 
 /** The same key and actor are on a sealed entry with another intent digest. */
 export type MismatchReason = "idempotency-mismatch";
@@ -51,7 +51,8 @@ export type MismatchReason = "idempotency-mismatch";
 /** Why a read gave no value (section 9.1). */
 export type ReadRefusal = "archived" | "not-found" | "wrong-incarnation" | "forbidden" | "scope-provisional" | "unsupported-definition" | "history-unavailable" | "too-large" | "unavailable"
   | "sessions-unavailable"   // a read session was presented, and the scope has no usable session secret, so it accepts none (authority note, section 5.5)
-  | "clock-behind";          // an authentic read session was presented, and the scope's clock reads earlier than its previous entry's time (authority note, sections 3.9 and 3.12, W6)
+  | "clock-behind"          // an authentic read session was presented, and the scope's clock reads earlier than its previous entry's time (authority note, sections 3.9 and 3.12, W6)
+  | "rate-limited";         // serving protection before target/proof work; no native judgment or authority change (kernel section 7, R12)
 
 /** A delivery that failed a source check. Nothing is recorded (sections 7.2 and 7.4). */
 export type DeliveryRefusal = "source-unverified";

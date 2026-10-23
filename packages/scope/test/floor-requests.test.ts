@@ -13,7 +13,7 @@ import { namespace } from "../src/namespace.ts";
 import { production, type Delivery } from "../src/ports.ts";
 import { SqliteStore } from "../src/sqlite.ts";
 import { testPorts } from "../src/testing.ts";
-import { route } from "../src/worker.ts";
+import { fixtureRoute as route } from "./support/serving-route.ts";
 import { at, create, reader, rita, type Lane } from "./fixtures-native.ts";
 import { wired } from "./outside.ts";
 import { archiveDefinition, archiveSql } from "./support/archive.ts";

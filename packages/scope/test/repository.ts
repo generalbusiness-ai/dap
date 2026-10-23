@@ -26,6 +26,7 @@ import { MEMBERSHIP, platform } from "@generalbusiness/dap-platform";
 import { officeDefinitionFor } from "@generalbusiness/dap-platform/testing";
 import type { Delivery, OutboxItem, Sealed, Summary } from "../src/index.ts";
 import { route } from "../src/worker.ts";
+import { startupTest } from "./support/serving-startup.ts";
 import { net } from "../src/testing.ts";
 import { soon } from "./net.ts";
 import { reader } from "./support.ts";
@@ -46,7 +47,13 @@ interface Surface {
 }
 
 /** The Worker's routes over the namespace `PLATFORM`, called in the test's isolate, for a verifier that reads a history as bytes. */
-export const routed = (url: string, init?: RequestInit): Promise<Response> => route(new Request(url, init), env.PLATFORM);
+/** Explicit simulated edge metadata for this fixture; internal hosted calls
+ * use route's null transport address instead. */
+export const routed = (url: string, init?: RequestInit): Promise<Response> => {
+  const request = new Request(url, init);
+  const action = () => route(request, env.PLATFORM, { SCOPE_INDEX: startupTest.index ?? env.SCOPE_INDEX }, request.headers.get("cf-connecting-ip"));
+  return startupTest.owner ? startupTest.owner.wait(action) : action();
+};
 
 /** One scope of the namespace `PLATFORM`, by name. */
 export class Platform {

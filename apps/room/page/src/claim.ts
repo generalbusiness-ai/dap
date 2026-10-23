@@ -1,12 +1,13 @@
 /** Native creation through the existing CLI workflow, with private browser recovery.
  * A typed label is local intent, not the repository name selected by the host.
  * This module never installs a register or imports an operator key. */
-import type { PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, isScopeRef, keyIdOfSecret, parseStrict, unb64url } from "@generalbusiness/artroom-bytes";
-import { ScopeHandle, httpTransport, secretSigner, signedReads, isCreationOffer, type Fetch } from "@generalbusiness/artroom-client";
+import type { KeyId, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
+import { canonicalize, isKeyId, isScopeRef, parseStrict, unb64url } from "@generalbusiness/artroom-bytes";
+import { ScopeHandle, httpTransport, signedReads, isCreationOffer, type Fetch } from "@generalbusiness/artroom-client";
 import { claim, checkClaim, type Config, type Context, type Outcome, type PendingClaim, type Repository, type Store } from "@generalbusiness/dap-cli";
 import { DIRECTORY_OF } from "@generalbusiness/dap-platform";
-import type { Session } from "./data.ts";
+import { sessionKey, sessionSigner, type Session } from "./data.ts";
+import { pageKeyStore } from "./browser-key-store.ts";
 
 export interface ClaimRegister { register: ScopeRef; definition: PlatformDefinition }
 /** Private same-origin storage. Its values include recovery key material;
@@ -16,6 +17,7 @@ export interface ClaimStorage { getItem(key: string): string | null; setItem(key
  * uses Web Locks; a test supplies its explicitly labelled lock stand-in. */
 export interface ClaimLocks { request<T>(name: string, run: () => Promise<T>): Promise<T> }
 export interface ClaimOptions extends Pick<Context, "pause" | "tries" | "creationOffer"> {
+  keys?: ReturnType<typeof pageKeyStore>;
   handle?: string;
   /** Only settle/follow the exact saved stages; never Continue or prepare. */
   readOnlyCheck?: boolean;
@@ -40,7 +42,7 @@ export interface ClaimedRoom {
   repository: Repository | null;
   pending: boolean;
 }
-interface Kept { v: 1; binding: string; label: string; config: Config; recovery?: string; completed?: PendingClaim }
+interface Kept { v: 1; binding: string; label: string; config: Config; recovery?: string; recoveryKey?: KeyId; completed?: PendingClaim }
 interface Journal { v: 2; binding: string; active: string; claims: Record<string, string>; originalLegacy?: string }
 export interface ClaimStatus { operation: string; label: string; state: "pending" | "complete" }
 /** A client storage bound, not native creation permission or capacity. No
@@ -48,30 +50,32 @@ export interface ClaimStatus { operation: string; label: string; state: "pending
 const MAX_CLAIMS = 64;
 const operationId = (id: string): boolean => id === "legacy" || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(id);
 
-function originOf(session: Session): void {
+type ClaimIdentity = { service: string; publicKey: KeyId };
+function originOf(session: { service: string }): void {
   const url = new URL(session.service);
   const browser = globalThis as { location?: { origin: string } };
   if (url.origin !== session.service || !["https:", "http:"].includes(url.protocol) || browser.location && browser.location.origin !== session.service) throw new Error("Claiming requires the exact origin of the Worker serving this page.");
 }
 
-function bindingOf(session: Session, configured: ClaimRegister): string {
-  if (session.secret.length !== 32 || !isScopeRef(configured.register) || configured.register.kind !== "register" || !DIRECTORY_OF[configured.definition]) throw new Error("A valid key and an explicitly supported configured register are required.");
+function bindingOf(session: Session | ClaimIdentity, configured: ClaimRegister): string {
+  if (!isScopeRef(configured.register) || configured.register.kind !== "register" || !DIRECTORY_OF[configured.definition]) throw new Error("A valid key and an explicitly supported configured register are required.");
   // The browser caller passes location.origin; an arbitrary remote connection
   // is not selected from a saved setting, invitation, or claim record.
   originOf(session);
-  return canonicalize([session.service, configured.register, configured.definition, keyIdOfSecret(session.secret)]);
+  return canonicalize([session.service, configured.register, configured.definition, "publicKey" in session ? session.publicKey : sessionKey(session)]);
 }
 
-function readKept(raw: string, binding: string, session: Session, configured: ClaimRegister): Kept {
+function readKept(raw: string, binding: string, session: { service: string }, configured: ClaimRegister): Kept {
   let got: Kept | null;
   try { got = parseStrict(raw) as unknown as Kept | null; } catch { throw new Error("The private claim record cannot be read. It is kept; nothing was submitted."); }
   if (!got || got.v !== 1 || got.binding !== binding || typeof got.label !== "string" || !got.config || got.config.v !== 1
     || got.config.service !== session.service || got.config.key !== "browser" || canonicalize(got.config.register) !== canonicalize(configured.register)
     || got.config.plan !== undefined || got.config.join !== undefined
-    || (got.recovery !== undefined && unb64url(got.recovery)?.length !== 32)) throw new Error("The private claim record does not match this Worker, register and key. It is kept; nothing was submitted.");
+    || (got.recovery !== undefined && (unb64url(got.recovery)?.length !== 32 || got.recoveryKey !== undefined))
+    || (got.recoveryKey !== undefined && !isKeyId(got.recoveryKey))) throw new Error("The private claim record does not match this Worker, register and key. It is kept; nothing was submitted.");
   return got;
 }
-function readJournal(session: Session, configured: ClaimRegister, storage: ClaimStorage): { binding: string; storageKey: string; journal: Journal | null } {
+function readJournal(session: Session | ClaimIdentity, configured: ClaimRegister, storage: ClaimStorage): { binding: string; storageKey: string; journal: Journal | null } {
   const binding = bindingOf(session, configured);
   const storageKey = `artroom-page-claim:${binding}`;
   const raw = storage.getItem(storageKey);
@@ -94,7 +98,7 @@ function readJournal(session: Session, configured: ClaimRegister, storage: Claim
 }
 /** A local descriptor only. It carries neither signing keys nor permission,
  * and a complete hint is revalidated natively before a new creation. */
-export function claimStatus(session: Session, configured: ClaimRegister, storage: ClaimStorage, selectedOperation?: string): ClaimStatus | null {
+export function claimStatus(session: Session | ClaimIdentity, configured: ClaimRegister, storage: ClaimStorage, selectedOperation?: string): ClaimStatus | null {
   const { binding, journal } = readJournal(session, configured, storage);
   if (!journal) return null;
   const operation = selectedOperation ?? journal.active;
@@ -106,7 +110,62 @@ export function claimStatus(session: Session, configured: ClaimRegister, storage
 /** One journal write commits the operation ID and its complete private record
  * before a mutation can leave. Existing signing keys stay in Page settings;
  * each new operation generates and retains its own recovery key. */
-function storeFor(session: Session, configured: ClaimRegister, storage: ClaimStorage, label: string, operation: string, fresh = false): { store: Store; kept(): Kept; retain(): void } {
+/** Called under the original claim lock. Every archived operation and legacy
+ * copy keeps its exact signed stages; only the independent recovery seed is
+ * replaced after durable import of that same recovery identity. */
+async function migrateClaimKeys(session: Session | ClaimIdentity, configured: ClaimRegister, storage: ClaimStorage, keys: ReturnType<typeof pageKeyStore>, current: () => void): Promise<void> {
+  const loaded = readJournal(session, configured, storage);
+  if (!loaded.journal) return;
+  let journal = loaded.journal;
+  for (const name of [...Object.keys(journal.claims), "originalLegacy"]) {
+    const raw = name === "originalLegacy" ? journal.originalLegacy : journal.claims[name];
+    if (!raw) continue;
+    const record = readKept(raw, loaded.binding, session, configured);
+    if (!record.recovery) continue;
+    const before = storage.getItem(loaded.storageKey);
+    await keys.migrate({ seed: record.recovery, current: () => { current(); return storage.getItem(loaded.storageKey) === before; }, removeSecret: recoveryKey => {
+      current();
+      if (storage.getItem(loaded.storageKey) !== before) throw new Error("The original recovery custody changed.");
+      const { recovery: _seed, ...publicRecord } = record;
+      const next = canonicalize({ ...publicRecord, recoveryKey });
+      journal = name === "originalLegacy" ? { ...journal, originalLegacy: next } : { ...journal, claims: { ...journal.claims, [name]: next } };
+      const bytes = canonicalize(journal);
+      storage.setItem(loaded.storageKey, bytes);
+      if (storage.getItem(loaded.storageKey) !== bytes) throw new Error("The recovery reference did not persist.");
+    } });
+  }
+}
+/** Migrate retained recovery custody without preparing, checking or sending
+ * any native operation. Original operation/history bytes remain in the row. */
+export async function migrateRecoveryCustody(session: Session, configured: ClaimRegister, storage: ClaimStorage, keys = pageKeyStore()): Promise<void> {
+  const locks = (globalThis as { navigator?: { locks?: ClaimLocks } }).navigator?.locks;
+  if (!locks) throw new Error("Private claim migration locking is unavailable.");
+  await locks.request(`artroom-page-claim:${bindingOf(session, configured)}`, () => migrateClaimKeys(session, configured, storage, keys, () => {}));
+}
+/** Enumerate only this origin's bounded, explicitly tagged claim journals.
+ * Their public binding is sufficient to move an existing recovery key; it
+ * does not authorize any native read, signing operation or new enrollment. */
+export async function migrateAllClaimCustody(origin: string, storage: ClaimStorage & { length: number; key(n: number): string | null }, keys = pageKeyStore()): Promise<void> {
+  const locks = (globalThis as { navigator?: { locks?: ClaimLocks } }).navigator?.locks;
+  const length = storage.length;
+  if (!locks || !Number.isSafeInteger(length) || length < 0 || length > 1024) throw new Error("Private claim migration is unavailable or exceeds its storage bound.");
+  const names: string[] = [];
+  for (let n = 0; n < length; n++) { const name = storage.key(n); if (name?.startsWith("artroom-page-claim:")) names.push(name); }
+  for (const name of names) {
+    const binding = name.slice("artroom-page-claim:".length);
+    if (binding.length > 4096) throw new Error("The original claim binding exceeds its bound.");
+    const tuple: unknown = JSON.parse(binding);
+    if (!Array.isArray(tuple) || tuple.length !== 4 || tuple[0] !== origin) continue;
+    const [service, register, definition, publicKey] = tuple;
+    if (!isScopeRef(register) || register.kind !== "register" || typeof definition !== "string" || !Object.hasOwn(DIRECTORY_OF, definition) || !isKeyId(publicKey)) throw new Error("The original claim binding is invalid.");
+    const configured = { register, definition: definition as PlatformDefinition };
+    const identity = { service: service as string, publicKey };
+    if (bindingOf(identity, configured) !== binding) throw new Error("The original claim binding changed.");
+    await locks.request(name, () => migrateClaimKeys(identity, configured, storage, keys, () => {}));
+  }
+}
+
+function storeFor(session: Session, configured: ClaimRegister, storage: ClaimStorage, label: string, operation: string, fresh = false, keys = pageKeyStore()): { store: Store; kept(): Kept; retain(): void } {
   const read = readJournal(session, configured, storage);
   const { binding, storageKey } = read;
   let journal = read.journal ?? { v: 2 as const, binding, active: operation, claims: {} };
@@ -126,6 +185,13 @@ function storeFor(session: Session, configured: ClaimRegister, storage: ClaimSto
     journal = nextJournal;
   };
   const store: Store = {
+    signer: async name => name === "browser" ? sessionSigner(session) : name === "recovery" && record.recoveryKey ? keys.load(record.recoveryKey) : null,
+    newSigner: async name => {
+      if (name !== "recovery" || record.recoveryKey || record.recovery) throw new Error("An existing browser or recovery key is never replaced.");
+      const signer = await keys.create();
+      write({ ...record, recoveryKey: signer.key });
+      return signer;
+    },
     config: async () => {
       const config = structuredClone(record.config);
       if (!record.completed) return config;
@@ -133,11 +199,8 @@ function storeFor(session: Session, configured: ClaimRegister, storage: ClaimSto
       return { ...base, claim: structuredClone(record.completed) };
     },
     save: async (config) => write({ ...record, config, ...(config.repository && record.config.claim ? { completed: structuredClone(record.config.claim) } : {}) }),
-    secret: async (name) => name === "browser" ? session.secret.slice() : name === "recovery" && record.recovery ? unb64url(record.recovery) : null,
-    keep: async (name, secret) => {
-      if (name !== "recovery" || secret.length !== 32 || record.recovery !== undefined) throw new Error("An existing browser or recovery key is never replaced.");
-      write({ ...record, recovery: b64url(secret) });
-    },
+    secret: async () => { throw new Error("Browser signing keys cannot be exported."); },
+    keep: async () => { throw new Error("Browser signing keys require durable private custody."); },
     private: async () => null,
     keepPrivate: async () => { throw new Error("Claiming does not create a private invitation record."); },
   };
@@ -149,15 +212,15 @@ function storeFor(session: Session, configured: ClaimRegister, storage: ClaimSto
  * version guess is used. The register still judges the eventual signed act. */
 export async function allowedClaim(session: Session, register: ScopeRef): Promise<ClaimRegister> {
   originOf(session);
-  if (session.secret.length !== 32 || !isScopeRef(register) || register.kind !== "register") throw new Error("A valid browser key and full configured register reference are required.");
-  const transport = signedReads(httpTransport(session.service, session.fetch ? { fetch: session.fetch } : {}), secretSigner(session.secret), session.now ? { now: session.now } : {});
+  if (!isScopeRef(register) || register.kind !== "register") throw new Error("A valid browser key and full configured register reference are required.");
+  const transport = signedReads(httpTransport(session.service, session.fetch ? { fetch: session.fetch } : {}), sessionSigner(session), session.now ? { now: session.now } : {});
   const read = await new ScopeHandle(transport, register.scope).summary();
   if (!read.ok) throw new Error(`The configured register cannot be read: ${read.reason}. Nothing was submitted.`);
   if (!read.complete || read.next !== undefined || canonicalize(read.value.scope) !== canonicalize(register) || !DIRECTORY_OF[read.value.definition]) throw new Error("The register read does not match the complete configured reference and a supported pinned version. Nothing was submitted.");
   const registers = read.value.items.filter((item) => item.type === "register" && item.state === "open");
   const policy = registers[0]?.values["policy"];
   const creators = registers[0]?.values["founders"];
-  if (registers.length !== 1 || !(policy === "open" || policy === "keys" && Array.isArray(creators) && creators.includes(keyIdOfSecret(session.secret)))) throw new Error("This browser key is not eligible under the configured register's creation policy. Nothing was submitted.");
+  if (registers.length !== 1 || !(policy === "open" || policy === "keys" && Array.isArray(creators) && creators.includes(sessionKey(session)))) throw new Error("This browser key is not eligible under the configured register's creation policy. Nothing was submitted.");
   return { register, definition: read.value.definition as PlatformDefinition };
 }
 
@@ -174,7 +237,9 @@ export async function claimRoom(session: Session, configured: ClaimRegister, sto
     };
     checkCurrent();
     if (!label.trim() || label.length > 256) throw new Error("Enter a local room label of at most 256 characters.");
-    const { handle, readOnlyCheck, retainOperation, locks: _locks, current: _current, mode: _mode, operation: _operation, ...waiting } = options;
+    const { handle, readOnlyCheck, retainOperation, locks: _locks, current: _current, mode: _mode, operation: _operation, keys: suppliedKeys, ...waiting } = options;
+    const keys = suppliedKeys ?? pageKeyStore();
+    await migrateClaimKeys(session, configured, storage, keys, checkCurrent);
     if (readOnlyCheck && options.mode !== "resume") throw new Error("Check requires a retained original creation. Nothing was submitted.");
     let blocked = false;
     const send = session.fetch ?? (globalThis as { fetch?: Fetch }).fetch;
@@ -201,7 +266,7 @@ export async function claimRoom(session: Session, configured: ClaimRegister, sto
       if (options.operation !== active) throw new Error("Another creation changed this browser's journal. Inspect the saved operation before creating another room.");
       if (loaded.journal && Object.keys(loaded.journal.claims).length >= MAX_CLAIMS) throw new Error("This browser's claim journal is full. Original proofs are kept; no new creation was submitted.");
       if (active) {
-        const previous = storeFor(session, configured, storage, label.trim(), active);
+        const previous = storeFor(session, configured, storage, label.trim(), active, false, keys);
         const kept = previous.kept();
         if (!kept.completed) return { outcome: { code: 1, lines: ["A creation is already in progress. Resume that exact original operation before creating another room."] }, operation: active, label: kept.label, repository: null, pending: true };
         const verified = await runNative(previous, kept.label);
@@ -218,7 +283,7 @@ export async function claimRoom(session: Session, configured: ClaimRegister, sto
       operation = crypto.randomUUID();
       fresh = true;
     }
-    const privateStore = storeFor(session, configured, storage, label.trim(), operation, fresh);
+    const privateStore = storeFor(session, configured, storage, label.trim(), operation, fresh, keys);
     const before = privateStore.kept();
     if (before.config.repository && !before.completed) throw new Error("The saved room has no exact native claim recovery proof. It is kept; nothing was submitted.");
     checkCurrent();

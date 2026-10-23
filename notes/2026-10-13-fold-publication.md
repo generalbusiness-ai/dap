@@ -1,8 +1,8 @@
 # Publication from a fold
 
-Status, 21 October 2026: draft 5 is approved (`f35f58ad`) and landed at
-`94cb87de`. The library's publication implements it (`5e11ca03`), and its
-hosted outputs are recorded at `94c85cc3`.
+Status: current. Draft 5 is approved (`f35f58ad`) and landed at
+`94cb87de`. The library's publication implements it (`5e11ca03`), and
+its hosted outputs are recorded at `94c85cc3`.
 
 13 October 2026; Draft 5, 14 October 2026. **Design note.** Two trials were run, in memory, of the
 lending definition of section 5 against the validator, the rule

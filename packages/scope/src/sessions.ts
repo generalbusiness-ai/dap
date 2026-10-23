@@ -554,11 +554,18 @@ export function relay(opened: Opened, release: () => unknown): ReadableStream<Ui
       await release();
     } catch { /* the scope's object had gone, and its streams with it */ }
   };
-  return new ReadableStream<Uint8Array>({
+  // This relay also leaves the Worker through named RPC. Use an explicit
+  // byte stream there; retain the existing zero-prefetch and once-only release.
+  return new ReadableStream({
+    type: "bytes",
     async pull(controller) {
       try {
         const { done, value } = await from.read();
-        if (!done) return controller.enqueue(value);
+        if (!done) {
+          const buffer = value.buffer;
+          if (!(buffer instanceof ArrayBuffer)) throw new TypeError("A native stream chunk requires an ArrayBuffer.");
+          return controller.enqueue(new Uint8Array(buffer, value.byteOffset, value.byteLength));
+        }
       } catch { /* the scope's stream failed, as at a restart: the reader is told that it ended */ }
       await once();
       controller.close();

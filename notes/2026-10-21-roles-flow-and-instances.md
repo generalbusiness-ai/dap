@@ -1,6 +1,7 @@
 # Roles, flow and instances for hosted agent teams
 
-Design note. Proposed: nothing here is built.
+Status: current. It landed at `184ba58d` (approval `cf359f74`). Nothing
+here is built.
 
 A room is worked by people and agents. Each one acts as a member of the
 room's membership, and signs with a key. The journal keeps every act, with

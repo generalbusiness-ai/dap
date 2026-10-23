@@ -5,10 +5,11 @@
 
 import type { ScopeRef } from "@generalbusiness/dap-contract";
 import { isScopeId } from "@generalbusiness/artroom-bytes";
-import { httpTransport, secretSigner, signedReads } from "@generalbusiness/artroom-client";
+import { httpTransport, signedReads } from "@generalbusiness/artroom-client";
 import { serve } from "@generalbusiness/dap-mcp/node";
 import type { McpConfig, Root } from "@generalbusiness/dap-mcp";
 import type { Context, Outcome } from "./commands.ts";
+import { storedSigner, newStoredSigner } from "./store-signer.ts";
 
 const usage = (...lines: string[]): Outcome => ({ code: 2, lines });
 
@@ -51,9 +52,9 @@ export async function mcpRoot(ctx: Context, scope: string, membership: string | 
     if (!named || !isScopeId(named)) return usage(`--membership takes membership or a scope ID, not ${membership}.`);
     if (config.repository?.membership.scope === named) ref = config.repository.membership;
     else {
-      const secret = await ctx.store.secret(config.key);
-      if (!secret) return { code: 1, lines: [`The key ${config.key} is missing from the config directory; nothing was read.`] };
-      const read = await signedReads(httpTransport(config.service, ctx.fetch ? { fetch: ctx.fetch } : {}), secretSigner(secret), ctx.now ? { now: ctx.now } : {}).summary(named, null);
+      const signer = await storedSigner(ctx.store, config.key);
+      if (!signer) return { code: 1, lines: [`The key ${config.key} is missing from the config directory; nothing was read.`] };
+      const read = await signedReads(httpTransport(config.service, ctx.fetch ? { fetch: ctx.fetch } : {}), signer, ctx.now ? { now: ctx.now } : {}).summary(named, null);
       if (!read.ok) return { code: 1, lines: [`Cannot read ${named}: ${read.reason}. Nothing was recorded.`] };
       ref = read.value.scope;
     }
@@ -76,9 +77,10 @@ export async function mcp(ctx: Context, home: string, argv: readonly string[]): 
   // server's `join` records the room, the service and the handle when an invitation is accepted.
   const config = await ctx.store.config();
   const keyName = config?.key ?? "device";
-  let secret = await ctx.store.secret(keyName);
-  if (!secret && config) return { code: 1, lines: [`The key ${config.key} is missing from the config directory; the server cannot sign.`] };
-  if (!secret) { secret = crypto.getRandomValues(new Uint8Array(32)); await ctx.store.keep(keyName, secret); }
+  let signer = await storedSigner(ctx.store, keyName);
+  if (!signer && config) return { code: 1, lines: [`The key ${config.key} is missing from the config directory; the server cannot sign.`] };
+  if (!signer && ctx.store.signer && !ctx.store.newSigner) return { code: 1, lines: ["The device signing key is unavailable; this store cannot create it."] };
+  if (!signer) signer = await newStoredSigner(ctx.store, keyName);
   const port = {
     read: async (): Promise<McpConfig> => {
       const c = await ctx.store.config();
@@ -99,7 +101,7 @@ export async function mcp(ctx: Context, home: string, argv: readonly string[]): 
     },
   };
   try {
-    await serve({ service: config?.service ?? "", signer: secretSigner(secret), config: port, home, mode: options.mode, tools: options.tools, http: options.http, ...(ctx.fetch ? { fetch: ctx.fetch } : {}) });
+    await serve({ service: config?.service ?? "", signer, config: port, home, mode: options.mode, tools: options.tools, http: options.http, ...(ctx.fetch ? { fetch: ctx.fetch } : {}) });
   } catch (error) {
     return { code: 2, lines: [error instanceof Error ? error.message : String(error)] };
   }

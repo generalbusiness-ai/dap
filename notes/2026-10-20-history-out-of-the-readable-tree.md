@@ -1,6 +1,7 @@
 # History out of the readable tree
 
-Design note. Proposed: nothing here is built.
+Status: current. It landed at `2a77bc5f` (approval `5cadc468`). Nothing
+here is built.
 
 dap is a repository that people and agents both read and change. An
 agent that adds a feature first searches the tree for a similar one and

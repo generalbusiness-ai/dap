@@ -1,15 +1,15 @@
 # Members and presence in the interface
 
-Draft 3, 19 October 2026. It is approved at `c16fe0aa` and landed at
-`9554919b`. D1 (`8aad37bb`) and B1 (`9c6d344c`) have landed; B2, B3 and
-B4 are not built. It sets a common
-framework for showing a member anywhere in a dap interface, and for
-showing a member's presence from a recorded source now and from the live
-surface later. It fixes what the member element shows, where its data
-comes from, and how an application author gets it with little effort.
-The builder designs the element's appearance and the screens that use it,
-following the design system (section 8). Source facts cite `path:line` at
-main `4d8c878c`. Draft 2 answered F1 and F2 of the checker's review
+Status: current. Draft 3, 19 October 2026. It is approved at `c16fe0aa`
+and landed at `9554919b`. D1 (`8aad37bb`) and B1 (`9c6d344c`) have
+landed; B2, B3 and B4 are not built. It sets a common framework for
+showing a member anywhere in a dap interface, and for showing a member's
+presence from a recorded source now and from the live surface later. It
+fixes what the member element shows, where its data comes from, and how
+an application author gets it with little effort. The builder designs
+the element's appearance and the screens that use it, following the
+design system (section 8). Source facts cite `path:line` at main
+`4d8c878c`. Draft 2 answered F1 and F2 of the checker's review
 `868bbe12`; draft 3 answers F3 and F4 of review `d273ec2d` (section 10).
 
 The presence model is the presence declaration of the

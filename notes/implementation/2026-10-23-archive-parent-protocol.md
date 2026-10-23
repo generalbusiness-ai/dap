@@ -8,7 +8,8 @@ Git protocol v2 path for Artifacts archive parent reads.
 Request `66010f21f899a4df8ac7530e18539f05887254cd` and promise
 `645d787bbd23c281e9cf92c82f8236b0a07772c7` track the work. The candidate starts
 from deployed diagnostic commit `f99ccc239aa305d442e1d0e354fce86ac37d598f`.
-The implementation draft is complete. Local validation is pending. Hosted v2 filtering
+The implementation draft is complete and includes accepted Main
+`aa016e0e1e6d71a8d466f82e8aff7e9f22ca0250`. Local validation is pending. Hosted v2 filtering
 support and a completed archive pass remain unverified.
 
 ## The observed failure
@@ -121,7 +122,16 @@ cancellation. The strengthened response-time and body-time clock witnesses
 require the same source to refuse later object and reference reads without
 more I/O while cancellation is pending. Local execution is still pending.
 
-The affected compiler, unrun owning tests, final gate, and exact-head review
+The candidate integrates accepted Main before the remaining checks. Its Git
+and Scope protocol files have no upstream overlap. The security inventory keeps
+Main's accepted owners and fourth case, with only the two measured archive
+seals changed. The lock, workspace dependencies, and Vitest configurations are
+unchanged. Accepted native fixture wiring includes the scope index, so the
+remaining Scope test and final gate use that integrated environment. The prior
+compiler results describe their original source. The final gate recompiles the
+integrated head.
+
+The affected Git compiler, unrun owning tests, final gate, and exact-head review
 remain pending.
 The planned Git witness uses real local `git http-backend` with filtering
 enabled and without the older non-tip-want permission. It must read an old
