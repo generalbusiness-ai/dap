@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4ac7cf8be0ec92d4d5050e9486c605a4362ba436","text":"Merge retired a covered predecessor; the successor is at docs/mcp.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4bc3dd40a1533d7d5b8eeadfdcfbf855289e101a","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/capacity-child-definitions.test.ts."}
