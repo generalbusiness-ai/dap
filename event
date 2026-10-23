@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4c5435cb056b5c25880ff8bada37684238ca9901","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-21-grow-demo-archive.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4e381e4379b5b2860862f061ae77b2b2e3ba1701","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-source-pins.ts."}
