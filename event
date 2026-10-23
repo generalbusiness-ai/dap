@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:23892ced40a7ce03452a91c03d14fa999e8db336","text":"Merge retired a covered predecessor; the successor is at packages/git/src/journal-anchors.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:23f45b8a278a4cedf3cff20f8b0aa9f144205b8c","text":"Merge retired a covered predecessor; the successor is at scripts/active-source.test.mjs."}
