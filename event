@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at docs/testing.md","body":{"commit":"085a3042149ce34b6cb90003c3e8e952d7e89459","path":"docs/testing.md"}}
+{"kind":"artifact","text":"Merge published the current artifact at scripts/check-commit-messages.mjs","body":{"commit":"085a3042149ce34b6cb90003c3e8e952d7e89459","path":"scripts/check-commit-messages.mjs"}}
