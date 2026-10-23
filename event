@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3f29692813b80ab25ee86469e5832037a68797d3","text":"Merge retired a covered predecessor; the successor is at scripts/workspace-rename-preservation.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3f3ed9c2ccc16139554fa72b5d5e846440232ad9","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/device-application-rules.ts."}
