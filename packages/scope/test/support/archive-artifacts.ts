@@ -55,12 +55,30 @@ export class ArchiveArtifactsPeer {
     if (request.url.endsWith("/git-upload-pack")) {
       const wanted = /want ([0-9a-f]{40})/.exec(new TextDecoder().decode(bytes))?.[1], object = wanted ? this.data.get(wanted) : null;
       if (!object) return expect.fail("The actual adapter must name one held object");
-      const pack = await buildPack([object], { maxBytes: 8 * 1024 * 1024 });
       if (request.headers.get("git-protocol") === "version=2") {
         expect(request.method).toBe("POST");
-        expect(new TextDecoder().decode(bytes)).toBe(`${pkt("command=fetch\n")}0001${pkt(`want ${wanted}\n`)}${pkt("deepen 1\n")}${pkt("filter tree:0\n")}${pkt("no-progress\n")}${pkt("done\n")}0000`);
-        return response(scriptedArchiveV2Pack(pack), "upload-pack-result");
+        expect(new TextDecoder().decode(bytes)).toBe(`${pkt("command=fetch\n")}0001${pkt(`want ${wanted}\n`)}${pkt("deepen 1\n")}${pkt("filter blob:none\n")}${pkt("no-progress\n")}${pkt("done\n")}0000`);
+        // Model blob:none, not a one-object shortcut: keep the wanted
+        // object and its trees, but no parent commits or unrequested blobs.
+        const reader = new Reader(this.source), objects = new Map([[object.id, object]]);
+        const trees = object.type === "commit" ? [(await reader.commit(object.id)).tree] : object.type === "tree" ? [object.id] : [];
+        const visited = new Set<string>();
+        for (const id of trees) {
+          if (visited.has(id)) continue;
+          visited.add(id);
+          const tree = this.data.get(id);
+          if (!tree || tree.type !== "tree") return expect.fail("The held commit/tree needs every descendant tree");
+          objects.set(id, tree);
+          for (const entry of await reader.tree(id)) if (entry.kind === "tree") trees.push(entry.id);
+        }
+        const pack = await buildPack([...objects.values()], { maxBytes: 8 * 1024 * 1024 });
+        const framed = scriptedArchiveV2Pack(pack);
+        if (object.type !== "commit") return response(framed, "upload-pack-result");
+        const shallow = utf8(`${pkt("shallow-info\n")}${pkt(`shallow ${wanted}\n`)}0001`);
+        const body = new Uint8Array(shallow.length + framed.length); body.set(shallow); body.set(framed, shallow.length);
+        return response(body, "upload-pack-result");
       }
+      const pack = await buildPack([object], { maxBytes: 8 * 1024 * 1024 });
       const prefix = utf8("0000" + pkt("NAK\n"));
       const body = new Uint8Array(prefix.length + pack.length); body.set(prefix); body.set(pack, prefix.length);
       return response(body, "upload-pack-result");
