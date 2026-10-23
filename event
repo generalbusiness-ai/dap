@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/implementation/2026-10-22-security-union.md","body":{"commit":"aa016e0e1e6d71a8d466f82e8aff7e9f22ca0250","path":"notes/implementation/2026-10-22-security-union.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0a903cef968ab49427960e7e317a30c8714348ba","text":"Merge retired a covered predecessor; the successor is at apps/room/wrangler.grow.jsonc."}
