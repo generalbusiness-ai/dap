@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5ff02da8af1f5e9088285d7ac3d1d3cb795a5b4c","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-22-archive-anchor-publication.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:608f8d1cf69a523b6b33f2f44475b96411cc9aaa","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/archive-target.test.ts."}
