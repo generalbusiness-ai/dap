@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:732f4d408e7b8ca3a40fccbab90ecb078e46c347","text":"Merge retired a covered predecessor; the successor is at scripts/public-release-modules.test.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:73ef6b54c38c9ec9b05eeb2373461b60fc02db1c","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/definition-corpus/genesis-bodies-data.ts."}
