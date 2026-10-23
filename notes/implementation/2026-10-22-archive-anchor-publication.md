@@ -12,10 +12,20 @@ The correction declares Replay's existing boolean as an erasable field and
 assignment. Its public command witness now invokes the documented native
 Node path without the test-only TSX preload. Commands remain sequential,
 with all reports, trust choices, token checks, caps and deadlines unchanged.
-The four owning compiler roots and 22 selected cases are pending. No
-performance or timeout-resolution claim is made. The genuinely unreached
-Node 36 and Counting 55 checks also remain pending. The whole suite is not
-automatically repeated after this correction.
+All four affected compiler roots and 22 whole-file cases passed at
+`739bc3c3e` under `392c4138d`. The production public command completed in
+27,672 ms under its original 30-second deadline, with trusted exit zero and
+five consistent reports. This observed fit is not a general timing-margin
+guarantee. Page asset equality also passed without another build.
+
+The downstream attempt then passed 34 of 36 Node cases. Two source-boundary
+checks rejected the new anchor-range test's deliberate Git encoder and
+reader imports because its exact path was missing from the development
+exception set. The correction adds only that test path. Portable production
+restrictions, Git dependency direction and unlisted-file counterexamples
+remain unchanged. The affected whole source-guard file and genuinely
+unreached Counting 55 checks are pending. The whole suite is not
+automatically repeated after these corrections.
 
 Earlier owning results remain attributed to their exact checkpoints:
 Scope test and Node-support compilation plus all six heavy cases passed
@@ -1184,3 +1194,32 @@ No healthy heavy repeat or automatic full gate repeat is requested.
 After those checks, the unreached downstream work still needs its own
 allocation. Formal review retains the failed full gate alongside exact
 correction evidence. No candidate test has run after this source change.
+
+### Corrected executable checks and downstream boundary follow-up
+
+Correction owner 77006 naturally passed all four affected compiler roots
+and all 22 cases once at clean `739bc3c3e`, under
+`392c4138d33a8e5ad57ef23d7c54537e5aac9363`. The unchanged executable usage,
+sha1 and sha256 disconnected-clone checks passed. All six installed cases
+and Page asset equality passed. The production public-command case took
+27,672 ms within its original 30,000 ms deadline. Owner-inclusive time was
+70.857413917 seconds wall, 54.409589 user and 18.052487 system. Full source,
+fixed dependencies, tools and environment guards passed without signals.
+This correction evidence does not turn the original failed gate green.
+
+Downstream owner 52071 then naturally failed at the same clean source:
+34 of 36 Node cases passed, and two source-boundary checks failed. The
+actual imports in `packages/replay/test/archive-anchor-ranges.test.ts`
+use the existing Git journal encoder and reader. Its exact development
+boundary had not been listed in `replayGitUsers`; this checkpoint adds only
+that path. It does not permit Git in portable Replay production modules,
+introduce a wildcard, or alter the existing negative controls. Counting 55
+was not reached under the original sequential failure behavior. The
+complete source and dependency guards passed, the cache was unchanged,
+and there were no signals. Outcome and narrow-fix authorization are
+`470f1ae78c371cd14cb3538731a3e6775720c845`.
+
+The next owning checks are the whole affected source-guard file and the
+genuinely unreached Counting 55 checks, under a fresh root allocation.
+The other 34 Node cases and passing Vitest files are not repeated. This
+checkpoint is source-prepared; no follow-up runtime result is claimed.
