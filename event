@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6f8b6f067b75cd7d903484dc3121acdba945ba8d","text":"Merge retired a covered predecessor; the successor is at packages/git/src/http-read.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a39ab078e8f74322050514e73dfaa4da280b8026","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-23-archive-post-status-diagnostic.md."}
