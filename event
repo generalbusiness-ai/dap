@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:53e21552697d895309ad4f7a3ce3b8249ee514a8","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/applications/projection-ownership.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:53ec209b050f009df7e793bf838fc34668e85c06","text":"Merge retired a covered predecessor; the successor is at packages/platform/test/partition-provenance.test.ts."}
