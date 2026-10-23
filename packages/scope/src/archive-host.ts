@@ -47,7 +47,7 @@ export function archiveProvider(ports: { readonly tokens: ArchiveTokens; readonl
   const { tokens, clock } = ports;
   const isolatedObjectProtocol = host.isolatedObjectProtocol;
   const held = new WeakMap<ArchiveCredential, { repository: DestinationRepository; at: ScopeRef; ref: string; original: ArchiveCredential }>();
-  const source = async (repository: DestinationRepository, allowed: () => boolean, most?: { bytes: number; objects: number }, isolated = false, observation?: ArchiveParentReadObservation, reserveObjects?: (count: number) => void): Promise<SmartHttpSource> => {
+  const source = async (repository: DestinationRepository, allowed: () => boolean, most?: { bytes: number; objects: number }, isolated = false, observation?: ArchiveParentReadObservation, reserveObjects?: (count: number) => void, reserveWork?: (bytes: number) => void): Promise<SmartHttpSource> => {
     check(allowed); repository = { ...repository }; host.transport(repository); // Validate before the first port call.
     observation?.phase("token");
     const plaintext = await tokens.read({ ...repository }, allowed); check(allowed);
@@ -67,7 +67,8 @@ export function archiveProvider(ports: { readonly tokens: ArchiveTokens; readonl
       ...(most === undefined ? {} : { bounds: { ...(transport.bounds ?? READ_BOUNDS), closureObjects: Math.min(transport.bounds?.closureObjects ?? READ_BOUNDS.closureObjects, most.objects) } }),
       ...(isolated ? { isolateObjects: { ownedBytes: maxBytes * 17,
         ...(isolatedObjectProtocol === undefined ? {} : { protocol: isolatedObjectProtocol }),
-        ...(reserveObjects === undefined ? {} : { reserveObjects }) } } : {}) });
+        ...(reserveObjects === undefined ? {} : { reserveObjects }),
+        ...(reserveWork === undefined ? {} : { reserveWork }) } } : {}) });
   };
   const ref = async (repository: DestinationRepository, name: string, allowed: () => boolean): Promise<string | null> => {
     const input = await source(repository, allowed);
@@ -92,20 +93,22 @@ export function archiveProvider(ports: { readonly tokens: ArchiveTokens; readonl
       // besides the pack's header/trailer. The transport can reduce this
       // count further; this is not a new platform quota or a cache grant.
       const objects = v2 ? Math.min(READ_BOUNDS.closureObjects, Math.floor((wire - 32) / 9)) : 1;
-      // One exact-object HTTP negotiation/decode, with bounded advertisement
-      // and wire work, spends the native pass's original allowance before I/O.
-      budget.spend({ calls: 2, metadata: 1024, inputWork: wire * 32 + (v2 ? 1024 : 0) });
+      // Fixed negotiation work and base metadata precede I/O. V2 payload
+      // work is admitted at its actual wire/inflation/construction boundary;
+      // the maximum remains a physical bound, not a debit for unread bytes.
+      budget.spend({ calls: 2, metadata: 1024, inputWork: v2 ? 1024 : wire * 32 });
       const observation = beginArchiveParentRead(budget, type, maximum);
       try {
         // Header count is checked before this synchronous reservation, and
         // no per-entry records, maps, reference arrays or inflation precede it. Price
         // their records, SHA-1 keys and dependency/ready/result memberships
         // conservatively at 1024 units per actual entry, in both ledgers.
-        // This is logical work accounting, not measured engine heap. Wire
-        // and base metadata were already charged; failed admission refunds
-        // nothing and exposes no object. V0 retains its original cost/mode.
+        // This is logical work accounting, not measured engine heap. Failed
+        // admission refunds nothing and exposes no object. V0 retains its
+        // original cost/mode, without staged work callbacks.
         const reserveObjects = v2 ? (count: number) => { budget.spend({ metadata: count * 1024, inputWork: count * 1024 }); } : undefined;
-        const input = await source(repository, allowed, { bytes: wire, objects }, true, observation, reserveObjects);
+        const reserveWork = v2 ? (bytes: number) => { budget.spend({ inputWork: bytes * 32 }); } : undefined;
+        const input = await source(repository, allowed, { bytes: wire, objects }, true, observation, reserveObjects, reserveWork);
         observation.phase("object");
         const value = await input.object(id, maximum); check(allowed);
         if (value.type !== type) return bad();

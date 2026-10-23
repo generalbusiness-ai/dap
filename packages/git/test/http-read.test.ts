@@ -41,8 +41,8 @@ function pack(remote: string, head: string, ofs: boolean): Uint8Array {
 }
 
 /** Independent Node zlib boundary oracle confirms the real Git pack kinds. */
-function kinds(pack: Uint8Array): number[] {
-  const matched: number[] = [];
+function packEntries(pack: Uint8Array): { kind: number; bytes: number }[] {
+  const matched: { kind: number; bytes: number }[] = [];
   let at = 12;
   const count = new DataView(pack.buffer, pack.byteOffset).getUint32(8);
   for (let i = 0; i < count; i++) {
@@ -52,12 +52,13 @@ function kinds(pack: Uint8Array): number[] {
     if (kind === 7) at += 20;
     if (kind === 6) { do { b = pack[at++]!; } while ((b & 128) !== 0); }
     // Node's typings omit the info:true overload that returns its engine.
-    const raw = inflateSync(pack.subarray(at), { info: true }) as unknown as { engine: { bytesWritten: number } };
+    const raw = inflateSync(pack.subarray(at), { info: true }) as unknown as { buffer: Uint8Array; engine: { bytesWritten: number } };
     at += raw.engine.bytesWritten;
-    matched.push(kind);
+    matched.push({ kind, bytes: raw.buffer.length });
   }
   return matched;
 }
+const kinds = (pack: Uint8Array) => packEntries(pack).map(entry => entry.kind);
 
 // Invariant: actual local Git's upload response becomes exact objects for
 // the production Reader, including real OFS/REF deltas; refs establish
@@ -380,10 +381,11 @@ test("isolated abandonment survives late fetch and cleanup settlement without co
 });
 
 const v2Options = { ...isolatedOptions, isolateObjects: { ownedBytes: 32 * isolatedWire, protocol: "v2" as const } };
-const v2Advertisement = (capabilities = ["fetch=shallow filter"], lineEnding = "\n", service = false, serviceLF = "\n") => new Response(Buffer.concat([
+const v2AdvertisementBytes = (capabilities = ["fetch=shallow filter"], lineEnding = "\n", service = false, serviceLF = "\n") => Buffer.concat([
   ...(service ? [pkt(`# service=git-upload-pack${serviceLF}`), Buffer.from("0000")] : []),
   pkt(`version 2${lineEnding}`), ...capabilities.map(line => pkt(`${line}${lineEnding}`)), Buffer.from("0000"),
-]), { headers: { "content-type": "application/x-git-upload-pack-advertisement" } });
+]);
+const v2Advertisement = (capabilities = ["fetch=shallow filter"], lineEnding = "\n", service = false, serviceLF = "\n") => new Response(v2AdvertisementBytes(capabilities, lineEnding, service, serviceLF), { headers: { "content-type": "application/x-git-upload-pack-advertisement" } });
 const band = (channel: number, data: Uint8Array = new Uint8Array()) => {
   const size = data.length + 5;
   return Buffer.concat([Buffer.from(size.toString(16).padStart(4, "0")), Buffer.from([channel]), data]);
@@ -506,13 +508,15 @@ test("opt-in v2 validates sections and binary sidebands before exact pack admiss
   const { remote, head, expected } = repository();
   const smallBlob = put(remote, "blob", "other\n");
   const single = onePack(remote, head), blob = onePack(remote, smallBlob);
-  const run = (body: Uint8Array, id = head, limit = isolatedWire, lineEnding = "\n", service = false, serviceLF = "\n", closureObjects = READ_BOUNDS.closureObjects, maximumBytes = isolatedWire) => {
+  const run = (body: Uint8Array, id = head, limit = isolatedWire, lineEnding = "\n", service = false, serviceLF = "\n", closureObjects = READ_BOUNDS.closureObjects, maximumBytes = isolatedWire, reserveWork?: (bytes: number) => void) => {
     let calls = 0;
-    const source = new SmartHttpSource({ ...v2Options, maxBytes: maximumBytes, bounds: { ...READ_BOUNDS, closureObjects }, fetch: request => {
+    const advertisement = v2AdvertisementBytes(["unknown=ignored", "unknown=also-ignored", "fetch=shallow filter", "object-format=sha1"], lineEnding, service, serviceLF);
+    const source = new SmartHttpSource({ ...v2Options, maxBytes: maximumBytes, bounds: { ...READ_BOUNDS, closureObjects },
+      isolateObjects: { ...v2Options.isolateObjects, ...(reserveWork === undefined ? {} : { reserveWork }) }, fetch: request => {
       calls++;
-      return Promise.resolve(request.method === "GET" ? v2Advertisement(["unknown=ignored", "unknown=also-ignored", "fetch=shallow filter", "object-format=sha1"], lineEnding, service, serviceLF) : v2Response(body));
+      return Promise.resolve(request.method === "GET" ? new Response(advertisement, { headers: { "content-type": "application/x-git-upload-pack-advertisement" } }) : v2Response(body));
     } });
-    return { outcome: source.object(id, limit), calls: () => calls };
+    return { outcome: source.object(id, limit), calls: () => calls, wireBytes: advertisement.length + body.length };
   };
   // The same text packets are valid with or without their optional final LF.
   for (const lineEnding of ["\n", ""]) {
@@ -537,6 +541,40 @@ test("opt-in v2 validates sections and binary sidebands before exact pack admiss
   const reserved: number[] = [];
   const denied = await decodePack(invalidEntry, { maxBytes, reserveObjects: count => { reserved.push(count); throw reservationRefusal; } }).then(() => undefined, error => error);
   expect(denied).toBe(reservationRefusal); expect(reserved).toEqual([1]);
+  const invalidCompression = new Uint8Array(single);
+  let compressedAt = 12, header = invalidCompression[compressedAt++]!;
+  while ((header & 128) !== 0) header = invalidCompression[compressedAt++]!;
+  invalidCompression[compressedAt] = 0; // invalid zlib header after a valid declared size
+  const inflateRefusal = new Error("TEST declared inflation quota"), declared: number[] = [];
+  const deniedInflation: unknown = await decodePack(invalidCompression, { maxBytes,
+    reserveWork: bytes => { declared.push(bytes); throw inflateRefusal; },
+  }).then(() => undefined, error => error);
+  expect(deniedInflation).toBe(inflateRefusal);
+  expect(declared).toEqual([expected.get(head)!.data.length]);
+  // Wire admission crosses body/HTTP normalization with the same original
+  // quota exception. A refused source never performs another object/ref read.
+  const wireRefusal = new Error("TEST received wire quota");
+  let wireCalls = 0, wireCancels = 0, wireCancellationFinished = false, releaseWire!: () => void;
+  const wireCancellation = new Promise<void>(resolve => { releaseWire = resolve; });
+  const wireSource = new SmartHttpSource({ ...v2Options, isolateObjects: { ...v2Options.isolateObjects,
+    reserveWork: () => { throw wireRefusal; },
+  }, fetch: request => {
+    wireCalls++; expect(request.method).toBe("GET");
+    return Promise.resolve(new Response(new ReadableStream<Uint8Array>({
+      start(controller) { controller.enqueue(v2AdvertisementBytes()); },
+      cancel() { wireCancels++; return wireCancellation.then(() => { wireCancellationFinished = true; }); },
+    }), { headers: { "content-type": "application/x-git-upload-pack-advertisement" } }));
+  } });
+  try {
+    expect(await wireSource.object(head, isolatedWire).then(() => undefined, error => error)).toBe(wireRefusal);
+    expect(wireCalls).toBe(1); expect(wireCancels).toBe(1);
+    expect(wireCancellationFinished).toBe(false);
+    await expect(wireSource.object(head, isolatedWire)).rejects.toMatchObject({ what: "isolated source abandoned" });
+    await expect(wireSource.ref(REF)).rejects.toMatchObject({ what: "isolated source abandoned" });
+    await expect(wireSource.refs("refs/heads/", 10)).rejects.toMatchObject({ what: "isolated source abandoned" });
+    expect(wireCalls).toBe(1);
+  } finally { releaseWire(); await wireCancellation; }
+
   const paired = new Uint8Array(execFileSync("git", ["-C", remote, "pack-objects", "--stdout"], {
     input: `${head}\n${smallBlob}\n`, maxBuffer: maxBytes,
     env: { PATH: process.env["PATH"] ?? "/usr/bin:/bin", GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: "/dev/null" },
@@ -573,6 +611,21 @@ test("opt-in v2 validates sections and binary sidebands before exact pack admiss
     expect(check.calls()).toBe(2);
   }
   expect((await run(v2Bytes(paired)).outcome).type).toBe("commit");
+  const companionBody = v2Bytes(paired), admitted: number[] = [];
+  const measured = run(companionBody, head, isolatedWire, "\n", false, "\n", READ_BOUNDS.closureObjects, isolatedWire, bytes => { admitted.push(bytes); });
+  await expect(measured.outcome).resolves.toMatchObject({ type: "commit" });
+  const companionInflated = packEntries(paired).reduce((sum, entry) => sum + entry.bytes, 0);
+  expect(admitted.reduce((sum, bytes) => sum + bytes, 0)).toBe(measured.wireBytes + companionInflated);
+  // The wanted body fits; the extra valid companion must still spend work.
+  const companionRefusal = new Error("TEST companion inflation quota");
+  const workLimit = measured.wireBytes + expected.get(head)!.data.length;
+  let spent = 0;
+  const quota = run(companionBody, head, isolatedWire, "\n", false, "\n", READ_BOUNDS.closureObjects, isolatedWire, bytes => {
+    spent += bytes; if (spent > workLimit) throw companionRefusal;
+  });
+  expect(await quota.outcome.then(() => undefined, error => error)).toBe(companionRefusal);
+  expect(spent).toBeGreaterThan(workLimit); expect(quota.calls()).toBe(2);
+
   await expect(run(v2Bytes(paired), head, isolatedWire, "\n", false, "\n", 1).outcome).rejects.toMatchObject({ reason: "too-large", what: "pack objects" });
   const beforeWanted = await buildPack([{ id: smallBlob, type: "blob", data: new TextEncoder().encode("other\n") }, { id: head, ...expected.get(head)! }], { maxBytes });
   expect((await decodePack(beforeWanted, { maxBytes })).map(object => object.id)).toEqual([smallBlob, head]);
@@ -598,6 +651,20 @@ test("opt-in v2 validates sections and binary sidebands before exact pack admiss
     expect(kinds(bytes)).toContain(ofs ? 6 : 7);
     const read = await run(v2Bytes(bytes), changedBlob).outcome;
     expect(read).toEqual({ type: "blob", size: Buffer.byteLength(text), data: new Uint8Array(Buffer.from(text.replace("line-0100", "edit-0100"))) });
+    const body = v2Bytes(bytes), work: number[] = [];
+    const counted = run(body, changedBlob, isolatedWire, "\n", false, "\n", READ_BOUNDS.closureObjects, isolatedWire, size => { work.push(size); });
+    await expect(counted.outcome).resolves.toMatchObject({ type: "blob", size: Buffer.byteLength(text) });
+    const rawInflated = packEntries(bytes).reduce((sum, entry) => sum + entry.bytes, 0);
+    expect(work.reduce((sum, size) => sum + size, 0)).toBe(counted.wireBytes + rawInflated + Buffer.byteLength(text));
+    const deltaRefusal = new Error("TEST reconstructed delta quota");
+    let deltaWork = 0;
+    const deniedDelta = run(body, changedBlob, isolatedWire, "\n", false, "\n", READ_BOUNDS.closureObjects, isolatedWire, size => {
+      deltaWork += size; if (deltaWork > counted.wireBytes + rawInflated) throw deltaRefusal;
+    });
+    expect(await deniedDelta.outcome.then(() => undefined, error => error)).toBe(deltaRefusal);
+    expect(deltaWork).toBe(counted.wireBytes + rawInflated + Buffer.byteLength(text));
+    expect(deniedDelta.calls()).toBe(2);
+
     await expect(run(v2Bytes(bytes), changedBlob, isolatedWire, "\n", false, "\n", READ_BOUNDS.closureObjects, 16 * 1024).outcome).rejects.toMatchObject({ reason: "too-large", what: "delta result" });
   }
   await expect(run(v2Bytes(blob)).outcome).rejects.toMatchObject({ what: "wanted object omitted" });
