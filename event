@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:76c1393e82649e6e73642ef8c670ee6bb7fdbb32","text":"Merge retired a covered predecessor; the successor is at apps/room/page/test/browser-key-store.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:76d53756d1d79bd0cbadf02d55664ec19fb2b8fb","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/sqlite.ts."}
