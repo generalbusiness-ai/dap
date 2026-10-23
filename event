@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:56d450755d6687d5d62ede9805ab4a4c1348df47","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/definition-corpus/platform-fixtures.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:56e08c541cfeec4220253457a86521b1cc7d4852","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/definition-corpus/replay-histories.ts."}
