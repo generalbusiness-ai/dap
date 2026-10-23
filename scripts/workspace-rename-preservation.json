@@ -18072,6 +18072,21 @@
       ],
       "dataProjection": "8657d274e025f5d5777c0310b3dba82dd02fc50f99e59d6e63b01748a968d6fc",
       "digests": []
+    },
+    {
+      "path": "apps/counter/scripts/test-browser.mjs",
+      "before": "ae0a5d5149d3e6a43c42f3c2585c9d5632de8eee13962386b03fa7abf0725f84",
+      "after": "3c4ee23291933e94c9bbad5897722c64a69bad696c05e0268499a098cb44cc61",
+      "spans": [
+        {
+          "start": 2458,
+          "end": 2546,
+          "kind": "package-policy",
+          "replacement": "  const expected=`@generalbusiness/dap-${name}`;\n"
+        }
+      ],
+      "dataProjection": "3e251661ddb3cdad4535d816a08baf2ed531dc4d6a86ccbf25eb8af603de4208",
+      "digests": []
     }
   ],
   "publicationSources": [
