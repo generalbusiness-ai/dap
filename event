@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7e169f13f6de18d6ed1a0525702aa311dfe17f2f","text":"Merge retired a covered predecessor; the successor is at apps/room/page/test/claim-ui.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7ec80ae203dbf2d202b21786c667c9bb3de571d3","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/applications/projection-wire.ts."}
