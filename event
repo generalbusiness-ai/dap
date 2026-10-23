@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:07c621a5d7dc65f3d112fb2bd9436d26b4a00dee","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-23-workspace-rename.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:082d1815873b428c9494adc27a9d3f43624a7d6c","text":"Merge retired a covered predecessor; the successor is at packages/client/src/agent-key-invitation.ts."}
