@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1ded0bbc022f0edd660be513201fdbc958dd3b67","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/support/application-fact-time-fixture.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1e3f71e13414a0ecbf04e32cf7c1cd74bf8ecdd2","text":"Merge retired a covered predecessor; the successor is at examples/lending/browser/model.test.ts."}
