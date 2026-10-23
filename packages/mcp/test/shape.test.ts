@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { FactRef, ScopeRef } from "@generalbusiness/dap-contract";
-import { newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/artroom-bytes";
+import { newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import { effectiveFields, expectedOf, type ActLike } from "../src/index.ts";
 import { capturedExpected, shapeAt } from "../src/shape.ts";
 

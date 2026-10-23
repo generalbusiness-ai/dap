@@ -7,7 +7,7 @@
  */
 
 import type { ActType, Advisory, AlsoMark, AlsoRule, Bounds, Digest, Effect, EffectForm, Entry, FactRef, FactUse, FieldType, FieldValue, Guard, Input, Notify, PlatformData, PlatformReceive, Prepared, Reason, ReceiveType, RefusalReason, Request, ResultClauses, ScopeRef, Send, SendForm, SendMark, Settles, UnavailableReason } from "@generalbusiness/dap-contract";
-import { entryHash } from "@generalbusiness/artroom-bytes";
+import { entryHash } from "@generalbusiness/dap-bytes";
 import { handlerBranch } from "./handler-branch.ts";
 import type { Signer } from "./attribution.ts";
 import { boundTo, decisionCounts, selectedByIndex, selectorOf } from "./binding.ts";

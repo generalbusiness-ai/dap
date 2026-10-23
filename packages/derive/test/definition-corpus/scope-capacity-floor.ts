@@ -1,6 +1,6 @@
 /** Positive raw Scope capacity/floor declarations; no Native setup or eager validation. */
 import { PROPOSED_BOUNDS, type Digest, type PlatformData } from "@generalbusiness/dap-contract";
-import { definitionDigest } from "@generalbusiness/artroom-bytes";
+import { definitionDigest } from "@generalbusiness/dap-bytes";
 import { PROFILES } from "../../src/validate/index.ts";
 import { RULE_PROFILES } from "../../src/rule/index.ts";
 import { ticket, desk } from "./fixture-data.ts";

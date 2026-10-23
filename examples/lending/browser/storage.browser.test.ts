@@ -1,8 +1,8 @@
 /** Real IndexedDB/Web Locks/WebCrypto witness; transport and recorded answers are STAND-INs.
  * No native membership, deployed room, public pages or audio is proved here. */
 import type { Receipt, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, intentDigest, newIncarnation, scopeIdOf, textDigest, verifySignedIntent } from "@generalbusiness/artroom-bytes";
-import { signedIntent } from "@generalbusiness/artroom-client";
+import { canonicalize, intentDigest, newIncarnation, scopeIdOf, textDigest, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { signedIntent } from "@generalbusiness/dap-client";
 import { LENDING_DEFINITION } from "../pin.ts";
 import { advance, lendingBinding, type Envelope, type Kept, type LendingIdentity, type Ports } from "./custody.ts";
 import { deviceSigner, newDeviceKey } from "./join.ts";

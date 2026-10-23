@@ -1,8 +1,8 @@
 /** Presentation over one complete authenticated membership summary. These
  * choices neither issue a grant nor certify the destination's admission. */
-import { isRecord as record } from "@generalbusiness/artroom-bytes";
+import { isRecord as record } from "@generalbusiness/dap-bytes";
 import type { Item, KeyId, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isKeyId, isMemberRef, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isKeyId, isMemberRef, utf8 } from "@generalbusiness/dap-bytes";
 import { CONTROLLER, EXTENT_CLASSES, EXTENTS_MOST, ROLE_LISTS, RULES_EXTENT, isActions, type Extent, type Role } from "@generalbusiness/dap-platform";
 import type { Standing } from "@generalbusiness/dap-cli";
 

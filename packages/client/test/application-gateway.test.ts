@@ -1,7 +1,7 @@
 /** Fixed transport mapping only. No browser/native admission or hosted shim
  * is claimed by these scripted HTTP boundaries. */
 import { expect, test } from "vitest";
-import { canonicalize, newIncarnation, scopeIdOf } from "@generalbusiness/artroom-bytes";
+import { canonicalize, newIncarnation, scopeIdOf } from "@generalbusiness/dap-bytes";
 import type { Digest, ScopeKind, ScopeRef } from "@generalbusiness/dap-contract";
 import { applicationScreenPath } from "../src/application-route.ts";
 import { applicationGatewayRoute, applicationScreenTransport, readApplicationScreenHost, type ApplicationGatewayFetch } from "../src/application-gateway.ts";

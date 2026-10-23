@@ -6,7 +6,7 @@ import { runInDurableObject } from "cloudflare:test";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import type { Head, ScopeRef } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, newIncarnation, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, newIncarnation, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { ARCHIVE_BOUNDS, ArchiveBudget } from "../src/archive-budget.ts";
 import { ARCHIVE_POSITION_METADATA_BYTES, archivePrefixMetadata } from "../src/archive-prefix.ts";
 import { ArchiveWindow, openArchiveWindow, type ArchiveWindowCheckpoint } from "../src/archive-window.ts";

@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { FactRef, ScopeId } from "@generalbusiness/dap-contract";
-import { canonicalize } from "@generalbusiness/artroom-bytes";
+import { canonicalize } from "@generalbusiness/dap-bytes";
 import { FILE_PUBLICATION_COHORT, FIRST_ACTIONS_OF } from "@generalbusiness/dap-platform";
 import { lending } from "../../../examples/lending/definition.ts";
 import { LENDING_DEFINITION } from "../../../examples/lending/pin.ts";

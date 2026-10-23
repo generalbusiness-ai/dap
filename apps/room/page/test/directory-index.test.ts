@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import type { Head, ScopeRef } from "@generalbusiness/dap-contract";
 import { ITEM_QUERY_BOUNDS as B } from "@generalbusiness/dap-contract";
-import { canonicalize, encodeItemQueryCursor, itemQueryArgument, itemQueryDigest, newIncarnation, readItemQueryParameter, scopeIdOf, textDigest } from "@generalbusiness/artroom-bytes";
+import { canonicalize, encodeItemQueryCursor, itemQueryArgument, itemQueryDigest, newIncarnation, readItemQueryParameter, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import { listLanes, Unreadable, type Room } from "../src/data.ts";
 
 // Scripted bounded HTTP page, not native authority or freshness evidence.

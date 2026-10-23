@@ -1,11 +1,11 @@
 import { env } from "cloudflare:workers";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Bounds, type FactRef, type ScopeRef, type Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, intentDigest, scopeIdOf, signIntent } from "@generalbusiness/artroom-bytes";
+import { canonicalize, intentDigest, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import type { Delivered, ValidDefinition } from "@generalbusiness/dap-derive";
 import { grantOf } from "@generalbusiness/dap-derive/testing";
 import { childDefinitions } from "../../derive/test/fixtures-child-definitions.ts";
-import { httpSource, verify } from "@generalbusiness/artroom-replay";
+import { httpSource, verify } from "@generalbusiness/dap-replay";
 import { SqliteStore, type Delivery } from "../src/index.ts";
 import { controls } from "../src/testing.ts";
 import { fixtureRoute as route } from "./support/serving-route.ts";

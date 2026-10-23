@@ -5,7 +5,7 @@ import { env } from "cloudflare:workers";
 import { ARCHIVE_APPLICATION_COHORT as C, ARCHIVE_DEVICE_APPLICATION_COHORT as DC } from "@generalbusiness/dap-platform";
 import { expect, test } from "vitest";
 import { ITEM_QUERY_BOUNDS, type ScopeRef, type Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, newIncarnation, parseStrict } from "@generalbusiness/artroom-bytes";
+import { canonicalize, newIncarnation, parseStrict } from "@generalbusiness/dap-bytes";
 import { ArchiveBudget } from "../src/archive-budget.ts";
 import { fixtureArchiveTarget, fixtureArchiveTargetIn, type FixtureArchiveTargetReads } from "../src/archive-target.ts";
 import { namespace } from "../src/namespace.ts";

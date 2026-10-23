@@ -1,8 +1,8 @@
 /** FAKE service data for custody and rendered preview witnesses. Uses the
  * shared pure producer; no native storage, installation or authority runs. */
 import type { Head, Summary } from "@generalbusiness/dap-contract";
-import { canonicalize, itemQueryArgument, itemQueryDigest } from "@generalbusiness/artroom-bytes";
-import { applicationProjectionQueries, applicationProjectionQueryDigest, projectApplicationQueryReads, readApplicationProjectionQuery } from "@generalbusiness/artroom-bytes/application-v2";
+import { canonicalize, itemQueryArgument, itemQueryDigest } from "@generalbusiness/dap-bytes";
+import { applicationProjectionQueries, applicationProjectionQueryDigest, projectApplicationQueryReads, readApplicationProjectionQuery } from "@generalbusiness/dap-bytes/application-v2";
 import { countingCommitments } from "../commitments.ts";
 import { counterStateProjection } from "./projection.ts";
 

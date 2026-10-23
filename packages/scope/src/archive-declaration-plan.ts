@@ -2,7 +2,7 @@
  * roots keep every original read/validation/support request. Distinct-node
  * union and fresh whole-prefix admission remain the caller's work. */
 import type { Digest, Head } from "@generalbusiness/dap-contract";
-import { isDigest, isHead, natural } from "@generalbusiness/artroom-bytes";
+import { isDigest, isHead, natural } from "@generalbusiness/dap-bytes";
 import { ARCHIVE_BOUNDS, type ArchiveBudget, type ArchiveCost } from "./archive-budget.ts";
 import { forecastArchiveDeclarationClosure, forecastArchivePotentialDeclarationClosure,
   type ArchiveDeclarationFootprint, type ArchivePotentialDeclarationFootprint } from "./archive-declaration-scout.ts";

@@ -6,7 +6,7 @@ import { prepareGrowCheck } from "../../../../examples/grow/prepare-check.ts";
 import { DEMO_RELEASE, DEMO_PUBLISHER } from "../../../../examples/grow/demo-release.ts";
 import { simulatorRelease } from "../../../../examples/grow/simulator-release.ts";
 import { fileURLToPath } from "node:url";
-import { b64url } from "@generalbusiness/artroom-bytes";
+import { b64url } from "@generalbusiness/dap-bytes";
 import { prepareApplicationDirectory } from "../../../cli/src/application-files.ts";
 import type { MaintainedApplicationInputs } from "./maintained-applications.ts";
 import { fixedSigner } from "../fixtures.ts";

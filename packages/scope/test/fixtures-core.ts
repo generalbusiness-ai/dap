@@ -1,7 +1,7 @@
 /** Portable builders for explicit application-test inputs. No Worker globals,
  * implicit trust, shared ownership or default cohort is introduced here. */
 import type { KeyId } from "@generalbusiness/dap-contract";
-import { secretSigner } from "@generalbusiness/artroom-client";
+import { secretSigner } from "@generalbusiness/dap-client";
 
 /** Each call retains the caller's exact public TEST seed. */
 export const fixedSigner = (fill: number) => secretSigner(new Uint8Array(32).fill(fill));

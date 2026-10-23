@@ -1,6 +1,6 @@
 /** Operator observations, not registration proof or a global scope inventory. */
 import type { Digest, ScopeRef, Seed, Sealed, Read } from "@generalbusiness/dap-contract";
-import { canonicalize, factRefOf, isDigest, isRecord, isScopeRef, isSeed, isSealed, parseStrict, scopeIdOf, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, factRefOf, isDigest, isRecord, isScopeRef, isSeed, isSealed, parseStrict, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 
 export const INDEX_INVENTORY_BOUNDS = Object.freeze({ scopes: 4096, pages: 4096, pagesPerScope: 1000, bytes: 16 * 1024 * 1024 });
 export interface IndexScope { readonly at: ScopeRef; readonly genesis: Digest }

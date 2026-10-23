@@ -1,7 +1,7 @@
 /** Pure raw declarations shared with the original Grow judgment witnesses.
  * This module validates nothing and constructs no history, actor key or service. */
 import type { DeclaredDefinition, FieldValue } from "@generalbusiness/dap-contract";
-import { definitionDigest } from "@generalbusiness/artroom-bytes";
+import { definitionDigest } from "@generalbusiness/dap-bytes";
 import { deviceCommandRow as row } from "../../packages/derive/test/fixtures-device-command.ts";
 import { deviceForms } from "./device.ts";
 import { zoneForms } from "./zone.ts";

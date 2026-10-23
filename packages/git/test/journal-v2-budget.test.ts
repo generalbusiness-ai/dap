@@ -3,7 +3,7 @@
  * archive history, native consumer, admission or receipt is claimed. */
 import { expect, test } from "vitest";
 import type { Entry } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, entryHash, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, digestBytes, entryHash, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { ARCHIVE_BOUNDS, ArchiveBudget } from "../../scope/src/archive-budget.ts";
 import { JournalObjects, type JournalObject } from "../src/journal-objects.ts";
 import { JournalWork } from "../src/journal-work.ts";

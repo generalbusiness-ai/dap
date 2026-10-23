@@ -1,7 +1,7 @@
 /** Raw late/pin variants shared by the original witnesses and positive corpus. */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { PROPOSED_BOUNDS, type DeclaredDefinition, type PlatformData, type Digest, type EffectForm } from "@generalbusiness/dap-contract";
-import { definitionDigest } from "@generalbusiness/artroom-bytes";
+import { definitionDigest } from "@generalbusiness/dap-bytes";
 import { RULE_PROFILES } from "../../src/rule/index.ts";
 import { sourceOrderDefinition, lateDefinition } from "./source-order-data.ts";
 import { receiverPinData, PIN_BOUNDS } from "./receiver-pins-data.ts";

@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
-import { newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/artroom-bytes";
-import type { CreationOffer } from "@generalbusiness/artroom-client";
+import { newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
+import type { CreationOffer } from "@generalbusiness/dap-client";
 import { checkClaim, claim, memoryStore, type Context } from "../src/index.ts";
 
 // Real shared command boundary with SCRIPTED offer/transport; no native admission.

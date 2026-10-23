@@ -1,8 +1,8 @@
 // Genuine Node WebCrypto; public TEST seeds and scripted binding, no enrollment or native acts.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { b64url, keyIdOfSecret, newIncarnation, scopeIdOf, textDigest, verify, verifySessionRequest } from "@generalbusiness/artroom-bytes";
-import { signerSessionRequest } from "@generalbusiness/artroom-client";
+import { b64url, keyIdOfSecret, newIncarnation, scopeIdOf, textDigest, verify, verifySessionRequest } from "@generalbusiness/dap-bytes";
+import { signerSessionRequest } from "@generalbusiness/dap-client";
 import type { ScopeRef } from "@generalbusiness/dap-contract";
 import { COUNTING_COMMITMENTS_DEFINITION } from "../commitments-pin.ts";
 import { deviceSigner, importDemoBundle, importLegacyDevice } from "./device-key.ts";

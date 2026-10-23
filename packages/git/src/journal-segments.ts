@@ -1,5 +1,5 @@
 /** Internal archive grouping only. No inventory, privacy decision or export is performed. */
-import { canonicalize, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import { archiveSegmentPath } from "./journal-path.ts";
 import { GitRefusal } from "./names.ts";
 

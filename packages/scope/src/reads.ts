@@ -31,7 +31,7 @@ import { heldPositions, archivedPosition } from "@generalbusiness/dap-derive";
 
 import { DOMAINS, ENTRY_READ_BYTES, HISTORY_PAGE_BYTES, HISTORY_PAGE_ENTRIES, OUTBOX_PAGE_ITEMS, RETAINED_INPUT_BYTES, RETAINED_ITEMS_PAGE } from "@generalbusiness/dap-contract";
 import type { Cursor, Digest, OutboxId, Entry, FieldValue, KeyId, LogPage, OperationId, Read, ReadRefusal as ContractReadRefusal, RetainedInput, Summary } from "@generalbusiness/dap-contract";
-import { isDigest, isOutboxId, isOperationId, isSeed, positionOf, retainedReadArgument, timeMs } from "@generalbusiness/artroom-bytes";
+import { isDigest, isOutboxId, isOperationId, isSeed, positionOf, retainedReadArgument, timeMs } from "@generalbusiness/dap-bytes";
 import { bound, byteOrder, creationFields, evidenceValues, inputTexts, namedBy, own, placesOf, retainsOf, same, type Item, type Owners, type ScopeState, type ValidDefinition } from "@generalbusiness/dap-derive";
 import type { Pinned } from "./core.ts";
 import { waitingIn, type Incident, type OperatorRecord } from "./operator.ts";

@@ -2,7 +2,7 @@
  * caller supplies actual classified context inside its synchronous frame;
  * this grants no pin, privacy, body-read or export admission. */
 import { RETAINED_INPUT_BYTES, type Bounds, type Digest, type FactRef, type Input, type ScopeRef } from "@generalbusiness/dap-contract";
-import { isFactRef, natural } from "@generalbusiness/artroom-bytes";
+import { isFactRef, natural } from "@generalbusiness/dap-bytes";
 import { boundedRetainedDependencies, requiredDependency, type PlannedRetainedDependency } from "@generalbusiness/dap-derive";
 import type { ArchiveBudget } from "./archive-budget.ts";
 import { ArchiveActFields } from "./archive-act-fields.ts";

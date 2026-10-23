@@ -1,7 +1,7 @@
 import { customRequiredChangeData } from "./support/definition-corpus-data.ts";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type DeclaredDefinition, type OutboxId, type Entry, type FactRef, type Item, type Receipt, type ScopeRef, type Seed, type SignedIntent, type Summary } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, entryHash, factRefOf, intentDigest, newIncarnation, scopeIdOf, textDigest, utf8, verifySignedIntent } from "@generalbusiness/artroom-bytes";
+import { canonicalize, definitionDigest, entryHash, factRefOf, intentDigest, newIncarnation, scopeIdOf, textDigest, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { changeDemo3 } from "../src/index.ts";
 import { validateDefinition } from "@generalbusiness/dap-derive";
 import { command, memoryStore, type Context } from "../../../../packages/cli/src/index.ts";

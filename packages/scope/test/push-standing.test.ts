@@ -5,7 +5,7 @@ import { evictDurableObject, runInDurableObject } from "cloudflare:test";
 import { expect, onTestFinished, test } from "vitest";
 import type { Entry, FieldValue, OperationId, Request, ScopeRef, Seed } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, factRefOf, intentDigest, isRecord, newIncarnation, scopeIdOf, textDigest, timeMs, timeOf, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, digestBytes, factRefOf, intentDigest, isRecord, newIncarnation, scopeIdOf, textDigest, timeMs, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { contentStates, owed, PROFILES, validateDefinition, valueDigest, type Fetched } from "@generalbusiness/dap-derive";
 import { keys } from "@generalbusiness/dap-derive/testing";
 import { DESTINATION_5, destination5, destinationRules5, firstExtents, PUBLISHING_LANE_DIGESTS, platform } from "@generalbusiness/dap-platform";

@@ -3,7 +3,7 @@
  * these are the inputs `readInventory` would give for a room whose scopes pin these definitions, with a standing the test states.
  */
 import type { DeclaredDefinition, Digest, PlatformDefinition, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
-import { definitionDigest } from "@generalbusiness/artroom-bytes";
+import { definitionDigest } from "@generalbusiness/dap-bytes";
 import { FIRST_ACTIONS_OF, platform } from "@generalbusiness/dap-platform";
 import { changeDemo, issueDemo } from "@generalbusiness/dap-lanes";
 import type { DefinitionLike, Held, Inventory, Place, Standing } from "../../src/index.ts";

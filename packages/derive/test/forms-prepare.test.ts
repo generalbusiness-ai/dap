@@ -2,7 +2,7 @@ import { forms_prepare_change0 } from "./definition-corpus/forms-prepare-variant
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { SignedIntent } from "@generalbusiness/dap-contract";
-import { intentDigest, isSealed } from "@generalbusiness/artroom-bytes";
+import { intentDigest, isSealed } from "@generalbusiness/dap-bytes";
 import { JOB_READ_ACTION, WINDOWS, capabilitiesOf, clockOf, gitRead, holdCapability, judgePreparation, ownerReservations, preparationStatus, reserved, settleOutcome, validateDefinition } from "../src/index.ts";
 import type { GrantDecision, Steps, Window } from "../src/index.ts";
 import { kindOf } from "../src/operand.ts";

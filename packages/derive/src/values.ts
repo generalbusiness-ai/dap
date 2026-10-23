@@ -1,6 +1,6 @@
 /** Values of the field types of section 6.2, as they appear in an intent, a slot and an effect. */
 
-import { SCOPE_KINDS, byteOrder, isFactRef, isLocalId, isMemberRef, isRecord, isScopeRef } from "@generalbusiness/artroom-bytes";
+import { SCOPE_KINDS, byteOrder, isFactRef, isLocalId, isMemberRef, isRecord, isScopeRef } from "@generalbusiness/dap-bytes";
 
 /** The scope kinds, from the bytes package, which holds the one guard of each identifier. */
 export { SCOPE_KINDS };
@@ -22,7 +22,7 @@ export const own = <T>(record: Readonly<Record<string, T>> | null | undefined, n
 /** The guards of a reference and of a position are the bytes package's, beside the other fixed records of the contract. */
 export { isFactRef, isLocalId, isMemberRef, isScopeRef, isRecord as isObject };
 
-export { fitsFieldType as isValue, memberFits } from "@generalbusiness/artroom-bytes";
+export { fitsFieldType as isValue, memberFits } from "@generalbusiness/dap-bytes";
 
 /**
  * Section 6.2: a member of a record is named after what holds the record,
@@ -44,7 +44,7 @@ export function memberOf(held: (name: string) => unknown, name: string): unknown
 }
 
 /** Equality of two values: equal canonical JSON. An empty slot or an absent field is `null`, and equals only another. */
-export { same } from "@generalbusiness/artroom-bytes";
+export { same } from "@generalbusiness/dap-bytes";
 
 /** Byte order of two strings: by their UTF-8 bytes (section 5.2). */
 export { byteOrder };

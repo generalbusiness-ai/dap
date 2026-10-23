@@ -1,10 +1,10 @@
 import { capacityHoldReaderChange, capacityTokenOwnerChange } from "./definition-corpus-data.ts";
 import { env } from "cloudflare:workers";
-import { httpSource, verify } from "@generalbusiness/artroom-replay";
+import { httpSource, verify } from "@generalbusiness/dap-replay";
 import { fixtureRoute as route } from "./support/serving-route.ts";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Entry} from "@generalbusiness/dap-contract";
-import { parseStrict } from "@generalbusiness/artroom-bytes";
+import { parseStrict } from "@generalbusiness/dap-bytes";
 import { JOB_READ_ACTION, ownerReservations, reserved } from "@generalbusiness/dap-derive";
 import { grantOf, variant } from "@generalbusiness/dap-derive/testing";
 import { SqliteStore } from "../src/index.ts";

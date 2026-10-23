@@ -3,8 +3,8 @@
  * scripted: `deliver` and `settle` are STAND-INs for a scope's submit and settlement.
  */
 import type { Answer, Receipt, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
-import { intentDigest, timeOf } from "@generalbusiness/artroom-bytes";
-import { signedIntent } from "@generalbusiness/artroom-client";
+import { intentDigest, timeOf } from "@generalbusiness/dap-bytes";
+import { signedIntent } from "@generalbusiness/dap-client";
 import type { Envelope, Identity } from "../../src/index.ts";
 import { fixedSigner } from "../fixtures.ts";
 

@@ -2,7 +2,7 @@
 // This witnesses the portable adapter; local Git parsing has separate tests.
 import { expect, test, vi } from "vitest";
 import type { FactRef, ScopeId } from "@generalbusiness/dap-contract";
-import { utf8 } from "@generalbusiness/artroom-bytes";
+import { utf8 } from "@generalbusiness/dap-bytes";
 import { ARCHIVE_HEAD_TRUST, ARCHIVE_SOURCE_TRUST, archiveSource, verifyArchive, type ArchiveData, type ArchiveReadPort, type ArchiveSourceOptions } from "../src/archive.ts";
 import { MemorySource, type MemoryScope } from "../src/source.ts";
 import { TRUSTS, verify } from "../src/verify.ts";

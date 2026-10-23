@@ -1,7 +1,7 @@
 /** Read-only page evidence. A match concerns rendered text at one observed published commit, never the push's outcome. */
 import { expectedPage, type PageText, type ScopePointer, type Thing } from "../shelf.ts";
-import { takeBytes } from "@generalbusiness/artroom-bytes";
-import type { ApplicationGatewayFetch } from "@generalbusiness/artroom-client";
+import { takeBytes } from "@generalbusiness/dap-bytes";
+import type { ApplicationGatewayFetch } from "@generalbusiness/dap-client";
 export type PublishedPage = { status:"matches"|"differs"; commit:string; url:string } | {status:"unreadable"; reason:string};
 export async function readPage(origin: string, directory: string, thing: Omit<Thing,"seq">, scope: ScopePointer, signal?: AbortSignal, gateway?: ApplicationGatewayFetch): Promise<PublishedPage> {
  const base = `${origin}/site/${encodeURIComponent(directory)}/`;

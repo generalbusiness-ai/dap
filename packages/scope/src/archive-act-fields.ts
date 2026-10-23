@@ -1,7 +1,7 @@
 /** Act field references only. The owner separately admits the root and
  * whole prefix; this neither reads bodies nor grants export permission. */
 import type { Bounds, Digest, FieldValue, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize } from "@generalbusiness/artroom-bytes";
+import { canonicalize } from "@generalbusiness/dap-bytes";
 import { actValueDependencies, boundedRetainedDependencies, isDetachedTextField, textDependency, textsNamed, valuePlaces, type PlannedRetainedDependency, type ValidDefinition } from "@generalbusiness/dap-derive";
 import type { ArchiveBudget } from "./archive-budget.ts";
 import { ARCHIVE_DIGEST_FIELD_BATCH, checkArchiveFieldSource, readArchiveDigestFields } from "./archive-digest-fields.ts";

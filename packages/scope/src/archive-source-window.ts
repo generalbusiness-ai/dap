@@ -2,7 +2,7 @@
  * The adaptive owner protects the earlier selected prefix while it runs.
  * All SQL/JSON work stays charged to that same ArchiveBudget. */
 import type { Bounds, Head, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isScopeRef, natural } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isDigest, isScopeRef, natural } from "@generalbusiness/dap-bytes";
 import { ARCHIVE_BOUNDS, type ArchiveBudget } from "./archive-budget.ts";
 import { ARCHIVE_SOURCE_PINS } from "./archive-source-pins.ts";
 import { sqlJsonText as text, type Sql } from "./sqlite.ts";

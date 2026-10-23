@@ -1,11 +1,11 @@
 import { env } from "cloudflare:workers";
 import { describe, expect, inject, test, onTestFinished } from "vitest";
 import type { ScopeId, SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, keyIdOfSecret, scopeIdOf, textDigest, timeMs, timeOf } from "@generalbusiness/artroom-bytes";
-import { ScopeHandle, httpTransport, requestSession, secretSigner, sessionRequest, signedReads, type Fetch } from "@generalbusiness/artroom-client";
-import { net } from "@generalbusiness/artroom-scope/testing";
+import { b64url, canonicalize, keyIdOfSecret, scopeIdOf, textDigest, timeMs, timeOf } from "@generalbusiness/dap-bytes";
+import { ScopeHandle, httpTransport, requestSession, secretSigner, sessionRequest, signedReads, type Fetch } from "@generalbusiness/dap-client";
+import { net } from "@generalbusiness/dap-scope/testing";
 import { beginSessionFixture } from "../../../../packages/scope/test/session-settings.ts";
-import { platformOutside } from "@generalbusiness/artroom-scope/testing/worker";
+import { platformOutside } from "@generalbusiness/dap-scope/testing/worker";
 import worker, { type Env } from "../../worker.ts";
 import { site } from "../../../../packages/scope/src/site/route.ts";
 import { gitHub, Hub, ownHost, type Stand } from "../../../../packages/scope/test/hosts.ts";

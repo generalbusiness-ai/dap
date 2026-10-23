@@ -8,7 +8,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { deflateSync } from "node:zlib";
-import { canonicalize, isEntry, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isEntry, utf8 } from "@generalbusiness/dap-bytes";
 import { JournalObjects, type JournalFormat, type JournalObject } from "../../git/src/journal-objects.ts";
 import { JournalWork, type JournalBudget, type JournalCost } from "../../git/src/journal-work.ts";
 import { archiveSegments } from "../../git/src/journal-segments.ts";

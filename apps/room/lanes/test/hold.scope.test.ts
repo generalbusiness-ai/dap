@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { runInDurableObject } from "cloudflare:test";
-import { canonicalize, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, utf8 } from "@generalbusiness/dap-bytes";
 import { localRetainedPlan, outcomeSnapshotDependencies, timeMs } from "@generalbusiness/dap-derive";
 import { PROPOSED_BOUNDS, RETAINED_INPUT_BYTES } from "@generalbusiness/dap-contract";
 import { ARCHIVE_BOUNDS, ArchiveBudget, type ArchiveCost } from "../../../../packages/scope/src/archive-budget.ts";

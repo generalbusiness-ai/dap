@@ -3,8 +3,8 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { DeclaredDefinition } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest } from "@generalbusiness/artroom-bytes";
-import { packApplication, type ApplicationPackageInput } from "@generalbusiness/artroom-client";
+import { canonicalize, definitionDigest } from "@generalbusiness/dap-bytes";
+import { packApplication, type ApplicationPackageInput } from "@generalbusiness/dap-client";
 import { countingCommitments } from "../../../apps/counter/commitments.ts";
 import { lending } from "../../../examples/lending/definition.ts";
 import { APPLICATION_HOST_PACKAGE_BYTES, ApplicationAdmissionError, readApplicationTrust, readTrustedApplication } from "../src/applications/admission.ts";

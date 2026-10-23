@@ -19,7 +19,7 @@
  */
 
 import type { Grant, Head, KeyId, Observation, ObservationUse, ScopeFilter, ScopeKind, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
-import { isHead, isKeyId, isMemberId, isPlatformDefinition, isRecord, platformName } from "@generalbusiness/artroom-bytes";
+import { isHead, isKeyId, isMemberId, isPlatformDefinition, isRecord, platformName } from "@generalbusiness/dap-bytes";
 import { actionOf } from "./marks.ts";
 import type { StateView } from "./state.ts";
 import { timeMs, type Clock } from "./time.ts";

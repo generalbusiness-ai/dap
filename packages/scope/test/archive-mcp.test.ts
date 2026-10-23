@@ -3,10 +3,10 @@
  * inspector are TEST fixtures. No deployment or archive export is claimed. */
 import { env } from "cloudflare:test";
 import { expect, test } from "vitest";
-import { isScopeRef, isSeed, scopeIdOf } from "@generalbusiness/artroom-bytes";
+import { isScopeRef, isSeed, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-mcp";
-import { applicationScreenPath, readApplicationScreenAddress, readApplicationScreenContext, secretSigner } from "@generalbusiness/artroom-client";
+import { applicationScreenPath, readApplicationScreenAddress, readApplicationScreenContext, secretSigner } from "@generalbusiness/dap-client";
 import { applicationSandboxPage } from "../src/applications/route.ts";
 import { outsideOf as hostOutside } from "../src/worker.ts";
 import { applicationOwnedScopesPacket, applicationResolverFixture, applicationHttpPeer, sessionRoom, dispatchFixture, driveFixture, effectFixture, applicationWorkerBindings } from "./fixtures-native.ts";

@@ -1,8 +1,8 @@
 /** Exact same-scope entry metadata, charged to the selected source's existing
  * page allowance. No entry bodies, recent-window scan, peers or retries. */
 import type { Digest } from "@generalbusiness/dap-contract";
-import { isDigest, timeMs } from "@generalbusiness/artroom-bytes";
-import type { ApplicationFactTimeRead, ApplicationProjectionFactRef } from "@generalbusiness/artroom-bytes/application-v2";
+import { isDigest, timeMs } from "@generalbusiness/dap-bytes";
+import type { ApplicationFactTimeRead, ApplicationProjectionFactRef } from "@generalbusiness/dap-bytes/application-v2";
 import type { PreparedRead } from "../read-preparation.ts";
 import type { Sql } from "../sqlite.ts";
 import type { ItemQueryBudget } from "../item-query-budget.ts";

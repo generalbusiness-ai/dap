@@ -1,7 +1,7 @@
 import { runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Entry } from "@generalbusiness/dap-contract";
-import { keyIdOfSecret, signInvitationProof } from "@generalbusiness/artroom-bytes";
+import { keyIdOfSecret, signInvitationProof } from "@generalbusiness/dap-bytes";
 import { owed, PROFILES, standingEntries, validateDefinition } from "@generalbusiness/dap-derive";
 import { PARTITION_COHORT as C, platform } from "@generalbusiness/dap-platform";
 import { partitionGeneration } from "../../../../packages/platform/src/directory-partitions.ts";

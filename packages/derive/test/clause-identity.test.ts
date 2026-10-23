@@ -2,7 +2,7 @@ import { clauseSends, clauseMatrices, clauseIdentityChange } from "./definition-
 import { expect, test } from "vitest";
 import type { ObservationUse, Send } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { factRefOf } from "@generalbusiness/artroom-bytes";
+import { factRefOf } from "@generalbusiness/dap-bytes";
 import { judgeDelivery } from "../src/index.ts";
 import { Scope, arriving, forged, keys, membership, otherLane, t, valid, memberSeen, weighed, weigherRules } from "./fixtures-entry.ts";
 

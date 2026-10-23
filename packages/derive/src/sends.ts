@@ -7,7 +7,7 @@
  */
 
 import type { Digest, FactRef, FieldType, Guard, Input, Notify, Operand, Range, Seed, SelfMark, Send, SendForm, SendMark, SendSource, ScopeRef, UnavailableReason } from "@generalbusiness/dap-contract";
-import { isDigest, isSend } from "@generalbusiness/artroom-bytes";
+import { isDigest, isSend } from "@generalbusiness/dap-bytes";
 import { creationContextOf, type CreationContext } from "./creation-context.ts";
 import type { Derived } from "./effects.ts";
 import { isLocalFact } from "./fields.ts";

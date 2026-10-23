@@ -1,12 +1,12 @@
 import { configurePledgeDefinition, configureConstantDefinition, configureSeriesDefinition } from "./support/definition-corpus-data.ts";
-import { emptyPackageComposition } from "@generalbusiness/artroom-package-graph";
+import { emptyPackageComposition } from "@generalbusiness/dap-package-graph";
 /** Pure presentation and mounted-view custody-boundary fixtures. The native
  * install/projection/standing ports below are explicit in-memory answers. */
 import { expect, test } from "vitest";
 import type { DeclaredDefinition, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, keyIdOfSecret, parseStrict, sign } from "@generalbusiness/artroom-bytes";
-import type { ApplicationInstallation } from "@generalbusiness/artroom-bytes/application";
-import { applicationProjectionId, applicationProjectionQueryDigest, packApplication2, readApplicationProjection } from "@generalbusiness/artroom-bytes/application-v2";
+import { canonicalize, definitionDigest, keyIdOfSecret, parseStrict, sign } from "@generalbusiness/dap-bytes";
+import type { ApplicationInstallation } from "@generalbusiness/dap-bytes/application";
+import { applicationProjectionId, applicationProjectionQueryDigest, packApplication2, readApplicationProjection } from "@generalbusiness/dap-bytes/application-v2";
 import { applicationCounterPacket2, applicationCounterNavigationPacket2 } from "../../scope/test/fixtures.ts";
 import { DeclaredViewSource } from "../src/views/declared.ts";
 import { ViewSessions } from "../src/views/session.ts";

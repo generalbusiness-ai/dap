@@ -27,7 +27,7 @@
 
 import { PROPOSED_BOUNDS, SESSION_DOMAINS } from "@generalbusiness/dap-contract";
 import type { ReadRequest, ScopeId, SignedRead, SignedReadName, Timestamp } from "@generalbusiness/dap-contract";
-import { b64url, canonicalBytes, parseStrictBytes, retainedReadArgument, taggedBytes, readItemQueryParameter, itemQueryArgument } from "@generalbusiness/artroom-bytes";
+import { b64url, canonicalBytes, parseStrictBytes, retainedReadArgument, taggedBytes, readItemQueryParameter, itemQueryArgument } from "@generalbusiness/dap-bytes";
 import type { Transport } from "./handle.ts";
 import type { Signer } from "./intent.ts";
 

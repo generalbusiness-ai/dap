@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { isScopeId } from "@generalbusiness/artroom-bytes";
+import { isScopeId } from "@generalbusiness/dap-bytes";
 import { archiveDomain, archiveRetainedPath, archiveSegmentPath, domainOfArchiveSegment, firstOfArchiveSegment, journalRef, retainedOfArchivePath, scopeOfJournalRef } from "../src/journal-path.ts";
 
 // Invariant: archive names round-trip without path interpretation, lossy

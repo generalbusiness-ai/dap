@@ -1,7 +1,7 @@
 import { clientNotes as notes, clientNotesWithMax } from "./definition-corpus-data.ts";
 import { expect, test } from "vitest";
 import type { FactRef, Grant, ScopeRef, Summary } from "@generalbusiness/dap-contract";
-import { definitionDigest, textDigest, verifySignedIntent } from "@generalbusiness/artroom-bytes";
+import { definitionDigest, textDigest, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, ShapeError, declaredHandle, shapeDeclaredAct, secretSigner, type Signer, type Transport } from "../src/index.ts";
 
 /** A made-up definition with one act: a note's body is a detached text, and the act is presented one fact. */

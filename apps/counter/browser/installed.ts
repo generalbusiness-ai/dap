@@ -1,7 +1,7 @@
 /** The installed Counter enrolls a browser key through native membership. */
-import { canonicalize, isRecord } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isRecord } from "@generalbusiness/dap-bytes";
 import { applicationDeviceIdentity, browserJoining, browserPrivateSlots, generateBrowserDeviceKey, readApplicationInvitation, storedWebCryptoSigner,
-  type ApplicationScreenContext, type BrowserKeptJoin, type BrowserJoinSeat, type Fetch } from "@generalbusiness/artroom-client";
+  type ApplicationScreenContext, type BrowserKeptJoin, type BrowserJoinSeat, type Fetch } from "@generalbusiness/dap-client";
 import { COUNTING_COMMITMENTS_DEFINITION } from "../commitments-pin.ts";
 import type { SavedDevice } from "./device-key.ts";
 interface Device { publicKey: import("@generalbusiness/dap-contract").KeyId; pair: CryptoKeyPair }

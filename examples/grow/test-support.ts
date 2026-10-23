@@ -4,11 +4,11 @@
 import { expect } from "vitest";
 import { growSiteLauncherDefinition } from "./definition-corpus-data.ts";
 import { PROPOSED_BOUNDS, type DeclaredDefinition, type Digest, type FieldValue, type RetainedInput } from "@generalbusiness/dap-contract";
-import { canonicalBytes, canonicalize, digestBytes } from "@generalbusiness/artroom-bytes";
+import { canonicalBytes, canonicalize, digestBytes } from "@generalbusiness/dap-bytes";
 import { clockOf, deviceCommand, judgeGenesis, prepareRules, validateDefinition, type Fetched } from "@generalbusiness/dap-derive";
 import { evaluateRules, RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { created, creation, deliver, grantOf, keys, valid, Ledger, type Actor, type Over } from "@generalbusiness/dap-derive/testing";
-import { MemorySource, verify } from "@generalbusiness/artroom-replay";
+import { MemorySource, verify } from "@generalbusiness/dap-replay";
 export type { Actor, Ledger, Over };
 export const operator = keys.paul, climate = keys.una, sensors: Actor = { ...keys.vic, principal: operator.member };
 export const devicePermissions = [[operator, ["grow.configure", "grow.climate", "grow.heat"]], [climate, ["grow.climate"]], [sensors, ["grow.sense"]]] as const;

@@ -1,8 +1,8 @@
 /** Actual SDK adapter. Bootstrap/enrollment belongs to F1/C4, never this stage. */
 import type { Receipt } from "@generalbusiness/dap-contract";
-import type { ApplicationInstallation } from "@generalbusiness/artroom-bytes/application";
-import { b64url, canonicalize, intentDigest, isRecord, timeOf } from "@generalbusiness/artroom-bytes";
-import { ScopeHandle, completeApplicationItems, httpTransport, observeScope, openHttpHeadStream, requestSession, signerSessionRequest, shapeDeclaredAct, signedIntent, type Fetch, type HeadStreamFetch, type Observation, type ObservationState, type Session, type Signer } from "@generalbusiness/artroom-client";
+import type { ApplicationInstallation } from "@generalbusiness/dap-bytes/application";
+import { b64url, canonicalize, intentDigest, isRecord, timeOf } from "@generalbusiness/dap-bytes";
+import { ScopeHandle, completeApplicationItems, httpTransport, observeScope, openHttpHeadStream, requestSession, signerSessionRequest, shapeDeclaredAct, signedIntent, type Fetch, type HeadStreamFetch, type Observation, type ObservationState, type Session, type Signer } from "@generalbusiness/dap-client";
 import { countingCommitments as counting } from "../commitments.ts";
 import { COUNTING_COMMITMENTS_DEFINITION as COUNTING_DEFINITION } from "../commitments-pin.ts";
 import { assignedTurn, countingView, ownedParticipant, proposal, same, type Control, type ProposalOptions, type CountingRead, type CountingView } from "./model.ts";

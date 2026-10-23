@@ -1,6 +1,6 @@
 /** SCRIPTED coherent immutable frames. No native factory judgment ran. */
 import type { Digest, Entry, FactRef, Request, PlatformDefinition, ScopeRef, Seed } from "@generalbusiness/dap-contract";
-import { factRefOf, intentDigest, newIncarnation, scopeIdOf, seedDigest, signIntent } from "@generalbusiness/artroom-bytes";
+import { factRefOf, intentDigest, newIncarnation, scopeIdOf, seedDigest, signIntent } from "@generalbusiness/dap-bytes";
 import { type Fetched } from "@generalbusiness/dap-derive";
 import { d, keys, T0, t } from "@generalbusiness/dap-derive/testing";
 import { PARTITION_COHORT as C } from "../src/directory-partitions.ts";

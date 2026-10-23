@@ -1,8 +1,8 @@
 /** Pure display resolution; membership reads below are explicit in-memory answers. */
 import { expect, test } from "vitest";
 import type { ApplicationProjectionData, Item, ItemQueryRead, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isMemberRef, itemQueryArgument, itemQueryDigest, readItemQueryParameter } from "@generalbusiness/artroom-bytes";
-import type { ApplicationReadProjection } from "@generalbusiness/artroom-bytes/application-v2";
+import { canonicalize, isMemberRef, itemQueryArgument, itemQueryDigest, readItemQueryParameter } from "@generalbusiness/dap-bytes";
+import type { ApplicationReadProjection } from "@generalbusiness/dap-bytes/application-v2";
 import { projectionMemberFacts, projectionMembers } from "../src/views/members.ts";
 import type { MembershipDisplaySnapshot } from "../src/views/member-types.ts";
 import { memberText } from "../src/views/member-text.ts";

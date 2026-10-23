@@ -5,13 +5,13 @@ import { lineageDeviceRoot, lineageBudgetDefinitions } from "./definition-corpus
 import { env, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { DEVICE_COMMAND, type Entry, type Intent, type PlatformDefinition, type ScopeRef, type Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, digestBytes, factRefOf, intentDigest, isSeed, newIncarnation, parseStrict, scopeIdOf, seedDigest, signIntent, utf8 } from "@generalbusiness/artroom-bytes";
-import { packApplication2, readApplicationProjection } from "@generalbusiness/artroom-bytes/application-v2";
-import { emptyPackageComposition } from "@generalbusiness/artroom-package-graph";
+import { canonicalize, definitionDigest, digestBytes, factRefOf, intentDigest, isSeed, newIncarnation, parseStrict, scopeIdOf, seedDigest, signIntent, utf8 } from "@generalbusiness/dap-bytes";
+import { packApplication2, readApplicationProjection } from "@generalbusiness/dap-bytes/application-v2";
+import { emptyPackageComposition } from "@generalbusiness/dap-package-graph";
 import type { Delivered } from "@generalbusiness/dap-derive";
 import { APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, TRUSTED_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-mcp";
-import { secretSigner } from "@generalbusiness/artroom-client";
+import { secretSigner } from "@generalbusiness/dap-client";
 import { admitChildCreation, type CreationTimer } from "../src/creation-lineage.ts";
 import { namespace, type Binding, type Peer } from "../src/namespace.ts";
 import { indexedScopes, type ScopeIndexPort } from "../src/scope-index.ts";

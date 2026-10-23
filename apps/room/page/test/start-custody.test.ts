@@ -1,7 +1,7 @@
 import { expect, test, vi } from "vitest";
 import type { SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, intentDigest, keyIdOfSecret, newIncarnation, scopeIdOf, textDigest, verify } from "@generalbusiness/artroom-bytes";
-import { signedIntent, type CreationOffer } from "@generalbusiness/artroom-client";
+import { b64url, canonicalize, intentDigest, keyIdOfSecret, newIncarnation, scopeIdOf, textDigest, verify } from "@generalbusiness/dap-bytes";
+import { signedIntent, type CreationOffer } from "@generalbusiness/dap-client";
 import type { Context, PendingClaim, Repository } from "@generalbusiness/dap-cli";
 
 // Actual Page descriptor/journal, codec and offer validator over SCRIPTED CLI

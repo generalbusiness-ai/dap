@@ -8,7 +8,7 @@
  */
 
 import type { FactRef, FieldValue, Item, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
-import { isDigest, isFactRef, isMemberRef, isRecord, isScopeRef, textDigest, timeMs, utf8, wellFormed } from "@generalbusiness/artroom-bytes";
+import { isDigest, isFactRef, isMemberRef, isRecord, isScopeRef, textDigest, timeMs, utf8, wellFormed } from "@generalbusiness/dap-bytes";
 import type { ActLike, FieldLike } from "./describe.ts";
 import { clip } from "./errors.ts";
 

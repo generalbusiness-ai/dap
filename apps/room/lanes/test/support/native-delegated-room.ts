@@ -1,4 +1,4 @@
-import { keyIdOfSecret, textDigest } from "@generalbusiness/artroom-bytes";
+import { keyIdOfSecret, textDigest } from "@generalbusiness/dap-bytes";
 import { DIGESTS, change, issue } from "../../src/index.ts";
 import { rita, soon, una, vic } from "./graph.ts";
 import { room as nativeRoom, checkerKey } from "./room.ts";

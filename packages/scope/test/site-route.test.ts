@@ -1,11 +1,11 @@
 import { env } from "cloudflare:workers";
 import { afterAll, beforeAll, expect, test, vi } from "vitest";
 import type { Intent, Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, intentDigest, scopeIdOf, signIntent, utf8, digestBytes, takeBytes } from "@generalbusiness/artroom-bytes";
+import { canonicalize, intentDigest, scopeIdOf, signIntent, utf8, digestBytes, takeBytes } from "@generalbusiness/dap-bytes";
 import { keys } from "@generalbusiness/dap-derive/testing";
 import { DIRECTORY, REGISTER, receiptObjects } from "@generalbusiness/dap-platform";
-import { idOf, objectId, GitRefusal, snapshotCommit, type SnapshotFile } from "@generalbusiness/artroom-git";
-import { buildPack, type RawGitObject } from "@generalbusiness/artroom-git/http";
+import { idOf, objectId, GitRefusal, snapshotCommit, type SnapshotFile } from "@generalbusiness/dap-git";
+import { buildPack, type RawGitObject } from "@generalbusiness/dap-git/http";
 import type { ArtifactsNamespace } from "../src/artifacts-host.ts";
 import { artifactsOutside } from "../src/artifacts-wiring.ts";
 import type { Binding } from "../src/namespace.ts";
@@ -759,7 +759,7 @@ test("Scripted pack cache invalidates replacements, byte mutations, deletion and
   const response = await selected.fetch(wanted(id)), wire = new Uint8Array(await response.arrayBuffer());
   const nak = utf8(pkt("NAK\n"));
   expect(wire.subarray(0, nak.length)).toEqual(nak);
-  const { decodePack } = await import("@generalbusiness/artroom-git/http-read");
+  const { decodePack } = await import("@generalbusiness/dap-git/http-read");
   const decoded = await decodePack(wire.subarray(nak.length), { maxBytes: MAX_BYTES });
   expect(decoded.map(object => [object.id, object.type, object.data])).toEqual([[id, "blob", first]]);
   expect(wire.length).toBeLessThan(256);

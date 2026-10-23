@@ -1,8 +1,8 @@
 /** Real WebCrypto; in-memory structured-clone/commit/lock stand-in, not IDB
  * durability or browser enrollment acceptance. All cases remain unrun here. */
 import { expect, test } from "vitest";
-import { b64url, keyIdOfSecret, verify } from "@generalbusiness/artroom-bytes";
-import type { BrowserPrivateSlots } from "@generalbusiness/artroom-client";
+import { b64url, keyIdOfSecret, verify } from "@generalbusiness/dap-bytes";
+import type { BrowserPrivateSlots } from "@generalbusiness/dap-client";
 import { legacySettingsKey, pageKeyStore } from "../src/browser-key-store.ts";
 
 function fixture() {

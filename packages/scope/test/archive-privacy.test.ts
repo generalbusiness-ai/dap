@@ -4,7 +4,7 @@
 import { expect, test } from "vitest";
 import type { Entry } from "@generalbusiness/dap-contract";
 import { DEVICE_COMMAND, DOMAINS, PROPOSED_BOUNDS, RETAINED_INPUT_BYTES } from "@generalbusiness/dap-contract";
-import { canonicalize } from "@generalbusiness/artroom-bytes";
+import { canonicalize } from "@generalbusiness/dap-bytes";
 import type { OperationRules } from "@generalbusiness/dap-derive";
 import { ArchiveBudget } from "../src/archive-budget.ts";
 import { forecastArchiveDeclarationValidation } from "../src/archive-inventory-cost.ts";

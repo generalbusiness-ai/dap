@@ -2,7 +2,7 @@
  * enrollment evidence. App-owned identity/custody witnesses stay separate. */
 import { webcrypto } from "node:crypto";
 import { expect, test } from "vitest";
-import { keyIdOf, verify } from "@generalbusiness/artroom-bytes";
+import { keyIdOf, verify } from "@generalbusiness/dap-bytes";
 import { generateBrowserDeviceKey, signedIntent, storedWebCryptoSigner } from "../src/index.ts";
 
 async function key(extractable = false) {

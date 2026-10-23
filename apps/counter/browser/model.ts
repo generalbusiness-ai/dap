@@ -1,8 +1,8 @@
 /** Proposals are convenience inputs. The native C1 declaration still checks authority and admission. */
-import { same } from "@generalbusiness/artroom-bytes";
+import { same } from "@generalbusiness/dap-bytes";
 import type { FieldValue, MemberRef, ScopeRef, Summary } from "@generalbusiness/dap-contract";
-import { canonicalize, isMemberRef, timeMs } from "@generalbusiness/artroom-bytes";
-import type { ProjectedItem } from "@generalbusiness/artroom-client";
+import { canonicalize, isMemberRef, timeMs } from "@generalbusiness/dap-bytes";
+import type { ProjectedItem } from "@generalbusiness/dap-client";
 import { countingCommitments } from "../commitments.ts";
 import { COUNTING_COMMITMENTS_DEFINITION } from "../commitments-pin.ts";
 import type { ActorIdentity, Completion, TurnToken } from "./voice-controller.ts";

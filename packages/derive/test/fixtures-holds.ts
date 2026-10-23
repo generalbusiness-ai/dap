@@ -21,7 +21,7 @@
 
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Entry, OperationId, PlatformData, PlatformDefinition, Request } from "@generalbusiness/dap-contract";
-import { entryHash, factRefOf } from "@generalbusiness/artroom-bytes";
+import { entryHash, factRefOf } from "@generalbusiness/dap-bytes";
 import { PROFILES, applyEntry, clockOf, entryOf, fits, judgeDelivery, owed, settleOutcome, validateDefinition } from "../src/index.ts";
 import type { Draft, Operation, OutcomeGives, PlatformRule, PlatformRules, RuleEffect, RuleGiven, RuleRequest, ValidDefinition, Validation } from "../src/index.ts";
 import { Scope, arriving, changedDraft, forged, keys, otherLane, valid, type Over } from "./fixtures.ts";

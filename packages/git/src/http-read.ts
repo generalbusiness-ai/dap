@@ -10,7 +10,7 @@
  */
 import { unreadableGit as fail } from "./names.ts";
 import { ascii } from "./ascii.ts";
-import { hex } from "@generalbusiness/artroom-bytes";
+import { hex } from "@generalbusiness/dap-bytes";
 import { sha1 } from "@noble/hashes/legacy.js";
 import { GitRefusal, objectId, refName, remoteUrl, ZERO_ID, type ObjectId } from "./names.ts";
 import { idOf, READ_BOUNDS, type GitSource, type ObjectType, type ReadBounds, type RefTarget, type StoredObject } from "./reader.ts";

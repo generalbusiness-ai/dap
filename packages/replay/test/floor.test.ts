@@ -4,7 +4,7 @@ import { floorProofActs, floorPricedKeys } from "../../derive/test/definition-co
  * native SQLite, archive writer or membership scope runs here. */
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Entry, type FloorInput, type JournalFloor } from "@generalbusiness/dap-contract";
-import { canonicalize, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, utf8 } from "@generalbusiness/dap-bytes";
 import { checkpointOf, countedEntries, judgeAct, judgeCheckpoint, judgeFloor, MemoryState, type Own, type StateSnapshot } from "@generalbusiness/dap-derive";
 import { created, keys, notesDefinition, t, variant } from "@generalbusiness/dap-derive/testing";
 import { MemorySource, verify, type HistorySource } from "../src/index.ts";

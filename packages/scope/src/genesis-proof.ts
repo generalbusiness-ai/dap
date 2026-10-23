@@ -1,6 +1,6 @@
 /** Bounded immutable content evidence; callers still owe fresh read authority. */
 import type { Entry, FactRef, FactUse, KeyId } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, isFactRef, isFactUse, isKeyId, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, digestBytes, isFactRef, isFactUse, isKeyId, utf8 } from "@generalbusiness/dap-bytes";
 import { same } from "@generalbusiness/dap-derive";
 import { CHAIN_STEPS, leads, rootOf, type Root } from "./signed-reads.ts";
 import { ProofBytes, proofEntry, type ProofBody, type ProofSource } from "./proof-bytes.ts";

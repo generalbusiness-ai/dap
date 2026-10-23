@@ -1,7 +1,7 @@
 import { SELF } from "cloudflare:test";
 import { expect, test } from "vitest";
-import { canonicalize, definitionDigest, textDigest } from "@generalbusiness/artroom-bytes";
-import { httpTransport } from "@generalbusiness/artroom-client";
+import { canonicalize, definitionDigest, textDigest } from "@generalbusiness/dap-bytes";
+import { httpTransport } from "@generalbusiness/dap-client";
 import { DIGESTS } from "../src/index.ts";
 import { graph, officeDefinition, README, reader, transport } from "./support/graph.ts";
 

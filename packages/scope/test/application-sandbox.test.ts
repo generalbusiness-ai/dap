@@ -3,11 +3,11 @@
  * Maintained packets use the existing TEST signer; no hosted browser proof. */
 import { env } from "cloudflare:test";
 import { expect, inject, onTestFinished, test } from "vitest";
-import { b64url, newIncarnation, scopeIdOf, unb64url } from "@generalbusiness/artroom-bytes";
-import { readPublishedApplicationPackage2 } from "@generalbusiness/artroom-bytes/application-v2";
+import { b64url, newIncarnation, scopeIdOf, unb64url } from "@generalbusiness/dap-bytes";
+import { readPublishedApplicationPackage2 } from "@generalbusiness/dap-bytes/application-v2";
 import { PROPOSED_BOUNDS, type ScopeKind, type ScopeRef } from "@generalbusiness/dap-contract";
-import { applicationScreenPath, readApplicationScreenHost } from "@generalbusiness/artroom-client/application";
-import { requestSession, sessionRequest, type Fetch } from "@generalbusiness/artroom-client";
+import { applicationScreenPath, readApplicationScreenHost } from "@generalbusiness/dap-client/application";
+import { requestSession, sessionRequest, type Fetch } from "@generalbusiness/dap-client";
 import room, { type Env } from "../../../apps/room/worker.ts";
 import sandbox, { type SandboxEnv } from "../../../apps/sandbox/worker.ts";
 import { applicationSandboxPage } from "../src/applications/route.ts";

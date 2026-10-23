@@ -2,7 +2,7 @@
  * No policy here enables a deployed binding; fixture/production policy owners
  * must explicitly supply the reviewed floor policy for the pinned cohort. */
 import type { Bounds, FloorInput } from "@generalbusiness/dap-contract";
-import { same } from "@generalbusiness/artroom-bytes";
+import { same } from "@generalbusiness/dap-bytes";
 import { chooseFloor, stateKept, FLOOR_KEEP, FLOOR_KEPT } from "@generalbusiness/dap-derive";
 import type { Own, PlatformRules, ValidDefinition } from "@generalbusiness/dap-derive";
 import { ArchiveRows } from "./archive-row.ts";

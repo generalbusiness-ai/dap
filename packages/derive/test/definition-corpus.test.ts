@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { isDigest } from "@generalbusiness/artroom-bytes";
+import { isDigest } from "@generalbusiness/dap-bytes";
 import { validateDefinition } from "../src/index.ts";
 import { definitionCorpus } from "./definition-corpus/index.ts";
 

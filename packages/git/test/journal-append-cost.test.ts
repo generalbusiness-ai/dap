@@ -1,7 +1,7 @@
 /** Mechanical selected descriptors over real Git objects/entry bytes.
  * No native admission, archive receipt, remote confirmation or export. */
 import { expect, test } from "vitest";
-import { canonicalize, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, utf8 } from "@generalbusiness/dap-bytes";
 import { ArchiveBudget, type ArchiveCost } from "../../scope/src/archive-budget.ts";
 import { buildJournalPass } from "../src/journal-v2-layout.ts";
 import { prepareJournalPass } from "../src/journal-v2-preparation.ts";

@@ -1,6 +1,6 @@
 /** The platform tests' raw declarations and their distinct validator contexts. */
 import { PROPOSED_BOUNDS, type PlatformDefinition } from "@generalbusiness/dap-contract";
-import { definitionDigest } from "@generalbusiness/artroom-bytes";
+import { definitionDigest } from "@generalbusiness/dap-bytes";
 import { PROFILES, outcomeValueDomains } from "../../src/index.ts";
 import { RULE_PROFILES } from "../../src/rule/index.ts";
 import { VERSIONS } from "../../../platform/src/native-catalog.ts";

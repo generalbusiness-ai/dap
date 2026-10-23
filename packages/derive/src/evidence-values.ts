@@ -1,6 +1,6 @@
 /** Evidence values of one pinned owner: named outside the entry, retained at their declared maxima. */
 import { RETAINED_INPUT_BYTES, type Evidence } from "@generalbusiness/dap-contract";
-import { isDigest } from "@generalbusiness/artroom-bytes";
+import { isDigest } from "@generalbusiness/dap-bytes";
 import type { EvidenceValue, OperationRules } from "./ledger.ts";
 
 /** Null: the evidence names a value outside this version's declaration. */

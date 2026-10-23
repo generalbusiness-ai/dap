@@ -2,7 +2,7 @@ import { composeChange0, composeChange1, composeChange2, composeChange3, compose
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Attempt, Input, Result, ScopeRef, Seed, Send } from "@generalbusiness/dap-contract";
-import { deliveryCauseDigest, entryHash, factRefOf, intentDigest, messageDigest, newIncarnation, scopeIdOf, seedDigest } from "@generalbusiness/artroom-bytes";
+import { deliveryCauseDigest, entryHash, factRefOf, intentDigest, messageDigest, newIncarnation, scopeIdOf, seedDigest } from "@generalbusiness/dap-bytes";
 import { MemoryState, applyEntry, checkpointOf, clockOf, entryOf, fits, judgeCheckpoint, judgeDelivery, judgeDiagnosis, judgeGenesis, owed, prepareRules, stateDigest, useOf } from "../src/index.ts";
 import type { Creation, DeliveryContext, Draft, Fetched, Judged, Source, ValidDefinition } from "../src/index.ts";
 import { Ledger, Scope, T0, arriving, born, creation, d, deliver, deskDefinition, fields, forged, created, judged, keys, laneDefinition, on, sent, t, ticket, ticketDefinition, variant, type Over } from "./fixtures-entry.ts";

@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import type { FactRef } from "@generalbusiness/dap-contract";
-import type { Fetch } from "@generalbusiness/artroom-client";
-import { canonicalize, definitionDigest, digestBytes, entryHash, takeBytes, utf8 } from "@generalbusiness/artroom-bytes";
+import type { Fetch } from "@generalbusiness/dap-client";
+import { canonicalize, definitionDigest, digestBytes, entryHash, takeBytes, utf8 } from "@generalbusiness/dap-bytes";
 import { changeDemo3 } from "@generalbusiness/dap-lanes";
 import { command } from "@generalbusiness/dap-cli";
 import { act, fieldValue, listLanes, loadChange, openRoom, placeOf } from "../src/data.ts";

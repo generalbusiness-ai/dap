@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
-import { utf8 } from "@generalbusiness/artroom-bytes";
-import { idOf, snapshotCommit } from "@generalbusiness/artroom-git";
-import { buildPack, type RawGitObject } from "@generalbusiness/artroom-git/http";
+import { utf8 } from "@generalbusiness/dap-bytes";
+import { idOf, snapshotCommit } from "@generalbusiness/dap-git";
+import { buildPack, type RawGitObject } from "@generalbusiness/dap-git/http";
 import { editTree, type DestinationObject } from "@generalbusiness/dap-platform";
 import { ArtifactsProvider, READ_TTL, WRITE_TTL, type ArtifactsNamespace, type CreationCustody } from "../src/artifacts-host.ts";
 import type { DestinationBinding } from "../src/destination-host.ts";

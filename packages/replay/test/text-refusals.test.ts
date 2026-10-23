@@ -1,6 +1,6 @@
 import { earlierFieldProof } from "../../derive/test/definition-corpus/replay-mutations-data.ts";
 import { expect, test } from "vitest";
-import { canonicalize, factRefOf, textDigest } from "@generalbusiness/artroom-bytes";
+import { canonicalize, factRefOf, textDigest } from "@generalbusiness/dap-bytes";
 import { judgeDelivery } from "@generalbusiness/dap-derive";
 import { arriving, created, forged, keys, notesDefinition, on, otherLane, variant } from "@generalbusiness/dap-derive/testing";
 import { MemorySource, verify, type MemoryScope } from "../src/index.ts";

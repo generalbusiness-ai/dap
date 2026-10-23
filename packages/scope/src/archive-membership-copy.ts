@@ -2,7 +2,7 @@
  * inside the three admitted native producer journals. This never admits a
  * Membership journal, a credential entry or another consumer cohort. */
 import type { Digest, PlatformDefinition } from "@generalbusiness/dap-contract";
-import { ARCHIVE_NATIVE_DATA } from "@generalbusiness/artroom-git/archive-policy";
+import { ARCHIVE_NATIVE_DATA } from "@generalbusiness/dap-git/archive-policy";
 import { ARCHIVE_MEMBERSHIP_COPY_METADATA, archiveMembershipCopyWork } from "./archive-foreign-cost.ts";
 import type { ArchiveBudget } from "./archive-budget.ts";
 import type { ArchiveEntryHeader } from "./archive-entry-metadata.ts";

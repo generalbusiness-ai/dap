@@ -1,6 +1,6 @@
 /** SCRIPTED immutable facts for pure provenance and runtime-boundary tests. No factory judge ran. */
 import type { Digest, Entry, ScopeRef, Seed } from "@generalbusiness/dap-contract";
-import { factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/artroom-bytes";
+import { factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import { type Fetched } from "@generalbusiness/dap-derive";
 import { d, keys, T0, t } from "@generalbusiness/dap-derive/testing";
 import { ISSUE_LANE_DIGESTS, PUBLISHING_LANE_DIGESTS } from "../src/publishing-provenance.ts";

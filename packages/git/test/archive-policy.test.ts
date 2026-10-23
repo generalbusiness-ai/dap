@@ -1,6 +1,6 @@
 import { expect, test, vi } from "vitest";
 import { INVITATION_KEY_MEMBERSHIP } from "@generalbusiness/dap-contract";
-import { textDigest } from "@generalbusiness/artroom-bytes";
+import { textDigest } from "@generalbusiness/dap-bytes";
 import { ARCHIVE_NATIVE_DATA, admitArchiveExport, admitArchiveNativeValuePlace } from "../src/archive-policy.ts";
 
 // Policy only, with a SCRIPTED inventory and trusted certificate stand-in.

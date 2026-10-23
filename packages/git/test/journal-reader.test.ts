@@ -1,6 +1,6 @@
 import { afterAll, expect, test } from "vitest";
 import type { ScopeId } from "@generalbusiness/dap-contract";
-import { canonicalize } from "@generalbusiness/artroom-bytes";
+import { canonicalize } from "@generalbusiness/dap-bytes";
 import { ArchiveBudget } from "../../scope/src/archive-budget.ts";
 import { buildJournalArchive } from "../src/journal-layout.ts";
 import type { JournalFormat } from "../src/journal-objects.ts";

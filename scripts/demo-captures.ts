@@ -24,7 +24,7 @@ import { createRequire } from "node:module";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ScopeRef, SignedIntent, SignedRead } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, keyIdOfSecret, textDigest, verifySignedIntent, verifySignedRead } from "@generalbusiness/artroom-bytes";
+import { b64url, canonicalize, keyIdOfSecret, textDigest, verifySignedIntent, verifySignedRead } from "@generalbusiness/dap-bytes";
 import { fileStore } from "../packages/cli/src/files.ts";
 import type { Config } from "../packages/cli/src/store.ts";
 import { CAPTURE_CONTEXT, captureBinding, captureSource, initializeCapture, ownerJson, type CaptureObservations } from "./demo/capture-context.ts";

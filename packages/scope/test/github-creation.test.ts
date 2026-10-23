@@ -1,12 +1,12 @@
 import { runInDurableObject } from "cloudflare:test";
 import { expect, onTestFinished, test } from "vitest";
 import type { Entry, Intent, ScopeId, Seed } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent, timeMs, timeOf, utf8 } from "@generalbusiness/artroom-bytes";
-import { requestSession, sessionRequest, type Fetch } from "@generalbusiness/artroom-client";
+import { b64url, canonicalize, factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent, timeMs, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { requestSession, sessionRequest, type Fetch } from "@generalbusiness/dap-client";
 import { keys } from "@generalbusiness/dap-derive/testing";
 import { DIRECTORY, REGISTER, destinationMembership, destinationReceipt, destinationTarget, initialCommitObjects } from "@generalbusiness/dap-platform";
-import { ZERO_ID } from "@generalbusiness/artroom-git";
-import { decodePack, type DecodedObject } from "@generalbusiness/artroom-git/http-read";
+import { ZERO_ID } from "@generalbusiness/dap-git";
+import { decodePack, type DecodedObject } from "@generalbusiness/dap-git/http-read";
 import { SqliteStore, mintSession, readerOf, sessionsOf } from "../src/index.ts";
 import { gitHubOutside, type GitHubBindings } from "../src/github-wiring.ts";
 import { net } from "../src/testing.ts";

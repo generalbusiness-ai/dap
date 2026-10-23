@@ -15,7 +15,7 @@
 import { writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { canonicalize, definitionDigest } from "@generalbusiness/artroom-bytes";
+import { canonicalize, definitionDigest } from "@generalbusiness/dap-bytes";
 import { change3, changeDemo3 } from "../src/change3.ts";
 import { change } from "../src/change.ts";
 import { changeDemo, issueDemo } from "../src/demo.ts";

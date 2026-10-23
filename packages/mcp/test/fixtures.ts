@@ -1,6 +1,6 @@
 /** Node-safe fixture entry: no Worker or test-framework runtime import. */
 import type { createServer as ServerFactory } from "node:http";
-import { secretSigner } from "@generalbusiness/artroom-client";
+import { secretSigner } from "@generalbusiness/dap-client";
 import type { StandIn } from "./support/standin.ts";
 
 /** Fresh deterministic TEST keys; the fill and scenario seed remain caller-owned. */

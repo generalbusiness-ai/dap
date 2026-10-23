@@ -5,9 +5,9 @@ import { open, realpath } from "node:fs/promises";
 import type { FileHandle } from "node:fs/promises";
 import { join } from "node:path";
 import type { ScopeId, FactRef } from "@generalbusiness/dap-contract";
-import { isDigest, isFactRef, isScopeId, parseStrict, textDigest } from "@generalbusiness/artroom-bytes";
-import { journalId, readJournalRepositoryArchive } from "@generalbusiness/artroom-git/journal-reader";
-import { localJournalRepository, type JournalLocalOptions } from "@generalbusiness/artroom-git/journal-local";
+import { isDigest, isFactRef, isScopeId, parseStrict, textDigest } from "@generalbusiness/dap-bytes";
+import { journalId, readJournalRepositoryArchive } from "@generalbusiness/dap-git/journal-reader";
+import { localJournalRepository, type JournalLocalOptions } from "@generalbusiness/dap-git/journal-local";
 import { archiveSource, type ArchiveReadWork, type ArchiveSource, type ArchiveSourceOptions, type ArchiveTextPort } from "./archive.ts";
 
 export interface GitSourceOptions extends ArchiveSourceOptions { readonly local?: JournalLocalOptions }

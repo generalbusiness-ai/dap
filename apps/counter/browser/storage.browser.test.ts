@@ -1,8 +1,8 @@
 /** Real same-origin browser custody witness. Two pages share IDB and Web Locks,
  * deliberately without BroadcastChannel. Public TEST binding/key; protocol
  * dispatch and speech callbacks are stand-ins, never native/provider/audio proof. */
-import { keyIdOfSecret, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/artroom-bytes";
-import { signedIntent } from "@generalbusiness/artroom-client";
+import { keyIdOfSecret, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
+import { signedIntent } from "@generalbusiness/dap-client";
 import type { ScopeRef } from "@generalbusiness/dap-contract";
 import { COUNTING_COMMITMENTS_DEFINITION } from "../commitments-pin.ts";
 import { deviceSigner, importLegacyDevice, type SavedDevice } from "./device-key.ts";

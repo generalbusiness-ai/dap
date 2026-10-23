@@ -1,12 +1,12 @@
 /** Loopback-only trusted-author development. Native state is in-memory SQLite;
  * actors/read access are explicit TEST fixtures, never room enrollment. */
-import type { AnyPackedApplication } from "@generalbusiness/artroom-bytes/application-v2";
+import type { AnyPackedApplication } from "@generalbusiness/dap-bytes/application-v2";
 import { watch, type FSWatcher } from "node:fs";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { resolve } from "node:path";
 import type { Answer, Beside, Read, ReadRefusal, RetainedInput } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isRecord, isSignedIntentShape, parseStrictBytes, timeOf } from "@generalbusiness/artroom-bytes";
-import { secretSigner } from "@generalbusiness/artroom-client";
+import { canonicalize, isDigest, isRecord, isSignedIntentShape, parseStrictBytes, timeOf } from "@generalbusiness/dap-bytes";
+import { secretSigner } from "@generalbusiness/dap-client";
 import { prepareApplicationDirectory, readApplicationScenario } from "./application-files.ts";
 import { openApplicationScenario, type ApplicationDevelopmentSession } from "./application-scenarios.ts";
 import { parse } from "./line.ts";

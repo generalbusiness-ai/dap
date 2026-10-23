@@ -14,7 +14,7 @@
  */
 
 import type { ScopeId, FactRef, Head, Report } from "@generalbusiness/dap-contract";
-import { isDigest, isFactRef, isScopeId, positionOf } from "@generalbusiness/artroom-bytes";
+import { isDigest, isFactRef, isScopeId, positionOf } from "@generalbusiness/dap-bytes";
 import { verifyArchive, type ArchiveSource } from "./archive.ts";
 import { render } from "./report.ts";
 import { httpSource, type Fetch } from "./source.ts";

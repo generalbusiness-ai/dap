@@ -1,6 +1,6 @@
 /** Directory15 relays the exact Rules9 grant once, outside domain fields. */
 import type { DeviceCommandGrant, PlatformData } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isRecord, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isDigest, isRecord, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import { readDeviceCommandGrant, type RuleGiven, type Rules } from "@generalbusiness/dap-derive";
 import { directory11, directoryRules11 } from "./application-install-creation.ts";
 import { directoryMembership } from "./directory.ts";

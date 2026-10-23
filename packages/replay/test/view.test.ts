@@ -1,7 +1,7 @@
 import { replayViewHeld, replayViewDuty, replayViewBase as data } from "../../derive/test/definition-corpus/replay-literals-data.ts";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize } from "@generalbusiness/artroom-bytes";
+import { canonicalize } from "@generalbusiness/dap-bytes";
 import { checkpointOf, judgeCheckpoint, judgeDiagnosis, validateDefinition, type StateView } from "@generalbusiness/dap-derive";
 import { d, created, keys, on, otherLane, valid } from "@generalbusiness/dap-derive/testing";
 import { View } from "../src/view.ts";

@@ -3,7 +3,7 @@
 import type { MemberRef } from "@generalbusiness/dap-contract";
 import type { Item } from "./state.ts";
 import type { ValidDefinition } from "./validate/index.ts";
-import { canonicalize } from "@generalbusiness/artroom-bytes";
+import { canonicalize } from "@generalbusiness/dap-bytes";
 import { byteOrder, own, same } from "./values.ts";
 
 /** The reference slot of a hold type that names the item the hold is under. */

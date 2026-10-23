@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { FactRef } from "@generalbusiness/dap-contract";
-import { textDigest } from "@generalbusiness/artroom-bytes";
+import { textDigest } from "@generalbusiness/dap-bytes";
 import { observationOf } from "@generalbusiness/dap-derive";
 import { d, otherLane, t } from "@generalbusiness/dap-derive/testing";
 import { MEMBERSHIP, standingOf } from "../src/membership.ts";

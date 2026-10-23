@@ -3,7 +3,7 @@
  * The producer witnesses durable report refs; the second case owns queue routing. */
 import { expect, test } from "vitest";
 import { readFile, rm } from "node:fs/promises";
-import { canonicalize } from "@generalbusiness/artroom-bytes";
+import { canonicalize } from "@generalbusiness/dap-bytes";
 import { prepareGrowCheck } from "../../../examples/grow/prepare-check.ts";
 import { prepareApplicationDirectory } from "../../cli/src/application-files.ts";
 import { openOwnedGrowScenario } from "./support/grow-owned-session.ts";

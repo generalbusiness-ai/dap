@@ -6,13 +6,13 @@
  * GitHub-issued token ID. No plaintext is recorded in an outside answer.
  */
 import type { RetainedInput, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, hex, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, hex, utf8 } from "@generalbusiness/dap-bytes";
 import { byteOrder, valueDigest } from "@generalbusiness/dap-derive";
 import { DESTINATION_CHANGED_SET, type DestinationObject, type JudgeChanges, type RecordedJudgeEvidence, type TreeLink } from "@generalbusiness/dap-platform";
-import { GitRefusal, READ_BOUNDS, SNAPSHOT_BOUNDS, Reader, objectId, refName, type GitSource, type ReadBounds, type StoredObject } from "@generalbusiness/artroom-git";
-import { GitHubApp, type GitHubAppOptions, type GitHubInstallationToken, type GitHubRepository } from "@generalbusiness/artroom-git/github";
-import { SmartHttpGit, type RawGitObject, type SmartHttpOptions } from "@generalbusiness/artroom-git/http";
-import { SmartHttpSource } from "@generalbusiness/artroom-git/http-read";
+import { GitRefusal, READ_BOUNDS, SNAPSHOT_BOUNDS, Reader, objectId, refName, type GitSource, type ReadBounds, type StoredObject } from "@generalbusiness/dap-git";
+import { GitHubApp, type GitHubAppOptions, type GitHubInstallationToken, type GitHubRepository } from "@generalbusiness/dap-git/github";
+import { SmartHttpGit, type RawGitObject, type SmartHttpOptions } from "@generalbusiness/dap-git/http";
+import { SmartHttpSource } from "@generalbusiness/dap-git/http-read";
 import type { DestinationBinding, DestinationInspection, DestinationProvider, DestinationRepository } from "./destination-host.ts";
 import type { RegisterProvider } from "./register-host.ts";
 import { fixtureArchiveProvider, type FixtureArchivePorts } from "./archive-host.ts";

@@ -3,7 +3,7 @@ import { env } from "cloudflare:workers";
 import { evictDurableObject, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import type { Intent, ScopeRef, Seed } from "@generalbusiness/dap-contract";
-import { intentDigest, scopeIdOf, signIntent } from "@generalbusiness/artroom-bytes";
+import { intentDigest, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import { deskDefinition, grantOf, keys, ticket, ticketDefinition, variant } from "@generalbusiness/dap-derive/testing";
 import { namespace } from "../src/namespace.ts";
 import { SqliteStore, Turns, Wakes, production } from "../src/index.ts";

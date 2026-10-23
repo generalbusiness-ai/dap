@@ -1,5 +1,5 @@
-import { isLocalId } from "@generalbusiness/artroom-bytes";
-import { isScopeRef } from "@generalbusiness/artroom-bytes";
+import { isLocalId } from "@generalbusiness/dap-bytes";
+import { isScopeRef } from "@generalbusiness/dap-bytes";
 import type { ScopeRef } from "@generalbusiness/dap-contract";
 import type { Tool } from "../catalogue.ts";
 import type { CallResult } from "../service.ts";

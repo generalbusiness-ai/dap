@@ -4,11 +4,11 @@ import { replayAnchorRemarks } from "../../derive/test/definition-corpus/replay-
  * are explicit stand-ins; no Native factory, source read or host runs. */
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type FactRef, type Seed, type Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, intentDigest, newIncarnation, scopeIdOf, signIntent, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, digestBytes, intentDigest, newIncarnation, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
 import { clockOf, grantFrom, judgeGenesis, validateDefinition } from "@generalbusiness/dap-derive";
 import { keys, Ledger, membership, on, t } from "@generalbusiness/dap-derive/testing";
-import { buildJournalPass, type JournalAnchorPublication, type JournalObject } from "@generalbusiness/artroom-git/journal";
-import { readJournalArchiveV2 } from "@generalbusiness/artroom-git/journal-reader";
+import { buildJournalPass, type JournalAnchorPublication, type JournalObject } from "@generalbusiness/dap-git/journal";
+import { readJournalArchiveV2 } from "@generalbusiness/dap-git/journal-reader";
 import { ArchiveBudget } from "../../scope/src/archive-budget.ts";
 import type { ArchiveSelectedObject } from "../../scope/src/archive-inventory.ts";
 import { archiveSource, type ArchiveReadWork } from "../src/archive.ts";

@@ -2,7 +2,7 @@
  * admission check. Output allowances are the portable package's limits. */
 import { basename, dirname, join, posix } from "node:path";
 import { fileURLToPath } from "node:url";
-import { APPLICATION_PACKAGE_LIMITS as LIMITS } from "@generalbusiness/artroom-client";
+import { APPLICATION_PACKAGE_LIMITS as LIMITS } from "@generalbusiness/dap-client";
 
 export interface ApplicationBrowserSource { entry: string; html: string; script: string }
 export interface ApplicationBrowserAsset { path: string; mediaType: string; bytes: Uint8Array }

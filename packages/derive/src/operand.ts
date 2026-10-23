@@ -8,7 +8,7 @@
  */
 
 import type { Entry, EntryPart, FactRef, FieldValue, Operand, Part, ScopeRef } from "@generalbusiness/dap-contract";
-import { intentDigest } from "@generalbusiness/artroom-bytes";
+import { intentDigest } from "@generalbusiness/dap-bytes";
 import { creationFields, isEntryOf, isLocalFact } from "./fields.ts";
 import { bound } from "./handlers.ts";
 import type { Judging } from "./guards.ts";

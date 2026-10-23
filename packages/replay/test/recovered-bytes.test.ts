@@ -2,7 +2,7 @@ import { recoveredText, recoveredChild, recoveredTransitiveTarget, recoveredSmal
 import { replayRecoveredAlias } from "../../derive/test/definition-corpus/replay-literals-data.ts";
 import { expect, test } from "vitest";
 import { DOMAINS, PROPOSED_BOUNDS, type PlatformDefinition, type Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, intentDigest, newIncarnation, scopeIdOf, signIntent, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, intentDigest, newIncarnation, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
 import { clockOf, judgeGenesis, validateDefinition, valueDigest } from "@generalbusiness/dap-derive";
 import { Ledger, T0, creation as childCreation, created, keys, notesDefinition, on, t, valid, variant } from "@generalbusiness/dap-derive/testing";
 import { MemorySource, TRUSTS, verify } from "../src/index.ts";

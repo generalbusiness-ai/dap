@@ -3,7 +3,7 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import type { OutboxId } from "@generalbusiness/dap-contract";
 import { correlated, correlation, isRequestId, isTraceId } from "./correlation.ts";
 import { admittedRequestUrl } from "./item-query-wire.ts";
-import { isScopeId } from "@generalbusiness/artroom-bytes";
+import { isScopeId } from "@generalbusiness/dap-bytes";
 import { Metrics, type Metric, type MetricBinding } from "./metrics.ts";
 
 export interface MetricEnvironment { METRICS?: MetricBinding; DEPLOYMENT?: string; VERSION_METADATA?: { id: string } }

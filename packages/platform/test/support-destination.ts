@@ -34,7 +34,7 @@ import { bureau } from "./definition-corpus-data.ts";
 
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Entry, Evidence, FactRef, FieldValue, Input, MemberObservation, HoldersObservation, Observation, ObservationUse, OperationId, Request, RulesObservation, ScopeRef, Seed, Send, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/artroom-bytes";
+import { canonicalize, factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import { PROFILES, clockOf, contentStates, valueDigest, outcomeValueDomains, judgeDelivery, judgeGenesis, settleOutcome, validateDefinition } from "@generalbusiness/dap-derive";
 import type { ActJudgment, Fetched, Judgment, OutcomeJudgment, Observing, PlatformRules, Source } from "@generalbusiness/dap-derive";
 import { Ledger, Scope, T0, creation as creationRequest, d, keys, laneDefinition, sent, t, type Actor, type Context, type Over } from "@generalbusiness/dap-derive/testing";

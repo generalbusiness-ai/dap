@@ -6,8 +6,8 @@
  * `*.scope.test.ts` stories show on the real test Worker.
  */
 import type { Answer, DeclaredDefinition, Digest, Entry, Input, Item, KeyId, PlatformDefinition, Receipt, ScopeId, ScopeKind, ScopeRef, Sealed, Seed, SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, entryHash, factRefOf, intentDigest, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/artroom-bytes";
-import type { Fetch } from "@generalbusiness/artroom-client";
+import { canonicalize, definitionDigest, entryHash, factRefOf, intentDigest, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
+import type { Fetch } from "@generalbusiness/dap-client";
 import type { McpConfig } from "../../src/index.ts";
 
 export const SERVICE = "https://scopes.test";

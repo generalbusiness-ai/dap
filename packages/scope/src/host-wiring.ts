@@ -4,9 +4,9 @@
  * handle. They read the scope's own history only. No configuration, key,
  * token or plaintext is read or written here.
  */
-import { same } from "@generalbusiness/artroom-bytes";
+import { same } from "@generalbusiness/dap-bytes";
 import type { Entry, FieldValue, ScopeId } from "@generalbusiness/dap-contract";
-import { entryHash, isDigest, isFactRef, isOperationId, parseStrict } from "@generalbusiness/artroom-bytes";
+import { entryHash, isDigest, isFactRef, isOperationId, parseStrict } from "@generalbusiness/dap-bytes";
 import { isEntryOf, valueDigest } from "@generalbusiness/dap-derive";
 import { DESTINATION_KINDS, destinationBranch, destinationWrite, directoryIdOf, isOf } from "@generalbusiness/dap-platform";
 import type { DestinationBinding, DestinationRepository } from "./destination-host.ts";

@@ -6,7 +6,7 @@
 import { DatabaseSync } from "node:sqlite";
 import { describe, expect, test } from "vitest";
 import type { Receipt } from "@generalbusiness/dap-contract";
-import { canonicalize, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, utf8 } from "@generalbusiness/dap-bytes";
 import { COMPLETION_BYTES, SEGMENT_ROW_BYTES, chargedOf, sqliteStore, type Sql, type SqlValue, type SqliteCustodyBounds } from "../src/sqlite-custody.ts";
 import { Custody, CustodyError, Lost, RECORD_BYTES, identityId, type CustodyRecord, type Outcome } from "../src/custody.ts";
 

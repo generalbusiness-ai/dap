@@ -2,8 +2,8 @@
  * production copy/validator/pack code; no external host or credential runs. */
 import { expect } from "vitest";
 import type { ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
-import { timeMs, timeOf, utf8 } from "@generalbusiness/artroom-bytes";
-import { journalRef, type JournalFormat, type JournalObject } from "@generalbusiness/artroom-git/journal";
+import { timeMs, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { journalRef, type JournalFormat, type JournalObject } from "@generalbusiness/dap-git/journal";
 import type { ArchiveCredential, FixtureArchiveProvider, ArchiveSend } from "../../src/archive-driver.ts";
 import { sendArchiveAppend } from "../../src/archive-send.ts";
 

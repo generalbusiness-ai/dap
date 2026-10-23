@@ -1,6 +1,6 @@
 /** Internal journal archive names (durability design 15.4). No bytes are read or exported here. */
 import type { Digest, ScopeId } from "@generalbusiness/dap-contract";
-import { base32, isDigest, isScopeId, unbase32, utf8, wellFormed } from "@generalbusiness/artroom-bytes";
+import { base32, isDigest, isScopeId, unbase32, utf8, wellFormed } from "@generalbusiness/dap-bytes";
 import { GitRefusal } from "./names.ts";
 
 const ROOT = "journal/v1/";

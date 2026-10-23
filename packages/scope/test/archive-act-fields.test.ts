@@ -5,7 +5,7 @@ import { archiveActFieldsChange } from "./definition-corpus-data.ts";
 import { expect, test } from "vitest";
 import { runInDurableObject } from "cloudflare:test";
 import { DOMAINS, PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, isEntry, parseStrict, textDigest } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isEntry, parseStrict, textDigest } from "@generalbusiness/dap-bytes";
 import { localRetainedPlan, outcomeValueDomains, validateDefinition } from "@generalbusiness/dap-derive";
 import { notesDefinition, variant } from "@generalbusiness/dap-derive/testing";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";

@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { DOMAINS } from "@generalbusiness/dap-contract";
-import { digestBytes, utf8 } from "@generalbusiness/artroom-bytes";
+import { digestBytes, utf8 } from "@generalbusiness/dap-bytes";
 import { AmountError, ByteUsage } from "../src/index.ts";
 
 // Size/digest metadata at a pure boundary. These do not validate payloads,

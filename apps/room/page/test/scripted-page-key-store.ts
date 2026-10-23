@@ -1,8 +1,8 @@
 /** UI-only key-custody stand-in. Signing is deliberately unavailable; real
  * nonextractability/migration is tested by browser-key-store.test.ts. */
-import { keyIdOfSecret, unb64url } from "@generalbusiness/artroom-bytes";
+import { keyIdOfSecret, unb64url } from "@generalbusiness/dap-bytes";
 import type { KeyId } from "@generalbusiness/dap-contract";
-import type { Signer } from "@generalbusiness/artroom-client";
+import type { Signer } from "@generalbusiness/dap-client";
 import type { pageKeyStore } from "../src/browser-key-store.ts";
 const signer = (key: KeyId): Signer => ({ key, sign: async () => { throw new Error("UI stand-in cannot sign"); } });
 export function scriptedPageKeys(): ReturnType<typeof pageKeyStore> {

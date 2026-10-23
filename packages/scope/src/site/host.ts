@@ -15,14 +15,14 @@
  * revoked after; on GitHub with the deployment's `GITHUB_READ_TOKEN`, or
  * with none when the setting says reads are public.
  */
-import { isRecord } from "@generalbusiness/artroom-bytes";
+import { isRecord } from "@generalbusiness/dap-bytes";
 import type { Entry, ScopeId } from "@generalbusiness/dap-contract";
-import { canonicalize, isScopeId, parseStrict } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isScopeId, parseStrict } from "@generalbusiness/dap-bytes";
 import { isOf } from "@generalbusiness/dap-platform";
-import { READ_BOUNDS, type GitSource } from "@generalbusiness/artroom-git";
-import { githubRepository, type GitHubAccount } from "@generalbusiness/artroom-git/github";
+import { READ_BOUNDS, type GitSource } from "@generalbusiness/dap-git";
+import { githubRepository, type GitHubAccount } from "@generalbusiness/dap-git/github";
 import { requireGitHubRepositoryIdentity } from "../github-host.ts";
-import { SmartHttpSource } from "@generalbusiness/artroom-git/http-read";
+import { SmartHttpSource } from "@generalbusiness/dap-git/http-read";
 import { READ_TTL, type ArtifactsNamespace } from "../artifacts-host.ts";
 import { ARTIFACTS_HOST, type ArtifactsBindings } from "../artifacts-wiring.ts";
 import type { DestinationRepository } from "../destination-host.ts";

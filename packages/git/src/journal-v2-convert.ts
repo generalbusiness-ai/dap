@@ -1,7 +1,7 @@
 /** One v1 receipt becomes the first v2 pass. The native caller re-admits
  * its bounded local prefix; matching the complete v1 tree binds every
  * regenerated segment and retained byte to the confirmed Git receipt. */
-import { canonicalize, timeMs, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, timeMs, utf8 } from "@generalbusiness/dap-bytes";
 import { journalFileTree, journalPhysicalFiles } from "./journal-files.ts";
 import { selectedEntries, selectedRetained } from "./journal-layout.ts";
 import { manifestOfSelection } from "./journal-manifest.ts";

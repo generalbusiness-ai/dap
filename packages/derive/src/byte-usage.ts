@@ -5,7 +5,7 @@
  * it cannot mistake the known subtotal for a complete byte check.
  */
 import { ACCEPTED_KEY_OVERHEAD_BYTES, DOMAINS, type Digest, type KeyId, type RetainedInput } from "@generalbusiness/dap-contract";
-import { canonicalize, retainedByteDomain, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, retainedByteDomain, utf8 } from "@generalbusiness/dap-bytes";
 import { AmountError, naturalAmount, NOTHING } from "./held.ts";
 
 export type ByteCount = { complete: true; bytes: number } | { complete: false; knownBytes: number; missing: number };

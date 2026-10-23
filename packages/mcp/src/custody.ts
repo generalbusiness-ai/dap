@@ -60,7 +60,7 @@
  */
 
 import type { Answer, Beside, DeclaredDefinition, Digest, KeyId, PlatformDefinition, Receipt, ScopeRef, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, intentDigest, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, digestBytes, intentDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { custodyTransition, custodyStepTransition } from "./metrics.ts";
 
 export const UNRESOLVED_MOST = 256;

@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { canonicalize } from "@generalbusiness/artroom-bytes";
+import { canonicalize } from "@generalbusiness/dap-bytes";
 import { httpTransport, TransportError, type Fetch } from "../src/index.ts";
 const scope = `sc_${"a".repeat(52)}` as const;
 const head = { seq: 7, hash: `sha256:${"a".repeat(64)}` };

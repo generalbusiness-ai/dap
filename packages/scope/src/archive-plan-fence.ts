@@ -1,7 +1,7 @@
 /** Immutable metadata forecast, never payload admission. Final inventory
  * still re-admits the whole prefix inside one fresh native read frame. */
 import type { Head } from "@generalbusiness/dap-contract";
-import { natural, same } from "@generalbusiness/artroom-bytes";
+import { natural, same } from "@generalbusiness/dap-bytes";
 import type { LocalRetainedPlan } from "@generalbusiness/dap-derive";
 import { ARCHIVE_BOUNDS, type ArchiveBudget, type ArchiveCost } from "./archive-budget.ts";
 import type { ArchiveLocalReferencePlan } from "./archive-local-references.ts";

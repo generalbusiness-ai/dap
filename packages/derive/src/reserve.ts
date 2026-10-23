@@ -71,7 +71,7 @@ import { countedEntries } from "./floor.ts";
  */
 
 import type { Bounds, Input, ScopeBoundName } from "@generalbusiness/dap-contract";
-import { isPlatformDefinition } from "@generalbusiness/artroom-bytes";
+import { isPlatformDefinition } from "@generalbusiness/dap-bytes";
 import { AmountError, amountMath, holding, naturalAmount, NOTHING, subtract, sum, times, type Amount } from "./held.ts";
 import { closureOf, outcomeReservation, ownerReservations, type Owners } from "./ledger.ts";
 import { markerOwed } from "./markers.ts";

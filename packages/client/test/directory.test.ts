@@ -1,7 +1,7 @@
 /** Scripted navigation reads, not Native origin/authority or browser proof. */
 import { expect, test, vi } from "vitest";
 import type { Head, Item, ItemQuery, ItemQueryRead, ScopeRef, Summary } from "@generalbusiness/dap-contract";
-import { itemQueryArgument, itemQueryDigest, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/artroom-bytes";
+import { itemQueryArgument, itemQueryDigest, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import { activeDirectory, partitionIndexes, type DirectoryReader } from "../src/index.ts";
 
 const ref = (c: string, kind: ScopeRef["kind"] = "directory"): ScopeRef => ({ scope: scopeIdOf({ v: 1, kind, definition: textDigest(c), creator: null, cause: textDigest(c), ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(c.charCodeAt(0))), kind });

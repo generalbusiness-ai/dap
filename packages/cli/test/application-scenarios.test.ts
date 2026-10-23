@@ -1,5 +1,5 @@
 import { addCounterCitation, scenarioParent } from "./definition-corpus-data.ts";
-import { emptyPackageComposition } from "@generalbusiness/artroom-package-graph";
+import { emptyPackageComposition } from "@generalbusiness/dap-package-graph";
 /** Real native Counter scenarios; only the final test's verifier reports are
  * deliberately faulted, to show the scenario cannot hide failed replay. */
 import { mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
@@ -9,9 +9,9 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test, vi } from "vitest";
 import type { DeclaredDefinition, FactRef, FieldValue, SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest } from "@generalbusiness/artroom-bytes";
-import { packApplication, secretSigner, signedIntent } from "@generalbusiness/artroom-client";
-import { packApplication2, readApplicationProjection } from "@generalbusiness/artroom-bytes/application-v2";
+import { canonicalize, definitionDigest } from "@generalbusiness/dap-bytes";
+import { packApplication, secretSigner, signedIntent } from "@generalbusiness/dap-client";
+import { packApplication2, readApplicationProjection } from "@generalbusiness/dap-bytes/application-v2";
 import { devicePackageFixture as deviceCommandFixture } from "../../derive/test/fixtures-device-command.ts";
 import { LocalApplicationScope } from "../src/application-local.ts";
 import { ApplicationScenarioError, openApplicationScenario, runApplicationScenario, supportsLocalSqlite } from "../src/application-scenarios.ts";

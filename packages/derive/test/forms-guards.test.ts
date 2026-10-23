@@ -2,7 +2,7 @@ import { probingData, guardRows0, guardRows1, guardRows2, timedGuardData, auditi
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Bounds, FieldValue, Guard, Operand, Send } from "@generalbusiness/dap-contract";
-import { factRefOf } from "@generalbusiness/artroom-bytes";
+import { factRefOf } from "@generalbusiness/dap-bytes";
 import { judgeDelivery, validateDefinition, type ActJudgment, type Fetched, type ProblemCode } from "../src/index.ts";
 import { Scope, arriving, fields, forged, created, keys, on, t, ticketDefinition, valid } from "./fixtures-entry.ts";
 

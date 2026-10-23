@@ -2,7 +2,7 @@
  * signed native receipts or an isolation boundary. The host owns identity
  * admission and the exact allowed act kinds. Existing wire version stays 2. */
 import type { Answer, Digest, KeyId, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isGrant, isHead, isRecord, isSignedIntentShape, REFUSAL_REASONS, textDigest, utf8, verifySignedIntent } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isGrant, isHead, isRecord, isSignedIntentShape, REFUSAL_REASONS, textDigest, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import type { Envelope as PreparedEnvelope } from "./request-custody.ts";
 export type { Envelope as RequestEnvelope } from "./request-custody.ts";
 export interface RequestActorIdentity {

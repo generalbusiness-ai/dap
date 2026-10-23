@@ -1,9 +1,9 @@
 /** Direct retained-copy metadata only. No payload body, recursive source
  * history, policy certificate or production admission is supplied here. */
-import { natural, same } from "@generalbusiness/artroom-bytes";
+import { natural, same } from "@generalbusiness/dap-bytes";
 import { INVITATION_KEY_MEMBERSHIP } from "@generalbusiness/dap-contract";
 import type { Bounds, Digest, FactRef, Input, PlatformDefinition } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isFactRef, platformName } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isDigest, isFactRef, platformName } from "@generalbusiness/dap-bytes";
 import { platform } from "@generalbusiness/dap-platform";
 import { forecastArchiveSourceLookup } from "./archive-source-cost.ts";
 import { derivable } from "@generalbusiness/dap-derive";

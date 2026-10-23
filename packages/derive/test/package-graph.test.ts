@@ -1,9 +1,9 @@
 import { expect, test } from "vitest";
 import { readFileSync } from "node:fs";
-import { b64url, canonicalize, definitionDigest, digestBytes, sign, utf8, verify } from "@generalbusiness/artroom-bytes";
-import { ApplicationPackageValidationError, packApplication2, readApplicationProjection, readApplicationPackage2, readPublishedApplicationPackage2, readPublishedApplicationReleaseProof2, type ApplicationPackageInput2 } from "@generalbusiness/artroom-bytes/application-v2";
+import { b64url, canonicalize, definitionDigest, digestBytes, sign, utf8, verify } from "@generalbusiness/dap-bytes";
+import { ApplicationPackageValidationError, packApplication2, readApplicationProjection, readApplicationPackage2, readPublishedApplicationPackage2, readPublishedApplicationReleaseProof2, type ApplicationPackageInput2 } from "@generalbusiness/dap-bytes/application-v2";
 import { PROPOSED_BOUNDS, type DeclaredDefinition, type Guard } from "@generalbusiness/dap-contract";
-import { checkPackageGraph, type PackageGraphInput } from "@generalbusiness/artroom-package-graph";
+import { checkPackageGraph, type PackageGraphInput } from "@generalbusiness/dap-package-graph";
 import { validateDefinition, validatePackage } from "../src/index.ts";
 import { RULE_PROFILES } from "../src/rule/index.ts";
 import { room } from "../../../examples/grow/room.ts";

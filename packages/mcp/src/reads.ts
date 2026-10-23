@@ -8,8 +8,8 @@
  */
 
 import type { ItemQueryRead, Read, ScopeId, ScopeRef, ApplicationProjectionQuery, ApplicationProjectionRead } from "@generalbusiness/dap-contract";
-import { timeOf } from "@generalbusiness/artroom-bytes";
-import { TransportError, ScopeHandle, httpTransport, requestSession, signedReads, signerSessionRequest, type Fetch, type Session, type Signer, type Transport } from "@generalbusiness/artroom-client";
+import { timeOf } from "@generalbusiness/dap-bytes";
+import { TransportError, ScopeHandle, httpTransport, requestSession, signedReads, signerSessionRequest, type Fetch, type Session, type Signer, type Transport } from "@generalbusiness/dap-client";
 
 export interface ReadPort {
   service: string;

@@ -9,7 +9,7 @@
  */
 import type { Sql } from "./sqlite.ts";
 import type { ScopeId } from "@generalbusiness/dap-contract";
-import { canonicalize, isScopeId, parseStrict } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isScopeId, parseStrict } from "@generalbusiness/dap-bytes";
 import { destinationBranch, isOf } from "@generalbusiness/dap-platform";
 import { ArtifactsProvider, type ArtifactsNamespace, type CreationCustody } from "./artifacts-host.ts";
 import { CredentialStore } from "./credential-store.ts";

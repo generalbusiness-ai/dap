@@ -1,7 +1,7 @@
 /** Route syntax only. Decode, native metadata and authorization belong to the
  * Scope-owned operation; no namespace is selected by a malformed request. */
 import { APPLICATION_PROJECTION_WIRE_BOUNDS as B } from "@generalbusiness/dap-contract";
-import { isScopeId, utf8 } from "@generalbusiness/artroom-bytes";
+import { isScopeId, utf8 } from "@generalbusiness/dap-bytes";
 const path = /^https?:\/\/[^/?#]+\/v1\/scopes\/([^/?#]+)\/application-projection\?p=([A-Za-z0-9_-]+)$/;
 export function applicationProjectionWire(request: Pick<Request, "url" | "method" | "body">, scope: string):
   { ok: true; encoded: string } | { ok: false; reason: "invalid-query" | "too-large" } {

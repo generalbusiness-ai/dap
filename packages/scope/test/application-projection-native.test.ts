@@ -4,11 +4,11 @@
  * provider, deployed host, arbitrary package containment or browser runs. */
 import { env, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
-import { canonicalize, isSeed, scopeIdOf, textDigest } from "@generalbusiness/artroom-bytes";
-import { encodeApplicationProjectionQuery, readApplicationProjectionReply } from "@generalbusiness/artroom-bytes/application-v2";
+import { canonicalize, isSeed, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
+import { encodeApplicationProjectionQuery, readApplicationProjectionReply } from "@generalbusiness/dap-bytes/application-v2";
 import { DOMAINS, ITEM_QUERY_BOUNDS, PROPOSED_BOUNDS, type ApplicationProjectionQuery, type ScopeRef } from "@generalbusiness/dap-contract";
 import { DECLARED_APPLICATION_COHORT as C } from "@generalbusiness/dap-platform";
-import { requestSession, sessionRequest, ScopeHandle, httpTransport, bindingTransport, secretSigner, signedApplicationInstall, ApplicationPackageError, type ServiceBinding } from "@generalbusiness/artroom-client";
+import { requestSession, sessionRequest, ScopeHandle, httpTransport, bindingTransport, secretSigner, signedApplicationInstall, ApplicationPackageError, type ServiceBinding } from "@generalbusiness/dap-client";
 import { McpService, memoryStore as custodyStore, type ServerPort } from "@generalbusiness/dap-mcp";
 import nativeWorker from "../../../apps/room/worker.ts";
 import { outsideOf as hostOutside } from "../src/worker.ts";

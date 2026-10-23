@@ -1,6 +1,6 @@
 /** Bounded origin-private records. A kind owns its format and public view;
  * this adapter owns validation before replacement and exact storage readback. */
-import { canonicalize, isRecord, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isRecord, utf8 } from "@generalbusiness/dap-bytes";
 
 export interface CustodyStorage { getItem(key: string): string | null; setItem(key: string, value: string): void }
 interface Current { current?: () => boolean }

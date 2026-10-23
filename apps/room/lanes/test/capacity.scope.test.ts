@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { textDigest } from "@generalbusiness/artroom-bytes";
+import { textDigest } from "@generalbusiness/dap-bytes";
 import { capable, graph, net, paul, rita, soon, una, type Node } from "./support/graph.ts";
 import { DIGESTS, change, issue } from "../src/index.ts";
 import { room } from "./support/room.ts";

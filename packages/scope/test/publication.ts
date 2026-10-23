@@ -15,7 +15,7 @@
 
 import { runInDurableObject } from "cloudflare:test";
 import type { Entry, OperationId } from "@generalbusiness/dap-contract";
-import { timeMs, timeOf } from "@generalbusiness/artroom-bytes";
+import { timeMs, timeOf } from "@generalbusiness/dap-bytes";
 import { destinationReceipt, initialCommitOf, revokedToken } from "@generalbusiness/dap-platform";
 import { targetOf } from "../../../packages/platform/src/destination.ts";
 import { SqliteStore } from "../src/index.ts";

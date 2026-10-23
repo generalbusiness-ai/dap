@@ -1,7 +1,7 @@
 /** Derived signer evidence. No public admission, replay judgment or resolver work. */
-import { isLocalId as integer } from "@generalbusiness/artroom-bytes";
+import { isLocalId as integer } from "@generalbusiness/dap-bytes";
 import type { Digest, Entry, Head, KeyId, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, isDigest, isEntry, isKeyId, isScopeRef, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, entryHash, isDigest, isEntry, isKeyId, isScopeRef, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import { isObject, same, timeMs, type ScopeState } from "@generalbusiness/dap-derive";
 import { signerOf } from "./entry-signer.ts";
 import type { Sql, SqlValue } from "./sqlite.ts";

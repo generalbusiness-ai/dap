@@ -7,7 +7,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 import { DOMAINS } from "@generalbusiness/dap-contract";
-import { b64url, domainBytes, isScopeId, newIncarnation, publicKeyOf, textDigest, unb64url } from "@generalbusiness/artroom-bytes";
+import { b64url, domainBytes, isScopeId, newIncarnation, publicKeyOf, textDigest, unb64url } from "@generalbusiness/dap-bytes";
 import { buildCreation, buildPlan, DemoPreparationError, plan, postInstall, prepare, readPrivateState } from "./demo-git-host.mjs";
 const script = fileURLToPath(new URL("./demo-git-host.mjs", import.meta.url));
 const checkout = fileURLToPath(new URL("../", import.meta.url));

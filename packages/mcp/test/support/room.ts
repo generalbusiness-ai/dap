@@ -14,8 +14,8 @@
  */
 import { expect } from "vitest";
 import { DOMAINS, type Intent, type ScopeId } from "@generalbusiness/dap-contract";
-import { b64url, keyIdOfSecret, scopeIdOf } from "@generalbusiness/artroom-bytes";
-import { secretSigner, type Fetch } from "@generalbusiness/artroom-client";
+import { b64url, keyIdOfSecret, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { secretSigner, type Fetch } from "@generalbusiness/dap-client";
 import { ownHost } from "../../../scope/test/hosts.ts";
 import { type Platform, routed } from "../../../scope/test/repository.ts";
 import { beginSessionFixture } from "../../../scope/test/session-settings.ts";

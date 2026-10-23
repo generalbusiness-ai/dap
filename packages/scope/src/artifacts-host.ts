@@ -10,10 +10,10 @@
  * answer.
  */
 import type { RetainedInput, Timestamp } from "@generalbusiness/dap-contract";
-import { timeMs, timeOf } from "@generalbusiness/artroom-bytes";
+import { timeMs, timeOf } from "@generalbusiness/dap-bytes";
 import type { DestinationObject, RecordedJudgeEvidence } from "@generalbusiness/dap-platform";
-import { GitRefusal, READ_BOUNDS, Reader, type GitSource, type ReadBounds } from "@generalbusiness/artroom-git";
-import { SmartHttpSource } from "@generalbusiness/artroom-git/http-read";
+import { GitRefusal, READ_BOUNDS, Reader, type GitSource, type ReadBounds } from "@generalbusiness/dap-git";
+import { SmartHttpSource } from "@generalbusiness/dap-git/http-read";
 import type { DestinationBinding, DestinationInspection, DestinationProvider, DestinationRepository } from "./destination-host.ts";
 import { deleteRefOnce, inspectGit, sendOnce, type DestinationRefDeletion } from "./github-host.ts";
 import type { RegisterProvider } from "./register-host.ts";

@@ -1,6 +1,6 @@
 import { expect, test, vi } from "vitest";
 import type { Entry, Read, ScopeRef, Seed, Sealed, Summary } from "@generalbusiness/dap-contract";
-import { entryHash, intentDigest, keyIdOfSecret, newIncarnation, scopeIdOf, signIntent, textDigest } from "@generalbusiness/artroom-bytes";
+import { entryHash, intentDigest, keyIdOfSecret, newIncarnation, scopeIdOf, signIntent, textDigest } from "@generalbusiness/dap-bytes";
 import { memoryStore, type Context, type Outcome } from "@generalbusiness/dap-cli";
 import { DEMO_DIGESTS, MANIFEST_DIGESTS } from "../src/index.ts";
 import { prepareConcurrentAndMerge, staleReproposal, type CapturedValues } from "../../../../scripts/demo/rehearse.ts";
@@ -10,8 +10,8 @@ import { prepareConcurrentAndMerge, staleReproposal, type CapturedValues } from 
 // hashes and identities. No native admission, Git host or provider runs here.
 const ports = vi.hoisted(() => ({ command: vi.fn(), session: vi.fn(), entry: vi.fn(), summary: vi.fn() }));
 vi.mock("@generalbusiness/dap-cli", async importOriginal => ({ ...await importOriginal<typeof import("@generalbusiness/dap-cli")>(), command: ports.command }));
-vi.mock("@generalbusiness/artroom-client", async importOriginal => ({
-  ...await importOriginal<typeof import("@generalbusiness/artroom-client")>(), requestSession: ports.session,
+vi.mock("@generalbusiness/dap-client", async importOriginal => ({
+  ...await importOriginal<typeof import("@generalbusiness/dap-client")>(), requestSession: ports.session,
   ScopeHandle: class {
     constructor(_transport: unknown, readonly scope: string) {}
     entry(seq: number) { return ports.entry(this.scope, seq); }

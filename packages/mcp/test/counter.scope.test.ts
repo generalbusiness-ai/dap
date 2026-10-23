@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { FactRef, ScopeId } from "@generalbusiness/dap-contract";
-import { canonicalize } from "@generalbusiness/artroom-bytes";
+import { canonicalize } from "@generalbusiness/dap-bytes";
 import { valueDigest } from "@generalbusiness/dap-derive";
 import { APPLICATION_COHORT, CONFIGURATION_DOMAIN, FIRST_ACTIONS_OF } from "@generalbusiness/dap-platform";
 import { countingCommitments } from "../../../apps/counter/commitments.ts";

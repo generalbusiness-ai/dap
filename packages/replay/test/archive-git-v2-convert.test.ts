@@ -1,7 +1,7 @@
 /** Real local Git over synthetic admitted selections. No native policy,
  * archive confirmation, provider or deployment acceptance is claimed. */
 import { afterAll, expect, test } from "vitest";
-import { canonicalize } from "@generalbusiness/artroom-bytes";
+import { canonicalize } from "@generalbusiness/dap-bytes";
 import { archiveSource, verifyArchive } from "../src/index.ts";
 import { ArchiveBudget } from "../../scope/src/archive-budget.ts";
 import { buildJournalArchive } from "../../git/src/journal-layout.ts";

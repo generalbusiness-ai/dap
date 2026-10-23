@@ -3,7 +3,7 @@ import { evictDurableObject, runDurableObjectAlarm, runInDurableObject } from "c
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Answer, Intent, PlatformDefinition, Seed } from "@generalbusiness/dap-contract";
-import { intentDigest, scopeIdOf, signIntent, textDigest } from "@generalbusiness/artroom-bytes";
+import { intentDigest, scopeIdOf, signIntent, textDigest } from "@generalbusiness/dap-bytes";
 import { MemoryState, applyEntry, owed, stateDigest, type RuleGiven } from "@generalbusiness/dap-derive";
 import { grantOf } from "@generalbusiness/dap-derive/testing";
 import { gateRules, gateWith } from "../../derive/test/fixtures-marks.ts";

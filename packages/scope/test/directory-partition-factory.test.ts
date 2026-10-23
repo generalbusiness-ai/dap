@@ -2,7 +2,7 @@ import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import type { Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, factRefOf, isPlatformDefinition, platformName, scopeIdOf } from "@generalbusiness/artroom-bytes";
+import { canonicalize, factRefOf, isPlatformDefinition, platformName, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { PARTITION_COHORT as C, FIRST_ACTIONS_OF, partitionReceiverPolicy, type PartitionNativeFrame } from "@generalbusiness/dap-platform";
 import { applicationPublicationOrigin } from "@generalbusiness/dap-platform";
 import type { EffectRequest } from "../src/operations.ts";

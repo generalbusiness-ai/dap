@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { expect, test } from "vitest";
 import type { FactRef, ScopeId, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, digestBytes, utf8 } from "@generalbusiness/dap-bytes";
 import { d, otherLane } from "@generalbusiness/dap-derive/testing";
 import { editCommit, editObjects, editPath, editTree, type DestinationObject } from "../src/destination-objects.ts";
 import { judgeReservation, type EditFile, type Statement } from "../src/reservation.ts";

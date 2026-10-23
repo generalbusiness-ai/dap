@@ -1,11 +1,11 @@
-import { invitationIssueFields, invitationRedemptionFields } from "@generalbusiness/artroom-client";
+import { invitationIssueFields, invitationRedemptionFields } from "@generalbusiness/dap-client";
 import { INVITATION_KEY_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 /** Retained invitation creation and explicitly tagged true-agent enrollment.
  * Store.private holds secrets/envelopes; public config holds only exact pointers.
  * Callers serialize one Store and fence their captured Page context. */
 import type { Answer, Entry, FactRef, MemberRef, Receipt, SignedIntent, Summary, ScopeRef } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, entryHash, factRefOf, intentDigest, isMemberRef, isScopeRef, isScopeId, isRecord, isHead, isKeyId, REFUSAL_REASONS, unb64url, timeMs, isReceipt, isSignedIntentShape, keyIdOfSecret, parseStrict, scopeIdOf, textDigest, timeOf, utf8, verifySignedIntent } from "@generalbusiness/artroom-bytes";
-import { agentKeyInvitationOf, encodeAgentKeyInvitation, httpTransport, isAgentKeyMembership, ScopeHandle, secretSigner, signedIntent, requestSession, signerSessionRequest, type AgentKeyMembership, type Signer } from "@generalbusiness/artroom-client";
+import { b64url, canonicalize, entryHash, factRefOf, intentDigest, isMemberRef, isScopeRef, isScopeId, isRecord, isHead, isKeyId, REFUSAL_REASONS, unb64url, timeMs, isReceipt, isSignedIntentShape, keyIdOfSecret, parseStrict, scopeIdOf, textDigest, timeOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { agentKeyInvitationOf, encodeAgentKeyInvitation, httpTransport, isAgentKeyMembership, ScopeHandle, secretSigner, signedIntent, requestSession, signerSessionRequest, type AgentKeyMembership, type Signer } from "@generalbusiness/dap-client";
 import { APPLICATION_COHORT, FILE_PUBLICATION_COHORT, COUNTING_COHORT, DEMO_REGISTER, DIRECTORY_OF, WEB_DEMO_COHORT, isHandle, platform } from "@generalbusiness/dap-platform";
 import { expectedOf, LINK, linkOf, type Context, type DefinitionShape, type Link, type Outcome } from "./commands.ts";
 import type { Config, PendingInvitationIssue, Repository } from "./store.ts";

@@ -3,8 +3,8 @@
 import { env, evictDurableObject, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import type { Intent, ItemQuery, SignedIntent } from "@generalbusiness/dap-contract";
-import { encodeItemQueryParameter, itemQueryArgument, keyIdOfSecret, newIncarnation, scopeIdOf, signIntent, textDigest } from "@generalbusiness/artroom-bytes";
-import { httpTransport, secretSigner, signedReader } from "@generalbusiness/artroom-client";
+import { encodeItemQueryParameter, itemQueryArgument, keyIdOfSecret, newIncarnation, scopeIdOf, signIntent, textDigest } from "@generalbusiness/dap-bytes";
+import { httpTransport, secretSigner, signedReader } from "@generalbusiness/dap-client";
 import { ServingAdmission, type ServingDecision, type ServingRequest } from "../src/serving-admission.ts";
 import { SCOPE_INDEX_NAME } from "../src/scope-index.ts";
 import { api, route, type Api } from "../src/worker.ts";

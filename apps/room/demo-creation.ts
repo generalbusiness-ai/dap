@@ -1,5 +1,5 @@
 /** The demo's HTTP route; the native read-only projection stays with ScopeObject. */
-import { canonicalize } from "@generalbusiness/artroom-bytes";
+import { canonicalize } from "@generalbusiness/dap-bytes";
 import type { Binding } from "../../packages/scope/src/namespace.ts";
 import { demoCreationConfig, registerRef, type DemoCreationBindings, type DemoCreationConfig, type DemoCreationOffer } from "../../packages/scope/src/demo-creation.ts";
 export { demoCreationConfig, type DemoCreationOffer } from "../../packages/scope/src/demo-creation.ts";

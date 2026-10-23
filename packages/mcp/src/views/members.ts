@@ -1,7 +1,7 @@
 /** Bounded display resolution from typed projection sources. No writes or history scans. */
 import type { ApplicationProjectionData, FieldValue, MemberRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isMemberRef, isDigest, isLocalId, utf8 } from "@generalbusiness/artroom-bytes";
-import { applicationViewFactField, isApplicationJournalSource, type ApplicationProjectionSource, type ApplicationReadProjection, type ApplicationViewFact } from "@generalbusiness/artroom-bytes/application-v2";
+import { canonicalize, isMemberRef, isDigest, isLocalId, utf8 } from "@generalbusiness/dap-bytes";
+import { applicationViewFactField, isApplicationJournalSource, type ApplicationProjectionSource, type ApplicationReadProjection, type ApplicationViewFact } from "@generalbusiness/dap-bytes/application-v2";
 import { isActions, ROLE_LISTS, type Role } from "@generalbusiness/dap-platform";
 import type { MemberDisplay, MemberTable, MembershipDisplayRead, MembershipDisplaySnapshot } from "./member-types.ts";
 

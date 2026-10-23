@@ -1,6 +1,6 @@
 import { smallApplication as declaration, applicationChild, applicationRoot, applicationDestination, applicationWrongDestination } from "./definition-corpus-data.ts";
 import { expect, test } from "vitest";
-import { canonicalize, definitionDigest, intentDigest } from "@generalbusiness/artroom-bytes";
+import { canonicalize, definitionDigest, intentDigest } from "@generalbusiness/dap-bytes";
 import { PROPOSED_BOUNDS, type DeclaredDefinition, type MemberRef } from "@generalbusiness/dap-contract";
 import { runnable, validateDefinition, type RuleGiven } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";

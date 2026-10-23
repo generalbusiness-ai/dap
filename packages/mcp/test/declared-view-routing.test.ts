@@ -3,8 +3,8 @@ import { configureRoutingDefinition } from "./support/definition-corpus-data.ts"
  * generic routing and the mounted pre-sign boundary, not native authority. */
 import { expect, test } from "vitest";
 import type { ApplicationProjectionQuery, ApplicationProjectionRow, DeclaredDefinition, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, keyIdOfSecret, parseStrict, sign } from "@generalbusiness/artroom-bytes";
-import { applicationProjectionId, applicationProjectionQueryDigest, packApplication2, readApplicationProjection } from "@generalbusiness/artroom-bytes/application-v2";
+import { canonicalize, definitionDigest, keyIdOfSecret, parseStrict, sign } from "@generalbusiness/dap-bytes";
+import { applicationProjectionId, applicationProjectionQueryDigest, packApplication2, readApplicationProjection } from "@generalbusiness/dap-bytes/application-v2";
 import { applicationCounterPacket2 } from "../../scope/test/fixtures.ts";
 import { DeclaredViewSource } from "../src/views/declared.ts";
 import { ViewSessions } from "../src/views/session.ts";

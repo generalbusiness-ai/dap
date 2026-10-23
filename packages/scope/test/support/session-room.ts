@@ -2,7 +2,7 @@
  * clock scripted, setup reads inspected; final tokens are manually minted. */
 import { expect } from "vitest";
 import type { Intent, OperationId, PlatformDefinition, Seed, SessionClaims } from "@generalbusiness/dap-contract";
-import { intentDigest, scopeIdOf, seedDigest, signIntent } from "@generalbusiness/artroom-bytes";
+import { intentDigest, scopeIdOf, seedDigest, signIntent } from "@generalbusiness/dap-bytes";
 import { DEMO_PURPOSE, DIRECTORY_OF, REGISTER, repositoryName } from "@generalbusiness/dap-platform";
 import { sessionsOf } from "../../src/sessions.ts";
 import { soon } from "../net.ts";

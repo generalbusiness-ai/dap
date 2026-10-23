@@ -3,7 +3,7 @@ import { packageDeclaration as declaration } from "./definition-corpus-data.ts";
  * Native whole-definition judgment, a Git fetch/install and browser behavior
  * are separate obligations of check and the host-side slice. */
 import { expect, test } from "vitest";
-import { b64url, canonicalize, newIncarnation, scopeIdOf, textDigest, utf8, verifySignedIntent } from "@generalbusiness/artroom-bytes";
+import { b64url, canonicalize, newIncarnation, scopeIdOf, textDigest, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { ApplicationPackageError, packApplication, readApplicationPackage, readApplicationReleaseProof, secretSigner, signedApplicationInstall, type ApplicationPackageInput, type PackedApplication } from "../src/index.ts";
 
 const signer = secretSigner(new Uint8Array(32).fill(7));

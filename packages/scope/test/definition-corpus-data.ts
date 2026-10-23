@@ -2,7 +2,7 @@ import { STEP_ROWS } from "../../derive/test/definition-corpus/observes-data.ts"
 import { DOMAINS, type PlatformData } from "@generalbusiness/dap-contract";
 import { notes } from "../../derive/test/definition-corpus/fixture-data.ts";
 import { standingData } from "../../derive/test/fixtures-standing.ts";
-import { definitionDigest } from "@generalbusiness/artroom-bytes";
+import { definitionDigest } from "@generalbusiness/dap-bytes";
 import { counting } from "../../../apps/counter/definition.ts";
 import { COUNTING_DEFINITION } from "../../../apps/counter/pin.ts";
 import { devicePackageFixture } from "../../derive/test/fixtures-device-command.ts";

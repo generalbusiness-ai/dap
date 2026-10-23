@@ -1,8 +1,8 @@
 /** Bounded advisory navigation for the explicit partition cohort. These
  * reads locate indexes; they do not attest Native provenance or grant acts. */
-import { same } from "@generalbusiness/artroom-bytes";
+import { same } from "@generalbusiness/dap-bytes";
 import type { Head, Item, ItemQuery, ItemQueryRead, Read, ScopeId, ScopeRef, Summary } from "@generalbusiness/dap-contract";
-import { canonicalize, isScopeRef, itemQueryReadFor, utf8, within, LATE } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isScopeRef, itemQueryReadFor, utf8, within, LATE } from "@generalbusiness/dap-bytes";
 
 const ROOT = "platform:directory@10", PARTITION = "platform:directory-partition@1";
 /** Logical data calls and admitted decoded reply bytes. Session acquisition,

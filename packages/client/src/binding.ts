@@ -8,8 +8,8 @@
  */
 
 import type { ScopeApi } from "@generalbusiness/dap-contract";
-import { itemQueryReadFor, readItemQueryParameter, within, LATE } from "@generalbusiness/artroom-bytes";
-import { readApplicationProjectionQuery, readApplicationProjectionReplyText } from "@generalbusiness/artroom-bytes/application-v2";
+import { itemQueryReadFor, readItemQueryParameter, within, LATE } from "@generalbusiness/dap-bytes";
+import { readApplicationProjectionQuery, readApplicationProjectionReplyText } from "@generalbusiness/dap-bytes/application-v2";
 import { ANSWERS } from "./answers.ts";
 import { TransportError, type Transport } from "./handle.ts";
 

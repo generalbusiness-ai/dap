@@ -1,9 +1,9 @@
 /** Exact immutable-selection reads for a build or rebuild. No head read,
  * inventory, retention enumeration or detached-text fallback. Foreign copies
  * require their marked source/pin pairs to match the fixture configuration. */
-import { natural } from "@generalbusiness/artroom-bytes";
+import { natural } from "@generalbusiness/dap-bytes";
 import { RETAINED_INPUT_BYTES, type Digest, type FactRef, type PlatformDefinition } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isFactRef, isPlatformDefinition, isScopeRef, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isDigest, isFactRef, isPlatformDefinition, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
 import { checkedRetainedKey, type RetainedKey } from "@generalbusiness/dap-derive";
 import { ARCHIVE_BOUNDS, ArchiveBudget } from "./archive-budget.ts";
 import { ArchiveRetainedReader, type ArchiveRetainedCopy } from "./archive-retained.ts";

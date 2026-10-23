@@ -3,11 +3,11 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { RetainedInput } from "@generalbusiness/dap-contract";
-import { canonicalBytes, canonicalize, digestBytes, timeMs, timeOf } from "@generalbusiness/artroom-bytes";
+import { canonicalBytes, canonicalize, digestBytes, timeMs, timeOf } from "@generalbusiness/dap-bytes";
 import { validateDefinition } from "@generalbusiness/dap-derive";
 import { valid } from "@generalbusiness/dap-derive/testing";
 import { lateDefinition } from "../../derive/test/fixtures-late.ts";
-import { MemorySource, verify } from "@generalbusiness/artroom-replay";
+import { MemorySource, verify } from "@generalbusiness/dap-replay";
 import { creation, Node, net, rita, settle } from "./net.ts";
 
 test("native late branches preserve strict boundaries, refusal authentication, exact repeats, clock-behind and replay", async () => {

@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { DOMAINS } from "@generalbusiness/dap-contract";
-import { domainBytes, keyIdOfSecret, newIncarnation, scopeIdOf, sign, textDigest } from "@generalbusiness/artroom-bytes";
+import { domainBytes, keyIdOfSecret, newIncarnation, scopeIdOf, sign, textDigest } from "@generalbusiness/dap-bytes";
 import { COUNTING_COMMITMENTS_DEFINITION as COUNTING_DEFINITION } from "../commitments-pin.ts";
 import { createVoiceController, type ActorIdentity, type Completion, type CustodyLock, type PendingReport,
   type AudioStart, type PreparedEnvelope, type ReportOutcome, type SpeechPort, type TurnToken } from "./voice-controller.ts";

@@ -8,8 +8,8 @@
  */
 
 import type { FactRef, ScopeId, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, editPath, factRefName, factText, hex, sha1, sha256, timeMs, utf8 } from "@generalbusiness/artroom-bytes";
-export { EDIT_PATH_BYTES, editPath } from "@generalbusiness/artroom-bytes";
+import { canonicalize, editPath, factRefName, factText, hex, sha1, sha256, timeMs, utf8 } from "@generalbusiness/dap-bytes";
+export { EDIT_PATH_BYTES, editPath } from "@generalbusiness/dap-bytes";
 
 export type ObjectFormat = "sha1" | "sha256";
 export interface DestinationObject { kind: "blob" | "tree" | "commit"; body: Uint8Array; id: string }

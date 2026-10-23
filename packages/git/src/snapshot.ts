@@ -33,7 +33,7 @@
  * lane's ledger, which no step opens yet.
  */
 
-import { wellFormed } from "@generalbusiness/artroom-bytes";
+import { wellFormed } from "@generalbusiness/dap-bytes";
 import { GitRefusal, objectId, type ObjectId } from "./names.ts";
 import { idOf, type Reader } from "./reader.ts";
 

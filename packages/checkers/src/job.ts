@@ -34,8 +34,8 @@
  */
 
 import type { ReservationSnapshot, Digest, Effect, FactRef, PlatformDefinition, ScopeRef, Sealed, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, utf8, entryHash, isDigest, isEntry, isFactRef, isLocalId, isScopeRef, timeMs, verifySignedIntent } from "@generalbusiness/artroom-bytes";
-import { idOf, READ_BOUNDS, parseCommit, isObjectId, type ObjectId } from "@generalbusiness/artroom-git";
+import { canonicalize, digestBytes, utf8, entryHash, isDigest, isEntry, isFactRef, isLocalId, isScopeRef, timeMs, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { idOf, READ_BOUNDS, parseCommit, isObjectId, type ObjectId } from "@generalbusiness/dap-git";
 
 /** The name that the rules scope holds an activated `change` definition under (section 3.11: "a `change` definition"). */
 export const CHANGE = "change";

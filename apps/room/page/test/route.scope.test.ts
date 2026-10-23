@@ -1,7 +1,7 @@
 import { env } from "cloudflare:test";
 import { expect, test } from "vitest";
 import worker, { type Env } from "../../worker.ts";
-import frameworkWorker from "@generalbusiness/artroom-scope/worker";
+import frameworkWorker from "@generalbusiness/dap-scope/worker";
 import { PAGE_HTML, PAGE_JS } from "../assets.ts";
 
 // Invariant: the deployed Worker's one entry serves the room's page at `/page/`, its HTML and its one script, from the module that

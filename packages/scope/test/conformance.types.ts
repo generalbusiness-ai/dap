@@ -8,7 +8,7 @@
 
 import type { WorkerEntrypoint } from "cloudflare:workers";
 import type { ScopeApi } from "@generalbusiness/dap-contract";
-import type { ServiceBinding, Transport } from "@generalbusiness/artroom-client";
+import type { ServiceBinding, Transport } from "@generalbusiness/dap-client";
 import type { ScopeService } from "../src/worker.ts";
 
 type Same<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;

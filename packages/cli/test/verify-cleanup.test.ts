@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { FactRef, Item, Read, Summary } from "@generalbusiness/dap-contract";
-import { newIncarnation, textDigest } from "@generalbusiness/artroom-bytes";
+import { newIncarnation, textDigest } from "@generalbusiness/dap-bytes";
 import { observeCleanup } from "../src/verify-cleanup.ts";
 
 const at: FactRef["at"] = { scope: `sc_${"a".repeat(52)}`, kind: "destination", inc: newIncarnation(new Uint8Array(16).fill(1)) };

@@ -2,11 +2,11 @@
  * fixture stand-ins. No real credential is minted and no network is used. */
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type ScopeRef } from "@generalbusiness/dap-contract";
-import { isScopeRef, timeOf, utf8 } from "@generalbusiness/artroom-bytes";
-import { GitRefusal, snapshotCommit } from "@generalbusiness/artroom-git";
-import { buildPack } from "@generalbusiness/artroom-git/http";
-import { SmartHttpSource } from "@generalbusiness/artroom-git/http-read";
-import { journalRef, type JournalPassArchive } from "@generalbusiness/artroom-git/journal";
+import { isScopeRef, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { GitRefusal, snapshotCommit } from "@generalbusiness/dap-git";
+import { buildPack } from "@generalbusiness/dap-git/http";
+import { SmartHttpSource } from "@generalbusiness/dap-git/http-read";
+import { journalRef, type JournalPassArchive } from "@generalbusiness/dap-git/journal";
 import { GitHubProvider } from "../src/github-host.ts";
 import { ArtifactsProvider } from "../src/artifacts-host.ts";
 import type { FixtureArchivePorts } from "../src/archive-host.ts";

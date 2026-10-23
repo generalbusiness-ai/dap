@@ -8,7 +8,7 @@
 
 import type { JournalFloor } from "@generalbusiness/dap-contract";
 import type { CapabilityName, Digest, FactRef, FieldValue, Head, Held, Incarnation, Item, KeyId, OperationId, Party, PlatformDefinition, Request, ScopeId, ScopeKind, ScopeRef, Seed, Status, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalBytes, canonicalize, digestBytes } from "@generalbusiness/artroom-bytes";
+import { canonicalBytes, canonicalize, digestBytes } from "@generalbusiness/dap-bytes";
 import { pendingOf } from "./ledger.ts";
 import { byteOrder } from "./values.ts";
 import type { ItemDuty } from "./item-duties.ts";

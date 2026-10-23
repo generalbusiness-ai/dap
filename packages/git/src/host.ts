@@ -63,7 +63,7 @@
  * this file cannot read, is no answer: the attempt is `unknown`.
  */
 
-import { isFactRef, timeMs } from "@generalbusiness/artroom-bytes";
+import { isFactRef, timeMs } from "@generalbusiness/dap-bytes";
 import type { DecisiveEvidence, Digest, Effect, Entry, FactRef, OperationId, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
 
 /** The owner and the two kinds of operation that this driver sends: the names that the code of `hold@1` states (`derive/src/capability/hold.ts`, `HOLD_KINDS`). */

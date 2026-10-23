@@ -2,7 +2,7 @@ import { env } from "cloudflare:workers";
 import { SELF } from "cloudflare:test";
 import { expect, test } from "vitest";
 import type { Answer, Intent } from "@generalbusiness/dap-contract";
-import { signIntent } from "@generalbusiness/artroom-bytes";
+import { signIntent } from "@generalbusiness/dap-bytes";
 import { grantOf } from "@generalbusiness/dap-derive/testing";
 import type { Created } from "../src/index.ts";
 import { route, type Api } from "../src/worker.ts";

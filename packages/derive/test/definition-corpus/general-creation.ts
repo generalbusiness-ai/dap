@@ -1,7 +1,7 @@
 /** Positive definitions from creation, standing, timed and source-order tests.
  * Raw constructors only: no validator, key, ledger or history runs on import. */
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { definitionDigest } from "@generalbusiness/artroom-bytes";
+import { definitionDigest } from "@generalbusiness/dap-bytes";
 import { PROFILES } from "../../src/index.ts";
 import type { DefinitionCorpusRow } from "./row.ts";
 import { standingData } from "../fixtures-standing.ts";

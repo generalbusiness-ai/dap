@@ -5,7 +5,7 @@
  */
 
 import type { Advisory, CapabilityName, Control, Digest, Effect, Entry, FactRef, FactUse, Message, ObservationUse, PlatformDefinition, Prepared, Reason, Request, Result, RoutingRefusal, ScopeRef, Seed, Send } from "@generalbusiness/dap-contract";
-import { deliveryCauseDigest, messageDigest, scopeIdOf, seedDigest } from "@generalbusiness/artroom-bytes";
+import { deliveryCauseDigest, messageDigest, scopeIdOf, seedDigest } from "@generalbusiness/dap-bytes";
 import { declaredBy, type Recorded } from "./capability.ts";
 import { isEntryOf, updateOf, useOf, type Reading } from "./fields.ts";
 import { bound, runClause, runHandler, type Clause, type Handled, type Sent } from "./handlers.ts";

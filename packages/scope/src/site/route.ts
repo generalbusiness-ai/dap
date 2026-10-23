@@ -44,8 +44,8 @@
  * nothing of the repository. No session is read: every site is public to
  * whoever has the room's directory scope ID.
  */
-import { GitRefusal, READ_BOUNDS, Reader, type ObjectId, type TreeEntry } from "@generalbusiness/artroom-git";
-import { canonicalize } from "@generalbusiness/artroom-bytes";
+import { GitRefusal, READ_BOUNDS, Reader, type ObjectId, type TreeEntry } from "@generalbusiness/dap-git";
+import { canonicalize } from "@generalbusiness/dap-bytes";
 import { credentialInUrl } from "../sessions.ts";
 import { StepError, publicationOf, publishedCommitOf, readerOf, roomOf, type Opened, type SiteEnv, type SiteStep } from "./host.ts";
 import { renderMarkdown, titleOf } from "./markdown.ts";

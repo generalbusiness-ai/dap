@@ -2,7 +2,7 @@ import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import type { ScopeRef } from "@generalbusiness/dap-contract";
-import { intentDigest, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/artroom-bytes";
+import { intentDigest, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import { readNativeBirth, type NativeBirth } from "../src/native-birth.ts";
 import { namespace } from "../src/namespace.ts";
 import { controls } from "../src/testing.ts";

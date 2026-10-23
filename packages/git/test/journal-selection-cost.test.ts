@@ -1,7 +1,7 @@
 /** Mechanical descriptive metadata only. No native inventory, retained
  * consumer truth, privacy, judgment, confirmation or export is claimed. */
 import { expect, test } from "vitest";
-import { canonicalize, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, utf8 } from "@generalbusiness/dap-bytes";
 import { ArchiveBudget, type ArchiveCost } from "../../scope/src/archive-budget.ts";
 import { journalKeyName, journalOrdered, journalPassSelection } from "../src/journal-selection.ts";
 import { forecastJournalSelection, journalOrderingInputWork, JOURNAL_SELECTION_BYTES } from "../src/journal-selection-cost.ts";

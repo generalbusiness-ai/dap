@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Entry, Evidence, OperationId } from "@generalbusiness/dap-contract";
-import { entryHash } from "@generalbusiness/artroom-bytes";
+import { entryHash } from "@generalbusiness/dap-bytes";
 import { AmountError, FoldError, applyEntry, capabilitiesOf, checkpointOf, clockOf, gitRead, holdCapability, ownerReservations, operationId, operationOpening, operationStanding, owed, reserved as reservedAmount, settleOutcome, tokenPast, validateDefinition } from "../src/index.ts";
 import type { Opening, OperationRules, Owners } from "../src/index.ts";
 import { ledgerDefinitionData } from "./definition-corpus/ledger-data.ts";

@@ -4,7 +4,7 @@ import { floorSizeProofsData as data } from "../../derive/test/definition-corpus
  * This tests the cold decision-binding consumer, not a real platform rule. */
 import { expect, onTestFinished, test } from "vitest";
 import { PROPOSED_BOUNDS, type Beside, type Created, type Entry, type PlatformDefinition, type Seed, type SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalize, factRefOf, intentDigest, scopeIdOf, signIntent, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, factRefOf, intentDigest, scopeIdOf, signIntent, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { MemoryState, clockOf, decisionBinding, isUnprovenDecisionBinding, validateDefinition, type Delivered, type Rules, type StateSnapshot } from "@generalbusiness/dap-derive";
 import { forged, otherLane, valid } from "@generalbusiness/dap-derive/testing";
 import { Scope, ownOf, retainedFacts } from "../src/core.ts";

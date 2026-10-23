@@ -1,7 +1,7 @@
 /** Exact cohort selection for private invitation handoff and public redemption. */
 import { INVITATION_KEY_MEMBERSHIPS } from "@generalbusiness/dap-contract";
 import type { FieldValue, KeyId, ScopeRef } from "@generalbusiness/dap-contract";
-import { b64url, isRecord, isSignature, keyIdOfSecret, signInvitationProof, textDigest, unb64url } from "@generalbusiness/artroom-bytes";
+import { b64url, isRecord, isSignature, keyIdOfSecret, signInvitationProof, textDigest, unb64url } from "@generalbusiness/dap-bytes";
 
 export { INVITATION_KEY_MEMBERSHIP, INVITATION_KEY_MEMBERSHIPS } from "@generalbusiness/dap-contract";
 const LEGACY = ["platform:membership@1", "platform:membership@2", "platform:membership@4", "platform:membership@5"] as const;

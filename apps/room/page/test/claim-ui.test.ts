@@ -45,7 +45,7 @@ test("only an eligible configured founder sees creation; an in-flight or stale c
   let finish!: (value: unknown) => void;
   let attempted = gate();
   const claim = vi.fn((..._args: unknown[]) => { attempted.resolve(); return new Promise((resolve) => { finish = resolve; }); });
-  vi.doMock("@generalbusiness/artroom-bytes", async () => ({ ...await vi.importActual<typeof import("@generalbusiness/artroom-bytes")>("@generalbusiness/artroom-bytes"), b64url: () => "device", unb64url: () => new Uint8Array(32), isScopeRef: (value: unknown) => !!value && typeof value === "object" && "kind" in value, keyIdOfSecret: () => "key", isKeyId: () => true }));
+  vi.doMock("@generalbusiness/dap-bytes", async () => ({ ...await vi.importActual<typeof import("@generalbusiness/dap-bytes")>("@generalbusiness/dap-bytes"), b64url: () => "device", unb64url: () => new Uint8Array(32), isScopeRef: (value: unknown) => !!value && typeof value === "object" && "kind" in value, keyIdOfSecret: () => "key", isKeyId: () => true }));
   vi.doMock("../src/claim.ts", () => ({ allowedClaim: async () => { if (!eligible) throw new Error("Not founder"); return { register, definition: "platform:register@2" }; }, claimRoom: claim, claimStatus: () => journal }));
   vi.doMock("../src/data.ts", () => ({
     sessionKey: () => "key", initializationStillCurrent: async () => true, roomInitialization: async () => ({ state: "configured" }), openRoom: async () => ({ session: { service: "https://page.test", secret: new Uint8Array(32) }, ...settings.place, key: "key", rules: "rules", destination: "destination", name: "Recorded repository", me: { handle: "@founder", role: "admin", actions: [], ref: { membership: settings.place.membership, member: "@founder" } }, definitions: new Map(), reader: null, unsessioned: null }),
@@ -144,5 +144,5 @@ test("only an eligible configured founder sees creation; an in-flight or stale c
     expect(root.find((element) => element.tag === "button" && element.textContent === "Create room")).toBeUndefined();
     eligible = true; locked = false; rendered = gate(); redraw(); await rendered.promise;
     expect(root.find((element) => element.tag === "button" && element.textContent === "Create room")).toBeUndefined();
-  } finally { vi.unstubAllGlobals(); for (const path of ["../src/claim.ts", "../src/data.ts", "../src/view.ts", "../src/browser-key-store.ts", "../src/page-key-migration.ts", "@generalbusiness/artroom-bytes"]) vi.doUnmock(path); }
+  } finally { vi.unstubAllGlobals(); for (const path of ["../src/claim.ts", "../src/data.ts", "../src/view.ts", "../src/browser-key-store.ts", "../src/page-key-migration.ts", "@generalbusiness/dap-bytes"]) vi.doUnmock(path); }
 });

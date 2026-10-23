@@ -1,4 +1,4 @@
-import { emptyPackageComposition } from "@generalbusiness/artroom-package-graph";
+import { emptyPackageComposition } from "@generalbusiness/dap-package-graph";
 import { expect, test } from "vitest";
 import type { DeclaredDefinition } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, definitionDigest, digestBytes, keyIdOfSecret, sign, utf8 } from "../src/index.ts";

@@ -4,7 +4,7 @@
 import { expect, test } from "vitest";
 import { runInDurableObject } from "cloudflare:test";
 import { PROPOSED_BOUNDS, type PlatformDefinition } from "@generalbusiness/dap-contract";
-import { canonicalize, parseStrict } from "@generalbusiness/artroom-bytes";
+import { canonicalize, parseStrict } from "@generalbusiness/dap-bytes";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT as C, VERSIONS, platform } from "@generalbusiness/dap-platform";
 import { outcomeValueDomains, ownersOf, validateDefinition, type OperationRules } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";

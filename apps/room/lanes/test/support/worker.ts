@@ -8,4 +8,4 @@
  * namespace. Nothing is deployed from this file.
  */
 
-export { NetScope, NetService, PlatformScope, ScopeIndex, default } from "@generalbusiness/artroom-scope/testing/worker";
+export { NetScope, NetService, PlatformScope, ScopeIndex, default } from "@generalbusiness/dap-scope/testing/worker";

@@ -1,7 +1,7 @@
 import { capacityLargeText, capacityLargeTextAgain, capacityWhole, capacityTwoSpans } from "../../derive/test/definition-corpus/replay-mutations-data.ts";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, entryHash, signIntent, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, digestBytes, entryHash, signIntent, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { created, keys, notesDefinition, on, variant } from "@generalbusiness/dap-derive/testing";
 import { MemorySource, render, verify } from "../src/index.ts";
 import { served } from "./world.ts";

@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
-import { utf8 } from "@generalbusiness/artroom-bytes";
-import { idOf } from "@generalbusiness/artroom-git";
-import { decodePack, type DecodedObject } from "@generalbusiness/artroom-git/http-read";
+import { utf8 } from "@generalbusiness/dap-bytes";
+import { idOf } from "@generalbusiness/dap-git";
+import { decodePack, type DecodedObject } from "@generalbusiness/dap-git/http-read";
 import { Hub, MAX_BYTES, OwnGit } from "./hosts.ts";
 
 // Fixture mechanism only: the real pack builder/decoder over OwnGit's mutable

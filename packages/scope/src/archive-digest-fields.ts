@@ -1,7 +1,7 @@
 /** Bounded scalar references for cost planning. Trusted typed selectors
  * supply paths; this neither discovers consumers nor admits payloads. */
 import { RETAINED_INPUT_BYTES, type Digest } from "@generalbusiness/dap-contract";
-import { isDigest, natural } from "@generalbusiness/artroom-bytes";
+import { isDigest, natural } from "@generalbusiness/dap-bytes";
 import type { ArchiveBudget } from "./archive-budget.ts";
 import { stopArchivePrefix as stop, type ArchivePosition } from "./archive-prefix.ts";
 import type { Sql } from "./sqlite.ts";

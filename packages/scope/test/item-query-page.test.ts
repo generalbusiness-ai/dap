@@ -1,8 +1,8 @@
 import { expect, test } from "vitest";
 import { ITEM_QUERY_BOUNDS as B } from "@generalbusiness/dap-contract";
 import type { Item, ItemQuery } from "@generalbusiness/dap-contract";
-import { canonicalize, encodeItemQueryParameter, itemQueryArgument, itemQueryDigest, utf8 } from "@generalbusiness/artroom-bytes";
-import { secretSigner, signedReader } from "@generalbusiness/artroom-client";
+import { canonicalize, encodeItemQueryParameter, itemQueryArgument, itemQueryDigest, utf8 } from "@generalbusiness/dap-bytes";
+import { secretSigner, signedReader } from "@generalbusiness/dap-client";
 import type { NativeItemQuery } from "../src/item-queries.ts";
 import { Scope } from "../src/core.ts";
 import { itemQueryPage } from "../src/item-query-page.ts";

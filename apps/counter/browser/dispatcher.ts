@@ -1,7 +1,7 @@
 /** Counting fixes its supported act list; the shared client owns the strict
  * first-dispatch protocol. No caller-supplied ticket or knowledge flag. */
-import { requestAttemptDispatcher, type RequestJournalRecord, type RequestJournalStore } from "@generalbusiness/artroom-client";
-import type { ByteStream } from "@generalbusiness/artroom-bytes";
+import { requestAttemptDispatcher, type RequestJournalRecord, type RequestJournalStore } from "@generalbusiness/dap-client";
+import type { ByteStream } from "@generalbusiness/dap-bytes";
 import type { Receipt } from "@generalbusiness/dap-contract";
 import { countingCommitments as counting } from "../commitments.ts";
 import type { ActorIdentity, PreparedEnvelope, ReportOutcome } from "./voice-controller.ts";

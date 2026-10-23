@@ -3,7 +3,7 @@
 import { expect, test } from "vitest";
 import type { Archived, Head, LogPage, Read, ScopeRef } from "@generalbusiness/dap-contract";
 import { DOMAINS } from "@generalbusiness/dap-contract";
-import { digestBytes, utf8 } from "@generalbusiness/artroom-bytes";
+import { digestBytes, utf8 } from "@generalbusiness/dap-bytes";
 import { ANSWERS } from "../src/answers.ts";
 import { ScopeHandle, bindingTransport, journalTail, type JournalClone, type ServiceBinding } from "../src/index.ts";
 

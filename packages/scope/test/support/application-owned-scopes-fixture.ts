@@ -1,10 +1,10 @@
 import { scopeOwnedGrant as grant, ownedScopeDefinition as definition } from "../definition-corpus-data.ts";
-import { emptyPackageComposition } from "@generalbusiness/artroom-package-graph";
+import { emptyPackageComposition } from "@generalbusiness/dap-package-graph";
 /** Public TEST package. Root genesis creates its child through the existing
  * native create form; no handmade genesis, identity or grant stands behind it. */
 import type { Digest } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest } from "@generalbusiness/artroom-bytes";
-import { packApplication2, readApplicationProjection } from "@generalbusiness/artroom-bytes/application-v2";
+import { canonicalize, definitionDigest } from "@generalbusiness/dap-bytes";
+import { packApplication2, readApplicationProjection } from "@generalbusiness/dap-bytes/application-v2";
 import { fixedSigner } from "../fixtures-core.ts";
 
 

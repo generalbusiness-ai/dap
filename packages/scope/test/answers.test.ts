@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { canonicalBytes, canonicalize, digestBytes, intentDigest, signIntent } from "@generalbusiness/artroom-bytes";
+import { canonicalBytes, canonicalize, digestBytes, intentDigest, signIntent } from "@generalbusiness/dap-bytes";
 import { Scope, grantOf, laneDefinition } from "@generalbusiness/dap-derive/testing";
 import { at, definition, create, rita, una } from "./fixtures-native.ts";
 

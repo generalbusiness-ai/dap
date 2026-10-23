@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { Entry, OperationId } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, entryHash, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, digestBytes, entryHash, utf8 } from "@generalbusiness/dap-bytes";
 import { ProofBytes, PROOF_BYTE_BOUNDS as B } from "../src/proof-bytes.ts";
 import { SqliteStore, type Sql } from "../src/sqlite.ts";
 import { at, create, rita } from "./fixtures-native.ts";

@@ -5,7 +5,7 @@
 import { expect, test } from "vitest";
 import { runInDurableObject } from "cloudflare:test";
 import type { Entry, FloorInput } from "@generalbusiness/dap-contract";
-import { timeMs, timeOf } from "@generalbusiness/artroom-bytes";
+import { timeMs, timeOf } from "@generalbusiness/dap-bytes";
 import { isEntryOf } from "@generalbusiness/dap-derive";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { Scope, type Checkpointed } from "../src/core.ts";

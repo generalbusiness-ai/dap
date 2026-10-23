@@ -20,7 +20,7 @@ import { archivedPosition } from "@generalbusiness/dap-derive";
  */
 
 import type { Archived, Digest, Entry, FactRef, ObservationRequest, ObservedScope, RoutingRefusal, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, textDigest, isDigest, isFactRef, isKeyId, isMemberId, isPlatformDefinition, isScopeId, parseStrict, scopeIdOf, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, definitionDigest, textDigest, isDigest, isFactRef, isKeyId, isMemberId, isPlatformDefinition, isScopeId, parseStrict, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { isEntryOf, isObject, isScopeRef, type Delivered, type Fetched, type ScopeState } from "@generalbusiness/dap-derive";
 import { INSTALL_DEFINITION_BYTES, isOf, platform, sourceName } from "@generalbusiness/dap-platform";
 import type { Membership } from "./authority.ts";

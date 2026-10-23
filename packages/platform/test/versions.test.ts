@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { DeclaredDefinition, PlatformDefinition, Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, parseStrict } from "@generalbusiness/artroom-bytes";
+import { canonicalize, definitionDigest, parseStrict } from "@generalbusiness/dap-bytes";
 import type { PlatformRule, RuleGiven } from "@generalbusiness/dap-derive";
 import { d } from "@generalbusiness/dap-derive/testing";
 import { TRUSTED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, INVITATION_KEY_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, PARTITION_COHORT, COUNTING_COHORT, DEMO_REGISTER, FIRST_ACTIONS_OF, NEWEST, ROLE_LISTS, ROLE_TABLE_OF, VERSIONS, WEB_DEMO_COHORT, WEB_DEMO_REGISTER, directorySeed, platform, versionOf, type Role, nativeDeclarationText, DEVICE_APPLICATION_COHORT } from "../src/index.ts";

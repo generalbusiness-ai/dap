@@ -3,8 +3,8 @@
  * a declared projection, or historical complete record; nothing here signs or sends.
  */
 import type { ApplicationProjectionData, Entry, FactRef, FieldValue, Item, KeyId, MemberRef, Summary } from "@generalbusiness/dap-contract";
-import { applicationItemSnapshot } from "@generalbusiness/artroom-client";
-import { canonicalize, isMemberRef } from "@generalbusiness/artroom-bytes";
+import { applicationItemSnapshot } from "@generalbusiness/dap-client";
+import { canonicalize, isMemberRef } from "@generalbusiness/dap-bytes";
 import { ROLE_LISTS, isActions, type Role } from "@generalbusiness/dap-platform/membership-actions";
 import { shelfPage, shelfPath, thingsOf, type RecordPointer, type Thing } from "../shelf.ts";
 import { lendingStateProjection } from "./projection.ts";

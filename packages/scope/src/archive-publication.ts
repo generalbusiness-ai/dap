@@ -1,7 +1,7 @@
 /** Pending publication bytes are descriptive metadata, not admission proof.
  * Rebuild checks the actual collected list before reproducing its commit. */
-import { canonicalize, isScopeRef, parseStrict, same, utf8 } from "@generalbusiness/artroom-bytes";
-import { JOURNAL_SELECTION_BYTES, JournalWork, journalAnchorPublication, journalPublicationUnits, type JournalAnchorPublication } from "@generalbusiness/artroom-git/journal";
+import { canonicalize, isScopeRef, parseStrict, same, utf8 } from "@generalbusiness/dap-bytes";
+import { JOURNAL_SELECTION_BYTES, JournalWork, journalAnchorPublication, journalPublicationUnits, type JournalAnchorPublication } from "@generalbusiness/dap-git/journal";
 import type { ArchiveBudget } from "./archive-budget.ts";
 import type { ScopeRef } from "@generalbusiness/dap-contract";
 

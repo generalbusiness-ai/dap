@@ -20,7 +20,7 @@ import { weighingDeclaration } from "../../derive/test/definition-corpus/replay-
 
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Digest, Entry, FactUse, Input, KeyId, MemberId, ObservationUse, OperationId, PlatformDefinition, RetainedInput, Seed, Send } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, digestBytes, factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
 import { clockOf, grantFrom, judgeDelivery, judgeGenesis, settleOutcome, valueDigest, type Fetched, type Observing, type RuleGiven } from "@generalbusiness/dap-derive";
 import { Ledger, T0, arriving, forged, keys, membership, otherLane, t, type Actor, type Context } from "@generalbusiness/dap-derive/testing";
 import { EXTENTS, RULEBOOK, WEIGHER, holdersSeen, keySeen, memberSeen, rulebook, rulesSeen, signers, stating, weigherRules, weigherWith } from "../../derive/test/fixtures-observes.ts";

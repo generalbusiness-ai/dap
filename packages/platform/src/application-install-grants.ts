@@ -3,7 +3,7 @@
  * No caller key, application name, or bare scope id substitutes for a pinned
  * sibling reference. Existing cohorts retain their previous definitions. */
 import type { FieldValue, PlatformData, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isRecord, isScopeRef } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isDigest, isRecord, isScopeRef } from "@generalbusiness/dap-bytes";
 import type { RuleGiven, RuleRequest, Rules } from "@generalbusiness/dap-derive";
 import { directory8, directoryRules8 } from "./application.ts";
 import { membership6, membershipRules6 } from "./invitation-key.ts";

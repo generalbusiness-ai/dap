@@ -2,7 +2,7 @@ import { reservedOrderData, reservedArrivalData } from "./definition-corpus/gene
 /** Native capability/judge/fold over MemoryState. Task source entries and
  * per-key grants are scripted fixture inputs, not object/provider authority. */
 import { expect, test } from "vitest";
-import { factRefOf } from "@generalbusiness/artroom-bytes";
+import { factRefOf } from "@generalbusiness/dap-bytes";
 import { capacityFull, holdCapability, judgeDelivery, ownerReservations, validateDefinition } from "../src/index.ts";
 import { arriving, created, forged, keys, valid, PIN_BOUNDS } from "./fixtures-entry.ts";
 

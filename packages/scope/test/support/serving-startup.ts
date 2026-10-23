@@ -7,7 +7,7 @@ import type { nativeFixtureLifetime } from "./native-fixture-lifetime.ts";
 import type { ServingDecision, ServingRequest } from "../../src/serving-admission.ts";
 import { boundedParentlessIntent } from "../../src/serving-admission.ts";
 import { signedReadForLimits } from "../../src/signed-reads.ts";
-import { verifySignedIntent } from "@generalbusiness/artroom-bytes";
+import { verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { ScopeIndex, type Env } from "../../src/worker.ts";
 import type { Binding } from "../../src/namespace.ts";
 import { addressKey } from "../../src/limits.ts";

@@ -1,6 +1,6 @@
 /** Original object-copy and send preparation prices. No object bytes,
  * provider read, append validation, credentials or admission are supplied. */
-import { natural } from "@generalbusiness/artroom-bytes";
+import { natural } from "@generalbusiness/dap-bytes";
 import { ArchiveStopped, type ArchiveCost } from "./archive-budget.ts";
 
 export const ARCHIVE_TRANSFER_OBJECTS = 8192;

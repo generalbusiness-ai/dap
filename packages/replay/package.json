@@ -1,5 +1,5 @@
 {
-  "name": "@generalbusiness/artroom-replay",
+  "name": "@generalbusiness/dap-replay",
   "version": "0.1.0-dev.1",
   "description": "Artroom's independent replay: integrity checks and full replay of a scope's history and of the scopes it used, the report of the result, and one command that prints it. It runs none of the runtime's code.",
   "license": "Apache-2.0",
@@ -17,13 +17,13 @@
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
-    "@generalbusiness/artroom-bytes": "0.1.0-dev.1",
+    "@generalbusiness/dap-bytes": "0.1.0-dev.1",
     "@generalbusiness/dap-contract": "0.1.0-dev.1",
     "@generalbusiness/dap-derive": "0.1.0-dev.1",
     "@generalbusiness/dap-platform": "0.1.0-dev.1"
   },
   "devDependencies": {
-    "@generalbusiness/artroom-git": "0.1.0-dev.1",
+    "@generalbusiness/dap-git": "0.1.0-dev.1",
     "@types/node": "26.6.3",
     "vitest": "4.1.12"
   },

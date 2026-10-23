@@ -3,9 +3,9 @@
  * These reads do not start dispatchers, operations, sessions or provider calls.
  */
 import type { Head, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, isScopeRef } from "@generalbusiness/artroom-bytes";
+import { canonicalize, entryHash, isScopeRef } from "@generalbusiness/dap-bytes";
 import { isOf, destinationReceipt, initialCommitOf } from "@generalbusiness/dap-platform";
-import { isObjectId, refName } from "@generalbusiness/artroom-git";
+import { isObjectId, refName } from "@generalbusiness/dap-git";
 import type { DestinationRepository } from "../destination-host.ts";
 
 export interface Publication {

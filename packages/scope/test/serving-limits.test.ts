@@ -1,7 +1,7 @@
 /** The counter boundary only. These tests do not prove signature admission,
  * a Worker route, native authority, or actual Durable Object eviction. */
 import { expect, test } from "vitest";
-import { keyIdOf } from "@generalbusiness/artroom-bytes";
+import { keyIdOf } from "@generalbusiness/dap-bytes";
 import { DEFAULT_SERVING_LIMITS, ServingLimits, servingLimitConfig } from "../src/serving-limits.ts";
 
 const actor = (n: number) => keyIdOf(new Uint8Array(32).fill(n));

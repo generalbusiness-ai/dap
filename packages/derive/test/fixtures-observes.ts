@@ -21,7 +21,7 @@
 
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Digest, Entry, KeyId, MemberId, ObservationUse, PlatformDefinition, RulesContent, ScopeRef, Seed } from "@generalbusiness/dap-contract";
-import { newIncarnation, scopeIdOf } from "@generalbusiness/artroom-bytes";
+import { newIncarnation, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { PROFILES, validateDefinition, type ContentStates, type FirstStep, type OutcomeRule, type PlatformRules, type RuleEffect, type RuleGiven, type Rules, type ValidDefinition } from "../src/index.ts";
 import { T0, changedDraft, d, membership, valid } from "./fixtures.ts";
 

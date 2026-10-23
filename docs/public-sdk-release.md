@@ -36,20 +36,17 @@ The six published SDK packages, in build order, are
 `@generalbusiness/dap-platform`, and `@generalbusiness/dap-replay`, all at
 `0.1.0-dev.2`.
 
-The command is `dap`. `artroom` remains an alias. The contract, derive,
-lanes, page, platform, and cli workspaces use `@generalbusiness/dap-*`
-names. Inside this repository, scope, git, checkers, bytes, client, and
-replay still use `@generalbusiness/artroom-*` workspace names, with public
-SDK names mapped at publication. The `artroom-replay` command,
-`ARTROOM_HOME`, `refs/artroom/`, and Worker names are unchanged.
+The command is `dap`. `artroom` remains an alias. All workspace package names
+use `@generalbusiness/dap-*`, including bytes, client and replay. Their six
+published SDK names are unchanged. The `artroom-replay` command,
+`ARTROOM_HOME`, `refs/artroom/`, protocol names and Worker names are unchanged.
 
-The producer keeps an exact original
-copy of each tracked SDK input, then changes only genuine module literals
-in its separate compiler inputs to the distribution names. Ordinary strings,
-protocol names, package directories and source workspace versions remain
-unchanged. Staged manifests use the six distribution names and coordinated
-dependencies at the selected version, plus the dap repository and homepage.
-The checker verifies both the original copies and the exact module rewrites.
+The producer keeps exact original and compiler-input copies of each tracked
+SDK input. Package names need no publication mapping. Staged manifests use
+the same six names and coordinated dependencies at the selected version,
+plus the dap repository and homepage. The checker verifies both copies
+against the original bytes. The existing export and dependency allow-list
+is unchanged; the rename does not establish fresh producer or consumer acceptance.
 
 The producer copies tracked inputs to an owned external build root and
 verifies their bytes. Every package compiles from its actual copied source

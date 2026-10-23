@@ -1,7 +1,7 @@
 /** Node-only local archive plumbing. No shell, checkout, remote operation,
  * inherited credential environment, or command derived from tree paths. */
 import { execFile } from "node:child_process";
-import { utf8 } from "@generalbusiness/artroom-bytes";
+import { utf8 } from "@generalbusiness/dap-bytes";
 import { GitRefusal } from "./names.ts";
 import { journalFormat, journalId, type JournalFormat } from "./journal-objects.ts";
 import { scopeOfJournalRef } from "./journal-path.ts";

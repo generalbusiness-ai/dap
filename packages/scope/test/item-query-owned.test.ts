@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import type { ItemQuery } from "@generalbusiness/dap-contract";
-import { canonicalize, encodeItemQueryParameter, itemQueryArgument, utf8 } from "@generalbusiness/artroom-bytes";
-import { secretSigner, signedReader } from "@generalbusiness/artroom-client";
+import { canonicalize, encodeItemQueryParameter, itemQueryArgument, utf8 } from "@generalbusiness/dap-bytes";
+import { secretSigner, signedReader } from "@generalbusiness/dap-client";
 import { ItemQueryBudget, type ItemQueryPhase, type ItemQueryCost } from "../src/item-query-budget.ts";
 import type { NativeItemQuery } from "../src/item-queries.ts";
 import { runInDurableObject } from "cloudflare:test";

@@ -3,7 +3,7 @@
  * explicit fixtures; no runtime storage, Git provider or replay verifier runs. */
 import type { PlatformDefinition, Seed } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { intentDigest, isSeed, newIncarnation, scopeIdOf } from "@generalbusiness/artroom-bytes";
+import { intentDigest, isSeed, newIncarnation, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { clockOf, judgeDelivery, judgeGenesis, judgeOutcome, validateDefinition, type Judgment } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { Ledger, T0, arriving, creation, keys, sent } from "@generalbusiness/dap-derive/testing";

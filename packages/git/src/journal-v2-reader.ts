@@ -1,7 +1,7 @@
 /** Complete v2 clone validation. Every pass retains its own S2b basis.
  * No service fallback, native admission or replay judgment is supplied. */
 import { DOMAINS, type Digest, type FactRef, type RetainedInput, type ScopeId } from "@generalbusiness/dap-contract";
-import { canonicalize, domainRetainedJSON, entryHash, isEntry, parseStrict, rawRetainedJSON, scopeIdOf, timeMs, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, domainRetainedJSON, entryHash, isEntry, parseStrict, rawRetainedJSON, scopeIdOf, timeMs, utf8 } from "@generalbusiness/dap-bytes";
 import { decodeGitText } from "./wire-text.ts";
 import { journalRef } from "./journal-path.ts";
 import { archiveSegments } from "./journal-segments.ts";

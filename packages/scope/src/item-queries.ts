@@ -1,7 +1,7 @@
 /** One native query operation. No legacy traversal, turn, retry or standing cache. */
 import { ITEM_QUERY_WIRE_BOUNDS } from "@generalbusiness/dap-contract";
 import type { ItemQuery, ItemQueryRefusal, ScopeId } from "@generalbusiness/dap-contract";
-import { itemQueryArgument, readItemQueryParameter } from "@generalbusiness/artroom-bytes";
+import { itemQueryArgument, readItemQueryParameter } from "@generalbusiness/dap-bytes";
 import { same, timeMs } from "@generalbusiness/dap-derive";
 import { GenesisProofs, type GenesisProof } from "./genesis-proof.ts";
 import { ItemQueryBudget } from "./item-query-budget.ts";

@@ -2,7 +2,7 @@
  * operation that delivers the recorded result back to the original Rules job.
  * The bridge opens no member act and grants no new authority. */
 import type { FieldValue, PlatformData, ScopeRef, Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, deliveryCauseDigest, isDigest, isMemberRef, isRecord, isScopeRef, messageDigest, parseStrict } from "@generalbusiness/artroom-bytes";
+import { canonicalize, deliveryCauseDigest, isDigest, isMemberRef, isRecord, isScopeRef, messageDigest, parseStrict } from "@generalbusiness/dap-bytes";
 import type { Item, Own, RuleGiven, Rules, StateView } from "@generalbusiness/dap-derive";
 import { directory11 as grantDirectory, directoryRules11 as grantRules } from "./application-install-grants.ts";
 import { directoryMembership, directoryRulesScope } from "./directory.ts";

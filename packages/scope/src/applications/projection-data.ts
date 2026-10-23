@@ -2,8 +2,8 @@
  * declaration. Authority, metadata, binding and final freshness remain the
  * caller's. No retry lives here. */
 import type { ApplicationProjectionData, ApplicationProjectionRefusal, ItemQueryRead } from "@generalbusiness/dap-contract";
-import { parseStrict } from "@generalbusiness/artroom-bytes";
-import { applicationProjectionQueries, applicationProjectionFactRefs, isApplicationJournalSource, projectApplicationQueryReads, type ApplicationReadProjection } from "@generalbusiness/artroom-bytes/application-v2";
+import { parseStrict } from "@generalbusiness/dap-bytes";
+import { applicationProjectionQueries, applicationProjectionFactRefs, isApplicationJournalSource, projectApplicationQueryReads, type ApplicationReadProjection } from "@generalbusiness/dap-bytes/application-v2";
 import { applicationProjectionJournal } from "./projection-journal.ts";
 import { applicationProjectionFactTimes } from "./projection-fact-times.ts";
 import { applicationProjectionFactSigners } from "./projection-fact-signers.ts";

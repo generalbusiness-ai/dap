@@ -2,7 +2,7 @@
  * package, native history, browser, validator result or test registration. */
 import { readFileSync } from "node:fs";
 import { PROPOSED_BOUNDS, type DeclaredDefinition } from "@generalbusiness/dap-contract";
-import { definitionDigest } from "@generalbusiness/artroom-bytes";
+import { definitionDigest } from "@generalbusiness/dap-bytes";
 import { RULE_PROFILES } from "../../src/rule/index.ts";
 import type { DefinitionCorpusRow } from "./row.ts";
 import { clientNotes, clientNotesWithMax, packageDeclaration } from "../../../client/test/definition-corpus-data.ts";

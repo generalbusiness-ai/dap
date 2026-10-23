@@ -5,11 +5,11 @@
 /** Real native one-entry archive scale witness. The production driver and
  * incremental send run over the fixture's scripted host and inline policy; Native Membership8 supplies authority. */
 import { expect, test } from "vitest";
-import { canonicalize, digestBytes, utf8 } from "@generalbusiness/artroom-bytes";
-import { idOf, parseCommit, parseTree } from "@generalbusiness/artroom-git";
-import { journalRef, journalV2PassPath, journalV2RetainedPath, journalV2SegmentPath, type JournalPassArchive } from "@generalbusiness/artroom-git/journal";
-import { readJournalRepositoryArchive } from "@generalbusiness/artroom-git/journal-reader";
-import { archiveSource, verifyArchive, TRUSTS } from "@generalbusiness/artroom-replay";
+import { canonicalize, digestBytes, utf8 } from "@generalbusiness/dap-bytes";
+import { idOf, parseCommit, parseTree } from "@generalbusiness/dap-git";
+import { journalRef, journalV2PassPath, journalV2RetainedPath, journalV2SegmentPath, type JournalPassArchive } from "@generalbusiness/dap-git/journal";
+import { readJournalRepositoryArchive } from "@generalbusiness/dap-git/journal-reader";
+import { archiveSource, verifyArchive, TRUSTS } from "@generalbusiness/dap-replay";
 import { ARCHIVE_BOUNDS, ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
 import type { ArchivePolicyRegistry } from "../src/archive-inventory.ts";
 import { ArchivePrefixStopped } from "../src/archive-prefix.ts";

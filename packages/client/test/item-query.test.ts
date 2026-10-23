@@ -1,7 +1,7 @@
 import { expect, test, vi } from "vitest";
 import type { ItemQuery, ItemQueryRead, ScopeRef } from "@generalbusiness/dap-contract";
 import { ITEM_QUERY_BOUNDS as B, ITEM_QUERY_ORDER } from "@generalbusiness/dap-contract";
-import { canonicalize, encodeItemQueryParameter, itemQueryArgument, itemQueryDigest, readItemQueryParameter, encodeItemQueryCursor } from "@generalbusiness/artroom-bytes";
+import { canonicalize, encodeItemQueryParameter, itemQueryArgument, itemQueryDigest, readItemQueryParameter, encodeItemQueryCursor } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, TransportError, collectItemQuery, httpTransport, signedReads, secretSigner, bindingTransport, type ServiceBinding, type Fetch } from "../src/index.ts";
 const scope: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "lane" as const };
 const query: ItemQuery = { v: 1, scope, type: "task", states: ["open"], ids: null, limit: 100, cursor: null };

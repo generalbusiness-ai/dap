@@ -16,7 +16,7 @@
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
-    "@generalbusiness/artroom-bytes": "0.1.0-dev.1",
+    "@generalbusiness/dap-bytes": "0.1.0-dev.1",
     "@generalbusiness/dap-contract": "0.1.0-dev.1",
     "@generalbusiness/dap-derive": "0.1.0-dev.1"
   },

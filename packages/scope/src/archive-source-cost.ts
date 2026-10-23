@@ -1,6 +1,6 @@
 /** Original fixture source lookup/comparison work. No source identity,
  * reviewed policy, privacy, foreign body or export admission is granted. */
-import { natural } from "@generalbusiness/artroom-bytes";
+import { natural } from "@generalbusiness/dap-bytes";
 import { ArchiveStopped, type ArchiveCost } from "./archive-budget.ts";
 import { archiveDeclarationValidationWork } from "./archive-inventory-cost.ts";
 

@@ -1,4 +1,4 @@
-import { isMemberRef } from "@generalbusiness/artroom-bytes";
+import { isMemberRef } from "@generalbusiness/dap-bytes";
 import type { ScopeRef } from "@generalbusiness/dap-contract";
 import { AppBridge, AppToolError } from "./bridge.ts";
 import type { Display, PageKind } from "../src/views/types.ts";

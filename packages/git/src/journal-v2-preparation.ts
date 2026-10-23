@@ -1,7 +1,7 @@
 /** One receipt-bound layout session. No scope entry/retained payload,
  * inventory, privacy admission or export certificate is supplied here. */
 import type { Head, ScopeRef } from "@generalbusiness/dap-contract";
-import { isHead, isScopeRef, natural } from "@generalbusiness/artroom-bytes";
+import { isHead, isScopeRef, natural } from "@generalbusiness/dap-bytes";
 import { JournalObjectReader, journalFormat, journalId, type JournalFormat, type JournalObjectSource } from "./journal-objects.ts";
 import { readJournalPassParent } from "./journal-v2-parent.ts";
 import { JOURNAL_V2_LAST_POSITION, journalV2PassPath, readJournalV2Path } from "./journal-v2-path.ts";

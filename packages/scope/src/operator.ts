@@ -35,7 +35,7 @@
  */
 
 import type { Digest, OutboxId, Entry, OperationId, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isOutboxId, isOperationId } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isDigest, isOutboxId, isOperationId } from "@generalbusiness/dap-bytes";
 import { isObject, timeMs } from "@generalbusiness/dap-derive";
 import type { Clock, Transport } from "./ports.ts";
 import type { Sql } from "./sqlite.ts";

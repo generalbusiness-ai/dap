@@ -2,10 +2,10 @@
  * history in this deployment may open a child object. */
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Digest, Entry, FactRef, PlatformDefinition, ScopeKind, ScopeRef, Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, intentDigest, isDigest, isFactRef, isLocalId, isSeed, isSignedIntentShape, parseStrict, utf8, verifySignedIntent } from "@generalbusiness/artroom-bytes";
+import { canonicalize, definitionDigest, intentDigest, isDigest, isFactRef, isLocalId, isSeed, isSignedIntentShape, parseStrict, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { creates, isObject, isScopeRef, same, sentBy, validateDefinition, type Delivered } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
-import { applicationJson } from "@generalbusiness/artroom-bytes/application";
+import { applicationJson } from "@generalbusiness/dap-bytes/application";
 import { APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { artifactsRegisterScope } from "./artifacts-wiring.ts";
 import type { CreationAdmission } from "./creation-admission.ts";

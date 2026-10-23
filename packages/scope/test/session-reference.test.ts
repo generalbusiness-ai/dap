@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { Entry, PlatformDefinition, ScopeRef, SessionClaims } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, newIncarnation, scopeIdOf, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, entryHash, newIncarnation, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { SIBLINGS_OF } from "@generalbusiness/dap-platform";
 import { Scope } from "../src/core.ts";
 import { production } from "../src/ports.ts";

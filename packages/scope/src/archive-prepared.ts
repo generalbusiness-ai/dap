@@ -1,7 +1,7 @@
 /** Prepared-rule references from native scalar metadata. The owning pass
  * separately binds the scope, admits the prefix and validates its bytes. */
 import type { Bounds, Digest, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, natural } from "@generalbusiness/artroom-bytes";
+import { canonicalize, natural } from "@generalbusiness/dap-bytes";
 import { preparedRuleDependencies, type PlannedRetainedDependency, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { ARCHIVE_BOUNDS, type ArchiveBudget } from "./archive-budget.ts";
 import { ARCHIVE_DIGEST_FIELD_BATCH, checkArchiveFieldSource, readArchiveDigestFields } from "./archive-digest-fields.ts";

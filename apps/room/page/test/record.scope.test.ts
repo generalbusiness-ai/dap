@@ -1,7 +1,7 @@
 import { expect, inject, test } from "vitest";
-import { b64url } from "@generalbusiness/artroom-bytes";
-import type { Fetch } from "@generalbusiness/artroom-client";
-import { ScopeHandle, httpTransport, signedReads } from "@generalbusiness/artroom-client";
+import { b64url } from "@generalbusiness/dap-bytes";
+import type { Fetch } from "@generalbusiness/dap-client";
+import { ScopeHandle, httpTransport, signedReads } from "@generalbusiness/dap-client";
 import { DEMO_DIGESTS } from "@generalbusiness/dap-lanes";
 import worker, { type Env } from "../../worker.ts";
 import { sessionSigner, act, actsOn, joinRoom, listLanes, loadChange, loadIssue, loadRules, loadSite, openRoom, placeOf, type Room } from "../src/index.ts";

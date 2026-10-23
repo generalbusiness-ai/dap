@@ -11,7 +11,7 @@
  * definition's own name with `platform:` taken off.
  */
 
-import { canonicalize, digestBytes, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, digestBytes, utf8 } from "@generalbusiness/dap-bytes";
 import type { Digest } from "@generalbusiness/dap-contract";
 import seed from "./words.json" with { type: "json" };
 

@@ -33,9 +33,9 @@
  */
 
 import type { Digest, Entry, Input, KeyId, Observation, ObservationRequest, ObservationUse, ObservedScope, PlatformDefinition, RunId, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, hex, isObservationUse, isRecord, parseStrict } from "@generalbusiness/artroom-bytes";
+import { canonicalize, hex, isObservationUse, isRecord, parseStrict } from "@generalbusiness/dap-bytes";
 import { WINDOWS, contentChecked, contentStates, fixedBy, highestHead, isScopeRef, judgeGrant, membershipOf, namedBy, observationOf, observedName, observedOf, prefer, revoked, same, subjectName, valueDigest, type Clock as Reading, type ContentStates, type GrantJudgment, type Needed, type RecordedRef, type Retains, type StateView, type ValueRead } from "@generalbusiness/dap-derive";
-import { isPlatformDefinition } from "@generalbusiness/artroom-bytes";
+import { isPlatformDefinition } from "@generalbusiness/dap-bytes";
 import { SIBLINGS_OF, destinationBranch, platform, standingOf } from "@generalbusiness/dap-platform";
 import type { Asked, Authority, Clock, Further, Random, Standing } from "./ports.ts";
 import type { SessionReading } from "./sessions.ts";

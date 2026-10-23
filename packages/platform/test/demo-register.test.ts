@@ -3,7 +3,7 @@
  * admission runs here. */
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { intentDigest, isDigest, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/artroom-bytes";
+import { intentDigest, isDigest, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import { PROFILES, clockOf, judgeGenesis, judgeOutcome, validateDefinition } from "@generalbusiness/dap-derive";
 import { Ledger, T0, creation } from "@generalbusiness/dap-derive/testing";
 import { DEMO_PURPOSE, DEMO_REGISTER, WEB_DEMO_COHORT, WEB_DEMO_REGISTER, platform, repositoryName } from "../src/index.ts";

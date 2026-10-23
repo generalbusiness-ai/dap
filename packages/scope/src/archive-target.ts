@@ -1,10 +1,10 @@
 /** Resolve one archive repository through existing bounded native reads.
  * Wiring and read authority are explicit fixture ports in this milestone. */
-import { same } from "@generalbusiness/artroom-bytes";
+import { same } from "@generalbusiness/dap-bytes";
 import { ITEM_QUERY_BOUNDS, type Digest, type Item, type ItemQuery, type PlatformDefinition, type ScopeRef, type Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, encodeItemQueryParameter, isDigest, isRecord, isScopeRef, isSeed, readItemQueryReply, scopeIdOf, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, encodeItemQueryParameter, isDigest, isRecord, isScopeRef, isSeed, readItemQueryReply, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT as DC, isOf } from "@generalbusiness/dap-platform";
-import { ARCHIVE_NATIVE_DATA } from "@generalbusiness/artroom-git/archive-policy";
+import { ARCHIVE_NATIVE_DATA } from "@generalbusiness/dap-git/archive-policy";
 import type { ArchiveBudget } from "./archive-budget.ts";
 import type { FixtureArchiveTarget } from "./archive-driver.ts";
 import type { DestinationRepository } from "./destination-host.ts";

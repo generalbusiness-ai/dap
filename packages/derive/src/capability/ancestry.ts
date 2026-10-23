@@ -40,7 +40,7 @@
  */
 
 import type { Digest, FactRef, RetainedInput, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isFactRef, isLocalId, isRecord, isScopeRef, parseStrict, snapshotDigest } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isDigest, isFactRef, isLocalId, isRecord, isScopeRef, parseStrict, snapshotDigest } from "@generalbusiness/dap-bytes";
 import { byteOrder } from "../values.ts";
 
 /** The ancestry record (authority note, section 6.2, "The record"; scope contract, section 16.4), member for member. */

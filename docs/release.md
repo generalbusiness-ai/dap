@@ -8,7 +8,7 @@ Six packages can be installed outside this repository:
 |---|---|---|
 | `@generalbusiness/artroom-contract` | Types, the signed envelope, type guards | Node, browsers, Workers |
 | `@generalbusiness/artroom-policy` | The policy runtime and authoring helpers | Node, browsers, Workers |
-| `@generalbusiness/artroom-client` | The typed client | Node, browsers, Workers |
+| `@generalbusiness/dap-client` | The typed client | Node, browsers, Workers |
 | `@generalbusiness/artroom-mcp` | The MCP tools, a Workers handler and a stdio server | Node, Workers |
 | `@generalbusiness/artroom-log` | Log publication and offline verification, and the `artroom-verify` command | Node, Workers; `./git-cli` and the command need Node and git |
 | `@generalbusiness/artroom-cli` | The `artroom` command, as one bundled file | Node |

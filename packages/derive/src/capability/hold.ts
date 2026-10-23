@@ -28,7 +28,7 @@
  */
 
 import type { CapabilityName, Digest, Effect, Evidence, FieldValue, Intent, OperationId, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
-import { isDigest, isFactRef, isLocalId, isRecord, isScopeRef, utf8 } from "@generalbusiness/artroom-bytes";
+import { isDigest, isFactRef, isLocalId, isRecord, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
 import type { Capabilities, CapabilityGiven, Maximum, Recorded } from "../capability.ts";
 import { WINDOWS, type Window } from "../grant.ts";
 import { EPOCH, HOLDER, holdStates, type HoldEffect } from "../hold.ts";

@@ -57,7 +57,7 @@
  */
 
 import type { FactRef, ScopeRef } from "@generalbusiness/dap-contract";
-import { Gateway, type GatewayOptions, type GrantRecord, type GrantRequest, type LiveToken } from "@generalbusiness/artroom-git";
+import { Gateway, type GatewayOptions, type GrantRecord, type GrantRequest, type LiveToken } from "@generalbusiness/dap-git";
 
 /** The purpose of a job's read token, as its record states it (`derive/src/capability/gitread.ts`, `CHECK_READ`). */
 export const CHECK_READ = "check-read";

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import type { Entry, OperationId } from "@generalbusiness/dap-contract";
-import { canonicalize, utf8 } from "@generalbusiness/artroom-bytes";
-import { snapshotCommit, ZERO_ID } from "@generalbusiness/artroom-git";
+import { canonicalize, utf8 } from "@generalbusiness/dap-bytes";
+import { snapshotCommit, ZERO_ID } from "@generalbusiness/dap-git";
 import { sendOnce } from "../src/github-host.ts";
 import type { DestinationProvider } from "../src/destination-host.ts";
 import { SqliteStore, type EffectRequest } from "../src/index.ts";

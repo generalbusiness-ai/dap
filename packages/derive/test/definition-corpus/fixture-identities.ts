@@ -1,6 +1,6 @@
 /** Exact public fixture identities without actor keys, validation or histories. */
 import type { Digest, MemberId, MemberRef, ScopeKind, ScopeRef, Seed } from "@generalbusiness/dap-contract";
-import { newIncarnation, scopeIdOf } from "@generalbusiness/artroom-bytes";
+import { newIncarnation, scopeIdOf } from "@generalbusiness/dap-bytes";
 export const d = (c: string): Digest => `sha256:${c.repeat(64)}`;
 export const T0 = "2026-10-04T12:00:00Z";
 

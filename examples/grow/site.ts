@@ -1,7 +1,7 @@
 /** Site data. Application names introduce no new native scope kind.
  * Recorded presence is a member-owned item; room summaries arrive by relation. */
 import type { ActType, DeclaredDefinition } from "@generalbusiness/dap-contract";
-import { definitionDigest } from "@generalbusiness/artroom-bytes";
+import { definitionDigest } from "@generalbusiness/dap-bytes";
 import { room, ROOM } from "./room.ts";
 import { SITE } from "./names.ts";
 import { presenceForms } from "./presence.ts";

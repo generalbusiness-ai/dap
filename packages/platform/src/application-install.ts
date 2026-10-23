@@ -3,8 +3,8 @@
  * fresh-room CLI selection is still under construction. */
 import type { DeclaredDefinition, Evidence, FieldValue, PlatformData } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isMemberRef, isRecord, isScopeRef, parseStrict, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
-import { readApplicationReleaseProof, readApplicationReleaseUri, type ApplicationReleaseProof } from "@generalbusiness/artroom-bytes/application";
+import { canonicalize, isDigest, isMemberRef, isRecord, isScopeRef, parseStrict, textDigest, utf8 } from "@generalbusiness/dap-bytes";
+import { readApplicationReleaseProof, readApplicationReleaseUri, type ApplicationReleaseProof } from "@generalbusiness/dap-bytes/application";
 import { validateDefinition, type GuardRule, type Item, type RuleGiven, type RuleEffect, type Rules } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { rulesScope3, rulesScopeRules3 } from "./rules-scope.ts";

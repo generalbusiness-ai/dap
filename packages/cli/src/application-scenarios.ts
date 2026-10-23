@@ -1,11 +1,11 @@
 /** Declarative local scenarios. No scenario module or application server code
  * is imported. TEST keys and authority are local stand-ins, stated in reports. */
-import type { AnyPackedApplication } from "@generalbusiness/artroom-bytes/application-v2";
+import type { AnyPackedApplication } from "@generalbusiness/dap-bytes/application-v2";
 import { CAPABILITIES, type Answer, type CapabilityName, type Digest, type FactRef, type FieldValue, type MemberId, type MemberRef, type ScopeKind, type ScopeRef, type SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalize, isRecord, newIncarnation, parseStrict, scopeIdOf } from "@generalbusiness/artroom-bytes";
-import { secretSigner, signedIntent, type Asked, type Signer } from "@generalbusiness/artroom-client";
+import { canonicalize, isRecord, newIncarnation, parseStrict, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { secretSigner, signedIntent, type Asked, type Signer } from "@generalbusiness/dap-client";
 import { timeMs } from "@generalbusiness/dap-derive";
-import type { Verification } from "@generalbusiness/artroom-replay";
+import type { Verification } from "@generalbusiness/dap-replay";
 import type { LocalActor, LocalApplicationScope } from "./application-local.ts";
 import type { ScriptedDeviceGrantEvidence } from "./application-local-device-fixture.ts";
 

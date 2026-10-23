@@ -9,7 +9,7 @@ import { env } from "cloudflare:test";
 import { expect, inject, onTestFinished } from "vitest";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT, FIRST_ACTIONS_OF } from "@generalbusiness/dap-platform";
 import type { Bounds, Digest, FactRef, Grant, MemberRef, PlatformDefinition } from "@generalbusiness/dap-contract";
-import { canonicalize, factRefOf, isFactRef, isRecord, isSeed, LATE, scopeIdOf, unb64url, within } from "@generalbusiness/artroom-bytes";
+import { canonicalize, factRefOf, isFactRef, isRecord, isSeed, LATE, scopeIdOf, unb64url, within } from "@generalbusiness/dap-bytes";
 import type { ValidDefinition } from "@generalbusiness/dap-derive";
 import { variant } from "@generalbusiness/dap-derive/testing";
 import { growArchivePolicies } from "../../../../apps/room/archive-policy.ts";

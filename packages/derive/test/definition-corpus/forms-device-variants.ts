@@ -1,4 +1,4 @@
-import { definitionDigest } from "@generalbusiness/artroom-bytes";
+import { definitionDigest } from "@generalbusiness/dap-bytes";
 import { PROPOSED_BOUNDS, type DeclaredDefinition, type Digest } from "@generalbusiness/dap-contract";
 import { deviceCommandFixture as scope, deviceCommandRow as row } from "../fixtures-device-command.ts";
 import type { DefinitionCorpusRow } from "./row.ts";

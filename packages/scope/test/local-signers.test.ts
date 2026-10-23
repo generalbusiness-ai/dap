@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { Entry, Input } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, entryHash, utf8 } from "@generalbusiness/dap-bytes";
 import { timeMs } from "@generalbusiness/dap-derive";
 import { signerOf } from "../src/entry-signer.ts";
 import { LocalSigners, SIGNER_INDEX_BOUNDS as B } from "../src/local-signers.ts";

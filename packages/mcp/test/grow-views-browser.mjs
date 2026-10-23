@@ -9,7 +9,7 @@ import { startViewsHost } from './support/views-host.ts';
 import { prepareGrowCheck } from '../../../examples/grow/prepare-check.ts';
 import { prepareApplicationDirectory } from '../../cli/src/application-files.ts';
 import { openOwnedGrowScenario } from './support/grow-owned-session.ts';
-import { secretSigner } from '@generalbusiness/artroom-client';
+import { secretSigner } from '@generalbusiness/dap-client';
 import { growOperator } from './support/grow-operator.ts';
 const { PLAYWRIGHT_CORE, CHROMIUM, VIEW_CAPTURE_OUT: out } = process.env;
 assert.ok(PLAYWRIGHT_CORE && CHROMIUM && out && /^\/(?:private\/)?tmp\//.test(out));

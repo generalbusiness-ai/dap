@@ -1,8 +1,8 @@
 /** Two native metadata peers, selected only after the read owner authenticates
  * and checks the target's recorded birth. No R2, Git or application code. */
 import type { ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isRecord, isScopeRef, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
-import { applicationJson } from "@generalbusiness/artroom-bytes/application";
+import { canonicalize, isRecord, isScopeRef, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
+import { applicationJson } from "@generalbusiness/dap-bytes/application";
 import type { Binding } from "../namespace.ts";
 import type { PreparationRun } from "../preparation-flight.ts";
 export const APPLICATION_DECLARATION_BYTES = 132 * 1024;

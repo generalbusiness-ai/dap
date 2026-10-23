@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { Read, Sealed } from "@generalbusiness/dap-contract";
-import { entryHash, takeBytes } from "@generalbusiness/artroom-bytes";
+import { entryHash, takeBytes } from "@generalbusiness/dap-bytes";
 import { listLanes, loadChange, openRoom, placeOf } from "../src/index.ts";
 import { demo } from "./support/demo.ts";
 

@@ -2,7 +2,7 @@ import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { scopeIdOf } from "@generalbusiness/artroom-bytes";
+import { scopeIdOf } from "@generalbusiness/dap-bytes";
 import { PARTITION_COHORT as C } from "@generalbusiness/dap-platform";
 import { namespace } from "../../../../packages/scope/src/namespace.ts";
 import { SqliteStore } from "../../../../packages/scope/src/sqlite.ts";

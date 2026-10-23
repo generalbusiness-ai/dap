@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { runInDurableObject } from "cloudflare:test";
 import type { OutboxItem, Entry, Read } from "@generalbusiness/dap-contract";
-import { entryHash } from "@generalbusiness/artroom-bytes";
+import { entryHash } from "@generalbusiness/dap-bytes";
 import type { Delivered } from "@generalbusiness/dap-derive";
 import { incidentsOf, type Incident, type Resent } from "../src/index.ts";
 import { OperatorRecord } from "../src/operator.ts";

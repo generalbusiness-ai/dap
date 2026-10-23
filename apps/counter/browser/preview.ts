@@ -2,8 +2,8 @@
 import "./style.css";
 import "../../../brand/fonts.css";
 import type { Entry, Item, MemberRef, Receipt, ScopeRef, SignedIntent, Summary } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, factRefOf, intentDigest, keyIdOfSecret, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/artroom-bytes";
-import { secretSigner, type Fetch, type HeadStreamFetch } from "@generalbusiness/artroom-client";
+import { canonicalize, entryHash, factRefOf, intentDigest, keyIdOfSecret, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
+import { secretSigner, type Fetch, type HeadStreamFetch } from "@generalbusiness/dap-client";
 import { COUNTING_COMMITMENTS_DEFINITION as COUNTING_DEFINITION } from "../commitments-pin.ts";
 import { nativeGateway } from "./client.ts";
 import { scriptedCounterProjection } from "./projection-fixture.ts";

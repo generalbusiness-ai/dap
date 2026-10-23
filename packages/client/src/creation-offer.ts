@@ -1,7 +1,7 @@
 /** Fixed same-origin discovery for an explicitly configured demo register.
  * This projection grants nothing. The native signed found is still judged. */
 import type { Head, ScopeRef } from "@generalbusiness/dap-contract";
-import { LATE, isHead, isLocalId, isRecord, isScopeRef, parseStrict, takeBytes, utf8, within, type ByteStream } from "@generalbusiness/artroom-bytes";
+import { LATE, isHead, isLocalId, isRecord, isScopeRef, parseStrict, takeBytes, utf8, within, type ByteStream } from "@generalbusiness/dap-bytes";
 import { TransportError } from "./handle.ts";
 
 export interface CreationOffer {

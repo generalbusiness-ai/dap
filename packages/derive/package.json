@@ -15,8 +15,8 @@
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
-    "@generalbusiness/artroom-bytes": "0.1.0-dev.1",
-    "@generalbusiness/artroom-package-graph": "0.1.0-dev.1",
+    "@generalbusiness/dap-bytes": "0.1.0-dev.1",
+    "@generalbusiness/dap-package-graph": "0.1.0-dev.1",
     "@generalbusiness/dap-contract": "0.1.0-dev.1",
     "jsonata": "2.2.2"
   },

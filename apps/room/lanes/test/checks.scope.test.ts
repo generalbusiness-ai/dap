@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { SignedIntent } from "@generalbusiness/dap-contract";
-import { sign, textDigest, timeMs, verifySignedIntent } from "@generalbusiness/artroom-bytes";
+import { sign, textDigest, timeMs, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { capable, graph, net, paul, sam, una, rita } from "./support/graph.ts";
 // The checker service's own origin read and signer, by path: the lanes package states no dependency on that package.
 import { originOf, signResult, type Job, type Outcome, type ResultSigner } from "../../../../packages/checkers/src/index.ts";

@@ -12,7 +12,7 @@
  */
 
 import type { Entry, FactRef, FactUse, GrantMark, Incarnation, Prepared, Reason, Request, ScopeId, ScopeRef, Seed, Send, SignedIntent } from "@generalbusiness/dap-contract";
-import { deliveryCauseDigest, intentDigest, isDigest, isIncarnation, isSeed, messageDigest, scopeIdOf, seedDigest, verifySignedIntent } from "@generalbusiness/artroom-bytes";
+import { deliveryCauseDigest, intentDigest, isDigest, isIncarnation, isSeed, messageDigest, scopeIdOf, seedDigest, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { judgeDelivery, reasonOf, sentBy, type DeliveryContext } from "./delivery.ts";
 import { creationFields, isEntryOf, isIntent, readFacts, readFields, textsNamed, useOf, type Texts } from "./fields.ts";
 import type { Fetched, Judging } from "./guards.ts";

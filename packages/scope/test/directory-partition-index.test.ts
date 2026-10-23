@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Entry, type Item, type Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, factRefOf, newIncarnation, scopeIdOf, seedDigest } from "@generalbusiness/artroom-bytes";
+import { canonicalize, entryHash, factRefOf, newIncarnation, scopeIdOf, seedDigest } from "@generalbusiness/dap-bytes";
 import { applyEntry, PROFILES, validateDefinition, type RuleGiven } from "@generalbusiness/dap-derive";
 import { directoryPartition1, directoryPartitionRules1, partitionGeneration, partitionLane, partitionNumber, PARTITION_COHORT } from "../../platform/src/directory-partitions.ts";
 import { SqliteStore, type Sql } from "../src/sqlite.ts";

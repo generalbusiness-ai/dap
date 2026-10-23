@@ -1,6 +1,6 @@
 /** Pure reading of already authenticated native metadata, never an authority source. */
 import { DEVICE_COMMAND, DEVICE_COMMAND_DEFINITIONS, DEVICE_COMMAND_KINDS, type DeviceCommandBounds, type DeviceCommandGrant, type DeviceCommandKind, type ScopeRef } from "@generalbusiness/dap-contract";
-import { isDigest } from "@generalbusiness/artroom-bytes";
+import { isDigest } from "@generalbusiness/dap-bytes";
 import { isMemberRef, isObject, same } from "./values.ts";
 
 const shape = (value: unknown, names: readonly string[]): value is Record<string, unknown> =>

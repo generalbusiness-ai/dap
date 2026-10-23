@@ -1,7 +1,7 @@
 /** Scalar references to observed values. Root policy and whole-prefix
  * admission remain with the owner; this never reads a retained body. */
 import { RETAINED_INPUT_BYTES, type Bounds, type Digest, type ScopeRef } from "@generalbusiness/dap-contract";
-import { natural } from "@generalbusiness/artroom-bytes";
+import { natural } from "@generalbusiness/dap-bytes";
 import { observationDependency, observationValueDigests, retainsOf, type PlannedRetainedDependency, type ValidDefinition } from "@generalbusiness/dap-derive";
 import type { ArchiveBudget } from "./archive-budget.ts";
 import { ARCHIVE_DIGEST_FIELD_BATCH, checkArchiveFieldSource, readArchiveDigestFields } from "./archive-digest-fields.ts";

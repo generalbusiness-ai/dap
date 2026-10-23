@@ -9,7 +9,7 @@ import { env } from "cloudflare:workers";
 import { evictDurableObject, runDurableObjectAlarm, runInDurableObject } from "cloudflare:test";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Answer, Bounds, Entry, Grant, Head, Intent, MemberRef, Read, Receipt, ScopeId, ScopeRef, Seed, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
-import { intentDigest, scopeIdOf, signIntent } from "@generalbusiness/artroom-bytes";
+import { intentDigest, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import { timeMs, timeOf, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { grantOf, keys, lane, variant, type Actor, type Over } from "@generalbusiness/dap-derive/testing";
 import { READ_BOUNDS, type ReadBounds, type Sealed, type Summary } from "../src/index.ts";

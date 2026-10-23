@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test } from "vitest";
-import { secretSigner } from "@generalbusiness/artroom-client";
+import { secretSigner } from "@generalbusiness/dap-client";
 import { newCommand } from "../src/application-command.ts";
 import { prepareApplicationDirectory } from "../src/application-files.ts";
 

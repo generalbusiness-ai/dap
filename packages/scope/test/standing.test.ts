@@ -5,7 +5,7 @@ import { evictDurableObject, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import type { Answer, Entry, Intent, PlatformDefinition, Request, Seed } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { entryHash, factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/artroom-bytes";
+import { entryHash, factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import { PROFILES, StandingError, standingEntries, validateDefinition } from "@generalbusiness/dap-derive";
 import { forged, grantOf } from "@generalbusiness/dap-derive/testing";
 import { valid } from "../../derive/test/fixtures.ts";

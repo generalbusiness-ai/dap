@@ -2,11 +2,11 @@
  * Actual token adapter, Git framing/pack/closure and driver run unchanged.
  * This peer grants no production authority and reaches no real service. */
 import { expect } from "vitest";
-import { utf8 } from "@generalbusiness/artroom-bytes";
-import { Reader, type GitSource } from "@generalbusiness/artroom-git";
-import { buildPack } from "@generalbusiness/artroom-git/http";
-import { decodePack } from "@generalbusiness/artroom-git/http-read";
-import type { JournalObject } from "@generalbusiness/artroom-git/journal";
+import { utf8 } from "@generalbusiness/dap-bytes";
+import { Reader, type GitSource } from "@generalbusiness/dap-git";
+import { buildPack } from "@generalbusiness/dap-git/http";
+import { decodePack } from "@generalbusiness/dap-git/http-read";
+import type { JournalObject } from "@generalbusiness/dap-git/journal";
 import type { DestinationRepository } from "../../src/destination-host.ts";
 import type { ArtifactsNamespace } from "../../src/artifacts-host.ts";
 import { scriptedArchiveV2Pack } from "./archive-v2-pack.ts";

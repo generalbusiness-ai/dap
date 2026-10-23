@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { FactRef } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest } from "@generalbusiness/artroom-bytes";
+import { canonicalize, definitionDigest } from "@generalbusiness/dap-bytes";
 import { firstExtents } from "@generalbusiness/dap-platform";
 import { pantry } from "./support/pantry.ts";
 import { mcpRoom, type Agent, type Room, created } from "./fixtures-native.ts";

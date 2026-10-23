@@ -32,7 +32,7 @@
  * never a value. Header safety is judged on the raw value as received.
  */
 
-import { isRecord } from "@generalbusiness/artroom-bytes";
+import { isRecord } from "@generalbusiness/dap-bytes";
 import type { Digest } from "@generalbusiness/dap-contract";
 import { LEGACY, MODERN, PROTOCOL_META, SESSION_FULL, UNSUPPORTED_VERSION, Wire, frameOf, isFrame, isNotificationMethod, newSession, type Id, type LegacySession, type Message, type Stream } from "./wire.ts";
 

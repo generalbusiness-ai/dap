@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { Entry, FactRef, Grant, RulesObservation } from "@generalbusiness/dap-contract";
-import { factRefOf, isFactRef } from "@generalbusiness/artroom-bytes";
+import { factRefOf, isFactRef } from "@generalbusiness/dap-bytes";
 import type { RuleGiven, StateView } from "@generalbusiness/dap-derive";
 import { d, keys, otherLane, t } from "@generalbusiness/dap-derive/testing";
 import { decidingKeys, manifestAuthors, readLane } from "../src/destination-reading.ts";

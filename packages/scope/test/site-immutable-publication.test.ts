@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { runInDurableObject } from "cloudflare:test";
-import { takeBytes } from "@generalbusiness/artroom-bytes";
+import { takeBytes } from "@generalbusiness/dap-bytes";
 import { demo } from "../../../apps/room/page/test/support/demo.ts";
 import { PUBLICATION_PROOF_BOUNDS, type SitePublicationPeer } from "../src/site/publication.ts";
 

@@ -1,7 +1,7 @@
 /** Two explicit demo roots at most. This projection grants nothing and wakes no work. */
-import { isRecord as record } from "@generalbusiness/artroom-bytes";
+import { isRecord as record } from "@generalbusiness/dap-bytes";
 import type { Head, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import { isScopeRef } from "@generalbusiness/dap-derive";
 import { DEMO_PURPOSE, DEMO_REGISTER, WEB_DEMO_REGISTER } from "@generalbusiness/dap-platform";
 import type { Store } from "./store.ts";

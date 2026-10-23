@@ -2,7 +2,7 @@ import { existsSync, readFileSync, rmSync, statSync, symlinkSync } from "node:fs
 import { spawn } from "node:child_process";
 import { join } from "node:path";
 import { afterAll, beforeAll, expect, test } from "vitest";
-import { GitProgram, READ_BOUNDS, Reader, repositorySource, type LiveToken } from "@generalbusiness/artroom-git";
+import { GitProgram, READ_BOUNDS, Reader, repositorySource, type LiveToken } from "@generalbusiness/dap-git";
 import { checkout, readGrant, runSteps, runnerGateway, type CheckoutAsk, type StepExec } from "../src/index.ts";
 import { checkoutObjects, type CheckoutObjectsAsk } from "../src/runner.ts";
 // The git package's own test support: real local repositories, made with the `git` program. A local repository is not a host.

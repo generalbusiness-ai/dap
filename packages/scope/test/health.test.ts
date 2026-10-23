@@ -1,7 +1,7 @@
 import { env } from "cloudflare:workers";
 import { SELF, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
-import { digestBytes, intentDigest, scopeIdOf, signIntent, utf8 } from "@generalbusiness/artroom-bytes";
+import { digestBytes, intentDigest, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
 import { health, HealthProbe } from "../src/health.ts";
 import { LATE } from "../src/turn.ts";
 import { controls } from "../src/testing.ts";

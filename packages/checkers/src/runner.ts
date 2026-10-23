@@ -40,7 +40,7 @@
  * deployment, and none is run (plan question Q8).
  */
 
-import { GitFailure, GitProgram, GitRefusal, READ_BOUNDS, Reader, idOf, isObjectId, objectId, refName, remoteUrl, repositorySource, snapshotFiles, type GitReason, type ObjectId, type ReadBounds } from "@generalbusiness/artroom-git";
+import { GitFailure, GitProgram, GitRefusal, READ_BOUNDS, Reader, idOf, isObjectId, objectId, refName, remoteUrl, repositorySource, snapshotFiles, type GitReason, type ObjectId, type ReadBounds } from "@generalbusiness/dap-git";
 import type { Configuration, Variable } from "./configuration.ts";
 import type { StepReport } from "./outcome.ts";
 

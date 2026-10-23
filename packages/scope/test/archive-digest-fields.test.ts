@@ -1,7 +1,7 @@
 /** Genuine native genesis/act rows and SQLite. This witnesses reference
  * projection only, not privacy admission, integrity, export or Replay. */
 import { expect, test } from "vitest";
-import { textDigest } from "@generalbusiness/artroom-bytes";
+import { textDigest } from "@generalbusiness/dap-bytes";
 import { ArchiveBudget } from "../src/archive-budget.ts";
 import { readArchiveDigestFields } from "../src/archive-digest-fields.ts";
 import type { SqlValue } from "../src/sqlite.ts";

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { Entry, FactRef } from "@generalbusiness/dap-contract";
-import { intentDigest, utf8 } from "@generalbusiness/artroom-bytes";
+import { intentDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { ANCESTRY_BOUNDS, ledgerOf, recordEffects, stagedRefName, walk } from "../src/index.ts";
 import type { AncestryCheck, GitObject, PriorCheck, WalkInput } from "../src/index.ts";
 import { d, directory, keys, membership, otherLane, C, Staging, cap, clean, kept } from "./fixtures-entry.ts";

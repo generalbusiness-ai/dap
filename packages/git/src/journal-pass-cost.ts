@@ -1,6 +1,6 @@
 /** Original Git input/body-stage arithmetic. Source ports, admission and
  * parent/patch/commit/transport work are priced by their respective owners. */
-import { natural } from "@generalbusiness/artroom-bytes";
+import { natural } from "@generalbusiness/dap-bytes";
 import { JOURNAL_SELECTION_BYTES } from "./journal-selection-cost.ts";
 import { refuseJournal, type JournalCost } from "./journal-work.ts";
 

@@ -3,7 +3,7 @@
  * caller owns one aggregate visited set shared with foreign admission.
  * This selects no entry, rule, snapshot or value body. */
 import type { Bounds, Digest, PlatformDefinition } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, natural, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isDigest, natural, utf8 } from "@generalbusiness/dap-bytes";
 import { creates, derivable, validateDefinition, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { archiveDeclarationValidationWork } from "./archive-inventory-cost.ts";

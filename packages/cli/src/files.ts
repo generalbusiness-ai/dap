@@ -12,7 +12,7 @@
 import { randomUUID } from "node:crypto";
 import { chmodSync, existsSync, linkSync, mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { b64url, unb64url } from "@generalbusiness/artroom-bytes";
+import { b64url, unb64url } from "@generalbusiness/dap-bytes";
 import type { Config, Store } from "./store.ts";
 
 export { configDir } from "./config-dir.ts";

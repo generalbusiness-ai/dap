@@ -8,7 +8,7 @@
  */
 
 import type { Digest, FactRef, PlatformDefinition, Receipt, ScopeId, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
-import type { Signer } from "@generalbusiness/artroom-client";
+import type { Signer } from "@generalbusiness/dap-client";
 
 /** The scopes of one repository, as `claim` or `join` learned them. */
 export interface Repository {

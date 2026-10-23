@@ -3,12 +3,12 @@
  * are TEST fixtures. No hosted resource or physical device is contacted. */
 import { env, runInDurableObject } from "cloudflare:test";
 import { expect, inject, test } from "vitest";
-import { b64url, canonicalize, isSeed, scopeIdOf, timeOf, unb64url } from "@generalbusiness/artroom-bytes";
-import { readPublishedApplicationPackage2 } from "@generalbusiness/artroom-bytes/application-v2";
+import { b64url, canonicalize, isSeed, scopeIdOf, timeOf, unb64url } from "@generalbusiness/dap-bytes";
+import { readPublishedApplicationPackage2 } from "@generalbusiness/dap-bytes/application-v2";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT as C, platform } from "@generalbusiness/dap-platform";
 import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-mcp";
-import { invitationIssueFields, invitationRedemptionFields, requestSession, secretSigner, sessionRequest } from "@generalbusiness/artroom-client";
-import { httpSource, verify } from "@generalbusiness/artroom-replay";
+import { invitationIssueFields, invitationRedemptionFields, requestSession, secretSigner, sessionRequest } from "@generalbusiness/dap-client";
+import { httpSource, verify } from "@generalbusiness/dap-replay";
 import { simulatorHost } from "../../../examples/grow/simulator-host.ts";
 import { outsideOf as hostOutside } from "../src/worker.ts";
 import { CAPABILITY_CODE } from "../src/ports.ts";

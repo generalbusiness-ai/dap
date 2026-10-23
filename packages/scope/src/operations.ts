@@ -40,7 +40,7 @@ import { countedEntries } from "@generalbusiness/dap-derive";
 
 import type { Bounds, CapabilityName, DecisiveEvidence, Entry, Evidence, FactRef, FactUse, KeyId, OperationId, PlatformDefinition, RetainedInput, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
 import type { ReceiverReads } from "./receiver-reads.ts";
-import { canonicalize, isEvidence, isPlatformDefinition, isOperationId, isRetainedInput, parseStrict, retainedValueKey, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isEvidence, isPlatformDefinition, isOperationId, isRetainedInput, parseStrict, retainedValueKey, utf8 } from "@generalbusiness/dap-bytes";
 import { clockOf, recordedOutcome, evidenceValues, isEntryOf, valueDigest, settleOutcome, snapshotInput, snapshotRead, timeMs, timeOf, type Clock as Reading, type Fetched, type Operation, type OutcomeOffered, type Owners } from "@generalbusiness/dap-derive";
 import { applicationPublicationOrigin, publishingLaneOrigin } from "@generalbusiness/dap-platform";
 import { ownOf, valuesOf, type Scope } from "./core.ts";

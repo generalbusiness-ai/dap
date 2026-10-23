@@ -1,8 +1,8 @@
 import { expect, test, vi } from "vitest";
-import { newIncarnation, parseStrictBytes, unb64url, verifySignedRead } from "@generalbusiness/artroom-bytes";
-import * as bytes from "@generalbusiness/artroom-bytes";
+import { newIncarnation, parseStrictBytes, unb64url, verifySignedRead } from "@generalbusiness/dap-bytes";
+import * as bytes from "@generalbusiness/dap-bytes";
 import type { SignedRead, SignedSessionRequest } from "@generalbusiness/dap-contract";
-import { secretSigner, type Fetch, type Signer } from "@generalbusiness/artroom-client";
+import { secretSigner, type Fetch, type Signer } from "@generalbusiness/dap-client";
 const DESTINATION = "platform:destination@1" as const;
 import { command } from "../src/line.ts";
 import type { Config } from "../src/store.ts";

@@ -1,7 +1,7 @@
 /** Raw positive hold variants and original option matrices; no eager validation. */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalBytes, parseStrictBytes } from "@generalbusiness/artroom-bytes";
+import { canonicalBytes, parseStrictBytes } from "@generalbusiness/dap-bytes";
 import { PROFILES, type ValidateOptions } from "../../src/validate/index.ts";
 import { works, chain } from "./holds-data.ts";
 import type { DefinitionCorpusRow } from "./row.ts";

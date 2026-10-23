@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { Item, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, keyIdOfSecret } from "@generalbusiness/artroom-bytes";
+import { canonicalize, keyIdOfSecret } from "@generalbusiness/dap-bytes";
 import { firstExtents } from "@generalbusiness/dap-platform";
 import { identityId, meaningOf } from "../src/index.ts";
 import { mcpRoom, SERVICE, created } from "./fixtures-native.ts";

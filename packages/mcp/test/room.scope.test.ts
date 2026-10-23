@@ -1,9 +1,9 @@
 import { expect, test } from "vitest";
 import type { Digest, FactRef } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, digestBytes, textDigest, timeOf, utf8 } from "@generalbusiness/artroom-bytes";
+import { b64url, canonicalize, digestBytes, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { firstExtents } from "@generalbusiness/dap-platform";
 import { DEMO_DIGESTS, changeDemo, issueDemo } from "@generalbusiness/dap-lanes";
-import { INVITATION_LINK } from "@generalbusiness/artroom-client";
+import { INVITATION_LINK } from "@generalbusiness/dap-client";
 import { GENERIC, mcpRoom, type Agent, exercises, created, offers, step } from "./fixtures-native.ts";
 
 /**

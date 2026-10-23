@@ -1,6 +1,6 @@
 /** Two primary-key seeks distinguish zero, one and multiple incarnations. */
 import type { Incarnation, ScopeId } from "@generalbusiness/dap-contract";
-import { canonicalize, isIncarnation, isScopeId, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isIncarnation, isScopeId, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import { isObject } from "@generalbusiness/dap-derive";
 import { PREPARATION_BOUNDS, PreparationBudget } from "./preparation-budget.ts";
 import type { Sql } from "./sqlite.ts";

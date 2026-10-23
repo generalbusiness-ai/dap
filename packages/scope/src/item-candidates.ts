@@ -1,5 +1,5 @@
 /** Internal synchronous metadata seeks, not a public authorized item query. */
-import { canonicalize, utf8, wellFormed } from "@generalbusiness/artroom-bytes";
+import { canonicalize, utf8, wellFormed } from "@generalbusiness/dap-bytes";
 import { byteOrder } from "@generalbusiness/dap-derive";
 import type { Sql, SqlValue } from "./sqlite.ts";
 

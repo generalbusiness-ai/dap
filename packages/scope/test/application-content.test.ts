@@ -4,8 +4,8 @@
 import { env } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest } from "@generalbusiness/artroom-bytes";
-import { packApplication } from "@generalbusiness/artroom-client";
+import { canonicalize, definitionDigest } from "@generalbusiness/dap-bytes";
+import { packApplication } from "@generalbusiness/dap-client";
 import { countingCommitments } from "../../../apps/counter/commitments.ts";
 import { APPLICATION_HOST_PACKAGE_BYTES, readApplicationTrust } from "../src/applications/admission.ts";
 import { ApplicationContentStore, applicationReleaseKey } from "../src/applications/content.ts";

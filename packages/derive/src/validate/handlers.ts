@@ -5,7 +5,7 @@
  */
 
 import type { FieldType } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isScopeKind } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isDigest, isScopeKind } from "@generalbusiness/dap-bytes";
 import { isObject, own } from "../values.ts";
 import { LAST_MS } from "../time.ts";
 import { alsoMark, bound, type Selecting } from "./binding.ts";

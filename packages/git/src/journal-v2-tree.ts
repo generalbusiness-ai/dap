@@ -1,7 +1,7 @@
 /** Copy only changed paths from the confirmed parent tree. An unchanged
  * edge is kept by ID; no older pass manifest, segment or payload is read. */
 import type { JournalFile } from "./journal-files.ts";
-import { natural } from "@generalbusiness/artroom-bytes";
+import { natural } from "@generalbusiness/dap-bytes";
 import { JournalObjectReader, JournalObjects, journalFormat, type JournalFormat, type JournalObjectType, type JournalTreeRow } from "./journal-objects.ts";
 import { journalObjectReservation, journalResultMetadata, journalTreeRowMetadata } from "./journal-object-cost.ts";
 import { journalV2Directory, readJournalV2Path } from "./journal-v2-path.ts";

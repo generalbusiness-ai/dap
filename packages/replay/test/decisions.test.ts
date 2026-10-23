@@ -2,7 +2,7 @@ import { replayDecisionFloor, replayDecisionText, replayDecisionFields, replayDe
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Digest, FieldValue, PlatformData, PlatformDefinition, Request, Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { MemoryState, applyEntry, checkpointOf, clockOf, judgeCheckpoint, judgeDelivery, judgeGenesis, judgeFloor, decisionBinding, isUnprovenDecisionBinding, owed, ownersOf, stateDigest, validateDefinition } from "@generalbusiness/dap-derive";
 import { Ledger, T0, arriving, forged, keys, otherLane, t, valid } from "@generalbusiness/dap-derive/testing";
 import { MemorySource, verify } from "../src/index.ts";

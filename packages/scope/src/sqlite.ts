@@ -17,7 +17,7 @@ import { ACCEPTED_KEY_OVERHEAD_BYTES } from "@generalbusiness/dap-contract";
 import type { JournalFloor } from "@generalbusiness/dap-contract";
 import type { CapabilityName, Digest, Entry, FactRef, FieldValue, Held, Incarnation, KeyId, OperationId, ScopeId, ScopeKind, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
 import { DOMAINS } from "@generalbusiness/dap-contract";
-import { RETAINED_BYTE_DOMAINS, canonicalize, isDigest, isScopeRef, parseStrict } from "@generalbusiness/artroom-bytes";
+import { RETAINED_BYTE_DOMAINS, canonicalize, isDigest, isScopeRef, parseStrict } from "@generalbusiness/dap-bytes";
 import { AmountError, NOTHING, naturalAmount, isObject, MemoryState, byteOrder, operationId, operationStanding, pendingOf, slotOf, timeMs } from "@generalbusiness/dap-derive";
 import type { Accepted, Account, Decided, HeldCreation, Holder, Item, ObservedHead, Operation, Outstanding, OwnRequest, Page, PreparedStep, RangeIndex, RecordState, RecordsWhere, Relation, ScopeState, SourceOrder, StateSnapshot } from "@generalbusiness/dap-derive";
 import type { Dispatched, OutboxItem, OperationStatus, Outgoing, Retained, Sending, Store, Stored } from "./store.ts";

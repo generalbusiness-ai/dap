@@ -1,11 +1,11 @@
 import { runDurableObjectAlarm } from "cloudflare:test";
 import { expect, test } from "vitest";
 import type { Answer, FieldValue, Intent, Item, Read, ScopeId, Seed, SignedIntent, SignedReadName } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, intentDigest, isSeed, scopeIdOf, seedDigest, signIntent, textDigest, timeMs } from "@generalbusiness/artroom-bytes";
-import { requestSession, secretSigner, sessionRequest, signedReader } from "@generalbusiness/artroom-client";
+import { b64url, canonicalize, intentDigest, isSeed, scopeIdOf, seedDigest, signIntent, textDigest, timeMs } from "@generalbusiness/dap-bytes";
+import { requestSession, secretSigner, sessionRequest, signedReader } from "@generalbusiness/dap-client";
 import { keys, type Actor } from "@generalbusiness/dap-derive/testing";
 import { COUNTING_COHORT, FIRST_ACTIONS_OF, platform, repositoryName } from "@generalbusiness/dap-platform";
-import { httpSource, verify } from "@generalbusiness/artroom-replay";
+import { httpSource, verify } from "@generalbusiness/dap-replay";
 import { countingCommitments } from "../../../apps/counter/commitments.ts";
 import { COUNTING_COMMITMENTS_DEFINITION } from "../../../apps/counter/commitments-pin.ts";
 import { NO_OUTSIDE } from "../src/index.ts";

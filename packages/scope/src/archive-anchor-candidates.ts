@@ -1,6 +1,6 @@
 /** Scalar forecast metadata only. Final collection still inspects the
  * admitted entry bytes and decides which private facts can be published. */
-import { isDigest, natural } from "@generalbusiness/artroom-bytes";
+import { isDigest, natural } from "@generalbusiness/dap-bytes";
 import type { ArchiveBudget } from "./archive-budget.ts";
 import { ARCHIVE_PRIVACY_JSON_PASSES, stopArchivePrefix as stop, type ArchivePosition } from "./archive-prefix.ts";
 import type { Sql } from "./sqlite.ts";

@@ -11,7 +11,7 @@
  */
 import type { Sql } from "./sqlite.ts";
 import type { OperationId, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize } from "@generalbusiness/artroom-bytes";
+import { canonicalize } from "@generalbusiness/dap-bytes";
 import { timeMs } from "@generalbusiness/dap-derive";
 
 export interface CredentialReply { id: string; ends: Timestamp }

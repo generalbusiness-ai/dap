@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Digest, Entry, Input, SignedIntent } from "@generalbusiness/dap-contract";
-import { factRefOf, intentDigest, newIncarnation, scopeIdOf, seedDigest } from "@generalbusiness/artroom-bytes";
+import { factRefOf, intentDigest, newIncarnation, scopeIdOf, seedDigest } from "@generalbusiness/dap-bytes";
 import { clockOf, derivable, judgeDelivery, judgeGenesis, runnable, type OutcomeRule, type PlatformRule, type RuleGiven } from "@generalbusiness/dap-derive";
 import { Ledger, T0, deskDefinition, created } from "@generalbusiness/dap-derive/testing";
 import { CREATION_ATTEMPTS, DIRECTORY, REGISTER, directoryIdOf, platform, register, registerRules, repositoryName } from "../src/index.ts";

@@ -3,7 +3,7 @@ import { effectFormCases } from "./definition-corpus/forms-effects-cases.ts";
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Bounds, EffectForm, FieldValue, Guard, MemberRef, Notify, Send } from "@generalbusiness/dap-contract";
-import { factRefOf } from "@generalbusiness/artroom-bytes";
+import { factRefOf } from "@generalbusiness/dap-bytes";
 import { clockOf, deriveEffects, judgeDelivery, judgeGuards, validateDefinition, type ActJudgment, type Judging } from "../src/index.ts";
 import { Scope, arriving, deliver, fields, forged, created, keys, member, on, ticketDefinition, valid, type Actor, type Over } from "./fixtures-entry.ts";
 

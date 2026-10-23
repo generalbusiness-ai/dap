@@ -1,6 +1,6 @@
 /** One deployment-wide index. It proves reachability, never native authority. */
 import type { Digest, ScopeKind, ScopeRef } from "@generalbusiness/dap-contract";
-import { isDigest, isScopeId, isScopeRef, scopeIdOf } from "@generalbusiness/artroom-bytes";
+import { isDigest, isScopeId, isScopeRef, scopeIdOf } from "@generalbusiness/dap-bytes";
 import type { Binding } from "./namespace.ts";
 import type { Sql } from "./sqlite.ts";
 import type { CreationAdmission } from "./creation-admission.ts";

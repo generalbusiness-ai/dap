@@ -22,7 +22,7 @@
  */
 
 import type { BindingMark, Bound, FieldValue, PlatformReceive, ReceiveType, ScopeRef } from "@generalbusiness/dap-contract";
-import { CanonicalError, canonicalize } from "@generalbusiness/artroom-bytes";
+import { CanonicalError, canonicalize } from "@generalbusiness/dap-bytes";
 import type { Judging } from "./guards.ts";
 import { RuleFault, markOf, outside, ruleFor, run, type Giving } from "./marks.ts";
 import { equal, operand } from "./operand.ts";

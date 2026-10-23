@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { Item, ScopeRef } from "@generalbusiness/dap-contract";
-import { keyIdOfSecret, newIncarnation } from "@generalbusiness/artroom-bytes";
+import { keyIdOfSecret, newIncarnation } from "@generalbusiness/dap-bytes";
 import { currentStanding, reviewCandidates } from "../src/membership-projection.ts";
 
 // Made-up complete summary rows: this witnesses Page presentation, not a

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { PROPOSED_BOUNDS, type DeclaredDefinition, type FieldValue, type Guard, type Operand, type MemberRef } from "@generalbusiness/dap-contract";
-import { intentDigest } from "@generalbusiness/artroom-bytes";
+import { intentDigest } from "@generalbusiness/dap-bytes";
 import type { Scope } from "../fixtures-entry.ts";
 import { asks, act, fact } from "./forms-operand-data.ts";
 import { ticket } from "./fixture-data.ts";

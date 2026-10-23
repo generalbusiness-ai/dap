@@ -27,7 +27,7 @@
 
 import { CAPABILITIES } from "@generalbusiness/dap-contract";
 import type { Capability, CapabilityName, Digest, Effect, FactRef, FieldValue, Grant, Head, Intent, KeyId, OperationId, RefusalReason, ScopeRef, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
-import { intentDigest, isScopeRef, verifySignedIntent } from "@generalbusiness/artroom-bytes";
+import { intentDigest, isScopeRef, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import type { Signer } from "./attribution.ts";
 import { capabilityItemEffects, maximumOf, type Capabilities, type CapabilityItemEffect, type Maximum, type Recorded } from "./capability.ts";
 import { isIntent, type Own, type Reading } from "./fields.ts";

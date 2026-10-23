@@ -1,6 +1,6 @@
 /** Transfer a send form's existing Amount to the request it actually made. */
 import type { Entry, SendForm } from "@generalbusiness/dap-contract";
-import { isPlatformDefinition } from "@generalbusiness/artroom-bytes";
+import { isPlatformDefinition } from "@generalbusiness/dap-bytes";
 import { bound } from "./handlers.ts";
 import { handlerBranch } from "./handler-branch.ts";
 import { AmountError, NOTHING, requestEntries, subtract, type Amount } from "./held.ts";

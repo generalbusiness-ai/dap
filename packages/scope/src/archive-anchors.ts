@@ -1,8 +1,8 @@
 /** Explicit caller trust derived only from already admitted exported bytes.
  * No copied body is proof, and no private source journal is read/exported. */
 import type { FactRef, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isEntry, isFactRef, isHead, isRecord, isScopeRef, parseStrict, same } from "@generalbusiness/artroom-bytes";
-import type { JournalSelection } from "@generalbusiness/artroom-git/journal";
+import { canonicalize, isEntry, isFactRef, isHead, isRecord, isScopeRef, parseStrict, same } from "@generalbusiness/dap-bytes";
+import type { JournalSelection } from "@generalbusiness/dap-git/journal";
 import type { ArchiveBudget } from "./archive-budget.ts";
 import { stopArchivePrefix as stop } from "./archive-prefix.ts";
 import type { FixtureArchiveSourcePins } from "./archive-source-pins.ts";

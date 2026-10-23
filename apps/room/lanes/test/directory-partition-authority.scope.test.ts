@@ -1,7 +1,7 @@
 import { runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type ScopeId, type Seed } from "@generalbusiness/dap-contract";
-import { factRefOf, intentDigest, scopeIdOf } from "@generalbusiness/artroom-bytes";
+import { factRefOf, intentDigest, scopeIdOf } from "@generalbusiness/dap-bytes";
 import type { RuleGiven } from "@generalbusiness/dap-derive";
 import { PARTITION_COHORT as C } from "@generalbusiness/dap-platform";
 import { directoryRules10 } from "../../../../packages/platform/src/directory-partitions.ts";

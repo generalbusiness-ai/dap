@@ -20,9 +20,9 @@
  */
 
 import type { DeclaredDefinition, Digest, Head, Item, PlatformDefinition, Read, ScopeId, ScopeRef, Summary } from "@generalbusiness/dap-contract";
-import { definitionDigest, isDigest, isPlatformDefinition, parseStrict } from "@generalbusiness/artroom-bytes";
+import { definitionDigest, isDigest, isPlatformDefinition, parseStrict } from "@generalbusiness/dap-bytes";
 import { ROLE_LISTS, SIBLINGS_OF, platform, type Role } from "@generalbusiness/dap-platform";
-import { ScopeHandle, partitionIndexes } from "@generalbusiness/artroom-client";
+import { ScopeHandle, partitionIndexes } from "@generalbusiness/dap-client";
 import type { Held, Inventory, Place, Standing } from "./catalogue.ts";
 import type { DefinitionLike } from "./describe.ts";
 import type { Reads } from "./reads.ts";

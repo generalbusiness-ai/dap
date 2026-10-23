@@ -2,11 +2,11 @@ import { capacityPinBodySlot, capacityPinChildData, capacityPinReceiverData, cap
 import { env } from "cloudflare:workers";
 import { expect, test } from "vitest";
 import type { Digest, Entry, FactRef, Seed } from "@generalbusiness/dap-contract";
-import { parseStrict, scopeIdOf, textDigest } from "@generalbusiness/artroom-bytes";
+import { parseStrict, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import { ownerReservations, reserved, validateDefinition, type Delivered, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { valid } from "../../derive/test/fixtures.ts";
 import { PIN_BOUNDS } from "../../derive/test/fixtures-receiver-pins.ts";
-import { httpSource, verify } from "@generalbusiness/artroom-replay";
+import { httpSource, verify } from "@generalbusiness/dap-replay";
 import { SqliteStore, type Delivery } from "../src/index.ts";
 import { CAPABILITY_CODE } from "../src/ports.ts";
 import { controls } from "../src/testing.ts";

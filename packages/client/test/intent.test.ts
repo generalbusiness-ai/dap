@@ -1,6 +1,6 @@
 import { expect, test, vi } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { LATE, MAX_DEPTH, canonicalize, isFieldValue, newIncarnation, publicKeyOf, scopeIdOf, takeBytes, textDigest, verifySessionRequest, verifySignedIntent } from "@generalbusiness/artroom-bytes";
+import { LATE, MAX_DEPTH, canonicalize, isFieldValue, newIncarnation, publicKeyOf, scopeIdOf, takeBytes, textDigest, verifySessionRequest, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, TransportError, bindingTransport, create, httpTransport, signedIntent, signerSessionRequest, webCryptoSigner, type ServiceBinding, type Transport } from "../src/index.ts";
 
 test("an asynchronous session signer keeps the original membership request and its session domain while caller data changes", async () => {

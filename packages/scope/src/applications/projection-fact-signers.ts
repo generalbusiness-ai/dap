@@ -1,8 +1,8 @@
 /** Exact local append-time signer metadata. No entry body, history window,
  * legacy backfill, current key lookup, peer or retry is part of this read. */
 import type { MemberRef } from "@generalbusiness/dap-contract";
-import { isDigest, isMemberRef, parseStrict } from "@generalbusiness/artroom-bytes";
-import type { ApplicationFactSignerRead, ApplicationProjectionFactRef } from "@generalbusiness/artroom-bytes/application-v2";
+import { isDigest, isMemberRef, parseStrict } from "@generalbusiness/dap-bytes";
+import type { ApplicationFactSignerRead, ApplicationProjectionFactRef } from "@generalbusiness/dap-bytes/application-v2";
 import type { PreparedRead } from "../read-preparation.ts";
 import type { Sql, SqlValue } from "../sqlite.ts";
 import type { ItemQueryBudget } from "../item-query-budget.ts";

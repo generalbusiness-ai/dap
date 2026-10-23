@@ -4,11 +4,11 @@
 import { DOMAINS } from "@generalbusiness/dap-contract";
 import { env } from "cloudflare:test";
 import { expect, test } from "vitest";
-import { canonicalize, isSeed, newIncarnation, scopeIdOf } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isSeed, newIncarnation, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { DECLARED_APPLICATION_COHORT as C, platform } from "@generalbusiness/dap-platform";
-import { ScopeHandle, httpTransport, requestSession, secretSigner, sessionRequest } from "@generalbusiness/artroom-client";
+import { ScopeHandle, httpTransport, requestSession, secretSigner, sessionRequest } from "@generalbusiness/dap-client";
 import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-mcp";
-import { httpSource, verify } from "@generalbusiness/artroom-replay";
+import { httpSource, verify } from "@generalbusiness/dap-replay";
 import nativeWorker from "../../../apps/room/worker.ts";
 import { outsideOf as hostOutside } from "../src/worker.ts";
 import { applicationOwnedScopesPacket, applicationWorkerBindings, applicationResolverFixture, applicationHttpPeer, sessionRoom, dispatchFixture, driveFixture, effectFixture } from "./fixtures-native.ts";

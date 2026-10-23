@@ -2,9 +2,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { DOMAINS } from "@generalbusiness/dap-contract";
-import { domainBytes, keyIdOfSecret, newIncarnation, scopeIdOf, sign, textDigest } from "@generalbusiness/artroom-bytes";
+import { domainBytes, keyIdOfSecret, newIncarnation, scopeIdOf, sign, textDigest } from "@generalbusiness/dap-bytes";
 import type { Summary } from "@generalbusiness/dap-contract";
-import { secretSigner, type ObservationState } from "@generalbusiness/artroom-client";
+import { secretSigner, type ObservationState } from "@generalbusiness/dap-client";
 import { COUNTING_COMMITMENTS_DEFINITION as COUNTING_DEFINITION } from "../commitments-pin.ts";
 import { mountCountingStage } from "./app.ts";
 import { browserSpeech } from "./speech.ts";

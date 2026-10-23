@@ -2,7 +2,7 @@ import { replayHolding, replayChained } from "../../derive/test/definition-corpu
 import { replayReservedSource, replayReservedReceiver, replayQualifiedReceiver } from "../../derive/test/definition-corpus/replay-literals-data.ts";
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Entry, type ObservationUse, type Report } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, textDigest } from "@generalbusiness/artroom-bytes";
+import { canonicalize, definitionDigest, textDigest } from "@generalbusiness/dap-bytes";
 import { grantFrom, namedBy, observationOf, validateDefinition } from "@generalbusiness/dap-derive";
 import { created, keys, notesDefinition, on, otherLane, t, type Actor, type Ledger } from "@generalbusiness/dap-derive/testing";
 import { C, cap, clean } from "../../derive/test/fixtures-hold.ts";

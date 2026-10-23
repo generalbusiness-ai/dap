@@ -1,7 +1,7 @@
 import { runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Entry, type Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, intentDigest, scopeIdOf } from "@generalbusiness/artroom-bytes";
+import { canonicalize, entryHash, intentDigest, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { applyEntry, MemoryState, owed, PROFILES, validateDefinition } from "@generalbusiness/dap-derive";
 import { PARTITION_COHORT as C, platform } from "@generalbusiness/dap-platform";
 import { partitionLane, partitionGeneration } from "../../../../packages/platform/src/directory-partitions.ts";

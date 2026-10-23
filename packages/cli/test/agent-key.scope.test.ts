@@ -14,8 +14,8 @@
  */
 import { describe, expect, test } from "vitest";
 import type { Digest, Item, OperationId, Read, Receipt, ScopeRef, Seed, SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, keyIdOfSecret, scopeIdOf, timeOf } from "@generalbusiness/artroom-bytes";
-import { AGENT_KEY_LINK, agentKeyInvitationOf, encodeAgentKeyInvitation, requestSession, sessionRequest, type AgentKeyInvitation, type Fetch } from "@generalbusiness/artroom-client";
+import { b64url, keyIdOfSecret, scopeIdOf, timeOf } from "@generalbusiness/dap-bytes";
+import { AGENT_KEY_LINK, agentKeyInvitationOf, encodeAgentKeyInvitation, requestSession, sessionRequest, type AgentKeyInvitation, type Fetch } from "@generalbusiness/dap-client";
 import { APPLICATION_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, repositoryName } from "@generalbusiness/dap-platform";
 import { beginSessionFixture } from "../../scope/test/session-settings.ts";
 import { Platform, routed } from "../../scope/test/repository.ts";

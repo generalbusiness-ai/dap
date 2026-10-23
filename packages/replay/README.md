@@ -1,4 +1,4 @@
-# @generalbusiness/artroom-replay
+# @generalbusiness/dap-replay
 
 Independent checks of an Artroom scope's history: an integrity check, and a
 full replay of the scope and of the scopes it used. It prints a report that
@@ -353,8 +353,8 @@ from this workspace: Node does not strip types from a file under
 ## How to test
 
 ```
-npm test --workspace @generalbusiness/artroom-replay
-npm run typecheck --workspace @generalbusiness/artroom-replay
+npm test --workspace @generalbusiness/dap-replay
+npm run typecheck --workspace @generalbusiness/dap-replay
 ```
 
 `test/world.ts` builds one good set of histories with derive's fixture

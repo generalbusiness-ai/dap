@@ -1,7 +1,7 @@
 import { beginSessionFixture, type SessionOwner } from "../../../../packages/scope/test/session-settings.ts";
 import { expect, onTestFinished, test } from "vitest";
-import { net } from "@generalbusiness/artroom-scope/testing";
-import { platformNet, platformOutside } from "@generalbusiness/artroom-scope/testing/worker";
+import { net } from "@generalbusiness/dap-scope/testing";
+import { platformNet, platformOutside } from "@generalbusiness/dap-scope/testing/worker";
 import { demo } from "./support/demo.ts";
 
 // The actual helper fails through its existing synchronous wrap boundary.

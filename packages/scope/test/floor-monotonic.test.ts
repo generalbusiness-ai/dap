@@ -4,10 +4,10 @@ import { floorMonotonicChange } from "./definition-corpus-data.ts";
  * this is not evidence of platform authority or Git archive custody. */
 import { expect, test } from "vitest";
 import type { Entry, FloorInput, Sealed } from "@generalbusiness/dap-contract";
-import { canonicalize } from "@generalbusiness/artroom-bytes";
+import { canonicalize } from "@generalbusiness/dap-bytes";
 import { applyEntry, MemoryState, stateDigest } from "@generalbusiness/dap-derive";
 import { variant } from "@generalbusiness/dap-derive/testing";
-import { MemorySource, verify, type MemoryScope } from "@generalbusiness/artroom-replay";
+import { MemorySource, verify, type MemoryScope } from "@generalbusiness/dap-replay";
 import { floorOwn } from "../../replay/src/floor.ts";
 import { Scope } from "../src/core.ts";
 import { production } from "../src/ports.ts";

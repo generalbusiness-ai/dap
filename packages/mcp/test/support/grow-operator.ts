@@ -4,9 +4,9 @@
  * No provider, device execution, hosted durability or enrollment is claimed. */
 import type { Beside, Digest, FieldValue, SignedIntent } from "@generalbusiness/dap-contract";
 import { DOMAINS } from "@generalbusiness/dap-contract";
-import { canonicalize, parseStrict } from "@generalbusiness/artroom-bytes";
-import { applicationProjectionQueryDigest, type AnyPackedApplication } from "@generalbusiness/artroom-bytes/application-v2";
-import { signedIntent, type Fetch } from "@generalbusiness/artroom-client";
+import { canonicalize, parseStrict } from "@generalbusiness/dap-bytes";
+import { applicationProjectionQueryDigest, type AnyPackedApplication } from "@generalbusiness/dap-bytes/application-v2";
+import { signedIntent, type Fetch } from "@generalbusiness/dap-client";
 import type { openOwnedGrowScenario } from "./grow-owned-session.ts";
 import { room } from "../../../../examples/grow/room.ts";
 import { McpService, memoryStore } from "../../src/index.ts";

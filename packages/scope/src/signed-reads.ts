@@ -86,7 +86,7 @@ import { heldPositions, archivedPosition } from "@generalbusiness/dap-derive";
  */
 
 import type { Entry, FactRef, FactUse, KeyId, ScopeId, Seed, SignedRead, SignedReadName, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, intentDigest, isKeyId, isScopeId, isSignature, parseStrict, scopeIdOf, seedDigest, unb64url, verifySignedRead } from "@generalbusiness/artroom-bytes";
+import { canonicalize, intentDigest, isKeyId, isScopeId, isSignature, parseStrict, scopeIdOf, seedDigest, unb64url, verifySignedRead } from "@generalbusiness/dap-bytes";
 import { isObject, same, timeMs, type ScopeState } from "@generalbusiness/dap-derive";
 import type { Clock, ReadName } from "./ports.ts";
 import type { Store } from "./store.ts";

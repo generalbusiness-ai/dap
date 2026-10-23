@@ -40,7 +40,7 @@
  */
 
 import type { Answer, Head, KeyId, SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalBytes, isSignature, isSignedIntentShape, utf8, verifySignedIntent } from "@generalbusiness/artroom-bytes";
+import { canonicalBytes, isSignature, isSignedIntentShape, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { isObject } from "@generalbusiness/dap-derive";
 import { metric } from "./operational.ts";
 

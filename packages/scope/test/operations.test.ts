@@ -3,7 +3,7 @@ import { describe, expect, test } from "vitest";
 import { abortAllDurableObjects } from "cloudflare:test";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { OperationId, Read } from "@generalbusiness/dap-contract";
-import { canonicalize } from "@generalbusiness/artroom-bytes";
+import { canonicalize } from "@generalbusiness/dap-bytes";
 import { operationId, snapshotInput, snapshotRead, stagedRefName, timeMs } from "@generalbusiness/dap-derive";
 import { isAnswer } from "../src/operations.ts";
 import { ScopeObject, SqliteStore, type EffectAnswer, type EffectRequest, type OperationStatus, type OutcomeRecorded, type Outside, type Wiring } from "../src/index.ts";

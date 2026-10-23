@@ -3,11 +3,11 @@ import { growLauncherDefinition } from "./definition-corpus-data.ts";
  * installation lookup and sessions remain fixtures. Every birth and source
  * entry is native; no Lane reference or application state is manufactured. */
 import type { DeclaredDefinition, ScopeId, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, factRefOf, isEntry, isScopeRef, isSeed, parseStrict, scopeIdOf } from "@generalbusiness/artroom-bytes";
-import type { AnyPackedApplication } from "@generalbusiness/artroom-bytes/application-v2";
-import { signedIntent } from "@generalbusiness/artroom-client";
-import type { HistorySource } from "@generalbusiness/artroom-replay";
-import type { Peer } from "@generalbusiness/artroom-scope/runtime";
+import { canonicalize, factRefOf, isEntry, isScopeRef, isSeed, parseStrict, scopeIdOf } from "@generalbusiness/dap-bytes";
+import type { AnyPackedApplication } from "@generalbusiness/dap-bytes/application-v2";
+import { signedIntent } from "@generalbusiness/dap-client";
+import type { HistorySource } from "@generalbusiness/dap-replay";
+import type { Peer } from "@generalbusiness/dap-scope/runtime";
 import { LocalApplicationScope } from "../../../cli/src/application-local.ts";
 import { openApplicationScenario } from "../../../cli/src/application-scenarios.ts";
 import { scenarioSigner } from "../fixtures.ts";

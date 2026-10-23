@@ -4,7 +4,7 @@
  * No generated module lies on this script's import path. */
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { canonicalize, definitionDigest } from "@generalbusiness/artroom-bytes";
+import { canonicalize, definitionDigest } from "@generalbusiness/dap-bytes";
 import { VERSIONS } from "../src/native-catalog.ts";
 
 const args = process.argv.slice(2);

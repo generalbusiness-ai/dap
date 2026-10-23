@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Digest } from "@generalbusiness/dap-contract";
-import { canonicalize, parseStrict } from "@generalbusiness/artroom-bytes";
+import { canonicalize, parseStrict } from "@generalbusiness/dap-bytes";
 import { namedDeclarations, validateDefinition } from "../src/index.ts";
 import { childDefinitions } from "./fixtures-entry.ts";
 

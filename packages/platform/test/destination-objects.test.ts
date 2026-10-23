@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { expect, test } from "vitest";
 import type { FactRef, ScopeId, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, utf8 } from "@generalbusiness/dap-bytes";
 import { initialCommitObjects, importRef, readmeText, receiptObjects, receiptRef, type DestinationCommit, type ObjectFormat, type Readme } from "../src/destination-objects.ts";
 
 // A real local Git repository in each object format. Facts are made up:

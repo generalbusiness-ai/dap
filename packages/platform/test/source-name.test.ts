@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { Digest, Entry, ScopeRef, Seed } from "@generalbusiness/dap-contract";
-import { factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/artroom-bytes";
+import { factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import { d, keys, T0, t } from "@generalbusiness/dap-derive/testing";
 import { applicationPublicationOrigin, sourceName, publishingLaneOrigin, publishingLaneAffiliation } from "../src/publishing-provenance.ts";
 import { scriptedApplicationOrigin, scriptedOrigin } from "./fixtures-entry.ts";

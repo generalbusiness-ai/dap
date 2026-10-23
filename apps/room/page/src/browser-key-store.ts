@@ -1,8 +1,8 @@
 /** Shared origin-private key custody for the room page and future sign-in route.
  * No network, enrollment, room selection or recovery-file export happens here. */
 import type { KeyId } from "@generalbusiness/dap-contract";
-import { b64url, isKeyId, keyIdOfSecret, unb64url } from "@generalbusiness/artroom-bytes";
-import { browserPrivateSlots, generateBrowserDeviceKey, storedWebCryptoSigner, type BrowserPrivateSlots, type Signer } from "@generalbusiness/artroom-client";
+import { b64url, isKeyId, keyIdOfSecret, unb64url } from "@generalbusiness/dap-bytes";
+import { browserPrivateSlots, generateBrowserDeviceKey, storedWebCryptoSigner, type BrowserPrivateSlots, type Signer } from "@generalbusiness/dap-client";
 
 interface StoredKey { v: 1; publicKey: KeyId; privateKey: CryptoKey }
 export interface KeySettingsStorage { getItem(name: string): string | null; setItem(name: string, value: string): void }

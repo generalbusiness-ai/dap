@@ -26,8 +26,8 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import { randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { join, relative, sep } from "node:path";
 import { Readable } from "node:stream";
-import { canonicalize, timeMs } from "@generalbusiness/artroom-bytes";
-import type { Signer, Fetch } from "@generalbusiness/artroom-client";
+import { canonicalize, timeMs } from "@generalbusiness/dap-bytes";
+import type { Signer, Fetch } from "@generalbusiness/dap-client";
 import { CustodyError, TERMINAL, type CustodyRecord, type CustodyStore, type Outcome } from "./custody.ts";
 import type { ConfigPort } from "./inventory.ts";
 import { McpService } from "./service.ts";

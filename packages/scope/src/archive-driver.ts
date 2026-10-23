@@ -1,9 +1,9 @@
 /** One bounded asynchronous archive pass. No entry, operation or public RPC.
  * Configuration and reviewed policy belong to the trusted object owner. */
-import { same } from "@generalbusiness/artroom-bytes";
+import { same } from "@generalbusiness/dap-bytes";
 import type { Bounds, Head, ScopeRef, Seed, Timestamp } from "@generalbusiness/dap-contract";
-import { isScopeRef, timeMs, timeOf } from "@generalbusiness/artroom-bytes";
-import { journalId, journalRef, type JournalArchive, type JournalPassArchive, type JournalFormat, type JournalObject, type JournalObjectSource } from "@generalbusiness/artroom-git/journal";
+import { isScopeRef, timeMs, timeOf } from "@generalbusiness/dap-bytes";
+import { journalId, journalRef, type JournalArchive, type JournalPassArchive, type JournalFormat, type JournalObject, type JournalObjectSource } from "@generalbusiness/dap-git/journal";
 import { ARCHIVE_BOUNDS, ArchiveBudget, ArchiveStopped } from "./archive-budget.ts";
 import { ARCHIVE_TRANSFER_OBJECTS, archiveObjectListMetadata, archiveObjectCopyWork } from "./archive-transfer-cost.ts";
 import { planPublishedArchiveConversion, rebuildArchive, rebuildArchivePass } from "./archive-build.ts";

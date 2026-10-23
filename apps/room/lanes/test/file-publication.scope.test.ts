@@ -2,7 +2,7 @@ import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import type { ScopeId } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, textDigest, factRefOf, isFactRef, isScopeRef, scopeIdOf, timeMs, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, definitionDigest, textDigest, factRefOf, isFactRef, isScopeRef, scopeIdOf, timeMs, utf8 } from "@generalbusiness/dap-bytes";
 import { command, memoryStore, type Context, type Outcome } from "../../../../packages/cli/src/index.ts";
 import { FILE_PUBLICATION_COHORT, FIRST_ACTIONS_OF, fileReceiptRef, firstExtents, receiptRef } from "@generalbusiness/dap-platform";
 import { changeDemo3 } from "../src/index.ts";

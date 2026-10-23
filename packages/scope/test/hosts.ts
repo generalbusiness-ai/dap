@@ -8,10 +8,10 @@
  */
 import { expect } from "vitest";
 import type { ScopeId } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, timeMs, timeOf, utf8 } from "@generalbusiness/artroom-bytes";
-import { READ_BOUNDS, Reader, ZERO_ID, type GitSource } from "@generalbusiness/artroom-git";
-import { buildPack } from "@generalbusiness/artroom-git/http";
-import { decodePack, type DecodedObject } from "@generalbusiness/artroom-git/http-read";
+import { canonicalize, digestBytes, timeMs, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { READ_BOUNDS, Reader, ZERO_ID, type GitSource } from "@generalbusiness/dap-git";
+import { buildPack } from "@generalbusiness/dap-git/http";
+import { decodePack, type DecodedObject } from "@generalbusiness/dap-git/http-read";
 import type { ArtifactsNamespace } from "../src/artifacts-host.ts";
 import { snapshotReaderOf } from "../src/worker.ts";
 import { env } from "cloudflare:workers";

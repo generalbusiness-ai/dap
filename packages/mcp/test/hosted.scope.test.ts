@@ -7,8 +7,8 @@
 import { env, evictDurableObject, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import type { ControlRequest, Digest, FactRef, KeyId, MemberId, ScopeRef } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, digestBytes, keyIdOfSecret, newIncarnation, signControl, textDigest, timeOf, utf8 } from "@generalbusiness/artroom-bytes";
-import { invitationIssueFields, encodeAgentKeyInvitation, secretSigner, type AgentKeyInvitation } from "@generalbusiness/artroom-client";
+import { b64url, canonicalize, digestBytes, keyIdOfSecret, newIncarnation, signControl, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { invitationIssueFields, encodeAgentKeyInvitation, secretSigner, type AgentKeyInvitation } from "@generalbusiness/dap-client";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT, FIRST_ACTIONS_OF, firstExtents } from "@generalbusiness/dap-platform";
 import { DEMO_DIGESTS, changeDemo, issueDemo } from "@generalbusiness/dap-lanes";
 import { counting } from "../../../apps/counter/definition.ts";
@@ -21,7 +21,7 @@ import { startupTest, StartupOwner, startupSnapshot, startupReport, type Startup
 import { DEFAULT_SERVING_LIMITS } from "../../scope/src/serving-limits.ts";
 import { SCOPE_INDEX_NAME, type ScopeIndexPort } from "../../scope/src/scope-index.ts";
 import { BOUNDS, COMPLETION_BYTES, MODERN, MODERN_RESULT_EXTRA } from "../src/index.ts";
-import { INVITATION_LINK } from "@generalbusiness/artroom-client";
+import { INVITATION_LINK } from "@generalbusiness/dap-client";
 import { mcpRoom, SERVICE, type Agent, type Room, created as createRoom } from "./fixtures-native.ts";
 import { MCP_METRIC_SCHEMA, type McpMetricPoint } from "../src/metrics.ts";
 

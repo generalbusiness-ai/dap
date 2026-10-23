@@ -20,7 +20,7 @@ import { standingData } from "../fixtures-standing.ts";
 import { indexedStandingData } from "../../../scope/test/definition-corpus-data.ts";
 /** Scope raw fixture declarations. This shard never opens a Durable Object. */
 import { PROPOSED_BOUNDS, type DeclaredDefinition, type Digest } from "@generalbusiness/dap-contract";
-import { definitionDigest } from "@generalbusiness/artroom-bytes";
+import { definitionDigest } from "@generalbusiness/dap-bytes";
 import { RULE_PROFILES } from "../../src/rule/index.ts";
 import type { DefinitionCorpusRow } from "./row.ts";
 import { scopeData, scopeLaneData, scopeArchiveData, scopeFactoryData, scopeScaleData, scopeInventoryData, scopeReceiverData,

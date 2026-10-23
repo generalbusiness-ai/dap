@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { canonicalBytes, canonicalize, digestBytes, entryHash } from "@generalbusiness/artroom-bytes";
+import { canonicalBytes, canonicalize, digestBytes, entryHash } from "@generalbusiness/dap-bytes";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { RetainedInput } from "@generalbusiness/dap-contract";
 import { deliver } from "@generalbusiness/dap-derive/testing";

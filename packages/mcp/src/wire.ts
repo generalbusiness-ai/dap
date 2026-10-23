@@ -24,9 +24,9 @@
  * connection of one server is bound to the one key the process signs with.
  */
 
-import { isRecord } from "@generalbusiness/artroom-bytes";
+import { isRecord } from "@generalbusiness/dap-bytes";
 import type { Digest } from "@generalbusiness/dap-contract";
-import { utf8 } from "@generalbusiness/artroom-bytes";
+import { utf8 } from "@generalbusiness/dap-bytes";
 import { INSTRUCTIONS, ListRestart, SERVER_NAME, SERVER_VERSION, type McpService } from "./service.ts";
 import { supportsViews } from "./views/tools.ts";
 

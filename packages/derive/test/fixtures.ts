@@ -13,7 +13,7 @@
 
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Bounds, DeclaredDefinition, Digest, Entry, FactRef, FieldValue, Grant, Input, Intent, KeyId, MemberRef, ObservationUse, ScopeRef, Seed, Send, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
-import { entryHash, factRefOf, intentDigest, keyIdOfSecret, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/artroom-bytes";
+import { entryHash, factRefOf, intentDigest, keyIdOfSecret, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import { MemoryState, actionOf, applyEntry, clockOf, entryOf, judgeAct, judgeDelivery, judgeGenesis, judgeTimed, messageFacts, nextDue, timeMs, timeOf, validateDefinition } from "../src/index.ts";
 import type { ActJudgment, Creation, Delivered, DeliveryContext, Draft, Fetched, JudgeContext, Judgment, Presented, Source, TimedJudgment, ValidDefinition, Validation } from "../src/index.ts";
 

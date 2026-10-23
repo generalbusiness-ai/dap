@@ -1,6 +1,6 @@
 /** Seven-day operational correlation, outside every sealed history. */
 import type { OutboxId, Timestamp } from "@generalbusiness/dap-contract";
-import { isOutboxId } from "@generalbusiness/artroom-bytes";
+import { isOutboxId } from "@generalbusiness/dap-bytes";
 import { timeOf } from "@generalbusiness/dap-derive";
 import { isRequestId, isTraceId } from "./correlation.ts";
 import type { Sql } from "./sqlite.ts";

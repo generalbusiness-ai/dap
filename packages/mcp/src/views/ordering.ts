@@ -1,8 +1,8 @@
 /** Presentation order over one complete native source, without changing its
  * retained read data. Native IDs break ties in both directions. */
 import type { ApplicationProjectionRow } from "@generalbusiness/dap-contract";
-import type { ApplicationItemView } from "@generalbusiness/artroom-bytes/application-v2";
-import { timeMs } from "@generalbusiness/artroom-bytes";
+import type { ApplicationItemView } from "@generalbusiness/dap-bytes/application-v2";
+import { timeMs } from "@generalbusiness/dap-bytes";
 import { ViewError } from "./session.ts";
 
 export function orderedViewRows(rows: readonly ApplicationProjectionRow[], order: NonNullable<ApplicationItemView["order"]>): ApplicationProjectionRow[] {

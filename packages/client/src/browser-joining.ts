@@ -2,7 +2,7 @@
  * membership version are explicit; this does not establish native admission
  * or isolate an untrusted screen. Read-session credentials stay in memory. */
 import type { KeyId, MemberId, Receipt, ScopeRef } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, intentDigest, isMemberId, isRecord, isScopeRef, parseStrict, timeMs, timeOf, utf8 } from "@generalbusiness/artroom-bytes";
+import { b64url, canonicalize, intentDigest, isMemberId, isRecord, isScopeRef, parseStrict, timeMs, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { ScopeHandle } from "./handle.ts";
 import { httpTransport, type Fetch } from "./http.ts";
 import { signedIntent, type Signer } from "./intent.ts";

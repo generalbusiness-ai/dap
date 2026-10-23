@@ -1,10 +1,10 @@
 /** Scalar upper bounds from actual Native plans. All probe choices remain
  * undecided; present keys/closures bound possible output, never select it. */
 import type { Digest, Head, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isHead, natural, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isHead, natural, utf8 } from "@generalbusiness/dap-bytes";
 import type { RetainedKey } from "@generalbusiness/dap-derive";
 import { ArchiveSegmentCursor, journalOrderingInputWork, journalV2PassPath, journalV2RetainedPath, journalV2SegmentPath,
-  type JournalV2PlannedFile } from "@generalbusiness/artroom-git/journal";
+  type JournalV2PlannedFile } from "@generalbusiness/dap-git/journal";
 import { ARCHIVE_BOUNDS, type ArchiveBudget, type ArchiveCost } from "./archive-budget.ts";
 import type { ArchiveDeclarationFootprint, ArchivePotentialDeclarationFootprint } from "./archive-declaration-scout.ts";
 import type { ArchiveLocalReferencePlan } from "./archive-local-references.ts";

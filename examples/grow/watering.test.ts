@@ -1,7 +1,7 @@
 /** Native recorded watering work. Explicit fixture grants do not exercise
  * membership admission, pumps, chemical handling or provider effects. */
 import { expect, test } from "vitest";
-import { keyIdOfSecret } from "@generalbusiness/artroom-bytes";
+import { keyIdOfSecret } from "@generalbusiness/dap-bytes";
 import { keys, member, t } from "@generalbusiness/dap-derive/testing";
 import { room } from "./room.ts";
 import { nativeScenario, devicePermissions, operator, climate, on, replay, submit, type Actor, type Ledger } from "./test-support.ts";

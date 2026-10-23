@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 import { ItemQueryBudget, ItemQueryUnavailable } from "../src/item-query-budget.ts";
 import { applicationProjectionFactTimes } from "../src/applications/projection-fact-times.ts";
 import { applicationProjectionFactSigners } from "../src/applications/projection-fact-signers.ts";
-import { textDigest } from "@generalbusiness/artroom-bytes";
+import { textDigest } from "@generalbusiness/dap-bytes";
 import type { SqlValue } from "../src/sqlite.ts";
 
 // Invariant: operation admission stops the next native call before execution, fences the whole

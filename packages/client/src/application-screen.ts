@@ -1,7 +1,7 @@
 /** Browser entry metadata and invitation binding for an installed screen.
  * These values route native reads and acts; they grant no authority. */
 import type { Digest, KeyId, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isKeyId, isMemberRef, LATE, parseStrictBytes, takeBytes, within } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isKeyId, isMemberRef, LATE, parseStrictBytes, takeBytes, within } from "@generalbusiness/dap-bytes";
 import { readApplicationScreenAddress, readApplicationScreenContext } from "./application-route.ts";
 import { APPLICATION_SCREEN_HOST_PATH, applicationScreenHostMatches, bindApplicationScreenHost, isApplicationSandboxOrigin, readApplicationScreenHost, type ApplicationScreenHost } from "./application-gateway.ts";
 import type { ApplicationScreenContext } from "./application-types.ts";

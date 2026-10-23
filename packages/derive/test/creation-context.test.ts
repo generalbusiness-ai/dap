@@ -1,7 +1,7 @@
 import { contextDeclared as declared, contextParentData, contextPlatformData, contextNamedData } from "./definition-corpus/general-creation-data.ts";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type DeviceCommandGrant, type ScopeKind } from "@generalbusiness/dap-contract";
-import { canonicalize, isSeed, newIncarnation } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isSeed, newIncarnation } from "@generalbusiness/dap-bytes";
 import { clockOf, judgeGenesis, validateDefinition, type ValidDefinition } from "../src/index.ts";
 import { Ledger, T0, creation, deliver, created, keys, valid } from "./fixtures-entry.ts";
 

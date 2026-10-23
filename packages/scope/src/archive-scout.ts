@@ -2,7 +2,7 @@
  * leave only trusted grammar, bounded metadata and a one-use continuation.
  * Every selected prefix still requires fresh whole-prefix inventory. */
 import type { Bounds, Digest, FactRef, Head, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isHead, natural } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isDigest, isHead, natural } from "@generalbusiness/dap-bytes";
 import { type ArchiveBudget, type ArchiveCost } from "./archive-budget.ts";
 import { ArchiveDeclarations } from "./archive-declarations.ts";
 import { ArchiveDeclarationPlan } from "./archive-declaration-plan.ts";

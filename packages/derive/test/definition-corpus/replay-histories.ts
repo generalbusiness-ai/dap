@@ -1,7 +1,7 @@
 /** Positive declarations used by the recorded/replay fixtures. This module
  * constructs raw data only: no Ledger, judge, validator or Vitest import. */
 import { PROPOSED_BOUNDS, type Bounds } from "@generalbusiness/dap-contract";
-import { definitionDigest } from "@generalbusiness/artroom-bytes";
+import { definitionDigest } from "@generalbusiness/dap-bytes";
 import { RULES_EXTENTS_VALUE } from "../../../platform/src/rules-scope.ts";
 import { notes, ticket, desk } from "./fixture-data.ts";
 import { gate } from "./marks-data.ts";

@@ -2,9 +2,9 @@ import { DEVICE_APPLICATION_COHORT as D } from "./device-application-wire.ts";
 /** Bounded native metadata for the trusted-package route. No application
  * item data, member credential, turn, outside call or inferred authority. */
 import type { Digest, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isScopeRef } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isDigest, isScopeRef } from "@generalbusiness/dap-bytes";
 import type { StateView } from "@generalbusiness/dap-derive";
-import type { ApplicationInstallation, ApplicationRoom } from "@generalbusiness/artroom-bytes/application";
+import type { ApplicationInstallation, ApplicationRoom } from "@generalbusiness/dap-bytes/application";
 import { TRUSTED_APPLICATION_COHORT as C } from "./application-install-wire.ts";
 import { DECLARED_APPLICATION_COHORT as C2 } from "./application-install-v2-wire.ts";
 import { ARCHIVE_APPLICATION_COHORT as AC, ARCHIVE_DECLARED_APPLICATION_COHORT as AC2, ARCHIVE_DEVICE_APPLICATION_COHORT as ADC } from "./archive-binding-wire.ts";

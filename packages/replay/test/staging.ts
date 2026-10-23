@@ -26,7 +26,7 @@ import { stagingGateDeclaration, replayProofDomain as PROOF_DOMAIN } from "../..
 
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Digest, Entry, Evidence, FieldValue, Grant, MemberId, MemberObservation, Observation, ObservationUse, OperationId, PlatformDefinition, RetainedInput, RulesObservation, ScopeRef, Seed, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent, textDigest } from "@generalbusiness/artroom-bytes";
+import { canonicalize, factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent, textDigest } from "@generalbusiness/dap-bytes";
 import { RETIRE_ACTION, actionOf, clockOf, grantFrom, judgeDelivery, judgeGenesis, judgePreparation, settleOutcome, valueDigest } from "@generalbusiness/dap-derive";
 import type { OutcomeRule, PlatformRules, Source } from "@generalbusiness/dap-derive";
 import { Ledger, T0, creation, d, deliver, directory, keys, membership, t, type Actor, type Context } from "@generalbusiness/dap-derive/testing";

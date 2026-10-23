@@ -4,7 +4,7 @@
  */
 
 import type { Timestamp } from "@generalbusiness/dap-contract";
-import { timeMs, timeOf } from "@generalbusiness/artroom-bytes";
+import { timeMs, timeOf } from "@generalbusiness/dap-bytes";
 import type { StateView } from "./state.ts";
 
 /** The one text form of a timestamp and its guard are the bytes package's, beside the other identifiers. */

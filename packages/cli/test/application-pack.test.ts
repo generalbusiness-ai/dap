@@ -7,15 +7,15 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test } from "vitest";
-import { b64url } from "@generalbusiness/artroom-bytes";
-import { APPLICATION_PACKAGE_LIMITS as LIMITS, readApplicationPackage, secretSigner, type Signer } from "@generalbusiness/artroom-client";
+import { b64url } from "@generalbusiness/dap-bytes";
+import { APPLICATION_PACKAGE_LIMITS as LIMITS, readApplicationPackage, secretSigner, type Signer } from "@generalbusiness/dap-client";
 import { ApplicationSourceError, packDirectory, prepareApplicationDirectory } from "../src/application-files.ts";
 import { checkCommand, packCommand } from "../src/application-command.ts";
 import { memoryStore } from "../src/store.ts";
 import { fileStore } from "../src/files.ts";
-import { readApplicationPackage2 } from "@generalbusiness/artroom-bytes/application-v2";
+import { readApplicationPackage2 } from "@generalbusiness/dap-bytes/application-v2";
 import { runApplicationScenario } from "../src/application-scenarios.ts";
-import { emptyPackageComposition } from "@generalbusiness/artroom-package-graph";
+import { emptyPackageComposition } from "@generalbusiness/dap-package-graph";
 
 const secret = new Uint8Array(32).fill(23), signer = secretSigner(secret);
 async function fixture(kind: "counter" | "lending" = "lending") {
@@ -92,7 +92,7 @@ test("a trusted author's browser entry builds through pack without generated che
   try {
     const html = '<!doctype html><head><title>Local browser source</title></head><body><script type="module" src="./main.ts"></script></body>';
     await writeFile(join(f.root, "screen/index.html"), html);
-    await writeFile(join(f.root, "screen/main.ts"), 'import { browserPrivateSlots } from "@generalbusiness/artroom-client"; import "./main.css"; document.body.textContent = String(typeof browserPrivateSlots);');
+    await writeFile(join(f.root, "screen/main.ts"), 'import { browserPrivateSlots } from "@generalbusiness/dap-client"; import "./main.css"; document.body.textContent = String(typeof browserPrivateSlots);');
     await writeFile(join(f.root, "screen/main.css"), "body { color: red; }");
     const config = { ...f.config, presentation: { ...f.config.presentation, entry: "view/index.html", assets: [], browser: { entry: "screen/main.ts", html: "screen/index.html", script: "application.js" } } };
     const save = () => writeFile(join(f.root, "dap.application.json"), JSON.stringify(config));
@@ -105,7 +105,7 @@ test("a trusted author's browser entry builds through pack without generated che
     expect(Object.keys(assets).sort()).toEqual(["view/application.css", "view/application.js", "view/index.html"]);
     expect(assets["view/index.html"]).toContain('<script type="module" src="./application.js"></script>');
     expect(assets["view/index.html"]).toContain('<link rel="stylesheet" href="./application.css">');
-    expect(assets["view/application.js"]).not.toContain("@generalbusiness/artroom-client");
+    expect(assets["view/application.js"]).not.toContain("@generalbusiness/dap-client");
     expect((await prepareApplicationDirectory(f.root, signer)).packet.bytes).toEqual(first.bytes);
     await writeFile(join(f.root, "screen/main.css"), "body { color: blue; }");
     const changed = (await prepareApplicationDirectory(f.root, signer)).packet;

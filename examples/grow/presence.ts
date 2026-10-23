@@ -1,6 +1,6 @@
 /** Application-owned recorded presence. No journal scan or native extension. */
 import type { ActType, FactRef, Item, ItemType, MemberRef } from "@generalbusiness/dap-contract";
-import { isFactRef, isMemberRef } from "@generalbusiness/artroom-bytes";
+import { isFactRef, isMemberRef } from "@generalbusiness/dap-bytes";
 
 export const PRESENCE_LIMIT = 32;
 const states = ["unknown", "present", "away"] as const;

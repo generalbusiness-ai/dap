@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 
-import { canonicalBytes, definitionDigest } from "@generalbusiness/artroom-bytes";
+import { canonicalBytes, definitionDigest } from "@generalbusiness/dap-bytes";
 import { timedGraph, validateDefinition } from "../src/index.ts";
 import { Scope, fields, keys, lane, laneDefinition, member, on, small, smallDefinition, t, ticket, valid } from "./fixtures-entry.ts";
 

@@ -2,7 +2,7 @@
  * body is returned here. Successful classification is not integrity,
  * replay, access/consent admission or permission to export. */
 import type { Digest, Input } from "@generalbusiness/dap-contract";
-import { isDigest, platformName } from "@generalbusiness/artroom-bytes";
+import { isDigest, platformName } from "@generalbusiness/dap-bytes";
 import { ArchiveBudget } from "./archive-budget.ts";
 import { stopArchivePrefix as stop, type ArchivePrefix, type ArchivePosition } from "./archive-prefix.ts";
 import type { Sql } from "./sqlite.ts";

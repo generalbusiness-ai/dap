@@ -2,7 +2,7 @@
  * A verified header/pin is metadata, never reviewed privacy coverage,
  * production provenance, consent or permission to export a payload. */
 import type { Bounds, Digest, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
-import { same, canonicalize, definitionDigest, entryHash, isDigest, isEntry, isRecord, isScopeRef, parseStrict, scopeIdOf, utf8 } from "@generalbusiness/artroom-bytes";
+import { same, canonicalize, definitionDigest, entryHash, isDigest, isEntry, isRecord, isScopeRef, parseStrict, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { outcomeValueDomains, validateDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { nativeDeclarationText, platform } from "@generalbusiness/dap-platform";

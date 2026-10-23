@@ -2,7 +2,7 @@
  * The owning frame supplies the actual verified source fact and its pin.
  * This returns metadata only and supplies no privacy/export admission. */
 import type { Advisory, Bounds, Digest, FactRef, Request, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isFactRef } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isFactRef } from "@generalbusiness/dap-bytes";
 import { bound, isDetachedTextField, textDependency, textsNamed, type PlannedRetainedDependency, type ValidDefinition } from "@generalbusiness/dap-derive";
 import type { ArchiveBudget } from "./archive-budget.ts";
 import { ARCHIVE_DIGEST_FIELD_BATCH, checkArchiveFieldSource, readArchiveDigestFields } from "./archive-digest-fields.ts";

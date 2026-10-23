@@ -1,7 +1,7 @@
 /** Raw Grow graph declarations. Native checks remain in the fixture wrapper. */
 import { PROPOSED_BOUNDS, type DeclaredDefinition, type Digest } from "@generalbusiness/dap-contract";
-import { definitionDigest, fitsFieldType } from "@generalbusiness/artroom-bytes";
-import { emptyPackageComposition, type PackageGraphInput } from "@generalbusiness/artroom-package-graph";
+import { definitionDigest, fitsFieldType } from "@generalbusiness/dap-bytes";
+import { emptyPackageComposition, type PackageGraphInput } from "@generalbusiness/dap-package-graph";
 import { site } from "../../../../examples/grow/site.ts";
 import { room } from "../../../../examples/grow/room.ts";
 export function growData(change: (site: DeclaredDefinition, room: DeclaredDefinition) => void = () => {}, peerPin?: Digest, extra: readonly DeclaredDefinition[] = []): PackageGraphInput {

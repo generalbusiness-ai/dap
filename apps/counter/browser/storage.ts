@@ -1,5 +1,5 @@
 /** Origin-private pending custody and non-extractable demo device keys. Session tokens remain volatile. */
-import { canonicalize, digestBytes, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, digestBytes, utf8 } from "@generalbusiness/dap-bytes";
 import { terminalJournal, validAudioStart, validReport, type AttemptJournal } from "./journal.ts";
 import { deviceSigner, type SavedDevice } from "./device-key.ts";
 import type { ActorIdentity, AudioStart, CustodyLock, PendingReport, PendingStore, PreparedEnvelope } from "./voice-controller.ts";

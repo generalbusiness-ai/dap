@@ -1,7 +1,7 @@
 import { relaxedCounting } from "./support/definition-corpus-data.ts";
 import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
-import { definitionDigest } from "@generalbusiness/artroom-bytes";
+import { definitionDigest } from "@generalbusiness/dap-bytes";
 import { change, issueDemo } from "@generalbusiness/dap-lanes";
 import { lane as deriveLane } from "@generalbusiness/dap-derive/testing";
 import { countingCommitments } from "../../../apps/counter/commitments.ts";

@@ -3,7 +3,7 @@ import { forms_sends_change0 } from "./definition-corpus/forms-sends-variants.ts
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Input, Request, Result, ScopeRef, Seed } from "@generalbusiness/dap-contract";
-import { intentDigest } from "@generalbusiness/artroom-bytes";
+import { intentDigest } from "@generalbusiness/dap-bytes";
 import { validateDefinition, type ProblemCode } from "../src/index.ts";
 import { Scope, arrive, born, decided, deliver, desk, directory, fields, created, keys, on, ticketDefinition, valid, variant } from "./fixtures-entry.ts";
 

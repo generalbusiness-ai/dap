@@ -6,7 +6,7 @@
  */
 
 import type { Bounds, Entry, FactRef, FieldType, FieldValue, Guard, MemberRef, Operand, Prepared, Range, Reason, ScopeRef, Subject, UnavailableReason, Digest } from "@generalbusiness/dap-contract";
-import { canonicalBytes, digestBytes } from "@generalbusiness/artroom-bytes";
+import { canonicalBytes, digestBytes } from "@generalbusiness/dap-bytes";
 import type { Signer } from "./attribution.ts";
 import { capabilityGuard, type Capabilities } from "./capability.ts";
 import type { Own, Snapshots } from "./fields.ts";

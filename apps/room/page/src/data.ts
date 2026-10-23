@@ -1,6 +1,6 @@
-import { stringOrNull as text } from "@generalbusiness/artroom-bytes";
-import { isRecord as record } from "@generalbusiness/artroom-bytes";
-import { invitationRedemptionFields, isInvitationMembership } from "@generalbusiness/artroom-client";
+import { stringOrNull as text } from "@generalbusiness/dap-bytes";
+import { isRecord as record } from "@generalbusiness/dap-bytes";
+import { invitationRedemptionFields, isInvitationMembership } from "@generalbusiness/dap-client";
 /**
  * The page's data functions: what it reads from a room and the one thing it
  * writes, a signed act. Each takes a `Session`, the scope service's base URL
@@ -37,10 +37,10 @@ import { invitationRedemptionFields, isInvitationMembership } from "@generalbusi
  */
 
 import type { Answer, DeclaredDefinition, Digest, Entry, FactRef, FieldValue, Head, Item, KeyId, MemberRef, ScopeId, ScopeRef, Summary, Read, SignedIntent, Receipt, OutboxId } from "@generalbusiness/dap-contract";
-import { LATE, b64url, byteOrder, canonicalize, definitionDigest, entryHash, intentDigest, isFactRef, isMemberRef, isScopeId, isSeed, scopeIdOf, isScopeRef as fullScopeRef, takeBytes, textDigest, timeMs, timeOf, verifySignedIntent } from "@generalbusiness/artroom-bytes";
+import { LATE, b64url, byteOrder, canonicalize, definitionDigest, entryHash, intentDigest, isFactRef, isMemberRef, isScopeId, isSeed, scopeIdOf, isScopeRef as fullScopeRef, takeBytes, textDigest, timeMs, timeOf, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import {
   ScopeHandle, activeDirectory, collectItemQuery, partitionIndexes, declaredHandle, httpTransport, requestSession, secretSigner, signerSessionRequest, shapeDeclaredAct, signedIntent, signedReads, type Fetch, type Session as ReadSession, type Signer, type Signing, type Transport,
-} from "@generalbusiness/artroom-client";
+} from "@generalbusiness/dap-client";
 import { LINK, describe, expectedOf, heldActs, linkOf, valueOf, type ActShape, type DefinitionShape, type Standing } from "@generalbusiness/dap-cli";
 import { DEFINITION_DOMAIN, ROLE_LISTS, fileSound, firstExtents, isExtents, platform, type Role } from "@generalbusiness/dap-platform";
 import type { Extent as PolicyExtent } from "@generalbusiness/dap-platform";

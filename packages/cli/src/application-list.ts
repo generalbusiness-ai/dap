@@ -1,8 +1,8 @@
 /** One explicit Directory query page; names come from content-checked local
  * definition retention. No history scan, child reads or implicit pagination. */
 import { DOMAINS, PROPOSED_BOUNDS, type Digest, type ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, domainRetainedJSON, isDigest, isRecord, isScopeRef } from "@generalbusiness/artroom-bytes";
-import { ScopeHandle, type Transport } from "@generalbusiness/artroom-client";
+import { canonicalize, domainRetainedJSON, isDigest, isRecord, isScopeRef } from "@generalbusiness/dap-bytes";
+import { ScopeHandle, type Transport } from "@generalbusiness/dap-client";
 import type { Outcome } from "./commands.ts";
 
 export const APPLICATION_LIST_ROWS = 25;

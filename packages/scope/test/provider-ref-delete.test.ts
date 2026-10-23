@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { utf8 } from "@generalbusiness/artroom-bytes";
+import { utf8 } from "@generalbusiness/dap-bytes";
 import { ArtifactsProvider } from "../src/artifacts-host.ts";
 import { GitHubProvider, type DestinationRefDeletion } from "../src/github-host.ts";
 

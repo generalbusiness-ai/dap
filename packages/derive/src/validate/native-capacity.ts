@@ -1,7 +1,7 @@
 /** Producer facts for native receiver pins. Amounts and their recursive
  * closures are computed by capacityOf, beside every other pending task. */
 import type { FieldType } from "@generalbusiness/dap-contract";
-import { isScopeRef } from "@generalbusiness/artroom-bytes";
+import { isScopeRef } from "@generalbusiness/dap-bytes";
 import { isObject } from "../values.ts";
 import { LICENSE_BOUND } from "../capability/hold.ts";
 import type { ClauseSet, Ctx, Defining, PendingWork } from "./context.ts";

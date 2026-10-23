@@ -15,8 +15,8 @@
  * then one pointer line to the complete text.
  */
 
-import { isRecord } from "@generalbusiness/artroom-bytes";
-import { canonicalize } from "@generalbusiness/artroom-bytes";
+import { isRecord } from "@generalbusiness/dap-bytes";
+import { canonicalize } from "@generalbusiness/dap-bytes";
 import { markRefusals, markText } from "./marks.ts";
 
 // ---------------------------------------------------------------- the forms, loosely, as both declared and platform data hold them

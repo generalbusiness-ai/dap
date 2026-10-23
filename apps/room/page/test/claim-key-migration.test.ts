@@ -1,7 +1,7 @@
 /** Actual key import/signing with localStorage/Web Locks stand-ins. No native
  * enrollment, browser IDB durability or deployed recovery is proved here. */
 import { expect, test, vi } from "vitest";
-import { b64url, canonicalize, keyIdOfSecret, newIncarnation, scopeIdOf, textDigest, verify } from "@generalbusiness/artroom-bytes";
+import { b64url, canonicalize, keyIdOfSecret, newIncarnation, scopeIdOf, textDigest, verify } from "@generalbusiness/dap-bytes";
 import { migrateAllClaimCustody } from "../src/claim.ts";
 import { memoryPageKeys } from "./private-key-fixture.ts";
 

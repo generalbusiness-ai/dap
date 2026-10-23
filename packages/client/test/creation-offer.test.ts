@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { newIncarnation, scopeIdOf, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
+import { newIncarnation, scopeIdOf, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { creationOffer, isCreationOffer, type CreationOffer, type CreationOfferFetch } from "../src/creation-offer.ts";
 
 // Actual SDK byte/URL guard over SCRIPTED HTTP, no native creation or permission.

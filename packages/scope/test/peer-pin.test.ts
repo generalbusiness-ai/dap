@@ -2,8 +2,8 @@
  * read access and transport are fixtures, not enrollment or a provider. */
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type RetainedInput } from "@generalbusiness/dap-contract";
-import { canonicalBytes, canonicalize, digestBytes, entryHash } from "@generalbusiness/artroom-bytes";
-import { MemorySource, verify } from "@generalbusiness/artroom-replay";
+import { canonicalBytes, canonicalize, digestBytes, entryHash } from "@generalbusiness/dap-bytes";
+import { MemorySource, verify } from "@generalbusiness/dap-replay";
 import { peerPinDefinitions } from "../../derive/test/fixtures-peer-pin.ts";
 import { creation, Node, net, rita, settle } from "./net.ts";
 

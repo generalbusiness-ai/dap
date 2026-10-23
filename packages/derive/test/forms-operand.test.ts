@@ -2,7 +2,7 @@ import { operandParts, operandProbeData, namedOperandData, elsewhereOperandData,
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { DeclaredDefinition, FactRef, FieldValue, Guard, Operand } from "@generalbusiness/dap-contract";
-import { intentDigest } from "@generalbusiness/artroom-bytes";
+import { intentDigest } from "@generalbusiness/dap-bytes";
 import { validateDefinition, type Fetched, type ProblemCode } from "../src/index.ts";
 import { Scope, deliver, fields, keys, on, ticket, valid, variant } from "./fixtures-entry.ts";
 

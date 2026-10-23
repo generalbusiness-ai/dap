@@ -8,7 +8,7 @@
 import { expect, onTestFinished, test } from "vitest";
 import { countedEntries, stateDigest } from "@generalbusiness/dap-derive";
 import type { Entry } from "@generalbusiness/dap-contract";
-import { timeMs, timeOf } from "@generalbusiness/artroom-bytes";
+import { timeMs, timeOf } from "@generalbusiness/dap-bytes";
 import { ArchiveRows } from "../src/archive-row.ts";
 import { ArchiveBudget, ARCHIVE_BOUNDS, type ArchiveCost } from "../src/archive-budget.ts";
 import { SqliteStore } from "../src/sqlite.ts";

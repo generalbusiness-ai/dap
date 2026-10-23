@@ -4,8 +4,8 @@
  */
 
 import type { ScopeRef } from "@generalbusiness/dap-contract";
-import { isScopeId } from "@generalbusiness/artroom-bytes";
-import { httpTransport, signedReads } from "@generalbusiness/artroom-client";
+import { isScopeId } from "@generalbusiness/dap-bytes";
+import { httpTransport, signedReads } from "@generalbusiness/dap-client";
 import { serve } from "@generalbusiness/dap-mcp/node";
 import type { McpConfig, Root } from "@generalbusiness/dap-mcp";
 import type { Context, Outcome } from "./commands.ts";

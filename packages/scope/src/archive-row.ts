@@ -1,9 +1,9 @@
 /** Internal archive bookkeeping, never an entry or an export certificate.
  * The planner must validate/admit a manifest before marking it; this store
  * only preserves its exact bytes and compares outstanding identities. */
-import { natural, same } from "@generalbusiness/artroom-bytes";
+import { natural, same } from "@generalbusiness/dap-bytes";
 import type { Head, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isRecord, isScopeRef, parseStrict, timeMs, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isDigest, isRecord, isScopeRef, parseStrict, timeMs, utf8 } from "@generalbusiness/dap-bytes";
 import type { DestinationRepository } from "./destination-host.ts";
 import { ArchiveBudget } from "./archive-budget.ts";
 import type { Sql } from "./sqlite.ts";

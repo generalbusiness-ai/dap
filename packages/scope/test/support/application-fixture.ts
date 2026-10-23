@@ -1,10 +1,10 @@
 /** Public TEST package and in-memory Git-object transport, not a remote. */
 import { env } from "cloudflare:test";
 import { PROPOSED_BOUNDS, type DeclaredDefinition } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, hex } from "@generalbusiness/artroom-bytes";
-import { packApplication, type ApplicationReleaseUri } from "@generalbusiness/artroom-client";
-import type { AnyPackedApplication } from "@generalbusiness/artroom-bytes/application-v2";
-import type { ApplicationGitObject } from "@generalbusiness/artroom-git";
+import { canonicalize, definitionDigest, hex } from "@generalbusiness/dap-bytes";
+import { packApplication, type ApplicationReleaseUri } from "@generalbusiness/dap-client";
+import type { AnyPackedApplication } from "@generalbusiness/dap-bytes/application-v2";
+import type { ApplicationGitObject } from "@generalbusiness/dap-git";
 import { countingCommitments } from "../../../../apps/counter/commitments.ts";
 import { readApplicationTrust } from "../../src/applications/admission.ts";
 import { ApplicationContentStore, applicationReleaseKey } from "../../src/applications/content.ts";

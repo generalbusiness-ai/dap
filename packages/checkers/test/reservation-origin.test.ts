@@ -4,7 +4,7 @@
 import { readFileSync } from "node:fs";
 import { expect, test } from "vitest";
 import type { Digest, ReservationSnapshot } from "@generalbusiness/dap-contract";
-import { entryHash, factRefOf, parseStrict, unb64url } from "@generalbusiness/artroom-bytes";
+import { entryHash, factRefOf, parseStrict, unb64url } from "@generalbusiness/dap-bytes";
 import { originOf, type Notice, type OriginRead } from "../src/index.ts";
 
 type Stored = { configurationDigest: Digest; snapshot: Omit<ReservationSnapshot, "objects"> & { objects: { id: string; type: "blob" | "tree" | "commit"; data: string }[] } };

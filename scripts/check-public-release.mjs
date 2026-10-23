@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 import { lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, writeFileSync } from "node:fs";
 import { dirname, join, isAbsolute } from "node:path";
 import { fileURLToPath } from "node:url";
-import { PLAN, ROOT, PUBLIC_TESTING_INPUTS, args, childEnv, compile, compilerTool, contained, digest, inventory, json, nameOf, outputClosure, productionInputs, publishManifest, references, rewritePublishedRefs, refusal, sourceIdentity, writeJson } from "./public-release-lib.mjs";
+import { PLAN, ROOT, PUBLIC_TESTING_INPUTS, args, childEnv, compile, compilerTool, contained, digest, inventory, json, nameOf, outputClosure, productionInputs, publishManifest, references, refusal, sourceIdentity, writeJson } from "./public-release-lib.mjs";
 
 /** esbuild 0.28.1's parser inserts its already-resolved helper import. Only
  * this exact edge of the pinned copied JSONata input is synthetic metadata.
@@ -31,7 +31,7 @@ export function check(manifestFile, captureFile, captureSha256, browserTool, bro
     if (/\.ts$/.test(input.path)) {
       const [, dir, ...parts] = input.path.split("/");
       const compiledInput = join(output, "inputs", dir, ...parts);
-      if (readFileSync(compiledInput, "utf8") !== rewritePublishedRefs(readFileSync(input.copy, "utf8"))) refusal("renamed-input-integrity");
+      if (!readFileSync(compiledInput).equals(readFileSync(input.copy))) refusal("renamed-input-integrity");
     }
   }
   const expectedExcluded = [];

@@ -1,7 +1,7 @@
 /** Effect forms, their conditions, and the rule that no two effects of one list set one thing (scope contract, sections 6.3, 6.6 and 6.7). */
 
 import { DEVICE_COMMAND, type Bounds, type EffectForm, type FieldType } from "@generalbusiness/dap-contract";
-import { canonicalize } from "@generalbusiness/artroom-bytes";
+import { canonicalize } from "@generalbusiness/dap-bytes";
 import { LAST_MS } from "../time.ts";
 import { isObject, isValue } from "../values.ts";
 import { capabilityEffect } from "./capability.ts";

@@ -1,7 +1,7 @@
 /** One authenticated scope observation. Invalidation notices never settle pending commands or prove current authority. */
-import { same } from "@generalbusiness/artroom-bytes";
+import { same } from "@generalbusiness/dap-bytes";
 import type { Digest, Head, KeyId, MemberId, PlatformDefinition, Read, ScopeRef, SessionRefusal, Summary } from "@generalbusiness/dap-contract";
-import { canonicalize, isHead, isScopeRef, timeMs, timeOf, type Expiry } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isHead, isScopeRef, timeMs, timeOf, type Expiry } from "@generalbusiness/dap-bytes";
 import type { Session } from "./session.ts";
 import { headLines, observationOrigin, type HeadBodyResult } from "./head-stream.ts";
 

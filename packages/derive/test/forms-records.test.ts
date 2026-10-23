@@ -1,7 +1,7 @@
 import { forms_records_change0 } from "./definition-corpus/forms-records-variants.ts";
 import { describe, expect, test } from "vitest";
 import type { Entry, FactRef, ScopeRef } from "@generalbusiness/dap-contract";
-import { factRefOf, intentDigest } from "@generalbusiness/artroom-bytes";
+import { factRefOf, intentDigest } from "@generalbusiness/dap-bytes";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { boundLicense, counted, hasWorkspace, holdCapability, judgeDelivery, preparationStatus, recordEffects } from "../src/index.ts";
 import type { Fetched } from "../src/index.ts";

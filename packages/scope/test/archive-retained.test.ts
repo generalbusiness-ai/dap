@@ -2,7 +2,7 @@
  * is not exercised here; no exporter or foreign/text/custom body runs. */
 import { expect, test } from "vitest";
 import { DOMAINS, PROPOSED_BOUNDS, RETAINED_INPUT_BYTES } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, digestBytes, utf8 } from "@generalbusiness/dap-bytes";
 import { ARCHIVE_BOUNDS, ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
 import { observationDependency } from "@generalbusiness/dap-derive";
 import { ArchiveRetainedReader, readArchiveProbe, archiveRetainedKeyName, archiveRetainedColdReadForecast, archiveRetainedReadForecast } from "../src/archive-retained.ts";

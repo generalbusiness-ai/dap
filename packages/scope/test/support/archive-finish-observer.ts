@@ -1,9 +1,9 @@
 /** TEST-only scalar observer for one exact Directory append candidate. Original methods
  * run exactly once. It supplies no production port, admission or allowance. */
 import type { Head, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, utf8 } from "@generalbusiness/dap-bytes";
 import { JournalPassPreparation, JOURNAL_SELECTION_BYTES, forecastJournalCommit,
-  forecastJournalPassBody, forecastJournalSelection, forecastJournalAppendFixed, type JournalObject } from "@generalbusiness/artroom-git/journal";
+  forecastJournalPassBody, forecastJournalSelection, forecastJournalAppendFixed, type JournalObject } from "@generalbusiness/dap-git/journal";
 import type { ArchiveBudget, ArchiveCost } from "../../src/archive-budget.ts";
 import { ArchiveRows, type ArchiveRow } from "../../src/archive-row.ts";
 import { archivePendingRowBytesUpper, forecastArchiveBookkeeping } from "../../src/archive-row-cost.ts";

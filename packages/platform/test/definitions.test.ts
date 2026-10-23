@@ -1,7 +1,7 @@
 import { membershipWrittenRoles } from "./definition-corpus-data.ts";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type DeclaredDefinition } from "@generalbusiness/dap-contract";
-import { definitionDigest } from "@generalbusiness/artroom-bytes";
+import { definitionDigest } from "@generalbusiness/dap-bytes";
 import { PROFILES, derivable, ruleAt, runnable, outcomeValueDomains, validateDefinition } from "@generalbusiness/dap-derive";
 import { ACTIONS_MOST, DESTINATION_CHANGED_SET, ROLE_LISTS, RULES, definitions, destinationMembership, destinationRulesScope, inbox, membership, platform, rulesMembership } from "../src/index.ts";
 

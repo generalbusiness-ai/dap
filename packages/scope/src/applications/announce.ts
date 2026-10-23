@@ -1,6 +1,6 @@
 /** A safe read of this Directory's own recorded child result. Its native
  * outcome sends the final install notice. No network or storage write here. */
-import { canonicalize } from "@generalbusiness/artroom-bytes";
+import { canonicalize } from "@generalbusiness/dap-bytes";
 import { APPLICATION_ANNOUNCEMENT_OWNER, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT as AC, ARCHIVE_DECLARED_APPLICATION_COHORT as AC2, applicationAnnouncement, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import type { OutsideGiven } from "../object.ts";
 import type { EffectRequest, Outside } from "../operations.ts";

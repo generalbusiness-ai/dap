@@ -5,9 +5,9 @@
  * No configuration, key, token or plaintext belongs in a scope's history.
  */
 import type { ScopeId } from "@generalbusiness/dap-contract";
-import { canonicalize, isFactRef, isScopeId, parseStrict, timeMs } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isFactRef, isScopeId, parseStrict, timeMs } from "@generalbusiness/dap-bytes";
 import { destinationBranch, isOf } from "@generalbusiness/dap-platform";
-import type { GitHubAccount, GitHubInstallationToken } from "@generalbusiness/artroom-git/github";
+import type { GitHubAccount, GitHubInstallationToken } from "@generalbusiness/dap-git/github";
 import { CredentialStore } from "./credential-store.ts";
 import { DestinationHost, type SnapshotReader } from "./destination-host.ts";
 import { GitHubProvider } from "./github-host.ts";

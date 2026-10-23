@@ -1,7 +1,7 @@
 import { finalHolderChange0, finalHolderChange1 } from "./definition-corpus/derive-reservation-variants.ts";
 import { expect, test } from "vitest";
 import type { Entry } from "@generalbusiness/dap-contract";
-import { entryHash } from "@generalbusiness/artroom-bytes";
+import { entryHash } from "@generalbusiness/dap-bytes";
 import { FoldError, applyEntry, drawsOf, heldReserved, stateDigest } from "../src/index.ts";
 import { on, valid, HOLDS_OWNER as OWNER, TELL, HoldsWorks as Works, changed, opened, holdsWorks as works } from "./fixtures-entry.ts";
 

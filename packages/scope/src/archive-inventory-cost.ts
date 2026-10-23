@@ -1,6 +1,6 @@
 /** Original fixed native inventory work. No privacy, declaration, body or
  * export admission is granted; those operations still execute in full. */
-import { natural } from "@generalbusiness/artroom-bytes";
+import { natural } from "@generalbusiness/dap-bytes";
 import { ARCHIVE_BOUNDS, ArchiveStopped, type ArchiveCost } from "./archive-budget.ts";
 import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES } from "./archive-pin.ts";
 

@@ -12,7 +12,7 @@
  */
 
 import type { Effect, Entry, FactRef, FactUse, Grant, GrantMark, Head, Input, MismatchReason, ObservationUse, Prepared, PlatformTimedRule, RefusalReason, RoutingRefusal, ScopeRef, Send, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
-import { intentDigest, scopeIdOf, verifySignedIntent } from "@generalbusiness/artroom-bytes";
+import { intentDigest, scopeIdOf, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import type { Signer } from "./attribution.ts";
 import { withinCounts } from "./draws.ts";
 import { deriveEffects } from "./effects.ts";

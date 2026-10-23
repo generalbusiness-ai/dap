@@ -1,6 +1,6 @@
 /** Native static create-definition edges, shared by creation and archive closure. */
 import type { DeclaredDefinition, Digest } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, parseStrict } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isDigest, parseStrict } from "@generalbusiness/dap-bytes";
 import { byteOrder } from "./values.ts";
 import type { Problem, ValidDefinition } from "./validate/index.ts";
 

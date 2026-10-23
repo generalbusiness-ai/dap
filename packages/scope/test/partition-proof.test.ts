@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type FactRef } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, isPlatformDefinition, newIncarnation, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, digestBytes, isPlatformDefinition, newIncarnation, utf8 } from "@generalbusiness/dap-bytes";
 import { scriptedPartitionOrigin } from "../../platform/test/support-partition-origin.ts";
 import { partitionProof, PartitionProofOperation, PARTITION_PROOF_BOUNDS as B, type PartitionProofPorts } from "../src/partition-proof.ts";
 import { used, retainedFacts } from "../src/core.ts";

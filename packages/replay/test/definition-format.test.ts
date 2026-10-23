@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { definitionDigest } from "@generalbusiness/artroom-bytes";
+import { definitionDigest } from "@generalbusiness/dap-bytes";
 import { created, notesDefinition } from "@generalbusiness/dap-derive/testing";
 import { MemorySource, verify } from "../src/index.ts";
 import { Gate } from "./staging.ts";

@@ -12,7 +12,7 @@
  */
 
 import type { Entry, RetainedInput } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, digestBytes, utf8 } from "@generalbusiness/dap-bytes";
 import { born, deliver, fields, created, keys, type Ledger } from "@generalbusiness/dap-derive/testing";
 import { MemorySource, hashOfBytes, type MemoryScope } from "../src/index.ts";
 

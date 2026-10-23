@@ -7,7 +7,7 @@
  */
 
 import type { Bounds, DeclaredDefinition, Digest } from "@generalbusiness/dap-contract";
-import { canonicalize, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, utf8 } from "@generalbusiness/dap-bytes";
 import type { Underived } from "./capability.ts";
 import type { PendingWorkAmounts, PendingCopy } from "./capacity.ts";
 import type { MarkPlace, RangeIndex } from "./context.ts";

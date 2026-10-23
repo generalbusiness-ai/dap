@@ -1,8 +1,8 @@
 /** One invocation's public HTTP allowance. This keeps no cross-tick state.
  * Exhaustion or an uncertain transport stops every later request. */
 import type { ScopeId } from "@generalbusiness/dap-contract";
-import type { Fetch } from "@generalbusiness/artroom-client";
-import type { ByteStream } from "@generalbusiness/artroom-bytes";
+import type { Fetch } from "@generalbusiness/dap-client";
+import type { ByteStream } from "@generalbusiness/dap-bytes";
 export const TICK_LIMITS = Object.freeze({ reads: 96, writes: 48, requestBytes: 256 * 1024, replyBytes: 4 * 1024 * 1024, milliseconds: 45_000 });
 export interface TickCosts { reads: number; writes: number; requestBytes: number; replyBytes: number }
 

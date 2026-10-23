@@ -1,8 +1,8 @@
 /** Every complete positive declaration used by the Grow package-graph witnesses.
  * Graph refusals do not remove otherwise valid definitions from this corpus. */
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { definitionDigest } from "@generalbusiness/artroom-bytes";
-import type { PackageGraphInput } from "@generalbusiness/artroom-package-graph";
+import { definitionDigest } from "@generalbusiness/dap-bytes";
+import type { PackageGraphInput } from "@generalbusiness/dap-package-graph";
 import { RULE_PROFILES } from "../../src/rule/index.ts";
 import type { DefinitionCorpusRow } from "./row.ts";
 import { growData, preFailureRelationData } from "./package-graph-data.ts";

@@ -7,9 +7,9 @@ import { archiveInventoryChange, archiveLeafData, archiveInventoryParentChange, 
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Digest, Entry, Head, Input, Seed} from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, entryHash, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, digestBytes, entryHash, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import type { OperationRules, ValidDefinition } from "@generalbusiness/dap-derive";
-import { MemorySource, verify } from "@generalbusiness/artroom-replay";
+import { MemorySource, verify } from "@generalbusiness/dap-replay";
 import { variant } from "@generalbusiness/dap-derive/testing";
 import { ArchivePrefixStopped } from "../src/archive-prefix.ts";
 import { ArchiveScout, type ArchiveScoutFrame } from "../src/archive-scout.ts";
@@ -479,7 +479,7 @@ test("a genuine native pin to legacy membership refuses before local entry/depen
   // genesis write, pin binding and legacy-policy ordering are exercised.
   const { wired } = await import("./outside.ts");
   const { controls } = await import("../src/testing.ts");
-  const { intentDigest, scopeIdOf, signIntent } = await import("@generalbusiness/artroom-bytes");
+  const { intentDigest, scopeIdOf, signIntent } = await import("@generalbusiness/dap-bytes");
   const { START, at, objectOf, stubOf } = await import("./support.ts");
   const { runInDurableObject } = await import("cloudflare:test");
   const data = oldMembershipStandingData();

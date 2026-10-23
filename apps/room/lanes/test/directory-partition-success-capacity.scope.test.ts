@@ -2,7 +2,7 @@ import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Entry, type ScopeId } from "@generalbusiness/dap-contract";
-import { keyIdOfSecret, scopeIdOf, signInvitationProof } from "@generalbusiness/artroom-bytes";
+import { keyIdOfSecret, scopeIdOf, signInvitationProof } from "@generalbusiness/dap-bytes";
 import { owed, PROFILES, standingEntries, validateDefinition } from "@generalbusiness/dap-derive";
 import { PARTITION_COHORT as C, platform } from "@generalbusiness/dap-platform";
 import { partitionGeneration } from "../../../../packages/platform/src/directory-partitions.ts";

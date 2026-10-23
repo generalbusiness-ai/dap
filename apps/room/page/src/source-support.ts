@@ -2,7 +2,7 @@
  * cohort, not an inference from a declaration's name or similar fields.
  * These pins match lanes/src/digests3.ts at the adopted b8 checkpoint. */
 import type { DeclaredDefinition, Digest } from "@generalbusiness/dap-contract";
-import { definitionDigest } from "@generalbusiness/artroom-bytes";
+import { definitionDigest } from "@generalbusiness/dap-bytes";
 
 export const LIST1_DEFINITION_DIGESTS = {
   change: "sha256:85cec888905722a8dd051b3eb3388a1b674d82500f1df80044b298d12a285930",

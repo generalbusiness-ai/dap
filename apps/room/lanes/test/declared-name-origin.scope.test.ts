@@ -1,9 +1,9 @@
 import { env } from "cloudflare:workers";
 import { isEntryOf } from "@generalbusiness/dap-derive";
-import { namespace, type Sourced } from "@generalbusiness/artroom-scope";
+import { namespace, type Sourced } from "@generalbusiness/dap-scope";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Intent, type ScopeRef, type Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, digestBytes, intentDigest, isSeed, scopeIdOf, seedDigest, signIntent, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, definitionDigest, digestBytes, intentDigest, isSeed, scopeIdOf, seedDigest, signIntent, utf8 } from "@generalbusiness/dap-bytes";
 import { keys, type Actor } from "@generalbusiness/dap-derive/testing";
 import { APPLICATION_COHORT, firstExtents, publishingLaneOrigin, repositoryName } from "@generalbusiness/dap-platform";
 import { changeDemo } from "../src/index.ts";

@@ -1,7 +1,7 @@
 /** Real native SQLite bookkeeping and restart. Marks below are explicit
  * test-authored metadata, not admitted inventory, built commits or host proof. */
 import { expect, test } from "vitest";
-import { canonicalize, digestBytes, domainBytes, timeOf, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, digestBytes, domainBytes, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { DOMAINS } from "@generalbusiness/dap-contract";
 import { ARCHIVE_ROW_BYTES, ArchiveRows, type ArchiveMark } from "../src/archive-row.ts";
 import { ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";

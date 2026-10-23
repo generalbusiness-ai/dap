@@ -1,5 +1,5 @@
 /** CLI entry to the same native install and persistent custody used by MCP. */
-import { secretSigner } from "@generalbusiness/artroom-client";
+import { secretSigner } from "@generalbusiness/dap-client";
 import { McpService, type CustodyStore } from "@generalbusiness/dap-mcp";
 import type { Context, Outcome } from "./commands.ts";
 

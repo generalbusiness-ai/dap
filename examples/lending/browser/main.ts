@@ -6,9 +6,9 @@
  * Each act keeps its page text in the signed request. Published text is read separately.
  */
 import "./style.css";
-import { applicationDeviceIdentity, applicationScreenTransport, loadApplicationScreenContext } from "@generalbusiness/artroom-client";
+import { applicationDeviceIdentity, applicationScreenTransport, loadApplicationScreenContext } from "@generalbusiness/dap-client";
 import { LENDING_DEFINITION } from "../pin.ts";
-import { canonicalize } from "@generalbusiness/artroom-bytes";
+import { canonicalize } from "@generalbusiness/dap-bytes";
 import { lendingGateway, type ActOutcome, type LendingGateway, type LendingState, type Pending } from "./client.ts";
 import { deviceSigner, findLending, joining, newDeviceKey, readInvitation, type DeviceKey, type JoinOutcome, type Seat } from "./join.ts";
 import { offeredActs, type LendingAct, type LendingActivityRow, type LendingView, type ShownThing } from "./model.ts";

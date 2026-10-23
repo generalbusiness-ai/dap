@@ -2,8 +2,8 @@
  * repository creation, directory/enrollment completion, production credentials, browser or hosted admission runs here. */
 import { env } from "cloudflare:test";
 import { expect, test } from "vitest";
-import { b64url, canonicalize, intentDigest, newIncarnation, scopeIdOf } from "@generalbusiness/artroom-bytes";
-import { secretSigner, signedIntent } from "@generalbusiness/artroom-client";
+import { b64url, canonicalize, intentDigest, newIncarnation, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { secretSigner, signedIntent } from "@generalbusiness/dap-client";
 import { DEMO_PURPOSE, DEMO_REGISTER, WEB_DEMO_REGISTER } from "@generalbusiness/dap-platform";
 import type { Seed } from "@generalbusiness/dap-contract";
 import type { Binding } from "../src/namespace.ts";

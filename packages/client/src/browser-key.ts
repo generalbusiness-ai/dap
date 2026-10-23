@@ -1,7 +1,7 @@
 /** A signer over an existing browser-held key, including one restored from
  * IndexedDB. The application still owns scope, member and epoch validation. */
 import type { KeyId } from "@generalbusiness/dap-contract";
-import { b64url, isKeyId, keyIdOf, verify } from "@generalbusiness/artroom-bytes";
+import { b64url, isKeyId, keyIdOf, verify } from "@generalbusiness/dap-bytes";
 import type { Signer } from "./intent.ts";
 
 const unavailable = (): never => { throw new Error("A browser-held non-extractable Ed25519 signing key is required."); };

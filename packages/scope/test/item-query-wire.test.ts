@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { ItemQuery } from "@generalbusiness/dap-contract";
-import { b64url, encodeItemQuery, newIncarnation, scopeIdOf, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
+import { b64url, encodeItemQuery, newIncarnation, scopeIdOf, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { admittedRequestUrl, decodeItemQueryWire, itemQueryWire } from "../src/item-query-wire.ts";
 
 const scope = { scope: scopeIdOf({ v: 1, kind: "lane", creator: null, definition: textDigest("SCRIPTED query wire definition"), cause: textDigest("SCRIPTED cause"), ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(4)), kind: "lane" as const };

@@ -1,14 +1,14 @@
 import { describe, expect, onTestFinished, test } from "vitest";
 import type { Entry, ScopeId, Seed } from "@generalbusiness/dap-contract";
-import { intentDigest, messageDigest, scopeIdOf, textDigest } from "@generalbusiness/artroom-bytes";
-import { TRUSTS, httpSource, verify } from "@generalbusiness/artroom-replay";
+import { intentDigest, messageDigest, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
+import { TRUSTS, httpSource, verify } from "@generalbusiness/dap-replay";
 import { sourceName } from "@generalbusiness/dap-platform";
-import { scriptedCapability, type CapabilityScript } from "@generalbusiness/artroom-scope/testing";
+import { scriptedCapability, type CapabilityScript } from "@generalbusiness/dap-scope/testing";
 import { README, answered, graph, net, rita, routed, type Graph, type Node } from "./support/graph.ts";
 import { DIGESTS, issue } from "../src/index.ts";
 import { room as nativeRoom, vic as nativeVic } from "./support/room.ts";
 import { nativelyCreatedChild, settleNativeChildren } from "./support/natively-created-child.ts";
-import type { Sourced } from "@generalbusiness/artroom-scope";
+import type { Sourced } from "@generalbusiness/dap-scope";
 
 /** What each entry of a history is: its input's type, and for a delivery the message's class and the clause or decision it recorded. */
 const kinds = (entries: readonly Entry[]) => entries.map((e) => (e.input.type !== "delivery" ? e.input.type : "clause" in e.input ? `result ${e.input.clause}` : e.input.message.class));
