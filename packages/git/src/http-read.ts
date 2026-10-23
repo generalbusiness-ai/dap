@@ -4,7 +4,8 @@
  * gitprotocol-capabilities and gitprotocol-v2; zlib framing: RFC 1950/1951.
  * No thin pack, retry or inference of absence from an error. Default reads fetch
  * closures; explicit isolated reads require shallow/filter and return only
- * the wanted commit/tree/blob, with no ancestry claim.
+ * the wanted commit/tree/blob, with no ancestry claim. V2 may transfer bounded
+ * companion objects under blob:none; only the wanted object is retained.
  * The caller's maxBytes bounds wire, inflated and retained object bytes;
  * it is a transport allowance, not an adopted platform quota.
  */
@@ -29,17 +30,21 @@ export interface PackReadOptions {
   singleObjectBytes?: number;
   /** Absolute deadline for isolated framing and inflation; default closure decoding is unchanged. */
   deadline?: number;
+  /** Trusted synchronous admission after header checks, before per-object metadata or inflation. */
+  reserveObjects?: (count: number) => void;
 }
 /** Isolation is explicit. Its conservative payload reservation excludes engine/stream metadata and is not measured peak memory. */
 export interface IsolatedObjectReads {
   ownedBytes: number;
   /** Trusted opt-in for object exchanges only. Ref reads and omitted options retain v0. */
   protocol?: "v2";
+  /** V2 only: reserve actual decoder metadata in the caller's original budget. */
+  reserveObjects?: (count: number) => void;
 }
 export interface SmartHttpReadOptions extends SmartHttpOptions { isolateObjects?: IsolatedObjectReads }
 // Includes wire chunks/concats, advertisement strings, pack/Blob copies,
 // inflate chunks/concat, retained bytes and one returned copy. Metadata is
-// separately finite by packet, ref and exact-one-object counts.
+// separately finite by packet, ref and admitted pack-object counts.
 const ISOLATED_WORKING_MULTIPLE = 16;
 const large = (what: string) => new GitRefusal("too-large", what);
 const utf8 = new TextEncoder();
@@ -281,6 +286,7 @@ export async function decodePack(input: Uint8Array, options: PackReadOptions): P
   if (version !== 2 && version !== 3) throw fail("pack version");
   if (count > bounds.closureObjects) throw large("pack objects");
   if (options.singleObjectBytes !== undefined && (!Number.isSafeInteger(options.singleObjectBytes) || options.singleObjectBytes < 0 || count !== 1)) throw large("isolated pack objects");
+  options.reserveObjects?.(count);
   const cursor = new Cursor(pack, 12);
   const offsets = new Map<number, Entry>();
   const waiting = new Map<string, Entry[]>();
@@ -588,6 +594,7 @@ export class SmartHttpSource implements GitSource {
     this.#options = checked(options);
     this.#isolation = options.isolateObjects === undefined ? undefined : { ...options.isolateObjects };
     if (this.#isolation?.protocol !== undefined && this.#isolation.protocol !== "v2") throw fail("isolated object capabilities");
+    if (this.#isolation?.reserveObjects !== undefined && typeof this.#isolation.reserveObjects !== "function") throw fail("isolated object capabilities");
     const working = ISOLATED_WORKING_MULTIPLE * this.#options.maxBytes;
     if (this.#isolation && (!Number.isSafeInteger(working) || !Number.isSafeInteger(this.#isolation.ownedBytes) || this.#isolation.ownedBytes < working)) throw large("isolated payload allowance");
     this.#timeoutMs = options.timeoutMs ?? COMMAND_MS;
@@ -749,13 +756,21 @@ export class SmartHttpSource implements GitSource {
     v2Capabilities(ad, this.#options.bounds.refs + 3, this.#deadline!);
     // v2 want is an exact object ID, not limited to an advertised ref list.
     // The server still authorizes this request with the same repository credential.
-    const body = concat([packet("command=fetch\n"), utf8.encode("0001"), packet(`want ${id}\n`), packet("deepen 1\n"), packet("filter tree:0\n"), packet("no-progress\n"), packet("done\n"), utf8.encode("0000")]);
+    const body = concat([packet("command=fetch\n"), utf8.encode("0001"), packet(`want ${id}\n`), packet("deepen 1\n"), packet("filter blob:none\n"), packet("no-progress\n"), packet("done\n"), utf8.encode("0000")]);
     const answer = await this.#request("git-upload-pack", "application/x-git-upload-pack-result", body, true);
     const framed = v2Pack(answer, id, this.#deadline!);
-    const objects = await decodePack(framed.pack, { ...this.#options, bounds: { ...this.#options.bounds, closureObjects: 1 }, singleObjectBytes: Math.min(limit, this.#options.maxBytes), deadline: this.#deadline! });
+    // blob:none can send the wanted commit and its trees. Use the existing
+    // bounded full decoder (including bounded deltas), not a closure read or
+    // a second request. Companion objects never enter this source's cache.
+    const objects = await decodePack(framed.pack, { ...this.#options, deadline: this.#deadline!,
+      ...(this.#isolation?.reserveObjects === undefined ? {} : { reserveObjects: this.#isolation.reserveObjects }) });
     this.#timely();
-    if (framed.boundary && objects[0]?.type !== "commit") throw fail("isolated shallow object");
-    return objects;
+    const wanted = objects.find(object => object.id === id);
+    if (!wanted) throw fail("wanted object omitted");
+    if (wanted.type === "tag") throw new GitRefusal("wrong-type", "isolated pack entry");
+    if (wanted.data.length > Math.min(limit, this.#options.maxBytes)) throw large("isolated object allowance");
+    if (framed.boundary && wanted.type !== "commit") throw fail("isolated shallow object");
+    return [wanted];
   }
   async #objectV0(id: ObjectId, limit: number): Promise<DecodedObject[]> {
     const ad = await this.#advertisement();

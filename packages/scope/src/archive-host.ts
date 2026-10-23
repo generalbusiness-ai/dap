@@ -47,7 +47,7 @@ export function archiveProvider(ports: { readonly tokens: ArchiveTokens; readonl
   const { tokens, clock } = ports;
   const isolatedObjectProtocol = host.isolatedObjectProtocol;
   const held = new WeakMap<ArchiveCredential, { repository: DestinationRepository; at: ScopeRef; ref: string; original: ArchiveCredential }>();
-  const source = async (repository: DestinationRepository, allowed: () => boolean, most?: { bytes: number; objects: number }, isolated = false, observation?: ArchiveParentReadObservation): Promise<SmartHttpSource> => {
+  const source = async (repository: DestinationRepository, allowed: () => boolean, most?: { bytes: number; objects: number }, isolated = false, observation?: ArchiveParentReadObservation, reserveObjects?: (count: number) => void): Promise<SmartHttpSource> => {
     check(allowed); repository = { ...repository }; host.transport(repository); // Validate before the first port call.
     observation?.phase("token");
     const plaintext = await tokens.read({ ...repository }, allowed); check(allowed);
@@ -66,7 +66,8 @@ export function archiveProvider(ports: { readonly tokens: ArchiveTokens; readonl
       } } : {}),
       ...(most === undefined ? {} : { bounds: { ...(transport.bounds ?? READ_BOUNDS), closureObjects: Math.min(transport.bounds?.closureObjects ?? READ_BOUNDS.closureObjects, most.objects) } }),
       ...(isolated ? { isolateObjects: { ownedBytes: maxBytes * 17,
-        ...(isolatedObjectProtocol === undefined ? {} : { protocol: isolatedObjectProtocol }) } } : {}) });
+        ...(isolatedObjectProtocol === undefined ? {} : { protocol: isolatedObjectProtocol }),
+        ...(reserveObjects === undefined ? {} : { reserveObjects }) } } : {}) });
   };
   const ref = async (repository: DestinationRepository, name: string, allowed: () => boolean): Promise<string | null> => {
     const input = await source(repository, allowed);
@@ -82,16 +83,29 @@ export function archiveProvider(ports: { readonly tokens: ArchiveTokens; readonl
       check(allowed);
       const id = journalId("sha1", object.id), maximum = object.maximum, type = object.type;
       if (!Number.isSafeInteger(maximum) || maximum < 1 || maximum > 8 * 1024 * 1024 || type !== "commit" && type !== "tree" && type !== "blob") return bad();
-      // A single-object exchange has a small, separately bounded allowance
-      // for advertisement and framing. Larger replies refuse; no closure
-      // fallback or unused transport allowance tops up the original budget.
+      // A wanted-object exchange has a small, separately bounded allowance
+      // for advertisement, framing and v2 blob:none companion trees. Larger
+      // replies refuse; no closure fallback tops up the original budget.
       const wire = maximum + 8 * 1024;
+      const v2 = isolatedObjectProtocol === "v2";
+      // A valid entry needs at least one header byte and eight zlib bytes,
+      // besides the pack's header/trailer. The transport can reduce this
+      // count further; this is not a new platform quota or a cache grant.
+      const objects = v2 ? Math.min(READ_BOUNDS.closureObjects, Math.floor((wire - 32) / 9)) : 1;
       // One exact-object HTTP negotiation/decode, with bounded advertisement
       // and wire work, spends the native pass's original allowance before I/O.
-      budget.spend({ calls: 2, metadata: 1024, inputWork: wire * 32 });
+      budget.spend({ calls: 2, metadata: 1024, inputWork: wire * 32 + (v2 ? 1024 : 0) });
       const observation = beginArchiveParentRead(budget, type, maximum);
       try {
-        const input = await source(repository, allowed, { bytes: wire, objects: 1 }, true, observation);
+        // Header count is checked before this synchronous reservation, and
+        // no per-entry records, maps, reference arrays or inflation precede it. Price
+        // their records, SHA-1 keys and dependency/ready/result memberships
+        // conservatively at 1024 units per actual entry, in both ledgers.
+        // This is logical work accounting, not measured engine heap. Wire
+        // and base metadata were already charged; failed admission refunds
+        // nothing and exposes no object. V0 retains its original cost/mode.
+        const reserveObjects = v2 ? (count: number) => { budget.spend({ metadata: count * 1024, inputWork: count * 1024 }); } : undefined;
+        const input = await source(repository, allowed, { bytes: wire, objects }, true, observation, reserveObjects);
         observation.phase("object");
         const value = await input.object(id, maximum); check(allowed);
         if (value.type !== type) return bad();
