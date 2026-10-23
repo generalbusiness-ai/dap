@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7430e4c229d08e130604aa4f46d6a30b34afc92b","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/definition-corpus/receiver-pins-data.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7683bc922735176a6950c2fc1463d4dcc8f59526","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/fixtures-holds.ts."}
