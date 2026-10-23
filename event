@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:72a7efbc21293482bb4e2decc0750dbc701e99cb","text":"Merge retired a covered predecessor; the successor is at packages/platform/tsconfig.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:72ac9244921c11f36acd7926ffc31fd2331e9bee","text":"Merge retired a covered predecessor; the successor is at examples/grow/presence.ts."}
