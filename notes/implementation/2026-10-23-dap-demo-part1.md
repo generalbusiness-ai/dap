@@ -1,6 +1,6 @@
 # dap-demo: CLI and MCP creation
 
-Source implementation for planner request `de76a01f4b6e65debb7985de2424a33717e72ec5`, promise `708c102c5f0328b5d0e62253ef5c64f009e4c7c2`. Basis: accepted Main `27abf6d90db7df1d459ff3da023e09324a89c53a`, including the landed archive advertisement request `489ad7c9`. The disjoint fast-forward preserved all twelve authored file identities and bytes; all other tracked paths equal accepted Main. The focused checks and controls below are complete. No hosted deployment or register installation is claimed. The ordinary gate result will accompany this exact candidate in Gitseq review evidence. The browser start page is Part 2 and is outside this head.
+Source implementation for planner request `de76a01f4b6e65debb7985de2424a33717e72ec5`, promise `708c102c5f0328b5d0e62253ef5c64f009e4c7c2`. Basis: accepted Main `27abf6d90db7df1d459ff3da023e09324a89c53a`, including the landed archive advertisement request `489ad7c9`. The disjoint fast-forward preserved all twelve authored file identities and bytes; all other tracked paths equal accepted Main. The focused checks and controls below are complete. No hosted deployment or register installation is claimed. The ordinary gate passed at `3d45e832673ab70ad125fd26ba4d0145bb2527a8`, tree `07c7a5270d28d16848f085c77ed1433ae25c7dfb`. This documentation-only follow-up leaves source and tests unchanged; Gitseq review evidence records both tree hashes. The browser start page is Part 2 and is outside this head.
 
 ## Resulting behavior
 
@@ -8,7 +8,9 @@ Source implementation for planner request `de76a01f4b6e65debb7985de2424a33717e72
 
 The new `apps/room/wrangler.demo.jsonc` uses the generic room Worker, four local Durable Object classes, its own `dap-demo` Artifacts namespace and an enforced index. Its serving limits equal Grow's: 10 creations per key/hour, 30 per address/hour, 240 reads per key/minute and 600 per address/minute. There is no open parentless creation setting, register ID, credential, deployment secret, session secret or browser creation offer in the file. The planner supplies the actual Artifacts host and planned registerScope. Local class bindings without script_name create this Worker's own namespaces; no scope/index/registry/agent namespace is borrowed from artroom-scope or Grow.
 
-Existing artroom-scope rooms remain available in register mode. Its legacy demo register@8 no longer meets deployed creation admission. The route refuses unqualified fresh Start discovery at the old public origin with its existing 404 response. Preserve live DEMO_START_CONFIG: GitHub destination authorization and exact retained Start references still depend on it. The existing Page handles the unavailable offer; no Page source or bundle changes are needed. No live setting or secret is removed. New CLI/MCP rooms use dap-demo.inguz.workers.dev; browser creation is not promised here.
+Existing artroom-scope rooms remain available in register mode. Its legacy demo register@8 no longer meets deployed creation admission. The route refuses unqualified fresh Start discovery at the old public origin with its existing 404 response. Preserve live DEMO_START_CONFIG: GitHub destination authorization and exact retained Start references still depend on it. The existing Page shows its unavailable-service message after a submitted Start attempt; the old form remains visible and has no link to the new service in Part 1. Part 2 adds the old-origin notice and a link to the new Start page. No Page source or bundle changes are included here. No live setting or secret is removed. New CLI/MCP rooms use dap-demo.inguz.workers.dev; browser creation is not promised here.
+
+The demo configuration does not bind `APPLICATION_CONTENT` or `APPLICATION_TRUST`. Application package hosting and installation are therefore unavailable in these rooms until those bindings are configured and verified. The open register and responding room API do not establish application availability.
 
 ## Planner runbook
 
@@ -37,6 +39,8 @@ Do not execute this sequence before the archive item and this exact reviewed hea
    ```sh
    npx --offline wrangler@4.147.0 deploy --config "$REPO/apps/room/wrangler.demo.jsonc" --var "ARTIFACTS_CONFIG:$DEMO_ARTIFACTS_CONFIG"
    ```
+
+   Supply the same actual nonsecret ARTIFACTS_CONFIG on every later deployment until the planner commits it to the configuration after founding. The command-line value above does not persist in the source file; omitting it from a later invocation can remove the setting.
 
    This is the first activation of room code. Require the two preexisting secret bindings to remain. Inspect the rendered configuration: name dap-demo; four local namespaces/migrations; Artifacts namespace dap-demo; index enforce; exact serving limits; no ALLOW_OPEN_CREATION or DEMO_START_CONFIG. Preserve deploy output/version. Do not weaken enforcement to found the register, and do not advertise traffic until the exact register is confirmed.
 
@@ -95,7 +99,11 @@ Both controls restored the exact original file bytes, modes and inodes, with com
 
 Root outcomes in Gitseq: adoption `8f5e6fe8`, parser `c6199070`, baseline `3d9227aa`, CLI control with collector failure `97d354e5`, and route control `e449fb59`. Independent audits cover complete raw identities and guards. Wall/inclusive CPU seconds are respectively 4.7680/4.3766, 3.4113/3.0817, 17.7833/21.9920, 5.0576/5.5339 and 7.7435/8.9873. Each owner's inclusive cost overlaps its nested children; do not add those intervals. These are observations on a shared macOS host with inherited caches.
 
-One ordinary `npm run gate` and independent exact-head review remain the landing requirements. Their original result and any callback gaps are recorded separately against the gated commit; this note supplies no prospective gate success.
+The ordinary `npm run gate` completed in root session `27282` with natural exit zero. All eight stages passed: 3,498 Vitest cases passed and three skipped across 487 files; the Node checks passed 37 cases and Counting passed 55. The complete final case set has 3,501 IDs. Incremental callbacks reported 3,484 ready and 3,481 result rows, leaving 17 missing-ready and 20 missing-result IDs among passed cases. These are reporting gaps, not evidence of a running case or physical draining. No unhandled error, signal or owner error was reported.
+
+The gate owner took 1,178.3892 seconds elapsed and 1,381.6582 seconds inclusive CPU on the shared macOS host with inherited caches. The child took 1,176.4917 seconds elapsed. Those intervals overlap. Raw evidence is `/private/tmp/artroom-dap-demo-part1-final-gate-20261023-v1`; Gitseq outcome `9476c9e6` records the exact gated head. Full fixed-input guards matched before and after, with only the allowed Vitest result-cache leaf changed. Independent review remains required before landing.
+
+The three accepted deployment limitations above and this completed result are the only post-gate changes, all in this note. Under `docs/testing.md`, the healthy gate is not repeated for a documents-only commit. The document-link and section-citation checks run at the review head, with their actual outcomes supplied separately. No hosted deployment, application installation or browser Start acceptance is claimed.
 
 Public rooms are not deleted, so storage grows. Serving limits bound floods, not accumulated storage. A retention policy is required before wide promotion and is not part of this head.
 
