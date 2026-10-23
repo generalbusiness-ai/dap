@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5a1c3251bd8f7950973bce381122090a6116b1e2","text":"Merge retired a covered predecessor; the successor is at examples/lending/browser/main.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5fd96bdc2717b915fb8f7626f79c3abf70a455ea","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-22-serving-windows-r12.md."}
