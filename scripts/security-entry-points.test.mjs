@@ -50,8 +50,8 @@ const pendingArchiveSeals = {
   "packages/scope/src/archive-source-window.ts": "4db3f5885e7541f713b9668d1cde655e42be1950dd6af77d5711a323b3582e1c",
   "packages/scope/src/archive-publication.ts": "d8c39d220bc7eea59301478aa553960267aac16f06502b4103a85647c71eb457",
   "packages/scope/src/archive-build.ts": "e82bffde8d5e6ce26b1dbd80f0659ec15a48dd461f9e02f4a235c19fbc1a4201",
-  "packages/scope/src/archive-driver.ts": "3dd46755edd501d2f4bb614648a3d0358fbe72635c4a734403da3f98317aceac", // Parent-read diagnostic reviewed; actual maintained parser output.
-  "packages/scope/src/archive-row.ts": "b3b4f7fed29152a60ba76dc58a09529b18fc7b9ea737f986d7fc2803a42d8dab",
+  "packages/scope/src/archive-driver.ts": "65e2a5cde96f1223297e3a7f1c7fc851126590fc781db009a220c73e44b8f9e2", // Parent-read diagnostic reviewed; actual maintained parser output.
+  "packages/scope/src/archive-row.ts": "91fd40cf8fd7dddb37383bf8daf86fdc30f0da5983ab69dfa3550263331ae12b",
   "packages/scope/src/floor-writer.ts": "fb8fd859844b8d10ba43b477bcaf07ab32fe1bfa1b6684ad9ae70b930d328a11",
   "packages/scope/src/object.ts": "b403bba2d72425b252488d960a7cbb557d1bcc38fb9390760e39b49ac4299df4", // Must match the separately adopted original owner value above.
   "apps/room/worker.grow.ts": "791c2bfcb8b2a62d8f0d8afec627ac76b63be4b9f1ee5de27d3f6c081959bc01",

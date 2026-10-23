@@ -19,6 +19,7 @@ import { ArchiveScout } from "./archive-scout.ts";
 import type { ArchiveScoutLayoutQuote } from "./archive-scout-layout.ts";
 import type { FixtureArchiveSourcePins } from "./archive-source-pins.ts";
 import { forecastArchiveTransfer } from "./archive-transfer-cost.ts";
+import { forecastArchiveFrontierFinish } from "./archive-frontier-cost.ts";
 import type { Sql } from "./sqlite.ts";
 
 const empty = (): ArchiveCost => ({ entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0, inputWork: 0 });
@@ -104,9 +105,12 @@ function finishCost(context: AdaptiveArchiveContext, preparation: JournalPassPre
     bytes: parent.bytes + patch.layoutWork.outputWork + commit.layoutWork.outputWork,
     incremental: context.parent !== null, maximum: context.maximum });
   if (!rows.ok || !transfer.ok) return null;
+  const frontier = forecastArchiveFrontierFinish({ hasBase: context.parent !== null,
+    markUnits: shape.selectionUnits + publicationUnits, markedRowBytes: pending });
+  if (!frontier.ok) return null;
   return sum(setup, inventory, shape.input, publication, { inputWork: JOURNAL_SELECTION_BYTES * 3 }, selection.cost, body.cost,
     patch.cost, commit.cost, context.parent && patch.appendEdges?.ok ? patch.appendEdges.cost : {},
-    append?.ok ? append.cost : {}, transfer.cost, rows.cost);
+    append?.ok ? append.cost : {}, transfer.cost, rows.cost, frontier.cost);
 }
 export function planAdaptiveArchivePass(sql: Sql, context: AdaptiveArchiveContext, budget: ArchiveBudget) {
   return adaptiveArchivePass(false, sql, context, budget);

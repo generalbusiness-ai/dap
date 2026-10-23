@@ -119,7 +119,10 @@ test("native driver parent reads and append sends use the same original budget t
     through = row.confirmed!.through.seq;
     if (budgets.length === 2) await lane.restart();
   }
-  expect(through).toBe(head.seq); expect(sends.length).toBeGreaterThan(3); expect(uploads.length).toBeGreaterThan(0);
+  expect(through).toBe(head.seq); expect(sends.length).toBeGreaterThan(3);
+  // Native parent state survives the restart. The actual adapter still
+  // owns every ref/readback and append send, but fetches no parent object.
+  expect(uploads).toEqual([]);
   expect(minted).toBe(sends.length); expect(revoked).toBe(minted);
   for (const budget of budgets) for (const [key, ceiling] of Object.entries(ARCHIVE_BOUNDS)) {
     expect(budget.admitted()[key as keyof typeof ARCHIVE_BOUNDS]).toBeLessThanOrEqual(ceiling);

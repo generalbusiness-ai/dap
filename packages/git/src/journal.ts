@@ -18,3 +18,4 @@ export { JOURNAL_V2_LAST_POSITION, journalV2PassPath, journalV2SegmentPath, jour
 export { JournalWork, type JournalBudget, type JournalCost } from "./journal-work.ts";
 export { journalId, type JournalFormat, type JournalObject, type JournalObjectSource } from "./journal-objects.ts";
 export { journalRef, archiveRetainedPath } from "./journal-path.ts";
+export { captureJournalParentFrontier, validateJournalParentFrontier, forecastJournalParentFrontier, JOURNAL_PARENT_FRONTIER_OBJECTS, JOURNAL_PARENT_FRONTIER_BYTES, JOURNAL_PARENT_FRONTIER_ROWS, type JournalParentBinding, type JournalParentFrontier } from "./journal-v2-frontier.ts";

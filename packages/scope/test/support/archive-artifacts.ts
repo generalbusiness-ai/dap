@@ -20,7 +20,8 @@ export class ArchiveArtifactsPeer {
   readonly posts: Uint8Array[] = [];
   readonly sends: string[] = [];
   failBeforeAccept = false;
-  constructor(readonly repository: DestinationRepository, readonly now: () => number) {}
+  constructor(readonly repository: DestinationRepository, readonly now: () => number,
+    readonly options: { readonly verifyReceivedClosure?: boolean } = {}) {}
   get remote() { return `https://service.invalid/git/${this.repository.namespace}/${this.repository.name}.git`; }
   readonly source: GitSource = {
     object: async (id, maximum) => { const object = this.data.get(id); return object ? { type: object.type, size: object.data.length, data: object.data.length <= maximum ? object.data : null } : null; },
@@ -92,7 +93,10 @@ export class ArchiveArtifactsPeer {
     this.posts.push(new Uint8Array(bytes));
     if (this.failBeforeAccept) { this.failBeforeAccept = false; throw new Error("TEST lost connection before acceptance"); }
     for (const object of objects) this.data.set(object.id, { id: object.id, type: object.type as JournalObject["type"], data: new Uint8Array(object.data) });
-    expect((await new Reader(this.source).closure(match[2]!)).complete).toBe(true);
+    // Large mechanical append witnesses check the final complete graph once;
+    // their real send path still validates every append's exact old/new edges.
+    // All existing callers retain this peer's full-closure check by default.
+    if (this.options.verifyReceivedClosure !== false) expect((await new Reader(this.source).closure(match[2]!)).complete).toBe(true);
     this.refs.set(match[3]!, match[2]!); this.sends.push(match[2]!);
     return response(`${pkt("unpack ok\n")}${pkt(`ok ${match[3]}\n`)}0000`, "receive-pack-result");
   };

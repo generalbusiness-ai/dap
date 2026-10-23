@@ -140,6 +140,11 @@ export class ArchiveRows {
     return parseStrict(bytes) as ArchiveRow;
   }
   load(budget = new ArchiveBudget()): ArchiveRow | null { return this.#sql.transaction(() => this.#load(budget)?.row ?? null); }
+  /** Checked canonical native bytes for an internal compare-and-set token.
+   * Same bounded reader and charges; no new row field or receipt authority. */
+  loadSnapshot(budget = new ArchiveBudget()): { readonly row: ArchiveRow; readonly bytes: string } | null {
+    return this.#sql.transaction(() => this.#load(budget));
+  }
   target(repository: DestinationRepository, format: Format, budget = new ArchiveBudget()): ArchiveRow {
     return this.#sql.transaction(() => {
       const previous = this.#load(budget)?.row;

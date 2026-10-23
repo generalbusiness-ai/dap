@@ -111,7 +111,7 @@ test("a pre-Mark target failure survives eviction and new native input without l
       // This stand-in provider has no exact-object transport. It must not
       // invent a parent-read phase from a target failure or native work.
       expect(record["parentRead"]).toEqual({ ordinal: 0, type: "none", maximum: 0, phase: "none", refusal: "none" });
-      expect(["row-load", "pin", "due-check", "target", "format", "pending-readback", "parent", "sources", "rebuild", "plan", "mark", "copy", "mint", "send", "readback", "confirm"]).toContain(record["step"]);
+      expect(["row-load", "pin", "due-check", "target", "format", "pending-readback", "parent", "bootstrap", "sources", "rebuild", "plan", "frontier", "mark", "copy", "mint", "send", "readback", "confirm"]).toContain(record["step"]);
       expect(["none", "not-due", "wake-not-due", "target-missing", "target-different"]).toContain(record["detail"]);
       expect(["unknown", "absent", "stopped", "pending", "confirmed", "target"]).toContain(record["rowPhaseAtLoad"]);
       expect(["idle", "disabled", "retry", "stopped", "confirmed", "threw"]).toContain(record["state"]);

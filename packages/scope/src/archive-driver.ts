@@ -1,17 +1,18 @@
 /** One bounded asynchronous archive pass. No entry, operation or public RPC.
  * Configuration and reviewed policy belong to the trusted object owner. */
-import { same } from "@generalbusiness/dap-bytes";
+import { canonicalize, digestBytes, same, utf8 } from "@generalbusiness/dap-bytes";
 import type { Bounds, Head, ScopeRef, Seed, Timestamp } from "@generalbusiness/dap-contract";
 import { isScopeRef, timeMs, timeOf } from "@generalbusiness/dap-bytes";
-import { journalId, journalRef, type JournalArchive, type JournalPassArchive, type JournalFormat, type JournalObject, type JournalObjectSource } from "@generalbusiness/dap-git/journal";
+import { captureJournalParentFrontier, journalRef, type JournalArchive, type JournalPassArchive, type JournalFormat, type JournalObject, type JournalObjectSource } from "@generalbusiness/dap-git/journal";
 import { ARCHIVE_BOUNDS, ArchiveBudget, ArchiveStopped } from "./archive-budget.ts";
-import { ARCHIVE_TRANSFER_OBJECTS, archiveObjectListMetadata, archiveObjectCopyWork } from "./archive-transfer-cost.ts";
+import { archiveParent, copyArchiveObjects } from "./archive-parent.ts";
+import { ArchiveFrontiers, type ArchiveFrontierBase, type ArchiveFrontierPrepared } from "./archive-frontier-store.ts";
 import { planPublishedArchiveConversion, rebuildArchive, rebuildArchivePass } from "./archive-build.ts";
 import { planAdaptiveArchivePass, planRootAdaptiveArchivePass } from "./archive-adaptive.ts";
 import type { FixtureArchiveSourcePins } from "./archive-source-pins.ts";
 import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, readArchivePin, readArchivePinAfterReceipt } from "./archive-pin.ts";
 import type { ArchivePolicyRegistry } from "./archive-inventory.ts";
-import { ArchiveRows, type ArchiveRow } from "./archive-row.ts";
+import { ArchiveRows, type ArchiveMark, type ArchiveRow } from "./archive-row.ts";
 import { finishArchiveParentRead, startArchiveParentReadPass } from "./archive-parent-read-diagnostic.ts";
 import type { DestinationRepository } from "./destination-host.ts";
 import type { Sql } from "./sqlite.ts";
@@ -122,56 +123,9 @@ export class ArchiveDriver {
       return Number.isSafeInteger(delay) && delay > 0 ? timeOf(now + delay) : null;
     } catch { return null; }
   }
-  #copy(objects: readonly JournalObject[], format: JournalFormat, budget: ArchiveBudget): Map<string, JournalObject> {
-    if (!Array.isArray(objects) || objects.length > ARCHIVE_TRANSFER_OBJECTS) budget.stop("limit");
-    budget.spend({ metadata: archiveObjectListMetadata(objects.length) });
-    let size = 0;
-    const owned = new Map<string, JournalObject>();
-    for (const object of objects) {
-      budget.check(); journalId(format, object.id);
-      if (!(object.data instanceof Uint8Array) || !["commit", "tree", "blob"].includes(object.type) || owned.has(object.id)) budget.stop("unavailable");
-      if (object.data.length > this.#maximum - size) budget.stop("limit");
-      size += object.data.length; budget.spend({ inputWork: archiveObjectCopyWork(object.data.length) });
-      owned.set(object.id, { id: object.id, type: object.type, data: new Uint8Array(object.data) });
-    }
-    return owned;
-  }
-  async #parent(row: ArchiveRow, budget: ArchiveBudget, allowed: () => boolean) {
-    const id = row.pending?.parent ?? row.confirmed?.commit ?? null;
-    if (row.pending?.layout === 2 || !row.pending) {
-      const held = new Map<string, JournalObject>(), used = new Set<string>(); let bytes = 0;
-      if (id === null) return { parent: null, held, used };
-      const read = this.#options.provider.readObject;
-      if (!read) return budget.stop("unavailable");
-      const source: JournalObjectSource = {
-        object: async (key, maximum) => {
-          const object = held.get(key);
-          return object ? { type: object.type, size: object.data.length, data: object.data.length <= maximum ? object.data : null } : null;
-        },
-        boundedObject: async (key, type, maximum) => {
-          budget.check(); let object = held.get(key);
-          if (!object) {
-            const got = await budget.wait(() => read.call(this.#options.provider, { ...row.repository }, { id: key, type, maximum }, allowed, budget));
-            if (got === null) return null;
-            if (!(got.data instanceof Uint8Array) || got.type !== type || got.size !== got.data.length || got.size > maximum || got.size > this.#maximum - bytes) return budget.stop("unavailable");
-            object = this.#copy([{ id: key, type, data: got.data }], row.format, budget).get(key)!;
-            bytes += object.data.length; held.set(key, object);
-          }
-          used.add(key);
-          return { type: object.type, size: object.data.length, data: object.data.length <= maximum ? object.data : null };
-        },
-      };
-      return { parent: { id, source }, held, used };
-    }
-    const held = id === null ? new Map<string, JournalObject>() : this.#copy(await budget.wait(() => this.#options.provider.objects({ ...row.repository }, id, { bytes: this.#maximum, objects: 8192 }, allowed)), row.format, budget);
-    const used = new Set<string>();
-    const parent = id === null ? null : { id, source: { object: async (key: string, most: number) => {
-      const object = held.get(key);
-      if (!object) return null;
-      if (object.data.length > most) return { type: object.type, size: object.data.length, data: null };
-      used.add(key); return { type: object.type, size: object.data.length, data: object.data };
-    } } };
-    return { parent, held, used };
+  async #parent(row: ArchiveRow, budget: ArchiveBudget, allowed: () => boolean, frontiers: ArchiveFrontiers, base: ArchiveFrontierBase | null) {
+    return archiveParent(row, this.#options.provider, this.#maximum, budget, allowed,
+      base === null ? null : { frontier: base.frontier, source: frontiers.source(base, budget) });
   }
   async #pass(): Promise<ArchivePass> {
     const budget = this.#options.budget?.() ?? new ArchiveBudget();
@@ -247,6 +201,12 @@ export class ArchiveDriver {
         deferred = false;
       }
       if (!same(row.at, at)) budget.stop("unavailable");
+      // Bind native witnesses to this exact repository identity. Repository
+      // strings were bounded by ArchiveRows before this serialization.
+      budget.spend({ metadata: 32 * 1024, inputWork: 32 * 1024 * 12 });
+      const identity = { at, format: row.format, repository: digestBytes(utf8(canonicalize(row.repository))) };
+      const frontiers = new ArchiveFrontiers(this.#options.sql, identity);
+      let pendingFrontier: ArchiveFrontierPrepared | null = null;
       const ref = journalRef(at.scope);
       // Resolve an outstanding attempt before reconstructing or minting again.
       if (row.pending) {
@@ -257,7 +217,20 @@ export class ArchiveDriver {
         }
         step = "pending-readback";
         const seen = await budget.wait(() => this.#options.provider.ref({ ...row!.repository }, ref, allowed));
-        if (seen === row.pending!.commit) { step = "confirm"; return done(this.#confirmed(rows, row, budget)); }
+        if (row.pending!.layout === 2) {
+          try { pendingFrontier = await frontiers.readPending({ ...identity, commit: row.pending!.commit, through: row.pending!.through }, row.pending!, budget); }
+          catch (error) {
+            // Only a store-owned contradiction of the still-current Mark
+            // is corruption. Stale state and resource failures keep retrying.
+            const stopped = this.#options.sql.transaction(() => {
+              if (!frontiers.isCurrentPendingMismatch(error, budget)) return false;
+              rows.stop("rebuild-mismatch", null, budget); return true;
+            });
+            if (stopped) return done({ state: "stopped", next: null, reason: "rebuild-mismatch" });
+            throw error;
+          }
+        }
+        if (seen === row.pending!.commit) { step = "confirm"; return done(this.#confirmed(rows, row, budget, frontiers, pendingFrontier)); }
         if (seen !== row.pending!.parent) { rows.stop("conflict", ref, budget); return done({ state: "stopped", next: null, reason: "conflict" }); }
       } else if (row.confirmed?.layout === 2 && row.confirmed.through.seq >= through.seq) {
         if ("production" in this.#options) {
@@ -275,13 +248,38 @@ export class ArchiveDriver {
         rows.defer(scheduled, budget); deferred = true;
       }
       step = "parent";
-      const previous = await this.#parent(row, budget, allowed);
+      const base = pendingFrontier !== null ? pendingFrontier.base : row.confirmed?.layout === 2
+        ? await frontiers.readConfirmed({ ...identity, commit: row.confirmed.commit, through: row.confirmed.through }, budget) : null;
+      if (row.confirmed?.layout === 2 && base === null) {
+        step = "bootstrap";
+        const context = frontiers.beginConfirmedBootstrap(budget);
+        if (context === null) return done({ state: "retry", next: scheduled });
+        if (!same(context.binding, { ...identity, commit: row.confirmed.commit, through: row.confirmed.through })) return budget.stop("unavailable");
+        const finish = frontiers.bootstrapFinish(context);
+        if (!finish.ok) return budget.stop("limit");
+        const captured = await budget.lookaheadAsync(finish.cost, async () => {
+          const remote = await this.#parent(row!, budget, allowed, frontiers, null);
+          if (remote.parent === null) return budget.stop("unavailable");
+          return captureJournalParentFrontier(context.binding, remote.parent.source, budget);
+        });
+        if (captured.kind === "limited") return done({ state: "retry", next: scheduled, reason: "limit" });
+        const prepared = await frontiers.prepareConfirmedBootstrap(context, captured.value, budget);
+        if (!allowed()) return budget.stop("unavailable");
+        frontiers.installConfirmedBootstrap(prepared, budget);
+        // Migration uses this pass's original allowance. The existing wake
+        // starts selection and append in a later pass without a budget reset.
+        return done({ state: "retry", next: scheduled });
+      }
+      const conversionBase = pendingFrontier === null && row.confirmed !== null && row.confirmed.layout !== 2 && (!row.pending || row.pending.layout === 2)
+        ? frontiers.readConversionBase(budget) : null;
+      const previous = await this.#parent(row, budget, allowed, frontiers, base);
       const prepareSources = "production" in this.#options ? this.#options.sources : undefined;
       step = "sources";
       const preparedSources = prepareSources ? await budget.wait(() => prepareSources(row!.confirmed?.layout === 2 ? row!.confirmed.through : null,
         row!.pending?.through ?? through, budget, !!row!.pending)) : null;
       const sources = preparedSources?.pins ?? this.#options.fixtureSources;
       let archive: JournalArchive | JournalPassArchive;
+      let mark: ArchiveMark;
       let selectedParentObjects: readonly string[] | undefined;
       if (row.pending) {
         step = "rebuild";
@@ -289,6 +287,7 @@ export class ArchiveDriver {
         const rebuilt = await rebuild(this.#options.sql, row, previous.parent, budget, sources);
         if (!rebuilt.ok) { rows.stop(rebuilt.reason, "where" in rebuilt ? rebuilt.where ?? null : null, budget); return done({ state: "stopped", next: null, reason: rebuilt.reason }); }
         archive = rebuilt.archive;
+        mark = row.pending;
       } else {
         step = "plan";
         const common = { bounds: this.#options.bounds, policies: this.#options.policies.registry, parent: previous.parent,
@@ -304,7 +303,7 @@ export class ArchiveDriver {
           const adaptive = await ("production" in this.#options ? planRootAdaptiveArchivePass : planAdaptiveArchivePass)(this.#options.sql, { ...common, at, through,
             ...(preparedSources?.prepare ? { prepareSources: preparedSources.prepare } : {}),
             after: row.confirmed?.through ?? null, format: row.format, row,
-            atomicFirstAttempt: "production" in this.#options,
+            atomicFirstAttempt: true,
             parentHeld: previous.held, parentUsed: previous.used, maximum: this.#maximum }, budget);
           if (adaptive.ok) selectedParentObjects = adaptive.parentObjects;
           else if (adaptive.reason === "mismatch") return done({ state: "retry", next: scheduled ?? this.#later(0), reason: adaptive.reason });
@@ -312,22 +311,33 @@ export class ArchiveDriver {
         }
         if (!planned.ok) { rows.stop(planned.reason, "where" in planned ? planned.where ?? null : null, budget); return done({ state: "stopped", next: null, reason: planned.reason }); }
         archive = planned.archive;
-        step = "mark";
-        if ("production" in this.#options) {
-          const first = scheduled ?? this.#later(0);
-          if (first === null) { budget.stop("unavailable"); return done({ state: "retry", next: null, reason: "unavailable" }); }
-          row = rows.markAttempt(planned.mark, first, budget); scheduled = first;
-        } else row = rows.mark(planned.mark, budget);
+        mark = planned.mark;
       }
       const next = scheduled ?? this.#later(row.attempts);
       if (next === null) { budget.stop("unavailable"); return done({ state: "retry", next: null, reason: "unavailable" }); }
-      if (row.attempts === 0) row = rows.attempt(next, budget);
-      scheduled = next;
       const all = new Map<string, JournalObject>();
       for (const id of selectedParentObjects ?? previous.used) all.set(id, previous.held.get(id)!);
       for (const object of archive.objects) all.set(object.id, object);
+      if (mark.layout === 2 && pendingFrontier === null) {
+        step = "frontier";
+        const frontier = await captureJournalParentFrontier({ ...identity, commit: mark.commit, through: mark.through }, {
+          object: async (id, maximum) => {
+            const object = all.get(id);
+            return object ? { type: object.type, size: object.data.length, data: object.data.length <= maximum ? object.data : null } : null;
+          },
+        }, budget);
+        pendingFrontier = await frontiers.prepare(frontier, mark, base ?? conversionBase, budget);
+        step = "mark";
+        row = this.#options.sql.transaction(() => {
+          const marked = rows.markAttempt(mark, next, budget);
+          frontiers.stage(pendingFrontier!, budget);
+          return marked;
+        });
+      } else if (!row.pending) row = rows.markAttempt(mark, next, budget);
+      if (row.attempts === 0) row = rows.attempt(next, budget);
+      scheduled = next;
       step = "copy";
-      const objects = [...this.#copy([...all.values()], row.format, budget).values()];
+      const objects = [...copyArchiveObjects([...all.values()], row.format, budget, this.#maximum).values()];
       step = "mint";
       credential = await budget.wait(() => this.#options.provider.mintArchive({ ...row!.repository }, { ...at }, allowed));
       if (!credential) return done({ state: "retry", next, reason: "unavailable" });
@@ -339,7 +349,7 @@ export class ArchiveDriver {
         ...(row!.confirmed?.layout === 2 ? { incremental: { budget } } : {}) }));
       step = "readback";
       const seen = await budget.wait(() => this.#options.provider.ref({ ...row!.repository }, ref, allowed));
-      if (seen === archive.commit) { step = "confirm"; return done(this.#confirmed(rows, row, budget)); }
+      if (seen === archive.commit) { step = "confirm"; return done(this.#confirmed(rows, row, budget, frontiers, pendingFrontier)); }
       if (seen !== row.pending!.parent) { rows.stop("conflict", ref, budget); return done({ state: "stopped", next: null, reason: "conflict" }); }
       return done({ state: "retry", next });
     } catch (error) {
@@ -362,10 +372,14 @@ export class ArchiveDriver {
       } catch { /* Observation cannot replace the original archive result. */ }
     }
   }
-  #confirmed(rows: ArchiveRows, row: ArchiveRow, budget: ArchiveBudget): ArchivePass {
+  #confirmed(rows: ArchiveRows, row: ArchiveRow, budget: ArchiveBudget, frontiers: ArchiveFrontiers, frontier: ArchiveFrontierPrepared | null): ArchivePass {
     const mark = row.pending!, latest = this.#options.current();
     const next = mark.layout !== 2 || latest && latest.head.seq > mark.through.seq ? this.#options.clock() : null;
-    rows.confirm(mark.commit, budget, next); this.#fallback = null;
+    this.#options.sql.transaction(() => {
+      if (frontier !== null) frontiers.promote(frontier, budget);
+      rows.confirm(mark.commit, budget, next);
+    });
+    this.#fallback = null;
     return { state: "confirmed", next };
   }
 }
