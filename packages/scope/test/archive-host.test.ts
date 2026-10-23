@@ -236,7 +236,7 @@ test.each(["github", "artifacts"] as const)("%s incremental parent reads one exa
     await expect(resetMalformed.provider.readObject!(resetMalformed.repository, { id: resetMalformed.archive.commit, type: "commit", maximum: 1024 }, () => true,
       resetBudget)).rejects.toMatchObject({ reason: "unreadable", what: "upload advertisement" });
     const resetRead = await resetNormal.provider.readObject!(resetNormal.repository, { id: resetNormal.archive.commit, type: "commit", maximum: 1024 }, () => true, resetBudget);
-    expect(resetRead.type).toBe("commit");
+    expect(resetRead).toMatchObject({ type: "commit" });
     expect(finishArchiveParentRead(resetBudget)).toEqual({ ordinal: 2, type: "commit", maximum: 1024, phase: "complete", refusal: "none" });
   }
 
