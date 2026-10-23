@@ -1,4 +1,4 @@
-// Six portable SDK packages only. No package loading or external service calls here.
+// Seven portable SDK packages only. No package loading or external service calls here.
 import { createHash } from "node:crypto";
 import { moduleSpecifierSpans } from "./public-release-modules.mjs";
 import { execFileSync } from "node:child_process";
@@ -81,6 +81,9 @@ export function copiedDependency(sourceRoot, outputRoot, name, expected, lock) {
 export function publishManifest(spec, source, selected) {
   const excluded = spec.excludedSourceExports ?? {};
   if (JSON.stringify(excluded) !== JSON.stringify(spec.dir === "platform" ? { "./testing": "./test/support.ts", "./application-install": "./src/application-install.ts" } : spec.dir === "replay" ? { "./git": "./src/git.ts" } : {})) refusal("source-export-exclusions");
+  const excludedDependencies = spec.excludedSourceDependencies ?? {};
+  if (JSON.stringify(excludedDependencies) !== JSON.stringify(spec.dir === "replay" ? { "@generalbusiness/dap-platform": "coordinated" } : {})) refusal("source-dependency-exclusions");
+  for (const name of Object.keys(excludedDependencies)) if (source.dependencies?.[name] !== source.version) refusal("source-only-dependency-pin");
   const keys = Object.keys(source.exports ?? {});
   if (JSON.stringify(keys.sort()) !== JSON.stringify([...Object.keys(spec.exports), ...Object.keys(excluded)].sort()) || source.name !== nameOf(spec.dir) || source.type !== "module" || source.license !== "Apache-2.0") refusal("unsupported-source-manifest");
   for (const [key, value] of Object.entries(excluded)) if (source.exports[key] !== value) refusal("unsupported-source-export");
@@ -90,8 +93,8 @@ export function publishManifest(spec, source, selected) {
     const old = source.exports[key];
     if (path.endsWith(".d.ts") ? JSON.stringify(old) !== JSON.stringify({ types: `./${path}` }) : old !== `./${path}.ts`) refusal("unsupported-source-export");
   }
-  if (JSON.stringify(Object.keys(source.dependencies ?? {}).sort()) !== JSON.stringify(Object.keys(spec.dependencies).sort())) refusal("unsupported-source-dependencies");
-  for (const [name, pin] of Object.entries(spec.dependencies)) if (pin !== "coordinated" && source.dependencies[name] !== pin) refusal("dependency-pin");
+  if (JSON.stringify(Object.keys(source.dependencies ?? {}).sort()) !== JSON.stringify([...Object.keys(spec.dependencies), ...Object.keys(excludedDependencies)].sort())) refusal("unsupported-source-dependencies");
+  for (const [name, pin] of Object.entries(spec.dependencies)) if (source.dependencies[name] !== (pin === "coordinated" ? source.version : pin)) refusal("dependency-pin");
   return {
     name: nameOf(spec.dir), version: version(selected), description: source.description, license: source.license,
     type: "module", sideEffects: false, engines: source.engines,

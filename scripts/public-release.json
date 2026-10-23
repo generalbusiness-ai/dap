@@ -3,11 +3,12 @@
   "compiler": "7.0.2",
   "packages": [
     { "dir": "contract", "exports": { ".": "src/index" }, "dependencies": {} },
-    { "dir": "bytes", "exports": { ".": "src/index", "./web": "src/web.d.ts" }, "dependencies": { "@generalbusiness/dap-contract": "coordinated", "@noble/curves": "2.4.0", "@noble/hashes": "2.4.0" } },
-    { "dir": "client", "exports": { ".": "src/index" }, "dependencies": { "@generalbusiness/dap-bytes": "coordinated", "@generalbusiness/dap-contract": "coordinated" } },
-    { "dir": "derive", "exports": { ".": "src/index", "./rule": "src/rule/index", "./testing": "test/fixtures" }, "dependencies": { "@generalbusiness/dap-bytes": "coordinated", "@generalbusiness/dap-contract": "coordinated", "jsonata": "2.2.2" } },
+    { "dir": "package-graph", "exports": { ".": "src/index" }, "dependencies": { "@generalbusiness/dap-contract": "coordinated" } },
+    { "dir": "bytes", "exports": { ".": "src/index", "./web": "src/web.d.ts", "./application": "src/application", "./application-v2": "src/application-v2" }, "dependencies": { "@generalbusiness/dap-contract": "coordinated", "@noble/curves": "2.4.0", "@noble/hashes": "2.4.0", "@generalbusiness/dap-package-graph": "coordinated" } },
+    { "dir": "client", "exports": { ".": "src/index", "./application": "src/application" }, "dependencies": { "@generalbusiness/dap-bytes": "coordinated", "@generalbusiness/dap-contract": "coordinated" } },
+    { "dir": "derive", "exports": { ".": "src/index", "./rule": "src/rule/index", "./testing": "test/fixtures" }, "dependencies": { "@generalbusiness/dap-bytes": "coordinated", "@generalbusiness/dap-contract": "coordinated", "jsonata": "2.2.2", "@generalbusiness/dap-package-graph": "coordinated" } },
     { "dir": "platform", "exports": { ".": "src/index", "./membership-actions": "src/membership-actions" }, "excludedSourceExports": { "./testing": "./test/support.ts", "./application-install": "./src/application-install.ts" }, "dependencies": { "@generalbusiness/dap-bytes": "coordinated", "@generalbusiness/dap-contract": "coordinated", "@generalbusiness/dap-derive": "coordinated" } },
-    { "dir": "replay", "exports": { ".": "src/index" }, "excludedSourceExports": { "./git": "./src/git.ts" }, "excludedInputs": ["src/bin.ts", "src/git.ts"], "dependencies": { "@generalbusiness/dap-bytes": "coordinated", "@generalbusiness/dap-contract": "coordinated", "@generalbusiness/dap-derive": "coordinated" } }
+    { "dir": "replay", "exports": { ".": "src/index" }, "excludedSourceExports": { "./git": "./src/git.ts" }, "excludedInputs": ["src/bin.ts", "src/git.ts"], "dependencies": { "@generalbusiness/dap-bytes": "coordinated", "@generalbusiness/dap-contract": "coordinated", "@generalbusiness/dap-derive": "coordinated" }, "excludedSourceDependencies": { "@generalbusiness/dap-platform": "coordinated" } }
   ],
   "checkDependencies": { "@types/node": "26.6.3", "undici-types": "8.9.0" }
 }

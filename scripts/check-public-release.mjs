@@ -26,7 +26,7 @@ export function check(manifestFile, captureFile, captureSha256, browserTool, bro
   if (JSON.stringify(release.producerInputs?.map(input => input.path)) !== JSON.stringify(producerPaths)) refusal("producer-input-set");
   for (const input of release.producerInputs) if (digest(readFileSync(join(ROOT, input.path))) !== input.sha256) refusal("producer-input-integrity");
   for (const input of release.inputs) {
-    if ((!/^(?:LICENSE|NOTICE|packages\/(?:contract|bytes|client|derive|platform|replay)\/(?:src\/[^\n]+\.ts|package\.json|README\.md))$/.test(input.path) && !PUBLIC_TESTING_INPUTS.includes(input.path)) || /^packages\/replay\/src\/(?:bin|git)\.ts$/.test(input.path) || !contained(output, realpathSync(input.copy))) refusal("input-path");
+    if ((!/^(?:LICENSE|NOTICE|packages\/(?:contract|package-graph|bytes|client|derive|platform|replay)\/(?:src\/[^\n]+\.ts|package\.json|README\.md))$/.test(input.path) && !PUBLIC_TESTING_INPUTS.includes(input.path)) || /^packages\/replay\/src\/(?:bin|git)\.ts$/.test(input.path) || !contained(output, realpathSync(input.copy))) refusal("input-path");
     if (digest(readFileSync(join(ROOT, input.path))) !== input.sha256 || digest(readFileSync(input.copy)) !== input.sha256) refusal("input-integrity");
     if (/\.ts$/.test(input.path)) {
       const [, dir, ...parts] = input.path.split("/");
@@ -115,6 +115,10 @@ export async function replayCapture(capture) {
 import { readFileSync, writeFileSync } from 'node:fs';
 import { replayCapture } from './replay-journey.mjs';
 import { PROPOSED_BOUNDS } from '@generalbusiness/dap-contract';
+import { fieldAssignable } from '@generalbusiness/dap-package-graph';
+import { readApplicationPackage } from '@generalbusiness/dap-bytes/application';
+import { readApplicationPackage2 } from '@generalbusiness/dap-bytes/application-v2';
+import { readApplicationPackage as readClientApplicationPackage } from '@generalbusiness/dap-client/application';
 import { canonicalBytes, keyIdOfSecret, sign, verify, verifySignedIntent } from '@generalbusiness/dap-bytes';
 import { secretSigner, signedIntent, shapeDeclaredAct } from '@generalbusiness/dap-client';
 import { validateDefinition } from '@generalbusiness/dap-derive';
@@ -122,6 +126,10 @@ import { RULE_PROFILES, evaluate, assertEngine } from '@generalbusiness/dap-deri
 import { small, variant } from '@generalbusiness/dap-derive/testing';
 const secret = new Uint8Array(32).fill(9), message = canonicalBytes({ b:2, a:1 });
 assert.equal(verify(keyIdOfSecret(secret), sign(secret,message),message),true);
+assert.equal(fieldAssignable({type:'int',min:1,max:2},{type:'int',min:0,max:3}),true);
+assert.equal(fieldAssignable({type:'int',min:0,max:3},{type:'int',min:1,max:2}),false);
+assert.equal(readClientApplicationPackage,readApplicationPackage);
+assert.equal(typeof readApplicationPackage2,'function');
 assert.equal(validateDefinition(small,PROPOSED_BOUNDS,RULE_PROFILES).ok,true);
 const originalSmall = canonicalBytes(small);
 const cloned = variant(small, definition => { definition.name = 'compiled-clone'; definition.items.note.values.text.of.max = 201; });
@@ -143,6 +151,10 @@ writeFileSync(new URL('./replay-result.json',import.meta.url),JSON.stringify(rep
   execFileSync(process.execPath, [runtime], { cwd: consumer, env: childEnv(join(output, "tmp")), stdio: "pipe" });
   const typed = `import type { DeclaredDefinition, Intent } from '@generalbusiness/dap-contract';
 import { canonicalBytes } from '@generalbusiness/dap-bytes';
+import { fieldAssignable } from '@generalbusiness/dap-package-graph';
+import { readApplicationPackage } from '@generalbusiness/dap-bytes/application';
+import { readApplicationPackage2 } from '@generalbusiness/dap-bytes/application-v2';
+import { readApplicationPackage as readClientApplicationPackage } from '@generalbusiness/dap-client/application';
 import { secretSigner, signedIntent, type Signer } from '@generalbusiness/dap-client';
 import { validateDefinition, type ValidDefinition } from '@generalbusiness/dap-derive';
 import { RULE_PROFILES } from '@generalbusiness/dap-derive/rule';
@@ -160,6 +172,9 @@ declare const replayScope: import('@generalbusiness/dap-contract').ScopeId;
 const replayOptions: Options = {mode:'replay',scope:replayScope,platform,grants:'proven'};
 const replayResult: Promise<Verification> = replay(httpSource('https://example.invalid'),replayOptions);
 void replayResult;
+fieldAssignable({type:'int',min:1,max:2},{type:'int',min:0,max:3});
+const sameApplicationCodec: typeof readApplicationPackage = readClientApplicationPackage;
+void sameApplicationCodec; void readApplicationPackage2;
 `;
   const use = join(consumer, "use.ts"); writeFileSync(use, typed, { flag: "wx" });
   const compilerProof = [];
@@ -185,7 +200,7 @@ void replayResult;
   const browserOutputs = Object.entries(meta.outputs);
   if (!browserInputs.length || browserInputs.length > 10000 || browserOutputs.length !== 1 || realpathSync(join(consumer,browserOutputs[0][0])) !== browserFile || realpathSync(join(consumer,browserOutputs[0][1].entryPoint)) !== replayFile || browserOutputs[0][1].imports.some(ref=>ref.external)) refusal("browser-inventory");
   const browserProof = browserInputs.map(path => {const supplied = realpathSync(join(consumer,path)); if (supplied !== replayFile && !contained(join(output,"packages"),supplied) && !release.dependencies.some(dep=>contained(join(output,"node_modules",dep.name),supplied))) refusal("browser-source-ancestry"); return {path:supplied,sha256:digest(readFileSync(supplied))};});
-  for (const dir of ["replay","platform","derive","bytes"]) if (!browserProof.some(input=>contained(join(output,"packages",dir),input.path))) refusal("browser-missing-package");
+  for (const dir of ["replay","platform","derive","bytes","package-graph"]) if (!browserProof.some(input=>contained(join(output,"packages",dir),input.path))) refusal("browser-missing-package");
   const jsonataInput = realpathSync(join(output,"node_modules/jsonata/jsonata.js"));
   if (Object.entries(meta.inputs).some(([name,input])=>input.imports.some(ref=>ref.external && !browserRuntimeEdge(realpathSync(join(consumer,name)),ref,jsonataInput))) || references(readFileSync(browserFile,"utf8")).length) refusal("browser-external-module");
   if (digest(readFileSync(capturePath)) !== captureSha256 || digest(readFileSync(captureCopy)) !== captureSha256) refusal("native-capture-changed");
