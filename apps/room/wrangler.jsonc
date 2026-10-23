@@ -1,3 +1,6 @@
+// Existing rooms only. New rooms use https://dap-demo.inguz.workers.dev.
+// Preserve live DEMO_START_CONFIG for existing GitHub destinations and retained
+// Start references. Fresh public Start discovery is refused by the route.
 // The scope Worker as it would be deployed: one Durable Object namespace, in
 // which a scope's object is named by its scope ID and by nothing else, and
 // the SQLite migration of its class. This file is configuration only.

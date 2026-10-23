@@ -410,7 +410,8 @@ async function createdBy(handle: ScopeHandle, seq: number): Promise<{ n: number;
 
 /** Explicit selection only; omission retains the installed default cohort. */
 export type InstallCohort = "application" | "application-publication" | "trusted-application" | "declared-application" | "device-application" | "archive-application" | "archive-device-application" | "archive-declared-application" | "invitation-key";
-export interface InstallOptions { host?: string; namespace?: string; cohort?: InstallCohort }
+export type RegisterPolicy = "keys" | "open";
+export interface InstallOptions { host?: string; namespace?: string; cohort?: InstallCohort; registerPolicy?: RegisterPolicy }
 const INSTALL_COHORTS: Readonly<Record<InstallCohort, PlatformDefinition>> = {
   "invitation-key": INVITATION_KEY_COHORT.register,
   application: APPLICATION_COHORT.register,
@@ -435,18 +436,30 @@ function selectedRegister(cohort: unknown): PlatformDefinition | undefined {
   if (cohort === "archive-device-application") return INSTALL_COHORTS["archive-device-application"];
   return stopCommand(usage("--cohort takes exactly application, application-publication, trusted-application, declared-application, device-application, archive-application, archive-declared-application, archive-device-application or invitation-key; nothing was signed or sent."));
 }
+/** Public creation is an explicit fixed cohort, independent of future defaults. */
+function installSelection(options: Pick<InstallOptions, "cohort" | "registerPolicy">): PlatformDefinition | undefined {
+  if (options.registerPolicy !== undefined && options.registerPolicy !== "keys" && options.registerPolicy !== "open") {
+    return stopCommand(usage("--register-policy takes exactly keys or open; nothing was signed or sent."));
+  }
+  const selected = selectedRegister(options.cohort);
+  if (options.registerPolicy !== "open") return selected;
+  if (selected !== undefined && selected !== ARCHIVE_DEVICE_APPLICATION_COHORT.register) {
+    return stopCommand(usage("--register-policy open requires the archive-device-application cohort; nothing was signed or sent."));
+  }
+  return ARCHIVE_DEVICE_APPLICATION_COHORT.register;
+}
 const selectedPlan = (definition: PlatformDefinition): boolean =>
   Object.values(INSTALL_COHORTS).includes(definition);
 
 /** Ordinary installs keep their legacy path; selected installs use exact planned custody. */
 export function install(ctx: Context, service: string, options: InstallOptions = {}): Promise<Outcome> {
   return run(async () => {
-    const selected = selectedRegister(options.cohort);
+    const selected = installSelection(options);
     const before = await ctx.store.config();
     if (before?.register) return usage(`This config directory has a register already: ${before.register.scope}.`);
     if (selected) {
       const plan = await cohortPlan(ctx, service, options, before, selected);
-      return executePlannedInstall(ctx, options.cohort, plan);
+      return executePlannedInstall(ctx, options.cohort, plan, options.registerPolicy);
     }
     if (before?.plan && selectedPlan(before.plan.definition)) return failed("Refused: install-pending. The retained selected plan must use its original cohort and request; run install --planned.");
     if (before?.plan?.attempted !== undefined) return failed("Refused: install-pending. Retry dap install --planned with the original plan; an attempted install cannot be replaced silently.");
@@ -459,11 +472,11 @@ export function install(ctx: Context, service: string, options: InstallOptions =
 }
 
 /** The signed `install` intent, by the operator key, which is made and kept when it does not exist yet. */
-async function installing(ctx: Context, options: { host?: string; namespace?: string }, at: Signing): Promise<{ signed: SignedIntent; key: KeyId }> {
+async function installing(ctx: Context, options: Pick<InstallOptions, "host" | "namespace" | "registerPolicy">, at: Signing): Promise<{ signed: SignedIntent; key: KeyId }> {
   const signer = ctx.store.signer && !ctx.store.newSigner
     ? (await storedSigner(ctx.store, "operator")) ?? stopCommand(failed("The operator signing key is unavailable; nothing was signed or sent."))
     : await newStoredSigner(ctx.store, "operator");
-  const fields = { host: options.host ?? "github.com", namespace: options.namespace ?? "artroom", policy: "keys", "founders": [signer.key] };
+  const fields = { host: options.host ?? "github.com", namespace: options.namespace ?? "artroom", policy: options.registerPolicy ?? "keys", "founders": [signer.key] };
   return { signed: await signedIntent(signer, { to: null, kind: "install", fields }, at), key: signer.key };
 }
 
@@ -513,9 +526,10 @@ function retainedCohortPlan(before: Config, service: string, options: InstallOpt
       && typeof plan["founding"].intent.fields["host"] === "string" && typeof plan["founding"].intent.fields["namespace"] === "string"
       && (options.host === undefined || options.host === plan["founding"].intent.fields["host"])
       && (options.namespace === undefined || options.namespace === plan["founding"].intent.fields["namespace"])
+      && (options.registerPolicy === undefined || options.registerPolicy === plan["founding"].intent.fields["policy"])
       && isScopeId(plan.register) && registerIdOf(plan["founding"], plan.definition) === plan.register;
   } catch { /* malformed retained plan cannot select a new request */ }
-  if (!compatible) stopCommand(failed("Refused: plan-mismatch. The retained install's cohort, service, host or namespace conflicts with this request. The original plan is kept; nothing was signed or sent."));
+  if (!compatible) stopCommand(failed("Refused: plan-mismatch. The retained install's cohort, service, host, namespace or policy conflicts with this request. The original plan is kept; nothing was signed or sent."));
   return parseStrict(canonicalize(plan)) as PlannedInstall;
 }
 async function cohortPlan(ctx: Context, service: string, options: InstallOptions, before: Config | null, definition: PlatformDefinition): Promise<PlannedInstall> {
@@ -549,7 +563,7 @@ function plannedLines(plan: PlannedInstall): Outcome {
  */
 export function planInstall(ctx: Context, service: string, options: InstallOptions = {}): Promise<Outcome> {
   return run(async () => {
-    const selected = selectedRegister(options.cohort);
+    const selected = installSelection(options);
     const before = await ctx.store.config();
     if (before?.register) return usage(`This config directory has a register already: ${before.register.scope}.`);
     if (selected) return plannedLines(await cohortPlan(ctx, service, options, before, selected));
@@ -573,16 +587,17 @@ export function planInstall(ctx: Context, service: string, options: InstallOptio
  * submission. Exact attempted late recovery retains the original plan and
  * configured-service acknowledgement; it claims no independent history proof.
  */
-export function installPlanned(ctx: Context, options: { cohort?: InstallCohort } = {}): Promise<Outcome> {
-  return run(() => executePlannedInstall(ctx, options.cohort));
+export function installPlanned(ctx: Context, options: Pick<InstallOptions, "cohort" | "registerPolicy"> = {}): Promise<Outcome> {
+  return run(() => executePlannedInstall(ctx, options.cohort, undefined, options.registerPolicy));
 }
-async function executePlannedInstall(ctx: Context, cohort?: InstallCohort, expected?: PlannedInstall): Promise<Outcome> {
-  const selected = selectedRegister(cohort);
+async function executePlannedInstall(ctx: Context, cohort?: InstallCohort, expected?: PlannedInstall, registerPolicy?: RegisterPolicy): Promise<Outcome> {
+  const selected = installSelection({ ...(cohort === undefined ? {} : { cohort }), ...(registerPolicy === undefined ? {} : { registerPolicy }) });
   const before = await ctx.store.config();
   if (before?.register) return usage(`This config directory has a register already: ${before.register.scope}.`);
   const kept = before?.plan ?? stopCommand(usage("No install is planned here. Run: dap install --plan <base-url>."));
   if (kept.definition === COUNTING_COHORT.register) return failed("Refused: retired-cohort. New rooms use the generic trusted-application cohort. The old plan is kept; nothing was sent.");
   if (selected && kept.definition !== selected) return failed("Refused: plan-mismatch. The selected cohort conflicts with the original install plan. Nothing was sent; the plan is kept.");
+  if (registerPolicy !== undefined && (!isSignedIntentShape(kept["founding"]) || kept["founding"].intent.fields["policy"] !== registerPolicy)) return failed("Refused: plan-mismatch. The register policy conflicts with the original install plan. Nothing was sent; the plan is kept.");
   if (expected && canonicalize(kept) !== canonicalize(expected)) return failed("Held: the selected install plan changed before delivery. Nothing was sent; restore the original request.");
   const strictCustody = selectedPlan(kept.definition);
   const plan = strictCustody ? parseStrict(canonicalize(kept)) as PlannedInstall : kept;
