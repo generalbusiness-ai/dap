@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c67d6d721ce58b66c6fd0b68d41234cc49ad845d","text":"Merge retired a covered predecessor; the successor is at docs/kernel.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c71f2c0314725c91156e1535f0f5a1790e4f5a0d","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/support/grow-owned-session.ts."}
