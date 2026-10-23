@@ -13,6 +13,7 @@
   "vars": {
     "SCOPE_INDEX_MODE": "enforce",
     "ARTIFACTS_NAMESPACE": "dap-demo",
+    "ARTIFACTS_CONFIG": "{\"registerScope\":\"sc_b5q435os6lggypatelcltqzvul4kqxzdaaxpmybvwumsmxwj2djq\",\"namespace\":\"dap-demo\",\"host\":\"6e953d231f1c9aadffbf59537a82e13a.artifacts.cloudflare.net\",\"maxBytes\":10485760,\"credentialIdentity\":\"adapter-attempt\"}",
     "APPLICATION_SCREEN_HOSTS": "[]",
     "SERVING_CREATION_KEY_PER_HOUR": "10",
     "SERVING_CREATION_ADDRESS_PER_HOUR": "30",

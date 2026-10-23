@@ -64,7 +64,7 @@ const pendingArchiveSeals = {
 };
 // Actual maintained parser outputs adopted by root; never infer hashes from intent.
 const pendingR8Seals = {
-  "packages/cli/src/commands.ts": "af31349c0023968b4cde7c63927dbda79a8156ab3bad6278cac0ee62676b9781", // Actual integrated CLI parser value adopted by root.
+  "packages/cli/src/commands.ts": "ff0ff4b5a530f570b2ceca73a550a1f9f400a7b06002bc1e269cbcc83b76efcd", // Actual integrated CLI parser value adopted by root.
   "apps/sandbox/worker.ts": "e1e91663d3b1e6b1751f526c02770e7459fbe08c455385bda2daeec65ae84010",
   "packages/client/src/application-gateway.ts": "c24b17dfa7f31f16386bb2e921ca78e2f58640de26618144d06cca4aa0343fc8",
   "packages/client/src/application-route.ts": "f78d183f082f52de545cc1ef0cd9c33b0944260f782a53188f05c3545ba246c1",

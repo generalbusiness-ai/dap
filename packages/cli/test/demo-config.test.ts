@@ -10,6 +10,7 @@ test("dap-demo has private namespaces, enforced index and the Grow serving bound
   expect(demo.migrations.flatMap((row: { new_sqlite_classes: string[] }) => row.new_sqlite_classes).sort()).toEqual(["DeployedScope", "McpAgent", "McpRegistry", "ScopeIndex"]);
   expect(demo.artifacts).toEqual([{ binding: "ARTIFACTS", namespace: "dap-demo", remote: true }]);
   expect(demo.vars.ARTIFACTS_NAMESPACE).toBe("dap-demo");
+  expect(JSON.parse(demo.vars.ARTIFACTS_CONFIG)).toEqual({ registerScope: "sc_b5q435os6lggypatelcltqzvul4kqxzdaaxpmybvwumsmxwj2djq", namespace: "dap-demo", host: "6e953d231f1c9aadffbf59537a82e13a.artifacts.cloudflare.net", maxBytes: 10485760, credentialIdentity: "adapter-attempt" });
   for (const field of ["SERVING_CREATION_KEY_PER_HOUR", "SERVING_CREATION_ADDRESS_PER_HOUR", "SERVING_READ_KEY_PER_MINUTE", "SERVING_READ_ADDRESS_PER_MINUTE"]) expect(demo.vars[field]).toBe(grow.vars[field]);
-  for (const field of ["ALLOW_OPEN_CREATION", "DEPLOYMENT", "SESSION_SECRET", "DEMO_START_CONFIG", "ARTIFACTS_CONFIG"]) expect(demo.vars).not.toHaveProperty(field);
+  for (const field of ["ALLOW_OPEN_CREATION", "DEPLOYMENT", "SESSION_SECRET", "DEMO_START_CONFIG"]) expect(demo.vars).not.toHaveProperty(field);
 });
