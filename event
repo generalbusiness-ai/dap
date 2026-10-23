@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bfc05f1c2dc4aec5c616768442a2cea1691a8cb5","text":"Merge retired a covered predecessor; the successor is at apps/room/page/src/claim.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c0926bea5ddf678fd1083c5425f19df1358bd893","text":"Merge retired a covered predecessor; the successor is at apps/room/wrangler.grow.jsonc."}
