@@ -1,3 +1,4 @@
+import { scopeStagedChange } from "./definition-corpus-data.ts";
 /**
  * One fixture for the tests of the token ledger at a real scope: a lane on
  * real Durable Object storage that runs the capability's code, as the
@@ -30,11 +31,7 @@ import { wired } from "./outside.ts";
 import { Lane, START, at, definition, creation, reader, stubOf, una } from "./support.ts";
 
 /** The fixture lane with one form of `hold@1`, so that its holds have a workspace, and a report that names its commit, as `report` of `issue` does. */
-export const staged = variant(definition.declared, (def) => {
-  // The fixture's acts share one object of fields, so the report gets its own.
-  def.acts.report.fields = { ...def.acts.report.fields, commit: { type: "commit", required: true } };
-  def.acts.report.guards.push({ capability: { name: "hold", guard: "staged", with: { commit: { field: "commit" }, under: { item: "also.commitment" } } } });
-});
+export const staged = variant(definition.declared, scopeStagedChange());
 
 /** A STAND-IN for whatever sends the request of an attempt of a staging: it answers what the test wrote for that attempt, or fails as the test said. */
 export class Stager {

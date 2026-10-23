@@ -1,3 +1,4 @@
+import { configureInputDefinition } from "./support/definition-corpus-data.ts";
 /** Scripted model calls and read/standing answers. This witnesses the mounted
  * host's pre-sign boundary, not an LLM, native submit or membership journal. */
 import { expect, test } from "vitest";
@@ -12,12 +13,7 @@ import { viewInputToolName } from "../src/views/names.ts";
 
 async function fixture(ordered = false, direction: "asc" | "desc" = "asc", missing: "first" | "last" = "first") {
   const base = await applicationCounterPacket2(), definition = parseStrict(base.package.semantic.definitions[0]!.bytes) as DeclaredDefinition;
-  definition.acts["pause"] = { ...definition.acts["pause"]!, fields: {
-    tag: { type: "enum", of: ["manual"], required: true }, moisture: { type: "int", min: 0, max: 100, required: false },
-    ec: { type: "int", min: 0, max: 10000, required: false }, note: { type: "text", max: 64, required: false },
-  } };
-  if (ordered) definition.items["board"] = { ...definition.items["board"]!, many: true, max: 4,
-    values: { ...definition.items["board"]!.values, probeTime: { required: false, fixed: false, of: { type: "time" } } } };
+  configureInputDefinition(definition, ordered);
   const id = definitionDigest(definition), board = base.package.presentation.views["board"]!;
   if (board.kind === "surface") throw Error("Item fixture required.");
   const { creates: _creates, ...semantic } = base.package.semantic, { semantic: _semantic, ...presentation } = base.package.presentation;

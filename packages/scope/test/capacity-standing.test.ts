@@ -1,11 +1,11 @@
+import { capacityStandingData } from "../../derive/test/definition-corpus/scope-capacity-floor.ts";
 import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
-import { PROPOSED_BOUNDS, type Entry, type PlatformData, type Seed } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type Entry, type Seed } from "@generalbusiness/dap-contract";
 import { intentDigest, scopeIdOf, signIntent } from "@generalbusiness/artroom-bytes";
 import { PROFILES, reserved, standingReserved, validateDefinition, type PlatformRules } from "@generalbusiness/dap-derive";
 import { grantOf, valid } from "@generalbusiness/dap-derive/testing";
-import { standingData } from "../../derive/test/fixtures-standing.ts";
 import { httpSource, verify } from "@generalbusiness/artroom-replay";
 import { SqliteStore } from "../src/index.ts";
 import { controls } from "../src/testing.ts";
@@ -13,10 +13,7 @@ import { fixtureRoute as route } from "./support/serving-route.ts";
 import { wired } from "./outside.ts";
 import { Lane, START, at, objectOf, reader, rita, stubOf } from "./fixtures-native.ts";
 
-const data: PlatformData = standingData(data => { data.capacity = { name: "whole-scope", version: 1 }; });
-// Close the fixture's unused dummy child edges. This tests standing slots,
-// not a claim about optional birth declarations or a directory policy.
-for (const form of [...Object.values(data.acts), ...Object.values(data.receives)]) form.sends = form.sends.filter(send => !("create" in send));
+const data = capacityStandingData();
 const definition = valid(validateDefinition(data, PROPOSED_BOUNDS, PROFILES, { platform: true }));
 const platform: PlatformRules = { named: "platform:task@1", rules: { "settle-counter": { place: "effect", most: 1, run: () => [] } } };
 const names: string[] = [];
@@ -70,8 +67,7 @@ test("native standing entry slots include bytes at equality, roll back ordinary 
     const below = setup(ceiling - 1);
     expect(await below.stub.create(below.signed, platform.named)).toEqual({ answer: "refused", reason: "scope-full", name: "scopeBytes" });
     expect((await inspect(below.name)).state.scope).toBeNull();
-    const oldData = structuredClone(data);
-    delete oldData.capacity;
+    const oldData = capacityStandingData(false);
     const oldDefinition = valid(validateDefinition(oldData, PROPOSED_BOUNDS, PROFILES, { platform: true })), old = setup(1, oldData);
     expect(await old.stub.create(old.signed, platform.named)).toMatchObject({ answer: "accepted" });
     const legacy = await inspect(old.name, oldDefinition);

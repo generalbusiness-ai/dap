@@ -1,5 +1,7 @@
+import { genesisQuietActs } from "../../derive/test/definition-corpus/replay-mutations-data.ts";
+import { replayGenesisAlias } from "../../derive/test/definition-corpus/replay-literals-data.ts";
 import { expect, test } from "vitest";
-import { DOMAINS, PROPOSED_BOUNDS, type PlatformData, type PlatformDefinition, type Seed } from "@generalbusiness/dap-contract";
+import { DOMAINS, PROPOSED_BOUNDS, type PlatformDefinition, type Seed } from "@generalbusiness/dap-contract";
 import { canonicalize, intentDigest, newIncarnation, scopeIdOf, signIntent, utf8 } from "@generalbusiness/artroom-bytes";
 import { clockOf, judgeGenesis, validateDefinition, valueDigest } from "@generalbusiness/dap-derive";
 import { keys, Ledger, notesDefinition, on, T0, t, valid, variant } from "@generalbusiness/dap-derive/testing";
@@ -11,9 +13,7 @@ const NAMED = "platform:task@1" as PlatformDefinition;
 function histories(whole: boolean, body: unknown = "é\n".repeat(500), failure: "count" | "size" | "forged-size" = "count", otherBody?: string) {
   // Keep the original declaration larger than the alias journal, so the
   // shared byte ceiling tests the original birth rather than its consumer.
-  const base = variant(notesDefinition.declared, data => {
-    for (let i = 0; i < 8; i++) data.acts[`quiet-${i}`] = { ...structuredClone(data.acts.vouch), presents: {}, guards: [], sends: [] };
-  });
+  const base = variant(notesDefinition.declared, genesisQuietActs);
   const definition = genesisBodyDefinition(whole, base), original = new Ledger(definition), digest = valueDigest(DOMAINS.text, body);
   const other = otherBody === undefined ? undefined : valueDigest(DOMAINS.text, otherBody);
   const creation = signIntent({ v: 1, to: null, actor: keys.rita.key, kind: "found", on: null, expected: {}, fields: { a: digest, ...(other ? { b: other } : {}), count: failure === "count" ? 2 : 0 }, idempotencyKey: "refused-birth", notAfter: t(60) }, keys.rita.secret);
@@ -22,11 +22,7 @@ function histories(whole: boolean, body: unknown = "é\n".repeat(500), failure: 
   if (made.result !== "write") throw new Error("the fixture's unrelated bad field must record a refused genesis");
   original.seal(made.draft);
 
-  const data: PlatformData = { ...structuredClone(notesDefinition.declared), name: "platform:task", capacity: { name: "whole-scope", version: 1 }, outcomes: {} };
-  data.acts["retain"] = { ...structuredClone(data.acts["vouch"]!), presents: {}, guards: [], sends: [], effects: [], fields: {
-    birth: { type: "fact", under: "notes", kind: ["start"], required: true },
-    body: { type: "digest", value: { domain: DOMAINS.text, max: 32768 }, required: true },
-  } };
+  const data = replayGenesisAlias();
   const aliasDefinition = valid(validateDefinition(data, PROPOSED_BOUNDS, undefined, { platform: true })), alias = new Ledger(aliasDefinition), platform = { named: NAMED, rules: {} };
   const signed = signIntent({ ...creation.intent, fields: {}, idempotencyKey: "alias" }, keys.rita.secret);
   const aliasSeed: Seed = { ...seed, definition: NAMED, cause: intentDigest(signed.intent) };

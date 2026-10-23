@@ -1,3 +1,4 @@
+import { capacityRecoveredTextChange, recoveredAliasData } from "./definition-corpus-data.ts";
 import { env } from "cloudflare:workers";
 import { expect, test } from "vitest";
 import { DOMAINS, PROPOSED_BOUNDS, type Entry, type PlatformData, type PlatformDefinition, type Seed } from "@generalbusiness/dap-contract";
@@ -34,11 +35,7 @@ async function birth(under: ValidDefinition, platform?: PlatformData): Promise<L
 test("a later value alias recovers a genuinely retained then redacted native text after eviction, and replay rejects one byte below the earlier exact budget", async () => {
   // Real native scopes, judge/fold, SQLite, retained-value writer, eviction
   // and HTTP replay. Data, authority and the small RPC resolver are fixtures.
-  const under = variant(notesDefinition.declared, d => {
-    d.capacity = { name: "whole-scope", version: 1 };
-    d.items.note.values.body.of = { type: "text", detached: true, max: 32768 };
-    d.acts.write.fields.body = { type: "text", detached: true, max: 32768, required: true };
-  });
+  const under = variant(notesDefinition.declared, capacityRecoveredTextChange());
   const original = await birth(under), body = "é".repeat(10000), digest = textDigest(body);
   const grants = (scope: Lane) => [grantOf(rita, scope.at, ["write", "strike"])];
   let last = original.genesis.fact;
@@ -56,8 +53,7 @@ test("a later value alias recovers a genuinely retained then redacted native tex
   await original.restart();
   expect(await original.stub.submit(original.intent(rita, "strike", { on: 0, expected: { on: 21 }, fields: {} }), grants(original))).toMatchObject({ answer: "accepted" });
 
-  const data: PlatformData = { ...structuredClone(notesDefinition.declared), name: "platform:task", capacity: { name: "whole-scope", version: 1 }, outcomes: {} };
-  data.acts["retain"] = { ...structuredClone(data.acts["vouch"]!), presents: {}, guards: [], fields: { proof: { type: "digest", required: true, value: { domain: DOMAINS.text, max: 32768 } } }, effects: [], sends: [] };
+  const data = recoveredAliasData();
   const alias = await birth(valid(validateDefinition(data, PROPOSED_BOUNDS, undefined, { platform: true })), data);
   try {
     const vouched = await alias.stub.submit(alias.intent(rita, "vouch", { on: 0, expected: { on: 1 }, fields: {} }), grants(alias), { presented: { proof: last } });

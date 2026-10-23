@@ -1,3 +1,4 @@
+import { replayDecisionFloor, replayDecisionText, replayDecisionFields, replayDecisionBase as DATA } from "../../derive/test/definition-corpus/replay-literals-data.ts";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Digest, FieldValue, PlatformData, PlatformDefinition, Request, Seed } from "@generalbusiness/dap-contract";
@@ -51,20 +52,7 @@ test("replay admission counts the actual register's legacy cleanup closure and p
  * funds the decision, and the real verifier derives its draw again.
  */
 const NAMED = "platform:task@2" as PlatformDefinition;
-const form = { also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [] };
-const DATA: PlatformData = {
-  format: "artroom-definition-1", name: "platform:task", profile: { name: "restricted", version: 1 }, capabilities: [], genesis: "found",
-  items: {
-    board: { many: false, max: 1, initial: "open", states: { open: { final: false } }, parties: { opener: { fixed: true, required: true, list: false, author: false } }, refs: {}, values: {} },
-    job: { many: false, max: 1, initial: "open", states: { open: { final: false } }, parties: {}, refs: { owner: { fixed: false, required: true, to: { type: "scope", kind: "lane" } } }, values: {}, holds: { decisions: { stop: 1 } } },
-  },
-  acts: { "found": { ...form, step: "open", on: "board", grant: "found", fields: { opener: { type: "member", required: true } }, effects: [{ party: { slot: "opener", from: { field: "opener" } } }] } },
-  receives: {
-    start: { ...form, class: "tell", message: "start", from: { kind: "lane" }, opens: "job", effects: [{ ref: { slot: "owner", from: { sender: true } } }] },
-    stop: { ...form, class: "tell", message: "stop", from: { kind: "lane" }, opens: null, also: { job: { item: "job", one: true } }, bound: { of: "also.job", where: [{ equals: { a: { sender: true }, b: { slot: "owner", of: "also.job" } } }] }, guards: [{ of: "also.job", equals: { a: { const: true }, b: { const: false } }, reason: "not-ready" }] },
-  },
-  outcomes: {}, rules: {}, timed: {},
-};
+
 
 class Deciding extends Ledger {
   readonly foreign: ReturnType<typeof forged>[] = [];
@@ -111,9 +99,7 @@ test("a bound refusal consumes a real holder decision at a full scope; replay de
 });
 
 test("replay and a closing checkpoint preserve the early field refusal and draw a late coded bad-field bound refusal", async () => {
-  const data = structuredClone(DATA);
-  data.receives["stop"]!.fields = { ...data.receives["stop"]!.fields, amount: { type: "int", min: 0, max: 1, required: true } };
-  data.receives["stop"]!.guards = [{ code: "decline", row: "P15" }];
+  const data = replayDecisionFields();
   let guards = 0;
   const rules: Rules = { decline: { place: "guard", refusals: ["late"], run: () => { guards++; return { holds: false, name: "late", code: "bad-field" }; } } };
   const scope = new Deciding(data, rules);
@@ -131,17 +117,7 @@ test("replay and a closing checkpoint preserve the early field refusal and draw 
 
 /** A larger creation field really holds the text before the smaller stop field reads it. Every receiver entry is judged. */
 function redacted(text: string, decision: "bare" | "named" | "other" | "applied" | "invalid" | "spent" | "known" = "bare") {
-  const data = structuredClone(DATA);
-  const memo = { type: "text", max: 16, detached: true } as const;
-  data.items["board"]!.values["memo"] = { fixed: false, required: true, of: memo };
-  data.items["job"]!.values["amount"] = { fixed: false, required: true, default: 0, of: { type: "int", min: 0, max: 1 } };
-  data.acts["found"]!.fields = { ...data.acts["found"]!.fields, memo: { ...memo, required: true } };
-  data.acts["found"]!.effects = [...data.acts["found"]!.effects, { value: { slot: "memo", from: { field: "memo" } } }];
-  data.acts["redact"] = { ...form, step: "transition", on: "board", grant: "redact", guards: [{ state: ["open"] }], effects: [{ redact: { slot: "memo" } }] };
-  if (decision === "known") data.items["job"]!.holds = { decisions: { stop: 2 } };
-  data.receives["stop"]!.fields = { note: { type: "text", max: 2, detached: true, required: true }, reject: { type: "bool", required: true } };
-  data.receives["stop"]!.guards = decision === "named" ? [{ code: "decline", row: "P15" }] : decision === "other" ? [{ of: "also.job", equals: { a: { const: true }, b: { const: false } } }] : [];
-  data.receives["stop"]!.effects = [{ code: "effect", row: "P15" }];
+  const data = replayDecisionText(decision);
   const rules: Rules = {
     decline: { place: "guard", refusals: ["late"], run: () => ({ holds: false, name: "late", code: "bad-field" }) },
     effect: { place: "effect", most: 1, run: ({ resolved }) => resolved.fields["reject"] === true ? [{ effect: "value", item: resolved.subjects.get("also.job")!.id, slot: "amount", value: "wrong" }] : [] },
@@ -190,17 +166,7 @@ test("ordinary redacted replay keeps applied, named-guard, definitive early-fiel
 // pure consumer boundary of witness 8.12, not its native restart witness.
 test("a floor's proof at 200 cannot bind deciding entry 100, while its proof at 50 can", () => {
   for (const proving of [200, 50]) {
-    const data = structuredClone(DATA), text = "ok", digest = textDigest(text);
-    const memo = { type: "text", max: 16, detached: true } as const;
-    data.items["board"]!.values["memo"] = { fixed: false, required: true, of: memo };
-    data.items["job"]!.values["amount"] = { fixed: false, required: true, default: 0, of: { type: "int", min: 0, max: 1 } };
-    data.acts["found"]!.fields = { ...data.acts["found"]!.fields, memo: { ...memo, required: true } };
-    data.acts["found"]!.effects = [...data.acts["found"]!.effects, { value: { slot: "memo", from: { field: "memo" } } }];
-    data.acts["prove"] = { ...form, step: "transition", on: "board", grant: "prove", fields: { note: { type: "text", max: 2, detached: true, required: true } } };
-    data.acts["erase"] = { ...form, step: "transition", on: "board", grant: "erase", effects: [{ redact: { slot: "memo" } }] };
-    data.receives["stop"]!.fields = { note: { type: "text", max: 2, detached: true, required: true } };
-    data.receives["stop"]!.guards = [];
-    data.receives["stop"]!.effects = [{ code: "invalid-value", row: "P15" }];
+    const data = replayDecisionFloor(), text = "ok", digest = textDigest(text);
     const rules: Rules = { "invalid-value": { place: "effect", most: 1, run: ({ resolved }) => [{ effect: "value", item: resolved.subjects.get("also.job")!.id, slot: "amount", value: "wrong" }] } };
     const scope = new Deciding(data, rules, text);
     scope.delivery("start");

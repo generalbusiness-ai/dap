@@ -1,3 +1,4 @@
+import { weighingDeclaration } from "../../derive/test/definition-corpus/replay-mutations-data.ts";
 /**
  * Histories for the replay of the rows of `observes` (scope contract,
  * revisions 20 and 21, sections 6.1 and 16.1; witnesses 18.46, cases 13 to
@@ -22,7 +23,7 @@ import type { Digest, Entry, FactUse, Input, KeyId, MemberId, ObservationUse, Op
 import { canonicalize, digestBytes, factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent, utf8 } from "@generalbusiness/artroom-bytes";
 import { clockOf, grantFrom, judgeDelivery, judgeGenesis, settleOutcome, valueDigest, type Fetched, type Observing, type RuleGiven } from "@generalbusiness/dap-derive";
 import { Ledger, T0, arriving, forged, keys, membership, otherLane, t, type Actor, type Context } from "@generalbusiness/dap-derive/testing";
-import { EXTENTS, RULEBOOK, STEP_ROWS, WEIGHER, holdersSeen, keySeen, memberSeen, rulebook, rulesSeen, signers, stating, weigherRules, weigherWith } from "../../derive/test/fixtures-observes.ts";
+import { EXTENTS, RULEBOOK, WEIGHER, holdersSeen, keySeen, memberSeen, rulebook, rulesSeen, signers, stating, weigherRules, weigherWith } from "../../derive/test/fixtures-observes.ts";
 import type { Anchor, Coded, MemoryScope } from "../src/index.ts";
 
 const { rita, una, vic, paul } = keys;
@@ -65,7 +66,7 @@ export class Weighing extends Ledger {
   outcome = -1;
 
   constructor(readonly which: Which) {
-    super(weigherWith((data) => { if (which === "steps" || which === "absent") { data.outcomes.weigh.origin = "opening"; data.outcomes.weigh.observes = STEP_ROWS; } }));
+    super(weigherWith(weighingDeclaration(which)));
     const first = which === "weigh" || which === "asked" ? signers : (given: RuleGiven): KeyId[] => [una.key, ...signers(given).slice(2)];
     this.rules = weigherRules(undefined, first);
     const creation = signIntent({ v: 1, to: null, actor: rita.key, kind: "found", on: null, expected: {}, fields: { opener: rita.member }, idempotencyKey: "weigh", notAfter: t(60) }, rita.secret);

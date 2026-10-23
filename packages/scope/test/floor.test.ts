@@ -1,3 +1,4 @@
+import { floorPendingChange } from "./definition-corpus-data.ts";
 /** Actual Scope turns and SQLite on real Durable Objects. Declaration,
  * authority, readers and clock are explicit test fixtures. The direct internal
  * floor call here is not evidence of the alarm writer or archive custody. */
@@ -84,11 +85,7 @@ test("Native floors charge migrated Unicode keys once and preserve retained byte
   const { variant } = await import("@generalbusiness/dap-derive/testing");
   const { textDigest } = await import("@generalbusiness/artroom-bytes");
   const { reserved } = await import("@generalbusiness/dap-derive");
-  const definition = variant(archiveDefinition.declared, data => {
-    data.capacity = { name: "whole-scope", version: 1 };
-    data.acts.remark.fields.text = { type: "text", max: 64, detached: true, required: true };
-    data.acts.offer.sends = [{ create: { kind: "lane", definition: "self", fields: { title: { const: "a pending child" }, opener: { signer: true } }, result: {} } }];
-  });
+  const definition = variant(archiveDefinition.declared, floorPendingChange());
   const lane = await create({}, {}, definition), text = "retained across both floors", digest = textDigest(text);
   const unicode = lane.intent(rita, "remark", { on: 0, fields: { text: digest }, idempotencyKey: "é🎵" });
   expect((await lane.stub.submit(unicode, lane.grants(), { texts: [text] })).answer).toBe("accepted");

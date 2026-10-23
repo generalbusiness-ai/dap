@@ -1,8 +1,9 @@
+import { floorSizeProofsData as data } from "../../derive/test/definition-corpus/scope-capacity-floor.ts";
 /** Native storage, admitted receiver inputs and restart. The platform data,
  * its invalid-value rule, authority, clock and sender are labelled fixtures.
  * This tests the cold decision-binding consumer, not a real platform rule. */
 import { expect, onTestFinished, test } from "vitest";
-import { PROPOSED_BOUNDS, type Beside, type Created, type Entry, type PlatformData, type PlatformDefinition, type Seed, type SignedIntent } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type Beside, type Created, type Entry, type PlatformDefinition, type Seed, type SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, factRefOf, intentDigest, scopeIdOf, signIntent, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
 import { MemoryState, clockOf, decisionBinding, isUnprovenDecisionBinding, validateDefinition, type Delivered, type Rules, type StateSnapshot } from "@generalbusiness/dap-derive";
 import { forged, otherLane, valid } from "@generalbusiness/dap-derive/testing";
@@ -16,26 +17,7 @@ import { wired } from "./outside.ts";
 import { archiveSql } from "./support/archive.ts";
 
 const NAMED = "platform:task@2" as PlatformDefinition;
-const form = { also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [] };
-function data(): PlatformData {
-  const memo = { type: "text", max: 16, detached: true } as const;
-  return {
-    format: "artroom-definition-1", name: "platform:task", profile: { name: "restricted", version: 1 }, capabilities: [], genesis: "found",
-    items: {
-      board: { many: false, max: 1, initial: "open", states: { open: { final: false } }, parties: {}, refs: {}, values: { memo: { fixed: false, required: true, of: memo } } },
-      job: { many: false, max: 1, initial: "open", states: { open: { final: false } }, parties: {}, refs: { owner: { fixed: false, required: true, to: { type: "scope", kind: "lane" } } }, values: { amount: { fixed: false, required: true, default: 0, of: { type: "int", min: 0, max: 1 } } }, holds: { decisions: { stop: 1 } } },
-    },
-    acts: {
-      found: { ...form, step: "open", on: "board", grant: "found", fields: { memo: { ...memo, required: true } }, effects: [{ value: { slot: "memo", from: { field: "memo" } } }] },
-      prove: { ...form, step: "transition", on: "board", grant: "remark", fields: { note: { type: "text", max: 2, detached: true, required: true } } },
-      erase: { ...form, step: "transition", on: "board", grant: "remark", effects: [{ redact: { slot: "memo" } }] },
-    },
-    receives: {
-      start: { ...form, class: "tell", message: "start", from: { kind: "lane" }, opens: "job", effects: [{ ref: { slot: "owner", from: { sender: true } } }] },
-      stop: { ...form, class: "tell", message: "stop", from: { kind: "lane" }, opens: null, fields: { note: { type: "text", max: 2, detached: true, required: true } }, also: { job: { item: "job", one: true } }, bound: { of: "also.job", where: [{ equals: { a: { sender: true }, b: { slot: "owner", of: "also.job" } } }] }, effects: [{ code: "invalid-value", row: "P15" }] },
-    }, outcomes: {}, rules: {}, timed: {},
-  };
-}
+
 const rules: Rules = { "invalid-value": { place: "effect", most: 1, run: ({ resolved }) => [{ effect: "value", item: resolved.subjects.get("also.job")!.id, slot: "amount", value: "wrong" }] } };
 // Only this fixture's present state kinds are needed by the cold consumer;
 // each value comes from the actual native pre-decision snapshot.

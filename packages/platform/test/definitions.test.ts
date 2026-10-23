@@ -1,8 +1,9 @@
+import { membershipWrittenRoles } from "./definition-corpus-data.ts";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type DeclaredDefinition } from "@generalbusiness/dap-contract";
 import { definitionDigest } from "@generalbusiness/artroom-bytes";
 import { PROFILES, derivable, ruleAt, runnable, outcomeValueDomains, validateDefinition } from "@generalbusiness/dap-derive";
-import { ACTIONS_MOST, DESTINATION_CHANGED_SET, FIRST_ACTIONS, ROLE_LISTS, RULES, definitions, destinationMembership, destinationRulesScope, inbox, membership, platform, rulesMembership } from "../src/index.ts";
+import { ACTIONS_MOST, DESTINATION_CHANGED_SET, ROLE_LISTS, RULES, definitions, destinationMembership, destinationRulesScope, inbox, membership, platform, rulesMembership } from "../src/index.ts";
 
 // The plan's T43, for `platform:inbox@1` (authority note, revision 16, section 12.1.6). The package holds six definitions: the two
 // lists at the end of this test name them. T43 for each of the other five is in this file or in the test file of its definition.
@@ -94,11 +95,7 @@ test("the membership definition validates whole with the platform option; every 
   // the source of a list slot. The same data with the mark `role-table` replaced by five written `value` effects, each from a
   // constant, validates. It is a check of the validator only: no entry was derived from that data, and the row stays a rule until
   // the note writes it as data.
-  const asData = JSON.parse(JSON.stringify(membership));
-  // A constant is of no marked type, so the five slots take the written list type that they had before the mark `action-list`.
-  for (const slot of Object.values(ROLE_LISTS)) asData.items.roster.values[slot].of = { type: "list", of: { type: "text", max: 64 }, max: 64 };
-  asData.acts["set-actions"].fields.actions = { type: "list", of: { type: "text", max: 64 }, max: 64, required: true };
-  asData.acts.establish.effects = [...asData.acts.establish.effects.filter((effect: object) => !("code" in effect)), ...Object.entries(ROLE_LISTS).map(([role, slot]) => ({ value: { slot, from: { const: FIRST_ACTIONS[role as keyof typeof ROLE_LISTS] } } }))];
+  const asData = membershipWrittenRoles();
   expect(validateDefinition(asData, PROPOSED_BOUNDS, PROFILES, { platform: true }).ok).toBe(true);
   // The whole-scope rule (the contract's section 6.1): a version with a mark and no rule runs nothing. The package has the eleven
   // rules of the note's table, each of the kind of its mark's place, and no other. Without any one of them the version is not runnable.

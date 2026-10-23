@@ -1,8 +1,9 @@
+import { deviceConditions, wholeDeviceData, conditionalDeviceData, deviceParentData } from "./definition-corpus/forms-device-variants.ts";
 import { expect, test } from "vitest";
 import { newIncarnation } from "@generalbusiness/artroom-bytes";
 import { DEVICE_COMMAND, PROPOSED_BOUNDS, type DeviceCommandGrant, type EffectForm, type FactRef, type FieldValue, type Grant, type SignedIntent } from "@generalbusiness/dap-contract";
 import { capabilitiesOf, clockOf, deviceCommand, fits, holdCapability, judgeGenesis, judgePreparation, ownerReservations, reserved, validateDefinition, type Own, type PreparationJudgment, type Steps, type ValidDefinition } from "../src/index.ts";
-import { Ledger, T0, creation, created, deliver, grantOf, keys, valid, deviceCommandFixture as scope, deviceCommandRow as row } from "./fixtures-entry.ts";
+import { Ledger, T0, creation, created, deliver, grantOf, keys, valid, deviceCommandFixture as scope } from "./fixtures-entry.ts";
 
 
 
@@ -36,9 +37,7 @@ const definition = valid(validateDefinition(scope, PROPOSED_BOUNDS));
 /** Real pure judges, native capability and fold. Parent grant metadata and
  * membership authority are SCRIPTED: this is no native installation proof. */
 function fixture(granted = true, under: ValidDefinition = definition) {
-  const parentDefinition = valid(validateDefinition({ ...scope, name: "command-parent", capabilities: [], items: { root: scope.items["root"]! },
-    acts: { start: row({ step: "open", on: "root", grant: "start", guards: [] }),
-      spawn: row({ on: "root", guards: [], sends: [{ create: { kind: "lane", definition: under.digest, fields: {}, result: {} } }] }) }, receives: {}, timed: {} }, PROPOSED_BOUNDS));
+  const parentDefinition = valid(validateDefinition(deviceParentData(under.digest), PROPOSED_BOUNDS));
   const parent = created(parentDefinition, {}), child = new Ledger(under);
   const drafted = parent.judge(parent.intent(keys.rita, "spawn", { on: 0, expected: { on: 1 } }));
   if (drafted.result !== "write") throw new Error(`fixture parent: ${drafted.result}`);
@@ -159,12 +158,8 @@ test("a pending command reserves one bounded answer; only its actual closing pre
   expect(ownerReservations(code, unbound.s.state, definition).entries).toBe(1);
   // Conditional writes keep their original order and share one condition.
   // When skipped, open cannot borrow commission's earlier targetAt fact.
-  for (const condition of [
-    { if: [{ equals: { a: { field: "level" }, b: { const: 80 } } }] },
-    { unless: [{ equals: { a: { field: "level" }, b: { const: 30 } } }] },
-  ] as const) {
-    const conditional = structuredClone(scope);
-    conditional.acts["command"]!.effects = conditional.acts["command"]!.effects.map((effect, i) => i < 3 ? { ...effect, ...condition } : effect);
+  for (const condition of deviceConditions) {
+    const conditional = conditionalDeviceData(condition);
     const conditionalDefinition = valid(validateDefinition(conditional, PROPOSED_BOUNDS));
     const conditionalScope = fixture(true, conditionalDefinition), conditionalID = conditionalScope.commission();
     expect(conditionalScope.command(conditionalID, 30).result).toBe("write");
@@ -175,7 +170,7 @@ test("a pending command reserves one bounded answer; only its actual closing pre
     expect(conditionalScope.s.state.record(DEVICE_COMMAND, "command", [conditionalScope.s.last.seq])).toMatchObject({ values: { target: "on", level: 80, targetAt: conditionalScope.s.last.seq } });
     expect(ownerReservations(code, conditionalScope.s.state, conditionalDefinition).entries).toBe(1);
   }
-  const under = valid(validateDefinition({ ...scope, capacity: { name: "whole-scope", version: 1 } }, PROPOSED_BOUNDS));
+  const under = valid(validateDefinition(wholeDeviceData(), PROPOSED_BOUNDS));
   const whole = fixture(true, under), id = whole.commission();
   expect(whole.command(id).result).toBe("write");
   const answerJ = whole.answer(whole.s.fact(whole.s.last.seq)).judgment;

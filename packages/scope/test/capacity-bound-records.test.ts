@@ -1,3 +1,4 @@
+import { capacityBoundSenderData } from "../../derive/test/definition-corpus/scope-capacity-floor.ts";
 import { env } from "cloudflare:workers";
 import { expect, test } from "vitest";
 import type { Entry, FactRef, Seed } from "@generalbusiness/dap-contract";
@@ -5,7 +6,7 @@ import { intentDigest, parseStrict, scopeIdOf, signIntent } from "@generalbusine
 import { reserved, validateDefinition, type Delivered, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { valid } from "../../derive/test/fixtures.ts";
 import { boundRecordData, boundRecordDefinition } from "../../derive/test/fixtures-bound-records.ts";
-import { PIN_BOUNDS, receiverPinData } from "../../derive/test/fixtures-receiver-pins.ts";
+import { PIN_BOUNDS } from "../../derive/test/fixtures-receiver-pins.ts";
 import { httpSource, verify } from "@generalbusiness/artroom-replay";
 import { SqliteStore, type Delivery } from "../src/index.ts";
 import { CAPABILITY_CODE } from "../src/ports.ts";
@@ -19,17 +20,7 @@ test.each([false, true])("a native bound decision reserves only its actual recor
   // replay. Trusted platform data, authority, clock and resolver are
   // fixtures; there is no platform rule mark or outside provider.
   const data = boundRecordData(firstKey), under = boundRecordDefinition(firstKey);
-  const sourceData = receiverPinData();
-  delete sourceData.capacity;
-  sourceData.name = "bound-sender"; sourceData.capabilities = []; sourceData.receives = {};
-  sourceData.items["intent"]!.refs["peer"] = { fixed: false, required: false, to: { type: "scope", kind: "directory" } };
-  const touch = sourceData.acts["touch"]!;
-  sourceData.acts = { file: sourceData.acts["file"]!, connect: {
-    ...touch, fields: { peer: { type: "scope", kind: "directory", required: true } }, effects: [{ ref: { slot: "peer", from: { field: "peer" } } }],
-  }, stop: {
-    ...touch, fields: { job: { type: "fact", kind: ["open-job"], under: data.name, required: true } },
-    sends: [{ tell: { to: { slot: "peer" }, message: "stop", fields: { job: { field: "job" } }, result: {} } }],
-  } };
+  const sourceData = capacityBoundSenderData(data.name);
   const sourceUnder = valid(validateDefinition(sourceData, PIN_BOUNDS));
   const peers = new Map<string, ValidDefinition>();
   const birth = async (definition: ValidDefinition, platform = false) => {

@@ -1,6 +1,7 @@
+import { countingContainerData, countingPublicationData } from "./definition-corpus-data.ts";
 import { runInDurableObject } from "cloudflare:test";
 import { expect, onTestFinished, test } from "vitest";
-import type { DeclaredDefinition, Intent, Seed } from "@generalbusiness/dap-contract";
+import type { Intent, Seed } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, intentDigest, isSeed, scopeIdOf, seedDigest, textDigest, timeMs } from "@generalbusiness/artroom-bytes";
 import { requestSession, sessionRequest, type Fetch } from "@generalbusiness/artroom-client";
 import { command, issueInvitation, memoryStore, type Context } from "../../cli/src/index.ts";
@@ -128,11 +129,7 @@ test.each([{ name: "application", cohort: APPLICATION_COHORT }, { name: "applica
     expect(await Q.stub.submit(await Q.intent(rita, "activate", { fields: { digest: COUNTING_DEFINITION, name: "counting" } }), [], { values: [bytes] })).toMatchObject({ answer: "accepted" });
     // Made-up container checks the generic native closure and a legitimate
     // non-opener MemberRef; its named child is the real exact Counting pin.
-    const container: DeclaredDefinition = { format: "artroom-definition-1", name: "counting-container", profile: counting.profile,
-      capabilities: [], genesis: "establish", items: { configuration: counting.items["configuration"]! },
-      acts: { establish: { ...counting.acts["establish"]!, fields: { ...counting.acts["establish"]!.fields, peer: { type: "member", required: true } },
-        sends: [{ create: { kind: "lane", definition: COUNTING_DEFINITION, fields: { opener: { field: "opener" }, target: { field: "target" } }, result: {} } }] } },
-      receives: {}, timed: {}, rules: {} };
+    const container = countingContainerData();
     const containerDigest = definitionDigest(container), containerBytes = canonicalize(container);
     expect(await Q.stub.submit(await Q.intent(rita, "activate", { fields: { digest: containerDigest, name: container.name } }), [], { values: [containerBytes] })).toMatchObject({ answer: "unavailable" });
     expect(await Q.stub.submit(await Q.intent(rita, "activate", { fields: { digest: containerDigest, name: container.name, dependency1: COUNTING_DEFINITION } }), [], { values: [containerBytes, bytes] })).toMatchObject({ answer: "accepted" });
@@ -224,9 +221,7 @@ test.each([{ name: "application", cohort: APPLICATION_COHORT }, { name: "applica
     if (name === "application-publication") {
       const invite = await lifetime.wait(() => issueInvitation(context, { kind: "person", handle: "@reader", hours: 1, role: "member" }, { privateRequests: [], mode: "new", operation: crypto.randomUUID(), current: () => { lifetime.active(); return true; } }));
       expect(invite.state).toBe("verified");
-      const published: DeclaredDefinition = { ...counting,
-        items: { ...counting.items, configuration: { ...counting.items["configuration"]!, refs: { ...counting.items["configuration"]!.refs, destination: { fixed: true, required: true, to: { type: "scope", kind: "destination" } } } } },
-        acts: { ...counting.acts, establish: { ...counting.acts["establish"]!, fields: { ...counting.acts["establish"]!.fields, destination: { type: "scope", kind: "destination", required: true } }, effects: [...counting.acts["establish"]!.effects, { ref: { slot: "destination", from: { field: "destination" } } }] } } };
+      const published = countingPublicationData();
       const digest = definitionDigest(published), content = canonicalize(published), destination = await G.at();
       expect(await Q.stub.submit(await Q.intent(rita, "activate", { fields: { digest, name: published.name } }), [], { values: [content] })).toMatchObject({ answer: "accepted" });
       const values = { definition: digest, values: '{"target":7}', execution: "recorded-do" };

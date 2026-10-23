@@ -1,3 +1,4 @@
+import { customRequiredChangeData } from "./support/definition-corpus-data.ts";
 import { runInDurableObject, runDurableObjectAlarm } from "cloudflare:test";
 import { inject, expect, test, onTestFinished } from "vitest";
 import { PROPOSED_BOUNDS, type Entry, type FactRef, type ScopeId, type ScopeRef } from "@generalbusiness/dap-contract";
@@ -360,8 +361,7 @@ async function story(at: Stand, wired: Set<ScopeId>, startedOnly = false, unknow
       // Generic activation legitimately accepts this complete custom schema.
       // The fixed CLI cannot provide its new input, so it must stop BEFORE
       // opening a lane; no deletion of a referenced row makes the fixture bad.
-      const custom = structuredClone(changeDemo3);
-      custom.acts["ask-rules"]!.fields["requiredNote"] = { type: "text", max: 32, required: true };
+      const custom = customRequiredChangeData();
       expect(validateDefinition(custom, PROPOSED_BOUNDS).ok).toBe(true);
       files["custom.json"] = utf8(canonicalize(custom));
       ok(await run(creator, "act", "activate", "--on", "rules", "--set", `digest=${definitionDigest(custom)}`, "--set", "name=change", "--value", "custom.json"));

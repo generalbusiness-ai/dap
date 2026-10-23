@@ -1,3 +1,5 @@
+import { replayHolding, replayChained } from "../../derive/test/definition-corpus/replay-mutations-data.ts";
+import { replayReservedSource, replayReservedReceiver, replayQualifiedReceiver } from "../../derive/test/definition-corpus/replay-literals-data.ts";
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Entry, type ObservationUse, type Report } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, textDigest } from "@generalbusiness/artroom-bytes";
@@ -60,9 +62,8 @@ describe("replay of a good history (sections 9.3 to 9.5)", () => {
 // A reserved alias is not established by a digest or by a retained copy.
 // These histories use derive's fixture authority, not native factory admission.
 test("a replay without native identity policy leaves a reserved declared source incomplete, while an exact source anchor remains explicit trust", async () => {
-  const reserved = validateDefinition({ ...notesDefinition.declared, name: "change" }, PROPOSED_BOUNDS);
-  const receiver = validateDefinition({ ...notesDefinition.declared, acts: { ...notesDefinition.declared.acts,
-    vouch: { ...notesDefinition.declared.acts["vouch"]!, presents: { proof: { kind: ["write"], under: "change", required: true } } } } }, PROPOSED_BOUNDS);
+  const reserved = validateDefinition(replayReservedSource(), PROPOSED_BOUNDS);
+  const receiver = validateDefinition(replayReservedReceiver(), PROPOSED_BOUNDS);
   expect([reserved.ok, receiver.ok]).toEqual([true, true]);
   if (!reserved.ok || !receiver.ok) throw new Error("the fixture definitions must validate");
   const S = created(reserved.definition, {}, "reserved-source");
@@ -83,8 +84,7 @@ test("a replay without native identity policy leaves a reserved declared source 
   expect([classified.report.result, classified.report.anchors, classified.why]).toEqual([
     "mismatch", [], `the retained copy of entry ${fact.seq} of ${fact.at.scope} names another definition than that scope pins`,
   ]);
-  const qualifiedReceiver = validateDefinition({ ...notesDefinition.declared, acts: { ...notesDefinition.declared.acts,
-    vouch: { ...notesDefinition.declared.acts["vouch"]!, presents: { proof: { kind: ["write"], under: "declared:change", required: true } } } } }, PROPOSED_BOUNDS);
+  const qualifiedReceiver = validateDefinition(replayQualifiedReceiver(), PROPOSED_BOUNDS);
   if (!qualifiedReceiver.ok) throw new Error("the qualified fixture definition must validate");
   const Q = created(qualifiedReceiver.definition, {}, "qualified-receiving-note");
   expect(Q.act(keys.rita, "vouch", { ...on(Q, 0), fields: {} }, { presented: { proof: fact }, facts: [{ fact, entry: S.last, under: "declared:change" }] }).result).toBe("write");
@@ -336,8 +336,7 @@ describe("a preparation, its outcomes and an ancestry record are derived again (
 describe("a reservation that an item holds, in a replay: the counts, each `for` and each draw are derived again from the history", () => {
   const replayed = (g: Gate, history: MemoryScope, platform: Options["platform"]) => verify(new MemorySource([history]), { mode: "replay", scope: g.at.scope, anchors: g.anchors(), platform });
   /** A ticket holds that many probes. The mark of `probe` lists `probe`: the kinds are in a circle, and each is held. */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const holding = (probes: number) => (data: any) => { data.items.ticket.holds = { operations: { probe: probes } }; data.outcomes.probe = { ...data.outcomes.probe, attempts: 1, most: { effects: 0, operations: ["probe"] } }; };
+  const holding = replayHolding;
   /** The rule of the outcome opens one more probe, for the holder of its own operation. */
   const again = (_given: unknown, operation: { for?: number }) => ({ effects: [], sends: [], opens: [{ owner: OWNER, kind: "probe", attempts: 1, for: operation.for }] });
 
@@ -366,8 +365,7 @@ describe("a reservation that an item holds, in a replay: the counts, each `for` 
   });
 
   test("18.49 case 12: a history in which a held kind opens a kind that no item holds is consistent, and the operation of that kind has no holder", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const chained = (data: any) => { data.items.ticket.holds = { operations: { probe: 1 } }; data.outcomes.probe = { ...data.outcomes.probe, attempts: 1, most: { effects: 0, operations: ["after"] } }; data.outcomes.after = { code: "after", row: "P16", attempts: 3 }; };
+    const chained = replayChained;
     const g = new Gate((() => ({ effects: [], sends: [], opens: [{ owner: OWNER, kind: "after", attempts: 3 }] })) as never, false, false, chained);
     expect([g.definition.reserving!.kinds["probe"]!.whole.entries, g.state.operation("3:0")?.kind, g.state.operation("3:0")?.for, g.state.holders()]).toEqual([14, "after", undefined, []]);
     const good = await replayed(g, g.served(), g.coded());

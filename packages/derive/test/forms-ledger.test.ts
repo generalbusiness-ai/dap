@@ -2,17 +2,14 @@ import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Entry, Evidence, OperationId } from "@generalbusiness/dap-contract";
 import { entryHash } from "@generalbusiness/artroom-bytes";
-import { AmountError, FoldError, applyEntry, capabilitiesOf, checkpointOf, clockOf, gitRead, holdCapability, ownerReservations, operationId, operationOpening, operationStanding, owed, reserved as reservedAmount, settleOutcome, tokenPast } from "../src/index.ts";
+import { AmountError, FoldError, applyEntry, capabilitiesOf, checkpointOf, clockOf, gitRead, holdCapability, ownerReservations, operationId, operationOpening, operationStanding, owed, reserved as reservedAmount, settleOutcome, tokenPast, validateDefinition } from "../src/index.ts";
 import type { Opening, OperationRules, Owners } from "../src/index.ts";
+import { ledgerDefinitionData } from "./definition-corpus/ledger-data.ts";
 import { kindOf } from "../src/operand.ts";
-import { Scope, t, ticketDefinition, variant } from "./fixtures-entry.ts";
+import { Scope, t, ticketDefinition, valid } from "./fixtures-entry.ts";
 
 test("a hold reader without local holds owes no record work", () => {
-  const reader = variant(ticketDefinition.declared, data => {
-    data.capacity = { name: "whole-scope", version: 1 };
-    data.capabilities = [{ name: "hold", version: 1 }];
-    data.acts.file.guards.push({ capability: { name: "hold", guard: "staged", with: {} } });
-  });
+  const reader = valid(validateDefinition(ledgerDefinitionData(true), PROPOSED_BOUNDS));
   const owner = holdCapability({ tokensPerHold: 2, rootRetentionSeconds: 600 });
   const scope = new Scope(ticketDefinition);
   expect(reader.holdTypes).toEqual([]);
@@ -22,7 +19,7 @@ test("a hold reader without local holds owes no record work", () => {
 test("opt-in owner-record reservations reject scalar-only, inconsistent and invalid Amounts, even when the current entry count is zero", () => {
   // This is the owner/calculator boundary. The callbacks below are explicit
   // stand-ins; the native job-read witness separately exercises real code.
-  const definition = variant(ticketDefinition.declared, data => { data.capacity = { name: "whole-scope", version: 1 }; });
+  const definition = valid(validateDefinition(ledgerDefinitionData(), PROPOSED_BOUNDS));
   const scope = new Scope(definition);
   const read = (owner: Owners) => reservedAmount(scope.state, definition, scope.last.input, owner);
   const scalar: Owners = { rules: () => null, reserves: () => 0 };
@@ -39,7 +36,7 @@ test("opt-in owner-record reservations reject scalar-only, inconsistent and inva
 test("opt-in outcome reservations keep the owner's complete Amount and refuse a missing or invalid declaration", () => {
   // Calculator boundary: the operation is folded by hand and the owner is
   // a stand-in. This does not establish an actual producer's maxima.
-  const definition = variant(ticketDefinition.declared, data => { data.capacity = { name: "whole-scope", version: 1 }; });
+  const definition = valid(validateDefinition(ledgerDefinitionData(), PROPOSED_BOUNDS));
   const scope = new Scope(definition);
   open(scope, { owner: "hold@1", kind: "mint", attempts: 1 });
   const read = (rule: OperationRules) => reservedAmount(scope.state, definition, scope.last.input, { rules: () => rule });

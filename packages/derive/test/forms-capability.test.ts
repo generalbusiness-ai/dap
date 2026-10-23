@@ -2,13 +2,12 @@ import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { isSealed } from "@generalbusiness/artroom-bytes";
 import { derivable, validateDefinition, type Capabilities, type ProblemCode } from "../src/index.ts";
-import { Scope, keys, laneDefinition, on, small, smallDefinition, variant } from "./fixtures-entry.ts";
+import { Scope, keys, laneDefinition, on, smallDefinition, valid } from "./fixtures-entry.ts";
 
 const { rita } = keys;
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Change = (d: any) => void;
-const [C1, C2] = ["a".repeat(40), "b".repeat(40)];
-const act = (a: object) => ({ step: "transition", on: "note", grant: "edit", also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [], ...a });
+import { C1, C2, capabilityStagingData, capabilityStepFactChange } from "./definition-corpus/capability-staging-data.ts";
 
 /**
  * The small definition, with the two capabilities listed and each
@@ -16,26 +15,7 @@ const act = (a: object) => ({ step: "transition", on: "note", grant: "edit", als
  * element of a list and a slot of each item of a range as arguments; an
  * effect; and a part that reads a record another entry carries.
  */
-const staging = variant(small, (def) => {
-  def.capabilities = [{ name: "hold", version: 1 }, { name: "git-read", version: 1 }];
-  def.acts.stage = act({
-    fields: { commit: { type: "commit", required: true }, earlier: { type: "list", of: { type: "commit" }, max: 4, required: false } },
-    guards: [
-      { state: ["draft"] },
-      { capability: { name: "hold", guard: "staged", with: { commit: { field: "commit" }, under: { item: "on" } } } },
-      { capability: { name: "git-read", guard: "ancestry", with: {
-        commit: { field: "commit" }, row: { const: "report" },
-        selected: { each: { field: "earlier" }, as: "c", value: { element: "c" } }, earlier: { items: { type: "note", states: ["draft"] }, slot: "text" },
-      } } },
-    ],
-    effects: [{ capability: { name: "hold", do: "pin-hold", with: { commit: { field: "commit" } } } }, { value: { slot: "text", from: { const: "staged" } } }],
-  });
-  def.acts.check = act({
-    fields: { pin: { type: "fact", kind: ["stage"], under: "small", required: true } },
-    guards: [{ equals: { a: { field: "pin", part: { carried: "pin.commit" } }, b: { const: C1 } }, reason: "pin-mismatch" }],
-  });
-  def.acts.ask = act({ guards: [{ capability: { name: "hold", guard: "staged", with: {} } }] });
-});
+const staging = valid(validateDefinition(capabilityStagingData(), PROPOSED_BOUNDS));
 
 /**
  * A stand-in for a capability's code, for this test only: it answers each
@@ -103,7 +83,7 @@ describe("capability forms (section 6.11), with a stand-in for the capability's 
     const stage = (def: any) => def.acts.stage;
     const step = (kind: string) => ({ type: "fact", kind: [kind], under: "lane", required: false });
     const rows: readonly (readonly [string, Change, ProblemCode | null])[] = [
-      ["a fact type whose kind is a step of a listed version passes", (def) => { def.acts.check.fields.other = step("hold@1:check"); }, null],
+      ["a fact type whose kind is a step of a listed version passes", capabilityStepFactChange, null],
       ["a kind that names no step of that version", (def) => { def.acts.check.fields.other = step("hold@1:walk"); }, "capability"],
       ["a kind that names a version the definition does not list", (def) => { def.acts.check.fields.other = step("hold@2:check"); }, "capability"],
       ["a guard of a capability that the definition does not list", (def) => { def.capabilities.pop(); }, "capability"],

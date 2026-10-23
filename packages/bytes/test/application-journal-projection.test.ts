@@ -1,20 +1,14 @@
+import { journalProjectionDefinition as definition } from "./definition-corpus-data.ts";
 /** Canonical signed tail fixtures, not native authority or whole replay. */
 import { expect, test } from "vitest";
-import type { DeclaredDefinition, Entry } from "@generalbusiness/dap-contract";
+import type { Entry } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, entryHash, keyIdOfSecret, signIntent, textDigest, utf8 } from "../src/index.ts";
 import { directory } from "./fixtures.ts";
 import { bindApplicationProjection, applicationProjectionId, readApplicationProjection } from "../src/application-v2.ts";
 import { projectApplicationQueryReads } from "../src/application-projection-read.ts";
 import { applicationProjectionQueryDigest, readApplicationProjectionReply } from "../src/application-projection-wire.ts";
 const scope = { ...directory, kind: "lane" as const }, secret = new Uint8Array(32).fill(71);
-const common = { also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [] };
-const definition: DeclaredDefinition = {
-  format: "artroom-definition-1", name: "journal-fixture", profile: { name: "restricted", version: 1 }, capabilities: [], genesis: "establish",
-  items: { root: { many: false, max: 1, initial: "open", states: { open: { final: false } }, parties: {}, refs: {}, values: {} } },
-  acts: { establish: { ...common, step: "open", on: "root", grant: "journal.write" }, note: { ...common, step: "comment", on: "root", grant: "journal.write",
-    fields: { room: { type: "int", min: 0, max: 10, required: true } } }, observe: { ...common, step: "comment", on: null, grant: "journal.write",
-    fields: { room: { type: "int", min: 0, max: 10, required: true } } } }, receives: {}, timed: {}, rules: {},
-};
+
 const projection = () => ({ v: 1, definition: definitionDigest(definition), revision: "revision", sources: { log: {
   read: "entries", acts: ["note", "observe"], window: 2, limit: 2, latestBy: null as string | null, fields: {
     room: { from: { kind: "field", name: "room" }, of: { type: "int", min: 0, max: 10 }, nullable: false },

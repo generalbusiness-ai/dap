@@ -1,3 +1,4 @@
+import { markRuntimeChange0, markRuntimeChange2, markRuntimeChange3, markRuntimeChange4, markRuntimeChange5, markRuntimeChange6, markRuntimeChange7, markRuntimeChange8, markRuntimeChange9, markRuntimeChange10 } from "./definition-corpus/forms-marks-variants.ts";
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Bounds, MemberId, ObservationUse, OperationId, PlatformDefinition, Request, ScopeRef, Seed, Send } from "@generalbusiness/dap-contract";
@@ -7,9 +8,9 @@ import { Scope, T0, arriving, d, forged, keys, membership, otherLane, small, t, 
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Change = (d: any) => void;
-const MARK = { code: "fresh", row: "P14" };
+import { PLACE, markFormCases } from "./definition-corpus/forms-marks-cases.ts";
 /** A made-up place: a byte domain that the made-up data declares, and its bound on one value. */
-const PLACE = { domain: "gate-proof-1", max: 64 };
+
 
 /** The problems of a value with one change, as the code and the path of each: with the platform option, or without it. */
 function problems(base: unknown, change: Change, platform: boolean): (readonly [string, string])[] | null {
@@ -40,61 +41,7 @@ describe("a mark in a definition (section 6.1)", () => {
   });
 
   /** Each row: a value, one change, whether the platform option is set, and every problem that the validator reports, or null when it passes. */
-  const rows: readonly (readonly [string, unknown, Change, boolean, readonly (readonly [string, string])[] | null])[] = [
-    // Without the option a mark is a form that the contract does not define, at every place.
-    ["a declared definition with a mark among its guards is refused", small, (d) => d.acts.edit.guards.push(MARK), false, [["shape", "acts.edit.guards.4"]]],
-    ["the platform data without the option: the member `outcomes` is no member of a declared definition", gate, () => {}, false, [["shape", "outcomes"]]],
-    ["the same rows under a declared name, without the option: each of the six forms is refused where it stands", gate, (d) => { delete d.outcomes; d.name = "gate"; }, false, [["shape", "items.ticket.values.note.of"]]],
-    ["and with the slot's type written as data: the grant, the field's type, the name of `also`, the guard, the effect and the send", gate, (d) => { delete d.outcomes; d.name = "gate"; d.items.ticket.values.note.of = { type: "int", min: 0, max: 9 }; }, false, [
-      ["shape", "acts.enter.grant"], ["shape", "acts.enter.fields.note"], ["shape", "acts.enter.also.ticket"], ["name", "acts.enter.guards.0.of"], ["shape", "acts.enter.guards.1"],
-      ["name", "acts.enter.effects.0.of"], ["name", "acts.enter.effects.1.of"], ["shape", "acts.enter.effects.2"], ["shape", "acts.enter.sends.0"],
-    ]],
-    // With the option a mark stands at one of the seven places, and nowhere else.
-    ["with the option, the data without `outcomes` is not platform data", gate, (d) => { delete d.outcomes; }, true, [["shape", "outcomes"]]],
-    ["a mark among the effects of a timed rule", gate, (d) => {
-      d.items.ticket.values.due = { fixed: false, required: false, of: { type: "time" } };
-      d.timed.lapse = { on: "ticket", states: ["open"], deadline: "due", effects: [{ state: "used" }, MARK], attention: [] };
-    }, true, [["timed-partial", "timed.lapse.effects.1"]]],
-    ["a mark inside a list form", gate, (d) => d.acts.enter.guards.push({ anyOf: [[MARK]] }), true, [["shape", "acts.enter.guards.2.anyOf.0.0"]]],
-    ["a mark in the condition of an effect", gate, (d) => { d.acts.enter.effects[1].if = [MARK]; }, true, [["shape", "acts.enter.effects.1.if.0"]]],
-    ["a mark as the type of an element of a list", gate, (d) => { d.acts.enter.fields.notes = { type: "list", max: 2, of: { code: "even", row: "P22", type: "code" }, required: false }; }, true, [["shape", "acts.enter.fields.notes.of"]]],
-    ["a mark with a condition of its own", gate, (d) => { d.acts.enter.effects[2].if = []; }, true, [["shape", "acts.enter.effects.2.if"]]],
-    ["a mark that names no row", gate, (d) => { d.acts.enter.guards[1].row = ""; }, true, [["shape", "acts.enter.guards.1.row"]]],
-    // The field is then no field, so the effect that copies it names nothing.
-    ["a default on a field whose type is a mark", gate, (d) => { d.acts.enter.fields.note.default = 2; }, true, [["shape", "acts.enter.fields.note.default"], ["name", "acts.enter.effects.1.value.from"]]],
-    ["a value of another type copied into a slot whose type is a mark", gate, (d) => { d.acts.enter.effects[1].value.from = { field: "secret" }; }, true, [["name", "acts.enter.effects.1.value.from"]]],
-    // Revision 19, "More than one send mark" (witness 18.45, case 3): a list may hold several marks when at most one does not state `always`.
-    ["a second send mark, where neither states `always`", gate, (d) => d.acts.enter.sends.push({ code: "again", row: "P21", result: {} }), true, [["shape", "acts.enter.sends.1"]]],
-    ["a second send mark, where one states `always`, passes", gate, (d) => d.acts.enter.sends.push({ code: "again", row: "P21", result: {}, always: true }), true, null],
-    ["three send marks, where two state `always`, pass, and each is listed", gate, (d) => { d.acts.enter.sends[0].always = true; d.acts.enter.sends.push({ code: "again", row: "P21", result: {} }, { code: "third", row: "P21", result: {}, always: true }); }, true, null],
-    ["`always` is true, or is left out", gate, (d) => { d.acts.enter.sends[0].always = false; }, true, [["shape", "acts.enter.sends.0.always"]]],
-    ["a written send that is not always made, beside two marks", gate, (d) => {
-      d.acts.enter.sends[0].always = true;
-      d.acts.enter.sends.push({ code: "again", row: "P21", result: {} }, { index: { fields: {} } });
-    }, true, [["shape", "acts.enter.sends.0"]]],
-    // Revision 19, section 6.2, "How a version states a place" (witness 18.45, case 7): a field of type `digest` of an act may state
-    // `value: { domain, max }`, in platform data only. Two fields that state one domain state one `max`.
-    ["a field of an act that names a value passes", gate, (d) => { d.acts.issue.fields.hash.value = PLACE; }, true, null],
-    ["the same member without the option is unknown: no act of a declared definition has a place", small, (d) => { d.acts.edit.fields.proof = { type: "digest", required: false, value: PLACE }; }, false, [["shape", "acts.edit.fields.proof.value"]]],
-    ["two fields that state one domain with two bounds", gate, (d) => { d.acts.issue.fields.hash.value = PLACE; d.acts.issue.fields.other = { type: "digest", required: false, value: { ...PLACE, max: 65 } }; }, true, [["shape", "acts.issue.fields.other.value.max"]]],
-    ["two fields that state one domain with one bound pass", gate, (d) => { d.acts.issue.fields.hash.value = PLACE; d.acts.issue.fields.other = { type: "digest", required: false, value: PLACE }; }, true, null],
-    ["a place with no bound, and one with no domain", gate, (d) => { d.acts.issue.fields.hash.value = { domain: "gate-proof-1", max: 0 }; d.acts.issue.fields.other = { type: "digest", required: false, value: { domain: "", max: 4 } }; }, true, [
-      ["shape", "acts.issue.fields.hash.value.max"], ["shape", "acts.issue.fields.other.value.domain"], ["name", "acts.issue.effects.0.value.from"],
-    ]],
-    ["a place on a field of another type", gate, (d) => { d.acts.enter.fields.secret.value = PLACE; }, true, [["shape", "acts.enter.fields.secret.value"]]],
-    ["a place on a slot", gate, (d) => { d.items.ticket.values.hash.of = { type: "digest", value: PLACE }; }, true, [["shape", "items.ticket.values.hash.of.value"]]],
-    ["`always` on a written send is no member of it", small, (d) => { d.acts.edit.sends = [{ index: { fields: {} }, always: true }]; }, false, [["shape", "acts.edit.sends.0"]]],
-    // A written effect on a name that a mark selects, a required slot that only an effect mark could set, and a clause of the mark's own request all pass.
-    ["a required slot that no written effect sets, in a row with an effect mark, passes", gate, (d) => { d.acts.issue.effects = [{ code: "hash-of", row: "P18" }]; }, true, null],
-    ["an effect mark in a clause of the send mark passes", gate, (d) => { d.acts.enter.sends[0].result.applied = [{ code: "noted", row: "P16" }]; }, true, null],
-    // Revision 17, section 6.1, "A request of an outcome's rule, and its clauses" (witness 18.43, case 6; row I3-23): the mark of a
-    // kind of `outcomes` may hold one `send`, which is a mark, and each effect of its clauses is an effect mark.
-    ["an outcome's mark with a send mark, whose clause holds an effect mark, passes", gate, (d) => { d.outcomes.probe.send = { code: "create-child", row: "P16", result: { applied: [{ code: "noted", row: "P16" }], refused: [] } }; }, true, null],
-    ["an outcome's mark with a written send", gate, (d) => { d.outcomes.probe.send = { tell: { to: { slot: "x" }, message: "hello", fields: {}, result: {} } }; }, true, [["shape", "outcomes.probe.send"]]],
-    ["an outcome's mark with two sends", gate, (d) => { d.outcomes.probe.send = [{ code: "a", row: "P16", result: {} }, { code: "b", row: "P16", result: {} }]; }, true, [["shape", "outcomes.probe.send"]]],
-    ["a written effect in a clause of an outcome's send", gate, (d) => { d.outcomes.probe.send = { code: "create-child", row: "P16", result: { applied: [{ state: "used" }] } }; }, true, [["shape", "outcomes.probe.send.result.applied.0"]]],
-    ["an outcome's send that states `always`", gate, (d) => { d.outcomes.probe.send = { code: "create-child", row: "P16", result: {}, always: true }; }, true, [["shape", "outcomes.probe.send.always"]]],
-  ];
+  const rows = markFormCases;
   for (const [name, base, change, platform, expected] of rows) test(name, () => expect(problems(base, change, platform)).toEqual(expected));
 });
 
@@ -106,7 +53,7 @@ describe("a rule is run at the check of its mark's place (sections 4.2 and 6.1)"
   const said = (j: ActJudgment) => [j.result, "reason" in j ? j.reason : null, "name" in j ? (j.name ?? null) : null, "detail" in j ? j.detail : null];
   /** A gate with two open tickets, issued for the secrets `one` and `two`: items 2 and 3. `enter` is judged on a written grant here. */
   const gated = () => {
-    const s = new Scope(gateWith((d) => { d.acts.enter.grant = "gate.enter"; }));
+    const s = new Scope(gateWith(markRuntimeChange0));
     for (const secret of ["one", "two"]) s.did(rita, "issue", { fields: { hash: textDigest(secret) } });
     return s;
   };
@@ -153,7 +100,7 @@ describe("a rule is run at the check of its mark's place (sections 4.2 and 6.1)"
     // The same row with a mark that states an action. With a current grant of it the check holds as written: the entry records
     // that grant, and the rule is not run. With none, the rule is run. And with nothing read about the signer, an act that the
     // rule does not pass is not judged.
-    const t = issued(new Scope(gateWith((d) => { d.acts.enter.grant.grant = "gate.enter"; })));
+    const t = issued(new Scope(gateWith(markRuntimeChange2)));
     const held = gateRules();
     expect([said(t.act(una, "enter", fields("one"), { platform: held })), authority(t)?.map((grant) => [grant.key, grant.actions.includes("gate.enter")]), held.ran["by-ticket"]]).toEqual([["write", null, null, null], [[una.key, true]], undefined]);
     expect([said(t.act(vic, "enter", fields("two"), { platform: gateRules(), grants: [] })), authority(t)]).toEqual([["write", null, null, null], []]);
@@ -249,21 +196,7 @@ describe("a rule is run at the check of its mark's place (sections 4.2 and 6.1)"
 
   test("what a rule returns meets what the validator asks of a written effect or send: nothing that only the hold capability sets, no operation without its first attempt, no relationship of an item that the entry does not open; a list change that changes nothing is not recorded, and a hold ends with an item that a rule ends", () => {
     // The gate with a pass: a hold under a ticket, with the forms that a hold type must have. A ticket also has a list of members.
-    const s = new Scope(gateWith((d) => {
-      d.acts.enter.grant = "gate.enter";
-      d.capabilities.push({ name: "hold", version: 1 });
-      d.items.ticket.parties = { seen: { fixed: false, required: false, list: true, max: 2, author: false } };
-      d.items.pass = {
-        many: true, max: 2, initial: "held", states: { held: { final: false }, ended: { final: true } },
-        parties: { holder: { fixed: false, required: true, list: false, author: false } }, refs: { under: { fixed: true, required: true, to: { type: "item", of: "ticket" } } },
-        values: { until: { fixed: false, required: true, of: { type: "time" } }, epoch: { fixed: false, required: true, of: { type: "int", min: 1, max: 9 } } },
-      };
-      d.acts.take = {
-        step: "open", on: "pass", grant: "gate.take", also: {}, fields: { ticket: { type: "item", of: "ticket", required: true } }, guards: [], sends: [], attention: [],
-        effects: [{ ref: { slot: "under", from: { field: "ticket" } } }, { value: { slot: "until", from: { time: { plusSeconds: 600 } } } }, { hold: { do: "open" } }],
-      };
-      d.timed["pass-end"] = { on: "pass", states: ["held"], deadline: "until", effects: [{ hold: { do: "end" } }], attention: [] };
-    }));
+    const s = new Scope(gateWith(markRuntimeChange3));
     // Tickets 2, 3 and 4, and pass 5, which rita holds under ticket 3.
     for (const secret of ["one", "two", "three"]) s.did(rita, "issue", { fields: { hash: textDigest(secret) } });
     s.did(rita, "take", { fields: { ticket: 3 } });
@@ -296,7 +229,7 @@ describe("a rule is run at the check of its mark's place (sections 4.2 and 6.1)"
 
   test("the first attempt of an operation is asked of the entry's joined effects, after every mark: one mark opens the operation and a later mark its first attempt, and the entry is written; an operation that the whole entry leaves with no first attempt is a fault, and nothing is written", () => {
     // The row `enter` with a second effect mark, `then`, after `key-id`.
-    const s = new Scope(gateWith((d) => { d.acts.enter.grant = "gate.enter"; d.acts.enter.effects.push({ code: "then", row: "P14" }); }));
+    const s = new Scope(gateWith(markRuntimeChange4));
     s.did(rita, "issue", { fields: { hash: textDigest("one") } });
     const operation = (k: number) => ({ effect: "operation", k, owner: OWNER, kind: "probe", attempts: 1 }) as const;
     const first = (k: number) => ({ effect: "attempt", operation: { k }, attempt: 1, result: "opened", selected: null }) as const;
@@ -311,7 +244,7 @@ describe("a rule is run at the check of its mark's place (sections 4.2 and 6.1)"
   // Scope contract, revision 19, section 6.2, "How a version states a place" and "The checks, in the commit"; witness 18.45, case 6.
   test("a field that names a value: the judge matches the value at hand by the domain and the bound that the data states, a rule reads it by its field, and the draft names it for the scope to keep; with none at hand, with bytes that are not canonical, or with a value past the bound, the act is refused `bad-field`", () => {
     const read: unknown[] = [];
-    const s = new Scope(gateWith((d) => { d.acts.issue.fields.hash.value = PLACE; d.acts.issue.effects.push({ code: "seen", row: "P21" }); }));
+    const s = new Scope(gateWith(markRuntimeChange5));
     const platform = gateRules({ seen: { place: "effect", most: 0, run: (given) => { read.push(given.placed("hash"), given.placed("secret")); return []; } } });
     const proof = { seat: 12, row: "c" };
     const [digest, bytes] = [valueDigest(PLACE.domain, proof), canonicalize(proof)];
@@ -331,14 +264,7 @@ describe("a rule is run at the check of its mark's place (sections 4.2 and 6.1)"
   // Scope contract, revision 19, section 6.1, "More than one send mark"; witness 18.45, cases 1, 2, 4 and 5. The rules are STAND-INS.
   test("a list of sends with several marks: each recorded send, and the clause of each result, is found by counting, with k sends or with k less 1; a rule whose mark states `always` and that gives no request has a fault", () => {
     // Three forms: a written `create`, the mark `refer` and the mark `again`. The clause `applied` of each is one effect mark of its own.
-    const listed = (first: boolean, second: boolean) => gateWith((d) => {
-      d.acts.enter.grant = "gate.enter";
-      d.acts.enter.sends = [
-        { create: { kind: "inbox", definition: "platform:inbox@1", fields: {}, result: { applied: [{ code: "noted-w", row: "P16" }] } } },
-        { code: "refer", row: "P21", result: { applied: [{ code: "noted-a", row: "P16" }] }, ...(first ? { always: true } : {}) },
-        { code: "again", row: "P21", result: { applied: [{ code: "noted-b", row: "P16" }] }, ...(second ? { always: true } : {}) },
-      ];
-    });
+    const listed = (first: boolean, second: boolean) => gateWith((data) => markRuntimeChange6(data, first, second));
     const tell = (message: string) => ({ to: otherLane, message: { class: "request", type: "tell", body: { message, fields: {} } } }) as const;
     const gives = (request: ReturnType<typeof tell> | null): PlatformRule => ({ place: "send", run: () => request });
     /** One `enter` under those marks and rules. Returns the scope, what the judge answered, and the clause that runs for the `applied` result of one recorded send. */
@@ -385,7 +311,7 @@ describe("a rule is run at the check of its mark's place (sections 4.2 and 6.1)"
 
   // Scope contract, revision 19, section 6.1, "A rule that decides a further attempt is given the state" (row I3-35; I3 delta ER5).
   test("the rule that says whether another attempt is allowed is given what every rule is given: it reads the folded state before the outcome entry, and the outcome as the judge set it", () => {
-    const s = new Scope(gateWith((d) => { d.acts.enter.grant = "gate.enter"; }));
+    const s = new Scope(gateWith(markRuntimeChange7));
     for (const secret of ["one", "two"]) s.did(rita, "issue", { fields: { hash: textDigest(secret) } });
     const opens = some(() => [{ effect: "operation", k: 0, owner: OWNER, kind: "probe", attempts: 2 }, { effect: "attempt", operation: { k: 0 }, attempt: 1, result: "opened", selected: null }]);
     expect(said(enter(s, una, "one", owned({ "key-id": opens })))).toEqual(["write", null, null, null]);
@@ -408,7 +334,7 @@ describe("a rule is run at the check of its mark's place (sections 4.2 and 6.1)"
 
   test("an item that a rule opens counts against its type's `max` in every entry: an outcome's rule that would pass it has a fault, and a clause's rule that would pass it changes nothing; an outcome's rule sends no more than one entry may", () => {
     // The row `enter` tells another scope, by its rule `refer`, and opens an operation, by its rule `key-id`. The clause of the tell is the mark `noted`.
-    const s = new Scope(gateWith((d) => { d.acts.enter.grant = "gate.enter"; d.acts.enter.sends[0].result.applied = [{ code: "noted", row: "P16" }]; }));
+    const s = new Scope(gateWith(markRuntimeChange8));
     for (const secret of ["one", "two"]) s.did(rita, "issue", { fields: { hash: textDigest(secret) } });
     const tell = { to: otherLane, message: { class: "request", type: "tell", body: { message: "hello", fields: {} } } } as const;
     const opens = some(() => [{ effect: "operation", k: 0, owner: OWNER, kind: "probe", attempts: 1 }, { effect: "attempt", operation: { k: 0 }, attempt: 1, result: "opened", selected: null }]);
@@ -442,7 +368,7 @@ describe("a rule is run at the check of its mark's place (sections 4.2 and 6.1)"
   // witness 18.43 (rows I3-23 and EP1). The rules are STAND-INS: this shows where a request, a clause and a cause stand, and proves
   // nothing about a rule of the register.
   test("the send of an outcome's mark: its rule gives one request at ordinal 0, and a `create` among them has the fourth cause and names the opening entry by a fact; the clause of its result is found by the outcome's kind and runs an effect mark", () => {
-    const s = new Scope(gateWith((d) => { d.acts.enter.grant = "gate.enter"; const send = { code: "create-child", row: "P16", result: { applied: [{ code: "noted", row: "P16" }] } }; d.outcomes.probe.send = send; d.outcomes.later = { code: "later", row: "P16", send }; }));
+    const s = new Scope(gateWith(markRuntimeChange9));
     s.did(rita, "issue", { fields: { hash: textDigest("one") } });
     const opens = some(() => [{ effect: "operation", k: 0, owner: OWNER, kind: "probe", attempts: 2 }, { effect: "attempt", operation: { k: 0 }, attempt: 1, result: "opened", selected: null }]);
     expect(said(enter(s, una, "one", owned({ "key-id": opens })))).toEqual(["write", null, null, null]);
@@ -519,7 +445,7 @@ describe("a rule is run at the check of its mark's place (sections 4.2 and 6.1)"
     });
     const [vic, una] = [standing("@vic", 7), standing("@una", 8)];
     const made = (): Scope => {
-      const s = new Scope(gateWith((d) => { d.acts.enter.grant = "gate.enter"; d.outcomes.probe.send = { code: "tell-other", row: "P16", result: { applied: [{ code: "noted", row: "P16" }] } }; }));
+      const s = new Scope(gateWith(markRuntimeChange10));
       s.did(rita, "issue", { fields: { hash: textDigest("one") } });
       const opens = some(() => [{ effect: "operation", k: 0, owner: OWNER, kind: "probe", attempts: 1 }, { effect: "attempt", operation: { k: 0 }, attempt: 1, result: "opened", selected: null }]);
       if (enter(s, keys.una, "one", owned({ "key-id": opens })).result !== "write") throw new Error("the operation was not opened");

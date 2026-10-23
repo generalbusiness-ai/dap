@@ -1,3 +1,4 @@
+import { finalHolderChange0, finalHolderChange1 } from "./definition-corpus/derive-reservation-variants.ts";
 import { expect, test } from "vitest";
 import type { Entry } from "@generalbusiness/dap-contract";
 import { entryHash } from "@generalbusiness/artroom-bytes";
@@ -6,14 +7,8 @@ import { on, valid, HOLDS_OWNER as OWNER, TELL, HoldsWorks as Works, changed, op
 
 // Made-up platform data and callback rules in memory. These witnesses run
 // the real judges, admission and fold; no Artroom platform scope or host is reached.
-const clause = { applied: [{ code: "after", row: "P16", most: { effects: 0, operations: ["tidy"] } }] };
-const definition = valid(changed(works, (data) => {
-  data.items.job.refs.peer = { fixed: true, required: true, to: { type: "scope", kind: "lane" } };
-  data.receives.start.effects.push({ ref: { slot: "peer", from: { sender: true } } });
-  data.acts.finish.sends = [{ tell: { to: { slot: "peer" }, message: "hello", fields: {}, result: clause } }];
-  data.acts.ask = { ...data.acts.finish, effects: [] };
-  data.outcomes.step.send.result = clause;
-}));
+
+const definition = valid(changed(works, finalHolderChange0));
 const started = () => {
   const s = new Works(definition);
   s.script.begin = ({ resolved }) => opened(0, "step", 1, resolved.self);
@@ -26,15 +21,7 @@ test("opt-in holder room survives an ordinary final transition and late outcomes
   // Invariant: a final state alone never discards admitted holder room.
   // Real in-memory judges/fold; all platform data, callbacks, source
   // entries and authority are the explicitly made-up Works fixture.
-  const under = valid(changed(works, data => {
-    data.capacity = { name: "whole-scope", version: 1 };
-    data.acts.settle = structuredClone(data.acts.finish);
-    data.acts.settle.settles = { of: "on", in: ["open"] };
-    data.items.job.values.mark = { fixed: false, required: true, of: { type: "bool" }, default: false };
-    data.acts["mark-final"] = structuredClone(data.acts.finish);
-    data.acts["mark-final"].settles = { of: "on", sets: "mark", in: ["open"] };
-    data.acts["mark-final"].effects.unshift({ value: { slot: "mark", from: { const: true } } });
-  }));
+  const under = valid(changed(works, finalHolderChange1));
   const run = (kind: string) => {
     const s = new Works(under);
     s.script.begin = ({ resolved }) => opened(0, "step", 1, resolved.self);

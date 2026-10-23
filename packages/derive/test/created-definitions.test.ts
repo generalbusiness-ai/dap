@@ -1,3 +1,4 @@
+import { directCreationPins, indirectCreationPins, lateCreationPin } from "./definition-corpus/general-creation-data.ts";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { creates, validateDefinition } from "../src/index.ts";
@@ -14,11 +15,10 @@ test("native create-definition edges are typed direct sends from acts/receives, 
   const changed = structuredClone(data);
   const act = changed.acts["open-issue"]!.sends[0]!, receive = changed.receives["spawn"]!.sends[0]!;
   if (!("create" in act) || !("create" in receive)) return expect.fail("fixture lost its create sends");
-  act.create.definition = d("b"); receive.create.definition = d("a");
+  directCreationPins(changed);
   expect(creates(valid(validateDefinition(changed, PROPOSED_BOUNDS)).declared)).toEqual([d("a"), d("b")]);
-  act.create.definition = "self"; receive.create.definition = "platform:directory@1";
-  changed.rules["unused"] = JSON.stringify(d("c"));
+  indirectCreationPins(changed);
   expect(creates(valid(validateDefinition(changed, PROPOSED_BOUNDS)).declared)).toEqual([]);
-  changed.receives["spawn"]!.late = { within: { seconds: 30 }, reason: "old-spawn", then: { sends: [{ create: { ...receive.create, definition: d("c") } }] } };
+  lateCreationPin(changed, receive.create);
   expect(creates(valid(validateDefinition(changed, PROPOSED_BOUNDS)).declared)).toEqual([d("c")]);
 });

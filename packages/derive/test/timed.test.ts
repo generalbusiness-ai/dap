@@ -1,7 +1,8 @@
+import { timedByteOrderData, timedOwnNamesData } from "./definition-corpus/general-creation-data.ts";
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { clockOf, fits, judgeTimed, nextDue, owed, validateDefinition } from "../src/index.ts";
-import { Scope, fields, keys, laneDefinition, on, t, valid, board } from "./fixtures-entry.ts";
+import { Scope, fields, keys, laneDefinition, on, t, valid } from "./fixtures-entry.ts";
 
 const { rita, una, vic, sam } = keys;
 
@@ -29,8 +30,7 @@ describe("the order of due transitions (section 5.2)", () => {
 
   test("of two rules on one item with one deadline, the rule whose name is first in byte order is next", () => {
     // U+E000 sorts before U+1F600 by UTF-8 bytes and after it by UTF-16 code units. A hold type has one rule, so the item is a job.
-    const rule = { ...board.timed["job-deadline"]!, effects: [{ state: "timed-out" }] };
-    const s = new Scope(valid(validateDefinition({ ...board, timed: { "\u{1F600}": rule, "": rule } }, PROPOSED_BOUNDS)));
+    const s = new Scope(valid(validateDefinition(timedByteOrderData(), PROPOSED_BOUNDS)));
     const job = s.did(sam, "ask", fields({ deadline: t(600) })).seq;
     expect(nextDue(s.state, s.definition, t(600))).toEqual({ item: job, rule: "", due: t(600) });
   });
@@ -107,27 +107,7 @@ describe("the clock (section 5.3)", () => {
 
 describe("a name is whatever its definition chose (sections 6.1 and 17.2)", () => {
   // Parsed JSON, as a definition and an intent arrive: `__proto__` and `constructor` are own names of their records.
-  const named = valid(validateDefinition(JSON.parse(`{
-    "format": "artroom-definition-1", "name": "constructor", "profile": { "name": "restricted", "version": 1 }, "capabilities": [], "genesis": "start", "receives": {}, "rules": {},
-    "items": {
-      "root": { "many": false, "max": 1, "states": { "open": { "final": false } }, "initial": "open", "parties": { "owner": { "fixed": true, "required": true, "list": false, "author": false } }, "refs": {}, "values": {} },
-      "__proto__": {
-        "many": true, "max": 4, "states": { "__proto__": { "final": false }, "constructor": { "final": false }, "done": { "final": true } }, "initial": "__proto__", "parties": {}, "refs": {},
-        "values": { "__proto__": { "fixed": false, "required": true, "of": { "type": "text", "max": 20 } }, "until": { "fixed": false, "required": true, "of": { "type": "time" } } }
-      }
-    },
-    "acts": {
-      "start": { "step": "open", "on": "root", "grant": "start", "also": {}, "fields": { "opener": { "type": "member", "required": true } }, "guards": [], "effects": [{ "party": { "slot": "owner", "from": { "field": "opener" } } }], "sends": [], "attention": [] },
-      "__proto__": {
-        "step": "open", "on": "__proto__", "grant": "note", "also": {}, "fields": { "__proto__": { "type": "text", "max": 20, "required": true }, "until": { "type": "time", "required": true } }, "guards": [],
-        "effects": [{ "value": { "slot": "__proto__", "from": { "field": "__proto__" } } }, { "value": { "slot": "until", "from": { "field": "until" } } }], "sends": [], "attention": []
-      }
-    },
-    "timed": {
-      "__proto__": { "on": "__proto__", "states": ["__proto__"], "deadline": "until", "effects": [{ "state": "constructor" }], "attention": [] },
-      "constructor": { "on": "__proto__", "states": ["constructor"], "deadline": "until", "effects": [{ "state": "done" }], "attention": [] }
-    }
-  }`), PROPOSED_BOUNDS));
+  const named = valid(validateDefinition(timedOwnNamesData(), PROPOSED_BOUNDS));
 
   test("a required text field named `__proto__` is admitted with its text in the slot, and an item type of that name reserves an entry for each rule of its chain", () => {
     const s = new Scope(named);                                // entries 0 and 1: the genesis and its confirmation

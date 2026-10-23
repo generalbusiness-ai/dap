@@ -1,5 +1,6 @@
+import { turnWholeChange, turnAbandonChange, turnTargetChange, turnRequestsChange } from "./definition-corpus-data.ts";
 import { describe, expect, test, vi } from "vitest";
-import { DOMAINS, PROPOSED_BOUNDS, type Receipt, type SendForm } from "@generalbusiness/dap-contract";
+import { DOMAINS, PROPOSED_BOUNDS, type Receipt} from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, rawRetainedJSON, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
 import { AmountError, MemoryState, applyEntry, checkpointOf, reserved, stateDigest, timeMs } from "@generalbusiness/dap-derive";
 import { SqliteStore, Turns, Wakes, production } from "../src/index.ts";
@@ -9,10 +10,7 @@ import { HOLD, at, definition, create, rita, una, vic } from "./fixtures-native.
 // The shared lane's unused link form names a dummy child digest. These
 // settlement/storage witnesses need a closed opt-in birth, so omit only
 // that unresolved create. Child-closure admission has dedicated witnesses.
-const wholeDefinition = variant(definition.declared, d => {
-  d.capacity = { name: "whole-scope", version: 1 };
-  d.acts.link.sends = d.acts.link.sends.filter((send: SendForm) => !("create" in send));
-});
+const wholeDefinition = variant(definition.declared, turnWholeChange());
 
 test("holder settlement bookkeeping survives actual eviction, rolls back atomically and counts as no logical record or retained byte", async () => {
   // Raw derived-bookkeeping writes on real SQLite, explicitly not judged
@@ -46,10 +44,7 @@ test("holder settlement bookkeeping survives actual eviction, rolls back atomica
 test("opt-in report duty survives an ordinary final transition and actual object eviction; at a filled scope only its real settlement spends that room", async () => {
   // Real scope, judge, fold, SQLite and object eviction. The lane data and
   // membership/grants are the existing labelled test fixture's stand-ins.
-  const under = variant(wholeDefinition.declared, (d) => {
-    d.acts.abandon = structuredClone(d.acts["accept-report"]);
-    delete d.acts.abandon.settles;
-  });
+  const under = variant(wholeDefinition.declared, turnAbandonChange());
   const openReport = async (limit: number) => {
     const scope = await create({ scopeEntries: limit }, {}, under);
     const commitment = await scope.commitment();
@@ -75,15 +70,7 @@ test("opt-in report duty survives an ordinary final transition and actual object
 test("an opt-in native alias settlement spends only the selected report's duty while an ordinary final change of its primary report remains reserved", async () => {
   // Real native scope/judgment/SQLite/eviction with the shared lane and
   // scripted membership/grants fixture; no native platform authority.
-  const under = variant(wholeDefinition.declared, (d) => {
-    const act = structuredClone(d.acts["accept-report"]);
-    act.fields = { target: { type: "item", of: "report", required: true } };
-    act.also = { target: { item: "report", by: "target" } };
-    act.guards.push({ of: "also.target", state: ["reported"] });
-    act.settles = { of: "also.target", in: ["reported"] };
-    act.effects = [{ state: "accepted" }, { of: "also.target", state: "accepted" }];
-    d.acts["accept-peer"] = act;
-  });
+  const under = variant(wholeDefinition.declared, turnTargetChange());
   const s = await create({ scopeEntries: 8 }, {}, under);
   const commitment = await s.commitment();
   const report = async () => (await s.did(una, "report", { fields: { commitment }, expected: { commitment: 2 } })).fact.seq;
@@ -487,10 +474,7 @@ describe("the scope's budget (section 9.2), here 12 entries", () => {
     // ceiling under the settlement exemption. The opt-in handoff keeps this
     // send's own Amount, so its checked settlement remains within the ceiling.
     const asks = { create: { kind: "lane", definition: "self", fields: { title: { const: "another" }, opener: { signer: true } } } };
-    const asking = variant(base.declared, (def) => {
-      def.acts["accept-report"].sends = [{ create: { ...asks.create, result: {} } }];
-      def.acts.renew.sends = [{ create: { ...asks.create, result: { applied: [{ value: { slot: "until", from: { time: { plusSeconds: 600 } } } }] } } }];
-    });
+    const asking = variant(base.declared, turnRequestsChange(asks));
     expect([asking.pending, asking.clauseEntries]).toEqual([{ report: { reported: 3 } }, 1]);
     const a = await create({ scopeEntries: 8 }, {}, asking);
     const under = await a.commitment();

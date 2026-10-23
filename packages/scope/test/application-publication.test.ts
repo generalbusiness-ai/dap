@@ -1,7 +1,8 @@
+import { scopePublisher as publisher, publisherContainerData } from "./definition-corpus-data.ts";
 import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
-import type { DeclaredDefinition, FactRef, Intent, ScopeRef, Seed } from "@generalbusiness/dap-contract";
+import type { FactRef, Intent, ScopeRef, Seed } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, definitionDigest, factRefOf, intentDigest, scopeIdOf, signIntent, textDigest, timeOf } from "@generalbusiness/artroom-bytes";
 import { applicationPublicationOrigin, FILE_PUBLICATION_COHORT, fileReceiptRef, platform } from "@generalbusiness/dap-platform";
 import { Reader } from "@generalbusiness/artroom-git";
@@ -18,24 +19,7 @@ import { beginSessionFixture } from "./session-settings.ts";
 
 // A made-up declared publisher deliberately uses the reserved word change.
 // Its acts and native factory are real; no change-lane role is granted.
-const publisher: DeclaredDefinition = {
-  format: "artroom-definition-1", name: "change", profile: { name: "restricted", version: 1 }, capabilities: [], genesis: "establish",
-  items: { library: { many: false, max: 1, states: { open: { final: false } }, initial: "open", parties: {},
-    refs: { destination: { fixed: true, required: true, to: { type: "scope", kind: "destination" } }, other: { fixed: true, required: false, to: { type: "scope", kind: "destination" } } }, values: {} } },
-  acts: {
-    establish: { step: "open", on: "library", grant: "application.establish", also: {}, fields: { destination: { type: "scope", kind: "destination", required: true }, other: { type: "scope", kind: "destination", required: false } }, guards: [],
-      effects: [{ ref: { slot: "destination", from: { field: "destination" } } }, { ref: { slot: "other", from: { field: "other" } } }], sends: [], attention: [] },
-    write: { step: "transition", on: "library", grant: "application.establish", also: {},
-      fields: { path: { type: "text", max: 1024, required: true }, content: { type: "text", max: 65536, required: true } }, guards: [], effects: [],
-      sends: [{ tell: { to: { slot: "destination" }, message: "publish-file", fields: { path: { field: "path" }, content: { field: "content" } }, result: {} } }], attention: [] },
-    elsewhere: { step: "transition", on: "library", grant: "application.establish", also: {},
-      fields: { path: { type: "text", max: 1024, required: true }, content: { type: "text", max: 65536, required: true } }, guards: [], effects: [],
-      sends: [{ tell: { to: { slot: "other" }, message: "publish-file", fields: { path: { field: "path" }, content: { field: "content" } }, result: {} } }], attention: [] },
-    pair: { step: "transition", on: "library", grant: "application.establish", also: {},
-      fields: { first: { type: "text", max: 1024, required: true }, second: { type: "text", max: 1024, required: true }, content: { type: "text", max: 4096, required: true } }, guards: [], effects: [],
-      sends: ["first", "second"].map(path => ({ tell: { to: { slot: "destination" }, message: "publish-file", fields: { path: { field: path }, content: { field: "content" } }, result: {} } })), attention: [] },
-  }, receives: {}, timed: {}, rules: {},
-};
+
 const bytes = canonicalize(publisher), digest = definitionDigest(publisher);
 const SERVICE = "https://scopes.test";
 
@@ -282,10 +266,7 @@ test("a native application publishes once after missing proof, keeps later sourc
     for (const [n, receipt] of receipts.entries()) expect(receipt.file).toMatchObject({ cause: { from: pairCause, n }, path: `shelf/ordinal-${n}.md`, contentDigest: textDigest("# Both actual sends\n") });
     // An actual nested child has room membership and a usable destination,
     // but its creator is an application, not the native Directory factory.
-    const container: DeclaredDefinition = { ...publisher, name: "publisher-container", acts: {
-      establish: { ...publisher.acts["establish"]!, sends: [{ create: { kind: "lane", definition: digest,
-        fields: { destination: { field: "destination" } }, result: {} } }] },
-    } };
+    const container = publisherContainerData(digest);
     const containerDigest = definitionDigest(container), containerBytes = canonicalize(container);
     expect(await a.Q.stub.submit(await a.Q.intent(rita, "activate", { fields: { digest: containerDigest, name: container.name, dependency1: digest } }), [], { values: [containerBytes, bytes] })).toMatchObject({ answer: "accepted" });
     life.advance(301000); // End the factory's documented 300-second definition observation reuse window.

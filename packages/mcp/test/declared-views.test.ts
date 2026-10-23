@@ -1,3 +1,4 @@
+import { configurePledgeDefinition, configureConstantDefinition, configureSeriesDefinition } from "./support/definition-corpus-data.ts";
 import { emptyPackageComposition } from "@generalbusiness/artroom-package-graph";
 /** Pure presentation and mounted-view custody-boundary fixtures. The native
  * install/projection/standing ports below are explicit in-memory answers. */
@@ -88,7 +89,7 @@ test("a declared record opens directly in detail with its declared Back target",
 // subjects, and a secondary revision change refuses before a signature.
 test("declared controls capture different subject sets and repeat secondary revisions before signing", async () => {
   const base = await applicationCounterPacket2(), definition = parseStrict(base.package.semantic.definitions[0]!.bytes) as DeclaredDefinition;
-  definition.acts["hold-pledge"] = { ...definition.acts["pause"]!, also: { pledge: { item: "promise", via: { of: "on", slot: "pledge" } } } };
+  configurePledgeDefinition(definition);
   const id = definitionDigest(definition), secret = new Uint8Array(32).fill(67);
   const board = base.package.presentation.views["board"]!;
   if (board.kind === "surface") throw Error("This fixture needs a board.");
@@ -165,9 +166,7 @@ test("declared opening tool names preserve exact names without reserved-name col
 // custody identities, and renewed admission refuses stale or altered choices.
 test("two constant choices retain one native act and recheck fields, standing and revision before signing", async () => {
   const base = await applicationCounterPacket2(), definition = parseStrict(base.package.semantic.definitions[0]!.bytes) as DeclaredDefinition;
-  definition.acts["pause"] = { ...definition.acts["pause"]!, fields: {
-    target: { type: "enum", of: ["on", "off"], required: true }, level: { type: "int", min: 0, max: 100, required: true },
-  } };
+  configureConstantDefinition(definition);
   const id = definitionDigest(definition), board = base.package.presentation.views["board"]!;
   if (board.kind === "surface") throw Error("Board fixture required.");
   const controls = [{ act: "pause", label: "Off", needs: "counting.control", when: "state = 'open'", args: { target: "off", level: 0 } },
@@ -205,7 +204,7 @@ test("two constant choices retain one native act and recheck fields, standing an
 // history completeness and authority are witnessed in the owning Scope tests.
 test("record history keeps only the last selected-item samples and their exact source facts and times", async () => {
   const base = await applicationCounterPacket2(), definition = parseStrict(base.package.semantic.definitions[0]!.bytes) as DeclaredDefinition;
-  definition.acts["pause"] = { ...definition.acts["pause"]!, fields: { mean: { type: "int", min: -4000, max: 8000, required: true } } };
+  configureSeriesDefinition(definition);
   const id = definitionDigest(definition), board = base.package.presentation.views["board"]!;
   if (board.kind === "surface") throw Error("Board fixture required.");
   const projection = readApplicationProjection({ ...base.package.semantic.projections["board"]!, definition: id, sources: {

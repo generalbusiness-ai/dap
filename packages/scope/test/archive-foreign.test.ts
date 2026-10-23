@@ -1,10 +1,11 @@
+import { archiveReceiverChange, archiveMembershipProofChange } from "./definition-corpus-data.ts";
 /** Actual native foreign uses/retention/SQLite. Grants, reviewed policy,
  * clock and setup reader are explicit TEST fixtures. This classifies
  * metadata and local inventory only: no installed export or replay verdict. */
 import { expect, onTestFinished, test } from "vitest";
 import { env } from "cloudflare:test";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Digest, Input, SendForm } from "@generalbusiness/dap-contract";
+import type { Digest, Input} from "@generalbusiness/dap-contract";
 import { canonicalize, isEntry, newIncarnation, parseStrict, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
 import { variant } from "@generalbusiness/dap-derive/testing";
 import { outcomeValueDomains, validateDefinition } from "@generalbusiness/dap-derive";
@@ -38,12 +39,7 @@ import { inventoryArchive, type ArchivePolicyRegistry, type ReviewedArchivePolic
 import { at, definition, create, reader, rita } from "./support.ts";
 import { wired } from "./outside.ts";
 const variants = new Set<Input["type"]>(["genesis", "act", "delivery", "timed", "diagnosis", "outcome", "preparation", "checkpoint"]);
-const receiver = variant(definition.declared, data => {
-  // Same producer name, different exact pin: the name cannot choose policy.
-  data.acts.remark.fields.text.max = 127;
-  data.acts.remark.fields.proof.kind = ["assign", "found"];
-  data.acts.link.sends = data.acts.link.sends.filter((send: SendForm) => !("create" in send));
-});
+const receiver = variant(definition.declared, archiveReceiverChange());
 const policy = (def: typeof definition, entryTypes = variants): ReviewedArchivePolicy => ({ review: "TEST reviewed inline classes; no production certificate",
   entryTypes, support: { named: def.digest, definition: def, owners: new Map(), records: new Map(), preparations: new Map() } });
 async function fixture(repeatUse = false, nativeAuthority = false) {
@@ -680,7 +676,7 @@ test("a genuine legacy membership copy refuses before body selection despite fix
     const seq = await life.wait(() => membership.did(rita, "seat", { expected: { roster: 1 } }));
     const sourceAt = await life.wait(() => membership.at()), source = await life.wait(() => membership.stub.entry(reader, seq)), birth = await life.wait(() => membership.stub.entry(reader, 0));
     expect(source.ok && birth.ok).toBe(true); if (!source.ok || !birth.ok) return;
-    const accepting = variant(receiver.declared, data => { data.acts.remark.fields.proof.kind = ["seat"]; data.acts.remark.fields.proof.under = "platform:membership"; });
+    const accepting = variant(receiver.declared, archiveMembershipProofChange());
     const consumer = await create({}, {}, accepting);
     wired.set(consumer.name, () => ({ resolver: namespace(env.PLATFORM).resolver }));
     try {

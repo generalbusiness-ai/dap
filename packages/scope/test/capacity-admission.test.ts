@@ -1,10 +1,11 @@
+import { capacityLaneChange, capacityRequestChange } from "./definition-corpus-data.ts";
 import { env } from "cloudflare:workers";
 import { httpSource, verify } from "@generalbusiness/artroom-replay";
 import { fixtureRoute as route } from "./support/serving-route.ts";
 import { CAPABILITY_CODE } from "../src/ports.ts";
 import { expect, test } from "vitest";
 import { evictDurableObject, runInDurableObject } from "cloudflare:test";
-import { PROPOSED_BOUNDS, type Entry, type SendForm } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type Entry} from "@generalbusiness/dap-contract";
 import { reserved } from "@generalbusiness/dap-derive";
 import { controls } from "../src/testing.ts";
 import { metricBindings } from "./worker.ts";
@@ -21,10 +22,7 @@ const nativeHistory = () => httpSource("https://scope.test", { reader, fetch: as
 // The shared lane's link form also names an unresolved dummy child. These
 // byte/key witnesses do not exercise that form; use a closed declaration,
 // rather than claiming a proved birth-time retained set for the placeholder.
-const wholeLane = () => variant(definition.declared, d => {
-  d.capacity = { name: "whole-scope", version: 1 };
-  d.acts.link.sends = d.acts.link.sends.filter((send: SendForm) => !("create" in send));
-});
+const wholeLane = () => variant(definition.declared, capacityLaneChange());
 
 // Native scope API, judgment, folding and SQLite. Declaration and authority
 // are the shared lane fixture; no provider or production membership is claimed.
@@ -44,11 +42,7 @@ test("opt-in item admission accepts the final free key and rolls back the next i
 });
 
 test("opt-in request admission accepts the final pending request and rolls back the next send after eviction", async () => {
-  const under = variant(definition.declared, d => {
-    d.capacity = { name: "whole-scope", version: 1 };
-    d.acts.link.sends = d.acts.link.sends.filter((send: SendForm) => !("create" in send));
-    d.acts.offer.sends = [{ create: { kind: "lane", definition: "self", fields: { title: { const: "child" }, opener: { signer: true } }, result: {} } }];
-  });
+  const under = variant(definition.declared, capacityRequestChange());
   const scope = await create({ scopeRequests: 1 }, {}, under);
   expect(await scope.act(rita, "offer", { fields: { intent: 0 }, expected: { intent: 1 } })).toMatchObject({ answer: "accepted" });
   const snapshot = () => scope.inside(state => {

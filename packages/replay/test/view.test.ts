@@ -1,5 +1,6 @@
+import { replayViewHeld, replayViewDuty, replayViewBase as data } from "../../derive/test/definition-corpus/replay-literals-data.ts";
 import { expect, test } from "vitest";
-import { PROPOSED_BOUNDS, type PlatformData } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize } from "@generalbusiness/artroom-bytes";
 import { checkpointOf, judgeCheckpoint, judgeDiagnosis, validateDefinition, type StateView } from "@generalbusiness/dap-derive";
 import { d, created, keys, on, otherLane, valid } from "@generalbusiness/dap-derive/testing";
@@ -9,50 +10,12 @@ import { MemorySource, verify } from "../src/index.ts";
 // Made-up platform data, with no marked rules. The fixture's test authority
 // stands in for membership. Its genesis and acts are judged in memory;
 // this witnesses historical StateView lookups, not a runtime observation.
-const form = { also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [] };
-const digest = { type: "digest" } as const;
-const data: PlatformData = {
-  format: "artroom-definition-1", name: "platform:view-index", profile: { name: "restricted", version: 1 }, capabilities: [], genesis: "found",
-  items: {
-    board: { many: false, max: 1, initial: "open", states: { open: { final: false } }, parties: {}, refs: {}, values: {} },
-    row: {
-      many: true, max: 8, initial: "live", states: { live: { final: false }, done: { final: true } }, parties: {},
-      refs: { key: { fixed: true, required: true, to: digest } },
-      values: { category: { fixed: true, required: true, of: digest }, other: { fixed: true, required: true, of: digest } },
-      indexes: ["key", "category"],
-    },
-  },
-  acts: {
-    "found": { ...form, step: "open", on: "board", grant: "found" },
-    add: {
-      ...form, step: "open", on: "row", grant: "add", fields: { key: { ...digest, required: true }, category: { ...digest, required: true } },
-      effects: [{ ref: { slot: "key", from: { field: "key" } } }, { value: { slot: "category", from: { field: "category" } } }, { value: { slot: "other", from: { field: "key" } } }],
-    },
-    finish: { ...form, step: "transition", on: "row", grant: "finish", guards: [{ state: ["live"] }], effects: [{ state: "done" }] },
-  },
-  receives: {}, timed: {}, rules: {}, outcomes: {},
-};
+
 
 test("replay derives opt-in item and originating-request duties through a diagnosis and accepts their covering checkpoint", async () => {
   // A declared made-up scope with real in-memory judgments/fold/verifier.
   // Fixture grants are explicitly trusted as recorded, not native authority.
-  const declared = structuredClone(data);
-  declared.name = "duty-replay-fixture";
-  delete (declared as Partial<PlatformData>).outcomes;
-  delete declared.items["row"]!.indexes;
-  declared.capacity = { name: "whole-scope", version: 1 };
-  declared.items["row"]!.refs["peer"] = { fixed: true, required: true, to: { type: "scope", kind: "lane" } };
-  declared.acts["add"]!.fields["peer"] = { type: "scope", kind: "lane", required: true };
-  declared.acts["add"]!.effects = [...declared.acts["add"]!.effects, { ref: { slot: "peer", from: { field: "peer" } } }];
-  declared.acts["add"]!.sends = [{ tell: { to: { slot: "peer" }, message: "note", fields: {}, result: {} } }];
-  declared.acts["finish"]!.settles = { of: "on", in: ["live"] };
-  const other = structuredClone(declared.acts["finish"]!);
-  other.fields = { target: { type: "item", of: "row", required: true } };
-  other.also = { other: { item: "row", by: "target" } };
-  other.settles = { of: "also.other", in: ["live"] };
-  other.guards = [{ state: ["live"] }, { of: "also.other", state: ["live"] }];
-  other.effects = [{ state: "done" }, { of: "also.other", state: "done" }];
-  declared.acts["finish-other"] = other;
+  const declared = replayViewDuty();
   const definition = valid(validateDefinition(declared, PROPOSED_BOUNDS));
   const history = created(definition, {});
   const add = (key: string) => history.did(keys.rita, "add", { fields: { key, category: d("3"), peer: otherLane } }).seq;
@@ -83,11 +46,7 @@ test("replay derives opt-in item and originating-request duties through a diagno
 test("historical item duties contain only their head's admitted tasks, preserve an ordinary final transition and remove a genuine settlement", () => {
   // Real in-memory judges/fold and historical View, with this file's
   // made-up platform data and test authority. No native scope or host.
-  const declared = structuredClone(data);
-  declared.capacity = { name: "whole-scope", version: 1 };
-  declared.items["row"]!.holds = { requests: 1 };
-  declared.acts["finish"]!.settles = { of: "on", in: ["live"] };
-  declared.acts["discard"] = structuredClone(data.acts["finish"]!);
+  const declared = replayViewHeld();
   const definition = valid(validateDefinition(declared, PROPOSED_BOUNDS, undefined, { platform: true }));
   const history = created(definition, {});
   const add = (key: string) => history.did(keys.rita, "add", { fields: { key, category: d("3") } }).seq;

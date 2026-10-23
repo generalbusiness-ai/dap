@@ -1,3 +1,4 @@
+import { capacityConfirmationChildData, capacityConfirmationParentData } from "../../derive/test/definition-corpus/scope-capacity-floor.ts";
 import { env } from "cloudflare:workers";
 import { evictDurableObject, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
@@ -5,7 +6,7 @@ import { PROPOSED_BOUNDS, type Entry, type FactRef, type ScopeId, type ScopeRef,
 import { canonicalBytes, canonicalize, intentDigest, scopeIdOf, signIntent } from "@generalbusiness/artroom-bytes";
 import { reserved, validateDefinition, type Delivered, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { grantOf } from "@generalbusiness/dap-derive/testing";
-import { desk, ticket, valid } from "../../derive/test/fixtures.ts";
+import { valid } from "../../derive/test/fixtures.ts";
 import { httpSource, verify } from "@generalbusiness/artroom-replay";
 import { SqliteStore, type Delivery } from "../src/index.ts";
 import type { NativeBirth } from "../src/native-birth.ts";
@@ -27,15 +28,9 @@ type Peer = {
 const peer = (name: ScopeId) => objectOf(name) as unknown as Peer;
 
 function definitions(whole: boolean) {
-  const childData = structuredClone(ticket);
-  if (whole) childData.capacity = { name: "whole-scope", version: 1 };
+  const childData = capacityConfirmationChildData(whole);
   const child = valid(validateDefinition(childData, bounds));
-  const parentData = structuredClone(desk);
-  parentData.items["issue"]!.values["padding"] = { fixed: false, required: false, of: { type: "text", max: 4096 } };
-  const send = parentData.acts["open-issue"]!.sends[0]!;
-  if (!("create" in send)) throw new Error("the fixture must create its ticket");
-  send.create.definition = child.digest;
-  send.create.result.applied = [...(send.create.result.applied ?? []), { value: { slot: "padding", from: { const: "x".repeat(1800) } } }];
+  const parentData = capacityConfirmationParentData(child.digest);
   return { child, parent: valid(validateDefinition(parentData, bounds)) };
 }
 

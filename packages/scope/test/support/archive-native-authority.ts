@@ -1,3 +1,4 @@
+import { scopeFactoryChange, scopeScaleChange } from "../definition-corpus-data.ts";
 /** Genuine Native Membership8 authority for archive fixture signed histories.
  * Lane definitions, clock, host, target, token and policy are TEST fixtures.
  * The reported budget covers source birth/pin validation only, not native
@@ -33,18 +34,11 @@ let activeClockOwner: object | null = null;
 /** TEST declaration for the two factory-born resume/replay cases only.
  * The genuine factory admits no capabilities. Their offer/assign rule input
  * remains; the unused hold capability, item, acts and timed rule are absent. */
-export const archiveFactoryDefinition = variant(archiveDefinition.declared, data => {
-  data.capabilities = []; delete data.items.hold;
-  delete data.acts["take-hold"]; delete data.acts.renew; delete data.timed["hold-end"];
-});
+export const archiveFactoryDefinition = variant(archiveDefinition.declared, scopeFactoryChange());
 /** TEST declaration for genuine factory-born retained-input scale replay.
  * The same archive-text transition is retained. Unused hold capability forms
  * remain absent so the production factory admits the declaration. */
-export const archiveScaleFactoryDefinition = variant(archiveFactoryDefinition.declared, data => {
-  data.acts.remark.step = "transition"; // No effects: the primary item stays unchanged.
-  data.rules["archive-text"] = 'fields.text != ""';
-  data.acts.remark.guards.push({ rule: "archive-text" });
-});
+export const archiveScaleFactoryDefinition = variant(archiveFactoryDefinition.declared, scopeScaleChange());
 /** Every public asynchronous Lane entry used by these fixtures is owned.
  * The inherited convenience methods dispatch through these fenced methods. */
 class NativeArchiveLane extends Lane {

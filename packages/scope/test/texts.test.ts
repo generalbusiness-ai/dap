@@ -1,7 +1,8 @@
+import { scopeTextChange, scopeWholeTextChange, scopeLinkedTextChange, scopeTextBody as body, scopeTextBase as base } from "./definition-corpus-data.ts";
 import { env } from "cloudflare:workers";
 import { evictDurableObject, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
-import type { DeclaredDefinition, Digest, Entry, Seed } from "@generalbusiness/dap-contract";
+import type { Digest, Entry, Seed } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize, isEntry, isFactRef, parseStrict, scopeIdOf, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
 import { localRetainedPlan, timeMs } from "@generalbusiness/dap-derive";
@@ -23,33 +24,12 @@ import type { SqlValue } from "../src/sqlite.ts";
  * note's body in the creation message. `share` stores a peer lane in the
  * note and tells it the body, and the peer's handler opens a note with it.
  */
-const body = { type: "text", max: 40, detached: true } as const;
-const base: DeclaredDefinition = {
-  format: "artroom-definition-1", name: "notes", profile: { name: "restricted", version: 1 }, capabilities: [], genesis: "start",
-  items: {
-    note: { many: true, max: 8, states: { kept: { final: false }, struck: { final: true } }, initial: "kept", parties: {}, refs: { peer: { fixed: false, required: false, to: { type: "scope", kind: "lane" } } }, values: { body: { fixed: false, required: false, of: body } } },
-  },
-  acts: {},
-  receives: {}, timed: {}, rules: {},
-};
-const notes = variant(base, (def) => {
-  const act = (a: object) => ({ on: "note", also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [], ...a });
-  const kept = [{ state: ["kept"] }];
-  const write = [{ value: { slot: "body", from: { field: "body" } } }];
-  def.acts = {
-    start: act({ step: "open", grant: "start", fields: { body: { ...body, required: false } }, effects: write }),
-    write: act({ step: "open", grant: "write", fields: { body: { ...body, required: true } }, effects: write }),
-    edit: act({ step: "transition", grant: "write", fields: { body: { ...body, required: true } }, guards: kept, effects: write }),
-    strike: act({ step: "transition", grant: "strike", guards: kept, effects: [{ state: "struck" }, { redact: { slot: "body" } }] }),
-    copy: act({ step: "transition", grant: "write", guards: kept, sends: [{ create: { kind: "lane", definition: "self", fields: { body: { slot: "body" } }, result: {} } }] }),
-    share: act({ step: "transition", grant: "write", fields: { peer: { type: "scope", kind: "lane", required: true } }, guards: kept, effects: [{ ref: { slot: "peer", from: { field: "peer" } } }], sends: [{ tell: { to: { slot: "peer" }, message: "noted", fields: { body: { slot: "body" } }, result: {} } }] }),
-  };
-  def.receives = { noted: { message: "noted", class: "tell", from: { kind: "lane", under: "notes" }, opens: "note", fields: { body: { ...body, required: true } }, also: {}, guards: [], effects: write, sends: [], attention: [] } };
-});
+
+const notes = variant(base, scopeTextChange(body));
 const source = httpSource("https://scopes.test", { fetch: routed });
 
 test.each(["legacy", "whole-scope"] as const)("%s: a detached text over the real route: the entry holds its digest and the scope keeps its bytes; a text that is not the one named is bad-field; a redaction removes the bytes, and replay reports them as redacted", async cohort => {
-  const under = cohort === "whole-scope" ? variant(notes.declared, d => { d.capacity = { name: "whole-scope", version: 1 }; }) : notes;
+  const under = cohort === "whole-scope" ? variant(notes.declared, scopeWholeTextChange()) : notes;
   net.hold = net.deaf = null;
   const signer = secretSigner(rita.secret);
   const now = timeMs(net.clock.now)!;
@@ -267,18 +247,7 @@ test("a repeat of a decided send is answered from the entry that recorded it, an
 
 test("native related-text projection follows self and earlier owner items, and ignores another owner's item", async () => {
   net.hold = net.deaf = null;
-  const linked = variant(notes.declared, data => {
-    data.items["note"]!.refs["origin"] = { fixed: true, required: false, to: { type: "item", of: "note" } };
-    data.acts["relate-body"] = { step: "open", on: "note", grant: "write", also: {},
-      fields: { peer: { type: "scope", kind: "lane", required: true }, body: { ...body, required: true } }, guards: [],
-      effects: [{ value: { slot: "body", from: { field: "body" } } }, { ref: { slot: "peer", from: { field: "peer" } } }, { ref: { slot: "origin", from: "self" } }],
-      sends: [{ relate: { to: { field: "peer" }, name: "linked", item: "self", state: "kept", detail: { body: { field: "body" } }, result: {} } }], attention: [] };
-    data.acts["revise-link"] = { step: "transition", on: "note", grant: "write", also: {}, fields: { body: { ...body, required: true } }, guards: [{ state: ["kept"] }],
-      effects: [{ value: { slot: "body", from: { field: "body" } } }],
-      sends: [{ relate: { to: { slot: "peer" }, name: "linked", item: { slot: "origin" }, state: "kept", detail: { body: { field: "body" } }, result: {} } }], attention: [] };
-    data.receives["linked"] = { message: "linked", class: "relate", from: { kind: "lane", under: "notes" }, copies: 2, opens: "note",
-      fields: { body: { ...body, required: true } }, also: {}, guards: [], effects: [{ value: { slot: "body", from: { field: "body" } } }], sends: [], attention: [] };
-  });
+  const linked = variant(notes.declared, scopeLinkedTextChange(body));
   const seedBody = "A copied starting body.";
   const { signed, name } = creation(linked, { body: textDigest(seedBody) }), P = new Node(name, linked.declared);
   expect(await P.stub.create(signed, linked.declared, [], { texts: [seedBody] })).toMatchObject({ answer: "accepted" });

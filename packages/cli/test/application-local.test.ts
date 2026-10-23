@@ -1,3 +1,4 @@
+import { clockDefinition } from "./definition-corpus-data.ts";
 /** Node SQLite and the real native commit/replay code. Explicit local grants
  * and unjudged membership/destination references are stand-ins, not enrollment. */
 import { readFile } from "node:fs/promises";
@@ -58,16 +59,7 @@ test("local Counter uses native SQLite commits, explicit actor grants, exact ret
 });
 
 test("advancing local time runs a due native transition and its resulting history replays", async () => {
-  const definition: DeclaredDefinition = {
-    format: "artroom-definition-1", name: "clock-fixture", profile: { name: "restricted", version: 1 }, capabilities: [], genesis: "establish",
-    items: { root: { many: false, max: 1, initial: "open", states: { open: { final: false } }, parties: {}, refs: {}, values: {} },
-      notice: { many: true, max: 1, initial: "waiting", states: { waiting: { final: false }, done: { final: true } }, parties: {}, refs: {},
-      values: { until: { fixed: true, required: true, of: { type: "time" } } } } },
-    acts: { establish: { step: "open", on: "root", grant: "clock.establish", also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [] },
-      schedule: { step: "open", on: "notice", grant: "clock.schedule", also: {}, fields: { until: { type: "time", required: true } }, guards: [],
-      effects: [{ value: { slot: "until", from: { field: "until" } } }], sends: [], attention: [] } },
-    receives: {}, timed: { expire: { on: "notice", states: ["waiting"], deadline: "until", effects: [{ state: "done" }], attention: [] } }, rules: {},
-  };
+  const definition = clockDefinition();
   const checked = validateDefinition(definition, PROPOSED_BOUNDS, RULE_PROFILES);
   expect(checked.ok ? [] : checked.problems).toEqual([]);
   const founding = await signedIntent(signer, { to: null, kind: "found" }, { now });

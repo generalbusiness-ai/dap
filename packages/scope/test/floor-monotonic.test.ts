@@ -1,3 +1,4 @@
+import { floorMonotonicChange } from "./definition-corpus-data.ts";
 /** Actual Native turns, SQLite, eviction and replay of the SAME saved journal.
  * Definition, grants, reader, clock and archive receipt port are test fixtures;
  * this is not evidence of platform authority or Git archive custody. */
@@ -18,13 +19,7 @@ import { archiveDefinition, archiveSql } from "./support/archive.ts";
 // Invariant: a new live reference to an archived final item's identity must
 // not resurrect its opening, either in SQLite or through a complete clone.
 test("Native and complete-clone replay never resurrect an archived final item through a new live reference", async () => {
-  const definition = variant(archiveDefinition.declared, data => {
-    data.items.intent.refs.previous = { fixed: false, required: false, to: { type: "item", of: "commitment" } };
-    const transition = { step: "transition" as const, grant: "remark", also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [] };
-    data.acts.finish = { ...transition, on: "commitment", guards: [{ state: ["offered", "accepted"] }], effects: [{ state: "done" }] };
-    data.acts.remember = { ...transition, on: "intent", fields: { previous: { type: "item", of: "commitment", required: true } }, effects: [{ ref: { slot: "previous", from: { field: "previous" } } }] };
-    data.acts.remark.fields.proof = { type: "fact", kind: ["offer"], under: "lane", required: false };
-  });
+  const definition = variant(archiveDefinition.declared, floorMonotonicChange());
   const lane = await create({}, {}, definition);
   const opening = await lane.did(rita, "offer", { fields: { intent: 0 }, expected: { intent: 1 } });
   expect(opening.fact.seq).toBe(1);

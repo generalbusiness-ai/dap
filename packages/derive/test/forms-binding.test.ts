@@ -1,3 +1,4 @@
+import { bindingChanges, bindingBoundOperandsData, bindingLateGuardData, bindingLateEffectData, bindingPreFailureData, bindingClockData, bindingAuditData, bindingCountsData, bindingRequestData, bindingProtoData, bindingLocalFactData, bindingIntegerData } from "./definition-corpus/binding-variants.ts";
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { FactRef, FieldValue, Input, PlatformDefinition, ScopeKind, ScopeRef, Seed, Send } from "@generalbusiness/dap-contract";
@@ -24,47 +25,8 @@ const lane = (n: number): ScopeRef => {
   return { scope: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(n)), kind: "lane" };
 };
 const [P, Q, R] = [lane(31), lane(32), lane(33)];
-const form = { also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [] };
-const TICKET = { type: "fact", kind: ["merge"], under: "ticket" } as const;
-const OWNER = { equals: { a: { sender: true }, b: { slot: "owner", of: "also.job" } } } as const;
-const JOB_OF = { code: "job-of", row: "P15", item: "job", index: "ticket", key: "ticket" } as const;
+import { JOB_OF, M, M51 } from "./definition-corpus/forms-binding-data.ts";
 
-/** M, of witness 18.53. The board is the item that the scope's genesis opens. */
-const M = {
-  format: "artroom-definition-1", name: "platform:jobs", profile: { name: "restricted", version: 1 }, capabilities: [], genesis: "file",
-  items: {
-    board: {
-      many: false, max: 1, states: { open: { final: false } }, initial: "open", parties: { opener: { fixed: true, required: true, list: false, author: false } },
-      refs: { slot: { fixed: false, required: false, to: { type: "item", of: "job" } }, judging: { fixed: false, required: false, to: { type: "item", of: "job" } } }, values: {},
-    },
-    job: {
-      many: true, max: 64, initial: "queued", states: { queued: { final: false }, taken: { final: false }, gone: { final: true }, done: { final: true } }, parties: {},
-      refs: { ticket: { fixed: true, required: true, to: TICKET }, owner: { fixed: true, required: true, to: { type: "scope", kind: "lane" } } }, values: {},
-      indexes: ["ticket"], holds: { decisions: { stop: 1 } },
-    },
-  },
-  acts: {
-    file: { ...form, step: "open", on: "board", grant: "file", fields: { opener: { type: "member", required: true } }, effects: [{ party: { slot: "opener", from: { field: "opener" } } }] },
-    take: { ...form, step: "transition", on: "job", grant: "take", guards: [{ state: ["queued"] }], effects: [{ state: "taken" }] },
-    point: {
-      ...form, step: "transition", on: "board", grant: "point", fields: { slot: { type: "item", of: "job", required: false }, judging: { type: "item", of: "job", required: false } },
-      effects: [{ ref: { slot: "slot", from: { field: "slot" } } }, { ref: { slot: "judging", from: { field: "judging" } } }],
-    },
-  },
-  receives: {
-    start: {
-      ...form, message: "start", class: "tell", from: { kind: "lane" }, fields: { ticket: { ...TICKET, required: true } }, opens: "job",
-      effects: [{ ref: { slot: "ticket", from: { field: "ticket" } } }, { ref: { slot: "owner", from: { sender: true } } }],
-    },
-    stop: {
-      ...form, message: "stop", class: "tell", from: { kind: "lane" }, fields: { ticket: { ...TICKET, required: true } }, opens: null,
-      also: { job: JOB_OF }, bound: { of: "also.job", where: [OWNER] },
-      guards: [{ ...OWNER, of: "also.job", reason: "not-owner" }, { state: ["queued"], of: "also.job", reason: "too-late" }],
-      effects: [{ state: "gone", of: "also.job" }, { code: "open-stopped", row: "P15" }],
-    },
-  },
-  timed: {}, rules: {}, outcomes: {},
-};
 const JOBS = "platform:jobs@1" as PlatformDefinition;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -82,15 +44,7 @@ const m = valid(changed(M, () => undefined));
 
 /** Same scripted jobs, with a fixed integer value as the binding key. */
 function integerJobs(min = -10, max = 10) {
-  const integer = { type: "int", min, max };
-  return changed(M, data => {
-    data.items.job.values.number = { fixed: true, required: true, of: integer };
-    data.items.job.indexes = ["number"];
-    data.receives.start.fields.number = { ...integer, required: true };
-    data.receives.start.effects.push({ value: { slot: "number", from: { field: "number" } } });
-    data.receives.stop.fields.number = { ...integer, required: true };
-    data.receives.stop.also.job = { ...JOB_OF, index: "number", key: "number" };
-  });
+  return validateDefinition(bindingIntegerData(min, max), PROPOSED_BOUNDS, PROFILES, { platform: true });
 }
 
 const FINAL = ["gone", "done"];
@@ -182,13 +136,7 @@ function three(using = rules()) {
 
 describe("18.53, at the validator: the index, the binding selector and `bound`", () => {
   test("an opt-in bound settlement reserves its source and fields without charging forbidden rule state changes", () => {
-    const checked = changed(M, data => {
-      data.capacity = { name: "whole-scope", version: 1 };
-      data.items.job.holds.items = 1;
-      data.items.result = { many: true, max: 8, states: { done: { final: true } }, initial: "done", parties: {}, refs: {}, values: {} };
-      data.receives.stop.settles = { of: "also.job", in: ["queued"] };
-      data.receives.stop.effects[1].most = { effects: 2, operations: [], opens: "result" };
-    });
+    const checked = changed(M, bindingChanges.wholeSettlement);
     expect(checked.ok).toBe(true);
     if (checked.ok) expect(checked.definition.reserving!.dec["stop"]).toEqual({ entries: 1, items: 0, records: 0, bytes: 3 * PROPOSED_BOUNDS.entryBytes, requests: 0 });
   });
@@ -243,16 +191,14 @@ describe("18.53, at the validator: the index, the binding selector and `bound`",
   test("18.53 case 1: the data validates; `job-of` is a binding selector on the index that `job` declares", () => {
     expect([m.keyed, m.marks.filter((mark) => mark.place === 2).map((mark) => mark.code)]).toEqual([{ job: ["ticket"] }, ["job-of"]]);
     // The kinds of a `fact` are compared as a set: the field may list them in another order.
-    expect(refusals(M, (data) => { data.items.job.refs.ticket.to = { ...TICKET, kind: ["merge", "land"] }; data.receives.start.fields.ticket.kind = ["merge", "land"]; data.receives.stop.fields.ticket.kind = ["land", "merge"]; })).toEqual([]);
+    expect(refusals(M, bindingChanges.ticketKinds)).toEqual([]);
     // An index that no selector names validates, and so does a source that a written rule binds.
-    expect(refusals(M, (data) => { data.items.job.indexes = ["ticket", "owner"]; })).toEqual([]);
-    expect(refusals(M, (data) => { data.receives.stop.fields.job = { type: "item", of: "job", required: true }; data.receives.stop.also.job = { item: "job", by: "job" }; })).toEqual([]);
+    expect(refusals(M, bindingChanges.unusedIndex)).toEqual([]);
+    expect(refusals(M, bindingChanges.writtenBinding)).toEqual([]);
   });
 
   test("a binding definition loaded from canonical bytes accepts bound slot operands in equals and differs", () => {
-    const data = structuredClone(M);
-    const bound: { of: string; where: unknown[] } = data.receives.stop.bound;
-    bound.where = [OWNER, { differs: { a: { slot: "ticket", of: "also.job" }, b: { field: "ticket" } } }];
+    const data = bindingBoundOperandsData();
     // Canonical bytes put `of` before `slot`: member order does not change what the operand reads.
     const loaded = parseStrictBytes(canonicalBytes(data));
     expect(validateDefinition(loaded, PROPOSED_BOUNDS, PROFILES, { platform: true })).toMatchObject({ ok: true });
@@ -318,7 +264,7 @@ describe("18.53, at the validator: the index, the binding selector and `bound`",
     expect(refusals(M, (data) => { data.receives.start.bound = { of: "also.job", where: [] }; })).toEqual(expect.arrayContaining(["shape receives.start.bound"]));
     expect(stop((handler) => { handler.bound.of = "also.none"; })).toEqual(expect.arrayContaining(["name receives.stop.bound.of"]));
     // A `where` reads the sender, a field of the message and a slot of the bound item, by `equals` and `differs`, and nothing else.
-    expect(stop((handler) => { handler.bound.where = [OWNER, { differs: { a: { field: "ticket" }, b: { slot: "ticket", of: "also.job" } } }]; })).toEqual([]);
+    expect(stop(bindingChanges.boundWhere)).toEqual([]);
     for (const operand of [{ const: 1 }, { scope: true }, { field: "none" }, { slot: "owner" }, { slot: "none", of: "also.job" }, { slot: "owner", of: "also.other" }, { slot: "owner", of: "also.job", extra: true }, { field: "ticket", part: "scope" }, { source: "ref" }]) {
       expect(stop((handler) => { handler.bound.where = [{ equals: { a: { sender: true }, b: operand } }]; }), JSON.stringify(operand)).toEqual(["shape receives.stop.bound.where.0.equals.b"]);
     }
@@ -335,10 +281,7 @@ describe("18.53, at the validator: the index, the binding selector and `bound`",
 
 describe("18.53, in the judge: a bound request finds its item by a selector, at a full scope", () => {
   test("an early ill-typed field keeps the count, while a late coded bad-field guard refusal draws it without rerunning the guard in the fold", () => {
-    const data = structuredClone(M) as unknown as import("@generalbusiness/dap-contract").PlatformData;
-    data.receives["stop"]!.fields["amount"] = { type: "int", min: 0, max: 1, required: true };
-    data.receives["stop"]!.guards = [{ code: "decline", row: "P15" }];
-    data.receives["stop"]!.effects = [];
+    const data = bindingLateGuardData();
     let guards = 0;
     const using = rules({ decline: { place: "guard", refusals: ["late"], run: () => { guards++; return { holds: false, name: "late", code: "bad-field" }; } } });
     const G = new Jobs(valid(validateDefinition(data, PROPOSED_BOUNDS, PROFILES, { platform: true })), using);
@@ -354,10 +297,7 @@ describe("18.53, in the judge: a bound request finds its item by a selector, at 
   });
 
   test("a late effect refusal with the same unqualified bad-field code as an early field refusal still consumes its bound decision", () => {
-    const data = structuredClone(M) as unknown as import("@generalbusiness/dap-contract").PlatformData;
-    data.items["job"]!.values["amount"] = { fixed: false, required: true, default: 0, of: { type: "int", min: 0, max: 1 } };
-    data.receives["stop"]!.guards = [];
-    data.receives["stop"]!.effects = [{ code: "invalid-value", row: "P15" }];
+    const data = bindingLateEffectData();
     let effects = 0;
     const using = rules({ "invalid-value": { place: "effect", most: 1, run: ({ resolved }) => { effects++; return [{ effect: "value", item: resolved.subjects.get("also.job")!.id, slot: "amount", value: "wrong" }]; } } });
     const G = new Jobs(valid(validateDefinition(data, PROPOSED_BOUNDS, PROFILES, { platform: true })), using);
@@ -370,11 +310,7 @@ describe("18.53, in the judge: a bound request finds its item by a selector, at 
 
   test("genuine pre-binding item, local-fact and alias failures keep their decisions and never run the later coded guard", () => {
     for (const failure of ["no-item", "fact-mismatch", "alias"]) {
-      const data = structuredClone(M51) as unknown as import("@generalbusiness/dap-contract").PlatformData;
-      data.receives["stop"]!.effects = [];
-      data.receives["stop"]!.guards = [{ code: "decline", row: "P15" }];
-      if (failure === "fact-mismatch") data.receives["stop"]!.fields = { job: { type: "fact", kind: ["start"], under: data.name, required: true } };
-      if (failure === "alias") data.receives["stop"]!.also["duplicate"] = { item: "job", by: "job" };
+      const data = bindingPreFailureData(failure);
       let guards = 0;
       const using = rules({ decline: { place: "guard", refusals: ["late"], run: () => { guards++; return { holds: false, name: "late", code: "bad-field" }; } } });
       const G = new Jobs(valid(validateDefinition(data, PROPOSED_BOUNDS, PROFILES, { platform: true })), using);
@@ -388,10 +324,7 @@ describe("18.53, in the judge: a bound request finds its item by a selector, at 
 
   test("a clock-declaring type or guard refusal is not written with a clamped reading that would lose its pre-binding inputs", () => {
     for (const phase of ["type", "guard"]) {
-      const data = structuredClone(M) as unknown as import("@generalbusiness/dap-contract").PlatformData;
-      data.receives["stop"]!.effects = [];
-      data.receives["stop"]!.guards = [{ code: "decline", row: "P15" }];
-      if (phase === "type") data.receives["stop"]!.fields["amount"] = { type: "code", code: "typed", row: "P15", required: true };
+      const data = bindingClockData(phase);
       const using = rules({
         typed: { place: "type", clock: true, run: () => false },
         decline: { place: "guard", clock: phase === "guard", refusals: ["late"], run: () => ({ holds: false, name: "late", code: "bad-field" }) },
@@ -406,19 +339,14 @@ describe("18.53, in the judge: a bound request finds its item by a selector, at 
   });
 
   test("dec(m) reserves the whole closure of an unheld operation that a bound handler's mark may open", () => {
-    const data = structuredClone(M) as unknown as import("@generalbusiness/dap-contract").PlatformData;
-    data.outcomes["audit"] = { code: "audit", row: "P16", attempts: 1 };
-    data.receives["stop"]!.effects = [{ code: "open-audit", row: "P16", most: { effects: 0, operations: ["audit"] } }];
+    const data = bindingAuditData();
     const definition = valid(validateDefinition(data, PROPOSED_BOUNDS, PROFILES, { platform: true }));
     // The deciding entry, plus the first outcome and late answer of audit.
     expect([definition.reserving!.dec["stop"]!.entries, definition.reserving!.holders["job"]!.amount.entries]).toEqual([3, 3]);
   });
 
   test("decision reservations are taken, added and drawn by the real ledger; a bound refusal uses its own room and a final holder releases unused decisions", () => {
-    const data = structuredClone(M) as unknown as import("@generalbusiness/dap-contract").PlatformData;
-    data.items["job"]!.holds = { decisions: { stop: 2 } };
-    data.acts["take"]!.adds = { decisions: { stop: 1 } };
-    data.acts["finish"] = { ...M.acts.take, step: "transition", grant: "finish", guards: [{ state: ["taken"] }], effects: [{ state: "done" }] };
+    const data = bindingCountsData();
     const definition = valid(validateDefinition(data, PROPOSED_BOUNDS, PROFILES, { platform: true }));
     expect([definition.reserving!.dec["stop"]!.entries, definition.reserving!.holders["job"]!.amount.entries, definition.reserving!.adds["take"]!.amount.entries]).toEqual([1, 2, 1]);
     const G = new Jobs(definition);
@@ -437,9 +365,7 @@ describe("18.53, in the judge: a bound request finds its item by a selector, at 
   });
 
   test("a request sent by a bound deciding entry draws on its holder's request count and preserves its account for its result", () => {
-    const data = structuredClone(M) as unknown as import("@generalbusiness/dap-contract").PlatformData;
-    data.items["job"]!.holds = { decisions: { stop: 1 }, requests: 1 };
-    data.receives["stop"]!.sends = [{ tell: { to: { slot: "owner", of: "also.job" }, message: "notice", fields: {}, result: {} } }];
+    const data = bindingRequestData();
     const definition = valid(validateDefinition(data, PROPOSED_BOUNDS, PROFILES, { platform: true }));
     const G = new Jobs(definition);
     const t = ticket(Q);
@@ -583,35 +509,10 @@ describe("18.53, in the judge: a bound request finds its item by a selector, at 
  * `item`. `flag` settles the job by the mark. `stop` is bound to the job
  * when its sender is the job's owner.
  */
-const M51 = {
-  ...M, name: "platform:flags",
-  items: {
-    board: M.items.board,
-    job: {
-      many: true, max: 8, initial: "open", states: { open: { final: false }, busy: { final: false }, done: { final: true } }, parties: {},
-      refs: { owner: { fixed: true, required: true, to: { type: "scope", kind: "lane" } } }, values: { flagged: { fixed: false, required: true, of: { type: "bool" }, default: false } },
-      holds: { decisions: { stop: 1 } },
-    },
-  },
-  acts: { file: M.acts.file, work: { ...form, step: "transition", on: "job", grant: "work", guards: [{ state: ["open"] }], effects: [{ state: "busy" }] }, finish: { ...form, step: "transition", on: "job", grant: "work", guards: [{ state: ["open", "busy"] }], effects: [{ state: "done" }] } },
-  receives: {
-    start: { ...form, message: "start", class: "tell", from: { kind: "lane" }, opens: "job", effects: [{ ref: { slot: "owner", from: { sender: true } } }] },
-    flag: {
-      ...form, message: "flag", class: "tell", from: { kind: "lane" }, fields: { job: { type: "item", of: "job", required: true } }, opens: null, also: { job: { item: "job", by: "job" } },
-      settles: { of: "also.job", sets: "flagged", in: ["open", "busy"] }, guards: [{ ...OWNER, of: "also.job", reason: "not-owner" }], effects: [{ of: "also.job", value: { slot: "flagged", from: { const: true } } }],
-    },
-    stop: {
-      ...form, message: "stop", class: "tell", from: { kind: "lane" }, fields: { job: { type: "item", of: "job", required: true } }, opens: null, also: { job: { item: "job", by: "job" } },
-      bound: { of: "also.job", where: [OWNER] }, guards: [{ state: ["open"], of: "also.job", reason: "too-late" }], effects: [{ state: "done", of: "also.job" }],
-    },
-  },
-};
 
 describe("18.51: a settlement by a mark, and a bound request, at a full scope", () => {
   test("the decision fold treats a bound subject named __proto__ as an own name", () => {
-    const data = structuredClone(M51) as unknown as import("@generalbusiness/dap-contract").PlatformData;
-    data.receives["stop"] = JSON.parse(JSON.stringify(data.receives["stop"]).replaceAll("also.job", "also.__proto__"));
-    data.receives["stop"]!.also = Object.fromEntries([["__proto__", { item: "job", by: "job" }]]);
+    const data = bindingProtoData();
     const definition = valid(validateDefinition(data, PROPOSED_BOUNDS, PROFILES, { platform: true }));
     const G = new Jobs(definition);
     expect(G.free(3).deliver(G.request(Q, "start", {}))).toBe("new work");
@@ -623,8 +524,7 @@ describe("18.51: a settlement by a mark, and a bound request, at a full scope", 
   });
 
   test("a local fact field that names the holder's opening is normalized identically by the judge and decision fold", () => {
-    const data = structuredClone(M51) as unknown as import("@generalbusiness/dap-contract").PlatformData;
-    data.receives["stop"]!.fields = { job: { type: "fact", kind: ["start"], under: data.name, required: true } };
+    const data = bindingLocalFactData();
     const definition = valid(validateDefinition(data, PROPOSED_BOUNDS, PROFILES, { platform: true }));
     const G = new Jobs(definition);
     expect(G.free(3).deliver(G.request(Q, "start", {}))).toBe("new work");

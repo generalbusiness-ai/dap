@@ -1,3 +1,4 @@
+import { officeDefinition } from "./definition-corpus-data.ts";
 /**
  * The one fixture of the lane scenarios: a small graph of real scopes, each
  * a Durable Object with its own SQLite storage in one namespace, under the
@@ -74,52 +75,7 @@ function valid(definition: DeclaredDefinition): ValidDefinition {
  * pinned `issue` digest, and `open-change` one under the pinned `change`
  * digest. Each clause of a creation moves the row that asked for it.
  */
-const creation = { applied: [{ state: "created" }, { ref: { slot: "child", from: { sender: true } } }], refused: [{ state: "refused" }], conflict: [{ state: "conflict" }] } as const;
-export const officeDefinition = {
-  format: "artroom-definition-1",
-  name: "office",
-  profile: { name: "restricted", version: 1 },
-  capabilities: [],
-  genesis: "found",
-  items: {
-    repository: {
-      many: false, max: 1, initial: "open", states: { open: { final: false } }, parties: {}, refs: {},
-      values: { readme: { fixed: false, required: false, of: { type: "text", max: 4096, detached: true } } },
-    },
-    lane: {
-      many: true, max: 16, initial: "asked", states: { asked: { final: false }, created: { final: false }, refused: { final: true }, conflict: { final: true } },
-      parties: {}, refs: { child: { fixed: false, required: false, to: { type: "scope", kind: "lane" } } }, values: {},
-    },
-  },
-  acts: {
-    "found": {
-      step: "open", on: "repository", grant: "office.found", also: {},
-      fields: { readme: { type: "text", max: 4096, detached: true, required: false } },
-      guards: [], effects: [{ value: { slot: "readme", from: { field: "readme" } } }], sends: [], attention: [],
-    },
-    "open-issue": {
-      step: "open", on: "lane", grant: "office.open", also: {},
-      fields: { title: { type: "text", max: 256, required: true }, conditions: { type: "list", of: { type: "text", max: 4096 }, max: 16, required: true } },
-      guards: [], effects: [], attention: [],
-      sends: [{ create: { kind: "lane", definition: DIGESTS.issue, fields: { opener: { signer: true }, title: { field: "title" }, conditions: { field: "conditions" } }, result: creation } }],
-    },
-    "open-change": {
-      step: "open", on: "lane", grant: "office.open", also: {},
-      fields: { title: { type: "text", max: 256, required: true }, destination: { type: "scope", kind: "destination", required: true }, rules: { type: "scope", kind: "rules", required: true } },
-      guards: [], effects: [], attention: [],
-      sends: [{
-        create: {
-          kind: "lane", definition: DIGESTS.change,
-          fields: { opener: { signer: true }, title: { field: "title" }, destination: { field: "destination" }, rules: { field: "rules" }, draft: { const: false } },
-          result: creation,
-        },
-      }],
-    },
-  },
-  receives: {},
-  timed: {},
-  rules: {},
-} as const satisfies DeclaredDefinition;
+export { officeDefinition } from "./definition-corpus-data.ts";
 
 const VALID = { office: valid(officeDefinition), issue: valid(issue), change: valid(change) };
 

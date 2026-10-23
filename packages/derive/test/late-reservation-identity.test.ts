@@ -1,25 +1,10 @@
+import { lateCollisionData as declaration } from "./definition-corpus/late-pin-variants.ts";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { holdCapability, judgeDelivery, validateDefinition } from "../src/index.ts";
-import { arriving, created, deliver, keys, sent, t, valid, lateDefinition } from "./fixtures-entry.ts";
+import { arriving, created, deliver, keys, sent, t, valid } from "./fixtures-entry.ts";
 
-function declaration(platform: boolean, collision: boolean) {
-  const data = { ...lateDefinition(true), name: platform ? "platform:late-collision" : "test.late-collision",
-    capacity: { name: "whole-scope" as const, version: 1 as const }, capabilities: [{ name: "hold", version: 1 }], ...(platform ? { outcomes: {} } : {}) };
-  const peer = { of: "also.board" as const, ref: { slot: "peer", from: { sender: true as const } } };
-  data.receives["sample"]!.late!.then = { effects: [peer], sends: [{ tell: {
-    to: { slot: "peer", of: "also.board" }, message: "other", fields: { value: { const: 21 } },
-    result: { applied: [{ capability: { name: "hold", do: "license", with: {
-      export: { const: 99 }, from: { none: true }, checkpoint: { const: "fixture" }, hold: { const: 0 }, instance: { const: "i" }, k: { const: 3 },
-    } } }] },
-  } }] };
-  const cheap = structuredClone(data.receives["other"]!);
-  cheap.message = "cheap"; cheap.effects = [peer]; cheap.sends = [{ tell: {
-    to: { slot: "peer", of: "also.board" }, message: "other", fields: { value: { const: 21 } }, result: {},
-  } }];
-  data.receives[collision ? "sample.late.then" : "cheap-handler"] = cheap;
-  return data;
-}
+
 
 test.each([false, true])("platform=%s: a real handler cannot overwrite a late body's native reservation identity", platform => {
   // Real validator, delivery/result judges, hold capability, fold and

@@ -1,10 +1,11 @@
+import { peerNativePinData } from "./definition-corpus/late-pin-variants.ts";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { factRefOf } from "@generalbusiness/artroom-bytes";
 import { holdCapability, judgeDelivery, ownerReservations, validateDefinition } from "../src/index.ts";
 import { arriving, created, d, deliver, forged, keys, valid } from "./fixtures.ts";
 import { boundRecordData } from "./fixtures-bound-records.ts";
-import { PIN_BOUNDS, receiverPinData } from "./fixtures-receiver-pins.ts";
+import { PIN_BOUNDS } from "./fixtures-receiver-pins.ts";
 import { peerPinFixture, receivePeerPin } from "./fixtures-peer-pin.ts";
 
 test("the declared digest applies; a second digest with the same name gets one authenticated wrong-pin result", () => {
@@ -46,7 +47,7 @@ test("native item-bound handlers reject the unsupported early pin-refusal compos
 test("wrong-pin refusal consumes a native receiver reservation without licensing the sender", () => {
   // Native hold/judge/fold/MemoryState; task source and its pin metadata
   // are scripted inputs, not native birth, authority or provider evidence.
-  const declaration = receiverPinData(); declaration.receives["license"]!.from.pin = d("a");
+  const declaration = peerNativePinData(d("a"));
   const definition = valid(validateDefinition(declaration, PIN_BOUNDS)), owner = holdCapability({ tokensPerHold: 2, rootRetentionSeconds: 600 });
   const ledger = created(definition, { title: "A", opener: keys.rita.member }); ledger.bounds = PIN_BOUNDS;
   const task = { ...ledger.at, kind: "task" as const };

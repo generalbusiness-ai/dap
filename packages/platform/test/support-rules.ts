@@ -1,3 +1,4 @@
+import { registrar, asker, registrarDataFor } from "./definition-corpus-data.ts";
 /**
  * For tests only. Nothing here is exported from the package's main entry,
  * and no production entry imports it.
@@ -23,7 +24,7 @@
  */
 
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { DeclaredDefinition, MemberId, MemberRef, ObservationUse, PlatformDefinition, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
+import type { MemberId, MemberRef, ObservationUse, PlatformDefinition, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import { PROFILES, clockOf, judgeDelivery, judgeGenesis, validateDefinition } from "@generalbusiness/dap-derive";
 import type { Judgment, PlatformRules } from "@generalbusiness/dap-derive";
 import { Ledger, Scope, T0, arriving, creation, d, created, keys, membership, sent } from "@generalbusiness/dap-derive/testing";
@@ -32,63 +33,10 @@ import { checkedDefinition as checked, written } from "./fixtures.ts";
 
 
 /** STAND-IN: a made-up directory, for the creator of a rules scope. Its creation creates one, and it has no other act and no handler. */
-export const registrar: DeclaredDefinition = {
-  format: "artroom-definition-1",
-  name: "registrar",
-  profile: { name: "restricted", version: 1 },
-  capabilities: [],
-  genesis: "open",
-  items: {
-    repository: {
-      many: false, max: 1, initial: "open", states: { open: { final: false } }, parties: {},
-      refs: { rules: { fixed: false, required: false, to: { type: "scope", kind: "rules" } } },
-      values: {},
-    },
-  },
-  acts: {
-    open: {
-      step: "open", on: "repository", grant: "registrar.open", also: {},
-      fields: { branch: { type: "text", max: 256, required: true }, membership: { type: "text", max: 64, required: true } },
-      guards: [], effects: [],
-      sends: [{
-        create: {
-          kind: "rules", definition: RULES_SCOPE,
-          fields: { branch: { field: "branch" }, directory: { scope: true }, membership: { field: "membership" } },
-          result: { applied: [{ ref: { slot: "rules", from: { sender: true } } }] },
-        },
-      }],
-      attention: [],
-    },
-  },
-  receives: {},
-  timed: {},
-  rules: {},
-};
+export { registrar } from "./definition-corpus-data.ts";
 
 /** STAND-IN: a made-up lane. `point` records a rules scope, and `want` tells it `rules-wanted`, with no field and no clause. */
-export const asker: DeclaredDefinition = {
-  format: "artroom-definition-1",
-  name: "asker",
-  profile: { name: "restricted", version: 1 },
-  capabilities: [],
-  genesis: "start",
-  items: {
-    ask: {
-      many: false, max: 1, initial: "open", states: { open: { final: false } },
-      parties: { opener: { fixed: true, required: true, list: false, author: false } },
-      refs: { rulesScope: { fixed: false, required: false, to: { type: "scope", kind: "rules" } } },
-      values: {},
-    },
-  },
-  acts: {
-    start: { step: "open", on: "ask", grant: "asker.start", also: {}, fields: { opener: { type: "member", required: true } }, guards: [], effects: [{ party: { slot: "opener", from: { field: "opener" } } }], sends: [], attention: [] },
-    point: { step: "transition", on: "ask", grant: "asker.point", also: {}, fields: { rules: { type: "scope", kind: "rules", required: true } }, guards: [], effects: [{ ref: { slot: "rulesScope", from: { field: "rules" } } }], sends: [], attention: [] },
-    want: { step: "transition", on: "ask", grant: "asker.want", also: {}, fields: {}, guards: [], effects: [], sends: [{ tell: { to: { slot: "rulesScope" }, message: "rules-wanted", fields: {}, result: {} } }], attention: [] },
-  },
-  receives: {},
-  timed: {},
-  rules: {},
-};
+export { asker } from "./definition-corpus-data.ts";
 
 export const registrarDefinition = checked(validateDefinition(registrar, PROPOSED_BOUNDS));
 export const askerDefinition = checked(validateDefinition(asker, PROPOSED_BOUNDS));
@@ -120,9 +68,7 @@ export class Rulebook extends Ledger {
     const definition = named === RULES_SCOPE ? rulesScopeDefinition : checked(validateDefinition(JSON.parse(JSON.stringify(supplied.data)), PROPOSED_BOUNDS, PROFILES, { platform: true }));
     super(definition, "platform:rules");
     this.#platform = { named, rules: supplied.rules };
-    const creator = named === RULES_SCOPE ? registrarDefinition : checked(validateDefinition({
-      ...registrar, acts: { ...registrar.acts, open: { ...registrar.acts["open"]!, sends: registrar.acts["open"]!.sends.map(send => "create" in send ? { create: { ...send.create, definition: named } } : send) } },
-    }, PROPOSED_BOUNDS));
+    const creator = named === RULES_SCOPE ? registrarDefinition : checked(validateDefinition(registrarDataFor(named), PROPOSED_BOUNDS));
     this.registrar = created(creator, { branch: BRANCH, membership: of });
     const { asked, source } = creation(this.registrar, 0);
     this.take(judgeGenesis(this.state, definition, asked, { clock: clockOf(this.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source, platform: this.#platform }));

@@ -1,3 +1,4 @@
+import { composeChange0, composeChange1, composeChange2, composeChange3, composeChange4, composeChange5, composeChange6, composeChange7, composeChange8, composeChange9 } from "./definition-corpus/compose-variants.ts";
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Attempt, Input, Result, ScopeRef, Seed, Send } from "@generalbusiness/dap-contract";
@@ -130,7 +131,7 @@ describe("founding a directory and creating a child (sections 7.1 and 7.2)", () 
     const claim = factRefOf(opener);
     const cause = intentDigest((act.input as Extract<Input, { type: "act" }>).signed.intent);
     // The child's definition: a ticket whose genesis act names the entry that opened the operation.
-    const child = variant(ticket, (t) => { t.acts.file.fields.claim = { type: "fact", kind: ["open-issue"], under: "desk", required: true }; });
+    const child = variant(ticket, composeChange0);
     const seed: Seed = { v: 1, kind: "lane", definition: child.digest, creator: D.at, cause, ordinal: 0 };
     /** The creation that the outcome entry at D.5 sends at ordinal 0, of an attempt of that operation, as it reaches the child; and the child's judgment with those entries at hand. */
     const judge = (operation: `${number}:${number}`, facts: readonly Fetched[], to: Seed = seed, named = claim) => {
@@ -275,11 +276,7 @@ describe("what a written refusal or a later clause records of what it read (sect
   const falsely = (state: MemoryState, definition: ValidDefinition, judged: Judged) => prepareRules(state, definition, judged).map((a) => ({ rule: a.rule, input: a.digest, result: false }));
 
   test("a rule that is false: the refused genesis and the refused deciding entry of a request each record the result their guard read", () => {
-    const strict = variant(ticket, (def) => {
-      def.rules.never = "false";
-      def.acts.file.guards.push({ rule: "never" });
-      def.receives.closes.guards.push({ rule: "never" });
-    });
+    const strict = variant(ticket, composeChange1);
     const D = created();
     D.did(rita, "open-issue", fields({ title: "A" }));
     const { asked, context } = creationUnder(D, strict);
@@ -309,10 +306,7 @@ describe("what a written refusal or a later clause records of what it read (sect
     const entry = l.did(rita, "assign", { ...on(l, 2), ...fields({ performer: una.member }) });
     const fetched = { fact: l.fact(entry.seq), entry, under: "lane" };
     const proof = { type: "fact", kind: ["assign"], under: "lane", required: true };
-    const cited = variant(ticket, (def) => {
-      def.acts.file.fields.proof = proof;
-      def.acts.file.guards.push({ fact: { field: "proof", where: [{ equals: { a: { field: "performer" }, b: { field: "opener" } } }] } });
-    });
+    const cited = variant(ticket, composeChange2(proof));
     const D = created();
     D.did(rita, "open-issue", fields({ title: "A" }));
     const { asked, context } = creationUnder(D, cited, { proof: fetched.fact });
@@ -323,17 +317,14 @@ describe("what a written refusal or a later clause records of what it read (sect
 
     // The same creation under a definition whose later field names a local item. No item exists before a genesis, so it is refused
     // `no-item`, after P was read: the entry holds P all the same.
-    const itemised = variant(ticket, (def) => {
-      def.acts.file.fields.proof = proof;
-      def.acts.file.fields.zItem = { type: "item", of: "intent", required: true };
-    });
+    const itemised = variant(ticket, composeChange3(proof));
     const early = creationUnder(D, itemised, { proof: fetched.fact, zItem: 0 });
     expect(judgeGenesis(new MemoryState(), itemised, early.asked, { ...early.context, facts: [fetched] })).toMatchObject({
       result: "write", draft: { input: { decision: "refused" }, uses: [useOf(early.asked.from, early.context.source!.entry), useOf(fetched.fact, entry)], sends: [{ message: { outcome: "refused", reason: { code: "no-item" } } }] },
     });
 
     // An `ask` whose fields name P. Its `undelivered` clause runs in a later entry and reads P again; the origin entry recorded P first.
-    const asking = variant(ticket, (def) => { def.acts.ask.fields.proof = proof; });
+    const asking = variant(ticket, composeChange4(proof));
     const S = new Scope(asking);
     expect(S.act(una, "ask", fields({ desk: D.at, proof: fetched.fact }), { facts: [fetched] }).result).toBe("write");
     expect(judgeDiagnosis(S.state, asking, { of: { seq: 2, n: 0 }, attempts: [{ at: t(0), answer: "not-found" }] }, { ...reading(S), facts: [fetched], origin: S.last })).toMatchObject({
@@ -346,10 +337,7 @@ describe("a clause run in a later entry (sections 6.6 and 6.7)", () => {
   test("it reads the member who signed the origin and no principal, so what it attributes is what the fold records", () => {
     // The request has a party slot that attributes, and a list that takes the request's attribution. The `applied` clause sets the
     // first from the signer and fills the second. Una asked, under a grant that names Paul.
-    const owned = variant(ticket, (def) => {
-      def.items.request.parties = { owner: { fixed: false, required: false, list: false, author: true }, authors: { fixed: false, required: false, list: true, max: 4, author: false } };
-      def.acts.ask.sends[0].tell.result.applied = [{ state: "answered" }, { party: { slot: "owner", from: { signer: true } } }, { attribute: { slot: "authors", of: "on" } }];
-    });
+    const owned = variant(ticket, composeChange5);
     const D = created();
     const S = new Scope(owned);
     S.did(una, "ask", fields({ desk: D.at }));
@@ -406,24 +394,13 @@ describe("checkpoints (section 9.2)", () => {
 describe("room to settle (section 17.2)", () => {
   /* eslint-disable @typescript-eslint/no-explicit-any */
   /** The ticket, with a request that a timed rule pauses at its `until`, which `ask` sets from a field. */
-  const pausing = (d: any) => {
-    d.items.request.states.paused = { final: false };
-    d.items.request.values.until = { fixed: false, required: false, of: { type: "time" } };
-    d.timed.pause = { on: "request", states: ["asked"], deadline: "until", effects: [{ state: "paused" }], attention: [] };
-    d.acts.ask.fields.until = { type: "time", required: true };
-    d.acts.ask.effects.push({ value: { slot: "until", from: { field: "until" } } });
-  };
+
   /** The entries written, and the entries reserved at that head. */
   const row = (s: Ledger): [number, number] => [s.entries.length, owed(s.state, s.definition, s.last.input)];
 
   test.each(["legacy", "whole-scope"] as const)("%s: a late result sets a timer again; every request, diagnosis and resulting deadline stays within its admitted budget", cohort => {
     // X12: `ask` sends two requests, and the `applied` clause of each sets `asked` again. The deadline has passed, so `asked` is due at once.
-    const x12 = variant(ticket, (d) => {
-      if (cohort === "whole-scope") d.capacity = { name: "whole-scope", version: 1 };
-      pausing(d);
-      d.acts.ask.sends[0].tell.result = { applied: [{ state: "asked" }] };
-      d.acts.ask.sends.push(structuredClone(d.acts.ask.sends[0]));
-    });
+    const x12 = variant(ticket, composeChange6(cohort));
     const D = created();
     const S = new Scope(x12);                                  // entries 0 and 1: one more than the contract's table, which has a creation only
     const ask = S.did(una, "ask", fields({ desk: D.at, until: t(-60) }));
@@ -458,28 +435,7 @@ describe("room to settle (section 17.2)", () => {
     // X15: a job is `requested` with a deadline, which times it out. `check` declares that it settles a job in the listed states.
     // It answers `ok` or not, and tells the job's desk. The `closes` handler declares that it settles a copy that is `set`. A
     // `note` is a comment: one entry, and no task. As in X12, the clause of another request, of `ask`, can start a deadline.
-    const form = { also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [] };
-    const jobs = (listed: string[]) => variant(ticket, (d) => {
-      if (cohort === "whole-scope") d.capacity = { name: "whole-scope", version: 1 };
-      pausing(d);
-      d.acts.ask.sends[0].tell.result = { applied: [{ state: "asked" }] };
-      d.items.job = {
-        many: true, max: 4, states: { requested: { final: false }, "timed-out": { final: false }, passed: { final: false } }, initial: "requested", parties: {},
-        refs: { desk: { fixed: true, required: true, to: { type: "scope", kind: "directory" } } }, values: { until: { fixed: false, required: true, of: { type: "time" } } },
-      };
-      d.acts.request = {
-        ...form, step: "open", on: "job", grant: "request", fields: { until: { type: "time", required: true }, desk: { type: "scope", kind: "directory", required: true } },
-        effects: [{ value: { slot: "until", from: { field: "until" } } }, { ref: { slot: "desk", from: { field: "desk" } } }],
-      };
-      d.acts.check = {
-        ...form, step: "transition", on: "job", grant: "check", settles: { of: "on", in: listed }, fields: { ok: { type: "bool", required: true } },
-        guards: [{ state: ["requested", "timed-out", "passed"] }], effects: [{ state: "passed", if: [{ equals: { a: { field: "ok" }, b: { const: true } } }] }],
-        sends: [{ tell: { to: { slot: "desk" }, message: "checked", fields: {}, result: {} } }],
-      };
-      d.acts.note = { ...form, step: "comment", on: null, grant: "note" };
-      d.timed.deadline = { on: "job", states: ["requested"], deadline: "until", effects: [{ state: "timed-out" }], attention: [] };
-      d.receives.closes.settles = { copy: ["set"] };
-    });
+    const jobs = (listed: string[]) => variant(ticket, composeChange7(cohort,listed));
     const x15 = jobs(["requested", "timed-out"]);
     // A job reserves its deadline's entry, and for its answer three: the answer's own, and the two of the request that it sends, whose
     // clauses start nothing. Timed out, it still reserves the three. A copy that is `set` reserves one entry. For any request the
@@ -532,17 +488,7 @@ describe("room to settle (section 17.2)", () => {
   });
 
   test("an item type named __proto__ reserves like any other: the pending table holds it as an own name, its pending item is reserved, a note at a full budget is refused, and Object.prototype is as it was", () => {
-    const form = { also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [] };
-    const x = variant(ticket, (d) => {
-      // Defined, not assigned: an assignment to `__proto__` would set the prototype.
-      const proto = { many: true, max: 4, states: { open: { final: false }, done: { final: true } }, initial: "open", parties: {}, refs: {}, values: {} };
-      Object.defineProperty(d.items, "__proto__", { value: proto, enumerable: true, writable: true, configurable: true });
-      Object.assign(d.acts, {
-        start: { ...form, step: "open", on: "__proto__", grant: "start" },
-        finish: { ...form, step: "transition", on: "__proto__", grant: "finish", settles: { of: "on", in: ["open"] }, guards: [{ state: ["open"] }], effects: [{ state: "done" }] },
-        note: { ...form, step: "comment", on: null, grant: "note" },
-      });
-    });
+    const x = variant(ticket, composeChange8);
     expect(Object.hasOwn(x.pending, "__proto__")).toBe(true);
     expect(Object.keys(Object.prototype)).toEqual([]);
     expect(({} as Record<string, unknown>)["open"]).toBeUndefined();
@@ -560,7 +506,7 @@ describe("room to settle (section 17.2)", () => {
 
   test("a chain of timed rules (the table of section 17.3a): a deadline reserves one entry for each rule its rule leads to", () => {
     // Rule A, `asked` to `paused`; rule B, `paused` to `failed`, which is final. Both read one deadline.
-    const x11 = variant(ticket, (d) => { pausing(d); d.timed.lapse = { ...d.timed.pause, states: ["paused"], effects: [{ state: "failed" }] }; });
+    const x11 = variant(ticket, composeChange9);
     const S = new Scope(x11);
     S.did(una, "ask", fields({ desk: created().at, until: t(-60) }));
     // The chain of 2, the request's 2, and the closing checkpoint. Both timed entries are then written from that reservation.

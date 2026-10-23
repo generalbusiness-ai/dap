@@ -1,3 +1,4 @@
+import { scriptedDeviceParentDefinition } from "./application-local-device-parent.ts";
 /** Developer-only scripted parent proof, explicitly anchored in replay.
  * This is not a native installation, membership, or production issuer. */
 import { DEVICE_COMMAND, PROPOSED_BOUNDS, type DeclaredDefinition, type DeviceCommandGrant, type Digest, type FactRef, type MemberRef, type RetainedInput, type ScopeRef, type Sealed, type Seed, type SignedIntent, type Timestamp } from "@generalbusiness/dap-contract";
@@ -23,13 +24,7 @@ export function scriptedDeviceParent(packet: AnyPackedApplication, founding: Sig
   const part = packet.package.semantic.definitions.find(part => part.id === selected);
   if (!part) throw Error("The selected device fixture is outside the package.");
   const child = parseStrict(part.bytes) as DeclaredDefinition, fields = child.acts[child.genesis]!.fields;
-  const parent: DeclaredDefinition = {
-    format: "artroom-definition-1", name: "test.scripted-device-parent", profile: { name: "restricted", version: 1 }, capabilities: [], genesis: "establish",
-    items: { root: { many: false, max: 1, initial: "ready", states: { ready: { final: false } }, parties: {}, refs: {}, values: {} } },
-    acts: { establish: { step: "open", on: "root", grant: "fixture.create", also: {}, fields, guards: [], effects: [], attention: [],
-      sends: [{ create: { kind: "lane", definition: selected, fields: Object.fromEntries(Object.keys(fields).map(name => [name, { field: name }])), result: {} } }],
-    } }, receives: {}, timed: {}, rules: {},
-  };
+  const parent = scriptedDeviceParentDefinition(selected, fields);
   const checked = validateDefinition(parent, PROPOSED_BOUNDS);
   if (!checked.ok) throw Error("The scripted parent declaration must validate.");
   const definition = checked.definition, state = new MemoryState(), entries: Sealed[] = [];

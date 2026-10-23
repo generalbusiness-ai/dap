@@ -1,3 +1,4 @@
+import { customListDefinition } from "./definition-corpus-data.ts";
 import { expect, test } from "vitest";
 import { definitionDigest } from "@generalbusiness/artroom-bytes";
 import { change3, changeDemo3, MANIFEST_DIGESTS } from "@generalbusiness/dap-lanes";
@@ -10,8 +11,7 @@ test("LIST1 accepts exact supported declarations and rejects changed/custom or m
   expect(knownLIST1(change3, MANIFEST_DIGESTS.change)).toBe(true);
   expect(knownLIST1(changeDemo3, MANIFEST_DIGESTS.demo)).toBe(true);
   expect(knownLIST1(changeDemo3, MANIFEST_DIGESTS.change)).toBe(false);
-  const custom = structuredClone(changeDemo3);
-  custom.acts["propose-manifest"]!.guards = custom.acts["propose-manifest"]!.guards.slice(0, -1);
+  const custom = customListDefinition();
   expect(knownLIST1(custom, MANIFEST_DIGESTS.demo)).toBe(false);
   expect(knownLIST1(custom, definitionDigest(custom))).toBe(false);
 });

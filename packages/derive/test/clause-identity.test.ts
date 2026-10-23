@@ -1,3 +1,4 @@
+import { clauseSends, clauseMatrices, clauseIdentityChange } from "./definition-corpus/derive-reservation-variants.ts";
 import { expect, test } from "vitest";
 import type { ObservationUse, Send } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
@@ -10,32 +11,14 @@ import { Scope, arriving, forged, keys, membership, otherLane, t, valid, memberS
 // alone are clause work; empty effects do not make rows interchangeable.
 // STAND-INS: made-up platform data, authority, observations and the peer's
 // sealed answer. Derive's judges create the sending act and the result.
-const sends = (identical = false, distinct = false, conditional = true, effects = false) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (data: any) => {
-    data.acts.go.fields = {
-      choice: { type: "bool", required: true },
-      first: { type: "member", required: true }, second: { type: "member", required: true },
-    };
-    data.acts.go.sends = [false, true].map((choice) => {
-      const second = choice && !identical;
-      return { tell: {
-        to: { slot: "peer" }, message: distinct && choice ? "ask-second" : "ask", fields: {},
-        ...(conditional ? { if: [{ equals: { a: { field: "choice" }, b: { const: choice } } }] } : {}),
-        result: { applied: effects ? [{ value: { slot: "note", from: { const: second ? "second" : "first" } } }] : [] },
-        observes: { applied: [{ of: "member", from: { field: second ? "second" : "first" }, max: 1,
-          window: second ? 300 : 10, use: second ? "reuse" : "once", without: second ? "write" : "wait" }] },
-      } };
-    });
-  };
-};
+
 
 test("conditional same-name sends with differing observations or effects are refused as ambiguous-send", () => {
   // The original RED reproducer's observation-only clauses are refused at
   // validation. No invalid definition is passed to a sending scope.
-  const observations = weighed(sends());
+  const observations = weighed(clauseSends());
   const effects = weighed((data) => {
-    sends(true, false, true, true)(data);
+    clauseSends(true, false, true, true)(data);
     data.acts.go.sends[1].tell.result.applied[0].value.from.const = "second";
   });
   for (const result of [observations, effects]) {
@@ -44,15 +27,8 @@ test("conditional same-name sends with differing observations or effects are ref
   }
 });
 
-for (const { name, identical, distinct, conditional, choices } of [
-  { name: "conditional same-name sends with identical results", identical: true, distinct: false, conditional: true, choices: [false, true] },
-  { name: "conditional distinct-name sends with differing results", identical: false, distinct: true, conditional: true, choices: [false, true] },
-  { name: "unconditional same-name sends with differing results", identical: false, distinct: false, conditional: false, choices: [true] },
-]) test.each(["legacy", "whole-scope"] as const)(`%s: ${name} retain their own result rows, effects and reservation`, cohort => {
-  const checked = weighed(data => {
-    sends(identical, distinct, conditional, true)(data);
-    if (cohort === "whole-scope") data.capacity = { name: "whole-scope", version: 1 };
-  });
+for (const { name, identical, distinct, conditional, choices } of clauseMatrices) test.each(["legacy", "whole-scope"] as const)(`%s: ${name} retain their own result rows, effects and reservation`, cohort => {
+  const checked = weighed(clauseIdentityChange(identical, distinct, conditional, cohort));
   expect(checked.ok).toBe(true);
   const definition = valid(checked);
   for (const choice of choices) {

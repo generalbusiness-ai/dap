@@ -1,3 +1,4 @@
+import { archiveObservation, archiveOutcomeValue, replayArchiveEvidenceValue, archiveStagingFactory, archiveObservationPeer } from "../../derive/test/definition-corpus/replay-mutations-data.ts";
 /** Judged in-memory fixture histories for A2 cutoffs. No native storage,
  * privacy admission or real-room export. Made-up owner rules and recorded
  * fixture authority are explicit; no caller anchor supplies a dependency. */
@@ -38,21 +39,17 @@ export function declaredGenesisFixture(): ArchiveFixture {
 /** The value first appears beside the final outcome. No later act reads it. */
 export function outcomeValueFixture(): ArchiveFixture {
   const named = "platform:task@1" as const;
-  const domain = "archive-fixture-evidence-1", proof = { seat: 12 };
+  const domain = replayArchiveEvidenceValue.domain, proof = { seat: 12 };
   const required: RetainedInput = { kind: "value", domain, digest: valueDigest(domain, proof), bytes: canonicalize(proof) };
   const probe: OutcomeRule = {
     selects: false, read: false, retries: () => false,
-    valueDomains: [{ domain, max: 64 }],
+    valueDomains: [replayArchiveEvidenceValue],
     values: evidence => {
       const digest = (evidence.body as { proof?: Digest } | null)?.proof;
       return digest ? [{ domain, max: 64, digest }] : [];
     },
   };
-  const definition = gateWith(data => {
-    data.name = "platform:task";
-    data.acts.issue.effects.push({ code: "archive-open", row: "P16", most: { effects: 0, operations: ["probe"] } });
-    data.outcomes.probe.attempts = 1;
-  });
+  const definition = gateWith(archiveOutcomeValue);
   const rules = gateRules({
     "archive-open": { place: "effect", most: 2, run: () => [
       { effect: "operation", k: 0, owner: named, kind: "probe", attempts: 1 },
@@ -77,9 +74,7 @@ export function outcomeValueFixture(): ArchiveFixture {
  * and confirmation have complete judged parent histories. Authority and
  * host replies remain explicit stand-ins; the ancestry walk is unproved. */
 export function outcomeSnapshotFixture(): ArchiveFixture {
-  const factory = variant(deskDefinition.declared, data => {
-    for (const send of data.acts["open-issue"]!.sends) if ("create" in send) send.create.definition = staging.digest;
-  });
+  const factory = variant(deskDefinition.declared, archiveStagingFactory(staging.digest));
   const parent = created(factory);
   parent.did(keys.rita, "open-issue", { fields: { title: "archive staging fixture" } });
   class ClosedLane extends Lane {
@@ -108,17 +103,9 @@ export function outcomeSnapshotFixture(): ArchiveFixture {
  * itself and fixture authority remain stated trusts. */
 export function observingDeliveryFixture(): ArchiveFixture {
   const rulebook = new Rulebook();
-  const peerDefinition = variant(notesDefinition.declared, data => {
-    data.receives.ask = { message: "ask", class: "tell", from: { kind: "directory" }, opens: null, fields: {}, also: {}, guards: [], effects: [], sends: [], attention: [] };
-  });
+  const peerDefinition = variant(notesDefinition.declared, archiveObservationPeer);
   const peer = created(peerDefinition, {}, "archive-observation-peer");
-  const definition = weigherWith(data => {
-    for (const key of Object.keys(data.acts)) if (!["establish", "point", "go"].includes(key)) delete data.acts[key];
-    data.outcomes = {}; data.rules = {};
-    data.items.desk.refs.peer.to.kind = "directory";
-    data.acts.point.fields.peer.kind = "directory";
-    data.acts.go.sends[0].tell.observes.applied[0].retains = [RULES_EXTENTS_VALUE];
-  });
+  const definition = weigherWith(archiveObservation(RULES_EXTENTS_VALUE));
   const named = "platform:task@1" as const, rules = {}, platform = { named, rules };
   const ledger = new Ledger(definition);
   const creation = signIntent({ v: 1, to: null, actor: keys.rita.key, kind: "found", on: null, expected: {}, fields: { opener: keys.rita.member }, idempotencyKey: "archive-observing-delivery", notAfter: t(60) }, keys.rita.secret);

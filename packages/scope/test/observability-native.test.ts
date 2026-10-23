@@ -1,3 +1,4 @@
+import { observabilityCountChange } from "./definition-corpus-data.ts";
 import { env } from "cloudflare:workers";
 import { evictDurableObject, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
@@ -117,7 +118,7 @@ test("absent, throwing, slow and SQL-faulted telemetry preserve native creation,
 // authority, clock and deterministic incarnations are labelled stand-ins.
 test("an alarm settles 251 native requests with exact turn multiplicity inside the 250 point cap", async () => {
   const count = 251, points: MetricPoint[] = [];
-  const definition = variant(ticket, def => { def.items.request.max = count; });
+  const definition = variant(ticket, observabilityCountChange(count));
   const intent: Intent = { v: 1, to: null, actor: keys.rita.key, kind: "found", on: null, expected: {}, fields: { title: "A ticket", opener: keys.rita.member }, idempotencyKey: crypto.randomUUID(), notAfter: at(60) };
   const seed: Seed = { v: 1, kind: "directory", definition: definition.digest, creator: null, cause: intentDigest(intent), ordinal: 0 };
   const name = scopeIdOf(seed), signed = signIntent(intent, keys.rita.secret), c = controls(name);

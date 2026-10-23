@@ -1,3 +1,4 @@
+import { replayRecordedChange } from "./definition-corpus-data.ts";
 import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { describe, expect, test } from "vitest";
@@ -78,7 +79,7 @@ describe("replay of histories the runtime wrote, read through the Worker's read 
 // NET uses the fixture authority, a stand-in, over real Durable Object SQLite.
 test("explicit recorded durability has its own native pin and replay; unsupported levels write no entries or operations", async () => {
   const implicitBytes = canonicalize(definition.declared), implicitPin = definition.digest;
-  const explicit = variant(definition.declared, def => { def.level = { name: "recorded", version: 1 }; });
+  const explicit = variant(definition.declared, replayRecordedChange());
   expect(explicit.digest).not.toBe(implicitPin);
   const fields = { title: "A recorded lane", opener: rita.member };
   const { signed, name } = creation(explicit, fields);

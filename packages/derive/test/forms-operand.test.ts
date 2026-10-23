@@ -1,6 +1,7 @@
+import { operandParts, operandProbeData, namedOperandData, elsewhereOperandData, deliveryOperandChange, deliveryOperandData } from "./definition-corpus/forms-operand-variants.ts";
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { ActType, DeclaredDefinition, FactRef, FieldValue, Guard, Operand } from "@generalbusiness/dap-contract";
+import type { DeclaredDefinition, FactRef, FieldValue, Guard, Operand } from "@generalbusiness/dap-contract";
 import { intentDigest } from "@generalbusiness/artroom-bytes";
 import { validateDefinition, type Fetched, type ProblemCode } from "../src/index.ts";
 import { Scope, deliver, fields, keys, on, ticket, valid, variant } from "./fixtures-entry.ts";
@@ -13,56 +14,12 @@ const { rita, una } = keys;
  * fact. A block waits on an ask of another lane, and is released by an
  * answer to that same ask.
  */
-const fact = (...kind: string[]) => ({ type: "fact", kind, under: "asks" }) as const;
-const text = { type: "text", max: 100 } as const;
-const slot = { fixed: false, required: false } as const;
-const act = (a: Partial<ActType> & Pick<ActType, "step" | "on" | "grant">): ActType => ({ also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [], ...a });
-const asks: DeclaredDefinition = {
-  format: "artroom-definition-1", name: "asks", profile: { name: "restricted", version: 1 }, capabilities: [], genesis: "start",
-  items: {
-    desk: { many: false, max: 1, states: { open: { final: false } }, initial: "open", parties: { owner: { fixed: true, required: true, list: false, author: false } }, refs: {}, values: {} },
-    ask: {
-      many: true, max: 8, states: { asked: { final: false }, answered: { final: false }, accepted: { final: true } }, initial: "asked",
-      parties: { asker: { fixed: true, required: true, list: false, author: false }, watchers: { ...slot, list: true, max: 4, author: false } },
-      refs: { termsAt: { fixed: false, required: true, to: fact("ask", "revise") } }, values: { text: { ...slot, of: text } },
-    },
-    block: { many: true, max: 8, states: { blocked: { final: false }, released: { final: true } }, initial: "blocked", parties: {}, refs: { on: { fixed: true, required: true, to: fact("ask") } }, values: {} },
-  },
-  acts: {
-    start: act({ step: "open", on: "desk", grant: "start", fields: { opener: { type: "member", required: true } }, effects: [{ party: { slot: "owner", from: { field: "opener" } } }] }),
-    ask: act({
-      step: "open", on: "ask", grant: "ask", fields: { text: { ...text, required: true } },
-      effects: [{ party: { slot: "asker", from: { signer: true } } }, { party: { slot: "watchers", from: { signer: true }, list: "add" } }, { value: { slot: "text", from: { field: "text" } } }, { ref: { slot: "termsAt", from: "self" } }],
-    }),
-    revise: act({
-      step: "transition", on: "ask", grant: "ask", fields: { text: { ...text, required: true } }, guards: [{ state: ["asked"] }],
-      effects: [{ value: { slot: "text", from: { field: "text" } } }, { ref: { slot: "termsAt", from: "self" } }],
-    }),
-    answer: act({ step: "transition", on: "ask", grant: "answer", guards: [{ state: ["asked"] }], effects: [{ state: "answered" }] }),
-    accept: act({
-      step: "transition", on: "ask", grant: "accept", fields: { terms: { ...fact("ask", "revise"), required: true } },
-      guards: [{ state: ["asked", "answered"] }, { equals: { a: { field: "terms" }, b: { slot: "termsAt" } }, reason: "terms-differ" }], effects: [{ state: "accepted" }],
-    }),
-    block: act({ step: "open", on: "block", grant: "block", fields: { on: { ...fact("ask"), required: true } }, effects: [{ ref: { slot: "on", from: { field: "on" } } }] }),
-    // Names the entry that opened a lane of asks: a genesis, whose kind is the genesis act's.
-    trace: act({ step: "transition", on: "ask", grant: "ask", fields: { origin: { ...fact("start"), required: true } }, guards: [{ fact: { field: "origin" } }] }),
-    "release-block": act({
-      step: "transition", on: "block", grant: "block", fields: { answer: { ...fact("answer"), required: true } },
-      guards: [
-        { state: ["blocked"] }, { fact: { field: "answer" } },
-        { equals: { a: { field: "answer", part: "scope" }, b: { slot: "on", part: "scope" } }, reason: "not-this-lane" },
-        { equals: { a: { field: "answer", part: "on" }, b: { slot: "on", part: "seq" } }, reason: "not-this-ask" },
-      ],
-      effects: [{ state: "released" }],
-    }),
-  },
-  receives: {}, timed: {}, rules: {},
-};
+import { asks } from "./definition-corpus/forms-operand-data.ts";
+
 const asksDefinition = valid(validateDefinition(asks, PROPOSED_BOUNDS));
 
 /** An entry of `s` as another scope fetches it: by fact, with its bytes and the name its scope's definition states. */
 const fetched = (s: Scope, seq: number): Fetched => ({ fact: s.fact(seq), entry: s.entries[seq]!.entry, under: s.under });
-const equals = (a: Operand, b: Operand, reason: string): Guard => ({ equals: { a, b }, reason });
 
 /** M, another lane of asks: M.2 and M.3 open asks 2 and 3, and M.4 and M.5 answer them. */
 function other(): Scope {
@@ -124,42 +81,8 @@ describe("operands, parts and a local fact (sections 6.2 and 6.5; witness 18.1)"
     const M = other();
     const asked = M.entries[2]!.entry;
     const intent = asked.input.type === "act" ? intentDigest(asked.input.signed.intent) : null;
-    const proof = (part: NonNullable<Extract<Operand, { field: string }>["part"]>): Operand => ({ field: "proof", part });
-    const is = (name: string, a: Operand, value: FieldValue): Guard => equals(a, { const: value }, name);
-    const none = (name: string, a: Operand): Guard => equals(a, { none: true }, name);
-    // `proof` is M.2, the `ask` that opened ask 2. `second` is M.6, a block whose field `on` names L.2, this scope's own ask. `origin` is M.0, M's genesis.
-    const parts: Guard[] = [
-      is("ref", proof("ref"), M.fact(2)), is("scope", proof("scope"), M.at), is("seq", proof("seq"), 2),
-      is("kind", proof("kind"), "ask"), is("intent", proof("intent"), intent!), is("on", proof("on"), 2),
-      is("field", proof({ field: "text" }), "why"),
-      is("opened state", proof({ opened: "state" }), "asked"), is("opened party", proof({ opened: "asker" }), una.member),
-      is("opened list", proof({ opened: "watchers" }), [una.member]), is("opened ref", proof({ opened: "termsAt" }), 2),
-      is("set", proof({ set: { item: proof("on"), slot: "text" } }), "why"),
-      is("then seq", { field: "second", part: { of: { field: "on" }, then: "seq" } }, 2), equals({ field: "second", part: { of: { field: "on" }, then: "scope" } }, { scope: true }, "then scope"),
-      // A fact that a fetched entry holds, and that names this scope's own entry, equals the local reference to that entry in a slot of another subject.
-      equals({ field: "second", part: { field: "on" } }, { slot: "termsAt", of: "also.mine" }, "names my entry"),
-      // What an entry does not hold is none: an unknown field or slot, an item it did not change, a value that is no fact, and the intent of a created scope.
-      none("no field", proof({ field: "title" })), none("no slot", proof({ opened: "title" })), none("no item", proof({ set: { item: { const: 9 }, slot: "text" } })),
-      none("no fact", proof({ of: { field: "text" }, then: "seq" })), none("no intent", { field: "origin", part: "intent" }),
-      // The block waits on M.3. That fact is held in a slot and is not named by this input, so its bytes were not fetched:
-      // its position is read from the reference, and a part of its bytes is none.
-      is("slot seq", { slot: "on", part: "seq" }, 3), none("slot bytes", { slot: "on", part: "kind" }),
-    ];
-    const probing = variant(asks, (d) => {
-      d.acts.probe = act({
-        step: "transition", on: "block", grant: "block", also: { mine: { item: "ask", by: "mine" } }, guards: parts,
-        fields: { proof: { ...fact("ask"), required: true }, second: { ...fact("block"), required: true }, origin: { ...fact("start"), required: true }, mine: { type: "item", of: "ask", required: true } },
-      });
-      // On this scope's own entry: the parts are read from its history, and compared with what this scope holds.
-      d.acts.own = act({
-        step: "transition", on: "ask", grant: "ask", fields: { terms: { ...fact("ask", "revise"), required: true } },
-        guards: [
-          equals({ field: "terms", part: "kind" }, { const: "ask" }, "kind"), equals({ field: "terms", part: "scope" }, { scope: true }, "scope"),
-          equals({ field: "terms", part: "seq" }, { item: "on" }, "seq"), equals({ field: "terms", part: { opened: "termsAt" } }, { slot: "termsAt" }, "opened"),
-          equals({ field: "terms", part: { opened: "asker" } }, { signer: true }, "signer"), equals({ field: "terms", part: "intent" }, { intent: true }, "another intent"),
-        ],
-      });
-    });
+    const parts = operandParts(M, intent, una.member);
+    const probing = valid(validateDefinition(operandProbeData(parts), PROPOSED_BOUNDS));
     const L = new Scope(probing);
     const ask = L.did(una, "ask", fields({ text: "why" })).seq;   // L.2
     expect(M.act(rita, "block", fields({ on: L.fact(ask) }), { facts: [fetched(L, ask)] }).result).toBe("write");   // M.6
@@ -183,8 +106,8 @@ describe("operands, parts and a local fact (sections 6.2 and 6.5; witness 18.1)"
     expect([trace(L, L).result, trace(L, M).result]).toEqual(["write", "write"]);
     // P pins another definition, with another name and another genesis act. It holds no bytes of M's definition: the kind `start` is in M.0.
     // A definition with another name: the slot that an ask sets from `self` holds a fact under its own definition.
-    const named = (name: string, change: (d: any) => void = () => {}) => variant(asks, (d) => { d.name = name; d.items.ask.refs.termsAt.to = { ...d.items.ask.refs.termsAt.to, under: name }; change(d); });   // eslint-disable-line @typescript-eslint/no-explicit-any
-    const elsewhere = (change: (d: any) => void = () => {}) => named("elsewhere", (d) => { d.genesis = "begin"; d.acts.begin = d.acts.start; delete d.acts.start; change(d); });   // eslint-disable-line @typescript-eslint/no-explicit-any
+    const named = (name: string, change: (d: any) => void = () => {}) => valid(validateDefinition(namedOperandData(name, change), PROPOSED_BOUNDS));
+    const elsewhere = (change: (d: any) => void = () => {}) => valid(validateDefinition(elsewhereOperandData(change), PROPOSED_BOUNDS));
     const P = new Scope(elsewhere());
     expect([(M.entries[0]!.entry.input as { kind?: string }).kind, trace(P, M).result, P.last.uses]).toEqual(["start", "write", [{ fact: M.fact(0), content: expect.any(String) }]]);
     // Q differs from P in one thing: the kinds of the field omit that genesis act.
@@ -196,36 +119,7 @@ describe("operands, parts and a local fact (sections 6.2 and 6.5; witness 18.1)"
   });
 
   test("a handler reads its sender, the source entry and the update; a refused delivery records the name its guard declares, and the result carries it; the delivery's kind is its message's name; a field of a foreign delivery is read as its bytes hold it, whatever handler its reader declares", () => {
-    const change = (d: any) => {   // eslint-disable-line @typescript-eslint/no-explicit-any
-      d.receives.closes.guards = [
-        equals({ update: "state" }, { const: "set" }, "not-set"),
-        equals({ sender: true }, { source: "scope" }, "sender"), equals({ update: "revision" }, { source: "seq" }, "revision"),
-        equals({ update: "item" }, { source: "ref" }, "item"), equals({ source: "kind" }, { const: "link" }, "kind"), equals({ source: { field: "about" } }, { field: "about" }, "about"),
-      ];
-      // `cite` names a delivery of `closes`, and may compare the `madeAt` that it delivered with a fact, or with a record.
-      const madeAt = (b: string): Guard => ({ fact: { field: "closed", where: [{ equals: { a: { field: "madeAt" }, b: { field: b } } }] }, ifPresent: true, reason: b });
-      // `peek` compares the same field of an entry whose kind it does not ask for.
-      d.acts.peek = act({
-        step: "transition", on: "intent", grant: "link", fields: { closed: { type: "fact", kind: ["closes"], under: "ticket", required: true }, by: { type: "fact", kind: ["link"], under: "ticket", required: true } },
-        guards: [equals({ field: "closed", part: { field: "madeAt" } }, { field: "by" }, "peek")],
-      });
-      d.acts.cite = act({
-        step: "transition", on: "intent", grant: "link", guards: [{ state: ["open"] }, { fact: { field: "closed" } }, madeAt("by"), madeAt("flag")],
-        fields: {
-          closed: { type: "fact", kind: ["closes"], under: "ticket", required: true }, by: { type: "fact", kind: ["link"], under: "ticket", required: false },
-          flag: { type: "record", of: { self: { type: "bool", required: true } }, required: false },
-        },
-      });
-      // The link keeps the entry that made it, set from `self`, and its update carries that slot, a fact that the act names, and a fact that it is presented.
-      d.items.link.refs.madeAt = { fixed: true, required: true, to: { type: "fact", kind: ["link"], under: "ticket" } };
-      d.acts.link.fields.because = { type: "fact", kind: ["file"], under: "ticket", required: true };
-      d.acts.link.effects.push({ ref: { slot: "madeAt", from: "self" } });
-      d.acts.link.presents = { shown: { kind: ["file"], under: "ticket", required: false } };
-      Object.assign(d.acts.link.sends[0].relate.detail, { madeAt: { slot: "madeAt" }, because: { field: "because" }, shown: { presented: "shown" } });
-      const filed = { type: "fact", kind: ["file"], under: "ticket", required: false };
-      Object.assign(d.receives.closes.fields, { madeAt: { type: "fact", kind: ["link"], under: "ticket", required: false }, because: filed, shown: filed });
-      d.receives.closes.guards.push(equals({ field: "madeAt" }, { source: "ref" }, "made at"));
-    };
+    const change = deliveryOperandChange;
     const definition = variant(ticket, change);
     const P = new Scope(definition);
     const I = new Scope(definition, rita.member, true, 1);
@@ -258,13 +152,13 @@ describe("operands, parts and a local fact (sections 6.2 and 6.5; witness 18.1)"
     // J is a lane under a definition of the same name, whose `closes` takes `madeAt` as a record with a boolean member `self`. P.5 sends
     // it the same bytes, and J admits a record. I reads J's entry, and declares a handler of that name whose `madeAt` is a fact. That
     // handler says nothing of J's entry: the field is the record that the bytes hold, and it equals no reference to P.5.
-    const J = new Scope(variant(ticket, (d) => { change(d); d.receives.closes.guards.pop(); d.receives.closes.fields.madeAt = { type: "record", of: { self: { type: "bool", required: true } }, required: false }; }), rita.member, true, 2);
+    const J = new Scope(valid(validateDefinition(deliveryOperandData("record"), PROPOSED_BOUNDS)), rita.member, true, 2);
     const link = P.did(rita, "link", fields({ target: J.at, about: 0, because: P.fact(0) })).seq;
     expect([deliver(J, P, link).result, J.last.input]).toMatchObject(["write", { decision: "applied", message: { body: { detail: { madeAt: { self: true } } } } }]);
     expect([cited(fetched(J, J.head.seq), { by: P.fact(link) }, link), cited(fetched(J, J.head.seq), { flag: { self: true } })]).toEqual(["by", "write"]);
     // K's handler is for a sender under another definition, so K decides the same update `unknown-message`. No handler of K received
     // the field, and the handler of that name does not read it afterwards: in K's own entry it is the record too.
-    const K = new Scope(variant(ticket, (d) => { change(d); d.receives.closes.from.under = "board"; }), rita.member, true, 3);
+    const K = new Scope(valid(validateDefinition(deliveryOperandData("foreign"), PROPOSED_BOUNDS)), rita.member, true, 3);
     const unread = P.did(rita, "link", fields({ target: K.at, about: 0, because: P.fact(0) })).seq;
     deliver(K, P, unread);
     expect([K.last.input, K.act(rita, "peek", { ...on(K, 0), ...fields({ closed: K.fact(K.head.seq), by: P.fact(unread) }) }, { facts: [fetched(P, unread)] })]).toMatchObject([{ decision: "refused", reason: { code: "unknown-message" } }, { result: "refused", name: "peek" }]);

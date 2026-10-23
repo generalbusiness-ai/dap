@@ -1,15 +1,12 @@
 /** Recorded sensor summaries and native threshold judgments. The readings,
  * member grants and root-directory setup are labelled local fixtures. */
 import { expect, test } from "vitest";
-import type { DeclaredDefinition, FactRef, FieldValue } from "@generalbusiness/dap-contract";
+import type { FactRef, FieldValue } from "@generalbusiness/dap-contract";
 import { t } from "@generalbusiness/dap-derive/testing";
 import { nativeScenario, on, operator, climate, sensors, devicePermissions, replay, submit, type Ledger } from "./test-support.ts";
-import { zoneForms } from "./zone.ts";
+import { zoneTestDefinition } from "./definition-corpus-data.ts";
 
-const under = "grow-zone-fixture", forms = zoneForms(under);
-const definition: DeclaredDefinition = { format: "artroom-definition-1", name: under, profile: { name: "restricted", version: 1 }, capabilities: [], genesis: "establish",
-  items: { root: { many: false, max: 1, states: { open: { final: false } }, initial: "open", parties: {}, refs: {}, values: {} }, zone: forms.item },
-  acts: { establish: { step: "open", on: "root", grant: "grow.configure", also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [] }, ...forms.acts }, receives: {}, timed: {}, rules: forms.rules };
+const definition = zoneTestDefinition();
 interface Stats { zone: number; min: number; max: number; mean: number; inBand: number }
 const normal = (zone: number): Stats => ({ zone, min: 2300, max: 2500, mean: 2400, inBand: 25 });
 const hot = (zone: number): Stats => ({ zone, min: 2400, max: 2740, mean: 2650, inBand: 10 });

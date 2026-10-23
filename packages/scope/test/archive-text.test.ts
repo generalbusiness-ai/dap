@@ -1,3 +1,4 @@
+import { archiveTextChange } from "./definition-corpus-data.ts";
 /** Real native detached-text retention and export inventory. Policy and
  * authority are TEST stand-ins. Replay uses the native exported journal. */
 import { expect, test } from "vitest";
@@ -17,7 +18,7 @@ import { at, create, rita } from "./fixtures-native.ts";
 import { archiveDefinition, archivePolicies, archiveRepository, archiveSql } from "./support/archive.ts";
 
 test("v2 records the native canonical text byte count without reading its body while v1 keeps its old omission", async () => {
-  const definition = variant(archiveDefinition.declared, data => { data.capacity = { name: "whole-scope", version: 1 }; data.acts["remark"]!.fields["text"] = { type: "text", max: 1024, detached: true, required: true }; });
+  const definition = variant(archiveDefinition.declared, archiveTextChange());
   const base = archivePolicies.get(archiveDefinition.digest)!;
   const policies = new Map([[definition.digest, { ...base, support: { ...base.support, named: definition.digest, definition } }]]);
   const lane = await create({}, {}, definition), text = 'TEST omitted text: newline\nquote" music🎵', digest = textDigest(text);

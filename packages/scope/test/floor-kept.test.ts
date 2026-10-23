@@ -1,3 +1,4 @@
+import { floorKeptChange } from "./definition-corpus-data.ts";
 /** Real native inputs/turns/SQLite; made-up lane declaration and fixture
  * authority/clock. No archive writer, provider or custody claim. */
 import { expect, test } from "vitest";
@@ -13,7 +14,7 @@ import { archiveDefinition, archiveSql } from "./support/archive.ts";
 // Invariant: the maximum kept set is admitted, and one more live opening
 // makes a later offer refuse without deleting any payload or changing state.
 test("Native floor-kept refuses the 4097th live opening after an exact4096 kept set", async () => {
-  const definition = variant(archiveDefinition.declared, data => { data.items.commitment.max = 5000; });
+  const definition = variant(archiveDefinition.declared, floorKeptChange());
   const lane = await create({}, {}, definition);
   for (let n = 0; n < 4196; n++) {
     expect((await lane.act(rita, "offer", { fields: { intent: 0 }, expected: { intent: 1 } })).answer).toBe("accepted");

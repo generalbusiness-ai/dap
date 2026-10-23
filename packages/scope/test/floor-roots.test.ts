@@ -1,8 +1,9 @@
+import { floorRootsData } from "../../derive/test/definition-corpus/scope-capacity-floor.ts";
 /** Native judgments, operations, turns, SQLite and eviction. Platform data,
  * the operation rules, reader/actor authority and provider are explicit
  * fixtures. Every journal row is admitted by the normal input path. */
 import { expect, onTestFinished, test } from "vitest";
-import { PROPOSED_BOUNDS, type Beside, type Created, type PlatformData, type PlatformDefinition, type Seed, type SignedIntent } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type Beside, type Created, type PlatformDefinition, type Seed, type SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, intentDigest, scopeIdOf, signIntent, textDigest } from "@generalbusiness/artroom-bytes";
 import { countedEntries, pendingOf, validateDefinition, type Rules } from "@generalbusiness/dap-derive";
 import { valid } from "@generalbusiness/dap-derive/testing";
@@ -15,19 +16,7 @@ import { wired } from "./outside.ts";
 import { archiveSql } from "./support/archive.ts";
 
 const NAMED = "platform:task@2" as PlatformDefinition;
-const form = { also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [] };
-const fact = { type: "fact", kind: ["note"], under: "platform:task" } as const;
-const supplied: PlatformData = {
-  format: "artroom-definition-1", name: "platform:task", profile: { name: "restricted", version: 1 }, capabilities: [], genesis: "found",
-  items: { board: { many: false, max: 1, initial: "open", states: { open: { final: false }, done: { final: true } }, parties: {}, refs: {}, values: { proof: { fixed: false, required: false, of: fact } } } },
-  acts: {
-    found: { ...form, step: "open", on: "board", grant: "found" },
-    start: { ...form, step: "transition", on: "board", grant: "remark", effects: [{ code: "begin", row: "P16" }] },
-    note: { ...form, step: "transition", on: "board", grant: "remark" },
-    pin: { ...form, step: "transition", on: "board", grant: "remark", fields: { proof: { ...fact, required: true }, memo: { type: "text", max: 32, detached: true, required: true } }, effects: [{ value: { slot: "proof", from: { field: "proof" } } }] },
-    finish: { ...form, step: "transition", on: "board", grant: "remark", guards: [{ state: ["open"] }], effects: [{ state: "done" }] },
-  }, receives: {}, rules: {}, timed: {}, outcomes: { work: { code: "work", row: "P16", attempts: 1 } },
-};
+const supplied = floorRootsData();
 const rules: Rules = {
   begin: { place: "effect", most: 2, run: () => [{ effect: "operation", k: 0, owner: NAMED, kind: "work", attempts: 1 }, { effect: "attempt", operation: { k: 0 }, attempt: 1, result: "opened", selected: null }] },
   work: { place: "outcome", rules: { selects: false, read: false, retries: () => false } },

@@ -1,3 +1,4 @@
+import { receiverClosureData, receiverExtendChange, receiverInertChange, receiverLegacyCounterChange } from "./definition-corpus/late-pin-variants.ts";
 import { expect, test } from "vitest";
 import { factRefOf, textDigest } from "@generalbusiness/artroom-bytes";
 import { holdCapability, judgeDelivery, ownerReservations, reserved, validateDefinition } from "../src/index.ts";
@@ -39,19 +40,14 @@ test("native receiver pins reserve their full deciding amount, including an over
 });
 
 test("native receiver-pin quotes use the shared item/request closure and refuse recursive or unknown counter producers", () => {
-  const data = receiverPinData();
-  data.items["job"] = { many: true, max: 4, initial: "pending", states: { pending: { final: false }, done: { final: true } }, parties: {}, refs: {}, values: {} };
-  data.receives["license"]!.opens = "job";
-  data.acts["finish"] = { ...data.acts["touch"]!, on: "job", guards: [{ state: ["pending"] }], settles: { of: "on", in: ["pending"] }, effects: [{ state: "done" }], sends: [{ create: { kind: "lane", definition: receiverPinDefinition().digest, fields: {}, result: {} } }] };
+  const data = receiverClosureData(receiverPinDefinition().digest);
   const definition = valid(validateDefinition(data, PIN_BOUNDS));
   const unit = definition.pendingWorkAmounts.receiverPins!.byKind["task"]!;
   expect(unit).toEqual({ entries: 4, items: 1, records: 0, bytes: 6 * PIN_BOUNDS.entryBytes + 6 * PIN_BOUNDS.textBytes + 2, requests: 1 });
   // Its later result comes from the declared child kind, not from the
   // original handler's task source. That pin has the finite unknown-
   // handler refusal, rather than a false edge back to the task handler.
-  const request = data.acts["finish"]!.sends[0]!;
-  if (!("create" in request)) throw new Error("fixture request missing");
-  request.create.result = { refused: [{ capability: { name: "hold", do: "license", with: { export: { const: 99 }, from: { sender: true }, checkpoint: { const: "fixture" }, hold: { const: 0 }, instance: { const: "i" }, k: { const: 1 } } } }] };
+  receiverExtendChange(data);
   const extended = valid(validateDefinition(data, PIN_BOUNDS));
   expect(extended.pendingWorkAmounts.receiverPins!.byKind["task"]).toEqual({ entries: 6, items: 1, records: 1, bytes: 10 * PIN_BOUNDS.entryBytes + 6 * PIN_BOUNDS.textBytes + 2, requests: 1 });
   // This handler would create a new pin instead of updating the bound key.
@@ -63,7 +59,7 @@ test("native receiver-pin quotes use the shared item/request closure and refuse 
   expect(validateDefinition(cyclic, PIN_BOUNDS)).toMatchObject({ ok: false, problems: [{ code: "reserve-unbounded", message: expect.stringContaining("hold@1/receiver-pin producer has a recursive") }] });
   // A typed integer cannot match a ScopeRef source. The record still
   // costs a key, but it opens no recursively bound decision work.
-  effect.capability.with["from"] = { field: "k" };
+  receiverInertChange(effect);
   const inert = validateDefinition(cyclic, PIN_BOUNDS);
   expect(inert.ok).toBe(true);
   if (!inert.ok) throw new Error("inert native source must validate");
@@ -73,6 +69,6 @@ test("native receiver-pin quotes use the shared item/request closure and refuse 
   if (!("capability" in opening)) throw new Error("native fixture effect missing");
   opening.capability.with["k"] = { const: "unbounded counter" };
   expect(validateDefinition(unknown, PIN_BOUNDS)).toMatchObject({ ok: false, problems: [{ code: "reserve-unbounded", path: "acts.license.effects.0.capability", message: expect.stringContaining("counter producer") }] });
-  delete unknown.capacity;
+  receiverLegacyCounterChange(unknown);
   expect(validateDefinition(unknown, PIN_BOUNDS).ok).toBe(true);
 });

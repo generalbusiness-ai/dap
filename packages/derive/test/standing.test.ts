@@ -1,3 +1,4 @@
+import { standingWhole, standingNoDefault, standingZero, standingSingleton } from "./definition-corpus/general-creation-data.ts";
 /** C1 uses made-up platform data and explicit authority/rule stand-ins.
  * The judges, complete prospective item projection, fold and entry ledger
  * are real. No directory pin or handoff policy is activated here. */
@@ -14,7 +15,7 @@ const total = (s: ReturnType<typeof created>) => s.head.seq + 1 + owed(s.state, 
 const projected = (s: ReturnType<typeof created>, effects: readonly Effect[]) => checkStandingEntry(s.state, s.definition, effects, s.head.seq + 1);
 
 test("opt-in standing entry slots carry their entry-byte Amount through the shared ledger; old slots keep their scalar projection", () => {
-  const checked = validateDefinition(standingData(data => { data.capacity = { name: "whole-scope", version: 1 }; }), PROPOSED_BOUNDS, PROFILES, { platform: true });
+  const checked = validateDefinition(standingData(standingWhole), PROPOSED_BOUNDS, PROFILES, { platform: true });
   const d = valid(checked), s = created(d), E = PROPOSED_BOUNDS.entryBytes;
   expect(standingReserved(new MemoryState(), d)).toEqual({ entries: 6, items: 0, records: 0, bytes: 6 * E, requests: 0 });
   expect(standingReserved(s.state, d)).toEqual({ entries: 6, items: 0, records: 0, bytes: 6 * E, requests: 0 });
@@ -30,7 +31,7 @@ test("opt-in standing entry slots carry their entry-byte Amount through the shar
 });
 
 test("whole standing amounts reject invalid units even at zero remaining, and validation names unsafe standing bytes", () => {
-  const d = valid(validateDefinition(standingData(data => { data.capacity = { name: "whole-scope", version: 1 }; }), PROPOSED_BOUNDS, PROFILES, { platform: true }));
+  const d = valid(validateDefinition(standingData(standingWhole), PROPOSED_BOUNDS, PROFILES, { platform: true }));
   const s = created(d);
   s.did(keys.rita, "set", { ...on(s, 0), fields: { next: 2 } });
   expect(standingReserved(s.state, d)).toEqual(NOTHING);
@@ -72,9 +73,9 @@ test("standing grammar admits only the closed, safe platform singleton declarati
     (d: any) => { d.standing.entries = Number.MAX_SAFE_INTEGER; },
   ];
   for (const change of invalid) expect(validateDefinition(standingData(change), PROPOSED_BOUNDS, PROFILES, { platform: true }).ok, String(change)).toBe(false);
-  const noDefault = standingData(d => { delete d.items.repo.values.count.default; d.acts["found"].effects.push({ value: { slot: "count", from: { const: 0 } } }); });
+  const noDefault = standingData(standingNoDefault);
   expect(validateDefinition(noDefault, PROPOSED_BOUNDS, PROFILES, { platform: true }).ok).toBe(true);
-  const zero = standingData(d => { d.standing.max = 0; d.items.repo.values.count.of.max = 0; d.acts.set.fields.next.max = 0; d.acts.advance.fields.next.max = 0; });
+  const zero = standingData(standingZero);
   expect(validateDefinition(zero, PROPOSED_BOUNDS, PROFILES, { platform: true }).ok).toBe(true);
   expect(validateDefinition(standingData(), { ...PROPOSED_BOUNDS, scopeEntries: 5 }, PROFILES, { platform: true }).ok).toBe(false);
 });
@@ -212,11 +213,7 @@ test("C1 rejects unsafe/negative operands before summing and before settlement e
 });
 
 test("a standing singleton distinct from genesis remains fully reserved until it opens; a checkpoint snapshot rebuild retains its counter term", () => {
-  const data = standingData(d => {
-    d.standing.item = "issue";
-    d.items.issue.many = false; d.items.issue.max = 1;
-    d.items.issue.values.count = { fixed: false, required: true, default: 0, of: { type: "int", min: 0, max: 2 } };
-  });
+  const data = standingData(standingSingleton);
   const d = valid(validateDefinition(data, PROPOSED_BOUNDS, PROFILES, { platform: true }));
   const s = created(d);
   expect(standingCounter(s.state, d)).toEqual({ item: null, count: 0 });

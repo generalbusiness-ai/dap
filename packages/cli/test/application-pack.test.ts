@@ -1,3 +1,4 @@
+import { packageReportDefinition } from "./definition-corpus-data.ts";
 /** Real filesystem/package/key witnesses. These are not installs, scenarios or
  * rendered Counter/Lending screen checks. All keys below are public TEST data. */
 import { mkdtemp, mkdir, readFile, readdir, realpath, rm, stat, symlink, truncate, writeFile } from "node:fs/promises";
@@ -291,14 +292,7 @@ test("dap check fails on a wrong expected result, a missing scenario or an inval
 test("v2 CLI reports proved item keys and escapes the same refusal rows through check and pack", async () => {
   const f = await fixture("counter"), store = memoryStore();
   try {
-    const definition = { format: "artroom-definition-1", name: "test.package-report", profile: { name: "restricted", version: 1 }, capabilities: [], genesis: "found",
-      items: { note: { many: false, max: 1, initial: "open", states: { open: { final: false } }, parties: {}, refs: {},
-        values: { label: { fixed: true, required: true, of: { type: "text", max: 80 } } } } },
-      acts: {
-        found: { step: "open", on: "note", grant: "app.configure", fields: { label: { type: "text", max: 80, required: true } }, also: {}, guards: [], effects: [{ value: { slot: "label", from: { field: "label" } } }], sends: [], attention: [] },
-        note: { step: "comment", on: "note", grant: "app.comment", fields: { text: { type: "text", max: 80, required: true } }, also: {}, guards: [], effects: [], sends: [], attention: [] },
-      } as Record<string, unknown>, receives: {}, timed: {}, rules: {},
-    };
+    const definition = packageReportDefinition();
     const config = { ...f.config, ...emptyPackageComposition(), v: 2, roles: { author: ["app.configure", "app.comment"] }, scenarios: ["scenario.json"],
       projections: { note: { v: 1, definition: "definition.json", revision: "revision", sources: {
         note: { item: "note", read: "one", states: ["open"], limit: 1, fields: { label: { from: { kind: "value", name: "label" }, of: { type: "text", max: 80 }, nullable: false } } },

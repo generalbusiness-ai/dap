@@ -2,8 +2,9 @@
  * It retains actual prepared inputs for replay. No enrollment/provider/DO
  * lifecycle is exercised here. Application data modules do not import it. */
 import { expect } from "vitest";
+import { growSiteLauncherDefinition } from "./definition-corpus-data.ts";
 import { PROPOSED_BOUNDS, type DeclaredDefinition, type Digest, type FieldValue, type RetainedInput } from "@generalbusiness/dap-contract";
-import { canonicalBytes, canonicalize, definitionDigest, digestBytes } from "@generalbusiness/artroom-bytes";
+import { canonicalBytes, canonicalize, digestBytes } from "@generalbusiness/artroom-bytes";
 import { clockOf, deviceCommand, judgeGenesis, prepareRules, validateDefinition, type Fetched } from "@generalbusiness/dap-derive";
 import { evaluateRules, RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { created, creation, deliver, grantOf, keys, valid, Ledger, type Actor, type Over } from "@generalbusiness/dap-derive/testing";
@@ -48,14 +49,7 @@ export async function nativeChild(parent: Ledger, seq: number, definition: Decla
 /** A created Site Lane, with a labelled Directory launcher and complete
  * source journal for replay. This is in-memory judged creation, not a host. */
 export async function nativeCreatedSite(definition: DeclaredDefinition, permissions: readonly Permission[], fields: Record<string, FieldValue>) {
-  const launcherDefinition = structuredClone(definition);
-  launcherDefinition.name = "test.grow-site-launcher";
-  // The launcher owns no Site reports: its own name cannot stand in for the
-  // Site's self-fact type. Keep only the actual creation row and root item.
-  launcherDefinition.items = { site: definition.items["site"]! };
-  launcherDefinition.acts = { [definition.genesis]: structuredClone(definition.acts[definition.genesis]!) };
-  launcherDefinition.receives = {}; launcherDefinition.timed = {}; launcherDefinition.rules = {};
-  launcherDefinition.acts[launcherDefinition.genesis]!.sends = [{ create: { kind: "lane", definition: definitionDigest(definition), fields: Object.fromEntries(Object.keys(definition.acts[definition.genesis]!.fields).map(name => [name, { field: name }])), result: {} } }];
+  const launcherDefinition = growSiteLauncherDefinition(definition);
   const launcher = nativeScenario(launcherDefinition, permissions, fields);
   const site = await nativeChild(launcher, 0, definition, permissions, 19);
   expect(deliver(launcher, site, 0).result).toBe("write");

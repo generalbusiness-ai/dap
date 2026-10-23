@@ -1,10 +1,11 @@
+import { capacityPinBodySlot, capacityPinChildData, capacityPinReceiverData, capacityPinSenderData } from "../../derive/test/definition-corpus/scope-capacity-floor.ts";
 import { env } from "cloudflare:workers";
 import { expect, test } from "vitest";
-import type { Digest, Entry, FactRef, PlatformData, Seed } from "@generalbusiness/dap-contract";
+import type { Digest, Entry, FactRef, Seed } from "@generalbusiness/dap-contract";
 import { parseStrict, scopeIdOf, textDigest } from "@generalbusiness/artroom-bytes";
 import { ownerReservations, reserved, validateDefinition, type Delivered, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { valid } from "../../derive/test/fixtures.ts";
-import { PIN_BOUNDS, receiverPinData } from "../../derive/test/fixtures-receiver-pins.ts";
+import { PIN_BOUNDS } from "../../derive/test/fixtures-receiver-pins.ts";
 import { httpSource, verify } from "@generalbusiness/artroom-replay";
 import { SqliteStore, type Delivery } from "../src/index.ts";
 import { CAPABILITY_CODE } from "../src/ports.ts";
@@ -17,42 +18,12 @@ test("native receiver pins fund item and request transfers at full scope ceiling
   // Two actual scopes and journals, native hold code, SQLite and routes.
   // Definitions, clock, authority and internal resolver wiring are fixtures.
   // No workspace, outside owner, provider or raw record injection runs.
-  const data = receiverPinData();
-  const peer = data.acts["license"]!.fields["peer"]!;
-  if (peer.type !== "scope") throw new Error("fixture peer type missing");
-  peer.kind = "directory";
-  data.receives["license"]!.from.kind = "directory";
-  const childData = receiverPinData() as unknown as PlatformData;
-  delete childData.capacity;
-  childData.name = "platform:task"; childData.capabilities = []; childData.receives = {}; childData.outcomes = {};
-  childData.acts = { file: childData.acts["file"]! };
+  const bodySlot = capacityPinBodySlot();
+  const data = capacityPinReceiverData(bodySlot);
+  const childData = capacityPinChildData();
   const childUnder = valid(validateDefinition(childData, PIN_BOUNDS, undefined, { platform: true }));
-  const request = { create: { kind: "lane" as const, definition: "platform:task@1" as const, fields: {}, result: {} } };
-  data.items["job"] = { many: true, max: 4, initial: "pending", states: { pending: { final: false }, done: { final: true } }, parties: {}, refs: {}, values: {} };
-  data.items["ballast"] = { many: false, max: 1, initial: "kept", states: { kept: { final: true } }, parties: {}, refs: {}, values: {} };
-  data.receives["license"]!.opens = "job";
-  data.acts["finish"] = { ...data.acts["touch"]!, on: "job", guards: [{ state: ["pending"] }], settles: { of: "on", in: ["pending"] }, effects: [{ state: "done" }], sends: [request] };
-  data.acts["ballast"] = { ...data.acts["touch"]!, step: "open", on: "ballast", sends: [request] };
-  const bodySlot = { fixed: false, required: false, of: { type: "text" as const, detached: true as const, max: PIN_BOUNDS.textBytes } };
-  data.items["intent"]!.values["body"] = bodySlot;
-  data.acts["attach"] = { ...data.acts["touch"]!, fields: { body: { ...bodySlot.of, required: true } }, guards: [{ state: ["open"] }], effects: [{ value: { slot: "body", from: { field: "body" } } }] };
-  data.acts["erase"] = { ...data.acts["touch"]!, guards: [{ state: ["open"] }], effects: [{ state: "closed" }, { redact: { slot: "body" } }] };
   const under = valid(validateDefinition(data, PIN_BOUNDS));
-  const senderData = receiverPinData();
-  delete senderData.capacity;
-  senderData.name = "pin-sender"; senderData.capabilities = []; senderData.receives = {};
-  senderData.items["intent"]!.refs["peer"] = { fixed: false, required: false, to: { type: "scope", kind: "directory" } };
-  senderData.items["intent"]!.values["body"] = bodySlot;
-  senderData.acts = { file: senderData.acts["file"]!, connect: {
-    ...senderData.acts["touch"]!, fields: { peer: { type: "scope", kind: "directory", required: true } }, effects: [{ ref: { slot: "peer", from: { field: "peer" } } }],
-  }, send: {
-    // The source sends an ordinary digest and holds its matching text in
-    // a detached field. The receiver judges that text as a body; it need
-    // not have the same field type as the source's digest.
-    ...senderData.acts["touch"]!, fields: { target: { type: "fact", kind: ["file"], under: data.name, required: true }, k: { type: "int", min: 1, max: 3, required: true }, body: { type: "digest", required: false }, kept: { type: "text", detached: true, max: PIN_BOUNDS.textBytes, required: false } },
-    guards: [{ state: ["open"] }], effects: [{ value: { slot: "body", from: { field: "kept" } } }],
-    sends: [{ tell: { to: { slot: "peer" }, message: "export-license", fields: { export: { field: "target" }, k: { field: "k" }, body: { field: "body" } }, result: {} } }],
-  }, erase: { ...senderData.acts["touch"]!, guards: [{ state: ["open"] }], effects: [{ state: "closed" }, { redact: { slot: "body" } }] } };
+  const senderData = capacityPinSenderData(data.name, bodySlot);
   const senderUnder = valid(validateDefinition(senderData, PIN_BOUNDS));
   const peers = new Map<string, ValidDefinition>();
   const wire = (name: string, definition: ValidDefinition, receiver = false) => {

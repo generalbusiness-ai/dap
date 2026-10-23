@@ -2,14 +2,10 @@
  * Grants and the separate scenario-owner outcomes are explicit stand-ins;
  * no native membership, device, transport or operation owner is witnessed. */
 import { expect, test } from "vitest";
-import type { DeclaredDefinition } from "@generalbusiness/dap-contract";
-import { deviceForms } from "./device.ts";
+import { deviceTestDefinition } from "./definition-corpus-data.ts";
 import { nativeScenario, on, operator, climate, sensors, devicePermissions, replay, submit, type Ledger } from "./test-support.ts";
 
-const under = "grow-device-fixture", forms = deviceForms(under);
-const definition: DeclaredDefinition = { format: "artroom-definition-1", name: under, profile: { name: "restricted", version: 1 }, capabilities: [{ name: "device-command", version: 1 }], genesis: "establish",
-  items: { root: { many: false, max: 1, states: { open: { final: false } }, initial: "open", parties: {}, refs: {}, values: {} }, device: forms.item },
-  acts: { establish: { step: "open", on: "root", grant: "grow.configure", also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [] }, ...forms.acts }, receives: {}, timed: {}, rules: forms.rules };
+const definition = deviceTestDefinition();
 const make = (): Ledger => nativeScenario(definition, devicePermissions);
 async function commission(ledger: Ledger, kind: "vent" | "heater", maxLevel = 100): Promise<number> {
   expect(await submit(ledger, operator, "commission-device", { fields: { kind, label: `${kind} 2`, minLevel: 0, maxLevel, target: kind === "vent" ? "closed" : "off", level: 0 } })).toMatchObject({ result: "write" });

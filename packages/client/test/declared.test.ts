@@ -1,28 +1,11 @@
+import { clientNotes as notes, clientNotesWithMax } from "./definition-corpus-data.ts";
 import { expect, test } from "vitest";
-import type { DeclaredDefinition, FactRef, Grant, ScopeRef, Summary } from "@generalbusiness/dap-contract";
+import type { FactRef, Grant, ScopeRef, Summary } from "@generalbusiness/dap-contract";
 import { definitionDigest, textDigest, verifySignedIntent } from "@generalbusiness/artroom-bytes";
 import { ScopeHandle, ShapeError, declaredHandle, shapeDeclaredAct, secretSigner, type Signer, type Transport } from "../src/index.ts";
 
 /** A made-up definition with one act: a note's body is a detached text, and the act is presented one fact. */
-const notes = {
-  format: "artroom-definition-1", name: "notes", profile: { name: "restricted", version: 1 }, capabilities: [], genesis: "start",
-  items: {
-    note: { many: true, max: 8, states: { kept: { final: false } }, initial: "kept", parties: {}, refs: {}, values: { body: { fixed: false, required: false, of: { type: "text", max: 40, detached: true } } } },
-  },
-  acts: {
-    start: { step: "open", on: "note", also: {}, fields: {}, grant: "start", guards: [], effects: [], sends: [], attention: [] },
-    write: {
-      step: "transition", on: "note", also: {}, grant: "write",
-      fields: {
-        body: { type: "text", max: 40, detached: true, required: true }, title: { type: "text", max: 10, required: false },
-        weight: { type: "int", min: 1, max: 3, required: false }, tone: { type: "enum", of: ["plain", "loud"], required: false },
-      },
-      presents: { proof: { kind: ["write"], under: "notes", required: false } },
-      guards: [{ state: ["kept"] }], effects: [{ value: { slot: "body", from: { field: "body" } } }], sends: [], attention: [],
-    },
-  },
-  receives: {}, timed: {}, rules: {},
-} as const satisfies DeclaredDefinition;
+
 
 const d = (c: string) => `sha256:${c.repeat(64)}` as const;
 const at: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "lane" };
@@ -95,7 +78,7 @@ test("a declared handle signs an act of its definition: each field is checked ag
 test("a declared handle is refused for a scope that publishes another definition than the value given", async () => {
   const digest = definitionDigest(notes);
   // The same definition with one number changed is another definition, with another digest.
-  const other = { ...notes, items: { note: { ...notes.items.note, max: 9 } } } as const satisfies DeclaredDefinition;
+  const other = clientNotesWithMax();
   const answers = await Promise.all([
     declaredHandle(serving(definitionDigest(other)).scope, notes), declaredHandle(serving(digest).scope, other),
     declaredHandle(serving("platform:directory@1").scope, notes), declaredHandle(serving(null).scope, notes), declaredHandle(serving(digest).scope, notes),
