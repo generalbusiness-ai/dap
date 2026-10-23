@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:57d3831ec40d702978853b046f08b0668815e6e3","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/definition-corpus/replay-mutations-data.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:582b6e9a28f0058235d0d0d7471a6463846d5ca6","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/definition-corpus/scope-fixtures-mapping.md."}
