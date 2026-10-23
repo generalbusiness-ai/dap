@@ -152,7 +152,9 @@ class Session implements HistorySource {
   readonly port: ArchiveReadPort;
   readonly work: Work;
   readonly texts: ArchiveTextPort | undefined;
-  constructor(port: ArchiveReadPort, work: Work, texts?: ArchiveTextPort, anchors?: Options["anchors"], readonly published = false) {
+  readonly published: boolean;
+  constructor(port: ArchiveReadPort, work: Work, texts?: ArchiveTextPort, anchors?: Options["anchors"], published = false) {
+    this.published = published;
     this.port = port; this.work = work; this.texts = texts;
     for (const anchor of anchors ?? []) {
       work.spend({ metadata: 256, inputWork: 512 });

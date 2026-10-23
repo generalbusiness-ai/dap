@@ -6,7 +6,6 @@ import { randomBytes } from "node:crypto";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { createServer } from "node:http";
 import type { AddressInfo } from "node:net";
-import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath, URL } from "node:url";
@@ -68,7 +67,7 @@ export async function archiveCommandSession(objects: LocalArchiveClone["objects"
         const clonedRefs = git(target, ["for-each-ref", "--format=%(refname) %(objectname)", "refs/artroom/journal/"]).split("\n").map(line => { const [ref, id] = line.split(" "); if (!ref || !id) throw Error("TEST cloned ref"); return { ref, id }; });
         const config = readFileSync(join(target, ".git", "config"), "utf8");
         const run = (trusted: boolean) => new Promise<ArchiveCommandWitness["withTrust"]>((resolve, reject) => {
-          const args = ["--import", createRequire(import.meta.url).resolve("tsx"), fileURLToPath(new URL("../../../replay/src/bin.ts", import.meta.url)), "--git", target, "--all", "--expect-journals", "5", "--json", ...(trusted ? ["--trust-published-anchors"] : [])];
+          const args = [fileURLToPath(new URL("../../../replay/src/bin.ts", import.meta.url)), "--git", target, "--all", "--expect-journals", "5", "--json", ...(trusted ? ["--trust-published-anchors"] : [])];
           tokenInArgv ||= args.some(arg => arg.includes(token));
           const child = spawn(process.execPath, args, { cwd: root, env: { PATH: process.env["PATH"] ?? "/usr/bin:/bin", HOME: "/nonexistent" }, stdio: ["ignore", "pipe", "pipe"] });
           const chunks: Buffer[] = [], stdoutChunks: Buffer[] = [], stderrChunks: Buffer[] = []; let size = 0; let over = false;
