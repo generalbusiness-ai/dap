@@ -1,10 +1,10 @@
 # Artifacts advertisement refusal diagnostic
 
-This change distinguishes fixed Git v2 advertisement rejection branches. It does not establish which bytes the hosted Artifacts endpoint returned, change protocol acceptance, or add a fallback. Independent Source review found no mandatory issue. Local verification is in progress.
+This change distinguishes fixed Git v2 advertisement rejection branches. It does not establish which bytes the hosted Artifacts endpoint returned, change protocol acceptance, or add a fallback. Independent Source review found no mandatory issue. The focused checks passed; the repository gate is pending.
 
 Request: `489ad7c9e2c432fc4cac8a20c58fdf62bf6bde4f`. Promise: `5879139ed024aefa7d86caad83a757a36fb0a652`. Original diagnostic basis: accepted Main `132a5e2afe9cdfddbc81ed434eb9a6dbd48ca2b6`.
 
-The candidate fast-forwards to accepted K9 Main `84213a7b8c08089fe5afb60ed163d7a484e7ee84` before verification. All five authored paths were unchanged on that Main interval and preserved byte-exact across the fast-forward; only this note records reconciliation. All accepted Main paths outside these five remain exact, including the new validator/corpus and generated Page asset. Root package, lock and existing D1 map are unchanged. Local checks and the gate remain unrun on this candidate.
+The candidate was based on accepted K9 Main `84213a7b8c08089fe5afb60ed163d7a484e7ee84` before verification. All five authored paths were unchanged on that Main interval and preserved byte-exact across the fast-forward; only this note records reconciliation. All accepted Main paths outside these five remain exact, including the new validator/corpus and generated Page asset. Root package, lock and existing D1 map are unchanged. The focused continuation below ran on the repaired candidate; the gate is a separate obligation.
 
 ## Hosted observation and limits
 
@@ -22,12 +22,23 @@ Malformed packet framing, unsupported object format, absent shallow/filter featu
 
 The existing parent-read snapshot conditionally includes `advertisement`. Every new ordinal starts without it. The same closed/ordinal guard prevents a late response from changing a frozen pass or later read; successful and unrelated refusal snapshots retain their existing shape.
 
-## Planned owning evidence
+## Owning evidence
 
 The existing Git rejection matrix now asserts exact fixed details while retaining one GET, no POST/fallback, original generic refusals and immutable detail. The existing Scope parent-read witness uses an explicit service-prefixed fixture response to assert projection through the actual adapter, original request/receiver, one GET, and frozen late-completion behavior. This fixture is not a claim about hosted bytes. Existing positive v2/object/hash/type/deadline witnesses remain intact.
 
-Planned checks: Git test compiler (also owns production Source), distinct Scope production/test compilers, complete Git HTTP file and complete Scope archive-host file. At the initial Source handoff, no dependencies had been installed or adopted and no parser, compiler, test, control or gate had run. Root has since adopted a private copy of the closed protocol checkout’s dependencies; no installer ran. A single later meaningful control may omit the annotation WeakMap.set: the generic refusal must remain while the exact diagnostic witness fails, followed by exact restoration. Root allocates checks and one ordinary final gate; the planner owns deployment and later hosted observations. The candidate now includes accepted K9 Main `84213a7b8c08089fe5afb60ed163d7a484e7ee84`; later Main changes require source reconciliation before final binding.
+The owning checks cover the Git test compiler (which includes production Source), distinct Scope production/test compilers, the complete Git HTTP file and the complete Scope archive-host file. Root adopted a private physical copy of the closed protocol checkout’s dependencies; no installer ran. The planner owns deployment and later hosted observations. The candidate includes accepted K9 Main `84213a7b8c08089fe5afb60ed163d7a484e7ee84`; later Main changes require source reconciliation before final binding.
 
 ## Initial owning attempts
 
 The first owner stopped before launching a project child because its sandbox capture and local-test launch differed at `CODEX_SANDBOX`. The corrected context retained the full environment guard. The next attempt passed compatibility preparation, the Git test compiler and the Scope production compiler, then the Scope test compiler reported TS18047 at the new reset assertion: its result could be null. The assertion now checks the returned object directly against `{ type: "commit" }`, so null still fails the intended witness. No baseline, control or gate ran in these attempts. The failed attempt and successful earlier compiler results retain their original attribution; continuation starts with the repaired Scope test compiler.
+
+
+## Successful focused continuation
+
+Root session `7889` closed naturally with exit 0 on commit `094565c2bf35b3aa020f85b3ad00ffaf7cad5185`, tree `376771eebddaec938d671581111c7d209065d8c0`, under allocation `0e95b1798689f8c20e2ef9003ea481f13267d3a9`. The repaired Scope test compiler passed. The complete two-file baseline passed all 25 cases: 13 Git and 12 Scope cases.
+
+The sole control omitted the private annotation insertion while preserving generic refusal. Its child exited naturally with 1: 23 cases passed, and the existing Git capability matrix and Artifacts parent-read witness failed their exact diagnostic assertions. Original stderr identified both as `AssertionError`; JSON and terminal framework identities agreed. Neither run had an unhandled error or missing ready callback. The original source bytes were restored before the owner returned. Raw evidence is `/private/tmp/artroom-archive-advertisement-owning-20261023-v3`; the prior attempts remain at the sibling `v1` and `v2` paths.
+
+The continuation took 26.3693 seconds elapsed and 30.6850 seconds inclusive CPU. Its compiler took 0.7254 seconds; baseline 7.9906 seconds; control 6.1170 seconds. These child intervals are inside the owner total and must not be added to it. This was a shared macOS development host with an adopted private dependency pool and existing caches, not an isolated performance comparison. The earlier failed compiler attempt cost 10.9627 seconds elapsed and 14.8954 seconds inclusive CPU; the preflight-only failure cost 5.9998 seconds elapsed and 4.1782 seconds inclusive CPU.
+
+The focused evidence establishes local diagnostic projection and refusal preservation. It does not identify hosted response bytes or establish archive progress. One ordinary `npm run gate` remains before review.
