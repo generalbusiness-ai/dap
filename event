@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/check-commit-messages.test.mjs","body":{"commit":"085a3042149ce34b6cb90003c3e8e952d7e89459","path":"scripts/check-commit-messages.test.mjs"}}
+{"kind":"artifact","text":"Merge published the current artifact at scripts/gate.sh","body":{"commit":"085a3042149ce34b6cb90003c3e8e952d7e89459","path":"scripts/gate.sh"}}
