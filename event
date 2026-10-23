@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:218cb9e3999dd9445a32720f8ba57f64e45ff8be","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/floor.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:21bd3149e84a4990aec3faf349e01e5bf48440fa","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-23-definition-format-validation.md."}
