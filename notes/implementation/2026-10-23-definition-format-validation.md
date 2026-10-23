@@ -6,7 +6,8 @@ Request `2e714fd7fdaa4427f3a6cf7790ee11211c2b3a86`, under promise
 new format, scope kind, platform name, capability, tool family or record model.
 Kernel placement follows [docs/kernel.md, section 7](../../docs/kernel.md#7-rule-for-adding-to-the-kernel).
 The ordinary gate and exact-candidate review report are filed separately.
-No gate pass or hosted result is claimed here.
+The prior head's passing gate does not cover the packaging correction below.
+No hosted result is claimed here.
 
 ## Compatible validation
 
@@ -106,6 +107,37 @@ The original log and restoration receipt remain under
 the registered raw row can expose this stricter admission change. It does
 not prove that the corpus detects every future incompatible change.
 
-The final candidate's gate and exact-head review remain external acceptance
-steps. This note does not replace them or erase the initial compiler and
-corpus failures.
+## Public testing package closure
+
+Source review found that extracting the public testing fixture's raw data
+introduced two dependencies which the SDK producer did not copy. Its output
+check also admitted only the original fixture module. Finding `775f9de` and
+independent finding `389b641` made head `14690284` nonfinal.
+
+The correction gives the producer and independent checker one explicit list:
+`fixtures.ts`, `definition-corpus/fixture-data.ts` and
+`definition-corpus/fixture-identities.ts`. Each still reconstructs the tracked
+input set. The output boundary permits only these three modules' JavaScript
+and declaration files. Existing relative-reference, bare-dependency and
+unexpected-testing-output refusals remain. No corpus runner is packaged.
+
+The new owning witness passed. It checks the real fixture's relative edges,
+the six permitted emitted-shaped files, refusal when either raw module's
+JavaScript or declaration file is missing, and refusal of an unrelated corpus
+output. It exercises the release boundary with made-up emitted files; it does
+not compile or package the SDK.
+
+The whole Node test file returned exit 1: this new case passed and the
+existing module-reference case failed with `unsupported-source-manifest`
+at its existing `publishManifest` call. The existing SDK manifest and plan
+drift is unchanged by this correction. No guard was relaxed to pass it.
+Original command, patch, output, timing and exit remain in
+`/private/tmp/artroom-k9-sdk-closure-owning-20261023-v1`.
+
+The ordinary gate at prior head `14690284` passed 3,455 tests with three
+skipped, then 37 Node checks and 55 Counting Node checks. Its finite
+evidence is recorded under `69bb355d`; that result belongs to the prior head.
+The corrected candidate's gate and exact-head review remain external
+acceptance steps. This note does not replace them or erase the initial
+compiler and corpus failures, the packaging finding or the separate SDK
+manifest failure.

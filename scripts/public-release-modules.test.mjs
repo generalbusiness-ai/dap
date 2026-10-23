@@ -4,7 +4,7 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { PLAN, nameOf, sourceNameOf, rewritePublishedRefs, outputClosure, productionInputs, publishManifest, references, rewriteDeclarationRefs } from "./public-release-lib.mjs";
+import { PLAN, PUBLIC_TESTING_INPUTS, nameOf, sourceNameOf, rewritePublishedRefs, outputClosure, productionInputs, publishManifest, references, rewriteDeclarationRefs } from "./public-release-lib.mjs";
 import { browserRuntimeEdge } from "./check-public-release.mjs";
 
 const root = new URL("../", import.meta.url);
@@ -100,4 +100,62 @@ test("SDK module references preserve genuine imports and rewrite declarations wi
     assert.equal(browserRuntimeEdge(jsonataInput, { ...synthetic, path: "https://foreign.invalid/runtime.js" }, jsonataInput), false);
     assert.equal(browserRuntimeEdge("/owned/another.js", synthetic, jsonataInput), false);
   } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+// Exercise the release output boundary without loading fixtures or compiling an SDK.
+test("SDK testing closure includes only the shared fixture and its two raw dependencies", () => {
+  assert.deepEqual(PUBLIC_TESTING_INPUTS, [
+    "packages/derive/test/fixtures.ts",
+    "packages/derive/test/definition-corpus/fixture-data.ts",
+    "packages/derive/test/definition-corpus/fixture-identities.ts",
+  ]);
+  // Keep the real fixture's reachable relative modules tied to the finite contract.
+  const fixture = new URL("packages/derive/test/fixtures.ts", root);
+  assert.deepEqual([...new Set(references(readFileSync(fixture, "utf8")).filter(ref => ref.startsWith(".")).map(ref => new URL(ref, fixture).href))].sort(), [
+    new URL("packages/derive/src/index.ts", root).href,
+    new URL("packages/derive/test/definition-corpus/fixture-data.ts", root).href,
+    new URL("packages/derive/test/definition-corpus/fixture-identities.ts", root).href,
+  ].sort());
+  const spec = PLAN.packages.find(spec => spec.dir === "derive");
+  const stage = mkdtempSync(join(tmpdir(), "artroom-sdk-testing-closure-"));
+  try {
+    mkdirSync(join(stage, "dist/src"), { recursive: true });
+    mkdirSync(join(stage, "dist/test/definition-corpus"), { recursive: true });
+    writeFileSync(join(stage, "package.json"), JSON.stringify({
+      name: "@generalbusiness/dap-derive", version: "0.1.0-dev.2", type: "module",
+      exports: {
+        ".": { types: "./dist/src/index.d.ts", default: "./dist/src/index.js" },
+        "./rule": { types: "./dist/src/rule.d.ts", default: "./dist/src/rule.js" },
+        "./testing": { types: "./dist/test/fixtures.d.ts", default: "./dist/test/fixtures.js" },
+      },
+    }));
+    for (const extension of ["js", "d.ts"]) {
+      for (const name of ["index", "rule"]) writeFileSync(join(stage, `dist/src/${name}.${extension}`), "export {};\n");
+      writeFileSync(join(stage, `dist/test/fixtures.${extension}`), [
+        'export * from "../src/index.js";',
+        'export * from "./definition-corpus/fixture-data.js";',
+        'export * from "./definition-corpus/fixture-identities.js";',
+      ].join("\n"));
+      for (const name of ["fixture-data", "fixture-identities"]) {
+        writeFileSync(join(stage, `dist/test/definition-corpus/${name}.${extension}`), "export {};\n");
+      }
+    }
+    const expected = [
+      "dist/test/fixtures.js", "dist/test/fixtures.d.ts",
+      "dist/test/definition-corpus/fixture-data.js", "dist/test/definition-corpus/fixture-data.d.ts",
+      "dist/test/definition-corpus/fixture-identities.js", "dist/test/definition-corpus/fixture-identities.d.ts",
+    ].sort();
+    assert.deepEqual(outputClosure(stage, spec, "0.1.0-dev.2").filter(row => row.path.startsWith("dist/test/")).map(row => row.path).sort(), expected);
+    for (const name of ["fixture-data", "fixture-identities"]) {
+      for (const extension of ["js", "d.ts"]) {
+        const file = join(stage, `dist/test/definition-corpus/${name}.${extension}`);
+        const bytes = readFileSync(file);
+        rmSync(file);
+        assert.throws(() => outputClosure(stage, spec, "0.1.0-dev.2"), /relative-output-closure/);
+        writeFileSync(file, bytes);
+      }
+    }
+    writeFileSync(join(stage, "dist/test/definition-corpus/index.js"), "export {};\n");
+    assert.throws(() => outputClosure(stage, spec, "0.1.0-dev.2"), /unplanned-testing-output/);
+  } finally { rmSync(stage, { recursive: true, force: true }); }
 });
