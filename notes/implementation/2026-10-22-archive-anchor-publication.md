@@ -14,13 +14,14 @@ existing native GitHub story now includes literal and percent-spelled
 credential-response regressions, with an explicitly labelled one-shot host
 stand-in and a named saved-configuration custody assertion.
 
-This correction is source-reviewed but unrun. Its affected compiler roots,
-whole native clone story and old-guard distinguishing control remain
-pending root allocation. Any required CLI command owner seal remains
-pending an actual maintained parser result and review; no hash is inferred
-or invented here. The historical review artifact at `7cdc1ec78` remains
-immutable and is not silently retargeted. The separately attributed
-pre-correction results and original failures follow.
+This correction is source-reviewed but has not been compiled or tested.
+Its affected compiler roots, whole native clone story and old-guard
+distinguishing control remain pending root allocation. The maintained
+owning parser passed for `commands.ts` under `8e63b9402`; its actual result
+is recorded below. The maintained seal map has no entry for that file, so
+no stored seal or map is changed. The historical review artifact at
+`7cdc1ec78` remains immutable and is not silently retargeted. The separately
+attributed pre-correction results and original failures follow.
 
 This implements planner decisions `29fd51b5`, `f15e483c`, and the count-policy
 correction `a7d03336`. The ordinary gate at `56a6119d1` naturally failed:
@@ -1301,5 +1302,26 @@ restores only the old raw-token-only pre-save guard, requires the named
 custody assertion to fail within the original deadline, and restores the
 exact reviewed source afterward. The positive whole-file result is not
 repeated merely to prepare the control. Page equality and any required
-CLI owner seal also remain separate pending obligations. No earlier pass
-is relabelled as acceptance of this new correction.
+D1 inventory check also remain separate pending obligations. The actual
+CLI owner parser result is recorded below. No earlier pass is relabelled
+as acceptance of this new correction.
+
+### Actual CLI owner parser result
+
+Owner 70692 naturally passed the maintained `sourceSeal` call for
+`packages/cli/src/commands.ts` at `41b9a7e78`. Root adopted the actual
+result in `8e63b940235e5824acfc74ae75dbb7296f4b8de2`:
+`2cc221e16d616c842821e3c188182ae94137638a29f7c28bfbe5c766ea23d318`.
+The original stdout and result were read; stderr was empty. All 2,780
+source and 6,070 dependency records, including the permitted cache, passed
+the full tool and environment guards without signals or errors. Owner
+inclusive time was 2.379065208 seconds wall, 1.055383 user and 0.68162
+system; outer time was 2.41, 1.05 and 0.68 seconds respectively.
+
+The actual map in `scripts/security-entry-points.test.mjs` has no
+`commands.ts` key in either owner-seal set. This checkpoint records the
+parser evidence without inventing a new map entry or changing an unrelated
+seal. Evidence remains at
+`/private/tmp/artroom-archive-credential-parser-evidence-20261022-v1`.
+No compiler, native regression, control, Page or D1 acceptance is inferred
+from the parser result.
