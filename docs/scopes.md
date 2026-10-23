@@ -62,9 +62,11 @@ deployments only; its default is unset. A Worker with no `DEPLOYMENT` keeps
 the local founding interface. Child creation still uses the verified
 namespace send and genesis judgment, not a caller's claim of a creator.
 The Git host in
-the creation witness is a stand-in. A scope Worker is deployed at
-<https://artroom-scope.inguz.workers.dev>; its API starts at `/v1/scopes`,
-and its root URL returns 404. The destination now
+the creation witness is a stand-in. The hosted service for new rooms is
+<https://dap-demo.inguz.workers.dev>, with API routes under `/v1/scopes`.
+<https://artroom-scope.inguz.workers.dev> keeps existing rooms only. The
+planner must deploy the [new service and planned open register](../notes/implementation/2026-10-23-dap-demo-part1.md)
+before the Source configuration becomes hosted acceptance. The destination now
 carries every rule needed to answer its creation; a missing rule is still
 refused for the whole pinned
 version. The initial GitHub adapter checkpoint owed a live run; later

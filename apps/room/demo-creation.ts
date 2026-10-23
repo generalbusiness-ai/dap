@@ -8,6 +8,9 @@ export async function demoCreationRoute(request: Request, env: DemoCreationBindi
   const url = new URL(request.url), settings = demoCreationConfig(env.DEMO_START_CONFIG, env.DEPLOYMENT);
   const reply = (status: number, value: unknown) => new Response(JSON.stringify(value), { status, headers: { "content-type": "application/json", "cache-control": "no-store" } });
   if (url.pathname !== DEMO_OFFER_PATH || !settings || url.origin !== settings.current.origin || url.hash) return reply(404, { error: "not-found" });
+  // Keep retained explicit-reference preflight and GitHub custody configuration.
+  // The old public origin no longer offers a register for fresh Start.
+  if (!url.search && url.origin === "https://artroom-scope.inguz.workers.dev") return reply(404, { error: "not-found" });
   let config = settings.current;
   if (url.search) {
     if ([...url.searchParams.keys()].sort().join(",") !== "inc,register") return reply(404, { error: "not-found" });

@@ -203,3 +203,35 @@ test("application install syntax and custody failures never create a register", 
   expect(await command(s.ctx, ["install", uri, "--release", release, "--request", "counter-1"])).toMatchObject({ code: 1, lines: [expect.stringContaining("Persistent application request custody")] });
   expect([s.metrics(), s.bodies, await s.store.config()]).toEqual([{ saves: 0, keyReads: 0, keyWrites: 0 }, [], null]);
 });
+
+// Fake acknowledgements show CLI custody/selection only; the native policy
+// and indexed lineage witness is demo-register.test.ts in the Scope project.
+test("open register install is explicit, fixed to Register17 and retained across planned delivery", async () => {
+  const invalid = scenario();
+  for (const args of [
+    ["install", SERVICE, "--register-policy", "public"],
+    ["install", SERVICE, "--register-policy", "open", "--register-policy", "keys"],
+    ["install", SERVICE, "--register-policy", "open", "--cohort", "application"],
+  ]) expect((await command(invalid.ctx, args)).code).toBe(2);
+  expect([invalid.metrics(), invalid.bodies]).toEqual([{ saves: 0, keyReads: 0, keyWrites: 0 }, []]);
+  const planned = scenario();
+  expect((await command(planned.ctx, ["install", "--plan", SERVICE, "--register-policy", "open", "--host", "artifacts", "--namespace", "dap-demo"])).code).toBe(0);
+  const original = (await planned.store.config())!;
+  expect(original.plan!.definition).toBe("platform:register@17");
+  expect(original.plan!["founding"].intent.fields).toMatchObject({ policy: "open", founders: [original.plan!["founding"].intent.actor] });
+  expect(planned.bodies).toEqual([]);
+  for (const args of [["install", "--planned", "--register-policy", "keys"], ["install", "--plan", SERVICE, "--register-policy", "keys", "--cohort", "archive-device-application"]]) {
+    expect((await command(planned.ctx, args)).code).toBe(1);
+    expect(await planned.store.config()).toEqual(original); expect(planned.bodies).toEqual([]);
+  }
+  expect((await command(planned.ctx, ["install", "--planned"])).code).toBe(0);
+  expect(JSON.parse(planned.bodies[0]!).creation).toEqual(original.plan!["founding"]);
+  const direct = scenario();
+  expect((await command(direct.ctx, ["install", SERVICE, "--register-policy", "open"])).code).toBe(0);
+  expect(JSON.parse(direct.bodies[0]!)).toMatchObject({ definition: "platform:register@17", creation: { intent: { fields: { policy: "open" } } } });
+  const keys = scenario();
+  expect((await command(keys.ctx, ["install", "--plan", SERVICE, "--cohort", "archive-device-application"])).code).toBe(0);
+  expect((await keys.store.config())!.plan!["founding"].intent.fields["policy"]).toBe("keys");
+  expect((await command(keys.ctx, ["install", "--planned", "--register-policy", "open"])).code).toBe(1);
+  expect(keys.bodies).toEqual([]);
+});

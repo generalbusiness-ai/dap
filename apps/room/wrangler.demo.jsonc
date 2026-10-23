@@ -1,0 +1,33 @@
+// New CLI/MCP demo service. No public browser-creation offer (Part 2).
+// Planner provisions this Worker's namespaces and sets DEPLOYMENT and
+// SESSION_SECRET as secrets. ARTIFACTS_CONFIG must use the planned Register17
+// scope, namespace dap-demo, the actual service host and adapter-attempt.
+// Do not deploy until the archive advertisement item has landed.
+{
+  "name": "dap-demo",
+  "main": "worker.ts",
+  "compatibility_date": "2026-08-15",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "SCOPE_INDEX_MODE": "enforce",
+    "ARTIFACTS_NAMESPACE": "dap-demo",
+    "APPLICATION_SCREEN_HOSTS": "[]",
+    "SERVING_CREATION_KEY_PER_HOUR": "10",
+    "SERVING_CREATION_ADDRESS_PER_HOUR": "30",
+    "SERVING_READ_KEY_PER_MINUTE": "240",
+    "SERVING_READ_ADDRESS_PER_MINUTE": "600"
+  },
+  "observability": { "enabled": true, "head_sampling_rate": 1, "logs": { "enabled": true, "head_sampling_rate": 1, "invocation_logs": false } },
+  "analytics_engine_datasets": [{ "binding": "METRICS", "dataset": "artroom_metrics_v1" }],
+  "version_metadata": { "binding": "VERSION_METADATA" },
+  "durable_objects": { "bindings": [
+    { "name": "SCOPES", "class_name": "DeployedScope" },
+    { "name": "SCOPE_INDEX", "class_name": "ScopeIndex" },
+    { "name": "REGISTRIES", "class_name": "McpRegistry" },
+    { "name": "AGENTS", "class_name": "McpAgent" }
+  ] },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["DeployedScope", "ScopeIndex", "McpRegistry", "McpAgent"] }
+  ],
+  "artifacts": [{ "binding": "ARTIFACTS", "namespace": "dap-demo", "remote": true }]
+}
