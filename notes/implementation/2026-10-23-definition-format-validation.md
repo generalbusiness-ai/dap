@@ -5,8 +5,8 @@ Request `2e714fd7fdaa4427f3a6cf7790ee11211c2b3a86`, under promise
 `artroom-definition-1` to its compatible validation checks. It introduces no
 new format, scope kind, platform name, capability, tool family or record model.
 Kernel placement follows [docs/kernel.md, section 7](../../docs/kernel.md#7-rule-for-adding-to-the-kernel).
-The ordinary gate and exact-candidate review report are filed separately.
-The prior head's passing gate does not cover the packaging and context corrections below.
+The integrated candidate's ordinary gate passed as recorded below.
+Exact-candidate review remains separate. Earlier results keep their original inputs.
 No hosted result is claimed here.
 
 ## Compatible validation
@@ -139,8 +139,8 @@ Original command, patch, output, timing and exit remain in
 The ordinary gate at prior head `14690284` passed 3,455 tests with three
 skipped, then 37 Node checks and 55 Counting Node checks. Its finite
 evidence is recorded under `69bb355d`; that result belongs to the prior head.
-The corrected candidate's gate and exact-head review remain external
-acceptance steps. This note does not replace them or erase the initial
+Those corrections required the integrated gate recorded below. Exact-head
+review remains separate. This note does not erase the initial
 compiler and corpus failures, the packaging finding or the separate SDK
 manifest failure.
 
@@ -182,8 +182,8 @@ classification is not an exhaustive proof over future dynamic callers.
 These edits add 36 named registration rows: two default contexts and 34 native
 contexts. The earlier 1,218 executed checks remain historical results. The affected
 derive test compiler and complete corpus file now pass as recorded below.
-The final candidate gate and exact-head review remain owed; only the prior
-`14690284` gate is recorded above. No additional healthy whole-suite run is
+At that point, the final candidate gate and exact-head review remained owed;
+only the prior `14690284` gate was recorded above. No healthy whole-suite run was
 part of this correction.
 
 The bounded follow-up ran once at the uncommitted three-path correction on
@@ -201,7 +201,7 @@ child PIDs, exit and timing receipts, logs, complete corpus JSON and snapshots
 remain in `/private/tmp/artroom-k9-context-owning-20261023-v1`. The result
 belongs to those run-input bytes; this later note records it without claiming
 another run. Initial failures and the separate SDK manifest failure remain
-recorded above. No full gate has run at this corrected candidate yet.
+recorded above. The integrated gate below followed this correction.
 
 ## Accepted Main integration
 
@@ -213,7 +213,50 @@ corrections. It adopts Main's rollout configuration, registration diagnostics,
 archive protocol and fixture corrections, Lending oracle, and reviewed D1
 map without replacing their accepted bytes. The automatic merge's path modes
 and blobs all match their selected parents; this note is the only authored
-overlay. The dependency lock and root manifest are unchanged. This integration
-runs no new checks. The 1,254-check corpus result
-and prior failures above retain their original attribution; the integrated
-candidate's ordinary gate and exact-head review remain pending.
+overlay. The dependency lock and root manifest are unchanged. The merge itself
+ran no checks. The 1,254-check corpus result and prior failures above retain
+their original attribution.
+
+## Integrated gate
+
+The ordinary `npm run gate` passed at clean head
+`6fc9972fccfb8b6526042ed1f41b213db0293558`, tree
+`1646c067d4e2085811e43cc7b2850e27103d24a9`. Root session `46053` and its
+npm child both exited normally with status 0. All eight gate stages passed.
+Installation was skipped against the verified lock and private dependency view.
+
+The terminal Vitest ledger records 3,495 passes and three skips across 485
+files, with 3,498 unique case identities and no unhandled errors. The skips
+are the existing long-home MCP case and the two opt-in recording cases.
+The subsequent 37 Node checks and 55 Counting Node checks also passed.
+The Counting check does not establish rendered browser acceptance.
+
+The same invocation emitted 3,478 ready callbacks and 3,475 result callbacks.
+Those callbacks omit some cases present in the terminal ledger. Their gaps
+do not establish unfinished execution or physical worker cleanup.
+
+The complete input guards retained all 2,928 Source entries, the tool and npm
+namespaces, and the dependency view. Only the existing Vitest results-cache
+contents changed, with its file identity and permissions retained. The owner
+recorded no errors or signals. The original compiler and corpus failures,
+packaging findings, and separate SDK manifest failure above remain recorded;
+this gate does not claim a successful SDK release build.
+
+The npm child took 1,198.876 seconds elapsed and 1,394.873 seconds of user
+and system CPU. Including metadata guards and evidence collection, the outer
+owner took 1,201.303 seconds elapsed and 1,396.533 seconds of CPU. These
+intervals overlap and must not be added. The run used the shared arm64 macOS
+host and reused private dependencies without a cache reset. Background load,
+preparation and review were not measured, so these costs are not a performance
+comparison or a complete edit-to-review measurement.
+
+Gitseq result `7f146f5b9b261013a62abd5ccb0ee57e36e6223b` records the run.
+The finite evidence packet is
+`/private/tmp/artroom-k9-final-gate-review-data-20261023-v1/manifest.json`
+(19,032 bytes; SHA-256
+`6e463029b09f39a2b1883bf4fa8058b3d5440a2cafb4d7667364d931232d6a98`).
+Its 35 read-only leaves retain 34,799,471 bytes of raw logs, case identities,
+input guards, commands and timings. This report-only update changes no tested
+implementation or test bytes. No additional gate is needed for this prose.
+Exact-candidate review and landing remain separate steps. No deployment or
+hosted acceptance is claimed.
