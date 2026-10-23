@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2a2e23d057a618e35a8672ea1f7a119e590c2c61","text":"Merge retired a covered predecessor; the successor is at packages/platform/test/support-partition-origin.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2a3f2d0cb696e0aea7fd72b0d4eec1fe82a6325b","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-cutoff.ts."}
