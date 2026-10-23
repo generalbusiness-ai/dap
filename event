@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:470a8af4ba8dd96c2ebe54bf91bf7a9c388d4b05","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-23-archive-advertisement-diagnostic.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7b1821e11b2c8a82944fc6cb0a0cf42b6b60319f","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/archive-host.test.ts."}
