@@ -5,8 +5,9 @@ The reader requires `shallow` and `filter` in the older Git advertisement,
 but the server does not advertise both. This candidate adds an explicit
 Git protocol v2 path for Artifacts archive parent reads. After deadline and
 text-framing corrections, the affected compiler and both owning files pass.
-The final gate and exact-head review remain pending. Hosted v2 filtering
-support and a completed archive pass remain unverified.
+The final gate found four failures in three test files. Test fixture corrections
+and their affected checks remain pending review. Hosted v2 filtering support
+and a completed archive pass remain unverified.
 
 Request `66010f21f899a4df8ac7530e18539f05887254cd` and promise
 `645d787bbd23c281e9cf92c82f8236b0a07772c7` track the work. The candidate starts
@@ -130,7 +131,8 @@ and costs. The local Git witness completed its old-commit, tree and blob reads
 in two requests each without unrelated history or a large sibling. Provider
 identity, credential and HTTP stand-ins passed their budget and late-result
 checks. These local passes preserve the earlier failures and prove no hosted
-capability or outage recovery. The final gate and exact-head review remain owed.
+capability or outage recovery. Integrated validation is recorded below;
+exact-head review remains owed.
 
 The single deadline control detected the intended abandonment fault at its
 named assertion. Its child exited 1; the wrapper also exited 1 because JSON
@@ -140,10 +142,41 @@ exact restoration of the reviewed source, and no rerun.
 
 Main's accepted inventory owners and fourth case remain; only the two archive
 seals changed. Lock, dependencies and Vitest configuration are unchanged; the
-integrated native fixture includes the scope index. The final gate recompiles
-the final head. Private APFS dependency adoption, not installation, is recorded
+integrated native fixture includes the scope index. The integrated gate
+recompiled its exact head. Private APFS dependency adoption, not installation, is recorded
 in `265163c59a9de061ccba02a6b39823978a108e3b`. Earlier passes retain their
 original source basis.
+
+## Integrated gate and fixture corrections
+
+The ordinary gate at `2ce0d50823b6cb98c2d6f0ee8d26d48158ec2afe` completed
+with 2,226 passes, four failures and three skips across 482 files, with no
+unhandled errors. All seven stages before tests passed. The Node checks and
+Counting browser check were not reached. Outcome `c2e97064c82aca2dc94598199bd8f05753978cd0`
+and frozen evidence receipt `9a15d70b957bba593cb2931750f804668c1ce867`
+retain the full run, input guards and costs; no failed result is replaced.
+
+The Grow producer stopped before admitting its next entries, with an
+unavailable parent read. Its command follower then had no producer session.
+The native transport witness likewise stopped before its first parent upload.
+Both scripted Artifacts peers still answered with v0 advertisements and packs,
+despite the reader's v2 request. Their test-only correction selects v2 by the
+header and shares bounded channel-1 pack framing. V0 ref and write behavior,
+production code, budgets and original assertions remain unchanged. The raw
+failures are consistent with this incompatibility; they did not retain the
+decoder's exact refusal.
+
+The Lending case returned `behind` where it required a current projection with
+no membership actions. Its reason was not retained, so its exact historical
+cause is unproved. The fixture's separate item and history reads can straddle
+the borrow's pending publication result. The correction uses its existing
+bounded dispatch helper after the deliberate overlapping-read assertions and
+before the failed membership read. It preserves the strict `current` and
+`actions: null` assertion and adds bounded status/reason diagnostics. It makes
+no production change or claim that all background work has drained.
+
+Affected whole-file checks and the previously unreached downstream commands
+remain pending. Healthy suites from the original gate will not be repeated.
 
 ## What can resume
 

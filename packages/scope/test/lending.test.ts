@@ -317,9 +317,13 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
       expect(late).toMatchObject({ status: "current" });
       if (late.status !== "current") throw Error("The older read did not preserve the newer view");
       expect(late.view.things.find(thing => thing.id === small)?.state).toBe("lent");
+      // Finish the borrow's publication replies before the next multi-read projection.
+      await settle(L, G);
       // An existing session and formerly observed staff actions cannot stand in for a failed roster read.
       unreadableMembership = true;
-      expect(await reader.look()).toMatchObject({ status: "current", actions: null });
+      const rosterRead = await reader.look();
+      const rosterReadStatus = { status: rosterRead.status, reason: rosterRead.status === "behind" ? rosterRead.reason.slice(0, 160) : null };
+      expect(rosterRead, JSON.stringify(rosterReadStatus)).toMatchObject({ status: "current", actions: null });
       await L.did(neighbour, "return", await on(small));
       sameView = false;
       await expect(reader.act("donate", { name: "Old view", description: "Must not be sent." })).rejects.toThrow("no longer current");

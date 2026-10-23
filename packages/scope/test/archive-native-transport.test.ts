@@ -18,6 +18,7 @@ import { ArtifactsProvider } from "../src/artifacts-host.ts";
 import { create } from "./fixtures-native.ts";
 import type { TestScope } from "./worker.ts";
 import { archiveDefinition, archivePolicies, archiveSql } from "./support/archive.ts";
+import { scriptedArchiveV2Pack } from "./support/archive-v2-pack.ts";
 
 const pkt = (line: string) => `${(utf8(line).length + 4).toString(16).padStart(4, "0")}${line}`;
 test("native driver parent reads and append sends use the same original budget through the actual adapter", async () => {
@@ -37,6 +38,9 @@ test("native driver parent reads and append sends use the same original budget t
     expect(request.url.startsWith(remote + "/")).toBe(true);
     if (request.method === "GET") {
       const receive = request.url.endsWith("service=git-receive-pack"), service = receive ? "git-receive-pack" : "git-upload-pack";
+      if (!receive && request.headers.get("git-protocol") === "version=2") {
+        return response(`${pkt("version 2\n")}${pkt("fetch=shallow filter\n")}${pkt("object-format=sha1\n")}0000`, "upload-pack-advertisement");
+      }
       const caps = receive ? "report-status" : "shallow filter allow-reachable-sha1-in-want";
       const row = pointer ? `${pointer} ${ref}` : `${"0".repeat(40)} capabilities^{}`;
       return response(`${pkt(`# service=${service}\n`)}0000${pkt(`${row}\0${caps}\n`)}0000`, receive ? "receive-pack-advertisement" : "upload-pack-advertisement");
@@ -47,7 +51,9 @@ test("native driver parent reads and append sends use the same original budget t
       expect(wanted).toBeDefined(); const object = objects.get(wanted!);
       expect(object).toBeDefined(); if (!object) throw Error("TEST peer has no requested object");
       uploads.push(object.id);
-      const pack = await buildPack([object], { maxBytes: 8 * 1024 * 1024 }), prefix = utf8("0000" + pkt("NAK\n"));
+      const pack = await buildPack([object], { maxBytes: 8 * 1024 * 1024 });
+      if (request.headers.get("git-protocol") === "version=2") return response(scriptedArchiveV2Pack(pack), "upload-pack-result");
+      const prefix = utf8("0000" + pkt("NAK\n"));
       const answer = new Uint8Array(prefix.length + pack.length); answer.set(prefix); answer.set(pack, prefix.length);
       return response(answer, "upload-pack-result");
     }
