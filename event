@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:34ec4034484ffaa46472f2a3236e5af2cf443244","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/definition-corpus/fixture-origin-aliases.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3509026281ec5924d3bd59b4370a5dd6ce3c0a64","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/describe.test.ts."}
