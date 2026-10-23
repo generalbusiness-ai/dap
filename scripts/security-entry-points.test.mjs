@@ -7,7 +7,7 @@ import { assertInventory, documentedInventory, servedInventory, sourceSeal, room
 const seals = {
   "apps/room/worker.ts": "aba04e12dc206f0be6bda4a8edeac64569e0edd44b7a87772595d7db40bb8b67",
   "apps/room/fetch.ts": "5661bfc33c21e9c0390f9897edb6948d05c1de42e3df559a8e8d16d16e8c1089", // R2 owning AST value adopted on the reviewed branch.
-  "apps/room/demo-creation.ts": "514b127aac2bc5bc2ec7b00341984b352a5801c7684fa5596cb3728d2bde5e1d",
+  "apps/room/demo-creation.ts": "422bbb901795ddad480e13edaaf50dcceaf1f9daa80af6c1671399c70031c8fd",
   "apps/room/page/route.ts": "62c8f69b9f516f1b5acdaef57d7aed25268d8cf03283bdffdd4b1b5f20bb6b3d",
   "apps/room/brand/route.ts": "71b45ff9b41b3bea31c775a16525349591e0d4f7dfdc65da79f095816b1c343c",
   "packages/scope/src/worker.ts": "9ee48699b984552477c84373f81fcc42a9c88963b4591655ecbe3c9d5df7fef2", // Actual union parser value adopted by root.
@@ -58,13 +58,13 @@ const pendingArchiveSeals = {
   "apps/room/archive-policy.ts": "707d55642fa0a35075614d1f7b02149b8a33f5eb128f0e0ef4b54100aaa1897f",
   "apps/room/archive.ts": "fd0e00f874b6607728bc5a63842a64e41799f1041f9c5952978c2d86dfc048a2",
   "packages/scope/src/archive-host-item.ts": "70ac9b23e986d0f399d9e64748381f97ee6c5f7e39971b9dd3a1fa6d700bbf4e",
-  "packages/scope/src/archive-host.ts": "f16f3972e28d1f2bbdc1e98f60f21bc38be82b2d3a3b851e552e6391eb94d0cd", // Parent-read diagnostic reviewed; actual maintained parser output.
+  "packages/scope/src/archive-host.ts": "024be0c8f8a23b0074e3f9e0f87c2bfd6b116721a569c41693ecb340f2b6d330", // Parent-read diagnostic reviewed; actual maintained parser output.
   "packages/scope/src/artifacts-host.ts": "80aac5184db427e83c369ab4d0222276fd7e3fe9792edcacc6d2c3ba6e9e8f2a",
   "packages/scope/src/artifacts-wiring.ts": "3590510139ad5c73a6ff66396b77a83dae5d212bfbcebb332df80154961fd478",
 };
 // Actual maintained parser outputs adopted by root; never infer hashes from intent.
 const pendingR8Seals = {
-  "packages/cli/src/commands.ts": "41adfb2b673df5ec2046fe401e65d97fab580c2c9e4331a18b1a6bf73d9b9bd5", // Actual integrated CLI parser value adopted by root.
+  "packages/cli/src/commands.ts": "ff0ff4b5a530f570b2ceca73a550a1f9f400a7b06002bc1e269cbcc83b76efcd", // Actual integrated CLI parser value adopted by root.
   "apps/sandbox/worker.ts": "e1e91663d3b1e6b1751f526c02770e7459fbe08c455385bda2daeec65ae84010",
   "packages/client/src/application-gateway.ts": "c24b17dfa7f31f16386bb2e921ca78e2f58640de26618144d06cca4aa0343fc8",
   "packages/client/src/application-route.ts": "f78d183f082f52de545cc1ef0cd9c33b0944260f782a53188f05c3545ba246c1",
