@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5f5b7ddce3ae4551854033204b0908b8b34786c0","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/definition-corpus/scope-capacity-floor-mapping.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5fc116c9a05a0fc087ae7c3af2a76403b835fbe5","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/indexed-integers.test.ts."}
