@@ -26,4 +26,3 @@ export const M: DeclaredDefinition = {
   },
   receives: {}, timed: {}, rules: {},
 } as unknown as DeclaredDefinition;
-

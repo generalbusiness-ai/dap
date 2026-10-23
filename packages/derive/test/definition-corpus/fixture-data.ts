@@ -302,4 +302,3 @@ export const desk: DeclaredDefinition = {
   timed: {},
   rules: {},
 };
-

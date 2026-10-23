@@ -55,4 +55,3 @@ export const gate: PlatformData = {
   // Place 7: the rule for the outcome entries of each kind of operation that this definition owns.
   outcomes: { probe: { code: "probe", row: "P16" } },
 };
-

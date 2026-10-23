@@ -13,4 +13,3 @@ export const directory = ref("directory", 2);
 export const otherLane = ref("lane", 3);
 
 export const member = (name: string): MemberRef => ({ membership, member: `@${name}` as MemberId });
-

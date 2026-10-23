@@ -93,4 +93,3 @@ export const weigher: PlatformData = {
   rules: {},
   outcomes: { weigh: { code: "weigh", row: "M1", origin: "rule", observes: WEIGH_ROWS } },
 };
-

@@ -25,7 +25,7 @@ export function handlerFormCases() {
       d.acts.note.sends = [{ tell: { to: { slot: "peer" }, message: "seen", fields: {}, result: { applied: [{ of: "also.pinned", value: { slot: "note", from: { const: "told" } } }] } } }];
       d.acts.note.on = "board"; d.acts.note.guards = []; d.acts.note.effects = []; d.acts.note.also = { pinned: { item: "card", via: { slot: "pinned", of: "on" } } };
     }), "name"],
-  
+
     ["a handler with no class", inBoard((d) => { delete d.receives.post.class; }), "shape"],
     ["a class the contract does not define", inBoard((d) => { d.receives.post.class = "ask"; }), "shape"],
     ["a tell and a relate handler for one name pass", inBoard((d) => { d.receives.again = { ...structuredClone(d.receives.count), class: "relate", copies: 1 }; }), null],

@@ -52,5 +52,3 @@ export function settlingPlatformMarksData(marker = false, base: PlatformData = f
   }
   return data;
 }
-
-
