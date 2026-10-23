@@ -1,27 +1,38 @@
 # Published archive anchors
 
-A blocking source review of historical head `7cdc1ec78` found that the
-archive clone rejected a raw token in a credential-supplied remote before
-saving it, but did not reject the actual GitHub Basic authorization payload
-at that boundary. A canonical URL path could therefore save and print that
-encoded credential before the later hardened runner refused it.
+The successor to historical review head `7cdc1ec78` refuses both the raw
+credential and its actual GitHub Basic authorization payload before an
+archive remote can be saved or printed. The exact existing header is
+constructed once and reused for Git. Canonical URL rules, default clone
+behavior and the hardened runner remain unchanged. The native GitHub
+story covers literal and percent-spelled credential-response paths with
+an explicitly labelled one-shot host stand-in.
 
-The reviewed successor computes the existing authorization header once,
-checks both the raw token and its actual payload before saving or printing
-the remote, and reuses the same header for Git. Canonical URL rules,
-default clone behavior and the hardened runner remain unchanged. The
-existing native GitHub story now includes literal and percent-spelled
-credential-response regressions, with an explicitly labelled one-shot host
-stand-in and a named saved-configuration custody assertion.
+The actual commands owner parser passed at `41b9a7e78`. All four affected
+compiler roots and the whole existing native clone case then passed at
+clean `9f9bab0a1`.
+The case completed in 524 ms under its unchanged 30-second deadline.
+The distinguishing old-guard control then failed at the named first
+saved-configuration custody assertion after 567 ms. Its test child exited
+one; the observing owner exited zero after verifying the expected failure
+and exact restoration. The maintained owner map has no `commands.ts`
+entry, so no stored seal was invented or changed.
 
-This correction is source-reviewed but has not been compiled or tested.
-Its affected compiler roots, whole native clone story and old-guard
-distinguishing control remain pending root allocation. The maintained
-owning parser passed for `commands.ts` under `8e63b9402`; its actual result
-is recorded below. The maintained seal map has no entry for that file, so
-no stored seal or map is changed. The historical review artifact at
-`7cdc1ec78` remains immutable and is not silently retargeted. The separately
-attributed pre-correction results and original failures follow.
+The maintained Page build reproduced the exact existing generated module
+and dist bytes, leaving Git clean. The separate comparator child passed;
+its inline observer then failed a postcheck. A later read-only stable
+identity and content reconciliation found no input differences. The exact
+failed assertion location was not retained, so the access-time explanation
+is an inference. The original child pass and observer failure remain
+separate. The owning Page freshness case also passed in 53 ms under its
+original 60-second deadline. No generated asset edit or comparator retry
+was needed.
+
+The historical review artifacts remain immutable. The ordinary gate
+remains a failed run followed by separately attributed owning corrections;
+it was not repeated or reported green. The original failures and all
+subsequent outcomes remain explicit below. Exact-head successor review
+and landing remain pending.
 
 This implements planner decisions `29fd51b5`, `f15e483c`, and the count-policy
 correction `a7d03336`. The ordinary gate at `56a6119d1` naturally failed:
@@ -1297,14 +1308,12 @@ saved configuration; later assertions require no archive invocation and
 no raw token or payload in the safe refusal lines. Existing Artifacts
 negative controls and all original assertions and deadlines remain.
 
-These changes have not been compiled or run. The planned negative control
-restores only the old raw-token-only pre-save guard, requires the named
-custody assertion to fail within the original deadline, and restores the
-exact reviewed source afterward. The positive whole-file result is not
-repeated merely to prepare the control. Page equality and any required
-D1 inventory check also remain separate pending obligations. The actual
-CLI owner parser result is recorded below. No earlier pass is relabelled
-as acceptance of this new correction.
+At the source-preparation checkpoint these changes had not been compiled
+or run. The planned negative control restored only the old raw-token-only
+pre-save guard, required the named custody assertion to fail within the
+original deadline, and required exact source restoration. Subsequent
+positive, control and Page outcomes are recorded below. No earlier pass
+was relabelled as acceptance of this new correction.
 
 ### Actual CLI owner parser result
 
@@ -1325,3 +1334,82 @@ seal. Evidence remains at
 `/private/tmp/artroom-archive-credential-parser-evidence-20261022-v1`.
 No compiler, native regression, control, Page or D1 acceptance is inferred
 from the parser result.
+
+### Credential correction: positive and distinguishing control
+
+After the actual owner parser recorded above, positive owner 95202
+naturally passed all four affected compiler roots and the whole existing
+native clone case at clean `9f9bab0a1`, under
+`cd8d97c3d3a41ba9e2ad00921cb089861852b117`. The native case completed in
+524 ms within its unchanged 30-second deadline. Full source, fixed
+dependency, tool and environment guards passed without signals. This
+covers the literal and percent-spelled actual Basic-payload credential
+responses, including unchanged saved configuration, no archive invocation
+and no credential in returned lines. It remains a local native client
+boundary witness with an explicitly labelled host stand-in.
+
+Control owner 34846 then tested the same whole native case with only the
+pre-save archive remote guard changed back to raw-token-only. The actual
+test child naturally exited one; the case failed after 567 ms at the first
+named assertion,
+“Archive credential remote must not change saved configuration”. The
+observing owner exited zero after checking that expected failure and exact
+restoration. There were no signals, guard errors or observer errors. The
+candidate returned to clean `9f9bab0a1`; this is a distinguishing custody
+failure, not a timeout, startup failure or a passing test. Root adopted it
+under `810cb98d19c942ed46e268848c0187973f3ddd6f`.
+
+The control evidence remains at
+`/private/tmp/artroom-archive-credential-control-evidence-20261022-v1`.
+Its original result is 3,317 bytes, SHA-256
+`091c58d290987f366cdd77125fff7da68d4d6ea7de98d20a9a7f14e48474550a`.
+The positive result is reused; it was not repeated merely to prepare the
+control. The historical failed full gate and all intervening correction
+outcomes remain separately attributed above.
+
+The maintained Page build owner 3639 naturally passed at the same clean
+source under `fceb087c8baf85e27cf3158e574b784038d5e6f7`. It reproduced the
+existing generated module, JavaScript and HTML bytes, and Git remained
+clean. Full Source, dependency, npm, tool and environment guards passed
+without signals or startup errors. The build command used 0.285348292
+seconds wall, 0.165647 user and 0.037918 system; outer owner time was 2.05,
+1.26 and 0.69 seconds respectively. Evidence remains at
+`/private/tmp/artroom-archive-credential-page-evidence-20261022-v1`.
+
+The separate DATA comparator naturally exited zero, with no signals,
+under `9f68724fdec32076ac6e4a8d8f3f76a89a6115f0`. Its complete 1,191-byte
+report, SHA-256
+`38fc5b6db124ecef2f3e320c8037ab811d446cabe0dcec1e49e69c4cc5e02d88`,
+confirmed the generated module shape and hash, decoded JavaScript equal
+to dist, and HTML equal to dist and source. The original inline observer
+then failed a blank postcheck assertion. It had compared full stat records,
+including access time; the exact failed assertion location was not
+retained, so an access-time explanation remains an inference rather than
+a proven diagnosis. The observer failure is preserved, not relabelled as
+a clean wrapper pass.
+
+A read-only post-closure reconciliation rechecked every planned tool,
+input and parent using stable identity, content, modification and change
+times, plus the actual selected environment and clean head/tree. It found
+no differences and revalidated the original report. The reconciliation
+is 5,395 bytes, SHA-256
+`55ad77c4deefb284668d781ef767ec23917ee9c670eb2513a195eb71012cdffa`.
+Evidence is retained under
+`/private/tmp/artroom-archive-credential-page-comparison-preparation-20261022-v2`.
+The comparator was not rerun and no generated code was imported.
+
+The whole owning Page freshness case also naturally passed in 53 ms under
+its original 60-second deadline, with zero retries, repeats, skips or
+issues, under `03a768f7aa360244ebe1407bd4333cf1e9889472`. Full 2,780-source
+and 6,069 fixed dependency guards, tools and environment passed without
+signals or errors. Owner 23451 used 2.416570625 seconds wall, 2.031229 user
+and 0.849337 system; outer time was 2.45, 2.06 and 0.85 seconds.
+Evidence remains at
+`/private/tmp/artroom-archive-credential-page-assets-evidence-20261022-v1`.
+
+The actual Page build, comparator child, qualified observer reconciliation
+and freshness case are separately attributed. Output bytes remain
+unchanged, so no generated-assets edit is needed. The ordinary failed gate,
+its owning corrections and the initial changes-requested review remain
+historical evidence. No full gate or healthy heavy suite was repeated.
+Exact-head successor review and landing remain pending.
