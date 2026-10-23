@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:883a73b8b30464591914b397875809feef1245f1","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/definition-corpus/replay-histories.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8846b697fc7e1a5e96343bcda20c553c1d610791","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/native-birth.ts."}
