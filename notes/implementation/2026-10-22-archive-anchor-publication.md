@@ -1221,5 +1221,5 @@ and there were no signals. Outcome and narrow-fix authorization are
 
 The next owning checks are the whole affected source-guard file and the
 genuinely unreached Counting 55 checks, under a fresh root allocation.
-The other 34 Node cases and passing Vitest files are not repeated. This
+The unaffected Node files and passing Vitest files are not repeated. This
 checkpoint is source-prepared; no follow-up runtime result is claimed.
