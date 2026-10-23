@@ -362,6 +362,13 @@ function sourceEdits(path, text) {
     const firstCommentEnd = text.indexOf("*/") + 2;
     edits.push(...docEdits(text.slice(0, firstCommentEnd)).map(edit => ({ ...edit, kind: "workspace-documentation" })));
   }
+  if (path === "apps/counter/scripts/test-browser.mjs") {
+    const before = '  const expected=`@generalbusiness/${name === "contract" ? "dap" : "artroom"}-${name}`;\n';
+    const after = '  const expected=`@generalbusiness/dap-${name}`;\n';
+    const oldCount = text.split(before).length - 1, newCount = text.split(after).length - 1;
+    if (oldCount === 1 && newCount === 0) edits.push(...anchoredEdits(text, before, after, "package-policy"));
+    else if (oldCount !== 0 || newCount !== 1) throw Error("Counting workspace-name policy differs.");
+  }
   if (path === "packages/cli/src/application-browser.ts") {
     edits.push(...anchoredEdits(text, "/^@generalbusiness\\/artroom-client(?:\\/.*)?$/", "/^@generalbusiness\\/dap-client(?:\\/.*)?$/", "package-policy"));
   }
@@ -872,7 +879,7 @@ function main() {
     if (SELF.has(path) || (metadata && path === SOURCE_SEAL_FILE)) continue;
     const { full, stat, bytes } = read(path), text = bytes.toString("utf8");
     if (protectedLeaf(path)) result.preserved.push({ path, bytes: bytes.length, sha256: hash(bytes), digests: literalDigests(text) });
-    if (!exactTokens(text).length) continue;
+    if (!exactTokens(text).length && path !== "apps/counter/scripts/test-browser.mjs") continue;
     if (historical(path) || PUBLICATION.has(path)) { result.excluded.push({ path, reason: historical(path) ? "historical-record" : mechanicalOnly ? "publication-not-selected" : "publication-context-transform" }); continue; }
     let edits = [];
     if (protectedLeaf(path)) { result.excluded.push({ path, reason: "recorded-byte-leaf" }); continue; }
