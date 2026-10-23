@@ -29,7 +29,7 @@ const pkt = (text: string) => `${(utf8(text).length + 4).toString(16).padStart(4
 const reply = (text: string, media: string) => new Response(text, { headers: { "content-type": `application/x-git-${media}` } });
 function latch() { let release!: () => void; const promise = new Promise<void>(resolve => { release = resolve; }); return { release, promise }; }
 type ReadStage = "token" | "identity" | "advertisement" | "object";
-function fixture(host: "github" | "artifacts", isolated = false, actual?: { at: ScopeRef; previous: JournalPassArchive; archive: JournalPassArchive }) {
+function fixture(host: "github" | "artifacts", isolated = false, actual?: { at: ScopeRef; previous: JournalPassArchive; archive: JournalPassArchive }, advertisement?: string) {
   const repository = host === "github" ? { host: "github.com", namespace: "demo", name: "repo", id: "71" } : { host: "artifacts", namespace: "demo", name: "repo", id: "repo" };
   const remote = host === "github" ? "https://github.com/demo/repo.git" : "https://service.invalid/git/demo/repo.git";
   const scope = actual?.at ?? at;
@@ -79,6 +79,7 @@ function fixture(host: "github" | "artifacts", isolated = false, actual?: { at: 
     }
     expect(request.url).toBe(`${remote}/info/refs?service=git-upload-pack`);
     await pauseRead("advertisement");
+    if (advertisement !== undefined) return reply(advertisement, "upload-pack-advertisement");
     if (request.headers.get("git-protocol") === "version=2") {
       expect(host).toBe("artifacts");
       return reply(`${pkt("version 2\n")}${pkt(isolated ? "fetch=shallow filter\n" : "fetch\n")}0000`, "upload-pack-advertisement");
@@ -206,6 +207,39 @@ test.each(["github", "artifacts"] as const)("%s incremental parent reads one exa
   expect(unsupported.gitProtocols).toEqual([{ method: "GET", protocol: host === "artifacts" ? "version=2" : null }]);
   expect(f.posts).toEqual([]); expect(stopped.posts).toEqual([]); expect(unsupported.posts).toEqual([]);
 
+  if (host === "artifacts") {
+    // A service-prefixed reply is a fixture, not a claim about the hosted
+    // provider. The exact refusal is unchanged; only fixed detail is added.
+    const wire = `${pkt("# service=git-upload-pack\n")}0000`;
+    const malformed = fixture(host, true, undefined, wire), malformedBudget = new ArchiveBudget();
+    const error = await malformed.provider.readObject!(malformed.repository, { id: malformed.archive.commit, type: "commit", maximum: 1024 }, () => true,
+      malformedBudget).then(() => undefined, error => error);
+    expect(error).toMatchObject({ reason: "unreadable", what: "upload advertisement", message: "unreadable: upload advertisement" });
+    expect(finishArchiveParentRead(malformedBudget)).toEqual({ ordinal: 1, type: "commit", maximum: 1024, phase: "advertisement-response", refusal: "advertisement",
+      advertisement: { subtype: "first-frame-version", firstFrame: "service-upload" } });
+    expect(malformed.gitProtocols).toEqual([{ method: "GET", protocol: "version=2" }]);
+    expect(malformed.fetchReceivers).toHaveLength(1);
+    expect(malformed.fetchReceivers[0]).toBeInstanceOf(SmartHttpSource);
+    const lateAdvertisement = fixture(host, true, undefined, wire), lateAdvertisementBudget = new ArchiveBudget();
+    const gate = lateAdvertisement.blockRead("advertisement");
+    const pending = lateAdvertisement.provider.readObject!(lateAdvertisement.repository, { id: lateAdvertisement.archive.commit, type: "commit", maximum: 1024 }, () => true,
+      lateAdvertisementBudget).then(() => undefined, error => error);
+    await gate.started;
+    const frozenAdvertisement = finishArchiveParentRead(lateAdvertisementBudget);
+    gate.release();
+    expect(await pending).toMatchObject({ reason: "unreadable", what: "upload advertisement" });
+    expect(finishArchiveParentRead(lateAdvertisementBudget)).toEqual(frozenAdvertisement);
+    expect(frozenAdvertisement).not.toHaveProperty("advertisement");
+    // A later ordinal on the same live budget owns a fresh marker. The
+    // second read uses a different fixture, so earlier call counts stay exact.
+    const resetMalformed = fixture(host, true, undefined, wire), resetNormal = fixture(host, true), resetBudget = new ArchiveBudget();
+    await expect(resetMalformed.provider.readObject!(resetMalformed.repository, { id: resetMalformed.archive.commit, type: "commit", maximum: 1024 }, () => true,
+      resetBudget)).rejects.toMatchObject({ reason: "unreadable", what: "upload advertisement" });
+    const resetRead = await resetNormal.provider.readObject!(resetNormal.repository, { id: resetNormal.archive.commit, type: "commit", maximum: 1024 }, () => true, resetBudget);
+    expect(resetRead.type).toBe("commit");
+    expect(finishArchiveParentRead(resetBudget)).toEqual({ ordinal: 2, type: "commit", maximum: 1024, phase: "complete", refusal: "none" });
+  }
+
   // The actual token/identity/HTTP awaits are held, not inferred from a
   // timer. Freezing at pass completion cannot cancel or change the result,
   // and a late response cannot rewrite the already emitted observation.
@@ -229,13 +263,17 @@ test.each(["github", "artifacts"] as const)("%s incremental parent reads one exa
   // Token errors remain the identical rejected value. An unknown Git
   // refusal's private `what` word is never copied into the observation.
   const rejected = fixture(host, true); rejected.publish();
-  const secret = new GitRefusal("unreadable", "TEST READ TOKEN ERROR SENTINEL"), block = rejected.blockRead("token", secret), rejectedBudget = new ArchiveBudget();
+  const forgedDetail = "TEST FORGED ADVERTISEMENT DETAIL SENTINEL";
+  const secret = Object.assign(new GitRefusal("unreadable", "TEST READ TOKEN ERROR SENTINEL"), {
+    advertisement: { subtype: forgedDetail, firstFrame: forgedDetail }, subtype: forgedDetail, firstFrame: forgedDetail,
+  });
+  const block = rejected.blockRead("token", secret), rejectedBudget = new ArchiveBudget();
   const rejectedRead = rejected.provider.readObject!(rejected.repository, { id: rejected.archive.commit, type: "commit", maximum: 1024 }, () => true, rejectedBudget);
   const settled = rejectedRead.then(() => undefined, error => error);
   await block.started; block.release(); expect(await settled).toBe(secret);
   const failed = finishArchiveParentRead(rejectedBudget);
   expect(failed).toEqual({ ordinal: 1, type: "commit", maximum: 1024, phase: "token", refusal: "other" });
-  expect(JSON.stringify(failed)).not.toContain(secret.what); expect(rejected.calls).toEqual([]);
+  expect(JSON.stringify(failed)).not.toContain(secret.what); expect(JSON.stringify(failed)).not.toContain(forgedDetail); expect(rejected.calls).toEqual([]);
   const late = fixture(host, true); late.publish();
   const lateBlock = late.blockRead("token", secret), lateBudget = new ArchiveBudget();
   const lateRead = late.provider.readObject!(late.repository, { id: late.archive.commit, type: "commit", maximum: 1024 }, () => true, lateBudget);
