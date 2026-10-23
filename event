@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/scope/test/archive-host.test.ts","body":{"commit":"8dd302ae33e849640c5fc61b33ece517d8b6793e","path":"packages/scope/test/archive-host.test.ts"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0195dce79c5b2109858bdb862f91d205724acab8","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-23-archive-service-preamble.md."}
