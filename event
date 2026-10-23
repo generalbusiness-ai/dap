@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:303abc2e3f27ec48a408444f1c9db563438e62ce","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/definition-corpus/scope-fixtures.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:305a145e4749dc65b95c1144f65c3eacb900ca2f","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/definition-corpus/client-cli-mcp-page.ts."}
