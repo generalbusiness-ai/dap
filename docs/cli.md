@@ -15,11 +15,13 @@ The source is `packages/cli`. In this repository it runs as
 installed `tsx` 4.21.0 dependency. The launcher resolves that loader beside
 the package, so it works from another directory and fetches no tool when
 it runs. The launcher is checked on Node 22.0.0 and 26.10.0. Nothing is
-published to a registry. A scope Worker is deployed at
-<https://artroom-scope.inguz.workers.dev>; its routes start at `/v1/scopes`.
-The root URL returns 404 because it has no application page. This endpoint
-does not establish a completed live creation, publication, clone or
-authenticated replay.
+published to a registry. The hosted service for new rooms is
+<https://dap-demo.inguz.workers.dev>, with CLI routes under `/v1/scopes`
+and the hosted MCP endpoint under `/mcp`.
+<https://artroom-scope.inguz.workers.dev> keeps existing rooms only; it is
+not a creation point for new rooms. This source change does not establish
+that the planner has deployed dap-demo or founded its register; follow the
+[dap-demo runbook](../notes/implementation/2026-10-23-dap-demo-part1.md).
 
 The launcher's Node 22.0 minimum is separate from the repository's test
 runtime. Built-in Node checks import TypeScript directly, as Replay already
@@ -64,7 +66,7 @@ authorization to install a register remains unimplemented.
 The examples are from one run of the test in
 `packages/cli/test/story.scope.test.ts`, with long IDs cut short.
 
-**`dap install <base-url> [--host <git-host>] [--namespace <name>] [--cohort application|application-publication|trusted-application|declared-application|device-application|archive-application|archive-declared-application|archive-device-application|invitation-key]`**
+**`dap install <base-url> [--host <git-host>] [--namespace <name>] [--register-policy keys|open] [--cohort application|application-publication|trusted-application|declared-application|device-application|archive-application|archive-declared-application|archive-device-application|invitation-key]`**
 creates the register with an `install` intent, signed by a new operator
 key, which is also the one creator key. The host defaults to `github.com`
 and the namespace to `artroom`. For the demo's host, the hosting's own Git
@@ -76,7 +78,7 @@ Installed: register sc_hinqqbm4....
 The operator key key_baqzbaDy... is kept in the config directory, readable only by you. It is the one founder key.
 ```
 
-**`dap install --plan <base-url> [--host <git-host>] [--namespace <name>] [--cohort application|application-publication|trusted-application|declared-application|device-application|archive-application|archive-declared-application|archive-device-application|invitation-key]`**
+**`dap install --plan <base-url> [--host <git-host>] [--namespace <name>] [--register-policy keys|open] [--cohort application|application-publication|trusted-application|declared-application|device-application|archive-application|archive-declared-application|archive-device-application|invitation-key]`**
 signs the same `install` intent and creates nothing. A register's ID is a
 function of its seed, and the seed of the intent and the register's
 version alone, so the command prints the ID that the install will create,
@@ -93,7 +95,7 @@ Planned: register sc_4kq2v7..., under platform:register@2, on host artifacts, na
 Set registerScope to sc_4kq2v7... in the Worker's host setting, then run dap install --planned before 2026-10-08T09:14:00Z.
 ```
 
-**`dap install --planned [--cohort application|application-publication|trusted-application|declared-application|device-application|archive-application|archive-declared-application|archive-device-application|invitation-key]`** creates the planned register, with the kept
+**`dap install --planned [--register-policy keys|open] [--cohort application|application-publication|trusted-application|declared-application|device-application|archive-application|archive-declared-application|archive-device-application|invitation-key]`** creates the planned register, with the kept
 intent and no other argument. Before anything is sent it checks the plan:
 a plan whose ID is not the one its intent and version make, or whose
 version is not supported by the installed catalog, is refused as
@@ -131,7 +133,17 @@ Installed: register sc_4kq2v7..., under platform:register@2, as planned.
 
 ### An explicitly selected application room
 
-Omitting `--cohort` keeps the legacy default. `--cohort application` selects
+`--register-policy open` explicitly selects the fixed archive-device-application
+cohort: register@17, directory@16, membership@8, rules@10, destination@12
+and inbox@1. It admits a founding key outside the install's founder list.
+It cannot be combined with another cohort. `--register-policy keys` and
+omission keep the founder-key policy; omission otherwise retains the existing
+cohort/default behavior. Planning signs the policy into the exact retained
+install. `--planned` without a policy reuses it; an explicit conflicting policy
+refuses before submission and keeps the original plan. This open selector
+stays register@17 even if a later task changes the ordinary default.
+
+Without an explicit open policy, omitting `--cohort` keeps the legacy default. `--cohort application` selects
 `APPLICATION_COHORT`: register@5, directory@5, membership@4, rules@3,
 destination@2 and inbox@1, each with the `platform:` prefix.
 `--cohort trusted-application` selects `TRUSTED_APPLICATION_COHORT`:

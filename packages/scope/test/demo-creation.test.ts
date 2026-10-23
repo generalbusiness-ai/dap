@@ -56,6 +56,22 @@ test("demo offer exposes only its configured register and admits a previously un
     const selected=()=>demoCreationRoute(new Request(`${origin}/v1/demo/creation-offer?register=${legacyAt.scope}&inc=${legacyAt.inc}`),bindings);
     const legacyResponse=await lifetime.wait(selected),legacyOffer=await legacyResponse.json() as DemoCreationOffer;
     expect([legacyResponse.status,legacyOffer.register,legacyOffer.definition]).toEqual([200,legacyAt,DEMO_REGISTER]);
+    // The old public origin refuses fresh discovery without touching its namespace,
+    // but retained exact-reference preflight still uses the original configuration.
+    const retiredOrigin="https://artroom-scope.inguz.workers.dev";
+    const retiredConfig=canonicalize({...config,origin:retiredOrigin,legacy:{register:legacyAt,definition:DEMO_REGISTER}});
+    const retiredCalls={idFromName:0,get:0};
+    const retired={...bindings,DEMO_START_CONFIG:retiredConfig,SCOPES:{
+      idFromName(name:string){retiredCalls.idFromName++;return env.PLATFORM.idFromName(name);},
+      get(id:Parameters<typeof env.PLATFORM.get>[0]){retiredCalls.get++;return env.PLATFORM.get(id);}
+    } as unknown as Binding};
+    const retiredOffer=await lifetime.wait(()=>demoCreationRoute(new Request(retiredOrigin+"/v1/demo/creation-offer"),retired));
+    expect(retiredOffer.status).toBe(404);
+    expect(await retiredOffer.json()).toEqual({error:"not-found"});
+    expect(retiredCalls).toEqual({idFromName:0,get:0});
+    const retained=await lifetime.wait(()=>demoCreationRoute(new Request(`${retiredOrigin}/v1/demo/creation-offer?register=${legacyAt.scope}&inc=${legacyAt.inc}`),retired));
+    expect([retained.status,(await retained.json() as DemoCreationOffer).register]).toEqual([200,legacyAt]);
+    expect(retiredCalls).toEqual({idFromName:1,get:1});
     const legacyV1={...bindings,DEMO_START_CONFIG:canonicalize({...config,v:1,register:legacyAt,definition:DEMO_REGISTER})};
     const legacyDefault=await lifetime.wait(()=>demoCreationRoute(new Request(origin+"/v1/demo/creation-offer"),legacyV1));
     expect([legacyDefault.status,(await legacyDefault.json() as DemoCreationOffer).definition]).toEqual([200,DEMO_REGISTER]);
