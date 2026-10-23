@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:42d0ef522e11a7045af33be26e5d23f983331db3","text":"Merge retired a covered predecessor; the successor is at apps/counter/browser/client.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:432ce50d3742349b516c70b5bac6d502774eb76d","text":"Merge retired a covered predecessor; the successor is at apps/room/lanes/test/directory-partition-recovery.scope.test.ts."}
