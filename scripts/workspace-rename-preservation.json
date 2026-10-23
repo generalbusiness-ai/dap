@@ -1,7 +1,7 @@
 {
   "format": "dap-workspace-rename-preservation-1",
-  "basis": "27abf6d90db7df1d459ff3da023e09324a89c53a",
-  "qualification": "Fresh counters from immutable Main 27ab bytes and the actual applied private worktree. Finite reviewed spans and ordered publication replacements replayed with standard-library text operations; no project helper or parser executed. Actual source-seal metadata is not yet adopted.",
+  "basis": "12d30573c5b70c1acb90d0e732654ff768586448",
+  "qualification": "Fresh counters from immutable accepted Main12d and actual clean merged rename Source. Finite reviewed UTF16 spans and publication contexts replayed by standard-library text operations. No project helper or parser executed; actual source-seal metadata remains pending.",
   "protectedLeaves": [
     {
       "path": "apps/counter/commitments-pin.ts",
@@ -860,8 +860,8 @@
     },
     {
       "path": "apps/room/demo-creation.ts",
-      "before": "e9ce8a7ab2ec893afeef2157bf527681361400a112202f48b856654dc6393258",
-      "after": "f54d4088cbeb6c21f03c06f66d83d5cae82e2821e792ffe0bb8ab798ba08a765",
+      "before": "4c5941b87da57216a81116d682bca39e21b32b48042da48b23876f4af5503071",
+      "after": "b52a87f5991c8460a79984db27d0a324d5193eea9a944a0178880468ac9183af",
       "spans": [
         {
           "start": 116,
@@ -870,7 +870,7 @@
           "replacement": "@generalbusiness/dap-bytes"
         }
       ],
-      "dataProjection": "5eb2f8c1cd7eabb7ab6734cc326ab0bce29568c3ed7c4044f25dddd1208fd359",
+      "dataProjection": "864530c3e853ee406a8aef3772d5d3ec7e67aa3c3acb8bf84ea1d6515f6c2b8c",
       "digests": []
     },
     {
@@ -4635,8 +4635,8 @@
     },
     {
       "path": "packages/cli/src/commands.ts",
-      "before": "430a366200c1299ad404a82431152c91b06f675723a9e6cac0258c94b68a10dd",
-      "after": "a1aa44937b7fc87e6102071306774adb2c6d85ff305b7bd69bb5d903c123f21b",
+      "before": "3f56ec7e5bf94a3025a05e93b604d4e1e32eeb705a7caedac16cb7638b211932",
+      "after": "2d4e55c8ecb961e67ddc7935ecac33fc52fc7e1a310631157f7edcc18d442ea8",
       "spans": [
         {
           "start": 218,
@@ -4669,7 +4669,7 @@
           "replacement": "@generalbusiness/dap-client"
         }
       ],
-      "dataProjection": "3c68bfc6125dbf632374f151e666f98d8802905f6e128e76e52fb0cbcb4bc655",
+      "dataProjection": "db0b1c84ae8640306e51de45f8d033845756dc9e52ffcdbb46b567684bf318e4",
       "digests": []
     },
     {
@@ -4716,8 +4716,8 @@
     },
     {
       "path": "packages/cli/src/line.ts",
-      "before": "ae69ef952da66c165b9140b58f5ee329bec400fccd8fc4b64f8141f96858b2e8",
-      "after": "a2b4e16ddb8c959a19f63d56b0463f1ccfec48dd71078af117ca1f7d377ac903",
+      "before": "197aa3f5100f7428664c1d501709f783302a67699431b8434137738ce1b67259",
+      "after": "c58d0f94d5670d73870b6a859e98060ee6760c620bdc0a7dec7fafa946ef0242",
       "spans": [
         {
           "start": 187,
@@ -4732,7 +4732,7 @@
           "replacement": "@generalbusiness/dap-client"
         }
       ],
-      "dataProjection": "4dd93bb786ebe496b075f47c1fcf1d7a72ea9ebd941294fcce3bdcb0a5a96fbb",
+      "dataProjection": "0aa179d20860b76d26b8a8ef12eaa638a945e8d75e50d84fb6b846946a96a1b3",
       "digests": []
     },
     {
@@ -5205,8 +5205,8 @@
     },
     {
       "path": "packages/cli/test/install-cohort.test.ts",
-      "before": "b8858767876d985fa1a31c74903748c1f516c954822398c5325e04582c84e939",
-      "after": "90d036105f35c9ea6b5c4cf08b2afb2652598a801616661f1183dcb8a38f0b4b",
+      "before": "fff1e65192ade254dc1047a214e18913674cf258b94b2b335923b0f343f717e2",
+      "after": "5678934050aa43346df60ab36aee2b3fed81e615e0adb4d9551aa683a69c4214",
       "spans": [
         {
           "start": 226,
@@ -5221,7 +5221,7 @@
           "replacement": "@generalbusiness/dap-client"
         }
       ],
-      "dataProjection": "680faa4ea81d879139b8a6f59de079ca0734a629f6af4eefb8db9d29c42f8642",
+      "dataProjection": "1fae17f1650d1ad673b6eb864d34acb71c9af8c0e0018f9a9cd3aeb48b0632f3",
       "digests": []
     },
     {
@@ -8298,8 +8298,8 @@
     },
     {
       "path": "packages/git/src/http-read.ts",
-      "before": "2541b20acdb17f38a2ed3c9c32a3fed7990d19462244c33ecfd6dfc6ca04c14e",
-      "after": "17612371605d4b40603d827201dd306d47cc3b5660820f364c0880c2d05ac64f",
+      "before": "e40ac5fd3e6f8740a34e0970a6f0d8badf2dbc524b96f21334bb50c50e36707a",
+      "after": "f4b58071e4d84c93a7667eda31b8a58ab914da35a82df8a3906fd3f3ccf675d6",
       "spans": [
         {
           "start": 695,
@@ -8308,7 +8308,7 @@
           "replacement": "@generalbusiness/dap-bytes"
         }
       ],
-      "dataProjection": "98d4c35442cb24ee4b4a07a4b8ada6bd1a38c9a59d32c27a6797030bee219724",
+      "dataProjection": "6bf705e1fad3a98e76410a3b7714718f04865d9fc1d524d67c03330dfaed202c",
       "digests": []
     },
     {
@@ -14806,8 +14806,8 @@
     },
     {
       "path": "packages/scope/test/archive-host.test.ts",
-      "before": "027ae41387faa93a9f60ae6af0c7742773f886ac894896d4560b8ca7fe0d928d",
-      "after": "2a985ef84be309ac1963159675356c3e1cb6179beeba3184545df42ccb84931b",
+      "before": "e571b488ecc87ced22f63c63abfa82d1c7820401a10cc498b90b5c9b9052fbb9",
+      "after": "12fc723eafe20b0c8abb5bd1588293f649b87254a56ef782d97939aed1792796",
       "spans": [
         {
           "start": 319,
@@ -14840,7 +14840,7 @@
           "replacement": "@generalbusiness/dap-git/journal"
         }
       ],
-      "dataProjection": "c8e906a1695eac1be39a25654f17ae4514b817123bb1875981e86f205c758485",
+      "dataProjection": "d4525dee2662039cac88b64b990b589d77cee7c9c884f3d061a3ceb6a0bfd931",
       "digests": []
     },
     {
@@ -15717,8 +15717,8 @@
     },
     {
       "path": "packages/scope/test/demo-creation.test.ts",
-      "before": "fdca1bbb326506eacc68dd145bccd970d15d3d7b9c56eb779722e5e77fc80dd5",
-      "after": "96db7fa3c186e7bc3519d1fd4a5357197005158628f3d7566ea679814efbd98b",
+      "before": "23a8397599f643d5ec4d74561c888ee86dba4dc540ea83716c42ed16938bdc0e",
+      "after": "fbc560dd971474d06a390230a3dddddd0c044d47071a28be753914b1c7137147",
       "spans": [
         {
           "start": 363,
@@ -15733,7 +15733,22 @@
           "replacement": "@generalbusiness/dap-client"
         }
       ],
-      "dataProjection": "7ba1fdbdde88c31de830e10a0fa49f21e05170e22b110186a8b490f9bbb0ac9a",
+      "dataProjection": "0e192a36cb74129982324043af644fa58304bec2bd6ff50328a581c5eb6953d9",
+      "digests": []
+    },
+    {
+      "path": "packages/scope/test/demo-register.test.ts",
+      "before": "8ca6dcb8e156df673f3ac7245141879da25ffe47e0f06fcbeaaef1e2e566be37",
+      "after": "49e7f30f19a6f8b9a0e32cf3158f727ba221bf82e4a4c218979f62926afb0e32",
+      "spans": [
+        {
+          "start": 444,
+          "end": 474,
+          "kind": "module",
+          "replacement": "@generalbusiness/dap-bytes"
+        }
+      ],
+      "dataProjection": "298f1950aabb48af3959418c8f5774489c939c608935aa58349bb7e74c5bac0e",
       "digests": []
     },
     {
@@ -18147,16 +18162,23 @@
       ]
     }
   ],
-  "earlierBasis": "b7b7a9726a7ba06b534cc78777e3611b18fd64b9",
+  "earlierBasis": "27abf6d90db7df1d459ff3da023e09324a89c53a",
   "earlierEvidence": {
-    "qualification": "Historical evidence retains its original basis; old counters are not current observations.",
-    "heldInventorySha256": "ce11adc1c6f553fa08572d484a3b00d3cb9d3840b01b5d4413e5928e43c0686f",
-    "priorBasis": "14690284d660806ce8b1b7136a2f033e3b0581de",
+    "qualification": "Historical counters retain their original basis, not relabelled current.",
+    "inventorySha256": "5f21cb386099da914d4b9884537b175787c21b4e8a4ef4b91c97a6427fb51a77",
+    "priorBasis": "b7b7a9726a7ba06b534cc78777e3611b18fd64b9",
     "priorEvidence": {
-      "mechanicalReceipt": "/private/tmp/artroom-workspace-rename-mechanical-applied-20261023-v1.json",
-      "inventorySha256": "eaae8c8bfbc4f57f42b36fe47fe5a29d828fe361c6ad56b7c43c34d65ac8d12b",
-      "supersededRepairHead": "77618aa5830c7cf9a12d5706f679ae71131d37c1"
+      "qualification": "Historical evidence retains its original basis; old counters are not current observations.",
+      "heldInventorySha256": "ce11adc1c6f553fa08572d484a3b00d3cb9d3840b01b5d4413e5928e43c0686f",
+      "priorBasis": "14690284d660806ce8b1b7136a2f033e3b0581de",
+      "priorEvidence": {
+        "mechanicalReceipt": "/private/tmp/artroom-workspace-rename-mechanical-applied-20261023-v1.json",
+        "inventorySha256": "eaae8c8bfbc4f57f42b36fe47fe5a29d828fe361c6ad56b7c43c34d65ac8d12b",
+        "supersededRepairHead": "77618aa5830c7cf9a12d5706f679ae71131d37c1"
+      },
+      "sourceApplicationReceiptSha256": "b9c227875b7b6802f77be66b7bc0dcaa1f8360bdf763e75627f6c8302db12aa2"
     },
-    "sourceApplicationReceiptSha256": "b9c227875b7b6802f77be66b7bc0dcaa1f8360bdf763e75627f6c8302db12aa2"
+    "carryReceiptSha256": "30e48b30170c551252b597f73aa56e8be1a8ac458641e01cd7742c8083a21a1c",
+    "carryHead": "6e1c9cf9d25d460c33a660a653c4b3be23dd2689"
   }
 }
