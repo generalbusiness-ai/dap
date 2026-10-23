@@ -5,9 +5,10 @@ The reader requires `shallow` and `filter` in the older Git advertisement,
 but the server does not advertise both. This candidate adds an explicit
 Git protocol v2 path for Artifacts archive parent reads. After deadline and
 text-framing corrections, the affected compiler and both owning files pass.
-The final gate found four failures in three test files. Test fixture corrections
-and their affected checks remain pending review. Hosted v2 filtering support
-and a completed archive pass remain unverified.
+The final gate found four failures in three test files. After fixture
+corrections, all eight affected cases and the unreached downstream checks
+passed. Exact-head review remains pending. Hosted v2 filtering support and a
+completed archive pass remain unverified.
 
 Request `66010f21f899a4df8ac7530e18539f05887254cd` and promise
 `645d787bbd23c281e9cf92c82f8236b0a07772c7` track the work. The candidate starts
@@ -152,7 +153,7 @@ original source basis.
 The ordinary gate at `2ce0d50823b6cb98c2d6f0ee8d26d48158ec2afe` completed
 with 2,226 passes, four failures and three skips across 482 files, with no
 unhandled errors. All seven stages before tests passed. The Node checks and
-Counting browser check were not reached. Outcome `c2e97064c82aca2dc94598199bd8f05753978cd0`
+Counting command were not reached. Outcome `c2e97064c82aca2dc94598199bd8f05753978cd0`
 and frozen evidence receipt `9a15d70b957bba593cb2931750f804668c1ce867`
 retain the full run, input guards and costs; no failed result is replaced.
 
@@ -175,8 +176,29 @@ before the failed membership read. It preserves the strict `current` and
 `actions: null` assertion and adds bounded status/reason diagnostics. It makes
 no production change or claim that all background work has drained.
 
-Affected whole-file checks and the previously unreached downstream commands
-remain pending. Healthy suites from the original gate will not be repeated.
+The focused continuation at `2120449356afabc3388247217a2ce103cd70403c`
+passed the helper guard, Scope test compiler, all eight cases in the three
+complete affected files, the 37 Node checks and the maintained Counting
+command's 55 Node cases. No errors, skips, signals or pending steps remained.
+Outcome `a238f6da39b18b6d511ef42fcea9442ba06d5ee8` retains that run and its
+fixed input checks. Healthy suites from the original gate were not repeated;
+the original failed gate and this focused continuation are separate results.
+
+The promise trailer was then added at
+`dad3cb2b10b607e88edc6928b5a5f96a4ffc4526`, preserving the tested tree
+`c76759fb87211fa66bfd11011e5426945f6b141b` and its parent. The final change
+after that amendment updates only this report. The runtime evidence keeps its
+original commit identity; no tests were repeated for commit metadata or prose.
+
+The full gate took 1,173.391 seconds elapsed and 1,358.644 seconds inclusive
+CPU. The continuation took 69.506 seconds elapsed and 86.901 seconds CPU.
+The five earlier recorded validation attempts total 35.677 seconds elapsed
+and 40.893 seconds CPU. These are separate-run totals, some overlapping other
+work; nested child timings are not added again. Preparation and review time
+were not measured. Dependencies were reused without a cache reset on the
+shared arm64 macOS development machine (Darwin 27.0.0); background load was
+not measured. These figures
+describe validation cost, not application performance.
 
 ## What can resume
 
