@@ -2,7 +2,7 @@ import { expect, test, vi } from "vitest";
 import { newIncarnation, parseStrictBytes, unb64url, verifySignedRead } from "@generalbusiness/artroom-bytes";
 import * as bytes from "@generalbusiness/artroom-bytes";
 import type { SignedRead, SignedSessionRequest } from "@generalbusiness/dap-contract";
-import type { Fetch } from "@generalbusiness/artroom-client";
+import { secretSigner, type Fetch, type Signer } from "@generalbusiness/artroom-client";
 const DESTINATION = "platform:destination@1" as const;
 import { command } from "../src/line.ts";
 import type { Config } from "../src/store.ts";
@@ -68,6 +68,23 @@ test("remote reads the recorded repository; missing Git and the pinned @1 withou
     const missingKey = await command({ ...context, store: { ...store, secret: async name => ++keyLoads === 1 ? store.secret(name) : null } }, ["remote"]);
     expect([missingKey.code, readers]).toEqual([1, []]);
     expect(missingKey.lines.join(" ")).toContain("is missing from the config directory; nothing was signed");
+    // Malformed custom-store values appear only on the second custody read:
+    // the actual signed session request succeeds before availability refuses.
+    for (const malformed of [new Uint8Array(31), [], {}, undefined]) {
+      readers.length = 0; let keyLoads = 0;
+      await expect(command({ ...context, store: { ...store, secret: async name => ++keyLoads === 1 ? store.secret(name) : malformed as unknown as Uint8Array } }, ["remote"])).rejects.toThrow("The key operator holds no 32-byte key.");
+      expect([keyLoads, readers]).toEqual([2, []]);
+    }
+    const operator = secretSigner((await store.secret("operator"))!);
+    for (const missing of [null, undefined]) {
+      readers.length = 0; let signerLoads = 0, rawLoads = 0;
+      const result = await command({ ...context, store: { ...store,
+        signer: async () => ++signerLoads === 1 ? operator : missing as unknown as Signer | null,
+        secret: async name => { rawLoads++; return store.secret(name); },
+      } }, ["remote"]);
+      expect([result.code, signerLoads, rawLoads, readers]).toEqual([1, 2, 0, []]);
+      expect(result.lines.join(" ")).toContain("is missing from the config directory; nothing was signed");
+    }
   } finally {
     derivations.mockRestore(); sessionMode = "absent";
   }

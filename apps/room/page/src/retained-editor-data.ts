@@ -2,11 +2,11 @@
 import { freeze } from "@generalbusiness/artroom-bytes";
 import type { Answer, Beside, DeclaredDefinition, Digest, FactRef, FieldValue, Grant, Head, KeyId, ScopeId, ScopeRef, Seed, SignedIntent, Summary } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, digestBytes, entryHash, isFactRef, scopeIdOf, utf8, verifySignedIntent, wellFormed } from "@generalbusiness/artroom-bytes";
-import { ScopeHandle, declaredHandle, httpTransport, secretSigner, shapeDeclaredAct, signedIntent, signedReads } from "@generalbusiness/artroom-client";
+import { ScopeHandle, declaredHandle, httpTransport, shapeDeclaredAct, signedIntent, signedReads } from "@generalbusiness/artroom-client";
 import { expectedOf, heldActs, type DefinitionShape } from "@generalbusiness/dap-cli";
 import { editPath, fileSound, platform } from "@generalbusiness/dap-platform";
 import { knownLIST1 } from "./source-support.ts";
-import { actAssociation, openingScope, openRoom, Unreadable, type ChangeView, type Room } from "./data.ts";
+import { actAssociation, openingScope, openRoom, sessionSigner, Unreadable, type ChangeView, type Room } from "./data.ts";
 
 export interface EditSource { definition: string; manifestFact: FactRef; sourceFact: FactRef; scope: ScopeRef; manifest: number; opened: Digest; base: string; path: string; digest: Digest; size: number; content: string }
 export interface EditDraft { title: string; path: string; content: string }
@@ -20,7 +20,7 @@ export interface EditTask {
   message: string; busy: boolean;
 }
 export interface EditOptions { current(): boolean; changed?(): void; pause?(scopes: readonly string[]): Promise<void> }
-const handle = (room: Room, scope: ScopeId) => new ScopeHandle(signedReads(httpTransport(room.session.service, room.session.fetch ? { fetch: room.session.fetch } : {}), secretSigner(room.session.secret), room.session.now ? { now: room.session.now } : {}), scope, room.reader?.reader() ?? null);
+const handle = (room: Room, scope: ScopeId) => new ScopeHandle(signedReads(httpTransport(room.session.service, room.session.fetch ? { fetch: room.session.fetch } : {}), sessionSigner(room.session), room.session.now ? { now: room.session.now } : {}), scope, room.reader?.reader() ?? null);
 async function summary(h: ScopeHandle): Promise<{ value: Summary; at: Head }> { const r = await h.summary(); if (!r.ok) throw new Unreadable(`Cannot read ${h.scope}: ${r.reason}.`); if (!r.complete || r.next !== undefined) throw new Unreadable(`Incomplete read of ${h.scope}.`); return { value: r.value, at: r.at }; }
 const check = (options: EditOptions) => { if (!options.current()) throw new Unreadable("The room or key changed. Nothing new was sent; return to the original task."); };
 export function editFields(draft: EditDraft, base: string): Record<string, FieldValue> {
@@ -89,7 +89,7 @@ export async function prepareEdit(room: Room, change: ChangeView, manifest: numb
   const R = handle(fresh, fresh.rules); const rs = await summary(R);
   const active = rs.value.items.filter(i => i.type === "definition" && i.state === "active" && i.values["name"] === "change").sort((a,b) => b.id-a.id)[0];
   const digest = active?.values["digest"]; if (typeof digest !== "string") throw new Unreadable("No change definition is active.");
-  const kept = await signedReads(httpTransport(fresh.session.service, fresh.session.fetch ? { fetch: fresh.session.fetch } : {}), secretSigner(fresh.session.secret), fresh.session.now ? { now: fresh.session.now } : {}).retained(fresh.rules, fresh.reader?.reader() ?? null, "definition", digest as Digest); if (!kept.ok) throw new Unreadable("The active change definition could not be read.");
+  const kept = await signedReads(httpTransport(fresh.session.service, fresh.session.fetch ? { fetch: fresh.session.fetch } : {}), sessionSigner(fresh.session), fresh.session.now ? { now: fresh.session.now } : {}).retained(fresh.rules, fresh.reader?.reader() ?? null, "definition", digest as Digest); if (!kept.ok) throw new Unreadable("The active change definition could not be read.");
   const declared = JSON.parse(kept.value.bytes) as DeclaredDefinition; if (canonicalize(declared) !== kept.value.bytes || definitionDigest(declared) !== digest) throw new Unreadable("The active definition bytes do not match their digest.");
   const workflow = knownLIST1(declared, digest) ? "list1" : "legacy";
   const base = await head(fresh, workflow === "list1"); check(options);
@@ -149,7 +149,7 @@ async function sendStep(room: Room, task: EditTask, kind: EditStep["kind"], targ
   const declaration = shape.acts[kind]; if (!declaration || !heldActs(shape, fresh.me).acts.some(([k]) => k === kind)) throw new Unreadable(`The current ${kind} action is unavailable to your member.`);
   if (kind !== "open-pr" && s.value.definition !== task.definition) throw new Unreadable("The created lane does not run the confirmed definition.");
   const expected = expectedOf(declaration, s.value.items, on, fields);
-  const signer = secretSigner(fresh.session.secret); const signing = fresh.session.now ? { now: fresh.session.now() } : {};
+  const signer = sessionSigner(fresh.session); const signing = fresh.session.now ? { now: fresh.session.now() } : {};
   let signed: SignedIntent, beside: Beside;
   if (supplied) {
     const shaped = shapeDeclaredAct(supplied.data as unknown as DeclaredDefinition, kind, { on, fields } as never);

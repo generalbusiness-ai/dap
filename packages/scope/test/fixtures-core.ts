@@ -14,6 +14,7 @@ export const applicationTrust = (packet: { ids: { release: string } }, publisher
 export const applicationContentBindings = <Content>(content: Content, trust: string) =>
   ({ APPLICATION_CONTENT: content, APPLICATION_TRUST: trust });
 
-/** A fresh environment per call; callers retain namespace/bucket identities. */
-export const applicationWorkerBindings = <Scopes, Content>(scopes: Scopes, content: Content, trust: string) =>
-  ({ SCOPES: scopes, ...applicationContentBindings(content, trust) });
+/** Explicit native namespace and its deployment index travel together.
+ * A fresh environment per call; no Worker globals or permissive fallback. */
+export const applicationWorkerBindings = <Scopes, Content, Index>(scopes: Scopes, content: Content, trust: string, index: Index) =>
+  ({ SCOPES: scopes, SCOPE_INDEX: index, ...applicationContentBindings(content, trust) });

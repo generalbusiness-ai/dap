@@ -1,3 +1,4 @@
+import { env } from "cloudflare:test";
 import { expect, test } from "vitest";
 import worker, { type Env } from "../../worker.ts";
 import frameworkWorker from "@generalbusiness/artroom-scope/worker";
@@ -5,12 +6,12 @@ import { PAGE_HTML, PAGE_JS } from "../assets.ts";
 
 // Invariant: the deployed Worker's one entry serves the room's page at `/page/`, its HTML and its one script, from the module that
 // the page's build writes, each under a policy that runs this origin's scripts only; any other path under `/page/` is not found,
-// a write is refused, and a path outside it still reaches the scope routes. The page route reads no scope, so no binding is given.
+// a write is refused, and a path outside it still reaches the scope routes. The static page reads no scope; the entry still receives its explicit deployment namespace and index.
 test("the Worker serves the page at /page/: its HTML and script under a same-origin script policy; /page redirects; another file is not-found; a POST is refused; /v1 is not the page's", async () => {
-  const get = (path: string, method = "GET") => worker.fetch(new Request(`https://scopes.test${path}`, { method }), {} as Env);
+  const get = (path: string, method = "GET") => worker.fetch(new Request(`https://scopes.test${path}`, { method }), { SCOPES: env.PLATFORM, SCOPE_INDEX: env.SCOPE_INDEX } as Env);
 
   // The framework remains reusable: only the app entry serves its static page.
-  const generic = await frameworkWorker.fetch(new Request("https://scopes.test/page/"), {} as Env);
+  const generic = await frameworkWorker.fetch(new Request("https://scopes.test/page/"), { SCOPES: env.PLATFORM, SCOPE_INDEX: env.SCOPE_INDEX } as Env);
   expect([generic.status, await generic.json()]).toEqual([404, { error: "not-found" }]);
 
   const html = await get("/page/");

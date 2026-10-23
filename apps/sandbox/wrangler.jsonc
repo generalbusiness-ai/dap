@@ -1,0 +1,18 @@
+// Planner deploys only after review and current screen release publication.
+// SCREEN_HOSTS is an exact list of {host,service}; host is the same six-field
+// descriptor in the target room's APPLICATION_SCREEN_HOSTS. One stable DNS
+// label names one installation, not every package in a room. Empty fails closed.
+{
+  "name": "dap-application-sandbox",
+  "main": "worker.ts",
+  "compatibility_date": "2026-08-15",
+  "workers_dev": false,
+  "routes": [{ "pattern": "*.inguz.space/*", "zone_name": "inguz.space" }],
+  "services": [
+    { "binding": "ROOM", "service": "artroom-scope", "entrypoint": "ApplicationScreenService" },
+    { "binding": "GROW", "service": "dap-grow", "entrypoint": "ApplicationScreenService" },
+    { "binding": "LENDING", "service": "dap-lending", "entrypoint": "ApplicationScreenService" }
+  ],
+  "vars": { "SCREEN_HOSTS": "[]" },
+  "observability": { "enabled": false }
+}

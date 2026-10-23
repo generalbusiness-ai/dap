@@ -1,14 +1,17 @@
 import { expect, test, vi } from "vitest";
 import type { SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, intentDigest, keyIdOfSecret, newIncarnation, scopeIdOf, signIntent, textDigest, unb64url } from "@generalbusiness/artroom-bytes";
-import type { CreationOffer } from "@generalbusiness/artroom-client";
+import { b64url, canonicalize, intentDigest, keyIdOfSecret, newIncarnation, scopeIdOf, textDigest, verify } from "@generalbusiness/artroom-bytes";
+import { signedIntent, type CreationOffer } from "@generalbusiness/artroom-client";
 import type { Context, PendingClaim, Repository } from "@generalbusiness/dap-cli";
 
 // Actual Page descriptor/journal, codec and offer validator over SCRIPTED CLI
 // workflow/locks/storage. No native admission, browser custody or host proof.
 const cli = vi.hoisted(() => ({ claim: vi.fn(), checkClaim: vi.fn() }));
 vi.mock("@generalbusiness/dap-cli", async () => ({ ...await vi.importActual<typeof import("@generalbusiness/dap-cli")>("@generalbusiness/dap-cli"), ...cli }));
-import { originalStart, startRoom, recoveryKeyOnce } from "../src/start-custody.ts";
+import { originalStart, startRoom as actualStartRoom, recoveryKeyOnce } from "../src/start-custody.ts";
+import { memoryPageKeys } from "./private-key-fixture.ts";
+const keys = memoryPageKeys();
+const startRoom: typeof actualStartRoom = (origin, storage, options) => actualStartRoom(origin, storage, { ...options, keys });
 import type { ClaimStorage } from "../src/claim.ts";
 const origin = "https://start-custody.test";
 const ref = (kind: "register" | "directory" | "membership") => ({ scope: scopeIdOf({ v: 1, kind, definition: kind === "register" ? "platform:register@8" : kind === "directory" ? "platform:directory@7" : "platform:membership@2", creator: null, cause: textDigest("SCRIPTED Start " + kind), ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(6)), kind });
@@ -33,22 +36,21 @@ test("scripted retained register7 Start keeps its founder key before the CLI bou
   cli.claim.mockImplementation(async (ctx: Context) => {
     const descriptorBytes = f.values.get(`artroom-page-start:${origin}`)!;
     expect(!!descriptorBytes, "founder-key readback precedes the workflow boundary").toBe(true);
-    const descriptor = JSON.parse(descriptorBytes) as { secret: string };
-    const secret = await ctx.store.secret("browser");
-    expect(secret !== null && b64url(secret) === descriptor.secret).toBe(true);
+    const descriptor = JSON.parse(descriptorBytes) as { publicKey: string; secret?: string };
+    const signer = (await ctx.store.signer!("browser"))!;
+    expect(signer.key).toBe(descriptor.publicKey); expect(descriptor.secret).toBeUndefined();
     const config = (await ctx.store.config())!;
     if (!config.claim) {
-      creator = descriptor.secret;
-      await ctx.store.keep("recovery", new Uint8Array(32).fill(92));
-      const intent = { v: 1 as const, idempotencyKey: "20000000-0000-4000-8000-000000000001", actor: keyIdOfSecret(secret!), to: register, kind: "found", on: null, fields: { branch: "main", "founderHandle": "@founder", recoveryKey: keyIdOfSecret(new Uint8Array(32).fill(92)) }, expected: { "0": 1 }, notAfter: "2099-01-01T00:00:00Z" };
-      original = signIntent(intent, secret!);
-      const pending: PendingClaim = { register: register.scope, intent: intentDigest(intent), handle: "@founder", "found": { signed: original } };
+      creator = descriptor.publicKey;
+      const recovery = await ctx.store.newSigner!("recovery");
+      original = await signedIntent(signer, { to: register, kind: "found", fields: { branch: "main", founderHandle: "@founder", recoveryKey: recovery.key }, expected: { "0": 1 } }, { now: 0, idempotencyKey: "20000000-0000-4000-8000-000000000001" });
+      const pending: PendingClaim = { register: register.scope, intent: intentDigest(original.intent), handle: "@founder", "found": { signed: original } };
       await ctx.store.save({ ...config, claim: pending });
     } else {
       expect(canonicalize(config.claim["found"]?.signed) === canonicalize(original)).toBe(true);
-      expect(descriptor.secret === creator).toBe(true);
+      expect(descriptor.publicKey === creator).toBe(true);
     }
-    secret?.fill(0); posts++;
+    posts++;
     return { code: 1, lines: ["SCRIPTED lost original reply"] };
   });
   cli.checkClaim.mockImplementation(async (ctx: Context) => {
@@ -60,6 +62,8 @@ test("scripted retained register7 Start keeps its founder key before the CLI bou
   expect(first.pending).toBe(true); expect(posts).toBe(1);
   expect(first.configured).toEqual({ register, definition: "platform:register@7" });
   const status = originalStart(origin, f.storage)!;
+  expect(status.key).toBe(keyIdOfSecret(new Uint8Array(32).fill(61)));
+  expect(JSON.parse(f.values.get(`artroom-page-start:${origin}`)!).secret).toBeUndefined();
   expect(Object.keys(status).sort()).toEqual(["configured", "handle", "key", "label", "operation", "state"]);
   const bytesBefore = [...f.values.entries()];
   const reload: ClaimStorage = { getItem: key => f.values.get(key) ?? null, setItem: (key, value) => { f.values.set(key, value); } };
@@ -121,34 +125,29 @@ test("scripted dropped, malformed or stale Start custody stops before the workfl
   expect(JSON.stringify([...prepared.values.entries()]) === JSON.stringify(before)).toBe(true);
 });
 
-test("scripted completed Start handoff returns the enrolled founder seed rather than the internal recovery seed", async () => {
+test("completed Start hands off the enrolled signer, preserves the separate recovery identity and refuses browser-key export", async () => {
   cli.claim.mockReset(); cli.checkClaim.mockReset();
   const f = fixture();
   cli.claim.mockImplementation(async (ctx: Context) => {
-    const descriptor = JSON.parse(f.values.get(`artroom-page-start:${origin}`)!) as { configured: { definition: string }; secret: string };
+    const descriptor = JSON.parse(f.values.get(`artroom-page-start:${origin}`)!) as { configured: { definition: string }; publicKey: string };
     expect(descriptor.configured.definition).toBe("platform:register@8");
     const config = (await ctx.store.config())!;
     expect(config.register).toEqual(register);
-    await ctx.store.keep("recovery", new Uint8Array(32).fill(92));
-    const secret = (await ctx.store.secret("browser"))!;
-    const intent = { v: 1 as const, idempotencyKey: "20000000-0000-4000-8000-000000000002", actor: keyIdOfSecret(secret), to: register, kind: "found", on: null, fields: {}, expected: {}, notAfter: "2099-01-01T00:00:00Z" };
-    const pending: PendingClaim = { register: register.scope, intent: intentDigest(intent), handle: "@founder", "found": { signed: signIntent(intent, secret) } };
+    const recovery = await ctx.store.newSigner!("recovery"), signer = (await ctx.store.signer!("browser"))!;
+    expect(recovery.key).not.toBe(signer.key);
+    const signed = await signedIntent(signer, { to: register, kind: "found", fields: { recoveryKey: recovery.key } }, { now: 0, idempotencyKey: "20000000-0000-4000-8000-000000000002" });
+    const pending: PendingClaim = { register: register.scope, intent: intentDigest(signed.intent), handle: "@founder", "found": { signed } };
     await ctx.store.save({ ...config, claim: pending });
-    await ctx.store.save({ ...config, repository, handle: "@founder" }); secret.fill(0);
+    await ctx.store.save({ ...config, repository, handle: "@founder" });
     return { code: 0, lines: ["SCRIPTED complete"] };
   });
   const result = await startRoom(origin, f.storage, { mode: "new", label: "Room", offer, creationOffer: async () => offer, locks });
   expect(result.repository).toEqual(repository);
-  const actual = unb64url((JSON.parse(f.values.get(`artroom-page-start:${origin}`)!) as { secret: string }).secret)!;
-  try {
-    expect(!!result.secret && b64url(result.secret) === b64url(actual)).toBe(true);
-    expect(result.secret && keyIdOfSecret(result.secret)).toBe(result.key);
-    expect(result.secret && b64url(result.secret) === b64url(new Uint8Array(32).fill(92))).toBe(false);
-  } finally { actual.fill(0); result.secret?.fill(0); }
-  const recovery = await recoveryKeyOnce(origin, f.storage, { key: result.key, operation: result.operation }, { locks });
-  expect(recovery.trim() === (JSON.parse(f.values.get(`artroom-page-start:${origin}`)!) as { secret: string }).secret).toBe(true);
-  expect(originalStart(origin, f.storage)?.recoverySaved).toBe(true);
+  const actual = JSON.parse(f.values.get(`artroom-page-start:${origin}`)!) as { publicKey: string; secret?: string };
+  expect(result.signer?.key).toBe(actual.publicKey); expect(actual.secret).toBeUndefined();
+  const message = new Uint8Array([1, 2, 3]);
+  expect(verify(result.key, await result.signer!.sign(message), message)).toBe(true);
   const preserved = [...f.values.entries()];
-  await expect(recoveryKeyOnce(origin, f.storage, { key: result.key, operation: result.operation }, { locks })).rejects.toThrow("already offered");
+  await expect(recoveryKeyOnce(origin, f.storage, { key: result.key, operation: result.operation }, { locks })).rejects.toThrow("nonextractable");
   expect(canonicalize([...f.values.entries()]) === canonicalize(preserved)).toBe(true);
 });

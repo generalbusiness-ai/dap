@@ -7,9 +7,16 @@
   "main": "test/support/worker.ts",
   "compatibility_date": "2026-08-15",
   "compatibility_flags": ["nodejs_compat"],
+  // High finite shared-key fixture policy, not the adopted-default startup measurement.
+  "vars": {
+    "SERVING_CREATION_KEY_PER_HOUR": "1000000",
+    "SERVING_CREATION_ADDRESS_PER_HOUR": "1000000",
+    "SERVING_READ_KEY_PER_MINUTE": "1000000",
+    "SERVING_READ_ADDRESS_PER_MINUTE": "1000000"
+  },
   "durable_objects": {
-    "bindings": [{ "name": "NET", "class_name": "NetScope" }, { "name": "PLATFORM", "class_name": "PlatformScope" }]
+    "bindings": [{ "name": "NET", "class_name": "NetScope" }, { "name": "PLATFORM", "class_name": "PlatformScope" }, { "name": "SCOPE_INDEX", "class_name": "ScopeIndex" }]
   },
   "services": [{ "binding": "API", "service": "artroom-lanes-test", "entrypoint": "NetService" }],
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["NetScope", "PlatformScope"] }]
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["NetScope", "PlatformScope"] }, { "tag": "v2-index", "new_sqlite_classes": ["ScopeIndex"] }]
 }

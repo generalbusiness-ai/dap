@@ -25,7 +25,7 @@ async function fixture() {
   const { life, R, D, children } = await sessionRoom(C.register), [M, A, G] = children;
   if (!M || !A || !G) { life.release(); throw Error("The exact native siblings are required."); }
   const f = await applicationResolverFixture("sha1", undefined, {}, undefined, packet), peer = applicationHttpPeer(f);
-  const bindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(f.trust));
+  const bindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(f.trust), env.SCOPE_INDEX);
   try {
     // Start on the next whole schedule boundary before issuing invitations.
     const start = Math.ceil(life.now() / 3_600_000) * 3_600_000;

@@ -5,7 +5,7 @@ import * as bytes from "@generalbusiness/artroom-bytes";
 import { b64url, definitionDigest, intentDigest, keyIdOfSecret, newIncarnation, textDigest, utf8, verifyInvitationProof, verifySignedIntent } from "@generalbusiness/artroom-bytes";
 import { changeDemo } from "@generalbusiness/dap-lanes";
 import { INVITATION_MEMBERSHIPS, Session as ReadSession, type Fetch } from "@generalbusiness/artroom-client";
-import { invitationTarget, prepareJoin, joinAssociation, joinRoom, placeOf, type Session } from "../src/index.ts";
+import { sessionKey, invitationTarget, prepareJoin, joinAssociation, joinRoom, placeOf, type Session } from "../src/index.ts";
 
 // One client boundary, with a SCRIPTED service acknowledgment. No scope,
 // membership judgment, provider or durable enrollment/recovery runs.
@@ -75,7 +75,7 @@ test("page join refuses mismatched encoding before submission and accepts script
   const archived = { answer: "archived", fact: { at: repository.membership, seq: 4, hash: textDigest("scripted archived fact") },
     archived: { floor: 10, commit: "a".repeat(40), through: { seq: 12, hash: textDigest("scripted archive head") } } } as const;
   const archivedLines = answerText({ service: session.service, directory: repository.directory.scope, membership: repository.membership,
-    key: keyIdOfSecret(session.secret), answer: archived, scope: repository.membership.scope, kind: "join", on: null,
+    key: sessionKey(session), answer: archived, scope: repository.membership.scope, kind: "join", on: null,
     before: { seq: 12, hash: archived.archived.through.hash }, after: null, observation: null });
   expect(archivedLines[0]).toContain(`Archived: original entry ${repository.membership.scope}:4`);
   expect(archivedLines[0]).toContain(`hash ${archived.fact.hash}, incarnation ${repository.membership.inc}`);
@@ -87,7 +87,7 @@ test("page join refuses mismatched encoding before submission and accepts script
   for (const answer of [{ answer: "unavailable", reason: "busy" }, { answer: "mismatch", reason: "idempotency-mismatch" }, { answer: "refused", reason: "unauthorized", judgedAt: { seq: 0, hash: textDigest("scripted refused head") } }] as const) {
     expect(nonacceptedAnswerText(answer)).toMatch(new RegExp(`^${answer.answer === "unavailable" ? "Unavailable" : answer.answer === "mismatch" ? "Mismatch" : "Refused"}:`));
     expect(nonacceptedAnswerText(answer)).not.toContain("Nothing was written");
-    const result = answerText({ service: session.service, directory: repository.directory.scope, membership: repository.membership, key: keyIdOfSecret(session.secret), answer, scope: repository.membership.scope, kind: "join", on: null, before: { seq: 0, hash: textDigest("scripted before head") }, after: null, observation: null });
+    const result = answerText({ service: session.service, directory: repository.directory.scope, membership: repository.membership, key: sessionKey(session), answer, scope: repository.membership.scope, kind: "join", on: null, before: { seq: 0, hash: textDigest("scripted before head") }, after: null, observation: null });
     if (answer.answer !== "refused") {
       expect(result.join(" ")).toContain("before another act");
       expect(result.join(" ")).toContain("same signed envelope; this page does not retain it");
@@ -154,7 +154,7 @@ test("incomplete projections stay unreadable and a real returned submit answer s
   // Real signer and HTTP transport, SCRIPTED reads/session refusal. A fixed
   // session handle derives no read key; after renewal is refused a new null
   // handle keeps the real authenticated signed-read fallback.
-  const claims = { v: 1 as const, deployment: "scripted", membership: room.membership, member: "@operator" as const, key: keyIdOfSecret(room.session.secret), reads: ["summary"], ends: "2026-10-08T12:01:00Z" };
+  const claims = { v: 1 as const, deployment: "scripted", membership: room.membership, member: "@operator" as const, key: sessionKey(room.session), reads: ["summary"], ends: "2026-10-08T12:01:00Z" };
   const derivations = vi.spyOn(bytes, "keyIdOfSecret");
   try {
     room.reader = new ReadSession("scripted-reader", claims);

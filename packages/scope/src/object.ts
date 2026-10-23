@@ -35,7 +35,7 @@ import { DurableObject } from "cloudflare:workers";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { SessionAnswer } from "@generalbusiness/dap-contract";
 import type { Answer, Beside, Bounds, Cursor, DeclaredDefinition, Digest, OutboxId, Entry, Grant, Input, LogPage, OperationId, PlatformDefinition, Read, RetainedInput, ScopeId, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalize, isRecord, digestBytes, isHead, isScopeId, isScopeRef, parseStrict, retainedReadArgument, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isRecord, digestBytes, isHead, isScopeId, isScopeRef, parseStrict, retainedReadArgument, scopeIdOf, utf8 } from "@generalbusiness/artroom-bytes";
 import { isEntryOf, timeMs, timeOf, type Item } from "@generalbusiness/dap-derive";
 import { sourceName } from "@generalbusiness/dap-platform";
 import type { Delivered, StateView } from "@generalbusiness/dap-derive";
@@ -57,6 +57,7 @@ import { APPLICATION_DECLARATION_BYTES, type ApplicationDeclarationSource } from
 import { applicationJson } from "@generalbusiness/artroom-bytes/application";
 import { ReadPreparation } from "./read-preparation.ts";
 import { nativeBirth } from "./native-birth.ts";
+import { creationDeclaration } from "./creation-declaration.ts";
 import { PreparationBudget } from "./preparation-budget.ts";
 import { SessionReferences, type SessionReferenceSource } from "./session-reference.ts";
 import { SessionPreparation, type QueryVisibility } from "./session-preparation.ts";
@@ -94,6 +95,8 @@ import { background, inOperation, measured, measuredSync, metric, OBSERVED_METHO
  * `limits`: the serving limits of a join, in place of the proposed ones.
  */
 export interface Wiring {
+  /** Internal deployment index; receives only this object's checked stored genesis. */
+  registerGenesis?: (proof: import("./scope-index.ts").ScopeRegistration) => Promise<boolean>;
   ports?: Partial<Ports>; bounds?: Bounds; reads?: ReadBounds;
   authority?: (given: Given) => Authority;
   readers?: (given: Given) => Readers;
@@ -120,6 +123,8 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   readonly #archiveItem: (ask: ArchiveHostItemAsk) => import("./item-queries.ts").NativeItemQuery;
   readonly #name: ScopeId | null;
   readonly #store: SqliteStore;
+  readonly #registerGenesis: Wiring["registerGenesis"];
+  readonly #registrationBytes: number;
   readonly #readSql: Pick<Sql, "exec">;
   readonly #queryFlights: PreparationFlights;
   readonly #itemQueries: ItemQueries;
@@ -158,7 +163,9 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     super(ctx, env);
     const name = ctx.id.name;
     const wiring = this.wiring(name);
+    this.#registerGenesis = wiring.registerGenesis;
     const bounds = wiring.bounds ?? PROPOSED_BOUNDS;
+    this.#registrationBytes = bounds.entryBytes;
     // Authority note, section 5.4, rule 7: the attempts of one operation are spaced by a backoff, to a cap. The first is due at its
     // entry's time. The texts state no numbers for it: the delays are the dispatcher's (I3 deltas, entry EB8).
     const spacing = (attempt: number) => (attempt < 2 ? 0 : Math.min(bounds.dispatchRetrySeconds * 2 ** Math.min(attempt - 2, 30), bounds.dispatchRetryMaxSeconds) * 1000);
@@ -400,7 +407,28 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     return { value, turn: context.turn.entered };
   }
 
-  async create(creation: SignedIntent, definition: DeclaredDefinition | Digest | PlatformDefinition, definitions: readonly DeclaredDefinition[] = [], beside: Beside = {}): Promise<Created> { return this.#publicInvoke("create", async () => this.#sent(await this.#scope.create(creation, definition, definitions, beside))); }
+  /** No caller bytes or mutable summary establish index membership. */
+  async registerKnown(): Promise<boolean> {
+    if (!this.#registerGenesis || !this.#name) return false;
+    try {
+      if ((this.#store.storedBytes(0) ?? Infinity) > this.#registrationBytes) return false;
+      const scope = this.#store.scope(), stored = this.#store.stored(0);
+      if (!scope || scope.status === "refused" || scope.at.scope !== this.#name || !stored) return false;
+      const entry = parseStrict(stored.bytes) as Entry;
+      const fact = { at: scope.at, seq: 0, hash: stored.hash };
+      if (!isEntryOf(entry, fact) || entry.prev !== null || entry.input.type !== "genesis" || entry.input.decision !== "applied"
+        || scopeIdOf(entry.input.seed) !== this.#name || entry.input.inc !== scope.at.inc || entry.input.seed.kind !== scope.at.kind) return false;
+      return await this.#registerGenesis({ at: scope.at, genesis: stored.hash });
+    } catch { return false; }
+  }
+
+  async create(creation: SignedIntent, definition: DeclaredDefinition | Digest | PlatformDefinition, definitions: readonly DeclaredDefinition[] = [], beside: Beside = {}): Promise<Created> {
+    return this.#publicInvoke("create", async () => {
+      const answer = await this.#scope.create(creation, definition, definitions, beside);
+      await this.registerKnown(); // after the native commit; failure never changes its answer
+      return this.#sent(answer);
+    });
+  }
   /**
    * `address`: the caller's address as the Worker's route had it, or null. Only the serving limits of a join read it (`limits.ts`):
    * at a membership scope a join is served through them, and no other act and no other scope is.
@@ -427,7 +455,9 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     return this.#invoke("dispatch", async () => {
     const refusal = routed(this.#name, this.#store.scope(), envelope);
     if (refusal) return { answer: "routing", reason: refusal };
-    return this.#sent(await this.#deliveries.deliver(envelope));
+    const answer = await this.#deliveries.deliver(envelope);
+    if (!isScopeRef(envelope.to)) await this.registerKnown();
+    return this.#sent(answer);
     }, identity);
   }
   /** One entry of this scope, for a scope that received a send of it and checks its source (section 7.4). */
@@ -495,6 +525,14 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     const active = () => { const now = this.#queryFlights.clock.now(); return now >= began && now < ends; };
     const result = nativeBirth(this.#readPreparation, at, new PreparationBudget(undefined, active), maxBytes);
     return active() ? result : null;
+  }
+  /** Immutable bounded custody only. No #first, turn, driver or authority. */
+  creationDeclaration(at: unknown, digest: unknown, maxBytes: number, milliseconds: number): string | null {
+    const began = this.#queryFlights.clock.now(), ends = began + milliseconds;
+    if (!Number.isSafeInteger(milliseconds) || milliseconds <= 0 || milliseconds > EXACT_PROOF_RECEIVER_BOUNDS.milliseconds || !Number.isFinite(began) || !Number.isFinite(ends)) return null;
+    const active = () => { const now = this.#queryFlights.clock.now(); return now >= began && now < ends; };
+    try { return creationDeclaration(this.#store, this.#scope.pinned(), at, digest, maxBytes, active); }
+    catch { return null; }
   }
   /** Authenticated small directory witness. No HTTP route or activation turn. */
   sessionReference(request: unknown): string | null { return this.#sessionReferences.read(request); }

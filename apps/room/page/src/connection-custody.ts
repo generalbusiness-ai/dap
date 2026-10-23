@@ -1,15 +1,15 @@
 /** Origin-private ready connections. Shared CLI owns exact invitation stages;
  * this Page adapter owns their browser retention and original-operation lock. */
 import type { KeyId, ScopeRef } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, isDigest, isRecord, keyIdOfSecret, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isDigest, isRecord, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
 import { issueInvitation, isInvitationIssueInput, type Config, type Store, type InvitationIssueInput, type InvitationIssueResult } from "@generalbusiness/dap-cli";
-import { openRoom, type Room } from "./data.ts";
+import { openRoom, sessionSigner, type Room } from "./data.ts";
 import { startRoom, originalStart, recoveryKeyOnce, type StartOptions } from "./start-custody.ts";
 import type { ClaimStorage } from "./claim.ts";
 import { custodyKind } from "./custody.ts";
 
 export interface CreatorBinding { key: KeyId; operation: string; membership: ScopeRef }
-export interface ConnectionOptions extends Pick<StartOptions, "locks" | "current" | "fetch" | "now" | "pause" | "tries"> { mode: "new" | "check" | "continue" }
+export interface ConnectionOptions extends Pick<StartOptions, "locks" | "current" | "fetch" | "now" | "pause" | "tries" | "keys"> { mode: "new" | "check" | "continue" }
 interface Row { operation: string; input: InvitationIssueInput; state: "reserved" | "entered" | InvitationIssueResult["state"]; config: Config; private: Record<string, string>; reason?: string }
 interface Journal { v: 1; binding: string; active: string; rows: Record<string, Row> }
 export interface ConnectionStatus { operation: string; kind: "person" | "agent-key"; handle: string; state: Row["state"]; reason?: string }
@@ -52,13 +52,13 @@ async function withCreator<T>(origin: string, storage: ClaimStorage, expected: C
   const status = originalStart(origin, storage);
   if (!status || status.key !== expected.key || status.operation !== expected.operation || options.current?.() === false) throw unavailable();
   const result = await startRoom(origin, storage, { ...options, mode: "check" });
-  const secret = result.secret;
-  try {
-    if (!result.repository || !secret || result.operation !== expected.operation || result.key !== expected.key || canonicalize(result.repository.membership) !== canonicalize(expected.membership)) throw new Error("The original creator proof is not verified. Check the original Start; no connection was submitted.");
-    const room = await openRoom({ service: origin, secret, ...(options.fetch ? { fetch: options.fetch } : {}), ...(options.now ? { now: options.now } : {}) }, { directory: result.repository.directory.scope, membership: result.repository.membership });
-    if (options.current?.() === false || room.session.service !== origin || room.directory !== result.repository.directory.scope || canonicalize(room.membership) !== canonicalize(expected.membership) || room.key !== expected.key || room.key !== keyIdOfSecret(secret) || room.me?.handle !== result.handle) throw unavailable();
+  const signer = result.signer;
+  {
+    if (!result.repository || !signer || result.operation !== expected.operation || result.key !== expected.key || canonicalize(result.repository.membership) !== canonicalize(expected.membership)) throw new Error("The original creator proof is not verified. Check the original Start; no connection was submitted.");
+    const room = await openRoom({ service: origin, signer, ...(options.fetch ? { fetch: options.fetch } : {}), ...(options.now ? { now: options.now } : {}) }, { directory: result.repository.directory.scope, membership: result.repository.membership });
+    if (options.current?.() === false || room.session.service !== origin || room.directory !== result.repository.directory.scope || canonicalize(room.membership) !== canonicalize(expected.membership) || room.key !== expected.key || room.key !== signer.key || room.me?.handle !== result.handle) throw unavailable();
     return await work(room, { v: 1, service: origin, key: "browser", register: result.configured.register, repository: result.repository, handle: result.handle });
-  } finally { secret?.fill(0); }
+  }
 }
 export async function connectInvitation(origin: string, storage: ClaimStorage, expected: CreatorBinding, input: InvitationIssueInput, options: ConnectionOptions): Promise<InvitationIssueResult> {
   const browser = globalThis as { navigator?: { locks?: import("./claim.ts").ClaimLocks } };
@@ -100,7 +100,8 @@ export async function connectInvitation(origin: string, storage: ClaimStorage, e
         if (canonicalize(unchanged) !== canonicalize(base) || config.invitationIssue?.operation !== operation) throw unavailable();
         update({ ...row, config: structuredClone(config), state: "entered" });
       },
-      secret: async name => name === "browser" ? room.session.secret.slice() : null,
+      signer: async name => name === "browser" ? sessionSigner(room.session) : null,
+      secret: async () => { throw new Error("Browser signing keys cannot be exported."); },
       keep: async () => { throw new Error("Connection creation never replaces or generates a creator signing key."); },
       private: async name => row.private[name] === undefined ? null : utf8(row.private[name]!),
       keepPrivate: async (name, bytes) => {
@@ -120,10 +121,9 @@ export async function connectInvitation(origin: string, storage: ClaimStorage, e
     return result;
   }));
 }
-export async function creatorConnectionFiles(origin: string, storage: ClaimStorage, expected: CreatorBinding, options: Omit<ConnectionOptions, "mode"> = {}): Promise<{ config: string; key: string }> {
-  return withCreator(origin, storage, expected, { ...options, mode: "check" }, async (room, config) => ({
-    config: JSON.stringify({ ...config, key: "device" }, null, 2) + "\n",
-    key: b64url(room.session.secret) + "\n"
+export async function creatorConnectionFiles(origin: string, storage: ClaimStorage, expected: CreatorBinding, options: Omit<ConnectionOptions, "mode"> = {}): Promise<{ config: string }> {
+  return withCreator(origin, storage, expected, { ...options, mode: "check" }, async (_room, config) => ({
+    config: JSON.stringify({ ...config, key: "device" }, null, 2) + "\n"
   }));
 }
 export async function saveCreatorRecoveryOnce(origin: string, storage: ClaimStorage, expected: CreatorBinding, options: Omit<ConnectionOptions, "mode"> = {}): Promise<string> {

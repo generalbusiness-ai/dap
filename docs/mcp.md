@@ -1605,6 +1605,7 @@ works; the count given is the default recipe's.
 | `dap show <scope>:<seq>` | `step`: 1 | `step`: 1 | 1 |
 | `dap verify <scope>` | `record`, one per page; the server verifies nothing, so a verifier outside it replays the canonical bytes, such as dap verify itself: 1 | `record`: 1 | 1 |
 | `dap verify --all` | `room`, then `record` for each scope it names: 1 + n | `room`, then `record` for each scope: 1 + n | 1 + n |
+| `dap scope-index inventory --out FILE`, `sweep --manifest FILE`, `verify --manifest FILE` (Node operator only) | No MCP tool. Saves or checks an exact manifest through authenticated native reads; register-mode reads can write registrations. No deployment mode or complete index is inferred. | Node operator only | Node operator only |
 | `dap status [<scope>] [--request <16-hex-id>]` (MCP gap: operational status) | Unavailable in MCP; use the CLI or SDK operational reads | Unavailable in MCP | Unavailable in MCP |
 | `dap remote` | `inspect` on the destination, whose branch item names the host, namespace and name: 1 | `inspect`: 1 | 1 |
 | `dap clone [<directory>]` | `repository.read-token` with the hours, `wait` for the outcome entry, `credential` with the act's entry, then Git: git clone with the credential as the header: 3 and Git | `actions` on the destination, `act`, `wait`, `credential`, then Git: 4 and Git | 3 and Git |

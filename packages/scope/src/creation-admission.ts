@@ -12,8 +12,9 @@ export interface CreationAdmission {
 }
 
 /** Only the exact pinned register install is public on a deployed Worker.
- * A child creation does not come through this parentless API: namespace
- * delivery verifies the creator's sealed send before its genesis judgment. */
+ * A child creation does not come through this parentless API: the indexed
+ * namespace first verifies its whole creator lineage before child lookup,
+ * and the receiver still makes its ordinary full genesis judgment. */
 export function admitsParentlessCreation(settings: CreationAdmission, signed: SignedIntent, seed: Seed): boolean {
   if (settings.DEPLOYMENT === undefined || settings.ALLOW_OPEN_CREATION === "true") return true;
   try {

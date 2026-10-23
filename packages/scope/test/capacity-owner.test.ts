@@ -1,6 +1,6 @@
 import { env } from "cloudflare:workers";
 import { httpSource, verify } from "@generalbusiness/artroom-replay";
-import { route } from "../src/worker.ts";
+import { fixtureRoute as route } from "./support/serving-route.ts";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Entry, type SendForm } from "@generalbusiness/dap-contract";
 import { parseStrict } from "@generalbusiness/artroom-bytes";

@@ -9,11 +9,11 @@ export function applicationCommands(ctx: Context, custody: CustodyStore, applica
 async function call(ctx: Context, custody: CustodyStore, applicationFetch: ((request: Request) => Promise<Response>) | undefined, name: string, args: Record<string, unknown>): Promise<Outcome> {
   const config = await ctx.store.config();
   if (!config?.repository) return { code: 2, lines: ["Configure a trusted-application or declared-application room before installing a package."] };
-  const kept = await ctx.store.secret(config.key);
-  if (!kept) return { code: 1, lines: ["The configured signing key is unavailable; nothing was signed or sent."] };
-  const secret = kept.slice();
+  const secret = ctx.store.signer ? null : (await ctx.store.secret(config.key))?.slice() ?? null;
+  const signer = ctx.store.signer ? await ctx.store.signer(config.key) : secret ? secretSigner(secret) : null;
+  if (!signer) { secret?.fill(0); return { code: 1, lines: ["The configured signing key is unavailable; nothing was signed or sent."] }; }
   try {
-    const service = new McpService({ service: config.service, signer: secretSigner(secret), custody,
+    const service = new McpService({ service: config.service, signer, custody,
       config: { read: async () => {
         const current = await ctx.store.config();
         return current ? { service: current.service, ...(current.repository ? { repository: current.repository } : {}) } : { service: "" };
@@ -33,5 +33,5 @@ async function call(ctx: Context, custody: CustodyStore, applicationFetch: ((req
       ...(typeof value["screen"] === "string" ? [`Screen: ${value["screen"]}`] : []),
     ] };
   } catch { return { code: 1, lines: ["The application request could not be read or completed. Keep its original request key and arguments."] }; }
-  finally { secret.fill(0); }
+  finally { secret?.fill(0); }
 }

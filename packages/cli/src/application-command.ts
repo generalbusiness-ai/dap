@@ -86,10 +86,11 @@ export async function packCommand(store: Store, argv: readonly string[], cwd = p
   const output = resolve(cwd, parsed.flags.get("out")?.[0] ?? resolve(directory, "application.dap.json"));
   let secret: Uint8Array | null = null;
   try {
-    const stored = await store.secret(keyName);
-    if (stored === null) return { code: 1, lines: [`No existing publisher key named ${keyName}. Pack does not create a key.`] };
-    secret = new Uint8Array(stored);
-    const packed = await packDirectory(directory, output, secretSigner(secret), { ...(parsed.flags.has("config") ? { config: parsed.flags.get("config")![0]! } : {}) });
+    const stored = store.signer ? null : await store.secret(keyName);
+    secret = stored === null ? null : new Uint8Array(stored);
+    const signer = store.signer ? await store.signer(keyName) : secret ? secretSigner(secret) : null;
+    if (signer === null) return { code: 1, lines: [`No existing publisher key named ${keyName}. Pack does not create a key.`] };
+    const packed = await packDirectory(directory, output, signer, { ...(parsed.flags.has("config") ? { config: parsed.flags.get("config")![0]! } : {}) });
     return { code: 0, lines: [`Package: ${output}`, `Semantic: ${packed.ids.semantic}`, `Presentation: ${packed.ids.presentation}`, `Release: ${packed.ids.release}`, `Publisher: ${packed.package.release.manifest.publisher}`] };
   } catch (error) {
     if (error instanceof ApplicationPackageValidationError) return { code: 1, lines: ["Package validation refused.", ...findingRows(error.findings)] };

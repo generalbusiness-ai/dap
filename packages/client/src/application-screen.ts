@@ -3,6 +3,7 @@
 import type { Digest, KeyId, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, isKeyId, isMemberRef, LATE, parseStrictBytes, takeBytes, within } from "@generalbusiness/artroom-bytes";
 import { readApplicationScreenAddress, readApplicationScreenContext } from "./application-route.ts";
+import { APPLICATION_SCREEN_HOST_PATH, applicationScreenHostMatches, bindApplicationScreenHost, isApplicationSandboxOrigin, readApplicationScreenHost, type ApplicationScreenHost } from "./application-gateway.ts";
 import type { ApplicationScreenContext } from "./application-types.ts";
 import { readBrowserInvitation, type Invited as BrowserInvitation, type Seat as BrowserJoinSeat } from "./browser-joining.ts";
 import type { Fetch } from "./http.ts";
@@ -20,10 +21,20 @@ export async function loadApplicationScreenContext(page: string, options: { fetc
   if (!send) throw unavailable();
   const answer = await within(10, async signal => {
     const init = { method: "GET", headers: { accept: "application/json" }, signal: signal as never, redirect: "error", credentials: "omit" };
+    let host: ApplicationScreenHost | undefined;
+    if (isApplicationSandboxOrigin(url.origin)) {
+      const response = await send(url.origin + APPLICATION_SCREEN_HOST_PATH, init);
+      const bytes = response.body ? await takeBytes(response.body, 4096, signal) : null;
+      if (response.status !== 200 || bytes === null || bytes === LATE) throw unavailable();
+      host = readApplicationScreenHost(parseStrictBytes(bytes));
+      if (host.screenOrigin !== url.origin || !applicationScreenHostMatches(host, url.pathname)) throw unavailable();
+    }
     const response = await send(url.origin + address.base + "_/context", init);
     const bytes = response.body ? await takeBytes(response.body, 16 * 1024, signal) : null;
     if (response.status !== 200 || bytes === null || bytes === LATE) throw unavailable();
-    return readApplicationScreenContext(parseStrictBytes(bytes), address, url.origin);
+    const context = readApplicationScreenContext(parseStrictBytes(bytes), address, host?.roomOrigin ?? url.origin);
+    if (host) bindApplicationScreenHost(context, host);
+    return context;
   });
   if (answer === LATE) throw unavailable();
   return answer;

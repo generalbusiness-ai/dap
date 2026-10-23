@@ -209,7 +209,7 @@ async function record(at: Stand, wired: Set<ScopeId>): Promise<void> {
   await loadRules(room);
   await actsOn(room, room.rules);
   expect((await loadSite(room, "guide/start.md")).status).toBe(200);
-  for (const path of ["/page/", "/page/page.js"]) await keep(`GET ${path}`, await worker.fetch(new Request(`${SERVICE}${path}`), {} as Env));
+  for (const path of ["/page/", "/page/page.js"]) await keep(`GET ${path}`, await worker.fetch(new Request(`${SERVICE}${path}`), { SCOPES: env.PLATFORM, SCOPE_INDEX: env.SCOPE_INDEX } as Env));
   // Readonly claim eligibility is recorded separately for each actual caller.
   // A path-only map cannot reuse the operator's signed read for a member.
   const creatorSession = { service: SERVICE, secret, fetch: recorded, now: () => timeMs(net.clock.now)! };
@@ -290,7 +290,7 @@ function testStage(at: Stand, wired: Set<ScopeId>): { stage: Stage; people: Part
   const deployed = async (url: string, init?: RequestInit): Promise<Response> => {
     const path = new URL(url).pathname;
     return path.startsWith("/site/") ? site(new Request(url, init), { SCOPES: env.PLATFORM, ...at.bindings(register!) }, at.stand.fetch)
-      : path.startsWith("/page/") ? worker.fetch(new Request(url, init), {} as Env) : routed(url, init);
+      : path.startsWith("/page/") ? worker.fetch(new Request(url, init), { SCOPES: env.PLATFORM, SCOPE_INDEX: env.SCOPE_INDEX } as Env) : routed(url, init);
   };
   const people: Partial<Record<Person, Context>> = {};
   const stage: Stage = {

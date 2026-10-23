@@ -2,7 +2,27 @@ import { expect, test } from "vitest";
 import type { Entry, PlatformDefinition, Receipt, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
 import { b64url, entryHash, intentDigest, newIncarnation, scopeIdOf, textDigest, utf8, verifySignedIntent } from "@generalbusiness/artroom-bytes";
 import type { Fetch } from "@generalbusiness/artroom-client";
-import { checkOriginal, joinInvitation, originalJoin, type JoinStorage } from "../src/join-custody.ts";
+import { checkOriginal as actualCheckOriginal, joinInvitation as actualJoinInvitation, originalJoin, type JoinStorage } from "../src/join-custody.ts";
+import { memoryPageKeys } from "./private-key-fixture.ts";
+const keys = memoryPageKeys();
+const joinInvitation: typeof actualJoinInvitation = (origin, invitation, storage, options) => actualJoinInvitation(origin, invitation, storage, { keys, ...options });
+const checkOriginal: typeof actualCheckOriginal = (origin, storage, options) => actualCheckOriginal(origin, storage, { keys, ...options });
+
+test("legacy pending enrollment imports the same key before removing its seed and keeps the original envelope across reload", async () => {
+  const f = fixture(), secret = new Uint8Array(32).fill(67); f.lose();
+  const original = await joinInvitation(origin, invitation(), f.storage, { fetch: f.fetch, now, lock, secret });
+  const name = [...f.values.keys()][0]!, current = JSON.parse(f.values.get(name)!);
+  const { publicKey: _publicKey, ...retained } = current;
+  const legacy = { ...retained, v: 1, secret: b64url(secret) };
+  const signed = JSON.stringify(legacy.prepared.signed);
+  f.values.set(name, JSON.stringify(legacy));
+  const checked = await checkOriginal(origin, f.storage, { fetch: f.fetch, now, lock, keys: memoryPageKeys() });
+  expect(checked?.status).toBe("verified"); expect(checked?.key).toBe(original.key);
+  const migrated = JSON.parse(f.values.get(name)!);
+  expect(migrated.v).toBe(2); expect(migrated.secret).toBeUndefined(); expect(migrated.publicKey).toBe(original.key);
+  expect(JSON.stringify(migrated.prepared.signed)).toBe(signed);
+  expect(f.counters().posts).toBe(1);
+});
 
 // Actual signer/codec/HTTP adapter with SCRIPTED storage, locking and service
 // answers. No native enrollment, grants, deployment or provider runs here.
@@ -58,7 +78,7 @@ test("scripted lost enrollment survives reload and changed invitation without re
   const checked = await checkOriginal(origin, reloaded, { fetch: f.fetch, now, lock });
   expect(checked?.status).toBe("verified");
   expect([checked?.key, f.counters()]).toEqual([first.key, { posts: 1, settles: 1, entries: 1 }]);
-  if (checked?.status === "verified") { expect(checked.secret.length).toBe(32); checked.secret.fill(0); }
+  if (checked?.status === "verified") expect(checked.signer.key).toBe(checked.key);
   expect(originalJoin(origin, reloaded)?.status).toBe("verified");
 });
 
@@ -95,7 +115,8 @@ test("scripted known refusal keeps the same invitation terminal but a different 
   // Boolean comparisons avoid emitting private seed/envelope bytes on failure.
   expect(JSON.stringify(saved.history[0].prepared) === JSON.stringify(original.prepared)).toBe(true);
   expect(JSON.stringify(saved.history[0].refusal) === JSON.stringify(original.refusal)).toBe(true);
-  expect(saved.secret === original.secret).toBe(true);
+  expect(saved.publicKey === original.publicKey).toBe(true);
+  expect(saved.secret).toBeUndefined(); expect(original.secret).toBeUndefined();
   expect(verifySignedIntent(saved.history[0].prepared.signed)).toBe(true);
   const rejecting: JoinStorage = { getItem: key => f.values.get(key) ?? null, setItem: () => { throw new Error("TEST full storage"); } };
   const before = [...f.values.values()][0];
@@ -179,5 +200,5 @@ test.each(["platform:membership@6", "platform:membership@8"] as const)("%s Page 
   const checked = await checkOriginal(origin, f.storage, { fetch: f.fetch, now, lock });
   expect(checked?.status).toBe("verified");
   expect(f.counters()).toEqual({ posts: 1, settles: 1, entries: 1 });
-  if (checked?.status === "verified") checked.secret.fill(0);
+  if (checked?.status === "verified") expect(checked.signer.key).toBe(checked.key);
 });

@@ -14,7 +14,7 @@ import { at, definition, creation, rita } from "./fixtures-native.ts";
 test("HTTP and direct RPC retain distinct native turn places and HTTP correlation reaches only the sidecar", async () => {
   // DEPLOYMENT names the metric stream; this local fixture intentionally creates
   // a made-up scope through the explicit test-only opening.
-  const points: MetricPoint[] = [], settings = { DEPLOYMENT: "metrics-http-test", ALLOW_OPEN_CREATION: "true", METRICS: { writeDataPoint: (p: MetricPoint) => points.push(structuredClone(p)) } };
+  const points: MetricPoint[] = [], settings = { SCOPE_INDEX: env.SCOPE_INDEX, DEPLOYMENT: "metrics-http-test", ALLOW_OPEN_CREATION: "true", METRICS: { writeDataPoint: (p: MetricPoint) => points.push(structuredClone(p)) } };
   const { signed, name } = creation(), object = env.SCOPES.get(env.SCOPES.idFromName(name));
   metricBindings.set(object.id.toString(), settings);
   const trace = "abcdef0123456789abcdef0123456789";
@@ -28,7 +28,7 @@ test("HTTP and direct RPC retain distinct native turn places and HTTP correlatio
   const httpTurn = points.find(p => p.blobs[0] === "turn" && p.blobs[3] === "create")!;
   expect(httpTurn.blobs.slice(4)).toEqual(["answer", "none", request, trace, "accepted"]);
   expect(points.find(p => p.blobs[0] === "route")?.blobs[8]).toBe("turn");
-  expect((await api(env.SCOPES).create(signed, definition.declared)).answer).toBe("accepted");
+  expect((await api(env.SCOPES, null, { SCOPE_INDEX: env.SCOPE_INDEX }).create(signed, definition.declared)).answer).toBe("accepted");
   expect(points.some(p => p.blobs[0] === "turn" && p.blobs[3] === "rpc:create" && p.blobs[8] === "accepted")).toBe(true);
   const atScope = answer.receipt.fact.at;
   const offer = signIntent({ v: 1, to: atScope, actor: rita.key, kind: "offer", on: null, expected: { intent: 1 }, fields: { intent: 0 }, idempotencyKey: "rpc-offer", notAfter: at(60) }, rita.secret);
@@ -52,7 +52,7 @@ test("HTTP and direct RPC retain distinct native turn places and HTTP correlatio
 // server-owned contexts cannot lend their HTTP classification to another call.
 // The binding here is an explicit RPC protocol stand-in, not a native scope.
 test("missing execution metadata fails coverage and concurrent RPC work cannot borrow HTTP ingress", async () => {
-  const points: MetricPoint[] = [], settings = { DEPLOYMENT: "context-test", METRICS: { writeDataPoint: (p: MetricPoint) => points.push(structuredClone(p)) } };
+  const points: MetricPoint[] = [], settings = { SCOPE_INDEX: env.SCOPE_INDEX, DEPLOYMENT: "context-test", METRICS: { writeDataPoint: (p: MetricPoint) => points.push(structuredClone(p)) } };
   const name = `sc_${"a".repeat(52)}`, seen: boolean[] = [];
   let release!: () => void;
   const held = new Promise<void>(resolve => { release = resolve; });

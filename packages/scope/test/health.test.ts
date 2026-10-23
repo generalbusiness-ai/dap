@@ -1,11 +1,13 @@
 import { env } from "cloudflare:workers";
 import { SELF, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
-import { intentDigest, scopeIdOf, signIntent } from "@generalbusiness/artroom-bytes";
+import { digestBytes, intentDigest, scopeIdOf, signIntent, utf8 } from "@generalbusiness/artroom-bytes";
 import { health, HealthProbe } from "../src/health.ts";
 import { LATE } from "../src/turn.ts";
 import { controls } from "../src/testing.ts";
 import { at, create, rita, type Remote } from "./fixtures-native.ts";
+import scopeWorker from "../src/worker.ts";
+import { indexedScopes, type ScopeIndexPort } from "../src/scope-index.ts";
 
 const version = "01234567-89ab-cdef-0123-456789abcdef";
 const settings = { SESSION_SECRET: "an ephemeral test secret longer than 32 bytes", DEPLOYMENT: "health-test", VERSION_METADATA: { id: version } };
@@ -14,6 +16,40 @@ function github(registerScope: string) {
 }
 function artifacts(registerScope: string) { return JSON.stringify({ registerScope, namespace: "artroom-demo", host: "service.invalid", maxBytes: 1024, credentialIdentity: "adapter-attempt" }); }
 const request = (suffix = "", method = "GET") => new Request(`https://scope.test/health${suffix}`, { method });
+
+test("production health keeps indexed transport identity for concurrent and cached probes without caching admission", async () => {
+  // Transport/readiness are stand-ins. Production fetch and HealthProbe are
+  // actual; a deferred response exposes the physical single-flight boundary.
+  const name = scopeIdOf({ v: 1, kind: "register", definition: "platform:register@3", creator: null, cause: digestBytes(utf8(crypto.randomUUID())), ordinal: 0 });
+  let release!: (value: string) => void, entered!: () => void;
+  const held = new Promise<string>(resolve => { release = resolve; });
+  const started = new Promise<void>(resolve => { entered = resolve; });
+  let calls = 0, indexReads = 0, admitted = true;
+  const target = { idFromName: () => name, get: () => ({ readiness: () => { calls++; entered(); return held; } }) };
+  const index: ScopeIndexPort = { async has() { indexReads++; return admitted; }, async register() { throw Error("health registered a scope"); } };
+  const indexBinding = { idFromName: (value: string) => value, get: () => index };
+  const base = { ...env, ...settings, SCOPES: target as unknown as DurableObjectNamespace, SCOPE_INDEX: indexBinding, GITHUB_APP_CONFIG: github(name) };
+  const first = scopeWorker.fetch(request(), base);
+  await started;
+  const second = scopeWorker.fetch(request(), { ...base });
+  release("ready");
+  expect((await Promise.all([first, second])).map(response => response.status)).toEqual([200, 200]);
+  expect((await scopeWorker.fetch(request(), { ...base, SCOPE_INDEX_MODE: "enforce" })).status).toBe(200);
+  expect({ calls, indexReads }).toEqual({ calls: 1, indexReads: 1 });
+  // A real new RPC still checks the index; the stable adapter stores no has()
+  // answer. Health's existing five-second readiness cache is a separate layer.
+  admitted = false;
+  const scopes = indexedScopes(base.SCOPES, base);
+  expect(await (scopes.get(scopes.idFromName(name)) as { readiness(): Promise<string> }).readiness()).toBe("absent");
+  expect({ calls, indexReads }).toEqual({ calls: 1, indexReads: 2 });
+  expect((await scopeWorker.fetch(request(), { ...base, SCOPE_INDEX_MODE: "invalid" })).status).toBe(503);
+  expect({ calls, indexReads }).toEqual({ calls: 1, indexReads: 2 });
+  let replacementReads = 0;
+  const replacement = { idFromName: (value: string) => value, get: () => ({ ...index, async has() { replacementReads++; return false; } }) };
+  expect((await scopeWorker.fetch(request(), { ...base, SCOPE_INDEX: replacement })).status).toBe(503);
+  expect(replacementReads).toBe(1);
+  expect(calls).toBe(1);
+});
 
 // Invariant: health reveals only validated public deployment metadata and
 // closed operational words, and invalid admission causes no namespace lookup.

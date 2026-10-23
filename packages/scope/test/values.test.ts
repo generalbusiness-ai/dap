@@ -10,7 +10,7 @@ import { gateRules, gateWith } from "../../derive/test/fixtures-marks.ts";
 import { controls } from "../src/testing.ts";
 import { outsideOf, wired } from "./outside.ts";
 import { httpSource, verify } from "@generalbusiness/artroom-replay";
-import { route } from "../src/worker.ts";
+import { fixtureRoute as route } from "./support/serving-route.ts";
 import { SqliteStore } from "../src/sqlite.ts";
 import type { LateAnswers } from "../src/operations.ts";
 import { START, at, objectOf, reader, rita, stubOf } from "./fixtures-native.ts";

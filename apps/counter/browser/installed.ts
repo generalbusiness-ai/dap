@@ -1,11 +1,11 @@
 /** The installed Counter enrolls a browser key through native membership. */
 import { canonicalize, isRecord } from "@generalbusiness/artroom-bytes";
 import { applicationDeviceIdentity, browserJoining, browserPrivateSlots, generateBrowserDeviceKey, readApplicationInvitation, storedWebCryptoSigner,
-  type ApplicationScreenContext, type BrowserKeptJoin, type BrowserJoinSeat } from "@generalbusiness/artroom-client";
+  type ApplicationScreenContext, type BrowserKeptJoin, type BrowserJoinSeat, type Fetch } from "@generalbusiness/artroom-client";
 import { COUNTING_COMMITMENTS_DEFINITION } from "../commitments-pin.ts";
 import type { SavedDevice } from "./device-key.ts";
 interface Device { publicKey: import("@generalbusiness/dap-contract").KeyId; pair: CryptoKeyPair }
-export function counterEnrollment(context: ApplicationScreenContext, current: () => boolean) {
+export function counterEnrollment(context: ApplicationScreenContext, current: () => boolean, fetch?: Fetch) {
   if (context.definition !== COUNTING_COMMITMENTS_DEFINITION) throw Error("This presentation does not match the installed Counter definition.");
   const prefix = canonicalize(context.scope), slots = browserPrivateSlots({ database: "dap-counter-enrollment-1", store: "slots", lock: "dap-counter-enrollment" });
   const get = (name: string) => slots.load(prefix + ":" + name), put = (name: string, value: unknown) => slots.save(prefix + ":" + name, value);
@@ -21,7 +21,7 @@ export function counterEnrollment(context: ApplicationScreenContext, current: ()
     return held;
   });
   const saved = (key: Device, seat: BrowserJoinSeat): SavedDevice => ({ name: seat.handle, binding: applicationDeviceIdentity(context, seat, key.publicKey), key: key.pair.privateKey });
-  const api = (key: Device) => browserJoining(storedWebCryptoSigner(key.publicKey, key.pair.privateKey), { origin: context.origin, membershipDefinition: context.membershipDefinition, current,
+  const api = (key: Device) => browserJoining(storedWebCryptoSigner(key.publicKey, key.pair.privateKey), { origin: context.origin, membershipDefinition: context.membershipDefinition, current, ...(fetch ? { fetch, actFetch: fetch } : {}),
     lock: slots, store: { load: () => get("join"), save: value => put("join", value), clear: async () => {
       const value = await get("join") as BrowserKeptJoin | null;
       // Preserve the verified seat before clearing terminal join custody. A
