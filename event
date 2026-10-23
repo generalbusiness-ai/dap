@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ec1026a4a8a7c23133c6c1f38b1502118be090e2","text":"Replace incorrectly typed landing request with proper review-only request 69418ed7 at the same exact head and evidence. Builder retains implementation and landing ownership; checker reviews."}
+{"kind":"promise","text":"Checker session 44e8 will file the exact-head review of 5a909f937529001b509f72e554811ffd644c48a5 (tree a84ac415) under this review-only request. The content review is complete, recorded in 55aca725, with the evidence audits listed there."}
