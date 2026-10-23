@@ -435,6 +435,37 @@ Run the gate once, at the head you will send.
 npm run gate
 ```
 
+The gate checks commit messages before its source helpers and typechecking.
+It uses the same `git merge-base HEAD origin/main` base as whitespace and
+checks every commit in `base..HEAD`, including merges and side history.
+If the base is unavailable, the message check fails. Fetch `origin/main`
+before running the gate.
+
+A subject has at most 100 Unicode code points. Put detail in the body after
+an empty line. In the subject and body, separate a word of three or more
+Unicode letters from an ASCII hexadecimal run of at least seven
+characters that contains a digit. For example, write `exact b8a4dea1`, not
+`exactb8a4dea1`. Bare maximal hexadecimal tokens and names such as
+`base64url`, `sha256`, and `ed25519` are allowed. Only a terminal block of
+`Name: value` trailer lines, separated from the message by an empty line,
+is exempt. Continuation lines are ordinary body text. Messages are read
+as UTF-8; an unreadable commit stops the check rather than passing it.
+Landing messages supplied to `gs merge` follow the same bounds.
+
+The standalone checker and its Node tests are:
+
+```
+node scripts/check-commit-messages.mjs <base> HEAD
+node --test scripts/check-commit-messages.test.mjs
+```
+
+The one-time historical subject audit uses
+`node scripts/check-commit-messages.mjs --subjects-since 2026-10-01T00:00:00-04:00 main`.
+It visits all commits reachable from `main`, filters subjects by committer
+date with `--since-as-filter`, and reports JSON. An older-dated parent does
+not hide a newer-dated ancestor. It reads history without changing
+it. This audit does not make historical commits part of the branch gate.
+
 The gate runs `node scripts/check-shared-helpers.mjs` before typechecking.
 For a gate that needs a durable list of started and finished cases, set
 `ARTROOM_TEST_PROGRESS` to a new file in an existing evidence directory.
