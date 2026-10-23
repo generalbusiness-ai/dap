@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:00d61ab6deff219baa9106e32fc64963ed8b878c","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/capability/hold.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:010810dfdb5a6883a457a1dcf1a5b23b25c37dd6","text":"Merge retired a covered predecessor; the successor is at examples/grow/simulator-host.ts."}
