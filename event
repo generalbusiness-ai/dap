@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d1eb1f4ea55835db17639b821d06d49f814f8b61","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/capacity-admission.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d34dc4bf1a4ded8abcf96896a66edef325c2805f","text":"Merge retired a covered predecessor; the successor is at apps/sandbox/tsconfig.json."}
