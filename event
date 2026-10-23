@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c1a9aa5cd7d63e0e2f7adc6cb4b9bcfd4d62c1ca","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/fixtures-peer-pin.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c1d3f01bff935c977b1e1d6a7d21c522d1c3b8e0","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/created-definitions.test.ts."}
