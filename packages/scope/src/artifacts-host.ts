@@ -133,6 +133,7 @@ export class ArtifactsProvider implements RegisterProvider, DestinationProvider 
         if (typeof remote.revokeToken === "function") await remote.revokeToken(credential.plaintext);
       },
     } }, {
+      isolatedObjectProtocol: "v2",
       transport: (repository, plaintext) => ({ ...this.#transport(this.#remote(repository)), ...(plaintext === undefined ? {} : { authorization: `Bearer ${plaintextOf(plaintext)}` }) }),
       identity: async (repository, _plaintext, allowed) => {
         active(allowed);
@@ -146,6 +147,7 @@ export class ArtifactsProvider implements RegisterProvider, DestinationProvider 
   /** No binding token creation: archive credentials are fixture stand-ins. */
   fixtureArchive(ports: FixtureArchivePorts) {
     return fixtureArchiveProvider(ports, {
+      isolatedObjectProtocol: "v2",
       transport: (repository, plaintext) => ({ ...this.#transport(this.#remote(repository)), ...(plaintext === undefined ? {} : { authorization: `Bearer ${plaintextOf(plaintext)}` }) }),
       identity: async (repository, _plaintext, allowed) => {
         if (!allowed()) return bad();
