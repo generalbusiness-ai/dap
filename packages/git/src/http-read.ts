@@ -398,8 +398,10 @@ function wireTextEquals(data: Uint8Array, start: number, end: number, text: stri
   return wireEquals(data, start, data[end - 1] === 10 ? end - 1 : end, text);
 }
 
-/** Fixed categories only; no status text, response URL, header or body survives. */
+/** Bounded status and fixed categories only; no status text, response URL, header or body survives. */
 export interface HttpResponseRefusalDetail {
+  /** Native HTTP status, including zero for an opaque/error response. */
+  readonly status: number;
   readonly statusClass: "200" | "1xx" | "2xx-other" | "3xx" | "4xx" | "5xx" | "other";
   readonly redirected: boolean;
   readonly url: "empty" | "exact" | "changed";
@@ -413,6 +415,8 @@ function httpResponseRefusal(response: Response, requested: string): GitRefusal 
   const error = fail("HTTP read response");
   try {
     const status = response.status;
+    // Invalid stand-in metadata must not retain an unbounded or noninteger value.
+    if (!Number.isInteger(status) || status < 0 || status > 599) return error;
     const statusClass: HttpResponseRefusalDetail["statusClass"] = status === 200 ? "200" : status >= 100 && status < 200 ? "1xx"
       : status >= 200 && status < 300 ? "2xx-other" : status >= 300 && status < 400 ? "3xx" : status >= 400 && status < 500 ? "4xx" : status >= 500 && status < 600 ? "5xx" : "other";
     const raw = response.headers.get("content-type");
@@ -425,7 +429,7 @@ function httpResponseRefusal(response: Response, requested: string): GitRefusal 
       : type === "application/x-git-upload-pack-advertisement" ? "upload-pack-advertisement" : type === "application/x-git-upload-pack-result" ? "upload-pack-result"
       : folded === "application/x-git-upload-pack-advertisement" ? "upload-pack-advertisement-case" : folded === "application/x-git-upload-pack-result" ? "upload-pack-result-case"
       : type === "text/plain" || type === "text/html" || type === "application/json" ? type : "other";
-    httpResponseDetails.set(error, Object.freeze({ statusClass, redirected: response.redirected === true, url: response.url === "" ? "empty" : response.url === requested ? "exact" : "changed", mediaType }));
+    httpResponseDetails.set(error, Object.freeze({ status, statusClass, redirected: response.redirected === true, url: response.url === "" ? "empty" : response.url === requested ? "exact" : "changed", mediaType }));
   } catch { /* Diagnostic metadata must not change the original refusal or cancellation. */ }
   return error;
 }

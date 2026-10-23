@@ -625,6 +625,12 @@ test("HTTP response refusal preserves only bounded categories and cancels before
     { status: 200, media: "Application/X-Git-Upload-Pack-Result", statusClass: "200", mediaType: "upload-pack-result-case" },
     { status: 302, media: "text/plain", statusClass: "3xx", mediaType: "text/plain" },
     { status: 403, media: "text/html", statusClass: "4xx", mediaType: "text/html" },
+    { status: 400, media: "text/plain", statusClass: "4xx", mediaType: "text/plain" },
+    { status: 401, media: "text/plain", statusClass: "4xx", mediaType: "text/plain" },
+    { status: 403, media: "text/plain", statusClass: "4xx", mediaType: "text/plain" },
+    { status: 404, media: "text/plain", statusClass: "4xx", mediaType: "text/plain" },
+    { status: 411, media: "text/plain", statusClass: "4xx", mediaType: "text/plain" },
+    { status: 415, media: "text/plain", statusClass: "4xx", mediaType: "text/plain" },
     { status: 503, media: "application/json", statusClass: "5xx", mediaType: "application/json" },
     { status: 200, media: "application/x-git-upload-pack-result", statusClass: "200", mediaType: "upload-pack-result", redirected: true },
     { status: 200, media: "application/x-git-upload-pack-result", statusClass: "200", mediaType: "upload-pack-result", changed: true },
@@ -646,9 +652,25 @@ test("HTTP response refusal preserves only bounded categories and cancels before
     const error = await source.object(head, isolatedWire).then(() => undefined, error => error);
     expect(error).toMatchObject({ reason: "unreadable", what: "HTTP read response", message: "unreadable: HTTP read response" });
     const detail = httpResponseRefusalDetail(error);
-    expect(detail, "Every HTTP response refusal must retain its fixed category record").toEqual({ statusClass: specimen.statusClass, redirected: "redirected" in specimen, url: "changed" in specimen ? "changed" : "empty", mediaType: specimen.mediaType });
-    expect(Object.isFrozen(detail)).toBe(true); expect(Object.keys(detail!).sort()).toEqual(["mediaType", "redirected", "statusClass", "url"]);
+    expect(detail, "Every HTTP response refusal must retain its exact status and fixed categories").toEqual({ status: specimen.status, statusClass: specimen.statusClass, redirected: "redirected" in specimen, url: "changed" in specimen ? "changed" : "empty", mediaType: specimen.mediaType });
+    expect(Object.isFrozen(detail)).toBe(true); expect(Object.keys(detail!).sort()).toEqual(["mediaType", "redirected", "status", "statusClass", "url"]);
     expect(JSON.stringify(detail)).not.toContain(secret); expect([calls, reads, cancels]).toEqual([2, 0, 1]);
+  }
+  // Non-native numeric metadata cannot widen the retained finite status field.
+  for (const status of [NaN, Infinity, -1, 600, 200.5]) {
+    let calls = 0, reads = 0, cancels = 0;
+    const source = new SmartHttpSource({ ...v2Options, fetch: async request => {
+      calls++;
+      if (request.method === "GET") return v2Advertisement();
+      const body = new ReadableStream<Uint8Array>({ pull() { reads++; }, cancel() { cancels++; } }, { highWaterMark: 0 });
+      const response = new Response(body, { status: 503 });
+      Object.defineProperty(response, "status", { value: status });
+      return response;
+    } });
+    const error = await source.object(head, isolatedWire).then(() => undefined, error => error);
+    expect(error).toMatchObject({ reason: "unreadable", what: "HTTP read response", message: "unreadable: HTTP read response" });
+    expect(httpResponseRefusalDetail(error)).toBeUndefined();
+    expect([calls, reads, cancels]).toEqual([2, 0, 1]);
   }
   // An early status refusal must still cancel when extra diagnostic metadata throws.
   let calls = 0, reads = 0, cancels = 0;
