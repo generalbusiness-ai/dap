@@ -150,6 +150,12 @@ export class PlatformScope extends DeployedScope<PlatformEnv> {
       scheduled.push(promise);
       try { originalWaitUntil(promise); }
       catch (error) { scheduled.splice(scheduled.lastIndexOf(promise), 1); throw error; }
+      // Successful callbacks no longer belong to the outstanding frontier.
+      // Retain rejected callbacks so explicit closure still reports failures.
+      void promise.then(() => {
+        const index = scheduled.indexOf(promise);
+        if (index >= 0) scheduled.splice(index, 1);
+      }, () => {});
     };
     super(ctx, startupTest.index ? { ...env, SCOPE_INDEX: startupTest.index } : env);
     this.#scheduledCallbacks = scheduled;

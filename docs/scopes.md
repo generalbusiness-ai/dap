@@ -83,6 +83,46 @@ from the planner's room-issued CLI clone flow. It establishes no native
 lane hold, content-change publication, fresh-person signoff or complete I3
 journey. A responding URL alone establishes none of those results.
 
+## Browser Start configuration
+
+Fresh browser Start on dap-demo accepts only `DEMO_START_CONFIG` version 3.
+The configuration has exactly `v`, `origin`, `deployment`, `register`, and
+`definition`. Use `v: 3`, origin `https://dap-demo.inguz.workers.dev`, the
+actual `DEPLOYMENT` value, the full installed register reference, and
+`platform:register@17`. Do not substitute a scope ID for the full reference.
+The register must be open and its recorded host must be `artifacts`.
+Its namespace must match both `ARTIFACTS_CONFIG.namespace` and
+`ARTIFACTS_NAMESPACE`; its scope ID must match `ARTIFACTS_CONFIG.registerScope`.
+The adapter's service hostname is separate from the recorded logical host.
+
+The route returns a version 2 offer. Register17 has no `purpose` field.
+A different origin, register, incarnation, or legacy version does not produce
+a fresh offer. The native namespace still judges the exact signed creation
+lineage before it creates and indexes a child. A valid offer alone grants
+no creation authority.
+
+The artroom-scope Start page links to dap-demo for new rooms. It keeps
+Check and Continue for an original creation retained on artroom-scope;
+following the link transfers no saved request or browser key.
+
+The client retains old private custody and can decode old offers. Old-origin
+fresh discovery stays blocked. Exact-reference preflight for a retained
+Register7 or Register8 still uses its original configured scope and incarnation;
+it never becomes a fresh offer or falls back from a failed dap-demo parser.
+An already submitted operation can still use its retained envelope and readback
+path. A prepared old descriptor is not silently upgraded to another register.
+
+The old nonsecret demo configuration also selected additional GitHub host
+authority for retained rooms. Its private GitHub decoder remains separate
+from the fresh route. Removing that configuration does not restore that
+additional authority. An operator who needs it must use the exact retained
+configuration; this change invents no register references and restores no
+configuration automatically. Primary GitHub host binding is unchanged.
+
+The planner must deploy and confirm one real browser Start, including a cold
+enforced-index read. Native fixtures and scripted HTTP responses do not
+establish that hosted result.
+
 ## Definition versions
 
 A platform definition is named with its version, such as

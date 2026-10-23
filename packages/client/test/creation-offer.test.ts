@@ -1,12 +1,12 @@
 import { expect, test } from "vitest";
 import { newIncarnation, scopeIdOf, textDigest, utf8 } from "@generalbusiness/dap-bytes";
-import { creationOffer, isCreationOffer, type CreationOffer, type CreationOfferFetch } from "../src/creation-offer.ts";
+import { creationOffer, isCreationOffer, isCurrentCreationOffer, type CreationOffer, type CreationOfferFetch } from "../src/creation-offer.ts";
 
 // Actual SDK byte/URL guard over SCRIPTED HTTP, no native creation or permission.
 test("fixed same-origin founding discovery accepts only the closed bounded demo projection and refuses redirects without consuming their body", async () => {
   const origin = "https://offer.test";
-  const register = { kind: "register" as const, scope: scopeIdOf({ v: 1, kind: "register", definition: "platform:register@8", creator: null, cause: textDigest("TEST offer"), ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(8)) };
-  const offer: CreationOffer = { v: 1, origin, register, definition: "platform:register@8", at: { seq: 0, hash: textDigest("TEST head") }, registerItem: { id: 0, revision: 1, state: "open", host: "github.com", namespace: "generalbusiness-ai", policy: "open", purpose: "demo-start" } };
+  const register = { kind: "register" as const, scope: scopeIdOf({ v: 1, kind: "register", definition: "platform:register@17", creator: null, cause: textDigest("TEST offer"), ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(8)) };
+  const offer: CreationOffer = { v: 2, origin, register, definition: "platform:register@17", at: { seq: 0, hash: textDigest("TEST head") }, registerItem: { id: 0, revision: 1, state: "open", host: "github.com", namespace: "generalbusiness-ai", policy: "open" } };
   let calls = 0;
   const fetch: CreationOfferFetch = async (url, init) => {
     calls++;
@@ -31,7 +31,7 @@ test("fixed same-origin founding discovery accepts only the closed bounded demo 
   await expect(creationOffer(origin, { fetch: async url => ({ status: 200, url, redirected: false, body: oversized }) })).rejects.toThrow("No claim was submitted");
   expect(canceled).toBe(2);
   const legacy = { ...register, scope: scopeIdOf({ v: 1, kind: "register", definition: "platform:register@7", creator: null, cause: textDigest("TEST retained offer"), ordinal: 0 }) };
-  const legacyOffer: CreationOffer = { ...offer, register: legacy, definition: "platform:register@7" };
+  const legacyOffer: CreationOffer = { ...offer, v: 1, register: legacy, definition: "platform:register@7", registerItem: { ...offer.registerItem, purpose: "demo-start" } };
   let selectedReads = 0;
   const selected: CreationOfferFetch = async url => {
     selectedReads++;
@@ -40,6 +40,13 @@ test("fixed same-origin founding discovery accepts only the closed bounded demo 
   };
   expect(await creationOffer(origin, { register: legacy, fetch: selected })).toEqual(legacyOffer);
   expect(selectedReads).toBe(1);
+  expect(isCurrentCreationOffer(legacyOffer, origin)).toBe(false);
+  const previous: CreationOffer = { ...legacyOffer, definition: "platform:register@8" };
+  expect(isCreationOffer(previous, origin, legacy)).toBe(true);
+  expect(isCurrentCreationOffer(previous, origin)).toBe(false);
+  expect(isCreationOffer({ ...offer, origin: "https://foreign.test" }, origin)).toBe(false);
+  expect(isCreationOffer({ ...offer, registerItem: { ...offer.registerItem, purpose: "demo-start" } }, origin)).toBe(false);
+  expect(isCurrentCreationOffer(offer, origin, register)).toBe(true);
   expect(isCreationOffer({ ...offer, definition: "platform:register@9" }, origin)).toBe(false);
   await expect(creationOffer(origin, { fetch: async url => ({ status: 200, url, redirected: false, body: Response.json(legacyOffer).body }) })).rejects.toThrow("No claim was submitted");
   await expect(creationOffer(origin, { register: legacy, fetch: async url => ({ status: 200, url, redirected: false, body: Response.json(offer).body }) })).rejects.toThrow("No claim was submitted");

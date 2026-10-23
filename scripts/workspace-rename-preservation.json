@@ -1,7 +1,7 @@
 {
   "format": "dap-workspace-rename-preservation-1",
-  "basis": "919710c2155b35438eb2d454066a00e9443b2854",
-  "qualification": "Preservation counters bind current accepted Main919710 and the exact reviewed rename composition, including the approved seven-package SDK publication closure and exact internal application-install exclusion. The earlier Main5253 evidence remains historical on its original checkpoint. Actual 54-owner parser output remains the original Main12d run; owner source, map values and maintained parser bytes are carried by exact equality, with no new parser execution. The909 mechanical rowset and22 protected leaves remain fixed; only the two explicitly reviewed mechanical before/after/projection hashes are refreshed for accepted status diagnostics. No parser or product execution is established by this Source composition. The existing CLI browser resolver row also includes the exact reviewed client-package regex policy span; no general regex replacement or retired-alias fallback is permitted.",
+  "basis": "93f761c4fe6d0e79d9234e789a222977e45236a3",
+  "qualification": "Current preservation basis is accepted Main93f761c4fe6d0e79d9234e789a222977e45236a3. Historical Main12d parser output and earlier basis evidence remain unchanged; exactly two changed owners have actual fresh parser results. The following qualification is retained historical text describing the former basis, not the current state: Preservation counters bind current accepted Main919710 and the exact reviewed rename composition, including the approved seven-package SDK publication closure and exact internal application-install exclusion. The earlier Main5253 evidence remains historical on its original checkpoint. Actual 54-owner parser output remains the original Main12d run; owner source, map values and maintained parser bytes are carried by exact equality, with no new parser execution. The909 mechanical rowset and22 protected leaves remain fixed; only the two explicitly reviewed mechanical before/after/projection hashes are refreshed for accepted status diagnostics. No parser or product execution is established by this Source composition. The existing CLI browser resolver row also includes the exact reviewed client-package regex policy span; no general regex replacement or retired-alias fallback is permitted.",
   "protectedLeaves": [
     {
       "path": "apps/counter/commitments-pin.ts",
@@ -860,8 +860,8 @@
     },
     {
       "path": "apps/room/demo-creation.ts",
-      "before": "4c5941b87da57216a81116d682bca39e21b32b48042da48b23876f4af5503071",
-      "after": "b52a87f5991c8460a79984db27d0a324d5193eea9a944a0178880468ac9183af",
+      "before": "6d382d51783f70b0d139360496af1ee94c7ab28acbcbb9ebb809d0de6d5154bf",
+      "after": "49556be001c51b22b00a955af8f4d3b3cb67b81e518254ed82c56c814ae71549",
       "spans": [
         {
           "start": 116,
@@ -870,7 +870,7 @@
           "replacement": "@generalbusiness/dap-bytes"
         }
       ],
-      "dataProjection": "864530c3e853ee406a8aef3772d5d3ec7e67aa3c3acb8bf84ea1d6515f6c2b8c",
+      "dataProjection": "fad3916a3cb30c6ed91edeb2383bc80e551a8d3d04272e7689322d32b19556d8",
       "digests": []
     },
     {
@@ -1937,8 +1937,8 @@
     },
     {
       "path": "apps/room/page/src/main.ts",
-      "before": "8febc17871200601acb54645dc5a3a82b27b9f8d462597203ebc273f8f65381a",
-      "after": "e0595caf77726ee2f413d004f469870156dc05257b02994fcdf04ec132230329",
+      "before": "0a08f5639c86fcbc57f644b8f54285749a53dd52236e416b8aa7d0452ec05b91",
+      "after": "21b5f09a3508b9eb670c19d7b87d601ac9b49b02cf2c5ed723cf8f88fb8f39d2",
       "spans": [
         {
           "start": 1126,
@@ -1953,7 +1953,7 @@
           "replacement": "@generalbusiness/dap-bytes"
         }
       ],
-      "dataProjection": "57710d0431217153a9e4183eba75adb21aad622609f5084f45d2c3f9781c70f1",
+      "dataProjection": "a5a6863c9ef4f2a37fc4338526f8ebbb4c97d98e991f0361374272d41ca303ee",
       "digests": []
     },
     {
@@ -2054,8 +2054,8 @@
     },
     {
       "path": "apps/room/page/src/start-custody.ts",
-      "before": "5422b33771da42c1f6cb951897ebf03b0cfa1c5862cea90ca2118b1df298a26a",
-      "after": "b5d3c63eb22244dd2a6b4b0688c002c0c732446812c056a76c75fdd490c5ccf0",
+      "before": "e401af4240702af7d772f5a8025d6cf0fb3ff972c01d688eb3627bd5b2187aec",
+      "after": "3978bb94d45a9ff1ae971a2964c376327bea49de2330384a04bc79a2d6dc6991",
       "spans": [
         {
           "start": 233,
@@ -2064,13 +2064,13 @@
           "replacement": "@generalbusiness/dap-bytes"
         },
         {
-          "start": 344,
-          "end": 375,
+          "start": 368,
+          "end": 399,
           "kind": "module",
           "replacement": "@generalbusiness/dap-client"
         }
       ],
-      "dataProjection": "5581ec855d6bf205d92e5ab3003bfbc578a688fba222b25a4614087c74fa10be",
+      "dataProjection": "d368e0be19463fb51271d16bc84fd2c8894a80193e14b579a1e160ad21b66a8a",
       "digests": []
     },
     {
@@ -2663,23 +2663,23 @@
     },
     {
       "path": "apps/room/page/test/serving-startup.scope.test.ts",
-      "before": "e0ef2a5e6d83ba04fe68bb26f292cc4ce269a6e54fa7939aaa614f83db65a40d",
-      "after": "82a4af2178c0dd7fec3765d07e70e2e417b8464f61a73da7d1f75461ffcc05d4",
+      "before": "4ccc3271e1276e63f0010c720c4dc1b7244e2257d1faf4c97ee2d060f1cb9386",
+      "after": "e344c510d49e2a47efe90e6c76129523818ff6e9fe5f956a6914b039a9c12e95",
       "spans": [
         {
-          "start": 483,
-          "end": 513,
+          "start": 491,
+          "end": 521,
           "kind": "module",
           "replacement": "@generalbusiness/dap-bytes"
         },
         {
-          "start": 625,
-          "end": 656,
+          "start": 633,
+          "end": 664,
           "kind": "module",
           "replacement": "@generalbusiness/dap-client"
         }
       ],
-      "dataProjection": "5a48edf2dd064cfe848874768c381326096d588a8bbd950e0c63852d46e68b68",
+      "dataProjection": "a012030e91fe401471e514a382e0deadb1ab8d61ddf40df45462e431dcfc9dee",
       "digests": []
     },
     {
@@ -2750,8 +2750,8 @@
     },
     {
       "path": "apps/room/page/test/start-custody.test.ts",
-      "before": "ee3c8ad129a84d22a94754d19c14df5c7830215ae8136105c8d52e6a51a1de86",
-      "after": "218cb25c6e51aee957ddbd0f2061ea143c960b5c180eaa5aa556bcaf9bcaeaad",
+      "before": "f7a6f7b6ec37798861d7db12b5c9a7dff838317bbf263152890fea7c62085c1e",
+      "after": "8627c412d6acf54eaaada9260b1bc1d4f51f0401927ef1d54efba23ebd6667cc",
       "spans": [
         {
           "start": 224,
@@ -2766,13 +2766,13 @@
           "replacement": "@generalbusiness/dap-client"
         }
       ],
-      "dataProjection": "1dc0e2d3a8fa8ece6a9ebc9e82ede4a6536cfe89bb1e49371a457a58b7c34daf",
+      "dataProjection": "850deb10642cccd06ecc78be2c8bbd6a1c8259093d5d556c7349600e42b57ee2",
       "digests": []
     },
     {
       "path": "apps/room/page/test/start-ui.test.ts",
-      "before": "8213b33a0736050c4c89ec24ce262a833d6de23dc6fec9d1fbef6c7c32715032",
-      "after": "ed36a7d68105a3e4909869eef917023d57fb1b8e2534dfdf2f428ef30ca18deb",
+      "before": "52ea560ee48db3a6f8da38f6285fb6dce652e414950639a7414eb3939705d1d8",
+      "after": "bcbb147f281a76f888f90f4c3eb023bdd3a4d7659744105557f81a0483eb0d4b",
       "spans": [
         {
           "start": 121,
@@ -2787,52 +2787,52 @@
           "replacement": "@generalbusiness/dap-client"
         },
         {
-          "start": 5960,
-          "end": 5991,
+          "start": 5954,
+          "end": 5985,
           "kind": "executable-module-binding",
           "replacement": "@generalbusiness/dap-client"
         },
         {
-          "start": 6049,
-          "end": 6080,
+          "start": 6043,
+          "end": 6074,
           "kind": "module",
           "replacement": "@generalbusiness/dap-client"
         },
         {
-          "start": 6085,
-          "end": 6116,
+          "start": 6079,
+          "end": 6110,
           "kind": "executable-module-binding",
           "replacement": "@generalbusiness/dap-client"
         },
         {
-          "start": 16177,
-          "end": 16208,
+          "start": 17706,
+          "end": 17737,
           "kind": "executable-module-binding",
           "replacement": "@generalbusiness/dap-client"
         }
       ],
-      "dataProjection": "c519049c79514a7a8881f0519a7433704605e72a1f4dd9b4f0ac470d77a8b557",
+      "dataProjection": "bd542717ccc2e08d3d8d37e4802b62302d42dcb4a6d69c32f4ed5fa504f6eb08",
       "digests": []
     },
     {
       "path": "apps/room/page/test/start.scope.test.ts",
-      "before": "aec08bda57065b78e5032c5a70ea9a9c4a94ba431c7c7ec1967c6e1445b36189",
-      "after": "c1bb6e607017f243a48785c60daf9930773ce7e92704fc8cf911ae20bc7cce08",
+      "before": "16d51f764f8fce8fdbf8cb698009058c820c4913130b6a2c17c9874984c94d23",
+      "after": "c9b8852dfcc83bc0a0c32e0290e8d67362c72a5824faf25e2b6b9b5602bf7d14",
       "spans": [
         {
-          "start": 621,
-          "end": 651,
+          "start": 627,
+          "end": 657,
           "kind": "module",
           "replacement": "@generalbusiness/dap-bytes"
         },
         {
-          "start": 785,
-          "end": 816,
+          "start": 791,
+          "end": 822,
           "kind": "module",
           "replacement": "@generalbusiness/dap-client"
         }
       ],
-      "dataProjection": "8d5980217ecf4c254216ee2df4eed8e3f3ea4a5b17dbfbff2f4cb15a4d548e45",
+      "dataProjection": "aa1921ab09a0ecebd5e11bb353dbffc06ddf091e2caa8c1fb37dd7ca6222e7d2",
       "digests": []
     },
     {
@@ -4641,8 +4641,8 @@
     },
     {
       "path": "packages/cli/src/commands.ts",
-      "before": "3f56ec7e5bf94a3025a05e93b604d4e1e32eeb705a7caedac16cb7638b211932",
-      "after": "2d4e55c8ecb961e67ddc7935ecac33fc52fc7e1a310631157f7edcc18d442ea8",
+      "before": "d3b8ec952842fe9c0a81b283c26d01aedea0a35cde91847c7240087afdc773bb",
+      "after": "7ce145ea725d8cd4fa204fe23b747ae9e551ab2b73b8da92e2680f2304721786",
       "spans": [
         {
           "start": 218,
@@ -4657,25 +4657,25 @@
           "replacement": "@generalbusiness/dap-bytes"
         },
         {
-          "start": 4338,
-          "end": 4369,
+          "start": 4377,
+          "end": 4408,
           "kind": "module",
           "replacement": "@generalbusiness/dap-client"
         },
         {
-          "start": 4893,
-          "end": 4924,
+          "start": 4932,
+          "end": 4963,
           "kind": "module",
           "replacement": "@generalbusiness/dap-replay"
         },
         {
-          "start": 5009,
-          "end": 5040,
+          "start": 5048,
+          "end": 5079,
           "kind": "module",
           "replacement": "@generalbusiness/dap-client"
         }
       ],
-      "dataProjection": "db0b1c84ae8640306e51de45f8d033845756dc9e52ffcdbb46b567684bf318e4",
+      "dataProjection": "155307df8351ccf16a633006f55ee68344bae4ed9f4584c8b1b0298cbf90feb6",
       "digests": []
     },
     {
@@ -5754,8 +5754,8 @@
     },
     {
       "path": "packages/client/src/creation-offer.ts",
-      "before": "5bc93af089b1b61fe7a55f4eb1c4be629795c968fa439231596234c6868d94ae",
-      "after": "9b403c903d579d6cfff2cf907d97a3674aa96443154ba7127b66a972afc44aa9",
+      "before": "d737e162b612431945f23b5a0689759d32e545713362d5311af264233efcfebf",
+      "after": "0944616ec0e9a431805786668051fc81619e2a56e8838f74ca46d5f9ca4c7667",
       "spans": [
         {
           "start": 342,
@@ -5764,7 +5764,7 @@
           "replacement": "@generalbusiness/dap-bytes"
         }
       ],
-      "dataProjection": "5791f9ec429744b901f1b4a319b0fa4990db0b7538add6faf645a6186f41d53d",
+      "dataProjection": "7ccd7d7caa2f0d3544770db1576075bc7375ba2dfcb897c55ab4714a3d10f1ff",
       "digests": []
     },
     {
@@ -6195,8 +6195,8 @@
     },
     {
       "path": "packages/client/test/creation-offer.test.ts",
-      "before": "c241e66cb8d4145357cf71b9b592c4f552609c4da8c08043fbd428e4958d468f",
-      "after": "fac7705eedecb0e3708bce828f9046026992c4613848bd1c6e85e237bd1234b0",
+      "before": "78e7183bf49f367a078f200b080e6c9c26a9d139d4759a4dcac41d64357815e8",
+      "after": "b8a99f36a8835d9ce4202da8ccd0f3ea2e77470ad01ba04c29b2664c347e290c",
       "spans": [
         {
           "start": 100,
@@ -6205,7 +6205,7 @@
           "replacement": "@generalbusiness/dap-bytes"
         }
       ],
-      "dataProjection": "81054961ab2cb8f8626da767dc3b547b01a96c5b840328235636a319ff5feb41",
+      "dataProjection": "2e8ffe7f29a671689abee43dd7db6da8b539b871a4887288e7380e0f08e377cf",
       "digests": []
     },
     {
@@ -13576,23 +13576,23 @@
     },
     {
       "path": "packages/scope/src/demo-creation.ts",
-      "before": "ec11fa4113caf1507fcb6a654d5fe2228c2eb643513e917487e0c5d4538b405d",
-      "after": "26b16f8e21b65548191e96caed5ec732eceb088ccf642f793d4900e8be04066c",
+      "before": "4bfc570255e384f0e589f4c8ae5fea8a200bd3cbf60797056e810a92786401a5",
+      "after": "e370dee80a068d81a3449661326dc030d702f263aa03fa576f58a60c6a9a5de7",
       "spans": [
         {
-          "start": 126,
-          "end": 156,
+          "start": 211,
+          "end": 241,
           "kind": "module",
           "replacement": "@generalbusiness/dap-bytes"
         },
         {
-          "start": 277,
-          "end": 307,
+          "start": 338,
+          "end": 369,
           "kind": "module",
-          "replacement": "@generalbusiness/dap-bytes"
+          "replacement": "@generalbusiness/dap-client"
         }
       ],
-      "dataProjection": "ce2094e8652b5500096c8980a32c98604e188753b8dbca0f6746b555f5999ff4",
+      "dataProjection": "ce8461fb158d3f2fc0941b9b0379c50aeb9e5e963d5caa5d74bfba02af69c92b",
       "digests": []
     },
     {
@@ -13687,8 +13687,8 @@
     },
     {
       "path": "packages/scope/src/github-wiring.ts",
-      "before": "2d25b244406f2cbd12637291917fa0476a9bfa2c015252d2324a73b266cad5f6",
-      "after": "833f9221ffbe0604573dcdeb3b51d707815c652bde60261913f9009922581231",
+      "before": "99f8717476c6cd38593b138354b9de2d489ee6d3b707966f4743e2dee59a7937",
+      "after": "4144e363dc13c1629338f9b8f474600b036a216280543d9a98cdfb4d36a5992b",
       "spans": [
         {
           "start": 443,
@@ -13703,7 +13703,7 @@
           "replacement": "@generalbusiness/dap-git/github"
         }
       ],
-      "dataProjection": "5489f12b28e72c5ddd5c406fc8af19e4b0ebcdf7b244f54319d6a7b048bc1dd6",
+      "dataProjection": "fb6c60f2336e6e62124fd8cfc0491fd0e5addedce17e36eeb1f99f008e706059",
       "digests": []
     },
     {
@@ -15058,8 +15058,8 @@
     },
     {
       "path": "packages/scope/test/archive-one-entry-scale.test.ts",
-      "before": "3e141ac6a2d863f7ed1738fb314039c0c48e6bbd44e467b4dceb81c1174f6278",
-      "after": "1192971237febc9dff75da81f29f59feaf8ec25fc3dc24b3486c1212c0b38d1e",
+      "before": "301f9131f645dc6cd835dfeec76fc05cdc8a4b914872ad6dda59b8b077501d47",
+      "after": "f2fd2684b3387db02931b708aa7808fb34dbdc80c2162909996d27b698378c8f",
       "spans": [
         {
           "start": 594,
@@ -15068,31 +15068,31 @@
           "replacement": "@generalbusiness/dap-bytes"
         },
         {
-          "start": 673,
-          "end": 701,
+          "start": 685,
+          "end": 713,
           "kind": "module",
           "replacement": "@generalbusiness/dap-git"
         },
         {
-          "start": 821,
-          "end": 857,
+          "start": 833,
+          "end": 869,
           "kind": "module",
           "replacement": "@generalbusiness/dap-git/journal"
         },
         {
-          "start": 906,
-          "end": 949,
+          "start": 918,
+          "end": 961,
           "kind": "module",
           "replacement": "@generalbusiness/dap-git/journal-reader"
         },
         {
-          "start": 1006,
-          "end": 1037,
+          "start": 1018,
+          "end": 1049,
           "kind": "module",
           "replacement": "@generalbusiness/dap-replay"
         }
       ],
-      "dataProjection": "ca89e3962ebaf997634b24cb41436567b0782ee4ee383b54f21fcd1a0b303921",
+      "dataProjection": "b20aa461208a708402b0ed58bea204432d98ae298c3cbc6b9bafe0e67f20c83a",
       "digests": []
     },
     {
@@ -15723,8 +15723,8 @@
     },
     {
       "path": "packages/scope/test/demo-creation.test.ts",
-      "before": "23a8397599f643d5ec4d74561c888ee86dba4dc540ea83716c42ed16938bdc0e",
-      "after": "fbc560dd971474d06a390230a3dddddd0c044d47071a28be753914b1c7137147",
+      "before": "74a5bad83e07cce06fad4efe2c8758a53e1a9435a899cc0b812737ac4ae2c65b",
+      "after": "40b6271fce0a648c7a5c16c2e3211fa03a930cc71e216c5ec60c87dfa2cf1625",
       "spans": [
         {
           "start": 363,
@@ -15739,22 +15739,22 @@
           "replacement": "@generalbusiness/dap-client"
         }
       ],
-      "dataProjection": "0e192a36cb74129982324043af644fa58304bec2bd6ff50328a581c5eb6953d9",
+      "dataProjection": "59ffa6899470ce1931252118929990a90ad7ff4f3e44f27e2ecc43411ae63ec0",
       "digests": []
     },
     {
       "path": "packages/scope/test/demo-register.test.ts",
-      "before": "8ca6dcb8e156df673f3ac7245141879da25ffe47e0f06fcbeaaef1e2e566be37",
-      "after": "49e7f30f19a6f8b9a0e32cf3158f727ba221bf82e4a4c218979f62926afb0e32",
+      "before": "7950733b009ce0160481a6d8301e851f8320e67e5023e84489d87e98c3304a3e",
+      "after": "50776b66b1032777652ef34da1fde7d70090a183f9904f80a54657c0fec2e30c",
       "spans": [
         {
-          "start": 444,
-          "end": 474,
+          "start": 464,
+          "end": 494,
           "kind": "module",
           "replacement": "@generalbusiness/dap-bytes"
         }
       ],
-      "dataProjection": "298f1950aabb48af3959418c8f5774489c939c608935aa58349bb7e74c5bac0e",
+      "dataProjection": "9fb49be3591c3baa7419825bc09eee548b2b72e55e164586043aa9086cf5f33a",
       "digests": []
     },
     {
@@ -17739,8 +17739,8 @@
     },
     {
       "path": "packages/scope/test/worker.ts",
-      "before": "b6af915d4e7bd5325c421372497a6ae237b565bcaf4bf5b59e2cff3a90200a27",
-      "after": "05026b6938db666b9153bdbdc5413d6ccf9bbae9ad9b082c57f2226e5c2090d6",
+      "before": "a64485bc3ee98f8717ae7bd0be73c159a2d2d06c193b9bd60f38f6fb754ce9ff",
+      "after": "6c29be551be20ed84fe80e5a0a9fc1279bf948ace1c00a2e85d7196fddc9472c",
       "spans": [
         {
           "start": 2134,
@@ -17755,7 +17755,7 @@
           "replacement": "@generalbusiness/dap-client/application"
         }
       ],
-      "dataProjection": "975541ff81c629cc59958bbcde559cfd5eda8eb3b5ac460804d6b40b779bb254",
+      "dataProjection": "f78086ce09b713baade7cfc7e45e7df04d49cc79d7fd53bad0e2eb20e40242a0",
       "digests": []
     },
     {
@@ -17993,6 +17993,27 @@
         }
       ],
       "dataProjection": "1bf0f42a6b90ed78718c74dbf22600626f7a5ee9bc8c5d6d7b4d4389e202f4e1",
+      "digests": []
+    },
+    {
+      "path": "packages/cli/test/outsider-claim.scope.test.ts",
+      "before": "4f89aed54044f338a9c61c857887bed3ed2bf8f2e713bf70f35f99eae4d0c0d1",
+      "after": "1fd3ca9dcc5f07790000f4470da8ec7c90e3fc28d88c22f378d7534bb7d8e5ba",
+      "spans": [
+        {
+          "start": 343,
+          "end": 373,
+          "kind": "module",
+          "replacement": "@generalbusiness/dap-bytes"
+        },
+        {
+          "start": 541,
+          "end": 572,
+          "kind": "module",
+          "replacement": "@generalbusiness/dap-client"
+        }
+      ],
+      "dataProjection": "e60b5e4a2c0bc651c905e2c990cfd9bff2a4f8c833557b0ce237abb280b3698f",
       "digests": []
     }
   ],
@@ -18276,13 +18297,13 @@
     "parserOutcome": "cba70c5ef4d82bfbbefacca178c5305382592220"
   },
   "sourceSealMetadata": {
-    "sha256": "fff5db2ff3cf8fc112185dbf18c6fd27e44a9cce6ab698c628ff91c0971d9241",
+    "sha256": "b6142bf83766d4105d9ec01f82fa340cf0f1b11e72cfdbbed051c5d721a5ba7b",
     "record": {
       "format": "dap-workspace-source-seals-1",
-      "basis": "919710c2155b35438eb2d454066a00e9443b2854",
+      "basis": "93f761c4fe6d0e79d9234e789a222977e45236a3",
       "file": "scripts/security-entry-points.test.mjs",
-      "beforeSha256": "33def0e6126500a5104189455b70a5a0a5ee2be238419de3d734ff55c901e3a2",
-      "afterSha256": "557a0fb9dca78e25a885160f5d985a4748c9c082a83d8693113e49fc586d215d",
+      "beforeSha256": "9e895958d31be1b448e29800298078f099eb815f6b33c742d032df851072e8d3",
+      "afterSha256": "ebfa7c28109e1262dada7abc02d1611436e5dbbd50a4c65f0bd2ba3aea1e594b",
       "outsideValueProjectionSha256": "e1c99f613250eba46d5d30a964cef9fa2108e1fe5b3d22f0fedc53e4fe6bd085",
       "maps": {
         "seals": [
@@ -18367,8 +18388,8 @@
         {
           "map": "seals",
           "owner": "apps/room/demo-creation.ts",
-          "beforeValue": "514b127aac2bc5bc2ec7b00341984b352a5801c7684fa5596cb3728d2bde5e1d",
-          "afterValue": "cbc8c23034bc6c83f45bd7664cb158c7f452d2eb4f9e6bf406ff36c003a6fff7",
+          "beforeValue": "422bbb901795ddad480e13edaaf50dcceaf1f9daa80af6c1671399c70031c8fd",
+          "afterValue": "d9850f4854182c0231a2ae9a985882343e7f3dfea67ea034cafe4fca4bb0d77f",
           "valueStartUtf16": 631,
           "valueEndUtf16": 695
         },
@@ -18751,8 +18772,8 @@
         {
           "map": "pendingR8Seals",
           "owner": "packages/cli/src/commands.ts",
-          "beforeValue": "41adfb2b673df5ec2046fe401e65d97fab580c2c9e4331a18b1a6bf73d9b9bd5",
-          "afterValue": "7ccaa015aff104d009dc4fcd0fd37faf718fb822535f6a88764585c4ed69cb76",
+          "beforeValue": "ff0ff4b5a530f570b2ceca73a550a1f9f400a7b06002bc1e269cbcc83b76efcd",
+          "afterValue": "b85ccc91193f954de0410eb7d531a4fd32ed55a3de93c7e8201ba89ab8453a98",
           "valueStartUtf16": 7075,
           "valueEndUtf16": 7139
         },
@@ -18804,9 +18825,9 @@
         },
         {
           "path": "apps/room/demo-creation.ts",
-          "beforeSourceSha256": "4c5941b87da57216a81116d682bca39e21b32b48042da48b23876f4af5503071",
-          "afterSourceSha256": "b52a87f5991c8460a79984db27d0a324d5193eea9a944a0178880468ac9183af",
-          "actualSourceSeal": "cbc8c23034bc6c83f45bd7664cb158c7f452d2eb4f9e6bf406ff36c003a6fff7"
+          "beforeSourceSha256": "6d382d51783f70b0d139360496af1ee94c7ab28acbcbb9ebb809d0de6d5154bf",
+          "afterSourceSha256": "49556be001c51b22b00a955af8f4d3b3cb67b81e518254ed82c56c814ae71549",
+          "actualSourceSeal": "d9850f4854182c0231a2ae9a985882343e7f3dfea67ea034cafe4fca4bb0d77f"
         },
         {
           "path": "apps/room/page/route.ts",
@@ -19086,9 +19107,9 @@
         },
         {
           "path": "packages/cli/src/commands.ts",
-          "beforeSourceSha256": "3f56ec7e5bf94a3025a05e93b604d4e1e32eeb705a7caedac16cb7638b211932",
-          "afterSourceSha256": "2d4e55c8ecb961e67ddc7935ecac33fc52fc7e1a310631157f7edcc18d442ea8",
-          "actualSourceSeal": "7ccaa015aff104d009dc4fcd0fd37faf718fb822535f6a88764585c4ed69cb76"
+          "beforeSourceSha256": "d3b8ec952842fe9c0a81b283c26d01aedea0a35cde91847c7240087afdc773bb",
+          "afterSourceSha256": "7ce145ea725d8cd4fa204fe23b747ae9e551ab2b73b8da92e2680f2304721786",
+          "actualSourceSeal": "b85ccc91193f954de0410eb7d531a4fd32ed55a3de93c7e8201ba89ab8453a98"
         },
         {
           "path": "apps/sandbox/worker.ts",
@@ -19122,6 +19143,28 @@
         "outputBytes": 7710,
         "outputSha256": "aab95f824947d6a25cc04802beaad887f3d9cf455c5c9423f399d03f08fb7462",
         "outputText": "[\n  {\n    \"path\": \"apps/room/worker.ts\",\n    \"sourceSeal\": \"aba04e12dc206f0be6bda4a8edeac64569e0edd44b7a87772595d7db40bb8b67\"\n  },\n  {\n    \"path\": \"apps/room/fetch.ts\",\n    \"sourceSeal\": \"5661bfc33c21e9c0390f9897edb6948d05c1de42e3df559a8e8d16d16e8c1089\"\n  },\n  {\n    \"path\": \"apps/room/demo-creation.ts\",\n    \"sourceSeal\": \"cbc8c23034bc6c83f45bd7664cb158c7f452d2eb4f9e6bf406ff36c003a6fff7\"\n  },\n  {\n    \"path\": \"apps/room/page/route.ts\",\n    \"sourceSeal\": \"62c8f69b9f516f1b5acdaef57d7aed25268d8cf03283bdffdd4b1b5f20bb6b3d\"\n  },\n  {\n    \"path\": \"apps/room/brand/route.ts\",\n    \"sourceSeal\": \"71b45ff9b41b3bea31c775a16525349591e0d4f7dfdc65da79f095816b1c343c\"\n  },\n  {\n    \"path\": \"packages/scope/src/worker.ts\",\n    \"sourceSeal\": \"2e3546e4c7a70ce17ae42c8e1367287277b26a7a67fa6dfe4fa2d83c4b5eedca\"\n  },\n  {\n    \"path\": \"packages/scope/src/scope-index.ts\",\n    \"sourceSeal\": \"98a91329fbe8926127aab2db555970278e898cec347fd4f20569b19f1f879d54\"\n  },\n  {\n    \"path\": \"packages/scope/src/creation-admission.ts\",\n    \"sourceSeal\": \"5fe79f1b3a9f760c318cd5f9c66d768fe8a1815e47454e351826443b617ead58\"\n  },\n  {\n    \"path\": \"packages/scope/src/creation-lineage.ts\",\n    \"sourceSeal\": \"3786e04db4627fa7bfa07f8edefd3fd1125305da80b96b3d9132b671d9f21ef0\"\n  },\n  {\n    \"path\": \"packages/scope/src/creation-declaration.ts\",\n    \"sourceSeal\": \"ec719181ce0cff0048165e27bd108b8b728e9f78a858033155b670ab82e93c2b\"\n  },\n  {\n    \"path\": \"packages/scope/src/namespace.ts\",\n    \"sourceSeal\": \"1f65de08e11d85c204b671b8605b132f506cf06f2e87843e90eb0d1884f428e3\"\n  },\n  {\n    \"path\": \"packages/scope/src/health.ts\",\n    \"sourceSeal\": \"b1c5240a6ca05b247ed54766ba25448d02057267d8342a4df6908969a57acb23\"\n  },\n  {\n    \"path\": \"packages/scope/src/site/route.ts\",\n    \"sourceSeal\": \"f57a2415c997ce17fb6fcf254944b0237bae598adffca64eda123faf0fcc1084\"\n  },\n  {\n    \"path\": \"packages/scope/src/applications/route.ts\",\n    \"sourceSeal\": \"2e75a4a1ed4edc78697f740da1c7957fe365e3c5c179a00dbbb5d2a933ddfb8a\"\n  },\n  {\n    \"path\": \"packages/scope/src/item-query-wire.ts\",\n    \"sourceSeal\": \"8206b9a6531ca30cae1bc49cc249eea08c70a658305f41b3ebea6eda042055a8\"\n  },\n  {\n    \"path\": \"packages/scope/src/applications/projection-wire.ts\",\n    \"sourceSeal\": \"2e07df5447469dc09aff0d4017e010634150f49c92f614221402cf46a869c6d0\"\n  },\n  {\n    \"path\": \"packages/scope/src/object.ts\",\n    \"sourceSeal\": \"b403bba2d72425b252488d960a7cbb557d1bcc38fb9390760e39b49ac4299df4\"\n  },\n  {\n    \"path\": \"packages/scope/src/core.ts\",\n    \"sourceSeal\": \"c7f2e49246b1e784981337ee13af53b17bab424a13112d5a40ff76b75fb7a128\"\n  },\n  {\n    \"path\": \"packages/derive/src/genesis.ts\",\n    \"sourceSeal\": \"df7722143f01c8084b8f045ef959b203ae1756c4dfde170d0454cfe0b0392843\"\n  },\n  {\n    \"path\": \"packages/derive/src/judge.ts\",\n    \"sourceSeal\": \"c0ed325bc2fa84693b40d3d53a9ad54a9a9786dab39dd3b9c6039ac553488f63\"\n  },\n  {\n    \"path\": \"packages/scope/src/sessions.ts\",\n    \"sourceSeal\": \"7206983eedd0ff821afee7c6032f2a9b461c36e31b9ac186a4c2cc8b8a897de2\"\n  },\n  {\n    \"path\": \"packages/scope/src/reads.ts\",\n    \"sourceSeal\": \"1d4bb75e2b71f10f140990b7537d626f93eb8c3679057ba700ddeda96faa5e1a\"\n  },\n  {\n    \"path\": \"packages/scope/src/signed-reads.ts\",\n    \"sourceSeal\": \"6c4c4c81f44994c2ac9e4ca921c8f34184977a1256d6574e78514b814512eaf0\"\n  },\n  {\n    \"path\": \"packages/scope/src/limits.ts\",\n    \"sourceSeal\": \"6d4966a12e86067c39f61a243601d0d3a78a66850ee07f4ae80e97e22ab3639e\"\n  },\n  {\n    \"path\": \"packages/scope/src/serving-limits.ts\",\n    \"sourceSeal\": \"3a9f410f926f1e3711b78a750dd7dfb055f418fa9904be55ccb3f8cea869a987\"\n  },\n  {\n    \"path\": \"packages/scope/src/serving-admission.ts\",\n    \"sourceSeal\": \"18a5d6991a769647cd14d3e8985585c6746f5df1c3d1d5c639f34d0eb6f4da5e\"\n  },\n  {\n    \"path\": \"packages/bytes/src/records.ts\",\n    \"sourceSeal\": \"bc4e65e75215c2d940b0884a6810d5d90969455ba956c1e9731a3ed0d3c1b6af\"\n  },\n  {\n    \"path\": \"packages/scope/src/session-preparation.ts\",\n    \"sourceSeal\": \"4b9699cb1ee06234162dc2088c5c37be1804e1e9f15985fa1f0dc3151170bd85\"\n  },\n  {\n    \"path\": \"packages/scope/src/item-queries.ts\",\n    \"sourceSeal\": \"61ead9996d2c338a26331e04b8576c52425d8d2c88dc86173a7d79108c2ee418\"\n  },\n  {\n    \"path\": \"packages/scope/src/applications/projection.ts\",\n    \"sourceSeal\": \"31a3db04f3912ee3fb5bbd4cc3c658344f265f30d224ac95be2ba3b17f8622bd\"\n  },\n  {\n    \"path\": \"packages/scope/src/destination-host.ts\",\n    \"sourceSeal\": \"b86198499cadddaf47f439ed39f7e44f8da78fbed120e185b787b153f0dc66eb\"\n  },\n  {\n    \"path\": \"packages/mcp/src/hosted.ts\",\n    \"sourceSeal\": \"337b73c8773a5ce3424fc67b5746710d800ca1e4d4074ba6819f94560817641d\"\n  },\n  {\n    \"path\": \"packages/mcp/src/http.ts\",\n    \"sourceSeal\": \"9a1450bef9f94b55b4751a3368032dfc480555628b48ccfdd55fd43e9c853af8\"\n  },\n  {\n    \"path\": \"examples/grow/simulator-worker.ts\",\n    \"sourceSeal\": \"2d60dab3a9a5b204b69f15bc5ec3473fa48513888d7ffdb0c1fc179f6fe4883c\"\n  },\n  {\n    \"path\": \"examples/grow/simulator-host.ts\",\n    \"sourceSeal\": \"26a8521b98737cae3d80a9fe3b9ac17fb10b11fcf2f8ce973251253bdbf2b7df\"\n  },\n  {\n    \"path\": \"packages/scope/src/archive-target.ts\",\n    \"sourceSeal\": \"33826c2966d39df7f4d46aa74365f55b9e7e2a2317f26f9f98a735792ccb4a39\"\n  },\n  {\n    \"path\": \"packages/scope/src/archive-source-window.ts\",\n    \"sourceSeal\": \"4db3f5885e7541f713b9668d1cde655e42be1950dd6af77d5711a323b3582e1c\"\n  },\n  {\n    \"path\": \"packages/scope/src/archive-publication.ts\",\n    \"sourceSeal\": \"d8c39d220bc7eea59301478aa553960267aac16f06502b4103a85647c71eb457\"\n  },\n  {\n    \"path\": \"packages/scope/src/archive-build.ts\",\n    \"sourceSeal\": \"e82bffde8d5e6ce26b1dbd80f0659ec15a48dd461f9e02f4a235c19fbc1a4201\"\n  },\n  {\n    \"path\": \"packages/scope/src/archive-driver.ts\",\n    \"sourceSeal\": \"3dd46755edd501d2f4bb614648a3d0358fbe72635c4a734403da3f98317aceac\"\n  },\n  {\n    \"path\": \"packages/scope/src/archive-row.ts\",\n    \"sourceSeal\": \"b3b4f7fed29152a60ba76dc58a09529b18fc7b9ea737f986d7fc2803a42d8dab\"\n  },\n  {\n    \"path\": \"packages/scope/src/floor-writer.ts\",\n    \"sourceSeal\": \"fb8fd859844b8d10ba43b477bcaf07ab32fe1bfa1b6684ad9ae70b930d328a11\"\n  },\n  {\n    \"path\": \"apps/room/worker.grow.ts\",\n    \"sourceSeal\": \"791c2bfcb8b2a62d8f0d8afec627ac76b63be4b9f1ee5de27d3f6c081959bc01\"\n  },\n  {\n    \"path\": \"apps/room/archive-policy.ts\",\n    \"sourceSeal\": \"07ea72db6bc58257d3f280ac1e1c7db9296868016493fa926e473ddeb9b6f486\"\n  },\n  {\n    \"path\": \"apps/room/archive.ts\",\n    \"sourceSeal\": \"36b2250301a217b6e1c74cd1cea1a65a45390be3679e4a2fd2e809890eb6abf5\"\n  },\n  {\n    \"path\": \"packages/scope/src/archive-host-item.ts\",\n    \"sourceSeal\": \"0f9eaddc4000574a1575466592f88c57beecc11efb93e402a568a84fab8ef903\"\n  },\n  {\n    \"path\": \"packages/scope/src/archive-host.ts\",\n    \"sourceSeal\": \"8e573b3b8f5a5fdc6f677fdcc1a2e28fe4078f1f149083db568d950c4c2d2539\"\n  },\n  {\n    \"path\": \"packages/scope/src/artifacts-host.ts\",\n    \"sourceSeal\": \"378eca9b5c3c197f738cb88f59a5df51d83d52929f614735d0fdc3917df06ac0\"\n  },\n  {\n    \"path\": \"packages/scope/src/artifacts-wiring.ts\",\n    \"sourceSeal\": \"937bedd41f5f21953c2fe659634ca732b44620cc98e33e5a43f7945601c58963\"\n  },\n  {\n    \"path\": \"packages/cli/src/commands.ts\",\n    \"sourceSeal\": \"7ccaa015aff104d009dc4fcd0fd37faf718fb822535f6a88764585c4ed69cb76\"\n  },\n  {\n    \"path\": \"apps/sandbox/worker.ts\",\n    \"sourceSeal\": \"d354c1740d51e2b83e0b93272384607c609c65386c3fc4b8d977edfb89b6636a\"\n  },\n  {\n    \"path\": \"packages/client/src/application-gateway.ts\",\n    \"sourceSeal\": \"daa1d28c02085bd6be7a9698a7120cd106cc7233aad92565aaa05e67427878ef\"\n  },\n  {\n    \"path\": \"packages/client/src/application-route.ts\",\n    \"sourceSeal\": \"dcb686835049af3043e1cb8c73a989545636ea5bac2d85aaee6be92b6cd3abcc\"\n  },\n  {\n    \"path\": \"packages/scope/src/applications/bindings.ts\",\n    \"sourceSeal\": \"8212d318f058035a580c945f1140717fe31ea42638024e1099069cf654400888\"\n  }\n]\n"
+      },
+      "refresh": {
+        "owners": [
+          {
+            "path": "apps/room/demo-creation.ts",
+            "beforeSourceSha256": "6d382d51783f70b0d139360496af1ee94c7ab28acbcbb9ebb809d0de6d5154bf",
+            "afterSourceSha256": "49556be001c51b22b00a955af8f4d3b3cb67b81e518254ed82c56c814ae71549"
+          },
+          {
+            "path": "packages/cli/src/commands.ts",
+            "beforeSourceSha256": "d3b8ec952842fe9c0a81b283c26d01aedea0a35cde91847c7240087afdc773bb",
+            "afterSourceSha256": "7ce145ea725d8cd4fa204fe23b747ae9e551ab2b73b8da92e2680f2304721786"
+          }
+        ],
+        "parser": {
+          "maintainedToolSourceSha256": "6211e9d63c50bc8686ddebbc4d211fceedb4acd3303849ea29137c031517e167",
+          "rootRunReference": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a775d863dab251725b8ca7e84d69ee136124a837",
+          "outputPath": "/private/tmp/artroom-rename-main93-integration-execution-20261023-v1/parser.stdout",
+          "outputBytes": 277,
+          "outputSha256": "926bc08691166e159aeded22f74d697a5561d062f649c09263b897b954b24034",
+          "outputText": "[\n  {\n    \"path\": \"apps/room/demo-creation.ts\",\n    \"sourceSeal\": \"d9850f4854182c0231a2ae9a985882343e7f3dfea67ea034cafe4fca4bb0d77f\"\n  },\n  {\n    \"path\": \"packages/cli/src/commands.ts\",\n    \"sourceSeal\": \"b85ccc91193f954de0410eb7d531a4fd32ed55a3de93c7e8201ba89ab8453a98\"\n  }\n]\n"
+        }
       }
     }
   },

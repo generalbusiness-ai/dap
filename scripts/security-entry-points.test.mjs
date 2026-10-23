@@ -7,7 +7,7 @@ import { assertInventory, documentedInventory, servedInventory, sourceSeal, room
 const seals = {
   "apps/room/worker.ts": "aba04e12dc206f0be6bda4a8edeac64569e0edd44b7a87772595d7db40bb8b67",
   "apps/room/fetch.ts": "5661bfc33c21e9c0390f9897edb6948d05c1de42e3df559a8e8d16d16e8c1089", // R2 owning AST value adopted on the reviewed branch.
-  "apps/room/demo-creation.ts": "cbc8c23034bc6c83f45bd7664cb158c7f452d2eb4f9e6bf406ff36c003a6fff7",
+  "apps/room/demo-creation.ts": "d9850f4854182c0231a2ae9a985882343e7f3dfea67ea034cafe4fca4bb0d77f",
   "apps/room/page/route.ts": "62c8f69b9f516f1b5acdaef57d7aed25268d8cf03283bdffdd4b1b5f20bb6b3d",
   "apps/room/brand/route.ts": "71b45ff9b41b3bea31c775a16525349591e0d4f7dfdc65da79f095816b1c343c",
   "packages/scope/src/worker.ts": "2e3546e4c7a70ce17ae42c8e1367287277b26a7a67fa6dfe4fa2d83c4b5eedca", // Actual union parser value adopted by root.
@@ -64,7 +64,7 @@ const pendingArchiveSeals = {
 };
 // Actual maintained parser outputs adopted by root; never infer hashes from intent.
 const pendingR8Seals = {
-  "packages/cli/src/commands.ts": "7ccaa015aff104d009dc4fcd0fd37faf718fb822535f6a88764585c4ed69cb76", // Actual integrated CLI parser value adopted by root.
+  "packages/cli/src/commands.ts": "b85ccc91193f954de0410eb7d531a4fd32ed55a3de93c7e8201ba89ab8453a98", // Actual integrated CLI parser value adopted by root.
   "apps/sandbox/worker.ts": "d354c1740d51e2b83e0b93272384607c609c65386c3fc4b8d977edfb89b6636a",
   "packages/client/src/application-gateway.ts": "daa1d28c02085bd6be7a9698a7120cd106cc7233aad92565aaa05e67427878ef",
   "packages/client/src/application-route.ts": "dcb686835049af3043e1cb8c73a989545636ea5bac2d85aaee6be92b6cd3abcc",

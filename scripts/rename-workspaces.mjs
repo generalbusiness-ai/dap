@@ -661,8 +661,39 @@ function sealKeyControl(record, text) {
   }
   throw Error("Source-seal owner-key control was accepted.");
 }
+const SOURCE_SEAL_REFRESH_OWNERS = ["apps/room/demo-creation.ts", "packages/cli/src/commands.ts"];
+function sealRefresh(refresh, parserHash) {
+  sealKeys(refresh, ["owners", "parser"], "refresh");
+  if (!Array.isArray(refresh.owners) || !sameJson(refresh.owners.map(row => row.path), SOURCE_SEAL_REFRESH_OWNERS)) {
+    throw Error("Source-seal refresh owners differ.");
+  }
+  const parser = refresh.parser;
+  sealKeys(parser, ["maintainedToolSourceSha256", "rootRunReference", "outputPath", "outputBytes", "outputSha256", "outputText"], "refresh parser provenance");
+  if (parser.maintainedToolSourceSha256 !== parserHash || typeof parser.rootRunReference !== "string"
+    || parser.rootRunReference.length < 1 || parser.rootRunReference.length > 512
+    || typeof parser.outputPath !== "string" || parser.outputPath.length < 1 || parser.outputPath.length > 4096
+    || typeof parser.outputText !== "string" || Buffer.byteLength(parser.outputText) > 4096
+    || !Number.isSafeInteger(parser.outputBytes) || parser.outputBytes !== Buffer.byteLength(parser.outputText)
+    || !sha256(parser.outputSha256) || hash(parser.outputText) !== parser.outputSha256) throw Error("Invalid source-seal refresh output binding.");
+  const output = JSON.parse(parser.outputText);
+  if (!Array.isArray(output) || output.length !== 2) throw Error("Invalid source-seal refresh result count.");
+  for (let index = 0; index < 2; index++) {
+    const owner = refresh.owners[index], result = output[index];
+    sealKeys(owner, ["path", "beforeSourceSha256", "afterSourceSha256"], "refresh owner");
+    sealKeys(result, ["path", "sourceSeal"], "refresh parser result");
+    if (result.path !== owner.path || !sha256(result.sourceSeal)
+      || !sha256(owner.beforeSourceSha256) || !sha256(owner.afterSourceSha256)) throw Error("Source-seal refresh owner/output differs.");
+  }
+  return output;
+}
+function sealRefreshControl(refresh, parserHash) {
+  const mutant = { ...refresh, owners: refresh.owners.map((row, index) => index === 0 ? { ...row, path: "apps/room/worker.ts" } : row) };
+  try { sealRefresh(mutant, parserHash); }
+  catch (error) { if (error.message === "Source-seal refresh owners differ.") return; throw error; }
+  throw Error("Source-seal unlisted-owner refresh was accepted.");
+}
 function sealRecord(record, baseline) {
-  sealKeys(record, ["format", "basis", "file", "beforeSha256", "afterSha256", "outsideValueProjectionSha256", "maps", "entries", "owners", "parser"], "record");
+  sealKeys(record, ["format", "basis", "file", "beforeSha256", "afterSha256", "outsideValueProjectionSha256", "maps", "entries", "owners", "parser", ...(Object.hasOwn(record, "refresh") ? ["refresh"] : [])], "record");
   if (record.format !== "dap-workspace-source-seals-1" || !/^[a-f0-9]{40}$/.test(record.basis)
     || record.basis !== baseline.basis || record.file !== SOURCE_SEAL_FILE
     || ![record.beforeSha256, record.afterSha256, record.outsideValueProjectionSha256].every(sha256)
@@ -694,13 +725,25 @@ function sealRecord(record, baseline) {
   // execution and dependencies; this script follows only its fixed tool/owner list.
   const output = JSON.parse(parser.outputText);
   if (!Array.isArray(output) || output.length !== 54) throw Error("Invalid source-seal parser result count.");
+  const refreshed = Object.hasOwn(record, "refresh") ? sealRefresh(record.refresh, parser.maintainedToolSourceSha256) : undefined;
+  if (refreshed) sealRefreshControl(record.refresh, parser.maintainedToolSourceSha256);
   const guards = [sealRead(resolve(ROOT, SOURCE_SEAL_TOOL))];
   if (hash(guards[0].bytes) !== parser.maintainedToolSourceSha256
     || hash(sealOriginal(record.basis, SOURCE_SEAL_TOOL)) !== parser.maintainedToolSourceSha256) {
     throw Error("Source-seal maintained tool differs.");
   }
   for (let index = 0; index < SOURCE_SEAL_OWNERS.length; index++) {
-    const path = SOURCE_SEAL_OWNERS[index], owner = record.owners[index], result = output[index];
+    const path = SOURCE_SEAL_OWNERS[index], owner = record.owners[index], historicalResult = output[index];
+    const refreshIndex = SOURCE_SEAL_REFRESH_OWNERS.indexOf(path);
+    const result = refreshed && refreshIndex !== -1 ? refreshed[refreshIndex] : historicalResult;
+    sealKeys(historicalResult, ["path", "sourceSeal"], "historical parser result");
+    if (historicalResult.path !== path || !sha256(historicalResult.sourceSeal)) throw Error("Source-seal historical output order or value differs.");
+    if (refreshed && refreshIndex !== -1) {
+      const refreshedOwner = record.refresh.owners[refreshIndex];
+      if (refreshedOwner.beforeSourceSha256 !== owner.beforeSourceSha256 || refreshedOwner.afterSourceSha256 !== owner.afterSourceSha256) {
+        throw Error("Source-seal refresh Source binding differs.");
+      }
+    }
     sealKeys(owner, ["path", "beforeSourceSha256", "afterSourceSha256", "actualSourceSeal"], "owner");
     sealKeys(result, ["path", "sourceSeal"], "parser result");
     if (owner.path !== path || result.path !== path || !sha256(owner.beforeSourceSha256)

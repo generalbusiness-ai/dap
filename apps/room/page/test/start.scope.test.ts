@@ -1,17 +1,20 @@
-/** Native Page Start through production HTTP/Register@8/directory@7/enrollment, plus exact retained Register@7 offer.
+/** Native Page Start through production HTTP/Register17/indexed Directory16/enrollment; deployed old offers refuse.
  * STAND-INs: OwnGit/provider, scripted clock, bounded dispatcher scheduler,
  * private storage/Web Locks, accepted-reply loss and native Response URL metadata.
  * No installer key is passed to Page. No browser/provider/deployment runs here. */
 import { env } from "cloudflare:workers";
 import { expect, test } from "vitest";
 import type { Seed, SignedIntent, ScopeId } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, intentDigest, keyIdOfSecret, newIncarnation, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, intentDigest, isSeed, keyIdOfSecret, newIncarnation, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { agentKeyInvitationOf, creationOffer, secretSigner, signedIntent, type Fetch, type CreationOfferFetch, type Signer } from "@generalbusiness/dap-client";
-import { DEMO_REGISTER, WEB_DEMO_REGISTER, WEB_DEMO_COHORT, DEMO_PURPOSE } from "@generalbusiness/dap-platform";
+import { DEMO_REGISTER, ARCHIVE_DEVICE_APPLICATION_COHORT, DEMO_PURPOSE } from "@generalbusiness/dap-platform";
 import worker from "../../worker.ts";
 import { beginSessionFixture } from "../../../../packages/scope/test/session-settings.ts";
 import { nativeFixtureLifetime, driveFixture } from "../../../../packages/scope/test/support/native-fixture-lifetime.ts";
 import { TEST_DEPLOYMENT } from "../../../../packages/scope/test/worker.ts";
+import { indexedScopes } from "../../../../packages/scope/src/scope-index.ts";
+import { namespace } from "../../../../packages/scope/src/namespace.ts";
+import type { Transport } from "../../../../packages/scope/src/ports.ts";
 import { reader } from "../../../../packages/scope/test/support.ts";
 import { ownHost } from "../../../../packages/scope/test/hosts.ts";
 import { originalStart, startRoom as actualStartRoom } from "../src/start-custody.ts";
@@ -36,24 +39,27 @@ function locksOf(): ClaimLocks {
   } };
 }
 
-test("fresh Page Start discovers native web register@8 and exact retained legacy7, retains before dispatch, Checks a lost accepted reply without mutation and explicitly Continues the original through enrolled room recovery (host, scheduler, storage and loss STAND-INs)", async () => {
+test("fresh Page Start discovers native Register17 and refuses a deployed legacy7 offer, retains before dispatch, Checks a lost accepted reply without mutation and explicitly Continues the original through enrolled room recovery (host, scheduler, storage and loss STAND-INs)", async () => {
   const owner = beginSessionFixture({ secret: b64url(crypto.getRandomValues(new Uint8Array(32))), sessions: true, inspector: reader });
   const lifetime = nativeFixtureLifetime(owner);
   let recovered: Signer | undefined;
   try {
-    const origin = "https://artroom-rehearsal.inguz.workers.dev";
+    const origin = "https://dap-demo.inguz.workers.dev";
     const host = ownHost();
     // Installer is solely native register setup; Start generates another key.
     const installer = secretSigner(crypto.getRandomValues(new Uint8Array(32)));
-    const install = await signedIntent(installer, { to: null, kind: "install", fields: { host: host.host, namespace: host.namespace, policy: "open", purpose: DEMO_PURPOSE } }, { now: lifetime.now() });
-    const seed: Seed = { v: 1, kind: "register", definition: WEB_DEMO_REGISTER, creator: null, cause: intentDigest(install.intent), ordinal: 0 };
+    const install = await signedIntent(installer, { to: null, kind: "install", fields: { host: host.host, namespace: host.namespace, policy: "open" } }, { now: lifetime.now() });
+    const seed: Seed = { v: 1, kind: "register", definition: ARCHIVE_DEVICE_APPLICATION_COHORT.register, creator: null, cause: intentDigest(install.intent), ordinal: 0 };
     const R = lifetime.platform(scopeIdOf(seed));
-    expect((await lifetime.wait(() => R.stub.create(install, WEB_DEMO_REGISTER))).answer).toBe("accepted");
+    expect((await lifetime.wait(() => R.stub.create(install, ARCHIVE_DEVICE_APPLICATION_COHORT.register))).answer).toBe("accepted");
     const register = await lifetime.wait(() => R.at());
-    const wire = (name: ScopeId) => lifetime.outside(name, (given, sql) => host.outside(given, sql, host.bindings(R.name)));
+    const deployed = { SCOPE_INDEX: env.SCOPE_INDEX, SCOPE_INDEX_MODE: "enforce", DEPLOYMENT: TEST_DEPLOYMENT, ...host.bindings(R.name), ARTIFACTS_NAMESPACE: host.namespace };
+    const transport = namespace(indexedScopes(env.PLATFORM, deployed)).transport;
+    const forwarded: Transport = { send: async envelope => { if (isSeed(envelope.to)) wire(scopeIdOf(envelope.to)); return transport.send(envelope); } };
+    const wire = (name: ScopeId) => { lifetime.platform(name); lifetime.outside(name, (given, sql) => host.outside(given, sql, host.bindings(R.name))); lifetime.wire(name, () => ({ transport: forwarded })); };
     wire(R.name);
     await lifetime.wait(() => R.restart());
-    lifetime.setHold(envelope => { if ("definition" in envelope.to) wire(scopeIdOf(envelope.to)); return false; });
+    // Every per-name child transport forwards through actual deployed indexed admission.
     // A separate real legacy root models a previously configured register7.
     // It is selected only by its exact retained scope+inc, never by a fresh GET.
     const legacyInstall = await signedIntent(installer, { to: null, kind: "install", fields: { host: host.host, namespace: host.namespace, policy: "open", purpose: DEMO_PURPOSE } }, { now: lifetime.now() });
@@ -61,7 +67,7 @@ test("fresh Page Start discovers native web register@8 and exact retained legacy
     const L = lifetime.platform(scopeIdOf(legacySeed));
     expect((await lifetime.wait(() => L.stub.create(legacyInstall, DEMO_REGISTER))).answer).toBe("accepted");
     const legacyRegister = await lifetime.wait(() => L.at());
-    const bindings = { SCOPE_INDEX: env.SCOPE_INDEX, SCOPES: env.PLATFORM, DEPLOYMENT: TEST_DEPLOYMENT, DEMO_START_CONFIG: canonicalize({ v: 2, origin, deployment: TEST_DEPLOYMENT, register, definition: WEB_DEMO_REGISTER, legacy: { register: legacyRegister, definition: DEMO_REGISTER } }) };
+    const bindings = { ...deployed, SCOPES: env.PLATFORM, DEMO_START_CONFIG: canonicalize({ v: 3, origin, deployment: TEST_DEPLOYMENT, register, definition: ARCHIVE_DEVICE_APPLICATION_COHORT.register }) };
     const native: Fetch = (url, init) => lifetime.wait(() => worker.fetch(new Request(url, init), bindings));
     const anonymous = await native(`${origin}/v1/scopes/${register.scope}`);
     expect(anonymous.status).toBe(403);
@@ -88,9 +94,9 @@ test("fresh Page Start discovers native web register@8 and exact retained legacy
     expect([offerStatus, offerTransportError], "native offer HTTP response before codec acceptance").toEqual([200, null]);
     expect(offerFailed, "bounded SDK acceptance of the actual native offer").toBe(false);
     if (!offer) throw new Error("The actual native offer was not decoded.");
-    expect([offer.definition, offer.register, offer.at.seq, offer.registerItem.revision, offer.registerItem.purpose]).toEqual([WEB_DEMO_REGISTER, register, 0, 1, DEMO_PURPOSE]);
-    const retainedOffer = await lifetime.wait(() => creationOffer(origin, { fetch: offerFetch, register: legacyRegister }));
-    expect([retainedOffer.definition, retainedOffer.register]).toEqual([DEMO_REGISTER, legacyRegister]);
+    expect([offer.definition, offer.register, offer.at.seq, offer.registerItem.revision]).toEqual([ARCHIVE_DEVICE_APPLICATION_COHORT.register, register, 0, 1]);
+    await expect(lifetime.wait(() => creationOffer(origin, { fetch: offerFetch, register: legacyRegister }))).rejects.toThrow("No claim was submitted");
+    expect(offer.registerItem).not.toHaveProperty("purpose");
     const unrelatedInc = newIncarnation(new Uint8Array(16).fill(1));
     const unseenLegacy = { ...legacyRegister, inc: unrelatedInc !== legacyRegister.inc ? unrelatedInc : newIncarnation(new Uint8Array(16).fill(2)) };
     await expect(lifetime.wait(() => creationOffer(origin, { fetch: offerFetch, register: unseenLegacy }))).rejects.toThrow();
@@ -159,11 +165,11 @@ test("fresh Page Start discovers native web register@8 and exact retained legacy
     expect(canonicalize(kept.completed["found"].signed) === canonicalize(original)).toBe(true);
     expect([kept.completed["found"].signed.intent.idempotencyKey, kept.completed["found"].signed.intent.notAfter]).toEqual([original.intent.idempotencyKey, original.intent.notAfter]);
     const O = lifetime.platform(completed.repository!.directory.scope), M = lifetime.platform(completed.repository!.membership.scope);
-    expect((await lifetime.wait(() => O.summary())).value.definition).toBe(WEB_DEMO_COHORT.directory);
+    expect((await lifetime.wait(() => O.summary())).value.definition).toBe(ARCHIVE_DEVICE_APPLICATION_COHORT.directory);
     const Q = lifetime.platform(completed.repository!.rules);
     const bornRules = (await lifetime.wait(() => Q.summary())).value;
-    expect(bornRules.definition).toBe(WEB_DEMO_COHORT.rules);
-    expect(bornRules.items.find(item => item.type === "rules")?.values["ownerMayReview"]).toBe(true);
+    expect(bornRules.definition).toBe(ARCHIVE_DEVICE_APPLICATION_COHORT.rules);
+    expect(bornRules.items.find(item => item.type === "rules")?.values["ownerMayReview"]).toBe(false);
     expect(bornRules.items.find(item => item.type === "rules")?.values["approvals"]).toBe(1);
     expect((await lifetime.wait(() => R.entries())).filter(e => e.input.type === "act" && e.input.signed.intent.kind === "found")).toHaveLength(1);
     expect((await lifetime.wait(() => M.entries())).filter(e => e.input.type === "act" && e.input.signed.intent.kind === "seat")).toHaveLength(1);
@@ -285,7 +291,7 @@ test("fresh Page Start discovers native web register@8 and exact retained legacy
       expect((await lifetime.wait(() => M.summary())).value.items.some(item => item.type === "key" && item.state === "active" && item.values["kind"] === "agent" && item.values["id"] === keyIdOfSecret(agentSeed) && item.refs["member"] === member.id)).toBe(true);
     } finally { agentSeed.fill(0); }
     const person = await lifetime.wait(() => connectInvitation(origin, reload, binding, { kind: "person", handle: "@native-person", role: "member", hours: 24 }, { ...ready, fetch: creatorFetch, mode: "new" }));
-    expect([person.state, linkOf(person.link!)?.definition, agentKeyInvitationOf(person.link!)]).toEqual(["verified", "platform:membership@2", null]);
+    expect([person.state, linkOf(person.link!)?.definition, agentKeyInvitationOf(person.link!)]).toEqual(["verified", ARCHIVE_DEVICE_APPLICATION_COHORT.membership, null]);
     const personStore = memoryStore();
     expect((await lifetime.wait(() => command({ store: personStore, fetch: native, now: lifetime.now, pause, tries: 16 }, ["join", person.link!]))).code).toBe(0);
     expect((await personStore.config())?.handle).toBe("@native-person");

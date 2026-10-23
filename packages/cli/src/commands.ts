@@ -33,7 +33,7 @@ import { applicationList } from "./application-list.ts";
 import { PROPOSED_BOUNDS, type Answer, type DeclaredDefinition, type Digest, type EffectForm, type Entry, type FactRef, type FieldValue, type Created, type Item, type KeyId, type PlatformDefinition, type ScopeId, type ScopeRef, type Seed, type SignedIntent, type Summary } from "@generalbusiness/dap-contract";
 import { READ_REFUSALS, readItemQuery, b64url, canonicalize, definitionDigest, digestBytes, factRefOf, intentDigest, isReceipt, isSignedIntentShape, isDigest, isFactRef, isIncarnation, isScopeId, parseStrict, scopeIdOf, seedDigest, textDigest, timeMs, timeOf, unb64url, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import {
-  ScopeHandle, ShapeError, TransportError, activeDirectory, partitionIndexes, wellFormedInvitation, isCreationOffer, readCredential, declaredHandle, create, httpTransport, requestSession, signerSessionRequest, shapeDeclaredAct, signedIntent, signedLogReader, signedReads,
+  ScopeHandle, ShapeError, TransportError, activeDirectory, partitionIndexes, wellFormedInvitation, creationOffer, isCreationOffer, isCurrentCreationOffer, readCredential, declaredHandle, create, httpTransport, requestSession, signerSessionRequest, shapeDeclaredAct, signedIntent, signedLogReader, signedReads,
   type Fetch, type Session, type CreationOffer, type ReadSigning, type Signer, type Signing, type Transport,
 } from "@generalbusiness/dap-client";
 import { CAPABILITY_CODE as REPLAY_CAPABILITY_CODE } from "@generalbusiness/dap-derive";
@@ -740,8 +740,28 @@ function walkClaim(ctx: Context, name: string, options: { handle?: string; branc
       if (pending["found"] && (!validStep(pending["found"], register, signer.key, "found") || intentDigest(pending["found"].signed.intent) !== pending.intent || pending["found"].signed.intent.fields["founderHandle"] !== pending.handle)) return failed("The pending claim does not match this register, signing key and recorded intent; nothing was submitted.");
     } else {
       let offered: CreationOffer | undefined;
-      if (ctx.creationOffer) {
-        const value = await ctx.creationOffer(structuredClone(register));
+      // The dedicated public service offers fresh Register17 selectors without
+      // a member summary. Other origins retain their historical read path.
+      const demoOrigin = "https://dap-demo.inguz.workers.dev";
+      const publicDemo = config.service === demoOrigin || config.service === demoOrigin + "/";
+      const offeredBy = ctx.creationOffer ?? (publicDemo ? async (at: ScopeRef) => creationOffer(demoOrigin, {
+        register: at,
+        ...(ctx.fetch ? { fetch: async (endpoint, init) => {
+          const response = await ctx.fetch!(endpoint, init);
+          // The ordinary injected transport has a narrower response type.
+          // Require real fetch metadata rather than invent redirect success.
+          if (!("url" in response) || typeof response.url !== "string" || !("redirected" in response) || typeof response.redirected !== "boolean") {
+            try { await response.body?.getReader().cancel(); } catch { /* Preserve the fixed metadata refusal. */ }
+            throw new TransportError("The public creation offer has no checked response URL.");
+          }
+          return { status: response.status, body: response.body, url: response.url, redirected: response.redirected };
+        } } : {}),
+      }).then(value => {
+        if (!isCurrentCreationOffer(value, demoOrigin, at)) throw new TransportError("The dedicated demo requires its exact public Register17 offer.");
+        return value;
+      }) : undefined);
+      if (offeredBy) {
+        const value = await offeredBy(structuredClone(register));
         if (!isCreationOffer(value, config.service, register)) return failed("The demo offer does not match the configured origin, full register reference, pin and purpose. Nothing was prepared or submitted.");
         // Own the projection before asynchronous recovery-key preparation.
         offered = JSON.parse(canonicalize(value)) as CreationOffer;
@@ -755,7 +775,7 @@ function walkClaim(ctx: Context, name: string, options: { handle?: string; branc
         definition = offered.definition;
         // Revision selector only: never present this projection as a Summary,
         // an authenticated roster or authority for the native `found` judgment.
-        items = [{ id: offered.registerItem.id, revision: offered.registerItem.revision, type: "register", state: "open", opened: null, parties: {}, refs: {}, attributed: [], values: { host: offered.registerItem.host, namespace: offered.registerItem.namespace, policy: "open", purpose: "demo-start" } }];
+        items = [{ id: offered.registerItem.id, revision: offered.registerItem.revision, type: "register", state: "open", opened: null, parties: {}, refs: {}, attributed: [], values: { host: offered.registerItem.host, namespace: offered.registerItem.namespace, policy: "open", ...(offered.v === 1 ? { purpose: "demo-start" } : {}) } }];
       } else {
         const registered = await summaryOf(R);
         if (canonicalize(registered.scope) !== canonicalize(register)) return failed("The register read does not match the saved register reference; nothing was submitted.");

@@ -14,9 +14,9 @@ const keys = memoryPageKeys();
 const startRoom: typeof actualStartRoom = (origin, storage, options) => actualStartRoom(origin, storage, { ...options, keys });
 import type { ClaimStorage } from "../src/claim.ts";
 const origin = "https://start-custody.test";
-const ref = (kind: "register" | "directory" | "membership") => ({ scope: scopeIdOf({ v: 1, kind, definition: kind === "register" ? "platform:register@8" : kind === "directory" ? "platform:directory@7" : "platform:membership@2", creator: null, cause: textDigest("SCRIPTED Start " + kind), ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(6)), kind });
+const ref = (kind: "register" | "directory" | "membership") => ({ scope: scopeIdOf({ v: 1, kind, definition: kind === "register" ? "platform:register@17" : kind === "directory" ? "platform:directory@16" : "platform:membership@8", creator: null, cause: textDigest("SCRIPTED Start " + kind), ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(6)), kind });
 const register = ref("register");
-const offer: CreationOffer = { v: 1, origin, register, definition: "platform:register@8", at: { seq: 0, hash: textDigest("SCRIPTED register head") }, registerItem: { id: 0, revision: 1, state: "open", host: "artifacts", namespace: "SCRIPTED", policy: "open", purpose: "demo-start" } };
+const offer: CreationOffer = { v: 2, origin, register, definition: "platform:register@17", at: { seq: 0, hash: textDigest("SCRIPTED register head") }, registerItem: { id: 0, revision: 1, state: "open", host: "artifacts", namespace: "SCRIPTED", policy: "open" } };
 const locks = { request: async <T>(_name: string, run: () => Promise<T>) => run() };
 const repository: Repository = { directory: ref("directory"), membership: ref("membership"), rules: ref("directory").scope, destination: ref("membership").scope };
 function fixture() {
@@ -29,7 +29,7 @@ test("scripted retained register7 Start keeps its founder key before the CLI bou
   cli.claim.mockReset(); cli.checkClaim.mockReset();
   // This descriptor is the exact legacy register7 format, retained before this upgrade.
   const register = { ...ref("register"), scope: scopeIdOf({ v: 1, kind: "register", definition: "platform:register@7", creator: null, cause: textDigest("SCRIPTED legacy Start"), ordinal: 0 }) };
-  const legacyOffer: CreationOffer = { ...offer, register, definition: "platform:register@7" };
+  const legacyOffer: CreationOffer = { ...offer, v: 1, register, definition: "platform:register@7", registerItem: { ...offer.registerItem, purpose: "demo-start" } };
   const f = fixture(), offerRead = vi.fn(async () => legacyOffer);
   f.values.set(`artroom-page-start:${origin}`, canonicalize({ v: 1, origin, secret: b64url(new Uint8Array(32).fill(61)), configured: { register, definition: "platform:register@7" }, label: "Personal intent", handle: "@founder" }));
   let original: SignedIntent | undefined, posts = 0, creator: string | undefined;
@@ -97,11 +97,12 @@ test("scripted retained register7 Start keeps its founder key before the CLI bou
 test("scripted dropped, malformed or stale Start custody stops before the workflow; a retained key alone permits only explicit Continue", async () => {
   cli.claim.mockReset(); cli.checkClaim.mockReset();
   const legacyNew = fixture();
-  await expect(startRoom(origin, legacyNew.storage, { mode: "new", label: "Room", offer: { ...offer, definition: "platform:register@7" }, locks })).rejects.toThrow("register8");
+  await expect(startRoom(origin, legacyNew.storage, { mode: "new", label: "Room", offer: { ...offer, v: 1, definition: "platform:register@7", registerItem: { ...offer.registerItem, purpose: "demo-start" } }, locks })).rejects.toThrow("register17");
+  await expect(startRoom(origin, legacyNew.storage, { mode: "new", label: "Room", offer: { ...offer, v: 1, definition: "platform:register@8", registerItem: { ...offer.registerItem, purpose: "demo-start" } }, locks })).rejects.toThrow("register17");
   expect(legacyNew.values.size).toBe(0); expect(cli.claim).not.toHaveBeenCalled();
   const mismatched = fixture();
-  await expect(startRoom(origin, mismatched.storage, { mode: "new", label: "Room", offer, locks, creationOffer: async () => ({ ...offer, definition: "platform:register@7" }) })).rejects.toThrow("private Start");
-  expect(originalStart(origin, mismatched.storage)?.configured.definition).toBe("platform:register@8");
+  await expect(startRoom(origin, mismatched.storage, { mode: "new", label: "Room", offer, locks, creationOffer: async () => ({ ...offer, v: 1, definition: "platform:register@7", registerItem: { ...offer.registerItem, purpose: "demo-start" } }) })).rejects.toThrow("private Start");
+  expect(originalStart(origin, mismatched.storage)?.configured.definition).toBe("platform:register@17");
   const mismatchedBytes = [...mismatched.values.entries()];
   await startRoom(origin, mismatched.storage, { mode: "check", locks });
   expect([...mismatched.values.entries()]).toEqual(mismatchedBytes); expect(cli.claim).not.toHaveBeenCalled();
@@ -130,7 +131,7 @@ test("completed Start hands off the enrolled signer, preserves the separate reco
   const f = fixture();
   cli.claim.mockImplementation(async (ctx: Context) => {
     const descriptor = JSON.parse(f.values.get(`artroom-page-start:${origin}`)!) as { configured: { definition: string }; publicKey: string };
-    expect(descriptor.configured.definition).toBe("platform:register@8");
+    expect(descriptor.configured.definition).toBe("platform:register@17");
     const config = (await ctx.store.config())!;
     expect(config.register).toEqual(register);
     const recovery = await ctx.store.newSigner!("recovery"), signer = (await ctx.store.signer!("browser"))!;

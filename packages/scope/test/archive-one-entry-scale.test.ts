@@ -6,11 +6,11 @@
  * incremental send run over the fixture's scripted host and inline policy; Native Membership8 supplies authority. */
 import { expect, test } from "vitest";
 import { canonicalize, digestBytes, utf8 } from "@generalbusiness/dap-bytes";
-import { idOf, parseCommit, parseTree } from "@generalbusiness/dap-git";
+import { GitRefusal, idOf, parseCommit, parseTree } from "@generalbusiness/dap-git";
 import { journalRef, journalV2PassPath, journalV2RetainedPath, journalV2SegmentPath, type JournalPassArchive } from "@generalbusiness/dap-git/journal";
 import { readJournalRepositoryArchive } from "@generalbusiness/dap-git/journal-reader";
 import { archiveSource, verifyArchive, TRUSTS } from "@generalbusiness/dap-replay";
-import { ARCHIVE_BOUNDS, ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
+import { ARCHIVE_BOUNDS, ArchiveBudget, ArchiveStopped, type ArchiveCost } from "../src/archive-budget.ts";
 import type { ArchivePolicyRegistry } from "../src/archive-inventory.ts";
 import { ArchivePrefixStopped } from "../src/archive-prefix.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
@@ -172,7 +172,51 @@ test("the Native driver confirms 10,001 one-entry passes and preserves retained 
         return rows;
       } };
     } } : archiveSql(state);
-    const result = await driver(lane, state, host, () => budget, after, policies, sql).run();
+    // TEST-only observation before the same action reaches budget.wait's
+    // existing generic-error mapping. No retry, additional read or allowance.
+    type SendError = { boundary: "wait-action" | "provider-send"; kind: string; reason: string | null; where: string | null };
+    let sending = false, sendWaits = 0, firstNull: number | null = null, lowerSendError: SendError | null = null;
+    const retain = (error: unknown, boundary: SendError["boundary"]): void => {
+      if (lowerSendError !== null) return;
+      // A broken diagnostic must not replace the original rejection. Only
+      // fixed error categories and GitRefusal's caller-owned words survive.
+      try {
+        lowerSendError = error instanceof GitRefusal
+          ? { boundary, kind: "GitRefusal", reason: error.reason, where: error.what.slice(0, 96) }
+          : error instanceof ArchiveStopped
+            ? { boundary, kind: "ArchiveStopped", reason: error.reason, where: null }
+            : { boundary, kind: error instanceof Error && error.name === "AssertionError" ? "AssertionError"
+              : error instanceof TypeError ? "TypeError" : error instanceof RangeError ? "RangeError"
+              : error instanceof Error ? "Error" : "non-error", reason: null, where: null };
+      } catch { lowerSendError = { boundary, kind: "diagnostic-unavailable", reason: null, where: null }; }
+    };
+    const wait = budget.wait.bind(budget), originalSend = host.sendArchive;
+    budget.wait = <T>(action: () => Promise<T>): Promise<T> => wait(async () => {
+      const ordinal = sending ? ++sendWaits : 0;
+      try {
+        const value = await action();
+        if (ordinal > 0 && value === null && firstNull === null) firstNull = ordinal;
+        return value;
+      } catch (error) { if (ordinal > 0) retain(error, "wait-action"); throw error; }
+    });
+    host.sendArchive = async request => {
+      sending = true;
+      try { return await originalSend.call(host, request); }
+      catch (error) { retain(error, "provider-send"); throw error; }
+      finally { sending = false; }
+    };
+    let result: Awaited<ReturnType<ReturnType<typeof driver>["run"]>>;
+    try { result = await driver(lane, state, host, () => budget, after, policies, sql).run(); }
+    finally {
+      host.sendArchive = originalSend;
+      if (lowerSendError !== null || firstNull !== null) {
+        const observation = { after, lowerSendError, firstNull, sendWaits };
+        try {
+          (context.task.meta as Record<string, unknown>)["nativeScaleLowerSendObservation"] = observation;
+          console.info("TEST Native scale lower send observation", JSON.stringify(observation));
+        } catch { /* Observation cannot replace the original archive result. */ }
+      }
+    }
     const cost = budget.admitted();
     // Separate, post-pass observation; mark/attempt/confirm share `budget`.
     return { result, cost, refused, limited, blocked, stored: new ArchiveRows(archiveSql(state), lane.at).load() };
