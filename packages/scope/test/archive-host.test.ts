@@ -225,7 +225,7 @@ test.each(["github", "artifacts"] as const)("%s incremental parent reads one exa
     const httpError = await rejectedHttp.provider.readObject!(rejectedHttp.repository, { id: rejectedHttp.archive.commit, type: "commit", maximum: 1024 }, () => true, rejectedHttpBudget).then(() => undefined, error => error);
     expect(httpError).toMatchObject({ reason: "unreadable", what: "HTTP read response" });
     const httpSnapshot = finishArchiveParentRead(rejectedHttpBudget);
-    expect(httpSnapshot).toEqual({ ordinal: 1, type: "commit", maximum: 1024, phase: "object-response", refusal: "http-response", httpResponse: { statusClass: "5xx", redirected: false, url: "empty", mediaType: "text/html" } });
+    expect(httpSnapshot).toEqual({ ordinal: 1, type: "commit", maximum: 1024, phase: "object-response", refusal: "http-response", httpResponse: { status: 503, statusClass: "5xx", redirected: false, url: "empty", mediaType: "text/html" } });
     expect(JSON.stringify(httpSnapshot)).not.toContain("TEST-private-parameter");
     expect(rejectedHttp.gitProtocols).toEqual([{ method: "GET", protocol: "version=2" }, { method: "POST", protocol: "version=2" }]);
     const lateAdvertisement = fixture(host, true, undefined, wire), lateAdvertisementBudget = new ArchiveBudget();

@@ -33,7 +33,7 @@ against the recorded Git basis, and compares the exact resulting source hashes.
 The check also replays all six publication files from the corrected K9 basis.
 Two representative controls check already-applied idempotence and refusal of an
 extra external old block: an ordinary replacement and an insertion that retains
-old text inside its new block. The full file replay covers all 24 actual anchors.
+old text inside its new block. The full file replay covers all 44 actual anchors.
 The inventory records the unchanged bytes outside each approved edit span
 and the literal digest spellings in each file. Literal digest equality is not an
 independent recalculation of semantic definition digests. Preserving declaration

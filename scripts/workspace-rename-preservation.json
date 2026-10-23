@@ -1,7 +1,7 @@
 {
   "format": "dap-workspace-rename-preservation-1",
-  "basis": "5253d7fb9dbd12ad7024eeb664355426dc0c9d4f",
-  "qualification": "Preservation counters bind accepted Main5253 and the exact recorded rename composition, including the planner-approved source-only application-install exclusion. Only reviewed import-name spans and publication contexts differ. Actual 54-owner parser output remains the original Main12d run; owner, map and maintained parser bytes are carried by exact equality, with no new parser execution.",
+  "basis": "919710c2155b35438eb2d454066a00e9443b2854",
+  "qualification": "Preservation counters bind current accepted Main919710 and the exact reviewed rename composition, including the approved seven-package SDK publication closure and exact internal application-install exclusion. The earlier Main5253 evidence remains historical on its original checkpoint. Actual 54-owner parser output remains the original Main12d run; owner source, map values and maintained parser bytes are carried by exact equality, with no new parser execution. The909 mechanical rowset and22 protected leaves remain fixed; only the two explicitly reviewed mechanical before/after/projection hashes are refreshed for accepted status diagnostics. No parser or product execution is established by this Source composition.",
   "protectedLeaves": [
     {
       "path": "apps/counter/commitments-pin.ts",
@@ -8298,8 +8298,8 @@
     },
     {
       "path": "packages/git/src/http-read.ts",
-      "before": "fe7c0ebff3b36c2b55fdcb26ed44b596ebcbf61622c4b36254d039eb0275b7e1",
-      "after": "b0ac092e40cb0f8ffde93471ac91cca12a87ddffb13875a2086822de16374d57",
+      "before": "1c86390a59fec3d2638470a28ec79224fff7ceeef74eeaf6d00c901b9fe05342",
+      "after": "6f467b71fcb5bfcf393d2d46d017d08b61bf5e1477d07f2e33a4d0ff577f244e",
       "spans": [
         {
           "start": 695,
@@ -8308,7 +8308,7 @@
           "replacement": "@generalbusiness/dap-bytes"
         }
       ],
-      "dataProjection": "381240793dadf9fceab0aa62f98a634cf7ecf8eaf1cda8a3a009ff66068e5092",
+      "dataProjection": "7ba1cbe59f330abb2a7a3a7c0634e03f575022415b04a7c60174359c14f8ba24",
       "digests": []
     },
     {
@@ -14806,8 +14806,8 @@
     },
     {
       "path": "packages/scope/test/archive-host.test.ts",
-      "before": "7de2a7a04a9c1eccf13568ebc9ee83371624c400b937d57f555ac6578266b070",
-      "after": "626cad5e3a51ad19c03127b848831b8f16e8f20878d84560c88c557960f0a0cc",
+      "before": "fdac140f26b93d705093d47461113ebc08a69ba580d08a3094f6bfa1cf175d62",
+      "after": "c98368e5f2d6fd1b075498ffcae1bd10afd58b614309daa3fdf4c1a5e42a8f55",
       "spans": [
         {
           "start": 319,
@@ -14840,7 +14840,7 @@
           "replacement": "@generalbusiness/dap-git/journal"
         }
       ],
-      "dataProjection": "581b82506ad43939b5430566b29e96900b50fc44130edae58b5168dc8eec72fa",
+      "dataProjection": "e69ac461f8d6a492bcb49b191e8cfd91af62ab7a3e4b2aaa11cba98af18fd119",
       "digests": []
     },
     {
@@ -18270,10 +18270,10 @@
     "parserOutcome": "cba70c5ef4d82bfbbefacca178c5305382592220"
   },
   "sourceSealMetadata": {
-    "sha256": "a08516903a4bd4624f7b8f6f290e4b5faeb20619aabcb90e3f44a97a8f731ad4",
+    "sha256": "fff5db2ff3cf8fc112185dbf18c6fd27e44a9cce6ab698c628ff91c0971d9241",
     "record": {
       "format": "dap-workspace-source-seals-1",
-      "basis": "5253d7fb9dbd12ad7024eeb664355426dc0c9d4f",
+      "basis": "919710c2155b35438eb2d454066a00e9443b2854",
       "file": "scripts/security-entry-points.test.mjs",
       "beforeSha256": "33def0e6126500a5104189455b70a5a0a5ee2be238419de3d734ff55c901e3a2",
       "afterSha256": "557a0fb9dca78e25a885160f5d985a4748c9c082a83d8693113e49fc586d215d",
