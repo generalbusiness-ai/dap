@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d34dc4bf1a4ded8abcf96896a66edef325c2805f","text":"Merge retired a covered predecessor; the successor is at apps/sandbox/tsconfig.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d3efa8784ce459a2d409082516eb56d1ec4674da","text":"Merge retired a covered predecessor; the successor is at packages/cli/test/store-signer.test.ts."}
