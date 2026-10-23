@@ -34,6 +34,8 @@ fi
 # -B: a path whose file was rewritten whole is read as a new file, so only this branch's lines are checked.
 base=$(git merge-base HEAD origin/main 2>/dev/null)
 if [ -n "$base" ]; then step whitespace git diff --check -B "$base"; fi
+[ "$failed" = 0 ] && step commit-messages node scripts/check-commit-messages.mjs "$base" HEAD
+[ "$failed" = 0 ] && step commit-test node --test scripts/check-commit-messages.test.mjs
 [ "$failed" = 0 ] && step helpers node scripts/check-shared-helpers.mjs
 [ "$failed" = 0 ] && step citations node scripts/check-section-citations.mjs --report "$out/section-citations.json"
 [ "$failed" = 0 ] && step cite-test node --test scripts/check-section-citations.test.mjs
