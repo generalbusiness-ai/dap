@@ -402,40 +402,57 @@ function wireTextEquals(data: Uint8Array, start: number, end: number, text: stri
 export interface AdvertisementRefusalDetail {
   readonly subtype: "first-frame-kind" | "first-frame-version" | "trailing-data" | "capability-frame-kind"
     | "capability-name-character" | "capability-value-character" | "capability-empty-name" | "capability-empty-value"
-    | "duplicate-fetch" | "duplicate-object-format";
+    | "duplicate-fetch" | "duplicate-object-format" | "service-preamble-flush" | "post-preamble-version";
   readonly firstFrame: "version-2" | "service-upload" | "error" | "other" | "non-data";
+  readonly postPreamble?: "version-2" | "protocol-0-ref" | "other" | "non-data";
 }
 const advertisementDetails = new WeakMap<GitRefusal, Readonly<AdvertisementRefusalDetail>>();
 /** An absent detail leaves legacy, framing, HTTP and other refusals unchanged. */
 export function advertisementRefusalDetail(error: unknown): Readonly<AdvertisementRefusalDetail> | undefined {
   return error instanceof GitRefusal ? advertisementDetails.get(error) : undefined;
 }
-function advertisementRefusal(what: "upload advertisement" | "upload capabilities", subtype: AdvertisementRefusalDetail["subtype"], firstFrame: AdvertisementRefusalDetail["firstFrame"]): GitRefusal {
+function advertisementRefusal(what: "upload advertisement" | "upload capabilities", subtype: AdvertisementRefusalDetail["subtype"], firstFrame: AdvertisementRefusalDetail["firstFrame"], postPreamble?: AdvertisementRefusalDetail["postPreamble"]): GitRefusal {
   const error = fail(what);
-  advertisementDetails.set(error, Object.freeze({ subtype, firstFrame }));
+  advertisementDetails.set(error, Object.freeze({ subtype, firstFrame, ...(postPreamble === undefined ? {} : { postPreamble }) }));
   return error;
 }
 
 /** No refs, unknown capability strings, token arrays or growing metadata are retained. */
 function v2Capabilities(data: Uint8Array, maximumPackets: number, deadline: number): void {
   let at = 0, count = 1, fetchSeen = false, formatSeen = false, shallow = false, filter = false;
-  const version = v2Frame(data, at);
+  let version = v2Frame(data, at);
   const firstFrame: AdvertisementRefusalDetail["firstFrame"] = version.kind !== "data" ? "non-data"
     : wireTextEquals(data, version.start, version.next, "version 2") ? "version-2"
     : wireTextEquals(data, version.start, version.next, "# service=git-upload-pack") ? "service-upload"
     : version.next - version.start >= 4 && wireEquals(data, version.start, version.start + 4, "ERR ") ? "error" : "other";
-  if (version.kind !== "data") throw advertisementRefusal("upload advertisement", "first-frame-kind", firstFrame);
-  if (firstFrame !== "version-2") throw advertisementRefusal("upload advertisement", "first-frame-version", firstFrame);
+  let postPreamble: AdvertisementRefusalDetail["postPreamble"];
+  const refuse = (what: "upload advertisement" | "upload capabilities", subtype: AdvertisementRefusalDetail["subtype"]) => advertisementRefusal(what, subtype, firstFrame, postPreamble);
+  if (version.kind !== "data") throw refuse("upload advertisement", "first-frame-kind");
+  if (wireTextEquals(data, version.start, version.next, "# service=git-upload-pack")) {
+    beforeDeadline(deadline);
+    if (++count > maximumPackets) throw large("upload advertisement packets");
+    const flush = v2Frame(data, version.next);
+    if (flush.kind !== "flush") throw refuse("upload advertisement", "service-preamble-flush");
+    beforeDeadline(deadline);
+    if (++count > maximumPackets) throw large("upload advertisement packets");
+    version = v2Frame(data, flush.next);
+    let ref = version.kind === "data" && version.next - version.start >= 41 && data[version.start + 40] === 32;
+    for (let i = version.start; ref && i < version.start + 40; i++) {
+      const c = data[i]!; ref = c >= 48 && c <= 57 || c >= 97 && c <= 102;
+    }
+    postPreamble = version.kind !== "data" ? "non-data" : wireTextEquals(data, version.start, version.next, "version 2") ? "version-2" : ref ? "protocol-0-ref" : "other";
+    if (postPreamble !== "version-2") throw refuse("upload advertisement", "post-preamble-version");
+  } else if (firstFrame !== "version-2") throw refuse("upload advertisement", "first-frame-version");
   at = version.next;
   for (;;) {
     beforeDeadline(deadline);
     if (++count > maximumPackets) throw large("upload advertisement packets");
     const frame = v2Frame(data, at); at = frame.next;
     if (frame.kind === "flush") {
-      if (at !== data.length) throw advertisementRefusal("upload advertisement", "trailing-data", firstFrame);
+      if (at !== data.length) throw refuse("upload advertisement", "trailing-data");
       break;
     }
-    if (frame.kind !== "data") throw advertisementRefusal("upload capabilities", "capability-frame-kind", firstFrame);
+    if (frame.kind !== "data") throw refuse("upload capabilities", "capability-frame-kind");
     const end = data[frame.next - 1] === 10 ? frame.next - 1 : frame.next;
     let equals = end;
     // One validation scan, then at most one feature scan. Unknown values
@@ -444,13 +461,13 @@ function v2Capabilities(data: Uint8Array, maximumPackets: number, deadline: numb
       const c = data[i]!;
       if (equals === end && c === 61) { equals = i; continue; }
       if (i < equals) {
-        if (!(c >= 65 && c <= 90 || c >= 97 && c <= 122 || c >= 48 && c <= 57 || c === 45 || c === 95)) throw advertisementRefusal("upload capabilities", "capability-name-character", firstFrame);
-      } else if (c < 32 || c > 126) throw advertisementRefusal("upload capabilities", "capability-value-character", firstFrame);
+        if (!(c >= 65 && c <= 90 || c >= 97 && c <= 122 || c >= 48 && c <= 57 || c === 45 || c === 95)) throw refuse("upload capabilities", "capability-name-character");
+      } else if (c < 32 || c > 126) throw refuse("upload capabilities", "capability-value-character");
     }
-    if (equals === frame.start) throw advertisementRefusal("upload capabilities", "capability-empty-name", firstFrame);
-    if (equals < end && equals + 1 === end) throw advertisementRefusal("upload capabilities", "capability-empty-value", firstFrame);
+    if (equals === frame.start) throw refuse("upload capabilities", "capability-empty-name");
+    if (equals < end && equals + 1 === end) throw refuse("upload capabilities", "capability-empty-value");
     if (wireEquals(data, frame.start, equals, "fetch")) {
-      if (fetchSeen) throw advertisementRefusal("upload capabilities", "duplicate-fetch", firstFrame);
+      if (fetchSeen) throw refuse("upload capabilities", "duplicate-fetch");
       fetchSeen = true;
       let token = equals + 1;
       for (let i = token; i <= end; i++) {
@@ -460,7 +477,7 @@ function v2Capabilities(data: Uint8Array, maximumPackets: number, deadline: numb
         token = i + 1;
       }
     } else if (wireEquals(data, frame.start, equals, "object-format")) {
-      if (formatSeen) throw advertisementRefusal("upload capabilities", "duplicate-object-format", firstFrame);
+      if (formatSeen) throw refuse("upload capabilities", "duplicate-object-format");
       formatSeen = true;
       if (!wireEquals(data, equals + 1, end, "sha1")) throw new GitRefusal("unsupported-object-format", "upload advertisement");
     }
