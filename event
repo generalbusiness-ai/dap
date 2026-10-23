@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2432677e1e023a06c120ee77c13ea13750e60926","text":"Merge retired a covered predecessor; the successor is at apps/room/page/src/join-custody.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:24422ef88e839ed4f95e1f3994b05c7321291800","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-22-creation-lineage.md."}
