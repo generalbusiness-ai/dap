@@ -1,1 +1,0 @@
-Read-only Git ls-tree/cat-file/diff/ancestry inspection; Python in-memory standard SHA1 tree framing, validated against the base/Main/policy tree OIDs. No write-tree, merge-tree --write-tree, new checkout, imported checker or audit/test invocation.
