@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7ef13080fed70bb41004c2b63f49973e9dbab824","text":"Merge retired a covered predecessor; the successor is at examples/grow/site.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:809a05f64b263ffecc9f965350f1fcb3130fdb34","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/definition-corpus/package-graph-variants.ts."}
