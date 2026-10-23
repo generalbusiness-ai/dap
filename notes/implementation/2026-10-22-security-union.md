@@ -437,3 +437,241 @@ review must record its owning compiler and complete two-case file, then the
 separate Node 37 and Counting 55 continuation. Those attributed outcomes do
 not turn this original full gate into an exit-0 run. No healthy whole-suite
 retry is part of this correction.
+
+## Draft hosted security rollout
+
+This runbook tracks request `f07dcfb1a1bd5e267f5194368408667d8804eb69`.
+It prepares deployment configuration; it records no hosted change or hosted
+acceptance. The planner owns deployments, saved inventories and rollback.
+Planner report `9c58329be9878a8d4a0ae2d35ae962a25af8cd4b` supplies the
+observations below. Planner decision
+`f3b8a57d3152dc8440a8dd0393a662e5c67f0349` confirms Grow's installed release
+and selects its sandbox origin. All three checked room configurations start
+in register mode. Room and Lending screen mappings remain empty. Grow item 2
+has the same exact descriptor in its room configuration and the dedicated
+sandbox rollout configuration, through the fixed `GROW` service binding.
+This mapping serves the existing inert placeholder, not a standalone Grow UI.
+
+| Service | Screen configuration and remaining prerequisite |
+| --- | --- |
+| `artroom-scope` | Empty. Its known Directory has no application type or screen installation, and the Worker has no application trust. Counter currently runs on a separate Worker. |
+| `dap-lending` | Empty. It has no generic installation tuple, content binding or trust. Its separate release/install request must establish those before any screen host is added. |
+| `dap-grow` | Grow item 2 maps to `https://grow.inguz.space` through `GROW`. The installed release matches the trusted packet; its browser entry remains an inert placeholder. |
+
+Grow's observed tuple is room origin `https://dap-grow.inguz.workers.dev`,
+Directory `sc_ryghgistvpshbaznxlbleop5zqruy2kmogy4jeigr7j3yqlewceq`, item 2,
+and presentation
+`sha256:5bd818a796771c0b6bdd6eac7d5b0fe6ed70358ddc2c33dec82bfd11cd558cf4`.
+The selected origin is `https://grow.inguz.space`. The planner read the
+installed record with the authenticated MCP `application_installation` tool
+and `{"item":2}` in actual Grow custody. It returned active state, creation
+phase, release
+`sha256:71e10ca9499e926a4de1d8294ed83a772051dff677d8b1687bbd8e28e61802fa`,
+semantic
+`sha256:bc098820edffe4061f7f0ff3d007ef67748307dd96fcbbe2dd5f464dfa7c9497`
+and the presentation above. This is the exact release already trusted by
+Grow. The planner's observation and explicit decision supply the match;
+the CLI summary or a successful old-origin HTTP load alone would not.
+
+Source assessment of the exact committed packet found its `index.html` is a
+76-byte placeholder: "Grow integration fixture: no production screen". Its
+other surfaces require the MCP `window.dapSurface` host. A room-origin HTTP
+200 shows that the placeholder asset is available, not that a standalone
+Grow screen works. Moving those unchanged inert bytes to a matching sandbox
+origin does not itself require resigning or a third release request. Building
+an interactive standalone Grow screen is separate authored work outside this
+configuration request. The confirmed descriptor serves that unchanged
+placeholder without claiming a usable standalone UI. No release or signed
+packet is changed by this configuration work.
+
+### Before deployment
+
+Use the exact reviewed commit. Record each current Worker version and its
+bindings, the known room roots, and each active installation's canonical room
+origin, Directory ID, item, presentation digest, release and publisher.
+`APPLICATION_SCREEN_HOSTS` and the sandbox's matching `SCREEN_HOSTS` must use
+these actual records. One stable DNS label names one installation. A package
+name or an old screen URL is not an installation record.
+
+Complete the pre-index authenticated inventory before deploying this code.
+The planner has listed 11 Grow scopes and eight Lending scopes, with manifest
+SHA-256 values `902ac75bc1867a5dac649d2bf7b5e25b6ee8aeab83c2fa0fce92b25aa8e698a8`
+and `cd67ae0a15d129f93672827df6b618ccfed1d479899eb3990598e119fa5dbe8e`.
+The planner also saved nine scopes for the known `artroom-scope` root, with
+manifest SHA-256
+`79f495530da0271602079efdd6ba727168ff155ec1a353f829d560b0bf610765`.
+Its first inventory attempt timed out at 30 seconds; the second completed.
+Rooms made through the public demo or hosted MCP endpoint are outside this
+known-root inventory. Keep `artroom-scope` in register mode until the planner
+separately decides whether enforce is appropriate. Preserve
+the exact manifests and their full genesis observations. These are listed
+sets, not a claim to have found every scope.
+
+Confirm the reviewed `SCOPE_INDEX` binding and its configured SQLite migration
+in each deployment. Preserve the existing scope namespaces, migrations, deployment
+identity, session secret, host settings, content bucket and exact application
+trust. In particular, the historical Lending configuration alone does not
+supply the private content binding or application trust. Its live `DEPLOYMENT`
+and `SESSION_SECRET` are secrets. Preserve both secret bindings. Do not add a
+plain `DEPLOYMENT` variable or expose a Lending screen before its later
+content, trust and installation configuration is reviewed. The same secret
+preservation applies to the existing `artroom-scope` deployment identity.
+
+Counter and Lending need separate reviewed signed releases of their current
+browser screens. A Worker deployment cannot replace an old signed packet.
+Their release work must record exact packet digests, publisher, content
+admission, trust and the resulting active installation before its host is
+enabled. Keep existing release pins intact until that reviewed operation.
+The planner's separate release requests are Counter
+`9d80bf6a4f777386900faebce53d99d651747559` and Lending
+`d110bfcef198929da99f408c819693403ac5f5dc`.
+
+### Register, sweep and enforce
+
+Run the pinned deployment tool from a scratch directory, never by installing
+it in the checkout. Read-only inspection of the cached Wrangler `4.147.0`
+Source confirms the explicit `--config` path, `--keep-vars` and
+`--var NAME:value` override used below. The CLI override replaces only the
+named binding. `--keep-vars` preserves existing plain-text and JSON variables;
+deploy preserves existing secrets. This Source assessment ran no Wrangler
+command and proves no deployed setting. Reconcile the actual operator
+variables before deployment rather than assuming every retained value is current.
+Set `REPO` to the absolute reviewed checkout path. Select
+the operator's existing private `DAP_HOME` for exactly one service at a time;
+do not print its contents. Use the following configuration paths in order:
+
+| Worker | Configuration |
+| --- | --- |
+| `artroom-scope` | `apps/room/wrangler.jsonc` |
+| `dap-grow` | `apps/room/wrangler.grow.jsonc` |
+| `dap-lending` | `apps/room/wrangler.lending.jsonc` |
+
+Set `CONFIG` to that Worker's configuration path from the table and
+`MANIFEST` to its saved inventory. Deploy register mode and finish the sweep
+in that order. Enforce is a separate planner decision for each Worker.
+`artroom-scope` may remain in register while the other services proceed.
+The files do not need to change between phases.
+
+1. Deploy the reviewed configuration in register mode. Record the actual
+   version ID as this Worker's register rollback version, together with the
+   exact commit, configuration and command. Preserve existing operator-set
+   variables and secrets; reconcile them before deployment. The four serving
+   settings remain 10 and 30 creations per hour, and 240 and 600 Signed reads
+   per minute, by verified key and trusted edge address respectively.
+
+   ```sh
+   npx -y wrangler@4.147.0 deploy --config "$REPO/$CONFIG" --keep-vars --var SCOPE_INDEX_MODE:register
+   ```
+
+2. Check the deployment's ordinary health route, then run the write-bearing
+   authenticated sweep over its saved manifest. Require every listed full
+   genesis observation to match. These ordinary register-mode reads can
+   register scopes; they do not prove index contents or deployment mode.
+
+   ```sh
+   node "$REPO/packages/cli/bin/dap.js" scope-index sweep --manifest "$MANIFEST"
+   ```
+
+3. Only after the planner authorizes enforce for this Worker, deploy the same
+   reviewed configuration with the enforce override. Record the actual enforce
+   version and deployment inputs. Do not edit a checked-in file.
+
+   ```sh
+   npx -y wrangler@4.147.0 deploy --config "$REPO/$CONFIG" --keep-vars --var SCOPE_INDEX_MODE:enforce
+   node "$REPO/packages/cli/bin/dap.js" scope-index verify --manifest "$MANIFEST"
+   ```
+
+4. Require every listed full genesis observation to match under that recorded
+   enforce version. Any missing or mismatched scope requires immediate
+   rollback to the saved register version. Record the failed IDs and operator
+   failure, sweep the affected scope again, then repeat enforce deployment and
+   exact verification. Do not delete the failing manifest row or weaken the
+   ancestry rules. There is no mode-query or administrative index-list route.
+
+### Sandbox and screen checks
+
+After the room services are ready, deploy the sandbox with the explicit
+rollout configuration below. Its only mapping is the confirmed Grow item 2.
+Room, Lending and all unconfigured origins remain refused. Review and deploy
+the matching Grow room and sandbox configurations as a pair. Future host
+additions need their own installed-release match and exact matching descriptor.
+
+```sh
+npx -y wrangler@4.147.0 deploy --config "$REPO/apps/sandbox/wrangler.rollout.jsonc"
+```
+
+The default `apps/sandbox/wrangler.jsonc` deliberately keeps `SCREEN_HOSTS`
+empty and refuses screens. The dedicated rollout file retains the same
+`dap-application-sandbox` Worker, `worker.ts` entry point and three fixed
+ROOM/GROW/LENDING `ApplicationScreenService` bindings. It is a separate
+deployment choice, not another service or a dynamic dispatch target. Always
+name its full `--config` path; the default is not the hosted rollout input.
+
+The `inguz.space` zone and wildcard DNS record already exist. Confirm that
+the record is proxied and that the reviewed `*.inguz.space/*` route points
+to this exact sandbox Worker without taking a conflicting route. Wait for
+the paired room and sandbox versions before calling a screen ready; a
+partially deployed pair may refuse requests.
+
+For each configured origin, check that `/_application-host` returns exactly
+the six-field descriptor, the old room application path redirects to that
+origin without changing its path, and the screen loads its signed assets.
+Check an unconfigured host and a mismatched application path still refuse.
+For this Grow mapping, require the unchanged placeholder HTML and its signed
+asset headers. There is no standalone enrollment or interactive action to
+accept from that placeholder. When Counter or Lending is later installed,
+perform that release's authorized enrollment, reload and native-action
+acceptance separately. Do not log invitations, session credentials or private
+keys. Browser storage belongs to each origin; no migration or private-key
+export is implied.
+
+Record the sandbox's previous and new versions. On a host/descriptor mismatch,
+restore the previously recorded sandbox version or the empty default
+configuration and investigate the exact room/release pair. Keep the room's
+index rollback decision separate: any enforce verification failure still
+requires the saved register version. Do not delete Durable Objects or undo
+their SQLite migrations as a screen rollback.
+
+The ordinary D1 inventory checks the conservative default sandbox file. It
+does not validate the new rollout file. The separate local configuration
+check below covers that file's actual descriptor and fixed service data.
+The ordinary gate and exact-head checker review remain required. Local
+configuration checks and the gate do not substitute for hosted acceptance.
+
+### Local configuration validation
+
+The first allocated check exited 1 when Node's strip-only loader reached an
+existing constructor parameter property through the application route's
+unrelated native imports. Input guards passed; no candidate code changed.
+The original failure remains in
+`/private/tmp/artroom-security-rollout-config-owning-20261023-v1`.
+
+The approved launcher-only successor used the maintained D1 loading pattern:
+it read the exact `applicationScreenHosts` declaration and supplied its actual
+`parseStrict` and `readApplicationScreenHost` dependencies. Its source-slice
+hash is retained in the result. This checks the actual pure boundary without
+importing the unrelated native classes; it is not a native service witness.
+
+That single retry passed with child and owner exit 0. Cached Wrangler 4.147.0
+read and normalized all four changed configurations. The host parsers accepted
+the exact Grow tuple. Matching rows, the fixed `GROW` selector and service
+bindings, register modes, serving defaults, empty Room and Lending lists,
+unchanged default sandbox bytes and absence of a plain Lending deployment,
+trust or content binding all passed. Network attempts were zero. Source,
+dependency, tool and environment guards passed with no timeout or signal.
+The TypeScript-stripping experimental warning is retained.
+
+The original command, outputs, exits and before/after inputs remain in
+`/private/tmp/artroom-security-rollout-config-owning-20261023-v2`.
+Child wall, user and system times were 0.829, 0.509 and 0.053 seconds;
+outer times including the input guards were 3.50, 1.51 and 0.91 seconds.
+This local result changes no release or hosted setting and proves no deployed
+isolation, signature, standalone Grow UI or successful final gate.
+
+After these checks, the rollout branch fast-forwarded to landed Main
+`525cb3a919855cf8aee50f28ad9ec7868d67c870`. Its eight archive paths are
+disjoint from the five rollout edits and the actual configuration/parser
+inputs. All five dirty paths retained their exact bytes, modes and physical
+identities during that update. The successful local check is carried without
+a healthy repeat. The final committed candidate still needs its ordinary
+gate and exact-head checker review.
