@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e0d1cfab9ba63cca85b44e44cecd937dac094091","text":"Merge retired a covered predecessor; the successor is at packages/replay/test/definition-format.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e173e32fbe6b87552ab48da13478cbdda500f2c8","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/application-local-device-parent.ts."}
