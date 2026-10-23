@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4b52c4886eef0529856ffc90b9e681f02f14b849","text":"Merge retired a covered predecessor; the successor is at scripts/public-release-lib.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4b640b73236b81b1fe0697b2a56d750b4e0aa45e","text":"Merge retired a covered predecessor; the successor is at apps/room/lanes/test/directory-partition-recovery.scope.test.ts."}
