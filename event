@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:855b8ee31182f8cb70dbdd48a7bf07f1671f7783","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/definition-corpus/late-pin-variants.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:856314a7d461406ee2a83e8f8e5fdf484e7ad07b","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/turn.test.ts."}
