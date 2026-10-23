@@ -1,6 +1,6 @@
 # Artifacts advertisement refusal diagnostic
 
-This change distinguishes fixed Git v2 advertisement rejection branches. It does not establish which bytes the hosted Artifacts endpoint returned, change protocol acceptance, or add a fallback. Independent Source review found no mandatory issue. The focused checks passed; the repository gate is pending.
+This change distinguishes fixed Git v2 advertisement rejection branches. It does not establish which bytes the hosted Artifacts endpoint returned, change protocol acceptance, or add a fallback. Independent Source review found no mandatory issue. The focused checks and the repository gate passed.
 
 Request: `489ad7c9e2c432fc4cac8a20c58fdf62bf6bde4f`. Promise: `5879139ed024aefa7d86caad83a757a36fb0a652`. Original diagnostic basis: accepted Main `132a5e2afe9cdfddbc81ed434eb9a6dbd48ca2b6`.
 
@@ -41,4 +41,16 @@ The sole control omitted the private annotation insertion while preserving gener
 
 The continuation took 26.3693 seconds elapsed and 30.6850 seconds inclusive CPU. Its compiler took 0.7254 seconds; baseline 7.9906 seconds; control 6.1170 seconds. These child intervals are inside the owner total and must not be added to it. This was a shared macOS development host with an adopted private dependency pool and existing caches, not an isolated performance comparison. The earlier failed compiler attempt cost 10.9627 seconds elapsed and 14.8954 seconds inclusive CPU; the preflight-only failure cost 5.9998 seconds elapsed and 4.1782 seconds inclusive CPU.
 
-The focused evidence establishes local diagnostic projection and refusal preservation. It does not identify hosted response bytes or establish archive progress. One ordinary `npm run gate` remains before review.
+The focused evidence establishes local diagnostic projection and refusal preservation. It does not identify hosted response bytes or establish archive progress.
+
+## Repository gate
+
+The one ordinary `npm run gate` passed on commit `44b415d149a2ff2f6413ab04c3d67cdbefebe7ba`, tree `56466a0b2308cb09155577a9a07c30f61e48f2c7`, under allocation `1d9caf068e9372144827f347f3c6290fe81e5e79`. Root session `1342` and gate child `70782` both ended naturally with exit 0. Whitespace, commit messages, commit tests, helpers, citations, citation tests, typecheck and tests all passed. Vitest reported 3,495 passed and three skipped cases across 485 files; the separate Node checks passed 37 cases and Counting passed 55. These are local checks, not browser or hosted acceptance.
+
+The progress ledger has all 3,498 unique final case identities and no unhandled error. It has 3,486 ready callbacks and 3,484 result callbacks: 12 and 14 passed cases lack those intermediate callbacks. Final results are complete; intermediate progress coverage is not. No extra run was used to fill these reporting gaps.
+
+The before/after comparison preserves all 2,929 source entries, 218 external tool entries, 2,414 npm namespace entries, environment, resolvers, head, tree and clean status. Among 6,072 dependency entries, only the approved Vitest results cache changed, on the same inode. Owner errors and received signals are empty. Raw gate evidence is `/private/tmp/artroom-archive-advertisement-final-gate-20261023-v1`.
+
+The gate child took 1,215.6128 seconds elapsed and 1,417.7389 seconds CPU. The outer owner, including metadata checks, took 1,217.8749 seconds elapsed and 1,419.3968 seconds inclusive CPU. Its test stage took 1,198.28 seconds elapsed and 1,372.26 seconds CPU. These nested intervals overlap and must not be added. The host and cache qualifications above still apply.
+
+The final reporting commit changes only this note after the gated tree. All four implementation and test files remain byte-exact, so the healthy gate is not repeated. The frozen review packet retains the original failed attempts, successful continuation, gate, bindings and immutable source copies. The planner owns deployment and the next hosted observation; this diagnostic alone does not correct or identify the hosted advertisement response.
