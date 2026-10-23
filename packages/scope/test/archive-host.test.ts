@@ -208,15 +208,14 @@ test.each(["github", "artifacts"] as const)("%s incremental parent reads one exa
   expect(f.posts).toEqual([]); expect(stopped.posts).toEqual([]); expect(unsupported.posts).toEqual([]);
 
   if (host === "artifacts") {
-    // A service-prefixed reply is a fixture, not a claim about the hosted
-    // provider. The exact refusal is unchanged; only fixed detail is added.
-    const wire = `${pkt("# service=git-upload-pack\n")}0000`;
+    // A service-prefixed protocol0 reply stays refused without a fallback.
+    const wire = `${pkt("# service=git-upload-pack\n")}0000${pkt(`${f.archive.commit} ${journalRef(at.scope)}\0shallow filter allow-reachable-sha1-in-want\n`)}0000`;
     const malformed = fixture(host, true, undefined, wire), malformedBudget = new ArchiveBudget();
     const error = await malformed.provider.readObject!(malformed.repository, { id: malformed.archive.commit, type: "commit", maximum: 1024 }, () => true,
       malformedBudget).then(() => undefined, error => error);
     expect(error).toMatchObject({ reason: "unreadable", what: "upload advertisement", message: "unreadable: upload advertisement" });
     expect(finishArchiveParentRead(malformedBudget)).toEqual({ ordinal: 1, type: "commit", maximum: 1024, phase: "advertisement-response", refusal: "advertisement",
-      advertisement: { subtype: "first-frame-version", firstFrame: "service-upload" } });
+      advertisement: { subtype: "post-preamble-version", firstFrame: "service-upload", postPreamble: "protocol-0-ref" } });
     expect(malformed.gitProtocols).toEqual([{ method: "GET", protocol: "version=2" }]);
     expect(malformed.fetchReceivers).toHaveLength(1);
     expect(malformed.fetchReceivers[0]).toBeInstanceOf(SmartHttpSource);

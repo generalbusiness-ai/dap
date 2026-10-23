@@ -379,7 +379,8 @@ test("isolated abandonment survives late fetch and cleanup settlement without co
 });
 
 const v2Options = { ...isolatedOptions, isolateObjects: { ownedBytes: 32 * isolatedWire, protocol: "v2" as const } };
-const v2Advertisement = (capabilities = ["fetch=shallow filter"], lineEnding = "\n") => new Response(Buffer.concat([
+const v2Advertisement = (capabilities = ["fetch=shallow filter"], lineEnding = "\n", service = false, serviceLF = "\n") => new Response(Buffer.concat([
+  ...(service ? [pkt(`# service=git-upload-pack${serviceLF}`), Buffer.from("0000")] : []),
   pkt(`version 2${lineEnding}`), ...capabilities.map(line => pkt(`${line}${lineEnding}`)), Buffer.from("0000"),
 ]), { headers: { "content-type": "application/x-git-upload-pack-advertisement" } });
 const band = (channel: number, data: Uint8Array = new Uint8Array()) => {
@@ -457,7 +458,7 @@ test("opt-in v2 requires its complete bounded capability advertisement without a
     { subtype: "duplicate-fetch", firstFrame: "version-2" }, undefined,
     { subtype: "duplicate-object-format", firstFrame: "version-2" },
     { subtype: "capability-name-character", firstFrame: "version-2" },
-    { subtype: "first-frame-version", firstFrame: "service-upload" },
+    { subtype: "post-preamble-version", firstFrame: "service-upload", postPreamble: "protocol-0-ref" },
     { subtype: "trailing-data", firstFrame: "version-2" },
   ];
   for (const [index, response] of cases.entries()) {
@@ -476,6 +477,19 @@ test("opt-in v2 requires its complete bounded capability advertisement without a
     }
     expect(calls).toBe(1);
   }
+  // Exact preamble framing is accepted only before protocol2, never as a fallback.
+  for (const bytes of [
+    Buffer.concat([pkt("# service=git-upload-pack\n"), pkt("version 2\n"), Buffer.from("0000")]),
+    Buffer.concat([pkt("# service=git-upload-pack\n"), Buffer.from("0001"), pkt("version 2\n"), Buffer.from("0000")]),
+    Buffer.concat([pkt("# service=git-upload-pack\n"), Buffer.from("0000"), pkt("# service=git-upload-pack\n"), Buffer.from("0000")]),
+    Buffer.concat([pkt("# service=git-upload-pack\n"), Buffer.from("0000")]),
+    Buffer.concat([pkt("# service=git-upload-pack\n"), Buffer.from("0000"), Buffer.from("000evers")]),
+  ]) {
+    let calls=0;
+    const source=new SmartHttpSource({...v2Options,fetch:request=>{calls++;expect(request.method).toBe("GET");return Promise.resolve(new Response(bytes,{headers:{"content-type":"application/x-git-upload-pack-advertisement"}}));}});
+    await expect(source.object(id,1024)).rejects.toBeInstanceOf(GitRefusal);
+    expect(calls).toBe(1);
+  }
   let calls = 0;
   const bounded = new SmartHttpSource({ ...v2Options, bounds: { ...READ_BOUNDS, refs: 1 }, fetch: () => {
     calls++; return Promise.resolve(v2Advertisement(["a=one", "b=two", "c=three", "fetch=shallow filter"]));
@@ -488,11 +502,11 @@ test("opt-in v2 validates sections and binary sidebands before exact pack admiss
   const { remote, head } = repository();
   const smallBlob = put(remote, "blob", "other\n");
   const single = onePack(remote, head), blob = onePack(remote, smallBlob);
-  const run = (body: Uint8Array, id = head, limit = isolatedWire, lineEnding = "\n") => {
+  const run = (body: Uint8Array, id = head, limit = isolatedWire, lineEnding = "\n", service = false, serviceLF = "\n") => {
     let calls = 0;
     const source = new SmartHttpSource({ ...v2Options, fetch: request => {
       calls++;
-      return Promise.resolve(request.method === "GET" ? v2Advertisement(["unknown=ignored", "unknown=also-ignored", "fetch=shallow filter", "object-format=sha1"], lineEnding) : v2Response(body));
+      return Promise.resolve(request.method === "GET" ? v2Advertisement(["unknown=ignored", "unknown=also-ignored", "fetch=shallow filter", "object-format=sha1"], lineEnding, service, serviceLF) : v2Response(body));
     } });
     return { outcome: source.object(id, limit), calls: () => calls };
   };
@@ -502,6 +516,10 @@ test("opt-in v2 validates sections and binary sidebands before exact pack admiss
       const check = run(v2Bytes(single, before, lineEnding), head, isolatedWire, lineEnding);
       expect((await check.outcome).type).toBe("commit"); expect(check.calls()).toBe(2);
     }
+  }
+  for (const serviceLF of ["\n", ""]) {
+    const prefixed=run(v2Bytes(single),head,isolatedWire,"\n",true,serviceLF);
+    await expect(prefixed.outcome).resolves.toMatchObject({type:"commit"});expect(prefixed.calls()).toBe(2);
   }
   // Binary channels are split at arbitrary positions; progress is ignored,
   // including bytes that cannot be mistaken for another section or a pack.
