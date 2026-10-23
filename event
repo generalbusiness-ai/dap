@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:66211fd962e68f43773d8f788790477a7ad12636","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-23-archive-blob-none.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bd25b11b6a3eddca68e161d98c764b55a142ac8a","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/support/archive-artifacts.ts."}
