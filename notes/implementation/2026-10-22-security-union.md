@@ -12,7 +12,10 @@ adopted from the actual maintained parser. Four incremental compiler roots
 and 14 cases across seven whole files passed. The maintained Page build,
 separate DATA comparison and four rendered Page checks passed. The later
 archive fixture child-lifecycle correction also passed its owning validation.
-The ordinary exact-head gate and final acceptance remain pending.
+The ordinary gate at `4f7c14555cba4a32ef4fc51753c82daf26f152e8` failed
+two MCP documentation-inventory assertions. Final review must reconcile the
+narrow correction's owning checks and the separately required downstream
+stages; the original gate remains failed evidence.
 Its 61 affected cases have actual outcomes across two documented heads;
 there is no single 61-pass pipeline or final gate pass. Work is tracked under request
 `571717dc596243cf28bd9c21e359407325a96d70` and promise
@@ -66,8 +69,8 @@ The maintained build has now replaced it from integrated source
 `a061bd6d3d9d43f28b9aedc9f02c89156509dd9e`. The separate DATA comparison
 passed for the actual module, emitted files and source HTML. No generated
 literal was hand-merged. Four rendered checks also passed at the generated
-output checkpoint. Owning freshness in the final gate remains required
-before product acceptance.
+output checkpoint. Owning freshness passed in the original gate recorded
+below; the gate itself failed the two MCP inventory assertions.
 
 ## Evidence and next checks
 
@@ -92,10 +95,12 @@ The healthy nine-case browser custody module is not repeated merely for a
 count. The integrated source's four compiler roots and seven whole files
 with 14 cases passed. Its maintained Page build and DATA comparison also
 passed, as recorded below. The four rendered Page checks passed at the
-clean output checkpoint. The single submission on current Main awaits its
-ordinary exact-head gate. D1, the hosted file including
-its two startup variants, and Page freshness require their actual maintained
-final-gate outcomes; their old branch passes do not substitute for this union.
+clean output checkpoint. The original ordinary gate passed the whole hosted
+file, including both startup variants, Page startup and Page freshness.
+It failed only the two MCP recipe assertions recorded below. Node 37,
+including D1's four cases, and Counting 55 were not reached inside that gate. Final review
+must record the narrow correction's owning results and those downstream
+stages separately; no earlier branch outcome substitutes for them.
 
 Planner-owned host descriptors, DNS/service settings, reviewed Counter/Lending
 releases/signatures/trust, index rollout and exact listed verification/rollback
@@ -405,3 +410,30 @@ with 0; full guards passed with no errors, signals or collection issues.
 The public command case took 18,449 ms within its unchanged 30-second deadline.
 The original timeout remains recorded; this later pass does not establish
 its cause or replace its outcome.
+
+## Original final gate and narrow W1 correction
+
+At `4f7c14555cba4a32ef4fc51753c82daf26f152e8`, original session 66323 exited
+naturally with child and owner status 1. Root adopted the original outcome
+in `084abff1fc001adc896c4597d9ae9aac36d55e65`. The complete Vitest result
+was 2,224 passed, two failed and three skipped across 2,229 cases, with zero
+unhandled errors. Full input guards held. Both failures were the default
+and generic MCP recipe assertions requiring the Node-only scope-index row
+to execute as a public MCP recipe. The original failure is retained.
+
+The whole hosted file's 16 cases, including both startup variants, passed,
+as did Page startup, generated-asset freshness and all six installed-archive
+cases. The failed Vitest command prevented the later Node 37 and Counting
+55 stages from running; D1's four inventory cases are inside Node 37. These
+are unreached stages in this gate, rather than failed tests or inferred passes.
+
+Correction request `e8bb220df758f38ecc45356bef0e9d9426b7ac32` and promise
+`2b5832ec0babcdc255685a930cd276d0a01b1738` cover the row's existing
+local-command classification, exact fifth-row expectation and W1 introduction.
+The introduction clarifies that Node execution outside MCP does not imply
+offline or read-only work. Every real
+MCP recipe, tool order, call count and original deadline is preserved. Final
+review must record its owning compiler and complete two-case file, then the
+separate Node 37 and Counting 55 continuation. Those attributed outcomes do
+not turn this original full gate into an exit-0 run. No healthy whole-suite
+retry is part of this correction.

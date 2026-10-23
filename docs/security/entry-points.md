@@ -357,9 +357,10 @@ its own scoped index, serving and startup checks. Those branch outcomes do not
 validate this source union. The union now has its actual adopted owner seals;
 four affected compiler roots and 14 cases across seven whole files passed.
 Its maintained Page build, separate DATA comparison and four rendered Page
-checks also passed. The single security submission preserves current Main's
-documents and commit-message policy; its ordinary exact-head gate remains
-pending. These local outcomes and their original heads are recorded in the
+checks also passed. Its original ordinary gate passed hosted startup and
+Page freshness, but failed two MCP documentation-inventory assertions.
+Final review must record the narrow correction and downstream Node stages
+separately. These local outcomes and their original heads are recorded in the
 [union implementation note](../../notes/implementation/2026-10-22-security-union.md).
 Hosted deployment and operator rollout remain separate
 obligations; no hosted isolation claim follows from the local browser cases.
