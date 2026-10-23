@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:07b70f69d11b1eb1b761ea27893650c7da2f9b5a","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/validate.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:07c621a5d7dc65f3d112fb2bd9436d26b4a00dee","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-23-workspace-rename.md."}
