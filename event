@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:581c0fadc45894b77a2c4e1931bfb1b26d2a11fc","text":"Merge retired a covered predecessor; the successor is at packages/replay/README.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5841e75eb6a29bc837237d2da7edca9ad2c95810","text":"Merge retired a covered predecessor; the successor is at apps/counter/browser/projection-fixture.ts."}
