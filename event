@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ad53ce798b9a6fd59d64e9cba636e7af54e96db8","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/application-local-device-fixture.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ad60302576b485b4a1555a79436ae78d5723401b","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/declared-views.test.ts."}
