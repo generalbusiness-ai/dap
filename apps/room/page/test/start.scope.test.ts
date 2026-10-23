@@ -169,7 +169,7 @@ test("fresh Page Start discovers native Register17 and refuses a deployed legacy
     const Q = lifetime.platform(completed.repository!.rules);
     const bornRules = (await lifetime.wait(() => Q.summary())).value;
     expect(bornRules.definition).toBe(ARCHIVE_DEVICE_APPLICATION_COHORT.rules);
-    expect(bornRules.items.find(item => item.type === "rules")?.values["ownerMayReview"]).toBe(true);
+    expect(bornRules.items.find(item => item.type === "rules")?.values["ownerMayReview"]).toBe(false);
     expect(bornRules.items.find(item => item.type === "rules")?.values["approvals"]).toBe(1);
     expect((await lifetime.wait(() => R.entries())).filter(e => e.input.type === "act" && e.input.signed.intent.kind === "found")).toHaveLength(1);
     expect((await lifetime.wait(() => M.entries())).filter(e => e.input.type === "act" && e.input.signed.intent.kind === "seat")).toHaveLength(1);
