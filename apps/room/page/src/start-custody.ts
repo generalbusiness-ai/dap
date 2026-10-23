@@ -1,7 +1,7 @@
 /** Public key references for one explicit Start; private keys live in IDB. */
 import type { KeyId } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, isKeyId, isRecord, isScopeRef, keyIdOfSecret, unb64url } from "@generalbusiness/artroom-bytes";
-import { isCreationOffer, type CreationOffer, type Fetch, type Signer } from "@generalbusiness/artroom-client";
+import { isCreationOffer, isCurrentCreationOffer, type CreationOffer, type Fetch, type Signer } from "@generalbusiness/artroom-client";
 import { pageKeyStore } from "./browser-key-store.ts";
 import { custodyKind } from "./custody.ts";
 import { claimRoom, claimStatus, migrateRecoveryCustody, type ClaimOptions, type ClaimRegister, type ClaimStorage, type ClaimedRoom } from "./claim.ts";
@@ -25,7 +25,7 @@ function decode(raw: string, origin: string): KeptStart {
     if (row["operation"] !== undefined && (typeof row["operation"] !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(row["operation"]))) throw unavailable();
     if (row["recoverySaved"] !== undefined && row["recoverySaved"] !== true) throw unavailable();
     const configured = row["configured"];
-    if (!isRecord(configured) || Object.keys(configured).sort().join(",") !== "definition,register" || !["platform:register@7", "platform:register@8"].includes(configured["definition"] as string) || !isScopeRef(configured["register"]) || configured["register"].kind !== "register") throw unavailable();
+    if (!isRecord(configured) || Object.keys(configured).sort().join(",") !== "definition,register" || !["platform:register@7", "platform:register@8", "platform:register@17"].includes(configured["definition"] as string) || !isScopeRef(configured["register"]) || configured["register"].kind !== "register") throw unavailable();
     if (row["v"] === 1) {
       if (typeof row["secret"] !== "string" || row["publicKey"] !== undefined) throw unavailable();
       secret = unb64url(row["secret"]);
@@ -85,7 +85,7 @@ export async function startRoom(origin: string, storage: ClaimStorage, options: 
     if (row) row = await migrateStart(row, storage, options);
     if (options.mode === "new") {
       if (row) throw new Error("An original Start is already retained. Check status or explicitly Continue that original creation.");
-      if (!options.offer || !isCreationOffer(options.offer, origin) || options.offer.definition !== "platform:register@8") throw new Error("A current same-origin register8 demo creation offer is required. Nothing was submitted.");
+      if (!options.offer || !isCurrentCreationOffer(options.offer, origin)) throw new Error("A current same-origin configured register17 creation offer is required. Nothing was submitted.");
       const label = options.label?.trim() ?? "";
       if (!label || label.length > 256) throw new Error("Enter a personal room label of at most 256 characters.");
       const signer = await keys.create(); current(options);

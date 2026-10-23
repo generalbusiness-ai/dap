@@ -1,4 +1,6 @@
-// New CLI/MCP demo service. No public browser-creation offer (Part 2).
+// CLI/MCP and same-origin browser demo service. Planner sets DEMO_START_CONFIG
+// v3 to the actual Register17 full reference, exact dap-demo origin and
+// DEPLOYMENT. Its register scope and namespace must match ARTIFACTS_CONFIG.
 // Planner provisions this Worker's namespaces and sets DEPLOYMENT and
 // SESSION_SECRET as secrets. ARTIFACTS_CONFIG must use the planned Register17
 // scope, namespace dap-demo, the actual service host and adapter-attempt.

@@ -652,6 +652,11 @@ function startScreen(): HTMLElement {
     } catch { blocked = true; name.setAttribute("disabled", ""); submit.setAttribute("disabled", ""); check.setAttribute("disabled", ""); tell("Original Start custody is unavailable. Nothing will be replaced.", true); }
   };
   restore();
+  const moved = location.origin === "https://artroom-scope.inguz.workers.dev" ? h("section", { class: "entry-moved" },
+    h("p", {}, "Create new rooms on dap-demo. Existing rooms and saved creation requests stay on this service."),
+    h("a", { href: "https://dap-demo.inguz.workers.dev/#/start" }, "Start a new room on dap-demo")) : null;
+  if (moved && !original && !blocked) return h("main", { class: "screen entry-screen entry-start" },
+    h("a", { class: "entry-back", href: "#/join" }, "‹", "Back"), heading, moved);
   if (original) tell("Your original Start and creator key are retained. Check status only reads; Continue creation explicitly resumes its original requests.");
   name.addEventListener("input", () => { startDraft = name.value; });
   const download = (filename: string, text: string, type: string) => {
@@ -782,7 +787,7 @@ function startScreen(): HTMLElement {
   check.addEventListener("click", () => { void run("check"); });
   const about = h("details", {}, h("summary", {}, "About your account"), h("p", {}, "Your creator key stays in this browser and cannot be downloaded. Clearing this browser’s saved data removes its access to the room."));
   return h("main", { class: "screen entry-screen entry-start" }, h("a", { class: "entry-back", href: "#/join" }, "‹", "Back"),
-    heading, intro, form, message, check, ready, about);
+    heading, intro, moved, form, message, check, ready, about);
 }
 
 function connectionScreen(path: "join" | "invitation" | "config", connected: Room | null = null): HTMLElement {

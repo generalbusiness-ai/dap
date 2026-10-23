@@ -755,7 +755,7 @@ function walkClaim(ctx: Context, name: string, options: { handle?: string; branc
         definition = offered.definition;
         // Revision selector only: never present this projection as a Summary,
         // an authenticated roster or authority for the native `found` judgment.
-        items = [{ id: offered.registerItem.id, revision: offered.registerItem.revision, type: "register", state: "open", opened: null, parties: {}, refs: {}, attributed: [], values: { host: offered.registerItem.host, namespace: offered.registerItem.namespace, policy: "open", purpose: "demo-start" } }];
+        items = [{ id: offered.registerItem.id, revision: offered.registerItem.revision, type: "register", state: "open", opened: null, parties: {}, refs: {}, attributed: [], values: { host: offered.registerItem.host, namespace: offered.registerItem.namespace, policy: "open", ...(offered.v === 1 ? { purpose: "demo-start" } : {}) } }];
       } else {
         const registered = await summaryOf(R);
         if (canonicalize(registered.scope) !== canonicalize(register)) return failed("The register read does not match the saved register reference; nothing was submitted.");
