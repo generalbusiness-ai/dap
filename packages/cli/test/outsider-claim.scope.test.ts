@@ -24,7 +24,7 @@ test("dedicated public offer lets an outsider claim Register17 without a member 
     for (const policy of ["open", "keys"] as const) {
       let register: ReturnType<typeof life.platform> | undefined;
       let summaryReads = 0, offers = 0;
-      const rawFetch = async (url: string, init?: Parameters<Fetch>[1]): Promise<Response> => {
+      const rawFetch = async (url: string, init?: Parameters<Fetch>[1]): Promise<Awaited<ReturnType<Fetch>> & { url?: string; redirected?: boolean }> => {
         const endpoint = new URL(url);
         if (register && endpoint.pathname === `/v1/scopes/${register.name}` && (init?.method ?? "GET") === "GET") {
           summaryReads++; return Response.json({ ok: false, reason: "forbidden" }, { status: 403 });
@@ -33,15 +33,18 @@ test("dedicated public offer lets an outsider claim Register17 without a member 
           offers++;
           expect(endpoint.origin).toBe(SERVICE);
           expect(init?.method).toBe("GET");
-          const response = await life.wait(() => demoCreationRoute(new Request(url, init), {
+          // Match the maintained startup fixture: direct Worker dispatch is
+          // not a fetch redirect implementation. The production client asks
+          // fetch to reject redirects; this adapter never follows one.
+          expect(Reflect.get(init!, "redirect")).toBe("error");
+          const response = await life.wait(() => demoCreationRoute(new Request(url, { ...init, redirect: "manual" }), {
             SCOPES: env.PLATFORM as unknown as Binding, DEPLOYMENT: "TEST outsider demo",
             ARTIFACTS_NAMESPACE: "outsider-fixture", ARTIFACTS_CONFIG: canonicalize({ registerScope: register!.name, namespace: "outsider-fixture", host: "service.invalid", maxBytes: 10485760, credentialIdentity: "adapter-attempt" }),
             DEMO_START_CONFIG: canonicalize({ v: 3, origin: SERVICE, deployment: "TEST outsider demo", register: { scope: register!.name, kind: "register", inc: current!.inc }, definition: C.register }),
           }));
-          // Worker route playback is not an HTTP fetch: attach its exact
-          // request URL; redirected is the real Response false flag.
-          Object.defineProperty(response, "url", { value: url });
-          return response;
+          // Exact local playback metadata, as serving-startup.scope.test.ts.
+          // The body/status remain those of the actual route and Native offer.
+          return { status: response.status, body: response.body, url, redirected: false };
         }
         return life.wait(() => routed(url, init));
       };
