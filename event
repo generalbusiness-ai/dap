@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5c7a8f8a3bd38768a19ad449d3a3a295d19c5441","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/ports.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5ff02da8af1f5e9088285d7ac3d1d3cb795a5b4c","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-22-archive-anchor-publication.md."}
