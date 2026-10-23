@@ -1,0 +1,1 @@
+Only archive-one-entry-scale.test.ts and archive-native-transport.test.ts changed. archive-driver.test.ts is byte-exact to b44528f2. The newly authored acceptance file was held unchanged during this follow-up.
