@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 import { inflateSync } from "node:zlib";
 import { afterAll, expect, test, vi } from "vitest";
 import { advertisementRefusalDetail, httpResponseRefusalDetail, decodePack, SmartHttpSource } from "../src/http-read.ts";
+import { buildPack } from "../src/http.ts";
 import { GitRefusal } from "../src/names.ts";
 import { READ_BOUNDS, Reader } from "../src/reader.ts";
 import { Host } from "./support/host.ts";
@@ -426,8 +427,11 @@ test("opt-in v2 fetch reads exact nonadvertised objects in two requests and keep
   expect((await reader.commit(first)).parents).toEqual([]);
   expect(requests.map(row => [row.method, row.protocol])).toEqual(Array.from({ length: 4 }, () => [["GET", "version=2"], ["POST", "version=2"]]).flat());
   expect(requests.filter(row => row.method === "POST").map(row => row.body)).toEqual([head, root, content, first].map(id =>
-    `${pkt("command=fetch\n").toString()}0001${pkt(`want ${id}\n`).toString()}${pkt("deepen 1\n").toString()}${pkt("filter tree:0\n").toString()}${pkt("no-progress\n").toString()}${pkt("done\n").toString()}0000`));
-  expect(packs.every(row => row.count === 1)).toBe(true);
+    `${pkt("command=fetch\n").toString()}0001${pkt(`want ${id}\n`).toString()}${pkt("deepen 1\n").toString()}${pkt("filter blob:none\n").toString()}${pkt("no-progress\n").toString()}${pkt("done\n").toString()}0000`));
+  // blob:none sends commit + tree, but a directly wanted tree/blob still
+  // arrives. Reading the tree again above proves it was not cached as a
+  // companion of the first commit response.
+  expect(packs.map(row => row.count)).toEqual([2, 1, 1, 2]);
   expect(packs.reduce((bytes, row) => bytes + row.bytes, 0)).toBeLessThan(5000);
   expect(await source.ref(REF)).toBe(head);
   expect(await source.refs("refs/heads/", 2)).toEqual([{ ref: REF, target: head }]);
@@ -499,12 +503,12 @@ test("opt-in v2 requires its complete bounded capability advertisement without a
 });
 
 test("opt-in v2 validates sections and binary sidebands before exact pack admission", async () => {
-  const { remote, head } = repository();
+  const { remote, head, expected } = repository();
   const smallBlob = put(remote, "blob", "other\n");
   const single = onePack(remote, head), blob = onePack(remote, smallBlob);
-  const run = (body: Uint8Array, id = head, limit = isolatedWire, lineEnding = "\n", service = false, serviceLF = "\n") => {
+  const run = (body: Uint8Array, id = head, limit = isolatedWire, lineEnding = "\n", service = false, serviceLF = "\n", closureObjects = READ_BOUNDS.closureObjects, maximumBytes = isolatedWire) => {
     let calls = 0;
-    const source = new SmartHttpSource({ ...v2Options, fetch: request => {
+    const source = new SmartHttpSource({ ...v2Options, maxBytes: maximumBytes, bounds: { ...READ_BOUNDS, closureObjects }, fetch: request => {
       calls++;
       return Promise.resolve(request.method === "GET" ? v2Advertisement(["unknown=ignored", "unknown=also-ignored", "fetch=shallow filter", "object-format=sha1"], lineEnding, service, serviceLF) : v2Response(body));
     } });
@@ -526,14 +530,20 @@ test("opt-in v2 validates sections and binary sidebands before exact pack admiss
   const split = Buffer.concat([pkt("packfile\n"), band(1), band(1, single.subarray(0, 7)), band(2, Buffer.from([255, 0, 10])), band(1, single.subarray(7)), Buffer.from("0000")]);
   expect((await run(split).outcome).type).toBe("commit");
   const corrupt = new Uint8Array(single); corrupt[corrupt.length - 1]! ^= 1;
+  // Admission is synchronous and precedes even an invalid entry's parse
+  // or inflation. The identical refusal escapes and the count is sent once.
+  const invalidEntry = new Uint8Array(single); invalidEntry[12] = 0;
+  const reservationRefusal = new GitRefusal("too-large", "TEST decoder metadata");
+  const reserved: number[] = [];
+  const denied = await decodePack(invalidEntry, { maxBytes, reserveObjects: count => { reserved.push(count); throw reservationRefusal; } }).then(() => undefined, error => error);
+  expect(denied).toBe(reservationRefusal); expect(reserved).toEqual([1]);
   const paired = new Uint8Array(execFileSync("git", ["-C", remote, "pack-objects", "--stdout"], {
     input: `${head}\n${smallBlob}\n`, maxBuffer: maxBytes,
     env: { PATH: process.env["PATH"] ?? "/usr/bin:/bin", GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: "/dev/null" },
   }));
-  // The response really contains two valid objects. Its refusal must be the
-  // isolated count guard, rather than a later checksum or framing failure.
+  // Companions are valid pack objects, not output or cache authority. The
+  // caller's count and aggregate byte bounds still apply to the whole pack.
   expect((await decodePack(paired, { maxBytes })).map(object => object.id).sort()).toEqual([head, smallBlob].sort());
-  const delta = Buffer.alloc(33); delta.write("PACK"); delta.writeUInt32BE(2, 4); delta.writeUInt32BE(1, 8); delta[12] = 0x60;
   const broken = [
     v2Bytes(single, [pkt("shallow-info\n\n"), Buffer.from("0001")]),
     v2Bytes(single, [pkt("shallow-info\n"), pkt(`shallow ${head}\n\n`), Buffer.from("0001")]),
@@ -562,10 +572,34 @@ test("opt-in v2 validates sections and binary sidebands before exact pack admiss
     expect(String(error)).not.toContain(TOKEN);
     expect(check.calls()).toBe(2);
   }
-  await expect(run(v2Bytes(paired)).outcome).rejects.toMatchObject({ reason: "too-large", what: "pack objects" });
-  // This deliberately incomplete delta must be rejected at the entry kind,
-  // before any zlib or trailer access; a generic corrupt-pack error is insufficient.
-  await expect(run(v2Bytes(delta)).outcome).rejects.toMatchObject({ reason: "wrong-type", what: "isolated pack entry" });
+  expect((await run(v2Bytes(paired)).outcome).type).toBe("commit");
+  await expect(run(v2Bytes(paired), head, isolatedWire, "\n", false, "\n", 1).outcome).rejects.toMatchObject({ reason: "too-large", what: "pack objects" });
+  const beforeWanted = await buildPack([{ id: smallBlob, type: "blob", data: new TextEncoder().encode("other\n") }, { id: head, ...expected.get(head)! }], { maxBytes });
+  expect((await decodePack(beforeWanted, { maxBytes })).map(object => object.id)).toEqual([smallBlob, head]);
+  // The shallow boundary describes the wanted commit, not the first entry.
+  expect((await run(v2Bytes(beforeWanted, [pkt("shallow-info\n"), pkt(`shallow ${head}\n`), Buffer.from("0001")])).outcome).type).toBe("commit");
+  const huge = put(remote, "blob", "x".repeat(isolatedWire));
+  const inflated = new Uint8Array(execFileSync("git", ["-C", remote, "pack-objects", "--stdout"], {
+    input: `${head}\n${huge}\n`, maxBuffer: maxBytes,
+    env: { PATH: process.env["PATH"] ?? "/usr/bin:/bin", GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: "/dev/null" },
+  }));
+  expect(inflated.length).toBeLessThan(isolatedWire);
+  expect((await decodePack(inflated, { maxBytes })).map(object => object.id).sort()).toEqual([head, huge].sort());
+  await expect(run(v2Bytes(inflated)).outcome).rejects.toMatchObject({ reason: "too-large", what: "inflated bytes" });
+  // Full v2 decoding deliberately admits bounded OFS/REF deltas. The old
+  // v0 exact-one non-delta reader above is unchanged.
+  const deltaRemote = bare();
+  const text = Array.from({ length: 200 }, (_, i) => `line-${i.toString().padStart(4, "0")} predictable material for Git delta compression\n`).join("");
+  const baseBlob = put(deltaRemote, "blob", text), changedBlob = put(deltaRemote, "blob", text.replace("line-0100", "edit-0100"));
+  const deltaTree = put(deltaRemote, "tree", Buffer.concat([Buffer.from("100644 a\0"), Buffer.from(baseBlob, "hex"), Buffer.from("100644 b\0"), Buffer.from(changedBlob, "hex")]));
+  const deltaHead = put(deltaRemote, "commit", commitText(deltaTree, [], "bounded delta companions"));
+  for (const ofs of [true, false]) {
+    const bytes = pack(deltaRemote, deltaHead, ofs);
+    expect(kinds(bytes)).toContain(ofs ? 6 : 7);
+    const read = await run(v2Bytes(bytes), changedBlob).outcome;
+    expect(read).toEqual({ type: "blob", size: Buffer.byteLength(text), data: new Uint8Array(Buffer.from(text.replace("line-0100", "edit-0100"))) });
+    await expect(run(v2Bytes(bytes), changedBlob, isolatedWire, "\n", false, "\n", READ_BOUNDS.closureObjects, 16 * 1024).outcome).rejects.toMatchObject({ reason: "too-large", what: "delta result" });
+  }
   await expect(run(v2Bytes(blob)).outcome).rejects.toMatchObject({ what: "wanted object omitted" });
   await expect(run(v2Bytes(blob, [pkt("shallow-info\n"), pkt(`shallow ${smallBlob}\n`), Buffer.from("0001")]), smallBlob).outcome).rejects.toMatchObject({ what: "isolated shallow object" });
   await expect(run(v2Bytes(single), head, 1).outcome).rejects.toMatchObject({ reason: "too-large", what: "isolated object allowance" });
@@ -625,7 +659,7 @@ test("HTTP response refusal preserves only bounded categories and cancels before
     { status: 200, media: "Application/X-Git-Upload-Pack-Result", statusClass: "200", mediaType: "upload-pack-result-case" },
     { status: 302, media: "text/plain", statusClass: "3xx", mediaType: "text/plain" },
     { status: 403, media: "text/html", statusClass: "4xx", mediaType: "text/html" },
-    { status: 400, media: "text/plain", statusClass: "4xx", mediaType: "text/plain" },
+    { status: 400, media: "text/plain", statusClass: "4xx", mediaType: "text/plain", body: "Unsupported Git fetch filter; only blob:none is supported." },
     { status: 401, media: "text/plain", statusClass: "4xx", mediaType: "text/plain" },
     { status: 403, media: "text/plain", statusClass: "4xx", mediaType: "text/plain" },
     { status: 404, media: "text/plain", statusClass: "4xx", mediaType: "text/plain" },
@@ -643,7 +677,7 @@ test("HTTP response refusal preserves only bounded categories and cancels before
       calls++;
       if (request.method === "GET") return v2Advertisement();
       expect(request.method).toBe("POST"); expect(request.headers.get("git-protocol")).toBe("version=2");
-      const body = new ReadableStream<Uint8Array>({ pull() { reads++; }, cancel() { cancels++; } }, { highWaterMark: 0 });
+      const body = new ReadableStream<Uint8Array>({ start(controller) { if ("body" in specimen) controller.enqueue(new TextEncoder().encode(specimen.body)); }, pull() { reads++; }, cancel() { cancels++; } }, { highWaterMark: 0 });
       const response = new Response(body, { status: specimen.status, headers: specimen.media === null ? {} : { "content-type": specimen.media } });
       if ("redirected" in specimen) Object.defineProperty(response, "redirected", { value: true });
       if ("changed" in specimen) Object.defineProperty(response, "url", { value: "https://response.invalid/" + secret });
@@ -654,7 +688,8 @@ test("HTTP response refusal preserves only bounded categories and cancels before
     const detail = httpResponseRefusalDetail(error);
     expect(detail, "Every HTTP response refusal must retain its exact status and fixed categories").toEqual({ status: specimen.status, statusClass: specimen.statusClass, redirected: "redirected" in specimen, url: "changed" in specimen ? "changed" : "empty", mediaType: specimen.mediaType });
     expect(Object.isFrozen(detail)).toBe(true); expect(Object.keys(detail!).sort()).toEqual(["mediaType", "redirected", "status", "statusClass", "url"]);
-    expect(JSON.stringify(detail)).not.toContain(secret); expect([calls, reads, cancels]).toEqual([2, 0, 1]);
+    expect(JSON.stringify(detail)).not.toContain(secret); expect(JSON.stringify(detail)).not.toContain("Unsupported Git fetch filter");
+    expect(String(error)).not.toContain("Unsupported Git fetch filter"); expect([calls, reads, cancels]).toEqual([2, 0, 1]);
   }
   // Non-native numeric metadata cannot widen the retained finite status field.
   for (const status of [NaN, Infinity, -1, 600, 200.5]) {

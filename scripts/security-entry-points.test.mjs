@@ -58,7 +58,7 @@ const pendingArchiveSeals = {
   "apps/room/archive-policy.ts": "07ea72db6bc58257d3f280ac1e1c7db9296868016493fa926e473ddeb9b6f486",
   "apps/room/archive.ts": "36b2250301a217b6e1c74cd1cea1a65a45390be3679e4a2fd2e809890eb6abf5",
   "packages/scope/src/archive-host-item.ts": "0f9eaddc4000574a1575466592f88c57beecc11efb93e402a568a84fab8ef903",
-  "packages/scope/src/archive-host.ts": "8e573b3b8f5a5fdc6f677fdcc1a2e28fe4078f1f149083db568d950c4c2d2539", // Parent-read diagnostic reviewed; actual maintained parser output.
+  "packages/scope/src/archive-host.ts": "b57d08f14989add1eece16d76f14caa73c62e31b114f1388f77aabbd5f696232", // Parent-read diagnostic reviewed; actual maintained parser output.
   "packages/scope/src/artifacts-host.ts": "378eca9b5c3c197f738cb88f59a5df51d83d52929f614735d0fdc3917df06ac0",
   "packages/scope/src/artifacts-wiring.ts": "937bedd41f5f21953c2fe659634ca732b44620cc98e33e5a43f7945601c58963",
 };

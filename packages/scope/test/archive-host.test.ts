@@ -36,7 +36,9 @@ function fixture(host: "github" | "artifacts", isolated = false, actual?: { at: 
   let now = Date.parse("2026-10-18T00:00:00Z"), pointer: string | null = actual?.previous.commit ?? null, revoked = 0;
   let blocked: ReturnType<typeof latch> | null = null;
   let readBlock: { stage: ReadStage; gate: ReturnType<typeof latch>; started: ReturnType<typeof latch>; error?: unknown } | null = null;
+  const readStages: ReadStage[] = [];
   const pauseRead = async (stage: ReadStage) => {
+    readStages.push(stage);
     const held = readBlock;
     if (held?.stage === stage) { held.started.release(); await held.gate.promise; if (held.error !== undefined) throw held.error; }
   };
@@ -57,8 +59,11 @@ function fixture(host: "github" | "artifacts", isolated = false, actual?: { at: 
       if (request.url === `${remote}/git-upload-pack`) {
         await pauseRead("object");
         if (objectReply) return objectReply();
-        const wanted = isolated ? /want ([0-9a-f]{40})/.exec(new TextDecoder().decode(await request.arrayBuffer()))?.[1] : null;
-        const pack = await buildPack(isolated ? archive.objects.filter(object => object.id === wanted) : archive.objects, { maxBytes: 64 * 1024 });
+        const requestText = isolated ? new TextDecoder().decode(await request.arrayBuffer()) : "";
+        const wanted = /want ([0-9a-f]{40})/.exec(requestText)?.[1];
+        const v2 = request.headers.get("git-protocol") === "version=2";
+        if (v2) { expect(requestText).toContain(pkt("filter blob:none\n")); expect(requestText).not.toContain("filter tree:0"); }
+        const pack = await buildPack(isolated ? archive.objects.filter(object => v2 ? object.type !== "blob" || object.id === wanted : object.id === wanted) : archive.objects, { maxBytes: 64 * 1024 });
         if (request.headers.get("git-protocol") === "version=2") {
           expect(host).toBe("artifacts"); expect(isolated).toBe(true);
           const prefix = utf8(pkt("packfile\n") + (pack.length + 5).toString(16).padStart(4, "0") + "\x01");
@@ -113,7 +118,7 @@ function fixture(host: "github" | "artifacts", isolated = false, actual?: { at: 
     return { repository: { ...repository }, at: { ...scope }, ref: journalRef(scope.scope), old: actual?.previous.commit ?? null, commit: archive.commit, objects, credential, allowed: () => true,
       ...(actual ? { incremental: { budget: budget ?? new ArchiveBudget() } } : {}) };
   };
-  return { provider, repository, archive, posts, calls, fetchReceivers, gitProtocols, started, request, publish: () => { pointer = archive.commit; }, block: () => { blocked = latch(); return blocked; }, expire: () => { now += 60_000; }, revoked: () => revoked,
+  return { provider, repository, archive, posts, calls, fetchReceivers, gitProtocols, readStages, started, request, publish: () => { pointer = archive.commit; }, block: () => { blocked = latch(); return blocked; }, expire: () => { now += 60_000; }, revoked: () => revoked,
     blockRead: (stage: ReadStage, error?: unknown) => {
       const gate = latch(), began = latch(); readBlock = { stage, gate, started: began, ...(error === undefined ? {} : { error }) };
       return { release: gate.release, started: began.promise };
@@ -209,6 +214,18 @@ test.each(["github", "artifacts"] as const)("%s incremental parent reads one exa
   expect(f.posts).toEqual([]); expect(stopped.posts).toEqual([]); expect(unsupported.posts).toEqual([]);
 
   if (host === "artifacts") {
+    // This stand-in sends one commit and its empty tree: charge those two
+    // actual records once, not the wire-derived maximum possible count.
+    expect(budget.admitted().metadata).toBe(3 * 1024);
+    expect(budget.admitted().inputWork).toBe(32 * (1024 + 8 * 1024) + 3 * 1024);
+    // The fixed wire/base cost admits HTTP, but actual companion metadata
+    // must still fit the same original budget before decoder allocation.
+    const metadataStopped = fixture(host, true), metadataBudget = new ArchiveBudget({ metadata: 1024 });
+    await expect(metadataStopped.provider.readObject!(metadataStopped.repository, { id: metadataStopped.archive.commit, type: "commit", maximum: 1024 }, () => true,
+      metadataBudget)).rejects.toMatchObject({ reason: "limit" });
+    expect(metadataStopped.readStages).toEqual(["token", "identity", "advertisement", "object"]);
+    expect(metadataStopped.gitProtocols).toEqual([{ method: "GET", protocol: "version=2" }, { method: "POST", protocol: "version=2" }]);
+    expect(metadataStopped.calls).toHaveLength(2); expect(metadataBudget.admitted().metadata).toBe(1024);
     // A service-prefixed protocol0 reply stays refused without a fallback.
     const wire = `${pkt("# service=git-upload-pack\n")}0000${pkt(`${f.archive.commit} ${journalRef(at.scope)}\0shallow filter allow-reachable-sha1-in-want\n`)}0000`;
     const malformed = fixture(host, true, undefined, wire), malformedBudget = new ArchiveBudget();

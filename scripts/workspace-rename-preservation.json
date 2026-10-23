@@ -1,7 +1,7 @@
 {
   "format": "dap-workspace-rename-preservation-1",
-  "basis": "de52252f18a7afdc97486bf00d743981814d8980",
-  "qualification": "Current preservation basis is accepted Main de52252f18a7afdc97486bf00d743981814d8980. It adds only the exact historical sprint report to former basis Main93; all owner Source, seal values and actual parser provenance remain unchanged. Historical prior qualification follows and describes former bases: Current preservation basis is accepted Main93f761c4fe6d0e79d9234e789a222977e45236a3. Historical Main12d parser output and earlier basis evidence remain unchanged; exactly two changed owners have actual fresh parser results. The following qualification is retained historical text describing the former basis, not the current state: Preservation counters bind current accepted Main919710 and the exact reviewed rename composition, including the approved seven-package SDK publication closure and exact internal application-install exclusion. The earlier Main5253 evidence remains historical on its original checkpoint. Actual 54-owner parser output remains the original Main12d run; owner source, map values and maintained parser bytes are carried by exact equality, with no new parser execution. The909 mechanical rowset and22 protected leaves remain fixed; only the two explicitly reviewed mechanical before/after/projection hashes are refreshed for accepted status diagnostics. No parser or product execution is established by this Source composition. The existing CLI browser resolver row also includes the exact reviewed client-package regex policy span; no general regex replacement or retired-alias fallback is permitted.",
+  "basis": "235e9262565335735870574113174b0218237910",
+  "qualification": "Current preservation basis is accepted Main 235e9262565335735870574113174b0218237910. Exactly archive-host has a new actual one-owner archiveRefresh; historical54 and actual2 provenance remain unchanged. Prior qualification below describes earlier bases: Current preservation basis is accepted Main de52252f18a7afdc97486bf00d743981814d8980. It adds only the exact historical sprint report to former basis Main93; all owner Source, seal values and actual parser provenance remain unchanged. Historical prior qualification follows and describes former bases: Current preservation basis is accepted Main93f761c4fe6d0e79d9234e789a222977e45236a3. Historical Main12d parser output and earlier basis evidence remain unchanged; exactly two changed owners have actual fresh parser results. The following qualification is retained historical text describing the former basis, not the current state: Preservation counters bind current accepted Main919710 and the exact reviewed rename composition, including the approved seven-package SDK publication closure and exact internal application-install exclusion. The earlier Main5253 evidence remains historical on its original checkpoint. Actual 54-owner parser output remains the original Main12d run; owner source, map values and maintained parser bytes are carried by exact equality, with no new parser execution. The909 mechanical rowset and22 protected leaves remain fixed; only the two explicitly reviewed mechanical before/after/projection hashes are refreshed for accepted status diagnostics. No parser or product execution is established by this Source composition. The existing CLI browser resolver row also includes the exact reviewed client-package regex policy span; no general regex replacement or retired-alias fallback is permitted.",
   "protectedLeaves": [
     {
       "path": "apps/counter/commitments-pin.ts",
@@ -8304,17 +8304,17 @@
     },
     {
       "path": "packages/git/src/http-read.ts",
-      "before": "1c86390a59fec3d2638470a28ec79224fff7ceeef74eeaf6d00c901b9fe05342",
-      "after": "6f467b71fcb5bfcf393d2d46d017d08b61bf5e1477d07f2e33a4d0ff577f244e",
+      "before": "a5f81291502b74c0c859b1b593f3a190e681dda813d4a9480a4e89f8d23fff64",
+      "after": "1f42e8df5c6643cfe3922f8819aa70bc03fbfd711ea19acb53dcc137c0e19f9c",
       "spans": [
         {
-          "start": 695,
-          "end": 725,
+          "start": 793,
+          "end": 823,
           "kind": "module",
           "replacement": "@generalbusiness/dap-bytes"
         }
       ],
-      "dataProjection": "7ba1cbe59f330abb2a7a3a7c0634e03f575022415b04a7c60174359c14f8ba24",
+      "dataProjection": "86783b7e768737a4bc36478787b4a930b1fdc15821c7fe7907f09264d74ea217",
       "digests": []
     },
     {
@@ -12775,8 +12775,8 @@
     },
     {
       "path": "packages/scope/src/archive-host.ts",
-      "before": "07767acc8d384981f6480b585ee71e19a34ed4a351739d216faa556c1cb40239",
-      "after": "7aff0e38a81b255b3abe81088c6bec8e3fc6fbf163531b84f945d52b14b918d7",
+      "before": "6f2937df8e8e16b63fa9502484831232fb7b7f30c7d5b47e84983960ad978ec1",
+      "after": "e95792bc2ca9040c65ca03c06a881c79389b2c6bfa54406d151d0e9daea87a21",
       "spans": [
         {
           "start": 175,
@@ -12815,7 +12815,7 @@
           "replacement": "@generalbusiness/dap-git/http"
         }
       ],
-      "dataProjection": "db303a19677e59e986d4c4bc1e4904701050c0306523c9f2497a587641ee8a7f",
+      "dataProjection": "2a9a9e11f4d4785f570cdada9fa6b6476a064dae080f5f09d83dae96f04a403a",
       "digests": []
     },
     {
@@ -14812,8 +14812,8 @@
     },
     {
       "path": "packages/scope/test/archive-host.test.ts",
-      "before": "fdac140f26b93d705093d47461113ebc08a69ba580d08a3094f6bfa1cf175d62",
-      "after": "c98368e5f2d6fd1b075498ffcae1bd10afd58b614309daa3fdf4c1a5e42a8f55",
+      "before": "b9a0c452fe2a9a06942f28f712b221db6c53dd9c2d471f90f1752f72a5f660e8",
+      "after": "721cfe2d264dc081accebb76187f2f63a4d3e6870992f68f4016b8b457d5a285",
       "spans": [
         {
           "start": 319,
@@ -14846,7 +14846,7 @@
           "replacement": "@generalbusiness/dap-git/journal"
         }
       ],
-      "dataProjection": "e69ac461f8d6a492bcb49b191e8cfd91af62ab7a3e4b2aaa11cba98af18fd119",
+      "dataProjection": "5cad79ccb62112649219db1197e3a024d0cd6fad9c0df9319dfcd03af267b0b1",
       "digests": []
     },
     {
@@ -17394,8 +17394,8 @@
     },
     {
       "path": "packages/scope/test/support/archive-artifacts.ts",
-      "before": "c6afb37fd0738fae7db1d8438cca332b519d24d9c1bda0dd3dca4df8e8d2ebfc",
-      "after": "f63e1f50740dcacdd9d1d3ff32adf31e801cfe51f61eb6c4d9d061ab0ed33e7f",
+      "before": "bd2e49ce721819ca619156c42026c32023abc1192ed34be93cc4b4c50822128d",
+      "after": "efcb672e0ff195609171df6bf6ffcb205a9881ba96a534d2bec7b61d0aca26d4",
       "spans": [
         {
           "start": 286,
@@ -17428,7 +17428,7 @@
           "replacement": "@generalbusiness/dap-git/journal"
         }
       ],
-      "dataProjection": "fd33b405425e1463d43517f059fa12835dc6fea2be4feba73beca728675cba66",
+      "dataProjection": "413c15b49566ead2f9f0b371c2be8469991dff2a8cf352acd916805bf2717e2c",
       "digests": []
     },
     {
@@ -18354,13 +18354,13 @@
     "parserOutcome": "cba70c5ef4d82bfbbefacca178c5305382592220"
   },
   "sourceSealMetadata": {
-    "sha256": "fc87997ba8fd892184425b8b446826e8f9545496021030b663c966a7555bf26c",
+    "sha256": "968af6dc8ddc36fd21b4f1e7e8bf36f2166e2c736fd04d392ca7914fd6374c14",
     "record": {
       "format": "dap-workspace-source-seals-1",
-      "basis": "de52252f18a7afdc97486bf00d743981814d8980",
+      "basis": "235e9262565335735870574113174b0218237910",
       "file": "scripts/security-entry-points.test.mjs",
-      "beforeSha256": "9e895958d31be1b448e29800298078f099eb815f6b33c742d032df851072e8d3",
-      "afterSha256": "ebfa7c28109e1262dada7abc02d1611436e5dbbd50a4c65f0bd2ba3aea1e594b",
+      "beforeSha256": "b8e2bd84f59a6f802772c38a3b511b4196c57f770ef9b17327107a8cb06ad229",
+      "afterSha256": "4d5ce0a02d644ca5f92e493329f82aefe9bc8e4be36f1325ddfa2085f467c259",
       "outsideValueProjectionSha256": "e1c99f613250eba46d5d30a964cef9fa2108e1fe5b3d22f0fedc53e4fe6bd085",
       "maps": {
         "seals": [
@@ -18805,8 +18805,8 @@
         {
           "map": "pendingArchiveSeals",
           "owner": "packages/scope/src/archive-host.ts",
-          "beforeValue": "f16f3972e28d1f2bbdc1e98f60f21bc38be82b2d3a3b851e552e6391eb94d0cd",
-          "afterValue": "8e573b3b8f5a5fdc6f677fdcc1a2e28fe4078f1f149083db568d950c4c2d2539",
+          "beforeValue": "024be0c8f8a23b0074e3f9e0f87c2bfd6b116721a569c41693ecb340f2b6d330",
+          "afterValue": "b57d08f14989add1eece16d76f14caa73c62e31b114f1388f77aabbd5f696232",
           "valueStartUtf16": 6569,
           "valueEndUtf16": 6633
         },
@@ -19146,9 +19146,9 @@
         },
         {
           "path": "packages/scope/src/archive-host.ts",
-          "beforeSourceSha256": "07767acc8d384981f6480b585ee71e19a34ed4a351739d216faa556c1cb40239",
-          "afterSourceSha256": "7aff0e38a81b255b3abe81088c6bec8e3fc6fbf163531b84f945d52b14b918d7",
-          "actualSourceSeal": "8e573b3b8f5a5fdc6f677fdcc1a2e28fe4078f1f149083db568d950c4c2d2539"
+          "beforeSourceSha256": "6f2937df8e8e16b63fa9502484831232fb7b7f30c7d5b47e84983960ad978ec1",
+          "afterSourceSha256": "e95792bc2ca9040c65ca03c06a881c79389b2c6bfa54406d151d0e9daea87a21",
+          "actualSourceSeal": "b57d08f14989add1eece16d76f14caa73c62e31b114f1388f77aabbd5f696232"
         },
         {
           "path": "packages/scope/src/artifacts-host.ts",
@@ -19221,6 +19221,23 @@
           "outputBytes": 277,
           "outputSha256": "926bc08691166e159aeded22f74d697a5561d062f649c09263b897b954b24034",
           "outputText": "[\n  {\n    \"path\": \"apps/room/demo-creation.ts\",\n    \"sourceSeal\": \"d9850f4854182c0231a2ae9a985882343e7f3dfea67ea034cafe4fca4bb0d77f\"\n  },\n  {\n    \"path\": \"packages/cli/src/commands.ts\",\n    \"sourceSeal\": \"b85ccc91193f954de0410eb7d531a4fd32ed55a3de93c7e8201ba89ab8453a98\"\n  }\n]\n"
+        }
+      },
+      "archiveRefresh": {
+        "owners": [
+          {
+            "path": "packages/scope/src/archive-host.ts",
+            "beforeSourceSha256": "6f2937df8e8e16b63fa9502484831232fb7b7f30c7d5b47e84983960ad978ec1",
+            "afterSourceSha256": "e95792bc2ca9040c65ca03c06a881c79389b2c6bfa54406d151d0e9daea87a21"
+          }
+        ],
+        "parser": {
+          "maintainedToolSourceSha256": "6211e9d63c50bc8686ddebbc4d211fceedb4acd3303849ea29137c031517e167",
+          "rootRunReference": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4da49028267c9c877111ad41d33018311d551f2c",
+          "outputPath": "/private/tmp/artroom-rename-archive-integration-evidence-20261023-v1/parser.stdout",
+          "outputBytes": 147,
+          "outputSha256": "b924c8e25184dece65f60379ee92f6e9e94d5261e1ba22b49bb010f6120a836b",
+          "outputText": "[\n  {\n    \"path\": \"packages/scope/src/archive-host.ts\",\n    \"sourceSeal\": \"b57d08f14989add1eece16d76f14caa73c62e31b114f1388f77aabbd5f696232\"\n  }\n]\n"
         }
       }
     }
