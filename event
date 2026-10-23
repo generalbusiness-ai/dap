@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4985d50f357db5c3f366cf6683c5f8f7ac754b7f","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/index.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4c5435cb056b5c25880ff8bada37684238ca9901","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-21-grow-demo-archive.md."}
