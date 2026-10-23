@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0f64c638deeecffa45643b3db1fcee4a74851189","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/words.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0f76dd7381734abfd1c31414eb38af9c792d94a8","text":"Merge retired a covered predecessor; the successor is at apps/room/page/test/retained-editor.test.ts."}
