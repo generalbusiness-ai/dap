@@ -839,7 +839,7 @@ function main() {
     const additions = publicationAdditions(baseline);
     const metadata = sealMetadata(baseline, []);
     if (metadata) sealFileState(metadata.record, sealText(metadata.current.bytes), true);
-    const allowed = new Set([...baseline.transformedSources.map(row => row.path), ...(baseline.publicationSources ?? []).map(row => row.path), ...additions.rows.map(row => row.path), ...SELF, "docs/workspace-rename.md"]);
+    const allowed = new Set([...baseline.transformedSources.map(row => row.path), ...(baseline.publicationSources ?? []).map(row => row.path), ...additions.rows.map(row => row.path), ...SELF, "docs/workspace-rename.md", "notes/implementation/2026-10-23-workspace-rename.md"]);
     if (metadata) allowed.add(SOURCE_SEAL_FILE);
     const changed = execFileSync("git", ["diff", "--name-only", "-z", baseline.basis], { cwd: ROOT, encoding: "utf8" }).split("\0").filter(Boolean);
     for (const path of changed) if (!allowed.has(path)) throw Error(`Unclassified changed source: ${path}`);
