@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e9eb89ab4bbbc163b3755de4dd8657d408911053","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/definition-corpus/forms-sends-variants.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:eae56bf91cf32976c918d6415469d5ed03962c88","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/capacity-standing.test.ts."}
