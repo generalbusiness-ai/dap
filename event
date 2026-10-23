@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1ebef07cba3aa86f885f88602c101f61bd379eb8","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-04-scope-and-replay-contract.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1fde2cc3de526ae5081ba731e198d42d980d55a0","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/definition-corpus/grow-examples.ts."}
