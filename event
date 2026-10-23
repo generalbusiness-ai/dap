@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:08382fb0244b8c0281bbb4f2f00c893ab164a05e","text":"Merge retired a covered predecessor; the successor is at apps/room/page/test/private-key-fixture.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:083878787984b31e9a091983d0e240ec4251fd5a","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/applications/projection-data.ts."}
