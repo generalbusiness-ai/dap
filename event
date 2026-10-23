@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d71f2fdbdb2f2bc0ed495713950c9cbd3250a0c4","text":"Merge retired a covered predecessor; the successor is at packages/git/src/http-read.ts."}
+{"kind":"assert","text":"Read-only landing check by checker session 44e8. Main 8dd302ae33e849640c5fc61b33ece517d8b6793e has parents 27abf6d9 and the approved head 85805616. Its tree a8366cb7b82749a3eb519c9a589739e2d4d68393 equals the approved tree. origin refs/heads/main is 8dd302ae. The planner can deploy 8dd302ae to dap-grow."}
