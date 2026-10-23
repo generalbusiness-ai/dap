@@ -248,7 +248,8 @@ export interface HoldOptions {
    * `token` is the opening, and it is refused `tokens-full` at the bound.
    * So the entry that ends a hold, which cannot be refused, derives at most
    * 1 + 3 times this number of effects. The floor is 2. The number is the
-   * proof plan's, and none is proposed: it is required, with no default.
+   * proof plan's and is required as an argument. HOLD_VERSION records the
+   * maintained serving and replay choice.
    * A staging's tokens are not counted here.
    */
   tokensPerHold: number;
@@ -260,6 +261,10 @@ export interface HoldOptions {
    */
   rootRetentionSeconds: number | null;
 }
+
+/** The maintained hold@1 serving and replay choice. Alternative proof plans
+ * still pass their own explicit HoldOptions to holdCapability. */
+export const HOLD_VERSION: Readonly<HoldOptions> = Object.freeze({ tokensPerHold: TOKENS_FLOOR, rootRetentionSeconds: null });
 
 // ---------------------------------------------------------------- guards and effects
 

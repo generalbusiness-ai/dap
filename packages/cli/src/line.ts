@@ -34,7 +34,7 @@ export const USAGE = [
   "  dap verify --all",
   "  dap status [<scope>] [--request <16-hex-id>]",
   "  dap remote",
-  "  dap clone [<directory>] [--hours 1]",
+  "  dap clone [<directory>] [--hours 1] [--archive]",
   "  dap edit <path> --file <local file> [--title <text>] [--closes <issue>]",
   "  dap propose <branch> [--title <text>]",
   "  dap merge <change> [--closes <issue>]",
@@ -49,7 +49,7 @@ export const USAGE = [
 ].join("\n");
 
 /** The flags that take no value. */
-const SWITCHES: ReadonlySet<string> = new Set(["again", "all", "plan", "planned", "check", "keep", "continue"]);
+const SWITCHES: ReadonlySet<string> = new Set(["again", "all", "plan", "planned", "check", "keep", "continue", "archive"]);
 
 /** The words of a command line: the positional ones, each `--name value`, and each switch; `--set` may be given more than once. */
 export function parse(argv: readonly string[]): { words: string[]; flags: Map<string, string[]> } | null {
@@ -73,7 +73,7 @@ export function parse(argv: readonly string[]): { words: string[]; flags: Map<st
 }
 
 const KNOWN: Record<string, readonly string[]> = {
-  install: ["host", "namespace", "plan", "planned", "cohort", "release", "request", "role", "values", "owner"], application: [], apps: ["cursor"], create: ["handle", "branch", "again"], claim: ["handle", "branch", "again"], invite: ["role", "acts", "hours", "keep", "check", "continue"], join: ["check"], acts: [], act: ["on", "target", "set", "value"], log: ["limit"], items: ["query"], show: [], verify: ["all"], status: ["request"], remote: [], clone: ["hours"], edit: ["file", "title", "closes"], propose: ["title"], merge: ["closes"], issue: ["title", "body"], issues: [],
+  install: ["host", "namespace", "plan", "planned", "cohort", "release", "request", "role", "values", "owner"], application: [], apps: ["cursor"], create: ["handle", "branch", "again"], claim: ["handle", "branch", "again"], invite: ["role", "acts", "hours", "keep", "check", "continue"], join: ["check"], acts: [], act: ["on", "target", "set", "value"], log: ["limit"], items: ["query"], show: [], verify: ["all"], status: ["request"], remote: [], clone: ["hours", "archive"], edit: ["file", "title", "closes"], propose: ["title"], merge: ["closes"], issue: ["title", "body"], issues: [],
 };
 
 /** Runs one command line with the given context. */
@@ -128,7 +128,7 @@ export async function command(ctx: Context, argv: readonly string[]): Promise<Ou
     case "show": return first === undefined ? needs("an entry") : show(ctx, first);
     case "status": return (parsed.flags.get("request")?.length ?? 0) > 1 ? { code: 2, lines: ["status takes one --request value.", USAGE] } : status(ctx, first, flag("request"));
     case "remote": return first === undefined ? remote(ctx) : { code: 2, lines: ["remote takes no argument.", USAGE] };
-    case "clone": return clone(ctx, first, { ...(flag("hours") ? { hours: number("hours")! } : {}) });
+    case "clone": return clone(ctx, first, { ...(flag("hours") ? { hours: number("hours")! } : {}), ...(flag("archive") !== undefined ? { archive: true } : {}) });
     case "edit": return first === undefined ? needs("a path in the repository") : edit(ctx, first, { ...(flag("file") !== undefined ? { file: flag("file")! } : {}), ...(flag("title") !== undefined ? { title: flag("title")! } : {}), ...(flag("closes") !== undefined ? { closes: flag("closes")! } : {}) });
     case "propose": return first === undefined ? needs("a local branch") : propose(ctx, first, { ...(flag("title") !== undefined ? { title: flag("title")! } : {}) });
     case "merge": return first === undefined ? needs("a change") : merge(ctx, first, { ...(flag("closes") !== undefined ? { closes: flag("closes")! } : {}) });

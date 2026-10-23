@@ -1,3 +1,7 @@
+/** Archive fixture authority uses genuine Native Membership8 observations.
+ * Its seat/key/role and source-birth preparation are external fixture setup;
+ * each pass still pays its existing pin lookups and original complete ledger.
+ * Inline Lane policy, clock and host/token/repository remain TEST fixtures. */
 /** Actual native inputs, archive driver, confirmed receipt rows and
  * alarm floor writer. Declaration/grants/policy/clock and repository, HTTP
  * replies and tokens are explicit fixtures. No deployed host/custody claim. */
@@ -8,9 +12,10 @@ import { timeMs, timeOf } from "@generalbusiness/artroom-bytes";
 import { ArchiveRows } from "../src/archive-row.ts";
 import { ArchiveBudget, ARCHIVE_BOUNDS, type ArchiveCost } from "../src/archive-budget.ts";
 import { SqliteStore } from "../src/sqlite.ts";
-import { at, create, type Lane } from "./fixtures-native.ts";
+import { at, type Lane } from "./fixtures-native.ts";
 import { archiveDefinition, archivePolicies, archiveRepository, archiveSql } from "./support/archive.ts";
 import { ScriptedArchiveHost } from "./support/archive-provider.ts";
+import { nativeArchiveFixture, createNativeArchiveLane, archiveAuthorityBasis, archiveAuthorityPolicies } from "./support/archive-native-authority.ts";
 import { fixtureArchiveWiring } from "./worker.ts";
 
 const policies = (margin: number, minimum: number) => new Map([...archivePolicies].map(([pin, policy]) => [pin, {
@@ -30,9 +35,10 @@ async function archiveAlarm(lane: Lane, alarmTimes?: number[]) {
 // The native alarm must archive a small prefix even when floor policy is
 // enabled, while its minimum/window prevents an unnecessary floor entry.
 test.each([{ inputs: 10, complete: true }, { inputs: 4800, complete: false }])("Native floor-policy alarm measures a$inputs-input archive prefix", async ({ inputs, complete }) => {
-  const lane = await create({}, {}, archiveDefinition), host = new ScriptedArchiveHost("sha1", () => lane.c.clock.now), budgets: ArchiveBudget[] = [];
+  const lane = await createNativeArchiveLane({}, {}, archiveDefinition), host = new ScriptedArchiveHost("sha1", () => lane.c.clock.now), budgets: ArchiveBudget[] = [];
   fixtureArchiveWiring.set(lane.name, {
-    policies: { fixture: "archive-policies", registry: policies(10000, 1000) },
+    fixtureSources: archiveAuthorityBasis(lane)!.pins,
+    policies: { fixture: "archive-policies", registry: archiveAuthorityPolicies(lane, policies(10000, 1000)) },
     target: { fixture: "archive-target", resolve: async () => { host.targets++; return archiveRepository; } }, provider: host,
     budget: () => { const budget = new ArchiveBudget(); budgets.push(budget); return budget; },
   });
@@ -59,10 +65,11 @@ test.each([{ inputs: 10, complete: true }, { inputs: 4800, complete: false }])("
 // Invariant: the actual writer uses its confirmed receipt and minimum
 // increment, rather than creating a succession of one-entry floors.
 test("Native alarm writer advances a30000-entry journal in five bounded floors then waits for a1000-position target rise", async () => {
-  const lane = await create({}, {}, archiveDefinition), host = new ScriptedArchiveHost("sha1", () => lane.c.clock.now);
+  const lane = await createNativeArchiveLane({}, {}, archiveDefinition), host = new ScriptedArchiveHost("sha1", () => lane.c.clock.now);
   const budgets: ArchiveBudget[] = [];
   fixtureArchiveWiring.set(lane.name, {
-    policies: { fixture: "archive-policies", registry: policies(10000, 1000) },
+    fixtureSources: archiveAuthorityBasis(lane)!.pins,
+    policies: { fixture: "archive-policies", registry: archiveAuthorityPolicies(lane, policies(10000, 1000)) },
     target: { fixture: "archive-target", resolve: async () => archiveRepository }, provider: host,
     budget: () => { const budget = new ArchiveBudget(); budgets.push(budget); return budget; },
   });
@@ -136,7 +143,8 @@ test("Native alarm writer advances a30000-entry journal in five bounded floors t
 // Invariant: a floor is writable at the exact entry ceiling and lets a
 // bounded native scope keep accepting inputs; without floors it stops there.
 test("Native archive floors reclaim an exact2000-entry ceiling while10000 real inputs continue", async () => {
-  const fixed = await create({ scopeEntries: 2000 }, {}, archiveDefinition);
+  const fixture = await nativeArchiveFixture();
+  const fixed = await fixture.create({ scopeEntries: 2000 }, {}, archiveDefinition);
   for (let n = 0; n < 1998; n++) expect((await fixed.submit(fixed.remark(`fixed ${n}`))).answer).toBe("accepted");
   // Legacy admission reserves its closing checkpoint. Fill that actual
   // reserved slot, rather than pretending an ordinary act can consume it.
@@ -144,9 +152,10 @@ test("Native archive floors reclaim an exact2000-entry ceiling while10000 real i
   expect(await fixed.submit(fixed.remark("past the fixed ceiling"))).toMatchObject({ answer: "refused", reason: "scope-full" });
   expect((await fixed.head()).seq).toBe(1999);
 
-  const lane = await create({ scopeEntries: 2000 }, {}, archiveDefinition), host = new ScriptedArchiveHost("sha1", () => lane.c.clock.now), budgets: ArchiveBudget[] = [];
+  const lane = await fixture.create({ scopeEntries: 2000 }, {}, archiveDefinition), host = new ScriptedArchiveHost("sha1", () => lane.c.clock.now), budgets: ArchiveBudget[] = [];
   fixtureArchiveWiring.set(lane.name, {
-    policies: { fixture: "archive-policies", registry: policies(200, 500) },
+    fixtureSources: archiveAuthorityBasis(lane)!.pins,
+    policies: { fixture: "archive-policies", registry: archiveAuthorityPolicies(lane, policies(200, 500)) },
     target: { fixture: "archive-target", resolve: async () => archiveRepository }, provider: host,
     budget: () => { const budget = new ArchiveBudget(); budgets.push(budget); return budget; },
   });

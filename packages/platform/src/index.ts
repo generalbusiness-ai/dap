@@ -7,6 +7,7 @@ export { applicationAnnouncement, APPLICATION_ANNOUNCEMENT_OWNER } from "./appli
 export { TRUSTED_APPLICATION_COHORT, INSTALL_DEFINITION_BYTES, INSTALL_SEMANTIC_BYTES } from "./application-install-wire.ts";
 export { DECLARED_APPLICATION_RULES } from "./application-install-v2.ts";
 export { DECLARED_APPLICATION_COHORT } from "./application-install-v2-wire.ts";
+export { ARCHIVE_REPLAY_CODE } from "./archive-replay-code.ts";
 export { ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT } from "./archive-binding-wire.ts";
 export { DEVICE_APPLICATION_COHORT } from "./device-application-wire.ts";
 export { deviceApplicationRequirement } from "./device-application-package.ts";

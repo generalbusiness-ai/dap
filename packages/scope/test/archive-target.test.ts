@@ -141,7 +141,10 @@ test("one locate reuses only its identical checked Rules birth and keeps final f
     const old = { entries: 0, attempts: 0, nodes: 4, calls: 6, metadata: 4 * B + 2 * P + 3 * 512,
       inputWork: 4 * B * 8 + 2 * P * 4 + 4 * 1024 };
     expect(resolved.cost).toEqual({ ...old, nodes: old.nodes - 1, calls: old.calls - 1,
-      metadata: old.metadata - B, inputWork: old.inputWork - B * 8 + 1024 });
+      // The new descriptive list copies the three actual checked refs,
+      // at the existing full-ref metadata/comparison prices.
+      metadata: old.metadata - B + 3 * 512, inputWork: old.inputWork - B * 8 + 1024 + 3 * 1024 });
+    expect(resolved.result?.publicScopes).toEqual([rules, directory, destination]);
     // These full-ref coherence fences refuse before a substituted birth read.
     for (const replacement of [{ ...rules, inc: newIncarnation(new Uint8Array(16).fill(37)) }, { ...rules, kind: "directory" as const }]) {
       const refused = await run(replacement);

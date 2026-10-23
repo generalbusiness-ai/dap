@@ -11,6 +11,7 @@ import { journalV2Head, journalPassManifest, type JournalPassManifest, type Jour
 import { journalV2Directory, journalV2PassPath, journalV2Position, journalV2RetainedPath, journalV2SegmentPath, readJournalV2Path } from "./journal-v2-path.ts";
 import { JournalLayoutRefusal, JournalWork, refuseJournal } from "./journal-work.ts";
 import type { JournalReadBudget, JournalReadRepository, JournalReadResult, ReadJournal } from "./journal-reader.ts";
+import { readJournalAnchorPublication } from "./journal-anchors.ts";
 
 export const JOURNAL_V2_READ_ENTRIES = 1_000_000;
 export interface JournalV2ReadOptions { readonly entries?: number }
@@ -195,10 +196,13 @@ export async function readJournalArchiveV2(repository: JournalReadRepository, sc
         if (data && typeof data === "object" && "name" in data && typeof data.name === "string") name = data.name;
       }
     }
+    const publication = readJournalAnchorPublication(passes, [head.scope, ...[...sources.values()]
+      .filter(source => source.at.kind !== "register" && source.at.kind !== "membership").map(source => source.at)], id, work);
     work.check();
     return { ok: true, archive: Object.freeze({ scope: Object.freeze({ ...head.scope }), head: Object.freeze({ seq: head.through, hash: head.hash }), format, commit: id, name,
       entries: Object.freeze(entries.map(entry => Object.freeze(entry))), retained: Object.freeze([...retained.values()].map(input => Object.freeze(input))),
       ...(omittedTexts.length ? { omittedTexts: Object.freeze(omittedTexts) } : {}),
+      ...publication,
       ...(sources.size ? { foreignSources: Object.freeze([...sources.values()].map(source => Object.freeze({ at: Object.freeze({ ...source.at }), pin: source.pin }))) } : {}) }) };
   } catch (error) {
     const reason = error && typeof error === "object" && "reason" in error ? error.reason : "unavailable";

@@ -2,7 +2,8 @@
  * A caller confirms these updates in its archive receipt transaction. */
 import type { RetainedKey } from "@generalbusiness/dap-derive";
 import { checkedRetainedKey } from "@generalbusiness/dap-derive";
-import { canonicalize, isHead, isRecord, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isHead, isRecord, isScopeRef, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
+import type { Head, ScopeRef } from "@generalbusiness/dap-contract";
 import { JOURNAL_SELECTION_BYTES, JOURNAL_V2_LAST_POSITION, archiveRetainedPath } from "@generalbusiness/artroom-git/journal";
 import { ArchiveBudget } from "./archive-budget.ts";
 import type { Sql, SqlValue } from "./sqlite.ts";
@@ -26,7 +27,7 @@ export function readRetainedArchivePass(sql: Pick<Sql, "exec">, key: Key, budget
 /** The native planner has already admitted the marked selection. Confirm
  * decodes only bounded key metadata, never bodies or today's retained set.
  * Its cost is this confirmation's work, not the old inventory cost again. */
-export function confirmRetainedArchivePass(sql: Sql, manifest: string, budget: ArchiveBudget): void {
+export function confirmRetainedArchivePass(sql: Sql, manifest: string, budget: ArchiveBudget): { readonly first: number; readonly copies: number; readonly at: ScopeRef | null; readonly through: Head | null } {
   if (typeof manifest !== "string" || manifest.length > JOURNAL_SELECTION_BYTES) return budget.stop("limit");
   budget.spend(archiveConfirmedSelectionReservation(manifest.length));
   if (utf8(manifest).length > JOURNAL_SELECTION_BYTES) return budget.stop("limit");
@@ -37,12 +38,13 @@ export function confirmRetainedArchivePass(sql: Sql, manifest: string, budget: A
     || !Array.isArray(value["objects"]) || value["objects"].length > 512) return budget.stop("unavailable");
   const first = value["after"] === null ? 0 : value["after"].seq + 1;
   if (first > JOURNAL_V2_LAST_POSITION) return budget.stop("unavailable");
-  const seen = new Set<string>(), keys: Key[] = [];
+  const seen = new Set<string>(), keys: Key[] = []; let copies = 0;
   for (const raw of value["objects"]) {
     if (!isRecord(raw) || typeof raw["pass"] !== "number" || !Number.isSafeInteger(raw["pass"]) || raw["pass"] < 0 || raw["pass"] > first) return budget.stop("unavailable");
     let key: RetainedKey;
     try { key = checkedRetainedKey(raw["key"] as RetainedKey); } catch { return budget.stop("unavailable"); }
     const name = canonicalize(key);
+    if (key.kind === "entry") copies++;
     if (seen.has(name)) return budget.stop("unavailable"); seen.add(name);
     if (raw["pass"] === first) keys.push(key);
   }
@@ -52,4 +54,6 @@ export function confirmRetainedArchivePass(sql: Sql, manifest: string, budget: A
     sql.exec(`UPDATE ${p.table} SET pass = ? WHERE ${p.where} AND pass IS NULL`, first, ...p.args).toArray();
     budget.check();
   }
+  return { first, copies,
+    at: isScopeRef(value["at"]) ? value["at"] : null, through: isHead(value["through"]) ? value["through"] : null };
 }

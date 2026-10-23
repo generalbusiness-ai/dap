@@ -2,7 +2,8 @@
 /** The `artroom-replay` command under Node, which runs this file as it is. Everything else is in `cli.ts`. */
 
 import { main } from "./cli.ts";
-import { archiveTexts, gitSource, readArchiveReceipt } from "./git.ts";
+import { ARCHIVE_REPLAY_CODE } from "@generalbusiness/dap-platform";
+import { archiveTexts, auditClone, gitSource, readArchiveReceipt } from "./git.ts";
 
 /** The little of Node's `process` this file uses. */
 declare const process: { argv: string[]; exitCode: number | undefined; stdout: { write(text: string): unknown }; stderr: { write(text: string): unknown } };
@@ -12,6 +13,8 @@ try {
     out: (text) => process.stdout.write(`${text}\n`), err: (text) => process.stderr.write(`${text}\n`),
     archive: (directory, texts) => gitSource(directory, texts === undefined ? {} : { texts: archiveTexts(texts) }),
     receipt: readArchiveReceipt,
+    audit: auditClone,
+    native: ARCHIVE_REPLAY_CODE,
   });
 } catch (error) {
   process.stderr.write(`read error: ${error instanceof Error ? error.message : String(error)}\n`);

@@ -34,6 +34,9 @@ export interface ArchiveDependencyScope {
 export interface ArchiveDependencyPlan {
   readonly repository: DestinationRepository;
   readonly scopes: readonly ArchiveDependencyScope[];
+  /** Descriptive public journal identities only. In room mode the Rules
+   * reference is checked against Directory metadata, not read as a birth. */
+  readonly publicScopes: readonly ScopeRef[];
 }
 export interface FixtureArchiveDependencyTarget extends FixtureArchiveTarget {
   discover(at: ScopeRef, seed: Seed, budget: ArchiveBudget): Promise<ArchiveDependencyPlan | null>;
@@ -51,6 +54,7 @@ export function fixtureArchiveTarget(reads: FixtureArchiveTargetReads): FixtureA
  * item-read port, while fixture readers remain explicit at their wrapper. */
 export function archiveTarget(reads: ArchiveTargetReads): Omit<FixtureArchiveDependencyTarget, "fixture"> & {
   resolveRoom(at: ScopeRef, seed: Seed, budget: ArchiveBudget): Promise<DestinationRepository | null>;
+  discoverRoom(at: ScopeRef, seed: Seed, budget: ArchiveBudget): Promise<ArchiveDependencyPlan | null>;
 } {
   const birth = async (at: ScopeRef, budget: ArchiveBudget) => {
     budget.spend({ nodes: 1, calls: 1, metadata: BIRTH_BYTES, inputWork: BIRTH_BYTES * 8 });
@@ -74,6 +78,17 @@ export function archiveTarget(reads: ArchiveTargetReads): Omit<FixtureArchiveDep
     at = { ...at }; const archiving = { ...at }; seed = { ...seed, creator: seed.creator ? { ...seed.creator } : null };
     const visited = new Set<string>();
     const scopes = new Map<string, ArchiveDependencyScope>();
+    const result = (configured: DestinationRepository, reference?: ScopeRef): ArchiveDependencyPlan | null => {
+      const publicScopes = new Map<string, ScopeRef>();
+      for (const where of [...scopes.values()].map(row => row.at).concat(reference ? [reference] : [])) {
+        budget.spend({ metadata: 512, inputWork: 1024 });
+        if (["register", "membership", "inbox"].includes(where.kind)) return null;
+        const prior = publicScopes.get(where.scope);
+        if (prior && !same(prior, where)) return null;
+        if (!prior) publicScopes.set(where.scope, Object.freeze({ ...where }));
+      }
+      return { repository: { ...configured }, scopes: Object.freeze([...scopes.values()]), publicScopes: Object.freeze([...publicScopes.values()]) };
+    };
     const select = (where: ScopeRef, named: Digest | PlatformDefinition, via: ArchiveDependencyScope["via"], from: ScopeRef | null): boolean => {
       budget.spend({ inputWork: 1024 });
       const prior = scopes.get(where.scope);
@@ -117,7 +132,7 @@ export function archiveTarget(reads: ArchiveTargetReads): Omit<FixtureArchiveDep
             || rules.scope === destination.scope) return null;
           if (mode === "room") {
             if (!select(destination, target.named, "destination", at)) return null;
-            return { repository: { ...configured }, scopes: Object.freeze([...scopes.values()]) };
+            return result(configured, rules);
           }
           // Same binding-comparison price as select(). A different full ref
           // keeps the original actual read; all final fences below still run.
@@ -126,7 +141,7 @@ export function archiveTarget(reads: ArchiveTargetReads): Omit<FixtureArchiveDep
           if (!rulebook || rulebook.named !== DC.rules || !same(rulebook.seed.creator, at)
             || !select(rules, rulebook.named, "rules", at) || !select(destination, target.named, "destination", at)) return null;
         }
-        return { repository: { ...configured }, scopes: Object.freeze([...scopes.values()]) };
+        return result(configured);
       }
       if (!seed.creator) return null;
       if (hop === HOPS - 1) return null;
@@ -144,6 +159,10 @@ export function archiveTarget(reads: ArchiveTargetReads): Omit<FixtureArchiveDep
     async resolveRoom(at, seed, budget) {
       if (!isScopeRef(at) || at.kind !== "lane") return null;
       const found = await locate(at, seed, budget, "room"); return found ? { ...found.repository } : null;
+    },
+    async discoverRoom(at, seed, budget) {
+      if (!isScopeRef(at) || at.kind !== "lane") return null;
+      return locate(at, seed, budget, "room");
     },
     discover: (at, seed, budget) => locate(at, seed, budget, "all"),
   };

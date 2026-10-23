@@ -12,6 +12,7 @@ import { ownerReservations, validateDefinition } from "@generalbusiness/dap-deri
 import { SqliteStore, type SqlValue } from "../src/sqlite.ts";
 import { applicationProjectionData } from "../src/applications/projection-data.ts";
 import { CAPABILITY_CODE } from "../src/ports.ts";
+import { command as dapCommand, memoryStore as cliStore } from "../../cli/src/index.ts";
 import { ScopeHandle, httpTransport, requestSession, secretSigner, sessionRequest } from "@generalbusiness/artroom-client";
 import { httpSource, verify } from "@generalbusiness/artroom-replay";
 import nativeWorker from "../../../apps/room/worker.ts";
@@ -179,6 +180,14 @@ test("maintained Grow Site creates a native Room and opens its owned grid throug
       const replay = await life.wait(() => verify(httpSource(port.service, { fetch: routed, reader: issued.session.reader() }), { mode: "replay", platform, capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE, grants: "proven", scope: node.name, head: summary.at }));
       expect([replay.report.result, replay.why]).toEqual(["consistent", null]);
     }
+    // The actual member command must replay the installed device-command
+    // history too. No copied capability table is passed by this witness.
+    const local = cliStore();
+    await local.keep("native-member", rita.secret);
+    await local.save({ v: 1, service: port.service, key: "native-member", repository: { directory, membership, rules: A.name, destination: G.name } });
+    const verified = await life.wait(() => dapCommand({ store: local, now: life.now, fetch: (url, init) => life.wait(() => routed(url, init)) }, ["verify", room.name]));
+    expect(verified.code, verified.lines.join("\n")).toBe(0);
+    expect(verified.lines).toContain("Result: consistent, for the mode, target, coverage and trusts stated below.");
     expect(canonicalize(packet.package.semantic.creates)).toBe(canonicalize([{ from: siteId, to: roomId }]));
   } finally { life.release(); }
 }, 30_000);

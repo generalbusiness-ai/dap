@@ -26,7 +26,7 @@ const nameOf = (key: Key) => canonicalize(key.kind === "value" ? [key.kind, key.
 interface ObjectMetadata { readonly key: Key; readonly bytes: number; readonly pass: number | null; readonly first: number }
 interface Segment { readonly first: number; readonly bytes: number }
 interface Counts {
-  readonly objects: number; readonly newRetained: number; readonly retainedBytes: number; readonly retainedNameUnits: number;
+  readonly objects: number; readonly copies: number; readonly newRetained: number; readonly retainedBytes: number; readonly retainedNameUnits: number;
   readonly keyBytes: number; readonly objectJSONBytes: number;
 }
 interface Row extends Counts {
@@ -34,7 +34,8 @@ interface Row extends Counts {
   readonly omissions: number; readonly ancestry: number; readonly input: Readonly<Work>; readonly segments: readonly Segment[];
 }
 export interface ArchiveScoutLayoutQuote {
-  readonly entries: number; readonly entryBytes: number; readonly objects: number; readonly newRetained: number;
+  readonly entries: number; readonly entryBytes: number; readonly objects: number; readonly copies: number; readonly newRetained: number;
+  readonly anchorCandidates: number;
   readonly retainedBytes: number; readonly retainedNameUnits: number; readonly origins: number;
   readonly manifestRows: number; readonly selectionUnits: number; readonly manifestBytes: number;
   readonly measuredOmissions: number; readonly orderingInputWork: number;
@@ -48,7 +49,7 @@ export class ArchiveScoutLayout {
   readonly #rows = new Map<number, Row>();
   readonly #segments = new ArchiveSegmentCursor(8 * 1024 * 1024);
   readonly #rootConsumers: number;
-  #counts: Counts = { objects: 0, newRetained: 0, retainedBytes: 0, retainedNameUnits: 0, keyBytes: 0, objectJSONBytes: 0 };
+  #counts: Counts = { objects: 0, copies: 0, newRetained: 0, retainedBytes: 0, retainedNameUnits: 0, keyBytes: 0, objectJSONBytes: 0 };
   #retainedInput: Work = zero();
   constructor(readonly at: ScopeRef, readonly first: number, root: ArchiveDeclarationFootprint, sql: Pick<Sql, "exec">, readonly budget: ArchiveBudget) {
     budget.spend({ metadata: 512, inputWork: 1024 });
@@ -78,6 +79,7 @@ export class ArchiveScoutLayout {
     if (pass !== null && pass > this.first) return stop("mismatch");
     const counts = { ...this.#counts };
     counts.objects++; counts.keyBytes += utf8(name).length;
+    if (key.kind === "entry") counts.copies++;
     // Full object descriptor except consumers. The path's ASCII escaped
     // domain spelling bounds both key strings; 512 covers fact/pin/pass.
     counts.objectJSONBytes += 512 + path.length * 2;
@@ -178,9 +180,9 @@ export class ArchiveScoutLayout {
     for (const [key, held] of this.#sizes) if (held.first <= through.seq) sizes.set(key, held.bytes);
     return sizes;
   }
-  quote(through: Head, sources: number): ArchiveScoutLayoutQuote {
+  quote(through: Head, sources: number, anchorCandidates: number): ArchiveScoutLayoutQuote {
     this.budget.spend({ metadata: 512 + this.#objects.size * 128, inputWork: 1024 + this.#objects.size * 256 });
-    if (!isHead(through) || !natural(sources)) return stop("mismatch");
+    if (!isHead(through) || !natural(sources) || !natural(anchorCandidates)) return stop("mismatch");
     const row = this.#rows.get(through.seq);
     if (!row || row.hash !== through.hash) return stop("mismatch");
     const entries = through.seq - this.first + 1, keyRows = row.objects + row.omissions + sources;
@@ -196,7 +198,7 @@ export class ArchiveScoutLayout {
       ...row.segments.map(segment => ({ path: journalV2SegmentPath(this.first, segment.first), bytes: segment.bytes }))];
     for (const object of this.#objects.values()) if (object.first <= through.seq && (object.pass === null || object.pass === this.first)) files.push({ path: journalV2RetainedPath(this.first, object.key), bytes: object.bytes });
     const input = { ...row.input }; add(input, archiveInputBaseReservation(entries, row.objects));
-    return Object.freeze({ entries, entryBytes: row.entryBytes, objects: row.objects, newRetained: row.newRetained,
+    return Object.freeze({ entries, entryBytes: row.entryBytes, objects: row.objects, copies: row.copies, newRetained: row.newRetained, anchorCandidates,
       retainedBytes: row.retainedBytes, retainedNameUnits: row.retainedNameUnits, origins: row.origins, manifestRows: row.objects + row.omissions,
       selectionUnits, manifestBytes, measuredOmissions: row.omissions, orderingInputWork, input: Object.freeze(input), files: Object.freeze(files.map(file => Object.freeze(file))) });
   }

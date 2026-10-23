@@ -5,7 +5,7 @@ import { expect, onTestFinished, test } from "vitest";
 import { env } from "cloudflare:test";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Digest, Input, SendForm } from "@generalbusiness/dap-contract";
-import { canonicalize, isEntry, parseStrict, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isEntry, newIncarnation, parseStrict, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
 import { variant } from "@generalbusiness/dap-derive/testing";
 import { outcomeValueDomains, validateDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
@@ -14,16 +14,18 @@ import { forecastArchiveForeignLookup, forecastArchiveForeignSelection, forecast
 import { ArchiveRetainedReader } from "../src/archive-retained.ts";
 import { forecastArchiveSupportMetadata } from "../src/archive-support-cost.ts";
 import { ArchiveScout } from "../src/archive-scout.ts";
+import { archiveEntryAnchorCandidates } from "../src/archive-anchor-candidates.ts";
 import { ArchiveForeignPlan } from "../src/archive-foreign-plan.ts";
 import { ARCHIVE_BOUNDS, ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
 import { buildJournalArchive, journalRef, JournalWork } from "@generalbusiness/artroom-git/journal";
 import { JournalObjectReader, JournalObjects } from "../../git/src/journal-objects.ts";
 import { readJournalArchive } from "@generalbusiness/artroom-git/journal-reader";
-import { planArchive, rebuildArchive } from "../src/archive-build.ts";
+import { planArchive, planPublishedArchivePass, rebuildArchive, rebuildArchivePass } from "../src/archive-build.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
 import type { FixtureArchiveProvider } from "../src/archive-driver.ts";
 import { archiveRepository, archiveSql } from "./support/archive.ts";
 import { fixtureArchiveWiring } from "./worker.ts";
+import { nativeArchiveFixture, archiveAuthorityBasis, archiveAuthorityPolicies, archiveAuthorityAnchors } from "./support/archive-native-authority.ts";
 import { sessionRoom } from "./support/session-room.ts";
 import { namespace } from "../src/namespace.ts";
 import { ArchiveForeignMetadata, type ArchiveForeignRecordedScan, type ArchiveForeignExpectedCopy } from "../src/archive-foreign.ts";
@@ -44,8 +46,12 @@ const receiver = variant(definition.declared, data => {
 });
 const policy = (def: typeof definition, entryTypes = variants): ReviewedArchivePolicy => ({ review: "TEST reviewed inline classes; no production certificate",
   entryTypes, support: { named: def.digest, definition: def, owners: new Map(), records: new Map(), preparations: new Map() } });
-async function fixture(repeatUse = false) {
-  const producer = await create(), consumer = await create({}, {}, receiver);
+async function fixture(repeatUse = false, nativeAuthority = false) {
+  // Only the published alarm opts in; legacy inventory/cost controls retain
+  // their original TEST authority and exact literal work measurements.
+  const native = nativeAuthority ? await nativeArchiveFixture() : null;
+  const producer = native ? await native.create({}, {}, definition) : await create();
+  const consumer = native ? await native.create({}, {}, receiver) : await create({}, {}, receiver);
   const commitment = await producer.commitment(), assigned = (await producer.sealed()).find(sealed => sealed.entry.seq > commitment && sealed.entry.input.type === "act" && sealed.entry.input.signed.intent.kind === "assign")!;
   expect(assigned).toBeDefined();
   // The simple create fixture normally has a SCRIPTED foreign resolver.
@@ -60,8 +66,12 @@ async function fixture(repeatUse = false) {
   const birth = await producer.stub.entry(reader, 0); expect(birth.ok).toBe(true); if (!birth.ok) return expect.fail("native birth read required");
   const entries = await consumer.sealed(), uses = entries.flatMap(sealed => sealed.entry.uses);
   expect(uses).toHaveLength(repeatUse ? 3 : 2);
-  const sources = new FixtureArchiveSourcePins([{ at: producer.at, birth: { bytes: canonicalize(birth.value.entry), hash: birth.value.hash }, declaration: canonicalize(definition.declared) }], PROPOSED_BOUNDS, new ArchiveBudget());
-  const policies: ArchivePolicyRegistry = new Map([[receiver.digest, policy(receiver)], [definition.digest, policy(definition)]]);
+  const producerSource = { at: producer.at, birth: { bytes: canonicalize(birth.value.entry), hash: birth.value.hash }, declaration: canonicalize(definition.declared) };
+  const authority = archiveAuthorityBasis(consumer);
+  const sources = authority?.pins ?? new FixtureArchiveSourcePins([producerSource], PROPOSED_BOUNDS, new ArchiveBudget());
+  // Additional genuine source preparation is fixture setup, separately paid.
+  if (authority) sources.include([producerSource], PROPOSED_BOUNDS, new ArchiveBudget());
+  const policies: ArchivePolicyRegistry = archiveAuthorityPolicies(consumer, new Map([[receiver.digest, policy(receiver)], [definition.digest, policy(definition)]]));
   const through = await consumer.head();
   const scan = (pins = sources, reviewed = policies) => consumer.inside(state => {
     const forbidden: string[] = [], queries: string[] = [], budget = new ArchiveBudget();
@@ -350,11 +360,13 @@ test("foreign plans quote native whole prefixes and retain an earlier boundary a
 // fresh inventory still classifies every copy and byte-compares each plan.
 test("Native scout carries direct-copy metadata across a closed frame and prices fresh cold/repeat admission", async () => {
   const f = await fixture(true), budget = new ArchiveBudget();
+  const earlier = (await f.consumer.sealed())[1]!, earlierHead = { seq: earlier.entry.seq, hash: earlier.hash };
+  let earlierCandidates = 0;
   let scout!: ArchiveScout;
   const first = await f.consumer.inside(state => {
     const frame = ArchiveScout.open(state.storage.sql, f.consumer.at, f.through, null, PROPOSED_BOUNDS, f.policies, budget, f.sources);
     expect(frame.next().kind).toBe("position"); expect(frame.next().kind).toBe("position");
-    scout = frame.close(); return budget.admitted();
+    scout = frame.close(); earlierCandidates = scout.layout(earlierHead).anchorCandidates; return budget.admitted();
   });
   await f.consumer.did(rita, "offer", { fields: { intent: 0 }, expected: { intent: 1 } });
   const result = await f.consumer.inside(state => {
@@ -366,6 +378,8 @@ test("Native scout carries direct-copy metadata across a closed frame and prices
     const frame = scout.resume(sql);
     expect(frame.next().kind).toBe("position"); expect(frame.next().kind).toBe("position");
     expect(frame.next()).toEqual({ kind: "end" }); frame.close();
+    expect(scout.layout(earlierHead).anchorCandidates).toBe(earlierCandidates);
+    expect(scout.layout(f.through).anchorCandidates).toBeGreaterThanOrEqual(earlierCandidates);
     expect(queries.some(query => query.startsWith("SELECT bytes FROM entry") || query.startsWith("SELECT bytes FROM retained_value") || query.startsWith("SELECT bytes FROM retained_input") && !query.includes("kind = ?"))).toBe(false);
     const forecast = scout.inventoryCost(f.through), constraints = scout.select(f.through), before = budget.admitted();
     expect(constraints.expectedCopies.size).toBe(2); fresh = true;
@@ -380,6 +394,59 @@ test("Native scout carries direct-copy metadata across a closed frame and prices
   });
   expect(result.entries).toBe(8); expect(result.nodes).toBe(4);
   expect(result.attempts).toBeGreaterThan(first.attempts);
+});
+
+// Synthetic JSON exercises only real SQLite scalar metadata, not native
+// judgment, privacy admission or an authority fact. Production calls this
+// counter only after admitting the exact row's prefix and privacy class.
+test("anchor forecast counts nested necessary keys without charging irrelevant bytes as references and refuses before SQL", async () => {
+  const lane = await create(), hash = textDigest("TEST scalar anchor metadata row"), seq = 1_000_000;
+  const fact = { at: lane.at, seq: 7, hash: textDigest("TEST nested fact") }, head = { seq: 8, hash: textDigest("TEST observed head") };
+  const fields = { nested: [{ deep: [fact] }, { deeper: { of: lane.at, head } }],
+    // None of these objects is a real FactRef or observation. These necessary
+    // keys deliberately increase the conservative bound by three. The
+    // two real numbers also distinguish integer-only SQL counting.
+    falsePositives: [{ at: {}, seq: 1.5, hash: "not a digest" }, { at: {}, seq: 2.5, hash: "also not a digest" }, { of: {}, head: {} }] };
+  const small = JSON.stringify(fields), large = JSON.stringify({ ...fields,
+    irrelevant: 'at seq hash of head {"at":{},"seq":1,"hash":"text"} '.repeat(512) });
+  await lane.inside(state => {
+    const raw = state.storage.sql;
+    const read = (bytes: string) => {
+      const size = utf8(bytes).length, work = size * 64 + 128;
+      raw.exec("INSERT INTO entry (seq, hash, time, bytes, size) VALUES (?, ?, 'TEST metadata only', ?, ?)", seq, hash, bytes, size);
+      try {
+        const position = { seq, hash, bytes: size }, budget = new ArchiveBudget(); let calls = 0;
+        const sql = { exec(query: string, ...args: (string | number | null | ArrayBuffer)[]) {
+          calls++;
+          expect(budget.admitted()).toEqual({ entries: 0, attempts: 0, nodes: 0, calls: 1, metadata: 128, inputWork: work });
+          expect(query).toContain("json_tree(entry.bytes)"); expect(query).not.toContain("tree.value");
+          expect(query).not.toMatch(/^SELECT (?:bytes|\*)/);
+          return raw.exec(query, ...args);
+        } };
+        expect(archiveEntryAnchorCandidates(sql, position, PROPOSED_BOUNDS.entryBytes, budget)).toBe(5);
+        expect(calls).toBe(1);
+        let forbiddenCalls = 0;
+        const forbidden = { exec(query: string, ...args: (string | number | null | ArrayBuffer)[]) {
+          forbiddenCalls++; return raw.exec(query, ...args);
+        } };
+        expect(() => archiveEntryAnchorCandidates(forbidden, position, PROPOSED_BOUNDS.entryBytes,
+          new ArchiveBudget({ inputWork: work - 1 }))).toThrow(expect.objectContaining({ reason: "limit" }));
+        const protectedBudget = new ArchiveBudget();
+        expect(protectedBudget.lookahead({ inputWork: ARCHIVE_BOUNDS.inputWork - work + 1 }, () =>
+          archiveEntryAnchorCandidates(forbidden, position, PROPOSED_BOUNDS.entryBytes, protectedBudget))).toEqual({ kind: "limited" });
+        expect(forbiddenCalls).toBe(0); expect(protectedBudget.admitted().inputWork).toBe(0);
+        // A refused later read neither consumes its debit nor replaces any
+        // earlier prefix count. The same original budget can still finish.
+        expect(archiveEntryAnchorCandidates(forbidden, position, PROPOSED_BOUNDS.entryBytes, protectedBudget)).toBe(5);
+        expect(forbiddenCalls).toBe(1); expect(protectedBudget.admitted().inputWork).toBe(work);
+        expect(() => archiveEntryAnchorCandidates(forbidden, { ...position, hash: textDigest("TEST wrong exact row hash") },
+          PROPOSED_BOUNDS.entryBytes, new ArchiveBudget())).toThrow(expect.objectContaining({ reason: "mismatch" }));
+        expect(forbiddenCalls).toBe(2);
+      } finally { raw.exec("DELETE FROM entry WHERE seq = ?", seq); }
+    };
+    read(small); read(large);
+    expect(utf8(large).length).toBeGreaterThan(utf8(small).length * 16);
+  });
 });
 
 test("missing source or inline policy and a conflicting retained genesis pin refuse the whole prefix before payloads", async () => {
@@ -448,6 +515,48 @@ test("native inventory admits only classified direct copies and refuses a final 
 
 // Native direct-use scopes, not an installed application. This covers the
 // immutable Mark/layout/structural reader boundary; no host or replay claim.
+test("published replay closure adds only admitted public-copy producers and rebuilds the exact Mark", async () => {
+  const f = await fixture(true, true), through = await f.consumer.head();
+  // The target knows the consumer but omits its real copied producer.
+  // Only the completed inventory can contribute that additional full ref.
+  const targetScopes = [f.consumer.at], expected = [f.consumer.at, f.producer.at];
+  const plan = (replayScopes = targetScopes) => f.consumer.inside(state => planPublishedArchivePass(archiveSql(state), {
+    at: f.consumer.at, through, after: null, bounds: PROPOSED_BOUNDS, policies: f.policies,
+    format: "sha1", parent: null, markedAt: at(0), fixtureSources: f.sources, replayScopes,
+  }, new ArchiveBudget()));
+  const conflicting = { ...f.producer.at, inc: newIncarnation(new Uint8Array(16).fill(73)) };
+  expect(conflicting.inc).not.toBe(f.producer.at.inc);
+  expect(await plan([...targetScopes, conflicting])).toEqual({ ok: false, reason: "foreign-source-mismatch" });
+  const privateAt = archiveAuthorityAnchors(f.consumer).find(fact => fact.at.kind === "membership")!.at;
+  expect(await plan([...targetScopes, privateAt])).toEqual({ ok: false, reason: "unavailable" });
+  const planned = await plan();
+  expect(planned.ok, JSON.stringify(planned)).toBe(true); if (!planned.ok) return;
+  expect(planned.archive.selection.objects.some(object => object.foreign?.fact.at.scope === f.producer.name)).toBe(true);
+  expect(planned.mark.replayScopes).toEqual(expected);
+  expect(planned.archive.manifest.anchors?.some(fact => fact.at.scope === f.producer.name)).toBe(false);
+  expect(planned.mark.replayScopes?.some(where => ["membership", "register", "inbox"].includes(where.kind))).toBe(false);
+  for (const key of Object.keys(ARCHIVE_BOUNDS) as (keyof ArchiveCost)[]) expect(planned.archive.cost[key]).toBeLessThanOrEqual(ARCHIVE_BOUNDS[key]);
+  await f.consumer.inside(state => {
+    const rows = new ArchiveRows(archiveSql(state), f.consumer.at);
+    expect(rows.load()).toBeNull(); rows.target(archiveRepository, "sha1"); rows.mark(planned.mark);
+  });
+  await f.consumer.restart();
+  const rebuilt = await f.consumer.inside(async state => {
+    const sql = archiveSql(state), rows = new ArchiveRows(sql, f.consumer.at), row = rows.load()!;
+    expect(row.pending).toEqual(planned.mark);
+    expect(await rebuildArchivePass(sql, { ...row, pending: { ...row.pending!, replayScopes: targetScopes } },
+      null, new ArchiveBudget(), f.sources)).toEqual({ ok: false, reason: "rebuild-mismatch" });
+    const result = await rebuildArchivePass(sql, row, null, new ArchiveBudget(), f.sources);
+    expect(rows.load()!.pending).toEqual(planned.mark);
+    return result;
+  });
+  expect(rebuilt.ok, JSON.stringify(rebuilt)).toBe(true); if (!rebuilt.ok) return;
+  expect(rebuilt.archive.commit).toBe(planned.archive.commit);
+  expect(rebuilt.archive.objects).toEqual(planned.archive.objects);
+  expect(rebuilt.archive.manifestBytes).toBe(planned.archive.manifestBytes);
+});
+
+// Both immutable formats keep the original unpublished caller path below.
 test.each(["sha1", "sha256"] as const)("foreign copies retain their source basis in %s files and rebuild after eviction", async format => {
   const f = await fixture(), through = await f.consumer.head();
   const planned = await f.consumer.inside(state => planArchive(archiveSql(state), { at: f.consumer.at, through, bounds: PROPOSED_BOUNDS, policies: f.policies, format, parent: null, markedAt: at(0), fixtureSources: f.sources }, new ArchiveBudget()));
@@ -539,7 +648,7 @@ test.each(["sha1", "sha256"] as const)("foreign copies retain their source basis
 });
 
 test("native alarm stops a marked foreign archive after source configuration disappears without another mint", async () => {
-  const f = await fixture(); let mints = 0, sends = 0;
+  const f = await fixture(false, true); let mints = 0, sends = 0;
   // Explicit TEST host/credential stand-in. The native alarm and persisted
   // archive row are real; no provider adapter or outside send runs.
   const provider: FixtureArchiveProvider = { fixture: "archive-provider", format: async () => "sha1", ref: async () => null, objects: async () => [],

@@ -1,5 +1,6 @@
 /** Native driver fixture shared by functional and scale cases. Host,
- * authority and policy remain the explicitly labelled test stand-ins. */
+ * and policy remain explicitly labelled test stand-ins. Opted-in lanes use
+ * actual Native Membership authority with separately prepared fixture pins. */
 import { expect } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { JournalFormat } from "@generalbusiness/artroom-git/journal";
@@ -9,6 +10,7 @@ import type { ArchivePolicyRegistry } from "../../src/archive-inventory.ts";
 import type { Sql } from "../../src/sqlite.ts";
 import { at, type Lane } from "../fixtures-native.ts";
 import { ScriptedArchiveHost } from "./archive-provider.ts";
+import { archiveAuthorityBasis, archiveAuthorityPolicies } from "./archive-native-authority.ts";
 import { archivePolicies, archiveRepository, archiveSql } from "./archive.ts";
 
 export class ScriptedHost extends ScriptedArchiveHost {
@@ -32,7 +34,8 @@ export function driver(lane: Lane, state: DurableObjectState, host: ScriptedHost
     } }, current: () => {
       const value = state.storage.sql.exec<{ v: string }>("SELECT v FROM meta WHERE k = 'scope'").one();
       const scope = JSON.parse(value.v); return { at: scope.at, head: scope.head };
-    }, clock: () => lane.c.clock.now, bounds: PROPOSED_BOUNDS, policies: { fixture: "archive-policies", registry: policies },
+    }, clock: () => lane.c.clock.now, bounds: PROPOSED_BOUNDS, policies: { fixture: "archive-policies", registry: archiveAuthorityPolicies(lane, policies) },
+    ...(archiveAuthorityBasis(lane) ? { fixtureSources: archiveAuthorityBasis(lane)!.pins } : {}),
     target: { fixture: "archive-target", resolve: async () => { host.targets++; return archiveRepository; } }, provider: host, ...(budget ? { budget } : {}),
   });
 }

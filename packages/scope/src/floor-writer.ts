@@ -25,7 +25,10 @@ export function offerFloor(context: FloorWriterContext, policy: NonNullable<Revi
   const { store, sql } = context, scope = store.scope();
   if (!scope) return null;
   const receipt = new ArchiveRows(sql, scope.at).load()?.confirmed;
-  if (!receipt || receipt.layout !== 2) return null;
+  // A historical receipt does not establish that private replay anchors
+  // were published. Only the writer's complete first/backfill confirmation
+  // can establish coverage before deleting still-needed native entries.
+  if (!receipt || receipt.layout !== 2 || receipt.anchorsPublished !== true) return null;
   let floor = chooseFloor(store, receipt, policy, context.now(), context.bounds.intentLifetimeSeconds, context.own);
   if (floor === null) return null;
   const snapshot = store.all(), currentFloor = store.floor()?.floor ?? 0;
@@ -46,6 +49,6 @@ export function offerFloor(context: FloorWriterContext, policy: NonNullable<Revi
   if (floor < currentFloor + policy.minimum) return null;
   // No await separates this rebind from the synchronous offer/judgment.
   const current = new ArchiveRows(sql, scope.at).load()?.confirmed;
-  if (!current || current.layout !== 2 || !same(receipt, current)) return null;
+  if (!current || current.layout !== 2 || current.anchorsPublished !== true || !same(receipt, current)) return null;
   return { type: "floor", floor, receipt: { commit: receipt.commit, through: receipt.through }, keep };
 }

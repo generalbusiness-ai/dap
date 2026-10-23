@@ -20,6 +20,14 @@ export interface LocalArchiveClone {
   objects: readonly { id: string; type: "blob" | "tree" | "commit"; data: string }[];
   sourceObjects: number; fsckPassed: true; gitVersion: string;
 }
+export interface ArchiveCommandWitness {
+  cloneCode: number | null; fetchCode: number | null;
+  refs: readonly { ref: string; id: string }[];
+  tokenInConfig: boolean; tokenInArgv: boolean; tokenInOutput: boolean;
+  readRequests: number;
+  withoutTrust: { code: number | null; signal: string | null; report: unknown };
+  withTrust: { code: number | null; signal: string | null; report: unknown };
+}
 declare module "vitest" { interface ProvidedContext { localClone: LocalCloneAddress } }
 
 export function localClone(at: LocalCloneAddress) {
@@ -36,6 +44,10 @@ export function localClone(at: LocalCloneAddress) {
     run: (args: readonly string[], env: Readonly<Record<string, string>>) => json<LocalCloneRun>("/run", { args, env }),
     inspect: () => json<LocalCloneInspection>("/inspect"),
     archive: (objects: LocalArchiveClone["objects"], refs: LocalArchiveClone["refs"]) => json<LocalArchiveClone>("/archive-clone", { objects, refs }),
+    archiveCommand: (objects: LocalArchiveClone["objects"], refs: LocalArchiveClone["refs"], remote: string) => json<{ id: string; remote: string; directory: string; token: string }>("/archive-command", { objects, refs, remote }),
+    archiveRun: async (id: string, args: readonly string[], env: Readonly<Record<string, string>>) => (await json<{ code: number | null }>("/archive-command-run", { id, args, env })).code,
+    archiveFinish: (id: string, lines: readonly string[]) => json<ArchiveCommandWitness>("/archive-command-finish", { id, lines }),
+    archiveClose: (id: string) => json<{ closed: true }>("/archive-command-close", { id }),
     status: () => json<unknown>("/status"),
     forward: async (request: Request) => {
       // Fixed trusted test proxy, as Host.upstream's synthetic Response. The

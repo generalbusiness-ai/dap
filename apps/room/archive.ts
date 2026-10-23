@@ -39,6 +39,7 @@ export function growArchiveDriver(given: OutsideGiven, sql: Sql, binding: Bindin
   const config = growArchiveConfiguration(env), artifacts = artifactsBinding(env.ARTIFACTS);
   if (!config || !artifacts) return null;
   const prepared = new WeakMap<ArchiveBudget, Map<string, FixtureArchiveSourceBirth>>();
+  const publicScopes = new WeakMap<ArchiveBudget, readonly ScopeRef[]>();
   const provider = new ArtifactsProvider({ binding: artifacts, host: config.host, namespace: config.namespace, service: config.service, maxBytes: Math.min(config.maxBytes, 8 * 1024 * 1024), ...(fetch ? { fetch } : {}),
     credentialHandle: async () => { throw new Error("Archive uses no destination ledger credential"); } }).archive(() => given.clock.read());
   return { production: "room-binding", policies: { registry: policies }, provider,
@@ -68,9 +69,11 @@ export function growArchiveDriver(given: OutsideGiven, sql: Sql, binding: Bindin
       // Directory's own charged pass discovers/activates its quiet Rules
       // sibling. Room/Site preserve their complete target route while not
       // reading that unrelated birth on every application-journal pass.
-      const repository = at.kind === "lane" ? await target.resolveRoom(at, seed, budget) : (await target.discover(at, seed, budget))?.repository;
+      const discovered = await (at.kind === "lane" ? target.discoverRoom(at, seed, budget) : target.discover(at, seed, budget));
+      const repository = discovered?.repository;
       if (!repository || repository.host !== config.host || repository.namespace !== config.namespace || repository.name !== config.repositoryName) return null;
       prepared.set(budget, births);
+      publicScopes.set(budget, discovered!.publicScopes);
       return repository;
     } },
     sources: async (after, through, budget, exact) => {
@@ -103,7 +106,8 @@ export function growArchiveDriver(given: OutsideGiven, sql: Sql, binding: Bindin
         }
       };
       if (exact) for (let seq = (after?.seq ?? -1) + 1; seq <= through.seq; seq++) await prepare(seq, budget);
-      return { pins, ...(exact ? {} : { prepare }) };
+      const replayScopes = publicScopes.get(budget); if (!replayScopes) return budget.stop("unavailable");
+      return { pins, replayScopes, ...(exact ? {} : { prepare }) };
     },
   };
 }

@@ -13,6 +13,7 @@ import { journalV2PassPath, journalV2RetainedPath, journalV2SegmentPath } from "
 import { patchJournalV2Tree } from "./journal-v2-tree.ts";
 import type { JournalPassOptions, JournalPassResult } from "./journal-v2-layout.ts";
 import { JournalLayoutRefusal, JournalWork, refuseJournal } from "./journal-work.ts";
+import { journalAnchorPublication, journalAnchorCopyCount, journalPublicationUnits } from "./journal-anchors.ts";
 
 export async function convertJournalArchiveV1(options: JournalPassOptions): Promise<JournalPassResult> {
   try {
@@ -52,7 +53,13 @@ export async function convertJournalArchiveV1(options: JournalPassOptions): Prom
     }
     // The old manifest remains exact above. The new one needs no omission
     // row when this converted journal already supplies its tombstone.
-    const manifest = manifestOfPass({ ...selection, omitted: selection.omitted.filter(row => !redacted.has(row.digest)) }, format, parent.id, work);
+    const publication = options.publication ? journalAnchorPublication(options.publication(), journalAnchorCopyCount(selection.objects, work), 0, work, [selection.at]) : null;
+    const annotated = publication ? { ...selection, ...publication } : selection;
+    if (publication) {
+      const extra = journalPublicationUnits(publication.anchors.length + (publication.legacyAnchors?.anchors.length ?? 0)) * 3;
+      work.metadata(extra); work.input(extra, 2);
+    }
+    const manifest = manifestOfPass({ ...annotated, omitted: selection.omitted.filter(row => !redacted.has(row.digest)) }, format, parent.id, work);
     const manifestBytes = canonicalize(manifest);
     const headBytes = canonicalize({ v: 2, scope: selection.at, through: selection.through.seq, hash: selection.through.hash });
     if (utf8(manifestBytes).length > JOURNAL_SELECTION_BYTES) return work.stop();
@@ -64,7 +71,7 @@ export async function convertJournalArchiveV1(options: JournalPassOptions): Prom
     const tree = await patchJournalV2Tree(null, null, files, maker, work);
     const commit = maker.commit(tree, parent.id, seconds);
     work.check();
-    return { ok: true, archive: { commit: commit.id, tree, manifest, manifestBytes, objects: maker.objects(), selection,
+    return { ok: true, archive: { commit: commit.id, tree, manifest, manifestBytes, objects: maker.objects(), selection: annotated,
       // The represented first pass is [0, through]; conversion adds no entry.
       newInterval: [selection.through.seq + 1, selection.through.seq], cost: options.budget.admitted(), layoutWork: { ...work.used } } };
   } catch (error) {

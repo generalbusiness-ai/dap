@@ -12,7 +12,10 @@ type Selection = { readonly at: ScopeRef; readonly objects: readonly { readonly 
 /** `archived` is the exact producer closure selected for this repository.
  * Its copied facts must be replayed. Only Register17 and Membership8 facts
  * outside that closure may become anchors under decisions 5a642337 and
- * 066e49b3. An observed value remains on the caller's word with its head. */
+ * 066e49b3. Decision a7d03336 removes the copy-count bound: authority and
+ * observation heads need no copy. These are candidate references; replay
+ * with published trust must consult every listed fact in its own range.
+ * An observed value remains on the caller's word with its head. */
 export class ArchiveReplayAnchors {
   readonly #scopes = new Map<string, ScopeRef>();
   readonly #pins = new Map<string, string>();

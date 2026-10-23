@@ -8,19 +8,24 @@ import type { DestinationRepository } from "./destination-host.ts";
 import { ArchiveBudget } from "./archive-budget.ts";
 import type { Sql } from "./sqlite.ts";
 import { confirmRetainedArchivePass } from "./archive-retained-pass.ts";
-import { ARCHIVE_ROW_MANIFEST_BYTES as MANIFEST_BYTES, ARCHIVE_ROW_BYTES, ARCHIVE_ROW_SIZE_METADATA,
-  archiveRowLoadWork, archivePendingManifestWork, archiveMarkWork, archiveRowSaveReservation } from "./archive-row-cost.ts";
+import { archiveReplayScopes, archiveReplayScopeUnits, readArchivePublication } from "./archive-publication.ts";
+import { ARCHIVE_ROW_MANIFEST_BYTES as MANIFEST_BYTES, ARCHIVE_ROW_BYTES, ARCHIVE_CONFIRMED_ROW_BYTES, ARCHIVE_ROW_SIZE_METADATA,
+  ARCHIVE_ROW_SAVE_FIXED_WORK, archiveRowLoadWork, archivePendingManifestWork, archiveMarkWork,
+  archiveRowSaveReservation, archiveConfirmedRowSaveReservation } from "./archive-row-cost.ts";
 export { ARCHIVE_ROW_BYTES } from "./archive-row-cost.ts";
 
 const KEY = "archive-row-1";
 const WAKE = "archive-wake-1";
 type Format = "sha1" | "sha256";
-export interface ArchivedPosition { readonly commit: string; readonly through: Head; readonly layout?: 2 }
-export interface ArchiveMark extends ArchivedPosition {
+export interface ArchivedPosition { readonly commit: string; readonly through: Head; readonly layout?: 2; readonly anchorsPublished?: true }
+export interface ArchiveMark extends Omit<ArchivedPosition, "anchorsPublished"> {
   readonly parent: string | null;
   /** Immutable selection metadata only; no input or entry bodies. */
   readonly manifest: string;
   readonly markedAt: Timestamp;
+  /** Exact canonical descriptive lists, finalized after validated inputs. */
+  readonly anchorPublication?: string;
+  readonly replayScopes?: readonly ScopeRef[];
 }
 export interface ArchiveRow {
   readonly v: 1;
@@ -41,8 +46,9 @@ const refuse = (reason: ArchiveRowRefusal["reason"]): never => { throw new Archi
 const fields = (value: Record<string, unknown>, expected: string): boolean => Object.keys(value).sort().join(",") === expected;
 const objectId = (value: unknown, format: Format): value is string => typeof value === "string" && (format === "sha1" ? /^[0-9a-f]{40}$/ : /^[0-9a-f]{64}$/).test(value);
 function position(value: unknown, format: Format): value is ArchivedPosition {
-  if (!isRecord(value) || !fields(value, Object.hasOwn(value, "layout") ? "commit,layout,through" : "commit,through")
+  if (!isRecord(value) || !fields(value, ["commit", "through", ...(Object.hasOwn(value, "layout") ? ["layout"] : []), ...(Object.hasOwn(value, "anchorsPublished") ? ["anchorsPublished"] : [])].sort().join(","))
     || Object.hasOwn(value, "layout") && value["layout"] !== 2 || !objectId(value["commit"], format)) return false;
+  if (Object.hasOwn(value, "anchorsPublished") && (value["anchorsPublished"] !== true || value["layout"] !== 2)) return false;
   const head = value["through"];
   return isRecord(head) && fields(head, "hash,seq") && natural(head["seq"]) && isDigest(head["hash"]);
 }
@@ -59,11 +65,20 @@ function checked(value: unknown, at: ScopeRef, budget: ArchiveBudget): ArchiveRo
   if (pending === null && (attempts !== 0 || next !== null)) return refuse("unavailable");
   if (confirmed !== null && !position(confirmed, format)) return refuse("unavailable");
   if (pending !== null) {
-    if (!isRecord(pending) || !fields(pending, Object.hasOwn(pending, "layout") ? "commit,layout,manifest,markedAt,parent,through" : "commit,manifest,markedAt,parent,through")
+    if (!isRecord(pending) || !fields(pending, ["commit", "manifest", "markedAt", "parent", "through", ...(Object.hasOwn(pending, "layout") ? ["layout"] : []), ...(Object.hasOwn(pending, "anchorPublication") ? ["anchorPublication"] : []), ...(Object.hasOwn(pending, "replayScopes") ? ["replayScopes"] : [])].sort().join(","))
       || Object.hasOwn(pending, "layout") && pending["layout"] !== 2
       || !position({ commit: pending["commit"], through: pending["through"] }, format) || pending["parent"] !== null && !objectId(pending["parent"], format) || typeof pending["manifest"] !== "string" || pending["manifest"].length === 0 || pending["manifest"].length > MANIFEST_BYTES || typeof pending["markedAt"] !== "string" || timeMs(pending["markedAt"]) === null) return refuse("unavailable");
     budget.spend({ inputWork: archivePendingManifestWork(pending["manifest"].length) });
     if (utf8(pending["manifest"]).length > MANIFEST_BYTES) return refuse("limit");
+    if (Object.hasOwn(pending, "anchorPublication")) {
+      const publication = pending["anchorPublication"];
+      if (pending["layout"] !== 2 || typeof publication !== "string" || publication.length === 0 || publication.length > MANIFEST_BYTES) return refuse("unavailable");
+      budget.spend({ inputWork: archivePendingManifestWork(publication.length) });
+      if (utf8(publication).length > MANIFEST_BYTES) return refuse("limit");
+      if (!Array.isArray(pending["replayScopes"])) return refuse("unavailable");
+      archiveReplayScopes(pending["replayScopes"], at, budget);
+    }
+    else if (Object.hasOwn(pending, "replayScopes")) return refuse("unavailable");
     if (pending["parent"] !== (confirmed === null ? null : confirmed.commit)) return refuse("unavailable");
     const through = pending["through"] as Head;
     if (confirmed !== null && (confirmed.layout === 2 && pending["layout"] !== 2
@@ -99,9 +114,22 @@ export class ArchiveRows {
   }
   #save(value: ArchiveRow, budget: ArchiveBudget, afterConfirmation: Timestamp | null = null): ArchiveRow {
     checked(value, this.#at, budget);
-    budget.spend(archiveRowSaveReservation());
+    // Original fixed work precedes the bounded selector. checked() has
+    // already established every field/type/length and the closed schema.
+    // The compact schema's maximum UTF-8 size is 220 structure + 24,584
+    // repository strings + 248 other strings + 19 numbers + 4 boolean +
+    // 12 nulls = 25,087 bytes. Only the four repository strings need the
+    // six-bytes-per-UTF-16-unit escape bound; all other strings are fixed
+    // identifier/hex/format tokens. Neither pending nor stopped data enters.
+    budget.spend({ inputWork: ARCHIVE_ROW_SAVE_FIXED_WORK });
+    const compact = value.confirmed !== null && value.pending === null && value.stopped === null && value.next === null && value.attempts === 0;
+    const limit = compact ? ARCHIVE_CONFIRMED_ROW_BYTES : ARCHIVE_ROW_BYTES;
+    const reservation = compact ? archiveConfirmedRowSaveReservation() : archiveRowSaveReservation();
+    // Both persistence calls and the original three-per-byte price are
+    // reserved before serialization, UTF-8 allocation or owned parsing.
+    budget.spend({ calls: reservation.calls, inputWork: reservation.inputWork - ARCHIVE_ROW_SAVE_FIXED_WORK });
     const bytes = canonicalize(value);
-    if (bytes.length > ARCHIVE_ROW_BYTES || utf8(bytes).length > ARCHIVE_ROW_BYTES) return refuse("limit");
+    if (bytes.length > limit || utf8(bytes).length > limit) return refuse("limit");
     budget.check();
     this.#sql.exec("INSERT INTO meta (k, v) VALUES (?, ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v", KEY, bytes).toArray();
     // A small alarm index prevents a new turn from loading the manifest.
@@ -138,7 +166,7 @@ export class ArchiveRows {
       if (!previous) return refuse("unavailable");
       if (previous.stopped) return refuse("stopped");
       checked({ ...previous, pending: mark }, this.#at, budget);
-      budget.spend({ inputWork: archiveMarkWork(mark.manifest.length) });
+      budget.spend({ inputWork: archiveMarkWork(mark.manifest.length + (mark.anchorPublication?.length ?? 0) + archiveReplayScopeUnits(mark.replayScopes?.length ?? 0)) });
       if (previous.pending) {
         if (!same(previous.pending, mark)) return refuse("outstanding");
         if (next === undefined || previous.attempts !== 0) return previous;
@@ -156,8 +184,21 @@ export class ArchiveRows {
       if (!previous?.pending || previous.pending.commit !== commit) return refuse("conflict");
       if (previous.stopped) return refuse("stopped");
       if (afterConfirmation !== null && timeMs(afterConfirmation) === null) return refuse("unavailable");
-      if (previous.pending.layout === 2) confirmRetainedArchivePass(this.#sql, previous.pending.manifest, budget);
-      return this.#save({ ...previous, confirmed: { commit, through: previous.pending.through, ...(previous.pending.layout === 2 ? { layout: 2 } : {}) }, pending: null, attempts: 0, next: null }, budget, afterConfirmation);
+      let covered = false;
+      if (previous.pending.layout === 2) {
+        const selected = confirmRetainedArchivePass(this.#sql, previous.pending.manifest, budget);
+        if (previous.pending.anchorPublication !== undefined) {
+          if (!same(selected.at, previous.at) || !same(selected.through, previous.pending.through)) return refuse("unavailable");
+          const publication = readArchivePublication(previous.pending.anchorPublication, selected.copies, selected.first, budget, [previous.at]);
+          const old = previous.confirmed;
+          if (publication.legacyAnchors && (!old || old.anchorsPublished || selected.first !== old.through.seq + 1
+            || publication.legacyAnchors.from !== 0 || publication.legacyAnchors.through !== old.through.seq)) return refuse("unavailable");
+          covered = old === null || selected.first === 0 && old.layout !== 2 || old.anchorsPublished === true
+            || publication.legacyAnchors?.through === old.through.seq;
+          if (!covered) return refuse("unavailable");
+        }
+      }
+      return this.#save({ ...previous, confirmed: { commit, through: previous.pending.through, ...(previous.pending.layout === 2 ? { layout: 2 } : {}), ...(covered ? { anchorsPublished: true as const } : {}) }, pending: null, attempts: 0, next: null }, budget, afterConfirmation);
     });
   }
   attempt(next: Timestamp, budget = new ArchiveBudget()): ArchiveRow {
