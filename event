@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b73a88371e43206b0bcfee47bb27d28c71e0a9cd","text":"Merge retired a covered predecessor; the successor is at packages/replay/test/archive-anchor-ranges.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b81d296d2998279a5afdea5d782fa6c18639a3be","text":"Merge retired a covered predecessor; the successor is at packages/platform/test/definitions.test.ts."}
