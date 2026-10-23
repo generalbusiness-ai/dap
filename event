@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:264194a3212ac2d1afc545cb00e3416a8869fdec","text":"Merge retired a covered predecessor; the successor is at apps/counter/browser/storage.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:26534d194b2119435dfc461983bb24b61f6fa2d2","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/definition-corpus/fixture-identities.ts."}
