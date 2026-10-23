@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:975bd83b2c57474e3b56fa3cd643f171e6165feb","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/definition-corpus/scope-capacity-floor.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9770122f4266da65563d9bce4f515a4ef7a0b31c","text":"Merge retired a covered predecessor; the successor is at packages/platform/test/definition-corpus-data.ts."}
