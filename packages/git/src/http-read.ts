@@ -399,6 +399,36 @@ function wireTextEquals(data: Uint8Array, start: number, end: number, text: stri
 }
 
 /** Fixed diagnostic words only. These describe a refusal, never provider text. */
+/** Fixed categories only; no status text, response URL, header or body survives. */
+export interface HttpResponseRefusalDetail {
+  readonly statusClass: "200" | "1xx" | "2xx-other" | "3xx" | "4xx" | "5xx" | "other";
+  readonly redirected: boolean;
+  readonly url: "empty" | "exact" | "changed";
+  readonly mediaType: "missing" | "upload-pack-advertisement" | "upload-pack-result" | "text/plain" | "text/html" | "application/json" | "other" | "unclassified-long";
+}
+const httpResponseDetails = new WeakMap<GitRefusal, Readonly<HttpResponseRefusalDetail>>();
+export function httpResponseRefusalDetail(error: unknown): Readonly<HttpResponseRefusalDetail> | undefined {
+  return error instanceof GitRefusal ? httpResponseDetails.get(error) : undefined;
+}
+function httpResponseRefusal(response: Response, requested: string): GitRefusal {
+  const error = fail("HTTP read response");
+  try {
+    const status = response.status;
+    const statusClass: HttpResponseRefusalDetail["statusClass"] = status === 200 ? "200" : status >= 100 && status < 200 ? "1xx"
+      : status >= 200 && status < 300 ? "2xx-other" : status >= 300 && status < 400 ? "3xx" : status >= 400 && status < 500 ? "4xx" : status >= 500 && status < 600 ? "5xx" : "other";
+    const raw = response.headers.get("content-type");
+    // Inspect at most 256 code units. A longer unclassified token stays unknown;
+    // parameters after an early semicolon never enter the retained diagnostic.
+    const prefix = raw?.slice(0, 256), semicolon = prefix?.indexOf(";") ?? -1;
+    const type = raw === null ? null : semicolon >= 0 ? prefix!.slice(0, semicolon).trim() : raw.length <= 256 ? raw.trim() : undefined;
+    const mediaType: HttpResponseRefusalDetail["mediaType"] = type === null ? "missing" : type === undefined ? "unclassified-long"
+      : type === "application/x-git-upload-pack-advertisement" ? "upload-pack-advertisement" : type === "application/x-git-upload-pack-result" ? "upload-pack-result"
+      : type === "text/plain" || type === "text/html" || type === "application/json" ? type : "other";
+    httpResponseDetails.set(error, Object.freeze({ statusClass, redirected: response.redirected === true, url: response.url === "" ? "empty" : response.url === requested ? "exact" : "changed", mediaType }));
+  } catch { /* Diagnostic metadata must not change the original refusal or cancellation. */ }
+  return error;
+}
+
 export interface AdvertisementRefusalDetail {
   readonly subtype: "first-frame-kind" | "first-frame-version" | "trailing-data" | "capability-frame-kind"
     | "capability-name-character" | "capability-value-character" | "capability-empty-name" | "capability-empty-value"
@@ -635,8 +665,9 @@ export class SmartHttpSource implements GitSource {
         throw error;
       }
       if (response.status !== 200 || response.redirected || (response.url !== "" && response.url !== url) || response.headers.get("content-type")?.split(";", 1)[0]?.trim() !== media) {
+        const error = httpResponseRefusal(response, url);
         await response.body?.cancel().catch(() => undefined);
-        throw fail("HTTP read response");
+        throw error;
       }
       const result = await readBytes(response.body, this.#options.maxBytes, this.#deadline ?? undefined);
       this.#timely();
