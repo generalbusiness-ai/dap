@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4910f7c01faf5fcd2a9fc7d0f3b9f5ec2a637069","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/definition-corpus-data.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4989124390b11a0e860f341a26bafdab7b0ad369","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/indexed-integers.test.ts."}
