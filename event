@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:192f0b25ca027e2ec7346906513cbb7d3914c153","text":"Merge retired a covered predecessor; the successor is at scripts/public-release-lib.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1b29ca777c1a394bf330685aadf3f5113b892b93","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/definition-corpus/lane-apps-mapping.md."}
