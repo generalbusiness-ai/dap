@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f5257b9ba8dd1b364e77cd8c2b57dfff0f0c5325","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/declared-view-inputs.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f67658bca806f48a8e488d3ba5a8f42562735f3c","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/definition-corpus/platform-requests-data.ts."}
