@@ -1,12 +1,22 @@
 # Published archive anchors
 
 This implements planner decisions `29fd51b5`, `f15e483c`, and the count-policy
-correction `a7d03336`. The writer and
-command are integrated on the R1 candidate `1793ca7d`. The owning compilers
-passed before the current policy and authority-fixture corrections, after two
-retained type-boundary failures. These new sources are uncompiled and unrun.
-Owning tests and the final gate remain pending. No hosted clone, custody, deployment,
-or budget-fit result is claimed.
+correction `a7d03336`. The current owning archive checks have passed. Root
+adopted Scope test and Node-support compilation plus all six heavy cases
+at `1de5a73b7` under outcome `9b89ba9d7`. That run includes strict scale
+replay, the dense retained-input phases, cadence, floors and capacity.
+The corrected installed six-case file passed at `08bbee7b7` under outcome
+`1c9c2cca5`, including the actual local public command, trusted exit zero
+and all five consistent journal reports. Later executable changes are the
+scale fixture and its import correction, not a production trust change.
+
+The stored Page bundle is stale against its imported source. Its maintained
+build, output comparison and owning assets check remain pending, followed
+by the exact-source final gate and review. These local Native and Node
+fixture results do not establish hosted custody, deployment or provider
+throughput. The writer and command's initial integration at `1793ca7d`
+and every failed attempt recorded below are historical. Their original
+failures and qualifications remain; later passes do not rewrite them.
 
 ## Publication is distinct from replay trust
 
