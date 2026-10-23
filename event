@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:791037866b1dc9370c2951dbc745dfd4bf5bbbfa","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/definition-corpus/scope-fixtures.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7931c843fd40ce347713756636ce2a69fef7b49e","text":"Merge retired a covered predecessor; the successor is at apps/room/demo-creation.ts."}
