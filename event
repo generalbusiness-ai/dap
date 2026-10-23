@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d7eeabb295752b35a439055dd984409aa7c5108f","text":"Merge retired a covered predecessor; the successor is at scripts/public-release-lib.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d7f090746d35d0649250702ffc501084f9ae1571","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/definition-corpus/capability-staging-data.ts."}
