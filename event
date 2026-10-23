@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0591008e2c64e8adabaf21e4b9ea515d02d715bc","text":"Merge retired a covered predecessor; the successor is at examples/grow/tick-receipt.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:05de73d20fc1b544a3cc4a42e89e099d43ef4c20","text":"Merge retired a covered predecessor; the successor is at apps/counter/browser/dispatcher.ts."}
