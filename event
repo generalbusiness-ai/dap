@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1a58eb0e294a64aa008dbdc41c7739ddc28721de","text":"Merge retired a covered predecessor; the successor is at packages/replay/test/genesis-bodies.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1a7090711773f72278db9f8f83a397831f56c167","text":"Merge retired a covered predecessor; the successor is at scripts/demo-git-host.mjs."}
