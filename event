@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1a264f29b8d0ae92bc6b3a58154b20832b4d6340","text":"Merge retired a covered predecessor; the successor is at packages/bytes/package.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1a395fd2c657f6cdfca9960b8c7440d53a9f122b","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/peer-pin.test.ts."}
