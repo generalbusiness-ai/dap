@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f71917383e757a981dbbb7b5135817bf5f69a0a3","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/definition-corpus/late-pin-mapping.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f73b66e93647aaece0984edaa5f3b970bf57d703","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/describe.test.ts."}
