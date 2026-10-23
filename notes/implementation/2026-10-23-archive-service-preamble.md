@@ -1,6 +1,6 @@
 # Archive: exact HTTP service preamble before protocol 2
 
-Request `4310427f713429ad268790ced91e1b1b14ff19c9`; promise `9b7471a16ba3f5abae44e6659b44f3cefcd7fd13`. Source implementation against accepted Main `27abf6d90db7df1d459ff3da023e09324a89c53a`, applied in an isolated checkout. The focused compilers and baseline passed. The control produced the intended assertion; its collector also failed on a wording mismatch, retained below. The ordinary gate result will accompany the exact review head.
+Request `4310427f713429ad268790ced91e1b1b14ff19c9`; promise `9b7471a16ba3f5abae44e6659b44f3cefcd7fd13`. Implementation against accepted Main `27abf6d90db7df1d459ff3da023e09324a89c53a`, applied in an isolated checkout. The focused compilers, baseline and ordinary gate passed. The control produced the intended assertion; its collector also failed on a wording mismatch, retained below.
 
 Planner observation ac4a8cf8 reports 41 first-parent refusals at first-frame-version/service-upload. That proves the service marker appeared; it does not establish the protocol after it. This change accepts exactly one '# service=git-upload-pack' data packet with an optional terminal LF followed by one flush, then requires the existing protocol 2 advertisement. Direct protocol 2 remains supported. No protocol 0 fallback, extra request, provider-text decoding or credential handling is added.
 
@@ -22,6 +22,19 @@ Child `8233` exited one. Root session `7413` also exited one because the collect
 
 Full source, dependency, tool, environment and ref guards were retained across these runs; only the allowed Vitest result cache changed during tests. Raw evidence is in the three explicit external directories `/private/tmp/artroom-archive-service-preamble-adoption-20261023-v1`, `/private/tmp/artroom-archive-service-preamble-baseline-20261023-v1` and `/private/tmp/artroom-archive-service-preamble-control-20261023-v1`. Wall/inclusive CPU seconds were respectively 5.0862/4.6619, 16.0205/19.3656 and 5.6193/5.8752 on the shared macOS host with inherited caches. Owner totals include nested child work; do not add those overlapping intervals.
 
-One ordinary gate and independent exact-head review remain required before landing and pushing. The planner owns deployment and hosted observation. No hosted success is claimed.
+## Gate and review evidence
+
+The ordinary gate passed at `eef72769e72515a985191816b469c24c69d222cd`, tree `3227ed32cae1bd43b74db0cc4fded66e2b02974b`. Root session `92235` and child `29743` exited naturally zero. All eight stages passed. Vitest recorded 3,495 passed and three skipped cases across 485 files, followed by 37 passed Node checks and 55 passed Counting browser checks. The complete 3,498-case identity and state multiset matches the prior accepted archive gate. There were no unhandled errors or signals.
+
+The progress stream omitted 20 ready callbacks and 21 result callbacks for cases with terminal framework records. These remain reporting gaps; they do not prove a missing start or physical draining. All bound source, environment, tool, npm, ref and working-directory records were unchanged. Only the existing Vitest results cache changed, retaining its inode. Independent audit `ff860b4cf036bb649ae5da0acfe48fbee56b05a9` confirms the raw results and guards.
+
+Gate wall time was 1,178.6928 seconds and inclusive CPU time was 1,377.3036 seconds on the shared macOS host with inherited caches and concurrent isolated development work. The gate child took 1,175.6943 seconds; its user and system CPU times were 1,211.7710 and 163.7469 seconds. These are nested, overlapping costs.
+
+Two finite, read-only evidence packets retain the original results, failed collector and independent audits. Their helper copies are inert data and must not be executed or imported:
+
+- Focused packet: `/private/tmp/artroom-archive-service-preamble-review-data-20261023-v1/manifest.json`, 82,454 bytes, SHA-256 `df0b556b3a43293a9b46499c5fedc59db1a3b6a511a347ce0ec4d6e0ab681eb4`; 97 leaves containing 82,819,312 bytes.
+- Gate packet: `/private/tmp/artroom-archive-service-preamble-gate-review-data-20261023-v1/manifest.json`, 33,568 bytes, SHA-256 `90dc80a651bcef91b751f421e7e44cb54d2c124b27fb74d90e457efda411e01f`; 33 leaves containing 33,256,916 bytes. Captured stage files retain the original claimed hashes and their distinct-copy qualification.
+
+This final update changes only this report. Code and tests are identical to the gated tree. Under `docs/testing.md`, the healthy gate is carried forward without a repeat; the final review receipt supplies the report-only tree and direct documentation checks. Independent exact-head review remains required before landing and pushing. The planner owns deployment and hosted observation. No hosted success is claimed.
 
 If the deployed service sends protocol 0 refs after its preamble, this candidate diagnoses protocol-0-ref and still refuses. It does not unblock hosted archive step 6 in that situation. Hosted protocol 2 and successful archive work remain unproved.
