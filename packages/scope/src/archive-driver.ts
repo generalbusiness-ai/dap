@@ -12,6 +12,7 @@ import type { FixtureArchiveSourcePins } from "./archive-source-pins.ts";
 import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, readArchivePin, readArchivePinAfterReceipt } from "./archive-pin.ts";
 import type { ArchivePolicyRegistry } from "./archive-inventory.ts";
 import { ArchiveRows, type ArchiveRow } from "./archive-row.ts";
+import { finishArchiveParentRead, startArchiveParentReadPass } from "./archive-parent-read-diagnostic.ts";
 import type { DestinationRepository } from "./destination-host.ts";
 import type { Sql } from "./sqlite.ts";
 import { readArchiveScopeFrame } from "./archive-prefix.ts";
@@ -174,6 +175,7 @@ export class ArchiveDriver {
   }
   async #pass(): Promise<ArchivePass> {
     const budget = this.#options.budget?.() ?? new ArchiveBudget();
+    startArchiveParentReadPass(budget);
     // Temporary pass diagnostic: fixed categories and already-loaded scalars
     // only. It adds no archive read, admission, retry or persistent state.
     let step = "row-load", detail = "none", caught = "none";
@@ -346,6 +348,7 @@ export class ArchiveDriver {
       this.#fallback = scheduled ?? this.#later(0); return done({ state: "retry", next: this.#fallback, reason });
     } finally {
       active = false;
+      const parentRead = finishArchiveParentRead(budget);
       if (credential) { try { budget.check(); await budget.wait(() => this.#options.provider.revokeArchive(credential!)); } catch { /* The short-lived credential may expire; it is never recorded. */ } }
       try {
         const reason = observed.outcome?.reason;
@@ -354,7 +357,7 @@ export class ArchiveDriver {
         console.info("archive-pass-diagnostic-v1", {
           step, detail, rowPhaseAtLoad: phase, confirmed: position(confirmed), pending: position(pending), attemptsAtLoad: position(attempts), hasNext,
           attempted, state: observed.outcome?.state ?? "threw", reason: reason === undefined ? "none" : known.includes(reason) ? reason : "other",
-          caught: known.includes(caught) ? caught : caught === "none" ? "none" : "other", cost: budget.admitted(),
+          caught: known.includes(caught) ? caught : caught === "none" ? "none" : "other", cost: budget.admitted(), parentRead,
         });
       } catch { /* Observation cannot replace the original archive result. */ }
     }

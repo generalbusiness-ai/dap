@@ -50,7 +50,7 @@ const pendingArchiveSeals = {
   "packages/scope/src/archive-source-window.ts": "5ebf1d481081ae462374a33496b92310617a1bf3af1da675407f26017da3dfb1",
   "packages/scope/src/archive-publication.ts": "9c80517fd5de98545a0042f8fa7675769166de5a6387b9e6b60ddc9e5b68b2a5",
   "packages/scope/src/archive-build.ts": "8ecba805ae96c5e8f854d429878d438f5bca17536fa3ace22152c12b017e9186",
-  "packages/scope/src/archive-driver.ts": "4bb6a4bc663ae67509c1d07d3456420c4009d7f64e3dab9ef2a99a94fb9ef4d4", // Sanitized pass diagnostic; archive operation order and gates remain unchanged.
+  "packages/scope/src/archive-driver.ts": "35510dbb61c75496ac3e0e363d49d1137284671cc4c383582222cca8ee0a3e6d", // Parent-read diagnostic reviewed; actual maintained parser output.
   "packages/scope/src/archive-row.ts": "6387b60a8ecd09a7dd3166ca1dac7f5c3749e61d7e02adf64878cbd8c9cf4412",
   "packages/scope/src/floor-writer.ts": "a55c28f393f59297fe952104b576b275c73c451456afced3d8cac33dc54f2ff4",
   "packages/scope/src/object.ts": "9e2fe42f0b6331e2c9a115f3ebc718a359818c34b18eb149ee33a3b8e3e1c503", // Must match the separately adopted original owner value above.
@@ -58,7 +58,7 @@ const pendingArchiveSeals = {
   "apps/room/archive-policy.ts": "707d55642fa0a35075614d1f7b02149b8a33f5eb128f0e0ef4b54100aaa1897f",
   "apps/room/archive.ts": "fd0e00f874b6607728bc5a63842a64e41799f1041f9c5952978c2d86dfc048a2",
   "packages/scope/src/archive-host-item.ts": "70ac9b23e986d0f399d9e64748381f97ee6c5f7e39971b9dd3a1fa6d700bbf4e",
-  "packages/scope/src/archive-host.ts": "29e262731d46335cb9535b10e2c1de36b6b3a6f8ea42c77be4b628378704dfd7",
+  "packages/scope/src/archive-host.ts": "894a844fce26846a955b717669d5913f7ccd57c6a4eab6d729bd24815717edec", // Parent-read diagnostic reviewed; actual maintained parser output.
   "packages/scope/src/artifacts-host.ts": "3aaf075454b58ceae380bf9ab667d3a26d173776936ddd63d2bf01bbe865a698",
   "packages/scope/src/artifacts-wiring.ts": "3590510139ad5c73a6ff66396b77a83dae5d212bfbcebb332df80154961fd478",
 };
