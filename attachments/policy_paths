@@ -1,0 +1,4 @@
+docs/testing.md
+scripts/check-commit-messages.mjs
+scripts/check-commit-messages.test.mjs
+scripts/gate.sh
