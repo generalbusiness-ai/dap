@@ -119,7 +119,13 @@ test("Register17 default-limit Page Start uses indexed child admission and a sep
       qualification: report.qualification + " No browser/DOM/provider/deployment. Native setup and post-phase cohort inspection are separate. Single-task locks/storage and URL metadata are fixture adapters." };
     console.info("R12 default startup", JSON.stringify(actual));
     (context.task.meta as Record<string, unknown>)["r12Startup"] = actual;
-    expect(cohort).toEqual(ARCHIVE_DEVICE_APPLICATION_COHORT);
+    expect(cohort).toEqual({
+      register: ARCHIVE_DEVICE_APPLICATION_COHORT.register,
+      directory: ARCHIVE_DEVICE_APPLICATION_COHORT.directory,
+      membership: ARCHIVE_DEVICE_APPLICATION_COHORT.membership,
+      rules: ARCHIVE_DEVICE_APPLICATION_COHORT.rules,
+      destination: ARCHIVE_DEVICE_APPLICATION_COHORT.destination,
+    });
     expect([report.complete, report.requiresDefaultAdjustment, after.defaults, reads.calls > 0])
       .toEqual([true, false, DEFAULT_SERVING_LIMITS, true]);
     expect(after.counts.some(row => row.by === "address")).toBe(false);
