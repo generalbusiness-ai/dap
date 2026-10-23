@@ -365,12 +365,23 @@ function sourceEdits(path, text) {
   if (path === "packages/cli/src/application-browser.ts") {
     edits.push(...anchoredEdits(text, "/^@generalbusiness\\/artroom-client(?:\\/.*)?$/", "/^@generalbusiness\\/dap-client(?:\\/.*)?$/", "package-policy"));
   }
+  if (path === "apps/counter/browser/vite.config.ts") {
+    edits.push(...anchoredEdits(text, "/^@generalbusiness\\/artroom-client$/", "/^@generalbusiness\\/dap-client$/", "package-policy"));
+    edits.push(...anchoredEdits(text, "/^@generalbusiness\\/artroom-bytes$/", "/^@generalbusiness\\/dap-bytes$/", "package-policy"));
+  }
+  if (path === "apps/counter/vitest.config.ts") {
+    edits.push(...anchoredEdits(text, "/^@generalbusiness\\/artroom-bytes$/", "/^@generalbusiness\\/dap-bytes$/", "package-policy"));
+  }
+  if (path === "examples/lending/vitest.config.ts") {
+    edits.push(...anchoredEdits(text, "/^@generalbusiness\\/artroom-bytes$/", "/^@generalbusiness\\/dap-bytes$/", "package-policy"));
+  }
   if (path === "scripts/active-source.test.mjs") {
     for (const [before, after] of [
       ["(?:artroom-bytes|dap-(?:contract|derive))", "dap-(?:bytes|contract|derive)"],
       ["@generalbusiness\\/artroom-git", "@generalbusiness\\/dap-git"],
       ["(artroom-(bytes|client)|dap-(contract|platform|derive))", "dap-(bytes|client|contract|platform|derive)"],
       ["/artroom-git/.test", "/dap-git/.test"],
+      ["/artroom-checkers/", "/dap-checkers/"],
     ]) edits.push(...anchoredEdits(text, before, after, "package-policy"));
   }
   return edits;

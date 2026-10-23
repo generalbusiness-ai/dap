@@ -1,7 +1,7 @@
 {
   "format": "dap-workspace-rename-preservation-1",
-  "basis": "93f761c4fe6d0e79d9234e789a222977e45236a3",
-  "qualification": "Current preservation basis is accepted Main93f761c4fe6d0e79d9234e789a222977e45236a3. Historical Main12d parser output and earlier basis evidence remain unchanged; exactly two changed owners have actual fresh parser results. The following qualification is retained historical text describing the former basis, not the current state: Preservation counters bind current accepted Main919710 and the exact reviewed rename composition, including the approved seven-package SDK publication closure and exact internal application-install exclusion. The earlier Main5253 evidence remains historical on its original checkpoint. Actual 54-owner parser output remains the original Main12d run; owner source, map values and maintained parser bytes are carried by exact equality, with no new parser execution. The909 mechanical rowset and22 protected leaves remain fixed; only the two explicitly reviewed mechanical before/after/projection hashes are refreshed for accepted status diagnostics. No parser or product execution is established by this Source composition. The existing CLI browser resolver row also includes the exact reviewed client-package regex policy span; no general regex replacement or retired-alias fallback is permitted.",
+  "basis": "de52252f18a7afdc97486bf00d743981814d8980",
+  "qualification": "Current preservation basis is accepted Main de52252f18a7afdc97486bf00d743981814d8980. It adds only the exact historical sprint report to former basis Main93; all owner Source, seal values and actual parser provenance remain unchanged. Historical prior qualification follows and describes former bases: Current preservation basis is accepted Main93f761c4fe6d0e79d9234e789a222977e45236a3. Historical Main12d parser output and earlier basis evidence remain unchanged; exactly two changed owners have actual fresh parser results. The following qualification is retained historical text describing the former basis, not the current state: Preservation counters bind current accepted Main919710 and the exact reviewed rename composition, including the approved seven-package SDK publication closure and exact internal application-install exclusion. The earlier Main5253 evidence remains historical on its original checkpoint. Actual 54-owner parser output remains the original Main12d run; owner source, map values and maintained parser bytes are carried by exact equality, with no new parser execution. The909 mechanical rowset and22 protected leaves remain fixed; only the two explicitly reviewed mechanical before/after/projection hashes are refreshed for accepted status diagnostics. No parser or product execution is established by this Source composition. The existing CLI browser resolver row also includes the exact reviewed client-package regex policy span; no general regex replacement or retired-alias fallback is permitted.",
   "protectedLeaves": [
     {
       "path": "apps/counter/commitments-pin.ts",
@@ -17761,7 +17761,7 @@
     {
       "path": "scripts/active-source.test.mjs",
       "before": "dbd732e803a1e6087ec22d52a61facdee68cd4008041adab132fc3a746cd01de",
-      "after": "228d56b715d57721c3ddd67e0a535893e9260466262abbbe5654b58793a18767",
+      "after": "ff8aeb05ebce3b6e6a114dc0a060ec41eadd4f5b605df14625ff0a8d12ae2ebc",
       "spans": [
         {
           "start": 7961,
@@ -17810,6 +17810,12 @@
           "end": 10419,
           "kind": "executable-module-binding",
           "replacement": "@generalbusiness/dap-replay"
+        },
+        {
+          "start": 12102,
+          "end": 12120,
+          "kind": "package-policy",
+          "replacement": "/dap-checkers/"
         },
         {
           "start": 12888,
@@ -17884,7 +17890,7 @@
           "replacement": "dap-(bytes|client|contract|platform|derive)"
         }
       ],
-      "dataProjection": "07d9e8ec395d763fb66e76989f1f37743b9d5e66880001e663dbe418a13b0cb9",
+      "dataProjection": "3bce49b36e99d0f260fac87c52d634efb25c853782aac9a8ab3ac9cbf58fa8a2",
       "digests": []
     },
     {
@@ -18014,6 +18020,57 @@
         }
       ],
       "dataProjection": "e60b5e4a2c0bc651c905e2c990cfd9bff2a4f8c833557b0ce237abb280b3698f",
+      "digests": []
+    },
+    {
+      "path": "apps/counter/browser/vite.config.ts",
+      "before": "33ebe53c3225cc116d8e6bb33ce7fff1d87adbeb12506c2947e67f1d415b404f",
+      "after": "24a1e61ab1f97e32a882460089336d6d7b074780b085b4a74d4d7ece31b43fd9",
+      "spans": [
+        {
+          "start": 259,
+          "end": 295,
+          "kind": "package-policy",
+          "replacement": "/^@generalbusiness\\/dap-client$/"
+        },
+        {
+          "start": 348,
+          "end": 383,
+          "kind": "package-policy",
+          "replacement": "/^@generalbusiness\\/dap-bytes$/"
+        }
+      ],
+      "dataProjection": "c69902375dd33347962c38b0c9ee900c95b75da4d42bd167dfa0b5f16f8181c6",
+      "digests": []
+    },
+    {
+      "path": "apps/counter/vitest.config.ts",
+      "before": "7ad57e05e0e202ceb0fd6bf9944092dbe4af03a1a1562ed85481a7c0456b79f1",
+      "after": "366d39274e813e8028a5ba7acedd4f2cd4eca17b96b2f53f9986a2fa42a0ab9d",
+      "spans": [
+        {
+          "start": 637,
+          "end": 672,
+          "kind": "package-policy",
+          "replacement": "/^@generalbusiness\\/dap-bytes$/"
+        }
+      ],
+      "dataProjection": "6f49dfcc41b05a866eb513874281925113f1179272a4046fc4b964906535d7ff",
+      "digests": []
+    },
+    {
+      "path": "examples/lending/vitest.config.ts",
+      "before": "d1658edc73a083d21f7bdc0059ac4591a0b560413ba752ecaf5bfb21464e3356",
+      "after": "739bb0836e820985ff75c9e7ba5b85fb9f80dd295316a75b6e778a6be90c4326",
+      "spans": [
+        {
+          "start": 855,
+          "end": 890,
+          "kind": "package-policy",
+          "replacement": "/^@generalbusiness\\/dap-bytes$/"
+        }
+      ],
+      "dataProjection": "8657d274e025f5d5777c0310b3dba82dd02fc50f99e59d6e63b01748a968d6fc",
       "digests": []
     }
   ],
@@ -18297,10 +18354,10 @@
     "parserOutcome": "cba70c5ef4d82bfbbefacca178c5305382592220"
   },
   "sourceSealMetadata": {
-    "sha256": "b6142bf83766d4105d9ec01f82fa340cf0f1b11e72cfdbbed051c5d721a5ba7b",
+    "sha256": "fc87997ba8fd892184425b8b446826e8f9545496021030b663c966a7555bf26c",
     "record": {
       "format": "dap-workspace-source-seals-1",
-      "basis": "93f761c4fe6d0e79d9234e789a222977e45236a3",
+      "basis": "de52252f18a7afdc97486bf00d743981814d8980",
       "file": "scripts/security-entry-points.test.mjs",
       "beforeSha256": "9e895958d31be1b448e29800298078f099eb815f6b33c742d032df851072e8d3",
       "afterSha256": "ebfa7c28109e1262dada7abc02d1611436e5dbbd50a4c65f0bd2ba3aea1e594b",

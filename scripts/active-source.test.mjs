@@ -142,7 +142,7 @@ test("the checkers package depends only on contract, bytes and git, and no packa
   const inside = files.filter((f) => source(f) && packagePath(f).startsWith("packages/checkers/"));
   assert.deepEqual(inside.filter((f) => /(?:artroom|dap)-(derive|platform|scope|replay|client|lanes)/.test(text(f))), []);
   const named = files.filter((f) => source(f) && !packagePath(f).startsWith("packages/checkers/"));
-  assert.deepEqual(named.filter((f) => /artroom-checkers/.test(text(f))), []);
+  assert.deepEqual(named.filter((f) => /dap-checkers/.test(text(f))), []);
   const reaches = files.filter((f) => source(f) && !packagePath(f).startsWith("packages/checkers/") && /(?:[.\/]\/|packages\/)checkers\//.test(text(f)));
   assert.deepEqual(reaches, ["apps/room/lanes/test/checks.scope.test.ts", "apps/room/lanes/test/manifest-tree.scope.test.ts"]);
 });
