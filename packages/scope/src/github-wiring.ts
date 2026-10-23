@@ -14,7 +14,7 @@ import { GitHubProvider } from "./github-host.ts";
 import { credentialHandle, exact, hostBound } from "./host-wiring.ts";
 import type { OutsideGiven } from "./object.ts";
 import { NO_OUTSIDE, type EffectRequest, type Outside } from "./operations.ts";
-import { demoCreationConfig, type DemoCreationBindings } from "./demo-creation.ts";
+import { legacyGitHubDemoConfig, type DemoCreationBindings } from "./demo-creation.ts";
 import { RegisterHost } from "./register-host.ts";
 
 export interface GitHubBindings extends DemoCreationBindings {
@@ -85,7 +85,7 @@ export function gitHubOutside(given: OutsideGiven, sql: Pick<SqlStorage, "exec">
     const custody = new CredentialStore(sql, () => given.scope()?.at ?? null);
     const destination = new DestinationHost(given, { host, namespace, provider, custody, ...(snapshotReader ? { snapshotReader } : {}) });
     const originalBound = hostBound(given, config.registerScope, host, namespace);
-    const demos = demoCreationConfig(env.DEMO_START_CONFIG, env.DEPLOYMENT);
+    const demos = legacyGitHubDemoConfig(env.DEMO_START_CONFIG, env.DEPLOYMENT);
     // The additional register requires the exact incarnation, pin and recorded demo marker.
     // Destinations keep hostBound's retained actual-claim and directory-birth checks.
     const demoBound = (demo: NonNullable<typeof demos>["current"], owner: string): boolean => hostBound(given, demo.register.scope, host, namespace)(owner) && (isOf(owner, "platform:register")

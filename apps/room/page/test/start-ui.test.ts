@@ -77,12 +77,12 @@ class Element {
 // Actual key/journal custody is in start-custody.test; native admission is separate.
 // Startup migration is a stand-in here; this case owns the rendered Start controls.
 test("Start is explicit; Back fences late discovery, reload only offers Check and Continue, and public configuration never exports the browser key", async () => {
-  const root = new Element("div"), location = { origin: "https://start-ui.test", hash: "#/join" };
-  const ref = (kind: "register" | "directory" | "membership") => ({ scope: scopeIdOf({ v: 1, kind, definition: kind === "register" ? "platform:register@8" : kind === "directory" ? "platform:directory@7" : "platform:membership@2", creator: null, cause: textDigest("SCRIPTED Start UI " + kind), ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(5)), kind });
+  const root = new Element("div"), location = { origin: "https://dap-demo.inguz.workers.dev", hash: "#/join" };
+  const ref = (kind: "register" | "directory" | "membership") => ({ scope: scopeIdOf({ v: 1, kind, definition: kind === "register" ? "platform:register@17" : kind === "directory" ? "platform:directory@16" : "platform:membership@8", creator: null, cause: textDigest("SCRIPTED Start UI " + kind), ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(5)), kind });
   const register = ref("register"), directory = ref("directory"), membership = ref("membership");
   const legacyRegister = { ...register, scope: scopeIdOf({ v: 1, kind: "register", definition: "platform:register@7", creator: null, cause: textDigest("SCRIPTED retained UI register"), ordinal: 0 }) };
   let selectedDirectory = directory;
-  const offer: CreationOffer = { v: 1, origin: location.origin, register, definition: "platform:register@8", at: { seq: 0, hash: textDigest("SCRIPTED head") }, registerItem: { id: 0, revision: 1, state: "open", host: "artifacts", namespace: "SCRIPTED", policy: "open", purpose: "demo-start" } };
+  const offer: CreationOffer = { v: 2, origin: location.origin, register, definition: "platform:register@17", at: { seq: 0, hash: textDigest("SCRIPTED head") }, registerItem: { id: 0, revision: 1, state: "open", host: "artifacts", namespace: "SCRIPTED", policy: "open" } };
   const seed = new Uint8Array(32).fill(63), key = keyIdOfSecret(seed), signer = secretSigner(seed);
   const values = new Map<string, string>(), blobs: Blob[] = [];
   let original: StartStatus | null = null, verified = false, complete = false, redraw!: () => void;
@@ -99,7 +99,7 @@ test("Start is explicit; Back fences late discovery, reload only offers Check an
   let finishOffer!: (value: CreationOffer) => void;
   const offerRead = vi.fn(() => new Promise<CreationOffer>(resolve => { finishOffer = resolve; }));
   const start = vi.fn(async (_origin: string, _storage: unknown, _options: StartOptions): Promise<StartedRoom> => {
-    original = { key, configured: _options.mode === "new" ? { register, definition: "platform:register@8" } : original!.configured, handle: "@founder", label: "Personal intent", operation: "original", state: complete ? "complete" : "pending" };
+    original = { key, configured: _options.mode === "new" ? { register, definition: "platform:register@17" } : original!.configured, handle: "@founder", label: "Personal intent", operation: "original", state: complete ? "complete" : "pending" };
     return { key, configured: original.configured, handle: "@founder", operation: "original", label: "Personal intent", pending: !complete, repository: complete ? { directory: selectedDirectory, membership, rules: directory.scope, destination: membership.scope } : null, outcome: { code: complete ? 0 : 1, lines: ["SCRIPTED original pending"] }, ...(complete ? { signer } : {}) };
   });
   const save = vi.fn((name: string, text: string) => { values.set(name, text); });
@@ -127,6 +127,23 @@ test("Start is explicit; Back fences late discovery, reload only offers Check an
       ["#/config", "Join with a config and key", "Use config.json and its matching device key."],
     ]);
     expect(start).not.toHaveBeenCalled(); expect(offerRead).not.toHaveBeenCalled();
+    // Old-origin Start links to the new service without discovery or custody.
+    const freshOrigin = location.origin;
+    location.origin = "https://artroom-scope.inguz.workers.dev"; location.hash = "#/start"; redraw(); await flush();
+    expect(root.textContent).toContain("Create new rooms on dap-demo.");
+    const moved = find("a", "Start a new room on dap-demo");
+    expect(moved.attrs["href"]).toBe("https://dap-demo.inguz.workers.dev/page/#/start");
+    expect(root.all().some(element => element.tag === "form")).toBe(false);
+    expect(start).not.toHaveBeenCalled(); expect(offerRead).not.toHaveBeenCalled(); expect(save).not.toHaveBeenCalled();
+    // A retained old request keeps its original controls on the old service.
+    original = { key, configured: { register: legacyRegister, definition: "platform:register@7" },
+      handle: "@founder", label: "Retained original room", operation: "original", state: "pending" };
+    redraw(); await flush();
+    expect(find("button", "Continue creation")).toBeDefined(); expect(find("button", "Check status").hasAttribute("hidden")).toBe(false);
+    expect(find("input").hasAttribute("disabled")).toBe(true);
+    expect(find("a", "Start a new room on dap-demo").attrs["href"]).toBe("https://dap-demo.inguz.workers.dev/page/#/start");
+    expect(start).not.toHaveBeenCalled(); expect(offerRead).not.toHaveBeenCalled(); expect(save).not.toHaveBeenCalled();
+    original = null; location.origin = freshOrigin;
     location.hash = choices[0]!.attrs["href"]!; redraw(); await flush();
     expect(root.textContent).toContain("Start a room"); expect(root.all().some(e => e.attrs["type"] === "email")).toBe(false);
     expect(start).not.toHaveBeenCalled(); expect(offerRead).not.toHaveBeenCalled();
@@ -142,7 +159,7 @@ test("Start is explicit; Back fences late discovery, reload only offers Check an
     expect(start).not.toHaveBeenCalled(); expect(root.textContent).toContain("Join with an invitation link"); expect(root.textContent).toContain("Join with a config and key");
     location.hash = "#/start"; redraw(); await flush(); find("input").value = "Personal intent"; find("form").fire("submit"); finishOffer(offer); await flush();
     expect(start).toHaveBeenCalledTimes(1); expect(start.mock.calls[0]![2].mode).toBe("new");
-    expect(start.mock.calls[0]![2].offer?.definition).toBe("platform:register@8");
+    expect(start.mock.calls[0]![2].offer?.definition).toBe("platform:register@17");
     // Reloaded legacy custody is not retargeted to the current fresh offer.
     original = { ...original!, configured: { register: legacyRegister, definition: "platform:register@7" } };
     selectedDirectory = { ...directory, scope: scopeIdOf({ v: 1, kind: "directory", definition: "platform:directory@3", creator: null, cause: textDigest("SCRIPTED retained UI directory"), ordinal: 0 }) };
@@ -156,7 +173,7 @@ test("Start is explicit; Back fences late discovery, reload only offers Check an
     const selectOriginal = start.mock.calls.at(-1)![2].creationOffer!;
     const selectedOffer = selectOriginal(legacyRegister);
     expect(offerRead.mock.calls.at(-1)).toEqual([location.origin, { register: legacyRegister }]);
-    finishOffer({ ...offer, register: legacyRegister, definition: "platform:register@7" });
+    finishOffer({ ...offer, v: 1, register: legacyRegister, definition: "platform:register@7", registerItem: { ...offer.registerItem, purpose: "demo-start" } });
     expect((await selectedOffer).definition).toBe("platform:register@7");
     const wrongOffer = selectOriginal(legacyRegister); finishOffer(offer);
     await expect(wrongOffer).rejects.toThrow("offered register changed");
