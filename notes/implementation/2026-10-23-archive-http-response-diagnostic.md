@@ -8,6 +8,18 @@ Four reviewed Source paths are applied in the isolated `builder/archive-http-res
 
 The new Git test has nine response specimens plus one throwing-metadata specimen. It checks the fixed schema, redaction, original refusal and cancellation without reading the body. An existing Scope case carries an explicit Artifacts POST503/text-html stand-in through the actual provider diagnostic. These are local boundaries, not a hosted response diagnosis.
 
-Pending: reviewed private dependency adoption; Git test and distinct Scope production/test compilers; complete Git14 and Scope12 files; one Git14 annotation-removal control; one ordinary gate and final-head review. No compiler, test, control, dependency copy or gate has run for this candidate. None of the changed files is a mapped source-seal owner, so no seal regeneration is proposed. The external copy helper carries verified compatible bytes without claiming an install or fresh compatibility invocation; the ordinary gate retains its maintained compatibility command.
+Focused verification is recorded below. The ordinary gate and final-head review remain pending. None of the changed files is a mapped source-seal owner, so no seal regeneration is proposed. The dependency copy carries exact verified compatible bytes without claiming an install or fresh compatibility invocation; the ordinary gate retains its maintained compatibility command.
 
 Root owns execution allocations. Planner owns any diagnostic deployment and the next sanitized tail. That observation must precede any proposed transport correction. No fallback, extra authority, retry or deadline widening is included.
+
+## Focused verification
+
+The initial Source checkpoint is `020c76f99741574b02af024844d8fc2042a92462`. Allocated private dependency adoption closed naturally 0: namespace copy then stamp copy both exited 0. The complete 6,072-row view matches the donor bytes/modes/link text, with 5,499 unique single-link files on independent inodes. The stamp was copied only after the unstamped view passed verification. Source, tools and environment stayed fixed. This was a private copy, not an install or a new compatibility run.
+
+Allocated owning run `9d9e03018bafaa107c0604308d4d7570d56c9fc9` closed naturally 0. Git test, Scope production and Scope test compilers all passed. The combined complete Git14/Scope12 baseline passed all 26 cases. Its original ready/result/final callback counts are 26/26/26 without gaps or unhandled errors.
+
+The single annotation-removal control ran the complete Git14 file. Its child exited naturally 1 with 13 passes and the intended named-case AssertionError at `http-read.test.ts:648:89`: the fixed category record was undefined. Original ready/result/final counts are 14/14/14. Later assertions and specimens in that failed case are baseline evidence only. No retry or wrapper-only reinterpretation was needed.
+
+Full snapshots before/after agree outside the declared Vitest cache. Mutant snapshots agree with each other outside that cache, and differ from the original only in the one reader Source row and its expected dirty status. The 43,875-byte original reader was restored exactly (SHA256 `10645eae41e9ff45d9ab3338d102453d091a7c7bea747ae724c17e46c4bee2a8`) on inode 545040318 with mode 0644. Errors and signals are empty. Owning wall time was 26.615046 seconds; inclusive CPU was 31.129626 seconds. Child costs overlap inclusive totals and must not be added again. Private adoption wall time was 5.029124 seconds; inclusive CPU was 4.674612 seconds.
+
+The ordinary gate and final-head review remain pending. These local witnesses establish diagnostic behavior and noninterference at their named boundaries, not the cause of the deployed HTTP refusal. Planner still owns deployment and the next sanitized tail; no protocol fallback or request-policy relaxation is authorized by these results.
