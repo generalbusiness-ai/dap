@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1700a1d0fe0e54adac6e26fdd94327b1bc81db00","text":"Merge retired a covered predecessor; the successor is at apps/room/lanes/test/support/definition-corpus-data.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:171eb622f5b35eb26ff9e2507e4543cdaff8d8bd","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/values.test.ts."}
