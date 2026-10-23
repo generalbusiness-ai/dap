@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:276e1eaa9bce89d549ed4554f702fa276e6811ae","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/fixtures-child-definitions.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:27a3f03dc5f175b22e8be03b340e8d397c6e492a","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/definition-corpus/ledger-data.ts."}
