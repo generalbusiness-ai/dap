@@ -1,0 +1,1 @@
+Baseline outer16.020538917044178 wall; Python6.173589 CPU; children11.024358 user/2.167699 system; inclusive19.365645999999998 CPU. Control outer5.619326333049685 wall; Python3.0843499999999997 CPU; children1.9925899999999999 user/0.798288 system; inclusive5.875228 CPU. Nested costs overlap; these are separate runs, not one gate.
