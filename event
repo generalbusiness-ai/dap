@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3ebfcab1c1ddc96a0442a34540d46bb940933f6a","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/definition-corpus/settles-variants.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3f29692813b80ab25ee86469e5832037a68797d3","text":"Merge retired a covered predecessor; the successor is at scripts/workspace-rename-preservation.json."}
