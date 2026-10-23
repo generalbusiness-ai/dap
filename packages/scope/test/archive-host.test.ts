@@ -29,7 +29,7 @@ const pkt = (text: string) => `${(utf8(text).length + 4).toString(16).padStart(4
 const reply = (text: string, media: string) => new Response(text, { headers: { "content-type": `application/x-git-${media}` } });
 function latch() { let release!: () => void; const promise = new Promise<void>(resolve => { release = resolve; }); return { release, promise }; }
 type ReadStage = "token" | "identity" | "advertisement" | "object";
-function fixture(host: "github" | "artifacts", isolated = false, actual?: { at: ScopeRef; previous: JournalPassArchive; archive: JournalPassArchive }, advertisement?: string) {
+function fixture(host: "github" | "artifacts", isolated = false, actual?: { at: ScopeRef; previous: JournalPassArchive; archive: JournalPassArchive }, advertisement?: string, objectReply?: () => Response) {
   const repository = host === "github" ? { host: "github.com", namespace: "demo", name: "repo", id: "71" } : { host: "artifacts", namespace: "demo", name: "repo", id: "repo" };
   const remote = host === "github" ? "https://github.com/demo/repo.git" : "https://service.invalid/git/demo/repo.git";
   const scope = actual?.at ?? at;
@@ -56,6 +56,7 @@ function fixture(host: "github" | "artifacts", isolated = false, actual?: { at: 
     if (request.method === "POST") {
       if (request.url === `${remote}/git-upload-pack`) {
         await pauseRead("object");
+        if (objectReply) return objectReply();
         const wanted = isolated ? /want ([0-9a-f]{40})/.exec(new TextDecoder().decode(await request.arrayBuffer()))?.[1] : null;
         const pack = await buildPack(isolated ? archive.objects.filter(object => object.id === wanted) : archive.objects, { maxBytes: 64 * 1024 });
         if (request.headers.get("git-protocol") === "version=2") {
@@ -219,6 +220,14 @@ test.each(["github", "artifacts"] as const)("%s incremental parent reads one exa
     expect(malformed.gitProtocols).toEqual([{ method: "GET", protocol: "version=2" }]);
     expect(malformed.fetchReceivers).toHaveLength(1);
     expect(malformed.fetchReceivers[0]).toBeInstanceOf(SmartHttpSource);
+    const rejectedHttp = fixture(host, true, undefined, undefined, () => new Response(null, { status: 503, headers: { "content-type": "text/html; TEST-private-parameter" } }));
+    const rejectedHttpBudget = new ArchiveBudget();
+    const httpError = await rejectedHttp.provider.readObject!(rejectedHttp.repository, { id: rejectedHttp.archive.commit, type: "commit", maximum: 1024 }, () => true, rejectedHttpBudget).then(() => undefined, error => error);
+    expect(httpError).toMatchObject({ reason: "unreadable", what: "HTTP read response" });
+    const httpSnapshot = finishArchiveParentRead(rejectedHttpBudget);
+    expect(httpSnapshot).toEqual({ ordinal: 1, type: "commit", maximum: 1024, phase: "object-response", refusal: "http-response", httpResponse: { statusClass: "5xx", redirected: false, url: "empty", mediaType: "text/html" } });
+    expect(JSON.stringify(httpSnapshot)).not.toContain("TEST-private-parameter");
+    expect(rejectedHttp.gitProtocols).toEqual([{ method: "GET", protocol: "version=2" }, { method: "POST", protocol: "version=2" }]);
     const lateAdvertisement = fixture(host, true, undefined, wire), lateAdvertisementBudget = new ArchiveBudget();
     const gate = lateAdvertisement.blockRead("advertisement");
     const pending = lateAdvertisement.provider.readObject!(lateAdvertisement.repository, { id: lateAdvertisement.archive.commit, type: "commit", maximum: 1024 }, () => true,

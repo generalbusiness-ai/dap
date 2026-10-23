@@ -80,7 +80,7 @@ export function copiedDependency(sourceRoot, outputRoot, name, expected, lock) {
 }
 export function publishManifest(spec, source, selected) {
   const excluded = spec.excludedSourceExports ?? {};
-  if (JSON.stringify(excluded) !== JSON.stringify(spec.dir === "platform" ? { "./testing": "./test/support.ts" } : spec.dir === "replay" ? { "./git": "./src/git.ts" } : {})) refusal("source-export-exclusions");
+  if (JSON.stringify(excluded) !== JSON.stringify(spec.dir === "platform" ? { "./testing": "./test/support.ts", "./application-install": "./src/application-install.ts" } : spec.dir === "replay" ? { "./git": "./src/git.ts" } : {})) refusal("source-export-exclusions");
   const keys = Object.keys(source.exports ?? {});
   if (JSON.stringify(keys.sort()) !== JSON.stringify([...Object.keys(spec.exports), ...Object.keys(excluded)].sort()) || source.name !== nameOf(spec.dir) || source.type !== "module" || source.license !== "Apache-2.0") refusal("unsupported-source-manifest");
   for (const [key, value] of Object.entries(excluded)) if (source.exports[key] !== value) refusal("unsupported-source-export");

@@ -100,6 +100,10 @@ test("SDK published manifests match the actual supported workspace manifests", (
   assert.deepEqual(published.repository, { type: "git", url: "git+https://github.com/generalbusiness-ai/dap.git", directory: "packages/platform" });
   assert.equal(published.homepage, "https://dap.generalbusiness.ai/");
   assert.deepEqual(Object.keys(published.exports), [".", "./membership-actions"]);
+  assert.equal(published.exports["./application-install"], undefined);
+  assert.deepEqual(platform.excludedSourceExports, { "./testing": "./test/support.ts", "./application-install": "./src/application-install.ts" });
+  assert.throws(() => publishManifest({ ...platform, excludedSourceExports: { "./testing": "./test/support.ts" } }, platformManifest, "0.1.0-dev.2"), /source-export-exclusions/);
+  assert.throws(() => publishManifest(platform, { ...platformManifest, exports: { ...platformManifest.exports, "./application-install": "./src/index.ts" } }, "0.1.0-dev.2"), /unsupported-source-export/);
   assert.deepEqual(published.exports["./membership-actions"], { types: "./dist/src/membership-actions.d.ts", default: "./dist/src/membership-actions.js" });
   assert.deepEqual(published.dependencies, { "@generalbusiness/dap-bytes": "0.1.0-dev.2", "@generalbusiness/dap-contract": "0.1.0-dev.2", "@generalbusiness/dap-derive": "0.1.0-dev.2" });
   const bytes = PLAN.packages.find(spec => spec.dir === "bytes");

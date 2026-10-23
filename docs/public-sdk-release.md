@@ -45,8 +45,9 @@ The producer keeps exact original and compiler-input copies of each tracked
 SDK input. Package names need no publication mapping. Staged manifests use
 the same six names and coordinated dependencies at the selected version,
 plus the dap repository and homepage. The checker verifies both copies
-against the original bytes. The existing export and dependency allow-list
-is unchanged; the rename does not establish fresh producer or consumer acceptance.
+against the original bytes. The public export and dependency allowlists
+are unchanged. The source-only install exclusion does not establish fresh
+producer or consumer acceptance.
 
 The producer copies tracked inputs to an owned external build root and
 verifies their bytes. Every package compiles from its actual copied source
@@ -69,9 +70,13 @@ converted to `.js` where needed and checked against real `.d.ts` files in
 the same stage. The manifest records each such declaration rewrite. Neither
 an extension flag nor a source typecheck proves declaration closure.
 
-Platform publishes only its production root. The source manifest's exact
-`./testing` export is accounted for but excluded; an extra source export still
-refuses. Replay publishes its existing portable library and pure command
+Platform publishes its production root and `./membership-actions`.
+The source-only exports `./testing` (`./test/support.ts`) and
+`./application-install` (`./src/application-install.ts`) are accounted for
+and excluded from the published export map. The install rules stay internal
+to the hosting Worker. This exclusion does not omit their production code
+from the compiled platform closure. An unknown source export or a changed
+excluded path still refuses. Replay publishes its existing portable library and pure command
 function. Its Node process wrapper `src/bin.ts` is copied only into an
 excluded evidence directory, hashed, and omitted from compiler ancestry and
 public output. This release supplies no `artroom-replay` executable. The checker

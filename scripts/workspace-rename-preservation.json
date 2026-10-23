@@ -1,7 +1,7 @@
 {
   "format": "dap-workspace-rename-preservation-1",
-  "basis": "12d30573c5b70c1acb90d0e732654ff768586448",
-  "qualification": "Fresh counters from immutable accepted Main12d and actual clean merged rename Source. Finite reviewed UTF16 spans and publication contexts replayed by standard-library text operations. No project helper or parser executed; actual source-seal metadata remains pending.",
+  "basis": "5253d7fb9dbd12ad7024eeb664355426dc0c9d4f",
+  "qualification": "Preservation counters bind accepted Main5253 and the exact recorded rename composition, including the planner-approved source-only application-install exclusion. Only reviewed import-name spans and publication contexts differ. Actual 54-owner parser output remains the original Main12d run; owner, map and maintained parser bytes are carried by exact equality, with no new parser execution.",
   "protectedLeaves": [
     {
       "path": "apps/counter/commitments-pin.ts",
@@ -8298,8 +8298,8 @@
     },
     {
       "path": "packages/git/src/http-read.ts",
-      "before": "e40ac5fd3e6f8740a34e0970a6f0d8badf2dbc524b96f21334bb50c50e36707a",
-      "after": "f4b58071e4d84c93a7667eda31b8a58ab914da35a82df8a3906fd3f3ccf675d6",
+      "before": "fe7c0ebff3b36c2b55fdcb26ed44b596ebcbf61622c4b36254d039eb0275b7e1",
+      "after": "b0ac092e40cb0f8ffde93471ac91cca12a87ddffb13875a2086822de16374d57",
       "spans": [
         {
           "start": 695,
@@ -8308,7 +8308,7 @@
           "replacement": "@generalbusiness/dap-bytes"
         }
       ],
-      "dataProjection": "6bf705e1fad3a98e76410a3b7714718f04865d9fc1d524d67c03330dfaed202c",
+      "dataProjection": "381240793dadf9fceab0aa62f98a634cf7ecf8eaf1cda8a3a009ff66068e5092",
       "digests": []
     },
     {
@@ -12955,8 +12955,8 @@
     },
     {
       "path": "packages/scope/src/archive-parent-read-diagnostic.ts",
-      "before": "3d0bae324de25fc0c129c0d2a41cb8bf061415c4739c44b9979ff80f888c2128",
-      "after": "94e40905641e91c0bddbe60d16cf43e06eaf167382d1a7e153e5a17295a446fb",
+      "before": "cee4c36d449543630e02e686c8630ab524ddd3c4f1fbbc0a9e338f337c86d2c5",
+      "after": "491f4bf6557dfa9c11d590993d30268b12d52428c07fc58a86ef0c47f3e794a8",
       "spans": [
         {
           "start": 110,
@@ -12965,13 +12965,13 @@
           "replacement": "@generalbusiness/dap-git"
         },
         {
-          "start": 218,
-          "end": 256,
+          "start": 277,
+          "end": 315,
           "kind": "module",
           "replacement": "@generalbusiness/dap-git/http-read"
         }
       ],
-      "dataProjection": "cb299b2f31c2c95cca0bc59a1f003ee125b2e0756bc070d86fed308d7127beed",
+      "dataProjection": "605d7335461848ae9440ac6570cc2e38a2c6724ae726494afcfcaee50d7be930",
       "digests": []
     },
     {
@@ -14806,8 +14806,8 @@
     },
     {
       "path": "packages/scope/test/archive-host.test.ts",
-      "before": "e571b488ecc87ced22f63c63abfa82d1c7820401a10cc498b90b5c9b9052fbb9",
-      "after": "12fc723eafe20b0c8abb5bd1588293f649b87254a56ef782d97939aed1792796",
+      "before": "7de2a7a04a9c1eccf13568ebc9ee83371624c400b937d57f555ac6578266b070",
+      "after": "626cad5e3a51ad19c03127b848831b8f16e8f20878d84560c88c557960f0a0cc",
       "spans": [
         {
           "start": 319,
@@ -14840,7 +14840,7 @@
           "replacement": "@generalbusiness/dap-git/journal"
         }
       ],
-      "dataProjection": "d4525dee2662039cac88b64b990b589d77cee7c9c884f3d061a3ceb6a0bfd931",
+      "dataProjection": "581b82506ad43939b5430566b29e96900b50fc44130edae58b5168dc8eec72fa",
       "digests": []
     },
     {
@@ -17994,7 +17994,7 @@
     {
       "path": "docs/public-sdk-release.md",
       "before": "cb6c3fcb2b0fc54dc4646cb2f430f687ba39014f55eda53f656fbc58f7b06b60",
-      "after": "c5916b3366549157ce50c3a4321c43c10c46093d2efcf21baf1179441a698f45",
+      "after": "105f8859ee6558a687f7d70c8a3a8d26282618e9de1028ab7d05b1eae4e19846",
       "publication": true,
       "digests": [
         "fecf7160fd4a8c4b9219d7713a11036ff48db85e",
@@ -18020,7 +18020,11 @@
       "reviewedReplacementSteps": [
         {
           "before": "cb6c3fcb2b0fc54dc4646cb2f430f687ba39014f55eda53f656fbc58f7b06b60",
-          "after": "c5916b3366549157ce50c3a4321c43c10c46093d2efcf21baf1179441a698f45"
+          "after": "92f347e343823a558d15ad6991a1fb2a3fe5d34c33c6a6075546ae4923efe259"
+        },
+        {
+          "before": "92f347e343823a558d15ad6991a1fb2a3fe5d34c33c6a6075546ae4923efe259",
+          "after": "105f8859ee6558a687f7d70c8a3a8d26282618e9de1028ab7d05b1eae4e19846"
         }
       ]
     },
@@ -18044,7 +18048,7 @@
     {
       "path": "scripts/public-release-lib.mjs",
       "before": "c3f899241cd35664ba3ef4f3787da74ab72995e6aa310ad8b97db769af2ac0ba",
-      "after": "fba2352fe530fef200629dbaa8a4dc74c875c17fd4889f4f09d249044064ce4d",
+      "after": "d34e444e5bef04c2bf834845d25a903b338f7a79ad2825461e4a1534387eb84b",
       "publication": true,
       "digests": [],
       "reviewedReplacementSteps": [
@@ -18067,13 +18071,17 @@
         {
           "before": "d93243b93c85d0a0785dadeaae9d1cc386d33871edb2bff28de205c5042d3733",
           "after": "fba2352fe530fef200629dbaa8a4dc74c875c17fd4889f4f09d249044064ce4d"
+        },
+        {
+          "before": "fba2352fe530fef200629dbaa8a4dc74c875c17fd4889f4f09d249044064ce4d",
+          "after": "d34e444e5bef04c2bf834845d25a903b338f7a79ad2825461e4a1534387eb84b"
         }
       ]
     },
     {
       "path": "scripts/public-release-modules.test.mjs",
       "before": "95f8c23b5955ce72c92afb39651bcbae7c338d769287f17a7c7f94b35d280f01",
-      "after": "8501281d90c00578d68f816d9d2cca6d82d97a7b2eb312e651901cb0f5578a89",
+      "after": "c683eaeea19ee7612dcf6f61ddcefca2d7875a0a81b10ce734fb5785a7ad8d10",
       "publication": true,
       "digests": [],
       "reviewedReplacementSteps": [
@@ -18103,22 +18111,22 @@
         },
         {
           "before": "df149bf731e10f13f11a26c59a47f95c7a03777a47d9249fd8a5fe6f6b492d26",
-          "after": "9564c06a9b130be8705ad266ce17b71da981e9d8cb1ce1f52927458a76095235"
+          "after": "9dc1ac5756cf05c1f5e6c4edc9e4355f6c7313502ba69818199afac7446cf82c"
         },
         {
-          "before": "9564c06a9b130be8705ad266ce17b71da981e9d8cb1ce1f52927458a76095235",
-          "after": "f171a16807bd1f0cb22ea850eb7acc45c75a6b61133668d46338de2ea631f31d"
+          "before": "9dc1ac5756cf05c1f5e6c4edc9e4355f6c7313502ba69818199afac7446cf82c",
+          "after": "012409382ad2542aed0e1f65282753d173edd77f447677512adecfecb06d1ef6"
         },
         {
-          "before": "f171a16807bd1f0cb22ea850eb7acc45c75a6b61133668d46338de2ea631f31d",
-          "after": "8501281d90c00578d68f816d9d2cca6d82d97a7b2eb312e651901cb0f5578a89"
+          "before": "012409382ad2542aed0e1f65282753d173edd77f447677512adecfecb06d1ef6",
+          "after": "c683eaeea19ee7612dcf6f61ddcefca2d7875a0a81b10ce734fb5785a7ad8d10"
         }
       ]
     },
     {
       "path": "scripts/public-release.json",
       "before": "28d67746a3b6c926cc4dc6eaa9cd0c636860307cb5698259edb7de6f8f4c9796",
-      "after": "591ebeba73594be4b8247693fb2029e767ac8abdb79378e6210a87d20611988f",
+      "after": "f364ce06cd98f88daee21536a00329614c8de4d826a27d9b5f699099983ebf20",
       "publication": true,
       "digests": [],
       "reviewedReplacementSteps": [
@@ -18132,11 +18140,11 @@
         },
         {
           "before": "61bf8ce346fb22c8790ba0201ea1c359ef5a21891d2994fdd1f92e2894d91e66",
-          "after": "3e4b869f6766dd413560c4b52f77b690950d7d8156efad2568e3cbadac970221"
+          "after": "4c783835891dd9f620607e5b10d6afc6fe9d6114becad2d5e208a9bbdb5bc921"
         },
         {
-          "before": "3e4b869f6766dd413560c4b52f77b690950d7d8156efad2568e3cbadac970221",
-          "after": "591ebeba73594be4b8247693fb2029e767ac8abdb79378e6210a87d20611988f"
+          "before": "4c783835891dd9f620607e5b10d6afc6fe9d6114becad2d5e208a9bbdb5bc921",
+          "after": "f364ce06cd98f88daee21536a00329614c8de4d826a27d9b5f699099983ebf20"
         }
       ]
     },
@@ -18162,30 +18170,38 @@
       ]
     }
   ],
-  "earlierBasis": "27abf6d90db7df1d459ff3da023e09324a89c53a",
+  "earlierBasis": "12d30573c5b70c1acb90d0e732654ff768586448",
   "earlierEvidence": {
-    "qualification": "Historical counters retain their original basis, not relabelled current.",
-    "inventorySha256": "5f21cb386099da914d4b9884537b175787c21b4e8a4ef4b91c97a6427fb51a77",
-    "priorBasis": "b7b7a9726a7ba06b534cc78777e3611b18fd64b9",
-    "priorEvidence": {
-      "qualification": "Historical evidence retains its original basis; old counters are not current observations.",
-      "heldInventorySha256": "ce11adc1c6f553fa08572d484a3b00d3cb9d3840b01b5d4413e5928e43c0686f",
-      "priorBasis": "14690284d660806ce8b1b7136a2f033e3b0581de",
+    "qualification": "Historical counters and parser execution retain their original accepted basis and measured source. This record does not relabel a parser run.",
+    "inventorySha256": "e60553b15dd4d4037cbba42625d40359d7ed239046be695574fe57307b4d3871",
+    "sourceHead": "98c7132751e928ff408d0bf3fd3b7530e31dfdfc",
+    "sourceTree": "c442d106cabc404f6abc480aebf5ccfbaff00ce4",
+    "priorEarlierBasis": "27abf6d90db7df1d459ff3da023e09324a89c53a",
+    "priorEarlierEvidence": {
+      "qualification": "Historical counters retain their original basis, not relabelled current.",
+      "inventorySha256": "5f21cb386099da914d4b9884537b175787c21b4e8a4ef4b91c97a6427fb51a77",
+      "priorBasis": "b7b7a9726a7ba06b534cc78777e3611b18fd64b9",
       "priorEvidence": {
-        "mechanicalReceipt": "/private/tmp/artroom-workspace-rename-mechanical-applied-20261023-v1.json",
-        "inventorySha256": "eaae8c8bfbc4f57f42b36fe47fe5a29d828fe361c6ad56b7c43c34d65ac8d12b",
-        "supersededRepairHead": "77618aa5830c7cf9a12d5706f679ae71131d37c1"
+        "qualification": "Historical evidence retains its original basis; old counters are not current observations.",
+        "heldInventorySha256": "ce11adc1c6f553fa08572d484a3b00d3cb9d3840b01b5d4413e5928e43c0686f",
+        "priorBasis": "14690284d660806ce8b1b7136a2f033e3b0581de",
+        "priorEvidence": {
+          "mechanicalReceipt": "/private/tmp/artroom-workspace-rename-mechanical-applied-20261023-v1.json",
+          "inventorySha256": "eaae8c8bfbc4f57f42b36fe47fe5a29d828fe361c6ad56b7c43c34d65ac8d12b",
+          "supersededRepairHead": "77618aa5830c7cf9a12d5706f679ae71131d37c1"
+        },
+        "sourceApplicationReceiptSha256": "b9c227875b7b6802f77be66b7bc0dcaa1f8360bdf763e75627f6c8302db12aa2"
       },
-      "sourceApplicationReceiptSha256": "b9c227875b7b6802f77be66b7bc0dcaa1f8360bdf763e75627f6c8302db12aa2"
+      "carryReceiptSha256": "30e48b30170c551252b597f73aa56e8be1a8ac458641e01cd7742c8083a21a1c",
+      "carryHead": "6e1c9cf9d25d460c33a660a653c4b3be23dd2689"
     },
-    "carryReceiptSha256": "30e48b30170c551252b597f73aa56e8be1a8ac458641e01cd7742c8083a21a1c",
-    "carryHead": "6e1c9cf9d25d460c33a660a653c4b3be23dd2689"
+    "parserOutcome": "cba70c5ef4d82bfbbefacca178c5305382592220"
   },
   "sourceSealMetadata": {
-    "sha256": "952d141810785d8c9578e7a9ab71581df20ba4b5471e7c7c3ee794cd485564be",
+    "sha256": "a08516903a4bd4624f7b8f6f290e4b5faeb20619aabcb90e3f44a97a8f731ad4",
     "record": {
       "format": "dap-workspace-source-seals-1",
-      "basis": "12d30573c5b70c1acb90d0e732654ff768586448",
+      "basis": "5253d7fb9dbd12ad7024eeb664355426dc0c9d4f",
       "file": "scripts/security-entry-points.test.mjs",
       "beforeSha256": "33def0e6126500a5104189455b70a5a0a5ee2be238419de3d734ff55c901e3a2",
       "afterSha256": "557a0fb9dca78e25a885160f5d985a4748c9c082a83d8693113e49fc586d215d",
