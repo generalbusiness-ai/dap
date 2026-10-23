@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:34695e3d6a7c98f924b07e98bd5ff155b7f88250","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-22-security-union.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4f5a84d94f42f89b9dea63095dd7f28b12061a31","text":"Merge retired a covered predecessor; the successor is at apps/room/wrangler.jsonc."}
