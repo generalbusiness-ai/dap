@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/security-entry-points.test.mjs","body":{"commit":"525cb3a919855cf8aee50f28ad9ec7868d67c870","path":"scripts/security-entry-points.test.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1dbd51a27c0eec859ea66973436da04b38842d98","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-23-archive-pass-diagnostic.md."}
