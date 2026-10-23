@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:057bb79518ba135150873f4f4dc8496cd388956a","text":"Merge retired a covered predecessor; the successor is at scripts/demo/capture-binding.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0591008e2c64e8adabaf21e4b9ea515d02d715bc","text":"Merge retired a covered predecessor; the successor is at examples/grow/tick-receipt.test.ts."}
