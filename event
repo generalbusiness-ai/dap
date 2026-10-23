@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a79847c9d85bb3c6baddf303baaa8b593b0db9b0","text":"Merge retired a covered predecessor; the successor is at docs/security/entry-points.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a80c6a72be1a4b096a19ffe048f2b4c8e1ffbc22","text":"Merge retired a covered predecessor; the successor is at apps/room/page/test/workbench-work.test.ts."}
