@@ -1,8 +1,8 @@
 # Shared application language and volatile acts
 
-Status, 21 October 2026: the note landed at `bb395d25` (approval
-`6a1705a8`). Sections 1 to 14 and 16 are not built. Section 15 is partly
-built; its own status line says what.
+Status: current. The note landed at `bb395d25` (approval `6a1705a8`).
+Sections 1 to 14 and 16 are not built. Section 15 is partly built; its
+own status line says what.
 
 9 October 2026. **Design and implementation plan.**
 Request `f5b286d71a3243c809d152fd7cd95e6d945e4256`, promise

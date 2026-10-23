@@ -1,11 +1,11 @@
 # Repo in your AI app: MVP implementation plan
 
-Status: planning note, draft 4, 16 October 2026. It commissions nothing.
-It plans the first version of
-[the design proposal](2026-10-16-repo-in-your-ai-app.md) ("the proposal")
-for a real user test: one owner in their desktop assistant, two coding
-agents, and the "Clear completed" scenario from start to end. Section 7
-answers the review of draft 2.
+Status: current. Planning note, draft 4, 16 October 2026. It commissions
+nothing. It plans the first version of [the design
+proposal](2026-10-16-repo-in-your-ai-app.md) ("the proposal") for a real
+user test: one owner in their desktop assistant, two coding agents, and
+the "Clear completed" scenario from start to end. Section 7 answers the
+review of draft 2. It landed at `3267fbbe` (approval `d27b8e45`).
 
 Repo facts cite `path:line` at main `54dcefbcb`. Source at that commit is
 not proof of deployment: S0 establishes what the deployed service

@@ -1,6 +1,7 @@
 # Retained files
 
-Design note. Proposed: nothing here is built.
+Status: current. It landed at `afe0c319` (approval `a92a6f59`). Nothing
+here is built.
 
 A room keeps a journal of signed acts. Some acts are about bytes that are not
 text. Examples are a phone photo of a wall, a scanned quote, a PDF of a

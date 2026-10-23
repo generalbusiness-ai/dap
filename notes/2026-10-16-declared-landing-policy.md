@@ -1,9 +1,9 @@
 # A declared landing policy
 
-Status: design note, draft 3, 16 October 2026. It is approved (`3b25bfc7`)
+Status: current. Draft 3, 16 October 2026. It is approved (`3b25bfc7`)
 and landed at `4f7b07ee`. It is illustrative and commissions no
-implementation. Repository facts cite `path:line` at main
-`aeebc18cb`. Section 8 answers the reviews of drafts 1 and 2.
+implementation. Repository facts cite `path:line` at main `aeebc18cb`.
+Section 8 answers the reviews of drafts 1 and 2.
 
 Agent-coordination systems often hard-code when a change lands: a test
 gate, a retry limit, a confidence threshold, a conflict check. The policy

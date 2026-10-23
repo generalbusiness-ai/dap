@@ -1,6 +1,6 @@
 # Artroom: waking agents on events and on a schedule
 
-Status, 21 October 2026: revision 3 is reviewed and landed at `4b6d42a7`
+Status: current. Revision 3 is reviewed and landed at `4b6d42a7`
 (approval `8e35ab4a`). Schedules, wake addresses, the watcher and
 pi-durable wake are not built. The `notify` rule that this note says
 exists belonged to the earlier policy runtime, deleted at `66eba017`;

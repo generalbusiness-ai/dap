@@ -1,6 +1,6 @@
 # JSON output for the dap command line
 
-Status, 21 October 2026: approved (`53b0335e`) and merged at `dafb5c16`.
+Status: current. It is approved (`53b0335e`) and merged at `dafb5c16`.
 Not built: the CLI has no `--json` flag.
 
 Builder revision 5. Request `f319c428`,

@@ -1,6 +1,6 @@
 # Collections of Rooms: managing services at scale
 
-Status, 21 October 2026: this note was reviewed and landed at `4b6d42a7`
+Status: current. This note was reviewed and landed at `4b6d42a7`
 (approval `8e35ab4a`), with the wake note. Nothing in it is built.
 
 Date: 2026-10-02. Request `34cf52b3`, promise `6430ffd4`. A design note

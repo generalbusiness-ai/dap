@@ -1,6 +1,6 @@
 # Import a GitHub repository into dap
 
-Status, 21 October 2026: draft 1 is approved (`3b331834`) and landed at
+Status: current. Draft 1 is approved (`3b331834`) and landed at
 `16235053`. Nothing is built. The section 9 decisions are owed before
 implementation.
 

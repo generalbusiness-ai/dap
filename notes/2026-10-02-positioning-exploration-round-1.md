@@ -1,5 +1,7 @@
 # Positioning exploration: first round
 
+Status: landed `e6e67828`; describes work that is done.
+
 Date: 2026-10-03. Research for request `3f3f1d0ee91057c4a62ec19c9438ffc1335e8966`, promise `8f36dbcd1c9faa29fc2d190b6278f73f4f89bd95`. Baseline: approved main `344656705140d9bf6539fe44de889d1e21dd2482`; instructions revision 3 at `notes/2026-10-02-positioning-exploration.md`.
 
 This note answers Q1–Q15 at their commissioned breadth. Recommendations, opening paragraphs and candidate sentences are research judgments and specimens to test. F1 onward identifies sourced facts; proposed demonstrations and unmeasured claims are labelled. This research adopts no positioning design and commissions no assets. Estimates can sequence work; the complete functional scope remains owed.

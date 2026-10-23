@@ -1,10 +1,10 @@
 # Authority, effects and publication
 
-Status, 21 October 2026: normative reference. Code comments cite this
-document by section number. It lands on main unchanged from revision
-28, the revision in force (branch `request/authority-r20`, `8b1c3c9d`). Where the code
-no longer follows a cited section, the citation check of request
-`0270882b` lists it. `docs/scopes.md` is the reader's guide.
+Status: current. This note is a normative reference. Code comments cite
+this document by section number. It lands on main unchanged from revision
+28, the revision in force (branch `request/authority-r20`, `8b1c3c9d`).
+Where the code no longer follows a cited section, the citation check of
+request `0270882b` lists it. `docs/scopes.md` is the reader's guide.
 
 Date: 2026-10-04. Design only. Written for request R3
 `f2d23e6fededcbeceba50574fbd2a9f2200588c7` under Hugh's direction

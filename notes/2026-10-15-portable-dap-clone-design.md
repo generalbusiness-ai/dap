@@ -1,7 +1,7 @@
 # A portable dap clone
 
-15 October 2026. Design note, draft 2, revised 16 October 2026 against main
-`cf07ac85b`. It is approved (`05ce3331`) and landed at `dacf4df4`.
+Status: current. 15 October 2026. Draft 2, revised 16 October 2026 against
+main `cf07ac85b`. It is approved (`05ce3331`) and landed at `dacf4df4`.
 
 Request `35ee8372`, planner promise `35f875e4`. Draft 1 was read against
 main `bc95110e1`. Gap investigation: `e398c623`. Archive privacy decision:
