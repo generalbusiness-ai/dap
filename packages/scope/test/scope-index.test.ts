@@ -82,7 +82,7 @@ test("unknown scope gate touches no target and only the native target's applied 
   const known = new Map<string, ScopeRegistration>(); let registrations = 0, targetNames = 0, targetGets = 0, indexReads = 0, failRegistration = false;
   const index: ScopeIndexPort = {
     async has(name) { indexReads++; return known.has(name); },
-    async register(proof) { registrations++; if (failRegistration) throw Error("index unavailable"); known.set(proof.at.scope, proof); return true; },
+    async register(proof) { registrations++; if (failRegistration) throw Error("TEST PRIVATE REGISTRATION ERROR"); known.set(proof.at.scope, proof); return true; },
   };
   const target: Binding = {
     idFromName(name) { targetNames++; return env.SCOPES.idFromName(name); },
@@ -127,6 +127,55 @@ test("unknown scope gate touches no target and only the native target's applied 
     expect(known.get(born.name)).toEqual({ at: answer.receipt.fact.at, genesis: answer.receipt.fact.hash });
     expect((await backfill.summary(denied.name, reader)).ok).toBe(false);
     expect(known.has(denied.name)).toBe(false);
+
+    // Fixed observations cover a real native callback failure and an empty
+    // native object. Neither logs caller data nor changes a boolean answer.
+    const originalInfo = console.info, observed: unknown[][] = [];
+    const missing = creation(); controls(missing.name, START);
+    scopeRegistrationWiring.set(missing.name, proof => index.register(proof));
+    const raw = env.SCOPES.get(env.SCOPES.idFromName(born.name)) as unknown as { registerKnown(): Promise<boolean> };
+    const empty = env.SCOPES.get(env.SCOPES.idFromName(missing.name)) as unknown as { registerKnown(): Promise<boolean> };
+    console.info = (...args: unknown[]) => { if (args[0] === "scope-index-registration") observed.push(args); else originalInfo(...args); };
+    try {
+      expect(await raw.registerKnown()).toBe(true);
+      expect(observed).toEqual([]); // successful registration emits no row
+      failRegistration = true;
+      expect(await raw.registerKnown()).toBe(false);
+      expect(observed).toEqual([["scope-index-registration", { phase: "index-register", outcome: "error" }]]);
+      observed.length = 0;
+      expect(await empty.registerKnown()).toBe(false);
+      expect(observed).toEqual([["scope-index-registration", { phase: "entry-missing", outcome: "refused" }]]);
+      expect(known.has(missing.name)).toBe(false);
+      expect(JSON.stringify(observed)).not.toContain(missing.name);
+      expect(JSON.stringify(observed)).not.toContain("TEST PRIVATE REGISTRATION ERROR");
+      console.info = () => { throw Error("TEST PRIVATE LOGGER ERROR"); };
+      expect(await raw.registerKnown()).toBe(false);
+      expect(await empty.registerKnown()).toBe(false);
+    } finally {
+      console.info = originalInfo; failRegistration = false;
+      scopeRegistrationWiring.delete(missing.name);
+    }
+
+    // Explicit RPC-failure stand-in: the native method never entered. The
+    // wrapper must retain its original missing answer and fixed projection.
+    let rpcCalls = 0, ordinaryCalls = 0;
+    const rejected: Binding<string> = { idFromName: name => name, get: () => ({
+      registerKnown: async () => { rpcCalls++; throw Error("TEST PRIVATE RPC ERROR"); },
+      summary: async () => { ordinaryCalls++; throw Error("unregistered summary must not run"); },
+    }) };
+    const absent: ScopeIndexPort = { async has() { return false; }, async register() { throw Error("wrapper registered caller data"); } };
+    const broken = api(indexedScopes(rejected, { SCOPE_INDEX_MODE: "register", SCOPE_INDEX: { idFromName: name => name, get: () => absent } }));
+    observed.length = 0;
+    console.info = (...args: unknown[]) => { if (args[0] === "scope-index-registration") observed.push(args); else originalInfo(...args); };
+    try {
+      expect(await broken.summary(born.name, reader)).toEqual({ ok: false, reason: "not-found" });
+      expect(observed).toEqual([["scope-index-registration", { phase: "rpc", outcome: "rejected" }]]);
+      expect(JSON.stringify(observed)).not.toContain(born.name);
+      expect(JSON.stringify(observed)).not.toContain("TEST PRIVATE RPC ERROR");
+      console.info = () => { throw Error("TEST PRIVATE LOGGER ERROR"); };
+      expect(await broken.summary(born.name, reader)).toEqual({ ok: false, reason: "not-found" });
+      expect({ rpcCalls, ordinaryCalls }).toEqual({ rpcCalls: 2, ordinaryCalls: 0 });
+    } finally { console.info = originalInfo; }
   } finally {
     scopeRegistrationWiring.delete(born.name); scopeRegistrationWiring.delete(denied.name);
   }

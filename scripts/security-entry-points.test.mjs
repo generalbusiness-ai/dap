@@ -11,7 +11,7 @@ const seals = {
   "apps/room/page/route.ts": "62c8f69b9f516f1b5acdaef57d7aed25268d8cf03283bdffdd4b1b5f20bb6b3d",
   "apps/room/brand/route.ts": "71b45ff9b41b3bea31c775a16525349591e0d4f7dfdc65da79f095816b1c343c",
   "packages/scope/src/worker.ts": "9ee48699b984552477c84373f81fcc42a9c88963b4591655ecbe3c9d5df7fef2", // Actual union parser value adopted by root.
-  "packages/scope/src/scope-index.ts": "b7f06b9365c88e0d7cd9ac27927c994e0cad52156dcd15d286fee60dca469a1c", // New internal lookup/registration boundary.
+  "packages/scope/src/scope-index.ts": "c7abd0c5c5a148630ac4ede762fa951169a6d912a89eb58cadb747ab7544a2ca", // New internal lookup/registration boundary.
   "packages/scope/src/creation-admission.ts": "c45a0ac9231356298e9e2724cc1154bdd40def91b5bdc1e1bf6d14c4331eb42e", // Reviewed R1 ancestry owner; adopted AST value.
   "packages/scope/src/creation-lineage.ts": "fc478ab58d801383fc29f1cab65bd03fc6aa07118a0d6c8376bafe2ead03b404", // Reviewed whole-lineage boundary; adopted AST value.
   "packages/scope/src/creation-declaration.ts": "f14aac1ac8bce20cb8bc254b790ec5e66614ce13e9a72b42ab1a097aee837e72", // Bounded immutable native Directory custody, not authority.
@@ -21,7 +21,7 @@ const seals = {
   "packages/scope/src/applications/route.ts": "0f780b2b47a665f74dd1c65ce4a0b7d6d89e5fdc5973d62f9655ded2c8bd93ed", // Actual union parser value adopted by root.
   "packages/scope/src/item-query-wire.ts": "18c860286adefc1afab7cf14ceceea44c59e78031042aed3d781c5576b73ecea",
   "packages/scope/src/applications/projection-wire.ts": "cecaa88f08db6745013a9cb9fbcb9edee6939b0859c201e0c8057286529f1cdc",
-  "packages/scope/src/object.ts": "9e2fe42f0b6331e2c9a115f3ebc718a359818c34b18eb149ee33a3b8e3e1c503", // R2 target-owned genesis registration.
+  "packages/scope/src/object.ts": "ee8009861e1b87f4932fe617e062cf016b90ad67e4585d29eca6957538edfc45", // R2 target-owned genesis registration.
   "packages/scope/src/core.ts": "189ad7c56b9b772fc241fb10b78ba219627bdb04bef4e8d0ec9c1c3e07c992db",
   "packages/derive/src/genesis.ts": "3cedd7e1124a234aef7f04fb48c25e34c482e6fded7d4423ec666ae41e39c586",
   "packages/derive/src/judge.ts": "222d6d89be14fd62f59857778b0bf7e52f1f0b3d2f5df8d50b533a8f20d8cb14",
@@ -53,7 +53,7 @@ const pendingArchiveSeals = {
   "packages/scope/src/archive-driver.ts": "35510dbb61c75496ac3e0e363d49d1137284671cc4c383582222cca8ee0a3e6d", // Parent-read diagnostic reviewed; actual maintained parser output.
   "packages/scope/src/archive-row.ts": "6387b60a8ecd09a7dd3166ca1dac7f5c3749e61d7e02adf64878cbd8c9cf4412",
   "packages/scope/src/floor-writer.ts": "a55c28f393f59297fe952104b576b275c73c451456afced3d8cac33dc54f2ff4",
-  "packages/scope/src/object.ts": "9e2fe42f0b6331e2c9a115f3ebc718a359818c34b18eb149ee33a3b8e3e1c503", // Must match the separately adopted original owner value above.
+  "packages/scope/src/object.ts": "ee8009861e1b87f4932fe617e062cf016b90ad67e4585d29eca6957538edfc45", // Must match the separately adopted original owner value above.
   "apps/room/worker.grow.ts": "791c2bfcb8b2a62d8f0d8afec627ac76b63be4b9f1ee5de27d3f6c081959bc01",
   "apps/room/archive-policy.ts": "707d55642fa0a35075614d1f7b02149b8a33f5eb128f0e0ef4b54100aaa1897f",
   "apps/room/archive.ts": "fd0e00f874b6607728bc5a63842a64e41799f1041f9c5952978c2d86dfc048a2",

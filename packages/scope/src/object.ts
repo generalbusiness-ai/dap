@@ -409,17 +409,50 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
 
   /** No caller bytes or mutable summary establish index membership. */
   async registerKnown(): Promise<boolean> {
-    if (!this.#registerGenesis || !this.#name) return false;
+    // Temporary fixed-category observation. Never log native values or errors.
+    let phase: "configuration" | "entry-missing" | "entry-size" | "scope" | "entry" | "entry-parse" | "entry-integrity"
+      | "genesis-prev" | "genesis-type" | "genesis-decision" | "seed-address" | "incarnation" | "kind" | "index-register" = "configuration";
+    const observe = (outcome: "refused" | "error"): void => {
+      try { console.info("scope-index-registration", { phase, outcome }); }
+      catch { /* Observation cannot change registration. */ }
+    };
+    const refused = (): false => { observe("refused"); return false; };
+    if (!this.#registerGenesis || !this.#name) return refused();
     try {
-      if ((this.#store.storedBytes(0) ?? Infinity) > this.#registrationBytes) return false;
-      const scope = this.#store.scope(), stored = this.#store.stored(0);
-      if (!scope || scope.status === "refused" || scope.at.scope !== this.#name || !stored) return false;
+      phase = "entry-size";
+      const entryBytes = this.#store.storedBytes(0);
+      if ((entryBytes ?? Infinity) > this.#registrationBytes) {
+        if (entryBytes === null || entryBytes === undefined) phase = "entry-missing";
+        return refused();
+      }
+      phase = "scope";
+      const scope = this.#store.scope();
+      phase = "entry";
+      const stored = this.#store.stored(0);
+      if (!scope || scope.status === "refused" || scope.at.scope !== this.#name) { phase = "scope"; return refused(); }
+      if (!stored) return refused();
+      phase = "entry-parse";
       const entry = parseStrict(stored.bytes) as Entry;
       const fact = { at: scope.at, seq: 0, hash: stored.hash };
-      if (!isEntryOf(entry, fact) || entry.prev !== null || entry.input.type !== "genesis" || entry.input.decision !== "applied"
-        || scopeIdOf(entry.input.seed) !== this.#name || entry.input.inc !== scope.at.inc || entry.input.seed.kind !== scope.at.kind) return false;
-      return await this.#registerGenesis({ at: scope.at, genesis: stored.hash });
-    } catch { return false; }
+      phase = "entry-integrity";
+      if (!isEntryOf(entry, fact)) return refused();
+      phase = "genesis-prev";
+      if (entry.prev !== null) return refused();
+      phase = "genesis-type";
+      if (entry.input.type !== "genesis") return refused();
+      phase = "genesis-decision";
+      if (entry.input.decision !== "applied") return refused();
+      phase = "seed-address";
+      if (scopeIdOf(entry.input.seed) !== this.#name) return refused();
+      phase = "incarnation";
+      if (entry.input.inc !== scope.at.inc) return refused();
+      phase = "kind";
+      if (entry.input.seed.kind !== scope.at.kind) return refused();
+      phase = "index-register";
+      const registered = await this.#registerGenesis({ at: scope.at, genesis: stored.hash });
+      if (registered !== true) observe("refused");
+      return registered;
+    } catch { observe("error"); return false; }
   }
 
   async create(creation: SignedIntent, definition: DeclaredDefinition | Digest | PlatformDefinition, definitions: readonly DeclaredDefinition[] = [], beside: Beside = {}): Promise<Created> {

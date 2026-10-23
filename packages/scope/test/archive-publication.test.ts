@@ -25,6 +25,8 @@ import { archiveInput } from "../src/archive-input.ts";
 import { inventoryArchive } from "../src/archive-inventory.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
 import { SqliteStore, type Sql } from "../src/sqlite.ts";
+import { indexedScopes, ScopeIndexRows, SCOPE_INDEX_NAME } from "../src/scope-index.ts";
+import { api } from "../src/worker.ts";
 import { at } from "./fixtures-native.ts";
 import { archiveDefinition, archivePolicies, archiveRepository, archiveSql } from "./support/archive.ts";
 import { ScriptedArchiveHost } from "./support/archive-provider.ts";
@@ -224,10 +226,64 @@ test("Native admitted Register17 fact publishes nonempty anchors and rebuilds th
     }));
     const later = (await life.wait(() => D.summary())).at;
     expect(later.seq).toBeGreaterThan(through.seq);
+    // Confirmation does not remove entry 0. This migration fixture clears
+    // only the real index row, then reconstructs the deployed ScopeObject
+    // before register mode and again before an ordinary enforce-mode read.
+    const storedBirth = await life.wait(() => runInDurableObject(D.object, (_instance, state) => {
+      const store = new SqliteStore(archiveSql(state));
+      return { stored: store.stored(0), genesis: store.scope()?.genesis,
+        confirmed: new ArchiveRows(archiveSql(state), directoryAt).load()?.confirmed };
+    }));
+    expect(storedBirth.stored?.bytes).toBe(canonicalize(genesis.entry));
+    expect(storedBirth.stored?.hash).toBe(genesis.hash);
+    expect(storedBirth.genesis?.hash).toBe(genesis.hash);
+    expect(storedBirth.confirmed).toMatchObject({ through, anchorsPublished: true });
+    const indexObject = env.SCOPE_INDEX.get(env.SCOPE_INDEX.idFromName(SCOPE_INDEX_NAME));
+    const clearRegistration = () => life.wait(() => runInDurableObject(indexObject, (_instance, state) => {
+      state.storage.sql.exec("DELETE FROM known_scope WHERE scope = ?", D.name);
+      return new ScopeIndexRows(state.storage.sql).has(D.name);
+    }));
+    const registeredProof = () => life.wait(() => runInDurableObject(indexObject, (_instance, state) =>
+      state.storage.sql.exec("SELECT inc,kind,genesis FROM known_scope WHERE scope = ?", D.name).toArray()
+        .map(row => ({ at: { scope: D.name, inc: row["inc"], kind: row["kind"] }, genesis: row["genesis"] }))));
+    const registering = api(indexedScopes(env.PLATFORM, { SCOPE_INDEX: env.SCOPE_INDEX, SCOPE_INDEX_MODE: "register" }));
+    const enforcing = api(indexedScopes(env.PLATFORM, { SCOPE_INDEX: env.SCOPE_INDEX, SCOPE_INDEX_MODE: "enforce" }));
+    const summary = (scopes: typeof registering) => life.owner.required(() => life.wait(() => scopes.summary(D.name, memberReader)));
+    expect(await clearRegistration()).toBe(false);
+    await life.wait(() => D.restart());
+    expect(await summary(enforcing)).toEqual({ ok: false, reason: "not-found" });
+    const registered = await summary(registering);
+    expect(registered).toMatchObject({ ok: true, at: later, value: { scope: directoryAt } });
+    expect(await registeredProof()).toEqual([{ at: directoryAt, genesis: genesis.hash }]);
+    await life.wait(() => D.restart());
+    expect(await summary(enforcing)).toEqual(registered);
+
+    // Deliberate storage-corruption control, not a native transition or an
+    // archive effect: a false raw genesis hash must not earn registration.
+    expect(await clearRegistration()).toBe(false);
+    try {
+      await life.wait(() => runInDurableObject(D.object, (_instance, state) => {
+        state.storage.sql.exec("UPDATE entry SET hash = ? WHERE seq = 0", `sha256:${"0".repeat(64)}`);
+      }));
+      await life.wait(() => D.restart());
+      expect(await summary(registering)).toEqual({ ok: false, reason: "not-found" });
+      expect(await registeredProof()).toEqual([]);
+    } finally {
+      await life.wait(() => runInDurableObject(D.object, (_instance, state) => {
+        state.storage.sql.exec("UPDATE entry SET hash = ? WHERE seq = 0", genesis.hash);
+        const stored = new SqliteStore(archiveSql(state)).stored(0);
+        expect(stored?.hash).toBe(genesis.hash);
+        expect(stored?.bytes).toBe(canonicalize(genesis.entry));
+      }));
+      await life.wait(() => D.restart());
+    }
+    expect(await summary(registering)).toEqual(registered);
+    await life.wait(() => D.restart());
+    expect(await summary(enforcing)).toEqual(registered);
     for (const cost of [planned.cost, rebuilt.cost]) for (const key of Object.keys(ARCHIVE_BOUNDS) as (keyof typeof cost)[])
       expect(cost[key]).toBeLessThanOrEqual(ARCHIVE_BOUNDS[key]);
     const report = { expectedAnchors, through, publicScopes, initialCost: planned.cost, rebuildCost: rebuilt.cost, commit: rebuilt.commit,
-      qualification: "Genuine Native Register17 creation send and admitted Directory16 source copy; existing policy and original per-pass ledger. Actual source metadata/birth/pin preparation, stored nonempty publication/public identities, later checkpoint and eviction, exact rebuild. Genuine Membership seat/key and fixture-minted member session reader; scripted repository creation; no hosted custody, production binding or full-driver acceptance claim." };
+      qualification: "Genuine Native Register17 creation send and admitted Directory16 source copy; existing policy and original per-pass ledger. Actual source metadata/birth/pin preparation, stored nonempty publication/public identities, later checkpoint and eviction, exact rebuild. After confirmation through position 0, unchanged raw genesis and migration-fixture index-row removal, cold register/enforce ordinary reads use a fixture-minted member session with real checks. Corrupt-genesis hash refuses registration and is restored exactly. Genuine Membership seat/key; scripted repository creation; no hosted custody, Grow-specific archive factory construction, outage reproduction or full-driver acceptance claim." };
     (context.task.meta as Record<string, unknown>)["nativePrivateAnchorPublication"] = report;
     console.info("Native private anchor publication", JSON.stringify(report));
   } finally { life.release(); }
