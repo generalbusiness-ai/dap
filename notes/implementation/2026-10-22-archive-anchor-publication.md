@@ -23,9 +23,11 @@ checks rejected the new anchor-range test's deliberate Git encoder and
 reader imports because its exact path was missing from the development
 exception set. The correction adds only that test path. Portable production
 restrictions, Git dependency direction and unlisted-file counterexamples
-remain unchanged. The affected whole source-guard file and genuinely
-unreached Counting 55 checks are pending. The whole suite is not
-automatically repeated after these corrections.
+remain unchanged. The whole source-guard file then passed all 10 cases,
+and the previously unreached Counting checks passed all 55. The unaffected
+Node files and passing Vitest files were not repeated. The full gate remains
+a failed run followed by separately attributed owning corrections; it was
+not repeated or reported green.
 
 Earlier owning results remain attributed to their exact checkpoints:
 Scope test and Node-support compilation plus all six heavy cases passed
@@ -1223,3 +1225,25 @@ The next owning checks are the whole affected source-guard file and the
 genuinely unreached Counting 55 checks, under a fresh root allocation.
 The unaffected Node files and passing Vitest files are not repeated. This
 checkpoint is source-prepared; no follow-up runtime result is claimed.
+
+### Source-boundary correction and remaining Counting checks passed
+
+Owner 73032 naturally passed the whole active-source file's 10 cases and
+all 55 previously unreached Counting cases at clean `2ed95304c`. The whole
+source-guard file intentionally repeated eight passing cases alongside the
+two corrected failures; unaffected Node files were not repeated. Counting
+covered six files, four entries and 133 inputs. Root read all 65 raw case
+lines and the result: there were no signals, test errors or collector
+errors, and all 2,780 source and 6,069 fixed dependency guards passed with
+the bound tools and environment. The cache remained unchanged. Outer time
+was 5.86 seconds wall, 6.32 user and 0.79 system.
+
+Evidence is retained at
+`/private/tmp/artroom-archive-active-source-counting-evidence-20261022-v1`,
+under allocation `150d002e7abd9de6dc51658c2c2c685cea63d377`. This completes
+the affected source-guard follow-up and the genuinely unreached Counting
+checks. It does not erase the original 2,156-pass, four-failure, three-skip
+ordinary gate or the intervening 34-pass, two-failure Node attempt. The
+four compiler and 22-case correction pass remains separate evidence. No
+whole gate, healthy Vitest cohort or heavy suite was rerun for these final
+corrections. Exact-head review and landing remain pending.
