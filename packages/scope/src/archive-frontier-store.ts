@@ -3,7 +3,7 @@
 import { b64url, canonicalize, digestBytes, isDigest, isRecord, isScopeRef, natural, parseStrict, same, timeMs, unb64url, utf8 } from "@generalbusiness/dap-bytes";
 import type { Digest, Head, ScopeRef } from "@generalbusiness/dap-contract";
 import { JOURNAL_PARENT_FRONTIER_BYTES, JOURNAL_PARENT_FRONTIER_OBJECTS, validateJournalParentFrontier,
-  type JournalFormat, type JournalObjectSource, type JournalParentBinding, type JournalParentFrontier } from "@generalbusiness/dap-git/journal";
+  type JournalObjectSource, type JournalParentBinding, type JournalParentFrontier } from "@generalbusiness/dap-git/journal";
 import { ArchiveBudget } from "./archive-budget.ts";
 import { ArchiveRowRefusal, ArchiveRows, type ArchivedPosition, type ArchiveMark } from "./archive-row.ts";
 import { ARCHIVE_ROW_BYTES, ARCHIVE_ROW_MANIFEST_BYTES, archiveRowLoadWork } from "./archive-row-cost.ts";
