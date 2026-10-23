@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0c86d75219cbfb406fb200f35e202700969002cc","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-22-r8-screen-origin-and-page-keys.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0c9c2de7845c377e6ef1d4f75b203386920d8a1c","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/sessions.ts."}
