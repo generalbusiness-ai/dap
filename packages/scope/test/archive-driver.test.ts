@@ -88,18 +88,56 @@ test.each(["missing-input", "rebuild-mismatch"] as const)("native archive alarm 
 // A real alarm reset before Mark must retain its wake without a row/token.
 // A later entry must not shorten that lookup backoff.
 test("a pre-Mark target failure survives eviction and new native input without losing its alarm", async () => {
-  const host = new ScriptedHost("sha1"); let ready = false;
-  const lane = await alarmFixture(host, async () => { host.targets++; if (!ready) throw new Error("fixture target unavailable"); return archiveRepository; });
-  const before = await lane.head(); expect(await lane.alarm()).toBe(true); expect(await row(lane)).toBeNull();
-  const next = await lane.inside(state => state.storage.getAlarm()); expect(next).not.toBeNull();
-  await lane.restart();
-  await lane.did(rita, "offer", { fields: { intent: 0 }, expected: { intent: 1 } });
-  expect(await lane.inside(state => state.storage.getAlarm())).toBe(next);
-  expect(await lane.alarm()).toBe(true); expect(host.targets).toBe(1); expect(host.mintCalls).toBe(0);
-  ready = true; lane.c.clock.now = timeOf(next!); await lane.restart();
-  expect(await lane.alarm()).toBe(true); expect(host.sends).toHaveLength(1); expect(host.targets).toBe(2);
-  expect((await row(lane))?.confirmed?.through.seq).toBeGreaterThan(before.seq);
-  fixtureArchiveWiring.delete(lane.name);
+  const originalInfo = console.info, observed: unknown[][] = [];
+  console.info = (...args: unknown[]) => { if (args[0] === "archive-pass-diagnostic-v1") observed.push(args); else originalInfo(...args); };
+  try {
+    const host = new ScriptedHost("sha1"); let ready = false;
+    const lane = await alarmFixture(host, async () => { host.targets++; if (!ready) throw new Error("TEST PRIVATE ERROR SENTINEL"); return archiveRepository; });
+    const before = await lane.head(); expect(await lane.alarm()).toBe(true); expect(await row(lane)).toBeNull();
+    const next = await lane.inside(state => state.storage.getAlarm()); expect(next).not.toBeNull();
+    await lane.restart();
+    await lane.did(rita, "offer", { fields: { intent: 0 }, expected: { intent: 1 } });
+    expect(await lane.inside(state => state.storage.getAlarm())).toBe(next);
+    expect(await lane.alarm()).toBe(true); expect(host.targets).toBe(1); expect(host.mintCalls).toBe(0);
+    ready = true; lane.c.clock.now = timeOf(next!); await lane.restart();
+    expect(await lane.alarm()).toBe(true); expect(host.sends).toHaveLength(1); expect(host.targets).toBe(2);
+    expect((await row(lane))?.confirmed?.through.seq).toBeGreaterThan(before.seq);
+    fixtureArchiveWiring.delete(lane.name);
+
+    const records = observed.map(args => {
+      expect(args).toHaveLength(2);
+      const record = args[1] as Record<string, unknown>;
+      expect(Object.keys(record).sort()).toEqual(["step", "detail", "rowPhaseAtLoad", "confirmed", "pending", "attemptsAtLoad", "hasNext", "attempted", "state", "reason", "caught", "cost"].sort());
+      expect(["row-load", "pin", "due-check", "target", "format", "pending-readback", "parent", "sources", "rebuild", "plan", "mark", "copy", "mint", "send", "readback", "confirm"]).toContain(record["step"]);
+      expect(["none", "not-due", "wake-not-due", "target-missing", "target-different"]).toContain(record["detail"]);
+      expect(["unknown", "absent", "stopped", "pending", "confirmed", "target"]).toContain(record["rowPhaseAtLoad"]);
+      expect(["idle", "disabled", "retry", "stopped", "confirmed", "threw"]).toContain(record["state"]);
+      for (const key of ["reason", "caught"]) expect(["none", "other", "limit", "timeout", "unavailable", "conflict", "mismatch", "parent", "missing-input", "rebuild-mismatch", "unsupported-archive-cohort"]).toContain(record[key]);
+      for (const key of ["confirmed", "pending", "attemptsAtLoad"]) {
+        const value = record[key];
+        expect(value === null || typeof value === "number" && Number.isSafeInteger(value) && value >= 0).toBe(true);
+      }
+      expect(typeof record["hasNext"]).toBe("boolean"); expect(typeof record["attempted"]).toBe("boolean");
+      const cost = record["cost"] as Record<string, unknown>;
+      expect(Object.keys(cost).sort()).toEqual(Object.keys(ARCHIVE_BOUNDS).sort());
+      for (const value of Object.values(cost)) expect(typeof value === "number" && Number.isSafeInteger(value) && value >= 0).toBe(true);
+      return record;
+    });
+    expect(records.some(record => record["step"] === "target" && record["state"] === "retry" && record["caught"] === "unavailable")).toBe(true);
+    expect(records.some(record => record["detail"] === "wake-not-due" || record["detail"] === "not-due")).toBe(true);
+    expect(records.some(record => record["step"] === "confirm" && record["state"] === "confirmed")).toBe(true);
+    const printed = JSON.stringify(observed);
+    for (const secret of ["TEST PRIVATE ERROR SENTINEL", "TEST ARCHIVE TOKEN", ...Object.values(archiveRepository)]) expect(printed).not.toContain(secret);
+    // The same already-confirmed driver result survives a synchronous logger
+    // failure. No extra mint/send is needed to exercise observation failure.
+    const confirmed = await row(lane), head = await lane.head();
+    expect(confirmed?.confirmed?.through.seq).toBeGreaterThanOrEqual(head.seq);
+    let loggerCalls = 0;
+    console.info = (...args: unknown[]) => { if (args[0] === "archive-pass-diagnostic-v1") { loggerCalls++; throw new Error("TEST LOGGER FAILURE"); } originalInfo(...args); };
+    expect(await lane.inside(state => driver(lane, state, host).run())).toEqual({ state: "idle", next: null });
+    expect(loggerCalls).toBe(1); expect(await row(lane)).toEqual(confirmed); expect(await lane.head()).toEqual(head);
+    expect(host.sends).toHaveLength(1); expect(host.mintCalls).toBe(1); expect(host.targets).toBe(2);
+  } finally { console.info = originalInfo; }
 });
 
 // Invariant: a lost own send answer is resolved from the ref, never by

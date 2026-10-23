@@ -174,28 +174,39 @@ export class ArchiveDriver {
   }
   async #pass(): Promise<ArchivePass> {
     const budget = this.#options.budget?.() ?? new ArchiveBudget();
+    // Temporary pass diagnostic: fixed categories and already-loaded scalars
+    // only. It adds no archive read, admission, retry or persistent state.
+    let step = "row-load", detail = "none", caught = "none";
+    let phase = "unknown", confirmed: number | null = null, pending: number | null = null, attempts = 0, hasNext = false;
+    const observed: { outcome?: ArchivePass } = {};
+    const done = (value: ArchivePass): ArchivePass => { observed.outcome = value; return value; };
     let active = true, credential: ArchiveCredential | null = null, scheduled: Timestamp | null = null, deferred = false, attempted = false;
     const allowed = (): boolean => { if (!active) return false; try { budget.check(); return true; } catch { return false; } };
     try {
       const rows = this.#store();
-      if (!rows || this.#options.policies.registry.size === 0) return { state: "disabled", next: null };
+      if (!rows || this.#options.policies.registry.size === 0) return done({ state: "disabled", next: null });
       budget.spend({ inputWork: 4 * (ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES) });
       const current = this.#options.current()!;
       const at = { ...current.at }, through = { ...current.head };
       let row = rows.load(budget);
-      if (row?.stopped) return { state: "stopped", next: null, reason: row.stopped.reason };
+      phase = !row ? "absent" : row.stopped ? "stopped" : row.pending ? "pending" : row.confirmed ? "confirmed" : "target";
+      confirmed = row?.confirmed?.through.seq ?? null; pending = row?.pending?.through.seq ?? null;
+      attempts = row?.attempts ?? 0; hasNext = row?.next !== null && row?.next !== undefined;
+      if (row?.stopped) return done({ state: "stopped", next: null, reason: row.stopped.reason });
+      step = "pin";
       const readPin = row?.confirmed?.layout === 2 ? readArchivePinAfterReceipt : readArchivePin;
       const pin = readPin(budget.native(this.#options.sql, () => ({ metadata: ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES, inputWork: 0 })), at);
       budget.check();
-      if (!pin) return { state: "retry", next: this.#later(0), reason: "unavailable" };
-      if ("production" in this.#options && !this.#options.admit(at, pin.seed)) { this.#disabled = true; return { state: "disabled", next: null }; }
+      if (!pin) return done({ state: "retry", next: this.#later(0), reason: "unavailable" });
+      if ("production" in this.#options && !this.#options.admit(at, pin.seed)) { this.#disabled = true; return done({ state: "disabled", next: null }); }
       const policy = this.#options.policies.registry.get(pin.seed.definition);
-      if (!policy || !policy.review || policy.support.named !== pin.seed.definition) { this.#disabled = true; return { state: "disabled", next: null }; }
+      if (!policy || !policy.review || policy.support.named !== pin.seed.definition) { this.#disabled = true; return done({ state: "disabled", next: null }); }
       const now = timeMs(this.#options.clock());
-      if (now === null) { budget.stop("unavailable"); return { state: "retry", next: null, reason: "unavailable" }; }
-      if (row?.next && timeMs(row.next)! > now) return { state: "retry", next: row.next };
+      if (now === null) { budget.stop("unavailable"); return done({ state: "retry", next: null, reason: "unavailable" }); }
+      step = "due-check";
+      if (row?.next && timeMs(row.next)! > now) { detail = "not-due"; return done({ state: "retry", next: row.next }); }
       const indexed = rows.wake(budget);
-      if (!row?.pending && indexed && timeMs(indexed)! > now) return { state: "retry", next: indexed };
+      if (!row?.pending && indexed && timeMs(indexed)! > now) { detail = "wake-not-due"; return done({ state: "retry", next: indexed }); }
       // Production resolves its binding every pass. Preserve the original
       // pre-I/O retry contract before that additional await, even without a
       // payload row. A due pending Mark gets exactly its existing attempt
@@ -203,25 +214,30 @@ export class ArchiveDriver {
       if ("production" in this.#options) {
         if (row?.pending) {
           scheduled = this.#later(row.attempts);
-          if (scheduled === null) return { state: "retry", next: null, reason: "unavailable" };
+          if (scheduled === null) return done({ state: "retry", next: null, reason: "unavailable" });
           row = rows.attempt(scheduled, budget); attempted = true;
         } else {
           scheduled = this.#later(0);
-          if (scheduled === null) return { state: "retry", next: null, reason: "unavailable" };
+          if (scheduled === null) return done({ state: "retry", next: null, reason: "unavailable" });
           rows.defer(scheduled, budget); deferred = true;
         }
       }
+      step = "target";
       const productionTarget = "production" in this.#options ? await budget.wait(() => this.#options.target.resolve(at, { ...pin.seed, creator: pin.seed.creator ? { ...pin.seed.creator } : null }, budget)) : null;
-      if ("production" in this.#options && (!productionTarget || row && !same(row.repository, productionTarget))) return { state: "retry", next: scheduled, reason: "unavailable" };
+      if ("production" in this.#options && (!productionTarget || row && !same(row.repository, productionTarget))) {
+        detail = productionTarget ? "target-different" : "target-missing";
+        return done({ state: "retry", next: scheduled, reason: "unavailable" });
+      }
       if (!row) {
         if (!deferred) {
           scheduled = this.#later(0);
-          if (scheduled === null) return { state: "retry", next: null, reason: "unavailable" };
+          if (scheduled === null) return done({ state: "retry", next: null, reason: "unavailable" });
           rows.defer(scheduled, budget); deferred = true;
         }
         const repository = productionTarget ?? await budget.wait(() => this.#options.target.resolve(at, { ...pin.seed, creator: pin.seed.creator ? { ...pin.seed.creator } : null }, budget));
-        if (!repository) return { state: "retry", next: this.#later(0), reason: "unavailable" };
+        if (!repository) return done({ state: "retry", next: this.#later(0), reason: "unavailable" });
         const captured = { ...repository };
+        step = "format";
         const format = await budget.wait(() => this.#options.provider.format({ ...captured }, allowed));
         row = rows.target(captured, format, budget);
         // Initial target persistence replaces the wake index. Reestablish
@@ -234,40 +250,45 @@ export class ArchiveDriver {
       if (row.pending) {
         if (!attempted) {
           const next = this.#later(row.attempts);
-          if (next === null) { budget.stop("unavailable"); return { state: "retry", next: null, reason: "unavailable" }; }
+          if (next === null) { budget.stop("unavailable"); return done({ state: "retry", next: null, reason: "unavailable" }); }
           row = rows.attempt(next, budget); scheduled = next; attempted = true;
         }
+        step = "pending-readback";
         const seen = await budget.wait(() => this.#options.provider.ref({ ...row!.repository }, ref, allowed));
-        if (seen === row.pending!.commit) return this.#confirmed(rows, row, budget);
-        if (seen !== row.pending!.parent) { rows.stop("conflict", ref, budget); return { state: "stopped", next: null, reason: "conflict" }; }
+        if (seen === row.pending!.commit) { step = "confirm"; return done(this.#confirmed(rows, row, budget)); }
+        if (seen !== row.pending!.parent) { rows.stop("conflict", ref, budget); return done({ state: "stopped", next: null, reason: "conflict" }); }
       } else if (row.confirmed?.layout === 2 && row.confirmed.through.seq >= through.seq) {
         if ("production" in this.#options) {
           // Target I/O may have let a genuine turn seal after the initial
           // cutoff. Recheck charged Native identity/head in a fresh frame;
           // never clear its pending wake from the old snapshot.
           const latest = this.#options.sql.transaction(() => readArchiveScopeFrame(this.#options.sql, at, pin, this.#options.bounds, budget));
-          if (latest.head.seq > row.confirmed.through.seq) return { state: "retry", next: scheduled };
+          if (latest.head.seq > row.confirmed.through.seq) return done({ state: "retry", next: scheduled });
         }
-        rows.clearWake(budget); this.#fallback = null; return { state: "idle", next: null };
+        rows.clearWake(budget); this.#fallback = null; return done({ state: "idle", next: null });
       }
       if (!row.pending && !deferred) {
         scheduled ??= this.#later(0);
-        if (scheduled === null) return { state: "retry", next: null, reason: "unavailable" };
+        if (scheduled === null) return done({ state: "retry", next: null, reason: "unavailable" });
         rows.defer(scheduled, budget); deferred = true;
       }
+      step = "parent";
       const previous = await this.#parent(row, budget, allowed);
       const prepareSources = "production" in this.#options ? this.#options.sources : undefined;
+      step = "sources";
       const preparedSources = prepareSources ? await budget.wait(() => prepareSources(row!.confirmed?.layout === 2 ? row!.confirmed.through : null,
         row!.pending?.through ?? through, budget, !!row!.pending)) : null;
       const sources = preparedSources?.pins ?? this.#options.fixtureSources;
       let archive: JournalArchive | JournalPassArchive;
       let selectedParentObjects: readonly string[] | undefined;
       if (row.pending) {
+        step = "rebuild";
         const rebuild = row.pending.layout === 2 ? rebuildArchivePass : rebuildArchive;
         const rebuilt = await rebuild(this.#options.sql, row, previous.parent, budget, sources);
-        if (!rebuilt.ok) { rows.stop(rebuilt.reason, "where" in rebuilt ? rebuilt.where ?? null : null, budget); return { state: "stopped", next: null, reason: rebuilt.reason }; }
+        if (!rebuilt.ok) { rows.stop(rebuilt.reason, "where" in rebuilt ? rebuilt.where ?? null : null, budget); return done({ state: "stopped", next: null, reason: rebuilt.reason }); }
         archive = rebuilt.archive;
       } else {
+        step = "plan";
         const common = { bounds: this.#options.bounds, policies: this.#options.policies.registry, parent: previous.parent,
           markedAt: this.#options.clock(), ...(sources ? { fixtureSources: sources } : {}),
           ...(preparedSources?.replayScopes ? { replayScopes: preparedSources.replayScopes } : {}) };
@@ -284,42 +305,58 @@ export class ArchiveDriver {
             atomicFirstAttempt: "production" in this.#options,
             parentHeld: previous.held, parentUsed: previous.used, maximum: this.#maximum }, budget);
           if (adaptive.ok) selectedParentObjects = adaptive.parentObjects;
-          else if (adaptive.reason === "mismatch") return { state: "retry", next: scheduled ?? this.#later(0), reason: adaptive.reason };
+          else if (adaptive.reason === "mismatch") return done({ state: "retry", next: scheduled ?? this.#later(0), reason: adaptive.reason });
           planned = adaptive;
         }
-        if (!planned.ok) { rows.stop(planned.reason, "where" in planned ? planned.where ?? null : null, budget); return { state: "stopped", next: null, reason: planned.reason }; }
+        if (!planned.ok) { rows.stop(planned.reason, "where" in planned ? planned.where ?? null : null, budget); return done({ state: "stopped", next: null, reason: planned.reason }); }
         archive = planned.archive;
+        step = "mark";
         if ("production" in this.#options) {
           const first = scheduled ?? this.#later(0);
-          if (first === null) { budget.stop("unavailable"); return { state: "retry", next: null, reason: "unavailable" }; }
+          if (first === null) { budget.stop("unavailable"); return done({ state: "retry", next: null, reason: "unavailable" }); }
           row = rows.markAttempt(planned.mark, first, budget); scheduled = first;
         } else row = rows.mark(planned.mark, budget);
       }
       const next = scheduled ?? this.#later(row.attempts);
-      if (next === null) { budget.stop("unavailable"); return { state: "retry", next: null, reason: "unavailable" }; }
+      if (next === null) { budget.stop("unavailable"); return done({ state: "retry", next: null, reason: "unavailable" }); }
       if (row.attempts === 0) row = rows.attempt(next, budget);
       scheduled = next;
       const all = new Map<string, JournalObject>();
       for (const id of selectedParentObjects ?? previous.used) all.set(id, previous.held.get(id)!);
       for (const object of archive.objects) all.set(object.id, object);
+      step = "copy";
       const objects = [...this.#copy([...all.values()], row.format, budget).values()];
+      step = "mint";
       credential = await budget.wait(() => this.#options.provider.mintArchive({ ...row!.repository }, { ...at }, allowed));
-      if (!credential) return { state: "retry", next, reason: "unavailable" };
+      if (!credential) return done({ state: "retry", next, reason: "unavailable" });
       const sendingAt = timeMs(this.#options.clock());
       if (timeMs(credential.ends) === null || sendingAt === null || timeMs(credential.ends)! <= sendingAt) budget.stop("unavailable");
       // The own send reply never substitutes for read-back, including loss.
+      step = "send";
       await budget.wait(() => this.#options.provider.sendArchive({ repository: { ...row!.repository }, at: { ...at }, ref, old: row!.pending!.parent, commit: archive.commit, objects, credential: credential!, allowed,
         ...(row!.confirmed?.layout === 2 ? { incremental: { budget } } : {}) }));
+      step = "readback";
       const seen = await budget.wait(() => this.#options.provider.ref({ ...row!.repository }, ref, allowed));
-      if (seen === archive.commit) return this.#confirmed(rows, row, budget);
-      if (seen !== row.pending!.parent) { rows.stop("conflict", ref, budget); return { state: "stopped", next: null, reason: "conflict" }; }
-      return { state: "retry", next };
+      if (seen === archive.commit) { step = "confirm"; return done(this.#confirmed(rows, row, budget)); }
+      if (seen !== row.pending!.parent) { rows.stop("conflict", ref, budget); return done({ state: "stopped", next: null, reason: "conflict" }); }
+      return done({ state: "retry", next });
     } catch (error) {
+      caught = error instanceof ArchiveStopped ? error.reason : "other";
       const reason = error instanceof ArchiveStopped ? error.reason : "unavailable";
-      this.#fallback = scheduled ?? this.#later(0); return { state: "retry", next: this.#fallback, reason };
+      this.#fallback = scheduled ?? this.#later(0); return done({ state: "retry", next: this.#fallback, reason });
     } finally {
       active = false;
       if (credential) { try { budget.check(); await budget.wait(() => this.#options.provider.revokeArchive(credential!)); } catch { /* The short-lived credential may expire; it is never recorded. */ } }
+      try {
+        const reason = observed.outcome?.reason;
+        const known = ["limit", "timeout", "unavailable", "conflict", "mismatch", "parent", "missing-input", "rebuild-mismatch", "unsupported-archive-cohort"];
+        const position = (value: number | null) => value !== null && Number.isSafeInteger(value) && value >= 0 ? value : null;
+        console.info("archive-pass-diagnostic-v1", {
+          step, detail, rowPhaseAtLoad: phase, confirmed: position(confirmed), pending: position(pending), attemptsAtLoad: position(attempts), hasNext,
+          attempted, state: observed.outcome?.state ?? "threw", reason: reason === undefined ? "none" : known.includes(reason) ? reason : "other",
+          caught: known.includes(caught) ? caught : caught === "none" ? "none" : "other", cost: budget.admitted(),
+        });
+      } catch { /* Observation cannot replace the original archive result. */ }
     }
   }
   #confirmed(rows: ArchiveRows, row: ArchiveRow, budget: ArchiveBudget): ArchivePass {

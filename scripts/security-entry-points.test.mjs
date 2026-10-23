@@ -50,7 +50,7 @@ const pendingArchiveSeals = {
   "packages/scope/src/archive-source-window.ts": "5ebf1d481081ae462374a33496b92310617a1bf3af1da675407f26017da3dfb1",
   "packages/scope/src/archive-publication.ts": "9c80517fd5de98545a0042f8fa7675769166de5a6387b9e6b60ddc9e5b68b2a5",
   "packages/scope/src/archive-build.ts": "8ecba805ae96c5e8f854d429878d438f5bca17536fa3ace22152c12b017e9186",
-  "packages/scope/src/archive-driver.ts": "b7c3a13a59e7aae8a7eae2d7f601dc6e9f697c55c18d0094ec7499d45dd11ece",
+  "packages/scope/src/archive-driver.ts": "4bb6a4bc663ae67509c1d07d3456420c4009d7f64e3dab9ef2a99a94fb9ef4d4", // Sanitized pass diagnostic; archive operation order and gates remain unchanged.
   "packages/scope/src/archive-row.ts": "6387b60a8ecd09a7dd3166ca1dac7f5c3749e61d7e02adf64878cbd8c9cf4412",
   "packages/scope/src/floor-writer.ts": "a55c28f393f59297fe952104b576b275c73c451456afced3d8cac33dc54f2ff4",
   "packages/scope/src/object.ts": "9e2fe42f0b6331e2c9a115f3ebc718a359818c34b18eb149ee33a3b8e3e1c503", // Must match the separately adopted original owner value above.
