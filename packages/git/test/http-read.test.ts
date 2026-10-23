@@ -379,15 +379,15 @@ test("isolated abandonment survives late fetch and cleanup settlement without co
 });
 
 const v2Options = { ...isolatedOptions, isolateObjects: { ownedBytes: 32 * isolatedWire, protocol: "v2" as const } };
-const v2Advertisement = (capabilities = ["fetch=shallow filter"]) => new Response(Buffer.concat([
-  pkt("version 2\n"), ...capabilities.map(line => pkt(`${line}\n`)), Buffer.from("0000"),
+const v2Advertisement = (capabilities = ["fetch=shallow filter"], lineEnding = "\n") => new Response(Buffer.concat([
+  pkt(`version 2${lineEnding}`), ...capabilities.map(line => pkt(`${line}${lineEnding}`)), Buffer.from("0000"),
 ]), { headers: { "content-type": "application/x-git-upload-pack-advertisement" } });
 const band = (channel: number, data: Uint8Array = new Uint8Array()) => {
   const size = data.length + 5;
   return Buffer.concat([Buffer.from(size.toString(16).padStart(4, "0")), Buffer.from([channel]), data]);
 };
-const v2Bytes = (pack: Uint8Array, before: readonly Uint8Array[] = []) => {
-  const pieces = [...before, pkt("packfile\n"), band(1)]; // legal empty keepalive
+const v2Bytes = (pack: Uint8Array, before: readonly Uint8Array[] = [], lineEnding = "\n") => {
+  const pieces = [...before, pkt(`packfile${lineEnding}`), band(1)]; // legal empty keepalive
   for (let at = 0; at < pack.length; at += 65515) pieces.push(band(1, pack.subarray(at, at + 65515)));
   return Buffer.concat([...pieces, Buffer.from("0000")]);
 };
@@ -436,6 +436,9 @@ test("opt-in v2 fetch reads exact nonadvertised objects in two requests and keep
 test("opt-in v2 requires its complete bounded capability advertisement without a POST or v0 fallback", async () => {
   const id = "a".repeat(40);
   const cases = [
+    () => v2Advertisement(["fetch=shallow filter"], "\n\n"),
+    () => v2Advertisement(["fetch=shallow filter\n"]),
+    () => v2Advertisement(["fetch=shallow filter"], "\r\n"),
     () => v2Advertisement([]),
     () => v2Advertisement(["fetch=shallow"]),
     () => v2Advertisement(["fetch=filter"]),
@@ -467,17 +470,20 @@ test("opt-in v2 validates sections and binary sidebands before exact pack admiss
   const { remote, head } = repository();
   const smallBlob = put(remote, "blob", "other\n");
   const single = onePack(remote, head), blob = onePack(remote, smallBlob);
-  const run = (body: Uint8Array, id = head, limit = isolatedWire) => {
+  const run = (body: Uint8Array, id = head, limit = isolatedWire, lineEnding = "\n") => {
     let calls = 0;
     const source = new SmartHttpSource({ ...v2Options, fetch: request => {
       calls++;
-      return Promise.resolve(request.method === "GET" ? v2Advertisement(["unknown=ignored", "unknown=also-ignored", "fetch=shallow filter", "object-format=sha1"]) : v2Response(body));
+      return Promise.resolve(request.method === "GET" ? v2Advertisement(["unknown=ignored", "unknown=also-ignored", "fetch=shallow filter", "object-format=sha1"], lineEnding) : v2Response(body));
     } });
     return { outcome: source.object(id, limit), calls: () => calls };
   };
-  for (const before of [[], [pkt("shallow-info\n"), Buffer.from("0001")], [pkt("shallow-info\n"), pkt(`shallow ${head}\n`), Buffer.from("0001")]]) {
-    const check = run(v2Bytes(single, before));
-    expect((await check.outcome).type).toBe("commit"); expect(check.calls()).toBe(2);
+  // The same text packets are valid with or without their optional final LF.
+  for (const lineEnding of ["\n", ""]) {
+    for (const before of [[], [pkt(`shallow-info${lineEnding}`), Buffer.from("0001")], [pkt(`shallow-info${lineEnding}`), pkt(`shallow ${head}${lineEnding}`), Buffer.from("0001")]]) {
+      const check = run(v2Bytes(single, before, lineEnding), head, isolatedWire, lineEnding);
+      expect((await check.outcome).type).toBe("commit"); expect(check.calls()).toBe(2);
+    }
   }
   // Binary channels are split at arbitrary positions; progress is ignored,
   // including bytes that cannot be mistaken for another section or a pack.
@@ -493,6 +499,9 @@ test("opt-in v2 validates sections and binary sidebands before exact pack admiss
   expect((await decodePack(paired, { maxBytes })).map(object => object.id).sort()).toEqual([head, smallBlob].sort());
   const delta = Buffer.alloc(33); delta.write("PACK"); delta.writeUInt32BE(2, 4); delta.writeUInt32BE(1, 8); delta[12] = 0x60;
   const broken = [
+    v2Bytes(single, [pkt("shallow-info\n\n"), Buffer.from("0001")]),
+    v2Bytes(single, [pkt("shallow-info\n"), pkt(`shallow ${head}\n\n`), Buffer.from("0001")]),
+    Buffer.concat([pkt("packfile\n\n"), band(1, single), Buffer.from("0000")]),
     Buffer.concat([pkt("acknowledgments\n"), pkt("NAK\n"), Buffer.from("0001"), v2Bytes(single)]),
     v2Bytes(single, [pkt("shallow-info\n"), pkt(`shallow ${"f".repeat(40)}\n`), Buffer.from("0001")]),
     v2Bytes(single, [pkt("shallow-info\n"), pkt(`shallow ${head}\n`), pkt(`shallow ${head}\n`), Buffer.from("0001")]),

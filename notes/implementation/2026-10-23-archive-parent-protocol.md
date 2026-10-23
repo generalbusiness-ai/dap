@@ -1,151 +1,152 @@
 # Artifacts parent-object reads
 
-The hosted archive retries fail before they fetch the first parent commit.
+The hosted archive retries fail before fetching the first parent commit.
 The reader requires `shallow` and `filter` in the older Git advertisement,
 but the server does not advertise both. This candidate adds an explicit
-Git protocol v2 path for Artifacts archive parent reads.
+Git protocol v2 path for Artifacts archive parent reads. After deadline and
+text-framing corrections, the affected compiler and both owning files pass.
+The final gate and exact-head review remain pending. Hosted v2 filtering
+support and a completed archive pass remain unverified.
 
 Request `66010f21f899a4df8ac7530e18539f05887254cd` and promise
 `645d787bbd23c281e9cf92c82f8236b0a07772c7` track the work. The candidate starts
-from deployed diagnostic commit `f99ccc239aa305d442e1d0e354fce86ac37d598f`.
-The implementation draft is complete and includes accepted Main
-`aa016e0e1e6d71a8d466f82e8aff7e9f22ca0250`. Local validation is pending. Hosted v2 filtering
-support and a completed archive pass remain unverified.
+from deployed diagnostic commit `f99ccc239aa305d442e1d0e354fce86ac37d598f`
+and includes accepted Main `aa016e0e1e6d71a8d466f82e8aff7e9f22ca0250`.
 
 ## The observed failure
 
 Planner observation `122cb2eb086d659fdb2fa49ffd64bb85b6bdd63b` records 35
 diagnostics from Worker version `520aa54f` across three of the five objects.
-All 35 report `plan`, a loaded `confirmed` row, and `retry` with `unavailable`.
+All report `plan`, a loaded `confirmed` row, and `retry` with `unavailable`.
 The first parent read requests a commit of at most 1,024 bytes. Its last
 phase is `advertisement-response`, with refusal `isolated-capabilities`.
 The other two objects still ran the previous Worker version in that sample.
 
-The current reader sends no `Git-Protocol` header and parses only the older
-advertisement. Its isolated mode refuses before POST when either required
-feature is absent. The diagnostic identifies that refusal, but does not say
-which feature is absent or list the server's capabilities.
+The older reader sends no `Git-Protocol` header and refuses before POST when
+either feature is absent. The diagnostic does not name the missing feature.
 
 [Cloudflare's Git protocol documentation](https://developers.cloudflare.com/artifacts/api/git-protocol/)
 states that Artifacts supports v2 fetch and omits `filter` from its older
-protocol. It does not explicitly establish support for the exact v2
-`shallow` and `filter tree:0` exchange required here. The planner's bounded
-capability probe remains necessary. An ordinary successful clone does not
-prove support for isolated object reads. The archive's v2 journal layout is
-separate from the Git wire protocol version.
+protocol. It does not establish support for the exact v2 `shallow` and
+`filter tree:0` exchange required here. The planner's bounded capability
+probe remains necessary. A successful clone does not prove isolated-object
+support. The archive's v2 journal layout is separate from the wire protocol.
 
 ## The provider selects the protocol
 
-The candidate gives `SmartHttpSource` an opt-in protocol within
-`isolateObjects`. Artifacts selects that option through its trusted archive
-provider construction. GitHub and existing custom providers keep the default
-reader. No request field, repository name, or public configuration selects
-the option. Ref discovery, closure reads, and writes retain their existing
-protocol, including when an isolated source exposes `ref` or `refs`.
+`SmartHttpSource` gains an opt-in protocol within `isolateObjects`.
+Artifacts selects it through its trusted archive-provider construction.
+GitHub and existing custom providers keep the default reader. No request
+field, repository name or public configuration selects the option. Ref
+discovery, closure reads and writes retain their existing protocol, including
+`ref` and `refs` on an isolated source.
 
-An uncached v2 object read makes one capability GET and one fetch POST. Both
-carry `Git-Protocol: version=2`. The reader requires SHA-1 and advertised
-`shallow` and `filter` features. The POST asks for the exact object ID with
-`deepen 1`, `filter tree:0`, `no-progress`, and `done`.
-[Git's v2 specification](https://git-scm.com/docs/gitprotocol-v2) permits
-wants that were not advertised. This avoids a separate `ls-refs` request.
-The server still authorizes and answers the request. A denial remains a
-refusal and says nothing about object absence.
+An uncached v2 object read makes one capability GET and one fetch POST, both
+with `Git-Protocol: version=2`. It requires SHA-1 and advertised `shallow`
+and `filter` features. The POST asks for the exact object ID with `deepen 1`,
+`filter tree:0`, `no-progress` and `done`. [Git's v2 specification](https://git-scm.com/docs/gitprotocol-v2)
+permits wants that were not advertised, avoiding a separate `ls-refs` request.
+The server still authorizes the request. A denial says nothing about absence.
 
-The response contains an optional `shallow-info` section followed by a
-`packfile` section. A shallow boundary must name the requested object, and
-that object must be a commit. The reader accepts an empty shallow section.
-It compacts channel-1 pack bytes within its owned response buffer, ignores
-bounded channel-2 progress, and refuses channel-3 errors without exposing
-their text. The HTTP body must end at its final flush. Extra sections,
-acknowledgments after `done`, malformed packets, and trailing bytes refuse.
+The response permits an optional `shallow-info` section, including an empty
+one, followed by `packfile`. At most one shallow boundary may name the wanted
+object, which must then be a commit. Channel-1 pack bytes are compacted within
+the owned response buffer; bounded channel-2 progress is ignored. Channel-3
+errors refuse without exposing their text. The HTTP body must end at its
+final flush. Extra sections, acknowledgments after `done`, malformed packets
+and trailing bytes refuse.
 
-The verified pack must contain exactly one non-delta object of the requested
-type and ID. The existing inflated-size bound, hash verification, bounded
-cache, and returned-copy allowance still apply. A server that ignores the
-filter cannot make the reader accept a closure. There is no fallback or
-internal retry.
+The verified pack must contain exactly one non-delta commit, tree or blob
+with the requested ID; the Reader still checks its requested type. Existing
+inflated-size, hash, cache and returned-copy bounds apply. A server that
+ignores filtering cannot make the reader accept a closure. There is no
+fallback or internal retry.
 
-## The original reservation still applies
+## The original bounds still apply
 
-Each parent read reserves two Git calls before I/O, 1,024 units of metadata,
-and input work of 32 times its wire allowance. The wire allowance remains
-the requested object maximum plus 8 KiB, capped by the transport allowance.
-The isolated source retains its existing working and returned-payload bounds.
+Each parent read reserves two Git calls before I/O, 1,024 metadata units,
+and input work of 32 times its wire allowance. That allowance remains the
+requested object maximum plus 8 KiB, capped by the transport allowance.
+The isolated source keeps its working and returned-payload bounds.
 
-The capability parser retains fixed flags rather than a reference list or
-unknown capability values. Packet counts and wire bytes remain bounded.
-Pack compaction copies each data byte at most once within the owned buffer.
-These are source bounds on admitted work, not measurements of peak memory,
-CPU instructions, or server work.
+The capability parser retains fixed flags, not a ref list or unknown
+capability values. Packet counts and wire bytes stay bounded. Compaction
+copies each pack byte at most once within the owned buffer. These are source
+bounds on admitted work, not peak-memory, instruction or server-work measures.
 
-One original deadline covers advertisement, fetch, framing, and decoding.
-Expiry abandons the source. A late response cannot start another operation,
-populate its cache, or change the frozen diagnostic. The existing row state,
-retry schedule, pass budget, and credential checks remain unchanged.
+One original deadline covers advertisement, fetch, framing and decoding.
+Every detected expiry abandons the source before cleanup. A late response
+cannot start another operation, populate the cache or change the frozen
+diagnostic. Pending body cancellation cannot renew the source. Row state,
+retry schedule, pass budget and credential checks are unchanged.
 
-## Resumption and validation status
+## Local validation and remaining work
 
-The sampled objects already retry every few seconds. The driver preserves a
-retry wake when parent reading fails. If the new protocol resolves that
-failure, a later wake can continue planning without an operator row reset.
-Successful parent reading alone does not establish that planning fits its
-budget, reaches Mark, or publishes the legacy anchors.
+The maintained parser passed for the two changed mapped owners; only their
+existing seal values were updated. Assertion
+`2c528abfc1c50eee961a78ad628e6cc30c112b39` records the exact outputs and
+unchanged inputs. The first owning attempt passed the Git test compiler,
+both Scope compilers and all three inventory cases, then its wrapper failed
+because it expected four. Neither Vitest file ran. Original failure
+`f0b5a0064cece1b996b0855b6f277bf4c0e8c9f6` remains; parser and inventory
+passes are carried within their source basis.
 
-The maintained D1 parser passed once for the two changed mapped owners.
-Its `archive-host.ts` output is
-`f16f3972e28d1f2bbdc1e98f60f21bc38be82b2d3a3b851e552e6391eb94d0cd`.
-Its `artifacts-host.ts` output is
-`80aac5184db427e83c369ab4d0222276fd7e3fe9792edcacc6d2c3ba6e9e8f2a`.
-Only those two existing map values were updated. Assertion
-`2c528abfc1c50eee961a78ad628e6cc30c112b39` records the natural zero exit,
-unchanged inputs, and actual outputs. Evidence is in
-`/private/tmp/artroom-archive-parent-protocol-parser-20261023-v1`.
-The parser child took 0.482 seconds elapsed. The enclosing guarded operation
-took 3.066 seconds. These overlapping times are not added.
+Checker finding `9ef50640d5c72c7069cce83a85757609032a80a6` exposed a deadline
+gap: synchronous expiry could precede the timer's abandonment flag, and
+cleanup could then clear the timer while cancellation was pending. The fix
+makes expiry terminal before cleanup and rethrows the body's deadline
+refusal without waiting for cancellation. Its strengthened synchronous,
+body, timer and late-result witnesses passed in the next attempt.
 
-The first owning attempt passed the Git test compiler, both Scope compilers,
-and all three security-inventory cases. The wrapper then stopped with exit 1
-because it incorrectly expected four inventory cases. The Git and Scope test
-files did not run. Assertion `f0b5a0064cece1b996b0855b6f277bf4c0e8c9f6`
-retains that outcome and the original evidence at
-`/private/tmp/artroom-archive-parent-protocol-owning-20261023-v1`.
-The guarded attempt took 8.060 seconds elapsed and 12.132 seconds of inclusive
-CPU. Healthy parser and inventory results will be carried forward.
+That continuation ran at clean `07b066ab8f850598e3ba06dcbcaad8e2d5302d52`.
+The Git compiler passed; the whole Git HTTP file had 12 passes and one failure.
+The real local v2 case failed `unreadable: isolated shallow boundary` at its
+first `reader.commit(head)`, test line 422. The later old-commit read was not reached. Scope archive-host remained unrun. Assertion
+`b797b87ac15383432248d49622ff41444599f9b3` records the natural exit 1;
+audit `53f101e0cd4ddd7e0ec237f13aae29646c214a38` preserves all raw counts,
+identities, costs and guards in its finite packet.
 
-Checker finding `9ef50640d5c72c7069cce83a85757609032a80a6` identified an
-inherited deadline gap: synchronous expiry could throw before the timer marked
-the source abandoned. Cleanup could then clear that timer and make the source
-reusable while body cancellation remained pending. The correction makes every detected deadline terminal before cleanup.
-The shared body reader rethrows its deadline refusal without waiting for
-cancellation. The strengthened response-time and body-time clock witnesses
-require the same source to refuse later object and reference reads without
-more I/O while cancellation is pending. Local execution is still pending.
+Checker finding `e80ccaaea8cb1f00669ccac602bf7f79e441fb97` then identified an
+independent text-framing defect. [Git's common pkt-line rule](https://git-scm.com/docs/gitprotocol-common#_pkt_line_format)
+requires accepting non-binary packets with or without a final LF. Git's
+[shallow writer](https://github.com/git/git/blob/master/upload-pack.c#L739-L746)
+omits LF, and its [packet writer](https://github.com/git/git/blob/master/pkt-line.c#L644-L651)
+does not add one. The failure is consistent with this defect, but its local
+response body was not retained. No observation run was added.
 
-The candidate integrates accepted Main before the remaining checks. Its Git
-and Scope protocol files have no upstream overlap. The security inventory keeps
-Main's accepted owners and fourth case, with only the two measured archive
-seals changed. The lock, workspace dependencies, and Vitest configurations are
-unchanged. Accepted native fixture wiring includes the scope index, so the
-remaining Scope test and final gate use that integrated environment. The prior
-compiler results describe their original source. The final gate recompiles the
-integrated head.
+The correction removes at most one final LF before the exact version,
+capability, section-header and shallow-ID checks. It does not trim other
+whitespace or accept CR, embedded LF or doubled LF. Binary sidebands, bounds,
+identity checks, deadlines and refusal rules are unchanged. Existing cases cover both LF spellings and malformed endings. Source handoff
+`0581604764b55269876d014dfe59ffcd0e10c25d` records the correction.
 
-The affected Git compiler, unrun owning tests, final gate, and exact-head review
-remain pending.
-The planned Git witness uses real local `git http-backend` with filtering
-enabled and without the older non-tip-want permission. It must read an old
-commit, a tree, and a blob in two requests each while excluding unrelated
-history and a large sibling. Provider tests use explicit identity, credential,
-and HTTP stand-ins. They must preserve the existing budget and late-result
-checks while showing the different provider protocol choices.
+The corrected owning follow-up passed the Git compiler, all 13 Git HTTP cases
+and all 12 Scope archive-host cases, with no errors, signals or pending steps.
+Outcome `a0b56ba50985a47a34ed76ace11624fb494fbade` records the original run
+and costs. The local Git witness completed its old-commit, tree and blob reads
+in two requests each without unrelated history or a large sibling. Provider
+identity, credential and HTTP stand-ins passed their budget and late-result
+checks. These local passes preserve the earlier failures and prove no hosted
+capability or outage recovery. The final gate and exact-head review remain owed.
 
-Dependencies were adopted by a private APFS copy from the retained diagnostic
-checkout. Assertion `265163c59a9de061ccba02a6b39823978a108e3b` records exact
-bytes, private file identities, target-owned links, and unchanged source
-checkouts. The existing partial npm metadata, compatibility bytes, and lock
-stamp were preserved. This was dependency adoption, not a new installation.
+The single deadline control detected the intended abandonment fault at its
+named assertion. Its child exited 1; the wrapper also exited 1 because JSON
+labelled the failure `Error` while stderr identified `AssertionError`.
+Outcome `48b214025a7ca4927cf8ecb8c2983a78daf6de3a` retains both results,
+exact restoration of the reviewed source, and no rerun.
 
-The planner owns deployment and the later hosted observations. The remaining
-witness must cover successful parent reads, a completed pass through Mark,
-and the resulting archive and legacy-anchor state.
+Main's accepted inventory owners and fourth case remain; only the two archive
+seals changed. Lock, dependencies and Vitest configuration are unchanged; the
+integrated native fixture includes the scope index. The final gate recompiles
+the final head. Private APFS dependency adoption, not installation, is recorded
+in `265163c59a9de061ccba02a6b39823978a108e3b`. Earlier passes retain their
+original source basis.
+
+## What can resume
+
+The sampled objects already retry every few seconds, and a failed parent read
+keeps its retry wake. If the new protocol resolves that refusal, a later wake
+can continue planning without an operator row reset. That does not establish
+budget fit, Mark, or legacy-anchor publication. The planner owns deployment
+and hosted observations: successful parent reads, a completed pass through
+Mark, and the resulting archive and legacy-anchor state remain to be shown.

@@ -393,12 +393,16 @@ function wireEquals(data: Uint8Array, start: number, end: number, text: string):
   for (let i = 0; i < text.length; i++) if (data[start + i] !== text.charCodeAt(i)) return false;
   return true;
 }
+/** Only text pkt-lines drop one optional trailing LF. */
+function wireTextEquals(data: Uint8Array, start: number, end: number, text: string): boolean {
+  return wireEquals(data, start, data[end - 1] === 10 ? end - 1 : end, text);
+}
 
 /** No refs, unknown capability strings, token arrays or growing metadata are retained. */
 function v2Capabilities(data: Uint8Array, maximumPackets: number, deadline: number): void {
   let at = 0, count = 1, fetchSeen = false, formatSeen = false, shallow = false, filter = false;
   const version = v2Frame(data, at);
-  if (version.kind !== "data" || !wireEquals(data, version.start, version.next, "version 2\n")) throw fail("upload advertisement");
+  if (version.kind !== "data" || !wireTextEquals(data, version.start, version.next, "version 2")) throw fail("upload advertisement");
   at = version.next;
   for (;;) {
     beforeDeadline(deadline);
@@ -408,8 +412,8 @@ function v2Capabilities(data: Uint8Array, maximumPackets: number, deadline: numb
       if (at !== data.length) throw fail("upload advertisement");
       break;
     }
-    if (frame.kind !== "data" || data[frame.next - 1] !== 10) throw fail("upload capabilities");
-    const end = frame.next - 1;
+    if (frame.kind !== "data") throw fail("upload capabilities");
+    const end = data[frame.next - 1] === 10 ? frame.next - 1 : frame.next;
     let equals = end;
     // One validation scan, then at most one feature scan. Unknown values
     // remain bounded wire bytes, not retained provider strings.
@@ -444,18 +448,18 @@ function v2Capabilities(data: Uint8Array, maximumPackets: number, deadline: numb
 function v2Pack(data: Uint8Array, id: string, deadline: number): { pack: Uint8Array; boundary: boolean } {
   beforeDeadline(deadline);
   let frame = v2Frame(data, 0), boundary = false;
-  if (frame.kind === "data" && wireEquals(data, frame.start, frame.next, "shallow-info\n")) {
+  if (frame.kind === "data" && wireTextEquals(data, frame.start, frame.next, "shallow-info")) {
     for (;;) {
       beforeDeadline(deadline);
       frame = v2Frame(data, frame.next);
       if (frame.kind === "delimiter") break;
-      if (frame.kind !== "data" || boundary || !wireEquals(data, frame.start, frame.next, `shallow ${id}\n`)) throw fail("isolated shallow boundary");
+      if (frame.kind !== "data" || boundary || !wireTextEquals(data, frame.start, frame.next, `shallow ${id}`)) throw fail("isolated shallow boundary");
       boundary = true;
     }
     frame = v2Frame(data, frame.next);
   }
   // done forbids acknowledgments. No want-ref, URI or sideband-all was requested.
-  if (frame.kind !== "data" || !wireEquals(data, frame.start, frame.next, "packfile\n")) throw fail("upload negotiation");
+  if (frame.kind !== "data" || !wireTextEquals(data, frame.start, frame.next, "packfile")) throw fail("upload negotiation");
   let write = 0;
   for (;;) {
     beforeDeadline(deadline);
