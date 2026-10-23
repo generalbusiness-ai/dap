@@ -202,3 +202,18 @@ remain in `/private/tmp/artroom-k9-context-owning-20261023-v1`. The result
 belongs to those run-input bytes; this later note records it without claiming
 another run. Initial failures and the separate SDK manifest failure remain
 recorded above. No full gate has run at this corrected candidate yet.
+
+## Accepted Main integration
+
+The final candidate merges accepted Main
+`132a5e2afe9cdfddbc81ed434eb9a6dbd48ca2b6` into K9
+`71ae42f3aec41d498dda118826500db05d58666f`. The disjoint merge preserves
+the K9 validator, raw corpus, public testing package closure and exact-context
+corrections. It adopts Main's rollout configuration, registration diagnostics,
+archive protocol and fixture corrections, Lending oracle, and reviewed D1
+map without replacing their accepted bytes. The automatic merge's path modes
+and blobs all match their selected parents; this note is the only authored
+overlay. The dependency lock and root manifest are unchanged. This integration
+runs no new checks. The 1,254-check corpus result
+and prior failures above retain their original attribution; the integrated
+candidate's ordinary gate and exact-head review remain pending.

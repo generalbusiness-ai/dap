@@ -77,6 +77,11 @@
     }
   ],
   "vars": {
+    // Initial rollout only; enforce is a recorded deploy-time --var override.
+    "SCOPE_INDEX_MODE": "register",
+    // Planner-confirmed item 2 and release. This serves the unchanged
+    // placeholder at its sandbox origin, not a standalone Grow UI.
+    "APPLICATION_SCREEN_HOSTS": "[{\"v\":1,\"screenOrigin\":\"https://grow.inguz.space\",\"roomOrigin\":\"https://dap-grow.inguz.workers.dev\",\"directory\":\"sc_ryghgistvpshbaznxlbleop5zqruy2kmogy4jeigr7j3yqlewceq\",\"item\":2,\"presentation\":\"sha256:5bd818a796771c0b6bdd6eac7d5b0fe6ed70358ddc2c33dec82bfd11cd558cf4\"}]",
     "SERVING_CREATION_KEY_PER_HOUR": "10",
     "SERVING_CREATION_ADDRESS_PER_HOUR": "30",
     "SERVING_READ_KEY_PER_MINUTE": "240",

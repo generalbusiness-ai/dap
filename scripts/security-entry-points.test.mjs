@@ -11,7 +11,7 @@ const seals = {
   "apps/room/page/route.ts": "62c8f69b9f516f1b5acdaef57d7aed25268d8cf03283bdffdd4b1b5f20bb6b3d",
   "apps/room/brand/route.ts": "71b45ff9b41b3bea31c775a16525349591e0d4f7dfdc65da79f095816b1c343c",
   "packages/scope/src/worker.ts": "9ee48699b984552477c84373f81fcc42a9c88963b4591655ecbe3c9d5df7fef2", // Actual union parser value adopted by root.
-  "packages/scope/src/scope-index.ts": "b7f06b9365c88e0d7cd9ac27927c994e0cad52156dcd15d286fee60dca469a1c", // New internal lookup/registration boundary.
+  "packages/scope/src/scope-index.ts": "c7abd0c5c5a148630ac4ede762fa951169a6d912a89eb58cadb747ab7544a2ca", // New internal lookup/registration boundary.
   "packages/scope/src/creation-admission.ts": "c45a0ac9231356298e9e2724cc1154bdd40def91b5bdc1e1bf6d14c4331eb42e", // Reviewed R1 ancestry owner; adopted AST value.
   "packages/scope/src/creation-lineage.ts": "fc478ab58d801383fc29f1cab65bd03fc6aa07118a0d6c8376bafe2ead03b404", // Reviewed whole-lineage boundary; adopted AST value.
   "packages/scope/src/creation-declaration.ts": "f14aac1ac8bce20cb8bc254b790ec5e66614ce13e9a72b42ab1a097aee837e72", // Bounded immutable native Directory custody, not authority.
@@ -21,7 +21,7 @@ const seals = {
   "packages/scope/src/applications/route.ts": "0f780b2b47a665f74dd1c65ce4a0b7d6d89e5fdc5973d62f9655ded2c8bd93ed", // Actual union parser value adopted by root.
   "packages/scope/src/item-query-wire.ts": "18c860286adefc1afab7cf14ceceea44c59e78031042aed3d781c5576b73ecea",
   "packages/scope/src/applications/projection-wire.ts": "cecaa88f08db6745013a9cb9fbcb9edee6939b0859c201e0c8057286529f1cdc",
-  "packages/scope/src/object.ts": "9e2fe42f0b6331e2c9a115f3ebc718a359818c34b18eb149ee33a3b8e3e1c503", // R2 target-owned genesis registration.
+  "packages/scope/src/object.ts": "ee8009861e1b87f4932fe617e062cf016b90ad67e4585d29eca6957538edfc45", // R2 target-owned genesis registration.
   "packages/scope/src/core.ts": "189ad7c56b9b772fc241fb10b78ba219627bdb04bef4e8d0ec9c1c3e07c992db",
   "packages/derive/src/genesis.ts": "3cedd7e1124a234aef7f04fb48c25e34c482e6fded7d4423ec666ae41e39c586",
   "packages/derive/src/judge.ts": "222d6d89be14fd62f59857778b0bf7e52f1f0b3d2f5df8d50b533a8f20d8cb14",
@@ -50,16 +50,16 @@ const pendingArchiveSeals = {
   "packages/scope/src/archive-source-window.ts": "5ebf1d481081ae462374a33496b92310617a1bf3af1da675407f26017da3dfb1",
   "packages/scope/src/archive-publication.ts": "9c80517fd5de98545a0042f8fa7675769166de5a6387b9e6b60ddc9e5b68b2a5",
   "packages/scope/src/archive-build.ts": "8ecba805ae96c5e8f854d429878d438f5bca17536fa3ace22152c12b017e9186",
-  "packages/scope/src/archive-driver.ts": "4bb6a4bc663ae67509c1d07d3456420c4009d7f64e3dab9ef2a99a94fb9ef4d4", // Sanitized pass diagnostic; archive operation order and gates remain unchanged.
+  "packages/scope/src/archive-driver.ts": "35510dbb61c75496ac3e0e363d49d1137284671cc4c383582222cca8ee0a3e6d", // Parent-read diagnostic reviewed; actual maintained parser output.
   "packages/scope/src/archive-row.ts": "6387b60a8ecd09a7dd3166ca1dac7f5c3749e61d7e02adf64878cbd8c9cf4412",
   "packages/scope/src/floor-writer.ts": "a55c28f393f59297fe952104b576b275c73c451456afced3d8cac33dc54f2ff4",
-  "packages/scope/src/object.ts": "9e2fe42f0b6331e2c9a115f3ebc718a359818c34b18eb149ee33a3b8e3e1c503", // Must match the separately adopted original owner value above.
+  "packages/scope/src/object.ts": "ee8009861e1b87f4932fe617e062cf016b90ad67e4585d29eca6957538edfc45", // Must match the separately adopted original owner value above.
   "apps/room/worker.grow.ts": "791c2bfcb8b2a62d8f0d8afec627ac76b63be4b9f1ee5de27d3f6c081959bc01",
   "apps/room/archive-policy.ts": "707d55642fa0a35075614d1f7b02149b8a33f5eb128f0e0ef4b54100aaa1897f",
   "apps/room/archive.ts": "fd0e00f874b6607728bc5a63842a64e41799f1041f9c5952978c2d86dfc048a2",
   "packages/scope/src/archive-host-item.ts": "70ac9b23e986d0f399d9e64748381f97ee6c5f7e39971b9dd3a1fa6d700bbf4e",
-  "packages/scope/src/archive-host.ts": "29e262731d46335cb9535b10e2c1de36b6b3a6f8ea42c77be4b628378704dfd7",
-  "packages/scope/src/artifacts-host.ts": "3aaf075454b58ceae380bf9ab667d3a26d173776936ddd63d2bf01bbe865a698",
+  "packages/scope/src/archive-host.ts": "f16f3972e28d1f2bbdc1e98f60f21bc38be82b2d3a3b851e552e6391eb94d0cd", // Parent-read diagnostic reviewed; actual maintained parser output.
+  "packages/scope/src/artifacts-host.ts": "80aac5184db427e83c369ab4d0222276fd7e3fe9792edcacc6d2c3ba6e9e8f2a",
   "packages/scope/src/artifacts-wiring.ts": "3590510139ad5c73a6ff66396b77a83dae5d212bfbcebb332df80154961fd478",
 };
 // Actual maintained parser outputs adopted by root; never infer hashes from intent.

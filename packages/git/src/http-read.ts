@@ -1,8 +1,8 @@
 /**
  * SHA-1 smart-HTTP upload-pack as a Web-only GitSource. Protocol sources:
  * git-scm.com/docs/gitprotocol-http, gitprotocol-pack, gitformat-pack and
- * gitprotocol-capabilities; zlib framing: RFC 1950/1951. No thin pack,
- * sideband, retry or inference of absence from an error. Default reads fetch
+ * gitprotocol-capabilities and gitprotocol-v2; zlib framing: RFC 1950/1951.
+ * No thin pack, retry or inference of absence from an error. Default reads fetch
  * closures; explicit isolated reads require shallow/filter and return only
  * the wanted commit/tree/blob, with no ancestry claim.
  * The caller's maxBytes bounds wire, inflated and retained object bytes;
@@ -31,7 +31,11 @@ export interface PackReadOptions {
   deadline?: number;
 }
 /** Isolation is explicit. Its conservative payload reservation excludes engine/stream metadata and is not measured peak memory. */
-export interface IsolatedObjectReads { ownedBytes: number }
+export interface IsolatedObjectReads {
+  ownedBytes: number;
+  /** Trusted opt-in for object exchanges only. Ref reads and omitted options retain v0. */
+  protocol?: "v2";
+}
 export interface SmartHttpReadOptions extends SmartHttpOptions { isolateObjects?: IsolatedObjectReads }
 // Includes wire chunks/concats, advertisement strings, pack/Blob copies,
 // inflate chunks/concat, retained bytes and one returned copy. Metadata is
@@ -75,6 +79,12 @@ async function readBytes(stream: ReadableStream<Uint8Array> | null, limit: numbe
       chunks.push(new Uint8Array(next.value));
     }
   } catch (e) {
+    if (e instanceof GitRefusal && e.reason === "unreadable" && e.what === "read deadline") {
+      // Let the isolated owner make expiry terminal before its finally.
+      // Cancellation is not proof that this stream's cleanup has settled.
+      void reader.cancel().catch(() => undefined);
+      throw e;
+    }
     await reader.cancel().catch(() => undefined);
     if (e instanceof GitRefusal) throw e;
     throw fail("read body");
@@ -364,10 +374,116 @@ function readPacket(data: Uint8Array, at: number): { line: string | null; next: 
 }
 interface Advertisement { refs: RefTarget[]; ids: Set<string>; capabilities: string[] }
 
+/** Raw framing: a pack sideband is binary, never an ASCII string. */
+function v2Frame(data: Uint8Array, at: number): { kind: "data" | "flush" | "delimiter" | "end"; start: number; next: number } {
+  if (at + 4 > data.length) throw fail("upload pkt-line");
+  let size = 0;
+  for (let i = at; i < at + 4; i++) {
+    const c = data[i]!;
+    const digit = c >= 48 && c <= 57 ? c - 48 : c >= 97 && c <= 102 ? c - 87 : -1;
+    if (digit < 0) throw fail("upload pkt-line");
+    size = size * 16 + digit;
+  }
+  if (size <= 2) return { kind: size === 0 ? "flush" : size === 1 ? "delimiter" : "end", start: at + 4, next: at + 4 };
+  if (size < 5 || size > 65520 || at + size > data.length) throw fail("upload pkt-line");
+  return { kind: "data", start: at + 4, next: at + size };
+}
+function wireEquals(data: Uint8Array, start: number, end: number, text: string): boolean {
+  if (end - start !== text.length) return false;
+  for (let i = 0; i < text.length; i++) if (data[start + i] !== text.charCodeAt(i)) return false;
+  return true;
+}
+/** Only text pkt-lines drop one optional trailing LF. */
+function wireTextEquals(data: Uint8Array, start: number, end: number, text: string): boolean {
+  return wireEquals(data, start, data[end - 1] === 10 ? end - 1 : end, text);
+}
+
+/** No refs, unknown capability strings, token arrays or growing metadata are retained. */
+function v2Capabilities(data: Uint8Array, maximumPackets: number, deadline: number): void {
+  let at = 0, count = 1, fetchSeen = false, formatSeen = false, shallow = false, filter = false;
+  const version = v2Frame(data, at);
+  if (version.kind !== "data" || !wireTextEquals(data, version.start, version.next, "version 2")) throw fail("upload advertisement");
+  at = version.next;
+  for (;;) {
+    beforeDeadline(deadline);
+    if (++count > maximumPackets) throw large("upload advertisement packets");
+    const frame = v2Frame(data, at); at = frame.next;
+    if (frame.kind === "flush") {
+      if (at !== data.length) throw fail("upload advertisement");
+      break;
+    }
+    if (frame.kind !== "data") throw fail("upload capabilities");
+    const end = data[frame.next - 1] === 10 ? frame.next - 1 : frame.next;
+    let equals = end;
+    // One validation scan, then at most one feature scan. Unknown values
+    // remain bounded wire bytes, not retained provider strings.
+    for (let i = frame.start; i < end; i++) {
+      const c = data[i]!;
+      if (equals === end && c === 61) { equals = i; continue; }
+      if (i < equals) {
+        if (!(c >= 65 && c <= 90 || c >= 97 && c <= 122 || c >= 48 && c <= 57 || c === 45 || c === 95)) throw fail("upload capabilities");
+      } else if (c < 32 || c > 126) throw fail("upload capabilities");
+    }
+    if (equals === frame.start || equals < end && equals + 1 === end) throw fail("upload capabilities");
+    if (wireEquals(data, frame.start, equals, "fetch")) {
+      if (fetchSeen) throw fail("upload capabilities");
+      fetchSeen = true;
+      let token = equals + 1;
+      for (let i = token; i <= end; i++) {
+        if (i !== end && data[i] !== 32) continue;
+        if (wireEquals(data, token, i, "shallow")) shallow = true;
+        if (wireEquals(data, token, i, "filter")) filter = true;
+        token = i + 1;
+      }
+    } else if (wireEquals(data, frame.start, equals, "object-format")) {
+      if (formatSeen) throw fail("upload capabilities");
+      formatSeen = true;
+      if (!wireEquals(data, equals + 1, end, "sha1")) throw new GitRefusal("unsupported-object-format", "upload advertisement");
+    }
+  }
+  if (!fetchSeen || !shallow || !filter) throw fail("isolated object capabilities");
+}
+
+/** Exact done-response grammar. Compaction reuses the owned HTTP buffer. */
+function v2Pack(data: Uint8Array, id: string, deadline: number): { pack: Uint8Array; boundary: boolean } {
+  beforeDeadline(deadline);
+  let frame = v2Frame(data, 0), boundary = false;
+  if (frame.kind === "data" && wireTextEquals(data, frame.start, frame.next, "shallow-info")) {
+    for (;;) {
+      beforeDeadline(deadline);
+      frame = v2Frame(data, frame.next);
+      if (frame.kind === "delimiter") break;
+      if (frame.kind !== "data" || boundary || !wireTextEquals(data, frame.start, frame.next, `shallow ${id}`)) throw fail("isolated shallow boundary");
+      boundary = true;
+    }
+    frame = v2Frame(data, frame.next);
+  }
+  // done forbids acknowledgments. No want-ref, URI or sideband-all was requested.
+  if (frame.kind !== "data" || !wireTextEquals(data, frame.start, frame.next, "packfile")) throw fail("upload negotiation");
+  let write = 0;
+  for (;;) {
+    beforeDeadline(deadline);
+    frame = v2Frame(data, frame.next);
+    if (frame.kind === "flush") {
+      // HTTP ends here. remote-curl's helper-only 0002 is not server payload.
+      if (frame.next !== data.length) throw fail("upload negotiation");
+      return { pack: data.subarray(0, write), boundary };
+    }
+    if (frame.kind !== "data") throw fail("upload negotiation");
+    const channel = data[frame.start];
+    if (channel === 1) {
+      const length = frame.next - frame.start - 1;
+      // Destination ends no later than this payload's end, before the next
+      // unread header. Each pack byte moves once; no second pack is allocated.
+      data.copyWithin(write, frame.start + 1, frame.next); write += length;
+    } else if (channel !== 2) throw fail("upload negotiation"); // fatal text is never returned
+  }
+}
+
 /**
  * Verified pack objects are cached by exact ID, privately and bounded.
  * A commit want normally supplies its trees/blobs and ancestry in one pack.
- * An uncached nonadvertised want requires the server's advertised allowance;
+ * A v0 uncached nonadvertised want requires the server's advertised allowance;
  * any denial, missing wanted object, bad pack or HTTP failure rejects.
  * Only a complete advertisement can establish a ref's absence.
  */
@@ -394,6 +510,7 @@ export class SmartHttpSource implements GitSource {
     this.#fetch = options.fetch ?? ((request) => fetch(request));
     this.#options = checked(options);
     this.#isolation = options.isolateObjects === undefined ? undefined : { ...options.isolateObjects };
+    if (this.#isolation?.protocol !== undefined && this.#isolation.protocol !== "v2") throw fail("isolated object capabilities");
     const working = ISOLATED_WORKING_MULTIPLE * this.#options.maxBytes;
     if (this.#isolation && (!Number.isSafeInteger(working) || !Number.isSafeInteger(this.#isolation.ownedBytes) || this.#isolation.ownedBytes < working)) throw large("isolated payload allowance");
     this.#timeoutMs = options.timeoutMs ?? COMMAND_MS;
@@ -401,7 +518,17 @@ export class SmartHttpSource implements GitSource {
   }
   #timely(): void {
     if (this.#abandoned) throw fail("isolated source abandoned");
-    if (this.#deadline !== null && Date.now() >= this.#deadline) throw fail("isolated read deadline");
+    if (this.#deadline !== null && Date.now() >= this.#deadline) {
+      this.#abandon();
+      throw fail("isolated read deadline");
+    }
+  }
+  #abandon(): void {
+    // A deadline consumes this source's reservation even when cancellation
+    // or a detached upstream continuation has not settled.
+    if (this.#abandoned) return;
+    this.#abandoned = true;
+    try { this.#abort?.(); } catch { /* never reuse abandoned work */ }
   }
   #output(bytes: number): void {
     if (!this.#isolation) return;
@@ -413,7 +540,7 @@ export class SmartHttpSource implements GitSource {
   }
   async #isolated<T>(read: () => Promise<T>): Promise<T> {
     if (!this.#isolation) return read();
-    if (this.#abandoned) throw fail("isolated source abandoned");
+    this.#timely();
     if (this.#busy) throw large("concurrent isolated read");
     if (ISOLATED_WORKING_MULTIPLE * this.#options.maxBytes > this.#isolation.ownedBytes - this.#retainedBytes - this.#issuedBytes) throw large("isolated working payload");
     const deadline = Date.now() + this.#timeoutMs;
@@ -425,35 +552,46 @@ export class SmartHttpSource implements GitSource {
       timer = setTimeout(() => {
         // Cancellation is a request, not proof that an upstream or its
         // cleanup settled. Keep this source and its reservation terminal.
-        this.#abandoned = true;
-        try { this.#abort?.(); } catch { /* never reuse abandoned work */ }
+        this.#abandon();
         reject(fail("isolated read deadline"));
       }, this.#timeoutMs);
     });
     try { const result = await Promise.race([read(), expired]); this.#timely(); return result; }
+    catch (error) {
+      // Shared framing/inflation helpers use the original fixed refusal.
+      // Preserve that exact error while making their synchronous expiry terminal.
+      if (error instanceof GitRefusal && error.reason === "unreadable" && (error.what === "read deadline" || error.what === "isolated read deadline")) this.#abandon();
+      throw error;
+    }
     finally {
       if (timer !== undefined) clearTimeout(timer);
       if (!this.#abandoned) { this.#busy = false; this.#deadline = null; }
     }
   }
-  async #request(path: string, media: string, body?: Uint8Array): Promise<Uint8Array> {
+  async #request(path: string, media: string, body?: Uint8Array, protocolV2 = false): Promise<Uint8Array> {
     const controller = new AbortController();
     this.#timely();
     if (body !== undefined && body.length > this.#options.maxBytes) throw large("upload request");
     const duration = this.#deadline === null ? this.#timeoutMs : Math.min(this.#timeoutMs, this.#deadline - Date.now());
-    if (duration <= 0) throw fail("isolated read deadline");
-    const timer = setTimeout(() => controller.abort(), duration);
+    if (duration <= 0) {
+      if (this.#isolation) this.#abandon();
+      throw fail("isolated read deadline");
+    }
+    const timer = setTimeout(() => { if (this.#isolation) this.#abandon(); controller.abort(); }, duration);
     if (this.#isolation) this.#abort = () => controller.abort();
     try {
       const url = `${this.#remote}/${path}`;
       const headers = new Headers({ accept: media, "cache-control": "no-cache" });
+      if (protocolV2) headers.set("git-protocol", "version=2");
       if (this.#authorization !== undefined) headers.set("authorization", this.#authorization);
       if (body !== undefined) headers.set("content-type", "application/x-git-upload-pack-request");
       const init: RequestInit & { credentials: "omit" } = { method: body === undefined ? "GET" : "POST", headers, redirect: "manual", credentials: "omit", signal: controller.signal, ...(body === undefined ? {} : { body }) };
       const response = await this.#fetch(new Request(url, init));
       if (this.#isolation && (this.#abandoned || Date.now() >= this.#deadline!)) {
+        const error = fail(this.#abandoned ? "isolated source abandoned" : "isolated read deadline");
+        this.#abandon();
         void response.body?.cancel().catch(() => undefined);
-        this.#timely();
+        throw error;
       }
       if (response.status !== 200 || response.redirected || (response.url !== "" && response.url !== url) || response.headers.get("content-type")?.split(";", 1)[0]?.trim() !== media) {
         await response.body?.cancel().catch(() => undefined);
@@ -515,34 +653,8 @@ export class SmartHttpSource implements GitSource {
     objectId(id, "read object");
     if (!Number.isSafeInteger(limit) || limit < 0) throw large("object allowance");
     if (!this.#objects.has(id)) {
-      const ad = await this.#advertisement();
-      if (this.#isolation && (!ad.capabilities.includes("shallow") || !ad.capabilities.includes("filter"))) throw fail("isolated object capabilities");
-      // allow-tip alone does not authorize an arbitrary non-tip tree/blob.
-      const allowed = this.#isolation ? ad.capabilities.includes("allow-reachable-sha1-in-want")
-        : ad.capabilities.some(c => c === "allow-tip-sha1-in-want" || c === "allow-reachable-sha1-in-want");
-      if (!ad.ids.has(id) && !allowed) throw fail("unadvertised want");
-      const selected = this.#isolation ? " shallow filter" : ad.capabilities.includes("ofs-delta") ? " ofs-delta" : "";
-      const body = concat([packet(`want ${id}${selected}\n`), ...(this.#isolation ? [packet("deepen 1\n"), packet("filter tree:0\n")] : []), utf8.encode("0000"), packet("done\n")]);
-      if (body.length > this.#options.maxBytes) throw large("upload request");
-      const answer = await this.#request("git-upload-pack", "application/x-git-upload-pack-result", body);
-      let offset = 0, boundary: string | null = null;
-      if (this.#isolation) {
-        for (let count = 0; ; count++) {
-          if (count > 1) throw fail("isolated shallow packets");
-          const line = readPacket(answer, offset); offset = line.next;
-          if (line.line === null) break;
-          const match = /^shallow ([0-9a-f]{40})$/.exec(line.line);
-          if (!match || boundary !== null || objectId(match[1], "shallow object") !== id) throw fail("isolated shallow boundary");
-          boundary = match[1]!;
-        }
-      }
-      const nak = readPacket(answer, offset);
-      if (nak.line !== "NAK") throw fail("upload negotiation");
-      const objects = await decodePack(answer.subarray(nak.next), { ...this.#options, flushAfter: true,
-        ...(this.#isolation ? { bounds: { ...this.#options.bounds, closureObjects: 1 }, singleObjectBytes: Math.min(limit, this.#options.maxBytes), deadline: this.#deadline! } : {}),
-      });
+      const objects = this.#isolation?.protocol === "v2" ? await this.#objectV2(id, limit) : await this.#objectV0(id, limit);
       this.#timely();
-      if (boundary !== null && objects[0]?.type !== "commit") throw fail("isolated shallow object");
       if (!objects.some((o) => o.id === id)) throw fail("wanted object omitted");
       const additions = objects.filter((o) => !this.#objects.has(o.id));
       const bytes = additions.reduce((n, o) => n + o.data.length, 0);
@@ -553,6 +665,50 @@ export class SmartHttpSource implements GitSource {
     const object = this.#objects.get(id)!;
     if (object.data.length <= limit) this.#output(object.data.length);
     return { type: object.type, size: object.data.length, data: object.data.length > limit ? null : new Uint8Array(object.data) };
+  }
+  async #objectV2(id: ObjectId, limit: number): Promise<DecodedObject[]> {
+    const ad = await this.#request("info/refs?service=git-upload-pack", "application/x-git-upload-pack-advertisement", undefined, true);
+    v2Capabilities(ad, this.#options.bounds.refs + 3, this.#deadline!);
+    // v2 want is an exact object ID, not limited to an advertised ref list.
+    // The server still authorizes this request with the same repository credential.
+    const body = concat([packet("command=fetch\n"), utf8.encode("0001"), packet(`want ${id}\n`), packet("deepen 1\n"), packet("filter tree:0\n"), packet("no-progress\n"), packet("done\n"), utf8.encode("0000")]);
+    const answer = await this.#request("git-upload-pack", "application/x-git-upload-pack-result", body, true);
+    const framed = v2Pack(answer, id, this.#deadline!);
+    const objects = await decodePack(framed.pack, { ...this.#options, bounds: { ...this.#options.bounds, closureObjects: 1 }, singleObjectBytes: Math.min(limit, this.#options.maxBytes), deadline: this.#deadline! });
+    this.#timely();
+    if (framed.boundary && objects[0]?.type !== "commit") throw fail("isolated shallow object");
+    return objects;
+  }
+  async #objectV0(id: ObjectId, limit: number): Promise<DecodedObject[]> {
+    const ad = await this.#advertisement();
+    if (this.#isolation && (!ad.capabilities.includes("shallow") || !ad.capabilities.includes("filter"))) throw fail("isolated object capabilities");
+    // allow-tip alone does not authorize an arbitrary non-tip tree/blob.
+    const allowed = this.#isolation ? ad.capabilities.includes("allow-reachable-sha1-in-want")
+      : ad.capabilities.some(c => c === "allow-tip-sha1-in-want" || c === "allow-reachable-sha1-in-want");
+    if (!ad.ids.has(id) && !allowed) throw fail("unadvertised want");
+    const selected = this.#isolation ? " shallow filter" : ad.capabilities.includes("ofs-delta") ? " ofs-delta" : "";
+    const body = concat([packet(`want ${id}${selected}\n`), ...(this.#isolation ? [packet("deepen 1\n"), packet("filter tree:0\n")] : []), utf8.encode("0000"), packet("done\n")]);
+    if (body.length > this.#options.maxBytes) throw large("upload request");
+    const answer = await this.#request("git-upload-pack", "application/x-git-upload-pack-result", body);
+    let offset = 0, boundary: string | null = null;
+    if (this.#isolation) {
+      for (let count = 0; ; count++) {
+        if (count > 1) throw fail("isolated shallow packets");
+        const line = readPacket(answer, offset); offset = line.next;
+        if (line.line === null) break;
+        const match = /^shallow ([0-9a-f]{40})$/.exec(line.line);
+        if (!match || boundary !== null || objectId(match[1], "shallow object") !== id) throw fail("isolated shallow boundary");
+        boundary = match[1]!;
+      }
+    }
+    const nak = readPacket(answer, offset);
+    if (nak.line !== "NAK") throw fail("upload negotiation");
+    const objects = await decodePack(answer.subarray(nak.next), { ...this.#options, flushAfter: true,
+      ...(this.#isolation ? { bounds: { ...this.#options.bounds, closureObjects: 1 }, singleObjectBytes: Math.min(limit, this.#options.maxBytes), deadline: this.#deadline! } : {}),
+    });
+    this.#timely();
+    if (boundary !== null && objects[0]?.type !== "commit") throw fail("isolated shallow object");
+    return objects;
   }
   ref(name: string): Promise<string | null> {
     return this.#isolated(async () => {

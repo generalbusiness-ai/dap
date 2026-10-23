@@ -11,6 +11,7 @@ import type { ArchiveCredential, ArchiveProvider, FixtureArchiveProvider } from 
 import type { DestinationRepository } from "./destination-host.ts";
 import { sendOnce } from "./github-host.ts";
 import { sendArchiveAppend } from "./archive-send.ts";
+import { beginArchiveParentRead, type ArchiveParentReadObservation } from "./archive-parent-read-diagnostic.ts";
 
 /** Explicit stand-ins. Production credentials cannot be selected by config. */
 export interface ArchiveTokens {
@@ -25,6 +26,8 @@ export interface FixtureArchivePorts {
   readonly clock: () => Timestamp;
 }
 interface ArchiveTransport {
+  /** Trusted host choice for isolated objects only; refs and closures keep v0. */
+  readonly isolatedObjectProtocol?: "v2";
   transport(repository: DestinationRepository, plaintext?: string): SmartHttpOptions;
   identity(repository: DestinationRepository, plaintext: string | undefined, allowed: () => boolean): Promise<void>;
 }
@@ -42,16 +45,28 @@ export function fixtureArchiveProvider(ports: FixtureArchivePorts, host: Archive
  * adapter; no request, ledger binding or fixture tag grants it. */
 export function archiveProvider(ports: { readonly tokens: ArchiveTokens; readonly clock: () => Timestamp }, host: ArchiveTransport): ArchiveProvider {
   const { tokens, clock } = ports;
+  const isolatedObjectProtocol = host.isolatedObjectProtocol;
   const held = new WeakMap<ArchiveCredential, { repository: DestinationRepository; at: ScopeRef; ref: string; original: ArchiveCredential }>();
-  const source = async (repository: DestinationRepository, allowed: () => boolean, most?: { bytes: number; objects: number }, isolated = false): Promise<SmartHttpSource> => {
+  const source = async (repository: DestinationRepository, allowed: () => boolean, most?: { bytes: number; objects: number }, isolated = false, observation?: ArchiveParentReadObservation): Promise<SmartHttpSource> => {
     check(allowed); repository = { ...repository }; host.transport(repository); // Validate before the first port call.
+    observation?.phase("token");
     const plaintext = await tokens.read({ ...repository }, allowed); check(allowed);
+    observation?.phase("identity");
     await host.identity(repository, plaintext, allowed); check(allowed);
     const transport = host.transport(repository, plaintext);
     const maxBytes = Math.min(transport.maxBytes, most?.bytes ?? transport.maxBytes);
+    const originalFetch = transport.fetch ?? ((request: Request) => fetch(request));
     return new SmartHttpSource({ ...transport, maxBytes,
+      ...(observation ? { fetch: async function(this: unknown, request: Request) {
+        const get = request.method === "GET";
+        observation.phase(get ? "advertisement-request" : "object-request");
+        const response = await originalFetch.call(this, request);
+        observation.phase(get ? "advertisement-response" : "object-response");
+        return response;
+      } } : {}),
       ...(most === undefined ? {} : { bounds: { ...(transport.bounds ?? READ_BOUNDS), closureObjects: Math.min(transport.bounds?.closureObjects ?? READ_BOUNDS.closureObjects, most.objects) } }),
-      ...(isolated ? { isolateObjects: { ownedBytes: maxBytes * 17 } } : {}) });
+      ...(isolated ? { isolateObjects: { ownedBytes: maxBytes * 17,
+        ...(isolatedObjectProtocol === undefined ? {} : { protocol: isolatedObjectProtocol }) } } : {}) });
   };
   const ref = async (repository: DestinationRepository, name: string, allowed: () => boolean): Promise<string | null> => {
     const input = await source(repository, allowed);
@@ -66,7 +81,7 @@ export function archiveProvider(ports: { readonly tokens: ArchiveTokens; readonl
     async readObject(repository, object, allowed, budget) {
       check(allowed);
       const id = journalId("sha1", object.id), maximum = object.maximum, type = object.type;
-      if (!Number.isSafeInteger(maximum) || maximum < 1 || maximum > 8 * 1024 * 1024 || !["commit", "tree", "blob"].includes(type)) return bad();
+      if (!Number.isSafeInteger(maximum) || maximum < 1 || maximum > 8 * 1024 * 1024 || type !== "commit" && type !== "tree" && type !== "blob") return bad();
       // A single-object exchange has a small, separately bounded allowance
       // for advertisement and framing. Larger replies refuse; no closure
       // fallback or unused transport allowance tops up the original budget.
@@ -74,10 +89,15 @@ export function archiveProvider(ports: { readonly tokens: ArchiveTokens; readonl
       // One exact-object HTTP negotiation/decode, with bounded advertisement
       // and wire work, spends the native pass's original allowance before I/O.
       budget.spend({ calls: 2, metadata: 1024, inputWork: wire * 32 });
-      const input = await source(repository, allowed, { bytes: wire, objects: 1 }, true);
-      const value = await input.object(id, maximum); check(allowed);
-      if (value.type !== type) return bad();
-      return value;
+      const observation = beginArchiveParentRead(budget, type, maximum);
+      try {
+        const input = await source(repository, allowed, { bytes: wire, objects: 1 }, true, observation);
+        observation.phase("object");
+        const value = await input.object(id, maximum); check(allowed);
+        if (value.type !== type) return bad();
+        observation.phase("complete");
+        return value;
+      } catch (error) { observation.refused(error); throw error; }
     },
     async objects(repository, commit, most, allowed) {
       const maximum = { ...most };

@@ -126,7 +126,13 @@ export function indexedScopes(binding: Binding, env: ScopeIndexEnvironment): Bin
         const target = binding.get(binding.idFromName(name)) as Record<string, (...values: unknown[]) => Promise<unknown>>;
         if (!creating && !known) {
           try { if (await target["registerKnown"]!() !== true) return missing(); }
-          catch { return missing(); }
+          catch {
+            // The native method may never have entered (for example, activation failed).
+            // Fixed words only; logging failure cannot change the original refusal.
+            try { console.info("scope-index-registration", { phase: "rpc", outcome: "rejected" }); }
+            catch { /* Observation cannot change registration. */ }
+            return missing();
+          }
         }
         return await target[key]!(...args);
       };
