@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/security-entry-points.test.mjs","body":{"commit":"a9c25125c4e1d1eed15af75f85fd077a6c6e35b2","path":"scripts/security-entry-points.test.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:12dad376322a9503daeb7f80fd445550b167626a","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-23-grow-registration-diagnosis.md."}
