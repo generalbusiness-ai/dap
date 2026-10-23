@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:70c23cd273f6b57c69424972f08a318ed9831916","text":"Merge retired a covered predecessor; the successor is at apps/room/page/src/retained-editor-data.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:70e80cd0119551b26691cc44be7696bea7038822","text":"Merge retired a covered predecessor; the successor is at packages/platform/test/application-install.test.ts."}
