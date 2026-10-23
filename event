@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5dbf0fc62648d6bc244863489c1837ccd9274b6c","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/archive-driver.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d26792adf6cc1fe9e27d61a638c499a98924ea8b","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-23-archive-pass-diagnostic.md."}
