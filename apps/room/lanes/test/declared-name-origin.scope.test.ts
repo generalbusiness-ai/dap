@@ -2,7 +2,7 @@ import { env } from "cloudflare:workers";
 import { isEntryOf } from "@generalbusiness/dap-derive";
 import { namespace, type Sourced } from "@generalbusiness/artroom-scope";
 import { expect, test } from "vitest";
-import { PROPOSED_BOUNDS, type DeclaredDefinition, type Intent, type ScopeRef, type Seed } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type Intent, type ScopeRef, type Seed } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, digestBytes, intentDigest, isSeed, scopeIdOf, seedDigest, signIntent, utf8 } from "@generalbusiness/artroom-bytes";
 import { keys, type Actor } from "@generalbusiness/dap-derive/testing";
 import { APPLICATION_COHORT, firstExtents, publishingLaneOrigin, repositoryName } from "@generalbusiness/dap-platform";
@@ -15,7 +15,7 @@ import type { Platform } from "../../../../packages/scope/test/repository.ts";
 import { reader } from "../../../../packages/scope/test/support.ts";
 import { beginSessionFixture } from "../../../../packages/scope/test/session-settings.ts";
 import { dispatchFixture, effectFixture, nativeFixtureLifetime } from "../../../../packages/scope/test/support/native-fixture-lifetime.ts";
-import { declaredChangeAttack } from "../../../../packages/scope/test/support/declared-change-attack.ts";
+import { namedChangeApplication, foreignDestinationChange } from "./definition-corpus-data.ts";
 
 // Invariant: an arbitrary application cannot acquire a native change lane's
 // destination publication privilege by declaring the same name.
@@ -81,8 +81,7 @@ test("native reserve refuses declared-name applications across rooms and inside 
     // This keeps the same-room name-only control from being masked by the
     // separate birth-kind affiliation check. Its actual factory route is
     // still establish-application, never Native open-pr.
-    const { establish, ...applicationActs } = declaredChangeAttack.acts;
-    const namedApplication = { ...declaredChangeAttack, genesis: "open", acts: { ...applicationActs, open: establish } } satisfies DeclaredDefinition;
+    const namedApplication = namedChangeApplication();
     for (const [label, source, canonical] of [["A-to-B declared", A, false], ["B-to-B declared", B, false],
       ["A-to-B canonical F1", A, true], ["B-to-B canonical F1", B, true]] as const) {
       // This canonical pin carries hold/git-read capabilities. F1's existing
@@ -164,19 +163,7 @@ test("native reserve refuses declared-name applications across rooms and inside 
 test("a genuine Native change extension cannot reserve another room's destination; Git hosts and scheduler are STAND-INs", async ({ task }) => {
   const rita = nativeRita;
   const A = await nativeRoom({ roster: [] }), B = await nativeRoom({ roster: [] });
-  const definition = {
-    ...changeDemo,
-    items: { ...changeDemo.items, merge: {
-      ...changeDemo.items.merge,
-      refs: { ...changeDemo.items.merge.refs, foreign: { fixed: true, required: true, to: { type: "scope", kind: "destination" } } },
-    } },
-    acts: { ...changeDemo.acts, merge: {
-      ...changeDemo.acts.merge,
-      fields: { ...changeDemo.acts.merge.fields, foreign: { type: "scope", kind: "destination", required: true } },
-      effects: [...changeDemo.acts.merge.effects, { ref: { slot: "foreign", from: { field: "foreign" } } }],
-      sends: changeDemo.acts.merge.sends.map(form => ({ tell: { ...form.tell, to: { slot: "foreign" } } })),
-    } },
-  } as const satisfies DeclaredDefinition;
+  const definition = foreignDestinationChange();
   const digest = definitionDigest(definition);
   await A.activate(definition, digest);
   expect(await A.publishRules({ approvals: 0, checks: [], ownerMayReview: false, labels: [], extents: firstExtents({ approvals: 0, checks: [] }) })).toMatchObject({ answer: "accepted" });

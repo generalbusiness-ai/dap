@@ -1,7 +1,9 @@
+import { handlerFormCases } from "./definition-corpus/forms-handlers-cases.ts";
+import { forms_handlers_change0, forms_handlers_change1, forms_handlers_change2 } from "./definition-corpus/forms-handlers-variants.ts";
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { ActType, DeclaredDefinition, FieldValue, Request, Result } from "@generalbusiness/dap-contract";
-import { MemoryState, messageFacts, validateDefinition, type Fetched, type ProblemCode } from "../src/index.ts";
+import type { FieldValue, Request, Result } from "@generalbusiness/dap-contract";
+import { MemoryState, messageFacts, validateDefinition, type Fetched } from "../src/index.ts";
 import { Scope, arrive, decided, deliver, fields, keys, on, ticket, ticketDefinition, valid, variant } from "./fixtures-entry.ts";
 
 const { rita } = keys;
@@ -13,74 +15,8 @@ const { rita } = keys;
  * pinned card, through the board's slot; the tally, which only a handler
  * opens; and, in `add`, the parent that an optional field names.
  */
-const text = { type: "text", max: 100 } as const;
-const slot = { fixed: false, required: false } as const;
-const live = { open: { final: false }, done: { final: true } };
-const act = (a: Partial<ActType> & Pick<ActType, "step" | "on" | "grant">): ActType => ({ also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [], ...a });
-const board: DeclaredDefinition = {
-  format: "artroom-definition-1", name: "board", profile: { name: "restricted", version: 1 }, capabilities: [], genesis: "start",
-  items: {
-    board: { many: false, max: 1, states: { open: { final: false } }, initial: "open", parties: { owner: { fixed: true, required: true, list: false, author: false } }, refs: { pinned: { ...slot, to: { type: "item", of: "card" } } }, values: {} },
-    card: {
-      many: true, max: 3, states: live, initial: "open", parties: {},
-      refs: { parent: { fixed: true, required: false, to: { type: "item", of: "card" } }, postedAt: { ...slot, to: { type: "fact", kind: ["post"], under: "board" } }, peer: { ...slot, to: { type: "scope", kind: "lane" } } },
-      values: { note: { ...slot, of: text }, echo: { ...slot, of: text } },
-    },
-    tally: { many: false, max: 1, states: { kept: { final: false }, shut: { final: true } }, initial: "kept", parties: {}, refs: {}, values: { last: { ...slot, of: text } } },
-  },
-  acts: {
-    start: act({ step: "open", on: "board", grant: "start", fields: { opener: { type: "member", required: true } }, effects: [{ party: { slot: "owner", from: { field: "opener" } } }] }),
-    add: act({
-      step: "open", on: "card", grant: "write", fields: { parent: { type: "item", of: "card", required: false }, note: { ...text, required: true } },
-      also: { parent: { item: "card", by: "parent" }, board: { item: "board", one: true } },
-      guards: [{ of: "also.parent", state: ["open"], reason: "parent-done" }], effects: [{ value: { slot: "note", from: { field: "note" } } }],
-    }),
-    // By a local fact: the card that the named `add` entry opened.
-    reply: act({
-      step: "open", on: "card", grant: "write", fields: { to: { type: "fact", kind: ["add"], under: "board", required: true } }, also: { to: { item: "card", by: "to" } },
-      guards: [{ of: "also.to", state: ["open"], reason: "parent-done" }],
-    }),
-    pin: act({ step: "transition", on: "board", grant: "write", fields: { card: { type: "item", of: "card", required: true } }, guards: [{ state: ["open"] }], effects: [{ ref: { slot: "pinned", from: { field: "card" } } }] }),
-    done: act({ step: "transition", on: "card", grant: "write", guards: [{ state: ["open"] }], effects: [{ state: "done" }] }),
-    shut: act({ step: "transition", on: "tally", grant: "write", guards: [{ state: ["kept"] }], effects: [{ state: "shut" }] }),
-    recount: act({ step: "open", on: "tally", grant: "write" }),
-    note: act({
-      step: "transition", on: "card", grant: "write", fields: { note: { ...text, required: true } },
-      also: { pinned: { item: "card", via: { slot: "pinned", of: "also.board" } }, board: { item: "board", one: true }, tally: { item: "tally", one: true } },
-      // The guard on the tally is nested in a form. The last effect's condition reads the tally, and would hold on none.
-      guards: [{ state: ["open"] }, { of: "also.pinned", state: ["open"], reason: "pinned-done" }, { anyOf: [[{ of: "also.tally", equals: { a: { slot: "last" }, b: { field: "note" } } }]], reason: "not-the-last" }],
-      effects: [
-        { value: { slot: "note", from: { field: "note" } } }, { of: "also.pinned", value: { slot: "note", from: { field: "note" } } },
-        { value: { slot: "echo", from: { field: "note" } }, if: [{ differs: { a: { slot: "last", of: "also.tally" }, b: { field: "note" } } }] },
-      ],
-    }),
-  },
-  receives: {
-    post: {
-      message: "post", class: "tell", from: { kind: "lane" }, opens: "card",
-      fields: {
-        text: { ...text, required: true }, about: { type: "item", of: "card", required: false }, proof: { type: "fact", kind: ["link"], under: "ticket", required: false },
-        // A record that names a card, and a list of such records.
-        under: { type: "record", of: { card: { type: "item", of: "card", required: true } }, required: false },
-        beside: { type: "list", of: { type: "record", of: { card: { type: "item", of: "card", required: true } } }, max: 2, required: false },
-      },
-      also: { about: { item: "card", by: "about" } },
-      guards: [{ of: "also.about", state: ["open"], reason: "about-done" }, { equals: { a: { field: "proof", part: "kind" }, b: { const: "link" } }, ifPresent: true, reason: "not-a-link" }],
-      effects: [{ value: { slot: "note", from: { field: "text" } } }, { ref: { slot: "postedAt", from: "self" } }], sends: [], attention: [],
-    },
-    count: {
-      message: "count", class: "tell", from: { kind: "lane" }, opens: "tally", fields: { text: { ...text, required: true } }, also: {}, guards: [],
-      effects: [{ value: { slot: "last", from: { field: "text" } } }], sends: [], attention: [],
-    },
-    // Opens a card and tells the lane that asked. The clause of that request changes the card, and the tally if this entry found one.
-    relay: {
-      message: "relay", class: "tell", from: { kind: "lane" }, opens: "card", fields: { peer: { type: "scope", kind: "lane", required: true } }, also: { tally: { item: "tally", one: true } }, guards: [],
-      effects: [{ ref: { slot: "peer", from: { field: "peer" } } }], attention: [],
-      sends: [{ tell: { to: { slot: "peer" }, message: "seen", fields: {}, result: { applied: [{ value: { slot: "note", from: { const: "answered" } } }, { of: "also.tally", value: { slot: "last", from: { const: "answered" } } }] } } }],
-    },
-  },
-  timed: {}, rules: {},
-};
+import { board } from "./definition-corpus/forms-handlers-data.ts";
+
 const boardDefinition = valid(validateDefinition(board, PROPOSED_BOUNDS));
 
 /** A board B, and a lane X whose entries are made by hand: each holds one send to B, and nothing judged it. */
@@ -126,14 +62,7 @@ describe("subjects and handlers (sections 6.4 and 7.3)", () => {
   });
 
   test("a relationship update runs the handler of its name: a first update past `copies` is `type-full`, an update of a key that is held is not, and an update with no handler keeps no copy", () => {
-    const once = variant(ticket, (d) => {
-      d.receives.closes.copies = 1;
-      d.acts.follow = structuredClone(d.acts.link);
-      d.acts.follow.sends[0].relate.name = "follows";
-      // A `tell` of the same name is another message, with its own handler, which takes no field.
-      const { copies: _, ...closes } = structuredClone(d.receives.closes);
-      d.receives = { told: { ...closes, class: "tell", fields: {}, effects: [] }, ...d.receives };
-    });
+    const once = variant(ticket, forms_handlers_change0);
     const P = new Scope(once);
     const I = new Scope(once, rita.member, true, 1);
     const link = (kind = "link") => P.did(rita, kind, fields({ target: I.at, about: 0 })).seq;
@@ -157,7 +86,7 @@ describe("subjects and handlers (sections 6.4 and 7.3)", () => {
 
     // No handler is for the relationship `follows`. And one whose `from` names another definition is not for this sender.
     deliver(I, P, link("follow"));
-    const other = new Scope(variant(ticket, (d) => { d.receives.closes.from.under = "board"; }), rita.member, true, 2);
+    const other = new Scope(variant(ticket, forms_handlers_change1), rita.member, true, 2);
     deliver(other, P, P.did(rita, "link", fields({ target: other.at, about: 0 })).seq);
     for (const s of [I, other]) expect([decided(s), s.last.effects, s.state.all().relations.length]).toEqual([["refused", "unknown-message"], [], s === I ? 1 : 0]);
     expect(I.replay().snapshot()).toBe(I.state.snapshot());
@@ -217,7 +146,7 @@ describe("subjects and handlers (sections 6.4 and 7.3)", () => {
     expect([decided(B), B.last.uses.map((u) => u.fact).at(-1), B.last.uses.length]).toEqual([["applied"], proof.fact, 2]);
 
     // A handler for a sender under another definition does not receive the message, so its declared fields name nothing to fetch.
-    const under = variant(board, (d) => { d.receives.post.from.under = "ticket"; });
+    const under = variant(board, forms_handlers_change2);
     const message = { class: "request", type: "tell", body: { message: "post", fields: { text: "f", proof: proof.fact } } } as const;
     expect(["ticket", "desk"].map((sender) => messageFacts(B.state, under, message, X.fact(1), B.bounds, sender))).toEqual([[proof.fact], []]);
   });
@@ -238,47 +167,10 @@ describe("subjects and handlers (sections 6.4 and 7.3)", () => {
   });
 
   test("the validator refuses a name that selects nothing it can check, and a handler that is not the form of its class", () => {
-    const refusal = (base: DeclaredDefinition, change: (d: any) => void) => {   // eslint-disable-line @typescript-eslint/no-explicit-any
-      const d = structuredClone(base);
-      change(d);
-      const result = validateDefinition(d, PROPOSED_BOUNDS);
-      return result.ok ? null : [...new Set(result.problems.map((p) => p.code))];
-    };
-    const inBoard = (change: (d: any) => void) => refusal(board, change);   // eslint-disable-line @typescript-eslint/no-explicit-any
-    const rows: [string, ProblemCode[] | null, ProblemCode | null][] = [
-      ["a field of a fact whose entry opens another type", inBoard((d) => { d.acts.reply.fields.to.kind = ["start"]; }), "name"],
-      ["a field of a fact under another definition", inBoard((d) => { d.acts.reply.fields.to.under = "ticket"; }), "name"],
-      ["a slot that holds no item of that type", inBoard((d) => { d.acts.note.also.pinned.item = "board"; }), "name"],
-      ["the slots of an item that the act opens", inBoard((d) => { d.acts.add.also.next = { item: "card", via: { slot: "parent", of: "on" } }; }), "name"],
-      ["two names that each read the other's slot", inBoard((d) => { d.acts.note.also = { x: { item: "card", via: { slot: "parent", of: "also.y" } }, y: { item: "card", via: { slot: "parent", of: "also.x" } } }; d.acts.note.guards.length = 1; d.acts.note.effects.length = 1; }), "name"],
-      ["a name that reads a slot of an earlier name, in any order of the names, passes", inBoard((d) => { d.acts.note.also = { a: { item: "card", via: { slot: "parent", of: "also.z" } }, z: { item: "card", via: { slot: "parent", of: "on" } } }; d.acts.note.guards.length = 1; d.acts.note.effects.length = 1; }), null],
-      ["`one` of a type that is `many`", inBoard((d) => { d.acts.add.also.board.item = "card"; }), "name"],
-      ["two ways to select one name", inBoard((d) => { d.acts.add.also.board.by = "parent"; }), "shape"],
-      ["a result clause that names an item selected through a slot which may change", inBoard((d) => {
-        d.items.board.refs.peer = { fixed: false, required: false, to: { type: "scope", kind: "lane" } };
-        d.acts.note.sends = [{ tell: { to: { slot: "peer" }, message: "seen", fields: {}, result: { applied: [{ of: "also.pinned", value: { slot: "note", from: { const: "told" } } }] } } }];
-        d.acts.note.on = "board"; d.acts.note.guards = []; d.acts.note.effects = []; d.acts.note.also = { pinned: { item: "card", via: { slot: "pinned", of: "on" } } };
-      }), "name"],
-
-      ["a handler with no class", inBoard((d) => { delete d.receives.post.class; }), "shape"],
-      ["a class the contract does not define", inBoard((d) => { d.receives.post.class = "ask"; }), "shape"],
-      ["a tell and a relate handler for one name pass", inBoard((d) => { d.receives.again = { ...structuredClone(d.receives.count), class: "relate", copies: 1 }; }), null],
-      ["a relate handler that states no number of copies", refusal(ticket, (d) => { delete d.receives.closes.copies; }), "shape"],
-      ["a number of copies on a tell handler", inBoard((d) => { d.receives.post.copies = 2; }), "shape"],
-      ["an advisory handler for a message that is no advisory type", inBoard((d) => { d.receives.count.class = "advisory"; }), "name"],
-      ["an advisory handler that tells a member", inBoard((d) => { Object.assign(d.receives.count, { class: "advisory", message: "index", attention: [{ notify: { slot: "owner", of: "also.board", when: "after", reason: "counted" } }], also: { board: { item: "board", one: true } } }); }), "advisory-sends"],
-      ["an advisory handler that sets a fact slot from self: its entry has no kind", inBoard((d) => { Object.assign(d.receives.post, { class: "advisory", message: "index" }); d.items.card.refs.postedAt.to.kind = ["index"]; }), "name"],
-      // Section 6.6: the source entry is under the definition that the handler's `from` names.
-      ["the source entry into a fact slot under another name than the sender's definition", inBoard((d) => { d.receives.post.from.under = "ticket"; d.receives.post.effects[1].ref.from = { source: "ref" }; }), "name"],
-      ["the source entry into a fact slot under the sender's definition passes", inBoard((d) => { d.receives.post.from.under = "ticket"; d.receives.post.effects[1].ref.from = { source: "ref" }; d.items.card.refs.postedAt.to.under = "ticket"; }), null],
-      ["a field of a message with a default", inBoard((d) => { d.receives.post.fields.about.default = 1; }), "shape"],
-      ["a handler that opens no item type", inBoard((d) => { d.receives.post.opens = "page"; }), "name"],
-      ["a handler's guard on the item it opens", inBoard((d) => { d.receives.post.guards.push({ state: ["open"] }); }), "nascent-guard"],
-      ["a handler whose opening leaves a required slot unset", inBoard((d) => { d.items.card.values.note.required = true; d.receives.post.effects.shift(); }), "required-unset"],
-      ["a handler that sets a fixed slot of the one item of its type, which may exist already", inBoard((d) => { d.items.tally.values.last.fixed = true; }), "fixed"],
-      ["a handler that sets the state of the one item of its type, which may be final already", inBoard((d) => { d.items.tally.states.shut = { final: true }; d.receives.count.effects.push({ state: "kept" }); }), "final"],
-      ["`self` from a handler into a fact slot whose kinds do not include its message", inBoard((d) => { d.items.card.refs.postedAt.to.kind = ["count"]; }), "name"],
-    ];
+    const rows = handlerFormCases().map(([name, make, code]) => {
+      const result = validateDefinition(make(), PROPOSED_BOUNDS);
+      return [name, result.ok ? null : [...new Set(result.problems.map(p => p.code))], code] as const;
+    });
     expect(rows.filter(([, matched, code]) => (code === null ? matched !== null : matched?.length !== 1 || matched[0] !== code)).map(([name, matched]) => [name, matched])).toEqual([]);
   });
 });

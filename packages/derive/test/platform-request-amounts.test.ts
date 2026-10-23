@@ -1,3 +1,4 @@
+import { platformOperationRequestData } from "./definition-corpus/derive-reservation-variants.ts";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type PlatformData, type PlatformSend } from "@generalbusiness/dap-contract";
 import { clockOf, fits, judgeDelivery, judgeGenesis, reserved, validateDefinition } from "../src/index.ts";
@@ -41,8 +42,7 @@ test("state and marker duties fund a settling mark's item and its future request
   expect(refused.ok).toBe(false);
   if (!refused.ok) expect(refused.problems).toContainEqual(expect.objectContaining({ code: "reserve-unbounded", path: "acts.finish-row" }));
 
-  const operations = structuredClone(settlingPlatformMarks().declared) as PlatformData;
-  operations.acts["resolve-note"]!.effects = [...operations.acts["resolve-note"]!.effects, { code: "open-noop", row: "P5", most: { effects: 2, operations: ["noop"] } }];
+  const operations = platformOperationRequestData();
   const counted = validateDefinition(operations, PROPOSED_BOUNDS, undefined, { platform: true });
   expect(counted.ok).toBe(true);
   if (counted.ok) expect(counted.definition.pendingWorkAmounts.pending["note"]!["waiting"]).toEqual({ entries: 7, items: 2, records: 0, bytes: 8 * E, requests: 1 });

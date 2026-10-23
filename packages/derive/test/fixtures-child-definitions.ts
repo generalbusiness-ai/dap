@@ -1,13 +1,11 @@
 /** Real digest-addressed made-up declarations; no registry or provider. */
-import type { Digest } from "@generalbusiness/dap-contract";
-import { notesDefinition, variant } from "./fixtures.ts";
+import { PROPOSED_BOUNDS, type Digest } from "@generalbusiness/dap-contract";
+import { validateDefinition } from "../src/index.ts";
+import { valid } from "./fixtures.ts";
+import { childDeclaration } from "./definition-corpus/child-definitions-data.ts";
 
 function declaration(name: string, children: readonly Digest[], whole = false) {
-  return variant(notesDefinition.declared, d => {
-    d.name = name;
-    if (whole) d.capacity = { name: "whole-scope", version: 1 };
-    d.acts.children = { ...structuredClone(d.acts.vouch), presents: {}, guards: [], effects: [], sends: children.map(definition => ({ create: { kind: "lane", definition, fields: {}, result: {} } })) };
-  });
+  return valid(validateDefinition(childDeclaration(name, children, whole), PROPOSED_BOUNDS));
 }
 
 export function childDefinitions(whole = true) {

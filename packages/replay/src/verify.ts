@@ -1037,7 +1037,8 @@ class Verifier {
     if (checked.ok) return checked.definition;
     // Section 9.3: a history whose genesis opens a timed item is invalid.
     if (checked.problems.some((p) => p.code === "genesis-timed")) throw new Stop("mismatch", "genesis-timed: the pinned definition's genesis act opens a timed item", where);
-    throw new Stop("unsupported-definition", `the pinned definition does not pass validation under the bounds given: ${checked.problems[0]?.code ?? "unknown"} at ${checked.problems[0]?.path ?? ""}`, where);
+    const formatProblem = checked.problems.find((problem) => problem.code === "unsupported-definition" && problem.path === "format");
+    throw new Stop("unsupported-definition", `the pinned definition does not pass validation under the bounds given: ${checked.problems[0]?.code ?? "unknown"} at ${checked.problems[0]?.path ?? ""}${formatProblem ? `: ${formatProblem.message}` : ""}`, where);
   }
 
   /**
@@ -1058,7 +1059,10 @@ class Verifier {
     try {
       checked = validateDefinition(parseStrict(canonicalize(supplied.data)), this.#bounds, RULE_PROFILES, { platform: true, outcomeValues: outcomeValueDomains(supplied.data, supplied.rules) });
     } catch { /* data with no canonical bytes is no definition */ }
-    if (!checked?.ok || checked.definition.declared.name !== platformName(named)) throw new Stop("unsupported-definition", `the data that this replay was given for ${named} is not a platform definition of that name under the bounds given`, where);
+    if (!checked?.ok || checked.definition.declared.name !== platformName(named)) {
+      const formatProblem = checked && !checked.ok ? checked.problems.find((problem) => problem.code === "unsupported-definition" && problem.path === "format") : undefined;
+      throw new Stop("unsupported-definition", `the data that this replay was given for ${named} is not a platform definition of that name under the bounds given${formatProblem ? `: ${formatProblem.message}` : ""}`, where);
+    }
     const needs = checked.definition.underived.find((u) => !this.#capabilities?.implements(u));
     if (needs) throw new Stop("unsupported-definition", `the pinned definition needs ${needs.capability}, which this replay has no code for: ${needs.form} ${needs.name} at ${needs.path}`, where);
     const lacks = checked.definition.marks.find((mark) => ruleAt(supplied.rules, mark.code, mark.kind) === null);

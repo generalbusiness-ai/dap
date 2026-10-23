@@ -1,9 +1,11 @@
+import { row, adoptedObservationRows, openingObservationRows, narrowRetainedLimit, withoutRetainedPlace } from "./definition-corpus/forms-observes-variants.ts";
+import { observationRuntimeChange0, observationRuntimeChange1, observationRuntimeChange2, observationRuntimeChange3, observationRuntimeChange4, observationRuntimeChange5, observationRuntimeChange6, observationRuntimeChange7 } from "./definition-corpus/forms-observes-variants.ts";
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS, RETAINED_INPUT_BYTES } from "@generalbusiness/dap-contract";
 import type { FactUse, Input, KeyId, MemberId, Observation, ObservationUse, OperationId, Send } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, factRefOf, isEntry, isObservationUse, signIntent } from "@generalbusiness/artroom-bytes";
 import { PROFILES, actNeeds, clockOf, contentChecked, contentStates, judgeDelivery, observationBytes, retainable, retainableByRequest, rowsOfAct, rowsOfKind, settleOutcome, validateDefinition, valueDigest, type ActJudgment, type Fetched, type Judgment, type Observing, type OutcomeJudgment, type RuleGiven, type Subject } from "../src/index.ts";
-import { Scope, T0, arriving, forged, grantOf, keys, membership, otherLane, t, EXTENTS, EXTENTS_MAX, RULEBOOK, STEP_ROWS, holdersSeen, keySeen, memberSeen, rulebook, rulesSeen, signers, stating, weighed, weigher, weigherRules, weigherWith, type Seen } from "./fixtures-entry.ts";
+import { Scope, T0, arriving, forged, grantOf, keys, membership, otherLane, t, EXTENTS, EXTENTS_MAX, RULEBOOK, holdersSeen, keySeen, memberSeen, rulebook, rulesSeen, signers, stating, weighed, weigher, weigherRules, weigherWith, type Seen } from "./fixtures-entry.ts";
 
 // Scope contract, revisions 20 and 21, sections 6.1 and 16.1; witnesses 18.46, 18.48, 18.50 and 18.52; source rows I3-39, I3-41,
 // I3-42, I3-43, I3-53 and I3-56. STAND-INS: the platform data `weigher` and every rule of it are made up (`fixtures-observes.ts`),
@@ -15,13 +17,13 @@ const { rita, una, vic, paul, sam } = keys;
 type Change = (data: any) => void;
 /** The problems of the made-up data with one change, each as its code and its path. Null: it validates. */
 const problems = (change: Change, platform = true): string[] | null => { const v = weighed(change, platform); return v.ok ? null : [...new Set(v.problems.map((p) => `${p.code} ${p.path}`))]; };
-const row = (over: object = {}) => ({ of: "member", from: { field: "a" }, max: 1, window: 300, use: "reuse", ...over });
+
 const kindRow = (over: object = {}) => ({ of: "key", from: "rule", max: 3, window: 10, use: "once", without: "wait", ...over });
 
 describe("the rows of `observes` in a definition (section 16.1, the ten checks)", () => {
   test("18.46 cases 1 to 3, and 18.52 cases 1 to 4: the made-up data validates with the platform option; a row of an act that states a rule, the signer, a slot of a name that a mark binds, or `second` does not; and without the option the member is unknown", () => {
     // 18.46 case 1, and 18.52 case 1: each row passes the ten checks. The data states rows, so its entries are judged by them.
-    expect([problems(() => {}), problems((d) => { d.outcomes.weigh.origin = "opening"; d.outcomes.weigh.observes = STEP_ROWS; }), weigherWith().observing]).toEqual([null, null, true]);
+    expect([problems(() => {}), problems(openingObservationRows), weigherWith().observing]).toEqual([null, null, true]);
     // 18.46 case 2: a row of an act states an operand.
     expect(problems((d) => { d.acts["set-checks"].observes[0].from = "rule"; })).toEqual(["name acts.set-checks.observes.0.from"]);
     // 18.46 case 3: as a declared definition the member is unknown, on an act, on a send and on a kind. No pinned lane definition states it.
@@ -116,13 +118,7 @@ describe("the rows of `observes` in a definition (section 16.1, the ten checks)"
   });
 
   test("the adopted observation counts fit: 65 authors, a merger and eight other keys, the rules and one holder; exceeding the key budget still refuses the data", () => {
-    const rows = [
-      { of: "rules", window: 10, use: "once", without: "write" },
-      { of: "key", from: "rule", max: 1, window: 10, use: "once", without: "write" },
-      { of: "holders", action: "rules.publish", most: 1, window: 10, use: "once", without: "write" },
-      { of: "member", from: "rule", max: 65, second: true, window: 10, use: "once", without: "write" },
-      { of: "key", from: "rule", max: 8, second: true, window: 10, use: "once", without: "write" },
-    ];
+    const rows = adoptedObservationRows();
     expect(problems((data) => { data.outcomes.weigh.observes = rows; })).toBeNull();
     expect(problems((data) => { data.outcomes.weigh.observes = rows.map((row, n) => n === 4 ? { ...row, max: 64 } : row); })).toContain("bound outcomes.weigh.observes");
   });
@@ -131,9 +127,9 @@ describe("the rows of `observes` in a definition (section 16.1, the ten checks)"
     // The byte reservation itself, 1,186,432 against 786,432, is the reservation ledger's: no source counts bytes against a budget
     // (section 17.5; I3 deltas, entry GA8). This is the term that the rows give it: 400,000, and nothing without the row.
     const go = (definition = weigherWith()) => definition.declared.acts["go"]!.sends[0]!;
-    expect([retainableByRequest(go()), retainableByRequest(go(weigherWith((d) => { delete d.acts.go.sends[0].tell.observes; })))]).toEqual([EXTENTS_MAX, 0]);
+    expect([retainableByRequest(go()), retainableByRequest(go(weigherWith(observationRuntimeChange0)))]).toEqual([EXTENTS_MAX, 0]);
     // A `conflict` result is new work and is not reserved. A kind of `outcomes` and an act count their own rows.
-    const both = weigherWith((d) => { d.acts.go.sends[0].tell.observes = { refused: [{ of: "rules", window: 10, use: "once", without: "wait", retains: [{ domain: EXTENTS, max: 7 }, { domain: "x-other-1", max: 5 }] }] }; });
+    const both = weigherWith(observationRuntimeChange1);
     expect([retainableByRequest(go(both)), retainable(rowsOfKind(weigher, "weigh")), retainable(rowsOfAct(weigher.acts["set"]))]).toEqual([12, 0, 0]);
   });
 });
@@ -184,7 +180,7 @@ describe("an act with rows (section 16.1; witness 18.46, cases 4 to 6 and 16; wi
   });
 
   test("18.52 case 10, and 18.46 case 16: the signer's own member is served by the grant's observation inside the row's window, and `observed` holds no record of it; a rule of a form that states no row has a fault when it reads an observation; and an entry of such a form has the bytes it had", () => {
-    const s = new Scope(weigherWith((data) => { data.acts["own"] = { ...data.acts["peek"]!, observes: data.acts["set"]!.observes }; }));
+    const s = new Scope(weigherWith(observationRuntimeChange2));
     const read: ObservationUse[] = [];
     const supplied = weigherRules();
     const reading = { ...supplied, rules: { ...supplied.rules, sees: { place: "guard" as const, refusals: ["unseen"], run: (given: RuleGiven) => {
@@ -203,7 +199,7 @@ describe("an act with rows (section 16.1; witness 18.46, cases 4 to 6 and 16; wi
     expect(said(s.act(una, "set", { fields: { a: una.member } }, { ...context([], READABLE), grants: grants(300) }))).toEqual(["unavailable", "authority-unavailable", [[{ member: "@una" }, 300, false]]]);
     expect(said(s.act(una, "set", { fields: { a: vic.member } }, { ...context([]), grants: grants(40) }))).toEqual(["unavailable", "authority-unavailable"]);
     // A once-only row cannot be served by a reused grant. Its fresh grant can serve it without a further observation.
-    const once = new Scope(weigherWith((data) => { data.acts["own"] = { ...data.acts["peek"]!, observes: data.acts["set"]!.observes }; data.acts["own"]!.observes![0]!.use = "once"; }));
+    const once = new Scope(weigherWith(observationRuntimeChange3));
     const onceGrant = { ...grantOf(una, once.at, ["weigher.set"]), fresh: proof(40) };
     expect(said(once.act(una, "own", { on: 0, expected: { on: once.item(0).revision }, fields: { a: una.member } }, { ...context([]), grants: [{ grant: onceGrant, current: true }] }))).toEqual(["unavailable", "authority-unavailable"]);
     expect(said(once.act(una, "own", { on: 0, expected: { on: once.item(0).revision }, fields: { a: una.member } }, { ...context([]), grants: [{ grant: { ...onceGrant, fresh: { ...proof(40), use: "fresh", prior: null } }, current: true }] }))).toEqual(["write", null]);
@@ -248,10 +244,7 @@ describe("an outcome with rows, and its origin (sections 6.1 and 16.1; witness 1
   const blank = (): Seen => ({ rows: [], read: [], named: [] });
 
   test("a shared subject keeps one record for both phases: a fresh short-window read wins over an earlier reused read; without it only the looser row is whole", () => {
-    const g = made((data) => { data.outcomes.weigh.observes = [
-      { of: "key", from: "rule", max: 1, window: 300, use: "reuse", without: "write" },
-      { of: "key", from: "rule", max: 1, second: true, window: 10, use: "once", without: "write" },
-    ]; });
+    const g = made(observationRuntimeChange4);
     const prior = { seq: g.origin.seq, hash: entryHash(g.origin) };
     const old: ObservationUse = { ...keySeen(k1, "@una", 1), use: "reused", prior };
     const fresh = keySeen(k1, "@una", 2, t(55));
@@ -301,7 +294,7 @@ describe("an outcome with rows, and its origin (sections 6.1 and 16.1; witness 1
     const reused = { ...seen2, use: "reused" as const, prior };
     const last = { last: (use: ObservationUse) => (use.read.n === 3 ? { entry: prior, time: T0, observation: seen2.observation as never } : null) };
     expect(said(settleWith(g, blank(), [rules, seen1, reused, holders], last))).toEqual(["unavailable", "authority-unavailable"]);
-    const patient = made((d) => { d.outcomes.weigh.observes[1].use = "reuse"; });
+    const patient = made(observationRuntimeChange5);
     patient.s.now = t(8);
     expect(numbers(settleWith(patient, blank(), [rules, seen1, reused, holders], last))).toEqual([1, 2, 3, 4]);
 
@@ -331,7 +324,7 @@ describe("an outcome with rows, and its origin (sections 6.1 and 16.1; witness 1
   });
 
   test("18.52 cases 5 to 9: the second step names its subjects from the observation of the first; a subject of both steps is one record; a row that is absent and states `write`, or that is over, is told to the rule while a whole row retains its subject; an absent row that states `wait` leaves the outcome offered; and a first step that changes can add a subject", () => {
-    const stepped: Change = (d) => { d.outcomes.weigh.origin = "opening"; d.outcomes.weigh.observes = STEP_ROWS; };
+    const stepped: Change = openingObservationRows;
     /** R3, the row of the first step, names k1 and then each key of the desk's `more`. R2, of the second step, names the key behind each required check. */
     const first = (given: RuleGiven): KeyId[] => [k1, ...signers(given).slice(2)];
     const g = made(stepped);
@@ -416,16 +409,16 @@ describe("a clause of a result with a row, and a value that its observation name
 
     // 18.50 case 6: the list is over the row's `max`. No answer, so no observation: the row states `wait`. The number is made up:
     // the row here states 8 bytes, and the list has more. A row that states no `retains` can read no observation that names a value.
-    for (const narrow of [(d: Parameters<Change>[0]) => { d.acts.go.sends[0].tell.observes.applied[0].retains[0].max = 8; }, (d: Parameters<Change>[0]) => { delete d.acts.go.sends[0].tell.observes.applied[0].retains; }]) {
+    for (const narrow of [narrowRetainedLimit, withoutRetainedPlace]) {
       expect(said(made(narrow).record([rules], [bytes]))).toEqual(["unavailable", "authority-unavailable"]);
     }
     // A row that is absent and states `write`: the result is recorded without the observation, and nothing is kept.
-    const written = made((d) => { d.acts.go.sends[0].tell.observes.applied[0].without = "write"; }).record([rules], []);
+    const written = made(observationRuntimeChange6).record([rules], []);
     expect([said(written), observed(written), written.result === "write" && written.draft.values]).toEqual([["write", null], null, undefined]);
   });
 
   test("a clause that states no row, in a definition that states rows: the entry of its result holds no member `observed`, whatever is at hand", () => {
-    const { record } = made((d) => { delete d.acts.go.sends[0].tell.observes; });
+    const { record } = made(observationRuntimeChange7);
     const judged = record([rulesSeen([], 5, t(3), digest), memberSeen("@una", 6, T0)], [bytes]);
     expect([said(judged), observed(judged), judged.result === "write" && judged.draft.values]).toEqual([["write", null], null, undefined]);
   });

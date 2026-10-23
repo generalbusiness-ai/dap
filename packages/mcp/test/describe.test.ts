@@ -1,3 +1,4 @@
+import { relaxedCounting } from "./support/definition-corpus-data.ts";
 import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
 import { definitionDigest } from "@generalbusiness/artroom-bytes";
@@ -136,7 +137,7 @@ describe("descriptions are derived from the whole declaration", () => {
   // profile differs are two declarations, each tool's text holds its own rule body, and the names, the texts and the generation
   // do not depend on the order of the scopes.
   test("same rows, a different rule body or profile: two tools, each with its own meaning", () => {
-    const relaxed = { ...counting, rules: { ...counting.rules, "spoken-plan": "true" } };
+    const relaxed = relaxedCounting();
     const profiled = { ...counting, profile: { name: "restricted", version: 2 } };
     const roots: Parameters<typeof heldOf>[] = [["sc_c1", "root", definitionDigest(counting), declared(counting)], ["sc_c2", "root", definitionDigest(relaxed), declared(relaxed)]];
     const inventoryOf = (order: Parameters<typeof heldOf>[]) => room(order, "member", ["counting.spoken", "counting.join"]);

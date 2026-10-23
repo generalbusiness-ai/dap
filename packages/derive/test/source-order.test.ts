@@ -1,3 +1,4 @@
+import { sourceArrival, sourceTime, sourceOnlyOne } from "./definition-corpus/general-creation-data.ts";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { DeclaredDefinition } from "@generalbusiness/dap-contract";
@@ -39,7 +40,7 @@ test("source order applies increasing pairs and suppresses lower pairs only afte
 });
 
 test("arrival order stays available, and only a tell handler admits an exact order enum", () => {
-  const arrival = structuredClone(sourceOrderDefinition); arrival.receives["sample"]!.order = "arrival";
+  const arrival = structuredClone(sourceOrderDefinition); sourceArrival(arrival);
   const { sender, receiver } = sourceOrderFixture(arrival);
   for (const seq of [2, 1]) expect(deliver(receiver, sender, seq)).toMatchObject({ result: "write", draft: { input: { decision: "applied" } } });
   expect(receiver.item(0).values["last"]).toBe(1);
@@ -54,8 +55,7 @@ test("arrival order stays available, and only a tell handler admits an exact ord
 
 test("a handler reads time from its verified source entry, and an act cannot read the source operand", () => {
   const declaration = structuredClone(sourceOrderDefinition);
-  declaration.items["board"]!.values["sampledAt"] = { fixed: false, required: false, of: { type: "time" } };
-  declaration.receives["sample"]!.effects = [...declaration.receives["sample"]!.effects, { of: "also.board", value: { slot: "sampledAt", from: { source: "time" } } }];
+  sourceTime(declaration);
   const { receiver, sender } = sourceOrderFixture(declaration);
   receiver.now = t(60);
   expect(deliver(receiver, sender, 1)).toMatchObject({ result: "write", draft: { input: { decision: "applied" } } });
@@ -68,7 +68,7 @@ test("a handler reads time from its verified source entry, and an act cannot rea
 
 test("a refused higher pair does not suppress a lower pair that can apply", () => {
   const declaration = structuredClone(sourceOrderDefinition);
-  declaration.receives["sample"]!.guards = [{ equals: { a: { field: "value" }, b: { const: 1 } }, reason: "not-one" }];
+  sourceOnlyOne(declaration);
   const { receiver, sender } = sourceOrderFixture(declaration);
   expect(deliver(receiver, sender, 2, 1)).toMatchObject({ result: "write", draft: { input: { decision: "refused", reason: { code: "guard-failed", name: "not-one" } } } });
   expect(receiver.state.sourceOrder(sender.at, "sample")).toBeNull();

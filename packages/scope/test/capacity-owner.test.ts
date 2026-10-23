@@ -1,8 +1,9 @@
+import { capacityHoldReaderChange, capacityTokenOwnerChange } from "./definition-corpus-data.ts";
 import { env } from "cloudflare:workers";
 import { httpSource, verify } from "@generalbusiness/artroom-replay";
 import { fixtureRoute as route } from "./support/serving-route.ts";
 import { expect, test } from "vitest";
-import { PROPOSED_BOUNDS, type Entry, type SendForm } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type Entry} from "@generalbusiness/dap-contract";
 import { parseStrict } from "@generalbusiness/artroom-bytes";
 import { JOB_READ_ACTION, ownerReservations, reserved } from "@generalbusiness/dap-derive";
 import { grantOf, variant } from "@generalbusiness/dap-derive/testing";
@@ -13,16 +14,7 @@ import { wired } from "./outside.ts";
 import { Lane, START, at, creation, definition, stubOf, reader, una, vic } from "./fixtures-native.ts";
 
 test("native capacity admits a hold reader without local holds and preserves its empty owner reservation through eviction and replay", async () => {
-  const under = variant(definition.declared, d => {
-    d.capacity = { name: "whole-scope", version: 1 };
-    const form = { step: "transition", on: "intent", grant: "report", also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [] };
-    d.acts = {
-      file: d.acts.file,
-      touch: { ...form, effects: [{ capability: { name: "hold", do: "settle", with: { export: { const: 0 } } } }] },
-      inspect: { ...form, guards: [{ capability: { name: "hold", guard: "staged", with: {} } }] },
-    };
-    d.receives = {}; d.timed = {};
-  });
+  const under = variant(definition.declared, capacityHoldReaderChange());
   expect(under.holdTypes).toEqual([]);
   const asked = creation(at(61), under), c = controls(asked.name, START);
   wired.set(asked.name, () => ({ capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE }));
@@ -56,20 +48,7 @@ test("native read-token reservations keep their entry bytes after the mint repla
   // Real scope, native preparation/outcome code, SQLite, driver and eviction.
   // Lane data and authority are fixtures. The host answer below is a
   // stand-in, not a token minted at any provider. No raw record is injected.
-  const under = variant(definition.declared, d => {
-    d.capacity = { name: "whole-scope", version: 1 };
-    // Close the fixture declaration: its unused link form names a dummy
-    // child whose birth-time retention is outside this token witness.
-    d.acts.link.sends = d.acts.link.sends.filter((send: SendForm) => !("create" in send));
-    d.capabilities.push({ name: "git-read", version: 1 });
-    const name = { type: "text", max: 64 };
-    const checks = { type: "list", max: 4, of: { type: "record", of: { name: { ...name, required: true }, checker: { type: "member", required: true } } } };
-    d.items.rules = { many: false, max: 1, states: { current: { final: false } }, initial: "current", parties: {}, refs: {}, values: { checks: { fixed: true, required: true, of: checks } } };
-    d.items.job = { many: true, max: 4, states: { requested: { final: false } }, initial: "requested", parties: {}, refs: {}, values: { name: { fixed: true, required: true, of: name }, deadline: { fixed: true, required: true, of: { type: "time" } } } };
-    const form = { grant: "report", also: {}, guards: [], sends: [], attention: [] };
-    d.acts.publish = { ...form, step: "open", on: "rules", fields: { checks: { ...checks, required: true } }, effects: [{ value: { slot: "checks", from: { field: "checks" } } }] };
-    d.acts["request-check"] = { ...form, step: "open", on: "job", fields: { name: { ...name, required: true } }, effects: [{ value: { slot: "name", from: { field: "name" } } }, { value: { slot: "deadline", from: { time: { plusSeconds: 1800 } } } }] };
-  });
+  const under = variant(definition.declared, capacityTokenOwnerChange());
   const asked = creation(at(60), under), c = controls(asked.name, START);
   c.bounds = { ...c.bounds, scopeRecords: 1 };
   let sends = 0;

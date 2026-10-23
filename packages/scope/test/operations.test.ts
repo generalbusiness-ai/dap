@@ -1,3 +1,4 @@
+import { operationStagedChange } from "./definition-corpus-data.ts";
 import { describe, expect, test } from "vitest";
 import { abortAllDurableObjects } from "cloudflare:test";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
@@ -443,7 +444,7 @@ describe("outside operations at a real scope (scope contract, section 4.3; autho
 
   test("a scope whose pinned definition the runtime cannot run sends nothing outside the service: the attempt stays recorded, with no wake-up, and is sent once the runtime can run the definition. The capability is the scripted stand-in", async () => {
     // The lane of the other tests, with one capability guard. The scripted test capability, a stand-in, is the code for it.
-    const staged = variant(definition.declared, (def) => { def.acts.report.guards.push({ capability: { name: "hold", guard: "staged", with: { commit: { field: "commit" }, under: { item: "also.commitment" } } } }); def.acts.report.fields.commit = { type: "commit", required: true }; });
+    const staged = variant(definition.declared, operationStagedChange());
     const { signed, name } = creation(at(60), staged);
     const c = controls(name, START);
     c.capability = {};

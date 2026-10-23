@@ -1,9 +1,10 @@
+import { lineageDeviceRoot, lineageBudgetDefinitions } from "./definition-corpus-data.ts";
 /** Real applied cohort histories and native child deliveries. Git/package
  * providers, clock and the index transport are labelled TEST stand-ins.
  * No deployment, provider or operator reconciliation is exercised. */
 import { env, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
-import { DEVICE_COMMAND, type DeclaredDefinition, type Entry, type Intent, type PlatformDefinition, type ScopeRef, type Seed } from "@generalbusiness/dap-contract";
+import { DEVICE_COMMAND, type Entry, type Intent, type PlatformDefinition, type ScopeRef, type Seed } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, digestBytes, factRefOf, intentDigest, isSeed, newIncarnation, parseStrict, scopeIdOf, seedDigest, signIntent, utf8 } from "@generalbusiness/artroom-bytes";
 import { packApplication2, readApplicationProjection } from "@generalbusiness/artroom-bytes/application-v2";
 import { emptyPackageComposition } from "@generalbusiness/artroom-package-graph";
@@ -18,7 +19,6 @@ import { outsideOf as hostOutside } from "../src/worker.ts";
 import { applicationOwnedScopesPacket, applicationResolverFixture, applicationHttpPeer, applicationWorkerBindings, sessionRoom, sessionRepository, dispatchFixture, driveFixture, effectFixture } from "./fixtures-native.ts";
 import { rita, routed, type Platform } from "./repository.ts";
 import { fixedSigner } from "./fixtures-core.ts";
-import { devicePackageFixture } from "../../derive/test/fixtures-device-command.ts";
 import { soon } from "./net.ts";
 
 const config = (register: string) => ({ DEPLOYMENT: "TEST-lineage", ARTIFACTS_CONFIG: JSON.stringify({ registerScope: register, namespace: "lineage", host: "git.example", maxBytes: 1024, credentialIdentity: "adapter-attempt" }) });
@@ -33,11 +33,7 @@ async function declarationsFor(register: PlatformDefinition) {
   // The17-cohort genuinely requires a device package and an existing owner.
   // Keep the real command schema, add a normal static child, and sign only a
   // public TEST release. No old native definition or publisher key changes.
-  const root: DeclaredDefinition = { ...devicePackageFixture,
-    items: { ...devicePackageFixture.items, root: { ...devicePackageFixture.items["root"]!, refs: { child: { fixed: false, required: false, to: { type: "scope", kind: "lane" } } } } },
-    acts: { ...devicePackageFixture.acts, start: { ...devicePackageFixture.acts["start"]!, fields: { opener: { type: "member", required: true } },
-      sends: [{ create: { kind: "lane", definition: ordinary.childId, fields: { opener: { field: "opener" } }, result: { applied: [{ ref: { slot: "child", from: { sender: true } } }], refused: [], conflict: [], undelivered: [] } } }] } },
-  };
+  const root = lineageDeviceRoot(ordinary);
   const rootId = definitionDigest(root);
   const rootProjection = readApplicationProjection({ v: 1, definition: rootId, revision: "revision", sources: {
     row: { read: "one", item: "root", states: ["ready"], limit: 1, fields: {
@@ -200,13 +196,7 @@ test("the whole creation attempt admits exactly16 bodies before a genuine legacy
   if (!M || !A || !G) throw Error("native cohort siblings required");
   try {
     const ordinary = await applicationOwnedScopesPacket();
-    const declarations: DeclaredDefinition[] = [];
-    for (let i = 16; i >= 0; i--) {
-      const next = declarations[0];
-      declarations.unshift({ ...ordinary.child, name: `lineage-budget-${i}`, acts: { ...ordinary.child.acts,
-        establish: { ...ordinary.child.acts["establish"]!, sends: next ? [{ create: { kind: "lane", definition: definitionDigest(next), fields: { opener: { field: "opener" } }, result: {} } }] : [] },
-      } });
-    }
+    const declarations = lineageBudgetDefinitions(ordinary.child);
     const root = declarations[0]!, digest = definitionDigest(root), values = declarations.map(value => canonicalize(value));
     // Every individual body and their total are well below1MiB. The actual
     // native named-definition ceiling permits this17-definition closure;

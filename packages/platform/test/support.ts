@@ -1,3 +1,4 @@
+import { office, officeDataFor } from "./definition-corpus-data.ts";
 /**
  * For tests only. Nothing here is exported from the package's main entry,
  * and no production entry imports it. The package exports this file as
@@ -16,7 +17,7 @@
  */
 
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { DeclaredDefinition, KeyId, ObservationUse, PlatformDefinition } from "@generalbusiness/dap-contract";
+import type { KeyId, ObservationUse, PlatformDefinition } from "@generalbusiness/dap-contract";
 import { PROFILES, clockOf, grantFrom, judgeDelivery, judgeGenesis, observationOf, validateDefinition } from "@generalbusiness/dap-derive";
 import type { ActJudgment, Judgment, PlatformRules, Presented, ValidDefinition } from "@generalbusiness/dap-derive";
 import { Ledger, T0, creation, created, keys, sent, type Actor, type Context, type Over } from "@generalbusiness/dap-derive/testing";
@@ -40,45 +41,14 @@ export const lacking = (named: PlatformDefinition, without: string | null): Plat
  * between scopes"). It has no other act and no handler, so a `compromised`
  * notice that reaches it is refused `unknown-message`.
  */
-export const office: DeclaredDefinition = {
-  format: "artroom-definition-1",
-  name: "office",
-  profile: { name: "restricted", version: 1 },
-  capabilities: [],
-  genesis: "open",
-  items: {
-    repository: {
-      many: false, max: 1, initial: "open", states: { open: { final: false } }, parties: {},
-      refs: { membership: { fixed: false, required: false, to: { type: "scope", kind: "membership" } } },
-      values: {},
-    },
-  },
-  acts: {
-    open: {
-      step: "open", on: "repository", grant: "office.open", also: {},
-      fields: { "founder": { type: "text", max: 64, required: true }, "founderHandle": { type: "text", max: 256, required: true }, recoveryKey: { type: "text", max: 64, required: true } },
-      guards: [], effects: [],
-      sends: [{
-        create: {
-          kind: "membership", definition: MEMBERSHIP,
-          fields: { "founder": { field: "founder" }, "founderHandle": { field: "founderHandle" }, recoveryKey: { field: "recoveryKey" }, directory: { scope: true } },
-          result: { applied: [{ ref: { slot: "membership", from: { sender: true } } }] },
-        },
-      }],
-      attention: [],
-    },
-  },
-  receives: {},
-  timed: {},
-  rules: {},
-};
+export { office } from "./definition-corpus-data.ts";
 
 export const officeDefinition = checked(validateDefinition(office, PROPOSED_BOUNDS));
 /** The same labelled creator with an explicitly selected native membership pin. */
 export function officeDefinitionFor(named: PlatformDefinition): ValidDefinition {
   if (named === MEMBERSHIP) return officeDefinition;
   if (platform(named)?.data.name !== "platform:membership") throw new Error("unsupported test membership");
-  return checked(validateDefinition({ ...office, acts: { ...office.acts, open: { ...office.acts["open"]!, sends: office.acts["open"]!.sends.map(send => "create" in send ? { create: { ...send.create, definition: named } } : send) } } }, PROPOSED_BOUNDS));
+  return checked(validateDefinition(officeDataFor(named), PROPOSED_BOUNDS));
 }
 /** Membership's data, validated as a runtime validates it. */
 export const membershipDefinition = checked(validateDefinition(JSON.parse(JSON.stringify(membership)), PROPOSED_BOUNDS, PROFILES, { platform: true }));

@@ -1,11 +1,12 @@
+import { scopeArchiveChange } from "../definition-corpus-data.ts";
 /** Explicit fixture policy and host identity; no production certificate. */
-import type { Input, SendForm } from "@generalbusiness/dap-contract";
+import type { Input} from "@generalbusiness/dap-contract";
 import { variant } from "@generalbusiness/dap-derive/testing";
 import type { ArchivePolicyRegistry } from "../../src/archive-inventory.ts";
 import type { Sql } from "../../src/sqlite.ts";
 import { definition } from "../support.ts";
 
-export const archiveDefinition = variant(definition.declared, data => { data.acts["link"]!.sends = data.acts["link"]!.sends.filter((send: SendForm) => !("create" in send)); });
+export const archiveDefinition = variant(definition.declared, scopeArchiveChange());
 const variants: readonly Input["type"][] = ["genesis", "act", "delivery", "timed", "diagnosis", "outcome", "preparation", "checkpoint"];
 export const archivePolicies: ArchivePolicyRegistry = new Map([[archiveDefinition.digest, {
   review: "TEST STAND-IN: explicit fixture inline classes, never a production certificate", entryTypes: new Set(variants),

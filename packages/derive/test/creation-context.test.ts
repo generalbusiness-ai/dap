@@ -1,21 +1,12 @@
+import { contextDeclared as declared, contextParentData, contextPlatformData, contextNamedData } from "./definition-corpus/general-creation-data.ts";
 import { expect, test } from "vitest";
-import { PROPOSED_BOUNDS, type DeclaredDefinition, type DeviceCommandGrant, type ScopeKind } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type DeviceCommandGrant, type ScopeKind } from "@generalbusiness/dap-contract";
 import { canonicalize, isSeed, newIncarnation } from "@generalbusiness/artroom-bytes";
 import { clockOf, judgeGenesis, validateDefinition, type ValidDefinition } from "../src/index.ts";
 import { Ledger, T0, creation, deliver, created, keys, valid } from "./fixtures-entry.ts";
 
 // Pure judge/send boundary. Parent metadata and authority are SCRIPTED in a
 // draft before it seals; no native emitter/membership/session proof is claimed.
-const create = { create: { kind: "lane" as const, definition: "self" as const, fields: { creationContext: { const: { v: 99 } } }, result: {} } };
-const row = { step: "open" as const, on: "root", grant: "open", also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [] };
-const declared: DeclaredDefinition = {
-  format: "artroom-definition-1", name: "context-child", profile: { name: "restricted", version: 1 }, capabilities: [], genesis: "open",
-  items: { root: { many: false, max: 1, initial: "ready", states: { ready: { final: false } }, parties: {}, refs: {}, values: {} } },
-  acts: {
-    open: { ...row, fields: { creationContext: { type: "record", of: { v: { type: "int", min: 1, max: 99, required: true } }, required: false } }, sends: [create] },
-    spawn: { ...row, step: "transition", sends: [create] },
-  }, receives: {}, timed: {}, rules: {},
-};
 const definition = valid(validateDefinition(declared, PROPOSED_BOUNDS));
 const membership = keys.rita.member.membership;
 
@@ -27,9 +18,7 @@ function receive(from: Ledger, seq: number, n: number, under = definition) {
   return { child, judgment, asked, source };
 }
 function incoming(metadata: Record<string, unknown>, under = definition, kind: ScopeKind = "lane") {
-  const parentDefinition = valid(validateDefinition({ ...declared, name: "context-parent", acts: {
-    open: row, spawn: { ...row, step: "transition", sends: [{ create: { ...create.create, kind, definition: under.digest } }] },
-  } }, PROPOSED_BOUNDS));
+  const parentDefinition = valid(validateDefinition(contextParentData(under.digest, kind), PROPOSED_BOUNDS));
   const parent = created(parentDefinition, {});
   const result = parent.judge(parent.intent(keys.rita, "spawn", { on: 0, expected: { on: parent.item(0).revision } }));
   if (result.result !== "write") throw new Error(`scripted parent create was ${result.result}${"reason" in result ? `: ${result.reason}` : ""}`);
@@ -83,7 +72,7 @@ test("unknown or malformed opt-in and marked missing/invalid full membership rec
 });
 
 test("marked declared genesis does not stamp a platform creation, and membership-self retains its own full reference without a stamp", () => {
-  const platform: ValidDefinition = valid(validateDefinition({ ...declared, acts: { ...declared.acts, open: { ...declared.acts["open"]!, sends: [{ create: { kind: "rules", definition: "platform:rules@2", fields: {}, result: {} } }] } } }, PROPOSED_BOUNDS));
+  const platform: ValidDefinition = valid(validateDefinition(contextPlatformData(), PROPOSED_BOUNDS));
   const received = incoming({ creationContext: { v: 1 }, membership }, platform);
   expect(received.judgment.result).toBe("write");
   expect(bodyOf(received.child)).toEqual({ fields: {} });
@@ -105,7 +94,7 @@ test("a recorded device grant reaches only an allowed first child and cannot be 
   child.did(keys.rita, "spawn", { on: 0, expected: { on: child.item(0).revision } });
   expect(bodyOf(child, child.last.seq, 0)).toEqual(delegated);
 
-  const other = valid(validateDefinition({ ...declared, name: "other-device-definition" }, PROPOSED_BOUNDS));
+  const other = valid(validateDefinition(contextNamedData("other-device-definition"), PROPOSED_BOUNDS));
   const unlisted = incoming({ creationContext: { v: 2, deviceCommand: { ...grant, definitions: [other.digest] }, delegate: true }, membership });
   expect(unlisted.judgment.result).toBe("write");
   expect(bodyOf(unlisted.child)).toEqual({ fields: { creationContext: { v: 99 } }, directory: unlisted.parent.at, membership, creationContext: { v: 1 } });
@@ -114,7 +103,7 @@ test("a recorded device grant reaches only an allowed first child and cannot be 
 test("a device grant for another membership incarnation or definition refuses before any child send", () => {
   const grant: DeviceCommandGrant = { capability: "device-command@1", owner: keys.rita.member,
     bounds: { kinds: ["heater"], owners: 1 }, root: definition.digest, definitions: [definition.digest] };
-  const other = valid(validateDefinition({ ...declared, name: "foreign-device-definition" }, PROPOSED_BOUNDS));
+  const other = valid(validateDefinition(contextNamedData("foreign-device-definition"), PROPOSED_BOUNDS));
   const foreignOwner = { ...grant, owner: { ...grant.owner, membership: { ...membership, inc: newIncarnation(new Uint8Array(16).fill(93)) } } };
   for (const marker of [{ v: 2, deviceCommand: foreignOwner, delegate: true },
     { v: 2, deviceCommand: { ...grant, root: other.digest }, delegate: true },

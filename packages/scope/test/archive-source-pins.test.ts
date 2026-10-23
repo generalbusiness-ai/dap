@@ -1,3 +1,4 @@
+import { archiveWrongProducerChange } from "./definition-corpus-data.ts";
 /** Actual native creation, SQLite and genesis0 reads under the fixture's
  * TEST authority/clock/reader. This only witnesses fixture metadata binding,
  * not foreign privacy admission, production provenance or installed export. */
@@ -39,7 +40,7 @@ test("fixture source pins bind an actual native birth and declaration to its ful
   expect(() => new FixtureArchiveSourcePins([null as never], PROPOSED_BOUNDS, new ArchiveBudget())).toThrow("archive-unavailable");
   expect(() => new FixtureArchiveSourcePins([{ ...input, birth: { ...input.birth, bytes: "{bad" } }], PROPOSED_BOUNDS, new ArchiveBudget())).toThrow("archive-mismatch");
 
-  const wrongDeclaration = variant(definition.declared, data => { data.name = "test.wrong-foreign-producer"; });
+  const wrongDeclaration = variant(definition.declared, archiveWrongProducerChange());
   expect(() => new FixtureArchiveSourcePins([{ ...input, declaration: canonicalize(wrongDeclaration.declared) }], PROPOSED_BOUNDS, new ArchiveBudget())).toThrow("archive-mismatch");
   expect(() => new FixtureArchiveSourcePins([{ ...input, at: other.at }], PROPOSED_BOUNDS, new ArchiveBudget())).toThrow("archive-mismatch");
   // Tampered fixture configuration only: no native stored entry is changed.

@@ -1,3 +1,4 @@
+import { bureau } from "./definition-corpus-data.ts";
 /**
  * For tests only. Nothing here is exported from the package's main entry,
  * and no production entry imports it.
@@ -32,7 +33,7 @@
  */
 
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { DeclaredDefinition, Entry, Evidence, FactRef, FieldValue, Input, MemberObservation, HoldersObservation, Observation, ObservationUse, OperationId, Request, RulesObservation, ScopeRef, Seed, Send, Timestamp } from "@generalbusiness/dap-contract";
+import type { Entry, Evidence, FactRef, FieldValue, Input, MemberObservation, HoldersObservation, Observation, ObservationUse, OperationId, Request, RulesObservation, ScopeRef, Seed, Send, Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalize, factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/artroom-bytes";
 import { PROFILES, clockOf, contentStates, valueDigest, outcomeValueDomains, judgeDelivery, judgeGenesis, settleOutcome, validateDefinition } from "@generalbusiness/dap-derive";
 import type { ActJudgment, Fetched, Judgment, OutcomeJudgment, Observing, PlatformRules, Source } from "@generalbusiness/dap-derive";
@@ -102,7 +103,6 @@ export type Hand = Pick<ReservationRead, "merger" | "rules" | "manifest" | "verd
 export const destinationDefinition = checked(validateDefinition(JSON.parse(JSON.stringify(destination2)), PROPOSED_BOUNDS, PROFILES, { platform: true, outcomeValues: outcomeValueDomains(destination2, destinationRules2) }));
 
 const REPOSITORY = { host: "git.example", namespace: "artroom", name: "demo", id: "r1" };
-const NAME = { type: "text", max: 256 } as const;
 
 /**
  * STAND-IN: a made-up directory, for the creator of a destination scope.
@@ -110,49 +110,7 @@ const NAME = { type: "text", max: 256 } as const;
  * directory's genesis sends (authority note, section 12.1, "Messages
  * between scopes"). It has no other act and no handler.
  */
-export const bureau: DeclaredDefinition = {
-  format: "artroom-definition-1",
-  name: "bureau",
-  profile: { name: "restricted", version: 1 },
-  capabilities: [],
-  genesis: "open",
-  items: {
-    repository: {
-      many: false, max: 1, initial: "open", states: { open: { final: false } }, parties: {},
-      refs: { destination: { fixed: false, required: false, to: { type: "scope", kind: "destination" } } },
-      values: {},
-    },
-  },
-  acts: {
-    open: {
-      step: "open", on: "repository", grant: "bureau.open", also: {},
-      fields: {
-        repository: { type: "record", of: { host: { ...NAME, required: true }, namespace: { ...NAME, required: true }, name: { ...NAME, required: true }, id: { ...NAME, required: true } }, required: true },
-        branch: { ...NAME, required: true },
-        import: { type: "bool", required: true },
-        claim: { type: "fact", kind: ["found"], under: "platform:register", required: true },
-        membership: { type: "text", max: 64, required: true },
-        rules: { type: "text", max: 64, required: true },
-        "founderHandle": { ...NAME, required: true },
-      },
-      guards: [], effects: [],
-      sends: [{
-        create: {
-          kind: "destination", definition: DESTINATION,
-          fields: {
-            repository: { field: "repository" }, branch: { field: "branch" }, import: { field: "import" }, claim: { field: "claim" },
-            directory: { scope: true }, membership: { field: "membership" }, rules: { field: "rules" }, "founderHandle": { field: "founderHandle" },
-          },
-          result: { applied: [{ ref: { slot: "destination", from: { sender: true } } }] },
-        },
-      }],
-      attention: [],
-    },
-  },
-  receives: {},
-  timed: {},
-  rules: {},
-};
+export { bureau } from "./definition-corpus-data.ts";
 const bureauDefinition = checked(validateDefinition(bureau, PROPOSED_BOUNDS));
 
 let made = 0;

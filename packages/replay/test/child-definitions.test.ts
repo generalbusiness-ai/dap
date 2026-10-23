@@ -1,5 +1,6 @@
+import { replayChildAlias } from "../../derive/test/definition-corpus/replay-literals-data.ts";
 import { expect, test } from "vitest";
-import { DOMAINS, PROPOSED_BOUNDS, type PlatformData, type Seed } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type Seed } from "@generalbusiness/dap-contract";
 import { canonicalize, intentDigest, newIncarnation, scopeIdOf, signIntent, utf8 } from "@generalbusiness/artroom-bytes";
 import { clockOf, judgeGenesis, validateDefinition } from "@generalbusiness/dap-derive";
 import { created, keys, Ledger, on, T0, t, valid } from "@generalbusiness/dap-derive/testing";
@@ -28,8 +29,7 @@ test("opt-in replay counts the complete shared child closure at genesis, while l
 
 test("a later definition-domain value is charged at its actual entry and an alias of a birth child is not charged twice", async () => {
   const { root, branch, leaf, extra } = childDefinitions();
-  const data: PlatformData = { ...structuredClone(root.declared), name: "platform:task", outcomes: {} };
-  data.acts["retain"] = { ...structuredClone(data.acts["children"]!), sends: [], fields: { declaration: { type: "digest", required: true, value: { domain: DOMAINS.definition, max: PROPOSED_BOUNDS.definitionBytes } } } };
+  const data = replayChildAlias(root.declared);
   const definition = valid(validateDefinition(data, PROPOSED_BOUNDS, undefined, { platform: true }));
   const history = new Ledger(definition), platform = { named: "platform:task@1" as const, rules: {} };
   const signed = signIntent({ v: 1, to: null, actor: keys.rita.key, kind: "found", on: null, expected: {}, fields: {}, idempotencyKey: "definition-values", notAfter: t(60) }, keys.rita.secret);

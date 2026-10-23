@@ -1,3 +1,4 @@
+import { indexedIntegerChange } from "./definition-corpus-data.ts";
 /** C2 on real turns/SQLite. The platform data, grant authority and the
  * rule attempting a fixed-slot change are explicitly scripted fixtures. */
 import { evictDurableObject, runInDurableObject } from "cloudflare:test";
@@ -14,16 +15,7 @@ import { START, at, objectOf, rita, stubOf } from "./fixtures-native.ts";
 test("native integer indexes retain exact duplicate and boundary keys across finality and restart; invalid values and fixed-slot faults change no item/index", async () => {
   const MADE = "platform:task@1" as PlatformDefinition;
   const integer = { type: "int", min: Number.MIN_SAFE_INTEGER, max: Number.MAX_SAFE_INTEGER };
-  const data = gateWith(data => {
-    data.name = "platform:task";
-    data.items.ticket.values.number = { fixed: true, required: true, of: integer };
-    data.items.ticket.indexes = ["number"];
-    data.acts.issue.fields.number = { ...integer, required: true };
-    data.acts.issue.effects.push({ value: { slot: "number", from: { field: "number" } } });
-    const transition = { step: "transition", on: "ticket", grant: "gate.issue", also: {}, fields: {}, guards: [], sends: [], attention: [] };
-    data.acts.finish = { ...transition, guards: [{ state: ["open"] }], effects: [{ state: "used" }] };
-    data.acts.rewrite = { ...transition, effects: [{ code: "rewrite-number", row: "P16" }] };
-  }).declared;
+  const data = gateWith(indexedIntegerChange(integer)).declared;
   let fixedChangeAttempts = 0;
   const rules = gateRules({ "rewrite-number": { place: "effect", most: 1, run: ({ input }) => {
     fixedChangeAttempts++;

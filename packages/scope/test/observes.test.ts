@@ -1,3 +1,4 @@
+import { steppedObservationChange, observationDomainChange, membershipObservationChange } from "./definition-corpus-data.ts";
 import { evictDurableObject, runInDurableObject } from "cloudflare:test";
 import { env } from "cloudflare:workers";
 import { expect, test } from "vitest";
@@ -6,7 +7,7 @@ import type { Answer, Digest, Entry, FactRef, Intent, MemberId, ObservationReque
 import { canonicalize, entryHash, factRefOf, intentDigest, scopeIdOf, signIntent } from "@generalbusiness/artroom-bytes";
 import { timeMs, timeOf, valueDigest } from "@generalbusiness/dap-derive";
 import { d, keys, membership, notesDefinition, otherLane, type Actor } from "@generalbusiness/dap-derive/testing";
-import { EXTENTS, RULEBOOK, STEP_ROWS, rulebook, signers, weigherRules, weigherWith, type Seen } from "../../derive/test/fixtures-observes.ts";
+import { EXTENTS, RULEBOOK, rulebook, signers, weigherRules, weigherWith, type Seen } from "../../derive/test/fixtures-observes.ts";
 import { MEMBERSHIP, platform } from "@generalbusiness/dap-platform";
 import { httpSource, MemorySource, TRUSTS, verify, type MemoryScope } from "@generalbusiness/artroom-replay";
 import type { Delivery } from "../src/index.ts";
@@ -210,7 +211,7 @@ test("18.46 cases 7, 8, 10 and 11, an outcome with rows, on real storage: its `u
 
 test("18.52 case 5, two steps on real storage: the first step reads the rules and the keys of its row; the second step names its keys from the observation of the rules, and a key of both steps is read once and retained once", async () => {
   const [k1, k3] = [una.key, paul.key];
-  const s = await weighing((data) => { data.outcomes.weigh.origin = "opening"; data.outcomes.weigh.observes = STEP_ROWS; }, (given) => [k1, ...signers(given).slice(2)]);
+  const s = await weighing(steppedObservationChange(), (given) => [k1, ...signers(given).slice(2)]);
   try {
     const { script, c } = s;
     const facts = { first: decided(c, 41, una, "c1"), second: decided(c, 42, vic, "c2") };
@@ -227,7 +228,7 @@ test("18.52 case 5, two steps on real storage: the first step reads the rules an
 });
 
 test.each([EXTENTS, DOMAINS.definition])("18.48 cases 6 to 8, and 18.50 cases 4 to 8, a clause of a result in %s on real storage: malformed values retry; a whole answer is retained once under its native storage key and replays through the service", async (DOMAIN) => {
-  const change: Parameters<typeof weigherWith>[0] = data => { data.acts.go.sends[0].tell.observes.applied[0].retains[0].domain = DOMAIN; };
+  const change: Parameters<typeof weigherWith>[0] = observationDomainChange(DOMAIN);
   const s = await weighing(change);
   try {
     const { script, c, name } = s;
@@ -302,10 +303,7 @@ test("a scope with rows reads the real membership scope of the platform package:
   const of = await M.at();
   // The acts of the made-up data are judged on an action that membership's role table gives a member, and the row of the holders
   // names one that an admin and a member hold.
-  const s = await weighing((data) => {
-    for (const act of Object.values(data.acts) as { grant: string }[]) act.grant = "issue.open";
-    data.outcomes.weigh.observes[2].action = "issue.open";
-  });
+  const s = await weighing(membershipObservationChange());
   try {
     const { c } = s;
     c.membership = { at: of, answers: (asked) => M.stub.observe(asked) };
@@ -343,7 +341,7 @@ test("a scope with rows reads the real membership scope of the platform package:
     const retained: RetainedInput[] = [];
     for (const { entry } of sealed.value) for (const use of entry.uses) retained.push(...await kept("entry", use.content));
     const W: MemoryScope = { scope: s.scope, entries: sealed.value.map(({ entry, hash }) => ({ seq: entry.seq, hash, bytes: canonicalize(entry) })), retained };
-    const data = weigherWith((made) => { for (const act of Object.values(made.acts) as { grant: string }[]) act.grant = "issue.open"; made.outcomes.weigh.observes[2].action = "issue.open"; }).declared;
+    const data = weigherWith(membershipObservationChange()).declared;
     const code = (named: PlatformDefinition) => (named === MADE ? { data: data as never, rules: weigherRules().rules, membership: () => of, rulesScope: () => rulebook }
       : named === RULEBOOK ? { data: { items: { rules: { values: {} } } } as never, rules: {} } : platform(named));
     const lane = [...c.foreign.values()].map(({ entry }) => { const fact = factRefOf(entry); return { scope: fact.at.scope, seq: fact.seq, hash: fact.hash }; });

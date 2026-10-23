@@ -1,3 +1,4 @@
+import { laneShapeBounds } from "./support/definition-corpus-data.ts";
 import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
@@ -45,10 +46,7 @@ describe("the two lane definitions, as data (lane forms, revision 14)", () => {
     // The validator is the counter. A definition passes with a bound at the number below, and is refused with one less.
     // `propose-manifest` has 24 guards as written and 16 effects, which are the adopted bounds, and its guards are nested 8 deep, which
     // is the bound too. Counting those nested it has 73 guards. Four acts name 4 other items. `intent` has 10 values.
-    const meets: Record<(typeof names)[number], Partial<Bounds>> = {
-      issue: { items: 12, acts: 50, timedRules: 1, receives: 7, values: 10, also: 4 },
-      change: { items: 14, acts: 54, timedRules: 2, receives: 4, also: 4, presents: 1, guards: 24, nestedGuards: 73, guardDepth: 8, effects: 16 },
-    };
+    const meets = laneShapeBounds;
     const matched = names.flatMap((name) => (Object.entries(meets[name]) as [keyof Bounds, number][]).map(([bound, n]) => {
       const less = validated(lanes[name], { [bound]: n - 1 });
       return [name, bound, n <= PROPOSED_BOUNDS[bound], validated(lanes[name], { [bound]: n }).ok, less.ok ? null : [...new Set(less.problems.map((p) => p.code))]];

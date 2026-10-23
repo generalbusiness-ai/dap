@@ -1,3 +1,4 @@
+import { floorProofActs, floorPricedKeys } from "../../derive/test/definition-corpus/replay-mutations-data.ts";
 /** Real in-memory judges, fold and verifier over a made-up definition.
  * Fixture grants and clone commit metadata are explicit stand-ins; no host,
  * native SQLite, archive writer or membership scope runs here. */
@@ -12,10 +13,7 @@ import { View } from "../src/view.ts";
 import { histories, rewrite, served } from "./world.ts";
 
 function fixture() {
-  const definition = variant(notesDefinition.declared, data => {
-    data.acts.pulse = { step: "transition", on: "note", grant: "pulse", also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [] };
-    data.acts.prove = { ...data.acts.pulse, grant: "prove", fields: { proof: { type: "fact", kind: ["pulse"], under: "notes", required: true } } };
-  });
+  const definition = variant(notesDefinition.declared, floorProofActs);
   const history = created(definition, {}, "floor-replay");
   for (let n = 0; n < 150; n++) history.did(keys.rita, "pulse", { on: 0, expected: { on: history.item(0).revision } });
   history.now = t(1200);
@@ -95,10 +93,7 @@ test("observation views and captured own readers retain their historical floor a
 // The literal migrated-row total distinguishes UTF-8 pricing and a repeated
 // charge at the second floor. No SQLite or production authority is claimed.
 test("two floors charge migrated Unicode accepted keys once and preserve complete post-floor checkpoints", async () => {
-  const definition = variant(notesDefinition.declared, data => {
-    data.capacity = { name: "whole-scope", version: 1 };
-    data.acts.pulse = { step: "transition", on: "note", grant: "pulse", also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [] };
-  });
+  const definition = variant(notesDefinition.declared, floorPricedKeys);
   const history = created(definition, {}, "floor-priced-accepted-keys");
   const pulse = () => {
     const seq = history.head.seq + 1;

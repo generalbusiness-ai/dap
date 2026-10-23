@@ -1,5 +1,7 @@
+import { recoveredText, recoveredChild, recoveredTransitiveTarget, recoveredSmallChild, recoveredSender, recoveredRefusalTarget } from "../../derive/test/definition-corpus/replay-mutations-data.ts";
+import { replayRecoveredAlias } from "../../derive/test/definition-corpus/replay-literals-data.ts";
 import { expect, test } from "vitest";
-import { DOMAINS, PROPOSED_BOUNDS, type PlatformData, type PlatformDefinition, type Seed } from "@generalbusiness/dap-contract";
+import { DOMAINS, PROPOSED_BOUNDS, type PlatformDefinition, type Seed } from "@generalbusiness/dap-contract";
 import { canonicalize, intentDigest, newIncarnation, scopeIdOf, signIntent, utf8 } from "@generalbusiness/artroom-bytes";
 import { clockOf, judgeGenesis, validateDefinition, valueDigest } from "@generalbusiness/dap-derive";
 import { Ledger, T0, creation as childCreation, created, keys, notesDefinition, on, t, valid, variant } from "@generalbusiness/dap-derive/testing";
@@ -9,12 +11,7 @@ import { served } from "./world.ts";
 const NAMED = "platform:task@1" as PlatformDefinition;
 
 function aliasWorld(body: unknown, max: number) {
-  const under = variant(notesDefinition.declared, d => {
-    d.capacity = { name: "whole-scope", version: 1 };
-    d.acts["add-note"] = structuredClone(d.acts.start);
-    d.items.note.values.body.of = { type: "text", detached: true, max };
-    d.acts.write.fields.body = { type: "text", detached: true, max, required: true };
-  });
+  const under = variant(notesDefinition.declared, recoveredText(max));
   const original = created(under, {}, "original-text"), bytes = canonicalize(body), digest = valueDigest(DOMAINS.text, body);
   // In-memory judgments and fixture grants. Null deliberately stands for a
   // historical missing size: the negative cases claim no native admission.
@@ -23,8 +20,7 @@ function aliasWorld(body: unknown, max: number) {
   const ceiling = utf8(canonicalize(under.declared)).length + original.entries.reduce((n, { entry }) => n + utf8(canonicalize(entry)).length, 0) + utf8(bytes).length + PROPOSED_BOUNDS.entryBytes;
   original.did(keys.rita, "strike", on(original, 0));
 
-  const data: PlatformData = { ...structuredClone(notesDefinition.declared), name: "platform:task", capacity: { name: "whole-scope", version: 1 }, outcomes: {} };
-  data.acts["retain"] = { ...structuredClone(data.acts["vouch"]!), presents: {}, guards: [], fields: { proof: { type: "digest", required: true, value: { domain: DOMAINS.text, max: 32768 } } }, effects: [], sends: [] };
+  const data = replayRecoveredAlias();
   const definition = valid(validateDefinition(data, PROPOSED_BOUNDS, undefined, { platform: true }));
   const alias = new Ledger(definition), platform = { named: NAMED, rules: {} };
   const creation = signIntent({ v: 1, to: null, actor: keys.rita.key, kind: "found", on: null, expected: {}, fields: {}, idempotencyKey: "alias", notAfter: t(60) }, keys.rita.secret);
@@ -71,16 +67,10 @@ test.each([
 
 test("recovered overflow retracts transitive consumers and a foreign prefix admitted through a cached proof", async () => {
   const w = aliasWorld("é".repeat(10000), 32768);
-  const childDefinition = variant(notesDefinition.declared, d => { d.capacity = { name: "whole-scope", version: 1 }; });
+  const childDefinition = variant(notesDefinition.declared, recoveredChild);
   const child = created(childDefinition, {}, "cached-consumer"), originalFact = w.original.fact(w.referred);
   expect(child.act(keys.rita, "vouch", { ...on(child, 0), fields: {} }, { presented: { proof: originalFact }, facts: [{ fact: originalFact, entry: w.original.entries[w.referred]!.entry, under: "notes" }] }).result).toBe("write");
-  const targetDefinition = variant(notesDefinition.declared, d => {
-    d.capacity = { name: "whole-scope", version: 1 };
-    d.acts.vouch.presents.proof.kind = ["vouch"];
-    d.acts["vouch-alias"] = structuredClone(d.acts.vouch);
-    d.acts["vouch-alias"].presents.proof.under = "platform:task";
-    d.acts["vouch-alias"].presents.proof.kind = ["vouch", "retain"];
-  });
+  const targetDefinition = variant(notesDefinition.declared, recoveredTransitiveTarget);
   const target = created(targetDefinition, {}, "transitive-target");
   const use = (kind: string, from: Ledger, seq: number) => {
     const fact = from.fact(seq);
@@ -107,13 +97,8 @@ test("recovered overflow retracts transitive consumers and a foreign prefix admi
 
 test("recovering an oversized body preserves a child's correctly recorded bad-field refusal", async () => {
   const body = "x".repeat(41), w = aliasWorld(body, 32768), digest = valueDigest(DOMAINS.text, body);
-  const small = variant(notesDefinition.declared, d => {
-    d.name = "smallnotes"; d.capacity = { name: "whole-scope", version: 1 };
-    d.acts.start.fields = { body: { type: "text", detached: true, max: 1, required: true }, other: { type: "int", min: 0, max: 9, required: true } };
-  });
-  const senderDefinition = variant(notesDefinition.declared, d => {
-    d.acts["copy"] = { ...structuredClone(d.acts.vouch), presents: {}, guards: [], fields: { body: { type: "text", detached: true, max: 32768, required: true } }, sends: [{ create: { kind: "lane", definition: small.digest, fields: { body: { field: "body" }, other: { const: "wrong type" } }, result: {} } }] };
-  });
+  const small = variant(notesDefinition.declared, recoveredSmallChild);
+  const senderDefinition = variant(notesDefinition.declared, recoveredSender(small.digest));
   const sender = created(senderDefinition, {}, "refusal-sender");
   expect(sender.act(keys.rita, "copy", { ...on(sender, 0), fields: { body: digest } }, { texts: () => body.length }).result).toBe("write");
   const asked = childCreation(sender, sender.last.seq), child = new Ledger(small);
@@ -121,12 +106,7 @@ test("recovering an oversized body preserves a child's correctly recorded bad-fi
   if (refusal.result !== "write") throw new Error("the child must record its refusal");
   child.seal(refusal.draft);
   expect(child.last.input).toMatchObject({ type: "genesis", decision: "refused" });
-  const targetDefinition = variant(notesDefinition.declared, d => {
-    d.capacity = { name: "whole-scope", version: 1 };
-    d.acts.vouch.presents.proof = { kind: ["start"], under: "smallnotes", required: true };
-    d.acts["vouch-alias"] = structuredClone(d.acts.vouch);
-    d.acts["vouch-alias"].presents.proof = { kind: ["retain"], under: "platform:task", required: true };
-  });
+  const targetDefinition = variant(notesDefinition.declared, recoveredRefusalTarget);
   const target = created(targetDefinition, {}, "refusal-target");
   for (const [kind, from, seq] of [["vouch-alias", w.alias, 2], ["vouch", child, 0]] as const) {
     const fact = from.fact(seq);

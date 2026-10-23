@@ -1,20 +1,15 @@
+import { reservedOrderData, reservedArrivalData } from "./definition-corpus/general-creation-data.ts";
 /** Native capability/judge/fold over MemoryState. Task source entries and
  * per-key grants are scripted fixture inputs, not object/provider authority. */
 import { expect, test } from "vitest";
 import { factRefOf } from "@generalbusiness/artroom-bytes";
 import { capacityFull, holdCapability, judgeDelivery, ownerReservations, validateDefinition } from "../src/index.ts";
-import { arriving, created, forged, keys, valid, receiverPinData, PIN_BOUNDS, boundRecordData } from "./fixtures-entry.ts";
+import { arriving, created, forged, keys, valid, PIN_BOUNDS } from "./fixtures-entry.ts";
 
 test("suppressing a reserved export decision settles its pin, fits the reserved boundary and repeats without another debit", () => {
   for (const order of ["source", "arrival"] as const) {
     const owner = holdCapability({ tokensPerHold: 2, rootRetentionSeconds: 600 });
-    const data = receiverPinData(); data.receives["license"]!.order = order;
-    data.items["intent"]!.many = true; data.items["intent"]!.max = 2;
-    data.acts["open-export"] = structuredClone(data.acts["file"]!);
-    data.acts["license"]!.fields["export"] = { type: "item", of: "intent", required: true };
-    const effect = data.acts["license"]!.effects[0]!;
-    if (!("capability" in effect)) throw Error("The fixture must use the native hold license effect.");
-    effect.capability.with["export"] = { field: "export" };
+    const data = reservedOrderData(order);
     const definition = valid(validateDefinition(data, PIN_BOUNDS));
     const ledger = created(definition, { title: "A", opener: keys.rita.member }); ledger.bounds = PIN_BOUNDS;
     const second = ledger.did(keys.rita, "open-export", { fields: { title: "B", opener: keys.rita.member } }).seq;
@@ -45,7 +40,7 @@ test("suppressing a reserved export decision settles its pin, fits the reserved 
 });
 
 test("item-bound native handlers retain arrival semantics and refuse the unsupported source-order combination", () => {
-  const data = boundRecordData(); data.receives["stop"]!.order = "arrival";
+  const data = reservedArrivalData();
   expect(validateDefinition(data, PIN_BOUNDS, undefined, { platform: true }).ok).toBe(true);
   data.receives["stop"]!.order = "source";
   const checked = validateDefinition(data, PIN_BOUNDS, undefined, { platform: true });

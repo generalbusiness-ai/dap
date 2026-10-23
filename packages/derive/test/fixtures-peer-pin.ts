@@ -2,17 +2,13 @@
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { judgeDelivery, validateDefinition } from "../src/index.ts";
 import { arriving, created, keys, sent, valid, type Ledger } from "./fixtures.ts";
-import { sourceOrderDefinition } from "./fixtures-source-order.ts";
+import { peerPinData } from "./definition-corpus/peer-pin-data.ts";
 
 export function peerPinDefinitions() {
-  const senderDefinition = valid(validateDefinition(structuredClone(sourceOrderDefinition), PROPOSED_BOUNDS));
-  const alternate = structuredClone(sourceOrderDefinition);
-  alternate.acts["found"]!.effects = [{ value: { slot: "last", from: { const: 3 } } }];
-  const alternateDefinition = valid(validateDefinition(alternate, PROPOSED_BOUNDS));
-  const declared = structuredClone(sourceOrderDefinition);
-  declared.name = "test.peer-receiver";
-  declared.receives["sample"]!.from = { kind: "directory", under: senderDefinition.declared.name, pin: senderDefinition.digest };
-  const receiverDefinition = valid(validateDefinition(declared, PROPOSED_BOUNDS));
+  const data = peerPinData();
+  const senderDefinition = valid(validateDefinition(data.sender, PROPOSED_BOUNDS));
+  const alternateDefinition = valid(validateDefinition(data.alternate, PROPOSED_BOUNDS));
+  const receiverDefinition = valid(validateDefinition(data.receiver, PROPOSED_BOUNDS));
   return { receiverDefinition, senderDefinition, alternateDefinition };
 }
 export function peerPinFixture() {

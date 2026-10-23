@@ -1,10 +1,12 @@
+import { oldMembershipStandingData } from "./definition-corpus-data.ts";
+import { archiveInventoryChange, archiveLeafData, archiveInventoryParentChange, archiveInventoryAlwaysChange } from "./definition-corpus-data.ts";
 /** Native read frames, SQLite and genuine creation/acts. All reviewed
  * policies/certificates are explicit TEST STAND-INS, never production
  * certifications. Synthetic/corrupt rows are labelled at their witnesses.
  * No inventory result proves authority, replay, ancestry or host custody. */
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { DeclaredDefinition, Digest, Entry, Head, Input, Seed, SendForm } from "@generalbusiness/dap-contract";
+import type { Digest, Entry, Head, Input, Seed} from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, entryHash, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
 import type { OperationRules, ValidDefinition } from "@generalbusiness/dap-derive";
 import { MemorySource, verify } from "@generalbusiness/artroom-replay";
@@ -21,10 +23,7 @@ import { inventoryArchive, type ArchivePolicyRegistry, type ReviewedArchivePolic
 import { definition, create, rita, type Lane } from "./fixtures-native.ts";
 
 const variants = ["genesis", "act", "delivery", "timed", "diagnosis", "outcome", "preparation", "checkpoint"] as const;
-const base = variant(definition.declared, data => {
-  data.acts["link"]!.sends = data.acts["link"]!.sends.filter((send: SendForm) => !("create" in send));
-  data.acts["remark"]!.fields["text"] = { type: "text", max: 128, detached: true, required: true };
-});
+const base = variant(definition.declared, archiveInventoryChange());
 const policy = (definition: ValidDefinition, entryTypes: ReadonlySet<Input["type"]> = new Set(variants)): ReviewedArchivePolicy => ({
   review: "TEST STAND-IN: inline entry classes and declaration metadata, not a real certificate",
   entryTypes, support: { named: definition.digest, definition, owners: new Map(), records: new Map(), preparations: new Map() },
@@ -117,13 +116,7 @@ test("one native pass admits its exact measured call/byte/node limits and refuse
   expect(entryReads(noNode.calls)).toEqual([]); expect(payloadReads(noNode.calls)).toEqual([]);
 });
 
-const leaf = (name: string, child?: Digest) => variant({
-  format: "artroom-definition-1", name, profile: { name: "restricted", version: 1 }, capabilities: [], genesis: "found",
-  items: { root: { many: false, max: 1, states: { live: { final: false } }, initial: "live", parties: {}, refs: {}, values: {} } },
-  acts: { "found": { step: "open", on: "root", grant: "found", also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [] },
-    spawn: { step: child ? "transition" : "comment", on: "root", grant: "spawn", also: {}, fields: {}, guards: [], effects: [], sends: child ? [{ create: { kind: "lane", definition: child, fields: {}, result: {} } }] : [], attention: [] } },
-  receives: {}, timed: {}, rules: {},
-} satisfies DeclaredDefinition, () => {});
+const leaf = (name: string, child?: Digest) => variant(archiveLeafData(name, child), () => {});
 async function keep(lane: Lane, definitions: readonly ValidDefinition[]) {
   await lane.inside(state => { for (const definition of definitions) state.storage.sql.exec("INSERT OR REPLACE INTO retained_input (kind, digest, bytes) VALUES ('definition', ?, ?)", definition.digest, canonicalize(definition.declared)); });
 }
@@ -133,7 +126,7 @@ async function keep(lane: Lane, definitions: readonly ValidDefinition[]) {
 // policies remain this file's explicit TEST stand-ins.
 test("a complete declaration scout pays its own work and covers fresh and repeated native validation without payloads", async () => {
   const child = leaf("scouted-child");
-  const parent = variant(base.declared, data => { data.acts["link"].sends.push({ create: { kind: "lane", definition: child.digest, fields: {}, result: {} } }); });
+  const parent = variant(base.declared, archiveInventoryParentChange(child));
   const lane = await create({}, {}, parent);
   await keep(lane, [child]);
   const result = await lane.inside(state => {
@@ -192,7 +185,7 @@ test("a complete declaration scout pays its own work and covers fresh and repeat
 // is claimed to name these roots merely because its position is used.
 test("declaration plans retain repeated native validation work and missing-candidate prefix sizes", async () => {
   const child = leaf("planned-declaration-child");
-  const parent = variant(base.declared, data => { data.acts["link"].sends.push({ create: { kind: "lane", definition: child.digest, fields: {}, result: {} } }); });
+  const parent = variant(base.declared, archiveInventoryParentChange(child));
   const lane = await create({}, {}, parent); await keep(lane, [child]);
   await lane.did(rita, "offer", { fields: { intent: 0 }, expected: { intent: 1 } });
   const through = await lane.head(), missing = textDigest("TEST absent potential declaration");
@@ -329,7 +322,7 @@ test("Native scout size fences refuse changed text omission evidence before publ
 
 test("missing declaration probes retain their distinct native costs and refuse newly present bodies after a native turn", async () => {
   const child = leaf("missing-scout-child");
-  const parent = variant(base.declared, data => { data.acts["link"].sends.push({ create: { kind: "lane", definition: child.digest, fields: {}, result: {} } }); });
+  const parent = variant(base.declared, archiveInventoryParentChange(child));
   const lane = await create({}, {}, parent);
   const results = [];
   for (const covered of [true, false]) {
@@ -379,7 +372,7 @@ test("missing declaration probes retain their distinct native costs and refuse n
 
 test("archive-only closure requires a missing unused child; later bytes complete the same cutoff while ordinary replay and later unrelated inputs remain unchanged", async () => {
   const child = leaf("late-child");
-  const parent = variant(base.declared, data => { data.acts["link"].sends.push({ create: { kind: "lane", definition: child.digest, fields: {}, result: {} } }); });
+  const parent = variant(base.declared, archiveInventoryParentChange(child));
   const lane = await create({}, {}, parent), through = await lane.head(), policies = new Map([[parent.digest, policy(parent)], [child.digest, policy(child)]]);
   const rows = await lane.sealed();
   const history = { scope: lane.at, entries: rows.map(row => ({ seq: row.entry.seq, hash: row.hash, bytes: canonicalize(row.entry) })), retained: [{ kind: "definition" as const, digest: parent.digest, bytes: canonicalize(parent.declared) }] };
@@ -425,7 +418,7 @@ function outcomes(definition: ValidDefinition): ReviewedArchivePolicy {
 }
 
 test("an uncovered additional root at the final planned position aborts before ANY earlier rule/value/snapshot payload read or result", async () => {
-  const root = variant(base.declared, data => { data.rules["always"] = "true"; });
+  const root = variant(base.declared, archiveInventoryAlwaysChange());
   const good = leaf("covered-root"), uncovered = leaf("uncovered-final-root"), lane = await create({}, {}, root);
   const ruleBytes = "true", rule = digestBytes(utf8(ruleBytes));
   await lane.inside(state => { state.storage.sql.exec("INSERT INTO retained_input (kind, digest, bytes) VALUES ('rule', ?, ?)", rule, ruleBytes); });
@@ -484,13 +477,12 @@ test("native declaration metadata admits exactly 64 aggregate nodes while retain
 test("a genuine native pin to legacy membership refuses before local entry/dependency bodies despite a supplied support claim", async () => {
   // Stand-in platform data/rule and creation authority; native seed/name,
   // genesis write, pin binding and legacy-policy ordering are exercised.
-  const { standingData } = await import("../../derive/test/fixtures-standing.ts");
   const { wired } = await import("./outside.ts");
   const { controls } = await import("../src/testing.ts");
   const { intentDigest, scopeIdOf, signIntent } = await import("@generalbusiness/artroom-bytes");
   const { START, at, objectOf, stubOf } = await import("./support.ts");
   const { runInDurableObject } = await import("cloudflare:test");
-  const data = standingData(); data.name = "platform:membership";
+  const data = oldMembershipStandingData();
   const named = "platform:membership@5";
   const intent = { v: 1 as const, to: null, actor: rita.key, kind: "found", on: null, expected: {}, fields: { source: "stand-in data for old-pin refusal" }, idempotencyKey: crypto.randomUUID(), notAfter: at(60) };
   const seed: Seed = { v: 1 as const, kind: "directory" as const, definition: named, creator: null, cause: intentDigest(intent), ordinal: 0 }, name = scopeIdOf(seed);

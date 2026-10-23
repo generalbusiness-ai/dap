@@ -1,3 +1,4 @@
+import { forms_beside_change0 } from "./definition-corpus/forms-beside-variants.ts";
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { isSealed } from "@generalbusiness/artroom-bytes";
@@ -7,20 +8,10 @@ import { Scope, d, keys, laneDefinition, notes, on, small, variant } from "./fix
 const { rita, una, vic } = keys;
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Change = (d: any) => void;
-const act = (a: object) => ({ on: "note", also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [], ...a });
 
 describe("facts presented beside an intent (section 6.4)", () => {
   /** The small definition, with an act that is presented one fact: an `assign` entry of a lane, whose performer must be the signer. */
-  const vouching = variant(small, (def) => {
-    def.acts.vouch = act({
-      step: "transition", grant: "edit", presents: { proof: { kind: ["assign"], under: "lane", required: false } },
-      guards: [
-        { state: ["draft"] }, { fact: { presented: "proof" }, ifPresent: true },
-        { equals: { a: { presented: "proof", part: { field: "performer" } }, b: { signer: true } }, ifPresent: true, reason: "not-yours" },
-      ],
-      effects: [{ party: { slot: "readers", from: { presented: "proof", part: { field: "performer" } }, list: "add" } }],
-    });
-  });
+  const vouching = variant(small, forms_beside_change0);
 
   test("a presented fact is fetched and checked like a fact field, a guard ties it to the signer, and the entry records it and uses it; one that is absent skips its guards", () => {
     const L = new Scope(laneDefinition);

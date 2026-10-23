@@ -1,3 +1,4 @@
+import { customRequiredChangeData } from "./support/definition-corpus-data.ts";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type DeclaredDefinition, type OutboxId, type Entry, type FactRef, type Item, type Receipt, type ScopeRef, type Seed, type SignedIntent, type Summary } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, entryHash, factRefOf, intentDigest, newIncarnation, scopeIdOf, textDigest, utf8, verifySignedIntent } from "@generalbusiness/artroom-bytes";
@@ -124,8 +125,7 @@ test.each(["link-summary", "link-request", "link-unavailable"] as const)("CLI li
 });
 
 test("a valid custom required rules input refuses the fixed CLI workflow before opening (HTTP STAND-IN)", async () => {
-  const custom = structuredClone(changeDemo3);
-  custom.acts["ask-rules"]!.fields["requiredNote"] = { type: "text", max: 32, required: true };
+  const custom = customRequiredChangeData();
   expect(validateDefinition(custom, PROPOSED_BOUNDS).ok).toBe(true);
   const f = await fixture("custom-required", custom);
   const result = await command(f.context, ["propose", "partial"]);

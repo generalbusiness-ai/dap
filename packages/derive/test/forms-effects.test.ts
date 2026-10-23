@@ -1,9 +1,11 @@
+import { auditedData, refusingTicketData } from "./definition-corpus/forms-effects-variants.ts";
+import { effectFormCases } from "./definition-corpus/forms-effects-cases.ts";
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { ActType, Bounds, DeclaredDefinition, EffectForm, FieldValue, Guard, MemberRef, Notify, Send } from "@generalbusiness/dap-contract";
+import type { Bounds, EffectForm, FieldValue, Guard, MemberRef, Notify, Send } from "@generalbusiness/dap-contract";
 import { factRefOf } from "@generalbusiness/artroom-bytes";
-import { clockOf, deriveEffects, judgeDelivery, judgeGuards, validateDefinition, type ActJudgment, type Judging, type ProblemCode } from "../src/index.ts";
-import { Scope, arriving, deliver, desk, fields, forged, created, keys, member, on, ticket, ticketDefinition, valid, variant, type Actor, type Over } from "./fixtures-entry.ts";
+import { clockOf, deriveEffects, judgeDelivery, judgeGuards, validateDefinition, type ActJudgment, type Judging } from "../src/index.ts";
+import { Scope, arriving, deliver, fields, forged, created, keys, member, on, ticketDefinition, valid, type Actor, type Over } from "./fixtures-entry.ts";
 
 const { rita, una, vic, paul, sam } = keys;
 
@@ -12,84 +14,8 @@ const { rita, una, vic, paul, sam } = keys;
  * parent, a text and a size. A summary takes the attribution of a card,
  * with further sources.
  */
-const text = { type: "text", max: 40 } as const;
-const size = { type: "int", min: 0, max: 9 } as const;
-const slot = { fixed: false, required: false } as const;
-const one = { fixed: true, required: true, list: false, author: false } as const;
-const act = (a: Partial<ActType> & Pick<ActType, "step" | "on" | "grant">): ActType => ({ also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [], ...a });
-const fact = (...kind: string[]) => ({ type: "fact", kind, under: "cards" }) as const;
-const parent = { also: { parent: { item: "card", by: "parent" } }, fields: { parent: { type: "item", of: "card", required: true } } } as const;
-const owner: EffectForm = { party: { slot: "owner", from: { signer: true } } };
-const cleared: Guard[] = [{ equals: { a: { field: "clear" }, b: { const: true } } }];
-const change = (a: Partial<ActType>) => act({ step: "transition", on: "card", grant: "write", ...a });
-const cards: DeclaredDefinition = {
-  format: "artroom-definition-1", name: "cards", profile: { name: "restricted", version: 1 }, capabilities: [], genesis: "start",
-  items: {
-    deck: { many: false, max: 1, states: { open: { final: false } }, initial: "open", parties: { owner: one }, refs: {}, values: {} },
-    card: {
-      many: true, max: 8, states: { draft: { final: false }, done: { final: true } }, initial: "draft",
-      parties: { owner: { ...one, author: true }, helper: { ...slot, list: false, author: false }, team: { ...slot, list: true, max: 3, author: false } },
-      refs: { parent: { ...slot, to: { type: "item", of: "card" } } }, values: { text: { ...slot, of: text }, size: { ...slot, of: size }, tags: { ...slot, of: { type: "list", of: text, max: 2 } }, near: { ...slot, of: { type: "record", of: { card: { type: "item", of: "card", required: true } } } } },
-    },
-    summary: {
-      many: true, max: 8, states: { made: { final: false } }, initial: "made",
-      parties: { owner: one, authors: { fixed: true, required: true, list: true, max: 8, author: false } }, refs: { of: { ...slot, to: { type: "item", of: "card" } } }, values: {},
-    },
-  },
-  acts: {
-    start: act({ step: "open", on: "deck", grant: "start", fields: { opener: { type: "member", required: true } }, effects: [{ party: { slot: "owner", from: { field: "opener" } } }] }),
-    add: act({ step: "open", on: "card", grant: "write", fields: { text: { ...text, required: false } }, effects: [owner, { value: { slot: "text", from: { field: "text" } } }] }),
-    // A card that copies from its parent: a slot of another subject, into a party, a reference and two values. Its team is its own helper,
-    // which an earlier effect of the same entry set.
-    child: act({
-      step: "open", on: "card", grant: "write", ...parent,
-      effects: [
-        owner, { party: { slot: "helper", from: { slot: "owner", of: "also.parent" } } }, { ref: { slot: "parent", from: { item: "also.parent" } } },
-        { value: { slot: "text", from: { slot: "text", of: "also.parent" } } }, { value: { slot: "size", from: { slot: "size", of: "also.parent" } } },
-        { party: { slot: "team", from: [{ slot: "helper", of: "on" }] } },
-      ],
-    }),
-    // The size is emptied when `clear` is true, and is otherwise set from the field: an `if` and an `unless` with the same guards.
-    edit: change({
-      fields: { text: { ...text, required: false }, size: { ...size, required: false }, clear: { type: "bool", required: false } },
-      effects: [{ value: { slot: "text", from: { field: "text" } } }, { value: { slot: "size", from: null }, if: cleared }, { value: { slot: "size", from: { field: "size" } }, unless: cleared }],
-    }),
-    // The second effect's condition reads the state that the first effect changes.
-    finish: change({ guards: [{ state: ["draft"] }], effects: [{ state: "done" }, { value: { slot: "text", from: { const: "finished" } }, if: [{ state: ["draft"] }] }] }),
-    // On the deck, with an effect on another card, which may be final.
-    touch: act({
-      step: "transition", on: "deck", grant: "write", also: { other: { item: "card", by: "other" } }, fields: { other: { type: "item", of: "card", required: true }, text: { ...text, required: false } },
-      effects: [{ of: "also.other", value: { slot: "text", from: { field: "text" } } }],
-    }),
-    staff: change({ fields: { team: { type: "list", of: { type: "member" }, max: 3, required: true } }, effects: [{ party: { slot: "team", from: { field: "team" } } }] }),
-    pair: change({ effects: [{ party: { slot: "team", from: [{ signer: true }, { slot: "helper" }, { slot: "owner" }] } }] }),
-    // Each source is a part of the entry that `proof` names. The definition states no type for it, so the commit checks each value.
-    borrow: change({
-      fields: { proof: { ...fact("add", "staff"), required: true } },
-      effects: [
-        { value: { slot: "text", from: { field: "proof", part: { field: "text" } } } }, { party: { slot: "helper", from: { field: "proof", part: { opened: "owner" } } } },
-        { party: { slot: "team", from: { field: "proof", part: { field: "team" } } } },
-      ],
-    }),
-    misread: change({ fields: { proof: { ...fact("add"), required: true } }, effects: [{ value: { slot: "size", from: { field: "proof", part: { field: "text" } } } }] }),
-    // A position is an integer, and no text states its most. The slot holds 0 to 9.
-    rank: change({ fields: { proof: { ...fact("add"), required: true } }, effects: [{ value: { slot: "size", from: { field: "proof", part: "seq" } } }] }),
-    sum: act({
-      step: "open", on: "summary", grant: "write", ...parent, fields: { ...parent.fields, earlier: { type: "list", of: fact("sum"), max: 4, required: false }, staffed: { ...fact("staff"), required: false } },
-      effects: [owner, { ref: { slot: "of", from: { item: "also.parent" } } }, {
-        attribute: {
-          slot: "authors", of: "also.parent", with: [
-            { items: { type: "card", states: ["done"], where: [{ equals: { a: { slot: "parent" }, b: { item: "also.parent" } } }] }, slot: "team" },
-            { subject: "also.parent", slot: "team" },
-            { each: { field: "earlier" }, as: "e", list: { element: "e", part: { opened: "authors" } } },
-            { list: { field: "staffed", part: { field: "team" } } },
-          ],
-        },
-      }],
-    }),
-  },
-  receives: {}, timed: {}, rules: {},
-};
+import { cards } from "./definition-corpus/forms-effects-data.ts";
+
 const definition = valid(validateDefinition(cards, PROPOSED_BOUNDS));
 
 const names = (list: unknown) => (list as readonly MemberRef[]).map((m) => m.member);
@@ -262,10 +188,7 @@ describe("attribution: its sources and its order (section 6.7)", () => {
 
 describe("effects in a handler and in a result clause (sections 6.6 and 7.4)", () => {
   test("a handler copies the source entry into a fact slot only when that entry is of a kind and a definition the slot states", () => {
-    const audited = (kind: string, under: string) => variant(desk, (d) => {
-      d.items.repo.refs.asked = { fixed: false, required: false, to: { type: "fact", kind: [kind], under } };
-      d.receives.audit = { message: "audit", class: "tell", from: { kind: "lane" }, fields: { repo: { type: "item", of: "repo", required: true } }, opens: null, also: { repo: { item: "repo", by: "repo" } }, guards: [], effects: [{ of: "also.repo", ref: { slot: "asked", from: { source: "ref" } } }], sends: [], attention: [] };
-    });
+    const audited = (kind: string, under: string) => valid(validateDefinition(auditedData(kind, under), PROPOSED_BOUNDS));
     const D = created();
     const X = new Scope(ticketDefinition);
     X.did(una, "ask", fields({ desk: D.at }));   // X.2: an `ask` act of a ticket
@@ -281,14 +204,7 @@ describe("effects in a handler and in a result clause (sections 6.6 and 7.4)", (
   });
 
   test("a clause's condition is judged when the result is recorded, and reads the name of the result's reason", () => {
-    const refusing = variant(ticket, (d) => {
-      d.acts.link.fields.why = { type: "int", min: 0, max: 9, required: true };
-      d.acts.link.sends[0].relate.detail.why = { field: "why" };
-      const set = { some: { type: "link", states: ["set"], where: [{ equals: { a: { slot: "me" }, b: { item: "on" } } }] } };
-      d.acts.link.sends[0].relate.result = { refused: [{ state: "removed", if: [{ equals: { a: { result: "reason" }, b: { const: "one" } } }, set] }] };
-      d.receives.closes.fields.why = { type: "int", min: 0, max: 9, required: true };
-      d.receives.closes.guards = [{ differs: { a: { field: "why" }, b: { const: 1 } }, reason: "one" }, { differs: { a: { field: "why" }, b: { const: 2 } }, reason: "two" }];
-    });
+    const refusing = valid(validateDefinition(refusingTicketData(), PROPOSED_BOUNDS));
     const P = new Scope(refusing);
     const I = new Scope(refusing, rita.member, true, 1);
     const recorded = (why: number) => {
@@ -310,66 +226,10 @@ describe("effects in a handler and in a result clause (sections 6.6 and 7.4)", (
 
 describe("the validator: effect forms (section 6.6)", () => {
   test("it takes a pair of effects on one slot only when their conditions exclude each other, or both change one list; and it refuses a source the slot cannot hold", () => {
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    const refusal = (change: (d: any) => void, base: DeclaredDefinition = cards) => {
-      const d = structuredClone(base);
-      change(d);
-      const result = validateDefinition(d, PROPOSED_BOUNDS);
-      return result.ok ? null : [...new Set(result.problems.map((p) => p.code))];
-    };
-    /* eslint-enable @typescript-eslint/no-explicit-any */
-    const edit = (...effects: unknown[]) => refusal((d) => { d.acts.edit.effects = effects; });
-    const say = (said: string, condition: object = {}) => ({ value: { slot: "text", from: { const: said } }, ...condition });
-    const sized = (n: number): Guard => ({ equals: { a: { field: "size" }, b: { const: n } } });
-    const team = (from: unknown, list?: string) => ({ party: { slot: "team", from, ...(list ? { list } : {}) } });
-    const who = { field: "who" };
-    const staffing = (...effects: unknown[]) => refusal((d) => { d.acts.staff.fields.who = { type: "member", required: false }; d.acts.staff.effects = effects; });
-    const timed = (...effects: unknown[]) => refusal((d) => {
-      d.items.card.values.due = { fixed: false, required: false, of: { type: "time" } };
-      d.timed.expire = { on: "card", states: ["draft"], deadline: "due", effects: [{ state: "done" }, ...effects], attention: [] };
+    const rows = effectFormCases().map(([name, make, code]) => {
+      const result = validateDefinition(make(), PROPOSED_BOUNDS);
+      return [name, result.ok ? null : [...new Set(result.problems.map(p => p.code))], code] as const;
     });
-    const attributed = (source: unknown) => refusal((d) => { d.acts.sum.effects[2].attribute.with = [source]; });
-    const rows: [string, ProblemCode[] | null, ProblemCode | null][] = [
-      // Conditions that exclude each other.
-      ["two effects on one slot, one under a condition", edit(say("a"), say("b", { if: cleared })), "conflict"],
-      ["an `if` and an `unless` with the same guards", edit(say("a", { if: cleared }), say("b", { unless: cleared })), null],
-      ["an `if` and an `unless` with other guards", edit(say("a", { if: cleared }), say("b", { unless: [sized(1)] })), "conflict"],
-      ["two `if` lists with an `equals` of one operand and two constants", edit(say("a", { if: [sized(1)] }), say("b", { if: [{ state: ["draft"] }, sized(2)] })), null],
-      ["the same with one constant", edit(say("a", { if: [sized(1)] }), say("b", { if: [sized(1)] })), "conflict"],
-      ["the same with `ifPresent`, which lets both hold", edit(say("a", { if: [{ ...sized(1), ifPresent: true }] }), say("b", { if: [{ ...sized(2), ifPresent: true }] })), "conflict"],
-      ["two `if` lists with `state` guards that share no state", edit(say("a", { if: [{ state: ["draft"] }] }), say("b", { if: [{ state: ["done"] }] })), null],
-      ["the same with a shared state", edit(say("a", { if: [{ state: ["draft"] }] }), say("b", { if: [{ state: ["draft", "done"] }] })), "conflict"],
-      // Successive changes of one party list.
-      ["an `add` and a `remove` on one party list", staffing(team(who, "add"), team({ signer: true }, "remove")), null],
-      ["a list set whole beside an `add`", staffing(team({ field: "team" }), team(who, "add")), "conflict"],
-      // A state effect needs a live subject.
-      ["a state effect whose live-state guard is in its own `if`", edit({ state: "done", if: [{ state: ["draft"] }] }), null],
-      ["a state effect whose live-state guard is in its `unless`", edit({ state: "done", unless: [{ state: ["draft"] }] }), "final"],
-      // Conditions are guards of the entry.
-      ["a condition that reads the item its act opens", refusal((d) => { d.acts.add.effects[1].if = [{ unset: "text" }]; }), "nascent-guard"],
-      ["a clause's condition reads the item its act opened, and the result", refusal((d) => { d.acts.ask.sends[0].tell.result.applied = [{ state: "answered", if: [{ state: ["asked"] }, { differs: { a: { result: "reason" }, b: { const: "late" } } }] }]; }, ticket), null],
-      ["a condition on an effect of a timed rule", timed(say("late", { if: [{ unset: "size" }] })), "timed-partial"],
-      ["a party list set whole by a timed rule", timed(team([{ slot: "owner" }])), "timed-partial"],
-      ["a source of a timed rule whose type only the commit knows", timed({ value: { slot: "text", from: { scope: true } } }), "timed-partial"],
-      ["a timed rule that copies one slot of its item into another, and empties a third", timed({ party: { slot: "helper", from: { slot: "owner" } } }, { value: { slot: "text", from: null } }), null],
-      // Sources.
-      ["an opening whose only effect on a required slot empties it", refusal((d) => { d.acts["found"].effects[0].value.from = null; }, desk), "required-unset"],
-      ["a source that is none", edit({ value: { slot: "text", from: { none: true } } }), "shape"],
-      ["a constant that is not a value of the slot", edit({ value: { slot: "size", from: { const: "big" } } }), "shape"],
-      ["a position into a slot that is no integer", refusal((d) => { d.acts.rank.effects[0].value.slot = "text"; }), "name"],
-      ["a source of another type: the signer into a text", edit({ value: { slot: "text", from: { signer: true } } }), "name"],
-      ["the first delivery's form of a member from a fetched fact", refusal((d) => { d.acts.borrow.effects[1].party.from = { fact: "proof", field: "owner" }; }), "shape"],
-      ["a list of operands into a slot that holds one member", staffing({ party: { slot: "helper", from: [who] } }), "shape"],
-      ["more operands than the list can hold", staffing(team([who, who, who, who])), "bound"],
-      ["an `add` of a list of operands", staffing(team([who], "add")), "shape"],
-      ["a list set whole from a list that can hold more", refusal((d) => { d.acts.staff.fields.team.max = 4; }), "bound"],
-      ["one member into a list slot, with no `add`", staffing(team(who)), "name"],
-      // Further sources of an attribution.
-      ["a further source that is no form", attributed({ members: { field: "earlier" } }), "shape"],
-      ["a further source from a slot that is no party slot", attributed({ subject: "also.parent", slot: "text" }), "name"],
-      ["a further source over each element of a value that is no list", attributed({ each: { field: "staffed" }, as: "e", list: { element: "e" } }), "name"],
-      ["a further source whose list holds no members", attributed({ list: { field: "earlier" } }), "name"],
-    ];
     expect(rows.filter(([, matched, code]) => (code === null ? matched !== null : matched?.length !== 1 || matched[0] !== code)).map(([name, matched]) => [name, matched])).toEqual([]);
   });
 });

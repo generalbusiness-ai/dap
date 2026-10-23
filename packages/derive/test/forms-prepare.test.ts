@@ -1,11 +1,12 @@
+import { forms_prepare_change0 } from "./definition-corpus/forms-prepare-variants.ts";
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { SignedIntent } from "@generalbusiness/dap-contract";
 import { intentDigest, isSealed } from "@generalbusiness/artroom-bytes";
-import { JOB_READ_ACTION, WINDOWS, capabilitiesOf, clockOf, gitRead, holdCapability, judgePreparation, ownerReservations, preparationStatus, reserved, settleOutcome } from "../src/index.ts";
+import { JOB_READ_ACTION, WINDOWS, capabilitiesOf, clockOf, gitRead, holdCapability, judgePreparation, ownerReservations, preparationStatus, reserved, settleOutcome, validateDefinition } from "../src/index.ts";
 import type { GrantDecision, Steps, Window } from "../src/index.ts";
 import { kindOf } from "../src/operand.ts";
-import { Scope, grantOf, keys, lane, laneDefinition, on, otherLane, t, variant } from "./fixtures-entry.ts";
+import { Scope, grantOf, keys, laneDefinition, on, otherLane, t, valid, variant } from "./fixtures-entry.ts";
 
 const { una, vic, paul, sam } = keys;
 
@@ -98,18 +99,8 @@ describe("a preparation (scope contract, section 5.5), with stand-in step rules"
  * `job-deadline`: they move the job and nothing else.
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-const checking = variant(lane, (def: any) => {
-  def.capabilities.push({ name: "git-read", version: 1 });
-  const name = { type: "text", max: 64 };
-  def.items.rules = { many: false, max: 1, states: { current: { final: false } }, initial: "current", parties: {}, refs: {}, values: { checks: { fixed: false, required: true, of: { type: "list", of: { type: "record", of: { name: { ...name, required: true }, checker: { type: "member", required: true } } }, max: 4 } } } };
-  def.items.job = { many: true, max: 8, states: { requested: { final: false }, passed: { final: false }, "timed-out": { final: false } }, initial: "requested", parties: {}, refs: {}, values: { name: { fixed: true, required: true, of: name }, deadline: { fixed: true, required: true, of: { type: "time" } } } };
-  const row = { also: {}, guards: [], sends: [], attention: [] };
-  def.acts.publish = { ...row, step: "open", on: "rules", grant: "publish", fields: { checks: { ...def.items.rules.values.checks.of, required: true } }, effects: [{ value: { slot: "checks", from: { field: "checks" } } }] };
-  def.acts["request-check"] = { ...row, step: "open", on: "job", grant: "propose", fields: { name: { ...name, required: true } }, effects: [{ value: { slot: "name", from: { field: "name" } } }, { value: { slot: "deadline", from: { time: { plusSeconds: 1800 } } } }] };
-  const waiting = [{ state: ["requested", "timed-out"] }];
-  def.acts.decide = { ...row, step: "transition", on: "job", grant: "check", fields: {}, guards: waiting, effects: [{ state: "passed" }] };
-  def.acts["time-out"] = { ...row, step: "transition", on: "job", grant: "check", fields: {}, guards: waiting, effects: [{ state: "timed-out" }] };
-});
+import { checkingData } from "./definition-corpus/checking-data.ts";
+const checking = valid(validateDefinition(checkingData(), PROPOSED_BOUNDS));
 
 describe("the step `job-read` of `git-read@1` (authority note, sections 3.11 and 5.7; plan step 24), on the capability's own code", () => {
   const code = capabilitiesOf(holdCapability({ tokensPerHold: 2, rootRetentionSeconds: null }), gitRead());
@@ -139,7 +130,7 @@ describe("the step `job-read` of `git-read@1` (authority note, sections 3.11 and
     // Real in-memory preparation/outcome judgments, native capability code
     // and fold. Lane data, initial scope and granted authority are fixtures;
     // the offered host answer is synthetic, and no provider is called.
-    const definition = variant(checking.declared, data => { data.capacity = { name: "whole-scope", version: 1 }; });
+    const definition = variant(checking.declared, forms_prepare_change0);
     const { s, job, ask, outcome, token } = lanes(definition);
     const ci = job("ci"), prepared = ask(paul, { job: ci });
     if (prepared.j.result !== "write") throw new Error("native job-read must prepare");

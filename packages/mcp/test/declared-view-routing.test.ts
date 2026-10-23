@@ -1,3 +1,4 @@
+import { configureRoutingDefinition } from "./support/definition-corpus-data.ts";
 /** Trusted read/session/standing ports are explicit fixtures. This witnesses
  * generic routing and the mounted pre-sign boundary, not native authority. */
 import { expect, test } from "vitest";
@@ -16,9 +17,7 @@ async function fixture(condition = rule, related = false, outcome: "accepted" | 
   const base = await applicationCounterPacket2(), board = base.package.presentation.views["board"]!;
   if (board.kind === "surface") throw Error("Item fixture required.");
   const definition = parseStrict(base.package.semantic.definitions[0]!.bytes) as DeclaredDefinition;
-  definition.items["board"] = { ...definition.items["board"]!, many: true, max: 4 };
-  if (withMembers) definition.items["board"]!.parties = { ...definition.items["board"]!.parties,
-    worker: { fixed: false, required: false, list: false, author: false } };
+  configureRoutingDefinition(definition, withMembers);
   const id = definitionDigest(definition), { creates: _creates, ...semantic } = base.package.semantic;
   const { semantic: _semantic, ...presentation } = base.package.presentation;
   const fields = { lastNumber: { from: { kind: "value", name: "lastNumber" }, of: { type: "int", min: 0, max: 100 }, nullable: false },

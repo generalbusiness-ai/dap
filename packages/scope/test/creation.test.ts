@@ -1,3 +1,4 @@
+import { withWholeCapacity, creationStagedRenewChange, creationNoAttentionChange, creationProofChange, creationStagedReportChange } from "./definition-corpus-data.ts";
 import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { describe, expect, test } from "vitest";
@@ -15,15 +16,13 @@ describe("founding a directory (sections 2.2, 2.3 and 7.1)", () => {
   test("an opted-in declaration with an unbounded native snapshot producer is refused before genesis; the same legacy declaration still creates", async () => {
     // Real production creation/validation/SQLite and native capability code.
     // No staging, outside operation, user act or test authority runs.
-    const under = variant(definition.declared, d => {
-      d.acts.renew.guards.push({ capability: { name: "hold", guard: "staged", with: {} } });
-    });
+    const under = variant(definition.declared, creationStagedRenewChange());
     const intent: Intent = { v: 1, to: null, actor: rita.key, kind: "found", on: null, expected: {}, fields: { title: "A lane", opener: rita.member }, idempotencyKey: crypto.randomUUID(), notAfter: timeOf(Date.now() + 60_000) };
     const signed = signIntent(intent, rita.secret);
     const seed: Seed = { v: 1, kind: "directory", definition: under.digest, creator: null, cause: intentDigest(intent), ordinal: 0 };
     const legacy = stubOf(scopeIdOf(seed), env.AS_DEPLOYED);
     expect(await legacy.create(signed, under.declared)).toMatchObject({ answer: "accepted", receipt: { fact: { seq: 0 } } });
-    const declared: DeclaredDefinition = { ...under.declared, capacity: { name: "whole-scope", version: 1 } };
+    const declared = withWholeCapacity(under.declared);
     const name = scopeIdOf({ ...seed, definition: definitionDigest(declared) });
     const stub = stubOf(name, env.AS_DEPLOYED);
     expect(await stub.create(signed, declared)).toEqual({ answer: "refused", reason: "unsupported-definition" });
@@ -58,7 +57,7 @@ describe("founding a directory (sections 2.2, 2.3 and 7.1)", () => {
     const s = await create();
     const [hold] = await s.holds(1);
     // The same lane, but the end of a hold tells nobody. A creation under it reaches the scope when the hold is due.
-    const other = variant(definition.declared, (def) => { def.timed["hold-end"].attention = []; });
+    const other = variant(definition.declared, creationNoAttentionChange());
     s.c.clock.now = at(HOLD);
     expect(await s.stub.create(creation(at(HOLD + 60)).signed, other.declared)).toEqual({ answer: "refused", reason: "source-unverified" });
     // The turn drained first, as every turn does, and the end it wrote is the pinned definition's.
@@ -71,9 +70,7 @@ describe("founding a directory (sections 2.2, 2.3 and 7.1)", () => {
     l.did(rita, "offer", { fields: { intent: 0 }, expected: { intent: 1 } });
     const entry = l.did(rita, "assign", { on: 2, expected: { on: 1 }, fields: { performer: una.member } });
     const proof = l.fact(entry.seq);
-    const naming = variant(definition.declared, (def) => {
-      def.acts[def.genesis].fields.proof = { type: "fact", kind: ["assign"], under: "lane", required: false };
-    });
+    const naming = variant(definition.declared, creationProofChange());
     const signed = signIntent({ v: 1, to: null, actor: rita.key, kind: "found", on: null, expected: {}, fields: { title: "A lane", opener: rita.member, proof }, idempotencyKey: "k", notAfter: at(60) }, rita.secret);
     const name = scopeIdOf({ v: 1, kind: "directory", definition: naming.digest, creator: null, cause: intentDigest(signed.intent), ordinal: 0 });
     const c = controls(name, START);
@@ -206,11 +203,7 @@ describe("founding a directory (sections 2.2, 2.3 and 7.1)", () => {
 
   test("a definition that needs a capability record: the production wiring has the capability's code and founds a scope under it, which admits no act and no step and sends nothing; a runtime that lacks the code founds none; the scripted test capability, a stand-in that shows nothing about a real hold, runs it in a test; a replay with no code for the capability answers unsupported-definition", async () => {
     // The lane of the other tests, whose `report` now asks the hold capability whether the commit is staged, and pins it.
-    const staged = variant(definition.declared, (def) => {
-      def.acts.report.fields.commit = { type: "commit", required: true };
-      def.acts.report.guards.push({ capability: { name: "hold", guard: "staged", with: { commit: { field: "commit" }, under: { item: "also.commitment" } } } });
-      def.acts.report.effects.push({ capability: { name: "hold", do: "pin-hold", with: { commit: { field: "commit" } } } });
-    });
+    const staged = variant(definition.declared, creationStagedReportChange());
     const fields = { title: "A lane", opener: rita.member };
     const commit = "c".repeat(40);
 

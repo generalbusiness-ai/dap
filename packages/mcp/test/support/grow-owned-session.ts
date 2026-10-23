@@ -1,3 +1,4 @@
+import { growLauncherDefinition } from "./definition-corpus-data.ts";
 /** One Core/SQLite Site -> Room path. TEST grants, namespace routing,
  * installation lookup and sessions remain fixtures. Every birth and source
  * entry is native; no Lane reference or application state is manufactured. */
@@ -46,12 +47,7 @@ export async function openOwnedGrowScenario(packet: AnyPackedApplication, value:
         return scopes.get(name)!;
       };
       deliverNative = deliver;
-      const launcher: DeclaredDefinition = { format: "artroom-definition-1", name: "test.grow-directory-launcher", profile: { name: "restricted", version: 1 }, capabilities: [], genesis: "establish",
-        items: { launcher: { many: false, max: 1, initial: "open", states: { open: { final: false } }, parties: {}, refs: {}, values: {} } },
-        acts: { establish: { step: "open", on: "launcher", grant: "grow.configure", also: {}, fields: { label: { type: "text", max: 80, required: true } }, guards: [], effects: [],
-          sends: [{ create: { kind: "lane", definition: packet.package.semantic.entry, fields: { label: { const: "Grow site" } }, result: { applied: [], refused: [], undelivered: [], conflict: [] } } }], attention: [] } },
-        receives: {}, timed: {}, rules: {},
-      };
+      const launcher = growLauncherDefinition(packet.package.semantic.entry);
       directory = await LocalApplicationScope.directory(launcher, definitions, founding, actors, now);
       attach(directory.at.scope, directory);
       site = await deliver(directory, 0, 0); await deliver(site, 0, 0);

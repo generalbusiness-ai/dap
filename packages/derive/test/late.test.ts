@@ -1,10 +1,10 @@
+import { lateIgnoredGuardData, lateRelationshipData, lateResultData, lateRenamedPinData, lateOrdinaryLicenseData, lateTrustedData, lateNativePinData, lateNormalRuleData, lateOpeningData, lateOpeningEffects } from "./definition-corpus/late-pin-variants.ts";
 import { expect, test } from "vitest";
 import { factRefOf, isEntry } from "@generalbusiness/artroom-bytes";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { PlatformData } from "@generalbusiness/dap-contract";
 import { holdCapability, judgeDelivery, ownerReservations, prepareRules, validateDefinition } from "../src/index.ts";
 import { RULE_PROFILES } from "../src/rule/index.ts";
-import { arriving, created, deliver, forged, keys, sent, t, valid, sourceOrderDefinition, sourceOrderFixture, lateDefinition, lateFixture, boundRecordData, PIN_BOUNDS, receiverPinData } from "./fixtures-entry.ts";
+import { arriving, created, deliver, forged, keys, sent, t, valid, sourceOrderFixture, lateDefinition, lateFixture, boundRecordData, PIN_BOUNDS } from "./fixtures-entry.ts";
 
 test.each([false, true])("late branch=%s: fresh and boundary run normal forms; strictly late replaces or refuses with an authenticated result", branch => {
   for (const seconds of [29.999, 30, 30.001]) {
@@ -45,9 +45,7 @@ test("late time judgments refuse clock-behind before any entry in both branches"
 });
 
 test("a late replacement does not evaluate the normal handler's failing guard", () => {
-  const definition = structuredClone(sourceOrderDefinition);
-  definition.receives["sample"]!.guards = [{ equals: { a: { const: 1 }, b: { const: 2 } }, reason: "normal-only" }];
-  definition.receives["sample"]!.late = { within: { seconds: 30 }, reason: "old-sample", then: {} };
+  const definition = lateIgnoredGuardData();
   const { sender, receiver } = sourceOrderFixture(definition); receiver.now = t(31);
   expect(deliver(receiver, sender, 1, 0)).toMatchObject({ result: "write", draft: { input: { decision: "applied", late: { reason: "old-sample" } }, effects: [] } });
   expect(receiver.item(0).values["last"]).toBe(0);
@@ -65,11 +63,7 @@ test("a negative apparent latency remains fresh without inventing clock toleranc
 
 test("a late relationship refusal writes no copy; an applied replacement advances the actual copy", () => {
   for (const branch of [false, true]) {
-    const declaration = lateDefinition(branch), handler = declaration.receives["sample"]!;
-    handler.class = "relate"; handler.copies = 4; delete handler.order;
-    declaration.items["board"]!.refs["me"] = { fixed: true, required: true, to: { type: "item", of: "board" } };
-    declaration.acts["found"]!.effects = [...declaration.acts["found"]!.effects, { ref: { slot: "me", from: "self" } }];
-    declaration.acts["emit"]!.sends = [{ relate: { to: { slot: "peer" }, name: "sample", item: { slot: "me" }, state: "set", detail: { value: { field: "first" } }, result: {} } }];
+    const declaration = lateRelationshipData(branch);
     const { sender, receiver } = sourceOrderFixture(declaration); receiver.now = t(31);
     expect(deliver(receiver, sender, 1, 0)).toMatchObject({ result: "write", draft: { input: { decision: branch ? "applied" : "refused" } } });
     expect(receiver.state.relation(sender.at, "sample", 0)).toEqual(branch ? expect.objectContaining({ revision: 1, state: "set" }) : null);
@@ -96,12 +90,7 @@ test("replacement validation cannot borrow normal guards and late is a closed ha
 
 test("a result reconstructs the actual normal or late send clause from its deciding entry", () => {
   for (const late of [false, true]) {
-    const definition = lateDefinition(true), handler = definition.receives["sample"]!;
-    definition.capacity = { name: "whole-scope", version: 1 };
-    handler.effects = [...handler.effects, { of: "also.board", ref: { slot: "peer", from: { sender: true } } }];
-    handler.sends = [{ tell: { to: { slot: "peer", of: "also.board" }, message: "other", fields: { value: { const: 11 } }, result: { applied: [{ of: "also.board", value: { slot: "last", from: { const: 12 } } }] } } }];
-    handler.late!.then!.effects = [...handler.late!.then!.effects!, { of: "also.board", ref: { slot: "peer", from: { sender: true } } }];
-    handler.late!.then!.sends = [{ tell: { to: { slot: "peer", of: "also.board" }, message: "other", fields: { value: { const: 21 } }, result: { applied: [{ of: "also.board", value: { slot: "last", from: { const: 22 } } }] } } }];
+    const definition = lateResultData();
     const { receiver, sender } = sourceOrderFixture(definition); receiver.now = t(late ? 31 : 29);
     expect(deliver(receiver, sender, 1, 0)).toMatchObject({ result: "write" });
     const deciding = receiver.last.seq;
@@ -123,17 +112,14 @@ test("late refuses the unsupported item-bound native combination while the origi
 });
 
 test("late replacement refuses the capability's reserved request regardless of the local handler name", () => {
-  const data = receiverPinData(), handler = data.receives["license"]!;
-  delete data.receives["license"]; data.receives["renamed"] = handler;
-  handler.late = { within: { seconds: 30 }, reason: "old-license" };
+  const data = lateRenamedPinData(), handler = data.receives["renamed"]!;
   expect(validateDefinition(data, PIN_BOUNDS).ok).toBe(true);
-  handler.late.then = {};
+  handler.late!.then = {};
   const checked = validateDefinition(data, PIN_BOUNDS);
   expect(checked.ok).toBe(false);
   if (!checked.ok) expect(checked.problems).toContainEqual(expect.objectContaining({ code: "late-then-on-reserved-handler", path: "receives.renamed.late.then" }));
   // A same-name ordinary message has no native receiver reservation.
-  const ordinary = lateDefinition(true);
-  ordinary.receives["sample"]!.message = "export-license";
+  const ordinary = lateOrdinaryLicenseData();
   expect(validateDefinition(ordinary, PROPOSED_BOUNDS).ok).toBe(true);
   const advisory = lateDefinition(false);
   advisory.receives["sample"]!.class = "advisory";
@@ -145,11 +131,7 @@ test("late replacement refuses the capability's reserved request regardless of t
 
 test("trusted platform capacity includes requests declared only by a late replacement", () => {
   // Trusted fictional data, not production rules or native authority.
-  const declaration = { ...lateDefinition(true), name: "platform:late-fixture", outcomes: {} } as PlatformData;
-  declaration.name = "platform:late-fixture"; declaration.outcomes = {};
-  declaration.capacity = { name: "whole-scope", version: 1 };
-  declaration.receives["sample"]!.late!.then!.effects = [{ of: "also.board", ref: { slot: "peer", from: { sender: true } } }];
-  declaration.receives["sample"]!.late!.then!.sends = [{ tell: { to: { slot: "peer", of: "also.board" }, message: "other", fields: { value: { const: 21 } }, result: {} } }];
+  const declaration = lateTrustedData();
   const checked = validateDefinition(declaration, PROPOSED_BOUNDS, undefined, { platform: true });
   expect(checked.ok, checked.ok ? undefined : JSON.stringify(checked.problems)).toBe(true);
   if (checked.ok) expect(checked.definition.reserving?.requests?.["receives.sample.late.then.sends.0"]?.entries).toBeGreaterThan(0);
@@ -158,7 +140,7 @@ test("trusted platform capacity includes requests declared only by a late replac
 test("a late refusal consumes a native receiver pin and exact repeat consumes nothing more", () => {
   // Native hold capability, judge and MemoryState; task source and grants
   // are scripted fixture inputs, not native object or provider evidence.
-  const data = receiverPinData(); data.receives["license"]!.late = { within: { seconds: 30 }, reason: "old-license" };
+  const data = lateNativePinData();
   const definition = valid(validateDefinition(data, PIN_BOUNDS)), owner = holdCapability({ tokensPerHold: 2, rootRetentionSeconds: 600 });
   const ledger = created(definition, { title: "A", opener: keys.rita.member }); ledger.bounds = PIN_BOUNDS;
   const task = { ...ledger.at, kind: "task" as const };
@@ -180,8 +162,7 @@ test("a late refusal consumes a native receiver pin and exact repeat consumes no
 });
 
 test("rule preparation collects no normal guard input for a late replacement", () => {
-  const declaration = lateDefinition(true);
-  declaration.rules = { normal: "false" }; declaration.receives["sample"]!.guards = [{ rule: "normal", reason: "normal-only" }];
+  const declaration = lateNormalRuleData();
   const definition = valid(validateDefinition(declaration, PROPOSED_BOUNDS, RULE_PROFILES));
   const receiver = created(definition, {}, "receiver"), sender = created(definition, {}, "sender");
   sender.did(keys.rita, "emit", { on: 0, expected: { on: sender.item(0).revision }, fields: { to: receiver.at, first: 1, second: 2 } });
@@ -195,12 +176,9 @@ test("rule preparation collects no normal guard input for a late replacement", (
 });
 
 test("the replacement shares its declared opening context and must set its own required slots", () => {
-  const declaration = lateDefinition(true), handler = declaration.receives["sample"]!;
-  declaration.items["row"] = { many: true, max: 3, initial: "open", states: { open: { final: false } }, parties: {}, refs: {}, values: { value: { fixed: true, required: true, of: { type: "int", min: 0, max: 100 } } } };
-  handler.opens = "row"; handler.effects = [{ value: { slot: "value", from: { field: "value" } } }];
-  handler.late!.then!.effects = [];
+  const declaration = lateOpeningData(), handler = declaration.receives["sample"]!;
   expect(validateDefinition(declaration, PROPOSED_BOUNDS).ok).toBe(false);
-  handler.late!.then!.effects = [{ value: { slot: "value", from: { const: 42 } } }];
+  handler.late!.then!.effects = lateOpeningEffects();
   const { sender, receiver } = sourceOrderFixture(declaration); receiver.now = t(31);
   expect(deliver(receiver, sender, 1, 0)).toMatchObject({ result: "write" });
   expect(receiver.item(1)).toMatchObject({ type: "row", values: { value: 42 } });

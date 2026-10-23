@@ -1,3 +1,4 @@
+import { scopeHeldOperationsChange } from "./definition-corpus-data.ts";
 import { evictDurableObject, runDurableObjectAlarm, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
@@ -21,7 +22,7 @@ import { START, at, objectOf, reader, rita, stubOf, una } from "./fixtures-nativ
 test("a reservation that an item holds, on real storage: the entry that opens the holder is admitted only with the whole amount; a draw moves a count to the operation that it is for; an outcome that draws is written with no free room; the store reads the operations of one holder by the holder; and a checkpoint's digest covers the counts", async () => {
   const MADE = "platform:task@1" as PlatformDefinition;
   const TICKET = 1;
-  const definition = gateWith((d) => { d.name = "platform:task"; d.acts.enter.grant = "gate.enter"; d.items.ticket.holds = { operations: { probe: 2 } }; d.outcomes.probe = { ...d.outcomes.probe, attempts: 1, most: { effects: 0, operations: ["probe"] } }; });
+  const definition = gateWith(scopeHeldOperationsChange());
   const opens = [{ effect: "operation", k: 0, owner: MADE, kind: "probe", attempts: 1, for: TICKET }, { effect: "attempt", operation: { k: 0 }, attempt: 1, result: "opened", selected: null }];
   // The rule of an outcome reads what the ticket still holds, to stay inside it (section 6.1, "A rule may read what an item still holds").
   const again = ({ state }: RuleGiven) => ({ effects: [], sends: [], opens: (state.holder(TICKET)?.operations?.["probe"] ?? 0) > 0 ? [{ owner: MADE, kind: "probe", attempts: 1, for: TICKET }] : [] });

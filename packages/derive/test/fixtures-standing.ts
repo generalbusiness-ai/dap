@@ -1,5 +1,5 @@
 /** Made-up C1 platform data shared by pure and native witnesses. */
-import { desk } from "./fixtures.ts";
+import { desk } from "./definition-corpus/fixture-data.ts";
 const form = { also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [] };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function standingData(change: (data: any) => void = () => {}) {

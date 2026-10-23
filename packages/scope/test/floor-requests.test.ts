@@ -1,3 +1,4 @@
+import { floorReceiverChange, floorSenderChange } from "./definition-corpus-data.ts";
 /** Two actual native scopes, sends, ACKs, decisions, SQLite and restart.
  * Declarations/authority/readers/clock are fixtures; the receiver transport
  * deliberately withholds results. Floor receipts are test statements, not
@@ -35,14 +36,9 @@ const floor = (lane: Lane, input: FloorInput) => lane.inside(state => new Scope(
 // it only at the next floor. Completed non-create request identity/hash and
 // exact checkpoint state survive removal of both old payloads.
 test("Native ACK timing, completed request100/result150, archived resolver and stale repeats survive two floors", async () => {
-  const receiverDefinition = variant(archiveDefinition.declared, data => {
-    data.receives.ack = { class: "tell", message: "ack", from: { kind: "directory" }, opens: null, also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [] };
-  });
+  const receiverDefinition = variant(archiveDefinition.declared, floorReceiverChange());
   const receiver = await create({}, {}, receiverDefinition);
-  const senderDefinition = variant(archiveDefinition.declared, data => {
-    data.items.intent.refs.peer = { fixed: false, required: false, to: { type: "scope", kind: "directory" } };
-    data.acts.ask = { step: "transition", on: "intent", grant: "remark", also: {}, fields: { peer: { type: "scope", kind: "directory", required: true } }, guards: [], effects: [{ ref: { slot: "peer", from: { field: "peer" } } }], sends: [{ tell: { to: { slot: "peer" }, message: "ack", fields: {}, result: {} } }], attention: [] };
-  });
+  const senderDefinition = variant(archiveDefinition.declared, floorSenderChange());
   const sender = await create({}, {}, senderDefinition), net = namespace(env.SCOPES);
   let permit = false, sends = 0;
   wired.set(sender.name, () => ({ resolver: net.resolver, transport: net.transport }));
@@ -127,14 +123,9 @@ test("Native ACK timing, completed request100/result150, archived resolver and s
 }, 90_000);
 
 test("Native delivery-unavailable request keeps its old sending entry for a legitimate late result", async () => {
-  const receiverDefinition = variant(archiveDefinition.declared, data => {
-    data.receives.ack = { class: "tell", message: "ack", from: { kind: "directory" }, opens: null, also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [] };
-  });
+  const receiverDefinition = variant(archiveDefinition.declared, floorReceiverChange());
   const receiver = await create({}, {}, receiverDefinition);
-  const senderDefinition = variant(archiveDefinition.declared, data => {
-    data.items.intent.refs.peer = { fixed: false, required: false, to: { type: "scope", kind: "directory" } };
-    data.acts.ask = { step: "transition", on: "intent", grant: "remark", also: {}, fields: { peer: { type: "scope", kind: "directory", required: true } }, guards: [], effects: [{ ref: { slot: "peer", from: { field: "peer" } } }], sends: [{ tell: { to: { slot: "peer" }, message: "ack", fields: {}, result: {} } }], attention: [] };
-  });
+  const senderDefinition = variant(archiveDefinition.declared, floorSenderChange());
   const sender = await create({}, {}, senderDefinition), net = namespace(env.SCOPES);
   let attempts = 0;
   // One unanswered send followed by actual logged routing refusals makes a

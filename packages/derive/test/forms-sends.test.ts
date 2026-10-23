@@ -1,6 +1,8 @@
+import { wholePullData, repeatedPullData, citedPullData } from "./definition-corpus/forms-sends-additional.ts";
+import { forms_sends_change0 } from "./definition-corpus/forms-sends-variants.ts";
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { ActType, DeclaredDefinition, Input, Request, Result, ScopeRef, Seed } from "@generalbusiness/dap-contract";
+import type { Input, Request, Result, ScopeRef, Seed } from "@generalbusiness/dap-contract";
 import { intentDigest } from "@generalbusiness/artroom-bytes";
 import { validateDefinition, type ProblemCode } from "../src/index.ts";
 import { Scope, arrive, born, decided, deliver, desk, directory, fields, created, keys, on, ticketDefinition, valid, variant } from "./fixtures-entry.ts";
@@ -15,80 +17,8 @@ const { rita, una } = keys;
  * tells each linked issue, by one fan-out; then the staging lane, when there
  * is one; and sends an index row.
  */
-const text = { type: "text", max: 100 } as const;
-const slot = { fixed: false, required: false } as const;
-const lane = { type: "scope", kind: "lane" } as const;
-const staged = [{ of: "also.proposal", set: "staging" }] as const;
-const act = (a: Partial<ActType> & Pick<ActType, "step" | "on" | "grant">): ActType => ({ also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [], ...a });
-const pull: DeclaredDefinition = {
-  format: "artroom-definition-1", name: "pull", profile: { name: "restricted", version: 1 }, capabilities: [], genesis: "open",
-  items: {
-    proposal: {
-      many: false, max: 1, states: { open: { final: false } }, initial: "open",
-      parties: { author: { fixed: true, required: true, list: false, author: false }, watchers: { ...slot, list: true, max: 2, author: false } },
-      refs: { staging: { ...slot, to: lane }, closed: { ...slot, to: { type: "item", of: "link" } } }, values: {},
-    },
-    link: {
-      many: true, max: 3, states: { set: { final: false }, removed: { final: true } }, initial: "set", parties: {},
-      refs: { issue: { fixed: true, required: true, to: lane }, madeAt: { fixed: true, required: true, to: { type: "fact", kind: ["link"], under: "pull" } } }, values: { how: { ...slot, of: text } },
-    },
-    merge: { many: true, max: 4, states: { intended: { final: false }, done: { final: true }, refused: { final: true } }, initial: "intended", parties: {}, refs: { peer: { ...slot, to: lane } }, values: {} },
-  },
-  acts: {
-    open: act({ step: "open", on: "proposal", grant: "open", fields: { opener: { type: "member", required: true } }, effects: [{ party: { slot: "author", from: { field: "opener" } } }] }),
-    stage: act({
-      step: "transition", on: "proposal", grant: "write", fields: { staging: { ...lane, required: true }, watcher: { type: "member", required: true } }, guards: [{ state: ["open"] }],
-      effects: [{ ref: { slot: "staging", from: { field: "staging" } } }, { party: { slot: "watchers", from: { field: "watcher" }, list: "add" } }],
-    }),
-    link: act({
-      step: "open", on: "link", grant: "write", fields: { issue: { ...lane, required: true }, how: { ...text, required: false } },
-      effects: [{ ref: { slot: "issue", from: { field: "issue" } } }, { ref: { slot: "madeAt", from: "self" } }, { value: { slot: "how", from: { field: "how" } } }],
-    }),
-    merge: act({
-      step: "open", on: "merge", grant: "merge", also: { proposal: { item: "proposal", one: true }, link: { item: "link", by: "link" } },
-      fields: { peer: { ...lane, required: false }, link: { type: "item", of: "link", required: false } }, effects: [{ ref: { slot: "peer", from: { field: "peer" } } }],
-      sends: [
-        {
-          tell: {
-            to: { slot: "staging", of: "also.proposal" }, message: "reserve", if: staged,
-            fields: {
-              operation: "self", by: { signer: true }, lane: { scope: true }, intent: { intent: true }, why: { const: "ready" }, proposal: { item: "also.proposal" }, author: { slot: "author", of: "also.proposal" },
-              links: { collect: { items: { type: "link", states: ["set"], where: [{ differs: { a: { slot: "how" }, b: { const: "manual" } } }] }, fields: { link: "item", state: "state", issue: "issue", how: "how" } } },
-            },
-            result: { refused: [{ state: "refused" }] },
-          },
-        },
-        // Addressed by a slot of the item this entry opens, which its own effect sets.
-        { tell: { to: { slot: "peer" }, message: "note", fields: {}, result: { applied: [{ state: "done" }] } } },
-        // The address of the first reads the link that the act may name, and so does the condition of the second.
-        { relate: { to: { slot: "issue", of: "also.link" }, name: "blocks", item: { item: "also.link" }, state: "set", detail: {}, result: {} } },
-        { tell: { to: { slot: "peer" }, message: "unexplained", if: [{ equals: { a: { slot: "how", of: "also.link" }, b: { none: true } } }], fields: {}, result: {} } },
-      ],
-      // The watchers are told only of a merge that names a link which states how it was made.
-      attention: [{ notify: { slot: "watchers", of: "also.proposal", when: "after", reason: "merging", if: [{ differs: { a: { slot: "how", of: "also.link" }, b: { none: true } } }] } }],
-    }),
-  },
-  receives: {
-    published: {
-      message: "published", class: "tell", from: { kind: "lane" }, opens: null, fields: { outcome: { type: "enum", of: ["published", "refused"], required: true }, commit: { ...text, required: false } },
-      also: { proposal: { item: "proposal", one: true } }, guards: [], effects: [],
-      attention: [{ notify: { slot: "watchers", of: "also.proposal", when: "after", reason: "published", if: [{ equals: { a: { field: "outcome" }, b: { const: "published" } } }] } }],
-      sends: [
-        {
-          relate: {
-            each: { type: "link", states: ["set"] }, to: { slot: "issue", of: "each" }, name: "closes", item: { item: "each" }, state: "merged", if: [{ equals: { a: { field: "outcome" }, b: { const: "published" } } }],
-            detail: { commit: { field: "commit" }, how: { slot: "how", of: "each" }, from: { sender: true }, by: { source: "ref" }, made: { slot: "madeAt", of: "each" }, seq: { slot: "madeAt", of: "each", part: "seq" } },
-            // The clause of one send of the fan-out reads the item of that send.
-            result: { applied: [{ of: "also.proposal", ref: { slot: "closed", from: { item: "each" } } }] },
-          },
-        },
-        { tell: { to: { slot: "staging", of: "also.proposal" }, message: "unpin", if: staged, fields: { because: { const: "published" } }, result: {} } },
-        { index: { fields: { merge: { field: "outcome" } } } },
-      ],
-    },
-  },
-  timed: {}, rules: {},
-};
+import { pull } from "./definition-corpus/forms-sends-data.ts";
+
 /** The fan-out is at its limit here: the type takes three live links, and one fan-out makes at most three sends. */
 const tight = { ...PROPOSED_BOUNDS, fanOut: 3 };
 const pullDefinition = valid(validateDefinition(pull, tight));
@@ -110,7 +40,7 @@ describe("sends (section 6.6)", () => {
   test.each(["legacy", "whole-scope"] as const)("%s: a fan-out at its limit keeps each request's ordinal and reservation when a later conditional send is omitted", cohort => {
     const [X, issue] = [9, 1].map((n) => new Scope(ticketDefinition, rita.member, true, n)) as [Scope, Scope];
     const [A, B, C, S] = [issue.at, ...[2, 3, 4].map(address)] as [ScopeRef, ScopeRef, ScopeRef, ScopeRef];
-    const definition = cohort === "whole-scope" ? valid(validateDefinition({ ...pull, capacity: { name: "whole-scope", version: 1 } }, tight)) : pullDefinition;
+    const definition = cohort === "whole-scope" ? valid(validateDefinition(wholePullData(), tight)) : pullDefinition;
     const P = new Scope(definition);
     const links = [C, A, B].map((to, i) => P.did(rita, "link", fields(i === 0 ? { issue: to, how: "keyword" } : { issue: to })).seq);
     // No lane staged this work, so the `unpin` is not made: the index row takes the next ordinal, and the result the one after.
@@ -138,7 +68,7 @@ describe("sends (section 6.6)", () => {
     expect([sent(P).map(([, kind]) => kind), told(P)]).toEqual([["unpin", "advisory", "result"], []]);
 
     // Each send of a fan-out has its own key. Two links to one issue, sent for one item, are one key: the delivery is refused, and sends its result alone.
-    const same = new Scope(valid(validateDefinition({ ...pull, receives: { published: { ...pull.receives["published"]!, sends: [{ relate: { ...(pull.receives["published"]!.sends[0] as { relate: object }).relate, item: { item: "also.proposal" }, result: {} } }] } } }, tight)));
+    const same = new Scope(valid(validateDefinition(repeatedPullData(), tight)));
     for (const issue of [A, A]) same.did(rita, "link", fields({ issue }));
     published(same, X);
     expect([decided(same), same.last.sends.length]).toEqual([["refused", "duplicate-relation"], 1]);
@@ -191,19 +121,7 @@ describe("sends (section 6.6)", () => {
 
   test("a record that holds a reference to this scope's own entry is sent with the full reference, and a receiver with the same record type accepts it", () => {
     // `note` is a comment: its entry is the own fact that the record names. `cite` sends a record of it to the staging lane.
-    const proof = { type: "fact", kind: ["note"], under: "pull" } as const;
-    const evidence = { type: "record", of: { proof: { ...proof, required: true } } } as const;
-    const cited = valid(validateDefinition((() => {
-      const d = structuredClone(pull) as any;   // eslint-disable-line @typescript-eslint/no-explicit-any
-      d.acts.note = act({ step: "comment", on: null, grant: "write" });
-      d.acts.cite = act({
-        step: "transition", on: "proposal", grant: "write", fields: { evidence: { ...evidence, required: true } }, guards: [{ state: ["open"] }],
-        sends: [{ tell: { to: { slot: "staging" }, message: "evidence", fields: { evidence: { field: "evidence" } }, result: {} } }],
-      });
-      d.receives.evidence = { message: "evidence", class: "tell", from: { kind: "lane" }, opens: null, fields: { evidence: { ...evidence, required: true } }, also: {}, guards: [], effects: [], sends: [], attention: [] };
-      d.receives.flag = { ...d.receives.evidence, message: "flag", fields: { tag: { type: "record", of: { self: { type: "bool", required: true } }, required: true } } };
-      return d as DeclaredDefinition;
-    })(), tight));
+    const cited = valid(validateDefinition(citedPullData(), tight));
     const R = new Scope(cited, rita.member, true, 5);
     const P = new Scope(cited);
     P.did(rita, "stage", { ...on(P, 0), ...fields({ staging: R.at, watcher: una.member }) });
@@ -236,7 +154,7 @@ describe("sends (section 6.6)", () => {
     const K = born(C, split.seq).child;
     expect(K.last.sends.map((s) => [s.n, s.message.class, s.to])).toEqual([[0, "result", C.at], [1, "advisory", D.at]]);
     // A directory records no directory of its own. The index row of its genesis act is not made.
-    expect(created(variant(desk, (d) => { d.acts["found"].sends = [{ index: { fields: {} } }]; })).last.sends).toEqual([]);
+    expect(created(variant(desk, forms_sends_change0)).last.sends).toEqual([]);
   });
 
   test("the validator bounds what one entry can send and tell, and refuses a send that it cannot bound or address", () => {

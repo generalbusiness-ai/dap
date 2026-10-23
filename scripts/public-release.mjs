@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, symlinkSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { ROOT, PLAN, args, childEnv, compilerTool, compile, contained, copiedDependency, copyFileVerified, digest, json, outputClosure, productionInputs, publishManifest, references, refusal, rewriteDeclarationRefs, rewritePublishedRefs, sourceIdentity, version, writeJson } from "./public-release-lib.mjs";
+import { ROOT, PLAN, PUBLIC_TESTING_INPUTS, args, childEnv, compilerTool, compile, contained, copiedDependency, copyFileVerified, digest, json, outputClosure, productionInputs, publishManifest, references, refusal, rewriteDeclarationRefs, rewritePublishedRefs, sourceIdentity, version, writeJson } from "./public-release-lib.mjs";
 
 export function produce(options) {
   const source = realpathSync(options.source), selected = version(options.version);
@@ -25,7 +25,7 @@ export function produce(options) {
   for (const spec of PLAN.packages) {
     const input = join(output, "inputs", spec.dir), stage = join(output, "packages", spec.dir);
     mkdirSync(input, { recursive: true }); mkdirSync(stage, { recursive: true });
-    const tracked = execFileSync("git", ["ls-files", "-z", `packages/${spec.dir}/src`, ...(spec.dir === "derive" ? ["packages/derive/test/fixtures.ts"] : [])], { cwd: source, encoding: "utf8" }).split("\0").filter(Boolean);
+    const tracked = execFileSync("git", ["ls-files", "-z", `packages/${spec.dir}/src`, ...(spec.dir === "derive" ? PUBLIC_TESTING_INPUTS : [])], { cwd: source, encoding: "utf8" }).split("\0").filter(Boolean);
     const { names, omitted } = productionInputs(spec, tracked);
     for (const path of omitted) {
       const copy = join(output, "excluded", path);

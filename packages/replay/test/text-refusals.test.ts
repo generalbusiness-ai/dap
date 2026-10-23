@@ -1,3 +1,4 @@
+import { earlierFieldProof } from "../../derive/test/definition-corpus/replay-mutations-data.ts";
 import { expect, test } from "vitest";
 import { canonicalize, factRefOf, textDigest } from "@generalbusiness/artroom-bytes";
 import { judgeDelivery } from "@generalbusiness/dap-derive";
@@ -5,12 +6,7 @@ import { arriving, created, forged, keys, notesDefinition, on, otherLane, varian
 import { MemorySource, verify, type MemoryScope } from "../src/index.ts";
 
 test("an earlier successful field check rules out a later fabricated size refusal even after the text is erased", async () => {
-  const definition = variant(notesDefinition.declared, data => {
-    data.capacity = { name: "whole-scope", version: 1 };
-    const body = { type: "text", detached: true, max: 4, required: true };
-    data.acts.write.fields.body = body;
-    data.receives.noted = { class: "tell", message: "noted", from: { kind: "lane" }, opens: "note", fields: { body }, also: {}, guards: [], effects: [{ value: { slot: "body", from: { field: "body" } } }], sends: [], attention: [] };
-  });
+  const definition = variant(notesDefinition.declared, earlierFieldProof);
   const scope = created(definition, {}, "earlier-field-proof"), body = "four", digest = textDigest(body);
   expect(scope.act(keys.rita, "write", { ...on(scope, 0), fields: { body: digest } }, { texts: () => 4 }).result).toBe("write");
   const send = { n: 0, to: scope.at, message: { class: "request", type: "tell", body: { message: "noted", fields: { body: digest } } } } as const;

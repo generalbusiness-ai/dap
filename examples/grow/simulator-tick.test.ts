@@ -10,7 +10,7 @@ import { clockOf, deviceCommand, judgePreparation, prepareRules, validateDefinit
 import { evaluateRules } from "@generalbusiness/dap-derive/rule";
 import { receiptOf } from "@generalbusiness/artroom-scope/runtime";
 import { created, deliver, grantOf, t, valid } from "@generalbusiness/dap-derive/testing";
-import { deviceCommandRow as row } from "../../packages/derive/test/fixtures-device-command.ts";
+import { simulatorTickParentDefinition } from "./definition-corpus-data.ts";
 import { demoDefinitions } from "./demo-definitions.ts";
 import { simulatorSchedule } from "./simulator.ts";
 import { simulatorTick, type SimulatorPorts } from "./simulator-tick.ts";
@@ -22,13 +22,7 @@ async function fixture() {
   };
   // A made-up parent supplies the TEST grant in its actual sealed create
   // message. The Room then uses the native capability, judges and fold.
-  const parentDefinition = valid(validateDefinition({ ...room, name: "test.grow-tick-parent", capabilities: [], genesis: "start",
-    items: { root: { many: false, max: 1, initial: "ready", states: { ready: { final: false } }, parties: {}, refs: {}, values: {} } },
-    acts: { start: row({ step: "open", on: "root", grant: "found", guards: [] }),
-      spawn: row({ on: "root", grant: "found", guards: [], sends: [{ create: { kind: "lane", definition: definitionDigest(room),
-        fields: Object.fromEntries(Object.entries(fields).map(([name, value]) => [name, { const: value }])), result: {} } }] }) },
-    receives: {}, timed: {}, rules: {},
-  }, PROPOSED_BOUNDS));
+  const parentDefinition = valid(validateDefinition(simulatorTickParentDefinition(room, fields), PROPOSED_BOUNDS));
   const parent = created(parentDefinition, {}), code = deviceCommand();
   const spawning = parent.judge(parent.intent(operator, "spawn", { on: 0, expected: { on: 1 } }));
   if (spawning.result !== "write") throw Error("The TEST parent must create its Room.");

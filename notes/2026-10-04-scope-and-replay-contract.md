@@ -4010,6 +4010,36 @@ interface DeclaredDefinition {
 }
 ```
 
+- **`format`: one compatible validator check set.** Each definition format
+  names one set of admission checks. The current format,
+  `artroom-definition-1`, selects the existing checks in
+  `packages/derive/src/validate/format-1.ts`, the grammar families beside it
+  and the shared pure semantic helpers they call. The public validator
+  preserves its existing header, canonical-byte and outcome-domain checks
+  before selecting that set. Replay uses the same public validator. An
+  unknown format is `unsupported-definition`, and its reason names the
+  actual format; it never falls back to format 1.
+
+  A check that refuses a definition accepted under this format belongs in
+  a new authorized format, or a new version of the optional part that owns
+  it: level, capacity, profile or capability. This includes changes in a
+  shared helper, such as field assignability, capability tables,
+  reservation arithmetic or record/field predicates. Their file location
+  does not exempt them from compatibility review. A bug fix that changes
+  admission needs that review too. Caller bounds, profiles, platform and
+  outcome-value options remain explicit inputs; the format does not freeze
+  their supplied values. Existing canonical bytes, digest domains and
+  identifier protocols remain unchanged.
+
+  The named definition corpus must register every positive application,
+  example, fixture and retained-history declaration with its original
+  validation context and pin, where present. A new pinned declaration joins
+  that corpus with all origin names retained. A paired stricter-check
+  control must detect drift for the named corpus, not every possible value.
+  This binding belongs in the kernel because portable judgment and replay
+  must agree on a pinned declaration's interpretation (kernel section 7;
+  request `2e714fd7`). It adds no format or application vocabulary.
+
 - **`name`.** A definition states its own name. A `fact` field type and
   a handler's `from` name a definition by `under`, and `under` is
   compared with this member. The name of a platform definition is its

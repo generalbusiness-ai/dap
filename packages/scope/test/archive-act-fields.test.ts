@@ -1,3 +1,4 @@
+import { archiveActFieldsChange } from "./definition-corpus-data.ts";
 /** Real native signed acts and SQLite. The first cases use TEST lane data
  * and grants; the final case creates the actual Rules scope. This is field
  * projection, not complete dependency or privacy admission. */
@@ -16,10 +17,7 @@ import { create, definition, rita } from "./fixtures-native.ts";
 import { sessionRoom } from "./support/session-room.ts";
 
 test.each([false, true])("native act field projection shares the byte selector with detached=%s and ignores inline digest-shaped text", async detached => {
-  const declared = variant(definition.declared, data => {
-    data.acts["remark"]!.fields["text"] = { type: "text", max: 128, required: true, ...(detached ? { detached: true } : {}) };
-    data.acts["remark"]!.fields["extra"] = { type: "text", max: 128, required: false };
-  });
+  const declared = variant(definition.declared, archiveActFieldsChange(detached));
   const lane = await create({}, {}, declared), raw = "TEST native reference; no body projection 🎵";
   const digest = textDigest(raw), inline = textDigest("TEST digest-shaped inline field, never a detached consumer");
   const answer = await lane.stub.submit(lane.intent(rita, "remark", { on: 0, fields: { text: detached ? digest : inline, extra: inline } }), lane.grants(), detached ? { texts: [raw] } : {});

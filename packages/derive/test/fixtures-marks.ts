@@ -17,65 +17,13 @@
  */
 
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { PlatformData, PlatformDefinition } from "@generalbusiness/dap-contract";
+import type { PlatformDefinition } from "@generalbusiness/dap-contract";
 import { textDigest } from "@generalbusiness/artroom-bytes";
 import { PROFILES, validateDefinition, type PlatformRule, type PlatformRules, type RuleGiven, type Rules, type ValidDefinition } from "../src/index.ts";
 import { changedDraft, valid } from "./fixtures.ts";
 
-const NO = { parties: {}, refs: {} } as const;
-const EVEN = { code: "even", row: "P22", type: "code" } as const;
-
-export const gate: PlatformData = {
-  format: "artroom-definition-1",
-  name: "platform:gate",
-  profile: { name: "restricted", version: 1 },
-  capabilities: [],
-  genesis: "establish",
-  items: {
-    gate: { many: false, max: 1, initial: "open", states: { open: { final: false } }, parties: { opener: { fixed: true, required: true, list: false, author: false } }, refs: {}, values: {} },
-    ticket: {
-      ...NO, many: true, max: 100, initial: "open",
-      states: { open: { final: false }, used: { final: true } },
-      values: {
-        hash: { fixed: true, required: true, of: { type: "digest" } },
-        key: { fixed: false, required: false, of: { type: "text", max: 64 } },
-        // Place 3, on a slot: the data states no shape, and the rule `even` checks each value that an effect would set.
-        note: { fixed: false, required: false, of: EVEN },
-      },
-    },
-  },
-  acts: {
-    establish: {
-      step: "open", on: "gate", grant: "gate.establish", also: {}, fields: { opener: { type: "member", required: true } },
-      guards: [], effects: [{ party: { slot: "opener", from: { field: "opener" } } }], sends: [], attention: [],
-    },
-    issue: {
-      step: "open", on: "ticket", grant: "gate.issue", also: {}, fields: { hash: { type: "digest", required: true } },
-      guards: [], effects: [{ value: { slot: "hash", from: { field: "hash" } } }], sends: [], attention: [],
-    },
-    enter: {
-      step: "transition", on: "gate",
-      // Place 1: the rule stands in place of the grant check.
-      grant: { code: "by-ticket", row: "P13" },
-      // Place 2: the rule gives one ticket, or none.
-      also: { ticket: { code: "find", row: "P18", item: "ticket" } },
-      // Place 3, on a field: the same type as the slot, so the copy below is one that the validator can show.
-      fields: { secret: { type: "text", max: 64, required: true }, note: { ...EVEN, required: false } },
-      // Place 4: the mark is the second guard of the written list.
-      guards: [{ state: ["open"], of: "also.ticket", reason: "used" }, { code: "fresh", row: "P14" }],
-      // Place 5: the mark is the last effect of the written list.
-      effects: [{ state: "used", of: "also.ticket" }, { value: { slot: "note", from: { field: "note" } }, of: "also.ticket" }, { code: "key-id", row: "P14" }],
-      // Place 6: the rule gives no request, or one. The clauses are data.
-      sends: [{ code: "refer", row: "P21", result: { applied: [], refused: [] } }],
-      attention: [],
-    },
-  },
-  receives: {},
-  timed: {},
-  rules: {},
-  // Place 7: the rule for the outcome entries of each kind of operation that this definition owns.
-  outcomes: { probe: { code: "probe", row: "P16" } },
-};
+import { gate } from "./definition-corpus/marks-data.ts";
+export { gate } from "./definition-corpus/marks-data.ts";
 
 /** The name and version that the made-up data is given in a test. No runtime holds it. */
 export const GATE = "platform:gate@1" as PlatformDefinition;

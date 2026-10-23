@@ -1,23 +1,14 @@
+import { packageDeclaration as declaration } from "./definition-corpus-data.ts";
 /** Real canonical bytes and Ed25519 signatures over small declaration fixtures.
  * Native whole-definition judgment, a Git fetch/install and browser behavior
  * are separate obligations of check and the host-side slice. */
 import { expect, test } from "vitest";
-import type { DeclaredDefinition } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, definitionDigest, newIncarnation, scopeIdOf, textDigest, utf8, verifySignedIntent } from "@generalbusiness/artroom-bytes";
-import { ApplicationPackageError, packApplication, readApplicationPackage, readApplicationReleaseProof, secretSigner, signedApplicationInstall, type ApplicationDefinition, type ApplicationPackageInput, type PackedApplication } from "../src/index.ts";
+import { b64url, canonicalize, newIncarnation, scopeIdOf, textDigest, utf8, verifySignedIntent } from "@generalbusiness/artroom-bytes";
+import { ApplicationPackageError, packApplication, readApplicationPackage, readApplicationReleaseProof, secretSigner, signedApplicationInstall, type ApplicationPackageInput, type PackedApplication } from "../src/index.ts";
 
 const signer = secretSigner(new Uint8Array(32).fill(7));
 type Mutable<T> = T extends readonly (infer V)[] ? Mutable<V>[] : T extends object ? { -readonly [K in keyof T]: Mutable<T[K]> } : T;
-function declaration(name: string, child?: ApplicationDefinition, capability = false): ApplicationDefinition {
-  const common = { also: {}, fields: {}, guards: [], effects: [], attention: [] };
-  const body: DeclaredDefinition = {
-    format: "artroom-definition-1", name, profile: { name: "restricted", version: 1 }, capabilities: capability ? [{ name: "hold", version: 1 }] : [],
-    genesis: "found", items: { record: { many: false, max: 1, initial: "open", states: { open: { final: false } }, parties: {}, refs: {}, values: {} } },
-    acts: { found: { ...common, step: "open", on: "record", grant: "app.found", sends: child ? [{ create: { kind: "lane", definition: child.id, fields: {}, result: {} } }] : [] },
-      touch: { ...common, step: "transition", on: "record", grant: "app.edit", sends: [] } }, receives: {}, timed: {}, rules: {},
-  };
-  return { id: definitionDigest(body), bytes: canonicalize(body) };
-}
+
 function input(): Mutable<ApplicationPackageInput> {
   const child = declaration("child"), root = declaration("root", child);
   return { name: "ai.generalbusiness.fixture", version: "0.1.0", semantic: {

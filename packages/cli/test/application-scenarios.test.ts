@@ -1,3 +1,4 @@
+import { addCounterCitation, scenarioParent } from "./definition-corpus-data.ts";
 import { emptyPackageComposition } from "@generalbusiness/artroom-package-graph";
 /** Real native Counter scenarios; only the final test's verifier reports are
  * deliberately faulted, to show the scenario cannot hide failed replay. */
@@ -19,17 +20,9 @@ async function packet(withCitation = false, withParent = false) {
   const declaration: DeclaredDefinition = JSON.parse(await readFile(new URL("../../../apps/counter/definition.json", import.meta.url), "utf8"));
   // This one fixture augments the real Counter with a comment that carries a
   // typed local fact; it is not a proposed Counter application change.
-  if (withCitation) declaration.acts["cite"] = { step: "comment", on: null, grant: "counting.control", also: {}, fields: { source: { type: "fact", kind: ["initialize"], under: declaration.name, required: true } }, guards: [], effects: [], sends: [], attention: [] };
+  if (withCitation) addCounterCitation(declaration);
   const id = definitionDigest(declaration);
-  const parent: DeclaredDefinition = {
-    format: "artroom-definition-1", name: "parent-fixture", profile: { name: "restricted", version: 1 }, capabilities: [], genesis: "establish",
-    items: { root: { many: false, max: 1, initial: "open", states: { open: { final: false } }, parties: {}, refs: {}, values: {} } },
-    acts: {
-      establish: { step: "open", on: "root", grant: "fixture.create", also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [] },
-      spawn: { step: "transition", on: "root", grant: "fixture.create", also: {}, fields: {}, guards: [], effects: [], attention: [],
-        sends: [{ create: { kind: "lane", definition: id, fields: { opener: { signer: true }, target: { const: 10 } }, result: {} } }] },
-    }, receives: {}, timed: {}, rules: {},
-  };
+  const parent = scenarioParent(id);
   const parentId = definitionDigest(parent);
   return packApplication({ name: "ai.generalbusiness.counter", version: "0.1.0", semantic: {
     v: 1, entry: withParent ? parentId : id, definitions: [{ id, bytes: canonicalize(declaration) }, ...(withParent ? [{ id: parentId, bytes: canonicalize(parent) }] : [])], host: { execution: "recorded-do", profiles: ["restricted@1"] }, capabilities: [], roles: {}, projections: {}, predecessor: null,

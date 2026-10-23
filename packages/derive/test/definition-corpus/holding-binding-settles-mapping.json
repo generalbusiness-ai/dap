@@ -1,0 +1,90 @@
+{
+  "basis": "f7b59bf92d1abe20300818ab109fa12df617c2e0",
+  "status": "Source only; not compiled or executed",
+  "ownership": "Existing callbacks move to shared raw constructors; original tests retain validation, assertions and histories. Corpus index registration belongs to the corpus owner.",
+  "files": [
+    {
+      "path": "packages/derive/test/forms-binding.test.ts",
+      "bytes": 45090,
+      "sha256": "11cf8b771cd9c2bc700b4ed589771e9998bb3b3ee5c94205f5c85879adeaf8c6",
+      "preserved_static_expect_calls": 143
+    },
+    {
+      "path": "packages/derive/test/definition-corpus/binding-variants.ts",
+      "bytes": 8259,
+      "sha256": "82b71f936eb03a5ff43701e96edf10df869f461824437b4fa793170ded953117"
+    },
+    {
+      "path": "packages/derive/test/forms-settles.test.ts",
+      "bytes": 29278,
+      "sha256": "3e237005659cf02dd85354281e9db4a1af0674b5408a4d1f5a35e3594abd0472",
+      "preserved_static_expect_calls": 95
+    },
+    {
+      "path": "packages/derive/test/definition-corpus/settles-variants.ts",
+      "bytes": 10952,
+      "sha256": "8d3ea82ea568720e5eff171861e328a272ce642af089746200d72eab7e03a8ed"
+    },
+    {
+      "path": "packages/derive/test/forms-holds.test.ts",
+      "bytes": 48165,
+      "sha256": "3da02e49fa24cac16b310590ec0ec584ceb7a88624f5d7302647102968235ac1",
+      "preserved_static_expect_calls": 123
+    },
+    {
+      "path": "packages/derive/test/definition-corpus/holds-variants.ts",
+      "bytes": 7612,
+      "sha256": "4a41b597b273f46a87599a3da34d36eaa78d117722bcd9535c482a011102d247"
+    }
+  ],
+  "contexts": {
+    "binding": {
+      "rows": 22,
+      "validation": "PROPOSED_BOUNDS, explicit PROFILES, {platform:true}",
+      "expansions": [
+        "M and M51 bases",
+        "integer default -10..10 and full safe-integer range",
+        "whole settlement",
+        "ticket-kind set order; unused owner index; written item binding",
+        "two distinct bound operand orders",
+        "late guard and late effect declarations",
+        "pre-binding failure labels: no-item, fact-mismatch, alias",
+        "clock phase: type, guard",
+        "audit closure; decision counts; bound request",
+        "own __proto__ subject; local fact field"
+      ],
+      "exclusions": "All nonempty validator refusal expectations remain outside the positive corpus; runtime refused input cases remain positive declarations."
+    },
+    "settles": {
+      "rows": 16,
+      "validation": "changed() uses PROPOSED_BOUNDS, explicit PROFILES and {platform:false}, except fields/rows/m5 and three holder variants use platform:true. Canonical timed done uses omitted profiles/options.",
+      "expansions": [
+        "alias settlement; delivered flag/note/advice; ordinary marker duties",
+        "whole declaration with marker acts removed; ordinary whole; guarded whole",
+        "retained fields/presented input; observation-only rows",
+        "m2 and m3 finite paths",
+        "no marker data; coded m5 settlement",
+        "canonical timed done",
+        "canonical holder, own-copy and marked-copy variants"
+      ],
+      "exclusions": "Timed held cycle, cross-item marker cycle, illegal holders and grammar-negative callbacks remain negative. Mutated computed pendingWorkAmounts is metadata, not a raw declaration."
+    },
+    "holds": {
+      "rows": 37,
+      "validation": "changed() uses PROPOSED_BOUNDS, explicit PROFILES and {platform:true}. Evidence domains, inherited names and observation-only clauses retain omitted profiles and exact options.",
+      "expansions": [
+        "works/chain base contexts",
+        "started most: effects0, effects1, effects0+opens note, effects1+opens note",
+        "loose outcome; receiver begin mark",
+        "settling held k only; chain without child; mixed held/unheld graph",
+        "ordinary note item; pending tidy clause; no holder; unheld w kind",
+        "outcome request once omitted/true",
+        "evidence domains: k changes-1 max262144, u other-1 max64",
+        "inherited __proto__/constructor/toString each with outcomeValues omitted, empty adapter, own-empty declaration",
+        "ordinary normal kind",
+        "applied/refused/superseded clauses each with effects missing+retains, effects empty+retains, effects missing without retains"
+      ],
+      "exclusions": "Handmade Counting/Amount objects are not declarations. Unsafe totals, missing/duplicate/invalid owner domains and invalid clause effects remain negatives."
+    }
+  }
+}

@@ -1,3 +1,4 @@
+import { holdsChanges, holdsStartedChange, holdsSettlingChange, holdsSendChange, namedKind, holdsClauseData, holdsEvidenceOptions } from "./definition-corpus/holds-variants.ts";
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalBytes, entryHash, parseStrictBytes } from "@generalbusiness/artroom-bytes";
@@ -14,15 +15,7 @@ const counting = (kinds: Record<string, KindStated>, held: string[] = [], over: 
 
 describe("the actual return of an outcome callback stays within its declared data", () => {
   const started = (most: { effects: number; opens?: string }) => {
-    const definition = valid(changed(works, (data) => {
-      data.items.note = structuredClone(data.items.job);
-      delete data.items.note.holds;
-      data.items.other = structuredClone(data.items.note);
-      data.items.job.values.deadline = { fixed: false, required: false, of: { type: "time" } };
-      data.timed.expire = { on: "job", states: ["open"], deadline: "deadline", effects: [{ state: "done" }], attention: [] };
-      data.items.job.holds.items = 1;
-      data.outcomes.step.most = { ...most, operations: ["step", "tidy"] };
-    }));
+    const definition = valid(changed(works, holdsStartedChange(most)));
     const scope = new Works(definition);
     scope.script.begin = ({ resolved }) => opened(0, "step", 1, resolved.self);
     expect(scope.start()).toBe("written");
@@ -54,7 +47,7 @@ describe("the actual return of an outcome callback stays within its declared dat
   });
 
   test("a legacy outcome callback cannot open a holder at a full scope, even when no data most is stated", () => {
-    const definition = valid(changed(works, (data) => { data.outcomes.loose = { code: "loose", row: "P16" }; }));
+    const definition = valid(changed(works, holdsChanges.loose));
     const scope = new Works(definition);
     scope.script.begin = () => opened(0, "loose", 1);
     expect(scope.start()).toBe("written");
@@ -194,18 +187,18 @@ describe("the validator's checks of `holds`, `adds` and what a mark may start (s
       codes(changed(works, (d) => { d.outcomes.tidy.most = { effects: 2, opens: "job" }; })),
       codes(changed(works, (d) => { d.outcomes.step.send.result = { applied: [{ code: "after", row: "P16", most: { effects: 2, opens: "job" } }] }; })),
       // A mark of a handler of a request may open one: its entry is new work.
-      codes(changed(works, (d) => { d.receives.start.opens = null; d.receives.start.effects = [{ code: "begin", row: "P16", most: { effects: 2, opens: "job" } }]; })),
+      codes(changed(works, holdsChanges.receiverBegin)),
     ]).toEqual([["holds outcomes.tidy.most.opens"], ["holds outcomes.step.send.result.applied"], "valid"]);
     // A settling form is written with no free room. This source counts no mark of one, so a mark there that may open an item, or
     // an operation of a kind that no item holds, is refused. One that lists held kinds draws on a holder, and validates.
-    const settling = (operations: string[]) => codes(changed(chain, (d) => { d.acts.finish.settles = { of: "on", in: ["open"] }; d.acts.finish.effects.push({ code: "after", row: "P16", most: { effects: 0, operations } }); }));
+    const settling = (operations: string[]) => codes(changed(chain, holdsSettlingChange(operations)));
     expect([settling(["u"]), settling(["k"])]).toEqual([["reserve-unbounded acts.finish.effects.1"], "valid"]);
   });
 
   test("18.49 cases 1 and 2: a held kind reserves the closure of a kind that no item holds: C(u) is 6, `one(k)` is 14 and a job reserves 14; with no child, 2", () => {
     const r = chainDefinition.reserving!;
     expect([r.kinds["u"]!.whole, r.kinds["k"]!.whole, r.holders["job"]!.amount, r.kinds["u"]!.held]).toEqual([entries(6), entries(14), entries(14), false]);
-    const r0 = valid(changed(chain, (d) => { d.outcomes.k.most.operations = []; })).reserving!;
+    const r0 = valid(changed(chain, holdsChanges.chainNoChild)).reserving!;
     expect([r0.kinds["k"]!.whole, r0.holders["job"]!.amount]).toEqual([entries(2), entries(2)]);
   });
 
@@ -223,7 +216,7 @@ describe("the validator's checks of `holds`, `adds` and what a mark may start (s
   });
 
   test("18.49 case 11: a mixed graph validates: `k` lists a held kind and a kind that no item holds, and a job reserves 14 and 2, which is 16 entries", () => {
-    const mixed = valid(changed(chain, (d) => { d.items.job.holds.operations.h = 1; d.outcomes.k.most.operations = ["u", "h"]; d.outcomes.h = { code: "u", row: "P16", attempts: 1 }; }));
+    const mixed = valid(changed(chain, holdsChanges.mixed));
     expect([mixed.reserving!.holders["job"]!.amount, mixed.reserving!.kinds["k"]!.whole]).toEqual([entries(16), entries(14)]);
     // An outcome of `k` that opens an `h` states `for`, and draws the 1.
     const s = new Works(mixed);
@@ -278,7 +271,7 @@ describe("18.47: a reservation that an item holds is taken once, drawn down and 
 
   test("a request and an item of the account draw on `requests` and `items`: a second request, and a second item, are past the count, and nothing is written", () => {
     // M with one more type, `note`, which the mark of `step` may open. A job holds 1 item beside its 1 request.
-    const s = new Works(valid(changed(works, (d) => { d.items.note = { ...d.items.job, holds: undefined }; delete d.items.note.holds; d.items.job.holds.items = 1; d.outcomes.step.most = { effects: 2, operations: ["step", "tidy"], opens: "note" }; })));
+    const s = new Works(valid(changed(works, holdsChanges.note)));
     expect(s.definition.reserving!.holders["job"]!.amount).toEqual({ entries: 8, items: 1, records: 0, bytes: 9 * EB, requests: 1 });
     s.script.begin = ({ resolved }) => opened(0, "step", 1, resolved.self);
     expect(s.start()).toBe("written");
@@ -360,7 +353,7 @@ describe("18.47: a reservation that an item holds is taken once, drawn down and 
 
   test("the release of a final holder keeps a count while a clause of a pending request of its account can reach the kind, and the clause's entry draws on that account", () => {
     // M with one change: the clause `applied` of the send of `step` holds a mark that lists `tidy`.
-    const s = new Works(valid(changed(works, (d) => { d.outcomes.step.send.result = { applied: [{ code: "after", row: "P16", most: { effects: 0, operations: ["tidy"] } }] }; })));
+    const s = new Works(valid(changed(works, holdsChanges.clauseTidy)));
     s.script.begin = ({ resolved }) => opened(0, "step", 1, resolved.self);
     s.script.report = () => TELL;
     expect(s.start()).toBe("written");
@@ -401,7 +394,7 @@ describe("18.47: a reservation that an item holds is taken once, drawn down and 
     const digest = stateDigest(snapshot);
     expect([stateDigest({ ...snapshot, holders: [{ item: job, held: { operations: { tidy: 2 } } }] }), stateDigest({ ...snapshot, accounts: [] }), stateDigest({ ...snapshot, operations: snapshot.operations.map(({ for: _, ...operation }) => operation) })].includes(digest)).toBe(false);
     // A state under a definition that states no `holds` has no such member, so its digest is the one it had.
-    expect(Object.keys(new Works(valid(changed(works, (d) => { delete d.items.job.holds; delete d.acts.again.adds; d.outcomes.step.most.operations = []; }))).state.all())).not.toContain("holders");
+    expect(Object.keys(new Works(valid(changed(works, holdsChanges.noHolder))).state.all())).not.toContain("holders");
   });
 });
 
@@ -446,7 +439,7 @@ describe("18.49: a held kind opens a kind that no item holds, at capacity (secti
   });
 
   test("cases 7 and 8, the control: with no child a job reserves 2, a `start` is written with 3 free entries, and an outcome of `k` whose rule opens a `u` that its mark does not list has a fault", () => {
-    const m0 = valid(changed(chain, (d) => { d.outcomes.k.most.operations = []; }));
+    const m0 = valid(changed(chain, holdsChanges.chainNoChild));
     const { s, result, k } = started(m0, 3);
     expect([result, started(m0, 2).result]).toEqual(["written", "scope-full"]);
     opensU(s);
@@ -458,7 +451,7 @@ describe("18.49: a held kind opens a kind that no item holds, at capacity (secti
     expect([twice([{ kind: "u", attempts: 3 }, { kind: "u", attempts: 3 }]), twice([{ kind: "u", attempts: 4 }])]).toEqual(["unavailable", "unavailable"]);
     // One of each listed kind: `w` has 1 attempt and a send, so one operation of it reserves 6 entries where two of them would
     // count 4 by their attempts alone. A rule that opens two is a fault, although the closure of `k` has the room by that count.
-    const w = new Works(valid(changed(chain, (d) => { d.outcomes.w = { code: "u", row: "P16", attempts: 1, send: { code: "report", row: "P16", result: {} } }; d.outcomes.k.most.operations = ["u", "w"]; })));
+    const w = new Works(valid(changed(chain, holdsChanges.wChild)));
     w.script.begin = ({ resolved }) => opened(0, "k", 1, resolved.self);
     w.script.derives = () => ({ effects: [], sends: [], opens: [{ owner: OWNER, kind: "w", attempts: 1 }, { owner: OWNER, kind: "w", attempts: 1 }] });
     expect([w.definition.reserving!.kinds["w"]!.whole.entries, w.start(), w.outcome(w.opened()[0]!, 1, "confirmed")]).toEqual([6, "written", "unavailable"]);
@@ -470,7 +463,7 @@ describe("18.49: a held kind opens a kind that no item holds, at capacity (secti
 describe("a request that an outcome sends is reserved with its operation (section 17.2)", () => {
   /** `chain` with one more kind, `w`, that no item holds: 2 attempts, and a send with empty clauses. A `start` opens one `w`. */
   const withSend = (once: boolean) => {
-    const s = new Works(valid(changed(chain, (d) => { d.outcomes.w = { code: "u", row: "P16", attempts: 2, send: { code: "report", row: "P16", result: {}, ...(once ? { once: true } : {}) } }; })));
+    const s = new Works(valid(changed(chain, holdsSendChange(once))));
     s.script.begin = () => opened(0, "w", 2);
     s.script.report = () => TELL;
     s.script.retries = true;
@@ -508,7 +501,7 @@ test("evidence value domains of pinned owner code are counted for each possible 
   expect(validateDefinition(chain, PROPOSED_BOUNDS, undefined, { platform: true, outcomeValues: declaration }).ok).toBe(false);
   expect(evidenceValues(missing.rules, { basis: "none", body: null })).toBeNull();
   expect(evidenceValues(noValues.rules, { basis: "none", body: null })).toEqual([]);
-  const declared = valid(validateDefinition(chain, PROPOSED_BOUNDS, undefined, { platform: true, outcomeValues: { k: [{ domain: "changes-1", max: 262144 }], u: [{ domain: "other-1", max: 64 }] } }));
+  const declared = valid(validateDefinition(chain, PROPOSED_BOUNDS, undefined, holdsEvidenceOptions));
   const ordinary = chainDefinition.reserving!;
   const counted = declared.reserving!;
   // k has two outcomes; each can open u, whose three attempts have six outcomes. The reservation includes every value, even
@@ -518,13 +511,7 @@ test("evidence value domains of pinned owner code are counted for each possible 
 });
 
 /** Rename the held kind in the made-up reservation witness, then load its actual canonical bytes. */
-function namedKind(name: string) {
-  const data = structuredClone(works);
-  data.outcomes = Object.fromEntries([[name, { ...data.outcomes["step"]!, most: { effects: 0, operations: [name, "tidy"] } }], ["tidy", data.outcomes["tidy"]!]]);
-  data.items["job"]!.holds = { operations: Object.fromEntries([[name, 2], ["tidy", 1]]), requests: 1 };
-  data.acts["again"]!.adds = { operations: Object.fromEntries([[name, 1]]) };
-  return parseStrictBytes(canonicalBytes(data)) as typeof works;
-}
+
 
 test("canonical inherited-name kinds with no own owner domains validate or report ordinary problems; the trusted no-domain adapter never supplies a prototype", () => {
   const noDomains: Rules = { step: { place: "outcome", rules: { selects: false, read: false, retries: () => false } }, tidy: { place: "outcome", rules: { selects: false, read: false, retries: () => false } } };
@@ -555,17 +542,7 @@ test("a canonical held __proto__ kind keeps its own reservation metadata and the
 
 test("canonical observation-only result clauses reserve their declared value bytes identically with missing or empty effects", () => {
   const MAX = 321;
-  const load = (clause: "applied" | "refused" | "superseded", effects: "missing" | "empty" | "invalid", retains = true) => {
-    const data = structuredClone(works);
-    data.items["job"]!.refs["peer"] = { fixed: false, required: false, to: { type: "scope", kind: "lane" } };
-    data.acts["again"]!.adds = { operations: { step: 1 }, requests: 1 };
-    data.acts["again"]!.sends = [{ tell: {
-      to: { slot: "peer" }, message: "observe", fields: {},
-      result: effects === "missing" ? {} : { [clause]: effects === "empty" ? [] : "not a list" },
-      observes: { [clause]: [{ of: "rules", window: 10, use: "once", without: "wait", retains: retains ? [{ domain: "clause-value-1", max: MAX }] : [] }] },
-    } } as unknown as typeof data.acts[string]["sends"][number]];
-    return validateDefinition(parseStrictBytes(canonicalBytes(data)), PROPOSED_BOUNDS, undefined, { platform: true });
-  };
+  const load = (clause: "applied" | "refused" | "superseded", effects: "missing" | "empty" | "invalid", retains = true) => validateDefinition(parseStrictBytes(canonicalBytes(holdsClauseData(clause, effects, retains))), PROPOSED_BOUNDS, undefined, { platform: true });
   for (const clause of ["applied", "refused", "superseded"] as const) {
     const missing = valid(load(clause, "missing")).reserving!;
     const empty = valid(load(clause, "empty")).reserving!;

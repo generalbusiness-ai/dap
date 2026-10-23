@@ -1,6 +1,7 @@
+import { settlesChanges, settlesThreeChange, settlesTimedData, settlesHolderData, settlesOwnCopyChange, settlesMarkedCopyChange } from "./definition-corpus/settles-variants.ts";
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { DeclaredDefinition, PlatformData, PlatformDefinition, Subject } from "@generalbusiness/dap-contract";
+import type { PlatformData, PlatformDefinition } from "@generalbusiness/dap-contract";
 import { canonicalBytes, entryHash, factRefOf, parseStrictBytes } from "@generalbusiness/artroom-bytes";
 import { AmountError, PROFILES, applyEntry, clockOf, entryOf, fits, itemAwaits, judgeDelivery, markerAmounts, markerReservations, owed, reserved, validateDefinition } from "../src/index.ts";
 import type { Draft, PlatformRules, RuleEffect, ValidDefinition } from "../src/index.ts";
@@ -16,31 +17,7 @@ import { Scope, arriving, directory, fields, forged, keys, on, valid, type Over 
  * second also sends one request. `mark-b` sets `b`. `close` settles the job
  * by state.
  */
-const act = (a: Record<string, unknown>) => ({ also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [], ...a });
-const MARK = { fixed: false, required: true, of: { type: "bool" }, default: false } as const;
-const set = (slot: string, of?: Subject) => ({ ...(of ? { of } : {}), value: { slot, from: { const: true } } });
-const M: DeclaredDefinition = {
-  format: "artroom-definition-1", name: "marks", profile: { name: "restricted", version: 1 }, capabilities: [], genesis: "file",
-  items: {
-    root: { many: false, max: 1, states: { open: { final: false } }, initial: "open", parties: { opener: { fixed: true, required: true, list: false, author: false } }, refs: {}, values: {} },
-    job: {
-      many: true, max: 8, states: { open: { final: false }, held: { final: false }, done: { final: true } }, initial: "open", parties: {},
-      refs: { desk: { fixed: true, required: true, to: { type: "scope", kind: "directory" } } }, values: { a: { ...MARK }, b: { ...MARK } },
-    },
-  },
-  acts: {
-    file: act({ step: "open", on: "root", grant: "file", fields: { opener: { type: "member", required: true } }, effects: [{ party: { slot: "opener", from: { field: "opener" } } }] }),
-    start: act({ step: "open", on: "job", grant: "start", fields: { desk: { type: "scope", kind: "directory", required: true } }, effects: [{ ref: { slot: "desk", from: { field: "desk" } } }] }),
-    "mark-a": act({ step: "transition", on: "job", grant: "mark", settles: { of: "on", sets: "a", in: ["open", "held"] }, effects: [set("a")] }),
-    "mark-a-far": act({
-      step: "transition", on: "job", grant: "mark", settles: { of: "on", sets: "a", in: ["open"] }, effects: [set("a")],
-      sends: [{ tell: { to: { slot: "desk" }, message: "marked", fields: {}, result: {} } }],
-    }),
-    "mark-b": act({ step: "transition", on: "job", grant: "mark", settles: { of: "on", sets: "b", in: ["open", "held"] }, effects: [set("b")] }),
-    close: act({ step: "transition", on: "job", grant: "close", settles: { of: "on", in: ["open"] }, guards: [{ state: ["open"] }], effects: [{ state: "done" }] }),
-  },
-  receives: {}, timed: {}, rules: {},
-} as unknown as DeclaredDefinition;
+import { M } from "./definition-corpus/forms-settles-data.ts";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const changed = (base: unknown, change: (d: any) => void, platform = false) => {
@@ -82,19 +59,7 @@ describe("18.54: two marks on one item, and a state settlement beside them", () 
   test("opt-in alias settlement binds the old target before the same entry changes its selecting reference", () => {
     // Made-up lane data; real in-memory judgments and fold, with fixture
     // authority. The mutable selector makes post-entry binding incorrect.
-    const definition = valid(changed(M, (d) => {
-      d.capacity = { name: "whole-scope", version: 1 };
-      d.items.job.refs.target = { fixed: false, required: false, to: { type: "item", of: "job" } };
-      d.acts.point = structuredClone(d.acts["mark-a"]);
-      delete d.acts.point.settles;
-      d.acts.point.fields = { target: { type: "item", of: "job", required: true } };
-      d.acts.point.effects = [{ ref: { slot: "target", from: { field: "target" } } }];
-      d.acts["mark-target"] = structuredClone(d.acts["mark-a"]);
-      d.acts["mark-target"].fields = { next: { type: "item", of: "job", required: true } };
-      d.acts["mark-target"].also = { target: { item: "job", via: { slot: "target", of: "on" } } };
-      d.acts["mark-target"].settles.of = "also.target";
-      d.acts["mark-target"].effects = [{ ref: { slot: "target", from: { field: "next" } } }, set("a", "also.target")];
-    }));
+    const definition = valid(changed(M, settlesChanges.alias));
     const scope = new Scope(definition);
     const start = () => scope.did(keys.una, "start", fields({ desk: directory })).seq;
     const primary = start(), oldTarget = start(), newTarget = start();
@@ -110,14 +75,7 @@ describe("18.54: two marks on one item, and a state settlement beside them", () 
   test("opt-in delivered handlers release only their selected item's genuine duty; an ordinary message and a refused advisory retain it", () => {
     // The receiver's judgments/fold are real in memory. Sender entries are
     // made by hand and anchored, not judged foreign histories or authority.
-    const definition = valid(changed(M, (d) => {
-      d.capacity = { name: "whole-scope", version: 1 };
-      const handler = { message: "flag", class: "tell", from: { kind: "directory" }, fields: { job: { type: "item", of: "job", required: true } }, opens: null, also: { job: { item: "job", by: "job" } }, settles: { of: "also.job", sets: "a", in: ["open"] }, guards: [], effects: [set("a", "also.job")], sends: [], attention: [] };
-      d.receives.flag = handler;
-      d.receives.note = { ...structuredClone(handler), message: "note" };
-      delete d.receives.note.settles;
-      d.receives.advice = { ...structuredClone(handler), message: "index", class: "advisory" };
-    }));
+    const definition = valid(changed(M, settlesChanges.handlers));
     const scope = new Scope(definition);
     const first = scope.did(keys.una, "start", fields({ desk: directory })).seq;
     const second = scope.did(keys.una, "start", fields({ desk: directory })).seq;
@@ -139,11 +97,7 @@ describe("18.54: two marks on one item, and a state settlement beside them", () 
   });
 
   test("an opt-in item keeps each admitted duty through ordinary marker and final-state changes; only its actual settling entry releases that duty", () => {
-    const definition = valid(changed(M, (d) => {
-      d.capacity = { name: "whole-scope", version: 1 };
-      d.acts.note = structuredClone(d.acts["mark-b"]);
-      delete d.acts.note.settles;
-    }));
+    const definition = valid(changed(M, settlesChanges.duties));
     const scope = new Full(definition);
     const id = scope.started();
     const held = scope.state.itemDuties(id);
@@ -162,10 +116,7 @@ describe("18.54: two marks on one item, and a state settlement beside them", () 
   });
 
   test("whole-scope checks pending Amount operands before a zero live count can hide a fractional record term", () => {
-    const definition = valid(changed(M, (d) => {
-      d.capacity = { name: "whole-scope", version: 1 };
-      for (const kind of ["mark-a", "mark-a-far", "mark-b"]) delete d.acts[kind];
-    }));
+    const definition = valid(changed(M, settlesChanges.removeMarkersWhole));
     const scope = new Full(definition);
     expect(scope.state.count("job", "open")).toBe(0);
     const malformed = { ...definition, pendingWorkAmounts: { ...definition.pendingWorkAmounts, pending: {
@@ -177,28 +128,15 @@ describe("18.54: two marks on one item, and a state settlement beside them", () 
   test("the shared traversal keeps marker alternatives and future requests as Amounts, then moves a sent request from Reserved to Used", () => {
     // This is the existing made-up marker definition and real judges/fold in
     // memory, not a native scope or a complete byte-admission witness.
-    const definition = valid(changed(M, (d) => { d.capacity = { name: "whole-scope", version: 1 }; }));
+    const definition = valid(changed(M, settlesChanges.whole));
     const unit = PROPOSED_BOUNDS.entryBytes;
-    const guarded = valid(changed(M, (d) => {
-      d.capacity = { name: "whole-scope", version: 1 };
-      d.rules.check = "true";
-      for (const kind of ["mark-a", "mark-a-far", "mark-b", "close"]) d.acts[kind].guards.push({ rule: "check" });
-    }));
+    const guarded = valid(changed(M, settlesChanges.guarded));
     const withRules = new Full(guarded);
     withRules.started();
     // The three independent duties each reserve one retained rule input,
     // including the larger a alternative. The closing checkpoint has none.
     expect(reserved(withRules.state, guarded, withRules.last.input)).toEqual({ entries: 6, bytes: 10 * unit, items: 0, records: 0, requests: 1 });
-    const withFields = valid(changed(M, (d) => {
-      d.capacity = { name: "whole-scope", version: 1 };
-      d.outcomes = {};
-      d.acts["mark-b"].fields = {
-        memo: { type: "text", max: 3, detached: true, required: false },
-        proof: { type: "fact", under: "fixture", kind: ["fact"], required: false },
-        value: { type: "digest", value: { domain: "fixture-value", max: 17 }, required: false },
-      };
-      d.acts["mark-b"].presents = { extra: { under: "fixture", kind: ["fact"], required: false } };
-    }, true));
+    const withFields = valid(changed(M, settlesChanges.fields, true));
     const retained = new Full(withFields);
     retained.started();
     // Three NUL bytes occupy twenty canonical JSON bytes. The field and
@@ -206,15 +144,7 @@ describe("18.54: two marks on one item, and a state settlement beside them", () 
     // and the value place has its own seventeen-byte canonical ceiling.
     expect(canonicalBytes("\0\0\0").length).toBe(20);
     expect(reserved(retained.state, withFields, retained.last.input)).toEqual({ entries: 6, bytes: 9 * unit + 37, items: 0, records: 0, requests: 1 });
-    const withRows = valid(changed(M, (d) => {
-      d.capacity = { name: "whole-scope", version: 1 };
-      d.outcomes = {};
-      const row = (max: number, clause = false) => ({ of: "rules", window: 60, use: "once", ...(clause ? { without: "write" } : {}), retains: [{ domain: "fixture-row-value", max }] });
-      d.acts["mark-b"].observes = [row(11)];
-      const send = d.acts["mark-a-far"].sends[0].tell;
-      send.result = {};
-      send.observes = { applied: [row(17, true)], refused: [row(23, true)] };
-    }, true));
+    const withRows = valid(changed(M, settlesChanges.rows, true));
     const observed = new Full(withRows);
     const observedJob = observed.started();
     // No outcome kinds or holders: row-only result clauses must still
@@ -297,21 +227,14 @@ describe("18.54: two marks on one item, and a state settlement beside them", () 
 
   test("18.54 cases 9 to 12: a completed mark is in no later closure, a path by two marks ends, and a form that reaches its own duty on another item is refused", () => {
     // M2: `close` sets `held`, and `finish` settles a job that is `held`.
-    const m2 = valid(changed(M, (d) => {
-      d.acts.close.effects = [{ state: "held" }];
-      d.acts.finish = act({ step: "transition", on: "job", grant: "close", settles: { of: "on", in: ["held"] }, guards: [{ state: ["held"] }], effects: [{ state: "done" }] });
-    }));
+    const m2 = valid(changed(M, settlesChanges.m2));
     // Case 9. The state task is `close` and what the job reserves in `held`: `finish`, (job, a) by `mark-a`, and (job, b). 1 and 3.
     expect([job(m2, "open"), job(m2, "held")]).toEqual([8, 3]);
     // Case 10. With `a` completed the state task is 1 and 2, and the job reserves 1 and 3. After `close` it reserves 2.
     expect([job(m2, "open", ["a"]), job(m2, "held", ["a"])]).toEqual([4, 2]);
 
     // M3: `mark-a` lists `open` and sets `held`; `mark-b` lists `held` and sets `open`. The path is a, then b, and it ends.
-    const three = (d: { acts: Record<string, { settles: unknown; guards: unknown; effects: unknown[]; also?: unknown; fields?: unknown }> }) => {
-      for (const kind of ["mark-a-far", "close"]) delete d.acts[kind];
-      Object.assign(d.acts["mark-a"]!, { settles: { of: "on", sets: "a", in: ["open"] }, guards: [{ state: ["open"] }], effects: [set("a"), { state: "held" }] });
-      Object.assign(d.acts["mark-b"]!, { settles: { of: "on", sets: "b", in: ["held"] }, guards: [{ state: ["held"] }], effects: [set("b"), { state: "open" }] });
-    };
+    const three = settlesThreeChange;
     const m3 = valid(changed(M, three));
     // Case 11. A job that is `open` reserves 2: `mark-a`, and (job, b) in `held`. In `open` again, `a` is completed.
     expect([job(m3, "open"), job(m3, "held", ["a"]), job(m3, "open", ["a", "b"])]).toEqual([2, 1, 0]);
@@ -339,20 +262,7 @@ describe("the form `{ of, sets, in }` at the validator", () => {
   test("a canonical settling closure that returns through a timed state with no settler is refused; the finite path retains its whole duty", () => {
     // Made-up data. Settling the root's mark can put a job in held. Its timer leads to open, where close either ends it or
     // puts it back in held. The timed graph alone is acyclic, and no form settles held; the repeated job task is not finite.
-    const load = (to: "held" | "done") => {
-      const data = structuredClone(M);
-      for (const name of ["mark-a", "mark-a-far", "mark-b"]) delete data.acts[name];
-      data.items["root"]!.values["flag"] = { ...MARK };
-      data.items["job"]!.values["until"] = { fixed: false, required: false, of: { type: "time" } };
-      data.acts["close"]!.effects = [{ state: to }];
-      data.acts["trigger"] = act({
-        step: "transition", on: "root", grant: "trigger", settles: { of: "on", sets: "flag", in: ["open"] },
-        also: { job: { item: "job", by: "job" } }, fields: { job: { type: "item", of: "job", required: true } },
-        guards: [{ state: ["open", "held"], of: "also.job" }], effects: [set("flag"), { state: "held", of: "also.job" }],
-      }) as unknown as DeclaredDefinition["acts"][string];
-      data.timed["resume"] = { on: "job", states: ["held"], deadline: "until", effects: [{ state: "open" }], attention: [] };
-      return validateDefinition(parseStrictBytes(canonicalBytes(data)), PROPOSED_BOUNDS);
-    };
+    const load = (to: "held" | "done") => validateDefinition(parseStrictBytes(canonicalBytes(settlesTimedData(to))), PROPOSED_BOUNDS);
     const finite = load("done");
     expect(finite.ok).toBe(true);
     if (finite.ok) expect([finite.definition.pending, markerAmounts(finite.definition.markers!).awaits("root", "open", [])]).toEqual([{ job: { open: 1, held: 1 } }, 3]);
@@ -363,29 +273,7 @@ describe("the form `{ of, sets, in }` at the validator", () => {
   test("canonical holder amounts count an unnamed item's deadline, state duty and every pending mark in initial, changed and clause states", () => {
     // Made-up platform data: pulse can change one item and open one job. The opening draws on the holder's item count.
     // A job in open reserves its deadline (1), mark a (the larger alternative, 3), mark b (1), and its state settlement (1).
-    const data = structuredClone(M) as unknown as PlatformData;
-    data.name = "platform:marks";
-    data.items["root"]!.holds = { operations: { pulse: 1 }, requests: 1, items: 1 };
-    data.items["job"]!.values["until"] = { fixed: false, required: false, of: { type: "time" } };
-    data.timed["pause"] = { on: "job", states: ["open"], deadline: "until", effects: [{ state: "held" }], attention: [] };
-    data.acts["start"]!.sends = [{ tell: { to: { slot: "desk" }, message: "resume", fields: {}, result: { applied: [{ state: "open" }] } } }];
-    data.items["result"] = { many: true, max: 8, states: { done: { final: true } }, initial: "done", parties: {}, refs: {}, values: {} };
-    // One alternative opens a result while settling the existing job. The shorter relate alternative may create its first
-    // copy while settling that same mark: each dimension takes its own largest alternative, not the form with most entries.
-    data.acts["mark-a-far"] = act({
-      step: "open", on: "result", grant: "mark", also: { job: { item: "job", by: "job" } }, fields: { job: { type: "item", of: "job", required: true } },
-      settles: { of: "also.job", sets: "a", in: ["open"] }, effects: [set("a", "also.job")],
-      sends: [{ tell: { to: { slot: "desk", of: "also.job" }, message: "marked", fields: {}, result: {} } }],
-    }) as unknown as PlatformData["acts"][string];
-    data.receives["record-a"] = {
-      class: "relate", message: "record-a", from: { kind: "lane" }, copies: 8, opens: null,
-      fields: { job: { type: "item", of: "job", required: true } }, also: { job: { item: "job", by: "job" } },
-      settles: { of: "also.job", sets: "a", in: ["open"] }, guards: [], effects: [set("a", "also.job")], sends: [], attention: [],
-    };
-    data.outcomes = {
-      pulse: { code: "pulse", row: "X1", attempts: 1, most: { effects: 1, opens: "job" } },
-      spawn: { code: "spawn", row: "X2", attempts: 1, most: { effects: 0, opens: "job" } },
-    };
+    const data = settlesHolderData();
     const checked = validateDefinition(parseStrictBytes(canonicalBytes(data)), PROPOSED_BOUNDS, PROFILES, { platform: true });
     expect(checked.ok).toBe(true);
     if (!checked.ok) return;
@@ -408,16 +296,13 @@ describe("the form `{ of, sets, in }` at the validator", () => {
     // result item, but its own relationship key exists already, so it reserves no new record for that update.
     expect(definition.markers!["job"]!.forms.filter((form) => ["acts.mark-a", "acts.mark-b", "acts.close"].includes(form.path)).map(({ amount }) => [amount.items, amount.records])).toEqual([[0, 0], [0, 0], [0, 0]]);
     const ownCopy = structuredClone(data);
-    ownCopy.receives["record-a"]!.settles = { copy: ["set"] };
-    ownCopy.receives["record-a"]!.opens = "result";
+    settlesOwnCopyChange(ownCopy);
     const checkedCopy = validateDefinition(parseStrictBytes(canonicalBytes(ownCopy)), PROPOSED_BOUNDS, PROFILES, { platform: true });
     expect(checkedCopy.ok).toBe(true);
     if (checkedCopy.ok) expect(checkedCopy.definition.pendingWorkAmounts.pendingCopies.map(({ amount }) => [amount.entries, amount.items, amount.records])).toEqual([[1, 1, 0]]);
     // The opt-in copy duty also counts a rule's opening, without charging
     // arbitrary state changes that a settling rule is forbidden to return.
-    ownCopy.capacity = { name: "whole-scope", version: 1 };
-    ownCopy.receives["record-a"]!.opens = null;
-    ownCopy.receives["record-a"]!.effects = [...ownCopy.receives["record-a"]!.effects, { code: "copy-result", row: "X3", most: { effects: 2, opens: "result" } }];
+    settlesMarkedCopyChange(ownCopy);
     const markedCopy = validateDefinition(parseStrictBytes(canonicalBytes(ownCopy)), PROPOSED_BOUNDS, PROFILES, { platform: true });
     expect(markedCopy.ok).toBe(true);
     // The handler also reserves its retained foreign source entry.
@@ -461,7 +346,7 @@ describe("the form `{ of, sets, in }` at the validator", () => {
   });
 
   test("a definition with no settlement by a mark has no marker data, and counts as it did", () => {
-    const plain = valid(changed(M, (d) => { for (const kind of ["mark-a", "mark-a-far", "mark-b"]) delete d.acts[kind]; }));
+    const plain = valid(changed(M, settlesChanges.plain));
     expect([plain.markers, plain.pending]).toEqual([undefined, { job: { open: 1 } }]);
     expect(itemAwaits(plain, { type: "job", state: "open", values: {} })).toBe(0);
   });
@@ -475,19 +360,7 @@ describe("the form `{ of, sets, in }` at the validator", () => {
  * `most` of a mark is row I3-52's, so here the rule's code states it.
  */
 const M5 = "platform:marks@1" as PlatformDefinition;
-const m5 = () => valid(changed(M, (d) => {
-  d.name = "platform:marks";
-  d.outcomes = {};
-  for (const kind of ["mark-a", "mark-a-far", "mark-b", "close"]) delete d.acts[kind];
-  delete d.items.job.values.b;
-  d.items.job.values.until = { fixed: false, required: false, of: { type: "time" } };
-  d.timed.lapse = { on: "job", states: ["held"], deadline: "until", effects: [{ state: "done" }], attention: [] };
-  d.receives.flag = {
-    message: "flag", class: "tell", from: { kind: "directory" }, fields: { job: { type: "item", of: "job", required: true } }, opens: null,
-    also: { job: { item: "job", by: "job" } }, settles: { of: "also.job", sets: "a", in: ["open"] },
-    guards: [], effects: [{ code: "raise", row: "X1" }], sends: [], attention: [],
-  };
-}, true));
+const m5 = () => valid(changed(M, settlesChanges.m5, true));
 const raising = (effects: (item: number) => RuleEffect[]): PlatformRules =>
   ({ named: M5, rules: { raise: { place: "effect", most: 2, run: ({ resolved }) => effects(resolved.subjects.get("also.job")!.id) } } });
 

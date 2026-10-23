@@ -1,11 +1,12 @@
+import { replayAnchorRemarks } from "../../derive/test/definition-corpus/replay-literals-data.ts";
 /** Actual journal encoder/reader and verifier over judged in-memory
  * remarks. The task definition/code and Membership observations below
  * are explicit stand-ins; no Native factory, source read or host runs. */
 import { expect, test } from "vitest";
-import { PROPOSED_BOUNDS, type FactRef, type PlatformData, type Seed, type Timestamp } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type FactRef, type Seed, type Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, intentDigest, newIncarnation, scopeIdOf, signIntent, utf8 } from "@generalbusiness/artroom-bytes";
 import { clockOf, grantFrom, judgeGenesis, validateDefinition } from "@generalbusiness/dap-derive";
-import { deskDefinition, keys, lane, Ledger, membership, on, t } from "@generalbusiness/dap-derive/testing";
+import { keys, Ledger, membership, on, t } from "@generalbusiness/dap-derive/testing";
 import { buildJournalPass, type JournalAnchorPublication, type JournalObject } from "@generalbusiness/artroom-git/journal";
 import { readJournalArchiveV2 } from "@generalbusiness/artroom-git/journal-reader";
 import { ArchiveBudget } from "../../scope/src/archive-budget.ts";
@@ -25,10 +26,7 @@ function freshGrant(n: number, at: Timestamp) {
   return grantFrom({ ...proof, observation: { ...proof.observation, definition: "platform:membership@8" } });
 }
 function remarks(count: number, identity = "TEST anchor publication") {
-  const data: PlatformData = { ...deskDefinition.declared, name: "platform:task", receives: {}, outcomes: {},
-    acts: { found: deskDefinition.declared.acts["found"]!, remark: { ...lane.acts["remark"]!, on: "repo" },
-      vouch: { ...lane.acts["remark"]!, step: "transition", on: "repo", fields: {},
-        presents: { proof: { kind: ["remark"], under: "platform:task", required: true } }, guards: [{ fact: { presented: "proof" } }] } } };
+  const data = replayAnchorRemarks();
   const checked = validateDefinition(data, PROPOSED_BOUNDS, undefined, { platform: true });
   if (!checked.ok) throw Error(JSON.stringify(checked));
   const ledger = new Ledger(checked.definition), rules = {};

@@ -1,3 +1,4 @@
+import { capacityLargeText, capacityLargeTextAgain, capacityWhole, capacityTwoSpans } from "../../derive/test/definition-corpus/replay-mutations-data.ts";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, entryHash, signIntent, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
@@ -8,12 +9,7 @@ import { served } from "./world.ts";
 // Real in-memory judges/fold/verifier; fixture grants are explicitly trusted
 // as recorded. No native runtime, production membership or provider is claimed.
 test("whole-scope replay counts escaped text once per digest and reports only the historical span whose later redaction lost its size", async () => {
-  const definition = variant(notesDefinition.declared, d => {
-    d.capacity = { name: "whole-scope", version: 1 };
-    d.items.note.values.body.of = { type: "text", detached: true, max: 32000 };
-    d.acts.write.fields.body = { type: "text", detached: true, max: 32000, required: true };
-    d.acts["add-note"] = structuredClone(d.acts.start);
-  });
+  const definition = variant(notesDefinition.declared, capacityLargeText);
   const history = created(definition, {}, "capacity-redaction");
   const body = "é\n".repeat(5000), digest = textDigest(body);
   for (let n = 0; n < 2; n++) expect(history.act(keys.rita, "write", { ...on(history, 0), fields: { body: digest } }, { texts: () => utf8(body).length }).result).toBe("write");
@@ -35,12 +31,7 @@ test("whole-scope replay counts escaped text once per digest and reports only th
 });
 
 test("an unknown historical text size does not hide a later item-key overflow", async () => {
-  const definition = variant(notesDefinition.declared, d => {
-    d.capacity = { name: "whole-scope", version: 1 };
-    d.items.note.values.body.of = { type: "text", detached: true, max: 32000 };
-    d.acts.write.fields.body = { type: "text", detached: true, max: 32000, required: true };
-    d.acts["add-note"] = structuredClone(d.acts.start);
-  });
+  const definition = variant(notesDefinition.declared, capacityLargeTextAgain);
   const history = created(definition, {}, "capacity-unknown-items");
   const body = "formerly retained";
   expect(history.act(keys.rita, "write", { ...on(history, 0), fields: { body: textDigest(body) } }, { texts: () => body.length }).result).toBe("write");
@@ -55,7 +46,7 @@ test("an unknown historical text size does not hide a later item-key overflow", 
 
 
 test("an anchored foreign entry still has to fit the opt-in receiver's retained-entry producer ceiling", async () => {
-  const definition = variant(notesDefinition.declared, d => { d.capacity = { name: "whole-scope", version: 1 }; });
+  const definition = variant(notesDefinition.declared, capacityWhole);
   const sender = created(notesDefinition, {}, "large-anchored-source"), receiver = created(definition, {}, "small-receiver");
   const body = "a";
   expect(sender.act(keys.rita, "write", { ...on(sender, 0), fields: { body: textDigest(body) } }, { texts: () => body.length }).result).toBe("write");
@@ -76,10 +67,7 @@ test("an anchored foreign entry still has to fit the opt-in receiver's retained-
 });
 
 test("a later missing body cannot erase the proved redaction reason of an earlier byte span", async () => {
-  const definition = variant(notesDefinition.declared, d => {
-    d.capacity = { name: "whole-scope", version: 1 };
-    d.acts["add-note"] = structuredClone(d.acts.start);
-  });
+  const definition = variant(notesDefinition.declared, capacityTwoSpans);
   const history = created(definition, {}, "two-byte-spans");
   const write = (item: number, body: string) => expect(history.act(keys.rita, "write", { ...on(history, item), fields: { body: textDigest(body) } }, { texts: () => body.length }).result).toBe("write");
   write(0, "redacted earlier");

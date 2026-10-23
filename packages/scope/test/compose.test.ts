@@ -1,3 +1,4 @@
+import { composeWholeTicketChange, composeWholeDeskChange } from "./definition-corpus-data.ts";
 import { describe, expect, test } from "vitest";
 import { runInDurableObject } from "cloudflare:test";
 import type { Entry, Input, Seed } from "@generalbusiness/dap-contract";
@@ -127,10 +128,8 @@ describe("a relationship update (section 7.3) between two real objects", () => {
 
 describe("a request that cannot be delivered (section 7.4)", () => {
   test.each(["legacy", "whole-scope"] as const)("%s: another incarnation records nothing; routing refusals end undelivered and an unanswered attempt leaves the request pending", async cohort => {
-    const under = cohort === "whole-scope" ? variant(ticketDefinition.declared, d => { d.capacity = { name: "whole-scope", version: 1 }; }) : ticketDefinition;
-    const directory = cohort === "whole-scope" ? variant(deskDefinition.declared, d => {
-      for (const form of [...Object.values(d.acts), ...Object.values(d.receives)] as { sends: { create?: { definition: string } }[] }[]) for (const send of form.sends) if (send.create?.definition === ticketDefinition.digest) send.create.definition = under.digest;
-    }) : deskDefinition;
+    const under = cohort === "whole-scope" ? variant(ticketDefinition.declared, composeWholeTicketChange()) : ticketDefinition;
+    const directory = cohort === "whole-scope" ? variant(deskDefinition.declared, composeWholeDeskChange(ticketDefinition, under)) : deskDefinition;
     const D = await desk(directory, [under]);
     const S = await ticket(D, "S", under);
     const head = (await D.summary()).at;

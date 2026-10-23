@@ -1,3 +1,4 @@
+import { stagingGateDeclaration, replayProofDomain as PROOF_DOMAIN } from "../../derive/test/definition-corpus/replay-mutations-data.ts";
 /**
  * Test support for the replay of a preparation, of outcomes and of an
  * ancestry record (scope contract, sections 5.5, 9.3 and 16.4): one staging
@@ -169,7 +170,6 @@ export const RULES_SCOPE: ScopeRef = (() => {
 const RULES_HEAD = { seq: 12, hash: d("9") } as const;
 
 /** A made-up byte domain, which the made-up data of a gate with a place declares. */
-const PROOF_DOMAIN = "gate-proof-1";
 
 /**
  * A scope under made-up platform data, created by `rita`: derive's fixture
@@ -202,12 +202,7 @@ export class Gate extends Ledger {
   // `key-id` then opens its probe for the ticket.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(derives: NonNullable<OutcomeRule["derives"]>, readonly watched = false, placed = false, held?: (data: any) => void, readonly ruled: ((at: Timestamp) => RulesObservation) | null = null) {
-    super(gateWith((data) => {
-      data.name = "platform:task";
-      data.acts.enter.grant = "gate.enter";
-      held?.(data);
-      if (placed) data.acts.issue.fields.proof = { type: "digest", required: false, value: { domain: PROOF_DOMAIN, max: 64 } };
-    }));
+    super(gateWith(stagingGateDeclaration(placed, held)));
     const proof = { seat: 12 };
     this.proof = placed ? { domain: PROOF_DOMAIN, digest: valueDigest(PROOF_DOMAIN, proof), bytes: canonicalize(proof) } : null;
     this.rules = Gate.rulesWith(derives, watched, held ? this.ticket : undefined);

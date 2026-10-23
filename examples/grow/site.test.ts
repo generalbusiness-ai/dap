@@ -3,8 +3,7 @@
 import { expect, test } from "vitest";
 import { keys, deliver } from "@generalbusiness/dap-derive/testing";
 import { creates } from "@generalbusiness/dap-derive";
-import { definitionDigest } from "@generalbusiness/artroom-bytes";
-import { site } from "./site.ts";
+import { siteForRoomDefinition, misaddressedRoomDefinition } from "./definition-corpus-data.ts";
 import { sitePresence } from "./presence.ts";
 import { room } from "./room.ts";
 import { nativeCreatedSite, nativeChild, devicePermissions, operator, climate, sensors, on, replay, submit, type Ledger } from "./test-support.ts";
@@ -12,10 +11,7 @@ const night = { ...keys.sam, principal: operator.member };
 const permissions = [...devicePermissions, [keys.rita, ["grow.tend"]], [night, ["grow.tend"]]] as const;
 const wrote = (result: { result: string }) => expect(result).toMatchObject({ result: "write" });
 async function setup(childDefinition = room) {
-  const parentDefinition = structuredClone(site), send = parentDefinition.acts["create-room"]!.sends[0]!;
-  if (!("create" in send)) throw new Error("site fixture requires a declared create send");
-  send.create.definition = definitionDigest(childDefinition);
-  parentDefinition.receives["room-summary"]!.from.pin = definitionDigest(childDefinition);
+  const parentDefinition = siteForRoomDefinition(childDefinition);
   const { launcher, site: parent } = await nativeCreatedSite(parentDefinition, permissions, { label: "Test grow site" });
   const rooms: Ledger[] = [], rows: number[] = [];
   for (const label of ["Room A", "Room B", "Room C"]) {
@@ -68,9 +64,7 @@ test("native Site presence keeps explicit report facts beyond the activity windo
 test("a different registered room cannot replace a room's summary even under the same definition name", async () => {
   // This alternate declared sender deliberately addresses row 2. Its create,
   // proof, source entry and relation are all judged; no send is forged.
-  const misaddressed = structuredClone(room), send = misaddressed.acts["report-site"]!.sends[0]!;
-  if (!("relate" in send)) throw new Error("room fixture requires a declared relation send");
-  send.relate.detail["room"] = { const: 2 };
+  const misaddressed = misaddressedRoomDefinition();
   const { launcher, parent, rooms, rows } = await setup(misaddressed), child = rooms[0]!, other = rooms[1]!, row = rows[0]!;
   expect(row).toBe(2);
   wrote(await submit(child, sensors, "report-site", on(child, 0, { openAlerts: 0 }))); wrote(deliver(parent, child, child.last.seq));

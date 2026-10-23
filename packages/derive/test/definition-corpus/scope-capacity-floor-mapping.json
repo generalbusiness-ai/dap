@@ -1,0 +1,87 @@
+{
+  "basis": "f7b59bf92d1abe20300818ab109fa12df617c2e0",
+  "status": "Source only; no compilation or runtime",
+  "source_enumerated_rows": 34,
+  "files": [
+    {
+      "path": "packages/scope/test/capacity-bound-records.test.ts",
+      "bytes": 7527,
+      "sha256": "a397b97a8f4ba9c79a593ea5bbe8b1e1071581b654da7f6a2f7c08d48032f977",
+      "preserved_expect_calls": 19,
+      "static_test_titles_unchanged": true
+    },
+    {
+      "path": "packages/scope/test/capacity-confirmation.test.ts",
+      "bytes": 11998,
+      "sha256": "84c08e73e86a8732abaa1814e651cab61ec85566334377893fd40c68a14fa562",
+      "preserved_expect_calls": 34,
+      "static_test_titles_unchanged": true
+    },
+    {
+      "path": "packages/scope/test/capacity-receiver-pins.test.ts",
+      "bytes": 13847,
+      "sha256": "aaa198a25c26708ec19abf7e99c7e5fad457529e76ef18d43e70a0b4a34e968f",
+      "preserved_expect_calls": 48,
+      "static_test_titles_unchanged": true
+    },
+    {
+      "path": "packages/scope/test/capacity-standing.test.ts",
+      "bytes": 6417,
+      "sha256": "24f46dea2f6af0856999674a3530b01255b966fd34a18420018512fa5eee5397",
+      "preserved_expect_calls": 18,
+      "static_test_titles_unchanged": true
+    },
+    {
+      "path": "packages/scope/test/floor-roots.test.ts",
+      "bytes": 6308,
+      "sha256": "7d32d3a3b3e09ecb573bd433886c671c1e606a6369e08c66f7525241fee007de",
+      "preserved_expect_calls": 19,
+      "static_test_titles_unchanged": true
+    },
+    {
+      "path": "packages/scope/test/floor-size-proofs.test.ts",
+      "bytes": 6595,
+      "sha256": "3d1ccaffecfd50ae4a5a3d2109dd4c408f2fd3ea7dd41a5375730b0ff433e332",
+      "preserved_expect_calls": 11,
+      "static_test_titles_unchanged": true
+    },
+    {
+      "path": "packages/derive/test/definition-corpus/scope-capacity-floor.ts",
+      "bytes": 17683,
+      "sha256": "f4609843bc72033cf326d8712d3313aaaafb82b2b104fecc2958581927a26ae6"
+    }
+  ],
+  "contexts": [
+    "confirmation child and digest-dependent parent for whole false/true; original child validation remains before parent construction; entryBytes4096, default profiles/options",
+    "boundRecord receiver/sender for firstKey false/true; PIN_BOUNDS; receiver platformtrue, sender default",
+    "receiver pins child platformtrue, receiver/sender default; PIN_BOUNDS; original bodySlot object shared inside the native scenario",
+    "standing whole and capacity-absent closed legacy; explicit PROFILES and platformtrue",
+    "floor roots platformtrue and default profiles",
+    "floor size proofs same positive declaration for proving200/50; platformtrue/default profiles; invalid runtime value rule remains in Native test",
+    "19 additional fixed Core/Replay contexts preserve explicit RULE_PROFILES and platform outcomeValues {}; all six owning test files remain exact at their earlier hashes",
+    "confirmation native true child/default ceiling and both parent variants; legacy false child and replay parent use scopeBytes 0",
+    "bound records receiver records0 both firstKey branches, records1 after true restart; native sender PIN_BOUNDS and replay sender at exact receiver bounds",
+    "receiver pins native child PIN_BOUNDS/platform, initial receiver entries15/items3/records1/requests2 and ordinary sender PIN_BOUNDS",
+    "standing native whole entries9/default scopeBytes and legacy entries9/scopeBytes1; floor roots and size proofs native platform contexts"
+  ],
+  "exclusions": "Missing dependencies, byte ceilings, floor receipts, invalid runtime effects and other refused histories are not validator-negative declarations. No private Native resource/setup is imported into raw data.",
+  "runtime_measured_contexts": [
+    {
+      "origin": "packages/scope/test/capacity-confirmation.test.ts#history(true,ceiling)/history(true,ceiling-1)/verify(exact.child)",
+      "bound": "scopeBytes = measured own+source admission ceiling; preserved in owning history, not invented as a static corpus number"
+    },
+    {
+      "origin": "packages/scope/test/capacity-receiver-pins.test.ts#receiver.restart()/verify(receiver)/verify(redacted)",
+      "bound": "scopeBytes = before.bytes + before.reserved.bytes remains through entries100,15,18; all combined contexts remain owning-history checks"
+    },
+    {
+      "origin": "packages/scope/test/capacity-standing.test.ts#setup(ceiling)/setup(ceiling-1)/verify(exact.name)",
+      "bound": "scopeBytes = measured.bytes + 7*entryBytes (and one below); owning history remains the evidence"
+    }
+  ],
+  "native_context_source_proof": {
+    "ordinary": "packages/scope/src/core.ts#validate and packages/replay/src/verify.ts#pin pass RULE_PROFILES with default options",
+    "platform": "Core.platform and Replay.#code pass RULE_PROFILES and platform:true with outcomeValueDomains(data,rules)",
+    "domains": "packages/derive/src/outcomes.ts#outcomeValueDomains returns only declared rule valueDomains; these fixtures have none (including floor-roots work rule), yielding {}"
+  }
+}

@@ -1,3 +1,4 @@
+import { gateValueFieldChange, gateValueOutcomeChange } from "./definition-corpus-data.ts";
 import { env } from "cloudflare:workers";
 import { evictDurableObject, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
@@ -22,7 +23,7 @@ import { START, at, objectOf, reader, rita, stubOf } from "./fixtures-native.ts"
 test("a value beside an intent, on real storage: the scope reads it only for a place that its pinned data states, and keeps it under its domain and its digest, once; other bytes, and a value past the bound of its domain, are bad-field and nothing is kept; the read route serves a value only under its domain", async () => {
   const MADE = "platform:task@1" as PlatformDefinition;
   const [DOMAIN, MAX] = ["gate-proof-1", 64];
-  const data = gateWith((d) => { d.name = "platform:task"; d.acts.issue.fields.proof = { type: "digest", required: false, value: { domain: DOMAIN, max: MAX } }; }).declared;
+  const data = gateWith(gateValueFieldChange(DOMAIN, MAX)).declared;
   const creation: Intent = { v: 1, to: null, actor: rita.key, kind: "found", on: null, expected: {}, fields: { opener: rita.member }, idempotencyKey: crypto.randomUUID(), notAfter: at(60) };
   const seed: Seed = { v: 1, kind: "directory", definition: MADE, creator: null, cause: intentDigest(creation), ordinal: 0 };
   const name = scopeIdOf(seed);
@@ -80,11 +81,7 @@ test.each(["gate-proof-1", DOMAINS.definition])("an owner's evidence value in %s
     values: (evidence) => { const digest = (evidence.body as { proof?: Digest } | null)?.proof; return digest ? [{ domain: DOMAIN, max: MAX, digest }] : []; },
     // No value read is needed for retention: the declaration and the evidence name it.
   };
-  const data = gateWith((data) => {
-    data.name = "platform:task";
-    data.acts.issue.effects.push({ code: "open-proof", row: "P16", most: { effects: 0, operations: ["probe"] } });
-    data.outcomes.probe.attempts = 1;
-  }).declared;
+  const data = gateWith(gateValueOutcomeChange()).declared;
   const code = gateRules({ "open-proof": { place: "effect", most: 2, run: () => [{ effect: "operation", k: 0, owner: MADE, kind: "probe", attempts: 1 }, { effect: "attempt", operation: { k: 0 }, attempt: 1, result: "opened", selected: null }] }, probe: { place: "outcome", rules: probe } });
   const creation: Intent = { v: 1, to: null, actor: rita.key, kind: "found", on: null, expected: {}, fields: { opener: rita.member }, idempotencyKey: crypto.randomUUID(), notAfter: at(60) };
   const seed: Seed = { v: 1, kind: "directory", definition: MADE, creator: null, cause: intentDigest(creation), ordinal: 0 };

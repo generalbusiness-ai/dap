@@ -8,8 +8,14 @@ import { validateDefinition, validatePackage } from "../src/index.ts";
 import { RULE_PROFILES } from "../src/rule/index.ts";
 import { room } from "../../../examples/grow/room.ts";
 import { keys } from "./fixtures.ts";
-import { grow, preFailureRelation } from "./fixtures-package-graph.ts";
+import { grow, preFailureRelation, checkedGraph } from "./fixtures-package-graph.ts";
 import { DEMO_RELEASE, DEMO_PUBLISHER } from "../../../examples/grow/demo-release.ts";
+import { publishedCopies, insufficientCopies, twoItems as twoItemsData, conflictFrees, recyclable as recyclableData, rewritable as rewritableData, missingResult, openingReport, narrowField, unknownMessage, unusedHandler, packerCopies, pairedUnusedHandler, pairedCopies, pairedRebind, pairedMissingResult, pairedUnknownMessage, pairedNarrowField, lifetimeVariantsData, repeatedReporterData, automaticCycleData, cycleAlternativesData, pendingCreationData, differentRoomData } from "./definition-corpus/package-graph-variants.ts";
+const lifetimeVariants = () => lifetimeVariantsData().map(row => ({ ...row, input: checkedGraph(row.input) }));
+const repeatedReporter = (copies = 3) => checkedGraph(repeatedReporterData(copies));
+const automaticCycle = (guarded: boolean, additional: readonly Guard[] = []) => checkedGraph(automaticCycleData(guarded, additional));
+const cycleAlternatives = () => cycleAlternativesData().map(row => ({ ...row, good: checkedGraph(row.good), bad: checkedGraph(row.bad) }));
+const pendingCreation = (timer: boolean) => checkedGraph(pendingCreationData(timer));
 const maintained = JSON.parse(readFileSync(new URL("../../../examples/grow/check/dap.application.json", import.meta.url), "utf8")) as {
   capabilities: ApplicationPackageInput2["semantic"]["capabilities"];
 };
@@ -18,60 +24,6 @@ const maintained = JSON.parse(readFileSync(new URL("../../../examples/grow/check
 // The final case also crosses the signed package codec and public validator.
 // All variants pass native whole-definition validation first. The backup
 // opening makes the aliases reachable without adding a second child creator.
-function lifetimeVariants(): { name: string; input: PackageGraphInput }[] {
-  const backup = (parent: DeclaredDefinition) => {
-    const opening = parent.acts["create-room"]!;
-    parent.acts["open-backup-slot"] = { ...structuredClone(opening), sends: [] };
-  };
-  const birthKinds = (child: DeclaredDefinition, kinds: string[]) => {
-    const field = child.acts["establish"]!.fields["siteRoom"]!;
-    if (field.type !== "fact") return expect.fail("Grow siteRoom must be a fact.");
-    field.kind = kinds;
-    const slot = child.items["room"]!.refs["siteRoom"]!.to;
-    if (slot.type !== "fact") return expect.fail("Grow siteRoom slot must be a fact.");
-    slot.kind = kinds;
-  };
-  return [
-    { name: "retiring a confirmed backing slot", input: grow(parent => {
-      parent.acts["retire"] = { step: "transition", on: "room", grant: "grow.configure", fields: {}, also: {},
-        guards: [{ state: ["active"] }], effects: [{ state: "failed" }], sends: [], attention: [] };
-    }) },
-    { name: "retiring a backing slot through the Site's selected room", input: grow(parent => {
-      parent.items["site"]!.refs["selected"] = { fixed: false, required: false, to: { type: "item", of: "room" } };
-      parent.acts["select-room"] = { step: "transition", on: "site", grant: "grow.configure",
-        fields: { room: { type: "item", of: "room", required: true } }, also: {}, guards: [],
-        effects: [{ ref: { slot: "selected", from: { field: "room" } } }], sends: [], attention: [] };
-      parent.acts["retire-selected-room"] = { step: "transition", on: "site", grant: "grow.configure", fields: {},
-        also: { selected: { item: "room", via: { of: "on", slot: "selected" } } },
-        guards: [{ of: "also.selected", state: ["active"] }],
-        effects: [{ of: "also.selected", state: "failed" }], sends: [], attention: [] };
-    }) },
-    { name: "repeated creation from the singleton Site", input: grow((parent, child) => {
-      backup(parent); birthKinds(child, ["open-backup-slot"]);
-      const creator = parent.acts["create-room"]!;
-      creator.step = "transition"; creator.on = "site"; creator.effects = [];
-      creator.fields["slot"] = { type: "item", of: "room", required: true };
-      creator.also = { slot: { item: "room", by: "slot" } };
-      const send = creator.sends[0]!;
-      if (!("create" in send)) return expect.fail("Grow requires its creation.");
-      send.create.fields["siteRoom"] = { item: "also.slot" };
-      for (const [name, effects] of Object.entries(send.create.result)) send.create.result[name as keyof typeof send.create.result] = effects.map(effect => ({ ...effect, of: "also.slot" }));
-    }) },
-    { name: "refusal also frees a previous confirmed slot", input: grow((parent, child) => {
-      backup(parent); birthKinds(child, ["create-room", "open-backup-slot"]);
-      const creator = parent.acts["create-room"]!;
-      creator.fields["previous"] = { type: "item", of: "room", required: true };
-      creator.also = { previous: { item: "room", by: "previous" } };
-      const send = creator.sends[0]!;
-      if ("create" in send) send.create.result.refused = [{ state: "failed" }, { of: "also.previous", state: "failed" }];
-    }) },
-    { name: "recyclable related items", input: grow((_parent, child) => { child.items["room"]!.states["ended"] = { final: true }; }) },
-    { name: "a creation conflict frees its backing slot", input: grow(parent => {
-      const send = parent.acts["create-room"]!.sends[0]!;
-      if ("create" in send) send.create.result.conflict = [{ state: "failed" }];
-    }) },
-  ];
-}
 
 // Deliberately unchecked TEST producer: this tests hostile signed input at
 // the byte boundary, independently of pack's refusal before signing. The
@@ -114,20 +66,11 @@ test("published consumption preserves the exact old Grow packet while new pack a
   const unrelated = signedGrowWire(grow(), true);
   expect(validatePackage(unrelated.bytes, PROPOSED_BOUNDS, RULE_PROFILES, {}, unrelated.release)).toMatchObject({ ok: false, kind: "codec", reason: "invalid" });
   expect(() => readPublishedApplicationPackage2(unrelated.bytes, unrelated.release)).toThrow("application-package-invalid");
-  const unproved = signedGrowWire(grow(parent => { parent.receives["room-summary"]!.copies = 2; }));
+  const unproved = signedGrowWire(grow(publishedCopies));
   expect(() => readPublishedApplicationPackage2(unproved.bytes, unproved.release)).toThrow(ApplicationPackageValidationError);
   const complete = signedGrowWire(grow());
   expect(readPublishedApplicationPackage2(complete.bytes, complete.release).ids).toEqual(readApplicationPackage2(complete.bytes, complete.release).ids);
 });
-
-function repeatedReporter(copies = 3) {
-  return grow((parent, child) => {
-    parent.receives["room-summary"]!.copies = copies;
-    child.acts["report-again"] = { ...structuredClone(child.acts["report-site"]!), effects: [] };
-    const summary = parent.items["room"]!.refs["summaryAt"]!.to;
-    if (summary.type === "fact") summary.kind = [...summary.kind, "report-again"];
-  });
-}
 
 test("Grow's three retained child slots prove three lifetime relation keys, rather than live maxima alone", async () => {
   const input = grow(), checked = checkPackageGraph(input);
@@ -137,13 +80,10 @@ test("Grow's three retained child slots prove three lifetime relation keys, rath
   // Three successful children add three creator entries, geneses and results;
   // their backing items and root items add six keys beside the Site's root.
   expect(checked.projected).toMatchObject({ liveItems: { acrossInstall: 606 }, successfulCreation: { entryCeiling: 10, itemKeyCeiling: 7 }, lifetime: { entries: null, itemKeys: null } });
-  const insufficient = checkPackageGraph(grow(parent => { parent.receives["room-summary"]!.copies = 2; }));
+  const insufficient = checkPackageGraph(grow(insufficientCopies));
   expect(insufficient.findings.map(finding => finding.reason)).toEqual(["fan-in-exceeds-copies"]);
   expect(insufficient.findings[0]!.message).toContain("fan-in 3 exceeds copies 2");
-  const twoItems = (copies: number) => checkPackageGraph(grow((parent, child) => {
-    child.items["room"]!.many = true; child.items["room"]!.max = 2;
-    parent.receives["room-summary"]!.copies = copies;
-  }));
+  const twoItems = (copies: number) => checkPackageGraph(grow(twoItemsData(copies)));
   expect(twoItems(3).findings.map(finding => finding.reason)).toEqual(["fan-in-exceeds-copies"]);
   expect(twoItems(3).findings[0]!.message).toContain("fan-in 6 exceeds copies 3");
   expect(twoItems(6).findings).toEqual([]);
@@ -155,12 +95,9 @@ test("Grow's three retained child slots prove three lifetime relation keys, rath
   const separate = checkPackageGraph(preFailureRelation(false, 8));
   expect(separate.findings.map(finding => finding.reason)).toEqual(["fan-in-exceeds-copies"]);
   expect(separate.findings[0]!.message).toContain("fan-in 9 exceeds copies 8");
-  const conflicted = checkPackageGraph(grow(parent => {
-    const send = parent.acts["create-room"]!.sends[0]!;
-    if ("create" in send) send.create.result["conflict"] = [{ state: "failed" }];
-  }));
+  const conflicted = checkPackageGraph(grow(conflictFrees));
   expect(conflicted.findings.map(finding => finding.reason)).toEqual(["fan-in-unproved"]);
-  const recyclable = checkPackageGraph(grow((_parent, child) => { child.items["room"]!.states["ended"] = { final: true }; }));
+  const recyclable = checkPackageGraph(grow(recyclableData));
   expect(recyclable.findings.map(finding => finding.reason)).toEqual(["fan-in-unproved"]);
   const validWire = signedGrowWire(input);
   expect(validatePackage(validWire.bytes, PROPOSED_BOUNDS, RULE_PROFILES, {}, validWire.release)).toMatchObject({ ok: true, kind: "graph" });
@@ -179,10 +116,7 @@ test("Grow's three retained child slots prove three lifetime relation keys, rath
 
 test("Grow endpoints stay bound to the declared child and creator rather than signer-selected peers", () => {
   expect(checkPackageGraph(grow()).findings).toEqual([]);
-  const rewritable = grow(parent => {
-    parent.acts["rebind-room"] = { step: "transition", on: "room", grant: "grow.configure", fields: { peer: { type: "scope", kind: "lane", required: true } }, also: {},
-      guards: [{ state: ["active"] }], effects: [{ ref: { slot: "scope", from: { field: "peer" } } }], sends: [], attention: [] };
-  });
+  const rewritable = grow(rewritableData);
   expect(checkPackageGraph(rewritable).findings.map(finding => finding.reason)).toEqual(["unbound-endpoint"]);
   const wrongChild = grow(), original = wrongChild.composition.connections[0]!;
   expect(checkPackageGraph({ ...wrongChild, composition: { ...wrongChild.composition,
@@ -192,10 +126,7 @@ test("Grow endpoints stay bound to the declared child and creator rather than si
 
 test("Grow's explicit failure clauses, default grants and order each carry a separate package obligation", () => {
   expect(checkPackageGraph(grow()).findings).toEqual([]);
-  const incomplete = grow((_parent, child) => {
-    const send = child.acts["report-site"]!.sends[0]!;
-    if ("relate" in send) delete send.relate.result["undelivered"];
-  });
+  const incomplete = grow(missingResult);
   expect(checkPackageGraph(incomplete).findings.map(finding => finding.reason)).toEqual(["unhandled-result"]);
   const input = grow();
   const ungranted = checkPackageGraph({ ...input, roles: { operator: input.roles["operator"]!.filter(action => action !== "grow.tend") } });
@@ -210,10 +141,7 @@ test("Grow rights check declared ownership and warn without claiming complete wr
   const owned = { ...input, composition: { ...input.composition, rights: { "room-count": { owner: input.entry } }, exercises } };
   expect(checkPackageGraph(owned).findings).toEqual([]);
   expect(checkPackageGraph({ ...owned, composition: { ...owned.composition, rights: { "room-count": { owner: child } } } }).findings.map(finding => finding.reason)).toEqual(["right-not-owned"]);
-  const opening = grow(parent => {
-    parent.items["report"] = { many: true, max: 3, initial: "received", states: { received: { final: false } }, parties: {}, refs: {}, values: {} };
-    parent.receives["room-summary"]!.opens = "report";
-  });
+  const opening = grow(openingReport);
   const warnings = checkPackageGraph(opening).findings;
   expect(warnings.map(finding => [finding.reason, finding.severity])).toEqual([["unowned-bound", "warning"]]);
   const packet = await packApplication2(packageInput(opening), { key: keys.rita.key, sign: bytes => sign(keys.rita.secret, bytes) });
@@ -228,26 +156,15 @@ test("Grow rights check declared ownership and warn without claiming complete wr
 
 test("Grow ports check the actual peer digest, message reachability and transmitted field types", () => {
   expect(checkPackageGraph(grow()).findings).toEqual([]);
-  const different = structuredClone(room), label = different.items["room"]!.values["label"]!.of;
-  if (label.type !== "text") return expect.fail("Grow label must be text");
-  label.max = 81;
+  const different = differentRoomData();
   expect(different.name).toBe(room.name);
   expect(validateDefinition(different, PROPOSED_BOUNDS, RULE_PROFILES).ok).toBe(true);
   expect(checkPackageGraph(grow(() => {}, definitionDigest(different))).findings.map(finding => finding.reason)).toEqual(["wrong-peer"]);
-  const tooNarrow = grow(parent => {
-    const field = parent.receives["room-summary"]!.fields["openAlerts"]!;
-    if (field.type === "int") field.max = 3;
-  });
+  const tooNarrow = grow(narrowField);
   expect(checkPackageGraph(tooNarrow).findings.map(finding => finding.reason)).toEqual(["field-mismatch"]);
-  const missing = grow((_parent, child) => {
-    const send = structuredClone(child.acts["report-site"]!.sends[0]!);
-    if ("relate" in send) send.relate.name = "unknown-summary";
-    child.acts["report-site"]!.sends = [...child.acts["report-site"]!.sends, send];
-  });
+  const missing = grow(unknownMessage);
   expect(checkPackageGraph(missing).findings.map(finding => finding.reason)).toEqual(["unknown-message"]);
-  const unreachable = grow(parent => {
-    parent.receives["unused-summary"] = { ...structuredClone(parent.receives["room-summary"]!), message: "unused-summary" };
-  });
+  const unreachable = grow(unusedHandler);
   const unused = { ...unreachable, composition: { ...unreachable.composition,
     order: [...unreachable.composition.order, { definition: unreachable.entry, handler: "unused-summary", by: "any" as const }],
   } };
@@ -286,56 +203,10 @@ test("the public package byte validator checks signed Grow bytes and preserves t
       ok: false, kind: "codec", reason: "limit", findings: [expect.objectContaining({ reason: "bounds" })],
     });
   }
-  const rejected = packApplication2(packageInput(grow(parent => { parent.receives["room-summary"]!.copies = 2; })), signer);
+  const rejected = packApplication2(packageInput(grow(packerCopies)), signer);
   await expect(rejected).rejects.toBeInstanceOf(ApplicationPackageValidationError);
   await expect(rejected).rejects.toMatchObject({ findings: [expect.objectContaining({ reason: "fan-in-exceeds-copies" })] });
 });
-
-function automaticCycle(guarded: boolean, additional: readonly Guard[] = []) {
-  const input = grow((parent, child) => {
-    const creator = structuredClone(parent.acts["create-room"]!.sends[0]!);
-    parent.acts["create-room"]!.sends = [];
-    const handler = parent.receives["room-summary"]!;
-    handler.opens = "room"; handler.copies = 6;
-    handler.fields["label"] = { type: "text", max: 80, required: true };
-    handler.effects = [{ value: { slot: "label", from: { field: "label" } } }, ...handler.effects];
-    handler.sends = [creator];
-    if (!guarded) handler.guards = handler.guards.filter(guard => !("state" in guard));
-    handler.guards = [...handler.guards, ...additional];
-    const siteRoom = child.items["room"]!.refs["siteRoom"]!.to, incoming = child.acts["establish"]!.fields["siteRoom"]!;
-    if (siteRoom.type === "fact") siteRoom.kind = ["create-room", "room-summary"];
-    if (incoming.type === "fact") { incoming.kind = ["create-room", "room-summary"]; incoming.required = true; }
-    const summary = parent.items["room"]!.refs["summaryAt"]!.to;
-    if (summary.type === "fact") summary.kind = ["establish", "report-site"];
-    const report = child.acts["report-site"]!.sends[0]!;
-    if (!("relate" in report)) throw new Error("Grow report must relate");
-    report.relate.detail["label"] = { slot: "label" };
-    const atBirth = structuredClone(report);
-    atBirth.relate.detail = { room: { field: "siteRoom" }, openAlerts: { const: 0 }, label: { field: "label" } };
-    child.acts["establish"]!.sends = [atBirth];
-  });
-  return { ...input, composition: { ...input.composition, rights: { rooms: { owner: input.entry } }, exercises: [{ definition: input.entry, row: "receives.room-summary", right: "rooms" }] } };
-}
-
-function cycleAlternatives() {
-  const state: Guard = { of: "also.room", state: ["active"] };
-  const always: Guard = { equals: { a: { const: true }, b: { const: true } } };
-  return [
-    { name: "one unconditional alternative",
-      good: automaticCycle(false, [{ anyOf: [[state], [state]] }]),
-      bad: automaticCycle(false, [{ anyOf: [[state], [always]] }]) },
-    { name: "a nested unconditional alternative",
-      good: automaticCycle(false, [{ anyOf: [[state], [{ anyOf: [[state], [state]] }]] }]),
-      bad: automaticCycle(false, [{ anyOf: [[state], [{ anyOf: [[state], [always]] }]] }]) },
-    { name: "an empty universal list",
-      good: automaticCycle(false, [{ each: { list: { const: [true] }, as: "x", guards: [state] } }]),
-      bad: automaticCycle(false, [{ each: { list: { const: [] }, as: "x", guards: [state] } }]) },
-    { name: "a universal list filtered to empty",
-      good: automaticCycle(false, [{ each: { list: { const: [true] }, as: "x", guards: [state] } }]),
-      bad: automaticCycle(false, [{ each: { list: { const: [true] }, as: "x",
-        where: [{ equals: { a: { const: true }, b: { const: false } } }], guards: [state] } }]) },
-  ];
-}
 
 test("Grow's automatic create/report cycle needs an explicit state condition, without claiming termination", () => {
   expect(checkPackageGraph(automaticCycle(true)).findings).toEqual([]);
@@ -345,17 +216,6 @@ test("Grow's automatic create/report cycle needs an explicit state condition, wi
     expect(checkPackageGraph(pair.bad).findings.map(finding => finding.reason), pair.name).toEqual(["cycle-unacknowledged"]);
   }
 });
-
-function pendingCreation(timer: boolean) {
-  return grow(parent => {
-  parent.items["room"]!.values["deadline"] = { fixed: false, required: false, of: { type: "time" } };
-  const create = parent.acts["create-room"]!;
-  create.effects = [...create.effects, { value: { slot: "deadline", from: { time: { plusSeconds: 30 } } } }];
-  parent.acts["settle-room"] = { step: "transition", on: "room", grant: "grow.configure", also: {}, fields: {},
-    guards: [{ state: ["pending"] }], settles: { of: "on", in: ["pending"] }, effects: [{ state: "active" }], sends: [], attention: [] };
-  if (timer) parent.timed["creation-expired"] = { on: "room", states: ["pending"], deadline: "deadline", effects: [{ state: "conflicted" }], attention: [] };
-  });
-}
 
 test("Grow's declared pending creation work needs its own timed exit without recycling a successful child slot", () => {
   const settled = checkPackageGraph(pendingCreation(true));
@@ -396,29 +256,21 @@ test("planned definition forms refuse by name before signing and from correctly 
 test("P1 graph refusals retain their sole reason through packing and signed package validation", async () => {
   const base = grow(), right = { ...base, composition: { ...base.composition, rights: { rooms: { owner: base.entry } },
     exercises: [{ definition: base.entry, row: "acts.create-room", right: "rooms" }] } };
-  const alternate = structuredClone(room), label = alternate.items["room"]!.values["label"]!.of;
-  if (label.type !== "text") return expect.fail("Grow label must be text.");
-  label.max = 81;
-  const unreachable = grow(parent => { parent.receives["unused-summary"] = { ...structuredClone(parent.receives["room-summary"]!), message: "unused-summary" }; });
+  const alternate = differentRoomData();
+  const unreachable = grow(pairedUnusedHandler);
   const unowned = { ...unreachable, composition: { ...unreachable.composition, order: [...unreachable.composition.order,
     { definition: unreachable.entry, handler: "unused-summary", by: "any" as const }] } };
   const cases: { name?: string; reason: string; good: PackageGraphInput; bad: PackageGraphInput }[] = [
-    { reason: "fan-in-exceeds-copies", good: base, bad: grow(parent => { parent.receives["room-summary"]!.copies = 2; }) },
+    { reason: "fan-in-exceeds-copies", good: base, bad: grow(pairedCopies) },
     { name: "repeated reporting of the same keys", reason: "fan-in-exceeds-copies", good: repeatedReporter(), bad: repeatedReporter(2) },
-    { reason: "unbound-endpoint", good: base, bad: grow(parent => {
-      parent.acts["rebind-room"] = { step: "transition", on: "room", grant: "grow.configure", fields: { peer: { type: "scope", kind: "lane", required: true } }, also: {},
-        guards: [{ state: ["active"] }], effects: [{ ref: { slot: "scope", from: { field: "peer" } } }], sends: [], attention: [] };
-    }) },
+    { reason: "unbound-endpoint", good: base, bad: grow(pairedRebind) },
     { reason: "wrong-peer", good: base, bad: grow(() => {}, definitionDigest(alternate)) },
-    { reason: "unhandled-result", good: base, bad: grow((_parent, child) => { const send = child.acts["report-site"]!.sends[0]!; if ("relate" in send) delete send.relate.result.undelivered; }) },
+    { reason: "unhandled-result", good: base, bad: grow(pairedMissingResult) },
     { reason: "ungranted-act", good: base, bad: { ...base, roles: { operator: base.roles["operator"]!.filter(action => action !== "grow.tend") } } },
     { reason: "right-not-owned", good: right, bad: { ...right, composition: { ...right.composition, rights: { rooms: { owner: base.definitions[1]!.id } } } } },
     { reason: "order-undeclared", good: base, bad: { ...base, composition: { ...base.composition, order: [] } } },
-    { reason: "unknown-message", good: base, bad: grow((_parent, child) => {
-      const send = structuredClone(child.acts["report-site"]!.sends[0]!); if ("relate" in send) send.relate.name = "unknown-summary";
-      child.acts["report-site"]!.sends = [...child.acts["report-site"]!.sends, send];
-    }) },
-    { reason: "field-mismatch", good: base, bad: grow(parent => { const field = parent.receives["room-summary"]!.fields["openAlerts"]!; if (field.type === "int") field.max = 3; }) },
+    { reason: "unknown-message", good: base, bad: grow(pairedUnknownMessage) },
+    { reason: "field-mismatch", good: base, bad: grow(pairedNarrowField) },
     { reason: "unreachable-handler", good: base, bad: unowned },
     { reason: "cycle-unacknowledged", good: automaticCycle(true), bad: automaticCycle(false) },
     ...cycleAlternatives().map(pair => ({ ...pair, reason: "cycle-unacknowledged" })),

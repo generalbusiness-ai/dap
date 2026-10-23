@@ -1,7 +1,7 @@
 import { runInDurableObject } from "cloudflare:test";
 import { env } from "cloudflare:workers";
 import { describe, expect, test, onTestFinished } from "vitest";
-import type { DeclaredDefinition, Entry, FactRef, Item, Read, ScopeId } from "@generalbusiness/dap-contract";
+import type { Entry, FactRef, Item, Read, ScopeId } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, definitionDigest, entryHash, scopeIdOf, timeMs, timeOf, utf8 } from "@generalbusiness/artroom-bytes";
 import type { Fetch } from "@generalbusiness/artroom-client";
 import { firstExtents, initialCommitObjects, platform } from "@generalbusiness/dap-platform";
@@ -19,6 +19,7 @@ import { gitHub, ownHost, readerOf, type Stand } from "../../../../packages/scop
 import { Platform, routed } from "../../../../packages/scope/test/repository.ts";
 import { command, memoryStore, type Context, type Outcome } from "../../../../packages/cli/src/index.ts";
 import { DEMO_DIGESTS, changeDemo } from "../src/index.ts";
+import { editChangeDefinitions } from "./definition-corpus-data.ts";
 
 const SERVICE = "https://scopes.test";
 /** The test's own reader, which the command never presents. */
@@ -120,15 +121,7 @@ async function story(at: Stand, wired: Set<ScopeId>, checkpointMeta?: object): P
   // An older valid change definition has no one-file proposal. Another
   // valid definition has that name but carries detached content, unlike the
   // command's signed-text protocol. Neither supports this edit workflow.
-  const legacy = structuredClone(changeDemo) as DeclaredDefinition;
-  delete legacy.acts["propose-file"];
-  const detached = structuredClone(changeDemo) as DeclaredDefinition;
-  detached.acts["propose-file"]!.fields["content"] = { type: "text", max: 65536, detached: true, required: true };
-  // Harmless metadata and explicit default targets are compatible:
-  // support is not an exact-row catalog.
-  const extended = structuredClone(changeDemo) as DeclaredDefinition;
-  extended.items["manifest"]!.values["commandNote"] = { fixed: true, required: false, of: { type: "text", max: 32 } };
-  extended.acts["propose-file"]!.effects = [...extended.acts["propose-file"]!.effects.map((effect) => ({ ...effect, of: "on" as const })), { value: { slot: "commandNote", from: { const: "metadata" } } }];
+  const { legacy, detached, extended } = editChangeDefinitions();
   const files: Record<string, Uint8Array> = {
     "change-demo.json": utf8(canonicalize(changeDemo)),
     "legacy.json": utf8(canonicalize(legacy)),

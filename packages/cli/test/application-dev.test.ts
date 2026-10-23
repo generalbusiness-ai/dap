@@ -1,3 +1,4 @@
+import { shortenNotesText } from "./definition-corpus-data.ts";
 /** Real loopback HTTP, native SQLite/reads/acts/replay and existing esbuild.
  * Explicit public TEST grants and open local reads are not native enrollment. */
 import { mkdtemp, readFile, realpath, rename, rm, writeFile } from "node:fs/promises";
@@ -95,7 +96,7 @@ test("presentation rebuilds keep native history while changed scenario or semant
     expect(changedFixture.ids.semantic).toBe(initial.ids.semantic); expect(changedFixture.scope).not.toEqual(initial.scope);
     expect(await handle.summary()).toMatchObject({ ok: false, reason: "not-found" });
     const definitionPath = join(f.directory, "definition.json"), definition = JSON.parse(await readFile(definitionPath, "utf8"));
-    definition.items.note.values.text.of.max = 200; definition.acts.add.fields.text.max = 200;
+    shortenNotesText(definition);
     await writeFile(definitionPath, JSON.stringify(definition)); await f.server.rebuild(); const semantic = await meta(f.server);
     expect(semantic.ids.semantic).not.toBe(initial.ids.semantic); expect(semantic.scope).not.toEqual(changedFixture.scope);
     const stale = await fetch(f.server.origin + "/v1/scopes/" + encodeURIComponent(semantic.scope.scope) + "/acts", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ signed, grants: [] }) });

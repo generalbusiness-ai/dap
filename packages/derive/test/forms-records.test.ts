@@ -1,3 +1,4 @@
+import { forms_records_change0 } from "./definition-corpus/forms-records-variants.ts";
 import { describe, expect, test } from "vitest";
 import type { Entry, FactRef, ScopeRef } from "@generalbusiness/dap-contract";
 import { factRefOf, intentDigest } from "@generalbusiness/artroom-bytes";
@@ -174,7 +175,7 @@ describe("the records of `hold@1` (scope contract, section 6.11; authority note,
   });
 
   test("the holds of a definition have a workspace exactly when it uses a guard or an effect of `hold@1`; an end revokes each live token, and a mint that is answered after its use ended is revoked in its own entry and is never live", () => {
-    const reads = variant(lane, (def) => { def.capabilities.push({ name: "git-read", version: 1 }); def.acts.report.guards.push({ capability: { name: "git-read", guard: "ancestry", with: { row: { const: "report" } } } }); });
+    const reads = variant(lane, forms_records_change0);
     expect([hasWorkspace(staging), hasWorkspace(laneDefinition), hasWorkspace(reads)]).toEqual([true, false, false]);
     // Without a workspace the item form is all there is: no fork, and the steps of a workspace are refused by name.
     const plain = new Staging(laneDefinition);

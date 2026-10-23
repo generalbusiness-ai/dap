@@ -9,6 +9,14 @@ import { fileURLToPath } from "node:url";
 
 export const ROOT = realpathSync(join(dirname(fileURLToPath(import.meta.url)), ".."));
 export const PLAN = JSON.parse(readFileSync(new URL("./public-release.json", import.meta.url), "utf8"));
+// The public /testing export has exactly these source modules, not the corpus.
+export const PUBLIC_TESTING_INPUTS = Object.freeze([
+  "packages/derive/test/fixtures.ts",
+  "packages/derive/test/definition-corpus/fixture-data.ts",
+  "packages/derive/test/definition-corpus/fixture-identities.ts",
+]);
+const PUBLIC_TESTING_OUTPUTS = new Set(PUBLIC_TESTING_INPUTS.flatMap(input =>
+  [".js", ".d.ts"].map(extension => input.replace(/^packages\/derive\//, "dist/").replace(/\.ts$/, extension))));
 const DAP_PACKAGES = new Set(["contract", "derive", "lanes", "page", "platform", "cli"]);
 export const sourceNameOf = (dir) => `@generalbusiness/${DAP_PACKAGES.has(dir) ? "dap" : "artroom"}-${dir}`;
 export const nameOf = (dir) => `@generalbusiness/dap-${dir}`;
@@ -152,7 +160,7 @@ export function outputClosure(stage, spec, selected) {
   for (const row of rows) {
     if (spec.dir === "replay" && /^dist\/src\/(?:bin|git)\.(?:js|d\.ts)$/.test(row.path)) refusal("excluded-output");
     if (!["package.json", "README.md", "LICENSE", "NOTICE"].includes(row.path) && (!row.path.startsWith("dist/") || !/\.(?:js|d\.ts)$/.test(row.path))) refusal("unplanned-output");
-    if (row.path.startsWith("dist/test/") && !(spec.dir === "derive" && /^dist\/test\/fixtures\.(?:js|d\.ts)$/.test(row.path))) refusal("unplanned-testing-output");
+    if (row.path.startsWith("dist/test/") && !(spec.dir === "derive" && PUBLIC_TESTING_OUTPUTS.has(row.path))) refusal("unplanned-testing-output");
     if (!row.path.startsWith("dist/") || !/\.(?:js|d\.ts)$/.test(row.path)) continue;
     for (const ref of references(readFileSync(join(stage, row.path), "utf8"))) {
       if (ref.startsWith(".")) {

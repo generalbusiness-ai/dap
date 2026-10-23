@@ -1,3 +1,4 @@
+import { indexedStandingData } from "./definition-corpus-data.ts";
 /** Real native turns/SQLite; platform data, grant authority and the result
  * source/rule are scripted stand-ins. No directory policy is activated. */
 import { evictDurableObject, runInDurableObject } from "cloudflare:test";
@@ -18,11 +19,7 @@ import { START, at, objectOf, rita, stubOf } from "./fixtures-native.ts";
 const MADE = "platform:task@1" as PlatformDefinition;
 
 test("C1 native admission reserves before new work, rolls back ordinary/owed marked decreases at B, then accepts valid settlement and retains final counter across restart", async () => {
-  const data = standingData(d => {
-    // A real nonempty index makes rollback of index state observable.
-    d.items.repo.values.serial = { fixed: true, required: true, default: 0, of: { type: "int", min: 0, max: 0 } };
-    d.items.repo.indexes = ["serial"];
-  });
+  const data = indexedStandingData();
   const definition = valid(validateDefinition(data, PROPOSED_BOUNDS, PROFILES, { platform: true }));
   let reached = 0, next = 0, extra = 0;
   const creation: Intent = { v: 1, to: null, actor: rita.key, kind: "found", on: null, expected: {}, fields: { source: "standing fixture" }, idempotencyKey: crypto.randomUUID(), notAfter: at(60) };

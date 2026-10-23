@@ -1,0 +1,73 @@
+{
+  "basis": "f7b59bf92d1abe20300818ab109fa12df617c2e0",
+  "status": "Source only; not compiled or run",
+  "source_enumerated_rows": 37,
+  "files": [
+    {
+      "path": "packages/derive/test/late.test.ts",
+      "bytes": 12945,
+      "sha256": "c57b4e757c91f225744a24ef513b10df409a93e932a40803003ab33d4c9bcf4b",
+      "preserved_expect_calls": 61,
+      "static_test_titles_unchanged": true,
+      "unchanged_from_basis": false
+    },
+    {
+      "path": "packages/derive/test/late-reservation-identity.test.ts",
+      "bytes": 2770,
+      "sha256": "0f3063928049ced7c71ffe1fd003ad43b7a48ae8288ed3fd752097375c214341",
+      "preserved_expect_calls": 10,
+      "static_test_titles_unchanged": true,
+      "unchanged_from_basis": false
+    },
+    {
+      "path": "packages/derive/test/peer-pin.test.ts",
+      "bytes": 5132,
+      "sha256": "f46079bd284e7545929a6c17735de8a3dc002bd4ae4f982698f431858640efcb",
+      "preserved_expect_calls": 25,
+      "static_test_titles_unchanged": true,
+      "unchanged_from_basis": false
+    },
+    {
+      "path": "packages/derive/test/receiver-pins.test.ts",
+      "bytes": 6221,
+      "sha256": "659aed8d1a9df34ca8f6335eed875a39dcbf8cdae3a36e5e73660e39fe769adb",
+      "preserved_expect_calls": 18,
+      "static_test_titles_unchanged": true,
+      "unchanged_from_basis": false
+    },
+    {
+      "path": "packages/derive/test/bound-records.test.ts",
+      "bytes": 1115,
+      "sha256": "584a24914010c3e2fbedebc2aed6c64c89745a10f9dabc16221fa8181747d151",
+      "preserved_expect_calls": 4,
+      "static_test_titles_unchanged": true,
+      "unchanged_from_basis": true
+    },
+    {
+      "path": "packages/derive/test/child-definitions.test.ts",
+      "bytes": 2562,
+      "sha256": "2889ee41211a7b9b03d6e08b292e5480832292d1837db520dd4074d30861197d",
+      "preserved_expect_calls": 8,
+      "static_test_titles_unchanged": true,
+      "unchanged_from_basis": true
+    },
+    {
+      "path": "packages/derive/test/definition-corpus/late-pin-variants.ts",
+      "bytes": 11898,
+      "sha256": "9f7e3a567a5be001daee5f6e965150f67264964bcdb7b0a69a8746cc0ec332b2"
+    }
+  ],
+  "contexts": [
+    "late bases false/true, ignored normal guard, relationship false/true, same declaration for normal/late actual result clauses",
+    "renamed reserved native handler without replacement; ordinary export-license; trusted platform with late-only request; native late refusal",
+    "RULE_PROFILES normal-guard declaration; corrected opening slot after original required-slot refusal",
+    "collision false and collision true after deleting .then, each with explicit platform false/true",
+    "fixed peer pin, and sender/alternate/receiver fixture aliases",
+    "receiver base, closure, extended clause, positive inert source after its recursive refusal, legacy counter after its whole-scope refusal",
+    "all four boundRecord firstKey/whole contexts with platformtrue and PIN_BOUNDS; positive raw caller aliases preserved",
+    "all childDefinitions whole/part aliases; branch remains wholetrue even in false root family"
+  ],
+  "validation": "PROPOSED_BOUNDS/default profiles/options except PIN_BOUNDS native receiver/bound contexts; trusted/bound platformtrue; collision explicit platform false/true; normal guard explicit RULE_PROFILES.",
+  "exclusions": "Deliberately invalid replacement guards/effects, malformed time bounds, advisory late, reserved replacement, item-bound late/pin, collision-with-then, recursive source and unknown whole-scope counter are not positive declarations. Original validation and input/refusal assertions remain in their tests.",
+  "source_qualification": "Four tests change; bound-records and child-definitions remain byte-exact because existing wrappers already consume the raw foundational factories. Raw registry constructors never call validateDefinition or import history/native fixtures. Receiver closure keeps the existing receiverPinDefinition().digest call as an explicit argument; its pure validation precedes moved raw metadata construction, while the same declaration bytes and subsequent validation/assertions remain."
+}
