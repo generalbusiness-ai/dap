@@ -622,6 +622,7 @@ test("HTTP response refusal preserves only bounded categories and cancels before
   const secret = "TEST response credential URL header body sentinel";
   for (const specimen of [
     { status: 201, media: "application/x-git-upload-pack-result", statusClass: "2xx-other", mediaType: "upload-pack-result" },
+    { status: 200, media: "Application/X-Git-Upload-Pack-Result", statusClass: "200", mediaType: "upload-pack-result-case" },
     { status: 302, media: "text/plain", statusClass: "3xx", mediaType: "text/plain" },
     { status: 403, media: "text/html", statusClass: "4xx", mediaType: "text/html" },
     { status: 503, media: "application/json", statusClass: "5xx", mediaType: "application/json" },
