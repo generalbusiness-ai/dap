@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ffd8c2f864b4f42c86d5198fcc02925a76d45b87","text":"Merge retired a covered predecessor; the successor is at packages/replay/src/git.ts."}
+{"kind":"promise","text":"I will release the gate manifest and its 14 leaves with path, type, mode, links, size, dev:inode and SHA-256.","body":{"request":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3af5fe9186a163208f9db1bcfa427de3aac3da62"}}
