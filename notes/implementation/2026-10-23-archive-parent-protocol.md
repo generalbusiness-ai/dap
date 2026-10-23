@@ -11,7 +11,10 @@ support and a completed archive pass remain unverified.
 Request `66010f21f899a4df8ac7530e18539f05887254cd` and promise
 `645d787bbd23c281e9cf92c82f8236b0a07772c7` track the work. The candidate starts
 from deployed diagnostic commit `f99ccc239aa305d442e1d0e354fce86ac37d598f`
-and includes accepted Main `aa016e0e1e6d71a8d466f82e8aff7e9f22ca0250`.
+and includes accepted Main `a9c25125c4e1d1eed15af75f85fd077a6c6e35b2`.
+That integration retains the reviewed registration diagnostic and all five
+measured inventory updates: the two archive owners, scope index, and the
+object owner in both maps.
 
 ## The observed failure
 
