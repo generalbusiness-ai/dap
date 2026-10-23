@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2c4ffdb7486f75b64f05f4aada13063b65f36ba9","text":"Merge retired a covered predecessor; the successor is at packages/git/src/journal-v2-reader.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2c5da1c8cb8e06d0ee977a27ff18a35ca870fde7","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/hosts-pack-cache.test.ts."}
