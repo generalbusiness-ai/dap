@@ -1,10 +1,27 @@
+import { workbenchFixtures } from "./workbench-fixture.ts";
 import { expect, test, vi } from "vitest";
-import { b64url, keyIdOfSecret } from "@generalbusiness/artroom-bytes";
+import { keyIdOfSecret } from "@generalbusiness/artroom-bytes";
+
+
+// Scripted UI ports: migration/key persistence have separate custody/browser
+// witnesses. Any unexpected key creation, import, write or signing is a failure.
+function uiKeys(publicKeys: readonly string[]) {
+  const forbidden = vi.fn(async () => { throw new Error("Unexpected UI key operation"); });
+  vi.doMock("../src/page-key-migration.ts", () => ({ migratePageOperations: async () => {} }));
+  vi.doMock("../src/browser-key-store.ts", () => ({ pageKeyStore: () => ({
+    load: async (key: string) => {
+      if (!publicKeys.includes(key)) throw new Error("Unknown scripted browser key");
+      return { key, sign: forbidden };
+    },
+    create: forbidden, migrate: forbidden, saveSettings: forbidden,
+  }) }));
+  return forbidden;
+}
 
 // Production Main/view markup and handlers over scripted data/DOM ports.
 // The DOM stand-in models native details/anchor clicks; it proves no browser
 // layout or native membership admission. Those require separate witnesses.
-test("joined room/account clicks disclose identity without leaving the room, and connected Join has a named back link", async () => {
+test("joined room/account clicks disclose identity without leaving the room, and connected Join has a named back link", ({ onTestFinished }) => workbenchFixtures.run(onTestFinished, async fixture => {
   vi.resetModules();
   const location = { origin: "https://page.test", hash: "#/" };
   class Element {
@@ -40,8 +57,10 @@ test("joined room/account clicks disclose identity without leaving the room, and
   }
   const root = new Element("div"), secret = new Uint8Array(32).fill(71);
   const place = { directory: "directory", membership: { scope: "membership", kind: "membership", inc: "one" } };
-  const room = { session: { service: location.origin, secret }, ...place, name: "Hugh's room", key: keyIdOfSecret(secret), me: { handle: "@hugh-web", role: "member", actions: [] }, reader: {}, rules: "rules", destination: "destination" };
-  const saved = JSON.stringify({ place, secret: b64url(secret) });
+  const publicKey = keyIdOfSecret(secret), unexpectedKeyOperation = uiKeys([publicKey]);
+  const signer = { key: publicKey, sign: unexpectedKeyOperation };
+  const room = { session: { service: location.origin, signer }, ...place, name: "Hugh's room", key: keyIdOfSecret(secret), me: { handle: "@hugh-web", role: "member", actions: [] }, reader: {}, rules: "rules", destination: "destination" };
+  const saved = JSON.stringify({ place, publicKey });
   const setItem = vi.fn();
   vi.doMock("../src/data.ts", async () => ({
     ...await vi.importActual<typeof import("../src/data.ts")>("../src/data.ts"),
@@ -53,9 +72,9 @@ test("joined room/account clicks disclose identity without leaving the room, and
   vi.stubGlobal("localStorage", { getItem: (key: string) => key === "artroom-page" ? saved : null, setItem });
   let redraw!: () => void;
   vi.stubGlobal("window", { addEventListener: (_name: string, handler: () => void) => { redraw = handler; } });
-  const drain = async () => { for (let i = 0; i < 40; i++) await Promise.resolve(); };
+  let main!: typeof import("../src/main.ts");
   try {
-    await import("../src/main.ts"); await drain();
+    main = await fixture.load(() => import("../src/main.ts")); await fixture.wait(() => main.workbenchLifecycle.idle());
     const controls = root.all().filter(e => ["room-switch", "account"].includes(e.attrs["class"] ?? ""));
     expect(controls).toHaveLength(4); // Desktop and mobile presentations.
     let prior: Element | null = null;
@@ -78,7 +97,7 @@ test("joined room/account clicks disclose identity without leaving the room, and
       const link = root.all().find(e => e.tag === "a" && e.textContent === label)!;
       expect(link.attrs["href"]).toBe("#/join");
     }
-    roomDisclosure.all().find(e => e.tag === "a")!.click(); expect(location.hash).toBe("#/join"); redraw(); await drain();
+    roomDisclosure.all().find(e => e.tag === "a")!.click(); expect(location.hash).toBe("#/join"); redraw(); await fixture.wait(() => main.workbenchLifecycle.idle());
     expect(root.all().find(e => e.tag === "h1")?.textContent).toBe("Join another room");
     expect(root.all().filter(e => e.attrs["class"] === "entry-intro")).toHaveLength(0);
     const back = root.all().find(e => e.tag === "a" && e.textContent.includes("Back to Hugh's room"))!;
@@ -89,6 +108,7 @@ test("joined room/account clicks disclose identity without leaving the room, and
       ["#/config", "Join with a config and key", "Use config.json and its matching device key."],
     ]);
     back.click(); expect(location.hash).toBe("#/");
+    expect(unexpectedKeyOperation).not.toHaveBeenCalled();
     expect(setItem).not.toHaveBeenCalled(); expect(root.textContent).not.toContain("Settings");
-  } finally { await drain(); vi.unstubAllGlobals(); vi.doUnmock("../src/data.ts"); vi.resetModules(); }
-});
+  } finally { await fixture.retire(); vi.unstubAllGlobals(); vi.doUnmock("../src/browser-key-store.ts"); vi.doUnmock("../src/page-key-migration.ts"); vi.doUnmock("../src/data.ts"); vi.resetModules(); }
+}));

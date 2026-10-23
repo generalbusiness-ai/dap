@@ -4,7 +4,7 @@ import { invitationRedemptionFields, isInvitationMembership } from "@generalbusi
 /**
  * The page's data functions: what it reads from a room and the one thing it
  * writes, a signed act. Each takes a `Session`, the scope service's base URL
- * and a 32-byte Ed25519 secret, and goes over the service's HTTP routes
+ * and an Ed25519 signer, and goes over the service's HTTP routes
  * through the client's transport. The view (`view.ts`) only shows what these
  * return, and a test calls them without a browser.
  *
@@ -37,9 +37,9 @@ import { invitationRedemptionFields, isInvitationMembership } from "@generalbusi
  */
 
 import type { Answer, DeclaredDefinition, Digest, Entry, FactRef, FieldValue, Head, Item, KeyId, MemberRef, ScopeId, ScopeRef, Summary, Read, SignedIntent, Receipt, OutboxId } from "@generalbusiness/dap-contract";
-import { LATE, b64url, byteOrder, canonicalize, definitionDigest, entryHash, intentDigest, isFactRef, isMemberRef, isScopeId, isSeed, scopeIdOf, isScopeRef as fullScopeRef, keyIdOfSecret, takeBytes, textDigest, timeMs, timeOf, verifySignedIntent } from "@generalbusiness/artroom-bytes";
+import { LATE, b64url, byteOrder, canonicalize, definitionDigest, entryHash, intentDigest, isFactRef, isMemberRef, isScopeId, isSeed, scopeIdOf, isScopeRef as fullScopeRef, takeBytes, textDigest, timeMs, timeOf, verifySignedIntent } from "@generalbusiness/artroom-bytes";
 import {
-  ScopeHandle, activeDirectory, collectItemQuery, partitionIndexes, declaredHandle, httpTransport, requestSession, secretSigner, sessionRequest, shapeDeclaredAct, signedIntent, signedReads, type Fetch, type Session as ReadSession, type Signing, type Transport,
+  ScopeHandle, activeDirectory, collectItemQuery, partitionIndexes, declaredHandle, httpTransport, requestSession, secretSigner, signerSessionRequest, shapeDeclaredAct, signedIntent, signedReads, type Fetch, type Session as ReadSession, type Signer, type Signing, type Transport,
 } from "@generalbusiness/artroom-client";
 import { LINK, describe, expectedOf, heldActs, linkOf, valueOf, type ActShape, type DefinitionShape, type Standing } from "@generalbusiness/dap-cli";
 import { DEFINITION_DOMAIN, ROLE_LISTS, fileSound, firstExtents, isExtents, platform, type Role } from "@generalbusiness/dap-platform";
@@ -48,13 +48,16 @@ import { knownLIST1 } from "./source-support.ts";
 import { currentStanding, reviewCandidates } from "./membership-projection.ts";
 
 /** Who is reading and signing, and where. `fetch` and `now` replace the runtime's, as a test does. */
-export interface Session {
+export type Session = {
   service: string;
-  secret: Uint8Array;
   fetch?: Fetch;
   /** The clock that intents and reads are signed by, in milliseconds. */
   now?: () => number;
-}
+} & ({ signer: Signer; secret?: never } | { secret: Uint8Array; signer?: never });
+/** Legacy seed callers are supported during import and by existing CLI tests; retained page sessions
+ * use only the nonexportable signing capability. */
+export const sessionSigner = (session: Session): Signer => session.signer ?? secretSigner(session.secret);
+export const sessionKey = (session: Session): KeyId => sessionSigner(session).key;
 
 /**
  * Where a room is: its directory, and its membership scope with the
@@ -93,7 +96,7 @@ export class Unreadable extends Error {
 const nowOf = (session: Session): number => session.now?.() ?? Date.now();
 const transportOf = (session: Session, reader: string | null = null): Transport => {
   const transport = httpTransport(session.service, session.fetch ? { fetch: session.fetch } : {});
-  return typeof reader === "string" ? transport : signedReads(transport, secretSigner(session.secret), session.now ? { now: session.now } : {});
+  return typeof reader === "string" ? transport : signedReads(transport, sessionSigner(session), session.now ? { now: session.now } : {});
 };
 
 /** A handle on one scope that presents the caller's session, or signs each read where there is none. */
@@ -213,7 +216,7 @@ function admittedInvitation(session: Pick<Session, "service">, link: NonNullable
  * settle an unknown enrollment under that same identity. */
 export function enrollmentAssociation(session: Session, membership: ScopeRef): string {
   if (!fullScopeRef(membership) || membership.kind !== "membership") throw new Unreadable("Enrollment requires a complete membership reference.");
-  return canonicalize([session.service.replace(/\/+$/, ""), membership, keyIdOfSecret(session.secret)]);
+  return canonicalize([session.service.replace(/\/+$/, ""), membership, sessionKey(session)]);
 }
 
 export function joinAssociation(session: Session, typed: string): string {
@@ -241,9 +244,9 @@ export function invitationTarget(service: string, typed: string): Omit<PreparedJ
 export async function prepareJoin(session: Session, typed: string): Promise<PreparedJoin> {
   const target = invitationTarget(session.service, typed), link = linkOf(typed.trim())!;
   const shape = platform(target.definition)!.data as unknown as DefinitionShape;
-  const fields = invitationRedemptionFields(target.definition, target.place.membership, link.invitation, keyIdOfSecret(session.secret), link.secret);
+  const fields = invitationRedemptionFields(target.definition, target.place.membership, link.invitation, sessionKey(session), link.secret);
   const signing: Signing = session.now ? { now: session.now() } : {};
-  const signed = await signedIntent(secretSigner(session.secret), { to: target.place.membership, kind: "join", fields, expected: expectedOf(shape.acts["join"]!, [], null, fields) }, signing);
+  const signed = await signedIntent(sessionSigner(session), { to: target.place.membership, kind: "join", fields, expected: expectedOf(shape.acts["join"]!, [], null, fields) }, signing);
   return { ...target, signed };
 }
 /** Submit the original envelope, never sign a replacement in this operation. */
@@ -274,7 +277,7 @@ export async function joinRoom(session: Session, typed: string, submitting?: () 
  * the caller's standing in membership.
  */
 export async function openRoom(session: Session, place: Place): Promise<Room> {
-  const key = keyIdOfSecret(session.secret);
+  const key = sessionKey(session);
   const asked = await readerFor(session, place.membership);
   const room: Room = { session, directory: place.directory, directoryIndex: null, membership: place.membership, rules: "" as ScopeId, destination: "" as ScopeId, key, me: null, reader: asked.session, unsessioned: asked.why, definitions: new Map() };
   const { summary } = await summaryOf(handleOf(room, place.directory));
@@ -295,7 +298,7 @@ export async function openRoom(session: Session, place: Place): Promise<Room> {
 
 /** A read session from membership, signed for by the caller's key, or why membership gave none. A request that got no reply is `no-reply`. */
 async function readerFor(session: Session, membership: ScopeRef): Promise<{ session: ReadSession | null; why: string | null }> {
-  const asked = sessionRequest(membership, session.secret, timeOf(Math.floor(nowOf(session) / 1000) * 1000 + 60_000), b64url(crypto.getRandomValues(new Uint8Array(16))));
+  const asked = await signerSessionRequest(membership, sessionSigner(session), timeOf(Math.floor(nowOf(session) / 1000) * 1000 + 60_000), b64url(crypto.getRandomValues(new Uint8Array(16))));
   try {
     const answer = await requestSession(session.service, membership.scope, asked, session.fetch ? { fetch: session.fetch } : {});
     return answer.ok ? { session: answer.session, why: null } : { session: null, why: answer.reason };
@@ -994,7 +997,7 @@ export async function createdIssue(room: Room, result: Acted): Promise<ScopeRef 
 
 /** Memory-only association; contains no signing key or current permission. */
 export function actAssociation(room: Pick<Room, "session" | "directory" | "membership">, scope: ScopeId): string {
-  return JSON.stringify([room.session.service.replace(/\/+$/, ""), room.directory, room.membership, keyIdOfSecret(room.session.secret), scope]);
+  return JSON.stringify([room.session.service.replace(/\/+$/, ""), room.directory, room.membership, sessionKey(room.session), scope]);
 }
 
 const OPENING_ACTS = new Set(["open-issue", "open-pr", "open-task", "establish-application"]);
@@ -1027,7 +1030,7 @@ export async function act(room: Room, scope: ScopeId, kind: string, asked: { on?
   const on = asked.on ?? null;
   const expected = expectedOf(declaration, summary.items, on, fields);
   const values = await valuesOf(room, declaration, fields);
-  const signer = secretSigner(room.session.secret);
+  const signer = sessionSigner(room.session);
   const signing: Signing = room.session.now ? { now: room.session.now() } : {};
   let answer: Answer;
   if (declared) {

@@ -9,7 +9,7 @@ import { httpSource, verify } from "@generalbusiness/artroom-replay";
 import { SqliteStore, type Delivery } from "../src/index.ts";
 import { CAPABILITY_CODE } from "../src/ports.ts";
 import { controls } from "../src/testing.ts";
-import { route } from "../src/worker.ts";
+import { fixtureRoute as route } from "./support/serving-route.ts";
 import { wired } from "./outside.ts";
 import { Lane, START, at, creation, objectOf, reader, rita, stubOf } from "./fixtures-native.ts";
 

@@ -7,9 +7,19 @@
   "main": "test/worker.ts",
   "compatibility_date": "2026-08-15",
   "compatibility_flags": ["nodejs_compat"],
+  // High finite fixture policy, not the adopted-default startup measurement.
+  "vars": {
+    "SERVING_CREATION_KEY_PER_HOUR": "1000000",
+    "SERVING_CREATION_ADDRESS_PER_HOUR": "1000000",
+    "SERVING_READ_KEY_PER_MINUTE": "1000000",
+    "SERVING_READ_ADDRESS_PER_MINUTE": "1000000"
+  },
   "durable_objects": {
     "bindings": [
       { "name": "SCOPES", "class_name": "TestScope" },
+      { "name": "SCOPE_INDEX", "class_name": "ScopeIndex" },
+      { "name": "SERVING_INDEX", "class_name": "ServingTestIndex" },
+      { "name": "STARTUP_INDEX", "class_name": "StartupServingIndex" },
       { "name": "METRIC_CONTROL", "class_name": "MetricControlScope" },
       { "name": "AS_DEPLOYED", "class_name": "ScopeObject" },
       { "name": "NET", "class_name": "NetScope" },
@@ -20,9 +30,12 @@
   },
   "r2_buckets": [{ "binding": "APPLICATION_CONTENT", "bucket_name": "application-content-test" }],
   "services": [
+    { "binding": "SERVING_API", "service": "artroom-scope-test", "entrypoint": "ServingTestService" },
+    { "binding": "SERVING_SCREEN_API", "service": "artroom-scope-test", "entrypoint": "ServingTestScreenService" },
     { "binding": "API", "service": "artroom-scope-test", "entrypoint": "NetService" },
     { "binding": "PLATFORM_API", "service": "artroom-scope-test", "entrypoint": "PlatformService" },
-    { "binding": "CREATION_API", "service": "artroom-scope-test", "entrypoint": "CreationAdmissionService" }
+    { "binding": "CREATION_API", "service": "artroom-scope-test", "entrypoint": "CreationAdmissionService" },
+    { "binding": "SCREEN_API", "service": "artroom-scope-test", "entrypoint": "SandboxScreenService" }
   ],
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["TestScope", "MetricControlScope", "ScopeObject", "NetScope", "PlatformScope", "PlatformMcpRegistry", "PlatformMcpAgent"] }]
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["TestScope", "MetricControlScope", "ScopeObject", "NetScope", "PlatformScope", "PlatformMcpRegistry", "PlatformMcpAgent"] }, { "tag": "v2-index", "new_sqlite_classes": ["ScopeIndex"] }, { "tag": "v3-serving-test", "new_sqlite_classes": ["ServingTestIndex"] }, { "tag": "v4-startup-test", "new_sqlite_classes": ["StartupServingIndex"] }]
 }

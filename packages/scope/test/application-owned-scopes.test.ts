@@ -26,7 +26,7 @@ test("one native install creates and confirms the declared root and child with i
   const other = await applicationResolverFixture("sha1", undefined, {}, undefined, foreign.packet), otherPeer = applicationHttpPeer(other);
   let packageFetch = peer.fetch;
   const fetchPackage = (request: Request) => packageFetch(request);
-  const bindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify([...f.trust, ...other.trust]));
+  const bindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify([...f.trust, ...other.trust]), env.SCOPE_INDEX);
   try {
     const seat = await life.wait(() => M.did(rita, "seat", { expected: { roster: 1 } }));
     await life.wait(async () => M.did(rita, "first-key", { fields: { member: seat }, expected: await M.expected({ roster: 0, member: seat }) }));

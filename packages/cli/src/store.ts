@@ -1,15 +1,14 @@
 /**
- * What the command keeps between runs: one config, and one Ed25519 secret
- * for each key it made, by name. A key is the 32-byte secret that the
- * client's `secretSigner` signs with, which the contract's signing needs.
- * The command reads a secret only to sign: it never prints one, and no
- * line it writes holds one.
+ * What the command keeps between runs: config and named signing custody.
+ * Filesystem stores retain 32-byte Ed25519 seeds; capability stores provide
+ * a Signer without exposing private bytes. Command output contains neither.
  *
  * `files.ts` keeps both under the user's config directory, readable only by
  * the user. `memoryStore` keeps them in memory, for a test.
  */
 
 import type { Digest, FactRef, PlatformDefinition, Receipt, ScopeId, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
+import type { Signer } from "@generalbusiness/artroom-client";
 
 /** The scopes of one repository, as `claim` or `join` learned them. */
 export interface Repository {
@@ -100,6 +99,11 @@ export interface Config {
 export interface Store {
   config(): Promise<Config | null>;
   save(config: Config): Promise<void>;
+  /** Optional nonexportable key custody. When present, missing keys must not
+   * fall back to secret(): this store owns its complete signing namespace. */
+  signer?(name: string): Promise<Signer | null>;
+  /** Durably create a named signer without replacing an existing identity. */
+  newSigner?(name: string): Promise<Signer>;
   /** The secret of the named key, or null when there is none. */
   secret(name: string): Promise<Uint8Array | null>;
   /** Keep a new secret under the name. A name that holds one already is refused: a key is never replaced. */

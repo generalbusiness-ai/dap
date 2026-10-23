@@ -6,14 +6,17 @@ import { deviceSigner, importDemoBundle, importLegacyDevice, type SavedDevice } 
 import { browserSpeech } from "./speech.ts";
 import { browserLock, privateCommandStore, privateDeviceStore, privatePendingStore } from "./storage.ts";
 import { canonicalize } from "@generalbusiness/artroom-bytes";
-import { loadApplicationScreenContext } from "@generalbusiness/artroom-client";
+import { applicationScreenTransport, loadApplicationScreenContext } from "@generalbusiness/artroom-client";
 import { counterEnrollment } from "./installed.ts";
+import type { TrustedActFetch } from "./dispatcher.ts";
 async function main() {
 const screen = await loadApplicationScreenContext(location.href), installed = screen ? canonicalize(screen.scope) : undefined;
+const screenTransport = screen ? applicationScreenTransport(screen) : null;
+const screenActFetch: TrustedActFetch | undefined = screenTransport ? (url, init) => screenTransport.request(url, { ...init, signal: init.signal as never }) : undefined;
 const speech=browserSpeech(),custody=privateDeviceStore(installed);
 let custodyEpoch:string|undefined;
 let active=0,devices:SavedDevice[]=[],selectedKey:string|undefined,selectedVoice:string|undefined,remember=true,busy=false;
-const enrollment = screen ? (current: () => boolean) => counterEnrollment(screen, current) : null;
+const enrollment = screen ? (current: () => boolean) => counterEnrollment(screen, current, screenTransport?.fetch) : null;
 const channel=typeof BroadcastChannel==="function"?new BroadcastChannel("dap-counter-device-custody"):undefined;
 const app=mountCountingStage(document.querySelector<HTMLElement>("#counting")!,{speech,memberNames:()=>devices.map(device=>({member:device.binding.member,name:device.name})),connect:openDialog,changeIdentity:openDialog,forget:()=>{void forget();},selectedVoiceId:()=>selectedVoice,selectVoice:id=>{const changed=selectedVoice!==id;selectedVoice=id;if(changed){const at=active;void saveChoice().then(saved=>{if(!saved&&at===active){openDialog();message.textContent="refused because the remembered voice choice could not be saved";}});}}});
 const dialog=document.createElement("dialog");dialog.className="join-dialog";
@@ -50,7 +53,7 @@ dialog.addEventListener("cancel",event=>{if(busy){event.preventDefault();return;
 voice.onchange=()=>{selectedVoice=voice.value;message.textContent="";join.disabled=busy||!currentDevice()||!speech.voices().some(v=>v.id===voice.value);};
 globalThis.speechSynthesis?.addEventListener("voiceschanged",()=>{renderVoices();app.repaint();});
 async function saveChoice(){const at=active;try{await custody.save(devices,remember&&selectedKey&&selectedVoice?{publicKey:selectedKey,voiceId:selectedVoice}:undefined,()=>at===active,custodyEpoch);return at===active;}catch{if(at===active)message.textContent="refused because the remembered choice could not be saved";return false;}}
-async function mountDevice(device:SavedDevice){const at=++active;app.disconnect();try{const signer=await deviceSigner(device);if(at!==active)return false;const identity=device.binding,store=privatePendingStore(identity),lock=browserLock(identity,custodyEpoch,installed),commandStore=privateCommandStore(identity),gateway=nativeGateway(identity,signer,{current:()=>at===active,lock,voiceStore:store,commandStore,...(screen?{application:screen}:{})});await app.attach({identity,name:device.name,speech,gateway,store,lock,current:()=>at===active,dispose:()=>{if(at===active)active++;}});return at===active;}catch{if(at===active){openDialog();message.textContent="refused because remembered identity or original-request custody could not be restored; original requests remain intact";}return false;}}
+async function mountDevice(device:SavedDevice){const at=++active;app.disconnect();try{const signer=await deviceSigner(device);if(at!==active)return false;const identity=device.binding,store=privatePendingStore(identity),lock=browserLock(identity,custodyEpoch,installed),commandStore=privateCommandStore(identity),gateway=nativeGateway(identity,signer,{current:()=>at===active,lock,voiceStore:store,commandStore,...(screen?{application:screen}:{}),...(screenTransport?{fetch:screenTransport.fetch,headFetch:screenTransport.headFetch}:{}),...(screenActFetch?{actFetch:screenActFetch}:{})});await app.attach({identity,name:device.name,speech,gateway,store,lock,current:()=>at===active,dispose:()=>{if(at===active)active++;}});return at===active;}catch{if(at===active){openDialog();message.textContent="refused because remembered identity or original-request custody could not be restored; original requests remain intact";}return false;}}
 async function importFile(legacy=false){
  if(busy)return;const at=++active;busy=true;renderPicker();message.textContent="Importing this browser’s demo identities";let first:Uint8Array|undefined,second:Uint8Array|undefined;
  try{const lease=await custody.load(()=>at===active);if(at!==active)return;if(legacy){const a=binding.files?.[0],b=key.files?.[0];if(!a||!b||a.size>16384||b.size>256)throw new Error();first=new Uint8Array(await a.arrayBuffer());second=new Uint8Array(await b.arrayBuffer());}else{const f=bundle.files?.[0];if(!f||f.size>65536)throw new Error();first=new Uint8Array(await f.arrayBuffer());}

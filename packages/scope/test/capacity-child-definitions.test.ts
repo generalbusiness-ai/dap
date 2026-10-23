@@ -8,7 +8,7 @@ import { childDefinitions } from "../../derive/test/fixtures-child-definitions.t
 import { httpSource, verify } from "@generalbusiness/artroom-replay";
 import { SqliteStore, type Delivery } from "../src/index.ts";
 import { controls } from "../src/testing.ts";
-import { route } from "../src/worker.ts";
+import { fixtureRoute as route } from "./support/serving-route.ts";
 import type { NativeBirth } from "../src/native-birth.ts";
 import type { ProofBody } from "../src/proof-bytes.ts";
 import { wired } from "./outside.ts";

@@ -15,11 +15,17 @@
  * - **What is counted.** For each address, in a window: the joins that
  *   failed at check 1, 2, 3 or 6. A join that is admitted, and one that is
  *   refused at another check, counts nothing.
- * - **A full table locks nobody out.** The table holds a bounded number of
+ * - **A full address table locks nobody out.** The table holds a bounded number of
  *   windows. A window is made only when a request from an address with no
  *   window fails, and then the oldest window is dropped. No request is
  *   refused for lack of a window. A window that was dropped, or lost in a
  *   restart, decides nothing.
+ * - **Verified-key failures have a separate membership-local window.**
+ *   After outer signature verification, failed invitation form, address or
+ *   secret checks also count by that key, including calls with no address.
+ *   Forged signatures never charge the key they claim. Unlike the original
+ *   address table, a full key table refuses a new key until a window expires;
+ *   it never evicts a live key. Neither table names an invitation.
  * - **The bound on waiting secret checks** counts the joins of this scope
  *   that passed check 2 and wait for checks 3 to 9. A further join is
  *   answered `busy`, and the same signed bytes may be sent again. Nothing
@@ -33,7 +39,7 @@
  * `notes/reviews/2026-10-05-i3-limits-review.md`.
  */
 
-import type { Answer, Head } from "@generalbusiness/dap-contract";
+import type { Answer, Head, KeyId, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalBytes, isSignature, isSignedIntentShape, utf8, verifySignedIntent } from "@generalbusiness/artroom-bytes";
 import { isObject } from "@generalbusiness/dap-derive";
 import { metric } from "./operational.ts";
@@ -48,7 +54,7 @@ export interface LimitConfig {
   windowSeconds: number;
   /** The failed joins of one address in one window, at which its further joins are answered `rate-limited`. */
   failures: number;
-  /** The most windows the table holds. */
+  /** The most windows in each membership-local address/key table. */
   windows: number;
   /** The most joins that have passed check 2 and wait for checks 3 to 9. */
   waiting: number;
@@ -134,11 +140,15 @@ export class JoinLimits {
   readonly #config: LimitConfig;
   /** The window of each address, by its key. The order of insertion is the order in which the windows began, so the oldest is first. */
   readonly #windows = new Map<string, { failed: number; since: number }>();
+  /** A separate membership-local table: address churn cannot evict it, and
+   * forged signatures never allocate a claimed key's window. */
+  readonly #keys = new Map<KeyId, { failed: number; since: number }>();
   #waiting = 0;
 
   constructor(config: LimitConfig = PROPOSED_LIMITS) { this.#config = config; }
 
-  /** The windows held now, and the joins that wait for checks 3 to 9. */
+  /** Original address-window diagnostics and waiting count. Key identities
+   * and their separate bounded windows are not exposed by this surface. */
   counts(): { windows: number; waiting: number } { return { windows: this.#windows.size, waiting: this.#waiting }; }
 
   /** The address's window, if it has one that has not ended. A window that has ended is removed, and decides nothing. */
@@ -161,6 +171,24 @@ export class JoinLimits {
     this.#windows.set(key, { failed: 1, since: now });
   }
 
+  #keyWindow(key: KeyId, now: number): { failed: number; since: number } | null {
+    const window = this.#keys.get(key);
+    if (window && now - window.since >= this.#config.windowSeconds * 1000) this.#keys.delete(key);
+    return this.#keys.get(key) ?? null;
+  }
+  #keyRoom(now: number): boolean {
+    if (this.#keys.size < this.#config.windows) return true;
+    for (const [key, window] of this.#keys) if (now - window.since >= this.#config.windowSeconds * 1000) this.#keys.delete(key);
+    return this.#keys.size < this.#config.windows;
+  }
+  #failedKey(key: KeyId, now: number): void {
+    const window = this.#keyWindow(key, now);
+    if (window) { window.failed++; return; }
+    // Capacity was checked before submit. Another waiting join may have
+    // filled it; never evict an active key. New keys then fail closed.
+    if (this.#keyRoom(now)) this.#keys.set(key, { failed: 1, since: now });
+  }
+
   /**
    * Serve one join. `submit` is the scope's own judgment of the act: checks
    * 3 to 9. It is called at most once, and only for a request that passed
@@ -179,8 +207,15 @@ export class JoinLimits {
     if (key !== null && (this.#window(key, at.now)?.failed ?? 0) >= this.#config.failures) return { answer: "unavailable", reason: "rate-limited" };
     // Outer size/shape/signature admission precedes exact cohort selection.
     // Legacy scopes require their secret; the new cohort requires a proof.
-    if (!this.#sound(signed, at.invitationProof)) {
+    const outer = this.#outer(signed);
+    if (!outer) {
       this.#failed(key, at.now);
+      return refused(at.head);
+    }
+    const actor = outer.intent.actor, keyWindow = this.#keyWindow(actor, at.now);
+    if ((keyWindow?.failed ?? 0) >= this.#config.failures || !keyWindow && !this.#keyRoom(at.now)) return { answer: "unavailable", reason: "rate-limited" };
+    if (!this.#invitation(outer, at.invitationProof)) {
+      this.#failed(key, at.now); this.#failedKey(actor, at.now);
       return refused(at.head);
     }
     if (this.#waiting >= this.#config.waiting) return { answer: "unavailable", reason: "busy" };
@@ -192,18 +227,22 @@ export class JoinLimits {
       this.#waiting--;
     }
     // Check 3 answers `misaddressed`. Check 6 answers `invitation-refused`, one answer for an unknown ID and for a wrong secret.
-    if (answer.answer === "refused" && (answer.reason === "misaddressed" || answer.name === "invitation-refused")) this.#failed(key, at.now);
+    if (answer.answer === "refused" && (answer.reason === "misaddressed" || answer.name === "invitation-refused")) {
+      this.#failed(key, at.now); this.#failedKey(actor, at.now);
+    }
     return answer;
   }
 
-  #sound(signed: unknown, invitationProof?: () => boolean): boolean {
+  #outer(signed: unknown): SignedIntent | null {
     try {
-      if (!isSignedIntentShape(signed) || canonicalBytes(signed).length > this.#config.joinBytes || !verifySignedIntent(signed)) return false;
+      return isSignedIntentShape(signed) && canonicalBytes(signed).length <= this.#config.joinBytes && verifySignedIntent(signed) ? signed : null;
+    } catch { return null; }
+  }
+  #invitation(signed: SignedIntent, invitationProof?: () => boolean): boolean {
+    try {
       if (invitationProof?.() === true) return isSignature(signed.intent.fields["proof"]) && !Object.hasOwn(signed.intent.fields, "secret");
       const secret: unknown = signed.intent.fields["secret"];
       return typeof secret === "string" && utf8(secret).length >= INVITATION_SECRET_BYTES;
-    } catch {
-      return false;   // not values that have canonical bytes
-    }
+    } catch { return false; }
   }
 }

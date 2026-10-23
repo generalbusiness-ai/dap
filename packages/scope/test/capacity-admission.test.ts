@@ -1,6 +1,6 @@
 import { env } from "cloudflare:workers";
 import { httpSource, verify } from "@generalbusiness/artroom-replay";
-import { route } from "../src/worker.ts";
+import { fixtureRoute as route } from "./support/serving-route.ts";
 import { CAPABILITY_CODE } from "../src/ports.ts";
 import { expect, test } from "vitest";
 import { evictDurableObject, runInDurableObject } from "cloudflare:test";

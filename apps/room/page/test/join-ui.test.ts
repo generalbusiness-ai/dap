@@ -54,6 +54,7 @@ const cleanup = async () => {
   await drain();
   vi.unstubAllGlobals();
   vi.doUnmock("../src/join-custody.ts");
+  vi.doUnmock("../src/page-key-migration.ts");
   vi.doUnmock("../src/view.ts");
   vi.resetModules();
 };
@@ -127,6 +128,21 @@ class Element {
   }
 }
 
+
+// Own the requested import/redraw and its actual terminal publication. Failure
+// publications remain terminal so the original UI assertions diagnose them.
+async function publication(root: Element, start: () => unknown): Promise<void> {
+  const original = root.replaceChildren;
+  let published!: () => void;
+  const ready = new Promise<void>(resolve => { published = resolve; });
+  root.replaceChildren = function (...children: (Element | string)[]) {
+    original.apply(this, children);
+    if (!this.all().some(node => node.tag === "h1" && node.textContent === "Opening your room")) published();
+  };
+  try { await Promise.all([Promise.resolve().then(start), ready]); }
+  finally { root.replaceChildren = original; }
+}
+
 // Actual entry handlers over scripted DOM/enrollment ports. Native exact
 // envelope persistence and verification belong to join-custody.test.ts.
 test("Invitation paste joins automatically once; Back and reload keep unknown enrollment fenced without premature room navigation", ({ onTestFinished }) => fixtures.run(onTestFinished, async (wait) => {
@@ -179,6 +195,8 @@ test("Invitation paste joins automatically once; Back and reload keep unknown en
         "The original enrollment remains unknown. No replacement was sent.",
     };
   });
+  // Startup migration is a separate custody witness, not this UI port.
+  vi.doMock("../src/page-key-migration.ts", () => ({ migratePageOperations: async () => {} }));
   vi.doMock("../src/join-custody.ts", () => ({
     joinInvitation: join,
     originalJoin: original,
@@ -220,7 +238,7 @@ test("Invitation paste joins automatically once; Back and reload keep unknown en
       redraw = f;
     },
   });
-  await wait(() => import("../src/main.ts"));
+  await wait(() => publication(root, () => import("../src/main.ts")));
   const entryWordmarks = root.all().filter(element => element.tag === "a" && element.attrs["aria-label"] === "dap homepage");
   expect(entryWordmarks).toHaveLength(1);
   expect(entryWordmarks[0]!.attrs["href"]).toBe("https://dap.generalbusiness.ai/");
@@ -246,7 +264,7 @@ test("Invitation paste joins automatically once; Back and reload keep unknown en
   expect(posts).toBe(1);
   values.set("SCRIPTED-original", b64url(new Uint8Array([1]))); // Public fixture presence only; no real secret or envelope.
   location.hash = "#/join";
-  redraw();
+  await wait(() => publication(root, () => redraw()));
   expect(root.all().find(e => e.tag === "h1")?.textContent).toBe("Join or create a room");
   finish({
     ...publicOriginal,
@@ -255,7 +273,7 @@ test("Invitation paste joins automatically once; Back and reload keep unknown en
   await wait(drain);
   expect(values.has("artroom-page")).toBe(false);
   location.hash = "#/invitation";
-  redraw();
+  await wait(() => publication(root, () => redraw()));
   const restored = root.all().find((e) => e.attrs["name"] === "invitation")!;
   expect(restored.hasAttribute("disabled")).toBe(true);
   restored.fire("input");
@@ -269,7 +287,7 @@ test("Invitation paste joins automatically once; Back and reload keep unknown en
   expect(posts).toBe(1);
   // A new module instance stands for reload; durable port presence survives.
   vi.resetModules();
-  await wait(() => import("../src/main.ts"));
+  await wait(() => publication(root, () => import("../src/main.ts")));
   expect(
     root
       .all()
@@ -292,11 +310,11 @@ test("Invitation paste joins automatically once; Back and reload keep unknown en
     .fire("click");
   await wait(drain);
   location.hash = "#/join";
-  redraw();
+  await wait(() => publication(root, () => redraw()));
   checked({
     ...publicOriginal,
     status: "verified",
-    secret: seed,
+    signer: { key, sign: async () => { throw new Error("A retired UI result must not sign"); } },
     answer: { answer: "accepted" },
   });
   await wait(drain);
@@ -420,6 +438,8 @@ test("A retained first refusal stays readable after reload and allows only a dif
     checks++;
     return refused();
   });
+  // Startup migration is a separate custody witness, not this UI port.
+  vi.doMock("../src/page-key-migration.ts", () => ({ migratePageOperations: async () => {} }));
   vi.doMock("../src/join-custody.ts", () => ({
     originalJoin: original,
     joinInvitation: join,
@@ -455,14 +475,14 @@ test("A retained first refusal stays readable after reload and allows only a dif
   vi.stubGlobal("localStorage", { getItem: () => null, setItem: vi.fn() });
   vi.stubGlobal("window", { addEventListener: vi.fn() });
   const field = () => root.all().find((e) => e.attrs["name"] === "invitation")!;
-  await wait(() => import("../src/main.ts"));
+  await wait(() => publication(root, () => import("../src/main.ts")));
   expect(field().hasAttribute("disabled")).toBe(false);
   expect(root.textContent).toContain("different invitation");
   expect(root.textContent).toContain("retained key");
   // Reload keeps the refusal and the same public identity, while leaving
   // the paste path available. Merely loading the page sends no enrollment.
   vi.resetModules();
-  await wait(() => import("../src/main.ts"));
+  await wait(() => publication(root, () => import("../src/main.ts")));
   expect(field().hasAttribute("disabled")).toBe(false);
   expect(posts).toBe(0);
   root

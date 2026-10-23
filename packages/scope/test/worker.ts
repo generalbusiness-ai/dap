@@ -32,12 +32,28 @@
 
 import { platform } from "@generalbusiness/dap-platform";
 import { lacking } from "@generalbusiness/dap-platform/testing";
+import { scopeIdOf } from "@generalbusiness/artroom-bytes";
+import { readApplicationScreenHost } from "@generalbusiness/artroom-client/application";
 import { ScopeObject, type Outside, type OutsideGiven, type Wiring } from "../src/index.ts";
 import { sessionsOf, type LimitConfig } from "../src/index.ts";
 import { codeLost, controls, net, netPorts, testPorts } from "../src/testing.ts";
 import { signedDiagnosticFor } from "./signed-read-diagnostic.ts";
 import { sessionFields, testSessionBypass } from "./session-settings.ts";
-import scopeWorker, { DeployedScope, McpAgent, McpRegistry, ScopeService, route, sessionWiring, type Env, type McpEnv } from "../src/worker.ts";
+import { startupTest, startupScopes, StartupReadTrace } from "./support/serving-startup.ts";
+import type { Binding } from "../src/namespace.ts";
+export { StartupServingIndex } from "./support/serving-startup.ts";
+import scopeWorker, { ApplicationScreenService, DeployedScope, McpAgent, McpRegistry, ScopeIndex, ScopeService, route, sessionWiring, type Env, type McpEnv } from "../src/worker.ts";
+export { ScopeIndex } from "../src/worker.ts";
+/** Separate actual fixed-object namespace for small-limit boundary witnesses.
+ * Heavy existing fixtures explicitly retain their high finite test policy. */
+export class ServingTestIndex extends ScopeIndex {
+  constructor(ctx: DurableObjectState, env: Env) { super(ctx, { ...env,
+    SERVING_CREATION_KEY_PER_HOUR: "2", SERVING_CREATION_ADDRESS_PER_HOUR: "3",
+    SERVING_READ_KEY_PER_MINUTE: "2", SERVING_READ_ADDRESS_PER_MINUTE: "3" }); }
+}
+export class ServingTestService extends ScopeService<Env & { SERVING_INDEX: DurableObjectNamespace }> {
+  constructor(ctx: ExecutionContext, env: Env & { SERVING_INDEX: DurableObjectNamespace }) { super(ctx, { ...env, SCOPE_INDEX: env.SERVING_INDEX }); }
+}
 import type { AgentPorts, HostedAgent } from "@generalbusiness/dap-mcp";
 import { outsideOf, owners, wired } from "./outside.ts";
 import type { CreationAdmission } from "../src/creation-admission.ts";
@@ -57,13 +73,16 @@ export const archiveHostWiring = new Map<string, NonNullable<Wiring["archiveHost
 /** Genuine production factory injection for alarm/activation witnesses only. */
 export const roomArchiveWiring = new Map<string, NonNullable<Wiring["archive"]>>();
 export const roomArchiveConstructions = new Map<string, number>();
+/** Index callback fixture only: the native target still checks its own stored genesis. */
+export const scopeRegistrationWiring = new Map<string, NonNullable<Wiring["registerGenesis"]>>();
 
 export class TestScope extends ScopeObject {
   protected override metricEnvironment(): MetricEnvironment { return metricBindings.get(this.ctx.id.toString()) ?? super.metricEnvironment(); }
   protected override wiring(name: string | undefined): Wiring {
     const c = controls(name ?? "");
     const fixtureArchive = fixtureArchiveWiring.get(name ?? "");
-    return { ports: { ...testPorts(c), outside: outsideOf(name ?? ""), owners, ...wired.get(name ?? "")?.(), ...metricWiring.get(this.ctx.id.toString())?.() }, bounds: c.bounds, reads: c.reads, ...(fixtureArchive ? { fixtureArchive } : {}) };
+    const registerGenesis = scopeRegistrationWiring.get(name ?? "");
+    return { ports: { ...testPorts(c), outside: outsideOf(name ?? ""), owners, ...wired.get(name ?? "")?.(), ...metricWiring.get(this.ctx.id.toString())?.() }, bounds: c.bounds, reads: c.reads, ...(registerGenesis ? { registerGenesis } : {}), ...(fixtureArchive ? { fixtureArchive } : {}) };
   }
 }
 /** Same native code in a second local namespace for byte equality controls. */
@@ -78,7 +97,7 @@ export class NetScope extends DeployedScope<NetEnv> {
     const deployed = super.wiring(name);
     const ports = { ...deployed.ports, ...netPorts(net, deployed.ports!.transport!, deployed.ports!.resolver) };
     // The definitions port is the deployed one, whose platform definitions are the platform package's, until a test takes their code away.
-    return { bounds: net.sized.get(name ?? "") ?? net.bounds, ports: { ...ports, definitions: codeLost(deployed.ports!.definitions!, () => !net.platformCode) } };
+    return { ...(deployed.registerGenesis ? { registerGenesis: deployed.registerGenesis } : {}), bounds: net.sized.get(name ?? "") ?? net.bounds, ports: { ...ports, definitions: codeLost(deployed.ports!.definitions!, () => !net.platformCode) } };
   }
 }
 
@@ -132,7 +151,7 @@ export class PlatformScope extends DeployedScope<PlatformEnv> {
       try { originalWaitUntil(promise); }
       catch (error) { scheduled.splice(scheduled.lastIndexOf(promise), 1); throw error; }
     };
-    super(ctx, env);
+    super(ctx, startupTest.index ? { ...env, SCOPE_INDEX: startupTest.index } : env);
     this.#scheduledCallbacks = scheduled;
   }
 
@@ -212,6 +231,36 @@ export class CreationAdmissionService extends PlatformService {
   constructor(ctx: ExecutionContext, env: NetEnv & { PLATFORM: DurableObjectNamespace }) { super(ctx, { ...env, ...creationTest.settings }); }
 }
 
+/** Fixed TEST installation locator only; this does not claim an installed
+ * application. The binding witness exercises the genuine native session and
+ * stream routes, whose authority is the real PLATFORM membership. */
+export const SCREEN_TEST_HOST = readApplicationScreenHost({
+  v: 1, screenOrigin: "https://rpc-screen.inguz.space", roomOrigin: "https://scope.test",
+  directory: scopeIdOf({ v: 1, kind: "directory", definition: "platform:directory@16", creator: null, cause: `sha256:${"a".repeat(64)}`, ordinal: 1 }),
+  item: 7, presentation: `sha256:${"b".repeat(64)}`,
+});
+/** Inherited production RPC methods; only the fixed configuration and native
+ * test namespace differ. No test override admits a session or a read. */
+export class SandboxScreenService extends ApplicationScreenService<NetEnv & { PLATFORM: DurableObjectNamespace }> {
+  constructor(ctx: ExecutionContext, env: NetEnv & { PLATFORM: DurableObjectNamespace }) {
+    super(ctx, { ...env, SCOPES: env.PLATFORM, APPLICATION_SCREEN_HOSTS: JSON.stringify([SCREEN_TEST_HOST]) });
+  }
+}
+
+/** Actual sandbox service with the existing small-limit fixed owner. The
+ * unknown-target witness never supplies a native admission or read result. */
+export class ServingTestScreenService extends ApplicationScreenService<Env & { SERVING_INDEX: DurableObjectNamespace }> {
+  constructor(ctx: ExecutionContext, env: Env & { SERVING_INDEX: DurableObjectNamespace }) {
+    // Unknown indexed targets must not even reach the raw namespace. This is
+    // a lookup sentinel, not a scripted native answer or authority substitute.
+    const scopes = new Proxy(env.SCOPES, { get(target, key) {
+      if (key === "idFromName" || key === "get") return () => { throw new Error("Unknown sandbox target reached raw namespace"); };
+      return Reflect.get(target, key);
+    } });
+    super(ctx, { ...env, SCOPES: scopes, SCOPE_INDEX: env.SERVING_INDEX, APPLICATION_SCREEN_HOSTS: JSON.stringify([SCREEN_TEST_HOST]) });
+  }
+}
+
 // Exercise the production entrypoint with the same NET namespace as before.
 export default { fetch: async (request: Request, env: NetEnv & HostedEnv): Promise<Response> => scopeWorker.fetch(request, { ...env, SCOPES: env.NET }) };
 
@@ -253,11 +302,16 @@ export class PlatformMcpRegistry extends McpRegistry<HostedEnv> {
 }
 export class PlatformMcpAgent extends McpAgent<HostedEnv> {
   readonly #productionHostedFetch: boolean;
+  readonly #startup: boolean;
+  readonly startupReads = new StartupReadTrace();
+  #startupBinding: Binding | null = null;
   constructor(ctx: DurableObjectState, env: HostedEnv) {
-    super(ctx, { ...env, ...creationTest.settings });
+    const index = startupTest.index;
+    super(ctx, { ...env, ...creationTest.settings, ...(index ? { SCOPE_INDEX: index } : {}) });
     this.#productionHostedFetch = creationTest.productionHostedFetch;
+    this.#startup = index !== null;
   }
-  protected override scopes() { return this.env.PLATFORM; }
+  protected override scopes() { return this.#startup ? this.#startupBinding ??= startupScopes(this.env.PLATFORM, this.startupReads) : this.env.PLATFORM; }
   /** The harness's instance reset: what an eviction leaves. */
   reset(): void { this.evict(); }
   /** Fire the service's watch once, as 30 seconds passing would. */
@@ -281,7 +335,7 @@ export class PlatformMcpAgent extends McpAgent<HostedEnv> {
       now: () => hostedTest.now?.() ?? Date.now(), every: () => () => {},
       pause: (waiting: readonly string[]) => hostedTest.pause?.(waiting) ?? new Promise<void>((r) => setTimeout(r, 50)),
       ...(this.#productionHostedFetch ? {} : { fetch: (async (url: string, init?: RequestInit) => {
-        const response = await route(new Request(url, init), scopes);
+        const response = await route(new Request(url, init), scopes, this.env);
         if (hostedTest.lose !== null && new URL(url).pathname.endsWith(hostedTest.lose)) { hostedTest.lose = null; await response.body?.cancel(); throw new Error("scripted loss of the reply"); }
         return response;
       }) as never }),

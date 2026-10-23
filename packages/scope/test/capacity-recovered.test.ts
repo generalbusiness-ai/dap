@@ -7,7 +7,7 @@ import { grantOf, notesDefinition, valid, variant } from "@generalbusiness/dap-d
 import { httpSource, verify } from "@generalbusiness/artroom-replay";
 import { controls } from "../src/testing.ts";
 import { SqliteStore } from "../src/index.ts";
-import { route } from "../src/worker.ts";
+import { fixtureRoute as route } from "./support/serving-route.ts";
 import { wired } from "./outside.ts";
 import { Lane, START, at, reader, rita, stubOf } from "./fixtures-native.ts";
 

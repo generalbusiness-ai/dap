@@ -7,8 +7,9 @@ import type { ScopeKind, ScopeRef } from "@generalbusiness/dap-contract";
 import { applicationResolverFixture, applicationWorkerBindings } from "./fixtures-native.ts";
 import { expect, test } from "vitest";
 import worker, { type Env } from "../../../apps/room/worker.ts";
+import { applicationSandboxPage } from "../src/applications/route.ts";
 test("Room refuses retired application paths and still rejects URL credentials before dispatch", async () => {
-  const get = (path: string, method = "GET") => worker.fetch(new Request("https://scopes.test" + path, { method, headers: { authorization: "Bearer TEST-header", cookie: "private=TEST-cookie" } }), {} as Env);
+  const get = (path: string, method = "GET") => worker.fetch(new Request("https://scopes.test" + path, { method, headers: { authorization: "Bearer TEST-header", cookie: "private=TEST-cookie" } }), { SCOPES: env.PLATFORM, SCOPE_INDEX: env.SCOPE_INDEX } as Env);
   for (const path of ["/counting", "/counting/", "/counting/counting.js", "/counting/brand/dap-wordmark.svg", "/lending", "/lending/", "/lending/lending.css", "/lending/keys.json"]) {
     const response = await get(path);
     expect(response.status).toBe(404); expect(await response.text()).not.toMatch(/TEST-header|TEST-cookie|<script|<html/);
@@ -44,8 +45,16 @@ test("two pending packet loads coalesce while a third distinct release refuses b
     };
     return typeof value === "function" ? value.bind(target) : value;
   } });
-  const bindings = applicationWorkerBindings(scopes as unknown as Env["SCOPES"], bucket, trust);
-  const get = (item: number) => worker.fetch(new Request("https://cache.test" + applicationScreenPath(directory.scope, item, fixtures[item]!.packet.ids.presentation) + "index.html"), bindings);
+  // Explicit reachability stand-in for these two scripted native RPC peers.
+  // It grants no native authority and never admits another target.
+  const index = { idFromName: (name: string) => name, get: (name: string) => {
+    expect(name).toBe("applied-genesis-v1");
+    return { has: async (scope: string) => scope === directory.scope || scope === rules.scope };
+  } };
+  const bindings = applicationWorkerBindings(scopes as unknown as Env["SCOPES"], bucket, trust, index);
+  // The dedicated sandbox service's byte renderer; public Room refusal is
+  // checked separately. Installation RPCs here remain explicit stand-ins.
+  const get = async (item: number) => (await applicationSandboxPage(new Request("https://cache.test" + applicationScreenPath(directory.scope, item, fixtures[item]!.packet.ids.presentation) + "index.html"), bindings))!;
   const outstanding: Promise<Response>[] = [];
   try {
     for (const f of fixtures) await f.store.put(f.packet.bytes, f.packet.ids.release);

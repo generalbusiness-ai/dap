@@ -40,7 +40,7 @@ test("one real route: a founding, an act and a request for a step through the Wo
 });
 
 test("the HTTP boundary: a body is budgeted in raw bytes while it is read, and a path that is not percent-encoded text is refused; neither reaches an operation", async () => {
-  const post = (body: BodyInit) => route(new Request("https://scopes.test/v1/scopes", { method: "POST", body }), env.NET);
+  const post = (body: BodyInit) => route(new Request("https://scopes.test/v1/scopes", { method: "POST", body }), env.NET, { SCOPE_INDEX: env.SCOPE_INDEX });
   // A creation that would be accepted, with a padding member of 400,000 three-byte characters: under 1 MiB of UTF-16 units, over it in bytes.
   const { signed } = creation(definition, { title: "A lane", opener: rita.member });
   const asked = { creation: signed, definition: definition.declared };

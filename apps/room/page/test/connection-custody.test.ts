@@ -1,16 +1,13 @@
 import { expect, test, vi } from "vitest";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { fileStore } from "../../../../packages/cli/src/files.ts";
-import { b64url, canonicalize, keyIdOfSecret, newIncarnation, scopeIdOf, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, keyIdOfSecret, newIncarnation, scopeIdOf, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
+import { secretSigner, type Signer } from "@generalbusiness/artroom-client";
 import type { Context, InvitationIssueInput, InvitationIssueResult } from "@generalbusiness/dap-cli";
 import type { ClaimStorage } from "../src/claim.ts";
 const shared = vi.hoisted(() => ({ issueInvitation: vi.fn() }));
 vi.mock("@generalbusiness/dap-cli", async () => ({ ...await vi.importActual<typeof import("@generalbusiness/dap-cli")>("@generalbusiness/dap-cli"), ...shared }));
 const creator = vi.hoisted(() => ({ originalStart: vi.fn(), startRoom: vi.fn(), recoveryKeyOnce: vi.fn() }));
 vi.mock("../src/start-custody.ts", () => creator);
-vi.mock("../src/data.ts", async () => ({ ...await vi.importActual<typeof import("../src/data.ts")>("../src/data.ts"), openRoom: async (session: { service: string; secret: Uint8Array }) => ({ session, directory: directory.scope, membership, key, me: { handle: "@founder", ref: controller, actions: ["membership.invite", "membership.manage"] } }) }));
+vi.mock("../src/data.ts", async () => ({ ...await vi.importActual<typeof import("../src/data.ts")>("../src/data.ts"), openRoom: async (session: { service: string; signer: Signer }) => ({ session, directory: directory.scope, membership, key, me: { handle: "@founder", ref: controller, actions: ["membership.invite", "membership.manage"] } }) }));
 import { connectInvitation, originalConnection, creatorConnectionFiles, saveCreatorRecoveryOnce } from "../src/connection-custody.ts";
 const origin = "https://connection-custody.test";
 const ref = (kind: "register" | "directory" | "membership") => ({ scope: scopeIdOf({ v: 1, kind, definition: kind === "register" ? "platform:register@7" : "platform:directory@3", creator: null, cause: textDigest("SCRIPTED connection " + kind), ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(4)), kind });
@@ -22,9 +19,9 @@ const locks = { request: async <T>(_name: string, work: () => Promise<T>) => wor
 function fixture() {
   shared.issueInvitation.mockReset(); creator.originalStart.mockReset(); creator.startRoom.mockReset(); creator.recoveryKeyOnce.mockReset();
   const values = new Map<string, string>();
-  const handed: Uint8Array[] = [];
+  const handed: Signer[] = [];
   creator.originalStart.mockReturnValue({ ...expected, state: "complete" });
-  creator.startRoom.mockImplementation(async () => { const secret = seed.slice(); handed.push(secret); return { ...expected, repository, configured: { register, definition: "platform:register@7" }, handle: "@founder", secret }; });
+  creator.startRoom.mockImplementation(async () => { const signer = secretSigner(seed); handed.push(signer); return { ...expected, repository, configured: { register, definition: "platform:register@7" }, handle: "@founder", signer }; });
   const storage: ClaimStorage = { getItem: name => values.get(name) ?? null, setItem: (name, value) => { values.set(name, value); } };
   return { values, storage, handed };
 }
@@ -56,7 +53,7 @@ test("connection custody reserves before the shared sender and retains opaque or
     return { operation: options.operation, kind: actual.kind, handle: actual.handle, state: "unknown", reason: "SCRIPTED original reply lost" };
   });
   await connectInvitation(origin, f.storage, expected, input, { mode: "new", locks });
-  expect(posts).toBe(1); expect(f.handed[0]!.every(byte => byte === 0)).toBe(true);
+  expect(posts).toBe(1); expect(f.handed[0]!.key).toBe(key);
   const after = [...f.values.entries()];
   const reload: ClaimStorage = { getItem: f.storage.getItem, setItem: f.storage.setItem };
   await connectInvitation(origin, reload, expected, input, { mode: "check", locks });
@@ -71,7 +68,7 @@ test("connection custody reserves before the shared sender and retains opaque or
   expect(shared.issueInvitation).toHaveBeenCalledTimes(callsBefore); expect(posts).toBe(2);
 });
 
-test("dropped connection reservation dispatches nothing; true agent input uses the verified founder controller, and CLI/recovery files use that enrolled key", async () => {
+test("dropped connection reservation dispatches nothing; agent input uses the verified controller and public configuration exports no browser key", async () => {
   const f = fixture();
   const dropped: ClaimStorage = { getItem: () => null, setItem: () => {} };
   await expect(connectInvitation(origin, dropped, expected, { kind: "person", handle: "@guest", role: "member", hours: 24 }, { mode: "new", locks })).rejects.toThrow("original private connection");
@@ -86,24 +83,12 @@ test("dropped connection reservation dispatches nothing; true agent input uses t
   const agent = await connectInvitation(origin, f.storage, expected, { kind: "agent-key", handle: "@agent", hours: 24, controller: { membership, member: "@forged" } }, { mode: "new", locks });
   expect(agent.state).toBe("verified");
   const files = await creatorConnectionFiles(origin, f.storage, expected, { locks });
-  expect(files.key.trim() === b64url(seed)).toBe(true);
+  expect(Object.keys(files)).toEqual(["config"]);
   const config = JSON.parse(files.config); expect(config.repository.membership).toEqual(membership); expect(config.key).toBe("device");
-  // Real CLI fileStore consumes the downloaded config/key layout. No CLI
-  // native request is made; the temporary directory is this test's own.
-  const directory = mkdtempSync(join(tmpdir(), "page-cli-connection-"));
-  try {
-    mkdirSync(join(directory, "keys"), { mode: 0o700 });
-    writeFileSync(join(directory, "config.json"), files.config, { mode: 0o600 });
-    writeFileSync(join(directory, "keys", "device.key"), files.key, { mode: 0o600 });
-    const cliStore = fileStore(directory), loaded = (await cliStore.config())!;
-    const privateKey = (await cliStore.secret(loaded.key))!;
-    try { expect(keyIdOfSecret(privateKey)).toBe(expected.key); } finally { privateKey.fill(0); }
-  } finally { rmSync(directory, { recursive: true, force: true }); }
-  creator.recoveryKeyOnce.mockResolvedValue(b64url(seed) + "\n");
-  const recovery = await saveCreatorRecoveryOnce(origin, f.storage, expected, { locks });
-  expect(recovery.trim() === b64url(seed)).toBe(true);
+  creator.recoveryKeyOnce.mockRejectedValue(new Error("Browser signing keys are nonextractable."));
+  await expect(saveCreatorRecoveryOnce(origin, f.storage, expected, { locks })).rejects.toThrow("nonextractable");
   expect(creator.recoveryKeyOnce).toHaveBeenCalledWith(origin, f.storage, expected, { locks });
-  expect(f.handed.every(bytes => bytes.every(byte => byte === 0))).toBe(true);
+  expect(f.handed.every(signer => signer.key === key)).toBe(true);
 });
 
 test("a retained initial snapshot with a dropped public pointer is read-only on Check and recovered explicitly on Continue without another operation or snapshot", async () => {

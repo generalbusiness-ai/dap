@@ -2,6 +2,8 @@
 declare namespace Cloudflare {
   interface Env {
     NET: DurableObjectNamespace;
+    /** Actual fixed lookup/registration and serving owner, bound by this test Worker. */
+    SCOPE_INDEX: DurableObjectNamespace;
     /** The deployed class with the production authority, for the scenarios on a room (`room.ts`). */
     PLATFORM: DurableObjectNamespace;
     /** Typed only: the scope package's test support names it, which `room.ts` reaches through that package's `repository.ts`. This Worker binds none, and no lane test reads it. */

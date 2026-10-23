@@ -3,7 +3,7 @@ import { nativeFixtureLifetime, driveFixture } from "../../../../packages/scope/
 import type { Platform } from "../../../../packages/scope/test/repository.ts";
 import { expect, test } from "vitest";
 import type { ScopeId, SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, scopeIdOf } from "@generalbusiness/artroom-bytes";
+import { b64url, isKeyId, scopeIdOf, verify } from "@generalbusiness/artroom-bytes";
 import type { Fetch } from "@generalbusiness/artroom-client";
 import { routed } from "../../../../packages/scope/test/repository.ts";
 import { claimRoom as nativeClaimRoom, claimStatus, type ClaimOptions, type ClaimStorage } from "../src/claim.ts";
@@ -13,6 +13,8 @@ import { OwnGit, ownHost } from "../../../../packages/scope/test/hosts.ts";
 import { artifactsOutside } from "../../../../packages/scope/src/artifacts-wiring.ts";
 import type { ArtifactsNamespace } from "../../../../packages/scope/src/artifacts-host.ts";
 import type { ClaimLocks } from "../src/claim.ts";
+import { memoryPageKeys } from "./private-key-fixture.ts";
+const keys = memoryPageKeys();
 
 async function registerFixture() {
   const owner = beginSessionFixture({ secret: b64url(crypto.getRandomValues(new Uint8Array(32))), sessions: true, inspector: reader });
@@ -73,7 +75,7 @@ function activeKept(bytes: string): any {
 // reads. STAND-INs: demo's Git host and scheduler, local storage and HTTP loss.
 test("the browser's native claim survives lost founding and enrollment replies without replacement requests; unsafe configuration or failed storage submits nothing (Git host, scheduler, storage and loss STAND-INs)", async () => {
   const d = await registerFixture();
-  const claimRoom: typeof nativeClaimRoom = (...args) => d.lifetime.wait(() => nativeClaimRoom(...args));
+  const claimRoom: typeof nativeClaimRoom = (session, configured, storage, label, options) => d.lifetime.wait(() => nativeClaimRoom(session, configured, storage, label, { ...options, keys }));
   try {
     const secret = d.secret;
     const configured = { register: d.config.register!, definition: "platform:register@3" as const };
@@ -136,7 +138,13 @@ test("the browser's native claim survives lost founding and enrollment replies w
     const savedBefore = inFlight;
     expect(activeKept(savedBefore).config.claim["found"].signed).toEqual(original);
     expect(savedBefore).not.toContain(b64url(secret));
-    expect(JSON.stringify(unknown)).not.toContain(activeKept(savedBefore).recovery);
+    const recovery = activeKept(savedBefore);
+    expect(recovery.recovery).toBeUndefined();
+    expect(isKeyId(recovery.recoveryKey)).toBe(true);
+    expect((await keys.load(recovery.recoveryKey)).key).toBe(recovery.recoveryKey);
+    expect(unknown).not.toHaveProperty("recovery");
+    expect(unknown).not.toHaveProperty("secret");
+    expect(JSON.stringify(unknown)).not.toContain(b64url(secret));
     const uncertainSeat = await second;
     expect(uncertainSeat.outcome.lines.join("\n")).toMatch(/^No answer:/);
     expect([uncertainSeat.outcome.code, uncertainSeat.pending, uncertainSeat.repository]).toEqual([1, true, null]);
@@ -184,7 +192,7 @@ test("the browser's native claim survives lost founding and enrollment replies w
 // The scopes/routes are real; Git host, scheduler, storage and lock are STAND-INs.
 test("a changed Page context stops queued and prepared native claims before delivery, preserving found, seat and first-key for exact original-context recovery (Git host, scheduler, storage and locks STAND-INs)", async () => {
   const d = await registerFixture();
-  const claimRoom: typeof nativeClaimRoom = (...args) => d.lifetime.wait(() => nativeClaimRoom(...args));
+  const claimRoom: typeof nativeClaimRoom = (session, configured, storage, label, options) => d.lifetime.wait(() => nativeClaimRoom(session, configured, storage, label, { ...options, keys }));
   try {
     const configured = { register: d.config.register!, definition: "platform:register@3" as const };
     const values = new Map<string, string>();
@@ -258,7 +266,7 @@ test("a changed Page context stops queued and prepared native claims before deli
 // replaced by a label edit, a queued duplicate New action, or another context.
 test("explicit new creates another native directory while exact operation resume, pending conflict, stale new and legacy migration preserve original proofs (Git host, scheduler, storage and locks STAND-INs)", async () => {
   const d = await registerFixture();
-  const claimRoom: typeof nativeClaimRoom = (...args) => d.lifetime.wait(() => nativeClaimRoom(...args));
+  const claimRoom: typeof nativeClaimRoom = (session, configured, storage, label, options) => d.lifetime.wait(() => nativeClaimRoom(session, configured, storage, label, { ...options, keys }));
   try {
     const configured = { register: d.config.register!, definition: "platform:register@3" as const };
     const values = new Map<string, string>();
@@ -301,13 +309,29 @@ test("explicit new creates another native directory while exact operation resume
     expect(sent.slice(count).map((signed) => signed.intent.kind)).toEqual(["found", "seat", "first-key"]);
     const journal = JSON.parse([...values.values()][0]!);
     expect([journal.active, Object.keys(journal.claims).length, journal.claims[first.operation]]).toEqual([second.value.operation, 2, firstBytes]);
-    expect(JSON.parse(journal.claims[second.value.operation]).recovery).not.toBe(JSON.parse(firstBytes).recovery);
+    const firstRecovery = JSON.parse(firstBytes), secondRecovery = JSON.parse(journal.claims[second.value.operation]);
+    expect([firstRecovery.recovery, secondRecovery.recovery]).toEqual([undefined, undefined]);
+    expect(isKeyId(firstRecovery.recoveryKey) && isKeyId(secondRecovery.recoveryKey)).toBe(true);
+    expect(secondRecovery.recoveryKey).not.toBe(firstRecovery.recoveryKey);
+    // Each independent retained identity must still load and sign, and be
+    // the exact public recovery identity in its genuine native found request.
+    for (const record of [firstRecovery, secondRecovery]) {
+      const signer = await keys.load(record.recoveryKey), bytes = Uint8Array.of(1, 2, 3);
+      expect(signer.key).toBe(record.recoveryKey);
+      expect(verify(record.recoveryKey, await signer.sign(bytes), bytes)).toBe(true);
+      const found = record.completed?.found?.signed;
+      expect(found).toBeDefined();
+      expect(found.intent.kind).toBe("found");
+      expect(found.intent.fields["recoveryKey"]).toBe(record.recoveryKey);
+      expect(sent).toContainEqual(found);
+    }
     const beforeResume = sent.length;
     const old = await claimRoom(session, configured, storage, "Again edited", { ...options, mode: "resume", operation: first.operation });
     expect([old.operation, old.repository, old.label, sent.length]).toEqual([first.operation, first.repository, first.label, beforeResume]);
     expect(claimStatus(session, configured, storage)?.operation).toBe(second.value.operation);
     // A completed legacy v1 record remains a single exact operation; migration
-    // neither invents a found nor loses the original recovery/proof bytes.
+    // neither invents a found nor loses the already-migrated recovery reference
+    // or original proof bytes. Legacy raw-seed custody has separate migration tests.
     const legacyRaw = JSON.stringify(JSON.parse(firstBytes), null, 2);
     const legacyValues = new Map<string, string>([[[...values.keys()][0]!, legacyRaw]]);
     const legacyStorage: ClaimStorage = { getItem: (key) => legacyValues.get(key) ?? null, setItem: (key, value) => { d.lifetime.active(); legacyValues.set(key, value); } };

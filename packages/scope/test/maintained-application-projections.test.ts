@@ -4,7 +4,7 @@
  * are explicit fixtures. No browser, provider effect or deployment runs. */
 import { env } from "cloudflare:test";
 import { expect, inject, onTestFinished, test, vi } from "vitest";
-import { canonicalize, isSeed, scopeIdOf, unb64url } from "@generalbusiness/artroom-bytes";
+import { canonicalize, factRefOf, isRecord, isScopeRef, isSeed, same, scopeIdOf, unb64url } from "@generalbusiness/artroom-bytes";
 import { readPublishedApplicationPackage2 } from "@generalbusiness/artroom-bytes/application-v2";
 import { DECLARED_APPLICATION_COHORT as C } from "@generalbusiness/dap-platform";
 import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-mcp";
@@ -20,6 +20,13 @@ import { soon } from "./net.ts";
 import { TEST_DEPLOYMENT } from "./worker.ts";
 import type {} from "./support/maintained-applications.ts";
 
+/** Permanent assertion context: public state only, no view, credentials or raw reply. */
+const readContext = (phase: string, state: { status: string; reason?: string }): string => JSON.stringify({
+  phase, status: state.status,
+  ...(state.status === "behind" && typeof state.reason === "string"
+    ? { reason: state.reason.slice(0, 512), reasonTruncated: state.reason.length > 512 } : {}),
+});
+
 test.each(["counter", "lending"] as const)("maintained %s package installs and its browser adapter reads native declared state", async name => {
   const captured = inject("maintainedApplications")[name], bytes = unb64url(captured.bytes);
   if (!bytes) throw Error("The maintained source packet was not captured.");
@@ -27,7 +34,7 @@ test.each(["counter", "lending"] as const)("maintained %s package installs and i
   const room = await sessionRoom(C.register), { life, R, D, children } = room, [M, A, G] = children;
   if (!M || !A || !G) throw Error("The declared cohort needs its three siblings.");
   const f = await applicationResolverFixture("sha1", undefined, {}, undefined, packet), peer = applicationHttpPeer(f);
-  const bindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(f.trust));
+  const bindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(f.trust), env.SCOPE_INDEX);
   const now = life.now(), date = vi.spyOn(Date, "now").mockReturnValue(now);
   let dispose = () => {};
   let observation: Observation | undefined;
@@ -88,21 +95,53 @@ test.each(["counter", "lending"] as const)("maintained %s package installs and i
       }));
       expect(current).toMatchObject({ view: { board: { state: "paused", lastNumber: 0 } } });
     } else {
+      // A recorded act is not the later native result of its publish-file
+      // send. Complete that explicit fixture protocol before asking for one
+      // current projection; do not retry a refused read or change its guard.
+      const settlePublication = async (kind: "donate" | "borrow" | "cancel"): Promise<void> => {
+        const acts = (await life.wait(() => app.entries())).filter(entry => entry.input.type === "act"
+          && entry.input.signed.intent.kind === kind && entry.input.signed.intent.actor === rita.key
+          && same(entry.input.signed.intent.to, scope));
+        expect(acts.length, `${kind}: one actual application act`).toBe(1);
+        const act = acts[0];
+        if (!act) throw Error("The recorded Lending act is missing.");
+        const requests = act.sends.filter(send => isScopeRef(send.to) && send.to.scope === G.name
+          && send.message.class === "request" && send.message.type === "tell"
+          && isRecord(send.message.body) && send.message.body["message"] === "publish-file");
+        expect(requests.length, `${kind}: one actual publish-file request`).toBe(1);
+        const request = requests[0];
+        if (!request || !isScopeRef(request.to)) throw Error("The recorded publication request is missing.");
+        const cause = factRefOf(act);
+        // The existing finite scheduler joins real in-flight dispatches and
+        // their result sends. No outside effects, clock advance or sleep.
+        await dispatchFixture([app, G], life.wait);
+        const results = (await life.wait(() => app.entries())).filter(entry => {
+          const input = entry.input;
+          return input.type === "delivery" && input.message.class === "result"
+            && same(input.message.of.from, cause) && input.message.of.n === request.n
+            && same(input.from.at, request.to) && "clause" in input
+            && input.clause === input.message.outcome;
+        });
+        expect(results.length, `${kind}: native result binds the exact request fact, ordinal and target`).toBe(1);
+      };
       let held: Kept | null = null;
       const gateway = lendingGateway(identity, secretSigner(rita.secret), { application: installation, current: () => true, lock, fetch, now: life.now,
         store: { load: async () => held, save: async value => { held = value; }, clear: async () => { held = null; } } });
       dispose = () => gateway.dispose();
       expect(await life.owner.required(() => gateway.look())).toMatchObject({ status: "current", view: { things: [] } });
       expect(await life.owner.required(() => gateway.act("donate", { name: "Native kettle", description: "A maintained package donation." }))).toEqual({ status: "recorded" });
+      await settlePublication("donate");
       const seen = await life.owner.required(() => gateway.look());
-      expect(seen).toMatchObject({ status: "current", view: { things: [{ name: "Native kettle", revision: 1, state: "available" }] }, activity: [{ kind: "donate", signer: "@rita", what: "Native kettle" }] });
+      expect(seen, readContext("after donate", seen)).toMatchObject({ status: "current", view: { things: [{ name: "Native kettle", revision: 1, state: "available" }] }, activity: [{ kind: "donate", signer: "@rita", what: "Native kettle" }] });
       if (seen.status !== "current") throw Error("The donation needs a current native read.");
       const thing = seen.view.things[0]!;
       expect(await life.owner.required(() => gateway.act("borrow", { thing: thing.id }))).toEqual({ status: "recorded" });
-      await life.owner.required(() => gateway.look());
-      expect(await life.owner.required(() => gateway.act("cancel", { thing: thing.id, reason: "Native retained final row" }))).toEqual({ status: "recorded" });
+      await settlePublication("borrow");
+      const afterBorrow = await life.owner.required(() => gateway.look());
+      expect(await life.owner.required(() => gateway.act("cancel", { thing: thing.id, reason: "Native retained final row" })), readContext("after borrow, before cancel", afterBorrow)).toEqual({ status: "recorded" });
+      await settlePublication("cancel");
       const gone = await life.owner.required(() => gateway.look());
-      expect(gone).toMatchObject({ status: "current", view: { things: [{ id: thing.id, revision: 3, state: "gone", reason: "Native retained final row" }] },
+      expect(gone, readContext("after cancel", gone)).toMatchObject({ status: "current", view: { things: [{ id: thing.id, revision: 3, state: "gone", reason: "Native retained final row" }] },
         activity: [{ kind: "donate" }, { kind: "borrow", what: `Native kettle (thing ${thing.id})` }, { kind: "cancel", what: `Native kettle (thing ${thing.id}): Native retained final row` }] });
       expect(held).toBeNull();
     }

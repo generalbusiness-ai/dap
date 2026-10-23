@@ -17,6 +17,7 @@ import { applicationCommands } from "./application-install-runtime.ts";
 import { mcp } from "./mcp.ts";
 import { checkCommand, newCommand, packCommand } from "./application-command.ts";
 import { runApplicationDevelopment } from "./application-dev.ts";
+import { scopeIndexCommand } from "./scope-index-command.ts";
 
 /** The command under Node. Returns the exit code. */
 export async function main(argv: readonly string[]): Promise<number> {
@@ -37,7 +38,7 @@ export async function main(argv: readonly string[]): Promise<number> {
   const ctx: Context = { store: fileStore(home), git: nodeGit(), read };
   ctx.applicationCommand = applicationCommands(ctx, mcpCustodyStore(join(home, "private", "mcp-custody")));
   // The MCP server runs until its input ends; its own output is the protocol, so it prints only on failure.
-  const outcome = argv[0] === "pack" ? await packCommand(ctx.store, argv) : argv[0] === "mcp" ? await mcp(ctx, home, argv.slice(1)) : await command(ctx, argv);
+  const outcome = argv[0] === "scope-index" ? await scopeIndexCommand(ctx, argv.slice(1)) : argv[0] === "pack" ? await packCommand(ctx.store, argv) : argv[0] === "mcp" ? await mcp(ctx, home, argv.slice(1)) : await command(ctx, argv);
   if (argv[0] === "mcp" && outcome.lines.length === 0) return outcome.code;
   (outcome.code === 0 ? process.stdout : process.stderr).write(`${outcome.lines.join("\n")}\n`);
   return outcome.code;

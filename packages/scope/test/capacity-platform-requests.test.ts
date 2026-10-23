@@ -8,7 +8,7 @@ import { platformRequests, futurePlatformRequests, settlingPlatformMarks, platfo
 import { httpSource, verify } from "@generalbusiness/artroom-replay";
 import { SqliteStore, type Delivery } from "../src/index.ts";
 import { controls } from "../src/testing.ts";
-import { route } from "../src/worker.ts";
+import { fixtureRoute as route } from "./support/serving-route.ts";
 import { wired } from "./outside.ts";
 import { Lane, START, at, objectOf, reader, rita, stubOf } from "./fixtures-native.ts";
 

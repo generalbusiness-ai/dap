@@ -73,11 +73,12 @@ export interface Room {
   done(): void;
 }
 
-export function mcpRoom(): Room {
+export function mcpRoom(external?: { finish: "external"; capture: (life: ReturnType<typeof nativeFixtureLifetime>) => void }): Room {
   const secret = b64url(crypto.getRandomValues(new Uint8Array(32)));
   // The fixture's own inspector reader, which no agent presents: a test's native reading of a scope, apart from any MCP read.
   const sessionOwner = beginSessionFixture({ secret, sessions: true, inspector: reader });
-  const lifetime = nativeFixtureLifetime(sessionOwner);
+  const lifetime = nativeFixtureLifetime(sessionOwner, external ? { finish: "external" } : {});
+  external?.capture(lifetime);
   const { active, wait, release: done } = lifetime;
   const at = ownHost();
   let register: ScopeId | null = null;
@@ -86,14 +87,17 @@ export function mcpRoom(): Room {
   // hold@1's operations (mints, revocations, staged refs, the ancestry read) are answered by the lanes' Host STAND-IN; the
   // register's and the destination's by Artifacts, as wired above.
   const hold = new Host();
-  const wire = (name: ScopeId) => lifetime.outside(name, (given, sql) => {
-    const outside = at.outside(given, sql, bindings());
-    return {
-      ...outside,
-      accepts: (owner, kind) => hold.accepts(owner, kind) || outside.accepts(owner, kind),
-      send: (request) => (hold.accepts(request.owner, request.kind) ? Promise.resolve(hold.send(request)) : outside.send(request)),
-    };
-  });
+  const wire = (name: ScopeId) => {
+    if (external) lifetime.platform(name); // include real child constructions in the owning callback registry
+    lifetime.outside(name, (given, sql) => {
+      const outside = at.outside(given, sql, bindings());
+      return {
+        ...outside,
+        accepts: (owner, kind) => hold.accepts(owner, kind) || outside.accepts(owner, kind),
+        send: (request) => (hold.accepts(request.owner, request.kind) ? Promise.resolve(hold.send(request)) : outside.send(request)),
+      };
+    });
+  };
   const pause = async (waiting: readonly string[] = []) => {
     active();
     const nodes = [...known, ...waiting.filter((scope) => !known.some((node) => node.name === scope)).map((scope) => lifetime.platform(scope as ScopeId))];

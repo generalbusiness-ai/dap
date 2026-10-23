@@ -9,7 +9,7 @@ export const ITEM_QUERY_DOMAINS = Object.freeze({ selection: "artroom-item-query
 export const ITEM_QUERY_ARGUMENT_PREFIX = "query-items-v1:" as const;
 export const ITEM_QUERY_CURSOR_PREFIX = "iq1." as const;
 export const ITEM_QUERY_WIRE_BOUNDS = Object.freeze({ encodedChars: 10923, urlBytes: 12 * 1024, commonUrlBytes: 16 * 1024, errorBytes: 4096, signedChars: 2055, sessionChars: 4104 });
-export const ITEM_QUERY_REFUSALS = Object.freeze(["invalid-query", "wrong-scope", "invalid-cursor", "stale-cursor", "query-mismatch", "unknown-type", "unknown-state", "query-not-ready", "too-large", "invalid-metadata", "invalid-item", "row-too-large", "forbidden", "sessions-unavailable", "clock-behind", "unavailable"] as const);
+export const ITEM_QUERY_REFUSALS = Object.freeze(["invalid-query", "wrong-scope", "invalid-cursor", "stale-cursor", "query-mismatch", "unknown-type", "unknown-state", "query-not-ready", "too-large", "invalid-metadata", "invalid-item", "row-too-large", "forbidden", "sessions-unavailable", "clock-behind", "unavailable", "rate-limited"] as const);
 export type ItemQueryRefusal = typeof ITEM_QUERY_REFUSALS[number];
 export interface ItemQueryValue { v: 1; scope: ScopeRef; query: Digest; argument: string; items: readonly Item[] }
 export type ItemQueryRead = { ok: true; at: Head; value: ItemQueryValue; complete: boolean; next?: string } | { ok: false; reason: ItemQueryRefusal };
