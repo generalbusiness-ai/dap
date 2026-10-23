@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:759688b55ee1762b5d8fbabff792bb904149b2c4","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/capacity-receiver-pins.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:75add9cfbc176f62ae86d0b30cce66c1d708beee","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/support.ts."}
