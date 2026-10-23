@@ -26,6 +26,8 @@ export interface FixtureArchivePorts {
   readonly clock: () => Timestamp;
 }
 interface ArchiveTransport {
+  /** Trusted host choice for isolated objects only; refs and closures keep v0. */
+  readonly isolatedObjectProtocol?: "v2";
   transport(repository: DestinationRepository, plaintext?: string): SmartHttpOptions;
   identity(repository: DestinationRepository, plaintext: string | undefined, allowed: () => boolean): Promise<void>;
 }
@@ -43,6 +45,7 @@ export function fixtureArchiveProvider(ports: FixtureArchivePorts, host: Archive
  * adapter; no request, ledger binding or fixture tag grants it. */
 export function archiveProvider(ports: { readonly tokens: ArchiveTokens; readonly clock: () => Timestamp }, host: ArchiveTransport): ArchiveProvider {
   const { tokens, clock } = ports;
+  const isolatedObjectProtocol = host.isolatedObjectProtocol;
   const held = new WeakMap<ArchiveCredential, { repository: DestinationRepository; at: ScopeRef; ref: string; original: ArchiveCredential }>();
   const source = async (repository: DestinationRepository, allowed: () => boolean, most?: { bytes: number; objects: number }, isolated = false, observation?: ArchiveParentReadObservation): Promise<SmartHttpSource> => {
     check(allowed); repository = { ...repository }; host.transport(repository); // Validate before the first port call.
@@ -62,7 +65,8 @@ export function archiveProvider(ports: { readonly tokens: ArchiveTokens; readonl
         return response;
       } } : {}),
       ...(most === undefined ? {} : { bounds: { ...(transport.bounds ?? READ_BOUNDS), closureObjects: Math.min(transport.bounds?.closureObjects ?? READ_BOUNDS.closureObjects, most.objects) } }),
-      ...(isolated ? { isolateObjects: { ownedBytes: maxBytes * 17 } } : {}) });
+      ...(isolated ? { isolateObjects: { ownedBytes: maxBytes * 17,
+        ...(isolatedObjectProtocol === undefined ? {} : { protocol: isolatedObjectProtocol }) } } : {}) });
   };
   const ref = async (repository: DestinationRepository, name: string, allowed: () => boolean): Promise<string | null> => {
     const input = await source(repository, allowed);

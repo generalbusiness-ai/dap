@@ -3,7 +3,7 @@ import { inflateSync } from "node:zlib";
 import { afterAll, expect, test, vi } from "vitest";
 import { decodePack, SmartHttpSource } from "../src/http-read.ts";
 import { GitRefusal } from "../src/names.ts";
-import { Reader } from "../src/reader.ts";
+import { READ_BOUNDS, Reader } from "../src/reader.ts";
 import { Host } from "./support/host.ts";
 import { bare, cleanup, commitText, git, put, setRef } from "./support/repo.ts";
 
@@ -260,15 +260,40 @@ test("isolated in-flight and caller-owned copies consume one source allowance wi
 // No wall-clock wait: the test moves the clock at an actual response boundary.
 test("an isolated operation cannot renew its deadline between advertisement and object fetch", async () => {
   const { remote, head } = repository(); allowIsolation(remote);
-  const host = new Host(remote, TOKEN); let posts = 0, now = Date.now();
+  const host = new Host(remote, TOKEN); let now = Date.now();
   const clock = vi.spyOn(Date, "now").mockImplementation(() => now);
   try {
-    const source = new SmartHttpSource({ ...isolatedOptions, timeoutMs: 10_000, fetch: async request => {
-      if (request.method === "POST") posts++;
-      const response = await host.upstream(request); now += 10_001; return response;
-    } });
-    await expect(new Reader(source).commit(head)).rejects.toMatchObject({ reason: "unreadable" });
-    expect(posts).toBe(0);
+    for (const boundary of ["response", "body"]) {
+      let requests = 0, posts = 0, pulls = 0, cancels = 0, cancellationFinished = false, release!: () => void;
+      const held = new Promise<void>(resolve => { release = resolve; });
+      const source = new SmartHttpSource({ ...isolatedOptions, timeoutMs: 10_000, fetch: async request => {
+        requests++; if (request.method === "POST") posts++;
+        const response = await host.upstream(request), bytes = new Uint8Array(await response.arrayBuffer());
+        const body = new ReadableStream<Uint8Array>({
+          pull(controller) { pulls++; controller.enqueue(bytes); now += 10_001; },
+          cancel() {
+            cancels++;
+            return held.then(() => { cancellationFinished = true; });
+          },
+        }, { highWaterMark: 0 });
+        if (boundary === "response") now += 10_001;
+        return new Response(body, { headers: response.headers });
+      } });
+      try {
+        // response reaches the request boundary; body reaches the shared
+        // beforeDeadline helper after reader.read(), before a timer fires.
+        await expect(new Reader(source).commit(head)).rejects.toMatchObject({ reason: "unreadable", what: boundary === "response" ? "isolated read deadline" : "read deadline" });
+        expect(pulls).toBe(boundary === "response" ? 0 : 1);
+        expect(cancels).toBe(1);
+        expect(cancellationFinished).toBe(false);
+        for (const again of [() => source.object(head, maxBytes), () => source.ref(REF), () => source.refs("refs/heads/", 10)]) {
+          await expect(again(), "A synchronous isolated deadline must permanently abandon the source").rejects.toMatchObject({ reason: "unreadable", what: "isolated source abandoned" });
+        }
+        expect(requests).toBe(1); expect(posts).toBe(0);
+      } finally { release(); await held; }
+      await expect(source.ref(REF)).rejects.toMatchObject({ what: "isolated source abandoned" });
+      expect(requests).toBe(1);
+    }
   } finally { clock.mockRestore(); }
 });
 
@@ -350,5 +375,207 @@ test("isolated abandonment survives late fetch and cleanup settlement without co
       }
       expect(requests).toBe(2);
     }
+  } finally { vi.useRealTimers(); }
+});
+
+const v2Options = { ...isolatedOptions, isolateObjects: { ownedBytes: 32 * isolatedWire, protocol: "v2" as const } };
+const v2Advertisement = (capabilities = ["fetch=shallow filter"], lineEnding = "\n") => new Response(Buffer.concat([
+  pkt(`version 2${lineEnding}`), ...capabilities.map(line => pkt(`${line}${lineEnding}`)), Buffer.from("0000"),
+]), { headers: { "content-type": "application/x-git-upload-pack-advertisement" } });
+const band = (channel: number, data: Uint8Array = new Uint8Array()) => {
+  const size = data.length + 5;
+  return Buffer.concat([Buffer.from(size.toString(16).padStart(4, "0")), Buffer.from([channel]), data]);
+};
+const v2Bytes = (pack: Uint8Array, before: readonly Uint8Array[] = [], lineEnding = "\n") => {
+  const pieces = [...before, pkt(`packfile${lineEnding}`), band(1)]; // legal empty keepalive
+  for (let at = 0; at < pack.length; at += 65515) pieces.push(band(1, pack.subarray(at, at + 65515)));
+  return Buffer.concat([...pieces, Buffer.from("0000")]);
+};
+const v2Response = (body: Uint8Array) => new Response(body, { headers: { "content-type": "application/x-git-upload-pack-result" } });
+
+// Actual Git, with filter enabled but v0 nonadvertised-want permissions
+// explicitly disabled. This is a local boundary witness, not hosted support.
+test("opt-in v2 fetch reads exact nonadvertised objects in two requests and keeps ref reads on v0", async () => {
+  const remote = bare();
+  git(remote, ["config", "uploadpack.allowFilter", "true"]);
+  git(remote, ["config", "uploadpack.allowReachableSHA1InWant", "false"]);
+  git(remote, ["config", "uploadpack.allowTipSHA1InWant", "false"]);
+  const content = put(remote, "blob", "selected\n");
+  const large = put(remote, "blob", "unrelated material\n".repeat(100_000));
+  const root = put(remote, "tree", Buffer.concat([Buffer.from("100644 other\0"), Buffer.from(large, "hex"), Buffer.from("100755 selected\0"), Buffer.from(content, "hex")]));
+  const first = put(remote, "commit", commitText(root, [], "root"));
+  let head = first;
+  for (let n = 0; n < 40; n++) head = put(remote, "commit", commitText(root, [head], `history ${n}`));
+  setRef(remote, REF, head);
+  const host = new Host(remote, TOKEN);
+  const requests: { method: string; protocol: string | null; body: string }[] = [];
+  const packs: { bytes: number; count: number }[] = [];
+  const source = new SmartHttpSource({ ...v2Options, fetch: async request => {
+    requests.push({ method: request.method, protocol: request.headers.get("git-protocol"), body: await request.clone().text() });
+    const response = await host.upstream(request);
+    if (request.method !== "POST") return response;
+    const raw = Buffer.from(await response.arrayBuffer()), start = raw.indexOf("PACK");
+    packs.push({ bytes: raw.length, count: start < 0 ? -1 : raw.readUInt32BE(start + 8) });
+    return new Response(raw, { status: response.status, headers: response.headers });
+  } });
+  const reader = new Reader(source);
+  expect(await reader.commit(head)).toMatchObject({ id: head, tree: root });
+  expect((await reader.tree(root)).map(row => [new TextDecoder().decode(row.name), row.mode, row.id])).toEqual([["other", "100644", large], ["selected", "100755", content]]);
+  expect(new TextDecoder().decode(await reader.blob(content))).toBe("selected\n");
+  expect((await reader.commit(first)).parents).toEqual([]);
+  expect(requests.map(row => [row.method, row.protocol])).toEqual(Array.from({ length: 4 }, () => [["GET", "version=2"], ["POST", "version=2"]]).flat());
+  expect(requests.filter(row => row.method === "POST").map(row => row.body)).toEqual([head, root, content, first].map(id =>
+    `${pkt("command=fetch\n").toString()}0001${pkt(`want ${id}\n`).toString()}${pkt("deepen 1\n").toString()}${pkt("filter tree:0\n").toString()}${pkt("no-progress\n").toString()}${pkt("done\n").toString()}0000`));
+  expect(packs.every(row => row.count === 1)).toBe(true);
+  expect(packs.reduce((bytes, row) => bytes + row.bytes, 0)).toBeLessThan(5000);
+  expect(await source.ref(REF)).toBe(head);
+  expect(await source.refs("refs/heads/", 2)).toEqual([{ ref: REF, target: head }]);
+  expect(requests.slice(-2).map(row => [row.method, row.protocol])).toEqual([["GET", null], ["GET", null]]);
+});
+
+test("opt-in v2 requires its complete bounded capability advertisement without a POST or v0 fallback", async () => {
+  const id = "a".repeat(40);
+  const cases = [
+    () => v2Advertisement(["fetch=shallow filter"], "\n\n"),
+    () => v2Advertisement(["fetch=shallow filter\n"]),
+    () => v2Advertisement(["fetch=shallow filter"], "\r\n"),
+    () => v2Advertisement([]),
+    () => v2Advertisement(["fetch=shallow"]),
+    () => v2Advertisement(["fetch=filter"]),
+    () => v2Advertisement(["fetch=shallow filter", "fetch=shallow filter"]),
+    () => v2Advertisement(["fetch=shallow filter", "object-format=sha256"]),
+    () => v2Advertisement(["fetch=shallow filter", "object-format=sha1", "object-format=sha1"]),
+    () => v2Advertisement(["fetch=shallow filter", "bad key=value"]),
+    () => new Response(Buffer.concat([pkt("# service=git-upload-pack\n"), Buffer.from("0000"), pkt(`${id} ${REF}\0shallow filter allow-reachable-sha1-in-want\n`), Buffer.from("0000")]), { headers: { "content-type": "application/x-git-upload-pack-advertisement" } }),
+    () => new Response(Buffer.concat([pkt("version 2\n"), pkt("fetch=shallow filter\n"), Buffer.from("00000002")]), { headers: { "content-type": "application/x-git-upload-pack-advertisement" } }),
+  ];
+  for (const response of cases) {
+    let calls = 0;
+    const source = new SmartHttpSource({ ...v2Options, fetch: request => {
+      calls++; expect(request.method).toBe("GET"); expect(request.headers.get("git-protocol")).toBe("version=2");
+      return Promise.resolve(response());
+    } });
+    await expect(source.object(id, 1024)).rejects.toBeInstanceOf(GitRefusal);
+    expect(calls).toBe(1);
+  }
+  let calls = 0;
+  const bounded = new SmartHttpSource({ ...v2Options, bounds: { ...READ_BOUNDS, refs: 1 }, fetch: () => {
+    calls++; return Promise.resolve(v2Advertisement(["a=one", "b=two", "c=three", "fetch=shallow filter"]));
+  } });
+  await expect(bounded.object(id, 1024)).rejects.toMatchObject({ reason: "too-large", what: "upload advertisement packets" });
+  expect(calls).toBe(1);
+});
+
+test("opt-in v2 validates sections and binary sidebands before exact pack admission", async () => {
+  const { remote, head } = repository();
+  const smallBlob = put(remote, "blob", "other\n");
+  const single = onePack(remote, head), blob = onePack(remote, smallBlob);
+  const run = (body: Uint8Array, id = head, limit = isolatedWire, lineEnding = "\n") => {
+    let calls = 0;
+    const source = new SmartHttpSource({ ...v2Options, fetch: request => {
+      calls++;
+      return Promise.resolve(request.method === "GET" ? v2Advertisement(["unknown=ignored", "unknown=also-ignored", "fetch=shallow filter", "object-format=sha1"], lineEnding) : v2Response(body));
+    } });
+    return { outcome: source.object(id, limit), calls: () => calls };
+  };
+  // The same text packets are valid with or without their optional final LF.
+  for (const lineEnding of ["\n", ""]) {
+    for (const before of [[], [pkt(`shallow-info${lineEnding}`), Buffer.from("0001")], [pkt(`shallow-info${lineEnding}`), pkt(`shallow ${head}${lineEnding}`), Buffer.from("0001")]]) {
+      const check = run(v2Bytes(single, before, lineEnding), head, isolatedWire, lineEnding);
+      expect((await check.outcome).type).toBe("commit"); expect(check.calls()).toBe(2);
+    }
+  }
+  // Binary channels are split at arbitrary positions; progress is ignored,
+  // including bytes that cannot be mistaken for another section or a pack.
+  const split = Buffer.concat([pkt("packfile\n"), band(1), band(1, single.subarray(0, 7)), band(2, Buffer.from([255, 0, 10])), band(1, single.subarray(7)), Buffer.from("0000")]);
+  expect((await run(split).outcome).type).toBe("commit");
+  const corrupt = new Uint8Array(single); corrupt[corrupt.length - 1]! ^= 1;
+  const paired = new Uint8Array(execFileSync("git", ["-C", remote, "pack-objects", "--stdout"], {
+    input: `${head}\n${smallBlob}\n`, maxBuffer: maxBytes,
+    env: { PATH: process.env["PATH"] ?? "/usr/bin:/bin", GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: "/dev/null" },
+  }));
+  // The response really contains two valid objects. Its refusal must be the
+  // isolated count guard, rather than a later checksum or framing failure.
+  expect((await decodePack(paired, { maxBytes })).map(object => object.id).sort()).toEqual([head, smallBlob].sort());
+  const delta = Buffer.alloc(33); delta.write("PACK"); delta.writeUInt32BE(2, 4); delta.writeUInt32BE(1, 8); delta[12] = 0x60;
+  const broken = [
+    v2Bytes(single, [pkt("shallow-info\n\n"), Buffer.from("0001")]),
+    v2Bytes(single, [pkt("shallow-info\n"), pkt(`shallow ${head}\n\n`), Buffer.from("0001")]),
+    Buffer.concat([pkt("packfile\n\n"), band(1, single), Buffer.from("0000")]),
+    Buffer.concat([pkt("acknowledgments\n"), pkt("NAK\n"), Buffer.from("0001"), v2Bytes(single)]),
+    v2Bytes(single, [pkt("shallow-info\n"), pkt(`shallow ${"f".repeat(40)}\n`), Buffer.from("0001")]),
+    v2Bytes(single, [pkt("shallow-info\n"), pkt(`shallow ${head}\n`), pkt(`shallow ${head}\n`), Buffer.from("0001")]),
+    v2Bytes(single, [pkt("shallow-info\n"), pkt(`unshallow ${head}\n`), Buffer.from("0001")]),
+    v2Bytes(single, [pkt("shallow-info\n")]),
+    v2Bytes(single, [pkt("wanted-refs\n"), Buffer.from("0001")]),
+    v2Bytes(single, [pkt("packfile-uris\n"), Buffer.from("0001")]),
+    v2Bytes(single, [pkt("packfile\n")]),
+    Buffer.concat([pkt("packfile\n"), single, Buffer.from("0000")]),
+    Buffer.concat([pkt("packfile\n"), band(4, single), Buffer.from("0000")]),
+    Buffer.concat([pkt("packfile\n"), band(3, Buffer.from(TOKEN)), Buffer.from("0000")]),
+    v2Bytes(single).subarray(0, v2Bytes(single).length - 4),
+    Buffer.concat([v2Bytes(single).subarray(0, v2Bytes(single).length - 4), Buffer.from("0002")]),
+    Buffer.concat([v2Bytes(single), Buffer.from("0002")]),
+    Buffer.concat([pkt("packfile\n"), Buffer.from("0004"), Buffer.from("0000")]),
+    v2Bytes(corrupt),
+  ];
+  for (const body of broken) {
+    const check = run(body);
+    const error: unknown = await check.outcome.then(() => null, error => error);
+    expect(error).toBeInstanceOf(GitRefusal);
+    expect(String(error)).not.toContain(TOKEN);
+    expect(check.calls()).toBe(2);
+  }
+  await expect(run(v2Bytes(paired)).outcome).rejects.toMatchObject({ reason: "too-large", what: "pack objects" });
+  // This deliberately incomplete delta must be rejected at the entry kind,
+  // before any zlib or trailer access; a generic corrupt-pack error is insufficient.
+  await expect(run(v2Bytes(delta)).outcome).rejects.toMatchObject({ reason: "wrong-type", what: "isolated pack entry" });
+  await expect(run(v2Bytes(blob)).outcome).rejects.toMatchObject({ what: "wanted object omitted" });
+  await expect(run(v2Bytes(blob, [pkt("shallow-info\n"), pkt(`shallow ${smallBlob}\n`), Buffer.from("0001")]), smallBlob).outcome).rejects.toMatchObject({ what: "isolated shallow object" });
+  await expect(run(v2Bytes(single), head, 1).outcome).rejects.toMatchObject({ reason: "too-large", what: "isolated object allowance" });
+  await expect(run(new Uint8Array(isolatedWire + 1)).outcome).rejects.toMatchObject({ reason: "too-large", what: "read bytes" });
+  const tag = put(remote, "tag", `object ${head}\ntype commit\ntag example\ntagger Test <test@artroom.invalid> 1700000000 +0000\n\nTag.\n`);
+  await expect(run(v2Bytes(onePack(remote, tag)), tag).outcome).rejects.toMatchObject({ reason: "wrong-type", what: "isolated pack entry" });
+});
+
+test("opt-in v2 retains one deadline and permanently abandons a late exact-object response", async () => {
+  const id = "a".repeat(40);
+  let calls = 0, posts = 0, cancels = 0, cancellationFinished = false, release!: () => void, now = Date.now();
+  const held = new Promise<void>(resolve => { release = resolve; });
+  const clock = vi.spyOn(Date, "now").mockImplementation(() => now);
+  try {
+    const source = new SmartHttpSource({ ...v2Options, timeoutMs: 10_000, fetch: request => {
+      calls++;
+      if (request.method === "POST") posts++;
+      now += 10_001;
+      const body = new ReadableStream<Uint8Array>({ cancel() { cancels++; return held.then(() => { cancellationFinished = true; }); } }, { highWaterMark: 0 });
+      return Promise.resolve(new Response(body, { headers: { "content-type": "application/x-git-upload-pack-advertisement" } }));
+    } });
+    await expect(source.object(id, 1024)).rejects.toMatchObject({ reason: "unreadable", what: "isolated read deadline" });
+    expect(cancels).toBe(1); expect(cancellationFinished).toBe(false);
+    for (const again of [() => source.object(id, 1024), () => source.ref(REF), () => source.refs("refs/heads/", 10)]) {
+      await expect(again()).rejects.toMatchObject({ what: "isolated source abandoned" });
+    }
+    expect(calls).toBe(1);
+    expect(posts).toBe(0);
+  } finally { release(); await held; clock.mockRestore(); }
+  vi.useFakeTimers();
+  try {
+    let calls = 0, pulls = 0, cancels = 0, posted!: () => void, release!: () => void;
+    const began = new Promise<void>(resolve => { posted = resolve; });
+    const held = new Promise<void>(resolve => { release = resolve; });
+    const body = new ReadableStream<Uint8Array>({ pull() { pulls++; }, cancel() { cancels++; } }, { highWaterMark: 0 });
+    const source = new SmartHttpSource({ ...v2Options, timeoutMs: 100, fetch: async request => {
+      calls++;
+      if (request.method === "GET") return v2Advertisement();
+      posted(); await held; return new Response(body, { headers: { "content-type": "application/x-git-upload-pack-result" } });
+    } });
+    const outcome = source.object(id, 1024).then(() => null, (error: unknown) => error);
+    await began; await vi.advanceTimersByTimeAsync(101);
+    expect(await outcome).toMatchObject({ what: "isolated read deadline" });
+    release(); await vi.advanceTimersByTimeAsync(0);
+    expect(pulls).toBe(0); expect(cancels).toBe(1);
+    await expect(source.object(id, 1024)).rejects.toMatchObject({ what: "isolated source abandoned" });
+    expect(calls).toBe(2);
   } finally { vi.useRealTimers(); }
 });

@@ -42,6 +42,7 @@ function fixture(host: "github" | "artifacts", isolated = false, actual?: { at: 
   };
   const started = latch(), posts: Uint8Array[] = [], calls: string[] = [];
   const fetchReceivers: unknown[] = [];
+  const gitProtocols: { method: string; protocol: string | null }[] = [];
   const archive = actual?.archive ?? snapshotCommit([], "fixture archive boundary\n");
   const fetch = async function(this: unknown, request: Request): Promise<Response> {
     calls.push(request.url);
@@ -51,11 +52,19 @@ function fixture(host: "github" | "artifacts", isolated = false, actual?: { at: 
       expect(request.url).toBe("https://api.github.com/repos/demo/repo");
       return Response.json({ id: 71, name: "repo", owner: { id: 17, login: "demo", type: "Organization" }, private: false, full_name: "demo/repo", html_url: "https://github.com/demo/repo", clone_url: remote });
     }
+    gitProtocols.push({ method: request.method, protocol: request.headers.get("git-protocol") });
     if (request.method === "POST") {
       if (request.url === `${remote}/git-upload-pack`) {
         await pauseRead("object");
         const wanted = isolated ? /want ([0-9a-f]{40})/.exec(new TextDecoder().decode(await request.arrayBuffer()))?.[1] : null;
         const pack = await buildPack(isolated ? archive.objects.filter(object => object.id === wanted) : archive.objects, { maxBytes: 64 * 1024 });
+        if (request.headers.get("git-protocol") === "version=2") {
+          expect(host).toBe("artifacts"); expect(isolated).toBe(true);
+          const prefix = utf8(pkt("packfile\n") + (pack.length + 5).toString(16).padStart(4, "0") + "\x01");
+          const body = new Uint8Array(prefix.length + pack.length + 4);
+          body.set(prefix); body.set(pack, prefix.length); body.set(utf8("0000"), prefix.length + pack.length);
+          return new Response(body, { headers: { "content-type": "application/x-git-upload-pack-result" } });
+        }
         const prefix = utf8((isolated ? "0000" : "") + pkt("NAK\n")), body = new Uint8Array(prefix.length + pack.length); body.set(prefix); body.set(pack, prefix.length);
         return new Response(body, { headers: { "content-type": "application/x-git-upload-pack-result" } });
       }
@@ -70,6 +79,10 @@ function fixture(host: "github" | "artifacts", isolated = false, actual?: { at: 
     }
     expect(request.url).toBe(`${remote}/info/refs?service=git-upload-pack`);
     await pauseRead("advertisement");
+    if (request.headers.get("git-protocol") === "version=2") {
+      expect(host).toBe("artifacts");
+      return reply(`${pkt("version 2\n")}${pkt(isolated ? "fetch=shallow filter\n" : "fetch\n")}0000`, "upload-pack-advertisement");
+    }
     const capabilities = isolated ? "shallow filter allow-reachable-sha1-in-want" : "ofs-delta";
     const line = pointer ? `${pointer} ${journalRef(scope.scope)}\0${capabilities}\n` : `${"0".repeat(40)} capabilities^{}\0${capabilities}\n`;
     return reply(`${pkt("# service=git-upload-pack\n")}0000${pkt(line)}0000`, "upload-pack-advertisement");
@@ -98,7 +111,7 @@ function fixture(host: "github" | "artifacts", isolated = false, actual?: { at: 
     return { repository: { ...repository }, at: { ...scope }, ref: journalRef(scope.scope), old: actual?.previous.commit ?? null, commit: archive.commit, objects, credential, allowed: () => true,
       ...(actual ? { incremental: { budget: budget ?? new ArchiveBudget() } } : {}) };
   };
-  return { provider, repository, archive, posts, calls, fetchReceivers, started, request, publish: () => { pointer = archive.commit; }, block: () => { blocked = latch(); return blocked; }, expire: () => { now += 60_000; }, revoked: () => revoked,
+  return { provider, repository, archive, posts, calls, fetchReceivers, gitProtocols, started, request, publish: () => { pointer = archive.commit; }, block: () => { blocked = latch(); return blocked; }, expire: () => { now += 60_000; }, revoked: () => revoked,
     blockRead: (stage: ReadStage, error?: unknown) => {
       const gate = latch(), began = latch(); readBlock = { stage, gate, started: began, ...(error === undefined ? {} : { error }) };
       return { release: gate.release, started: began.promise };
@@ -136,6 +149,7 @@ test.each(["github", "artifacts"] as const)("%s archive send owns its command an
   expect(await running).toEqual({ send: "accepted" }); expect(f.posts).toHaveLength(1);
   const command = new TextDecoder().decode(f.posts[0]);
   expect(command).toContain(journalRef(at.scope)); expect(command).not.toContain("refs/heads/main");
+  expect(f.gitProtocols.every(read => read.protocol === null)).toBe(true);
 });
 
 // These changes happen after the initial check, while actual smart-HTTP
@@ -162,6 +176,7 @@ test.each(["github", "artifacts"] as const)("%s parent reads cap decoded objects
   await expect(f.provider.objects(f.repository, f.archive.commit, { bytes: 64 * 1024, objects: 1 }, () => true)).rejects.toThrow();
   await expect(f.provider.objects(f.repository, f.archive.commit, { bytes: 32, objects: 2 }, () => true)).rejects.toThrow();
   expect(f.posts).toEqual([]);
+  expect(f.gitProtocols.every(read => read.protocol === null)).toBe(true);
 });
 
 // Actual isolated upload/decode, with TEST identity/token/HTTP. A full
@@ -175,6 +190,7 @@ test.each(["github", "artifacts"] as const)("%s incremental parent reads one exa
   expect(f.fetchReceivers).toHaveLength(2);
   expect(f.fetchReceivers.every(receiver => receiver instanceof SmartHttpSource)).toBe(true);
   expect(f.fetchReceivers[0]).toBe(f.fetchReceivers[1]);
+  expect(f.gitProtocols).toEqual(["GET", "POST"].map(method => ({ method, protocol: host === "artifacts" ? "version=2" : null })));
   expect(finishArchiveParentRead(budget)).toEqual({ ordinal: 1, type: "commit", maximum: 1024, phase: "complete", refusal: "none" });
   const stopped = fixture(host, true); stopped.publish();
   await expect(stopped.provider.readObject!(stopped.repository, { id: stopped.archive.commit, type: "commit", maximum: 1024 }, () => true,
@@ -187,6 +203,7 @@ test.each(["github", "artifacts"] as const)("%s incremental parent reads one exa
     unsupportedBudget)).rejects.toMatchObject({ reason: "unreadable", what: "isolated object capabilities" });
   expect(finishArchiveParentRead(unsupportedBudget)).toEqual({ ordinal: 1, type: "commit", maximum: 1024, phase: "advertisement-response", refusal: "isolated-capabilities" });
   expect(unsupported.calls.some(call => call.endsWith("/git-upload-pack"))).toBe(false);
+  expect(unsupported.gitProtocols).toEqual([{ method: "GET", protocol: host === "artifacts" ? "version=2" : null }]);
   expect(f.posts).toEqual([]); expect(stopped.posts).toEqual([]); expect(unsupported.posts).toEqual([]);
 
   // The actual token/identity/HTTP awaits are held, not inferred from a

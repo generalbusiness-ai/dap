@@ -58,8 +58,8 @@ const pendingArchiveSeals = {
   "apps/room/archive-policy.ts": "707d55642fa0a35075614d1f7b02149b8a33f5eb128f0e0ef4b54100aaa1897f",
   "apps/room/archive.ts": "fd0e00f874b6607728bc5a63842a64e41799f1041f9c5952978c2d86dfc048a2",
   "packages/scope/src/archive-host-item.ts": "70ac9b23e986d0f399d9e64748381f97ee6c5f7e39971b9dd3a1fa6d700bbf4e",
-  "packages/scope/src/archive-host.ts": "894a844fce26846a955b717669d5913f7ccd57c6a4eab6d729bd24815717edec", // Parent-read diagnostic reviewed; actual maintained parser output.
-  "packages/scope/src/artifacts-host.ts": "3aaf075454b58ceae380bf9ab667d3a26d173776936ddd63d2bf01bbe865a698",
+  "packages/scope/src/archive-host.ts": "f16f3972e28d1f2bbdc1e98f60f21bc38be82b2d3a3b851e552e6391eb94d0cd", // Parent-read diagnostic reviewed; actual maintained parser output.
+  "packages/scope/src/artifacts-host.ts": "80aac5184db427e83c369ab4d0222276fd7e3fe9792edcacc6d2c3ba6e9e8f2a",
   "packages/scope/src/artifacts-wiring.ts": "3590510139ad5c73a6ff66396b77a83dae5d212bfbcebb332df80154961fd478",
 };
 // Actual maintained parser outputs adopted by root; never infer hashes from intent.
