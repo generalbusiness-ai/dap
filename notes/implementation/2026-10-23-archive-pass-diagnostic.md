@@ -23,6 +23,7 @@ order, return values, limits, and deadlines remain in force.
 | `state` | The returned pass state: `idle`, `disabled`, `retry`, `stopped`, or `confirmed`. `threw` means no return value was captured. |
 | `reason`, `caught` | An allowed archive reason, `none`, or `other`. Arbitrary exception text is omitted. |
 | `cost` | The budget's admitted `entries`, `attempts`, `nodes`, `calls`, `metadata`, and `inputWork`. These are charged work counters, not elapsed time or memory use. |
+| `parentRead` | The last exact parent-object read's fixed phase, requested type and maximum, ordinal, and sanitized refusal category. See [Parent-read diagnostics](2026-10-23-archive-parent-read-diagnostic.md). |
 
 The allowed reasons are `limit`, `timeout`, `unavailable`, `conflict`,
 `mismatch`, `parent`, `missing-input`, `rebuild-mismatch`, and

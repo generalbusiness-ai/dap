@@ -70,23 +70,29 @@ export async function archiveCommandSession(objects: LocalArchiveClone["objects"
           const args = [fileURLToPath(new URL("../../../replay/src/bin.ts", import.meta.url)), "--git", target, "--all", "--expect-journals", "5", "--json", ...(trusted ? ["--trust-published-anchors"] : [])];
           tokenInArgv ||= args.some(arg => arg.includes(token));
           const child = spawn(process.execPath, args, { cwd: root, env: { PATH: process.env["PATH"] ?? "/usr/bin:/bin", HOME: "/nonexistent" }, stdio: ["ignore", "pipe", "pipe"] });
-          const chunks: Buffer[] = [], stdoutChunks: Buffer[] = [], stderrChunks: Buffer[] = []; let size = 0; let over = false;
+          const chunks: Buffer[] = [], stdoutChunks: Buffer[] = [], stderrChunks: Buffer[] = []; let size = 0; let over = false; let failure: Error | undefined;
           const capture = (stream: Buffer[], chunk: Buffer) => { size += chunk.length; if (size > 8 * 1024 * 1024) { over = true; child.kill("SIGKILL"); } else { const owned = Buffer.from(chunk); chunks.push(owned); stream.push(owned); } };
           child.stdout.on("data", (chunk: Buffer) => capture(stdoutChunks, chunk)); child.stderr.on("data", (chunk: Buffer) => capture(stderrChunks, chunk));
           const timer = setTimeout(() => child.kill("SIGKILL"), 30_000);
-          child.on("error", error => { clearTimeout(timer); reject(error); });
+          child.on("error", error => { failure = error; });
           child.on("close", (code, signal) => {
             clearTimeout(timer);
             const output = Buffer.concat(chunks).toString("utf8");
             const stdout = Buffer.concat(stdoutChunks).toString("utf8"), stderr = Buffer.concat(stderrChunks).toString("utf8");
             tokenInOutput ||= output.includes(token) || stdout.includes(token) || stderr.includes(token);
+            if (failure) { reject(failure); return; }
             if (over) { reject(Error("TEST command output bound")); return; }
             // The public executable writes its JSON report to stdout. Stderr
             // is checked for secrets, but is not part of that JSON document.
             try { resolve({ code, signal, report: JSON.parse(stdout) }); } catch { reject(Error("TEST public executable did not return JSON")); }
           });
         });
-        const withoutTrust = await run(false), withTrust = await run(true);
+        // Both commands only read the completed clone. Wait for both owned
+        // children before propagating failure or allowing session cleanup.
+        const [untrusted, trusted] = await Promise.allSettled([run(false), run(true)]);
+        if (untrusted.status === "rejected") throw untrusted.reason;
+        if (trusted.status === "rejected") throw trusted.reason;
+        const withoutTrust = untrusted.value, withTrust = trusted.value;
         return { cloneCode, fetchCode, refs: clonedRefs, tokenInConfig: config.includes(token), tokenInArgv, tokenInOutput, readRequests: requests, withoutTrust, withTrust };
       },
     };
