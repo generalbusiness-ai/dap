@@ -1048,3 +1048,34 @@ as the driver fixture already does. It changes no production exports,
 resolver behavior, assertion, workload, budget or deadline. The import
 error escaped the source review and remains recorded. Both owning compiler
 boundaries and the whole six-case heavy set remain pending a fresh attempt.
+
+
+### All six heavy cases pass with genuine authority
+
+Owner 62336 naturally passed at `1de5a73b7`. Scope test compilation and
+the separate Node-support compiler passed. All six cases in the three
+heavy files started and passed exactly once, with no skips, retries,
+repeats, unexpected cases, guard errors or signals. The original archive
+caps, prices and case deadlines remained unchanged.
+
+The scale case passed in 181.287 seconds, including its strict replay,
+all 9,999 original distinct rule inputs, 10,001 initial one-entry passes,
+4,609 later dense inputs, mixed old and new inputs, restart, immutable
+target refusal and provider conflict controls. Dense inputs took 301
+passes and left 14,609 confirmed retained rule inputs. Maximum dense input
+work was 56,804,738 against 67,108,864, and metadata was 2,789,364 against
+4,194,304. This is measured Native TEST fixture behavior, not deployed
+provider throughput or general performance.
+
+Cadence passed in 63.669 seconds. The two small floor cases passed in
+0.403 and 13.149 seconds. The 30,000-entry floor case passed in 193.085
+seconds, and the 2,000-entry capacity with 10,000 continuing inputs passed
+in 58.933 seconds. Owner wall time was 520.049 seconds, including guards
+and Git. Root adopted outcome `9b89ba9d7ad3079ea07b91a6ec38dd6e51db0633`.
+All original failed attempts and their evidence remain separate.
+
+The stored Page bundle still contains an initializer removed from its
+current CLI dependencies. The maintained Page build, output comparison
+and owning assets check must run against this source before the final
+freeze. The final gate and review also remain pending. No Page output is
+changed merely by this note checkpoint.
