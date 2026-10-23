@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:dc000a870f858d94f4384c6a37a912d695c76dd5","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-host.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fde3f3048ad4cab384d3b6745e0be11f8e9726c7","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-23-archive-pass-diagnostic.md."}
