@@ -209,7 +209,8 @@ parser, failure behavior, health visibility, and other readers.
         "apps/room/demo-creation.ts",
         "packages/scope/src/applications/route.ts",
         "packages/scope/src/scope-index.ts",
-        "packages/scope/src/github-wiring.ts"
+        "packages/scope/src/github-wiring.ts",
+        "packages/scope/src/creation-versions.ts"
       ],
       "parser": "readDeployment: nonempty string of at most 128 UTF-8 bytes; shared by sessions, creation, demo, screens and metrics.",
       "missing": "Sessions unavailable; genuinely absent local creation retains the local API.",
