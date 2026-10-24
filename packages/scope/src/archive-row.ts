@@ -47,6 +47,7 @@ export interface ArchiveRow {
   readonly next: Timestamp | null;
   readonly stopped: { readonly reason: string; readonly where: string | null } | null;
 }
+export interface ArchiveStoredWake { readonly pending: boolean; readonly stopped: boolean; readonly next: Timestamp | null }
 export class ArchiveRowRefusal extends Error {
   readonly reason: "unavailable" | "limit" | "conflict" | "outstanding" | "stopped";
   constructor(reason: ArchiveRowRefusal["reason"]) { super(`archive-row-${reason}`); this.reason = reason; }
@@ -244,6 +245,16 @@ export class ArchiveRows {
     return value as unknown as ArchiveWake;
   }
   wake(budget = new ArchiveBudget()): Timestamp | null { const wake = this.#wake(budget); return wake?.stopped ? null : wake?.next ?? null; }
+  /** Read the actual index, preserving missing versus malformed/oversized.
+   * No row, wake, schema or alarm is created or repaired. */
+  storedWake(budget = new ArchiveBudget()): ArchiveStoredWake | null {
+    const sizes = budget.native(this.#sql, () => ({ metadata: ARCHIVE_ROW_SIZE_METADATA, inputWork: 0 }))
+      .exec("SELECT octet_length(v) AS size, typeof(v) AS type FROM meta WHERE k = ? LIMIT 1", WAKE).toArray();
+    if (!sizes.length) return null;
+    const size = sizes[0]?.["size"];
+    if (sizes.length !== 1 || sizes[0]?.["type"] !== "text" || !natural(size) || size === 0 || size > 256) return refuse("unavailable");
+    return this.#wake(budget) ?? refuse("unavailable");
+  }
   /** Persist a pre-Mark retry before a target or parent lookup can await.
    * The pending flag protects this backoff from new entry notifications;
    * it does not introduce a second commit or selection. */

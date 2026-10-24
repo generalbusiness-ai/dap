@@ -47,6 +47,7 @@ import { Operations, type Outside } from "./operations.ts";
 import { OperatorRecord, sendAgain, type Incident, type Resent } from "./operator.ts";
 import { Dispatcher, Wakes } from "./outbox.ts";
 import { ArchiveDriver, type FixtureArchiveDriverOptions, type RoomArchiveDriverOptions } from "./archive-driver.ts";
+import { archiveRowDiagnostic } from "./archive-operator.ts";
 import { archiveHostItem, type ArchiveHostConfiguration, type ArchiveHostItemAsk } from "./archive-host-item.ts";
 import { GenesisProofs, type ProofTimer } from "./genesis-proof.ts";
 import { EXACT_PROOF_RECEIVER_BOUNDS, ProofBytes } from "./proof-bytes.ts";
@@ -161,6 +162,10 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   #alarmRevision = 0;
   #alarmRunning = 0;
   #archiveAlarmRecovery: Promise<void> | null = null;
+  #archiveDiagnostic: Promise<void> | null = null;
+  #archiveDiagnosticDone = false;
+  #archiveRecoveryQueued = false;
+  #archiveFirstQueued = false;
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
@@ -293,6 +298,10 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
       clock: this.#clock, sessionPreparation: this.#sessionPreparation, flights: this.#queryFlights, source: wiring.applicationDeclarationSource ?? null, births: ports.births ?? null });
     // The session requests that this scope has answered, each until its `notAfter`: one more table that is no part of the store.
     this.#requests = new SessionRequests({ exec: (query, ...bindings) => ctx.storage.sql.exec(query, ...bindings) });
+    // The constructor owns this activation observation. Its synchronous SQL
+    // finishes before any bounded read method begins; ingress awaits only
+    // the retained promise before recovery, not another diagnostic read.
+    const diagnostic = this.#diagnoseArchive();
     // Only bounded control initialization happened above. No read runs a
     // migration quantum; an activated legacy object schedules its owner.
     const pending = store.localSigners.pending(), maintenance = store.signerMaintenance();
@@ -306,12 +315,15 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     // prefix without awaiting host I/O or appending an
     // entry. Generic/fixture deployments retain their old activation behavior.
     if (archive && "production" in archive) {
-      const existing = store.scope(), birth = genesis();
-      if (existing?.status === "active" && birth?.decision === "applied" && archive.admit(existing.at, birth.seed)) {
-        this.#archive?.committed();
-        try { ctx.waitUntil(Promise.resolve(wakes.set()).catch(() => undefined)); }
-        catch { /* Archive scheduling cannot refuse an existing native scope. */ }
-      }
+      const activation = diagnostic.then(() => {
+        const existing = store.scope(), birth = genesis();
+        if (existing?.status === "active" && birth?.decision === "applied" && archive.admit(existing.at, birth.seed)) {
+          this.#archive?.committed();
+          return wakes.set();
+        }
+      }).catch(() => undefined);
+      try { ctx.waitUntil(activation); }
+      catch { /* Archive scheduling cannot refuse an existing native scope. */ }
     }
   }
 
@@ -349,9 +361,34 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     return answer;
   }
 
+  /** One constructor-owned activation observation before recovery. No new caller surface.
+   * A failed read/log is finite and never blocks subsequent ingress. */
+  #diagnoseArchive(): Promise<void> {
+    if (this.#archiveDiagnostic) return this.#archiveDiagnostic;
+    let complete!: () => void;
+    this.#archiveDiagnostic = new Promise<void>(resolve => { complete = resolve; });
+    const observation = archiveRowDiagnostic(this.#readSql, this.#name, () => this.ctx.storage.getAlarm());
+    void observation.then(value => {
+      try { console.info("archive-row-diagnostic-v1", value); } catch { /* tail unavailable */ }
+    }, () => {
+      try { console.info("archive-row-diagnostic-v1", { scope: this.#name, state: "unknown", phase: "unknown", reason: "unknown",
+        confirmed: "unknown", pendingMark: "unknown", storedWake: "unknown", platformAlarm: "unknown" }); } catch { /* tail unavailable */ }
+    }).then(() => { this.#archiveDiagnosticDone = true; complete(); });
+    try { this.ctx.waitUntil(this.#archiveDiagnostic); } catch { /* log failure cannot refuse ingress */ }
+    return this.#archiveDiagnostic;
+  }
+
   /** Recover only scheduling, never an archive pass or a native turn. A
    * canceled alarm can otherwise strand its durable wake in a live object. */
   #recoverArchiveAlarm(): void {
+    if (!this.#archiveDiagnosticDone) {
+      if (!this.#archiveRecoveryQueued) {
+        this.#archiveRecoveryQueued = true;
+        const later = this.#diagnoseArchive().then(() => { this.#archiveRecoveryQueued = false; this.#recoverArchiveAlarm(); });
+        try { this.ctx.waitUntil(later); } catch { /* a later ingress still recovers */ }
+      }
+      return;
+    }
     if (!this.#archive || this.#alarmRunning || this.#archiveAlarmRecovery) return;
     // Quiet scopes need no asynchronous alarm lookup. Re-read after the await.
     if (this.#archive.wake() === null) return;
@@ -380,6 +417,14 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
    * accepts it again. The pass sends nothing twice: an attempt marked sent is never sent again.
    */
   #first(): void {
+    if (!this.#archiveDiagnosticDone) {
+      if (!this.#archiveFirstQueued) {
+        this.#archiveFirstQueued = true;
+        const later = this.#diagnoseArchive().then(() => { this.#archiveFirstQueued = false; this.#first(); });
+        try { this.ctx.waitUntil(later); } catch { /* next ingress retries first-turn work */ }
+      }
+      return;
+    }
     this.#recoverArchiveAlarm();
     if (!this.#fresh) {
       if (this.#operations.reaccepted()) this.ctx.waitUntil(background("dispatch", () => this.#invoke("dispatch", () => this.#operations.run())).catch(() => 0));
@@ -411,7 +456,8 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     });
     return context;
   }
-  #invoke<A>(place: string, work: () => Promise<A>, identity?: OperationalIdentity): Promise<A> {
+  async #invoke<A>(place: string, work: () => Promise<A>, identity?: OperationalIdentity): Promise<A> {
+    await this.#diagnoseArchive();
     if (place !== "alarm") this.#recoverArchiveAlarm();
     const parent = operational();
     if (parent) return parent.place === place ? work() : inOperation({ ...parent, place, turn: { entered: false, known: true }, httpPublic: false }, work);
@@ -423,12 +469,14 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     if (parent) return parent.place === place ? work() : inOperation({ ...parent, place, turn: { entered: false, known: true }, httpPublic: false }, work);
     return measuredSync(this.#context(place), work);
   }
-  #publicInvoke<A>(place: "create" | "acts" | "preparations", work: () => Promise<A>): Promise<A> {
+  async #publicInvoke<A>(place: "create" | "acts" | "preparations", work: () => Promise<A>): Promise<A> {
+    await this.#diagnoseArchive();
     return operational() ? work() : this.#invoke(`rpc:${place}`, work);
   }
   /** The native answer travels untouched beside one operational turn flag. */
   async observed(method: ObservedMethod, args: unknown[], identity: OperationalIdentity, httpPublic = false): Promise<{ value: unknown; turn: boolean }> {
     if (!(OBSERVED_METHODS as readonly string[]).includes(method) || !Array.isArray(args) || args.length > 5) throw Error("Unknown operational route");
+    await this.#diagnoseArchive();
     const base = operationPlace(method), isPublic = ["create", "submit", "prepare"].includes(method);
     const context = this.#context(isPublic && httpPublic !== true ? `rpc:${base}` : base, identity);
     const call = this[method] as (...args: unknown[]) => unknown;
