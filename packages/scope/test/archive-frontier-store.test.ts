@@ -65,7 +65,7 @@ test("frontier Mark and promotion share rollback cuts and the pending proof surv
     // refused before JSON/base64 decoding, below the independent 64 KiB cap.
     sql.exec("UPDATE meta SET v=? WHERE k=?", " ".repeat(archiveFrontierEncodingBound(made.mark.through.seq) + 1), PENDING);
     try { await expect(frontiers.readPending(made.binding, made.mark, budget())).rejects.toMatchObject({ reason: "limit" }); }
-    finally { sql.exec("UPDATE meta SET v=? WHERE k=?", pending[0]!["v"], PENDING); }
+    finally { sql.exec("UPDATE meta SET v=? WHERE k=?", pending[0]!["v"]!, PENDING); }
     expect(values(sql)).toEqual(pending);
   });
   await lane.restart();

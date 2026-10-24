@@ -153,7 +153,7 @@ test("missing v2 parent state seeds once, publishes legacy anchors and then appe
   } };
   for (const wrong of [
     { ...expected, commit: "0".repeat(40) },
-    { ...expected, at: { ...lane.at, inc: "in_aaaaaaaaaaaaaaaaaaaaaaaaaa" } },
+    { ...expected, at: { ...lane.at, inc: "in_aaaaaaaaaaaaaaaaaaaaaaaaaa" as const } },
     { ...expected, through: { ...receipt.through, hash: digestBytes(utf8("TEST wrong head")) } },
   ]) {
     await expect(captureJournalParentFrontier(wrong, local, new ArchiveBudget())).rejects.toBeDefined();
