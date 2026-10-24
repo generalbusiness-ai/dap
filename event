@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7d93aab547ac6c23144219e7a09c7ac8094d2237","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/archive-mcp.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7d9ce4ee4ac7eb0892044dd151476cd19794ca2b","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/credential-store.ts."}
