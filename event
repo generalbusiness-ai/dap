@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ce6aba3bbad4cdbc8acb8fb4a2ab0e2243733148","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/site/host.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ce8e32a241be98ed1f09ff50f19210d2b7ee129f","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/observability-native.test.ts."}
