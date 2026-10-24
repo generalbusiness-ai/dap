@@ -50,7 +50,7 @@ const pendingArchiveSeals = {
   "packages/scope/src/archive-source-window.ts": "4db3f5885e7541f713b9668d1cde655e42be1950dd6af77d5711a323b3582e1c",
   "packages/scope/src/archive-publication.ts": "d8c39d220bc7eea59301478aa553960267aac16f06502b4103a85647c71eb457",
   "packages/scope/src/archive-build.ts": "e1111bfef1fe94cc8436498679395ba1b9b8adba3db8651f4f24d87d68696853",
-  "packages/scope/src/archive-driver.ts": "a3d1bc20aeab36e4153fd40fef3437f6d53b7c3ff432097c68a126ac289a4249", // Native parent transition reviewed; actual maintained parser output.
+  "packages/scope/src/archive-driver.ts": "3792480621bdfa69054f647ce4941cccfada5aa57e6d653808de0cdf1fb966ae", // Native parent transition reviewed; actual maintained parser output.
   "packages/scope/src/archive-row.ts": "91fd40cf8fd7dddb37383bf8daf86fdc30f0da5983ab69dfa3550263331ae12b",
   "packages/scope/src/floor-writer.ts": "fb8fd859844b8d10ba43b477bcaf07ab32fe1bfa1b6684ad9ae70b930d328a11",
   "packages/scope/src/object.ts": "b403bba2d72425b252488d960a7cbb557d1bcc38fb9390760e39b49ac4299df4", // Must match the separately adopted original owner value above.
@@ -58,7 +58,7 @@ const pendingArchiveSeals = {
   "apps/room/archive-policy.ts": "07ea72db6bc58257d3f280ac1e1c7db9296868016493fa926e473ddeb9b6f486",
   "apps/room/archive.ts": "36b2250301a217b6e1c74cd1cea1a65a45390be3679e4a2fd2e809890eb6abf5",
   "packages/scope/src/archive-host-item.ts": "0f9eaddc4000574a1575466592f88c57beecc11efb93e402a568a84fab8ef903",
-  "packages/scope/src/archive-host.ts": "ab91d539daf94c381886d515e9510322e3d79e7cdf48cfd3efe20f2e88a4c75b", // Staged input charges and bounded bootstrap reviewed; actual maintained parser output.
+  "packages/scope/src/archive-host.ts": "e376746b7a1001a47715f666c4777e135bf1c48a162bfffe9c80e0ec913f079f", // Staged input charges and bounded bootstrap reviewed; actual maintained parser output.
   "packages/scope/src/artifacts-host.ts": "378eca9b5c3c197f738cb88f59a5df51d83d52929f614735d0fdc3917df06ac0",
   "packages/scope/src/artifacts-wiring.ts": "937bedd41f5f21953c2fe659634ca732b44620cc98e33e5a43f7945601c58963",
 };
