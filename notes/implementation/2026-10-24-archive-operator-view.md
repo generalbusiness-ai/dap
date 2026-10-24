@@ -39,7 +39,31 @@ The prior source at `03b40dfc1187b297abbcee7c6792da93c29e9de4` passed two Scope
 compiler contexts and 13 cases in original run 96204, accepted by
 `c71e52b1c066679830b2b74bd07e0506bf6fdfd5`. That evidence applies to the prior
 RPC/internal-reader source only. Its proposed identity control was never run.
-The revised source retains six internal-reader purity cases and adds four real
+The revised source retains six warm internal-reader purity cases and adds four
 existing-ingress witnesses for one line, one diagnostic alarm read and ordering
-before recovery. No revised compiler, test, seal, control or gate result is
-claimed yet. Root review and runtime allocation remain pending.
+before recovery. These claims apply to the local fixtures, not deployment.
+
+Original run `20590` at `4fcc3e08` passed both Scope compiler contexts and all
+34 affected cases: 10 operator/diagnostic, 17 driver and 7 row cases. Its
+single terminal report and built-in JSON agree, with zero unhandled errors.
+There were 34 ready callbacks but only 17 individual result callbacks; the
+17 driver results are present in the complete run-end report. The maintained
+runner uses that terminal report. Four clean source/tool/lock/workspace guards
+held; these are not full physical dependency/environment snapshot records.
+
+The stored-name control, original `41674`, removed only the checked native
+metadata scope-name fence. All five stored-state cases then failed the same
+intended `131:31` assertion; the five companions passed, with zero unhandled
+errors and complete terminal callbacks. Its child exited 1 as expected; the
+owner exited 0 after restoring the original bytes, inode, mode and modification
+time. The target change time changed. All other source, Main, tool,
+environment and preparation values stayed fixed. The four full control
+snapshots show only the declared existing cache-cell and empty temporary
+directory allowances in dependencies.
+
+The focused command took 18.06 seconds wall and 24.01 seconds CPU; the control
+took 10.67 seconds wall and 12.27 seconds CPU. Nested costs overlap these
+outer measurements and are not added. These are local partial costs.
+The final gate, exact-head review, landing and deployment remain pending.
+The observations remain warm and non-atomic; no restart permission or cold
+constructor purity is inferred.
