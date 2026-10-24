@@ -1,0 +1,1 @@
+Immutable Git plus finite held external Source reads and review artifact only. No candidate/deps reads or edits, project imports, runtime, captures, tests or installs.
