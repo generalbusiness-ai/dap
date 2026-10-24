@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f95306faf9d635c79f6f0b88b0989bc8dad4dc6b","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-24-kernel-hygiene-evidence/focused-owner-result.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f9c491c8624c8ab128f6fd3d6f050181c696856d","text":"Merge retired a covered predecessor with no successor at its old path."}
