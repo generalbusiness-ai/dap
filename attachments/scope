@@ -1,0 +1,1 @@
+No capture, project runtime, candidate/dependency reads or mutations; null checkpoint refuses capture.
