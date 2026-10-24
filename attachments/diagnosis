@@ -1,1 +1,0 @@
-Original whole109-entry closure necessarily exceeds derived bootstrap byte capacity: even optimistic selected max<=41862;100 checkpoint bodies alone>=44500 (actual lane44800). First count-vs-byte guard and exact runtime selected maximum remain unrecorded. No production reuse defect demonstrated.
