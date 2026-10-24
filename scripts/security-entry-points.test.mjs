@@ -37,12 +37,12 @@ const seals = {
   "packages/scope/src/item-queries.ts": "61ead9996d2c338a26331e04b8576c52425d8d2c88dc86173a7d79108c2ee418",
   "packages/scope/src/applications/projection.ts": "f7d3bb45d448ec654a89f875697f865e1e89baeb5d7529e0db0859bd855b009f",
   "packages/scope/src/destination-host.ts": "b86198499cadddaf47f439ed39f7e44f8da78fbed120e185b787b153f0dc66eb",
-  "packages/mcp/src/hosted.ts": "25e38fd6cb4529d86e1695a0a2abb85b40d5eb6efe13f0ab5830a22dd6474234",
+  "packages/mcp/src/hosted.ts": "12022f8f5816776931b6fdf1ab5bf7910af6371237523c5a8a05ab987fce30c4",
   "packages/mcp/src/hosted-tools.ts": "5bb4dd74b12896bb8f5f5cb366f25bd31af849c2690d0e3ab5d81eb277f94a47", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/service.ts": "e8d95eca7d989a5f883fdae5236865d181b9b1a3129828876df07c5122762836", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/catalogue.ts": "194dd82a6d3f188909485c4c1b9db33aee671b06fb46840e92fc0b8df2a79726", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/inventory.ts": "74c5db16355c5badacf9dc6cc241d20d6400908a160324c07d88db9191b455f8", // Reviewed R5 admission owner; actual maintained parser output.
-  "packages/mcp/src/http.ts": "9a1450bef9f94b55b4751a3368032dfc480555628b48ccfdd55fd43e9c853af8",
+  "packages/mcp/src/http.ts": "757f8b3644c6afdf5d6c0399bd3865f879c8aa4841a7429aaa30c264ee9d76a6",
   "examples/grow/simulator-worker.ts": "2d60dab3a9a5b204b69f15bc5ec3473fa48513888d7ffdb0c1fc179f6fe4883c",
   "examples/grow/simulator-host.ts": "26a8521b98737cae3d80a9fe3b9ac17fb10b11fcf2f8ce973251253bdbf2b7df"
 };

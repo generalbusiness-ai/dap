@@ -84,6 +84,32 @@ function control(room: Room, secret: Uint8Array, action: ControlRequest["action"
   return `Control ${b64url(utf8(canonicalize(request)))}.${signed.sig}`;
 }
 const post = (path: string, authorization: string, body: string, method = "POST") => routed(`${SERVICE}${path}`, { method, headers: { authorization, "content-type": "application/json" }, body });
+const BEARER_LIFETIME = 30 * 86_400_000;
+type IssuedBearer = { agent: string; key: KeyId; bearer: string; bearerExpires: string };
+const shownReceipt = (answer: object) => {
+  const { bearer: _bearer, ...stable } = answer as Record<string, unknown>;
+  return { ...stable, bearerShown: true };
+};
+/** The three actual SQLite answer copies, apart from retained native envelopes. */
+async function storedBearerAnswers(agent: string, membership: string) {
+  const agentObject = env.AGENTS.get(env.AGENTS.idFromString(agent));
+  const registryObject = env.REGISTRIES.get(env.REGISTRIES.idFromName(membership));
+  const [agentAnswers, registryAnswers] = await Promise.all([
+    runInDurableObject(agentObject, (_instance, state) => ({
+      agent: state.storage.sql.exec("SELECT answer, bearer FROM agent WHERE id = 1").toArray(),
+      control: state.storage.sql.exec("SELECT op, answer FROM control ORDER BY op").toArray(),
+    })),
+    runInDurableObject(registryObject, (_instance, state) => state.storage.sql.exec("SELECT op, answer FROM control ORDER BY op").toArray()),
+  ]);
+  return { ...agentAnswers, registry: registryAnswers };
+}
+async function expectBearerNotStored(agent: string, membership: string, bearer: string) {
+  const answers = await storedBearerAnswers(agent, membership);
+  const stored = JSON.stringify(answers);
+  expect(stored).not.toContain(bearer);
+  expect(stored).not.toContain(bearer.slice(bearer.indexOf(".") + 1));
+  return answers;
+}
 
 test.each(["platform:register@3", "platform:register@10"] as const)("H1, the whole recipe: add-member, invite-key, create, enrol, then the pinned client in both revisions acts as the agent (%s)", async registerDefinition => {
   const room = mcpRoom();
@@ -104,19 +130,30 @@ test.each(["platform:register@3", "platform:register@10"] as const)("H1, the who
     const body = JSON.stringify({ link });
     // The controller's create: the registry reserves, the agent object enrols its own key, and the bearer is shown once.
     const created = await room.wait(() => post("/mcp/agents", control(room, rita.secret, "create", M, null, body, "create-1"), body));
-    const answer = await created.json() as { agent: string; key: KeyId; handle: string; bearer: string; member: FactRef };
+    const answer = await created.json() as IssuedBearer & { handle: string; member: FactRef };
     expect([created.status, answer.handle], JSON.stringify(answer)).toEqual([201, "@bot"]);
     expect(answer.bearer.startsWith(`${answer.agent}.`)).toBe(true);
-    // The same op answers the same, including the bearer; another body under the same op is refused.
+    expect(answer.bearerExpires).toBe(timeOf(room.now() + BEARER_LIFETIME));
+    const stored = await expectBearerNotStored(answer.agent, M.scope, answer.bearer);
+    const keptCreate = { status: 201, body: shownReceipt(answer) };
+    expect(JSON.parse(String(stored.agent[0]!["answer"]))).toEqual(keptCreate);
+    expect(JSON.parse(String(stored.control.find(row => row["op"] === "create-1")!["answer"]))).toEqual(keptCreate);
+    expect(JSON.parse(String(stored.registry.find(row => row["op"] === "create-1")!["answer"]))).toEqual(keptCreate);
+    // The same op returns its stable receipt; plaintext is disclosed only by the committing call.
     const again = await room.wait(() => post("/mcp/agents", control(room, rita.secret, "create", M, null, body, "create-1"), body));
-    expect([again.status, (await again.json() as { bearer: string }).bearer]).toEqual([201, answer.bearer]);
-    // Two concurrent creates under one op, from the reservation through the enrolment: one agent, one key, one bearer.
+    expect([again.status, await again.json()]).toEqual([201, shownReceipt(answer)]);
+    // Two concurrent creates retain one identity, but at most one caller receives plaintext.
     const { link: link3 } = await inviteAgent("@bot3");
     const body3 = JSON.stringify({ link: link3 });
     const pair = await room.wait(() => Promise.all([1, 2].map(() => post("/mcp/agents", control(room, rita.secret, "create", M, null, body3, "create-3"), body3))));
-    const answers = await Promise.all(pair.map((r) => r.json() as Promise<{ agent: string; key: string; bearer: string }>));
+    const answers = await Promise.all(pair.map((r) => r.json() as Promise<Partial<IssuedBearer> & { agent: string; key: string }>));
     expect(pair.map((r) => r.status), JSON.stringify(answers)).toEqual([201, 201]);
-    expect([answers[0]!.agent, answers[0]!.key, answers[0]!.bearer]).toEqual([answers[1]!.agent, answers[1]!.key, answers[1]!.bearer]);
+    expect([answers[0]!.agent, answers[0]!.key]).toEqual([answers[1]!.agent, answers[1]!.key]);
+    const disclosed = answers.filter((value): value is IssuedBearer => typeof value.bearer === "string");
+    expect(disclosed).toHaveLength(1);
+    expect(answers.find(value => value.bearer === undefined)).toEqual(shownReceipt(disclosed[0]!));
+    expect(disclosed[0]!.bearerExpires).toBe(timeOf(room.now() + BEARER_LIFETIME));
+    await expectBearerNotStored(disclosed[0]!.agent, M.scope, disclosed[0]!.bearer);
     expect((await registryStub(M.scope).agents()).filter((a) => a.handle === "@bot3")).toHaveLength(1);
     const other = JSON.stringify({ link: (await inviteAgent("@bot2")).link });
     expect((await room.wait(() => post("/mcp/agents", control(room, rita.secret, "create", M, null, other, "create-1"), other))).status, "another request under the same op").toBe(409);
@@ -457,8 +494,10 @@ test("H2, H3 and H4: agents kept apart, control authority, the bearer and revoca
     const rotated = await room.wait(() => post(`/mcp/agents/${bot3.agent}/bearer`, control(room, paul.secret, "bearer", M, bot3.agent, "", "paul-bearer-3"), ""));
     expect([rotated.status, (await rotated.json() as { by: string }).by], "the controller re-issues").toEqual([200, "controller"]);
     const byAdmin = await room.wait(() => post(`/mcp/agents/${bot3.agent}/bearer`, control(room, rita.secret, "bearer", M, bot3.agent, "", "rita-bearer-3"), ""));
-    const adminAnswer = await byAdmin.json() as { by: string; bearer: string };
+    const adminAnswer = await byAdmin.json() as IssuedBearer & { by: string };
     expect([byAdmin.status, adminAnswer.by], "an admin re-issues").toEqual([200, "admin"]);
+    expect(adminAnswer.bearerExpires).toBe(timeOf(room.now() + BEARER_LIFETIME));
+    await expectBearerNotStored(bot3.agent, M.scope, adminAnswer.bearer);
     // Binding refusals: another incarnation, another action than the route, another agent than the path, a differing body, an expired deadline.
     const otherInc = { ...M, inc: newIncarnation(new Uint8Array(16).fill(7)) };
     expect((await room.wait(() => post(`/mcp/agents/${bot3.agent}/bearer`, control(room, rita.secret, "bearer", otherInc, bot3.agent, "", "inc"), ""))).status, "another incarnation").toBe(403);
@@ -468,7 +507,7 @@ test("H2, H3 and H4: agents kept apart, control authority, the bearer and revoca
     expect((await room.wait(() => post(`/mcp/agents/${bot3.agent}/bearer`, control(room, rita.secret, "bearer", M, bot3.agent, "", "late", { notAfter: timeOf(room.now() - 1000) }), ""))).status, "an expired deadline").toBe(400);
     // A repeated op with the same digest answers the same; with a different digest it is refused.
     const same = await room.wait(() => post(`/mcp/agents/${bot3.agent}/bearer`, control(room, rita.secret, "bearer", M, bot3.agent, "", "rita-bearer-3"), ""));
-    expect([same.status, (await same.json() as { bearer: string }).bearer], "the same op answers the same, bearer included").toEqual([200, adminAnswer.bearer]);
+    expect([same.status, await same.json()], "the same op returns its redacted original issuance").toEqual([200, shownReceipt(adminAnswer)]);
     expect((await room.wait(() => post(`/mcp/agents/${bot3.agent}/bearer`, control(room, rita.secret, "bearer", M, bot3.agent, "{}", "rita-bearer-3"), "{}"))).status, "the same op, another digest").toBe(409);
     // H2: two agents in one repository: the same idempotency key in both makes two records; one's session is unknown to the other.
     const first = await room.wait(() => modernCall(bot.bearer, "issue.create", { fields: { definition: DEMO_DIGESTS.issue, title: "by bot", conditions: ["done"] }, values: [canonicalize(issueDemo)], idempotencyKey: "same" }));
@@ -494,7 +533,10 @@ test("H2, H3 and H4: agents kept apart, control authority, the bearer and revoca
     expect(await open.ready, "the stream attached before bearer rotation").toBe(200);
     expect((await agentStub(bot.agent).counts()).streams).toBe(1);
     const reissued = await room.wait(() => post(`/mcp/agents/${bot.agent}/bearer`, control(room, rita.secret, "bearer", M, bot.agent, "", "rita-bearer-bot"), ""));
-    const botNew = (await reissued.json() as { bearer: string }).bearer;
+    const renewal = await reissued.json() as IssuedBearer;
+    const botNew = renewal.bearer;
+    expect(renewal.bearerExpires).toBe(timeOf(room.now() + BEARER_LIFETIME));
+    await expectBearerNotStored(bot.agent, M.scope, botNew);
     expect(await open.ended, "the stream closed").toBe(200);
     expect(open.text(), "with a final event").toContain("event: end");
     expect((await mcp(bot.bearer, "POST", { "mcp-protocol-version": MODERN, "mcp-method": "tools/list" }, { jsonrpc: "2.0", id: 1, method: "tools/list", params: { _meta: META } })).status).toBe(401);
@@ -508,7 +550,7 @@ test("H2, H3 and H4: agents kept apart, control authority, the bearer and revoca
     expect(await until(() => afterListen.text().includes("acknowledged"))).toBe(true);
     expect((await agentStub(bot.agent).counts()).streams).toBe(2);
     const replayed = await room.wait(() => post(`/mcp/agents/${bot.agent}/bearer`, control(room, rita.secret, "bearer", M, bot.agent, "", "rita-bearer-bot"), ""));
-    expect([replayed.status, (await replayed.json() as { bearer: string }).bearer]).toEqual([200, botNew]);
+    expect([replayed.status, await replayed.json()]).toEqual([200, shownReceipt(renewal)]);
     await settle();
     expect((await agentStub(bot.agent).counts()).streams, "the replay disturbed nothing").toBe(2);
     expect(afterStream.text()).not.toContain("event: end");
@@ -539,7 +581,7 @@ test("H2, H3 and H4: agents kept apart, control authority, the bearer and revoca
     const registryObject = env.REGISTRIES.get(env.REGISTRIES.idFromName(M.scope));
     const agentRetention = () => runInDurableObject(agentObject, (instance, state) => ({
       control: state.storage.sql.exec("SELECT op, fingerprint, state, answer, not_after FROM control ORDER BY op").toArray(),
-      agent: state.storage.sql.exec("SELECT state, key, bearer, answer, updated FROM agent WHERE id = 1").toArray(),
+      agent: state.storage.sql.exec("SELECT state, key, bearer, bearer_expires, answer, updated FROM agent WHERE id = 1").toArray(),
       sessions: state.storage.sql.exec("SELECT id, row, created FROM session ORDER BY id").toArray(),
       used: Number(state.storage.sql.exec("SELECT v FROM control_budget WHERE k = 'used'").toArray()[0]!["v"]),
       counts: (instance as PlatformMcpAgent).counts(),
@@ -598,6 +640,24 @@ test("H2, H3 and H4: agents kept apart, control authority, the bearer and revoca
     const paulKey = (await allItems(rita, "membership")).find((i) => i.type === "key" && i.values["id"] === paul.key)!;
     expect((await rita.ok("key.revoke", { on: paulKey.id, fields: { as: "retired" }, idempotencyKey: "revoke-paul" }))["answer"]).toBe("accepted");
     expect((await room.wait(() => post(`/mcp/agents/${bot3.agent}/bearer`, control(room, paul.secret, "bearer", M, bot3.agent, "", "paul-after-revoke"), ""))).status, "a revoked key").toBe(403);
+    // Retention is seven days; bearer validity is its independent fixed
+    // thirty-day deadline. Reset and ordinary use never extend that date.
+    const expires = Date.parse(adminAnswer.bearerExpires);
+    room.advance(expires - room.now() - 1);
+    await agentStub(bot3.agent).reset();
+    const list = () => mcp(bot3Rotated, "POST", { "mcp-protocol-version": MODERN, "mcp-method": "tools/list" }, { jsonrpc: "2.0", id: 1, method: "tools/list", params: { _meta: META } });
+    expect((await list()).status, "one millisecond before expiry").toBe(200);
+    room.advance(1);
+    const expired = await list();
+    expect([expired.status, await expired.text()], "exact expiry refuses before any RPC answer").toEqual([401, ""]);
+    const renewedResponse = await room.wait(() => post(`/mcp/agents/${bot3.agent}/bearer`, control(room, rita.secret, "bearer", M, bot3.agent, "", "renew-expired"), ""));
+    const renewed = await renewedResponse.json() as IssuedBearer;
+    expect(renewedResponse.status, "signed authority can renew an expired bearer").toBe(200);
+    expect(renewed.bearerExpires).toBe(timeOf(room.now() + BEARER_LIFETIME));
+    expect(renewed.bearer).not.toBe(bot3Rotated);
+    expect((await list()).status, "renewal does not revive the old digest").toBe(401);
+    expect((await modernCall(renewed.bearer, "room", {})).status).toBe(200);
+    await expectBearerNotStored(bot3.agent, M.scope, renewed.bearer);
   } finally { done(room); }
 });
 
@@ -1023,14 +1083,26 @@ test("H1 fences: a reset at each adopted fence of a creation resumes with the sa
       if (["kept", "accepted", "complete"].includes(fence)) expect(before.enrol, `${fence}: the envelope is kept`).toMatch(/^sha256:/);
       if (fence === "complete") expect(before.bearer, `${fence}: the bearer was minted before the reply was lost`).toBe(true);
       else expect(before.bearer, `${fence}: no bearer yet`).toBe(false);
+      const beforeAnswers = await storedBearerAnswers(reserved!, M.scope);
+      const beforeAnswer = beforeAnswers.agent[0]?.["answer"];
+      const committedExpiry = beforeAnswer === null || beforeAnswer === undefined ? null
+        : (JSON.parse(String(beforeAnswer)) as { body: { bearerExpires?: string } }).body.bearerExpires;
+      room.advance(2_000);
       // The retry with the same op resumes from the durable state and answers; a further retry answers the same.
       const resumed = await room.wait(() => post("/mcp/agents", control(room, rita.secret, "create", M, null, body, op), body));
-      const answer = await resumed.json() as { agent: string; key: string; bearer: string; member: FactRef };
+      const answer = await resumed.json() as { agent: string; key: string; bearer?: string; bearerShown?: true; bearerExpires: string; member: FactRef };
       expect([resumed.status, answer.agent], `${fence}: resumed ${JSON.stringify(answer)}`).toEqual([201, reserved]);
+      expect(answer.bearerExpires, `${fence}: only terminal issuance starts the lifetime`).toBe(fence === "complete" ? committedExpiry : timeOf(room.now() + BEARER_LIFETIME));
+      if (fence === "complete") expect([answer.bearer, answer.bearerShown], "the committed plaintext was lost, never replayed").toEqual([undefined, true]);
+      else expect(answer.bearer).toMatch(new RegExp(`^${reserved}\\.`));
       const again = await room.wait(() => post("/mcp/agents", control(room, rita.secret, "create", M, null, body, op), body));
-      expect(await again.json(), `${fence}: the same answer`).toEqual(answer);
+      expect(await again.json(), `${fence}: only the stable receipt replays`).toEqual(shownReceipt(answer));
       // One key, one enrol entry signed by it: the envelope kept before the reset is the one admitted, never a second one.
       const after = await agentStub(reserved!).durableFacts();
+      if (fence === "complete") {
+        const afterAnswers = await storedBearerAnswers(reserved!, M.scope);
+        expect(afterAnswers.agent[0]!["bearer"], "a committed issuance never remints on resume").toBe(beforeAnswers.agent[0]!["bearer"]);
+      }
       if (before.key) expect(after.key, `${fence}: the same key`).toBe(before.key);
       if (before.enrol) expect(after.enrol, `${fence}: the same kept envelope`).toBe(before.enrol);
       expect(after.key).toBe(answer.key);
@@ -1040,12 +1112,127 @@ test("H1 fences: a reset at each adopted fence of a creation resumes with the sa
       const entry = (await rita.ok("step", { scope: "membership", seq: enrols[0]!.seq }))["entry"] as { input: { signed: { intent: unknown } } };
       expect(intentDigestOf(entry.input.signed.intent), `${fence}: the admitted intent is the kept one`).toBe(after.enrol);
       expect((await registry.agents()).filter((a) => a.handle === handle).map((a) => [a.key, a.state])).toEqual([[answer.key, "enrolled"]]);
-      // The agent acts with that bearer.
-      const r = await room.wait(() => modernCall(answer.bearer, "room", {}));
+      // A lost terminal disclosure needs a new signed renewal, not another
+      // copy of the creation's secret. Earlier fences issue once on resume.
+      let bearer = answer.bearer;
+      if (bearer === undefined) {
+        const renewed = await room.wait(() => post(`/mcp/agents/${answer.agent}/bearer`, control(room, rita.secret, "bearer", M, answer.agent, "", `renew-${fence}`), ""));
+        expect(renewed.status).toBe(200);
+        bearer = (await renewed.json() as IssuedBearer).bearer;
+        const oldReceipt = await room.wait(() => post("/mcp/agents", control(room, rita.secret, "create", M, null, body, op), body));
+        expect([oldReceipt.status, await oldReceipt.json()], "renewal does not rewrite the creation's original expiry").toEqual([201, shownReceipt(answer)]);
+      }
+      await expectBearerNotStored(answer.agent, M.scope, bearer);
+      const r = await room.wait(() => modernCall(bearer, "room", {}));
       expect(r.status, `${fence}: the bearer serves`).toBe(200);
     }
   } finally { done(room); }
 });
+
+test("legacy hosted bearer migration redacts all three SQLite answers once and requires signed renewal", async () => {
+  const { room, rita } = await roomWithIssues();
+  try {
+    const M = rita.config.repository!.membership, op = "legacy-create";
+    const { link } = await invite(room, rita, "@legacy");
+    const body = JSON.stringify({ link });
+    const response = await room.wait(() => post("/mcp/agents", control(room, rita.secret, "create", M, null, body, op), body));
+    const fresh = await response.json() as IssuedBearer & { handle: string; member: FactRef };
+    expect(response.status).toBe(201);
+    // A real persisted session, without starting an inventory watcher while
+    // this witness reconstructs the old schema. Eviction keeps its row.
+    const initialized = await mcp(fresh.bearer, "POST", { "mcp-protocol-version": LEGACY }, { jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: LEGACY, capabilities: {} } });
+    const session = initialized.headers.get("mcp-session-id");
+    expect([initialized.status, typeof session]).toEqual([200, "string"]);
+    await agentStub(fresh.agent).reset();
+    const agent = env.AGENTS.get(env.AGENTS.idFromString(fresh.agent));
+    const registry = env.REGISTRIES.get(env.REGISTRIES.idFromName(M.scope));
+    const { bearerExpires: _newExpiry, ...legacyBody } = fresh;
+    const { bearer: _legacyBearer, ...legacyStable } = legacyBody;
+    const legacyText = JSON.stringify({ status: 201, body: legacyBody });
+    const redactedText = JSON.stringify({ status: 201, body: { ...legacyStable, bearerShown: true, bearerExpires: null } });
+    const credit = utf8(redactedText).length - utf8(legacyText).length;
+    // Seed the actual pre-cutover layout and accounting, not a migration
+    // test switch. The original protocol stored the agent answer twice but
+    // charged/credited only its control copy.
+    await runInDurableObject(agent, (_instance, state) => state.storage.transactionSync(() => {
+      const old = String(state.storage.sql.exec("SELECT answer FROM control WHERE op=?", op).toArray()[0]!["answer"]);
+      state.storage.sql.exec("UPDATE control SET answer=? WHERE op=?", legacyText, op).toArray();
+      state.storage.sql.exec("UPDATE agent SET answer=? WHERE id=1", legacyText).toArray();
+      state.storage.sql.exec("UPDATE control_budget SET v=v+? WHERE k='used'", utf8(legacyText).length - utf8(old).length - utf8(fresh.bearerExpires).length).toArray();
+      state.storage.sql.exec("CREATE TABLE agent_legacy (id INTEGER PRIMARY KEY CHECK (id=1), op TEXT NOT NULL, seed BLOB NOT NULL, key TEXT NOT NULL, state TEXT NOT NULL, membership TEXT NOT NULL, handle TEXT NOT NULL, config TEXT NOT NULL, bearer TEXT, answer TEXT, created TEXT NOT NULL, updated TEXT NOT NULL)").toArray();
+      state.storage.sql.exec("INSERT INTO agent_legacy SELECT id,op,seed,key,state,membership,handle,config,bearer,answer,created,updated FROM agent").toArray();
+      state.storage.sql.exec("DROP TABLE agent").toArray();
+      state.storage.sql.exec("ALTER TABLE agent_legacy RENAME TO agent").toArray();
+      state.storage.sql.exec("DELETE FROM control_budget WHERE k='bearer-schema'").toArray();
+      state.storage.sql.exec("CREATE TRIGGER r5_migration_abort BEFORE UPDATE OF answer ON agent BEGIN SELECT RAISE(ABORT, 'scripted migration write'); END").toArray();
+    }));
+    await runInDurableObject(registry, (_instance, state) => state.storage.transactionSync(() => {
+      const old = String(state.storage.sql.exec("SELECT answer FROM control WHERE op=?", op).toArray()[0]!["answer"]);
+      state.storage.sql.exec("UPDATE control SET answer=? WHERE op=?", legacyText, op).toArray();
+      state.storage.sql.exec("UPDATE control_budget SET v=v+? WHERE k='used'", utf8(legacyText).length - utf8(old).length).toArray();
+      state.storage.sql.exec("DELETE FROM control_budget WHERE k='bearer-schema'").toArray();
+    }));
+    const agentSnapshot = () => runInDurableObject(agent, (_instance, state) => ({
+      columns: state.storage.sql.exec("PRAGMA table_info(agent)").toArray().map(row => row["name"]),
+      agent: state.storage.sql.exec("SELECT id,op,key,state,membership,handle,config,bearer,answer,created,updated FROM agent").toArray(),
+      control: state.storage.sql.exec("SELECT * FROM control ORDER BY op").toArray(),
+      sessions: state.storage.sql.exec("SELECT * FROM session ORDER BY id").toArray(),
+      budget: state.storage.sql.exec("SELECT * FROM control_budget ORDER BY k").toArray(),
+    }));
+    const registrySnapshot = () => runInDurableObject(registry, (_instance, state) => ({
+      agents: state.storage.sql.exec("SELECT * FROM agents ORDER BY agent").toArray(),
+      control: state.storage.sql.exec("SELECT * FROM control ORDER BY op").toArray(),
+      budget: state.storage.sql.exec("SELECT * FROM control_budget ORDER BY k").toArray(),
+    }));
+    const before = await agentSnapshot(), beforeRegistry = await registrySnapshot();
+    expect(before.columns).not.toContain("bearer_expires");
+    expect(before.sessions.map(row => row["id"])).toContain(session);
+    expect(before.agent[0]!["answer"]).toBe(legacyText);
+    expect(before.control[0]!["answer"]).toBe(legacyText);
+    expect(beforeRegistry.control[0]!["answer"]).toBe(legacyText);
+    await agentStub(fresh.agent).reset();
+    const migrationFailure = await runInDurableObject(agent, instance => {
+      try { (instance as PlatformMcpAgent).used(); }
+      catch (error) { return { threw: true, message: error instanceof Error ? error.message : String(error) }; }
+      return { threw: false, message: null };
+    });
+    expect(migrationFailure.threw, "the actual migration write must fail inside its owning object").toBe(true);
+    expect(migrationFailure.message).toContain("scripted migration write");
+    expect(await agentSnapshot(), "the failed last write rolls back column, answers, credit and marker together").toEqual(before);
+    await runInDurableObject(agent, (_instance, state) => state.storage.sql.exec("DROP TRIGGER r5_migration_abort").toArray());
+    await agentStub(fresh.agent).used();
+    const registryWithReset = registryStub(M.scope) as unknown as { reset(): Promise<void>; agents(): Promise<unknown> };
+    await registryWithReset.reset(); await registryWithReset.agents();
+    const migrated = await agentSnapshot(), migratedRegistry = await registrySnapshot();
+    const migratedBudget = (rows: typeof before.budget) => {
+      const next: Record<string, unknown>[] = [...rows.map(row => ({ ...row, v: row["k"] === "used" ? Number(row["v"]) + credit : row["v"] })), { k: "bearer-schema", v: 1 }];
+      return next.sort((a, b) => String(a["k"]).localeCompare(String(b["k"])));
+    };
+    expect(migrated).toEqual({ ...before, columns: [...before.columns, "bearer_expires"],
+      agent: before.agent.map(row => ({ ...row, answer: redactedText })), control: before.control.map(row => ({ ...row, answer: redactedText })), budget: migratedBudget(before.budget) });
+    expect(migratedRegistry).toEqual({ ...beforeRegistry, control: beforeRegistry.control.map(row => ({ ...row, answer: redactedText })), budget: migratedBudget(beforeRegistry.budget) });
+    const expiry = await runInDurableObject(agent, (_instance, state) => state.storage.sql.exec("SELECT bearer_expires FROM agent").toArray());
+    expect(expiry).toEqual([{ bearer_expires: null }]);
+    await expectBearerNotStored(fresh.agent, M.scope, fresh.bearer);
+    const replay = await room.wait(() => post("/mcp/agents", control(room, rita.secret, "create", M, null, body, op), body));
+    expect([replay.status, await replay.json()]).toEqual([201, JSON.parse(redactedText).body]);
+    await agentStub(fresh.agent).reset(); await agentStub(fresh.agent).used();
+    await registryWithReset.reset(); await registryWithReset.agents();
+    expect(await agentSnapshot(), "second initialization neither extends nor credits again").toEqual(migrated);
+    expect(await registrySnapshot()).toEqual(migratedRegistry);
+    expect((await modernCall(fresh.bearer, "room", {})).status, "null expiry authorizes no legacy digest").toBe(401);
+    const renewedResponse = await room.wait(() => post(`/mcp/agents/${fresh.agent}/bearer`, control(room, rita.secret, "bearer", M, fresh.agent, "", "renew-legacy"), ""));
+    const renewed = await renewedResponse.json() as IssuedBearer;
+    expect(renewedResponse.status).toBe(200);
+    expect(renewed.bearerExpires).toBe(timeOf(room.now() + BEARER_LIFETIME));
+    expect((await modernCall(renewed.bearer, "room", {})).status).toBe(200);
+    expect((await agentStub(fresh.agent).counts()).sessions, "renewal removes the legacy session through its ordinary lifecycle").toBe(0);
+    await expectBearerNotStored(fresh.agent, M.scope, renewed.bearer);
+    await runInDurableObject(agent, (_instance, state) => state.storage.sql.exec("UPDATE agent SET bearer_expires='malformed' WHERE id=1").toArray());
+    await agentStub(fresh.agent).reset();
+    expect((await modernCall(renewed.bearer, "room", {})).status, "a malformed expiry cannot borrow the updated timestamp").toBe(401);
+  } finally { done(room); }
+}, 30_000);
 
 test("H6 through the endpoint: a custody budget refuses full before signing, a storage failure settles nothing and the receipt follows", async () => {
   const { room, rita } = await roomWithIssues();
