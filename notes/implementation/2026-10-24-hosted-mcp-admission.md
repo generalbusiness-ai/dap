@@ -114,9 +114,10 @@ execution. The existing binding scenario now also checks that a removed
 name on its original target reaches no custody write, signs nothing and
 leaves the target head unchanged.
 
-Both failed runs remain evidence. The focused binding and policy checks
-are pending. Checker decision `24f8119c` requires a new ordinary gate at
-the final production commit. That gate includes the previously unreached
+Both failed runs remain evidence. At `909c6d1bfd`, the second repair continuation passed all five compiler
+contexts and all four binding and policy cases, closing naturally in
+11.000 seconds. Checker decision `24f8119c` requires a new ordinary gate
+at the final commit. That gate includes the previously unreached
 Node and Counting browser tail; the separate tail runner remains unused.
 No hosted rollout is claimed.
 
