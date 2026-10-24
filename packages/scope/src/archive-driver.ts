@@ -320,6 +320,11 @@ export class ArchiveDriver {
             after: row.confirmed?.through ?? null, format: row.format, row,
             atomicFirstAttempt: true,
             parentHeld: previous.held, parentUsed: previous.used, maximum: this.#maximum }, budget);
+          if (!adaptive.ok && "deferred" in adaptive) {
+            // The existing pre-Mark defer already owns this retry wake.
+            // Keep all spent work; no Mark, attempt, token or extra debit.
+            return done({ state: "retry", next: scheduled, reason: "limit" });
+          }
           if (adaptive.ok) selectedParentObjects = adaptive.parentObjects;
           else if (adaptive.reason === "mismatch") return done({ state: "retry", next: scheduled ?? this.#later(0), reason: adaptive.reason });
           planned = adaptive;
