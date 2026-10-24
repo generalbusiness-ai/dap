@@ -63,7 +63,7 @@ function transport(lane: Lane) {
             if (value?.data) objects.set(id, peer.data.get(id)!);
             return value;
           } };
-          expect(await new Reader(source).closure(objectId(wanted))).toMatchObject({ complete: true });
+          expect(await new Reader(source).closure(objectId(wanted, "TEST closure want"))).toMatchObject({ complete: true });
           // Encoding a deliberately oversized reply does not grant the
           // production reader this fixture's server-side allowance.
           const pack = await buildPack([...objects.values()], { maxBytes: 16 * 1024 * 1024 });
@@ -310,7 +310,7 @@ test("over-cap recursive bootstrap root refuses without installing either native
   // budget and its original local-finish reserve; no state is installed if
   // the complete remote closure cannot fit the admitted adapter profile.
   await lane.inside(async state => {
-    const sql = archiveSql(state), row = new ArchiveRows(sql, lane.at).load()!, budget = new ArchiveBudget();
+    const sql = archiveSql(state), budget = new ArchiveBudget();
     const identity = { at: lane.at, format: "sha1" as const, repository: digestBytes(utf8(canonicalize(repository))) };
     const frontiers = new ArchiveFrontiers(sql, identity), context = frontiers.beginConfirmedBootstrap(budget);
     expect(context).not.toBeNull(); if (!context) return;

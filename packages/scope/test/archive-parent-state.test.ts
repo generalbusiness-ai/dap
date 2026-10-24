@@ -33,7 +33,11 @@ function selectedPasses(count: number) {
   const at = { scope: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(29)), kind: "register" as const };
   const entries: { body: string; head: Head }[] = [];
   const retained = new Map<string, string>();
-  const passes = [];
+  const passes: {
+    head: Head; after: Head | null; body: string;
+    files: { key: { kind: "rule"; digest: ReturnType<typeof digestBytes> }; body: string }[];
+    description: Record<string, unknown>;
+  }[] = [];
   for (let seq = 0; seq < count; seq++) {
     const input: Entry["input"] = seq === 0
       ? { type: "genesis", seed, inc: at.inc, kind: intent.kind, founding: signIntent(intent, secret), source: null, n: null, message: null, decision: "applied" }
@@ -196,12 +200,14 @@ test("native parent state appends 200 host-shaped passes with two retained files
         expect(await provider.ref(repository, ref, allowed)).toBe(mark.commit);
       } finally { await provider.revokeArchive(credential); }
       sql.transaction(() => { frontiers.promote(prepared, budget); rows.confirm(mark.commit, budget); });
-      const sizes = sql.exec<{ k: string; size: number }>("SELECT k, octet_length(v) AS size FROM meta WHERE k IN ('archive-frontier-confirmed-1', 'archive-frontier-pending-1') ORDER BY k").toArray();
-      expect(sizes).toHaveLength(1); expect(sizes[0]!.k).toBe("archive-frontier-confirmed-1");
-      expect(sizes[0]!.size).toBeLessThanOrEqual(ARCHIVE_FRONTIER_BYTES);
+      const sizes = sql.exec("SELECT k, octet_length(v) AS size FROM meta WHERE k IN ('archive-frontier-confirmed-1', 'archive-frontier-pending-1') ORDER BY k").toArray();
+      expect(sizes).toHaveLength(1); expect(sizes[0]!["k"]).toBe("archive-frontier-confirmed-1");
+      const stateBytes = sizes[0]!["size"];
+      if (typeof stateBytes !== "number") throw new Error("Expected numeric native frontier byte size");
+      expect(stateBytes).toBeLessThanOrEqual(ARCHIVE_FRONTIER_BYTES);
       const cost = budget.admitted();
       for (const key of Object.keys(ARCHIVE_BOUNDS) as (keyof typeof cost)[]) expect(cost[key], `pass ${pass}: ${key}`).toBeLessThanOrEqual(ARCHIVE_BOUNDS[key]);
-      observations.push({ pass, cost, stateBytes: sizes[0]!.size, parentRequests }); commits.push(mark.commit);
+      observations.push({ pass, cost, stateBytes, parentRequests }); commits.push(mark.commit);
     }
   });
   expect(commits).toHaveLength(200); expect(peer.sends).toEqual(commits); expect(parentRequests).toBe(0);
