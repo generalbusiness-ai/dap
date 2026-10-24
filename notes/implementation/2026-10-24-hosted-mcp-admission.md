@@ -97,14 +97,28 @@ The correction keeps descriptor and digest checks before target admission.
 On a target-policy denial, a mounted card runs its existing stale-view
 check before returning the denial. Successful calls add no read. Every
 attempt still checks its actual target before custody or signing, and the
-existing immediately-before-signing view check remains. Test assertions
-and deadlines are unchanged. The service AST seal tracks the corrected
+existing immediately-before-signing view check remains. Existing assertions
+and deadlines are retained. The service AST seal tracks the corrected
 source.
 
-The gate remains failed evidence. A scoped continuation covers both failing
-native files, the three view unit files and the policy file; the Node and
-Counting browser tail commands were unreached and remain to run. No hosted
-rollout is claimed.
+The first repair continuation at `04a4798510` passed all five compiler
+contexts and 17 of 18 tests, including the stale-card case. The binding
+case still failed at the cached descriptor: refreshing the catalogue
+removed the old name before the descriptor check could run.
+
+The next correction preserves a previous descriptor only when its
+configuration is still current and its snapshot was not invalidated.
+Fresh state supplies all authorization. After descriptor comparison, the
+current catalogue must still serve the exact name and declaration before
+execution. The existing binding scenario now also checks that a removed
+name on its original target reaches no custody write, signs nothing and
+leaves the target head unchanged.
+
+Both failed runs remain evidence. The focused binding and policy checks
+are pending. Checker decision `24f8119c` requires a new ordinary gate at
+the final production commit. That gate includes the previously unreached
+Node and Counting browser tail; the separate tail runner remains unused.
+No hosted rollout is claimed.
 
 ## Rollout and deferred policy
 

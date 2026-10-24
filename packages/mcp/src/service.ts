@@ -354,9 +354,11 @@ export class McpService {
     try {
       const generic = Object.hasOwn(this.#generic, name) ? this.#generic[name]! : null;
       if (generic && ((name !== "actions" && name !== "act") || this.mode !== "default")) return this.#genericAdmitted(name) ? await generic.run(given) : failed({ error: "unknown-tool", name });
-      // Derive standing again before admitting a named act.
+      // Keep a known descriptor's identity, but derive its admission from fresh standing.
+      const previous = this.#stale ? null : this.#snapshot;
       const s = await this.snapshot();
-      const binding = this.mode === "generic" ? null : s.bindings.find((b) => b.name === name) ?? null;
+      const cached = previous?.configured === s.configured ? previous.bindings.find((b) => b.name === name) : undefined;
+      const binding = this.mode === "generic" ? null : cached ?? s.bindings.find((b) => b.name === name) ?? null;
       if (!binding || !selected(binding, this.#tools) || !listed(binding, s.read.inventory)) return failed({ error: "unknown-tool", name });
       return await this.#perform(binding, given, binding.kind, undefined, undefined, s);
     } catch (error) { return this.#failure(error, given); }
@@ -478,6 +480,11 @@ export class McpService {
     if (!binding && args["digest"] !== undefined && args["digest"] !== summary.definition) {
       return failed({ error: "stale-descriptor", scope, runs: `${definition.name} ${summary.definition}`, tool: "act, with the digest you read again from actions" });
     }
+    // A cached descriptor can explain a stale target, never authorize a name
+    // that the current catalogue no longer serves.
+    if (binding && !s.bindings.some(current => current.name === binding.name && current.definition === binding.definition
+      && current.kind === binding.kind && current.declaration === binding.declaration && current.digests.includes(summary.definition)
+      && selected(current, this.#tools) && listed(current, s.read.inventory))) return failed({ error: "unknown-tool", name: binding.name });
     // Check the actual target's membership, not another scope served by the
     // same catalogue binding. Generic act and preparation share this fence.
     try {
