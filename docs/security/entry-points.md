@@ -35,6 +35,20 @@ Refusals and unsupported methods are not additional routes.
 - **control**: a signed MCP control request, bound to its action, body, service,
   deadline, repository, and current member authority.
 
+Hosted MCP requires `MCP_ENABLED` to be exactly `"true"`, as well as both
+committed agent namespaces. `MCP_TOOL_ADDITIONS` can add known generic tool
+names to the hosted default list. If present, it must be a JSON array of unique,
+known names within 1024 characters. Missing opt-in or invalid additions return
+404 before the MCP route reads a body or selects an agent or registry object.
+The shared room request setup described below still runs first.
+
+The hosted default omits `create`, `install_application`, `credential`,
+`prepare`, `join`, `record`, `step`, and `text`. An explicit addition affects
+both listing and direct calls. Local MCP services keep their existing default.
+Generated named tools additionally require fresh standing and tool selection
+checks, then the actual target's membership check when called. A remembered tool name
+does not preserve an expired grant or authorize another target.
+
 The parentless serving policy is also passed through `ScopeService.create`
 and the hosted agent's in-process scope fetch. In closed deployed mode,
 child creation additionally passes a whole-lineage serving check before
@@ -153,7 +167,8 @@ the deployed room fetch.
 Configuration: [apps/room/wrangler.jsonc](../../apps/room/wrangler.jsonc).
 
 Entry: `apps/room/worker.ts` → `apps/room/fetch.ts`. Hosted MCP is reachable
-when both committed namespaces are bound. Application redirects require
+when both committed namespaces are bound, `MCP_ENABLED` is exactly `"true"`,
+and `MCP_TOOL_ADDITIONS` is absent or valid. Application redirects require
 `APPLICATION_SCREEN_HOSTS`; sandbox rendering additionally requires
 `APPLICATION_TRUST`. Demo offers require `DEMO_START_CONFIG`. Missing or invalid
 settings refuse those families. The table records source reachability with
@@ -203,7 +218,8 @@ Configuration: [apps/room/wrangler.grow.jsonc](../../apps/room/wrangler.grow.jso
 Entry: `apps/room/worker.grow.ts` → `apps/room/worker.ts` →
 `apps/room/fetch.ts`. The Grow wrapper forwards the same default HTTP handler.
 Hosted MCP is reachable
-when both committed namespaces are bound. Application redirects require
+when both committed namespaces are bound, `MCP_ENABLED` is exactly `"true"`,
+and `MCP_TOOL_ADDITIONS` is absent or valid. Application redirects require
 `APPLICATION_SCREEN_HOSTS`; sandbox rendering additionally requires
 `APPLICATION_TRUST`. Demo offers require `DEMO_START_CONFIG`. Missing or invalid
 settings refuse those families. The table records source reachability with
@@ -412,6 +428,11 @@ and reads public prefix, equality, switch, and method matchers. Rows must match
 in both directions, including the reviewed operation's gate class. Missing,
 extra, duplicate, or differently gated rows fail.
 
+The hosted matcher uses its real deployment policy with explicit valid opt-in.
+A disabled-policy control removes only hosted rows and fails against this
+unchanged enabled-deployment table. That control proves structural dispatch,
+not a deployed setting or a native grant decision.
+
 The room entry model accepts only the exact generic/lending entry and the
 Grow wrapper’s two-hop default re-export chain. It does not follow arbitrary
 module re-exports. Whole-owner seals separately cover the wrapper and archive
@@ -440,7 +461,11 @@ Gate owners: [core.ts](../../packages/scope/src/core.ts),
 [signed-reads.ts](../../packages/scope/src/signed-reads.ts),
 [item-queries.ts](../../packages/scope/src/item-queries.ts),
 [applications/projection.ts](../../packages/scope/src/applications/projection.ts),
-[destination-host.ts](../../packages/scope/src/destination-host.ts), and
-[hosted.ts](../../packages/mcp/src/hosted.ts).
+[destination-host.ts](../../packages/scope/src/destination-host.ts),
+[hosted.ts](../../packages/mcp/src/hosted.ts),
+[hosted-tools.ts](../../packages/mcp/src/hosted-tools.ts),
+[service.ts](../../packages/mcp/src/service.ts),
+[catalogue.ts](../../packages/mcp/src/catalogue.ts), and
+[inventory.ts](../../packages/mcp/src/inventory.ts).
 
 The sandbox stream-only named RPC returns the ordinary response plus a close capability for that exact already-authorized subscription. The capability accepts no target or stream ID. Gateway cancellation waits, within the existing transport window, for its idempotent release acknowledgement before completion; RPC stub disposal is separate and is not an acknowledgement. No public HTTP route, header or general ScopeService operation is added.

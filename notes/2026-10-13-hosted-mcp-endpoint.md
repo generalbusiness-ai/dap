@@ -547,10 +547,28 @@ Start) covers the local `join` tool and this route.
 
 ## 5. Deployment
 
+R5 slice A adds explicit hosted admission: `MCP_ENABLED` must be exactly
+`"true"`, both hosted namespaces must be bound, and the optional
+`MCP_TOOL_ADDITIONS` setting must be valid. Bindings alone no longer open
+the endpoint. The bounded additions and narrow hosted defaults are in
+[the MCP guide](../docs/mcp.md#hosted-admission-settings). Local Node MCP
+defaults are unchanged. The shared actual-target admission also runs before
+generic `install_application` resolves a package or enters custody. It
+adds no R9 trust-schema behavior.
+
+The planner must inventory existing hosted agents' required tools
+(request `92d54432`) and choose each Worker's settings before rollout.
+That explicit deployment choice remains pending. An unset opt-in closes all
+hosted MCP routes, including control routes. This local implementation
+covers R5 items 1–3 only. Its compiler, runtime, seal, gate, and deployment
+results are not yet claimed; see [the slice note](implementation/2026-10-24-hosted-mcp-admission.md).
+R5 items 4–7 and R15 remain open. The historical acceptance and live-check
+recipes below do not prove this slice has been deployed.
+
 `wrangler.jsonc` gains the `REGISTRIES` and `AGENTS` bindings to
-`McpRegistry` and `McpAgent` with a SQLite migration (`v2`). No new
-variable and no new secret: seeds, bearer digests and envelopes live in
-the objects. The redeploy keeps `SESSION_SECRET` and `DEPLOYMENT` with
+`McpRegistry` and `McpAgent` with a SQLite migration (`v2`). That original
+head added no variable. R5 adds the admission settings above, with no new
+secret: seeds, bearer digests and envelopes live in the objects. The redeploy keeps `SESSION_SECRET` and `DEPLOYMENT` with
 `--keep-vars`, from a pinned `wrangler` run from a scratch directory, by
 the planner, after the head lands. The first live check is an agent
 created and enrolled in the hosted demo room by the three steps of

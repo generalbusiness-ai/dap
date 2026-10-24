@@ -60,7 +60,7 @@ import { health } from "./health.ts";
  */
 
 import { DurableObject, RpcTarget, WorkerEntrypoint } from "cloudflare:workers";
-import { CONTROL_BODY_BYTES, HostedAgent, HostedRegistry, controlOf, type AgentPorts, type ControlAnswer, type RegistryPorts } from "@generalbusiness/dap-mcp";
+import { CONTROL_BODY_BYTES, HostedAgent, HostedRegistry, controlOf, hostedMcpTools, type HostedMcpSettings, type AgentPorts, type ControlAnswer, type RegistryPorts } from "@generalbusiness/dap-mcp";
 import { PROPOSED_BOUNDS, ITEM_QUERY_WIRE_BOUNDS } from "@generalbusiness/dap-contract";
 import type { FactRef, Entry, ItemQueryRead, ItemQueryRefusal, Answer, Beside, Cursor, DeclaredDefinition, Digest, OutboxId, Grant, LogPage, PlatformDefinition, Read, ReadRefusal, RetainedInput, ScopeApi, ScopeId, ScopeKind, Seed, SessionAnswer, SessionRefusal, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
 import { b64url, parseStrict, readItemQueryReply, utf8, definitionDigest, intentDigest, isScopeId, positionOf, scopeIdOf } from "@generalbusiness/dap-bytes";
@@ -101,7 +101,7 @@ import { presentsSignedRead } from "./signed-reads.ts";
  * the operator sets it, and no file of this repository holds one.
  * `DEPLOYMENT` is the deployment's name, which a session's token names.
  */
-export interface Env extends GitHubBindings, ArtifactsBindings, ApplicationBindings, MetricEnvironment, CreationAdmission, ScopeIndexEnvironment, ServingEnvironment { SCOPES: DurableObjectNamespace; SESSION_SECRET?: string; DEPLOYMENT?: string }
+export interface Env extends GitHubBindings, ArtifactsBindings, ApplicationBindings, MetricEnvironment, CreationAdmission, ScopeIndexEnvironment, ServingEnvironment, HostedMcpSettings { SCOPES: DurableObjectNamespace; SESSION_SECRET?: string; DEPLOYMENT?: string }
 
 /** Only the fixed internal binding exposes this class; there is no HTTP index route. */
 export class ScopeIndex extends DurableObject<Env> {
@@ -660,13 +660,13 @@ export default {
  * | `DELETE /mcp/agents/<id>` | `Control`, action `retire` | the agent |
  * | `POST`, `GET`, `DELETE /mcp` | `Bearer <id>.<secret>` | the agent |
  */
-export async function mcpRoute(request: Request, env: Partial<Pick<McpEnv, "REGISTRIES" | "AGENTS" | "SCOPES">> & ScopeIndexEnvironment): Promise<Response | null> {
+export async function mcpRoute(request: Request, env: HostedMcpSettings & Partial<Pick<McpEnv, "REGISTRIES" | "AGENTS" | "SCOPES">> & ScopeIndexEnvironment): Promise<Response | null> {
   if (!admittedRequestUrl(request.url)) return json(413, { error: "too-large" });
   const url = new URL(request.url);
   const path = url.pathname;
   if (path !== "/mcp" && !path.startsWith("/mcp/")) return null;
-  // A Worker without the two namespaces bound serves no hosted endpoint.
-  if (!env.REGISTRIES || !env.AGENTS) return json(404, { error: "not-found" });
+  // Explicit opt-in and valid policy precede body reads or namespace addressing.
+  if (hostedMcpTools(env) === null || !env.REGISTRIES || !env.AGENTS) return json(404, { error: "not-found" });
   const { REGISTRIES, AGENTS } = env;
   const answered = (a: ControlAnswer): Response => new Response(JSON.stringify(a.body), { status: a.status, headers: { "content-type": "application/json", "cache-control": "no-store" } });
   if (path === "/mcp") {
@@ -781,6 +781,7 @@ export class McpAgent<E extends McpEnv = McpEnv> extends DurableObject<E> {
     if (this.#agent) return this.#agent;
     const scopes = this.scopes();
     this.#agent = new HostedAgent(sqlOf(this.ctx), {
+      genericTools: hostedMcpTools(this.env) ?? [],
       id: this.ctx.id.toString(), now: () => Date.now(), random: (n) => crypto.getRandomValues(new Uint8Array(n)), observe: observeThrough(scopes),
       ...(this.env.METRICS ? { metrics: { deployment: this.env.DEPLOYMENT ?? "unknown", version: this.env.VERSION_METADATA?.id ?? "unknown", report: (point: MetricPoint) => this.env.METRICS?.writeDataPoint(point) } } : {}),
       fetch: ((url: string, init?: RequestInit) => route(new Request(url, init), scopes, this.env)) as unknown as AgentPorts["fetch"],

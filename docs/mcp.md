@@ -1735,6 +1735,45 @@ agent's by construction; one registry per repository creates agents. The
 design is notes/2026-10-13-hosted-mcp-endpoint.md; this section is what an
 operator and a controller need.
 
+### Hosted admission settings
+
+The endpoint is off unless `MCP_ENABLED` is exactly `"true"`, both
+`REGISTRIES` and `AGENTS` are bound, and `MCP_TOOL_ADDITIONS` is absent or
+valid. A closed endpoint returns `404` before reading the request body or
+addressing either namespace. This applies to the control routes too.
+
+`MCP_TOOL_ADDITIONS` is an optional JSON array of distinct known generic
+tool names, at most 1,024 characters and 18 names. Unknown names,
+duplicates, a different JSON shape, or an oversized setting close the
+endpoint. The hosted default omits `create`, `install_application`,
+`credential`, `prepare`, `join`, `record`, `step`, and `text`. To enable
+needed tools, name them explicitly, for example `["prepare","text"]`.
+The other accepted names are `room`, `inspect`, `application_installation`,
+`items`, `steps`, `sends`, `wait`, `settle`, `actions`, and `act`. The
+existing service mode still decides whether `actions` and `act` are listed.
+These settings do not change local Node MCP defaults.
+
+A named act call takes a fresh inventory snapshot and applies the same
+selection and standing predicates as `tools/list`. Dispatch also checks
+the actual target's membership: standing on scope A cannot admit the same
+operation on ungranted scope B. This target check also applies to generic
+`act`, `prepare` with a kind, and view actions. Generic
+`install_application` checks the actual target before package resolution or
+custody work. This is an admission check, not an R9 trust-schema change.
+Existing code-granted,
+action-null, and unknown-standing cases keep their admission rules. The
+native scope remains the judge of every admitted act.
+
+Before rollout, the planner inventories existing hosted agents and their
+required tools (request `92d54432`), chooses each Worker's opt-in and additions, and deploys
+only after exact-head review. Repository bindings do not establish live
+usage or settings. The explicit deployment choice remains pending. Leaving
+opt-in unset closes existing endpoints. The
+local slice A implementation and its pending verification are recorded in
+[the admission note](../notes/implementation/2026-10-24-hosted-mcp-admission.md).
+Bearer lifecycle, plaintext retention, failure-map bounds, authentication
+ordering, and R15 are separate unfinished work.
+
 ### Routes
 
 | Route | Authorization | What it does |
