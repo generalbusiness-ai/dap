@@ -1,1 +1,1 @@
-{"kind":"assert","text":"Final gate preparation clarification: heldV1 checkpoint is readonly; attemptedmetadatafill refused before any edit/runtime. PreserveV1, publish freshV2 with exact163baaf/c27fa checkpoint. run-gate.py byte-exactde93ddb8 and ordinary fresh evidenceoutputV1 unchanged. Allocationaf9b99b1 applies to this concrete V2Source; no guard or runtime change."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:59d36a4e6ee14e869000f7013ac714be4716ecf4"}
