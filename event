@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/security-entry-points.test.mjs","body":{"commit":"d7aea0b03ce8b9c1afcea7f3f6252b66d0d3630a","path":"scripts/security-entry-points.test.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0252678e5a8f0bbd7ad7d9398e5794742130f681","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-23-archive-input-work/gate-v4/result.json."}
