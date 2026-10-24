@@ -68,8 +68,9 @@ test("legacy activity renews durable idle time; exact expiry closes streams afte
   expect((await s.request(http, "POST", active, "ping", { origin: SERVICE })).status).toBe(403);
   expect((await s.request(http, "POST", active, "ping", { authorization: "Bearer wrong" })).status).toBe(401);
   expect((await s.request(http, "GET", active, "ping", { "mcp-protocol-version": MODERN })).status).toBe(405);
-  const modern = await http.handle(new Request(SERVICE + "/mcp", { method: "POST", headers: { authorization: "Bearer SCRIPTED", "mcp-protocol-version": MODERN, "mcp-session-id": active, "mcp-method": "ping" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "ping", params: { _meta: { [PROTOCOL_META]: MODERN, [CAPABILITIES_META]: {} } } }) }));
+  const modern = await http.handle(new Request(SERVICE + "/mcp", { method: "POST", headers: { authorization: "Bearer SCRIPTED", "mcp-protocol-version": MODERN, "mcp-session-id": active, "mcp-method": "server/discover" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "server/discover", params: { _meta: { [PROTOCOL_META]: MODERN, [CAPABILITIES_META]: {} } } }) }));
   expect(modern.status).toBe(200);
+  expect(await modern.json()).toMatchObject({ result: { supportedVersions: [MODERN, LEGACY] } });
   expect(s.rows.get(active)?.lastActive).toBe(start + SESSION_IDLE_MS - 1);
   expect(http.sessions.has(active)).toBe(true);
   expect((await s.request(http, "POST", active)).status).toBe(404);
@@ -118,56 +119,64 @@ test("restored idle deadlines survive eviction and expiry orders removal after a
 
 test("hosted lifetime closes both stream eras at bounded rechecks and canceled callbacks cannot close a replacement layer", async () => {
   const s = setup(), q = clockQueue(), start = s.now(), expires = start + 30 * 86_400_000;
-  const http = s.layer({ expires, schedule: q.schedule });
-  const id = await s.open(http);
-  expect(q.active()).toHaveLength(0);
-  const legacy = await s.request(http, "GET", id);
-  const listening = await modern(http, "subscriptions/listen", { notifications: { toolsListChanged: true } });
-  expect([legacy.status, listening.status, http.streams]).toEqual([200, 200, 2]);
-  expect(q.active()).toHaveLength(1);
-  expect(q.active()[0]!.delay).toBe(30_000);
-  const oldCallback = q.active()[0]!;
-  s.at(expires - 1);
-  await q.fire(oldCallback);
-  expect(http.streams).toBe(2);
-  expect(q.active()).toHaveLength(1);
-  expect(q.active()[0]!.delay).toBe(1);
-  s.at(expires);
-  await q.fire(q.active()[0]!);
-  expect([http.streams, http.sessions.size, s.rows.size, q.active().length]).toEqual([0, 0, 0, 0]);
-  expect(await legacy.text()).toContain("event: end");
-  expect(await listening.text()).toContain('"resultType":"complete"');
-  expect(s.service.watching).toBe(false);
-  expect((await modern(http, "ping")).status).toBe(401);
+  const layers: McpHttp[] = [];
+  try {
+    const http = s.layer({ expires, schedule: q.schedule });
+    layers.push(http);
+    const id = await s.open(http);
+    expect(q.active()).toHaveLength(0);
+    const legacy = await s.request(http, "GET", id);
+    const listening = await modern(http, "subscriptions/listen", { notifications: { toolsListChanged: true } });
+    expect([legacy.status, listening.status, http.streams]).toEqual([200, 200, 2]);
+    expect(q.active()).toHaveLength(1);
+    expect(q.active()[0]!.delay).toBe(30_000);
+    const oldCallback = q.active()[0]!;
+    s.at(expires - 1);
+    await q.fire(oldCallback);
+    expect(http.streams).toBe(2);
+    expect(q.active()).toHaveLength(1);
+    expect(q.active()[0]!.delay).toBe(1);
+    s.at(expires);
+    await q.fire(q.active()[0]!);
+    expect([http.streams, http.sessions.size, s.rows.size, q.active().length]).toEqual([0, 0, 0, 0]);
+    expect(await legacy.text()).toContain("event: end");
+    expect(await listening.text()).toContain('"resultType":"complete"');
+    expect(s.service.watching).toBe(false);
+    expect((await modern(http, "ping")).status).toBe(401);
 
-  const replacement = s.layer({ expires: expires + 60_000, schedule: q.schedule });
-  const replacementId = await s.open(replacement);
-  const replacementListen = await modern(replacement, "subscriptions/listen", { notifications: { toolsListChanged: true } });
-  expect(q.active()).toHaveLength(1);
-  await oldCallback.run(); // A callback already dequeued when cancellation occurred.
-  expect(replacement.streams).toBe(1);
-  await replacementListen.body!.cancel();
-  expect(q.active()).toHaveLength(0);
-  const last = await s.request(replacement, "GET", replacementId);
-  const abandoned = q.active()[0]!;
-  replacement.abrupt();
-  expect(q.active()).toHaveLength(0);
-  await abandoned.run();
-  expect(replacement.streams).toBe(0);
-  await last.text();
+    const replacement = s.layer({ expires: expires + 60_000, schedule: q.schedule });
+    layers.push(replacement);
+    const replacementId = await s.open(replacement);
+    const replacementListen = await modern(replacement, "subscriptions/listen", { notifications: { toolsListChanged: true } });
+    expect(q.active()).toHaveLength(1);
+    await oldCallback.run(); // A callback already dequeued when cancellation occurred.
+    expect(replacement.streams).toBe(1);
+    await replacementListen.body!.cancel();
+    expect(q.active()).toHaveLength(0);
+    const last = await s.request(replacement, "GET", replacementId);
+    const abandoned = q.active()[0]!;
+    replacement.abrupt();
+    expect(q.active()).toHaveLength(0);
+    await abandoned.run();
+    expect(replacement.streams).toBe(0);
+    await last.text();
 
-  // Cross the deadline after listen admission but inside owner scheduling:
-  // the first two reads admit, the next one must close before Wire starts.
-  const crossingExpiry = s.now() + 1000, rowsBeforeCrossing = structuredClone([...s.rows]);
-  const crossing = s.layer({ expires: crossingExpiry, schedule: q.schedule });
-  let clockReads = 0;
-  crossing.port.now = () => ++clockReads <= 2 ? crossingExpiry - 1 : crossingExpiry;
-  const refused = await modern(crossing, "subscriptions/listen", { notifications: { toolsListChanged: true } });
-  expect(clockReads).toBeGreaterThanOrEqual(3);
-  expect(refused.status, "expiry during owner registration starts no subscription").toBe(401);
-  await crossing.closeAll();
-  expect([crossing.streams, crossing.sessions.size, q.active().length, s.service.watching]).toEqual([0, 0, 0, false]);
-  expect([...s.rows], "a canceled opening changes no stored session").toEqual(rowsBeforeCrossing);
+    // Cross the deadline after listen admission but inside owner scheduling:
+    // the first two reads admit, the next one must close before Wire starts.
+    const crossingExpiry = s.now() + 1000, rowsBeforeCrossing = structuredClone([...s.rows]);
+    const crossing = s.layer({ expires: crossingExpiry, schedule: q.schedule });
+    layers.push(crossing);
+    let clockReads = 0;
+    crossing.port.now = () => ++clockReads <= 2 ? crossingExpiry - 1 : crossingExpiry;
+    const refused = await modern(crossing, "subscriptions/listen", { notifications: { toolsListChanged: true } });
+    expect(clockReads).toBeGreaterThanOrEqual(3);
+    expect(refused.status, "expiry during owner registration starts no subscription").toBe(401);
+    await crossing.closeAll();
+    expect([crossing.streams, crossing.sessions.size, q.active().length, s.service.watching]).toEqual([0, 0, 0, false]);
+    expect([...s.rows], "a canceled opening changes no stored session").toEqual(rowsBeforeCrossing);
+  } finally {
+    await Promise.all(layers.map(layer => layer.closeAll()));
+  }
 });
 
 test("hosted expiry fences deferred openings and initialization while an admitted custodial call still settles once", async () => {
