@@ -1,12 +1,12 @@
-/** Real warm Durable Object RPC, SQLite and platform alarm observations.
+/** Warm Native SQLite/internal-reader and actual ingress log observations.
  * Native Membership authority prepares the archive fixture; its host,
  * credentials and policy admission remain TEST stand-ins. Constructor DDL
  * and activation happen before the observation interval. This is not a
  * cold-object, authenticated installation or hosted recovery witness. */
 import { runInDurableObject } from "cloudflare:test";
 import { expect, onTestFinished, test, vi } from "vitest";
-import { newIncarnation } from "@generalbusiness/dap-bytes";
-import type { ArchiveOperatorView } from "../src/archive-operator.ts";
+import type { ScopeId } from "@generalbusiness/dap-contract";
+import { archiveOperatorState, archiveRowDiagnostic, type ArchiveOperatorView } from "../src/archive-operator.ts";
 import { ArchiveDriver } from "../src/archive-driver.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
 import { at, creation, objectOf, rita } from "./fixtures-native.ts";
@@ -15,8 +15,8 @@ import { ScriptedHost } from "./support/archive-driver.ts";
 import { archivePolicies, archiveRepository, archiveSql } from "./support/archive.ts";
 import { fixtureArchiveWiring } from "./worker.ts";
 
-interface Operator { archiveState(asked: unknown): Promise<ArchiveOperatorView> }
-const surface = (object: DurableObjectStub) => object as unknown as Operator;
+// The old unused RPC is removed. These six cases retain the internal reader's
+// exact metadata purity proof; the existing-ingress log is witnessed below.
 const quote = (name: string) => `"${name.replaceAll('"', '""')}"`;
 function sqlite(state: DurableObjectState) {
   const schema = state.storage.sql.exec<{ type: string; name: string; tbl_name: string; sql: string | null }>(
@@ -34,8 +34,8 @@ function sqlite(state: DurableObjectState) {
 }
 
 /** Traps cover even swallowed attempts. The RPC still runs through the
- * actual namespace stub; no direct call to the projection substitutes it. */
-async function observed(object: DurableObjectStub, asks: readonly unknown[], host?: ScriptedHost, resolve?: () => Promise<typeof archiveRepository>) {
+ * real stored SQLite reader. The separate ingress case uses the namespace stub. */
+async function observed(object: DurableObjectStub, names: readonly ScopeId[], host?: ScriptedHost, resolve?: () => Promise<typeof archiveRepository>) {
   const attempted: string[] = [], queries: string[] = [], restore: (() => void)[] = [];
   const forbidden = (where: string): never => { attempted.push(where); return expect.fail(`operator observation reached ${where}`); };
   const before = await runInDurableObject(object, async (_instance, state) => ({ sql: sqlite(state), alarm: await state.storage.getAlarm() }));
@@ -81,7 +81,7 @@ async function observed(object: DurableObjectStub, asks: readonly unknown[], hos
       restore.push(...setters.map(spy => () => spy.mockRestore()));
     });
     const answers: ArchiveOperatorView[] = [];
-    for (const ask of asks) answers.push(await surface(object).archiveState(ask));
+    for (const name of names) answers.push(await runInDurableObject(object, (_instance, state) => archiveOperatorState(archiveSql(state), name, () => state.storage.getAlarm())));
     // Restore instrumentation before taking the independent full snapshot.
     for (const undo of restore.splice(0).reverse()) undo();
     const after = await runInDurableObject(object, async (_instance, state) => ({ sql: sqlite(state), alarm: await state.storage.getAlarm() }));
@@ -112,7 +112,7 @@ async function fixture(phase: "absent" | "target" | "confirmed" | "stopped" | "p
 }
 
 test.for(["absent", "target", "confirmed", "stopped", "pending"] as const)("a warm operator archive view reports %s without changing SQLite or its alarm", async (phase, context) => {
-  const { lane, host, resolve, row } = await fixture(phase), asked = { at: lane.at, repository: archiveRepository };
+  const { lane, host, resolve, row } = await fixture(phase);
   if (phase === "absent") expect(row).toBeNull();
   else {
     expect(row).not.toBeNull();
@@ -127,11 +127,8 @@ test.for(["absent", "target", "confirmed", "stopped", "pending"] as const)("a wa
     await lane.inside(state => state.storage.deleteAlarm());
   } else await lane.inside(state => state.storage.setAlarm(Date.parse(at(900))));
   const wake = await lane.inside(state => new ArchiveRows(archiveSql(state), lane.at).storedWake());
-  const differentInc = newIncarnation(new Uint8Array(16).fill(255)); expect(differentInc).not.toBe(lane.at.inc);
-  const wrong = [null, { ...asked, extra: true }, { ...asked, at: { ...lane.at, scope: creation().name } },
-    { ...asked, at: { ...lane.at, inc: differentInc } }, ...(row ? [{ ...asked, repository: { ...archiveRepository, name: `${archiveRepository.name}-other` } }] : [])];
-  const measured = await observed(lane.object, [asked, ...wrong], host, resolve), view = measured.answers[0]!;
-  for (const answer of measured.answers.slice(1)) expect(answer).toEqual({ state: "refused", reason: "identity" });
+  const measured = await observed(lane.object, [lane.name, creation().name], host, resolve), view = measured.answers[0]!;
+  expect(measured.answers[1]).toEqual({ state: "unknown", reason: "scope" });
   expect(view.state).toBe("read"); if (view.state !== "read") expect.fail("a warm valid scope must be read");
   expect(view.storedWake).toEqual(wake === null ? { state: "absent" } : { state: "present", ...wake });
   expect(view.platformAlarm).toEqual(phase === "pending" ? { state: "absent" } : { state: "present", at: Date.parse(at(900)) });
@@ -140,11 +137,11 @@ test.for(["absent", "target", "confirmed", "stopped", "pending"] as const)("a wa
     pendingMark: row.pending === null ? null : { commit: row.pending.commit, parent: row.pending.parent, through: row.pending.through,
       markedAt: row.pending.markedAt, ...(row.pending.layout === 2 ? { layout: 2 } : {}) }, attempts: row.attempts, next: row.next });
   (context.task.meta as Record<string, unknown>)["operatorObservation"] = { phase, queries: measured.queries, platformAlarm: measured.alarm,
-    qualification: "Warm namespace RPC only; exact application SQLite and actual platform alarm unchanged. Constructor DDL/activation, authenticated installation, atomic SQL/alarm snapshot and hosted recovery are not established." };
+    qualification: "Warm internal reader only; exact application SQLite and actual platform alarm unchanged. Constructor DDL/activation, authenticated installation, atomic SQL/alarm snapshot and hosted recovery are not established." };
 
   if (phase === "stopped") {
     await lane.inside(state => new ArchiveRows(archiveSql(state), lane.at).stop("TEST PRIVATE REASON", "TEST PRIVATE DETAIL"));
-    const masked = (await observed(lane.object, [asked], host, resolve)).answers[0]!;
+    const masked = (await observed(lane.object, [lane.name], host, resolve)).answers[0]!;
     expect(masked).toEqual({ ...view, row: { ...view.row, reason: "unknown" } });
     expect(JSON.stringify(masked)).not.toContain("TEST PRIVATE");
   }
@@ -152,23 +149,68 @@ test.for(["absent", "target", "confirmed", "stopped", "pending"] as const)("a wa
     // Deliberate metadata damage is not a Native transition. Unknown must
     // stay distinct from absent, without schema repair or synthesized state.
     await lane.inside(state => state.storage.sql.exec("INSERT INTO meta(k,v) VALUES ('archive-row-1','{broken')"));
-    const unknownRow = (await observed(lane.object, [asked], host, resolve)).answers[0]!;
+    const unknownRow = (await observed(lane.object, [lane.name], host, resolve)).answers[0]!;
     expect(unknownRow).toEqual({ state: "read", row: { state: "unknown" }, storedWake: view.storedWake, platformAlarm: view.platformAlarm });
     await lane.inside(state => state.storage.sql.exec("INSERT INTO meta(k,v) VALUES ('archive-wake-1','{broken') ON CONFLICT(k) DO UPDATE SET v = excluded.v"));
-    expect((await observed(lane.object, [asked], host, resolve)).answers).toEqual([
+    expect((await observed(lane.object, [lane.name], host, resolve)).answers).toEqual([
       { state: "read", row: { state: "unknown" }, storedWake: { state: "unknown" }, platformAlarm: view.platformAlarm },
     ]);
     await lane.inside(state => state.storage.sql.exec("UPDATE meta SET v = '{broken' WHERE k = 'scope'"));
-    expect((await observed(lane.object, [asked], host, resolve)).answers).toEqual([{ state: "unknown", reason: "scope" }]);
+    expect((await observed(lane.object, [lane.name], host, resolve)).answers).toEqual([{ state: "unknown", reason: "scope" }]);
   }
 });
 
 test("a warm uncreated operator target stays absent and does not initialize missing metadata", async () => {
   const { name } = creation(), object = objectOf(name);
-  const asked = { at: { scope: name, inc: newIncarnation(new Uint8Array(16).fill(254)), kind: "directory" }, repository: archiveRepository };
   // This first in-object access intentionally allows constructor effects.
   await runInDurableObject(object, (_instance, state) => { expect(sqlite(state).tables.find(table => table.name === "meta")).toBeDefined(); });
-  expect((await observed(object, [asked])).answers).toEqual([{ state: "absent" }]);
+  expect((await observed(object, [name])).answers).toEqual([{ state: "absent" }]);
+  const absent = await runInDurableObject(object, (_instance, state) => archiveRowDiagnostic(archiveSql(state), name, () => state.storage.getAlarm()));
+  expect([absent.state, absent.phase, absent.confirmed, absent.pendingMark, absent.storedWake]).toEqual(["absent", "absent", "unknown", "unknown", "unknown"]);
   await runInDurableObject(object, (_instance, state) => state.storage.sql.exec("DROP TABLE meta"));
-  expect((await observed(object, [asked])).answers).toEqual([{ state: "unknown", reason: "scope" }]);
+  expect((await observed(object, [name])).answers).toEqual([{ state: "unknown", reason: "scope" }]);
+});
+
+
+test.for(["nativeBirth", "readiness", "queryItems", "proofSource"] as const)("existing %s ingress logs one bounded archive diagnostic before recovery per activation", async ingress => {
+  const { lane, row } = await fixture("pending");
+  await lane.restart();
+  const seen: unknown[][] = [], order: string[] = [];
+  let alarmReads = 0;
+  const owned: Promise<unknown>[] = [];
+  let restoreAlarm: (() => void) | undefined;
+  await runInDurableObject(lane.object, (_instance, state) => {
+    const original = state.storage.getAlarm.bind(state.storage);
+    const spy = vi.spyOn(state.storage, "getAlarm").mockImplementation(() => { alarmReads++; return original(); });
+    const originalWait = state.waitUntil.bind(state);
+    const waiting = vi.spyOn(state, "waitUntil").mockImplementation(promise => { owned.push(promise); originalWait(promise); });
+    restoreAlarm = () => { waiting.mockRestore(); spy.mockRestore(); };
+  });
+  const logging = vi.spyOn(console, "info").mockImplementation((...args: unknown[]) => {
+    if (args[0] === "archive-row-diagnostic-v1") { seen.push(args); order.push("diagnostic"); }
+  });
+  const waking = vi.spyOn(ArchiveDriver.prototype, "wake").mockImplementation(() => { order.push("recovery"); return null; });
+  try {
+    const object = lane.object as unknown as { nativeBirth(at: unknown, milliseconds: number): Promise<unknown>; readiness(): Promise<unknown>;
+      queryItems(encoded: unknown, reader: unknown): Promise<unknown>; proofSource(fact: unknown, maxBytes: number, milliseconds: number): Promise<unknown>; serving(): Promise<unknown> };
+    const enter = () => ingress === "nativeBirth" ? object.nativeBirth(null, 1) : ingress === "readiness" ? object.readiness()
+      : ingress === "queryItems" ? object.queryItems(null, null) : object.proofSource(null, 1, 1);
+    await Promise.all([enter(), enter()]);
+    expect(owned.length, "the first ingress must own its diagnostic before any fallback ingress").toBeGreaterThan(0);
+    await Promise.all([...owned]);
+    expect(seen.filter(args => (args[1] as { scope?: string }).scope === lane.name)).toHaveLength(1);
+    expect(alarmReads).toBe(1);
+    await object.serving();
+    await object.serving();
+    const lines = seen.filter(args => (args[1] as { scope?: string }).scope === lane.name);
+    expect(lines).toHaveLength(1);
+    expect(alarmReads).toBe(1);
+    expect(order.indexOf("diagnostic")).toBeGreaterThanOrEqual(0);
+    expect(order.indexOf("recovery")).toBeGreaterThan(order.indexOf("diagnostic"));
+    const value = lines[0]![1] as Record<string, unknown>;
+    expect(Object.keys(value).sort()).toEqual(["confirmed", "pendingMark", "phase", "platformAlarm", "reason", "scope", "state", "storedWake"]);
+    expect(value["phase"]).toBe("pending");
+    expect(value["pendingMark"]).toEqual({ commit: row!.pending!.commit, through: row!.pending!.through });
+    expect(JSON.stringify(value)).not.toMatch(/manifest|credential|token|secret|TEST PRIVATE/);
+  } finally { restoreAlarm?.(); waking.mockRestore(); logging.mockRestore(); }
 });

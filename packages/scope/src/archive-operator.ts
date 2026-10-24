@@ -1,7 +1,7 @@
-/** Namespace-only operator observation. No driver, authority, recovery,
+/** Internal bounded archive observation for the activation diagnostic. No driver, authority, recovery,
  * mutation, schema initialization or raw archive payload is reachable here. */
 import type { ScopeId, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, isHead, isRecord, isScopeRef, natural, parseStrict, same, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, isHead, isRecord, isScopeRef, natural, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import { ArchiveBudget } from "./archive-budget.ts";
 import { ARCHIVE_SCOPE_METADATA_BYTES } from "./archive-pin.ts";
 import { ArchiveRows, type ArchivedPosition, type ArchiveMark, type ArchiveStoredWake } from "./archive-row.ts";
@@ -23,20 +23,12 @@ export interface ArchiveOperatorRow {
   readonly attempts: number;
   readonly next: Timestamp | null;
 }
-export type ArchiveOperatorView = { readonly state: "refused"; readonly reason: "identity" }
-  | { readonly state: "absent" }
+export type ArchiveOperatorView = { readonly state: "absent" }
   | { readonly state: "unknown"; readonly reason: "scope" }
   | { readonly state: "read"; readonly row: Observation<ArchiveOperatorRow>;
     readonly storedWake: Observation<ArchiveStoredWake>;
     readonly platformAlarm: Observation<{ readonly at: number }> };
-interface Ask { at: ScopeRef; repository: DestinationRepository }
 const fields = (value: Record<string, unknown>, expected: string): boolean => Object.keys(value).sort().join(",") === expected;
-function askOf(value: unknown, name: ScopeId | null): Ask | null {
-  if (!isRecord(value) || !fields(value, "at,repository") || !isScopeRef(value["at"]) || !fields(value["at"] as unknown as Record<string, unknown>, "inc,kind,scope") || value["at"].scope !== name) return null;
-  const repository = value["repository"];
-  if (!isRecord(repository) || !fields(repository, "host,id,name,namespace") || Object.values(repository).some(field => typeof field !== "string" || field.length === 0 || field.length > 1024)) return null;
-  return { at: { ...value["at"] }, repository: { host: repository["host"] as string, id: repository["id"] as string, name: repository["name"] as string, namespace: repository["namespace"] as string } };
-}
 function scopeOf(sql: Pick<Sql, "exec">, budget: ArchiveBudget): ScopeRef | null {
   const sizes = budget.native(sql, () => ({ metadata: 96, inputWork: 0 }))
     .exec("SELECT octet_length(v) AS size, typeof(v) AS type FROM meta WHERE k = 'scope' LIMIT 1").toArray();
@@ -57,15 +49,13 @@ const position = (value: ArchivedPosition): ArchivedPosition => ({ commit: value
 /** SQL observations finish before the asynchronous platform-alarm read.
  * They are not an atomic snapshot across those two platform interfaces.
  * The supplied SQL facade has no transaction or mutation implementation. */
-export async function archiveOperatorState(sql: Pick<Sql, "exec">, name: ScopeId | null, asked: unknown, getAlarm: () => Promise<number | null>): Promise<ArchiveOperatorView> {
-  const ask = askOf(asked, name);
-  if (!ask) return { state: "refused", reason: "identity" };
+export async function archiveOperatorState(sql: Pick<Sql, "exec">, name: ScopeId | null, getAlarm: () => Promise<number | null>): Promise<ArchiveOperatorView> {
   const budget = new ArchiveBudget();
   let at: ScopeRef | null;
   try { at = scopeOf(sql, budget); }
   catch { return { state: "unknown", reason: "scope" }; }
   if (at === null) return { state: "absent" };
-  if (!same(at, ask.at)) return { state: "refused", reason: "identity" };
+  if (at.scope !== name) return { state: "unknown", reason: "scope" };
   // load() owns the existing strict, canonical, bounded ArchiveRow decoder.
   // Its synchronous frame is read-only; never construct SqliteStore here.
   const rows = new ArchiveRows({ exec: sql.exec.bind(sql), transaction: read => read() }, at);
@@ -74,7 +64,6 @@ export async function archiveOperatorState(sql: Pick<Sql, "exec">, name: ScopeId
     const value = rows.load(budget);
     if (value === null) row = { state: "absent" };
     else {
-      if (!same(value.repository, ask.repository)) return { state: "refused", reason: "identity" };
       budget.spend({ metadata: 32 * 1024, inputWork: 128 * 1024 });
       const pending = value.pending;
       row = { state: "present", at: { ...value.at }, repository: { ...value.repository }, format: value.format,
@@ -91,4 +80,24 @@ export async function archiveOperatorState(sql: Pick<Sql, "exec">, name: ScopeId
   try { const alarm = await getAlarm(); platformAlarm = alarm === null ? { state: "absent" } : Number.isSafeInteger(alarm) && alarm >= 0 ? { state: "present", at: alarm } : { state: "unknown" }; }
   catch { platformAlarm = { state: "unknown" }; }
   return { state: "read", row, storedWake, platformAlarm };
+}
+
+/** Fixed, secret-free tail projection. Metadata is captured synchronously
+ * before the single platform alarm await in archiveOperatorState. */
+export async function archiveRowDiagnostic(sql: Pick<Sql, "exec">, name: ScopeId | null, getAlarm: () => Promise<number | null>) {
+  let alarmRead = false;
+  let alarm: number | null | undefined;
+  const readAlarm = async () => { alarmRead = true; alarm = await getAlarm(); return alarm; };
+  const view = await archiveOperatorState(sql, name, readAlarm);
+  if (!alarmRead) { try { await readAlarm(); } catch { /* finite unknown */ } }
+  if (view.state !== "read") return { scope: name, state: view.state, phase: view.state, reason: view.state === "unknown" ? view.reason : null,
+    confirmed: "unknown", pendingMark: "unknown", storedWake: "unknown",
+    platformAlarm: alarm === null ? "absent" : Number.isSafeInteger(alarm) && alarm! >= 0 ? alarm! : "unknown" };
+  const row = view.row;
+  return { scope: name, state: row.state, phase: row.state === "present" ? row.phase : row.state,
+    reason: row.state === "present" ? row.reason : row.state === "unknown" ? "unknown" : null,
+    confirmed: row.state === "present" ? row.confirmed === null ? "absent" : { commit: row.confirmed.commit, through: { ...row.confirmed.through } } : row.state,
+    pendingMark: row.state === "present" ? row.pendingMark === null ? "absent" : { commit: row.pendingMark.commit, through: { ...row.pendingMark.through } } : row.state,
+    storedWake: view.storedWake.state === "present" ? { pending: view.storedWake.pending, stopped: view.storedWake.stopped, next: view.storedWake.next } : view.storedWake.state,
+    platformAlarm: view.platformAlarm.state === "present" ? view.platformAlarm.at : view.platformAlarm.state };
 }
