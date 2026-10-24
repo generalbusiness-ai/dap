@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d2a41afb253bd5fa4c474b57139b5a87e3ea5aee","text":"Merge retired a covered predecessor; the successor is at examples/lending/browser/custody.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d2bae9bae8394b764f5e0a6ff6add55ca3f83e9e","text":"Merge retired a covered predecessor; the successor is at apps/room/page/src/shell.ts."}
