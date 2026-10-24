@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/security-settings.test.mjs","body":{"commit":"e645e9d2faf640d171c266a39dd561d7b3fb82e8","path":"scripts/security-settings.test.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1e273c3fa7e795dc9ef69e430de1f0aab9ba9d05","text":"Merge retired a covered predecessor; the successor is at package.json."}
