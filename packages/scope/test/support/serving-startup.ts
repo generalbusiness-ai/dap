@@ -40,7 +40,7 @@ export class StartupServingIndex extends ScopeIndex {
       let key: string | null = null;
       if (request.kind === "signed-read") {
         const value = signedReadForLimits(request.reader); key = value?.verified ? value.actor : null;
-      } else {
+      } else if (request.kind === "creation") {
         const value = boundedParentlessIntent(request.signed); key = value && verifySignedIntent(value) ? value.intent.actor : null;
       }
       const normalized = addressKey(address);
