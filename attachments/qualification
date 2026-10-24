@@ -1,0 +1,1 @@
+Source preparation and AST syntax only. No helper execution, candidate/dependency reads, capture or mutation.
