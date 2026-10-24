@@ -26,7 +26,7 @@ old or malformed lists fail as a whole. Grow's existing row gains only
 to install packages. The planner owns settings review and deployment with
 `--keep-vars`; no binding or package dependency is added.
 
-Source witnesses are prepared but unrun. One MCP Node case uses the actual
+Local witnesses include one MCP Node case using the actual
 dispatch, custody and HTTPS Git opener with scripted room answers and an
 outbound response stand-in: untrusted releases and wrong hosts send no
 package request, a changed policy across the custody wait is rechecked,
@@ -36,9 +36,44 @@ integrity, publisher and native submission checks. Fixture trust rows gain
 explicit TEST hosts; no membership or native authority is fabricated by the
 new check.
 
-Affected compilers, whole-file tests, actual maintained source seals, a
-single host-check negative control, the ordinary gate and exact-head review
-remain pending. The control baseline is null until the healthy affected run
-is naturally closed and accepted. No runtime, parser, compiler, test,
-control, dependency setup, commit, or deployment was performed during
-source preparation. Base: R9 `ba8c3d121bf691336e645bbc6e3c164ab0608363`.
+## Local validation
+
+At source checkpoint `fc42cb67`, original run 18241 completed all nine
+compiler contexts and the body command with exit 0. All 73 cases in 19 whole
+files passed, with 73 collected case identities, 73 started callbacks and
+73 result callbacks, one terminal end, and no unhandled errors, retries or repeats.
+
+The strict focused pipeline and outer owner still exited 1. The static ledger
+omitted the ` > ` separator between the existing describe title and four
+`errors.test.ts` titles (lines 95, 111, 132 and 144, under the describe at
+line 93). The strict ledger consequently records 69 passes, four planned
+names as unrun and four observed names as unexpected. Those four cases
+actually ran and passed. The separate source-to-result mapping supplies
+only those four exact aliases. The original failed artifacts are preserved;
+no source fix or healthy repeat was used. Root accepted the actual result
+in `6993ded4e85b8d131bc625e02aff5c3123d0663a` after the independent audit
+at `/private/tmp/artroom-security-r10-install-trust-closed-validation-audit-20261024-v1/audit.json`.
+
+The maintained producer then completed all six actual source seals at the
+same checkpoint. Root adopted three existing rows (worker, hosted and
+service) and three new rows (trust parser, signed install and native
+resolver) from its output. All six target source files and every unrelated
+map value remain unchanged.
+
+The measured outer commands were separate:
+
+| Command | Wall seconds | CPU seconds |
+|---|---:|---:|
+| Private dependency copy, original 6004 | 2.31 | 1.92 |
+| Compatibility, exit 0 | 0.08 | 0.07 |
+| Affected validation, original 18241 | 119.12 | 110.33 |
+| Six-seal producer, exit 0 | 0.20 | 0.29 |
+
+These are local observations, not the full edit-to-review cost. Nested
+compiler and body costs overlap the outer validation and are not added.
+
+The single host-check control, ordinary gate, exact-head review and final
+R9 integration remain pending. The accepted four-case baseline still needs
+binding to the final control configuration and a fresh physical capture. No deployment is claimed.
+The original implementation base is R9
+`ba8c3d121bf691336e645bbc6e3c164ab0608363`.
