@@ -115,9 +115,10 @@ part of this subtotal. The pinned independent audit and exact raw excerpts
 are in
 `/private/tmp/artroom-archive-capacity-backoff-controls-independent-audit-20261024-v1/manifest.json`.
 
-The separately held corrected operator diagnostic must integrate before
-the final backoff gate. Root will compose the backward-compatible wake
-decoder once and refresh the actual row seal after integration. Its
+The corrected constructor-owned operator diagnostic at `a99c2e6742` is
+composed here before the final backoff gate. The shared wake decoder accepts
+both legacy and capacity-count rows. The actual combined row seal was refreshed
+after integration; the driver and diagnostic owner values are carried unchanged. Its
 current diagnostic projection can keep the same pending, stopped, and
 next fields. The counter does not change those fields' meaning. One
 ordinary gate, exact-head review, and deployment remain pending.
