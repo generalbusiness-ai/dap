@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c113f252003b8e46fb0e8f269810a583f92cfce8","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/application-codec/application.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c15afbbea0431ef66ed260b2fd46522ceef44e79","text":"Merge retired a covered predecessor; the successor is at scripts/public-release.json."}
