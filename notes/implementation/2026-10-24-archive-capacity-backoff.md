@@ -80,8 +80,40 @@ are nested and are not added again.
 
 The independent closed audit is
 `/private/tmp/artroom-archive-capacity-backoff-focused-independent-audit-20261024-v1/manifest.json`.
-The proposed cadence and stale-Mark controls have not run. Their Source
-preparation does not establish a distinguishing outcome.
+Both distinguishing controls completed naturally and restored the original
+source file in place. Cadence original `68556` produced 17 passes and the
+one intended failure: forcing count one yielded count 1 and a wake at
+`00:00:04Z`, while the second deferral expected count 2 and `00:00:06Z`
+(driver test line 309). The failing case stops there; its later cap and
+reset assertions remain evidence from the healthy baseline.
+
+Stale-Mark original `61994` produced seven passes and the one intended
+failure at row test line 196: removing only the payload-row equality fence
+allowed the stale capacity closure to return instead of throwing. The
+preceding assertion verified that an actual Mark had recreated the exact
+captured wake bytes. Assertions after the expected throw are not reached
+in this mutant.
+
+Each control wrapper exited 0 with its test child naturally exiting 1,
+no signal, no runner error, and zero unhandled errors. Cadence has all 18
+terminal rows and ready callbacks, but only its failed case has a result
+callback. Stale-Mark has all eight ready, result, and terminal callbacks.
+The raw assertion locations and values were checked independently of the
+runner's class and title match.
+
+All four physical snapshots agree outside the target and the declared
+Vitest cache allowance. The target retained its device, inode, mode and
+link count; its original bytes, size and modification time were restored.
+Its change time can differ. These remain boundary snapshots rather than
+a continuous process or memory proof.
+
+The external control owners measured 14.12 and 7.03 seconds wall, and
+15.90 and 8.26 seconds CPU, respectively. Their subtotal is 21.15 seconds
+wall and 24.16 seconds CPU at printed 0.01-second precision. Child timing
+is nested and is not added again; capture and preparation costs are not
+part of this subtotal. The pinned independent audit and exact raw excerpts
+are in
+`/private/tmp/artroom-archive-capacity-backoff-controls-independent-audit-20261024-v1/manifest.json`.
 
 The separately held corrected operator diagnostic must integrate before
 the final backoff gate. Root will compose the backward-compatible wake
