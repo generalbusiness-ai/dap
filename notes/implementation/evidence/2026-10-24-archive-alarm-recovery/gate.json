@@ -1,0 +1,403 @@
+{
+  "version": 1,
+  "scope": "Independent closed-data reconciliation of this one ordinary gate; no historical outcome carry or runtime repetition.",
+  "originalClosure": {
+    "session": 30167,
+    "outcome": "natural exit 0",
+    "source": "Root closure message; no process control by auditor",
+    "outerRootReported": {
+      "elapsedSeconds": "1244.52",
+      "userSeconds": "1276.86",
+      "systemSeconds": "161.83",
+      "inclusiveCpuSeconds": "1438.69",
+      "maximumResidentBytes": 2990489600,
+      "precision": "Root-reported rounded /usr/bin/time values; distinct from runner timed child"
+    }
+  },
+  "checkpoint": {
+    "head": "dc1be5821f958a65bc1ee42163b544244643beef",
+    "tree": "ec6603225f4bf0db4707c3a88c830cf8244d5fca",
+    "beforeEqualsAfter": true,
+    "cleanBefore": true,
+    "cleanAfter": true,
+    "lock": {
+      "path": "/private/tmp/artroom-builder-archive-wake-recovery-20261024/package-lock.json",
+      "device": 16777231,
+      "inode": 546150424,
+      "mode": "0o644",
+      "nlink": 1,
+      "bytes": 134284,
+      "sha256": "f9d837e29e9e96874eb59c5eed718b1d824b98d2cc86fda615f1047011ee99cc"
+    },
+    "stamp": {
+      "path": "/private/tmp/artroom-builder-archive-wake-recovery-20261024/node_modules/.artroom-lock-sha256",
+      "device": 16777231,
+      "inode": 546164441,
+      "mode": "0o644",
+      "nlink": 1,
+      "bytes": 65,
+      "sha256": "7581d7116544c7b720345118f70d552c315522cd0095ab560ce14e9094683e6a"
+    },
+    "node": {
+      "path": "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+      "device": 16777231,
+      "inode": 540580399,
+      "mode": "0o555",
+      "nlink": 1,
+      "bytes": 132848,
+      "sha256": "9af7e24478e538455cf4af53a2607f1b79304bd5e25458b041fb855c3c167991"
+    },
+    "npm": {
+      "path": "/opt/homebrew/lib/node_modules/npm/bin/npm-cli.js",
+      "device": 16777231,
+      "inode": 540595648,
+      "mode": "0o755",
+      "nlink": 1,
+      "bytes": 54,
+      "sha256": "8e5f6f3429f8cdbe693cdc29904e9d5a7b127a494bd15c804bd54c7403bfcbe7"
+    },
+    "installReportedSkipped": true,
+    "installStagePresent": false,
+    "qualification": "Compared retained Git/lock/stamp/tool records, not a full Source or dependency-byte snapshot; no Main ref was bound by runner."
+  },
+  "invocation": {
+    "argv": [
+      "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+      "/opt/homebrew/lib/node_modules/npm/bin/npm-cli.js",
+      "run",
+      "gate"
+    ],
+    "cwd": "/private/tmp/artroom-builder-archive-wake-recovery-20261024",
+    "path": "/opt/homebrew/Cellar/node/26.12.1/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "progress": "/private/tmp/artroom-archive-wake-gate-evidence-20261024-v1/progress.jsonl",
+    "mainRefBinding": null,
+    "retries": 0,
+    "timeout": null
+  },
+  "process": {
+    "pid": 86383,
+    "exitCode": 0,
+    "signal": null,
+    "elapsedSeconds": 1244.388271624921,
+    "childrenUserSeconds": 1276.799293,
+    "childrenSystemSeconds": 161.77168,
+    "childrenCpuSeconds": 1438.570973,
+    "costQualification": "npm child and descendants only; stage timings are nested, not additive"
+  },
+  "runnerErrors": [],
+  "runnerAccepted": true,
+  "vitest": {
+    "finalRows": 3524,
+    "uniqueFinalIds": 3524,
+    "states": {
+      "passed": 3521,
+      "skipped": 3
+    },
+    "files": 494,
+    "fileStates": {
+      "passed": 493,
+      "skipped": 1
+    },
+    "runStart": {
+      "event": "run-start",
+      "time": "2026-10-24T09:46:32.063Z",
+      "files": 494
+    },
+    "runEnd": {
+      "event": "run-end",
+      "time": "2026-10-24T10:06:52.590Z",
+      "files": 494,
+      "unhandledErrors": 0,
+      "reason": "passed"
+    },
+    "callbacks": {
+      "case-ready": {
+        "rows": 3507,
+        "uniqueIds": 3506,
+        "states": {
+          "not-reported": 3507
+        },
+        "missingTerminalIds": 18,
+        "missingTerminalStates": {
+          "passed": 18
+        },
+        "duplicates": [
+          {
+            "id": "1746186093_12_6",
+            "count": 2,
+            "project": "scope",
+            "file": "/private/tmp/artroom-builder-archive-wake-recovery-20261024/packages/scope/test/turn.test.ts",
+            "name": "the scope's budget (section 9.2), here 12 entries > after a closing checkpoint nothing is reserved; the next entry that is not a checkpoint is admitted only with a closing checkpoint reserved again"
+          }
+        ]
+      },
+      "case-result": {
+        "rows": 3502,
+        "uniqueIds": 3502,
+        "states": {
+          "passed": 3499,
+          "skipped": 3
+        },
+        "missingTerminalIds": 22,
+        "missingTerminalStates": {
+          "passed": 22
+        },
+        "duplicates": []
+      }
+    },
+    "qualification": "Terminal cases are complete and unique. Incremental callbacks have gaps and one duplicate ready event; these are retained reporting observations, not extra cases or inferred failures."
+  },
+  "nodeBlocks": {
+    "commit-test": [
+      {
+        "tests": 4,
+        "suites": 0,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    ],
+    "cite-test": [
+      {
+        "tests": 7,
+        "suites": 0,
+        "pass": 7,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    ],
+    "test": [
+      {
+        "tests": 39,
+        "suites": 0,
+        "pass": 39,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      {
+        "tests": 55,
+        "suites": 0,
+        "pass": 55,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    ]
+  },
+  "stages": [
+    {
+      "name": "whitespace",
+      "exitCode": 0,
+      "timeSeconds": {
+        "real": 0.03,
+        "user": 0.01,
+        "sys": 0.01
+      },
+      "log": {
+        "path": "/private/tmp/artroom-archive-wake-gate-evidence-20261024-v1/stages/whitespace.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "timing": {
+        "path": "/private/tmp/artroom-archive-wake-gate-evidence-20261024-v1/stages/whitespace.time",
+        "bytes": 29,
+        "sha256": "131ac13bec3bfe3796d6cb0a8ddb6e178fa1dbecb91279ffa43755987df852e7"
+      }
+    },
+    {
+      "name": "commit-messages",
+      "exitCode": 0,
+      "timeSeconds": {
+        "real": 0.1,
+        "user": 0.07,
+        "sys": 0.02
+      },
+      "log": {
+        "path": "/private/tmp/artroom-archive-wake-gate-evidence-20261024-v1/stages/commit-messages.log",
+        "bytes": 38,
+        "sha256": "2fe2fa15ac7bb6c4dbbe6ed404cb2d1a56d8c574b1f5ce311350bd0b24086f37"
+      },
+      "timing": {
+        "path": "/private/tmp/artroom-archive-wake-gate-evidence-20261024-v1/stages/commit-messages.time",
+        "bytes": 29,
+        "sha256": "66b019f3b91dd78b8a648f25e84fc8cee994db5eb175e39de9579bfdd75b994e"
+      }
+    },
+    {
+      "name": "commit-test",
+      "exitCode": 0,
+      "timeSeconds": {
+        "real": 0.56,
+        "user": 0.37,
+        "sys": 0.15
+      },
+      "log": {
+        "path": "/private/tmp/artroom-archive-wake-gate-evidence-20261024-v1/stages/commit-test.log",
+        "bytes": 595,
+        "sha256": "40f5d515868be77cf85be7df28580a60c80eebb059392628242af7ccb29b3514"
+      },
+      "timing": {
+        "path": "/private/tmp/artroom-archive-wake-gate-evidence-20261024-v1/stages/commit-test.time",
+        "bytes": 29,
+        "sha256": "cc470ac47769f020b9a35fd6443897fec1fcf17c72e0b74f36da7192f70f5cec"
+      }
+    },
+    {
+      "name": "helpers",
+      "exitCode": 0,
+      "timeSeconds": {
+        "real": 0.39,
+        "user": 0.43,
+        "sys": 0.05
+      },
+      "log": {
+        "path": "/private/tmp/artroom-archive-wake-gate-evidence-20261024-v1/stages/helpers.log",
+        "bytes": 68,
+        "sha256": "5cea5405079894e9e08043c3d734e81ff60358eff472991c63241c5458c0626e"
+      },
+      "timing": {
+        "path": "/private/tmp/artroom-archive-wake-gate-evidence-20261024-v1/stages/helpers.time",
+        "bytes": 29,
+        "sha256": "c8a50dd0868543374d1d2d3b4d269596ee608d57ba2ad2f1721682939aece716"
+      }
+    },
+    {
+      "name": "citations",
+      "exitCode": 0,
+      "timeSeconds": {
+        "real": 5.63,
+        "user": 5.58,
+        "sys": 0.23
+      },
+      "log": {
+        "path": "/private/tmp/artroom-archive-wake-gate-evidence-20261024-v1/stages/citations.log",
+        "bytes": 1540431,
+        "sha256": "513dd71bffe40ed58ecb39c0dfda797d51552ae770a73f835939f367e05d0905"
+      },
+      "timing": {
+        "path": "/private/tmp/artroom-archive-wake-gate-evidence-20261024-v1/stages/citations.time",
+        "bytes": 29,
+        "sha256": "8d1c2a564aa8052c2454db5e248777f849500d91f1e8fc0cade8c5f08eb6228c"
+      }
+    },
+    {
+      "name": "cite-test",
+      "exitCode": 0,
+      "timeSeconds": {
+        "real": 0.34,
+        "user": 0.28,
+        "sys": 0.07
+      },
+      "log": {
+        "path": "/private/tmp/artroom-archive-wake-gate-evidence-20261024-v1/stages/cite-test.log",
+        "bytes": 763,
+        "sha256": "6798d713a80dde583d8c6218f508f8895303c9dd1bd6783df281686fad4e87b5"
+      },
+      "timing": {
+        "path": "/private/tmp/artroom-archive-wake-gate-evidence-20261024-v1/stages/cite-test.time",
+        "bytes": 29,
+        "sha256": "10a723bc3b9c9f73c12f8f0f4dff4a202a179b8fbbe6f4d72a968e50311ebcd1"
+      }
+    },
+    {
+      "name": "typecheck",
+      "exitCode": 0,
+      "timeSeconds": {
+        "real": 9.54,
+        "user": 32.51,
+        "sys": 4.04
+      },
+      "log": {
+        "path": "/private/tmp/artroom-archive-wake-gate-evidence-20261024-v1/stages/typecheck.log",
+        "bytes": 1987,
+        "sha256": "62170bbe0cd055cff4699debd9470a886c0f98f328e7c9517d899c021a3788d0"
+      },
+      "timing": {
+        "path": "/private/tmp/artroom-archive-wake-gate-evidence-20261024-v1/stages/typecheck.time",
+        "bytes": 30,
+        "sha256": "b70b0721bcd4671866e228d21599384fc2a4b761747843447e2cd8e0566b3c5c"
+      }
+    },
+    {
+      "name": "test",
+      "exitCode": 0,
+      "timeSeconds": {
+        "real": 1227.35,
+        "user": 1237.26,
+        "sys": 157.05
+      },
+      "log": {
+        "path": "/private/tmp/artroom-archive-wake-gate-evidence-20261024-v1/stages/test.log",
+        "bytes": 11479205,
+        "sha256": "9f91b08c1028cd4615b126812790171241641d9cc9ad40f31d32de3f4daa1450"
+      },
+      "timing": {
+        "path": "/private/tmp/artroom-archive-wake-gate-evidence-20261024-v1/stages/test.time",
+        "bytes": 37,
+        "sha256": "3b687b573ac4bf003e16db4cdb54965344e23b1526ea6ad20d74f1bd993a7081"
+      }
+    }
+  ],
+  "stageCopyVerification": {
+    "copies": 17,
+    "allCopiedBytesAndHashesMatchRetainedOriginalPins": true,
+    "originalStageDirectory": "/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.g4DnFBUvVL",
+    "qualification": "Auditor authenticated retained copied files against stage-copies.json; did not reread the original temporary directory."
+  },
+  "rawEvidence": {
+    "result.json": {
+      "path": "/private/tmp/artroom-archive-wake-gate-evidence-20261024-v1/result.json",
+      "bytes": 1639,
+      "sha256": "75d0bb8c4314eed02c6469be4aa6e01086c9f577ea4aa29ac4ca1d634b62d441"
+    },
+    "process.json": {
+      "path": "/private/tmp/artroom-archive-wake-gate-evidence-20261024-v1/process.json",
+      "bytes": 303,
+      "sha256": "47a08addb086e15ee12260f44aa5ce8bc5e124704ef14ea2731ae522ebe2ae90"
+    },
+    "invocation.json": {
+      "path": "/private/tmp/artroom-archive-wake-gate-evidence-20261024-v1/invocation.json",
+      "bytes": 6186,
+      "sha256": "197bfee8312a0c33107d0560d3d5477b1a85b463c9d64c92a23931b65aba53fc"
+    },
+    "before.json": {
+      "path": "/private/tmp/artroom-archive-wake-gate-evidence-20261024-v1/before.json",
+      "bytes": 1260,
+      "sha256": "04e5b56a3425d8782a8f13639538f4078dfdc9decfcfbd94255580326c7ef536"
+    },
+    "after.json": {
+      "path": "/private/tmp/artroom-archive-wake-gate-evidence-20261024-v1/after.json",
+      "bytes": 1260,
+      "sha256": "04e5b56a3425d8782a8f13639538f4078dfdc9decfcfbd94255580326c7ef536"
+    },
+    "stage-copies.json": {
+      "path": "/private/tmp/artroom-archive-wake-gate-evidence-20261024-v1/stage-copies.json",
+      "bytes": 10912,
+      "sha256": "e8bc1a10129d1f05f9ce57d9d92d2e6bf69a8237f54923a7d57c93e4988e6c46"
+    },
+    "stdout.log": {
+      "path": "/private/tmp/artroom-archive-wake-gate-evidence-20261024-v1/stdout.log",
+      "bytes": 781,
+      "sha256": "04ead1daefb61e03246bdd6d54c570503734432271627d7f06c36ec1d679921d"
+    },
+    "stderr.log": {
+      "path": "/private/tmp/artroom-archive-wake-gate-evidence-20261024-v1/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "progress.jsonl": {
+      "path": "/private/tmp/artroom-archive-wake-gate-evidence-20261024-v1/progress.jsonl",
+      "bytes": 3597109,
+      "sha256": "45164ae3a0df0d0ed3b41568b0077fa8f437651ffe79c7952951212f5874912c"
+    }
+  },
+  "costQualification": "Runner npm child includes descendants. All stage costs and subsequent Node blocks are nested and must not be added to child or root outer costs.",
+  "findings": []
+}
