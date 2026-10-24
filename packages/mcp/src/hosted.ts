@@ -171,11 +171,11 @@ class ControlPlane {
       if (typeof total !== "number" || total < 0 || total > CONTROL_BUDGET) throw new Error("Hosted control migration exceeds its storage bound.");
       let after: string | null = null;
       for (;;) {
-        const scalar = after === null
+        const scalar: Record<string, unknown> | undefined = after === null
           ? this.sql.exec(`SELECT op, octet_length(answer) AS bytes FROM control WHERE answer IS NOT NULL ORDER BY op LIMIT 1`).toArray()[0]
           : this.sql.exec(`SELECT op, octet_length(answer) AS bytes FROM control WHERE answer IS NOT NULL AND op > ? ORDER BY op LIMIT 1`, after).toArray()[0];
         if (!scalar) break;
-        const op = String(scalar["op"]);
+        const op: string = String(scalar["op"]);
         if (utf8(op).length > OP_BYTES || typeof scalar["bytes"] !== "number" || scalar["bytes"] > CONTROL_BUDGET) throw new Error("Invalid hosted control migration row.");
         const text = String(this.sql.exec(`SELECT answer FROM control WHERE op = ?`, op).toArray()[0]!["answer"]);
         const next = this.#migratedAnswer(text);

@@ -67,3 +67,9 @@ reviewed production source. Those two existing map slots were updated after
 raw source hashes were checked. This is a source identity check, not a test
 result. The modern stream-opening deadline race and test protocol metadata
 were corrected during source review, before any runtime invocation.
+
+The first affected invocation at `acfbe8c1` stopped in the production
+compiler: TypeScript could not infer the paginated migration cursor row
+and operation key across the loop. Explicit row and key annotations retain
+the existing runtime checks and values. The other compiler contexts and
+all test bodies were unrun; this original failure remains evidence.
