@@ -50,7 +50,37 @@ export const ROW_OVERHEAD = 128;
 export const ANSWER_RETENTION_MS = 7 * 86_400_000;
 export const CONTROL_BODY_BYTES = 64 * 1024;
 export const BEARER_FAILURES_PER_MINUTE = 10;
+export const BEARER_FAILURE_KEYS = 4096;
+export const BEARER_ADDRESS_BYTES = 64;
 export const OP_BYTES = 128;
+
+/** A bounded, sliding-minute failure window. Capacity never evicts an active
+ * key or prevents a valid bearer on a new address from being checked. */
+export class BearerFailures {
+  readonly #keys = new Map<string, number[]>();
+  get size(): number { return this.#keys.size; }
+
+  check(address: string | null, now: number, authenticate: () => boolean): "ok" | "unauthorized" | "limited" {
+    const key = address ?? "";
+    // Cloudflare's IPv4/IPv6 address fits this bound. Reject, never truncate
+    // or hash, an oversized representation into another caller's window.
+    if (key.length > BEARER_ADDRESS_BYTES || utf8(key).length > BEARER_ADDRESS_BYTES) return "limited";
+    const recent = (this.#keys.get(key) ?? []).filter(at => now - at < 60_000);
+    if (recent.length > 0) this.#keys.set(key, recent);
+    else this.#keys.delete(key);
+    if (recent.length >= BEARER_FAILURES_PER_MINUTE) return "limited";
+    if (authenticate()) return "ok";
+    if (recent.length === 0 && this.#keys.size >= BEARER_FAILURE_KEYS) {
+      for (const [other, failures] of this.#keys) {
+        if (failures.every(at => now - at >= 60_000)) this.#keys.delete(other);
+      }
+      if (this.#keys.size >= BEARER_FAILURE_KEYS) return "limited";
+    }
+    recent.push(now);
+    this.#keys.set(key, recent);
+    return "unauthorized";
+  }
+}
 
 /** What a control route answers: the status, and a body that names a rule or a result, never a secret except the bearer shown once. */
 export interface ControlAnswer { status: number; body: Record<string, unknown> }
@@ -299,7 +329,7 @@ export class HostedAgent {
   readonly #metrics: McpMetrics;
   #service: McpService | null = null;
   #http: McpHttp | null = null;
-  readonly #failures = new Map<string, number[]>();
+  readonly #failures = new BearerFailures();
   /** Control operations run one at a time in this object: a retry of `create` waits for the first and then finds its answer. */
   readonly #controls = new Queue();
   constructor(private readonly sql: Sql, private readonly ports: AgentPorts) {
@@ -490,7 +520,6 @@ export class HostedAgent {
 
   async #control_(signed: SignedControl, action: "bearer" | "retire", body: Uint8Array): Promise<ControlAnswer> {
     const now = this.ports.now();
-    this.sql.transaction(() => this.#expire(now));
     const row = this.#row();
     if (!row) return answer(404, { error: "agent" });
     // An enrolment still unfinished can be retired by its authority; it cannot be re-issued a bearer, having none.
@@ -506,6 +535,7 @@ export class HostedAgent {
     const secret = action === "bearer" ? b64url(this.ports.random(32)) : null;
     // `fresh`: this call committed the action now. A replay returns the retained answer and disturbs nothing opened since.
     const { result, fresh } = this.sql.transaction((): { result: ControlAnswer; fresh: boolean } => {
+      this.#expire(now);
       const existing = this.#control.row(r.op);
       if (existing) {
         if (existing.fingerprint !== fingerprint) return { result: answer(409, { error: "op", rule: "fingerprint" }), fresh: false };
@@ -536,24 +566,22 @@ export class HostedAgent {
 
   /** The bearer check, in constant time over digests, with failures counted per connecting address. */
   #authorized(authorization: string | null, address: string | null): "ok" | "unauthorized" | "limited" {
-    const key = address ?? "";
     const now = this.ports.now();
-    const recent = (this.#failures.get(key) ?? []).filter((t) => now - t < 60_000);
-    if (recent.length >= BEARER_FAILURES_PER_MINUTE) { this.#failures.set(key, recent); return "limited"; }
-    const row = this.#row();
-    let ok = false;
-    if (authorization?.startsWith("Bearer ") && row?.state === "enrolled" && row.bearer) {
-      const [id, secret, ...rest] = authorization.slice("Bearer ".length).split(".");
-      if (id === this.ports.id && secret && rest.length === 0) {
-        const given = utf8(digestBytes(utf8(secret)));
-        const expected = utf8(row.bearer);
-        let differ = given.length ^ expected.length;
-        for (let i = 0; i < Math.max(given.length, expected.length); i++) differ |= (given[i] ?? 0) ^ (expected[i] ?? 0);
-        ok = differ === 0;
+    return this.#failures.check(address, now, () => {
+      const row = this.#row();
+      let ok = false;
+      if (authorization?.startsWith("Bearer ") && row?.state === "enrolled" && row.bearer) {
+        const [id, secret, ...rest] = authorization.slice("Bearer ".length).split(".");
+        if (id === this.ports.id && secret && rest.length === 0) {
+          const given = utf8(digestBytes(utf8(secret)));
+          const expected = utf8(row.bearer);
+          let differ = given.length ^ expected.length;
+          for (let i = 0; i < Math.max(given.length, expected.length); i++) differ |= (given[i] ?? 0) ^ (expected[i] ?? 0);
+          ok = differ === 0;
+        }
       }
-    }
-    if (!ok) { recent.push(now); this.#failures.set(key, recent); return "unauthorized"; }
-    return "ok";
+      return ok;
+    });
   }
 
   /** `POST`, `GET` and `DELETE /mcp` for this agent. */
