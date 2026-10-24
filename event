@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fbac26eab9e51af0fdb61bddfd69a765c57c269f","text":"Replaced by the review request for exact head 0943756ba3901f798c162ae57627cee307af61e6; any review promised on this request is released, and a verdict filed against it would bind to nothing."}
+{"kind":"promise","text":"Checker accepts the exact-head review of the R5C note-only successor 0943756ba3 (tree d4f6252f), correcting F1 of 82ea197d. Docs delta against 6015dc3d, source and seals unchanged from the gated e10584fc."}
