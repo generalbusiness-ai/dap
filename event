@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:215ec0c8558e65db092d1f49b3d699c124c2dcd2","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-23-archive-input-work/controls-v5/scope-maximum-debit/mutation.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2280e62aba2acea22c3a0c9fc8d58cbce87be806","text":"Merge retired a covered predecessor; the successor is at packages/git/test/http-read.test.ts."}
