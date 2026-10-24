@@ -14,7 +14,8 @@ import type { Sql } from "./sqlite.ts";
 
 const CONFIRMED = "archive-frontier-confirmed-1", PENDING = "archive-frontier-pending-1", ROW = "archive-row-1";
 type Identity = Pick<JournalParentBinding, "at" | "repository" | "format">;
-type Pair = { readonly confirmed: string | null; readonly pending: string | null };
+type Pair = { readonly confirmed: string | null; readonly pending: string | null;
+  readonly confirmedBytes: number; readonly pendingBytes: number };
 export interface ArchiveFrontierBase { readonly frontier: JournalParentFrontier }
 export interface ArchiveFrontierConversionBase { readonly position: ArchivedPosition }
 export interface ArchiveFrontierBootstrap { readonly binding: JournalParentBinding }
@@ -128,11 +129,15 @@ export class ArchiveFrontiers {
   readonly #sql: Sql;
   readonly #identity: Identity;
   constructor(sql: Sql, value: Identity) { this.#sql = sql; this.#identity = identity(value); }
-  #read(key: string, budget: ArchiveBudget): string | null {
+  #read(key: string, budget: ArchiveBudget, expected?: { readonly text: string | null; readonly bytes: number }): { readonly text: string; readonly bytes: number } | null {
     const rows = budget.native(this.#sql, () => ({ metadata: ARCHIVE_FRONTIER_SIZE_METADATA, inputWork: 0 }))
       .exec("SELECT octet_length(v) AS size, typeof(v) AS type FROM meta WHERE k = ? LIMIT 1", key).toArray();
-    if (!rows.length) return null;
+    if (!rows.length) { if (expected?.text !== undefined && expected.text !== null) return refuse("conflict"); return null; }
     const size = rows[0]?.["size"];
+    // A captured pair authorizes only this exact body size. Refuse any
+    // appearance/type/size change before its body can consume the reserve.
+    if (expected !== undefined && (expected.text === null || rows.length !== 1
+      || rows[0]?.["type"] !== "text" || size !== expected.bytes)) return refuse("conflict");
     if (rows.length !== 1 || rows[0]?.["type"] !== "text" || !natural(size) || size === 0) return refuse();
     if (size > ARCHIVE_FRONTIER_BYTES) return refuse("limit");
     budget.spend(archiveFrontierReadCost(size));
@@ -140,14 +145,23 @@ export class ArchiveFrontiers {
       .exec("SELECT v FROM meta WHERE k = ? AND typeof(v) = 'text' AND octet_length(v) = ? LIMIT 1", key, size).toArray();
     const text = body[0]?.["v"];
     if (body.length !== 1 || typeof text !== "string" || text.length > size || utf8(text).length !== size) return refuse();
-    return text;
+    return { text, bytes: size };
   }
-  #pair(budget: ArchiveBudget): Pair { return { confirmed: this.#read(CONFIRMED, budget), pending: this.#read(PENDING, budget) }; }
+  #pair(budget: ArchiveBudget, expected?: Pair): Pair {
+    const confirmed = this.#read(CONFIRMED, budget, expected === undefined ? undefined : { text: expected.confirmed, bytes: expected.confirmedBytes });
+    const pending = this.#read(PENDING, budget, expected === undefined ? undefined : { text: expected.pending, bytes: expected.pendingBytes });
+    return { confirmed: confirmed?.text ?? null, pending: pending?.text ?? null,
+      confirmedBytes: confirmed?.bytes ?? 0, pendingBytes: pending?.bytes ?? 0 };
+  }
   #assertPair(pair: Pair, budget: ArchiveBudget): void {
-    const current = this.#pair(budget);
+    const current = this.#pair(budget, pair);
     if (current.confirmed !== pair.confirmed || current.pending !== pair.pending) return refuse("conflict");
   }
   #base(pair: Pair, frontier: JournalParentFrontier, budget: ArchiveBudget): ArchiveFrontierBase {
+    // Initial untrusted loads retain the independent 64 KiB ceiling. Only
+    // a validated base inside the writer bound can authorize the smaller
+    // steady-state finish forecast; no prior read debit is credited back.
+    if (pair.confirmedBytes > ARCHIVE_FRONTIER_ENCODING_BOUND) return refuse("limit");
     const token = Object.freeze({ frontier: copy(frontier, budget) });
     bases.set(token, { owner: this, pair, frontier }); return token;
   }
@@ -325,7 +339,7 @@ export class ArchiveFrontiers {
       this.#assertPair(state.pair, budget); this.#sameRow(state.row, state.rowBytes, budget);
       budget.spend({ metadata: 4096, inputWork: 4096 });
       budget.spend(archiveFrontierWriteCost(state.encoded.length));
-      const result = this.#base({ confirmed: state.encoded, pending: null }, state.frontier, budget);
+      const result = this.#base({ confirmed: state.encoded, pending: null, confirmedBytes: state.encoded.length, pendingBytes: 0 }, state.frontier, budget);
       budget.check(); this.#sql.exec("INSERT INTO meta (k, v) VALUES (?, ?)", CONFIRMED, state.encoded).toArray(); budget.check(); return result;
     });
   }
@@ -343,7 +357,7 @@ export class ArchiveFrontiers {
   promote(token: ArchiveFrontierPrepared, budget: ArchiveBudget): void {
     const state = prepared.get(token); if (!state || state.owner !== this) return refuse();
     this.#sql.transaction(() => {
-      this.#assertPair({ confirmed: state.pair.confirmed, pending: state.encoded }, budget); this.#row(state, budget);
+      this.#assertPair({ confirmed: state.pair.confirmed, pending: state.encoded, confirmedBytes: state.pair.confirmedBytes, pendingBytes: state.encoded.length }, budget); this.#row(state, budget);
       budget.spend(archiveFrontierWriteCost(state.promoted.length, 2)); budget.check();
       this.#sql.exec("INSERT INTO meta (k, v) VALUES (?, ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v", CONFIRMED, state.promoted).toArray();
       this.#sql.exec("DELETE FROM meta WHERE k = ?", PENDING).toArray(); budget.check();

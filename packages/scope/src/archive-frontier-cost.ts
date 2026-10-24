@@ -64,7 +64,9 @@ export function forecastArchiveFrontierFinish(shape: ArchiveFrontierFinishShape)
   const sizeCalls = shape.hasBase ? 4 : 6;
   add({ calls: sizeCalls, metadata: sizeCalls * ARCHIVE_FRONTIER_SIZE_METADATA, inputWork: sizeCalls * ARCHIVE_FRONTIER_SIZE_METADATA });
   const body = (bytes: number) => { add(archiveFrontierReadCost(bytes)); add({ calls: 1, metadata: bytes, inputWork: bytes }); };
-  if (shape.hasBase) { body(ARCHIVE_FRONTIER_BYTES); body(ARCHIVE_FRONTIER_BYTES); }
+  // A base token admits at most the writer's encoding bound. Each later
+  // exact-pair check refuses a changed byte count before loading its body.
+  if (shape.hasBase) { body(ARCHIVE_FRONTIER_ENCODING_BOUND); body(ARCHIVE_FRONTIER_ENCODING_BOUND); }
   body(ARCHIVE_FRONTIER_ENCODING_BOUND);
   // The canonical pending object is contained in the marked row. Its
   // UTF-8 bytes cannot exceed either that row or its independent escape bound.
