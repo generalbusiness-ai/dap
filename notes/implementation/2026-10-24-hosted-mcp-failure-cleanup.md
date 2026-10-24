@@ -90,7 +90,28 @@ owner wall and CPU costs are unrecorded. Nested child costs are kept separate.
 These measurements do not establish complete edit-to-review latency or a
 controlled-load, cold-cache benchmark.
 
-The ordinary gate remains pending. There is no new setting. The planner's
+The ordinary gate passed once at `f230ff2c593c574c8d7adc58f131b2e95c8f0e16`
+(tree `6d5278d9d5d37e845fbce1985dd40f147f52998f`). All eight stages
+passed. Vitest reported 3,531 passed and 3 skipped across 497 files, with
+3,534 distinct terminal case IDs and no unhandled errors. The Node and
+Counting suites passed all 39 and 55 cases. Both affected whole files passed
+again within the gate. The final commit changes only this validation note.
+
+The gate's before and after HEAD, tree, clean status, lock, dependency stamp,
+Node and npm records match. These boundary checks do not establish continuous
+physical dependency identity. The progress stream omitted 13 ready callbacks
+and 31 result callbacks; every affected terminal case passed, and all 19
+cases in the two changed files have complete callbacks. No missing callback
+is treated as an observed callback. The independent review is held in
+`artroom-security-r5b-gate-independent-review-evidence-20261024-v1`.
+
+The full gate owner took 1,419.20 seconds wall time and 1,633.85 seconds CPU.
+Its child and stage timings are nested. The six recorded nonoverlapping
+spans total 1,627.55 seconds wall time and 1,856.32 seconds CPU with the mixed
+boundaries and missing measurements described above; this is not total
+edit-to-review cost.
+
+There is no new setting. The planner's
 current decision (`10f45efc`) keeps hosted MCP unset and closed on the
 `dap-grow`, `dap-demo`, and `artroom-scope` Workers, with no tool additions.
 The planner found no recorded hosted MCP tool calls; opening a named
