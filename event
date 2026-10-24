@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e78dd8ad9801c77575621c3a790eda6e0b862ea4","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-24-archive-fixed-parent/final-gate-continuation/tail-result.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e9cb0066a517f84d1271114868cb83304ac5f881","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-frontier-cost.ts."}
