@@ -143,7 +143,7 @@ test.for(["absent", "target", "confirmed", "stopped", "pending"] as const)("a wa
   if (phase === "stopped") {
     await lane.inside(state => new ArchiveRows(archiveSql(state), lane.at).stop("TEST PRIVATE REASON", "TEST PRIVATE DETAIL"));
     const masked = (await observed(lane.object, [lane.name], host, resolve)).answers[0]!;
-    expect(masked).toEqual({ ...view, row: { ...view.row, reason: "unknown" } });
+    expect(masked).toEqual({ ...view, row: { ...view.row, reason: "unknown", rowDigest: null } });
     expect(JSON.stringify(masked)).not.toContain("TEST PRIVATE");
   }
   if (phase === "absent") {

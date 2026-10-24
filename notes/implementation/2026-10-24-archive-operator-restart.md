@@ -104,10 +104,24 @@ archive wake before one ordinary alarm. The exact final-head assertion,
 all prior restart assertions and the deadline remain. Its outer cost was
 15.58 seconds wall and 19.07 seconds CPU.
 
+Original `55657` passed the Scope test compiler, all 19 driver cases,
+including the exact-wake restart witness, and both projection ownership
+cases. It then failed the warm stopped operator case at line 146: the
+expected value retained the old restart digest after the fixture changed
+the stop reason from `limit` to an unknown private reason. The actual null
+digest is required because only an eligible `limit` stop exposes it.
+The correction requires null and preserves the private-reason masking
+assertion. Its body retained 24 passes, one failure and 18 pending or
+unfinished cases. The outer span was 15.05 seconds wall and 19.42 seconds
+CPU. Per-file success is derived from completed assertion rows; a file
+reported passed with only pending rows is not a successful file.
+
 All original failures retain their outcomes. The next continuation carries
-the successful production and Grow compilers because only the test witness
-and this note changed. The updated Scope test compiler and bodies remain
-pending.
+the successful production and Grow compilers and the complete driver and
+projection ownership files, subject to the raw error audit. Only the
+operator test expectation and this note change. The updated Scope test
+compiler and remaining 22 cases in the operator, row and item-query-owned
+files remain pending.
 
 These costs were observed on macOS 27.0.1 arm64 with the existing private
 dependency pool and caches. Load and cache temperature were uncontrolled.
