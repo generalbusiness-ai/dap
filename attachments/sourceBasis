@@ -1,1 +1,0 @@
-920c9051e7725ff4d813bfbbc7b4bf78b0371696; packages/scope/src/destination-host.ts:174-177 requires held.plaintext and passes it to provider.revoke

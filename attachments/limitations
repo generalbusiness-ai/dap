@@ -1,1 +1,0 @@
-Malformed oversized legacy cursor remains blocked with repeated immediate maintenance alarms; fresh empty objects schedule one initialization alarm. Current validated caller IDs fit caps, but CredentialStore.put does not itself enforce ID length.
