@@ -92,8 +92,8 @@ controlled-load, cold-cache benchmark.
 
 The ordinary gate remains pending. There is no new setting. The planner's
 current decision (`10f45efc`) keeps hosted MCP unset and closed on the
-`dap-grow`, `demo`, and `artroom-scope` Workers, with no tool additions.
-That inventory and configuration choice is made without tool calls; opening
-a named Worker requires a future task. This note records no local deployment
+`dap-grow`, `dap-demo`, and `artroom-scope` Workers, with no tool additions.
+The planner found no recorded hosted MCP tool calls; opening a named
+Worker requires a future task. This note records no local deployment
 or live configuration read. R5 bearer items 4–5 and R15 remain open and
 outside this follow-up.
