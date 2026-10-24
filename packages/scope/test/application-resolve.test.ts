@@ -28,6 +28,7 @@ test("untrusted, malformed and unavailable resolution never falls back or writes
   const f = await fixture("sha1", utf8.encode("TEST wrong immutable Git file"));
   try {
     await expect(resolveTrustedApplication(f.uri, f.packet.ids.release, [], PROPOSED_BOUNDS, f.open)).rejects.toThrow("application-untrusted-release"); expect(f.opened).toEqual([]);
+    await expect(resolveTrustedApplication(f.uri.replace("git.example", "other.example"), f.packet.ids.release, f.trust, PROPOSED_BOUNDS, f.open)).rejects.toThrow("application-untrusted-release"); expect(f.opened).toEqual([]);
     await expect(resolveTrustedApplication(f.uri + "?credential=TEST", f.packet.ids.release, f.trust, PROPOSED_BOUNDS, f.open)).rejects.toThrow("application-uri-invalid"); expect(f.opened).toEqual([]);
     await expect(resolveAndStoreApplication(f.uri, f.packet.ids.release, f.trust, PROPOSED_BOUNDS, f.open, f.store)).rejects.toThrow();
     expect(f.closed()).toBe(1); expect(await env.APPLICATION_CONTENT.head(f.key)).toBeNull();

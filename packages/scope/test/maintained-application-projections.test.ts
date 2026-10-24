@@ -46,7 +46,7 @@ test.each(["counter", "lending"] as const)("maintained %s package installs and i
     const membership = await life.wait(() => M.at()), directory = await life.wait(() => D.at());
     const port: ServerPort = { service: "https://scopes.test", signer: secretSigner(rita.secret), custody: memoryStore(), now: life.now,
       config: { read: async () => ({ service: "https://scopes.test", repository: { directory, membership, rules: A.name, destination: G.name } }), addRoot: async () => { throw Error("Discover the installed native scope."); } },
-      applicationFetch: peer.fetch, fetch: (url, init) => life.wait(() => routed(url, init)) };
+      applicationFetch: peer.fetch, applicationTrust: JSON.stringify(f.trust), fetch: (url, init) => life.wait(() => routed(url, init)) };
     const mcp = new McpService(port);
     const installed = await life.wait(() => mcp.call("install_application", { uri: f.uri, release: packet.ids.release, roles: ["admin", "member", "agent"], values: name === "counter" ? { target: 7 } : {}, idempotencyKey: `TEST-maintained-${name}` }));
     expect(installed.structuredContent).toMatchObject({ answer: "accepted", phase: "recorded" });

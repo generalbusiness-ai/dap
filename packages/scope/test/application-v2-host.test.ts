@@ -10,7 +10,7 @@ import { ApplicationContentStore, applicationReleaseKey } from "../src/applicati
 // private storage checks as v1; unsupported when syntax is refused first.
 test("trusted v2 declarations round-trip through local R2 while unsupported expressions never write", async () => {
   const valid = await applicationCounterPacket2("state = 'open'"), unsupported = await applicationCounterPacket2("$now()");
-  const trust = [valid, unsupported].map(packet => ({ release: packet.ids.release, publisher: packet.package.release.manifest.publisher }));
+  const trust = [valid, unsupported].map(packet => ({ release: packet.ids.release, publisher: packet.package.release.manifest.publisher, host: "git.example" }));
   expect(readTrustedApplication(valid.bytes, valid.ids.release, trust, PROPOSED_BOUNDS)).toEqual(valid);
   expect(() => readTrustedApplication(unsupported.bytes, unsupported.ids.release, trust, PROPOSED_BOUNDS)).toThrow("application-unsupported-host");
   let writes = 0;

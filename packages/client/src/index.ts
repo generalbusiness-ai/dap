@@ -45,3 +45,5 @@ export { applicationScreenTransport, type ApplicationGatewayFetch } from "./appl
 export * from "./application-projection.ts";
 
 export * from "./journal-tail.ts";
+
+export * from "./application-trust.ts";

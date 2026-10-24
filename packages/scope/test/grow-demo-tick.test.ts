@@ -47,7 +47,7 @@ async function fixture() {
     for (const node of [D, A]) { life.outside(node.name, (given, sql) => hostOutside(given, sql, bindings, peer.fetch)); await life.wait(() => node.restart()); }
     const port: ServerPort = { mode: "generic", service: "https://scopes.test", signer: secretSigner(rita.secret), custody: memoryStore(), now: life.now,
       config: { read: async () => ({ service: "https://scopes.test", repository: { directory, membership, rules: A.name, destination: G.name } }), addRoot: async () => { throw Error("Use the actual native demo installation."); } },
-      applicationFetch: peer.fetch, fetch: (url, init) => life.wait(() => routed(url, init)) };
+      applicationFetch: peer.fetch, applicationTrust: JSON.stringify(f.trust), fetch: (url, init) => life.wait(() => routed(url, init)) };
     const mcp = new McpService(port);
     const installed = await life.wait(() => mcp.call("install_application", { uri: f.uri, release: packet.ids.release, roles: ["admin", "agent"],
       values: { label: "TEST native demo", ...members }, owner: members.sensors, idempotencyKey: "TEST-demo-distinct-owner-install" }));

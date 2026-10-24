@@ -18,7 +18,7 @@ const input = (definition: DeclaredDefinition): ApplicationPackageInput => ({ na
 // and native host support are all necessary before any later store/install.
 test("both current application definitions admit only under their exact release and publisher", async () => {
   for (const definition of [countingCommitments, lending]) {
-    const packet = await packApplication(input(definition), signer), rows = [{ release: packet.ids.release, publisher: signer.key }];
+    const packet = await packApplication(input(definition), signer), rows = [{ release: packet.ids.release, publisher: signer.key, host: "git.example" }];
     const trust = readApplicationTrust(JSON.stringify(rows, null, 2));
     expect(readTrustedApplication(packet.bytes, packet.ids.release, trust, PROPOSED_BOUNDS)).toEqual(packet);
     expect(Object.isFrozen(trust[0])).toBe(true);
@@ -31,10 +31,10 @@ test("both current application definitions admit only under their exact release 
 });
 
 test("invalid trust and a trusted but unsupported package refuse without partial admission", async () => {
-  const packet = await packApplication(input(lending), signer), row = { release: packet.ids.release, publisher: signer.key };
+  const packet = await packApplication(input(lending), signer), row = { release: packet.ids.release, publisher: signer.key, host: "git.example" };
   expect(readApplicationTrust(undefined)).toEqual([]);
   expect(() => readTrustedApplication(new Uint8Array(APPLICATION_HOST_PACKAGE_BYTES + 1), packet.ids.release, readApplicationTrust(JSON.stringify([row])), PROPOSED_BOUNDS)).toThrow("application-package-limit");
-  for (const setting of ["not JSON", "null", "{}", JSON.stringify([row, row]), JSON.stringify([{ ...row, extra: true }]), JSON.stringify([{ ...row, publisher: "not-a-key" }]), JSON.stringify(Array.from({ length: 129 }, () => row)), " ".repeat(64 * 1024 + 1)]) expect(() => readApplicationTrust(setting)).toThrow(ApplicationAdmissionError);
+  for (const setting of ["not JSON", "null", "{}", JSON.stringify([row, row]), JSON.stringify([{ ...row, extra: true }]), JSON.stringify([{ ...row, publisher: "not-a-key" }]), JSON.stringify([{ release: row.release, publisher: row.publisher }]), ...["Git.example", "git.example/path", "git.example:443"].map(host => JSON.stringify([{ ...row, host }])), JSON.stringify(Array.from({ length: 129 }, () => row)), " ".repeat(64 * 1024 + 1)]) expect(() => readApplicationTrust(setting)).toThrow(ApplicationAdmissionError);
   const base = input(lending), unsupported = { ...base, semantic: { ...base.semantic, host: { ...base.semantic.host, profiles: ["restricted@1", "unknown@1"] } } };
   const other = await packApplication(unsupported, signer), trust = readApplicationTrust(applicationTrust(other, signer.key));
   expect(() => readTrustedApplication(other.bytes, other.ids.release, trust, PROPOSED_BOUNDS)).toThrow("application-unsupported-host");

@@ -26,7 +26,7 @@ test.each([ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT])("na
     const membership = await life.wait(() => M.at()), directory = await life.wait(() => D.at());
     const port: ServerPort = { service: "https://scopes.test", signer: secretSigner(rita.secret), custody: memoryStore(), now: life.now,
       config: { read: async () => ({ service: "https://scopes.test", repository: { directory, membership, rules: A.name, destination: G.name } }), addRoot: async () => { throw Error("Use the native installation."); } },
-      applicationFetch: peer.fetch, fetch: (url, init) => life.wait(() => routed(url, init)) };
+      applicationFetch: peer.fetch, applicationTrust: JSON.stringify(f.trust), fetch: (url, init) => life.wait(() => routed(url, init)) };
     const mcp = new McpService(port);
     const installed = await life.wait(() => mcp.call("install_application", { uri: f.uri, release: f.packet.ids.release, roles: ["admin"], values: declared ? {} : { target: 7 }, idempotencyKey: "TEST-archive-mcp-install" }));
     expect(installed.structuredContent, JSON.stringify(installed.structuredContent)).toMatchObject({ answer: "accepted", phase: "recorded" });

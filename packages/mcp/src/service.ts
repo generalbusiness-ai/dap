@@ -16,7 +16,7 @@ import { invitationRedemptionFields } from "@generalbusiness/dap-client";
 import type { Answer, Beside, DeclaredDefinition, Digest, Entry, FieldValue, Item, PlatformDefinition, Read, Receipt, ScopeId, ScopeRef, Seed, Summary } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, digestBytes, intentDigest, isDigest, isPlatformDefinition, isScopeId, isScopeRef, isReceipt, entryHash, parseStrict, scopeIdOf, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
-import { TransportError, ScopeHandle, ApplicationPackageError, applicationScreenPath, readApplicationInstallOptions, readDeviceApplicationInstallOptions, readApplicationReleaseUri, signedApplicationInstall, signedApplicationInstall2, signedDeviceApplicationInstall, invitationOf, readCredential, signedIntent, wellFormedInvitation, type Fetch, type Signer } from "@generalbusiness/dap-client";
+import { TransportError, ScopeHandle, ApplicationPackageError, applicationScreenPath, readApplicationInstallOptions, readDeviceApplicationInstallOptions, readApplicationReleaseUri, readApplicationTrust, applicationTrustForSource, signedApplicationInstall, signedApplicationInstall2, signedDeviceApplicationInstall, invitationOf, readCredential, signedIntent, wellFormedInvitation, type Fetch, type Signer } from "@generalbusiness/dap-client";
 import { TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, platform, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { ApplicationHttpError, applicationGitHttpSource, readApplicationGitBlob } from "@generalbusiness/dap-git/application";
 import { ACT_OUTPUT, actTool, bindingsOf, declarationDigest, describedOf, generationOf, listed, selected, type Binding, type Held, type Inventory, type Mode, type Tool } from "./catalogue.ts";
@@ -48,6 +48,8 @@ export interface ServerPort {
   signer: Signer;
   /** Public Git transport only; separate from authenticated native reads. */
   applicationFetch?: (request: Request) => Promise<Response>;
+  /** Raw operator policy, parsed before each install and again before custody builds. */
+  applicationTrust?: string | undefined;
   config: ConfigPort;
   custody: CustodyStore;
   /** Operational observations only; absent or failed reporting does not own a result. */
@@ -1018,17 +1020,26 @@ export class McpService {
       if (room.cohort.rules !== DEVICE_APPLICATION_COHORT.rules && room.cohort.rules !== ARCHIVE_DEVICE_APPLICATION_COHORT.rules && args["owner"] !== undefined) throw Error("this cohort has no owner selection");
     }
     catch { return failed({ error: "shape", field: "installation", what: "needs an immutable Git URI, expected release, explicit unique roles, bounded genesis values and a full existing owner for a device package", declared: "the install_application input" }); }
+    const address = readApplicationReleaseUri(selected.uri);
+    const trustForBuild = () => {
+      const allowed = applicationTrustForSource(address, selected.release, readApplicationTrust(this.#port.applicationTrust));
+      if (!allowed) throw new ApplicationPackageError("invalid");
+      return allowed;
+    };
+    try { trustForBuild(); }
+    catch { return failed({ error: "target", what: "the expected release and Git host are not in a valid APPLICATION_TRUST setting; nothing was fetched or submitted" }); }
     const identity: Identity = { service: this.#service, membership: room.membership, signer: this.#port.signer.key, target: room.rules, key: key as string };
     const meaning = meaningOf(selected);
     const build = async () => {
-      const address = readApplicationReleaseUri(selected.uri);
+      // Recheck after custody awaits; an earlier list or policy read is no authority.
+      const allowed = trustForBuild();
       const source = applicationGitHttpSource(address, { blobBytes: 4 * 1024 * 1024, ...(this.#port.applicationFetch ? { send: this.#port.applicationFetch } : {}) });
       try {
         const bytes = await readApplicationGitBlob(address, source.source, 4 * 1024 * 1024);
         const prepare = pin === DECLARED_APPLICATION_COHORT.rules || pin === ARCHIVE_DECLARED_APPLICATION_COHORT.rules ? signedApplicationInstall2 : signedApplicationInstall;
         const prepared = "owner" in selected
-          ? await signedDeviceApplicationInstall(this.#port.signer, bytes, readDeviceApplicationInstallOptions(selected), { idempotencyKey: key as string, now: this.#now() })
-          : await prepare(this.#port.signer, bytes, selected, { idempotencyKey: key as string, now: this.#now() });
+          ? await signedDeviceApplicationInstall(this.#port.signer, bytes, readDeviceApplicationInstallOptions(selected), { idempotencyKey: key as string, now: this.#now() }, allowed.publisher)
+          : await prepare(this.#port.signer, bytes, selected, { idempotencyKey: key as string, now: this.#now() }, allowed.publisher);
         return { binding: { definition: "platform:rules", kind: "install-application", declaration: declarationDigest(platform(pin)!.data as unknown as DefinitionLike, "install-application", pin), pinned: pin }, envelope: { signed: prepared.signed, beside: prepared.beside } };
       } finally { await source.close(); }
     };
