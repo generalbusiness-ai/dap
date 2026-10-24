@@ -3,7 +3,8 @@
  * only preserves its exact bytes and compares outstanding identities. */
 import { natural, same } from "@generalbusiness/dap-bytes";
 import type { Head, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isRecord, isScopeRef, parseStrict, timeMs, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, digestBytes, isDigest, isRecord, isScopeRef, parseStrict, timeMs, utf8 } from "@generalbusiness/dap-bytes";
+import type { ArchiveRestartDirective } from "./archive-restart.ts";
 import type { DestinationRepository } from "./destination-host.ts";
 import { ArchiveBudget } from "./archive-budget.ts";
 import { archiveFrontierRowContextBound, archiveFrontierRowCompareCost, archiveFrontierSnapshotCost } from "./archive-frontier-cost.ts";
@@ -17,6 +18,7 @@ export { ARCHIVE_ROW_BYTES } from "./archive-row-cost.ts";
 
 const KEY = "archive-row-1";
 const WAKE = "archive-wake-1";
+const RESTART = "archive-restart-1";
 interface ArchiveWake {
   readonly pending: boolean;
   readonly stopped: boolean;
@@ -154,6 +156,47 @@ export class ArchiveRows {
    * Same bounded reader and charges; no new row field or receipt authority. */
   loadSnapshot(budget = new ArchiveBudget()): { readonly row: ArchiveRow; readonly bytes: string } | null {
     return this.#sql.transaction(() => this.#load(budget));
+  }
+  /** Bounded nonsecret replay metadata; missing is generation zero. */
+  restartReceipt(budget = new ArchiveBudget()): { generation: number; command: string | null; bytes: string | null } {
+    const size = budget.native(this.#sql, () => ({ metadata: 96, inputWork: 0 })).exec("SELECT octet_length(v) AS size,typeof(v) AS type FROM meta WHERE k=?",RESTART).toArray()[0];
+    if (!size) return { generation: 0, command: null, bytes: null };
+    if (size["type"] !== "text" || !natural(size["size"]) || size["size"] === 0 || size["size"] > 512) return refuse("unavailable");
+    budget.spend({ inputWork: size["size"] * 12 });
+    const raw = budget.native(this.#sql, () => ({ metadata: 512, inputWork: 0 })).exec("SELECT v FROM meta WHERE k=? AND typeof(v)='text' AND octet_length(v)=?",RESTART,size["size"]).toArray()[0]?.["v"];
+    if (typeof raw !== "string") return refuse("unavailable");
+    const v: unknown = parseStrict(raw);
+    if (!isRecord(v) || !fields(v,"command,generation,v") || v["v"] !== 1 || !natural(v["generation"]) || v["generation"] < 1 || !isDigest(v["command"]) || canonicalize(v) !== raw) return refuse("unavailable");
+    return { generation: v["generation"], command: v["command"], bytes: raw };
+  }
+  /** Deployment owner only. All durable cuts share one synchronous CAS. */
+  restart(command: ArchiveRestartDirective, next: Timestamp, now: Timestamp, budget = new ArchiveBudget()): "applied" | "already-applied" | "refused" {
+    return this.#sql.transaction<"applied" | "already-applied" | "refused">(() => {
+      if (timeMs(next) === null || timeMs(now) === null || timeMs(command.expires) === null || timeMs(now)! >= timeMs(command.expires)! || !same(command.at,this.#at)) return "refused";
+      const prior = this.restartReceipt(budget);
+      if (prior.command === command.command && prior.generation === command.generation + 1) return "already-applied";
+      if (prior.generation !== command.generation || prior.generation >= Number.MAX_SAFE_INTEGER) return "refused";
+      const snapshot = this.#load(budget);
+      if (!snapshot) return "refused";
+      const row = snapshot.row;
+      budget.spend({ metadata: 32 * 1024, inputWork: snapshot.bytes.length * 64 + 64 * 1024 });
+      if (row.stopped?.reason !== "limit" || row.pending !== null || row.attempts !== 0 || row.next !== null || row.confirmed?.layout !== 2
+        || !same(row.repository,command.repository) || row.format !== command.format || !same(row.confirmed,command.confirmed)
+        || digestBytes(utf8(snapshot.bytes)) !== command.rowDigest) return "refused";
+      // Exact row and generation receipt comparison occurs after all reads,
+      // inside the same transaction. No await or caller-owned object is saved.
+      const rowSize = utf8(snapshot.bytes).length;
+      const receiptCAS = prior.bytes === null ? "NOT EXISTS(SELECT 1 FROM meta WHERE k=?)" : "EXISTS(SELECT 1 FROM meta WHERE k=? AND CASE WHEN typeof(v)='text' AND octet_length(v)=? THEN CAST(v AS BLOB)=CAST(? AS BLOB) ELSE 0 END)";
+      const bindings = prior.bytes === null ? [KEY,rowSize,snapshot.bytes,RESTART] : [KEY,rowSize,snapshot.bytes,RESTART,utf8(prior.bytes).length,prior.bytes];
+      const matched = budget.native(this.#sql, () => ({ metadata: 96, inputWork: rowSize * 3 + 2048 })).exec("SELECT 1 AS matched WHERE EXISTS(SELECT 1 FROM meta WHERE k=? AND CASE WHEN typeof(v)='text' AND octet_length(v)=? THEN CAST(v AS BLOB)=CAST(? AS BLOB) ELSE 0 END) AND "+receiptCAS,...bindings).toArray();
+      if (matched.length !== 1) return refuse("conflict");
+      this.#save({ ...row, stopped: null },budget);
+      budget.spend({ calls: 2, metadata: 1024, inputWork: 8192 }); budget.check();
+      this.#sql.exec("INSERT INTO meta(k,v) VALUES(?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v",WAKE,canonicalize({ pending: true, stopped: false, next })).toArray();
+      this.#sql.exec("INSERT INTO meta(k,v) VALUES(?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v",RESTART,canonicalize({ v:1,generation:prior.generation+1,command:command.command })).toArray();
+      budget.check();
+      return "applied";
+    });
   }
   target(repository: DestinationRepository, format: Format, budget = new ArchiveBudget()): ArchiveRow {
     return this.#sql.transaction(() => {
