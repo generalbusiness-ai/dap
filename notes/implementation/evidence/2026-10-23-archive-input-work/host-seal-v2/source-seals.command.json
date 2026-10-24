@@ -1,0 +1,8 @@
+{
+  "argv": [
+    "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+    "/private/tmp/artroom-archive-input-work-host-seal-source-20261023-v2/produce-source-seals.mjs",
+    "/private/tmp/artroom-builder-archive-input-work-20261023"
+  ],
+  "cwd": "/private/tmp/artroom-builder-archive-input-work-20261023"
+}

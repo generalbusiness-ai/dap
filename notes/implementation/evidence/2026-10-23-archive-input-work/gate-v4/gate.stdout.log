@@ -1,0 +1,18 @@
+
+> gate
+> bash scripts/gate.sh
+
+head 0859b64e3be5a43e57dbf03ea9f2e5bd6009e0e8  tree 7f337d29035b5f863e4334df45a3c0e8f740c9ee  changed files 0
+install    skipped: dependency view was verified against this package-lock.json
+whitespace exit 0  elapsed    0.0 s  cpu    0.0 s
+commit-messages exit 0  elapsed    0.1 s  cpu    0.1 s
+commit-test exit 0  elapsed    0.6 s  cpu    0.6 s
+helpers    exit 0  elapsed    0.4 s  cpu    0.5 s
+citations  exit 0  elapsed    5.6 s  cpu    5.9 s
+cite-test  exit 0  elapsed    0.3 s  cpu    0.3 s
+typecheck  exit 0  elapsed    9.8 s  cpu   37.8 s
+test       exit 0  elapsed 1199.3 s  cpu 1374.8 s
+  Tests  3503 passed | 3 skipped (3506)
+  ℹ pass 37
+  ℹ pass 55
+gate passed; logs in /var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.bVsjuqEPks

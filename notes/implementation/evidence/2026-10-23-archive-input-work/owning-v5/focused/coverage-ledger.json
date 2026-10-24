@@ -1,0 +1,44 @@
+{
+  "cases": [
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-input-work.test.ts",
+      "name": "legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-input-work.test.ts",
+          "name": "legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    }
+  ],
+  "observedCases": [
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-input-work.test.ts",
+      "name": "legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    }
+  ],
+  "unexpectedCases": [],
+  "modules": [
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-input-work.test.ts",
+      "status": "passed",
+      "errors": 0
+    }
+  ],
+  "issues": [],
+  "passed": true
+}

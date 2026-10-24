@@ -1,0 +1,54 @@
+{
+  "allocation": "2a3bb88d9947bf363175dd6a7ca61c9ab81b2143",
+  "status": "failed",
+  "children": [
+    {
+      "label": "compatibility",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "scripts/cloudflare-pool-compat.mjs"
+      ],
+      "cwd": "/private/tmp/artroom-builder-archive-input-work-20261023",
+      "pid": 62595,
+      "exit": 0,
+      "signal": null,
+      "wall": 0.07321037503425032,
+      "user": 0.060683999999999995,
+      "system": 0.011741999999999995
+    },
+    {
+      "label": "focused",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "scripts/focused-check.mjs",
+        "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v2/focused-plan.json",
+        "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v2/focused"
+      ],
+      "cwd": "/private/tmp/artroom-builder-archive-input-work-20261023",
+      "pid": 62697,
+      "exit": 1,
+      "signal": null,
+      "wall": 2.308276957948692,
+      "user": 5.535275,
+      "system": 0.9649869999999999
+    }
+  ],
+  "errors": [
+    "RuntimeError: child failed/interrupted; later phases unrun"
+  ],
+  "signals": [],
+  "compatibility": {
+    "package": "@cloudflare/vitest-pool-workers",
+    "version": "0.22.0",
+    "packageRoot": "/private/tmp/artroom-builder-archive-input-work-20261023/node_modules/@cloudflare/vitest-pool-workers",
+    "copied": false,
+    "before": "cd50d18adce92adb54a3f00410d646b2fe09b3f12c5b833c492bcf5857621b39",
+    "after": "cd50d18adce92adb54a3f00410d646b2fe09b3f12c5b833c492bcf5857621b39"
+  },
+  "wall": 5.442532040993683,
+  "pythonCpu": 2.763477,
+  "childrenUser": 5.729605,
+  "childrenSystem": 1.110462,
+  "inclusiveCpu": 9.603544000000001,
+  "qualification": "Compatibility no-op once, four compiler roots and whole three-file focused body only. Full guarded Source/dependencies/tools/environment/Main/preparation; only declared selected-file cache cells and empty Vite-temp metadata may change during focused child. No control mutation, parser, package install, test collection, Node tails or gate. Callback gaps are reporting gaps; nested costs overlap."
+}

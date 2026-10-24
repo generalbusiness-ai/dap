@@ -1,0 +1,22 @@
+{
+  "argv": [
+    "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+    "/private/tmp/artroom-builder-archive-input-work-20261023/node_modules/vitest/vitest.mjs",
+    "run",
+    "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+    "--config",
+    "/private/tmp/artroom-builder-archive-input-work-20261023/vitest.config.ts",
+    "--project",
+    "git",
+    "--allowOnly=false",
+    "--passWithNoTests=false",
+    "--reporter=default",
+    "--reporter=json",
+    "--reporter=/private/tmp/artroom-builder-archive-input-work-20261023/scripts/test-progress.mjs",
+    "--outputFile.json=/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/git-inflation/vitest.json"
+  ],
+  "cwd": "/private/tmp/artroom-builder-archive-input-work-20261023",
+  "childEnvironmentAddition": {
+    "ARTROOM_TEST_PROGRESS": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/git-inflation/progress.jsonl"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "argv": [
+    "/private/tmp/artroom-archive-input-work-final-gate-source-20261023-v4/gate-owner.py",
+    "/private/tmp/artroom-archive-input-work-final-gate-binding-allocated-20261023-v4.json",
+    "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4"
+  ],
+  "pid": 45493,
+  "cwd": "/Users/hughpyle/play/artroom",
+  "childArgv": [
+    "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+    "/opt/homebrew/lib/node_modules/npm/bin/npm-cli.js",
+    "run",
+    "gate"
+  ],
+  "childCwd": "/private/tmp/artroom-builder-archive-input-work-20261023",
+  "declaredChildEnvironment": {
+    "ARTROOM_TEST_PROGRESS": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/test-progress.jsonl"
+  },
+  "invocationProvenanceDigests": {
+    "CODEX_TOOL_CALL_ID": "9203802ca31dd4da5d87b8d9e048ac1f73a1ac307b0ef585079bfff7dabf0223"
+  }
+}

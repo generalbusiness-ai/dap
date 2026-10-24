@@ -1,0 +1,7 @@
+{
+  "path": "packages/scope/src/archive-host.ts",
+  "before": "inputWork: v2 ? 1024 : wire * 32",
+  "after": "inputWork: wire * 32 + (v2 ? 1024 : 0)",
+  "originalSha256": "9d0ad63e4ce1052d99eb0b537cbb5d21ec90622f8a1e9c9ffb0c374392984207",
+  "mutantSha256": "8d3e0c35626a4ae80d80d89c8c5c9ebe5d91eb05975aee75b0433df4197dc595"
+}

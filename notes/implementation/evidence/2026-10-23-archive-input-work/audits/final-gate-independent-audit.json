@@ -1,0 +1,1821 @@
+{
+  "kind": "Independent closed actual input-work ordinary-gate audit",
+  "request": "78638defde7a4613aef78414dbcee73aecc565fd",
+  "promise": "ade43f6922e44f5f7366ae8ba9bdb53206bbc645",
+  "disposition": "PASS: original child0, exact complete identities/stages/Node outcomes and full fixed guards; callback gaps retained",
+  "rootOriginalClosure": {
+    "session": 84951,
+    "tool": "922903",
+    "naturalExit": 0,
+    "qualification": "Root observed original outer tool closure; this audit independently reads retained original data, without rerun."
+  },
+  "allocation": "2603bb4af334f58bda190195190afef4c71df906",
+  "checkpoint": {
+    "head": "0859b64e3be5a43e57dbf03ea9f2e5bd6009e0e8",
+    "tree": "7f337d29035b5f863e4334df45a3c0e8f740c9ee",
+    "base": "b1b2169c90b293cf059df446362d329263952eac",
+    "qualification": "Root supplied clean final report checkpoint. Strict complete framework IDs include Native380254411_0. Actual host seal and primary/evidence adoption correspondence is retained adjacent. Capture/runtime require separate root allocation."
+  },
+  "process": {
+    "argv": [
+      "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+      "/opt/homebrew/lib/node_modules/npm/bin/npm-cli.js",
+      "run",
+      "gate"
+    ],
+    "cwd": "/private/tmp/artroom-builder-archive-input-work-20261023",
+    "pid": 45519,
+    "exit": 0,
+    "signal": null,
+    "wall": 1216.587973583024,
+    "user": 1250.223962,
+    "sys": 170.196145
+  },
+  "caseEvidence": {
+    "terminal": 3506,
+    "states": {
+      "passed": 3503,
+      "skipped": 3
+    },
+    "files": 490,
+    "canonicalFiveTuplesSha256": "75d84abbae42dfff0a0eba7a4734ab00688d631a55b8c089b5952f69662a224a",
+    "allExpectedFiveTuplesExact": true,
+    "legacyRows": 3505,
+    "native": {
+      "event": "case-final",
+      "time": "2026-10-24T01:01:08.847Z",
+      "id": "380254411_0",
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-input-work.test.ts",
+      "name": "legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder",
+      "state": "passed"
+    },
+    "runStart": [
+      {
+        "event": "run-start",
+        "time": "2026-10-24T00:41:16.261Z",
+        "files": 490
+      }
+    ],
+    "runEnd": [
+      {
+        "event": "run-end",
+        "time": "2026-10-24T01:01:08.848Z",
+        "files": 490,
+        "unhandledErrors": 0,
+        "reason": "passed"
+      }
+    ],
+    "callbacks": {
+      "ready": {
+        "count": 3488,
+        "missing": 18,
+        "missingStates": {
+          "passed": 18
+        }
+      },
+      "result": {
+        "count": 3486,
+        "missing": 20,
+        "missingStates": {
+          "passed": 20
+        },
+        "states": {
+          "passed": 3483,
+          "skipped": 3
+        }
+      }
+    },
+    "missingReadyTerminalRows": [
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.848Z",
+        "id": "1746186093_10_0",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/turn.test.ts",
+        "name": "the budget of timed attempts, here 2 for a turn (section 5.2, step 7) > 1 due: 1 timed entries are written, +0 stays due, and the waiting act is 'accepted'",
+        "state": "passed"
+      },
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.848Z",
+        "id": "1746186093_10_1",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/turn.test.ts",
+        "name": "the budget of timed attempts, here 2 for a turn (section 5.2, step 7) > 2 due: 2 timed entries are written, +0 stays due, and the waiting act is 'accepted'",
+        "state": "passed"
+      },
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.848Z",
+        "id": "1746186093_10_2",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/turn.test.ts",
+        "name": "the budget of timed attempts, here 2 for a turn (section 5.2, step 7) > 3 due: 2 timed entries are written, 1 stays due, and the waiting act is 'busy'",
+        "state": "passed"
+      },
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.848Z",
+        "id": "1746186093_10_3",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/turn.test.ts",
+        "name": "the budget of timed attempts, here 2 for a turn (section 5.2, step 7) > a selection dropped each time, the clock reading the deadline at selection and one second less at commit, ends the turn busy with nothing written",
+        "state": "passed"
+      },
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.848Z",
+        "id": "1746186093_10_4",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/turn.test.ts",
+        "name": "the budget of timed attempts, here 2 for a turn (section 5.2, step 7) > the restarts of one turn are bounded, here at 1: an act whose every commit finds the hold newly due ends busy with nothing written",
+        "state": "passed"
+      },
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.848Z",
+        "id": "1746186093_10_5",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/turn.test.ts",
+        "name": "the budget of timed attempts, here 2 for a turn (section 5.2, step 7) > preparation has a time limit, here 10 milliseconds: an act whose rule is not evaluated in time is answered unavailable and writes nothing; one that is evaluated in time is accepted",
+        "state": "passed"
+      },
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.848Z",
+        "id": "1746186093_11_0",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/turn.test.ts",
+        "name": "the clock behind the history (section 5.3) > with a transition due, nothing is written and every input is answered clock-behind",
+        "state": "passed"
+      },
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.848Z",
+        "id": "1746186093_11_1",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/turn.test.ts",
+        "name": "the clock behind the history (section 5.3) > with nothing due, an act is answered clock-behind and a checkpoint, which judges no time, is written with the previous entry's time, clamped",
+        "state": "passed"
+      },
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.848Z",
+        "id": "1746186093_12_0",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/turn.test.ts",
+        "name": "the scope's budget (section 9.2), here 12 entries > legacy: new work cannot take admitted holds' timed entries or the closing checkpoint",
+        "state": "passed"
+      },
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.848Z",
+        "id": "1746186093_12_1",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/turn.test.ts",
+        "name": "the scope's budget (section 9.2), here 12 entries > whole-scope: new work cannot take admitted holds' timed entries or the closing checkpoint",
+        "state": "passed"
+      },
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.848Z",
+        "id": "1746186093_12_2",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/turn.test.ts",
+        "name": "the scope's budget (section 9.2), here 12 entries > a checkpoint beside a pending hold is new work, and with 6 entries it is 'unavailable'; the closing checkpoint is entry 5",
+        "state": "passed"
+      },
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.848Z",
+        "id": "1746186093_12_3",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/turn.test.ts",
+        "name": "the scope's budget (section 9.2), here 12 entries > a checkpoint beside a pending hold is new work, and with 7 entries it is 'written'; the closing checkpoint is entry 6",
+        "state": "passed"
+      },
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.848Z",
+        "id": "1746186093_12_4",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/turn.test.ts",
+        "name": "the scope's budget (section 9.2), here 12 entries > legacy: a full report scope still writes its acceptance and the request that acceptance reserved",
+        "state": "passed"
+      },
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.848Z",
+        "id": "1746186093_5",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/turn.test.ts",
+        "name": "logical bytes in real SQLite count UTF-8 payloads once across journal and retained domains, redact texts, and roll back retention",
+        "state": "passed"
+      },
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.848Z",
+        "id": "1746186093_6",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/turn.test.ts",
+        "name": "logical key counts in real SQLite retain final keys, ignore transport ACKs, survive reopening and roll back with their writes",
+        "state": "passed"
+      },
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.848Z",
+        "id": "1746186093_7_0",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/turn.test.ts",
+        "name": "the head check (section 5.2, steps 4 to 6) > a second act commits while the first is in preparation; the first starts again from step 3 and is prepared and judged on the new head",
+        "state": "passed"
+      },
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.848Z",
+        "id": "1746186093_9_0",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/turn.test.ts",
+        "name": "what follows the head is told of each commit (`Turns.onSealed`) > a turn tells its listener after each entry that it seals, a timed entry as an input's, at that entry's head and in order; a turn that writes nothing tells nothing; a listener that fails changes no entry. The turns are made by hand over the object's storage",
+        "state": "passed"
+      },
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.847Z",
+        "id": "369754740_0_0",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/membership.test.ts",
+        "name": "authority on real scopes, under the production wiring (authority note, sections 3.1, 3.3, 3.5 and 12.1.3; the contract's section 16.1) > an act at an inbox is judged on a real observation of the signing key, read from the membership scope that the inbox's genesis records; after the key is revoked the next act on a fresh read is refused, and another member's key is not",
+        "state": "passed"
+      }
+    ],
+    "missingResultTerminalRows": [
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.848Z",
+        "id": "1746186093_10_0",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/turn.test.ts",
+        "name": "the budget of timed attempts, here 2 for a turn (section 5.2, step 7) > 1 due: 1 timed entries are written, +0 stays due, and the waiting act is 'accepted'",
+        "state": "passed"
+      },
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.848Z",
+        "id": "1746186093_10_1",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/turn.test.ts",
+        "name": "the budget of timed attempts, here 2 for a turn (section 5.2, step 7) > 2 due: 2 timed entries are written, +0 stays due, and the waiting act is 'accepted'",
+        "state": "passed"
+      },
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.848Z",
+        "id": "1746186093_10_2",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/turn.test.ts",
+        "name": "the budget of timed attempts, here 2 for a turn (section 5.2, step 7) > 3 due: 2 timed entries are written, 1 stays due, and the waiting act is 'busy'",
+        "state": "passed"
+      },
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.848Z",
+        "id": "1746186093_10_3",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/turn.test.ts",
+        "name": "the budget of timed attempts, here 2 for a turn (section 5.2, step 7) > a selection dropped each time, the clock reading the deadline at selection and one second less at commit, ends the turn busy with nothing written",
+        "state": "passed"
+      },
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.848Z",
+        "id": "1746186093_10_4",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/turn.test.ts",
+        "name": "the budget of timed attempts, here 2 for a turn (section 5.2, step 7) > the restarts of one turn are bounded, here at 1: an act whose every commit finds the hold newly due ends busy with nothing written",
+        "state": "passed"
+      },
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.848Z",
+        "id": "1746186093_10_5",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/turn.test.ts",
+        "name": "the budget of timed attempts, here 2 for a turn (section 5.2, step 7) > preparation has a time limit, here 10 milliseconds: an act whose rule is not evaluated in time is answered unavailable and writes nothing; one that is evaluated in time is accepted",
+        "state": "passed"
+      },
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.848Z",
+        "id": "1746186093_10_6",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/turn.test.ts",
+        "name": "the budget of timed attempts, here 2 for a turn (section 5.2, step 7) > an alarm's turn has the same budget: it writes 2 of 3, leaves the third due and sets the alarm again; the next alarm writes it",
+        "state": "passed"
+      },
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.848Z",
+        "id": "1746186093_11_0",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/turn.test.ts",
+        "name": "the clock behind the history (section 5.3) > with a transition due, nothing is written and every input is answered clock-behind",
+        "state": "passed"
+      },
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.848Z",
+        "id": "1746186093_11_1",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/turn.test.ts",
+        "name": "the clock behind the history (section 5.3) > with nothing due, an act is answered clock-behind and a checkpoint, which judges no time, is written with the previous entry's time, clamped",
+        "state": "passed"
+      },
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.848Z",
+        "id": "1746186093_12_0",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/turn.test.ts",
+        "name": "the scope's budget (section 9.2), here 12 entries > legacy: new work cannot take admitted holds' timed entries or the closing checkpoint",
+        "state": "passed"
+      },
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.848Z",
+        "id": "1746186093_12_1",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/turn.test.ts",
+        "name": "the scope's budget (section 9.2), here 12 entries > whole-scope: new work cannot take admitted holds' timed entries or the closing checkpoint",
+        "state": "passed"
+      },
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.848Z",
+        "id": "1746186093_12_2",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/turn.test.ts",
+        "name": "the scope's budget (section 9.2), here 12 entries > a checkpoint beside a pending hold is new work, and with 6 entries it is 'unavailable'; the closing checkpoint is entry 5",
+        "state": "passed"
+      },
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.848Z",
+        "id": "1746186093_12_3",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/turn.test.ts",
+        "name": "the scope's budget (section 9.2), here 12 entries > a checkpoint beside a pending hold is new work, and with 7 entries it is 'written'; the closing checkpoint is entry 6",
+        "state": "passed"
+      },
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.848Z",
+        "id": "1746186093_4",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/turn.test.ts",
+        "name": "the opt-in rule-input writer ceiling accepts exact canonical bytes and refuses one more even when evaluation returns false; legacy retention is unchanged",
+        "state": "passed"
+      },
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.848Z",
+        "id": "1746186093_5",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/turn.test.ts",
+        "name": "logical bytes in real SQLite count UTF-8 payloads once across journal and retained domains, redact texts, and roll back retention",
+        "state": "passed"
+      },
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.848Z",
+        "id": "1746186093_6",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/turn.test.ts",
+        "name": "logical key counts in real SQLite retain final keys, ignore transport ACKs, survive reopening and roll back with their writes",
+        "state": "passed"
+      },
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.848Z",
+        "id": "1746186093_7_0",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/turn.test.ts",
+        "name": "the head check (section 5.2, steps 4 to 6) > a second act commits while the first is in preparation; the first starts again from step 3 and is prepared and judged on the new head",
+        "state": "passed"
+      },
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.848Z",
+        "id": "1746186093_8_0",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/turn.test.ts",
+        "name": "a due expiry is written before any other input (section 5.2, steps 3 and 6.3) > an act whose commit reading is at two holds' deadline stops; the drain writes both ends, the lower item first, and then the act",
+        "state": "passed"
+      },
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.848Z",
+        "id": "1746186093_9_0",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/turn.test.ts",
+        "name": "what follows the head is told of each commit (`Turns.onSealed`) > a turn tells its listener after each entry that it seals, a timed entry as an input's, at that entry's head and in order; a turn that writes nothing tells nothing; a listener that fails changes no entry. The turns are made by hand over the object's storage",
+        "state": "passed"
+      },
+      {
+        "event": "case-final",
+        "time": "2026-10-24T01:01:08.848Z",
+        "id": "1760911592_0",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/apps/room/lanes/test/file-publication.scope.test.ts",
+        "name": "a real change and Lending tell share one slot: the held change finishes first and the later file wins with its own receipt",
+        "state": "passed"
+      }
+    ],
+    "qualification": "Terminal framework rows are authoritative. 18 missing ready callbacks and 20 missing result callbacks are reporting gaps; no start, drain, cancellation or teardown completion is inferred from their absence."
+  },
+  "stageCosts": {
+    "whitespace": {
+      "exit": 0,
+      "real": 0.01,
+      "user": 0.0,
+      "sys": 0.01
+    },
+    "commit-messages": {
+      "exit": 0,
+      "real": 0.11,
+      "user": 0.08,
+      "sys": 0.02
+    },
+    "commit-test": {
+      "exit": 0,
+      "real": 0.59,
+      "user": 0.38,
+      "sys": 0.17
+    },
+    "helpers": {
+      "exit": 0,
+      "real": 0.39,
+      "user": 0.43,
+      "sys": 0.06
+    },
+    "citations": {
+      "exit": 0,
+      "real": 5.6,
+      "user": 5.62,
+      "sys": 0.24
+    },
+    "cite-test": {
+      "exit": 0,
+      "real": 0.35,
+      "user": 0.28,
+      "sys": 0.07
+    },
+    "typecheck": {
+      "exit": 0,
+      "real": 9.78,
+      "user": 33.49,
+      "sys": 4.31
+    },
+    "test": {
+      "exit": 0,
+      "real": 1199.34,
+      "user": 1209.66,
+      "sys": 165.18
+    }
+  },
+  "nodeBlocks": [
+    {
+      "stage": "commit-test",
+      "count": 4,
+      "summaries": {
+        "tests": 4,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "cases": [
+        {
+          "name": "subjects accept 100 code points and refuse 101 or an unseparated body",
+          "status": "passed",
+          "reportedMilliseconds": 1.402334
+        },
+        {
+          "name": "word/hash boundaries distinguish glued prefixes and suffixes from names and bare hashes",
+          "status": "passed",
+          "reportedMilliseconds": 0.421875
+        },
+        {
+          "name": "terminal trailers are exempt while body lookalikes and continuation text remain checked",
+          "status": "passed",
+          "reportedMilliseconds": 0.134834
+        },
+        {
+          "name": "the command checks the whole base..head range, including side history, and fails closed on a missing base",
+          "status": "passed",
+          "reportedMilliseconds": 443.106708
+        }
+      ]
+    },
+    {
+      "stage": "cite-test",
+      "count": 7,
+      "summaries": {
+        "tests": 7,
+        "pass": 7,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "cases": [
+        {
+          "name": "named citations bind their own headings and ambiguous references stay listed",
+          "status": "passed",
+          "reportedMilliseconds": 2.605125
+        },
+        {
+          "name": "syntax extraction ignores example strings while retaining real comments",
+          "status": "passed",
+          "reportedMilliseconds": 0.299875
+        },
+        {
+          "name": "historical notes are inventoried without guessing from nearby document names",
+          "status": "passed",
+          "reportedMilliseconds": 0.107792
+        },
+        {
+          "name": "broken Markdown section links fail against their actual document",
+          "status": "passed",
+          "reportedMilliseconds": 0.22675
+        },
+        {
+          "name": "parenthesized names bind while unknown manuals break introductory defaults",
+          "status": "passed",
+          "reportedMilliseconds": 0.127959
+        },
+        {
+          "name": "exact known findings stay unresolved and changed, duplicate or stale rows fail",
+          "status": "passed",
+          "reportedMilliseconds": 0.193125
+        },
+        {
+          "name": "the real command fails when only a named citation is changed to a missing section",
+          "status": "passed",
+          "reportedMilliseconds": 193.154417
+        }
+      ]
+    },
+    {
+      "stage": "test",
+      "count": 37,
+      "summaries": {
+        "tests": 37,
+        "pass": 37,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "cases": [
+        {
+          "name": "the generated witness's own test timeout names the stalled case and preserves its failure",
+          "status": "passed",
+          "reportedMilliseconds": 281.195167
+        },
+        {
+          "name": "a module that never reaches a case hits the whole child deadline even if reporting fails",
+          "status": "passed",
+          "reportedMilliseconds": 1506.320709
+        },
+        {
+          "name": "finishing a case does not turn a child stuck in teardown into a pass",
+          "status": "passed",
+          "reportedMilliseconds": 1508.003584
+        },
+        {
+          "name": "interrupting the wrapper also stops the detached test worker's owned listener",
+          "status": "passed",
+          "reportedMilliseconds": 241.729583
+        },
+        {
+          "name": "managed recipe preserves all nineteen recorded public bodies and the security configuration",
+          "status": "passed",
+          "reportedMilliseconds": 34.379875
+        },
+        {
+          "name": "stale source or an unlisted asset refuses before creating an output",
+          "status": "passed",
+          "reportedMilliseconds": 21.120292
+        },
+        {
+          "name": "six built pages preserve copy, links, child headers, shared style and link previews; the homepage lists five destinations",
+          "status": "passed",
+          "reportedMilliseconds": 27.396042
+        },
+        {
+          "name": "explicit DAP_HOME and legacy ARTROOM_HOME select one normalized path or refuse before probing",
+          "status": "passed",
+          "reportedMilliseconds": 0.472375
+        },
+        {
+          "name": "new defaults use dap but occupied legacy XDG custody retains precedence over the home fallback",
+          "status": "passed",
+          "reportedMilliseconds": 0.313125
+        },
+        {
+          "name": "an empty new directory cannot hide legacy config, keys or pending records, and selection changes no bytes",
+          "status": "passed",
+          "reportedMilliseconds": 4.303167
+        },
+        {
+          "name": "no active file names a removed format, binding or variable",
+          "status": "passed",
+          "reportedMilliseconds": 151.173291
+        },
+        {
+          "name": "no active source or configuration file reaches into spikes/parked/, and spikes/parked/ is in no workspace",
+          "status": "passed",
+          "reportedMilliseconds": 2041.134708
+        },
+        {
+          "name": "no platform package depends on the lanes package or imports from it",
+          "status": "passed",
+          "reportedMilliseconds": 23.106166
+        },
+        {
+          "name": "the platform package depends only on contract, bytes and derive, and only scope, replay, lanes, cli, page and mcp name it",
+          "status": "passed",
+          "reportedMilliseconds": 10.273666
+        },
+        {
+          "name": "Git keeps its lower-layer dependencies; Replay names it only at its exact development boundaries",
+          "status": "passed",
+          "reportedMilliseconds": 32.675542
+        },
+        {
+          "name": "archive Node exceptions are exact and preserve portable and Git dependency directions",
+          "status": "passed",
+          "reportedMilliseconds": 31.108
+        },
+        {
+          "name": "the checkers package depends only on contract, bytes and git, and no package names it",
+          "status": "passed",
+          "reportedMilliseconds": 76.631166
+        },
+        {
+          "name": "MCP relative imports stay inside tracked server source",
+          "status": "passed",
+          "reportedMilliseconds": 0.225209
+        },
+        {
+          "name": "the MCP server imports its lower layers and the exact public application Git reader only",
+          "status": "passed",
+          "reportedMilliseconds": 13.198917
+        },
+        {
+          "name": "framework runtime modules do not import application source",
+          "status": "passed",
+          "reportedMilliseconds": 82.83775
+        },
+        {
+          "name": "a new source file cannot redefine a bytes helper through a function, exported arrow or typed expression",
+          "status": "passed",
+          "reportedMilliseconds": 1.006833
+        },
+        {
+          "name": "the owner, imports and public aliases pass; source strings, comments and different meanings are not declarations",
+          "status": "passed",
+          "reportedMilliseconds": 0.526541
+        },
+        {
+          "name": "the actual pinned pool factory keeps one lazy prototype across early and late constructions, preserving receiver and later prototype methods",
+          "status": "passed",
+          "reportedMilliseconds": 2.538666
+        },
+        {
+          "name": "compatibility privately copies cache-linked bytes, is idempotent, and refuses unknown versions or bundles before changing that view",
+          "status": "passed",
+          "reportedMilliseconds": 14.548
+        },
+        {
+          "name": "Judge uses weighted event counts, counter sums and route quantiles once",
+          "status": "passed",
+          "reportedMilliseconds": 1.520292
+        },
+        {
+          "name": "Judge passes the unsampled synthetic boundary with declared limits",
+          "status": "passed",
+          "reportedMilliseconds": 0.462625
+        },
+        {
+          "name": "Judge refuses insufficient, stale, erroneous, slow or busy observations",
+          "status": "passed",
+          "reportedMilliseconds": 1.257375
+        },
+        {
+          "name": "Judge requires loss-free unsampled balance at each actual HTTP place",
+          "status": "passed",
+          "reportedMilliseconds": 1.380916
+        },
+        {
+          "name": "Judge binds health and isolates the selected version and window",
+          "status": "passed",
+          "reportedMilliseconds": 0.69625
+        },
+        {
+          "name": "Judge refuses malformed query observations and a missing bound",
+          "status": "passed",
+          "reportedMilliseconds": 0.540625
+        },
+        {
+          "name": "Judge client binds one bounded SQL window and a private independent health read",
+          "status": "passed",
+          "reportedMilliseconds": 12.641583
+        },
+        {
+          "name": "Judge client refuses failed, truncated or oversized observations without echoing them",
+          "status": "passed",
+          "reportedMilliseconds": 76.324375
+        },
+        {
+          "name": "Judge CLI takes the completed version from retained output and requires calibration before I/O",
+          "status": "passed",
+          "reportedMilliseconds": 5.682542
+        },
+        {
+          "name": "every served Worker route/method has exactly its reviewed gate-class row",
+          "status": "passed",
+          "reportedMilliseconds": 284.076958
+        },
+        {
+          "name": "a real matcher change fails the inventory bijection with the page unchanged",
+          "status": "passed",
+          "reportedMilliseconds": 138.636
+        },
+        {
+          "name": "the bijection rejects a missing row, an extra row, and a changed gate",
+          "status": "passed",
+          "reportedMilliseconds": 133.323459
+        },
+        {
+          "name": "R8 public and sandbox matcher changes fail their finite inventory",
+          "status": "passed",
+          "reportedMilliseconds": 459.461167
+        }
+      ]
+    },
+    {
+      "stage": "test",
+      "count": 55,
+      "summaries": {
+        "tests": 55,
+        "pass": 55,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "cases": [
+        {
+          "name": "Counter demo offers and plays only en-US voices, including after inventory changes",
+          "status": "passed",
+          "reportedMilliseconds": 0.942459
+        },
+        {
+          "name": "Roster removal leaves the identity-owned original Check report reachable without signing, POST or speech",
+          "status": "passed",
+          "reportedMilliseconds": 88.342416
+        },
+        {
+          "name": "Explicit Resume command fences active playback before dispatch and displays the trusted refusal",
+          "status": "passed",
+          "reportedMilliseconds": 5.517583
+        },
+        {
+          "name": "Counter acknowledgement requires a recorded local effect and keeps playback, unknown and refusal messages",
+          "status": "passed",
+          "reportedMilliseconds": 0.875625
+        },
+        {
+          "name": "One Join waits for a fresh record, records participation and own activation, then arms; Leave deactivates after stopping local speech",
+          "status": "passed",
+          "reportedMilliseconds": 2.32475
+        },
+        {
+          "name": "Join refuses unusable voices and duplicate runner ownership before mutation, and keeps partial unknown participation as an original",
+          "status": "passed",
+          "reportedMilliseconds": 0.9095
+        },
+        {
+          "name": "Automatic commits keep native fairness and do not retry a refused turn when only the observed head advances",
+          "status": "passed",
+          "reportedMilliseconds": 1.841333
+        },
+        {
+          "name": "A Pause-winning refused automatic commit recovers after Start at a new accepted revision without Leave or Join",
+          "status": "passed",
+          "reportedMilliseconds": 1.713375
+        },
+        {
+          "name": "Automatic refused correction wakes from a relevant accepted state received while the original command was busy",
+          "status": "passed",
+          "reportedMilliseconds": 1.632166
+        },
+        {
+          "name": "Automatic unsent correction wakes from a relevant accepted state received while the original command was busy",
+          "status": "passed",
+          "reportedMilliseconds": 1.206542
+        },
+        {
+          "name": "A refused automatic commit corrects its accepted roster basis once while preserving fairness",
+          "status": "passed",
+          "reportedMilliseconds": 2.208417
+        },
+        {
+          "name": "Automatic unsent outcome only permits relevant-state correction when definitely unsent",
+          "status": "passed",
+          "reportedMilliseconds": 1.769375
+        },
+        {
+          "name": "Automatic blocked outcome only permits relevant-state correction when definitely unsent",
+          "status": "passed",
+          "reportedMilliseconds": 2.330708
+        },
+        {
+          "name": "Automatic unknown outcome only permits relevant-state correction when definitely unsent",
+          "status": "passed",
+          "reportedMilliseconds": 0.937209
+        },
+        {
+          "name": "Automatic recorded outcome only permits relevant-state correction when definitely unsent",
+          "status": "passed",
+          "reportedMilliseconds": 1.181708
+        },
+        {
+          "name": "A stale Join context cannot activate, arm or repaint after its pending participation returns",
+          "status": "passed",
+          "reportedMilliseconds": 0.6965
+        },
+        {
+          "name": "FAKE correlated trusted first refusal commits judgment before terminal control custody clears",
+          "status": "passed",
+          "reportedMilliseconds": 76.99425
+        },
+        {
+          "name": "FAKE wrong-route first response stays unknown; later refusal/head cannot settle it, exact accepted history can",
+          "status": "passed",
+          "reportedMilliseconds": 71.985958
+        },
+        {
+          "name": "FAKE Check command leaves prepared custody unchanged; concurrent explicit Resume first-dispatches identical bytes once; restored inflight and legacy commands never POST",
+          "status": "passed",
+          "reportedMilliseconds": 143.7
+        },
+        {
+          "name": "FAKE known-refusal journal-save failure fences correction; unavailable local candidate never saves or POSTs",
+          "status": "passed",
+          "reportedMilliseconds": 55.863125
+        },
+        {
+          "name": "FAKE changed active journal fences the first ticket and prevents a stale terminal overwrite",
+          "status": "passed",
+          "reportedMilliseconds": 46.303916
+        },
+        {
+          "name": "FAKE malformed restored PreparedEnvelope and refusal stay blocked without POST or terminal clear",
+          "status": "passed",
+          "reportedMilliseconds": 76.299666
+        },
+        {
+          "name": "FAKE prepared structural mismatch blocks dispatcher before inflight and preserves the whole original",
+          "status": "passed",
+          "reportedMilliseconds": 21.026333
+        },
+        {
+          "name": "FAKE read-only dispatcher Check leaves valid prepared custody unsent; original resume consumes it once",
+          "status": "passed",
+          "reportedMilliseconds": 41.086125
+        },
+        {
+          "name": "C1 claims use the complete active roster without assigning a speaker, and only the exact linked pledge can resolve",
+          "status": "passed",
+          "reportedMilliseconds": 3.589208
+        },
+        {
+          "name": "TEST bundle becomes non-extractable keys that survive structured clone and sign existing request domains; loader buffers are cleared",
+          "status": "passed",
+          "reportedMilliseconds": 39.660042
+        },
+        {
+          "name": "TEST mismatched bundles are refused and cleared; legacy raw seed imports use the same non-extractable path",
+          "status": "passed",
+          "reportedMilliseconds": 4.763875
+        },
+        {
+          "name": "Explicit Arm starts local speech once; duplicate end and snapshots cannot replay the same turn",
+          "status": "passed",
+          "reportedMilliseconds": 23.243959
+        },
+        {
+          "name": "Arm while paused or waiting retains the selected voice until a fresh own assignment",
+          "status": "passed",
+          "reportedMilliseconds": 0.544292
+        },
+        {
+          "name": "Pause fences callbacks and retains uncertain audio until native resolution and a new explicit arm",
+          "status": "passed",
+          "reportedMilliseconds": 12.331292
+        },
+        {
+          "name": "Complete context binding rejects key, full scope, membership, deployment, member, definition and origin changes",
+          "status": "passed",
+          "reportedMilliseconds": 1.4815
+        },
+        {
+          "name": "Reset generation, serial and N changes fence late callbacks without replaying uncertain audio",
+          "status": "passed",
+          "reportedMilliseconds": 0.68225
+        },
+        {
+          "name": "Ordinary refresh holds a completion until a fresh exact token; forbidden or expired turns cancel it",
+          "status": "passed",
+          "reportedMilliseconds": 10.605875
+        },
+        {
+          "name": "Private persistence failure blocks POST",
+          "status": "passed",
+          "reportedMilliseconds": 4.733083
+        },
+        {
+          "name": "Unknown retains the exact signed envelope, fences signatures and playback, and observations cannot settle it",
+          "status": "passed",
+          "reportedMilliseconds": 68.781583
+        },
+        {
+          "name": "Known refusal can prepare a corrected successor using the same completion without speech replay",
+          "status": "passed",
+          "reportedMilliseconds": 97.813459
+        },
+        {
+          "name": "Loaded pending custody must match the complete context and blocks replay after restart",
+          "status": "passed",
+          "reportedMilliseconds": 5.769791
+        },
+        {
+          "name": "An old controller cannot paint, prepare, or report after losing the shared view",
+          "status": "passed",
+          "reportedMilliseconds": 0.31975
+        },
+        {
+          "name": "Invalidation while prepare is in flight prevents even a same-token later observation from reviving that attempt",
+          "status": "passed",
+          "reportedMilliseconds": 1.040292
+        },
+        {
+          "name": "A fresh next own assignment arriving during submit or reconciliation starts after custody work releases busy",
+          "status": "passed",
+          "reportedMilliseconds": 60.15125
+        },
+        {
+          "name": "Verified fulfillment archive keeps the selected voice armed for a fresh next pledge without replaying the completed token",
+          "status": "passed",
+          "reportedMilliseconds": 25.457291
+        },
+        {
+          "name": "The played-token ceiling disarms new speech without discarding unresolved exact custody",
+          "status": "passed",
+          "reportedMilliseconds": 59.086417
+        },
+        {
+          "name": "Eight refused attempts retain the original history and prevent a ninth signature or speech replay",
+          "status": "passed",
+          "reportedMilliseconds": 835.883708
+        },
+        {
+          "name": "Unavailable correction room blocks signing and an oversized prepared successor cannot replace refused history",
+          "status": "passed",
+          "reportedMilliseconds": 81.673375
+        },
+        {
+          "name": "A returned refused enum without retained service proof and a legacy refused slot stay unknown",
+          "status": "passed",
+          "reportedMilliseconds": 38.161042
+        },
+        {
+          "name": "Refusal refresh runs after stale fencing even when CURRENT arrived before the reporter returned",
+          "status": "passed",
+          "reportedMilliseconds": 85.977042
+        },
+        {
+          "name": "A same-envelope handoff cannot reparent the report to another retained completion",
+          "status": "passed",
+          "reportedMilliseconds": 6.130875
+        },
+        {
+          "name": "Obsolete known refusal archives intact, while a valid active unknown history fences archive",
+          "status": "passed",
+          "reportedMilliseconds": 78.476291
+        },
+        {
+          "name": "Malformed restored refusal never becomes a known terminal UI classification",
+          "status": "passed",
+          "reportedMilliseconds": 27.977333
+        },
+        {
+          "name": "Archive quota failure preserves intact terminal custody and does not unblock new speech",
+          "status": "passed",
+          "reportedMilliseconds": 40.032959
+        },
+        {
+          "name": "Restored recorded phase without receipt confirmation remains unresolved and cannot clear or archive",
+          "status": "passed",
+          "reportedMilliseconds": 46.368166
+        },
+        {
+          "name": "Check is read-only; explicit Resume dispatches only the exact prepared original without signing or speech",
+          "status": "passed",
+          "reportedMilliseconds": 55.113708
+        },
+        {
+          "name": "Durable audio start is retained before speech and an interrupted restart cannot replay it",
+          "status": "passed",
+          "reportedMilliseconds": 0.445667
+        },
+        {
+          "name": "Audio start failure and mismatched readback block sound; voice switch retains uncertainty and exact report transfer remains checkable",
+          "status": "passed",
+          "reportedMilliseconds": 24.987375
+        },
+        {
+          "name": "A stale pre-audio lock grant releases an unsent pledge; a fresh notice while busy starts it once after release",
+          "status": "passed",
+          "reportedMilliseconds": 0.356709
+        }
+      ]
+    }
+  ],
+  "guardEvidence": {
+    "beforeEqualsAllocatedBinding": true,
+    "allNonDependencyFieldsExact": true,
+    "source": 2985,
+    "privateDependenciesIncludingRoot": 6072,
+    "npmNamespace": 2414,
+    "external": 233,
+    "toolResolutions": 214,
+    "pathResolvers": 17,
+    "environmentDigests": 60,
+    "onlyDependencyDelta": {
+      "node_modules/.vite/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/results.json": {
+        "before": {
+          "mode": "0o644",
+          "device": 16777231,
+          "inode": 545653495,
+          "nlink": 1,
+          "kind": "file",
+          "bytes": 45648,
+          "sha256": "1e43e342de54e166642a3296beaad1c42af35f0f172a4b585fc3dedffbdd5085"
+        },
+        "after": {
+          "mode": "0o644",
+          "device": 16777231,
+          "inode": 545653495,
+          "nlink": 1,
+          "kind": "file",
+          "bytes": 45643,
+          "sha256": "7b4a5b5c336e5829b76dac9716a35ade272626a2a5ec6e0689e14a655f0afdde"
+        }
+      }
+    },
+    "qualification": "Only existing same-inode Vitest results cache changed within inherited allowance. No Vite temporary allowance consumed. Source, lock/stamp, npm, CLT selection, tools/resolvers, environment/cwd, refs/head/tree/clean status and bound prepared inputs remain exact. No live dependency paths were read."
+  },
+  "costs": {
+    "ownerOuterWall": 1218.9577470000368,
+    "ownerPythonCpu": 1.626966,
+    "childrenUser": 1250.300176,
+    "childrenSys": 170.272612,
+    "ownerInclusiveCpu": 1422.199754,
+    "gateChildUserPlusSys": 1420.420107,
+    "testStage": {
+      "exit": 0,
+      "real": 1199.34,
+      "user": 1209.66,
+      "sys": 165.18
+    },
+    "qualification": "Per-stage figures are nested in the gate child, which is nested in owner totals. Do not sum overlapping intervals. Counting55 is maintained Node witness work, not a rendered browser claim."
+  },
+  "evidenceLimits": [
+    "All reads stayed within the granted closed raw root, exact allocated binding and held Source manifest leaves. No original temporary stage directory or external Counting artifact path was followed.",
+    "Stage copy bytes/hashes match owner-recorded original metadata; copied section-citations.json mode can differ from its separately recorded original0600 mode. No new copy provenance or old raw outcome is inferred.",
+    "This audit executes only fresh data processing, with no project command, historical program, parser/test/compiler/gate repeat, import or candidate mutation."
+  ],
+  "inputPins": [
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/after.json",
+      "bytes": 3256142,
+      "sha256": "7899ae8514ea9a332a45e75fefbeb91ab5ee21c2518671fcdebf2894a7108995",
+      "identity": [
+        16777231,
+        545802025,
+        33188,
+        1,
+        3256142,
+        1792803676477045230,
+        1792803676477045230
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/before.json",
+      "bytes": 3256142,
+      "sha256": "696cc7df566e3e14a3abb83243aacf57188e5e6817bc790032fbd73b7fbc1c1f",
+      "identity": [
+        16777231,
+        545753785,
+        33188,
+        1,
+        3256142,
+        1792802458273934816,
+        1792802458273934816
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/case-ledger.json",
+      "bytes": 1440856,
+      "sha256": "8369e69b920ddaf42b667a294f7213f029d8559eb3becb3b2478746cac1c0aa7",
+      "identity": [
+        16777231,
+        545802023,
+        33188,
+        1,
+        1440856,
+        1792803675002111162,
+        1792803675002111162
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/child-pid.json",
+      "bytes": 19,
+      "sha256": "b105612b6836baca087730e119616efe754354ec830c3f9934a805f9166ee44b",
+      "identity": [
+        16777231,
+        545753788,
+        33188,
+        1,
+        19,
+        1792802458277567414,
+        1792802458277567414
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/dependency-delta.json",
+      "bytes": 579,
+      "sha256": "c89520350c6d3f157047bfddddc660b1e636742c5d00da6d525c48451032e9eb",
+      "identity": [
+        16777231,
+        545802026,
+        33188,
+        1,
+        579,
+        1792803676481631577,
+        1792803676481631577
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/gate.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "identity": [
+        16777231,
+        545753787,
+        33188,
+        1,
+        0,
+        1792802458275993991,
+        1792802458276009074
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/gate.stdout.log",
+      "bytes": 781,
+      "sha256": "38f0ff3e52f4b1a84081faedc78421883af746f4d09e38128075a598bcb6b31b",
+      "identity": [
+        16777231,
+        545753786,
+        33188,
+        1,
+        781,
+        1792803674860665614,
+        1792803674860665614
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/invocation.json",
+      "bytes": 857,
+      "sha256": "3edcfe8f0c96891c9c2b1a36fb41e2990ae4a2af0e23c4d09dcf2f530dfe9187",
+      "identity": [
+        16777231,
+        545753781,
+        33188,
+        1,
+        857,
+        1792802457523378684,
+        1792802457523378684
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/process.json",
+      "bytes": 338,
+      "sha256": "c899e6585c530cdd4cb30387f297bcc90b859136c2ef6b14c48df4460e9b4efb",
+      "identity": [
+        16777231,
+        545802004,
+        33188,
+        1,
+        338,
+        1792803674864842294,
+        1792803674864842294
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/result.json",
+      "bytes": 1511098,
+      "sha256": "c6b64de93b8ff9a5447a67ba1b3780b5b38d6d37b85186ca3bd932d073139c0c",
+      "identity": [
+        16777231,
+        545802027,
+        33188,
+        1,
+        1511098,
+        1792803676484612378,
+        1792803676484612378
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/test-progress.jsonl",
+      "bytes": 3547893,
+      "sha256": "387aaab974e7165d9f796b6eaa5da04bf1c79a1c1880cce355422cf176405766",
+      "identity": [
+        16777231,
+        545754038,
+        33152,
+        1,
+        3547893,
+        1792803668848668589,
+        1792803668848668589
+      ],
+      "mode": "0o600"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/stages/citations.log",
+      "bytes": 1540528,
+      "sha256": "de0bf048b2c7df27f552d6734fb679c6bddab350273a858be66a58b7c98d9177",
+      "identity": [
+        16777231,
+        545802006,
+        33188,
+        1,
+        1540528,
+        1792803674867291593,
+        1792803674867291593
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/stages/citations.time",
+      "bytes": 29,
+      "sha256": "c7deee687030b420d327080dc5f98f702902293eb1d62fe12cba84ceca03a6f4",
+      "identity": [
+        16777231,
+        545802007,
+        33188,
+        1,
+        29,
+        1792803674867640635,
+        1792803674867640635
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/stages/cite-test.log",
+      "bytes": 762,
+      "sha256": "a40a8e9daf7daf92402307f636986e50540e6ad35597e3b1ee78e4a9d15ea05a",
+      "identity": [
+        16777231,
+        545802008,
+        33188,
+        1,
+        762,
+        1792803674868836931,
+        1792803674868836931
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/stages/cite-test.time",
+      "bytes": 29,
+      "sha256": "4888f1bb2d06f8a10868a54819bd92b9a3885a31551cc79710723df32ef023cd",
+      "identity": [
+        16777231,
+        545802009,
+        33188,
+        1,
+        29,
+        1792803674869122015,
+        1792803674869122015
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/stages/commit-messages.log",
+      "bytes": 38,
+      "sha256": "d565ad41c5104d7b8ad898e430e0ae846198a92a98421a50b7b7dd1fe7b6b472",
+      "identity": [
+        16777231,
+        545802010,
+        33188,
+        1,
+        38,
+        1792803674870413435,
+        1792803674870413435
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/stages/commit-messages.time",
+      "bytes": 29,
+      "sha256": "2f00bb14f48e47d581a40c36302b3d8f94ecd53f8ccfa6825008731de11235d2",
+      "identity": [
+        16777231,
+        545802011,
+        33188,
+        1,
+        29,
+        1792803674870614144,
+        1792803674870614144
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/stages/commit-test.log",
+      "bytes": 595,
+      "sha256": "d9051ac493999b6fba305a03425893872b9b843fd9e1903d0dd28500e8b58ec7",
+      "identity": [
+        16777231,
+        545802012,
+        33188,
+        1,
+        595,
+        1792803674870855437,
+        1792803674870855437
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/stages/commit-test.time",
+      "bytes": 29,
+      "sha256": "ef7320a0edef7c90e1d957d16fee71c6b7ba6ad40b11d9044c87712ac1c31aee",
+      "identity": [
+        16777231,
+        545802013,
+        33188,
+        1,
+        29,
+        1792803674871017895,
+        1792803674871017895
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/stages/helpers.log",
+      "bytes": 68,
+      "sha256": "5b40900741f61b49773ab187b34ac66a383855d5320dd4ee9e2ace3d7b933e65",
+      "identity": [
+        16777231,
+        545802014,
+        33188,
+        1,
+        68,
+        1792803674871280396,
+        1792803674871280396
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/stages/helpers.time",
+      "bytes": 29,
+      "sha256": "8dcf41c06a02993e78103ab72d396501848dd6186ee2d6b6e5111693521aac23",
+      "identity": [
+        16777231,
+        545802015,
+        33188,
+        1,
+        29,
+        1792803674871464647,
+        1792803674871464647
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/stages/section-citations.json",
+      "bytes": 3898411,
+      "sha256": "23d6ecee3888f90359b68719e84fca57af6c66409ee65fa1e50edc883df65dd6",
+      "identity": [
+        16777231,
+        545802016,
+        33188,
+        1,
+        3898411,
+        1792803674875722826,
+        1792803674875722826
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/stages/test.log",
+      "bytes": 9785443,
+      "sha256": "f694062627988b57dfd74de36a59f0843264dfa7a2a66d461bdf687d33294d81",
+      "identity": [
+        16777231,
+        545802017,
+        33188,
+        1,
+        9785443,
+        1792803674885598189,
+        1792803674885598189
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/stages/test.time",
+      "bytes": 37,
+      "sha256": "84a795b6c03febc92c7db5506d0e6ba499552b1dae3d92b730d21b77bd8279cb",
+      "identity": [
+        16777231,
+        545802018,
+        33188,
+        1,
+        37,
+        1792803674885789356,
+        1792803674885789356
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/stages/typecheck.log",
+      "bytes": 1987,
+      "sha256": "62170bbe0cd055cff4699debd9470a886c0f98f328e7c9517d899c021a3788d0",
+      "identity": [
+        16777231,
+        545802019,
+        33188,
+        1,
+        1987,
+        1792803674887729237,
+        1792803674887729237
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/stages/typecheck.time",
+      "bytes": 30,
+      "sha256": "901b4ac62db3a918d0d0c613c90ba93e7ee6891554b7d696782d663cf0a5e6ed",
+      "identity": [
+        16777231,
+        545802020,
+        33188,
+        1,
+        30,
+        1792803674888842407,
+        1792803674888842407
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/stages/whitespace.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "identity": [
+        16777231,
+        545802021,
+        33188,
+        1,
+        0,
+        1792803674888944116,
+        1792803674888956866
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/stages/whitespace.time",
+      "bytes": 29,
+      "sha256": "b19caaf7f42fccf27d8c76a198f52fea0f91edf4f9fc11246dfb0c794d708d58",
+      "identity": [
+        16777231,
+        545802022,
+        33188,
+        1,
+        29,
+        1792803674889209658,
+        1792803674889209658
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-binding-allocated-20261023-v4.json",
+      "bytes": 3463979,
+      "sha256": "8d74d6afbe4d0f880dd49edcbcae7fe17addddf455cb666e5e8189ec415e4bba",
+      "identity": [
+        16777231,
+        545753778,
+        33188,
+        1,
+        3463979,
+        1792802455025168205,
+        1792802455025168205
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-source-20261023-v4/manifest.json",
+      "bytes": 3155,
+      "sha256": "45f314de43057b8175be61c252f44d189844ed176933ab631a55e30204bcb2c8",
+      "identity": [
+        16777231,
+        545752271,
+        33188,
+        1,
+        3155,
+        1792802389851748929,
+        1792802389851748929
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-source-20261023-v4/ancestry.json",
+      "bytes": 680,
+      "sha256": "4263fe071260099281d03e48e4ad1d5c1ab9a4d2a4aefc5877450e159cfdd243",
+      "identity": [
+        16777231,
+        545752269,
+        33188,
+        1,
+        680,
+        1792802101173871806,
+        1792802101173871806
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-source-20261023-v4/checkpoint.json",
+      "bytes": 423,
+      "sha256": "82a00f262e54e27e02c10007c63ef3bd82a99ae3d800b76f26aecadd7e58a5ad",
+      "identity": [
+        16777231,
+        545752266,
+        33188,
+        1,
+        423,
+        1792802389850509882,
+        1792802389850509882
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-source-20261023-v4/count-correspondence.json",
+      "bytes": 3475,
+      "sha256": "4b3b9b00b9ee1d12d5d921cb606b5e3ee2a17d9b5459bde73aad253f44719f1c",
+      "identity": [
+        16777231,
+        545752267,
+        33188,
+        1,
+        3475,
+        1792802389850597091,
+        1792802389850597091
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-source-20261023-v4/expected-case-ledger.json",
+      "bytes": 991236,
+      "sha256": "44f08e2fd0738f364e459600d9a16b4743c9e8ecde566dfafd8cb75ca9c98af4",
+      "identity": [
+        16777231,
+        545752261,
+        33188,
+        1,
+        991236,
+        1792802134803220893,
+        1792802134803220893
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-source-20261023-v4/external-tools.json",
+      "bytes": 16839,
+      "sha256": "c01595d5d989555cbe89839fe2b05cc0f3a8d886fbf8e0cac19a307b0015c05c",
+      "identity": [
+        16777231,
+        545752262,
+        33188,
+        1,
+        16839,
+        1792802101173245887,
+        1792802101173245887
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-source-20261023-v4/final-adoption-correspondence.json",
+      "bytes": 14451,
+      "sha256": "bb0bb040061d82871099e58957702a09250bada386f0e085f40fbc3a7316c10f",
+      "identity": [
+        16777231,
+        545753579,
+        33188,
+        1,
+        14451,
+        1792802389850409548,
+        1792802389850409548
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-source-20261023-v4/final-checkpoint-fill.patch",
+      "bytes": 5721,
+      "sha256": "b376d1237b999f4076dfef833dfd979e2d8a43e985f24e725404daff12f34dc0",
+      "identity": [
+        16777231,
+        545753580,
+        33188,
+        1,
+        5721,
+        1792802389850946009,
+        1792802389850946009
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-source-20261023-v4/framework-id-source-proof.json",
+      "bytes": 4474,
+      "sha256": "83845dadbb426b9b17e1bf952eb207298117a7df5ec2f6dcd7b5c5351c651ace",
+      "identity": [
+        16777231,
+        545752260,
+        33188,
+        1,
+        4474,
+        1792802134803874412,
+        1792802134803874412
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-source-20261023-v4/gate-expectations.json",
+      "bytes": 374,
+      "sha256": "57baa9fedc872ca1b860429a799ee798bd3723f54d48face780e1c73ee1a64dd",
+      "identity": [
+        16777231,
+        545752263,
+        33188,
+        1,
+        374,
+        1792802101173333971,
+        1792802101173333971
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-source-20261023-v4/gate-owner.py",
+      "bytes": 19016,
+      "sha256": "5446d6093c086f3517b1c4ad32942ef967a0a714288b75062b243389849b21c3",
+      "identity": [
+        16777231,
+        545752256,
+        33188,
+        1,
+        19016,
+        1792802101158262209,
+        1792802101158262209
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-source-20261023-v4/main-count-correspondence.json",
+      "bytes": 1507,
+      "sha256": "12f21bfd5b84eacb988031f13ee05a577a5df98c2ded77f05592246e4442bd63",
+      "identity": [
+        16777231,
+        545752264,
+        33188,
+        1,
+        1507,
+        1792802101173418721,
+        1792802101173418721
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-source-20261023-v4/observed-control-progress.jsonl",
+      "bytes": 1145,
+      "sha256": "179f4c5512a7be2111c17c2d2bfb6ef1a7c602e4a2efa38dd2eef62be90c065b",
+      "identity": [
+        16777231,
+        545752258,
+        33188,
+        1,
+        1145,
+        1792802101158700336,
+        1792802101158700336
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-source-20261023-v4/plan.md",
+      "bytes": 3181,
+      "sha256": "ebdb07da7043aaeb355480be43deb990dc40c2849d74ae10fa64ece7a628954a",
+      "identity": [
+        16777231,
+        545752268,
+        33188,
+        1,
+        3181,
+        1792802389850650091,
+        1792802389850650091
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-source-20261023-v4/task-id-source-excerpts.txt",
+      "bytes": 3269,
+      "sha256": "78f7ed87fa66970031a452593ae44f9b70a56a0ebb1ba1a4e249ba04b062f7b4",
+      "identity": [
+        16777231,
+        545752259,
+        33188,
+        1,
+        3269,
+        1792802101159864090,
+        1792802101159864090
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-source-20261023-v4/test-correspondence.patch",
+      "bytes": 47890,
+      "sha256": "5774db6b8be735c23ca75597546b0b36c0a8830a01baa67a269a1911c3e3fc31",
+      "identity": [
+        16777231,
+        545752265,
+        33188,
+        1,
+        47890,
+        1792802101173517221,
+        1792802101173517221
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-source-20261023-v4/v3-to-v4-metadata.patch",
+      "bytes": 11623,
+      "sha256": "b9f9a76bbad42e92c6e4666286e0795eef9c292c4b73af287f18a2509bbfc7bf",
+      "identity": [
+        16777231,
+        545752270,
+        33188,
+        1,
+        11623,
+        1792802134819771920,
+        1792802134819771920
+      ],
+      "mode": "0o644"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-final-gate-source-20261023-v4/v3-to-v4-owner.patch",
+      "bytes": 5104,
+      "sha256": "752e54121e7685899694b0d9c895e817eaf9d955d6a361a941e35ba24e8ea535",
+      "identity": [
+        16777231,
+        545752257,
+        33188,
+        1,
+        5104,
+        1792802101158501918,
+        1792802101158501918
+      ],
+      "mode": "0o644"
+    }
+  ]
+}

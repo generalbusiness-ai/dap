@@ -32,6 +32,8 @@ export interface PackReadOptions {
   deadline?: number;
   /** Trusted synchronous admission after header checks, before per-object metadata or inflation. */
   reserveObjects?: (count: number) => void;
+  /** Trusted synchronous work admission before declared inflation or delta output construction. */
+  reserveWork?: (bytes: number) => void;
 }
 /** Isolation is explicit. Its conservative payload reservation excludes engine/stream metadata and is not measured peak memory. */
 export interface IsolatedObjectReads {
@@ -40,6 +42,8 @@ export interface IsolatedObjectReads {
   protocol?: "v2";
   /** V2 only: reserve actual decoder metadata in the caller's original budget. */
   reserveObjects?: (count: number) => void;
+  /** V2 only: admit actual wire chunks and checked inflate/delta sizes before work. */
+  reserveWork?: (bytes: number) => void;
 }
 export interface SmartHttpReadOptions extends SmartHttpOptions { isolateObjects?: IsolatedObjectReads }
 // Includes wire chunks/concats, advertisement strings, pack/Blob copies,
@@ -64,7 +68,22 @@ const typeLimit = (type: ObjectType, bounds: ReadBounds) => type === "commit" ? 
 function beforeDeadline(deadline: number | undefined): void {
   if (deadline !== undefined && (!Number.isSafeInteger(deadline) || Date.now() >= deadline)) throw fail("read deadline");
 }
-async function readBytes(stream: ReadableStream<Uint8Array> | null, limit: number, deadline?: number): Promise<Uint8Array> {
+/** Private attribution only: a trusted refusal may be any thrown value.
+ * It must cross HTTP/body normalization unchanged, without granting reuse. */
+class WorkAdmission {
+  #failed = false;
+  #error: unknown;
+  constructor(readonly callback: (bytes: number) => void, readonly abandon: () => void) {}
+  reserve(bytes: number): void {
+    if (this.#failed) throw this.#error;
+    try { const callback = this.callback; callback(bytes); }
+    catch (error) {
+      this.#failed = true; this.#error = error; this.abandon(); throw error;
+    }
+  }
+  refused(error: unknown): boolean { return this.#failed && Object.is(error, this.#error); }
+}
+async function readBytes(stream: ReadableStream<Uint8Array> | null, limit: number, deadline?: number, work?: WorkAdmission): Promise<Uint8Array> {
   if (stream === null) throw fail("read body");
   const reader = stream.getReader();
   const chunks: Uint8Array[] = [];
@@ -81,9 +100,16 @@ async function readBytes(stream: ReadableStream<Uint8Array> | null, limit: numbe
       if (next.done) return concat(chunks);
       total += next.value.length;
       if (total > limit) throw large("read bytes");
+      work?.reserve(next.value.length);
       chunks.push(new Uint8Array(next.value));
     }
   } catch (e) {
+    if (work?.refused(e)) {
+      // The source is already terminal. Pending cancellation cannot delay
+      // or replace the exact original native-budget refusal.
+      void reader.cancel().catch(() => undefined);
+      throw e;
+    }
     if (e instanceof GitRefusal && e.reason === "unreadable" && e.what === "read deadline") {
       // Let the isolated owner make expiry terminal before its finally.
       // Cancellation is not proof that this stream's cleanup has settled.
@@ -237,11 +263,12 @@ class Cursor {
   }
 }
 
-function applyDelta(raw: Uint8Array, base: DecodedObject, limit: number): Uint8Array {
+function applyDelta(raw: Uint8Array, base: DecodedObject, limit: number, reserveWork?: (bytes: number) => void): Uint8Array {
   const cursor = new Cursor(raw);
   if (cursor.variable() !== base.data.length) throw new GitRefusal("wrong-size", "delta base");
   const size = cursor.variable();
   if (size > limit) throw large("delta result");
+  reserveWork?.(size);
   const out = new Uint8Array(size);
   let at = 0;
   while (cursor.at < raw.length) {
@@ -276,6 +303,7 @@ interface Entry { offset: number; raw: Uint8Array; object?: DecodedObject; depen
  */
 export async function decodePack(input: Uint8Array, options: PackReadOptions): Promise<DecodedObject[]> {
   const { bounds, maxBytes } = checked(options);
+  const reserveWork = options.reserveWork;
   beforeDeadline(options.deadline);
   if (input.length > maxBytes) throw large("pack bytes");
   const pack = new Uint8Array(input);
@@ -323,6 +351,7 @@ export async function decodePack(input: Uint8Array, options: PackReadOptions): P
       baseId = objectId(hex(pack.subarray(cursor.at, cursor.at + 20)), "delta base");
       cursor.at += 20;
     }
+    reserveWork?.(size);
     const end = zlibEnd(pack, cursor.at, size, options.deadline);
     const raw = await readBytes(new Blob([pack.slice(cursor.at, end)]).stream().pipeThrough(new DecompressionStream("deflate")), size, options.deadline);
     if (raw.length !== size) throw new GitRefusal("wrong-size", "pack entry");
@@ -355,7 +384,7 @@ export async function decodePack(input: Uint8Array, options: PackReadOptions): P
     const children = [...entry.dependents, ...(waiting.get(object.id) ?? [])];
     waiting.delete(object.id);
     for (const child of children) {
-      const data = applyDelta(child.raw, object, Math.min(typeLimit(object.type, bounds), maxBytes - constructed));
+      const data = applyDelta(child.raw, object, Math.min(typeLimit(object.type, bounds), maxBytes - constructed), reserveWork);
       constructed += data.length;
       child.object = { id: idOf(object.type, data), type: object.type, data };
       ready.push(child);
@@ -579,6 +608,7 @@ export class SmartHttpSource implements GitSource {
   readonly #objects = new Map<string, DecodedObject>();
   #retainedBytes = 0;
   readonly #isolation: IsolatedObjectReads | undefined;
+  readonly #work: WorkAdmission | undefined;
   #busy = false;
   #abandoned = false;
   #abort: (() => void) | null = null;
@@ -595,6 +625,9 @@ export class SmartHttpSource implements GitSource {
     this.#isolation = options.isolateObjects === undefined ? undefined : { ...options.isolateObjects };
     if (this.#isolation?.protocol !== undefined && this.#isolation.protocol !== "v2") throw fail("isolated object capabilities");
     if (this.#isolation?.reserveObjects !== undefined && typeof this.#isolation.reserveObjects !== "function") throw fail("isolated object capabilities");
+    if (this.#isolation?.reserveWork !== undefined && typeof this.#isolation.reserveWork !== "function") throw fail("isolated object capabilities");
+    this.#work = this.#isolation?.protocol === "v2" && this.#isolation.reserveWork !== undefined
+      ? new WorkAdmission(this.#isolation.reserveWork, () => this.#abandon()) : undefined;
     const working = ISOLATED_WORKING_MULTIPLE * this.#options.maxBytes;
     if (this.#isolation && (!Number.isSafeInteger(working) || !Number.isSafeInteger(this.#isolation.ownedBytes) || this.#isolation.ownedBytes < working)) throw large("isolated payload allowance");
     this.#timeoutMs = options.timeoutMs ?? COMMAND_MS;
@@ -608,8 +641,8 @@ export class SmartHttpSource implements GitSource {
     }
   }
   #abandon(): void {
-    // A deadline consumes this source's reservation even when cancellation
-    // or a detached upstream continuation has not settled.
+    // A deadline or trusted admission refusal consumes this source's
+    // reservation even while cancellation or upstream work is unsettled.
     if (this.#abandoned) return;
     this.#abandoned = true;
     try { this.#abort?.(); } catch { /* never reuse abandoned work */ }
@@ -642,6 +675,7 @@ export class SmartHttpSource implements GitSource {
     });
     try { const result = await Promise.race([read(), expired]); this.#timely(); return result; }
     catch (error) {
+      if (this.#work?.refused(error)) { this.#abandon(); throw error; }
       // Shared framing/inflation helpers use the original fixed refusal.
       // Preserve that exact error while making their synchronous expiry terminal.
       if (error instanceof GitRefusal && error.reason === "unreadable" && (error.what === "read deadline" || error.what === "isolated read deadline")) this.#abandon();
@@ -682,10 +716,11 @@ export class SmartHttpSource implements GitSource {
         await response.body?.cancel().catch(() => undefined);
         throw error;
       }
-      const result = await readBytes(response.body, this.#options.maxBytes, this.#deadline ?? undefined);
+      const result = await readBytes(response.body, this.#options.maxBytes, this.#deadline ?? undefined, protocolV2 ? this.#work : undefined);
       this.#timely();
       return result;
     } catch (e) {
+      if (this.#work?.refused(e)) throw e;
       if (e instanceof GitRefusal) throw e;
       throw fail("HTTP read request");
     } finally { clearTimeout(timer); if (this.#isolation) this.#abort = null; }
@@ -763,7 +798,8 @@ export class SmartHttpSource implements GitSource {
     // bounded full decoder (including bounded deltas), not a closure read or
     // a second request. Companion objects never enter this source's cache.
     const objects = await decodePack(framed.pack, { ...this.#options, deadline: this.#deadline!,
-      ...(this.#isolation?.reserveObjects === undefined ? {} : { reserveObjects: this.#isolation.reserveObjects }) });
+      ...(this.#isolation?.reserveObjects === undefined ? {} : { reserveObjects: this.#isolation.reserveObjects }),
+      ...(this.#work === undefined ? {} : { reserveWork: (bytes: number) => this.#work!.reserve(bytes) }) });
     this.#timely();
     const wanted = objects.find(object => object.id === id);
     if (!wanted) throw fail("wanted object omitted");

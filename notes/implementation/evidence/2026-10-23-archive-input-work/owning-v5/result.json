@@ -1,0 +1,50 @@
+{
+  "allocation": "45353ff98a2741213ceee9a8b9550c12dc6e755e",
+  "status": "passed",
+  "children": [
+    {
+      "label": "focused",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "scripts/focused-check.mjs",
+        "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v5/focused-plan.json",
+        "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v5/focused"
+      ],
+      "cwd": "/private/tmp/artroom-builder-archive-input-work-20261023",
+      "pid": 15470,
+      "exit": 0,
+      "signal": null,
+      "wall": 6.672784166992642,
+      "user": 9.377589,
+      "system": 1.4800239999999998
+    }
+  ],
+  "errors": [],
+  "signals": [],
+  "cases": [
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-input-work.test.ts",
+      "name": "legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-input-work.test.ts",
+          "name": "legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    }
+  ],
+  "wall": 9.011619792087004,
+  "pythonCpu": 2.097093,
+  "childrenUser": 9.482084,
+  "childrenSystem": 1.584652,
+  "inclusiveCpu": 13.163829000000002,
+  "qualification": "Continuation only: Scope test compiler for changed test inputs and the single corrected Native whole-file body. Original V4 compiled and drained all 300 checkpoints but failed its final authority-anchor assertion. Original V3 Git HTTP14 plus Scope host12 passed. Both Native failures remain retained. Compatibility no-op and first three compiler successes remain carried from original V2. Full guarded Source/dependencies/tools/environment/Main/preparation; only declared selected-file cache cells and empty Vite-temp metadata may change during focused child. No control mutation, parser, package install, test collection, Node tails or gate. Callback gaps are reporting gaps; nested costs overlap."
+}
