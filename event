@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c68c8f6d9a17a2f467d79e3e583a022b8040f6fc","text":"Merge retired a covered predecessor; the successor is at docs/kernel.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c91f5dd6760da4f12c2b383143f74c4b6d335f9d","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/applications/projection-journal.ts."}
