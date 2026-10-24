@@ -8,6 +8,7 @@ import { expect, onTestFinished, test, vi } from "vitest";
 import type { OperationId, ScopeId } from "@generalbusiness/dap-contract";
 import { archiveOperatorState, archiveRowDiagnostic, type ArchiveOperatorView } from "../src/archive-operator.ts";
 import { ArchiveDriver } from "../src/archive-driver.ts";
+import { canonicalize, digestBytes, utf8 } from "@generalbusiness/dap-bytes";
 import { ArchiveRows } from "../src/archive-row.ts";
 import { CredentialStore } from "../src/credential-store.ts";
 import { at, creation, objectOf, rita } from "./fixtures-native.ts";
@@ -133,7 +134,7 @@ test.for(["absent", "target", "confirmed", "stopped", "pending"] as const)("a wa
   expect(view.state).toBe("read"); if (view.state !== "read") expect.fail("a warm valid scope must be read");
   expect(view.storedWake).toEqual(wake === null ? { state: "absent" } : { state: "present", ...wake });
   expect(view.platformAlarm).toEqual(phase === "pending" ? { state: "absent" } : { state: "present", at: Date.parse(at(900)) });
-  expect(view.row).toEqual(row === null ? { state: "absent" } : { state: "present", at: row.at, repository: row.repository, format: row.format,
+  expect(view.row).toEqual(row === null ? { state: "absent" } : { state: "present", rowDigest: row.stopped?.reason === "limit" && row.pending === null ? digestBytes(utf8(canonicalize(row))) : null, restartGeneration: 0, at: row.at, repository: row.repository, format: row.format,
     phase, reason: row.stopped?.reason ?? null, confirmed: row.confirmed,
     pendingMark: row.pending === null ? null : { commit: row.pending.commit, parent: row.pending.parent, through: row.pending.through,
       markedAt: row.pending.markedAt, ...(row.pending.layout === 2 ? { layout: 2 } : {}) }, attempts: row.attempts, next: row.next });
@@ -143,7 +144,7 @@ test.for(["absent", "target", "confirmed", "stopped", "pending"] as const)("a wa
   if (phase === "stopped") {
     await lane.inside(state => new ArchiveRows(archiveSql(state), lane.at).stop("TEST PRIVATE REASON", "TEST PRIVATE DETAIL"));
     const masked = (await observed(lane.object, [lane.name], host, resolve)).answers[0]!;
-    expect(masked).toEqual({ ...view, row: { ...view.row, reason: "unknown" } });
+    expect(masked).toEqual({ ...view, row: { ...view.row, reason: "unknown", rowDigest: null } });
     expect(JSON.stringify(masked)).not.toContain("TEST PRIVATE");
   }
   if (phase === "absent") {
@@ -189,8 +190,8 @@ test.for(["nativeBirth", "readiness", "queryItems", "proofSource"] as const)("ex
     if (args[0] === "archive-row-diagnostic-v1") { seen.push(args); order.push("diagnostic"); }
   });
   const waking = vi.spyOn(ArchiveDriver.prototype, "wake").mockImplementation(() => { order.push("recovery"); return null; });
-  const originalLoad = ArchiveRows.prototype.load;
-  const loading = vi.spyOn(ArchiveRows.prototype, "load").mockImplementation(function (this: ArchiveRows, ...args: Parameters<ArchiveRows["load"]>) {
+  const originalLoad = ArchiveRows.prototype.loadSnapshot;
+  const loading = vi.spyOn(ArchiveRows.prototype, "loadSnapshot").mockImplementation(function (this: ArchiveRows, ...args: Parameters<ArchiveRows["loadSnapshot"]>) {
     order.push("diagnostic-row-read");
     return originalLoad.apply(this, args);
   });
@@ -222,7 +223,7 @@ test.for(["nativeBirth", "readiness", "queryItems", "proofSource"] as const)("ex
     expect(order.indexOf("diagnostic")).toBeGreaterThanOrEqual(0);
     expect(order.indexOf("recovery")).toBeGreaterThan(order.indexOf("diagnostic"));
     const value = lines[0]![1] as Record<string, unknown>;
-    expect(Object.keys(value).sort()).toEqual(["confirmed", "pendingMark", "phase", "platformAlarm", "reason", "scope", "state", "storedWake"]);
+    expect(Object.keys(value).sort()).toEqual(["confirmed", "pendingMark", "phase", "platformAlarm", "reason", "restartGeneration", "rowDigest", "scope", "state", "storedWake"]);
     expect(value["phase"]).toBe("pending");
     expect(value["pendingMark"]).toEqual({ commit: row!.pending!.commit, through: row!.pending!.through });
     expect(JSON.stringify(value)).not.toMatch(/manifest|credential|token|secret|TEST PRIVATE/);

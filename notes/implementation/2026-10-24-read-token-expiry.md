@@ -149,3 +149,21 @@ Private dependencies were copied from the verified same-lock archive
 wake checkout without installing packages or executing project code. The
 copy passed its before/after checks and took 2.66 seconds wall and 2.23
 seconds CPU. No deployment or provider measurement is recorded.
+
+
+## Integration with the approved archive restart
+
+Approved Main `55e4be6cdc0300b0a1865c237be3097cfb232edd` is merged
+with the R13 source. The composed object preserves both credential expiry
+scheduling after the activation diagnostic and restart consumption after
+that same diagnostic, before archive recovery. The operator witness keeps
+the real private expiry fixture and the restart snapshot and digest fields.
+
+The earlier 23-case results above apply to the earlier R13 source, not this
+composition. New 30-case affected checks, composed Source seals, the two
+existing R13 controls rebound to final Source, and the ordinary gate remain
+pending. No new validation was executed for this merge. The two object map
+slots currently retain the historical incoming Main value and are explicitly
+stale for the composed object until the actual maintained producer runs.
+The R13 destination seal and incoming archive values are preserved; neither
+parent's object value is claimed as the composed seal.

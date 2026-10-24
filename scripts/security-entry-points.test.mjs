@@ -21,7 +21,7 @@ const seals = {
   "packages/scope/src/applications/route.ts": "a9c2c7071bc190a9dc44be6efe57b973203c40d3fff8ab35263f73818925ae29", // Actual union parser value adopted by root.
   "packages/scope/src/item-query-wire.ts": "8206b9a6531ca30cae1bc49cc249eea08c70a658305f41b3ebea6eda042055a8",
   "packages/scope/src/applications/projection-wire.ts": "2e07df5447469dc09aff0d4017e010634150f49c92f614221402cf46a869c6d0",
-  "packages/scope/src/object.ts": "6646aad6653a654776d729e4d900259b05005558062ed70ae2712d651b7c849f", // Reviewed archive alarm recovery; actual maintained parser output.
+  "packages/scope/src/object.ts": "a8346c18f87ef2029989f7d86a986d00d6c70acf13574eefd1238df01421523a", // Reviewed archive alarm recovery; actual maintained parser output.
   "packages/scope/src/core.ts": "c7f2e49246b1e784981337ee13af53b17bab424a13112d5a40ff76b75fb7a128",
   "packages/derive/src/genesis.ts": "df7722143f01c8084b8f045ef959b203ae1756c4dfde170d0454cfe0b0392843",
   "packages/derive/src/judge.ts": "c0ed325bc2fa84693b40d3d53a9ad54a9a9786dab39dd3b9c6039ac553488f63",
@@ -48,20 +48,21 @@ const seals = {
 // Integrated archive owners computed by the maintained owning parser.
 // Root adopted the reviewed outputs; the historical map name is retained here.
 const pendingArchiveSeals = {
-  "packages/scope/src/archive-operator.ts": "24ec09cba3d9c135be6fda8d290e8cf2b34ce4937cbfcbb5a508263fa248078f", // Private observation owner; actual maintained parser output.
+  "packages/scope/src/archive-restart.ts": "1ef6109fa2fc54cc481e31d818ce739fa037594aeabe17f065208c22a2c425af", // Deployment directive parser; actual maintained output.
+  "packages/scope/src/archive-operator.ts": "672ad996c5362209e809c5a921a8182ca8269a7a6d597db138da3c21dfc2e0aa", // Private observation owner; actual maintained parser output.
   // Publication and floor owners were reviewed before these values were
   // computed by the maintained parser on the integrated source.
   "packages/scope/src/archive-target.ts": "33826c2966d39df7f4d46aa74365f55b9e7e2a2317f26f9f98a735792ccb4a39",
   "packages/scope/src/archive-source-window.ts": "4db3f5885e7541f713b9668d1cde655e42be1950dd6af77d5711a323b3582e1c",
   "packages/scope/src/archive-publication.ts": "d8c39d220bc7eea59301478aa553960267aac16f06502b4103a85647c71eb457",
   "packages/scope/src/archive-build.ts": "e1111bfef1fe94cc8436498679395ba1b9b8adba3db8651f4f24d87d68696853",
-  "packages/scope/src/archive-driver.ts": "acaee7f86ebdddb1936dbe260331f39d22ca764ca0f628418f821cfcdd36e9bc", // Capacity deferral reviewed; actual maintained parser output.
-  "packages/scope/src/archive-row.ts": "b70e54ce9c07f2e903357028ed2e0cc723544a41e6aaa92c715639b05cb1a1f6",
+  "packages/scope/src/archive-driver.ts": "006e53f3ef1b7a3e97cd53df3c8f8aa964d089e0c53a5bbe06efe8794d5e091d", // Capacity deferral reviewed; actual maintained parser output.
+  "packages/scope/src/archive-row.ts": "be48ef12598ad4f5d0084bd05e760a4537faf23a96f21dce8c9e8748c7eddfda",
   "packages/scope/src/floor-writer.ts": "fb8fd859844b8d10ba43b477bcaf07ab32fe1bfa1b6684ad9ae70b930d328a11",
-  "packages/scope/src/object.ts": "6646aad6653a654776d729e4d900259b05005558062ed70ae2712d651b7c849f", // Must match the separately adopted original owner value above.
-  "apps/room/worker.grow.ts": "791c2bfcb8b2a62d8f0d8afec627ac76b63be4b9f1ee5de27d3f6c081959bc01",
+  "packages/scope/src/object.ts": "a8346c18f87ef2029989f7d86a986d00d6c70acf13574eefd1238df01421523a", // Must match the separately adopted original owner value above.
+  "apps/room/worker.grow.ts": "0cc4c1c63f79f8da8dad5e98b2ace5b69fcd818d41640ed4e316ee534adf749f",
   "apps/room/archive-policy.ts": "ed3b746b5a26c3e872e41b13ba133f43ade42b5612aa5028ba544fc013be5ce7",
-  "apps/room/archive.ts": "36b2250301a217b6e1c74cd1cea1a65a45390be3679e4a2fd2e809890eb6abf5",
+  "apps/room/archive.ts": "8252a0d142fcf7bac4c266980e0cbc4c592d1ad8783914b16d8f40ba6fb824f9",
   "packages/scope/src/archive-host-item.ts": "0f9eaddc4000574a1575466592f88c57beecc11efb93e402a568a84fab8ef903",
   "packages/scope/src/archive-host.ts": "e376746b7a1001a47715f666c4777e135bf1c48a162bfffe9c80e0ec913f079f", // Staged input charges and bounded bootstrap reviewed; actual maintained parser output.
   "packages/scope/src/artifacts-host.ts": "378eca9b5c3c197f738cb88f59a5df51d83d52929f614735d0fdc3917df06ac0",
