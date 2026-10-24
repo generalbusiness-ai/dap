@@ -32,8 +32,8 @@ every legal entry will fit a future pass under the same fixed budget.
 
 ## Evidence still required
 
-Affected compiler and native outcomes, the paired control, final gate and
-exact-head review are pending. The maintained parser supplied the actual
+The affected checks and paired control are recorded below. The final gate
+and exact-head review remain pending. The maintained parser supplied the actual
 driver source seal, which root adopted in its existing map slot. The requested
 witnesses distinguish limited lookahead and a non-null unaffordable finish
 from a hard null forecast. They must retain spent cost, persist the normal
@@ -52,4 +52,24 @@ The new subscenarios attempted two Native fixtures in one test; the existing
 exclusive clock guard refused the second. The correction gives each new
 scenario its own registration and fixture lifetime. All 14 original tests
 remain intact, with three added cases and no deadline or owner-guard change.
-The failed run remains evidence; continuation is pending.
+The failed run remains evidence. At `912454c1`, the Scope test compiler and
+all 17 cases passed in 12.813 seconds overall. The unchanged production
+compiler pass is retained from the first run. No test deadline changed.
+
+The paired control restores only the old hard-limit return before prefix
+selection. Both shortage cases then fail at the stored-row assertion:
+`stopped: null` becomes `stopped: { reason: "limit", where: null }`. The
+other 15 cases pass. The child exits 1 as intended, but the wrapper also
+reports failure because it searched the compact JSON message for diff text
+that appears only in raw stderr. Root and an independent reviewer checked
+that stderr, all 17 terminal states and the complete restoration guards.
+The semantic control proof is accepted; the wrapper failure remains recorded.
+Original source bytes, inode, mode and modification time were restored;
+change time can change. An earlier control preflight failed on a sandbox
+environment mismatch before any source change or test child. Neither
+failure is hidden, and no healthy baseline was repeated.
+
+The final gate candidate also includes the reviewed hosted admission change
+and its two-sentence documentation correction. That merge changes no archive
+production or witness bytes. Deployment requires the planner's hosted MCP
+opt-in and tool-addition choices as well as the archive rollout decision.
