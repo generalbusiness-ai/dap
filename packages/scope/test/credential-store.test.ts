@@ -104,6 +104,7 @@ test("expiry backfill crosses restarts in bounded quanta and clears old incarnat
   await scope.inside(state => {
     const custody = new CredentialStore(state.storage.sql, () => scope.at);
     expect(custody.expiryWake(due), "empty custody has no maintenance alarm").toBeNull();
+    expect(custody.expiryWake(() => { throw new Error("quiet custody sampled the clock"); })).toBeNull();
     // Model pre-queue storage, including dropped rows that still count toward
     // the primary-key quantum and an invalid legacy expiry that must erase.
     for (let n = 0; n < 65; n++) state.storage.sql.exec("INSERT INTO private_credential (scope,id,mint,attempt,ends,plaintext,state) VALUES (?,?,?,?,?,?,?)",
@@ -116,6 +117,9 @@ test("expiry backfill crosses restarts in bounded quanta and clears old incarnat
     custody.expire(due);
     expect(state.storage.sql.exec("SELECT COUNT(*) AS n FROM private_credential WHERE plaintext IS NOT NULL").toArray()).toEqual([{ n: 1 }]);
     expect(custody.expiryWake(due)).toBe(due);
+    let readings = 0;
+    expect(custody.expiryWake(() => { readings++; return due; })).toBe(due);
+    expect(readings).toBe(1);
   });
   await scope.restart();
   await scope.inside(async state => {
