@@ -61,7 +61,8 @@ the deployment-setting stand-in. Host and deployment authority remain
 TEST stand-ins; no Cloudflare deployment control plane or hosted recovery
 is exercised. The updated diagnostic still exposes no raw Mark payload.
 The whole-file witnesses passed across the retained continuations below.
-The single control and ordinary gate remain pending. The maintained
+The single control passed its distinguishing assertion below; the ordinary
+gate remains pending. The maintained
 producer supplied seven actual owner seals for eight slots, including an
 explicit row for the new directive parser.
 
@@ -148,6 +149,44 @@ new row and both existing object slots. The outer span was 0.20 seconds
 wall and 0.30 seconds CPU. No application source or witness changed in
 this adoption. These seals bind reviewed source identity; they do not
 replace the native results or establish a deployment.
+
+The single deployment-consumption control, original `88369`, completed
+with owner exit 0 around the expected child exit 1. Suppressing only the
+internal `archive.restart` call produced 18 passes and one intended failure
+at `archive-driver.test.ts:552:21`: expected `stopped: null`, received the
+original `{reason: "limit", where: null}`. The preceding diagnostic
+assertion passed. The later frontier and progress assertions are not
+reached by the mutant; the healthy driver baseline covers them.
+All 19 terminal and ready IDs are unique, with zero unhandled errors.
+The two result callbacks duplicate the same failed ID; all 18 passing
+result callbacks are absent. The raw JSON and terminal outcomes agree,
+and the duplicate is not counted as a repeated body or another failure.
+
+Four physical snapshots checked the original, mutation, child lifetime
+and restoration. The target's device, inode, mode, link count, bytes,
+size and modification time were restored; its change time can differ.
+Other source, tools, environment, preparation files and Main references
+stayed exact. Only the declared private Vitest cache file and existing
+empty temporary directory had allowed changes. Main and origin were
+`0fae5159323440badbb6c4a9e914fc3b27b60c89` throughout this control.
+Root acceptance `8eddcd3c6a513b375b431210d9a0cd4237ff93b5` follows the
+independent audit at
+`/private/tmp/artroom-archive-restart-consumption-control-independent-audit-20261024-v1/manifest.json`.
+The outer control cost was 15.20 seconds wall and 17.09 seconds CPU;
+the preceding capture cost was 0.79 seconds wall and 0.70 seconds CPU.
+Child timings are nested and are not added again.
+
+The normal Main integration after that restored control is
+`a24e48299f977f1858884b4417e24493101d75e2`, tree
+`4c1ac9cc0ca1b0708bc034b4bc27340db35da95d`. All 12 restart source and
+test paths remain exact. Seven incoming bearer-expiry paths match the
+approved Main source; the map adds only its two MCP values. Because that
+incoming code changes the Grow entry's transitive dependencies, the prior
+Grow pass alone does not cover this union. One justified direct strict
+entry recheck passed at the integrated head, with unchanged configuration
+and owner, at 0.78 seconds wall and 1.84 seconds CPU. The ordinary gate
+will check the integrated Scope contexts and broader bodies. This note
+is the only change after that recheck.
 
 These costs were observed on macOS 27.0.1 arm64 with the existing private
 dependency pool and caches. Load and cache temperature were uncontrolled.
