@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:03622cf5ccdd22d7b926095aa3d339a4b421da0a","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-24-archive-fixed-parent/costs-v3/append-proof.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:039117e8d7690181f51946e8bef45c7fceb6fbe9","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/archive-publication.test.ts."}
