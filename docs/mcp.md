@@ -1772,8 +1772,11 @@ opt-in unset closes existing endpoints. The
 local slice A implementation and validation, including the passing gate,
 are recorded in [the admission note](../notes/implementation/2026-10-24-hosted-mcp-admission.md)
 and its review record.
-Bearer lifecycle, plaintext retention, failure-map bounds, authentication
-ordering, and R15 are separate unfinished work.
+Bearer lifecycle, plaintext retention, and R15 remain separate unfinished
+work. The bounded failure window, authenticated control cleanup and their validation,
+including the passing gate, are recorded in
+[the failure-cleanup note](../notes/implementation/2026-10-24-hosted-mcp-failure-cleanup.md);
+deployment of that follow-up is pending.
 
 ### Routes
 
@@ -1829,8 +1832,10 @@ the caller's identity for the operation, 1 to 128 bytes. The same `op` with
 the same request answers the same, resuming unfinished work; another
 request under the same `op` is refused `409`; an answer is kept seven days
 past the request's `notAfter`, then `409` as stale, and the `op` is never
-reused. Each object removes expired answer bodies when it next acts; the
-`create` answer, which shows the bearer, is among them. Refusals are fixed bodies naming a rule, never a value: `403` for a
+reused. Authenticated control operations remove expired answer bodies; the
+`create` answer, which shows the bearer, is among them. A denied agent
+`bearer` or `retire` control does not perform that cleanup. Refusals are
+fixed bodies naming a rule, never a value: `403` for a
 bad signature, another service, another repository or incarnation, a
 revoked key, an ended member or a signer without authority; `400` for a
 binding that does not match the route, a body digest that differs or a
@@ -1842,9 +1847,16 @@ deadline out of range; `507` when the object's control budget is full.
 constant time. Missing, malformed, wrong and retired each answer `401` with
 no body. Failures that name an agent are counted by that agent per
 connecting address: after ten in a minute, the eleventh request from that
-address answers `429`, right bearer or not. Revocation is also the
-membership's: `key.revoke` or `member.remove` by an admin makes the key's
-acts refused everywhere; `retire` only stops the hosted service.
+address answers `429`, right bearer or not. Each agent's in-memory window
+holds at most 4,096 address keys, each at most 64 UTF-8 bytes and ten failure
+timestamps. An oversized address or an address already at ten failures is
+rejected before bearer authentication. At capacity, a new bounded address
+can still authenticate successfully. A failed new address gets `429` if
+expired keys cannot free a slot. Active keys are never evicted to make room.
+
+Revocation is also the membership's: `key.revoke` or `member.remove` by an
+admin makes the key's acts refused everywhere; `retire` only stops the
+hosted service.
 
 ### The two revisions over HTTP
 

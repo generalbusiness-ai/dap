@@ -60,6 +60,14 @@ local clock. These are source contracts for current minting, not a measurement
 of deployed expiry enforcement or proof of any unknown legacy row's provider
 or expiry. Local plaintext removal does not revoke a provider token.
 
+The archive integration keeps constructor expiry scheduling behind the
+once-per-activation diagnostic. The bounded expiry-wake predicate still runs
+once in the constructor; only shared alarm scheduling waits for the log.
+Expiry cleanup remains alarm-owned. The four existing cold-activation
+witnesses now enroll a labelled TEST read through the real custody API before
+eviction and retain their log-before-recovery assertions. A held rollback
+control restores immediate scheduling; its outcome remains unproved.
+
 ## Verification status
 
 V7 received static Source review only; its review receipt is
