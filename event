@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a7321f30c2ee6cea90478dd2f2a2269c5e743a2b","text":"Merge retired a covered predecessor; the successor is at packages/cli/test/claim.scope.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a755ce91e1d4c2f4bb8dbadfbc9acb9016049492","text":"Merge retired a covered predecessor; the successor is at apps/room/page/test/claim-ui.test.ts."}
