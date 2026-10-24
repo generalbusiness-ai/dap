@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ad61073c479dc67d98f97949121af844589d0ec3","text":"Merge retired a covered predecessor; the successor is at packages/cli/test/store-signer.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ad8f686c3ab0f02e1467367148f4eea289d7ee43","text":"Merge retired a covered predecessor; the successor is at apps/counter/browser/dispatcher.ts."}
