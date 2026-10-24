@@ -1,7 +1,7 @@
 /** Strict, explicit-format archive primitives. Legacy Reader, objectId,
  * idOf, snapshots and provider contracts retain their original behavior. */
 import { decodeGitText } from "./wire-text.ts";
-import { hex, sha1, sha256, utf8 } from "@generalbusiness/dap-bytes";
+import { hex, natural, sha1, sha256, utf8 } from "@generalbusiness/dap-bytes";
 import { JournalWork, refuseJournal } from "./journal-work.ts";
 import { journalObjectReservation, journalResultMetadata, journalTreeRowMetadata } from "./journal-object-cost.ts";
 
@@ -184,7 +184,8 @@ export class JournalObjectReader {
     this.work.check();
     return body;
   }
-  tree(body: Uint8Array): readonly JournalTreeRow[] {
+  tree(body: Uint8Array, maximumRows?: number): readonly JournalTreeRow[] {
+    if (maximumRows !== undefined && (!natural(maximumRows) || maximumRows > 4096)) return refuseJournal("input");
     this.work.size(body.length); this.work.spend({ trees: 1 });
     this.work.input(body.length, 3);
     const width = this.format === "sha1" ? 20 : 32, rows: JournalTreeRow[] = [];
@@ -193,6 +194,9 @@ export class JournalObjectReader {
     for (let at = 0; at < body.length;) {
       this.work.check();
       if (rows.length === 4096) this.work.stop();
+      // A caller's narrower grammar refuses before allocating or charging
+      // the next row. The default 4096-row layout limit stays terminal.
+      if (maximumRows !== undefined && rows.length === maximumRows) return refuseJournal("tree");
       this.work.spend({ names: 1 }); this.work.metadata(512);
       const space = body.indexOf(32, at), nul = space < 0 ? -1 : body.indexOf(0, space + 1);
       if (space < 0 || space - at > 6 || nul < 0 || nul - space - 1 > 255 || nul + 1 + width > body.length) refuseJournal("tree");

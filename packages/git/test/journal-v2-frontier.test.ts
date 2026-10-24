@@ -142,4 +142,18 @@ test("the SHA-256 frontier stays within its literal byte bound at all 604 permit
   expect(frontier.objects.reduce((n, object) => n + object.data.length, 0)).toBeLessThanOrEqual(28_828);
   const reader = new JournalObjectReader("sha256", source(frontier.objects), new JournalWork(budget()));
   expect(frontier.objects.filter(object => object.type === "tree").reduce((n, object) => n + reader.tree(object.data).length, 0)).toBe(JOURNAL_PARENT_FRONTIER_ROWS);
+  // A hash-valid root with a second edge fits the original byte ceiling,
+  // but its grammar permits one row. It must refuse before charging or
+  // allocating the second row, not after parsing an overlarge row list.
+  const journal = reader.tree(frontier.objects[1]!.data)[0]!.id;
+  const extraRoot = maker.tree([{ mode: "40000", name: "journal", id: journal }, { mode: "40000", name: "spare", id: opaque }]);
+  const extraCommit = maker.commit(extraRoot.id, null, 1_700_000_000);
+  const bounded = budget(), spend = bounded.spend.bind(bounded);
+  let rowDebits = 0;
+  bounded.spend = cost => {
+    spend(cost);
+    if (cost.metadata === 512 && cost.inputWork === 512) rowDebits++;
+  };
+  await expect(captureJournalParentFrontier({ ...binding, commit: extraCommit.id }, source(maker.objects()), bounded)).rejects.toMatchObject({ reason: "tree" });
+  expect(rowDebits, "Refuse the second root row before its 512-byte metadata debit").toBe(1);
 });

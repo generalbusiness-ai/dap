@@ -23,11 +23,10 @@ export const JOURNAL_PARENT_FRONTIER_ROWS = 604;
 export function forecastJournalParentFrontier(validation = false): Readonly<JournalCost> {
   const objects = JOURNAL_PARENT_FRONTIER_OBJECTS, bytes = JOURNAL_PARENT_FRONTIER_BYTES;
   const trees = bytes - 2 * 1024;
-  // A malformed SHA-1 tree can parse more rows before its grammar refusal
-  // than the 604 accepted rows. A parsed directory row needs at least
-  // 5 mode + 1 space + 1 name + 1 NUL + 20 ID bytes. Include one final
-  // row debit before malformed framing/name refusal aborts the whole capture.
-  const rows = Math.floor(trees / 28) + 1, reads = journalAppendReadCost(bytes, objects);
+  // Each tree parser receives its fixed geometry maximum and refuses
+  // BEFORE the next row debit/allocation. Root/journal/v2 allow 1+1+2
+  // rows; six numeric trees allow 100 each, including malformed prefixes.
+  const rows = JOURNAL_PARENT_FRONTIER_ROWS, reads = journalAppendReadCost(bytes, objects);
   const metadata = 1024 + objects * 128 + bytes + journalTreeRowMetadata(rows) + 1024 * 3;
   // Validation checks two bindings and snapshots the finite descriptors
   // before capture. Its original debits are all metadata(), hence both fees.
@@ -95,7 +94,7 @@ export async function captureJournalParentFrontier(expected: JournalParentBindin
     work.budget.spend({ nodes: 1 });
     const geometry = journalV2Directory(prefix);
     if (!geometry) return refuseJournal("tree");
-    const rows = reader.tree(await read(id, "tree", geometry.bytes));
+    const rows = reader.tree(await read(id, "tree", geometry.bytes), geometry.maximum);
     rowCount += rows.length;
     if (rows.length === 0 || rows.length > geometry.maximum || rowCount > JOURNAL_PARENT_FRONTIER_ROWS) return refuseJournal("tree");
     return rows;
