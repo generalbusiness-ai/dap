@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:37fc0f7868f7a042b5454150a57035d1cf4a5878","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-24-archive-fixed-parent/audits/history-artroom-archive-fixed-parent-actual-scale-diagnostic-v2-independent-audit-20261024-v1.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3bd060a4003cb5258a9b3ca1dd6437bd92f54024","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-host.ts."}
