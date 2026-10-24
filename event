@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f7fc08312ccd8d5d0b124c3be8861937d7a3677b","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-24-archive-fixed-parent/native-control/command.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f85401a7b99d171c89d144eae73486ebd72255bc","text":"Merge retired a covered predecessor; the successor is at packages/git/test/journal-v2-append.test.ts."}
