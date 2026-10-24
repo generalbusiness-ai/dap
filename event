@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:48f5c2c16cf7d172370c7749b060a196b10aa414","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-13-hosted-mcp-endpoint.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5a93b7646e0266697bc621357531fabbf617fefa","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/http-idle.test.ts."}
