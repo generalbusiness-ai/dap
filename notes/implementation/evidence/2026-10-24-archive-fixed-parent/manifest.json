@@ -1,5 +1,5 @@
 {
-  "state": "REVIEWED_SOURCE_ADOPTION_PROPOSAL_32_ACTUAL_LEAVES",
+  "state": "SELECTED_EVIDENCE_WITH_REVERSIBLE_LOG_ENCODING",
   "request": "fc2548ae1ab9c7c5e859d422611f8a34fd0ff13c",
   "inputs": [
     {
@@ -168,19 +168,34 @@
       ]
     },
     {
-      "source": "/private/tmp/artroom-archive-fixed-parent-control-evidence-20261024-v11/stderr",
-      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/native-control/stderr",
-      "bytes": 1609,
-      "sha256": "02250d280245401a88af264091509d2f2a884a21b5bf9c942f53507ac8a2168f",
+      "source": "/private/tmp/artroom-archive-fixed-parent-log-encoding-20261024-v1/stderr.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/native-control/stderr.json",
+      "bytes": 1955,
+      "sha256": "8cf209c01d0d6fce73a0c00feac805483161f9b915f0d9630c890d90cc3dee3f",
       "identity": [
         16777231,
-        545860240,
+        545861521,
         33188,
         1,
-        1609,
-        1792813174026697157,
-        1792813174026697157
-      ]
+        1955,
+        1792813862024368593,
+        1792813862024368593
+      ],
+      "derivedFrom": {
+        "source": "/private/tmp/artroom-archive-fixed-parent-control-evidence-20261024-v11/stderr",
+        "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/native-control/stderr",
+        "bytes": 1609,
+        "sha256": "02250d280245401a88af264091509d2f2a884a21b5bf9c942f53507ac8a2168f",
+        "identity": [
+          16777231,
+          545860240,
+          33188,
+          1,
+          1609,
+          1792813174026697157,
+          1792813174026697157
+        ]
+      }
     },
     {
       "source": "/private/tmp/artroom-archive-fixed-parent-control-evidence-20261024-v11/progress.jsonl",
@@ -481,9 +496,39 @@
         1792813281814705993,
         1792813281814739243
       ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v8/result.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/gate-preflight-v8/result.json",
+      "bytes": 1859,
+      "sha256": "180a66fd88c09b2494da3e199aedcc9992cb5de1027769ae094fd54642f1ee8f",
+      "identity": [
+        16777231,
+        545861414,
+        33188,
+        1,
+        1859,
+        1792813777777486026,
+        1792813777777486026
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v8/stages/whitespace.log",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/gate-preflight-v8/whitespace.log",
+      "bytes": 111,
+      "sha256": "52cc90e9677caa0f892a5819de6547a7ca60d8858e051a2c9584646ad19a2ee4",
+      "identity": [
+        16777231,
+        545861409,
+        33188,
+        1,
+        111,
+        1792813777039506315,
+        1792813777039506315
+      ]
     }
   ],
-  "count": 32,
-  "bytes": 461290,
-  "qualification": "Finite immediate-adoption proposal: exactly32 actual original leaves; author has not copied them to the repository. Full guards/bindings remain external as pinned in audits. Both controls independently audited. Gate pending. Measured edit subtotal and its ledger will be added with gate outcome."
+  "count": 34,
+  "bytes": 463606,
+  "qualification": "33 original evidence leaves and one reversible UTF-8 JSON log container. Each selected payload is pinned. The container decodes exactly to the original stderr bytes/hash; external originals are unchanged. Full guards/bindings remain external through audit pins. Gate V8 stopped at whitespace before compilers/tests; corrected documentation will continue the unreached gate. Measured edit subtotal will be added with final gate outcome."
 }

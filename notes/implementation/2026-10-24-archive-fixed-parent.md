@@ -64,6 +64,8 @@ Planner report `462f064f` observed Room A stall at a tree of 8,698 bytes against
 
 ## Remaining validation
 
+The first gate at `05ec70ff` stopped at whitespace checking: a copied raw stderr log ended with an extra blank line. No compiler or test ran. The corrected evidence stores that log in a reversible UTF-8 JSON record; its decoded bytes and original hash are unchanged. The original failed gate result is retained. The gate continuation will run the previously unreached stages.
+
 The measured edit subtotal will be added with the gate outcome. Its cost ledger is not part of this evidence adoption.
 
 Ordinary `npm run gate`, its outcome audit, measured edit subtotal and final review are **PENDING**. Coverage comprises 51 distinct cases in separate Source-bound runs: earlier 29, genuine reuse 16, then continuation 6. This is not a single whole-owning PASS. Full multi-megabyte guards remain external, pinned by the audits. The compact evidence manifest records retained results, coverage and audits. No hosted execution or capacity is established.
