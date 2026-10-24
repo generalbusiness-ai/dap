@@ -5,9 +5,9 @@
 /** Real native SQLite/turns/eviction; the host, credentials and fixture
  * admission/authority are explicit stand-ins. Actual adapter enforcement
  * and alarm wiring have separate obligations. No external provider runs. */
-import { expect, onTestFinished, test } from "vitest";
+import { expect, onTestFinished, test, vi } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, timeOf } from "@generalbusiness/dap-bytes";
+import { canonicalize, digestBytes, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { journalRef } from "@generalbusiness/dap-git/journal";
 import { readJournalRepositoryArchive } from "@generalbusiness/dap-git/journal-reader";
 import { archiveSource, verifyArchive, TRUSTS } from "@generalbusiness/dap-replay";
@@ -20,7 +20,7 @@ import { planArchive } from "../src/archive-build.ts";
 import { at, rita, una, type Lane } from "./fixtures-native.ts";
 import { createNativeArchiveLane, createNativeArchiveApplicationLane, archiveAuthorityBasis, archiveAuthorityPolicies, archiveAuthorityAnchors } from "./support/archive-native-authority.ts";
 import { archiveDefinition, archivePolicies, archiveRepository, archiveSql } from "./support/archive.ts";
-import { fixtureArchiveWiring } from "./worker.ts";
+import { fixtureArchiveWiring, fixtureArchiveRestart } from "./worker.ts";
 import type { TestScope } from "./worker.ts";
 
 const row = (lane: Lane) => lane.inside(state => new ArchiveRows(archiveSql(state), lane.at).load());
@@ -521,3 +521,54 @@ test("the native driver confirms a pending v1 attempt before a separate same-cut
   expect((await row(lane))!.confirmed).toMatchObject({ through: later, layout: 2 });
   expect(host.sends).toHaveLength(3); expect(host.closureReads).toBe(0); expect(await lane.head()).toEqual(later);
 }, 20_000);
+
+// Installed deployment setting is a TEST stand-in for CF deployment authority.
+// The receipt/frontier and follow-up alarm below are actual Native archive work.
+test("a deployment restart is consumed after the diagnostic on ordinary ingress and preserves the confirmed frontier", async () => {
+  const host = new ScriptedHost("sha1"), lane = await alarmFixture(host, undefined, true);
+  expect(await lane.alarm()).toBe(true);
+  const confirmed = (await row(lane))!;
+  expect(confirmed.confirmed?.layout).toBe(2); expect(confirmed.pending).toBeNull();
+  await lane.did(rita,"remark",{ on:0,fields:{ text:"waiting after the historical fixture stop" } });
+  await lane.inside(state => new ArchiveRows(archiveSql(state),lane.at).stop("limit"));
+  const stopped = (await row(lane))!, head = await lane.head();
+  const frontier = await lane.inside(state => state.storage.sql.exec("SELECT k,v FROM meta WHERE k IN ('archive-frontier-confirmed-1','archive-frontier-pending-1') ORDER BY k").toArray());
+  expect(frontier.some(value => value["k"] === "archive-frontier-confirmed-1")).toBe(true);
+  const payload = { v:1 as const,at:lane.at,repository:stopped.repository,format:stopped.format,confirmed:stopped.confirmed!,rowDigest:digestBytes(utf8(canonicalize(stopped))),generation:0,expires:timeOf(Date.parse(lane.c.clock.now)+600_000) };
+  fixtureArchiveRestart.set(lane.name,canonicalize({ ...payload,command:digestBytes(utf8(canonicalize(payload))) }));
+  onTestFinished(() => fixtureArchiveRestart.delete(lane.name));
+  const diagnostics: Record<string,unknown>[] = [];
+  const log = vi.spyOn(console,"info").mockImplementation((...args: unknown[]) => {
+    const [label,value] = args;
+    if (label === "archive-row-diagnostic-v1" && typeof value === "object" && value !== null) diagnostics.push(value as Record<string,unknown>);
+  });
+  onTestFinished(() => log.mockRestore());
+  await lane.restart();
+  const calls = { targets:host.targets,mints:host.mintCalls,sends:host.sends.length,closures:host.closureReads,reads:host.objectReads.length };
+  await (lane.object as unknown as { nativeBirth(at:unknown,milliseconds:number):Promise<unknown> }).nativeBirth(lane.at,10_000);
+  await lane.inside((_state,instance) => (instance as { awaitScheduledCallbacks():Promise<unknown> }).awaitScheduledCallbacks());
+  const restarted = (await row(lane))!;
+  expect(diagnostics.some(value => value["rowDigest"] === payload.rowDigest && value["restartGeneration"] === 0 && value["phase"] === "stopped")).toBe(true);
+  expect(restarted).toEqual({ ...stopped,stopped:null });
+  expect(restarted.confirmed).toEqual(confirmed.confirmed); expect(restarted.next).toBeNull(); expect(restarted.pending).toBeNull();
+  expect(await lane.inside(state => state.storage.sql.exec("SELECT k,v FROM meta WHERE k IN ('archive-frontier-confirmed-1','archive-frontier-pending-1') ORDER BY k").toArray())).toEqual(frontier);
+  expect(await lane.head()).toEqual(head);
+  expect({ targets:host.targets,mints:host.mintCalls,sends:host.sends.length,closures:host.closureReads,reads:host.objectReads.length }).toEqual(calls);
+  expect((await lane.inside(state => new ArchiveRows(archiveSql(state),lane.at).restartReceipt())).generation).toBe(1);
+  const next = await lane.alarmAt(); expect(next).not.toBeNull();
+  // Latest directive replay is read-only, including after a later stop.
+  await lane.inside(state => new ArchiveRows(archiveSql(state),lane.at).stop("limit"));
+  await lane.restart();
+  await (lane.object as unknown as { nativeBirth(at:unknown,milliseconds:number):Promise<unknown> }).nativeBirth(lane.at,10_000);
+  await lane.inside((_state,instance) => (instance as { awaitScheduledCallbacks():Promise<unknown> }).awaitScheduledCallbacks());
+  expect((await row(lane))!.stopped?.reason).toBe("limit");
+  // A fresh diagnostic-bound operator generation is required to retry again.
+  const again = (await row(lane))!, payload2 = { ...payload,generation:1,rowDigest:digestBytes(utf8(canonicalize(again))) };
+  fixtureArchiveRestart.set(lane.name,canonicalize({ ...payload2,command:digestBytes(utf8(canonicalize(payload2))) }));
+  await lane.restart();
+  await (lane.object as unknown as { nativeBirth(at:unknown,milliseconds:number):Promise<unknown> }).nativeBirth(lane.at,10_000);
+  await lane.inside((_state,instance) => (instance as { awaitScheduledCallbacks():Promise<unknown> }).awaitScheduledCallbacks());
+  lane.c.clock.now = timeOf((await lane.alarmAt())!);
+  expect(await lane.alarm()).toBe(true);
+  expect((await row(lane))!.confirmed?.through).toEqual(head);
+},20_000);
