@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:041f9814f5312c3e15a88b397f4c9889df90978a","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-24-security-common-delivery.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:054bd01b589f44cb6caace87e3b0930c37c19f8b","text":"Merge retired a covered predecessor; the successor is at apps/room/lanes/test/demo.scope.test.ts."}
