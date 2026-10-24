@@ -13,7 +13,7 @@ const seals = {
   "packages/scope/src/worker.ts": "30e12e38ed7143affd984a715f93d4a707541d12988bc2442b9d487bb158367a", // Actual composed Worker seal from the maintained parser.
   "packages/scope/src/scope-index.ts": "e5658b5fc39cc15bc08e7e71711a67c5859a0e0de94ede88ee5b8b5dbc3d7919", // New internal lookup/registration boundary.
   "packages/scope/src/creation-admission.ts": "0531cbd36d1ae4c0eadc9d836eb5eec13f896fc7c8b8faaaaf9c3c24e3759ccd", // Reviewed R1 ancestry owner; adopted AST value.
-  "packages/scope/src/creation-lineage.ts": "eccd209d5ba96896e9cec1c92c442d1e3d7ebdce861b11759a0ade48455b59ff", // Reviewed whole-lineage boundary; adopted AST value.
+  "packages/scope/src/creation-lineage.ts": "f5be34a8fcde765d57f6d30bd7925b77bb5957514a678cbdc9508a9eb0f3e84d", // Reviewed whole-lineage boundary; adopted AST value.
   "packages/scope/src/creation-versions.ts": "1e7baeaecb96f9719feadef0b083108e91575fe793a83fe1ea3d80dd7f0d55bb", // Reviewed R6 creation-policy parser; actual maintained output.
   "packages/scope/src/creation-declaration.ts": "ec719181ce0cff0048165e27bd108b8b728e9f78a858033155b670ab82e93c2b", // Bounded immutable native Directory custody, not authority.
   "packages/scope/src/namespace.ts": "1f65de08e11d85c204b671b8605b132f506cf06f2e87843e90eb0d1884f428e3", // Reviewed internal declaration RPC; adopted AST value.
