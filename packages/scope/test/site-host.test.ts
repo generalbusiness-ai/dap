@@ -7,7 +7,9 @@ import type { Binding } from "../src/namespace.ts";
 const ACCOUNT = { id: 17, login: "demo-owner", type: "Organization" } as const;
 const TOKEN = "ghs_scripted_site_read";
 const room: Room = { register: otherLane.scope, repository: { host: "github.com", namespace: ACCOUNT.login, name: "demo", id: "71" }, branch: "main" };
-const environment = (publicReads: boolean): SiteEnv => ({ SCOPES: {} as Binding, GITHUB_APP_CONFIG: canonicalize({ registerScope: room.register, account: ACCOUNT, maxBytes: 1024 * 1024, publicReads }), GITHUB_READ_TOKEN: TOKEN });
+// Shaped TEST key; Site readiness must not import or use it to sign.
+const PRIVATE = "-----BEGIN PRIVATE KEY-----\nYQ==\n-----END PRIVATE KEY-----\n";
+const environment = (publicReads: boolean): SiteEnv => ({ SCOPES: {} as Binding, GITHUB_APP_CONFIG: canonicalize({ issuer: "fixture", installationId: 1, registerScope: room.register, account: ACCOUNT, maxBytes: 1024 * 1024, privateRepositories: !publicReads, publicReads, credentialIdentity: "adapter-attempt" }), GITHUB_APP_PRIVATE_KEY: PRIVATE, GITHUB_READ_TOKEN: TOKEN });
 const repository = () => ({ id: 71, name: "demo", owner: ACCOUNT, private: false, full_name: "demo-owner/demo", html_url: "https://github.com/demo-owner/demo", clone_url: "https://github.com/demo-owner/demo.git" });
 const json = (value: unknown, status = 200) => new Response(JSON.stringify(value), { status, headers: { "content-type": "application/json" } });
 const packet = (value: string) => `${(new TextEncoder().encode(value).length + 4).toString(16).padStart(4, "0")}${value}`;
@@ -34,6 +36,25 @@ test("scripted GitHub Site acquisition binds stable identity before Git reads an
     expect(opened.secrets).toEqual(publicReads ? [] : [TOKEN]);
     await opened.close();
   }
+  // Full factory readiness, including optional secrets, governs Site too.
+  let refusedRequests = 0;
+  const publicEnv = environment(true);
+  for (const changed of [
+    { GITHUB_APP_CONFIG: canonicalize({ ...JSON.parse(publicEnv.GITHUB_APP_CONFIG!), extra: true }) },
+    { GITHUB_READ_TOKEN: "private token with spaces" },
+    { GITHUB_APP_PRIVATE_KEY: "malformed-private-key" },
+  ]) expect(readerOf({ ...publicEnv, ...changed }, room, async () => { refusedRequests++; return json({}); })).toBeNull();
+  const artifactRoom: Room = { ...room, repository: { host: "artifacts", namespace: "artroom-demo", name: "site-test", id: "site-test" } };
+  const artifactConfig = { registerScope: room.register, namespace: "artroom-demo", host: "service.invalid", maxBytes: 1024, credentialIdentity: "adapter-attempt" };
+  const noArtifact = () => { refusedRequests++; expect.fail("refused Site accessed the Artifacts binding"); };
+  const artifactEnv: SiteEnv = { SCOPES: {} as Binding, ARTIFACTS_CONFIG: canonicalize(artifactConfig), ARTIFACTS: { get: noArtifact, create: noArtifact, delete: noArtifact } };
+  expect(readerOf(artifactEnv, artifactRoom)).not.toBeNull();
+  for (const changed of [
+    { ARTIFACTS_NAMESPACE: "other" },
+    { ARTIFACTS_CONFIG: canonicalize({ ...artifactConfig, extra: true }) },
+    { ARTIFACTS: { get: noArtifact } },
+  ]) expect(readerOf({ ...artifactEnv, ...changed }, artifactRoom)).toBeNull();
+  expect(refusedRequests).toBe(0);
   const { GITHUB_READ_TOKEN: _readToken, ...withoutReadToken } = environment(false);
   expect(readerOf(withoutReadToken, room)).toBeNull();
 

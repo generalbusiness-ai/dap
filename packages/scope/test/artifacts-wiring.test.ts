@@ -6,7 +6,7 @@ import { Ledger, T0, d } from "@generalbusiness/dap-derive/testing";
 import { DESTINATION, DIRECTORY, REGISTER, directoryIdOf, repositoryName } from "@generalbusiness/dap-platform";
 import { installing, paul, registerDefinition, registerPlatform, rita, sam } from "../../../packages/platform/test/support-creation.ts";
 import type { ArtifactsNamespace } from "../src/artifacts-host.ts";
-import { artifactsOutside, type ArtifactsBindings } from "../src/artifacts-wiring.ts";
+import { artifactsOutside, artifactsReadiness, type ArtifactsBindings } from "../src/artifacts-wiring.ts";
 import { gitHubOutside, type GitHubBindings } from "../src/github-wiring.ts";
 import type { OutsideGiven } from "../src/object.ts";
 import { NO_OUTSIDE, type EffectAnswer, type EffectRequest } from "../src/operations.ts";
@@ -235,6 +235,7 @@ test("absent or malformed configuration, or a missing binding, gives NO_OUTSIDE 
     expect(await wrongNamespace.send(other.claim())).toBeNull();
     expect(s.calls).toEqual([]);
     expect(wrongNamespace).toBe(NO_OUTSIDE);
+    expect(artifactsReadiness({ ARTIFACTS: s.ns, ARTIFACTS_CONFIG: canonicalize({ ...CONFIG, registerScope: other.register.at.scope, namespace: "other" }) })).toEqual({ state: "off", reason: "namespace-mismatch" });
     // A separately configured binding namespace permits a fresh deployment,
     // while a changed namespace immediately removes that authority.
     const custom = service("other");
@@ -242,6 +243,7 @@ test("absent or malformed configuration, or a missing binding, gives NO_OUTSIDE 
       ARTIFACTS: custom.ns, ARTIFACTS_NAMESPACE: "other",
       ARTIFACTS_CONFIG: canonicalize({ ...CONFIG, registerScope: other.register.at.scope, namespace: "other" }),
     };
+    expect(artifactsReadiness(customEnv).state).toBe("wired");
     const customOutside = outsideOf(other.given, state.storage.sql, customEnv);
     expect(customOutside.accepts(REGISTER, "create-repository")).toBe(true);
     expect((await customOutside.send(other.request("1:0")))?.result).toBe("confirmed");

@@ -33,6 +33,14 @@ test("Register17 offer exposes only its configured Artifacts register and admits
     expect((await lifetime.wait(()=>routed(`https://scopes.test/v1/scopes/${at.scope}`))).status).toBe(403);
     const first=await lifetime.wait(get), offer=await first.json() as DemoCreationOffer;
     expect((await lifetime.wait(()=>demoCreationRoute(new Request(origin+"/v1/demo/creation-offer"),{...bindings,DEPLOYMENT:"TEST unrelated runtime"}))).status).toBe(404);
+    const beforeInvalidDeployment = { ...lookups };
+    for (const invalid of ["", "a".repeat(129), "界".repeat(43)]) {
+      const settings = { ...bindings, DEPLOYMENT: invalid, DEMO_START_CONFIG: canonicalize({ ...config, deployment: invalid }) };
+      expect(demoCreationConfig(settings.DEMO_START_CONFIG, invalid, settings)).toBeNull();
+      expect((await lifetime.wait(() => demoCreationRoute(new Request(origin + "/v1/demo/creation-offer"), settings))).status).toBe(404);
+    }
+    expect(lookups).toEqual(beforeInvalidDeployment);
+    for (const valid of ["a".repeat(128), "界".repeat(42) + "aa"]) expect(demoCreationConfig(canonicalize({ ...config, deployment: valid }), valid, bindings)).not.toBeNull();
     expect(first.headers.get("cache-control")).toBe("no-store");
     expect([first.status,offer]).toEqual([200,{v:2,origin,register:at,definition:ARCHIVE_DEVICE_APPLICATION_COHORT.register,at:{seq:0,hash:(await lifetime.wait(()=>register.summary())).at.hash},registerItem:{id:0,revision:1,state:"open",host:"artifacts",namespace:"dap-demo",policy:"open"}}]);
     expect(JSON.stringify(offer)).not.toContain(newcomer.key);

@@ -10,7 +10,10 @@ import scopeWorker from "../src/worker.ts";
 import { indexedScopes, type ScopeIndexPort } from "../src/scope-index.ts";
 
 const version = "01234567-89ab-cdef-0123-456789abcdef";
-const settings = { SESSION_SECRET: "an ephemeral test secret longer than 32 bytes", DEPLOYMENT: "health-test", VERSION_METADATA: { id: version } };
+// Syntactically shaped TEST key only: readiness performs no RSA/provider work.
+const privateKey = "-----BEGIN PRIVATE KEY-----\nYQ==\n-----END PRIVATE KEY-----\n";
+const noProvider = { get: () => expect.fail("health contacted Artifacts"), create: () => expect.fail("health created a repository"), delete: () => expect.fail("health deleted a repository") };
+const settings = { GITHUB_APP_PRIVATE_KEY: privateKey, GITHUB_READ_TOKEN: "TEST-read-token", ARTIFACTS: noProvider, SESSION_SECRET: "an ephemeral test secret longer than 32 bytes", DEPLOYMENT: "health-test", VERSION_METADATA: { id: version } };
 function github(registerScope: string) {
   return JSON.stringify({ issuer: "fixture", installationId: 1, account: { id: 1, login: "fixture", type: "Organization" }, maxBytes: 1024, registerScope, privateRepositories: true, publicReads: false, credentialIdentity: "adapter-attempt" });
 }
@@ -59,12 +62,13 @@ test("health configuration, selector and request admission have closed answers w
   let calls = 0;
   const binding = { idFromName: () => name, get: () => { calls++; return { readiness: async () => "ready" }; } };
   const base = { ...settings, SCOPES: binding as never, GITHUB_APP_CONFIG: github(name) };
-  for (const changed of [{ SESSION_SECRET: undefined }, { SESSION_SECRET: "short" }, { DEPLOYMENT: undefined }, { DEPLOYMENT: "" }, { DEPLOYMENT: "界".repeat(43) }]) {
+  for (const changed of [{ SESSION_SECRET: undefined }, { SESSION_SECRET: "short" }, { DEPLOYMENT: undefined }, { DEPLOYMENT: "" }, { DEPLOYMENT: "a".repeat(129) }, { DEPLOYMENT: "界".repeat(43) }]) {
     const response = await health(request(), { ...base, ...changed }, new HealthProbe());
     expect(response?.status).toBe(503);
     const body = await response!.json<Record<string, unknown>>();
     expect(body["sessions"]).toBe("unavailable");
-    expect(Object.keys(body).sort()).toEqual(["deployment", "register", "sessions", "version"]);
+    if (Object.hasOwn(changed, "DEPLOYMENT")) expect(body["deployment"]).toBe("unknown");
+    expect(Object.keys(body).sort()).toEqual(["deployment", "register", "sessions", "version", "wiring"]);
     expect(JSON.stringify(body)).not.toContain(settings.SESSION_SECRET);
     expect(JSON.stringify(body)).not.toContain(name);
   }
@@ -79,7 +83,23 @@ test("health configuration, selector and request admission have closed answers w
   for (const [suffix, method, status] of [["?x=1", "GET", 400], ["", "POST", 405], ["", "PUT", 405]] as const) expect((await health(request(suffix, method), base))?.status).toBe(status);
   expect(calls).toBe(0);
   const good = await health(request(), { ...base, ARTIFACTS_CONFIG: artifacts(name) }, new HealthProbe());
-  expect([good?.status, await good!.json()]).toEqual([200, { deployment: settings.DEPLOYMENT, version, sessions: "ok", register: "ready" }]);
+  expect([good?.status, await good!.json()]).toEqual([200, { deployment: settings.DEPLOYMENT, version, sessions: "ok", register: "ready", wiring: { artifacts: { state: "wired" }, github: { state: "wired" } } }]);
+  // A ready native register does not hide unusable configured host wiring.
+  const secret = "R9 private optional secret with spaces";
+  for (const [changed, host, reason] of [
+    [{ ARTIFACTS_CONFIG: artifacts(name), ARTIFACTS_NAMESPACE: "other" }, "artifacts", "namespace-mismatch"],
+    [{ ARTIFACTS_CONFIG: artifacts(name), ARTIFACTS: undefined }, "artifacts", "missing-binding"],
+    [{ GITHUB_APP_CONFIG: JSON.stringify({ ...JSON.parse(github(name)), publicReads: true, privateRepositories: false }), GITHUB_CREATION_TOKEN: secret }, "github", "creation-token"],
+  ] as const) {
+    const response = await health(request(), { ...base, ...changed }, new HealthProbe());
+    const body = await response!.json<{ register: string; wiring: Record<string, unknown> }>();
+    expect([response?.status, body.register, body.wiring[host]]).toEqual([503, "ready", { state: "off", reason }]);
+    for (const value of [secret, settings.SESSION_SECRET, privateKey, settings.GITHUB_READ_TOKEN]) expect(JSON.stringify(body)).not.toContain(value);
+  }
+  for (const DEPLOYMENT of ["a".repeat(128), "界".repeat(42) + "aa"]) {
+    const response = await health(request(), { ...base, DEPLOYMENT }, new HealthProbe());
+    expect([response?.status, (await response!.json<{ deployment: string }>()).deployment]).toEqual([200, DEPLOYMENT]);
+  }
   const head = await health(request("", "HEAD"), base, new HealthProbe());
   expect([head?.status, await head!.text()]).toEqual([200, ""]);
   expect((await SELF.fetch("https://scope.test/health")).status).toBe(503);

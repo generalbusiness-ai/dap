@@ -80,6 +80,9 @@ function scopeOf(value: GitHubTokenScope): { repositoryIds: number[]; permission
   return { repositoryIds: ids, permissions };
 }
 
+/** Syntactic PKCS#8 setting check only, not cryptographic key import. */
+export const gitHubPrivateKey = (value: unknown): value is string => typeof value === "string" && value.length <= 16_384 && /^-----BEGIN PRIVATE KEY-----\r?\n[A-Za-z0-9+/=\r\n]+\r?\n-----END PRIVATE KEY-----\s*$/.test(value);
+
 export class GitHubApp {
   readonly #issuer: string;
   readonly #pem: string;
@@ -92,7 +95,7 @@ export class GitHubApp {
   #key: CryptoKey | undefined;
 
   constructor(options: GitHubAppOptions) {
-    if (!/^[A-Za-z0-9_.-]{1,128}$/.test(options.issuer) || !positive(options.installationId) || !positive(options.account.id) || !loginOK(options.account.login) || (options.account.type !== "User" && options.account.type !== "Organization") || typeof options.privateKey !== "string" || options.privateKey.length > 16_384 || !/^-----BEGIN PRIVATE KEY-----\r?\n[A-Za-z0-9+/=\r\n]+\r?\n-----END PRIVATE KEY-----\s*$/.test(options.privateKey)) githubFailure("configuration");
+    if (!/^[A-Za-z0-9_.-]{1,128}$/.test(options.issuer) || !positive(options.installationId) || !positive(options.account.id) || !loginOK(options.account.login) || (options.account.type !== "User" && options.account.type !== "Organization") || !gitHubPrivateKey(options.privateKey)) githubFailure("configuration");
     this.#issuer = options.issuer;
     this.#pem = options.privateKey;
     this.#installation = options.installationId;

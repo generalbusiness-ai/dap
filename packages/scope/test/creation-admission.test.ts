@@ -53,6 +53,10 @@ test("only the pinned signed register install reaches creation; explicit local/t
     expect(await api(binding, null, { SCOPE_INDEX: env.SCOPE_INDEX, DEPLOYMENT: "test", ...(ALLOW_OPEN_CREATION === undefined ? {} : { ALLOW_OPEN_CREATION }) }).create(changed, seed.definition)).toEqual({ answer: "refused", reason: "unauthorized" });
   }
   expect(addressed).toEqual([]);
+  for (const DEPLOYMENT of ["", "a".repeat(129), "界".repeat(43)]) {
+    expect(await api(binding, null, { SCOPE_INDEX: env.SCOPE_INDEX, DEPLOYMENT, ALLOW_OPEN_CREATION: "true" }).create(changed, seed.definition)).toEqual({ answer: "refused", reason: "unauthorized" });
+  }
+  expect(addressed).toEqual([]);
   expect(await api(binding, null, { SCOPE_INDEX: env.SCOPE_INDEX, DEPLOYMENT: "local-test", ALLOW_OPEN_CREATION: "true" }).create(changed, seed.definition)).toEqual(unavailable);
   expect(addressed.splice(0)).toEqual([changedName]);
   // The local creation opening is not an unconfigured rate-limit bypass.

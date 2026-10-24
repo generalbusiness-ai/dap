@@ -127,8 +127,15 @@ test("the real fixed object's memory survives calls without SQLite writes and re
   expect([await port.admitServing(request, null), await port.admitServing(request, null), await port.admitServing(request, null)])
     .toEqual(["admitted", "admitted", "rate-limited"]);
   expect(await tables()).toEqual(before);
+  // Separate stubs/ingress callers reach the same fixed owner, not fresh
+  // per-request environment counters. Site reads do not spend key windows.
+  const other = env.SERVING_INDEX.get(env.SERVING_INDEX.idFromName(SCOPE_INDEX_NAME)) as unknown as typeof port;
+  for (let n = 0; n < 240; n++) expect(await (n % 2 ? port : other).admitServing({ kind: "site-read" }, "192.0.2.241")).toBe("admitted");
+  expect(await other.admitServing({ kind: "site-read" }, "192.0.2.241")).toBe("rate-limited");
+  expect(await tables()).toEqual(before);
   await evictDurableObject(object);
   expect(await port.admitServing(request, null)).toBe("admitted");
+  expect(await port.admitServing({ kind: "site-read" }, "192.0.2.241")).toBe("admitted");
   expect(await tables()).toEqual(before);
 });
 

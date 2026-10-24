@@ -11,7 +11,7 @@ import type { Sql } from "./sqlite.ts";
 import type { ScopeId } from "@generalbusiness/dap-contract";
 import { canonicalize, isScopeId, parseStrict } from "@generalbusiness/dap-bytes";
 import { destinationBranch, isOf } from "@generalbusiness/dap-platform";
-import { ArtifactsProvider, type ArtifactsNamespace, type CreationCustody } from "./artifacts-host.ts";
+import { ArtifactsProvider, artifactsService, type ArtifactsNamespace, type CreationCustody } from "./artifacts-host.ts";
 import { CredentialStore } from "./credential-store.ts";
 import { DestinationHost, type SnapshotReader, type DestinationRepository } from "./destination-host.ts";
 import { credentialHandle, exact, hostBound } from "./host-wiring.ts";
@@ -39,10 +39,11 @@ export function artifactsRegisterScope(raw: unknown): ScopeId | null {
   try { return configuration(typeof raw === "string" ? raw : undefined)?.registerScope ?? null; }
   catch { return null; }
 }
-export function artifactsConfiguration(raw: string | undefined): ArtifactsConfiguration | null {
+export function artifactsConfiguration(raw: unknown): ArtifactsConfiguration | null {
   if (typeof raw !== "string" || raw.length > 4096) return null;
-  const value = exact(parseStrict(raw), ["registerScope", "namespace", "host", "maxBytes", "credentialIdentity"]);
-  if (!value || !isScopeId(value["registerScope"]) || typeof value["namespace"] !== "string" || !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,99}$/.test(value["namespace"]) || typeof value["host"] !== "string" || value["host"].length > 253 || typeof value["maxBytes"] !== "number" || !Number.isSafeInteger(value["maxBytes"]) || value["maxBytes"] < 32 || value["credentialIdentity"] !== "adapter-attempt") return null;
+  let value: ReturnType<typeof exact>;
+  try { value = exact(parseStrict(raw), ["registerScope", "namespace", "host", "maxBytes", "credentialIdentity"]); } catch { return null; }
+  if (!value || !isScopeId(value["registerScope"]) || typeof value["namespace"] !== "string" || (!/^[A-Za-z0-9][A-Za-z0-9_.-]{0,99}$/.test(value["namespace"]) || value["namespace"].toLowerCase().endsWith(".git")) || !artifactsService(value["host"]) || typeof value["maxBytes"] !== "number" || !Number.isSafeInteger(value["maxBytes"]) || value["maxBytes"] < 32 || value["credentialIdentity"] !== "adapter-attempt") return null;
   return value as unknown as ArtifactsConfiguration;
 }
 export function artifactsBinding(value: unknown): ArtifactsNamespace | null {
@@ -50,7 +51,18 @@ export function artifactsBinding(value: unknown): ArtifactsNamespace | null {
   const binding = value as Record<string, unknown>;
   return typeof binding["get"] === "function" && typeof binding["create"] === "function" && typeof binding["delete"] === "function" ? value as ArtifactsNamespace : null;
 }
-const configuration = artifactsConfiguration, binding = artifactsBinding;
+export type ArtifactsReadiness = { state: "wired"; config: ArtifactsConfiguration; binding: ArtifactsNamespace }
+  | { state: "off"; reason: "unconfigured" | "invalid-config" | "namespace-mismatch" | "missing-binding" };
+/** The same pure admission used by the factory, site reader and health. */
+export function artifactsReadiness(env: { ARTIFACTS_CONFIG?: unknown; ARTIFACTS_NAMESPACE?: unknown; ARTIFACTS?: unknown }): ArtifactsReadiness {
+  if (env.ARTIFACTS_CONFIG === undefined) return { state: "off", reason: "unconfigured" };
+  const config = artifactsConfiguration(env.ARTIFACTS_CONFIG);
+  if (!config) return { state: "off", reason: "invalid-config" };
+  if (config.namespace !== (env.ARTIFACTS_NAMESPACE ?? ARTIFACTS_NAMESPACE)) return { state: "off", reason: "namespace-mismatch" };
+  const binding = artifactsBinding(env.ARTIFACTS);
+  return binding ? { state: "wired", config, binding } : { state: "off", reason: "missing-binding" };
+}
+const configuration = artifactsConfiguration;
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS private_creation_credential (
@@ -85,9 +97,9 @@ function creationCustody(sql: Pick<Sql, "exec">, current: () => string | null): 
 /** Factory for one object life. Its scope/state reads stay live across genesis and later entries. */
 export function artifactsOutside(given: OutsideGiven, sql: Pick<Sql, "exec">, env: ArtifactsBindings, fetch?: (request: Request) => Promise<Response>, snapshotReader?: SnapshotReader): Outside {
   try {
-    const config = configuration(env.ARTIFACTS_CONFIG);
-    const namespaceBinding = binding(env.ARTIFACTS);
-    if (!config || config.namespace !== (env.ARTIFACTS_NAMESPACE ?? ARTIFACTS_NAMESPACE) || !namespaceBinding) return NO_OUTSIDE;
+    const ready = artifactsReadiness(env);
+    if (ready.state !== "wired") return NO_OUTSIDE;
+    const { config, binding: namespaceBinding } = ready;
     const host = ARTIFACTS_HOST;
     const namespace = config.namespace;
     const current = () => { const scope = given.scope()?.at; return scope ? canonicalize(scope) : null; };

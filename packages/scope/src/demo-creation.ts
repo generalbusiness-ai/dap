@@ -1,3 +1,4 @@
+import { readDeployment } from "./deployment-setting.ts";
 /** One configured Register17 projection; grants nothing and wakes no work. */
 import type { ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, isRecord as record, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
@@ -19,7 +20,7 @@ export function demoCreationConfig(raw: string | undefined, deployment: string |
     if (!raw || utf8(raw).length > 4096) return null;
     const value = parseStrict(raw), artifacts = artifactsConfiguration(bindings.ARTIFACTS_CONFIG);
     if (!record(value) || Object.keys(value).sort().join() !== "definition,deployment,origin,register,v" || value["v"] !== 3
-      || typeof deployment !== "string" || !deployment || deployment.length > 256 || value["deployment"] !== deployment
+      || typeof deployment !== "string" || readDeployment(deployment) === null || value["deployment"] !== deployment
       || value["origin"] !== ORIGIN || value["definition"] !== ARCHIVE_DEVICE_APPLICATION_COHORT.register || !registerRef(value["register"])
       || !artifacts || artifacts.namespace !== (bindings.ARTIFACTS_NAMESPACE ?? ARTIFACTS_NAMESPACE)
       || value["register"].scope !== artifacts.registerScope) return null;
@@ -64,7 +65,7 @@ export function legacyGitHubDemoConfig(raw: string | undefined, deployment: stri
     if (!raw || utf8(raw).length > 4096) return null;
     const value = parseStrict(raw);
     if (!record(value) || !["v", "origin", "deployment", "register", "definition", "legacy"].every(key => key === "legacy" || Object.hasOwn(value, key)) || Object.keys(value).some(key => !["v", "origin", "deployment", "register", "definition", "legacy"].includes(key))) return null;
-    if (typeof deployment !== "string" || !deployment || deployment.length > 256 || value["deployment"] !== deployment || typeof value["origin"] !== "string" || !LEGACY_ORIGINS.has(value["origin"]) || !registerRef(value["register"])) return null;
+    if (typeof deployment !== "string" || readDeployment(deployment) === null || value["deployment"] !== deployment || typeof value["origin"] !== "string" || !LEGACY_ORIGINS.has(value["origin"]) || !registerRef(value["register"])) return null;
     if (value["v"] === 1 ? Object.keys(value).length !== 5 || value["definition"] !== DEMO_REGISTER : value["v"] !== 2 || value["definition"] !== WEB_DEMO_REGISTER) return null;
     const current: LegacyGitHubDemoContext = { v: 1, origin: value["origin"], deployment, register: structuredClone(value["register"]), definition: value["v"] === 1 ? DEMO_REGISTER : WEB_DEMO_REGISTER };
     let legacy: LegacyGitHubDemoContext | null = null;

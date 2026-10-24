@@ -23,10 +23,11 @@ import { READ_BOUNDS, type GitSource } from "@generalbusiness/dap-git";
 import { githubRepository, type GitHubAccount } from "@generalbusiness/dap-git/github";
 import { requireGitHubRepositoryIdentity } from "../github-host.ts";
 import { SmartHttpSource } from "@generalbusiness/dap-git/http-read";
-import { READ_TTL, type ArtifactsNamespace } from "../artifacts-host.ts";
-import { ARTIFACTS_HOST, type ArtifactsBindings } from "../artifacts-wiring.ts";
+import { READ_TTL } from "../artifacts-host.ts";
+import { ARTIFACTS_HOST, artifactsReadiness, type ArtifactsBindings } from "../artifacts-wiring.ts";
+import type { ScopeIndexEnvironment } from "../scope-index.ts";
 import type { DestinationRepository } from "../destination-host.ts";
-import type { GitHubBindings } from "../github-wiring.ts";
+import { gitHubReadiness, type GitHubBindings } from "../github-wiring.ts";
 import type { Binding, Sourced } from "../namespace.ts";
 import type { Publication, PublishedCommitSelection, SitePublicationPeer } from "./publication.ts";
 
@@ -110,7 +111,7 @@ async function step<T>(name: SiteStep, run: () => Promise<T>): Promise<T> {
 }
 
 /** The bindings the site reads: the scope namespace and the two hosts' settings. */
-export interface SiteEnv extends GitHubBindings, ArtifactsBindings {
+export interface SiteEnv extends GitHubBindings, ArtifactsBindings, ScopeIndexEnvironment {
   SCOPES: Binding;
 }
 
@@ -137,19 +138,6 @@ export async function roomOf(scopes: Binding, directory: string): Promise<Room |
   const { host, namespace, name, id } = repository;
   if (Object.keys(repository).length !== 4 || typeof host !== "string" || typeof namespace !== "string" || typeof name !== "string" || typeof id !== "string") return null;
   return { register: input.seed.creator.scope, repository: { host, namespace, name, id }, branch };
-}
-
-interface Setting { registerScope: ScopeId; namespace: string; maxBytes: number }
-
-/** The fields of a host's setting that the site reads. The host's own wiring checks the whole setting; this reads only these. */
-function setting(raw: string | undefined): (Setting & Record<string, unknown>) | null {
-  try {
-    const value = typeof raw === "string" && raw.length <= 4096 ? recordOrNull(parseStrict(raw)) : null;
-    if (!value || !isScopeId(value["registerScope"]) || typeof value["maxBytes"] !== "number" || !Number.isSafeInteger(value["maxBytes"]) || value["maxBytes"] < 32) return null;
-    return value as Setting & Record<string, unknown>;
-  } catch {
-    return null;
-  }
 }
 
 /**
@@ -179,10 +167,10 @@ export function readerOf(env: SiteEnv, room: Room, fetch?: (request: Request) =>
     return { source: new SmartHttpSource({ remote, maxBytes: Math.min(maxBytes, 16 * 1024 * 1024), bounds: { ...READ_BOUNDS, commitBytes: 1024 * 1024, treeBytes: 8 * 1024 * 1024, blobBytes: 1024 * 1024 + 1, closureObjects: 4096, refs: 4096 }, ...(authorization === undefined ? {} : { authorization }), fetch: traced }), last: () => last };
   };
   if (repository.host === ARTIFACTS_HOST) {
-    const config = setting(env.ARTIFACTS_CONFIG);
-    const binding = env.ARTIFACTS as ArtifactsNamespace | undefined;
-    const service = config?.["host"];
-    if (!config || typeof binding?.get !== "function" || typeof service !== "string" || config["namespace"] !== repository.namespace || config.registerScope !== room.register) return null;
+    const ready = artifactsReadiness(env);
+    if (ready.state !== "wired") return null;
+    const { config, binding } = ready, service = config.host;
+    if (config.namespace !== repository.namespace || config.registerScope !== room.register) return null;
     if (!REPOSITORY_NAME.test(repository.name) || repository.name.toLowerCase().endsWith(".git") || repository.id !== repository.name) return null;
     const remote = `https://${service}/git/${repository.namespace}/${repository.name}.git`;
     return async () => {
@@ -205,10 +193,10 @@ export function readerOf(env: SiteEnv, room: Room, fetch?: (request: Request) =>
     };
   }
   if (repository.host === GITHUB_HOST) {
-    const config = setting(env.GITHUB_APP_CONFIG);
-    const login = recordOrNull(config?.["account"])?.["login"];
-    const token = env.GITHUB_READ_TOKEN;
-    if (!config || login !== repository.namespace || config.registerScope !== room.register) return null;
+    const ready = gitHubReadiness(env);
+    if (ready.state !== "wired") return null;
+    const { config, read: token } = ready, login = config.account.login;
+    if (login !== repository.namespace || config.registerScope !== room.register) return null;
     if (!/^[A-Za-z0-9_.-]{1,100}$/.test(repository.name) || repository.name === "." || repository.name === ".." || repository.name.toLowerCase().endsWith(".git")) return null;
     const publicReads = config["publicReads"] === true;
     if (!publicReads && (typeof token !== "string" || !/^[A-Za-z0-9_.-]{1,4096}$/.test(token))) return null;

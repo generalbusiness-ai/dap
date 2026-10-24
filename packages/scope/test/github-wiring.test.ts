@@ -5,7 +5,7 @@ import { MemoryState, PROFILES, clockOf, judgeGenesis, judgeOutcome, validateDef
 import { Ledger, T0, d } from "@generalbusiness/dap-derive/testing";
 import { DEMO_REGISTER, WEB_DEMO_REGISTER, DESTINATION, DIRECTORY, REGISTER, directoryIdOf, platform, repositoryName } from "@generalbusiness/dap-platform";
 import { installing, paul, registerDefinition, registerPlatform, rita, sam } from "../../../packages/platform/test/support-creation.ts";
-import { gitHubOutside, type GitHubBindings } from "../src/github-wiring.ts";
+import { gitHubOutside, gitHubReadiness, type GitHubBindings } from "../src/github-wiring.ts";
 import { outsideOf } from "../src/worker.ts";
 import type { OutsideGiven } from "../src/object.ts";
 import { NO_OUTSIDE, type EffectRequest } from "../src/operations.ts";
@@ -160,6 +160,17 @@ test("absent, malformed or contradictory configuration disables effects, and abs
       expect(outside).toBe(NO_OUTSIDE);
       expect(await outside.send(request)).toBeNull();
     }
+    // Public reads do not excuse malformed optional credentials elsewhere.
+    const publicOptionalEnv = { ...env, GITHUB_APP_CONFIG: canonicalize({ ...config, privateRepositories: false, publicReads: true }) };
+    for (const [changed, reason] of [
+      [{ GITHUB_CREATION_TOKEN: "optional secret with spaces" }, "creation-token"],
+      [{ GITHUB_CLEANUP_TOKENS: "{private malformed cleanup" }, "cleanup-tokens"],
+    ] as const) {
+      const settings = { ...publicOptionalEnv, ...changed };
+      expect(gitHubReadiness(settings)).toEqual({ state: "off", reason });
+      expect(gitHubOutside(f.given, state.storage.sql, settings, transport)).toBe(NO_OUTSIDE);
+    }
+    expect(calls).toBe(0);
     // The demo opt-in binds the real native demo pin AND this runtime identity.
     // The original register remains bound when demo configuration is unusable.
     const demo=registerFixture("TEST demo adapter",DEMO_REGISTER), demoRequest=demo.claim();
