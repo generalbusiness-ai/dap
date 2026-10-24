@@ -1,0 +1,763 @@
+{
+  "cases": [
+    {
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+      "name": "Web upload-pack reads exact local Git closure and empty refs, and decodes both real Git delta encodings",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "git",
+          "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+          "name": "Web upload-pack reads exact local Git closure and empty refs, and decodes both real Git delta encodings",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+      "name": "Web pack reads reject corruption and bounds, and HTTP failures keep no guessed absence or partial cache",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "git",
+          "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+          "name": "Web pack reads reject corruption and bounds, and HTTP failures keep no guessed absence or partial cache",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+      "name": "isolated upload-pack reads one commit, root and blob without unrelated history or a large sibling",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "git",
+          "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+          "name": "isolated upload-pack reads one commit, root and blob without unrelated history or a large sibling",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+      "name": "isolation refuses absent capabilities and tip-only permission before a POST",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "git",
+          "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+          "name": "isolation refuses absent capabilities and tip-only permission before a POST",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+      "name": "isolated framing and pack guards refuse before inflation or cache retention",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "git",
+          "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+          "name": "isolated framing and pack guards refuse before inflation or cache retention",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+      "name": "isolated in-flight and caller-owned copies consume one source allowance without concurrent borrowing",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "git",
+          "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+          "name": "isolated in-flight and caller-owned copies consume one source allowance without concurrent borrowing",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+      "name": "an isolated operation cannot renew its deadline between advertisement and object fetch",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "git",
+          "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+          "name": "an isolated operation cannot renew its deadline between advertisement and object fetch",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+      "name": "isolated deadlines return despite pending read/refusal cancellation and permanently refuse source reuse",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "git",
+          "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+          "name": "isolated deadlines return despite pending read/refusal cancellation and permanently refuse source reuse",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+      "name": "isolated abandonment survives late fetch and cleanup settlement without consuming the late body",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "git",
+          "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+          "name": "isolated abandonment survives late fetch and cleanup settlement without consuming the late body",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+      "name": "opt-in v2 fetch reads exact nonadvertised objects in two requests and keeps ref reads on v0",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "git",
+          "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+          "name": "opt-in v2 fetch reads exact nonadvertised objects in two requests and keeps ref reads on v0",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+      "name": "opt-in v2 requires its complete bounded capability advertisement without a POST or v0 fallback",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "git",
+          "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+          "name": "opt-in v2 requires its complete bounded capability advertisement without a POST or v0 fallback",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+      "name": "opt-in v2 validates sections and binary sidebands before exact pack admission",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "git",
+          "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+          "name": "opt-in v2 validates sections and binary sidebands before exact pack admission",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+      "name": "opt-in v2 retains one deadline and permanently abandons a late exact-object response",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "git",
+          "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+          "name": "opt-in v2 retains one deadline and permanently abandons a late exact-object response",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+      "name": "HTTP response refusal preserves only bounded categories and cancels before reading",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "git",
+          "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+          "name": "HTTP response refusal preserves only bounded categories and cancels before reading",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "github archive credential cannot escape its native journal ref",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-host.test.ts",
+          "name": "github archive credential cannot escape its native journal ref",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "artifacts archive credential cannot escape its native journal ref",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-host.test.ts",
+          "name": "artifacts archive credential cannot escape its native journal ref",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "github archive send owns its command and bytes before discovery awaits",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-host.test.ts",
+          "name": "github archive send owns its command and bytes before discovery awaits",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "artifacts archive send owns its command and bytes before discovery awaits",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-host.test.ts",
+          "name": "artifacts archive send owns its command and bytes before discovery awaits",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "github rechecks expiry, revocation and the pass fence after awaits",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-host.test.ts",
+          "name": "github rechecks expiry, revocation and the pass fence after awaits",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "artifacts rechecks expiry, revocation and the pass fence after awaits",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-host.test.ts",
+          "name": "artifacts rechecks expiry, revocation and the pass fence after awaits",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "github parent reads cap decoded objects and bytes in the actual transport",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-host.test.ts",
+          "name": "github parent reads cap decoded objects and bytes in the actual transport",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "artifacts parent reads cap decoded objects and bytes in the actual transport",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-host.test.ts",
+          "name": "artifacts parent reads cap decoded objects and bytes in the actual transport",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "github incremental parent reads one exact object after reserving the original pass work",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-host.test.ts",
+          "name": "github incremental parent reads one exact object after reserving the original pass work",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "artifacts incremental parent reads one exact object after reserving the original pass work",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-host.test.ts",
+          "name": "artifacts incremental parent reads one exact object after reserving the original pass work",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "github incremental send validates exact parent edges and keeps its final credential fence",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-host.test.ts",
+          "name": "github incremental send validates exact parent edges and keeps its final credential fence",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "artifacts incremental send validates exact parent edges and keeps its final credential fence",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-host.test.ts",
+          "name": "artifacts incremental send validates exact parent edges and keeps its final credential fence",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-input-work.test.ts",
+      "name": "legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder",
+      "status": "failed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-input-work.test.ts",
+          "name": "legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder",
+          "status": "failed",
+          "errors": 1,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    }
+  ],
+  "observedCases": [
+    {
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+      "name": "Web upload-pack reads exact local Git closure and empty refs, and decodes both real Git delta encodings",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+      "name": "Web pack reads reject corruption and bounds, and HTTP failures keep no guessed absence or partial cache",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+      "name": "isolated upload-pack reads one commit, root and blob without unrelated history or a large sibling",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+      "name": "isolation refuses absent capabilities and tip-only permission before a POST",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+      "name": "isolated framing and pack guards refuse before inflation or cache retention",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+      "name": "isolated in-flight and caller-owned copies consume one source allowance without concurrent borrowing",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+      "name": "an isolated operation cannot renew its deadline between advertisement and object fetch",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+      "name": "isolated deadlines return despite pending read/refusal cancellation and permanently refuse source reuse",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+      "name": "isolated abandonment survives late fetch and cleanup settlement without consuming the late body",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+      "name": "opt-in v2 fetch reads exact nonadvertised objects in two requests and keeps ref reads on v0",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+      "name": "opt-in v2 requires its complete bounded capability advertisement without a POST or v0 fallback",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+      "name": "opt-in v2 validates sections and binary sidebands before exact pack admission",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+      "name": "opt-in v2 retains one deadline and permanently abandons a late exact-object response",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+      "name": "HTTP response refusal preserves only bounded categories and cancels before reading",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "github archive credential cannot escape its native journal ref",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "artifacts archive credential cannot escape its native journal ref",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "github archive send owns its command and bytes before discovery awaits",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "artifacts archive send owns its command and bytes before discovery awaits",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "github rechecks expiry, revocation and the pass fence after awaits",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "artifacts rechecks expiry, revocation and the pass fence after awaits",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "github parent reads cap decoded objects and bytes in the actual transport",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "artifacts parent reads cap decoded objects and bytes in the actual transport",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "github incremental parent reads one exact object after reserving the original pass work",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "artifacts incremental parent reads one exact object after reserving the original pass work",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "github incremental send validates exact parent edges and keeps its final credential fence",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "artifacts incremental send validates exact parent edges and keeps its final credential fence",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-input-work.test.ts",
+      "name": "legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder",
+      "status": "failed",
+      "errors": 1,
+      "retryCount": 0,
+      "repeatCount": 0
+    }
+  ],
+  "unexpectedCases": [],
+  "modules": [
+    {
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+      "status": "passed",
+      "errors": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-host.test.ts",
+      "status": "passed",
+      "errors": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-input-work.test.ts",
+      "status": "failed",
+      "errors": 0
+    }
+  ],
+  "issues": [
+    "run incomplete, interrupted or has unhandled errors",
+    "file failed, skipped, incomplete or has collection errors",
+    "required case did not pass exactly once",
+    "built-in JSON count/file/status mismatch"
+  ],
+  "passed": false
+}

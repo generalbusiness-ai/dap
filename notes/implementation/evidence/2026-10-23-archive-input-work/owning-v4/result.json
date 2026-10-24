@@ -1,0 +1,32 @@
+{
+  "allocation": "3f959c5b5ba71e2f51e3f0ee1d5714151c2f4ca2",
+  "status": "failed",
+  "children": [
+    {
+      "label": "focused",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "scripts/focused-check.mjs",
+        "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v4/focused-plan.json",
+        "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v4/focused"
+      ],
+      "cwd": "/private/tmp/artroom-builder-archive-input-work-20261023",
+      "pid": 98891,
+      "exit": 1,
+      "signal": null,
+      "wall": 6.512121209059842,
+      "user": 9.259812,
+      "system": 1.309531
+    }
+  ],
+  "errors": [
+    "RuntimeError: child failed/interrupted; later phases unrun"
+  ],
+  "signals": [],
+  "wall": 8.801463708980009,
+  "pythonCpu": 2.062309,
+  "childrenUser": 9.359662,
+  "childrenSystem": 1.409083,
+  "inclusiveCpu": 12.831054,
+  "qualification": "Continuation only: Scope test compiler for changed test inputs and the single corrected Native whole-file body. Original V3 Scope test compiler passed and Git HTTP14 plus Scope host12 passed; its Native1 failure remains retained. Compatibility no-op and first three compiler successes remain carried from original V2. Full guarded Source/dependencies/tools/environment/Main/preparation; only declared selected-file cache cells and empty Vite-temp metadata may change during focused child. No control mutation, parser, package install, test collection, Node tails or gate. Callback gaps are reporting gaps; nested costs overlap."
+}

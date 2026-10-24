@@ -1,0 +1,1003 @@
+{
+  "state": "INDEPENDENT_CLOSED_MATCHED_CONTROLS",
+  "rootNaturalObservation": {
+    "session": 39288,
+    "tool": "00bdf3",
+    "exit": 0,
+    "attribution": "Root observation, not auditor process monitoring"
+  },
+  "allocation": "fa14787c8510ee7b0edefcace0fee5f692a20f0c",
+  "head": "0c12abc24eee67e8a60ae33455d94eaa2548e0fb",
+  "tree": "221c5d5ddf46176d643f75eeffde3f01ef0bb3f4",
+  "phases": [
+    {
+      "phase": "git-inflation",
+      "target": "packages/git/src/http-read.ts",
+      "mutation": {
+        "path": "packages/git/src/http-read.ts",
+        "before": "    reserveWork?.(size);\n    const end = zlibEnd",
+        "after": "    const end = zlibEnd",
+        "originalSha256": "819bdf711d8fe4e2dcfd58551dc9e844c51e17fd65a556a4adce167808ccc704",
+        "mutantSha256": "0e3413842229c2cee9f803d3cb7ccc4974b57c51c5c300969ce55b68cb986439"
+      },
+      "restoration": {
+        "path": "packages/git/src/http-read.ts",
+        "original": {
+          "device": 16777231,
+          "inode": 545638119,
+          "mode": "0o644",
+          "nlink": 1,
+          "kind": "file",
+          "bytes": 47613,
+          "sha256": "819bdf711d8fe4e2dcfd58551dc9e844c51e17fd65a556a4adce167808ccc704",
+          "mtimeNs": 1792797041174802487,
+          "ctimeNs": 1792797041174802487
+        },
+        "restored": {
+          "device": 16777231,
+          "inode": 545638119,
+          "mode": "0o644",
+          "nlink": 1,
+          "kind": "file",
+          "bytes": 47613,
+          "sha256": "819bdf711d8fe4e2dcfd58551dc9e844c51e17fd65a556a4adce167808ccc704",
+          "mtimeNs": 1792797041174802487,
+          "ctimeNs": 1792801647182624546
+        },
+        "qualification": "Original device/inode/mode/nlink/bytes/hash exact; only targetmtime/ctime may reflect controlled rename. No other Source allowance."
+      },
+      "child": {
+        "argv": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-archive-input-work-20261023/node_modules/vitest/vitest.mjs",
+          "run",
+          "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+          "--config",
+          "/private/tmp/artroom-builder-archive-input-work-20261023/vitest.config.ts",
+          "--project",
+          "git",
+          "--allowOnly=false",
+          "--passWithNoTests=false",
+          "--reporter=default",
+          "--reporter=json",
+          "--reporter=/private/tmp/artroom-builder-archive-input-work-20261023/scripts/test-progress.mjs",
+          "--outputFile.json=/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/git-inflation/vitest.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-archive-input-work-20261023",
+        "pid": 21764,
+        "exit": 1,
+        "signal": null,
+        "wall": 2.414465333102271,
+        "user": 1.9131560000000003,
+        "system": 0.7222139999999999
+      },
+      "caseCount": 14,
+      "failedCase": "opt-in v2 validates sections and binary sidebands before exact pack admission",
+      "failure": "AssertionError: expected GitRefusal: unreadable: zlib header { \u2026(2) } to be Error: TEST declared inflation quota // Object.is equality\n    at /private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts:552:27\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async file:///private/tmp/artroom-builder-archive-input-work-20261023/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20",
+      "callbackCounts": {
+        "run-start": 1,
+        "case-ready": 14,
+        "case-result": 14,
+        "case-final": 14,
+        "run-end": 1
+      },
+      "phaseWall": 5.514900250011124,
+      "phaseInclusiveCpu": 5.707018
+    },
+    {
+      "phase": "scope-maximum-debit",
+      "target": "packages/scope/src/archive-host.ts",
+      "mutation": {
+        "path": "packages/scope/src/archive-host.ts",
+        "before": "inputWork: v2 ? 1024 : wire * 32",
+        "after": "inputWork: wire * 32 + (v2 ? 1024 : 0)",
+        "originalSha256": "9d0ad63e4ce1052d99eb0b537cbb5d21ec90622f8a1e9c9ffb0c374392984207",
+        "mutantSha256": "8d3e0c35626a4ae80d80d89c8c5c9ebe5d91eb05975aee75b0433df4197dc595"
+      },
+      "restoration": {
+        "path": "packages/scope/src/archive-host.ts",
+        "original": {
+          "device": 16777231,
+          "inode": 545638524,
+          "mode": "0o644",
+          "nlink": 1,
+          "kind": "file",
+          "bytes": 12220,
+          "sha256": "9d0ad63e4ce1052d99eb0b537cbb5d21ec90622f8a1e9c9ffb0c374392984207",
+          "mtimeNs": 1792796808891357539,
+          "ctimeNs": 1792796808891357539
+        },
+        "restored": {
+          "device": 16777231,
+          "inode": 545638524,
+          "mode": "0o644",
+          "nlink": 1,
+          "kind": "file",
+          "bytes": 12220,
+          "sha256": "9d0ad63e4ce1052d99eb0b537cbb5d21ec90622f8a1e9c9ffb0c374392984207",
+          "mtimeNs": 1792796808891357539,
+          "ctimeNs": 1792801655985170743
+        },
+        "qualification": "Original device/inode/mode/nlink/bytes/hash exact; only targetmtime/ctime may reflect controlled rename. No other Source allowance."
+      },
+      "child": {
+        "argv": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-archive-input-work-20261023/node_modules/vitest/vitest.mjs",
+          "run",
+          "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-input-work.test.ts",
+          "--config",
+          "/private/tmp/artroom-builder-archive-input-work-20261023/vitest.config.ts",
+          "--project",
+          "scope",
+          "--allowOnly=false",
+          "--passWithNoTests=false",
+          "--reporter=default",
+          "--reporter=json",
+          "--reporter=/private/tmp/artroom-builder-archive-input-work-20261023/scripts/test-progress.mjs",
+          "--outputFile.json=/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/scope-maximum-debit/vitest.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-archive-input-work-20261023",
+        "pid": 22957,
+        "exit": 1,
+        "signal": null,
+        "wall": 5.01078658294864,
+        "user": 5.561501,
+        "system": 0.8345110000000001
+      },
+      "caseCount": 1,
+      "failedCase": "legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder",
+      "failure": "AssertionError: Legacy parent preplanning work must leave the Native finish allowance: expected 51635300 to be less than 16777216\n    at /private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-input-work.test.ts:150:138\n    at private/tmp/artroom-builder-archive-input-work-20261023/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20",
+      "callbackCounts": {
+        "run-start": 1,
+        "case-ready": 1,
+        "case-result": 1,
+        "case-final": 1,
+        "run-end": 1
+      },
+      "phaseWall": 8.0871329579968,
+      "phaseInclusiveCpu": 9.442051000000001
+    }
+  ],
+  "guardResult": "All fixed Source/dependencies6072/root32links/tools/env/refs/preparation exact. Complete original bytes and core device/inode/mode/nlink restored for both targets; target ctime may change, mtime retained. Mutant exact single replacement; no outside source delta. Phase2 starts at exact phase1 after snapshot. Only selected two cache cells and empty temp timestamps allowed.",
+  "scopeCosts": {
+    "beforePlanning": [
+      {
+        "entries": 0,
+        "attempts": 17,
+        "nodes": 13,
+        "calls": 50,
+        "metadata": 193293,
+        "inputWork": 51635300
+      }
+    ],
+    "final": {
+      "entries": 3,
+      "attempts": 37,
+      "nodes": 29,
+      "calls": 107,
+      "metadata": 697409,
+      "inputWork": 61961713
+    },
+    "shares": [
+      [
+        "before-parent",
+        {
+          "calls": 98,
+          "cost": {
+            "entries": 0,
+            "attempts": 17,
+            "nodes": 13,
+            "calls": 24,
+            "metadata": 99085,
+            "inputWork": 5687076
+          }
+        }
+      ],
+      [
+        "parent-adapter",
+        {
+          "calls": 131,
+          "cost": {
+            "entries": 0,
+            "attempts": 0,
+            "nodes": 0,
+            "calls": 26,
+            "metadata": 94208,
+            "inputWork": 45948224
+          }
+        }
+      ],
+      [
+        "legacy-reconstruction",
+        {
+          "calls": 138,
+          "cost": {
+            "entries": 2,
+            "attempts": 18,
+            "nodes": 15,
+            "calls": 39,
+            "metadata": 168822,
+            "inputWork": 5398577
+          }
+        }
+      ],
+      [
+        "scouting-and-finish",
+        {
+          "calls": 150,
+          "cost": {
+            "entries": 1,
+            "attempts": 2,
+            "nodes": 1,
+            "calls": 18,
+            "metadata": 335294,
+            "inputWork": 4927836
+          }
+        }
+      ]
+    ],
+    "firstScouted": {
+      "entries": 3,
+      "attempts": 37,
+      "nodes": 29,
+      "calls": 105,
+      "metadata": 688547,
+      "inputWork": 61930703
+    },
+    "siteCount": 95,
+    "allAxisSiteAndPhaseSumsExact": true
+  },
+  "outerCosts": {
+    "wall": 16.594113625003956,
+    "pythonCpu": 8.239436,
+    "childrenUser": 7.892025,
+    "childrenSystem": 1.977191,
+    "inclusiveCpu": 18.108652000000003
+  },
+  "qualification": "Git13pass1 intended raw AssertionError; Scope sole intended named preplanning assertion fails before progress/drain. Host mutant reintroduces former maximum debit while retaining new staged debits, not exact old implementation. No extra failures/retries/unhandled/signals; no runtime repeated. Original child exits1 retained, matched wrapper exits0 attributed. Nested costs overlap.",
+  "inputPins": [
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/before.json",
+      "bytes": 3295475,
+      "sha256": "9963f9f2573fdb5684f6baaad1d1c99dba7c46db3ad7a3bf3a0df3bb4b5326b0",
+      "identity": [
+        16777231,
+        545749948,
+        33188,
+        1,
+        3295475,
+        1792801642435032794,
+        1792801642435032794
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/final.json",
+      "bytes": 3295472,
+      "sha256": "c1d13c598bf4894f44403d97a5c5afd2a177400cb8e6fadc1f8f2b9e531998cf",
+      "identity": [
+        16777231,
+        545751007,
+        33188,
+        1,
+        3295472,
+        1792801658222877307,
+        1792801658222877307
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/git-inflation/after.json",
+      "bytes": 3295474,
+      "sha256": "d003ae4250a17fd28c13cbdab548e0769ff8368d0d2ef38cd510bcead0504df4",
+      "identity": [
+        16777231,
+        545750849,
+        33188,
+        1,
+        3295474,
+        1792801647931737051,
+        1792801647931737051
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/git-inflation/before.json",
+      "bytes": 3295475,
+      "sha256": "9963f9f2573fdb5684f6baaad1d1c99dba7c46db3ad7a3bf3a0df3bb4b5326b0",
+      "identity": [
+        16777231,
+        545749952,
+        33188,
+        1,
+        3295475,
+        1792801643200911691,
+        1792801643200911691
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/git-inflation/command.json",
+      "bytes": 963,
+      "sha256": "0dcf01b3b4b60654f307b3b2f1008bca702f7193f13aed7069bdf1a93c9cee00",
+      "identity": [
+        16777231,
+        545749961,
+        33188,
+        1,
+        963,
+        1792801643978881007,
+        1792801643978881007
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/git-inflation/invocation.json",
+      "bytes": 475,
+      "sha256": "93a5e069a6075528f494142c450707718c76b02c16c941c3fc909ee1a06ad6f3",
+      "identity": [
+        16777231,
+        545749950,
+        33188,
+        1,
+        475,
+        1792801642439558102,
+        1792801642439558102
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/git-inflation/mutant-after.json",
+      "bytes": 3295508,
+      "sha256": "a133a3d67455c6f2d911059546f3e8a58fce19f4401d953e668c46caaa613f40",
+      "identity": [
+        16777231,
+        545750846,
+        33188,
+        1,
+        3295508,
+        1792801647158396085,
+        1792801647158396085
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/git-inflation/mutant-before.json",
+      "bytes": 3295509,
+      "sha256": "dd267ed2b3b501abc55797346503f0a3c4d4798db9a53623ddb41deae422c989",
+      "identity": [
+        16777231,
+        545749960,
+        33188,
+        1,
+        3295509,
+        1792801643952175830,
+        1792801643952175830
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/git-inflation/mutant.data",
+      "bytes": 47588,
+      "sha256": "0e3413842229c2cee9f803d3cb7ccc4974b57c51c5c300969ce55b68cb986439",
+      "identity": [
+        16777231,
+        545749955,
+        33188,
+        1,
+        47588,
+        1792801643215162949,
+        1792801643215162949
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/git-inflation/mutation.json",
+      "bytes": 323,
+      "sha256": "a06529de20e8912c5eab2133da428ad022ca686eeefe08dfbb4de0d3cf2ebb17",
+      "identity": [
+        16777231,
+        545749953,
+        33188,
+        1,
+        323,
+        1792801643213640569,
+        1792801643213640569
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/git-inflation/mutation.patch",
+      "bytes": 534,
+      "sha256": "a80a65d485a2f9ad7f58e1cb73b9b70d80436249639bd8dd3e3da64e971ed393",
+      "identity": [
+        16777231,
+        545749956,
+        33188,
+        1,
+        534,
+        1792801643215223450,
+        1792801643215223450
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/git-inflation/original.data",
+      "bytes": 47613,
+      "sha256": "819bdf711d8fe4e2dcfd58551dc9e844c51e17fd65a556a4adce167808ccc704",
+      "identity": [
+        16777231,
+        545749954,
+        33188,
+        1,
+        47613,
+        1792801643215067032,
+        1792801643215067032
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/git-inflation/pid.json",
+      "bytes": 19,
+      "sha256": "d20b875af75cb2265f6e15fa0942669d6442f529b6bc9b7be70fba760de77fcc",
+      "identity": [
+        16777231,
+        545749964,
+        33188,
+        1,
+        19,
+        1792801643980916305,
+        1792801643980916305
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/git-inflation/process.json",
+      "bytes": 934,
+      "sha256": "d82fb73ad9d18dd736bb475527e24d71f9753f22316f4462d2338f7622bc95c2",
+      "identity": [
+        16777231,
+        545750844,
+        33188,
+        1,
+        934,
+        1792801646393596734,
+        1792801646393596734
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/git-inflation/progress.jsonl",
+      "bytes": 13117,
+      "sha256": "ff61f6e3bd3a78bd4a2d0b34bf42cc28f7ffd6dd680fc62a22e0b8ec9ecfce29",
+      "identity": [
+        16777231,
+        545749982,
+        33152,
+        1,
+        13117,
+        1792801646379026641,
+        1792801646379026641
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/git-inflation/restoration.json",
+      "bytes": 798,
+      "sha256": "2a9ffd154ff188632f175c6513ffb06addf9e2cb71d921dd299b5bde7b8e6b3d",
+      "identity": [
+        16777231,
+        545750847,
+        33188,
+        1,
+        798,
+        1792801647182877130,
+        1792801647182877130
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/git-inflation/result.json",
+      "bytes": 3597,
+      "sha256": "b98b11513bae8894138949d2a632879d55773de672b1cac1bc3c9710f51f33d3",
+      "identity": [
+        16777231,
+        545750850,
+        33188,
+        1,
+        3597,
+        1792801647954567548,
+        1792801647954567548
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/git-inflation/stderr",
+      "bytes": 1042,
+      "sha256": "d850eaba5c0d5789b619929af10b5bb55badf15d511ed0aac7bcb9fec5fb411f",
+      "identity": [
+        16777231,
+        545749963,
+        33188,
+        1,
+        1042,
+        1792801646378306347,
+        1792801646378306347
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/git-inflation/stdout",
+      "bytes": 1883,
+      "sha256": "2b026541f1dca2965e51c91719c0c423cbbb38da5a9ec9cfb84c8b4360ead24c",
+      "identity": [
+        16777231,
+        545749962,
+        33188,
+        1,
+        1883,
+        1792801646379201392,
+        1792801646379201392
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/git-inflation/vitest.json",
+      "bytes": 5589,
+      "sha256": "e7d8df3732f36178163758bd3331a4e1be2c52d2ae15f84332484a638d3662ea",
+      "identity": [
+        16777231,
+        545750843,
+        33188,
+        1,
+        5589,
+        1792801646379005391,
+        1792801646379005391
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/result.json",
+      "bytes": 55679,
+      "sha256": "677b2de99fffed13285d9101d448d8a87916d21da679aa6086d77969550bcfae",
+      "identity": [
+        16777231,
+        545751008,
+        33188,
+        1,
+        55679,
+        1792801658250115278,
+        1792801658250115278
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/scope-maximum-debit/after.json",
+      "bytes": 3295472,
+      "sha256": "c1d13c598bf4894f44403d97a5c5afd2a177400cb8e6fadc1f8f2b9e531998cf",
+      "identity": [
+        16777231,
+        545751003,
+        33188,
+        1,
+        3295472,
+        1792801656734314165,
+        1792801656734314165
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/scope-maximum-debit/before.json",
+      "bytes": 3295474,
+      "sha256": "d003ae4250a17fd28c13cbdab548e0769ff8368d0d2ef38cd510bcead0504df4",
+      "identity": [
+        16777231,
+        545750855,
+        33188,
+        1,
+        3295474,
+        1792801649398944952,
+        1792801649398944952
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/scope-maximum-debit/command.json",
+      "bytes": 988,
+      "sha256": "22159848ffac7b099df63bd8a1e97d1b883c01e69b357c6e2c9d9db4ecd75f64",
+      "identity": [
+        16777231,
+        545750863,
+        33188,
+        1,
+        988,
+        1792801650172121041,
+        1792801650172121041
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/scope-maximum-debit/cost-observation.json",
+      "bytes": 40430,
+      "sha256": "7a6f454ba0f472da84aaa9eb372442cba307bd33da48b7bcb2136ac9ad0e2c1a",
+      "identity": [
+        16777231,
+        545750998,
+        33188,
+        1,
+        40430,
+        1792801655984828908,
+        1792801655984828908
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/scope-maximum-debit/invocation.json",
+      "bytes": 475,
+      "sha256": "93a5e069a6075528f494142c450707718c76b02c16c941c3fc909ee1a06ad6f3",
+      "identity": [
+        16777231,
+        545750853,
+        33188,
+        1,
+        475,
+        1792801648669965143,
+        1792801648669965143
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/scope-maximum-debit/mutant-after.json",
+      "bytes": 3295511,
+      "sha256": "a2a646e52f06e7fbf91cee4126ffeb4dbeec5b33f37a18bfe7473aa2a1110bf8",
+      "identity": [
+        16777231,
+        545750997,
+        33188,
+        1,
+        3295511,
+        1792801655960145863,
+        1792801655960145863
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/scope-maximum-debit/mutant-before.json",
+      "bytes": 3295513,
+      "sha256": "552a4fbb3d21e8803d8213090556aadf266d2dc5f764ec1a30dee07d6d4f7af5",
+      "identity": [
+        16777231,
+        545750862,
+        33188,
+        1,
+        3295513,
+        1792801650144482069,
+        1792801650144482069
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/scope-maximum-debit/mutant.data",
+      "bytes": 12226,
+      "sha256": "8d3e0c35626a4ae80d80d89c8c5c9ebe5d91eb05975aee75b0433df4197dc595",
+      "identity": [
+        16777231,
+        545750858,
+        33188,
+        1,
+        12226,
+        1792801649410740243,
+        1792801649410740243
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/scope-maximum-debit/mutation.json",
+      "bytes": 326,
+      "sha256": "ad32787882028107e70003a869ce7202fa09747c403cc20e577289857955338e",
+      "identity": [
+        16777231,
+        545750856,
+        33188,
+        1,
+        326,
+        1792801649410464034,
+        1792801649410464034
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/scope-maximum-debit/mutation.patch",
+      "bytes": 668,
+      "sha256": "432fa3fc1729ac7cb5ed387dbd077c50d21f8a5296aa094ae5319cc0712bb2dc",
+      "identity": [
+        16777231,
+        545750859,
+        33188,
+        1,
+        668,
+        1792801649410802077,
+        1792801649410802077
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/scope-maximum-debit/original.data",
+      "bytes": 12220,
+      "sha256": "9d0ad63e4ce1052d99eb0b537cbb5d21ec90622f8a1e9c9ffb0c374392984207",
+      "identity": [
+        16777231,
+        545750857,
+        33188,
+        1,
+        12220,
+        1792801649410674410,
+        1792801649410674410
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/scope-maximum-debit/pid.json",
+      "bytes": 19,
+      "sha256": "7b0a741295bb4ce8152c644f05fd4219adace5ae280e79c8f6f666dd564ac517",
+      "identity": [
+        16777231,
+        545750866,
+        33188,
+        1,
+        19,
+        1792801650174222257,
+        1792801650174222257
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/scope-maximum-debit/process.json",
+      "bytes": 942,
+      "sha256": "5dc41e78529371569ef31c76ccafd96765b0204a4c86c647675efd55f96b2b89",
+      "identity": [
+        16777231,
+        545750995,
+        33188,
+        1,
+        942,
+        1792801655183245093,
+        1792801655183245093
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/scope-maximum-debit/progress.jsonl",
+      "bytes": 1145,
+      "sha256": "179f4c5512a7be2111c17c2d2bfb6ef1a7c602e4a2efa38dd2eef62be90c065b",
+      "identity": [
+        16777231,
+        545750885,
+        33152,
+        1,
+        1145,
+        1792801655150410311,
+        1792801655150410311
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/scope-maximum-debit/restoration.json",
+      "bytes": 803,
+      "sha256": "93965eb7185ba92b5acec42bfe9b07661c08d1e77474284e602497ebb4d71e8a",
+      "identity": [
+        16777231,
+        545750999,
+        33188,
+        1,
+        803,
+        1792801655985386952,
+        1792801655985386952
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/scope-maximum-debit/result.json",
+      "bytes": 45180,
+      "sha256": "4dcbbb09ab9ea14d80c77251827ed1b698e8d0d98cdf19ddcd18c5822c7bc663",
+      "identity": [
+        16777231,
+        545751004,
+        33188,
+        1,
+        45180,
+        1792801656757851872,
+        1792801656757851872
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/scope-maximum-debit/stderr",
+      "bytes": 891,
+      "sha256": "ad4d8eddbdf0333b1d9276bf7e0519a33a0c100a123ac3dbeef71a5acac8fad1",
+      "identity": [
+        16777231,
+        545750865,
+        33188,
+        1,
+        891,
+        1792801655149779684,
+        1792801655149779684
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/scope-maximum-debit/stdout",
+      "bytes": 1670,
+      "sha256": "3c1aa32dcd9bc9f46a6e8b20144fb90253dc6cf5f061a2707dad4bd71181b465",
+      "identity": [
+        16777231,
+        545750864,
+        33188,
+        1,
+        1670,
+        1792801655150495228,
+        1792801655150495228
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/scope-maximum-debit/vitest.json",
+      "bytes": 25096,
+      "sha256": "961e3abca15ed8f5cc833d1fa7a3676742d0691c7b718c8987611ded33b850c5",
+      "identity": [
+        16777231,
+        545750994,
+        33188,
+        1,
+        25096,
+        1792801655150457062,
+        1792801655150457062
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-source-20261023-v5/manifest.json",
+      "bytes": 2023,
+      "sha256": "5f8b15a1695b9ff06f8779b9fa5c6075a2599f87007ef7ed6d542df7260cd40b",
+      "identity": [
+        16777231,
+        545746310,
+        33188,
+        1,
+        2023,
+        1792801516312980448,
+        1792801516312980448
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-source-20261023-v5/ancestry.patch",
+      "bytes": 25099,
+      "sha256": "bc157ce433e3d89a328b6c7f27613251f77b708ecb6829cddc86fb13f33c204a",
+      "identity": [
+        16777231,
+        545746300,
+        33188,
+        1,
+        25099,
+        1792800955706661931,
+        1792800955706661931
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-source-20261023-v5/checkpoint.json",
+      "bytes": 252,
+      "sha256": "b017ce9983a1ce330371f4107ad85d8babeb6825ff8ed77c4da14a62f5b96465",
+      "identity": [
+        16777231,
+        545746301,
+        33188,
+        1,
+        252,
+        1792801516312324196,
+        1792801516312324196
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-source-20261023-v5/control-proof.json",
+      "bytes": 954,
+      "sha256": "643f89886a379c14a59471552b66dda2b28ffd6b524ff6bf068263a8a20fbec6",
+      "identity": [
+        16777231,
+        545746302,
+        33188,
+        1,
+        954,
+        1792801516312398737,
+        1792801516312398737
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-source-20261023-v5/external-tools.json",
+      "bytes": 17093,
+      "sha256": "0d9080c248245cd20c1f600ffbbffd423c9714e4995bd131f114bf3687f349e0",
+      "identity": [
+        16777231,
+        545746303,
+        33188,
+        1,
+        17093,
+        1792800955706921182,
+        1792800955706921182
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-source-20261023-v5/git-tool-preparation.json",
+      "bytes": 11628,
+      "sha256": "d4342497b38f8d64daed553dc7306365a82f20fbaed416dffd957af46b1e1158",
+      "identity": [
+        16777231,
+        545746304,
+        33188,
+        1,
+        11628,
+        1792800955706993141,
+        1792800955706993141
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-source-20261023-v5/ledger.json",
+      "bytes": 2356,
+      "sha256": "070a4fc9a38bc698ab983f9fa20ab366197d1b7b6bebb17cc916a5c7b3805f27",
+      "identity": [
+        16777231,
+        545746305,
+        33188,
+        1,
+        2356,
+        1792801516312515946,
+        1792801516312515946
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-source-20261023-v5/owner.py",
+      "bytes": 26180,
+      "sha256": "0ecf9fbaa290753340f6876c1a53b156b7e994515a4d60790c0c7f7f1ecb7e2a",
+      "identity": [
+        16777231,
+        545746306,
+        33188,
+        1,
+        26180,
+        1792800955707265017,
+        1792800955707265017
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-source-20261023-v5/plan.md",
+      "bytes": 4766,
+      "sha256": "1b251c2b64881c275485a85d1eb70501d085a413077fa0db47d144e075bb4aa4",
+      "identity": [
+        16777231,
+        545746307,
+        33188,
+        1,
+        4766,
+        1792801516312594322,
+        1792801516312594322
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-source-20261023-v5/v3-to-v4.patch",
+      "bytes": 2765,
+      "sha256": "812a596abfa83a0398cfd3152b6ef993be3c4eaca2f9b152852c4d721a231f5b",
+      "identity": [
+        16777231,
+        545746308,
+        33188,
+        1,
+        2765,
+        1792800955707445475,
+        1792800955707445475
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-source-20261023-v5/v4-to-v5.patch",
+      "bytes": 9634,
+      "sha256": "6ad6f80757fffd638ad187f671bbd2a45fcafd4a0786bf375072c27c1a59da9f",
+      "identity": [
+        16777231,
+        545746309,
+        33188,
+        1,
+        9634,
+        1792800979297256725,
+        1792800979297256725
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-source-20261023-v5/v5-v8-to-final-v9-fill.patch",
+      "bytes": 8070,
+      "sha256": "32a1d59de8f48bb3702bd236063da10d4f6d994124c71624f6fbf1665a102a35",
+      "identity": [
+        16777231,
+        545749487,
+        33188,
+        1,
+        8070,
+        1792801516312891114,
+        1792801516312891114
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-controls-binding-allocated-20261023-v5.json",
+      "bytes": 3498068,
+      "sha256": "935afbe63ca682df01e81c87651a389b95743b34943ebad46683001bc5a83086",
+      "identity": [
+        16777231,
+        545749930,
+        33188,
+        1,
+        3498068,
+        1792801633548348177,
+        1792801633548348177
+      ]
+    }
+  ]
+}

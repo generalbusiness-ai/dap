@@ -1,0 +1,28 @@
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |git| test/http-read.test.ts > opt-in v2 validates sections and binary sidebands before exact pack admission
+AssertionError: expected GitRefusal: unreadable: zlib header { …(2) } to be Error: TEST declared inflation quota // Object.is equality
+
+- Expected
++ Received
+
+- Error {
+-   "message": "TEST declared inflation quota",
++ GitRefusal {
++   "message": "unreadable: zlib header",
++   "reason": "unreadable",
++   "what": "zlib header",
++   "name": "GitRefusal",
+  }
+
+ ❯ test/http-read.test.ts:552:27
+    550|     reserveWork: bytes => { declared.push(bytes); throw inflateRefusal…
+    551|   }).then(() => undefined, error => error);
+    552|   expect(deniedInflation).toBe(inflateRefusal);
+       |                           ^
+    553|   expect(declared).toEqual([expected.get(head)!.data.length]);
+    554|   // Wire admission crosses body/HTTP normalization with the same orig…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+

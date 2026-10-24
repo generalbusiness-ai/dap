@@ -1,0 +1,360 @@
+{
+  "kind": "Independent closed single-host actual seal audit",
+  "request": "78638defde7a4613aef78414dbcee73aecc565fd",
+  "promise": "ade43f6922e44f5f7366ae8ba9bdb53206bbc645",
+  "disposition": "clear singleton actualparser result with exact fullguards; not map adoption or finalgate",
+  "rootAttribution": {
+    "session": 75713,
+    "tool": "ba4637",
+    "naturalExit": 0,
+    "source": "Root originalprocess closure; not independently re-observed or rerun"
+  },
+  "allocation": "178d45df6ed94261b53d43ad5e54cffe84435f2f",
+  "bindingSHA256": "0269e858f5191a75d8aedd9a58d70e5174e77f654091c277a1b5a4d93b90f63c",
+  "actualSingleton": [
+    {
+      "path": "packages/scope/src/archive-host.ts",
+      "sourceSeal": "94914ff2f85237464418dddf8e66e307b851fe7a4f2ad296aa2933c4b3249673"
+    }
+  ],
+  "process": {
+    "label": "source-seals",
+    "argv": [
+      "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+      "/private/tmp/artroom-archive-input-work-host-seal-source-20261023-v2/produce-source-seals.mjs",
+      "/private/tmp/artroom-builder-archive-input-work-20261023"
+    ],
+    "cwd": "/private/tmp/artroom-builder-archive-input-work-20261023",
+    "pid": 31116,
+    "exit": 0,
+    "signal": null,
+    "wall": 0.10646550008095801,
+    "user": 0.11118599999999998,
+    "system": 0.021875999999999993
+  },
+  "guardComparison": {
+    "allThreeCompleteSnapshotsEqualAllocatedBinding": true,
+    "source": 2947,
+    "privateDependenciesIncludingRoot": 6072,
+    "relativeLinks": 32,
+    "tools": 219,
+    "toolResolutions": 218,
+    "environmentDigests": 60,
+    "preparationIncludingRoot": 10,
+    "checkpoint": {
+      "head": "0c12abc24eee67e8a60ae33455d94eaa2548e0fb",
+      "tree": "221c5d5ddf46176d643f75eeffde3f01ef0bb3f4",
+      "basis": "b1b2169c90b293cf059df446362d329263952eac",
+      "statusSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "hostSha256": "9d0ad63e4ce1052d99eb0b537cbb5d21ec90622f8a1e9c9ffb0c374392984207",
+      "parserSha256": "6211e9d63c50bc8686ddebbc4d211fceedb4acd3303849ea29137c031517e167"
+    },
+    "noCacheOrSourceAllowanceConsumed": true,
+    "usedExternalSourcePhysicalPinsExact": true
+  },
+  "stderr": {
+    "bytes": 183,
+    "qualification": "Only retained Node31116 stripTypeScriptTypes ExperimentalWarning; child stillnatural0. Stderr is notempty and must not be represented as such."
+  },
+  "costs": {
+    "wall": 2.3447759590344504,
+    "pythonCpu": 2.013075,
+    "childrenUser": 0.21290299999999998,
+    "childrenSystem": 0.124834,
+    "inclusiveCpu": 2.350812
+  },
+  "costQualification": "Original child wall/CPU and outer guard-inclusive observations retained separately; nested values overlap. Outer inheritedchildren include guardmetadataGit process overhead beyond the sole parserchild.",
+  "checks": [
+    "Rawstdout parsesexactly one closed-schema hostrow with64lowercasehex and equals outerresult. No driver/row/Git owner selected. Literalproducer/source/parser pins matchallocatedsnapshot.",
+    "Invocation binds exact allocatedhash/ownerpath/cwd/allocation and original PIDs. Command/process/PID/outerresult agree; errors/signals empty.",
+    "All10rawleaves, allocatedbinding and9externalusedSourceleaves stable-read and pinned. CompleteSource/deps/tools/environment/Main/preparation vectors compare exactly; no candidate/dependency/tool paths followed.",
+    "No parser rerun, code import, candidate/mapedit, compiler,test,compatibility,gate,capture or packageinstallation by auditor. Actualseal remains the recordedmaintainedparser result, never guessed."
+  ],
+  "limitations": [
+    "Root owns adoption of only the existing mapped archive-host slot. This audit does not prove finalmapplacement, gate, deployment or hosted recovery.",
+    "Only allocatedbinding granted/read; no independent null-to-allocated derivation comparison claimed.",
+    "Recordedphysicalguards establish exact inputs at this run, not currentlivecheckout state."
+  ],
+  "inputPins": [
+    {
+      "path": "/private/tmp/artroom-archive-input-work-host-seal-evidence-20261023-v2/after.json",
+      "bytes": 3245930,
+      "sha256": "db0ca6b8af67ed5fa467dbd9474ad617605f8b074692c9cb840107abd0234086",
+      "identity": [
+        16777231,
+        545751924,
+        33188,
+        1,
+        3245930,
+        1792801989813831955,
+        1792801989813831955
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-host-seal-evidence-20261023-v2/before.json",
+      "bytes": 3245930,
+      "sha256": "db0ca6b8af67ed5fa467dbd9474ad617605f8b074692c9cb840107abd0234086",
+      "identity": [
+        16777231,
+        545751910,
+        33188,
+        1,
+        3245930,
+        1792801988235737914,
+        1792801988235737914
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-host-seal-evidence-20261023-v2/invocation.json",
+      "bytes": 567,
+      "sha256": "22c172eed21d7b20d6077358307ac36d7f288fa0963822e555cf87ec9884afd2",
+      "identity": [
+        16777231,
+        545751908,
+        33188,
+        1,
+        567,
+        1792801987471023188,
+        1792801987471023188
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-host-seal-evidence-20261023-v2/result.json",
+      "bytes": 1345,
+      "sha256": "714da84ce83d5adffe3e2615a2c9725e7ecee59eb96ebdf86c31558801fe84df",
+      "identity": [
+        16777231,
+        545751925,
+        33188,
+        1,
+        1345,
+        1792801989816051713,
+        1792801989816051713
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-host-seal-evidence-20261023-v2/source-seals-after.json",
+      "bytes": 3245930,
+      "sha256": "db0ca6b8af67ed5fa467dbd9474ad617605f8b074692c9cb840107abd0234086",
+      "identity": [
+        16777231,
+        545751922,
+        33188,
+        1,
+        3245930,
+        1792801989086018233,
+        1792801989086018233
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-host-seal-evidence-20261023-v2/source-seals.command.json",
+      "bytes": 303,
+      "sha256": "34531590a2c21464e5829af13a376ecc4b7441ecbaa8e011a69b7467deb75e5c",
+      "identity": [
+        16777231,
+        545751911,
+        33188,
+        1,
+        303,
+        1792801988237602254,
+        1792801988237602254
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-host-seal-evidence-20261023-v2/source-seals.pid.json",
+      "bytes": 19,
+      "sha256": "b380ce0f0985fdfc395ccbf5d91868378920201eb5ef1575f6fde669e24a7181",
+      "identity": [
+        16777231,
+        545751914,
+        33188,
+        1,
+        19,
+        1792801988239597136,
+        1792801988239597136
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-host-seal-evidence-20261023-v2/source-seals.process.json",
+      "bytes": 473,
+      "sha256": "c01ed52d389bd2b9f159550b0c9b5c2873f6da588e0972e0a96347979c97ea19",
+      "identity": [
+        16777231,
+        545751920,
+        33188,
+        1,
+        473,
+        1792801988344108670,
+        1792801988344108670
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-host-seal-evidence-20261023-v2/source-seals.stderr",
+      "bytes": 183,
+      "sha256": "159d37f84397bc0fbd6864be90c1dedad41487a33afcf59a524fece06559f621",
+      "identity": [
+        16777231,
+        545751913,
+        33188,
+        1,
+        183,
+        1792801988340652116,
+        1792801988340652116
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-host-seal-evidence-20261023-v2/source-seals.stdout",
+      "bytes": 147,
+      "sha256": "48e73282a650fd615cb1ead5eceab126b53065a3bdee5161bf4118a599c9cdc3",
+      "identity": [
+        16777231,
+        545751912,
+        33188,
+        1,
+        147,
+        1792801988340546824,
+        1792801988340546824
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-host-seal-binding-allocated-20261023-v2.json",
+      "bytes": 3448041,
+      "sha256": "0269e858f5191a75d8aedd9a58d70e5174e77f654091c277a1b5a4d93b90f63c",
+      "identity": [
+        16777231,
+        545751894,
+        33188,
+        1,
+        3448041,
+        1792801979600383013,
+        1792801979600383013
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-host-seal-source-20261023-v2/checkpoint.json",
+      "bytes": 422,
+      "sha256": "5e7134d9d99bad13b2ea9eeac0db0170bc9f5db7948f4beb0c69ac734eb7296f",
+      "identity": [
+        16777231,
+        545746312,
+        33188,
+        1,
+        422,
+        1792801516315963042,
+        1792801516315963042
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-host-seal-source-20261023-v2/external-tools.json",
+      "bytes": 17110,
+      "sha256": "434a9a9b4fb4e34ab46b00dd83c836cfe929055e244adecf459f5ef896fd3ebd",
+      "identity": [
+        16777231,
+        545746313,
+        33188,
+        1,
+        17110,
+        1792800955710509320,
+        1792800955710509320
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-host-seal-source-20261023-v2/manifest.json",
+      "bytes": 1511,
+      "sha256": "e7291caecd9325047e10e991ab686709ff95169d38783cd189a186dc13191ed6",
+      "identity": [
+        16777231,
+        545746319,
+        33188,
+        1,
+        1511,
+        1792801516316273209,
+        1792801516316273209
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-host-seal-source-20261023-v2/owner.py",
+      "bytes": 12983,
+      "sha256": "7ababfe5a9c789a4465c9b86d7b70a0ab3485ee6991671648515516c6ba0ed11",
+      "identity": [
+        16777231,
+        545746314,
+        33188,
+        1,
+        12983,
+        1792800955710589945,
+        1792800955710589945
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-host-seal-source-20261023-v2/plan.md",
+      "bytes": 3357,
+      "sha256": "20d672da2f7ea16c2217b2246bdd77963020608cb91933aee023061d03a3ba87",
+      "identity": [
+        16777231,
+        545746315,
+        33188,
+        1,
+        3357,
+        1792801516316074167,
+        1792801516316074167
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-host-seal-source-20261023-v2/produce-source-seals.mjs",
+      "bytes": 922,
+      "sha256": "17e652bf6543be86245eb03573bf11b6e79dc7c28740b0472b89e2264a704d19",
+      "identity": [
+        16777231,
+        545746316,
+        33188,
+        1,
+        922,
+        1792800955710695320,
+        1792800955710695320
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-host-seal-source-20261023-v2/source-delta.patch",
+      "bytes": 10598,
+      "sha256": "a9339ab25f887dc7ec52240268ef0ebb18ab828d30bcba5efb86524d5f52e0b3",
+      "identity": [
+        16777231,
+        545746317,
+        33188,
+        1,
+        10598,
+        1792800955710755320,
+        1792800955710755320
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-host-seal-source-20261023-v2/v1-to-v2.patch",
+      "bytes": 5719,
+      "sha256": "62cac656d38e88f2c3668d26857354bbd32f49835a6252ca4c318f9dbc7b786e",
+      "identity": [
+        16777231,
+        545746318,
+        33188,
+        1,
+        5719,
+        1792800979298459771,
+        1792800979298459771
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-host-seal-source-20261023-v2/v2-v8-to-final-v9-fill.patch",
+      "bytes": 4628,
+      "sha256": "47ac800f4043cda8ec7f709a2245a9e73baf2c819aa5e318c475d914f6d49f4a",
+      "identity": [
+        16777231,
+        545749488,
+        33188,
+        1,
+        4628,
+        1792801516316218001,
+        1792801516316218001
+      ]
+    }
+  ]
+}

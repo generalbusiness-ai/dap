@@ -1,0 +1,4 @@
+packages/scope/test/archive-input-work.test.ts(185,124): error TS4104: The type 'readonly FactRef[]' is 'readonly' and cannot be assigned to the mutable type '({ at: { scope: WithAsymmetricMatcher<`sc_${string}`>; inc: WithAsymmetricMatcher<`in_${string}`>; kind: "destination" | "directory" | "inbox" | ... 5 more ... | AsymmetricMatcher<...>; } | WithAsymmetricMatcher<...>; seq: WithAsymmetricMatcher<...>; hash: WithAsymmetricMatcher<...>; } | WithAsymmetricMatcher<...>)[]'.
+real 0.58
+user 2.87
+sys 0.23

@@ -1,0 +1,26 @@
+{
+  "path": "packages/scope/src/archive-host.ts",
+  "original": {
+    "device": 16777231,
+    "inode": 545638524,
+    "mode": "0o644",
+    "nlink": 1,
+    "kind": "file",
+    "bytes": 12220,
+    "sha256": "9d0ad63e4ce1052d99eb0b537cbb5d21ec90622f8a1e9c9ffb0c374392984207",
+    "mtimeNs": 1792796808891357539,
+    "ctimeNs": 1792796808891357539
+  },
+  "restored": {
+    "device": 16777231,
+    "inode": 545638524,
+    "mode": "0o644",
+    "nlink": 1,
+    "kind": "file",
+    "bytes": 12220,
+    "sha256": "9d0ad63e4ce1052d99eb0b537cbb5d21ec90622f8a1e9c9ffb0c374392984207",
+    "mtimeNs": 1792796808891357539,
+    "ctimeNs": 1792801655985170743
+  },
+  "qualification": "Original device/inode/mode/nlink/bytes/hash exact; only targetmtime/ctime may reflect controlled rename. No other Source allowance."
+}
