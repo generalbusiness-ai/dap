@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4a8de0a5cf31bd790927fc7d538b25b0a54944c3"}
+{"kind":"assert","text":"Prepared a provisional fixed-parent implementation note from reviewed Source only. It explains the bounded native frontier, same-budget one-time complete-closure seed, exact pending readback, explicit legacy anchor metadata route, unchanged caps and original Scope compiler failure. All31 cases/control/three-owner seals/final gate remain pending. Final integrated head and accepted Main are unknown. No candidate changes or runtime."}
