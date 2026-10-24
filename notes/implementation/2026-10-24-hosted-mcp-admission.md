@@ -87,14 +87,47 @@ The original source bytes, inode, mode, size, and modification time were
 restored after each run; change time can change. Root reviewed the actual
 assertion diagnostics. No healthy baseline was repeated for these controls.
 Their evidence is under `/private/tmp/artroom-r5-control-*-evidence-20261024-v2/`.
-The final ordinary gate is pending; no hosted rollout is claimed.
+The ordinary gate at `c0208a87ad` closed with exit 1: 3524 passed,
+2 failed and 3 skipped tests across 496 files. Both failures exposed error
+precedence regressions in the new target check. A stale tool descriptor
+received `unknown-tool`; a mounted card whose grant was removed received
+a nested permission error instead of `view: stale`.
+
+The correction keeps descriptor and digest checks before target admission.
+On a target-policy denial, a mounted card runs its existing stale-view
+check before returning the denial. Successful calls add no read. Every
+attempt still checks its actual target before custody or signing, and the
+existing immediately-before-signing view check remains. Existing assertions
+and deadlines are retained. The service AST seal tracks the corrected
+source.
+
+The first repair continuation at `04a4798510` passed all five compiler
+contexts and 17 of 18 tests, including the stale-card case. The binding
+case still failed at the cached descriptor: refreshing the catalogue
+removed the old name before the descriptor check could run.
+
+The next correction preserves a previous descriptor only when its
+configuration is still current and its snapshot was not invalidated.
+Fresh state supplies all authorization. After descriptor comparison, the
+current catalogue must still serve the exact name and declaration before
+execution. The existing binding scenario now also checks that a removed
+name on its original target reaches no custody write, signs nothing and
+leaves the target head unchanged.
+
+Both failed runs remain evidence. At `909c6d1bfd`, the second repair continuation passed all five compiler
+contexts and all four binding and policy cases, closing naturally in
+11.000 seconds. Checker decision `24f8119c` requires a new ordinary gate
+at the final commit. That gate includes the previously unreached
+Node and Counting browser tail; the separate tail runner remains unused.
+No hosted rollout is claimed.
 
 ## Rollout and deferred policy
 
 The user has approved pushing the reviewed change. Cloudflare configuration
-and deployment remain planner-only. The planner must inventory existing
-hosted agents and their tools under request `92d54432`, choose explicit
-opt-in and additions per Worker, and deploy the reviewed head. Leaving
+and deployment remain planner-only. Planner decision `8904bf5b` accepts the defaults for local review. Before
+deployment, the planner inventories actual tool use per Worker under request
+`92d54432`, chooses explicit opt-in and additions, and records those settings
+in the deployment record. Leaving
 opt-in unset closes the endpoint. No live agent, custody, bearer, secret,
 usage, or deployment state was read for this slice.
 
