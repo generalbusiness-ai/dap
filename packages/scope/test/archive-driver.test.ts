@@ -66,6 +66,57 @@ test("the real native alarm archives asynchronously while sixteen turns complete
   fixtureArchiveWiring.delete(lane.name);
 }, 20_000);
 
+// Deliberate platform-alarm reset reconstruction, not hosted cancellation
+// evidence. Recovery only schedules the durable wake: it must not seal or
+// enter the scripted archive host until the actual alarm is dispatched.
+test("a native birth read restores a lost archive alarm without shortening backoff or a prior alarm", async () => {
+  let lookups = 0;
+  const host = new class extends ScriptedHost {
+    override async format() { lookups++; return super.format(); }
+    override async ref() { lookups++; return super.ref(); }
+  }("sha1");
+  host.missingMint = true;
+  const lane = await alarmFixture(host, undefined, true);
+  expect(await lane.alarm()).toBe(true);
+  const pending = (await row(lane))!;
+  expect(pending.pending).not.toBeNull(); expect(pending.confirmed).toBeNull();
+  expect(pending.next).not.toBeNull();
+  const next = Date.parse(pending.next!), head = await lane.head();
+  expect(next).toBeGreaterThan(Date.parse(lane.c.clock.now));
+  const before = { lookups, targets: host.targets, mints: host.mintCalls, sends: [...host.sends], reads: [...host.objectReads], closures: host.closureReads };
+  const readBirth = async () => {
+    await (lane.object as unknown as { nativeBirth(at: unknown, milliseconds: number): Promise<unknown> }).nativeBirth(lane.at, 10_000);
+    // Join the actual object's already-scheduled callbacks, without another
+    // native turn, clock advance, driver call, or invented scheduling hook.
+    await lane.inside((_state, instance) => (instance as { awaitScheduledCallbacks(): Promise<unknown> }).awaitScheduledCallbacks());
+  };
+  await lane.inside(state => state.storage.deleteAlarm());
+  expect(await lane.alarmAt()).toBeNull();
+  await readBirth();
+  expect(await lane.alarmAt(), "a read must re-arm the exact future archive backoff").toBe(next);
+  expect(await row(lane)).toEqual(pending);
+  const earlier = next - 1;
+  await lane.inside(state => state.storage.setAlarm(earlier));
+  await readBirth();
+  expect(await lane.alarmAt(), "recovery must not postpone an earlier native alarm").toBe(earlier);
+  await lane.inside(state => state.storage.setAlarm(next + 1));
+  await readBirth();
+  expect(await lane.alarmAt(), "recovery must replace a later alarm with the archive wake").toBe(next);
+  lane.c.clock.now = pending.next!;
+  await lane.inside(state => state.storage.deleteAlarm());
+  await readBirth();
+  expect(await lane.alarmAt(), "a due durable archive wake must regain its alarm").toBe(next);
+  expect(await row(lane)).toEqual(pending);
+  expect(await lane.head()).toEqual(head);
+  expect({ lookups, targets: host.targets, mints: host.mintCalls, sends: [...host.sends], reads: [...host.objectReads], closures: host.closureReads }).toEqual(before);
+  expect(await lane.alarm()).toBe(true);
+  const confirmed = (await row(lane))!;
+  expect(confirmed.pending).toBeNull(); expect(confirmed.stopped).toBeNull();
+  expect(confirmed.confirmed).toMatchObject({ commit: pending.pending!.commit, through: pending.pending!.through, layout: 2 });
+  expect(host.sends).toEqual([pending.pending!.commit]);
+  expect(await lane.head()).toEqual(head);
+}, 20_000);
+
 // Deliberate storage-corruption fixtures, not native transitions. The real
 // alarm must persist the named stop before another token or send is attempted.
 test.each(["missing-input", "rebuild-mismatch"] as const)("native archive alarm stops %s without another mint or send", async reason => {
