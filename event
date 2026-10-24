@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4d7c71da291713763aa23644866565c7775fb554","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-24-archive-alarm-recovery.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:61a9e4338bdef0110cb87869cffd3994bc2bab3f","text":"Merge retired a covered predecessor; the successor is at scripts/security-entry-points.test.mjs."}
