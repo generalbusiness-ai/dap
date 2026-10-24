@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:951a2e7ae6d490ee52ca482882032ec2c1ffb6ea","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/archive-host.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:983c01d04bf1f3f6777268308d09eeac07fa0925","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-24-archive-fixed-parent/post-gate-repair/owning-v3-v4-summary.json."}
