@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/git/src/http-read.ts","body":{"commit":"d7aea0b03ce8b9c1afcea7f3f6252b66d0d3630a","path":"packages/git/src/http-read.ts"}}
+{"kind":"artifact","text":"Merge published the current artifact at packages/git/test/http-read.test.ts","body":{"commit":"d7aea0b03ce8b9c1afcea7f3f6252b66d0d3630a","path":"packages/git/test/http-read.test.ts"}}
