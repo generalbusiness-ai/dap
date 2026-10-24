@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c4f84644a29ae8a8b46f8f6837012b96cf4524d8","text":"Merge retired a covered predecessor; the successor is at examples/lending/vitest.config.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c57f9358636c864775a5de9e06fca3f316adaf17","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/applications/projection-fact-times.ts."}
