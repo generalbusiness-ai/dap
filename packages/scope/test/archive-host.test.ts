@@ -350,7 +350,7 @@ test.for(["github", "artifacts"] as const)("%s incremental send validates exact 
   expect(shape).toEqual({ objects: 27, bytes: 3789, maximum: 65536 });
   expect(budget.charges[0]).toEqual({ metadata: 3456, inputWork: 15156 });
   expect(budget.charges.at(-1)).toEqual({ inputWork: 30312 });
-  expect(budget.admitted()).toEqual({ entries: 0, attempts: 32, nodes: 16, calls: 64, metadata: 27766, inputWork: 98310 });
+  expect(budget.admitted()).toEqual({ entries: 0, attempts: 25, nodes: 10, calls: 50, metadata: 22774, inputWork: 89628 });
   // Future transfer includes one outgoing driver copy in addition to the
   // adapter's copy/pack. Append validation remains priced separately.
   expect(forecast).toEqual({ ok: true, cost: { entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 6912, inputWork: 60624 } });
