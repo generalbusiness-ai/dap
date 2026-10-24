@@ -76,10 +76,10 @@ beforeAll(async () => {
     return { ...first, receipt };
   });
   published = commit.commit; receiptRef = commit.receipt.ref; receiptCommit = commit.receipt.commit; objects = [...commit.objects, ...commit.receipt.objects].map(o => ({ id: o.id, type: o.kind, data: o.body }));
-  siteEnv = { SCOPES: env.PLATFORM, GITHUB_APP_PRIVATE_KEY: PRIVATE, GITHUB_READ_TOKEN: TOKEN, GITHUB_APP_CONFIG: configuration(R.name) };
+  siteEnv = { SCOPE_INDEX: env.SCOPE_INDEX, SCOPES: env.PLATFORM, GITHUB_APP_PRIVATE_KEY: PRIVATE, GITHUB_READ_TOKEN: TOKEN, GITHUB_APP_CONFIG: configuration(R.name) };
 });
 afterAll(() => { for (const r of roots) wired.delete(r); });
-const get = (ref: string, init?: RequestInit) => site(new Request(`https://scopes.test/site/${D.name}/${ref}/README.md`, init), siteEnv, fetchHost);
+const get = (ref: string, init?: RequestInit) => site(new Request(`https://scopes.test/site/${D.name}/${ref}/README.md`, init), siteEnv, fetchHost, `fixture:${D.name}`);
 
 // Invariant: serve exactly the destination's recorded head, even when its provider branch has moved.
 test("published head served from the real destination record, with conditional/path checks before 304 (STAND-IN provider)", async () => {
@@ -88,8 +88,8 @@ test("published head served from the real destination record, with conditional/p
   expect(await response.text()).toContain(`Rendered from commit <code>${published}</code>`);
   expect((await get(published)).status).toBe(200);
   expect((await get("main", { headers: { "if-none-match": "*" } })).status).toBe(304);
-  expect((await site(new Request(`https://scopes.test/site/${D.name}/HEAD/missing.md`, { headers: { "if-none-match": "*" } }), siteEnv, fetchHost)).status).toBe(404);
-  const versions = await site(new Request(`https://scopes.test/site/${D.name}/versions/`), siteEnv, fetchHost);
+  expect((await site(new Request(`https://scopes.test/site/${D.name}/HEAD/missing.md`, { headers: { "if-none-match": "*" } }), siteEnv, fetchHost, `fixture:${D.name}`)).status).toBe(404);
+  const versions = await site(new Request(`https://scopes.test/site/${D.name}/versions/`), siteEnv, fetchHost, `fixture:${D.name}`);
   const body = await versions.text();
   expect(body).toContain(published); expect(body).not.toContain("private-draft"); expect(body).not.toContain("f".repeat(40));
 });
@@ -120,7 +120,7 @@ test("not-published refusal writes no entries, operation bookkeeping, custody or
   let sent = 0;
   wired.set(f.g.name, () => ({ outside: { accepts: () => true, send: async () => { sent++; return null; } } }));
   await f.g.restart();
-  const response = await site(new Request(`https://scopes.test/site/${f.d.name}/HEAD/README.md`), { ...siteEnv, GITHUB_APP_CONFIG: configuration(f.r.name) }, async () => { sent++; return new Response(null, { status: 500 }); });
+  const response = await site(new Request(`https://scopes.test/site/${f.d.name}/HEAD/README.md`), { ...siteEnv, GITHUB_APP_CONFIG: configuration(f.r.name) }, async () => { sent++; return new Response(null, { status: 500 }); }, `fixture:${f.d.name}`);
   expect([response.status, await response.text()]).toEqual([404, "not-published: the room has not published that ref\n"]);
   expect(await Promise.all([f.d, f.g].map(snapshot))).toEqual(before);
   expect(sent).toBe(0);

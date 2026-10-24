@@ -640,7 +640,7 @@ export default {
     if (healthy) return healthy;
     const hosted = await mcpRoute(request, env);
     const application = hosted ? null : await applicationPage(request, lookups);
-    return hosted ?? application ?? (isSite(request) ? site(request, lookups) : route(request, scopes, env, request.headers.get("cf-connecting-ip")));
+    return hosted ?? application ?? (isSite(request) ? site(request, lookups, undefined, request.headers.get("cf-connecting-ip")) : route(request, scopes, env, request.headers.get("cf-connecting-ip")));
     });
   },
 };

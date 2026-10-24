@@ -155,8 +155,8 @@ async function story(at: Stand, wired: Set<ScopeId>, checkpointMeta?: object): P
   // (`platform:destination@2`).
   const first = initialCommitObjects("sha1", G.name, (await G.entries())[0]!.time, (await G.item(0)).refs["claim"] as never, { name: ((await G.item(0)).values["repository"] as { name: string }).name, handle: "@rita", directory: D.name }).commit;
   expect([(await G.item(0)).values["head"], host.refs.get("refs/heads/main")]).toEqual([first, first]);
-  const siteEnv: SiteEnv = { SCOPES: env.PLATFORM, ...bindings() };
-  const page = async (path: string) => { const response = await site(new Request(`${SERVICE}/site/${D.name}/HEAD/${path}`), siteEnv, host.fetch); return { status: response.status, body: await response.text() }; };
+  const siteEnv: SiteEnv = { SCOPE_INDEX: env.SCOPE_INDEX, SCOPES: env.PLATFORM, ...bindings() };
+  const page = async (path: string) => { const response = await site(new Request(`${SERVICE}/site/${D.name}/HEAD/${path}`), siteEnv, host.fetch, `fixture:${D.name}`); return { status: response.status, body: await response.text() }; };
   // The site already serves the creation README, which the first edit replaces.
   const created = await page("README.md");
   expect([created.status, created.body.includes("Founded by")]).toEqual([200, true]);

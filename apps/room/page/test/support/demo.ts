@@ -129,7 +129,7 @@ export async function demo(wrap: (fetch: Fetch, owner: SessionOwner) => Fetch = 
       }
     };
     const routes = (async (url: string, init?: RequestInit) =>
-      (siteEnv && new URL(url).pathname.startsWith("/site/") ? site(new Request(url, init), siteEnv, at.stand.fetch) : routed(url, init))) as unknown as Fetch;
+      (siteEnv && new URL(url).pathname.startsWith("/site/") ? site(new Request(url, init), siteEnv, at.stand.fetch, `fixture:${new URL(url).pathname.split("/")[2]}`) : routed(url, init))) as unknown as Fetch;
     const wrapped = wrap(routes, sessionOwner);
     const guarded = (owner: SessionOwner, through: Fetch): Fetch => (url, init) => lifetime.waitFor(owner, () => through(url, init));
     const fetch = guarded(sessionOwner, wrapped);
@@ -158,7 +158,7 @@ export async function demo(wrap: (fetch: Fetch, owner: SessionOwner) => Fetch = 
     known.push(D, M, rules, G);
     await pause();
     active();
-    siteEnv = { SCOPES: env.PLATFORM, ...bindings() };
+    siteEnv = { SCOPE_INDEX: env.SCOPE_INDEX, SCOPES: env.PLATFORM, ...bindings() };
 
     // Full setup enrolls Paul; Una's actual invitation can be omitted by a founder-only reader.
     if (!setup.editorOnly) {

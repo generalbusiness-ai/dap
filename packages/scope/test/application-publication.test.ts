@@ -282,7 +282,7 @@ test("a native application publishes once after missing proof, keeps later sourc
     const noAppHead = (await a.G.summary()).at;
     expect(await a.G.stub.deliver(await envelope(nested, nestedWrite))).toEqual({ answer: "source-unverified" });
     expect((await a.G.summary()).at).toEqual(noAppHead);
-    const response = await life.wait(() => site(new Request(`${SERVICE}/site/${a.D.name}/${newerMain}/shelf/native.md`), { SCOPES: env.PLATFORM, ...a.bindings }, a.host.stand.fetch));
+    const response = await life.wait(() => site(new Request(`${SERVICE}/site/${a.D.name}/${newerMain}/shelf/native.md`), { SCOPE_INDEX: env.SCOPE_INDEX, SCOPES: env.PLATFORM, ...a.bindings }, a.host.stand.fetch, `fixture:${a.D.name}`));
     expect(response.status).toBe(200);
     expect(await response.text()).toContain("Later shelf wins");
     const checkedHead = (await a.G.summary()).at;

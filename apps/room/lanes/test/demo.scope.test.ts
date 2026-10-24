@@ -289,7 +289,7 @@ function testStage(at: Stand, wired: Set<ScopeId>): { stage: Stage; people: Part
   // The paths as the deployed Worker answers them: the site route over the stand-in host, the page, and the scope routes.
   const deployed = async (url: string, init?: RequestInit): Promise<Response> => {
     const path = new URL(url).pathname;
-    return path.startsWith("/site/") ? site(new Request(url, init), { SCOPES: env.PLATFORM, ...at.bindings(register!) }, at.stand.fetch)
+    return path.startsWith("/site/") ? site(new Request(url, init), { SCOPE_INDEX: env.SCOPE_INDEX, SCOPES: env.PLATFORM, ...at.bindings(register!) }, at.stand.fetch, `fixture:${register!}`)
       : path.startsWith("/page/") ? worker.fetch(new Request(url, init), { SCOPES: env.PLATFORM, SCOPE_INDEX: env.SCOPE_INDEX } as Env) : routed(url, init);
   };
   const people: Partial<Record<Person, Context>> = {};

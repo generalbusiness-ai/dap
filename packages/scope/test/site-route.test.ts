@@ -11,6 +11,8 @@ import { artifactsOutside } from "../src/artifacts-wiring.ts";
 import type { Binding } from "../src/namespace.ts";
 import type { SiteEnv } from "../src/site/host.ts";
 import { FILE_BYTES, redacted, refused, site } from "../src/site/route.ts";
+import { ServingAdmission, type ServingRequest } from "../src/serving-admission.ts";
+import { SCOPE_INDEX_NAME } from "../src/scope-index.ts";
 import { net } from "../src/testing.ts";
 import { soon } from "./net.ts";
 import { Platform, rita, sam, settle } from "./repository.ts";
@@ -262,7 +264,7 @@ let D: Platform;
 let R: Platform;
 let siteEnv: SiteEnv;
 let nav: string;
-const get = (path: string, init?: RequestInit, environment: SiteEnv = siteEnv) => site(new Request(`https://scopes.test${path}`, init), environment, host.fetch);
+const get = (path: string, init?: RequestInit, environment: SiteEnv = siteEnv) => site(new Request(`https://scopes.test${path}`, init), { SCOPE_INDEX: env.SCOPE_INDEX, ...environment }, host.fetch, `fixture:${D.name}`);
 const prior = { hold: net.hold, deaf: net.deaf };
 
 beforeAll(async () => {
@@ -503,6 +505,41 @@ test("refusals preserve machine reasons and statuses while browsers get safe Pag
   host.refs.set("refs/tags/edge", edge);
   expect((await get(`/site/${D.name}/edge/edge.md`)).status).toBe(200);
   expect((await get(`/site/${D.name}/HEAD/README.md`, { method: "POST" })).status).toBe(405);
+
+  // Stand-in fixed owner plus trapped target/provider ports: quota refusal
+  // must precede all protected room/publication/host work. Existing real
+  // fixed-object coverage separately proves the admission RPC lifetime.
+  const serving = new ServingAdmission({});
+  let admissions = 0, targets = 0, fetches = 0;
+  const index: Binding<string> = { idFromName: name => { expect(name).toBe(SCOPE_INDEX_NAME); return name; },
+    get: () => ({ admitServing: async (request: ServingRequest, address: string | null) => {
+      expect(request).toEqual({ kind: "site-read" }); admissions++; return serving.admit(request, address, 0);
+    } }) };
+  const scopes: Binding<string> = { idFromName: name => { targets++; return name; },
+    get: () => ({ siteRoom: async () => null }) };
+  const send = async () => { fetches++; return expect.fail("a missing room cannot fetch a provider"); };
+  const address = `https://room.test/site/${D.name}/HEAD/README.md`;
+  const read = (init?: RequestInit) => site(new Request(address, init), { SCOPES: scopes, SCOPE_INDEX: index }, send);
+  expect((await read({ method: "POST" })).status).toBe(405);
+  expect((await site(new Request(`https://room.test/site/${D.name}/HEAD/${"a/".repeat(65)}`), { SCOPES: scopes, SCOPE_INDEX: index }, send)).status).toBe(502);
+  expect((await site(new Request(address + "?token=not-used"), { SCOPES: scopes, SCOPE_INDEX: index }, send)).status).toBe(400);
+  expect((await site(new Request(address), { SCOPES: scopes, SCOPE_INDEX: index }, send, "a".repeat(65))).status).toBe(429);
+  expect([admissions, targets, fetches]).toEqual([0, 0, 0]);
+  for (let n = 0; n < 240; n++) expect((await read()).status).toBe(404);
+  const before = targets;
+  // Synthetic forwarded headers cannot choose another bucket; fresh env
+  // objects above also cannot reset the fixed admission owner.
+  const limited = await read({ headers: { "cf-connecting-ip": "192.0.2.90", "if-none-match": "*", accept: "text/html" } });
+  expect([limited.status, limited.headers.get("retry-after"), limited.headers.get("cache-control")]).toEqual([429, "60", "no-store"]);
+  expect(await limited.text()).toContain("Too many Pages reads");
+  expect([admissions, targets, fetches]).toEqual([241, before, 0]);
+  expect((await site(new Request(`https://room.test/site/${D.name}`), { SCOPES: scopes, SCOPE_INDEX: index }, send)).status).toBe(429);
+  expect([admissions, targets, fetches]).toEqual([242, before, 0]);
+  const unavailable = await site(new Request(address), { SCOPES: scopes }, send);
+  expect([unavailable.status, unavailable.headers.get("cache-control"), await unavailable.text()]).toEqual([503, "no-store", "unavailable: site admission is unavailable\n"]);
+  const brokenIndex: Binding<string> = { idFromName: name => name, get: () => { throw Error("scripted index unavailable"); } };
+  expect((await site(new Request(address), { SCOPES: scopes, SCOPE_INDEX: brokenIndex }, send)).status).toBe(503);
+  expect([targets, fetches]).toEqual([before, 0]);
 });
 
 // Invariant: the ETag is the commit and the path: the same for the same commit and path, new for a new commit or another path,

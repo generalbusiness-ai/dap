@@ -25,6 +25,7 @@ import { requireGitHubRepositoryIdentity } from "../github-host.ts";
 import { SmartHttpSource } from "@generalbusiness/dap-git/http-read";
 import { READ_TTL } from "../artifacts-host.ts";
 import { ARTIFACTS_HOST, artifactsReadiness, type ArtifactsBindings } from "../artifacts-wiring.ts";
+import type { ScopeIndexEnvironment } from "../scope-index.ts";
 import type { DestinationRepository } from "../destination-host.ts";
 import { gitHubReadiness, type GitHubBindings } from "../github-wiring.ts";
 import type { Binding, Sourced } from "../namespace.ts";
@@ -110,7 +111,7 @@ async function step<T>(name: SiteStep, run: () => Promise<T>): Promise<T> {
 }
 
 /** The bindings the site reads: the scope namespace and the two hosts' settings. */
-export interface SiteEnv extends GitHubBindings, ArtifactsBindings {
+export interface SiteEnv extends GitHubBindings, ArtifactsBindings, ScopeIndexEnvironment {
   SCOPES: Binding;
 }
 
