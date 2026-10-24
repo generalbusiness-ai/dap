@@ -1,0 +1,11 @@
+--- packages/scope/src/archive-host.ts
++++ packages/scope/src/archive-host.ts
+@@ -96,7 +96,7 @@
+       // Fixed negotiation work and base metadata precede I/O. V2 payload
+       // work is admitted at its actual wire/inflation/construction boundary;
+       // the maximum remains a physical bound, not a debit for unread bytes.
+-      budget.spend({ calls: 2, metadata: 1024, inputWork: v2 ? 1024 : wire * 32 });
++      budget.spend({ calls: 2, metadata: 1024, inputWork: wire * 32 + (v2 ? 1024 : 0) });
+       const observation = beginArchiveParentRead(budget, type, maximum);
+       try {
+         // Header count is checked before this synchronous reservation, and

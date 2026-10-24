@@ -730,14 +730,19 @@ read authority. Freezing preserves evidence; it adds no runtime result.
 
 ## Review and landing status
 
-The builder request authorized the completed owning checks. Planner decision
-request `39f2` remains pending for acceptance and landing. Exact code and Source
-review can proceed using the retained evidence.
+The builder request authorized the completed owning checks. Planner ruling
+`aa90926d125769fe90b15489bef306220e2112df` confirms the finite continuation
+for this head on the checker's terms in `d133bd18`. The allowed changes are the
+Counting launcher, its inventory and rename-script rows, and this final
+reporting note. The checker must rerun the preservation check and residue
+searches at the successor; any other changed path requires a whole gate.
 
 The latest runtime results belong to `bcd244c5` and its tree above. The
-documentation-only successor updates this primary report; its native artifact
-identifies the exact review commit. Product and test blobs remain identical
-to that tested checkpoint. The recorded outcomes retain their original heads.
+successor updates this primary report and permits its exact path in the
+preservation check; its native artifact identifies the exact review commit.
+Product and test blobs remain identical to that tested checkpoint. The
+recorded outcomes retain their original heads. These review corrections add
+no new runtime result.
 
 The failed gate at `b44528f2` remains failed. Its passed prerequisites, Vitest
 cases, and Node 37 block are retained at that checkpoint. The separate corrected

@@ -1,0 +1,5 @@
+{"event":"run-start","time":"2026-10-24T00:27:30.751Z","files":1}
+{"event":"case-ready","time":"2026-10-24T00:27:34.656Z","id":"380254411_0","project":"scope","file":"/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-input-work.test.ts","name":"legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder"}
+{"event":"case-result","time":"2026-10-24T00:27:35.145Z","id":"380254411_0","project":"scope","file":"/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-input-work.test.ts","name":"legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder","state":"failed"}
+{"event":"case-final","time":"2026-10-24T00:27:35.150Z","id":"380254411_0","project":"scope","file":"/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-input-work.test.ts","name":"legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder","state":"failed"}
+{"event":"run-end","time":"2026-10-24T00:27:35.150Z","files":1,"unhandledErrors":0,"reason":"failed"}

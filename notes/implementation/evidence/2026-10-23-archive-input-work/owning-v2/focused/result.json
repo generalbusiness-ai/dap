@@ -1,0 +1,244 @@
+{
+  "phases": [
+    {
+      "name": "git-production",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-archive-input-work-20261023/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/tsconfig.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-archive-input-work-20261023",
+      "started": "2026-10-23T23:33:03.558Z",
+      "ended": "2026-10-23T23:33:04.005Z",
+      "measuredCommandMilliseconds": 447.31108399999994,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.44,
+      "userSeconds": 0.33,
+      "systemSeconds": 0.09,
+      "cpuSeconds": 0.42000000000000004
+    },
+    {
+      "name": "git-test",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-archive-input-work-20261023/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/tsconfig.test.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-archive-input-work-20261023",
+      "started": "2026-10-23T23:33:04.152Z",
+      "ended": "2026-10-23T23:33:04.353Z",
+      "measuredCommandMilliseconds": 201.609958,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.19,
+      "userSeconds": 0.76,
+      "systemSeconds": 0.1,
+      "cpuSeconds": 0.86
+    },
+    {
+      "name": "scope-production",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-archive-input-work-20261023/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/tsconfig.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-archive-input-work-20261023",
+      "started": "2026-10-23T23:33:04.497Z",
+      "ended": "2026-10-23T23:33:04.763Z",
+      "measuredCommandMilliseconds": 265.60570800000005,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.26,
+      "userSeconds": 1.11,
+      "systemSeconds": 0.12,
+      "cpuSeconds": 1.23
+    },
+    {
+      "name": "scope-test",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-archive-input-work-20261023/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/tsconfig.test.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-archive-input-work-20261023",
+      "started": "2026-10-23T23:33:04.906Z",
+      "ended": "2026-10-23T23:33:05.488Z",
+      "measuredCommandMilliseconds": 582.457292,
+      "exitCode": 1,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.58,
+      "userSeconds": 2.87,
+      "systemSeconds": 0.23,
+      "cpuSeconds": 3.1
+    }
+  ],
+  "guards": [
+    {
+      "head": "b9687fabf17a95692da7e172448a23eb4d99048d",
+      "tree": "90ef3946b9bbc0a45509f135ddd5ebaaba8cfb2b",
+      "clean": true,
+      "sources": 2947,
+      "inputs": 14,
+      "workspaces": 14,
+      "aliases": 39,
+      "milliseconds": 152.255792
+    },
+    {
+      "head": "b9687fabf17a95692da7e172448a23eb4d99048d",
+      "tree": "90ef3946b9bbc0a45509f135ddd5ebaaba8cfb2b",
+      "clean": true,
+      "sources": 2947,
+      "inputs": 14,
+      "workspaces": 14,
+      "aliases": 39,
+      "milliseconds": 146.371167
+    },
+    {
+      "head": "b9687fabf17a95692da7e172448a23eb4d99048d",
+      "tree": "90ef3946b9bbc0a45509f135ddd5ebaaba8cfb2b",
+      "clean": true,
+      "sources": 2947,
+      "inputs": 14,
+      "workspaces": 14,
+      "aliases": 39,
+      "milliseconds": 143.67616599999997
+    },
+    {
+      "head": "b9687fabf17a95692da7e172448a23eb4d99048d",
+      "tree": "90ef3946b9bbc0a45509f135ddd5ebaaba8cfb2b",
+      "clean": true,
+      "sources": 2947,
+      "inputs": 14,
+      "workspaces": 14,
+      "aliases": 39,
+      "milliseconds": 142.805834
+    },
+    {
+      "head": "b9687fabf17a95692da7e172448a23eb4d99048d",
+      "tree": "90ef3946b9bbc0a45509f135ddd5ebaaba8cfb2b",
+      "clean": true,
+      "sources": 2947,
+      "inputs": 14,
+      "workspaces": 14,
+      "aliases": 39,
+      "milliseconds": 150.9771249999999
+    }
+  ],
+  "stage": "source-tool-dependency-guard",
+  "verificationExitCode": 1,
+  "commandLedger": [
+    {
+      "name": "git-production",
+      "status": "passed",
+      "phase": {
+        "name": "git-production",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-archive-input-work-20261023/node_modules/typescript/bin/tsc",
+          "-p",
+          "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/tsconfig.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-archive-input-work-20261023",
+        "started": "2026-10-23T23:33:03.558Z",
+        "ended": "2026-10-23T23:33:04.005Z",
+        "measuredCommandMilliseconds": 447.31108399999994,
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 0.44,
+        "userSeconds": 0.33,
+        "systemSeconds": 0.09,
+        "cpuSeconds": 0.42000000000000004
+      }
+    },
+    {
+      "name": "git-test",
+      "status": "passed",
+      "phase": {
+        "name": "git-test",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-archive-input-work-20261023/node_modules/typescript/bin/tsc",
+          "-p",
+          "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/tsconfig.test.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-archive-input-work-20261023",
+        "started": "2026-10-23T23:33:04.152Z",
+        "ended": "2026-10-23T23:33:04.353Z",
+        "measuredCommandMilliseconds": 201.609958,
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 0.19,
+        "userSeconds": 0.76,
+        "systemSeconds": 0.1,
+        "cpuSeconds": 0.86
+      }
+    },
+    {
+      "name": "scope-production",
+      "status": "passed",
+      "phase": {
+        "name": "scope-production",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-archive-input-work-20261023/node_modules/typescript/bin/tsc",
+          "-p",
+          "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/tsconfig.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-archive-input-work-20261023",
+        "started": "2026-10-23T23:33:04.497Z",
+        "ended": "2026-10-23T23:33:04.763Z",
+        "measuredCommandMilliseconds": 265.60570800000005,
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 0.26,
+        "userSeconds": 1.11,
+        "systemSeconds": 0.12,
+        "cpuSeconds": 1.23
+      }
+    },
+    {
+      "name": "scope-test",
+      "status": "failed",
+      "phase": {
+        "name": "scope-test",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-archive-input-work-20261023/node_modules/typescript/bin/tsc",
+          "-p",
+          "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/tsconfig.test.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-archive-input-work-20261023",
+        "started": "2026-10-23T23:33:04.906Z",
+        "ended": "2026-10-23T23:33:05.488Z",
+        "measuredCommandMilliseconds": 582.457292,
+        "exitCode": 1,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 0.58,
+        "userSeconds": 2.87,
+        "systemSeconds": 0.23,
+        "cpuSeconds": 3.1
+      }
+    },
+    {
+      "name": "body",
+      "status": "unrun",
+      "phase": null
+    }
+  ],
+  "elapsedToResultPreparationMilliseconds": 2237.627916,
+  "timingNote": "Per-command wall/CPU observations are separate. Time the outer pipeline to measure all guard/artifact/driver CPU; internal elapsed excludes Node bootstrap.",
+  "verificationStatus": "failed"
+}

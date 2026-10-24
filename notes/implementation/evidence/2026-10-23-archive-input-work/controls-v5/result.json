@@ -1,0 +1,1643 @@
+{
+  "allocation": "fa14787c8510ee7b0edefcace0fee5f692a20f0c",
+  "status": "matched-controls",
+  "errors": [],
+  "phases": [
+    {
+      "allocation": "fa14787c8510ee7b0edefcace0fee5f692a20f0c",
+      "status": "matched-control",
+      "errors": [],
+      "signals": [],
+      "child": {
+        "argv": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-archive-input-work-20261023/node_modules/vitest/vitest.mjs",
+          "run",
+          "/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/test/http-read.test.ts",
+          "--config",
+          "/private/tmp/artroom-builder-archive-input-work-20261023/vitest.config.ts",
+          "--project",
+          "git",
+          "--allowOnly=false",
+          "--passWithNoTests=false",
+          "--reporter=default",
+          "--reporter=json",
+          "--reporter=/private/tmp/artroom-builder-archive-input-work-20261023/scripts/test-progress.mjs",
+          "--outputFile.json=/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/git-inflation/vitest.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-archive-input-work-20261023",
+        "pid": 21764,
+        "exit": 1,
+        "signal": null,
+        "wall": 2.414465333102271,
+        "user": 1.9131560000000003,
+        "system": 0.7222139999999999
+      },
+      "qualification": "One declared input-work control. Original child failure remains DATA; no compatibility/compiler/baseline/gate repeat.",
+      "caseStates": [
+        {
+          "name": "Web upload-pack reads exact local Git closure and empty refs, and decodes both real Git delta encodings",
+          "state": "passed"
+        },
+        {
+          "name": "Web pack reads reject corruption and bounds, and HTTP failures keep no guessed absence or partial cache",
+          "state": "passed"
+        },
+        {
+          "name": "isolated upload-pack reads one commit, root and blob without unrelated history or a large sibling",
+          "state": "passed"
+        },
+        {
+          "name": "isolation refuses absent capabilities and tip-only permission before a POST",
+          "state": "passed"
+        },
+        {
+          "name": "isolated framing and pack guards refuse before inflation or cache retention",
+          "state": "passed"
+        },
+        {
+          "name": "isolated in-flight and caller-owned copies consume one source allowance without concurrent borrowing",
+          "state": "passed"
+        },
+        {
+          "name": "an isolated operation cannot renew its deadline between advertisement and object fetch",
+          "state": "passed"
+        },
+        {
+          "name": "isolated deadlines return despite pending read/refusal cancellation and permanently refuse source reuse",
+          "state": "passed"
+        },
+        {
+          "name": "isolated abandonment survives late fetch and cleanup settlement without consuming the late body",
+          "state": "passed"
+        },
+        {
+          "name": "opt-in v2 fetch reads exact nonadvertised objects in two requests and keeps ref reads on v0",
+          "state": "passed"
+        },
+        {
+          "name": "opt-in v2 requires its complete bounded capability advertisement without a POST or v0 fallback",
+          "state": "passed"
+        },
+        {
+          "name": "opt-in v2 validates sections and binary sidebands before exact pack admission",
+          "state": "failed"
+        },
+        {
+          "name": "opt-in v2 retains one deadline and permanently abandons a late exact-object response",
+          "state": "passed"
+        },
+        {
+          "name": "HTTP response refusal preserves only bounded categories and cancels before reading",
+          "state": "passed"
+        }
+      ],
+      "controlMatched": true,
+      "wall": 5.514900250011124,
+      "pythonCpu": 2.791989,
+      "childrenUser": 2.052493,
+      "childrenSystem": 0.862536,
+      "inclusiveCpu": 5.707018,
+      "costQualification": "Owner includes guards and child; nested costs overlap. Original tool closure separate."
+    },
+    {
+      "allocation": "fa14787c8510ee7b0edefcace0fee5f692a20f0c",
+      "status": "matched-control",
+      "errors": [],
+      "signals": [],
+      "child": {
+        "argv": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-archive-input-work-20261023/node_modules/vitest/vitest.mjs",
+          "run",
+          "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-input-work.test.ts",
+          "--config",
+          "/private/tmp/artroom-builder-archive-input-work-20261023/vitest.config.ts",
+          "--project",
+          "scope",
+          "--allowOnly=false",
+          "--passWithNoTests=false",
+          "--reporter=default",
+          "--reporter=json",
+          "--reporter=/private/tmp/artroom-builder-archive-input-work-20261023/scripts/test-progress.mjs",
+          "--outputFile.json=/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/scope-maximum-debit/vitest.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-archive-input-work-20261023",
+        "pid": 22957,
+        "exit": 1,
+        "signal": null,
+        "wall": 5.01078658294864,
+        "user": 5.561501,
+        "system": 0.8345110000000001
+      },
+      "qualification": "One declared input-work control. Original child failure remains DATA; no compatibility/compiler/baseline/gate repeat.",
+      "observation": {
+        "currentLegacyPass": {
+          "pass": 0,
+          "result": {
+            "state": "retry",
+            "next": "2099-01-01T00:00:01Z",
+            "reason": "limit"
+          },
+          "beforePlanning": [
+            {
+              "entries": 0,
+              "attempts": 17,
+              "nodes": 13,
+              "calls": 50,
+              "metadata": 193293,
+              "inputWork": 51635300
+            }
+          ],
+          "final": {
+            "entries": 3,
+            "attempts": 37,
+            "nodes": 29,
+            "calls": 107,
+            "metadata": 697409,
+            "inputWork": 61961713
+          },
+          "checkpoints": [
+            {
+              "name": "before-parent",
+              "cost": {
+                "entries": 0,
+                "attempts": 1,
+                "nodes": 0,
+                "calls": 9,
+                "metadata": 86226,
+                "inputWork": 407594
+              }
+            },
+            {
+              "name": "before-legacy-manifest",
+              "cost": {
+                "entries": 0,
+                "attempts": 17,
+                "nodes": 13,
+                "calls": 48,
+                "metadata": 191245,
+                "inputWork": 17797124
+              }
+            },
+            {
+              "name": "before-scouting",
+              "cost": {
+                "entries": 2,
+                "attempts": 35,
+                "nodes": 28,
+                "calls": 89,
+                "metadata": 362115,
+                "inputWork": 57033877
+              }
+            },
+            {
+              "name": "first-scouted-entry",
+              "cost": {
+                "entries": 3,
+                "attempts": 37,
+                "nodes": 29,
+                "calls": 105,
+                "metadata": 688547,
+                "inputWork": 61930703
+              }
+            },
+            {
+              "name": "finished",
+              "cost": {
+                "entries": 3,
+                "attempts": 37,
+                "nodes": 29,
+                "calls": 107,
+                "metadata": 697409,
+                "inputWork": 61961713
+              }
+            }
+          ],
+          "shares": [
+            [
+              "before-parent",
+              {
+                "calls": 98,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 17,
+                  "nodes": 13,
+                  "calls": 24,
+                  "metadata": 99085,
+                  "inputWork": 5687076
+                }
+              }
+            ],
+            [
+              "parent-adapter",
+              {
+                "calls": 131,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 26,
+                  "metadata": 94208,
+                  "inputWork": 45948224
+                }
+              }
+            ],
+            [
+              "legacy-reconstruction",
+              {
+                "calls": 138,
+                "cost": {
+                  "entries": 2,
+                  "attempts": 18,
+                  "nodes": 15,
+                  "calls": 39,
+                  "metadata": 168822,
+                  "inputWork": 5398577
+                }
+              }
+            ],
+            [
+              "scouting-and-finish",
+              {
+                "calls": 150,
+                "cost": {
+                  "entries": 1,
+                  "attempts": 2,
+                  "nodes": 1,
+                  "calls": 18,
+                  "metadata": 335294,
+                  "inputWork": 4927836
+                }
+              }
+            ]
+          ],
+          "preEntrySites": [
+            [
+              "at ArchiveDriver.#pass (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-driver.ts:190:14)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 0,
+                  "inputWork": 69632
+                }
+              }
+            ],
+            [
+              "at ArchiveRows.#load (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-row.ts:101:23)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 1,
+                  "metadata": 96,
+                  "inputWork": 96
+                }
+              }
+            ],
+            [
+              "at ArchiveRows.#load (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-row.ts:106:12)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 0,
+                  "inputWork": 5976
+                }
+              }
+            ],
+            [
+              "at ArchiveRows.#load (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-row.ts:107:87)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 1,
+                  "metadata": 498,
+                  "inputWork": 498
+                }
+              }
+            ],
+            [
+              "at readPin (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-pin.ts:46:23)",
+              {
+                "calls": 4,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 4,
+                  "metadata": 69632,
+                  "inputWork": 69632
+                }
+              }
+            ],
+            [
+              "at read (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-pin.ts:51:24)",
+              {
+                "calls": 8,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 8,
+                  "metadata": 139264,
+                  "inputWork": 139264
+                }
+              }
+            ],
+            [
+              "at ArchiveRows.#wake (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-row.ts:220:87)",
+              {
+                "calls": 2,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 2,
+                  "metadata": 512,
+                  "inputWork": 8704
+                }
+              }
+            ],
+            [
+              "at /private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-row.ts:238:14",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 1,
+                  "metadata": 0,
+                  "inputWork": 4096
+                }
+              }
+            ],
+            [
+              "at adaptiveArchivePass (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-adaptive.ts:126:12)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 32768,
+                  "inputWork": 262144
+                }
+              }
+            ],
+            [
+              "at JournalObjectReader.read (/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/src/journal-objects.ts:155:24)",
+              {
+                "calls": 30,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 30,
+                  "nodes": 0,
+                  "calls": 30,
+                  "metadata": 3840,
+                  "inputWork": 5388480
+                }
+              }
+            ],
+            [
+              "at Object.readObject (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-host.ts:99:14)",
+              {
+                "calls": 13,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 26,
+                  "metadata": 13312,
+                  "inputWork": 45500288
+                }
+              }
+            ],
+            [
+              "at reserveWork (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-host.ts:110:62)",
+              {
+                "calls": 105,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 0,
+                  "inputWork": 367040
+                }
+              }
+            ],
+            [
+              "at Object.reserveObjects (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-host.ts:109:65)",
+              {
+                "calls": 13,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 80896,
+                  "inputWork": 80896
+                }
+              }
+            ],
+            [
+              "at ArchiveDriver.#copy (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-driver.ts:127:12)",
+              {
+                "calls": 13,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 1664,
+                  "inputWork": 0
+                }
+              }
+            ],
+            [
+              "at ArchiveDriver.#copy (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-driver.ts:134:42)",
+              {
+                "calls": 13,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 0,
+                  "inputWork": 4652
+                }
+              }
+            ],
+            [
+              "at JournalWork.input (/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/src/journal-work.ts:93:17)",
+              {
+                "calls": 37,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 0,
+                  "inputWork": 43216
+                }
+              }
+            ],
+            [
+              "at journalV2File (/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/src/journal-v2-tree.ts:39:17)",
+              {
+                "calls": 16,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 16,
+                  "calls": 0,
+                  "metadata": 0,
+                  "inputWork": 0
+                }
+              }
+            ],
+            [
+              "at JournalWork.metadata (/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/src/journal-work.ts:98:17)",
+              {
+                "calls": 49,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 24837,
+                  "inputWork": 24837
+                }
+              }
+            ],
+            [
+              "at journalLegacyCopyCount (/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/src/journal-anchor-legacy.ts:21:17)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 1,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 0,
+                  "inputWork": 0
+                }
+              }
+            ],
+            [
+              "at prefixPin (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-prefix.ts:110:10)",
+              {
+                "calls": 2,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 0,
+                  "inputWork": 139264
+                }
+              }
+            ],
+            [
+              "at readPin (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-pin.ts:64:22)",
+              {
+                "calls": 2,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 2,
+                  "metadata": 34816,
+                  "inputWork": 34816
+                }
+              }
+            ],
+            [
+              "at readArchiveScopeFrame (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-prefix.ts:42:25)",
+              {
+                "calls": 2,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 2,
+                  "metadata": 128,
+                  "inputWork": 128
+                }
+              }
+            ],
+            [
+              "at readArchiveScopeFrame (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-prefix.ts:46:27)",
+              {
+                "calls": 2,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 2,
+                  "metadata": 1096,
+                  "inputWork": 7816
+                }
+              }
+            ],
+            [
+              "at prefixAfterPin (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-prefix.ts:145:20)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 1,
+                  "metadata": 384,
+                  "inputWork": 384
+                }
+              }
+            ],
+            [
+              "at prefixAfterPin (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-prefix.ts:158:10)",
+              {
+                "calls": 2,
+                "cost": {
+                  "entries": 3,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 0,
+                  "inputWork": 355200
+                }
+              }
+            ],
+            [
+              "at new ArchiveRetainedReader (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-retained.ts:68:12)",
+              {
+                "calls": 4,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 0,
+                  "inputWork": 0
+                }
+              }
+            ],
+            [
+              "at ArchiveDeclarations.#declaration (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-declarations.ts:56:57)",
+              {
+                "calls": 2,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 2,
+                  "calls": 0,
+                  "metadata": 0,
+                  "inputWork": 0
+                }
+              }
+            ],
+            [
+              "at ArchiveRetainedReader.#request (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-retained.ts:103:17)",
+              {
+                "calls": 3,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 3,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 0,
+                  "inputWork": 768
+                }
+              }
+            ],
+            [
+              "at ArchiveRetainedReader.#size (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-retained.ts:116:98)",
+              {
+                "calls": 3,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 3,
+                  "metadata": 288,
+                  "inputWork": 288
+                }
+              }
+            ],
+            [
+              "at ArchiveRetainedReader.read (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-retained.ts:143:19)",
+              {
+                "calls": 2,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 0,
+                  "inputWork": 381312
+                }
+              }
+            ],
+            [
+              "at ArchiveRetainedReader.read (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-retained.ts:144:91)",
+              {
+                "calls": 2,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 2,
+                  "metadata": 0,
+                  "inputWork": 11916
+                }
+              }
+            ],
+            [
+              "at ArchiveDeclarations.#declaration (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-declarations.ts:67:24)",
+              {
+                "calls": 2,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 0,
+                  "inputWork": 571968
+                }
+              }
+            ],
+            [
+              "at archiveEntryHeader (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-entry-metadata.ts:59:102)",
+              {
+                "calls": 3,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 3,
+                  "metadata": 1536,
+                  "inputWork": 1536
+                }
+              }
+            ],
+            [
+              "at archiveEntryPrivacy (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-entry-metadata.ts:79:96)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 1,
+                  "metadata": 2048,
+                  "inputWork": 2048
+                }
+              }
+            ],
+            [
+              "at ArchiveForeignMetadata.selection (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-foreign.ts:177:17)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 0,
+                  "inputWork": 0
+                }
+              }
+            ],
+            [
+              "at collect (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-inventory.ts:98:18)",
+              {
+                "calls": 2,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 0,
+                  "inputWork": 163072
+                }
+              }
+            ],
+            [
+              "at collect (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-inventory.ts:99:95)",
+              {
+                "calls": 2,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 2,
+                  "metadata": 0,
+                  "inputWork": 5096
+                }
+              }
+            ],
+            [
+              "at collect (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-inventory.ts:197:16)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 0,
+                  "inputWork": 69632
+                }
+              }
+            ],
+            [
+              "at collect (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-inventory.ts:201:84)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 1,
+                  "metadata": 128,
+                  "inputWork": 128
+                }
+              }
+            ],
+            [
+              "at ArchiveForeignMetadata.basis (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-foreign.ts:181:17)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 0,
+                  "inputWork": 0
+                }
+              }
+            ],
+            [
+              "at planLegacyArchiveAnchors (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-build.ts:117:10)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 0,
+                  "inputWork": 3145728
+                }
+              }
+            ],
+            [
+              "at archiveInput (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-input.ts:32:10)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 512,
+                  "inputWork": 1024
+                }
+              }
+            ],
+            [
+              "at archiveInput (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-input.ts:42:10)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 0,
+                  "inputWork": 0
+                }
+              }
+            ],
+            [
+              "at archiveReplayScopes (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-publication.ts:16:10)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 512,
+                  "inputWork": 1024
+                }
+              }
+            ],
+            [
+              "at new ArchiveReplayAnchors (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-anchors.ts:24:12)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 1,
+                  "calls": 0,
+                  "metadata": 512,
+                  "inputWork": 1024
+                }
+              }
+            ],
+            [
+              "at new ArchiveReplayAnchors (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-anchors.ts:32:14)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 0,
+                  "inputWork": 1024
+                }
+              }
+            ],
+            [
+              "at namedBytes (/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/src/journal-layout.ts:52:15)",
+              {
+                "calls": 2,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 2,
+                  "metadata": 0,
+                  "inputWork": 40768
+                }
+              }
+            ],
+            [
+              "at Object.entry (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-input.ts:68:14)",
+              {
+                "calls": 2,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 2,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 0,
+                  "inputWork": 512
+                }
+              }
+            ],
+            [
+              "at /private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-input.ts:72:107",
+              {
+                "calls": 2,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 2,
+                  "metadata": 256,
+                  "inputWork": 256
+                }
+              }
+            ],
+            [
+              "at /private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-input.ts:76:16",
+              {
+                "calls": 2,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 0,
+                  "inputWork": 40768
+                }
+              }
+            ],
+            [
+              "at /private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-input.ts:77:95",
+              {
+                "calls": 2,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 2,
+                  "metadata": 0,
+                  "inputWork": 5096
+                }
+              }
+            ],
+            [
+              "at ArchiveReplayAnchors.entry (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-anchors.ts:57:17)",
+              {
+                "calls": 2,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 5096,
+                  "inputWork": 40768
+                }
+              }
+            ],
+            [
+              "at ArchiveReplayAnchors.#add (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-anchors.ts:40:17)",
+              {
+                "calls": 2,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 0,
+                  "inputWork": 2048
+                }
+              }
+            ],
+            [
+              "at ArchiveReplayAnchors.#add (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-anchors.ts:49:19)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 512,
+                  "inputWork": 0
+                }
+              }
+            ],
+            [
+              "at FixtureArchiveSourcePins.get (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-source-pins.ts:98:12)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 1,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 512,
+                  "inputWork": 1024
+                }
+              }
+            ],
+            [
+              "at FixtureArchiveSourcePins.get (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-source-pins.ts:104:12)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 0,
+                  "inputWork": 674640
+                }
+              }
+            ],
+            [
+              "at ArchiveReplayAnchors.finish (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-anchors.ts:88:17)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 0,
+                  "inputWork": 2048
+                }
+              }
+            ],
+            [
+              "at JournalV2TreePatch.#load (/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/src/journal-v2-tree.ts:72:51)",
+              {
+                "calls": 10,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 10,
+                  "calls": 0,
+                  "metadata": 0,
+                  "inputWork": 0
+                }
+              }
+            ],
+            [
+              "at prefixAfterPin (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-prefix.ts:127:106)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 1,
+                  "metadata": 192,
+                  "inputWork": 192
+                }
+              }
+            ],
+            [
+              "at prefixAfterPin (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-prefix.ts:146:20)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 1,
+                  "metadata": 192,
+                  "inputWork": 192
+                }
+              }
+            ],
+            [
+              "at recordArchiveCurrentDeclarationClosure (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-declaration-scout.ts:30:27)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 256,
+                  "inputWork": 512
+                }
+              }
+            ],
+            [
+              "at collectDeclarationClosure (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-declaration-scout.ts:40:12)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 256,
+                  "inputWork": 512
+                }
+              }
+            ],
+            [
+              "at recordArchiveSupportMetadata (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-entry-metadata.ts:110:10)",
+              {
+                "calls": 2,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 256,
+                  "inputWork": 512
+                }
+              }
+            ],
+            [
+              "at new ArchiveScout (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-scout.ts:84:12)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 512,
+                  "inputWork": 1024
+                }
+              }
+            ],
+            [
+              "at new ArchiveDeclarationPlan (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-declaration-plan.ts:26:12)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 256,
+                  "inputWork": 512
+                }
+              }
+            ],
+            [
+              "at forecastArchiveDeclarationClosure (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-declaration-scout.ts:60:10)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 128,
+                  "inputWork": 384
+                }
+              }
+            ],
+            [
+              "at ArchiveDeclarationPlan.#remember (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-declaration-plan.ts:43:17)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 512,
+                  "inputWork": 1024
+                }
+              }
+            ],
+            [
+              "at new ArchiveForeignPlan (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-foreign-plan.ts:35:12)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 256,
+                  "inputWork": 512
+                }
+              }
+            ],
+            [
+              "at new ArchivePlanFence (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-plan-fence.ts:73:12)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 256,
+                  "inputWork": 512
+                }
+              }
+            ],
+            [
+              "at captureComparison (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-plan-fence.ts:50:10)",
+              {
+                "calls": 2,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 256,
+                  "inputWork": 512
+                }
+              }
+            ],
+            [
+              "at sealPlanMetadata (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-plan-fence.ts:19:10)",
+              {
+                "calls": 25,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 800,
+                  "inputWork": 1600
+                }
+              }
+            ],
+            [
+              "at sealPlanMetadata (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-plan-fence.ts:34:14)",
+              {
+                "calls": 23,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 0,
+                  "inputWork": 1008
+                }
+              }
+            ],
+            [
+              "at sealPlanMetadata (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-plan-fence.ts:22:12)",
+              {
+                "calls": 10,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 956,
+                  "inputWork": 3824
+                }
+              }
+            ],
+            [
+              "at new ArchiveScoutLayout (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-scout-layout.ts:55:12)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 512,
+                  "inputWork": 1024
+                }
+              }
+            ],
+            [
+              "at ArchiveScoutLayout.#recordSize (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-scout-layout.ts:64:17)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 1024,
+                  "inputWork": 2048
+                }
+              }
+            ],
+            [
+              "at ArchiveScoutLayout.#remember (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-scout-layout.ts:73:17)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 1024,
+                  "inputWork": 2048
+                }
+              }
+            ],
+            [
+              "at readRetainedArchivePass (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-retained-pass.ts:19:146)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 1,
+                  "metadata": 96,
+                  "inputWork": 224
+                }
+              }
+            ],
+            [
+              "at new ArchiveForeignMetadata (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-foreign.ts:58:37)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 256,
+                  "inputWork": 512
+                }
+              }
+            ],
+            [
+              "at readPosition (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-window.ts:24:104)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 1,
+                  "metadata": 192,
+                  "inputWork": 192
+                }
+              }
+            ],
+            [
+              "at archiveEntryAnchorCandidates (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-anchor-candidates.ts:19:79)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 1,
+                  "metadata": 128,
+                  "inputWork": 29184
+                }
+              }
+            ],
+            [
+              "at ArchiveForeignPlan.append (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-foreign-plan.ts:50:14)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 256,
+                  "inputWork": 512
+                }
+              }
+            ],
+            [
+              "at ArchiveLocalReferences.read (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-local-references.ts:48:103)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 1,
+                  "metadata": 128,
+                  "inputWork": 7392
+                }
+              }
+            ],
+            [
+              "at ArchiveLocalReferences.read (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-local-references.ts:53:17)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 0,
+                  "inputWork": 0
+                }
+              }
+            ],
+            [
+              "at ArchiveLocalReferences.project (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-local-references.ts:98:17)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 0,
+                  "inputWork": 0
+                }
+              }
+            ],
+            [
+              "at new ArchivePrepared (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-prepared.ts:20:12)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 262144,
+                  "inputWork": 4194304
+                }
+              }
+            ],
+            [
+              "at reserveArchiveNames (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-schema-cost.ts:9:10)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 640,
+                  "inputWork": 1536
+                }
+              }
+            ],
+            [
+              "at ArchivePrepared.project (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-prepared.ts:27:100)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 1,
+                  "metadata": 128,
+                  "inputWork": 3760
+                }
+              }
+            ],
+            [
+              "at append (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-local-references.ts:94:19)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 0,
+                  "inputWork": 0
+                }
+              }
+            ],
+            [
+              "at ArchiveLocalReferences.project (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-local-references.ts:128:17)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 0,
+                  "inputWork": 0
+                }
+              }
+            ],
+            [
+              "at ArchiveDeclarationPlan.append (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-declaration-plan.ts:55:19)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 256,
+                  "inputWork": 512
+                }
+              }
+            ],
+            [
+              "at ArchivePlanFence.append (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-plan-fence.ts:86:12)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 256,
+                  "inputWork": 512
+                }
+              }
+            ],
+            [
+              "at sealPlanMetadata (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-plan-fence.ts:30:12)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 0,
+                  "inputWork": 0
+                }
+              }
+            ],
+            [
+              "at ArchiveScoutLayout.append (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-scout-layout.ts:125:17)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 0,
+                  "inputWork": 0
+                }
+              }
+            ],
+            [
+              "at ArchiveScoutLayout.append (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-scout-layout.ts:147:17)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 384,
+                  "inputWork": 768
+                }
+              }
+            ],
+            [
+              "at ArchiveScout.#advance (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-scout.ts:195:12)",
+              {
+                "calls": 1,
+                "cost": {
+                  "entries": 0,
+                  "attempts": 0,
+                  "nodes": 0,
+                  "calls": 0,
+                  "metadata": 384,
+                  "inputWork": 768
+                }
+              }
+            ]
+          ]
+        },
+        "legacyParentInputWork": {
+          "seedTreeBytes": 529,
+          "seedBlobs": 4,
+          "checkpointBytes": {
+            "minimum": 454,
+            "maximum": 458,
+            "total": 137186
+          },
+          "backlog": 300,
+          "preplanningCeiling": 16777216,
+          "observations": [],
+          "qualification": "Actual Native300 backlog, original per-pass caps, truthful TEST HTTP/token/repository; local reconstructed successful debit shares. No4096 completion, hosted or throughput claim."
+        }
+      },
+      "caseStates": [
+        {
+          "name": "legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder",
+          "state": "failed"
+        }
+      ],
+      "controlMatched": true,
+      "wall": 8.0871329579968,
+      "pythonCpu": 2.7677449999999997,
+      "childrenUser": 5.700843000000001,
+      "childrenSystem": 0.9734629999999999,
+      "inclusiveCpu": 9.442051000000001,
+      "costQualification": "Owner includes guards and child; nested costs overlap. Original tool closure separate."
+    }
+  ],
+  "wall": 16.594113625003956,
+  "pythonCpu": 8.239436,
+  "childrenUser": 7.892025,
+  "childrenSystem": 1.977191,
+  "inclusiveCpu": 18.108652000000003,
+  "costQualification": "Outer includes both phase owners/children/guards; nested timings overlap."
+}

@@ -1,0 +1,246 @@
+
+ RUN  v4.1.12 /private/tmp/artroom-builder-archive-input-work-20261023
+
+stdout | test/archive-input-work.test.ts > legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder
+scope-index-registration { phase: 'configuration', outcome: 'refused' }
+
+stdout | test/archive-input-work.test.ts > legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder
+Native archive source-birth/pin setup budget only {"attempts":2,"calls":1,"entries":0,"inputWork":3892240,"metadata":263680,"nodes":1}
+
+stdout | test/archive-input-work.test.ts > legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder
+archive-pass-diagnostic-v1 {
+  step: 'confirm',
+  detail: 'none',
+  rowPhaseAtLoad: 'confirmed',
+  confirmed: 0,
+  pending: null,
+  attemptsAtLoad: 0,
+  hasNext: false,
+  attempted: false,
+  state: 'confirmed',
+  reason: 'none',
+  caught: 'none',
+  cost: {
+    entries: 85,
+    attempts: 110,
+    nodes: 47,
+    calls: 850,
+    metadata: 3702487,
+    inputWork: 45300110
+  },
+  parentRead: {
+    ordinal: 13,
+    type: 'blob',
+    maximum: 1048576,
+    phase: 'complete',
+    refusal: 'none'
+  }
+}
+
+stdout | test/archive-input-work.test.ts > legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder
+archive-pass-diagnostic-v1 {
+  step: 'confirm',
+  detail: 'none',
+  rowPhaseAtLoad: 'confirmed',
+  confirmed: 42,
+  pending: null,
+  attemptsAtLoad: 0,
+  hasNext: false,
+  attempted: false,
+  state: 'confirmed',
+  reason: 'none',
+  caught: 'none',
+  cost: {
+    entries: 88,
+    attempts: 93,
+    nodes: 32,
+    calls: 844,
+    metadata: 3707792,
+    inputWork: 36560280
+  },
+  parentRead: {
+    ordinal: 11,
+    type: 'tree',
+    maximum: 5100,
+    phase: 'complete',
+    refusal: 'none'
+  }
+}
+
+stdout | test/archive-input-work.test.ts > legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder
+archive-pass-diagnostic-v1 {
+  step: 'confirm',
+  detail: 'none',
+  rowPhaseAtLoad: 'confirmed',
+  confirmed: 86,
+  pending: null,
+  attemptsAtLoad: 0,
+  hasNext: false,
+  attempted: false,
+  state: 'confirmed',
+  reason: 'none',
+  caught: 'none',
+  cost: {
+    entries: 88,
+    attempts: 93,
+    nodes: 32,
+    calls: 843,
+    metadata: 3703346,
+    inputWork: 36654082
+  },
+  parentRead: {
+    ordinal: 11,
+    type: 'tree',
+    maximum: 5100,
+    phase: 'complete',
+    refusal: 'none'
+  }
+}
+
+stdout | test/archive-input-work.test.ts > legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder
+archive-pass-diagnostic-v1 {
+  step: 'confirm',
+  detail: 'none',
+  rowPhaseAtLoad: 'confirmed',
+  confirmed: 130,
+  pending: null,
+  attemptsAtLoad: 0,
+  hasNext: false,
+  attempted: false,
+  state: 'confirmed',
+  reason: 'none',
+  caught: 'none',
+  cost: {
+    entries: 88,
+    attempts: 91,
+    nodes: 32,
+    calls: 839,
+    metadata: 3711996,
+    inputWork: 36672974
+  },
+  parentRead: {
+    ordinal: 10,
+    type: 'tree',
+    maximum: 4100,
+    phase: 'complete',
+    refusal: 'none'
+  }
+}
+
+stdout | test/archive-input-work.test.ts > legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder
+archive-pass-diagnostic-v1 {
+  step: 'confirm',
+  detail: 'none',
+  rowPhaseAtLoad: 'confirmed',
+  confirmed: 174,
+  pending: null,
+  attemptsAtLoad: 0,
+  hasNext: false,
+  attempted: false,
+  state: 'confirmed',
+  reason: 'none',
+  caught: 'none',
+  cost: {
+    entries: 88,
+    attempts: 93,
+    nodes: 32,
+    calls: 842,
+    metadata: 3708412,
+    inputWork: 36795443
+  },
+  parentRead: {
+    ordinal: 11,
+    type: 'tree',
+    maximum: 5100,
+    phase: 'complete',
+    refusal: 'none'
+  }
+}
+
+stdout | test/archive-input-work.test.ts > legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder
+archive-pass-diagnostic-v1 {
+  step: 'confirm',
+  detail: 'none',
+  rowPhaseAtLoad: 'confirmed',
+  confirmed: 218,
+  pending: null,
+  attemptsAtLoad: 0,
+  hasNext: false,
+  attempted: false,
+  state: 'confirmed',
+  reason: 'none',
+  caught: 'none',
+  cost: {
+    entries: 88,
+    attempts: 91,
+    nodes: 32,
+    calls: 837,
+    metadata: 3707132,
+    inputWork: 36822691
+  },
+  parentRead: {
+    ordinal: 10,
+    type: 'tree',
+    maximum: 4100,
+    phase: 'complete',
+    refusal: 'none'
+  }
+}
+
+stdout | test/archive-input-work.test.ts > legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder
+archive-pass-diagnostic-v1 {
+  step: 'confirm',
+  detail: 'none',
+  rowPhaseAtLoad: 'confirmed',
+  confirmed: 262,
+  pending: null,
+  attemptsAtLoad: 0,
+  hasNext: false,
+  attempted: false,
+  state: 'confirmed',
+  reason: 'none',
+  caught: 'none',
+  cost: {
+    entries: 76,
+    attempts: 87,
+    nodes: 32,
+    calls: 746,
+    metadata: 3329166,
+    inputWork: 35047054
+  },
+  parentRead: {
+    ordinal: 11,
+    type: 'tree',
+    maximum: 5100,
+    phase: 'complete',
+    refusal: 'none'
+  }
+}
+
+ × |scope| test/archive-input-work.test.ts > legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder 1007ms
+   → expected 0 to be greater than 0
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |scope| test/archive-input-work.test.ts > legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder
+AssertionError: expected 0 to be greater than 0
+ ❯ test/archive-input-work.test.ts:183:89
+    181|   expect(observations.at(-1)!.remainingEntries).toBe(0); expect(budget…
+    182|   expect(await lane.head()).toEqual(head);
+    183|   const expectedAnchors = archiveAuthorityAnchors(lane); expect(expect…
+       |                                                                                         ^
+    184|   const publications = [...peer.data.values()].filter(object => object…
+    185|     .map(object => new TextDecoder().decode(object.data)).filter(text …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  20:15:51
+   Duration  4.72s (transform 815ms, setup 0ms, import 1.72s, tests 1.01s, environment 0ms)
+
+JSON report written to /private/tmp/artroom-archive-input-work-owning-evidence-20261023-v4/focused/vitest.json
+real 5.35
+user 5.96
+sys 0.77

@@ -75,8 +75,8 @@ function transport(lane: Lane) {
       return peer.fetch(request);
     }, credentialHandle: async () => { throw new Error("TEST fixture never enters production credential custody"); },
   }).fixtureArchive({ fixture: "archive-ports", clock: () => lane.c.clock.now, tokens: {
-    fixture: "archive-tokens", read: async () => "TEST bootstrap read",
-    mint: async () => ({ id: "TEST bootstrap handle", plaintext: "TEST bootstrap write", ends: timeOf(Date.parse(lane.c.clock.now) + 60_000) }),
+    fixture: "archive-tokens", read: async () => "TEST-bootstrap-read",
+    mint: async () => ({ id: "TEST bootstrap handle", plaintext: "TEST-bootstrap-write", ends: timeOf(Date.parse(lane.c.clock.now) + 60_000) }),
     revoke: async () => {},
   } });
   const provider: FixtureArchiveProvider = { ...actual,
@@ -138,6 +138,8 @@ function run(lane: Lane, provider: FixtureArchiveProvider) {
 // genuine Native receipt and source-birth authority remain available.
 test("missing v2 parent state seeds once, publishes legacy anchors and then appends without old host reads", async () => {
   const fixture = await nativeArchiveFixture(), lane = await fixture.create({}, {}, archiveDefinition), host = transport(lane);
+  await lane.did(rita, "remark", { on: 0, fields: { text: "signed authority inside the old v2 receipt" } });
+  expect(archiveAuthorityAnchors(lane).length).toBeGreaterThan(0);
   const seedHead = await lane.head();
   // Genuine old root-only v2 output has no anchor publication or native key.
   // Do not simulate that old receipt by editing an accepted publication flag.

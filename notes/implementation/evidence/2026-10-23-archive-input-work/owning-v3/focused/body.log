@@ -1,0 +1,98 @@
+
+ RUN  v4.1.12 /private/tmp/artroom-builder-archive-input-work-20261023
+
+ ✓ |git| test/http-read.test.ts > Web upload-pack reads exact local Git closure and empty refs, and decodes both real Git delta encodings 626ms
+ ✓ |git| test/http-read.test.ts > Web pack reads reject corruption and bounds, and HTTP failures keep no guessed absence or partial cache 87ms
+ ✓ |git| test/http-read.test.ts > isolated upload-pack reads one commit, root and blob without unrelated history or a large sibling 216ms
+ ✓ |git| test/http-read.test.ts > isolation refuses absent capabilities and tip-only permission before a POST 49ms
+ ✓ |git| test/http-read.test.ts > isolated framing and pack guards refuse before inflation or cache retention 158ms
+ ✓ |git| test/http-read.test.ts > isolated in-flight and caller-owned copies consume one source allowance without concurrent borrowing 55ms
+ ✓ |git| test/http-read.test.ts > an isolated operation cannot renew its deadline between advertisement and object fetch 48ms
+ ✓ |git| test/http-read.test.ts > isolated deadlines return despite pending read/refusal cancellation and permanently refuse source reuse 36ms
+ ✓ |git| test/http-read.test.ts > isolated abandonment survives late fetch and cleanup settlement without consuming the late body 42ms
+ ✓ |git| test/http-read.test.ts > opt-in v2 fetch reads exact nonadvertised objects in two requests and keeps ref reads on v0 178ms
+ ✓ |git| test/http-read.test.ts > opt-in v2 requires its complete bounded capability advertisement without a POST or v0 fallback 2ms
+ ✓ |git| test/http-read.test.ts > opt-in v2 validates sections and binary sidebands before exact pack admission 108ms
+ ✓ |git| test/http-read.test.ts > opt-in v2 retains one deadline and permanently abandons a late exact-object response 1ms
+ ✓ |git| test/http-read.test.ts > HTTP response refusal preserves only bounded categories and cancels before reading 13ms
+stdout | test/archive-host.test.ts > github incremental send validates exact parent edges and keeps its final credential fence
+scope-index-registration { phase: 'configuration', outcome: 'refused' }
+
+stdout | test/archive-host.test.ts > artifacts incremental send validates exact parent edges and keeps its final credential fence
+scope-index-registration { phase: 'configuration', outcome: 'refused' }
+
+ ✓ |scope| test/archive-host.test.ts > github archive credential cannot escape its native journal ref 2ms
+ ✓ |scope| test/archive-host.test.ts > artifacts archive credential cannot escape its native journal ref 1ms
+ ✓ |scope| test/archive-host.test.ts > github archive send owns its command and bytes before discovery awaits 3ms
+ ✓ |scope| test/archive-host.test.ts > artifacts archive send owns its command and bytes before discovery awaits 1ms
+ ✓ |scope| test/archive-host.test.ts > github rechecks expiry, revocation and the pass fence after awaits 1ms
+ ✓ |scope| test/archive-host.test.ts > artifacts rechecks expiry, revocation and the pass fence after awaits 0ms
+ ✓ |scope| test/archive-host.test.ts > github parent reads cap decoded objects and bytes in the actual transport 2ms
+ ✓ |scope| test/archive-host.test.ts > artifacts parent reads cap decoded objects and bytes in the actual transport 1ms
+ ✓ |scope| test/archive-host.test.ts > github incremental parent reads one exact object after reserving the original pass work 9ms
+ ✓ |scope| test/archive-host.test.ts > artifacts incremental parent reads one exact object after reserving the original pass work 5ms
+ ✓ |scope| test/archive-host.test.ts > github incremental send validates exact parent edges and keeps its final credential fence 44ms
+ ✓ |scope| test/archive-host.test.ts > artifacts incremental send validates exact parent edges and keeps its final credential fence 26ms
+stdout | test/archive-input-work.test.ts > legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder
+scope-index-registration { phase: 'configuration', outcome: 'refused' }
+
+stdout | test/archive-input-work.test.ts > legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder
+Native archive source-birth/pin setup budget only {"attempts":2,"calls":1,"entries":0,"inputWork":3892240,"metadata":263680,"nodes":1}
+
+stdout | test/archive-input-work.test.ts > legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder
+archive-pass-diagnostic-v1 {
+  step: 'plan',
+  detail: 'none',
+  rowPhaseAtLoad: 'confirmed',
+  confirmed: 0,
+  pending: null,
+  attemptsAtLoad: 0,
+  hasNext: false,
+  attempted: false,
+  state: 'retry',
+  reason: 'unavailable',
+  caught: 'unavailable',
+  cost: {
+    entries: 0,
+    attempts: 1,
+    nodes: 0,
+    calls: 11,
+    metadata: 87253,
+    inputWork: 408657
+  },
+  parentRead: {
+    ordinal: 1,
+    type: 'commit',
+    maximum: 1024,
+    phase: 'source',
+    refusal: 'other'
+  }
+}
+
+ × |scope| test/archive-input-work.test.ts > legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder 518ms
+   → expected 0 to be greater than 0
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |scope| test/archive-input-work.test.ts > legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder
+AssertionError: expected 0 to be greater than 0
+ ❯ test/archive-input-work.test.ts:143:37
+    141|     // staged debits remain. Match this cost AssertionError, not a set…
+    142|     if (pass === 0) {
+    143|       expect(beforePlanning.length).toBeGreaterThan(0);
+       |                                     ^
+    144|       for (const cost of beforePlanning) expect(cost.inputWork, "Legac…
+    145|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  1 failed | 26 passed (27)
+   Start at  20:09:33
+   Duration  7.49s (transform 904ms, setup 0ms, import 1.89s, tests 2.29s, environment 0ms)
+
+JSON report written to /private/tmp/artroom-archive-input-work-owning-evidence-20261023-v3/focused/vitest.json
+real 8.51
+user 7.29
+sys 1.46

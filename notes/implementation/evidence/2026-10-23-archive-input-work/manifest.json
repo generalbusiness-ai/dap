@@ -1,0 +1,274 @@
+{
+  "qualification": "Original selected finite evidence copied byte for byte; site-charges is the labelled inert projection. Full guard snapshots and complete stage logs remain external. Original gate V4 passed at the checkpoint named in the primary.",
+  "files": [
+    {
+      "path": "owning-v2/result.json",
+      "source": "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v2/result.json",
+      "bytes": 2152,
+      "sha256": "b7d7c27bd3aa37011e385054905a7847c8a1caf4c6f18ad0ea205a1eadd3bc0d"
+    },
+    {
+      "path": "owning-v2/focused/result.json",
+      "source": "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v2/focused/result.json",
+      "bytes": 8166,
+      "sha256": "be17d2f14d3632b792dd275bb90e1af110697d244070f7ac04f53732157c6aa9"
+    },
+    {
+      "path": "owning-v2/focused/scope-test.log",
+      "source": "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v2/focused/scope-test.log",
+      "bytes": 509,
+      "sha256": "53d366dcf00d35f5442f214b7a3717ddd62cddcee98e97aaa64da5a53f713732"
+    },
+    {
+      "path": "owning-v3/result.json",
+      "source": "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v3/result.json",
+      "bytes": 1468,
+      "sha256": "e92de03deb56afa7e91afa0a3824da1969f55b066c0bc14f286b62a58cea209c"
+    },
+    {
+      "path": "owning-v3/focused/coverage-ledger.json",
+      "source": "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v3/focused/coverage-ledger.json",
+      "bytes": 29354,
+      "sha256": "4ef9f0089aa8c8d2d22452063605df1cee640b7678c83d67edbfa08ae7033314"
+    },
+    {
+      "path": "owning-v3/focused/body.log",
+      "source": "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v3/focused/body.log",
+      "bytes": 6152,
+      "sha256": "b4eeaba045511d5196ee2e2a8015a2f14c85a2a2f9aab96d5190ff7275895d00"
+    },
+    {
+      "path": "owning-v4/result.json",
+      "source": "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v4/result.json",
+      "bytes": 1549,
+      "sha256": "e6fe5799a77b2cc1ed9058e2d1d660c1af42e4a521ba4bb90dd84190ce2a3b3e"
+    },
+    {
+      "path": "owning-v4/focused/vitest.json",
+      "source": "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v4/focused/vitest.json",
+      "bytes": 130824,
+      "sha256": "1f32ea7060edef3c7de16993e13d8d099cd6ac4ee2c3c3d6ae8730ef562d9b5a"
+    },
+    {
+      "path": "owning-v4/focused/body.log",
+      "source": "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v4/focused/body.log",
+      "bytes": 6394,
+      "sha256": "b14847744041ae3200f42316d81ad4a286632eb4b9691308dd6749b077d90990"
+    },
+    {
+      "path": "owning-v5/result.json",
+      "source": "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v5/result.json",
+      "bytes": 2341,
+      "sha256": "df61e9fbdacf1cdb05f2e67e8c672d33df77e9c80616b86a74985b87e05d0f11"
+    },
+    {
+      "path": "owning-v5/focused/vitest.json",
+      "source": "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v5/focused/vitest.json",
+      "bytes": 145191,
+      "sha256": "bf39c2723e22829429fd201e04d519c061d694be7fb46a703f7744bbe77d0c92"
+    },
+    {
+      "path": "owning-v5/focused/coverage-ledger.json",
+      "source": "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v5/focused/coverage-ledger.json",
+      "bytes": 1446,
+      "sha256": "1cbdab8c411d386fb3bf35d56954a7d8d256218385691e0222d4edeaa74a15aa"
+    },
+    {
+      "path": "controls-v5/result.json",
+      "source": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/result.json",
+      "bytes": 55679,
+      "sha256": "677b2de99fffed13285d9101d448d8a87916d21da679aa6086d77969550bcfae"
+    },
+    {
+      "path": "controls-v5/git-inflation/command.json",
+      "source": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/git-inflation/command.json",
+      "bytes": 963,
+      "sha256": "0dcf01b3b4b60654f307b3b2f1008bca702f7193f13aed7069bdf1a93c9cee00"
+    },
+    {
+      "path": "controls-v5/git-inflation/process.json",
+      "source": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/git-inflation/process.json",
+      "bytes": 934,
+      "sha256": "d82fb73ad9d18dd736bb475527e24d71f9753f22316f4462d2338f7622bc95c2"
+    },
+    {
+      "path": "controls-v5/git-inflation/progress.jsonl",
+      "source": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/git-inflation/progress.jsonl",
+      "bytes": 13117,
+      "sha256": "ff61f6e3bd3a78bd4a2d0b34bf42cc28f7ffd6dd680fc62a22e0b8ec9ecfce29"
+    },
+    {
+      "path": "controls-v5/git-inflation/restoration.json",
+      "source": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/git-inflation/restoration.json",
+      "bytes": 798,
+      "sha256": "2a9ffd154ff188632f175c6513ffb06addf9e2cb71d921dd299b5bde7b8e6b3d"
+    },
+    {
+      "path": "controls-v5/git-inflation/mutation.json",
+      "source": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/git-inflation/mutation.json",
+      "bytes": 323,
+      "sha256": "a06529de20e8912c5eab2133da428ad022ca686eeefe08dfbb4de0d3cf2ebb17"
+    },
+    {
+      "path": "controls-v5/git-inflation/mutation.patch",
+      "source": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/git-inflation/mutation.patch",
+      "bytes": 534,
+      "sha256": "a80a65d485a2f9ad7f58e1cb73b9b70d80436249639bd8dd3e3da64e971ed393"
+    },
+    {
+      "path": "controls-v5/scope-maximum-debit/command.json",
+      "source": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/scope-maximum-debit/command.json",
+      "bytes": 988,
+      "sha256": "22159848ffac7b099df63bd8a1e97d1b883c01e69b357c6e2c9d9db4ecd75f64"
+    },
+    {
+      "path": "controls-v5/scope-maximum-debit/process.json",
+      "source": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/scope-maximum-debit/process.json",
+      "bytes": 942,
+      "sha256": "5dc41e78529371569ef31c76ccafd96765b0204a4c86c647675efd55f96b2b89"
+    },
+    {
+      "path": "controls-v5/scope-maximum-debit/progress.jsonl",
+      "source": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/scope-maximum-debit/progress.jsonl",
+      "bytes": 1145,
+      "sha256": "179f4c5512a7be2111c17c2d2bfb6ef1a7c602e4a2efa38dd2eef62be90c065b"
+    },
+    {
+      "path": "controls-v5/scope-maximum-debit/restoration.json",
+      "source": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/scope-maximum-debit/restoration.json",
+      "bytes": 803,
+      "sha256": "93965eb7185ba92b5acec42bfe9b07661c08d1e77474284e602497ebb4d71e8a"
+    },
+    {
+      "path": "controls-v5/scope-maximum-debit/mutation.json",
+      "source": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/scope-maximum-debit/mutation.json",
+      "bytes": 326,
+      "sha256": "ad32787882028107e70003a869ce7202fa09747c403cc20e577289857955338e"
+    },
+    {
+      "path": "controls-v5/scope-maximum-debit/mutation.patch",
+      "source": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/scope-maximum-debit/mutation.patch",
+      "bytes": 668,
+      "sha256": "432fa3fc1729ac7cb5ed387dbd077c50d21f8a5296aa094ae5319cc0712bb2dc"
+    },
+    {
+      "path": "controls-v5/scope-maximum-debit/cost-observation.json",
+      "source": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/scope-maximum-debit/cost-observation.json",
+      "bytes": 40430,
+      "sha256": "7a6f454ba0f472da84aaa9eb372442cba307bd33da48b7bcb2136ac9ad0e2c1a"
+    },
+    {
+      "path": "audits/owning-v5-independent-audit.json",
+      "source": "/private/tmp/artroom-archive-input-work-owning-v5-independent-audit-20261023-v1.json",
+      "bytes": 71006,
+      "sha256": "a84e23995d24bfa2ad4de3e82121f678477441a3d99c415849fb156b3232f041"
+    },
+    {
+      "path": "audits/controls-v5-independent-audit.json",
+      "source": "/private/tmp/artroom-archive-input-work-controls-v5-independent-audit-20261023-v1.json",
+      "bytes": 30756,
+      "sha256": "4b0c7030ff24550e3e77d7a55bf1e964630685edd7d6dbd1e1a6c9eb0b0c8ea9"
+    },
+    {
+      "path": "host-seal-v2/result.json",
+      "source": "/private/tmp/artroom-archive-input-work-host-seal-evidence-20261023-v2/result.json",
+      "bytes": 1345,
+      "sha256": "714da84ce83d5adffe3e2615a2c9725e7ecee59eb96ebdf86c31558801fe84df"
+    },
+    {
+      "path": "host-seal-v2/source-seals.stdout",
+      "source": "/private/tmp/artroom-archive-input-work-host-seal-evidence-20261023-v2/source-seals.stdout",
+      "bytes": 147,
+      "sha256": "48e73282a650fd615cb1ead5eceab126b53065a3bdee5161bf4118a599c9cdc3"
+    },
+    {
+      "path": "host-seal-v2/source-seals.stderr",
+      "source": "/private/tmp/artroom-archive-input-work-host-seal-evidence-20261023-v2/source-seals.stderr",
+      "bytes": 183,
+      "sha256": "159d37f84397bc0fbd6864be90c1dedad41487a33afcf59a524fece06559f621"
+    },
+    {
+      "path": "host-seal-v2/source-seals.command.json",
+      "source": "/private/tmp/artroom-archive-input-work-host-seal-evidence-20261023-v2/source-seals.command.json",
+      "bytes": 303,
+      "sha256": "34531590a2c21464e5829af13a376ecc4b7441ecbaa8e011a69b7467deb75e5c"
+    },
+    {
+      "path": "host-seal-v2/source-seals.process.json",
+      "source": "/private/tmp/artroom-archive-input-work-host-seal-evidence-20261023-v2/source-seals.process.json",
+      "bytes": 473,
+      "sha256": "c01ed52d389bd2b9f159550b0c9b5c2873f6da588e0972e0a96347979c97ea19"
+    },
+    {
+      "path": "host-seal-v2/invocation.json",
+      "source": "/private/tmp/artroom-archive-input-work-host-seal-evidence-20261023-v2/invocation.json",
+      "bytes": 567,
+      "sha256": "22c172eed21d7b20d6077358307ac36d7f288fa0963822e555cf87ec9884afd2"
+    },
+    {
+      "path": "audits/host-seal-independent-outcome-audit.json",
+      "source": "/private/tmp/artroom-archive-input-work-host-seal-independent-outcome-audit-20261023-v1.json",
+      "bytes": 11668,
+      "sha256": "a20fc2223c4bc11ef1653bdfb28147aa143a8bc950a7a49f69afb6d00a1a6bd6"
+    },
+    {
+      "path": "site-charges.json",
+      "source": "/private/tmp/artroom-archive-input-work-primary-source-20261023-v8/site-charges.json",
+      "bytes": 237800,
+      "sha256": "ae276e9a18908fea69bc0fc3fbda3c31e1b39455ecb1ee8309012edc12928c46",
+      "qualification": "Inert projection of original successful budget observations."
+    },
+    {
+      "path": "gate-v4/result.json",
+      "source": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/result.json",
+      "bytes": 1511098,
+      "sha256": "c6b64de93b8ff9a5447a67ba1b3780b5b38d6d37b85186ca3bd932d073139c0c"
+    },
+    {
+      "path": "gate-v4/process.json",
+      "source": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/process.json",
+      "bytes": 338,
+      "sha256": "c899e6585c530cdd4cb30387f297bcc90b859136c2ef6b14c48df4460e9b4efb"
+    },
+    {
+      "path": "gate-v4/invocation.json",
+      "source": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/invocation.json",
+      "bytes": 857,
+      "sha256": "3edcfe8f0c96891c9c2b1a36fb41e2990ae4a2af0e23c4d09dcf2f530dfe9187"
+    },
+    {
+      "path": "gate-v4/gate.stdout.log",
+      "source": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/gate.stdout.log",
+      "bytes": 781,
+      "sha256": "38f0ff3e52f4b1a84081faedc78421883af746f4d09e38128075a598bcb6b31b"
+    },
+    {
+      "path": "gate-v4/dependency-delta.json",
+      "source": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/dependency-delta.json",
+      "bytes": 579,
+      "sha256": "c89520350c6d3f157047bfddddc660b1e636742c5d00da6d525c48451032e9eb"
+    },
+    {
+      "path": "audits/final-gate-independent-audit.json",
+      "source": "/private/tmp/artroom-archive-input-work-final-gate-independent-audit-20261023-v1.json",
+      "bytes": 66863,
+      "sha256": "24af4a13c1fd5182f4ea4eda88f5d9151bb5e810719d117443b6a63c83ff428d"
+    }
+  ],
+  "externalOnly": [
+    {
+      "path": "controls-v5/git-inflation/stderr",
+      "source": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/git-inflation/stderr",
+      "bytes": 1042,
+      "sha256": "d850eaba5c0d5789b619929af10b5bb55badf15d511ed0aac7bcb9fec5fb411f",
+      "qualification": "Original stderr retained externally without whitespace alteration; exact failure also retained in independent audit."
+    },
+    {
+      "path": "controls-v5/scope-maximum-debit/stderr",
+      "source": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/scope-maximum-debit/stderr",
+      "bytes": 891,
+      "sha256": "ad4d8eddbdf0333b1d9276bf7e0519a33a0c100a123ac3dbeef71a5acac8fad1",
+      "qualification": "Original stderr retained externally without whitespace alteration; exact failure also retained in independent audit."
+    }
+  ]
+}

@@ -1,0 +1,2725 @@
+{
+  "state": "INDEPENDENT_CLOSED_SUCCESS_AUDIT",
+  "rootNaturalObservation": {
+    "session": 88188,
+    "tool": "5a00de",
+    "exit": 0,
+    "attribution": "Root original process observation; auditor did not monitor process"
+  },
+  "head": "0c12abc24eee67e8a60ae33455d94eaa2548e0fb",
+  "tree": "221c5d5ddf46176d643f75eeffde3f01ef0bb3f4",
+  "allocation": "45353ff98a2741213ceee9a8b9550c12dc6e755e",
+  "ownerPid": 15434,
+  "focusedPid": 15470,
+  "frameworkCaseTuple": {
+    "project": "scope",
+    "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-input-work.test.ts",
+    "name": "legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder"
+  },
+  "frameworkCaseID": "[\"scope\",\"/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-input-work.test.ts\",\"legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder\"]",
+  "phases": [
+    {
+      "name": "scope-test",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-archive-input-work-20261023/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/tsconfig.test.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-archive-input-work-20261023",
+      "started": "2026-10-24T00:23:28.727Z",
+      "ended": "2026-10-24T00:23:29.370Z",
+      "measuredCommandMilliseconds": 643.208125,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.64,
+      "userSeconds": 3.04,
+      "systemSeconds": 0.34,
+      "cpuSeconds": 3.38
+    },
+    {
+      "name": "body",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-archive-input-work-20261023/node_modules/vitest/vitest.mjs",
+        "run",
+        "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-input-work.test.ts",
+        "--config",
+        "/private/tmp/artroom-builder-archive-input-work-20261023/vitest.config.ts",
+        "--bail=1",
+        "--allowOnly=false",
+        "--passWithNoTests=false",
+        "--reporter=verbose",
+        "--reporter=json",
+        "--reporter=/private/tmp/artroom-builder-archive-input-work-20261023/scripts/focused-check.mjs",
+        "--outputFile.json=/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v5/focused/vitest.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-archive-input-work-20261023",
+      "started": "2026-10-24T00:23:29.517Z",
+      "ended": "2026-10-24T00:23:35.006Z",
+      "measuredCommandMilliseconds": 5488.72325,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 5.48,
+      "userSeconds": 6.03,
+      "systemSeconds": 0.86,
+      "cpuSeconds": 6.890000000000001
+    }
+  ],
+  "ownerResult": {
+    "allocation": "45353ff98a2741213ceee9a8b9550c12dc6e755e",
+    "status": "passed",
+    "children": [
+      {
+        "label": "focused",
+        "argv": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "scripts/focused-check.mjs",
+          "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v5/focused-plan.json",
+          "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v5/focused"
+        ],
+        "cwd": "/private/tmp/artroom-builder-archive-input-work-20261023",
+        "pid": 15470,
+        "exit": 0,
+        "signal": null,
+        "wall": 6.672784166992642,
+        "user": 9.377589,
+        "system": 1.4800239999999998
+      }
+    ],
+    "errors": [],
+    "signals": [],
+    "cases": [
+      {
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-input-work.test.ts",
+        "name": "legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder",
+        "status": "passed",
+        "started": true,
+        "observed": [
+          {
+            "project": "scope",
+            "file": "/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/test/archive-input-work.test.ts",
+            "name": "legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder",
+            "status": "passed",
+            "errors": 0,
+            "retryCount": 0,
+            "repeatCount": 0
+          }
+        ]
+      }
+    ],
+    "wall": 9.011619792087004,
+    "pythonCpu": 2.097093,
+    "childrenUser": 9.482084,
+    "childrenSystem": 1.584652,
+    "inclusiveCpu": 13.163829000000002,
+    "qualification": "Continuation only: Scope test compiler for changed test inputs and the single corrected Native whole-file body. Original V4 compiled and drained all 300 checkpoints but failed its final authority-anchor assertion. Original V3 Git HTTP14 plus Scope host12 passed. Both Native failures remain retained. Compatibility no-op and first three compiler successes remain carried from original V2. Full guarded Source/dependencies/tools/environment/Main/preparation; only declared selected-file cache cells and empty Vite-temp metadata may change during focused child. No control mutation, parser, package install, test collection, Node tails or gate. Callback gaps are reporting gaps; nested costs overlap."
+  },
+  "fullGuards": "Binding allocation-only exact; full before equals allocated snapshot; after-focused equals final; all fixed vectors exact except selected cache cell and empty Vite-temp timestamps.6072 dependency rows including root,32links.",
+  "callbackCounts": {
+    "selection": 1,
+    "collected": 1,
+    "started": 1,
+    "result": 1,
+    "end": 1
+  },
+  "unhandled": 0,
+  "seed": {
+    "seedTreeBytes": 529,
+    "seedBlobs": 4,
+    "checkpointBytes": {
+      "minimum": 454,
+      "maximum": 458,
+      "total": 137186
+    },
+    "backlog": 300,
+    "preplanningCeiling": 16777216,
+    "qualification": "Actual Native300 backlog, original per-pass caps, truthful TEST HTTP/token/repository; local reconstructed successful debit shares. No4096 completion, hosted or throughput claim."
+  },
+  "passSummary": [
+    {
+      "pass": 0,
+      "from": 2,
+      "through": 42,
+      "selectedEntries": 41,
+      "remainingEntries": 259,
+      "commit": "8ca2a58f98feb343fa3f95de840542ce36ef761f",
+      "final": {
+        "entries": 85,
+        "attempts": 111,
+        "nodes": 47,
+        "calls": 850,
+        "metadata": 3709432,
+        "inputWork": 46313174
+      },
+      "checkpoints": [
+        {
+          "name": "before-parent",
+          "cost": {
+            "entries": 0,
+            "attempts": 1,
+            "nodes": 0,
+            "calls": 9,
+            "metadata": 86226,
+            "inputWork": 407594
+          }
+        },
+        {
+          "name": "before-legacy-manifest",
+          "cost": {
+            "entries": 0,
+            "attempts": 17,
+            "nodes": 13,
+            "calls": 48,
+            "metadata": 191245,
+            "inputWork": 6127204
+          }
+        },
+        {
+          "name": "before-scouting",
+          "cost": {
+            "entries": 2,
+            "attempts": 35,
+            "nodes": 28,
+            "calls": 89,
+            "metadata": 362112,
+            "inputWork": 11547322
+          }
+        },
+        {
+          "name": "first-scouted-entry",
+          "cost": {
+            "entries": 3,
+            "attempts": 37,
+            "nodes": 29,
+            "calls": 105,
+            "metadata": 688544,
+            "inputWork": 16444148
+          }
+        },
+        {
+          "name": "before-send",
+          "cost": {
+            "entries": 85,
+            "attempts": 79,
+            "nodes": 31,
+            "calls": 782,
+            "metadata": 3656248,
+            "inputWork": 45549206
+          }
+        },
+        {
+          "name": "finished",
+          "cost": {
+            "entries": 85,
+            "attempts": 111,
+            "nodes": 47,
+            "calls": 850,
+            "metadata": 3709432,
+            "inputWork": 46313174
+          }
+        }
+      ],
+      "shares": [
+        [
+          "before-parent",
+          {
+            "calls": 98,
+            "cost": {
+              "entries": 0,
+              "attempts": 17,
+              "nodes": 13,
+              "calls": 24,
+              "metadata": 99085,
+              "inputWork": 5687076
+            }
+          }
+        ],
+        [
+          "parent-adapter",
+          {
+            "calls": 131,
+            "cost": {
+              "entries": 0,
+              "attempts": 0,
+              "nodes": 0,
+              "calls": 26,
+              "metadata": 94208,
+              "inputWork": 461696
+            }
+          }
+        ],
+        [
+          "legacy-reconstruction",
+          {
+            "calls": 138,
+            "cost": {
+              "entries": 2,
+              "attempts": 18,
+              "nodes": 15,
+              "calls": 39,
+              "metadata": 168819,
+              "inputWork": 5398550
+            }
+          }
+        ],
+        [
+          "scouting-and-finish",
+          {
+            "calls": 3603,
+            "cost": {
+              "entries": 83,
+              "attempts": 44,
+              "nodes": 3,
+              "calls": 693,
+              "metadata": 3294136,
+              "inputWork": 34001884
+            }
+          }
+        ],
+        [
+          "send-and-confirm",
+          {
+            "calls": 167,
+            "cost": {
+              "entries": 0,
+              "attempts": 32,
+              "nodes": 16,
+              "calls": 68,
+              "metadata": 53184,
+              "inputWork": 763968
+            }
+          }
+        ]
+      ],
+      "siteCount": 95
+    },
+    {
+      "pass": 1,
+      "from": 43,
+      "through": 86,
+      "selectedEntries": 44,
+      "remainingEntries": 215,
+      "commit": "c39984442c09ea8325f9570a312a598de7094441",
+      "final": {
+        "entries": 88,
+        "attempts": 93,
+        "nodes": 32,
+        "calls": 844,
+        "metadata": 3707792,
+        "inputWork": 36559864
+      },
+      "checkpoints": [
+        {
+          "name": "before-parent",
+          "cost": {
+            "entries": 0,
+            "attempts": 1,
+            "nodes": 0,
+            "calls": 9,
+            "metadata": 87275,
+            "inputWork": 408943
+          }
+        },
+        {
+          "name": "before-scouting",
+          "cost": {
+            "entries": 0,
+            "attempts": 14,
+            "nodes": 13,
+            "calls": 44,
+            "metadata": 199566,
+            "inputWork": 1049814
+          }
+        },
+        {
+          "name": "first-scouted-entry",
+          "cost": {
+            "entries": 1,
+            "attempts": 16,
+            "nodes": 14,
+            "calls": 60,
+            "metadata": 525998,
+            "inputWork": 5946944
+          }
+        },
+        {
+          "name": "before-send",
+          "cost": {
+            "entries": 88,
+            "attempts": 61,
+            "nodes": 16,
+            "calls": 776,
+            "metadata": 3653884,
+            "inputWork": 35781731
+          }
+        },
+        {
+          "name": "finished",
+          "cost": {
+            "entries": 88,
+            "attempts": 93,
+            "nodes": 32,
+            "calls": 844,
+            "metadata": 3707792,
+            "inputWork": 36559864
+          }
+        }
+      ],
+      "shares": [
+        [
+          "before-parent",
+          {
+            "calls": 102,
+            "cost": {
+              "entries": 0,
+              "attempts": 14,
+              "nodes": 13,
+              "calls": 22,
+              "metadata": 100238,
+              "inputWork": 543862
+            }
+          }
+        ],
+        [
+          "parent-adapter",
+          {
+            "calls": 130,
+            "cost": {
+              "entries": 0,
+              "attempts": 0,
+              "nodes": 0,
+              "calls": 22,
+              "metadata": 99328,
+              "inputWork": 505952
+            }
+          }
+        ],
+        [
+          "scouting-and-finish",
+          {
+            "calls": 3774,
+            "cost": {
+              "entries": 88,
+              "attempts": 47,
+              "nodes": 3,
+              "calls": 732,
+              "metadata": 3454318,
+              "inputWork": 34731917
+            }
+          }
+        ],
+        [
+          "send-and-confirm",
+          {
+            "calls": 167,
+            "cost": {
+              "entries": 0,
+              "attempts": 32,
+              "nodes": 16,
+              "calls": 68,
+              "metadata": 53908,
+              "inputWork": 778133
+            }
+          }
+        ]
+      ],
+      "siteCount": 68
+    },
+    {
+      "pass": 2,
+      "from": 87,
+      "through": 130,
+      "selectedEntries": 44,
+      "remainingEntries": 171,
+      "commit": "f5999140ede748da7fe910bcced7b30c1e03c57b",
+      "final": {
+        "entries": 88,
+        "attempts": 93,
+        "nodes": 32,
+        "calls": 843,
+        "metadata": 3703346,
+        "inputWork": 36653314
+      },
+      "checkpoints": [
+        {
+          "name": "before-parent",
+          "cost": {
+            "entries": 0,
+            "attempts": 1,
+            "nodes": 0,
+            "calls": 9,
+            "metadata": 87275,
+            "inputWork": 408943
+          }
+        },
+        {
+          "name": "before-scouting",
+          "cost": {
+            "entries": 0,
+            "attempts": 14,
+            "nodes": 13,
+            "calls": 44,
+            "metadata": 210318,
+            "inputWork": 1133799
+          }
+        },
+        {
+          "name": "first-scouted-entry",
+          "cost": {
+            "entries": 1,
+            "attempts": 16,
+            "nodes": 14,
+            "calls": 60,
+            "metadata": 536750,
+            "inputWork": 6030929
+          }
+        },
+        {
+          "name": "before-send",
+          "cost": {
+            "entries": 88,
+            "attempts": 61,
+            "nodes": 16,
+            "calls": 775,
+            "metadata": 3648026,
+            "inputWork": 35869927
+          }
+        },
+        {
+          "name": "finished",
+          "cost": {
+            "entries": 88,
+            "attempts": 93,
+            "nodes": 32,
+            "calls": 843,
+            "metadata": 3703346,
+            "inputWork": 36653314
+          }
+        }
+      ],
+      "shares": [
+        [
+          "before-parent",
+          {
+            "calls": 103,
+            "cost": {
+              "entries": 0,
+              "attempts": 14,
+              "nodes": 13,
+              "calls": 22,
+              "metadata": 100750,
+              "inputWork": 544647
+            }
+          }
+        ],
+        [
+          "parent-adapter",
+          {
+            "calls": 140,
+            "cost": {
+              "entries": 0,
+              "attempts": 0,
+              "nodes": 0,
+              "calls": 22,
+              "metadata": 109568,
+              "inputWork": 589152
+            }
+          }
+        ],
+        [
+          "scouting-and-finish",
+          {
+            "calls": 3773,
+            "cost": {
+              "entries": 88,
+              "attempts": 47,
+              "nodes": 3,
+              "calls": 731,
+              "metadata": 3437708,
+              "inputWork": 34736128
+            }
+          }
+        ],
+        [
+          "send-and-confirm",
+          {
+            "calls": 169,
+            "cost": {
+              "entries": 0,
+              "attempts": 32,
+              "nodes": 16,
+              "calls": 68,
+              "metadata": 55320,
+              "inputWork": 783387
+            }
+          }
+        ]
+      ],
+      "siteCount": 68
+    },
+    {
+      "pass": 3,
+      "from": 131,
+      "through": 174,
+      "selectedEntries": 44,
+      "remainingEntries": 127,
+      "commit": "f7eb667841f81dab2be368c5a327726be44740e5",
+      "final": {
+        "entries": 88,
+        "attempts": 91,
+        "nodes": 32,
+        "calls": 839,
+        "metadata": 3711996,
+        "inputWork": 36672398
+      },
+      "checkpoints": [
+        {
+          "name": "before-parent",
+          "cost": {
+            "entries": 0,
+            "attempts": 1,
+            "nodes": 0,
+            "calls": 9,
+            "metadata": 87276,
+            "inputWork": 408956
+          }
+        },
+        {
+          "name": "before-scouting",
+          "cost": {
+            "entries": 0,
+            "attempts": 13,
+            "nodes": 13,
+            "calls": 41,
+            "metadata": 211602,
+            "inputWork": 1145888
+          }
+        },
+        {
+          "name": "first-scouted-entry",
+          "cost": {
+            "entries": 1,
+            "attempts": 15,
+            "nodes": 14,
+            "calls": 57,
+            "metadata": 538034,
+            "inputWork": 6043322
+          }
+        },
+        {
+          "name": "before-send",
+          "cost": {
+            "entries": 88,
+            "attempts": 60,
+            "nodes": 16,
+            "calls": 773,
+            "metadata": 3660068,
+            "inputWork": 35895199
+          }
+        },
+        {
+          "name": "finished",
+          "cost": {
+            "entries": 88,
+            "attempts": 91,
+            "nodes": 32,
+            "calls": 839,
+            "metadata": 3711996,
+            "inputWork": 36672398
+          }
+        }
+      ],
+      "shares": [
+        [
+          "before-parent",
+          {
+            "calls": 96,
+            "cost": {
+              "entries": 0,
+              "attempts": 13,
+              "nodes": 13,
+              "calls": 21,
+              "metadata": 98962,
+              "inputWork": 521792
+            }
+          }
+        ],
+        [
+          "parent-adapter",
+          {
+            "calls": 140,
+            "cost": {
+              "entries": 0,
+              "attempts": 0,
+              "nodes": 0,
+              "calls": 20,
+              "metadata": 112640,
+              "inputWork": 624096
+            }
+          }
+        ],
+        [
+          "scouting-and-finish",
+          {
+            "calls": 3773,
+            "cost": {
+              "entries": 88,
+              "attempts": 47,
+              "nodes": 3,
+              "calls": 732,
+              "metadata": 3448466,
+              "inputWork": 34749311
+            }
+          }
+        ],
+        [
+          "send-and-confirm",
+          {
+            "calls": 161,
+            "cost": {
+              "entries": 0,
+              "attempts": 31,
+              "nodes": 16,
+              "calls": 66,
+              "metadata": 51928,
+              "inputWork": 777199
+            }
+          }
+        ]
+      ],
+      "siteCount": 68
+    },
+    {
+      "pass": 4,
+      "from": 175,
+      "through": 218,
+      "selectedEntries": 44,
+      "remainingEntries": 83,
+      "commit": "70f07ad53429d4d0df505dcd341b2efb3d1893fd",
+      "final": {
+        "entries": 88,
+        "attempts": 93,
+        "nodes": 32,
+        "calls": 842,
+        "metadata": 3708412,
+        "inputWork": 36795315
+      },
+      "checkpoints": [
+        {
+          "name": "before-parent",
+          "cost": {
+            "entries": 0,
+            "attempts": 1,
+            "nodes": 0,
+            "calls": 9,
+            "metadata": 87276,
+            "inputWork": 408956
+          }
+        },
+        {
+          "name": "before-scouting",
+          "cost": {
+            "entries": 0,
+            "attempts": 14,
+            "nodes": 13,
+            "calls": 44,
+            "metadata": 234386,
+            "inputWork": 1287052
+          }
+        },
+        {
+          "name": "first-scouted-entry",
+          "cost": {
+            "entries": 1,
+            "attempts": 16,
+            "nodes": 14,
+            "calls": 60,
+            "metadata": 560818,
+            "inputWork": 6184486
+          }
+        },
+        {
+          "name": "before-send",
+          "cost": {
+            "entries": 88,
+            "attempts": 61,
+            "nodes": 16,
+            "calls": 774,
+            "metadata": 3654308,
+            "inputWork": 36013907
+          }
+        },
+        {
+          "name": "finished",
+          "cost": {
+            "entries": 88,
+            "attempts": 93,
+            "nodes": 32,
+            "calls": 842,
+            "metadata": 3708412,
+            "inputWork": 36795315
+          }
+        }
+      ],
+      "shares": [
+        [
+          "before-parent",
+          {
+            "calls": 102,
+            "cost": {
+              "entries": 0,
+              "attempts": 14,
+              "nodes": 13,
+              "calls": 22,
+              "metadata": 100242,
+              "inputWork": 543820
+            }
+          }
+        ],
+        [
+          "parent-adapter",
+          {
+            "calls": 164,
+            "cost": {
+              "entries": 0,
+              "attempts": 0,
+              "nodes": 0,
+              "calls": 22,
+              "metadata": 134144,
+              "inputWork": 743232
+            }
+          }
+        ],
+        [
+          "scouting-and-finish",
+          {
+            "calls": 3772,
+            "cost": {
+              "entries": 88,
+              "attempts": 47,
+              "nodes": 3,
+              "calls": 730,
+              "metadata": 3419922,
+              "inputWork": 34726855
+            }
+          }
+        ],
+        [
+          "send-and-confirm",
+          {
+            "calls": 167,
+            "cost": {
+              "entries": 0,
+              "attempts": 32,
+              "nodes": 16,
+              "calls": 68,
+              "metadata": 54104,
+              "inputWork": 781408
+            }
+          }
+        ]
+      ],
+      "siteCount": 68
+    },
+    {
+      "pass": 5,
+      "from": 219,
+      "through": 262,
+      "selectedEntries": 44,
+      "remainingEntries": 39,
+      "commit": "532de08d39004002262fbd0bbf8a7631597926d5",
+      "final": {
+        "entries": 88,
+        "attempts": 91,
+        "nodes": 32,
+        "calls": 837,
+        "metadata": 3707132,
+        "inputWork": 36822307
+      },
+      "checkpoints": [
+        {
+          "name": "before-parent",
+          "cost": {
+            "entries": 0,
+            "attempts": 1,
+            "nodes": 0,
+            "calls": 9,
+            "metadata": 87276,
+            "inputWork": 408956
+          }
+        },
+        {
+          "name": "before-scouting",
+          "cost": {
+            "entries": 0,
+            "attempts": 13,
+            "nodes": 13,
+            "calls": 41,
+            "metadata": 239762,
+            "inputWork": 1327371
+          }
+        },
+        {
+          "name": "first-scouted-entry",
+          "cost": {
+            "entries": 1,
+            "attempts": 15,
+            "nodes": 14,
+            "calls": 57,
+            "metadata": 566194,
+            "inputWork": 6224805
+          }
+        },
+        {
+          "name": "before-send",
+          "cost": {
+            "entries": 88,
+            "attempts": 60,
+            "nodes": 16,
+            "calls": 771,
+            "metadata": 3653924,
+            "inputWork": 36042726
+          }
+        },
+        {
+          "name": "finished",
+          "cost": {
+            "entries": 88,
+            "attempts": 91,
+            "nodes": 32,
+            "calls": 837,
+            "metadata": 3707132,
+            "inputWork": 36822307
+          }
+        }
+      ],
+      "shares": [
+        [
+          "before-parent",
+          {
+            "calls": 97,
+            "cost": {
+              "entries": 0,
+              "attempts": 13,
+              "nodes": 13,
+              "calls": 21,
+              "metadata": 99474,
+              "inputWork": 522507
+            }
+          }
+        ],
+        [
+          "parent-adapter",
+          {
+            "calls": 167,
+            "cost": {
+              "entries": 0,
+              "attempts": 0,
+              "nodes": 0,
+              "calls": 20,
+              "metadata": 140288,
+              "inputWork": 804864
+            }
+          }
+        ],
+        [
+          "scouting-and-finish",
+          {
+            "calls": 3771,
+            "cost": {
+              "entries": 88,
+              "attempts": 47,
+              "nodes": 3,
+              "calls": 730,
+              "metadata": 3414162,
+              "inputWork": 34715355
+            }
+          }
+        ],
+        [
+          "send-and-confirm",
+          {
+            "calls": 163,
+            "cost": {
+              "entries": 0,
+              "attempts": 31,
+              "nodes": 16,
+              "calls": 66,
+              "metadata": 53208,
+              "inputWork": 779581
+            }
+          }
+        ]
+      ],
+      "siteCount": 68
+    },
+    {
+      "pass": 6,
+      "from": 263,
+      "through": 301,
+      "selectedEntries": 39,
+      "remainingEntries": 0,
+      "commit": "1b8e73ab9da129e24db1e01ea17d8367fd7b3d11",
+      "final": {
+        "entries": 78,
+        "attempts": 88,
+        "nodes": 32,
+        "calls": 762,
+        "metadata": 3397451,
+        "inputWork": 35357981
+      },
+      "checkpoints": [
+        {
+          "name": "before-parent",
+          "cost": {
+            "entries": 0,
+            "attempts": 1,
+            "nodes": 0,
+            "calls": 9,
+            "metadata": 87276,
+            "inputWork": 408956
+          }
+        },
+        {
+          "name": "before-scouting",
+          "cost": {
+            "entries": 0,
+            "attempts": 14,
+            "nodes": 13,
+            "calls": 44,
+            "metadata": 262546,
+            "inputWork": 1469079
+          }
+        },
+        {
+          "name": "first-scouted-entry",
+          "cost": {
+            "entries": 1,
+            "attempts": 16,
+            "nodes": 14,
+            "calls": 60,
+            "metadata": 588978,
+            "inputWork": 6366513
+          }
+        },
+        {
+          "name": "before-send",
+          "cost": {
+            "entries": 78,
+            "attempts": 56,
+            "nodes": 16,
+            "calls": 694,
+            "metadata": 3344207,
+            "inputWork": 34635056
+          }
+        },
+        {
+          "name": "finished",
+          "cost": {
+            "entries": 78,
+            "attempts": 88,
+            "nodes": 32,
+            "calls": 762,
+            "metadata": 3397451,
+            "inputWork": 35357981
+          }
+        }
+      ],
+      "shares": [
+        [
+          "before-parent",
+          {
+            "calls": 103,
+            "cost": {
+              "entries": 0,
+              "attempts": 14,
+              "nodes": 13,
+              "calls": 22,
+              "metadata": 100754,
+              "inputWork": 544535
+            }
+          }
+        ],
+        [
+          "parent-adapter",
+          {
+            "calls": 191,
+            "cost": {
+              "entries": 0,
+              "attempts": 0,
+              "nodes": 0,
+              "calls": 22,
+              "metadata": 161792,
+              "inputWork": 924544
+            }
+          }
+        ],
+        [
+          "scouting-and-finish",
+          {
+            "calls": 3380,
+            "cost": {
+              "entries": 78,
+              "attempts": 42,
+              "nodes": 3,
+              "calls": 650,
+              "metadata": 3081661,
+              "inputWork": 33165977
+            }
+          }
+        ],
+        [
+          "send-and-confirm",
+          {
+            "calls": 169,
+            "cost": {
+              "entries": 0,
+              "attempts": 32,
+              "nodes": 16,
+              "calls": 68,
+              "metadata": 53244,
+              "inputWork": 722925
+            }
+          }
+        ]
+      ],
+      "siteCount": 68
+    }
+  ],
+  "firstPreEntrySites": [
+    [
+      "at ArchiveDriver.#pass (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-driver.ts:190:14)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 0,
+          "inputWork": 69632
+        }
+      }
+    ],
+    [
+      "at ArchiveRows.#load (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-row.ts:101:23)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 1,
+          "metadata": 96,
+          "inputWork": 96
+        }
+      }
+    ],
+    [
+      "at ArchiveRows.#load (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-row.ts:106:12)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 0,
+          "inputWork": 5976
+        }
+      }
+    ],
+    [
+      "at ArchiveRows.#load (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-row.ts:107:87)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 1,
+          "metadata": 498,
+          "inputWork": 498
+        }
+      }
+    ],
+    [
+      "at readPin (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-pin.ts:46:23)",
+      {
+        "calls": 4,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 4,
+          "metadata": 69632,
+          "inputWork": 69632
+        }
+      }
+    ],
+    [
+      "at read (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-pin.ts:51:24)",
+      {
+        "calls": 8,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 8,
+          "metadata": 139264,
+          "inputWork": 139264
+        }
+      }
+    ],
+    [
+      "at ArchiveRows.#wake (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-row.ts:220:87)",
+      {
+        "calls": 2,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 2,
+          "metadata": 512,
+          "inputWork": 8704
+        }
+      }
+    ],
+    [
+      "at /private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-row.ts:238:14",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 1,
+          "metadata": 0,
+          "inputWork": 4096
+        }
+      }
+    ],
+    [
+      "at adaptiveArchivePass (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-adaptive.ts:126:12)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 32768,
+          "inputWork": 262144
+        }
+      }
+    ],
+    [
+      "at JournalObjectReader.read (/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/src/journal-objects.ts:155:24)",
+      {
+        "calls": 30,
+        "cost": {
+          "entries": 0,
+          "attempts": 30,
+          "nodes": 0,
+          "calls": 30,
+          "metadata": 3840,
+          "inputWork": 5388480
+        }
+      }
+    ],
+    [
+      "at Object.readObject (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-host.ts:99:14)",
+      {
+        "calls": 13,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 26,
+          "metadata": 13312,
+          "inputWork": 13312
+        }
+      }
+    ],
+    [
+      "at reserveWork (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-host.ts:110:62)",
+      {
+        "calls": 105,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 0,
+          "inputWork": 367488
+        }
+      }
+    ],
+    [
+      "at Object.reserveObjects (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-host.ts:109:65)",
+      {
+        "calls": 13,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 80896,
+          "inputWork": 80896
+        }
+      }
+    ],
+    [
+      "at ArchiveDriver.#copy (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-driver.ts:127:12)",
+      {
+        "calls": 13,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 1664,
+          "inputWork": 0
+        }
+      }
+    ],
+    [
+      "at ArchiveDriver.#copy (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-driver.ts:134:42)",
+      {
+        "calls": 13,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 0,
+          "inputWork": 4652
+        }
+      }
+    ],
+    [
+      "at JournalWork.input (/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/src/journal-work.ts:93:17)",
+      {
+        "calls": 37,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 0,
+          "inputWork": 43192
+        }
+      }
+    ],
+    [
+      "at journalV2File (/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/src/journal-v2-tree.ts:39:17)",
+      {
+        "calls": 16,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 16,
+          "calls": 0,
+          "metadata": 0,
+          "inputWork": 0
+        }
+      }
+    ],
+    [
+      "at JournalWork.metadata (/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/src/journal-work.ts:98:17)",
+      {
+        "calls": 49,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 24834,
+          "inputWork": 24834
+        }
+      }
+    ],
+    [
+      "at journalLegacyCopyCount (/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/src/journal-anchor-legacy.ts:21:17)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 1,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 0,
+          "inputWork": 0
+        }
+      }
+    ],
+    [
+      "at prefixPin (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-prefix.ts:110:10)",
+      {
+        "calls": 2,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 0,
+          "inputWork": 139264
+        }
+      }
+    ],
+    [
+      "at readPin (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-pin.ts:64:22)",
+      {
+        "calls": 2,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 2,
+          "metadata": 34816,
+          "inputWork": 34816
+        }
+      }
+    ],
+    [
+      "at readArchiveScopeFrame (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-prefix.ts:42:25)",
+      {
+        "calls": 2,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 2,
+          "metadata": 128,
+          "inputWork": 128
+        }
+      }
+    ],
+    [
+      "at readArchiveScopeFrame (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-prefix.ts:46:27)",
+      {
+        "calls": 2,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 2,
+          "metadata": 1096,
+          "inputWork": 7816
+        }
+      }
+    ],
+    [
+      "at prefixAfterPin (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-prefix.ts:145:20)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 1,
+          "metadata": 384,
+          "inputWork": 384
+        }
+      }
+    ],
+    [
+      "at prefixAfterPin (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-prefix.ts:158:10)",
+      {
+        "calls": 2,
+        "cost": {
+          "entries": 3,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 0,
+          "inputWork": 355200
+        }
+      }
+    ],
+    [
+      "at new ArchiveRetainedReader (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-retained.ts:68:12)",
+      {
+        "calls": 4,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 0,
+          "inputWork": 0
+        }
+      }
+    ],
+    [
+      "at ArchiveDeclarations.#declaration (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-declarations.ts:56:57)",
+      {
+        "calls": 2,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 2,
+          "calls": 0,
+          "metadata": 0,
+          "inputWork": 0
+        }
+      }
+    ],
+    [
+      "at ArchiveRetainedReader.#request (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-retained.ts:103:17)",
+      {
+        "calls": 3,
+        "cost": {
+          "entries": 0,
+          "attempts": 3,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 0,
+          "inputWork": 768
+        }
+      }
+    ],
+    [
+      "at ArchiveRetainedReader.#size (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-retained.ts:116:98)",
+      {
+        "calls": 3,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 3,
+          "metadata": 288,
+          "inputWork": 288
+        }
+      }
+    ],
+    [
+      "at ArchiveRetainedReader.read (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-retained.ts:143:19)",
+      {
+        "calls": 2,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 0,
+          "inputWork": 381312
+        }
+      }
+    ],
+    [
+      "at ArchiveRetainedReader.read (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-retained.ts:144:91)",
+      {
+        "calls": 2,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 2,
+          "metadata": 0,
+          "inputWork": 11916
+        }
+      }
+    ],
+    [
+      "at ArchiveDeclarations.#declaration (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-declarations.ts:67:24)",
+      {
+        "calls": 2,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 0,
+          "inputWork": 571968
+        }
+      }
+    ],
+    [
+      "at archiveEntryHeader (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-entry-metadata.ts:59:102)",
+      {
+        "calls": 3,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 3,
+          "metadata": 1536,
+          "inputWork": 1536
+        }
+      }
+    ],
+    [
+      "at archiveEntryPrivacy (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-entry-metadata.ts:79:96)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 1,
+          "metadata": 2048,
+          "inputWork": 2048
+        }
+      }
+    ],
+    [
+      "at ArchiveForeignMetadata.selection (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-foreign.ts:177:17)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 0,
+          "inputWork": 0
+        }
+      }
+    ],
+    [
+      "at collect (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-inventory.ts:98:18)",
+      {
+        "calls": 2,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 0,
+          "inputWork": 163072
+        }
+      }
+    ],
+    [
+      "at collect (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-inventory.ts:99:95)",
+      {
+        "calls": 2,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 2,
+          "metadata": 0,
+          "inputWork": 5096
+        }
+      }
+    ],
+    [
+      "at collect (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-inventory.ts:197:16)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 0,
+          "inputWork": 69632
+        }
+      }
+    ],
+    [
+      "at collect (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-inventory.ts:201:84)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 1,
+          "metadata": 128,
+          "inputWork": 128
+        }
+      }
+    ],
+    [
+      "at ArchiveForeignMetadata.basis (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-foreign.ts:181:17)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 0,
+          "inputWork": 0
+        }
+      }
+    ],
+    [
+      "at planLegacyArchiveAnchors (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-build.ts:117:10)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 0,
+          "inputWork": 3145728
+        }
+      }
+    ],
+    [
+      "at archiveInput (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-input.ts:32:10)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 512,
+          "inputWork": 1024
+        }
+      }
+    ],
+    [
+      "at archiveInput (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-input.ts:42:10)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 0,
+          "inputWork": 0
+        }
+      }
+    ],
+    [
+      "at archiveReplayScopes (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-publication.ts:16:10)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 512,
+          "inputWork": 1024
+        }
+      }
+    ],
+    [
+      "at new ArchiveReplayAnchors (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-anchors.ts:24:12)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 1,
+          "calls": 0,
+          "metadata": 512,
+          "inputWork": 1024
+        }
+      }
+    ],
+    [
+      "at new ArchiveReplayAnchors (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-anchors.ts:32:14)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 0,
+          "inputWork": 1024
+        }
+      }
+    ],
+    [
+      "at namedBytes (/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/src/journal-layout.ts:52:15)",
+      {
+        "calls": 2,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 2,
+          "metadata": 0,
+          "inputWork": 40768
+        }
+      }
+    ],
+    [
+      "at Object.entry (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-input.ts:68:14)",
+      {
+        "calls": 2,
+        "cost": {
+          "entries": 0,
+          "attempts": 2,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 0,
+          "inputWork": 512
+        }
+      }
+    ],
+    [
+      "at /private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-input.ts:72:107",
+      {
+        "calls": 2,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 2,
+          "metadata": 256,
+          "inputWork": 256
+        }
+      }
+    ],
+    [
+      "at /private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-input.ts:76:16",
+      {
+        "calls": 2,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 0,
+          "inputWork": 40768
+        }
+      }
+    ],
+    [
+      "at /private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-input.ts:77:95",
+      {
+        "calls": 2,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 2,
+          "metadata": 0,
+          "inputWork": 5096
+        }
+      }
+    ],
+    [
+      "at ArchiveReplayAnchors.entry (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-anchors.ts:57:17)",
+      {
+        "calls": 2,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 5096,
+          "inputWork": 40768
+        }
+      }
+    ],
+    [
+      "at ArchiveReplayAnchors.#add (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-anchors.ts:40:17)",
+      {
+        "calls": 2,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 0,
+          "inputWork": 2048
+        }
+      }
+    ],
+    [
+      "at ArchiveReplayAnchors.#add (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-anchors.ts:49:19)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 512,
+          "inputWork": 0
+        }
+      }
+    ],
+    [
+      "at FixtureArchiveSourcePins.get (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-source-pins.ts:98:12)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 1,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 512,
+          "inputWork": 1024
+        }
+      }
+    ],
+    [
+      "at FixtureArchiveSourcePins.get (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-source-pins.ts:104:12)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 0,
+          "inputWork": 674640
+        }
+      }
+    ],
+    [
+      "at ArchiveReplayAnchors.finish (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-anchors.ts:88:17)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 0,
+          "inputWork": 2048
+        }
+      }
+    ],
+    [
+      "at JournalV2TreePatch.#load (/private/tmp/artroom-builder-archive-input-work-20261023/packages/git/src/journal-v2-tree.ts:72:51)",
+      {
+        "calls": 10,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 10,
+          "calls": 0,
+          "metadata": 0,
+          "inputWork": 0
+        }
+      }
+    ],
+    [
+      "at prefixAfterPin (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-prefix.ts:127:106)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 1,
+          "metadata": 192,
+          "inputWork": 192
+        }
+      }
+    ],
+    [
+      "at prefixAfterPin (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-prefix.ts:146:20)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 1,
+          "metadata": 192,
+          "inputWork": 192
+        }
+      }
+    ],
+    [
+      "at recordArchiveCurrentDeclarationClosure (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-declaration-scout.ts:30:27)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 256,
+          "inputWork": 512
+        }
+      }
+    ],
+    [
+      "at collectDeclarationClosure (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-declaration-scout.ts:40:12)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 256,
+          "inputWork": 512
+        }
+      }
+    ],
+    [
+      "at recordArchiveSupportMetadata (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-entry-metadata.ts:110:10)",
+      {
+        "calls": 2,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 256,
+          "inputWork": 512
+        }
+      }
+    ],
+    [
+      "at new ArchiveScout (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-scout.ts:84:12)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 512,
+          "inputWork": 1024
+        }
+      }
+    ],
+    [
+      "at new ArchiveDeclarationPlan (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-declaration-plan.ts:26:12)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 256,
+          "inputWork": 512
+        }
+      }
+    ],
+    [
+      "at forecastArchiveDeclarationClosure (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-declaration-scout.ts:60:10)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 128,
+          "inputWork": 384
+        }
+      }
+    ],
+    [
+      "at ArchiveDeclarationPlan.#remember (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-declaration-plan.ts:43:17)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 512,
+          "inputWork": 1024
+        }
+      }
+    ],
+    [
+      "at new ArchiveForeignPlan (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-foreign-plan.ts:35:12)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 256,
+          "inputWork": 512
+        }
+      }
+    ],
+    [
+      "at new ArchivePlanFence (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-plan-fence.ts:73:12)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 256,
+          "inputWork": 512
+        }
+      }
+    ],
+    [
+      "at captureComparison (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-plan-fence.ts:50:10)",
+      {
+        "calls": 2,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 256,
+          "inputWork": 512
+        }
+      }
+    ],
+    [
+      "at sealPlanMetadata (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-plan-fence.ts:19:10)",
+      {
+        "calls": 25,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 800,
+          "inputWork": 1600
+        }
+      }
+    ],
+    [
+      "at sealPlanMetadata (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-plan-fence.ts:34:14)",
+      {
+        "calls": 23,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 0,
+          "inputWork": 1008
+        }
+      }
+    ],
+    [
+      "at sealPlanMetadata (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-plan-fence.ts:22:12)",
+      {
+        "calls": 10,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 956,
+          "inputWork": 3824
+        }
+      }
+    ],
+    [
+      "at new ArchiveScoutLayout (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-scout-layout.ts:55:12)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 512,
+          "inputWork": 1024
+        }
+      }
+    ],
+    [
+      "at ArchiveScoutLayout.#recordSize (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-scout-layout.ts:64:17)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 1024,
+          "inputWork": 2048
+        }
+      }
+    ],
+    [
+      "at ArchiveScoutLayout.#remember (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-scout-layout.ts:73:17)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 1024,
+          "inputWork": 2048
+        }
+      }
+    ],
+    [
+      "at readRetainedArchivePass (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-retained-pass.ts:19:146)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 1,
+          "metadata": 96,
+          "inputWork": 224
+        }
+      }
+    ],
+    [
+      "at new ArchiveForeignMetadata (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-foreign.ts:58:37)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 256,
+          "inputWork": 512
+        }
+      }
+    ],
+    [
+      "at readPosition (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-window.ts:24:104)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 1,
+          "metadata": 192,
+          "inputWork": 192
+        }
+      }
+    ],
+    [
+      "at archiveEntryAnchorCandidates (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-anchor-candidates.ts:19:79)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 1,
+          "metadata": 128,
+          "inputWork": 29184
+        }
+      }
+    ],
+    [
+      "at ArchiveForeignPlan.append (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-foreign-plan.ts:50:14)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 256,
+          "inputWork": 512
+        }
+      }
+    ],
+    [
+      "at ArchiveLocalReferences.read (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-local-references.ts:48:103)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 1,
+          "metadata": 128,
+          "inputWork": 7392
+        }
+      }
+    ],
+    [
+      "at ArchiveLocalReferences.read (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-local-references.ts:53:17)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 0,
+          "inputWork": 0
+        }
+      }
+    ],
+    [
+      "at ArchiveLocalReferences.project (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-local-references.ts:98:17)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 0,
+          "inputWork": 0
+        }
+      }
+    ],
+    [
+      "at new ArchivePrepared (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-prepared.ts:20:12)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 262144,
+          "inputWork": 4194304
+        }
+      }
+    ],
+    [
+      "at reserveArchiveNames (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-schema-cost.ts:9:10)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 640,
+          "inputWork": 1536
+        }
+      }
+    ],
+    [
+      "at ArchivePrepared.project (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-prepared.ts:27:100)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 1,
+          "metadata": 128,
+          "inputWork": 3760
+        }
+      }
+    ],
+    [
+      "at append (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-local-references.ts:94:19)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 0,
+          "inputWork": 0
+        }
+      }
+    ],
+    [
+      "at ArchiveLocalReferences.project (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-local-references.ts:128:17)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 0,
+          "inputWork": 0
+        }
+      }
+    ],
+    [
+      "at ArchiveDeclarationPlan.append (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-declaration-plan.ts:55:19)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 256,
+          "inputWork": 512
+        }
+      }
+    ],
+    [
+      "at ArchivePlanFence.append (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-plan-fence.ts:86:12)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 256,
+          "inputWork": 512
+        }
+      }
+    ],
+    [
+      "at sealPlanMetadata (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-plan-fence.ts:30:12)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 0,
+          "inputWork": 0
+        }
+      }
+    ],
+    [
+      "at ArchiveScoutLayout.append (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-scout-layout.ts:125:17)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 0,
+          "inputWork": 0
+        }
+      }
+    ],
+    [
+      "at ArchiveScoutLayout.append (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-scout-layout.ts:147:17)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 384,
+          "inputWork": 768
+        }
+      }
+    ],
+    [
+      "at ArchiveScout.#advance (/private/tmp/artroom-builder-archive-input-work-20261023/packages/scope/src/archive-scout.ts:195:12)",
+      {
+        "calls": 1,
+        "cost": {
+          "entries": 0,
+          "attempts": 0,
+          "nodes": 0,
+          "calls": 0,
+          "metadata": 384,
+          "inputWork": 768
+        }
+      }
+    ]
+  ],
+  "firstPreplanningInputWork": 6148772,
+  "originalHeadSeq": 1,
+  "publication": "Complete case passed including nonempty genuine anchors and exact old-range/publication checks; no independent reconstruction of native SQL beyond original successful assertions.",
+  "qualification": "Actual seven passes drain300 with strict first partial and exact suffix/receipt/hash assertions. Site sums reconcile every axis before first SCOUTED entry, not selection admission; stack keys are descriptive logical charge attribution, not engine heap. No overflow. PriorV2compilerfailure,V3fixturefailure26healthy andV4lateanchorfailure remain retained; not rerun here. No4096/hosted/throughput/control/gate claim. Nested costs overlap.",
+  "inputPins": [
+    {
+      "path": "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v5/after.json",
+      "bytes": 3295459,
+      "sha256": "4d8debbf43148bf3034299838067f3870496eab32d8e137a66e84fc9fe4cc4b3",
+      "identity": [
+        16777231,
+        545749189,
+        33188,
+        1,
+        3295459,
+        1792801416696721037,
+        1792801416696721037
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v5/before.json",
+      "bytes": 3295458,
+      "sha256": "b094143a128e94ed42853115b62ceb68ad13f2a8f674a06a06d5acf44f938df5",
+      "identity": [
+        16777231,
+        545749040,
+        33188,
+        1,
+        3295458,
+        1792801408479714479,
+        1792801408479714479
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v5/focused/body.log",
+      "bytes": 5490,
+      "sha256": "933b17386e4bffd865460d9028ce8760c4a09fd67c556d4c7e9e061819a9b8ff",
+      "identity": [
+        16777231,
+        545749052,
+        33024,
+        1,
+        5490,
+        1792801415006152143,
+        1792801415168564504
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v5/focused/coverage-ledger.json",
+      "bytes": 1446,
+      "sha256": "1cbdab8c411d386fb3bf35d56954a7d8d256218385691e0222d4edeaa74a15aa",
+      "identity": [
+        16777231,
+        545749182,
+        33024,
+        1,
+        1446,
+        1792801415167990336,
+        1792801415168574046
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v5/focused/coverage.jsonl",
+      "bytes": 1984,
+      "sha256": "5fef0a344c1e43aa7c598be2e3cf23bea2625028cb32dd3e5eba42ab7b983a6a",
+      "identity": [
+        16777231,
+        545749071,
+        33024,
+        1,
+        1984,
+        1792801414965354375,
+        1792801415168581546
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v5/focused/manifest.json",
+      "bytes": 939,
+      "sha256": "c6ffe272eae8ba6ca87958e5c888179d46edac4f23faa0a469badfb339c3acf0",
+      "identity": [
+        16777231,
+        545749184,
+        33024,
+        1,
+        939,
+        1792801415168526671,
+        1792801415168588963
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v5/focused/plan.json",
+      "bytes": 495573,
+      "sha256": "2d49f9b25fa9bd153c1e6e390ba9ba8aeea068091539e697d4ab0fe8240692d4",
+      "identity": [
+        16777231,
+        545749047,
+        33024,
+        1,
+        495573,
+        1792801408576245068,
+        1792801415168595963
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v5/focused/result.json",
+      "bytes": 5329,
+      "sha256": "f637c00d27c971176a25b76f3be113ece15c2cb6acecdff297537a5c8b737f9c",
+      "identity": [
+        16777231,
+        545749183,
+        33024,
+        1,
+        5329,
+        1792801415168104753,
+        1792801415168603088
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v5/focused/scope-test.log",
+      "bytes": 29,
+      "sha256": "e543c5a0c2ecaaafc80c133acc71125d85a7e70c5233acc5b2bb2276da6f817e",
+      "identity": [
+        16777231,
+        545749049,
+        33024,
+        1,
+        29,
+        1792801409369944479,
+        1792801415168610213
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v5/focused/vitest.json",
+      "bytes": 145191,
+      "sha256": "bf39c2723e22829429fd201e04d519c061d694be7fb46a703f7744bbe77d0c92",
+      "identity": [
+        16777231,
+        545749180,
+        33024,
+        1,
+        145191,
+        1792801414965353833,
+        1792801415168618838
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v5/focused-after.json",
+      "bytes": 3295459,
+      "sha256": "4d8debbf43148bf3034299838067f3870496eab32d8e137a66e84fc9fe4cc4b3",
+      "identity": [
+        16777231,
+        545749187,
+        33188,
+        1,
+        3295459,
+        1792801415941110842,
+        1792801415941110842
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v5/focused-plan.json",
+      "bytes": 495573,
+      "sha256": "2d49f9b25fa9bd153c1e6e390ba9ba8aeea068091539e697d4ab0fe8240692d4",
+      "identity": [
+        16777231,
+        545749041,
+        33188,
+        1,
+        495573,
+        1792801408498453003,
+        1792801408498453003
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v5/focused.command.json",
+      "bytes": 347,
+      "sha256": "4a467bfff0d79e6021ef99ea62825ef33f2269822232341bc8076f197fd441ce",
+      "identity": [
+        16777231,
+        545749042,
+        33188,
+        1,
+        347,
+        1792801408498618170,
+        1792801408498618170
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v5/focused.pid.json",
+      "bytes": 19,
+      "sha256": "e4ad0095d8588ed68460bc8509cf1148bc611371a2082f1c68b570f959cc9d4b",
+      "identity": [
+        16777231,
+        545749045,
+        33188,
+        1,
+        19,
+        1792801408500584886,
+        1792801408500584886
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v5/focused.process.json",
+      "bytes": 497,
+      "sha256": "81b4faeecb260c9a56a37e57377c6e0ecd1168c4302d36c6dfd5e5d14da55748",
+      "identity": [
+        16777231,
+        545749185,
+        33188,
+        1,
+        497,
+        1792801415171569890,
+        1792801415171569890
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v5/focused.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "identity": [
+        16777231,
+        545749044,
+        33188,
+        1,
+        0,
+        1792801408498687796,
+        1792801408498698921
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v5/focused.stdout",
+      "bytes": 284,
+      "sha256": "2e62584881e42886cb30d0b0b0add4c6a80a925353081d6092820dbb895764b3",
+      "identity": [
+        16777231,
+        545749043,
+        33188,
+        1,
+        284,
+        1792801415168669005,
+        1792801415168669005
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v5/invocation.json",
+      "bytes": 471,
+      "sha256": "6a62e13b20b39e48ecf3205f327fd8f967539dbb3ed0f1eb1927b1c5ce19ecde",
+      "identity": [
+        16777231,
+        545749036,
+        33188,
+        1,
+        471,
+        1792801407697395274,
+        1792801407697395274
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-owning-evidence-20261023-v5/result.json",
+      "bytes": 2341,
+      "sha256": "df61e9fbdacf1cdb05f2e67e8c672d33df77e9c80616b86a74985b87e05d0f11",
+      "identity": [
+        16777231,
+        545749190,
+        33188,
+        1,
+        2341,
+        1792801416709079080,
+        1792801416709079080
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-owning-binding-null-20261023-v5.json",
+      "bytes": 4017268,
+      "sha256": "e0ca6d24f5ab6bb11a4057e7055711df4aae591e728671242974605f3e2bb6f2",
+      "identity": [
+        16777231,
+        545748941,
+        33188,
+        1,
+        4017268,
+        1792801373107002954,
+        1792801373107002954
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-input-work-owning-binding-allocated-20261023-v5.json",
+      "bytes": 4017306,
+      "sha256": "7d2c1ecbc638857a50db70dc035a4efbff4c7d1806d6b062164088668f6b6c97",
+      "identity": [
+        16777231,
+        545749025,
+        33188,
+        1,
+        4017306,
+        1792801398790308085,
+        1792801398790308085
+      ]
+    }
+  ]
+}

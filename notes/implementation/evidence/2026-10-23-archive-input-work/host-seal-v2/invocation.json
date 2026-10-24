@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "/private/tmp/artroom-archive-input-work-host-seal-source-20261023-v2/owner.py",
+    "/private/tmp/artroom-archive-input-work-host-seal-binding-allocated-20261023-v2.json",
+    "0269e858f5191a75d8aedd9a58d70e5174e77f654091c277a1b5a4d93b90f63c"
+  ],
+  "ownerPid": 31084,
+  "cwd": "/Users/hughpyle/play/artroom",
+  "allocation": "178d45df6ed94261b53d43ad5e54cffe84435f2f",
+  "bindingSha256": "0269e858f5191a75d8aedd9a58d70e5174e77f654091c277a1b5a4d93b90f63c",
+  "toolCallIdSha256": "b0472d7abc6f24c43b5d8ed27dd3efac21960c7ffee0b09e2fe18c7751183022"
+}

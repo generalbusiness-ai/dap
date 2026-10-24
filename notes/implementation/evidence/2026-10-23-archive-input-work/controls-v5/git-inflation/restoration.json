@@ -1,0 +1,26 @@
+{
+  "path": "packages/git/src/http-read.ts",
+  "original": {
+    "device": 16777231,
+    "inode": 545638119,
+    "mode": "0o644",
+    "nlink": 1,
+    "kind": "file",
+    "bytes": 47613,
+    "sha256": "819bdf711d8fe4e2dcfd58551dc9e844c51e17fd65a556a4adce167808ccc704",
+    "mtimeNs": 1792797041174802487,
+    "ctimeNs": 1792797041174802487
+  },
+  "restored": {
+    "device": 16777231,
+    "inode": 545638119,
+    "mode": "0o644",
+    "nlink": 1,
+    "kind": "file",
+    "bytes": 47613,
+    "sha256": "819bdf711d8fe4e2dcfd58551dc9e844c51e17fd65a556a4adce167808ccc704",
+    "mtimeNs": 1792797041174802487,
+    "ctimeNs": 1792801647182624546
+  },
+  "qualification": "Original device/inode/mode/nlink/bytes/hash exact; only targetmtime/ctime may reflect controlled rename. No other Source allowance."
+}

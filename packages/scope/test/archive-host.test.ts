@@ -203,7 +203,11 @@ test.each(["github", "artifacts"] as const)("%s incremental parent reads one exa
   await expect(stopped.provider.readObject!(stopped.repository, { id: stopped.archive.commit, type: "commit", maximum: 1024 }, () => true,
     new ArchiveBudget({ inputWork: 1 }))).rejects.toMatchObject({ reason: "limit" });
   expect(stopped.calls).toEqual([]);
-  expect(budget.admitted().inputWork).toBeGreaterThanOrEqual(32 * (1024 + 8 * 1024));
+  if (host === "github") expect(budget.admitted().inputWork).toBeGreaterThanOrEqual(32 * (1024 + 8 * 1024));
+  else {
+    expect(budget.admitted().inputWork).toBeGreaterThan(32 * expected.data.length);
+    expect(budget.admitted().inputWork).toBeLessThan(32 * (1024 + 8 * 1024));
+  }
   const unsupported = fixture(host); unsupported.publish();
   const unsupportedBudget = new ArchiveBudget();
   await expect(unsupported.provider.readObject!(unsupported.repository, { id: unsupported.archive.commit, type: "commit", maximum: 1024 }, () => true,
@@ -217,8 +221,15 @@ test.each(["github", "artifacts"] as const)("%s incremental parent reads one exa
     // This stand-in sends one commit and its empty tree: charge those two
     // actual records once, not the wire-derived maximum possible count.
     expect(budget.admitted().metadata).toBe(3 * 1024);
-    expect(budget.admitted().inputWork).toBe(32 * (1024 + 8 * 1024) + 3 * 1024);
-    // The fixed wire/base cost admits HTTP, but actual companion metadata
+    // More unused caller slack must not change the charge for the exact
+    // same accepted advertisement/pack/body. Original reader limits remain.
+    const slack = fixture(host, true); slack.publish();
+    const slackBudget = new ArchiveBudget();
+    expect(await slack.provider.readObject!(slack.repository, { id: slack.archive.commit, type: "commit", maximum: 2048 }, () => true,
+      slackBudget)).toEqual(actual);
+    expect(slackBudget.admitted()).toEqual(budget.admitted());
+    expect(slack.fetchReceivers).toHaveLength(2);
+    // The fixed base cost admits HTTP, but actual companion metadata
     // must still fit the same original budget before decoder allocation.
     const metadataStopped = fixture(host, true), metadataBudget = new ArchiveBudget({ metadata: 1024 });
     await expect(metadataStopped.provider.readObject!(metadataStopped.repository, { id: metadataStopped.archive.commit, type: "commit", maximum: 1024 }, () => true,

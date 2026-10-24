@@ -128,8 +128,8 @@ test("native parent state appends 200 host-shaped passes with two retained files
       return peer.fetch(request);
     }, credentialHandle: async () => { throw new Error("TEST fixture never enters production credential custody"); },
   }).fixtureArchive({ fixture: "archive-ports", clock: () => timeOf(now), tokens: {
-    fixture: "archive-tokens", read: async () => "TEST read",
-    mint: async () => ({ id: "TEST handle", plaintext: "TEST write", ends: timeOf(now + 60_000) }), revoke: async () => {},
+    fixture: "archive-tokens", read: async () => "TEST-read",
+    mint: async () => ({ id: "TEST handle", plaintext: "TEST-write", ends: timeOf(now + 60_000) }), revoke: async () => {},
   } });
   const provider: FixtureArchiveProvider = { ...actualProvider,
     readObject: async (repository, object, allowed, budget) => {

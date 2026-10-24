@@ -1,0 +1,10 @@
+--- packages/git/src/http-read.ts
++++ packages/git/src/http-read.ts
+@@ -351,7 +351,6 @@
+       baseId = objectId(hex(pack.subarray(cursor.at, cursor.at + 20)), "delta base");
+       cursor.at += 20;
+     }
+-    reserveWork?.(size);
+     const end = zlibEnd(pack, cursor.at, size, options.deadline);
+     const raw = await readBytes(new Blob([pack.slice(cursor.at, end)]).stream().pipeThrough(new DecompressionStream("deflate")), size, options.deadline);
+     if (raw.length !== size) throw new GitRefusal("wrong-size", "pack entry");

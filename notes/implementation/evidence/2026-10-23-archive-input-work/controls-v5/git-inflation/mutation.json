@@ -1,0 +1,7 @@
+{
+  "path": "packages/git/src/http-read.ts",
+  "before": "    reserveWork?.(size);\n    const end = zlibEnd",
+  "after": "    const end = zlibEnd",
+  "originalSha256": "819bdf711d8fe4e2dcfd58551dc9e844c51e17fd65a556a4adce167808ccc704",
+  "mutantSha256": "0e3413842229c2cee9f803d3cb7ccc4974b57c51c5c300969ce55b68cb986439"
+}
