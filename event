@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9a6fa82acf9932342d68a57caaa8f9de07e2bd94","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-privacy.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9a86407790c1be091594a01cdf562a087b202246","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/definition-corpus/grow-examples.ts."}
