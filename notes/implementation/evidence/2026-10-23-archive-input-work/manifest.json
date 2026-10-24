@@ -98,12 +98,6 @@
       "sha256": "ff61f6e3bd3a78bd4a2d0b34bf42cc28f7ffd6dd680fc62a22e0b8ec9ecfce29"
     },
     {
-      "path": "controls-v5/git-inflation/stderr",
-      "source": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/git-inflation/stderr",
-      "bytes": 1042,
-      "sha256": "d850eaba5c0d5789b619929af10b5bb55badf15d511ed0aac7bcb9fec5fb411f"
-    },
-    {
       "path": "controls-v5/git-inflation/restoration.json",
       "source": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/git-inflation/restoration.json",
       "bytes": 798,
@@ -138,12 +132,6 @@
       "source": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/scope-maximum-debit/progress.jsonl",
       "bytes": 1145,
       "sha256": "179f4c5512a7be2111c17c2d2bfb6ef1a7c602e4a2efa38dd2eef62be90c065b"
-    },
-    {
-      "path": "controls-v5/scope-maximum-debit/stderr",
-      "source": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/scope-maximum-debit/stderr",
-      "bytes": 891,
-      "sha256": "ad4d8eddbdf0333b1d9276bf7e0519a33a0c100a123ac3dbeef71a5acac8fad1"
     },
     {
       "path": "controls-v5/scope-maximum-debit/restoration.json",
@@ -229,6 +217,22 @@
       "bytes": 237800,
       "sha256": "ae276e9a18908fea69bc0fc3fbda3c31e1b39455ecb1ee8309012edc12928c46",
       "qualification": "Inert projection of original successful budget observations."
+    }
+  ],
+  "externalOnly": [
+    {
+      "path": "controls-v5/git-inflation/stderr",
+      "source": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/git-inflation/stderr",
+      "bytes": 1042,
+      "sha256": "d850eaba5c0d5789b619929af10b5bb55badf15d511ed0aac7bcb9fec5fb411f",
+      "qualification": "Original stderr retained externally without whitespace alteration; exact failure also retained in independent audit."
+    },
+    {
+      "path": "controls-v5/scope-maximum-debit/stderr",
+      "source": "/private/tmp/artroom-archive-input-work-controls-evidence-20261023-v5/scope-maximum-debit/stderr",
+      "bytes": 891,
+      "sha256": "ad4d8eddbdf0333b1d9276bf7e0519a33a0c100a123ac3dbeef71a5acac8fad1",
+      "qualification": "Original stderr retained externally without whitespace alteration; exact failure also retained in independent audit."
     }
   ]
 }
