@@ -21,6 +21,7 @@ export class DeployedScope<E extends Env & GrowArchiveEnvironment = Env & GrowAr
     policies ??= growArchivePolicies(packet);
     const reviewed = policies;
     return { ...deployed, archiveHost: config,
+      ...(this.env.ARCHIVE_RESTART_DIRECTIVE === undefined ? {} : { archiveRestart: this.env.ARCHIVE_RESTART_DIRECTIVE }),
       archive: (given, sql, bounds) => growArchiveDriver(given, sql, this.scopes(), this.env, reviewed, bounds),
     };
   }
