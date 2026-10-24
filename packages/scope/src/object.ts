@@ -110,6 +110,8 @@ export interface Wiring {
   limits?: LimitConfig;
   /** Optional passive internal diagnostic; deployed wiring leaves it absent. */
   signedReadObserver?: SignedReadObserver;
+  /** Deployment-principal-only raw setting; never supplied by an RPC. */
+  archiveRestart?: unknown;
   /** Fixture milestone only. Absent from all deployed/default wiring. A0b
    * admission, policy ownership and production configuration remain due. */
   fixtureArchive?: Omit<FixtureArchiveDriverOptions, "sql" | "current" | "clock" | "bounds">;
@@ -120,6 +122,7 @@ export interface Wiring {
 
 export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   readonly #archive: ArchiveDriver | null;
+  readonly #archiveRestart: unknown;
   readonly #floorOffer: (() => import("@generalbusiness/dap-contract").FloorInput | null) | null;
   readonly #archiveItem: (ask: ArchiveHostItemAsk) => import("./item-queries.ts").NativeItemQuery;
   readonly #name: ScopeId | null;
@@ -259,6 +262,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     const archiveSql: Sql = { ...this.#readSql, transaction: closure => ctx.storage.transactionSync(closure) };
     if (wiring.fixtureArchive && wiring.archive) throw new Error("archive wiring must have one owner");
     const archive = wiring.archive?.(outsideGiven, archiveSql, bounds) ?? wiring.fixtureArchive;
+    this.#archiveRestart = wiring.archiveRestart;
     this.#archive = archive ? new ArchiveDriver({
       ...archive, sql: archiveSql,
       current: () => store.scope(), clock: () => ports.clock.read(), bounds,
@@ -372,7 +376,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
       try { console.info("archive-row-diagnostic-v1", value); } catch { /* tail unavailable */ }
     }, () => {
       try { console.info("archive-row-diagnostic-v1", { scope: this.#name, state: "unknown", phase: "unknown", reason: "unknown",
-        confirmed: "unknown", pendingMark: "unknown", storedWake: "unknown", platformAlarm: "unknown" }); } catch { /* tail unavailable */ }
+        confirmed: "unknown", pendingMark: "unknown", storedWake: "unknown", platformAlarm: "unknown", rowDigest: "unknown", restartGeneration: "unknown" }); } catch { /* tail unavailable */ }
     }).then(() => { this.#archiveDiagnosticDone = true; complete(); });
     try { this.ctx.waitUntil(this.#archiveDiagnostic); } catch { /* log failure cannot refuse ingress */ }
     return this.#archiveDiagnostic;
@@ -390,6 +394,8 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
       return;
     }
     if (!this.#archive || this.#alarmRunning || this.#archiveAlarmRecovery) return;
+    // Diagnostic completed before this synchronous deployment-only transition.
+    if (this.#store.scope()?.status === "active" && this.#archiveRestart !== undefined) this.#archive.restart(this.#archiveRestart);
     // Quiet scopes need no asynchronous alarm lookup. Re-read after the await.
     if (this.#archive.wake() === null) return;
     const recovery = (async () => {

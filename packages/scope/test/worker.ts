@@ -64,6 +64,8 @@ export { ScopeObject };
 export const metricBindings = new Map<string, MetricEnvironment>();
 /** Test ports for byte-equal native worlds in different physical namespaces. */
 export const metricWiring = new Map<string, () => Partial<NonNullable<Wiring["ports"]>>>();
+/** Deployment-setting stand-in only; no RPC can populate this fixture. */
+export const fixtureArchiveRestart = new Map<string, string>();
 /** Explicit archive fixture wiring, absent unless a witness supplies it.
  * The map survives object eviction; it is not production configuration. */
 export const fixtureArchiveWiring = new Map<string, NonNullable<Wiring["fixtureArchive"]>>();
@@ -82,7 +84,7 @@ export class TestScope extends ScopeObject {
     const c = controls(name ?? "");
     const fixtureArchive = fixtureArchiveWiring.get(name ?? "");
     const registerGenesis = scopeRegistrationWiring.get(name ?? "");
-    return { ports: { ...testPorts(c), outside: outsideOf(name ?? ""), owners, ...wired.get(name ?? "")?.(), ...metricWiring.get(this.ctx.id.toString())?.() }, bounds: c.bounds, reads: c.reads, ...(registerGenesis ? { registerGenesis } : {}), ...(fixtureArchive ? { fixtureArchive } : {}) };
+    return { ports: { ...testPorts(c), outside: outsideOf(name ?? ""), owners, ...wired.get(name ?? "")?.(), ...metricWiring.get(this.ctx.id.toString())?.() }, bounds: c.bounds, reads: c.reads, ...(registerGenesis ? { registerGenesis } : {}), ...(fixtureArchive ? { fixtureArchive } : {}), ...(fixtureArchiveRestart.has(name ?? "") ? { archiveRestart: fixtureArchiveRestart.get(name ?? "")! } : {}) };
   }
 }
 /** Same native code in a second local namespace for byte equality controls. */
@@ -195,6 +197,7 @@ export class PlatformScope extends DeployedScope<PlatformEnv> {
       ...(archiveHostWiring.has(name ?? "") ? { archiveHost: archiveHostWiring.get(name ?? "")! } : {}),
       ...(roomArchiveWiring.has(name ?? "") ? { archive: roomArchiveWiring.get(name ?? "")! } : {}),
       ...(fixtureArchiveWiring.has(name ?? "") ? { fixtureArchive: fixtureArchiveWiring.get(name ?? "")! } : {}),
+      ...(fixtureArchiveRestart.has(name ?? "") ? { archiveRestart: fixtureArchiveRestart.get(name ?? "")! } : {}),
       ...(signedReadObserver ? { signedReadObserver } : {}),
       readers: (given) => {
         const real = session.readers(given);

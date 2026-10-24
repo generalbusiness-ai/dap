@@ -16,6 +16,7 @@ import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, readArchivePin, readAr
 import type { ArchivePolicyRegistry } from "./archive-inventory.ts";
 import { ArchiveRows, type ArchiveMark, type ArchiveRow } from "./archive-row.ts";
 import { finishArchiveParentRead, startArchiveParentReadPass } from "./archive-parent-read-diagnostic.ts";
+import { readArchiveRestart } from "./archive-restart.ts";
 import type { DestinationRepository } from "./destination-host.ts";
 import type { Sql } from "./sqlite.ts";
 import { readArchiveScopeFrame } from "./archive-prefix.ts";
@@ -97,6 +98,15 @@ export class ArchiveDriver {
   #store(): ArchiveRows | null {
     const current = this.#options.current();
     return current && isScopeRef(current.at) ? this.#rows ??= new ArchiveRows(this.#options.sql, current.at) : null;
+  }
+  /** Internal deployment directive; no pass, host call, native turn or Mark. */
+  restart(raw: unknown): "applied" | "already-applied" | "refused" {
+    if (this.#running || this.#disabled || this.#options.policies.registry.size === 0) return "refused";
+    try {
+      const budget = new ArchiveBudget(), now = this.#options.clock();
+      const command = readArchiveRestart(raw,now,budget), next = this.#later(0), rows = this.#store();
+      return command && next && rows && same(command.at,this.#options.current()?.at) ? rows.restart(command,next,now,budget) : "refused";
+    } catch { return "refused"; }
   }
   /** Scheduling only: never waits on a host or reads a manifest. */
   committed(): void {

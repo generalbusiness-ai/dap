@@ -20,7 +20,7 @@ import { archiveSourceReferences } from "../../packages/scope/src/archive-source
 import { stopArchivePrefix } from "../../packages/scope/src/archive-prefix.ts";
 import { ArchiveStopped } from "../../packages/scope/src/archive-budget.ts";
 
-export interface GrowArchiveEnvironment extends ArtifactsBindings { GROW_ARCHIVE_CONFIG?: string }
+export interface GrowArchiveEnvironment extends ArtifactsBindings { GROW_ARCHIVE_CONFIG?: string; ARCHIVE_RESTART_DIRECTIVE?: string }
 export function growArchiveConfiguration(env: GrowArchiveEnvironment): (ArchiveHostConfiguration & { readonly repositoryName: string; readonly service: string; readonly maxBytes: number }) | null {
   try {
     const host = artifactsConfiguration(env.ARTIFACTS_CONFIG);

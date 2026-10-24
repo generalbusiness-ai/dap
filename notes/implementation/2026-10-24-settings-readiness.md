@@ -69,3 +69,27 @@ The measured outer control commands took 7.23 and 7.36 seconds of wall time,
 and 8.45 and 8.73 seconds of CPU time. Their nested child costs overlap and
 are not added. These are local partial measurements, not total implementation
 costs or a portable performance claim.
+
+## Approved archive integration, gate pending
+
+Approved archive restart landed in Main
+`55e4be6cdc0300b0a1865c237be3097cfb232edd`, with tree
+`b6ff4b88a32d7125c290672ff07c15e4467123d2`, before this normal ancestry
+merge into the R9 branch. Archive approval `6fa5bec4` and root ratification
+`901d16f5` are event references; the landed receipt is
+`db1d03fd379146b8db81c49a6914e10f481de5fc`.
+
+The integration preserves R9 production and test bytes and the sibling
+`deploy:scope --keep-vars` change. Archive production and tests retain
+their approved Main bytes. The shared tripwire map is the exact union of
+R9's eight actual seals and archive's eight slots for seven owners,
+including both object slots and the new directive parser. No owner source
+was adapted and no new parser run was needed for this union.
+
+The earlier 47 assertions and two controls remain the qualified historical
+results above, not new results on the merged tree. Archive changes the
+Scope object and shared test-worker import closure; the final ordinary R9
+gate must validate this actual integrated checkpoint before review. No
+extra healthy focused run, compiler, compatibility setup, provider call or
+deployment has run for this merge. Gate, exact-head review and landing of
+this R9 change remain pending.
