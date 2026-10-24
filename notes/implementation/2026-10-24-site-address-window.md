@@ -42,9 +42,12 @@ publication/render fixtures add only the existing index binding and explicit
 fixture-owned address, avoiding artificial cross-fixture quota sharing; their
 assertions and scenarios remain unchanged.
 
-All validation remains unrun: affected compilers/tests, actual maintained seals,
-the gate and exact-head review. Existing mapped worker, room fetch, Site route
-and serving-admission owners changed; the new Site counter also needs a reviewed
-owner seal. No parser was executed and no seal value is invented. R4 token reuse,
+The maintained producer computed all five owner seals at clean
+`a14daa75e41dc44f727ca7b2ffa4d065fe26c999`, tree
+`286f5583b73a3b7c04dae084d8dcc79dffa14c46`. Its pinned Source, tools and clean
+checkpoint agreed before and after the calls. Four existing map values and
+one new Site-window row were adopted from
+`/private/tmp/artroom-r4-site-window-seal-actual-20261024-v1.json`.
+Affected compilers/tests, the gate and exact-head review remain unrun. R4 token reuse,
 R13 expiry/member quota and R10/R11 trust remain separate. Archive work retains
 priority over validation of this slice.
