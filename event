@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c93fab5b119276ad0a9e80c32d43541c7d8723a1","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-source-cost.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c98eeee32052d89f66ac4658d9bac167a17a02fc","text":"Merge retired a covered predecessor; the successor is at apps/room/page/test/record.scope.test.ts."}
