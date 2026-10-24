@@ -6,7 +6,7 @@ import { captureJournalParentFrontier, JournalWork, journalV2PassPath, type Jour
 import { JournalObjects } from "../../git/src/journal-objects.ts";
 import { patchJournalV2Tree } from "../../git/src/journal-v2-tree.ts";
 import { ArchiveFrontiers, type ArchiveFrontierPrepared, type ArchiveFrontierBootstrap, type ArchiveFrontierBootstrapPrepared } from "../src/archive-frontier-store.ts";
-import { ARCHIVE_FRONTIER_BYTES, ARCHIVE_FRONTIER_ENCODING_BOUND, archiveFrontierEncodingBound, forecastArchiveFrontierFinish } from "../src/archive-frontier-cost.ts";
+import { ARCHIVE_FRONTIER_BYTES, ARCHIVE_FRONTIER_ENCODING_BOUND, archiveFrontierEncodingBound, archiveFrontierRowContextBound, forecastArchiveFrontierFinish } from "../src/archive-frontier-cost.ts";
 import { ArchiveBudget } from "../src/archive-budget.ts";
 import { ArchiveRows, type ArchiveMark } from "../src/archive-row.ts";
 import { at, create } from "./fixtures-native.ts";
@@ -165,7 +165,19 @@ test("frontier size and work are admitted before body reads or writes, without r
   const lane = await create(), made = await fixture(lane.at, await lane.head());
   await lane.inside(async state => {
     const sql = archiveSql(state), queries: string[] = [];
-    const counted: Sql = { ...sql, exec(query, ...args) { queries.push(query); return sql.exec(query, ...args); } };
+    const projectionPrefix = "SELECT json_extract(v, '$.at') AS at,";
+    let raceBeforeProjection: string | null = null, projectedRaceRows: number | null = null;
+    const counted: Sql = { ...sql, exec(query, ...args) {
+      queries.push(query);
+      const racing = raceBeforeProjection !== null && query.startsWith(projectionPrefix);
+      if (racing) {
+        const replacement = raceBeforeProjection!; raceBeforeProjection = null;
+        // Deliberate test-only intervening write inside stage's transaction.
+        sql.exec("UPDATE meta SET v = ? WHERE k = ?", replacement, "archive-row-1").toArray();
+      }
+      const cursor = sql.exec(query, ...args);
+      return racing ? { toArray() { const rows = cursor.toArray(); projectedRaceRows = rows.length; return rows; } } : cursor;
+    } };
     const frontiers = store(counted, lane.at);
     await expect(frontiers.readConfirmed(made.binding, new ArchiveBudget({ metadata: 0 }, () => 0))).rejects.toThrow("archive-limit");
     expect(queries).toEqual([]);
@@ -202,18 +214,96 @@ test("frontier size and work are admitted before body reads or writes, without r
     const validating = budget(); await frontiers.prepare(made.frontier, made.mark, null, validating);
     if (defaultForecast.ok) for (const key of Object.keys(defaultForecast.cost) as (keyof typeof defaultForecast.cost)[])
       expect(validating.admitted()[key], `Default unknown-frontier ${key}`).toBeLessThanOrEqual(defaultForecast.cost[key]);
-    const finishing = budget(), exact = await frontiers.prepareFromSource(made.source, made.mark, null, finishing);
+    const markedNative = rows.loadSnapshot(budget())!, contextBytes = archiveFrontierRowContextBound(markedNative.row);
+    expect(contextBytes).toBeGreaterThanOrEqual(1024); expect(contextBytes).toBeLessThan(32 * 1024);
+    const contextForecast = forecastArchiveFrontierFinish({ hasBase: false, through: made.mark.through.seq, captureFromSource: true,
+      rowContextBytes: contextBytes, markUnits: made.mark.manifest.length, markedRowBytes: rowSize as number });
+    expect(contextForecast.ok).toBe(true);
+    const finishing = budget(), exact = await frontiers.prepareFromSource(made.source, made.mark, null, finishing, contextBytes);
     expect(finishing.admitted().nodes, "Source-owned preparation visits the nine trees once").toBe(9);
+    // Compare two actual stage debits on identical native bytes. The default
+    // token above retains 32 KiB; the source-owned token uses a checked bound.
+    queries.length = 0;
+    const narrowStage = budget();
+    expect(() => sql.transaction(() => { frontiers.stage(exact, narrowStage); throw Error("TEST narrow context rollback"); })).toThrow("TEST narrow context rollback");
+    expect(values(sql)).toEqual([]); expect(rows.loadSnapshot(budget())!.bytes).toBe(markedNative.bytes);
+    const scalarIndex = queries.findIndex(query => query.startsWith("SELECT octet_length(json_extract("));
+    const projectionIndex = queries.findIndex(query => query.startsWith(projectionPrefix));
+    expect(scalarIndex).toBeGreaterThanOrEqual(0); expect(projectionIndex).toBeGreaterThan(scalarIndex);
+    expect(queries[scalarIndex]).toContain("AS atBytes"); expect(queries[scalarIndex]).toContain("AS repositoryBytes");
+    expect(queries[scalarIndex]).toContain("AS confirmedBytes");
+    expect(narrowStage.admitted().calls).toBe(spent.calls);
+    expect(narrowStage.admitted().metadata).toBeLessThan(spent.metadata);
+    expect(narrowStage.admitted().inputWork).toBeLessThan(spent.inputWork);
+    if (forecast.ok && contextForecast.ok) {
+      expect(forecast.cost.nodes).toBe(contextForecast.cost.nodes); expect(forecast.cost.calls).toBe(contextForecast.cost.calls);
+      // Finish has two row checks. Its saving must match their actual
+      // per-check difference, including native metadata folded into work.
+      expect(forecast.cost.metadata - contextForecast.cost.metadata).toBe(2 * (spent.metadata - narrowStage.admitted().metadata));
+      expect(forecast.cost.inputWork - contextForecast.cost.inputWork).toBe(2 * (spent.inputWork - narrowStage.admitted().inputWork));
+    }
+    const largerRepository = { ...markedNative.row.repository, namespace: markedNative.row.repository.namespace + "x".repeat(contextBytes) };
+    expect(utf8(canonicalize(largerRepository)).length).toBeLessThanOrEqual(25600);
+    const largerContext = canonicalize({ ...markedNative.row, repository: largerRepository });
+    // Growth after preparation is refused by numeric sizes before context
+    // strings cross the SQL boundary. The failed call cannot write a key.
+    sql.exec("UPDATE meta SET v = ? WHERE k = ?", largerContext, "archive-row-1").toArray();
+    queries.length = 0;
+    try {
+      expect(() => frontiers.stage(exact, budget())).toThrow("archive-row-limit");
+      expect(queries.some(query => query.startsWith("SELECT octet_length(json_extract("))).toBe(true);
+      expect(queries.some(query => query.startsWith(projectionPrefix))).toBe(false);
+      expect(queries.every(query => query.startsWith("SELECT "))).toBe(true); expect(values(sql)).toEqual([]);
+      expect(sql.exec("SELECT v FROM meta WHERE k = ?", "archive-row-1").toArray()[0]!["v"]).toBe(largerContext);
+    } finally { sql.exec("UPDATE meta SET v = ? WHERE k = ?", markedNative.bytes, "archive-row-1").toArray(); }
+    // A same-total-size race cannot evade the individual measured-length
+    // fence: grow repository text while consuming inert trailing padding.
+    const extra = utf8(largerContext).length - utf8(markedNative.bytes).length;
+    expect(extra).toBeGreaterThan(0);
+    const paddedBefore = markedNative.bytes + " ".repeat(extra + 64), paddedAfter = largerContext + " ".repeat(64);
+    expect(utf8(paddedAfter).length).toBe(utf8(paddedBefore).length);
+    sql.exec("UPDATE meta SET v = ? WHERE k = ?", paddedBefore, "archive-row-1").toArray();
+    queries.length = 0; projectedRaceRows = null; raceBeforeProjection = paddedAfter;
+    try {
+      expect(() => frontiers.stage(exact, budget())).toThrow("archive-row-conflict");
+      expect(raceBeforeProjection).toBeNull();
+      expect(projectedRaceRows, "Refuse the enlarged repository before any projected row crosses SQL").toBe(0);
+      expect(queries.some(query => query.startsWith("SELECT octet_length(json_extract("))).toBe(true);
+      expect(queries.filter(query => query.startsWith(projectionPrefix))).toHaveLength(1);
+      expect(queries.every(query => query.startsWith("SELECT "))).toBe(true); expect(values(sql)).toEqual([]);
+      expect(sql.exec("SELECT v FROM meta WHERE k = ?", "archive-row-1").toArray()[0]!["v"]).toBe(paddedBefore);
+    } finally { raceBeforeProjection = null; sql.exec("UPDATE meta SET v = ? WHERE k = ?", markedNative.bytes, "archive-row-1").toArray(); }
+    // Equal lengths still require the original scope and repository hash
+    // checks. These rows pass the size fences, then fail identity validation.
+    const wrongInc = markedNative.row.at.inc === "in_aaaaaaaaaaaaaaaaaaaaaaaaaa" ? "in_bbbbbbbbbbbbbbbbbbbbbbbbbb" : "in_aaaaaaaaaaaaaaaaaaaaaaaaaa";
+    const wrongName = (markedNative.row.repository.name.startsWith("x") ? "y" : "x") + markedNative.row.repository.name.slice(1);
+    const wrongIdentities = [
+      canonicalize({ ...markedNative.row, at: { ...markedNative.row.at, inc: wrongInc } }),
+      canonicalize({ ...markedNative.row, repository: { ...markedNative.row.repository, name: wrongName } }),
+    ];
+    for (const wrong of wrongIdentities) {
+      expect(wrong).not.toBe(markedNative.bytes); expect(utf8(wrong).length).toBe(utf8(markedNative.bytes).length);
+      queries.length = 0; projectedRaceRows = null; raceBeforeProjection = wrong;
+      try {
+        expect(() => frontiers.stage(exact, budget())).toThrow("archive-row-conflict");
+        expect(raceBeforeProjection).toBeNull(); expect(projectedRaceRows).toBe(1);
+        expect(queries.every(query => query.startsWith("SELECT "))).toBe(true); expect(values(sql)).toEqual([]);
+        expect(rows.loadSnapshot(budget())!.bytes).toBe(markedNative.bytes);
+      } finally { raceBeforeProjection = null; }
+    }
     sql.transaction(() => { frontiers.stage(exact, finishing); });
     sql.transaction(() => { frontiers.promote(exact, finishing); rows.confirm(made.mark.commit, budget()); });
     if (forecast.ok) for (const key of Object.keys(forecast.cost) as (keyof typeof forecast.cost)[])
       expect(finishing.admitted()[key], `Include all remaining frontier ${key}`).toBeLessThanOrEqual(forecast.cost[key]);
+    if (contextForecast.ok) for (const key of Object.keys(contextForecast.cost) as (keyof typeof contextForecast.cost)[])
+      expect(finishing.admitted()[key], `Include the bounded native context ${key}`).toBeLessThanOrEqual(contextForecast.cost[key]);
     // A loaded base keeps its already-spent validation. The next finish
     // must cover actual stage/promotion while fencing changed larger keys
     // before their bodies, including within the independent 64 KiB cap.
     const base = await frontiers.readConfirmed(made.binding, budget()); expect(base).not.toBeNull();
     const next = await fixture(lane.at, { ...made.mark.through, seq: made.mark.through.seq + 1 }, made.mark.commit, made.mark.through.seq + 1);
-    const future = budget(), ready = await frontiers.prepareFromSource(next.source, next.mark, base, future);
+    const nextContextBytes = archiveFrontierRowContextBound(rows.load(budget())!);
+    const future = budget(), ready = await frontiers.prepareFromSource(next.source, next.mark, base, future, nextContextBytes);
     expect(future.admitted().nodes, "Loaded-base source-owned preparation visits nine trees once").toBe(9);
     rows.markAttempt(next.mark, at(2), budget());
     const marked = rows.loadSnapshot(budget())!.bytes;
@@ -240,7 +330,7 @@ test("frontier size and work are admitted before body reads or writes, without r
     const nextRowSize = sql.exec("SELECT octet_length(v) AS size FROM meta WHERE k = ?", "archive-row-1").toArray()[0]!["size"];
     expect(typeof nextRowSize).toBe("number");
     const nextForecast = forecastArchiveFrontierFinish({ hasBase: true, through: next.mark.through.seq, captureFromSource: true,
-      markUnits: next.mark.manifest.length, markedRowBytes: nextRowSize as number });
+      rowContextBytes: nextContextBytes, markUnits: next.mark.manifest.length, markedRowBytes: nextRowSize as number });
     expect(nextForecast.ok).toBe(true);
     sql.transaction(() => { frontiers.stage(ready, future); });
     const staged = values(sql).find(row => row["k"] === PENDING)!["v"] as string;

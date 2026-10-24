@@ -16,7 +16,7 @@ export interface JournalAppendFixedFootprint {
 /** Complements prepared append-edge prices. Original read maxima provide
  * a conservative default when exact parent sizes are not retained. Covers
  * both commit reads/parses and both head-blob reads/parses; their tree walks
- * belong to the append-edge forecast. It grants no I/O admission. */
+ * are shared with the append-edge comparison. It grants no I/O admission. */
 export function forecastJournalAppendFixed(shape: JournalAppendFixedFootprint = {
   oldCommitBytes: 1024, newCommitBytes: 1024, oldHeadBytes: 1024, newHeadBytes: 1024,
 }): JournalAppendForecast {

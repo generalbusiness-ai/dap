@@ -7,6 +7,7 @@ import { captureJournalParentFrontier, journalRef, type JournalArchive, type Jou
 import { ARCHIVE_BOUNDS, ArchiveBudget, ArchiveStopped } from "./archive-budget.ts";
 import { archiveParent, copyArchiveObjects } from "./archive-parent.ts";
 import { ArchiveFrontiers, type ArchiveFrontierBase, type ArchiveFrontierPrepared } from "./archive-frontier-store.ts";
+import { archiveFrontierRowContextBound } from "./archive-frontier-cost.ts";
 import { admitArchiveMigration } from "./archive-bootstrap-cost.ts";
 import { planPublishedArchiveConversion, rebuildArchive, rebuildArchivePass } from "./archive-build.ts";
 import { planAdaptiveArchivePass, planRootAdaptiveArchivePass } from "./archive-adaptive.ts";
@@ -339,7 +340,7 @@ export class ArchiveDriver {
             const object = all.get(id);
             return object ? { type: object.type, size: object.data.length, data: object.data.length <= maximum ? object.data : null } : null;
           },
-        }, mark, base ?? conversionBase, budget);
+        }, mark, base ?? conversionBase, budget, archiveFrontierRowContextBound(row));
         step = "mark";
         row = this.#options.sql.transaction(() => {
           const marked = rows.markAttempt(mark, next, budget);

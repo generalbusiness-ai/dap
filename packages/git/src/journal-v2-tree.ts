@@ -157,9 +157,9 @@ export class JournalV2TreePatch {
     } finally { this.#preparing = false; }
   }
   /** Future finish with a fresh maker of this format, plus one objects()
-   * exposure. Separate appendEdges prices changed edges and both head tree
-   * walks when a parent and selected head exist. It excludes commit/head
-   * blob reads/parses (forecastJournalAppendFixed), source/body validation
+   * exposure. Separate appendEdges prices changed edges, including the
+   * shared head path when a parent and selected head exist. It excludes
+   * commit/head blob reads/parses (forecastJournalAppendFixed), source/body validation
    * and provider work. This reads only prepared tree metadata. Forecast
    * scratch work is charged now; estimated work is still owed in full.
    * Unselected prepared paths receive no future emission charge or refund. */
@@ -172,7 +172,7 @@ export class JournalV2TreePatch {
     const width = format === "sha1" ? 20 : 32;
     const cost: JournalCost = { entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0, inputWork: 0 };
     const layout: PatchLayoutWork = { objects: 0, trees: 0, names: 0, outputWork: 0, objectBytes: 0 };
-    let fits = true, appendBlobBytes = 0, appendBlobMaximum = 0;
+    let fits = true, appendBlobBytes = 0, appendBlobMaximum = 0, appendBlobs = 0;
     const metadata = (bytes: number) => { cost.metadata += bytes; cost.inputWork += bytes; };
     const make = (type: JournalObjectType, bytes: number) => {
       if (bytes > this.work.limits.objectBytes) fits = false;
@@ -192,7 +192,11 @@ export class JournalV2TreePatch {
       const path = file.path, bytes = file.bytes;
       if (typeof path !== "string" || path.length > 1024 || !readJournalV2Path(path)) return refuseJournal("tree");
       if (!natural(bytes)) return refuseJournal("input", path);
-      appendBlobBytes += bytes; appendBlobMaximum = Math.max(appendBlobMaximum, bytes);
+      // Both bounded head reads/parses belong to the fixed price. The
+      // comparison visits its tree path once and does not reread that blob.
+      if (path !== "journal/v2/head.json") {
+        appendBlobBytes += bytes; appendBlobMaximum = Math.max(appendBlobMaximum, bytes); appendBlobs++;
+      }
       this.work.metadata(128 + path.length * 4); this.work.input(path.length, 4);
       if (selected.has(path)) return refuseJournal("tree", path);
       selected.add(path);
@@ -254,16 +258,16 @@ export class JournalV2TreePatch {
       }
       // Use the primitive sizes captured in the original validated loop,
       // never revisit caller getters or the borrowed file list.
-      const blobs = journalAppendReadCost(appendBlobBytes, selected.size);
+      const blobs = journalAppendReadCost(appendBlobBytes, appendBlobs);
       cost.attempts += blobs.attempts; cost.calls += blobs.calls;
       cost.metadata += blobs.metadata; cost.inputWork += blobs.inputWork;
-      used.objects += selected.size; used.objectBytes = Math.max(used.objectBytes, appendBlobMaximum);
+      used.objects += appendBlobs; used.objectBytes = Math.max(used.objectBytes, appendBlobMaximum);
       let node = this.#root;
       for (const part of ["journal", "v2", null]) {
         const state = nodes.get(node);
         if (!state || node.previous === null || node.rows === null) return refuseJournal("parent");
-        cost.nodes += 2;
-        read(node.baseBytes, node.rows.size); read(state.bytes, state.rows);
+        // These exact prefix maps are already covered by the changed-edge
+        // loop. Keep their presence/parent checks without a second walk.
         if (part !== null) node = node.children.get(part)!;
       }
       // Append validation owns a fresh JournalWork but the SAME native

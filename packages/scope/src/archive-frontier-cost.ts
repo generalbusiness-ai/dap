@@ -2,6 +2,7 @@
  * not a new allowance, transport limit or credit for locally held bytes. */
 import { natural } from "@generalbusiness/dap-bytes";
 import { ArchiveStopped, ARCHIVE_BOUNDS, type ArchiveCost } from "./archive-budget.ts";
+import type { ArchiveRow } from "./archive-row.ts";
 import { ARCHIVE_ROW_BYTES } from "./archive-row-cost.ts";
 import { JOURNAL_PARENT_FRONTIER_BYTES, JOURNAL_PARENT_FRONTIER_OBJECTS, forecastJournalParentFrontier, journalParentFrontierProfile } from "@generalbusiness/dap-git/journal";
 
@@ -36,6 +37,20 @@ export function archiveFrontierMarkCost(units: number): Partial<ArchiveCost> {
   return { metadata: bytes * 3, inputWork: bytes * 12 };
 }
 
+/** A scheduling ceiling from an already checked row, never identity authority.
+ * Six bytes per code unit covers JSON escapes. One KiB covers JSON keys,
+ * numbers, separators and an optional future anchorsPublished flag; another
+ * KiB is retained by the measured projection's descriptor fence. No body
+ * is copied. */
+export function archiveFrontierRowContextBound(row: Pick<ArchiveRow, "at" | "repository" | "confirmed">): number {
+  const repo = row.repository, old = row.confirmed;
+  const units = row.at.scope.length + row.at.inc.length + row.at.kind.length
+    + repo.host.length + repo.id.length + repo.name.length + repo.namespace.length
+    + (old === null ? 0 : old.commit.length + old.through.hash.length);
+  if (!natural(units)) throw new ArchiveStopped("unavailable");
+  return Math.min(32 * 1024, 2048 + units * 6);
+}
+
 export interface ArchiveFrontierFinishShape {
   /** A validated v2 base is already loaded; its read is not credited back. */
   readonly hasBase: boolean;
@@ -44,6 +59,8 @@ export interface ArchiveFrontierFinishShape {
   /** Only prepareFromSource owns capture through the private store boundary.
    * Unspecified/unknown-frontier callers retain capture + full validation. */
   readonly captureFromSource?: boolean;
+  /** A narrower projection ceiling only. All native identity checks remain. */
+  readonly rowContextBytes?: number;
   /** UTF-16 units of manifest + optional anchor publication. */
   readonly markUnits: number;
   /** Upper bound of the native row after Mark+first attempt. */
@@ -62,6 +79,8 @@ export function forecastArchiveFrontierFinish(shape: ArchiveFrontierFinishShape)
   if (typeof shape.hasBase !== "boolean" || (shape.captureFromSource !== undefined && typeof shape.captureFromSource !== "boolean")
     || !natural(shape.markUnits) || !natural(shape.markedRowBytes)
     || shape.markedRowBytes === 0 || shape.markedRowBytes > ARCHIVE_ROW_BYTES) throw new ArchiveStopped("unavailable");
+  const contextBytes = shape.rowContextBytes ?? 32 * 1024;
+  if (!natural(contextBytes) || contextBytes < 1024 || contextBytes > 32 * 1024) throw new ArchiveStopped("unavailable");
   const cost: ArchiveCost = { entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0, inputWork: 0 };
   const add = (part: Partial<ArchiveCost>) => { for (const key of Object.keys(cost) as (keyof ArchiveCost)[]) cost[key] += part[key] ?? 0; };
   const profile = journalParentFrontierProfile(shape.through), encoded = archiveFrontierEncodingBound(shape.through);
@@ -89,8 +108,11 @@ export function forecastArchiveFrontierFinish(shape: ArchiveFrontierFinishShape)
   // The canonical pending object is contained in the marked row. Its
   // UTF-8 bytes cannot exceed either that row or its independent escape bound.
   const markText = Math.min(shape.markedRowBytes, shape.markUnits * 6 + 16 * 1024);
-  for (let index = 0; index < 2; index++) add({ calls: 2, metadata: 32 * 1024 * 5 + 96 + shape.markedRowBytes + markText * 2,
-    inputWork: shape.markedRowBytes * 12 + markText * 6 + 32 * 1024 * 13 + 96 });
+  // Each context check first pays a full-row JSON scan that returns only
+  // scalar lengths. The following projection repeats that work, fences the
+  // exact lengths in SQL, and reserves its bounded strings/parse/hash copies.
+  for (let index = 0; index < 2; index++) add({ calls: 3, metadata: contextBytes * 5 + 608 + shape.markedRowBytes * 2 + markText * 2,
+    inputWork: shape.markedRowBytes * 25 + markText * 6 + contextBytes * 13 + 608 });
   add(archiveFrontierWriteCost(encoded));
   add(archiveFrontierWriteCost(encoded, 2));
   if ((Object.keys(cost) as (keyof ArchiveCost)[]).some(key => !natural(cost[key]) || cost[key] > ARCHIVE_BOUNDS[key])) return { ok: false, reason: "limit" };

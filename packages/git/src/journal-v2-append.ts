@@ -7,7 +7,7 @@ import { JournalObjectReader, journalFormat, journalId, type JournalFormat, type
 import { sameJournalScope } from "./journal-selection.ts";
 import { journalV2Head } from "./journal-v2-manifest.ts";
 import { journalV2Directory, readJournalV2Path } from "./journal-v2-path.ts";
-import { journalV2File, journalV2TreeBytes } from "./journal-v2-tree.ts";
+import { journalV2TreeBytes } from "./journal-v2-tree.ts";
 import { JournalLayoutRefusal, JournalWork, refuseJournal, type JournalBudget, type JournalLayoutReason } from "./journal-work.ts";
 
 export async function verifyJournalAppend(options: { readonly format: JournalFormat; readonly at: ScopeRef;
@@ -21,13 +21,7 @@ export async function verifyJournalAppend(options: { readonly format: JournalFor
     const previous = reader.commit(await reader.read(old, "commit", 1024));
     const next = reader.commit(await reader.read(id, "commit", 1024));
     if (next.parent !== old) return refuseJournal("parent");
-    const head = async (tree: string) => {
-      const blob = await journalV2File(reader, tree, "journal/v2/head.json", work);
-      if (blob === null) return refuseJournal("parent");
-      return journalV2Head(await reader.read(blob, "blob", 1024), work);
-    };
-    const before = await head(previous.tree), after = await head(next.tree);
-    if (!sameJournalScope(before.scope, at) || !sameJournalScope(after.scope, at) || after.through <= before.through) return refuseJournal("parent");
+    let headSeen = false;
     async function tree(newId: string, oldId: string | null, prefix: string, depth: number): Promise<void> {
       work.depth(depth); work.budget.spend({ nodes: 1 });
       const rows = async (key: string): Promise<readonly JournalTreeRow[]> => reader.tree(await reader.read(key, "tree", journalV2TreeBytes(prefix)));
@@ -38,10 +32,23 @@ export async function verifyJournalAppend(options: { readonly format: JournalFor
       work.metadata((was.length + now.length) * 128);
       const oldRows = new Map(was.map(row => [row.name, row])), newRows = new Map(now.map(row => [row.name, row]));
       for (const row of was) if (!newRows.has(row.name)) return refuseJournal("parent");
+      // The comparison already owns both exact v2 maps. Authenticate the
+      // changed head before following any changed payload edge.
+      if (prefix === "journal/v2/") {
+        const prior = oldRows.get("head.json"), row = newRows.get("head.json");
+        if (!prior || !row) return refuseJournal("parent");
+        if (prior.mode !== "100644" || row.mode !== "100644") return refuseJournal("tree");
+        const before = journalV2Head(await reader.read(prior.id, "blob", 1024), work);
+        const after = journalV2Head(await reader.read(row.id, "blob", 1024), work);
+        if (prior.id === row.id || !sameJournalScope(before.scope, at) || !sameJournalScope(after.scope, at)
+          || after.through <= before.through) return refuseJournal("parent");
+        headSeen = true;
+      }
       for (const row of now) {
         work.check(); const prior = oldRows.get(row.name), path = prefix + row.name;
         if (path.length > 1024) return work.stop();
         if (prior && prior.mode !== row.mode) return refuseJournal("tree");
+        if (path === "journal/v2/head.json") continue;
         // Only a hash checked edge of this exact parent at this exact path
         // can avoid traversal. A matching ID elsewhere grants nothing.
         if (prior?.id === row.id) continue;
@@ -54,6 +61,7 @@ export async function verifyJournalAppend(options: { readonly format: JournalFor
       }
     }
     await tree(next.tree, previous.tree, "", 0); work.check();
+    if (!headSeen) return refuseJournal("parent");
     return { ok: true };
   } catch (error) {
     if (error instanceof JournalLayoutRefusal) return { ok: false, reason: error.reason };

@@ -22,7 +22,7 @@ export interface ArchiveFrontierBootstrap { readonly binding: JournalParentBindi
 export interface ArchiveFrontierBootstrapPrepared { readonly frontier: JournalParentFrontier }
 export interface ArchiveFrontierPrepared { readonly frontier: JournalParentFrontier; readonly base: ArchiveFrontierBase | null }
 type BaseState = { readonly owner: ArchiveFrontiers; readonly pair: Pair; readonly frontier: JournalParentFrontier };
-type PreparedState = BaseState & { readonly mark: string; readonly markBytes: number; readonly markHash: Digest; readonly encoded: string; readonly promoted: string; readonly base: ArchiveFrontierBase | null; readonly previous: ArchivedPosition | null };
+type PreparedState = BaseState & { readonly rowContextBytes: number; readonly mark: string; readonly markBytes: number; readonly markHash: Digest; readonly encoded: string; readonly promoted: string; readonly base: ArchiveFrontierBase | null; readonly previous: ArchivedPosition | null };
 const bases = new WeakMap<ArchiveFrontierBase, BaseState>();
 const conversions = new WeakMap<ArchiveFrontierConversionBase, { readonly owner: ArchiveFrontiers; readonly pair: Pair; readonly position: ArchivedPosition }>();
 const prepared = new WeakMap<ArchiveFrontierPrepared, PreparedState>();
@@ -222,10 +222,11 @@ export class ArchiveFrontiers {
   /** Own and authenticate a new writer's source exactly once. Captured
    * bytes stay private until #prepared has encoded them and made the public
    * copy. Unknown/persisted frontiers still require full validation. */
-  prepareFromSource(source: JournalObjectSource, mark: ArchiveMark, base: ArchiveFrontierBase | ArchiveFrontierConversionBase | null, budget: ArchiveBudget): Promise<ArchiveFrontierPrepared> {
-    return this.#prepare(source, mark, base, budget, true);
+  prepareFromSource(source: JournalObjectSource, mark: ArchiveMark, base: ArchiveFrontierBase | ArchiveFrontierConversionBase | null, budget: ArchiveBudget, rowContextBytes = 32 * 1024): Promise<ArchiveFrontierPrepared> {
+    return this.#prepare(source, mark, base, budget, true, rowContextBytes);
   }
-  async #prepare(value: unknown, mark: ArchiveMark, base: ArchiveFrontierBase | ArchiveFrontierConversionBase | null, budget: ArchiveBudget, fromSource: boolean): Promise<ArchiveFrontierPrepared> {
+  async #prepare(value: unknown, mark: ArchiveMark, base: ArchiveFrontierBase | ArchiveFrontierConversionBase | null, budget: ArchiveBudget, fromSource: boolean, rowContextBytes = 32 * 1024): Promise<ArchiveFrontierPrepared> {
+    if (!natural(rowContextBytes) || rowContextBytes < 1024 || rowContextBytes > 32 * 1024) return refuse();
     const m = markSnapshot(mark, this.#identity, budget), state = base === null ? null : bases.get(base as ArchiveFrontierBase);
     const conversion = base === null ? null : conversions.get(base as ArchiveFrontierConversionBase);
     if (base !== null && ((!state || state.owner !== this) && (!conversion || conversion.owner !== this))) return refuse();
@@ -237,12 +238,12 @@ export class ArchiveFrontiers {
       ? await captureJournalParentFrontier(bound, value as JournalObjectSource, budget, m.value.parent)
       : await validateJournalParentFrontier(value, bound, budget, m.value.parent);
     if (state && frontier.first !== state.frontier.through.seq + 1 || !state && frontier.first !== 0) return refuse("conflict");
-    return this.#prepared(pair, frontier, m, state ? base as ArchiveFrontierBase : null, previous, budget);
+    return this.#prepared(pair, frontier, m, state ? base as ArchiveFrontierBase : null, previous, budget, rowContextBytes);
   }
-  #prepared(pair: Pair, frontier: JournalParentFrontier, m: { text: string; bytes: number; hash: Digest }, base: ArchiveFrontierBase | null, previous: ArchivedPosition | null, budget: ArchiveBudget): ArchiveFrontierPrepared {
+  #prepared(pair: Pair, frontier: JournalParentFrontier, m: { text: string; bytes: number; hash: Digest }, base: ArchiveFrontierBase | null, previous: ArchivedPosition | null, budget: ArchiveBudget, rowContextBytes = 32 * 1024): ArchiveFrontierPrepared {
     const encoded = encode(frontier, m.hash, budget), promoted = encode(frontier, null, budget);
     const token = Object.freeze({ frontier: copy(frontier, budget), base });
-    prepared.set(token, { owner: this, pair, frontier, mark: m.text, markBytes: m.bytes, markHash: m.hash, encoded, promoted, base, previous }); return token;
+    prepared.set(token, { owner: this, pair, frontier, rowContextBytes, mark: m.text, markBytes: m.bytes, markHash: m.hash, encoded, promoted, base, previous }); return token;
   }
   async readPending(value: JournalParentBinding, mark: ArchiveMark, budget: ArchiveBudget): Promise<ArchiveFrontierPrepared | null> {
     const pair = this.#sql.transaction(() => this.#pair(budget));
@@ -273,9 +274,19 @@ export class ArchiveFrontiers {
     const size = sizes[0]?.["size"];
     if (sizes.length !== 1 || sizes[0]?.["type"] !== "text" || !natural(size) || size === 0) return refuse();
     if (size > ARCHIVE_ROW_BYTES) return refuse("limit");
-    budget.spend({ metadata: 32 * 1024 * 4 + size + state.markBytes * 2, inputWork: archiveRowLoadWork(size) + state.markBytes * 6 + 32 * 1024 * 12 });
-    const rows = budget.native(this.#sql, () => ({ metadata: 32 * 1024, inputWork: 0 })).exec(
-      "SELECT json_extract(v, '$.at') AS at, json_extract(v, '$.repository') AS repository, json_extract(v, '$.format') AS format, json_extract(v, '$.confirmed') AS confirmed FROM meta WHERE k = ? AND typeof(v) = 'text' AND octet_length(v) = ? AND json_valid(v) AND octet_length(json_extract(v, '$.at')) <= 1024 AND octet_length(json_extract(v, '$.repository')) <= 25600 AND (json_type(v, '$.confirmed') = 'null' OR octet_length(json_extract(v, '$.confirmed')) <= 1024) AND json_extract(v, '$.v') = 1 AND json_type(v, '$.stopped') = 'null' AND json_extract(v, '$.attempts') BETWEEN 1 AND 32 AND json_extract(v, '$.pending') = ? LIMIT 1", ROW, size, state.mark).toArray();
+    // Pay a full-row JSON scan before asking for numeric sizes only. No
+    // context string crosses the SQL boundary until its projection is paid.
+    budget.spend({ inputWork: archiveRowLoadWork(size) });
+    const measured = budget.native(this.#sql, () => ({ metadata: size + 512, inputWork: 0 })).exec(
+      "SELECT octet_length(json_extract(v, '$.at')) AS atBytes, octet_length(json_extract(v, '$.repository')) AS repositoryBytes, CASE WHEN json_type(v, '$.confirmed') = 'null' THEN 0 ELSE octet_length(json_extract(v, '$.confirmed')) END AS confirmedBytes FROM meta WHERE k = ? AND typeof(v) = 'text' AND octet_length(v) = ? AND json_valid(v) LIMIT 1", ROW, size).toArray();
+    const atBytes = measured[0]?.["atBytes"], repositoryBytes = measured[0]?.["repositoryBytes"], confirmedBytes = measured[0]?.["confirmedBytes"];
+    if (measured.length !== 1 || !natural(atBytes) || !natural(repositoryBytes) || !natural(confirmedBytes)
+      || atBytes > 1024 || repositoryBytes > 25600 || confirmedBytes > 1024) return refuse("conflict");
+    if (1024 + atBytes + repositoryBytes + confirmedBytes > state.rowContextBytes) return refuse("limit");
+    budget.spend({ metadata: state.rowContextBytes * 4 + size + state.markBytes * 2,
+      inputWork: archiveRowLoadWork(size) + state.markBytes * 6 + state.rowContextBytes * 12 });
+    const rows = budget.native(this.#sql, () => ({ metadata: state.rowContextBytes, inputWork: 0 })).exec(
+      "SELECT json_extract(v, '$.at') AS at, json_extract(v, '$.repository') AS repository, json_extract(v, '$.format') AS format, json_extract(v, '$.confirmed') AS confirmed FROM meta WHERE k = ? AND typeof(v) = 'text' AND octet_length(v) = ? AND json_valid(v) AND octet_length(json_extract(v, '$.at')) = ? AND octet_length(json_extract(v, '$.at')) <= 1024 AND octet_length(json_extract(v, '$.repository')) = ? AND octet_length(json_extract(v, '$.repository')) <= 25600 AND (CASE WHEN json_type(v, '$.confirmed') = 'null' THEN 0 ELSE octet_length(json_extract(v, '$.confirmed')) END) = ? AND (json_type(v, '$.confirmed') = 'null' OR octet_length(json_extract(v, '$.confirmed')) <= 1024) AND json_extract(v, '$.format') = ? AND json_extract(v, '$.v') = 1 AND json_type(v, '$.stopped') = 'null' AND json_extract(v, '$.attempts') BETWEEN 1 AND 32 AND json_extract(v, '$.pending') = ? LIMIT 1", ROW, size, atBytes, repositoryBytes, confirmedBytes, this.#identity.format, state.mark).toArray();
     const row = rows[0];
     if (rows.length !== 1 || !row || typeof row["at"] !== "string" || typeof row["repository"] !== "string" || row["format"] !== this.#identity.format
       || row["at"].length > 1024 || row["repository"].length > 25 * 1024 || typeof row["confirmed"] !== "string" && row["confirmed"] !== null) return refuse("conflict");
