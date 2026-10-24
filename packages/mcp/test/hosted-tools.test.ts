@@ -51,7 +51,7 @@ test("a derived tool hidden for missing standing refuses direct invocation befor
   // Read authentication itself signs. The act/custody path must never begin.
   const signedBytes: string[] = [];
   let custodyCalls = 0;
-  const blocked = async (): Promise<never> => { custodyCalls++; throw new Error("A hidden call reached custody."); };
+  const blocked = async (): Promise<never> => { custodyCalls++; expect.fail("A hidden call reached custody."); };
   const custody = { lock: blocked, exclusive: blocked, read: blocked, write: blocked, unresolved: blocked, segment: blocked, segmented: blocked, admit: blocked, unadmit: blocked };
   const guarded = new McpService({ mode: "add", service: "https://scopes.test", fetch: peer.fetch, signer: { key: signer.key, sign: async bytes => { signedBytes.push(new TextDecoder().decode(bytes)); return signer.sign(bytes); } }, config: { read: async () => peer.config(), addRoot: async () => {} }, custody });
   expect((await guarded.call("rules.publish", { on: 0, fields: {}, idempotencyKey: "hidden" })).structuredContent).toEqual({ error: "unknown-tool", message: "No tool is named rules.publish in this list.", next: "Call tools/list." });
@@ -118,12 +118,12 @@ test("actual-target standing and definition selection refuse before signing, cus
     installPeer.scopes.get(installPeer.rules.scope)!.definition = TRUSTED_APPLICATION_COHORT.rules;
     let packages = 0, custodyCalls = 0;
     const writes: string[] = [];
-    const blocked = async (): Promise<never> => { custodyCalls++; throw new Error("Unadmitted installation reached custody"); };
+    const blocked = async (): Promise<never> => { custodyCalls++; expect.fail("Unadmitted installation reached custody"); };
     const install = new McpService({ mode: "add", ...(excludedDefinition ? { tools: ["membership"] } : {}), service: "https://scopes.test", fetch: installPeer.fetch,
       signer: { key: signer.key, sign: async bytes => { writes.push(new TextDecoder().decode(bytes)); return signer.sign(bytes); } },
       config: { read: async () => installPeer.config(), addRoot: async () => {} },
       custody: { lock: blocked, exclusive: blocked, read: blocked, write: blocked, unresolved: blocked, segment: blocked, segmented: blocked, admit: blocked, unadmit: blocked },
-      applicationFetch: async () => { packages++; throw new Error("Unadmitted installation fetched a package"); } });
+      applicationFetch: async () => { packages++; expect.fail("Unadmitted installation fetched a package"); } });
     const answer = await install.call("install_application", { uri: `git+https://packages.test/apps.git/@${"c".repeat(40)}/application.dap.json`, release: `sha256:${"c".repeat(64)}`, roles: [], values: {}, idempotencyKey: `unadmitted-install-${excludedDefinition}` });
     expect(answer.structuredContent).toEqual({ error: "unknown-tool", message: "No tool is named install_application in this list.", next: "Call tools/list." });
     expect([packages, custodyCalls]).toEqual([0, 0]);
