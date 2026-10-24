@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e085161b4f5c000a17700afb2c89c699d11ac98a","text":"Merge retired a covered predecessor; the successor is at package-lock.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e2ea3a1d95c6ea8efdc54007e6f1c424e702970d","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/definition-corpus/bytes-fixtures.ts."}
