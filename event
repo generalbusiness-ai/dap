@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:99201c013aa64c29009bcfbd0700b3527ef7948f","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/declared-view-routing.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:992df3265856c3abc07d9b4b2894041d80f928b0","text":"Merge retired a covered predecessor; the successor is at apps/counter/browser/projection-fixture.ts."}
