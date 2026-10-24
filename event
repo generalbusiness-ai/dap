@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5df71030c083c1ad9f6d7a4b73b211b85fba4842","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-23-archive-input-work/owning-v4/focused/vitest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:69e5e9e020c98a336c09b62749c869410903d969","text":"Merge retired a covered predecessor; the successor is at scripts/security-entry-points.test.mjs."}
