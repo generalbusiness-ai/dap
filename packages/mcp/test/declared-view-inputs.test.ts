@@ -4,7 +4,7 @@ import { configureInputDefinition } from "./support/definition-corpus-data.ts";
 import { expect, test } from "vitest";
 import type { DeclaredDefinition, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, keyIdOfSecret, parseStrict, sign } from "@generalbusiness/dap-bytes";
-import { applicationProjectionId, applicationProjectionQueryDigest, isApplicationJournalSource, packApplication2 } from "@generalbusiness/dap-bytes/application-v2";
+import { applicationProjectionId, applicationProjectionQueryDigest, isApplicationJournalSource, packApplication2 } from "@generalbusiness/dap-platform/application-v2";
 import { applicationCounterPacket2 } from "../../scope/test/fixtures.ts";
 import { DeclaredViewSource } from "../src/views/declared.ts";
 import { ViewSessions } from "../src/views/session.ts";

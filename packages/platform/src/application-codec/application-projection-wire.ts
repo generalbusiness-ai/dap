@@ -1,9 +1,9 @@
 /** Canonical bounded projection requests/replies. These forms authenticate
  * no viewer; a native read owner owes authorization and coverage. */
-import { freeze } from "./values.ts";
+import { freeze } from "@generalbusiness/dap-bytes";
 import { APPLICATION_PROJECTION_REFUSALS, APPLICATION_PROJECTION_WIRE_BOUNDS as B, type ApplicationProjectionData, type ApplicationProjectionQuery, type ApplicationProjectionRead } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, digestBytes, isDigest, isFactRef, isFieldValue, isHead, isRecord, isScopeRef, parseStrict, parseStrictBytes, unb64url, utf8 } from "./index.ts";
-import { timeMs } from "./ids.ts";
+import { b64url, canonicalize, digestBytes, isDigest, isFactRef, isFieldValue, isHead, isRecord, isScopeRef, parseStrict, parseStrictBytes, unb64url, utf8 } from "@generalbusiness/dap-bytes";
+import { timeMs } from "@generalbusiness/dap-bytes";
 import type { Digest } from "@generalbusiness/dap-contract";
 import { applicationJson } from "./application-json.ts";
 const whole = (value: unknown): value is number => typeof value === "number" && Number.isSafeInteger(value) && value >= 0 && !Object.is(value, -0);

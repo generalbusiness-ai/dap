@@ -1,7 +1,7 @@
 /** Presentation order over one complete native source, without changing its
  * retained read data. Native IDs break ties in both directions. */
 import type { ApplicationProjectionRow } from "@generalbusiness/dap-contract";
-import type { ApplicationItemView } from "@generalbusiness/dap-bytes/application-v2";
+import type { ApplicationItemView } from "@generalbusiness/dap-platform/application-v2";
 import { timeMs } from "@generalbusiness/dap-bytes";
 import { ViewError } from "./session.ts";
 

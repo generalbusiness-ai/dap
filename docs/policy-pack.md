@@ -1,4 +1,4 @@
-> **Inactive.** This page describes the policy pack of the earlier model. Nothing in the active packages implements it. It is kept, unedited, as source material for the deliveries that replace its parts (I2, I3 and I5). What is built now is described in [`docs/scopes.md`](scopes.md).
+> **Inactive.** This page describes the policy pack of the earlier model. Nothing in the active packages implements it. It is kept as source material for the deliveries that replace its parts (I2, I3 and I5). What is built now is described in [`docs/scopes.md`](scopes.md).
 
 # The default policy pack
 
@@ -35,24 +35,7 @@ export default policy(
 );
 ```
 
-Run the compiler from the repository root:
-
-```sh
-npm run compile-policy --workspace @generalbusiness/artroom-policy -- examples/demo-repo/.artroom
-```
-
-The directory is relative to where you run `npm`. npm runs the script in
-`packages/policy`, so the compiler reads the directory npm was started from
-(`INIT_CWD`). Without an argument it uses `.artroom`. The compiler writes
-`policy.json` only if the policy is valid (R-POL-1) and every owner-review
-path has an owner (see below). Otherwise it prints the problems and exits
-with status 1. The command above reproduces the committed demo `policy.json`
-byte for byte.
-
-The demo repository's complete policy is in
-[`examples/demo-repo/.artroom/policy.ts`](../examples/demo-repo/.artroom/policy.ts),
-and the compiled file is next to it as `policy.json`. To use every rule with your
-own owners, call `starterPolicy({ owners })` instead.
+The obsolete demo repository and its runnable example were removed.
 
 ## Owners must cover every path
 

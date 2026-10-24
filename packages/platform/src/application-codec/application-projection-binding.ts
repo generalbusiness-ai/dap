@@ -1,7 +1,7 @@
 /** Match a projection to the exact native schema it names. This does not
  * replace native whole-definition admission, authenticate or perform a read. */
 import type { DeclaredDefinition, FieldType } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, parseStrict } from "./index.ts";
+import { canonicalize, definitionDigest, parseStrict } from "@generalbusiness/dap-bytes";
 import { applicationJson } from "./application-json.ts";
 import { APPLICATION_PACKAGE_LIMITS } from "./application-types.ts";
 import { ApplicationProjectionError, isApplicationJournalSource, readApplicationProjection, type ApplicationReadProjection } from "./application-projection.ts";

@@ -37,7 +37,7 @@ import { toolsForHost, viewTools } from "./views/tools.ts";
 import type { ViewSource } from "./views/types.ts";
 import { DeclaredViewSource } from "./views/declared.ts";
 import { readMembershipDisplay } from "./views/member-reads.ts";
-import type { ApplicationInstallation } from "@generalbusiness/dap-bytes/application";
+import type { ApplicationInstallation } from "@generalbusiness/dap-platform/application";
 
 export interface ServerPort {
   /** The scope service's base URL. */

@@ -1,7 +1,7 @@
 /** Development-only local scope: genuine native Core + SqliteStore, with
  * explicit scripted authority. No enrollment/freshness proof, dispatcher,
  * provider call, hosted durability or screen isolation is claimed here. */
-import { bindApplicationProjection, ApplicationProjectionError, readPublishedApplicationPackage2, type AnyPackedApplication, type ApplicationReadProjection } from "@generalbusiness/dap-bytes/application-v2";
+import { bindApplicationProjection, ApplicationProjectionError, readPublishedApplicationPackage2, type AnyPackedApplication, type ApplicationReadProjection } from "@generalbusiness/dap-platform/application-v2";
 import { DatabaseSync } from "node:sqlite";
 import type { Answer, ApplicationProjectionData, Beside, DeclaredDefinition, Digest, FreshnessProof, Grant, KeyId, MemberRef, ScopeId, ScopeRef, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
 import { HISTORY_PAGE_ENTRIES, PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";

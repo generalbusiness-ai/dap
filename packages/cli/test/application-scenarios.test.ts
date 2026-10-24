@@ -11,7 +11,7 @@ import { expect, test, vi } from "vitest";
 import type { DeclaredDefinition, FactRef, FieldValue, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest } from "@generalbusiness/dap-bytes";
 import { packApplication, secretSigner, signedIntent } from "@generalbusiness/dap-client";
-import { packApplication2, readApplicationProjection } from "@generalbusiness/dap-bytes/application-v2";
+import { packApplication2, readApplicationProjection } from "@generalbusiness/dap-platform/application-v2";
 import { devicePackageFixture as deviceCommandFixture } from "../../derive/test/fixtures-device-command.ts";
 import { LocalApplicationScope } from "../src/application-local.ts";
 import { ApplicationScenarioError, openApplicationScenario, runApplicationScenario, supportsLocalSqlite } from "../src/application-scenarios.ts";

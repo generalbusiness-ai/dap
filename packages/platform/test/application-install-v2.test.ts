@@ -5,8 +5,8 @@ import { emptyPackageComposition } from "@generalbusiness/dap-package-graph";
  * second case creates native siblings and the declared application in memory. */
 import { expect, test } from "vitest";
 import { canonicalize, definitionDigest, keyIdOfSecret, sign, textDigest, utf8 } from "@generalbusiness/dap-bytes";
-import { packApplication } from "@generalbusiness/dap-bytes/application";
-import { packApplication2, readApplicationProjection } from "@generalbusiness/dap-bytes/application-v2";
+import { packApplication } from "../src/application-codec/application.ts";
+import { packApplication2, readApplicationProjection } from "../src/application-codec/application-v2.ts";
 import { Ledger, T0, arriving, creation, grantOf, keys, membership, sent } from "@generalbusiness/dap-derive/testing";
 import { clockOf, judgeDelivery, judgeGenesis, validateDefinition } from "@generalbusiness/dap-derive";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";

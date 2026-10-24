@@ -1,8 +1,8 @@
 import { expect, test } from "vitest";
 import { APPLICATION_PROJECTION_WIRE_BOUNDS as B, type ApplicationProjectionQuery, type ApplicationProjectionRead } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, textDigest, utf8 } from "../src/index.ts";
-import { directory } from "./fixtures.ts";
-import { applicationProjectionQueryDigest, encodeApplicationProjectionQuery, readApplicationProjectionQuery, readApplicationProjectionReply } from "../src/application-projection-wire.ts";
+import { b64url, canonicalize, textDigest, utf8 } from "@generalbusiness/dap-bytes";
+import { directory } from "../../bytes/test/fixtures.ts";
+import { applicationProjectionQueryDigest, encodeApplicationProjectionQuery, readApplicationProjectionQuery, readApplicationProjectionReply } from "../src/application-codec/application-projection-wire.ts";
 const scope = { ...directory, kind: "lane" as const };
 const query = (): ApplicationProjectionQuery => ({ v: 1, scope, directory, install: 2, projection: "room.alert", items: { alert: 7 } });
 const reply = (): ApplicationProjectionRead => ({ ok: true, query: applicationProjectionQueryDigest(query())!, value: {

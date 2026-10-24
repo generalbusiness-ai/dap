@@ -1,8 +1,8 @@
 /** Declarative trusted views. Parsing this data grants no read or signing
  * authority; the host separately admits/evaluates when and checks needs. */
-import { freeze } from "./values.ts";
+import { freeze } from "@generalbusiness/dap-bytes";
 import type { FieldValue } from "@generalbusiness/dap-contract";
-import { canonicalize, isRecord, parseStrict, utf8 } from "./index.ts";
+import { canonicalize, isRecord, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import { readViewParameters, ApplicationViewParameterError, type ApplicationViewParameters } from "./application-view-parameters.ts";
 import { applicationJson } from "./application-json.ts";
 import { ApplicationPackageError } from "./application-types.ts";

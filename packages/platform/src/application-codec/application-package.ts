@@ -1,9 +1,9 @@
 /** Canonical trusted packages. These checks establish content/signatures and
  * closure, never native definition admission, installation or screen isolation. */
-import { freeze } from "./values.ts";
+import { freeze } from "@generalbusiness/dap-bytes";
 import type { Digest } from "@generalbusiness/dap-contract";
-import { isDigest, parseStrict, parseStrictBytes, utf8, verify } from "./index.ts";
-import type { Signer } from "./signer.ts";
+import { isDigest, parseStrict, parseStrictBytes, utf8, verify } from "@generalbusiness/dap-bytes";
+import type { Signer } from "@generalbusiness/dap-bytes";
 import { applicationJson } from "./application-json.ts";
 import { ApplicationPackageError, type ApplicationIds, type ApplicationPackage, type ApplicationPackageInput, type ApplicationPackageLimits, type ApplicationReleaseProof, type PackedApplication } from "./application-types.ts";
 import { declarations, domain, fail, id, limits, only, presentation, release, semantics } from "./application-package-validation.ts";

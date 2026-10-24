@@ -2,7 +2,7 @@
  * owes history authority and bounded storage reads; this checks their bytes. */
 import { projectionFailure as fail } from "./application-projection-types.ts";
 import type { DeclaredDefinition, Digest, FieldValue, Head, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, isDigest, isEntry, isHead, isRecord, parseStrict, utf8 } from "./index.ts";
+import { canonicalize, entryHash, isDigest, isEntry, isHead, isRecord, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import { applicationJson } from "./application-json.ts";
 import { APPLICATION_PROJECTION_LIMITS as B, type ApplicationJournalProjectionSource, type ApplicationProjectionRow } from "./application-projection-types.ts";
 export interface ApplicationJournalRead {

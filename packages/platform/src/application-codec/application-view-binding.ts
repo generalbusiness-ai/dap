@@ -1,7 +1,7 @@
 /** Bind presentation data to declared reads and native acts. Restricted rule
  * admission/evaluation and current viewer authority belong to the host. */
 import { PROPOSED_BOUNDS, type DeclaredDefinition, type Digest } from "@generalbusiness/dap-contract";
-import { fitsFieldType, isRecord, parseStrict } from "./index.ts";
+import { fitsFieldType, isRecord, parseStrict } from "@generalbusiness/dap-bytes";
 import { viewParameterFits } from "./application-view-parameters.ts";
 import { applicationJson } from "./application-json.ts";
 import { APPLICATION_PACKAGE_LIMITS, type ApplicationDefinition } from "./application-types.ts";

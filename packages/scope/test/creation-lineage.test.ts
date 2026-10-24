@@ -6,7 +6,7 @@ import { env, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { DEVICE_COMMAND, type Entry, type Intent, type PlatformDefinition, type ScopeRef, type Seed } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, digestBytes, factRefOf, intentDigest, isSeed, newIncarnation, parseStrict, scopeIdOf, seedDigest, signIntent, utf8 } from "@generalbusiness/dap-bytes";
-import { packApplication2, readApplicationProjection } from "@generalbusiness/dap-bytes/application-v2";
+import { packApplication2, readApplicationProjection } from "@generalbusiness/dap-platform/application-v2";
 import { emptyPackageComposition } from "@generalbusiness/dap-package-graph";
 import type { Delivered } from "@generalbusiness/dap-derive";
 import { APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, TRUSTED_APPLICATION_COHORT } from "@generalbusiness/dap-platform";

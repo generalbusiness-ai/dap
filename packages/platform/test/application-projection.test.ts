@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
-import { textDigest } from "../src/index.ts";
-import { APPLICATION_PROJECTION_LIMITS, ApplicationProjectionError, applicationProjectionId, readApplicationProjection } from "../src/application-projection.ts";
+import { textDigest } from "@generalbusiness/dap-bytes";
+import { APPLICATION_PROJECTION_LIMITS, ApplicationProjectionError, applicationProjectionId, readApplicationProjection } from "../src/application-codec/application-projection.ts";
 const declaration = () => ({ v: 1, definition: textDigest("PUBLIC TEST projection definition"), revision: "revision", sources: {
   alert: { item: "alert", read: "item", states: ["held", "open"], limit: 1, fields: {
     text: { from: { kind: "value", name: "text" }, of: { type: "text", max: 1024 }, nullable: false },

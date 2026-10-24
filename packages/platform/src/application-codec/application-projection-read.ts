@@ -1,11 +1,11 @@
 /** One pure projection over exact native query replies. The host must own
  * read authorization and the definition pin before obtaining those replies. */
 import { projectionFailure as fail } from "./application-projection-types.ts";
-import { freeze } from "./values.ts";
+import { freeze } from "@generalbusiness/dap-bytes";
 import { ITEM_QUERY_BOUNDS, type DeclaredDefinition, type Head, type ItemQuery, type MemberRef, type ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isRecord, parseStrict } from "./index.ts";
-import { encodeItemQuery } from "./item-query.ts";
-import { itemQueryReadFor } from "./item-query-read.ts";
+import { canonicalize, isRecord, parseStrict } from "@generalbusiness/dap-bytes";
+import { encodeItemQuery } from "@generalbusiness/dap-bytes";
+import { itemQueryReadFor } from "@generalbusiness/dap-bytes";
 import { applicationJson } from "./application-json.ts";
 import { ApplicationPackageError } from "./application-types.ts";
 import { bindApplicationProjection } from "./application-projection-binding.ts";

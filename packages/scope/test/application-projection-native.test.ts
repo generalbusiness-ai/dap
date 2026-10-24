@@ -5,7 +5,7 @@
 import { env, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { canonicalize, isSeed, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
-import { encodeApplicationProjectionQuery, readApplicationProjectionReply } from "@generalbusiness/dap-bytes/application-v2";
+import { encodeApplicationProjectionQuery, readApplicationProjectionReply } from "@generalbusiness/dap-platform/application-v2";
 import { DOMAINS, ITEM_QUERY_BOUNDS, PROPOSED_BOUNDS, type ApplicationProjectionQuery, type ScopeRef } from "@generalbusiness/dap-contract";
 import { DECLARED_APPLICATION_COHORT as C } from "@generalbusiness/dap-platform";
 import { requestSession, sessionRequest, ScopeHandle, httpTransport, bindingTransport, secretSigner, signedApplicationInstall, ApplicationPackageError, type ServiceBinding } from "@generalbusiness/dap-client";

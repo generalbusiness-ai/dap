@@ -55,17 +55,18 @@ test("no platform package depends on the lanes package or imports from it", () =
   assert.equal(mcp.dependencies?.["@generalbusiness/dap-lanes"], undefined, "the MCP server depends on the lanes package for its tests only");
 });
 
-// The platform package is pure data and rules over the contract, the bytes and the derivation (I3 plan, section 3.1). It names no
+// The platform package is pure data and rules over the contract, bytes, derivation and package graph (I3 plan, section 3.1). It names no
 // package above them, and only the packages that run or check its definitions name it: the runtime, the verifier, the lanes' tests,
 // and the command line, which reads a platform definition's acts (no scope retains a platform definition's declaration to read) and
 // runs the verifier with the platform's rules; the page, which reads a platform definition's acts as the command line does; and the
 // MCP server, which derives the act tools of the platform's scopes from those acts.
-test("the platform package depends only on contract, bytes and derive, and only scope, replay, lanes, cli, page and mcp name it", () => {
+const clientApplicationUsers = new Set(["packages/client/src/answers.ts", "packages/client/src/application-install.ts", "packages/client/src/application-json.ts", "packages/client/src/application-package.ts", "packages/client/src/application-projection.ts", "packages/client/src/application-types.ts", "packages/client/src/application-uri.ts", "packages/client/src/binding.ts", "packages/client/src/handle.ts", "packages/client/src/http.ts", "packages/client/src/signer.ts", "packages/client/test/application-projection.test.ts", "packages/client/package.json"]);
+test("the platform package depends only on contract, bytes, derive and package graph, and only its runtime consumers and exact client application wrappers name it", () => {
   assert.ok(files.includes("packages/platform/package.json"), "the platform package was listed");
   const source = (f) => packagePath(f).startsWith("packages/") && !f.endsWith(".md");
   const inside = files.filter((f) => source(f) && packagePath(f).startsWith("packages/platform/"));
   assert.deepEqual(inside.filter((f) => /(?:artroom|dap)-(scope|replay|client|lanes)/.test(text(f))), []);
-  const named = files.filter((f) => source(f) && !/^packages\/(platform|scope|replay|lanes|cli|page|mcp)\//.test(packagePath(f)));
+  const named = files.filter((f) => source(f) && !clientApplicationUsers.has(f) && !/^packages\/(platform|scope|replay|lanes|cli|page|mcp)\//.test(packagePath(f)));
   assert.deepEqual(named.filter((f) => /(?:artroom|dap)-platform/.test(text(f))), []);
 });
 

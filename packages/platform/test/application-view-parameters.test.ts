@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { ApplicationViewParameterError, decodeViewParameters, readViewParameters, viewParameterFits, viewScaledInteger } from "../src/application-view-parameters.ts";
+import { ApplicationViewParameterError, decodeViewParameters, readViewParameters, viewParameterFits, viewScaledInteger } from "../src/application-codec/application-view-parameters.ts";
 
 const declared = () => readViewParameters({
   moisture: { kind: "int", label: "Moisture", unit: "%", min: 0, max: 100, required: false },

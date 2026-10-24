@@ -2,7 +2,7 @@ import { emptyPackageComposition } from "@generalbusiness/dap-package-graph";
 /** Public TEST Counter packet with one declared board read. No native
  * install or browser is constructed by this fixture. */
 import { b64url, canonicalize, definitionDigest, utf8 } from "@generalbusiness/dap-bytes";
-import { packApplication2, readApplicationProjection } from "@generalbusiness/dap-bytes/application-v2";
+import { packApplication2, readApplicationProjection } from "@generalbusiness/dap-platform/application-v2";
 import { countingCommitments } from "../../../../apps/counter/commitments.ts";
 import { fixedSigner } from "../fixtures-core.ts";
 const signer = fixedSigner(67);

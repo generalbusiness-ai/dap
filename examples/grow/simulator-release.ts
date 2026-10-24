@@ -2,7 +2,7 @@
  * host trust configuration and performs no install, read or mutation. */
 import type { Digest, KeyId } from "@generalbusiness/dap-contract";
 import { parseStrictBytes, unb64url } from "@generalbusiness/dap-bytes";
-import { readPublishedApplicationPackage2 } from "@generalbusiness/dap-bytes/application-v2";
+import { readPublishedApplicationPackage2 } from "@generalbusiness/dap-platform/application-v2";
 import { simulatorSchedule } from "./simulator.ts";
 
 export function simulatorRelease(bytes: Uint8Array, expectedRelease: Digest, expectedPublisher: KeyId) {

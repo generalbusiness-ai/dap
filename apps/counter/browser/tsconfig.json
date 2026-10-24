@@ -1,15 +1,35 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "lib": ["ES2022", "ESNext.Disposable", "DOM"],
-    "types": ["node"],
+    "lib": [
+      "ES2022",
+      "ESNext.Disposable",
+      "DOM"
+    ],
+    "types": [
+      "node"
+    ],
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "paths": {
-      "@generalbusiness/dap-contract": ["../../../packages/contract/src/index.ts"],
-      "@generalbusiness/dap-bytes": ["../../../packages/bytes/src/index.ts"],
-      "@generalbusiness/dap-client": ["../../../packages/client/src/index.ts"]
+      "@generalbusiness/dap-contract": [
+        "../../../packages/contract/src/index.ts"
+      ],
+      "@generalbusiness/dap-bytes": [
+        "../../../packages/bytes/src/index.ts"
+      ],
+      "@generalbusiness/dap-client": [
+        "../../../packages/client/src/index.ts"
+      ],
+      "@generalbusiness/dap-platform/application": [
+        "../../../packages/platform/src/application-codec/application.ts"
+      ],
+      "@generalbusiness/dap-platform/application-v2": [
+        "../../../packages/platform/src/application-codec/application-v2.ts"
+      ]
     }
   },
-  "include": ["*.ts"]
+  "include": [
+    "*.ts"
+  ]
 }

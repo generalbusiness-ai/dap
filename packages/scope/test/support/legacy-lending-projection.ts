@@ -2,9 +2,9 @@
  * generic item/history reads still use its real issued session and native
  * SQLite state. This supplies neither an installed package nor ownership
  * authority; application-projection-native.test.ts covers that boundary. */
-import type { ApplicationInstallation } from "@generalbusiness/dap-bytes/application";
+import type { ApplicationInstallation } from "@generalbusiness/dap-platform/application";
 import { canonicalize } from "@generalbusiness/dap-bytes";
-import { applicationProjectionQueries, applicationProjectionQueryDigest, isApplicationJournalSource, projectApplicationQueryReads, readApplicationProjectionQuery } from "@generalbusiness/dap-bytes/application-v2";
+import { applicationProjectionQueries, applicationProjectionQueryDigest, isApplicationJournalSource, projectApplicationQueryReads, readApplicationProjectionQuery } from "@generalbusiness/dap-platform/application-v2";
 import { ScopeHandle, httpTransport, type Fetch } from "@generalbusiness/dap-client";
 import { lending } from "../../../../examples/lending/definition.ts";
 import { lendingStateProjection } from "../../../../examples/lending/browser/projection.ts";

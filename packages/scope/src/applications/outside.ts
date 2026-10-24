@@ -1,7 +1,7 @@
 /** Native fetch prepares the private immutable cache, with explicit host-only
  * resumption. The separate admission phase and its recovery are safe reads.
  * Neither phase repeats an application or provider mutation. */
-import type { AnyPackedApplication } from "@generalbusiness/dap-bytes/application-v2";
+import type { AnyPackedApplication } from "@generalbusiness/dap-platform/application-v2";
 import type { Bounds, Digest } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, isDigest, isRecord, utf8 } from "@generalbusiness/dap-bytes";
 import { ApplicationPackageError } from "@generalbusiness/dap-client/application";

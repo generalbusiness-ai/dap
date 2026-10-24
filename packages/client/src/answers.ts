@@ -18,7 +18,7 @@ import type { Answer, DeliveryRefusal, Created, MismatchReason, RefusalReason, R
 import { isScopeBoundName } from "@generalbusiness/dap-contract";
 import { REFUSAL_REASONS, isItemQueryRead, among, isOutboxItem, isFactRef, isHead, isItem, isListOf, isLogPage, isRead, isReceipt, isRecord, isRetainedInput, isSealed, isSummary } from "@generalbusiness/dap-bytes";
 import { isArchived } from "./journal-tail.ts";
-import { readApplicationProjectionReplyText } from "@generalbusiness/dap-bytes/application-v2";
+import { readApplicationProjectionReplyText } from "@generalbusiness/dap-platform/application-v2";
 
 // Each table has every member of its union, and the compiler says so when the contract gains or loses one.
 /** Archived reads carry a covered position and the exact archive receipt. */

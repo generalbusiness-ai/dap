@@ -1,9 +1,9 @@
 import { expect, test } from "vitest";
 import type { DeclaredDefinition } from "@generalbusiness/dap-contract";
-import { definitionDigest } from "../src/index.ts";
-import { definition as empty } from "./fixtures.ts";
-import { bindApplicationProjection } from "../src/application-projection-binding.ts";
-import { ApplicationProjectionError } from "../src/application-projection.ts";
+import { definitionDigest } from "@generalbusiness/dap-bytes";
+import { definition as empty } from "../../bytes/test/fixtures.ts";
+import { bindApplicationProjection } from "../src/application-codec/application-projection-binding.ts";
+import { ApplicationProjectionError } from "../src/application-codec/application-projection.ts";
 
 // Made-up native schema, not a runtime or whole-definition admission witness.
 const definition = (): DeclaredDefinition => ({ ...empty, items: { alert: {

@@ -1,5 +1,5 @@
 /** Finite JSON admission before package serialization. No native entry rule. */
-import { canonicalize, utf8, wellFormed } from "./index.ts";
+import { canonicalize, utf8, wellFormed } from "@generalbusiness/dap-bytes";
 import { ApplicationPackageError } from "./application-types.ts";
 
 export function applicationJson(value: unknown, most: number): string {

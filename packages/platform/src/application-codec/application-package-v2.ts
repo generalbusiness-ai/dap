@@ -1,8 +1,8 @@
 /** Versioned projections and presentation declarations. The legacy reader
  * is never widened; neither codec admits native execution or viewer rights. */
-import { freeze } from "./values.ts";
+import { freeze } from "@generalbusiness/dap-bytes";
 import { PROPOSED_BOUNDS, type DeclaredDefinition, type Digest } from "@generalbusiness/dap-contract";
-import { digestBytes, fitsFieldType, isDigest, isRecord, parseStrict, parseStrictBytes, utf8, verify } from "./index.ts";
+import { digestBytes, fitsFieldType, isDigest, isRecord, parseStrict, parseStrictBytes, utf8, verify } from "@generalbusiness/dap-bytes";
 import { applicationJson } from "./application-json.ts";
 import { ApplicationPackageError, type ApplicationIds, type ApplicationPackageLimits } from "./application-types.ts";
 import { declarations, fail, limits, only, presentation as presentation1, release as release1, semantics as semantics1 } from "./application-package-validation.ts";
@@ -11,7 +11,7 @@ import { bindApplicationViews } from "./application-view-binding.ts";
 import { isApplicationViewResource } from "./application-view.ts";
 import { checkPackageGraph, PackageCompositionError, readPackageComposition } from "@generalbusiness/dap-package-graph";
 import { ApplicationPackageValidationError } from "./application-v2-types.ts";
-import type { Signer } from "./signer.ts";
+import type { Signer } from "@generalbusiness/dap-bytes";
 import type { ApplicationPackage2, ApplicationPackageInput2, ApplicationPresentation2, ApplicationRelease2, ApplicationReleaseProof2, ApplicationSemantics2, PackedApplication2, PublishedApplicationSemantics2, PublishedApplicationReleaseProof2, PublishedPackedApplication2 } from "./application-v2-types.ts";
 export * from "./application-v2-types.ts";
 

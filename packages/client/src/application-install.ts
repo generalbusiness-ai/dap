@@ -6,7 +6,7 @@ import { applicationJson } from "./application-json.ts";
 import { readApplicationPackage } from "./application-package.ts";
 import { readApplicationReleaseUri } from "./application-uri.ts";
 import { ApplicationPackageError, type ApplicationIds } from "./application-types.ts";
-import { readPublishedApplicationPackage2, type AnyPackedApplication } from "@generalbusiness/dap-bytes/application-v2";
+import { readPublishedApplicationPackage2, type AnyPackedApplication } from "@generalbusiness/dap-platform/application-v2";
 import { signedIntent, type Signer, type Signing } from "./intent.ts";
 
 export type ApplicationInstallRole = "admin" | "maintainer" | "member" | "agent" | "checker";

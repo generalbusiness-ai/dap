@@ -1,8 +1,8 @@
 /** Internal strict v1 validators shared by the versioned package codecs.
  * The legacy semantic validator continues to admit empty projections only. */
-import { same } from "./values.ts";
+import { same } from "@generalbusiness/dap-bytes";
 import type { DeclaredDefinition, Digest } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, definitionDigest, digestBytes, isDigest, isKeyId, isRecord, parseStrict, unb64url, utf8 } from "./index.ts";
+import { b64url, canonicalize, definitionDigest, digestBytes, isDigest, isKeyId, isRecord, parseStrict, unb64url, utf8 } from "@generalbusiness/dap-bytes";
 import { applicationJson } from "./application-json.ts";
 import { APPLICATION_PACKAGE_LIMITS, ApplicationPackageError, type ApplicationCreation, type ApplicationDefinition, type ApplicationPackageLimits, type ApplicationPresentation, type ApplicationRelease, type ApplicationSemantics } from "./application-types.ts";
 

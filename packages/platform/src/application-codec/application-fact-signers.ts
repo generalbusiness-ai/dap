@@ -2,7 +2,7 @@
  * Scope/head/hash binding is checked; this is not entry-body verification,
  * current-key inference or permission to look up a foreign fact. */
 import type { Digest, Head, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isHead, isMemberRef, isRecord, parseStrict } from "./index.ts";
+import { canonicalize, isDigest, isHead, isMemberRef, isRecord, parseStrict } from "@generalbusiness/dap-bytes";
 import { applicationJson } from "./application-json.ts";
 import { APPLICATION_PROJECTION_LIMITS as B, ApplicationProjectionError } from "./application-projection-types.ts";
 import type { ApplicationProjectionFactRef } from "./application-fact-times.ts";

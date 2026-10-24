@@ -2,10 +2,10 @@
  * shared package graph. It grants no runtime or installation authority. */
 import type { Bounds, Digest } from "@generalbusiness/dap-contract";
 import { fitsFieldType, parseStrict } from "@generalbusiness/dap-bytes";
-import { ApplicationPackageError, type ApplicationPackageLimits } from "@generalbusiness/dap-bytes/application";
-import { ApplicationPackageValidationError, readApplicationPackage2, type PackedApplication2 } from "@generalbusiness/dap-bytes/application-v2";
+import { ApplicationPackageError, type ApplicationPackageLimits } from "./application-codec/application.ts";
+import { ApplicationPackageValidationError, readApplicationPackage2, type PackedApplication2 } from "./application-codec/application-v2.ts";
 import { checkPackageGraph, type PackageFinding, type PackageGraphReport } from "@generalbusiness/dap-package-graph";
-import { PROFILES, validateDefinition, type Profile, type ProblemCode, type ValidDefinition } from "./validate/index.ts";
+import { PROFILES, validateDefinition, type Profile, type ProblemCode, type ValidDefinition } from "@generalbusiness/dap-derive";
 
 export type PackageValidationFinding = Omit<PackageFinding, "reason"> & { readonly reason: PackageFinding["reason"] | ProblemCode };
 export type PackageValidation =

@@ -1,8 +1,8 @@
 /** Bounded presentation inputs. They become ordinary native scalar fields;
  * this module grants neither a subject selection nor signing authority. */
 import type { FieldType, FieldValue } from "@generalbusiness/dap-contract";
-import { isRecord } from "./records.ts";
-import { parseStrict, utf8, wellFormed } from "./canonical.ts";
+import { isRecord } from "@generalbusiness/dap-bytes";
+import { parseStrict, utf8, wellFormed } from "@generalbusiness/dap-bytes";
 import { applicationJson } from "./application-json.ts";
 interface Base { readonly label: string; readonly required: boolean }
 export type ApplicationViewParameter = Base & (

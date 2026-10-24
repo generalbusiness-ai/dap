@@ -15,7 +15,7 @@ test("SDK module references preserve genuine imports and rewrite declarations wi
     const manifest = JSON.parse(readFileSync(new URL(`${workspace}/package.json`, root), "utf8"));
     assert.equal(manifest.name, `@generalbusiness/dap-${dir}`);
   }
-  assert.deepEqual(PLAN.packages.map(spec => nameOf(spec.dir)), ["@generalbusiness/dap-contract", "@generalbusiness/dap-package-graph", "@generalbusiness/dap-bytes", "@generalbusiness/dap-client", "@generalbusiness/dap-derive", "@generalbusiness/dap-platform", "@generalbusiness/dap-replay"]);
+  assert.deepEqual(PLAN.packages.map(spec => nameOf(spec.dir)), ["@generalbusiness/dap-contract", "@generalbusiness/dap-bytes", "@generalbusiness/dap-derive", "@generalbusiness/dap-package-graph", "@generalbusiness/dap-platform", "@generalbusiness/dap-client", "@generalbusiness/dap-replay"]);
   // Small manifest fixture isolates naming from the separate compatibility obligation.
   const namingSpec = { dir: "bytes", exports: { ".": "src/index" }, dependencies: {} };
   const namingInput = { name: "@generalbusiness/dap-bytes", type: "module", license: "Apache-2.0", exports: { ".": "./src/index.ts" } };
@@ -57,10 +57,10 @@ test("SDK module references preserve genuine imports and rewrite declarations wi
     assert.deepEqual(references(rewritten), expected.map(value => value.startsWith(".") ? value.slice(0, -3) + ".js" : value));
     for (const line of source.split("\n").slice(8)) assert.ok(rewritten.includes(line));
     assert.deepEqual(rewriteDeclarationRefs(dir), []);
-    const bytesSpec = PLAN.packages.find(spec => spec.dir === "bytes");
-    const applicationInputs = ["packages/bytes/src/index.ts", "packages/bytes/src/application.ts", "packages/bytes/src/application-v2.ts", "packages/bytes/src/application-package-v2.ts"];
-    assert.deepEqual(productionInputs(bytesSpec, applicationInputs), { names: applicationInputs, omitted: [] });
-    assert.throws(() => productionInputs({ ...bytesSpec, excludedInputs: ["src/application-v2.ts"] }, applicationInputs), /source-input-exclusions/);
+    const platformSpec = PLAN.packages.find(spec => spec.dir === "platform");
+    const applicationInputs = ["packages/platform/src/index.ts", "packages/platform/src/application-codec/application.ts", "packages/platform/src/application-codec/application-v2.ts", "packages/platform/src/application-codec/application-package-v2.ts"];
+    assert.deepEqual(productionInputs(platformSpec, applicationInputs), { names: applicationInputs, omitted: [] });
+    assert.throws(() => productionInputs({ ...platformSpec, excludedInputs: ["src/application-codec/application-v2.ts"] }, applicationInputs), /source-input-exclusions/);
     const replay = PLAN.packages.find(spec => spec.dir === "replay");
     assert.deepEqual(productionInputs(replay, ["packages/replay/src/index.ts", "packages/replay/src/bin.ts", "packages/replay/src/git.ts"]), { names: ["packages/replay/src/index.ts"], omitted: ["packages/replay/src/bin.ts", "packages/replay/src/git.ts"] });
     assert.throws(() => productionInputs({ ...replay, excludedInputs: ["src/index.ts"] }, ["packages/replay/src/index.ts", "packages/replay/src/bin.ts"]), /source-input-exclusions/);
@@ -84,21 +84,21 @@ test("SDK module references preserve genuine imports and rewrite declarations wi
       assert.throws(() => outputClosure(stage, replay, "0.1.0-dev.2"), /bare-output-closure/);
       writeFileSync(join(stage, "dist/src/index.d.ts"), "export {};\n");
     }
-    // All planned bytes subpaths must exist, and their graph dependency must
+    // All planned platform subpaths must exist, and their graph dependency must
     // remain admitted by the output closure.
     const applicationStage = join(dir, "application-production");
     mkdirSync(join(applicationStage, "dist/src"), { recursive: true });
-    const bytesManifest = JSON.parse(readFileSync(new URL("packages/bytes/package.json", root), "utf8"));
-    writeFileSync(join(applicationStage, "package.json"), JSON.stringify(publishManifest(bytesSpec, bytesManifest, "0.1.0-dev.2")));
-    for (const name of ["index", "application", "application-v2"]) {
-      for (const extension of ["js", "d.ts"]) writeFileSync(join(applicationStage, `dist/src/${name}.${extension}`), name === "application-v2" ? "export { fieldAssignable } from '@generalbusiness/dap-package-graph';\n" : "export {};\n");
+    const platformManifest = JSON.parse(readFileSync(new URL("packages/platform/package.json", root), "utf8"));
+    writeFileSync(join(applicationStage, "package.json"), JSON.stringify(publishManifest(platformSpec, platformManifest, "0.1.0-dev.2")));
+    for (const name of Object.values(platformSpec.exports).map(path => path.slice("src/".length))) {
+      mkdirSync(join(applicationStage, "dist/src", name, ".."), { recursive: true });
+      for (const extension of ["js", "d.ts"]) writeFileSync(join(applicationStage, `dist/src/${name}.${extension}`), name.endsWith("application-v2") ? "export { fieldAssignable } from '@generalbusiness/dap-package-graph';\n" : "export {};\n");
     }
-    writeFileSync(join(applicationStage, "dist/src/web.d.ts"), "export {};\n");
-    assert.equal(outputClosure(applicationStage, bytesSpec, "0.1.0-dev.2").length, 8);
-    const withoutGraph = { ...bytesSpec, dependencies: Object.fromEntries(Object.entries(bytesSpec.dependencies).filter(([name]) => name !== "@generalbusiness/dap-package-graph")) };
+    assert.equal(outputClosure(applicationStage, platformSpec, "0.1.0-dev.2").length, 1 + Object.keys(platformSpec.exports).length * 2);
+    const withoutGraph = { ...platformSpec, dependencies: Object.fromEntries(Object.entries(platformSpec.dependencies).filter(([name]) => name !== "@generalbusiness/dap-package-graph")) };
     assert.throws(() => outputClosure(applicationStage, withoutGraph, "0.1.0-dev.2"), /bare-output-closure/);
-    rmSync(join(applicationStage, "dist/src/application-v2.js"));
-    assert.throws(() => outputClosure(applicationStage, bytesSpec, "0.1.0-dev.2"), /missing-export/);
+    rmSync(join(applicationStage, "dist/src/application-codec/application-v2.js"));
+    assert.throws(() => outputClosure(applicationStage, platformSpec, "0.1.0-dev.2"), /missing-export/);
     const jsonataInput = "/owned/node_modules/jsonata/jsonata.js";
     const synthetic = { path: "<runtime>", kind: "import-statement", external: true };
     assert.equal(browserRuntimeEdge(jsonataInput, synthetic, jsonataInput), true);
@@ -127,31 +127,39 @@ test("SDK published manifests match the actual supported workspace manifests", (
   assert.equal(published.name, "@generalbusiness/dap-platform");
   assert.deepEqual(published.repository, { type: "git", url: "git+https://github.com/generalbusiness-ai/dap.git", directory: "packages/platform" });
   assert.equal(published.homepage, "https://dap.generalbusiness.ai/");
-  assert.deepEqual(Object.keys(published.exports), [".", "./membership-actions"]);
+  assert.deepEqual(Object.keys(published.exports), [".", "./membership-actions", "./application", "./application-v2", "./package-validation"]);
   assert.equal(published.exports["./application-install"], undefined);
   assert.deepEqual(platform.excludedSourceExports, { "./testing": "./test/support.ts", "./application-install": "./src/application-install.ts" });
   assert.throws(() => publishManifest({ ...platform, excludedSourceExports: { "./testing": "./test/support.ts" } }, platformManifest, "0.1.0-dev.2"), /source-export-exclusions/);
   assert.throws(() => publishManifest(platform, { ...platformManifest, exports: { ...platformManifest.exports, "./application-install": "./src/index.ts" } }, "0.1.0-dev.2"), /unsupported-source-export/);
   assert.deepEqual(published.exports["./membership-actions"], { types: "./dist/src/membership-actions.d.ts", default: "./dist/src/membership-actions.js" });
-  assert.deepEqual(published.dependencies, { "@generalbusiness/dap-bytes": "0.1.0-dev.2", "@generalbusiness/dap-contract": "0.1.0-dev.2", "@generalbusiness/dap-derive": "0.1.0-dev.2" });
+  assert.deepEqual(published.exports["./package-validation"], { types: "./dist/src/validate-package.d.ts", default: "./dist/src/validate-package.js" });
+  assert.throws(() => publishManifest(platform, { ...platformManifest, exports: { ...platformManifest.exports, "./package-validation": "./src/index.ts" } }, "0.1.0-dev.2"), /unsupported-source-export/);
+  assert.deepEqual(published.dependencies, { "@generalbusiness/dap-bytes": "0.1.0-dev.2", "@generalbusiness/dap-contract": "0.1.0-dev.2", "@generalbusiness/dap-derive": "0.1.0-dev.2", "@generalbusiness/dap-package-graph": "0.1.0-dev.2" });
   const bytes = PLAN.packages.find(spec => spec.dir === "bytes");
   const bytesManifest = JSON.parse(readFileSync(new URL("packages/bytes/package.json", root), "utf8"));
   const publicBytes = publishManifest(bytes, bytesManifest, "0.1.0-dev.2");
   assert.equal(bytesManifest.name, "@generalbusiness/dap-bytes");
   assert.equal(publicBytes.name, "@generalbusiness/dap-bytes");
   assert.equal(publicBytes.dependencies["@noble/curves"], "2.4.0");
-  assert.deepEqual(Object.keys(publicBytes.exports), [".", "./web", "./application", "./application-v2"]);
-  assert.equal(publicBytes.dependencies["@generalbusiness/dap-package-graph"], "0.1.0-dev.2");
-  assert.deepEqual(publicBytes.exports["./application-v2"], { types: "./dist/src/application-v2.d.ts", default: "./dist/src/application-v2.js" });
-  assert.throws(() => publishManifest(bytes, { ...bytesManifest, exports: { ...bytesManifest.exports, "./application-v2": "./src/index.ts" } }, "0.1.0-dev.2"), /unsupported-source-export/);
-  assert.throws(() => publishManifest(bytes, { ...bytesManifest, dependencies: { ...bytesManifest.dependencies, "@generalbusiness/dap-package-graph": "0.1.0-wrong" } }, "0.1.0-dev.2"), /dependency-pin/);
+  assert.deepEqual(Object.keys(publicBytes.exports), [".", "./web"]);
+  assert.equal(publicBytes.dependencies["@generalbusiness/dap-package-graph"], undefined);
+  assert.deepEqual(published.exports["./application-v2"], { types: "./dist/src/application-codec/application-v2.d.ts", default: "./dist/src/application-codec/application-v2.js" });
+  assert.throws(() => publishManifest(platform, { ...platformManifest, exports: { ...platformManifest.exports, "./application-v2": "./src/index.ts" } }, "0.1.0-dev.2"), /unsupported-source-export/);
+  assert.throws(() => publishManifest(platform, { ...platformManifest, dependencies: { ...platformManifest.dependencies, "@generalbusiness/dap-package-graph": "0.1.0-wrong" } }, "0.1.0-dev.2"), /dependency-pin/);
   const graph = PLAN.packages.find(spec => spec.dir === "package-graph");
   const graphManifest = JSON.parse(readFileSync(new URL("packages/package-graph/package.json", root), "utf8"));
-  assert.deepEqual(publishManifest(graph, graphManifest, "0.1.0-dev.2").dependencies, { "@generalbusiness/dap-contract": "0.1.0-dev.2" });
+  assert.deepEqual(publishManifest(graph, graphManifest, "0.1.0-dev.2").dependencies, { "@generalbusiness/dap-contract": "0.1.0-dev.2", "@generalbusiness/dap-derive": "0.1.0-dev.2" });
   const client = PLAN.packages.find(spec => spec.dir === "client");
   const clientManifest = JSON.parse(readFileSync(new URL("packages/client/package.json", root), "utf8"));
   assert.deepEqual(Object.keys(publishManifest(client, clientManifest, "0.1.0-dev.2").exports), [".", "./application"]);
-  assert.deepEqual(PLAN.packages.find(spec => spec.dir === "derive").dependencies["@generalbusiness/dap-package-graph"], "coordinated");
+  assert.equal(publishManifest(client, clientManifest, "0.1.0-dev.2").dependencies["@generalbusiness/dap-platform"], "0.1.0-dev.2");
+  const derive = PLAN.packages.find(spec => spec.dir === "derive");
+  const deriveManifest = JSON.parse(readFileSync(new URL("packages/derive/package.json", root), "utf8"));
+  const publicDerive = publishManifest(derive, deriveManifest, "0.1.0-dev.2");
+  assert.equal(publicDerive.dependencies["@generalbusiness/dap-package-graph"], undefined);
+  assert.deepEqual(publicDerive.exports["./field-types"], { types: "./dist/src/field-types.d.ts", default: "./dist/src/field-types.js" });
+  assert.throws(() => publishManifest(derive, { ...deriveManifest, exports: { ...deriveManifest.exports, "./field-types": "./src/index.ts" } }, "0.1.0-dev.2"), /unsupported-source-export/);
   assert.throws(() => publishManifest(platform, { ...platformManifest, name: "@generalbusiness/artroom-platform" }, "0.1.0-dev.2"), /unsupported-source-manifest/);
   assert.throws(() => publishManifest(platform, { ...platformManifest, exports: { ...platformManifest.exports, "./private": "./src/private.ts" } }, "0.1.0-dev.2"), /unsupported-source-manifest/);
   const replayManifest = JSON.parse(readFileSync(new URL("packages/replay/package.json", root), "utf8"));

@@ -1,11 +1,11 @@
 import { emptyPackageComposition } from "@generalbusiness/dap-package-graph";
 import { expect, test } from "vitest";
 import type { DeclaredDefinition } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, definitionDigest, digestBytes, keyIdOfSecret, sign, utf8 } from "../src/index.ts";
-import { definition as empty, secret } from "./fixtures.ts";
-import { packApplication, readApplicationPackage, readApplicationReleaseProof } from "../src/application-package.ts";
-import { ApplicationPackageValidationError, packApplication2, readApplicationPackage2, readApplicationReleaseProof2, type ApplicationPackageInput2 } from "../src/application-package-v2.ts";
-import { readApplicationProjection } from "../src/application-projection.ts";
+import { b64url, canonicalize, definitionDigest, digestBytes, keyIdOfSecret, sign, utf8 } from "@generalbusiness/dap-bytes";
+import { definition as empty, secret } from "../../bytes/test/fixtures.ts";
+import { packApplication, readApplicationPackage, readApplicationReleaseProof } from "../src/application-codec/application-package.ts";
+import { ApplicationPackageValidationError, packApplication2, readApplicationPackage2, readApplicationReleaseProof2, type ApplicationPackageInput2 } from "../src/application-codec/application-package-v2.ts";
+import { readApplicationProjection } from "../src/application-codec/application-projection.ts";
 const signer = { key: keyIdOfSecret(secret), sign: (bytes: Uint8Array) => sign(secret, bytes) };
 // Small made-up schema, real package hashes and signatures. This is no
 // native validator, host trust, installation, browser or authority witness.

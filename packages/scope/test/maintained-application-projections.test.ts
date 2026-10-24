@@ -5,7 +5,7 @@
 import { env } from "cloudflare:test";
 import { expect, inject, onTestFinished, test, vi } from "vitest";
 import { canonicalize, factRefOf, isRecord, isScopeRef, isSeed, same, scopeIdOf, unb64url } from "@generalbusiness/dap-bytes";
-import { readPublishedApplicationPackage2 } from "@generalbusiness/dap-bytes/application-v2";
+import { readPublishedApplicationPackage2 } from "@generalbusiness/dap-platform/application-v2";
 import { DECLARED_APPLICATION_COHORT as C } from "@generalbusiness/dap-platform";
 import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-mcp";
 import { ScopeHandle, httpTransport, requestSession, secretSigner, sessionRequest, type Fetch, type Observation } from "@generalbusiness/dap-client";

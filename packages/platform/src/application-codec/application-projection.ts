@@ -1,9 +1,9 @@
 /** Bounded projection declarations only. Native schema binding and actual
  * journal reads belong to the reader; this module performs neither. */
 import { projectionFailure as fail } from "./application-projection-types.ts";
-import { freeze } from "./values.ts";
+import { freeze } from "@generalbusiness/dap-bytes";
 import { CAPABILITIES, type Capability, type Digest, type ScopeKind } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, isDigest, isRecord, parseStrict, utf8 } from "./index.ts";
+import { canonicalize, digestBytes, isDigest, isRecord, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import { applicationJson } from "./application-json.ts";
 import { ApplicationPackageError } from "./application-types.ts";
 import { APPLICATION_PROJECTION_LIMITS as B, type ApplicationReadProjection } from "./application-projection-types.ts";

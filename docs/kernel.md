@@ -8,6 +8,10 @@ are closed at main `b52ca7e3`. Section 7.2 records the implemented K9
 binding and its passed owning checks and control. The exact-head gate and
 review remain separate requirements.
 
+The K2, K3 and K11 Source revision for request `30c7c3ec` is proposed
+below. Its relocation, structural witnesses and exact-head validation are
+pending; these Source changes alone do not close those review requirements.
+
 Applications on dap run for a long time, and they change more often than
 they are replaced. That works only if a small part of the system changes
 rarely and everything else can be replaced around it. This page names that
@@ -51,8 +55,8 @@ is not meant to be kernel, is listed in section 5 with what passing takes.
 |---|---|---|---|
 | `packages/contract` | Kernel | — | Entry, act, seed and definition forms. It also names platform and app vocabulary (section 5, K4). |
 | `packages/derive` | Kernel | — | Validator, judges, fold, rule expressions and the code of three capabilities. |
-| `packages/bytes` | Kernel | Fails in part | Canonical JSON, hashes, signatures and byte domains are kernel: entry hashes are its canonical bytes, and `derive` imports it. Its application package, view and projection codecs (`application-*.ts`, about 1,600 lines) are platform code (K3). |
-| `packages/package-graph` | Platform service | Fails | `derive` imports it (K2). |
+| `packages/bytes` | Kernel | Proposed K3 split; validation pending | Canonical JSON, hashes, signatures and byte domains stay here. Application package, view and projection codecs move to `platform/src/application-codec/`; the existing codec witnesses move with them. |
+| `packages/package-graph` | Platform service | Proposed K2 boundary; validation pending | The single field-assignability implementation moves to `derive/field-types`; package validation moves to `platform/package-validation`. Production derivation no longer needs graph. |
 | `packages/platform` | Platform service | Fails | Replay needs its code to derive platform scopes (K1). |
 | `packages/scope` | Platform service: the runtime host | Passes | It holds the runtime's host details (section 8). It re-exports the `hold@1` numbers that judgments use; `derive` chooses them (K7, closed). |
 | `packages/mcp` | Platform service | Passes | The runtime imports it (`scope/src/worker.ts:60`). |
@@ -66,7 +70,7 @@ is not meant to be kernel, is listed in section 5 with what passing takes.
 | `apps/room` | Application | Passes for the kernel | Its lanes are definitions pinned by digest. It also holds the production entry of the platform Worker (`apps/room/worker.ts:2`, `wrangler.jsonc`), and the kernel names its lane actions (K4, K10). |
 | `examples/grow` | Application | Passes to retire; fails to replace | `contract` fixes the device kinds at fan, heater and vent (`contract/src/device-command.ts:5`, K4). |
 | `examples/lending` | Application | Passes | — |
-| `examples/demo-repo` | Application (example) | Passes | A fixture of the retired policy system. It imports `@generalbusiness/artroom-policy`, a package that no longer exists (K11). |
+| `examples/demo-repo` (retired) | Removed example | K11 Source deletion; review pending | Its two policy files and the active guide command/link are removed. Dated notes and reports stay unchanged. |
 
 The request that commissioned this page proposed `packages/scope` and
 `packages/replay` as kernel. The test places them outside. The runtime host
@@ -91,7 +95,9 @@ whether it is one, or a special case that the kernel knows.
 ## 5. Parts that fail the test today
 
 Each item says what passing takes, and names the request that covers it.
-K4 has no request yet. K7 and K8 are closed.
+K4 has no request yet. K7 and K8 are closed. K2, K3 and K11 have the
+Source changes described here; their owning checks, gate and review remain
+pending until evidence is recorded in the implementation report.
 
 - **K1. Platform rules are code that replay needs.** A platform scope pins
   `platform:<name>@<n>`. Replay derives it only with code that its caller
@@ -102,13 +108,23 @@ K4 has no request yet. K7 and K8 are closed.
   move the shipped versions into a frozen part of the kernel; or replace
   the marks with declared forms. Design request `50133470` covers K1 and
   K6.
-- **K2. `derive` imports `package-graph`.** `derive/src/validate/fields.ts:26`
-  re-exports `fieldAssignable`, a grammar rule, and
-  `derive/src/validate-package.ts:7` imports `checkPackageGraph`. Passing
-  takes `fieldAssignable` into `derive`, and package validation out of it.
-  Request `30c7c3ec` covers K2, K3 and K11.
-- **K3. Application codecs in `bytes`.** Passing takes the
-  `application-*.ts` codecs into a platform package.
+- **K2. Package graph leaves the production kernel.** The proposed Source
+  places the single field-assignability implementation in
+  `derive/src/field-types.ts`, exposed by `dap-derive/field-types`.
+  `package-graph` imports that home. Native package validation moves to
+  `platform/src/validate-package.ts`, exposed by
+  `dap-platform/package-validation`; its integration witness moves to
+  platform. Caller bounds, profiles, graph decisions and codec errors stay
+  unchanged. The corpus harness remains in derive. Request `30c7c3ec`
+  covers K2, K3 and K11; validation and exact-head review are pending.
+- **K3. Application codecs leave `bytes`.** The proposed Source moves all
+  20 modules into `platform/src/application-codec/`, exposed by
+  `dap-platform/application` and `dap-platform/application-v2`.
+  The directory preserves the existing native `platform/src/application.ts`
+  cohort implementation. Eight whole codec tests move to platform with
+  their 32 existing cases and unchanged wire, digest, signature and refusal
+  assertions. Bytes has no compatibility re-export of the moved codecs.
+  Test fixtures remain explicit test-only imports. Validation is pending.
 - **K4. Platform and app vocabulary in `contract` and `derive`.** Examples:
   the closed kind list (`contract/src/scope.ts:19`); the closed capability
   names (`contract/src/capability.ts:19`); the grow device kinds
@@ -153,9 +169,10 @@ K4 has no request yet. K7 and K8 are closed.
   configuration is the platform's. Passing takes the entry and its
   configuration into a platform home. Design request `1fcd6692` takes it
   into its scope.
-- **K11. A dead example.** `examples/demo-repo` imports a package that no
-  longer exists. Passing takes its deletion and the two references in
-  `docs/policy-pack.md`.
+- **K11. The dead example is removed in Source.** The two tracked files
+  below `examples/demo-repo` and the command/link in `docs/policy-pack.md`
+  are deleted. The guide states the removal. Dated notes and reports are
+  unchanged; final review remains pending.
 
 ## 6. Kernel promises
 
@@ -213,6 +230,51 @@ A head adds to the kernel when it does any of these:
 
 The checker checks this rule on every head that touches these packages.
 A head that removes a kernel promise also needs this review.
+
+### Maintained production dependency check
+
+`node scripts/check-kernel-boundary.mjs` parses production imports,
+exports, require calls and dynamic imports, including erased type edges.
+It follows exact workspace exports and relative cross-package paths.
+Only contract, bytes and derive are permitted workspace targets; the one
+machine list is `KERNEL` in that script. Their production dependency,
+optional-dependency and peer-dependency pins are checked as well.
+
+The following marked table is the sole machine-readable approval list for
+external production libraries. Workspace pins must match the actual
+coordinated package versions; external pins must match this table, the
+installed package and the lock. Unknown exports, computed module targets,
+unresolved paths and unsupported package/compiler aliases are refused.
+The resolver models the inherited Bundler mode with package exports. It
+refuses configured `baseUrl`, `rootDirs` and `moduleSuffixes`, other
+resolution modes, and disabled package-export resolution rather than
+assuming those settings resolve the same production source. Loader
+references must use supported direct calls; extracted aliases and computed
+loader names are refused. The `module` loader object may be used only for
+a supported direct `module.require` call; object aliases, destructuring
+and other member chains are refused.
+A new library or changed pin needs review of this page, not a broad prefix
+exception in code.
+
+<!-- kernel-approved-libraries -->
+| Package | Exact version |
+|---|---|
+| `@noble/curves` | `2.4.0` |
+| `@noble/hashes` | `2.4.0` |
+| `jsonata` | `2.2.2` |
+<!-- /kernel-approved-libraries -->
+
+Tests and tooling are outside this production boundary. Production code
+cannot import an excluded test/tool file to evade it. The corpus stays in
+derive as a test harness, with its explicit nonkernel fixtures. The
+ordinary `npm test` path runs the structural check before Vitest and its
+two compact parser/resolver Node witnesses in the existing Node check
+list. The proposed paired control temporarily adds a platform import to
+`derive/src/index.ts`, requires a refusal naming that file, then restores
+the exact original. The control is not committed. These structural checks
+prove dependency placement, not byte compatibility or native authority;
+the moved codec witnesses and final gate remain separate requirements.
+
 
 ### 7.1 Filing while parts fail the test
 

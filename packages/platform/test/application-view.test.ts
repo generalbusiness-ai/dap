@@ -1,10 +1,10 @@
 import { expect, test } from "vitest";
 import type { DeclaredDefinition } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest } from "../src/index.ts";
-import { definition as empty } from "./fixtures.ts";
-import { readApplicationProjection } from "../src/application-projection.ts";
-import { bindApplicationViews } from "../src/application-view-binding.ts";
-import { ApplicationViewError, readApplicationViews } from "../src/application-view.ts";
+import { canonicalize, definitionDigest } from "@generalbusiness/dap-bytes";
+import { definition as empty } from "../../bytes/test/fixtures.ts";
+import { readApplicationProjection } from "../src/application-codec/application-projection.ts";
+import { bindApplicationViews } from "../src/application-codec/application-view-binding.ts";
+import { ApplicationViewError, readApplicationViews } from "../src/application-codec/application-view.ts";
 
 // Made-up declarations. This tests no native admission, current authority,
 // when evaluation, renderer, host route or actual signing operation.

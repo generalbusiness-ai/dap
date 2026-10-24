@@ -2,8 +2,8 @@
 import type { DeclaredDefinition, FieldValue, MemberObservation, PlatformData } from "@generalbusiness/dap-contract";
 import { DEVICE_COMMAND } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isMemberRef, isRecord, parseStrict, textDigest, utf8 } from "@generalbusiness/dap-bytes";
-import { readApplicationReleaseUri } from "@generalbusiness/dap-bytes/application";
-import { readPublishedApplicationReleaseProof2, type PublishedApplicationReleaseProof2 } from "@generalbusiness/dap-bytes/application-v2";
+import { readApplicationReleaseUri } from "./application-codec/application.ts";
+import { readPublishedApplicationReleaseProof2, type PublishedApplicationReleaseProof2 } from "./application-codec/application-v2.ts";
 import { same, validateDefinition, type GuardRule, type RuleGiven, type Rules } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { applicationInstallRulesScope, applicationInstallRules } from "./application-install.ts";

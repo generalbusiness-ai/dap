@@ -1,9 +1,9 @@
 import { expect, test } from "vitest";
 import { ITEM_QUERY_BOUNDS, ITEM_QUERY_ORDER, type DeclaredDefinition, type Head, type Item, type ItemQuery, type ItemQueryRead } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, encodeItemQueryCursor, itemQueryArgument, itemQueryDigest, textDigest } from "../src/index.ts";
-import { definition as empty, directory as scope } from "./fixtures.ts";
-import { applicationProjectionQueries, projectApplicationQueryReads } from "../src/application-projection-read.ts";
-import { readApplicationProjection } from "../src/application-projection.ts";
+import { canonicalize, definitionDigest, encodeItemQueryCursor, itemQueryArgument, itemQueryDigest, textDigest } from "@generalbusiness/dap-bytes";
+import { definition as empty, directory as scope } from "../../bytes/test/fixtures.ts";
+import { applicationProjectionQueries, projectApplicationQueryReads } from "../src/application-codec/application-projection-read.ts";
+import { readApplicationProjection } from "../src/application-codec/application-projection.ts";
 
 // Native rows and query envelopes below are scripted. No journal, read
 // authorization, host route, MCP tool or kit runs in this pure witness.

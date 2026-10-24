@@ -2,7 +2,7 @@
  * checks exact refs/head and bounded shape; it is not a separate entry-body
  * verification or a permission to look up foreign facts. */
 import type { Digest, Head, Item, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isFactRef, isHead, isLocalId, isRecord, parseStrict, timeMs } from "./index.ts";
+import { canonicalize, isDigest, isFactRef, isHead, isLocalId, isRecord, parseStrict, timeMs } from "@generalbusiness/dap-bytes";
 import { applicationJson } from "./application-json.ts";
 import { APPLICATION_PROJECTION_LIMITS as B, projectionFailure, type ApplicationItemProjectionSource } from "./application-projection-types.ts";
 

@@ -1,12 +1,12 @@
-import { journalProjectionDefinition as definition } from "./definition-corpus-data.ts";
+import { journalProjectionDefinition as definition } from "../../bytes/test/definition-corpus-data.ts";
 /** Canonical signed tail fixtures, not native authority or whole replay. */
 import { expect, test } from "vitest";
 import type { Entry } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, entryHash, keyIdOfSecret, signIntent, textDigest, utf8 } from "../src/index.ts";
-import { directory } from "./fixtures.ts";
-import { bindApplicationProjection, applicationProjectionId, readApplicationProjection } from "../src/application-v2.ts";
-import { projectApplicationQueryReads } from "../src/application-projection-read.ts";
-import { applicationProjectionQueryDigest, readApplicationProjectionReply } from "../src/application-projection-wire.ts";
+import { canonicalize, definitionDigest, entryHash, keyIdOfSecret, signIntent, textDigest, utf8 } from "@generalbusiness/dap-bytes";
+import { directory } from "../../bytes/test/fixtures.ts";
+import { bindApplicationProjection, applicationProjectionId, readApplicationProjection } from "../src/application-codec/application-v2.ts";
+import { projectApplicationQueryReads } from "../src/application-codec/application-projection-read.ts";
+import { applicationProjectionQueryDigest, readApplicationProjectionReply } from "../src/application-codec/application-projection-wire.ts";
 const scope = { ...directory, kind: "lane" as const }, secret = new Uint8Array(32).fill(71);
 
 const projection = () => ({ v: 1, definition: definitionDigest(definition), revision: "revision", sources: { log: {

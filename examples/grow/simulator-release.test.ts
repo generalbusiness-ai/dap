@@ -3,7 +3,7 @@
 import { readFile, rm } from "node:fs/promises";
 import { expect, test } from "vitest";
 import { b64url, canonicalBytes, keyIdOfSecret } from "@generalbusiness/dap-bytes";
-import { packApplication2 } from "@generalbusiness/dap-bytes/application-v2";
+import { packApplication2 } from "@generalbusiness/dap-platform/application-v2";
 import { secretSigner } from "@generalbusiness/dap-client";
 import { prepareApplicationDirectory } from "../../packages/cli/src/application-files.ts";
 import { prepareGrowCheck } from "./prepare-check.ts";

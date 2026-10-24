@@ -6,7 +6,7 @@ import { env, runDurableObjectAlarm, runInDurableObject } from "cloudflare:test"
 import { expect, inject, test } from "vitest";
 import { DEVICE_COMMAND, PROPOSED_BOUNDS, type DeclaredDefinition, type Digest, type FactRef, type Head, type Input, type PlatformDefinition, type ScopeId, type ScopeRef, type Sealed } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, encodeItemQueryParameter, isDigest, isEntry, isFactRef, isScopeId, isRecord, isSeed, parseStrict, scopeIdOf, textDigest, timeMs, timeOf, unb64url, utf8 } from "@generalbusiness/dap-bytes";
-import { readApplicationPackage2, readPublishedApplicationPackage2 } from "@generalbusiness/dap-bytes/application-v2";
+import { readApplicationPackage2, readPublishedApplicationPackage2 } from "@generalbusiness/dap-platform/application-v2";
 import { inputTexts, outcomeValueDomains, ownersOf, validateDefinition, type OperationRules, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, platform } from "@generalbusiness/dap-platform";

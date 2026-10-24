@@ -4,7 +4,7 @@
 import type { DeclaredDefinition, Evidence, FieldValue, PlatformData } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isMemberRef, isRecord, isScopeRef, parseStrict, textDigest, utf8 } from "@generalbusiness/dap-bytes";
-import { readApplicationReleaseProof, readApplicationReleaseUri, type ApplicationReleaseProof } from "@generalbusiness/dap-bytes/application";
+import { readApplicationReleaseProof, readApplicationReleaseUri, type ApplicationReleaseProof } from "./application-codec/application.ts";
 import { validateDefinition, type GuardRule, type Item, type RuleGiven, type RuleEffect, type Rules } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { rulesScope3, rulesScopeRules3 } from "./rules-scope.ts";

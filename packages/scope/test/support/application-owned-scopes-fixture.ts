@@ -4,7 +4,7 @@ import { emptyPackageComposition } from "@generalbusiness/dap-package-graph";
  * native create form; no handmade genesis, identity or grant stands behind it. */
 import type { Digest } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest } from "@generalbusiness/dap-bytes";
-import { packApplication2, readApplicationProjection } from "@generalbusiness/dap-bytes/application-v2";
+import { packApplication2, readApplicationProjection } from "@generalbusiness/dap-platform/application-v2";
 import { fixedSigner } from "../fixtures-core.ts";
 
 

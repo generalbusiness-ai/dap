@@ -5,7 +5,7 @@
 import type { Beside, Digest, FieldValue, SignedIntent } from "@generalbusiness/dap-contract";
 import { DOMAINS } from "@generalbusiness/dap-contract";
 import { canonicalize, parseStrict } from "@generalbusiness/dap-bytes";
-import { applicationProjectionQueryDigest, type AnyPackedApplication } from "@generalbusiness/dap-bytes/application-v2";
+import { applicationProjectionQueryDigest, type AnyPackedApplication } from "@generalbusiness/dap-platform/application-v2";
 import { signedIntent, type Fetch } from "@generalbusiness/dap-client";
 import type { openOwnedGrowScenario } from "./grow-owned-session.ts";
 import { room } from "../../../../examples/grow/room.ts";

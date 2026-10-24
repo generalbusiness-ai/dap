@@ -1,4 +1,4 @@
 export * from "./types.ts";
 export * from "./read.ts";
 export * from "./check.ts";
-export * from "./field-types.ts";
+export { fieldAssignable } from "@generalbusiness/dap-derive/field-types";
