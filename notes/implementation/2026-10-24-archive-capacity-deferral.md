@@ -30,13 +30,13 @@ stops nor infers their cause. Operator restart and its exact-row safeguards
 are separate work. Deferral preserves retryability; it does not prove that
 every legal entry will fit a future pass under the same fixed budget.
 
-## Evidence still required
+## Validation
 
-The affected checks and paired control are recorded below. The final gate
-and exact-head review remain pending. The maintained parser supplied the actual
+The affected checks, paired control and passing final gate are recorded below.
+Exact-head review remains pending. The maintained parser supplied the actual
 driver source seal, which root adopted in its existing map slot. The requested
 witnesses distinguish limited lookahead and a non-null unaffordable finish
-from a hard null forecast. They must retain spent cost, persist the normal
+from a hard null forecast. They retain spent cost, persist the normal
 retry without a Mark or stop, then advance through the actual due alarm
 without a new entry. Existing earlier-prefix, hard-stop, exact pending
 rebuild, conflict, timeout and alarm-recovery assertions remain.
@@ -73,3 +73,22 @@ The final gate candidate also includes the reviewed hosted admission change
 and its two-sentence documentation correction. That merge changes no archive
 production or witness bytes. Deployment requires the planner's hosted MCP
 opt-in and tool-addition choices as well as the archive rollout decision.
+
+The ordinary gate at `163baafbf8339f65844e1c1878eab77de9fd885c`, tree
+`c27fa9192d927b4d923754a2755f845760faa7dd`, exited normally with status zero.
+It passed all compiler and gate stages: 3,529 Vitest cases passed, three were
+skipped, and the separate Node and Counting browser blocks passed 39 and 55
+checks. All 3,532 unique terminal case records are retained. Incremental
+callbacks have gaps and one duplicate ready callback; the terminal records
+and raw summary agree. No unhandled error was reported, and the source,
+lock stamp and tool checkpoint remained unchanged.
+
+The outer gate took 1,349.26 seconds elapsed and 1,555.26 seconds of CPU,
+printed to 0.01-second precision. Its nested process and stage measurements
+are not added again. Earlier affected and control invocations took a summed
+39.972655293 seconds elapsed and 50.124146 seconds of CPU, with every original
+failure preserved as described above. These are validation costs, not the complete
+elapsed time from implementation to review. Dependency preparation and its
+unrecorded CPU cost are separate. This subsequent note update changes no
+production code, test, seal, dependency or gate configuration, so the passing
+gate is carried under the documentation-only rule in `docs/testing.md`.
