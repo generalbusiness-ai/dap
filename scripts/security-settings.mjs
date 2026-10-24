@@ -24,6 +24,8 @@ function names(pattern) {
   if (!pattern) return [];
   if (pattern.type === "Identifier") return [pattern.name];
   if (pattern.type === "AssignmentPattern") return names(pattern.left);
+  if (pattern.type === "ArrayPattern") return pattern.elements.flatMap(names);
+  if (pattern.type === "RestElement") return names(pattern.argument);
   if (pattern.type === "ObjectPattern") return pattern.properties.flatMap(p => names(p.value ?? p.argument));
   return [];
 }
@@ -33,7 +35,7 @@ const refs = node => {
   function visit(value) {
     if (!value || typeof value !== "object") return;
     if (value.type === "TSTypeReference" && value.typeName?.type === "Identifier") result.add(value.typeName.name);
-    if (value.type === "TSExpressionWithTypeArguments" && value.expression?.type === "Identifier") result.add(value.expression.name);
+    if (["TSExpressionWithTypeArguments", "TSInterfaceHeritage"].includes(value.type) && value.expression?.type === "Identifier") result.add(value.expression.name);
     for (const child of Object.values(value)) if (Array.isArray(child)) child.forEach(visit); else if (child && typeof child === "object") visit(child);
   }
   visit(node); return result;
@@ -78,16 +80,43 @@ export function sandboxSettingKeys(source, file = "apps/sandbox/worker.ts") {
 /** Lexical immutable aliases only. Unsupported Env uses refuse, never vanish. */
 export function environmentReads(source, file, { environmentTypes = new Set(), forwarding = new Map(), sandbox = false } = {}) {
   const tree = parse(source, file), reads = [];
+  // One existing protected adapter. This is a Source tripwire, not return-flow inference.
+  const metricReturns = new Set(), metricCalls = new Set();
+  if (file === "packages/scope/src/object.ts") {
+    const method = "protected metricEnvironment(): MetricEnvironment { return this.env as MetricEnvironment; }";
+    const start = source.indexOf(method), references = [], consumers = [], returns = [];
+    walk(tree, n => {
+      if (n.type === "MemberExpression" && n.object.type === "ThisExpression" && prop(n.property) === "metricEnvironment") references.push(n);
+      if (n.type === "CallExpression" && n.callee.type === "Identifier" && n.callee.name === "operationContext") {
+        const first = n.arguments[0];
+        if (first?.type === "CallExpression" && first.arguments.length === 0 && first.callee.type === "MemberExpression" && first.callee.object.type === "ThisExpression" && prop(first.callee.property) === "metricEnvironment") consumers.push(first);
+      }
+      if (n.type === "ReturnStatement" && n.start >= start && n.end <= start + method.length) returns.push(n);
+    });
+    if (start < 0 || source.indexOf(method, start + 1) !== -1 || references.length !== 1 || consumers.length !== 1 || references[0] !== consumers[0].callee || returns.length !== 1 || !environmentTypes.has("MetricEnvironment") || !forwarding.get("operationContext")?.has(0)) fail(file, tree, "metric environment adapter or its sole typed consumer changed");
+    metricReturns.add(returns[0].argument.start); metricCalls.add(consumers[0].start);
+  }
   const superPositions = Symbol("platform environment constructor");
   const platformBases = new Set(tree.body.filter(n => n.type === "ImportDeclaration" && n.source.value === "cloudflare:workers")
     .flatMap(n => n.specifiers.filter(p => p.type === "ImportSpecifier" && ["DurableObject", "WorkerEntrypoint"].includes(prop(p.imported))).map(p => p.local.name)));
   const typed = annotation => uppercaseShape(annotation) || [...refs(annotation)].some(name => environmentTypes.has(name));
+  const localCallable = parameters => {
+    const positions = new Set();
+    parameters.forEach((parameter, index) => {
+      if (typed(annotation(parameter))) {
+        if (parameter.type === "RestElement") fail(file, parameter, "variadic environment parameter");
+        positions.add(index);
+      }
+    });
+    return { positions };
+  };
   const record = (name, node) => {
     if (!upper(name)) fail(file, node, "nonliteral or noncanonical environment key");
     reads.push({ name, file, start: node.start, end: node.end });
   };
   const isEnv = (node, scope) => {
     node = unwrap(node);
+    if (node?.type === "CallExpression" && metricCalls.has(node.start)) return true;
     if (node?.type === "Identifier") return scope.get(node.name) === true;
     if (node?.type === "MemberExpression" && !node.computed && node.object.type === "ThisExpression" && prop(node.property) === "env") return true;
     return node?.type === "ObjectExpression" && node.properties.some(p => p.type === "SpreadElement" && isEnv(p.argument, scope));
@@ -124,7 +153,8 @@ export function environmentReads(source, file, { environmentTypes = new Set(), f
       for (const statement of node.body) {
         const declaration = statement.declaration ?? statement;
         if (declaration.type === "VariableDeclaration") for (const item of declaration.declarations) for (const name of names(item.id)) local.set(name, false);
-        if (["FunctionDeclaration", "ClassDeclaration"].includes(declaration.type) && declaration.id) local.set(declaration.id.name, false);
+        if (declaration.type === "FunctionDeclaration" && declaration.id) local.set(declaration.id.name, localCallable(declaration.params));
+        if (declaration.type === "ClassDeclaration" && declaration.id) local.set(declaration.id.name, false);
       }
       for (const statement of node.body) visit(statement, local, node, "body"); return;
     }
@@ -154,11 +184,16 @@ export function environmentReads(source, file, { environmentTypes = new Set(), f
       return;
     }
     if (node.type === "AssignmentExpression" && isEnv(node.left, scope)) fail(file, node, "environment reassignment");
+    if (["AssignmentExpression", "UpdateExpression"].includes(node.type)) {
+      const target = node.left ?? node.argument;
+      if (names(target).some(name => scope.has(name) ? scope.get(name)?.positions : forwarding.has(name))) fail(file, node, "callable identity reassignment");
+    }
     if (node.type === "SpreadElement" && isEnv(node.argument, scope) && parent?.type !== "ObjectExpression") fail(file, node, "environment argument spread");
     if (isEnv(node, scope)) {
       const allowed = parent?.type === "MemberExpression" && key === "object"
         || parent?.type === "VariableDeclarator" && key === "init"
         || parent?.type === "SpreadElement"
+        || parent?.type === "ReturnStatement" && metricReturns.has(node.start)
         || ["TSAsExpression", "TSSatisfiesExpression", "TSNonNullExpression", "ParenthesizedExpression", "ChainExpression"].includes(parent?.type)
         || parent?.type === "UnaryExpression" && ["typeof", "!"].includes(parent.operator)
         ;
@@ -167,14 +202,14 @@ export function environmentReads(source, file, { environmentTypes = new Set(), f
           const callee = unwrap(parent.callee), name = callee?.name ?? (callee?.type === "MemberExpression" ? prop(callee.property) : null);
           const position = parent.arguments.indexOf(node);
           const accepted = callee?.type === "Super" ? scope.get(superPositions)?.has(position)
-            : callee?.type === "Identifier" && !scope.has(name) && forwarding.get(name)?.has(position);
+            : callee?.type === "Identifier" && (scope.has(name) ? scope.get(name)?.positions?.has(position) : forwarding.get(name)?.has(position));
           if (!accepted) fail(file, node, `unresolved environment forwarding to ${name ?? "super/expression"} argument ${position}`);
           if (parent.arguments.some(argument => argument.type === "SpreadElement")) fail(file, parent, "spread arguments in environment forwarding");
         } else fail(file, node, "escaped environment object");
       }
     }
     for (const [childKey, value] of Object.entries(node)) {
-      if (["start", "end", "loc", "typeAnnotation"].includes(childKey) || node.type.startsWith("TS") && !["TSAsExpression", "TSSatisfiesExpression", "TSNonNullExpression"].includes(node.type)) continue;
+      if (["start", "end", "loc", "typeAnnotation"].includes(childKey) || typeof node.type === "string" && node.type.startsWith("TS") && !["TSAsExpression", "TSSatisfiesExpression", "TSNonNullExpression"].includes(node.type)) continue;
       if (Array.isArray(value)) for (const child of value) visit(child, scope, node, childKey);
       else if (value && typeof value === "object") visit(value, scope, node, childKey);
     }

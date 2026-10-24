@@ -35,6 +35,11 @@ test("setting reads follow immutable lexical aliases and refuse unsupported esca
   assert.throws(() => environmentReads(platform.replace("super(ctx, env)", "super(env, ctx)"), "platform.ts", options), /argument 0/);
   const shadowedPlatform = 'import { DurableObject } from "cloudflare:workers"; function nested() { class DurableObject { constructor(a: unknown, b: unknown) { return (b as any).NEW_SETTING; } } class Worker extends DurableObject { constructor(ctx: unknown, env: Env) { super(ctx, env); } } }';
   assert.throws(() => environmentReads(shadowedPlatform, "platform.ts", options), /super\/expression.*argument 1/);
+  const nested = "function outer() { function accept(value: unknown, settings: Env) { return settings.TEXT; } function invoke(env: Env) { accept({}, env); } }";
+  assert.deepEqual(environmentReads(nested, "nested.ts", options).map(row => row.name), ["TEXT"]);
+  assert.throws(() => environmentReads(nested.replace("accept({}, env)", "accept(env, {})"), "nested.ts", options), /argument 0/);
+  assert.throws(() => environmentReads(nested.replace("function invoke", "accept = (a, b) => b.NEW_SETTING; function invoke"), "nested.ts", options), /callable identity reassignment/);
+  assert.throws(() => environmentReads(nested.replace("function invoke", "[accept] = replacements; function invoke"), "nested.ts", options), /callable identity reassignment/);
   const loop = environmentReads("function run(env: Env) { for (const env of []) {} return env.NEW_SETTING; }", "specimen.ts", options);
   assert.deepEqual(loop.map(row => row.name), ["NEW_SETTING"]);
 });
@@ -47,6 +52,12 @@ test("the real Worker source inventory rejects an undocumented setting read", ()
   const original = checkSettings(root);
   assert.ok(original.settings > 0);
   const file = "packages/scope/src/health.ts";
+  const inherited = source(file) + "\ninterface D3InheritedEnvironment extends HealthEnvironment {}\nfunction inheritedRead(env: D3InheritedEnvironment) { return env.SECURITY_SETTINGS_UNDOCUMENTED; }\n";
+  assert.throws(() => checkSettings(root, { overrides: new Map([[file, inherited]]) }), /undocumented setting read SECURITY_SETTINGS_UNDOCUMENTED/);
+  const object = "packages/scope/src/object.ts";
+  for (const changedAdapter of [source(object).replace("return this.env as MetricEnvironment;", "return (this.env as MetricEnvironment);"), source(object).replace("operationContext(this.metricEnvironment()", "untrackedConsumer(this.metricEnvironment()")]) {
+    assert.throws(() => checkSettings(root, { overrides: new Map([[object, changedAdapter]]) }), /metric environment adapter or its sole typed consumer changed/);
+  }
   const changed = source(file) + "\nfunction undocumentedSettingWitness(env: HealthEnvironment) { return env.SECURITY_SETTINGS_UNDOCUMENTED; }\n";
   assert.throws(() => checkSettings(root, { overrides: new Map([[file, changed]]) }), /health\.ts:.*undocumented setting read SECURITY_SETTINGS_UNDOCUMENTED/);
   const inventory = readSettingsDocument(page);
