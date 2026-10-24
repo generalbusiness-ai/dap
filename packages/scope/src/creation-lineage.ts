@@ -4,7 +4,7 @@ import { injectedPlatformCreationPolicy, permitsNewPlatformScope } from "./creat
  * history in this deployment may open a child object. */
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Digest, Entry, FactRef, PlatformDefinition, ScopeKind, ScopeRef, Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, intentDigest, isDigest, isPlatformDefinition, isFactRef, isLocalId, isSeed, isSignedIntentShape, parseStrict, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { canonicalize, definitionDigest, intentDigest, isDigest, isPlatformDefinition, isFactRef, isLocalId, isSeed, isSignedIntentShape, parseStrict, scopeIdOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { creates, isObject, isScopeRef, same, sentBy, validateDefinition, type Delivered } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { applicationJson } from "@generalbusiness/dap-platform/application";
