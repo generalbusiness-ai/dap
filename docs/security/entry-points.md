@@ -9,6 +9,13 @@ result. It does not imply that the gate runs before object activation or all
 other work. For `none`, the work and state columns cover the whole request.
 Refusals and unsupported methods are not additional routes.
 
+The fixed `archive-row-diagnostic-v1` line reports bounded stored archive
+state and the platform alarm once per object activation, through existing
+ingress before recovery. It adds no RPC, HTTP, member, MCP or operator caller.
+Its internal reader does no recovery or writes. Existing cold constructor
+effects remain; the planner accepted this warm observation boundary. A tail
+is an observation channel, not authority to restart an archive.
+
 - **none**: no caller identity or membership proof. Publication and package
   trust checks can still restrict the bytes served.
 - **creation**: parentless serving admission followed by the native genesis
