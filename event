@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3eadf551c276b9f190288c36528f1f1b2f5dd649","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-24-kernel-hygiene.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3f55cef898657015c480e08facd3aa4facbe18d8","text":"Merge retired a covered predecessor; the successor is at packages/platform/package.json."}
