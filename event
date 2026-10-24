@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c6b74a02de9052206190bc0eb7998e9fda827d68","text":"Merge retired a covered predecessor; the successor is at apps/room/lanes/test/site-native3-publication.scope.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c6dce9f282146034517bd2eb5fc8a0f8a4969951","text":"Merge retired a covered predecessor; the successor is at packages/git/src/journal-v2-manifest.ts."}
