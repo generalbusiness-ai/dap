@@ -86,7 +86,7 @@ export function refused(reason: SiteRefusal, sentence: string, step?: SiteStep, 
     "host-not-configured": `This host does not read the repository of ${browser?.room ?? "this room"}.`,
     unreadable: "The published page could not be read.",
     "rate-limited": "Too many Pages reads. Try again after a minute.",
-    unavailable: "Pages admission is unavailable. Try again later.",
+    unavailable: "Pages are temporarily unavailable. Try again later.",
   };
   const body = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Pages</title>
@@ -268,7 +268,7 @@ export async function site(request: Request, env: SiteEnv, fetch?: (request: Req
   if (parsed.ref !== null && (parsed.path.length > 64 || utf8.encode(parsed.path.join("/")).length > 8192)) return refusal("unreadable", "publication-history-limit", "objects");
   const admission = await admitServing(env, { kind: "site-read" }, address);
   if (admission !== "admitted") return admission === "rate-limited"
-    ? refusal("rate-limited", "too many site reads") : refusal("unavailable", "site admission is unavailable");
+    ? refusal("rate-limited", "too many site reads") : refusal("unavailable", "the site is temporarily unavailable");
   // Redirects and conditional reads also consume a public-site attempt.
   if (parsed.ref === null) return new Response(null, { status: 302, headers: { location: `/site/${segment(parsed.directory)}/HEAD/`, "cache-control": "no-store" } });
   const { directory, ref, path, trailing } = parsed;

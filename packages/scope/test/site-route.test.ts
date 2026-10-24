@@ -536,7 +536,7 @@ test("refusals preserve machine reasons and statuses while browsers get safe Pag
   expect((await site(new Request(`https://room.test/site/${D.name}`), { SCOPES: scopes, SCOPE_INDEX: index }, send)).status).toBe(429);
   expect([admissions, targets, fetches]).toEqual([242, before, 0]);
   const unavailable = await site(new Request(address), { SCOPES: scopes }, send);
-  expect([unavailable.status, unavailable.headers.get("cache-control"), await unavailable.text()]).toEqual([503, "no-store", "unavailable: site admission is unavailable\n"]);
+  expect([unavailable.status, unavailable.headers.get("cache-control"), await unavailable.text()]).toEqual([503, "no-store", "unavailable: the site is temporarily unavailable\n"]);
   const brokenIndex: Binding<string> = { idFromName: name => name, get: () => { throw Error("scripted index unavailable"); } };
   expect((await site(new Request(address), { SCOPES: scopes, SCOPE_INDEX: brokenIndex }, send)).status).toBe(503);
   expect([targets, fetches]).toEqual([before, 0]);
