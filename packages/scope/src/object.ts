@@ -158,6 +158,9 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   readonly #readers: Readers;
   /** True until this object's first turn: its first call or its alarm (`#first`). In memory, so a restart sets it again. */
   #fresh = true;
+  #alarmRevision = 0;
+  #alarmRunning = 0;
+  #archiveAlarmRecovery: Promise<void> | null = null;
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
@@ -179,7 +182,8 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     const alarm: Alarm = { set: (at) => (at === null ? ctx.storage.deleteAlarm() : ctx.storage.setAlarm(timeMs(at)!)) };
     const given: Ports = { ...production(), alarm, ...wiring.ports };
     // The one alarm serves the earliest deadline, the next attempt of an outside operation and, with a transport, the next dispatch.
-    const wakes = new Wakes(store, given.alarm, given.transport !== null, wiring.fixtureArchive || wiring.archive ? () => this.#archive?.wake() ?? null : undefined);
+    const schedulingAlarm: Alarm = { set: at => { this.#alarmRevision++; return given.alarm.set(at); } };
+    const wakes = new Wakes(store, schedulingAlarm, given.transport !== null, wiring.fixtureArchive || wiring.archive ? () => this.#archive?.wake() ?? null : undefined);
     this.#wakes = wakes;
     // The authority of a deployed scope reads this scope's own genesis entry, for the membership scope that it records.
     const genesis = (): Extract<Input, { type: "genesis" }> | null => {
@@ -345,6 +349,28 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     return answer;
   }
 
+  /** Recover only scheduling, never an archive pass or a native turn. A
+   * canceled alarm can otherwise strand its durable wake in a live object. */
+  #recoverArchiveAlarm(): void {
+    if (!this.#archive || this.#alarmRunning || this.#archiveAlarmRecovery) return;
+    // Quiet scopes need no asynchronous alarm lookup. Re-read after the await.
+    if (this.#archive.wake() === null) return;
+    const recovery = (async () => {
+      const revision = this.#alarmRevision;
+      const actual = await this.ctx.storage.getAlarm();
+      // getAlarm is null inside an alarm handler unless a successor is set.
+      // Its final arbitration owns recovery. A newer local scheduling action
+      // also supersedes this read, even if it happened while getAlarm awaited.
+      if (this.#alarmRunning || revision !== this.#alarmRevision) return;
+      const wake = this.#archive!.wake(), at = wake === null ? null : timeMs(wake);
+      if (at !== null && (actual === null || actual > at)) await this.#wakes.set();
+    })().catch(() => { /* A later ingress retries scheduling; its answer is unchanged. */ })
+      .finally(() => { this.#archiveAlarmRecovery = null; });
+    this.#archiveAlarmRecovery = recovery;
+    try { this.ctx.waitUntil(recovery); }
+    catch { /* Scheduling cannot refuse the request that exposed its wake. */ }
+  }
+
   /**
    * The first turn of this object's life, when that turn runs no pass of its own: one pass of the operations driver, which the
    * caller does not wait for, if an attempt is recorded and has no time to be looked at next (`Store.parked`). Such an attempt
@@ -354,6 +380,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
    * accepts it again. The pass sends nothing twice: an attempt marked sent is never sent again.
    */
   #first(): void {
+    this.#recoverArchiveAlarm();
     if (!this.#fresh) {
       if (this.#operations.reaccepted()) this.ctx.waitUntil(background("dispatch", () => this.#invoke("dispatch", () => this.#operations.run())).catch(() => 0));
       return;
@@ -385,11 +412,13 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     return context;
   }
   #invoke<A>(place: string, work: () => Promise<A>, identity?: OperationalIdentity): Promise<A> {
+    if (place !== "alarm") this.#recoverArchiveAlarm();
     const parent = operational();
     if (parent) return parent.place === place ? work() : inOperation({ ...parent, place, turn: { entered: false, known: true }, httpPublic: false }, work);
     return measured(this.#context(place, identity), work);
   }
   #invokeSync<A>(place: string, work: () => A): A {
+    this.#recoverArchiveAlarm();
     const parent = operational();
     if (parent) return parent.place === place ? work() : inOperation({ ...parent, place, turn: { entered: false, known: true }, httpPublic: false }, work);
     return measuredSync(this.#context(place), work);
@@ -551,8 +580,10 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     const result = bytes.exact(fact, maxBytes);
     return active() ? result : null;
   }
-  /** Closed raw birth view, without activation, source identity or authority. */
+  /** Closed raw birth view with scheduling metadata recovery only; no native
+   * turn, source identity, host I/O or authority work. */
   nativeBirth(at: unknown, milliseconds: number, maxBytes?: number) {
+    this.#recoverArchiveAlarm();
     const began = this.#queryFlights.clock.now(), ends = began + milliseconds;
     if (!Number.isSafeInteger(milliseconds) || milliseconds <= 0 || milliseconds > EXACT_PROOF_RECEIVER_BOUNDS.milliseconds || !Number.isFinite(began) || !Number.isFinite(ends)) return null;
     const active = () => { const now = this.#queryFlights.clock.now(); return now >= began && now < ends; };
@@ -665,26 +696,29 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   }
   /** The alarm: a turn with no waiting input, at the earliest deadline (section 5.2), then a dispatch pass, then a pass of the operations driver. */
   override async alarm(): Promise<void> {
-    return this.#invoke("alarm", async () => {
-    this.#fresh = false;
+    this.#alarmRunning++;
     try {
-      // One synchronous bounded quantum gets a turn before potentially
-      // asynchronous native owners. A backlog never drains in one alarm.
-      try { this.#store.localSigners.maintain(); }
-      catch { /* A storage retry must not prevent the other native owners. */ }
-      try { await this.#wakes.maintenance.set(this.#store.localSigners.pending() ? this.#maintenanceAt() : null); }
-      catch { /* The final arbitration retries without hiding native work. */ }
-      await this.#scope.alarm();
-      await this.dispatch();
-      await this.effect();
-      await this.#archive?.run();
-      if (this.#floorOffer) {
-        await this.#chains.update();
-        await this.#scope.floor(this.#floorOffer);
-      }
-      this.#followed();
-    } finally { await this.#wakes.set(); }
-    });
+      return await this.#invoke("alarm", async () => {
+        this.#fresh = false;
+        try {
+          // One synchronous bounded quantum gets a turn before potentially
+          // asynchronous native owners. A backlog never drains in one alarm.
+          try { this.#store.localSigners.maintain(); }
+          catch { /* A storage retry must not prevent the other native owners. */ }
+          try { await this.#wakes.maintenance.set(this.#store.localSigners.pending() ? this.#maintenanceAt() : null); }
+          catch { /* The final arbitration retries without hiding native work. */ }
+          await this.#scope.alarm();
+          await this.dispatch();
+          await this.effect();
+          await this.#archive?.run();
+          if (this.#floorOffer) {
+            await this.#chains.update();
+            await this.#scope.floor(this.#floorOffer);
+          }
+          this.#followed();
+        } finally { await this.#wakes.set(); }
+      });
+    } finally { this.#alarmRunning--; }
   }
 
   /**

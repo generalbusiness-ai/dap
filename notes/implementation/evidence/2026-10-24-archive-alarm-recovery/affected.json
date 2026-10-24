@@ -1,0 +1,53 @@
+{
+  "state": "AFFECTED_VALIDATION_PASS_WITH_MATCHED_CONTROL",
+  "baseHead": "6c15e85f2a76af89fb9d1e995e47aa3206e9a577",
+  "status": " M packages/scope/src/object.ts\n M packages/scope/test/archive-driver.test.ts\n M scripts/security-entry-points.test.mjs\n?? notes/implementation/2026-10-24-archive-alarm-recovery.md\n",
+  "source": {
+    "objectSha256": "28c7ef5c8730041f970a63164b197858491303ddd6889ac820a570416ffdd31a",
+    "controlAndFirstHealthyTestSha256": "22d481aa56b56862bb527d89748f119f95294bbaf8b8f738a61c4e9dd4894fc0",
+    "finalTestSha256": "701eedf6478f917713c82d4bae291a2f94edd69b66778466568453801921a46d"
+  },
+  "compilers": {
+    "scopeProduction": 0,
+    "scopeTestInitial": 0,
+    "scopeTestFinal": 0
+  },
+  "initialSandboxLaunch": {
+    "exit": 1,
+    "classification": "PREBODY_LISTEN_EPERM_LOOPBACK",
+    "caseOutcome": null
+  },
+  "healthyActual": {
+    "originalSession": 58314,
+    "naturalExit": 0,
+    "driverPass": 14,
+    "bootstrapPass": 4,
+    "fail": 0
+  },
+  "control": {
+    "originalSession": 83513,
+    "outerNaturalExit": 0,
+    "childNaturalExit": 1,
+    "passed": 13,
+    "failed": 1,
+    "intendedTitle": "a native birth read restores a lost archive alarm without shortening backoff or a prior alarm",
+    "assertion": "a read must re-arm the exact future archive backoff",
+    "frame": "archive-driver.test.ts:96:87",
+    "restoration": {
+      "bytes": 56614,
+      "sha256": "28c7ef5c8730041f970a63164b197858491303ddd6889ac820a570416ffdd31a",
+      "sameInode": true,
+      "sameMode": true,
+      "sameMtime": true,
+      "ctimeChanged": true
+    }
+  },
+  "finalHealthy": {
+    "originalSession": 11575,
+    "naturalExit": 0,
+    "passed": 14,
+    "failed": 0,
+    "changeSinceControl": "Added only setAlarm(next+1), readBirth and exact-next assertion for reset-later branch. Root authorized carrying original matched control; no control/bootstrap repeat."
+  },
+  "limits": "No gate/install/commit. Scripted host and explicit platform delete/reset are local reconstruction, not hosted cancellation cause proof. Original failures and raw logs retained. Complete lifetime dependency/source snapshots and inclusive CPU were not captured by this targeted command workflow."
+}
