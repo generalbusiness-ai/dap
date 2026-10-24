@@ -13,7 +13,7 @@ import { ArchiveRows } from "../src/archive-row.ts";
 import { ArtifactsProvider } from "../src/artifacts-host.ts";
 import { nativeArchiveFixture, archiveAuthorityBasis, archiveAuthorityPolicies, archiveAuthorityAnchors } from "./support/archive-native-authority.ts";
 import { ArchiveArtifactsPeer } from "./support/archive-artifacts.ts";
-import { archiveDefinition, archivePolicies, archiveRepository, archiveSql } from "./support/archive.ts";
+import { archiveDefinition, archivePolicies, archiveRepository as scriptedRepository, archiveSql } from "./support/archive.ts";
 import type { TestScope } from "./worker.ts";
 
 const CHECKPOINT_BACKLOG = 300;
@@ -59,6 +59,8 @@ class ObservedArchiveBudget extends ArchiveBudget {
 
 test("legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder", async context => {
   const fixture = await nativeArchiveFixture(), lane = await fixture.create({}, {}, archiveDefinition);
+  // Artifacts binds ID to name; the shared scripted-host tuple need not.
+  const archiveRepository = { ...scriptedRepository, id: scriptedRepository.name };
   const peer = new ArchiveArtifactsPeer(archiveRepository, () => Date.parse(lane.c.clock.now));
   const originalHead = await lane.head();
   const seeded = await lane.inside(async state => {
@@ -100,8 +102,8 @@ test("legacy v2 parent work preserves partial Native checkpoint progress and dra
     service: "service.invalid", maxBytes: 8 * 1024 * 1024, binding: peer.binding, fetch: request => peer.fetch(request),
     credentialHandle: async () => { throw Error("TEST fixture never uses production credential custody"); },
   }).fixtureArchive({ fixture: "archive-ports", clock: () => lane.c.clock.now, tokens: {
-    fixture: "archive-tokens", read: async () => "TEST parent read",
-    mint: async () => ({ id: "TEST append handle", plaintext: "TEST append write", ends: timeOf(Date.parse(lane.c.clock.now) + 60_000) }), revoke: async () => {},
+    fixture: "archive-tokens", read: async () => "TEST-parent-read",
+    mint: async () => ({ id: "TEST append handle", plaintext: "TEST-append-write", ends: timeOf(Date.parse(lane.c.clock.now) + 60_000) }), revoke: async () => {},
   } });
   const provider: FixtureArchiveProvider = { ...actual,
     readObject: async (repository, object, allowed, budget) => {
