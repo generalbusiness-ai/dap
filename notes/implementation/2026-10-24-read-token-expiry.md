@@ -36,16 +36,29 @@ including when a provider chooses an ID resembling a read handle. Cleanup
 retains read-token metadata and state; it does not claim provider revocation,
 append an entry or grant new authority.
 
-Legacy coverage is incomplete. An untagged row enrolls only with bounded
-retained proof of its current full incarnation, owned read-mint operation,
-opening and confirmed own outcome. Missing, pruned, oversized, invalid or
-unproved old-incarnation evidence leaves the row unchanged. The once-through
-backfill also leaves a read unchanged if confirmation arrives after its
-first scan: `judged()` alone does not enroll it. Explicitly tagged reads
-remain scheduled across restarts and incarnations. Whether conservative
-unknown-legacy retention is acceptable is pending planner decision
-`35728fff7c46dbe3135b5cc93986e06d721d2319`. This is not a complete legacy
-cleanup or hosted rollout claim.
+Planner decision `21a8e35b103dd0280ea711d78d167db0d355cafd` accepts partial
+legacy coverage. An untagged row enrolls only with bounded retained proof of
+its current full incarnation, owned read-mint operation, opening and confirmed
+own outcome. Missing, pruned, oversized, invalid or unproved old-incarnation
+evidence leaves the row unchanged: no retained discriminator safely separates
+those rows from write credentials needed for provider revocation. A held legacy
+read whose confirmation arrives after its once-through backfill scan also stays
+retained; `judged()` alone does not enroll it. All newly minted reads use explicit
+`putRead` enrollment and remain queued across restarts and incarnations. No
+further search for legacy proof is required. This is not complete legacy cleanup
+or a hosted rollout claim.
+
+Both current provider adapters record a provider-reported expiry. The
+[Artifacts adapter](../../packages/scope/src/artifacts-host.ts) sends the
+requested lifetime to `createToken("read", seconds)` and normalizes the returned
+`expiresAt`; it does not derive an end from the requested lifetime. The
+[GitHub adapter](../../packages/scope/src/github-host.ts) requests a
+repository-restricted installation token and records its returned expiry,
+without sending the requested seconds. The [GitHub client](../../packages/git/src/github.ts)
+requires that expiry to be in the future and no more than 65 minutes from its
+local clock. These are source contracts for current minting, not a measurement
+of deployed expiry enforcement or proof of any unknown legacy row's provider
+or expiry. Local plaintext removal does not revoke a provider token.
 
 ## Verification status
 
@@ -57,4 +70,7 @@ read-mint conflict and interrupted-insert recovery, bounded restart-safe
 maintenance, exact fractional end, earlier wake arbitration and preservation
 of write-token revocation. These witnesses have not run. Affected compilers,
 paired control, actual maintained Source seals and the final gate remain
-unrun. No dependency setup, deployment or provider measurement is recorded.
+unrun. Private dependencies were copied from the verified same-lock archive
+wake checkout without installing packages or executing project code. The
+copy passed its before/after checks and took 2.66 seconds wall and 2.23
+seconds CPU. No deployment or provider measurement is recorded.

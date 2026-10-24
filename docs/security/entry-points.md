@@ -418,6 +418,35 @@ evidence for the platform adapter, not an in-tree runtime witness.
 |---|---|---|---|---|---|
 | `GET, HEAD /*` | `none` | Platform asset selection | None | Finite deployed asset set; platform serving limits | None |
 
+## Unread read-token custody
+
+Only the trusted destination `mint-read` adapter enrolls newly minted member
+read tokens for local plaintext expiry. A durable marker binds the full scope
+and incarnation, token ID, mint operation, attempt and provider-reported end.
+The native alarm processes bounded backfill and due-queue quanta; delivery is
+not an exact-wall-clock guarantee. Taking or dropping plaintext keeps its
+metadata and does not revoke the provider token. Generic write-token plaintext
+stays available for provider revocation, even if its ID resembles a read handle.
+
+Planner decision `21a8e35b103dd0280ea711d78d167db0d355cafd` accepts partial
+legacy coverage. An untagged row needs bounded retained current-incarnation
+mint-read, opening and confirmed-outcome proof before enrollment. Rows with
+missing, pruned, oversized, invalid or unproved old-incarnation evidence remain
+retained because no safe retained discriminator separates them from write
+credentials. A held legacy read confirmed after its once-through backfill scan
+also remains retained; confirmation alone does not enroll it. All newly minted
+explicit read tokens are queued. No complete legacy cleanup is claimed.
+
+Current [Artifacts minting](../../packages/scope/src/artifacts-host.ts) sends
+the requested read lifetime to the provider and records its returned
+`expiresAt`. Current [GitHub minting](../../packages/scope/src/github-host.ts)
+records the installation token's provider-reported expiry rather than sending
+the requested seconds; the [client](../../packages/git/src/github.ts) requires
+a future expiry within 65 minutes of its clock. These adapter checks do not
+prove deployed provider enforcement or an unknown legacy row's origin or expiry.
+See the [implementation note](../../notes/implementation/2026-10-24-read-token-expiry.md)
+for the bounded maintenance and pending validation limits.
+
 ## Witness and limits
 
 Run `node --test scripts/security-entry-points.test.mjs`. The root test command
