@@ -28,39 +28,6 @@ function sum(...costs: readonly Partial<ArchiveCost>[]): ArchiveCost {
   for (const cost of costs) for (const key of Object.keys(result) as (keyof ArchiveCost)[]) result[key] += cost[key] ?? 0;
   return result;
 }
-// TEMPORARY unlanded diagnostic: fixed scalar schema, at most eight rows.
-// This adds synchronous observation overhead only; it grants no admission.
-type TemporaryAdaptivePhase = "source-lookahead" | "scout-lookahead" | "quote-lookahead"
-  | "prepare-lookahead" | "finish-quote" | "finish-budget" | "outer-limit";
-type TemporaryAdaptiveReason = "lookahead-limit" | "budget-limit" | "publication-shape" | "publication-scopes"
-  | "selection-limit" | "body-limit" | "manifest-limit" | "patch-limit" | "layout-limit"
-  | "append-limit" | "bookkeeping-limit" | "transfer-limit" | "frontier-limit" | "unknown-finish";
-interface TemporaryAdaptiveLayout { objects: number; trees: number; names: number; outputWork: number }
-interface TemporaryAdaptiveQuote {
-  reason?: TemporaryAdaptiveReason;
-  frontier?: Readonly<ArchiveCost>;
-  append?: Readonly<ArchiveCost>;
-  markUnits?: number;
-  markedRowBytes?: number;
-  layout?: { used: TemporaryAdaptiveLayout; quote: TemporaryAdaptiveLayout; limits: TemporaryAdaptiveLayout };
-}
-function temporaryAdaptiveLimit(state: { reports: number }, budget: ArchiveBudget, phase: TemporaryAdaptivePhase, reason: TemporaryAdaptiveReason,
-  quote?: Readonly<Partial<ArchiveCost>>, reserve?: Readonly<Partial<ArchiveCost>>, detail?: TemporaryAdaptiveQuote): void {
-  if (state.reports >= 8) return;
-  state.reports++;
-  try {
-    const cost = (value?: Readonly<Partial<ArchiveCost>>) => value === undefined ? null : ({
-      entries: value.entries ?? 0, attempts: value.attempts ?? 0, nodes: value.nodes ?? 0,
-      calls: value.calls ?? 0, metadata: value.metadata ?? 0, inputWork: value.inputWork ?? 0,
-    });
-    console.info("TEMP archive-adaptive-limit-v1", JSON.stringify({ phase, reason,
-      used: cost(budget.admitted()), quote: cost(quote), reserve: cost(reserve),
-      frontier: cost(detail?.frontier), append: cost(detail?.append), layout: detail?.layout ?? null,
-      markUnits: detail?.markUnits ?? null, markedRowBytes: detail?.markedRowBytes ?? null,
-    }));
-  } catch { /* Observation must not replace the original decision or error. */ }
-}
-
 interface ParentMetadata { readonly ids: readonly string[]; readonly objects: number; readonly bytes: number }
 export interface AdaptiveArchiveContext {
   readonly at: ScopeRef; readonly through: Head; readonly after: Head | null;
@@ -97,8 +64,7 @@ function parentMetadata(context: AdaptiveArchiveContext, budget: ArchiveBudget):
 const setupCost = (): ArchiveCost => sum(archiveDeclarationHandoffCost(ARCHIVE_BOUNDS.nodes),
   archiveForeignHandoffCost(ARCHIVE_BOUNDS.attempts), archiveRetainedHandoffCost(ARCHIVE_BOUNDS.attempts), { inputWork: ARCHIVE_BOUNDS.entries * 32 });
 function finishCost(context: AdaptiveArchiveContext, preparation: JournalPassPreparation, shape: ArchiveScoutLayoutQuote,
-  inventory: ArchiveCost, oldRowBytes: number, parent: ParentMetadata, setup: ArchiveCost, legacyAnchors: number, budget: ArchiveBudget, diagnostic: TemporaryAdaptiveQuote): ArchiveCost | null {
-  const decline = (reason: TemporaryAdaptiveReason): null => { diagnostic.reason = reason; return null; };
+  inventory: ArchiveCost, oldRowBytes: number, parent: ParentMetadata, setup: ArchiveCost, legacyAnchors: number, budget: ArchiveBudget): ArchiveCost | null {
   // A copied fact can be needed without being written in a local entry.
   // The scout paid for a necessary-key count on each selected local row.
   // It includes nested FactRefs and of/head observations independently of
@@ -106,13 +72,13 @@ function finishCost(context: AdaptiveArchiveContext, preparation: JournalPassPre
   // Final paid collection, not this quote, chooses the published list.
   const anchors = shape.copies + shape.anchorCandidates, total = anchors + legacyAnchors;
   const publicationUnits = archivePublicationBytesUpper(total);
-  if (![anchors, total, publicationUnits].every(n => Number.isSafeInteger(n) && n >= 0)) return decline("publication-shape");
+  if (![anchors, total, publicationUnits].every(n => Number.isSafeInteger(n) && n >= 0)) return null;
   const sources = context.fixtureSources?.publicationFootprint(budget);
   // Each admitted public copy can add one producer to the target's public
   // identities. Duplicates/private copies only reduce the actual union.
   const scopeBase = context.replayScopes?.length ?? 1, scopes = scopeBase + shape.copies;
   if (![scopeBase, shape.copies, scopes].every(n => Number.isSafeInteger(n) && n >= 0)
-    || scopeBase === 0 || scopes > 64) return decline("publication-scopes");
+    || scopeBase === 0 || scopes > 64) return null;
   const publication = sum(sources?.lookups ?? {}, { nodes: scopes,
     metadata: shape.entryBytes + scopes * 1024 + (context.replayScopes ? shape.copies * 512 : 0)
       + anchors * 512 + total * (512 * 3 + 128) + publicationUnits * 4,
@@ -126,38 +92,25 @@ function finishCost(context: AdaptiveArchiveContext, preparation: JournalPassPre
   const selection = forecastJournalSelection({ codeUnits: shape.selectionUnits, utf8Bytes: shape.selectionUnits,
     measuredOmissions: shape.measuredOmissions, orderingInputWork: shape.orderingInputWork });
   const body = forecastJournalPassBody(publishedShape);
-  if (!selection.ok || !body.ok || publishedShape.manifestBytes > JOURNAL_SELECTION_BYTES)
-    return decline(!selection.ok ? "selection-limit" : !body.ok ? "body-limit" : "manifest-limit");
+  if (!selection.ok || !body.ok || publishedShape.manifestBytes > JOURNAL_SELECTION_BYTES) return null;
   const patch = preparation.forecast(publishedShape.files), commit = forecastJournalCommit(context.format, context.parent !== null);
-  if (!patch.ok) return decline("patch-limit");
+  if (!patch.ok) return null;
   const limits = preparation.work.limits, used = preparation.work.used;
   if (used.objects + patch.layoutWork.objects + 1 > limits.objects || used.trees + patch.layoutWork.trees > limits.trees
     || used.names + patch.layoutWork.names > limits.names || used.outputWork + body.layoutWork.outputWork
-      + patch.layoutWork.outputWork + commit.layoutWork.outputWork > limits.outputWork) {
-    diagnostic.layout = {
-      used: { objects: used.objects, trees: used.trees, names: used.names, outputWork: used.outputWork },
-      quote: { objects: patch.layoutWork.objects + 1, trees: patch.layoutWork.trees, names: patch.layoutWork.names,
-        outputWork: body.layoutWork.outputWork + patch.layoutWork.outputWork + commit.layoutWork.outputWork },
-      limits: { objects: limits.objects, trees: limits.trees, names: limits.names, outputWork: limits.outputWork },
-    };
-    return decline("layout-limit");
-  }
+      + patch.layoutWork.outputWork + commit.layoutWork.outputWork > limits.outputWork) return null;
   const append = context.parent ? forecastJournalAppendFixed() : null;
-  if (context.parent && (!patch.appendEdges?.ok || !append?.ok)) return decline("append-limit");
-  if (patch.appendEdges?.ok) diagnostic.append = patch.appendEdges.cost;
+  if (context.parent && (!patch.appendEdges?.ok || !append?.ok)) return null;
   const pending = archivePendingRowBytesUpper(oldRowBytes, shape.selectionUnits, publicationUnits, archiveReplayScopeUnits(scopes));
   const rows = forecastArchiveBookkeeping({ oldRowBytes, markedRowBytes: pending, attemptedRowBytes: pending,
     manifestUnits: shape.selectionUnits, publicationUnits, replayScopes: scopes, newRetained: shape.newRetained, atomicFirstAttempt: context.atomicFirstAttempt === true });
   const transfer = forecastArchiveTransfer({ objects: parent.objects + patch.layoutWork.objects + 1,
     bytes: parent.bytes + patch.layoutWork.outputWork + commit.layoutWork.outputWork,
     incremental: context.parent !== null, maximum: context.maximum });
-  if (!rows.ok || !transfer.ok) return decline(!rows.ok ? "bookkeeping-limit" : "transfer-limit");
-  const frontierShape = { hasBase: context.parent !== null,
-    markUnits: shape.selectionUnits + publicationUnits, markedRowBytes: pending };
-  diagnostic.markUnits = frontierShape.markUnits; diagnostic.markedRowBytes = frontierShape.markedRowBytes;
-  const frontier = forecastArchiveFrontierFinish(frontierShape);
-  if (!frontier.ok) return decline("frontier-limit");
-  diagnostic.frontier = frontier.cost;
+  if (!rows.ok || !transfer.ok) return null;
+  const frontier = forecastArchiveFrontierFinish({ hasBase: context.parent !== null,
+    markUnits: shape.selectionUnits + publicationUnits, markedRowBytes: pending });
+  if (!frontier.ok) return null;
   return sum(setup, inventory, shape.input, publication, { inputWork: JOURNAL_SELECTION_BYTES * 3 }, selection.cost, body.cost,
     patch.cost, commit.cost, context.parent && patch.appendEdges?.ok ? patch.appendEdges.cost : {},
     append?.ok ? append.cost : {}, transfer.cost, rows.cost, frontier.cost);
@@ -170,7 +123,6 @@ export function planRootAdaptiveArchivePass(sql: Sql, context: AdaptiveArchiveCo
 }
 async function adaptiveArchivePass(coupled: boolean, sql: Sql, context: AdaptiveArchiveContext, budget: ArchiveBudget): Promise<
   ArchiveBuildFailure | (Extract<Awaited<ReturnType<typeof planPublishedArchivePass>>, { ok: true }> & { readonly parentObjects: readonly string[] })> {
-  const temporaryDiagnostic = { reports: 0 };
   try {
     if (context.row.pending !== null || context.row.confirmed !== null && context.row.confirmed.layout !== 2
       || !same(context.row.at, context.at) || context.row.format !== context.format
@@ -200,7 +152,7 @@ async function adaptiveArchivePass(coupled: boolean, sql: Sql, context: Adaptive
             throw error;
           }
         });
-        if (prepared.kind === "limited") { temporaryAdaptiveLimit(temporaryDiagnostic, budget, "source-lookahead", "lookahead-limit", undefined, reserve); break; }
+        if (prepared.kind === "limited") break;
         if (!prepared.value.ok) {
           if (selected) break;
           throw prepared.value.error;
@@ -224,34 +176,22 @@ async function adaptiveArchivePass(coupled: boolean, sql: Sql, context: Adaptive
           throw error;
         }
       });
-      if (step.kind !== "position") {
-        if (step.kind === "limited") temporaryAdaptiveLimit(temporaryDiagnostic, budget, "scout-lookahead", "lookahead-limit", undefined, reserve);
-        break;
-      }
+      if (step.kind !== "position") break;
       nextSource = step.position.seq + 1;
       const through = { seq: step.position.seq, hash: step.position.hash };
       const quoted = budget.lookahead(selected?.cost ?? {}, () => ({ shape: scout!.layout(through), inventory: scout!.inventoryCost(through),
         setup: through.seq === context.through.seq ? scout!.selectionCost(through) : setupCost() }));
-      if (quoted.kind === "limited") { temporaryAdaptiveLimit(temporaryDiagnostic, budget, "quote-lookahead", "lookahead-limit", undefined, selected?.cost); break; }
+      if (quoted.kind === "limited") break;
       const { shape, inventory, setup } = quoted.value;
       const prepared = await budget.lookaheadAsync(selected?.cost ?? {}, async () => {
         budget.spend({ metadata: shape.files.length * 128, inputWork: shape.files.length * 256 });
         const delta: string[] = [];
         for (const file of shape.files) if (file.path !== "journal/v2/head.json" && !file.path.endsWith("/pass.json") && !paths.has(file.path)) { paths.add(file.path); delta.push(file.path); }
         if (delta.length) await preparation.prepare(delta);
-        const diagnostic: TemporaryAdaptiveQuote = {};
-        const parent = parentMetadata(context, budget), cost = finishCost(context, preparation, shape, inventory, oldRowBytes, parent, setup, legacyAnchors?.anchors.length ?? 0, budget, diagnostic);
-        return { parent, cost, diagnostic };
+        const parent = parentMetadata(context, budget), cost = finishCost(context, preparation, shape, inventory, oldRowBytes, parent, setup, legacyAnchors?.anchors.length ?? 0, budget);
+        return { parent, cost };
       });
-      if (prepared.kind === "limited") { temporaryAdaptiveLimit(temporaryDiagnostic, budget, "prepare-lookahead", "lookahead-limit", undefined, selected?.cost); break; }
-      if (prepared.value.cost === null) {
-        temporaryAdaptiveLimit(temporaryDiagnostic, budget, "finish-quote", prepared.value.diagnostic.reason ?? "unknown-finish", undefined, selected?.cost, prepared.value.diagnostic);
-        break;
-      }
-      if (!budget.canSpend(prepared.value.cost)) {
-        temporaryAdaptiveLimit(temporaryDiagnostic, budget, "finish-budget", "budget-limit", prepared.value.cost, selected?.cost, prepared.value.diagnostic);
-        break;
-      }
+      if (prepared.kind === "limited" || prepared.value.cost === null || !budget.canSpend(prepared.value.cost)) break;
       selected = { through, cost: prepared.value.cost, parent: prepared.value.parent };
       if (through.seq === context.through.seq) break;
     }
@@ -264,10 +204,7 @@ async function adaptiveArchivePass(coupled: boolean, sql: Sql, context: Adaptive
       preparation, ...(legacyAnchors ? { legacyAnchors } : {}), ...constraints }, budget);
     return built.ok ? { ...built, parentObjects: selected.parent.ids } : built;
   } catch (error) {
-    if (error instanceof ArchiveStopped || error instanceof ArchivePrefixStopped) {
-      if (error.reason === "limit") temporaryAdaptiveLimit(temporaryDiagnostic, budget, "outer-limit", "budget-limit");
-      return { ok: false, reason: error.reason };
-    }
+    if (error instanceof ArchiveStopped || error instanceof ArchivePrefixStopped) return { ok: false, reason: error.reason };
     throw error;
   }
 }

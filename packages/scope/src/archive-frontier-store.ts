@@ -129,15 +129,11 @@ export class ArchiveFrontiers {
   readonly #sql: Sql;
   readonly #identity: Identity;
   constructor(sql: Sql, value: Identity) { this.#sql = sql; this.#identity = identity(value); }
-  #read(key: string, budget: ArchiveBudget, expected?: { readonly text: string | null; readonly bytes: number }): { readonly text: string; readonly bytes: number } | null {
+  #read(key: string, budget: ArchiveBudget): { readonly text: string; readonly bytes: number } | null {
     const rows = budget.native(this.#sql, () => ({ metadata: ARCHIVE_FRONTIER_SIZE_METADATA, inputWork: 0 }))
       .exec("SELECT octet_length(v) AS size, typeof(v) AS type FROM meta WHERE k = ? LIMIT 1", key).toArray();
-    if (!rows.length) { if (expected?.text !== undefined && expected.text !== null) return refuse("conflict"); return null; }
+    if (!rows.length) return null;
     const size = rows[0]?.["size"];
-    // A captured pair authorizes only this exact body size. Refuse any
-    // appearance/type/size change before its body can consume the reserve.
-    if (expected !== undefined && (expected.text === null || rows.length !== 1
-      || rows[0]?.["type"] !== "text" || size !== expected.bytes)) return refuse("conflict");
     if (rows.length !== 1 || rows[0]?.["type"] !== "text" || !natural(size) || size === 0) return refuse();
     if (size > ARCHIVE_FRONTIER_BYTES) return refuse("limit");
     budget.spend(archiveFrontierReadCost(size));
@@ -147,15 +143,26 @@ export class ArchiveFrontiers {
     if (body.length !== 1 || typeof text !== "string" || text.length > size || utf8(text).length !== size) return refuse();
     return { text, bytes: size };
   }
-  #pair(budget: ArchiveBudget, expected?: Pair): Pair {
-    const confirmed = this.#read(CONFIRMED, budget, expected === undefined ? undefined : { text: expected.confirmed, bytes: expected.confirmedBytes });
-    const pending = this.#read(PENDING, budget, expected === undefined ? undefined : { text: expected.pending, bytes: expected.pendingBytes });
+  #pair(budget: ArchiveBudget): Pair {
+    const confirmed = this.#read(CONFIRMED, budget);
+    const pending = this.#read(PENDING, budget);
     return { confirmed: confirmed?.text ?? null, pending: pending?.text ?? null,
       confirmedBytes: confirmed?.bytes ?? 0, pendingBytes: pending?.bytes ?? 0 };
   }
   #assertPair(pair: Pair, budget: ArchiveBudget): void {
-    const current = this.#pair(budget, pair);
-    if (current.confirmed !== pair.confirmed || current.pending !== pair.pending) return refuse("conflict");
+    const exact = (key: string, text: string | null, bytes: number) => {
+      const rows = budget.native(this.#sql, () => ({ metadata: ARCHIVE_FRONTIER_SIZE_METADATA, inputWork: 0 }))
+        .exec("SELECT octet_length(v) AS size, typeof(v) AS type FROM meta WHERE k = ? LIMIT 1", key).toArray();
+      if (!rows.length) { if (text !== null) return refuse("conflict"); return; }
+      if (text === null || rows.length !== 1 || rows[0]?.["type"] !== "text" || rows[0]?.["size"] !== bytes) return refuse("conflict");
+      // A changed larger body never reaches this paid exact comparison.
+      // Avoid materializing/decoding bytes already owned by the token.
+      const matched = budget.native(this.#sql, () => archiveFrontierRowCompareCost(bytes))
+        .exec("SELECT 1 AS exact FROM meta WHERE k = ? AND typeof(v) = 'text' AND octet_length(v) = ? AND CAST(v AS BLOB) = CAST(? AS BLOB) LIMIT 1", key, bytes, text).toArray();
+      if (matched.length !== 1 || matched[0]?.["exact"] !== 1) return refuse("conflict");
+    };
+    exact(CONFIRMED, pair.confirmed, pair.confirmedBytes);
+    exact(PENDING, pair.pending, pair.pendingBytes);
   }
   #base(pair: Pair, frontier: JournalParentFrontier, budget: ArchiveBudget): ArchiveFrontierBase {
     // Initial untrusted loads retain the independent 64 KiB ceiling. Only

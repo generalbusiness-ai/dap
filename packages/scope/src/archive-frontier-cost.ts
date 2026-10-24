@@ -63,9 +63,14 @@ export function forecastArchiveFrontierFinish(shape: ArchiveFrontierFinishShape)
   add({ metadata: JOURNAL_PARENT_FRONTIER_BYTES + JOURNAL_PARENT_FRONTIER_OBJECTS * 256, inputWork: JOURNAL_PARENT_FRONTIER_BYTES * 4 });
   const sizeCalls = shape.hasBase ? 4 : 6;
   add({ calls: sizeCalls, metadata: sizeCalls * ARCHIVE_FRONTIER_SIZE_METADATA, inputWork: sizeCalls * ARCHIVE_FRONTIER_SIZE_METADATA });
-  const body = (bytes: number) => { add(archiveFrontierReadCost(bytes)); add({ calls: 1, metadata: bytes, inputWork: bytes }); };
+  // Exact pair checks compare bounded native bytes without projecting or
+  // parsing the body. native() also folds metadata into input work.
+  const body = (bytes: number) => {
+    const comparison = archiveFrontierRowCompareCost(bytes);
+    add({ calls: 1, metadata: comparison.metadata, inputWork: comparison.inputWork + comparison.metadata });
+  };
   // A base token admits at most the writer's encoding bound. Each later
-  // exact-pair check refuses a changed byte count before loading its body.
+  // exact-pair check refuses a changed byte count before comparing its body.
   if (shape.hasBase) { body(ARCHIVE_FRONTIER_ENCODING_BOUND); body(ARCHIVE_FRONTIER_ENCODING_BOUND); }
   body(ARCHIVE_FRONTIER_ENCODING_BOUND);
   // The canonical pending object is contained in the marked row. Its

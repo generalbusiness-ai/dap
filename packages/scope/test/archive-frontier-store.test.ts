@@ -175,6 +175,7 @@ test("frontier size and work are admitted before body reads or writes, without r
     const next = await fixture(lane.at, { ...made.mark.through, seq: made.mark.through.seq + 1 }, made.mark.commit, made.mark.through.seq + 1);
     const future = budget(), ready = await frontiers.prepare(next.frontier, next.mark, base, future);
     rows.markAttempt(next.mark, at(2), budget());
+    const marked = rows.loadSnapshot(budget())!.bytes;
     const confirmed = values(sql)[0]!["v"] as string;
     const changed = "x".repeat(ARCHIVE_FRONTIER_ENCODING_BOUND + 1);
     sql.exec("UPDATE meta SET v = ? WHERE k = ?", changed, CONFIRMED);
@@ -184,13 +185,33 @@ test("frontier size and work are admitted before body reads or writes, without r
     expect(queries).toHaveLength(1); expect(queries[0]).toContain("octet_length");
     expect(fenced.admitted().metadata).toBe(96);
     expect(values(sql)[0]!["v"]).toBe(changed); expect(rows.load(budget())?.pending).toEqual(next.mark);
-    // Exact restoration of a deliberate concurrent-change fixture.
+    // Equal byte length is insufficient: even a one-byte change must fail
+    // the paid BLOB equality without projecting or parsing the body.
+    const sameSize = "!" + confirmed.slice(1);
+    sql.exec("UPDATE meta SET v = ? WHERE k = ?", sameSize, CONFIRMED);
+    queries.length = 0;
+    expect(() => frontiers.stage(ready, budget())).toThrow("archive-row-conflict");
+    expect(queries).toHaveLength(2); expect(queries[1]).toContain("CAST(v AS BLOB)");
+    expect(values(sql)[0]!["v"]).toBe(sameSize); expect(rows.loadSnapshot(budget())!.bytes).toBe(marked);
+    expect(queries.every(query => query.startsWith("SELECT "))).toBe(true);
+    // Exact restoration of deliberate concurrent-change fixtures.
     sql.exec("UPDATE meta SET v = ? WHERE k = ?", confirmed, CONFIRMED);
     const nextRowSize = sql.exec("SELECT octet_length(v) AS size FROM meta WHERE k = ?", "archive-row-1").toArray()[0]!["size"];
     expect(typeof nextRowSize).toBe("number");
     const nextForecast = forecastArchiveFrontierFinish({ hasBase: true, markUnits: next.mark.manifest.length, markedRowBytes: nextRowSize as number });
     expect(nextForecast.ok).toBe(true);
     sql.transaction(() => { frontiers.stage(ready, future); });
+    const staged = values(sql).find(row => row["k"] === PENDING)!["v"] as string;
+    const changedPending = "!" + staged.slice(1);
+    sql.exec("UPDATE meta SET v = ? WHERE k = ?", changedPending, PENDING);
+    queries.length = 0;
+    expect(() => frontiers.promote(ready, budget())).toThrow("archive-row-conflict");
+    expect(queries).toHaveLength(4); expect(queries[3]).toContain("CAST(v AS BLOB)");
+    expect(queries.every(query => query.startsWith("SELECT "))).toBe(true);
+    expect(values(sql).find(row => row["k"] === PENDING)!["v"]).toBe(changedPending);
+    expect(rows.loadSnapshot(budget())!.bytes).toBe(marked);
+    // The same owned token remains usable after exact fixture restoration.
+    sql.exec("UPDATE meta SET v = ? WHERE k = ?", staged, PENDING);
     sql.transaction(() => { frontiers.promote(ready, future); rows.confirm(next.mark.commit, budget()); });
     if (nextForecast.ok) for (const key of Object.keys(nextForecast.cost) as (keyof typeof nextForecast.cost)[])
       expect(future.admitted()[key], `Include loaded-base frontier ${key}`).toBeLessThanOrEqual(nextForecast.cost[key]);
