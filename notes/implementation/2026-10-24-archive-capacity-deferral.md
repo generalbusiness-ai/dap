@@ -45,3 +45,11 @@ No hosted cause is established for the reported stopped object. A local
 capacity witness is not a hosted recovery or throughput measurement. The
 planner deploys only after the exact head is reviewed; no deployment or
 reset of an old stopped row is authorized by this source preparation.
+
+The first affected run at `f8bed579` passed both Scope compiler contexts,
+then recorded six passing cases, one failure and seven unfinished cases.
+The new subscenarios attempted two Native fixtures in one test; the existing
+exclusive clock guard refused the second. The correction gives each new
+scenario its own registration and fixture lifetime. All 14 original tests
+remain intact, with three added cases and no deadline or owner-guard change.
+The failed run remains evidence; continuation is pending.
