@@ -47,6 +47,7 @@ import { Operations, type Outside } from "./operations.ts";
 import { OperatorRecord, sendAgain, type Incident, type Resent } from "./operator.ts";
 import { Dispatcher, Wakes } from "./outbox.ts";
 import { ArchiveDriver, type FixtureArchiveDriverOptions, type RoomArchiveDriverOptions } from "./archive-driver.ts";
+import { archiveOperatorState, type ArchiveOperatorView } from "./archive-operator.ts";
 import { archiveHostItem, type ArchiveHostConfiguration, type ArchiveHostItemAsk } from "./archive-host-item.ts";
 import { GenesisProofs, type ProofTimer } from "./genesis-proof.ts";
 import { EXACT_PROOF_RECEIVER_BOUNDS, ProofBytes } from "./proof-bytes.ts";
@@ -559,6 +560,12 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   queryItems(encoded: unknown, reader: unknown) { return this.#itemQueries.read(encoded, reader); }
   /** Namespace-only host capability; intentionally absent from HTTP routing. */
   archiveItem(ask: ArchiveHostItemAsk) { return this.#archiveItem(ask); }
+  /** Namespace-only operator observation; the installation owns its caller.
+   * Deliberately bypass invoke/recovery, first-turn work and archive drivers.
+   * Existing cold-constructor effects remain a separate deployment concern. */
+  archiveState(asked: unknown): Promise<ArchiveOperatorView> {
+    return archiveOperatorState(this.#readSql, this.#name, asked, () => this.ctx.storage.getAlarm());
+  }
   applicationProjection(encoded: unknown, reader: unknown) { return this.#applicationProjections.read(encoded, reader); }
   /** Admission of identifiers precedes authority and storage work. */
   async requests(reader: unknown, request?: string, trace?: string, cursor?: string) {
