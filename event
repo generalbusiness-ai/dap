@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0911fa72f34949d4a1c186d7fbbafa632a72c26f","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/device-application-rules.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0b68b60261a6610e332cc3aeef024f77a391a8ca","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/field-types.ts."}
