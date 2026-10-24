@@ -3,7 +3,9 @@
 This head implements R9 items 1–3 under child request
 `89cca717ebb1f3366942494d49c22d3bc029cbfd` and promise
 `7c0d93f2a5b5f6f6c25fc33a048f37c87c9150dd`. It is based on the reviewed
-R5B source. R5A, R5B and the separate R9 deployment-command change must land
+R5B source and includes the R9 deployment-command change tracked by
+`5179f3a13c685b7f4e78235e88398ffc6c749185`: `deploy:scope` preserves
+existing Worker settings with `--keep-vars`. R5A has landed; R5B must land
 before this head. Parent R9, R10 and R11 are not closed by this note.
 
 ## Behavior
@@ -35,26 +37,36 @@ separate.
 
 ## Verification status
 
-Source review and static correspondence found no mandatory production
-issue. Existing tests were strengthened without new registrations or
-deadlines, including shared full-config fixtures, exact UTF-8 boundaries,
-secret-free health failures, and invalid-present deployment rejection
-before creator or child lookup. Their runtime outcomes are pending.
+The first affected invocation, `66580`, passed the Git production, Git test
+and Scope production compilers, then failed the Scope test compiler on two
+fixture typing/name errors. No body ran. Those narrow fixture corrections
+preserved assertions, registrations and deadlines; the failed run remains.
 
-The maintained AST source-seal parser ran once and exited successfully for
-the eight changed mapped owners. Only those existing map slots were
-updated with its actual outputs. Its stderr retained the Node experimental
-TypeScript warning. This parser result is a Source tripwire, not runtime
-authority evidence. Affected compiler and native test results, paired-control
-evidence where required, and the final gate remain pending. No deployment,
-provider call, package install or runtime success is claimed here.
+Invocation `72848` then passed the corrected Scope test compiler and all
+47 affected assertions; its body exited 0 with no unhandled errors. Its
+wrapper still exited 1 because two parameterized creation-lineage names
+used different reporter quoting. Root reconciled the complete tuples and
+accepted the semantic result. The original wrapper failure is retained;
+this is not a claim that the owning wrapper passed or a whole gate passed.
 
-The first affected run at `1e18f5d0` passed the Git production, Git test and
-Scope production compiler contexts. The Scope test compiler then rejected
-two fixture errors: an explicitly `undefined` optional deployment property,
-and a duplicate local `publicEnv` binding. No test body ran; all 47 cases
-remain unrun. The absent-setting witness now passes the existing bindings
-with that property genuinely absent, and the optional-credential fixture
-uses a distinct local name. Assertions, registrations and deadlines are
-unchanged. The failed run remains retained; the corrected Scope test
-compiler and 47-case body still require validation.
+Two separately allocated controls matched their intended failures. Disabling
+the malformed optional creation-token refusal made the GitHub wiring case
+fail at `170:41`; its other case passed. Removing the UTF-8 byte bound made
+the session configuration case fail at `261:114`; its other two cases
+passed. Both control children exited 1 as expected, with zero unhandled
+errors, while their owners exited 0 after restoring original source bytes,
+inode, mode and modification time. The target change time changed. All other
+source, Main, tool, environment and preparation vectors stayed fixed.
+The existing declared cache file retained its physical identity; only its contents/times and empty temporary-directory times were
+allowed to change. The compact audit retains the full guard-map pins.
+
+The eight changed mapped owners have actual maintained AST seals. These
+are source tripwires, not provider or authority evidence. The final gate,
+exact-head review, prerequisite landings, merge and deployment remain
+pending. No hosted connectivity, token validity or provider acceptance is
+claimed. R10 and R11 remain separate.
+
+The measured outer control commands took 7.23 and 7.36 seconds of wall time,
+and 8.45 and 8.73 seconds of CPU time. Their nested child costs overlap and
+are not added. These are local partial measurements, not total implementation
+costs or a portable performance claim.
