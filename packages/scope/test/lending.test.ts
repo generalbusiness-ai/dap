@@ -324,7 +324,17 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
       const rosterRead = await reader.look();
       const rosterReadStatus = { status: rosterRead.status, reason: rosterRead.status === "behind" ? rosterRead.reason.slice(0, 160) : null };
       expect(rosterRead, JSON.stringify(rosterReadStatus)).toMatchObject({ status: "current", actions: null });
-      await L.did(neighbour, "return", await on(small));
+      const returnedSmall = await L.did(neighbour, "return", await on(small));
+      // The historical projection reads items and history separately. Finish
+      // this return's causal publication result before the visitor's read.
+      // Dispatch only: no outside effect or clock advance is started here.
+      await settle(L, G);
+      const returnedOutbox = await L.stub.outbox(inspector);
+      expect(returnedOutbox.ok).toBe(true);
+      if (!returnedOutbox.ok) throw Error("The returned thing's publication outbox could not be read.");
+      expect(returnedOutbox.value.find(row => row.outboxId === `${returnedSmall}.0`)).toMatchObject({
+        held: false, to: await G.at(), acknowledged: { at: await G.at() }, result: { clause: "applied" },
+      });
       sameView = false;
       await expect(reader.act("donate", { name: "Old view", description: "Must not be sent." })).rejects.toThrow("no longer current");
       expect([fenced.posts(), fenced.kept()]).toEqual([0, null]);
