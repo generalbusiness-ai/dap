@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:246cf62f3ba214fca2a26da92249b94db24a78d6","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-24-archive-fixed-parent/native-control/stderr.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:24e3889201946c3d3ff30d53e1dd7441e8da0341","text":"Merge retired a covered predecessor; the successor is at packages/git/src/journal-v2-tree.ts."}
