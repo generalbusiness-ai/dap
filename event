@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c5604df73b4e32e54eeb594b0c0a28356ee5b43a","text":"Merge retired a covered predecessor; the successor is at packages/replay/test/archive-git.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c578c332a7b3a508efa399cd24f455f14d40d669","text":"Merge retired a covered predecessor; the successor is at packages/replay/test/archive-git-v2-convert.test.ts."}
