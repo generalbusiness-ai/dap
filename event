@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:574af6792c17f2c87950ccb40d4bf7d9bb6c6651","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/credential-store.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:578a6caeeb54d5a6432223fbb82c02da47504203","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/fixtures-core.ts."}
