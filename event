@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:52c437e083c374fe62cc23052b72b405973d2a41","text":"Merge retired a covered predecessor; the successor is at docs/mcp.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8f6ca55f50c53f0b632a6aa57c93638685f95652","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-24-hosted-mcp-failure-cleanup.md."}
