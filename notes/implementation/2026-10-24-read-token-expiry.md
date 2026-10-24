@@ -65,8 +65,11 @@ once-per-activation diagnostic. The bounded expiry-wake predicate still runs
 once in the constructor; only shared alarm scheduling waits for the log.
 Expiry cleanup remains alarm-owned. The four existing cold-activation
 witnesses now enroll a labelled TEST read through the real custody API before
-eviction and retain their log-before-recovery assertions. A held rollback
-control restores immediate scheduling; its outcome remains unproved.
+eviction and retain their log-before-recovery assertions. The later common diagnostic-order control `39886` restored immediate
+scheduling and matched four intended failures with six companions passing.
+Its later diagnostic-field assertions were unreached in those mutants.
+This is historical evidence at its recorded pre-clock-repair source, not a
+control rerun at the repaired checkpoint.
 
 ## Verification status
 
@@ -125,8 +128,9 @@ native alarm, read-mint conflict and interrupted-insert recovery, bounded
 restart-safe maintenance, exact fractional end, earlier wake arbitration
 and preservation of write-token revocation. The Git providers, token
 responses and test clocks are stand-ins; no deployed provider expiry or
-hosted cleanup outcome was measured. Paired controls and the ordinary final
-gate remain pending.
+hosted cleanup outcome was measured. The later paired controls and their
+source qualifications are recorded in the [common delivery note](2026-10-24-security-common-delivery.md).
+The fresh ordinary-gate requirement is recorded below.
 
 The three external Python owner envelopes total 19.17 seconds wall and
 28.20 seconds CPU, each printed at 0.01-second precision. These runs used
@@ -135,7 +139,7 @@ with existing caches. System load and cache temperature were uncontrolled;
 these are validation costs, not a performance comparison. Focused Node and
 phase times are nested and are not added again. This is a subtotal of
 these three affected invocations, excluding dependency preparation, seals,
-future controls/gate and edit-to-review time. Exact closed input pins,
+separate controls/gate and edit-to-review time. Exact closed input pins,
 semantic outcomes, failure excerpts and carry comparison are held at
 `/private/tmp/artroom-r13-read-token-focused-independent-audit-20261024-v1/manifest.json`.
 
@@ -159,11 +163,37 @@ scheduling after the activation diagnostic and restart consumption after
 that same diagnostic, before archive recovery. The operator witness keeps
 the real private expiry fixture and the restart snapshot and digest fields.
 
-The earlier 23-case results above apply to the earlier R13 source, not this
-composition. New 30-case affected checks, composed Source seals, the two
-existing R13 controls rebound to final Source, and the ordinary gate remain
-pending. No new validation was executed for this merge. The two object map
-slots currently retain the historical incoming Main value and are explicitly
-stale for the composed object until the actual maintained producer runs.
-The R13 destination seal and incoming archive values are preserved; neither
-parent's object value is claimed as the composed seal.
+The earlier 23-case results above apply to the earlier R13 source. Later
+composition and validation are recorded in the [common delivery note](2026-10-24-security-common-delivery.md):
+138 passed cases and two unchanged ordinary recorder skips, failed gate
+`70364`, the complete 26-case repair pass `70072`, and Node 39/Counting 55
+tail `26900`. The strict skip-qualified owner outcomes and callback gaps
+remain recorded. Neither continuation is an ordinary-gate pass.
+
+The actual composed Worker and object seals were produced and adopted.
+After the lazy-clock repair, one new actual object value
+`d91755dd0f013bc7942d8dc171bcfe90603d2faafd33422bef101f0b3b92290b`
+replaced its two map slots. The destination and other incoming archive
+values carry unchanged. Exact-end control `84265` matched its intended
+failure; diagnostic-order control `39886` matched four failures and six
+passes. Both restored source exactly at their recorded historical
+checkpoint, before the later clock repair; they were not rerun afterward.
+The common note retains the unreached-assertion qualifications.
+
+Checker review `a4cdaecc395635ca470fcce2d11e1e78a6b9d87f` found no
+code defect and required a fresh ordinary gate on the repaired code before
+resubmission. The later common gate `90462` failed only in Lending; isolated diagnostic
+`10462` and complete Lending witness `14055` then passed. The added return
+precondition closes a real fixture gap without proving the original cause.
+Fresh ordinary gate `61084` passed at `c215460f`: all eight stages, 40
+compiler invocations, 3,553 passed Vitest cases and three ordinary skips, Node 39
+and Counting 55. Its 3,556 exact terminal IDs include all 140 affected cases,
+34 control-baseline cases, 26 repair cases and complete Lending. Twenty ready
+and 21 result callbacks are absent, all for passed terminal cases; none is
+invented. The common note preserves all failures, exact evidence, boundary
+guards, costs and limitations. Root accepted the closed result in
+`5598747d962d526061e022a19754e63e4e0606a6` and adopted the independent
+audit in `29ad36ec579af56283987d9209d776c4b19ac018`. Exact-head review
+approval and landing remain pending. Partial legacy
+retention, scheduling delivery limits, provider stand-ins and the absence
+of a hosted cleanup or provider-revocation claim remain unchanged.

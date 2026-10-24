@@ -22,7 +22,7 @@ const seals = {
   "packages/scope/src/applications/route.ts": "ad62679ad22021474b193d7e9b2f98d6146c85ebe9d223d66901c309b5b84abc", // Actual union parser value adopted by root.
   "packages/scope/src/item-query-wire.ts": "8206b9a6531ca30cae1bc49cc249eea08c70a658305f41b3ebea6eda042055a8",
   "packages/scope/src/applications/projection-wire.ts": "2e07df5447469dc09aff0d4017e010634150f49c92f614221402cf46a869c6d0",
-  "packages/scope/src/object.ts": "c55fb69f5ff2831aec854419fe3b7723d9b79f817d5740d6666a4fd999cc30cb", // Actual composed storage owner seal from the maintained parser.
+  "packages/scope/src/object.ts": "d91755dd0f013bc7942d8dc171bcfe90603d2faafd33422bef101f0b3b92290b", // Actual composed storage owner seal from the maintained parser.
   "packages/scope/src/core.ts": "c7f2e49246b1e784981337ee13af53b17bab424a13112d5a40ff76b75fb7a128",
   "packages/derive/src/genesis.ts": "df7722143f01c8084b8f045ef959b203ae1756c4dfde170d0454cfe0b0392843",
   "packages/derive/src/judge.ts": "c0ed325bc2fa84693b40d3d53a9ad54a9a9786dab39dd3b9c6039ac553488f63",
@@ -63,7 +63,7 @@ const pendingArchiveSeals = {
   "packages/scope/src/archive-driver.ts": "006e53f3ef1b7a3e97cd53df3c8f8aa964d089e0c53a5bbe06efe8794d5e091d", // Capacity deferral reviewed; actual maintained parser output.
   "packages/scope/src/archive-row.ts": "be48ef12598ad4f5d0084bd05e760a4537faf23a96f21dce8c9e8748c7eddfda",
   "packages/scope/src/floor-writer.ts": "fb8fd859844b8d10ba43b477bcaf07ab32fe1bfa1b6684ad9ae70b930d328a11",
-  "packages/scope/src/object.ts": "c55fb69f5ff2831aec854419fe3b7723d9b79f817d5740d6666a4fd999cc30cb", // Must match the separately adopted original owner value above.
+  "packages/scope/src/object.ts": "d91755dd0f013bc7942d8dc171bcfe90603d2faafd33422bef101f0b3b92290b", // Must match the separately adopted original owner value above.
   "apps/room/worker.grow.ts": "0cc4c1c63f79f8da8dad5e98b2ace5b69fcd818d41640ed4e316ee534adf749f",
   "apps/room/archive-policy.ts": "ed3b746b5a26c3e872e41b13ba133f43ade42b5612aa5028ba544fc013be5ce7",
   "apps/room/archive.ts": "8252a0d142fcf7bac4c266980e0cbc4c592d1ad8783914b16d8f40ba6fb824f9",

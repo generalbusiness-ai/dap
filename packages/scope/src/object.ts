@@ -196,7 +196,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     const credentialExpiry = new CredentialStore(this.#readSql, () => store.scope()?.at ?? null);
     this.#credentialExpiry = credentialExpiry;
     const wakes = new Wakes(store, schedulingAlarm, given.transport !== null, wiring.fixtureArchive || wiring.archive ? () => this.#archive?.wake() ?? null : undefined,
-      () => credentialExpiry.expiryWake(given.clock.read()));
+      () => credentialExpiry.expiryWake(() => given.clock.read()));
     this.#wakes = wakes;
     // The authority of a deployed scope reads this scope's own genesis entry, for the membership scope that it records.
     const genesis = (): Extract<Input, { type: "genesis" }> | null => {
@@ -321,7 +321,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     // Scheduling only on activation; legacy custody work stays alarm-owned.
     // The shared arbiter also reads the archive wake, so it waits for the
     // activation observation just like archive recovery.
-    if (credentialExpiry.expiryWake(given.clock.read()) !== null) {
+    if (credentialExpiry.expiryWake(() => given.clock.read()) !== null) {
       const expiry = diagnostic.then(() => wakes.set()).catch(() => undefined);
       try { ctx.waitUntil(expiry); }
       catch { /* A later activation or ingress can retry scheduling. */ }

@@ -95,12 +95,17 @@ export class CredentialStore {
 
 
   /** Durable private scheduling, across every incarnation. No plaintext is selected. */
-  expiryWake(now: Timestamp): Timestamp | null {
-    const at = timeMs(now);
-    if (at === null) throw new Error("credential expiry requires a valid clock");
+  expiryWake(now: Timestamp | (() => Timestamp)): Timestamp | null {
     const control = this.#sql.exec("SELECT done FROM private_credential_expiry_backfill WHERE singleton = 1").toArray()[0];
-    if (control?.["done"] !== 1) return now;
-    const next = this.#sql.exec("SELECT ends_ms FROM private_credential_expiry ORDER BY ends_ms, scope, id LIMIT 1").toArray()[0]?.["ends_ms"];
+    const next = control?.["done"] === 1
+      ? this.#sql.exec("SELECT ends_ms FROM private_credential_expiry ORDER BY ends_ms, scope, id LIMIT 1").toArray()[0]?.["ends_ms"]
+      : undefined;
+    // Quiet custody must not sample another owner's scripted or live clock.
+    if (control?.["done"] === 1 && typeof next !== "number" && typeof now === "function") return null;
+    const reading = typeof now === "function" ? now() : now;
+    const at = timeMs(reading);
+    if (at === null) throw new Error("credential expiry requires a valid clock");
+    if (control?.["done"] !== 1) return reading;
     return typeof next === "number" ? timeOf(Math.max(at, next)) : null;
   }
 

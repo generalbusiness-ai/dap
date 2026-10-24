@@ -102,8 +102,30 @@ configuration is introduced. The prior 73 passing cases and control proof
 remain historical evidence for their exact source, not a fresh pass of the
 merged shared runtime. No healthy test repeat was used for this merge.
 
-Final R9 landing and integration, the ordinary gate and exact-head review
-remain pending. Settings migration and deployment stay with the planner;
-`--keep-vars` does not migrate old trust rows. No deployment is claimed.
-The original implementation base is R9
-`ba8c3d121bf691336e645bbc6e3c164ab0608363`.
+## Common delivery status
+
+Approved R9 Main `56de75676275e07e02887c7c1b5aaa862668fac6` is
+integrated. The later [common delivery note](2026-10-24-security-common-delivery.md) records the
+composed Worker/object seals, hosted trust control `5743`, failed gate
+`70364`, passing repair continuation `70072` and Node 39/Counting 55 tail
+`26900`. Historical controls remain bound to their recorded source; the
+failed gate remains failed.
+
+Checker review `a4cdaecc395635ca470fcce2d11e1e78a6b9d87f` found no
+code defect and required a fresh ordinary gate on the repaired code before
+resubmission. The later common gate `90462` failed only in Lending; isolated diagnostic
+`10462` and complete Lending witness `14055` then passed. The added return
+precondition closes a real fixture gap without proving the original cause.
+Fresh ordinary gate `61084` passed at `c215460f`: all eight stages, 40
+compiler invocations, 3,553 passed Vitest cases and three ordinary skips, Node 39
+and Counting 55. Its 3,556 exact terminal IDs include all 140 affected cases,
+34 control-baseline cases, 26 repair cases and complete Lending. Twenty ready
+and 21 result callbacks are absent, all for passed terminal cases; none is
+invented. The common note preserves all failures, exact evidence, boundary
+guards, costs and limitations. Root accepted the closed result in
+`5598747d962d526061e022a19754e63e4e0606a6` and adopted the independent
+audit in `29ad36ec579af56283987d9209d776c4b19ac018`. Exact-head review
+approval and landing remain pending. Settings migration and
+deployment stay with the planner; `--keep-vars` does not migrate old trust
+rows. No deployment is claimed. The original implementation base remains
+R9 `ba8c3d121bf691336e645bbc6e3c164ab0608363`.
