@@ -44,6 +44,8 @@ export const SESSIONS_MOST = 16;
 export const SESSION_IDLE_MS = 30 * 60 * 1000;
 /** The most open streams one server holds, legacy streams and modern listens together; a 5th is refused `409`. */
 export const STREAMS_MOST = 4;
+/** Hosted bearer deadlines are checked with short, cancelable timers. */
+export const LIFETIME_RECHECK_MS = 30_000;
 export const SERVED: readonly string[] = [MODERN, LEGACY];
 const TOO_MANY_STREAMS = -32001;
 /** The most canonical bytes a 2025-11-25 client's declared capabilities may hold: a session row is bounded control state. */
@@ -67,6 +69,8 @@ export interface HttpPort {
   /** Called when a session ends. */
   remove?(id: string): void | Promise<void>;
   now?(): number;
+  /** Absent for local servers. One deadline belongs to this HTTP layer. */
+  lifetime?: { expires: number; schedule?: (delayMs: number, run: () => Promise<void>) => () => void };
 }
 
 const rpcError = (id: Id | null, code: number, message: string, data?: unknown): Message => ({ jsonrpc: "2.0", id, error: { code, message, ...(data !== undefined ? { data } : {}) } });
@@ -114,11 +118,41 @@ export class McpHttp {
   readonly #rows = new WeakMap<LegacySession, SessionRow>();
   // Removal follows in-flight writes; once ended, queued updates skip the write. Weak keys retain no ended-session registry.
   readonly #writes = new WeakMap<LegacySession, Promise<void>>();
+  readonly #issuing = new Set<LegacySession>();
+  #closed = false;
+  #discarded = false;
+  #closing: Promise<void> | null = null;
+  #stopLifetime: (() => void) | null = null;
+  #lifetimeGeneration = 0;
   constructor(readonly port: HttpPort) {
     // Issuance persists a new session; an update persists only a session that is still live. One that ended while its request
     // was pending (deleted, evicted, retired, or discarded with its layer) is never written again: an ended session's row stays
     // gone, and a restart restores nothing of it.
     port.wire.hooks.changed = (session, next) => this.#persist(session, next);
+  }
+
+  #due(): boolean { return this.port.lifetime !== undefined && (this.port.now?.() ?? Date.now()) >= this.port.lifetime.expires; }
+  #cancelLifetime(): void {
+    this.#lifetimeGeneration++;
+    this.#stopLifetime?.();
+    this.#stopLifetime = null;
+  }
+  #lifetime(): void {
+    if (this.#closed || this.#open.size === 0) { this.#cancelLifetime(); return; }
+    const lifetime = this.port.lifetime;
+    if (!lifetime || this.#stopLifetime) return;
+    const remaining = lifetime.expires - (this.port.now?.() ?? Date.now());
+    if (remaining <= 0) { void this.closeAll().catch(() => {}); return; }
+    const generation = ++this.#lifetimeGeneration;
+    const schedule = lifetime.schedule ?? ((delay: number, run: () => Promise<void>) => {
+      const timer = setTimeout(() => { void run().catch(() => {}); }, delay);
+      return () => clearTimeout(timer);
+    });
+    this.#stopLifetime = schedule(Math.min(LIFETIME_RECHECK_MS, remaining), async () => {
+      if (generation !== this.#lifetimeGeneration || this.#closed) return;
+      this.#stopLifetime = null;
+      if (this.#due()) await this.closeAll(); else this.#lifetime();
+    });
   }
 
   #queue(session: LegacySession, work: () => void | Promise<void>): Promise<void> {
@@ -128,13 +162,18 @@ export class McpHttp {
   }
 
   #persist(session: LegacySession, next: Partial<SessionRow> = {}): Promise<void> {
-    if (session.id === null || session.ended) return Promise.resolve();
+    if (this.#due() && !this.#discarded) void this.closeAll().catch(() => {});
+    if (session.id === null || session.ended || this.#closed || this.#due()) return Promise.resolve();
     return this.#queue(session, async () => {
-      if (session.ended) return;
+      if (this.#due() && !this.#discarded) void this.closeAll().catch(() => {});
+      if (session.ended || this.#closed || this.#due()) return;
       const previous = this.#rows.get(session) ?? rowOf(session);
       const row = { ...previous, ...next };
       row.lastActive = Math.max(previous.lastActive ?? previous.created, row.lastActive ?? row.created);
       await this.port.persist?.(row);
+      // Graceful removal is queued behind this write. Abrupt eviction keeps
+      // the durable row, so its late write must not delete it here.
+      if (this.#due() && !this.#discarded) void this.closeAll().catch(() => {});
       this.#rows.set(session, row);
     });
   }
@@ -176,6 +215,7 @@ export class McpHttp {
   async handle(request: Request): Promise<Response> {
     if (request.headers.get("origin") !== null) return bare(403);
     if (!(await this.port.authorized(request.headers.get("authorization")))) return bare(401);
+    if (this.#closed || this.#due()) { if (!this.#discarded) await this.closeAll(); return bare(this.#due() ? 401 : 404); }
     const method = request.method;
     const header = request.headers.get("mcp-protocol-version");
     const sessionId = request.headers.get("mcp-session-id");
@@ -267,6 +307,7 @@ export class McpHttp {
       // oldest: a refused initialize destroys nothing, and the limit holds once the newcomer is in.
       issued = this.port.mintSession();
       session = newSession(issued);
+      this.#issuing.add(session);
       session.created = this.port.now?.() ?? Date.now();
       session.lastActive = session.created;
     } else {
@@ -276,8 +317,16 @@ export class McpHttp {
       session = matched;
       if (!(await this.#touch(session))) return bare(404);
     }
-    const response = await this.port.wire.handle(m, session, (out) => session.stream?.send(out));
+    let response: Message | null;
+    try { response = await this.port.wire.handle(m, session, (out) => session.stream?.send(out)); }
+    finally { this.#issuing.delete(session); }
     if (issued) {
+      if (this.#closed || this.#due() || session.ended) {
+        session.ended = true;
+        this.port.wire.endLegacy(session);
+        if (!this.#discarded) await this.#queue(session, () => this.port.remove?.(issued!));
+        return bare(this.#due() ? 401 : 404);
+      }
       // Refused: no session was issued, nothing of it stays, and a row the hook may have kept is removed. A store that could
       // not keep it answers 507.
       if (response?.error) { session.ended = true; this.port.wire.endLegacy(session); await this.port.remove?.(issued); return rpcJsonReply(response.error.code === SESSION_FULL ? 507 : 200, response); }
@@ -313,25 +362,29 @@ export class McpHttp {
    * overlap and abort in whatever order, a session with a live stream is counted exactly once.
    */
   async #stream(session: LegacySession, signal?: AbortSignal): Promise<Response> {
+    if (this.#closed || this.#due()) { if (!this.#discarded) await this.closeAll(); return bare(this.#due() ? 401 : 404); }
     const fresh = session.stream === null && !this.#pending.has(session);
     if (fresh && this.#open.size >= STREAMS_MOST) return rpcJsonReply(409, rpcError(null, TOO_MANY_STREAMS, `At most ${STREAMS_MOST} streams are open at once.`));
     this.#open.add(session);
+    this.#lifetime();
     this.#pending.set(session, (this.#pending.get(session) ?? 0) + 1);
     // Every exit of this opening: the session keeps its slot while it has a live stream or another opening pending.
     const exit = () => {
       const left = (this.#pending.get(session) ?? 1) - 1;
       if (left > 0) this.#pending.set(session, left); else this.#pending.delete(session);
       if (left === 0 && session.stream === null) this.#open.delete(session);
+      this.#lifetime();
     };
     // Reconciliation before the stream is attached: a change made while no stream was open, or while the object was evicted, is
     // told once now, unless the client has listed since.
     let generation: Digest | null = null;
     try { generation = (await this.port.wire.service.snapshot()).generation; } catch { generation = null; }
     // The session may have ended, the layer been discarded, or the client gone, while the snapshot was read: then no stream opens.
+    if (this.#closed || this.#due()) { exit(); if (!this.#discarded) await this.closeAll(); return bare(this.#due() ? 401 : 404); }
     if (session.ended || (session.id !== null && !this.sessions.has(session.id))) { exit(); return bare(404); }
     if (signal?.aborted) { exit(); return bare(204); }
     const old = session.stream;
-    const sse = this.#sse(() => { if (session.stream === stream) { this.port.wire.endLegacy(session); if (!this.#pending.has(session)) this.#open.delete(session); } });
+    const sse = this.#sse(() => { if (session.stream === stream) { this.port.wire.endLegacy(session); if (!this.#pending.has(session)) this.#open.delete(session); this.#lifetime(); } });
     const stream: Stream = {
       notified: null,
       send: (message) => sse.send(`event: message\ndata: ${JSON.stringify(message)}\n\n`),
@@ -355,12 +408,13 @@ export class McpHttp {
    * completes the subscription (its result, as the revision defines) and closes the body; an abrupt one sends nothing.
    */
   #listen(m: Message): Response {
+    if (this.#closed || this.#due()) { if (!this.#discarded) void this.closeAll().catch(() => {}); return bare(this.#due() ? 401 : 404); }
     const owner = {};
-    const sse = this.#sse(() => { this.#open.delete(owner); this.#listens.delete(owner); this.port.wire.dropStream(owner); });
+    const sse = this.#sse(() => { this.#open.delete(owner); this.#listens.delete(owner); this.port.wire.dropStream(owner); this.#lifetime(); });
     this.#open.add(owner);
     const send = (out: Message) => {
       sse.send(`event: message\ndata: ${JSON.stringify(out)}\n\n`);
-      if (out.id !== undefined && (out.result !== undefined || out.error !== undefined)) { sse.close(); this.#open.delete(owner); this.#listens.delete(owner); }
+      if (out.id !== undefined && (out.result !== undefined || out.error !== undefined)) { sse.close(); this.#open.delete(owner); this.#listens.delete(owner); this.#lifetime(); }
     };
     this.#listens.set(owner, {
       end: (final) => {
@@ -369,8 +423,13 @@ export class McpHttp {
         sse.close();
         this.#open.delete(owner);
         this.#listens.delete(owner);
+        this.#lifetime();
       },
     });
+    // A deadline can pass while this opening is being assembled. Register
+    // its teardown before scheduling can close the layer, then fence dispatch.
+    this.#lifetime();
+    if (this.#closed || this.#due()) { if (!this.#discarded) void this.closeAll().catch(() => {}); return bare(this.#due() ? 401 : 404); }
     this.port.wire.handle(m, null, send, owner).then((response) => { if (response) send(response); }, () => send(rpcError(m.id ?? null, -32603, "Internal error")));
     return new Response(sse.body, { status: 200, headers: SSE });
   }
@@ -382,6 +441,7 @@ export class McpHttp {
     this.port.wire.endLegacy(session);
     if (stream) stream.close(final);
     if (!this.#pending.has(session)) this.#open.delete(session);   // a pending opening of it exits 404 and releases the slot then
+    this.#lifetime();
     if (session.id !== null) { this.sessions.delete(session.id); await this.#queue(session, () => this.port.remove?.(session.id!)); }
     return bare(200);
   }
@@ -392,7 +452,10 @@ export class McpHttp {
    * restore into the next layer.
    */
   abrupt(): void {
-    for (const session of this.sessions.values()) {
+    this.#closed = true;
+    this.#discarded = true;
+    this.#cancelLifetime();
+    for (const session of new Set([...this.sessions.values(), ...this.#issuing])) {
       const stream = session.stream;
       session.ended = true;
       this.port.wire.endLegacy(session);
@@ -404,10 +467,17 @@ export class McpHttp {
   }
 
   /** End every session and stream gracefully: `retire`, `bearer`, a server's close. Legacy streams get a final event; listens their result. */
-  async closeAll(): Promise<void> {
-    for (const session of [...this.sessions.values()]) await this.#end(session, true);
+  closeAll(): Promise<void> {
+    if (this.#closing) return this.#closing;
+    this.#closed = true;
+    this.#cancelLifetime();
+    // End all owners before the first await: a delayed opening or row write
+    // cannot attach to this layer while another owner's removal is pending.
+    const removed = [...new Set([...this.sessions.values(), ...this.#issuing])].map(session => this.#end(session, true));
     for (const listen of [...this.#listens.values()]) listen.end(true);
     this.port.wire.closeAll();
     this.#open.clear();
+    this.#closing = Promise.all(removed).then(() => {});
+    return this.#closing;
   }
 }

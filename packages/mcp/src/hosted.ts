@@ -48,6 +48,7 @@ export const CONTROL_ROW_BYTES = 4 * 1024;
 export const ROW_OVERHEAD = 128;
 /** How long a stored answer is kept past the original request's `notAfter`. */
 export const ANSWER_RETENTION_MS = 7 * 86_400_000;
+export const BEARER_LIFETIME_MS = 30 * 86_400_000;
 export const CONTROL_BODY_BYTES = 64 * 1024;
 export const BEARER_FAILURES_PER_MINUTE = 10;
 export const BEARER_FAILURE_KEYS = 4096;
@@ -85,6 +86,13 @@ export class BearerFailures {
 /** What a control route answers: the status, and a body that names a rule or a result, never a secret except the bearer shown once. */
 export interface ControlAnswer { status: number; body: Record<string, unknown> }
 const answer = (status: number, body: Record<string, unknown>): ControlAnswer => ({ status, body });
+/** Only the winning call may return a bearer. SQL always receives this receipt. */
+const retainedAnswer = (result: ControlAnswer): ControlAnswer => {
+  if (!Object.hasOwn(result.body, "bearer")) return result;
+  const body = { ...result.body };
+  delete body["bearer"];
+  return answer(result.status, { ...body, bearerShown: true, bearerExpires: typeof body["bearerExpires"] === "string" ? body["bearerExpires"] : null });
+};
 const closed = (v: unknown, keys: readonly string[]): v is Record<string, unknown> => isRecord(v) && Object.keys(v).length === keys.length && keys.every((k) => Object.hasOwn(v, k));
 
 /** The `Authorization: Control <b64url canonical JSON>.<sig>` header, parsed and shape-checked; null when malformed. Verifies nothing. */
@@ -153,6 +161,48 @@ class ControlPlane {
     sql.exec(`INSERT OR IGNORE INTO control_budget (k, v) VALUES ('used', 0)`);
   }
   used(): number { return Number(this.sql.exec(`SELECT v FROM control_budget WHERE k = 'used'`).toArray()[0]!["v"]); }
+  /** One atomic cutover per object. Page at most one old answer into JS;
+   * the existing control budget bounds the complete scan. */
+  migrateBearerAnswers(agent: boolean): void {
+    this.sql.transaction(() => {
+      if (this.sql.exec(`SELECT v FROM control_budget WHERE k = 'bearer-schema'`).toArray()[0]?.["v"] === 1) return;
+      if (agent && !this.sql.exec(`PRAGMA table_info(agent)`).toArray().some(row => row["name"] === "bearer_expires")) this.sql.exec(`ALTER TABLE agent ADD COLUMN bearer_expires TEXT`);
+      const total = this.sql.exec(`SELECT coalesce(sum(octet_length(answer)), 0) AS bytes FROM control`).toArray()[0]!["bytes"];
+      if (typeof total !== "number" || total < 0 || total > CONTROL_BUDGET) throw new Error("Hosted control migration exceeds its storage bound.");
+      let after: string | null = null;
+      for (;;) {
+        const scalar = after === null
+          ? this.sql.exec(`SELECT op, octet_length(answer) AS bytes FROM control WHERE answer IS NOT NULL ORDER BY op LIMIT 1`).toArray()[0]
+          : this.sql.exec(`SELECT op, octet_length(answer) AS bytes FROM control WHERE answer IS NOT NULL AND op > ? ORDER BY op LIMIT 1`, after).toArray()[0];
+        if (!scalar) break;
+        const op = String(scalar["op"]);
+        if (utf8(op).length > OP_BYTES || typeof scalar["bytes"] !== "number" || scalar["bytes"] > CONTROL_BUDGET) throw new Error("Invalid hosted control migration row.");
+        const text = String(this.sql.exec(`SELECT answer FROM control WHERE op = ?`, op).toArray()[0]!["answer"]);
+        const next = this.#migratedAnswer(text);
+        if (next !== text) {
+          if (!this.charge(utf8(next).length - utf8(text).length, "retire")) throw new Error("SQLITE_FULL: hosted control migration.");
+          this.sql.exec(`UPDATE control SET answer = ? WHERE op = ?`, next, op);
+        }
+        after = op;
+      }
+      if (agent) {
+        const scalar = this.sql.exec(`SELECT octet_length(answer) AS bytes FROM agent WHERE id = 1 AND answer IS NOT NULL`).toArray()[0];
+        if (scalar) {
+          if (typeof scalar["bytes"] !== "number" || scalar["bytes"] > CONTROL_BUDGET) throw new Error("Invalid hosted agent migration row.");
+          const text = String(this.sql.exec(`SELECT answer FROM agent WHERE id = 1`).toArray()[0]!["answer"]);
+          // The duplicate is not separately credited by retention either.
+          this.sql.exec(`UPDATE agent SET answer = ? WHERE id = 1`, this.#migratedAnswer(text));
+        }
+      }
+      this.sql.exec(`INSERT INTO control_budget (k, v) VALUES ('bearer-schema', 1)`);
+    });
+  }
+  #migratedAnswer(text: string): string {
+    const value: unknown = JSON.parse(text);
+    if (!isRecord(value) || !Number.isInteger(value["status"]) || !isRecord(value["body"])) throw new Error("Invalid hosted control answer.");
+    const result = value as unknown as ControlAnswer;
+    return Object.hasOwn(result.body, "bearer") ? JSON.stringify(retainedAnswer(result)) : text;
+  }
   /**
    * Charge `bytes` of persisted control state against the budget, inside the caller's transaction. False: the budget admits
    * none; `retire` alone may draw on the last 1 MiB. A negative charge credits what a removed row held. Every persisted row of
@@ -180,6 +230,7 @@ class ControlPlane {
   }
   /** Write the answer; bytes beyond the reservation are charged, and a refusal here is a storage failure the caller reports. */
   complete(op: string, state: string, result: ControlAnswer): void {
+    result = retainedAnswer(result);
     const row = this.row(op)!;
     const beyond = ControlPlane.rowBytes(op, row.fingerprint, result) - CONTROL_ROW_BYTES;
     if (beyond > 0 && !this.charge(beyond, row.action as ControlAction)) throw new Error("SQLITE_FULL: the control budget is exhausted");
@@ -228,6 +279,7 @@ export class HostedRegistry {
   constructor(private readonly sql: Sql, private readonly ports: RegistryPorts) {
     sql.exec(`CREATE TABLE IF NOT EXISTS agents (agent TEXT PRIMARY KEY, handle TEXT NOT NULL, key TEXT, state TEXT NOT NULL, created TEXT NOT NULL)`);
     this.#control = new ControlPlane(sql, ports.controlBudget?.budget, ports.controlBudget?.reserve);
+    this.#control.migrateBearerAnswers(false);
   }
 
   /** The agent object ID a reservation under `op` allotted, for a test's eyes; null when there is none. */
@@ -277,6 +329,9 @@ export class HostedRegistry {
     // Unresolved: the reservation stays, and the next request with the same op resumes it.
     if (result.status === 503) return result;
     this.sql.transaction(() => {
+      // Agent serialization selects the sole bearer disclosure; concurrent
+      // registry handoffs settle this reservation only once.
+      if (this.#control.row(r.op)?.state !== "reserved") return;
       this.#control.complete(r.op, result.status < 300 ? "complete" : "refused", result);
       const existing = this.sql.exec(`SELECT agent FROM agents WHERE agent = ?`, reserved.agent).toArray()[0];
       if (!existing) this.sql.exec(`INSERT INTO agents (agent, handle, key, state, created) VALUES (?, ?, ?, ?, ?)`, reserved.agent, link.handle, typeof result.body["key"] === "string" ? result.body["key"] : null, result.status < 300 ? "enrolled" : "refused", timeOf(now));
@@ -298,6 +353,8 @@ export interface AgentPorts extends Authority {
   fetch: Fetch;
   now(): number;
   random(bytes: number): Uint8Array;
+  /** A deterministic short expiry timer in tests; production uses setTimeout. */
+  scheduleExpiry?: (delayMs: number, run: () => Promise<void>) => () => void;
   every?: (ms: number, run: () => void) => () => void;
   pause?: (waiting: readonly string[]) => Promise<void>;
   /** A test's control budget and retirement reserve in place of 16 MiB and 1 MiB. */
@@ -312,7 +369,7 @@ export interface AgentPorts extends Authority {
   configHold?: () => Promise<void> | void;
 }
 
-interface AgentRow { op: string; seed: Uint8Array; key: KeyId; state: "enrolling" | "enrolled" | "retired" | "refused"; membership: ScopeRef; handle: string; config: McpConfig; bearer: string | null; answer: ControlAnswer | null }
+interface AgentRow { op: string; seed: Uint8Array; key: KeyId; state: "enrolling" | "enrolled" | "retired" | "refused"; membership: ScopeRef; handle: string; config: McpConfig; bearer: string | null; bearerExpires: string | null; answer: ControlAnswer | null }
 
 /** One agent: its key, bearer, configuration, sessions, custody and control identities, all in this object. */
 class Queue {
@@ -337,16 +394,17 @@ export class HostedAgent {
     sql.exec(`CREATE TABLE IF NOT EXISTS agent (id INTEGER PRIMARY KEY CHECK (id = 1), op TEXT NOT NULL, seed BLOB NOT NULL, key TEXT NOT NULL, state TEXT NOT NULL, membership TEXT NOT NULL, handle TEXT NOT NULL, config TEXT NOT NULL, bearer TEXT, answer TEXT, created TEXT NOT NULL, updated TEXT NOT NULL)`);
     sql.exec(`CREATE TABLE IF NOT EXISTS session (id TEXT PRIMARY KEY, row TEXT NOT NULL, created INTEGER NOT NULL)`);
     this.#control = new ControlPlane(sql, ports.controlBudget?.budget, ports.controlBudget?.reserve);
+    this.#control.migrateBearerAnswers(true);
   }
 
   /** The control budget's used bytes, for a test's eyes. */
   controlUsed(): number { return this.#control.used(); }
 
   #row(): AgentRow | null {
-    const r = this.sql.exec(`SELECT op, seed, key, state, membership, handle, config, bearer, answer FROM agent WHERE id = 1`).toArray()[0];
+    const r = this.sql.exec(`SELECT op, seed, key, state, membership, handle, config, bearer, bearer_expires, answer FROM agent WHERE id = 1`).toArray()[0];
     if (!r) return null;
     const seed = r["seed"] instanceof Uint8Array ? r["seed"] : new Uint8Array(r["seed"] as ArrayBuffer);
-    return { op: String(r["op"]), seed, key: String(r["key"]) as KeyId, state: String(r["state"]) as AgentRow["state"], membership: JSON.parse(String(r["membership"])) as ScopeRef, handle: String(r["handle"]), config: JSON.parse(String(r["config"])) as McpConfig, bearer: r["bearer"] === null ? null : String(r["bearer"]), answer: r["answer"] === null ? null : JSON.parse(String(r["answer"])) as ControlAnswer };
+    return { op: String(r["op"]), seed, key: String(r["key"]) as KeyId, state: String(r["state"]) as AgentRow["state"], membership: JSON.parse(String(r["membership"])) as ScopeRef, handle: String(r["handle"]), config: JSON.parse(String(r["config"])) as McpConfig, bearer: r["bearer"] === null ? null : String(r["bearer"]), bearerExpires: r["bearer_expires"] === null ? null : String(r["bearer_expires"]), answer: r["answer"] === null ? null : JSON.parse(String(r["answer"])) as ControlAnswer };
   }
   /** The agent row's configuration is control state too: its growth (a root added) is charged, and refused when the budget is full. */
   #setConfig(config: McpConfig): void {
@@ -383,6 +441,7 @@ export class HostedAgent {
     const wire = new Wire(this.#serviceOf(row));
     this.#http = new McpHttp({
       wire, bodyBytes: 1024 * 1024, now: this.ports.now,
+      lifetime: { expires: timeMs(row.bearerExpires!)!, ...(this.ports.scheduleExpiry ? { schedule: this.ports.scheduleExpiry } : {}) },
       mintSession: () => b64url(this.ports.random(16)),
       authorized: () => true,   // the bearer was checked before the request reached the layer
       persist: (session: SessionRow) => {
@@ -409,7 +468,7 @@ export class HostedAgent {
     return this.#http;
   }
 
-  /** Remove expired answer bodies from both copies: the control row's, and the agent row's, which holds the bearer shown at creation. */
+  /** Remove expired answer bodies from both copies: the control row's, and the agent row's redacted creation receipt. */
   #expire(now: number): void {
     for (const op of this.#control.expire(now)) this.sql.exec(`UPDATE agent SET answer = NULL WHERE id = 1 AND op = ?`, op);
   }
@@ -494,17 +553,18 @@ export class HostedAgent {
     if (!standing || standing.keyState !== "active") return answer(503, { error: "unresolved", op, rule: "key-not-active" });
     this.ports.fault?.("accepted");
     const inbox = entry.value.entry.sends.flatMap((send) => ("creator" in send.to && send.to.kind === "inbox" ? [scopeIdOf(send.to as Seed)] : []))[0];
-    const secret = b64url(this.ports.random(32));
-    const bearer = `${this.ports.id}.${secret}`;
-    const result = answer(201, { agent: this.ports.id, key: signer.key, handle: link.handle, member: fact, bearer });
     // The terminal transition is decided on the durable state as it is now: an agent retired or completed meanwhile keeps its
     // answer, and no second bearer is ever minted for one creation.
     const decided = this.sql.transaction((): ControlAnswer => {
       const current = this.#row()!;
       if (current.state === "retired") return answer(409, { error: "retired" });
       if (current.state !== "enrolling") return current.answer ?? answer(409, { error: "op", rule: "stale" });
+      const issued = this.ports.now(), bearerExpires = timeOf(issued + BEARER_LIFETIME_MS);
+      if (!this.#control.charge(utf8(bearerExpires).length, "create")) throw new Error("SQLITE_FULL: the bearer expiry cannot be stored.");
+      const secret = b64url(this.ports.random(32));
+      const result = answer(201, { agent: this.ports.id, key: signer.key, handle: link.handle, member: fact, bearer: `${this.ports.id}.${secret}`, bearerExpires });
       const config: McpConfig = { ...current.config, repository: { ...link.repository, ...(inbox ? { inbox } : {}) } };
-      this.sql.exec(`UPDATE agent SET state = 'enrolled', bearer = ?, answer = ?, config = ?, updated = ? WHERE id = 1`, digestBytes(utf8(secret)), JSON.stringify(result), canonicalize(config as never), timeOf(now));
+      this.sql.exec(`UPDATE agent SET state = 'enrolled', bearer = ?, bearer_expires = ?, answer = ?, config = ?, updated = ? WHERE id = 1`, digestBytes(utf8(secret)), bearerExpires, JSON.stringify(retainedAnswer(result)), canonicalize(config as never), timeOf(issued));
       this.#control.complete(op, "complete", result);
       return result;
     });
@@ -532,7 +592,6 @@ export class HostedAgent {
     const authority = await authorityOf(this.ports, row.membership, r.actor, row.handle as MemberId);
     if (!authority.ok) return answer(403, { error: "unauthorized" });
     const fingerprint = fingerprintOf(r);
-    const secret = action === "bearer" ? b64url(this.ports.random(32)) : null;
     // `fresh`: this call committed the action now. A replay returns the retained answer and disturbs nothing opened since.
     const { result, fresh } = this.sql.transaction((): { result: ControlAnswer; fresh: boolean } => {
       this.#expire(now);
@@ -542,12 +601,16 @@ export class HostedAgent {
         return { result: this.#control.retained(existing, now) ?? answer(409, { error: "op", rule: "stale" }), fresh: false };
       }
       if (row.state === "retired") return { result: answer(409, { error: "retired" }), fresh: false };
-      if (!this.#control.reserve(action)) return { result: answer(507, { error: "full", rule: "control-budget" }), fresh: false };
+      const issued = this.ports.now(), bearerExpires = action === "bearer" ? timeOf(issued + BEARER_LIFETIME_MS) : null;
+      const expiryDelta = (bearerExpires === null ? 0 : utf8(bearerExpires).length) - (row.bearerExpires === null ? 0 : utf8(row.bearerExpires).length);
+      // Reserve the operation and settle the expiry field in one admission.
+      if (!this.#control.charge(CONTROL_ROW_BYTES + expiryDelta, action)) return { result: answer(507, { error: "full", rule: "control-budget" }), fresh: false };
+      const secret = action === "bearer" ? b64url(this.ports.random(32)) : null;
       const done = action === "bearer"
-        ? answer(200, { agent: this.ports.id, by: authority.by, bearer: `${this.ports.id}.${secret}` })
+        ? answer(200, { agent: this.ports.id, by: authority.by, bearer: `${this.ports.id}.${secret}`, bearerExpires })
         : answer(200, { agent: this.ports.id, by: authority.by, retired: true });
-      if (action === "bearer") this.sql.exec(`UPDATE agent SET bearer = ?, updated = ? WHERE id = 1`, digestBytes(utf8(secret!)), timeOf(now));
-      else this.sql.exec(`UPDATE agent SET state = 'retired', bearer = NULL, updated = ? WHERE id = 1`, timeOf(now));
+      if (action === "bearer") this.sql.exec(`UPDATE agent SET bearer = ?, bearer_expires = ?, updated = ? WHERE id = 1`, digestBytes(utf8(secret!)), bearerExpires, timeOf(issued));
+      else this.sql.exec(`UPDATE agent SET state = 'retired', bearer = NULL, bearer_expires = NULL, updated = ? WHERE id = 1`, timeOf(issued));
       const held = this.sql.exec(`SELECT row FROM session`).toArray().reduce((n, s) => n + utf8(String(s["row"])).length + ROW_OVERHEAD, 0);
       this.sql.exec(`DELETE FROM session`);
       this.#control.charge(-held, "retire");
@@ -570,7 +633,8 @@ export class HostedAgent {
     return this.#failures.check(address, now, () => {
       const row = this.#row();
       let ok = false;
-      if (authorization?.startsWith("Bearer ") && row?.state === "enrolled" && row.bearer) {
+      const expires = row?.bearerExpires === null || row?.bearerExpires === undefined ? null : timeMs(row.bearerExpires);
+      if (authorization?.startsWith("Bearer ") && row?.state === "enrolled" && row.bearer && expires !== null && now < expires) {
         const [id, secret, ...rest] = authorization.slice("Bearer ".length).split(".");
         if (id === this.ports.id && secret && rest.length === 0) {
           const given = utf8(digestBytes(utf8(secret)));

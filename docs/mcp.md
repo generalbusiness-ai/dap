@@ -1780,8 +1780,8 @@ validation and deployment of that follow-up are pending.
 
 | Route | Authorization | What it does |
 |---|---|---|
-| `POST /mcp/agents` | `Control`, action `create` | Creates and enrols an agent. Body: `{ "link": "<artroom-agent-key:…>" }`, the private agent-key invitation described below. Answers `201` once with `{ agent, key, handle, member, bearer }`; the bearer is shown this once, and again only to the same `op` |
-| `POST /mcp/agents/<agent>/bearer` | `Control`, action `bearer` | A new bearer. Every session of the agent ends, every 2025-11-25 stream closes with a final event and every listen completes with its result. A replay of a completed `op` returns its answer and ends nothing |
+| `POST /mcp/agents` | `Control`, action `create` | Creates and enrols an agent. Body: `{ "link": "<artroom-agent-key:…>" }`, the private agent-key invitation described below. A fresh successful issuance answers `201` with `{ agent, key, handle, member, bearer, bearerExpires }`. The plaintext bearer is returned only by that fresh response; replay returns its secret-free receipt |
+| `POST /mcp/agents/<agent>/bearer` | `Control`, action `bearer` | A new bearer. Every session of the agent ends, every 2025-11-25 stream closes with a final event and every listen completes with its result. A fresh operation renews the bearer lifetime. A replay returns the original secret-free receipt and ends nothing |
 | `DELETE /mcp/agents/<agent>` | `Control`, action `retire` | Retires the bearer; sessions and streams end the same way. A retired agent answers `401` from then on, and no later `bearer` or unfinished `create` revives it. An enrolment still unfinished can be retired |
 | `POST /mcp` | `Bearer <agent>.<secret>` | One JSON-RPC request or notification, either revision |
 | `GET /mcp` | `Bearer`, `Mcp-Session-Id` | The 2025-11-25 server stream of that session |
@@ -1827,22 +1827,71 @@ signed by `actor` under the tag `artroom-mcp-control-1`, and presented as
 `Authorization: Control <base64url of the JSON>.<signature>`. `body` is the
 SHA-256 digest of the request body; `agent` is null for `create`; `op` is
 the caller's identity for the operation, 1 to 128 bytes. The same `op` with
-the same request answers the same, resuming unfinished work; another
-request under the same `op` is refused `409`; an answer is kept seven days
-past the request's `notAfter`, then `409` as stale, and the `op` is never
-reused. Authenticated control operations remove expired answer bodies; the
-`create` answer, which shows the bearer, is among them. A denied agent
-`bearer` or `retire` control does not perform that cleanup. Refusals are
+the same request resumes unfinished work or returns its original status
+and stable metadata. A completed bearer issuance replays with
+`bearerShown: true` and its original `bearerExpires`, never `bearer`.
+A later renewal does not change that receipt's expiry. Another request
+under the same `op` is refused `409`; the secret-free receipt is kept seven
+days past the request's `notAfter`, then `409` as stale, and the `op` is
+never reused. Authenticated control operations remove expired receipt
+bodies. A denied agent `bearer` or `retire` control does not perform that cleanup. Refusals are
 fixed bodies naming a rule, never a value: `403` for a
 bad signature, another service, another repository or incarnation, a
 revoked key, an ended member or a signer without authority; `400` for a
 binding that does not match the route, a body digest that differs or a
 deadline out of range; `507` when the object's control budget is full.
 
+### Bearer lifetime and one-time delivery
+
+A new bearer expires 30 days after its issuance commits. Ordinary calls,
+configuration writes, eviction, replay and stream activity do not extend
+that deadline. A fresh signed `bearer` operation, authorized against the
+controller's or admin's current membership standing, rotates the token
+and starts a new 30-day lifetime. Renewal does not require the old bearer
+to authenticate. It invalidates that bearer and uses the existing session
+and stream teardown.
+
+Plaintext is returned only from the fresh issuance response. Durable
+creation and control answers keep the secret-free receipt, not the token.
+If the first response is lost after issuance commits, repeating the same
+operation returns the already-shown receipt. Use a new signed `bearer`
+operation to obtain a new token; the server cannot recover the old one.
+Concurrent duplicate requests can receive at most one plaintext response.
+A reset before issuance commits can still resume the same enrolment and
+issue once, without creating a second agent or key.
+
+At cutover, an existing bearer without a valid stored expiry fails closed.
+There is no grace period or deadline inferred from activation or an
+unrelated update. The planner must explicitly renew live hosted-agent
+tokens as a deployment step and record that step. A legacy receipt has
+`bearerExpires: null`; it grants no continued token use.
+
+The versioned answer-scrubbing migration runs when each agent or registry
+object is constructed. Renewing an agent does not activate its repository's
+registry. A dormant registry can therefore retain an old raw creation
+answer until it is activated. Before claiming complete cleanup, the
+planner must also activate the relevant repository registries through the
+existing control plane, or record that dormant cleanup remains lazy and
+incomplete. This adds no operator enumeration API. New-code requests cannot
+return a stored answer before that object's migration runs.
+
+After expiry, new requests return `401` at bearer admission, before MCP
+body processing. Existing Origin and address-limiting refusals keep their
+precedence. Open hosted legacy streams and modern listens close through
+the existing HTTP lifecycle, using bounded timer rechecks while needed.
+There is no 30-day timer or new Durable Object alarm. A call admitted
+before expiry finishes under its original custody and operation fences;
+transport expiry does not cancel native authority work or authorize a new
+attempt. Legacy session idle expiry remains a separate 30-minute rule.
+
+The [R5C note](../notes/implementation/2026-10-24-hosted-mcp-bearer-expiry.md)
+records the implementation and verification status. R15 retirement and
+seed removal remain separate.
+
 ### The bearer
 
 `<agent>.<secret>`: the object holds the secret's digest and compares in
-constant time. Missing, malformed, wrong and retired each answer `401` with
+constant time. Missing, malformed, wrong, expired and retired each answer `401` with
 no body. Failures that name an agent are counted by that agent per
 connecting address: after ten in a minute, the eleventh request from that
 address answers `429`, right bearer or not. Each agent's in-memory window

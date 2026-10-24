@@ -112,6 +112,29 @@ head's predecessor.
   `NET`, `PLATFORM`, SQLite classes). An agent object class is one more
   entry there.
 
+## R5C bearer contract amendment
+
+Planner decision `855dd86db35a986ce2b09eafcffd7fb4bc3b661e` replaces the
+original plaintext-answer replay promise below. New bearer lifetime is
+30 days from committed issuance. Only a fresh authorized signed renewal
+rotates it and establishes a new deadline; use and replay never renew it.
+A versioned migration scrubs each object on construction; dormant registry
+answers remain until activation, which agent renewal alone does not cause.
+The planner must activate relevant registries or record incomplete lazy
+cleanup. New-code requests cannot replay an answer before their object
+migrates. Replays preserve their original
+status, metadata and expiry with `bearerShown: true`, never plaintext.
+Legacy receipts report `bearerExpires: null` and legacy active digests
+without a valid expiry fail closed. The planner records explicit renewal
+of live agents at deployment; there is no cutover grace.
+
+Open hosted streams use bounded timer rechecks and the existing HTTP
+teardown at bearer expiry. New calls are refused, while already admitted
+calls complete under their original fences. No long timer or new Durable
+Object alarm is added. The [implementation note](implementation/2026-10-24-hosted-mcp-bearer-expiry.md)
+keeps validation pending. Native enrolment and authority, custody, control
+retention and R15 retirement remain separate.
+
 ## 3. The design
 
 ### 3.1 Objects
@@ -202,7 +225,7 @@ reserved the space its answer will need (section 3.6, control budgets):
   transaction, so the rotation and its answer cannot part.
 
 Replay rules: the same `op` with the same fingerprint returns the stored
-answer (including the bearer shown at creation) or resumes the unfinished
+secret-free receipt (R5C removes plaintext bearer replay) or resumes the unfinished
 work; the same `op` with any other fingerprint, or another action or
 target, refuses `409`. Three lifetimes are distinct: the control
 request's own `notAfter` bounds when a **freshly signed** request with
@@ -254,8 +277,11 @@ which is the membership's own and adds no permission:
    retains as it retains every signed act. The hosted layer keeps no
    further copy: not in the `agent` row, the registry, a log or the
    configuration; and no native byte is changed to make that so.
-5. The answer is `{ agent, key, handle, bearer }`, the bearer shown this
-   once (and again only by the same `op`, section 3.2).
+5. A fresh issuance answers with `{ agent, key, handle, member, bearer,
+   bearerExpires }`. R5C returns plaintext only from that fresh response.
+   Replay keeps the original status and stable metadata with
+   `bearerShown: true` and `bearerExpires`, never the bearer. A lost first
+   response after commit requires a new signed renewal to obtain a token.
 
 Revocation is also the membership's own: `revoke-key` or `remove-member`
 by an admin makes the key's intents refused everywhere; `retire` by the
@@ -598,9 +624,12 @@ harness's instance reset; storage stays.
   seed is written, after the envelope is kept, after the native `enrol`
   is accepted but before the registry completes, and after completion but
   before the reply, a repeated `create` with the same `op` resumes and
-  answers with the same agent, key, envelope and bearer; two concurrent
-  `create` requests with the same `op` produce one agent, one key, one
-  envelope and one bearer.
+  answers with the same agent, key and envelope. Under R5C, a reset before
+  issuance commits can resume and issue once; after commit, a lost first
+  reply yields a secret-free already-shown receipt. Two concurrent `create`
+  requests produce one agent, key and envelope, with at most one plaintext
+  response. A new signed renewal recovers access without replacing native
+  enrolment.
 - **H2, agents kept apart.** Two agents in one repository: one's custody
   records, sessions and listens are invisible to the other; the same
   idempotency key in both creates two distinct records.
