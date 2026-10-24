@@ -557,10 +557,10 @@ test("H2, H3 and H4: agents kept apart, control authority, the bearer and revoca
     expect(beforeRegistryExpiry.control.some(row => row["answer"] !== null)).toBe(true);
     // Both headers have the right actor, body and route, but Paul's key did
     // not sign for Rita. Refusal must precede even retention-budget writes.
-    const badAgent = await room.wait(() => post(`/mcp/agents/${bot3.agent}/bearer`, control(room, paul.secret, "bearer", M, bot3.agent, "", "bad-expiry-agent", { actor: rita.key }), ""));
+    const badAgent = await room.wait(() => post(`/mcp/agents/${bot3.agent}/bearer`, control(room, paul.secret, "bearer", M, bot3.agent, "", "bad-expiry-agent", { actor: rita.key as KeyId }), ""));
     expect([badAgent.status, await badAgent.json()]).toEqual([403, { error: "control", rule: "signature" }]);
     expect(await agentRetention(), "invalid signature changes no answer, budget, session or agent state").toEqual(beforeAgentExpiry);
-    const badRegistry = await room.wait(() => post("/mcp/agents", control(room, paul.secret, "create", M, null, body3, "bad-expiry-registry", { actor: rita.key }), body3));
+    const badRegistry = await room.wait(() => post("/mcp/agents", control(room, paul.secret, "create", M, null, body3, "bad-expiry-registry", { actor: rita.key as KeyId }), body3));
     expect([badRegistry.status, await badRegistry.json()]).toEqual([403, { error: "control", rule: "signature" }]);
     expect(await registryRetention(), "the registry already authenticates before cleanup").toEqual(beforeRegistryExpiry);
     expect((await room.wait(() => post(`/mcp/agents/${bot3.agent}/bearer`, control(room, rita.secret, "bearer", M, bot3.agent, "", "rita-bearer-3"), ""))).status, "stale").toBe(409);

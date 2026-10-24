@@ -49,3 +49,10 @@ There is no new setting. The planner redeploys the reviewed head using the
 slice A opt-in and tool-addition settings chosen for that Worker. This note
 records no deployment or live configuration read. R5 bearer items 4–5, R15,
 and the live agent/tool inventory remain open and outside this follow-up.
+
+The first affected invocation at `4da26520` passed the MCP production and
+test compiler contexts, then stopped in the native MCP test compiler. Two
+invalid-signature fixtures supplied the helper's string-typed key where a
+`KeyId` was required. Their existing derived key values now carry explicit
+type annotations. No test body ran; the failure and unreached obligations
+remain in the external evidence. Runtime assertions and deadlines are unchanged.
