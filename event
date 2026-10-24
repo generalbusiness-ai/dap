@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ed1a09ec6a4c64e1f05a230ab162082ab1ddeca1","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/device-command-grant.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ed56c5f92273fd390259dea6cb1cbd048c2d522d","text":"Merge retired a covered predecessor; the successor is at apps/room/page/test/route.scope.test.ts."}
