@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fb20122d6303c5c2bc611dcea237a338dd2fbb71","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/support/archive-artifacts.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fb4683eddadbc708844984950c8e6ea3a1906a9b","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-24-archive-fixed-parent/post-gate-repair/single-capture-source-review.json."}
