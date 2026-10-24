@@ -77,8 +77,14 @@ The authored witnesses cover unread expiry through a real native alarm,
 read-mint conflict and interrupted-insert recovery, bounded restart-safe
 maintenance, exact fractional end, earlier wake arbitration and preservation
 of write-token revocation. These witnesses have not run. Affected compilers,
-paired control, actual maintained Source seals and the final gate remain
-unrun. Private dependencies were copied from the verified same-lock archive
+paired controls and the final gate remain unrun. The maintained producer
+computed the object and destination Source seals at clean
+`3a090dfbaefcb425dbec8e64b8143ff054b147bf`, tree
+`a992f369167b00d2360e5b0ffe729221033566ff`; only their three existing map
+slots were updated. The producer checked its pinned inputs and clean
+checkpoint before and after both calls. Its output is held at
+`/private/tmp/artroom-r13-read-token-seal-actual-20261024-v1.json`.
+Private dependencies were copied from the verified same-lock archive
 wake checkout without installing packages or executing project code. The
 copy passed its before/after checks and took 2.66 seconds wall and 2.23
 seconds CPU. No deployment or provider measurement is recorded.
