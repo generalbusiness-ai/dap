@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8f6ca55f50c53f0b632a6aa57c93638685f95652","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-24-hosted-mcp-failure-cleanup.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a970e738a8abc0b73403bd90339ab52b0c4ee96b","text":"Merge retired a covered predecessor; the successor is at scripts/security-entry-points.test.mjs."}
