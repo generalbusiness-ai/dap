@@ -1,1 +1,0 @@
-Original budget/transport caps unchanged; missing-state fullclosure bootstrap may refuse below8MiB. Publicationfixture assumes genuine valid existing frontier and does not claim oversized bootstrap. No broad capacity/hosted/recovery claim.
