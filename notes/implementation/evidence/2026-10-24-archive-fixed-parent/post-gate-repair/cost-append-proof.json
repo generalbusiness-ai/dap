@@ -1,0 +1,88 @@
+{
+  "state": "HELD_FROZEN_PARTIAL34_ORIGINALS_FINAL_ORDINARY_GATE_PENDING",
+  "previousManifest": {
+    "path": "/private/tmp/artroom-archive-fixed-parent-measured-cost-ledger-20261024-v5/manifest.json",
+    "bytes": 785,
+    "sha256": "ae59b679f14a1a0b4f978bdea62adec3bfea741af0983e1e57d70ad03ec69bcb",
+    "device": 16777231,
+    "inode": 545925813,
+    "mode": "0o444",
+    "nlink": 1
+  },
+  "previousLedger": {
+    "path": "/private/tmp/artroom-archive-fixed-parent-measured-cost-ledger-20261024-v5/cost-ledger.json",
+    "bytes": 48709,
+    "sha256": "abb40f6c8e478a661ab620ad385fa00bcf381c47068adde883da19da7d1b3a0e"
+  },
+  "prior30RowObjectsExact": true,
+  "prior30CanonicalRowVectorSha256": "44649feb09950e3d0b6bca9b6d093df671f4432f9224b8e06da0069d7ef5a9bd",
+  "new4OriginalResultPins": [
+    {
+      "path": "/private/tmp/artroom-archive-append-row-driver-seal-evidence-20261024-v2/result.json",
+      "bytes": 1590,
+      "sha256": "eb6483afd4635584c80cf6d93d06561f68c195a8c7b517351b1371e9313256f3",
+      "device": 16777231,
+      "inode": 545926813,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-append-row-repair-owning-evidence-20261024-v2/result.json",
+      "bytes": 14371,
+      "sha256": "e820e89ab0bd7271105418a539e6b45fe91cd72a523a05cc7739f3165fe4e54e",
+      "device": 16777231,
+      "inode": 545931116,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-append-headseen-control-evidence-20261024-v3/result.json",
+      "bytes": 2685,
+      "sha256": "dc0264ea2b0d3a3dd6e358e0f9e9b8713cb0d99833f1e4f74ba4e40d8e424cea",
+      "device": 16777231,
+      "inode": 545931665,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-row-projection-control-evidence-20261024-v3/result.json",
+      "bytes": 3522,
+      "sha256": "e3eb9588824baca1e34a7a49f8b9fa873a778c89369010e44fff016ee0a32682",
+      "device": 16777231,
+      "inode": 545931923,
+      "mode": "0o644",
+      "nlink": 1
+    }
+  ],
+  "all34UniqueAllocationsAndResultPaths": true,
+  "new4UniquePhysicalFiles": true,
+  "totals": {
+    "old30": {
+      "originalOwnerInvocations": 30,
+      "sumRecordedWallSeconds": 2064.7279035001993,
+      "sumRecordedInclusiveCpuSeconds": 2339.961498,
+      "exactDecimalWallSeconds": "2064.7279035001993053",
+      "exactDecimalInclusiveCpuSeconds": "2339.9614980000000714"
+    },
+    "appended4": {
+      "originalOwnerInvocations": 4,
+      "sumRecordedWallSeconds": 68.07969304104336,
+      "sumRecordedInclusiveCpuSeconds": 84.789213,
+      "exactDecimalWallSeconds": "68.0796930410433535",
+      "exactDecimalInclusiveCpuSeconds": "84.789213"
+    },
+    "all34": {
+      "originalOwnerInvocations": 34,
+      "sumRecordedWallSeconds": 2132.8075965412427,
+      "sumRecordedInclusiveCpuSeconds": 2424.750711,
+      "exactDecimalWallSeconds": "2132.8075965412426588",
+      "exactDecimalInclusiveCpuSeconds": "2424.7507110000000714"
+    }
+  },
+  "qualification": [
+    "Four new original results authenticated and costs/status/allocation verified. Earlier30 row objects copied exact, not re-audited.",
+    "Cost-only consolidation; separately accepted outcome/guard/restoration audits retain their own scope. Intentional child1 is not outer failure for matched controls.",
+    "Outer costs only; no nested costs, captures or unmeasured preparation/review/audit/freeze/Git/tool overhead added as zero.",
+    "Final gate pending. Retired through-profile Source is unexecuted and uncounted. Partial local observation, not a complete elapsed-cost or portable benchmark."
+  ]
+}

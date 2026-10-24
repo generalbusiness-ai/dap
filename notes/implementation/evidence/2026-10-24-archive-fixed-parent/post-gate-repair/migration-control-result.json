@@ -1,0 +1,83 @@
+{
+  "allocation": "5101aeabde2ef948f2527662c4423d03815ee014",
+  "status": "matched-control",
+  "errors": [],
+  "signals": [],
+  "child": {
+    "argv": [
+      "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+      "/private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/vitest/vitest.mjs",
+      "run",
+      "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-parent-bootstrap.test.ts",
+      "--config",
+      "/private/tmp/artroom-builder-archive-fixed-parent-20261023/vitest.config.ts",
+      "--project",
+      "scope",
+      "--allowOnly=false",
+      "--passWithNoTests=false",
+      "--reporter=default",
+      "--reporter=json",
+      "--reporter=/private/tmp/artroom-builder-archive-fixed-parent-20261023/scripts/test-progress.mjs",
+      "--outputFile.json=/private/tmp/artroom-archive-current-parent-migration-control-evidence-20261024-v5/vitest.json"
+    ],
+    "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+    "pid": 47193,
+    "exit": 1,
+    "signal": null,
+    "wall": 5.8316402080236,
+    "user": 6.491078,
+    "system": 0.841928
+  },
+  "qualification": "Migration-dispatch denial control, whole bootstrap4 only. Original successful owning4 is the external baseline; no healthy baseline/compiler/compatibility/gate repeat. Every actual terminal state is retained, with no sole-failure assumption.",
+  "caseStates": [
+    {
+      "name": "missing v2 parent state seeds once, publishes legacy anchors and then appends without old host reads",
+      "state": "failed",
+      "failureMessages": [
+        "AssertionError: expected 'unavailable' to be undefined\n    at /private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-parent-bootstrap.test.ts:164:75\n    at private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ]
+    },
+    {
+      "name": "old pending v2 readback confirms first or seeds only its exact confirmed parent",
+      "state": "failed",
+      "failureMessages": [
+        "AssertionError: expected 'unavailable' to be undefined\n    at /private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-parent-bootstrap.test.ts:255:75\n    at private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ]
+    },
+    {
+      "name": "over-bound current-parent migration refuses without installing either native key",
+      "state": "passed",
+      "failureMessages": []
+    },
+    {
+      "name": "current-parent migration handles six and thirty-seven old passes without walking history",
+      "state": "failed",
+      "failureMessages": [
+        "AssertionError: expected 'unavailable' to be undefined\n    at /private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-parent-bootstrap.test.ts:436:81\n    at private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ]
+    }
+  ],
+  "classification": {
+    "intendedFirstSeedAssertion": true,
+    "sourceFrame": {
+      "file": "packages/scope/test/archive-parent-bootstrap.test.ts",
+      "line": 164,
+      "columnStart": 53,
+      "columnEnd": 89,
+      "sourceLine": "  expect(seeded).toMatchObject({ state: \"retry\" }); expect(seeded.reason).toBeUndefined();"
+    },
+    "observedFrameColumns": [
+      75
+    ],
+    "passed": 1,
+    "failed": 3,
+    "qualification": "All actual outcomes retained. Other AssertionError failures are not labelled as a sole intended failure; inspect their original messages against the same successful owning baseline."
+  },
+  "controlMatched": true,
+  "wall": 8.923674916033633,
+  "pythonCpu": 2.7874250000000003,
+  "childrenUser": 6.625841,
+  "childrenSystem": 0.979715,
+  "inclusiveCpu": 10.392981,
+  "costQualification": "Owner includes guards and child; nested costs overlap. Original tool closure separate."
+}

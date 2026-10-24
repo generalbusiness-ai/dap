@@ -1,0 +1,285 @@
+{
+  "state": "CLOSED_NINE_CASE_BODY_PASS_FULL_GUARDS_EXACT_EXCEPT_DECLARED_CACHE",
+  "request": "fc2548ae1ab9c7c5e859d422611f8a34fd0ff13c",
+  "promise": "28cdea0d83a29e9a02c5107d89c6e21b10341fc2",
+  "originalOuterClosure": {
+    "session": 3145,
+    "naturalExit": 0,
+    "rootTool": "5b6356",
+    "attribution": "Root observed original natural closure; retained child38233 exit0/no signal independently agrees.",
+    "priorMetadataCapture": {
+      "session": 59432,
+      "naturalExit": 0,
+      "rootTool": "914a5c",
+      "attribution": "Root original capture observation; not a project test result."
+    }
+  },
+  "allocation": "4a0d0d665bc48671a906736019e89377ccbab246",
+  "checkpoint": {
+    "head": "0401d45ee71f0ef6d70f7fc327a02e22ba10cd47",
+    "tree": "e01f9398735bf996d843bddf53e2b6feaecfea6e",
+    "basis": "d7aea0b03ce8b9c1afcea7f3f6252b66d0d3630a",
+    "ledgerSha256": "ba96a6b75b6d2b67bc1a2038329fe13b819d2e8286528f3f5a886a44c9243891"
+  },
+  "binding": {
+    "path": "/private/tmp/artroom-archive-single-capture-repair-owning-binding-allocated-20261024-v3.json",
+    "bytes": 4083783,
+    "sha256": "e7058559df7192915ddf4270f33a13762e5e8d6b148b9a62232922fdb63e72ba",
+    "device": 16777231,
+    "inode": 545924555,
+    "mode": "0o644",
+    "nlink": 1
+  },
+  "sourceManifest": {
+    "path": "/private/tmp/artroom-archive-single-capture-repair-owning-source-20261024-v3/manifest.json",
+    "bytes": 1960,
+    "sha256": "0591c0803e95ec1c6259c6c94af6d322408c4fec1ba82db352e6fc76cacfb599",
+    "device": 16777231,
+    "inode": 545924379,
+    "mode": "0o444",
+    "nlink": 1
+  },
+  "authenticatedSourcePayloads": 11,
+  "rawPins": [
+    {
+      "path": "/private/tmp/artroom-archive-single-capture-repair-owning-evidence-20261024-v3/after.json",
+      "bytes": 3336707,
+      "sha256": "207590f158a19189f5f5129feb597b3ce18bae1c4550680fc400c9edd6d974ae",
+      "device": 16777231,
+      "inode": 545924867,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-single-capture-repair-owning-evidence-20261024-v3/before.json",
+      "bytes": 3336701,
+      "sha256": "58ff83c8ca43b8dd8ee25cd51c8dd3f84b8f9ec664766274a325d5f0ddc58156",
+      "device": 16777231,
+      "inode": 545924562,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-single-capture-repair-owning-evidence-20261024-v3/focused/body.log",
+      "bytes": 27661,
+      "sha256": "1fcfbba832aee86c5abcd89ac69b1176ce916126935b85fb7b2e91cd5b833db8",
+      "device": 16777231,
+      "inode": 545924571,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-single-capture-repair-owning-evidence-20261024-v3/focused/coverage-ledger.json",
+      "bytes": 10798,
+      "sha256": "52097d96de364b4b2e47f5c82552c5aa58a4cf1e39211d050ce9138a4fdaf4dd",
+      "device": 16777231,
+      "inode": 545924859,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-single-capture-repair-owning-evidence-20261024-v3/focused/coverage.jsonl",
+      "bytes": 13145,
+      "sha256": "8314948fc0880c0eb29db6fadec0ba4232e97c618cacf5d0440f2c2755bb8499",
+      "device": 16777231,
+      "inode": 545924589,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-single-capture-repair-owning-evidence-20261024-v3/focused/manifest.json",
+      "bytes": 825,
+      "sha256": "33496dd6852837bc5a6557ed560a993c936cdc7f8bed105ee8321064c4376691",
+      "device": 16777231,
+      "inode": 545924861,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-single-capture-repair-owning-evidence-20261024-v3/focused/plan.json",
+      "bytes": 517775,
+      "sha256": "e7b2cd1d4d83d23f94fa038be4409f755037171c82a0735a3947c26a88060dd9",
+      "device": 16777231,
+      "inode": 545924569,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-single-capture-repair-owning-evidence-20261024-v3/focused/result.json",
+      "bytes": 4003,
+      "sha256": "2d241e6d790e67a88e2553204320a4d5284a536630b17d31bd2aa8f31e415815",
+      "device": 16777231,
+      "inode": 545924860,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-single-capture-repair-owning-evidence-20261024-v3/focused/vitest.json",
+      "bytes": 222626,
+      "sha256": "5feb59a6ca39e5452b4f1b4d8883d71be8969f4e34b2448d5fa296295e7a6844",
+      "device": 16777231,
+      "inode": 545924856,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-single-capture-repair-owning-evidence-20261024-v3/focused-after.json",
+      "bytes": 3336707,
+      "sha256": "207590f158a19189f5f5129feb597b3ce18bae1c4550680fc400c9edd6d974ae",
+      "device": 16777231,
+      "inode": 545924864,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-single-capture-repair-owning-evidence-20261024-v3/focused-plan.json",
+      "bytes": 517775,
+      "sha256": "e7b2cd1d4d83d23f94fa038be4409f755037171c82a0735a3947c26a88060dd9",
+      "device": 16777231,
+      "inode": 545924563,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-single-capture-repair-owning-evidence-20261024-v3/focused.command.json",
+      "bytes": 371,
+      "sha256": "abaefe46e942c3742e4948d8ded6f0c6bb3c68967f71b74b24b8550ac2f84f39",
+      "device": 16777231,
+      "inode": 545924564,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-single-capture-repair-owning-evidence-20261024-v3/focused.pid.json",
+      "bytes": 19,
+      "sha256": "b9cf2f71642770ff29fea969a9f8dee618b2f7c63258192b83e1ed6f26d679f9",
+      "device": 16777231,
+      "inode": 545924567,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-single-capture-repair-owning-evidence-20261024-v3/focused.process.json",
+      "bytes": 511,
+      "sha256": "69f9183bbb1d1030b3c07ebbcdf80b8f7c671bfe54ac03a0cbcff31f5ede78fb",
+      "device": 16777231,
+      "inode": 545924862,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-single-capture-repair-owning-evidence-20261024-v3/focused.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "device": 16777231,
+      "inode": 545924566,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-single-capture-repair-owning-evidence-20261024-v3/focused.stdout",
+      "bytes": 205,
+      "sha256": "a61f021d50b9b1e284f504e43b5fea2d7ab5facd25dfdf8825434f6dbdcdac50",
+      "device": 16777231,
+      "inode": 545924565,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-single-capture-repair-owning-evidence-20261024-v3/invocation.json",
+      "bytes": 493,
+      "sha256": "93f61b1d0f6578c841e2697dc36ee273c55fd6bfcce7cdcfc0dcde96b8f0a57a",
+      "device": 16777231,
+      "inode": 545924560,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-single-capture-repair-owning-evidence-20261024-v3/result.json",
+      "bytes": 8272,
+      "sha256": "17ef7f5cea6212bc53f05dcc76e8a46fe38627927077ff1dffa87434b759fbea",
+      "device": 16777231,
+      "inode": 545924868,
+      "mode": "0o644",
+      "nlink": 1
+    }
+  ],
+  "guards": {
+    "beforeExactlyAllocated": true,
+    "focusedAfterExactlyFinal": true,
+    "allFixedFieldsExactAfterNarrowCacheAllowance": true,
+    "sourceRows": 3047,
+    "dependencyRowsIncludingRoot": 6072,
+    "relativeLinks": 32,
+    "changedCacheCells": [
+      "scope:packages/scope/test/archive-parent-bootstrap.test.ts",
+      "scope:packages/scope/test/archive-frontier-store.test.ts",
+      "scope:packages/scope/test/archive-input-work.test.ts"
+    ],
+    "cachePhysicalIdentityExact": true,
+    "cacheBytes": [
+      46025,
+      46031
+    ],
+    "emptyViteTempDirectoryTimestampsOnly": true
+  },
+  "coverage": {
+    "files": 3,
+    "cases": 9,
+    "states": {
+      "passed": 9
+    },
+    "byFile": {
+      "packages/scope/test/archive-frontier-store.test.ts": 4,
+      "packages/scope/test/archive-parent-bootstrap.test.ts": 4,
+      "packages/scope/test/archive-input-work.test.ts": 1
+    },
+    "compilerPhases": [],
+    "bodyExit": 0,
+    "callbackEvents": {
+      "selection": 1,
+      "collected": 3,
+      "started": 9,
+      "result": 9,
+      "end": 1
+    },
+    "missingStarted": 0,
+    "missingResult": 0,
+    "unhandledErrors": 0,
+    "endReason": "passed",
+    "qualification": "Exact semantic project/file/title/state tuples, no numeric framework IDs exposed. All9 terminal states pass; no retry/repeat/errors."
+  },
+  "ownerCost": {
+    "wall": 10.504091375041753,
+    "pythonCpu": 2.204979,
+    "childrenUser": 8.62945,
+    "childrenSystem": 1.320187,
+    "inclusiveCpu": 12.154616
+  },
+  "child": {
+    "label": "focused",
+    "argv": [
+      "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+      "scripts/focused-check.mjs",
+      "/private/tmp/artroom-archive-single-capture-repair-owning-evidence-20261024-v3/focused-plan.json",
+      "/private/tmp/artroom-archive-single-capture-repair-owning-evidence-20261024-v3/focused"
+    ],
+    "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+    "pid": 38233,
+    "exit": 0,
+    "signal": null,
+    "wall": 8.034683584002778,
+    "user": 8.525764,
+    "system": 1.207622
+  },
+  "measurements": {
+    "path": "/private/tmp/artroom-archive-single-capture-nine-pass-measurements-20261024-v1.json",
+    "bytes": 4362,
+    "sha256": "623cfa8f2faa017664c45f6cf28d2779def00a317981e2575ed7839c13d1d7af"
+  },
+  "limits": [
+    "No repeated runtime/import/current Source/dependency/tool-pool read. Only granted closed evidence, retained Source and allocated binding read.",
+    "Full lifetime Source/private/tools/environment/Main/preparation binding fixed; only selected three cache cells and existing empty Vite-temp timestamps allowed.",
+    "Owner inclusive CPU includes child and phases; do not add nested observations. Prior failed invocations and unresolved installed/gate outcomes remain separate."
+  ]
+}

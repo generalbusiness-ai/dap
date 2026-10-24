@@ -1,0 +1,64 @@
+{
+  "allocation": "abd5aa6369887daf1ded2a05307dc83ee275e295",
+  "status": "matched-control",
+  "errors": [],
+  "signals": [],
+  "child": {
+    "argv": [
+      "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+      "/private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/vitest/vitest.mjs",
+      "run",
+      "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/git/test/journal-v2-append.test.ts",
+      "--config",
+      "/private/tmp/artroom-builder-archive-fixed-parent-20261023/vitest.config.ts",
+      "--project",
+      "git",
+      "--allowOnly=false",
+      "--passWithNoTests=false",
+      "--reporter=default",
+      "--reporter=json",
+      "--reporter=/private/tmp/artroom-builder-archive-fixed-parent-20261023/scripts/test-progress.mjs",
+      "--outputFile.json=/private/tmp/artroom-archive-append-headseen-control-evidence-20261024-v3/vitest.json"
+    ],
+    "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+    "pid": 29863,
+    "exit": 1,
+    "signal": null,
+    "wall": 1.923624333110638,
+    "user": 1.419003,
+    "system": 0.592673
+  },
+  "qualification": "HeadSeen denial control, whole Git append1. Original complete passed file is the external baseline; no healthy repeat. Sole original no-op refusal assertion must fail.",
+  "caseStates": [
+    {
+      "name": "an append preserves old edges only at their exact parent paths and supplies every changed edge",
+      "state": "failed",
+      "failureMessages": [
+        "AssertionError: expected { ok: true } to deeply equal { ok: false, reason: 'parent' }\n    at /private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/git/test/journal-v2-append.test.ts:83:66\n    at async file:///private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ]
+    }
+  ],
+  "classification": {
+    "intendedCaptureParentAssertion": true,
+    "sourceFrame": {
+      "file": "packages/git/test/journal-v2-append.test.ts",
+      "line": 83,
+      "columnStart": 3,
+      "columnEnd": 106,
+      "sourceLine": "  expect(await check(await rewriteV2(rows => rows, true), full)).toEqual({ ok: false, reason: \"parent\" });"
+    },
+    "observedFrameColumns": [
+      66
+    ],
+    "passed": 0,
+    "failed": 1,
+    "qualification": "All actual outcomes retained. Sole original no-op refusal assertion required."
+  },
+  "controlMatched": true,
+  "wall": 4.995296666980721,
+  "pythonCpu": 2.7708239999999997,
+  "childrenUser": 1.552082,
+  "childrenSystem": 0.728422,
+  "inclusiveCpu": 5.051328,
+  "costQualification": "Owner includes guards and child; nested costs overlap. Original tool closure separate."
+}

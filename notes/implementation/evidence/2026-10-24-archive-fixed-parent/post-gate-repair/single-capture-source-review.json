@@ -1,0 +1,112 @@
+{
+  "state": "INDEPENDENT_SOURCE_REVIEW_CLEAR_NO_RUNTIME_CLAIM",
+  "request": "fc2548ae1ab9c7c5e859d422611f8a34fd0ff13c",
+  "promise": "28cdea0d83a29e9a02c5107d89c6e21b10341fc2",
+  "basis": "a32bbea5e1c43e80bcdb7e1e6b3a2e454641a5c4",
+  "sourceManifest": {
+    "path": "/private/tmp/artroom-archive-single-capture-preparation-source-20261024-v1/manifest.json",
+    "bytes": 4220,
+    "sha256": "4a961bc0e7c5795ee714951f7e997786fd5b6caf95a29a11b126a12a2d9a4e73"
+  },
+  "scope": {
+    "authenticatedLeaves": 20,
+    "totalLeafBytes": 315196,
+    "regularMode": "0444",
+    "nlink": 1,
+    "stableIdentityChecks": "dev/inode/full mode/nlink/size/mtimeNs/ctimeNs before open, through fd, and after read; atime excluded",
+    "immutableBasisMatches": 7,
+    "fullPatchReplays": 7,
+    "productionPatchReplays": 5,
+    "projectOrHelperExecution": false,
+    "candidateOrDependencyReads": false,
+    "embeddedEvidencePathsFollowed": false
+  },
+  "selectedPins": [
+    {
+      "path": "diagnosis-and-cost-proof.json",
+      "bytes": 7762,
+      "sha256": "ac3ec6ccd7cb931363733d770df913e54182449b68141f2d3e642892b9eea06a",
+      "mode": "0444"
+    },
+    {
+      "path": "production.patch",
+      "bytes": 9686,
+      "sha256": "c7b7c15b2ee54158cb0eb02e393f25b3dc671147871cd569ca153c5726e8a199",
+      "mode": "0444"
+    },
+    {
+      "path": "source/packages/git/src/journal-v2-frontier.ts",
+      "bytes": 12777,
+      "sha256": "b5f0e0fb05abe62e21a1b86e922bef1fac2f1064700231641693674ade629f4e",
+      "mode": "0444"
+    },
+    {
+      "path": "source/packages/git/test/journal-v2-frontier.test.ts",
+      "bytes": 15621,
+      "sha256": "7ce8478ab79ee9c26055ff0b8c355f381bc5f4c259ff15faf68fe5dfc7b7f448",
+      "mode": "0444"
+    },
+    {
+      "path": "source/packages/scope/src/archive-adaptive.ts",
+      "bytes": 16111,
+      "sha256": "c3fdd35f739adf53c6638cfbf5b6e3af774ccab7d1fd4ea4526d5f4ca3607b9a",
+      "mode": "0444"
+    },
+    {
+      "path": "source/packages/scope/src/archive-driver.ts",
+      "bytes": 28071,
+      "sha256": "497504db94873fed16b955d19a55c8bd2a32ceada3acffe5d1f7765becabe37a",
+      "mode": "0444"
+    },
+    {
+      "path": "source/packages/scope/src/archive-frontier-cost.ts",
+      "bytes": 8860,
+      "sha256": "74c70ea260ae219f6e663657cf4a0e62ca7d2daa7a565e0827629e77d42cf1c8",
+      "mode": "0444"
+    },
+    {
+      "path": "source/packages/scope/src/archive-frontier-store.ts",
+      "bytes": 30997,
+      "sha256": "ec4c90578add9c327fb5da0e4cd4910ff860af32d5b7fb9e492d0130545a3430",
+      "mode": "0444"
+    },
+    {
+      "path": "source/packages/scope/test/archive-frontier-store.test.ts",
+      "bytes": 25022,
+      "sha256": "cb9bf105b5d57dcc87f10664739f46845e75c823cd1d33f71414e417575dd894",
+      "mode": "0444"
+    },
+    {
+      "path": "source.patch",
+      "bytes": 19558,
+      "sha256": "27604364a73622d124b472c4a7fa47f93ddb18149ed0b0ba725d68e21d6d2767",
+      "mode": "0444"
+    }
+  ],
+  "findings": [],
+  "reasoning": [
+    "prepareFromSource and prepare share the existing Mark snapshot, genuine store-owned WeakMap base/conversion checks, captured prior pair, exact declared Mark.parent and first-position binding. Mark text and nested head/replay scopes are owned before the first await.",
+    "Source-owned capture derives its binding from the captured Mark and store identity, hashes and intrinsically owns each of the eleven object bodies using the maintained JournalObjectReader, enforces exact geometry/rightmost path/head/scope/through/hash/count/type/byte limits, and compares the already-parsed actual commit.parent against the captured Mark.parent. The optional parent argument is normalized before the first await; callers omitting it retain behavior.",
+    "Captured bodies are not exposed before private encoding and WeakMap state construction. Public returned frontier bodies are separately copied. Source aliases, mutated public token bodies and a token from another ArchiveFrontiers instance cannot alter private authority. The source itself is not retained as stage authority.",
+    "Unknown prepare, readConfirmed, readPending and prepareConfirmedBootstrap retain validateJournalParentFrontier, including hash/order/first/binding and optional parent checks. No public already-validated flag or persisted-validation bypass was introduced.",
+    "Stage/promote exact native pair-byte comparison, row size-first checks, exact canonical pending Mark comparison, repository/scope/format/old receipt checks, caller outer transaction contract and rollback behavior remain unchanged. Intervening SQL state still refuses at the existing synchronous compare-and-write boundary.",
+    "The driver now calls prepareFromSource on the same locally held built-object map; existing atomic rows.markAttempt plus frontier.stage and later promotion/confirmation paths are unchanged. Adaptive planning selects captureFromSource only for this path. Default finish forecast still covers capture plus validation.",
+    "The source-owned forecast removes only the duplicate validation recapture and its actual duplicate nine tree-node visits, while retaining capture, source ownership, both encodes, public copy, Mark capture, SQL comparisons/writes and already-spent base reads. Existing limits and actual tariffs are unchanged.",
+    "Existing Git frontier six cases and Scope store four cases retain their exact registration lines/order/deadlines. Added witnesses cover null/non-null correct and wrong actual commit parents, a hash-valid wrong edge after the common base check, source body corruption, actual nine-node preparation, default versus source-owned forecast difference, all-axis finish debits, public-copy mutation, foreign/forged tokens, rollback, restart and changed persisted bytes. These are unexecuted Source witnesses."
+  ],
+  "arithmetic": {
+    "verifiedSourceDataOnly": true,
+    "observedRejectedUsedNodes": 29,
+    "oldFinishNodes": 43,
+    "removedActualDuplicateNodes": 9,
+    "prospectiveTotalNodes": 63,
+    "unchangedCap": 64,
+    "qualification": "63 nodes is prospective arithmetic for the specifically recorded observed through-one shape, not an execution result or universal admission guarantee. The input observation is author-attributed closed evidence; this review did not follow its embedded pathname."
+  },
+  "limitations": [
+    "No compiler, test, parser, producer, capture, hosted call or gate ran in this review. New runtime behavior, exact admitted costs and installed Grow progress remain to be established by root owning validation.",
+    "One node of prospective margin does not guarantee progress for every allowed publication, replay-scope or selected path shape. No maximum or authority waiver is inferred.",
+    "The separate manual historical inventory-attempt fixture correction is outside these seven paths; its accepted afterimage and observed continuation outcomes must be bound separately.",
+    "Historical test-handoff-manifest.json is inert ancestry naming its original packet leaves; this review authenticated only the twenty explicit outer-manifest leaves and did not traverse those references."
+  ]
+}

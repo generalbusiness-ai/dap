@@ -1,0 +1,199 @@
+{
+  "state": "CLOSED_PARTIAL_OWNING_MEASUREMENTS_NO_WHOLE_PASS",
+  "request": "fc2548ae1ab9c7c5e859d422611f8a34fd0ff13c",
+  "promise": "28cdea0d83a29e9a02c5107d89c6e21b10341fc2",
+  "measurements": {
+    "GrowFailure": {
+      "source": {
+        "path": "/private/tmp/artroom-archive-post-gate-repair-owning-evidence-20261024-v3/focused/vitest.json",
+        "device": 16777231,
+        "inode": 545920232,
+        "mode": "0o400",
+        "nlink": 1,
+        "bytes": 68857,
+        "sha256": "8be81416a6b7012ed0745d351d066da2ae3324b6eb318bb90c13f6547a2bf820"
+      },
+      "case": "installed Grow production scopes export genesis zero after a late native Membership8 directory binding",
+      "assertionPrefix": "AssertionError: ",
+      "initialResult": {
+        "state": "stopped",
+        "next": null,
+        "reason": "limit"
+      },
+      "initialCost": {
+        "entries": 1,
+        "attempts": 30,
+        "nodes": 29,
+        "calls": 87,
+        "metadata": 2396495,
+        "inputWork": 31779847
+      },
+      "confirmed": {
+        "anchorsPublished": true,
+        "commit": "745a587e7b790ab253dcf4cd4468aa5e8304e973",
+        "layout": 2,
+        "through": {
+          "hash": "sha256:f07eb51b5661ba702b59d1abcc4139317a0d7f4ab0ae658b91513c700dba1a46",
+          "seq": 0
+        }
+      },
+      "pending": null,
+      "sourceRefused": false,
+      "rejectedFit": {
+        "cost": {
+          "entries": 1,
+          "attempts": 66,
+          "nodes": 43,
+          "calls": 165,
+          "metadata": 1171834,
+          "inputWork": 21720247
+        },
+        "used": {
+          "entries": 1,
+          "attempts": 30,
+          "nodes": 29,
+          "calls": 83,
+          "metadata": 2395807,
+          "inputWork": 25427351
+        }
+      },
+      "summedFit": {
+        "entries": 2,
+        "attempts": 96,
+        "nodes": 72,
+        "calls": 248,
+        "metadata": 3567641,
+        "inputWork": 47147598
+      },
+      "overOriginalBounds": {
+        "nodes": 8
+      },
+      "qualification": "Genesis zero is actually confirmed with anchorsPublished. The next entry is refused before a Mark; this is a failed whole-file outcome, not a successful Grow pair or universal fit."
+    },
+    "nativeDrain": {
+      "source": {
+        "path": "/private/tmp/artroom-archive-post-gate-repair-owning-evidence-20261024-v4/focused/vitest.json",
+        "device": 16777231,
+        "inode": 545920772,
+        "mode": "0o400",
+        "nlink": 1,
+        "bytes": 226788,
+        "sha256": "a14f8c04d2a1c6ce185cae0884d2b3e90d1af9e828a1c20283d584cea0e231c7"
+      },
+      "case": "legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder",
+      "state": "passed",
+      "backlog": 300,
+      "passes": 10,
+      "selectedEntriesPerPass": [
+        30,
+        31,
+        30,
+        30,
+        30,
+        30,
+        30,
+        30,
+        30,
+        29
+      ],
+      "remainingEntries": [
+        270,
+        239,
+        209,
+        179,
+        149,
+        119,
+        89,
+        59,
+        29,
+        0
+      ],
+      "firstSeq": 2,
+      "finalSeq": 301,
+      "confirmedTargetExact": true,
+      "firstParentReads": 2,
+      "laterNativeParentReads": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "firstPreplanningCost": {
+        "entries": 0,
+        "attempts": 28,
+        "nodes": 23,
+        "calls": 53,
+        "metadata": 178583,
+        "inputWork": 6192246
+      },
+      "preplanningCeiling": 16777216,
+      "maxPerPassCost": {
+        "entries": 62,
+        "attempts": 119,
+        "nodes": 62,
+        "calls": 706,
+        "metadata": 3483440,
+        "inputWork": 38177156
+      },
+      "originalBounds": {
+        "entries": 4096,
+        "attempts": 512,
+        "nodes": 64,
+        "calls": 16384,
+        "metadata": 4194304,
+        "inputWork": 67108864
+      },
+      "allPassesFitOriginalBounds": true,
+      "allObservedSharesExactlyReconcile": true,
+      "seedAlarm": {
+        "result": {
+          "state": "retry",
+          "next": "2099-01-01T00:00:01Z"
+        },
+        "cost": {
+          "entries": 0,
+          "attempts": 22,
+          "nodes": 18,
+          "calls": 56,
+          "metadata": 267751,
+          "inputWork": 921519
+        },
+        "qualification": "Separate seed-only alarm under its original budget; excluded from append prefix totals, never refunded."
+      },
+      "seedFixture": {
+        "seedTreeBytes": 529,
+        "seedBlobs": 4,
+        "checkpointBytes": {
+          "minimum": 454,
+          "maximum": 458,
+          "total": 137186
+        }
+      },
+      "qualification": "Actual current Native300 drain; compare measured prefixes to prior41-44, do not infer performance or backlog13031 recovery. Seed alarm is separately reported with zero archived entries. Actual Native300 backlog, original per-pass caps, truthful TEST HTTP/token/repository; local reconstructed successful debit shares. No4096 completion, hosted or throughput claim."
+    },
+    "bootstrapFailure": {
+      "source": {
+        "path": "/private/tmp/artroom-archive-post-gate-repair-owning-evidence-20261024-v4/focused/vitest.json",
+        "device": 16777231,
+        "inode": 545920772,
+        "mode": "0o400",
+        "nlink": 1,
+        "bytes": 226788,
+        "sha256": "a14f8c04d2a1c6ce185cae0884d2b3e90d1af9e828a1c20283d584cea0e231c7"
+      },
+      "case": "current-parent migration handles six and thirty-seven old passes without walking history",
+      "message": "AssertionError: expected { ok: false, reason: 'input' } to be 'accepted' // Object.is equality\n    at /private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-parent-bootstrap.test.ts:392:43\n    at private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20",
+      "qualification": "First three bootstrap cases passed. Fourth manual-history case refuses input at line392 before its intended six/thirty-seven/big-row migration assertions complete. Later assertions are not claimed."
+    }
+  },
+  "limits": [
+    "Actual local Native300, scripted bounded transport/clock/source setup; not hosted recovery, throughput, backlog13031 drainage, first RoomA fit or4096 entry-cap proof.",
+    "Finite compact projection; pinned original Vitest reports retain complete metadata/error messages.",
+    "V3 and V4 both failed. Healthy subcohorts do not upgrade either whole outcome."
+  ]
+}

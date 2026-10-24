@@ -1,0 +1,197 @@
+{
+  "status": "MATCHED_ORIGINAL_MIGRATION_CONTROL_CONFIRMED",
+  "closure": "Root original26864 natural0/tool0c5a64; child47193 natural1/no signal. No rerun.",
+  "result": {
+    "allocation": "5101aeabde2ef948f2527662c4423d03815ee014",
+    "status": "matched-control",
+    "errors": [],
+    "signals": [],
+    "child": {
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/vitest/vitest.mjs",
+        "run",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-parent-bootstrap.test.ts",
+        "--config",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/vitest.config.ts",
+        "--project",
+        "scope",
+        "--allowOnly=false",
+        "--passWithNoTests=false",
+        "--reporter=default",
+        "--reporter=json",
+        "--reporter=/private/tmp/artroom-builder-archive-fixed-parent-20261023/scripts/test-progress.mjs",
+        "--outputFile.json=/private/tmp/artroom-archive-current-parent-migration-control-evidence-20261024-v5/vitest.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+      "pid": 47193,
+      "exit": 1,
+      "signal": null,
+      "wall": 5.8316402080236,
+      "user": 6.491078,
+      "system": 0.841928
+    },
+    "qualification": "Migration-dispatch denial control, whole bootstrap4 only. Original successful owning4 is the external baseline; no healthy baseline/compiler/compatibility/gate repeat. Every actual terminal state is retained, with no sole-failure assumption.",
+    "caseStates": [
+      {
+        "name": "missing v2 parent state seeds once, publishes legacy anchors and then appends without old host reads",
+        "state": "failed",
+        "failureMessages": [
+          "AssertionError: expected 'unavailable' to be undefined\n    at /private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-parent-bootstrap.test.ts:164:75\n    at private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+        ]
+      },
+      {
+        "name": "old pending v2 readback confirms first or seeds only its exact confirmed parent",
+        "state": "failed",
+        "failureMessages": [
+          "AssertionError: expected 'unavailable' to be undefined\n    at /private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-parent-bootstrap.test.ts:255:75\n    at private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+        ]
+      },
+      {
+        "name": "over-bound current-parent migration refuses without installing either native key",
+        "state": "passed",
+        "failureMessages": []
+      },
+      {
+        "name": "current-parent migration handles six and thirty-seven old passes without walking history",
+        "state": "failed",
+        "failureMessages": [
+          "AssertionError: expected 'unavailable' to be undefined\n    at /private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-parent-bootstrap.test.ts:436:81\n    at private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+        ]
+      }
+    ],
+    "classification": {
+      "intendedFirstSeedAssertion": true,
+      "sourceFrame": {
+        "file": "packages/scope/test/archive-parent-bootstrap.test.ts",
+        "line": 164,
+        "columnStart": 53,
+        "columnEnd": 89,
+        "sourceLine": "  expect(seeded).toMatchObject({ state: \"retry\" }); expect(seeded.reason).toBeUndefined();"
+      },
+      "observedFrameColumns": [
+        75
+      ],
+      "passed": 1,
+      "failed": 3,
+      "qualification": "All actual outcomes retained. Other AssertionError failures are not labelled as a sole intended failure; inspect their original messages against the same successful owning baseline."
+    },
+    "controlMatched": true,
+    "wall": 8.923674916033633,
+    "pythonCpu": 2.7874250000000003,
+    "childrenUser": 6.625841,
+    "childrenSystem": 0.979715,
+    "inclusiveCpu": 10.392981,
+    "costQualification": "Owner includes guards and child; nested costs overlap. Original tool closure separate."
+  },
+  "verified": [
+    "Exact allocated binding size/hash and original snapshot; single literal mutation reproduced from retained originalbytes.",
+    "All before/mutantbefore/mutantafter/final fixed vectors agree after only owned source/status, one selected cachecell and emptytemp timestamps; restored original inode/mode/nlink/bytes/hash/mtime, targetctime only.",
+    "Actual four states are FAIL/FAIL/PASS/FAIL, with original first seed assertion164:75. Oldpending255:75/history436:81 retain their own actual AssertionError diagnostics; not labelled sole failure.",
+    "Four terminal callback names/states agree JSON; runend0unhandled. Original result has no errors/signals. No retry/repeat recorded.",
+    "Root reported natural outer0 attributed separately from retained child process. Costs are original owner totals with nested child overlap."
+  ],
+  "counts": {
+    "source": 3047,
+    "dependencies": 6072,
+    "links": 32
+  },
+  "binding": {
+    "path": "/private/tmp/artroom-archive-current-parent-migration-control-binding-allocated-20261024-v5.json",
+    "bytes": 3543436,
+    "sha256": "5c0ed5d4c50c292421a8472c5705c8b6be489600ebe2d1338813bfb18cc01381"
+  },
+  "rawPins": [
+    {
+      "name": "after.json",
+      "bytes": 3338761,
+      "sha256": "a93e4368a405eaadb0d73194a40634124cd3f07605afac430d9bc80d9a86ffbe"
+    },
+    {
+      "name": "before.json",
+      "bytes": 3338762,
+      "sha256": "48af934c09941c02085a82fbb995073b66ab5a16f055c58e5259b1a28d39f233"
+    },
+    {
+      "name": "command.json",
+      "bytes": 990,
+      "sha256": "2ea2f40fb084671c70a0316f7989aafe41fc0f0aae608b5544d063860aef185c"
+    },
+    {
+      "name": "invocation.json",
+      "bytes": 501,
+      "sha256": "48ec6a1f076212f2e908cf5fe20a4d22905534b65fdc2f8fbec6b37e94b81f1b"
+    },
+    {
+      "name": "mutant-after.json",
+      "bytes": 3338802,
+      "sha256": "a63ddc9f1bc44d865c2c8ce208f36aebc8d201bdbcb192bc17011ca4ccfc6db9"
+    },
+    {
+      "name": "mutant-before.json",
+      "bytes": 3338803,
+      "sha256": "6818e620ff50b353ef9a3f83fa1097243b295f44cb469724f2b0dc7dfbb0f1aa"
+    },
+    {
+      "name": "mutant.data",
+      "bytes": 28101,
+      "sha256": "0e1016a628cd13031ee123ab66eeeae8ddf25e61964fbc67c29aa9f495166084"
+    },
+    {
+      "name": "mutation.json",
+      "bytes": 398,
+      "sha256": "e510cace00b612084f05102408bff8a11ba7c13697ff9ea9a0891daa07ed6dfb"
+    },
+    {
+      "name": "mutation.patch",
+      "bytes": 759,
+      "sha256": "f95c257fcea42c23e9f62c15b932e2abf0fc9f9d2146bd1619e1d25843f9881c"
+    },
+    {
+      "name": "original.data",
+      "bytes": 28071,
+      "sha256": "497504db94873fed16b955d19a55c8bd2a32ceada3acffe5d1f7765becabe37a"
+    },
+    {
+      "name": "pid.json",
+      "bytes": 19,
+      "sha256": "48c8865d6879d3be678570176233a64bdce04e832303480bdd28edac837ee069"
+    },
+    {
+      "name": "process.json",
+      "bytes": 940,
+      "sha256": "fb270523a00fd55ae0e2ea9dc5f444aed89f60bfa0e290ac11c0f2f01e889a69"
+    },
+    {
+      "name": "progress.jsonl",
+      "bytes": 4061,
+      "sha256": "9f90840e97066ab54626c1549d84fcbf06e304aebe31f08b27653df53c7880c7"
+    },
+    {
+      "name": "restoration.json",
+      "bytes": 805,
+      "sha256": "f810d3cbde48fdbeb33a4b9aa34250ea9d118ce68f0006b08c73c83184b26bc5"
+    },
+    {
+      "name": "result.json",
+      "bytes": 3990,
+      "sha256": "d02a4bc57494f9d4a350489fcbc0a40c933af38aa16afa2d4c514cfee69129c5"
+    },
+    {
+      "name": "stderr",
+      "bytes": 2438,
+      "sha256": "5a4d580c39bd5603afcd94031a39adf09cd47c8032ea42a69d03e7930ab3852f"
+    },
+    {
+      "name": "stdout",
+      "bytes": 9453,
+      "sha256": "1ca27443ffb018499767a2d486576fb8612324dde7e0b169f249517d75bd517f"
+    },
+    {
+      "name": "vitest.json",
+      "bytes": 2809,
+      "sha256": "2250974e9844fac4a1e5be731f17430813eb3a70f691d941d06aa8a26f532dc2"
+    }
+  ],
+  "limits": "Closed data-only audit, no live candidate/dependencies or program/test execution."
+}

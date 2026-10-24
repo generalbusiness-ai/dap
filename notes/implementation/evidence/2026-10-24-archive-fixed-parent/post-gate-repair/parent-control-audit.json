@@ -1,0 +1,157 @@
+{
+  "status": "ACTUAL_INTENDED_SEMANTIC_FAILURE_PROVED_WRAPPER_REMAINS_FAILED",
+  "originalClosure": "Root reported original42935 natural1/tooldf2288; child42130 natural1 no signal. No rerun.",
+  "result": {
+    "allocation": "b8614d8bbf5eefacd277e1218c63078ee2e42c64",
+    "status": "failed",
+    "errors": [
+      "RuntimeError: nonassertion/timeout failure is inconclusive"
+    ],
+    "signals": [],
+    "child": {
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/vitest/vitest.mjs",
+        "run",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/git/test/journal-v2-frontier.test.ts",
+        "--config",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/vitest.config.ts",
+        "--project",
+        "git",
+        "--allowOnly=false",
+        "--passWithNoTests=false",
+        "--reporter=default",
+        "--reporter=json",
+        "--reporter=/private/tmp/artroom-builder-archive-fixed-parent-20261023/scripts/test-progress.mjs",
+        "--outputFile.json=/private/tmp/artroom-archive-capture-parent-control-evidence-20261024-v3/vitest.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+      "pid": 42130,
+      "exit": 1,
+      "signal": null,
+      "wall": 0.7869001249782741,
+      "user": 0.948609,
+      "system": 0.14447700000000002
+    },
+    "qualification": "Capture-parent denial control, whole Git frontier6. Original successful owning6 is the external baseline; no healthy repeat. Sole existing custody case must fail, other five pass.",
+    "wall": 3.8514995840378106,
+    "pythonCpu": 2.7688379999999997,
+    "childrenUser": 1.083107,
+    "childrenSystem": 0.281589,
+    "inclusiveCpu": 4.133534,
+    "costQualification": "Owner includes guards and child; nested costs overlap. Original tool closure separate."
+  },
+  "semanticFailure": {
+    "case": "a stored frontier refuses changed custody, head, schema, object bytes, count and order",
+    "message": "Error: promise resolved \"{ v: 1, format: 'sha1', \u2026(6) }\" instead of rejecting\n    at Assertion.__VITEST_REJECTS__ (file:///private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/@vitest/expect/dist/index.js:1747:17)\n    at Assertion.propertyGetter (file:///private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/chai/index.js:1607:27)\n    at Reflect.get (<anonymous>)\n    at Object.proxyGetter [as get] (file:///private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/chai/index.js:1696:22)\n    at /private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/git/test/journal-v2-frontier.test.ts:80:107\n    at async file:///private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20",
+    "passed": 5,
+    "failed": 1,
+    "unhandled": 0,
+    "qualification": "Original wrong-parent capture promise resolves at authenticated80:107. Vitest renders Error, not AssertionError; wrapper string-name requirement rejected it before its later frame classifier. This audit does not relabel original wrapper status or invent controlMatched."
+  },
+  "guards": "Allocated binding SHA/size/snapshot exact; mutation reconstructed from original literal; all before/mutant-before/mutant-after/final vectors equal after only owned target/status normalization, selected cache cell content/timestamps and allowed empty Vite-temp timestamps. Exact original inode/bytes/mode/nlink/mtime restored; only targetctime changed. Source/deps/tools/env/Main/prep remain otherwise exact.",
+  "counts": {
+    "source": 3047,
+    "dependencyRows": 6072,
+    "dependencyLinks": 32,
+    "progressFinals": 6
+  },
+  "binding": {
+    "path": "/private/tmp/artroom-archive-capture-parent-control-binding-allocated-20261024-v3.json",
+    "bytes": 3541604,
+    "sha256": "6ebccc8c971cd9e9129839865f5b7277d8ba5e4517b0e79a022f5bb1be73e94c"
+  },
+  "rawPins": [
+    {
+      "name": "after.json",
+      "bytes": 3336992,
+      "sha256": "683ae1ea856d94bcd7018f7e37e35a2053135b3934a3632e16fd4ed1324e9a12"
+    },
+    {
+      "name": "before.json",
+      "bytes": 3336994,
+      "sha256": "b97e4d18f45b4dfe7a1caef0dd3d061c9d5397af62dd354fed51bfc671bb3b77"
+    },
+    {
+      "name": "command.json",
+      "bytes": 961,
+      "sha256": "dd82e25711811c843c98eb3f63b0f2d9337871b2a18251ccc8a9ae858817bd2e"
+    },
+    {
+      "name": "invocation.json",
+      "bytes": 481,
+      "sha256": "9dd31d39a1cdcf0efad9af331629d9f463fa085ba5e4a22aa97d1fe28d358e47"
+    },
+    {
+      "name": "mutant-after.json",
+      "bytes": 3337036,
+      "sha256": "964920bb85d2fc1848d71651194f8c8f3ffc71d3b2939b5c9e9803eb0467a792"
+    },
+    {
+      "name": "mutant-before.json",
+      "bytes": 3337038,
+      "sha256": "8643a463ea1d296256e83b0e8e541898cc91a2506a28e1ce6b501e8329c82e62"
+    },
+    {
+      "name": "mutant.data",
+      "bytes": 12786,
+      "sha256": "6286f706097bf8baceb48a38cf27ce877cd2fd235a421b20756caa4dd53bd55a"
+    },
+    {
+      "name": "mutation.json",
+      "bytes": 444,
+      "sha256": "f4d21e7fec3371fc6b6d7b6f338523b89e1521678c2a9ecb2bcdda84c78a6024"
+    },
+    {
+      "name": "mutation.patch",
+      "bytes": 647,
+      "sha256": "26fd6fe274e4e01cb6e9d2aa34b14d163635ddaa9d423f642d3693814bc8adaf"
+    },
+    {
+      "name": "original.data",
+      "bytes": 12777,
+      "sha256": "b5f0e0fb05abe62e21a1b86e922bef1fac2f1064700231641693674ade629f4e"
+    },
+    {
+      "name": "pid.json",
+      "bytes": 19,
+      "sha256": "62bef3725d4b6915ffbf65af0db6cd46434824f2a93d5b00cd00d41efc02dc2e"
+    },
+    {
+      "name": "process.json",
+      "bytes": 935,
+      "sha256": "62ba198e68cdf076a75d3ed09db28f76289cda3f108066781381887b732c2301"
+    },
+    {
+      "name": "progress.jsonl",
+      "bytes": 5898,
+      "sha256": "5ba7cd9883798674c53e3bf67a2f9833bf4151caa46b3f4b1100f1cced243d54"
+    },
+    {
+      "name": "restoration.json",
+      "bytes": 802,
+      "sha256": "81a6abc69a963f00e15a5ca96dd959abd7e5a67be4ea7fa54b8272c16b41abf7"
+    },
+    {
+      "name": "result.json",
+      "bytes": 1647,
+      "sha256": "f8ae276f3d9c60232c60295904dad0ee601a41f3ad91799722e35b002a5c9778"
+    },
+    {
+      "name": "stderr",
+      "bytes": 13875,
+      "sha256": "fbb4e34524b7ba6789c2818691e4acb2dc56e339005d6666173c193d81f02228"
+    },
+    {
+      "name": "stdout",
+      "bytes": 1045,
+      "sha256": "8ba979aa7ebeac17991ea66b9a72a3fe21954c7241715ab8fe2a9ac1962e2fda"
+    },
+    {
+      "name": "vitest.json",
+      "bytes": 3412,
+      "sha256": "ccd0a675d8690a4c61d8b07b157a19d1ab7d3b12bd584c7fd7603bad17449478"
+    }
+  ],
+  "limits": "No live candidate/dependencies, parser/test/helper execution or classifier retry. Expect stack provenance is retained original log evidence, not a fresh installed-code read."
+}

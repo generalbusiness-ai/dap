@@ -1,0 +1,1606 @@
+{
+  "state": "CLOSED_LOCAL_MEASUREMENT_EXTRACT_NO_RUNTIME",
+  "request": "fc2548ae1ab9c7c5e859d422611f8a34fd0ff13c",
+  "promise": "28cdea0d83a29e9a02c5107d89c6e21b10341fc2",
+  "source": {
+    "path": "/private/tmp/artroom-archive-append-row-repair-owning-evidence-20261024-v2/focused/vitest.json",
+    "bytes": 355968,
+    "sha256": "98db5cd1842c1bf33130041e3f7952cb45de31631d2f49ad52aca1a9e23e8516"
+  },
+  "rootAttributedClosure": {
+    "session": 72413,
+    "naturalExit": 0,
+    "tool": "2276bd",
+    "childPid": 76776,
+    "childExit": 0,
+    "compilerRootsPassed": 4,
+    "qualification": "Root supplied original process/compiler attribution. This extraction independently authenticates only the named Vitest JSON and its terminal tuples/metadata."
+  },
+  "terminal": {
+    "files": 6,
+    "cases": 17,
+    "passed": 17,
+    "failed": 0,
+    "pending": 0,
+    "success": true
+  },
+  "appendExact": {
+    "delta": {
+      "entries": 0,
+      "attempts": 25,
+      "nodes": 10,
+      "calls": 50,
+      "metadata": 19312,
+      "inputWork": 39198
+    },
+    "edges": {
+      "entries": 0,
+      "attempts": 21,
+      "nodes": 10,
+      "calls": 42,
+      "metadata": 17408,
+      "inputWork": 28092
+    },
+    "fixed": {
+      "entries": 0,
+      "attempts": 4,
+      "nodes": 0,
+      "calls": 8,
+      "metadata": 1904,
+      "inputWork": 11106
+    },
+    "objectReads": 50,
+    "distinctReadIds": 25,
+    "qualification": "Shared comparison/head path geometry; original per-unit append-validator fees unchanged. Mechanical selected metadata, not native receipts/export."
+  },
+  "growProduction": {
+    "caseTitle": "installed Grow production scopes export genesis zero after a late native Membership8 directory binding",
+    "recordedPrefixSteps": 37,
+    "recordedInvocationsIncludingRebuild": 38,
+    "states": {
+      "retry": 1,
+      "confirmed": 37
+    },
+    "groups": [
+      {
+        "scope": "sc_vi75u5dkgyh66chrkkeierg7x3lmsrhshbfnhqwedvrez7ucb4wa",
+        "sourceLabel": "sha256:b89e7f84740dfd8b24f78e8b52aff5aa8d4181750a7b5f385c1ef6f993846787",
+        "recordedSeqs": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "finalConfirmedHead": {
+          "anchorsPublished": true,
+          "commit": "3cd8c8a5c9ce8060c6592e2f0784e6a35868c3a7",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:76c22675f98974a4bf3278fad8757cf56eb5cf956fc5da5130facdb9805dcdd1",
+            "seq": 5
+          }
+        },
+        "peakCostsByDimension": {
+          "entries": 2,
+          "attempts": 78,
+          "nodes": 56,
+          "calls": 214,
+          "metadata": 3270938,
+          "inputWork": 51283785
+        },
+        "qualification": "Dimension-wise maxima across separately budgeted recorded initial/rebuild invocations; not one combined pass or a cost sum."
+      },
+      {
+        "scope": "sc_umocooj2mhn3mvojuhd6tsltrlxn56u3diny2efio4m4hmqwugxq",
+        "sourceLabel": "sha256:d2bc830e74caaabab32dbad17adae6812050fb4d36b67e97145d39c2a4cfe2ea",
+        "recordedSeqs": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "finalConfirmedHead": {
+          "anchorsPublished": true,
+          "commit": "5cbdbba22e914d0a78ab6418bea4ce27c2bd7f4d",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:5b77cfb9b2ae2133923c7f6b5b071182dd545106ddfa4c76ef11d6faa753d86e",
+            "seq": 3
+          }
+        },
+        "peakCostsByDimension": {
+          "entries": 2,
+          "attempts": 87,
+          "nodes": 56,
+          "calls": 223,
+          "metadata": 2961940,
+          "inputWork": 54254907
+        },
+        "qualification": "Dimension-wise maxima across separately budgeted recorded initial/rebuild invocations; not one combined pass or a cost sum."
+      },
+      {
+        "scope": "sc_chpdye66zvoiqlzubi62qtig4unqi2hqzraeemj4msnwwwe7qsuq",
+        "sourceLabel": "platform:directory@16",
+        "recordedSeqs": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13
+        ],
+        "finalConfirmedHead": {
+          "anchorsPublished": true,
+          "commit": "18f8154c2b08458c197b333d20f09c18a29bd7a1",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:6351cb2169489c6eeba3225a9064be6c042ae4c9567b6ff1d39ffd1e6cfc04a8",
+            "seq": 13
+          }
+        },
+        "peakCostsByDimension": {
+          "entries": 2,
+          "attempts": 94,
+          "nodes": 57,
+          "calls": 224,
+          "metadata": 3566747,
+          "inputWork": 54544992
+        },
+        "qualification": "Dimension-wise maxima across separately budgeted recorded initial/rebuild invocations; not one combined pass or a cost sum."
+      },
+      {
+        "scope": "sc_xkojb3dqyihrupeorcktbrcqmddadvl54jlfwothzxual36z5flq",
+        "sourceLabel": "platform:rules@10",
+        "recordedSeqs": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ],
+        "finalConfirmedHead": {
+          "anchorsPublished": true,
+          "commit": "fc571579b7e3be0c37727e62a6b23378068155dc",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:190882395f93c8c630be202ec2dad8ea5cace2a77ef8ea1287cdf9fb74cf91d3",
+            "seq": 10
+          }
+        },
+        "peakCostsByDimension": {
+          "entries": 2,
+          "attempts": 82,
+          "nodes": 56,
+          "calls": 219,
+          "metadata": 3353969,
+          "inputWork": 62328993
+        },
+        "qualification": "Dimension-wise maxima across separately budgeted recorded initial/rebuild invocations; not one combined pass or a cost sum."
+      },
+      {
+        "scope": "sc_guyzgba2lktrr66skezn254622lqowyfuea6o5av7jc7mj7f6upq",
+        "sourceLabel": "platform:destination@12",
+        "recordedSeqs": [
+          0,
+          1
+        ],
+        "finalConfirmedHead": {
+          "anchorsPublished": true,
+          "commit": "f79d163035e5a108b2a13adb9bfabbe19017156c",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:ea3a9af830cb0c637cf63267c78c6ae828ba34bc0a1703f2a3b7146e911cd3b1",
+            "seq": 1
+          }
+        },
+        "peakCostsByDimension": {
+          "entries": 2,
+          "attempts": 81,
+          "nodes": 54,
+          "calls": 208,
+          "metadata": 3222032,
+          "inputWork": 58849370
+        },
+        "qualification": "Dimension-wise maxima across separately budgeted recorded initial/rebuild invocations; not one combined pass or a cost sum."
+      }
+    ],
+    "actualInvocations": [
+      {
+        "scope": "sc_vi75u5dkgyh66chrkkeierg7x3lmsrhshbfnhqwedvrez7ucb4wa",
+        "seq": 0,
+        "phase": "initial",
+        "result": {
+          "state": "retry",
+          "next": "2099-01-01T00:00:01Z"
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 28,
+          "nodes": 34,
+          "calls": 121,
+          "metadata": 2866308,
+          "inputWork": 51283785
+        },
+        "confirmedHead": null,
+        "hasPending": true,
+        "sourceRefused": true
+      },
+      {
+        "scope": "sc_vi75u5dkgyh66chrkkeierg7x3lmsrhshbfnhqwedvrez7ucb4wa",
+        "seq": 0,
+        "phase": "rebuilt",
+        "result": {
+          "state": "confirmed",
+          "next": "2099-01-01T00:00:01Z"
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 17,
+          "nodes": 30,
+          "calls": 103,
+          "metadata": 2853453,
+          "inputWork": 41793186
+        },
+        "confirmedHead": {
+          "anchorsPublished": true,
+          "commit": "783f64ebb7041bc6beb3b8c841cbbc8d290627f6",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:81d7457c47a3060373c1bcd91d572661589ca88f208f381e87148e7f81fdf6bc",
+            "seq": 0
+          }
+        },
+        "hasPending": false,
+        "sourceRefused": false
+      },
+      {
+        "scope": "sc_vi75u5dkgyh66chrkkeierg7x3lmsrhshbfnhqwedvrez7ucb4wa",
+        "seq": 1,
+        "phase": "initial",
+        "result": {
+          "state": "confirmed",
+          "next": null
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 78,
+          "nodes": 56,
+          "calls": 214,
+          "metadata": 2926783,
+          "inputWork": 41471271
+        },
+        "confirmedHead": {
+          "anchorsPublished": true,
+          "commit": "7b310c3d2f4f90fe58844e925b5f8c4dcbaf23ce",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:2d584ec1ca0a3dc9ea30228e964818913042493740b9df9e76bcdafc95cdc07c",
+            "seq": 1
+          }
+        },
+        "hasPending": false,
+        "sourceRefused": false
+      },
+      {
+        "scope": "sc_vi75u5dkgyh66chrkkeierg7x3lmsrhshbfnhqwedvrez7ucb4wa",
+        "seq": 2,
+        "phase": "initial",
+        "result": {
+          "state": "confirmed",
+          "next": null
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 68,
+          "nodes": 53,
+          "calls": 190,
+          "metadata": 3206350,
+          "inputWork": 45230245
+        },
+        "confirmedHead": {
+          "anchorsPublished": true,
+          "commit": "b19ca98aaf30d65f529988668bcc5a290a0b8075",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:9c6c6761ce06025234be9ee5c20254508b201a6c54c1b0bec16d7cc03f36a35d",
+            "seq": 2
+          }
+        },
+        "hasPending": false,
+        "sourceRefused": false
+      },
+      {
+        "scope": "sc_vi75u5dkgyh66chrkkeierg7x3lmsrhshbfnhqwedvrez7ucb4wa",
+        "seq": 3,
+        "phase": "initial",
+        "result": {
+          "state": "confirmed",
+          "next": null
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 74,
+          "nodes": 55,
+          "calls": 206,
+          "metadata": 3269286,
+          "inputWork": 46043524
+        },
+        "confirmedHead": {
+          "anchorsPublished": true,
+          "commit": "bf185f19472ec2ff7bcf1aa74eb6d6d78ce4d75c",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:83b3b4c42c13bddac4a382faf59b6cd55f07bf7e07ef3fe6c1879124200c08bd",
+            "seq": 3
+          }
+        },
+        "hasPending": false,
+        "sourceRefused": false
+      },
+      {
+        "scope": "sc_vi75u5dkgyh66chrkkeierg7x3lmsrhshbfnhqwedvrez7ucb4wa",
+        "seq": 4,
+        "phase": "initial",
+        "result": {
+          "state": "confirmed",
+          "next": null
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 74,
+          "nodes": 55,
+          "calls": 206,
+          "metadata": 3270938,
+          "inputWork": 46069781
+        },
+        "confirmedHead": {
+          "anchorsPublished": true,
+          "commit": "79f357cbc0289a5330961ea8a4c529b77739eb88",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:c5077b5eb4b25bbf7f84b355fdc70052f38aa92bb192dc261f9bfd22d2113fb9",
+            "seq": 4
+          }
+        },
+        "hasPending": false,
+        "sourceRefused": false
+      },
+      {
+        "scope": "sc_vi75u5dkgyh66chrkkeierg7x3lmsrhshbfnhqwedvrez7ucb4wa",
+        "seq": 5,
+        "phase": "initial",
+        "result": {
+          "state": "confirmed",
+          "next": null
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 68,
+          "nodes": 53,
+          "calls": 191,
+          "metadata": 2873530,
+          "inputWork": 40229890
+        },
+        "confirmedHead": {
+          "anchorsPublished": true,
+          "commit": "3cd8c8a5c9ce8060c6592e2f0784e6a35868c3a7",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:76c22675f98974a4bf3278fad8757cf56eb5cf956fc5da5130facdb9805dcdd1",
+            "seq": 5
+          }
+        },
+        "hasPending": false,
+        "sourceRefused": false
+      },
+      {
+        "scope": "sc_umocooj2mhn3mvojuhd6tsltrlxn56u3diny2efio4m4hmqwugxq",
+        "seq": 0,
+        "phase": "initial",
+        "result": {
+          "state": "confirmed",
+          "next": null
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 37,
+          "nodes": 34,
+          "calls": 144,
+          "metadata": 2656455,
+          "inputWork": 54254907
+        },
+        "confirmedHead": {
+          "anchorsPublished": true,
+          "commit": "76193058d5cd905ecc38319093bc141c42c761f5",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:dc5845e9f27d781aecad8d7e18b5377593de7309683450f93df75c97b196f27d",
+            "seq": 0
+          }
+        },
+        "hasPending": false,
+        "sourceRefused": false
+      },
+      {
+        "scope": "sc_umocooj2mhn3mvojuhd6tsltrlxn56u3diny2efio4m4hmqwugxq",
+        "seq": 1,
+        "phase": "initial",
+        "result": {
+          "state": "confirmed",
+          "next": null
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 87,
+          "nodes": 56,
+          "calls": 220,
+          "metadata": 2678553,
+          "inputWork": 44124672
+        },
+        "confirmedHead": {
+          "anchorsPublished": true,
+          "commit": "bfdc254e6ddec678c2c9cb2e8f68a29ce39fa4c3",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:d814b3e0b8424f5120c634f852ae046616e7c58bd6aa428efc8b0d1520eef097",
+            "seq": 1
+          }
+        },
+        "hasPending": false,
+        "sourceRefused": false
+      },
+      {
+        "scope": "sc_umocooj2mhn3mvojuhd6tsltrlxn56u3diny2efio4m4hmqwugxq",
+        "seq": 2,
+        "phase": "initial",
+        "result": {
+          "state": "confirmed",
+          "next": null
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 71,
+          "nodes": 53,
+          "calls": 196,
+          "metadata": 2878972,
+          "inputWork": 44081267
+        },
+        "confirmedHead": {
+          "anchorsPublished": true,
+          "commit": "2ea2c9ca02e90daf4097825a739b452fe2118b42",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:e1d716bb201d06147fc63014b84cad06a514b331e3283a5d84be5d82b1a11c4f",
+            "seq": 2
+          }
+        },
+        "hasPending": false,
+        "sourceRefused": false
+      },
+      {
+        "scope": "sc_umocooj2mhn3mvojuhd6tsltrlxn56u3diny2efio4m4hmqwugxq",
+        "seq": 3,
+        "phase": "initial",
+        "result": {
+          "state": "confirmed",
+          "next": null
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 83,
+          "nodes": 56,
+          "calls": 223,
+          "metadata": 2961940,
+          "inputWork": 52679682
+        },
+        "confirmedHead": {
+          "anchorsPublished": true,
+          "commit": "5cbdbba22e914d0a78ab6418bea4ce27c2bd7f4d",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:5b77cfb9b2ae2133923c7f6b5b071182dd545106ddfa4c76ef11d6faa753d86e",
+            "seq": 3
+          }
+        },
+        "hasPending": false,
+        "sourceRefused": false
+      },
+      {
+        "scope": "sc_chpdye66zvoiqlzubi62qtig4unqi2hqzraeemj4msnwwwe7qsuq",
+        "seq": 0,
+        "phase": "initial",
+        "result": {
+          "state": "confirmed",
+          "next": null
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 39,
+          "nodes": 31,
+          "calls": 139,
+          "metadata": 2952447,
+          "inputWork": 50887294
+        },
+        "confirmedHead": {
+          "anchorsPublished": true,
+          "commit": "b6a536ce5edf7c92c9c9f27813bb92f2f08215c9",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:33a1d24ffd4877b1bbbcd2591c2ceb182718071312a22f645e2ecc8927e100e3",
+            "seq": 0
+          }
+        },
+        "hasPending": false,
+        "sourceRefused": false
+      },
+      {
+        "scope": "sc_chpdye66zvoiqlzubi62qtig4unqi2hqzraeemj4msnwwwe7qsuq",
+        "seq": 1,
+        "phase": "initial",
+        "result": {
+          "state": "confirmed",
+          "next": null
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 81,
+          "nodes": 54,
+          "calls": 208,
+          "metadata": 3191372,
+          "inputWork": 46528761
+        },
+        "confirmedHead": {
+          "anchorsPublished": true,
+          "commit": "b0ab85933f875fd260bcb46e398431a22c87bb2e",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:a90d82bd17c95a6d76b540f9cf9d93afe71be57c4906764851d012351e81238c",
+            "seq": 1
+          }
+        },
+        "hasPending": false,
+        "sourceRefused": false
+      },
+      {
+        "scope": "sc_chpdye66zvoiqlzubi62qtig4unqi2hqzraeemj4msnwwwe7qsuq",
+        "seq": 2,
+        "phase": "initial",
+        "result": {
+          "state": "confirmed",
+          "next": null
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 94,
+          "nodes": 57,
+          "calls": 224,
+          "metadata": 3566747,
+          "inputWork": 54544992
+        },
+        "confirmedHead": {
+          "anchorsPublished": true,
+          "commit": "01c3cb0b42e871846302ddee9c952f4e953c2ee5",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:fda4bfe5454e3b9a0ccef9960bc5a80ead72f15b7bc0283a61efa721b8fa4a3a",
+            "seq": 2
+          }
+        },
+        "hasPending": false,
+        "sourceRefused": false
+      },
+      {
+        "scope": "sc_chpdye66zvoiqlzubi62qtig4unqi2hqzraeemj4msnwwwe7qsuq",
+        "seq": 3,
+        "phase": "initial",
+        "result": {
+          "state": "confirmed",
+          "next": null
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 94,
+          "nodes": 56,
+          "calls": 221,
+          "metadata": 3290340,
+          "inputWork": 52219506
+        },
+        "confirmedHead": {
+          "anchorsPublished": true,
+          "commit": "729fe6f588667cf992052016b08c7dd5375c9fd0",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:88a3acfb752238ced923d453db248f6140c4396b4b55ab186659ec182c6f888b",
+            "seq": 3
+          }
+        },
+        "hasPending": false,
+        "sourceRefused": false
+      },
+      {
+        "scope": "sc_chpdye66zvoiqlzubi62qtig4unqi2hqzraeemj4msnwwwe7qsuq",
+        "seq": 4,
+        "phase": "initial",
+        "result": {
+          "state": "confirmed",
+          "next": null
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 94,
+          "nodes": 56,
+          "calls": 221,
+          "metadata": 3303091,
+          "inputWork": 54030302
+        },
+        "confirmedHead": {
+          "anchorsPublished": true,
+          "commit": "3b3c98b4460907e3ce9950aab12d73378f84d1ee",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:c5437c3212cb1888becc9ae87b98878fb5adf4c56e6808bed3a449ccb886ae07",
+            "seq": 4
+          }
+        },
+        "hasPending": false,
+        "sourceRefused": false
+      },
+      {
+        "scope": "sc_chpdye66zvoiqlzubi62qtig4unqi2hqzraeemj4msnwwwe7qsuq",
+        "seq": 5,
+        "phase": "initial",
+        "result": {
+          "state": "confirmed",
+          "next": null
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 85,
+          "nodes": 53,
+          "calls": 214,
+          "metadata": 3051188,
+          "inputWork": 50789000
+        },
+        "confirmedHead": {
+          "anchorsPublished": true,
+          "commit": "889b03dfa2e7b476bcdf0aec6d2b92388f0f3ce5",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:f9d0b7aa4e2ceb3dbda79f6495cf71b4f60e74c6dda58c2ddee1d074c8bf3de5",
+            "seq": 5
+          }
+        },
+        "hasPending": false,
+        "sourceRefused": false
+      },
+      {
+        "scope": "sc_chpdye66zvoiqlzubi62qtig4unqi2hqzraeemj4msnwwwe7qsuq",
+        "seq": 6,
+        "phase": "initial",
+        "result": {
+          "state": "confirmed",
+          "next": null
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 81,
+          "nodes": 53,
+          "calls": 205,
+          "metadata": 2941354,
+          "inputWork": 49003032
+        },
+        "confirmedHead": {
+          "anchorsPublished": true,
+          "commit": "cb5c1cc1ef8a683eaa50f97565a62ce4a5b5b10a",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:7c2cc40f24984023a834d54c55d89f675ab64a7cb29232ff3391836a9dc2d23b",
+            "seq": 6
+          }
+        },
+        "hasPending": false,
+        "sourceRefused": false
+      },
+      {
+        "scope": "sc_chpdye66zvoiqlzubi62qtig4unqi2hqzraeemj4msnwwwe7qsuq",
+        "seq": 7,
+        "phase": "initial",
+        "result": {
+          "state": "confirmed",
+          "next": null
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 77,
+          "nodes": 51,
+          "calls": 196,
+          "metadata": 2938361,
+          "inputWork": 47837908
+        },
+        "confirmedHead": {
+          "anchorsPublished": true,
+          "commit": "7dcc0e0f83379f12db9f8829881b1b88aff46b86",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:066afe13436778dadb37262f9c6d549e37ed0ccb584c8e5ea47d0d760ad56ddf",
+            "seq": 7
+          }
+        },
+        "hasPending": false,
+        "sourceRefused": false
+      },
+      {
+        "scope": "sc_chpdye66zvoiqlzubi62qtig4unqi2hqzraeemj4msnwwwe7qsuq",
+        "seq": 8,
+        "phase": "initial",
+        "result": {
+          "state": "confirmed",
+          "next": null
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 81,
+          "nodes": 53,
+          "calls": 207,
+          "metadata": 2961183,
+          "inputWork": 51503287
+        },
+        "confirmedHead": {
+          "anchorsPublished": true,
+          "commit": "086616e6a1d82427c1e659c9099f7e04cdd48157",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:7f42058cb96891499dcae3a83fc23a934b615023cde4c56f362f800aefe99082",
+            "seq": 8
+          }
+        },
+        "hasPending": false,
+        "sourceRefused": false
+      },
+      {
+        "scope": "sc_chpdye66zvoiqlzubi62qtig4unqi2hqzraeemj4msnwwwe7qsuq",
+        "seq": 9,
+        "phase": "initial",
+        "result": {
+          "state": "confirmed",
+          "next": null
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 81,
+          "nodes": 54,
+          "calls": 208,
+          "metadata": 3227946,
+          "inputWork": 49993346
+        },
+        "confirmedHead": {
+          "anchorsPublished": true,
+          "commit": "2b4dbaa509d1d6b29276c7ee8d482da43fb7cdda",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:a6280b5c6e7247977d5de29ffe6da69f490d04616a3da94ace5dd77f7ac25424",
+            "seq": 9
+          }
+        },
+        "hasPending": false,
+        "sourceRefused": false
+      },
+      {
+        "scope": "sc_chpdye66zvoiqlzubi62qtig4unqi2hqzraeemj4msnwwwe7qsuq",
+        "seq": 10,
+        "phase": "initial",
+        "result": {
+          "state": "confirmed",
+          "next": null
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 77,
+          "nodes": 55,
+          "calls": 210,
+          "metadata": 3235956,
+          "inputWork": 48214534
+        },
+        "confirmedHead": {
+          "anchorsPublished": true,
+          "commit": "abb018206ce0a2c41d2aa557ccb4d89405db7011",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:61e73bfc48632792c02c47198f1d31db903559a74dd8e66259e547703d4b69d4",
+            "seq": 10
+          }
+        },
+        "hasPending": false,
+        "sourceRefused": false
+      },
+      {
+        "scope": "sc_chpdye66zvoiqlzubi62qtig4unqi2hqzraeemj4msnwwwe7qsuq",
+        "seq": 11,
+        "phase": "initial",
+        "result": {
+          "state": "confirmed",
+          "next": null
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 62,
+          "nodes": 49,
+          "calls": 185,
+          "metadata": 2576462,
+          "inputWork": 38324222
+        },
+        "confirmedHead": {
+          "anchorsPublished": true,
+          "commit": "e55d907bd11ed8f13d91cf782ceb7e8eb0ec4a2f",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:5fbfcdfbc1c1574f6d5829c9f3e6cf7dff82c056ac71f6500a0b5ad96e52d2da",
+            "seq": 11
+          }
+        },
+        "hasPending": false,
+        "sourceRefused": false
+      },
+      {
+        "scope": "sc_chpdye66zvoiqlzubi62qtig4unqi2hqzraeemj4msnwwwe7qsuq",
+        "seq": 12,
+        "phase": "initial",
+        "result": {
+          "state": "confirmed",
+          "next": null
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 81,
+          "nodes": 53,
+          "calls": 205,
+          "metadata": 2967363,
+          "inputWork": 47897217
+        },
+        "confirmedHead": {
+          "anchorsPublished": true,
+          "commit": "7a06e5c3b54105557c0e41e72e01e90d384b1de1",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:6cab70079184d5d0f5c5c3b941d164469db399b2b1377b203249133269ab2c20",
+            "seq": 12
+          }
+        },
+        "hasPending": false,
+        "sourceRefused": false
+      },
+      {
+        "scope": "sc_chpdye66zvoiqlzubi62qtig4unqi2hqzraeemj4msnwwwe7qsuq",
+        "seq": 13,
+        "phase": "initial",
+        "result": {
+          "state": "confirmed",
+          "next": null
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 65,
+          "nodes": 50,
+          "calls": 183,
+          "metadata": 3157171,
+          "inputWork": 48070925
+        },
+        "confirmedHead": {
+          "anchorsPublished": true,
+          "commit": "18f8154c2b08458c197b333d20f09c18a29bd7a1",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:6351cb2169489c6eeba3225a9064be6c042ae4c9567b6ff1d39ffd1e6cfc04a8",
+            "seq": 13
+          }
+        },
+        "hasPending": false,
+        "sourceRefused": false
+      },
+      {
+        "scope": "sc_xkojb3dqyihrupeorcktbrcqmddadvl54jlfwothzxual36z5flq",
+        "seq": 0,
+        "phase": "initial",
+        "result": {
+          "state": "confirmed",
+          "next": null
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 27,
+          "nodes": 30,
+          "calls": 122,
+          "metadata": 2586196,
+          "inputWork": 51927249
+        },
+        "confirmedHead": {
+          "anchorsPublished": true,
+          "commit": "80e6823b338f9b343ec03311b88a84c127872f8e",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:6d84ca6196621a10148afb7b674f3e7e4a8b0c106b56ae738153d3e6809210eb",
+            "seq": 0
+          }
+        },
+        "hasPending": false,
+        "sourceRefused": false
+      },
+      {
+        "scope": "sc_xkojb3dqyihrupeorcktbrcqmddadvl54jlfwothzxual36z5flq",
+        "seq": 1,
+        "phase": "initial",
+        "result": {
+          "state": "confirmed",
+          "next": null
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 81,
+          "nodes": 53,
+          "calls": 207,
+          "metadata": 2892154,
+          "inputWork": 49203682
+        },
+        "confirmedHead": {
+          "anchorsPublished": true,
+          "commit": "751168c79ef1ba610d62e92ba3bd2f20aa59ef58",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:e980d3f39b4050049c26e1a3ef2f17a5564504001be895ff18b9b8902553994e",
+            "seq": 1
+          }
+        },
+        "hasPending": false,
+        "sourceRefused": false
+      },
+      {
+        "scope": "sc_xkojb3dqyihrupeorcktbrcqmddadvl54jlfwothzxual36z5flq",
+        "seq": 2,
+        "phase": "initial",
+        "result": {
+          "state": "confirmed",
+          "next": null
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 82,
+          "nodes": 56,
+          "calls": 219,
+          "metadata": 3353969,
+          "inputWork": 62328993
+        },
+        "confirmedHead": {
+          "anchorsPublished": true,
+          "commit": "c86807841f361dc8992a8cf81f130a058eeae150",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:252cf9a62ea49694eb713c46713ba38efb900e54fcd8b715e32ffbcd319b8f6e",
+            "seq": 2
+          }
+        },
+        "hasPending": false,
+        "sourceRefused": false
+      },
+      {
+        "scope": "sc_xkojb3dqyihrupeorcktbrcqmddadvl54jlfwothzxual36z5flq",
+        "seq": 3,
+        "phase": "initial",
+        "result": {
+          "state": "confirmed",
+          "next": null
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 62,
+          "nodes": 49,
+          "calls": 185,
+          "metadata": 2540389,
+          "inputWork": 38563960
+        },
+        "confirmedHead": {
+          "anchorsPublished": true,
+          "commit": "308eaa41a0f3ee8f4f0e181060fd85f0b491326b",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:261273311c62130e3bb35f5e2acd2aa7465d030bd02c08dd250882051f370563",
+            "seq": 3
+          }
+        },
+        "hasPending": false,
+        "sourceRefused": false
+      },
+      {
+        "scope": "sc_xkojb3dqyihrupeorcktbrcqmddadvl54jlfwothzxual36z5flq",
+        "seq": 4,
+        "phase": "initial",
+        "result": {
+          "state": "confirmed",
+          "next": null
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 62,
+          "nodes": 49,
+          "calls": 185,
+          "metadata": 2550085,
+          "inputWork": 39434289
+        },
+        "confirmedHead": {
+          "anchorsPublished": true,
+          "commit": "476f12cf1b64d09883f4b6fdbc12d5f5d8150582",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:6c39050a084e154168c4cbd8f5019acfeeb3566b356c832107160047b8f16001",
+            "seq": 4
+          }
+        },
+        "hasPending": false,
+        "sourceRefused": false
+      },
+      {
+        "scope": "sc_xkojb3dqyihrupeorcktbrcqmddadvl54jlfwothzxual36z5flq",
+        "seq": 5,
+        "phase": "initial",
+        "result": {
+          "state": "confirmed",
+          "next": null
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 81,
+          "nodes": 53,
+          "calls": 207,
+          "metadata": 2918755,
+          "inputWork": 51033182
+        },
+        "confirmedHead": {
+          "anchorsPublished": true,
+          "commit": "de9f2c71857edb5c058f1de461ce7db7d0e49d02",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:8244d45d13e7e9d33151b1c6130195a1c4601c032bddf757cd85ce561e091458",
+            "seq": 5
+          }
+        },
+        "hasPending": false,
+        "sourceRefused": false
+      },
+      {
+        "scope": "sc_xkojb3dqyihrupeorcktbrcqmddadvl54jlfwothzxual36z5flq",
+        "seq": 6,
+        "phase": "initial",
+        "result": {
+          "state": "confirmed",
+          "next": null
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 77,
+          "nodes": 51,
+          "calls": 196,
+          "metadata": 2911088,
+          "inputWork": 49431183
+        },
+        "confirmedHead": {
+          "anchorsPublished": true,
+          "commit": "28fec1bffa0c29374bd058bf8767d00b469fc7e2",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:6b39aa5ddac4a4badc0276ea23e15faa982792141f82a2fef803765ff1a22076",
+            "seq": 6
+          }
+        },
+        "hasPending": false,
+        "sourceRefused": false
+      },
+      {
+        "scope": "sc_xkojb3dqyihrupeorcktbrcqmddadvl54jlfwothzxual36z5flq",
+        "seq": 7,
+        "phase": "initial",
+        "result": {
+          "state": "confirmed",
+          "next": null
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 81,
+          "nodes": 54,
+          "calls": 210,
+          "metadata": 3199070,
+          "inputWork": 52235850
+        },
+        "confirmedHead": {
+          "anchorsPublished": true,
+          "commit": "443114a327564c39a7b6a430ef570a74dd6aaf5e",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:829583c6dc1da2674efb8d1b9983130743b36f328e8d244717708efb186e3138",
+            "seq": 7
+          }
+        },
+        "hasPending": false,
+        "sourceRefused": false
+      },
+      {
+        "scope": "sc_xkojb3dqyihrupeorcktbrcqmddadvl54jlfwothzxual36z5flq",
+        "seq": 8,
+        "phase": "initial",
+        "result": {
+          "state": "confirmed",
+          "next": null
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 81,
+          "nodes": 53,
+          "calls": 203,
+          "metadata": 2921649,
+          "inputWork": 49398295
+        },
+        "confirmedHead": {
+          "anchorsPublished": true,
+          "commit": "df604b22bd81a68218b5f61ba7d75249ee0bfaf2",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:3e641ffd1405b107b0a95b70ff63a1ab00ef2b9231184faa8779021aa2b59a53",
+            "seq": 8
+          }
+        },
+        "hasPending": false,
+        "sourceRefused": false
+      },
+      {
+        "scope": "sc_xkojb3dqyihrupeorcktbrcqmddadvl54jlfwothzxual36z5flq",
+        "seq": 9,
+        "phase": "initial",
+        "result": {
+          "state": "confirmed",
+          "next": null
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 81,
+          "nodes": 53,
+          "calls": 205,
+          "metadata": 2935548,
+          "inputWork": 50170047
+        },
+        "confirmedHead": {
+          "anchorsPublished": true,
+          "commit": "42729b3b9fe932e8094cc8ae7068beace6dfb213",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:2d2080980319f54e5aa2b374b225911558bb39b029829367e1be84b059d91e2e",
+            "seq": 9
+          }
+        },
+        "hasPending": false,
+        "sourceRefused": false
+      },
+      {
+        "scope": "sc_xkojb3dqyihrupeorcktbrcqmddadvl54jlfwothzxual36z5flq",
+        "seq": 10,
+        "phase": "initial",
+        "result": {
+          "state": "confirmed",
+          "next": null
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 81,
+          "nodes": 53,
+          "calls": 209,
+          "metadata": 2937940,
+          "inputWork": 49918353
+        },
+        "confirmedHead": {
+          "anchorsPublished": true,
+          "commit": "fc571579b7e3be0c37727e62a6b23378068155dc",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:190882395f93c8c630be202ec2dad8ea5cace2a77ef8ea1287cdf9fb74cf91d3",
+            "seq": 10
+          }
+        },
+        "hasPending": false,
+        "sourceRefused": false
+      },
+      {
+        "scope": "sc_guyzgba2lktrr66skezn254622lqowyfuea6o5av7jc7mj7f6upq",
+        "seq": 0,
+        "phase": "initial",
+        "result": {
+          "state": "confirmed",
+          "next": null
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 42,
+          "nodes": 34,
+          "calls": 140,
+          "metadata": 3222032,
+          "inputWork": 58849370
+        },
+        "confirmedHead": {
+          "anchorsPublished": true,
+          "commit": "1956248777f51d6b35afbe2edd27b2b076813ccd",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:fe96d5af72cf34de38113311df96c49024c9cdaaf8d7f9830f98ae30db2515a7",
+            "seq": 0
+          }
+        },
+        "hasPending": false,
+        "sourceRefused": false
+      },
+      {
+        "scope": "sc_guyzgba2lktrr66skezn254622lqowyfuea6o5av7jc7mj7f6upq",
+        "seq": 1,
+        "phase": "initial",
+        "result": {
+          "state": "confirmed",
+          "next": null
+        },
+        "cost": {
+          "entries": 2,
+          "attempts": 81,
+          "nodes": 54,
+          "calls": 208,
+          "metadata": 3158288,
+          "inputWork": 51717556
+        },
+        "confirmedHead": {
+          "anchorsPublished": true,
+          "commit": "f79d163035e5a108b2a13adb9bfabbe19017156c",
+          "layout": 2,
+          "through": {
+            "hash": "sha256:ea3a9af830cb0c637cf63267c78c6ae828ba34bc0a1703f2a3b7146e911cd3b1",
+            "seq": 1
+          }
+        },
+        "hasPending": false,
+        "sourceRefused": false
+      }
+    ],
+    "recordedRejectedQuotes": [],
+    "rejectedQuoteQualification": "No rejectedFit key is recorded in this cohort metadata; absence is not proof that no internal candidate was ever refused.",
+    "directorySeq2": {
+      "scope": "sc_chpdye66zvoiqlzubi62qtig4unqi2hqzraeemj4msnwwwe7qsuq",
+      "seq": 2,
+      "phase": "initial",
+      "result": {
+        "state": "confirmed",
+        "next": null
+      },
+      "cost": {
+        "entries": 2,
+        "attempts": 94,
+        "nodes": 57,
+        "calls": 224,
+        "metadata": 3566747,
+        "inputWork": 54544992
+      },
+      "confirmedHead": {
+        "anchorsPublished": true,
+        "commit": "01c3cb0b42e871846302ddee9c952f4e953c2ee5",
+        "layout": 2,
+        "through": {
+          "hash": "sha256:fda4bfe5454e3b9a0ccef9960bc5a80ead72f15b7bc0283a61efa721b8fa4a3a",
+          "seq": 2
+        }
+      },
+      "hasPending": false,
+      "sourceRefused": false
+    },
+    "directorySeq2Observer": {
+      "captures": 32,
+      "overflow": true,
+      "forecasts": 1,
+      "invalidParentRead": true,
+      "incomplete": true,
+      "reason": "exact first D2 append scalar set incomplete"
+    },
+    "qualification": "Actual installed Grow root/child and Directory16/Rules10/Destination12, with native production host-item RPC, growArchiveDriver target/source preparation, adaptive writer, Mark and pending rebuild, actual Artifacts token adapter and smart-HTTP pack/send/readback. Exact committed signed demo packet and growArchivePolicies; TEST namespace, distinct enrolled agents, binding/HTTP peer, clock and scheduler; no real provider, alarm cadence or hosted acceptance. Every individual pass owns its default original30s ledger; first lost send and later rebuild retain separate costs. No source frame survives peer await."
+  },
+  "native300": {
+    "seed": {
+      "result": {
+        "state": "retry",
+        "next": "2099-01-01T00:00:01Z"
+      },
+      "cost": {
+        "entries": 0,
+        "attempts": 22,
+        "nodes": 18,
+        "calls": 56,
+        "metadata": 267749,
+        "inputWork": 921455
+      },
+      "qualification": "Separate seed-only alarm under its original budget; excluded from append prefix totals, never refunded."
+    },
+    "backlog": 300,
+    "target": {
+      "hash": "sha256:2bf08fe5aafb77c517c972493cdf29f36586b741dfcb0a59b610caf97338a807",
+      "seq": 301
+    },
+    "completedThrough": {
+      "hash": "sha256:2bf08fe5aafb77c517c972493cdf29f36586b741dfcb0a59b610caf97338a807",
+      "seq": 301
+    },
+    "passes": 9,
+    "completedPerPass": [
+      34,
+      35,
+      35,
+      35,
+      35,
+      34,
+      35,
+      34,
+      23
+    ],
+    "totalCompleted": 300,
+    "passesExact": [
+      {
+        "pass": 0,
+        "from": 2,
+        "through": 35,
+        "attemptedEntries": 70,
+        "completedEntries": 34,
+        "remainingEntries": 266,
+        "parentPath": "unpublished-legacy-proof",
+        "parentReads": 2,
+        "cost": {
+          "entries": 70,
+          "attempts": 105,
+          "nodes": 47,
+          "calls": 736,
+          "metadata": 3465411,
+          "inputWork": 38828099
+        }
+      },
+      {
+        "pass": 1,
+        "from": 36,
+        "through": 70,
+        "attemptedEntries": 71,
+        "completedEntries": 35,
+        "remainingEntries": 231,
+        "parentPath": "native-published",
+        "parentReads": 0,
+        "cost": {
+          "entries": 71,
+          "attempts": 99,
+          "nodes": 44,
+          "calls": 732,
+          "metadata": 3438406,
+          "inputWork": 28827849
+        }
+      },
+      {
+        "pass": 2,
+        "from": 71,
+        "through": 105,
+        "attemptedEntries": 70,
+        "completedEntries": 35,
+        "remainingEntries": 196,
+        "parentPath": "native-published",
+        "parentReads": 0,
+        "cost": {
+          "entries": 70,
+          "attempts": 99,
+          "nodes": 44,
+          "calls": 721,
+          "metadata": 3402451,
+          "inputWork": 28764041
+        }
+      },
+      {
+        "pass": 3,
+        "from": 106,
+        "through": 140,
+        "attemptedEntries": 70,
+        "completedEntries": 35,
+        "remainingEntries": 161,
+        "parentPath": "native-published",
+        "parentReads": 0,
+        "cost": {
+          "entries": 70,
+          "attempts": 97,
+          "nodes": 44,
+          "calls": 718,
+          "metadata": 3393735,
+          "inputWork": 28747950
+        }
+      },
+      {
+        "pass": 4,
+        "from": 141,
+        "through": 175,
+        "attemptedEntries": 70,
+        "completedEntries": 35,
+        "remainingEntries": 126,
+        "parentPath": "native-published",
+        "parentReads": 0,
+        "cost": {
+          "entries": 70,
+          "attempts": 99,
+          "nodes": 44,
+          "calls": 721,
+          "metadata": 3400826,
+          "inputWork": 28780343
+        }
+      },
+      {
+        "pass": 5,
+        "from": 176,
+        "through": 209,
+        "attemptedEntries": 69,
+        "completedEntries": 34,
+        "remainingEntries": 92,
+        "parentPath": "native-published",
+        "parentReads": 0,
+        "cost": {
+          "entries": 69,
+          "attempts": 98,
+          "nodes": 44,
+          "calls": 716,
+          "metadata": 3398714,
+          "inputWork": 28620557
+        }
+      },
+      {
+        "pass": 6,
+        "from": 210,
+        "through": 244,
+        "attemptedEntries": 70,
+        "completedEntries": 35,
+        "remainingEntries": 57,
+        "parentPath": "native-published",
+        "parentReads": 0,
+        "cost": {
+          "entries": 70,
+          "attempts": 97,
+          "nodes": 44,
+          "calls": 718,
+          "metadata": 3396999,
+          "inputWork": 28754308
+        }
+      },
+      {
+        "pass": 7,
+        "from": 245,
+        "through": 278,
+        "attemptedEntries": 69,
+        "completedEntries": 34,
+        "remainingEntries": 23,
+        "parentPath": "native-published",
+        "parentReads": 0,
+        "cost": {
+          "entries": 69,
+          "attempts": 98,
+          "nodes": 44,
+          "calls": 716,
+          "metadata": 3398529,
+          "inputWork": 28618959
+        }
+      },
+      {
+        "pass": 8,
+        "from": 279,
+        "through": 301,
+        "attemptedEntries": 46,
+        "completedEntries": 23,
+        "remainingEntries": 0,
+        "parentPath": "native-published",
+        "parentReads": 0,
+        "cost": {
+          "entries": 46,
+          "attempts": 87,
+          "nodes": 44,
+          "calls": 529,
+          "metadata": 2558661,
+          "inputWork": 24865405
+        }
+      }
+    ],
+    "peakCostsByDimension": {
+      "entries": 71,
+      "attempts": 105,
+      "nodes": 47,
+      "calls": 736,
+      "metadata": 3465411,
+      "inputWork": 38828099
+    },
+    "firstBeforePlanning": [
+      {
+        "entries": 0,
+        "attempts": 28,
+        "nodes": 23,
+        "calls": 53,
+        "metadata": 178583,
+        "inputWork": 6192246
+      }
+    ],
+    "originalBounds": {
+      "entries": 4096,
+      "attempts": 512,
+      "nodes": 64,
+      "calls": 16384,
+      "metadata": 4194304,
+      "inputWork": 67108864
+    },
+    "qualification": "Actual current Native300 drain; compare measured prefixes to prior41-44, do not infer performance or backlog13031 recovery. Seed alarm is separately reported with zero archived entries."
+  },
+  "currentParentBootstrap": {
+    "measured": [
+      {
+        "passes": 6,
+        "extraRetainedFiles": 0,
+        "treeBytes": 1754,
+        "trees": 21,
+        "seedCost": {
+          "entries": 0,
+          "attempts": 22,
+          "nodes": 18,
+          "calls": 56,
+          "metadata": 294205,
+          "inputWork": 1037315
+        }
+      },
+      {
+        "passes": 37,
+        "extraRetainedFiles": 0,
+        "treeBytes": 9349,
+        "trees": 83,
+        "seedCost": {
+          "entries": 0,
+          "attempts": 22,
+          "nodes": 18,
+          "calls": 56,
+          "metadata": 455674,
+          "inputWork": 1727987
+        }
+      },
+      {
+        "passes": 37,
+        "extraRetainedFiles": 77,
+        "treeBytes": 16433,
+        "trees": 83,
+        "seedCost": {
+          "entries": 0,
+          "attempts": 22,
+          "nodes": 18,
+          "calls": 56,
+          "metadata": 475240,
+          "inputWork": 2155747
+        }
+      }
+    ],
+    "qualification": "Real Native entries, row receipts and SQLite; distributed mechanical retained selections and scripted HTTP/token host. Current-tree bytes measured independently; no hosted measurement or arbitrary-history capacity claim."
+  },
+  "limitsAndUnknowns": [
+    "Actual local fixture fit only; no hosted acceptance, latency comparison, machine isolation or arbitrary application/history capacity claim.",
+    "The original budgets remain unchanged. The Grow passes each own their budget; do not sum their peaks into one pass.",
+    "The Directory sequence-2 observer overflowed and labels its scalar set incomplete. Its terminal confirmation/cost is recorded; a full internal quote or exact attribution is not reconstructed.",
+    "The current frontier base validation and new capture retain their distinct nine-node paths. Sharing six append-prefix nodes does not turn that frontier eighteen-node subtotal into twelve.",
+    "Current-node capacity for broader legal application shapes remains open; this passing selected fixture is not a universal progress theorem.",
+    "This extract does not infer unrecorded bootstrap I/O counts, row projection byte counts or controls/final-gate outcomes."
+  ]
+}
