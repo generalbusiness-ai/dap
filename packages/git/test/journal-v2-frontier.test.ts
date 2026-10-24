@@ -74,10 +74,16 @@ test("a stored frontier refuses changed custody, head, schema, object bytes, cou
   ];
   // Zero is the valid first pass, but negative zero has no canonical position.
   for (const mutant of mutants) await expect(validateJournalParentFrontier(mutant.value, made.binding, budget())).rejects.toMatchObject({ reason: mutant.reason });
+  // The source-owned store path binds the actual parsed commit edge during
+  // capture, without relying on a later unknown-frontier validation pass.
+  await expect(captureJournalParentFrontier(made.binding, source(made.objects), budget(), null)).resolves.toEqual(frontier);
+  await expect(captureJournalParentFrontier(made.binding, source(made.objects), budget(), "f".repeat(40))).rejects.toMatchObject({ reason: "parent" });
   await expect(validateJournalParentFrontier(frontier, made.binding, budget(), null)).resolves.toEqual(frontier);
   await expect(validateJournalParentFrontier(frontier, made.binding, budget(), "f".repeat(40))).rejects.toMatchObject({ reason: "parent" });
   const appended = await pass("sha1", 1, 1, frontier);
   const next = await captureJournalParentFrontier(appended.binding, source(appended.objects), budget());
+  await expect(captureJournalParentFrontier(appended.binding, source(appended.objects), budget(), frontier.commit)).resolves.toEqual(next);
+  await expect(captureJournalParentFrontier(appended.binding, source(appended.objects), budget(), null)).rejects.toMatchObject({ reason: "parent" });
   await expect(validateJournalParentFrontier(next, appended.binding, budget(), frontier.commit)).resolves.toEqual(next);
   await expect(validateJournalParentFrontier(next, appended.binding, budget(), null)).rejects.toMatchObject({ reason: "parent" });
   const checked = await validateJournalParentFrontier(frontier, made.binding, budget());

@@ -41,6 +41,9 @@ export interface ArchiveFrontierFinishShape {
   readonly hasBase: boolean;
   /** Exact selected receipt position; unspecified callers keep the full ceiling. */
   readonly through?: number;
+  /** Only prepareFromSource owns capture through the private store boundary.
+   * Unspecified/unknown-frontier callers retain capture + full validation. */
+  readonly captureFromSource?: boolean;
   /** UTF-16 units of manifest + optional anchor publication. */
   readonly markUnits: number;
   /** Upper bound of the native row after Mark+first attempt. */
@@ -48,19 +51,22 @@ export interface ArchiveFrontierFinishShape {
 }
 
 /** Full remaining steady-state finish, starting with a loaded base (or an
- * empty first archive). Includes prospective extraction, strict validation,
- * Mark capture, both encodes and public copy, stage and promotion. Existing
+ * empty first archive). Includes prospective extraction and, for unknown
+ * frontiers, strict validation; source-owned preparation captures once.
+ * Mark capture, both encodes and public copy, stage and promotion stay. Existing
  * base loads, build/append, native row saves/retained confirmation, parent
  * dispatch and transport remain separately priced and are never credited.
  * Conversion's bounded old-row token read also precedes this forecast. */
 export function forecastArchiveFrontierFinish(shape: ArchiveFrontierFinishShape):
   { readonly ok: true; readonly cost: Readonly<ArchiveCost> } | { readonly ok: false; readonly reason: "limit" } {
-  if (typeof shape.hasBase !== "boolean" || !natural(shape.markUnits) || !natural(shape.markedRowBytes)
+  if (typeof shape.hasBase !== "boolean" || (shape.captureFromSource !== undefined && typeof shape.captureFromSource !== "boolean")
+    || !natural(shape.markUnits) || !natural(shape.markedRowBytes)
     || shape.markedRowBytes === 0 || shape.markedRowBytes > ARCHIVE_ROW_BYTES) throw new ArchiveStopped("unavailable");
   const cost: ArchiveCost = { entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0, inputWork: 0 };
   const add = (part: Partial<ArchiveCost>) => { for (const key of Object.keys(cost) as (keyof ArchiveCost)[]) cost[key] += part[key] ?? 0; };
   const profile = journalParentFrontierProfile(shape.through), encoded = archiveFrontierEncodingBound(shape.through);
-  add(forecastJournalParentFrontier(false, shape.through)); add(forecastJournalParentFrontier(true, shape.through));
+  add(forecastJournalParentFrontier(false, shape.through));
+  if (shape.captureFromSource !== true) add(forecastJournalParentFrontier(true, shape.through));
   add({ metadata: 16 * 1024, inputWork: 16 * 1024 });
   add(archiveFrontierMarkCost(shape.markUnits));
   add(archiveFrontierEncodeCost(shape.through)); add(archiveFrontierEncodeCost(shape.through));

@@ -90,8 +90,9 @@ function edge(rows: readonly JournalTreeRow[], names: readonly string[]): void {
 /** Extract only the fixed witness. Every body is hash checked by the existing
  * reader, with the same caller budget/deadline. No descendant walk occurs. */
 export async function captureJournalParentFrontier(expected: JournalParentBinding, source: JournalObjectSource,
-  budget: JournalBudget): Promise<JournalParentFrontier> {
+  budget: JournalBudget, expectedParent?: string | null): Promise<JournalParentFrontier> {
   const work = new JournalWork(budget), owned = binding(expected, work), profile = journalParentFrontierProfile(owned.through.seq);
+  const parent = expectedParent === undefined || expectedParent === null ? expectedParent : journalId(owned.format, expectedParent);
   work.metadata(JOURNAL_PARENT_FRONTIER_OBJECTS * 128);
   const reader = new JournalObjectReader(owned.format, source, work), objects: JournalObject[] = [], ids = new Set<string>();
   let bytes = 0, rowCount = 0;
@@ -108,6 +109,9 @@ export async function captureJournalParentFrontier(expected: JournalParentBindin
     return data;
   };
   const commit = reader.commit(await read(owned.commit, "commit", 1024));
+  // A source-owned writer can bind the existing parsed edge to its Mark
+  // without a second extraction or another commit parse.
+  if (parent !== undefined && commit.parent !== parent) return refuseJournal("parent");
   const tree = async (id: string, prefix: string) => {
     work.budget.spend({ nodes: 1 });
     const geometry = journalV2Directory(prefix);

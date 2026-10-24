@@ -25,12 +25,13 @@ async function fixture(scope: ScopeRef, through: Head, parent: string | null = n
   const commit = maker.commit(tree, parent, 1_700_000_000).id;
   const binding: JournalParentBinding = { format: "sha1", repository, at: scope, through, commit };
   const objects = new Map<string, JournalObject>(maker.objects().map(object => [object.id, object]));
-  const frontier = await captureJournalParentFrontier(binding, { object: async (id, maximum) => {
+  const source = { object: async (id: string, maximum: number) => {
     const object = objects.get(id); return object ? { type: object.type, size: object.data.length, data: maximum >= object.data.length ? object.data : null } : null;
-  } }, budget());
+  } };
+  const frontier = await captureJournalParentFrontier(binding, source, budget());
   const mark: ArchiveMark = { commit, parent, through, layout: 2, markedAt: at(0),
     manifest: canonicalize({ format: "artroom-local-inventory-2", after: null, objects: [] }) };
-  return { binding, frontier, mark };
+  return { binding, frontier, mark, source };
 }
 const store = (sql: Sql, scope: ScopeRef) => new ArchiveFrontiers(sql, { at: scope, repository, format: "sha1" });
 const values = (sql: Sql) => sql.exec("SELECT k, v FROM meta WHERE k IN (?, ?) ORDER BY k", CONFIRMED, PENDING).toArray();
@@ -42,7 +43,8 @@ test("frontier Mark and promotion share rollback cuts and the pending proof surv
     rows.target(archiveRepository, "sha1", budget());
     expect(await frontiers.readConfirmed(made.binding, budget())).toBeNull();
     const preparing = budget(), beforePrepare = preparing.admitted();
-    const prepared = await frontiers.prepare(made.frontier, made.mark, null, preparing);
+    const prepared = await frontiers.prepareFromSource(made.source, made.mark, null, preparing);
+    expect(preparing.admitted().nodes - beforePrepare.nodes, "Capture the nine actual tree nodes once").toBe(9);
     expect(archiveFrontierEncodingBound(made.mark.through.seq)).toBe(8744);
     const narrow = forecastArchiveFrontierFinish({ hasBase: false, through: made.mark.through.seq,
       markUnits: made.mark.manifest.length, markedRowBytes: 4096 });
@@ -53,6 +55,7 @@ test("frontier Mark and promotion share rollback cuts and the pending proof surv
     // The public view is owned, but is never the prepared authority.
     prepared.frontier.objects[0]!.data.fill(0);
     expect(() => frontiers.stage({ frontier: made.frontier, base: null } as ArchiveFrontierPrepared, budget())).toThrow("archive-row-unavailable");
+    expect(() => store(sql, lane.at).stage(prepared, budget())).toThrow("archive-row-unavailable");
     expect(() => sql.transaction(() => {
       rows.markAttempt(made.mark, at(1), budget()); frontiers.stage(prepared, budget());
       throw Error("TEST abort after pending frontier write");
@@ -108,6 +111,19 @@ test("a prepared frontier cannot overwrite a changed key or a different native M
     await expect(frontiers.readConfirmed(made.binding, budget())).rejects.toThrow("archive-row-conflict");
     sql.exec("DELETE FROM meta WHERE k = ?", PENDING);
     await expect(frontiers.prepare({ ...made.frontier, repository: digestBytes(utf8("TEST wrong repository")) }, made.mark, null, budget())).rejects.toThrow("parent");
+    // Source-owned preparation still hashes every object and checks the
+    // real commit edge before it can create private stage authority.
+    const wrongEdge = await fixture(lane.at, made.mark.through, "f".repeat(40));
+    // The declared Mark agrees with the empty native base. Only the actual
+    // hash-valid commit edge disagrees, so capture must reject that edge.
+    await expect(frontiers.prepareFromSource(wrongEdge.source, { ...wrongEdge.mark, parent: null }, null, budget())).rejects.toThrow("parent");
+    const corrupt = { object: async (id: string, maximum: number) => {
+      const value = await made.source.object(id, maximum);
+      if (value === null || value.data === null || id !== made.mark.commit) return value;
+      const data = new Uint8Array(value.data); data[0] = data[0]! ^ 1;
+      return { ...value, data };
+    } };
+    await expect(frontiers.prepareFromSource(corrupt, made.mark, null, budget())).rejects.toThrow("object-mismatch");
     // Neither failed validation nor stale-key comparison installs a record.
     expect(values(sql)).toEqual([]);
     // A valid envelope whose Mark digest contradicts the CURRENT checked
@@ -175,9 +191,19 @@ test("frontier size and work are admitted before body reads or writes, without r
     expect(short.admitted().calls).toBe(spent.calls - 1);
     const rowSize = sql.exec("SELECT octet_length(v) AS size FROM meta WHERE k = ?", "archive-row-1").toArray()[0]!["size"];
     expect(typeof rowSize).toBe("number");
-    const forecast = forecastArchiveFrontierFinish({ hasBase: false, markUnits: made.mark.manifest.length, markedRowBytes: rowSize as number });
-    expect(forecast.ok).toBe(true);
-    const finishing = budget(), exact = await frontiers.prepare(made.frontier, made.mark, null, finishing);
+    const defaultForecast = forecastArchiveFrontierFinish({ hasBase: false, through: made.mark.through.seq,
+      markUnits: made.mark.manifest.length, markedRowBytes: rowSize as number });
+    const forecast = forecastArchiveFrontierFinish({ hasBase: false, through: made.mark.through.seq, captureFromSource: true,
+      markUnits: made.mark.manifest.length, markedRowBytes: rowSize as number });
+    expect(defaultForecast.ok && forecast.ok).toBe(true);
+    if (defaultForecast.ok && forecast.ok)
+      expect(defaultForecast.cost.nodes - forecast.cost.nodes, "Reserve one extraction instead of extraction plus validation").toBe(9);
+    // Unknown/persisted frontiers retain the complete validation path.
+    const validating = budget(); await frontiers.prepare(made.frontier, made.mark, null, validating);
+    if (defaultForecast.ok) for (const key of Object.keys(defaultForecast.cost) as (keyof typeof defaultForecast.cost)[])
+      expect(validating.admitted()[key], `Default unknown-frontier ${key}`).toBeLessThanOrEqual(defaultForecast.cost[key]);
+    const finishing = budget(), exact = await frontiers.prepareFromSource(made.source, made.mark, null, finishing);
+    expect(finishing.admitted().nodes, "Source-owned preparation visits the nine trees once").toBe(9);
     sql.transaction(() => { frontiers.stage(exact, finishing); });
     sql.transaction(() => { frontiers.promote(exact, finishing); rows.confirm(made.mark.commit, budget()); });
     if (forecast.ok) for (const key of Object.keys(forecast.cost) as (keyof typeof forecast.cost)[])
@@ -187,7 +213,8 @@ test("frontier size and work are admitted before body reads or writes, without r
     // before their bodies, including within the independent 64 KiB cap.
     const base = await frontiers.readConfirmed(made.binding, budget()); expect(base).not.toBeNull();
     const next = await fixture(lane.at, { ...made.mark.through, seq: made.mark.through.seq + 1 }, made.mark.commit, made.mark.through.seq + 1);
-    const future = budget(), ready = await frontiers.prepare(next.frontier, next.mark, base, future);
+    const future = budget(), ready = await frontiers.prepareFromSource(next.source, next.mark, base, future);
+    expect(future.admitted().nodes, "Loaded-base source-owned preparation visits nine trees once").toBe(9);
     rows.markAttempt(next.mark, at(2), budget());
     const marked = rows.loadSnapshot(budget())!.bytes;
     const confirmed = values(sql)[0]!["v"] as string;
@@ -212,7 +239,8 @@ test("frontier size and work are admitted before body reads or writes, without r
     sql.exec("UPDATE meta SET v = ? WHERE k = ?", confirmed, CONFIRMED);
     const nextRowSize = sql.exec("SELECT octet_length(v) AS size FROM meta WHERE k = ?", "archive-row-1").toArray()[0]!["size"];
     expect(typeof nextRowSize).toBe("number");
-    const nextForecast = forecastArchiveFrontierFinish({ hasBase: true, markUnits: next.mark.manifest.length, markedRowBytes: nextRowSize as number });
+    const nextForecast = forecastArchiveFrontierFinish({ hasBase: true, through: next.mark.through.seq, captureFromSource: true,
+      markUnits: next.mark.manifest.length, markedRowBytes: nextRowSize as number });
     expect(nextForecast.ok).toBe(true);
     sql.transaction(() => { frontiers.stage(ready, future); });
     const staged = values(sql).find(row => row["k"] === PENDING)!["v"] as string;

@@ -2,7 +2,7 @@
  * confirmed receipt. Does not create receipts or change the ArchiveRow schema. */
 import { b64url, canonicalize, digestBytes, isDigest, isRecord, isScopeRef, natural, parseStrict, same, timeMs, unb64url, utf8 } from "@generalbusiness/dap-bytes";
 import type { Digest, Head, ScopeRef } from "@generalbusiness/dap-contract";
-import { JOURNAL_PARENT_FRONTIER_OBJECTS, validateJournalParentFrontier, journalParentFrontierProfile,
+import { JOURNAL_PARENT_FRONTIER_OBJECTS, captureJournalParentFrontier, validateJournalParentFrontier, journalParentFrontierProfile,
   type JournalObjectSource, type JournalParentBinding, type JournalParentFrontier } from "@generalbusiness/dap-git/journal";
 import { ArchiveBudget } from "./archive-budget.ts";
 import { ArchiveRowRefusal, ArchiveRows, type ArchivedPosition, type ArchiveMark } from "./archive-row.ts";
@@ -216,7 +216,16 @@ export class ArchiveFrontiers {
     }
     return { ...row.confirmed, through: { ...row.confirmed.through } };
   }
-  async prepare(value: unknown, mark: ArchiveMark, base: ArchiveFrontierBase | ArchiveFrontierConversionBase | null, budget: ArchiveBudget): Promise<ArchiveFrontierPrepared> {
+  prepare(value: unknown, mark: ArchiveMark, base: ArchiveFrontierBase | ArchiveFrontierConversionBase | null, budget: ArchiveBudget): Promise<ArchiveFrontierPrepared> {
+    return this.#prepare(value, mark, base, budget, false);
+  }
+  /** Own and authenticate a new writer's source exactly once. Captured
+   * bytes stay private until #prepared has encoded them and made the public
+   * copy. Unknown/persisted frontiers still require full validation. */
+  prepareFromSource(source: JournalObjectSource, mark: ArchiveMark, base: ArchiveFrontierBase | ArchiveFrontierConversionBase | null, budget: ArchiveBudget): Promise<ArchiveFrontierPrepared> {
+    return this.#prepare(source, mark, base, budget, true);
+  }
+  async #prepare(value: unknown, mark: ArchiveMark, base: ArchiveFrontierBase | ArchiveFrontierConversionBase | null, budget: ArchiveBudget, fromSource: boolean): Promise<ArchiveFrontierPrepared> {
     const m = markSnapshot(mark, this.#identity, budget), state = base === null ? null : bases.get(base as ArchiveFrontierBase);
     const conversion = base === null ? null : conversions.get(base as ArchiveFrontierConversionBase);
     if (base !== null && ((!state || state.owner !== this) && (!conversion || conversion.owner !== this))) return refuse();
@@ -224,7 +233,9 @@ export class ArchiveFrontiers {
     const previous: ArchivedPosition | null = state ? { commit: state.frontier.commit, through: state.frontier.through, layout: 2 } : conversion?.position ?? null;
     if (pair.pending !== null || base === null && pair.confirmed !== null || m.value.parent !== (previous?.commit ?? null)) return refuse("conflict");
     const bound = binding({ ...this.#identity, commit: m.value.commit, through: m.value.through }, this.#identity);
-    const frontier = await validateJournalParentFrontier(value, bound, budget, m.value.parent);
+    const frontier = fromSource
+      ? await captureJournalParentFrontier(bound, value as JournalObjectSource, budget, m.value.parent)
+      : await validateJournalParentFrontier(value, bound, budget, m.value.parent);
     if (state && frontier.first !== state.frontier.through.seq + 1 || !state && frontier.first !== 0) return refuse("conflict");
     return this.#prepared(pair, frontier, m, state ? base as ArchiveFrontierBase : null, previous, budget);
   }

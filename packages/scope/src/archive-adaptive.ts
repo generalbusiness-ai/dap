@@ -108,7 +108,7 @@ function finishCost(context: AdaptiveArchiveContext, preparation: JournalPassPre
     bytes: parent.bytes + patch.layoutWork.outputWork + commit.layoutWork.outputWork,
     incremental: context.parent !== null, maximum: context.maximum });
   if (!rows.ok || !transfer.ok) return null;
-  const frontier = forecastArchiveFrontierFinish({ hasBase: context.parent !== null, through: through.seq,
+  const frontier = forecastArchiveFrontierFinish({ hasBase: context.parent !== null, through: through.seq, captureFromSource: true,
     markUnits: shape.selectionUnits + publicationUnits, markedRowBytes: pending });
   if (!frontier.ok) return null;
   return sum(setup, inventory, shape.input, publication, { inputWork: JOURNAL_SELECTION_BYTES * 3 }, selection.cost, body.cost,

@@ -334,13 +334,12 @@ export class ArchiveDriver {
       for (const object of archive.objects) all.set(object.id, object);
       if (mark.layout === 2 && pendingFrontier === null) {
         step = "frontier";
-        const frontier = await captureJournalParentFrontier({ ...identity, commit: mark.commit, through: mark.through }, {
+        pendingFrontier = await frontiers.prepareFromSource({
           object: async (id, maximum) => {
             const object = all.get(id);
             return object ? { type: object.type, size: object.data.length, data: object.data.length <= maximum ? object.data : null } : null;
           },
-        }, budget);
-        pendingFrontier = await frontiers.prepare(frontier, mark, base ?? conversionBase, budget);
+        }, mark, base ?? conversionBase, budget);
         step = "mark";
         row = this.#options.sql.transaction(() => {
           const marked = rows.markAttempt(mark, next, budget);

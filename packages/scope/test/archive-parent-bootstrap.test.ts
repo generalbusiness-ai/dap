@@ -379,7 +379,7 @@ test("current-parent migration handles six and thirty-seven old passes without w
         return { body, key: { kind: "rule" as const, digest: digestBytes(utf8(body)) } };
       });
       const retained = new Map(files.map(file => [canonicalize(file.key), file.body]));
-      const budget = new ArchiveBudget(); budget.spend({ entries: through.seq - first + 1 });
+      const budget = new ArchiveBudget(); budget.spend({ entries: through.seq - first + 1, attempts: files.length });
       const selection = canonicalize({ format: "artroom-local-inventory-2", at: lane.at, through: head, after: prior,
         entries: native.filter(value => value.seq >= first && value.seq <= through.seq).map(value => ({ seq: value.seq, hash: value.hash, bytes: utf8(value.bytes).length })),
         objects: files.map(({ key, body }) => ({ key, bytes: utf8(body).length, pass: first, consumers: [{ mode: "required", origin: { at: { at: lane.at, seq: through.seq, hash: through.hash }, input: (JSON.parse(through.bytes) as { input: { type: string } }).input.type }, consumer: "rule-input", purpose: "replay-required", key }] })),
