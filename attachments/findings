@@ -1,0 +1,1 @@
+F1 refs/heads/Main case; F2 retain exact verified target payload across lock_check/preStamp; F3 preserve allocated binding physical identity; F4 explicit reviewed bindingSHA authentication; F5 coherent immutable config/capture/allocation flow. Root reportedF1-F3, reviewer confirmed+F4-F5.
