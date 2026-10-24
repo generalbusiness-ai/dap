@@ -161,12 +161,12 @@ test("absent, malformed or contradictory configuration disables effects, and abs
       expect(await outside.send(request)).toBeNull();
     }
     // Public reads do not excuse malformed optional credentials elsewhere.
-    const publicEnv = { ...env, GITHUB_APP_CONFIG: canonicalize({ ...config, privateRepositories: false, publicReads: true }) };
+    const publicOptionalEnv = { ...env, GITHUB_APP_CONFIG: canonicalize({ ...config, privateRepositories: false, publicReads: true }) };
     for (const [changed, reason] of [
       [{ GITHUB_CREATION_TOKEN: "optional secret with spaces" }, "creation-token"],
       [{ GITHUB_CLEANUP_TOKENS: "{private malformed cleanup" }, "cleanup-tokens"],
     ] as const) {
-      const settings = { ...publicEnv, ...changed };
+      const settings = { ...publicOptionalEnv, ...changed };
       expect(gitHubReadiness(settings)).toEqual({ state: "off", reason });
       expect(gitHubOutside(f.given, state.storage.sql, settings, transport)).toBe(NO_OUTSIDE);
     }

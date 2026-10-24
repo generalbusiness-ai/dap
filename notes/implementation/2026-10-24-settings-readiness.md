@@ -48,3 +48,13 @@ TypeScript warning. This parser result is a Source tripwire, not runtime
 authority evidence. Affected compiler and native test results, paired-control
 evidence where required, and the final gate remain pending. No deployment,
 provider call, package install or runtime success is claimed here.
+
+The first affected run at `1e18f5d0` passed the Git production, Git test and
+Scope production compiler contexts. The Scope test compiler then rejected
+two fixture errors: an explicitly `undefined` optional deployment property,
+and a duplicate local `publicEnv` binding. No test body ran; all 47 cases
+remain unrun. The absent-setting witness now passes the existing bindings
+with that property genuinely absent, and the optional-credential fixture
+uses a distinct local name. Assertions, registrations and deadlines are
+unchanged. The failed run remains retained; the corrected Scope test
+compiler and 47-case body still require validation.

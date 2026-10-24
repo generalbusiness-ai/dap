@@ -72,7 +72,7 @@ test("two pending packet loads coalesce while a third distinct release refuses b
       const response = await applicationSandboxPage(new Request("https://cache.test" + applicationScreenPath(directory.scope, 0, fixtures[0]!.packet.ids.presentation) + "_/context"), { ...bindings, DEPLOYMENT });
       expect([response?.status, (await response!.json<{ deployment: string }>()).deployment]).toEqual([200, DEPLOYMENT]);
     }
-    const local = await applicationSandboxPage(new Request("https://cache.test" + applicationScreenPath(directory.scope, 0, fixtures[0]!.packet.ids.presentation) + "_/context"), { ...bindings, DEPLOYMENT: undefined });
+    const local = await applicationSandboxPage(new Request("https://cache.test" + applicationScreenPath(directory.scope, 0, fixtures[0]!.packet.ids.presentation) + "_/context"), bindings);
     expect([local?.status, (await local!.json<{ deployment: string }>()).deployment]).toEqual([200, "https://cache.test"]);
   } finally { releaseFirst(); releaseSecond(); await Promise.allSettled(outstanding); for (const f of fixtures) await env.APPLICATION_CONTENT.delete(f.key); }
 });
