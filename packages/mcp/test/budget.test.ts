@@ -693,8 +693,8 @@ describe("what a call costs, end to end", () => {
     await annotate(`paging: a 64 KiB item alone on its inspect page; a 200 KiB text in ${calls} text calls; ${alone} descriptors alone on a 2 KiB list page of ${whole} tools`);
   });
 
-  // Invariant: terminal resubmissions past 64 outcomes keep every outcome readable, and each resubmission costs one read and one
-  // post, with the custody record on disk.
+  // Invariant: terminal resubmissions past 64 outcomes keep every outcome readable. Each attempt refreshes membership,
+  // directory and rules, reads the target lane and posts once, with the custody record on disk.
   test("resubmissions past 64 outcomes", async ({ annotate }) => {
     const dir = mkdtempSync(join(tmpdir(), "mcp-budget-"));
     const s = roomOf("admin", [issueDemo], { custody: fileStore(dir) });
@@ -704,8 +704,14 @@ describe("what a call costs, end to end", () => {
     for (let i = 0; i < 70; i++) {
       const sent = await counted(s, () => s.service.call("issue.comment", { target: 1, fields: { body: "Again." }, idempotencyKey: "again", ...(i > 0 ? { resubmit: true } : {}) }));
       expect(sent.result.structuredContent["answer"], JSON.stringify(sent.result.structuredContent)).toBe("refused");
-      // Every one of the 70: one read of the lane and one post, and nothing else (the session was taken by the list before).
-      expect([reads(sent.requests), posts(sent.requests), sessions(sent.requests)], `refusal ${i + 1}: ${sent.requests.join(", ")}`).toEqual([1, 1, 0]);
+      // Every attempt checks fresh standing before posting; the session was taken by the list before.
+      expect([reads(sent.requests), posts(sent.requests), sessions(sent.requests)], `refusal ${i + 1}: ${sent.requests.join(", ")}`).toEqual([4, 1, 0]);
+      expect(sent.requests.filter(request => request.startsWith("GET ")).sort()).toEqual([
+        `GET /v1/scopes/${s.config.repository!.membership.scope}`,
+        `GET /v1/scopes/${s.config.repository!.directory.scope}`,
+        `GET /v1/scopes/${s.config.repository!.rules}`,
+        `GET /v1/scopes/${laneOf(s, 1).ref.scope}`,
+      ].sort());
       last = sent.requests;
     }
     const settled = (await s.service.call("settle", { target: 1, idempotencyKey: "again" })).structuredContent;
