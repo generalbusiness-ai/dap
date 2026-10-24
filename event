@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f191369d9a7eab785d7774c2c92d0539b4b9efff","text":"Merge retired a covered predecessor; the successor is at packages/git/test/journal-anchor-publication.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f4593a24f2649c058699dee3acbfed10824829fa","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-24-archive-fixed-parent/audits/current-parent-git-v2-review.json."}
