@@ -1950,10 +1950,13 @@ and final-item reads, that poll returns no item; a later poll reads again.
 Observed run of `packages/mcp/test/budget.test.ts`, on the stand-in scope
 service of the Node tests, which counts every request the server makes. A
 warm call holds a read session; a cold call adds one session request. The
-plan's bound is plan 031, section 8. Response bytes are the whole result
-of the warm call, as the service makes it; the test asserts both calls' sizes against the bound.
+response bounds are from plan 031, section 8. Response bytes are the whole
+result of the warm call, as the service makes it. The test asserts both calls'
+sizes against the bound. The table retains the historical observed counts and
+response sizes. The last column includes the current fresh-admission read
+bounds for the two named act tools.
 
-| Tool | Reads, warm | Posts | Cold | Response bytes | Plan's bound, warm |
+| Tool | Historical reads, warm | Posts | Cold | Response bytes | Current read bound, warm |
 |---|---|---|---|---|---|
 | `room` | 3 | 0 | +1 session | 3874 | 3, + roots and memberships |
 | `inspect` | 1 | 0 | +1 | 990 | 1 |
@@ -1968,11 +1971,23 @@ of the warm call, as the service makes it; the test asserts both calls' sizes ag
 | `wait`, one poll | 1 | 0 | +1 | 476 | 1 |
 | `settle` | 1 | 0 | +1 | 1570 | 1 |
 | `actions` | 1 | 0 | +1 | 20056 | 3 |
-| `issue.comment`, on a lane | 1 | 1 | +1 | 1184 | 2 |
-| `issue.create`, with the definition's bytes read | 2 | 1 | +1 | 1204 | 2 |
+| `issue.comment`, on a lane | 1 | 1 | +1 | 1184 | 4 |
+| `issue.create`, with the definition's bytes read | 2 | 1 | +1 | 1204 | 5 |
 | `create` | 0 | 1 | | | 0 |
 | `credential`, a second token after the first was read | 3 | 0 | +1 | 362 | 1 |
 | `tools/list` | 3 | 0 | +1 | | 3, + roots and memberships |
+
+Fresh act admission reads Membership, Directory, and Rules on each attempt.
+`issue.comment` then reads its target lane: four reads in this fixture.
+`issue.create` also reads its Directory target and the retained definition
+bytes from Rules: five reads. The budget witness checks those exact routes
+for both cold and warm calls. These bounds apply to this room with no
+applications or standalone roots. They do not raise the other tools' bounds.
+
+The closed R5 validation observed four reads for `issue.comment`, then
+stopped at its old bound of two. The five-read create count follows the
+current source. Its measured count and updated response sizes await the
+whole-file validation.
 
 `credential` reads the act's entry, then the entries after it until the
 operation's outcome names the token (two here), then the credential route:
