@@ -85,8 +85,27 @@ took 10.67 seconds wall and 12.27 seconds CPU. The failed gate took 1,360.71
 seconds wall and 1,565.66 seconds CPU. Nested child and stage costs overlap
 these outer measurements and are not added. These are local partial costs.
 
-Object-only seal derivation and validation of the constructor correction
-remain pending. The failed original gate remains failed; no replacement gate
-pass, exact-head review, landing or deployment is claimed. SQL and platform
-alarm remain non-atomic; no restart permission or cold constructor purity is
-inferred.
+The constructor correction's actual maintained object seal has been derived
+and adopted. Original corrected focused run `72970` at
+`b275802a199c4788c5901701beac4135bc8abdb5` /
+`194878aaafe1d96ae64a7351eda649cbdd21b89f` exited naturally with status 0.
+Scope production and test compilers passed, followed by all 13 cases in the
+whole operator10 and item-query-owned3 files. Every case started and completed
+once, with no errors, retries, repeats or unhandled errors. The independent
+audit is retained at
+`/private/tmp/artroom-archive-operator-constructor-focused-independent-review-evidence-20261024-v1/audit.json`.
+
+The maintained body actually used `--bail=1`; the allocation's earlier
+“no bail” wording was inaccurate. All 13 cases ran and passed, so bail did not
+curtail this result. Four maintained guards checked 1,713 active Source pins,
+one external input, 14 workspaces and 41 aliases against the same clean
+checkpoint. Notes remained under the committed-tree guard. This is not a
+claim of a complete physical dependency snapshot or a 3,120-file inventory.
+The outer run took 9.39 seconds wall and 14.42 seconds CPU; its 9.363-second
+wrapper measurement and nested compiler/body costs overlap and are not added.
+
+The failed original gate `45227` remains failed. The prior stored-name control
+and affected34 result retain their original-source qualifications. A new
+ordinary gate is pending; no exact-head review, landing or deployment is
+claimed. SQL and platform alarm remain non-atomic, and no cold constructor
+purity or restart authority is inferred.
