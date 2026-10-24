@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e18019276e0a78cac9c1895738af940574109145","text":"Merge retired a covered predecessor; the successor is at apps/room/lanes/test/support/foreign-hold-change.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e1b183666c7322fc5aa4becdc7ff0ef0649f1122","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/binding.ts."}
