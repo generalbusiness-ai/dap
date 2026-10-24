@@ -171,8 +171,12 @@ review and deployment. This is not complete edit-to-review cost.
 The pinned independent audit, exact terminal identities, callback gaps
 and finite raw input roster are held at
 `/private/tmp/artroom-security-r5c-gate-independent-audit-20261024-v1/manifest.json`.
-Only this implementation note changes after the gate. Source, tests and
-seals remain unchanged from the tested tree. Under `docs/testing.md`, the
+Only this implementation note and the endpoint contract note change after
+the gate. Source, tests and seals remain unchanged from the tested tree.
+Review `82ea197d6f70997cefd1b00f8ecf5a9ce0782804` found no code defect and
+requested one documentation correction: the endpoint note still said
+validation was pending. That sentence now describes the implementation,
+validation and deployment obligations recorded here. Under `docs/testing.md`, the
 documentation-only successor carries this gate without a repeat; its
 final tree hash must accompany the documentation commit.
 

@@ -132,7 +132,9 @@ Open hosted streams use bounded timer rechecks and the existing HTTP
 teardown at bearer expiry. New calls are refused, while already admitted
 calls complete under their original fences. No long timer or new Durable
 Object alarm is added. The [implementation note](implementation/2026-10-24-hosted-mcp-bearer-expiry.md)
-keeps validation pending. Native enrolment and authority, custody, control
+records the implementation, validation and deployment obligations: explicit
+renewal of live tokens, Registry activation or recorded lazy cleanup.
+Native enrolment and authority, custody, control
 retention and R15 retirement remain separate.
 
 ## 3. The design
