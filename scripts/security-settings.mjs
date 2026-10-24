@@ -80,6 +80,33 @@ export function sandboxSettingKeys(source, file = "apps/sandbox/worker.ts") {
 /** Lexical immutable aliases only. Unsupported Env uses refuse, never vanish. */
 export function environmentReads(source, file, { environmentTypes = new Set(), forwarding = new Map(), sandbox = false } = {}) {
   const tree = parse(source, file), reads = [];
+  // This exception needs the unexposed global constructor, not alias/dataflow
+  // inference. Permit Object only as a direct member receiver or nonvalue key.
+  // Any other Object use or globalThis use closes this read form filewide.
+  let globalObject = true;
+  const objectReceivers = new Set(), propertyNames = new Set();
+  walk(tree, node => {
+    if (node.type === "MemberExpression" && node.object.type === "Identifier" && node.object.name === "Object") objectReceivers.add(node.object);
+    if (["MemberExpression", "Property", "MethodDefinition", "PropertyDefinition"].includes(node.type) && !node.computed && !node.shorthand) {
+      const key = node.type === "MemberExpression" ? node.property : node.key;
+      if (key?.type === "Identifier") propertyNames.add(key);
+    }
+  });
+  walk(tree, node => {
+    if (node.type === "Identifier" && (node.name === "globalThis"
+      || node.name === "Object" && !objectReceivers.has(node) && !propertyNames.has(node))) globalObject = false;
+    const bound = node.type === "VariableDeclarator" ? names(node.id)
+      : node.type === "ImportDeclaration" ? node.specifiers.map(part => part.local.name)
+      : ["FunctionDeclaration", "FunctionExpression", "ArrowFunctionExpression"].includes(node.type) ? [...names(node.id), ...node.params.flatMap(names)]
+      : ["ClassDeclaration", "ClassExpression", "TSImportEqualsDeclaration", "TSEnumDeclaration", "TSModuleDeclaration"].includes(node.type) ? names(node.id)
+      : node.type === "CatchClause" ? names(node.param) : [];
+    let target = ["AssignmentExpression", "UpdateExpression"].includes(node.type) ? node.left ?? node.argument
+      : node.type === "UnaryExpression" && node.operator === "delete" ? node.argument : null;
+    if (names(target).includes("Object")) globalObject = false;
+    target = unwrap(target);
+    while (target?.type === "MemberExpression") target = unwrap(target.object);
+    if (bound.includes("Object") || target?.type === "Identifier" && target.name === "Object") globalObject = false;
+  });
   // One existing protected adapter. This is a Source tripwire, not return-flow inference.
   const metricReturns = new Set(), metricCalls = new Set();
   if (file === "packages/scope/src/object.ts") {
@@ -201,6 +228,14 @@ export function environmentReads(source, file, { environmentTypes = new Set(), f
         if (parent?.type === "CallExpression" || parent?.type === "NewExpression") {
           const callee = unwrap(parent.callee), name = callee?.name ?? (callee?.type === "MemberExpression" ? prop(callee.property) : null);
           const position = parent.arguments.indexOf(node);
+          if (node.type === "Identifier" && scope.get(node.name) === true
+            && parent.type === "CallExpression" && !parent.optional && globalObject
+            && callee?.type === "MemberExpression" && !callee.computed && !callee.optional
+            && callee.object.type === "Identifier" && callee.object.name === "Object"
+            && prop(callee.property) === "hasOwn" && position === 0 && parent.arguments.length === 2
+            && parent.arguments[1].type === "Literal" && typeof parent.arguments[1].value === "string") {
+            record(parent.arguments[1].value, parent); return;
+          }
           const accepted = callee?.type === "Super" ? scope.get(superPositions)?.has(position)
             : callee?.type === "Identifier" && (scope.has(name) ? scope.get(name)?.positions?.has(position) : forwarding.get(name)?.has(position));
           if (!accepted) fail(file, node, `unresolved environment forwarding to ${name ?? "super/expression"} argument ${position}`);
