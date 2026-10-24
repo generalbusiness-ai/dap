@@ -374,9 +374,34 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
     if (!matched.ok) throw new Error(matched.reason);
     expect(matched.identity).toMatchObject({ scope: scopeOfLending, member: { member: "@visitor" }, publicKey: device.publicKey });
     let visitorSlot: string | null = null;
-    const visitor = lendingGateway(matched.identity, (await import("../../../examples/lending/browser/join.ts")).deviceSigner(device), { current: () => true, lock: serial, now: clock, application, fetch: legacyLendingProjection(SERVICE, application, fetch),
+    const knownLookReasons = new Set([
+      "application-projection-invalid", "application-projection-limit", "application-projection-binding",
+      "application-projection-incomplete", "application-projection-stale", "application-projection-unavailable",
+      "The historical fixture needs a complete authenticated history page.",
+      "the reply does not match the bounded application projection",
+      "no whole application projection within 10 seconds; coverage is incomplete",
+      "The projection is behind the list.", "A newer read replaced this one.",
+    ]);
+    let visitorFetchFailure: string | null = null;
+    const visitorProjection = legacyLendingProjection(SERVICE, application, fetch);
+    // Diagnostic only: preserve the same fetch/read order and rethrow unchanged.
+    // Never expose arbitrary provider errors, signed requests or view contents.
+    const visitorFetch: Fetch = async (url, init) => {
+      try { return await visitorProjection(url, init); }
+      catch (error) {
+        visitorFetchFailure = error instanceof Error && knownLookReasons.has(error.message) ? error.message : "other-unclassified";
+        throw error;
+      }
+    };
+    const visitor = lendingGateway(matched.identity, (await import("../../../examples/lending/browser/join.ts")).deviceSigner(device), { current: () => true, lock: serial, now: clock, application, fetch: visitorFetch,
       store: { load: async () => visitorSlot === null ? null : JSON.parse(visitorSlot) as Kept, save: async (value) => { visitorSlot = JSON.stringify(value); }, clear: async () => { visitorSlot = null; } } });
-    expect((await visitor.look()).status).toBe("current");
+    const visitorSeen = await visitor.look();
+    const visitorReason = visitorSeen.status === "behind"
+      ? knownLookReasons.has(visitorSeen.reason) ? visitorSeen.reason
+        : visitorSeen.reason.startsWith("The room refused a read session: ") ? "read-session-refused"
+        : visitorSeen.reason.startsWith("The library could not be read: ") ? "projection-read-refused" : "other-unclassified"
+      : null;
+    expect(visitorSeen.status, JSON.stringify({ status: visitorSeen.status, reason: visitorReason, fetchFailure: visitorFetchFailure })).toBe("current");
     expect(await visitor.act("donate", { name: "Whisk", description: "Balloon." })).toEqual({ status: "recorded" });
     expect((await things()).find((thing) => thing.values["name"] === "Whisk")).toMatchObject({ parties: { donor: person("@visitor") } });
     expect(await findLending(read.seat, second, { now: clock, fetch })).toMatchObject({ ok: false });
