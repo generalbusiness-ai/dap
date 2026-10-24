@@ -70,33 +70,77 @@ control restores immediate scheduling; its outcome remains unproved.
 
 ## Verification status
 
-V7 received static Source review only; its review receipt is
+The retained V7 static Source review is
 `/private/tmp/artroom-r13-read-token-expiry-v7-narrow-independent-review-20261024-v1.json`
 (SHA256 `6afcf14419623e037e82f0d9a8a3fd6380ce0f32225a1d94b55d6e27f63a360f`).
-Affected original `50749` stopped naturally with exit 1 in the Scope production
-compiler at `a7c49158257ea51f1bdd7fc6d8dd34bdcbd29d41`. Two TS7053 errors
-identified a legacy receipt body narrowed to `{}` before indexing `token`
-and `ends`. The existing `isRecord` helper supplies the same object, null
-and array checks with the required record type. The correction changes only
-that predicate and its import. The test compiler and Vitest body were unrun;
-this failed run is not a baseline. A fresh affected run is still required.
+The following affected runs preserve both original failures before the
+healthy continuation. They are separate natural invocations, not retries
+hidden inside one passing result.
 
-Corrected-source original `86333` passed both Scope compilers, then stopped
-at the first destination case: its scripted mint now used
-`read:provider-token-1`, while the scripted revoke reply still named the old
-ID. The adapter correctly returned no answer for that mismatch. The fixture
-now uses the matching revoke ID; all assertions and production code remain
-unchanged. The other 22 cases were unrun. The production compiler's pass
-carries across this test-and-note-only correction; the test compiler and
-complete affected body still need a fresh run.
+| Original | Actual outcome | Outer wall / CPU seconds |
+| --- | --- | --- |
+| `50749` | Scope production compiler failed; test compiler and all 23 bodies unrun | 1.18 / 1.91 |
+| `86333` | Both compilers passed; one destination fixture assertion failed; 22 cases unfinished/pending after bail | 8.25 / 12.15 |
+| `72343` | Scope test compiler and all 23 cases in five whole files passed | 9.74 / 14.14 |
 
-The authored witnesses cover unread expiry through a real native alarm,
-read-mint conflict and interrupted-insert recovery, bounded restart-safe
-maintenance, exact fractional end, earlier wake arbitration and preservation
-of write-token revocation. These witnesses have not run. Affected compilers,
-paired controls and the final gate remain unrun. The maintained producer
-computed the object and destination Source seals at clean
-`3a090dfbaefcb425dbec8e64b8143ff054b147bf`, tree
+The first run stopped at `a7c49158257ea51f1bdd7fc6d8dd34bdcbd29d41`.
+Two TS7053 errors identified a legacy receipt body narrowed to `{}` before
+indexing `token` and `ends`. The existing `isRecord` helper supplies the same
+object, null and array checks with the required record type. The correction
+changed only that predicate and its import.
+
+At `64318364bb59d2fb3e8000c0a1d2736e94a5c204`, the second run passed both
+Scope compilers, then failed at destination-host test line 150: the scripted
+mint used `read:provider-token-1`, but its revoke reply still named the old
+ID. The adapter returned no answer rather than the expected confirmation.
+The fixture correction matches that revoke ID and retains all assertions.
+Earlier shorthand that the other 22 cases were unrun is too strong: all 23
+started and result callbacks exist, but 22 results are pending after bail.
+They establish neither completed cases nor completed assertions in those
+22 bodies. This original invocation remains failed.
+
+The healthy continuation ran at
+`276963a0ed1deeebbd9251a252567b9db0eff99d`, tree
+`b6d2609d52f4661da4181144193cee15713013e3`. Its Scope test compiler passed,
+then all 23 semantic cases were collected, started, completed and passed
+exactly once. All 23 result callbacks are present. The maintained end event
+and Vitest JSON agree, with zero unhandled errors, no added or missing
+semantic identities, no repeats and no retries. The five whole files are
+credential custody (3), destination adapter (6), read-token expiry (1),
+archive operator (10), and owned item-query bounds (3). Original deadlines
+and configurations remain unchanged.
+
+The production compiler pass carries from `86333`; it was not rerun in
+`72343`. Between the two tested commits, only the destination test fixture
+and this note changed. Every production Source/configuration, tool, workspace,
+alias and lock hash is identical. The changed fixture was recompiled by
+Scope test. Three maintained clean guards passed in the healthy run,
+each checking 3,124 tracked Source inputs, one external owner input,
+14 workspaces and 41 aliases. These are standard boundary guards, not a
+full physical dependency-pool or continuous memory proof. Numeric framework
+task IDs are not supplied by this focused reporter and are not invented.
+
+The witnesses now include passing unread-expiry cleanup through a real
+native alarm, read-mint conflict and interrupted-insert recovery, bounded
+restart-safe maintenance, exact fractional end, earlier wake arbitration
+and preservation of write-token revocation. The Git providers, token
+responses and test clocks are stand-ins; no deployed provider expiry or
+hosted cleanup outcome was measured. Paired controls and the ordinary final
+gate remain pending.
+
+The three external Python owner envelopes total 19.17 seconds wall and
+28.20 seconds CPU, each printed at 0.01-second precision. These runs used
+the local macOS 27.0.1 arm64 machine and verified private dependency view
+with existing caches. System load and cache temperature were uncontrolled;
+these are validation costs, not a performance comparison. Focused Node and
+phase times are nested and are not added again. This is a subtotal of
+these three affected invocations, excluding dependency preparation, seals,
+future controls/gate and edit-to-review time. Exact closed input pins,
+semantic outcomes, failure excerpts and carry comparison are held at
+`/private/tmp/artroom-r13-read-token-focused-independent-audit-20261024-v1/manifest.json`.
+
+The maintained producer computed the object and destination Source seals
+at clean `3a090dfbaefcb425dbec8e64b8143ff054b147bf`, tree
 `a992f369167b00d2360e5b0ffe729221033566ff`; only their three existing map
 slots were updated. The producer checked its pinned inputs and clean
 checkpoint before and after both calls. Its output is held at
