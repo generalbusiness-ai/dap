@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4e2b43b32ffddd71ded10e3c2f7e0d2aeff433cb","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-24-archive-fixed-parent/post-gate-repair/remaining9-audit.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:537df2d2a245c2b2a9cc30e28fec2861e6f8926c","text":"Merge retired a covered predecessor; the successor is at packages/git/src/http-read.ts."}
