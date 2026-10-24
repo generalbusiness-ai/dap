@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:292010bd0b3523a134c1e7cd422a9e7f63f8ac7c","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-24-archive-fixed-parent/post-gate-repair/projection-control-result.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2a18f9d29d4900dced49492ab2f4acff1470d6a1","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/archive-driver.test.ts."}
