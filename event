@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:27287459a6e71b0a5986d376eb04b027adc2465e","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-24-read-token-expiry.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:29ac5d37ec97a3ee5cc9f85081f4ea40a1d525ec","text":"Merge retired a covered predecessor; the successor is at apps/room/lanes/test/edit.scope.test.ts."}
