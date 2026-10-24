@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7d17fdfdae8e9b6696083eb9e59e2ace37da5162","text":"Merge retired a covered predecessor; the successor is at packages/package-graph/src/port-fields.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7d8a37c7575ce8789207ca3ed72fa904f69ab489","text":"Merge retired a covered predecessor with no successor at its old path."}
