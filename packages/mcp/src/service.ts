@@ -474,12 +474,18 @@ export class McpService {
       return failed({ error: "stale-descriptor", scope, runs: `${definition.name} ${summary.definition}`, tool: serving && this.mode !== "generic" ? serving.name : declaration ? "act, with this scope and kind" : null });
     };
     if (!act || declaration === null) return binding ? stale() : failed({ error: "shape", field: "kind", what: `is not an act of ${definition.name}`, declared: Object.keys(definition.acts).filter((k) => k !== definition.genesis).join(", ") });
-    // Check the actual target's membership, not another scope served by the
-    // same catalogue binding. Generic act and preparation share this fence.
-    this.#admitTarget(s, { scope, ref: summary.scope, place: "root", pinned: summary.definition, definition, membership: membership?.scope ?? null }, kind, binding?.name ?? kind);
     if (binding && (binding.definition !== definition.name || binding.declaration !== declaration || !binding.digests.includes(summary.definition))) return stale();
     if (!binding && args["digest"] !== undefined && args["digest"] !== summary.definition) {
       return failed({ error: "stale-descriptor", scope, runs: `${definition.name} ${summary.definition}`, tool: "act, with the digest you read again from actions" });
+    }
+    // Check the actual target's membership, not another scope served by the
+    // same catalogue binding. Generic act and preparation share this fence.
+    try {
+      this.#admitTarget(s, { scope, ref: summary.scope, place: "root", pinned: summary.definition, definition, membership: membership?.scope ?? null }, kind, binding?.name ?? kind);
+    } catch (error) {
+      // Preserve a mounted card's stale-view fence before returning a policy denial.
+      if (error instanceof Stop && admit) await admit();
+      throw error;
     }
     const on = args["on"] === undefined ? null : args["on"];
     if (needsOn(act) ? !(typeof on === "number" && Number.isSafeInteger(on) && on >= 0) : on !== null) {

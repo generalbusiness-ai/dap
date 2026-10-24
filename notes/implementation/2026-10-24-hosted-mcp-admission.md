@@ -87,14 +87,32 @@ The original source bytes, inode, mode, size, and modification time were
 restored after each run; change time can change. Root reviewed the actual
 assertion diagnostics. No healthy baseline was repeated for these controls.
 Their evidence is under `/private/tmp/artroom-r5-control-*-evidence-20261024-v2/`.
-The final ordinary gate is pending; no hosted rollout is claimed.
+The ordinary gate at `c0208a87ad` closed with exit 1: 3524 passed,
+2 failed and 3 skipped tests across 496 files. Both failures exposed error
+precedence regressions in the new target check. A stale tool descriptor
+received `unknown-tool`; a mounted card whose grant was removed received
+a nested permission error instead of `view: stale`.
+
+The correction keeps descriptor and digest checks before target admission.
+On a target-policy denial, a mounted card runs its existing stale-view
+check before returning the denial. Successful calls add no read. Every
+attempt still checks its actual target before custody or signing, and the
+existing immediately-before-signing view check remains. Test assertions
+and deadlines are unchanged. The service AST seal tracks the corrected
+source.
+
+The gate remains failed evidence. A scoped continuation covers both failing
+native files, the three view unit files and the policy file; the Node and
+Counting browser tail commands were unreached and remain to run. No hosted
+rollout is claimed.
 
 ## Rollout and deferred policy
 
 The user has approved pushing the reviewed change. Cloudflare configuration
-and deployment remain planner-only. The planner must inventory existing
-hosted agents and their tools under request `92d54432`, choose explicit
-opt-in and additions per Worker, and deploy the reviewed head. Leaving
+and deployment remain planner-only. Planner decision `8904bf5b` accepts the defaults for local review. Before
+deployment, the planner inventories actual tool use per Worker under request
+`92d54432`, chooses explicit opt-in and additions, and records those settings
+in the deployment record. Leaving
 opt-in unset closes the endpoint. No live agent, custody, bearer, secret,
 usage, or deployment state was read for this slice.
 
