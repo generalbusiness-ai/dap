@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:77fc76dd99b6219ad1c92faa0d42c283ac2ba746","text":"Merge retired a covered predecessor; the successor is at packages/git/src/journal-v2-append.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7d8315c4992f9c40b08312f9da04e4470d347960","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-24-archive-fixed-parent/audits/continuation-outcome-audit.json."}
