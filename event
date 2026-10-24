@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0b6ccb9591192457333de26f310a4ba6d8bf9b9a","text":"Merge retired a covered predecessor with no successor at its old path."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0b833e57cd7ac9d373554ff285588f36257578ea","text":"Merge retired a covered predecessor; the successor is at examples/grow/simulator-release.ts."}
