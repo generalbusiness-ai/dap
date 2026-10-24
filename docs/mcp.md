@@ -1769,8 +1769,9 @@ required tools (request `92d54432`), chooses each Worker's opt-in and additions,
 only after exact-head review. Repository bindings do not establish live
 usage or settings. The explicit deployment choice remains pending. Leaving
 opt-in unset closes existing endpoints. The
-local slice A implementation and its pending verification are recorded in
-[the admission note](../notes/implementation/2026-10-24-hosted-mcp-admission.md).
+local slice A implementation and validation, including the passing gate,
+are recorded in [the admission note](../notes/implementation/2026-10-24-hosted-mcp-admission.md)
+and its review record.
 Bearer lifecycle, plaintext retention, failure-map bounds, authentication
 ordering, and R15 are separate unfinished work.
 
