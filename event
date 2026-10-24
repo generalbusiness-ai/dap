@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f02fe99133083dadefb27a0bc13d65a1f8590461","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/session-reference-native.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f03400a8eff5a80f36bab3ef149617b774917459","text":"Merge retired a covered predecessor; the successor is at apps/room/page/src/view.ts."}
