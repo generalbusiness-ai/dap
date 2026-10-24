@@ -1,1 +1,0 @@
-31 collected/started/result reporter rows; only 7 terminal states (6 pass, 1 fail), 24 pending/unfinished. JSON aggregate numPendingTests=0 disagrees with its 24 pending assertions; five reporter modules skipped. Unhandled errors 0.
