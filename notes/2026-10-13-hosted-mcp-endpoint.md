@@ -586,8 +586,9 @@ The planner must inventory existing hosted agents' required tools
 (request `92d54432`) and choose each Worker's settings before rollout.
 That explicit deployment choice remains pending. An unset opt-in closes all
 hosted MCP routes, including control routes. This local implementation
-covers R5 items 1–3 only. Its compiler, runtime, seal, gate, and deployment
-results are not yet claimed; see [the slice note](implementation/2026-10-24-hosted-mcp-admission.md).
+covers R5 items 1–3 only. Its compiler, runtime and seal checks and final gate passed; deployment
+is not claimed, as recorded in [the slice note](implementation/2026-10-24-hosted-mcp-admission.md)
+and its review record.
 R5 items 4–7 and R15 remain open. The historical acceptance and live-check
 recipes below do not prove this slice has been deployed.
 

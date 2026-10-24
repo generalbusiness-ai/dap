@@ -1769,12 +1769,15 @@ required tools (request `92d54432`), chooses each Worker's opt-in and additions,
 only after exact-head review. Repository bindings do not establish live
 usage or settings. The explicit deployment choice remains pending. Leaving
 opt-in unset closes existing endpoints. The
-local slice A implementation and its pending verification are recorded in
-[the admission note](../notes/implementation/2026-10-24-hosted-mcp-admission.md).
-Bearer lifecycle, plaintext retention, and R15 remain separate unfinished
-work. The bounded failure window and authenticated control cleanup are
-recorded in [the failure-cleanup note](../notes/implementation/2026-10-24-hosted-mcp-failure-cleanup.md);
-validation and deployment of that follow-up are pending.
+local slice A implementation and validation, including the passing gate,
+are recorded in [the admission note](../notes/implementation/2026-10-24-hosted-mcp-admission.md)
+and its review record. The bounded failure window and authenticated control
+cleanup are recorded in [the failure-cleanup note](../notes/implementation/2026-10-24-hosted-mcp-failure-cleanup.md).
+Bearer expiry and secret-free issuance receipts are recorded in
+[the bearer-expiry note](../notes/implementation/2026-10-24-hosted-mcp-bearer-expiry.md).
+Those follow-ups retain their own verification and deployment qualifications;
+A's passing gate does not establish their acceptance. R15 remains separate
+unfinished work.
 
 ### Routes
 
