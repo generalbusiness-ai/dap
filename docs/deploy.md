@@ -1,7 +1,28 @@
 # Deploy the scope Worker
 
 `npm run deploy:scope` deploys the scope Worker from
-`apps/room/wrangler.jsonc` with Wrangler 4.147.0. Follow
+`apps/room/wrangler.jsonc` with Wrangler 4.147.0 and `--keep-vars`, preserving
+plain settings already set on the Worker when the file omits them. Values
+explicitly supplied by the reviewed configuration or `--var` still need
+review. This does not supply a missing setting or change secret custody.
+
+From the reviewed checkout, the default scope command is:
+
+```sh
+npm run deploy:scope
+```
+
+For a planner deployment of Grow with pinned Wrangler from scratch, use:
+
+```sh
+ARTROOM_REPO=/absolute/path/to/the-reviewed-checkout
+cd "$(mktemp -d)"
+npx -y wrangler@4.147.0 deploy --keep-vars --config "$ARTROOM_REPO/apps/room/wrangler.grow.jsonc"
+```
+
+Retain any reviewed `--var` overrides for that Worker on the same command;
+`--keep-vars` does not establish their correct values. The planner deploys
+after exact-head review. Follow
 [Run dap in 10 minutes](self-host.md) to deploy it on your own account,
 create a room, and invite another device. This page describes the service
 settings and the GitHub setup order.
