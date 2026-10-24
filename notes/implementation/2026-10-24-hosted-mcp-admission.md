@@ -60,9 +60,34 @@ does not replace an earlier failure.
 
 Whole-budget V2 evidence is retained at
 `/private/tmp/artroom-security-r5-budget-validation-20261024-v2/`.
-Controls and the final ordinary gate are pending. No final pass, complete
-compatibility result, or hosted rollout is claimed. Root will append the
-closed control and gate outcomes before review.
+The next continuation, V7, passed all five affected compiler contexts and
+24 cases: policy 3, native hosted 17, opt-in 1, and index 3. It closed
+naturally at `1d334a7128`, with 97.740 seconds elapsed; its test process
+used 94.68 seconds elapsed and 98.27 CPU seconds. Earlier healthy inventory
+5, errors 7, describe 8, and budget 22 with the one Darwin skip were carried
+without additional focused repeats.
+
+The first target-guard control was inconclusive: one test reached a generic
+Error trap, while another failed by assertion. The original result remains
+recorded. Three existing forbidden-work traps now use `expect.fail`.
+V8 validated that test-only correction at `2f6422a841`: the test compiler
+and all 3 policy cases passed, with 2.215 seconds elapsed overall.
+
+Four separate controls then used those healthy whole-file baselines:
+
+| Removed behavior | Observed failure | Other cases |
+|---|---|---|
+| Shared actual-target admission | Forbidden custody was reached; an ungranted target was accepted. | 1 passed, 2 assertion failures. |
+| Local default-mode alias dispatch | A valid custom alias returned an error. | 2 passed, 1 assertion failure. |
+| Endpoint opt-in predicate | A disabled endpoint answered 401 instead of 404. | 1 assertion failure. |
+| Hosted policy forwarding | The default tool list included `create`. | 16 passed, 1 assertion failure. |
+
+Each control closed naturally with child exit 1 and successful runner exit 0.
+The original source bytes, inode, mode, size, and modification time were
+restored after each run; change time can change. Root reviewed the actual
+assertion diagnostics. No healthy baseline was repeated for these controls.
+Their evidence is under `/private/tmp/artroom-r5-control-*-evidence-20261024-v2/`.
+The final ordinary gate is pending; no hosted rollout is claimed.
 
 ## Rollout and deferred policy
 
