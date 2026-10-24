@@ -81,6 +81,15 @@ and array checks with the required record type. The correction changes only
 that predicate and its import. The test compiler and Vitest body were unrun;
 this failed run is not a baseline. A fresh affected run is still required.
 
+Corrected-source original `86333` passed both Scope compilers, then stopped
+at the first destination case: its scripted mint now used
+`read:provider-token-1`, while the scripted revoke reply still named the old
+ID. The adapter correctly returned no answer for that mismatch. The fixture
+now uses the matching revoke ID; all assertions and production code remain
+unchanged. The other 22 cases were unrun. The production compiler's pass
+carries across this test-and-note-only correction; the test compiler and
+complete affected body still need a fresh run.
+
 The authored witnesses cover unread expiry through a real native alarm,
 read-mint conflict and interrupted-insert recovery, bounded restart-safe
 maintenance, exact fractional end, earlier wake arbitration and preservation

@@ -81,6 +81,7 @@ describe("destination outside adapter; scripted host, platform judgments in memo
     await storage.inside(async (state) => {
       const f = fixture(state.storage.sql);
       f.provider.mintReply = { id: "read:provider-token-1", ends: t(60), plaintext: "private-token-1" };
+      f.provider.revokeReply = { revoked: true, id: "read:provider-token-1" };
       f.branch.confirmed();
       const write = operation(f.branch, "first-head");
       const mint = operation(f.branch, "mint");
