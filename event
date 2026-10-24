@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/implementation/2026-10-24-hosted-mcp-failure-cleanup.md","body":{"commit":"fe4967ca620a5b2b05b60ff6776540fd5eb82a53","path":"notes/implementation/2026-10-24-hosted-mcp-failure-cleanup.md"}}
+{"kind":"artifact","text":"Merge published the current artifact at packages/mcp/src/hosted.ts","body":{"commit":"fe4967ca620a5b2b05b60ff6776540fd5eb82a53","path":"packages/mcp/src/hosted.ts"}}
