@@ -79,7 +79,16 @@ test("a native birth read restores a lost archive alarm without shortening backo
   host.missingMint = true;
   const lane = await alarmFixture(host, undefined, true);
   expect(await lane.alarm()).toBe(true);
+  const first = (await row(lane))!;
+  expect(first.attempts).toBe(1);
+  expect(Date.parse(first.next!) - Date.parse(lane.c.clock.now)).toBe(PROPOSED_BOUNDS.dispatchRetrySeconds * 1000);
+  // A second failed mint keeps the existing Mark cadence, independently
+  // of the new pre-Mark capacity counter.
+  lane.c.clock.now = first.next!; host.missingMint = true;
+  await lane.restart(); expect(await lane.alarm()).toBe(true);
   const pending = (await row(lane))!;
+  expect(pending.attempts).toBe(2); expect(pending.pending).toEqual(first.pending);
+  expect(Date.parse(pending.next!) - Date.parse(lane.c.clock.now)).toBe(PROPOSED_BOUNDS.dispatchRetrySeconds * 2 * 1000);
   expect(pending.pending).not.toBeNull(); expect(pending.confirmed).toBeNull();
   expect(pending.next).not.toBeNull();
   const next = Date.parse(pending.next!), head = await lane.head();
@@ -147,12 +156,17 @@ test("a pre-Mark target failure survives eviction and new native input without l
     const lane = await alarmFixture(host, async () => { host.targets++; if (!ready) throw new Error("TEST PRIVATE ERROR SENTINEL"); return archiveRepository; });
     const before = await lane.head(); expect(await lane.alarm()).toBe(true); expect(await row(lane)).toBeNull();
     const next = await lane.inside(state => state.storage.getAlarm()); expect(next).not.toBeNull();
+    expect(next! - Date.parse(lane.c.clock.now)).toBe(PROPOSED_BOUNDS.dispatchRetrySeconds * 1000);
     await lane.restart();
     await lane.did(rita, "offer", { fields: { intent: 0 }, expected: { intent: 1 } });
     expect(await lane.inside(state => state.storage.getAlarm())).toBe(next);
     expect(await lane.alarm()).toBe(true); expect(host.targets).toBe(1); expect(host.mintCalls).toBe(0);
-    ready = true; lane.c.clock.now = timeOf(next!); await lane.restart();
-    expect(await lane.alarm()).toBe(true); expect(host.sends).toHaveLength(1); expect(host.targets).toBe(2);
+    lane.c.clock.now = timeOf(next!); await lane.restart();
+    expect(await lane.alarm()).toBe(true); expect(host.targets).toBe(2);
+    const second = await lane.alarmAt();
+    expect(second! - Date.parse(lane.c.clock.now)).toBe(PROPOSED_BOUNDS.dispatchRetrySeconds * 1000);
+    ready = true; lane.c.clock.now = timeOf(second!); await lane.restart();
+    expect(await lane.alarm()).toBe(true); expect(host.sends).toHaveLength(1); expect(host.targets).toBe(3);
     expect((await row(lane))?.confirmed?.through.seq).toBeGreaterThan(before.seq);
     fixtureArchiveWiring.delete(lane.name);
 
@@ -191,7 +205,7 @@ test("a pre-Mark target failure survives eviction and new native input without l
     console.info = (...args: unknown[]) => { if (args[0] === "archive-pass-diagnostic-v1") { loggerCalls++; throw new Error("TEST LOGGER FAILURE"); } originalInfo(...args); };
     expect(await lane.inside(state => driver(lane, state, host).run())).toEqual({ state: "idle", next: null });
     expect(loggerCalls).toBe(1); expect(await row(lane)).toEqual(confirmed); expect(await lane.head()).toEqual(head);
-    expect(host.sends).toHaveLength(1); expect(host.mintCalls).toBe(1); expect(host.targets).toBe(2);
+    expect(host.sends).toHaveLength(1); expect(host.mintCalls).toBe(1); expect(host.targets).toBe(3);
   } finally { console.info = originalInfo; }
 });
 
@@ -241,7 +255,7 @@ test.each([0, 1])("a native archive shortage at %s entries retries the same head
   const retryLane = await alarmFixture(retryHost, undefined, false, { budget: () => {
     const budget = budgets.length === 0 ? makeShortage() : new ArchiveBudget(); budgets.push(budget); return budget;
   } });
-  const before = await retryLane.head(), due = timeOf(Date.parse(retryLane.c.clock.now) + PROPOSED_BOUNDS.dispatchRetrySeconds * 1000);
+  const before = await retryLane.head(), due = timeOf(Date.parse(retryLane.c.clock.now) + PROPOSED_BOUNDS.dispatchRetrySeconds * 2 * 1000);
   expect(await retryLane.alarm()).toBe(true);
   expect(budgets).toHaveLength(1);
   const shortage = budgets[0]!; expect(() => shortage.check()).not.toThrow();
@@ -275,6 +289,44 @@ test.each([0, 1])("a native archive shortage at %s entries retries the same head
   console.info("archive-capacity-deferral-witness", { entries, limited, quotes, spent, due,
     confirmed: (await row(retryLane))!.confirmed!.through,
     qualification: "Actual Native alarms, persisted wake, eviction and confirmation; only the first pass lowers the existing entries allowance. Host, credentials and policy admission remain TEST stand-ins. No hosted cancellation cause or recovery is established." });
+});
+
+// Real Native alarms and eviction; the existing host and policy are TEST
+// stand-ins. Literal observed delays distinguish reset, escalation and cap.
+test("capacity deferrals survive eviction, cap at five minutes and reset after progress", async () => {
+  const host = new ScriptedHost("sha1"); let shortage = true;
+  const lane = await alarmFixture(host, undefined, false, { budget: () => new ArchiveBudget(shortage ? { entries: 0 } : {}) });
+  const head = await lane.head(), delays = [2, 4, 8, 16, 32, 64, 128, 256, 300, 300, 300];
+  let deferred: Awaited<ReturnType<typeof row>> = null;
+  for (const [index, seconds] of delays.entries()) {
+    const now = Date.parse(lane.c.clock.now);
+    expect(await lane.alarm()).toBe(true);
+    const actual = (await row(lane))!;
+    expect(actual).toMatchObject({ confirmed: null, pending: null, attempts: 0, stopped: null, next: null });
+    if (deferred) expect(actual).toEqual(deferred);
+    deferred = actual;
+    const wake = await lane.inside(state => JSON.parse(state.storage.sql.exec<{ v: string }>("SELECT v FROM meta WHERE k = 'archive-wake-1'").one().v));
+    expect(wake).toEqual({ capacityDeferrals: index + 1, pending: true, stopped: false, next: timeOf(now + seconds * 1000) });
+    expect(await lane.alarmAt()).toBe(now + seconds * 1000);
+    expect(host.sends).toEqual([]); expect(host.mintCalls).toBe(0); expect(await lane.head()).toEqual(head);
+    // A fresh activation reads the persisted count, not a driver field.
+    lane.c.clock.now = wake.next; await lane.restart();
+  }
+  shortage = false;
+  expect(await lane.alarm()).toBe(true);
+  expect((await row(lane))!).toMatchObject({ confirmed: { through: head }, pending: null, stopped: null });
+  expect(host.sends).toHaveLength(1);
+  const cleared = await lane.inside(state => JSON.parse(state.storage.sql.exec<{ v: string }>("SELECT v FROM meta WHERE k = 'archive-wake-1'").one().v));
+  expect(cleared).toEqual({ pending: false, stopped: false, next: null });
+  await lane.did(rita, "remark", { on: 0, fields: { text: "a new prefix after capacity progress" } });
+  shortage = true;
+  const now = Date.parse(lane.c.clock.now);
+  expect(await lane.alarm()).toBe(true);
+  const reset = await lane.inside(state => JSON.parse(state.storage.sql.exec<{ v: string }>("SELECT v FROM meta WHERE k = 'archive-wake-1'").one().v));
+  expect(reset).toEqual({ capacityDeferrals: 1, pending: true, stopped: false, next: timeOf(now + 2000) });
+  expect(await lane.alarmAt()).toBe(now + 2000);
+  expect((await row(lane))!).toMatchObject({ confirmed: { through: head }, pending: null, stopped: null });
+  expect(host.sends).toHaveLength(1);
 });
 
 test("a native archive null transfer forecast remains stopped without a wake or Mark", async context => {
