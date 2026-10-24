@@ -65,7 +65,7 @@ test("actual-target standing and definition selection refuse before signing, cus
   // Both targets have the same native definition. Only their memberships differ.
   const signer = fixedSigner(29), peer = new StandIn(signer.key, "agent", ["rules.publish"]);
   const bMembers = structuredClone(peer.scopes.get(peer.membership.scope)!.items);
-  bMembers[0]!.values["agentActions"] = [];
+  bMembers[0] = { ...bMembers[0]!, values: { ...bMembers[0]!.values, agentActions: [] } };
   const membershipB = peer.add("membership", "platform:membership@2", bMembers);
   const rulesB = peer.add("rules", "platform:rules@2", structuredClone(peer.scopes.get(peer.rules.scope)!.items));
   const signedBytes: string[] = [], custody = memoryStore();
@@ -80,7 +80,8 @@ test("actual-target standing and definition selection refuse before signing, cus
     expect(result.structuredContent).toEqual({ error: "unknown-tool", message: "No tool is named publish in this list.", next: "Call tools/list." });
   }
   // Standing is read anew after an earlier list; the peer is scripted, not a native grant oracle.
-  peer.scopes.get(peer.membership.scope)!.items[0]!.values["agentActions"] = [];
+  const activeMembership = peer.scopes.get(peer.membership.scope)!;
+  activeMembership.items[0] = { ...activeMembership.items[0]!, values: { ...activeMembership.items[0]!.values, agentActions: [] } };
   const withdrawn = await service.call("rules.publish", { on: 0, fields: publishFields, idempotencyKey: "standing-withdrawn" });
   expect(withdrawn.structuredContent["error"]).toBe("unknown-tool");
   expect(signedBytes.some(bytes => bytes.includes('"kind":"publish"'))).toBe(false);
