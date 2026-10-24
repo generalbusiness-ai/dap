@@ -8,10 +8,10 @@ import { env, runInDurableObject } from "cloudflare:test";
 import { expect, inject, onTestFinished, test } from "vitest";
 import { PROPOSED_BOUNDS, type FactRef } from "@generalbusiness/dap-contract";
 import { FLOOR_WINDOW } from "@generalbusiness/dap-derive";
-import { canonicalize, intentDigest, isSeed, scopeIdOf, timeMs, timeOf, unb64url } from "@generalbusiness/dap-bytes";
+import { canonicalize, digestBytes, intentDigest, isSeed, scopeIdOf, timeMs, timeOf, unb64url, utf8 } from "@generalbusiness/dap-bytes";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { growArchivePolicies } from "../../../apps/room/archive-policy.ts";
-import { buildJournalPass } from "@generalbusiness/dap-git/journal";
+import { buildJournalPass, captureJournalParentFrontier } from "@generalbusiness/dap-git/journal";
 import { ARCHIVE_BOUNDS, ArchiveBudget } from "../src/archive-budget.ts";
 import { planLegacyArchiveAnchors, planPublishedArchivePass, planRootPublishedArchivePass, rebuildArchivePass } from "../src/archive-build.ts";
 import { fixtureArchiveTargetIn } from "../src/archive-target.ts";
@@ -24,6 +24,7 @@ import { readNativeBirth } from "../src/native-birth.ts";
 import { archiveInput } from "../src/archive-input.ts";
 import { inventoryArchive } from "../src/archive-inventory.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
+import { ArchiveFrontiers } from "../src/archive-frontier-store.ts";
 import { SqliteStore, type Sql } from "../src/sqlite.ts";
 import { indexedScopes, ScopeIndexRows, SCOPE_INDEX_NAME } from "../src/scope-index.ts";
 import { api } from "../src/worker.ts";
@@ -64,6 +65,31 @@ test("Native legacy archive receipt blocks the floor until a real backfill pass 
     expect(rows.confirm(built.archive.commit).confirmed).toEqual({ commit: built.archive.commit, through, layout: 2 });
     return built.archive;
   });
+  // This floor/backfill fixture starts with valid pre-existing native
+  // parent metadata. Its 109-entry complete closure is intentionally too
+  // large for bounded transport bootstrap; the separate bootstrap cases
+  // cover missing-state migration. A frontier is never publication authority.
+  await lane.inside(async state => {
+    const sql = archiveSql(state), rows = new ArchiveRows(sql, lane.at), before = rows.load()!;
+    const budget = new ArchiveBudget();
+    budget.spend({ metadata: 4096 + legacy.objects.length * 128, inputWork: 16 * 1024 });
+    const identity = { at: lane.at, format: "sha1" as const, repository: digestBytes(utf8(canonicalize(archiveRepository))) };
+    const frontiers = new ArchiveFrontiers(sql, identity), context = frontiers.beginConfirmedBootstrap(budget);
+    expect(context).not.toBeNull(); if (context === null) throw Error("Exact legacy receipt required");
+    const held = new Map(legacy.objects.map(object => [object.id, object]));
+    const captured = await captureJournalParentFrontier(context.binding, { object: async (id, limit) => {
+      const object = held.get(id);
+      return object ? { type: object.type, size: object.data.length, data: object.data.length <= limit ? object.data : null } : null;
+    } }, budget);
+    const prepared = await frontiers.prepareConfirmedBootstrap(context, captured, budget);
+    frontiers.installConfirmedBootstrap(prepared, budget);
+    expect(rows.load()).toEqual(before); // Receipt, missing publication, wake and Mark are untouched.
+    expect(sql.exec("SELECT k FROM meta WHERE k IN (?, ?) ORDER BY k", "archive-frontier-confirmed-1", "archive-frontier-pending-1")
+      .toArray().map(row => row["k"])).toEqual(["archive-frontier-confirmed-1"]);
+    const base = await frontiers.readConfirmed({ ...identity, commit: legacy.commit, through }, budget);
+    expect(base?.frontier).toMatchObject({ ...identity, commit: legacy.commit, through });
+    expect(base?.frontier.objects).toHaveLength(11);
+  });
   const host = new ScriptedArchiveHost("sha1", () => lane.c.clock.now);
   for (const object of legacy.objects) host.data.set(object.id, object);
   host.pointer = legacy.commit;
@@ -99,6 +125,7 @@ test("Native legacy archive receipt blocks the floor until a real backfill pass 
     return { confirmed: row?.confirmed, stopped: row?.stopped, floor: store.floor(),
       count: state.storage.sql.exec("SELECT COUNT(*) AS n FROM entry").one()["n"] };
   });
+  expect(host.closureReads).toBe(0); // This witness exercised native dispatch, not oversized transport bootstrap.
   expect(observed.stopped).toBeNull();
   expect(observed.confirmed).toMatchObject({ layout: 2, anchorsPublished: true });
   expect(observed.floor?.floor).toBeGreaterThan(0);
