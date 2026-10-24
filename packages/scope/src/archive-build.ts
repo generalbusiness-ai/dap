@@ -102,6 +102,7 @@ function replayInput(native: ReturnType<typeof archiveInput>, selection: Constru
 export async function planLegacyArchiveAnchors(sql: Sql, context: { readonly row: ArchiveRow; readonly bounds: Bounds;
   readonly policies: ArchivePolicyRegistry; readonly parent: Parent; readonly legacyAnchorParent?: NonNullable<Parent>;
   readonly fixtureSources?: FixtureArchiveSourcePins; readonly replayScopes?: readonly ScopeRef[];
+  readonly preparation?: JournalPassPreparation;
   readonly prepareSources?: (seq: number, budget: ArchiveBudget) => Promise<void> }, budget: ArchiveBudget): Promise<JournalLegacyAnchors | undefined> {
   const old = context.row.confirmed;
   if (context.legacyAnchorParent !== undefined && (!old || old.layout !== 2 || old.anchorsPublished === true
@@ -114,7 +115,8 @@ export async function planLegacyArchiveAnchors(sql: Sql, context: { readonly row
   // count no longer bounds a signer's authority or an observation head.
   // No missing-object fallback: the trusted driver supplies this separate
   // original bounded remote port only for the unpublished receipt transition.
-  await journalLegacyCopyCount({ format: context.row.format, at, through, parent: metadataParent, budget });
+  await journalLegacyCopyCount({ format: context.row.format, at, through, parent: metadataParent, budget,
+    ...(context.preparation ? { preparation: context.preparation } : {}) });
   if (context.prepareSources) for (let seq = 0; seq <= through.seq; seq++) await context.prepareSources(seq, budget);
   const selected = inventoryArchiveRoot(sql, at, through, context.bounds, context.policies, budget, context.fixtureSources);
   if (!selected.ok) throw new ArchiveStopped(selected.reason === "limit" || selected.reason === "timeout" ? selected.reason : "unavailable");

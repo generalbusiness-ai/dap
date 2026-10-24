@@ -6,6 +6,7 @@ import { JournalObjectReader, journalFormat, journalId, type JournalFormat, type
 import { readJournalPassParent } from "./journal-v2-parent.ts";
 import { JOURNAL_V2_LAST_POSITION, journalV2PassPath, readJournalV2Path } from "./journal-v2-path.ts";
 import { sameJournalScope } from "./journal-selection.ts";
+import { countJournalLegacyCopies } from "./journal-anchor-legacy-count.ts";
 import { JournalV2TreePatch, type JournalV2PlannedFile, type JournalV2PatchForecast } from "./journal-v2-tree.ts";
 import { JournalLayoutRefusal, JournalWork, refuseJournal, type JournalBudget, type JournalCost, type JournalLayoutReason } from "./journal-work.ts";
 
@@ -28,6 +29,7 @@ export type JournalPassPreparationResult = { readonly ok: true; readonly prepara
 
 export class JournalPassPreparation {
   #used = false;
+  #busy = false;
   readonly #patch: JournalV2TreePatch;
   readonly #metadataCost: JournalCost;
   private constructor(readonly format: JournalFormat, readonly at: ScopeRef, readonly after: Head | null,
@@ -62,12 +64,38 @@ export class JournalPassPreparation {
       return { ok: false, reason: reason === "limit" || reason === "timeout" ? reason : "unavailable" };
     }
   }
+  /** Read prior-pass manifests through this exact immutable parent. Already
+   * parsed baseline trees are reused; unseen old directories and every
+   * manifest still use the separately supplied bounded remote reader.
+   * This does not stage files, publish anchors or validate local entries.
+   * Its work remains outside metadataCost(), like standalone legacy reads. */
+  async legacyCopyCount(options: { readonly format: JournalFormat; readonly at: ScopeRef; readonly through: Head;
+    readonly parent: { readonly id: string; readonly source: JournalObjectSource }; readonly budget: JournalBudget }): Promise<number> {
+    if (!(#used in this)) return refuseJournal("parent");
+    this.work.check();
+    if (this.#used || this.#busy) return refuseJournal("unavailable");
+    const through = this.after;
+    if (through === null || options.budget !== this.work.budget || options.format !== this.format
+      || options.parent.id !== this.parent || !sameJournalScope(options.at, this.at)
+      || options.through.seq !== through.seq || options.through.hash !== through.hash) return refuseJournal("parent");
+    const reader = new JournalObjectReader(this.format, options.parent.source, this.work);
+    this.#busy = true;
+    try {
+      return await countJournalLegacyCopies(reader, through, this.work, first => {
+        // All pass paths have one fixed <=128-unit spelling. Pay before
+        // constructing that spelling; priorFile pays its split/lookup work.
+        this.work.metadata(512); this.work.input(512);
+        return this.#patch.priorFile(journalV2PassPath(first), reader);
+      });
+    } finally { this.#busy = false; }
+  }
   /** Structured unique deltas only, outside a native synchronous frame.
    * Registration cannot select a body; final selection still binds bytes. */
   async prepare(paths: readonly string[]): Promise<void> {
     this.work.check();
-    if (this.#used) return refuseJournal("unavailable");
+    if (this.#used || this.#busy) return refuseJournal("unavailable");
     const before = this.work.budget.admitted();
+    this.#busy = true;
     try {
       this.work.metadata(paths.length * 64);
       for (const path of paths) {
@@ -80,7 +108,8 @@ export class JournalPassPreparation {
       }
       await this.#patch.prepare(paths);
     } finally {
-      addPreparationCost(this.#metadataCost, before, this.work.budget.admitted());
+      try { addPreparationCost(this.#metadataCost, before, this.work.budget.admitted()); }
+      finally { this.#busy = false; }
     }
   }
   /** Exact work inside settled preparation/forecast calls only. Reporting this
@@ -91,7 +120,7 @@ export class JournalPassPreparation {
   /** Patch construction only, under this same receipt/format/work. It is
    * not the complete native pass's finish forecast or an allowance. */
   forecast(files: readonly JournalV2PlannedFile[]): JournalV2PatchForecast {
-    this.work.check(); if (this.#used) return refuseJournal("unavailable");
+    this.work.check(); if (this.#used || this.#busy) return refuseJournal("unavailable");
     const before = this.work.budget.admitted();
     try { return this.#patch.forecast(this.format, files); }
     finally { addPreparationCost(this.#metadataCost, before, this.work.budget.admitted()); }
@@ -100,7 +129,7 @@ export class JournalPassPreparation {
    * as admission evidence. Every final payload/maker debit is still owed. */
   consume(format: JournalFormat, at: ScopeRef, after: Head | null, parent: string | null, budget: JournalBudget): JournalV2TreePatch {
     this.work.check();
-    if (this.#used) return refuseJournal("unavailable");
+    if (this.#used || this.#busy) return refuseJournal("unavailable");
     this.#used = true;
     if (this.work.budget !== budget || format !== this.format || parent !== this.parent || !sameJournalScope(at, this.at)
       || (this.after === null ? after !== null : after === null || after.seq !== this.after.seq || after.hash !== this.after.hash)) return refuseJournal("parent");

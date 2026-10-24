@@ -57,6 +57,7 @@ export async function journalV2File(reader: JournalObjectReader, tree: string, p
  * This supplies no payload admission or complete-parent closure proof. */
 export class JournalV2TreePatch {
   readonly #root: Change;
+  #prior: Map<string, Change> | null = null;
   #preparing = false;
   #finished = false;
   #staged: { readonly path: string; readonly id: string }[] | null = null;
@@ -66,15 +67,58 @@ export class JournalV2TreePatch {
     if (reader !== null && reader.work !== work) refuseJournal("parent");
     this.#root = change(parentTree, "", 0);
   }
-  async #load(node: Change): Promise<void> {
+  async #load(node: Change, reader: JournalObjectReader | null = this.reader): Promise<void> {
     this.work.check();
     if (node.rows !== null) return;
     this.work.depth(node.depth); this.work.budget.spend({ nodes: 1 });
-    const body = node.previous === null ? null : await this.reader!.read(node.previous, "tree", journalV2TreeBytes(node.prefix));
-    const before = body === null ? [] : this.reader!.tree(body);
+    const body = node.previous === null ? null : await reader!.read(node.previous, "tree", journalV2TreeBytes(node.prefix));
+    const before = body === null ? [] : reader!.tree(body);
     if (before.length > maximumRows(node.prefix)) return this.work.stop();
     node.rows = new Map(before.map(row => [row.name, row]));
     node.baseBytes = body?.length ?? 0;
+  }
+  /** Read only the original tree's file edge. Cached baseline maps carry
+   * their original hash/grammar checks; unseen directories are loaded and
+   * charged through this exact-work reader. Never consult staged files or
+   * activate a node, and never replace an existing immutable edge. */
+  async priorFile(path: string, reader: JournalObjectReader): Promise<string | null> {
+    this.work.check();
+    if (this.#finished || this.#preparing || this.#staged !== null || this.#root.rows === null) return refuseJournal("unavailable");
+    if (this.reader === null || reader.work !== this.work || reader.format !== this.reader.format) return refuseJournal("parent");
+    if (typeof path !== "string" || path.length > 1024) return refuseJournal("tree");
+    this.work.metadata(128 + path.length * 4); this.work.input(path.length, 4);
+    const named = readJournalV2Path(path);
+    if (!named || named.kind !== "pass") return refuseJournal("tree");
+    this.#preparing = true;
+    try {
+      const parts = path.split("/");
+      let node = this.#root;
+      for (let index = 0; index < parts.length; index++) {
+        this.work.check();
+        const part = parts[index]!, row = node.rows!.get(part);
+        if (!row) return null;
+        if (index === parts.length - 1) return row.mode === "100644" ? row.id : refuseJournal("tree", path);
+        if (row.mode !== "40000") return refuseJournal("tree", path);
+        // Keep read-only discoveries outside write children: forecast and
+        // emit must not acquire extra inactive edges to scan later.
+        let child = node.children.get(part);
+        if (!child) {
+          this.work.metadata(128 + (node.prefix.length + part.length + 1) * 2);
+          this.work.input(node.prefix.length + part.length + 1, 2);
+          const prefix = node.prefix + part + "/";
+          if (this.#prior === null) { this.work.metadata(128); this.#prior = new Map(); }
+          child = this.#prior.get(prefix);
+          if (!child) {
+            this.work.metadata(128 + part.length);
+            child = change(row.id, prefix, node.depth + 1);
+            this.#prior.set(prefix, child);
+          }
+        }
+        if (child.previous !== row.id) return refuseJournal("parent");
+        await this.#load(child, reader); node = child;
+      }
+      return null;
+    } finally { this.#preparing = false; }
   }
   /** New unique path deltas only. No file data is supplied or read here.
    * Await each call before starting another; no work may be detached. */

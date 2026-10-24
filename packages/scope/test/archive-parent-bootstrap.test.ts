@@ -188,9 +188,9 @@ test("missing v2 parent state seeds once, publishes legacy anchors and then appe
   expect(appended.confirmed).toMatchObject({ layout: 2, through: later });
   expect(appended.confirmed?.commit).not.toBe(receipt.commit); expect(appended.pending).toBeNull();
   const legacyReads = host.reads.slice(oldReads.length);
-  // The one-pass old shape needs its eleven-object parent witness plus the
-  // final pass directory and manifest. Native append must not reread it too.
-  expect(legacyReads).toHaveLength(13);
+  // Paid native preparation reuses the eleven-object baseline witness.
+  // Only the old pass directory and manifest need this remote transition.
+  expect(legacyReads).toHaveLength(2);
   expect(new Set(legacyReads.map(read => read.id)).size).toBe(legacyReads.length);
   expect(legacyReads.some(read => read.type === "blob" && read.maximum === JOURNAL_SELECTION_BYTES)).toBe(true);
   expect(legacyReads.every(read => seed.objects.some(object => object.id === read.id))).toBe(true);
