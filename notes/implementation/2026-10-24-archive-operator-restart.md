@@ -61,8 +61,9 @@ the deployment-setting stand-in. Host and deployment authority remain
 TEST stand-ins; no Cloudflare deployment control plane or hosted recovery
 is exercised. The updated diagnostic still exposes no raw Mark payload.
 The whole-file witnesses passed across the retained continuations below.
-The single control passed its distinguishing assertion below; the ordinary
-gate remains pending. The maintained
+The single control reached its distinguishing assertion below, and the
+ordinary gate has now passed. Exact-head review and deployment remain
+pending. The maintained
 producer supplied seven actual owner seals for eight slots, including an
 explicit row for the new directive parser.
 
@@ -71,7 +72,8 @@ fixture wiring. They do not directly compile the Grow deployment wrapper;
 its one-line setting forwarding passed a separate strict compiler check.
 The planned focused cases cover the changed archive
 witnesses and bounded-read regressions, not every shared-worker importer.
-The ordinary gate remains required.
+The completed ordinary gate below covers the integrated repository;
+the separate direct Grow compiler result remains distinct.
 
 The private dependency copy completed as original `62109`, without an
 install. The maintained compatibility check passed once and left the
@@ -184,9 +186,62 @@ approved Main source; the map adds only its two MCP values. Because that
 incoming code changes the Grow entry's transitive dependencies, the prior
 Grow pass alone does not cover this union. One justified direct strict
 entry recheck passed at the integrated head, with unchanged configuration
-and owner, at 0.78 seconds wall and 1.84 seconds CPU. The ordinary gate
-will check the integrated Scope contexts and broader bodies. This note
+and owner, at 0.78 seconds wall and 1.84 seconds CPU. The ordinary gate below
+checked the integrated Scope contexts and broader bodies. This note
 is the only change after that recheck.
+
+## Ordinary gate
+
+Original `83102` completed naturally with exit 0 at
+`bc668d687f0edd16923824f1b774b612671bf4db`, tree
+`4e234b11ab7a44616d58d98624cc0e17633b921a`. All eight gate stages passed,
+including the complete maintained typecheck stage. The maintained pool
+compatibility step was a no-op on the adopted bundle, and the kernel
+checker reported zero refusals. Vitest retained 3,551 unique final case
+IDs across 498 files: 3,548 passed and three skipped. There were no failed
+cases or unhandled errors. The subsequent Node 39 and Counting 55 blocks
+passed in full, including their existing startup, timeout and teardown
+witnesses. No extra runtime was launched for this audit.
+
+All 43 affected archive cases passed in this ordinary gate: driver 19,
+row 9, operator 10, owned item-query 3 and projection ownership 2. This
+successful gate is separate from the earlier composed affected evidence;
+it does not relabel any original failed invocation or remove its callback
+qualification.
+
+The raw reporter has 3,527 distinct ready IDs and 3,505 distinct result
+IDs. Twenty-four terminal-passed cases lack ready callbacks and 46 lack
+result callbacks. There are no duplicate ready, result or final IDs, and
+no callback identity or state contradicts its terminal row. The reporter
+has no separate collected-case event. Its run-start count and final
+module-derived identities agree on 498 files; no collected callback
+vector is invented.
+
+The gate runner's before and after records match exactly: clean head and
+tree, lock file, adoption stamp, and Node/npm descriptors. Installation
+was skipped for the verified existing dependency view. All 17 terminal
+stage copies match their recorded original hashes and sizes. The runner
+records fixed Node/npm, PATH and launch-environment hashes, without
+filters, retries or a timeout. These checkpoint boundaries do not prove
+a full physical dependency-pool or continuous environment/memory lifetime.
+The simple ordinary runner does not bind mutable Main references; the
+control's separate fixed-ref proof above remains scoped to that control.
+
+The external gate owner measured 1,358.33 seconds wall and 1,558.00 seconds
+CPU, at printed 0.01-second precision. Its npm child measured
+1,358.2006579589797 seconds wall and 1,557.887669 seconds CPU. Child and
+stage costs are nested and are not added again. Preparation, earlier
+validation and review are outside this gate span. The independent bounded
+audit, exact terminal and Node identities, callback gaps and finite raw
+input pins are held at
+`/private/tmp/artroom-archive-operator-restart-gate-independent-audit-20261024-v1/manifest.json`.
+
+Only this implementation note changes after the gate. Source, tests and
+seals remain unchanged from the tested tree. Under `docs/testing.md`, the
+documentation-only successor carries this gate without a repeat; the
+final documentation tree hash must accompany its commit. Review and the
+planner's identity-bound deployment decision remain pending. No hosted
+restart, recovered archive or deployment is claimed by this validation.
 
 These costs were observed on macOS 27.0.1 arm64 with the existing private
 dependency pool and caches. Load and cache temperature were uncontrolled.
