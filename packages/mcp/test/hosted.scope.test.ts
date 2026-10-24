@@ -1191,7 +1191,13 @@ test("legacy hosted bearer migration redacts all three SQLite answers once and r
     expect(before.control[0]!["answer"]).toBe(legacyText);
     expect(beforeRegistry.control[0]!["answer"]).toBe(legacyText);
     await agentStub(fresh.agent).reset();
-    await expect(agentStub(fresh.agent).used()).rejects.toThrow("scripted migration write");
+    const migrationFailure = await runInDurableObject(agent, instance => {
+      try { (instance as PlatformMcpAgent).used(); }
+      catch (error) { return { threw: true, message: error instanceof Error ? error.message : String(error) }; }
+      return { threw: false, message: null };
+    });
+    expect(migrationFailure.threw, "the actual migration write must fail inside its owning object").toBe(true);
+    expect(migrationFailure.message).toContain("scripted migration write");
     expect(await agentSnapshot(), "the failed last write rolls back column, answers, credit and marker together").toEqual(before);
     await runInDurableObject(agent, (_instance, state) => state.storage.sql.exec("DROP TRIGGER r5_migration_abort").toArray());
     await agentStub(fresh.agent).used();

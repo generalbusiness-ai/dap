@@ -3,10 +3,11 @@
 This implementation covers R5C under child request `a3e54dcf6aa8fd305c5cffca4ef65a62e6100462` and
 promise `fb529297627a453b7f844979779ab0b27867fd15`. Planner decision
 `855dd86db35a986ce2b09eafcffd7fb4bc3b661e` fixes the cutover and stream
-policy. Affected validation remains failed: all five compiler contexts have
-passed, but no healthy test body or file has been established. Controls,
-gate, review and deployment remain pending. This note claims no completed
-parent R5.
+policy. All five compiler contexts and all 31 affected assertions have
+passed, but affected validation remains failed because its latest run had
+one unhandled rejection. No healthy affected baseline is established.
+Controls, gate, review and deployment remain pending. This note claims no
+completed parent R5.
 
 ## Contract
 
@@ -97,3 +98,18 @@ assertion. Its assertions, explicit abrupt-discard sequence and deadlines
 are unchanged. This cleanup is required for the proposed due-close
 negative control; it is not an observed passing outcome. Controls still
 need a naturally passing affected baseline before allocation.
+
+The continuation `66450` at `a959edc4` passed the MCP test compiler and all
+31 affected assertions. The other four compiler results carried from
+`99714` because their inputs were unchanged. The continuation still failed:
+its deliberate legacy-migration SQL trigger produced one unhandled remote
+rejection despite the test's passing rejection assertion. All 31 assertion
+passes are retained; this is not a healthy affected run or control baseline.
+
+The migration witness now invokes the same actual instance's synchronous
+`used()` method inside `runInDurableObject`. A local catch owns only that
+call's expected failure and returns a tagged result. Assertions outside the
+callback require the failure and its scripted message. The original SQL
+trigger, complete rollback snapshot, retry, one-time budget credit and
+renewal checks remain. No global rejection filter or production change was
+added. This correction has not been compiled or run.
