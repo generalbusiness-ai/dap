@@ -112,6 +112,15 @@ These pages go from understanding to reference.
 | [Test dap](testing.md) | Invariants, focused tests and the checks to run before review. |
 | [Produce the public SDK](public-sdk-release.md) | Build and check the public packages. |
 
-These pages describe the earlier model and are marked inactive. Read
+## Security references
+
+| Page | What it describes |
+|---|---|
+| [Worker entry points and gates](security/entry-points.md) | Public routes, admission checks, and their evidence limits. |
+| [Worker settings and bindings](security/settings.md) | Source readers, parsers, failure behavior, and health visibility. |
+| [Deployment trust boundaries](security/trust-boundaries.md) | Resource authority and sharing across deployment configurations. |
+| [Definition-author security reference](security/definition-authors.md) | Validation refusals, permissive forms, and authority checks. |
+
+The following pages describe the earlier model and are marked inactive. Read
 their status before using them: [Release the packages](release.md),
 [the dap protocol](protocol.md) and [the default policy pack](policy-pack.md).

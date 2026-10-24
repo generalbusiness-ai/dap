@@ -612,6 +612,23 @@ owners change. This structural test supplies no native authority evidence.
 The in-memory control changes a real route matcher with the inventory fixed.
 The root `npm test` command includes this Node file once.
 
+## Settings inventory
+
+`node --test scripts/security-settings.test.mjs` checks the static inventory in
+[Worker settings and bindings](security/settings.md). The checker follows
+tracked relative and workspace runtime imports from each configured Worker
+entry. It compares configured names and supported environment reads with the
+inventory, and refuses unsupported environment syntax or forwarding rather
+than silently omitting it. The tests compare the displayed lookup with the
+canonical inventory rows and require undocumented source reads and configured
+bindings to fail.
+
+Parser, missing-value, invalid-value, and health descriptions still require
+source review. This structural check does not execute Worker modules or prove
+runtime failure behavior, deployed settings, provider connectivity, or hosted
+authorization. The root `npm test` command includes this file once in its
+explicit `node --test` list after Vitest.
+
 ## Showing that a test distinguishes
 
 When you add or change a guard, show its witness fails without it. Break
