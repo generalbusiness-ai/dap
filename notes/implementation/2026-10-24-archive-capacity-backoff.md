@@ -38,9 +38,9 @@ Null transfer forecasts, hard refusals, unavailable responses, and pending
 Mark retries keep their existing classifications. This change does not
 restart stopped rows or explain a hosted canceled alarm.
 
-## Witnesses and remaining validation
+## Witnesses and validation
 
-The proposed Native alarm witness repeatedly lowers the existing entries
+The Native alarm witness repeatedly lowers the existing entries
 allowance to zero. It checks literal delays through the five-minute cap,
 restarts between attempts, confirms progress under the original allowance,
 then checks that a new shortage starts at two seconds. The host, token,
@@ -120,8 +120,51 @@ composed here before the final backoff gate. The shared wake decoder accepts
 both legacy and capacity-count rows. The actual combined row seal was refreshed
 after integration; the driver and diagnostic owner values are carried unchanged. Its
 current diagnostic projection can keep the same pending, stopped, and
-next fields. The counter does not change those fields' meaning. One
-ordinary gate, exact-head review, and deployment remain pending.
+next fields. The counter does not change those fields' meaning.
+
+The ordinary gate original `37129` completed naturally with exit 0 at
+`c8316204c9c3727da75b3982648846208d9020ad`, tree
+`c716ef173841905af69719d2fa85e22354f58813`. All eight gate stages passed,
+including the complete maintained typecheck stage. The maintained pool
+compatibility step was a no-op on the already adopted bundle, and the
+kernel checker reported zero refusals. Vitest retained 3,546 unique final
+case IDs across 498 files: 3,543 passed and three skipped, with no failures
+or unhandled errors. The subsequent Node 39 and Counting 55 blocks also
+passed in full. The driver 18 and row 8 cases passed again in this ordinary
+gate.
+
+The callback ledger is less complete than those terminal outcomes. It has
+3,529 ready records for 3,528 distinct IDs: one ID has a duplicate ready
+callback, and 18 terminal-passed cases have no ready callback. It has
+3,506 result callbacks, leaving 40 terminal-passed cases without one.
+No callback identity or state contradicts its terminal row, and no final
+or result ID is duplicated. These gaps remain recorded rather than being
+counted as failures or silently filled.
+
+The gate runner's before and after checkpoints match exactly: clean Git
+head and tree, lock file, adoption stamp, and Node/npm descriptors. The
+verified dependency view skipped installation. All 17 copied terminal
+stage artifacts match their recorded original hashes and sizes. This
+small ordinary runner does not add a full physical dependency-pool or
+continuous memory proof, and it does not bind mutable Main references.
+
+The external gate owner measured 1,359.53 seconds wall and 1,560.95 seconds
+CPU at printed 0.01-second precision. This was the local macOS 27.0.1 arm64
+machine, using the verified private dependency view and existing caches.
+System load and cache temperature were not controlled; this is an ordinary
+validation run, not a performance comparison. The npm child measured
+1,359.40 seconds wall and 1,560.84 seconds CPU;
+those and the stage costs are nested details, not additional costs.
+Preparation, earlier validation and edit-to-review time are excluded.
+The independent audit, exact terminal ledger, callback gaps and finite raw
+input pins are held at
+`/private/tmp/artroom-archive-capacity-backoff-gate-independent-audit-20261024-v1/manifest.json`.
+
+This outcome update changes only this implementation note. Source, tests
+and seals remain unchanged from the tested tree above. Under
+`docs/testing.md`, the documentation-only successor carries that gate
+without another run; its final tree hash must accompany the documentation
+commit. Exact-head review and deployment remain pending.
 
 The planner requires this head to land before the separate restart
 transition. The planner then owns one deployment containing capacity
