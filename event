@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d4513e76458162ff0ed08c9c779a42721d51ef20","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-driver.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e8a2e1a3325a5ec2fa1d9674f97f40341cd43cc5","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-24-archive-capacity-backoff.md."}
