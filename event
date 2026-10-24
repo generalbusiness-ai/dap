@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9c81b9ead45aa616e3354a0cfd86f4cbed1d3d28","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/applications/projection-data.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9d67b65c119bb868f0cad56f78b9a13a08c7eaf7","text":"Merge retired a covered predecessor with no successor at its old path."}
