@@ -50,8 +50,22 @@ test("binding: variants, stale descriptors, retirement, collisions and controls"
     // A cached descriptor: with one change lane, change.propose-version is that declaration's alone. After a lane under change3,
     // a call by the cached name on that lane is refused before signing, names the tool that serves it, and the list is derived again.
     expect(await rita.names()).toContain("change.propose-version");
+    const cachedConnection = room.agent("rita, cached descriptor", { secret: rita.secret, config: rita.config, share: true });
+    expect(await cachedConnection.names()).toContain("change.propose-version");
     await open("change.create", { definition: definitionDigest(change3), title: "Under change3", draft: false }, "lane-2");
     const cachedManifest = { base: "a".repeat(40), complete: true, decisions: [], instance: "i-1", integration: "b".repeat(40), selected: [], tree: "c".repeat(40) };
+    // Even on the original declaration, the removed public name is not an
+    // execution capability. Its old identity serves only the stale diagnosis.
+    const cachedHead = (await cachedConnection.ok("inspect", { scope: 1 }))["head"];
+    const cachedSignatures = cachedConnection.signedIntents.length;
+    const cachedStore = cachedConnection.service.custody.store, originalWrite = cachedStore.write;
+    cachedStore.write = async () => expect.fail("a removed public name reached custody");
+    try {
+      const removed = await cachedConnection.call("change.propose-version", { target: 1, fields: cachedManifest, idempotencyKey: "removed-cached-name" });
+      expect([removed.isError, removed.structuredContent["error"]]).toEqual([true, "unknown-tool"]);
+    } finally { cachedStore.write = originalWrite; }
+    expect(cachedConnection.signedIntents).toHaveLength(cachedSignatures);
+    expect((await cachedConnection.ok("inspect", { scope: 1 }))["head"]).toEqual(cachedHead);
     const cached = await rita.call("change.propose-version", { target: 2, fields: cachedManifest, idempotencyKey: "cached" });
     expect([cached.isError, cached.structuredContent["error"]]).toEqual([true, "stale-descriptor"]);
     expect(cached.structuredContent["message"]).toMatch(/The tool for that target is change\.propose-version@[0-9a-f]{8}\./);
