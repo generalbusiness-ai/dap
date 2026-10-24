@@ -24,9 +24,10 @@ import { fixtureArchiveWiring } from "./worker.ts";
 import type { TestScope } from "./worker.ts";
 
 const row = (lane: Lane) => lane.inside(state => new ArchiveRows(archiveSql(state), lane.at).load());
-async function alarmFixture(host: ScriptedHost, resolve = async () => { host.targets++; return archiveRepository; }, factory = false) {
+async function alarmFixture(host: ScriptedHost, resolve = async () => { host.targets++; return archiveRepository; }, factory = false,
+  options: { budget?: () => ArchiveBudget; maxBytes?: number } = {}) {
   const lane = factory ? await createNativeArchiveApplicationLane() : await createNativeArchiveLane({}, {}, archiveDefinition);
-  fixtureArchiveWiring.set(lane.name, { policies: { fixture: "archive-policies", registry: archiveAuthorityPolicies(lane, archivePolicies) }, fixtureSources: archiveAuthorityBasis(lane)!.pins, target: { fixture: "archive-target", resolve }, provider: host });
+  fixtureArchiveWiring.set(lane.name, { policies: { fixture: "archive-policies", registry: archiveAuthorityPolicies(lane, archivePolicies) }, fixtureSources: archiveAuthorityBasis(lane)!.pins, target: { fixture: "archive-target", resolve }, provider: host, ...options });
   onTestFinished(() => { fixtureArchiveWiring.delete(lane.name); });
   await lane.restart();
   await lane.did(rita, "remark", { on: 0, fields: { text: "schedule the fixture archive" } });
@@ -209,6 +210,92 @@ test("confirms a lost reply by read-back with no second commit or journal entry"
 // Invariant: earlier whole entries can complete after actual lookahead has
 // spent work, including the real incremental-send code and Native receipt.
 test("adaptive Native passes reserve writing, incremental sending and confirmation before more lookahead", async context => {
+  const capacity: unknown[] = [];
+  for (const entries of [0, 1]) {
+    const retryHost = new ScriptedHost("sha1"), quotes: { cost: Partial<ArchiveCost>; spent: ArchiveCost; fits: boolean }[] = [];
+    let limited = 0;
+    const makeShortage = () => {
+      const budget = new class extends ArchiveBudget {
+        override lookahead<T>(reserve: Partial<ArchiveCost>, read: () => T) {
+          const result = super.lookahead(reserve, read);
+          if (result.kind === "limited") limited++;
+          return result;
+        }
+        override async lookaheadAsync<T>(reserve: Partial<ArchiveCost>, read: () => Promise<T>) {
+          const result = await super.lookaheadAsync(reserve, read);
+          if (result.kind === "limited") limited++;
+          return result;
+        }
+      }({ entries }), canSpend = budget.canSpend.bind(budget);
+      budget.canSpend = cost => {
+        const fits = canSpend(cost);
+        // Observe the actual complete finish quote, without changing either
+        // its forecast or the original budget's admission decision.
+        if ((cost.entries ?? 0) > 0 && (cost.nodes ?? 0) > 0 && (cost.calls ?? 0) > 0) {
+          if (quotes.length === 8) quotes.shift();
+          quotes.push({ cost: { ...cost }, spent: budget.admitted(), fits });
+        }
+        return fits;
+      };
+      return budget;
+    };
+    const budgets: ArchiveBudget[] = [];
+    const retryLane = await alarmFixture(retryHost, undefined, false, { budget: () => {
+      const budget = budgets.length === 0 ? makeShortage() : new ArchiveBudget(); budgets.push(budget); return budget;
+    } });
+    const before = await retryLane.head(), due = timeOf(Date.parse(retryLane.c.clock.now) + PROPOSED_BOUNDS.dispatchRetrySeconds * 1000);
+    expect(await retryLane.alarm()).toBe(true);
+    expect(budgets).toHaveLength(1);
+    const shortage = budgets[0]!; expect(() => shortage.check()).not.toThrow();
+    const deferred = (await row(retryLane))!;
+    expect(deferred).toMatchObject({ pending: null, confirmed: null, stopped: null, attempts: 0, next: null });
+    expect(await retryLane.inside(state => new ArchiveRows(archiveSql(state), retryLane.at).wake())).toBe(due);
+    expect(await retryLane.alarmAt()).toBe(Date.parse(due));
+    expect(retryHost.mintCalls).toBe(0); expect(retryHost.sends).toEqual([]);
+    expect(await retryLane.head()).toEqual(before);
+    if (entries === 0) {
+      expect(limited, "the first native prefix read must actually exhaust the lowered lookahead allowance").toBeGreaterThan(0);
+      expect(quotes).toEqual([]);
+    } else {
+      // Scouting paid for the first entry. Fresh finishing inventory owes
+      // that entry again, so a real non-null quote cannot fit entries=1.
+      const refused = quotes.find(quote => !quote.fits && quote.spent.entries === 1 && (quote.cost.entries ?? 0) > 0);
+      expect(refused, JSON.stringify({ limited, quotes })).toBeDefined();
+      expect(refused!.spent.entries + refused!.cost.entries!).toBeGreaterThan(entries);
+    }
+    const spent = shortage.admitted();
+    expect(spent.inputWork).toBeGreaterThan(0);
+    for (const key of ["entries", "attempts", "nodes", "calls", "metadata", "inputWork"] as const) {
+      expect(spent[key]).toBeLessThanOrEqual(key === "entries" ? entries : ARCHIVE_BOUNDS[key]);
+    }
+    await retryLane.restart(); retryLane.c.clock.now = due;
+    expect(await row(retryLane)).toEqual(deferred);
+    expect(await retryLane.alarm()).toBe(true); expect(budgets).toHaveLength(2);
+    expect((await row(retryLane))!).toMatchObject({ pending: null, stopped: null, confirmed: { through: before } });
+    expect(retryHost.sends).toHaveLength(1); expect(await retryLane.head()).toEqual(before);
+    expect(shortage.admitted()).toEqual(spent);
+    capacity.push({ entries, limited, quotes, spent, due, confirmed: (await row(retryLane))!.confirmed!.through });
+  }
+  // A byte/layout refusal is not evidence of temporary capacity shortage.
+  // maxBytes=1 makes the real transfer forecast null; it must stay stopped.
+  const hardHost = new ScriptedHost("sha1"), hardBudgets: ArchiveBudget[] = [];
+  let hardQuotes = 0;
+  const hardLane = await alarmFixture(hardHost, undefined, false, { budget: () => {
+    const budget = new ArchiveBudget(), canSpend = budget.canSpend.bind(budget);
+    budget.canSpend = cost => {
+      if ((cost.entries ?? 0) > 0 && (cost.nodes ?? 0) > 0 && (cost.calls ?? 0) > 0) hardQuotes++;
+      return canSpend(cost);
+    };
+    hardBudgets.push(budget); return budget;
+  }, maxBytes: 1 }), hardHead = await hardLane.head();
+  expect(await hardLane.alarm()).toBe(true);
+  expect(hardBudgets).toHaveLength(1);
+  expect((await row(hardLane))!).toMatchObject({ pending: null, confirmed: null, stopped: { reason: "limit" }, attempts: 0, next: null });
+  expect(hardQuotes).toBe(0); expect(hardHost.mintCalls).toBe(0); expect(hardHost.sends).toEqual([]);
+  expect(await hardLane.inside(state => new ArchiveRows(archiveSql(state), hardLane.at).wake())).toBeNull();
+  expect(await hardLane.alarmAt()).toBeNull(); expect(await hardLane.head()).toEqual(hardHead);
+  (context.task.meta as Record<string, unknown>)["capacityDeferral"] = { capacity, hard: { maxBytes: 1, quotes: hardQuotes, spent: hardBudgets[0]!.admitted() },
+    qualification: "Actual Native alarms, persisted wake, eviction and confirmation; only the first pass lowers the existing entries allowance. Host, credentials and policy admission remain TEST stand-ins. No hosted cancellation cause or recovery is established." };
   const lane = await createNativeArchiveLane({}, {}, archiveDefinition), host = new ScriptedHost("sha1");
   await lane.inside(async (_state, instance) => {
     for (let n = 0; n < 300; n++) expect(await (instance as TestScope).checkpoint()).toMatchObject({ answer: "written" });
