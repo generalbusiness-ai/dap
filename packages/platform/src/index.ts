@@ -1,5 +1,6 @@
 import { NATIVE_DECLARATION_PINS, NATIVE_DECLARATION_TEXT } from "./native-declarations.generated.ts";
 import { VERSIONS } from "./native-catalog.ts";
+import { ARCHIVE_DEVICE_APPLICATION_COHORT } from "./archive-binding-wire.ts";
 export { VERSIONS, platform, type Platform } from "./native-catalog.ts";
 export { applicationRoom, applicationInstallation } from "./application-install-reader.ts";
 export { applicationProjectionDeclaration } from "./application-projection-reader.ts";
@@ -34,12 +35,12 @@ export { PARTITION_IDENTITY_POLICY, PARTITION_IDENTITY_BOUNDS, partitionReceiver
 import type { PlatformData, PlatformDefinition } from "@generalbusiness/dap-contract";
 import { destination, destination2, destination4, destination5, destination6, destinationRules4, destinationRules5, destinationRules6 } from "./destination.ts";
 import { inbox } from "./inbox.ts";
-import { MEMBERSHIP, membership, membership5 } from "./membership.ts";
+import { membership, membership5 } from "./membership.ts";
 export { DEMO_REGISTER, DEMO_PURPOSE, WEB_DEMO_COHORT, WEB_DEMO_REGISTER, demoRegister, demoRegisterRules, webDemoRegister } from "./demo-register.ts";
 import { register } from "./register.ts";
 import { directory, directory2, directory7 } from "./directory.ts";
 import { RULES } from "./rules.ts";
-import { RULES_SCOPE, rulesScope, rulesScope4 } from "./rules-scope.ts";
+import { rulesScope, rulesScope4 } from "./rules-scope.ts";
 
 export { inbox, membership, membership5, register, directory, directory2, directory7, destination, destination2, destination4, destination5, destination6, destinationRules4, destinationRules5, destinationRules6 };
 export { isOf, isStandingDestination, pinnedBy, pinnedOf, versionOf } from "./versions.ts";
@@ -75,9 +76,9 @@ export type { Extent, ExtentClass, ExtentJudged, ExtentsAsked, ExtentsJudged, Ho
  * and version.
  */
 
-/** Existing default creation cohort. Supporting application scopes require explicit APPLICATION_COHORT pins. */
+/** New creation defaults only. Existing scopes and explicit cohort pins stay fixed. */
 export const NEWEST: Readonly<Record<string, PlatformDefinition>> = {
-  "platform:inbox": "platform:inbox@1", "platform:membership": MEMBERSHIP, "platform:register": "platform:register@3", "platform:directory": "platform:directory@3", "platform:rules": RULES_SCOPE, "platform:destination": "platform:destination@3",
+  "platform:inbox": ARCHIVE_DEVICE_APPLICATION_COHORT.inbox, "platform:membership": ARCHIVE_DEVICE_APPLICATION_COHORT.membership, "platform:register": ARCHIVE_DEVICE_APPLICATION_COHORT.register, "platform:directory": ARCHIVE_DEVICE_APPLICATION_COHORT.directory, "platform:rules": ARCHIVE_DEVICE_APPLICATION_COHORT.rules, "platform:destination": ARCHIVE_DEVICE_APPLICATION_COHORT.destination,
 };
 
 /** The data of the newest version of each platform definition, by name without the version. */

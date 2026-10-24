@@ -30,16 +30,17 @@ import { applicationRoom, applicationInstallation, applicationProjectionDeclarat
  * refusing one of `production()`.
  */
 
+import { permitsNewPlatformScope, type PlatformCreationPolicy } from "./creation-versions.ts";
 import { demoCreationOffer, type DemoCreationConfig } from "./demo-creation.ts";
 import { DurableObject } from "cloudflare:workers";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { SessionAnswer } from "@generalbusiness/dap-contract";
-import type { Answer, Beside, Bounds, Cursor, DeclaredDefinition, Digest, OutboxId, Entry, Grant, Input, LogPage, OperationId, PlatformDefinition, Read, RetainedInput, ScopeId, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalize, isRecord, digestBytes, isHead, isScopeId, isScopeRef, parseStrict, retainedReadArgument, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
+import type { Answer, Beside, Bounds, Cursor, DeclaredDefinition, Digest, OutboxId, Entry, Grant, Input, LogPage, OperationId, PlatformDefinition, Read, RetainedInput, Seed, ScopeId, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
+import { canonicalize, isRecord, isPlatformDefinition, isSeed, isSignedIntentShape, intentDigest, digestBytes, isHead, isScopeId, isScopeRef, parseStrict, retainedReadArgument, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { isEntryOf, timeMs, timeOf, type Item } from "@generalbusiness/dap-derive";
 import { sourceName } from "@generalbusiness/dap-platform";
 import type { Delivered, StateView } from "@generalbusiness/dap-derive";
-import { Scope, ownOf, type Checkpointed, type Created } from "./core.ts";
+import { Scope, creationKind, ownOf, type Checkpointed, type Created } from "./core.ts";
 import { Deliveries } from "./delivery.ts";
 import { declaredBy, observedAt, routed, sentText, sourced, sourceOrigin, type Sourced } from "./namespace.ts";
 import { JoinLimits, isJoin, type LimitConfig } from "./limits.ts";
@@ -97,6 +98,8 @@ import { background, inOperation, measured, measuredSync, metric, OBSERVED_METHO
  * `limits`: the serving limits of a join, in place of the proposed ones.
  */
 export interface Wiring {
+  /** Absent only for raw engine wiring; null explicitly denies new platform genesis. */
+  platformCreationPolicy?: PlatformCreationPolicy | null;
   /** Internal deployment index; receives only this object's checked stored genesis. */
   registerGenesis?: (proof: import("./scope-index.ts").ScopeRegistration) => Promise<boolean>;
   ports?: Partial<Ports>; bounds?: Bounds; reads?: ReadBounds;
@@ -130,6 +133,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   readonly #store: SqliteStore;
   readonly #registerGenesis: Wiring["registerGenesis"];
   readonly #registrationBytes: number;
+  readonly #platformCreationPolicy: Wiring["platformCreationPolicy"];
   readonly #readSql: Pick<Sql, "exec">;
   readonly #queryFlights: PreparationFlights;
   readonly #itemQueries: ItemQueries;
@@ -177,6 +181,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     const name = ctx.id.name;
     const wiring = this.wiring(name);
     this.#registerGenesis = wiring.registerGenesis;
+    this.#platformCreationPolicy = wiring.platformCreationPolicy;
     const bounds = wiring.bounds ?? PROPOSED_BOUNDS;
     this.#registrationBytes = bounds.entryBytes;
     // Authority note, section 5.4, rule 7: the attempts of one operation are spaced by a backoff, to a cap. The first is due at its
@@ -551,8 +556,29 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     } catch { observe("error"); return false; }
   }
 
+  /** The index cannot establish this exception. Read the actual bounded,
+   * sealed birth and its exact native pin; the native judge still decides
+   * repeat versus mismatch and supplies the original receipt. */
+  #permitsPlatformGenesis(seed: Seed): boolean {
+    if (!isPlatformDefinition(seed.definition) || this.#platformCreationPolicy === undefined
+      || permitsNewPlatformScope(this.#platformCreationPolicy, seed.definition)) return true;
+    const captured = this.#readPreparation.birth();
+    if (!captured || captured.scope.status !== "active" || captured.genesis.decision !== "applied"
+      || captured.pinned.named !== seed.definition || captured.pinned.platform === null
+      || captured.scope.at.scope !== this.#name || captured.scope.at.scope !== scopeIdOf(captured.genesis.seed)
+      || captured.scope.at.kind !== captured.genesis.seed.kind || captured.scope.at.inc !== captured.genesis.inc
+      || canonicalize(captured.genesis.seed) !== canonicalize(seed)) return false;
+    // The admitted canonical body is bounded and hash-checked by birth().
+    if ((parseStrict(captured.birth.bytes) as Entry).prev !== null) return false;
+    return captured.current();
+  }
+
   async create(creation: SignedIntent, definition: DeclaredDefinition | Digest | PlatformDefinition, definitions: readonly DeclaredDefinition[] = [], beside: Beside = {}): Promise<Created> {
     return this.#publicInvoke("create", async () => {
+      if (isPlatformDefinition(definition) && isSignedIntentShape(creation)) {
+        const seed: Seed = { v: 1, kind: creationKind(definition), definition, creator: null, cause: intentDigest(creation.intent), ordinal: 0 };
+        if (!this.#permitsPlatformGenesis(seed)) return { answer: "refused", reason: "unsupported-definition" } as const;
+      }
       const answer = await this.#scope.create(creation, definition, definitions, beside);
       await this.registerKnown(); // after the native commit; failure never changes its answer
       return this.#sent(answer);
@@ -584,6 +610,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     return this.#invoke("dispatch", async () => {
     const refusal = routed(this.#name, this.#store.scope(), envelope);
     if (refusal) return { answer: "routing", reason: refusal };
+    if (isSeed(envelope.to) && !this.#permitsPlatformGenesis(envelope.to)) return { answer: "routing", reason: "not-found" } as const;
     const answer = await this.#deliveries.deliver(envelope);
     if (!isScopeRef(envelope.to)) await this.registerKnown();
     return this.#sent(answer);

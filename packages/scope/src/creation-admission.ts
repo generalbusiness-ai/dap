@@ -1,11 +1,12 @@
 import { readDeployment } from "./deployment-setting.ts";
+import type { PlatformCreationSettings } from "./creation-versions.ts";
 /** Serving policy before a parentless creation addresses a Durable Object.
  * This is not a genesis judgment or a substitute for verified child delivery. */
 import type { Seed, SignedIntent } from "@generalbusiness/dap-contract";
 import { isSignedIntentShape, scopeIdOf, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { artifactsRegisterScope } from "./artifacts-wiring.ts";
 
-export interface CreationAdmission {
+export interface CreationAdmission extends PlatformCreationSettings {
   DEPLOYMENT?: string;
   ARTIFACTS_CONFIG?: string;
   /** Explicit local/test escape hatch. Unset or any value other than "true" is closed when DEPLOYMENT is set. */

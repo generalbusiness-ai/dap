@@ -64,7 +64,7 @@ import { DurableObject, RpcTarget, WorkerEntrypoint } from "cloudflare:workers";
 import { CONTROL_BODY_BYTES, HostedAgent, HostedRegistry, controlOf, hostedMcpTools, type HostedMcpSettings, type AgentPorts, type ControlAnswer, type RegistryPorts } from "@generalbusiness/dap-mcp";
 import { PROPOSED_BOUNDS, ITEM_QUERY_WIRE_BOUNDS } from "@generalbusiness/dap-contract";
 import type { FactRef, Entry, ItemQueryRead, ItemQueryRefusal, Answer, Beside, Cursor, DeclaredDefinition, Digest, OutboxId, Grant, LogPage, PlatformDefinition, Read, ReadRefusal, RetainedInput, ScopeApi, ScopeId, ScopeKind, Seed, SessionAnswer, SessionRefusal, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, parseStrict, readItemQueryReply, utf8, definitionDigest, intentDigest, isScopeId, positionOf, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { b64url, parseStrict, readItemQueryReply, utf8, definitionDigest, intentDigest, isPlatformDefinition, isScopeId, positionOf, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { isObject, type Item } from "@generalbusiness/dap-derive";
 import { creationKind, type Created } from "./core.ts";
 import { repositorySessionMembership, fixedMembership, repositoryAuthority } from "./authority.ts";
@@ -90,6 +90,7 @@ import { isSite, site } from "./site/route.ts";
 import { requestQuery, type RequestPage } from "./request-index.ts";
 import { measuredRequest, OBSERVED_METHODS, operational, operationPlace, unknownTurnMark, type MetricEnvironment, type OperationalIdentity, type ObservedMethod } from "./operational.ts";
 import type { MetricPoint } from "./metrics.ts";
+import { readPlatformCreationPolicy, injectedPlatformCreationPolicy, permitsNewPlatformScope } from "./creation-versions.ts";
 import { admitsParentlessCreation, type CreationAdmission } from "./creation-admission.ts";
 import { indexedScopes, scopeIndex, ScopeIndexRows, type ScopeIndexEnvironment, type ScopeRegistration } from "./scope-index.ts";
 import { admitServing, boundedParentlessIntent, ServingAdmission, type ServingEnvironment, type ServingRequest } from "./serving-admission.ts";
@@ -168,6 +169,7 @@ export interface Api extends ScopeApi {
  * limits of a join, or null when the caller has none.
  */
 export function api(binding: Binding, address: string | null = null, creationAdmission: CreationAdmission & ServingEnvironment = {}): Api {
+  const creationPolicy = injectedPlatformCreationPolicy(creationAdmission);
   const readGate = async (reader: unknown): Promise<{ ok: false; reason: "rate-limited" | "unavailable" | "forbidden" } | null> => {
     if (!presentsSignedRead(reader)) return null;
     // Bound before serializing the RPC. The owner independently verifies it.
@@ -235,6 +237,12 @@ export function api(binding: Binding, address: string | null = null, creationAdm
         const seed: Seed = { v: 1, kind: creationKind(names), definition: names, creator: null, cause: intentDigest(creation.intent), ordinal: 0 };
         if (!admitsParentlessCreation(creationAdmission, creation, seed)) return { answer: "refused", reason: "unauthorized" };
         name = scopeIdOf(seed);
+        if (creationPolicy !== undefined && isPlatformDefinition(names) && !permitsNewPlatformScope(creationPolicy, names)) {
+          // A fixed-index hit permits the native target lookup only.
+          // Its sealed genesis/repeat guard remains authoritative.
+          const index = scopeIndex(creationAdmission);
+          if (!index || await index.has(name, seed.kind) !== true) return { answer: "refused", reason: "unsupported-definition" };
+        }
       } catch {
         return { answer: "refused", reason: "source-unverified" };   // not values that have canonical bytes
       }
@@ -547,6 +555,7 @@ export class DeployedScope<E extends Env = Env> extends ScopeObject<E> {
   protected scopes(): Binding { return indexedScopes(this.env.SCOPES, this.env); }
   protected override wiring(_name: string | undefined): Wiring {
     return {
+      platformCreationPolicy: readPlatformCreationPolicy({ PLATFORM_CREATION_PINS: this.env.PLATFORM_CREATION_PINS }),
       registerGenesis: async proof => scopeIndex(this.env)?.register(proof) ?? false,
       ports: namespace(this.scopes()),
       authority: (given) => repositoryAuthority({ ...given, reader: membershipIn(this.scopes()) }),

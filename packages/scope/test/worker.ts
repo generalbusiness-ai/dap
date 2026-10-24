@@ -30,7 +30,7 @@
  * of a package that runs its own definitions on real scopes.
  */
 
-import { platform } from "@generalbusiness/dap-platform";
+import { platform, VERSIONS } from "@generalbusiness/dap-platform";
 import { lacking } from "@generalbusiness/dap-platform/testing";
 import { scopeIdOf } from "@generalbusiness/dap-bytes";
 import { readApplicationScreenHost } from "@generalbusiness/dap-client/application";
@@ -57,6 +57,19 @@ export class ServingTestService extends ScopeService<Env & { SERVING_INDEX: Dura
 import type { AgentPorts, HostedAgent } from "@generalbusiness/dap-mcp";
 import { outsideOf, owners, wired } from "./outside.ts";
 import type { CreationAdmission } from "../src/creation-admission.ts";
+import { readPlatformCreationPolicy } from "../src/creation-versions.ts";
+
+// Historical-catalog compatibility scaffolding for existing native fixtures.
+// Production-default/invalid-policy witnesses use CreationVersionScope instead.
+const historicalCreationPolicy = readPlatformCreationPolicy({ PLATFORM_CREATION_PINS: JSON.stringify(Object.keys(VERSIONS)) });
+/** Env-only override: all wiring, clock, authority and genesis code is deployed code. */
+export const creationVersionSettings = new Map<string, unknown>();
+export class CreationVersionScope extends DeployedScope {
+  constructor(ctx: DurableObjectState, env: Env) {
+    const name = ctx.id.name ?? "";
+    super(ctx, { ...env, ...(creationVersionSettings.has(name) ? { PLATFORM_CREATION_PINS: creationVersionSettings.get(name) } : {}) });
+  }
+}
 import type { MetricEnvironment } from "../src/operational.ts";
 
 export { ScopeObject };
@@ -99,7 +112,7 @@ export class NetScope extends DeployedScope<NetEnv> {
     const deployed = super.wiring(name);
     const ports = { ...deployed.ports, ...netPorts(net, deployed.ports!.transport!, deployed.ports!.resolver) };
     // The definitions port is the deployed one, whose platform definitions are the platform package's, until a test takes their code away.
-    return { ...(deployed.registerGenesis ? { registerGenesis: deployed.registerGenesis } : {}), bounds: net.sized.get(name ?? "") ?? net.bounds, ports: { ...ports, definitions: codeLost(deployed.ports!.definitions!, () => !net.platformCode) } };
+    return { platformCreationPolicy: historicalCreationPolicy, ...(deployed.registerGenesis ? { registerGenesis: deployed.registerGenesis } : {}), bounds: net.sized.get(name ?? "") ?? net.bounds, ports: { ...ports, definitions: codeLost(deployed.ports!.definitions!, () => !net.platformCode) } };
   }
 }
 
@@ -190,6 +203,7 @@ export class PlatformScope extends DeployedScope<PlatformEnv> {
     const signedReadObserver = signedDiagnosticFor(name);
     return {
       ...(ports?.outside ? rest : deployed),
+      platformCreationPolicy: historicalCreationPolicy,
       // Explicit per-name fixture bounds only; deployed defaults are unchanged.
       ...(net.sized.has(name ?? "") ? { bounds: net.sized.get(name ?? "")! } : {}),
       ...(outside ? { outside: (given: OutsideGiven) => outside(given, this.ctx.storage.sql) } : {}),

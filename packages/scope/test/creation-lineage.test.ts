@@ -21,7 +21,8 @@ import { rita, routed, type Platform } from "./repository.ts";
 import { fixedSigner } from "./fixtures-core.ts";
 import { soon } from "./net.ts";
 
-const config = (register: string) => ({ DEPLOYMENT: "TEST-lineage", ARTIFACTS_CONFIG: JSON.stringify({ registerScope: register, namespace: "lineage", host: "git.example", maxBytes: 1024, credentialIdentity: "adapter-attempt" }) });
+// Explicit historical-family policy: lineage authority still comes from native proofs.
+const config = (register: string) => ({ PLATFORM_CREATION_PINS: JSON.stringify(Object.values(APPLICATION_COHORT)), DEPLOYMENT: "TEST-lineage", ARTIFACTS_CONFIG: JSON.stringify({ registerScope: register, namespace: "lineage", host: "git.example", maxBytes: 1024, credentialIdentity: "adapter-attempt" }) });
 const envelopeOf = (entry: Entry, n: number): Delivered => {
   const send = entry.sends.find(send => send.n === n);
   if (!send) throw Error("genuine retained create required");

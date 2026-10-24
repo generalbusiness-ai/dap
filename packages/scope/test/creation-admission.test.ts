@@ -41,7 +41,8 @@ test("only the pinned signed register install reaches creation; explicit local/t
   const unavailable = { answer: "unavailable", reason: "unavailable" } as const;
   const binding: Binding<string> = { idFromName: name => { addressed.push(name); return name; }, get: () => ({ create: async () => unavailable }) };
   const config = JSON.stringify({ registerScope: name, namespace: "artroom-demo", host: "service.invalid", maxBytes: 1024, credentialIdentity: "adapter-attempt" });
-  const settings: CreationAdmission = { DEPLOYMENT: "creation-admission-test", ARTIFACTS_CONFIG: config };
+  // Explicit historical pin keeps this R1 witness separate from R6 defaults.
+  const settings: CreationAdmission = { PLATFORM_CREATION_PINS: JSON.stringify([seed.definition]), DEPLOYMENT: "creation-admission-test", ARTIFACTS_CONFIG: config };
   expect(await api(binding, null, { ...settings, SCOPE_INDEX: env.SCOPE_INDEX }).create(signed, seed.definition)).toEqual(unavailable);
   expect(addressed.splice(0)).toEqual([name]);
   const changed = signIntent({ ...intent, idempotencyKey: "different-install" }, secret);
@@ -57,7 +58,7 @@ test("only the pinned signed register install reaches creation; explicit local/t
     expect(await api(binding, null, { SCOPE_INDEX: env.SCOPE_INDEX, DEPLOYMENT, ALLOW_OPEN_CREATION: "true" }).create(changed, seed.definition)).toEqual({ answer: "refused", reason: "unauthorized" });
   }
   expect(addressed).toEqual([]);
-  expect(await api(binding, null, { SCOPE_INDEX: env.SCOPE_INDEX, DEPLOYMENT: "local-test", ALLOW_OPEN_CREATION: "true" }).create(changed, seed.definition)).toEqual(unavailable);
+  expect(await api(binding, null, { SCOPE_INDEX: env.SCOPE_INDEX, DEPLOYMENT: "local-test", ALLOW_OPEN_CREATION: "true", PLATFORM_CREATION_PINS: JSON.stringify([seed.definition]) }).create(changed, seed.definition)).toEqual(unavailable);
   expect(addressed.splice(0)).toEqual([changedName]);
   // The local creation opening is not an unconfigured rate-limit bypass.
   expect(await api(binding).create(changed, seed.definition)).toEqual(unavailable);
