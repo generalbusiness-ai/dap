@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e487750faa4b0281daf4155ac6e3b3d2a5758be3","text":"Merge retired a covered predecessor; the successor is at apps/counter/browser/tsconfig.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e63cc6d898f257ec2929a8970e0a7ed2c04d98aa","text":"Merge retired a covered predecessor; the successor is at examples/grow/simulator-release.ts."}
