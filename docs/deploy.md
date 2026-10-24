@@ -98,6 +98,7 @@ or in the command line's config.
 | Name | Kind | What it is |
 |---|---|---|
 | `DEPLOYMENT` | setting | The deployment's name, 1 to 128 UTF-8 bytes. Every read session names it. |
+| `PLATFORM_CREATION_PINS` | setting | JSON array of deployment-approved historical platform pins, added to the newest cohort. Missing or explicit undefined uses the newest cohort only. Invalid input closes new platform genesis; existing reads, acts and replay keep their pins. See [Creation versions](#creation-versions) and the [full setting reference](security/settings.md). |
 | `ALLOW_OPEN_CREATION` | setting | Local and test deployments only: the exact string `true` opens parentless creation. Default unset. With `DEPLOYMENT` set, every other value permits only the exact signed register install pinned by valid `ARTIFACTS_CONFIG.registerScope`; a direct directory founding is refused before namespace lookup. Never enable this on a hosted production Worker. |
 | `SESSION_SECRET` | secret | At least 32 bytes from a cryptographic random source. It signs read sessions. Without it, or without `DEPLOYMENT`, no session is issued or accepted. Replacing it ends every session at once. |
 | `GITHUB_APP_CONFIG` | setting | JSON with exactly the fields below. Without it, or if it is not valid, the Worker sends nothing to GitHub: attempts are recorded and wait. |
@@ -128,6 +129,88 @@ invocation logs are disabled. These are source settings, not a record
 that an existing Worker has been changed. Preserve each deployment's
 bindings and settings when preparing an authorized release. See the
 [metric slot map and request correlation](operations.md).
+
+## Creation versions
+
+New unqualified installs select register 17, directory 16, membership 8,
+rules 10, destination 12 and inbox 1. Existing scopes retain the exact pin
+in their genesis. Advancing these defaults changes neither an installed
+register nor a retained CLI plan.
+
+`PLATFORM_CREATION_PINS` adds approved historical pins for new platform
+scopes in one deployment. Supply a JSON array with at most 128 distinct,
+complete pins supported by the shipped catalog, within 8,192 UTF-8 bytes.
+The newest cohort remains included. Unset, explicit undefined and `[]`
+select the newest cohort alone. Null, malformed input, duplicates, unknown
+pins or an exceeded bound close new platform genesis.
+
+For example, a reviewed deployment that must create application-family
+children from its existing register 5 and directory 5 can add these pins:
+
+```json
+[
+	"platform:register@5",
+	"platform:directory@5",
+	"platform:membership@4",
+	"platform:rules@3",
+	"platform:destination@2"
+]
+```
+
+Use that example only when the deployment's retained evidence supports
+those pins. Inbox 1 is already included. A recognized catalog pin does
+not add a supported lineage family: deployed child admission still checks
+the `archive-device-application` or `application` family and its native
+creator proofs. The setting grants no member, credential or host authority.
+An index entry permits lookup, not creation.
+
+Within the original routing and authority checks, an excluded pin can
+repeat only an exact existing native genesis. The target checks an active
+scope, its bounded canonical and hash-checked applied birth, exact scope
+address, kind, incarnation, pin and seed, a null genesis predecessor, and
+current native support. An invalid setting still permits that exception.
+It does not block later reads, acts or replay of existing scopes. Neither
+`ALLOW_OPEN_CREATION` nor a missing `DEPLOYMENT` skips the version policy
+in a deployed Scope class. Raw engine fixtures without that wiring are a
+separate compatibility path.
+
+For each planned Worker rollout:
+
+1. Retain that deployment's saved R2 manifest and the original CLI directory.
+   Confirm the service, namespace and register identity from operator records.
+   Do not treat the manifest or the fixed index as a global live-scope inventory.
+2. Run the version report with the reviewed CLI and that saved manifest:
+
+   ```sh
+   dap scope-index versions --manifest /absolute/path/to/deployment-scopes.json
+   ```
+
+   The report rereads the exact listed applied genesis identities and hashes.
+   `observedPins` records their platform pins. `usableCreationCohorts` reports
+   supported family pin coverage, including the implicit newest pins.
+   Unknown pins, unsupported families, unavailable reads or mismatches make
+   the report unready. The report changes no setting and emits no policy JSON.
+   Register-mode reads may register the exact scopes they authenticate.
+3. Review the historical pins to retain for that Worker. Keep
+   `ARTIFACTS_CONFIG.registerScope` equal to the exact planned signed install
+   admitted by R1. A GitHub register pin alone does not open that API.
+   Preserve attempted plans and their original pins and IDs. Do not replan
+   an attempted or acknowledged install to make it fit the new defaults.
+4. Have the planner deploy the exact reviewed source and nonsecret policy.
+   Apply the review to `artroom-scope`, `dap-demo`, `dap-lending` and `dap-grow`
+   separately, as applicable. Preserve their existing bindings, secrets,
+   register pins and reviewed `--var` overrides with the `--keep-vars`
+   procedure above. That flag preserves omitted values; it does not populate
+   or validate this policy. Deployed objects capture policy at activation.
+5. Verify the intended new-creation refusal and the retained existing-scope
+   behavior after rollout. Keep the R2 backfill and enforce records separate.
+   `/health` does not validate or expose `PLATFORM_CREATION_PINS`; a healthy
+   register probe does not prove version admission or configuration completeness.
+
+These steps describe planner work, not a completed deployment. Neither the
+CLI report nor this page attests hosted policy, namespace isolation, full
+live-scope coverage or readiness for every creation path. Version activation
+and the separate rules-version change remain planner-owned work.
 
 ## The order
 

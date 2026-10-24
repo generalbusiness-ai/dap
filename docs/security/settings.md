@@ -58,10 +58,19 @@ response, and the existence of index code do not prove backfill completion or
 deployed enforcement. The separate R2 continuation remains open; this page
 makes no unconditional “no object before genesis” claim.
 
+`PLATFORM_CREATION_PINS` adds deployment-approved historical pins to the
+newest creation cohort. It does not change existing scopes' pins or admit
+another native lineage family. An index entry permits lookup only; the
+native target must validate an exact existing birth before an excluded
+pin can repeat. [Creation versions](../deploy.md#creation-versions) describes
+the saved-manifest report, register pin and planner rollout steps.
+
+The health response does not inspect this setting. A `200` response does
+not prove that a requested platform pin can create a new scope.
+
 `APPLICATION_TRUST` controls package admission and serving under its own
 parser. This reference does not change that schema or claim to resolve
-trust revocation, provider custody, or the separate R11 behavior. No new
-setting, secret, redeploy step, or operator API is introduced by this page.
+trust revocation, provider custody, or the separate R11 behavior.
 Deployment and secret-setting procedures remain in [Deploy dap](../deploy.md).
 
 ## Source-owned inventory
@@ -105,6 +114,7 @@ parser, failure behavior, health visibility, and other readers.
 | `MCP_ENABLED` | text | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/mcp/src/hosted-tools.ts`](../../packages/mcp/src/hosted-tools.ts) |
 | `MCP_TOOL_ADDITIONS` | text | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/mcp/src/hosted-tools.ts`](../../packages/mcp/src/hosted-tools.ts) |
 | `METRICS` | binding | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
+| `PLATFORM_CREATION_PINS` | text | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/creation-versions.ts`](../../packages/scope/src/creation-versions.ts) |
 | `REGISTRIES` | binding | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
 | `ROOM` | binding | `dap-application-sandbox` | [`apps/sandbox/worker.ts`](../../apps/sandbox/worker.ts) |
 | `SCOPES` | binding | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
@@ -413,6 +423,26 @@ parser, failure behavior, health visibility, and other readers.
       "missing": "A configured deployment requires its pinned register/verified creator chain; absent local DEPLOYMENT preserves local behavior.",
       "invalid": "Values other than true do not open the escape.",
       "health": "Not reported; a healthy response does not attest this policy."
+    },
+    {
+      "deployments": [
+        "artroom-scope",
+        "dap-demo",
+        "dap-lending",
+        "dap-grow"
+      ],
+      "name": "PLATFORM_CREATION_PINS",
+      "kind": "text",
+      "status": "read",
+      "readers": [
+        "packages/scope/src/creation-versions.ts",
+        "packages/scope/src/worker.ts",
+        "packages/scope/src/scope-index.ts"
+      ],
+      "parser": "readPlatformCreationPolicy: a JSON string of at most 8192 UTF-8 bytes containing at most 128 distinct exact pins supported by platform(). The newest ARCHIVE_DEVICE_APPLICATION_COHORT is always included. An absent field or explicit undefined selects that default; an empty array adds no historical pins.",
+      "missing": "DeployedScope permits new platform genesis under the newest cohort only. Raw internal engine wiring without an injected deployment policy retains its compatibility behavior.",
+      "invalid": "Null, malformed JSON, a non-array, duplicate or unknown pins, or an exceeded bound closes new platform genesis. An exact existing repeat requires an active scope and a bounded applied birth with canonical bytes and a matching hash. Scope address, kind, incarnation, pin and seed must match. The predecessor must be null and native support current. Original routing and authority checks remain. Reads, later acts and replay retain their recorded pins.",
+      "health": "Not validated or reported by /health. Its session, register and host checks can pass while this policy closes new platform creation."
     },
     {
       "deployments": [
