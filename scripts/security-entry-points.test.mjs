@@ -49,7 +49,7 @@ const pendingArchiveSeals = {
   "packages/scope/src/archive-target.ts": "33826c2966d39df7f4d46aa74365f55b9e7e2a2317f26f9f98a735792ccb4a39",
   "packages/scope/src/archive-source-window.ts": "4db3f5885e7541f713b9668d1cde655e42be1950dd6af77d5711a323b3582e1c",
   "packages/scope/src/archive-publication.ts": "d8c39d220bc7eea59301478aa553960267aac16f06502b4103a85647c71eb457",
-  "packages/scope/src/archive-build.ts": "5fbae1ae09dd161f943ebd653e4d7352c214094e36291f556e40cb8fc5994d5d",
+  "packages/scope/src/archive-build.ts": "e1111bfef1fe94cc8436498679395ba1b9b8adba3db8651f4f24d87d68696853",
   "packages/scope/src/archive-driver.ts": "a3d1bc20aeab36e4153fd40fef3437f6d53b7c3ff432097c68a126ac289a4249", // Native parent transition reviewed; actual maintained parser output.
   "packages/scope/src/archive-row.ts": "91fd40cf8fd7dddb37383bf8daf86fdc30f0da5983ab69dfa3550263331ae12b",
   "packages/scope/src/floor-writer.ts": "fb8fd859844b8d10ba43b477bcaf07ab32fe1bfa1b6684ad9ae70b930d328a11",
