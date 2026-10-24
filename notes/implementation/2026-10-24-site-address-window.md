@@ -42,29 +42,85 @@ publication/render fixtures add only the existing index binding and explicit
 fixture-owned address, avoiding artificial cross-fixture quota sharing; their
 assertions and scenarios remain unchanged.
 
-The maintained producer computed all five owner seals at clean
+## Verification
+
+The private dependency copy retained the existing lock and target-owned
+workspace links; no install or package upgrade was used. The one maintained
+compatibility command accepted `@cloudflare/vitest-pool-workers` 0.22.0,
+reported `copied: false` and found the already-patched supported bundle.
+
+The maintained producer computed five owner seals at clean
 `a14daa75e41dc44f727ca7b2ffa4d065fe26c999`, tree
-`286f5583b73a3b7c04dae084d8dcc79dffa14c46`. Its pinned Source, tools and clean
-checkpoint agreed before and after the calls. Four existing map values and
-one new Site-window row were adopted from
+`286f5583b73a3b7c04dae084d8dcc79dffa14c46`, with matching pinned Source,
+tools and checkpoint before and after. Four replacements and the new
+Site-window row were adopted under
+`53d1d6bdc3b7e3cd26b78e1d3f312d03139d2a46`, from
 `/private/tmp/artroom-r4-site-window-seal-actual-20261024-v1.json`.
-The first affected invocation, `2371`, passed the Scope production compiler,
-then failed the Scope test compiler with TS2339 in the test-only startup
-observer: its former two-way branch read `signed` from the new `site-read`
-variant. The lane and page compilers and all 56 body cases remained unrun.
-This was a compiler failure, not the expected ordinary recorder-skip outcome.
-The original failed result is retained at
-`/private/tmp/artroom-security-r4-site-window-affected-validation-evidence-20261024-v1`.
+All five Sources and seals remain unchanged through this validation.
 
-The observer now verifies parentless signed intent only for `creation`;
-`signed-read` retains its existing verification and `site-read` has no actor
-key. The original admission still runs once, and address observations and
-returned decisions are unchanged. No production source, assertion, test
-registration, deadline or recorder setting changed. The held continuation
-runs Scope test, lane and page compilers, then the same 18 whole files and
-56 cases. It carries the completed production compiler rather than repeating
-it. No continuation result or gate pass is claimed.
+| Original invocation | Actual result |
+| --- | --- |
+| `2371` affected validation | Scope production passed; Scope test failed TS2339. Lane/page compilers and all 56 cases were unrun. |
+| `85584` continuation | Three remaining compilers and body exited 0; 54 PASS, two ordinary recorder SKIP. Strict owner exited 1. |
+| `91308` quota control | Owner 0, child 1; both whole-file cases failed at the intended assertions. |
+| `17391` route control | Owner 0, child 1; 14 PASS and one intended failure in the whole 15-case file. |
 
-The gate and exact-head review remain pending. R4 token reuse, R13
-expiry/member quota and R10/R11 trust remain separate. Archive work retains
-priority over validation of this slice.
+The original compiler failure remains evidence. The test-only startup
+observer's former two-way branch read `signed` from the new `site-read`
+variant. Commit `39199508cef0561e2c0089eea48e4d8fed55b91d` narrows that
+branch to `creation`; signed-read verification, the one original admission,
+address observations and returned decisions remain unchanged. Only the
+helper and this note changed. The continuation carried the already-passed
+production compiler and repeated neither it nor compatibility preparation.
+
+The two skips are the unchanged demo capture recorder and page screenshot
+recorder. No recorder was enabled or file filtered. The reporter retained
+56 start callbacks, 55 result callbacks, complete end/JSON states and zero
+unhandled errors. The passed file-publication case lacks a result callback;
+its passed end/JSON evidence is retained, without inventing that callback.
+The strict wrapper failure remains. Root manually accepted the exact
+semantic result and both window cases and all 15 route cases under
+`1bd317b030ddf22a699044e5b152809f5e565318`.
+
+The quota mutation changed `>=` to `>`: actual `true` versus expected
+`false` at `site-window.test.ts:8:38` and `29:39` distinguishes attempt 241
+and an exhausted address after key churn. The route mutation ignored
+`rate-limited`: actual 404 versus expected 429 at
+`site-route.test.ts:526:115`. Its later quota assertion at line 533 was
+unreached; the missing-room stand-in performed no provider fetch. These
+are counter and route-order witnesses, not deployed edge or provider proof.
+Both controls retained complete case IDs/callbacks, zero unhandled errors
+and exact original source bytes, device, inode, mode, size and modification
+time after restoration. Target change time changed; only the declared
+cache contents/times and existing empty temporary-directory times could
+vary. Root accepted both independently audited outcomes under
+`e142392c5b058e03a2921490449a41c9354f9b7b`.
+
+Closed evidence and audits:
+
+- Validation: `/private/tmp/artroom-security-r4-site-window-affected-validation-evidence-20261024-v1` and `-v2`; audit `/private/tmp/artroom-security-r4-site-window-closed-validation-audit-20261024-v1/audit.json`.
+- Quota: `/private/tmp/artroom-r4-quota-control-evidence-20261024-v1`; audit `/private/tmp/artroom-r4-quota-control-independent-outcome-audit-20261024-v1/audit.json`.
+- Route: `/private/tmp/artroom-r4-route-control-evidence-20261024-v1`; combined audit `/private/tmp/artroom-r4-controls-independent-outcome-audit-20261024-v1/audit.json`.
+
+Local measured wall and inclusive CPU seconds are separate categories:
+
+| Recorded commands | Wall seconds | CPU seconds |
+| --- | ---: | ---: |
+| Private dependency copy | 1.89 | 1.87 |
+| Maintained compatibility | 0.08 | 0.07 |
+| Five-seal producer | 0.48 | 0.32 |
+| Both affected invocations, including the compiler failure | 87.43 | 101.01 |
+| Both control captures | 1.81 | 1.45 |
+| Both control owners | 13.41 | 15.68 |
+
+Affected and control-owner measurements include their descendants. Nested
+compiler/body/child timings overlap those measurements and are not added.
+These observations describe this macOS machine and its owned private pool,
+not a cold-cache benchmark or a portable throughput claim. They omit source
+review and other unmeasured preparation; no total implementation cost is
+claimed.
+
+The final gate and exact-head review remain pending. Integrate approved
+archive Main and the eventual R9 landing before that gate. No deployment or hosted
+provider acceptance is claimed. R4 token reuse, R13 expiry/member quota and
+R10/R11 trust remain separate.
