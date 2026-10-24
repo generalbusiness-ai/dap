@@ -1,0 +1,67 @@
+{
+  "state": "OLD_HELD_CONTROL_NOT_CAPTURED_OR_EXECUTED_REASSESSMENT",
+  "request": "fc2548ae1ab9c7c5e859d422611f8a34fd0ff13c",
+  "promise": "28cdea0d83a29e9a02c5107d89c6e21b10341fc2",
+  "oldHeldManifest": {
+    "path": "/private/tmp/artroom-archive-through-profile-control-source-20261024-v1/manifest.json",
+    "bytes": 1252,
+    "sha256": "7fdd90a95e03331d3a20962b81e575f66813fc04313c035acf8c5f9dfb678676"
+  },
+  "sourceEvidence": {
+    "immutableBasis": "0401d45ee71f0ef6d70f7fc327a02e22ba10cd47",
+    "frontierModule": {
+      "bytes": 12777,
+      "sha256": "b5f0e0fb05abe62e21a1b86e922bef1fac2f1064700231641693674ade629f4e"
+    },
+    "frontierWholeTest": {
+      "bytes": 15621,
+      "sha256": "7ce8478ab79ee9c26055ff0b8c355f381bc5f4c259ff15faf68fe5dfc7b7f448"
+    },
+    "finalCostSource": {
+      "path": "/private/tmp/artroom-archive-append-row-repair-source-20261024-v1/source/packages/scope/src/archive-frontier-cost.ts",
+      "sha256": "cf2f4b4876fc6dd51657b9b07ca1d7d12fe166192462b22e4f764c632b7e2128"
+    }
+  },
+  "oldOracle": "Whole installed6; first Grow production genesis entries2-versus1, stoppedlimit before Mark, metadata-only original-bound refusal, sole dependent no-handoff, other4pass.",
+  "assessment": "That specific oracle is not proved after single source capture and narrow native projection. Do not fill or execute it by carrying the old expectation forward.",
+  "sourceArithmetic": {
+    "normalThrough0": {
+      "bytes": 3484,
+      "rows": 10,
+      "encodedCeiling": 8744
+    },
+    "forcedLastPosition": {
+      "bytes": 28828,
+      "rows": 604,
+      "encodedCeiling": 42536
+    },
+    "firstSourceOwnedFinishMetadataIncrease": {
+      "capture": 329472,
+      "twoEncodes": 202752,
+      "twoOwnedCopies": 50688,
+      "onePendingPairCompare": 101376,
+      "total": 684288
+    },
+    "qualification": "Exact symbolic difference in the hasBase=false source-owned finish forecast for an unchanged candidate shape. It is not a measured rejected quote. Existing pre-finish costs and selection can change under a mutation."
+  },
+  "actualHealthyEvidence": {
+    "rootAcceptance": "a27c5aef (root-attributed)",
+    "ownerSession": 72413,
+    "naturalExit": 0,
+    "tool": "2276bd",
+    "installedCasesPassed": 6,
+    "firstSendMetadata": 2866308,
+    "firstSendInputWork": 51283785,
+    "qualification": "Retained initial first-send retry cost, not the first candidate used+quote. It cannot establish mutant overflow."
+  },
+  "existingCoverage": {
+    "frontier6": "Exact receipt-derived profiles at0/99/100/full; invalid position refusal; per-path read maxima; actual capture/validation debits bounded by forecast; malformed future path/early geometry refusal. Source tests remain meaningful without replaying this whole installed control.",
+    "actualGuardControls": "Root is coordinating capture-parent/current-parent migration, folded headSeen and row projection equality controls separately. Their outcomes are not inferred here."
+  },
+  "recommendation": "Retain original V1 unchanged and retire its unproved installed6 budget-only control from execution, subject to root/checker decision. Do not invent a replacement body merely to satisfy the historical plan. Through-position scheduling optimization is not itself a new archive authority source; receipt/head/hash/geometry checks remain independent.",
+  "unknowns": [
+    "No mutant runtime has been performed.",
+    "No assertion that all final-prefix or arbitrary application shapes fit the original budgets.",
+    "No original source or failed result is relabeled healthy."
+  ]
+}

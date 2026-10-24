@@ -1,0 +1,403 @@
+{
+  "request": "fc2548ae1ab9c7c5e859d422611f8a34fd0ff13c",
+  "promise": "28cdea0d83a29e9a02c5107d89c6e21b10341fc2",
+  "kind": "independent_closed_actual_scale_diagnostic_audit",
+  "rootAttribution": {
+    "session": 14964,
+    "tool": "f25da5",
+    "naturalExit": 1,
+    "source": "Parent original natural closure, not re-executed."
+  },
+  "status": "Failed original actual-scale diagnostic. Scope production/test compilation passed; sole scale case failed at seq1. No full owning pass or repair claim.",
+  "allocation": "066731d5acf195b7d57f873d371d27d4c7037434",
+  "checkpoint": {
+    "head": "dce937e869613db4b96be9ee64528b162a4eaaaa",
+    "tree": "54494a1c793337f2ff904c735786cb3cfa1bc601",
+    "basis": "d7aea0b03ce8b9c1afcea7f3f6252b66d0d3630a",
+    "ledgerSha256": "946392884e868dead55002639bd74033d42f5fbf9d5daced2307cbdee290d917"
+  },
+  "child": {
+    "label": "focused",
+    "argv": [
+      "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+      "scripts/focused-check.mjs",
+      "/private/tmp/artroom-archive-fixed-parent-scale-diagnostic-evidence-20261024-v1/focused-plan.json",
+      "/private/tmp/artroom-archive-fixed-parent-scale-diagnostic-evidence-20261024-v1/focused"
+    ],
+    "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+    "pid": 43380,
+    "exit": 1,
+    "signal": null,
+    "wall": 37.19769766705576,
+    "user": 36.862008,
+    "system": 5.263204
+  },
+  "phases": [
+    {
+      "name": "scope-production",
+      "exitCode": 0,
+      "signal": null,
+      "wallSeconds": 0.27,
+      "userSeconds": 1.05,
+      "systemSeconds": 0.12
+    },
+    {
+      "name": "scope-test",
+      "exitCode": 0,
+      "signal": null,
+      "wallSeconds": 0.59,
+      "userSeconds": 2.7,
+      "systemSeconds": 0.25
+    },
+    {
+      "name": "body",
+      "exitCode": 1,
+      "signal": null,
+      "wallSeconds": 35.65,
+      "userSeconds": 32.72,
+      "systemSeconds": 4.54
+    }
+  ],
+  "guards": {
+    "allocatedEqualsBefore": true,
+    "focusedAfterEqualsAfter": true,
+    "allFixedFieldsExactOutsideReviewedAllowance": true,
+    "sourceRows": 3000,
+    "dependencyRowsIncludingRoot": 6072,
+    "tools": 219,
+    "environmentRows": 60,
+    "cacheChanges": [
+      {
+        "key": "scope:packages/scope/test/archive-one-entry-scale.test.ts",
+        "before": {
+          "duration": 31172,
+          "failed": true
+        },
+        "after": {
+          "duration": 31400,
+          "failed": true
+        }
+      }
+    ],
+    "allowance": "Only the selected scale cache cell, same physical cache allowed bytes/hash/timestamps, and existing empty Vite-temp timestamps. No other fixed field changed."
+  },
+  "case": {
+    "project": "scope",
+    "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-one-entry-scale.test.ts",
+    "title": "the Native driver confirms 10,001 one-entry passes and preserves retained rule inputs from pass 3700",
+    "state": "failed",
+    "startedCallbacks": 1,
+    "resultCallbacks": 1,
+    "unexpectedCases": 0,
+    "unhandledErrors": 0,
+    "retryCount": 0,
+    "repeatCount": 0,
+    "failureMessages": [
+      "AssertionError: {\"seq\":1,\"result\":{\"state\":\"stopped\",\"next\":null,\"reason\":\"limit\"},\"cost\":{\"entries\":1,\"attempts\":31,\"nodes\":25,\"calls\":77,\"metadata\":815297,\"inputWork\":17871757},\"confirmed\":{\"anchorsPublished\":true,\"commit\":\"08c8865cccb656dbc87e2a28ac73732efceee991\",\"layout\":2,\"through\":{\"hash\":\"sha256:0accb7c2724ada98ab559ab5cf5ef9e134a1330850b67e4a343d26b2ede70792\",\"seq\":0}}}: expected { state: 'stopped', next: null, \u2026(1) } to match object { state: 'confirmed' }\n(2 matching properties omitted from actual)\n    at Proxy.<anonymous> (private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/@vitest/expect/dist/index.js:1283:10)\n    at Proxy.<anonymous> (private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/@vitest/expect/dist/index.js:1156:15)\n    at Proxy.methodWrapper (private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/chai/index.js:1737:25)\n    at /private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-one-entry-scale.test.ts:62:65\n    at private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+    ]
+  },
+  "temporaryRows": [
+    {
+      "phase": "scout-lookahead",
+      "reason": "lookahead-limit",
+      "used": {
+        "entries": 1,
+        "attempts": 6,
+        "nodes": 14,
+        "calls": 47,
+        "metadata": 846610,
+        "inputWork": 18117229
+      },
+      "quote": null,
+      "reserve": {
+        "entries": 1,
+        "attempts": 36,
+        "nodes": 22,
+        "calls": 104,
+        "metadata": 2964750,
+        "inputWork": 22517501
+      },
+      "frontier": null,
+      "append": null,
+      "layout": null,
+      "markUnits": null,
+      "markedRowBytes": null
+    },
+    {
+      "phase": "finish-budget",
+      "reason": "budget-limit",
+      "used": {
+        "entries": 1,
+        "attempts": 31,
+        "nodes": 25,
+        "calls": 73,
+        "metadata": 814681,
+        "inputWork": 11520197
+      },
+      "quote": {
+        "entries": 1,
+        "attempts": 68,
+        "nodes": 39,
+        "calls": 165,
+        "metadata": 3395016,
+        "inputWork": 22837842
+      },
+      "reserve": null,
+      "frontier": {
+        "entries": 0,
+        "attempts": 22,
+        "nodes": 18,
+        "calls": 58,
+        "metadata": 2647860,
+        "inputWork": 6766100
+      },
+      "append": {
+        "entries": 0,
+        "attempts": 30,
+        "nodes": 17,
+        "calls": 60,
+        "metadata": 23936,
+        "inputWork": 69094
+      },
+      "layout": null,
+      "markUnits": 7258,
+      "markedRowBytes": 17084
+    }
+  ],
+  "finishAdmission": {
+    "usedPlusQuote": {
+      "entries": 2,
+      "attempts": 99,
+      "nodes": 64,
+      "calls": 238,
+      "metadata": 4209697,
+      "inputWork": 34358039
+    },
+    "bounds": {
+      "entries": 4096,
+      "attempts": 512,
+      "nodes": 64,
+      "calls": 16384,
+      "metadata": 4194304,
+      "inputWork": 67108864
+    },
+    "overage": {
+      "metadata": 15393
+    },
+    "arithmetic": "814,681 + 3,395,016 = 4,209,697 metadata, exceeding 4,194,304 by 15,393. Nodes 25 + 39 = 64 exactly; entries 1 + 1 = 2; all other dimensions fit.",
+    "qualification": "Two actual temporary rows: scout-lookahead selection cutoff in the first successful seq 0 pass, then the seq 1 finish-budget rejection. The latter diagnoses an actual quoted metadata bound rejection, not an actual extra charge, repair proof or general statement about all historical failures. Frontier and Mark values are retained verbatim; no source objects or credentials are read."
+  },
+  "costs": {
+    "wall": 39.48479970905464,
+    "pythonCpu": 2.065494,
+    "childrenUser": 36.962046,
+    "childrenSystem": 5.364759,
+    "inclusiveCpu": 44.392299
+  },
+  "costQualification": "Compiler/body/child costs overlap owner inclusive CPU; do not add nested totals. Root supplies original outer exit.",
+  "errors": [
+    "RuntimeError: child failed/interrupted; later phases unrun"
+  ],
+  "signals": [],
+  "pins": [
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-scale-diagnostic-evidence-20261024-v1/after.json",
+      "bytes": 3317330,
+      "sha256": "144e8a6f8ef4f6b4e956f55f9fea961cc9fd1a77c217b3a0f396f081f342079e",
+      "device": 16777231,
+      "inode": 545844066,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-scale-diagnostic-evidence-20261024-v1/before.json",
+      "bytes": 3317330,
+      "sha256": "499d4d989233c3a2eeb0239d6c2c2c4bbc8de71744438a32f7777d88b26bec47",
+      "device": 16777231,
+      "inode": 545843485,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-scale-diagnostic-evidence-20261024-v1/focused/body.log",
+      "bytes": 6125,
+      "sha256": "1d7cb0fdd566bb908f4c07b3b6130cc4ce3b02caa96c2504d9e0f70261ac462d",
+      "device": 16777231,
+      "inode": 545843498,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-scale-diagnostic-evidence-20261024-v1/focused/coverage-ledger.json",
+      "bytes": 1705,
+      "sha256": "06d2d7634a06576edf5ab45bcf2fb3f8dfc7e159aa719e17bfb857373e5e609e",
+      "device": 16777231,
+      "inode": 545844059,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-scale-diagnostic-evidence-20261024-v1/focused/coverage.jsonl",
+      "bytes": 2057,
+      "sha256": "9bff1446912f7de952cea1c747c6c3d58dceba3b5d6321a270e7fada7bc6c2aa",
+      "device": 16777231,
+      "inode": 545843516,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-scale-diagnostic-evidence-20261024-v1/focused/manifest.json",
+      "bytes": 1059,
+      "sha256": "37b7d59aa27faed4926014b3f8022f6874397977b7d3a04bdad3b43dbebfeae4",
+      "device": 16777231,
+      "inode": 545844061,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-scale-diagnostic-evidence-20261024-v1/focused/plan.json",
+      "bytes": 506772,
+      "sha256": "4234473c559ba583a034c356c594b1e4de3fe804d171d664e34aff6a927444e7",
+      "device": 16777231,
+      "inode": 545843492,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-scale-diagnostic-evidence-20261024-v1/focused/result.json",
+      "bytes": 7259,
+      "sha256": "b6c615b1a4ff0c1a1f34b9cd66a206ae309539964d23215f58fddc3810c8c8d8",
+      "device": 16777231,
+      "inode": 545844060,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-scale-diagnostic-evidence-20261024-v1/focused/scope-production.log",
+      "bytes": 29,
+      "sha256": "0d80d82c73045cb586fd6ff0530d1c1524e98ca137d62deab91c32dbd3ed18b7",
+      "device": 16777231,
+      "inode": 545843494,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-scale-diagnostic-evidence-20261024-v1/focused/scope-test.log",
+      "bytes": 29,
+      "sha256": "adacf87ca7318da730e9a1b1d4982c16993c62e0957d856350b848a2ac13eb32",
+      "device": 16777231,
+      "inode": 545843496,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-scale-diagnostic-evidence-20261024-v1/focused/vitest.json",
+      "bytes": 2238,
+      "sha256": "2aa45c0f965649f305c8496e85e546d5923e7b2c6b9734b8a7a2eceddb9ef7d2",
+      "device": 16777231,
+      "inode": 545844057,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-scale-diagnostic-evidence-20261024-v1/focused-after.json",
+      "bytes": 3317330,
+      "sha256": "144e8a6f8ef4f6b4e956f55f9fea961cc9fd1a77c217b3a0f396f081f342079e",
+      "device": 16777231,
+      "inode": 545844064,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-scale-diagnostic-evidence-20261024-v1/focused-plan.json",
+      "bytes": 506772,
+      "sha256": "4234473c559ba583a034c356c594b1e4de3fe804d171d664e34aff6a927444e7",
+      "device": 16777231,
+      "inode": 545843486,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-scale-diagnostic-evidence-20261024-v1/focused.command.json",
+      "bytes": 373,
+      "sha256": "2a0a43e1b3081ef4e074040c7954ca7914a96256d93b8f7eced40487bb1efba4",
+      "device": 16777231,
+      "inode": 545843487,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-scale-diagnostic-evidence-20261024-v1/focused.pid.json",
+      "bytes": 19,
+      "sha256": "fc1202fcf763bf4ff15da5a22a82887eb5a4a383461904b149972b1e24987355",
+      "device": 16777231,
+      "inode": 545843490,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-scale-diagnostic-evidence-20261024-v1/focused.process.json",
+      "bytes": 514,
+      "sha256": "88020e1fbf9fd38a2d654c7c6b4fb5f0be3ad78779cc13de34536fce4dbe33d1",
+      "device": 16777231,
+      "inode": 545844062,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-scale-diagnostic-evidence-20261024-v1/focused.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "device": 16777231,
+      "inode": 545843489,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-scale-diagnostic-evidence-20261024-v1/focused.stdout",
+      "bytes": 398,
+      "sha256": "9d5d62c60dba3a48c01344e0648c4159086ad01f3d99c2d09f659f51dcf305c8",
+      "device": 16777231,
+      "inode": 545843488,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-scale-diagnostic-evidence-20261024-v1/invocation.json",
+      "bytes": 502,
+      "sha256": "210f353d6186b69c61cedcb1b0ba5092c0b9a41f248bb0824d2bf950292c2f2f",
+      "device": 16777231,
+      "inode": 545843482,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-scale-diagnostic-evidence-20261024-v1/result.json",
+      "bytes": 1914,
+      "sha256": "bf2b8a9334e53b295e48d84a8e4b9a586d82c4d92143e5aa805c1bb07cd01ec0",
+      "device": 16777231,
+      "inode": 545844067,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-scale-diagnostic-binding-allocated-20261024-v1.json",
+      "bytes": 4052007,
+      "sha256": "43323df1a3b5d38f44c63abf1ccad0df7e8e34c0406414aaf8130ff68d38c41a",
+      "device": 16777231,
+      "inode": 545843478,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-scale-diagnostic-owning-source-20261024-v1/ledger.json",
+      "bytes": 584,
+      "sha256": "946392884e868dead55002639bd74033d42f5fbf9d5daced2307cbdee290d917",
+      "device": 16777231,
+      "inode": 545843253,
+      "mode": "0o444",
+      "nlink": 1
+    }
+  ],
+  "limits": "Finite closed DATA only, no candidate/dependency/ref reads, program imports or historical execution, tests, mutation or causal repair claim. Original nonzero outcome retained."
+}

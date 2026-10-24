@@ -1,0 +1,834 @@
+{
+  "state": "CLOSED_NODE37_COUNTING55_PASS_FULL_INPUTS_EXACT_ORIGINAL_GATE_STILL_FAILED",
+  "request": "fc2548ae1ab9c7c5e859d422611f8a34fd0ff13c",
+  "promise": "28cdea0d83a29e9a02c5107d89c6e21b10341fc2",
+  "originalClosure": {
+    "session": 1432,
+    "naturalExit": 0,
+    "rootTool": "9d6be2",
+    "attribution": "Original outer closure supplied by root. Raw children79572/79697 independently natural0/no signal."
+  },
+  "head": "b86df6e5c5fc7e6c6ba095ef95c0cb01c60ca397",
+  "tree": "397762ef93ac782b4b86b00df6a84a8a60b351ba",
+  "allocation": "26b65435f68733acaaee0b52c7b8385ec51fc15c",
+  "rawBinding": {
+    "path": "/private/tmp/artroom-archive-unreached-tail-binding-raw-20261024-v3.json",
+    "bytes": 3553946,
+    "sha256": "a362a6c6045944c4a20afb5056293e3d43239058e452563ddf44ca2841859d19",
+    "device": 16777231,
+    "inode": 545981491,
+    "mode": "0o644",
+    "nlink": 1
+  },
+  "allocatedBinding": {
+    "path": "/private/tmp/artroom-archive-unreached-tail-binding-allocated-20261024-v3.json",
+    "bytes": 3553984,
+    "sha256": "87f65aca108bccc1932a5cd198c9f2e6ffb1415a089908466f34bd72f5f1edf2",
+    "device": 16777231,
+    "inode": 545981549,
+    "mode": "0o644",
+    "nlink": 1
+  },
+  "allocationOnlyDelta": true,
+  "sourceManifest": {
+    "path": "/private/tmp/artroom-archive-unreached-tail-owning-source-20261024-v3/manifest.json",
+    "bytes": 3278,
+    "sha256": "9c09b664573c5b0800bffdbcd5d868a2489ed24a5d1408db3127cd975f05feeb",
+    "device": 16777231,
+    "inode": 545981166,
+    "mode": "0o444",
+    "nlink": 1
+  },
+  "usedSourcePayloads": 18,
+  "usedSourceCapturedPreparationIdentityExact": true,
+  "guards": {
+    "allFiveVectorsExact": "allocated snapshot=before=node37-after=counting55-after=final",
+    "noCacheOrTempException": true,
+    "sourceRows": 3071,
+    "dependencyRowsIncludingRoot": 6072,
+    "relativeLinks": 32,
+    "allFixedGroupNames": [
+      "root",
+      "head",
+      "tree",
+      "branch",
+      "status",
+      "mainRefs",
+      "source",
+      "dependencies",
+      "lockSha256",
+      "tools",
+      "toolResolutions",
+      "gitContext",
+      "pathResolvers",
+      "preparation",
+      "vitestCache",
+      "cwd",
+      "python",
+      "environmentDigests"
+    ],
+    "qualification": "Complete retained physical descriptors/timestamps, Source/private root/links/lock/stamp/tools/resolvers/CLT/env/Main/preparation/binding exact. No body waiver."
+  },
+  "nodes": {
+    "node37": {
+      "counts": {
+        "tests": 37,
+        "suites": 0,
+        "pass": 37,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "durationMs": 3618.181958,
+      "cases": [
+        {
+          "name": "the generated witness's own test timeout names the stalled case and preserves its failure",
+          "milliseconds": 274.551167
+        },
+        {
+          "name": "a module that never reaches a case hits the whole child deadline even if reporting fails",
+          "milliseconds": 1506.325458
+        },
+        {
+          "name": "finishing a case does not turn a child stuck in teardown into a pass",
+          "milliseconds": 1509.957458
+        },
+        {
+          "name": "interrupting the wrapper also stops the detached test worker's owned listener",
+          "milliseconds": 232.766083
+        },
+        {
+          "name": "managed recipe preserves all nineteen recorded public bodies and the security configuration",
+          "milliseconds": 27.000459
+        },
+        {
+          "name": "stale source or an unlisted asset refuses before creating an output",
+          "milliseconds": 19.68
+        },
+        {
+          "name": "six built pages preserve copy, links, child headers, shared style and link previews; the homepage lists five destinations",
+          "milliseconds": 22.604333
+        },
+        {
+          "name": "explicit DAP_HOME and legacy ARTROOM_HOME select one normalized path or refuse before probing",
+          "milliseconds": 0.462625
+        },
+        {
+          "name": "new defaults use dap but occupied legacy XDG custody retains precedence over the home fallback",
+          "milliseconds": 0.309
+        },
+        {
+          "name": "an empty new directory cannot hide legacy config, keys or pending records, and selection changes no bytes",
+          "milliseconds": 3.338208
+        },
+        {
+          "name": "no active file names a removed format, binding or variable",
+          "milliseconds": 79.403458
+        },
+        {
+          "name": "no active source or configuration file reaches into spikes/parked/, and spikes/parked/ is in no workspace",
+          "milliseconds": 1978.875042
+        },
+        {
+          "name": "no platform package depends on the lanes package or imports from it",
+          "milliseconds": 21.656291
+        },
+        {
+          "name": "the platform package depends only on contract, bytes and derive, and only scope, replay, lanes, cli, page and mcp name it",
+          "milliseconds": 9.392916
+        },
+        {
+          "name": "Git keeps its lower-layer dependencies; Replay names it only at its exact development boundaries",
+          "milliseconds": 30.012625
+        },
+        {
+          "name": "archive Node exceptions are exact and preserve portable and Git dependency directions",
+          "milliseconds": 31.035792
+        },
+        {
+          "name": "the checkers package depends only on contract, bytes and git, and no package names it",
+          "milliseconds": 68.512542
+        },
+        {
+          "name": "MCP relative imports stay inside tracked server source",
+          "milliseconds": 0.187375
+        },
+        {
+          "name": "the MCP server imports its lower layers and the exact public application Git reader only",
+          "milliseconds": 11.375708
+        },
+        {
+          "name": "framework runtime modules do not import application source",
+          "milliseconds": 84.9245
+        },
+        {
+          "name": "a new source file cannot redefine a bytes helper through a function, exported arrow or typed expression",
+          "milliseconds": 1.043
+        },
+        {
+          "name": "the owner, imports and public aliases pass; source strings, comments and different meanings are not declarations",
+          "milliseconds": 0.587042
+        },
+        {
+          "name": "the actual pinned pool factory keeps one lazy prototype across early and late constructions, preserving receiver and later prototype methods",
+          "milliseconds": 1.991583
+        },
+        {
+          "name": "compatibility privately copies cache-linked bytes, is idempotent, and refuses unknown versions or bundles before changing that view",
+          "milliseconds": 12.547042
+        },
+        {
+          "name": "Judge uses weighted event counts, counter sums and route quantiles once",
+          "milliseconds": 1.443583
+        },
+        {
+          "name": "Judge passes the unsampled synthetic boundary with declared limits",
+          "milliseconds": 0.47775
+        },
+        {
+          "name": "Judge refuses insufficient, stale, erroneous, slow or busy observations",
+          "milliseconds": 0.895709
+        },
+        {
+          "name": "Judge requires loss-free unsampled balance at each actual HTTP place",
+          "milliseconds": 1.372458
+        },
+        {
+          "name": "Judge binds health and isolates the selected version and window",
+          "milliseconds": 0.642708
+        },
+        {
+          "name": "Judge refuses malformed query observations and a missing bound",
+          "milliseconds": 0.438667
+        },
+        {
+          "name": "Judge client binds one bounded SQL window and a private independent health read",
+          "milliseconds": 12.554041
+        },
+        {
+          "name": "Judge client refuses failed, truncated or oversized observations without echoing them",
+          "milliseconds": 68.669833
+        },
+        {
+          "name": "Judge CLI takes the completed version from retained output and requires calibration before I/O",
+          "milliseconds": 5.904209
+        },
+        {
+          "name": "every served Worker route/method has exactly its reviewed gate-class row",
+          "milliseconds": 278.336958
+        },
+        {
+          "name": "a real matcher change fails the inventory bijection with the page unchanged",
+          "milliseconds": 136.05975
+        },
+        {
+          "name": "the bijection rejects a missing row, an extra row, and a changed gate",
+          "milliseconds": 130.5585
+        },
+        {
+          "name": "R8 public and sandbox matcher changes fail their finite inventory",
+          "milliseconds": 442.431875
+        }
+      ],
+      "stderrBytes": 0
+    },
+    "counting55": {
+      "counts": {
+        "tests": 55,
+        "suites": 0,
+        "pass": 55,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "durationMs": 1712.633584,
+      "cases": [
+        {
+          "name": "Counter demo offers and plays only en-US voices, including after inventory changes",
+          "milliseconds": 0.900916
+        },
+        {
+          "name": "Roster removal leaves the identity-owned original Check report reachable without signing, POST or speech",
+          "milliseconds": 81.79575
+        },
+        {
+          "name": "Explicit Resume command fences active playback before dispatch and displays the trusted refusal",
+          "milliseconds": 4.691667
+        },
+        {
+          "name": "Counter acknowledgement requires a recorded local effect and keeps playback, unknown and refusal messages",
+          "milliseconds": 0.739
+        },
+        {
+          "name": "One Join waits for a fresh record, records participation and own activation, then arms; Leave deactivates after stopping local speech",
+          "milliseconds": 1.839417
+        },
+        {
+          "name": "Join refuses unusable voices and duplicate runner ownership before mutation, and keeps partial unknown participation as an original",
+          "milliseconds": 0.728667
+        },
+        {
+          "name": "Automatic commits keep native fairness and do not retry a refused turn when only the observed head advances",
+          "milliseconds": 1.496625
+        },
+        {
+          "name": "A Pause-winning refused automatic commit recovers after Start at a new accepted revision without Leave or Join",
+          "milliseconds": 1.38275
+        },
+        {
+          "name": "Automatic refused correction wakes from a relevant accepted state received while the original command was busy",
+          "milliseconds": 1.081333
+        },
+        {
+          "name": "Automatic unsent correction wakes from a relevant accepted state received while the original command was busy",
+          "milliseconds": 0.933917
+        },
+        {
+          "name": "A refused automatic commit corrects its accepted roster basis once while preserving fairness",
+          "milliseconds": 1.435916
+        },
+        {
+          "name": "Automatic unsent outcome only permits relevant-state correction when definitely unsent",
+          "milliseconds": 1.387958
+        },
+        {
+          "name": "Automatic blocked outcome only permits relevant-state correction when definitely unsent",
+          "milliseconds": 1.816292
+        },
+        {
+          "name": "Automatic unknown outcome only permits relevant-state correction when definitely unsent",
+          "milliseconds": 0.882541
+        },
+        {
+          "name": "Automatic recorded outcome only permits relevant-state correction when definitely unsent",
+          "milliseconds": 0.8935
+        },
+        {
+          "name": "A stale Join context cannot activate, arm or repaint after its pending participation returns",
+          "milliseconds": 0.396792
+        },
+        {
+          "name": "FAKE correlated trusted first refusal commits judgment before terminal control custody clears",
+          "milliseconds": 70.968208
+        },
+        {
+          "name": "FAKE wrong-route first response stays unknown; later refusal/head cannot settle it, exact accepted history can",
+          "milliseconds": 64.372042
+        },
+        {
+          "name": "FAKE Check command leaves prepared custody unchanged; concurrent explicit Resume first-dispatches identical bytes once; restored inflight and legacy commands never POST",
+          "milliseconds": 129.581334
+        },
+        {
+          "name": "FAKE known-refusal journal-save failure fences correction; unavailable local candidate never saves or POSTs",
+          "milliseconds": 52.325459
+        },
+        {
+          "name": "FAKE changed active journal fences the first ticket and prevents a stale terminal overwrite",
+          "milliseconds": 46.133375
+        },
+        {
+          "name": "FAKE malformed restored PreparedEnvelope and refusal stay blocked without POST or terminal clear",
+          "milliseconds": 73.371541
+        },
+        {
+          "name": "FAKE prepared structural mismatch blocks dispatcher before inflight and preserves the whole original",
+          "milliseconds": 20.613375
+        },
+        {
+          "name": "FAKE read-only dispatcher Check leaves valid prepared custody unsent; original resume consumes it once",
+          "milliseconds": 38.958083
+        },
+        {
+          "name": "C1 claims use the complete active roster without assigning a speaker, and only the exact linked pledge can resolve",
+          "milliseconds": 3.456
+        },
+        {
+          "name": "TEST bundle becomes non-extractable keys that survive structured clone and sign existing request domains; loader buffers are cleared",
+          "milliseconds": 37.936083
+        },
+        {
+          "name": "TEST mismatched bundles are refused and cleared; legacy raw seed imports use the same non-extractable path",
+          "milliseconds": 4.045625
+        },
+        {
+          "name": "Explicit Arm starts local speech once; duplicate end and snapshots cannot replay the same turn",
+          "milliseconds": 21.667333
+        },
+        {
+          "name": "Arm while paused or waiting retains the selected voice until a fresh own assignment",
+          "milliseconds": 0.476958
+        },
+        {
+          "name": "Pause fences callbacks and retains uncertain audio until native resolution and a new explicit arm",
+          "milliseconds": 10.739958
+        },
+        {
+          "name": "Complete context binding rejects key, full scope, membership, deployment, member, definition and origin changes",
+          "milliseconds": 1.350334
+        },
+        {
+          "name": "Reset generation, serial and N changes fence late callbacks without replaying uncertain audio",
+          "milliseconds": 0.567458
+        },
+        {
+          "name": "Ordinary refresh holds a completion until a fresh exact token; forbidden or expired turns cancel it",
+          "milliseconds": 10.472208
+        },
+        {
+          "name": "Private persistence failure blocks POST",
+          "milliseconds": 3.978625
+        },
+        {
+          "name": "Unknown retains the exact signed envelope, fences signatures and playback, and observations cannot settle it",
+          "milliseconds": 58.859958
+        },
+        {
+          "name": "Known refusal can prepare a corrected successor using the same completion without speech replay",
+          "milliseconds": 91.140209
+        },
+        {
+          "name": "Loaded pending custody must match the complete context and blocks replay after restart",
+          "milliseconds": 5.220125
+        },
+        {
+          "name": "An old controller cannot paint, prepare, or report after losing the shared view",
+          "milliseconds": 0.272584
+        },
+        {
+          "name": "Invalidation while prepare is in flight prevents even a same-token later observation from reviving that attempt",
+          "milliseconds": 0.933667
+        },
+        {
+          "name": "A fresh next own assignment arriving during submit or reconciliation starts after custody work releases busy",
+          "milliseconds": 50.062584
+        },
+        {
+          "name": "Verified fulfillment archive keeps the selected voice armed for a fresh next pledge without replaying the completed token",
+          "milliseconds": 25.780875
+        },
+        {
+          "name": "The played-token ceiling disarms new speech without discarding unresolved exact custody",
+          "milliseconds": 59.389125
+        },
+        {
+          "name": "Eight refused attempts retain the original history and prevent a ninth signature or speech replay",
+          "milliseconds": 794.593833
+        },
+        {
+          "name": "Unavailable correction room blocks signing and an oversized prepared successor cannot replace refused history",
+          "milliseconds": 75.900375
+        },
+        {
+          "name": "A returned refused enum without retained service proof and a legacy refused slot stay unknown",
+          "milliseconds": 35.967042
+        },
+        {
+          "name": "Refusal refresh runs after stale fencing even when CURRENT arrived before the reporter returned",
+          "milliseconds": 80.240375
+        },
+        {
+          "name": "A same-envelope handoff cannot reparent the report to another retained completion",
+          "milliseconds": 5.691917
+        },
+        {
+          "name": "Obsolete known refusal archives intact, while a valid active unknown history fences archive",
+          "milliseconds": 73.407083
+        },
+        {
+          "name": "Malformed restored refusal never becomes a known terminal UI classification",
+          "milliseconds": 25.4755
+        },
+        {
+          "name": "Archive quota failure preserves intact terminal custody and does not unblock new speech",
+          "milliseconds": 37.977959
+        },
+        {
+          "name": "Restored recorded phase without receipt confirmation remains unresolved and cannot clear or archive",
+          "milliseconds": 43.692583
+        },
+        {
+          "name": "Check is read-only; explicit Resume dispatches only the exact prepared original without signing or speech",
+          "milliseconds": 52.385459
+        },
+        {
+          "name": "Durable audio start is retained before speech and an interrupted restart cannot replay it",
+          "milliseconds": 0.4525
+        },
+        {
+          "name": "Audio start failure and mismatched readback block sound; voice switch retains uncertainty and exact report transfer remains checkable",
+          "milliseconds": 23.697541
+        },
+        {
+          "name": "A stale pre-audio lock grant releases an unsent pledge; a fresh notice while busy starts it once after release",
+          "milliseconds": 0.407375
+        }
+      ],
+      "stderrBytes": 0
+    }
+  },
+  "children": [
+    {
+      "label": "node37",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "--test",
+        "scripts/security-entry-points.test.mjs",
+        "scripts/active-source.test.mjs",
+        "scripts/cloudflare-pool-compat.test.mjs",
+        "scripts/check-shared-helpers.test.mjs",
+        "apps/counter/scripts/node-witness.test.mjs",
+        "scripts/deploy-check.test.mjs",
+        "homepage/test/home.test.mjs",
+        "packages/cli/test/config-dir.test.mjs",
+        "apps/jam/test/managed-assets.test.mjs"
+      ],
+      "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+      "pid": 79572,
+      "exit": 0,
+      "signal": null,
+      "wall": 3.6871474999934435,
+      "user": 4.900867,
+      "system": 0.587434
+    },
+    {
+      "label": "counting55",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "apps/counter/scripts/test-browser.mjs"
+      ],
+      "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+      "pid": 79697,
+      "exit": 0,
+      "signal": null,
+      "wall": 1.9050954999402165,
+      "user": 2.914408,
+      "system": 0.14865400000000006
+    }
+  ],
+  "cost": {
+    "wall": 8.626248624990694,
+    "pythonCpu": 2.74004,
+    "childrenUser": 7.94912,
+    "childrenSystem": 0.8738619999999999,
+    "inclusiveCpu": 11.563022
+  },
+  "costQualification": "Owner includes metadata guards and child work. Children/spec durations overlap owner totals, not additive evidence costs.",
+  "rawPins": [
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-evidence-20261024-v3/before.json",
+      "bytes": 3349023,
+      "sha256": "3fd1b13f143b225b76029d3f2c5b8e688454053e439efc6a849aa647fb693d70",
+      "device": 16777231,
+      "inode": 545981559,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-evidence-20261024-v3/counting55.pid.json",
+      "bytes": 19,
+      "sha256": "d97d76a1b58846896fe75352e326c37951b4ff04badc56242f6f792430aca608",
+      "device": 16777231,
+      "inode": 545981764,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-evidence-20261024-v3/counting55-after.json",
+      "bytes": 3349023,
+      "sha256": "3fd1b13f143b225b76029d3f2c5b8e688454053e439efc6a849aa647fb693d70",
+      "device": 16777231,
+      "inode": 545981774,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-evidence-20261024-v3/counting55.process.json",
+      "bytes": 340,
+      "sha256": "b7f7776d4a6f1d14851ad01036e552dacd286a9c3ced1aa5e04d74c28964bdca",
+      "device": 16777231,
+      "inode": 545981772,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-evidence-20261024-v3/result.json",
+      "bytes": 12199,
+      "sha256": "2271c7eff5c10c0d9582c776951a684f501ada6afb90f342a0924540349400da",
+      "device": 16777231,
+      "inode": 545981777,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-evidence-20261024-v3/counting55.stdout",
+      "bytes": 6754,
+      "sha256": "e4b065b6048836ba08c3e264d10f0ac28bd8b9e5e4fef6837de46aa3d66d74d9",
+      "device": 16777231,
+      "inode": 545981762,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-evidence-20261024-v3/counting55.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "device": 16777231,
+      "inode": 545981763,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-evidence-20261024-v3/node37.pid.json",
+      "bytes": 19,
+      "sha256": "8350df408d0de95ea9a21762f4892002df27169b2d3e1b7e20b584e00b11e135",
+      "device": 16777231,
+      "inode": 545981563,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-evidence-20261024-v3/counting55.command.json",
+      "bytes": 185,
+      "sha256": "2956f6f1cf0bb55bd8a769ca2ddb0f64ea5531a0c1fee14b12589fc2694b7a2f",
+      "device": 16777231,
+      "inode": 545981761,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-evidence-20261024-v3/after.json",
+      "bytes": 3349023,
+      "sha256": "3fd1b13f143b225b76029d3f2c5b8e688454053e439efc6a849aa647fb693d70",
+      "device": 16777231,
+      "inode": 545981776,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-evidence-20261024-v3/node37.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "device": 16777231,
+      "inode": 545981562,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-evidence-20261024-v3/node37.command.json",
+      "bytes": 542,
+      "sha256": "a01fe06b19f0412889cc662be0c7c730a9aa198c0ccbcb92113b7e5f4d8d31ec",
+      "device": 16777231,
+      "inode": 545981560,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-evidence-20261024-v3/invocation.json",
+      "bytes": 472,
+      "sha256": "a5e78f6246a187fc80dc7aac7230a876370ad49c74b24022869eb08c88238b92",
+      "device": 16777231,
+      "inode": 545981557,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-evidence-20261024-v3/node37-after.json",
+      "bytes": 3349023,
+      "sha256": "3fd1b13f143b225b76029d3f2c5b8e688454053e439efc6a849aa647fb693d70",
+      "device": 16777231,
+      "inode": 545981760,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-evidence-20261024-v3/node37.process.json",
+      "bytes": 682,
+      "sha256": "147427318e8096fcbbb8ef107bab144980dc09388287ceb86930086f08728bd2",
+      "device": 16777231,
+      "inode": 545981757,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-evidence-20261024-v3/node37.stdout",
+      "bytes": 4121,
+      "sha256": "ff6a2e91f2a55dec9b4eea6c2554e9af95b39c7fed35c691036f4be883d4c1a3",
+      "device": 16777231,
+      "inode": 545981561,
+      "mode": "0o644",
+      "nlink": 1
+    }
+  ],
+  "sourcePins": [
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-source-20261024-v3/adopted-two-test-manifest.json",
+      "bytes": 1189,
+      "sha256": "4f778ba5d232f3dee52653652739863ec1445ef86680fc8a46bb43cd45824238",
+      "device": 16777231,
+      "inode": 545981159,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-source-20261024-v3/adopted-two-test-proof.json",
+      "bytes": 7895,
+      "sha256": "cbb138edea97da09b91c74df3c165dd902db7b1e8c4f26ef4594af46f1cb4686",
+      "device": 16777231,
+      "inode": 545981160,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-source-20261024-v3/adopted-two-test-source-review.json",
+      "bytes": 1312,
+      "sha256": "85b2cb31bb5b019394c2422a4e63e01dc9ddc1417afe36d617b437ecc51cca25",
+      "device": 16777231,
+      "inode": 545981161,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-source-20261024-v3/ancestry.json",
+      "bytes": 197,
+      "sha256": "f08378271bd5b0b73f49514393c3b0a60cb560869c65defa44efcc6eb68e763c",
+      "device": 16777231,
+      "inode": 545981150,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-source-20261024-v3/checkpoint.json",
+      "bytes": 324,
+      "sha256": "19f34050331b0b1314299b4b9e58370e10fb12570300301cbd5a94029e81282e",
+      "device": 16777231,
+      "inode": 545981149,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-source-20261024-v3/external-tools.json",
+      "bytes": 17101,
+      "sha256": "3f7aede17d7fbed0e3d33e4fff03d465a13b2cd90caed5ad8f0a42f3c954e93e",
+      "device": 16777231,
+      "inode": 545981151,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-source-20261024-v3/fill-proof.json",
+      "bytes": 7932,
+      "sha256": "e4083fb615a12c3a1c6174ef6a220071b1614be289c7cbc074eea7bddd67412e",
+      "device": 16777231,
+      "inode": 545981164,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-source-20261024-v3/final-tail-identity-proof.json",
+      "bytes": 28321,
+      "sha256": "993577b9c633a6c9472fe71efc03339c8e203cd5fb4dcc7a0cc900cfbcc3227b",
+      "device": 16777231,
+      "inode": 545981157,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-source-20261024-v3/historical-tail-proof.json",
+      "bytes": 2254,
+      "sha256": "d3837d189003767acc8e24164007f2f2c8eb570c5324c0a15530b7624b97eb3a",
+      "device": 16777231,
+      "inode": 545981155,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-source-20261024-v3/ledger.json",
+      "bytes": 9427,
+      "sha256": "0d0d97d1a076854da319bb8d5cce2fe1ae7483c4240395b31249e78df527e489",
+      "device": 16777231,
+      "inode": 545981156,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-source-20261024-v3/original-gate-audit.json",
+      "bytes": 38436,
+      "sha256": "484225650bcfa9674bf307538608f13a23193b8a3838ac9fae5eb1336ff9a569",
+      "device": 16777231,
+      "inode": 545981162,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-source-20261024-v3/original-gate-completion-addendum.json",
+      "bytes": 1256,
+      "sha256": "8168088fe42a77792fd586f042607b1568983f2c8060b22f01dd05626057d335",
+      "device": 16777231,
+      "inode": 545981163,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-source-20261024-v3/owner.delta.patch",
+      "bytes": 598,
+      "sha256": "8c8191bf8962d8e0c45ec9e5022716b36369e52e904ae550f7f6f8c8b728c386",
+      "device": 16777231,
+      "inode": 545981154,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-source-20261024-v3/owner.py",
+      "bytes": 16768,
+      "sha256": "e63d4982f4fa81cccb2dfa0e2ebd091cfdcb4bfab41dbb0d08770c41ba39aa9e",
+      "device": 16777231,
+      "inode": 545981152,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-source-20261024-v3/plan.md",
+      "bytes": 2117,
+      "sha256": "756aabe50ce8469800b0b1413e67bf7d778a49d0af744fde3c40d47c04d0f87a",
+      "device": 16777231,
+      "inode": 545981153,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-source-20261024-v3/selection-proof.json",
+      "bytes": 10117,
+      "sha256": "fe03c3e93c23aff381d97ab661f054d0bf8223c5067f5f85a38cad66eb696dbd",
+      "device": 16777231,
+      "inode": 545981148,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-source-20261024-v3/tools.delta.patch",
+      "bytes": 1123,
+      "sha256": "d937efba8a6c99abfa368891cd2a2f5c0e528e535e7b1f35c5fb09bcdc67031b",
+      "device": 16777231,
+      "inode": 545981158,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-source-20261024-v3/v2-to-v3-fill.patch",
+      "bytes": 18147,
+      "sha256": "2b7e4a422d10555c6bc311d00a1bc453127b62effb13bc359af08168c4bc1622",
+      "device": 16777231,
+      "inode": 545981165,
+      "mode": "0o444",
+      "nlink": 1
+    }
+  ],
+  "limits": [
+    "Only previously unreached tails now pass. Original gateV14 remains failed with three test assertions and duplicate-ready owner error.",
+    "Counting stdout OS-temp output aliases are inert; no path dereference, generated-file custody, cleanup or additional rendered browser claim.",
+    "No fresh runtime, compiler, compatibility, healthy Vitest or ordinary gate repeat. No live candidate/dependency reads."
+  ]
+}

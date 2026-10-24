@@ -1,0 +1,90 @@
+{
+  "allocation": "c2fbb18be529c6cb9d95893b7b8a28c644dc13cb",
+  "status": "matched-control",
+  "errors": [],
+  "signals": [],
+  "child": {
+    "argv": [
+      "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+      "/private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/vitest/vitest.mjs",
+      "run",
+      "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-parent-state.test.ts",
+      "--config",
+      "/private/tmp/artroom-builder-archive-fixed-parent-20261023/vitest.config.ts",
+      "--project",
+      "scope",
+      "--allowOnly=false",
+      "--passWithNoTests=false",
+      "--reporter=default",
+      "--reporter=json",
+      "--reporter=/private/tmp/artroom-builder-archive-fixed-parent-20261023/scripts/test-progress.mjs",
+      "--outputFile.json=/private/tmp/artroom-archive-fixed-parent-control-evidence-20261024-v11/vitest.json"
+    ],
+    "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+    "pid": 78982,
+    "exit": 1,
+    "signal": null,
+    "wall": 6.197553999954835,
+    "user": 6.881335,
+    "system": 0.7930609999999999
+  },
+  "qualification": "Sole native-path denial control, whole parent-state3 only. No compatibility/compiler/scale/healthy body/gate repetition. Expected childfailure remains raw DATA; original whole-gate outcomes unchanged.",
+  "observation": {
+    "pass": 25,
+    "completedPasses": 25,
+    "built": {
+      "ok": false,
+      "reason": "unavailable"
+    },
+    "parentRead": {
+      "ordinal": 2,
+      "type": "tree",
+      "maximum": 295,
+      "phase": "object-response",
+      "refusal": "too-large"
+    },
+    "parentError": {
+      "reason": "too-large",
+      "what": "inflated bytes",
+      "id": "14943a28e05110b64122b140ee074cb517005f0d",
+      "type": "tree",
+      "maximum": 295
+    },
+    "treeObservation": {
+      "commit": "d845c2086a5e218a5c0cf7430fbbfb4a8b9e4fef",
+      "commitBytes": 247,
+      "treeBytes": 8703,
+      "trees": 59
+    },
+    "cost": {
+      "entries": 1,
+      "attempts": 15,
+      "nodes": 10,
+      "calls": 33,
+      "metadata": 211068,
+      "inputWork": 1400081
+    },
+    "parentRequests": 266
+  },
+  "caseStates": [
+    {
+      "name": "native parent state appends 200 host-shaped passes with two retained files each",
+      "state": "failed"
+    },
+    {
+      "name": "native parent state resumes the exact Mark and confirms lost readback after eviction",
+      "state": "passed"
+    },
+    {
+      "name": "a legacy pending Mark confirms by exact readback without a frontier or a second send",
+      "state": "passed"
+    }
+  ],
+  "controlMatched": true,
+  "wall": 9.247072250000201,
+  "pythonCpu": 2.753022,
+  "childrenUser": 7.014695,
+  "childrenSystem": 0.933383,
+  "inclusiveCpu": 10.701099999999999,
+  "costQualification": "Owner includes guards and child; nested costs overlap. Original tool closure separate."
+}

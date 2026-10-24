@@ -1,0 +1,1023 @@
+{
+  "state": "CLOSED_FAILED_GATE_INDEPENDENTLY_RECONCILED_NO_UPGRADE",
+  "request": "fc2548ae1ab9c7c5e859d422611f8a34fd0ff13c",
+  "promise": "28cdea0d83a29e9a02c5107d89c6e21b10341fc2",
+  "originalClosure": {
+    "session": 80683,
+    "naturalExit": 1,
+    "rootTool": "3f04ef",
+    "attribution": "Original outer natural closure supplied by root; retained process independently shows child59347 natural1/no signal."
+  },
+  "head": "e9511c4383d81b845c66eb8801e95ce50ac38c13",
+  "tree": "ee29d841e046fbc5fd4580da5ba87ac3f398a1a0",
+  "allocation": "3d6563c3ef0051f00e7abfd2cb9bc5f2033a7c9e",
+  "binding": {
+    "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-binding-allocated-20261024-v14.json",
+    "bytes": 3494342,
+    "sha256": "e5baa30c3d6c3057f973f47b2bd84c33dbe5ebdb7933e59c1c085e065d3aae79",
+    "device": 16777231,
+    "inode": 545934117,
+    "mode": "0o644",
+    "nlink": 1
+  },
+  "sourceManifest": {
+    "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-source-20261024-v14/manifest.json",
+    "bytes": 3053,
+    "sha256": "2a45cfaf537bb080f427cd4f4a05ce2eb933b3ac3ad572ea247846eea21a77c0",
+    "device": 16777231,
+    "inode": 545934038,
+    "mode": "0o444",
+    "nlink": 1
+  },
+  "authenticatedSourcePayloads": 19,
+  "rawPins": [
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v14/after.json",
+      "bytes": 3284955,
+      "sha256": "31f751baa8d0c2d93a2c96e04c80384e6c7bed782e242985c47415432f5cbf79",
+      "device": 16777231,
+      "inode": 545980472,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v14/before.json",
+      "bytes": 3284955,
+      "sha256": "1352214285f455326352a67e80479966f392a2114a30ce843face609cb81171a",
+      "device": 16777231,
+      "inode": 545934126,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v14/child-pid.json",
+      "bytes": 19,
+      "sha256": "8e5ffd737b7069475928aee1ae551bcbb0210d58b4651bfd375786c00298b845",
+      "device": 16777231,
+      "inode": 545934129,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v14/dependency-delta.json",
+      "bytes": 579,
+      "sha256": "78c7bc9fa34c350702511ab6417669ad4b3f4cb86e96f0c3a3c549fc7d0c5ba5",
+      "device": 16777231,
+      "inode": 545980473,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v14/gate.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "device": 16777231,
+      "inode": 545934128,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v14/gate.stdout.log",
+      "bytes": 2320,
+      "sha256": "0053f51a6118aa4fc5e1abd9e87e51a54c229c4ec87ead293fa055213892d872",
+      "device": 16777231,
+      "inode": 545934127,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v14/invocation.json",
+      "bytes": 871,
+      "sha256": "e1bf112bb46b68a21647b6d99b7b8f9495cd29a907cd087bd38141353a8926c5",
+      "device": 16777231,
+      "inode": 545934122,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v14/process.json",
+      "bytes": 349,
+      "sha256": "da7c123b9a1c91fcac6eb44e01069dfc5de0d314240811e8dd95af7915e51a6e",
+      "device": 16777231,
+      "inode": 545980452,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v14/result.json",
+      "bytes": 6940,
+      "sha256": "e47d4d3c9aa08e5271b4992467a8866d25018d9ae0c9d2b2eed74bf50125e362",
+      "device": 16777231,
+      "inode": 545980474,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v14/stages/citations.log",
+      "bytes": 1540528,
+      "sha256": "7283657221da2b682a3bd3c6033e8dc9587f096515f37160a942a9910e7cd7d9",
+      "device": 16777231,
+      "inode": 545980454,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v14/stages/citations.time",
+      "bytes": 29,
+      "sha256": "0c589e7283054921e405c88afa6e301caa1f691f51c1efc7e494020bb54a2543",
+      "device": 16777231,
+      "inode": 545980455,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v14/stages/cite-test.log",
+      "bytes": 760,
+      "sha256": "e24c7b1aefd02f4fef12deb9f60eba34d75be607a44c5d847530800b6f640ffe",
+      "device": 16777231,
+      "inode": 545980456,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v14/stages/cite-test.time",
+      "bytes": 29,
+      "sha256": "10a723bc3b9c9f73c12f8f0f4dff4a202a179b8fbbe6f4d72a968e50311ebcd1",
+      "device": 16777231,
+      "inode": 545980457,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v14/stages/commit-messages.log",
+      "bytes": 39,
+      "sha256": "3e005adbebc4ecf196ca22b0aa0e3b49cd2607c7ea38195671bfb7116501752b",
+      "device": 16777231,
+      "inode": 545980458,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v14/stages/commit-messages.time",
+      "bytes": 29,
+      "sha256": "66b019f3b91dd78b8a648f25e84fc8cee994db5eb175e39de9579bfdd75b994e",
+      "device": 16777231,
+      "inode": 545980459,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v14/stages/commit-test.log",
+      "bytes": 595,
+      "sha256": "5c07c4a4aad7dcd7fa72a13d96328bd0174632ec3fb27459154cf673ab5e2069",
+      "device": 16777231,
+      "inode": 545980460,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v14/stages/commit-test.time",
+      "bytes": 29,
+      "sha256": "ddab934b8b958c26a7ce259112c1216df60e2762e691b37a57f679b4ddd3ab10",
+      "device": 16777231,
+      "inode": 545980461,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v14/stages/helpers.log",
+      "bytes": 68,
+      "sha256": "2d852bd490024e0a21c9c055db2c13d467d635c1a29d05f0b92f5d7643828175",
+      "device": 16777231,
+      "inode": 545980462,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v14/stages/helpers.time",
+      "bytes": 29,
+      "sha256": "c8a50dd0868543374d1d2d3b4d269596ee608d57ba2ad2f1721682939aece716",
+      "device": 16777231,
+      "inode": 545980463,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v14/stages/section-citations.json",
+      "bytes": 3898411,
+      "sha256": "4f80312e4b9298e0218fb66f23eb86064997dc56f93aac3ad28222f18bbfa639",
+      "device": 16777231,
+      "inode": 545980464,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v14/stages/test.log",
+      "bytes": 11468809,
+      "sha256": "83a53750b11b73fc99e633b1990adf649ad383514059664aadf8ecb69db70747",
+      "device": 16777231,
+      "inode": 545980465,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v14/stages/test.time",
+      "bytes": 37,
+      "sha256": "1efaafde15bd3c393813efd510b6b2cbcab65cf1a97eec53d7553d6e2d5a26d0",
+      "device": 16777231,
+      "inode": 545980466,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v14/stages/typecheck.log",
+      "bytes": 1987,
+      "sha256": "62170bbe0cd055cff4699debd9470a886c0f98f328e7c9517d899c021a3788d0",
+      "device": 16777231,
+      "inode": 545980467,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v14/stages/typecheck.time",
+      "bytes": 30,
+      "sha256": "1c745fbf590534007a792208d66c1324ae379f5018e06631016621f3219bf9f7",
+      "device": 16777231,
+      "inode": 545980468,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v14/stages/whitespace.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "device": 16777231,
+      "inode": 545980469,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v14/stages/whitespace.time",
+      "bytes": 29,
+      "sha256": "b19caaf7f42fccf27d8c76a198f52fea0f91edf4f9fc11246dfb0c794d708d58",
+      "device": 16777231,
+      "inode": 545980470,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v14/test-progress.jsonl",
+      "bytes": 3585470,
+      "sha256": "2cea3ff7f3eb1283398e665300355128b7cda93f6343db1e9a1b0080cda1eb92",
+      "device": 16777231,
+      "inode": 545934374,
+      "mode": "0o600",
+      "nlink": 1
+    }
+  ],
+  "guards": {
+    "beforeExactlyAllocated": true,
+    "allFixedGroupsExact": [
+      "gitContext",
+      "environmentDigests",
+      "absentNpmrc",
+      "mainRefs",
+      "originMain",
+      "mergeBase",
+      "npmNamespace",
+      "head",
+      "tree",
+      "status",
+      "source",
+      "external",
+      "environment",
+      "outerCwd",
+      "toolResolutions",
+      "pathResolvers"
+    ],
+    "groupCanonicalSha256": {
+      "gitContext": "665397da95e0859ab0641b7fd6fab33a46b4b49276ad01a71827a1b25b23a57e",
+      "environmentDigests": "bcb48df290f7b296b16eb72d99cd6ed8c75e8517294d568119abee64fe7fb0df",
+      "absentNpmrc": "8e5cef2b23b6c427c85a8c29af2e3da791a8bea9d2c0591fa7ec85c950c08cf3",
+      "mainRefs": "8e739eabd71478d9fb1b1110803b0543d75e8e0a4f3ce5236bf4aeba2add77d5",
+      "originMain": "e635ad35c03543ea8fbc588fab798ca7ddbf6a96bdb110368c14d6c91a180103",
+      "mergeBase": "e635ad35c03543ea8fbc588fab798ca7ddbf6a96bdb110368c14d6c91a180103",
+      "npmNamespace": "1a774fe9e3ba6d5630d9370c77ba30cba237792bf2985400fda0d64d2eb1e389",
+      "head": "ed5a132b1403d906d7fcd07fbe9b9f6af9434064e1b6fa2d462f820e8e65fe11",
+      "tree": "2f2c7163f053ce68acfb938634bd4e99ab79243a73cb8acc8b6e2abaf70f8baa",
+      "status": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+      "source": "5719fb1780f083b9ecaca5c727c5901e4d2c1f0bd600b30854c3c49fd92ef564",
+      "external": "0992abdac0eca489363363b1c7725533d3633febb661a31922bbf2549e73a667",
+      "environment": "fc4e7fb53b8602316eebd16f06c4c6011701f242cd276f19246a7c20e54f5f20",
+      "outerCwd": "f36fdbe4f788bb30f0bbc738216b624f7c4d82eb2a189e4fc6da43ed7842f291",
+      "toolResolutions": "6202f63cbd46e5569b7183e9656d5848c77fb87bcd106093e28a07e8e1890651",
+      "pathResolvers": "3230411caec3cb18e4c2096e0aa23042b372e0da09952d4bbe24bcf47762c4f8"
+    },
+    "sourceRows": 3071,
+    "dependencyRowsIncludingRoot": 6072,
+    "relativeLinks": 32,
+    "actualDependencyDelta": {
+      "node_modules/.vite/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/results.json": {
+        "before": {
+          "mode": "0o644",
+          "device": 16777231,
+          "inode": 545594279,
+          "nlink": 1,
+          "kind": "file",
+          "bytes": 46029,
+          "sha256": "c22328180ea9a28dea509f3ad889493cf09856b89ef8f2aefb190ac634192425"
+        },
+        "after": {
+          "mode": "0o644",
+          "device": 16777231,
+          "inode": 545594279,
+          "nlink": 1,
+          "kind": "file",
+          "bytes": 46036,
+          "sha256": "f6527beb6be57c68510fb165471ee3cf916a9b6f93cff3263422e3f4eb6f0341"
+        }
+      }
+    },
+    "cachePhysicalIdentityExact": true,
+    "physicalQualification": "Snapshots retain mode/device/inode/nlink plus regular bytes/hash and link targets; read-time timestamps are checked but not retained. No claim of full timestamp equality or per-cell cache contents."
+  },
+  "terminals": {
+    "events": 10533,
+    "uniqueIds": 3523,
+    "files": 494,
+    "states": {
+      "passed": 3517,
+      "skipped": 3,
+      "failed": 3
+    },
+    "expectedIdentityTupleSetExactIgnoringState": true,
+    "onlyExpectedPassedToFailed": [
+      {
+        "id": "-1680162046_0",
+        "project": "git",
+        "file": "packages/git/test/journal-v2-budget.test.ts",
+        "name": "a full numeric path at the highest position fits one original writer and append budget",
+        "state": "failed"
+      },
+      {
+        "id": "421427415_10",
+        "project": "scope",
+        "file": "packages/scope/test/archive-host.test.ts",
+        "name": "github incremental send validates exact parent edges and keeps its final credential fence",
+        "state": "failed"
+      },
+      {
+        "id": "421427415_11",
+        "project": "scope",
+        "file": "packages/scope/test/archive-host.test.ts",
+        "name": "artifacts incremental send validates exact parent edges and keeps its final credential fence",
+        "state": "failed"
+      }
+    ],
+    "allOther3520RowsExact": true,
+    "normalizedTupleSha256": "a8396ab7d25d4fe9f652b58b83073061de636994e7902670b19d9d645c3cde2b",
+    "runEnd": {
+      "event": "run-end",
+      "time": "2026-10-24T06:47:07.339Z",
+      "files": 494,
+      "unhandledErrors": 0,
+      "reason": "failed"
+    }
+  },
+  "callbacks": {
+    "case-ready": {
+      "events": 3507,
+      "uniqueIds": 3506,
+      "duplicates": [
+        {
+          "id": "1746186093_12_6",
+          "occurrences": 2,
+          "identity": {
+            "id": "1746186093_12_6",
+            "project": "scope",
+            "file": "packages/scope/test/turn.test.ts",
+            "name": "the scope's budget (section 9.2), here 12 entries > after a closing checkpoint nothing is reserved; the next entry that is not a checkpoint is admitted only with a closing checkpoint reserved again",
+            "state": "passed"
+          },
+          "events": [
+            {
+              "index": 6170,
+              "event": "case-ready",
+              "time": "2026-10-24T06:46:35.548Z",
+              "id": "1746186093_12_6",
+              "project": "scope",
+              "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/turn.test.ts",
+              "name": "the scope's budget (section 9.2), here 12 entries > after a closing checkpoint nothing is reserved; the next entry that is not a checkpoint is admitted only with a closing checkpoint reserved again"
+            },
+            {
+              "index": 6171,
+              "event": "case-ready",
+              "time": "2026-10-24T06:46:35.558Z",
+              "id": "1746186093_12_6",
+              "project": "scope",
+              "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/turn.test.ts",
+              "name": "the scope's budget (section 9.2), here 12 entries > after a closing checkpoint nothing is reserved; the next entry that is not a checkpoint is admitted only with a closing checkpoint reserved again"
+            }
+          ]
+        }
+      ],
+      "missing": [
+        {
+          "id": "1746186093_10_0",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "the budget of timed attempts, here 2 for a turn (section 5.2, step 7) > 1 due: 1 timed entries are written, +0 stays due, and the waiting act is 'accepted'",
+          "state": "passed"
+        },
+        {
+          "id": "1746186093_10_1",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "the budget of timed attempts, here 2 for a turn (section 5.2, step 7) > 2 due: 2 timed entries are written, +0 stays due, and the waiting act is 'accepted'",
+          "state": "passed"
+        },
+        {
+          "id": "1746186093_10_2",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "the budget of timed attempts, here 2 for a turn (section 5.2, step 7) > 3 due: 2 timed entries are written, 1 stays due, and the waiting act is 'busy'",
+          "state": "passed"
+        },
+        {
+          "id": "1746186093_10_4",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "the budget of timed attempts, here 2 for a turn (section 5.2, step 7) > the restarts of one turn are bounded, here at 1: an act whose every commit finds the hold newly due ends busy with nothing written",
+          "state": "passed"
+        },
+        {
+          "id": "1746186093_10_5",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "the budget of timed attempts, here 2 for a turn (section 5.2, step 7) > preparation has a time limit, here 10 milliseconds: an act whose rule is not evaluated in time is answered unavailable and writes nothing; one that is evaluated in time is accepted",
+          "state": "passed"
+        },
+        {
+          "id": "1746186093_10_6",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "the budget of timed attempts, here 2 for a turn (section 5.2, step 7) > an alarm's turn has the same budget: it writes 2 of 3, leaves the third due and sets the alarm again; the next alarm writes it",
+          "state": "passed"
+        },
+        {
+          "id": "1746186093_11_0",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "the clock behind the history (section 5.3) > with a transition due, nothing is written and every input is answered clock-behind",
+          "state": "passed"
+        },
+        {
+          "id": "1746186093_11_1",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "the clock behind the history (section 5.3) > with nothing due, an act is answered clock-behind and a checkpoint, which judges no time, is written with the previous entry's time, clamped",
+          "state": "passed"
+        },
+        {
+          "id": "1746186093_12_0",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "the scope's budget (section 9.2), here 12 entries > legacy: new work cannot take admitted holds' timed entries or the closing checkpoint",
+          "state": "passed"
+        },
+        {
+          "id": "1746186093_12_1",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "the scope's budget (section 9.2), here 12 entries > whole-scope: new work cannot take admitted holds' timed entries or the closing checkpoint",
+          "state": "passed"
+        },
+        {
+          "id": "1746186093_12_2",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "the scope's budget (section 9.2), here 12 entries > a checkpoint beside a pending hold is new work, and with 6 entries it is 'unavailable'; the closing checkpoint is entry 5",
+          "state": "passed"
+        },
+        {
+          "id": "1746186093_12_4",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "the scope's budget (section 9.2), here 12 entries > legacy: a full report scope still writes its acceptance and the request that acceptance reserved",
+          "state": "passed"
+        },
+        {
+          "id": "1746186093_12_5",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "the scope's budget (section 9.2), here 12 entries > whole-scope: a full report scope still writes its acceptance and the request that acceptance reserved",
+          "state": "passed"
+        },
+        {
+          "id": "1746186093_5",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "logical bytes in real SQLite count UTF-8 payloads once across journal and retained domains, redact texts, and roll back retention",
+          "state": "passed"
+        },
+        {
+          "id": "1746186093_6",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "logical key counts in real SQLite retain final keys, ignore transport ACKs, survive reopening and roll back with their writes",
+          "state": "passed"
+        },
+        {
+          "id": "1746186093_7_0",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "the head check (section 5.2, steps 4 to 6) > a second act commits while the first is in preparation; the first starts again from step 3 and is prepared and judged on the new head",
+          "state": "passed"
+        },
+        {
+          "id": "1746186093_9_0",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "what follows the head is told of each commit (`Turns.onSealed`) > a turn tells its listener after each entry that it seals, a timed entry as an input's, at that entry's head and in order; a turn that writes nothing tells nothing; a listener that fails changes no entry. The turns are made by hand over the object's storage",
+          "state": "passed"
+        }
+      ]
+    },
+    "case-result": {
+      "events": 3501,
+      "uniqueIds": 3501,
+      "duplicates": [],
+      "missing": [
+        {
+          "id": "1746186093_10_0",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "the budget of timed attempts, here 2 for a turn (section 5.2, step 7) > 1 due: 1 timed entries are written, +0 stays due, and the waiting act is 'accepted'",
+          "state": "passed"
+        },
+        {
+          "id": "1746186093_10_1",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "the budget of timed attempts, here 2 for a turn (section 5.2, step 7) > 2 due: 2 timed entries are written, +0 stays due, and the waiting act is 'accepted'",
+          "state": "passed"
+        },
+        {
+          "id": "1746186093_10_2",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "the budget of timed attempts, here 2 for a turn (section 5.2, step 7) > 3 due: 2 timed entries are written, 1 stays due, and the waiting act is 'busy'",
+          "state": "passed"
+        },
+        {
+          "id": "1746186093_10_3",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "the budget of timed attempts, here 2 for a turn (section 5.2, step 7) > a selection dropped each time, the clock reading the deadline at selection and one second less at commit, ends the turn busy with nothing written",
+          "state": "passed"
+        },
+        {
+          "id": "1746186093_10_4",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "the budget of timed attempts, here 2 for a turn (section 5.2, step 7) > the restarts of one turn are bounded, here at 1: an act whose every commit finds the hold newly due ends busy with nothing written",
+          "state": "passed"
+        },
+        {
+          "id": "1746186093_10_5",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "the budget of timed attempts, here 2 for a turn (section 5.2, step 7) > preparation has a time limit, here 10 milliseconds: an act whose rule is not evaluated in time is answered unavailable and writes nothing; one that is evaluated in time is accepted",
+          "state": "passed"
+        },
+        {
+          "id": "1746186093_10_6",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "the budget of timed attempts, here 2 for a turn (section 5.2, step 7) > an alarm's turn has the same budget: it writes 2 of 3, leaves the third due and sets the alarm again; the next alarm writes it",
+          "state": "passed"
+        },
+        {
+          "id": "1746186093_11_0",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "the clock behind the history (section 5.3) > with a transition due, nothing is written and every input is answered clock-behind",
+          "state": "passed"
+        },
+        {
+          "id": "1746186093_11_1",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "the clock behind the history (section 5.3) > with nothing due, an act is answered clock-behind and a checkpoint, which judges no time, is written with the previous entry's time, clamped",
+          "state": "passed"
+        },
+        {
+          "id": "1746186093_12_0",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "the scope's budget (section 9.2), here 12 entries > legacy: new work cannot take admitted holds' timed entries or the closing checkpoint",
+          "state": "passed"
+        },
+        {
+          "id": "1746186093_12_1",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "the scope's budget (section 9.2), here 12 entries > whole-scope: new work cannot take admitted holds' timed entries or the closing checkpoint",
+          "state": "passed"
+        },
+        {
+          "id": "1746186093_12_2",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "the scope's budget (section 9.2), here 12 entries > a checkpoint beside a pending hold is new work, and with 6 entries it is 'unavailable'; the closing checkpoint is entry 5",
+          "state": "passed"
+        },
+        {
+          "id": "1746186093_12_3",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "the scope's budget (section 9.2), here 12 entries > a checkpoint beside a pending hold is new work, and with 7 entries it is 'written'; the closing checkpoint is entry 6",
+          "state": "passed"
+        },
+        {
+          "id": "1746186093_12_4",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "the scope's budget (section 9.2), here 12 entries > legacy: a full report scope still writes its acceptance and the request that acceptance reserved",
+          "state": "passed"
+        },
+        {
+          "id": "1746186093_12_5",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "the scope's budget (section 9.2), here 12 entries > whole-scope: a full report scope still writes its acceptance and the request that acceptance reserved",
+          "state": "passed"
+        },
+        {
+          "id": "1746186093_4",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "the opt-in rule-input writer ceiling accepts exact canonical bytes and refuses one more even when evaluation returns false; legacy retention is unchanged",
+          "state": "passed"
+        },
+        {
+          "id": "1746186093_5",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "logical bytes in real SQLite count UTF-8 payloads once across journal and retained domains, redact texts, and roll back retention",
+          "state": "passed"
+        },
+        {
+          "id": "1746186093_6",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "logical key counts in real SQLite retain final keys, ignore transport ACKs, survive reopening and roll back with their writes",
+          "state": "passed"
+        },
+        {
+          "id": "1746186093_7_0",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "the head check (section 5.2, steps 4 to 6) > a second act commits while the first is in preparation; the first starts again from step 3 and is prepared and judged on the new head",
+          "state": "passed"
+        },
+        {
+          "id": "1746186093_8_0",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "a due expiry is written before any other input (section 5.2, steps 3 and 6.3) > an act whose commit reading is at two holds' deadline stops; the drain writes both ends, the lower item first, and then the act",
+          "state": "passed"
+        },
+        {
+          "id": "1746186093_9_0",
+          "project": "scope",
+          "file": "packages/scope/test/turn.test.ts",
+          "name": "what follows the head is told of each commit (`Turns.onSealed`) > a turn tells its listener after each entry that it seals, a timed entry as an input's, at that entry's head and in order; a turn that writes nothing tells nothing; a listener that fails changes no entry. The turns are made by hand over the object's storage",
+          "state": "passed"
+        },
+        {
+          "id": "1760911592_0",
+          "project": "scope",
+          "file": "apps/room/lanes/test/file-publication.scope.test.ts",
+          "name": "a real change and Lending tell share one slot: the held change finishes first and the later file wins with its own receipt",
+          "state": "passed"
+        }
+      ]
+    }
+  },
+  "ownerFailure": {
+    "errors": [
+      "RuntimeError: duplicate ready callback"
+    ],
+    "qualification": "Owner refused duplicate ready callback before case-ledger write. Independent audit reconstructs terminal identities without changing owner result. Duplicate callbacks do not establish retries or duplicate execution; gaps do not establish missing execution."
+  },
+  "stages": {
+    "whitespace": {
+      "exit": 0,
+      "printedWall": 0.0,
+      "printedCpu": 0.0
+    },
+    "commit-messages": {
+      "exit": 0,
+      "printedWall": 0.1,
+      "printedCpu": 0.1
+    },
+    "commit-test": {
+      "exit": 0,
+      "printedWall": 0.6,
+      "printedCpu": 0.5
+    },
+    "helpers": {
+      "exit": 0,
+      "printedWall": 0.4,
+      "printedCpu": 0.5
+    },
+    "citations": {
+      "exit": 0,
+      "printedWall": 5.5,
+      "printedCpu": 5.8
+    },
+    "cite-test": {
+      "exit": 0,
+      "printedWall": 0.3,
+      "printedCpu": 0.3
+    },
+    "typecheck": {
+      "exit": 0,
+      "printedWall": 9.5,
+      "printedCpu": 37.2
+    },
+    "test": {
+      "exit": 1,
+      "printedWall": 1217.0,
+      "printedCpu": 1385.3
+    }
+  },
+  "stageTimes": {
+    "whitespace": {
+      "real": 0.01,
+      "user": 0.0,
+      "sys": 0.01
+    },
+    "commit-messages": {
+      "real": 0.1,
+      "user": 0.07,
+      "sys": 0.02
+    },
+    "commit-test": {
+      "real": 0.57,
+      "user": 0.37,
+      "sys": 0.16
+    },
+    "helpers": {
+      "real": 0.39,
+      "user": 0.43,
+      "sys": 0.05
+    },
+    "citations": {
+      "real": 5.54,
+      "user": 5.57,
+      "sys": 0.23
+    },
+    "cite-test": {
+      "real": 0.34,
+      "user": 0.28,
+      "sys": 0.07
+    },
+    "typecheck": {
+      "real": 9.5,
+      "user": 33.07,
+      "sys": 4.14
+    },
+    "test": {
+      "real": 1216.98,
+      "user": 1223.3,
+      "sys": 162.03
+    }
+  },
+  "stageCopyCorrespondence": [
+    {
+      "name": "citations.log",
+      "bytes": 1540528,
+      "sha256": "7283657221da2b682a3bd3c6033e8dc9587f096515f37160a942a9910e7cd7d9",
+      "originalMode": "0o644",
+      "copyMode": "0o644",
+      "modeEqual": true
+    },
+    {
+      "name": "citations.time",
+      "bytes": 29,
+      "sha256": "0c589e7283054921e405c88afa6e301caa1f691f51c1efc7e494020bb54a2543",
+      "originalMode": "0o644",
+      "copyMode": "0o644",
+      "modeEqual": true
+    },
+    {
+      "name": "cite-test.log",
+      "bytes": 760,
+      "sha256": "e24c7b1aefd02f4fef12deb9f60eba34d75be607a44c5d847530800b6f640ffe",
+      "originalMode": "0o644",
+      "copyMode": "0o644",
+      "modeEqual": true
+    },
+    {
+      "name": "cite-test.time",
+      "bytes": 29,
+      "sha256": "10a723bc3b9c9f73c12f8f0f4dff4a202a179b8fbbe6f4d72a968e50311ebcd1",
+      "originalMode": "0o644",
+      "copyMode": "0o644",
+      "modeEqual": true
+    },
+    {
+      "name": "commit-messages.log",
+      "bytes": 39,
+      "sha256": "3e005adbebc4ecf196ca22b0aa0e3b49cd2607c7ea38195671bfb7116501752b",
+      "originalMode": "0o644",
+      "copyMode": "0o644",
+      "modeEqual": true
+    },
+    {
+      "name": "commit-messages.time",
+      "bytes": 29,
+      "sha256": "66b019f3b91dd78b8a648f25e84fc8cee994db5eb175e39de9579bfdd75b994e",
+      "originalMode": "0o644",
+      "copyMode": "0o644",
+      "modeEqual": true
+    },
+    {
+      "name": "commit-test.log",
+      "bytes": 595,
+      "sha256": "5c07c4a4aad7dcd7fa72a13d96328bd0174632ec3fb27459154cf673ab5e2069",
+      "originalMode": "0o644",
+      "copyMode": "0o644",
+      "modeEqual": true
+    },
+    {
+      "name": "commit-test.time",
+      "bytes": 29,
+      "sha256": "ddab934b8b958c26a7ce259112c1216df60e2762e691b37a57f679b4ddd3ab10",
+      "originalMode": "0o644",
+      "copyMode": "0o644",
+      "modeEqual": true
+    },
+    {
+      "name": "helpers.log",
+      "bytes": 68,
+      "sha256": "2d852bd490024e0a21c9c055db2c13d467d635c1a29d05f0b92f5d7643828175",
+      "originalMode": "0o644",
+      "copyMode": "0o644",
+      "modeEqual": true
+    },
+    {
+      "name": "helpers.time",
+      "bytes": 29,
+      "sha256": "c8a50dd0868543374d1d2d3b4d269596ee608d57ba2ad2f1721682939aece716",
+      "originalMode": "0o644",
+      "copyMode": "0o644",
+      "modeEqual": true
+    },
+    {
+      "name": "section-citations.json",
+      "bytes": 3898411,
+      "sha256": "4f80312e4b9298e0218fb66f23eb86064997dc56f93aac3ad28222f18bbfa639",
+      "originalMode": "0o600",
+      "copyMode": "0o644",
+      "modeEqual": false
+    },
+    {
+      "name": "test.log",
+      "bytes": 11468809,
+      "sha256": "83a53750b11b73fc99e633b1990adf649ad383514059664aadf8ecb69db70747",
+      "originalMode": "0o644",
+      "copyMode": "0o644",
+      "modeEqual": true
+    },
+    {
+      "name": "test.time",
+      "bytes": 37,
+      "sha256": "1efaafde15bd3c393813efd510b6b2cbcab65cf1a97eec53d7553d6e2d5a26d0",
+      "originalMode": "0o644",
+      "copyMode": "0o644",
+      "modeEqual": true
+    },
+    {
+      "name": "typecheck.log",
+      "bytes": 1987,
+      "sha256": "62170bbe0cd055cff4699debd9470a886c0f98f328e7c9517d899c021a3788d0",
+      "originalMode": "0o644",
+      "copyMode": "0o644",
+      "modeEqual": true
+    },
+    {
+      "name": "typecheck.time",
+      "bytes": 30,
+      "sha256": "1c745fbf590534007a792208d66c1324ae379f5018e06631016621f3219bf9f7",
+      "originalMode": "0o644",
+      "copyMode": "0o644",
+      "modeEqual": true
+    },
+    {
+      "name": "whitespace.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "originalMode": "0o644",
+      "copyMode": "0o644",
+      "modeEqual": true
+    },
+    {
+      "name": "whitespace.time",
+      "bytes": 29,
+      "sha256": "b19caaf7f42fccf27d8c76a198f52fea0f91edf4f9fc11246dfb0c794d708d58",
+      "originalMode": "0o644",
+      "copyMode": "0o644",
+      "modeEqual": true
+    }
+  ],
+  "nodeSummaries": {
+    "commit-test": {
+      "tests": [
+        4
+      ],
+      "pass": [
+        4
+      ],
+      "fail": [
+        0
+      ]
+    },
+    "cite-test": {
+      "tests": [
+        7
+      ],
+      "pass": [
+        7
+      ],
+      "fail": [
+        0
+      ]
+    },
+    "test": {
+      "tests": [],
+      "pass": [],
+      "fail": [],
+      "qualification": "Vitest failed in maintained && chain before Node37 and Counting55. No healthy tail outcome claimed."
+    }
+  },
+  "child": {
+    "argv": [
+      "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+      "/opt/homebrew/lib/node_modules/npm/bin/npm-cli.js",
+      "run",
+      "gate"
+    ],
+    "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+    "pid": 59347,
+    "exit": 1,
+    "signal": null,
+    "wall": 1233.7489193340298,
+    "user": 1263.276876,
+    "sys": 166.84904899999998
+  },
+  "cost": {
+    "outerWall": 1235.5651862079976,
+    "outerPythonCpu": 1.53921,
+    "childrenUser": 1263.350823,
+    "childrenSys": 166.930859,
+    "inclusiveCpu": 1431.820892
+  },
+  "costQualification": "Owner inclusive CPU includes child and metadata guards. Child and stage intervals overlap; do not sum nested intervals. Raw typecheck log retained; compiler-context count checked separately below.",
+  "failureAssertions": {
+    "git": {
+      "file": "packages/git/test/journal-v2-budget.test.ts",
+      "line": 55,
+      "expectedNodes": 31,
+      "receivedNodes": 25
+    },
+    "scopeHosts": {
+      "file": "packages/scope/test/archive-host.test.ts",
+      "line": 353,
+      "cases": 2,
+      "expected": {
+        "entries": 0,
+        "attempts": 32,
+        "nodes": 16,
+        "calls": 64,
+        "metadata": 27766,
+        "inputWork": 98310
+      },
+      "received": {
+        "entries": 0,
+        "attempts": 25,
+        "nodes": 10,
+        "calls": 50,
+        "metadata": 22774,
+        "inputWork": 89628
+      }
+    }
+  },
+  "limits": [
+    "All three tests and owner remain FAILED. No acceptance upgrade or rerun.",
+    "No live candidate/dependency/tool reads, original stage-temp path traversal or embedded reference dereference. Stage-copy bytes checked against retained original descriptors; section-citations mode difference retained.",
+    "No retries inferred from duplicate callback. Original raw events and messages retained, not rewritten."
+  ]
+}

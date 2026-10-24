@@ -1,0 +1,167 @@
+{
+  "status": "ORIGINAL_MATCHED_HEADSEEN_CONTROL_CONFIRMED",
+  "closure": "Root1396natural0/toolaa8a83 attributed; retained child29863natural1/noSignal.",
+  "checks": [
+    "Allocated binding exact bytes/hash/snapshot. Single literal guard mutation independently reconstructed from retained originalbytes.",
+    "All4 full snapshot vectors reconcile with only ownedtarget/status normalization, exact selectedcache cell and emptytemp timestamp allowances. Original device/inode/mode/nlink/bytes/hash/mtime restored, onlyctime differs.",
+    "Sole whole appendcase fails with actual AssertionError at83:66, original no-op expectation;1terminalcallback matches JSON and0unhandled. No retry/rerun.",
+    "Original wrapper matched-control/errors[]/signals[] retained; unrelated outcome not inferred."
+  ],
+  "result": {
+    "allocation": "abd5aa6369887daf1ded2a05307dc83ee275e295",
+    "status": "matched-control",
+    "errors": [],
+    "signals": [],
+    "child": {
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/vitest/vitest.mjs",
+        "run",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/git/test/journal-v2-append.test.ts",
+        "--config",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/vitest.config.ts",
+        "--project",
+        "git",
+        "--allowOnly=false",
+        "--passWithNoTests=false",
+        "--reporter=default",
+        "--reporter=json",
+        "--reporter=/private/tmp/artroom-builder-archive-fixed-parent-20261023/scripts/test-progress.mjs",
+        "--outputFile.json=/private/tmp/artroom-archive-append-headseen-control-evidence-20261024-v3/vitest.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+      "pid": 29863,
+      "exit": 1,
+      "signal": null,
+      "wall": 1.923624333110638,
+      "user": 1.419003,
+      "system": 0.592673
+    },
+    "qualification": "HeadSeen denial control, whole Git append1. Original complete passed file is the external baseline; no healthy repeat. Sole original no-op refusal assertion must fail.",
+    "caseStates": [
+      {
+        "name": "an append preserves old edges only at their exact parent paths and supplies every changed edge",
+        "state": "failed",
+        "failureMessages": [
+          "AssertionError: expected { ok: true } to deeply equal { ok: false, reason: 'parent' }\n    at /private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/git/test/journal-v2-append.test.ts:83:66\n    at async file:///private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+        ]
+      }
+    ],
+    "classification": {
+      "intendedCaptureParentAssertion": true,
+      "sourceFrame": {
+        "file": "packages/git/test/journal-v2-append.test.ts",
+        "line": 83,
+        "columnStart": 3,
+        "columnEnd": 106,
+        "sourceLine": "  expect(await check(await rewriteV2(rows => rows, true), full)).toEqual({ ok: false, reason: \"parent\" });"
+      },
+      "observedFrameColumns": [
+        66
+      ],
+      "passed": 0,
+      "failed": 1,
+      "qualification": "All actual outcomes retained. Sole original no-op refusal assertion required."
+    },
+    "controlMatched": true,
+    "wall": 4.995296666980721,
+    "pythonCpu": 2.7708239999999997,
+    "childrenUser": 1.552082,
+    "childrenSystem": 0.728422,
+    "inclusiveCpu": 5.051328,
+    "costQualification": "Owner includes guards and child; nested costs overlap. Original tool closure separate."
+  },
+  "rawPins": [
+    {
+      "name": "after.json",
+      "bytes": 3336673,
+      "sha256": "4107aa294fc25897d088e714a00a3651d485f815472db1688fe6be5ed161675e"
+    },
+    {
+      "name": "before.json",
+      "bytes": 3336667,
+      "sha256": "4b4d456a27ab63ea79ab831c00c1a1b4ff16e37a4f8efdd2cc51ac226a6dcda1"
+    },
+    {
+      "name": "command.json",
+      "bytes": 961,
+      "sha256": "01d50a9602a19b0827ac56a2fe2e94a5431a19aa5c47653a00771f05eddc0873"
+    },
+    {
+      "name": "invocation.json",
+      "bytes": 483,
+      "sha256": "95875679598e09f493a0d984c867472b1533afdfd9a1a3c47b39c3d66c2cf3d6"
+    },
+    {
+      "name": "mutant-after.json",
+      "bytes": 3336715,
+      "sha256": "a05ca56595f376e6d9adffdbdb4aea6a29d7b858ffa41063bfc8647b78c60f8d"
+    },
+    {
+      "name": "mutant-before.json",
+      "bytes": 3336709,
+      "sha256": "6e089ab2184b4ec3978f137183506a50feea5ba052dc41002324dc254c0448e5"
+    },
+    {
+      "name": "mutant.data",
+      "bytes": 4780,
+      "sha256": "623b9a9ce4dfca72640e62b24b207f698d718f489e2bf17350d529ff14094b6e"
+    },
+    {
+      "name": "mutation.json",
+      "bytes": 364,
+      "sha256": "435f5b9b55834e708e3e20a15b4553d14ce0c4bd34c124386044cb520f29cbcc"
+    },
+    {
+      "name": "mutation.patch",
+      "bytes": 434,
+      "sha256": "8f2bd297e09fb4b962a03ceb62a54c6a18429b3d908c3d6c3943979ab3c8454d"
+    },
+    {
+      "name": "original.data",
+      "bytes": 4771,
+      "sha256": "7b75788f894117f96e0caa8a564b2072f4e63f07d6ea16c65e3b7cd976ced4a8"
+    },
+    {
+      "name": "pid.json",
+      "bytes": 19,
+      "sha256": "7248ffee53eafeecba56a77a9cca595f2ad74b09bb93d0d0b813a8e658006308"
+    },
+    {
+      "name": "process.json",
+      "bytes": 922,
+      "sha256": "0e9621c7791267c3e939537dd9cd838e78d6267918e2b4ec06ed013a4a83eef1"
+    },
+    {
+      "name": "progress.jsonl",
+      "bytes": 1130,
+      "sha256": "78c622bf306cdd70da8b7127f9edcfdc13fb531032e5f6801204802be8a0b84d"
+    },
+    {
+      "name": "restoration.json",
+      "bytes": 798,
+      "sha256": "956e09b86030fd6c232f8acf2676457b06c09f7f4e5b64002a65900f6eb14e0f"
+    },
+    {
+      "name": "result.json",
+      "bytes": 2685,
+      "sha256": "dc0264ea2b0d3a3dd6e358e0f9e9b8713cb0d99833f1e4f74ba4e40d8e424cea"
+    },
+    {
+      "name": "stderr",
+      "bytes": 973,
+      "sha256": "0a8c8729043f279764371ab770e62aa5eb3d3269d819aea698531d32e328593a"
+    },
+    {
+      "name": "stdout",
+      "bytes": 527,
+      "sha256": "0b4ee1933ea1d71c7b1cd01aa60cc1aa82a8baf50275792bba5366142c46ceec"
+    },
+    {
+      "name": "vitest.json",
+      "bytes": 1362,
+      "sha256": "7ad29284e5b1de012b91cd190013919d62a6ab47b7d4b23482d6fffe75d87653"
+    }
+  ],
+  "limits": "Closed data only; no live candidate/dependencies or project execution. Costs overlap nested child."
+}

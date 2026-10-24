@@ -1,0 +1,472 @@
+{
+  "kind": "closed-fixed-parent-owning-prerequisite-failure-audit",
+  "request": "fc2548ae1ab9c7c5e859d422611f8a34fd0ff13c",
+  "promise": "28cdea0d83a29e9a02c5107d89c6e21b10341fc2",
+  "verdict": "COHERENT_ORIGINAL_FAILURE_ALL_FIXED_GUARDS_EXACT",
+  "rootAttribution": {
+    "session": 92847,
+    "tool": "387af7",
+    "naturalExit": 1,
+    "source": "Root explicit original-process closure; not independently re-executed."
+  },
+  "allocation": "339382d04f2b07610154d63deffe4cbd7ad9615c",
+  "bindings": {
+    "allocationOnly": true,
+    "nullBytes": 4019615,
+    "nullSha256": "45ca954d76ae29dc2fa2ccd7699a82fa2862ebe7ea6d4f5ff19aec0e09dcd3ac",
+    "allocatedBytes": 4019653,
+    "allocatedSha256": "9f99eaa3d771a0990df7df897666e79792892305671a344ae2f6fcf71a20ebba"
+  },
+  "checkpoint": {
+    "root": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+    "head": "51ddc73d535af94641c746d96e070e03c8648b39",
+    "tree": "e73e19211f3e1ab0e0655cf26f52cae7f712e0c5",
+    "branch": "builder/archive-fixed-parent-20261023",
+    "status": "",
+    "mainRefs": {
+      "refs/heads/Main": "235e9262565335735870574113174b0218237910",
+      "refs/remotes/origin/main": "235e9262565335735870574113174b0218237910"
+    },
+    "lockSha256": "1c452439eca771ee24b9fa030f59b383806a4fa57ba0140481e90c98404d4fd8"
+  },
+  "fullGuards": {
+    "snapshots": [
+      "before.json",
+      "compatibility-after.json",
+      "focused-after.json",
+      "after.json"
+    ],
+    "allEqualToAllocatedBinding": true,
+    "sourceRows": 2954,
+    "dependencyRowsIncludingRoot": 6072,
+    "dependencyLinks": 32,
+    "toolRows": 208,
+    "environmentRows": 60,
+    "preparationRows": 11,
+    "allOtherSnapshotFieldsEqual": true,
+    "cacheChange": "None. Full dependency/cache fields exact; no allowance needed.",
+    "continuity": "All four complete retained vectors, including physical identities/hashes, Source/status/head, Main, tools/environment/preparation, equal the captured binding. No live paths were followed."
+  },
+  "outcome": {
+    "outerChildren": [
+      {
+        "label": "compatibility",
+        "argv": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "scripts/cloudflare-pool-compat.mjs"
+        ],
+        "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+        "pid": 20202,
+        "exit": 0,
+        "signal": null,
+        "wall": 0.07958962500561029,
+        "user": 0.065956,
+        "system": 0.012843
+      },
+      {
+        "label": "focused",
+        "argv": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "scripts/focused-check.mjs",
+          "/private/tmp/artroom-archive-fixed-parent-owning-evidence-20261023-v2/focused-plan.json",
+          "/private/tmp/artroom-archive-fixed-parent-owning-evidence-20261023-v2/focused"
+        ],
+        "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+        "pid": 20223,
+        "exit": 1,
+        "signal": null,
+        "wall": 1.3663021250395104,
+        "user": 2.104686,
+        "system": 0.493518
+      }
+    ],
+    "compatibility": {
+      "package": "@cloudflare/vitest-pool-workers",
+      "version": "0.22.0",
+      "packageRoot": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/@cloudflare/vitest-pool-workers",
+      "copied": false,
+      "before": "cd50d18adce92adb54a3f00410d646b2fe09b3f12c5b833c492bcf5857621b39",
+      "after": "cd50d18adce92adb54a3f00410d646b2fe09b3f12c5b833c492bcf5857621b39"
+    },
+    "compilerPhases": [
+      {
+        "name": "git-test",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/typescript/bin/tsc",
+          "-p",
+          "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/git/tsconfig.test.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+        "started": "2026-10-23T22:44:29.430Z",
+        "ended": "2026-10-23T22:44:29.997Z",
+        "measuredCommandMilliseconds": 567.142,
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 0.56,
+        "userSeconds": 0.74,
+        "systemSeconds": 0.12,
+        "cpuSeconds": 0.86
+      },
+      {
+        "name": "scope-production",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/typescript/bin/tsc",
+          "-p",
+          "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/tsconfig.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+        "started": "2026-10-23T22:44:30.147Z",
+        "ended": "2026-10-23T22:44:30.425Z",
+        "measuredCommandMilliseconds": 278.20129099999997,
+        "exitCode": 1,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 0.27,
+        "userSeconds": 1.05,
+        "systemSeconds": 0.12,
+        "cpuSeconds": 1.17
+      }
+    ],
+    "commandStatuses": [
+      {
+        "name": "git-test",
+        "status": "passed"
+      },
+      {
+        "name": "scope-production",
+        "status": "failed"
+      },
+      {
+        "name": "scope-test",
+        "status": "unrun"
+      },
+      {
+        "name": "body",
+        "status": "unrun"
+      }
+    ],
+    "rawFailure": "packages/scope/src/archive-frontier-store.ts(6,8): error TS6133: 'JournalFormat' is declared but its value is never read.\nreal 0.27\nuser 1.05\nsys 0.12\n",
+    "cases": {
+      "planned": 31,
+      "started": 0,
+      "final": 0,
+      "allUnrun": true,
+      "observed": 0,
+      "unexpected": 0,
+      "modules": 0,
+      "coverageIssues": 0
+    },
+    "outerErrors": [
+      "RuntimeError: child failed/interrupted; later phases unrun"
+    ],
+    "signals": [],
+    "focusedManifestAllSixPinsExact": true,
+    "focusedPlanEqualsBoundPlan": true
+  },
+  "cost": {
+    "ownerWall": 4.376927500008605,
+    "ownerPythonCpu": 2.671015,
+    "inclusiveChildrenUser": 2.290447,
+    "inclusiveChildrenSystem": 0.6297539999999999,
+    "inclusiveCpu": 5.591216,
+    "qualification": "Nested per-command and compiler costs overlap with inclusive children costs; do not add them. Outer tool closure is attributed to root, not measured by this audit."
+  },
+  "limitations": [
+    "The original run failed at Scope-production TS6133. Git-test compiler and compatibility setup passed; Scope-test compiler and all body cases remain unrun. This is not an owning pass.",
+    "No runtime bodies or callbacks occurred, so no body acceptance or callback-drain inference follows.",
+    "Only closed raw leaves and the two explicit bindings were read. No helper execution, candidate/dependency access, source repair, rerun, parser or gate occurred.",
+    "The stored namespace/result qualification describes the intended full plan, not phases actually reached.",
+    "Root owns the exact unused type-only import correction; this audit makes no Source or seal change."
+  ],
+  "inputs": [
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-owning-evidence-20261023-v2/after.json",
+      "bytes": 3292667,
+      "sha256": "9e34d37608d38c3ff54cac95c08c30416b88ec34fae43e515ce85da4f070b851",
+      "device": 16777231,
+      "inode": 545608923,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792795471995411741,
+      "ctimeNs": 1792795471995411741
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-owning-evidence-20261023-v2/before.json",
+      "bytes": 3292667,
+      "sha256": "9e34d37608d38c3ff54cac95c08c30416b88ec34fae43e515ce85da4f070b851",
+      "device": 16777231,
+      "inode": 545608888,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792795468380791311,
+      "ctimeNs": 1792795468380791311
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-owning-evidence-20261023-v2/compatibility-after.json",
+      "bytes": 3292667,
+      "sha256": "9e34d37608d38c3ff54cac95c08c30416b88ec34fae43e515ce85da4f070b851",
+      "device": 16777231,
+      "inode": 545608897,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792795469194669439,
+      "ctimeNs": 1792795469194669439
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-owning-evidence-20261023-v2/compatibility.command.json",
+      "bytes": 182,
+      "sha256": "d3f1b66fcbfcb1a44e811184631ed527f95652a945e2894892509c5d0fb46270",
+      "device": 16777231,
+      "inode": 545608890,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792795468399345910,
+      "ctimeNs": 1792795468399345910
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-owning-evidence-20261023-v2/compatibility.pid.json",
+      "bytes": 19,
+      "sha256": "8aa0d392ad7fb87b49eb7301707caffc073296c9f3164a8b33a4747f8cc7e6b4",
+      "device": 16777231,
+      "inode": 545608893,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792795468401221541,
+      "ctimeNs": 1792795468401221541
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-owning-evidence-20261023-v2/compatibility.process.json",
+      "bytes": 330,
+      "sha256": "975637c98efc300e79579912cded4b174ba82bff8c2fd7b3f3b7ddee9ba5592f",
+      "device": 16777231,
+      "inode": 545608894,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792795468479007660,
+      "ctimeNs": 1792795468479007660
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-owning-evidence-20261023-v2/compatibility.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "device": 16777231,
+      "inode": 545608892,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792795468399415536,
+      "ctimeNs": 1792795468399427744
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-owning-evidence-20261023-v2/compatibility.stdout",
+      "bytes": 351,
+      "sha256": "c250fecb0d76ed80b79cfcb388a2ffc89ce13f1fdaa9b7da404eb24b8da1572c",
+      "device": 16777231,
+      "inode": 545608891,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792795468477047945,
+      "ctimeNs": 1792795468477047945
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-owning-evidence-20261023-v2/focused-after.json",
+      "bytes": 3292667,
+      "sha256": "9e34d37608d38c3ff54cac95c08c30416b88ec34fae43e515ce85da4f070b851",
+      "device": 16777231,
+      "inode": 545608921,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792795471279927504,
+      "ctimeNs": 1792795471279927504
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-owning-evidence-20261023-v2/focused-plan.json",
+      "bytes": 500629,
+      "sha256": "cd6e69bc94d41c9d8861e16cc78df9b86a3997e81e87dbfa2ce61503f4f7d194",
+      "device": 16777231,
+      "inode": 545608889,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792795468399184493,
+      "ctimeNs": 1792795468399184493
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-owning-evidence-20261023-v2/focused.command.json",
+      "bytes": 353,
+      "sha256": "5e1ee0a93c78a3b54d9dbbe099a2b9a8308b9efe9a82961eacc8e3d83d2eff18",
+      "device": 16777231,
+      "inode": 545608898,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792795469207166187,
+      "ctimeNs": 1792795469207166187
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-owning-evidence-20261023-v2/focused.pid.json",
+      "bytes": 19,
+      "sha256": "f07d73b5ec5e37f839a132de51002b5570b0d3f331e8b79b9e523a7622500aa0",
+      "device": 16777231,
+      "inode": 545608901,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792795469208874692,
+      "ctimeNs": 1792795469208874692
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-owning-evidence-20261023-v2/focused.process.json",
+      "bytes": 494,
+      "sha256": "0ac541af36862db7557731a560f206f31a7739f83f28888e5a75c32df33fb59f",
+      "device": 16777231,
+      "inode": 545608918,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792795470573518253,
+      "ctimeNs": 1792795470573518253
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-owning-evidence-20261023-v2/focused.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "device": 16777231,
+      "inode": 545608900,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792795469207265979,
+      "ctimeNs": 1792795469207280229
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-owning-evidence-20261023-v2/focused.stdout",
+      "bytes": 306,
+      "sha256": "9662324904226fc898a0600831b94780844037a1524dd1bf1d9ad3bd48366be4",
+      "device": 16777231,
+      "inode": 545608899,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792795470571141204,
+      "ctimeNs": 1792795470571141204
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-owning-evidence-20261023-v2/invocation.json",
+      "bytes": 475,
+      "sha256": "e6c9e46224b7788c9c5d85bc3e9d320343945ff899f7b03d85a64c8b883c84eb",
+      "device": 16777231,
+      "inode": 545608885,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792795467631181507,
+      "ctimeNs": 1792795467631181507
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-owning-evidence-20261023-v2/result.json",
+      "bytes": 2131,
+      "sha256": "3f34659842831feebe7b5dd03c66194f09c8e4e751cf511c9afe71f78f0fd0ef",
+      "device": 16777231,
+      "inode": 545608924,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792795472008150031,
+      "ctimeNs": 1792795472008150031
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-owning-evidence-20261023-v2/focused/coverage-ledger.json",
+      "bytes": 10464,
+      "sha256": "310df7616a6f4ff084f76fdd52ea71cf0f47e71819e71a591127959dd57b4547",
+      "device": 16777231,
+      "inode": 545608915,
+      "mode": "0o400",
+      "nlink": 1,
+      "mtimeNs": 1792795470570547035,
+      "ctimeNs": 1792795470571049245
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-owning-evidence-20261023-v2/focused/error.log",
+      "bytes": 471,
+      "sha256": "f33a8f5349454c1ee6dbe880b54f80ae75aa22e1a7bad90a83e59afd8dfa4f87",
+      "device": 16777231,
+      "inode": 545608914,
+      "mode": "0o400",
+      "nlink": 1,
+      "mtimeNs": 1792795470570257618,
+      "ctimeNs": 1792795470571060204
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-owning-evidence-20261023-v2/focused/git-test.log",
+      "bytes": 29,
+      "sha256": "ae2034eb05c508d6a32cbbadcc0d298bfe7e460387cbb67dd15093fffefebdb1",
+      "device": 16777231,
+      "inode": 545608906,
+      "mode": "0o400",
+      "nlink": 1,
+      "mtimeNs": 1792795469997145908,
+      "ctimeNs": 1792795470571068787
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-owning-evidence-20261023-v2/focused/manifest.json",
+      "bytes": 833,
+      "sha256": "1276d2da6a33c7e100d9de4263e7668985f8846c25073fa8444c6ad6fcd9d6b0",
+      "device": 16777231,
+      "inode": 545608917,
+      "mode": "0o400",
+      "nlink": 1,
+      "mtimeNs": 1792795470571010787,
+      "ctimeNs": 1792795470571078537
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-owning-evidence-20261023-v2/focused/plan.json",
+      "bytes": 500629,
+      "sha256": "cd6e69bc94d41c9d8861e16cc78df9b86a3997e81e87dbfa2ce61503f4f7d194",
+      "device": 16777231,
+      "inode": 545608903,
+      "mode": "0o400",
+      "nlink": 1,
+      "mtimeNs": 1792795469277359948,
+      "ctimeNs": 1792795470571086079
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-owning-evidence-20261023-v2/focused/result.json",
+      "bytes": 4559,
+      "sha256": "baef7f0ac7d45d5a7ba51b3f64865a101a18f65210d3a6162d1c6668e3567175",
+      "device": 16777231,
+      "inode": 545608916,
+      "mode": "0o400",
+      "nlink": 1,
+      "mtimeNs": 1792795470570656786,
+      "ctimeNs": 1792795470571096787
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-owning-evidence-20261023-v2/focused/scope-production.log",
+      "bytes": 151,
+      "sha256": "1a12357a5b24c1d7201df89fcec66707acd2aa4515afa33f2e2c8bc359e9b66d",
+      "device": 16777231,
+      "inode": 545608912,
+      "mode": "0o400",
+      "nlink": 1,
+      "mtimeNs": 1792795470425571415,
+      "ctimeNs": 1792795470571103954
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-owning-binding-null-20261023-v2.json",
+      "bytes": 4019615,
+      "sha256": "45ca954d76ae29dc2fa2ccd7699a82fa2862ebe7ea6d4f5ff19aec0e09dcd3ac",
+      "device": 16777231,
+      "inode": 545608816,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792795427908964550,
+      "ctimeNs": 1792795427908964550
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-owning-binding-allocated-20261023-v2.json",
+      "bytes": 4019653,
+      "sha256": "9f99eaa3d771a0990df7df897666e79792892305671a344ae2f6fcf71a20ebba",
+      "device": 16777231,
+      "inode": 545608857,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792795460103301960,
+      "ctimeNs": 1792795460103301960
+    }
+  ]
+}

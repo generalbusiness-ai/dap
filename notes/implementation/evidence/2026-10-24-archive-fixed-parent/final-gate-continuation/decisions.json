@@ -1,0 +1,57 @@
+{
+  "state": "SCOPED_CHECKS_CLOSED_ORIGINAL_GATE_FAILED_EXACT_HEAD_REVIEW_PENDING",
+  "request": "fc2548ae1ab9c7c5e859d422611f8a34fd0ff13c",
+  "promise": "28cdea0d83a29e9a02c5107d89c6e21b10341fc2",
+  "testedHead": "b86df6e5c5fc7e6c6ba095ef95c0cb01c60ca397",
+  "testedTree": "397762ef93ac782b4b86b00df6a84a8a60b351ba",
+  "acceptedMain": "d7aea0b03ce8b9c1afcea7f3f6252b66d0d3630a",
+  "originalGate": {
+    "head": "e9511c4383d81b845c66eb8801e95ce50ac38c13",
+    "tree": "ee29d841e046fbc5fd4580da5ba87ac3f398a1a0",
+    "session": 80683,
+    "naturalExit": 1,
+    "tool": "3f04ef",
+    "passed": 3517,
+    "failed": 3,
+    "skipped": 3,
+    "files": 494,
+    "ownerError": "RuntimeError: duplicate ready callback",
+    "qualification": "Child assertion failures and post-child collector error remain independently FAILED."
+  },
+  "continuations": {
+    "scoped13": {
+      "session": 37406,
+      "naturalExit": 0,
+      "tool": "76e1dd",
+      "cases": 13
+    },
+    "unreachedTail": {
+      "session": 1432,
+      "naturalExit": 0,
+      "tool": "9d6be2",
+      "nodeCases": 37,
+      "countingCases": 55
+    }
+  },
+  "rootAttributedAcceptance": "bdc8382766df1655580802bfd1041cb52ec3a885",
+  "gateAuditRootAdoption": "2f7459e6e3b281446ad8ec5b4344cc8562619ab6",
+  "sameProductionBasis": {
+    "parent": "e9511c4383d81b845c66eb8801e95ce50ac38c13",
+    "changedPaths": [
+      "packages/git/test/journal-v2-budget.test.ts",
+      "packages/scope/test/archive-host.test.ts"
+    ],
+    "allOtherPathsAndModesExact": true
+  },
+  "cost": {
+    "owners": 37,
+    "wallExact": "3384.2076838333159408",
+    "inclusiveCpuExact": "3876.6540490000000714",
+    "qualification": "Partial original outer-invocation subtotal. Nested child/stage costs overlap. Captures/preparation/review/unmeasured overhead excluded. Immutable cost rows predate final audit acceptance and retain historical pending text."
+  },
+  "outstanding": [
+    "Exact-head independent review and landing",
+    "Planner broader capacity/disposition and any separately authorized hosted deployment/acceptance"
+  ],
+  "qualification": "Acceptance IDs and original natural closure remain root-attributed. No new project/helper execution or candidate mutation in this preparation. Every copied program/patch/path is inert DATA with no transitive authority."
+}

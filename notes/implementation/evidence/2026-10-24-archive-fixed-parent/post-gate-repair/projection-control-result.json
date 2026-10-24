@@ -1,0 +1,79 @@
+{
+  "allocation": "487e2c2fbd4677ce9d9c7477f6bae58d4bb79667",
+  "status": "matched-control",
+  "errors": [],
+  "signals": [],
+  "child": {
+    "argv": [
+      "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+      "/private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/vitest/vitest.mjs",
+      "run",
+      "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-frontier-store.test.ts",
+      "--config",
+      "/private/tmp/artroom-builder-archive-fixed-parent-20261023/vitest.config.ts",
+      "--project",
+      "scope",
+      "--allowOnly=false",
+      "--passWithNoTests=false",
+      "--reporter=default",
+      "--reporter=json",
+      "--reporter=/private/tmp/artroom-builder-archive-fixed-parent-20261023/scripts/test-progress.mjs",
+      "--outputFile.json=/private/tmp/artroom-archive-row-projection-control-evidence-20261024-v3/vitest.json"
+    ],
+    "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+    "pid": 33605,
+    "exit": 1,
+    "signal": null,
+    "wall": 4.42192504205741,
+    "user": 5.018327,
+    "system": 0.720835
+  },
+  "qualification": "Repository projection equality control, whole Scope store4. Original complete passed file is the baseline; no healthy repeat. Sole cursor rowcount assertion must fail.",
+  "caseStates": [
+    {
+      "name": "frontier Mark and promotion share rollback cuts and the pending proof survives native eviction",
+      "state": "passed",
+      "failureMessages": []
+    },
+    {
+      "name": "a prepared frontier cannot overwrite a changed key or a different native Mark or custody",
+      "state": "passed",
+      "failureMessages": []
+    },
+    {
+      "name": "frontier size and work are admitted before body reads or writes, without refunding a rollback",
+      "state": "failed",
+      "failureMessages": [
+        "AssertionError: Refuse the enlarged repository before any projected row crosses SQL: expected 1 to be +0 // Object.is equality\n    at /private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-frontier-store.test.ts:270:104\n    at maybeHandleRunRequest (private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/@cloudflare/vitest-pool-workers/dist/worker/lib/cloudflare/test-internal.mjs:157:18)\n    at DurableObject.Wrapper.fetch (private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/@cloudflare/vitest-pool-workers/dist/worker/lib/cloudflare/test-internal.mjs:552:20)"
+      ]
+    },
+    {
+      "name": "a missing-v2 seed binds an opaque exact native context and installs only confirmed bytes",
+      "state": "passed",
+      "failureMessages": []
+    }
+  ],
+  "classification": {
+    "intendedCaptureParentAssertion": true,
+    "sourceFrame": {
+      "file": "packages/scope/test/archive-frontier-store.test.ts",
+      "line": 270,
+      "columnStart": 7,
+      "columnEnd": 111,
+      "sourceLine": "      expect(projectedRaceRows, \"Refuse the enlarged repository before any projected row crosses SQL\").toBe(0);"
+    },
+    "observedFrameColumns": [
+      104
+    ],
+    "passed": 3,
+    "failed": 1,
+    "qualification": "All actual outcomes retained. Sole original projection cursor rowcount assertion required."
+  },
+  "controlMatched": true,
+  "wall": 7.5024127080105245,
+  "pythonCpu": 2.780161,
+  "childrenUser": 5.151642,
+  "childrenSystem": 0.857059,
+  "inclusiveCpu": 8.788862,
+  "costQualification": "Owner includes guards and child; nested costs overlap. Original tool closure separate."
+}

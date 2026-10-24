@@ -1,0 +1,40 @@
+{
+  "schema": "archive-publication-frontier-fixture-independent-source-review-1",
+  "verdict": "Source clear; no unresolved mandatory finding",
+  "request": "fc2548ae1ab9c7c5e859d422611f8a34fd0ff13c",
+  "promise": "28cdea0d83a29e9a02c5107d89c6e21b10341fc2",
+  "source": "/private/tmp/artroom-archive-publication-frontier-fixture-source-20261024-v1",
+  "manifest": {
+    "bytes": 853,
+    "sha256": "0e34b41a0fbdef6b856c926d4de207647df1ca04237e82115fe4b20e08b4400f",
+    "payloadLeaves": 5
+  },
+  "basis": "5460741784776af24d432c748aac8166d4059a94",
+  "after": {
+    "path": "packages/scope/test/archive-publication.test.ts",
+    "bytes": 26723,
+    "sha256": "92068ca9453f7bb103ca199c8d34d686bd2bae14f5e9d220db7e3941dc7fdaba"
+  },
+  "verification": [
+    "All finite leaves authenticated through stable regular single-link physical reads; all bytes/SHA pins match.",
+    "Basis matches immutable Git exactly; one-file unified patch independently replayed to the full held afterimage.",
+    "All original expect lines remain in order, title/deadline unchanged, remaining two cases unchanged.",
+    "Actual Git capture hashes/parses held old writer objects. Same ordinary fixture budget pays capture, private validation, encode, confirmed-only install and private readback.",
+    "Production store context binds exact old row/repository/receipt and absent pair. Installer rechecks exact row/key CAS atomically. No raw key, row, Mark, receipt, anchorsPublished, anchor or signed action is invented.",
+    "Setup asserts full old ArchiveRow unchanged, only confirmed native key present, exact repository/at/format/commit/through binding and eleven-object witness.",
+    "Original low-budget refusal/no-row-change, pre-publication floor/send blocking, real signed backfill, exact nonempty authority/legacy range, floor release, reduced entries and restart preservation assertions remain.",
+    "closureReads==0 clearly identifies pre-existing native-frontier dispatch; this does not claim oversized closure migration success."
+  ],
+  "failureAssessment": {
+    "closedLog": "/private/tmp/artroom-archive-preparation-reuse-owning-evidence-20261024-v3/focused/body.log",
+    "observation": "Old receipt through108; first alarm idle, second missing-frontier bootstrap retries limit before parent read/capture node. Sixteen prior cases passed, this case failed and five cases remained unfinished.",
+    "independentStaticProof": "Even ignoring every other fee/current usage, capture+validation accepted604row metadata and encoding require746104 metadata; minimum one-object read profile bounds selected bytes to41862. The100 checkpoints alone exceed that (at least44500 bytes even allowing a fictitious1character kind; actual lane44800). Whole closure is necessarily over selected byte bound.",
+    "qualification": "Exact selected max/count/sum and first count-vs-byte guard are absent from raw. No numeric first-guard claim or production reuse regression is inferred."
+  },
+  "limits": [
+    "Production code, caps, tariffs, schemas and maintained seals unchanged.",
+    "This witness starts with genuine validated existing frontier metadata and still proves that frontier does not confer publication authority. Separate bootstrap cases retain actual missing-state success and oversized refusal.",
+    "Scope-test compiler and whole publication3 plus unfinished parent-state3 remain pending; no corrective runtime success inferred.",
+    "No live candidate/dependency reads or mutations, project imports, runtime, parser, compiler, capture, tests or installs in this review."
+  ]
+}

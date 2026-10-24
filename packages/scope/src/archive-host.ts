@@ -4,7 +4,7 @@ import { same } from "@generalbusiness/dap-bytes";
 import type { ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
 import { isScopeRef, timeMs } from "@generalbusiness/dap-bytes";
 import { GitRefusal, READ_BOUNDS, Reader, type GitSource } from "@generalbusiness/dap-git";
-import { journalId, journalRef, type JournalObject } from "@generalbusiness/dap-git/journal";
+import { journalId, journalRef, type JournalObject, type JournalObjectSource } from "@generalbusiness/dap-git/journal";
 import { SmartHttpSource } from "@generalbusiness/dap-git/http-read";
 import type { SmartHttpOptions } from "@generalbusiness/dap-git/http";
 import type { ArchiveCredential, ArchiveProvider, FixtureArchiveProvider } from "./archive-driver.ts";
@@ -12,6 +12,8 @@ import type { DestinationRepository } from "./destination-host.ts";
 import { sendOnce } from "./github-host.ts";
 import { sendArchiveAppend } from "./archive-send.ts";
 import { beginArchiveParentRead, type ArchiveParentReadObservation } from "./archive-parent-read-diagnostic.ts";
+import { ARCHIVE_MIGRATION_TREE_BYTES, ARCHIVE_MIGRATION_COMMIT_BYTES, ARCHIVE_MIGRATION_HEAD_BYTES,
+  ARCHIVE_MIGRATION_OBJECTS, ARCHIVE_MIGRATION_WIRE_BYTES, ARCHIVE_MIGRATION_AD_BYTES } from "./archive-bootstrap-cost.ts";
 
 /** Explicit stand-ins. Production credentials cannot be selected by config. */
 export interface ArchiveTokens {
@@ -47,7 +49,7 @@ export function archiveProvider(ports: { readonly tokens: ArchiveTokens; readonl
   const { tokens, clock } = ports;
   const isolatedObjectProtocol = host.isolatedObjectProtocol;
   const held = new WeakMap<ArchiveCredential, { repository: DestinationRepository; at: ScopeRef; ref: string; original: ArchiveCredential }>();
-  const source = async (repository: DestinationRepository, allowed: () => boolean, most?: { bytes: number; objects: number }, isolated = false, observation?: ArchiveParentReadObservation, reserveObjects?: (count: number) => void, reserveWork?: (bytes: number) => void): Promise<SmartHttpSource> => {
+  const source = async (repository: DestinationRepository, allowed: () => boolean, most?: { bytes: number; objects: number }, isolated = false, observation?: ArchiveParentReadObservation, reserveObjects?: (count: number) => void, reserveWork?: (bytes: number) => void, oneClosure = false, migration = false, reserveOutput?: (objects: number, bytes: number) => void): Promise<SmartHttpSource> => {
     check(allowed); repository = { ...repository }; host.transport(repository); // Validate before the first port call.
     observation?.phase("token");
     const plaintext = await tokens.read({ ...repository }, allowed); check(allowed);
@@ -56,17 +58,29 @@ export function archiveProvider(ports: { readonly tokens: ArchiveTokens; readonl
     const transport = host.transport(repository, plaintext);
     const maxBytes = Math.min(transport.maxBytes, most?.bytes ?? transport.maxBytes);
     const originalFetch = transport.fetch ?? ((request: Request) => fetch(request));
+    let requests = 0;
     return new SmartHttpSource({ ...transport, maxBytes,
-      ...(observation ? { fetch: async function(this: unknown, request: Request) {
+      ...(observation || oneClosure ? { fetch: async function(this: unknown, request: Request) {
         const get = request.method === "GET";
-        observation.phase(get ? "advertisement-request" : "object-request");
+        // A complete pack may satisfy every cached closure read. An omitted
+        // object must refuse, not start another negotiation on this allowance.
+        if (oneClosure) {
+          check(allowed);
+          if (requests === 0 ? !get : requests !== 1 || request.method !== "POST") return bad();
+          requests++;
+        }
+        observation?.phase(get ? "advertisement-request" : "object-request");
         const response = await originalFetch.call(this, request);
-        observation.phase(get ? "advertisement-response" : "object-response");
+        observation?.phase(get ? "advertisement-response" : "object-response");
         return response;
       } } : {}),
-      ...(most === undefined ? {} : { bounds: { ...(transport.bounds ?? READ_BOUNDS), closureObjects: Math.min(transport.bounds?.closureObjects ?? READ_BOUNDS.closureObjects, most.objects) } }),
+      ...(most === undefined ? {} : { bounds: { ...(transport.bounds ?? READ_BOUNDS), closureObjects: Math.min(transport.bounds?.closureObjects ?? READ_BOUNDS.closureObjects, most.objects),
+        ...(migration && most.objects === 1 ? { blobBytes: ARCHIVE_MIGRATION_HEAD_BYTES, commitBytes: ARCHIVE_MIGRATION_HEAD_BYTES, treeBytes: ARCHIVE_MIGRATION_HEAD_BYTES } : {}) } }),
       ...(isolated ? { isolateObjects: { ownedBytes: maxBytes * 17,
-        ...(isolatedObjectProtocol === undefined ? {} : { protocol: isolatedObjectProtocol }),
+        ...(migration ? { protocol: "v2" as const } : isolatedObjectProtocol === undefined ? {} : { protocol: isolatedObjectProtocol }),
+        ...(migration ? { advertisementBytes: ARCHIVE_MIGRATION_AD_BYTES, advertisementPackets: 32,
+          maxInflatedBytes: most?.objects === 1 ? ARCHIVE_MIGRATION_HEAD_BYTES : ARCHIVE_MIGRATION_TREE_BYTES + ARCHIVE_MIGRATION_COMMIT_BYTES } : {}),
+        ...(reserveOutput ? { reserveOutput } : {}),
         ...(reserveObjects === undefined ? {} : { reserveObjects }),
         ...(reserveWork === undefined ? {} : { reserveWork }) } } : {}) });
   };
@@ -116,10 +130,75 @@ export function archiveProvider(ports: { readonly tokens: ArchiveTokens; readonl
         return value;
       } catch (error) { observation.refused(error); throw error; }
     },
+    async readParent(repository, commit, allowed, budget) {
+      check(allowed);
+      repository = { ...repository }; // Own identity before current-parent await and lazy head read.
+      const id = journalId("sha1", commit);
+      // Fixed ad32/response64 frame scans and1024adbytes never retain an
+      // arbitrary capability/chunk array. Actual bodies/counts are charged below.
+      const advertisement = () => budget.spend({ calls: 2, metadata: 16384, inputWork: 16384 });
+      const reserveObjects = (count: number) => budget.spend({ metadata: count * 1024, inputWork: count * 1024 });
+      const reserveWork = (bytes: number) => budget.spend({ metadata: bytes, inputWork: bytes * 32 });
+      const reserveOutput = (objects: number, bytes: number) => budget.spend({ metadata: objects * 256 + bytes, inputWork: objects * 256 + bytes * 4 });
+      advertisement();
+      budget.spend({ metadata: ARCHIVE_MIGRATION_WIRE_BYTES, inputWork: ARCHIVE_MIGRATION_WIRE_BYTES });
+      const input = await source(repository, allowed, { bytes: ARCHIVE_MIGRATION_WIRE_BYTES, objects: ARCHIVE_MIGRATION_OBJECTS },
+        true, undefined, reserveObjects, reserveWork, true, true, reserveOutput);
+      const objects = await input.currentParent(id, { commitBytes: ARCHIVE_MIGRATION_COMMIT_BYTES,
+        treeBytes: ARCHIVE_MIGRATION_TREE_BYTES, advertisementBytes: ARCHIVE_MIGRATION_AD_BYTES });
+      check(allowed);
+      // Decoder-owned bodies enter this private map without another payload
+      // copy. Reserve list/map descriptors before constructing them.
+      budget.spend({ metadata: objects.length * 256, inputWork: objects.length * 256 });
+      const held = new Map(objects.map(object => [object.id as string, object]));
+      let head: { id: string; value: Awaited<ReturnType<JournalObjectSource["object"]>> } | null = null;
+      let headReading: Promise<Awaited<ReturnType<JournalObjectSource["object"]>>> | null = null;
+      const object: JournalObjectSource["object"] = async (key, maximum) => {
+        check(allowed);
+        const found = held.get(key);
+        if (found) {
+          if (found.type !== "commit" && found.type !== "tree") return bad();
+          return { type: found.type, size: found.data.length, data: maximum !== 0 && found.data.length <= maximum ? found.data : null };
+        }
+        const value = head?.id === key ? head.value : null;
+        return value ? { type: value.type, size: value.size, data: maximum !== 0 && value.size <= maximum ? value.data : null } : null;
+      };
+      const boundedObject: NonNullable<JournalObjectSource["boundedObject"]> = async (key, type, maximum) => {
+        check(allowed);
+        const found = await object(key, maximum);
+        if (found) { if (found.type !== type) return bad(); return found; }
+        // Metadata-only object() never initiates a fetch. The journal reader
+        // prepays this explicit body maximum before entering boundedObject.
+        if (type !== "blob" || !Number.isSafeInteger(maximum) || maximum <= 0 || maximum > ARCHIVE_MIGRATION_HEAD_BYTES) return bad();
+        const headId = journalId("sha1", key);
+        if (head !== null && head.id !== headId) return bad();
+        if (headReading === null) {
+          head = { id: headId, value: null };
+          headReading = (async () => {
+            advertisement();
+            budget.spend({ metadata: ARCHIVE_MIGRATION_HEAD_BYTES + 8192, inputWork: ARCHIVE_MIGRATION_HEAD_BYTES + 8192 });
+            const sourceHead = await source(repository, allowed,
+              { bytes: ARCHIVE_MIGRATION_HEAD_BYTES + 8192, objects: 1 }, true, undefined, reserveObjects, reserveWork, true, true, reserveOutput);
+            const value = await sourceHead.object(headId, ARCHIVE_MIGRATION_HEAD_BYTES);
+            check(allowed);
+            if (value.type !== "blob" || !(value.data instanceof Uint8Array) || value.size !== value.data.length) return bad();
+            head!.value = value; return value;
+          })();
+        }
+        const value = await headReading;
+        check(allowed);
+        if (!value) return null;
+        return { type: value.type, size: value.size, data: value.size <= maximum ? value.data : null };
+      };
+      return { object, boundedObject };
+    },
     async objects(repository, commit, most, allowed) {
       const maximum = { ...most };
       if (!Number.isSafeInteger(maximum.bytes) || maximum.bytes < 32 || maximum.bytes > 8 * 1024 * 1024 || !Number.isSafeInteger(maximum.objects) || maximum.objects < 1 || maximum.objects > 8192) return bad();
-      const input = await source(repository, allowed, maximum);
+      check(allowed);
+      // Legacy complete-closure callers retain their existing port. Native
+      // migration has a separate shallow current-parent source above.
+      const input = await source(repository, allowed, maximum, false);
       const collected = new Map<string, JournalObject>(); let bytes = 0;
       const recording: GitSource = {
         object: async (id, limit) => {

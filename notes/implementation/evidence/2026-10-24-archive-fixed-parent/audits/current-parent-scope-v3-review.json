@@ -1,0 +1,89 @@
+{
+  "kind": "independent-source-review",
+  "state": "source-clear-runtime-pending",
+  "request": "fc2548ae1ab9c7c5e859d422611f8a34fd0ff13c",
+  "promise": "28cdea0d83a29e9a02c5107d89c6e21b10341fc2",
+  "ruling": "63a9216ff69eef0800d0b9cbf05d370bd5840c25",
+  "packet": {
+    "path": "/private/tmp/artroom-archive-current-parent-scope-source-20261024-v3/manifest.json",
+    "bytes": 2047,
+    "sha256": "6229ab5c7c076e0fbf0ecc7cb0fc462b3c46ae0cfd3433677ed964cad8c39a46",
+    "authenticatedLeaves": 12,
+    "payloadBytes": 209754,
+    "immutableBasis": "d33eba016678a911fbc27e245d40eaa22e4c92d7",
+    "fullPatchReplayPaths": 5
+  },
+  "reviewMethod": "Stable regular/noalias/nlink1 FD reads of all twelve finite leaves and exact bytes/SHA verification. Full five-path unified patch replay against immutable basis. Relevant changed production/test flows read, with maintained budget/object-reader/frontier/legacy/publication/row APIs inspected as inert immutable Source. No project import/execution or candidate/dependency/active gate access.",
+  "findingsClosed": [
+    "Maintained object(id,0) never fetches unknown head; typed boundedObject is the sole lazy blob exchange, after reader body admission. Missing tree refuses before credential/network calls.",
+    "Repository is owned before any await and reused for the bounded head. Allowed is fenced after its await.",
+    "A single Native fixture owner creates all three history lanes.",
+    "Initial real driver publication must cover the exact pre-run head. Every later mechanical range is exactly one inspected checkpoint with empty authority-bearing fields.",
+    "Production buildJournalPass publication callback enters the actual Git manifest blob; returned manifest anchors and canonical checked Mark publication match it. Original published state is carried through real rows.confirm, with no direct flag edit.",
+    "Metadata-only/missing-tree and reduced-budget witnesses retain zero token/identity/info/all-HTTP counters; genuine bounded blob reads are separate.",
+    "Published6/37 histories avoid an unrelated37-directory legacy publication walk; small original unpublished history and Native300 preserve truthful legacy-anchor coverage."
+  ],
+  "productionAssessment": [
+    "No complete-closure or stopgap fallback remains in the migration driver branch. Generic legacy v1 closure port remains unrelated and unchanged in authority.",
+    "Current exact commit and bounded tree companions come from one depth1/blob:none exchange. Only one fresh exact1024-byte blob source may be fetched; no cache-miss renegotiation.",
+    "Exact receipt/scope/incarnation/head/path hashes are authenticated by existing frontier capture/validation. Existing opaque begin/prepare/install and exact raw-row/absent-key CAS are retained. Migration does not create a Mark/receipt/authority anchor or mint/send.",
+    "All original caps and ordinary readObject maximum+8192/protocol tariff stay unchanged; migration alone selects explicit v2.",
+    "Private through value drives prospective capture/finish admission. Original prechecks remain paid, and original finish lookahead escrow remains in force. No reset/refund or validation credit."
+  ],
+  "accounting": {
+    "treeBytes": 18432,
+    "commitBytes": 1024,
+    "wireBytes": 32768,
+    "objects": 660,
+    "headBlobBytes": 1024,
+    "headWireBytes": 9216,
+    "adBytesEach": 1024,
+    "adFramesEach": 32,
+    "responseFramesEach": 64,
+    "readReservationMetadata": 1359360,
+    "readReservationInputWork": 8723968,
+    "actualHookUpperBytes": {
+      "parent": 72704,
+      "head": 12288
+    },
+    "qualification": "Read reservation is conservative for actual record/work/output charges plus fixed wire/frame/map ownership. Static table uses compact confirmed row<=32768 and root-accepted through-profile V2; arbitrary larger pending rows still require their own private forecast and may refuse. Logical metadata/work model is not a measured heap bound. Rounded root-attributed precheck metadata is not a full measurement."
+  },
+  "transportOwnershipCorrection": {
+    "packet": "/private/tmp/artroom-archive-current-parent-git-source-20261024-v3/manifest.json",
+    "sha256": "c3c9a47d2cd274c7769cd53d569cdcda862603a5a5d6b2dadca9bcb1d913fa92",
+    "httpReadBytes": 53550,
+    "httpReadSha256": "4ff56bca6b68030d147805668b6a4401c2b66abc952edaf5ba2af5e1f1c54510",
+    "change": "Sole V2-to-V3 production word change slice to subarray in the opt-in contiguous return removes an intermediate wire/inflation copy. API/caps/hooks and all14 tests are unchanged. ScopeV3 literal prior transport pin is historical; final integrated provenance must identify this successor. Git peer review is separate."
+  },
+  "testAssessment": {
+    "bootstrapCases": 4,
+    "bootstrapDeadlinesMs": 20000,
+    "inputWorkCases": 1,
+    "inputWorkDeadlineMs": 30000,
+    "native300": "Seed-only alarm is separately reported with zero entries; post-seed original signed authority, named preplanning ceiling, exact partial receipt/suffix/drain and all original cost caps remain. Later published passes require zero parent reads.",
+    "history": "6-pass, ordinary37-pass (~8700 tree bytes) and padded37-pass >=16384 tree bytes use actual Native entries/SQLite/publications, mechanical bounded retained selections and independent tree-byte inspection. No fixture budget or timeout widens.",
+    "unrun": "All current compiler/owning/control/seal/final gate checks remain pending; actual capacity, deadlines and hosted migration cannot be inferred from Source."
+  },
+  "remainingMandatorySourceFindings": [],
+  "throughProfileCorrespondence": {
+    "manifestSha256": "dcf0f0eb76319ec8bb93924d6d7b5df9679f77b70fde72d9ccab6a8c9be86e0f",
+    "authenticatedRelevantAfterimages": [
+      {
+        "path": "source/packages/git/src/journal-v2-frontier.ts",
+        "bytes": 12393,
+        "sha256": "8a79366ae569d21983e3f42b158ede6c941b056eb121093d215dced3531da5ab"
+      },
+      {
+        "path": "source/packages/scope/src/archive-frontier-cost.ts",
+        "bytes": 8453,
+        "sha256": "fe8f03fd94259fb74dad61a9866f8ffa7da549f0a6b6534db5fb41cca06e3971"
+      },
+      {
+        "path": "source/packages/scope/src/archive-frontier-store.ts",
+        "bytes": 30109,
+        "sha256": "aa04c767ecdccb4e0d1423d94260583afbf3aaa65f2cf1c0e61d98715285bc62"
+      }
+    ],
+    "scope": "Only exact exported forecast signature and private bootstrapFinish rowBytes/through correspondence checked; full profile semantics/test review remains its separate independent review."
+  }
+}

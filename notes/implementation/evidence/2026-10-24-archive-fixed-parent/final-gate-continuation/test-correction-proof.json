@@ -1,0 +1,205 @@
+{
+  "state": "HELD_EXTERNAL_TWO_TEST_RECEIPT_CORRECTION_NO_RUNTIME",
+  "request": "fc2548ae1ab9c7c5e859d422611f8a34fd0ff13c",
+  "promise": "28cdea0d83a29e9a02c5107d89c6e21b10341fc2",
+  "basis": "e9511c4383d81b845c66eb8801e95ce50ac38c13",
+  "changes": [
+    {
+      "path": "packages/git/test/journal-v2-budget.test.ts",
+      "basisBytes": 5720,
+      "basisSha256": "ff9e6c750b1fbd83c5698a762150177bc0531e2e70959389280022a0b857b7d1",
+      "afterBytes": 5805,
+      "afterSha256": "c45dfb7136b0fdaf728ca79dc17277357ac97db7c7f1b0d89fb6364c2523cb6f",
+      "change": "Exact node receipt and explanatory comment only"
+    },
+    {
+      "path": "packages/scope/test/archive-host.test.ts",
+      "basisBytes": 30036,
+      "basisSha256": "ed1ba72aa1c8a34bab62de90e6421d30428a9cad196a11f2179be992f614dcd7",
+      "afterBytes": 30036,
+      "afterSha256": "af38849e69e2b2ad0bb5f21083cd00b6627378f461f91414b8bc52ba2584b837",
+      "change": "Five exact cost scalars in the one parameterized assertion; both adapters retain all other assertions"
+    }
+  ],
+  "closedGateEvidence": {
+    "rootAttribution": {
+      "originalSession": 80683,
+      "naturalExit": 1,
+      "tool": "3f04ef"
+    },
+    "rawPins": [
+      {
+        "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v14/stages/test.log",
+        "bytes": 11468809,
+        "sha256": "83a53750b11b73fc99e633b1990adf649ad383514059664aadf8ecb69db70747",
+        "device": 16777231,
+        "inode": 545980465
+      },
+      {
+        "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v14/gate.stdout.log",
+        "bytes": 2320,
+        "sha256": "0053f51a6118aa4fc5e1abd9e87e51a54c229c4ec87ead293fa055213892d872",
+        "device": 16777231,
+        "inode": 545934127
+      },
+      {
+        "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v14/result.json",
+        "bytes": 6940,
+        "sha256": "e47d4d3c9aa08e5271b4992467a8866d25018d9ae0c9d2b2eed74bf50125e362",
+        "device": 16777231,
+        "inode": 545980474
+      }
+    ],
+    "tail": {
+      "lines": 100,
+      "sha256": "8ac76d94365d10c7b1a31f8302f6dca71a64574a3b8b2dde1961f005a5cd02da",
+      "qualifier": "Only this bounded terminal tail was inspected for assertion content; full named leaf was hashed for authentication."
+    },
+    "child": {
+      "pid": 59347,
+      "exit": 1,
+      "signal": null
+    },
+    "ownerErrors": [
+      "RuntimeError: duplicate ready callback"
+    ],
+    "qualification": "Closed original gate remains failed. This proposal repairs only the three confirmed stale exact-cost assertions, not the separate callback reconciliation error or an entire gate outcome."
+  },
+  "gitBudgetArithmetic": {
+    "parentReceiptHeadWalk": 3,
+    "preparedDirectories": {
+      "fixedRootJournalV2": 3,
+      "numeric": 6,
+      "newPass": 1,
+      "newRule": 1,
+      "total": 11
+    },
+    "buildNodes": 0,
+    "foldedAppendComparison": 11,
+    "total": 25,
+    "oldSeparateHeadWalksRemoved": 6,
+    "retained": "All real writer/build/append checks, six original ArchiveBudget ceilings, title and30-second deadline."
+  },
+  "adapterArithmetic": {
+    "removedTreeReads": 6,
+    "removedRowsParsed": 8,
+    "sha1FixedTreeBytes": {
+      "root": 34,
+      "journal": 29,
+      "v2": 70,
+      "oldAndNewTotal": 266
+    },
+    "removedDuplicateHeadBlobBytes": 233,
+    "removedHeadShape": "Canonical v2 head with directory kind, fixed55-character scope,29-character incarnation,71-character digest and one-digit position. Source construction is pinned; JSON-length arithmetic only.",
+    "removedCost": {
+      "entries": 0,
+      "attempts": 7,
+      "nodes": 6,
+      "calls": 14,
+      "metadata": 4992,
+      "inputWork": 8682
+    },
+    "metadataFormula": "6*128 + 8*512 +128 =4992",
+    "inputFormula": "6*256 +266*(4+3) +8*512 +(256+4*233) =8682",
+    "oldTotal": {
+      "entries": 0,
+      "attempts": 32,
+      "nodes": 16,
+      "calls": 64,
+      "metadata": 27766,
+      "inputWork": 98310
+    },
+    "newTotal": {
+      "entries": 0,
+      "attempts": 25,
+      "nodes": 10,
+      "calls": 50,
+      "metadata": 22774,
+      "inputWork": 89628
+    },
+    "unchanged": "Credential expiry/final send fence, outgoing27 objects/3789bytes,3456 metadata/15156 input copy,30312 pack work, transfer forecasts, byte/object bounds and every other host assertion remain exact."
+  },
+  "boundedScopeScan": {
+    "directConsumer": "archive-installed.test.ts invokes verifyJournalAppend and checks successful append/refusal with independently priced privacy/support deltas; no stale exact append-total tuple found.",
+    "adapterConsumer": "archive-host.test.ts reaches archive-host.sendArchive\u2192sendArchiveAppend\u2192verifyJournalAppend. The one parameterized total assertion is the sole old tuple found; it accounts for both observed failures.",
+    "supportConsumers": [
+      "support/archive-provider.ts routes actual scripted sends, without an old exact append-cost assertion.",
+      "support/archive-finish-observer.ts computes retained diagnostic append forecasts, without an old literal expected cost assertion.",
+      "archive-frontier-store.test.ts constructs unchanged trees; no append verifier or removed head walk."
+    ],
+    "qualification": "Bounded immutable symbol/module/old-tuple scan, not a claim that unrelated Scope cost assertions were re-audited. Prior Git-only census omitted this indirect adapter consumer."
+  },
+  "sourcePins": [
+    {
+      "path": "packages/git/src/journal-v2-append.ts",
+      "bytes": 4771,
+      "sha256": "7b75788f894117f96e0caa8a564b2072f4e63f07d6ea16c65e3b7cd976ced4a8"
+    },
+    {
+      "path": "packages/git/src/journal-v2-tree.ts",
+      "bytes": 20278,
+      "sha256": "3dc24594b64f80a16a7a987f3a9a9738dca04c03f9a0a2b5c1aa61c688e67b9d"
+    },
+    {
+      "path": "packages/git/src/journal-objects.ts",
+      "bytes": 13402,
+      "sha256": "ad8680c6d71188a4786c47984d3ef51939dd29640edb06f4e659ec055d304c1a"
+    },
+    {
+      "path": "packages/scope/src/archive-send.ts",
+      "bytes": 3107,
+      "sha256": "48262ae05b221230425843fb687296da9d9f138b408617b199a52fbb5a7e698a"
+    },
+    {
+      "path": "packages/scope/src/archive-host.ts",
+      "bytes": 17899,
+      "sha256": "ba47d62b0cf1ef7d75444e76d7866ab6acd5ec7137833560bfd0b89b0e31ba84"
+    },
+    {
+      "path": "packages/scope/src/archive-transfer-cost.ts",
+      "bytes": 2273,
+      "sha256": "e9675acff3ef800dc883ce251632770ccbde8cf2a6dc8f65b5e258805a6daa5a"
+    },
+    {
+      "path": "packages/scope/test/support.ts",
+      "bytes": 9093,
+      "sha256": "eef466f72f1a8e5203e9c46eb33acb6a0b14fcd330c2bea0c20672adc3f78ab6"
+    },
+    {
+      "path": "packages/bytes/src/domains.ts",
+      "bytes": 4371,
+      "sha256": "2819e86e5c1eadb68347935a543a7d5e5ba609ce5891749051de132d134b3b6e"
+    },
+    {
+      "path": "packages/scope/test/archive-installed.test.ts",
+      "bytes": 111757,
+      "sha256": "42f996aa71605e73fc4eb21db9467cd9c2a5c898cb98dd3fbaa6ead570589f92"
+    },
+    {
+      "path": "packages/scope/test/support/archive-finish-observer.ts",
+      "bytes": 10546,
+      "sha256": "f73bb124b2e528268cdb20ec1a9fa768957fde356ab3d8fb927d3dd6f6c4127b"
+    },
+    {
+      "path": "packages/scope/test/archive-frontier-store.test.ts",
+      "bytes": 32429,
+      "sha256": "f4b1f832312ccf0e8911625e6ce5989ba99efc7ec90f11486df62ebf215f4b61"
+    },
+    {
+      "path": "packages/scope/test/support/archive-provider.ts",
+      "bytes": 4689,
+      "sha256": "c978306f8178baf9af517aa5212475f5562c87689d17bb122f979dd1b6ba0afc"
+    }
+  ],
+  "pending": [
+    "Root Source review/adoption",
+    "Appropriate compiler contexts and whole budget1/host12 continuation",
+    "Separate final gate callback/coverage disposition"
+  ],
+  "bindings": {
+    "adoptedHead": null,
+    "tree": null,
+    "allocation": null,
+    "runtime": null
+  }
+}

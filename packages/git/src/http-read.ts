@@ -26,6 +26,8 @@ export interface DecodedObject { id: ObjectId; type: ObjectType; data: Uint8Arra
  */
 export interface PackReadOptions {
   maxBytes: number; bounds?: ReadBounds; flushAfter?: boolean;
+  /** Optional smaller aggregate raw/reconstructed cap; wire remains bounded by maxBytes. */
+  maxInflatedBytes?: number;
   /** Exact one non-delta commit/tree/blob. Enforced at the header before inflation. */
   singleObjectBytes?: number;
   /** Absolute deadline for isolated framing and inflation; default closure decoding is unchanged. */
@@ -44,6 +46,18 @@ export interface IsolatedObjectReads {
   reserveObjects?: (count: number) => void;
   /** V2 only: admit actual wire chunks and checked inflate/delta sizes before work. */
   reserveWork?: (bytes: number) => void;
+  /** Optional narrower v2 advertisement bounds, including an exact-object head read. */
+  advertisementBytes?: number;
+  advertisementPackets?: number;
+  /** Optional smaller aggregate raw/reconstructed cap for an exact bounded head read. */
+  maxInflatedBytes?: number;
+  /** Trusted synchronous admission before caller-owned descriptors and body copies. */
+  reserveOutput?: (objects: number, bytes: number) => void;
+}
+export interface CurrentParentLimits {
+  readonly commitBytes: number;
+  readonly treeBytes: number;
+  readonly advertisementBytes: number;
 }
 export interface SmartHttpReadOptions extends SmartHttpOptions { isolateObjects?: IsolatedObjectReads }
 // Includes wire chunks/concats, advertisement strings, pack/Blob copies,
@@ -83,10 +97,13 @@ class WorkAdmission {
   }
   refused(error: unknown): boolean { return this.#failed && Object.is(error, this.#error); }
 }
-async function readBytes(stream: ReadableStream<Uint8Array> | null, limit: number, deadline?: number, work?: WorkAdmission): Promise<Uint8Array> {
+async function readBytes(stream: ReadableStream<Uint8Array> | null, limit: number, deadline?: number, work?: WorkAdmission, contiguous = false): Promise<Uint8Array> {
   if (stream === null) throw fail("read body");
   const reader = stream.getReader();
   const chunks: Uint8Array[] = [];
+  // Bounded migration mode owns one fixed payload buffer. Fragmentation
+  // cannot retain one metadata descriptor per byte of an admitted response.
+  const buffer = contiguous ? new Uint8Array(limit) : null;
   let total = 0;
   let timer: ReturnType<typeof setTimeout> | undefined;
   let expired = false;
@@ -97,11 +114,12 @@ async function readBytes(stream: ReadableStream<Uint8Array> | null, limit: numbe
       const next = await reader.read();
       if (expired) throw fail("read deadline");
       beforeDeadline(deadline);
-      if (next.done) return concat(chunks);
+      if (next.done) return buffer === null ? concat(chunks) : buffer.subarray(0, total);
       total += next.value.length;
       if (total > limit) throw large("read bytes");
       work?.reserve(next.value.length);
-      chunks.push(new Uint8Array(next.value));
+      if (buffer === null) chunks.push(new Uint8Array(next.value));
+      else buffer.set(next.value, total - next.value.length);
     }
   } catch (e) {
     if (work?.refused(e)) {
@@ -304,6 +322,8 @@ interface Entry { offset: number; raw: Uint8Array; object?: DecodedObject; depen
 export async function decodePack(input: Uint8Array, options: PackReadOptions): Promise<DecodedObject[]> {
   const { bounds, maxBytes } = checked(options);
   const reserveWork = options.reserveWork;
+  const maxInflatedBytes = options.maxInflatedBytes ?? maxBytes;
+  if (!Number.isSafeInteger(maxInflatedBytes) || maxInflatedBytes < 0 || maxInflatedBytes > maxBytes) throw large("inflated allowance");
   beforeDeadline(options.deadline);
   if (input.length > maxBytes) throw large("pack bytes");
   const pack = new Uint8Array(input);
@@ -333,7 +353,7 @@ export async function decodePack(input: Uint8Array, options: PackReadOptions): P
       if (type === undefined || type === "tag") throw new GitRefusal("wrong-type", "isolated pack entry");
       if (size > options.singleObjectBytes) throw large("isolated object allowance");
     }
-    if (size > (type === undefined ? maxBytes : typeLimit(type, bounds)) || inflated + size > maxBytes) throw large("inflated bytes");
+    if (size > (type === undefined ? maxBytes : typeLimit(type, bounds)) || inflated + size > maxInflatedBytes) throw large("inflated bytes");
     let baseOffset: number | undefined;
     let baseId: string | undefined;
     if (kind === 6) {
@@ -353,7 +373,7 @@ export async function decodePack(input: Uint8Array, options: PackReadOptions): P
     }
     reserveWork?.(size);
     const end = zlibEnd(pack, cursor.at, size, options.deadline);
-    const raw = await readBytes(new Blob([pack.slice(cursor.at, end)]).stream().pipeThrough(new DecompressionStream("deflate")), size, options.deadline);
+    const raw = await readBytes(new Blob([pack.slice(cursor.at, end)]).stream().pipeThrough(new DecompressionStream("deflate")), size, options.deadline, undefined, options.maxInflatedBytes !== undefined);
     if (raw.length !== size) throw new GitRefusal("wrong-size", "pack entry");
     cursor.at = end;
     inflated += size;
@@ -384,7 +404,7 @@ export async function decodePack(input: Uint8Array, options: PackReadOptions): P
     const children = [...entry.dependents, ...(waiting.get(object.id) ?? [])];
     waiting.delete(object.id);
     for (const child of children) {
-      const data = applyDelta(child.raw, object, Math.min(typeLimit(object.type, bounds), maxBytes - constructed), reserveWork);
+      const data = applyDelta(child.raw, object, Math.min(typeLimit(object.type, bounds), maxInflatedBytes - constructed), reserveWork);
       constructed += data.length;
       child.object = { id: idOf(object.type, data), type: object.type, data };
       ready.push(child);
@@ -557,25 +577,30 @@ function v2Capabilities(data: Uint8Array, maximumPackets: number, deadline: numb
 }
 
 /** Exact done-response grammar. Compaction reuses the owned HTTP buffer. */
-function v2Pack(data: Uint8Array, id: string, deadline: number): { pack: Uint8Array; boundary: boolean } {
+function v2Pack(data: Uint8Array, id: string, deadline: number, maximumPackets = Number.MAX_SAFE_INTEGER): { pack: Uint8Array; boundary: boolean } {
   beforeDeadline(deadline);
-  let frame = v2Frame(data, 0), boundary = false;
+  let packets = 0;
+  const next = (at: number) => {
+    if (packets++ >= maximumPackets) throw large("upload response packets");
+    return v2Frame(data, at);
+  };
+  let frame = next(0), boundary = false;
   if (frame.kind === "data" && wireTextEquals(data, frame.start, frame.next, "shallow-info")) {
     for (;;) {
       beforeDeadline(deadline);
-      frame = v2Frame(data, frame.next);
+      frame = next(frame.next);
       if (frame.kind === "delimiter") break;
       if (frame.kind !== "data" || boundary || !wireTextEquals(data, frame.start, frame.next, `shallow ${id}`)) throw fail("isolated shallow boundary");
       boundary = true;
     }
-    frame = v2Frame(data, frame.next);
+    frame = next(frame.next);
   }
   // done forbids acknowledgments. No want-ref, URI or sideband-all was requested.
   if (frame.kind !== "data" || !wireTextEquals(data, frame.start, frame.next, "packfile")) throw fail("upload negotiation");
   let write = 0;
   for (;;) {
     beforeDeadline(deadline);
-    frame = v2Frame(data, frame.next);
+    frame = next(frame.next);
     if (frame.kind === "flush") {
       // HTTP ends here. remote-curl's helper-only 0002 is not server payload.
       if (frame.next !== data.length) throw fail("upload negotiation");
@@ -614,6 +639,8 @@ export class SmartHttpSource implements GitSource {
   #abort: (() => void) | null = null;
   #issuedBytes = 0;
   #deadline: number | null = null;
+  #operations = 0;
+  #currentParentUsed = false;
   /** Fixed per-source payload allowance; null identifies the full-closure mode. */
   get isolatedPayloadAllowance(): number | null { return this.#isolation?.ownedBytes ?? null; }
   constructor(options: SmartHttpReadOptions) {
@@ -628,6 +655,11 @@ export class SmartHttpSource implements GitSource {
     if (this.#isolation?.reserveWork !== undefined && typeof this.#isolation.reserveWork !== "function") throw fail("isolated object capabilities");
     this.#work = this.#isolation?.protocol === "v2" && this.#isolation.reserveWork !== undefined
       ? new WorkAdmission(this.#isolation.reserveWork, () => this.#abandon()) : undefined;
+    if (this.#isolation?.reserveOutput !== undefined && typeof this.#isolation.reserveOutput !== "function") throw fail("isolated output admission");
+    for (const n of [this.#isolation?.advertisementBytes, this.#isolation?.advertisementPackets, this.#isolation?.maxInflatedBytes]) {
+      if (n !== undefined && (!Number.isSafeInteger(n) || n <= 0)) throw large("upload advertisement allowance");
+    }
+    if ((this.#isolation?.maxInflatedBytes ?? 0) > this.#options.maxBytes) throw large("inflated allowance");
     const working = ISOLATED_WORKING_MULTIPLE * this.#options.maxBytes;
     if (this.#isolation && (!Number.isSafeInteger(working) || !Number.isSafeInteger(this.#isolation.ownedBytes) || this.#isolation.ownedBytes < working)) throw large("isolated payload allowance");
     this.#timeoutMs = options.timeoutMs ?? COMMAND_MS;
@@ -647,12 +679,15 @@ export class SmartHttpSource implements GitSource {
     this.#abandoned = true;
     try { this.#abort?.(); } catch { /* never reuse abandoned work */ }
   }
-  #output(bytes: number): void {
+  #output(bytes: number, objects = 1): void {
     if (!this.#isolation) return;
     this.#timely();
     if (bytes > this.#isolation.ownedBytes - this.#retainedBytes - this.#issuedBytes) throw large("isolated returned payload");
     // Conservatively charge every caller-owned result for this source's lifetime:
     // no guess that a caller released its previous copy.
+    const reserveOutput = this.#isolation.reserveOutput;
+    try { reserveOutput?.(objects, bytes); }
+    catch (error) { this.#abandon(); throw error; }
     this.#issuedBytes += bytes;
   }
   async #isolated<T>(read: () => Promise<T>): Promise<T> {
@@ -686,7 +721,7 @@ export class SmartHttpSource implements GitSource {
       if (!this.#abandoned) { this.#busy = false; this.#deadline = null; }
     }
   }
-  async #request(path: string, media: string, body?: Uint8Array, protocolV2 = false): Promise<Uint8Array> {
+  async #request(path: string, media: string, body?: Uint8Array, protocolV2 = false, responseLimit = this.#options.maxBytes): Promise<Uint8Array> {
     const controller = new AbortController();
     this.#timely();
     if (body !== undefined && body.length > this.#options.maxBytes) throw large("upload request");
@@ -716,7 +751,7 @@ export class SmartHttpSource implements GitSource {
         await response.body?.cancel().catch(() => undefined);
         throw error;
       }
-      const result = await readBytes(response.body, this.#options.maxBytes, this.#deadline ?? undefined, protocolV2 ? this.#work : undefined);
+      const result = await readBytes(response.body, Math.min(responseLimit, this.#options.maxBytes), this.#deadline ?? undefined, protocolV2 ? this.#work : undefined, protocolV2 && (this.#currentParentUsed || this.#isolation?.advertisementBytes !== undefined || this.#isolation?.maxInflatedBytes !== undefined));
       this.#timely();
       return result;
     } catch (e) {
@@ -767,7 +802,40 @@ export class SmartHttpSource implements GitSource {
     return { refs, ids, capabilities };
   }
   object(id: ObjectId, limit: number): Promise<StoredObject> {
+    if (this.#currentParentUsed) return Promise.reject(fail("current parent source consumed"));
+    this.#operations++;
     return this.#isolated(() => this.#object(id, limit));
+  }
+  /** One migration exchange, never a history closure or a reusable cache.
+   * All bodies are hash checked; the caller validates the receipt-bound tree
+   * paths and head blob. Other commits, blobs and tags are not admitted. */
+  currentParent(id: ObjectId, limits: CurrentParentLimits): Promise<readonly DecodedObject[]> {
+    if (this.#currentParentUsed || this.#operations !== 0) return Promise.reject(fail("current parent source consumed"));
+    const commitBytes = limits.commitBytes, treeBytes = limits.treeBytes, advertisementBytes = limits.advertisementBytes;
+    if (this.#isolation?.protocol !== "v2" || [commitBytes, treeBytes, advertisementBytes].some(n => !Number.isSafeInteger(n) || n <= 0)
+      || !Number.isSafeInteger(commitBytes + treeBytes) || commitBytes + treeBytes > this.#options.maxBytes
+      || commitBytes > this.#options.bounds.commitBytes || treeBytes > this.#options.bounds.treeBytes) return Promise.reject(large("current parent allowance"));
+    objectId(id, "current parent");
+    this.#currentParentUsed = true;
+    return this.#isolated(async () => {
+      const { objects } = await this.#packV2(id, advertisementBytes, 32, Math.min(commitBytes + treeBytes, this.#isolation?.maxInflatedBytes ?? this.#options.maxBytes),
+        { ...this.#options.bounds, commitBytes, treeBytes });
+      const wanted = objects.find(object => object.id === id);
+      if (!wanted) throw fail("wanted object omitted");
+      if (wanted.type !== "commit") throw new GitRefusal("wrong-type", "current parent commit");
+      if (wanted.data.length > commitBytes) throw large("current parent commit bytes");
+      let trees = 0;
+      for (const object of objects) {
+        this.#timely();
+        if (object.id === id) continue;
+        if (object.type !== "tree") throw new GitRefusal("wrong-type", "current parent companion");
+        trees += object.data.length;
+        if (trees > treeBytes) throw large("current parent tree bytes");
+      }
+      const bytes = wanted.data.length + trees;
+      this.#output(bytes, objects.length);
+      return objects.map(object => ({ id: object.id, type: object.type, data: new Uint8Array(object.data) }));
+    });
   }
   async #object(id: ObjectId, limit: number): Promise<StoredObject> {
     objectId(id, "read object");
@@ -786,26 +854,37 @@ export class SmartHttpSource implements GitSource {
     if (object.data.length <= limit) this.#output(object.data.length);
     return { type: object.type, size: object.data.length, data: object.data.length > limit ? null : new Uint8Array(object.data) };
   }
-  async #objectV2(id: ObjectId, limit: number): Promise<DecodedObject[]> {
-    const ad = await this.#request("info/refs?service=git-upload-pack", "application/x-git-upload-pack-advertisement", undefined, true);
-    v2Capabilities(ad, this.#options.bounds.refs + 3, this.#deadline!);
+  async #packV2(id: ObjectId, advertisementBytes = this.#isolation?.advertisementBytes ?? this.#options.maxBytes,
+    advertisementPackets = this.#isolation?.advertisementPackets ?? this.#options.bounds.refs + 3,
+    maxInflatedBytes = this.#isolation?.maxInflatedBytes, bounds = this.#options.bounds): Promise<{ objects: DecodedObject[]; boundary: boolean }> {
+    const ad = await this.#request("info/refs?service=git-upload-pack", "application/x-git-upload-pack-advertisement", undefined, true,
+      Math.min(advertisementBytes, this.#isolation?.advertisementBytes ?? this.#options.maxBytes));
+    v2Capabilities(ad, Math.min(advertisementPackets, this.#isolation?.advertisementPackets ?? this.#options.bounds.refs + 3), this.#deadline!);
     // v2 want is an exact object ID, not limited to an advertised ref list.
     // The server still authorizes this request with the same repository credential.
     const body = concat([packet("command=fetch\n"), utf8.encode("0001"), packet(`want ${id}\n`), packet("deepen 1\n"), packet("filter blob:none\n"), packet("no-progress\n"), packet("done\n"), utf8.encode("0000")]);
     const answer = await this.#request("git-upload-pack", "application/x-git-upload-pack-result", body, true);
-    const framed = v2Pack(answer, id, this.#deadline!);
+    const framed = v2Pack(answer, id, this.#deadline!,
+      this.#currentParentUsed || this.#isolation?.advertisementBytes !== undefined || this.#isolation?.maxInflatedBytes !== undefined ? 64 : undefined);
     // blob:none can send the wanted commit and its trees. Use the existing
     // bounded full decoder (including bounded deltas), not a closure read or
     // a second request. Companion objects never enter this source's cache.
-    const objects = await decodePack(framed.pack, { ...this.#options, deadline: this.#deadline!,
-      ...(this.#isolation?.reserveObjects === undefined ? {} : { reserveObjects: this.#isolation.reserveObjects }),
+    const objects = await decodePack(framed.pack, { ...this.#options, bounds, ...(maxInflatedBytes === undefined ? {} : { maxInflatedBytes }), deadline: this.#deadline!,
+      ...(this.#isolation?.reserveObjects === undefined ? {} : { reserveObjects: (count: number) => {
+        try { this.#isolation!.reserveObjects!(count); }
+        catch (error) { this.#abandon(); throw error; }
+      } }),
       ...(this.#work === undefined ? {} : { reserveWork: (bytes: number) => this.#work!.reserve(bytes) }) });
     this.#timely();
+    return { objects, boundary: framed.boundary };
+  }
+  async #objectV2(id: ObjectId, limit: number): Promise<DecodedObject[]> {
+    const { objects, boundary } = await this.#packV2(id);
     const wanted = objects.find(object => object.id === id);
     if (!wanted) throw fail("wanted object omitted");
     if (wanted.type === "tag") throw new GitRefusal("wrong-type", "isolated pack entry");
     if (wanted.data.length > Math.min(limit, this.#options.maxBytes)) throw large("isolated object allowance");
-    if (framed.boundary && wanted.type !== "commit") throw fail("isolated shallow object");
+    if (boundary && wanted.type !== "commit") throw fail("isolated shallow object");
     return [wanted];
   }
   async #objectV0(id: ObjectId, limit: number): Promise<DecodedObject[]> {
@@ -840,6 +919,8 @@ export class SmartHttpSource implements GitSource {
     return objects;
   }
   ref(name: string): Promise<string | null> {
+    if (this.#currentParentUsed) return Promise.reject(fail("current parent source consumed"));
+    this.#operations++;
     return this.#isolated(async () => {
       refName(name, "read ref");
       const target = (await this.#advertisement()).refs.find(r => r.ref === name)?.target ?? null;
@@ -848,6 +929,8 @@ export class SmartHttpSource implements GitSource {
     });
   }
   refs(prefix: string, limit: number): Promise<readonly RefTarget[]> {
+    if (this.#currentParentUsed) return Promise.reject(fail("current parent source consumed"));
+    this.#operations++;
     return this.#isolated(async () => {
       if (!prefix.endsWith("/")) throw new GitRefusal("bad-ref-name", "read prefix");
       refName(`${prefix}x`, "read prefix");

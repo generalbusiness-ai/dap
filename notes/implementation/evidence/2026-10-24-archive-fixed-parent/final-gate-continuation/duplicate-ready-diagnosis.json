@@ -1,0 +1,200 @@
+{
+  "status": "CLOSED_SOURCE_AND_EVIDENCE_DIAGNOSIS",
+  "head": "e9511c4383d81b845c66eb8801e95ce50ac38c13",
+  "ownerThrow": {
+    "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-source-20261024-v14/gate-owner.py",
+    "lines": [
+      107,
+      109
+    ],
+    "condition": "len(callbackIDs)==len(set(callbackIDs)) for ready and result",
+    "placement": "after child.wait and collectStages; before readLedger returns/writecaseledger"
+  },
+  "producer": "Maintained optional TestProgress reporter onTestCaseReady\u2192case\u2192writeSync JSONL; no own retry/dedup. Config enables it only with ARTROOM_TEST_PROGRESS.",
+  "duplicate": [
+    {
+      "id": "1746186093_12_6",
+      "occurrences": 2,
+      "identity": {
+        "id": "1746186093_12_6",
+        "project": "scope",
+        "file": "packages/scope/test/turn.test.ts",
+        "name": "the scope's budget (section 9.2), here 12 entries > after a closing checkpoint nothing is reserved; the next entry that is not a checkpoint is admitted only with a closing checkpoint reserved again",
+        "state": "passed"
+      },
+      "events": [
+        {
+          "index": 6170,
+          "event": "case-ready",
+          "time": "2026-10-24T06:46:35.548Z",
+          "id": "1746186093_12_6",
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/turn.test.ts",
+          "name": "the scope's budget (section 9.2), here 12 entries > after a closing checkpoint nothing is reserved; the next entry that is not a checkpoint is admitted only with a closing checkpoint reserved again"
+        },
+        {
+          "index": 6171,
+          "event": "case-ready",
+          "time": "2026-10-24T06:46:35.558Z",
+          "id": "1746186093_12_6",
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/turn.test.ts",
+          "name": "the scope's budget (section 9.2), here 12 entries > after a closing checkpoint nothing is reserved; the next entry that is not a checkpoint is admitted only with a closing checkpoint reserved again"
+        }
+      ]
+    }
+  ],
+  "callbacks": {
+    "readyEvents": 3507,
+    "readyUnique": 3506,
+    "duplicateReadyId": "1746186093_12_6",
+    "duplicateReadyOccurrences": 2,
+    "duplicateCaseTerminal": "passed",
+    "missingReady": 17,
+    "resultEvents": 3501,
+    "resultUnique": 3501,
+    "missingResult": 22,
+    "duplicateResults": 0,
+    "qualification": "Raw duplicate is two ready events10ms apart for one passing Scope turn case. No retry inferred. Full raw event positions and gap identity records are in audit."
+  },
+  "terminals": {
+    "events": 10533,
+    "uniqueIds": 3523,
+    "files": 494,
+    "states": {
+      "passed": 3517,
+      "skipped": 3,
+      "failed": 3
+    },
+    "expectedIdentityTupleSetExactIgnoringState": true,
+    "onlyExpectedPassedToFailed": [
+      {
+        "id": "-1680162046_0",
+        "project": "git",
+        "file": "packages/git/test/journal-v2-budget.test.ts",
+        "name": "a full numeric path at the highest position fits one original writer and append budget",
+        "state": "failed"
+      },
+      {
+        "id": "421427415_10",
+        "project": "scope",
+        "file": "packages/scope/test/archive-host.test.ts",
+        "name": "github incremental send validates exact parent edges and keeps its final credential fence",
+        "state": "failed"
+      },
+      {
+        "id": "421427415_11",
+        "project": "scope",
+        "file": "packages/scope/test/archive-host.test.ts",
+        "name": "artifacts incremental send validates exact parent edges and keeps its final credential fence",
+        "state": "failed"
+      }
+    ],
+    "allOther3520RowsExact": true,
+    "normalizedTupleSha256": "a8396ab7d25d4fe9f652b58b83073061de636994e7902670b19d9d645c3cde2b",
+    "runEnd": {
+      "event": "run-end",
+      "time": "2026-10-24T06:47:07.339Z",
+      "files": 494,
+      "unhandledErrors": 0,
+      "reason": "failed"
+    }
+  },
+  "failures": {
+    "git": {
+      "file": "packages/git/test/journal-v2-budget.test.ts",
+      "line": 55,
+      "expectedNodes": 31,
+      "receivedNodes": 25
+    },
+    "scopeHosts": {
+      "file": "packages/scope/test/archive-host.test.ts",
+      "line": 353,
+      "cases": 2,
+      "expected": {
+        "entries": 0,
+        "attempts": 32,
+        "nodes": 16,
+        "calls": 64,
+        "metadata": 27766,
+        "inputWork": 98310
+      },
+      "received": {
+        "entries": 0,
+        "attempts": 25,
+        "nodes": 10,
+        "calls": 50,
+        "metadata": 22774,
+        "inputWork": 89628
+      }
+    }
+  },
+  "independence": "Childexit1 and rawscalar assertions precede outer collector classification. Terminal facts independently reconciled in priorclosedaudit. No original failure upgraded.",
+  "unknown": [
+    "Why Vitest/pool delivered same ready hook twice is not established from allowed Source/rawmetadata.",
+    "No retry/repeat/body-execution count inferred from duplicate readiness or missing callbacks.",
+    "No claim observer has zero timing overhead; no causal link from collector to assertions is established, and collector executes postchild."
+  ],
+  "pins": [
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v14/result.json",
+      "bytes": 6940,
+      "sha256": "e47d4d3c9aa08e5271b4992467a8866d25018d9ae0c9d2b2eed74bf50125e362"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v14/gate.stdout.log",
+      "bytes": 2320,
+      "sha256": "0053f51a6118aa4fc5e1abd9e87e51a54c229c4ec87ead293fa055213892d872"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v14/stages/test.log",
+      "bytes": 11468809,
+      "sha256": "83a53750b11b73fc99e633b1990adf649ad383514059664aadf8ecb69db70747"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-v14-independent-audit-20261024-v1/audit.json",
+      "bytes": 38436,
+      "sha256": "484225650bcfa9674bf307538608f13a23193b8a3838ac9fae5eb1336ff9a569"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-v14-independent-audit-20261024-v1/completion-addendum.json",
+      "bytes": 1256,
+      "sha256": "8168088fe42a77792fd586f042607b1568983f2c8060b22f01dd05626057d335"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-source-20261024-v14/gate-owner.py",
+      "bytes": 19289,
+      "sha256": "7cde69e1a6c60f08e1e7878b240bf9a53a44a56e6dfcf35edb3297522d7cc90f"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-source-20261024-v14/manifest.json",
+      "bytes": 3053,
+      "sha256": "2a45cfaf537bb080f427cd4f4a05ce2eb933b3ac3ad572ea247846eea21a77c0"
+    }
+  ],
+  "immutableSource": [
+    {
+      "path": "scripts/test-progress.mjs",
+      "sha256": "9b732075c26ea182eac492db30b5243ace87cef2cff88c141e3ce7f8ae825a23",
+      "excerpts": [
+        {
+          "first": 5,
+          "last": 21,
+          "text": "5: export default class TestProgress {\n6:   constructor() { this.fd = openSync(process.env.ARTROOM_TEST_PROGRESS, \"wx\", 0o600); }\n7:   write(event, details) { writeSync(this.fd, `${JSON.stringify({ event, time: new Date().toISOString(), ...details })}\\n`); }\n8:   case(event, test) {\n9:     this.write(event, { id: test.id, project: test.project.name, file: test.module.moduleId, name: test.fullName,\n10:       ...(event !== \"case-ready\" ? { state: test.result().state } : {}) });\n11:   }\n12:   onTestRunStart(specifications) { this.write(\"run-start\", { files: specifications.length }); }\n13:   onTestCaseReady(test) { this.case(\"case-ready\", test); }\n14:   onTestCaseResult(test) { this.case(\"case-result\", test); }\n15:   onTestRunEnd(modules, errors, reason) {\n16:     // Native incremental callbacks can omit already completed cases. Retain\n17:     // the terminal framework state separately from the original event stream.\n18:     for (const module of modules) for (const test of module.children.allTests()) this.case(\"case-final\", test);\n19:     this.write(\"run-end\", { files: modules.length, unhandledErrors: errors.length, reason });\n20:     closeSync(this.fd);\n21:   }"
+        }
+      ]
+    },
+    {
+      "path": "vitest.config.ts",
+      "sha256": "8214c0d2b3684dcb46df54f4f55879a12ff0d2c3a339eb678530c7775b1dffd3",
+      "excerpts": [
+        {
+          "first": 29,
+          "last": 34,
+          "text": "29: \n30: export default defineConfig({\n31:   test: {\n32:     maxWorkers: 4,\n33:     ...(process.env[\"ARTROOM_TEST_PROGRESS\"] ? { reporters: [\"verbose\", \"./scripts/test-progress.mjs\"] } : {}),\n34:     projects: ["
+        }
+      ]
+    }
+  ],
+  "noRuntime": true
+}

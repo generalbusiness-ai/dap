@@ -7,7 +7,7 @@
 import { expect, test } from "vitest";
 import { canonicalize, digestBytes, utf8 } from "@generalbusiness/dap-bytes";
 import { GitRefusal, idOf, parseCommit, parseTree } from "@generalbusiness/dap-git";
-import { journalRef, journalV2PassPath, journalV2RetainedPath, journalV2SegmentPath, type JournalPassArchive } from "@generalbusiness/dap-git/journal";
+import { journalRef, journalV2PassPath, journalV2RetainedPath, type JournalPassArchive } from "@generalbusiness/dap-git/journal";
 import { readJournalRepositoryArchive } from "@generalbusiness/dap-git/journal-reader";
 import { archiveSource, verifyArchive, TRUSTS } from "@generalbusiness/dap-replay";
 import { ARCHIVE_BOUNDS, ArchiveBudget, ArchiveStopped, type ArchiveCost } from "../src/archive-budget.ts";
@@ -257,7 +257,6 @@ test("the Native driver confirms 10,001 one-entry passes and preserves retained 
   const parent = host.pointer!, oldPaths = pathsAt(parent), oldPath = journalV2RetainedPath(3700, { kind: "rule", digest: old.digest });
   expect(oldPaths.get(oldPath)).toBe(oldBlob);
   const newPath = journalV2RetainedPath(14_611, { kind: "rule", digest: fresh.digest });
-  const allowedTrees = new Set(["journal/v2/head.json", journalV2PassPath(14_611), journalV2SegmentPath(14_611), newPath].flatMap(path => pathAt(parent, path).trees));
   const parentHead = pathAt(parent, "journal/v2/head.json").id!, readStart = host.objectReads.length, nativeReads: NativeRead[] = [];
   const mixed = await defaultReceipt(14_610, nativeReads);
   const providerReads = host.objectReads.slice(readStart), readTypes = providerReads.map(id => ({ id, type: object(id).type }));
@@ -291,11 +290,9 @@ test("the Native driver confirms 10,001 one-entry passes and preserves retained 
     "SELECT digest, pass FROM retained_input WHERE kind = 'rule' AND digest IN (?, ?) ORDER BY digest", old.digest, fresh.digest).toArray());
   expect(mixedNativePasses).toEqual(expect.arrayContaining([{ digest: old.digest, pass: 3700 }, { digest: fresh.digest, pass: 14_611 }]));
   expect(mixedNativePasses).toHaveLength(2);
-  expect(readTypes.filter(row => row.type === "blob").map(row => row.id)).toEqual([parentHead]);
-  expect(readTypes.filter(row => row.type === "commit").map(row => row.id)).toEqual([parent]);
-  const treeReads = readTypes.filter(row => row.type === "tree");
-  expect(treeReads.length).toBeLessThanOrEqual(16);
-  for (const row of treeReads) expect(allowedTrees.has(row.id), row.id).toBe(true);
+  // Confirmed parent edges come from the bounded native witness, including
+  // after eviction. The host supplies no parent commit, head or tree body.
+  expect(providerReads).toEqual([]);
   expect(host.closureReads).toBe(0);
   expect(retainedReads.length).toBeGreaterThan(0);
   for (const row of retainedReads) {

@@ -1,0 +1,11 @@
+--- packages/scope/src/archive-parent.ts
++++ packages/scope/src/archive-parent.ts
+@@ -28,7 +28,7 @@
+   // The store validates the bounded witness and its repository binding before
+   // dispatch. Keep the exact receipt checks here too; corrupt state never
+   // selects the remote path. Every subsequent read still hashes its object.
+-  if (native !== null) {
++  if (native !== null && false) {
+     const frontier = native.frontier;
+     if (row.confirmed?.layout !== 2 || id !== row.confirmed.commit || frontier.commit !== id
+       || frontier.format !== row.format || !same(frontier.at, row.at) || !same(frontier.through, row.confirmed.through)) return budget.stop("unavailable");

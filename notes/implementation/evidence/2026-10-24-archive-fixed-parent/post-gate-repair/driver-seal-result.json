@@ -1,0 +1,35 @@
+{
+  "allocation": "eca02264ae84820e3e39a1e92fcd2373c71c17f4",
+  "status": "passed",
+  "children": [
+    {
+      "label": "source-seals",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-archive-append-row-driver-seal-source-20261024-v2/produce-source-seals.mjs",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023"
+      ],
+      "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+      "pid": 72578,
+      "exit": 0,
+      "signal": null,
+      "wall": 0.10707770800217986,
+      "user": 0.11904299999999998,
+      "system": 0.019506000000000003
+    }
+  ],
+  "errors": [],
+  "signals": [],
+  "sourceSeals": [
+    {
+      "path": "packages/scope/src/archive-driver.ts",
+      "sourceSeal": "df3ecc92e8853edd1abfb0fb47bfbe0553f2fd90bf872fe9a083ee18a6826d06"
+    }
+  ],
+  "wall": 2.349256040994078,
+  "pythonCpu": 2.0104040000000003,
+  "childrenUser": 0.22006399999999998,
+  "childrenSystem": 0.12440799999999999,
+  "inclusiveCpu": 2.354876,
+  "qualification": "One actual maintained sourceSeal call, archive-driver only. Host, build and row Source bytes and the complete current map stay guarded and unwritten; no unrelated owner is parsed. Map adoption is a separate reviewed action after the actual results and all input guards are accepted. Full held Source, private dependencies, tools, environment, Main, preparation and binding exact before/after. No cache allowance, map adoption, tests, compiler, compatibility, application operation or gate. Costs include snapshots and nested totals overlap."
+}

@@ -49,16 +49,16 @@ const pendingArchiveSeals = {
   "packages/scope/src/archive-target.ts": "33826c2966d39df7f4d46aa74365f55b9e7e2a2317f26f9f98a735792ccb4a39",
   "packages/scope/src/archive-source-window.ts": "4db3f5885e7541f713b9668d1cde655e42be1950dd6af77d5711a323b3582e1c",
   "packages/scope/src/archive-publication.ts": "d8c39d220bc7eea59301478aa553960267aac16f06502b4103a85647c71eb457",
-  "packages/scope/src/archive-build.ts": "e82bffde8d5e6ce26b1dbd80f0659ec15a48dd461f9e02f4a235c19fbc1a4201",
-  "packages/scope/src/archive-driver.ts": "3dd46755edd501d2f4bb614648a3d0358fbe72635c4a734403da3f98317aceac", // Parent-read diagnostic reviewed; actual maintained parser output.
-  "packages/scope/src/archive-row.ts": "b3b4f7fed29152a60ba76dc58a09529b18fc7b9ea737f986d7fc2803a42d8dab",
+  "packages/scope/src/archive-build.ts": "e1111bfef1fe94cc8436498679395ba1b9b8adba3db8651f4f24d87d68696853",
+  "packages/scope/src/archive-driver.ts": "df3ecc92e8853edd1abfb0fb47bfbe0553f2fd90bf872fe9a083ee18a6826d06", // Native parent transition reviewed; actual maintained parser output.
+  "packages/scope/src/archive-row.ts": "91fd40cf8fd7dddb37383bf8daf86fdc30f0da5983ab69dfa3550263331ae12b",
   "packages/scope/src/floor-writer.ts": "fb8fd859844b8d10ba43b477bcaf07ab32fe1bfa1b6684ad9ae70b930d328a11",
   "packages/scope/src/object.ts": "b403bba2d72425b252488d960a7cbb557d1bcc38fb9390760e39b49ac4299df4", // Must match the separately adopted original owner value above.
   "apps/room/worker.grow.ts": "791c2bfcb8b2a62d8f0d8afec627ac76b63be4b9f1ee5de27d3f6c081959bc01",
   "apps/room/archive-policy.ts": "07ea72db6bc58257d3f280ac1e1c7db9296868016493fa926e473ddeb9b6f486",
   "apps/room/archive.ts": "36b2250301a217b6e1c74cd1cea1a65a45390be3679e4a2fd2e809890eb6abf5",
   "packages/scope/src/archive-host-item.ts": "0f9eaddc4000574a1575466592f88c57beecc11efb93e402a568a84fab8ef903",
-  "packages/scope/src/archive-host.ts": "94914ff2f85237464418dddf8e66e307b851fe7a4f2ad296aa2933c4b3249673", // Staged input-work charge reviewed; actual maintained parser output.
+  "packages/scope/src/archive-host.ts": "e376746b7a1001a47715f666c4777e135bf1c48a162bfffe9c80e0ec913f079f", // Staged input charges and bounded bootstrap reviewed; actual maintained parser output.
   "packages/scope/src/artifacts-host.ts": "378eca9b5c3c197f738cb88f59a5df51d83d52929f614735d0fdc3917df06ac0",
   "packages/scope/src/artifacts-wiring.ts": "937bedd41f5f21953c2fe659634ca732b44620cc98e33e5a43f7945601c58963",
 };

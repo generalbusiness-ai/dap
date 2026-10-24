@@ -52,7 +52,8 @@ test("a full numeric path at the highest position fits one original writer and a
   expect(built.ok, JSON.stringify(built)).toBe(true); if (!built.ok) return;
   for (const row of built.archive.objects) held.set(row.id, row);
   expect(await verifyJournalAppend({ format: "sha1", at: fixture.at, old: old.id, commit: built.archive.commit, source, budget })).toEqual({ ok: true });
-  const cost = budget.admitted(); expect(cost.nodes).toBe(31);
+  // Three parent lookup nodes, eleven prepared path nodes, eleven comparison nodes.
+  const cost = budget.admitted(); expect(cost.nodes).toBe(25);
   for (const [key, ceiling] of Object.entries(ARCHIVE_BOUNDS)) expect(cost[key as keyof typeof cost]).toBeLessThanOrEqual(ceiling);
   (context.task.meta as Record<string, unknown>)["highestSharedPassBudget"] = { cost, writerLayout: built.archive.layoutWork,
     maximumNumericRows: 100, pass: last, setup: setup.admitted(),

@@ -1,0 +1,182 @@
+{
+  "status": "ORIGINAL_MATCHED_PROJECTION_CONTROL_CONFIRMED",
+  "closure": "Root21578natural0/tool11feb5 attributed; child33605natural1/noSignal.",
+  "checks": [
+    "Exact allocated binding size/hash/snapshot and sole SQL equality-to-greater-equal mutation reconstructed.",
+    "Full before/mutantbefore/mutantafter/final vectors reconcile with only ownedtarget/status, one selectedcachecell and emptytemp timestamps. Original inode/bytes/mode/nlink/mtime restored; onlytargetctime differs.",
+    "Whole store4 actual3PASS/soleintendedFAIL at270:104; original cursor rowcount assertion proves enlarged repository crossed weakened SQL projection. Fourterminal callbacks match JSON,0unhandled; wrapper matched-control/errors[]/signals[].",
+    "Original control shows projection predicate necessity; no claim that later identity checks would accept changed custody. No rerun."
+  ],
+  "result": {
+    "allocation": "487e2c2fbd4677ce9d9c7477f6bae58d4bb79667",
+    "status": "matched-control",
+    "errors": [],
+    "signals": [],
+    "child": {
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/vitest/vitest.mjs",
+        "run",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-frontier-store.test.ts",
+        "--config",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/vitest.config.ts",
+        "--project",
+        "scope",
+        "--allowOnly=false",
+        "--passWithNoTests=false",
+        "--reporter=default",
+        "--reporter=json",
+        "--reporter=/private/tmp/artroom-builder-archive-fixed-parent-20261023/scripts/test-progress.mjs",
+        "--outputFile.json=/private/tmp/artroom-archive-row-projection-control-evidence-20261024-v3/vitest.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+      "pid": 33605,
+      "exit": 1,
+      "signal": null,
+      "wall": 4.42192504205741,
+      "user": 5.018327,
+      "system": 0.720835
+    },
+    "qualification": "Repository projection equality control, whole Scope store4. Original complete passed file is the baseline; no healthy repeat. Sole cursor rowcount assertion must fail.",
+    "caseStates": [
+      {
+        "name": "frontier Mark and promotion share rollback cuts and the pending proof survives native eviction",
+        "state": "passed",
+        "failureMessages": []
+      },
+      {
+        "name": "a prepared frontier cannot overwrite a changed key or a different native Mark or custody",
+        "state": "passed",
+        "failureMessages": []
+      },
+      {
+        "name": "frontier size and work are admitted before body reads or writes, without refunding a rollback",
+        "state": "failed",
+        "failureMessages": [
+          "AssertionError: Refuse the enlarged repository before any projected row crosses SQL: expected 1 to be +0 // Object.is equality\n    at /private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-frontier-store.test.ts:270:104\n    at maybeHandleRunRequest (private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/@cloudflare/vitest-pool-workers/dist/worker/lib/cloudflare/test-internal.mjs:157:18)\n    at DurableObject.Wrapper.fetch (private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/@cloudflare/vitest-pool-workers/dist/worker/lib/cloudflare/test-internal.mjs:552:20)"
+        ]
+      },
+      {
+        "name": "a missing-v2 seed binds an opaque exact native context and installs only confirmed bytes",
+        "state": "passed",
+        "failureMessages": []
+      }
+    ],
+    "classification": {
+      "intendedCaptureParentAssertion": true,
+      "sourceFrame": {
+        "file": "packages/scope/test/archive-frontier-store.test.ts",
+        "line": 270,
+        "columnStart": 7,
+        "columnEnd": 111,
+        "sourceLine": "      expect(projectedRaceRows, \"Refuse the enlarged repository before any projected row crosses SQL\").toBe(0);"
+      },
+      "observedFrameColumns": [
+        104
+      ],
+      "passed": 3,
+      "failed": 1,
+      "qualification": "All actual outcomes retained. Sole original projection cursor rowcount assertion required."
+    },
+    "controlMatched": true,
+    "wall": 7.5024127080105245,
+    "pythonCpu": 2.780161,
+    "childrenUser": 5.151642,
+    "childrenSystem": 0.857059,
+    "inclusiveCpu": 8.788862,
+    "costQualification": "Owner includes guards and child; nested costs overlap. Original tool closure separate."
+  },
+  "rawPins": [
+    {
+      "name": "after.json",
+      "bytes": 3336991,
+      "sha256": "eca357e924ec57396b0abb96d12f47b31321bd06f616d4afe2e61cd3b38448cb"
+    },
+    {
+      "name": "before.json",
+      "bytes": 3336992,
+      "sha256": "ec797ca36cf15143c557578c12895db4a9cff7141c237d06939027b8612a9ecd"
+    },
+    {
+      "name": "command.json",
+      "bytes": 968,
+      "sha256": "1c8ccbd9cde1aa8b4efce7d4f60863fe692ee99f63f0330484ae5aea1cc3fca4"
+    },
+    {
+      "name": "invocation.json",
+      "bytes": 481,
+      "sha256": "16ba039825962e262e8223dc365563815d4ea5767b2d14ec4363ce43adeccf21"
+    },
+    {
+      "name": "mutant-after.json",
+      "bytes": 3337040,
+      "sha256": "6156f8d4bf2b9c9a8334f16fa293b45ebe44e9ab2b010fa9612d42fec23aad36"
+    },
+    {
+      "name": "mutant-before.json",
+      "bytes": 3337041,
+      "sha256": "983253c9f69c32849920d5653743bb29772024415da3f06525868cada13896fc"
+    },
+    {
+      "name": "mutant.data",
+      "bytes": 32791,
+      "sha256": "6cbe99cbdb2f14e7c009d9370becc783b392cf78475613a59b40b8646fe295b1"
+    },
+    {
+      "name": "mutation.json",
+      "bytes": 373,
+      "sha256": "db9ced28da38ae2dd9d992ac21e5dee8e6bff3bcaf11e17b248f839b0f6506ce"
+    },
+    {
+      "name": "mutation.patch",
+      "bytes": 2744,
+      "sha256": "b645e8a8932b68eb43793fded4ae4a029cf2400bea4f287a1794d08c8152b1b0"
+    },
+    {
+      "name": "original.data",
+      "bytes": 32790,
+      "sha256": "67d1a9cef7048e5fa2badb079a991ff2d43543a75945aea6dca226570637e4f2"
+    },
+    {
+      "name": "pid.json",
+      "bytes": 19,
+      "sha256": "699cb2f63896539d8403831dff1488f2e2d3a271a3447a50fc5e175f5cbbf4ad"
+    },
+    {
+      "name": "process.json",
+      "bytes": 929,
+      "sha256": "e86bb7edd520e42753fd4e6c24534413917783af24c5da249edb1041055d5919"
+    },
+    {
+      "name": "progress.jsonl",
+      "bytes": 4073,
+      "sha256": "6c60a2291b209fdf6318876dc911cc74face6ea7b46a6ccf16491db9d761f3bf"
+    },
+    {
+      "name": "restoration.json",
+      "bytes": 807,
+      "sha256": "43bfd2365c33990db95d57e2c4f9f6d78f807028358f1b67e56dd4c3db369e98"
+    },
+    {
+      "name": "result.json",
+      "bytes": 3522,
+      "sha256": "e3eb9588824baca1e34a7a49f8b9fa873a778c89369010e44fff016ee0a32682"
+    },
+    {
+      "name": "stderr",
+      "bytes": 1384,
+      "sha256": "7ba1bd1d2cc2250d3b9ddaca0b4e2614296f006ec54f30e3f7bd8f67e0c27c10"
+    },
+    {
+      "name": "stdout",
+      "bytes": 1697,
+      "sha256": "6ed8585efc511c0bafcbf8e3b05ed5c0f7cdfb27e93028b78fbd548f6a36784c"
+    },
+    {
+      "name": "vitest.json",
+      "bytes": 2545,
+      "sha256": "cb58e0f577eed69c712b72ebfc2a255ffcbf5d8cb827455e2554a566518cf095"
+    }
+  ],
+  "limits": "Closed data only, no live candidate/dependency or project execution. Owner/child costs overlap."
+}

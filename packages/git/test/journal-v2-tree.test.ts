@@ -167,6 +167,27 @@ test("v2 edits only the new pass paths after ten thousand passes and never reloc
   const work = new JournalWork(new ArchiveBudget({}, () => 0)), maker = new JournalObjects("sha1", work);
   await expect(patchJournalV2Tree(new JournalObjectReader("sha1", source, work), tree,
     [{ path: earlier, data: utf8("TEST replacement") }], maker, work)).rejects.toThrow("parent");
+  // An older numeric branch absent from the new pass's preparation still
+  // loads through the same bounded reader. It is never added to write
+  // children: discovering it must not change the future selected quote.
+  const lookupBudget = new ArchiveBudget({}, () => 0), lookupWork = new JournalWork(lookupBudget);
+  const lookupReader = new JournalObjectReader("sha1", source, lookupWork);
+  const lookup = new JournalV2TreePatch(lookupReader, tree, lookupWork), lookupFiles = testPassFiles(10_011).slice(0, 3);
+  await lookup.prepare(lookupFiles.map(file => file.path));
+  const sizes = lookupFiles.map(file => ({ path: file.path, bytes: file.data.length }));
+  const beforeLookup = lookupBudget.admitted(), beforeQuote = lookup.forecast("sha1", sizes);
+  const oldId = [...held.values()].find(object => object.type === "blob" && new TextDecoder().decode(object.data) === "TEST pass 3700")?.id;
+  expect(oldId).toBeDefined();
+  expect(await lookup.priorFile(journalV2PassPath(3700), lookupReader)).toBe(oldId);
+  expect(lookupBudget.admitted().nodes - beforeLookup.nodes).toBeGreaterThan(1);
+  const loadedNodes = lookupBudget.admitted().nodes;
+  expect(await lookup.priorFile(journalV2PassPath(3700), lookupReader)).toBe(oldId);
+  expect(lookupBudget.admitted().nodes).toBe(loadedNodes);
+  expect(lookup.forecast("sha1", sizes)).toEqual(beforeQuote);
+  expect(await lookup.priorFile(journalV2PassPath(999_999), lookupReader)).toBeNull();
+  const lookupMaker = new JournalObjects("sha1", lookupWork);
+  lookup.finish(lookupFiles, lookupMaker);
+  expect(lookupMaker.objects().some(object => object.id === oldId)).toBe(false);
   expect(maximumNumericRows).toBe(100);
   (context.task.meta as Record<string, unknown>)["sharedPassNumericTrees"] = { treePatchNodes, maximumNumericRows,
     at10000: after.cost.nodes, at10010: final.cost.nodes,

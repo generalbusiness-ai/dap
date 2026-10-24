@@ -1,0 +1,62 @@
+{
+  "schema": "archive-legacy-preparation-reuse-independent-source-review-1",
+  "verdict": "Source clear; no unresolved mandatory finding",
+  "request": "fc2548ae1ab9c7c5e859d422611f8a34fd0ff13c",
+  "promise": "28cdea0d83a29e9a02c5107d89c6e21b10341fc2",
+  "source": "/private/tmp/artroom-archive-legacy-preparation-reuse-source-20261024-v2",
+  "manifest": {
+    "bytes": 4998,
+    "sha256": "62567a784d11e26c430a70863477a5fd4f63fab5f8ead3c61ba09ca1f1eb8bfc",
+    "leaves": 24,
+    "payloadBytes": 369963
+  },
+  "basis": "16f861d81fe3d814ead650a116363c7633d92915",
+  "diagnosticBasis": "162f9aa090e1c2b9c1500248e1607995ddd19074",
+  "verified": {
+    "allFinitePinsStableRegularSingleLink0444": true,
+    "exactNinePathReplayBothBases": true,
+    "exactNarrowV1ToV2Delta": true,
+    "onlyTwoSourceAfterimagesChangedFromV1": [
+      "source/packages/git/src/journal-v2-preparation.ts",
+      "source/packages/git/test/journal-anchor-publication.test.ts"
+    ],
+    "commonManifestRangeCountLoopExact": true,
+    "forecastThroughEmissionBodyExact": true
+  },
+  "closedFindings": [
+    {
+      "finding": "Prepared publication build omitted actual segment/retained registration",
+      "correction": "V2 make registers journalV2SegmentPath(seq) and every selected retained key under the same original preparation/budget before building."
+    },
+    {
+      "finding": "Reverse prepare-to-legacy overlap could spend migration work into preparation metadataCost interval",
+      "correction": "V2 uses one private busy flag through prepare and complete legacy awaits, rejects before legacy spend, and clears through nested finally. Existing first case asserts immediate zero admitted delta and exact preparation attribution."
+    }
+  ],
+  "assessment": [
+    "Genuine runtime class plus private-field branding; exact format/scope/through/hash/parent/original-budget binding before migration work. Public fields and forged prototype confer no private state.",
+    "Private busy and consumed state exclude overlapping/reused operations, including through manifest awaits. Immutable private through snapshot is used after await.",
+    "priorFile traverses only baseline rows/previous IDs. Separate charged read cache never enters write children/files/active state. Missing baseline edges return null.",
+    "Cache misses use exact format/work reader and original hash/type/body/depth/grammar/row limits. New paths/cache descriptors and actual parse/read work remain charged. Shared layout counters conservatively narrow admission.",
+    "Full old manifest/range/count parser remains common. Native retained-prefix inventory/entry/authority replay is unchanged. Migration work remains outside metadataCost subtraction.",
+    "Published effective operation order is preserved. Temporary adaptive diagnostics are removed in combined patch. No caps, tariffs, registration titles or deadlines change.",
+    "Existing witnesses cover one-vs-thirteen tree visits, missing/corrupt manifests, invalid binding/forged/consumed/busy state, numeric-prefix fallback/cache reuse, unchanged forecast and real publication readback."
+  ],
+  "afterimages": {
+    "packages/git/src/journal-anchor-legacy-count.ts": "60fc0bfa20063323267159bfd516ab9600368088c62b9698b102082b42f02f78",
+    "packages/git/src/journal-anchor-legacy.ts": "4d1d0e97b0317414baf65db2a0c9db6e8dc898009413357807482abb95922752",
+    "packages/git/src/journal-v2-preparation.ts": "8765e856a361a11f33ffa835ae8921f22f341055fa55f178d06e58c39ac3067d",
+    "packages/git/src/journal-v2-tree.ts": "c8ea9a2b57a17f04852faadf85f99525307244fcdb3d40787abf478759aea3d0",
+    "packages/git/test/journal-anchor-publication.test.ts": "433c5cdabea1dccd762238aa69b91bc49b2bccd89d15e44846f6cc5a393bb433",
+    "packages/git/test/journal-v2-tree.test.ts": "ccf0da364af5c668806ac66986586d7d805151114bbdd3bfaf4b1e947bf000e0",
+    "packages/scope/src/archive-adaptive.ts": "8ef347b59e5caea2b6d25c2a61bacc2f47164c8524a5b860c2bbd19ee4215773",
+    "packages/scope/src/archive-build.ts": "de94fc6aebd0480b6ad82b8ec5f5c9265ab4442f015f65cd70e42c96ba53cf14",
+    "packages/scope/test/archive-parent-bootstrap.test.ts": "f84c1e158273af709ae8827a7eb5c54df5d17c6cd1e031686635f075bef44c8b"
+  },
+  "validationPlan": "Root-selected conservative 22 cases in nine whole files and Git production/test plus Scope production/test compiler roots. Prior29 healthy results remain historical and may only be carried for justified unaffected behavior.",
+  "limitations": [
+    "No project/helper execution, parser, compiler, test, candidate/dependency read or mutation occurred in this review.",
+    "74-to-62 node arithmetic is a static one-old-pass projection, not an observed repair result or universal affordability guarantee.",
+    "Actual affected checks, necessary maintained seal refresh and final gate remain pending."
+  ]
+}

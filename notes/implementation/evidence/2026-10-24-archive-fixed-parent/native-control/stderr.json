@@ -1,0 +1,9 @@
+{
+  "encoding": "utf-8",
+  "original": {
+    "path": "/private/tmp/artroom-archive-fixed-parent-control-evidence-20261024-v11/stderr",
+    "bytes": 1609,
+    "sha256": "02250d280245401a88af264091509d2f2a884a21b5bf9c942f53507ac8a2168f"
+  },
+  "text": "\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  |scope| test/archive-parent-state.test.ts > native parent state appends 200 host-shaped passes with two retained files each\nAssertionError: {\"pass\":25,\"parentRead\":{\"ordinal\":2,\"type\":\"tree\",\"maximum\":295,\"phase\":\"object-response\",\"refusal\":\"too-large\"},\"parentError\":{\"reason\":\"too-large\",\"what\":\"inflated bytes\",\"id\":\"14943a28e05110b64122b140ee074cb517005f0d\",\"type\":\"tree\",\"maximum\":295},\"cost\":{\"entries\":1,\"attempts\":15,\"nodes\":10,\"calls\":33,\"metadata\":211068,\"inputWork\":1400081}}: expected { ok: false, reason: 'unavailable' } to be 'accepted' // Object.is equality\n\n- Expected:\n\"accepted\"\n\n+ Received:\n{\n  \"ok\": false,\n  \"reason\": \"unavailable\",\n}\n\n ❯ test/archive-parent-state.test.ts:176:121\n    174|         };\n    175|       }\n    176|       expect(built.ok ? \"accepted\" : built, JSON.stringify({ pass, par…\n       |                                                                                                                         ^\n    177|       if (!built.ok) return;\n    178|       const archive = built.archive, all = new Map<string, JournalObje…\n ❯ maybeHandleRunRequest ../../private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/@cloudflare/vitest-pool-workers/dist/worker/lib/cloudflare/test-internal.mjs:157:18\n ❯ DurableObject.Wrapper.fetch ../../private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/@cloudflare/vitest-pool-workers/dist/worker/lib/cloudflare/test-internal.mjs:552:20\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n"
+}

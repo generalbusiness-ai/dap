@@ -19,6 +19,7 @@ import { ArchiveScout } from "./archive-scout.ts";
 import type { ArchiveScoutLayoutQuote } from "./archive-scout-layout.ts";
 import type { FixtureArchiveSourcePins } from "./archive-source-pins.ts";
 import { forecastArchiveTransfer } from "./archive-transfer-cost.ts";
+import { archiveFrontierRowContextBound, forecastArchiveFrontierFinish } from "./archive-frontier-cost.ts";
 import type { Sql } from "./sqlite.ts";
 
 const empty = (): ArchiveCost => ({ entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0, inputWork: 0 });
@@ -32,6 +33,9 @@ export interface AdaptiveArchiveContext {
   readonly at: ScopeRef; readonly through: Head; readonly after: Head | null;
   readonly bounds: Bounds; readonly policies: ArchivePolicyRegistry; readonly format: JournalFormat;
   readonly parent: { readonly id: string; readonly source: JournalObjectSource } | null;
+  /** Explicit receipt-bound old pass metadata for anchor migration only.
+   * The core append parent remains the independent native frontier above. */
+  readonly legacyAnchorParent?: { readonly id: string; readonly source: JournalObjectSource };
   readonly markedAt: Timestamp; readonly fixtureSources?: FixtureArchiveSourcePins;
   readonly replayScopes?: readonly ScopeRef[];
   /** Host source identity preparation for exactly the next candidate. It
@@ -59,7 +63,7 @@ function parentMetadata(context: AdaptiveArchiveContext, budget: ArchiveBudget):
  * The original fixed caps bound those visits; nothing is prepaid here. */
 const setupCost = (): ArchiveCost => sum(archiveDeclarationHandoffCost(ARCHIVE_BOUNDS.nodes),
   archiveForeignHandoffCost(ARCHIVE_BOUNDS.attempts), archiveRetainedHandoffCost(ARCHIVE_BOUNDS.attempts), { inputWork: ARCHIVE_BOUNDS.entries * 32 });
-function finishCost(context: AdaptiveArchiveContext, preparation: JournalPassPreparation, shape: ArchiveScoutLayoutQuote,
+function finishCost(context: AdaptiveArchiveContext, preparation: JournalPassPreparation, shape: ArchiveScoutLayoutQuote, through: Head,
   inventory: ArchiveCost, oldRowBytes: number, parent: ParentMetadata, setup: ArchiveCost, legacyAnchors: number, budget: ArchiveBudget): ArchiveCost | null {
   // A copied fact can be needed without being written in a local entry.
   // The scout paid for a necessary-key count on each selected local row.
@@ -104,9 +108,12 @@ function finishCost(context: AdaptiveArchiveContext, preparation: JournalPassPre
     bytes: parent.bytes + patch.layoutWork.outputWork + commit.layoutWork.outputWork,
     incremental: context.parent !== null, maximum: context.maximum });
   if (!rows.ok || !transfer.ok) return null;
+  const frontier = forecastArchiveFrontierFinish({ hasBase: context.parent !== null, through: through.seq, captureFromSource: true, rowContextBytes: archiveFrontierRowContextBound(context.row),
+    markUnits: shape.selectionUnits + publicationUnits, markedRowBytes: pending });
+  if (!frontier.ok) return null;
   return sum(setup, inventory, shape.input, publication, { inputWork: JOURNAL_SELECTION_BYTES * 3 }, selection.cost, body.cost,
     patch.cost, commit.cost, context.parent && patch.appendEdges?.ok ? patch.appendEdges.cost : {},
-    append?.ok ? append.cost : {}, transfer.cost, rows.cost);
+    append?.ok ? append.cost : {}, transfer.cost, rows.cost, frontier.cost);
 }
 export function planAdaptiveArchivePass(sql: Sql, context: AdaptiveArchiveContext, budget: ArchiveBudget) {
   return adaptiveArchivePass(false, sql, context, budget);
@@ -125,11 +132,20 @@ async function adaptiveArchivePass(coupled: boolean, sql: Sql, context: Adaptive
     // repository strings before serializing the Native metadata snapshot.
     budget.spend({ metadata: 32 * 1024, inputWork: 256 * 1024 });
     const oldRowBytes = utf8(canonicalize(context.row)).length;
-    const legacyAnchors = await planLegacyArchiveAnchors(sql, context, budget);
+    const unpublished = context.row.confirmed?.layout === 2 && context.row.confirmed.anchorsPublished !== true;
+    // Published receipts retain their original operation order. Only the
+    // one-time unpublished transition needs the preparation first.
+    const earlyLegacy = unpublished ? undefined : await planLegacyArchiveAnchors(sql, context, budget);
     const begun = await budget.wait(() => JournalPassPreparation.begin({ format: context.format, at: context.at,
       after: context.after, parent: context.parent, budget }));
     if (!begun.ok) return begun;
-    const preparation = begun.preparation, paths = new Set<string>();
+    // The preparation already authenticated this receipt and parsed the
+    // baseline path. Only the unpublished transition reuses those maps;
+    // old manifests and the complete local authority replay remain owed.
+    const preparation = begun.preparation;
+    const legacyAnchors = unpublished
+      ? await planLegacyArchiveAnchors(sql, { ...context, preparation }, budget) : earlyLegacy;
+    const paths = new Set<string>();
     let scout: ArchiveScout | undefined;
     let nextSource = (context.after?.seq ?? -1) + 1;
     let selected: { through: Head; cost: ArchiveCost; parent: ParentMetadata } | undefined;
@@ -181,7 +197,7 @@ async function adaptiveArchivePass(coupled: boolean, sql: Sql, context: Adaptive
         const delta: string[] = [];
         for (const file of shape.files) if (file.path !== "journal/v2/head.json" && !file.path.endsWith("/pass.json") && !paths.has(file.path)) { paths.add(file.path); delta.push(file.path); }
         if (delta.length) await preparation.prepare(delta);
-        const parent = parentMetadata(context, budget), cost = finishCost(context, preparation, shape, inventory, oldRowBytes, parent, setup, legacyAnchors?.anchors.length ?? 0, budget);
+        const parent = parentMetadata(context, budget), cost = finishCost(context, preparation, shape, through, inventory, oldRowBytes, parent, setup, legacyAnchors?.anchors.length ?? 0, budget);
         return { parent, cost };
       });
       if (prepared.kind === "limited" || prepared.value.cost === null || !budget.canSpend(prepared.value.cost)) break;

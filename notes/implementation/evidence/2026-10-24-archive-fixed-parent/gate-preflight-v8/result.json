@@ -1,0 +1,61 @@
+{
+  "allocation": "86ccfbe4eac1e1538edc28d7b7a00f647e24184c",
+  "errors": [],
+  "receivedSignals": [],
+  "child": {
+    "argv": [
+      "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+      "/opt/homebrew/lib/node_modules/npm/bin/npm-cli.js",
+      "run",
+      "gate"
+    ],
+    "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+    "pid": 93992,
+    "exit": 1,
+    "signal": null,
+    "wall": 0.224142708000727,
+    "user": 0.12729599999999996,
+    "sys": 0.07268
+  },
+  "stageEvidence": {
+    "location": "/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.3ZzYUAeEaL",
+    "files": {
+      "whitespace.log": {
+        "mode": "0o644",
+        "device": 16777231,
+        "inode": 545861405,
+        "nlink": 1,
+        "kind": "file",
+        "bytes": 111,
+        "sha256": "52cc90e9677caa0f892a5819de6547a7ca60d8858e051a2c9584646ad19a2ee4"
+      },
+      "whitespace.time": {
+        "mode": "0o644",
+        "device": 16777231,
+        "inode": 545861406,
+        "nlink": 1,
+        "kind": "file",
+        "bytes": 29,
+        "sha256": "b19caaf7f42fccf27d8c76a198f52fea0f91edf4f9fc11246dfb0c794d708d58"
+      }
+    },
+    "stages": {
+      "whitespace": {
+        "exit": 2,
+        "printedWall": 0.0,
+        "printedCpu": 0.0
+      }
+    },
+    "nodeSummaries": {},
+    "qualification": "Stage timing is nested within gate child/outer totals; never sum these overlapping intervals."
+  },
+  "vitestLedger": {
+    "qualification": "Vitest progress not reached or not created; raw stage logs decide."
+  },
+  "outerWall": 1.7094305830541998,
+  "outerPythonCpu": 1.319814,
+  "childrenUser": 0.202485,
+  "childrenSys": 0.146193,
+  "inclusiveCpu": 1.668492,
+  "costQualification": "Outer inclusive totals include metadata guards and the gate child. Gate child includes nested npm/stage/test work; stage costs overlap these totals."
+}

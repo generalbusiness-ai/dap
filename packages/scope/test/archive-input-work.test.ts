@@ -94,7 +94,7 @@ test("legacy v2 parent work preserves partial Native checkpoint progress and dra
   const budgets: ObservedArchiveBudget[] = [];
   let beforePlanning: ArchiveCost[] = [];
   const observations: { pass: number; from: number; through: number; selectedEntries: number; remainingEntries: number;
-    commit: string; beforePlanning: ArchiveCost[]; final: ArchiveCost; checkpoints: ObservedArchiveBudget["checkpoints"];
+    commit: string; attemptedEntries: number; completedEntries: number; parentReads: number; parentPath: "unpublished-legacy-proof" | "native-published"; beforePlanning: ArchiveCost[]; final: ArchiveCost; checkpoints: ObservedArchiveBudget["checkpoints"];
     shares: [string, { calls: number; cost: ArchiveCost }][]; preEntrySites: [string, { calls: number; cost: ArchiveCost }][] }[] = [];
   // Install the metadata container before the named control assertion so a
   // failed control retains the actual original pass and reconstructed costs.
@@ -108,8 +108,11 @@ test("legacy v2 parent work preserves partial Native checkpoint progress and dra
     fixture: "archive-tokens", read: async () => "TEST-parent-read",
     mint: async () => ({ id: "TEST append handle", plaintext: "TEST-append-write", ends: timeOf(Date.parse(lane.c.clock.now) + 60_000) }), revoke: async () => {},
   } });
+  let mintCalls = 0, parentReads = 0;
   const provider: FixtureArchiveProvider = { ...actual,
+    mintArchive: async (...args) => { mintCalls++; return actual.mintArchive(...args); },
     readObject: async (repository, object, allowed, budget) => {
+      parentReads++;
       expect(budget).toBe(budgets.at(-1)); const observed = budgets.at(-1)!; observed.checkpoint("before-parent");
       if (object.type === "blob" && object.maximum === JOURNAL_SELECTION_BYTES) observed.checkpoint("before-legacy-manifest");
       const prior = observed.stage; observed.stage = "parent-adapter";
@@ -126,9 +129,29 @@ test("legacy v2 parent work preserves partial Native checkpoint progress and dra
       return actual.sendArchive(request);
     },
   };
+  // Explicit missing-frontier migration alarm: it pays its own original
+  // pass budget, archives no backlog entries, and cannot mint or send.
+  const beforeSeed = await lane.inside(state => new ArchiveRows(archiveSql(state), lane.at).load());
+  const migration = await lane.inside(state => new ArchiveDriver({ sql: archiveSql(state), current: () => ({ at: lane.at, head }),
+    clock: () => lane.c.clock.now, bounds: PROPOSED_BOUNDS,
+    policies: { fixture: "archive-policies", registry: archiveAuthorityPolicies(lane, archivePolicies) }, fixtureSources: archiveAuthorityBasis(lane)!.pins,
+    target: { fixture: "archive-target", resolve: async () => archiveRepository }, provider,
+    budget: () => { const budget = new ObservedArchiveBudget(); budgets.push(budget); return budget; },
+  }).run());
+  expect(migration).toMatchObject({ state: "retry" }); expect(migration.reason).toBeUndefined();
+  expect(peer.sends).toEqual([]); expect(mintCalls).toBe(0);
+  expect(await lane.inside(state => new ArchiveRows(archiveSql(state), lane.at).load())).toEqual(beforeSeed);
+  expect(await lane.inside(state => state.storage.sql.exec("SELECT k FROM meta WHERE k IN ('archive-frontier-confirmed-1', 'archive-frontier-pending-1') ORDER BY k").toArray()))
+    .toEqual([{ k: "archive-frontier-confirmed-1" }]);
+  (context.task.meta as Record<string, unknown>)["legacyParentMigration"] = { result: migration, cost: budgets[0]!.admitted(),
+    qualification: "Separate seed-only alarm under its original budget; excluded from append prefix totals, never refunded." };
+  const migrationBudget = budgets.shift()!;
+  expect(migrationBudget.admitted().entries).toBe(0);
+  beforePlanning = [];
   let through = originalHead, priorCommit = seeded.commit;
   for (let pass = 0; through.seq < head.seq && pass < CHECKPOINT_BACKLOG; pass++) {
     beforePlanning = [];
+    const readsBeforePass = parentReads;
     const next = await lane.inside(state => new ArchiveRows(archiveSql(state), lane.at).wake());
     if (next) lane.c.clock.now = next;
     const result = await lane.inside(state => new ArchiveDriver({ sql: archiveSql(state), current: () => ({ at: lane.at, head }),
@@ -176,13 +199,23 @@ test("legacy v2 parent work preserves partial Native checkpoint progress and dra
     for (const site of budget.preEntrySites.values()) for (const key of Object.keys(beforeEntry) as (keyof ArchiveCost)[]) beforeEntry[key] += site.cost[key];
     expect(beforeEntry).toEqual(firstScouted!.cost);
     for (const key of Object.keys(ARCHIVE_BOUNDS) as (keyof ArchiveCost)[]) expect(final[key]).toBeLessThanOrEqual(ARCHIVE_BOUNDS[key]);
-    observations.push({ pass, from: through.seq + 1, through: receipt.through.seq, selectedEntries, remainingEntries,
+    const readsThisPass = parentReads - readsBeforePass;
+    if (pass === 0) expect(readsThisPass).toBeGreaterThan(0); else expect(readsThisPass).toBe(0);
+    observations.push({ attemptedEntries: final.entries, completedEntries: selectedEntries, parentReads: readsThisPass,
+      parentPath: pass === 0 ? "unpublished-legacy-proof" : "native-published", pass, from: through.seq + 1, through: receipt.through.seq, selectedEntries, remainingEntries,
       commit: receipt.commit, beforePlanning, final, checkpoints: budget.checkpoints, shares: [...budget.shares], preEntrySites: [...budget.preEntrySites] });
     through = receipt.through; priorCommit = receipt.commit;
   }
   expect(observations.length).toBeGreaterThan(1); expect(through).toEqual(head);
   expect(observations.reduce((sum, pass) => sum + pass.selectedEntries, 0)).toBe(CHECKPOINT_BACKLOG);
   expect(observations.at(-1)!.remainingEntries).toBe(0); expect(budgets).toHaveLength(observations.length);
+  (context.task.meta as Record<string, unknown>)["nativeDrain"] = { backlog: CHECKPOINT_BACKLOG,
+    target: head, completedThrough: through, passes: observations.length,
+    entriesPerPass: observations.map(value => ({ pass: value.pass, from: value.from, through: value.through,
+      attemptedEntries: value.attemptedEntries, completedEntries: value.completedEntries, remainingEntries: value.remainingEntries,
+      parentPath: value.parentPath, parentReads: value.parentReads, cost: value.final })),
+    originalBounds: ARCHIVE_BOUNDS, previousMeasuredPrefixRange: [41, 44],
+    qualification: "Actual current Native300 drain; compare measured prefixes to prior41-44, do not infer performance or backlog13031 recovery. Seed alarm is separately reported with zero archived entries." };
   expect(await lane.head()).toEqual(head);
   const expectedAnchors = archiveAuthorityAnchors(lane); expect(expectedAnchors.length).toBeGreaterThan(0);
   const publications = [...peer.data.values()].filter(object => object.type === "blob")

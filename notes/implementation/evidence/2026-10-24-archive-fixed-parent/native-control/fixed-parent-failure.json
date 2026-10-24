@@ -1,0 +1,37 @@
+{
+  "pass": 25,
+  "completedPasses": 25,
+  "built": {
+    "ok": false,
+    "reason": "unavailable"
+  },
+  "parentRead": {
+    "ordinal": 2,
+    "type": "tree",
+    "maximum": 295,
+    "phase": "object-response",
+    "refusal": "too-large"
+  },
+  "parentError": {
+    "reason": "too-large",
+    "what": "inflated bytes",
+    "id": "14943a28e05110b64122b140ee074cb517005f0d",
+    "type": "tree",
+    "maximum": 295
+  },
+  "treeObservation": {
+    "commit": "d845c2086a5e218a5c0cf7430fbbfb4a8b9e4fef",
+    "commitBytes": 247,
+    "treeBytes": 8703,
+    "trees": 59
+  },
+  "cost": {
+    "entries": 1,
+    "attempts": 15,
+    "nodes": 10,
+    "calls": 33,
+    "metadata": 211068,
+    "inputWork": 1400081
+  },
+  "parentRequests": 266
+}

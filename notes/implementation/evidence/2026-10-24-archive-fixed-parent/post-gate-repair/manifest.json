@@ -1,0 +1,373 @@
+{
+  "state": "FOCUSED_AND_CONTROLS_CLOSED_FINAL_GATE_PENDING",
+  "request": "fc2548ae1ab9c7c5e859d422611f8a34fd0ff13c",
+  "promise": "28cdea0d83a29e9a02c5107d89c6e21b10341fc2",
+  "testedHead": "7bca0d489771e56cd42c1e60a5e02b104db9c2b4",
+  "testedTree": "a3abc67f1d16527011711ab4a43a1449cc384387",
+  "acceptedMain": "d7aea0b03ce8b9c1afcea7f3f6252b66d0d3630a",
+  "inputs": [
+    {
+      "source": "/private/tmp/artroom-archive-append-row-repair-owning-evidence-20261024-v2/result.json",
+      "bytes": 14371,
+      "sha256": "e820e89ab0bd7271105418a539e6b45fe91cd72a523a05cc7739f3165fe4e54e",
+      "identity": [
+        16777231,
+        545931116,
+        33188,
+        1,
+        14371,
+        1792822036196568663,
+        1792822036196568663
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/post-gate-repair/focused17-result.json",
+      "qualification": "Inert exact copy; embedded paths and raw pins were not followed."
+    },
+    {
+      "source": "/private/tmp/artroom-archive-append-row-repair-owning-v2-independent-audit-20261024-v1.json",
+      "bytes": 19401,
+      "sha256": "ac69aaa1ebc9b3d5cf1848f6de802c9c78d4f61a37fef3f371aacf8b7f8b9035",
+      "identity": [
+        16777231,
+        545931165,
+        33060,
+        1,
+        19401,
+        1792822104241856050,
+        1792822104241913008
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/post-gate-repair/focused17-audit.json",
+      "qualification": "Inert exact copy; embedded paths and raw pins were not followed."
+    },
+    {
+      "source": "/private/tmp/artroom-archive-append-row-repair-measurements-20261024-v1/measurements.json",
+      "bytes": 45975,
+      "sha256": "317aa182ede48e624d2aaaf019709d1c83a944c39d795b8d17ed80e466019e00",
+      "identity": [
+        16777231,
+        545931263,
+        33060,
+        1,
+        45975,
+        1792822215880811255,
+        1792822215880887797
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/post-gate-repair/measurements.json",
+      "qualification": "Inert exact copy; embedded paths and raw pins were not followed."
+    },
+    {
+      "source": "/private/tmp/artroom-archive-append-row-repair-measurements-20261024-v1/summary.md",
+      "bytes": 2252,
+      "sha256": "39ec8cdb599bdbfba02b113282a29c8a4971284e29fc70dc36d214a3fba217da",
+      "identity": [
+        16777231,
+        545931264,
+        33060,
+        1,
+        2252,
+        1792822215880946214,
+        1792822215880962172
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/post-gate-repair/measurement-summary.md",
+      "qualification": "Inert exact copy; embedded paths and raw pins were not followed."
+    },
+    {
+      "source": "/private/tmp/artroom-archive-append-row-driver-seal-evidence-20261024-v2/result.json",
+      "bytes": 1590,
+      "sha256": "eb6483afd4635584c80cf6d93d06561f68c195a8c7b517351b1371e9313256f3",
+      "identity": [
+        16777231,
+        545926813,
+        33188,
+        1,
+        1590,
+        1792821817463312599,
+        1792821817463312599
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/post-gate-repair/driver-seal-result.json",
+      "qualification": "Inert exact copy; embedded paths and raw pins were not followed."
+    },
+    {
+      "source": "/private/tmp/artroom-archive-append-row-driver-seal-independent-outcome-audit-20261024-v1.json",
+      "bytes": 4425,
+      "sha256": "ea054b99c1512240fc0f79cfc5a5906a3185fee1980551b7ee1ebc6608a295ee",
+      "identity": [
+        16777231,
+        545926868,
+        33060,
+        1,
+        4425,
+        1792821854589682293,
+        1792821854589762252
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/post-gate-repair/driver-seal-audit.json",
+      "qualification": "Inert exact copy; embedded paths and raw pins were not followed."
+    },
+    {
+      "source": "/private/tmp/artroom-archive-current-parent-migration-control-evidence-20261024-v5/result.json",
+      "bytes": 3990,
+      "sha256": "d02a4bc57494f9d4a350489fcbc0a40c933af38aa16afa2d4c514cfee69129c5",
+      "identity": [
+        16777231,
+        545925667,
+        33188,
+        1,
+        3990,
+        1792820766836577971,
+        1792820766836577971
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/post-gate-repair/migration-control-result.json",
+      "qualification": "Inert exact copy; embedded paths and raw pins were not followed."
+    },
+    {
+      "source": "/private/tmp/artroom-archive-current-parent-migration-control-v5-independent-outcome-audit-20261024-v1.json",
+      "bytes": 8269,
+      "sha256": "e430d7be846dcb4262fd3bb03913ad8b6352e5baba40edebc04ec73ebd66a7d2",
+      "identity": [
+        16777231,
+        545925719,
+        33060,
+        1,
+        8269,
+        1792820830443146660,
+        1792820830443200535
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/post-gate-repair/migration-control-audit.json",
+      "qualification": "Inert exact copy; embedded paths and raw pins were not followed."
+    },
+    {
+      "source": "/private/tmp/artroom-archive-append-headseen-control-evidence-20261024-v3/result.json",
+      "bytes": 2685,
+      "sha256": "dc0264ea2b0d3a3dd6e358e0f9e9b8713cb0d99833f1e4f74ba4e40d8e424cea",
+      "identity": [
+        16777231,
+        545931665,
+        33188,
+        1,
+        2685,
+        1792822294898818963,
+        1792822294898818963
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/post-gate-repair/head-seen-control-result.json",
+      "qualification": "Inert exact copy; embedded paths and raw pins were not followed."
+    },
+    {
+      "source": "/private/tmp/artroom-archive-append-headseen-control-v3-independent-outcome-audit-20261024-v1.json",
+      "bytes": 6409,
+      "sha256": "f883dc8949ab28f2818dcd40965fe627608fb11d3d99532a63167cdf2037157b",
+      "identity": [
+        16777231,
+        545931750,
+        33060,
+        1,
+        6409,
+        1792822361147465935,
+        1792822361147550352
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/post-gate-repair/head-seen-control-audit.json",
+      "qualification": "Inert exact copy; embedded paths and raw pins were not followed."
+    },
+    {
+      "source": "/private/tmp/artroom-archive-row-projection-control-evidence-20261024-v3/result.json",
+      "bytes": 3522,
+      "sha256": "e3eb9588824baca1e34a7a49f8b9fa873a778c89369010e44fff016ee0a32682",
+      "identity": [
+        16777231,
+        545931923,
+        33188,
+        1,
+        3522,
+        1792822378444794204,
+        1792822378444794204
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/post-gate-repair/projection-control-result.json",
+      "qualification": "Inert exact copy; embedded paths and raw pins were not followed."
+    },
+    {
+      "source": "/private/tmp/artroom-archive-row-projection-control-v3-independent-outcome-audit-20261024-v1.json",
+      "bytes": 7359,
+      "sha256": "1a697d6945e1b5c3fb7e164d8f50e0c97bb501abddcc087d926130394f920280",
+      "identity": [
+        16777231,
+        545932003,
+        33060,
+        1,
+        7359,
+        1792822455387945784,
+        1792822455388028325
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/post-gate-repair/projection-control-audit.json",
+      "qualification": "Inert exact copy; embedded paths and raw pins were not followed."
+    },
+    {
+      "source": "/private/tmp/artroom-archive-through-profile-control-reassessment-20261024-v1/assessment.json",
+      "bytes": 3582,
+      "sha256": "592ce94e1b69e439f41b7cf9aeb1e5ffa6d8eb59fa121986a73d5024941b7511",
+      "identity": [
+        16777231,
+        545931929,
+        33060,
+        1,
+        3582,
+        1792822392527626996,
+        1792822392527705913
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/post-gate-repair/retired-profile-control.json",
+      "qualification": "Inert exact copy; embedded paths and raw pins were not followed."
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-measured-cost-ledger-20261024-v6/cost-ledger.json",
+      "bytes": 61002,
+      "sha256": "1c073b7040e3850ee20d52fff0bc649767d64b87ca488a3aceb70b12affa29e0",
+      "identity": [
+        16777231,
+        545932141,
+        33060,
+        1,
+        61002,
+        1792822653700921716,
+        1792822653701000341
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/post-gate-repair/cost-ledger.json",
+      "qualification": "Inert exact copy; embedded paths and raw pins were not followed."
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-measured-cost-ledger-20261024-v6/append-proof.json",
+      "bytes": 3633,
+      "sha256": "252c29b2428cb064d6acf25e46e7ce506d772712c3b36d2979203ac3cec491f7",
+      "identity": [
+        16777231,
+        545932142,
+        33060,
+        1,
+        3633,
+        1792822653701051049,
+        1792822653701069258
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/post-gate-repair/cost-append-proof.json",
+      "qualification": "Inert exact copy; embedded paths and raw pins were not followed."
+    },
+    {
+      "source": "/private/tmp/artroom-archive-single-capture-repair-owning-v2-independent-audit-20261024-v1.json",
+      "bytes": 15821,
+      "sha256": "491dc930f2ae794ab81fccba0c07a096319225cb70691212ed0381cb6bc10b46",
+      "identity": [
+        16777231,
+        545924295,
+        33060,
+        1,
+        15821,
+        1792820271688938108,
+        1792820271689026192
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/post-gate-repair/failed-single-capture21-audit.json",
+      "qualification": "Inert exact copy; embedded paths and raw pins were not followed."
+    },
+    {
+      "source": "/private/tmp/artroom-archive-capture-parent-control-v3-independent-outcome-audit-20261024-v1.json",
+      "bytes": 6865,
+      "sha256": "f66223d1ba26d8cc62cc9f8984b601a6e91c2e08b5f106a0914093a3f38997a0",
+      "identity": [
+        16777231,
+        545925203,
+        33060,
+        1,
+        6865,
+        1792820634774725637,
+        1792820634774806554
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/post-gate-repair/parent-control-audit.json",
+      "qualification": "Inert exact copy; embedded paths and raw pins were not followed."
+    },
+    {
+      "source": "/private/tmp/artroom-archive-post-gate-repair-owning-source-20261024-v3/prior-outcome.json",
+      "bytes": 3166,
+      "sha256": "d936c2abbf0a32637617a07c93e129b20c67d7d7b6ed83fb70ec776b67e400a1",
+      "identity": [
+        16777231,
+        545918530,
+        33060,
+        1,
+        3166,
+        1792818587889741024,
+        1792818587889760899
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/post-gate-repair/compiler-failure-prior-outcome.json",
+      "qualification": "Inert exact copy; embedded paths and raw pins were not followed."
+    },
+    {
+      "source": "/private/tmp/artroom-archive-post-gate-repair-v3-v4-measurement-summary-20261024-v1.json",
+      "bytes": 6555,
+      "sha256": "a54568962e33d06d307816e25acbf1793a51ee41f7c1ae1f779c455fe73d1d5f",
+      "identity": [
+        16777231,
+        545921266,
+        33060,
+        1,
+        6555,
+        1792819204303500578,
+        1792819204303587411
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/post-gate-repair/owning-v3-v4-summary.json",
+      "qualification": "Inert exact copy; embedded paths and raw pins were not followed."
+    },
+    {
+      "source": "/private/tmp/artroom-archive-post-gate-repair-v3-v4-independent-audit-20261024-v1.json",
+      "bytes": 36474,
+      "sha256": "7be3bf046eaaa4ac63258d47e06b2cbefbe23e5e334a77549263b03aab72aa5e",
+      "identity": [
+        16777231,
+        545921267,
+        33060,
+        1,
+        36474,
+        1792819204303804329,
+        1792819204303834745
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/post-gate-repair/owning-v3-v4-audit.json",
+      "qualification": "Inert exact copy; embedded paths and raw pins were not followed."
+    },
+    {
+      "source": "/private/tmp/artroom-archive-single-capture-repair-owning-v3-independent-audit-20261024-v1.json",
+      "bytes": 10285,
+      "sha256": "e2ee888c28d9b1bf3c7ec976ebf94301d080eb61b16c514eac1b2ae2920cc67d",
+      "identity": [
+        16777231,
+        545925002,
+        33060,
+        1,
+        10285,
+        1792820536954243754,
+        1792820536954266754
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/post-gate-repair/remaining9-audit.json",
+      "qualification": "Inert exact copy; embedded paths and raw pins were not followed."
+    },
+    {
+      "source": "/private/tmp/artroom-archive-single-capture-independent-source-review-20261024-v1.json",
+      "bytes": 7113,
+      "sha256": "b19f86cdf2fb64def5c1d3bb5f0cb48d7cc2d995f5334025faf7cc3babccb933",
+      "identity": [
+        16777231,
+        545922921,
+        33060,
+        1,
+        7113,
+        1792819784582505733,
+        1792819784582554899
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/post-gate-repair/single-capture-source-review.json",
+      "qualification": "Inert exact copy; embedded paths and raw pins were not followed."
+    }
+  ],
+  "authoredDecisionFile": {
+    "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/post-gate-repair/decisions.json",
+    "bytes": 1325,
+    "sha256": "0cd5f894d3ba7c7211da11511eab981dfc6e2158ad00fbb2600e2a0d710feb3f"
+  },
+  "qualification": [
+    "Finite compact DATA only. Exact bytes copied through stable regular-file descriptors; originals preserved.",
+    "This manifest records source identities at preparation time, not historic identities never measured. Embedded paths are inert metadata; no transitive grants are inferred.",
+    "Prior evidence manifest and all existing history are preserved. New report is a pre-gate status update, not a successful final gate claim.",
+    "Original failed wrappers remain failed. Matched controls retain expected child exit1. Retired control was never run."
+  ]
+}

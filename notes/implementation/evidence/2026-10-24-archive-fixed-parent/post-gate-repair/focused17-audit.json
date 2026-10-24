@@ -1,0 +1,517 @@
+{
+  "status": "CLOSED_ORIGINAL_FOCUSED17_PASS_CONFIRMED",
+  "originalClosure": "Root original72413 natural0/tool2276bd; retained child76776exit0/noSignal. No rerun.",
+  "checks": [
+    "Allocated binding size/hash/snapshot/plan exact. Final and childafter snapshots equal, all full fixed fields preserved after only selected six cachecell content/timestamps and emptyVitetemp timestamps; existing cachekeys preserved.",
+    "Four compiler phases and body naturally0/noSignal; exact17 cases across6files allpassed with zero errors/retries/repeats; complete17collected/started/result plus6passedmodules and coverage terminal correspondence.",
+    "All usedSource manifest leaves and preparation file pins authenticated as inert data. No live candidate/dependency/program reads or execution.",
+    "Earlier failed runs remain failed; this result is a fresh affected closure, not relabelled historical success."
+  ],
+  "head": "7bca0d489771e56cd42c1e60a5e02b104db9c2b4",
+  "tree": "a3abc67f1d16527011711ab4a43a1449cc384387",
+  "counts": {
+    "source": 3047,
+    "dependencies": 6072,
+    "links": 32,
+    "tools": 219,
+    "environment": 60,
+    "callbacks": {
+      "collected": 17,
+      "started": 17,
+      "result": 17
+    }
+  },
+  "cases": [
+    {
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/git/test/journal-v2-append.test.ts",
+      "name": "an append preserves old edges only at their exact parent paths and supplies every changed edge",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "git",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/git/test/journal-v2-append.test.ts",
+          "name": "an append preserves old edges only at their exact parent paths and supplies every changed edge",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/git/test/journal-append-cost.test.ts",
+      "name": "append forecasts charge shared head paths and old and new changed edges",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "git",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/git/test/journal-append-cost.test.ts",
+          "name": "append forecasts charge shared head paths and old and new changed edges",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-frontier-store.test.ts",
+      "name": "frontier Mark and promotion share rollback cuts and the pending proof survives native eviction",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-frontier-store.test.ts",
+          "name": "frontier Mark and promotion share rollback cuts and the pending proof survives native eviction",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-frontier-store.test.ts",
+      "name": "a prepared frontier cannot overwrite a changed key or a different native Mark or custody",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-frontier-store.test.ts",
+          "name": "a prepared frontier cannot overwrite a changed key or a different native Mark or custody",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-frontier-store.test.ts",
+      "name": "frontier size and work are admitted before body reads or writes, without refunding a rollback",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-frontier-store.test.ts",
+          "name": "frontier size and work are admitted before body reads or writes, without refunding a rollback",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-frontier-store.test.ts",
+      "name": "a missing-v2 seed binds an opaque exact native context and installs only confirmed bytes",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-frontier-store.test.ts",
+          "name": "a missing-v2 seed binds an opaque exact native context and installs only confirmed bytes",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-parent-bootstrap.test.ts",
+      "name": "missing v2 parent state seeds once, publishes legacy anchors and then appends without old host reads",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-parent-bootstrap.test.ts",
+          "name": "missing v2 parent state seeds once, publishes legacy anchors and then appends without old host reads",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-parent-bootstrap.test.ts",
+      "name": "old pending v2 readback confirms first or seeds only its exact confirmed parent",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-parent-bootstrap.test.ts",
+          "name": "old pending v2 readback confirms first or seeds only its exact confirmed parent",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-parent-bootstrap.test.ts",
+      "name": "over-bound current-parent migration refuses without installing either native key",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-parent-bootstrap.test.ts",
+          "name": "over-bound current-parent migration refuses without installing either native key",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-parent-bootstrap.test.ts",
+      "name": "current-parent migration handles six and thirty-seven old passes without walking history",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-parent-bootstrap.test.ts",
+          "name": "current-parent migration handles six and thirty-seven old passes without walking history",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-input-work.test.ts",
+      "name": "legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-input-work.test.ts",
+          "name": "legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-installed.test.ts",
+      "name": "installed fixture scopes export genesis zero after a late native Membership8 directory binding",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-installed.test.ts",
+          "name": "installed fixture scopes export genesis zero after a late native Membership8 directory binding",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-installed.test.ts",
+      "name": "installed Grow scopes export genesis zero after a late native Membership8 directory binding",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-installed.test.ts",
+          "name": "installed Grow scopes export genesis zero after a late native Membership8 directory binding",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-installed.test.ts",
+      "name": "installed Grow production scopes export genesis zero after a late native Membership8 directory binding",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-installed.test.ts",
+          "name": "installed Grow production scopes export genesis zero after a late native Membership8 directory binding",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-installed.test.ts",
+      "name": "installed Grow production public archive command verifies its native producer clone",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-installed.test.ts",
+          "name": "installed Grow production public archive command verifies its native producer clone",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-installed.test.ts",
+      "name": "installed Grow activation warm scopes export genesis zero after a late native Membership8 directory binding",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-installed.test.ts",
+          "name": "installed Grow activation warm scopes export genesis zero after a late native Membership8 directory binding",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-installed.test.ts",
+      "name": "installed Grow activation evicted scopes export genesis zero after a late native Membership8 directory binding",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-installed.test.ts",
+          "name": "installed Grow activation evicted scopes export genesis zero after a late native Membership8 directory binding",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    }
+  ],
+  "modules": [
+    {
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/git/test/journal-append-cost.test.ts",
+      "status": "passed",
+      "errors": 0
+    },
+    {
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/git/test/journal-v2-append.test.ts",
+      "status": "passed",
+      "errors": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-frontier-store.test.ts",
+      "status": "passed",
+      "errors": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-input-work.test.ts",
+      "status": "passed",
+      "errors": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-installed.test.ts",
+      "status": "passed",
+      "errors": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-parent-bootstrap.test.ts",
+      "status": "passed",
+      "errors": 0
+    }
+  ],
+  "phases": [
+    {
+      "name": "git-production",
+      "exit": 0,
+      "signal": null
+    },
+    {
+      "name": "git-test",
+      "exit": 0,
+      "signal": null
+    },
+    {
+      "name": "scope-production",
+      "exit": 0,
+      "signal": null
+    },
+    {
+      "name": "scope-test",
+      "exit": 0,
+      "signal": null
+    },
+    {
+      "name": "body",
+      "exit": 0,
+      "signal": null
+    }
+  ],
+  "cost": {
+    "wall": 53.23272762505803,
+    "inclusiveCpu": 68.594147,
+    "pythonCpu": 2.100884,
+    "childrenUser": 51.040849,
+    "childrenSystem": 15.452414
+  },
+  "qualification": "Original owner and nested child costs overlap. No hosted/general-capacity/ordinary-gate claim. Root original tool naturalclosure attributed separately.",
+  "rawPins": [
+    {
+      "path": "after.json",
+      "bytes": 3337314,
+      "sha256": "af7f42319453fd7693d989b6d7f589e7a612ed76878e769a2ea009113e507e7f"
+    },
+    {
+      "path": "before.json",
+      "bytes": 3337318,
+      "sha256": "fcd91e9f703041683cf66942b09c60055b056c745f38d7288a753f1b0aaae097"
+    },
+    {
+      "path": "focused/body.log",
+      "bytes": 73145,
+      "sha256": "f4b98093e0498f52f4f4e191e784110bc7c6d451d5b5c2aaf3c074ea85aa1712"
+    },
+    {
+      "path": "focused/coverage-ledger.json",
+      "bytes": 20293,
+      "sha256": "3b887fbd8f564389f1302a97d235a575fde542775dca3627b2c845e63f6cffab"
+    },
+    {
+      "path": "focused/coverage.jsonl",
+      "bytes": 24763,
+      "sha256": "440eee7d8b52bff57e6e61040abf5d7690c84f0a519504cc566191424643a4dd"
+    },
+    {
+      "path": "focused/git-production.log",
+      "bytes": 29,
+      "sha256": "25d5b4590e2193415825c40e2c9ccf1c772aa3be11e84bf09d795f8b06d67c75"
+    },
+    {
+      "path": "focused/git-test.log",
+      "bytes": 29,
+      "sha256": "c70f1a66ee4954fe944adeee30db5cce2e2d1b3a28f322e782a708bf00e0196f"
+    },
+    {
+      "path": "focused/manifest.json",
+      "bytes": 1289,
+      "sha256": "a20df530f2df75db2848d3ca940552beeeb53ac27af75b9ae1d2155e4b75d0d5"
+    },
+    {
+      "path": "focused/plan.json",
+      "bytes": 519938,
+      "sha256": "3b93ce3a9b63afa30fda5d9f9f61e566ff11569f62d8988d3d68cb260ce0d9d4"
+    },
+    {
+      "path": "focused/result.json",
+      "bytes": 12146,
+      "sha256": "a3c1edb98b8aa5376861bc41995b9ccb26bff87c648f27d11b8fd356e92ad79b"
+    },
+    {
+      "path": "focused/scope-production.log",
+      "bytes": 29,
+      "sha256": "c715afbdb6070a6221b89c17f6ee9b4a2f2d58828be8ab698e2cc5177054ff52"
+    },
+    {
+      "path": "focused/scope-test.log",
+      "bytes": 29,
+      "sha256": "34c1f37dbea354187a0c3d63cfd77aba6b1458bdf6783aeb7d0a37554048e4a2"
+    },
+    {
+      "path": "focused/vitest.json",
+      "bytes": 355968,
+      "sha256": "98db5cd1842c1bf33130041e3f7952cb45de31631d2f49ad52aca1a9e23e8516"
+    },
+    {
+      "path": "focused-after.json",
+      "bytes": 3337314,
+      "sha256": "af7f42319453fd7693d989b6d7f589e7a612ed76878e769a2ea009113e507e7f"
+    },
+    {
+      "path": "focused-plan.json",
+      "bytes": 519938,
+      "sha256": "3b93ce3a9b63afa30fda5d9f9f61e566ff11569f62d8988d3d68cb260ce0d9d4"
+    },
+    {
+      "path": "focused.command.json",
+      "bytes": 363,
+      "sha256": "2bfff27c6a00ad79126edd8f80c666076c57ddc6ff068ae2363f84b7389989ea"
+    },
+    {
+      "path": "focused.pid.json",
+      "bytes": 19,
+      "sha256": "a475bcafc78b4a0b7fac99dccfed989a8ec03141bf76941118e74648a42eb872"
+    },
+    {
+      "path": "focused.process.json",
+      "bytes": 505,
+      "sha256": "2779eb96339f939b0469b5614d142c54e86e8ce2b61d2b58792a172628bcc55c"
+    },
+    {
+      "path": "focused.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "focused.stdout",
+      "bytes": 577,
+      "sha256": "0aadd26b108c3221c3e042fd572c781de4d7e4ba8bfaeeb1600993cfb581b547"
+    },
+    {
+      "path": "invocation.json",
+      "bytes": 485,
+      "sha256": "2d926384f08ba634f7f5171f583180da0eabfde2d87f8c7c220675bf4accde38"
+    },
+    {
+      "path": "result.json",
+      "bytes": 14371,
+      "sha256": "e820e89ab0bd7271105418a539e6b45fe91cd72a523a05cc7739f3165fe4e54e"
+    }
+  ]
+}

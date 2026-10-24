@@ -1,0 +1,47 @@
+✔ the generated witness's own test timeout names the stalled case and preserves its failure (274.551167ms)
+✔ a module that never reaches a case hits the whole child deadline even if reporting fails (1506.325458ms)
+✔ finishing a case does not turn a child stuck in teardown into a pass (1509.957458ms)
+✔ interrupting the wrapper also stops the detached test worker's owned listener (232.766083ms)
+✔ managed recipe preserves all nineteen recorded public bodies and the security configuration (27.000459ms)
+✔ stale source or an unlisted asset refuses before creating an output (19.68ms)
+✔ six built pages preserve copy, links, child headers, shared style and link previews; the homepage lists five destinations (22.604333ms)
+✔ explicit DAP_HOME and legacy ARTROOM_HOME select one normalized path or refuse before probing (0.462625ms)
+✔ new defaults use dap but occupied legacy XDG custody retains precedence over the home fallback (0.309ms)
+✔ an empty new directory cannot hide legacy config, keys or pending records, and selection changes no bytes (3.338208ms)
+✔ no active file names a removed format, binding or variable (79.403458ms)
+✔ no active source or configuration file reaches into spikes/parked/, and spikes/parked/ is in no workspace (1978.875042ms)
+✔ no platform package depends on the lanes package or imports from it (21.656291ms)
+✔ the platform package depends only on contract, bytes and derive, and only scope, replay, lanes, cli, page and mcp name it (9.392916ms)
+✔ Git keeps its lower-layer dependencies; Replay names it only at its exact development boundaries (30.012625ms)
+✔ archive Node exceptions are exact and preserve portable and Git dependency directions (31.035792ms)
+✔ the checkers package depends only on contract, bytes and git, and no package names it (68.512542ms)
+✔ MCP relative imports stay inside tracked server source (0.187375ms)
+✔ the MCP server imports its lower layers and the exact public application Git reader only (11.375708ms)
+✔ framework runtime modules do not import application source (84.9245ms)
+✔ a new source file cannot redefine a bytes helper through a function, exported arrow or typed expression (1.043ms)
+✔ the owner, imports and public aliases pass; source strings, comments and different meanings are not declarations (0.587042ms)
+✔ the actual pinned pool factory keeps one lazy prototype across early and late constructions, preserving receiver and later prototype methods (1.991583ms)
+✔ compatibility privately copies cache-linked bytes, is idempotent, and refuses unknown versions or bundles before changing that view (12.547042ms)
+✔ Judge uses weighted event counts, counter sums and route quantiles once (1.443583ms)
+✔ Judge passes the unsampled synthetic boundary with declared limits (0.47775ms)
+✔ Judge refuses insufficient, stale, erroneous, slow or busy observations (0.895709ms)
+✔ Judge requires loss-free unsampled balance at each actual HTTP place (1.372458ms)
+✔ Judge binds health and isolates the selected version and window (0.642708ms)
+✔ Judge refuses malformed query observations and a missing bound (0.438667ms)
+✔ Judge client binds one bounded SQL window and a private independent health read (12.554041ms)
+✔ Judge client refuses failed, truncated or oversized observations without echoing them (68.669833ms)
+✔ Judge CLI takes the completed version from retained output and requires calibration before I/O (5.904209ms)
+(node:79581) ExperimentalWarning: stripTypeScriptTypes is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ every served Worker route/method has exactly its reviewed gate-class row (278.336958ms)
+✔ a real matcher change fails the inventory bijection with the page unchanged (136.05975ms)
+✔ the bijection rejects a missing row, an extra row, and a changed gate (130.5585ms)
+✔ R8 public and sandbox matcher changes fail their finite inventory (442.431875ms)
+ℹ tests 37
+ℹ suites 0
+ℹ pass 37
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3618.181958

@@ -1,0 +1,18 @@
+{
+  "state": "FOCUSED_AND_CONTROLS_CLOSED_FINAL_GATE_PENDING",
+  "request": "fc2548ae1ab9c7c5e859d422611f8a34fd0ff13c",
+  "promise": "28cdea0d83a29e9a02c5107d89c6e21b10341fc2",
+  "testedHead": "7bca0d489771e56cd42c1e60a5e02b104db9c2b4",
+  "testedTree": "a3abc67f1d16527011711ab4a43a1449cc384387",
+  "acceptedMain": "d7aea0b03ce8b9c1afcea7f3f6252b66d0d3630a",
+  "rootAttributedDecisions": {
+    "focused17Accepted": "a27c5aefb38facd2259699276d3151df0eaa7da1",
+    "sealAdoption": "fa691a7159f31e1f6ac47cd8a8e37f266e174e01",
+    "failedSingleCapture21AcceptedAsFailure": "4a0d0d665bc48671a906736019e89377ccbab246",
+    "parentSemanticProofWrapperFailed": "3f8e113e8a7b49135a1f8c23282f6252b33d206f",
+    "migrationControlAccepted": "1d5d0457cb3f345b409949e8ab3abd2dc532c7a0",
+    "headSeenAndProjectionControlsAccepted": "c4a80fa428b97ac019b4f5dfd67fc181e0d64d9c",
+    "obsoleteProfileControlRetiredUnexecuted": "5b2902278f72d0b386394f547de3f07906f1956d"
+  },
+  "qualification": "Decision IDs are root-attributed conversation evidence, not independently traversed Gitseq objects. Exact compact audits retain their scope. No project code, parser, test, helper or gate executed during this preparation. Existing evidence manifest/history remain unchanged. Final ordinary gate, final review and hosted recovery remain unproved."
+}

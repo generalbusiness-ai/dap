@@ -1,0 +1,77 @@
+{
+  "state": "RETAINED_V2_FAILED_BEFORE_ALL_BODIES",
+  "originalOuter": {
+    "session": 56694,
+    "naturalExit": 1,
+    "rootTool": "4d95bb",
+    "attribution": "Root observed original outer closure; this preparation independently read closed result and phase ledger."
+  },
+  "pins": {
+    "result.json": {
+      "path": "/private/tmp/artroom-archive-post-gate-repair-owning-evidence-20261024-v2/result.json",
+      "bytes": 1820,
+      "sha256": "ef6d5bef2a97423a5de567cdc87bd4beea6f3c2c1213bbdb5b36354906920757"
+    },
+    "focused/result.json": {
+      "path": "/private/tmp/artroom-archive-post-gate-repair-owning-evidence-20261024-v2/focused/result.json",
+      "bytes": 8265,
+      "sha256": "1bc517137401b728a1972280d3dbad2e2a428392abfd0801fed43a6cd16301fc"
+    },
+    "focused/scope-test.log": {
+      "path": "/private/tmp/artroom-archive-post-gate-repair-owning-evidence-20261024-v2/focused/scope-test.log",
+      "bytes": 670,
+      "sha256": "08b6f0da896a9066cf491104149291c45256cfc370b1cbad87c8a55afb151d4b"
+    }
+  },
+  "allocation": "f386059a95f6bd652e068ecb9b7de449dc198cc9",
+  "compilerPhases": [
+    {
+      "name": "git-production",
+      "exit": 0,
+      "signal": null
+    },
+    {
+      "name": "git-test",
+      "exit": 0,
+      "signal": null
+    },
+    {
+      "name": "scope-production",
+      "exit": 0,
+      "signal": null
+    },
+    {
+      "name": "scope-test",
+      "exit": 1,
+      "signal": null
+    }
+  ],
+  "body": "All47 UNRUN; no callbacks claimed.",
+  "errors": "packages/scope/test/archive-frontier-store.test.ts(68,57): error TS2345: Argument of type 'SqlValue | undefined' is not assignable to parameter of type 'SqlValue'.\n  Type 'undefined' is not assignable to type 'SqlValue'.\npackages/scope/test/archive-parent-bootstrap.test.ts(159,47): error TS2345: Argument of type '{ format: \"sha1\"; repository: `sha256:${string}`; commit: string; through: Head; at: { scope: ScopeId; kind: ScopeKind; inc: string; }; }' is not assignable to parameter of type 'JournalParentBinding'.\n  The types of 'at.inc' are incompatible between these types.\n    Type 'string' is not assignable to type '`in_${string}`'.\nreal 0.59\nuser 2.68\nsys 0.24\n",
+  "ownerCost": {
+    "wall": 4.34306258300785,
+    "pythonCpu": 2.071532,
+    "childrenUser": 5.321887,
+    "childrenSystem": 1.082178,
+    "inclusiveCpu": 8.475597
+  },
+  "nestedChild": [
+    {
+      "label": "focused",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "scripts/focused-check.mjs",
+        "/private/tmp/artroom-archive-post-gate-repair-owning-evidence-20261024-v2/focused-plan.json",
+        "/private/tmp/artroom-archive-post-gate-repair-owning-evidence-20261024-v2/focused"
+      ],
+      "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+      "pid": 86930,
+      "exit": 1,
+      "signal": null,
+      "wall": 2.0530166249955073,
+      "user": 5.223047,
+      "system": 0.9762149999999999
+    }
+  ],
+  "qualification": "Nested child/phase CPU is already included in owner inclusive CPU; do not add twice. This is a finite result/phase/log observation, not an independently recomputed full snapshot audit."
+}

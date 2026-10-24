@@ -1,0 +1,64 @@
+{
+  "schema": "reversible-raw-failure-excerpts/v1",
+  "historicalCheckpoint": "d33eba016678a911fbc27e245d40eaa22e4c92d7",
+  "source": {
+    "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/stages/test.log",
+    "bytes": 18857008,
+    "sha256": "6d24c623d8236a9a2c2d8d4e43bb429a0ba4c57c21c490aba90ab24def399220"
+  },
+  "byteSelection": "Exact UTF-8 slices begin at the last matching failure heading and stop immediately before the following delimiter. No trim or whitespace normalization. JSON text decoding and UTF-8 encoding recover every excerpt byte, including leading/trailing newlines. Offsets are zero-based bytes; end is exclusive.",
+  "excerpts": [
+    {
+      "frameworkId": "380254411_0",
+      "sourceByteOffset": 18852239,
+      "sourceByteEndExclusive": 18852803,
+      "bytes": 564,
+      "sha256": "bc9aaccc4098b1cd77ef7cf0609d617e9182012539023f439af9d46d4b27f72b",
+      "encoding": "UTF-8",
+      "text": "\n FAIL  |scope| test/archive-input-work.test.ts > legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder\nAssertionError: expected 0 to be greater than 0\n ❯ test/archive-input-work.test.ts:149:37\n    147|     // staged debits remain. Match this cost AssertionError, not a set…\n    148|     if (pass === 0) {\n    149|       expect(beforePlanning.length).toBeGreaterThan(0);\n       |                                     ^\n    150|       for (const cost of beforePlanning) expect(cost.inputWork, \"Legac…\n    151|     }\n"
+    },
+    {
+      "frameworkId": "-1531300267_2",
+      "sourceByteOffset": 18852885,
+      "sourceByteEndExclusive": 18855985,
+      "bytes": 3100,
+      "sha256": "c87fecf21158e243aa7b65956d255d4d11e296982cbdf03e70878ab391b5c6fb",
+      "encoding": "UTF-8",
+      "text": "\n FAIL  |scope| test/archive-installed.test.ts > installed Grow production scopes export genesis zero after a late native Membership8 directory binding\nAssertionError: {\"scope\":\"sc_y6fpz7xowndu73scb5g55rwfobt6qppaaxpsnr37biyhgzqu2cga\",\"cutoff\":{\"seq\":0,\"hash\":\"sha256:6cd7861e3fe886692338d54201f1f1a9eb90613f36927db9f9f8bcc30ff689a6\"},\"initial\":{\"result\":{\"state\":\"stopped\",\"next\":null,\"reason\":\"limit\"},\"cost\":{\"entries\":1,\"attempts\":5,\"nodes\":18,\"calls\":53,\"metadata\":2382809,\"inputWork\":38910192},\"confirmed\":null,\"pending\":null,\"sourceRefused\":false,\"birthCalls\":4,\"phases\":[{\"birth\":{\"scope\":\"sc_y6fpz7xowndu73scb5g55rwfobt6qppaaxpsnr37biyhgzqu2cga\",\"reply\":{\"named\":\"sha256:b89e7f84740dfd8b24f78e8b52aff5aa8d4181750a7b5f385c1ef6f993846787\",\"native\":false,\"birthUnits\":4427,\"birthBytes\":4427}}},{\"birth\":{\"scope\":\"sc_egyc4lqhvjqq4yakcvs32xndlwdylshouyknhshl5jm7ydrzbwva\",\"reply\":{\"named\":\"sha256:d2bc830e74caaabab32dbad17adae6812050fb4d36b67e97145d39c2a4cfe2ea\",\"native\":false,\"birthUnits\":3869,\"birthBytes\":3869}}},{\"birth\":{\"scope\":\"sc_rf27qs2i6lyhfovuvstar6byp6fajxmghtsrrwdn35gfdcu2zppa\",\"reply\":{\"named\":\"platform:directory@16\",\"native\":true,\"birthUnits\":5983,\"birthBytes\":5983}}},{\"birth\":{\"scope\":\"sc_swseffyw4grxy3lyr7es24droznot2mtgqz7xutyjdijmyenxvnq\",\"reply\":{\"named\":\"platform:destination@12\",\"native\":true,\"birthUnits\":4133,\"birthBytes\":4133}}},{\"target\":{\"host\":\"artifacts\",\"id\":\"rf27qs2i6lyhfovuvstar6byp6fajxmghtsrrwdn35gfdcu2zppa-1\",\"name\":\"rf27qs2i6lyhfovuvstar6byp6fajxmghtsrrwdn35gfdcu2zppa-1\",\"namespace\":\"artroom-demo\"},\"cost\":{\"entries\":0,\"attempts\":0,\"nodes\":4,\"calls\":14,\"metadata\":1647712,\"inputWork\":10647136}},{\"sources\":{\"after\":null,\"through\":{\"seq\":1,\"hash\":\"sha256:cf94c2bc068517eb35c185f1f25e70b8d06345f3bdb824788b189cae173cfdf4\"},\"exact\":false},\"cost\":{\"entries\":0,\"attempts\":0,\"nodes\":4,\"calls\":19,\"metadata\":1680832,\"inputWork\":17393600}},{\"sourceReturn\":{\"exact\":false,\"rebuildWitnessed\":false,\"keys\":[\"pins\",\"replayScopes\",\"prepare\"],\"prepareType\":\"function\"}},{\"prepareEntered\":0,\"budgetSame\":true},{\"sourcePrepared\":0,\"before\":{\"entries\":0,\"attempts\":0,\"nodes\":14,\"calls\":19,\"metadata\":1716133,\"inputWork\":17658277},\"after\":{\"entries\":0,\"attempts\":0,\"nodes\":14,\"calls\":23,\"metadata\":1733829,\"inputWork\":18957829}},{\"rejectedFit\":{\"cost\":{\"entries\":1,\"attempts\":34,\"nodes\":26,\"calls\":104,\"metadata\":2565149,\"inputWork\":28220663},\"used\":{\"entries\":1,\"attempts\":5,\"nodes\":18,\"calls\":49,\"metadata\":2382306,\"inputWork\":32560101}}}],\"nativeRootReservations\":0}}: expected 1 to be 2 // Object.is equality\n\n- Expected\n+ Received\n\n- 2\n+ 1\n\n ❯ test/archive-installed.test.ts:861:135\n    859|             qualification: \"Already captured genuine Native entry; pos…\n    860|           if (entryShape) (context.task.meta as Record<string, unknown…\n    861|           expect(initial.cost.entries, JSON.stringify({ scope: scope.n…\n       |                                                                                                                                       ^\n    862|           let outcome = initial;\n    863|           if (!rebuildWitnessed) {\n"
+    },
+    {
+      "frameworkId": "-1531300267_3",
+      "sourceByteOffset": 18856067,
+      "sourceByteEndExclusive": 18856692,
+      "bytes": 625,
+      "sha256": "bb533557a7b4dac2c75429d18959f27960dd75b0132b3fd438a81a27b3b4c61a",
+      "encoding": "UTF-8",
+      "text": "\n FAIL  |scope| test/archive-installed.test.ts > installed Grow production public archive command verifies its native producer clone\nAssertionError: the immediately preceding native producer did not publish a command session\n ❯ test/archive-installed.test.ts:1222:26\n    1220|     test(`installed ${scenario} public archive command verifies its na…\n    1221|       const basis = retainedCommand;\n    1222|       if (!basis) expect.fail(\"the immediately preceding native produc…\n       |                          ^\n    1223|       retainedCommand = null;\n    1224|       const bridge = localClone(inject(\"localClone\"));\n"
+    }
+  ],
+  "growDiagnostic": {
+    "encoding": "UTF-8",
+    "bytes": 2332,
+    "sha256": "1a8ebf9c68e5332018d6488b0f85ed1e07c6bb4fb1c64f23ee36a2bfeac244f0",
+    "text": "{\"scope\":\"sc_y6fpz7xowndu73scb5g55rwfobt6qppaaxpsnr37biyhgzqu2cga\",\"cutoff\":{\"seq\":0,\"hash\":\"sha256:6cd7861e3fe886692338d54201f1f1a9eb90613f36927db9f9f8bcc30ff689a6\"},\"initial\":{\"result\":{\"state\":\"stopped\",\"next\":null,\"reason\":\"limit\"},\"cost\":{\"entries\":1,\"attempts\":5,\"nodes\":18,\"calls\":53,\"metadata\":2382809,\"inputWork\":38910192},\"confirmed\":null,\"pending\":null,\"sourceRefused\":false,\"birthCalls\":4,\"phases\":[{\"birth\":{\"scope\":\"sc_y6fpz7xowndu73scb5g55rwfobt6qppaaxpsnr37biyhgzqu2cga\",\"reply\":{\"named\":\"sha256:b89e7f84740dfd8b24f78e8b52aff5aa8d4181750a7b5f385c1ef6f993846787\",\"native\":false,\"birthUnits\":4427,\"birthBytes\":4427}}},{\"birth\":{\"scope\":\"sc_egyc4lqhvjqq4yakcvs32xndlwdylshouyknhshl5jm7ydrzbwva\",\"reply\":{\"named\":\"sha256:d2bc830e74caaabab32dbad17adae6812050fb4d36b67e97145d39c2a4cfe2ea\",\"native\":false,\"birthUnits\":3869,\"birthBytes\":3869}}},{\"birth\":{\"scope\":\"sc_rf27qs2i6lyhfovuvstar6byp6fajxmghtsrrwdn35gfdcu2zppa\",\"reply\":{\"named\":\"platform:directory@16\",\"native\":true,\"birthUnits\":5983,\"birthBytes\":5983}}},{\"birth\":{\"scope\":\"sc_swseffyw4grxy3lyr7es24droznot2mtgqz7xutyjdijmyenxvnq\",\"reply\":{\"named\":\"platform:destination@12\",\"native\":true,\"birthUnits\":4133,\"birthBytes\":4133}}},{\"target\":{\"host\":\"artifacts\",\"id\":\"rf27qs2i6lyhfovuvstar6byp6fajxmghtsrrwdn35gfdcu2zppa-1\",\"name\":\"rf27qs2i6lyhfovuvstar6byp6fajxmghtsrrwdn35gfdcu2zppa-1\",\"namespace\":\"artroom-demo\"},\"cost\":{\"entries\":0,\"attempts\":0,\"nodes\":4,\"calls\":14,\"metadata\":1647712,\"inputWork\":10647136}},{\"sources\":{\"after\":null,\"through\":{\"seq\":1,\"hash\":\"sha256:cf94c2bc068517eb35c185f1f25e70b8d06345f3bdb824788b189cae173cfdf4\"},\"exact\":false},\"cost\":{\"entries\":0,\"attempts\":0,\"nodes\":4,\"calls\":19,\"metadata\":1680832,\"inputWork\":17393600}},{\"sourceReturn\":{\"exact\":false,\"rebuildWitnessed\":false,\"keys\":[\"pins\",\"replayScopes\",\"prepare\"],\"prepareType\":\"function\"}},{\"prepareEntered\":0,\"budgetSame\":true},{\"sourcePrepared\":0,\"before\":{\"entries\":0,\"attempts\":0,\"nodes\":14,\"calls\":19,\"metadata\":1716133,\"inputWork\":17658277},\"after\":{\"entries\":0,\"attempts\":0,\"nodes\":14,\"calls\":23,\"metadata\":1733829,\"inputWork\":18957829}},{\"rejectedFit\":{\"cost\":{\"entries\":1,\"attempts\":34,\"nodes\":26,\"calls\":104,\"metadata\":2565149,\"inputWork\":28220663},\"used\":{\"entries\":1,\"attempts\":5,\"nodes\":18,\"calls\":49,\"metadata\":2382306,\"inputWork\":32560101}}}],\"nativeRootReservations\":0}}",
+    "rejectedFit": {
+      "cost": {
+        "entries": 1,
+        "attempts": 34,
+        "nodes": 26,
+        "calls": 104,
+        "metadata": 2565149,
+        "inputWork": 28220663
+      },
+      "used": {
+        "entries": 1,
+        "attempts": 5,
+        "nodes": 18,
+        "calls": 49,
+        "metadata": 2382306,
+        "inputWork": 32560101
+      }
+    },
+    "qualification": "Exact diagnostic substring from the producer assertion, with a parsed convenience view of rejectedFit. The complete reversible producer excerpt remains above."
+  }
+}
