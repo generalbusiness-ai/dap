@@ -353,7 +353,7 @@ export class McpService {
     const given = isRecord(args) ? args : {};
     try {
       const generic = Object.hasOwn(this.#generic, name) ? this.#generic[name]! : null;
-      if (generic) return this.#genericAdmitted(name) ? await generic.run(given) : failed({ error: "unknown-tool", name });
+      if (generic && ((name !== "actions" && name !== "act") || this.mode !== "default")) return this.#genericAdmitted(name) ? await generic.run(given) : failed({ error: "unknown-tool", name });
       // Derive standing again before admitting a named act.
       const s = await this.snapshot();
       const binding = this.mode === "generic" ? null : s.bindings.find((b) => b.name === name) ?? null;

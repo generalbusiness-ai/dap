@@ -521,11 +521,16 @@ test("H2, H3 and H4: agents kept apart, control authority, the bearer and revoca
     expect(afterListen.text(), "with its result").toContain('"resultType":"complete"');
     expect((await mcp(botNew, "POST", { "mcp-protocol-version": MODERN, "mcp-method": "tools/list" }, { jsonrpc: "2.0", id: 1, method: "tools/list", params: { _meta: META } })).status).toBe(401);
     expect((await room.wait(() => post(`/mcp/agents/${bot.agent}/bearer`, control(room, rita.secret, "bearer", M, bot.agent, "", "after-retire"), ""))).status).toBe(409);
-    // After revoke-key of bot3's key by the admin: its act is refused by the scope with membership's reason, and custody records it.
+    // Revoking the native key does not retire this hosted bearer. Fresh
+    // standing hides the act before signing or custody, rather than sending
+    // an act that the native scope would refuse.
     const keyItem = (await allItems(rita, "membership")).find((i) => i.type === "key" && i.values["id"] === bot3.key)!;
     expect((await rita.ok("key.revoke", { on: keyItem.id, fields: { as: "retired" }, idempotencyKey: "revoke-bot3" }))["answer"]).toBe("accepted");
-    const refused = await factOf(await room.wait(() => modernCall(bot3Rotated, "issue.create", { fields: { definition: DEMO_DIGESTS.issue, title: "after revocation", conditions: ["done"] }, idempotencyKey: "after-revoke" })));
-    expect(refused.answer, JSON.stringify(refused)).toBe("refused");
+    const hidden = await room.wait(() => modernCall(bot3Rotated, "issue.create", { fields: { definition: DEMO_DIGESTS.issue, title: "after revocation", conditions: ["done"] }, idempotencyKey: "after-revoke" }));
+    expect(hidden.status, "the hosted bearer remains authenticated").toBe(200);
+    const refused = (await hidden.json() as { result: { structuredContent: { error: string } } }).result.structuredContent;
+    expect(refused.error, JSON.stringify(refused)).toBe("unknown-tool");
+    expect(await agentStub(bot3.agent).custodyRecord("after-revoke"), "hidden acts create no custody record").toBeNull();
     // Expiry: seven days past the original request's deadline, the op is stale and no answer body remains in either object.
     room.advance(8 * 86_400_000);
     expect((await room.wait(() => post(`/mcp/agents/${bot3.agent}/bearer`, control(room, rita.secret, "bearer", M, bot3.agent, "", "rita-bearer-3"), ""))).status, "stale").toBe(409);

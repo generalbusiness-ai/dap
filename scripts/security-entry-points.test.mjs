@@ -38,7 +38,7 @@ const seals = {
   "packages/scope/src/destination-host.ts": "b86198499cadddaf47f439ed39f7e44f8da78fbed120e185b787b153f0dc66eb",
   "packages/mcp/src/hosted.ts": "3125d8d617f214a83b07a8173406b567ed652953b70e39cd45bc7aff48f0e966",
   "packages/mcp/src/hosted-tools.ts": "5bb4dd74b12896bb8f5f5cb366f25bd31af849c2690d0e3ab5d81eb277f94a47", // Reviewed R5 admission owner; actual maintained parser output.
-  "packages/mcp/src/service.ts": "54942c37f11e54ffe6c009bffe5c093cb71edf8a65e4fb0fbe8f23c42a3bb5e1", // Reviewed R5 admission owner; actual maintained parser output.
+  "packages/mcp/src/service.ts": "11e8f82b75db3ef427325fafdc0054f7e7cb1f560554eadce07103b58d6f9fd0", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/catalogue.ts": "194dd82a6d3f188909485c4c1b9db33aee671b06fb46840e92fc0b8df2a79726", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/inventory.ts": "74c5db16355c5badacf9dc6cc241d20d6400908a160324c07d88db9191b455f8", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/http.ts": "9a1450bef9f94b55b4751a3368032dfc480555628b48ccfdd55fd43e9c853af8",

@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { hostedMcpTools, McpService, memoryStore } from "../src/index.ts";
+import { hostedMcpTools, McpService, memoryStore, WORDS } from "../src/index.ts";
 import { fixedSigner } from "./fixtures.ts";
 import { StandIn } from "./support/standin.ts";
 import { TRUSTED_APPLICATION_COHORT, firstExtents } from "@generalbusiness/dap-platform";
@@ -23,6 +23,19 @@ test("hosted tool settings default closed, admit only known additions, and prese
     expect(await names(local)).toContain(name);
     expect(await names(hosted)).not.toContain(name);
     expect((await hosted.call(name, {})).structuredContent).toEqual({ error: "unknown-tool", message: `No tool is named ${name} in this list.`, next: "Call tools/list." });
+  }
+  // In local default mode, these generic names are disabled. A supported
+  // words-table alias must still reach its listed derived act.
+  for (const name of ["act", "actions"]) {
+    const peer = new StandIn(signer.key);
+    const aliased = new McpService({ service: "https://scopes.test", fetch: peer.fetch, signer,
+      words: { ...WORDS, acts: { ...WORDS.acts, "platform:rules": { ...WORDS.acts["platform:rules"], publish: name } } },
+      config: { read: async () => peer.config(), addRoot: async () => {} }, custody: memoryStore() });
+    expect(await names(aliased)).toContain(name);
+    const called = await aliased.call(name, { on: 0, fields: { approvals: 0, ownerMayReview: false, checks: [], labels: [], extents: firstExtents({ approvals: 0, checks: [] }) }, idempotencyKey: `local-alias-${name}` });
+    expect(called.isError).toBe(false);
+    expect(called.structuredContent["answer"]).toBe("accepted");
+    expect(peer.requests.some(request => request.endsWith("/acts"))).toBe(true);
   }
   // The enabled tool reaches its shape check, rather than the hosted policy refusal.
   expect((await make(hostedMcpTools({ MCP_ENABLED: "true", MCP_TOOL_ADDITIONS: '["create"]' })!).call("create", {})).structuredContent["error"]).not.toBe("unknown-tool");

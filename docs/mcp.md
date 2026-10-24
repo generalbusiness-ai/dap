@@ -1984,10 +1984,10 @@ bytes from Rules: five reads. The budget witness checks those exact routes
 for both cold and warm calls. These bounds apply to this room with no
 applications or standalone roots. They do not raise the other tools' bounds.
 
-The closed R5 validation observed four reads for `issue.comment`, then
-stopped at its old bound of two. The five-read create count follows the
-current source. Its measured count and updated response sizes await the
-whole-file validation.
+The R5 whole-file validation observed four reads for `issue.comment` and
+five for `issue.create`, with the exact routes checked for both cold and
+warm calls. All 22 runnable cases passed; the existing Darwin reclaimer
+case was skipped. Response sizes in the table remain historical.
 
 `credential` reads the act's entry, then the entries after it until the
 operation's outcome names the token (two here), then the credential route:
@@ -2028,8 +2028,9 @@ Other observed figures from the same run:
 - A 200 KiB retained text is read whole in 4 calls of `text` by offset.
 - With a 2 KiB list page, each descriptor larger than the page is alone on
   its page (35 of them), and all 71 tools are reachable.
-- 70 resubmissions of one refused envelope: each of the 70 made 1 read and
-  1 post, and all 70 outcomes are readable.
+- 70 resubmissions of one refused envelope: each of the 70 made 4 reads and
+  1 post, with no new session. Every attempt checked the same four routes
+  above, and all 70 outcomes remained readable in the R5 validation.
 - A subscribed client is told 2 times for an activation and a role change,
   and 0 times for an ordinary head advance. Each watch run reads 3
   summaries.
