@@ -60,11 +60,10 @@ labelled historical stop and the existing nativeBirth ingress to expose
 the deployment-setting stand-in. Host and deployment authority remain
 TEST stand-ins; no Cloudflare deployment control plane or hosted recovery
 is exercised. The updated diagnostic still exposes no raw Mark payload.
-Whole-file witnesses, paired control, maintained AST seals and the ordinary
-gate remain pending. Six existing mapped owners
-supply seven seal slots; the new directive parser will also receive an
-explicit owner row. The planned actual producer therefore has seven calls
-and eight map slots. No values are filled before that producer runs.
+The whole-file witnesses passed across the retained continuations below.
+The single control and ordinary gate remain pending. The maintained
+producer supplied seven actual owner seals for eight slots, including an
+explicit row for the new directive parser.
 
 Scope production and test compilers cover the archive implementation and
 fixture wiring. They do not directly compile the Grow deployment wrapper;
@@ -116,14 +115,41 @@ unfinished cases. The outer span was 15.05 seconds wall and 19.42 seconds
 CPU. Per-file success is derived from completed assertion rows; a file
 reported passed with only pending rows is not a successful file.
 
-All original failures retain their outcomes. The next continuation carries
-the successful production and Grow compilers and the complete driver and
-projection ownership files, subject to the raw error audit. Only the
-operator test expectation and this note change. The updated Scope test
-compiler and remaining 22 cases in the operator, row and item-query-owned
-files remain pending.
+Original `57486` passed the Scope test compiler and all remaining 22 cases:
+operator 10, row 9 and item-query-owned 3, with complete callbacks and zero
+unhandled errors. Its outer cost was 9.22 seconds wall and 13.51 seconds
+CPU. The complete driver 19 and projection ownership 2 files carry from
+`55657`, whose body also reports zero unhandled errors. Driver 19 has
+complete terminal and JSON passes and starts, but no per-case result
+callbacks. The maintained ledger retains those terminal observations;
+this is a reporting gap, not a fabricated callback vector. All 43 distinct
+cases have completed passing results, with no retry or repeat. There is
+no single successful 43-case invocation, and all earlier failures retain
+their outcomes.
+
+The independent audit is
+`/private/tmp/artroom-archive-operator-restart-closed-validation-audit-20261024-v2/manifest.json`.
+Root acceptance `85814d2ba67f72b291e2dd7340b845db9edb7eb0` records the
+raw outcome checks and the unchanged production and tool closure. The
+production compiler carries from `76102` and the corrected Grow check
+from `4aca04bc`; only archive fixture tests and this note changed later.
+Four focused outer spans and the corrected Grow check sum to 42.33
+seconds wall and 58.84 seconds CPU. This subtotal excludes the initial
+Grow configuration failure, preparation, review, control and gate.
+
+After that acceptance, the hardened producer ran once at clean
+`635143681d4a370d6991bfe44d6ef2e9e1ca8e47`, tree
+`98b7f924b3bddd52ec1c8ce39fbac7dab07fae37`. Its seven maintained calls
+completed naturally with exit 0, after exact prechecks and postchecks of
+ten source files, the old map and 33 finite parser/tool files. The output
+is `/private/tmp/artroom-archive-operator-restart-seal-actual-20261024-v1.json`.
+The map adopts those seven values in eight slots, including the parser's
+new row and both existing object slots. The outer span was 0.20 seconds
+wall and 0.30 seconds CPU. No application source or witness changed in
+this adoption. These seals bind reviewed source identity; they do not
+replace the native results or establish a deployment.
 
 These costs were observed on macOS 27.0.1 arm64 with the existing private
 dependency pool and caches. Load and cache temperature were uncontrolled.
-Nested compiler timings are not added to their outer spans. No parser,
-package install or deployment has run for this change.
+Nested compiler timings are not added to their outer spans. No package
+install or deployment has run for this change.
