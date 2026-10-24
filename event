@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5a666f91c7e54542b4fe05fef6615127a8f4869b","text":"Merge retired a covered predecessor; the successor is at packages/git/test/http-read.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5c773391926d42c8a0f09f8e5b7d82cc822ec934","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-23-archive-input-work/owning-v3/focused/coverage-ledger.json."}
