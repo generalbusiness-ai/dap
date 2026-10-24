@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4d3b66fbc1cbba094d40d5fdc6fa013665af0da8","text":"Merge retired a covered predecessor; the successor is at apps/counter/tsconfig.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4fd0dae1f44306a5b5e989089e175f6dfafcbd75","text":"Merge retired a covered predecessor with no successor at its old path."}
