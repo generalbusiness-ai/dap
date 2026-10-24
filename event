@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fc2cc7cc981b5396ed7c65f2f8cfcf9f7c43e069","text":"Merge retired a covered predecessor; the successor is at packages/derive/package.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fec4172c65b1a9d64823e5fdb1dfaad6b9790e94","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/application-codec/application-fact-signers.ts."}
