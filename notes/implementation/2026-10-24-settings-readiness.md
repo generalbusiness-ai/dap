@@ -5,8 +5,7 @@ This head implements R9 items 1–3 under child request
 `7c0d93f2a5b5f6f6c25fc33a048f37c87c9150dd`. It is based on the reviewed
 R5B source and includes the R9 deployment-command change tracked by
 `5179f3a13c685b7f4e78235e88398ffc6c749185`: `deploy:scope` preserves
-existing Worker settings with `--keep-vars`. R5A has landed; R5B must land
-before this head. Parent R9, R10 and R11 are not closed by this note.
+existing Worker settings with `--keep-vars`. R5A and R5B have landed. Parent R9, R10 and R11 are not closed by this note.
 
 ## Behavior
 
@@ -62,8 +61,7 @@ allowed to change. The compact audit retains the full guard-map pins.
 
 The eight changed mapped owners have actual maintained AST seals. These
 are source tripwires, not provider or authority evidence. The final gate,
-exact-head review, prerequisite landings, merge and deployment remain
-pending. No hosted connectivity, token validity or provider acceptance is
+exact-head review, landing and deployment remain pending. No hosted connectivity, token validity or provider acceptance is
 claimed. R10 and R11 remain separate.
 
 The measured outer control commands took 7.23 and 7.36 seconds of wall time,
