@@ -15,6 +15,7 @@ import { nativeArchiveFixture, archiveAuthorityBasis, archiveAuthorityPolicies, 
 import { ArchiveArtifactsPeer } from "./support/archive-artifacts.ts";
 import { archiveDefinition, archivePolicies, archiveRepository as scriptedRepository, archiveSql } from "./support/archive.ts";
 import type { TestScope } from "./worker.ts";
+import { rita } from "./fixtures-native.ts";
 
 const CHECKPOINT_BACKLOG = 300;
 // Parent metadata/legacy manifest reads must leave at least three quarters
@@ -42,7 +43,7 @@ class ObservedArchiveBudget extends ArchiveBudget {
       try { site = (new Error("TEST debit site").stack ?? "").split("\n").slice(1, 17)
         .find(line => !line.includes("archive-input-work.test") && !line.includes("archive-budget") && line.trim())?.trim().slice(0, 512) ?? site; }
       catch { /* Site attribution is descriptive, never an admission rule. */ }
-      if (!this.preEntrySites.has(site) && this.preEntrySites.size >= 63) site = "<additional sites>";
+      if (!this.preEntrySites.has(site) && this.preEntrySites.size >= 255) site = "<additional sites>";
       const bucket = this.preEntrySites.get(site) ?? { calls: 0, cost: { entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0, inputWork: 0 } };
       bucket.calls++;
       for (const key of Object.keys(bucket.cost) as (keyof ArchiveCost)[]) bucket.cost[key] += after[key] - before[key];
@@ -62,6 +63,8 @@ test("legacy v2 parent work preserves partial Native checkpoint progress and dra
   // Artifacts binds ID to name; the shared scripted-host tuple need not.
   const archiveRepository = { ...scriptedRepository, id: scriptedRepository.name };
   const peer = new ArchiveArtifactsPeer(archiveRepository, () => Date.parse(lane.c.clock.now));
+  await lane.did(rita, "remark", { on: 0, fields: { text: "require genuine legacy authority" } });
+  expect(archiveAuthorityAnchors(lane).length).toBeGreaterThan(0);
   const originalHead = await lane.head();
   const seeded = await lane.inside(async state => {
     const sql = archiveSql(state), budget = new ArchiveBudget();
@@ -139,6 +142,7 @@ test("legacy v2 parent work preserves partial Native checkpoint progress and dra
     for (const share of budget.shares.values()) for (const key of Object.keys(sum) as (keyof ArchiveCost)[]) sum[key] += share.cost[key];
     (context.task.meta as Record<string, unknown>)["currentLegacyPass"] = { pass, result, beforePlanning, final,
       checkpoints: budget.checkpoints, shares: [...budget.shares], preEntrySites: [...budget.preEntrySites] };
+    expect(budget.preEntrySites.has("<additional sites>")).toBe(false);
     // Sole host control reintroduces the former maximum debit, while new
     // staged debits remain. Match this cost AssertionError, not a setup error.
     if (pass === 0) {
