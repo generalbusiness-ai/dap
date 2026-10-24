@@ -4,6 +4,7 @@ import { expect, test } from "vitest";
 import { canonicalize, digestBytes, domainBytes, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { DOMAINS } from "@generalbusiness/dap-contract";
 import { ARCHIVE_ROW_BYTES, ArchiveRows, type ArchiveMark } from "../src/archive-row.ts";
+import { readArchiveRestart } from "../src/archive-restart.ts";
 import { ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
 import { at, create, type Lane } from "./fixtures-native.ts";
 import { SqliteStore } from "../src/sqlite.ts";
@@ -399,4 +400,68 @@ test("compact confirmation rolls back both writes and retained updates, then acc
   });
   await lane.restart();
   expect(await rows(lane, store => store.load())).toEqual(actual);
+});
+
+// Deliberate stopped-v2 metadata, not a hosted receipt or cause diagnosis.
+test("an expiring deployment directive atomically restarts only its exact stopped receipt and cannot replay a later stop", async () => {
+  const lane = await create(), head = await lane.head();
+  const original = { v: 1 as const, at: lane.at, repository, format: "sha1" as const,
+    confirmed: { layout: 2 as const, commit: "a".repeat(40), through: head }, pending: null, attempts: 0, next: null,
+    stopped: { reason: "limit", where: null } };
+  const payload = { v:1,at:lane.at,repository,format:"sha1",confirmed:original.confirmed,rowDigest:digestBytes(utf8(canonicalize(original))),generation:0,expires:at(60) };
+  const encoded = (value: object) => canonicalize({ ...value,command:digestBytes(utf8(canonicalize(value))) });
+  const raw = encoded(payload), command = readArchiveRestart(raw,at(0));
+  if (!command) expect.fail("the exact bounded deployment directive must parse");
+  expect(readArchiveRestart(raw,at(60))).toBeNull();
+  for (const invalid of [raw+" ","x".repeat(8193),canonicalize({ ...payload,command:"sha256:"+"0".repeat(64),extra:true })]) expect(readArchiveRestart(invalid,at(0))).toBeNull();
+  await lane.inside(state => {
+    const sql = archiveSql(state), store = new ArchiveRows(sql,lane.at);
+    sql.exec("INSERT INTO meta(k,v) VALUES('archive-row-1',?)",canonicalize(original));
+    sql.exec("INSERT INTO meta(k,v) VALUES('archive-wake-1',?)",canonicalize({ pending:false,stopped:true,next:null }));
+    sql.exec("INSERT INTO meta(k,v) VALUES('archive-frontier-confirmed-1',?)","TEST opaque frontier bytes, never parsed");
+    const before = sql.exec("SELECT k,v FROM meta WHERE k LIKE 'archive-%' ORDER BY k").toArray();
+    for (const changed of [{ ...payload,at:{ ...lane.at,inc:"in_aaaaaaaaaaaaaaaaaaaaaaaaaa" } },{ ...payload,repository:{ ...repository,id:"another" } },{ ...payload,rowDigest:digestBytes(utf8("stale")) },{ ...payload,generation:1 },{ ...payload,confirmed:{ ...original.confirmed,commit:"b".repeat(40) } }]) {
+      const wrong = readArchiveRestart(encoded(changed),at(0)); if (!wrong) expect.fail("bounded mismatched directive must remain well formed");
+      expect(store.restart(wrong,at(1),at(0))).toBe("refused");
+      expect(sql.exec("SELECT k,v FROM meta WHERE k LIKE 'archive-%' ORDER BY k").toArray()).toEqual(before);
+    }
+    const pending = { layout:2 as const,commit:"b".repeat(40),parent:original.confirmed.commit,through:{ ...head,seq:head.seq+1 },manifest:"{}",markedAt:at(0) };
+    for (const invalidRow of [
+      { ...original,confirmed:{ commit:original.confirmed.commit,through:head } },
+      { ...original,confirmed:null },
+      { ...original,pending },
+      { ...original,stopped:{ reason:"unavailable",where:null } },
+    ]) {
+      sql.exec("UPDATE meta SET v=? WHERE k='archive-row-1'",canonicalize(invalidRow));
+      const beforeRefusal = sql.exec("SELECT k,v FROM meta WHERE k LIKE 'archive-%' ORDER BY k").toArray();
+      const fresh = readArchiveRestart(encoded({ ...payload,rowDigest:digestBytes(utf8(canonicalize(invalidRow))) }),at(0));
+      if (!fresh) expect.fail("a matching command remains well formed while the stored row is ineligible");
+      expect(store.restart(fresh,at(1),at(0))).toBe("refused");
+      expect(sql.exec("SELECT k,v FROM meta WHERE k LIKE 'archive-%' ORDER BY k").toArray()).toEqual(beforeRefusal);
+    }
+    sql.exec("UPDATE meta SET v=? WHERE k='archive-row-1'",canonicalize(original));
+    const fail = new ArchiveRows({ ...sql,exec(query,...bindings) {
+      if (query.startsWith("INSERT INTO meta(k,v)") && bindings[0] === "archive-restart-1") throw new Error("TEST restart receipt write interrupted");
+      return sql.exec(query,...bindings);
+    } },lane.at);
+    expect(() => fail.restart(command,at(1),at(0))).toThrow("TEST restart receipt write interrupted");
+    expect(sql.exec("SELECT k,v FROM meta WHERE k LIKE 'archive-%' ORDER BY k").toArray()).toEqual(before);
+    const race = new ArchiveRows({ ...sql,exec(query,...bindings) {
+      if (query.startsWith("SELECT 1 AS matched")) sql.exec("UPDATE meta SET v=? WHERE k='archive-row-1'",canonicalize({ ...original,stopped:{ reason:"limit",where:"TEST raced row" } }));
+      return sql.exec(query,...bindings);
+    } },lane.at);
+    expect(() => race.restart(command,at(1),at(0))).toThrow("archive-row-conflict");
+    expect(sql.exec("SELECT k,v FROM meta WHERE k LIKE 'archive-%' ORDER BY k").toArray()).toEqual(before);
+    expect(() => store.restart(command,at(1),at(0),new ArchiveBudget({ inputWork:1 }))).toThrow();
+    expect(sql.exec("SELECT k,v FROM meta WHERE k LIKE 'archive-%' ORDER BY k").toArray()).toEqual(before);
+    expect(store.restart(command,at(1),at(0))).toBe("applied");
+    expect(store.load()).toEqual({ ...original,stopped:null });
+    expect(store.storedWake()).toEqual({ pending:true,stopped:false,next:at(1) });
+    expect(store.restartReceipt().generation).toBe(1);
+    expect(sql.exec("SELECT v FROM meta WHERE k='archive-frontier-confirmed-1'").toArray()).toEqual([{ v:"TEST opaque frontier bytes, never parsed" }]);
+    store.stop("limit");
+    const stoppedAgain = store.load();
+    expect(store.restart(command,at(2),at(0))).toBe("already-applied");
+    expect(store.load()).toEqual(stoppedAgain); expect(store.wake()).toBeNull();
+  });
 });

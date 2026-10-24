@@ -1,7 +1,7 @@
 /** Internal bounded archive observation for the activation diagnostic. No driver, authority, recovery,
  * mutation, schema initialization or raw archive payload is reachable here. */
 import type { ScopeId, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, isHead, isRecord, isScopeRef, natural, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, digestBytes, isHead, isRecord, isScopeRef, natural, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import { ArchiveBudget } from "./archive-budget.ts";
 import { ARCHIVE_SCOPE_METADATA_BYTES } from "./archive-pin.ts";
 import { ArchiveRows, type ArchivedPosition, type ArchiveMark, type ArchiveStoredWake } from "./archive-row.ts";
@@ -13,6 +13,8 @@ const reasons = ["limit", "timeout", "unavailable", "format", "object-id", "miss
 export type ArchiveOperatorReason = typeof reasons[number] | "unknown";
 export interface ArchiveOperatorRow {
   readonly at: ScopeRef;
+  readonly rowDigest: string | null;
+  readonly restartGeneration: number;
   readonly repository: DestinationRepository;
   readonly format: "sha1" | "sha256";
   /** Stored state only; no claim that it has caught up with the native head. */
@@ -61,12 +63,21 @@ export async function archiveOperatorState(sql: Pick<Sql, "exec">, name: ScopeId
   const rows = new ArchiveRows({ exec: sql.exec.bind(sql), transaction: read => read() }, at);
   let row: Observation<ArchiveOperatorRow>;
   try {
-    const value = rows.load(budget);
+    const snapshot = rows.loadSnapshot(budget);
+    const value = snapshot?.row ?? null;
     if (value === null) row = { state: "absent" };
     else {
       budget.spend({ metadata: 32 * 1024, inputWork: 128 * 1024 });
+      // Only a no-Mark stopped row can authorize restart. Do not add a
+      // second whole-manifest hash to an otherwise readable pending diagnostic.
+      let rowDigest: string | null = null;
+      if (value.stopped?.reason === "limit" && value.pending === null) {
+        budget.spend({ inputWork: snapshot!.bytes.length * 64 });
+        rowDigest = digestBytes(utf8(snapshot!.bytes));
+      }
+      const restartGeneration = rows.restartReceipt(budget).generation;
       const pending = value.pending;
-      row = { state: "present", at: { ...value.at }, repository: { ...value.repository }, format: value.format,
+      row = { state: "present", rowDigest, restartGeneration, at: { ...value.at }, repository: { ...value.repository }, format: value.format,
         phase: value.stopped ? "stopped" : pending ? "pending" : value.confirmed !== null ? "confirmed" : "target",
         reason: value.stopped === null ? null : (reasons as readonly string[]).includes(value.stopped.reason) ? value.stopped.reason as ArchiveOperatorReason : "unknown",
         confirmed: value.confirmed === null ? null : position(value.confirmed),
@@ -91,10 +102,10 @@ export async function archiveRowDiagnostic(sql: Pick<Sql, "exec">, name: ScopeId
   const view = await archiveOperatorState(sql, name, readAlarm);
   if (!alarmRead) { try { await readAlarm(); } catch { /* finite unknown */ } }
   if (view.state !== "read") return { scope: name, state: view.state, phase: view.state, reason: view.state === "unknown" ? view.reason : null,
-    confirmed: "unknown", pendingMark: "unknown", storedWake: "unknown",
+    confirmed: "unknown", pendingMark: "unknown", storedWake: "unknown", rowDigest: "unknown", restartGeneration: "unknown",
     platformAlarm: alarm === null ? "absent" : Number.isSafeInteger(alarm) && alarm! >= 0 ? alarm! : "unknown" };
   const row = view.row;
-  return { scope: name, state: row.state, phase: row.state === "present" ? row.phase : row.state,
+  return { scope: name, rowDigest: row.state === "present" ? row.rowDigest : row.state, restartGeneration: row.state === "present" ? row.restartGeneration : "unknown", state: row.state, phase: row.state === "present" ? row.phase : row.state,
     reason: row.state === "present" ? row.reason : row.state === "unknown" ? "unknown" : null,
     confirmed: row.state === "present" ? row.confirmed === null ? "absent" : { commit: row.confirmed.commit, through: { ...row.confirmed.through } } : row.state,
     pendingMark: row.state === "present" ? row.pendingMark === null ? "absent" : { commit: row.pendingMark.commit, through: { ...row.pendingMark.through } } : row.state,

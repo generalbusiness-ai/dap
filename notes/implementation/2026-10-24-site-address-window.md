@@ -120,7 +120,16 @@ not a cold-cache benchmark or a portable throughput claim. They omit source
 review and other unmeasured preparation; no total implementation cost is
 claimed.
 
-The final gate and exact-head review remain pending. Integrate approved
-archive Main and the eventual R9 landing before that gate. No deployment or hosted
+The Source now integrates approved archive Main
+`55e4be6cdc0300b0a1865c237be3097cfb232edd` without product adaptation.
+All five R4 Sources and seals, inherited R9 settings and `--keep-vars`
+remain unchanged. Incoming archive Sources/tests and their eight actual
+map slots, including the new restart parser row, retain approved Main bytes
+and values. The changed Scope object and shared test Worker add a new
+import closure: earlier validation and controls remain evidence at their
+original heads, not an exact-head pass for this integration.
+
+The final gate and exact-head review remain pending. Integrate the eventual
+R9 landing before that gate. No deployment or hosted
 provider acceptance is claimed. R4 token reuse, R13 expiry/member quota and
 R10/R11 trust remain separate.
