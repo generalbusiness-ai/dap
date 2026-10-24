@@ -64,11 +64,11 @@ test("unknown foreign facts, site and application lookups and hosted registry re
     const value = Reflect.get(target, key, target); return typeof value === "function" ? value.bind(target) : value;
   } });
   const registries = { idFromName() { registryCalls++; throw Error("registry addressed"); }, get() { registryCalls++; throw Error("registry instantiated"); } };
-  const reply = await mcpRoute(trapped, { ...settings, SCOPES: targets as unknown as DurableObjectNamespace, REGISTRIES: registries as unknown as DurableObjectNamespace, AGENTS: env.AGENTS });
+  const reply = await mcpRoute(trapped, { ...settings, MCP_ENABLED: "true", SCOPES: targets as unknown as DurableObjectNamespace, REGISTRIES: registries as unknown as DurableObjectNamespace, AGENTS: env.AGENTS });
   expect(reply?.status).toBe(404);
   expect(indexReads).toBe(beforeSite + 3);
   const otherKindIndex: ScopeIndexPort = { async has(_scope, kind) { return kind === undefined; }, async register() { throw Error("lookup wrote index"); } };
-  const otherKind = await mcpRoute(trapped, { SCOPE_INDEX: { idFromName: name => name, get: () => otherKindIndex },
+  const otherKind = await mcpRoute(trapped, { MCP_ENABLED: "true", SCOPE_INDEX: { idFromName: name => name, get: () => otherKindIndex },
     SCOPES: targets as unknown as DurableObjectNamespace, REGISTRIES: registries as unknown as DurableObjectNamespace, AGENTS: env.AGENTS });
   expect(otherKind?.status).toBe(404); // a known Directory ID is not a known Membership
   expect({ targetCalls, registryCalls, bodyReads }).toEqual({ targetCalls: 0, registryCalls: 0, bodyReads: 0 });

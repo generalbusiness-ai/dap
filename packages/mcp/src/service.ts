@@ -55,6 +55,8 @@ export interface ServerPort {
   mode?: Mode;
   /** `--tools`: only these definitions' act tools beside the generic ones. */
   tools?: readonly string[] | null;
+  /** Hosted generic-tool policy; absent preserves local CLI defaults. */
+  genericTools?: readonly string[];
   words?: Words;
   now?: () => number;
   /** Called between two polls of `wait`. The default waits one second; a test drives its scheduler here. */
@@ -200,11 +202,13 @@ export class McpService {
   #stopWatch: (() => void) | null = null;
   #told: Digest | null = null;
   readonly #generic: Record<string, { tool: Tool; run: Run }>;
+  readonly #genericPolicy: readonly string[] | undefined;
   /** Every list-change the service raised, for a test to count. */
   raised = 0;
 
   constructor(port: ServerPort) {
     this.#port = port;
+    this.#genericPolicy = port.genericTools === undefined ? undefined : Object.freeze([...port.genericTools]);
     this.#metrics = new McpMetrics(port.metrics);
     const fetcher = port.fetch ?? (globalThis as { fetch?: Fetch }).fetch;
     this.#fetch = this.#metrics.enabled && fetcher ? observedFetch(fetcher) : port.fetch;
@@ -257,14 +261,14 @@ export class McpService {
     const read = await readInventory(this.reads, this.kept, config);
     const bindings = bindingsOf(read.inventory, this.words);
     const baseGeneration = generationOf(bindings, read.inventory, { mode: this.mode, tools: this.#tools, words: this.words });
-    const generation = digestBytes(utf8(canonicalize({ tools: baseGeneration, presentation: this.resources.generation, views: !!(this.#port.views || this.#port.declaredViews), declared: this.#port.declaredViews?.release ?? null })));
+    const generation = digestBytes(utf8(canonicalize({ tools: baseGeneration, ...(this.#genericPolicy ? { generic: this.#genericPolicy } : {}), presentation: this.resources.generation, views: !!(this.#port.views || this.#port.declaredViews), declared: this.#port.declaredViews?.release ?? null })));
     const memberships = new Map<string, ScopeRef>();
     if (config.repository) memberships.set(config.repository.membership.scope, config.repository.membership);
     for (const root of config.roots ?? []) if (root.membership) memberships.set(root.membership.scope, root.membership);
     const shown = bindings.filter((b) => selected(b, this.#tools));
     const hidden = shown.filter((b) => !listed(b, read.inventory)).map((b) => b.name);
     const acts = this.mode === "generic" ? [] : shown.filter((b) => listed(b, read.inventory)).map((b) => actTool(b, read.inventory, this.mode));
-    const generic = Object.entries(this.#generic).filter(([name]) => (name === "actions" || name === "act" ? this.mode !== "default" : true)).map(([, g]) => g.tool);
+    const generic = Object.entries(this.#generic).filter(([name]) => this.#genericAdmitted(name)).map(([, g]) => g.tool);
     const snapshot: Snapshot = { read, bindings, tools: [...generic, ...acts], generation, hidden, memberships, configured: configDigest(config) };
     this.#stale = false;
     const previous = this.#snapshot?.generation ?? null;
@@ -349,14 +353,19 @@ export class McpService {
     const given = isRecord(args) ? args : {};
     try {
       const generic = Object.hasOwn(this.#generic, name) ? this.#generic[name]! : null;
-      if (generic && ((name !== "actions" && name !== "act") || this.mode !== "default")) return await generic.run(given);
-      // A name the list derived earlier does not hold: derive it again once, since the room may have changed since.
-      let s = await this.#current();
-      if (!s.bindings.some((b) => b.name === name)) s = await this.snapshot();
-      const binding = this.mode === "generic" ? null : s.bindings.find((b) => b.name === name) ?? null;
-      if (!binding) return failed({ error: "unknown-tool", name });
-      return await this.#perform(binding, given, binding.kind);
+      if (generic && ((name !== "actions" && name !== "act") || this.mode !== "default")) return this.#genericAdmitted(name) ? await generic.run(given) : failed({ error: "unknown-tool", name });
+      // Keep a known descriptor's identity, but derive its admission from fresh standing.
+      const previous = this.#stale ? null : this.#snapshot;
+      const s = await this.snapshot();
+      const cached = previous?.configured === s.configured ? previous.bindings.find((b) => b.name === name) : undefined;
+      const binding = this.mode === "generic" ? null : cached ?? s.bindings.find((b) => b.name === name) ?? null;
+      if (!binding || !selected(binding, this.#tools) || !listed(binding, s.read.inventory)) return failed({ error: "unknown-tool", name });
+      return await this.#perform(binding, given, binding.kind, undefined, undefined, s);
     } catch (error) { return this.#failure(error, given); }
+  }
+
+  #genericAdmitted(name: string): boolean {
+    return ((name !== "actions" && name !== "act") || this.mode !== "default") && (this.#genericPolicy === undefined || this.#genericPolicy.includes(name));
   }
 
   #failure(error: unknown, given: Args): CallResult {
@@ -435,12 +444,21 @@ export class McpService {
     return matched ?? stopCall({ error: "read", scope, reason: "unsupported-definition" });
   }
 
+  /** Apply the catalogue policy to one actual target, using this attempt's fresh standing. */
+  #admitTarget(snapshot: Snapshot, target: Held, kind: string, name = kind): void {
+    const inventory: Inventory = { ...snapshot.read.inventory, scopes: [target] };
+    const binding = bindingsOf(inventory, this.words).find(candidate => candidate.kind === kind && candidate.digests.includes(target.pinned));
+    if (!binding || !selected(binding, this.#tools) || !listed(binding, inventory)) stopCall({ error: "unknown-tool", name });
+  }
+
   // ---------------------------------------------------------------- an act, under custody
 
-  async #perform(binding: Binding | null, args: Args, kind: string, preparing?: { resource: unknown; capability: string; step: string }, admit?: () => void | Promise<void>): Promise<CallResult> {
+  async #perform(binding: Binding | null, args: Args, kind: string, preparing?: { resource: unknown; capability: string; step: string }, admit?: () => void | Promise<void>, suppliedSnapshot?: Snapshot): Promise<CallResult> {
     const key = args["idempotencyKey"];
     if (!validKey(key)) return failed({ error: "shape", field: "idempotencyKey", what: "is missing, or not 1 to 128 bytes of UTF-8", declared: "a key you choose and keep" });
-    const s = await this.#current();
+    // A named call passes the fresh snapshot it just used for admission.
+    // Other entrypoints refresh here; no snapshot is carried across attempts.
+    const s = suppliedSnapshot ?? await this.snapshot();
     // The target: given, or the room's own scope of a singleton platform kind.
     let named = args["target"] ?? args["scope"];
     if (named === undefined && binding?.singleton) named = binding.scopes[0]!.scope;
@@ -461,6 +479,20 @@ export class McpService {
     if (binding && (binding.definition !== definition.name || binding.declaration !== declaration || !binding.digests.includes(summary.definition))) return stale();
     if (!binding && args["digest"] !== undefined && args["digest"] !== summary.definition) {
       return failed({ error: "stale-descriptor", scope, runs: `${definition.name} ${summary.definition}`, tool: "act, with the digest you read again from actions" });
+    }
+    // A cached descriptor can explain a stale target, never authorize a name
+    // that the current catalogue no longer serves.
+    if (binding && !s.bindings.some(current => current.name === binding.name && current.definition === binding.definition
+      && current.kind === binding.kind && current.declaration === binding.declaration && current.digests.includes(summary.definition)
+      && selected(current, this.#tools) && listed(current, s.read.inventory))) return failed({ error: "unknown-tool", name: binding.name });
+    // Check the actual target's membership, not another scope served by the
+    // same catalogue binding. Generic act and preparation share this fence.
+    try {
+      this.#admitTarget(s, { scope, ref: summary.scope, place: "root", pinned: summary.definition, definition, membership: membership?.scope ?? null }, kind, binding?.name ?? kind);
+    } catch (error) {
+      // Preserve a mounted card's stale-view fence before returning a policy denial.
+      if (error instanceof Stop && admit) await admit();
+      throw error;
     }
     const on = args["on"] === undefined ? null : args["on"];
     if (needsOn(act) ? !(typeof on === "number" && Number.isSafeInteger(on) && on >= 0) : on !== null) {
@@ -976,7 +1008,9 @@ export class McpService {
   async #installApplication(args: Args): Promise<CallResult> {
     const key = args["idempotencyKey"];
     if (!validKey(key)) return failed({ error: "shape", field: "idempotencyKey", what: "is missing or invalid", declared: "a key you choose and keep" });
-    const room = await this.#applicationRoom();
+    const room = await this.#applicationRoom(), pin = room.cohort.rules;
+    const snapshot = await this.snapshot();
+    this.#admitTarget(snapshot, { scope: room.rules.scope, ref: room.rules, place: "rules", pinned: pin, definition: platform(pin)!.data as unknown as DefinitionLike, membership: room.membership.scope }, "install-application", "install_application");
     let selected: ReturnType<typeof readApplicationInstallOptions> | ReturnType<typeof readDeviceApplicationInstallOptions>;
     try {
       const ordinary = { rules: room.rules, uri: args["uri"], release: args["release"], roles: args["roles"], values: args["values"] };
@@ -985,7 +1019,7 @@ export class McpService {
     }
     catch { return failed({ error: "shape", field: "installation", what: "needs an immutable Git URI, expected release, explicit unique roles, bounded genesis values and a full existing owner for a device package", declared: "the install_application input" }); }
     const identity: Identity = { service: this.#service, membership: room.membership, signer: this.#port.signer.key, target: room.rules, key: key as string };
-    const meaning = meaningOf(selected), pin = room.cohort.rules;
+    const meaning = meaningOf(selected);
     const build = async () => {
       const address = readApplicationReleaseUri(selected.uri);
       const source = applicationGitHttpSource(address, { blobBytes: 4 * 1024 * 1024, ...(this.#port.applicationFetch ? { send: this.#port.applicationFetch } : {}) });
