@@ -568,7 +568,15 @@ test("a deployment restart is consumed after the diagnostic on ordinary ingress 
   await lane.restart();
   await (lane.object as unknown as { nativeBirth(at:unknown,milliseconds:number):Promise<unknown> }).nativeBirth(lane.at,10_000);
   await lane.inside((_state,instance) => (instance as { awaitScheduledCallbacks():Promise<unknown> }).awaitScheduledCallbacks());
-  lane.c.clock.now = timeOf((await lane.alarmAt())!);
+  const archiveWake = await lane.inside(state => new ArchiveRows(archiveSql(state),lane.at).wake());
+  expect(archiveWake).not.toBeNull();
+  expect(Date.parse(archiveWake!)).toBeGreaterThan(Date.parse(lane.c.clock.now));
+  const platformAlarm = await lane.alarmAt();
+  expect(platformAlarm).not.toBeNull();
+  expect(platformAlarm!).toBeLessThanOrEqual(Date.parse(archiveWake!));
+  // Other native owners can have an earlier platform alarm. Dispatch this
+  // archive pass when its own persisted retry is due.
+  lane.c.clock.now = archiveWake!;
   expect(await lane.alarm()).toBe(true);
   expect((await row(lane))!.confirmed?.through).toEqual(head);
 },20_000);

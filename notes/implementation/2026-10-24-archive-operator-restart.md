@@ -68,8 +68,8 @@ and eight map slots. No values are filled before that producer runs.
 
 Scope production and test compilers cover the archive implementation and
 fixture wiring. They do not directly compile the Grow deployment wrapper;
-its one-line setting forwarding has Source review and a separate strict
-compiler check is prepared. The planned focused cases cover the changed archive
+its one-line setting forwarding passed a separate strict compiler check.
+The planned focused cases cover the changed archive
 witnesses and bounded-read regressions, not every shared-worker importer.
 The ordinary gate remains required.
 
@@ -87,10 +87,27 @@ The first separate Grow check failed before source checking with TS2688:
 its external configuration could not resolve the pool's exported type
 library. A corrected configuration names the same three declaration
 libraries by absolute path and preserves strict checking. That first
-outer span was 0.89 seconds wall and 0.97 seconds CPU. Both failures retain
-their original outcomes. The Scope continuation will carry the successful
-production compiler because only the test callback and this note changed.
-The corrected Grow check and Scope test compiler remain pending.
+outer span was 0.89 seconds wall and 0.97 seconds CPU. The corrected check
+passed with unchanged source, at 0.87 seconds wall and 1.90 seconds CPU.
+
+Original `37098` passed the Scope test compiler. Its body retained 18
+passes, one failure and 24 pending or unfinished cases, with zero
+unhandled errors. The new restart case reached its final assertion but
+read confirmed sequence 2 instead of the expected sequence 3. It had
+advanced the clock to the shared platform alarm, which can precede the
+archive's persisted retry. The driver refuses archive work before that
+retry is due. The failed log did not retain numeric wake values, so this
+is a source diagnosis, not a measured attribution of that failure.
+The corrected witness reads the exact durable archive wake, requires a
+future wake and a platform alarm no later than it, then advances to that
+archive wake before one ordinary alarm. The exact final-head assertion,
+all prior restart assertions and the deadline remain. Its outer cost was
+15.58 seconds wall and 19.07 seconds CPU.
+
+All original failures retain their outcomes. The next continuation carries
+the successful production and Grow compilers because only the test witness
+and this note changed. The updated Scope test compiler and bodies remain
+pending.
 
 These costs were observed on macOS 27.0.1 arm64 with the existing private
 dependency pool and caches. Load and cache temperature were uncontrolled.
