@@ -1,7 +1,28 @@
 # Deploy the scope Worker
 
 `npm run deploy:scope` deploys the scope Worker from
-`apps/room/wrangler.jsonc` with Wrangler 4.147.0. Follow
+`apps/room/wrangler.jsonc` with Wrangler 4.147.0 and `--keep-vars`, preserving
+plain settings already set on the Worker when the file omits them. Values
+explicitly supplied by the reviewed configuration or `--var` still need
+review. This does not supply a missing setting or change secret custody.
+
+From the reviewed checkout, the default scope command is:
+
+```sh
+npm run deploy:scope
+```
+
+For a planner deployment of Grow with pinned Wrangler from scratch, use:
+
+```sh
+ARTROOM_REPO=/absolute/path/to/the-reviewed-checkout
+cd "$(mktemp -d)"
+npx -y wrangler@4.147.0 deploy --keep-vars --config "$ARTROOM_REPO/apps/room/wrangler.grow.jsonc"
+```
+
+Retain any reviewed `--var` overrides for that Worker on the same command;
+`--keep-vars` does not establish their correct values. The planner deploys
+after exact-head review. Follow
 [Run dap in 10 minutes](self-host.md) to deploy it on your own account,
 create a room, and invite another device. This page describes the service
 settings and the GitHub setup order.
@@ -35,6 +56,38 @@ directory and pass the absolute path to `wrangler.grow.jsonc`. The
 [Grow runbook](../examples/grow/runbook.md) gives the command, the planner's
 20 October provisioning status and the remaining hosted acceptance work.
 
+## Local wiring readiness
+
+`GET /health` reports each host under `wiring.artifacts` and `wiring.github`.
+Both `GET` and `HEAD` keep their session and register readiness checks;
+`HEAD` returns the same status without a body.
+A host is `wired`, or `off` with a finite reason. An absent host setting
+is `off` with `unconfigured`. A configured host that cannot wire makes the
+response `503`, even when its register is ready. Different configured
+register roots remain `ambiguous` and return `503`.
+
+Artifacts checks its complete setting, namespace and binding shape.
+GitHub checks its complete setting, PKCS#8 key syntax and required or
+supplied optional credentials. The factory, site reader and health use
+the same checks. Health returns no key, token, configuration contents or
+cleanup map. `wired` means local settings can construct the wiring. It
+proves no cryptographic key import, provider connectivity, installation
+account authorization or hosted deployment acceptance.
+
+`DEPLOYMENT` has one bound: 1 to 128 UTF-8 bytes. Sessions, demo creation,
+health, metrics and screen contexts use that same reader. An invalid
+configured value cannot open the local creation bypass, even with
+`ALLOW_OPEN_CREATION="true"`. It makes a screen unavailable rather than
+falling back to its origin. Truly absent deployment settings retain the
+existing local behavior. Metrics use the bounded label `unknown` for an
+invalid or absent value. Health still requires usable sessions and a ready
+register before returning `200`.
+
+The existing `APPLICATION_TRUST` parser and release/publisher schema are
+unchanged. Trust-before-fetch and release revocation policy are separate
+R10 and R11 work. [The implementation note](../notes/implementation/2026-10-24-settings-readiness.md)
+records validation status.
+
 ## Settings and secrets
 
 A setting is a plain value. A secret is stored by the host and is never
@@ -43,7 +96,7 @@ or in the command line's config.
 
 | Name | Kind | What it is |
 |---|---|---|
-| `DEPLOYMENT` | setting | The deployment's name, 1 to 128 bytes. Every read session names it. |
+| `DEPLOYMENT` | setting | The deployment's name, 1 to 128 UTF-8 bytes. Every read session names it. |
 | `ALLOW_OPEN_CREATION` | setting | Local and test deployments only: the exact string `true` opens parentless creation. Default unset. With `DEPLOYMENT` set, every other value permits only the exact signed register install pinned by valid `ARTIFACTS_CONFIG.registerScope`; a direct directory founding is refused before namespace lookup. Never enable this on a hosted production Worker. |
 | `SESSION_SECRET` | secret | At least 32 bytes from a cryptographic random source. It signs read sessions. Without it, or without `DEPLOYMENT`, no session is issued or accepted. Replacing it ends every session at once. |
 | `GITHUB_APP_CONFIG` | setting | JSON with exactly the fields below. Without it, or if it is not valid, the Worker sends nothing to GitHub: attempts are recorded and wait. |

@@ -1,8 +1,8 @@
 /** Public operational readiness, without a scope read or provider call. */
 import type { ScopeId } from "@generalbusiness/dap-contract";
-import { utf8 } from "@generalbusiness/dap-bytes";
-import { artifactsRegisterScope } from "./artifacts-wiring.ts";
-import { gitHubRegisterScope } from "./github-wiring.ts";
+import { readDeployment } from "./deployment-setting.ts";
+import { artifactsRegisterScope, artifactsReadiness } from "./artifacts-wiring.ts";
+import { gitHubRegisterScope, gitHubReadiness } from "./github-wiring.ts";
 import type { Binding } from "./namespace.ts";
 import type { MetricEnvironment } from "./operational.ts";
 import { sessionsOf } from "./sessions.ts";
@@ -15,6 +15,12 @@ interface HealthEnvironment extends Omit<MetricEnvironment, "DEPLOYMENT"> {
   SESSION_SECRET?: unknown;
   GITHUB_APP_CONFIG?: unknown;
   ARTIFACTS_CONFIG?: unknown;
+  ARTIFACTS_NAMESPACE?: unknown;
+  ARTIFACTS?: unknown;
+  GITHUB_APP_PRIVATE_KEY?: unknown;
+  GITHUB_READ_TOKEN?: unknown;
+  GITHUB_CREATION_TOKEN?: unknown;
+  GITHUB_CLEANUP_TOKENS?: unknown;
 }
 interface Key { binding: Binding; scope: ScopeId }
 const sameHealthKey = (a: Key, b: Key): boolean => a.binding === b.binding && a.scope === b.scope;
@@ -60,7 +66,11 @@ export async function health(request: Request, env: HealthEnvironment, observer 
   const github = gitHubRegisterScope(env.GITHUB_APP_CONFIG), artifacts = artifactsRegisterScope(env.ARTIFACTS_CONFIG);
   const selected = github ?? artifacts;
   const register = github && artifacts && github !== artifacts ? "ambiguous" : selected === null ? "unconfigured" : await observer.read(env.SCOPES, selected);
-  const deployment = typeof env.DEPLOYMENT === "string" && utf8(env.DEPLOYMENT).length > 0 && utf8(env.DEPLOYMENT).length <= 128 ? env.DEPLOYMENT : "unknown";
+  const deployment = readDeployment(env.DEPLOYMENT) ?? "unknown";
+  const artifactsState = artifactsReadiness(env), githubState = gitHubReadiness(env);
+  const wiring = { artifacts: artifactsState.state === "wired" ? { state: "wired" as const } : artifactsState,
+    github: githubState.state === "wired" ? { state: "wired" as const } : githubState };
+  const configuredOff = [artifactsState, githubState].some(state => state.state === "off" && state.reason !== "unconfigured");
   const version = typeof env.VERSION_METADATA?.id === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(env.VERSION_METADATA.id) ? env.VERSION_METADATA.id : "unknown";
-  return new Response(request.method === "HEAD" ? null : JSON.stringify({ deployment, version, sessions, register }), { status: sessions === "ok" && register === "ready" ? 200 : 503, headers });
+  return new Response(request.method === "HEAD" ? null : JSON.stringify({ deployment, version, sessions, register, wiring }), { status: sessions === "ok" && register === "ready" && !configuredOff ? 200 : 503, headers });
 }

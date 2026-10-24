@@ -1,3 +1,4 @@
+import { readDeployment } from "../deployment-setting.ts";
 /** Generic trusted screen bytes, bound to one native active installation and
  * its exact presentation. This serves no application state and grants no
  * member authority. Only the dedicated sandbox service serves package bytes. */
@@ -59,6 +60,8 @@ async function screenResponse(request: Request, env: ApplicationBindings & { SCO
   const address = readApplicationScreenAddress(url.pathname);
   if (!address || url.search || url.hash || url.username || url.password) return applicationJsonReply(404, { error: "not-found" });
   if (!env.APPLICATION_CONTENT) return applicationJsonReply(503, { error: "application-unavailable" });
+  const deployment = env.DEPLOYMENT === undefined ? url.origin : readDeployment(env.DEPLOYMENT);
+  if (deployment === null) return applicationJsonReply(503, { error: "application-unavailable" });
   try {
     const trust = readApplicationTrust(env.APPLICATION_TRUST);
     const room = await within(() => (env.SCOPES.get(env.SCOPES.idFromName(address.directory)) as unknown as Peer).applicationRoom(), PROPOSED_BOUNDS.fetchSeconds);
@@ -68,7 +71,7 @@ async function screenResponse(request: Request, env: ApplicationBindings & { SCO
     if (install === LATE) return applicationJsonReply(503, { error: "application-unavailable" });
     if (!install || canonicalize(install.rules) !== canonicalize(room.rules) || canonicalize(install.directory) !== canonicalize(room.directory)
       || install.ids.presentation !== address.presentation || !trust.some(row => row.release === install.ids.release)) return applicationJsonReply(404, { error: "not-found" });
-    const context = readApplicationScreenContext({ ...install, v: 1, origin: url.origin, deployment: env.DEPLOYMENT ?? url.origin, membershipDefinition: install.membershipDefinition ?? "platform:membership@7" }, address, url.origin);
+    const context = readApplicationScreenContext({ ...install, v: 1, origin: url.origin, deployment, membershipDefinition: install.membershipDefinition ?? "platform:membership@7" }, address, url.origin);
     const packet = await packetOf(env.APPLICATION_CONTENT, env.APPLICATION_TRUST, trust, install.ids.release);
     if (!packet) return applicationJsonReply(503, { error: "application-unavailable" });
     if (canonicalize(packet.ids) !== canonicalize(install.ids) || packet.package.semantic.entry !== install.definition) return applicationJsonReply(404, { error: "not-found" });

@@ -92,11 +92,14 @@ function own(reply: unknown, key: string): unknown {
   try { return Object.hasOwn(reply, key) ? (reply as Record<string, unknown>)[key] : undefined; } catch { return undefined; }
 }
 
+/** Local service configuration only; no provider request. */
+export const artifactsService = (value: unknown): value is string => typeof value === "string" && value.length <= 253 && /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/.test(value);
+
 export class ArtifactsProvider implements RegisterProvider, DestinationProvider {
   readonly #options: ArtifactsProviderOptions;
   readonly #bounds: ReadBounds;
   constructor(options: ArtifactsProviderOptions) {
-    if (!repositoryName(options.namespace) || !/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/.test(options.service) || !Number.isSafeInteger(options.maxBytes) || options.maxBytes < 32) bad();
+    if (!repositoryName(options.namespace) || !artifactsService(options.service) || !Number.isSafeInteger(options.maxBytes) || options.maxBytes < 32) bad();
     this.#options = { ...options };
     this.#bounds = { ...(options.bounds ?? READ_BOUNDS) };
   }

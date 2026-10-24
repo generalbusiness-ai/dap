@@ -20,6 +20,8 @@ import { Platform, rita, sam, settle } from "./repository.ts";
 // Provider advertising is deliberately wider and newer than room publication.
 const ACCOUNT = { id: 17, login: "site-owner", type: "Organization" } as const;
 const TOKEN = "scripted-private-read";
+const PRIVATE = "-----BEGIN PRIVATE KEY-----\nYQ==\n-----END PRIVATE KEY-----\n";
+const configuration = (registerScope: ScopeId) => canonicalize({ issuer: "fixture", installationId: 1, registerScope, account: ACCOUNT, maxBytes: 8 * 1024 * 1024, privateRepositories: true, publicReads: false, credentialIdentity: "adapter-attempt" });
 const { paul } = keys;
 const pkt = (s: string) => `${(utf8(s).length + 4).toString(16).padStart(4, "0")}${s}`;
 const concat = (...xs: Uint8Array[]) => { const b = new Uint8Array(xs.reduce((n, x) => n + x.length, 0)); let at = 0; for (const x of xs) { b.set(x, at); at += x.length; } return b; };
@@ -74,7 +76,7 @@ beforeAll(async () => {
     return { ...first, receipt };
   });
   published = commit.commit; receiptRef = commit.receipt.ref; receiptCommit = commit.receipt.commit; objects = [...commit.objects, ...commit.receipt.objects].map(o => ({ id: o.id, type: o.kind, data: o.body }));
-  siteEnv = { SCOPES: env.PLATFORM, GITHUB_READ_TOKEN: TOKEN, GITHUB_APP_CONFIG: canonicalize({ registerScope: R.name, account: ACCOUNT, maxBytes: 8 * 1024 * 1024, publicReads: false }) };
+  siteEnv = { SCOPES: env.PLATFORM, GITHUB_APP_PRIVATE_KEY: PRIVATE, GITHUB_READ_TOKEN: TOKEN, GITHUB_APP_CONFIG: configuration(R.name) };
 });
 afterAll(() => { for (const r of roots) wired.delete(r); });
 const get = (ref: string, init?: RequestInit) => site(new Request(`https://scopes.test/site/${D.name}/${ref}/README.md`, init), siteEnv, fetchHost);
@@ -118,7 +120,7 @@ test("not-published refusal writes no entries, operation bookkeeping, custody or
   let sent = 0;
   wired.set(f.g.name, () => ({ outside: { accepts: () => true, send: async () => { sent++; return null; } } }));
   await f.g.restart();
-  const response = await site(new Request(`https://scopes.test/site/${f.d.name}/HEAD/README.md`), { ...siteEnv, GITHUB_APP_CONFIG: canonicalize({ registerScope: f.r.name, account: ACCOUNT, maxBytes: 8 * 1024 * 1024, publicReads: false }) }, async () => { sent++; return new Response(null, { status: 500 }); });
+  const response = await site(new Request(`https://scopes.test/site/${f.d.name}/HEAD/README.md`), { ...siteEnv, GITHUB_APP_CONFIG: configuration(f.r.name) }, async () => { sent++; return new Response(null, { status: 500 }); });
   expect([response.status, await response.text()]).toEqual([404, "not-published: the room has not published that ref\n"]);
   expect(await Promise.all([f.d, f.g].map(snapshot))).toEqual(before);
   expect(sent).toBe(0);

@@ -159,6 +159,11 @@ test("a late whole-lineage index result and an oversized body never activate any
     const accessor = { ...delivered, message: { ...delivered.message, body: Object.defineProperty({}, "hidden", { enumerable: true, get() { getters++; throw Error("caller getter ran during serialization"); } }) } };
     expect(await admitChildCreation(binding, config(room.R.name), { async has() { throw Error("accessor input reached index"); } }, accessor)).toEqual({ kind: "unavailable" });
     expect({ calls, getters }).toEqual({ calls: 0, getters: 0 });
+    for (const deployment of ["", "x".repeat(129)]) {
+      let ancestorLookups = 0;
+      expect(await admitChildCreation(binding, { ALLOW_OPEN_CREATION: "true", DEPLOYMENT: deployment }, { async has() { ancestorLookups++; throw Error("invalid deployment reached creator index"); } }, delivered)).toEqual({ kind: "unavailable" });
+      expect({ calls, ancestorLookups }).toEqual({ calls: 0, ancestorLookups: 0 });
+    }
     expect((await admitChildCreation(binding, { ALLOW_OPEN_CREATION: "true", DEPLOYMENT: "local" }, { async has() { throw Error("local opening reached index"); } }, delivered)).kind).toBe("admitted");
   } finally { room.life.release(); }
 }, 30_000);

@@ -2,6 +2,8 @@ import { expect, test } from "vitest";
 import { SCOPE_BOUNDS } from "@generalbusiness/dap-contract";
 import { LOSS, METRIC_MAX, METRIC_POINTS, Metrics, type Metric, type MetricPoint } from "../src/metrics.ts";
 import { correlated, correlation } from "../src/correlation.ts";
+import { measuredSync, metric, operationContext } from "../src/operational.ts";
+import { readDeployment } from "../src/deployment-setting.ts";
 
 const context = { scope: `sc_${"a".repeat(52)}`, deployment: "metrics-test", version: "unknown", request: "abcdef0123456789", trace: "none" };
 function recorder(cap = METRIC_POINTS) {
@@ -33,6 +35,15 @@ test("metrics-v1 keeps native end separate from public answer and writes the ten
   expect(points[1]!.blobs.slice(3)).toEqual(["dispatch", "answer", "none", context.request, "none", "none"]);
   expect(points.at(-1)!.doubles).toEqual([1, 0, 0, 0, 0, 0]);
   for (const p of points) expect([p.indexes.length, p.blobs.length, p.doubles.length]).toEqual([1, 9, 6]);
+  // Real operational labels use the same byte bound; invalid settings never
+  // become arbitrary dataset labels or an absent/local identity.
+  for (const [DEPLOYMENT, expected] of [["a".repeat(128), "a".repeat(128)], ["界".repeat(42) + "aa", "界".repeat(42) + "aa"], ["a".repeat(129), "unknown"], ["界".repeat(43), "unknown"], [undefined, "unknown"]] as const) {
+    expect(readDeployment(DEPLOYMENT)).toBe(expected === "unknown" ? null : expected);
+    const observed: MetricPoint[] = [];
+    const current = operationContext({ ...(DEPLOYMENT === undefined ? {} : { DEPLOYMENT }), METRICS: { writeDataPoint: point => observed.push(structuredClone(point)) } }, context.scope, "health", { request: context.request, trace: null });
+    measuredSync(current, () => metric({ kind: "route", place: "health", end: "ok", reason: "2xx", answer: "pre-turn" }));
+    expect(observed.map(point => [point.blobs[0], point.blobs[1]])).toEqual([["route", expected], ["metric-dropped", expected]]);
+  }
 });
 
 test("tainted fields and invalid numeric domains reach only the bounded loss summary, including critical turns", () => {

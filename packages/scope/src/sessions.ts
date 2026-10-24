@@ -1,3 +1,4 @@
+import { readDeployment } from "./deployment-setting.ts";
 /**
  * Read sessions, and the streams that a session opens (authority note,
  * sections 3.9, 3.12 row W6, 5.3 and 5.5). A read session is a credential:
@@ -96,10 +97,11 @@ export interface Sessions { readonly secret: Uint8Array; readonly deployment: st
  * accepted (section 5.5).
  */
 export function sessionsOf(secret: unknown, deployment: unknown): Sessions | null {
-  if (typeof secret !== "string" || typeof deployment !== "string") return null;
+  const identity = readDeployment(deployment);
+  if (typeof secret !== "string" || identity === null) return null;
   const key = utf8(secret);
-  if (key.length < SECRET_BYTES || deployment.length === 0 || utf8(deployment).length > 128) return null;
-  return { secret: key, deployment };
+  if (key.length < SECRET_BYTES) return null;
+  return { secret: key, deployment: identity };
 }
 
 // ---------------------------------------------------------------- the token
