@@ -6,7 +6,7 @@ import { captureJournalParentFrontier, JournalWork, journalV2PassPath, type Jour
 import { JournalObjects } from "../../git/src/journal-objects.ts";
 import { patchJournalV2Tree } from "../../git/src/journal-v2-tree.ts";
 import { ArchiveFrontiers, type ArchiveFrontierPrepared, type ArchiveFrontierBootstrap, type ArchiveFrontierBootstrapPrepared } from "../src/archive-frontier-store.ts";
-import { ARCHIVE_FRONTIER_BYTES, ARCHIVE_FRONTIER_ENCODING_BOUND, forecastArchiveFrontierFinish } from "../src/archive-frontier-cost.ts";
+import { ARCHIVE_FRONTIER_BYTES, ARCHIVE_FRONTIER_ENCODING_BOUND, archiveFrontierEncodingBound, forecastArchiveFrontierFinish } from "../src/archive-frontier-cost.ts";
 import { ArchiveBudget } from "../src/archive-budget.ts";
 import { ArchiveRows, type ArchiveMark } from "../src/archive-row.ts";
 import { at, create } from "./fixtures-native.ts";
@@ -41,7 +41,15 @@ test("frontier Mark and promotion share rollback cuts and the pending proof surv
     const sql = archiveSql(state), rows = new ArchiveRows(sql, lane.at), frontiers = store(sql, lane.at);
     rows.target(archiveRepository, "sha1", budget());
     expect(await frontiers.readConfirmed(made.binding, budget())).toBeNull();
-    const prepared = await frontiers.prepare(made.frontier, made.mark, null, budget());
+    const preparing = budget(), beforePrepare = preparing.admitted();
+    const prepared = await frontiers.prepare(made.frontier, made.mark, null, preparing);
+    expect(archiveFrontierEncodingBound(made.mark.through.seq)).toBe(8744);
+    const narrow = forecastArchiveFrontierFinish({ hasBase: false, through: made.mark.through.seq,
+      markUnits: made.mark.manifest.length, markedRowBytes: 4096 });
+    const full = forecastArchiveFrontierFinish({ hasBase: false, markUnits: made.mark.manifest.length, markedRowBytes: 4096 });
+    expect(narrow.ok && full.ok).toBe(true);
+    if (narrow.ok && full.ok) expect(full.cost.metadata - narrow.cost.metadata).toBeGreaterThan(750_000);
+    expect(preparing.admitted().metadata - beforePrepare.metadata).toBeLessThan(256 * 1024);
     // The public view is owned, but is never the prepared authority.
     prepared.frontier.objects[0]!.data.fill(0);
     expect(() => frontiers.stage({ frontier: made.frontier, base: null } as ArchiveFrontierPrepared, budget())).toThrow("archive-row-unavailable");
@@ -53,6 +61,12 @@ test("frontier Mark and promotion share rollback cuts and the pending proof surv
     sql.transaction(() => { rows.markAttempt(made.mark, at(1), budget()); frontiers.stage(prepared, budget()); });
     const pending = values(sql); expect(pending).toHaveLength(1);
     expect(utf8(pending[0]!["v"] as string).length).toBeLessThanOrEqual(ARCHIVE_FRONTIER_ENCODING_BOUND);
+    // An untrusted stored envelope larger than this receipt's profile is
+    // refused before JSON/base64 decoding, below the independent 64 KiB cap.
+    sql.exec("UPDATE meta SET v=? WHERE k=?", " ".repeat(archiveFrontierEncodingBound(made.mark.through.seq) + 1), PENDING);
+    try { await expect(frontiers.readPending(made.binding, made.mark, budget())).rejects.toMatchObject({ reason: "limit" }); }
+    finally { sql.exec("UPDATE meta SET v=? WHERE k=?", pending[0]!["v"], PENDING); }
+    expect(values(sql)).toEqual(pending);
   });
   await lane.restart();
   await lane.inside(async state => {

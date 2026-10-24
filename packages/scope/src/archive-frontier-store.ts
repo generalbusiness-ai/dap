@@ -2,13 +2,13 @@
  * confirmed receipt. Does not create receipts or change the ArchiveRow schema. */
 import { b64url, canonicalize, digestBytes, isDigest, isRecord, isScopeRef, natural, parseStrict, same, timeMs, unb64url, utf8 } from "@generalbusiness/dap-bytes";
 import type { Digest, Head, ScopeRef } from "@generalbusiness/dap-contract";
-import { JOURNAL_PARENT_FRONTIER_BYTES, JOURNAL_PARENT_FRONTIER_OBJECTS, validateJournalParentFrontier,
+import { JOURNAL_PARENT_FRONTIER_OBJECTS, validateJournalParentFrontier, journalParentFrontierProfile,
   type JournalObjectSource, type JournalParentBinding, type JournalParentFrontier } from "@generalbusiness/dap-git/journal";
 import { ArchiveBudget } from "./archive-budget.ts";
 import { ArchiveRowRefusal, ArchiveRows, type ArchivedPosition, type ArchiveMark } from "./archive-row.ts";
 import { ARCHIVE_ROW_BYTES, ARCHIVE_ROW_MANIFEST_BYTES, archiveRowLoadWork } from "./archive-row-cost.ts";
-import { ARCHIVE_FRONTIER_BYTES, ARCHIVE_FRONTIER_ENCODING_BOUND, ARCHIVE_FRONTIER_SIZE_METADATA,
-  archiveFrontierEncodeCost, archiveFrontierMarkCost, archiveFrontierReadCost, archiveFrontierWriteCost,
+import { ARCHIVE_FRONTIER_BYTES, ARCHIVE_FRONTIER_SIZE_METADATA,
+  archiveFrontierEncodeCost, archiveFrontierEncodingBound, archiveFrontierMarkCost, archiveFrontierReadCost, archiveFrontierWriteCost,
   archiveFrontierSnapshotCost, archiveFrontierRowCompareCost, forecastArchiveFrontierBootstrapFinish } from "./archive-frontier-cost.ts";
 import type { Sql } from "./sqlite.ts";
 
@@ -97,12 +97,14 @@ function copy(frontier: JournalParentFrontier, budget: ArchiveBudget): JournalPa
   return { ...frontier, at: { ...frontier.at }, through: { ...frontier.through }, objects: frontier.objects.map(object => ({ ...object, data: object.data.slice() })) };
 }
 function encode(frontier: JournalParentFrontier, mark: Digest | null, budget: ArchiveBudget): string {
-  budget.spend(archiveFrontierEncodeCost());
+  budget.spend(archiveFrontierEncodeCost(frontier.through.seq));
   const result = canonicalize({ v: 1, mark, frontier: { ...frontier, objects: frontier.objects.map(object => ({ id: object.id, type: object.type, data: b64url(object.data) })) } });
-  if (result.length > ARCHIVE_FRONTIER_ENCODING_BOUND || utf8(result).length > ARCHIVE_FRONTIER_BYTES) return refuse("limit");
+  if (result.length > archiveFrontierEncodingBound(frontier.through.seq) || utf8(result).length > ARCHIVE_FRONTIER_BYTES) return refuse("limit");
   return result;
 }
-function decode(text: string, expectedMark: Digest | null, mismatch?: () => never): unknown {
+function decode(text: string, expectedMark: Digest | null, through: number, mismatch?: () => never): unknown {
+  const profile = journalParentFrontierProfile(through);
+  if (text.length > archiveFrontierEncodingBound(through)) return refuse("limit");
   let value: unknown;
   try { value = parseStrict(text); if (canonicalize(value) !== text) return refuse(); } catch { return refuse(); }
   if (!isRecord(value) || !keys(value, "frontier,mark,v") || value["v"] !== 1 || !isRecord(value["frontier"])) return refuse();
@@ -114,9 +116,9 @@ function decode(text: string, expectedMark: Digest | null, mismatch?: () => neve
   if (!Array.isArray(objects) || objects.length !== JOURNAL_PARENT_FRONTIER_OBJECTS) return refuse();
   let total = 0;
   const raw = objects.map(item => {
-    if (!isRecord(item) || !keys(item, "data,id,type") || typeof item["data"] !== "string" || item["data"].length > Math.ceil(JOURNAL_PARENT_FRONTIER_BYTES / 3) * 4) return refuse();
+    if (!isRecord(item) || !keys(item, "data,id,type") || typeof item["data"] !== "string" || item["data"].length > Math.ceil(profile.bytes / 3) * 4) return refuse();
     const bytes = unb64url(item["data"]);
-    if (bytes === null || (total += bytes.length) > JOURNAL_PARENT_FRONTIER_BYTES) return refuse("limit");
+    if (bytes === null || (total += bytes.length) > profile.bytes) return refuse("limit");
     return { id: item["id"], type: item["type"], data: bytes };
   });
   return { ...f, objects: raw };
@@ -168,14 +170,14 @@ export class ArchiveFrontiers {
     // Initial untrusted loads retain the independent 64 KiB ceiling. Only
     // a validated base inside the writer bound can authorize the smaller
     // steady-state finish forecast; no prior read debit is credited back.
-    if (pair.confirmedBytes > ARCHIVE_FRONTIER_ENCODING_BOUND) return refuse("limit");
+    if (pair.confirmedBytes > archiveFrontierEncodingBound(frontier.through.seq)) return refuse("limit");
     const token = Object.freeze({ frontier: copy(frontier, budget) });
     bases.set(token, { owner: this, pair, frontier }); return token;
   }
   async readConfirmed(value: JournalParentBinding, budget: ArchiveBudget): Promise<ArchiveFrontierBase | null> {
     const bound = binding(value, this.#identity), pair = this.#sql.transaction(() => this.#pair(budget));
     if (pair.confirmed === null) { if (pair.pending !== null) return refuse("conflict"); return null; }
-    const frontier = await validateJournalParentFrontier(decode(pair.confirmed, null), bound, budget);
+    const frontier = await validateJournalParentFrontier(decode(pair.confirmed, null, bound.through.seq), bound, budget);
     budget.check(); return this.#base(pair, frontier, budget);
   }
   source(base: ArchiveFrontierBase, budget: ArchiveBudget): JournalObjectSource {
@@ -236,10 +238,10 @@ export class ArchiveFrontiers {
     if (pair.pending === null) return null;
     const bound = binding(value, this.#identity), m = markSnapshot(mark, this.#identity, budget);
     if (bound.commit !== m.value.commit || !same(bound.through, m.value.through)) return refuse("conflict");
-    const frontier = await validateJournalParentFrontier(decode(pair.pending, m.hash, () => this.#pendingMismatch(pair, m, budget)), bound, budget, m.value.parent);
+    const frontier = await validateJournalParentFrontier(decode(pair.pending, m.hash, bound.through.seq, () => this.#pendingMismatch(pair, m, budget)), bound, budget, m.value.parent);
     let base: ArchiveFrontierBase | null = null;
     if (pair.confirmed !== null) {
-      const raw = decode(pair.confirmed, null);
+      const raw = decode(pair.confirmed, null, bound.through.seq);
       if (!isRecord(raw)) return refuse();
       const old = binding({ ...this.#identity, commit: raw["commit"], through: raw["through"] } as JournalParentBinding, this.#identity);
       const validated = await validateJournalParentFrontier(raw, old, budget);
@@ -329,7 +331,7 @@ export class ArchiveFrontiers {
    * remote capture, including actual companion-object admission. */
   bootstrapFinish(token: ArchiveFrontierBootstrap): ReturnType<typeof forecastArchiveFrontierBootstrapFinish> {
     const state = bootstraps.get(token); if (!state || state.owner !== this) return refuse();
-    return forecastArchiveFrontierBootstrapFinish(state.rowBytes);
+    return forecastArchiveFrontierBootstrapFinish(state.rowBytes, state.binding.through.seq);
   }
   async prepareConfirmedBootstrap(token: ArchiveFrontierBootstrap, value: unknown, budget: ArchiveBudget): Promise<ArchiveFrontierBootstrapPrepared> {
     const state = bootstraps.get(token); if (!state || state.owner !== this) return refuse();

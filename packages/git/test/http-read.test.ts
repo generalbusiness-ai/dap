@@ -438,6 +438,39 @@ test("opt-in v2 fetch reads exact nonadvertised objects in two requests and keep
   expect(await source.ref(REF)).toBe(head);
   expect(await source.refs("refs/heads/", 2)).toEqual([{ ref: REF, target: head }]);
   expect(requests.slice(-2).map(row => [row.method, row.protocol])).toEqual([["GET", null], ["GET", null]]);
+
+  // Migration has its own transport shape. A real Git depth-one/blob:none
+  // response carries a full 16 KiB current tree, not 40 ancestral commits or
+  // either blob. This does not widen the ordinary isolated read above.
+  const treeBody = Buffer.concat([
+    ...Array.from({ length: 500 }, (_, i) => Buffer.concat([Buffer.from(`100644 ${i.toString().padStart(4, "0")}\0`), Buffer.from(content, "hex")])),
+    Buffer.from(`100644 ${"z".repeat(356)}\0`), Buffer.from(large, "hex"),
+  ]);
+  expect(treeBody.length).toBe(16 * 1024);
+  const migrationTree = put(remote, "tree", treeBody);
+  const migrationHead = put(remote, "commit", commitText(migrationTree, [head], "current parent"));
+  setRef(remote, REF, migrationHead); // The migration receipt is an advertised repository tip.
+  const migrationCalls: Request[] = [], counts: number[] = [], work: number[] = [], output: [number, number][] = [];
+  const migration = new SmartHttpSource({ ...v2Options, maxBytes: 32 * 1024,
+    bounds: { ...READ_BOUNDS, closureObjects: 587 },
+    isolateObjects: { ownedBytes: 17 * 32 * 1024, protocol: "v2", advertisementBytes: 1024, advertisementPackets: 32,
+      reserveObjects: count => { counts.push(count); }, reserveWork: bytes => { work.push(bytes); },
+      reserveOutput: (count, bytes) => { output.push([count, bytes]); } },
+    fetch: async request => { migrationCalls.push(request); return host.upstream(request); },
+  });
+  const current = await migration.currentParent(migrationHead, { commitBytes: 1024, treeBytes: 16 * 1024, advertisementBytes: 1024 });
+  expect(current.map(object => [object.id, object.type]).sort()).toEqual([[migrationHead, "commit"], [migrationTree, "tree"]].sort());
+  expect(current.find(object => object.id === migrationTree)!.data).toEqual(new Uint8Array(treeBody));
+  expect(current.some(object => object.id === head || object.id === content || object.id === large)).toBe(false);
+  expect(counts).toEqual([2]);
+  expect(work.reduce((sum, bytes) => sum + bytes, 0)).toBeGreaterThan(treeBody.length);
+  expect(output).toEqual([[2, current.reduce((sum, object) => sum + object.data.length, 0)]]);
+  expect(migrationCalls.map(request => request.method)).toEqual(["GET", "POST"]);
+  for (const action of [() => migration.currentParent(migrationHead, { commitBytes: 1024, treeBytes: 16 * 1024, advertisementBytes: 1024 }),
+    () => migration.object(content, 1024), () => migration.ref(REF), () => migration.refs("refs/heads/", 1)]) {
+    await expect(action()).rejects.toMatchObject({ what: "current parent source consumed" });
+  }
+  expect(migrationCalls).toHaveLength(2);
 });
 
 test("opt-in v2 requires its complete bounded capability advertisement without a POST or v0 fallback", async () => {
@@ -505,7 +538,7 @@ test("opt-in v2 requires its complete bounded capability advertisement without a
 });
 
 test("opt-in v2 validates sections and binary sidebands before exact pack admission", async () => {
-  const { remote, head, expected } = repository();
+  const { remote, head, tree2, expected } = repository();
   const smallBlob = put(remote, "blob", "other\n");
   const single = onePack(remote, head), blob = onePack(remote, smallBlob);
   const run = (body: Uint8Array, id = head, limit = isolatedWire, lineEnding = "\n", service = false, serviceLF = "\n", closureObjects = READ_BOUNDS.closureObjects, maximumBytes = isolatedWire, reserveWork?: (bytes: number) => void) => {
@@ -673,6 +706,59 @@ test("opt-in v2 validates sections and binary sidebands before exact pack admiss
   await expect(run(new Uint8Array(isolatedWire + 1)).outcome).rejects.toMatchObject({ reason: "too-large", what: "read bytes" });
   const tag = put(remote, "tag", `object ${head}\ntype commit\ntag example\ntagger Test <test@artroom.invalid> 1700000000 +0000\n\nTag.\n`);
   await expect(run(v2Bytes(onePack(remote, tag)), tag).outcome).rejects.toMatchObject({ reason: "wrong-type", what: "isolated pack entry" });
+
+  const limits = { commitBytes: 1024, treeBytes: 16 * 1024, advertisementBytes: 1024 };
+  const parentRun = (bytes: Uint8Array, options: { count?: number; ad?: Uint8Array; fragmented?: boolean;
+    reserveObjects?: (count: number) => void; reserveWork?: (bytes: number) => void;
+    reserveOutput?: (count: number, bytes: number) => void } = {}) => {
+    let requests = 0;
+    const source = new SmartHttpSource({ ...v2Options, maxBytes: 32 * 1024,
+      bounds: { ...READ_BOUNDS, closureObjects: options.count ?? 587 },
+      isolateObjects: { ownedBytes: 17 * 32 * 1024, protocol: "v2", advertisementBytes: 1024, advertisementPackets: 32,
+        ...(options.reserveObjects === undefined ? {} : { reserveObjects: options.reserveObjects }),
+        ...(options.reserveWork === undefined ? {} : { reserveWork: options.reserveWork }),
+        ...(options.reserveOutput === undefined ? {} : { reserveOutput: options.reserveOutput }) },
+      fetch: request => { requests++; return Promise.resolve(request.method === "GET"
+        ? new Response(options.ad ?? v2AdvertisementBytes(), { headers: { "content-type": "application/x-git-upload-pack-advertisement" } })
+        : options.fragmented ? new Response(new ReadableStream<Uint8Array>({
+          pull: (() => { let at = 0; return (controller: ReadableStreamDefaultController<Uint8Array>) => { if (at === bytes.length) controller.close(); else controller.enqueue(bytes.subarray(at, ++at)); }; })(),
+        }), { headers: { "content-type": "application/x-git-upload-pack-result" } }) : v2Response(bytes)); },
+    });
+    return { source, requests: () => requests, outcome: source.currentParent(head, limits) };
+  };
+  const own = parentRun(v2Bytes(single));
+  expect((await own.outcome).map(object => object.id)).toEqual([head]);
+  const fragmented = parentRun(v2Bytes(single), { fragmented: true });
+  expect((await fragmented.outcome).map(object => object.id)).toEqual([head]);
+  expect(fragmented.requests()).toBe(2);
+  await expect(parentRun(v2Bytes(paired)).outcome).rejects.toMatchObject({ reason: "wrong-type", what: "current parent companion" });
+  await expect(parentRun(v2Bytes(single), { count: 1, ad: new Uint8Array(1025) }).outcome).rejects.toMatchObject({ reason: "too-large", what: "read bytes" });
+  const excessiveFrames = v2AdvertisementBytes([...Array.from({ length: 31 }, () => "a=b"), "fetch=shallow filter"]);
+  await expect(parentRun(v2Bytes(single), { ad: excessiveFrames }).outcome).rejects.toMatchObject({ reason: "too-large", what: "upload advertisement packets" });
+  const excessiveResponseFrames = Buffer.concat([pkt("packfile\n"), ...Array.from({ length: 64 }, () => band(2)), band(1, single), Buffer.from("0000")]);
+  await expect(parentRun(excessiveResponseFrames).outcome).rejects.toMatchObject({ reason: "too-large", what: "upload response packets" });
+  const oldCommit = put(remote, "commit", commitText(tree2, [], "extra ancestor"));
+  const historyPack = new Uint8Array(execFileSync("git", ["-C", remote, "pack-objects", "--stdout"], {
+    input: `${head}\n${oldCommit}\n`, env: { PATH: process.env["PATH"] ?? "/usr/bin:/bin", GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: "/dev/null" }, maxBuffer: 1024 * 1024,
+  }));
+  await expect(parentRun(v2Bytes(historyPack)).outcome).rejects.toMatchObject({ reason: "wrong-type", what: "current parent companion" });
+  const excessiveTree = put(remote, "tree", Buffer.concat([Buffer.from(`100644 ${"a".repeat(16 * 1024 - 27)}\0`), Buffer.from(smallBlob, "hex")]));
+  const excessivePack = new Uint8Array(execFileSync("git", ["-C", remote, "pack-objects", "--stdout"], {
+    input: `${head}\n${excessiveTree}\n`, env: { PATH: process.env["PATH"] ?? "/usr/bin:/bin", GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: "/dev/null" }, maxBuffer: 1024 * 1024,
+  }));
+  await expect(parentRun(v2Bytes(excessivePack)).outcome).rejects.toMatchObject({ reason: "too-large", what: "inflated bytes" });
+  for (const stage of ["count", "inflate", "output"] as const) {
+    const refusal = { stage }, stages: string[] = [];
+    const denied = parentRun(v2Bytes(single), {
+      reserveObjects: () => { stages.push("count"); if (stage === "count") throw refusal; },
+      reserveWork: bytes => { if (stages.includes("count") && bytes === packEntries(single)[0]!.bytes) { stages.push("inflate"); if (stage === "inflate") throw refusal; } },
+      reserveOutput: () => { stages.push("output"); if (stage === "output") throw refusal; },
+    });
+    expect(await denied.outcome.then(() => null, error => error)).toBe(refusal);
+    expect(stages.at(-1)).toBe(stage);
+    await expect(denied.source.object(head, 1024)).rejects.toMatchObject({ what: "current parent source consumed" });
+    expect(denied.requests()).toBe(2);
+  }
 });
 
 test("opt-in v2 retains one deadline and permanently abandons a late exact-object response", async () => {

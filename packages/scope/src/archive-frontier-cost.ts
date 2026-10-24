@@ -3,7 +3,7 @@
 import { natural } from "@generalbusiness/dap-bytes";
 import { ArchiveStopped, ARCHIVE_BOUNDS, type ArchiveCost } from "./archive-budget.ts";
 import { ARCHIVE_ROW_BYTES } from "./archive-row-cost.ts";
-import { JOURNAL_PARENT_FRONTIER_BYTES, JOURNAL_PARENT_FRONTIER_OBJECTS, forecastJournalParentFrontier } from "@generalbusiness/dap-git/journal";
+import { JOURNAL_PARENT_FRONTIER_BYTES, JOURNAL_PARENT_FRONTIER_OBJECTS, forecastJournalParentFrontier, journalParentFrontierProfile } from "@generalbusiness/dap-git/journal";
 
 export const ARCHIVE_FRONTIER_BYTES = 64 * 1024;
 export const ARCHIVE_FRONTIER_SIZE_METADATA = 96;
@@ -18,8 +18,12 @@ export function archiveFrontierReadCost(bytes: number): Partial<ArchiveCost> {
   // validator separately pays object hashing, capture copies and tree rows.
   return { metadata: bytes * 4 + JOURNAL_PARENT_FRONTIER_OBJECTS * 256, inputWork: bytes * 12 };
 }
-export function archiveFrontierEncodeCost(): Partial<ArchiveCost> {
-  return { metadata: ARCHIVE_FRONTIER_ENCODING_BOUND * 3, inputWork: ARCHIVE_FRONTIER_ENCODING_BOUND * 12 };
+export function archiveFrontierEncodingBound(through?: number): number {
+  return Math.ceil(journalParentFrontierProfile(through).bytes / 3) * 4 + 4096;
+}
+export function archiveFrontierEncodeCost(through?: number): Partial<ArchiveCost> {
+  const bytes = archiveFrontierEncodingBound(through);
+  return { metadata: bytes * 3, inputWork: bytes * 12 };
 }
 export function archiveFrontierWriteCost(bytes: number, calls = 1): Partial<ArchiveCost> {
   return { calls, inputWork: bytes * 3 + 4096 };
@@ -35,6 +39,8 @@ export function archiveFrontierMarkCost(units: number): Partial<ArchiveCost> {
 export interface ArchiveFrontierFinishShape {
   /** A validated v2 base is already loaded; its read is not credited back. */
   readonly hasBase: boolean;
+  /** Exact selected receipt position; unspecified callers keep the full ceiling. */
+  readonly through?: number;
   /** UTF-16 units of manifest + optional anchor publication. */
   readonly markUnits: number;
   /** Upper bound of the native row after Mark+first attempt. */
@@ -53,14 +59,15 @@ export function forecastArchiveFrontierFinish(shape: ArchiveFrontierFinishShape)
     || shape.markedRowBytes === 0 || shape.markedRowBytes > ARCHIVE_ROW_BYTES) throw new ArchiveStopped("unavailable");
   const cost: ArchiveCost = { entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0, inputWork: 0 };
   const add = (part: Partial<ArchiveCost>) => { for (const key of Object.keys(cost) as (keyof ArchiveCost)[]) cost[key] += part[key] ?? 0; };
-  add(forecastJournalParentFrontier()); add(forecastJournalParentFrontier(true));
+  const profile = journalParentFrontierProfile(shape.through), encoded = archiveFrontierEncodingBound(shape.through);
+  add(forecastJournalParentFrontier(false, shape.through)); add(forecastJournalParentFrontier(true, shape.through));
   add({ metadata: 16 * 1024, inputWork: 16 * 1024 });
   add(archiveFrontierMarkCost(shape.markUnits));
-  add(archiveFrontierEncodeCost()); add(archiveFrontierEncodeCost());
-  add({ metadata: JOURNAL_PARENT_FRONTIER_BYTES + JOURNAL_PARENT_FRONTIER_OBJECTS * 256, inputWork: JOURNAL_PARENT_FRONTIER_BYTES });
+  add(archiveFrontierEncodeCost(shape.through)); add(archiveFrontierEncodeCost(shape.through));
+  add({ metadata: profile.bytes + JOURNAL_PARENT_FRONTIER_OBJECTS * 256, inputWork: profile.bytes });
   // The built-object port may copy each captured body once. Include that
   // bounded source ownership in addition to the Git reader's owned copy.
-  add({ metadata: JOURNAL_PARENT_FRONTIER_BYTES + JOURNAL_PARENT_FRONTIER_OBJECTS * 256, inputWork: JOURNAL_PARENT_FRONTIER_BYTES * 4 });
+  add({ metadata: profile.bytes + JOURNAL_PARENT_FRONTIER_OBJECTS * 256, inputWork: profile.bytes * 4 });
   const sizeCalls = shape.hasBase ? 4 : 6;
   add({ calls: sizeCalls, metadata: sizeCalls * ARCHIVE_FRONTIER_SIZE_METADATA, inputWork: sizeCalls * ARCHIVE_FRONTIER_SIZE_METADATA });
   // Exact pair checks compare bounded native bytes without projecting or
@@ -71,15 +78,15 @@ export function forecastArchiveFrontierFinish(shape: ArchiveFrontierFinishShape)
   };
   // A base token admits at most the writer's encoding bound. Each later
   // exact-pair check refuses a changed byte count before comparing its body.
-  if (shape.hasBase) { body(ARCHIVE_FRONTIER_ENCODING_BOUND); body(ARCHIVE_FRONTIER_ENCODING_BOUND); }
-  body(ARCHIVE_FRONTIER_ENCODING_BOUND);
+  if (shape.hasBase) { body(encoded); body(encoded); }
+  body(encoded);
   // The canonical pending object is contained in the marked row. Its
   // UTF-8 bytes cannot exceed either that row or its independent escape bound.
   const markText = Math.min(shape.markedRowBytes, shape.markUnits * 6 + 16 * 1024);
   for (let index = 0; index < 2; index++) add({ calls: 2, metadata: 32 * 1024 * 5 + 96 + shape.markedRowBytes + markText * 2,
     inputWork: shape.markedRowBytes * 12 + markText * 6 + 32 * 1024 * 13 + 96 });
-  add(archiveFrontierWriteCost(ARCHIVE_FRONTIER_ENCODING_BOUND));
-  add(archiveFrontierWriteCost(ARCHIVE_FRONTIER_ENCODING_BOUND, 2));
+  add(archiveFrontierWriteCost(encoded));
+  add(archiveFrontierWriteCost(encoded, 2));
   if ((Object.keys(cost) as (keyof ArchiveCost)[]).some(key => !natural(cost[key]) || cost[key] > ARCHIVE_BOUNDS[key])) return { ok: false, reason: "limit" };
   return { ok: true, cost: Object.freeze(cost) };
 }
@@ -97,16 +104,17 @@ export function archiveFrontierRowCompareCost(bytes: number): { metadata: number
 /** Remaining LOCAL finish after a checked missing-state context and remote
  * extraction. Remote calls, actual companion count admission and extraction
  * keep their separate original debits; this is only their finish escrow. */
-export function forecastArchiveFrontierBootstrapFinish(rowBytes: number):
+export function forecastArchiveFrontierBootstrapFinish(rowBytes: number, through?: number):
   { readonly ok: true; readonly cost: Readonly<ArchiveCost> } | { readonly ok: false; readonly reason: "limit" } {
   if (!natural(rowBytes) || rowBytes === 0 || rowBytes > ARCHIVE_ROW_BYTES) throw new ArchiveStopped("unavailable");
-  const validation = forecastJournalParentFrontier(true), encoding = archiveFrontierEncodeCost();
-  const copyBytes = JOURNAL_PARENT_FRONTIER_BYTES + JOURNAL_PARENT_FRONTIER_OBJECTS * 256;
-  const comparison = archiveFrontierRowCompareCost(rowBytes), write = archiveFrontierWriteCost(ARCHIVE_FRONTIER_ENCODING_BOUND);
+  const profile = journalParentFrontierProfile(through), encoded = archiveFrontierEncodingBound(through);
+  const validation = forecastJournalParentFrontier(true, through), encoding = archiveFrontierEncodeCost(through);
+  const copyBytes = profile.bytes + JOURNAL_PARENT_FRONTIER_OBJECTS * 256;
+  const comparison = archiveFrontierRowCompareCost(rowBytes), write = archiveFrontierWriteCost(encoded);
   const metadata = validation.metadata + (encoding.metadata ?? 0) + copyBytes * 2 + 8192 + ARCHIVE_FRONTIER_SIZE_METADATA * 3 + comparison.metadata;
   const cost: ArchiveCost = { entries: 0, attempts: validation.attempts, nodes: validation.nodes,
     calls: validation.calls + 5, metadata,
-    inputWork: validation.inputWork + (encoding.inputWork ?? 0) + JOURNAL_PARENT_FRONTIER_BYTES * 2 + 8192
+    inputWork: validation.inputWork + (encoding.inputWork ?? 0) + profile.bytes * 2 + 8192
       + ARCHIVE_FRONTIER_SIZE_METADATA * 3 + comparison.inputWork + comparison.metadata + (write.inputWork ?? 0) };
   if ((Object.keys(cost) as (keyof ArchiveCost)[]).some(key => !natural(cost[key]) || cost[key] > ARCHIVE_BOUNDS[key])) return { ok: false, reason: "limit" };
   return { ok: true, cost: Object.freeze(cost) };

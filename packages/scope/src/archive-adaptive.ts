@@ -63,7 +63,7 @@ function parentMetadata(context: AdaptiveArchiveContext, budget: ArchiveBudget):
  * The original fixed caps bound those visits; nothing is prepaid here. */
 const setupCost = (): ArchiveCost => sum(archiveDeclarationHandoffCost(ARCHIVE_BOUNDS.nodes),
   archiveForeignHandoffCost(ARCHIVE_BOUNDS.attempts), archiveRetainedHandoffCost(ARCHIVE_BOUNDS.attempts), { inputWork: ARCHIVE_BOUNDS.entries * 32 });
-function finishCost(context: AdaptiveArchiveContext, preparation: JournalPassPreparation, shape: ArchiveScoutLayoutQuote,
+function finishCost(context: AdaptiveArchiveContext, preparation: JournalPassPreparation, shape: ArchiveScoutLayoutQuote, through: Head,
   inventory: ArchiveCost, oldRowBytes: number, parent: ParentMetadata, setup: ArchiveCost, legacyAnchors: number, budget: ArchiveBudget): ArchiveCost | null {
   // A copied fact can be needed without being written in a local entry.
   // The scout paid for a necessary-key count on each selected local row.
@@ -108,7 +108,7 @@ function finishCost(context: AdaptiveArchiveContext, preparation: JournalPassPre
     bytes: parent.bytes + patch.layoutWork.outputWork + commit.layoutWork.outputWork,
     incremental: context.parent !== null, maximum: context.maximum });
   if (!rows.ok || !transfer.ok) return null;
-  const frontier = forecastArchiveFrontierFinish({ hasBase: context.parent !== null,
+  const frontier = forecastArchiveFrontierFinish({ hasBase: context.parent !== null, through: through.seq,
     markUnits: shape.selectionUnits + publicationUnits, markedRowBytes: pending });
   if (!frontier.ok) return null;
   return sum(setup, inventory, shape.input, publication, { inputWork: JOURNAL_SELECTION_BYTES * 3 }, selection.cost, body.cost,
@@ -197,7 +197,7 @@ async function adaptiveArchivePass(coupled: boolean, sql: Sql, context: Adaptive
         const delta: string[] = [];
         for (const file of shape.files) if (file.path !== "journal/v2/head.json" && !file.path.endsWith("/pass.json") && !paths.has(file.path)) { paths.add(file.path); delta.push(file.path); }
         if (delta.length) await preparation.prepare(delta);
-        const parent = parentMetadata(context, budget), cost = finishCost(context, preparation, shape, inventory, oldRowBytes, parent, setup, legacyAnchors?.anchors.length ?? 0, budget);
+        const parent = parentMetadata(context, budget), cost = finishCost(context, preparation, shape, through, inventory, oldRowBytes, parent, setup, legacyAnchors?.anchors.length ?? 0, budget);
         return { parent, cost };
       });
       if (prepared.kind === "limited" || prepared.value.cost === null || !budget.canSpend(prepared.value.cost)) break;

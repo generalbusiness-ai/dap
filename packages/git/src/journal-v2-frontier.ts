@@ -20,13 +20,31 @@ export const JOURNAL_PARENT_FRONTIER_ROWS = 604;
  * validation credit. Caller source-port, SQL, encoding and transport work are
  * additional. The two-call reader price also covers boundedObject's smaller
  * single-call debit, using the same per-path maxima. */
-export function forecastJournalParentFrontier(validation = false): Readonly<JournalCost> {
-  const objects = JOURNAL_PARENT_FRONTIER_OBJECTS, bytes = JOURNAL_PARENT_FRONTIER_BYTES;
+/** A rightmost pass cannot begin after the receipt's through position.
+ * At numeric depth d, at most floor(through / 100^(5-d)) + 1
+ * distinct prefixes can precede it, capped by the unchanged 100-row geometry.
+ * SHA-256 mode40000 rows occupy 41 bytes (two digits) or 51 (twelve).
+ * Fixed trees and commit/head retain their original independent ceilings. */
+function numericMaximum(through: number, depth: number): number {
+  return Math.min(100, Math.floor(through / 10 ** (10 - depth * 2)) + 1);
+}
+export function journalParentFrontierProfile(through = JOURNAL_V2_LAST_POSITION): Readonly<{ bytes: number; rows: number; through: number }> {
+  if (!Number.isSafeInteger(through) || Object.is(through, -0) || through < 0 || through > JOURNAL_V2_LAST_POSITION) return refuseJournal("parent");
+  let bytes = 2 * 1024 + 4 * 295, rows = 4;
+  for (let depth = 0; depth < 6; depth++) {
+    const maximum = numericMaximum(through, depth);
+    rows += maximum; bytes += maximum * (depth === 5 ? 51 : 41);
+  }
+  return Object.freeze({ bytes, rows, through });
+}
+export function forecastJournalParentFrontier(validation = false, through = JOURNAL_V2_LAST_POSITION): Readonly<JournalCost> {
+  const objects = JOURNAL_PARENT_FRONTIER_OBJECTS, profile = journalParentFrontierProfile(through), bytes = profile.bytes;
   const trees = bytes - 2 * 1024;
   // Each tree parser receives its fixed geometry maximum and refuses
   // BEFORE the next row debit/allocation. Root/journal/v2 allow 1+1+2
-  // rows; six numeric trees allow 100 each, including malformed prefixes.
-  const rows = JOURNAL_PARENT_FRONTIER_ROWS, reads = journalAppendReadCost(bytes, objects);
+  // rows; numeric trees use the receipt-bound profile, including malformed
+  // prefixes. Unspecified callers retain the global 604-row ceiling.
+  const rows = profile.rows, reads = journalAppendReadCost(bytes, objects);
   const metadata = 1024 + objects * 128 + bytes + journalTreeRowMetadata(rows) + 1024 * 3;
   // Validation checks two bindings and snapshots the finite descriptors
   // before capture. Its original debits are all metadata(), hence both fees.
@@ -73,7 +91,7 @@ function edge(rows: readonly JournalTreeRow[], names: readonly string[]): void {
  * reader, with the same caller budget/deadline. No descendant walk occurs. */
 export async function captureJournalParentFrontier(expected: JournalParentBinding, source: JournalObjectSource,
   budget: JournalBudget): Promise<JournalParentFrontier> {
-  const work = new JournalWork(budget), owned = binding(expected, work);
+  const work = new JournalWork(budget), owned = binding(expected, work), profile = journalParentFrontierProfile(owned.through.seq);
   work.metadata(JOURNAL_PARENT_FRONTIER_OBJECTS * 128);
   const reader = new JournalObjectReader(owned.format, source, work), objects: JournalObject[] = [], ids = new Set<string>();
   let bytes = 0, rowCount = 0;
@@ -85,7 +103,7 @@ export async function captureJournalParentFrontier(expected: JournalParentBindin
     work.metadata(maximum);
     const data = await reader.read(id, type, maximum);
     bytes += data.length;
-    if (bytes > JOURNAL_PARENT_FRONTIER_BYTES) return work.stop();
+    if (bytes > profile.bytes) return work.stop();
     objects.push(Object.freeze({ id, type, data }));
     return data;
   };
@@ -94,9 +112,12 @@ export async function captureJournalParentFrontier(expected: JournalParentBindin
     work.budget.spend({ nodes: 1 });
     const geometry = journalV2Directory(prefix);
     if (!geometry) return refuseJournal("tree");
-    const rows = reader.tree(await read(id, "tree", geometry.bytes), geometry.maximum);
+    const depth = prefix.startsWith("journal/v2/passes/") ? prefix.slice("journal/v2/passes/".length).split("/").length - 1 : -1;
+    const maximum = geometry.kind === "numeric" ? numericMaximum(profile.through, depth) : geometry.maximum;
+    const most = geometry.kind === "numeric" ? maximum * (depth === 5 ? 51 : 41) : geometry.bytes;
+    const rows = reader.tree(await read(id, "tree", most), maximum);
     rowCount += rows.length;
-    if (rows.length === 0 || rows.length > geometry.maximum || rowCount > JOURNAL_PARENT_FRONTIER_ROWS) return refuseJournal("tree");
+    if (rows.length === 0 || rows.length > maximum || rowCount > profile.rows) return refuseJournal("tree");
     return rows;
   };
   const root = await tree(commit.tree, ""); edge(root, ["journal"]);
@@ -128,7 +149,7 @@ const nativeLength = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(Uint8
  * This function neither reads SQL nor trusts a prior validation flag. */
 export async function validateJournalParentFrontier(value: unknown, expected: JournalParentBinding,
   budget: JournalBudget, expectedParent?: string | null): Promise<JournalParentFrontier> {
-  const work = new JournalWork(budget), required = binding(expected, work);
+  const work = new JournalWork(budget), required = binding(expected, work), profile = journalParentFrontierProfile(required.through.seq);
   const parent = expectedParent === undefined || expectedParent === null ? expectedParent : journalId(required.format, expectedParent);
   work.metadata(1024 + JOURNAL_PARENT_FRONTIER_OBJECTS * 128);
   const row = journalRecord(value, ["v", ...bindingFields, "first", "objects"]);
@@ -149,7 +170,7 @@ export async function validateJournalParentFrontier(value: unknown, expected: Jo
     const type = object["type"], data = object["data"];
     if (type !== "commit" && type !== "tree" && type !== "blob" || !(data instanceof Uint8Array) || !ArrayBuffer.isView(data)) return refuseJournal("object-mismatch");
     const size = nativeLength.call(data) as number;
-    if (size > JOURNAL_PARENT_FRONTIER_BYTES - bytes || held.has(id)) return refuseJournal("parent");
+    if (size > profile.bytes - bytes || held.has(id)) return refuseJournal("parent");
     bytes += size; held.set(id, { type, data, size }); ordered.push({ id, type, data });
   }
   const source: JournalObjectSource = { object: async (id, maximum) => {

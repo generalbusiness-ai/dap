@@ -7,7 +7,7 @@ import { JournalObjectReader, JournalObjects, type JournalFormat, type JournalOb
 import { JournalWork } from "../src/journal-work.ts";
 import { patchJournalV2Tree } from "../src/journal-v2-tree.ts";
 import { journalV2PassPath, journalV2RetainedPath } from "../src/journal-v2-path.ts";
-import { captureJournalParentFrontier, validateJournalParentFrontier, forecastJournalParentFrontier, JOURNAL_PARENT_FRONTIER_BYTES, JOURNAL_PARENT_FRONTIER_OBJECTS, JOURNAL_PARENT_FRONTIER_ROWS, type JournalParentBinding, type JournalParentFrontier } from "../src/journal-v2-frontier.ts";
+import { captureJournalParentFrontier, validateJournalParentFrontier, forecastJournalParentFrontier, journalParentFrontierProfile, JOURNAL_PARENT_FRONTIER_BYTES, JOURNAL_PARENT_FRONTIER_OBJECTS, JOURNAL_PARENT_FRONTIER_ROWS, type JournalParentBinding, type JournalParentFrontier } from "../src/journal-v2-frontier.ts";
 import { syntheticJournal } from "./support/journal.ts";
 
 const at = syntheticJournal().at;
@@ -36,7 +36,8 @@ async function pass(format: JournalFormat, first = 0, through = first, parent: J
 
 test.each(["sha1", "sha256"] as const)("a %s native parent witness owns only eleven receipt-bound objects and no old payload", async format => {
   const made = await pass(format), reads: string[] = [];
-  const frontier = await captureJournalParentFrontier(made.binding, source(made.objects, reads), budget());
+  const captureBudget = budget(), validationBudget = budget();
+  const frontier = await captureJournalParentFrontier(made.binding, source(made.objects, reads), captureBudget);
   expect(frontier.first).toBe(0);
   expect(frontier.objects).toHaveLength(JOURNAL_PARENT_FRONTIER_OBJECTS);
   expect(frontier.objects.map(object => object.type)).toEqual(["commit", ...Array<string>(9).fill("tree"), "blob"]);
@@ -44,7 +45,13 @@ test.each(["sha1", "sha256"] as const)("a %s native parent witness owns only ele
   const bodies = made.objects.filter(object => object.type === "blob" && object.id !== frontier.objects.at(-1)!.id);
   expect(bodies.length).toBeGreaterThanOrEqual(3);
   expect(reads.some(id => bodies.some(object => object.id === id))).toBe(false);
-  expect(await validateJournalParentFrontier(frontier, made.binding, budget())).toEqual(frontier);
+  expect(await validateJournalParentFrontier(frontier, made.binding, validationBudget)).toEqual(frontier);
+  expect(journalParentFrontierProfile(0)).toEqual({ bytes: 3484, rows: 10, through: 0 });
+  for (const [used, forecast] of [[captureBudget.admitted(), forecastJournalParentFrontier(false, 0)],
+    [validationBudget.admitted(), forecastJournalParentFrontier(true, 0)]] as const)
+    for (const key of ["entries", "attempts", "nodes", "calls", "metadata", "inputWork"] as const) expect(used[key]).toBeLessThanOrEqual(forecast[key]);
+  expect(captureBudget.admitted().metadata).toBeLessThan(32 * 1024);
+  expect(validationBudget.admitted().metadata).toBeLessThan(32 * 1024);
   const original = frontier.objects[0]!.data[0];
   made.objects.find(object => object.id === frontier.commit)!.data.fill(0);
   expect(frontier.objects[0]!.data[0]).toBe(original);
@@ -81,12 +88,25 @@ test("a stored frontier refuses changed custody, head, schema, object bytes, cou
 test("the bounded frontier carries unchanged subtrees across numeric rollovers without reading old pass leaves", async () => {
   let frontier: JournalParentFrontier | null = null;
   const all = new Map<string, JournalObject>();
-  const ranges = [[0, 98], [99, 99], [100, 4095], [4096, 8191], [8192, 9999], [10000, 10000]] as const;
+  const ranges = [[0, 98], [99, 99], [100, 100], [101, 101], [102, 4095], [4096, 8191], [8192, 9999], [10000, 10000]] as const;
   for (const [first, through] of ranges) {
     const made = await pass("sha1", first, through, frontier);
     for (const object of made.objects) all.set(object.id, object);
     const read: string[] = [];
-    frontier = await captureJournalParentFrontier(made.binding, source(made.objects, read), budget());
+    const capturing = budget(), validating = budget();
+    const limits: { id: string; maximum: number }[] = [], actual = source(made.objects, read);
+    frontier = await captureJournalParentFrontier(made.binding, { object: actual.object,
+      boundedObject: async (id, _type, maximum) => {
+        limits.push({ id, maximum }); return actual.object(id, maximum);
+      } }, capturing);
+    expect(await validateJournalParentFrontier(frontier, made.binding, validating)).toEqual(frontier);
+    for (let depth = 0; depth < 6; depth++) {
+      const maximum = Math.min(100, Math.floor(through / 10 ** (10 - depth * 2)) + 1);
+      expect(limits.find(row => row.id === frontier!.objects[depth + 4]!.id)?.maximum).toBe(maximum * (depth === 5 ? 51 : 41));
+    }
+    for (const [used, forecast] of [[capturing.admitted(), forecastJournalParentFrontier(false, through)],
+      [validating.admitted(), forecastJournalParentFrontier(true, through)]] as const)
+      for (const key of ["entries", "attempts", "nodes", "calls", "metadata", "inputWork"] as const) expect(used[key]).toBeLessThanOrEqual(forecast[key]);
     expect(frontier.first).toBe(first);
     expect(frontier.objects).toHaveLength(11);
     expect(frontier.objects.reduce((n, object) => n + object.data.length, 0)).toBeLessThanOrEqual(28_828);
@@ -116,6 +136,11 @@ test("a frontier refuses a future path or noncanonical head and reserves metadat
 
 
 test("the SHA-256 frontier stays within its literal byte bound at all 604 permitted tree rows", async () => {
+  // Literal boundary expectations complement actual rollover captures above.
+  expect(journalParentFrontierProfile(99)).toEqual({ through: 99, rows: 109, bytes: 8533 });
+  expect(journalParentFrontierProfile(100)).toEqual({ through: 100, rows: 110, bytes: 8574 });
+  expect(journalParentFrontierProfile()).toEqual({ bytes: JOURNAL_PARENT_FRONTIER_BYTES, rows: JOURNAL_PARENT_FRONTIER_ROWS, through: 999_999_999_999 });
+  for (const invalid of [-0, -1, 0.5, 1_000_000_000_000, NaN]) expect(() => journalParentFrontierProfile(invalid)).toThrow("parent");
   const work = new JournalWork(budget()), maker = new JournalObjects("sha256", work);
   const through = { seq: 999_999_999_999, hash: digestBytes(utf8("TEST final head")) };
   const head = maker.make("blob", utf8(canonicalize({ v: 2, scope: at, through: through.seq, hash: through.hash })));
@@ -137,6 +162,15 @@ test("the SHA-256 frontier stays within its literal byte bound at all 604 permit
     [validationBudget.admitted(), forecastJournalParentFrontier(true)]] as const) {
     for (const key of ["entries", "attempts", "nodes", "calls", "metadata", "inputWork"] as const) expect(used[key]).toBeLessThanOrEqual(forecast[key]);
   }
+  const tiny = journalParentFrontierProfile(0), numericRoot = frontier.objects[4]!;
+  const narrowReads: { id: string; maximum: number }[] = [];
+  const held = source(frontier.objects);
+  await expect(captureJournalParentFrontier({ ...binding, through: { ...binding.through, seq: 0 } }, {
+    object: held.object,
+    boundedObject: async (id, _type, maximum) => { narrowReads.push({ id, maximum }); return held.object(id, maximum); }
+  }, budget())).rejects.toBeDefined();
+  expect(narrowReads.find(row => row.id === numericRoot.id)?.maximum).toBe(41);
+  expect(tiny.rows).toBe(10);
   expect(frontier.first).toBe(999_999_999_999);
   expect(frontier.objects).toHaveLength(11);
   expect(frontier.objects.reduce((n, object) => n + object.data.length, 0)).toBeLessThanOrEqual(28_828);
