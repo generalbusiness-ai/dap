@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b75dcc3962c15e15fff055c2efb2e81a0e3f7ecd","text":"Merge retired a covered predecessor; the successor is at packages/git/src/journal-append-cost.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bcbd71a2f8780cb8b1e1f64fab95c1118458e6d3","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-24-archive-fixed-parent/final-gate-continuation/cost-append-proof.json."}
