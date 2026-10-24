@@ -157,6 +157,47 @@ test("persists retries and stops with a small wake index", async () => {
   await expect(rows(lane, store => store.confirm(mark.commit))).rejects.toThrow("archive-row-stopped");
 });
 
+// The reservation is paid before planning; the actual CAS needs no new
+// allowance and cannot replace a Mark with identical wake bytes.
+test("capacity wake reservations preserve old rows, saturate and refuse a stale Mark", async () => {
+  const lane = await create(), head = await lane.head();
+  await lane.inside(state => {
+    const sql = archiveSql(state), store = new ArchiveRows(sql, lane.at);
+    const target = store.target(repository, "sha1"); store.defer(at(30));
+    const wake = () => state.storage.sql.exec<{ v: string }>("SELECT v FROM meta WHERE k = ?", "archive-wake-1").one().v;
+    const before = wake(), budget = new ArchiveBudget({ calls: 2 });
+    let completion = 30;
+    const first = store.prepareCapacityDeferral(target, count => at(completion + count), budget), spent = budget.admitted();
+    expect(wake()).toBe(before); expect(budget.canSpend({ calls: 1 })).toBe(false);
+    completion = 45; // Planning elapsed after reservation; start backoff now.
+    expect(first.persist()).toBe(at(46)); expect(budget.admitted()).toEqual(spent);
+    expect(JSON.parse(wake())).toEqual({ pending: true, stopped: false, next: at(46), capacityDeferrals: 1 });
+    expect(() => first.persist()).toThrow("archive-row-unavailable");
+    // Deliberate old/high-count index setup exercises the storage ceiling
+    // without thirty-two complete archive passes or an invented receipt.
+    sql.exec("UPDATE meta SET v = ? WHERE k = ?", canonicalize({ pending: true, stopped: false, next: at(31), capacityDeferrals: 31 }), "archive-wake-1");
+    for (let n = 0; n < 2; n++) {
+      const capacity = store.prepareCapacityDeferral(target, count => { expect(count).toBe(32); return at(60); }, new ArchiveBudget());
+      expect(capacity.persist()).toBe(at(60));
+      expect(JSON.parse(wake())).toEqual({ pending: true, stopped: false, next: at(60), capacityDeferrals: 32 });
+      expect(store.load()).toEqual(target);
+    }
+    const saturated = wake();
+    sql.exec("UPDATE meta SET v = ? WHERE k = ?", canonicalize({ pending: true, stopped: false, next: at(60), capacityDeferrals: 33 }), "archive-wake-1");
+    expect(() => store.wake()).toThrow("archive-row-unavailable");
+    expect(store.load()).toEqual(target);
+    sql.exec("UPDATE meta SET v = ? WHERE k = ?", saturated, "archive-wake-1");
+    store.clearWake(); store.defer(at(30));
+    const stale = store.prepareCapacityDeferral(target, () => at(60), new ArchiveBudget());
+    const oldWake = wake();
+    const mark: ArchiveMark = { commit: "a".repeat(40), parent: null, through: head, manifest: canonicalize({ fixture: "metadata only" }), markedAt: at(0) };
+    const marked = store.markAttempt(mark, at(30));
+    expect(wake(), "the actual Mark recreates exactly the captured pre-Mark wake").toBe(oldWake);
+    expect(() => stale.persist()).toThrow("archive-row-unavailable");
+    expect(store.load()).toEqual(marked); expect(wake()).toBe(oldWake);
+  });
+});
+
 // Real SQLite transaction cutoffs. Metadata Marks below are TEST-authored;
 // this proves bookkeeping atomicity, not inventory admission or host custody.
 test("atomic initial Mark and attempt preserve the target on rollback and recover exact committed bytes", async context => {
