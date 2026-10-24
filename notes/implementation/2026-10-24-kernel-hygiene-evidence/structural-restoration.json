@@ -1,0 +1,38 @@
+{
+  "original": {
+    "device": 16777231,
+    "inode": 546037057,
+    "mode": "0o644",
+    "nlink": 1,
+    "kind": "file",
+    "bytes": 1581,
+    "sha256": "dafcab5218f361303099d7fd6458a4a256e1b69e210e44aba8f6440a041c0ef3",
+    "mtimeNs": 1792827658822405416,
+    "ctimeNs": 1792827658822405416
+  },
+  "mutant": {
+    "device": 16777231,
+    "inode": 546037057,
+    "mode": "0o644",
+    "nlink": 1,
+    "kind": "file",
+    "bytes": 1621,
+    "sha256": "5c58ef3ec41bc9607aef5d7d7fda59320ebed29359121f43a222b15b19270a9f",
+    "mtimeNs": 1792828716921825417,
+    "ctimeNs": 1792828716921825417
+  },
+  "restored": {
+    "device": 16777231,
+    "inode": 546037057,
+    "mode": "0o644",
+    "nlink": 1,
+    "kind": "file",
+    "bytes": 1581,
+    "sha256": "dafcab5218f361303099d7fd6458a4a256e1b69e210e44aba8f6440a041c0ef3",
+    "mtimeNs": 1792828718615002537,
+    "ctimeNs": 1792828718615002537
+  },
+  "sameDeviceInodeModeNlink": true,
+  "originalBytesAndHashRestored": true,
+  "timestamps": "mtime/ctime changed by exact in-place mutation/restoration, retained rather than claimed equal."
+}

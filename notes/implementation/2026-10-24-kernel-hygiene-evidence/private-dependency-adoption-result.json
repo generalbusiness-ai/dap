@@ -1,0 +1,20 @@
+{
+  "status": "passed",
+  "errors": [],
+  "allocation": "fd3e731bdee392f159eec30fa24ff1025b60ce40",
+  "child": {
+    "pid": 81119,
+    "exit": 0,
+    "signal": null,
+    "wall": 0.5980962499743327,
+    "user": 0.007396,
+    "sys": 0.54564
+  },
+  "qualification": "Private verification/copy plus stamp-last only. No package execution, install or compatibility claim.",
+  "wall": 5.915409583016299,
+  "pythonCpu": 4.845243,
+  "childrenUser": 0.041479,
+  "childrenSys": 0.597835,
+  "inclusiveCpu": 5.484557,
+  "costQualification": "Child and inclusive owner costs overlap; original outer natural closure is separate."
+}

@@ -1,0 +1,55 @@
+{
+  "allocation": "2a48aca61456285f3e15f08694fe66390a99de94",
+  "status": "passed",
+  "children": [
+    {
+      "label": "source-seals",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-kernel-six-owner-seal-source-20261024-v3/produce-source-seals.mjs",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024"
+      ],
+      "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+      "pid": 531,
+      "exit": 0,
+      "signal": null,
+      "wall": 0.11614541604649276,
+      "user": 0.137454,
+      "system": 0.021003
+    }
+  ],
+  "errors": [],
+  "signals": [],
+  "sourceSeals": [
+    {
+      "path": "apps/room/archive-policy.ts",
+      "sourceSeal": "ed3b746b5a26c3e872e41b13ba133f43ade42b5612aa5028ba544fc013be5ce7"
+    },
+    {
+      "path": "packages/scope/src/applications/projection.ts",
+      "sourceSeal": "f7d3bb45d448ec654a89f875697f865e1e89baeb5d7529e0db0859bd855b009f"
+    },
+    {
+      "path": "packages/scope/src/applications/route.ts",
+      "sourceSeal": "a9c2c7071bc190a9dc44be6efe57b973203c40d3fff8ab35263f73818925ae29"
+    },
+    {
+      "path": "packages/scope/src/creation-lineage.ts",
+      "sourceSeal": "82f46501400fde4903e9bd3b216d345f8af871d0311157da3faa9469e5b33140"
+    },
+    {
+      "path": "packages/scope/src/object.ts",
+      "sourceSeal": "f5272e8a18fdfdebf2062f1ed7f274389df5cdcb4a0e6040b7e4a43c797a77d5"
+    },
+    {
+      "path": "packages/scope/src/serving-admission.ts",
+      "sourceSeal": "d90d11a6a2de39eb6cb735ae050a3bcbc0e57c4130fac201ebc705bc090e6b70"
+    }
+  ],
+  "wall": 2.3670772090554237,
+  "pythonCpu": 2.0298030000000002,
+  "childrenUser": 0.237612,
+  "childrenSystem": 0.124707,
+  "inclusiveCpu": 2.392122,
+  "qualification": "Six actual maintained sourceSeal calls, one per literal kernel owner in fixed order. The object owner is parsed once; its one result can populate two slots only in a later separately reviewed adoption. All four archive owner bytes and the complete existing map stay guarded and unwritten; no unrelated owner is parsed. Full held Source, private dependencies, tools, environment, Main, preparation and binding exact before/after. No cache allowance, map adoption, tests, compiler, compatibility, application operation or gate. Costs include snapshots and nested totals overlap."
+}

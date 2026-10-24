@@ -1,0 +1,75 @@
+{
+  "allocation": "a645166374c42bfc84c5a088961a51093ae40057",
+  "status": "passed",
+  "children": [
+    {
+      "label": "build",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/opt/homebrew/lib/node_modules/npm/bin/npm-cli.js",
+        "run",
+        "build",
+        "--workspace",
+        "@generalbusiness/dap-page"
+      ],
+      "pid": 95795,
+      "exit": 0,
+      "signal": null,
+      "wall": 0.2786652500508353,
+      "user": 0.162196,
+      "system": 0.036109999999999996
+    },
+    {
+      "label": "assets",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/vitest/vitest.mjs",
+        "run",
+        "apps/room/page/test/assets.test.ts",
+        "--config",
+        "vitest.config.ts",
+        "--project",
+        "page",
+        "--allowOnly=false",
+        "--passWithNoTests=false",
+        "--reporter=default",
+        "--reporter=json",
+        "--reporter=/private/tmp/artroom-builder-kernel-hygiene-20261024/scripts/test-progress.mjs",
+        "--outputFile.json=/private/tmp/artroom-kernel-page-output-owning-evidence-20261024-v4/vitest.json"
+      ],
+      "pid": 95845,
+      "exit": 0,
+      "signal": null,
+      "wall": 0.8892991250613704,
+      "user": 0.9782599999999999,
+      "system": 0.188442
+    }
+  ],
+  "errors": [],
+  "signals": [],
+  "byteComparison": {
+    "PAGE_HTML": {
+      "bytes": 26184,
+      "sha256": "0167e7334fb013b0787bd559c18836789cf06d36bb2b402f1044b72ebec386f8"
+    },
+    "PAGE_JS": {
+      "bytes": 806615,
+      "sha256": "d53db79be16d558a12eed72f16c0ad00b91170e261294a9e764468bd76f5f8b7"
+    }
+  },
+  "cases": [
+    {
+      "ancestorTitles": [],
+      "fullName": "the scope Worker's page module is the page's build of this source: run npm run build --workspace @generalbusiness/dap-page when this fails",
+      "status": "passed",
+      "title": "the scope Worker's page module is the page's build of this source: run npm run build --workspace @generalbusiness/dap-page when this fails",
+      "duration": 52.40812500000004,
+      "failureMessages": [],
+      "meta": {},
+      "tags": []
+    }
+  ],
+  "wall": 4.381600916036405,
+  "inclusiveCpu": 4.55621,
+  "qualification": "One maintained Page build, DATA literal byte comparison, whole assets1. Test internally bundles for comparison; no second build command. Full guards;3generated writes only during build, selected cachecell only during assets. Nested costs overlap; no browser/deploy."
+}

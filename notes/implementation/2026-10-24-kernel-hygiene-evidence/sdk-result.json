@@ -1,0 +1,65 @@
+{
+  "allocation": "0f164062f79d5aac78be627ddf5c6be1bedd0c9e",
+  "children": [
+    {
+      "label": "producer",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "scripts/public-release.mjs",
+        "--source",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+        "--head",
+        "fb105fa777a7769ce67f7660e7d7ac5af5720423",
+        "--version",
+        "0.1.0-kernel.fb105fa",
+        "--output",
+        "/private/tmp/artroom-kernel-sdk-seven-output-20261024-v3",
+        "--npm-cli",
+        "/opt/homebrew/lib/node_modules/npm/bin/npm-cli.js",
+        "--npm-version",
+        "11.20.0"
+      ],
+      "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+      "pid": 91549,
+      "exit": 0,
+      "signal": null,
+      "wall": 2.858479458023794,
+      "user": 3.316453,
+      "sys": 1.124999
+    },
+    {
+      "label": "checker",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "scripts/check-public-release.mjs",
+        "--manifest",
+        "/private/tmp/artroom-kernel-sdk-seven-output-20261024-v3/release-manifest.json",
+        "--native-capture",
+        "/private/tmp/artroom-rename-sdk-output-check-inputs-20261023-v1/native-capture.json",
+        "--native-capture-sha256",
+        "7f2e7fdfebf41aa4911c13e335f5a9cb68d76d952aa1c737380998e9896ee66a",
+        "--esbuild",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/@esbuild/darwin-arm64/bin/esbuild",
+        "--esbuild-sha256",
+        "e2dc9a52440a2a34f09434a2f4843cb1e30f84e40dcf238976ec61ef8cd7f36a"
+      ],
+      "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+      "pid": 91767,
+      "exit": 0,
+      "signal": null,
+      "wall": 2.1503750829724595,
+      "user": 1.9762419999999996,
+      "sys": 0.6668419999999999
+    }
+  ],
+  "errors": [],
+  "receivedSignals": [],
+  "status": "PASSED",
+  "qualification": "Maintained producer and checker only; no install/publication/hosted or browser execution claim. Prior gate is separate.",
+  "ownerWall": 8.249888833030127,
+  "ownerPythonCpu": 2.9449739999999998,
+  "childrenUser": 5.424361,
+  "childrenSys": 1.936073,
+  "inclusiveCpu": 10.305408,
+  "costQualification": "Owner includes guards and children; child CPU/wall includes nested compiler/pack/check/bundle work. Do not sum overlapping intervals."
+}

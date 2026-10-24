@@ -1,0 +1,280 @@
+{
+  "request": "30c7c3eca82fba47449b35c4280aacbac4cb2c73",
+  "promise": "79ee2bae4fbe94426d0ac3d916af9f1b248fad8b",
+  "state": "AFFECTED_COMPILERS_AND_CASES_PASSED_GATE_AND_REVIEW_PENDING",
+  "implementationHead": "fb105fa777a7769ce67f7660e7d7ac5af5720423",
+  "currentHead": "8bfdc37eff766d2e242cd8ea9bbb674fab185273",
+  "currentTree": "b3d165cb65f4b71ef8800b86c8e628fe12bef349",
+  "results": {
+    "structural": {
+      "path": "/private/tmp/artroom-kernel-structural-owning-evidence-20261024-v2/result.json",
+      "bytes": 3783,
+      "sha256": "dc476650c5e5cce81188a39d9b48dfa86419df585e257cb77e25852195ee8070",
+      "allocation": "99598acfcffbba5419ca6470383a1a96d714f341",
+      "children": [
+        {
+          "label": "checker",
+          "exit": 0,
+          "signal": null
+        },
+        {
+          "label": "structural2",
+          "exit": 0,
+          "signal": null
+        },
+        {
+          "label": "publicRelease3",
+          "exit": 0,
+          "signal": null
+        },
+        {
+          "label": "control",
+          "exit": 1,
+          "signal": null
+        }
+      ],
+      "control": {
+        "status": "matched-control",
+        "expectedExit": 1,
+        "diagnostic": "packages/derive/src/index.ts: forbidden workspace edge @generalbusiness/dap-platform\n"
+      },
+      "caseCounts": {
+        "parserResolver": 2,
+        "releaseModules": 3
+      }
+    },
+    "sdk": {
+      "path": "/private/tmp/artroom-kernel-sdk-output-owning-evidence-20261024-v3/result.json",
+      "bytes": 2361,
+      "sha256": "4f988187e1387a357586d165ee02d5a8aaac958b95f20d72bc18cdbe914474e6",
+      "allocation": "0f164062f79d5aac78be627ddf5c6be1bedd0c9e",
+      "children": [
+        {
+          "label": "producer",
+          "exit": 0,
+          "signal": null
+        },
+        {
+          "label": "checker",
+          "exit": 0,
+          "signal": null
+        }
+      ]
+    },
+    "page": {
+      "path": "/private/tmp/artroom-kernel-page-output-owning-evidence-20261024-v4/result.json",
+      "bytes": 2533,
+      "sha256": "3cc8c1cc0cd4b43c0a79c8aee6ad9228155867d692b77213d1cedc681d823070",
+      "allocation": "a645166374c42bfc84c5a088961a51093ae40057",
+      "children": [
+        {
+          "label": "build",
+          "exit": 0,
+          "signal": null
+        },
+        {
+          "label": "assets",
+          "exit": 0,
+          "signal": null
+        }
+      ]
+    },
+    "sixSeals": {
+      "path": "/private/tmp/artroom-kernel-six-owner-seal-evidence-20261024-v3/result.json",
+      "bytes": 2330,
+      "sha256": "ca2f906fdb094b628243ab753f51e8217d3de0fca8d527beeb2bd85ee5ed798c",
+      "allocation": "2a48aca61456285f3e15f08694fe66390a99de94",
+      "children": [
+        {
+          "label": "source-seals",
+          "exit": 0,
+          "signal": null
+        }
+      ],
+      "actualOutputs": [
+        {
+          "path": "apps/room/archive-policy.ts",
+          "sourceSeal": "ed3b746b5a26c3e872e41b13ba133f43ade42b5612aa5028ba544fc013be5ce7"
+        },
+        {
+          "path": "packages/scope/src/applications/projection.ts",
+          "sourceSeal": "f7d3bb45d448ec654a89f875697f865e1e89baeb5d7529e0db0859bd855b009f"
+        },
+        {
+          "path": "packages/scope/src/applications/route.ts",
+          "sourceSeal": "a9c2c7071bc190a9dc44be6efe57b973203c40d3fff8ab35263f73818925ae29"
+        },
+        {
+          "path": "packages/scope/src/creation-lineage.ts",
+          "sourceSeal": "82f46501400fde4903e9bd3b216d345f8af871d0311157da3faa9469e5b33140"
+        },
+        {
+          "path": "packages/scope/src/object.ts",
+          "sourceSeal": "f5272e8a18fdfdebf2062f1ed7f274389df5cdcb4a0e6040b7e4a43c797a77d5"
+        },
+        {
+          "path": "packages/scope/src/serving-admission.ts",
+          "sourceSeal": "d90d11a6a2de39eb6cb735ae050a3bcbc0e57c4130fac201ebc705bc090e6b70"
+        }
+      ]
+    },
+    "focused": {
+      "path": "/private/tmp/artroom-kernel-focused-owning-evidence-20261024-v1/result.json",
+      "bytes": 96812,
+      "sha256": "f305dbbba792c997614d1c005237b792689da2b68b6bca18cdee408325deb799",
+      "allocation": "2fe19e45b2fe2dc5808d172450f4c08842554f66",
+      "maintainedResult": {
+        "path": "/private/tmp/artroom-kernel-focused-owning-evidence-20261024-v1/focused/result.json",
+        "bytes": 62422,
+        "sha256": "2131cabe832c86e437bb5d6f8411457deacb7323b643ee2ad0e93f20f20990c3"
+      },
+      "compilerPhases": 28,
+      "bodyPhases": 1,
+      "allPhaseExitCodesZero": true,
+      "passedCases": 129,
+      "wholeFiles": 25,
+      "rootAttributedUnexpectedCases": 0,
+      "rootAttributedCoverageIssues": [],
+      "rootAttributedGuardStatus": "stable with declared selected cache and empty temporary-directory metadata allowance",
+      "rootOriginalSession": 59089,
+      "rootNaturalExit": 0,
+      "rootOuterCostSeconds": {
+        "wall": "60.32",
+        "user": "59.96",
+        "system": "10.13"
+      },
+      "costQualification": "Original outer observations supplied by root. Nested owner/child costs overlap."
+    }
+  },
+  "rootAttributedAcceptances": {
+    "structuralPrefix": "973cec4d",
+    "sdk": "313086324d536b552853a95dc7381e23a5eba47c",
+    "page": "5828b4fa1e88ba1172cb738c8a444199f2d4e86b",
+    "sixSealsPrefix": "d288385f",
+    "mapAdoption": "8503ef745df7debea2960a904722b06fcdda43a7",
+    "dependencyCopy": "2fb255a3d01b143f5cacb2f5a75ce81a805fdc24",
+    "compatibilityPrefix": "e1f87a95",
+    "qualification": "Short IDs are root attribution, not complete event pins.",
+    "focused": "2b0e22a013a8f306ef511612e538399aa31603b8"
+  },
+  "mapAdoption": {
+    "path": "scripts/security-entry-points.test.mjs",
+    "bytes": 13255,
+    "sha256": "fbaba77164266f4bc54eff06be15cd0e8a6041ee2d3789acb55a459764740305",
+    "changedValues": 7,
+    "parsedOwners": 6,
+    "objectCalls": 1,
+    "archiveFourValuesPreserved": {
+      "packages/scope/src/archive-build.ts": "e1111bfef1fe94cc8436498679395ba1b9b8adba3db8651f4f24d87d68696853",
+      "packages/scope/src/archive-driver.ts": "df3ecc92e8853edd1abfb0fb47bfbe0553f2fd90bf872fe9a083ee18a6826d06",
+      "packages/scope/src/archive-host.ts": "e376746b7a1001a47715f666c4777e135bf1c48a162bfffe9c80e0ec913f079f",
+      "packages/scope/src/archive-row.ts": "91fd40cf8fd7dddb37383bf8daf86fdc30f0da5983ab69dfa3550263331ae12b"
+    },
+    "onlyPathChangedSinceImplementation": [
+      "scripts/security-entry-points.test.mjs"
+    ]
+  },
+  "pending": {
+    "ordinaryGate": null,
+    "exactHeadReview": null,
+    "landing": null
+  },
+  "limits": [
+    "No new runtime or candidate edits while preparing this report.",
+    "Source and closed result review only; no independent full guard audit is claimed by this documentation task.",
+    "No deployment, package publication, browser operation or closure of other open kernel items."
+  ],
+  "measuredOuterCommandCosts": {
+    "units": "seconds",
+    "source": "Original outer-command wall/user/system observations supplied by root.",
+    "runtime": [
+      {
+        "command": "Dependency copy",
+        "wall": "6.61",
+        "user": "3.66",
+        "system": "2.51"
+      },
+      {
+        "command": "Structural checks and control",
+        "wall": "7.15",
+        "user": "4.80",
+        "system": "2.15"
+      },
+      {
+        "command": "SDK",
+        "wall": "8.30",
+        "user": "7.43",
+        "system": "2.92"
+      },
+      {
+        "command": "Page",
+        "wall": "4.44",
+        "user": "3.29",
+        "system": "1.31"
+      },
+      {
+        "command": "Six source seals",
+        "wall": "2.41",
+        "user": "1.67",
+        "system": "0.76"
+      },
+      {
+        "command": "Affected compilers and cases",
+        "wall": "60.32",
+        "user": "59.96",
+        "system": "10.13"
+      }
+    ],
+    "captures": [
+      {
+        "command": "Dependencies",
+        "wall": "1.80",
+        "user": "1.12",
+        "system": "0.68"
+      },
+      {
+        "command": "Structural",
+        "wall": "1.51",
+        "user": "0.97",
+        "system": "0.50"
+      },
+      {
+        "command": "SDK",
+        "wall": "1.72",
+        "user": "1.00",
+        "system": "0.58"
+      },
+      {
+        "command": "Page",
+        "wall": "1.56",
+        "user": "0.99",
+        "system": "0.55"
+      },
+      {
+        "command": "Six source seals",
+        "wall": "1.50",
+        "user": "0.98",
+        "system": "0.51"
+      },
+      {
+        "command": "Affected compilers and cases",
+        "wall": "2.18",
+        "user": "1.00",
+        "system": "0.64"
+      }
+    ],
+    "roundedSubtotals": {
+      "runtime": {
+        "wall": "89.23",
+        "user": "80.81",
+        "system": "19.78"
+      },
+      "captures": {
+        "wall": "10.27",
+        "user": "6.06",
+        "system": "3.46"
+      }
+    },
+    "qualification": "Commands are disjoint. Nested child timings overlap the corresponding outer command and are not added. Rounded local observations only; edit/review overhead and future gate are not counted as zero."
+  }
+}

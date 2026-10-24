@@ -1,0 +1,41 @@
+{
+  "allocation": "d288385fce83b1ce9de6dca53b90edff32dd0c7a",
+  "before": "306a96614b0eb63960e9fecab4f2e5dbbd5ad1d7135c09b6e8c0ccff9e2dd495",
+  "after": "fbaba77164266f4bc54eff06be15cd0e8a6041ee2d3789acb55a459764740305",
+  "bytes": 13255,
+  "changedValueSpans": 7,
+  "actualParserOutputSha256": "82394e85072dd1de22ace8031404bee0446191af866ae1825fa10f9062ff644f",
+  "allOutsideBytesPreserved": true,
+  "archiveFourPreserved": {
+    "build": "e1111bfef1fe94cc8436498679395ba1b9b8adba3db8651f4f24d87d68696853",
+    "driver": "df3ecc92e8853edd1abfb0fb47bfbe0553f2fd90bf872fe9a083ee18a6826d06",
+    "row": "91fd40cf8fd7dddb37383bf8daf86fdc30f0da5983ab69dfa3550263331ae12b",
+    "host": "e376746b7a1001a47715f666c4777e135bf1c48a162bfffe9c80e0ec913f079f"
+  },
+  "values": [
+    {
+      "path": "apps/room/archive-policy.ts",
+      "sourceSeal": "ed3b746b5a26c3e872e41b13ba133f43ade42b5612aa5028ba544fc013be5ce7"
+    },
+    {
+      "path": "packages/scope/src/applications/projection.ts",
+      "sourceSeal": "f7d3bb45d448ec654a89f875697f865e1e89baeb5d7529e0db0859bd855b009f"
+    },
+    {
+      "path": "packages/scope/src/applications/route.ts",
+      "sourceSeal": "a9c2c7071bc190a9dc44be6efe57b973203c40d3fff8ab35263f73818925ae29"
+    },
+    {
+      "path": "packages/scope/src/creation-lineage.ts",
+      "sourceSeal": "82f46501400fde4903e9bd3b216d345f8af871d0311157da3faa9469e5b33140"
+    },
+    {
+      "path": "packages/scope/src/object.ts",
+      "sourceSeal": "f5272e8a18fdfdebf2062f1ed7f274389df5cdcb4a0e6040b7e4a43c797a77d5"
+    },
+    {
+      "path": "packages/scope/src/serving-admission.ts",
+      "sourceSeal": "d90d11a6a2de39eb6cb735ae050a3bcbc0e57c4130fac201ebc705bc090e6b70"
+    }
+  ]
+}

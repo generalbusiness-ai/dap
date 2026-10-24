@@ -1,0 +1,6 @@
+{
+  "format": "retained-stdout-utf8-1",
+  "originalBytes": 880,
+  "originalSha256": "82394e85072dd1de22ace8031404bee0446191af866ae1825fa10f9062ff644f",
+  "text": "[\n  {\n    \"path\": \"apps/room/archive-policy.ts\",\n    \"sourceSeal\": \"ed3b746b5a26c3e872e41b13ba133f43ade42b5612aa5028ba544fc013be5ce7\"\n  },\n  {\n    \"path\": \"packages/scope/src/applications/projection.ts\",\n    \"sourceSeal\": \"f7d3bb45d448ec654a89f875697f865e1e89baeb5d7529e0db0859bd855b009f\"\n  },\n  {\n    \"path\": \"packages/scope/src/applications/route.ts\",\n    \"sourceSeal\": \"a9c2c7071bc190a9dc44be6efe57b973203c40d3fff8ab35263f73818925ae29\"\n  },\n  {\n    \"path\": \"packages/scope/src/creation-lineage.ts\",\n    \"sourceSeal\": \"82f46501400fde4903e9bd3b216d345f8af871d0311157da3faa9469e5b33140\"\n  },\n  {\n    \"path\": \"packages/scope/src/object.ts\",\n    \"sourceSeal\": \"f5272e8a18fdfdebf2062f1ed7f274389df5cdcb4a0e6040b7e4a43c797a77d5\"\n  },\n  {\n    \"path\": \"packages/scope/src/serving-admission.ts\",\n    \"sourceSeal\": \"d90d11a6a2de39eb6cb735ae050a3bcbc0e57c4130fac201ebc705bc090e6b70\"\n  }\n]\n"
+}
