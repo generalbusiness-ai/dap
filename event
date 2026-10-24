@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c20cd9b91f1dd05d9876c4359015d30f43b23429","text":"Merge retired a covered predecessor with no successor at its old path."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c27350db9d553d3f7692c91b0d0a31e0a2710d6a","text":"Merge retired a covered predecessor; the successor is at examples/lending/browser/client.ts."}
