@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ae6bbac182e0e8ffd71c39b4203249f8f38638ec","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/discovery.scope.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ae8b6e33d0c00f7306e313556ed12f2dbeedd17a","text":"Merge retired a covered predecessor; the successor is at docs/workspace-rename.md."}
