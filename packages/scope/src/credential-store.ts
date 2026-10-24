@@ -11,7 +11,7 @@
  */
 import type { Sql } from "./sqlite.ts";
 import type { OperationId, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, isEntry, isOperationId, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, entryHash, isEntry, isOperationId, isRecord, utf8 } from "@generalbusiness/dap-bytes";
 import { timeMs, timeOf } from "@generalbusiness/dap-derive";
 import { isOf } from "@generalbusiness/dap-platform";
 import type { Entry } from "@generalbusiness/dap-contract";
@@ -172,7 +172,7 @@ export class CredentialStore {
       if (opening?.input.type !== "act" || opening.input.signed.intent.kind !== "read-token" || !opening.effects.some(e => e.effect === "operation" && e.k === k && e.owner === operation.owner && e.kind === "mint-read")) return false;
       if (input?.type !== "outcome" || input.operation !== mint || input.attempt !== attempt || input.owner !== operation.owner || input.kind !== "mint-read" || input.result !== "confirmed" || input.evidence.basis !== "own-answer") return false;
       const body = input.evidence.body;
-      if (typeof body !== "object" || body === null || Array.isArray(body) || body["token"] !== id || body["ends"] !== ends) return false;
+      if (!isRecord(body) || body["token"] !== id || body["ends"] !== ends) return false;
       return this.#enrollRead(scope,{ id,mint,attempt: attempt as number,ends: ends as Timestamp });
     } catch { return false; } // Missing/pruned/oversized/invalid proof is unknown, never write eligibility.
   }

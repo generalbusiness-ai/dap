@@ -73,6 +73,14 @@ control restores immediate scheduling; its outcome remains unproved.
 V7 received static Source review only; its review receipt is
 `/private/tmp/artroom-r13-read-token-expiry-v7-narrow-independent-review-20261024-v1.json`
 (SHA256 `6afcf14419623e037e82f0d9a8a3fd6380ce0f32225a1d94b55d6e27f63a360f`).
+Affected original `50749` stopped naturally with exit 1 in the Scope production
+compiler at `a7c49158257ea51f1bdd7fc6d8dd34bdcbd29d41`. Two TS7053 errors
+identified a legacy receipt body narrowed to `{}` before indexing `token`
+and `ends`. The existing `isRecord` helper supplies the same object, null
+and array checks with the required record type. The correction changes only
+that predicate and its import. The test compiler and Vitest body were unrun;
+this failed run is not a baseline. A fresh affected run is still required.
+
 The authored witnesses cover unread expiry through a real native alarm,
 read-mint conflict and interrupted-insert recovery, bounded restart-safe
 maintenance, exact fractional end, earlier wake arbitration and preservation
