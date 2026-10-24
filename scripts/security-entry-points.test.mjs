@@ -10,10 +10,11 @@ const seals = {
   "apps/room/demo-creation.ts": "d9850f4854182c0231a2ae9a985882343e7f3dfea67ea034cafe4fca4bb0d77f",
   "apps/room/page/route.ts": "62c8f69b9f516f1b5acdaef57d7aed25268d8cf03283bdffdd4b1b5f20bb6b3d",
   "apps/room/brand/route.ts": "71b45ff9b41b3bea31c775a16525349591e0d4f7dfdc65da79f095816b1c343c",
-  "packages/scope/src/worker.ts": "dd5d1d67e30392d7ba846ef2401de3386fb5aedd4011da190334de7f4f8cc550", // Actual composed Worker seal from the maintained parser.
-  "packages/scope/src/scope-index.ts": "98a91329fbe8926127aab2db555970278e898cec347fd4f20569b19f1f879d54", // New internal lookup/registration boundary.
-  "packages/scope/src/creation-admission.ts": "5cf6ba850f2b6fc4a0a5156209c7fce4fa1a739cf00129b664f86448d86e3f13", // Reviewed R1 ancestry owner; adopted AST value.
-  "packages/scope/src/creation-lineage.ts": "bc4aed5065e827ae5077f0462f176950f46943f707d729c22913c740a05fa1b3", // Reviewed whole-lineage boundary; adopted AST value.
+  "packages/scope/src/worker.ts": "30e12e38ed7143affd984a715f93d4a707541d12988bc2442b9d487bb158367a", // Actual composed Worker seal from the maintained parser.
+  "packages/scope/src/scope-index.ts": "e5658b5fc39cc15bc08e7e71711a67c5859a0e0de94ede88ee5b8b5dbc3d7919", // New internal lookup/registration boundary.
+  "packages/scope/src/creation-admission.ts": "0531cbd36d1ae4c0eadc9d836eb5eec13f896fc7c8b8faaaaf9c3c24e3759ccd", // Reviewed R1 ancestry owner; adopted AST value.
+  "packages/scope/src/creation-lineage.ts": "eccd209d5ba96896e9cec1c92c442d1e3d7ebdce861b11759a0ade48455b59ff", // Reviewed whole-lineage boundary; adopted AST value.
+  "packages/scope/src/creation-versions.ts": "1e7baeaecb96f9719feadef0b083108e91575fe793a83fe1ea3d80dd7f0d55bb", // Reviewed R6 creation-policy parser; actual maintained output.
   "packages/scope/src/creation-declaration.ts": "ec719181ce0cff0048165e27bd108b8b728e9f78a858033155b670ab82e93c2b", // Bounded immutable native Directory custody, not authority.
   "packages/scope/src/namespace.ts": "1f65de08e11d85c204b671b8605b132f506cf06f2e87843e90eb0d1884f428e3", // Reviewed internal declaration RPC; adopted AST value.
   "packages/scope/src/health.ts": "98a9538a31f927996d56470357a3a227f1935f21463c174329d8b7faac129528",
@@ -22,7 +23,7 @@ const seals = {
   "packages/scope/src/applications/route.ts": "ad62679ad22021474b193d7e9b2f98d6146c85ebe9d223d66901c309b5b84abc", // Actual union parser value adopted by root.
   "packages/scope/src/item-query-wire.ts": "8206b9a6531ca30cae1bc49cc249eea08c70a658305f41b3ebea6eda042055a8",
   "packages/scope/src/applications/projection-wire.ts": "2e07df5447469dc09aff0d4017e010634150f49c92f614221402cf46a869c6d0",
-  "packages/scope/src/object.ts": "d91755dd0f013bc7942d8dc171bcfe90603d2faafd33422bef101f0b3b92290b", // Actual composed storage owner seal from the maintained parser.
+  "packages/scope/src/object.ts": "091396e5ebe195252695a84287fc1edf2c1bb45fc2d1c65d14d679643694d9b1", // Actual composed storage owner seal from the maintained parser.
   "packages/scope/src/core.ts": "c7f2e49246b1e784981337ee13af53b17bab424a13112d5a40ff76b75fb7a128",
   "packages/derive/src/genesis.ts": "df7722143f01c8084b8f045ef959b203ae1756c4dfde170d0454cfe0b0392843",
   "packages/derive/src/judge.ts": "c0ed325bc2fa84693b40d3d53a9ad54a9a9786dab39dd3b9c6039ac553488f63",
@@ -63,7 +64,7 @@ const pendingArchiveSeals = {
   "packages/scope/src/archive-driver.ts": "006e53f3ef1b7a3e97cd53df3c8f8aa964d089e0c53a5bbe06efe8794d5e091d", // Capacity deferral reviewed; actual maintained parser output.
   "packages/scope/src/archive-row.ts": "be48ef12598ad4f5d0084bd05e760a4537faf23a96f21dce8c9e8748c7eddfda",
   "packages/scope/src/floor-writer.ts": "fb8fd859844b8d10ba43b477bcaf07ab32fe1bfa1b6684ad9ae70b930d328a11",
-  "packages/scope/src/object.ts": "d91755dd0f013bc7942d8dc171bcfe90603d2faafd33422bef101f0b3b92290b", // Must match the separately adopted original owner value above.
+  "packages/scope/src/object.ts": "091396e5ebe195252695a84287fc1edf2c1bb45fc2d1c65d14d679643694d9b1", // Must match the separately adopted original owner value above.
   "apps/room/worker.grow.ts": "0cc4c1c63f79f8da8dad5e98b2ace5b69fcd818d41640ed4e316ee534adf749f",
   "apps/room/archive-policy.ts": "ed3b746b5a26c3e872e41b13ba133f43ade42b5612aa5028ba544fc013be5ce7",
   "apps/room/archive.ts": "8252a0d142fcf7bac4c266980e0cbc4c592d1ad8783914b16d8f40ba6fb824f9",
