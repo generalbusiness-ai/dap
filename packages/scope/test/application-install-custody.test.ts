@@ -321,8 +321,11 @@ test("hosted Worker application trust reaches its lazy native agent before the p
     const invitation = await life.wait(async () => M.did(rita, "invite-key", { fields: { member, kind: "agent", ...invitationIssueFields(C.membership, secret), inviteEnds: timeOf(life.now() + 3_600_000) }, expected: await M.expected({ member }) }));
     const sealed = await life.wait(() => M.sealed());
     const fact = (seq: number) => ({ at: membership, seq, hash: sealed.find(row => row.entry.seq === seq)!.hash });
+    const expected = await life.wait(() => M.expected({ on: 0, member }));
+    const on = expected["on"], memberRevision = expected["member"];
+    if (typeof on !== "number" || typeof memberRevision !== "number") expect.fail("The actual roster and member revisions must be present.");
     const link: AgentKeyInvitation = { v: 1, kind: "agent-key", service: "https://scopes.test", repository: { directory, membership, rules: A.name, destination: G.name }, definition: C.membership, handle,
-      controller: { membership, member: "@rita" }, member: fact(member), invitation: fact(invitation), secret, expected: await life.wait(() => M.expected({ on: 0, member })) };
+      controller: { membership, member: "@rita" }, member: fact(member), invitation: fact(invitation), secret, expected: { on, member: memberRevision } };
     const release = `sha256:${"d".repeat(64)}` as const;
     hostedTest.applicationSettings = { APPLICATION_TRUST: JSON.stringify([{ release, publisher: rita.key, host: "packages.test" }]) };
     const body = utf8(JSON.stringify({ link: encodeAgentKeyInvitation(link) }));
@@ -349,7 +352,8 @@ test("hosted Worker application trust reaches its lazy native agent before the p
     expect(response.status).toBe(200);
     const result = await response.json() as { result: { isError: boolean } };
     expect(requests).toHaveLength(1);
-    expect([requests[0]!.url, requests[0]!.redirect, requests[0]!.credentials]).toEqual(["https://packages.test/apps.git/info/refs?service=git-upload-pack", "manual", "omit"]);
+    expect([requests[0]!.url, requests[0]!.redirect]).toEqual(["https://packages.test/apps.git/info/refs?service=git-upload-pack", "manual"]);
+    expect(requests[0]!.headers.get("authorization")).toBeNull();
     expect(result.result.isError).toBe(true); // The scripted redirect is refused.
     expect((await life.wait(() => A.entries())).filter(entry => entry.input.type === "act" && entry.input.signed.intent.kind === "install-application")).toEqual([]);
     expect(await object.counts()).toEqual({ streams: 0, sessions: 0 });

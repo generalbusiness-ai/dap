@@ -10,7 +10,7 @@ const seals = {
   "apps/room/demo-creation.ts": "d9850f4854182c0231a2ae9a985882343e7f3dfea67ea034cafe4fca4bb0d77f",
   "apps/room/page/route.ts": "62c8f69b9f516f1b5acdaef57d7aed25268d8cf03283bdffdd4b1b5f20bb6b3d",
   "apps/room/brand/route.ts": "71b45ff9b41b3bea31c775a16525349591e0d4f7dfdc65da79f095816b1c343c",
-  "packages/scope/src/worker.ts": "21986e4ca6416454c1d42a9abd5e85c3fe743067e8b026dac39e622477531375", // Historical R4 value; combined Worker seal pending actual producer.
+  "packages/scope/src/worker.ts": "dd5d1d67e30392d7ba846ef2401de3386fb5aedd4011da190334de7f4f8cc550", // Actual composed Worker seal from the maintained parser.
   "packages/scope/src/scope-index.ts": "98a91329fbe8926127aab2db555970278e898cec347fd4f20569b19f1f879d54", // New internal lookup/registration boundary.
   "packages/scope/src/creation-admission.ts": "5cf6ba850f2b6fc4a0a5156209c7fce4fa1a739cf00129b664f86448d86e3f13", // Reviewed R1 ancestry owner; adopted AST value.
   "packages/scope/src/creation-lineage.ts": "bc4aed5065e827ae5077f0462f176950f46943f707d729c22913c740a05fa1b3", // Reviewed whole-lineage boundary; adopted AST value.
@@ -22,7 +22,7 @@ const seals = {
   "packages/scope/src/applications/route.ts": "ad62679ad22021474b193d7e9b2f98d6146c85ebe9d223d66901c309b5b84abc", // Actual union parser value adopted by root.
   "packages/scope/src/item-query-wire.ts": "8206b9a6531ca30cae1bc49cc249eea08c70a658305f41b3ebea6eda042055a8",
   "packages/scope/src/applications/projection-wire.ts": "2e07df5447469dc09aff0d4017e010634150f49c92f614221402cf46a869c6d0",
-  "packages/scope/src/object.ts": "a8346c18f87ef2029989f7d86a986d00d6c70acf13574eefd1238df01421523a", // Reviewed archive alarm recovery; actual maintained parser output.
+  "packages/scope/src/object.ts": "c55fb69f5ff2831aec854419fe3b7723d9b79f817d5740d6666a4fd999cc30cb", // Actual composed storage owner seal from the maintained parser.
   "packages/scope/src/core.ts": "c7f2e49246b1e784981337ee13af53b17bab424a13112d5a40ff76b75fb7a128",
   "packages/derive/src/genesis.ts": "df7722143f01c8084b8f045ef959b203ae1756c4dfde170d0454cfe0b0392843",
   "packages/derive/src/judge.ts": "c0ed325bc2fa84693b40d3d53a9ad54a9a9786dab39dd3b9c6039ac553488f63",
@@ -63,7 +63,7 @@ const pendingArchiveSeals = {
   "packages/scope/src/archive-driver.ts": "006e53f3ef1b7a3e97cd53df3c8f8aa964d089e0c53a5bbe06efe8794d5e091d", // Capacity deferral reviewed; actual maintained parser output.
   "packages/scope/src/archive-row.ts": "be48ef12598ad4f5d0084bd05e760a4537faf23a96f21dce8c9e8748c7eddfda",
   "packages/scope/src/floor-writer.ts": "fb8fd859844b8d10ba43b477bcaf07ab32fe1bfa1b6684ad9ae70b930d328a11",
-  "packages/scope/src/object.ts": "a8346c18f87ef2029989f7d86a986d00d6c70acf13574eefd1238df01421523a", // Must match the separately adopted original owner value above.
+  "packages/scope/src/object.ts": "c55fb69f5ff2831aec854419fe3b7723d9b79f817d5740d6666a4fd999cc30cb", // Must match the separately adopted original owner value above.
   "apps/room/worker.grow.ts": "0cc4c1c63f79f8da8dad5e98b2ace5b69fcd818d41640ed4e316ee534adf749f",
   "apps/room/archive-policy.ts": "ed3b746b5a26c3e872e41b13ba133f43ade42b5612aa5028ba544fc013be5ce7",
   "apps/room/archive.ts": "8252a0d142fcf7bac4c266980e0cbc4c592d1ad8783914b16d8f40ba6fb824f9",
