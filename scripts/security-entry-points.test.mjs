@@ -54,7 +54,7 @@ const pendingArchiveSeals = {
   "packages/scope/src/archive-source-window.ts": "4db3f5885e7541f713b9668d1cde655e42be1950dd6af77d5711a323b3582e1c",
   "packages/scope/src/archive-publication.ts": "d8c39d220bc7eea59301478aa553960267aac16f06502b4103a85647c71eb457",
   "packages/scope/src/archive-build.ts": "e1111bfef1fe94cc8436498679395ba1b9b8adba3db8651f4f24d87d68696853",
-  "packages/scope/src/archive-driver.ts": "df3ecc92e8853edd1abfb0fb47bfbe0553f2fd90bf872fe9a083ee18a6826d06", // Native parent transition reviewed; actual maintained parser output.
+  "packages/scope/src/archive-driver.ts": "7d065eb9f2d3dd9f8b9f5f4ebe5703dd4b983fb18ca52bde48024fb4b6a39092", // Capacity deferral reviewed; actual maintained parser output.
   "packages/scope/src/archive-row.ts": "91fd40cf8fd7dddb37383bf8daf86fdc30f0da5983ab69dfa3550263331ae12b",
   "packages/scope/src/floor-writer.ts": "fb8fd859844b8d10ba43b477bcaf07ab32fe1bfa1b6684ad9ae70b930d328a11",
   "packages/scope/src/object.ts": "419039e3fb03ab23ddf476cd09cdec5ec737eba82c0dc033429811a1623d11ab", // Must match the separately adopted original owner value above.
