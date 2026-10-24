@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bfbf12314edd5fec4bdd62ad4dfccd5d9e99a8c1","text":"Merge retired a covered predecessor; the successor is at examples/lending/tsconfig.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bfee6bed92cdfa0084c149f67294d32c858e803a","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-24-kernel-hygiene-evidence/manifest.json."}
