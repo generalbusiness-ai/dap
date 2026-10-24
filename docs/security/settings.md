@@ -71,8 +71,7 @@ Each row below keys exact Worker names and one exact setting or binding.
 `health` state reviewed semantics. The static checker verifies enumeration
 and source ownership; it does not execute those parsers or prove their
 security behavior. A new read, unsupported environment syntax, or an
-undocumented configuration binding must not silently pass. These rows and
-the checker remain source-authored until their owning validation runs.
+undocumented configuration binding must not silently pass.
 
 The lookup is generated from the canonical rows below. **Main reader** is the
 first listed source owner, not its only reader. The full row records the
@@ -198,7 +197,9 @@ parser, failure behavior, health visibility, and other readers.
         "packages/scope/src/creation-admission.ts",
         "packages/scope/src/creation-lineage.ts",
         "apps/room/demo-creation.ts",
-        "packages/scope/src/applications/route.ts"
+        "packages/scope/src/applications/route.ts",
+        "packages/scope/src/scope-index.ts",
+        "packages/scope/src/github-wiring.ts"
       ],
       "parser": "readDeployment: nonempty string of at most 128 UTF-8 bytes; shared by sessions, creation, demo, screens and metrics.",
       "missing": "Sessions unavailable; genuinely absent local creation retains the local API.",
@@ -241,7 +242,9 @@ parser, failure behavior, health visibility, and other readers.
         "packages/scope/src/creation-admission.ts",
         "packages/scope/src/creation-lineage.ts",
         "packages/scope/src/site/host.ts",
-        "apps/room/archive.ts"
+        "apps/room/archive.ts",
+        "packages/scope/src/scope-index.ts",
+        "packages/scope/src/demo-creation.ts"
       ],
       "parser": "artifactsConfiguration: at most 4096 characters, strict exact JSON fields registerScope/namespace/host/maxBytes/credentialIdentity; host uses artifactsService; identity must adapter-attempt.",
       "missing": "Artifacts outside port off; deployed pinned creation cannot use this host pin.",
@@ -261,7 +264,8 @@ parser, failure behavior, health visibility, and other readers.
       "readers": [
         "packages/scope/src/worker.ts",
         "packages/scope/src/artifacts-wiring.ts",
-        "packages/scope/src/site/host.ts"
+        "packages/scope/src/site/host.ts",
+        "packages/scope/src/demo-creation.ts"
       ],
       "parser": "artifactsReadiness compares config namespace with this value or maintained ARTIFACTS_NAMESPACE default.",
       "missing": "Uses artroom-demo for compatibility.",
@@ -346,7 +350,7 @@ parser, failure behavior, health visibility, and other readers.
         "packages/scope/src/site/host.ts"
       ],
       "parser": "Optional credential has the bounded supported secret syntax; repository creation still needs its credential.",
-      "missing": "Wiring can remain wired, but no repository-creation credential is supplied. createRepository returns no answer, so the recorded creation operation waits.",
+      "missing": "Wiring can remain wired, but this outside port does not accept create-repository without the creation credential. The recorded operation remains unsent.",
       "invalid": "Configured malformed credential closes the whole GitHub wiring.",
       "health": "wiring.github off/creation-token when configured; status 503. No credential is returned."
     },
@@ -402,7 +406,8 @@ parser, failure behavior, health visibility, and other readers.
       "status": "read",
       "readers": [
         "packages/scope/src/creation-admission.ts",
-        "packages/scope/src/creation-lineage.ts"
+        "packages/scope/src/creation-lineage.ts",
+        "packages/scope/src/scope-index.ts"
       ],
       "parser": "Only the exact string true opens the local/test creation escape. DEPLOYMENT is validated first.",
       "missing": "A configured deployment requires its pinned register/verified creator chain; absent local DEPLOYMENT preserves local behavior.",
@@ -443,7 +448,9 @@ parser, failure behavior, health visibility, and other readers.
         "packages/scope/src/health.ts",
         "packages/scope/src/site/host.ts",
         "packages/scope/src/applications/route.ts",
-        "apps/room/fetch.ts"
+        "apps/room/fetch.ts",
+        "apps/room/demo-creation.ts",
+        "packages/scope/src/site/route.ts"
       ],
       "parser": "Wrangler DurableObjectNamespace; indexedScopes wraps target addressing. It is not a string parser.",
       "missing": "Scope routes cannot address their target; register readiness is unavailable.",
@@ -461,7 +468,8 @@ parser, failure behavior, health visibility, and other readers.
       "kind": "binding",
       "status": "read",
       "readers": [
-        "packages/scope/src/scope-index.ts"
+        "packages/scope/src/scope-index.ts",
+        "packages/scope/src/serving-admission.ts"
       ],
       "parser": "scopeIndex addresses the fixed applied-genesis-v1 owner; indexedScopes requires it before protected target lookup.",
       "missing": "Indexed existing-target requests refuse.",
@@ -611,7 +619,8 @@ parser, failure behavior, health visibility, and other readers.
       "status": "read",
       "readers": [
         "packages/scope/src/worker.ts",
-        "apps/room/demo-creation.ts"
+        "apps/room/demo-creation.ts",
+        "packages/scope/src/github-wiring.ts"
       ],
       "parser": "demoCreationConfig/legacyGitHubDemoConfig bind the supported exact version, origin, deployment, register/cohort and host context.",
       "missing": "Demo creation route unavailable.",
