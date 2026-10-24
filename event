@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f8692fc289fea3a582c5d99c6014a1cf68de7bc4","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/archive-input-work.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fb1511be2834033b6ed1845340fdf1b83b975101","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-24-archive-fixed-parent/post-gate-repair/head-seen-control-result.json."}
