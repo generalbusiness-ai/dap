@@ -3,21 +3,21 @@ import { mkdtemp, readFile, rm, symlink, truncate, writeFile } from "node:fs/pro
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Entry, ScopeRef, Seed, Sealed } from "@generalbusiness/dap-contract";
-import { canonicalize, factRefOf, newIncarnation, scopeIdOf, textDigest, utf8 } from "@generalbusiness/dap-bytes";
-import { captureIndexManifest, INDEX_INVENTORY_BOUNDS, readIndexManifest, verifyIndexManifest, type IndexReads } from "../src/scope-index-manifest.ts";
+import { canonicalize, digestBytes, factRefOf, newIncarnation, scopeIdOf, textDigest, utf8 } from "@generalbusiness/dap-bytes";
+import { captureIndexManifest, INDEX_INVENTORY_BOUNDS, indexManifestVersions, readIndexManifest, verifyIndexManifest, type IndexReads } from "../src/scope-index-manifest.ts";
 import { readIndexFile, saveIndexFile, scopeIndexCommand, type IndexFiles } from "../src/scope-index-command.ts";
 import { memoryStore } from "../src/store.ts";
 
 // Typed HTTP/history STAND-INs. These hashes bind observed bytes and sends;
 // no native judgment, registration or deployment mode is proved here.
-function fixture(ordinals: { root?: number; child?: number } = {}) {
+function fixture(ordinals: { root?: number; child?: number; definitions?: { register?: Seed["definition"]; directory?: Seed["definition"]; rules?: Seed["definition"] } } = {}) {
   const ref = (seed: Seed, n: number): ScopeRef => ({ scope: scopeIdOf(seed), kind: seed.kind, inc: newIncarnation(new Uint8Array(16).fill(n)) });
-  const registerSeed: Seed = { v: 1, kind: "register", definition: "platform:register@17", creator: null, cause: textDigest("operator inventory register"), ordinal: 0 };
+  const registerSeed: Seed = { v: 1, kind: "register", definition: ordinals.definitions?.register ?? "platform:register@17", creator: null, cause: textDigest("operator inventory register"), ordinal: 0 };
   const R = ref(registerSeed, 1);
-  const rootSeed: Seed = { ...registerSeed, kind: "directory", definition: "platform:directory@16", creator: R, cause: textDigest("operator inventory root"), ordinal: ordinals.root ?? 0 };
+  const rootSeed: Seed = { ...registerSeed, kind: "directory", definition: ordinals.definitions?.directory ?? "platform:directory@16", creator: R, cause: textDigest("operator inventory root"), ordinal: ordinals.root ?? 0 };
   const D = ref(rootSeed, 2);
   const otherSeed: Seed = { ...rootSeed, cause: textDigest("another room is not traversed") };
-  const childSeed: Seed = { ...rootSeed, kind: "rules", definition: "platform:rules@10", creator: D, cause: textDigest("operator inventory child"), ordinal: ordinals.child ?? 0 };
+  const childSeed: Seed = { ...rootSeed, kind: "rules", definition: ordinals.definitions?.rules ?? "platform:rules@10", creator: D, cause: textDigest("operator inventory child"), ordinal: ordinals.child ?? 0 };
   const A = ref(childSeed, 3);
   const base = (at: ScopeRef, seed: Seed): Entry => ({ v: 1, at, seq: 0, prev: null, time: "2099-01-01T00:00:00Z", clamped: false, epoch: 0,
     input: { type: "genesis", seed, inc: at.inc, kind: "create", founding: null, source: null, n: null, message: null, decision: "applied" }, uses: [], prepared: [], effects: [], sends: [] });
@@ -124,6 +124,13 @@ test("operator sweep validates locally and reports exact listed genesis outcomes
   expect(JSON.parse(result.lines[0]!)).toMatchObject({ listed: 3, verified: 3, unavailable: 0, mismatch: 0 });
   expect(calls.filter(call => !call.endsWith("/sessions"))).toEqual(manifest.scopes.map(row => `GET:/v1/scopes/${row.at.scope}/entries/0`));
   expect(result.lines.join("\n")).toContain("no deployment mode");
+  calls.length = 0;
+  held = utf8(`${canonicalize(manifest)}\n`);
+  const versions = await scopeIndexCommand(ctx, ["versions", "--manifest", "saved.json"], files);
+  expect(versions.code).toBe(0);
+  expect(JSON.parse(versions.lines[0]!)).toMatchObject({ manifestDigest: digestBytes(held), ready: true, listed: 3, usableCreationCohorts: ["archive-device-application"] });
+  expect(calls.filter(call => !call.endsWith("/sessions"))).toEqual(manifest.scopes.map(row => `GET:/v1/scopes/${row.at.scope}/entries/0`));
+  expect(versions.lines.join("\n")).toContain("No setting is changed or emitted");
   const report = await verifyIndexManifest(manifest, { ...f.reads, entry: async (scope, seq) => {
     if (scope === f.R.scope) return { ok: false, reason: "not-found" };
     const got = await f.reads.entry(scope, seq);
@@ -131,6 +138,44 @@ test("operator sweep validates locally and reports exact listed genesis outcomes
     return { ...got, value: { ...got.value, entry: { ...got.value.entry, at: { ...f.A, inc: f.D.inc } } } };
   } });
   expect(report).toMatchObject({ listed: 3, verified: 1, unavailable: 1, mismatch: 1 });
+});
+
+// Scripted authenticated replies prove the listed-byte/identity boundary only,
+// not a native lineage grant, complete deployment inventory or usable host.
+test("operator versions binds saved genesis and separates observed catalog pins from creation families", async () => {
+  const f = fixture(), manifest = await captureIndexManifest("https://service.test", f.D, f.reads);
+  f.calls.length = 0;
+  expect(await indexManifestVersions(manifest, f.reads)).toMatchObject({ ready: true,
+    observedPins: ["platform:directory@16", "platform:register@17", "platform:rules@10"], usableCreationCohorts: ["archive-device-application"] });
+  expect(f.calls).toEqual(manifest.scopes.map(row => `entry:${row.at.scope}:0`));
+  const legacy = fixture({ definitions: { register: "platform:register@3", directory: "platform:directory@3", rules: "platform:rules@2" } });
+  const old = await captureIndexManifest("https://service.test", legacy.D, legacy.reads);
+  const report = await indexManifestVersions(old, legacy.reads);
+  expect(report).toMatchObject({ ready: false, usableCreationCohorts: [], observedPins: ["platform:directory@3", "platform:register@3", "platform:rules@2"] });
+  expect(report.rows.every(row => row.result === "unsupported" && row.reason === "unsupported-creation-family")).toBe(true);
+  const unknown = fixture({ definitions: { rules: "platform:rules@9999" } });
+  const unknownManifest = await captureIndexManifest("https://service.test", unknown.D, unknown.reads);
+  expect(await indexManifestVersions(unknownManifest, unknown.reads)).toMatchObject({ ready: false, usableCreationCohorts: [], rows: expect.arrayContaining([
+    expect.objectContaining({ at: unknown.A, result: "unsupported", reason: "unknown-platform-pin" }),
+  ]) });
+  const refused = fixture(), refusedManifest = await captureIndexManifest("https://service.test", refused.D, refused.reads);
+  if (refused.a.input.type !== "genesis") throw Error("fixture genesis");
+  refused.a.input = { ...refused.a.input, decision: "refused" };
+  refused.entries.set(refused.A.scope, refused.sealed(refused.a));
+  expect(await indexManifestVersions(refusedManifest, refused.reads)).toMatchObject({ ready: false, rows: expect.arrayContaining([
+    expect.objectContaining({ at: refused.A, result: "mismatch", reason: "genesis-identity" }),
+  ]) });
+  const altered = { ...manifest, scopes: manifest.scopes.map(row => row.at.scope === f.A.scope ? { ...row, genesis: textDigest("different saved bytes") } : row) };
+  expect(await indexManifestVersions(altered, f.reads)).toMatchObject({ ready: false, usableCreationCohorts: [], rows: expect.arrayContaining([expect.objectContaining({ at: f.A, result: "mismatch", reason: "genesis-hash" })]) });
+  const substituted: IndexReads = { ...f.reads, entry: async (scope, seq) => {
+    if (scope === f.R.scope) return { ok: false, reason: "not-found" };
+    const got = await f.reads.entry(scope, seq);
+    if (!got.ok || scope !== f.A.scope) return got;
+    return { ...got, value: { ...got.value, entry: { ...got.value.entry, at: { ...f.A, inc: f.D.inc } } } };
+  } };
+  expect(await indexManifestVersions(manifest, substituted)).toMatchObject({ ready: false, usableCreationCohorts: [], rows: expect.arrayContaining([
+    expect.objectContaining({ at: f.R, result: "unavailable" }), expect.objectContaining({ at: f.A, result: "mismatch" }),
+  ]) });
 });
 
 // Invariant: Node custody never replaces an existing manifest and bounds the

@@ -3,9 +3,9 @@ import { constants } from "node:fs";
 import { open, link, unlink } from "node:fs/promises";
 import { dirname, join, basename } from "node:path";
 import { randomUUID } from "node:crypto";
-import { canonicalize, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, digestBytes, utf8 } from "@generalbusiness/dap-bytes";
 import { scopeIndexAccess, type Context, type Outcome } from "./commands.ts";
-import { captureIndexManifest, INDEX_INVENTORY_BOUNDS, readIndexManifest, verifyIndexManifest } from "./scope-index-manifest.ts";
+import { captureIndexManifest, INDEX_INVENTORY_BOUNDS, indexManifestVersions, readIndexManifest, verifyIndexManifest } from "./scope-index-manifest.ts";
 
 export interface IndexFiles { read(path: string): Promise<Uint8Array>; save(path: string, bytes: Uint8Array): Promise<void> }
 /** The opened descriptor, not a prior pathname stat, owns the byte bound. */
@@ -42,10 +42,10 @@ export async function saveIndexFile(path: string, bytes: Uint8Array): Promise<vo
   } finally { await unlink(temporary); }
 }
 const FILES: IndexFiles = { read: readIndexFile, save: saveIndexFile };
-const USAGE = "dap scope-index inventory --out FILE | sweep --manifest FILE | verify --manifest FILE";
+const USAGE = "dap scope-index inventory --out FILE | sweep --manifest FILE | verify --manifest FILE | versions --manifest FILE";
 export async function scopeIndexCommand(ctx: Context, argv: readonly string[], files: IndexFiles = FILES): Promise<Outcome> {
   const [verb, flag, path, ...extra] = argv;
-  if (!(verb === "inventory" || verb === "sweep" || verb === "verify") || flag !== (verb === "inventory" ? "--out" : "--manifest") || !path || extra.length) return { code: 2, lines: [USAGE] };
+  if (!(verb === "inventory" || verb === "sweep" || verb === "verify" || verb === "versions") || flag !== (verb === "inventory" ? "--out" : "--manifest") || !path || extra.length) return { code: 2, lines: [USAGE] };
   try {
     const access = await scopeIndexAccess(ctx);
     if (verb === "inventory") {
@@ -56,7 +56,14 @@ export async function scopeIndexCommand(ctx: Context, argv: readonly string[], f
         "For a no-registration dry run, use the pre-index deployment. Register-mode reads can write registrations."] };
     }
     // Complete local schema/config validation precedes lazy authentication.
-    const manifest = readIndexManifest(await files.read(path), access.service, access.root);
+    const saved = await files.read(path);
+    const manifest = readIndexManifest(saved, access.service, access.root);
+    if (verb === "versions") {
+      const report = await indexManifestVersions(manifest, access.reads);
+      return { code: report.ready ? 0 : 1, lines: [JSON.stringify({ manifestDigest: digestBytes(saved), service: manifest.service, root: manifest.root, ...report }),
+        "No setting is changed or emitted. Observed pins do not admit an unsupported lineage family or prove a global live-scope inventory.",
+        "Register-mode authenticated reads may register scopes; planner-owned deployment and R1 register configuration remain separate."] };
+    }
     const report = await verifyIndexManifest(manifest, access.reads);
     return { code: report.verified === report.listed ? 0 : 1, lines: [JSON.stringify(report),
       "Exact listed genesis observations only; no deployment mode, index completeness or registration is inferred.",

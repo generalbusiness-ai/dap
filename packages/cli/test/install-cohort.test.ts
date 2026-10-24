@@ -19,7 +19,7 @@ const COHORTS = [
   { name: "application", definition: APPLICATION_COHORT.register, other: COHORT },
 ] as const;
 // Fake service answers and memory storage: no native authority or host proof.
-function scenario(fault: "none" | "reply" | "save" = "none") {
+function scenario(fault: "none" | "reply" | "save" = "none", replaceUnsentLegacy = false) {
   const store = memoryStore();
   const bodies: string[] = [];
   let failed = false;
@@ -43,7 +43,10 @@ function scenario(fault: "none" | "reply" | "save" = "none") {
       const body = String(init?.body);
       const request = JSON.parse(body) as { creation: SignedIntent; definition: PlatformDefinition };
       const kept = (await store.config())!;
-      if (COHORTS.some(cohort => cohort.definition === request.definition)) {
+      if (replaceUnsentLegacy && kept.plan?.definition === "platform:register@3" && kept.plan.attempted === undefined) {
+        // This one direct-default path may replace a definitely-unsent old plan.
+        expect(request.definition).toBe("platform:register@17");
+      } else if (COHORTS.some(cohort => cohort.definition === request.definition)) {
         expect(kept.plan?.attempted).toMatch(/^sha256:/);
         expect(canonicalize(kept.plan?.["founding"])).toBe(canonicalize(request.creation));
         expect(kept.plan?.definition).toBe(request.definition);
@@ -61,7 +64,7 @@ function scenario(fault: "none" | "reply" | "save" = "none") {
   return { ctx, store, bodies, metrics: () => ({ saves, keyReads, keyWrites }) };
 }
 
-test("closed cohort selection preserves legacy defaults and refuses retained binding conflicts without replacing custody", async () => {
+test("closed cohort selection uses the new default and preserves retained historical plans without replacing custody", async () => {
   const bad = scenario();
   for (const args of [["install", SERVICE, "--cohort"], ["install", SERVICE, "--cohort", "latest"], ["install", SERVICE, "--cohort", "counting-commitments"], ["install", SERVICE, "--cohort", ""], ["install", SERVICE, "--cohort", COHORT, "--cohort", COHORT], ["install", SERVICE, "--cohort", "application", "--cohort", COHORT]]) {
     expect((await command(bad.ctx, args)).code).toBe(2);
@@ -77,10 +80,13 @@ test("closed cohort selection preserves legacy defaults and refuses retained bin
   const retiredMetrics = retired.metrics();
   expect(await installPlanned(retired.ctx)).toMatchObject({ code: 1, lines: [expect.stringMatching(/^Refused: retired-cohort/)] });
   expect([retired.metrics(), retired.bodies, (await retired.store.config())!.plan]).toEqual([retiredMetrics, [], retiredPlan]);
-  const legacy = scenario();
+  const legacy = scenario("none", true);
   expect((await command(legacy.ctx, ["install", "--plan", SERVICE])).code).toBe(0);
-  const legacyPlan = (await legacy.store.config())!.plan!;
-  expect(legacyPlan.definition).toBe("platform:register@3");
+  const fresh = (await legacy.store.config())!;
+  expect(fresh.plan!.definition).toBe("platform:register@17");
+  // A pre-upgrade, definitely-unsent plan keeps its exact old version/ID.
+  const legacyPlan = { ...fresh.plan!, definition: "platform:register@3" as const, register: scopeIdOf({ v: 1, kind: "register", definition: "platform:register@3", creator: null, cause: intentDigest(fresh.plan!["founding"].intent), ordinal: 0 }) };
+  await legacy.store.save({ ...fresh, plan: legacyPlan });
   for (const { name } of COHORTS) {
     const metrics = legacy.metrics();
     expect((await command(legacy.ctx, ["install", SERVICE, "--cohort", name])).code).toBe(1);
@@ -89,6 +95,22 @@ test("closed cohort selection preserves legacy defaults and refuses retained bin
   }
   expect((await command(legacy.ctx, ["install", SERVICE])).code).toBe(0);
   expect((await legacy.store.config())!.register!.scope).not.toBe(legacyPlan.register);
+
+  const recovery = scenario("reply");
+  await planInstall(recovery.ctx, SERVICE);
+  const configuredRecovery = (await recovery.store.config())!;
+  const oldPlan = { ...configuredRecovery.plan!, definition: "platform:register@3" as const, register: scopeIdOf({ v: 1, kind: "register", definition: "platform:register@3", creator: null, cause: intentDigest(configuredRecovery.plan!["founding"].intent), ordinal: 0 }) };
+  await recovery.store.save({ ...configuredRecovery, plan: oldPlan });
+  expect((await installPlanned(recovery.ctx)).code).toBe(1);
+  const attempted = (await recovery.store.config())!.plan!;
+  expect(attempted.attempted).toMatch(/^sha256:/);
+  expect((await install(recovery.ctx, SERVICE)).code).toBe(1);
+  expect((await planInstall(recovery.ctx, SERVICE)).code).toBe(1);
+  expect((await recovery.store.config())!.plan).toEqual(attempted);
+  expect((await installPlanned(recovery.ctx)).code).toBe(0);
+  expect(recovery.bodies).toHaveLength(2);
+  expect(recovery.bodies[1]).toBe(recovery.bodies[0]);
+  expect((await recovery.store.config())!.plan).toMatchObject({ ...attempted, definition: "platform:register@3", register: oldPlan.register });
 
   for (const { name, definition, other } of COHORTS) {
     const s = scenario();
