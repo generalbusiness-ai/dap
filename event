@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c584e03823d1c30af2fe785817b0b13c94a3362a","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/support/native-fixture-lifetime.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c5ecbb592c884644e22dde293213c8c7b29d3daf","text":"Merge retired a covered predecessor; the successor is at packages/client/test/definition-corpus-data.ts."}
