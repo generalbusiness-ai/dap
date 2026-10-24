@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c57f9358636c864775a5de9e06fca3f316adaf17","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/applications/projection-fact-times.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c63fec9cdbddb2a477e803e2fcc8400c6723bb63","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/application-codec/application-json.ts."}
