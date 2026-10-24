@@ -6,6 +6,7 @@ import type { Head, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isRecord, isScopeRef, parseStrict, timeMs, utf8 } from "@generalbusiness/dap-bytes";
 import type { DestinationRepository } from "./destination-host.ts";
 import { ArchiveBudget } from "./archive-budget.ts";
+import { archiveFrontierRowContextBound, archiveFrontierRowCompareCost, archiveFrontierSnapshotCost } from "./archive-frontier-cost.ts";
 import type { Sql } from "./sqlite.ts";
 import { confirmRetainedArchivePass } from "./archive-retained-pass.ts";
 import { archiveReplayScopes, archiveReplayScopeUnits, readArchivePublication } from "./archive-publication.ts";
@@ -16,6 +17,14 @@ export { ARCHIVE_ROW_BYTES } from "./archive-row-cost.ts";
 
 const KEY = "archive-row-1";
 const WAKE = "archive-wake-1";
+interface ArchiveWake {
+  readonly pending: boolean;
+  readonly stopped: boolean;
+  readonly next: Timestamp | null;
+  /** Absent on old wakes and after progress. Saturation bounds storage,
+   * never the number of retries or the lifetime of the archive writer. */
+  readonly capacityDeferrals?: number;
+}
 type Format = "sha1" | "sha256";
 export interface ArchivedPosition { readonly commit: string; readonly through: Head; readonly layout?: 2; readonly anchorsPublished?: true }
 export interface ArchiveMark extends Omit<ArchivedPosition, "anchorsPublished"> {
@@ -221,7 +230,7 @@ export class ArchiveRows {
       return this.#save({ ...previous, next: null, stopped: { reason, where } }, budget);
     });
   }
-  #wake(budget: ArchiveBudget): { pending: boolean; stopped: boolean; next: Timestamp | null } | null {
+  #wake(budget: ArchiveBudget): ArchiveWake | null {
     const rows = budget.native(this.#sql, () => ({ metadata: 256, inputWork: 4096 })).exec("SELECT v FROM meta WHERE k = ? AND typeof(v) = 'text' AND octet_length(v) <= 256 LIMIT 1", WAKE).toArray();
     if (!rows.length) return null;
     const bytes = rows[0]?.["v"];
@@ -229,8 +238,10 @@ export class ArchiveRows {
     let value: unknown;
     try { value = parseStrict(bytes); if (canonicalize(value) !== bytes) return refuse("unavailable"); }
     catch { return refuse("unavailable"); }
-    if (!isRecord(value) || !fields(value, "next,pending,stopped") || typeof value["pending"] !== "boolean" || typeof value["stopped"] !== "boolean" || value["next"] !== null && (typeof value["next"] !== "string" || timeMs(value["next"]) === null)) return refuse("unavailable");
-    return value as { pending: boolean; stopped: boolean; next: Timestamp | null };
+    if (!isRecord(value) || !fields(value, Object.hasOwn(value, "capacityDeferrals") ? "capacityDeferrals,next,pending,stopped" : "next,pending,stopped")
+      || Object.hasOwn(value, "capacityDeferrals") && (!natural(value["capacityDeferrals"]) || value["capacityDeferrals"] === 0 || value["capacityDeferrals"] > 32)
+      || typeof value["pending"] !== "boolean" || typeof value["stopped"] !== "boolean" || value["next"] !== null && (typeof value["next"] !== "string" || timeMs(value["next"]) === null)) return refuse("unavailable");
+    return value as unknown as ArchiveWake;
   }
   wake(budget = new ArchiveBudget()): Timestamp | null { const wake = this.#wake(budget); return wake?.stopped ? null : wake?.next ?? null; }
   /** Persist a pre-Mark retry before a target or parent lookup can await.
@@ -239,10 +250,53 @@ export class ArchiveRows {
   defer(at: Timestamp, budget = new ArchiveBudget()): void {
     this.#sql.transaction(() => {
       if (timeMs(at) === null) return refuse("unavailable");
-      if (this.#wake(budget)?.stopped) return;
+      const previous = this.#wake(budget);
+      if (previous?.stopped) return;
       budget.spend({ calls: 1, inputWork: 4096 }); budget.check();
-      this.#sql.exec("INSERT INTO meta (k, v) VALUES (?, ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v", WAKE, canonicalize({ pending: true, stopped: false, next: at })).toArray();
+      this.#sql.exec("INSERT INTO meta (k, v) VALUES (?, ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v", WAKE,
+        canonicalize({ pending: true, stopped: false, next: at, ...(previous?.capacityDeferrals ? { capacityDeferrals: previous.capacityDeferrals } : {}) })).toArray();
       budget.check();
+    });
+  }
+  /** Reserve this tiny transition before adaptive lookahead can consume the
+   * remaining allowance. Only an actual capacity deferral applies it. The
+   * exact-byte comparison prevents a stale pass replacing a newer wake. */
+  prepareCapacityDeferral(row: ArchiveRow, later: (count: number) => Timestamp | null, budget: ArchiveBudget): { readonly persist: () => Timestamp } {
+    return this.#sql.transaction(() => {
+      const previous = this.#wake(budget);
+      if (!previous || previous.stopped || row.pending !== null || row.stopped !== null) return refuse("unavailable");
+      const count = Math.min(32, (previous.capacityDeferrals ?? 0) + 1), bound = archiveFrontierRowContextBound(row);
+      // The caller's already checked, owned row has no pending manifest.
+      // Pay its bounded serialization/UTF-8 copy before allocation, then
+      // the exact-byte comparison tariffs used by the frontier store.
+      budget.spend(archiveFrontierSnapshotCost(bound));
+      const expectedRow = canonicalize(row), rowBytes = utf8(expectedRow).length;
+      if (rowBytes > bound) return refuse("limit");
+      const expected = canonicalize(previous), wakeBytes = utf8(expected).length;
+      const rowCompare = archiveFrontierRowCompareCost(rowBytes), wakeCompare = archiveFrontierRowCompareCost(wakeBytes);
+      budget.spend({ calls: 1, metadata: rowCompare.metadata + wakeCompare.metadata + 256,
+        inputWork: rowCompare.inputWork + rowCompare.metadata + wakeCompare.inputWork + wakeCompare.metadata + 4096 });
+      let used = false;
+      return { persist: () => {
+        if (used) return refuse("unavailable");
+        used = true;
+        budget.check();
+        // Anchor the delay at actual deferral, not before a possibly long
+        // lookahead. These tiny strings are covered by the prepaid 4096.
+        const next = later(count);
+        if (next === null || timeMs(next) === null) return refuse("unavailable");
+        const bytes = canonicalize({ pending: true, stopped: false, next, capacityDeferrals: count });
+        this.#sql.transaction(() => {
+          // A Mark can reuse the same next timestamp and wake bytes. Fence
+          // the payload row too, so stale capacity work cannot delay it.
+          // CASE bounds each BLOB comparison even if stored text changed.
+          const changed = this.#sql.exec("UPDATE meta SET v = ? WHERE k = ? AND CASE WHEN typeof(v) = 'text' AND octet_length(v) = ? THEN CAST(v AS BLOB) = CAST(? AS BLOB) ELSE 0 END AND EXISTS (SELECT 1 FROM meta WHERE k = ? AND CASE WHEN typeof(v) = 'text' AND octet_length(v) = ? THEN CAST(v AS BLOB) = CAST(? AS BLOB) ELSE 0 END) RETURNING k",
+            bytes, WAKE, wakeBytes, expected, KEY, rowBytes, expectedRow).toArray();
+          if (changed.length !== 1 || changed[0]?.["k"] !== WAKE) return refuse("unavailable");
+          budget.check();
+        });
+        return next;
+      } };
     });
   }
   clearWake(budget = new ArchiveBudget()): void {
