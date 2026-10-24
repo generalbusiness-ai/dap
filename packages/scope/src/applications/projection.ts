@@ -2,9 +2,9 @@
  * authenticates before metadata peers, has one deadline and never retries. */
 import { APPLICATION_PROJECTION_WIRE_BOUNDS as B, type ApplicationProjectionRefusal, type ScopeId } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isRecord, isScopeRef, parseStrict } from "@generalbusiness/dap-bytes";
-import { applicationJson } from "@generalbusiness/dap-bytes/application";
+import { applicationJson } from "@generalbusiness/dap-platform/application";
 import { timeMs } from "@generalbusiness/dap-derive";
-import { applicationProjectionQueryDigest, ApplicationProjectionError, bindApplicationProjection, isApplicationJournalSource, readApplicationProjectionQuery } from "@generalbusiness/dap-bytes/application-v2";
+import { applicationProjectionQueryDigest, ApplicationProjectionError, bindApplicationProjection, isApplicationJournalSource, readApplicationProjectionQuery } from "@generalbusiness/dap-platform/application-v2";
 import { ItemQueryBudget } from "../item-query-budget.ts";
 import { PreparationFlights, type PreparationRun } from "../preparation-flight.ts";
 import { preparedSessionRefusal, type QueryVisibility, type SessionPreparation } from "../session-preparation.ts";

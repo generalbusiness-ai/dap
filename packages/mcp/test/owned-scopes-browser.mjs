@@ -7,7 +7,7 @@ import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { DOMAINS } from '@generalbusiness/dap-contract';
 import { canonicalize, newIncarnation, scopeIdOf, textDigest } from '@generalbusiness/dap-bytes';
-import { applicationProjectionId, applicationProjectionQueryDigest } from '@generalbusiness/dap-bytes/application-v2';
+import { applicationProjectionId, applicationProjectionQueryDigest } from '@generalbusiness/dap-platform/application-v2';
 import { secretSigner } from '@generalbusiness/dap-client';
 import { prepareGrowCheck } from '../../../examples/grow/prepare-check.ts';
 import { prepareApplicationDirectory } from '../../cli/src/application-files.ts';

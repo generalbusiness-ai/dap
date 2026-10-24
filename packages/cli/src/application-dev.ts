@@ -1,6 +1,6 @@
 /** Loopback-only trusted-author development. Native state is in-memory SQLite;
  * actors/read access are explicit TEST fixtures, never room enrollment. */
-import type { AnyPackedApplication } from "@generalbusiness/dap-bytes/application-v2";
+import type { AnyPackedApplication } from "@generalbusiness/dap-platform/application-v2";
 import { watch, type FSWatcher } from "node:fs";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { resolve } from "node:path";

@@ -2,7 +2,7 @@
  * its exact presentation. This serves no application state and grants no
  * member authority. Only the dedicated sandbox service serves package bytes. */
 import { jsonReply } from "../response.ts";
-import type { AnyPackedApplication } from "@generalbusiness/dap-bytes/application-v2";
+import type { AnyPackedApplication } from "@generalbusiness/dap-platform/application-v2";
 import { PROPOSED_BOUNDS, type ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, parseStrict, unb64url } from "@generalbusiness/dap-bytes";
 import { applicationScreenHostMatches, readApplicationScreenHost, readApplicationScreenAddress, readApplicationScreenContext, type ApplicationScreenHost, type ApplicationInstallation, type ApplicationRoom } from "@generalbusiness/dap-client/application";

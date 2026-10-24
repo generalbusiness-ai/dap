@@ -1,0 +1,315 @@
+{
+  "state": "CLOSED_KERNEL_OWNING_REVIEW_EVIDENCE_PROPOSAL_NO_GATE_RESULT",
+  "request": "30c7c3eca82fba47449b35c4280aacbac4cb2c73",
+  "promise": "79ee2bae4fbe94426d0ac3d916af9f1b248fad8b",
+  "proposedRepositoryRoot": "notes/implementation/2026-10-24-kernel-hygiene-evidence",
+  "proposedManifestPath": "notes/implementation/2026-10-24-kernel-hygiene-evidence/manifest.json",
+  "payloads": 13,
+  "bundleFilesIncludingManifest": 14,
+  "originalBytes": 329041,
+  "artifactBytes": 329282,
+  "files": [
+    {
+      "proposedRepositoryPath": "notes/implementation/2026-10-24-kernel-hygiene-evidence/structural-result.json",
+      "bundlePath": "structural-result.json",
+      "copyKind": "exact-byte-copy",
+      "source": {
+        "path": "/private/tmp/artroom-kernel-structural-owning-evidence-20261024-v2/result.json",
+        "bytes": 3783,
+        "sha256": "dc476650c5e5cce81188a39d9b48dfa86419df585e257cb77e25852195ee8070",
+        "device": 16777231,
+        "inode": 546045100,
+        "mode": "0o644",
+        "nlink": 1,
+        "mtimeNs": 1792828720102780664,
+        "ctimeNs": 1792828720102780664
+      },
+      "artifact": {
+        "bytes": 3783,
+        "sha256": "dc476650c5e5cce81188a39d9b48dfa86419df585e257cb77e25852195ee8070",
+        "mode": "0444"
+      },
+      "verification": "For exact-byte-copy, artifact bytes equal original. For reversible-utf8-json, text.encode(utf-8) equals original bytes and originalSha256."
+    },
+    {
+      "proposedRepositoryPath": "notes/implementation/2026-10-24-kernel-hygiene-evidence/structural-restoration.json",
+      "bundlePath": "structural-restoration.json",
+      "copyKind": "exact-byte-copy",
+      "source": {
+        "path": "/private/tmp/artroom-kernel-structural-owning-evidence-20261024-v2/restoration.json",
+        "bytes": 1086,
+        "sha256": "2943cef28b1f2a422182a3134f31e2afad1fce30be30d58d56ddf309eaa679c3",
+        "device": 16777231,
+        "inode": 546045097,
+        "mode": "0o644",
+        "nlink": 1,
+        "mtimeNs": 1792828719360788771,
+        "ctimeNs": 1792828719360788771
+      },
+      "artifact": {
+        "bytes": 1086,
+        "sha256": "2943cef28b1f2a422182a3134f31e2afad1fce30be30d58d56ddf309eaa679c3",
+        "mode": "0444"
+      },
+      "verification": "For exact-byte-copy, artifact bytes equal original. For reversible-utf8-json, text.encode(utf-8) equals original bytes and originalSha256."
+    },
+    {
+      "proposedRepositoryPath": "notes/implementation/2026-10-24-kernel-hygiene-evidence/sdk-result.json",
+      "bundlePath": "sdk-result.json",
+      "copyKind": "exact-byte-copy",
+      "source": {
+        "path": "/private/tmp/artroom-kernel-sdk-output-owning-evidence-20261024-v3/result.json",
+        "bytes": 2361,
+        "sha256": "4f988187e1387a357586d165ee02d5a8aaac958b95f20d72bc18cdbe914474e6",
+        "device": 16777231,
+        "inode": 546047474,
+        "mode": "0o644",
+        "nlink": 1,
+        "mtimeNs": 1792828864259448766,
+        "ctimeNs": 1792828864259448766
+      },
+      "artifact": {
+        "bytes": 2361,
+        "sha256": "4f988187e1387a357586d165ee02d5a8aaac958b95f20d72bc18cdbe914474e6",
+        "mode": "0444"
+      },
+      "verification": "For exact-byte-copy, artifact bytes equal original. For reversible-utf8-json, text.encode(utf-8) equals original bytes and originalSha256."
+    },
+    {
+      "proposedRepositoryPath": "notes/implementation/2026-10-24-kernel-hygiene-evidence/page-result.json",
+      "bundlePath": "page-result.json",
+      "copyKind": "exact-byte-copy",
+      "source": {
+        "path": "/private/tmp/artroom-kernel-page-output-owning-evidence-20261024-v4/result.json",
+        "bytes": 2533,
+        "sha256": "3cc8c1cc0cd4b43c0a79c8aee6ad9228155867d692b77213d1cedc681d823070",
+        "device": 16777231,
+        "inode": 546047750,
+        "mode": "0o644",
+        "nlink": 1,
+        "mtimeNs": 1792828999076085288,
+        "ctimeNs": 1792828999076085288
+      },
+      "artifact": {
+        "bytes": 2533,
+        "sha256": "3cc8c1cc0cd4b43c0a79c8aee6ad9228155867d692b77213d1cedc681d823070",
+        "mode": "0444"
+      },
+      "verification": "For exact-byte-copy, artifact bytes equal original. For reversible-utf8-json, text.encode(utf-8) equals original bytes and originalSha256."
+    },
+    {
+      "proposedRepositoryPath": "notes/implementation/2026-10-24-kernel-hygiene-evidence/page-byte-comparison.json",
+      "bundlePath": "page-byte-comparison.json",
+      "copyKind": "exact-byte-copy",
+      "source": {
+        "path": "/private/tmp/artroom-kernel-page-output-owning-evidence-20261024-v4/byte-comparison.json",
+        "bytes": 248,
+        "sha256": "ab55d438ee21cb7c1dd0117e14ce63089be5f1ff27dbfc1d2fa442cc7aeee319",
+        "device": 16777231,
+        "inode": 546047720,
+        "mode": "0o644",
+        "nlink": 1,
+        "mtimeNs": 1792828996605999302,
+        "ctimeNs": 1792828996605999302
+      },
+      "artifact": {
+        "bytes": 248,
+        "sha256": "ab55d438ee21cb7c1dd0117e14ce63089be5f1ff27dbfc1d2fa442cc7aeee319",
+        "mode": "0444"
+      },
+      "verification": "For exact-byte-copy, artifact bytes equal original. For reversible-utf8-json, text.encode(utf-8) equals original bytes and originalSha256."
+    },
+    {
+      "proposedRepositoryPath": "notes/implementation/2026-10-24-kernel-hygiene-evidence/six-owner-seal-result.json",
+      "bundlePath": "six-owner-seal-result.json",
+      "copyKind": "exact-byte-copy",
+      "source": {
+        "path": "/private/tmp/artroom-kernel-six-owner-seal-evidence-20261024-v3/result.json",
+        "bytes": 2330,
+        "sha256": "ca2f906fdb094b628243ab753f51e8217d3de0fca8d527beeb2bd85ee5ed798c",
+        "device": 16777231,
+        "inode": 546048012,
+        "mode": "0o644",
+        "nlink": 1,
+        "mtimeNs": 1792829199099237180,
+        "ctimeNs": 1792829199099237180
+      },
+      "artifact": {
+        "bytes": 2330,
+        "sha256": "ca2f906fdb094b628243ab753f51e8217d3de0fca8d527beeb2bd85ee5ed798c",
+        "mode": "0444"
+      },
+      "verification": "For exact-byte-copy, artifact bytes equal original. For reversible-utf8-json, text.encode(utf-8) equals original bytes and originalSha256."
+    },
+    {
+      "proposedRepositoryPath": "notes/implementation/2026-10-24-kernel-hygiene-evidence/six-owner-seal-stdout.json",
+      "bundlePath": "six-owner-seal-stdout.json",
+      "copyKind": "reversible-utf8-json",
+      "source": {
+        "path": "/private/tmp/artroom-kernel-six-owner-seal-evidence-20261024-v3/source-seals.stdout",
+        "bytes": 880,
+        "sha256": "82394e85072dd1de22ace8031404bee0446191af866ae1825fa10f9062ff644f",
+        "device": 16777231,
+        "inode": 546048003,
+        "mode": "0o644",
+        "nlink": 1,
+        "mtimeNs": 1792829197615374519,
+        "ctimeNs": 1792829197615374519
+      },
+      "artifact": {
+        "bytes": 1121,
+        "sha256": "390165e8a9b6be96aa806cd3ec59c6ac5160f0a3432df1c01c374a68570a9122",
+        "mode": "0444"
+      },
+      "verification": "For exact-byte-copy, artifact bytes equal original. For reversible-utf8-json, text.encode(utf-8) equals original bytes and originalSha256."
+    },
+    {
+      "proposedRepositoryPath": "notes/implementation/2026-10-24-kernel-hygiene-evidence/seal-map-adoption.json",
+      "bundlePath": "seal-map-adoption.json",
+      "copyKind": "exact-byte-copy",
+      "source": {
+        "path": "/private/tmp/artroom-kernel-seal-map-adoption-20261024-v1.json",
+        "bytes": 1697,
+        "sha256": "b69f745c1de31a2dded73f141e7b7556dfa213a2b9697a6e6109c481bed57802",
+        "device": 16777231,
+        "inode": 546048039,
+        "mode": "0o644",
+        "nlink": 1,
+        "mtimeNs": 1792829238395731595,
+        "ctimeNs": 1792829238395731595
+      },
+      "artifact": {
+        "bytes": 1697,
+        "sha256": "b69f745c1de31a2dded73f141e7b7556dfa213a2b9697a6e6109c481bed57802",
+        "mode": "0444"
+      },
+      "verification": "For exact-byte-copy, artifact bytes equal original. For reversible-utf8-json, text.encode(utf-8) equals original bytes and originalSha256."
+    },
+    {
+      "proposedRepositoryPath": "notes/implementation/2026-10-24-kernel-hygiene-evidence/focused-owner-result.json",
+      "bundlePath": "focused-owner-result.json",
+      "copyKind": "exact-byte-copy",
+      "source": {
+        "path": "/private/tmp/artroom-kernel-focused-owning-evidence-20261024-v1/result.json",
+        "bytes": 96812,
+        "sha256": "f305dbbba792c997614d1c005237b792689da2b68b6bca18cdee408325deb799",
+        "device": 16777231,
+        "inode": 546049261,
+        "mode": "0o644",
+        "nlink": 1,
+        "mtimeNs": 1792829438977549420,
+        "ctimeNs": 1792829438977549420
+      },
+      "artifact": {
+        "bytes": 96812,
+        "sha256": "f305dbbba792c997614d1c005237b792689da2b68b6bca18cdee408325deb799",
+        "mode": "0444"
+      },
+      "verification": "For exact-byte-copy, artifact bytes equal original. For reversible-utf8-json, text.encode(utf-8) equals original bytes and originalSha256."
+    },
+    {
+      "proposedRepositoryPath": "notes/implementation/2026-10-24-kernel-hygiene-evidence/focused-result.json",
+      "bundlePath": "focused-result.json",
+      "copyKind": "exact-byte-copy",
+      "source": {
+        "path": "/private/tmp/artroom-kernel-focused-owning-evidence-20261024-v1/focused/result.json",
+        "bytes": 62422,
+        "sha256": "2131cabe832c86e437bb5d6f8411457deacb7323b643ee2ad0e93f20f20990c3",
+        "device": 16777231,
+        "inode": 546049254,
+        "mode": "0o400",
+        "nlink": 1,
+        "mtimeNs": 1792829437453910863,
+        "ctimeNs": 1792829437455154406
+      },
+      "artifact": {
+        "bytes": 62422,
+        "sha256": "2131cabe832c86e437bb5d6f8411457deacb7323b643ee2ad0e93f20f20990c3",
+        "mode": "0444"
+      },
+      "verification": "For exact-byte-copy, artifact bytes equal original. For reversible-utf8-json, text.encode(utf-8) equals original bytes and originalSha256."
+    },
+    {
+      "proposedRepositoryPath": "notes/implementation/2026-10-24-kernel-hygiene-evidence/focused-coverage-ledger.json",
+      "bundlePath": "focused-coverage-ledger.json",
+      "copyKind": "exact-byte-copy",
+      "source": {
+        "path": "/private/tmp/artroom-kernel-focused-owning-evidence-20261024-v1/focused/coverage-ledger.json",
+        "bytes": 146523,
+        "sha256": "46cb771d39cae11e87e4c9ee5c2cef7b696c1ea69fe3d6e51e54ca01c9a5efad",
+        "device": 16777231,
+        "inode": 546049253,
+        "mode": "0o400",
+        "nlink": 1,
+        "mtimeNs": 1792829437453635279,
+        "ctimeNs": 1792829437455122448
+      },
+      "artifact": {
+        "bytes": 146523,
+        "sha256": "46cb771d39cae11e87e4c9ee5c2cef7b696c1ea69fe3d6e51e54ca01c9a5efad",
+        "mode": "0444"
+      },
+      "verification": "For exact-byte-copy, artifact bytes equal original. For reversible-utf8-json, text.encode(utf-8) equals original bytes and originalSha256."
+    },
+    {
+      "proposedRepositoryPath": "notes/implementation/2026-10-24-kernel-hygiene-evidence/private-dependency-adoption-result.json",
+      "bundlePath": "private-dependency-adoption-result.json",
+      "copyKind": "exact-byte-copy",
+      "source": {
+        "path": "/private/tmp/artroom-kernel-private-dependency-adoption-evidence-20261024-v5/result.json",
+        "bytes": 617,
+        "sha256": "8be8199876256ff2ecbf70797afc6031b5122b34412c4a2ffc04048eeb7c637f",
+        "device": 16777231,
+        "inode": 546044654,
+        "mode": "0o644",
+        "nlink": 1,
+        "mtimeNs": 1792828470170776174,
+        "ctimeNs": 1792828470170776174
+      },
+      "artifact": {
+        "bytes": 617,
+        "sha256": "8be8199876256ff2ecbf70797afc6031b5122b34412c4a2ffc04048eeb7c637f",
+        "mode": "0444"
+      },
+      "verification": "For exact-byte-copy, artifact bytes equal original. For reversible-utf8-json, text.encode(utf-8) equals original bytes and originalSha256."
+    },
+    {
+      "proposedRepositoryPath": "notes/implementation/2026-10-24-kernel-hygiene-evidence/compatibility-readiness-proof.json",
+      "bundlePath": "compatibility-readiness-proof.json",
+      "copyKind": "exact-byte-copy",
+      "source": {
+        "path": "/private/tmp/artroom-kernel-carried-compatibility-readiness-20261024-v1.json",
+        "bytes": 7749,
+        "sha256": "0fcd920bffa53fb0a0dbe50f50d5eb693f82efe0cc8f47fa6a0439cd52d9b270",
+        "device": 16777231,
+        "inode": 546044735,
+        "mode": "0o444",
+        "nlink": 1,
+        "mtimeNs": 1792828578672318145,
+        "ctimeNs": 1792828578672318145
+      },
+      "artifact": {
+        "bytes": 7749,
+        "sha256": "0fcd920bffa53fb0a0dbe50f50d5eb693f82efe0cc8f47fa6a0439cd52d9b270",
+        "mode": "0444"
+      },
+      "verification": "For exact-byte-copy, artifact bytes equal original. For reversible-utf8-json, text.encode(utf-8) equals original bytes and originalSha256."
+    }
+  ],
+  "summary": {
+    "structural": "Maintained checker0, exact Node2+3 passed, sole forbidden-edge control natural1 matched; original inode/mode/nlink/bytes/hash restored, target timestamps honestly changed.",
+    "sdk": "Maintained producer0 then output checker0; local SDK output evidence only, no publication or new Native capture.",
+    "page": "Maintained build0, exact generated HTML/JS byte comparisons, whole assets1 passed; no physical browser/deployment claim.",
+    "seals": "Six actual maintained Source seals, one shared object result for two slots; seven map value spans adopted with outside bytes and four archive values preserved.",
+    "focused": "28 compiler contexts natural0 then whole25 files129cases passed; complete semantic coverage included.",
+    "dependencies": "Accepted private copy result; no install. Compatibility readiness is justified carry of old actual no-op through exact closed custody proof, not a new compatibility invocation."
+  },
+  "limits": [
+    "Evidence is inert retained DATA; copied programs are not included or executed. Embedded Source/result/tool paths grant no read or execution rights.",
+    "All13 original leaves stable regular single-link with exact hashes; immutable optional scratch copies are independently verified. Physical source IDs remain historical custody, copied IDs are new.",
+    "No full physical before/after snapshots, Native capture contents, dependency bytes, SDK product closure or Page generated assets are copied. Complete originals remain external.",
+    "Root supplied original outcome acceptance; this bundle performs finite copy and compact result consistency checks, not a replacement fullguard/outcome audit.",
+    "No final ordinary gate result exists in this bundle. Captures and copied receipts are not new runtime invocations; nested costs overlap and must not be summed again.",
+    "Only this14file bundle is proposed. No candidate file, index, ref, dependency or checkout was changed."
+  ]
+}

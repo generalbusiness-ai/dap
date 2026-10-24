@@ -1,0 +1,3644 @@
+{
+  "cases": [
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-journal-projection.test.ts",
+      "name": "a declared complete tail retains exact entry facts, fields and latest selection",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-journal-projection.test.ts",
+          "name": "a declared complete tail retains exact entry facts, fields and latest selection",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-journal-projection.test.ts",
+      "name": "missing tail entries, corrupt hashes, insufficient row limits and schema drift refuse",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-journal-projection.test.ts",
+          "name": "missing tail entries, corrupt hashes, insufficient row limits and schema drift refuse",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-package-v2.test.ts",
+      "name": "v2 binds projections to semantic identity and views only to presentation identity",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-package-v2.test.ts",
+          "name": "v2 binds projections to semantic identity and views only to presentation identity",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-package-v2.test.ts",
+      "name": "v2 refuses changed signatures, missing projections and unbound views before signing",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-package-v2.test.ts",
+          "name": "v2 refuses changed signatures, missing projections and unbound views before signing",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-package-v2.test.ts",
+      "name": "v2 signs explicit composition, refuses ambiguous references and keeps later forms unsupported",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-package-v2.test.ts",
+          "name": "v2 signs explicit composition, refuses ambiguous references and keeps later forms unsupported",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-package-v2.test.ts",
+      "name": "a signed host requirement names archive explicitly and refuses unknown or ambiguous requirements",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-package-v2.test.ts",
+          "name": "a signed host requirement names archive explicitly and refuses unknown or ambiguous requirements",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-package-v2.test.ts",
+      "name": "a child created only by a late replacement belongs to the signed package closure",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-package-v2.test.ts",
+          "name": "a child created only by a late replacement belongs to the signed package closure",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-binding.test.ts",
+      "name": "binding follows the exact definition, state, slot kind, type and optionality",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-binding.test.ts",
+          "name": "binding follows the exact definition, state, slot kind, type and optionality",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-binding.test.ts",
+      "name": "binding refuses detached text and executable definition input before a getter runs",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-binding.test.ts",
+          "name": "binding refuses detached text and executable definition input before a getter runs",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-binding.test.ts",
+      "name": "fact-time binds only to an optionality-matched same-definition native fact ref",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-binding.test.ts",
+          "name": "fact-time binds only to an optionality-matched same-definition native fact ref",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-binding.test.ts",
+      "name": "fact-signer binds only a matching member output to the local fact slot",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-binding.test.ts",
+          "name": "fact-signer binds only a matching member output to the local fact slot",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-read.test.ts",
+      "name": "fact-time uses only exact same-scope refs at the captured head and preserves absent evidence",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-read.test.ts",
+          "name": "fact-time uses only exact same-scope refs at the captured head and preserves absent evidence",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-read.test.ts",
+      "name": "fact-signer uses only exact local recorded signer metadata and keeps absent facts null",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-read.test.ts",
+          "name": "fact-signer uses only exact local recorded signer metadata and keeps absent facts null",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-read.test.ts",
+      "name": "one canonical projection keeps final rows and revisions while selecting only declared fields",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-read.test.ts",
+          "name": "one canonical projection keeps final rows and revisions while selecting only declared fields",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-read.test.ts",
+      "name": "incomplete, changed-head and mismatched native reads refuse beside a complete passing control",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-read.test.ts",
+          "name": "incomplete, changed-head and mismatched native reads refuse beside a complete passing control",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-wire.test.ts",
+      "name": "bounded owned queries bind their exact selection and incarnation",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-wire.test.ts",
+          "name": "bounded owned queries bind their exact selection and incarnation",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-wire.test.ts",
+      "name": "canonical replies require the exact request binding and native row identity",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-wire.test.ts",
+          "name": "canonical replies require the exact request binding and native row identity",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection.test.ts",
+      "name": "fact fields admit only declared native preparation kinds beside ordinary act names",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection.test.ts",
+          "name": "fact fields admit only declared native preparation kinds beside ordinary act names",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection.test.ts",
+      "name": "a typed declaration owns its complete input and changes identity when the read changes",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection.test.ts",
+          "name": "a typed declaration owns its complete input and changes identity when the read changes",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection.test.ts",
+      "name": "invalid or oversized declarations refuse without invoking getters",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection.test.ts",
+          "name": "invalid or oversized declarations refuse without invoking getters",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view-parameters.test.ts",
+      "name": "declared human inputs convert to exact native scalars and leave omitted readings absent",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view-parameters.test.ts",
+          "name": "declared human inputs convert to exact native scalars and leave omitted readings absent",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view-parameters.test.ts",
+      "name": "parameter declarations keep closed bounded kinds, native-compatible ranges and allowed words",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view-parameters.test.ts",
+          "name": "parameter declarations keep closed bounded kinds, native-compatible ranges and allowed words",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view.test.ts",
+      "name": "member routing is bounded carousel data over a complete native item source",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view.test.ts",
+          "name": "member routing is bounded carousel data over a complete native item source",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view.test.ts",
+      "name": "carousel order binds only to a complete item source's integer or timestamp fields",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view.test.ts",
+          "name": "carousel order binds only to a complete item source's integer or timestamp fields",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view.test.ts",
+      "name": "fixed-point fact descriptors bind only to selected integers with bounded decimal shifts and unique fields",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view.test.ts",
+          "name": "fixed-point fact descriptors bind only to selected integers with bounded decimal shifts and unique fields",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view.test.ts",
+      "name": "age descriptors bind only to selected timestamp fields",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view.test.ts",
+          "name": "age descriptors bind only to selected timestamp fields",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view.test.ts",
+      "name": "owned item and read-only surface views bind to their declared projection and native acts",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view.test.ts",
+          "name": "owned item and read-only surface views bind to their declared projection and native acts",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view.test.ts",
+      "name": "unknown syntax, extra controls, signing surfaces and executable inputs refuse",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view.test.ts",
+          "name": "unknown syntax, extra controls, signing surfaces and executable inputs refuse",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view.test.ts",
+      "name": "constant native arguments bind two choices without accepting invented or ill-typed fields",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view.test.ts",
+          "name": "constant native arguments bind two choices without accepting invented or ill-typed fields",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view.test.ts",
+      "name": "related records bind to typed local-item references and selected record targets",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view.test.ts",
+          "name": "related records bind to typed local-item references and selected record targets",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view.test.ts",
+      "name": "record series bind only bounded integer history on the selected native item type",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view.test.ts",
+          "name": "record series bind only bounded integer history on the selected native item type",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view.test.ts",
+      "name": "declared parameters bind to native fields beside constants without overlap or wider ranges",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view.test.ts",
+          "name": "declared parameters bind to native fields beside constants without overlap or wider ranges",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/package-graph.test.ts",
+      "name": "published consumption preserves the exact old Grow packet while new pack and validation require composition",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/package-graph.test.ts",
+          "name": "published consumption preserves the exact old Grow packet while new pack and validation require composition",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/package-graph.test.ts",
+      "name": "Grow's three retained child slots prove three lifetime relation keys, rather than live maxima alone",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/package-graph.test.ts",
+          "name": "Grow's three retained child slots prove three lifetime relation keys, rather than live maxima alone",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/package-graph.test.ts",
+      "name": "Grow endpoints stay bound to the declared child and creator rather than signer-selected peers",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/package-graph.test.ts",
+          "name": "Grow endpoints stay bound to the declared child and creator rather than signer-selected peers",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/package-graph.test.ts",
+      "name": "Grow's explicit failure clauses, default grants and order each carry a separate package obligation",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/package-graph.test.ts",
+          "name": "Grow's explicit failure clauses, default grants and order each carry a separate package obligation",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/package-graph.test.ts",
+      "name": "Grow rights check declared ownership and warn without claiming complete writer coverage",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/package-graph.test.ts",
+          "name": "Grow rights check declared ownership and warn without claiming complete writer coverage",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/package-graph.test.ts",
+      "name": "Grow ports check the actual peer digest, message reachability and transmitted field types",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/package-graph.test.ts",
+          "name": "Grow ports check the actual peer digest, message reachability and transmitted field types",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/package-graph.test.ts",
+      "name": "the public package byte validator checks signed Grow bytes and preserves the hand-counted instance report",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/package-graph.test.ts",
+          "name": "the public package byte validator checks signed Grow bytes and preserves the hand-counted instance report",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/package-graph.test.ts",
+      "name": "Grow's automatic create/report cycle needs an explicit state condition, without claiming termination",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/package-graph.test.ts",
+          "name": "Grow's automatic create/report cycle needs an explicit state condition, without claiming termination",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/package-graph.test.ts",
+      "name": "Grow's declared pending creation work needs its own timed exit without recycling a successful child slot",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/package-graph.test.ts",
+          "name": "Grow's declared pending creation work needs its own timed exit without recycling a successful child slot",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/package-graph.test.ts",
+      "name": "planned definition forms refuse by name before signing and from correctly signed package bytes",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/package-graph.test.ts",
+          "name": "planned definition forms refuse by name before signing and from correctly signed package bytes",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/package-graph.test.ts",
+      "name": "P1 graph refusals retain their sole reason through packing and signed package validation",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/package-graph.test.ts",
+          "name": "P1 graph refusals retain their sole reason through packing and signed package validation",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "derive",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/derive/test/forms-fields.test.ts",
+      "name": "the record type (section 6.2) > a record is a list's element, a field's default and a slot's value; an unknown member is refused; an item and a fact inside one are read as in any field",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "derive",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/derive/test/forms-fields.test.ts",
+          "name": "the record type (section 6.2) > a record is a list's element, a field's default and a slot's value; an unknown member is refused; an item and a fact inside one are read as in any field",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "derive",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/derive/test/forms-fields.test.ts",
+      "name": "the record type (section 6.2) > a member of a record element is named after the element with a dot, in the validator and in the commit",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "derive",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/derive/test/forms-fields.test.ts",
+          "name": "the record type (section 6.2) > a member of a record element is named after the element with a dot, in the validator and in the commit",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "derive",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/derive/test/forms-fields.test.ts",
+      "name": "the kind of a timed entry (sections 6.2 and 6.4) > a timed rule sets a slot from self, and the entry it writes is a fact of the kind timed: and the rule's key",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "derive",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/derive/test/forms-fields.test.ts",
+          "name": "the kind of a timed entry (sections 6.2 and 6.4) > a timed rule sets a slot from self, and the entry it writes is a fact of the kind timed: and the rule's key",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "derive",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/derive/test/forms-fields.test.ts",
+      "name": "what the validator refuses of these forms > each row is one definition with one change, and the validator reports that one kind of problem",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "derive",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/derive/test/forms-fields.test.ts",
+          "name": "what the validator refuses of these forms > each row is one definition with one change, and the validator reports that one kind of problem",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "derive",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/derive/test/package-relation-order.test.ts",
+      "name": "an item can add a native relation key while its independent creation result is still pending",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "derive",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/derive/test/package-relation-order.test.ts",
+          "name": "an item can add a native relation key while its independent creation result is still pending",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "client",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/client/test/application-projection.test.ts",
+      "name": "HTTP and binding retain canonical bytes, bind the whole request and use only the supplied session",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "client",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/client/test/application-projection.test.ts",
+          "name": "HTTP and binding retain canonical bytes, bind the whole request and use only the supplied session",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "client",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/client/test/application-projection.test.ts",
+      "name": "projection consumers cap reply bytes before parsing, refuse noncanonical text and omit transport secrets",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "client",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/client/test/application-projection.test.ts",
+          "name": "projection consumers cap reply bytes before parsing, refuse noncanonical text and omit transport secrets",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "client",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/client/test/application-projection.test.ts",
+      "name": "HTTP, binding and custom handle projections have finite deadlines and never accept late bytes",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "client",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/client/test/application-projection.test.ts",
+          "name": "HTTP, binding and custom handle projections have finite deadlines and never accept late bytes",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "client",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/client/test/application-projection.test.ts",
+      "name": "declared item observations resolve aliases and merge identical subjects without inventing read fields",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "client",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/client/test/application-projection.test.ts",
+          "name": "declared item observations resolve aliases and merge identical subjects without inventing read fields",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install.test.ts",
+      "name": "install admission retains signed semantics, requires authority and exact answers, and refolds",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install.test.ts",
+          "name": "install admission retains signed semantics, requires authority and exact answers, and refolds",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install.test.ts",
+      "name": "install rejects altered proof and records a bounded host refusal",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install.test.ts",
+          "name": "install rejects altered proof and records a bounded host refusal",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install.test.ts",
+      "name": "trusted install cohort validates whole with the selected embedded rules",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install.test.ts",
+          "name": "trusted install cohort validates whole with the selected embedded rules",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install.test.ts",
+      "name": "checked native grant route stages exact custody before preserving role actions (full=false)",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install.test.ts",
+          "name": "checked native grant route stages exact custody before preserving role actions (full=false)",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install.test.ts",
+      "name": "checked native grant route stages exact custody before preserving role actions (full=true)",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install.test.ts",
+          "name": "checked native grant route stages exact custody before preserving role actions (full=true)",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install.test.ts",
+      "name": "an archive requirement checks the room binding before grants (bound=false)",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install.test.ts",
+          "name": "an archive requirement checks the room binding before grants (bound=false)",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install.test.ts",
+      "name": "an archive requirement checks the room binding before grants (bound=true)",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install.test.ts",
+          "name": "an archive requirement checks the room binding before grants (bound=true)",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install.test.ts",
+      "name": "a full active-definition catalog refuses activation without opening more work",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install.test.ts",
+          "name": "a full active-definition catalog refuses activation without opening more work",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install-v2.test.ts",
+      "name": "new native pin retains exact v2 proof and projection while Rules5 refuses the new wire",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install-v2.test.ts",
+          "name": "new native pin retains exact v2 proof and projection while Rules5 refuses the new wire",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install-v2.test.ts",
+      "name": "'declared' cohort creates its exact native siblings and routes selected role additions",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install-v2.test.ts",
+          "name": "'declared' cohort creates its exact native siblings and routes selected role additions",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install-v2.test.ts",
+      "name": "'archive declared' cohort creates its exact native siblings and routes selected role additions",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install-v2.test.ts",
+          "name": "'archive declared' cohort creates its exact native siblings and routes selected role additions",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install-v2.test.ts",
+      "name": "archive v2 admission retains the requirement while the shipped Rules6 pin refuses it",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "platform",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install-v2.test.ts",
+          "name": "archive v2 admission retains the requirement while the shipped Rules6 pin refuses it",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-dev.test.ts",
+      "name": "loopback native SDK requests use only explicit TEST authority and preserve original retries",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "cli",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-dev.test.ts",
+          "name": "loopback native SDK requests use only explicit TEST authority and preserve original retries",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-dev.test.ts",
+      "name": "presentation rebuilds keep native history while changed scenario or semantics restart the fixture",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "cli",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-dev.test.ts",
+          "name": "presentation rebuilds keep native history while changed scenario or semantics restart the fixture",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-dev.test.ts",
+      "name": "the actual dev bin bypasses custody and closes its owned process group",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "cli",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-dev.test.ts",
+          "name": "the actual dev bin bypasses custody and closes its owned process group",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-new.test.ts",
+      "name": "the actual new bin creates a usable local check project without opening custody",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "cli",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-new.test.ts",
+          "name": "the actual new bin creates a usable local check project without opening custody",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-new.test.ts",
+      "name": "new refuses existing directories and symlinks without changing their files",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "cli",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-new.test.ts",
+          "name": "new refuses existing directories and symlinks without changing their files",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-pack.test.ts",
+      "name": "explicit v2 sources bind projections to captured definition paths and run native local replay",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "cli",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-pack.test.ts",
+          "name": "explicit v2 sources bind projections to captured definition paths and run native local replay",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-pack.test.ts",
+      "name": "a trusted author's browser entry builds through pack without generated checkout files",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "cli",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-pack.test.ts",
+          "name": "a trusted author's browser entry builds through pack without generated checkout files",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-pack.test.ts",
+      "name": "real Counter and Lending native declarations pack reproducibly into exact signed bytes",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "cli",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-pack.test.ts",
+          "name": "real Counter and Lending native declarations pack reproducibly into exact signed bytes",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-pack.test.ts",
+      "name": "explicit config selection keeps root confinement and the same package identity",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "cli",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-pack.test.ts",
+          "name": "explicit config selection keeps root confinement and the same package identity",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-pack.test.ts",
+      "name": "native form and restricted rule admission precede every publisher signature",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "cli",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-pack.test.ts",
+          "name": "native form and restricted rule admission precede every publisher signature",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-pack.test.ts",
+      "name": "bounded regular source files refuse symlinks, escaping paths and oversized bytes",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "cli",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-pack.test.ts",
+          "name": "bounded regular source files refuse symlinks, escaping paths and oversized bytes",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-pack.test.ts",
+      "name": "pack requires an existing named key and preserves its custody while refusing extra grants",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "cli",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-pack.test.ts",
+          "name": "pack requires an existing named key and preserves its custody while refusing extra grants",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-pack.test.ts",
+      "name": "the actual dap bin packs from an external working directory without room config or network",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "cli",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-pack.test.ts",
+          "name": "the actual dap bin packs from an external working directory without room config or network",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-pack.test.ts",
+      "name": "the actual dap check requires scenarios and native replay without reading CLI key custody",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "cli",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-pack.test.ts",
+          "name": "the actual dap check requires scenarios and native replay without reading CLI key custody",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-pack.test.ts",
+      "name": "dap check fails on a wrong expected result, a missing scenario or an invalid scenario list",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "cli",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-pack.test.ts",
+          "name": "dap check fails on a wrong expected result, a missing scenario or an invalid scenario list",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-pack.test.ts",
+      "name": "v2 CLI reports proved item keys and escapes the same refusal rows through check and pack",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "cli",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-pack.test.ts",
+          "name": "v2 CLI reports proved item keys and escapes the same refusal rows through check and pack",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-scenarios.test.ts",
+      "name": "a checked development session retains its native scope until its owner closes it",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "cli",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-scenarios.test.ts",
+          "name": "a checked development session retains its native scope until its owner closes it",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-scenarios.test.ts",
+      "name": "the actual check bin refuses vacuous scenarios and preserves explicit answer and state witnesses",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "cli",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-scenarios.test.ts",
+          "name": "the actual check bin refuses vacuous scenarios and preserves explicit answer and state witnesses",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-scenarios.test.ts",
+      "name": "data scenarios judge explicit grants, reuse saved signatures, assert native state and require replay",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "cli",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-scenarios.test.ts",
+          "name": "data scenarios judge explicit grants, reuse saved signatures, assert native state and require replay",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-scenarios.test.ts",
+      "name": "a scenario selects only a verified closure definition as its explicit local root",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "cli",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-scenarios.test.ts",
+          "name": "a scenario selects only a verified closure definition as its explicit local root",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-scenarios.test.ts",
+      "name": "signing without submitting preserves old revisions and expiry for a later native judgment",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "cli",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-scenarios.test.ts",
+          "name": "signing without submitting preserves old revisions and expiry for a later native judgment",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-scenarios.test.ts",
+      "name": "a running scenario owns its expected results before signing awaits or caller edits",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "cli",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-scenarios.test.ts",
+          "name": "a running scenario owns its expected results before signing awaits or caller edits",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-scenarios.test.ts",
+      "name": "saved facts come from accepted native receipts and owner records stay outside the journal",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "cli",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-scenarios.test.ts",
+          "name": "saved facts come from accepted native receipts and owner records stay outside the journal",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-scenarios.test.ts",
+      "name": "unaccepted or invented facts and duplicate scenario-owner outcomes cannot pass",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "cli",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-scenarios.test.ts",
+          "name": "unaccepted or invented facts and duplicate scenario-owner outcomes cannot pass",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-scenarios.test.ts",
+      "name": "scenario typos, empty assertions, wrong outcomes, malformed actors and missing references cannot pass",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "cli",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-scenarios.test.ts",
+          "name": "scenario typos, empty assertions, wrong outcomes, malformed actors and missing references cannot pass",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-scenarios.test.ts",
+      "name": "a mismatched or integrity-only verifier report cannot become a successful scenario",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "cli",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-scenarios.test.ts",
+          "name": "a mismatched or integrity-only verifier report cannot become a successful scenario",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-scenarios.test.ts",
+      "name": "scripted-parent device scenarios keep their anchor explicit and execute native owner preparations once",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "cli",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-scenarios.test.ts",
+          "name": "scripted-parent device scenarios keep their anchor explicit and execute native owner preparations once",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/application-projection-native.test.ts",
+      "name": "fact signer metadata reads 100 exact references on native SQLite",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/application-projection-native.test.ts",
+          "name": "fact signer metadata reads 100 exact references on native SQLite",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/application-projection-native.test.ts",
+      "name": "native installed projection reads exact journal state and survives R2 deletion and eviction",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/application-projection-native.test.ts",
+          "name": "native installed projection reads exact journal state and survives R2 deletion and eviction",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/application-sandbox.test.ts",
+      "name": "the public Room serves no package bytes before any scope or content lookup",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/application-sandbox.test.ts",
+          "name": "the public Room serves no package bytes before any scope or content lookup",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/application-sandbox.test.ts",
+      "name": "sandbox serves maintained grow bytes with canonical room context and no ambient credentials",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/application-sandbox.test.ts",
+          "name": "sandbox serves maintained grow bytes with canonical room context and no ambient credentials",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/application-sandbox.test.ts",
+      "name": "sandbox serves maintained lending bytes with canonical room context and no ambient credentials",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/application-sandbox.test.ts",
+          "name": "sandbox serves maintained lending bytes with canonical room context and no ambient credentials",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/application-sandbox.test.ts",
+      "name": "named sandbox RPC carries a real session and stream, and cancellation releases the native subscription",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/application-sandbox.test.ts",
+          "name": "named sandbox RPC carries a real session and stream, and cancellation releases the native subscription",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/application-sandbox.test.ts",
+      "name": "sandbox cancellation waits for its deferred release acknowledgement before completing",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/application-sandbox.test.ts",
+          "name": "sandbox cancellation waits for its deferred release acknowledgement before completing",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/application-sandbox.test.ts",
+      "name": "sandbox cancellation rejects a failed release acknowledgement rather than reporting success",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/application-sandbox.test.ts",
+          "name": "sandbox cancellation rejects a failed release acknowledgement rather than reporting success",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/application-sandbox.test.ts",
+      "name": "sandbox EOF and overlapping cancellation share one release and dispose the exchange once",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/application-sandbox.test.ts",
+          "name": "sandbox EOF and overlapping cancellation share one release and dispose the exchange once",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/application-sandbox.test.ts",
+      "name": "sandbox late headers retain bounded cleanup in the context until the exact exchange is released",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/application-sandbox.test.ts",
+          "name": "sandbox late headers retain bounded cleanup in the context until the exact exchange is released",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/creation-lineage.test.ts",
+      "name": "both approved native cohorts admit their exact child chain and refuse another configured register before child lookup",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/creation-lineage.test.ts",
+          "name": "both approved native cohorts admit their exact child chain and refuse another configured register before child lookup",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/creation-lineage.test.ts",
+      "name": "a late whole-lineage index result and an oversized body never activate any raw namespace",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/creation-lineage.test.ts",
+          "name": "a late whole-lineage index result and an oversized body never activate any raw namespace",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/creation-lineage.test.ts",
+      "name": "an actually supported but unadmitted native cohort and a refused native birth never admit a child",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/creation-lineage.test.ts",
+          "name": "an actually supported but unadmitted native cohort and a refused native birth never admit a child",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/creation-lineage.test.ts",
+      "name": "the whole creation attempt admits exactly16 bodies before a genuine legacy closure needs a seventeenth",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/creation-lineage.test.ts",
+          "name": "the whole creation attempt admits exactly16 bodies before a genuine legacy closure needs a seventeenth",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/creation-lineage.test.ts",
+      "name": "'platform:register@17' authenticated Directory closure admits a second-level declared child and rejects substituted bytes before lookup",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/creation-lineage.test.ts",
+          "name": "'platform:register@17' authenticated Directory closure admits a second-level declared child and rejects substituted bytes before lookup",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/creation-lineage.test.ts",
+      "name": "'platform:register@5' authenticated Directory closure admits a second-level declared child and rejects substituted bytes before lookup",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/creation-lineage.test.ts",
+          "name": "'platform:register@5' authenticated Directory closure admits a second-level declared child and rejects substituted bytes before lookup",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-members.test.ts",
+      "name": "member display sequences its bounded queries and preserves member and optional-roster errors",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "mcp",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-members.test.ts",
+          "name": "member display sequences its bounded queries and preserves member and optional-roster errors",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-members.test.ts",
+      "name": "party and signer resolve once with controller evidence; arbitrary values never cause a read",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "mcp",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-members.test.ts",
+          "name": "party and signer resolve once with controller evidence; arbitrary values never cause a read",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-members.test.ts",
+      "name": "32 primary references retain a visible distinct overflow and do not expand controllers beyond the bound",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "mcp",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-members.test.ts",
+          "name": "32 primary references retain a visible distinct overflow and do not expand controllers beyond the bound",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-members.test.ts",
+      "name": "removed and lapsed stay explicit; refused reads and different-head actions stay unknown",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "mcp",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-members.test.ts",
+          "name": "removed and lapsed stay explicit; refused reads and different-head actions stay unknown",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-inputs.test.ts",
+      "name": "declared model input converts exact fields once, retains concurrent retries and exposes no private card data",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "mcp",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-inputs.test.ts",
+          "name": "declared model input converts exact fields once, retains concurrent retries and exposes no private card data",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-inputs.test.ts",
+      "name": "changed revision, lost standing and invalid inputs refuse at the current pre-sign boundary",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "mcp",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-inputs.test.ts",
+          "name": "changed revision, lost standing and invalid inputs refuse at the current pre-sign boundary",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-inputs.test.ts",
+      "name": "an unknown measurement retains its original custody request and blocks a new submission",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "mcp",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-inputs.test.ts",
+          "name": "an unknown measurement retains its original custody request and blocks a new submission",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-inputs.test.ts",
+      "name": "oldest-first carousel orders missing and tied probes, then advances after an accepted input",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "mcp",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-inputs.test.ts",
+          "name": "oldest-first carousel orders missing and tied probes, then advances after an accepted input",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-routing.test.ts",
+      "name": "routed identity tables contain only the displayed row and unknown assignments make no member read",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "mcp",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-routing.test.ts",
+          "name": "routed identity tables contain only the displayed row and unknown assignments make no member read",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-routing.test.ts",
+      "name": "carousel routes from trusted member, grants and item state without exposing other rows; explicit records retain ordinary grants",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "mcp",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-routing.test.ts",
+          "name": "carousel routes from trusted member, grants and item state without exposing other rows; explicit records retain ordinary grants",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-routing.test.ts",
+      "name": "declared root reads retain both heads and recheck current routing without caller scope or item bindings",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "mcp",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-routing.test.ts",
+          "name": "declared root reads retain both heads and recheck current routing without caller scope or item bindings",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-routing.test.ts",
+      "name": "a changed route at unchanged native item revision refuses before signing",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "mcp",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-routing.test.ts",
+          "name": "a changed route at unchanged native item revision refuses before signing",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-routing.test.ts",
+      "name": "automatic refresh recovers a shortened member queue without retargeting explicit navigation or stale acts",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "mcp",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-routing.test.ts",
+          "name": "automatic refresh recovers a shortened member queue without retargeting explicit navigation or stale acts",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-routing.test.ts",
+      "name": "automatic member-queue refresh retains an unknown original even when current routing selects another item",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "mcp",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-routing.test.ts",
+          "name": "automatic member-queue refresh retains an unknown original even when current routing selects another item",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-routing.test.ts",
+      "name": "missing or foreign viewer and nonboolean or failed rules stay unavailable",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "mcp",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-routing.test.ts",
+          "name": "missing or foreign viewer and nonboolean or failed rules stay unavailable",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-views.test.ts",
+      "name": "declared fallback and identity open quietly; the app gets the exact projection and only offered controls",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "mcp",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-views.test.ts",
+          "name": "declared fallback and identity open quietly; the app gets the exact projection and only offered controls",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-views.test.ts",
+      "name": "the host repeats current revision and held-action checks before a new envelope can be signed",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "mcp",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-views.test.ts",
+          "name": "the host repeats current revision and held-action checks before a new envelope can be signed",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-views.test.ts",
+      "name": "a declared record opens directly in detail with its declared Back target",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "mcp",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-views.test.ts",
+          "name": "a declared record opens directly in detail with its declared Back target",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-views.test.ts",
+      "name": "declared controls capture different subject sets and repeat secondary revisions before signing",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "mcp",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-views.test.ts",
+          "name": "declared controls capture different subject sets and repeat secondary revisions before signing",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-views.test.ts",
+      "name": "declared opening tool names preserve exact names without reserved-name collisions",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "mcp",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-views.test.ts",
+          "name": "declared opening tool names preserve exact names without reserved-name collisions",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-views.test.ts",
+      "name": "two constant choices retain one native act and recheck fields, standing and revision before signing",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "mcp",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-views.test.ts",
+          "name": "two constant choices retain one native act and recheck fields, standing and revision before signing",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-views.test.ts",
+      "name": "record history keeps only the last selected-item samples and their exact source facts and times",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "mcp",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-views.test.ts",
+          "name": "record history keeps only the last selected-item samples and their exact source facts and times",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    }
+  ],
+  "observedCases": [
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install-v2.test.ts",
+      "name": "new native pin retains exact v2 proof and projection while Rules5 refuses the new wire",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install-v2.test.ts",
+      "name": "'declared' cohort creates its exact native siblings and routes selected role additions",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install-v2.test.ts",
+      "name": "'archive declared' cohort creates its exact native siblings and routes selected role additions",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install-v2.test.ts",
+      "name": "archive v2 admission retains the requirement while the shipped Rules6 pin refuses it",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install.test.ts",
+      "name": "install admission retains signed semantics, requires authority and exact answers, and refolds",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install.test.ts",
+      "name": "install rejects altered proof and records a bounded host refusal",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install.test.ts",
+      "name": "trusted install cohort validates whole with the selected embedded rules",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install.test.ts",
+      "name": "checked native grant route stages exact custody before preserving role actions (full=false)",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install.test.ts",
+      "name": "checked native grant route stages exact custody before preserving role actions (full=true)",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install.test.ts",
+      "name": "an archive requirement checks the room binding before grants (bound=false)",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install.test.ts",
+      "name": "an archive requirement checks the room binding before grants (bound=true)",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install.test.ts",
+      "name": "a full active-definition catalog refuses activation without opening more work",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-journal-projection.test.ts",
+      "name": "a declared complete tail retains exact entry facts, fields and latest selection",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-journal-projection.test.ts",
+      "name": "missing tail entries, corrupt hashes, insufficient row limits and schema drift refuse",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-package-v2.test.ts",
+      "name": "v2 binds projections to semantic identity and views only to presentation identity",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-package-v2.test.ts",
+      "name": "v2 refuses changed signatures, missing projections and unbound views before signing",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-package-v2.test.ts",
+      "name": "v2 signs explicit composition, refuses ambiguous references and keeps later forms unsupported",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-package-v2.test.ts",
+      "name": "a signed host requirement names archive explicitly and refuses unknown or ambiguous requirements",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-package-v2.test.ts",
+      "name": "a child created only by a late replacement belongs to the signed package closure",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-binding.test.ts",
+      "name": "binding follows the exact definition, state, slot kind, type and optionality",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-binding.test.ts",
+      "name": "binding refuses detached text and executable definition input before a getter runs",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-binding.test.ts",
+      "name": "fact-time binds only to an optionality-matched same-definition native fact ref",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-binding.test.ts",
+      "name": "fact-signer binds only a matching member output to the local fact slot",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-read.test.ts",
+      "name": "fact-time uses only exact same-scope refs at the captured head and preserves absent evidence",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-read.test.ts",
+      "name": "fact-signer uses only exact local recorded signer metadata and keeps absent facts null",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-read.test.ts",
+      "name": "one canonical projection keeps final rows and revisions while selecting only declared fields",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-read.test.ts",
+      "name": "incomplete, changed-head and mismatched native reads refuse beside a complete passing control",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-wire.test.ts",
+      "name": "bounded owned queries bind their exact selection and incarnation",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-wire.test.ts",
+      "name": "canonical replies require the exact request binding and native row identity",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection.test.ts",
+      "name": "fact fields admit only declared native preparation kinds beside ordinary act names",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection.test.ts",
+      "name": "a typed declaration owns its complete input and changes identity when the read changes",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection.test.ts",
+      "name": "invalid or oversized declarations refuse without invoking getters",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view-parameters.test.ts",
+      "name": "declared human inputs convert to exact native scalars and leave omitted readings absent",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view-parameters.test.ts",
+      "name": "parameter declarations keep closed bounded kinds, native-compatible ranges and allowed words",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view.test.ts",
+      "name": "member routing is bounded carousel data over a complete native item source",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view.test.ts",
+      "name": "carousel order binds only to a complete item source's integer or timestamp fields",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view.test.ts",
+      "name": "fixed-point fact descriptors bind only to selected integers with bounded decimal shifts and unique fields",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view.test.ts",
+      "name": "age descriptors bind only to selected timestamp fields",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view.test.ts",
+      "name": "owned item and read-only surface views bind to their declared projection and native acts",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view.test.ts",
+      "name": "unknown syntax, extra controls, signing surfaces and executable inputs refuse",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view.test.ts",
+      "name": "constant native arguments bind two choices without accepting invented or ill-typed fields",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view.test.ts",
+      "name": "related records bind to typed local-item references and selected record targets",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view.test.ts",
+      "name": "record series bind only bounded integer history on the selected native item type",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view.test.ts",
+      "name": "declared parameters bind to native fields beside constants without overlap or wider ranges",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/package-graph.test.ts",
+      "name": "published consumption preserves the exact old Grow packet while new pack and validation require composition",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/package-graph.test.ts",
+      "name": "Grow's three retained child slots prove three lifetime relation keys, rather than live maxima alone",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/package-graph.test.ts",
+      "name": "Grow endpoints stay bound to the declared child and creator rather than signer-selected peers",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/package-graph.test.ts",
+      "name": "Grow's explicit failure clauses, default grants and order each carry a separate package obligation",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/package-graph.test.ts",
+      "name": "Grow rights check declared ownership and warn without claiming complete writer coverage",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/package-graph.test.ts",
+      "name": "Grow ports check the actual peer digest, message reachability and transmitted field types",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/package-graph.test.ts",
+      "name": "the public package byte validator checks signed Grow bytes and preserves the hand-counted instance report",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/package-graph.test.ts",
+      "name": "Grow's automatic create/report cycle needs an explicit state condition, without claiming termination",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/package-graph.test.ts",
+      "name": "Grow's declared pending creation work needs its own timed exit without recycling a successful child slot",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/package-graph.test.ts",
+      "name": "planned definition forms refuse by name before signing and from correctly signed package bytes",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/package-graph.test.ts",
+      "name": "P1 graph refusals retain their sole reason through packing and signed package validation",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "client",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/client/test/application-projection.test.ts",
+      "name": "HTTP and binding retain canonical bytes, bind the whole request and use only the supplied session",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "client",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/client/test/application-projection.test.ts",
+      "name": "projection consumers cap reply bytes before parsing, refuse noncanonical text and omit transport secrets",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "client",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/client/test/application-projection.test.ts",
+      "name": "HTTP, binding and custom handle projections have finite deadlines and never accept late bytes",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "client",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/client/test/application-projection.test.ts",
+      "name": "declared item observations resolve aliases and merge identical subjects without inventing read fields",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-dev.test.ts",
+      "name": "loopback native SDK requests use only explicit TEST authority and preserve original retries",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-dev.test.ts",
+      "name": "presentation rebuilds keep native history while changed scenario or semantics restart the fixture",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-dev.test.ts",
+      "name": "the actual dev bin bypasses custody and closes its owned process group",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-new.test.ts",
+      "name": "the actual new bin creates a usable local check project without opening custody",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-new.test.ts",
+      "name": "new refuses existing directories and symlinks without changing their files",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-pack.test.ts",
+      "name": "explicit v2 sources bind projections to captured definition paths and run native local replay",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-pack.test.ts",
+      "name": "a trusted author's browser entry builds through pack without generated checkout files",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-pack.test.ts",
+      "name": "real Counter and Lending native declarations pack reproducibly into exact signed bytes",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-pack.test.ts",
+      "name": "explicit config selection keeps root confinement and the same package identity",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-pack.test.ts",
+      "name": "native form and restricted rule admission precede every publisher signature",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-pack.test.ts",
+      "name": "bounded regular source files refuse symlinks, escaping paths and oversized bytes",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-pack.test.ts",
+      "name": "pack requires an existing named key and preserves its custody while refusing extra grants",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-pack.test.ts",
+      "name": "the actual dap bin packs from an external working directory without room config or network",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-pack.test.ts",
+      "name": "the actual dap check requires scenarios and native replay without reading CLI key custody",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-pack.test.ts",
+      "name": "dap check fails on a wrong expected result, a missing scenario or an invalid scenario list",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-pack.test.ts",
+      "name": "v2 CLI reports proved item keys and escapes the same refusal rows through check and pack",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-scenarios.test.ts",
+      "name": "a checked development session retains its native scope until its owner closes it",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-scenarios.test.ts",
+      "name": "the actual check bin refuses vacuous scenarios and preserves explicit answer and state witnesses",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-scenarios.test.ts",
+      "name": "data scenarios judge explicit grants, reuse saved signatures, assert native state and require replay",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-scenarios.test.ts",
+      "name": "a scenario selects only a verified closure definition as its explicit local root",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-scenarios.test.ts",
+      "name": "signing without submitting preserves old revisions and expiry for a later native judgment",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-scenarios.test.ts",
+      "name": "a running scenario owns its expected results before signing awaits or caller edits",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-scenarios.test.ts",
+      "name": "saved facts come from accepted native receipts and owner records stay outside the journal",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-scenarios.test.ts",
+      "name": "unaccepted or invented facts and duplicate scenario-owner outcomes cannot pass",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-scenarios.test.ts",
+      "name": "scenario typos, empty assertions, wrong outcomes, malformed actors and missing references cannot pass",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-scenarios.test.ts",
+      "name": "a mismatched or integrity-only verifier report cannot become a successful scenario",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-scenarios.test.ts",
+      "name": "scripted-parent device scenarios keep their anchor explicit and execute native owner preparations once",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "derive",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/derive/test/forms-fields.test.ts",
+      "name": "the record type (section 6.2) > a record is a list's element, a field's default and a slot's value; an unknown member is refused; an item and a fact inside one are read as in any field",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "derive",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/derive/test/forms-fields.test.ts",
+      "name": "the record type (section 6.2) > a member of a record element is named after the element with a dot, in the validator and in the commit",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "derive",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/derive/test/forms-fields.test.ts",
+      "name": "the kind of a timed entry (sections 6.2 and 6.4) > a timed rule sets a slot from self, and the entry it writes is a fact of the kind timed: and the rule's key",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "derive",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/derive/test/forms-fields.test.ts",
+      "name": "what the validator refuses of these forms > each row is one definition with one change, and the validator reports that one kind of problem",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "derive",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/derive/test/package-relation-order.test.ts",
+      "name": "an item can add a native relation key while its independent creation result is still pending",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-members.test.ts",
+      "name": "member display sequences its bounded queries and preserves member and optional-roster errors",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-members.test.ts",
+      "name": "party and signer resolve once with controller evidence; arbitrary values never cause a read",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-members.test.ts",
+      "name": "32 primary references retain a visible distinct overflow and do not expand controllers beyond the bound",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-members.test.ts",
+      "name": "removed and lapsed stay explicit; refused reads and different-head actions stay unknown",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-inputs.test.ts",
+      "name": "declared model input converts exact fields once, retains concurrent retries and exposes no private card data",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-inputs.test.ts",
+      "name": "changed revision, lost standing and invalid inputs refuse at the current pre-sign boundary",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-inputs.test.ts",
+      "name": "an unknown measurement retains its original custody request and blocks a new submission",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-inputs.test.ts",
+      "name": "oldest-first carousel orders missing and tied probes, then advances after an accepted input",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-routing.test.ts",
+      "name": "routed identity tables contain only the displayed row and unknown assignments make no member read",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-routing.test.ts",
+      "name": "carousel routes from trusted member, grants and item state without exposing other rows; explicit records retain ordinary grants",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-routing.test.ts",
+      "name": "declared root reads retain both heads and recheck current routing without caller scope or item bindings",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-routing.test.ts",
+      "name": "a changed route at unchanged native item revision refuses before signing",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-routing.test.ts",
+      "name": "automatic refresh recovers a shortened member queue without retargeting explicit navigation or stale acts",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-routing.test.ts",
+      "name": "automatic member-queue refresh retains an unknown original even when current routing selects another item",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-routing.test.ts",
+      "name": "missing or foreign viewer and nonboolean or failed rules stay unavailable",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-views.test.ts",
+      "name": "declared fallback and identity open quietly; the app gets the exact projection and only offered controls",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-views.test.ts",
+      "name": "the host repeats current revision and held-action checks before a new envelope can be signed",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-views.test.ts",
+      "name": "a declared record opens directly in detail with its declared Back target",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-views.test.ts",
+      "name": "declared controls capture different subject sets and repeat secondary revisions before signing",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-views.test.ts",
+      "name": "declared opening tool names preserve exact names without reserved-name collisions",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-views.test.ts",
+      "name": "two constant choices retain one native act and recheck fields, standing and revision before signing",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-views.test.ts",
+      "name": "record history keeps only the last selected-item samples and their exact source facts and times",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/application-projection-native.test.ts",
+      "name": "fact signer metadata reads 100 exact references on native SQLite",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/application-projection-native.test.ts",
+      "name": "native installed projection reads exact journal state and survives R2 deletion and eviction",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/application-sandbox.test.ts",
+      "name": "the public Room serves no package bytes before any scope or content lookup",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/application-sandbox.test.ts",
+      "name": "sandbox serves maintained grow bytes with canonical room context and no ambient credentials",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/application-sandbox.test.ts",
+      "name": "sandbox serves maintained lending bytes with canonical room context and no ambient credentials",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/application-sandbox.test.ts",
+      "name": "named sandbox RPC carries a real session and stream, and cancellation releases the native subscription",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/application-sandbox.test.ts",
+      "name": "sandbox cancellation waits for its deferred release acknowledgement before completing",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/application-sandbox.test.ts",
+      "name": "sandbox cancellation rejects a failed release acknowledgement rather than reporting success",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/application-sandbox.test.ts",
+      "name": "sandbox EOF and overlapping cancellation share one release and dispose the exchange once",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/application-sandbox.test.ts",
+      "name": "sandbox late headers retain bounded cleanup in the context until the exact exchange is released",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/creation-lineage.test.ts",
+      "name": "both approved native cohorts admit their exact child chain and refuse another configured register before child lookup",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/creation-lineage.test.ts",
+      "name": "a late whole-lineage index result and an oversized body never activate any raw namespace",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/creation-lineage.test.ts",
+      "name": "an actually supported but unadmitted native cohort and a refused native birth never admit a child",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/creation-lineage.test.ts",
+      "name": "the whole creation attempt admits exactly16 bodies before a genuine legacy closure needs a seventeenth",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/creation-lineage.test.ts",
+      "name": "'platform:register@17' authenticated Directory closure admits a second-level declared child and rejects substituted bytes before lookup",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/creation-lineage.test.ts",
+      "name": "'platform:register@5' authenticated Directory closure admits a second-level declared child and rejects substituted bytes before lookup",
+      "status": "passed",
+      "errors": 0,
+      "retryCount": 0,
+      "repeatCount": 0
+    }
+  ],
+  "unexpectedCases": [],
+  "modules": [
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install-v2.test.ts",
+      "status": "passed",
+      "errors": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install.test.ts",
+      "status": "passed",
+      "errors": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-journal-projection.test.ts",
+      "status": "passed",
+      "errors": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-package-v2.test.ts",
+      "status": "passed",
+      "errors": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-binding.test.ts",
+      "status": "passed",
+      "errors": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-read.test.ts",
+      "status": "passed",
+      "errors": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-wire.test.ts",
+      "status": "passed",
+      "errors": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection.test.ts",
+      "status": "passed",
+      "errors": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view-parameters.test.ts",
+      "status": "passed",
+      "errors": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view.test.ts",
+      "status": "passed",
+      "errors": 0
+    },
+    {
+      "project": "platform",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/package-graph.test.ts",
+      "status": "passed",
+      "errors": 0
+    },
+    {
+      "project": "client",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/client/test/application-projection.test.ts",
+      "status": "passed",
+      "errors": 0
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-dev.test.ts",
+      "status": "passed",
+      "errors": 0
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-new.test.ts",
+      "status": "passed",
+      "errors": 0
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-pack.test.ts",
+      "status": "passed",
+      "errors": 0
+    },
+    {
+      "project": "cli",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-scenarios.test.ts",
+      "status": "passed",
+      "errors": 0
+    },
+    {
+      "project": "derive",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/derive/test/forms-fields.test.ts",
+      "status": "passed",
+      "errors": 0
+    },
+    {
+      "project": "derive",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/derive/test/package-relation-order.test.ts",
+      "status": "passed",
+      "errors": 0
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-members.test.ts",
+      "status": "passed",
+      "errors": 0
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-inputs.test.ts",
+      "status": "passed",
+      "errors": 0
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-routing.test.ts",
+      "status": "passed",
+      "errors": 0
+    },
+    {
+      "project": "mcp",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-views.test.ts",
+      "status": "passed",
+      "errors": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/application-projection-native.test.ts",
+      "status": "passed",
+      "errors": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/application-sandbox.test.ts",
+      "status": "passed",
+      "errors": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/creation-lineage.test.ts",
+      "status": "passed",
+      "errors": 0
+    }
+  ],
+  "issues": [],
+  "passed": true
+}

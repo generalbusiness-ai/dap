@@ -13,7 +13,7 @@ import { ApplicationSourceError, packDirectory, prepareApplicationDirectory } fr
 import { checkCommand, packCommand } from "../src/application-command.ts";
 import { memoryStore } from "../src/store.ts";
 import { fileStore } from "../src/files.ts";
-import { readApplicationPackage2 } from "@generalbusiness/dap-bytes/application-v2";
+import { readApplicationPackage2 } from "@generalbusiness/dap-platform/application-v2";
 import { runApplicationScenario } from "../src/application-scenarios.ts";
 import { emptyPackageComposition } from "@generalbusiness/dap-package-graph";
 

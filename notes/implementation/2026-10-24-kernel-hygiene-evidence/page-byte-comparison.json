@@ -1,0 +1,10 @@
+{
+  "PAGE_HTML": {
+    "bytes": 26184,
+    "sha256": "0167e7334fb013b0787bd559c18836789cf06d36bb2b402f1044b72ebec386f8"
+  },
+  "PAGE_JS": {
+    "bytes": 806615,
+    "sha256": "d53db79be16d558a12eed72f16c0ad00b91170e261294a9e764468bd76f5f8b7"
+  }
+}

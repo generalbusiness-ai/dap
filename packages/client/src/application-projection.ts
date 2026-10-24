@@ -2,7 +2,7 @@
  * opened/attributed fields, Summary reply or native authority proof. */
 import type { ApplicationProjectionData, ApplicationProjectionRead, FieldValue, Item, Read } from "@generalbusiness/dap-contract";
 import { canonicalize, isMemberRef, parseStrict, timeMs } from "@generalbusiness/dap-bytes";
-import { applicationProjectionId, isApplicationJournalSource, readApplicationProjection, type ApplicationReadProjection } from "@generalbusiness/dap-bytes/application-v2";
+import { applicationProjectionId, isApplicationJournalSource, readApplicationProjection, type ApplicationReadProjection } from "@generalbusiness/dap-platform/application-v2";
 import type { CompleteSnapshot } from "./observe.ts";
 
 export type ProjectedItem = Pick<Item, "id" | "type" | "state" | "revision" | "parties" | "refs" | "values">;

@@ -13,15 +13,15 @@ const seals = {
   "packages/scope/src/worker.ts": "2e3546e4c7a70ce17ae42c8e1367287277b26a7a67fa6dfe4fa2d83c4b5eedca", // Actual union parser value adopted by root.
   "packages/scope/src/scope-index.ts": "98a91329fbe8926127aab2db555970278e898cec347fd4f20569b19f1f879d54", // New internal lookup/registration boundary.
   "packages/scope/src/creation-admission.ts": "5fe79f1b3a9f760c318cd5f9c66d768fe8a1815e47454e351826443b617ead58", // Reviewed R1 ancestry owner; adopted AST value.
-  "packages/scope/src/creation-lineage.ts": "3786e04db4627fa7bfa07f8edefd3fd1125305da80b96b3d9132b671d9f21ef0", // Reviewed whole-lineage boundary; adopted AST value.
+  "packages/scope/src/creation-lineage.ts": "82f46501400fde4903e9bd3b216d345f8af871d0311157da3faa9469e5b33140", // Reviewed whole-lineage boundary; adopted AST value.
   "packages/scope/src/creation-declaration.ts": "ec719181ce0cff0048165e27bd108b8b728e9f78a858033155b670ab82e93c2b", // Bounded immutable native Directory custody, not authority.
   "packages/scope/src/namespace.ts": "1f65de08e11d85c204b671b8605b132f506cf06f2e87843e90eb0d1884f428e3", // Reviewed internal declaration RPC; adopted AST value.
   "packages/scope/src/health.ts": "b1c5240a6ca05b247ed54766ba25448d02057267d8342a4df6908969a57acb23",
   "packages/scope/src/site/route.ts": "f57a2415c997ce17fb6fcf254944b0237bae598adffca64eda123faf0fcc1084",
-  "packages/scope/src/applications/route.ts": "2e75a4a1ed4edc78697f740da1c7957fe365e3c5c179a00dbbb5d2a933ddfb8a", // Actual union parser value adopted by root.
+  "packages/scope/src/applications/route.ts": "a9c2c7071bc190a9dc44be6efe57b973203c40d3fff8ab35263f73818925ae29", // Actual union parser value adopted by root.
   "packages/scope/src/item-query-wire.ts": "8206b9a6531ca30cae1bc49cc249eea08c70a658305f41b3ebea6eda042055a8",
   "packages/scope/src/applications/projection-wire.ts": "2e07df5447469dc09aff0d4017e010634150f49c92f614221402cf46a869c6d0",
-  "packages/scope/src/object.ts": "b403bba2d72425b252488d960a7cbb557d1bcc38fb9390760e39b49ac4299df4", // R2 target-owned genesis registration.
+  "packages/scope/src/object.ts": "f5272e8a18fdfdebf2062f1ed7f274389df5cdcb4a0e6040b7e4a43c797a77d5", // R2 target-owned genesis registration.
   "packages/scope/src/core.ts": "c7f2e49246b1e784981337ee13af53b17bab424a13112d5a40ff76b75fb7a128",
   "packages/derive/src/genesis.ts": "df7722143f01c8084b8f045ef959b203ae1756c4dfde170d0454cfe0b0392843",
   "packages/derive/src/judge.ts": "c0ed325bc2fa84693b40d3d53a9ad54a9a9786dab39dd3b9c6039ac553488f63",
@@ -30,11 +30,11 @@ const seals = {
   "packages/scope/src/signed-reads.ts": "6c4c4c81f44994c2ac9e4ca921c8f34184977a1256d6574e78514b814512eaf0", // R12 custody-only serving helper; native checks unchanged.
   "packages/scope/src/limits.ts": "6d4966a12e86067c39f61a243601d0d3a78a66850ee07f4ae80e97e22ab3639e", // R12 verified-key join failure window.
   "packages/scope/src/serving-limits.ts": "3a9f410f926f1e3711b78a750dd7dfb055f418fa9904be55ccb3f8cea869a987", // New bounded memory-only counter, no live eviction.
-  "packages/scope/src/serving-admission.ts": "18a5d6991a769647cd14d3e8985585c6746f5df1c3d1d5c639f34d0eb6f4da5e", // New bounded original-signature/counter ingress.
+  "packages/scope/src/serving-admission.ts": "d90d11a6a2de39eb6cb735ae050a3bcbc0e57c4130fac201ebc705bc090e6b70", // New bounded original-signature/counter ingress.
   "packages/bytes/src/records.ts": "bc4e65e75215c2d940b0884a6810d5d90969455ba956c1e9731a3ed0d3c1b6af", // Public typed read refusal vocabulary (kernel section 7).
   "packages/scope/src/session-preparation.ts": "4b9699cb1ee06234162dc2088c5c37be1804e1e9f15985fa1f0dc3151170bd85",
   "packages/scope/src/item-queries.ts": "61ead9996d2c338a26331e04b8576c52425d8d2c88dc86173a7d79108c2ee418",
-  "packages/scope/src/applications/projection.ts": "31a3db04f3912ee3fb5bbd4cc3c658344f265f30d224ac95be2ba3b17f8622bd",
+  "packages/scope/src/applications/projection.ts": "f7d3bb45d448ec654a89f875697f865e1e89baeb5d7529e0db0859bd855b009f",
   "packages/scope/src/destination-host.ts": "b86198499cadddaf47f439ed39f7e44f8da78fbed120e185b787b153f0dc66eb",
   "packages/mcp/src/hosted.ts": "337b73c8773a5ce3424fc67b5746710d800ca1e4d4074ba6819f94560817641d",
   "packages/mcp/src/http.ts": "9a1450bef9f94b55b4751a3368032dfc480555628b48ccfdd55fd43e9c853af8",
@@ -53,9 +53,9 @@ const pendingArchiveSeals = {
   "packages/scope/src/archive-driver.ts": "df3ecc92e8853edd1abfb0fb47bfbe0553f2fd90bf872fe9a083ee18a6826d06", // Native parent transition reviewed; actual maintained parser output.
   "packages/scope/src/archive-row.ts": "91fd40cf8fd7dddb37383bf8daf86fdc30f0da5983ab69dfa3550263331ae12b",
   "packages/scope/src/floor-writer.ts": "fb8fd859844b8d10ba43b477bcaf07ab32fe1bfa1b6684ad9ae70b930d328a11",
-  "packages/scope/src/object.ts": "b403bba2d72425b252488d960a7cbb557d1bcc38fb9390760e39b49ac4299df4", // Must match the separately adopted original owner value above.
+  "packages/scope/src/object.ts": "f5272e8a18fdfdebf2062f1ed7f274389df5cdcb4a0e6040b7e4a43c797a77d5", // Must match the separately adopted original owner value above.
   "apps/room/worker.grow.ts": "791c2bfcb8b2a62d8f0d8afec627ac76b63be4b9f1ee5de27d3f6c081959bc01",
-  "apps/room/archive-policy.ts": "07ea72db6bc58257d3f280ac1e1c7db9296868016493fa926e473ddeb9b6f486",
+  "apps/room/archive-policy.ts": "ed3b746b5a26c3e872e41b13ba133f43ade42b5612aa5028ba544fc013be5ce7",
   "apps/room/archive.ts": "36b2250301a217b6e1c74cd1cea1a65a45390be3679e4a2fd2e809890eb6abf5",
   "packages/scope/src/archive-host-item.ts": "0f9eaddc4000574a1575466592f88c57beecc11efb93e402a568a84fab8ef903",
   "packages/scope/src/archive-host.ts": "e376746b7a1001a47715f666c4777e135bf1c48a162bfffe9c80e0ec913f079f", // Staged input charges and bounded bootstrap reviewed; actual maintained parser output.

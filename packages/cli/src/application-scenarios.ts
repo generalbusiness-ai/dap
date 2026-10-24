@@ -1,6 +1,6 @@
 /** Declarative local scenarios. No scenario module or application server code
  * is imported. TEST keys and authority are local stand-ins, stated in reports. */
-import type { AnyPackedApplication } from "@generalbusiness/dap-bytes/application-v2";
+import type { AnyPackedApplication } from "@generalbusiness/dap-platform/application-v2";
 import { CAPABILITIES, type Answer, type CapabilityName, type Digest, type FactRef, type FieldValue, type MemberId, type MemberRef, type ScopeKind, type ScopeRef, type SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, isRecord, newIncarnation, parseStrict, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { secretSigner, signedIntent, type Asked, type Signer } from "@generalbusiness/dap-client";

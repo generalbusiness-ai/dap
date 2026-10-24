@@ -3,7 +3,7 @@ import { DEVICE_APPLICATION_COHORT as D } from "./device-application-wire.ts";
  * declaration metadata, never authority, item data or a fallback to R2/Git. */
 import type { Digest, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize } from "@generalbusiness/dap-bytes";
-import { readPublishedApplicationReleaseProof2, type ApplicationProjectionDeclaration } from "@generalbusiness/dap-bytes/application-v2";
+import { readPublishedApplicationReleaseProof2, type ApplicationProjectionDeclaration } from "./application-codec/application-v2.ts";
 import type { StateView } from "@generalbusiness/dap-derive";
 import { applicationInstallation } from "./application-install-reader.ts";
 import { APPLICATION_RELEASE_VALUE2, APPLICATION_SEMANTIC_VALUE2 } from "./application-install-v2.ts";

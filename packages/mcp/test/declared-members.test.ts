@@ -2,7 +2,7 @@
 import { expect, test } from "vitest";
 import type { ApplicationProjectionData, Item, ItemQueryRead, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, isMemberRef, itemQueryArgument, itemQueryDigest, readItemQueryParameter } from "@generalbusiness/dap-bytes";
-import type { ApplicationReadProjection } from "@generalbusiness/dap-bytes/application-v2";
+import type { ApplicationReadProjection } from "@generalbusiness/dap-platform/application-v2";
 import { projectionMemberFacts, projectionMembers } from "../src/views/members.ts";
 import type { MembershipDisplaySnapshot } from "../src/views/member-types.ts";
 import { memberText } from "../src/views/member-text.ts";

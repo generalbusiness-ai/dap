@@ -1,6 +1,6 @@
 /** Actual SDK adapter. Bootstrap/enrollment belongs to F1/C4, never this stage. */
 import type { Receipt } from "@generalbusiness/dap-contract";
-import type { ApplicationInstallation } from "@generalbusiness/dap-bytes/application";
+import type { ApplicationInstallation } from "@generalbusiness/dap-platform/application";
 import { b64url, canonicalize, intentDigest, isRecord, timeOf } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, completeApplicationItems, httpTransport, observeScope, openHttpHeadStream, requestSession, signerSessionRequest, shapeDeclaredAct, signedIntent, type Fetch, type HeadStreamFetch, type Observation, type ObservationState, type Session, type Signer } from "@generalbusiness/dap-client";
 import { countingCommitments as counting } from "../commitments.ts";

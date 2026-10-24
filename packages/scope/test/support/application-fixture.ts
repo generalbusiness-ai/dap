@@ -3,7 +3,7 @@ import { env } from "cloudflare:test";
 import { PROPOSED_BOUNDS, type DeclaredDefinition } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, hex } from "@generalbusiness/dap-bytes";
 import { packApplication, type ApplicationReleaseUri } from "@generalbusiness/dap-client";
-import type { AnyPackedApplication } from "@generalbusiness/dap-bytes/application-v2";
+import type { AnyPackedApplication } from "@generalbusiness/dap-platform/application-v2";
 import type { ApplicationGitObject } from "@generalbusiness/dap-git";
 import { countingCommitments } from "../../../../apps/counter/commitments.ts";
 import { readApplicationTrust } from "../../src/applications/admission.ts";

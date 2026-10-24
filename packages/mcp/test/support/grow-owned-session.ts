@@ -4,7 +4,7 @@ import { growLauncherDefinition } from "./definition-corpus-data.ts";
  * entry is native; no Lane reference or application state is manufactured. */
 import type { DeclaredDefinition, ScopeId, Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalize, factRefOf, isEntry, isScopeRef, isSeed, parseStrict, scopeIdOf } from "@generalbusiness/dap-bytes";
-import type { AnyPackedApplication } from "@generalbusiness/dap-bytes/application-v2";
+import type { AnyPackedApplication } from "@generalbusiness/dap-platform/application-v2";
 import { signedIntent } from "@generalbusiness/dap-client";
 import type { HistorySource } from "@generalbusiness/dap-replay";
 import type { Peer } from "@generalbusiness/dap-scope/runtime";

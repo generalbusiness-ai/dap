@@ -1,5 +1,4 @@
 export * from "./validate/index.ts";
-export * from "./validate-package.ts";
 export * from "./state.ts";
 export * from "./fold.ts";
 export * from "./time.ts";

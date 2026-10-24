@@ -4,7 +4,7 @@ import { grantOf, keys, type Ledger } from "@generalbusiness/dap-derive/testing"
 import { donation, make as makeLedger, submit } from "../test-support.ts";
 import { actsFor, journalRows, lendingView, lendingProjectionView, lendingProjectionActivity, memberForKey, membershipActions, offeredActs, propose, refusalWords } from "./model.ts";
 import { canonicalize, itemQueryArgument, itemQueryDigest } from "@generalbusiness/dap-bytes";
-import { applicationProjectionQueries, isApplicationJournalSource, projectApplicationQueryReads } from "@generalbusiness/dap-bytes/application-v2";
+import { applicationProjectionQueries, isApplicationJournalSource, projectApplicationQueryReads } from "@generalbusiness/dap-platform/application-v2";
 import { lending } from "../definition.ts";
 import { lendingStateProjection } from "./projection.ts";
 

@@ -1,0 +1,1655 @@
+{
+  "phases": [
+    {
+      "name": "typecheck-packages-bytes",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/bytes/tsconfig.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+      "started": "2026-10-24T08:09:39.715Z",
+      "ended": "2026-10-24T08:09:39.835Z",
+      "measuredCommandMilliseconds": 119.83729199999999,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.11,
+      "userSeconds": 0.16,
+      "systemSeconds": 0.04,
+      "cpuSeconds": 0.2
+    },
+    {
+      "name": "typecheck-packages-bytes-tsconfig.test.json",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/bytes/tsconfig.test.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+      "started": "2026-10-24T08:09:39.984Z",
+      "ended": "2026-10-24T08:09:40.091Z",
+      "measuredCommandMilliseconds": 107.67383299999995,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.1,
+      "userSeconds": 0.22,
+      "systemSeconds": 0.06,
+      "cpuSeconds": 0.28
+    },
+    {
+      "name": "typecheck-packages-derive",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/derive/tsconfig.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+      "started": "2026-10-24T08:09:40.246Z",
+      "ended": "2026-10-24T08:09:40.382Z",
+      "measuredCommandMilliseconds": 136.18770800000004,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.13,
+      "userSeconds": 0.36,
+      "systemSeconds": 0.05,
+      "cpuSeconds": 0.41
+    },
+    {
+      "name": "typecheck-packages-derive-tsconfig.test.json",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/derive/tsconfig.test.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+      "started": "2026-10-24T08:09:40.530Z",
+      "ended": "2026-10-24T08:09:40.865Z",
+      "measuredCommandMilliseconds": 335.62024999999994,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.33,
+      "userSeconds": 1.48,
+      "systemSeconds": 0.14,
+      "cpuSeconds": 1.62
+    },
+    {
+      "name": "typecheck-packages-package-graph",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/package-graph/tsconfig.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+      "started": "2026-10-24T08:09:41.014Z",
+      "ended": "2026-10-24T08:09:41.104Z",
+      "measuredCommandMilliseconds": 90.85549999999989,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.08,
+      "userSeconds": 0.13,
+      "systemSeconds": 0.03,
+      "cpuSeconds": 0.16
+    },
+    {
+      "name": "typecheck-packages-platform",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/tsconfig.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+      "started": "2026-10-24T08:09:41.251Z",
+      "ended": "2026-10-24T08:09:41.439Z",
+      "measuredCommandMilliseconds": 187.864417,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.18,
+      "userSeconds": 0.53,
+      "systemSeconds": 0.06,
+      "cpuSeconds": 0.5900000000000001
+    },
+    {
+      "name": "typecheck-packages-platform-tsconfig.test.json",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/tsconfig.test.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+      "started": "2026-10-24T08:09:41.583Z",
+      "ended": "2026-10-24T08:09:41.819Z",
+      "measuredCommandMilliseconds": 235.4482919999998,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.23,
+      "userSeconds": 0.91,
+      "systemSeconds": 0.11,
+      "cpuSeconds": 1.02
+    },
+    {
+      "name": "typecheck-packages-client",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/client/tsconfig.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+      "started": "2026-10-24T08:09:41.966Z",
+      "ended": "2026-10-24T08:09:42.082Z",
+      "measuredCommandMilliseconds": 115.61725000000024,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.11,
+      "userSeconds": 0.24,
+      "systemSeconds": 0.04,
+      "cpuSeconds": 0.27999999999999997
+    },
+    {
+      "name": "typecheck-packages-client-tsconfig.test.json",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/client/tsconfig.test.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+      "started": "2026-10-24T08:09:42.228Z",
+      "ended": "2026-10-24T08:09:42.360Z",
+      "measuredCommandMilliseconds": 132.144542,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.13,
+      "userSeconds": 0.41,
+      "systemSeconds": 0.08,
+      "cpuSeconds": 0.49
+    },
+    {
+      "name": "typecheck-packages-cli",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/tsconfig.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+      "started": "2026-10-24T08:09:42.507Z",
+      "ended": "2026-10-24T08:09:42.783Z",
+      "measuredCommandMilliseconds": 275.40095900000006,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.27,
+      "userSeconds": 1.05,
+      "systemSeconds": 0.11,
+      "cpuSeconds": 1.1600000000000001
+    },
+    {
+      "name": "typecheck-packages-cli-tsconfig.test.json",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/tsconfig.test.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+      "started": "2026-10-24T08:09:42.941Z",
+      "ended": "2026-10-24T08:09:43.253Z",
+      "measuredCommandMilliseconds": 311.43708400000014,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.3,
+      "userSeconds": 1.23,
+      "systemSeconds": 0.13,
+      "cpuSeconds": 1.3599999999999999
+    },
+    {
+      "name": "typecheck-packages-cli-tsconfig.scope.json",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/tsconfig.scope.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+      "started": "2026-10-24T08:09:43.407Z",
+      "ended": "2026-10-24T08:09:43.750Z",
+      "measuredCommandMilliseconds": 342.1728750000002,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.34,
+      "userSeconds": 1.38,
+      "systemSeconds": 0.14,
+      "cpuSeconds": 1.52
+    },
+    {
+      "name": "typecheck-packages-mcp",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/tsconfig.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+      "started": "2026-10-24T08:09:43.900Z",
+      "ended": "2026-10-24T08:09:44.101Z",
+      "measuredCommandMilliseconds": 201.12091599999985,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.19,
+      "userSeconds": 0.75,
+      "systemSeconds": 0.09,
+      "cpuSeconds": 0.84
+    },
+    {
+      "name": "typecheck-packages-mcp-tsconfig.test.json",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/tsconfig.test.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+      "started": "2026-10-24T08:09:44.249Z",
+      "ended": "2026-10-24T08:09:44.600Z",
+      "measuredCommandMilliseconds": 350.71679199999926,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.34,
+      "userSeconds": 1.47,
+      "systemSeconds": 0.15,
+      "cpuSeconds": 1.6199999999999999
+    },
+    {
+      "name": "typecheck-packages-mcp-tsconfig.scope.json",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/tsconfig.scope.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+      "started": "2026-10-24T08:09:44.748Z",
+      "ended": "2026-10-24T08:09:45.155Z",
+      "measuredCommandMilliseconds": 407.3286670000007,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.4,
+      "userSeconds": 1.72,
+      "systemSeconds": 0.16,
+      "cpuSeconds": 1.88
+    },
+    {
+      "name": "typecheck-packages-mcp-tsconfig.browser.json",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/tsconfig.browser.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+      "started": "2026-10-24T08:09:45.301Z",
+      "ended": "2026-10-24T08:09:45.421Z",
+      "measuredCommandMilliseconds": 119.89983399999983,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.11,
+      "userSeconds": 0.23,
+      "systemSeconds": 0.04,
+      "cpuSeconds": 0.27
+    },
+    {
+      "name": "typecheck-packages-scope",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/tsconfig.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+      "started": "2026-10-24T08:09:45.568Z",
+      "ended": "2026-10-24T08:09:45.844Z",
+      "measuredCommandMilliseconds": 275.23704199999975,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.27,
+      "userSeconds": 1.14,
+      "systemSeconds": 0.13,
+      "cpuSeconds": 1.27
+    },
+    {
+      "name": "typecheck-packages-scope-tsconfig.test.json",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/tsconfig.test.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+      "started": "2026-10-24T08:09:45.992Z",
+      "ended": "2026-10-24T08:09:46.616Z",
+      "measuredCommandMilliseconds": 623.6755840000005,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.62,
+      "userSeconds": 3.01,
+      "systemSeconds": 0.26,
+      "cpuSeconds": 3.2699999999999996
+    },
+    {
+      "name": "typecheck-packages-scope-test-support-tsconfig.node.json",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/support/tsconfig.node.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+      "started": "2026-10-24T08:09:46.765Z",
+      "ended": "2026-10-24T08:09:46.991Z",
+      "measuredCommandMilliseconds": 226.0006659999999,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.22,
+      "userSeconds": 0.84,
+      "systemSeconds": 0.1,
+      "cpuSeconds": 0.94
+    },
+    {
+      "name": "typecheck-scripts",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/scripts/tsconfig.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+      "started": "2026-10-24T08:09:47.140Z",
+      "ended": "2026-10-24T08:09:47.450Z",
+      "measuredCommandMilliseconds": 310.3698749999994,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.3,
+      "userSeconds": 1.06,
+      "systemSeconds": 0.1,
+      "cpuSeconds": 1.1600000000000001
+    },
+    {
+      "name": "typecheck-apps-counter",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/apps/counter/tsconfig.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+      "started": "2026-10-24T08:09:47.601Z",
+      "ended": "2026-10-24T08:09:47.751Z",
+      "measuredCommandMilliseconds": 149.62375000000065,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.14,
+      "userSeconds": 0.5,
+      "systemSeconds": 0.08,
+      "cpuSeconds": 0.58
+    },
+    {
+      "name": "typecheck-apps-counter-browser",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/apps/counter/browser/tsconfig.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+      "started": "2026-10-24T08:09:47.899Z",
+      "ended": "2026-10-24T08:09:48.045Z",
+      "measuredCommandMilliseconds": 145.89216599999963,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.14,
+      "userSeconds": 0.39,
+      "systemSeconds": 0.07,
+      "cpuSeconds": 0.46
+    },
+    {
+      "name": "typecheck-examples-lending",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/examples/lending/tsconfig.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+      "started": "2026-10-24T08:09:48.195Z",
+      "ended": "2026-10-24T08:09:48.360Z",
+      "measuredCommandMilliseconds": 164.88045899999997,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.16,
+      "userSeconds": 0.57,
+      "systemSeconds": 0.09,
+      "cpuSeconds": 0.6599999999999999
+    },
+    {
+      "name": "typecheck-examples-lending-browser",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/examples/lending/browser/tsconfig.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+      "started": "2026-10-24T08:09:48.516Z",
+      "ended": "2026-10-24T08:09:48.708Z",
+      "measuredCommandMilliseconds": 191.7787499999995,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.19,
+      "userSeconds": 0.62,
+      "systemSeconds": 0.09,
+      "cpuSeconds": 0.71
+    },
+    {
+      "name": "typecheck-examples-grow",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/examples/grow/tsconfig.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+      "started": "2026-10-24T08:09:48.855Z",
+      "ended": "2026-10-24T08:09:49.088Z",
+      "measuredCommandMilliseconds": 233.09841699999924,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.23,
+      "userSeconds": 0.89,
+      "systemSeconds": 0.11,
+      "cpuSeconds": 1
+    },
+    {
+      "name": "typecheck-apps-room-page",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/apps/room/page/tsconfig.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+      "started": "2026-10-24T08:09:49.236Z",
+      "ended": "2026-10-24T08:09:49.479Z",
+      "measuredCommandMilliseconds": 243.05083299999933,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.24,
+      "userSeconds": 0.78,
+      "systemSeconds": 0.08,
+      "cpuSeconds": 0.86
+    },
+    {
+      "name": "typecheck-apps-room-page-tsconfig.test.json",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/apps/room/page/tsconfig.test.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+      "started": "2026-10-24T08:09:49.626Z",
+      "ended": "2026-10-24T08:09:49.951Z",
+      "measuredCommandMilliseconds": 325.3485419999997,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.32,
+      "userSeconds": 1.27,
+      "systemSeconds": 0.13,
+      "cpuSeconds": 1.4
+    },
+    {
+      "name": "typecheck-apps-room-page-tsconfig.scope.json",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/apps/room/page/tsconfig.scope.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+      "started": "2026-10-24T08:09:50.102Z",
+      "ended": "2026-10-24T08:09:50.514Z",
+      "measuredCommandMilliseconds": 411.8964590000014,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.41,
+      "userSeconds": 1.73,
+      "systemSeconds": 0.15,
+      "cpuSeconds": 1.88
+    },
+    {
+      "name": "body",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/vitest/vitest.mjs",
+        "run",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-journal-projection.test.ts",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-package-v2.test.ts",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-binding.test.ts",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-read.test.ts",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-wire.test.ts",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection.test.ts",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view-parameters.test.ts",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view.test.ts",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/package-graph.test.ts",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/derive/test/forms-fields.test.ts",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/derive/test/package-relation-order.test.ts",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/client/test/application-projection.test.ts",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install.test.ts",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install-v2.test.ts",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-dev.test.ts",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-new.test.ts",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-pack.test.ts",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-scenarios.test.ts",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/application-projection-native.test.ts",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/application-sandbox.test.ts",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/creation-lineage.test.ts",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-members.test.ts",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-inputs.test.ts",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-routing.test.ts",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-views.test.ts",
+        "--config",
+        "/private/tmp/artroom-builder-kernel-hygiene-20261024/vitest.config.ts",
+        "--bail=1",
+        "--allowOnly=false",
+        "--passWithNoTests=false",
+        "--reporter=verbose",
+        "--reporter=json",
+        "--reporter=/private/tmp/artroom-builder-kernel-hygiene-20261024/scripts/focused-check.mjs",
+        "--outputFile.json=/private/tmp/artroom-kernel-focused-owning-evidence-20261024-v1/focused/vitest.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+      "started": "2026-10-24T08:09:50.661Z",
+      "ended": "2026-10-24T08:10:37.276Z",
+      "measuredCommandMilliseconds": 46614.850833,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 46.61,
+      "userSeconds": 30.74,
+      "systemSeconds": 3.95,
+      "cpuSeconds": 34.69
+    }
+  ],
+  "guards": [
+    {
+      "head": "8bfdc37eff766d2e242cd8ea9bbb674fab185273",
+      "tree": "b3d165cb65f4b71ef8800b86c8e628fe12bef349",
+      "clean": true,
+      "sources": 3093,
+      "inputs": 16,
+      "workspaces": 14,
+      "aliases": 41,
+      "milliseconds": 154.277458
+    },
+    {
+      "head": "8bfdc37eff766d2e242cd8ea9bbb674fab185273",
+      "tree": "b3d165cb65f4b71ef8800b86c8e628fe12bef349",
+      "clean": true,
+      "sources": 3093,
+      "inputs": 16,
+      "workspaces": 14,
+      "aliases": 41,
+      "milliseconds": 148.366375
+    },
+    {
+      "head": "8bfdc37eff766d2e242cd8ea9bbb674fab185273",
+      "tree": "b3d165cb65f4b71ef8800b86c8e628fe12bef349",
+      "clean": true,
+      "sources": 3093,
+      "inputs": 16,
+      "workspaces": 14,
+      "aliases": 41,
+      "milliseconds": 154.46687499999996
+    },
+    {
+      "head": "8bfdc37eff766d2e242cd8ea9bbb674fab185273",
+      "tree": "b3d165cb65f4b71ef8800b86c8e628fe12bef349",
+      "clean": true,
+      "sources": 3093,
+      "inputs": 16,
+      "workspaces": 14,
+      "aliases": 41,
+      "milliseconds": 147.09116600000004
+    },
+    {
+      "head": "8bfdc37eff766d2e242cd8ea9bbb674fab185273",
+      "tree": "b3d165cb65f4b71ef8800b86c8e628fe12bef349",
+      "clean": true,
+      "sources": 3093,
+      "inputs": 16,
+      "workspaces": 14,
+      "aliases": 41,
+      "milliseconds": 147.93425000000002
+    },
+    {
+      "head": "8bfdc37eff766d2e242cd8ea9bbb674fab185273",
+      "tree": "b3d165cb65f4b71ef8800b86c8e628fe12bef349",
+      "clean": true,
+      "sources": 3093,
+      "inputs": 16,
+      "workspaces": 14,
+      "aliases": 41,
+      "milliseconds": 146.38433299999997
+    },
+    {
+      "head": "8bfdc37eff766d2e242cd8ea9bbb674fab185273",
+      "tree": "b3d165cb65f4b71ef8800b86c8e628fe12bef349",
+      "clean": true,
+      "sources": 3093,
+      "inputs": 16,
+      "workspaces": 14,
+      "aliases": 41,
+      "milliseconds": 144.22329100000002
+    },
+    {
+      "head": "8bfdc37eff766d2e242cd8ea9bbb674fab185273",
+      "tree": "b3d165cb65f4b71ef8800b86c8e628fe12bef349",
+      "clean": true,
+      "sources": 3093,
+      "inputs": 16,
+      "workspaces": 14,
+      "aliases": 41,
+      "milliseconds": 146.78679199999988
+    },
+    {
+      "head": "8bfdc37eff766d2e242cd8ea9bbb674fab185273",
+      "tree": "b3d165cb65f4b71ef8800b86c8e628fe12bef349",
+      "clean": true,
+      "sources": 3093,
+      "inputs": 16,
+      "workspaces": 14,
+      "aliases": 41,
+      "milliseconds": 145.69895799999995
+    },
+    {
+      "head": "8bfdc37eff766d2e242cd8ea9bbb674fab185273",
+      "tree": "b3d165cb65f4b71ef8800b86c8e628fe12bef349",
+      "clean": true,
+      "sources": 3093,
+      "inputs": 16,
+      "workspaces": 14,
+      "aliases": 41,
+      "milliseconds": 147.25950000000012
+    },
+    {
+      "head": "8bfdc37eff766d2e242cd8ea9bbb674fab185273",
+      "tree": "b3d165cb65f4b71ef8800b86c8e628fe12bef349",
+      "clean": true,
+      "sources": 3093,
+      "inputs": 16,
+      "workspaces": 14,
+      "aliases": 41,
+      "milliseconds": 158.0779160000002
+    },
+    {
+      "head": "8bfdc37eff766d2e242cd8ea9bbb674fab185273",
+      "tree": "b3d165cb65f4b71ef8800b86c8e628fe12bef349",
+      "clean": true,
+      "sources": 3093,
+      "inputs": 16,
+      "workspaces": 14,
+      "aliases": 41,
+      "milliseconds": 154.48483299999998
+    },
+    {
+      "head": "8bfdc37eff766d2e242cd8ea9bbb674fab185273",
+      "tree": "b3d165cb65f4b71ef8800b86c8e628fe12bef349",
+      "clean": true,
+      "sources": 3093,
+      "inputs": 16,
+      "workspaces": 14,
+      "aliases": 41,
+      "milliseconds": 150.30595799999992
+    },
+    {
+      "head": "8bfdc37eff766d2e242cd8ea9bbb674fab185273",
+      "tree": "b3d165cb65f4b71ef8800b86c8e628fe12bef349",
+      "clean": true,
+      "sources": 3093,
+      "inputs": 16,
+      "workspaces": 14,
+      "aliases": 41,
+      "milliseconds": 147.35741599999983
+    },
+    {
+      "head": "8bfdc37eff766d2e242cd8ea9bbb674fab185273",
+      "tree": "b3d165cb65f4b71ef8800b86c8e628fe12bef349",
+      "clean": true,
+      "sources": 3093,
+      "inputs": 16,
+      "workspaces": 14,
+      "aliases": 41,
+      "milliseconds": 148.00866699999915
+    },
+    {
+      "head": "8bfdc37eff766d2e242cd8ea9bbb674fab185273",
+      "tree": "b3d165cb65f4b71ef8800b86c8e628fe12bef349",
+      "clean": true,
+      "sources": 3093,
+      "inputs": 16,
+      "workspaces": 14,
+      "aliases": 41,
+      "milliseconds": 145.84295800000018
+    },
+    {
+      "head": "8bfdc37eff766d2e242cd8ea9bbb674fab185273",
+      "tree": "b3d165cb65f4b71ef8800b86c8e628fe12bef349",
+      "clean": true,
+      "sources": 3093,
+      "inputs": 16,
+      "workspaces": 14,
+      "aliases": 41,
+      "milliseconds": 146.74162500000057
+    },
+    {
+      "head": "8bfdc37eff766d2e242cd8ea9bbb674fab185273",
+      "tree": "b3d165cb65f4b71ef8800b86c8e628fe12bef349",
+      "clean": true,
+      "sources": 3093,
+      "inputs": 16,
+      "workspaces": 14,
+      "aliases": 41,
+      "milliseconds": 148.37362500000017
+    },
+    {
+      "head": "8bfdc37eff766d2e242cd8ea9bbb674fab185273",
+      "tree": "b3d165cb65f4b71ef8800b86c8e628fe12bef349",
+      "clean": true,
+      "sources": 3093,
+      "inputs": 16,
+      "workspaces": 14,
+      "aliases": 41,
+      "milliseconds": 149.04200000000037
+    },
+    {
+      "head": "8bfdc37eff766d2e242cd8ea9bbb674fab185273",
+      "tree": "b3d165cb65f4b71ef8800b86c8e628fe12bef349",
+      "clean": true,
+      "sources": 3093,
+      "inputs": 16,
+      "workspaces": 14,
+      "aliases": 41,
+      "milliseconds": 148.33458299999984
+    },
+    {
+      "head": "8bfdc37eff766d2e242cd8ea9bbb674fab185273",
+      "tree": "b3d165cb65f4b71ef8800b86c8e628fe12bef349",
+      "clean": true,
+      "sources": 3093,
+      "inputs": 16,
+      "workspaces": 14,
+      "aliases": 41,
+      "milliseconds": 150.4819580000003
+    },
+    {
+      "head": "8bfdc37eff766d2e242cd8ea9bbb674fab185273",
+      "tree": "b3d165cb65f4b71ef8800b86c8e628fe12bef349",
+      "clean": true,
+      "sources": 3093,
+      "inputs": 16,
+      "workspaces": 14,
+      "aliases": 41,
+      "milliseconds": 148.15625
+    },
+    {
+      "head": "8bfdc37eff766d2e242cd8ea9bbb674fab185273",
+      "tree": "b3d165cb65f4b71ef8800b86c8e628fe12bef349",
+      "clean": true,
+      "sources": 3093,
+      "inputs": 16,
+      "workspaces": 14,
+      "aliases": 41,
+      "milliseconds": 149.71287499999926
+    },
+    {
+      "head": "8bfdc37eff766d2e242cd8ea9bbb674fab185273",
+      "tree": "b3d165cb65f4b71ef8800b86c8e628fe12bef349",
+      "clean": true,
+      "sources": 3093,
+      "inputs": 16,
+      "workspaces": 14,
+      "aliases": 41,
+      "milliseconds": 155.3825420000012
+    },
+    {
+      "head": "8bfdc37eff766d2e242cd8ea9bbb674fab185273",
+      "tree": "b3d165cb65f4b71ef8800b86c8e628fe12bef349",
+      "clean": true,
+      "sources": 3093,
+      "inputs": 16,
+      "workspaces": 14,
+      "aliases": 41,
+      "milliseconds": 146.94908300000134
+    },
+    {
+      "head": "8bfdc37eff766d2e242cd8ea9bbb674fab185273",
+      "tree": "b3d165cb65f4b71ef8800b86c8e628fe12bef349",
+      "clean": true,
+      "sources": 3093,
+      "inputs": 16,
+      "workspaces": 14,
+      "aliases": 41,
+      "milliseconds": 147.3063340000008
+    },
+    {
+      "head": "8bfdc37eff766d2e242cd8ea9bbb674fab185273",
+      "tree": "b3d165cb65f4b71ef8800b86c8e628fe12bef349",
+      "clean": true,
+      "sources": 3093,
+      "inputs": 16,
+      "workspaces": 14,
+      "aliases": 41,
+      "milliseconds": 146.95316699999967
+    },
+    {
+      "head": "8bfdc37eff766d2e242cd8ea9bbb674fab185273",
+      "tree": "b3d165cb65f4b71ef8800b86c8e628fe12bef349",
+      "clean": true,
+      "sources": 3093,
+      "inputs": 16,
+      "workspaces": 14,
+      "aliases": 41,
+      "milliseconds": 150.6060000000016
+    },
+    {
+      "head": "8bfdc37eff766d2e242cd8ea9bbb674fab185273",
+      "tree": "b3d165cb65f4b71ef8800b86c8e628fe12bef349",
+      "clean": true,
+      "sources": 3093,
+      "inputs": 16,
+      "workspaces": 14,
+      "aliases": 41,
+      "milliseconds": 147.08029100000022
+    },
+    {
+      "head": "8bfdc37eff766d2e242cd8ea9bbb674fab185273",
+      "tree": "b3d165cb65f4b71ef8800b86c8e628fe12bef349",
+      "clean": true,
+      "sources": 3093,
+      "inputs": 16,
+      "workspaces": 14,
+      "aliases": 41,
+      "milliseconds": 168.55233299999963
+    }
+  ],
+  "stage": "complete",
+  "verificationExitCode": 0,
+  "commandLedger": [
+    {
+      "name": "typecheck-packages-bytes",
+      "status": "passed",
+      "phase": {
+        "name": "typecheck-packages-bytes",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+          "-p",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/bytes/tsconfig.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+        "started": "2026-10-24T08:09:39.715Z",
+        "ended": "2026-10-24T08:09:39.835Z",
+        "measuredCommandMilliseconds": 119.83729199999999,
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 0.11,
+        "userSeconds": 0.16,
+        "systemSeconds": 0.04,
+        "cpuSeconds": 0.2
+      }
+    },
+    {
+      "name": "typecheck-packages-bytes-tsconfig.test.json",
+      "status": "passed",
+      "phase": {
+        "name": "typecheck-packages-bytes-tsconfig.test.json",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+          "-p",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/bytes/tsconfig.test.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+        "started": "2026-10-24T08:09:39.984Z",
+        "ended": "2026-10-24T08:09:40.091Z",
+        "measuredCommandMilliseconds": 107.67383299999995,
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 0.1,
+        "userSeconds": 0.22,
+        "systemSeconds": 0.06,
+        "cpuSeconds": 0.28
+      }
+    },
+    {
+      "name": "typecheck-packages-derive",
+      "status": "passed",
+      "phase": {
+        "name": "typecheck-packages-derive",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+          "-p",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/derive/tsconfig.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+        "started": "2026-10-24T08:09:40.246Z",
+        "ended": "2026-10-24T08:09:40.382Z",
+        "measuredCommandMilliseconds": 136.18770800000004,
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 0.13,
+        "userSeconds": 0.36,
+        "systemSeconds": 0.05,
+        "cpuSeconds": 0.41
+      }
+    },
+    {
+      "name": "typecheck-packages-derive-tsconfig.test.json",
+      "status": "passed",
+      "phase": {
+        "name": "typecheck-packages-derive-tsconfig.test.json",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+          "-p",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/derive/tsconfig.test.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+        "started": "2026-10-24T08:09:40.530Z",
+        "ended": "2026-10-24T08:09:40.865Z",
+        "measuredCommandMilliseconds": 335.62024999999994,
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 0.33,
+        "userSeconds": 1.48,
+        "systemSeconds": 0.14,
+        "cpuSeconds": 1.62
+      }
+    },
+    {
+      "name": "typecheck-packages-package-graph",
+      "status": "passed",
+      "phase": {
+        "name": "typecheck-packages-package-graph",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+          "-p",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/package-graph/tsconfig.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+        "started": "2026-10-24T08:09:41.014Z",
+        "ended": "2026-10-24T08:09:41.104Z",
+        "measuredCommandMilliseconds": 90.85549999999989,
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 0.08,
+        "userSeconds": 0.13,
+        "systemSeconds": 0.03,
+        "cpuSeconds": 0.16
+      }
+    },
+    {
+      "name": "typecheck-packages-platform",
+      "status": "passed",
+      "phase": {
+        "name": "typecheck-packages-platform",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+          "-p",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/tsconfig.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+        "started": "2026-10-24T08:09:41.251Z",
+        "ended": "2026-10-24T08:09:41.439Z",
+        "measuredCommandMilliseconds": 187.864417,
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 0.18,
+        "userSeconds": 0.53,
+        "systemSeconds": 0.06,
+        "cpuSeconds": 0.5900000000000001
+      }
+    },
+    {
+      "name": "typecheck-packages-platform-tsconfig.test.json",
+      "status": "passed",
+      "phase": {
+        "name": "typecheck-packages-platform-tsconfig.test.json",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+          "-p",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/tsconfig.test.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+        "started": "2026-10-24T08:09:41.583Z",
+        "ended": "2026-10-24T08:09:41.819Z",
+        "measuredCommandMilliseconds": 235.4482919999998,
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 0.23,
+        "userSeconds": 0.91,
+        "systemSeconds": 0.11,
+        "cpuSeconds": 1.02
+      }
+    },
+    {
+      "name": "typecheck-packages-client",
+      "status": "passed",
+      "phase": {
+        "name": "typecheck-packages-client",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+          "-p",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/client/tsconfig.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+        "started": "2026-10-24T08:09:41.966Z",
+        "ended": "2026-10-24T08:09:42.082Z",
+        "measuredCommandMilliseconds": 115.61725000000024,
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 0.11,
+        "userSeconds": 0.24,
+        "systemSeconds": 0.04,
+        "cpuSeconds": 0.27999999999999997
+      }
+    },
+    {
+      "name": "typecheck-packages-client-tsconfig.test.json",
+      "status": "passed",
+      "phase": {
+        "name": "typecheck-packages-client-tsconfig.test.json",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+          "-p",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/client/tsconfig.test.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+        "started": "2026-10-24T08:09:42.228Z",
+        "ended": "2026-10-24T08:09:42.360Z",
+        "measuredCommandMilliseconds": 132.144542,
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 0.13,
+        "userSeconds": 0.41,
+        "systemSeconds": 0.08,
+        "cpuSeconds": 0.49
+      }
+    },
+    {
+      "name": "typecheck-packages-cli",
+      "status": "passed",
+      "phase": {
+        "name": "typecheck-packages-cli",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+          "-p",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/tsconfig.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+        "started": "2026-10-24T08:09:42.507Z",
+        "ended": "2026-10-24T08:09:42.783Z",
+        "measuredCommandMilliseconds": 275.40095900000006,
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 0.27,
+        "userSeconds": 1.05,
+        "systemSeconds": 0.11,
+        "cpuSeconds": 1.1600000000000001
+      }
+    },
+    {
+      "name": "typecheck-packages-cli-tsconfig.test.json",
+      "status": "passed",
+      "phase": {
+        "name": "typecheck-packages-cli-tsconfig.test.json",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+          "-p",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/tsconfig.test.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+        "started": "2026-10-24T08:09:42.941Z",
+        "ended": "2026-10-24T08:09:43.253Z",
+        "measuredCommandMilliseconds": 311.43708400000014,
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 0.3,
+        "userSeconds": 1.23,
+        "systemSeconds": 0.13,
+        "cpuSeconds": 1.3599999999999999
+      }
+    },
+    {
+      "name": "typecheck-packages-cli-tsconfig.scope.json",
+      "status": "passed",
+      "phase": {
+        "name": "typecheck-packages-cli-tsconfig.scope.json",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+          "-p",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/tsconfig.scope.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+        "started": "2026-10-24T08:09:43.407Z",
+        "ended": "2026-10-24T08:09:43.750Z",
+        "measuredCommandMilliseconds": 342.1728750000002,
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 0.34,
+        "userSeconds": 1.38,
+        "systemSeconds": 0.14,
+        "cpuSeconds": 1.52
+      }
+    },
+    {
+      "name": "typecheck-packages-mcp",
+      "status": "passed",
+      "phase": {
+        "name": "typecheck-packages-mcp",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+          "-p",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/tsconfig.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+        "started": "2026-10-24T08:09:43.900Z",
+        "ended": "2026-10-24T08:09:44.101Z",
+        "measuredCommandMilliseconds": 201.12091599999985,
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 0.19,
+        "userSeconds": 0.75,
+        "systemSeconds": 0.09,
+        "cpuSeconds": 0.84
+      }
+    },
+    {
+      "name": "typecheck-packages-mcp-tsconfig.test.json",
+      "status": "passed",
+      "phase": {
+        "name": "typecheck-packages-mcp-tsconfig.test.json",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+          "-p",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/tsconfig.test.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+        "started": "2026-10-24T08:09:44.249Z",
+        "ended": "2026-10-24T08:09:44.600Z",
+        "measuredCommandMilliseconds": 350.71679199999926,
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 0.34,
+        "userSeconds": 1.47,
+        "systemSeconds": 0.15,
+        "cpuSeconds": 1.6199999999999999
+      }
+    },
+    {
+      "name": "typecheck-packages-mcp-tsconfig.scope.json",
+      "status": "passed",
+      "phase": {
+        "name": "typecheck-packages-mcp-tsconfig.scope.json",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+          "-p",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/tsconfig.scope.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+        "started": "2026-10-24T08:09:44.748Z",
+        "ended": "2026-10-24T08:09:45.155Z",
+        "measuredCommandMilliseconds": 407.3286670000007,
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 0.4,
+        "userSeconds": 1.72,
+        "systemSeconds": 0.16,
+        "cpuSeconds": 1.88
+      }
+    },
+    {
+      "name": "typecheck-packages-mcp-tsconfig.browser.json",
+      "status": "passed",
+      "phase": {
+        "name": "typecheck-packages-mcp-tsconfig.browser.json",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+          "-p",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/tsconfig.browser.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+        "started": "2026-10-24T08:09:45.301Z",
+        "ended": "2026-10-24T08:09:45.421Z",
+        "measuredCommandMilliseconds": 119.89983399999983,
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 0.11,
+        "userSeconds": 0.23,
+        "systemSeconds": 0.04,
+        "cpuSeconds": 0.27
+      }
+    },
+    {
+      "name": "typecheck-packages-scope",
+      "status": "passed",
+      "phase": {
+        "name": "typecheck-packages-scope",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+          "-p",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/tsconfig.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+        "started": "2026-10-24T08:09:45.568Z",
+        "ended": "2026-10-24T08:09:45.844Z",
+        "measuredCommandMilliseconds": 275.23704199999975,
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 0.27,
+        "userSeconds": 1.14,
+        "systemSeconds": 0.13,
+        "cpuSeconds": 1.27
+      }
+    },
+    {
+      "name": "typecheck-packages-scope-tsconfig.test.json",
+      "status": "passed",
+      "phase": {
+        "name": "typecheck-packages-scope-tsconfig.test.json",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+          "-p",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/tsconfig.test.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+        "started": "2026-10-24T08:09:45.992Z",
+        "ended": "2026-10-24T08:09:46.616Z",
+        "measuredCommandMilliseconds": 623.6755840000005,
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 0.62,
+        "userSeconds": 3.01,
+        "systemSeconds": 0.26,
+        "cpuSeconds": 3.2699999999999996
+      }
+    },
+    {
+      "name": "typecheck-packages-scope-test-support-tsconfig.node.json",
+      "status": "passed",
+      "phase": {
+        "name": "typecheck-packages-scope-test-support-tsconfig.node.json",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+          "-p",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/support/tsconfig.node.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+        "started": "2026-10-24T08:09:46.765Z",
+        "ended": "2026-10-24T08:09:46.991Z",
+        "measuredCommandMilliseconds": 226.0006659999999,
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 0.22,
+        "userSeconds": 0.84,
+        "systemSeconds": 0.1,
+        "cpuSeconds": 0.94
+      }
+    },
+    {
+      "name": "typecheck-scripts",
+      "status": "passed",
+      "phase": {
+        "name": "typecheck-scripts",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+          "-p",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/scripts/tsconfig.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+        "started": "2026-10-24T08:09:47.140Z",
+        "ended": "2026-10-24T08:09:47.450Z",
+        "measuredCommandMilliseconds": 310.3698749999994,
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 0.3,
+        "userSeconds": 1.06,
+        "systemSeconds": 0.1,
+        "cpuSeconds": 1.1600000000000001
+      }
+    },
+    {
+      "name": "typecheck-apps-counter",
+      "status": "passed",
+      "phase": {
+        "name": "typecheck-apps-counter",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+          "-p",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/apps/counter/tsconfig.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+        "started": "2026-10-24T08:09:47.601Z",
+        "ended": "2026-10-24T08:09:47.751Z",
+        "measuredCommandMilliseconds": 149.62375000000065,
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 0.14,
+        "userSeconds": 0.5,
+        "systemSeconds": 0.08,
+        "cpuSeconds": 0.58
+      }
+    },
+    {
+      "name": "typecheck-apps-counter-browser",
+      "status": "passed",
+      "phase": {
+        "name": "typecheck-apps-counter-browser",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+          "-p",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/apps/counter/browser/tsconfig.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+        "started": "2026-10-24T08:09:47.899Z",
+        "ended": "2026-10-24T08:09:48.045Z",
+        "measuredCommandMilliseconds": 145.89216599999963,
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 0.14,
+        "userSeconds": 0.39,
+        "systemSeconds": 0.07,
+        "cpuSeconds": 0.46
+      }
+    },
+    {
+      "name": "typecheck-examples-lending",
+      "status": "passed",
+      "phase": {
+        "name": "typecheck-examples-lending",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+          "-p",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/examples/lending/tsconfig.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+        "started": "2026-10-24T08:09:48.195Z",
+        "ended": "2026-10-24T08:09:48.360Z",
+        "measuredCommandMilliseconds": 164.88045899999997,
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 0.16,
+        "userSeconds": 0.57,
+        "systemSeconds": 0.09,
+        "cpuSeconds": 0.6599999999999999
+      }
+    },
+    {
+      "name": "typecheck-examples-lending-browser",
+      "status": "passed",
+      "phase": {
+        "name": "typecheck-examples-lending-browser",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+          "-p",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/examples/lending/browser/tsconfig.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+        "started": "2026-10-24T08:09:48.516Z",
+        "ended": "2026-10-24T08:09:48.708Z",
+        "measuredCommandMilliseconds": 191.7787499999995,
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 0.19,
+        "userSeconds": 0.62,
+        "systemSeconds": 0.09,
+        "cpuSeconds": 0.71
+      }
+    },
+    {
+      "name": "typecheck-examples-grow",
+      "status": "passed",
+      "phase": {
+        "name": "typecheck-examples-grow",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+          "-p",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/examples/grow/tsconfig.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+        "started": "2026-10-24T08:09:48.855Z",
+        "ended": "2026-10-24T08:09:49.088Z",
+        "measuredCommandMilliseconds": 233.09841699999924,
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 0.23,
+        "userSeconds": 0.89,
+        "systemSeconds": 0.11,
+        "cpuSeconds": 1
+      }
+    },
+    {
+      "name": "typecheck-apps-room-page",
+      "status": "passed",
+      "phase": {
+        "name": "typecheck-apps-room-page",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+          "-p",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/apps/room/page/tsconfig.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+        "started": "2026-10-24T08:09:49.236Z",
+        "ended": "2026-10-24T08:09:49.479Z",
+        "measuredCommandMilliseconds": 243.05083299999933,
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 0.24,
+        "userSeconds": 0.78,
+        "systemSeconds": 0.08,
+        "cpuSeconds": 0.86
+      }
+    },
+    {
+      "name": "typecheck-apps-room-page-tsconfig.test.json",
+      "status": "passed",
+      "phase": {
+        "name": "typecheck-apps-room-page-tsconfig.test.json",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+          "-p",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/apps/room/page/tsconfig.test.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+        "started": "2026-10-24T08:09:49.626Z",
+        "ended": "2026-10-24T08:09:49.951Z",
+        "measuredCommandMilliseconds": 325.3485419999997,
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 0.32,
+        "userSeconds": 1.27,
+        "systemSeconds": 0.13,
+        "cpuSeconds": 1.4
+      }
+    },
+    {
+      "name": "typecheck-apps-room-page-tsconfig.scope.json",
+      "status": "passed",
+      "phase": {
+        "name": "typecheck-apps-room-page-tsconfig.scope.json",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/typescript/bin/tsc",
+          "-p",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/apps/room/page/tsconfig.scope.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+        "started": "2026-10-24T08:09:50.102Z",
+        "ended": "2026-10-24T08:09:50.514Z",
+        "measuredCommandMilliseconds": 411.8964590000014,
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 0.41,
+        "userSeconds": 1.73,
+        "systemSeconds": 0.15,
+        "cpuSeconds": 1.88
+      }
+    },
+    {
+      "name": "body",
+      "status": "passed",
+      "phase": {
+        "name": "body",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/node_modules/vitest/vitest.mjs",
+          "run",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-journal-projection.test.ts",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-package-v2.test.ts",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-binding.test.ts",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-read.test.ts",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection-wire.test.ts",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-projection.test.ts",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view-parameters.test.ts",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-view.test.ts",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/package-graph.test.ts",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/derive/test/forms-fields.test.ts",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/derive/test/package-relation-order.test.ts",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/client/test/application-projection.test.ts",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install.test.ts",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/platform/test/application-install-v2.test.ts",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-dev.test.ts",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-new.test.ts",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-pack.test.ts",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/cli/test/application-scenarios.test.ts",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/application-projection-native.test.ts",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/application-sandbox.test.ts",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/creation-lineage.test.ts",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-members.test.ts",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-inputs.test.ts",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-view-routing.test.ts",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/mcp/test/declared-views.test.ts",
+          "--config",
+          "/private/tmp/artroom-builder-kernel-hygiene-20261024/vitest.config.ts",
+          "--bail=1",
+          "--allowOnly=false",
+          "--passWithNoTests=false",
+          "--reporter=verbose",
+          "--reporter=json",
+          "--reporter=/private/tmp/artroom-builder-kernel-hygiene-20261024/scripts/focused-check.mjs",
+          "--outputFile.json=/private/tmp/artroom-kernel-focused-owning-evidence-20261024-v1/focused/vitest.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+        "started": "2026-10-24T08:09:50.661Z",
+        "ended": "2026-10-24T08:10:37.276Z",
+        "measuredCommandMilliseconds": 46614.850833,
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 46.61,
+        "userSeconds": 30.74,
+        "systemSeconds": 3.95,
+        "cpuSeconds": 34.69
+      }
+    }
+  ],
+  "elapsedToResultPreparationMilliseconds": 57895.316375,
+  "timingNote": "Per-command wall/CPU observations are separate. Time the outer pipeline to measure all guard/artifact/driver CPU; internal elapsed excludes Node bootstrap.",
+  "verificationStatus": "passed"
+}

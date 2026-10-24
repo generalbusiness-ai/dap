@@ -9,7 +9,10 @@
     ".": "./src/index.ts",
     "./membership-actions": "./src/membership-actions.ts",
     "./testing": "./test/support.ts",
-    "./application-install": "./src/application-install.ts"
+    "./application-install": "./src/application-install.ts",
+    "./application": "./src/application-codec/application.ts",
+    "./application-v2": "./src/application-codec/application-v2.ts",
+    "./package-validation": "./src/validate-package.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.test.json",
@@ -18,7 +21,8 @@
   "dependencies": {
     "@generalbusiness/dap-bytes": "0.1.0-dev.1",
     "@generalbusiness/dap-contract": "0.1.0-dev.1",
-    "@generalbusiness/dap-derive": "0.1.0-dev.1"
+    "@generalbusiness/dap-derive": "0.1.0-dev.1",
+    "@generalbusiness/dap-package-graph": "0.1.0-dev.1"
   },
   "devDependencies": {
     "@types/node": "26.6.3",

@@ -2,7 +2,7 @@ import { emptyPackageComposition } from "@generalbusiness/dap-package-graph";
 /** Signed TEST package only. It supplies no owner identity, grant or archive authority. */
 import { DEVICE_COMMAND } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest } from "@generalbusiness/dap-bytes";
-import { packApplication2, readApplicationProjection } from "@generalbusiness/dap-bytes/application-v2";
+import { packApplication2, readApplicationProjection } from "@generalbusiness/dap-platform/application-v2";
 import { fixedSigner } from "../fixtures-core.ts";
 import { devicePackageFixture as deviceCommandFixture } from "../../../derive/test/fixtures-device-command.ts";
 

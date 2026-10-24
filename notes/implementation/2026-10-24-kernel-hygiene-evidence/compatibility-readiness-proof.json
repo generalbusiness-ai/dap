@@ -1,0 +1,221 @@
+{
+  "request": "30c7c3eca82fba47449b35c4280aacbac4cb2c73",
+  "promise": "79ee2bae4fbe94426d0ac3d916af9f1b248fad8b",
+  "assessment": "CARRY_JUSTIFIED_NO_COMPATIBILITY_RERUN",
+  "priorMaintainedInvocation": {
+    "command": {
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "scripts/cloudflare-pool-compat.mjs"
+      ],
+      "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023"
+    },
+    "process": {
+      "label": "compatibility",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "scripts/cloudflare-pool-compat.mjs"
+      ],
+      "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+      "pid": 20202,
+      "exit": 0,
+      "signal": null,
+      "wall": 0.07958962500561029,
+      "user": 0.065956,
+      "system": 0.012843
+    },
+    "stdout": {
+      "package": "@cloudflare/vitest-pool-workers",
+      "version": "0.22.0",
+      "packageRoot": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/@cloudflare/vitest-pool-workers",
+      "copied": false,
+      "before": "cd50d18adce92adb54a3f00410d646b2fe09b3f12c5b833c492bcf5857621b39",
+      "after": "cd50d18adce92adb54a3f00410d646b2fe09b3f12c5b833c492bcf5857621b39"
+    },
+    "stderrBytes": 0,
+    "overallStatus": "failed",
+    "qualification": "Compatibility phase passed unchanged. Its aggregate failed later on a compiler; this proof does not relabel that aggregate."
+  },
+  "closedAdoption": {
+    "rootAttributedOriginalSession": 58447,
+    "rootAttributedNaturalExit": 0,
+    "rootAcceptance": "2fb255a3d01b143f5cacb2f5a75ce81a805fdc24",
+    "allocation": "fd3e731bdee392f159eec30fa24ff1025b60ce40",
+    "status": "passed",
+    "afterEqualsFinal": true,
+    "namespaceRecords": 6072,
+    "relativeLinks": 32,
+    "allTargetPhysicalIdentitiesDisjointFromDonor": true,
+    "allTargetRegularFilesSingleLink": true,
+    "onlyPayloadDifference": [
+      ".artroom-lock-sha256"
+    ],
+    "qualification": "This copy invocation executed no package or compatibility script. Readiness derives from the prior successful maintained invocation and verified custody continuity."
+  },
+  "sourcePins": [
+    {
+      "path": "scripts/cloudflare-pool-compat.mjs",
+      "bytes": 7089,
+      "sha256": "f3c258f26eaf591ef36b5ca96d7e379ec1c27440cd0f5d07566b124a111e26e3"
+    },
+    {
+      "path": "scripts/cloudflare-pool-compat.json",
+      "bytes": 1845,
+      "sha256": "244d9d9e951a2f5bed74a23c529c7b20d83635915a6e85534160d710d672ff6c"
+    }
+  ],
+  "relevantPackageVersions": {
+    "@cloudflare/vitest-pool-workers": "0.22.0",
+    "vitest": "4.1.12",
+    "workerd": "1.20260815.1",
+    "@cloudflare/workerd-darwin-arm64": "1.20260815.1"
+  },
+  "criticalPayloadPins": [
+    {
+      "path": "@cloudflare/vitest-pool-workers/package.json",
+      "bytes": 2607,
+      "sha256": "17f59cd527395976f966fd22a7d6de071596f13a2b8d22c9624369185ec413a1",
+      "targetIdentity": [
+        16777231,
+        546040205,
+        33188,
+        1,
+        2607,
+        1792711954772029579,
+        1792828464860401151
+      ]
+    },
+    {
+      "path": "@cloudflare/vitest-pool-workers/dist/worker/lib/cloudflare/test-internal.mjs",
+      "bytes": 45613,
+      "sha256": "cd50d18adce92adb54a3f00410d646b2fe09b3f12c5b833c492bcf5857621b39",
+      "targetIdentity": [
+        16777231,
+        546040184,
+        33188,
+        1,
+        45613,
+        1792711956435726317,
+        1792828464857865647
+      ]
+    },
+    {
+      "path": "@cloudflare/workerd-darwin-arm64/package.json",
+      "bytes": 377,
+      "sha256": "ab3cab29116dbfebb2dce7e10097f8a8971ac4b6322b9b421f8bfc9ac293b61d",
+      "targetIdentity": [
+        16777231,
+        546040229,
+        33188,
+        1,
+        377,
+        1792711954772587413,
+        1792828464862522362
+      ]
+    },
+    {
+      "path": "@cloudflare/workerd-darwin-arm64/bin/workerd",
+      "bytes": 141187784,
+      "sha256": "1136b482136aa93d67b0f77d4987a338a64a725b209ad1b889b8ae975dc7f388",
+      "targetIdentity": [
+        16777231,
+        546040227,
+        33261,
+        1,
+        141187784,
+        1792711955334541336,
+        1792828464862354154
+      ]
+    },
+    {
+      "path": "workerd/package.json",
+      "bytes": 676,
+      "sha256": "edeaa6dd138cc6f40cfaecd955042cb366afc32f5931313b824b6dd56a6a2e96",
+      "targetIdentity": [
+        16777231,
+        546039920,
+        33188,
+        1,
+        676,
+        1792711954758558352,
+        1792828464833952025
+      ]
+    },
+    {
+      "path": "vitest/package.json",
+      "bytes": 5933,
+      "sha256": "e5a6d55e103f04929442595df0f641f128b02fd706ff01474c094863b44511d0",
+      "targetIdentity": [
+        16777231,
+        546040391,
+        33188,
+        1,
+        5933,
+        1792711954754407804,
+        1792828464877860345
+      ]
+    }
+  ],
+  "entirePreparedPoolPackage": {
+    "records": 32,
+    "comparison": "Every historical package path/kind/file size/SHA256 equals closed donor and target; all target files physical and single-link.",
+    "canonicalPayloadRowsSha256": "4dfbf1c7e4dc695fdbeb616a4da11930f8ed2c33c9b0d212f65f69ad0131eb47"
+  },
+  "pins": [
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-owning-evidence-20261023-v2/before.json",
+      "bytes": 3292667,
+      "sha256": "9e34d37608d38c3ff54cac95c08c30416b88ec34fae43e515ce85da4f070b851"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-owning-evidence-20261023-v2/compatibility-after.json",
+      "bytes": 3292667,
+      "sha256": "9e34d37608d38c3ff54cac95c08c30416b88ec34fae43e515ce85da4f070b851"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-owning-evidence-20261023-v2/compatibility.command.json",
+      "bytes": 182,
+      "sha256": "d3f1b66fcbfcb1a44e811184631ed527f95652a945e2894892509c5d0fb46270"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-owning-evidence-20261023-v2/compatibility.process.json",
+      "bytes": 330,
+      "sha256": "975637c98efc300e79579912cded4b174ba82bff8c2fd7b3f3b7ddee9ba5592f"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-owning-evidence-20261023-v2/compatibility.stdout",
+      "bytes": 351,
+      "sha256": "c250fecb0d76ed80b79cfcb388a2ffc89ce13f1fdaa9b7da404eb24b8da1572c"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-owning-evidence-20261023-v2/compatibility.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-owning-evidence-20261023-v2/result.json",
+      "bytes": 2131,
+      "sha256": "3f34659842831feebe7b5dd03c66194f09c8e4e751cf511c9afe71f78f0fd0ef"
+    },
+    {
+      "path": "/private/tmp/artroom-kernel-private-dependency-adoption-evidence-20261024-v5/result.json",
+      "bytes": 617,
+      "sha256": "8be8199876256ff2ecbf70797afc6031b5122b34412c4a2ffc04048eeb7c637f"
+    },
+    {
+      "path": "/private/tmp/artroom-kernel-private-dependency-adoption-evidence-20261024-v5/after.json",
+      "bytes": 5451923,
+      "sha256": "83c8ccdbe899d3735dcdb1fbe43f8202a4527a3b0b807e973f01fc0e329874c1"
+    },
+    {
+      "path": "/private/tmp/artroom-kernel-private-dependency-adoption-evidence-20261024-v5/final.json",
+      "bytes": 5451923,
+      "sha256": "83c8ccdbe899d3735dcdb1fbe43f8202a4527a3b0b807e973f01fc0e329874c1"
+    }
+  ],
+  "limits": [
+    "No compatibility script, package import, workerd, Vitest, test body or parser executed for this assessment.",
+    "No assertion that the copy itself tested runtime behavior. Future payload/script/version/custody changes require a fresh assessment.",
+    "Kernel focused tests, SDK/Page/seals and final gate remain separate obligations."
+  ]
+}

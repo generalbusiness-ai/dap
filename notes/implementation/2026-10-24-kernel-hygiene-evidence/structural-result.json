@@ -1,0 +1,112 @@
+{
+  "allocation": "99598acfcffbba5419ca6470383a1a96d714f341",
+  "status": "passed",
+  "children": [
+    {
+      "label": "checker",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "scripts/check-kernel-boundary.mjs"
+      ],
+      "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+      "pid": 87499,
+      "exit": 0,
+      "signal": null,
+      "wall": 0.4429686670191586,
+      "user": 0.21478,
+      "system": 0.041486
+    },
+    {
+      "label": "structural2",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "--test",
+        "scripts/check-kernel-boundary.test.mjs"
+      ],
+      "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+      "pid": 87533,
+      "exit": 0,
+      "signal": null,
+      "wall": 0.16605037497356534,
+      "user": 0.14662499999999995,
+      "system": 0.028546000000000002
+    },
+    {
+      "label": "publicRelease3",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "--test",
+        "scripts/public-release-modules.test.mjs"
+      ],
+      "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+      "pid": 87580,
+      "exit": 0,
+      "signal": null,
+      "wall": 0.18500049994327128,
+      "user": 0.16035399999999994,
+      "system": 0.03866800000000001
+    },
+    {
+      "label": "control",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "scripts/check-kernel-boundary.mjs"
+      ],
+      "cwd": "/private/tmp/artroom-builder-kernel-hygiene-20261024",
+      "pid": 87673,
+      "exit": 1,
+      "signal": null,
+      "wall": 0.18166770797688514,
+      "user": 0.191925,
+      "system": 0.030127000000000015
+    }
+  ],
+  "errors": [],
+  "signals": [],
+  "structural2": {
+    "counts": {
+      "tests": 2,
+      "suites": 0,
+      "pass": 2,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "names": [
+      "kernel parser sees every production module edge and ignores ordinary data",
+      "kernel resolution binds production homes, exact exports and documented manifest pins"
+    ],
+    "durationMs": 91.054,
+    "format": "pinned Node26 spec"
+  },
+  "publicRelease3": {
+    "counts": {
+      "tests": 3,
+      "suites": 0,
+      "pass": 3,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "names": [
+      "SDK module references preserve genuine imports and rewrite declarations without treating capability data as modules",
+      "SDK published manifests match the actual supported workspace manifests",
+      "SDK testing closure includes only the shared fixture and its two raw dependencies"
+    ],
+    "durationMs": 107.767334,
+    "format": "pinned Node26 spec"
+  },
+  "control": {
+    "status": "matched-control",
+    "expectedExit": 1,
+    "diagnostic": "packages/derive/src/index.ts: forbidden workspace edge @generalbusiness/dap-platform\n"
+  },
+  "wall": 7.099126457935199,
+  "pythonCpu": 5.476228,
+  "childrenUser": 0.994035,
+  "childrenSystem": 0.440575,
+  "inclusiveCpu": 6.910838,
+  "qualification": "Kernel first validation block only: maintained structural checker once, whole structural Node2 and public-release modules Node3 once, then one exact derive-to-platform control. Healthy baseline is not repeated inside control. Natural control1 is required; all other children0. In-place original device/inode/mode/nlink and byte/hash restoration, with only target mtime/ctime recorded as changed. Full outside Source/private/tools/env/refs/preparation/binding guards; no cache waiver. Private adoption/tool/env/physical/runtime bindings remain pending until reviewed capture. Costs are original owner outer inclusive; nested child/guard totals overlap. No SDK/Page/parser/focused/gate execution."
+}

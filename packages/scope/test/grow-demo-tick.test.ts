@@ -4,7 +4,7 @@
 import { env, runInDurableObject } from "cloudflare:test";
 import { expect, inject, test } from "vitest";
 import { b64url, canonicalize, isSeed, scopeIdOf, timeOf, unb64url } from "@generalbusiness/dap-bytes";
-import { readPublishedApplicationPackage2 } from "@generalbusiness/dap-bytes/application-v2";
+import { readPublishedApplicationPackage2 } from "@generalbusiness/dap-platform/application-v2";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT as C, platform } from "@generalbusiness/dap-platform";
 import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-mcp";
 import { invitationIssueFields, invitationRedemptionFields, requestSession, secretSigner, sessionRequest } from "@generalbusiness/dap-client";

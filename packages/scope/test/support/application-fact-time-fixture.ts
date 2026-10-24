@@ -3,7 +3,7 @@ import { configureFactTimeDefinition } from "../definition-corpus-data.ts";
  * entry ref. The production Counter definition is unchanged. */
 import type { DeclaredDefinition } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, parseStrict } from "@generalbusiness/dap-bytes";
-import { isApplicationJournalSource, packApplication2 } from "@generalbusiness/dap-bytes/application-v2";
+import { isApplicationJournalSource, packApplication2 } from "@generalbusiness/dap-platform/application-v2";
 import { applicationCounterJournalPacket2 } from "./application-v2-fixture.ts";
 import { fixedSigner } from "../fixtures-core.ts";
 

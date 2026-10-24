@@ -1,6 +1,6 @@
 /** Native message-field inclusion. Unknown values are not treated as proof. */
 import type { FieldType } from "@generalbusiness/dap-contract";
-import { fieldAssignable } from "./field-types.ts";
+import { fieldAssignable } from "@generalbusiness/dap-derive/field-types";
 import { array, own, record, subjectType, type GraphCreate, type GraphRow, type GraphSend } from "./model.ts";
 import type { PortLink } from "./ports.ts";
 import type { PackageFinding } from "./types.ts";

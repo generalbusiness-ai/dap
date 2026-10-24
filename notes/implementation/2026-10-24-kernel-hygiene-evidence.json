@@ -1,0 +1,454 @@
+{
+  "request": "30c7c3eca82fba47449b35c4280aacbac4cb2c73",
+  "promise": "79ee2bae4fbe94426d0ac3d916af9f1b248fad8b",
+  "state": "ORIGINAL_GATE_FAILED_WHOLE_FILE_AND_UNREACHED_TAIL_CONTINUATIONS_PASSED_RULING_REVIEW_PENDING",
+  "implementationHead": "fb105fa777a7769ce67f7660e7d7ac5af5720423",
+  "currentHead": "59e6424759b26cb5b9c6bbb58439455e234cccc4",
+  "currentTree": "2a6c32d2594b2bef91fc4602f44c0db7947404d3",
+  "results": {
+    "structural": {
+      "path": "/private/tmp/artroom-kernel-structural-owning-evidence-20261024-v2/result.json",
+      "bytes": 3783,
+      "sha256": "dc476650c5e5cce81188a39d9b48dfa86419df585e257cb77e25852195ee8070",
+      "allocation": "99598acfcffbba5419ca6470383a1a96d714f341",
+      "children": [
+        {
+          "label": "checker",
+          "exit": 0,
+          "signal": null
+        },
+        {
+          "label": "structural2",
+          "exit": 0,
+          "signal": null
+        },
+        {
+          "label": "publicRelease3",
+          "exit": 0,
+          "signal": null
+        },
+        {
+          "label": "control",
+          "exit": 1,
+          "signal": null
+        }
+      ],
+      "control": {
+        "status": "matched-control",
+        "expectedExit": 1,
+        "diagnostic": "packages/derive/src/index.ts: forbidden workspace edge @generalbusiness/dap-platform\n"
+      },
+      "caseCounts": {
+        "parserResolver": 2,
+        "releaseModules": 3
+      }
+    },
+    "sdk": {
+      "path": "/private/tmp/artroom-kernel-sdk-output-owning-evidence-20261024-v3/result.json",
+      "bytes": 2361,
+      "sha256": "4f988187e1387a357586d165ee02d5a8aaac958b95f20d72bc18cdbe914474e6",
+      "allocation": "0f164062f79d5aac78be627ddf5c6be1bedd0c9e",
+      "children": [
+        {
+          "label": "producer",
+          "exit": 0,
+          "signal": null
+        },
+        {
+          "label": "checker",
+          "exit": 0,
+          "signal": null
+        }
+      ]
+    },
+    "page": {
+      "path": "/private/tmp/artroom-kernel-page-output-owning-evidence-20261024-v4/result.json",
+      "bytes": 2533,
+      "sha256": "3cc8c1cc0cd4b43c0a79c8aee6ad9228155867d692b77213d1cedc681d823070",
+      "allocation": "a645166374c42bfc84c5a088961a51093ae40057",
+      "children": [
+        {
+          "label": "build",
+          "exit": 0,
+          "signal": null
+        },
+        {
+          "label": "assets",
+          "exit": 0,
+          "signal": null
+        }
+      ]
+    },
+    "sixSeals": {
+      "path": "/private/tmp/artroom-kernel-six-owner-seal-evidence-20261024-v3/result.json",
+      "bytes": 2330,
+      "sha256": "ca2f906fdb094b628243ab753f51e8217d3de0fca8d527beeb2bd85ee5ed798c",
+      "allocation": "2a48aca61456285f3e15f08694fe66390a99de94",
+      "children": [
+        {
+          "label": "source-seals",
+          "exit": 0,
+          "signal": null
+        }
+      ],
+      "actualOutputs": [
+        {
+          "path": "apps/room/archive-policy.ts",
+          "sourceSeal": "ed3b746b5a26c3e872e41b13ba133f43ade42b5612aa5028ba544fc013be5ce7"
+        },
+        {
+          "path": "packages/scope/src/applications/projection.ts",
+          "sourceSeal": "f7d3bb45d448ec654a89f875697f865e1e89baeb5d7529e0db0859bd855b009f"
+        },
+        {
+          "path": "packages/scope/src/applications/route.ts",
+          "sourceSeal": "a9c2c7071bc190a9dc44be6efe57b973203c40d3fff8ab35263f73818925ae29"
+        },
+        {
+          "path": "packages/scope/src/creation-lineage.ts",
+          "sourceSeal": "82f46501400fde4903e9bd3b216d345f8af871d0311157da3faa9469e5b33140"
+        },
+        {
+          "path": "packages/scope/src/object.ts",
+          "sourceSeal": "f5272e8a18fdfdebf2062f1ed7f274389df5cdcb4a0e6040b7e4a43c797a77d5"
+        },
+        {
+          "path": "packages/scope/src/serving-admission.ts",
+          "sourceSeal": "d90d11a6a2de39eb6cb735ae050a3bcbc0e57c4130fac201ebc705bc090e6b70"
+        }
+      ]
+    },
+    "focused": {
+      "path": "/private/tmp/artroom-kernel-focused-owning-evidence-20261024-v1/result.json",
+      "bytes": 96812,
+      "sha256": "f305dbbba792c997614d1c005237b792689da2b68b6bca18cdee408325deb799",
+      "allocation": "2fe19e45b2fe2dc5808d172450f4c08842554f66",
+      "maintainedResult": {
+        "path": "/private/tmp/artroom-kernel-focused-owning-evidence-20261024-v1/focused/result.json",
+        "bytes": 62422,
+        "sha256": "2131cabe832c86e437bb5d6f8411457deacb7323b643ee2ad0e93f20f20990c3"
+      },
+      "compilerPhases": 28,
+      "bodyPhases": 1,
+      "allPhaseExitCodesZero": true,
+      "passedCases": 129,
+      "wholeFiles": 25,
+      "rootAttributedUnexpectedCases": 0,
+      "rootAttributedCoverageIssues": [],
+      "rootAttributedGuardStatus": "stable with declared selected cache and empty temporary-directory metadata allowance",
+      "rootOriginalSession": 59089,
+      "rootNaturalExit": 0,
+      "rootOuterCostSeconds": {
+        "wall": "60.32",
+        "user": "59.96",
+        "system": "10.13"
+      },
+      "costQualification": "Original outer observations supplied by root. Nested owner/child costs overlap."
+    },
+    "originalGate": {
+      "path": "/private/tmp/artroom-kernel-final-gate-owning-evidence-20261024-v3/result.json",
+      "bytes": 1500083,
+      "sha256": "08b9339f578725212d136b3e78a239cc23795dcab75a37268e4249073a106416",
+      "head": "8658d1099abcc395718056b56724105d186d8096",
+      "tree": "635e6cb70f5d60a7da83d4896f193ce9523a26fb",
+      "exit": 1,
+      "allocation": "ce48ab44cb894d37ac8912898bcd2356e8a5627e",
+      "terminalCounts": {
+        "failed": 2,
+        "passed": 3509,
+        "skipped": 3
+      },
+      "failedCases": [
+        {
+          "id": "84408684_0",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/replay/test/archive-git-v2-layout.test.ts",
+          "name": "three v2 passes cover ten thousand entries without rereading old entries or rewriting earlier files"
+        },
+        {
+          "id": "-1601051069_1",
+          "file": "/private/tmp/artroom-builder-kernel-hygiene-20261024/packages/scope/test/floor-archive.test.ts",
+          "name": "Native floor-policy alarm measures a4800-input archive prefix"
+        }
+      ],
+      "rootAttributedFailedLoadFiles": 2,
+      "rootAttributedAbsentExpectedCases": 9,
+      "rootAttributedUnknownIds": 0,
+      "rootAttributedUnhandledErrors": 0,
+      "rootAttributedGuards": "stable",
+      "unreached": [
+        "Node 39",
+        "Counting 55"
+      ],
+      "preTestStageExits": {
+        "whitespace": 0,
+        "commit-messages": 0,
+        "commit-test": 0,
+        "helpers": 0,
+        "citations": 0,
+        "cite-test": 0,
+        "typecheck": 0
+      },
+      "qualification": "Original gate remains failed. Root supplied coverage reconciliation; callback gaps do not establish starts, retries or drains."
+    },
+    "lendingContinuation": {
+      "path": "/private/tmp/artroom-kernel-lending-alias-validation-20261024-v1/result.json",
+      "bytes": 250,
+      "sha256": "62d83cda04a8eee15c8df9bff4a18fc9b4acffd3ebf268cc63709df237d0d5be",
+      "vitestResult": {
+        "path": "/private/tmp/artroom-kernel-lending-alias-validation-20261024-v1/vitest.json",
+        "bytes": 7563,
+        "sha256": "13e8730456b433799daa6ca09184490fe00780d487510428d92e5509df9375dc"
+      },
+      "head": "59e6424759b26cb5b9c6bbb58439455e234cccc4",
+      "exit": 0,
+      "wholeFiles": 5,
+      "passedCases": 18
+    },
+    "unreachedTailContinuation": {
+      "path": "/private/tmp/artroom-kernel-unreached-tail-validation-20261024-v1/result.json",
+      "bytes": 490,
+      "sha256": "04e62b6e88537d9aabe10adfd25cac26637d6c5c7000175902941e22875684eb",
+      "nodeStdout": {
+        "path": "/private/tmp/artroom-kernel-unreached-tail-validation-20261024-v1/node.stdout",
+        "bytes": 4344,
+        "sha256": "44cbaa224bbc9ece371e4665f054683167c304988fab4fe0ff2971c74c497b70"
+      },
+      "countingStdout": {
+        "path": "/private/tmp/artroom-kernel-unreached-tail-validation-20261024-v1/counting.stdout",
+        "bytes": 6749,
+        "sha256": "0042b1873974fdaabc48bf9283b8e41cdf04c5fe2bddb79855d9ed5fcdd7f859"
+      },
+      "head": "59e6424759b26cb5b9c6bbb58439455e234cccc4",
+      "nodePassed": 39,
+      "countingPassed": 55,
+      "allPhaseExitCodesZero": true
+    },
+    "floorWholeFileContinuation": {
+      "path": "/private/tmp/artroom-kernel-floor-failure-followup-20261024-v1/vitest.json",
+      "bytes": 1824,
+      "sha256": "47c211841ddee6ec3845ad82b8bd67e7146cb95823837fffc3a4d5a9151ad10d",
+      "head": "59e6424759b26cb5b9c6bbb58439455e234cccc4",
+      "wholeFile": "packages/scope/test/floor-archive.test.ts",
+      "passedCases": 4,
+      "caseDurationsMs": [
+        {
+          "name": "Native floor-policy alarm measures a10-input archive prefix",
+          "duration": 430
+        },
+        {
+          "name": "Native floor-policy alarm measures a4800-input archive prefix",
+          "duration": 12905
+        },
+        {
+          "name": "Native alarm writer advances a30000-entry journal in five bounded floors then waits for a1000-position target rise",
+          "duration": 230192
+        },
+        {
+          "name": "Native archive floors reclaim an exact2000-entry ceiling while10000 real inputs continue",
+          "duration": 60929
+        }
+      ],
+      "testSourceUnchangedFromGatedHead": true,
+      "testSourceSha256": "86fa9ca9fc3a9ee0640c6ac363e72f05ae70e4b2815802670e33aec6e7ec9a8f",
+      "limits": "Original limits unchanged. Root reports one whole-file invocation, no diagnostic overlay or retry. Exact original gate failure cause remains unproved.",
+      "rootOriginalSession": 86932,
+      "rootNaturalExit": 0
+    },
+    "replayWholeFileContinuation": {
+      "path": "/private/tmp/artroom-kernel-replay-failure-followup-20261024-v1/vitest.json",
+      "bytes": 1030,
+      "sha256": "356b08bee576eec4b3104f9bf91ffe0e24727f29161c5ce16bb8e4e6887439c6",
+      "head": "59e6424759b26cb5b9c6bbb58439455e234cccc4",
+      "wholeFile": "packages/replay/test/archive-git-v2-layout.test.ts",
+      "passedCases": 1,
+      "caseDurationsMs": [
+        {
+          "name": "three v2 passes cover ten thousand entries without rereading old entries or rewriting earlier files",
+          "duration": 4022.124583
+        }
+      ],
+      "testSourceUnchangedFromGatedHead": true,
+      "testSourceSha256": "93e641b8e41901602eab39832b36c3a6cfdde3b2212c86db6632c44c8a524a2c",
+      "limits": "Original limits unchanged. Root reports one whole-file invocation, no diagnostic overlay or retry. Exact original gate failure cause remains unproved.",
+      "rootOriginalSession": 37430,
+      "rootNaturalExit": 0
+    }
+  },
+  "rootAttributedAcceptances": {
+    "structuralPrefix": "973cec4d",
+    "sdk": "313086324d536b552853a95dc7381e23a5eba47c",
+    "page": "5828b4fa1e88ba1172cb738c8a444199f2d4e86b",
+    "sixSealsPrefix": "d288385f",
+    "mapAdoption": "8503ef745df7debea2960a904722b06fcdda43a7",
+    "dependencyCopy": "2fb255a3d01b143f5cacb2f5a75ce81a805fdc24",
+    "compatibilityPrefix": "e1f87a95",
+    "qualification": "Short IDs are root attribution, not complete event pins.",
+    "focused": "2b0e22a013a8f306ef511612e538399aa31603b8"
+  },
+  "mapAdoption": {
+    "path": "scripts/security-entry-points.test.mjs",
+    "bytes": 13255,
+    "sha256": "fbaba77164266f4bc54eff06be15cd0e8a6041ee2d3789acb55a459764740305",
+    "changedValues": 7,
+    "parsedOwners": 6,
+    "objectCalls": 1,
+    "archiveFourValuesPreserved": {
+      "packages/scope/src/archive-build.ts": "e1111bfef1fe94cc8436498679395ba1b9b8adba3db8651f4f24d87d68696853",
+      "packages/scope/src/archive-driver.ts": "df3ecc92e8853edd1abfb0fb47bfbe0553f2fd90bf872fe9a083ee18a6826d06",
+      "packages/scope/src/archive-host.ts": "e376746b7a1001a47715f666c4777e135bf1c48a162bfffe9c80e0ec913f079f",
+      "packages/scope/src/archive-row.ts": "91fd40cf8fd7dddb37383bf8daf86fdc30f0da5983ab69dfa3550263331ae12b"
+    },
+    "onlyPathChangedSinceImplementation": [
+      "scripts/security-entry-points.test.mjs"
+    ]
+  },
+  "pending": {
+    "exactHeadReview": null,
+    "landing": null,
+    "plannerScopedContinuationRuling": null
+  },
+  "limits": [
+    "No new runtime or candidate edits while preparing this report.",
+    "Source and closed result review only; no independent full guard audit is claimed by this documentation task.",
+    "No deployment, package publication, browser operation or closure of other open kernel items."
+  ],
+  "measuredOuterCommandCosts": {
+    "units": "seconds",
+    "source": "Original outer-command wall/user/system observations supplied by root.",
+    "runtime": [
+      {
+        "command": "Dependency copy",
+        "wall": "6.61",
+        "user": "3.66",
+        "system": "2.51"
+      },
+      {
+        "command": "Structural checks and control",
+        "wall": "7.15",
+        "user": "4.80",
+        "system": "2.15"
+      },
+      {
+        "command": "SDK",
+        "wall": "8.30",
+        "user": "7.43",
+        "system": "2.92"
+      },
+      {
+        "command": "Page",
+        "wall": "4.44",
+        "user": "3.29",
+        "system": "1.31"
+      },
+      {
+        "command": "Six source seals",
+        "wall": "2.41",
+        "user": "1.67",
+        "system": "0.76"
+      },
+      {
+        "command": "Affected compilers and cases",
+        "wall": "60.32",
+        "user": "59.96",
+        "system": "10.13"
+      },
+      {
+        "command": "Original ordinary gate (failed)",
+        "wall": "1309.07",
+        "user": "1389.20",
+        "system": "197.47"
+      },
+      {
+        "command": "Whole Lending continuation",
+        "wall": "1.25",
+        "user": "2.27",
+        "system": "0.32"
+      },
+      {
+        "command": "Previously unreached Node 39 and Counting 55",
+        "wall": "5.65",
+        "user": "7.98",
+        "system": "0.77"
+      },
+      {
+        "command": "Whole floor file follow-up",
+        "wall": "308.65",
+        "user": "279.41",
+        "system": "34.88"
+      },
+      {
+        "command": "Whole replay file follow-up",
+        "wall": "4.96",
+        "user": "4.03",
+        "system": "1.14"
+      }
+    ],
+    "captures": [
+      {
+        "command": "Dependencies",
+        "wall": "1.80",
+        "user": "1.12",
+        "system": "0.68"
+      },
+      {
+        "command": "Structural",
+        "wall": "1.51",
+        "user": "0.97",
+        "system": "0.50"
+      },
+      {
+        "command": "SDK",
+        "wall": "1.72",
+        "user": "1.00",
+        "system": "0.58"
+      },
+      {
+        "command": "Page",
+        "wall": "1.56",
+        "user": "0.99",
+        "system": "0.55"
+      },
+      {
+        "command": "Six source seals",
+        "wall": "1.50",
+        "user": "0.98",
+        "system": "0.51"
+      },
+      {
+        "command": "Affected compilers and cases",
+        "wall": "2.18",
+        "user": "1.00",
+        "system": "0.64"
+      },
+      {
+        "command": "Original gate",
+        "wall": "0.89",
+        "user": "0.46",
+        "system": "0.33"
+      }
+    ],
+    "roundedSubtotals": {
+      "runtime": {
+        "wall": "1718.81",
+        "user": "1763.70",
+        "system": "254.36"
+      },
+      "captures": {
+        "wall": "11.16",
+        "user": "6.52",
+        "system": "3.79"
+      }
+    },
+    "qualification": "Original outer commands are disjoint; nested child timings overlap. Rounded local observations only. Original failed gate and every continuation remain separate. Review and unmeasured work are not counted as zero."
+  },
+  "originalOwningValidationHead": "8bfdc37eff766d2e242cd8ea9bbb674fab185273",
+  "repair": {
+    "head": "59e6424759b26cb5b9c6bbb58439455e234cccc4",
+    "tree": "2a6c32d2594b2bef91fc4602f44c0db7947404d3",
+    "onlyChangedPath": "examples/lending/vitest.config.ts",
+    "changedAliasLines": 2,
+    "behavior": "Exact platform and derive package root aliases preserve subpath resolution.",
+    "productionAndTestBodiesUnchanged": true
+  },
+  "failureDiagnosisQualification": "Lending load failures diagnosed and corrected by exact alias matching. Original floor/replay failure cause remains unproved; load/process-pressure attribution is inference only. Whole-file passes under unchanged original limits are recorded without a whole-suite repeat or a whole-gate-zero claim."
+}

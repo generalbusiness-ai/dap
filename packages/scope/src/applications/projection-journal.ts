@@ -2,7 +2,7 @@
  * body. No continuation, scan outside the window, peer or retry exists. */
 import { ITEM_QUERY_BOUNDS as B } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, utf8 } from "@generalbusiness/dap-bytes";
-import type { ApplicationJournalProjectionSource, ApplicationJournalRead } from "@generalbusiness/dap-bytes/application-v2";
+import type { ApplicationJournalProjectionSource, ApplicationJournalRead } from "@generalbusiness/dap-platform/application-v2";
 import type { PreparedRead } from "../read-preparation.ts";
 import type { Sql } from "../sqlite.ts";
 import type { ItemQueryBudget } from "../item-query-budget.ts";

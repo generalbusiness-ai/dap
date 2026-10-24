@@ -2,7 +2,7 @@
  * shared pure producer; no native storage, installation or authority runs. */
 import type { Head, Summary } from "@generalbusiness/dap-contract";
 import { canonicalize, itemQueryArgument, itemQueryDigest } from "@generalbusiness/dap-bytes";
-import { applicationProjectionQueries, applicationProjectionQueryDigest, projectApplicationQueryReads, readApplicationProjectionQuery } from "@generalbusiness/dap-bytes/application-v2";
+import { applicationProjectionQueries, applicationProjectionQueryDigest, projectApplicationQueryReads, readApplicationProjectionQuery } from "@generalbusiness/dap-platform/application-v2";
 import { countingCommitments } from "../commitments.ts";
 import { counterStateProjection } from "./projection.ts";
 

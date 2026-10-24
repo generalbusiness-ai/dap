@@ -54,7 +54,7 @@ import { PreparationFlights } from "./preparation-flight.ts";
 import { ItemQueries } from "./item-queries.ts";
 import { ApplicationProjections } from "./applications/projection.ts";
 import { APPLICATION_DECLARATION_BYTES, type ApplicationDeclarationSource } from "./applications/projection-source.ts";
-import { applicationJson } from "@generalbusiness/dap-bytes/application";
+import { applicationJson } from "@generalbusiness/dap-platform/application";
 import { ReadPreparation } from "./read-preparation.ts";
 import { nativeBirth } from "./native-birth.ts";
 import { creationDeclaration } from "./creation-declaration.ts";

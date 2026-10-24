@@ -2,7 +2,7 @@
 import { expect, test, vi } from "vitest";
 import { APPLICATION_PROJECTION_WIRE_BOUNDS as B, type ApplicationProjectionQuery, type ApplicationProjectionRead, type ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, textDigest } from "@generalbusiness/dap-bytes";
-import { applicationProjectionId, applicationProjectionQueryDigest, encodeApplicationProjectionQuery, readApplicationProjection } from "@generalbusiness/dap-bytes/application-v2";
+import { applicationProjectionId, applicationProjectionQueryDigest, encodeApplicationProjectionQuery, readApplicationProjection } from "@generalbusiness/dap-platform/application-v2";
 import { ScopeHandle, TransportError, applicationItemSnapshot, completeApplicationItems, completeApplicationProjection, bindingTransport, httpTransport, signedReads, type Fetch, type ServiceBinding, type Transport } from "../src/index.ts";
 
 const scope: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "lane" };

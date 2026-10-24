@@ -7,7 +7,7 @@
  * original envelope. Nothing here signs a replacement.
  */
 import type { ApplicationProjectionData, Receipt } from "@generalbusiness/dap-contract";
-import type { ApplicationInstallation } from "@generalbusiness/dap-bytes/application";
+import type { ApplicationInstallation } from "@generalbusiness/dap-platform/application";
 import { b64url, canonicalize, intentDigest, timeMs, timeOf } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, completeSummary, completeApplicationProjection, httpTransport, observeScope, openHttpHeadStream, requestSession, shapeDeclaredAct, signedIntent, signerSessionRequest,
   type CompleteSnapshot, type Fetch, type HeadStreamFetch, type Observation, type Session, type Signer } from "@generalbusiness/dap-client";

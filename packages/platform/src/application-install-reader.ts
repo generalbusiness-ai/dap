@@ -4,7 +4,7 @@ import { DEVICE_APPLICATION_COHORT as D } from "./device-application-wire.ts";
 import type { Digest, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isScopeRef } from "@generalbusiness/dap-bytes";
 import type { StateView } from "@generalbusiness/dap-derive";
-import type { ApplicationInstallation, ApplicationRoom } from "@generalbusiness/dap-bytes/application";
+import type { ApplicationInstallation, ApplicationRoom } from "./application-codec/application.ts";
 import { TRUSTED_APPLICATION_COHORT as C } from "./application-install-wire.ts";
 import { DECLARED_APPLICATION_COHORT as C2 } from "./application-install-v2-wire.ts";
 import { ARCHIVE_APPLICATION_COHORT as AC, ARCHIVE_DECLARED_APPLICATION_COHORT as AC2, ARCHIVE_DEVICE_APPLICATION_COHORT as ADC } from "./archive-binding-wire.ts";
