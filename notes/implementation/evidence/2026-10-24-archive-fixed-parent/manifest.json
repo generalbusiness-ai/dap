@@ -514,7 +514,7 @@
     },
     {
       "source": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v8/stages/whitespace.log",
-      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/gate-preflight-v8/whitespace.log",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/gate-preflight-v8/whitespace.txt",
       "bytes": 111,
       "sha256": "52cc90e9677caa0f892a5819de6547a7ca60d8858e051a2c9584646ad19a2ee4",
       "identity": [
