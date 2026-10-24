@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8853607ff8b66ff48c295107fec1425126704c22","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-24-kernel-hygiene-evidence/private-dependency-adoption-result.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8a20d3340305286332641f997542217badb1400f","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/application-local-device-fixture.ts."}
