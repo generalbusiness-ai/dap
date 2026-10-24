@@ -421,7 +421,17 @@ turn coverage.
 In a room created with `--cohort trusted-application`, `install_application`
 records one native admin request. Its arguments are `uri`, `release`, `roles`,
 `values`, and `idempotencyKey`. The URI names a regular Git blob at an exact
-commit. The operator must trust that exact release and publisher. Each
+commit. `APPLICATION_TRUST` must list that exact release, publisher, and
+canonical Git hostname. An unlisted release, another host, or a malformed
+setting refuses before any package fetch. The policy is checked again when
+custody starts building the envelope. The decoded publisher must match
+before signing, alongside the existing release and signature checks. The
+bounded HTTPS transport refuses redirects to another source.
+
+Hosted agents receive the Worker's setting. Local `dap mcp` and `dap install` read the same
+setting from their process environment; an absent list admits no install.
+Old two-field rows need an explicit host before deployment. See
+[the deployment guide](deploy.md#trusted-application-screens). Each
 selected role receives only its signed package defaults; omitted roles
 receive no new grants. Existing grants remain.
 

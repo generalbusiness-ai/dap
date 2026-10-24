@@ -294,7 +294,7 @@ test.each([ARCHIVE_DEVICE_APPLICATION_COHORT, APPLICATION_COHORT])("$register au
       const directory = await life.wait(() => D.at()), membership = await life.wait(() => M.at());
       const port: ServerPort = { service: "https://scopes.test", signer: secretSigner(rita.secret), custody: memoryStore(), now: life.now,
         config: { read: async () => ({ service: "https://scopes.test", repository: { directory, membership, rules: A.name, destination: G.name } }), addRoot: async () => { throw Error("native install only"); } },
-        applicationFetch: peer.fetch, fetch: (url, init) => life.wait(() => routed(url, init)) };
+        applicationFetch: peer.fetch, applicationTrust: JSON.stringify(f.trust), fetch: (url, init) => life.wait(() => routed(url, init)) };
       const result = await life.wait(() => new McpService(port).call("install_application", { uri: f.uri, release: packet.ids.release, roles: ["admin"], owner: { membership, member: "@rita" }, values: {}, idempotencyKey: "TEST-lineage-install" }));
       expect(result.structuredContent).toMatchObject({ answer: "accepted" });
     }

@@ -66,6 +66,7 @@ test("install_application returns its archived settlement on repeat without fetc
   let posts = 0, settlements = 0, packages = 0;
   const service = new McpService({ service: SERVICE, signer, custody: store, now: () => Date.parse("2099-01-01T00:00:00Z"),
     config: { read: async () => stand.config(), addRoot: async () => { throw Error("must not grant a root"); } },
+    applicationTrust: JSON.stringify([{ release: args.release, publisher: signer.key, host: "packages.test" }]),
     applicationFetch: async () => { packages++; throw Error("retained request must not rebuild a package"); },
     fetch: async (url, init) => {
       if (url.endsWith("/acts")) { posts++; throw new TransportError("scripted lost install reply"); }

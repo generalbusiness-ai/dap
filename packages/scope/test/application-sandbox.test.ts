@@ -51,7 +51,7 @@ test.each(["grow", "lending"] as const)("sandbox serves maintained %s bytes with
   if (!bytes) throw Error("The maintained TEST packet must be captured.");
   const packet = readPublishedApplicationPackage2(bytes, input.release), directory = ref("directory", 1), rules = ref("rules", 2), membership = ref("membership", 3), destination = ref("destination", 4), scope = ref("lane", 5);
   const host = readApplicationScreenHost({ v: 1, screenOrigin: `https://${name}.inguz.space`, roomOrigin: `https://dap-${name}.inguz.workers.dev`, directory: directory.scope, item: 7, presentation: packet.ids.presentation });
-  const trust = [{ release: packet.ids.release, publisher: packet.package.release.manifest.publisher }], store = new ApplicationContentStore(env.APPLICATION_CONTENT, trust, PROPOSED_BOUNDS);
+  const trust = [{ release: packet.ids.release, publisher: packet.package.release.manifest.publisher, host: "git.example" }], store = new ApplicationContentStore(env.APPLICATION_CONTENT, trust, PROPOSED_BOUNDS);
   const scopes = { idFromName: (value: string) => value, get: (value: string) => value === directory.scope ? { applicationRoom: async () => ({ directory, rules }) }
     : { applicationInstallation: async () => ({ directory, rules, membership, destination, scope, item: host.item, definition: packet.package.semantic.entry, ids: packet.ids, membershipDefinition: "platform:membership@8" }) } };
   const roomEnv = { SCOPES: scopes as unknown as Env["SCOPES"], APPLICATION_CONTENT: env.APPLICATION_CONTENT, APPLICATION_TRUST: JSON.stringify(trust), APPLICATION_SCREEN_HOSTS: JSON.stringify([host]), DEPLOYMENT: "TEST fixed sandbox" };

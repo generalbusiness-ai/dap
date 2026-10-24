@@ -74,7 +74,7 @@ test("native installed projection reads exact journal state and survives R2 dele
     const port: ServerPort = { service: "https://scopes.test", signer: secretSigner(rita.secret), custody: custodyStore(), now: life.now,
       config: { read: async () => ({ service: "https://scopes.test", repository: { directory, membership, rules: A.name, destination: G.name } }),
         addRoot: async () => { throw Error("Native installs are discovered through Directory."); } },
-      applicationFetch: peer.fetch, fetch: (url, init) => life.wait(() => routed(url, init)),
+      applicationFetch: peer.fetch, applicationTrust: JSON.stringify(f.trust), fetch: (url, init) => life.wait(() => routed(url, init)),
     };
     const mcp = new McpService(port);
     const args = { uri: f.uri, release: packet.ids.release, roles: ["admin", "member"], values: { target: 7 }, idempotencyKey: "TEST-native-v2-install" };

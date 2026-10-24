@@ -41,7 +41,7 @@ test("maintained Grow Site creates a native Room and opens its owned grid throug
     const controller = { membership, member: "@rita" as const };
     const port: ServerPort = { mode: "generic", service: "https://scopes.test", signer: secretSigner(rita.secret), custody: memoryStore(), now: life.now,
       config: { read: async () => ({ service: "https://scopes.test", repository: { directory, membership, rules: A.name, destination: G.name } }), addRoot: async () => { throw Error("Use the installed Site."); } },
-      applicationFetch: peer.fetch, fetch: (url, init) => life.wait(() => routed(url, init)) };
+      applicationFetch: peer.fetch, applicationTrust: JSON.stringify(f.trust), fetch: (url, init) => life.wait(() => routed(url, init)) };
     const mcp = new McpService(port);
     const installed = await life.wait(() => mcp.call("install_application", { uri: f.uri, release: packet.ids.release, roles: ["admin"], values: { label: "Native grow site" }, owner: { membership, member: "@rita" }, idempotencyKey: "TEST-grow-site-install" }));
     expect(installed.structuredContent).toMatchObject({ answer: "accepted", phase: "recorded" });

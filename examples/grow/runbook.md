@@ -142,9 +142,12 @@ git+https://github.com/generalbusiness-ai/artroom.git/@<full-published-commit>/e
 ```
 
 The operator sets the host's nonsecret `APPLICATION_TRUST` to the single exact
-release/publisher row printed by `dap pack`, following
+release and publisher printed by `dap pack`, with `host: "github.com"`
+matching the immutable URI above, following
 [Trusted application screens](../../docs/deploy.md#trusted-application-screens).
-No trust setting or publisher secret is supplied by this checkout.
+Grow's checked-in trust row includes that explicit host; externally managed
+trust lists need the same schema migration. No publisher secret is supplied
+by this checkout.
 
 Use the recorded URI and release, an explicit kept request key and the full
 sensors MemberRef as `--owner`. Select only the final signed package's

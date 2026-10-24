@@ -39,7 +39,7 @@ The Grow demo uses Worker `dap-grow` at
 Its Durable Objects and Register17 are specific to this Worker. It shares
 the `artroom-demo` Artifacts namespace and application-content bucket.
 The config records `DEPLOYMENT=dap-grow-v1`, the exact register/Artifacts
-settings and the single signed demo release/publisher trust row.
+settings and the single signed demo release/publisher/host trust row.
 Set `SESSION_SECRET` separately from stdin.
 
 The reviewed Grow archive entry preserves the existing `DeployedScope`
@@ -83,9 +83,10 @@ existing local behavior. Metrics use the bounded label `unknown` for an
 invalid or absent value. Health still requires usable sessions and a ready
 register before returning `200`.
 
-The existing `APPLICATION_TRUST` parser and release/publisher schema are
-unchanged. Trust-before-fetch and release revocation policy are separate
-R10 and R11 work. [The implementation note](../notes/implementation/2026-10-24-settings-readiness.md)
+`APPLICATION_TRUST` uses one strict parser for native hosting and MCP.
+Its exact release/publisher/host schema and migration are described under
+[Trusted application screens](#trusted-application-screens).
+Release revocation for acts remains separate R11 work. [The implementation note](../notes/implementation/2026-10-24-settings-readiness.md)
 records validation status.
 
 ## Settings and secrets
@@ -264,15 +265,34 @@ provisions that bucket before the reviewed host deployment and leaves its
 public access disabled. The Worker owns CID-keyed immutable content. It
 exposes no bucket upload, list, delete, or arbitrary-key route.
 
-Set `APPLICATION_TRUST` to nonsecret JSON rows with exactly `release` and
-`publisher`, using the expected release and publisher printed by `dap pack`:
+Set `APPLICATION_TRUST` to nonsecret JSON rows with exactly `release`,
+`publisher`, and `host`. Use the expected release and publisher printed by
+`dap pack`, and the lowercase hostname in the immutable Git URI:
 
 ```json
-[{"release":"sha256:<64 lowercase hex>","publisher":"key_<publisher public key>"}]
+[{"release":"sha256:<64 lowercase hex>","publisher":"key_<publisher public key>","host":"github.com"}]
 ```
 
-A missing setting admits nothing; malformed or ambiguous rows refuse as a
-whole. The host checks the complete signed packet and exact publisher before
+A missing setting admits nothing. Malformed or ambiguous rows refuse as a
+whole. Rows from the previous two-field schema must gain an explicit `host`;
+there is no implicit host or legacy fallback. A host contains no scheme,
+port, path, credentials, or noncanonical URL spelling. One release has one
+host row. Native resolution and MCP `install_application` compare release
+and host before opening a transport. The existing public HTTPS transport
+refuses redirects and keeps its original byte, object and deadline bounds.
+
+Before this source is deployed, migrate every configured trust list on
+`artroom-scope`, `dap-grow`, and `dap-lending`, including any operator-set
+`--var` values. Omitted lists stay closed. Grow's checked-in row adds
+`host: "github.com"` without changing its release or publisher. The planner
+reviews the migrated nonsecret values and deploys with the existing
+`--keep-vars` commands above. `--keep-vars` alone does not migrate an old
+row. No builder deployment is part of this change.
+
+Local `dap mcp` and `dap install` also read `APPLICATION_TRUST` from their process environment.
+Set the same JSON policy before starting it if package installation is
+needed. Other local tools keep their existing defaults. Hosted tool opt-in
+and native membership standing remain separate requirements. The host checks the complete signed packet and exact publisher before
 storing it. A screen request also checks current trust and its active native
 installation. Revoked trust stops screen delivery. This same-origin route
 is not isolation for arbitrary packages: only operator-listed trusted

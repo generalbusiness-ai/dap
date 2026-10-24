@@ -97,7 +97,7 @@ test.each(installations)("$name: one signed native install settles through Direc
       let lose = specimen.application === "Counter";
       const port: ServerPort = { service: "https://scopes.test", signer: secretSigner(rita.secret), custody: store, now: life.now,
         config: { read: async () => ({ service: "https://scopes.test", repository: { directory, membership, rules: A.name, destination: G.name } }), addRoot: async () => { throw Error("TEST installs discover through Directory"); } },
-        applicationFetch: peer.fetch,
+        applicationFetch: peer.fetch, applicationTrust: JSON.stringify(f.trust),
         fetch: async (url, init) => {
           const response = await life.wait(() => routed(url, init));
           if (lose && new URL(url).pathname.endsWith("/acts")) { lose = false; await response.body?.cancel(); throw Error("TEST lost accepted MCP install reply"); }
@@ -111,12 +111,12 @@ test.each(installations)("$name: one signed native install settles through Direc
         const local = cliStore(); await local.keep("operator", rita.secret);
         await local.save({ v: 1, service: port.service, key: "operator", repository: { directory, membership, rules: A.name, destination: G.name } });
         cli = { store: local, fetch: port.fetch!, now: life.now };
-        cli.applicationCommand = applicationCommands(cli, store, peer.fetch);
+        cli.applicationCommand = applicationCommands(cli, store, peer.fetch, JSON.stringify(f.trust));
         const argv = ["install", f.uri, "--release", f.packet.ids.release, "--request", key, "--role", "admin", "--role", "member", "--values", specimen.values];
         const uncertain = await life.wait(() => command(cli!, argv));
         expect(uncertain.code, uncertain.lines.join("\n")).toBe(1); expect(lose).toBe(false);
         const restored = { ...cli! }; // another CLI invocation, same durable custody
-        restored.applicationCommand = applicationCommands(restored, store, peer.fetch);
+        restored.applicationCommand = applicationCommands(restored, store, peer.fetch, JSON.stringify(f.trust));
         expect(await life.wait(() => command(restored, argv))).toMatchObject({ code: 0, lines: [expect.stringMatching(/^Install request recorded:/), expect.any(String), expect.any(String)] });
         installedService = new McpService(port);
         result = await life.wait(() => installedService!.call("install_application", args));

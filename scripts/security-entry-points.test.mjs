@@ -10,7 +10,7 @@ const seals = {
   "apps/room/demo-creation.ts": "d9850f4854182c0231a2ae9a985882343e7f3dfea67ea034cafe4fca4bb0d77f",
   "apps/room/page/route.ts": "62c8f69b9f516f1b5acdaef57d7aed25268d8cf03283bdffdd4b1b5f20bb6b3d",
   "apps/room/brand/route.ts": "71b45ff9b41b3bea31c775a16525349591e0d4f7dfdc65da79f095816b1c343c",
-  "packages/scope/src/worker.ts": "21986e4ca6416454c1d42a9abd5e85c3fe743067e8b026dac39e622477531375", // Actual union parser value adopted by root.
+  "packages/scope/src/worker.ts": "21986e4ca6416454c1d42a9abd5e85c3fe743067e8b026dac39e622477531375", // Historical R4 value; combined Worker seal pending actual producer.
   "packages/scope/src/scope-index.ts": "98a91329fbe8926127aab2db555970278e898cec347fd4f20569b19f1f879d54", // New internal lookup/registration boundary.
   "packages/scope/src/creation-admission.ts": "5cf6ba850f2b6fc4a0a5156209c7fce4fa1a739cf00129b664f86448d86e3f13", // Reviewed R1 ancestry owner; adopted AST value.
   "packages/scope/src/creation-lineage.ts": "bc4aed5065e827ae5077f0462f176950f46943f707d729c22913c740a05fa1b3", // Reviewed whole-lineage boundary; adopted AST value.
@@ -37,12 +37,15 @@ const seals = {
   "packages/scope/src/item-queries.ts": "61ead9996d2c338a26331e04b8576c52425d8d2c88dc86173a7d79108c2ee418",
   "packages/scope/src/applications/projection.ts": "f7d3bb45d448ec654a89f875697f865e1e89baeb5d7529e0db0859bd855b009f",
   "packages/scope/src/destination-host.ts": "f5e13392ec2bf2690756a3063b05e478d24d834b24afe5388f04aedbb87d6f04",
-  "packages/mcp/src/hosted.ts": "12022f8f5816776931b6fdf1ab5bf7910af6371237523c5a8a05ab987fce30c4",
+  "packages/mcp/src/hosted.ts": "ebf77243d7987bf328a81c237865a3ba6b65a03f3327976cb37455a58a971a01",
   "packages/mcp/src/hosted-tools.ts": "5bb4dd74b12896bb8f5f5cb366f25bd31af849c2690d0e3ab5d81eb277f94a47", // Reviewed R5 admission owner; actual maintained parser output.
-  "packages/mcp/src/service.ts": "e8d95eca7d989a5f883fdae5236865d181b9b1a3129828876df07c5122762836", // Reviewed R5 admission owner; actual maintained parser output.
+  "packages/mcp/src/service.ts": "96dbfc212ce9ddd01bbe990505fb4273f66af40df667ce8866827c60107363db", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/catalogue.ts": "194dd82a6d3f188909485c4c1b9db33aee671b06fb46840e92fc0b8df2a79726", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/inventory.ts": "74c5db16355c5badacf9dc6cc241d20d6400908a160324c07d88db9191b455f8", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/http.ts": "757f8b3644c6afdf5d6c0399bd3865f879c8aa4841a7429aaa30c264ee9d76a6",
+  "packages/client/src/application-trust.ts": "137391c8b1ed6f59f66e9368012c1355ed77325fdb16f67b73296be1ccc856b3", // Reviewed R10 trust-before-fetch owner; actual maintained parser output.
+  "packages/client/src/application-install.ts": "4046c6792d4671cdb259691dcf2171a2c3144450664c696cb722db161790164b", // Reviewed R10 trust-before-fetch owner; actual maintained parser output.
+  "packages/scope/src/applications/resolve.ts": "6338c9357780846b115999454239b68f34c5d6be3c090ca3f18b8f6e8771d0e2", // Reviewed R10 trust-before-fetch owner; actual maintained parser output.
   "examples/grow/simulator-worker.ts": "2d60dab3a9a5b204b69f15bc5ec3473fa48513888d7ffdb0c1fc179f6fe4883c",
   "examples/grow/simulator-host.ts": "26a8521b98737cae3d80a9fe3b9ac17fb10b11fcf2f8ce973251253bdbf2b7df"
 };

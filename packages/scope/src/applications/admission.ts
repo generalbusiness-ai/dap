@@ -1,8 +1,8 @@
 /** Operator-listed trusted packages on the current runtime. This checks bytes,
  * exact release/publisher trust and native host support; it creates no scope,
  * grant, installation or content-store entry. It is no screen isolation. */
-import type { Bounds, Digest, KeyId } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isKeyId, isRecord, parseStrict, parseStrictBytes, utf8 } from "@generalbusiness/dap-bytes";
+import type { Bounds, Digest } from "@generalbusiness/dap-contract";
+import { canonicalize, isRecord, parseStrict, parseStrictBytes, utf8 } from "@generalbusiness/dap-bytes";
 import { ApplicationPackageError, readApplicationPackage } from "@generalbusiness/dap-platform/application";
 import { readPublishedApplicationPackage2, type AnyPackedApplication } from "@generalbusiness/dap-platform/application-v2";
 import { validateDefinition } from "@generalbusiness/dap-derive";
@@ -12,26 +12,9 @@ import { admit, RuleEvalError, RULE_PROFILES } from "@generalbusiness/dap-derive
 /** This host's finite packet allowance, below the portable 16 MiB codec
  * ceiling. Current maintained packets fit; it is not an adopted scope quota. */
 export const APPLICATION_HOST_PACKAGE_BYTES = 4 * 1024 * 1024;
-export interface ApplicationTrust { readonly release: Digest; readonly publisher: KeyId }
-export class ApplicationAdmissionError extends Error {
-  constructor(readonly reason: "invalid-trust" | "untrusted-release" | "unsupported-host" | "unsupported-definition") { super("application-" + reason); }
-}
+export { ApplicationAdmissionError, readApplicationTrust, type ApplicationTrust } from "@generalbusiness/dap-client/application";
+import { ApplicationAdmissionError, type ApplicationTrust } from "@generalbusiness/dap-client/application";
 const admissionFailure = (reason: ApplicationAdmissionError["reason"]): never => { throw new ApplicationAdmissionError(reason); };
-/** The absent setting admits nothing. An invalid or ambiguous setting refuses
- * as a whole; it never becomes a partial trust list. */
-export function readApplicationTrust(setting: string | undefined): readonly ApplicationTrust[] {
-  if (setting === undefined) return Object.freeze([]);
-  if (setting.length > 64 * 1024 || utf8(setting).length > 64 * 1024) return admissionFailure("invalid-trust");
-  let value: unknown;
-  try { value = parseStrict(setting); } catch { return admissionFailure("invalid-trust"); }
-  if (!Array.isArray(value) || value.length > 128) return admissionFailure("invalid-trust");
-  const releases = new Set<string>();
-  const rows = value.map(row => {
-    if (!isRecord(row) || Object.keys(row).sort().join() !== "publisher,release" || !isDigest(row["release"]) || !isKeyId(row["publisher"]) || releases.has(row["release"])) return admissionFailure("invalid-trust");
-    releases.add(row["release"]); return Object.freeze({ release: row["release"], publisher: row["publisher"] });
-  });
-  return Object.freeze(rows);
-}
 
 export function readTrustedApplication(bytes: Uint8Array, release: Digest, trust: readonly ApplicationTrust[], bounds: Bounds): AnyPackedApplication {
   const allowed = trust.find(row => row.release === release);

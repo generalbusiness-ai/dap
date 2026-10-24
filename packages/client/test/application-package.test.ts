@@ -170,7 +170,8 @@ test("invalid package, URI, role selection and accessor inputs never ask the ins
     [packet.bytes, { ...options, roles: ["owner"] }],
     [packet.bytes, Object.defineProperty({ ...options }, "values", { enumerable: true, get() { getters++; return {}; } })],
   ] as const) await expect(signedApplicationInstall(key, bytes, altered)).rejects.toBeInstanceOf(ApplicationPackageError);
+  await expect(signedApplicationInstall(key, packet.bytes, options, {}, secretSigner(new Uint8Array(32).fill(97)).key)).rejects.toBeInstanceOf(ApplicationPackageError);
   expect(calls).toBe(0); expect(getters).toBe(0);
-  const explicitNone = await signedApplicationInstall(key, packet.bytes, options);
+  const explicitNone = await signedApplicationInstall(key, packet.bytes, options, {}, signer.key);
   expect(explicitNone.signed.intent.fields["roles"]).toEqual([]); expect(calls).toBe(1);
 });

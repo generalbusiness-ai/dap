@@ -1,6 +1,6 @@
 /** One native application-install envelope. Keep it unchanged for submission
  * and settlement; host fetch/admission remains a separate authority. */
-import type { Beside, Digest, FieldValue, MemberRef, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
+import type { Beside, Digest, FieldValue, KeyId, MemberRef, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
 import { isDigest, isMemberRef, isRecord, isScopeRef, parseStrict, textDigest } from "@generalbusiness/dap-bytes";
 import { applicationJson } from "./application-json.ts";
 import { readApplicationPackage } from "./application-package.ts";
@@ -50,25 +50,29 @@ export function readDeviceApplicationInstallOptions(value: unknown): DeviceAppli
 /** Verify owned package bytes and bounded inputs before asking for one
  * signature. Beside holds semantic/release values and declaration texts;
  * screen bytes never enter this native request. This checks no host trust,
- * native grant, current revision or application genesis guard. */
-export async function signedApplicationInstall(signer: Signer, bytes: Uint8Array, options: ApplicationInstallOptions, signing: Signing = {}): Promise<SignedApplicationInstall> {
+ * native grant, current revision or application genesis guard. An optional
+ * expected publisher is compared with the decoded manifest before signing. */
+export async function signedApplicationInstall(signer: Signer, bytes: Uint8Array, options: ApplicationInstallOptions, signing: Signing = {}, publisher?: KeyId): Promise<SignedApplicationInstall> {
   const owned = readApplicationInstallOptions(options);
   const packet = readApplicationPackage(bytes, owned.release, { bytes: 4 * 1024 * 1024, definitionBytes: 64 * 1024 });
+  if (publisher !== undefined && packet.package.release.manifest.publisher !== publisher) return invalid();
   return signApplicationInstall(signer, packet, owned, signing);
 }
 
 /** The declared-interface cohort uses the separate strict v2 codec.
  * Calling this does not authorize that cohort or select its native pin. */
-export async function signedApplicationInstall2(signer: Signer, bytes: Uint8Array, options: ApplicationInstallOptions, signing: Signing = {}): Promise<SignedApplicationInstall> {
+export async function signedApplicationInstall2(signer: Signer, bytes: Uint8Array, options: ApplicationInstallOptions, signing: Signing = {}, publisher?: KeyId): Promise<SignedApplicationInstall> {
   const owned = readApplicationInstallOptions(options);
   const packet = readPublishedApplicationPackage2(bytes, owned.release, { bytes: 4 * 1024 * 1024, definitionBytes: 64 * 1024 });
+  if (publisher !== undefined && packet.package.release.manifest.publisher !== publisher) return invalid();
   return signApplicationInstall(signer, packet, owned, signing);
 }
 
 /** Device cohort only. Native Rules verifies the owner's current membership. */
-export async function signedDeviceApplicationInstall(signer: Signer, bytes: Uint8Array, options: DeviceApplicationInstallOptions, signing: Signing = {}): Promise<SignedApplicationInstall> {
+export async function signedDeviceApplicationInstall(signer: Signer, bytes: Uint8Array, options: DeviceApplicationInstallOptions, signing: Signing = {}, publisher?: KeyId): Promise<SignedApplicationInstall> {
   const owned = readDeviceApplicationInstallOptions(options);
   const packet = readPublishedApplicationPackage2(bytes, owned.release, { bytes: 4 * 1024 * 1024, definitionBytes: 64 * 1024 });
+  if (publisher !== undefined && packet.package.release.manifest.publisher !== publisher) return invalid();
   return signApplicationInstall(signer, packet, owned, signing, owned.owner);
 }
 

@@ -3,7 +3,7 @@
  * or HTTP route is created here. A cached release never proves another URI. */
 import type { AnyPackedApplication } from "@generalbusiness/dap-platform/application-v2";
 import type { Bounds, Digest } from "@generalbusiness/dap-contract";
-import { readApplicationReleaseUri, type ApplicationReleaseUri } from "@generalbusiness/dap-client";
+import { applicationTrustForSource, readApplicationReleaseUri, type ApplicationReleaseUri } from "@generalbusiness/dap-client";
 import { readApplicationGitBlob, type ApplicationGitSource } from "@generalbusiness/dap-git";
 import { APPLICATION_HOST_PACKAGE_BYTES, ApplicationAdmissionError, readTrustedApplication, type ApplicationTrust } from "./admission.ts";
 import type { ApplicationContentStore } from "./content.ts";
@@ -23,7 +23,7 @@ export async function resolveTrustedApplication(uri: unknown, release: Digest, t
   // No unlisted release can initiate even the remote transport. Publisher and
   // signature still need to match after the exact file has been obtained.
   const ownedTrust = trust.map(row => ({ ...row })), ownedBounds = { ...bounds };
-  if (!ownedTrust.some(row => row.release === release)) throw new ApplicationAdmissionError("untrusted-release");
+  if (!applicationTrustForSource(address, release, ownedTrust)) throw new ApplicationAdmissionError("untrusted-release");
   let opened: OpenedApplicationSource;
   try { opened = await open(address); } catch { throw new ApplicationReleaseError(); }
   try {

@@ -453,6 +453,7 @@ export interface ServeOptions {
 export async function serve(options: ServeOptions): Promise<void> {
   const service = new McpService({
     service: options.service, signer: options.signer, config: options.config, custody: fileStore(join(options.home, "private", "mcp-custody")),
+    applicationTrust: process.env["APPLICATION_TRUST"],
     mode: options.mode, tools: options.tools, ...(options.fetch ? { fetch: options.fetch } : {}),
     metrics: options.metrics ?? { report: point => { console.error(`dap.metric ${JSON.stringify({ schema: MCP_METRIC_SCHEMA, ...point })}`); } },
   });
