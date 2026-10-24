@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c89349da1a39b0b95c86d27a26277d9f438fc0d3","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-23-archive-input-work/audits/final-gate-independent-audit.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ca5069e5c90a4ea33aaaaf4fdc0af529a560d88b","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/archive-host.test.ts."}
