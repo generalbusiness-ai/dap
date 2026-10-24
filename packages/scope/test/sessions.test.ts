@@ -256,6 +256,10 @@ describe("read sessions (authority note, sections 3.9, 3.12 row W6, 5.3 and 5.5;
       expect([sessionsOf(undefined, TEST_DEPLOYMENT), sessionsOf("s".repeat(31), TEST_DEPLOYMENT), sessionsOf("s".repeat(32), undefined), sessionsOf("s".repeat(32), "") === null, sessionsOf("s".repeat(32), TEST_DEPLOYMENT) === null])
         .toEqual([null, null, null, true, false]);
 
+      // One shared identity limit is measured in UTF-8 bytes, not characters.
+      for (const deployment of ["a".repeat(128), "界".repeat(42) + "aa"]) expect(sessionsOf("s".repeat(32), deployment)?.deployment).toBe(deployment);
+      for (const deployment of ["a".repeat(129), "界".repeat(43)]) expect(sessionsOf("s".repeat(32), deployment)).toBeNull();
+
       // The operator replaces the secret. Every session that the old one made ends at once, and a new request gets a new session.
       owner.configure({ secret: testSecret() });
       expect([await read(owner, M, "", held.reader()), await read(owner, M, "", (await session(owner, M, rita)).reader())]).toEqual([[403, "forbidden"], [200, "ok"]]);

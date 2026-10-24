@@ -1,3 +1,4 @@
+import { readDeployment } from "./deployment-setting.ts";
 /** Serving policy before a parentless creation addresses a Durable Object.
  * This is not a genesis judgment or a substitute for verified child delivery. */
 import type { Seed, SignedIntent } from "@generalbusiness/dap-contract";
@@ -16,6 +17,7 @@ export interface CreationAdmission {
  * namespace first verifies its whole creator lineage before child lookup,
  * and the receiver still makes its ordinary full genesis judgment. */
 export function admitsParentlessCreation(settings: CreationAdmission, signed: SignedIntent, seed: Seed): boolean {
+  if (settings.DEPLOYMENT !== undefined && readDeployment(settings.DEPLOYMENT) === null) return false;
   if (settings.DEPLOYMENT === undefined || settings.ALLOW_OPEN_CREATION === "true") return true;
   try {
     const register = artifactsRegisterScope(settings.ARTIFACTS_CONFIG);

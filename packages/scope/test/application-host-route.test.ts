@@ -58,10 +58,21 @@ test("two pending packet loads coalesce while a third distinct release refuses b
   const outstanding: Promise<Response>[] = [];
   try {
     for (const f of fixtures) await f.store.put(f.packet.bytes, f.packet.ids.release);
+    for (const DEPLOYMENT of ["", "a".repeat(129), "界".repeat(43)]) {
+      const response = await applicationSandboxPage(new Request("https://cache.test" + applicationScreenPath(directory.scope, 0, fixtures[0]!.packet.ids.presentation) + "_/context"), { ...bindings, DEPLOYMENT });
+      expect([response?.status, await response!.json()]).toEqual([503, { error: "application-unavailable" }]);
+    }
+    expect(reads).toEqual([]);
     outstanding.push(get(0)); await first; outstanding.push(get(1)); await second; outstanding.push(get(0));
     expect((await get(2)).status).toBe(503); expect(reads).toEqual([fixtures[0]!.key, fixtures[1]!.key]);
     releaseFirst(); expect((await outstanding[0]!).status).toBe(200); expect((await outstanding[2]!).status).toBe(200);
     expect((await get(2)).status).toBe(200); expect(reads).toEqual(fixtures.map(f => f.key));
     releaseSecond(); expect((await outstanding[1]!).status).toBe(200);
+    for (const DEPLOYMENT of ["a".repeat(128), "界".repeat(42) + "aa"]) {
+      const response = await applicationSandboxPage(new Request("https://cache.test" + applicationScreenPath(directory.scope, 0, fixtures[0]!.packet.ids.presentation) + "_/context"), { ...bindings, DEPLOYMENT });
+      expect([response?.status, (await response!.json<{ deployment: string }>()).deployment]).toEqual([200, DEPLOYMENT]);
+    }
+    const local = await applicationSandboxPage(new Request("https://cache.test" + applicationScreenPath(directory.scope, 0, fixtures[0]!.packet.ids.presentation) + "_/context"), { ...bindings, DEPLOYMENT: undefined });
+    expect([local?.status, (await local!.json<{ deployment: string }>()).deployment]).toEqual([200, "https://cache.test"]);
   } finally { releaseFirst(); releaseSecond(); await Promise.allSettled(outstanding); for (const f of fixtures) await env.APPLICATION_CONTENT.delete(f.key); }
 });

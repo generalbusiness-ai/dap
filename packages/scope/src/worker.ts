@@ -1,3 +1,4 @@
+import { readDeployment } from "./deployment-setting.ts";
 import { jsonReply as json } from "./response.ts";
 import { applicationPage, applicationSandboxPage, applicationScreenHosts } from "./applications/route.ts";
 import { applicationGatewayRoute, applicationScreenHostMatches } from "@generalbusiness/dap-client/application";
@@ -783,7 +784,7 @@ export class McpAgent<E extends McpEnv = McpEnv> extends DurableObject<E> {
     this.#agent = new HostedAgent(sqlOf(this.ctx), {
       genericTools: hostedMcpTools(this.env) ?? [],
       id: this.ctx.id.toString(), now: () => Date.now(), random: (n) => crypto.getRandomValues(new Uint8Array(n)), observe: observeThrough(scopes),
-      ...(this.env.METRICS ? { metrics: { deployment: this.env.DEPLOYMENT ?? "unknown", version: this.env.VERSION_METADATA?.id ?? "unknown", report: (point: MetricPoint) => this.env.METRICS?.writeDataPoint(point) } } : {}),
+      ...(this.env.METRICS ? { metrics: { deployment: readDeployment(this.env.DEPLOYMENT) ?? "unknown", version: this.env.VERSION_METADATA?.id ?? "unknown", report: (point: MetricPoint) => this.env.METRICS?.writeDataPoint(point) } } : {}),
       fetch: ((url: string, init?: RequestInit) => route(new Request(url, init), scopes, this.env)) as unknown as AgentPorts["fetch"],
       ...this.ports(),
     });

@@ -1,3 +1,4 @@
+import { readDeployment } from "./deployment-setting.ts";
 /** Serving admission, not a kernel judgment. Only checked applied native
  * history in this deployment may open a child object. */
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
@@ -98,6 +99,7 @@ export async function admitChildCreation(binding: Binding, settings: CreationAdm
       if (!isObject(envelope) || !isSeed(envelope["to"]) || !isFactRef(envelope["from"]) || !isLocalId(envelope["n"])
         || !isObject(envelope["message"]) || envelope["message"]["class"] !== "request" || envelope["message"]["type"] !== "create") return refused();
       const owned = envelope as unknown as Delivered;
+      if (settings.DEPLOYMENT !== undefined && readDeployment(settings.DEPLOYMENT) === null) return unavailable();
       if (settings.DEPLOYMENT === undefined || settings.ALLOW_OPEN_CREATION === "true") return admitted(owned);
       const register = artifactsRegisterScope(settings.ARTIFACTS_CONFIG);
       if (!register) return unavailable();

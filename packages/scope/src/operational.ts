@@ -1,3 +1,4 @@
+import { readDeployment } from "./deployment-setting.ts";
 /** Invocation-local instrumentation. No native envelope or record carries it. */
 import { AsyncLocalStorage } from "node:async_hooks";
 import type { OutboxId } from "@generalbusiness/dap-contract";
@@ -38,7 +39,7 @@ export function operationContext(env: MetricEnvironment, scope: string | null, p
   const request = isRequestId(identity.request) ? identity.request : null;
   const trace = isTraceId(identity.trace) ? identity.trace : null;
   return { identity: { request, trace }, place, turn: { entered: false, known: true }, httpPublic: false, invocation: {
-    metrics: new Metrics({ scope, deployment: env.DEPLOYMENT ?? "unknown", version: env.VERSION_METADATA?.id ?? "unknown", request: request ?? "none", trace: trace ?? "none" }, env.METRICS), users: 1, ...sidecar,
+    metrics: new Metrics({ scope, deployment: readDeployment(env.DEPLOYMENT) ?? "unknown", version: env.VERSION_METADATA?.id ?? "unknown", request: request ?? "none", trace: trace ?? "none" }, env.METRICS), users: 1, ...sidecar,
   } };
 }
 export function inOperation<T>(context: Operational, work: () => T): T { return local.run(context, work); }
