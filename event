@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:aa03f05134832d8965721447ca5333795525b428","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-24-archive-fixed-parent/post-gate-repair/focused17-result.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:aa0af10de5a58c349a04d3d9bd75e6370ac1de03","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-build.ts."}
