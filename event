@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3e6d43988f6ba418f2d6ffa2dce64bc9ee8faf3b","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-24-archive-fixed-parent/post-gate-repair/decisions.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3f9ae35ef133793c5f75b23caba4c3047da36885","text":"Merge retired a covered predecessor; the successor is at packages/git/src/journal-v2-append.ts."}
