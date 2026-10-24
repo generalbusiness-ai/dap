@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:75abef538055ff271749742d82d0939b69a7c191","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-24-kernel-hygiene-evidence/structural-restoration.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:75cc4d0f1f8830227e2e4f2930a95d3148ad7cf5","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/validate/fields.ts."}
