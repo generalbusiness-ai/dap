@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:aa569e63575dd530bdb8034ad91d6fa502d05676","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-24-archive-fixed-parent/audits/history-artroom-archive-fixed-parent-continuation-v2-failure-independent-audit-20261024-v1.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:aa8d0a63ceaf5f22727b7cee5c69ed2471c8a933","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/archive-input-work.test.ts."}
