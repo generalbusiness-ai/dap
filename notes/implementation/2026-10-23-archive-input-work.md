@@ -1,6 +1,6 @@
 # Archive input-work accounting
 
-The isolated-v2 correction charges actual admitted work. Existing limits remain unchanged. The owning evidence now establishes the 26 Git/host cases and the corrected Native backlog case. The Native case confirms partial progress, an exact remainder and eventual drain with genuine nonempty legacy anchors. Earlier compiler and fixture failures remain retained. Both controls matched their intended failures with original Source restored. The host seal was computed; the mapped value was adopted and gate remains pending. No hosted recovery is claimed.
+The isolated-v2 correction charges actual admitted work. Existing limits remain unchanged. The owning evidence now establishes the 26 Git/host cases and the corrected Native backlog case. The Native case confirms partial progress, an exact remainder and eventual drain with genuine nonempty legacy anchors. Earlier compiler and fixture failures remain retained. Both controls matched their intended failures with original Source restored. The host seal was computed and adopted, and the ordinary final gate passed. No hosted recovery is claimed.
 
 Request `78638defde7a4613aef78414dbcee73aecc565fd` and promise `ade43f6922e44f5f7366ae8ba9bdb53206bbc645`. Original diagnosis and run identities remain pinned; root confirmed the rename landing and Main push. Current validated and seal-adoption checkpoints are recorded below.
 
@@ -74,7 +74,7 @@ The following groups sum the successful budget debits through the first scouted 
 
 [The site-charge attachment](evidence/2026-10-23-archive-input-work/site-charges.json) retains every reported site and all charge fields: 95 first-pass sites and 68 in each later pass, plus checkpoints, per-stage shares, prefix receipts and remainders. It is an inert projection of the original successful JSON metadata. The separate negative control below measures the restored maximum debit; this projection describes only the successful run.
 
-## Both controls matched; gate remains pending
+## Both controls matched
 
 The original control owner V5 (root `39288`, tool `00bdf3`) naturally exited 0 with `matched-controls`, no errors or signals. The original test children each exited 1, as required; they are retained failures, not healthy passes.
 
@@ -83,9 +83,19 @@ The original control owner V5 (root `39288`, tool `00bdf3`) naturally exited 0 w
 
 Original Source was restored between controls and after the second. Restoration records retain the exact original device, inode, mode, link count, bytes and hash; intentional target timestamps are separately recorded. Root confirmed the clean restoration. The independent controls audit is accepted (peer `0cd98cbbd46742a151ed5a02527dd92e368d2f4b`, root `e0b71820974e9335c768d2ffc2d20954f0dff33b`). Outer wall was 16.594114 seconds and inclusive CPU 18.108652; child wall times were 2.414465 and 5.010787 seconds. Nested costs overlap. Delta work retains its passing V3 baseline assertions; no separate delta control ran.
 
-`archive-host.ts` is a mapped owner whose whole cleaned AST changed, so old seal `b57d08f1` cannot be carried. The original host-seal run (root `75713`, tool `ba4637`) naturally exited 0 and returned the sole actual seal `94914ff2f85237464418dddf8e66e307b851fe7a4f2ad296aa2933c4b3249673`. Owner wall was 2.344776 seconds and inclusive CPU 2.350812; child wall 0.106466 and CPU 0.133062 overlap that total. The single mapped host value and explanatory comment were adopted in 80962d9dde8986bd6e1e2fb6da197340e6b65926, tree 14fb178327d72fc0304a25a448d1a11c799d8d7f; all other Source/tests match owning 0c12. Independent seal audit `738a4d4408ce9ea89a2d91eb8bd785081aa5ff83` is accepted. Stderr contains only the expected Node TypeScript-stripping warning. The gate is unrun. No hosted recovery is claimed.
+`archive-host.ts` is a mapped owner whose whole cleaned AST changed, so old seal `b57d08f1` cannot be carried. The original host-seal run (root `75713`, tool `ba4637`) naturally exited 0 and returned the sole actual seal `94914ff2f85237464418dddf8e66e307b851fe7a4f2ad296aa2933c4b3249673`. Owner wall was 2.344776 seconds and inclusive CPU 2.350812; child wall 0.106466 and CPU 0.133062 overlap that total. The single mapped host value and explanatory comment were adopted in 80962d9dde8986bd6e1e2fb6da197340e6b65926, tree 14fb178327d72fc0304a25a448d1a11c799d8d7f; all other Source/tests match owning 0c12. Independent seal audit `738a4d4408ce9ea89a2d91eb8bd785081aa5ff83` is accepted. Stderr contains only the expected Node TypeScript-stripping warning. The final gate below passed. No hosted recovery is claimed.
 
 The [evidence manifest](evidence/2026-10-23-archive-input-work/manifest.json) pins the adjacent original results, commands, progress, observations, restoration records and audits. Full Source/dependency/tool guards and bindings remain at their original external paths, named in the audit pins. Attachments are inert evidence, not programs to execute.
+
+## Final gate
+
+The ordinary `npm run gate` passed once at commit `0859b64e3be5a43e57dbf03ea9f2e5bd6009e0e8`, tree `7f337d29035b5f863e4334df45a3c0e8f740c9ee`. Root observed original session 84951 naturally exit 0 (tool `922903`). All eight stages passed. The terminal ledger contains exactly 3,506 expected identities in 490 files: 3,503 passed and three skipped, with no unhandled errors. The Node blocks passed 4, 7, 37 and 55 cases. Eighteen ready callbacks and twenty result callbacks were absent; each affected case has a passed terminal state. These are reporting gaps, not evidence of teardown drain.
+
+The outer command took 1,218.957747 seconds elapsed and 1,422.199754 inclusive CPU seconds. Its gate child took 1,216.587974 seconds elapsed, 1,250.223962 user CPU seconds and 170.196145 system CPU seconds. Stage and child costs overlap those totals. The machine was a Mac17,7 with an Apple M5 Max and 18 logical CPUs. Dependencies and the existing Vite cache were copied privately and then reused; this was not a cold-cache benchmark. Other machine activity was not isolated. A load sample during the gate at 20:43 Eastern was 3.22, 3.12 and 2.87 over one, five and fifteen minutes.
+
+The [independent gate audit](evidence/2026-10-23-archive-input-work/audits/final-gate-independent-audit.json) confirms all expected case identities, eight stage results, Node block titles and fixed guards, with only the declared existing Vite cache update. Its durable receipt is `7816ee2a85439c8317ab0f39a77ea16777dae10d`.
+
+The [original gate result](evidence/2026-10-23-archive-input-work/gate-v4/result.json) retains the full terminal ledger and stage results. Complete raw logs and guard snapshots remain in `/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4`. The final report adds only documentation and evidence after the gated tree; production source, tests and configuration remain unchanged. The review request records the resulting report tree, so this documentation update does not repeat the gate.
 
 ## Dependency adoption is complete
 

@@ -1,5 +1,5 @@
 {
-  "qualification": "Original selected finite evidence copied byte for byte; site-charges is the labelled inert projection. Full guard snapshots remain external. Gate outcome is pending.",
+  "qualification": "Original selected finite evidence copied byte for byte; site-charges is the labelled inert projection. Full guard snapshots and complete stage logs remain external. Original gate V4 passed at the checkpoint named in the primary.",
   "files": [
     {
       "path": "owning-v2/result.json",
@@ -217,6 +217,42 @@
       "bytes": 237800,
       "sha256": "ae276e9a18908fea69bc0fc3fbda3c31e1b39455ecb1ee8309012edc12928c46",
       "qualification": "Inert projection of original successful budget observations."
+    },
+    {
+      "path": "gate-v4/result.json",
+      "source": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/result.json",
+      "bytes": 1511098,
+      "sha256": "c6b64de93b8ff9a5447a67ba1b3780b5b38d6d37b85186ca3bd932d073139c0c"
+    },
+    {
+      "path": "gate-v4/process.json",
+      "source": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/process.json",
+      "bytes": 338,
+      "sha256": "c899e6585c530cdd4cb30387f297bcc90b859136c2ef6b14c48df4460e9b4efb"
+    },
+    {
+      "path": "gate-v4/invocation.json",
+      "source": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/invocation.json",
+      "bytes": 857,
+      "sha256": "3edcfe8f0c96891c9c2b1a36fb41e2990ae4a2af0e23c4d09dcf2f530dfe9187"
+    },
+    {
+      "path": "gate-v4/gate.stdout.log",
+      "source": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/gate.stdout.log",
+      "bytes": 781,
+      "sha256": "38f0ff3e52f4b1a84081faedc78421883af746f4d09e38128075a598bcb6b31b"
+    },
+    {
+      "path": "gate-v4/dependency-delta.json",
+      "source": "/private/tmp/artroom-archive-input-work-final-gate-evidence-20261023-v4/dependency-delta.json",
+      "bytes": 579,
+      "sha256": "c89520350c6d3f157047bfddddc660b1e636742c5d00da6d525c48451032e9eb"
+    },
+    {
+      "path": "audits/final-gate-independent-audit.json",
+      "source": "/private/tmp/artroom-archive-input-work-final-gate-independent-audit-20261023-v1.json",
+      "bytes": 66863,
+      "sha256": "24af4a13c1fd5182f4ea4eda88f5d9151bb5e810719d117443b6a63c83ff428d"
     }
   ],
   "externalOnly": [

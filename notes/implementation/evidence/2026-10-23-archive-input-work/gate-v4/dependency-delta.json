@@ -1,0 +1,22 @@
+{
+  "node_modules/.vite/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/results.json": {
+    "before": {
+      "mode": "0o644",
+      "device": 16777231,
+      "inode": 545653495,
+      "nlink": 1,
+      "kind": "file",
+      "bytes": 45648,
+      "sha256": "1e43e342de54e166642a3296beaad1c42af35f0f172a4b585fc3dedffbdd5085"
+    },
+    "after": {
+      "mode": "0o644",
+      "device": 16777231,
+      "inode": 545653495,
+      "nlink": 1,
+      "kind": "file",
+      "bytes": 45643,
+      "sha256": "7b4a5b5c336e5829b76dac9716a35ade272626a2a5ec6e0689e14a655f0afdde"
+    }
+  }
+}
