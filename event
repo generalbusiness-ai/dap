@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:238100bb712856d82522c414de6dafb0c78088c0","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-24-kernel-hygiene-evidence.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:23c9b7d697979f29ca4702ef1c616f8031cc4ab0","text":"Merge retired a covered predecessor; the successor is at packages/client/src/application-uri.ts."}
