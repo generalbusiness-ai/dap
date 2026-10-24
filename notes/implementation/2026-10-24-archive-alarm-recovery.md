@@ -1,7 +1,13 @@
 # Recover an archive alarm after a reset
 
 Request: `ea2bfc00f2f264cebd008627b8cffcc463904f4b`.
-Promise: `610cea676c9b4f7dee78610d43c588960d011179`.
+Investigation promise: `610cea676c9b4f7dee78610d43c588960d011179`.
+Local repair request: `379ed6b2dc851a0342f5492431c5318a8793d8b0`.
+Local repair promise: `dccf9dbee4a80cecdf8c4a6f481b496bc75a5397`.
+
+The local repair has its own review and landing. The original investigation
+remains open for the missing hosted scope identification and current-state
+evidence; landing this child does not complete that investigation.
 
 A live scope can retain an archive wake after its platform alarm disappears.
 Ordinary reads now reconcile that wake with the platform alarm. Recovery only
@@ -87,5 +93,24 @@ test result. No dependency install occurred.
 The [affected validation receipt](evidence/2026-10-24-archive-alarm-recovery/affected.json)
 records source hashes and outcomes. Raw logs and JSON remain at
 `/private/tmp/artroom-archive-wake-recovery-validation-20261024-v1`.
-The ordinary gate will run once on the committed candidate; its natural result
-will be added before review.
+The one ordinary gate passed naturally on commit
+`dc1be5821f958a65bc1ee42163b544244643beef`, tree
+`ec6603225f4bf0db4707c3a88c830cf8244d5fca`. It reported 3,521 passed and three
+skipped tests across 494 files, with 3,524 unique final case IDs and no
+unhandled errors. Incremental reporting omitted 18 ready callbacks and 22
+result callbacks and repeated one ready callback; the final case IDs are
+complete and unique. The receipt retains those reporting gaps without
+inferring a cause. The later Node groups passed all 39 and 55 tests. Every
+maintained gate stage passed; dependency installation was skipped.
+
+The gate child took 1,244.39 seconds elapsed and 1,438.57 CPU seconds. Its
+before/after Git, lock, stamp and tool records matched. This checks those
+records, not the complete dependency namespace. Raw output, stage logs and
+the progress ledger remain in
+`/private/tmp/artroom-archive-wake-gate-evidence-20261024-v1`.
+The [gate receipt](evidence/2026-10-24-archive-alarm-recovery/gate.json)
+records the observed results and raw evidence hashes.
+
+The final review update changes only this note and its gate receipt. Source,
+tests, configuration and lock remain byte-identical to the passing gate head;
+no document-only gate rerun is needed under `docs/testing.md`.
