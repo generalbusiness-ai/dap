@@ -1,0 +1,584 @@
+{
+  "schema": "closed-six-case-continuation-audit/v1",
+  "request": "fc2548ae1ab9c7c5e859d422611f8a34fd0ff13c",
+  "promise": "28cdea0d83a29e9a02c5107d89c6e21b10341fc2",
+  "verdict": "Clear: Scope-test compiler and six exact selected cases passed.",
+  "issues": [],
+  "method": "Bounded stable single-link regular reads of 19 closed raw leaves, two explicit bindings and supplied preparation; one immutable at-run test blob verified against bound Source. No historical program executed/imported, no live candidate/dependency reads.",
+  "outerClosureAttribution": "Root reports original owner 10303 natural exit 0 / tool f37846. Retained child/result agree; no independent persisted outer tool process observation supplied.",
+  "allocation": "66b4869262927d21d2166825bd6e54284529ab1a",
+  "checkpoint": {
+    "head": "62e76a4992c9671a802a30c5f0cbe91cb4b6513a",
+    "tree": "483c829f8cc3896e7f7e5e1a8873192701bee3af",
+    "basis": "d7aea0b03ce8b9c1afcea7f3f6252b66d0d3630a",
+    "ledgerSha256": "b7435a5515dddf61f8584293232d3bf292f07d57b5dcbcffba2fce648f4dbc09"
+  },
+  "lifecycle": {
+    "ownerPid": 66271,
+    "child": {
+      "label": "focused",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "scripts/focused-check.mjs",
+        "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-evidence-20261024-v2/focused-plan.json",
+        "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-evidence-20261024-v2/focused"
+      ],
+      "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+      "pid": 66286,
+      "exit": 0,
+      "signal": null,
+      "wall": 8.962114540976472,
+      "user": 11.794534,
+      "system": 1.474005
+    },
+    "errors": [],
+    "signals": []
+  },
+  "guards": {
+    "nullAndAllocatedDifferOnlyAllocation": true,
+    "allocatedEqualsBefore": true,
+    "childAfterEqualsFinal": true,
+    "fixedFieldsExactOutsideDeclaredAllowance": true,
+    "atRunPreparationPhysicalHashesVerified": true,
+    "dimensions": {
+      "source": 3001,
+      "dependencies": 6072,
+      "tools": 219,
+      "toolResolutions": 218,
+      "environmentDigests": 60,
+      "preparation": 12
+    },
+    "dependencyLinks": 32,
+    "changedCacheKeys": [
+      "scope:packages/scope/test/archive-parent-state.test.ts",
+      "scope:packages/scope/test/archive-publication.test.ts"
+    ],
+    "cacheBytesBeforeAfter": [
+      45924,
+      45929
+    ],
+    "physicalQualification": "Cache same identity/mode/link count; only its permitted bytes/hash/times and selected values changed. Empty .vite-temp only times may change; no retained file."
+  },
+  "phases": [
+    {
+      "name": "scope-test",
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.61,
+      "userSeconds": 2.93,
+      "systemSeconds": 0.25,
+      "cpuSeconds": 3.18
+    },
+    {
+      "name": "body",
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 7.81,
+      "userSeconds": 8.55,
+      "systemSeconds": 0.95,
+      "cpuSeconds": 9.5
+    }
+  ],
+  "coverage": {
+    "cases": [
+      {
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-publication.test.ts",
+        "name": "Native legacy archive receipt blocks the floor until a real backfill pass confirms",
+        "status": "passed"
+      },
+      {
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-publication.test.ts",
+        "name": "Native admitted Register17 fact publishes nonempty anchors and rebuilds the exact stored Mark",
+        "status": "passed"
+      },
+      {
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-publication.test.ts",
+        "name": "Native published Mark rebuilds its exact bytes after a later turn and eviction",
+        "status": "passed"
+      },
+      {
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-parent-state.test.ts",
+        "name": "native parent state appends 200 host-shaped passes with two retained files each",
+        "status": "passed"
+      },
+      {
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-parent-state.test.ts",
+        "name": "native parent state resumes the exact Mark and confirms lost readback after eviction",
+        "status": "passed"
+      },
+      {
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-parent-state.test.ts",
+        "name": "a legacy pending Mark confirms by exact readback without a frontier or a second send",
+        "status": "passed"
+      }
+    ],
+    "selectedFiles": 2,
+    "passed": 6,
+    "failed": 0,
+    "unfinished": 0,
+    "callbackEvents": {
+      "selection": 1,
+      "collected": 2,
+      "started": 6,
+      "result": 6,
+      "end": 1
+    },
+    "unhandledErrors": 0,
+    "retries": 0,
+    "repeats": 0,
+    "unexpected": 0,
+    "callbackQualification": "Started events may carry pending snapshot state; all six independent terminal result events pass. No framework numeric ID is invented."
+  },
+  "mechanical200PassWitness": {
+    "passes": 200,
+    "retainedFiles": 400,
+    "observations": 200,
+    "orderedPasses0Through199": true,
+    "allParentRequestsZero": true,
+    "costRanges": {
+      "entries": [
+        1,
+        1
+      ],
+      "attempts": [
+        26,
+        86
+      ],
+      "nodes": [
+        29,
+        58
+      ],
+      "calls": [
+        75,
+        184
+      ],
+      "metadata": [
+        829147,
+        1419875
+      ],
+      "inputWork": [
+        9175002,
+        10620550
+      ]
+    },
+    "stateBytesRange": [
+      2263,
+      7520
+    ],
+    "unchangedBudgetCaps": {
+      "entries": 4096,
+      "attempts": 512,
+      "nodes": 64,
+      "calls": 16384,
+      "metadata": 4194304,
+      "inputWork": 67108864
+    },
+    "first": {
+      "pass": 0,
+      "cost": {
+        "entries": 1,
+        "attempts": 26,
+        "nodes": 29,
+        "calls": 75,
+        "metadata": 829147,
+        "inputWork": 9175002
+      },
+      "stateBytes": 2263,
+      "parentRequests": 0
+    },
+    "last": {
+      "pass": 199,
+      "cost": {
+        "entries": 1,
+        "attempts": 86,
+        "nodes": 58,
+        "calls": 184,
+        "metadata": 1419875,
+        "inputWork": 10620550
+      },
+      "stateBytes": 7520,
+      "parentRequests": 0
+    },
+    "finalGraphFiles": 801,
+    "finalGraphProof": "The passed immutable test asserts one independent final full graph traversal, all 200 commit-parent links, every pass manifest and entry segment, and all 400 retained bodies. Metadata itself does not contain the final graph; Source assertions plus the passed case provide that linkage.",
+    "testBlob": {
+      "path": "packages/scope/test/archive-parent-state.test.ts",
+      "bytes": 20581,
+      "sha256": "4fbc7d85b806808fadf346a50957d0ac105a5da8aeb35c48245cb0df37745a1d"
+    },
+    "qualification": "Mechanical selected entries and retained rules; actual native SQLite state, production parent resolver, Git builder, append admission and smart HTTP. Scripted Artifacts/token service only. Final complete graph read once outside the charged writer. No replay, hosted performance or legacy bootstrap claim.",
+    "limits": "Canonical signed mechanical selected inventory, not 200 Native judgments or export-authority decisions. Real SQLite, production parent resolver, Git writer, append admission and smart HTTP; scripted Artifacts/token service. Peer repeated full-history closure checking is disabled only for this mechanical case, with final independent full traversal once. Fixed test budget clock and 20-second fixture deadline do not prove real wall-clock throughput, hosted behavior, replay, broad legacy bootstrap recovery, universal maxima or all journal shapes."
+  },
+  "otherWitnesses": "Publication3 and restart/legacy Mark2 also pass, with original authority/publication/floor and exact durable Mark/readback assertions. Services and membership/session setup retain their fixture qualifications. No earlier failed run is relabeled, and no control/gate result is implied.",
+  "costs": {
+    "wall": 11.225245416979305,
+    "pythonCpu": 2.0413650000000003,
+    "childrenUser": 11.893386,
+    "childrenSystem": 1.573846,
+    "inclusiveCpu": 15.508597
+  },
+  "costQualification": "Owner includes guards and metadata children. Focused child and phases are nested; do not add them again.",
+  "historicalProse": "Retained owner qualification still uses template/null wording; filled checkpoint, bound plan and snapshots prove actual inputs. That wording is historical, not evidence of an unfilled executed checkpoint.",
+  "finiteEvidencePins": [
+    {
+      "path": "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-evidence-20261024-v2/after.json",
+      "bytes": 3317011,
+      "sha256": "8011ec9df1d420b9c1df446f850f12e094e4cf43db4a9e0cf2e7b75bd13f1b70",
+      "device": 16777231,
+      "inode": 545859774,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792812626329396032,
+      "ctimeNs": 1792812626329396032
+    },
+    {
+      "path": "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-evidence-20261024-v2/before.json",
+      "bytes": 3317006,
+      "sha256": "bcbddf3b4ad7c241f69fa97b6a8db1f319c32996e1bde9d2b75e83c9a4c33092",
+      "device": 16777231,
+      "inode": 545859490,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792812615868880027,
+      "ctimeNs": 1792812615868880027
+    },
+    {
+      "path": "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-evidence-20261024-v2/focused-after.json",
+      "bytes": 3317011,
+      "sha256": "8011ec9df1d420b9c1df446f850f12e094e4cf43db4a9e0cf2e7b75bd13f1b70",
+      "device": 16777231,
+      "inode": 545859772,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792812625591393348,
+      "ctimeNs": 1792812625591393348
+    },
+    {
+      "path": "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-evidence-20261024-v2/focused-plan.json",
+      "bytes": 507006,
+      "sha256": "e047e7765074f90a1c93f839d8e0ee5364686784d0260eb3b056291b13972448",
+      "device": 16777231,
+      "inode": 545859491,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792812615885907575,
+      "ctimeNs": 1792812615885907575
+    },
+    {
+      "path": "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-evidence-20261024-v2/focused.command.json",
+      "bytes": 389,
+      "sha256": "088d2ac0479595cdca798bfb18b3e5fff3f58488a4a9c9b2f7a95a8e82802649",
+      "device": 16777231,
+      "inode": 545859492,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792812615886047950,
+      "ctimeNs": 1792812615886047950
+    },
+    {
+      "path": "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-evidence-20261024-v2/focused.pid.json",
+      "bytes": 19,
+      "sha256": "754c1989ad67e0ee600c1c673c950604e6178167469e5e56b369b0af2a457385",
+      "device": 16777231,
+      "inode": 545859495,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792812615887708368,
+      "ctimeNs": 1792812615887708368
+    },
+    {
+      "path": "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-evidence-20261024-v2/focused.process.json",
+      "bytes": 530,
+      "sha256": "521bccf6007e4e39280d9b0a29c1af168cb53cf770135d7f058ece175005df94",
+      "device": 16777231,
+      "inode": 545859770,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792812624848235370,
+      "ctimeNs": 1792812624848235370
+    },
+    {
+      "path": "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-evidence-20261024-v2/focused.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "device": 16777231,
+      "inode": 545859494,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792812615886123825,
+      "ctimeNs": 1792812615886138617
+    },
+    {
+      "path": "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-evidence-20261024-v2/focused.stdout",
+      "bytes": 304,
+      "sha256": "afc944eece0f047da84576a2573342d17b8b4f6fd92fd986807a267b636d7466",
+      "device": 16777231,
+      "inode": 545859493,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792812624845829827,
+      "ctimeNs": 1792812624845829827
+    },
+    {
+      "path": "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-evidence-20261024-v2/invocation.json",
+      "bytes": 504,
+      "sha256": "586194b0d34daed2c9dfc668c071a2c9ae7ccd203803431b871a5a6bbdb02508",
+      "device": 16777231,
+      "inode": 545859488,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792812615115856170,
+      "ctimeNs": 1792812615115856170
+    },
+    {
+      "path": "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-evidence-20261024-v2/result.json",
+      "bytes": 6493,
+      "sha256": "a266cecb17903c5a1e927427b0af4aacfd0304322f1527a442ff3ec577414147",
+      "device": 16777231,
+      "inode": 545859775,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792812626341176828,
+      "ctimeNs": 1792812626341176828
+    },
+    {
+      "path": "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-evidence-20261024-v2/focused/body.log",
+      "bytes": 9893,
+      "sha256": "8d8f52a98fd56d48ecaebf278447443972f017beacd622c0f121a1832a54c41c",
+      "device": 16777231,
+      "inode": 545859501,
+      "mode": "0o400",
+      "nlink": 1,
+      "mtimeNs": 1792812624684831768,
+      "ctimeNs": 1792812624845719494
+    },
+    {
+      "path": "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-evidence-20261024-v2/focused/coverage-ledger.json",
+      "bytes": 7069,
+      "sha256": "dcc1b7be7970a169ae1bd0473d74b1a458869f4f7c00651e433ace421d40fc48",
+      "device": 16777231,
+      "inode": 545859767,
+      "mode": "0o400",
+      "nlink": 1,
+      "mtimeNs": 1792812624845033702,
+      "ctimeNs": 1792812624845729410
+    },
+    {
+      "path": "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-evidence-20261024-v2/focused/coverage.jsonl",
+      "bytes": 8570,
+      "sha256": "55f8a3b0dbcf33aef8da8426a9bc15d183f465b5dcc14a2445e981a01b2a16d2",
+      "device": 16777231,
+      "inode": 545859519,
+      "mode": "0o400",
+      "nlink": 1,
+      "mtimeNs": 1792812624653388549,
+      "ctimeNs": 1792812624845737202
+    },
+    {
+      "path": "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-evidence-20261024-v2/focused/manifest.json",
+      "bytes": 939,
+      "sha256": "5ba7ef79970f9083b68265f775a553df3a1c75537d3b1563b8ec10668d8f9c5c",
+      "device": 16777231,
+      "inode": 545859769,
+      "mode": "0o400",
+      "nlink": 1,
+      "mtimeNs": 1792812624845680244,
+      "ctimeNs": 1792812624845748327
+    },
+    {
+      "path": "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-evidence-20261024-v2/focused/plan.json",
+      "bytes": 507006,
+      "sha256": "e047e7765074f90a1c93f839d8e0ee5364686784d0260eb3b056291b13972448",
+      "device": 16777231,
+      "inode": 545859497,
+      "mode": "0o400",
+      "nlink": 1,
+      "mtimeNs": 1792812615954271267,
+      "ctimeNs": 1792812624845755494
+    },
+    {
+      "path": "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-evidence-20261024-v2/focused/result.json",
+      "bytes": 5623,
+      "sha256": "6f349e39d4fc565939f92b68509a0161c80f9feb4580246d5873553a68ba4cb6",
+      "device": 16777231,
+      "inode": 545859768,
+      "mode": "0o400",
+      "nlink": 1,
+      "mtimeNs": 1792812624845182577,
+      "ctimeNs": 1792812624845767410
+    },
+    {
+      "path": "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-evidence-20261024-v2/focused/scope-test.log",
+      "bytes": 29,
+      "sha256": "7d0cd4d27c0aac7ecad20c8c36d2cea9599aa207ac7a2b51c8a779bead9d5638",
+      "device": 16777231,
+      "inode": 545859499,
+      "mode": "0o400",
+      "nlink": 1,
+      "mtimeNs": 1792812616728073798,
+      "ctimeNs": 1792812624845774535
+    },
+    {
+      "path": "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-evidence-20261024-v2/focused/vitest.json",
+      "bytes": 34388,
+      "sha256": "b7278db1e27214cc56287be1d51bd906387f63967e74138a2b5db8a5e03d3723",
+      "device": 16777231,
+      "inode": 545859765,
+      "mode": "0o400",
+      "nlink": 1,
+      "mtimeNs": 1792812624653354799,
+      "ctimeNs": 1792812624845783077
+    },
+    {
+      "path": "/private/tmp/artroom-archive-preparation-reuse-continuation-binding-allocated-20261024-v2.json",
+      "bytes": 4051901,
+      "sha256": "521aed1bbd1dbe881795cbba0a40cf12373819d7f0c5a58d800a9cdcfe991c06",
+      "device": 16777231,
+      "inode": 545859481,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792812606690013319,
+      "ctimeNs": 1792812606690013319
+    },
+    {
+      "path": "/private/tmp/artroom-archive-preparation-reuse-continuation-binding-null-20261024-v2.json",
+      "bytes": 4051863,
+      "sha256": "be3a81566a9f10ff183ab5f8ddce2f96f3cf224465109bad79e267abab973a80",
+      "device": 16777231,
+      "inode": 545859447,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792812580071194738,
+      "ctimeNs": 1792812580071194738
+    },
+    {
+      "path": "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-source-20261024-v2/checkpoint.json",
+      "bytes": 252,
+      "sha256": "5ec7df9d627629e8ad74267ffdc191d9a06c15beb1c02a18704302e2f77e52b6",
+      "device": 16777231,
+      "inode": 545859368,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792812523854054742,
+      "ctimeNs": 1792812523854054742
+    },
+    {
+      "path": "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-source-20261024-v2/external-tools.json",
+      "bytes": 17165,
+      "sha256": "520f130c439d8badb8b940efdc20a81749cd581565d6d6815ae16edcaca9bb88",
+      "device": 16777231,
+      "inode": 545859370,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792812523856705035,
+      "ctimeNs": 1792812523856705035
+    },
+    {
+      "path": "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-source-20261024-v2/input-status.json",
+      "bytes": 2931,
+      "sha256": "829cff335ff819985ad68871a6fb33388257da086777faa67b57c43069b96a5b",
+      "device": 16777231,
+      "inode": 545859372,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792812523896469091,
+      "ctimeNs": 1792812523896469091
+    },
+    {
+      "path": "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-source-20261024-v2/ledger.json",
+      "bytes": 1090,
+      "sha256": "b7435a5515dddf61f8584293232d3bf292f07d57b5dcbcffba2fce648f4dbc09",
+      "device": 16777231,
+      "inode": 545859367,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792812523853909700,
+      "ctimeNs": 1792812523853909700
+    },
+    {
+      "path": "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-source-20261024-v2/manifest.json",
+      "bytes": 1809,
+      "sha256": "fddbf1be80530057f43f2703e755aab0d3fdc043e3a9ca921a4a6c8c8069c2ec",
+      "device": 16777231,
+      "inode": 545859377,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792812523897744591,
+      "ctimeNs": 1792812523897744591
+    },
+    {
+      "path": "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-source-20261024-v2/owner.py",
+      "bytes": 19831,
+      "sha256": "abff18d4a3d052efa65d2968c36beac399e40d849e07911353ab8cd96f1d8cd5",
+      "device": 16777231,
+      "inode": 545859369,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792812523856612118,
+      "ctimeNs": 1792812523856612118
+    },
+    {
+      "path": "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-source-20261024-v2/plan.md",
+      "bytes": 3144,
+      "sha256": "221560a1cd51961da15bacc5a2c4693eed0a7458329def4c2973950483ab8cc1",
+      "device": 16777231,
+      "inode": 545859373,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792812523896533091,
+      "ctimeNs": 1792812523896533091
+    },
+    {
+      "path": "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-source-20261024-v2/selection-proof.json",
+      "bytes": 6885,
+      "sha256": "69761d0e68f42cd86da61fbac7a853c080a4908f07cf8f2e6782285b68177046",
+      "device": 16777231,
+      "inode": 545859371,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792812523896364507,
+      "ctimeNs": 1792812523896364507
+    },
+    {
+      "path": "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-source-20261024-v2/v1-to-v2-owner.patch",
+      "bytes": 578,
+      "sha256": "725eff2c6006c9104fa6ca4ca972b76609b502d1b440666a06e837419e395a0d",
+      "device": 16777231,
+      "inode": 545859374,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792812523896737008,
+      "ctimeNs": 1792812523896737008
+    },
+    {
+      "path": "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-source-20261024-v2/v1-to-v2-tools.patch",
+      "bytes": 1117,
+      "sha256": "d6ffb702603fd29b499b52c39506a767c16b2664899fbb4f5cc064315ee4c1d2",
+      "device": 16777231,
+      "inode": 545859375,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792812523896898008,
+      "ctimeNs": 1792812523896898008
+    },
+    {
+      "path": "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-source-20261024-v2/v1-to-v2.patch",
+      "bytes": 15739,
+      "sha256": "a97a77064654efc27493f969a8f8573c0470f0e49b6dcfeeb4874bbd12517f80",
+      "device": 16777231,
+      "inode": 545859376,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792812523897441050,
+      "ctimeNs": 1792812523897441050
+    }
+  ]
+}

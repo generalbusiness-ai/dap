@@ -1,0 +1,588 @@
+{
+  "kind": "independent_closed_data_audit",
+  "request": "fc2548ae1ab9c7c5e859d422611f8a34fd0ff13c",
+  "promise": "28cdea0d83a29e9a02c5107d89c6e21b10341fc2",
+  "result": "Original owning continuation V2 failed during Scope test compilation. No test body ran.",
+  "rootAttribution": {
+    "session": 56921,
+    "tool": "40ded7",
+    "naturalExit": 1,
+    "source": "Parent reports original process natural closure; not independently rerun."
+  },
+  "allocation": "254c2322cea8e1250020bb84da66d402ab0f4b54",
+  "child": {
+    "label": "focused",
+    "argv": [
+      "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+      "scripts/focused-check.mjs",
+      "/private/tmp/artroom-archive-fixed-parent-continuation-evidence-20261024-v2/focused-plan.json",
+      "/private/tmp/artroom-archive-fixed-parent-continuation-evidence-20261024-v2/focused"
+    ],
+    "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+    "pid": 88588,
+    "exit": 1,
+    "signal": null,
+    "wall": 1.76983179198578,
+    "user": 5.172834,
+    "system": 0.810979
+  },
+  "compilerPhases": [
+    {
+      "name": "git-test",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/git/tsconfig.test.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+      "started": "2026-10-24T01:30:40.342Z",
+      "ended": "2026-10-24T01:30:40.570Z",
+      "measuredCommandMilliseconds": 227.413,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.22,
+      "userSeconds": 0.74,
+      "systemSeconds": 0.11,
+      "cpuSeconds": 0.85
+    },
+    {
+      "name": "scope-production",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/tsconfig.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+      "started": "2026-10-24T01:30:40.715Z",
+      "ended": "2026-10-24T01:30:40.989Z",
+      "measuredCommandMilliseconds": 273.9725830000001,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.27,
+      "userSeconds": 1.13,
+      "systemSeconds": 0.12,
+      "cpuSeconds": 1.25
+    },
+    {
+      "name": "scope-test",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/tsconfig.test.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+      "started": "2026-10-24T01:30:41.134Z",
+      "ended": "2026-10-24T01:30:41.738Z",
+      "measuredCommandMilliseconds": 604.2018330000001,
+      "exitCode": 1,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.6,
+      "userSeconds": 2.91,
+      "systemSeconds": 0.24,
+      "cpuSeconds": 3.1500000000000004
+    }
+  ],
+  "commandLedger": [
+    {
+      "name": "git-test",
+      "status": "passed",
+      "phase": {
+        "name": "git-test",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/typescript/bin/tsc",
+          "-p",
+          "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/git/tsconfig.test.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+        "started": "2026-10-24T01:30:40.342Z",
+        "ended": "2026-10-24T01:30:40.570Z",
+        "measuredCommandMilliseconds": 227.413,
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 0.22,
+        "userSeconds": 0.74,
+        "systemSeconds": 0.11,
+        "cpuSeconds": 0.85
+      }
+    },
+    {
+      "name": "scope-production",
+      "status": "passed",
+      "phase": {
+        "name": "scope-production",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/typescript/bin/tsc",
+          "-p",
+          "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/tsconfig.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+        "started": "2026-10-24T01:30:40.715Z",
+        "ended": "2026-10-24T01:30:40.989Z",
+        "measuredCommandMilliseconds": 273.9725830000001,
+        "exitCode": 0,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 0.27,
+        "userSeconds": 1.13,
+        "systemSeconds": 0.12,
+        "cpuSeconds": 1.25
+      }
+    },
+    {
+      "name": "scope-test",
+      "status": "failed",
+      "phase": {
+        "name": "scope-test",
+        "command": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/typescript/bin/tsc",
+          "-p",
+          "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/tsconfig.test.json"
+        ],
+        "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+        "started": "2026-10-24T01:30:41.134Z",
+        "ended": "2026-10-24T01:30:41.738Z",
+        "measuredCommandMilliseconds": 604.2018330000001,
+        "exitCode": 1,
+        "signal": null,
+        "spawnError": null,
+        "wallSeconds": 0.6,
+        "userSeconds": 2.91,
+        "systemSeconds": 0.24,
+        "cpuSeconds": 3.1500000000000004
+      }
+    },
+    {
+      "name": "body",
+      "status": "unrun",
+      "phase": null
+    }
+  ],
+  "diagnostics": [
+    "packages/scope/test/archive-parent-bootstrap.test.ts(66,51): error TS2554: Expected 2 arguments, but got 1.",
+    "packages/scope/test/archive-parent-bootstrap.test.ts(313,36): error TS6133: 'row' is declared but its value is never read.",
+    "packages/scope/test/archive-parent-state.test.ts(36,9): error TS7034: Variable 'passes' implicitly has type 'any[]' in some locations where its type cannot be determined.",
+    "packages/scope/test/archive-parent-state.test.ts(74,30): error TS7005: Variable 'passes' implicitly has an 'any[]' type.",
+    "packages/scope/test/archive-parent-state.test.ts(199,30): error TS2558: Expected 0 type arguments, but got 1.",
+    "packages/scope/test/archive-parent-state.test.ts(200,55): error TS4111: Property 'k' comes from an index signature, so it must be accessed with ['k'].",
+    "packages/scope/test/archive-parent-state.test.ts(201,24): error TS4111: Property 'size' comes from an index signature, so it must be accessed with ['size'].",
+    "packages/scope/test/archive-parent-state.test.ts(204,39): error TS2322: Type 'SqlValue | undefined' is not assignable to type 'number'.",
+    "packages/scope/test/archive-parent-state.test.ts(204,61): error TS4111: Property 'size' comes from an index signature, so it must be accessed with ['size']."
+  ],
+  "guardComparison": {
+    "allSnapshotFieldsExact": true,
+    "bindingEqualsBeforeEqualsFocusedAfterEqualsAfter": true,
+    "sourceRows": 3000,
+    "dependencyRowsIncludingRoot": 6072,
+    "toolRows": 219,
+    "resolverRows": 218,
+    "preparationRowsIncludingRoot": 15,
+    "environmentRows": 60,
+    "cacheBytes": 45561,
+    "cacheAllowanceConsumed": false,
+    "checkpoint": {
+      "head": "d2765a39ea36cfe29b6981bffad765af86f86af5",
+      "tree": "a458a249e4f26b2bb7387ac4be9bff3a781fed6e",
+      "basis": "d7aea0b03ce8b9c1afcea7f3f6252b66d0d3630a",
+      "ledgerSha256": "fbe229497d58e433daa1b12b24f5c447ad148db8c22fd52b956166fa32968244"
+    }
+  },
+  "cases": {
+    "planned": 31,
+    "wholeFiles": 7,
+    "started": 0,
+    "observed": 0,
+    "terminal": 0,
+    "unexpected": 0,
+    "moduleCallbacks": 0,
+    "allUnrun": true,
+    "identities": [
+      [
+        "git",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/git/test/journal-v2-frontier.test.ts",
+        "a sha1 native parent witness owns only eleven receipt-bound objects and no old payload"
+      ],
+      [
+        "git",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/git/test/journal-v2-frontier.test.ts",
+        "a sha256 native parent witness owns only eleven receipt-bound objects and no old payload"
+      ],
+      [
+        "git",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/git/test/journal-v2-frontier.test.ts",
+        "a stored frontier refuses changed custody, head, schema, object bytes, count and order"
+      ],
+      [
+        "git",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/git/test/journal-v2-frontier.test.ts",
+        "the bounded frontier carries unchanged subtrees across numeric rollovers without reading old pass leaves"
+      ],
+      [
+        "git",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/git/test/journal-v2-frontier.test.ts",
+        "a frontier refuses a future path or noncanonical head and reserves metadata before source I/O"
+      ],
+      [
+        "git",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/git/test/journal-v2-frontier.test.ts",
+        "the SHA-256 frontier stays within its literal byte bound at all 604 permitted tree rows"
+      ],
+      [
+        "scope",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-frontier-store.test.ts",
+        "frontier Mark and promotion share rollback cuts and the pending proof survives native eviction"
+      ],
+      [
+        "scope",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-frontier-store.test.ts",
+        "a prepared frontier cannot overwrite a changed key or a different native Mark or custody"
+      ],
+      [
+        "scope",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-frontier-store.test.ts",
+        "frontier size and work are admitted before body reads or writes, without refunding a rollback"
+      ],
+      [
+        "scope",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-frontier-store.test.ts",
+        "a missing-v2 seed binds an opaque exact native context and installs only confirmed bytes"
+      ],
+      [
+        "scope",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-parent-state.test.ts",
+        "native parent state appends 200 host-shaped passes with two retained files each"
+      ],
+      [
+        "scope",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-parent-state.test.ts",
+        "native parent state resumes the exact Mark and confirms lost readback after eviction"
+      ],
+      [
+        "scope",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-parent-state.test.ts",
+        "a legacy pending Mark confirms by exact readback without a frontier or a second send"
+      ],
+      [
+        "scope",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-native-transport.test.ts",
+        "native driver parent reads and append sends use the same original budget through the actual adapter"
+      ],
+      [
+        "scope",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-one-entry-scale.test.ts",
+        "the Native driver confirms 10,001 one-entry passes and preserves retained rule inputs from pass 3700"
+      ],
+      [
+        "scope",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+        "the real native alarm archives asynchronously while sixteen turns complete"
+      ],
+      [
+        "scope",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+        "native archive alarm stops missing-input without another mint or send"
+      ],
+      [
+        "scope",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+        "native archive alarm stops rebuild-mismatch without another mint or send"
+      ],
+      [
+        "scope",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+        "a pre-Mark target failure survives eviction and new native input without losing its alarm"
+      ],
+      [
+        "scope",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+        "confirms a lost reply by read-back with no second commit or journal entry"
+      ],
+      [
+        "scope",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+        "adaptive Native passes reserve writing, incremental sending and confirmation before more lookahead"
+      ],
+      [
+        "scope",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+        "adaptive Native selection finishes a covered earlier prefix before an uncovered later class"
+      ],
+      [
+        "scope",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+        "resumes marked sha1 bytes after eviction and then archives the later rule input"
+      ],
+      [
+        "scope",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+        "resumes marked sha256 bytes after eviction and then archives the later rule input"
+      ],
+      [
+        "scope",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+        "stops on an unexpected ref without overwriting it"
+      ],
+      [
+        "scope",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+        "coalesces one host pass while a flood of native turns completes"
+      ],
+      [
+        "scope",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+        "a late host continuation cannot send or record after the original deadline"
+      ],
+      [
+        "scope",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+        "the native driver confirms a pending v1 attempt before a separate same-cutoff conversion and new v2 pass"
+      ],
+      [
+        "scope",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-parent-bootstrap.test.ts",
+        "missing v2 parent state seeds once, publishes legacy anchors and then appends without old host reads"
+      ],
+      [
+        "scope",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-parent-bootstrap.test.ts",
+        "old pending v2 readback confirms first or seeds only its exact confirmed parent"
+      ],
+      [
+        "scope",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-parent-bootstrap.test.ts",
+        "over-cap recursive bootstrap root refuses without installing either native key"
+      ]
+    ],
+    "qualification": "The maintained runner stopped at compilation. There are no test callbacks to assess for completeness, and no runtime pass or callback-draining claim."
+  },
+  "costs": {
+    "wall": 4.038040166953579,
+    "pythonCpu": 2.048598,
+    "childrenUser": 5.273522,
+    "childrenSystem": 0.914415,
+    "inclusiveCpu": 8.236535
+  },
+  "costQualification": "Compiler timings and focused-child resource costs are nested in the owner inclusive totals. Do not add them. Wall is measured by the owner; the original outer exit is attributed to root.",
+  "compatibilityCarry": {
+    "package": "@cloudflare/vitest-pool-workers",
+    "version": "0.22.0",
+    "packageRoot": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/@cloudflare/vitest-pool-workers",
+    "copied": false,
+    "before": "cd50d18adce92adb54a3f00410d646b2fe09b3f12c5b833c492bcf5857621b39",
+    "after": "cd50d18adce92adb54a3f00410d646b2fe09b3f12c5b833c492bcf5857621b39"
+  },
+  "errors": [
+    "RuntimeError: child failed/interrupted; later phases unrun"
+  ],
+  "signals": [],
+  "rawPins": [
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-continuation-evidence-20261024-v2/after.json",
+      "bytes": 3317194,
+      "sha256": "ca1426c881c7dfa9911acf57db761d92d34ec1aa3bb981e5cd29afc478498668",
+      "device": 16777231,
+      "inode": 545838150,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-continuation-evidence-20261024-v2/before.json",
+      "bytes": 3317194,
+      "sha256": "ca1426c881c7dfa9911acf57db761d92d34ec1aa3bb981e5cd29afc478498668",
+      "device": 16777231,
+      "inode": 545838124,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-continuation-evidence-20261024-v2/focused/coverage-ledger.json",
+      "bytes": 10477,
+      "sha256": "87a9a7187854efeebcec54a28ca7c9ab2f2faddb8874af1d1bae2e3b0e75458e",
+      "device": 16777231,
+      "inode": 545838143,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-continuation-evidence-20261024-v2/focused/error.log",
+      "bytes": 471,
+      "sha256": "f33a8f5349454c1ee6dbe880b54f80ae75aa22e1a7bad90a83e59afd8dfa4f87",
+      "device": 16777231,
+      "inode": 545838142,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-continuation-evidence-20261024-v2/focused/git-test.log",
+      "bytes": 29,
+      "sha256": "359b5a64f04dd0e2b0f3e35f82d52a13508a019944d20bb3d31aec41fd518abc",
+      "device": 16777231,
+      "inode": 545838134,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-continuation-evidence-20261024-v2/focused/manifest.json",
+      "bytes": 947,
+      "sha256": "6601c067699e2c2f8e64597398949c347b17230363f04c5ae11c040c5ae1f2fd",
+      "device": 16777231,
+      "inode": 545838145,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-continuation-evidence-20261024-v2/focused/plan.json",
+      "bytes": 511005,
+      "sha256": "a96e1364e85938bb849953ea9df5c7ae814a974785275515358537a039a54ed7",
+      "device": 16777231,
+      "inode": 545838132,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-continuation-evidence-20261024-v2/focused/result.json",
+      "bytes": 6367,
+      "sha256": "30e1697846eaa034cac7f58fcba06b59b91ea572442b3addd454705403241d0a",
+      "device": 16777231,
+      "inode": 545838144,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-continuation-evidence-20261024-v2/focused/scope-production.log",
+      "bytes": 29,
+      "sha256": "24c67a9356f25733b7135f1ffc99b9101c04458acf472b23ea664451d00b9a8c",
+      "device": 16777231,
+      "inode": 545838136,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-continuation-evidence-20261024-v2/focused/scope-test.log",
+      "bytes": 1318,
+      "sha256": "0841a187a0cdbad2c1ee88afe856305fc3ff48ad8273273335f07710e5897440",
+      "device": 16777231,
+      "inode": 545838138,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-continuation-evidence-20261024-v2/focused-after.json",
+      "bytes": 3317194,
+      "sha256": "ca1426c881c7dfa9911acf57db761d92d34ec1aa3bb981e5cd29afc478498668",
+      "device": 16777231,
+      "inode": 545838148,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-continuation-evidence-20261024-v2/focused-plan.json",
+      "bytes": 511005,
+      "sha256": "a96e1364e85938bb849953ea9df5c7ae814a974785275515358537a039a54ed7",
+      "device": 16777231,
+      "inode": 545838125,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-continuation-evidence-20261024-v2/focused.command.json",
+      "bytes": 365,
+      "sha256": "df0a26329af21655f7ffd11d45a3ff4867b145fdf61d5bee9e9ab59c5ae39ebc",
+      "device": 16777231,
+      "inode": 545838127,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-continuation-evidence-20261024-v2/focused.pid.json",
+      "bytes": 19,
+      "sha256": "e51224ab4ae2cc3aa0304c33771222926bac2b008e13255a1e908f3b44640ecb",
+      "device": 16777231,
+      "inode": 545838130,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-continuation-evidence-20261024-v2/focused.process.json",
+      "bytes": 504,
+      "sha256": "62d440135fe45381fa192e4adf293ec5eed90aa40daf4d16856a0e730ffda149",
+      "device": 16777231,
+      "inode": 545838146,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-continuation-evidence-20261024-v2/focused.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "device": 16777231,
+      "inode": 545838129,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-continuation-evidence-20261024-v2/focused.stdout",
+      "bytes": 402,
+      "sha256": "ac88acb47de615fab132d74bd488d2bac8cf15bbcfe2a85a027f7e2810e0aa17",
+      "device": 16777231,
+      "inode": 545838128,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-continuation-evidence-20261024-v2/invocation.json",
+      "bytes": 494,
+      "sha256": "e6c57cdf0ead7ca2cb0401b881542ae1747ffc893acb664beb68a4f0629b368c",
+      "device": 16777231,
+      "inode": 545838120,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-continuation-evidence-20261024-v2/result.json",
+      "bytes": 1698,
+      "sha256": "663666965a07dd3596d479bcb3a7849fed9fba20037d71befaeac3426dfeb7cd",
+      "device": 16777231,
+      "inode": 545838151,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-continuation-binding-allocated-20261024-v2.json",
+      "bytes": 4056288,
+      "sha256": "6e9b70c598edc1335129a958cb4f5bdbd8885464366283025cbc487d20b9d4e0",
+      "device": 16777231,
+      "inode": 545838118,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-continuation-owning-source-20261024-v2/ledger.json",
+      "bytes": 4540,
+      "sha256": "fbe229497d58e433daa1b12b24f5c447ad148db8c22fd52b956166fa32968244",
+      "device": 16777231,
+      "inode": 545837867,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-continuation-owning-source-20261024-v2/prior-outcome.json",
+      "bytes": 2583,
+      "sha256": "b98b2434ce2bca76a1215aa70203bb17962338a09fd2d8b2fc76201672f280f7",
+      "device": 16777231,
+      "inode": 545837868,
+      "mode": "0o444",
+      "nlink": 1
+    }
+  ],
+  "limits": "Read-only processing of closed finite raw evidence and its binding. No live Source, dependency, refs, hosted calls, tests, imports or historical-program execution. This audit preserves the nonzero outcome. Compiler fixes and future Source correspondence are not assessed here."
+}

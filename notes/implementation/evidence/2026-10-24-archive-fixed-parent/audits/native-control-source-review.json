@@ -1,0 +1,46 @@
+{
+  "schema": "archive-control-v11-and-final-union-independent-source-review-1",
+  "verdict": "Source clear; no unresolved mandatory finding in requested narrow scopes",
+  "request": "fc2548ae1ab9c7c5e859d422611f8a34fd0ff13c",
+  "promise": "28cdea0d83a29e9a02c5107d89c6e21b10341fc2",
+  "control": {
+    "source": "/private/tmp/artroom-archive-fixed-parent-control-source-20261024-v11",
+    "manifest": {
+      "bytes": 1899,
+      "sha256": "f0e59e8f0611caec7f6a93a29237c6e80179bd8c85692f9c9551c343626ffe87",
+      "leaves": 12,
+      "payloadBytes": 110408
+    },
+    "delta": {
+      "bytes": 25559,
+      "sha256": "ecd2dd1c4a1c93604257af43f32090b050628c3a0fd036834f18d36230e857ef"
+    },
+    "checks": [
+      "All11 predecessor and12 successor payloads plus manifests authenticated by stable regular single-link reads.",
+      "Exact V10-to-V11 delta independently reconstructed. Owner reverses exactly by its sole output namespace literal. Selector reverses by only four self paths.",
+      "Ledger and typed test review exact; mutation/source selector/API/reporter/assertion/meta classifier/restoration/private guards/cache caps/deadlines remain predecessor code.",
+      "All five source blob IDs/bytes/SHA256 and exact candidate checkpoint tree match immutable62e76. Existing proof excerpts and API pins remain exact predecessor fields.",
+      "Whole parent-state3 remains sole control selection, no compiler/baseline/healthy cohort added.",
+      "Prerequisite has actual parent-state3 within later six-case continuation, and carries original Git13/bootstrap3 from explicitly failed earlier22 run. Historical healthy31 receipt remains null. No control result is claimed."
+    ],
+    "attribution": "Closed prerequisite receipt pins are root/author-attributed Source metadata; embedded receipt paths were not followed. Source review adds no independent outcome audit or capture/runtime allocation."
+  },
+  "finalUnion": {
+    "head": "62e76a4992c9671a802a30c5f0cbe91cb4b6513a",
+    "tree": "483c829f8cc3896e7f7e5e1a8873192701bee3af",
+    "basis": "16f861d81fe3d814ead650a116363c7633d92915",
+    "checks": [
+      "All nine reuseV2 afterimages (six production/three tests) exactly match independent review22027932549059d5a591e2a4f0d6be6a3b3e1f21.",
+      "Publication fixture exact afterimage matches independent reviewedbf1a4986ff882e4985bc25509a817309d83d95.",
+      "Only other diff is scripts/security-entry-points.test.mjs build owner seal literal5fbae1ae to e1111bfef1fe94cc8436498679395ba1b9b8adba3db8651f4f24d87d68696853; all other map slots unchanged. Actual parser provenance belongs its separately accepted root evidence.",
+      "No unresolved finding remains in these reviewed changed seams; earlier unchanged code is carried by its existing Source reviews, not reviewed anew."
+    ]
+  },
+  "materialLimitsForPrimary": [
+    "Bootstrap stays bounded by remaining original native budget and may refuse far below nominal8MiB/8192 ceilings.",
+    "The109-entry publication fixture full closure is necessarily over selected byte maximum; valid existing frontier setup demonstrates no publication authority, not oversized migration support.",
+    "Static12-node reduction has only the separately attributed actual small-bootstrap validation, not a universal affordability guarantee.",
+    "Full control and final gate results remain separate future runtime evidence; no healthy cohort repetition authorized by this review."
+  ],
+  "activity": "Finite held Source and immutable Git reads plus this external review only. No live candidate/dependency reads, edits, project/helper execution/imports, parser/compiler/test/capture/install."
+}

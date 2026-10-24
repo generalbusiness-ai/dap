@@ -1,0 +1,140 @@
+{
+  "allocation": "66b4869262927d21d2166825bd6e54284529ab1a",
+  "status": "passed",
+  "children": [
+    {
+      "label": "focused",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "scripts/focused-check.mjs",
+        "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-evidence-20261024-v2/focused-plan.json",
+        "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-evidence-20261024-v2/focused"
+      ],
+      "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+      "pid": 66286,
+      "exit": 0,
+      "signal": null,
+      "wall": 8.962114540976472,
+      "user": 11.794534,
+      "system": 1.474005
+    }
+  ],
+  "errors": [],
+  "signals": [],
+  "cases": [
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-publication.test.ts",
+      "name": "Native legacy archive receipt blocks the floor until a real backfill pass confirms",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-publication.test.ts",
+          "name": "Native legacy archive receipt blocks the floor until a real backfill pass confirms",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-publication.test.ts",
+      "name": "Native admitted Register17 fact publishes nonempty anchors and rebuilds the exact stored Mark",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-publication.test.ts",
+          "name": "Native admitted Register17 fact publishes nonempty anchors and rebuilds the exact stored Mark",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-publication.test.ts",
+      "name": "Native published Mark rebuilds its exact bytes after a later turn and eviction",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-publication.test.ts",
+          "name": "Native published Mark rebuilds its exact bytes after a later turn and eviction",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-parent-state.test.ts",
+      "name": "native parent state appends 200 host-shaped passes with two retained files each",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-parent-state.test.ts",
+          "name": "native parent state appends 200 host-shaped passes with two retained files each",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-parent-state.test.ts",
+      "name": "native parent state resumes the exact Mark and confirms lost readback after eviction",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-parent-state.test.ts",
+          "name": "native parent state resumes the exact Mark and confirms lost readback after eviction",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-parent-state.test.ts",
+      "name": "a legacy pending Mark confirms by exact readback without a frontier or a second send",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-parent-state.test.ts",
+          "name": "a legacy pending Mark confirms by exact readback without a frontier or a second send",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    }
+  ],
+  "wall": 11.225245416979305,
+  "pythonCpu": 2.0413650000000003,
+  "childrenUser": 11.893386,
+  "childrenSystem": 1.573846,
+  "inclusiveCpu": 15.508597,
+  "qualification": "Test-only publication continuation template: Scope test compilation, then whole archive-publication3 and parent-state3 with original assertions and deadlines. Final adoption must be reviewed as test-only before this narrowed compiler selection is accepted; any production change requires a new reviewed selection. The fixture correction must initialize a genuinely validated preexisting native frontier and preserve all authority, exact publication, floor and refusal assertions. Root reports the previous reuse run passed Git13 and bootstrap3; those 16 cases and the earlier 29 healthy identities remain original Source-bound evidence, not a current whole-owning pass. No healthy case, Git compiler, Scope production compiler, compatibility command, parser, collection, control, install, Node tail or gate is repeated. Full Source/dependency/tool/environment/Main/preparation/binding guards remain; only the two selected Scope cache cells and existing empty Vite-temp metadata may change. Final checkpoint and test pins remain null until root reviews and adopts the exact test-only fix. Original failures and unfinished obligations remain retained. Nested costs overlap."
+}

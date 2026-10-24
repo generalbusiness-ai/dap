@@ -1,0 +1,332 @@
+{
+  "schema": "independent-closed-build-seal-audit/v1",
+  "request": "fc2548ae1ab9c7c5e859d422611f8a34fd0ff13c",
+  "promise": "28cdea0d83a29e9a02c5107d89c6e21b10341fc2",
+  "verdict": "clear within the single maintained build-seal run scope",
+  "issues": [],
+  "method": "Stable bounded reads of the ten exact closed raw leaves, the allocated binding, and the twelve already-held Source preparation leaves. No historical program was executed or imported. No live candidate, dependency or external tool contents were read. Snapshot equality compares every retained field and physical identity without exclusions or cache allowance.",
+  "outerClosureAttribution": {
+    "capture": "Root reports original 35943 exit 0 / tool cc9816; no persisted outer process leaf was supplied to this audit.",
+    "runtime": "Root reports original 5000 exit 0 / tool cb6c68. The retained owner invocation, child process and terminal result independently agree with a successful single-child run.",
+    "nullBinding": "Root reports 3471897 bytes / 1a11eb2583caf7f93bb415c7ee6af093a9c7cb3d3cffb85f1347ba962425591e; no null binding path was supplied or followed."
+  },
+  "allocation": "7967d21653e4dacc4177e626dd03f842aa1c66cd",
+  "checkpoint": {
+    "head": "2ef7aec1e53151b79d1f4212201e7fc233019d69",
+    "tree": "a04c2761069c015c74949ac32b9747c686b704e9",
+    "basis": "d7aea0b03ce8b9c1afcea7f3f6252b66d0d3630a",
+    "statusSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "driverSha256": "a7fa0ef63e3285bce6816fd9f27c89a518b022a1021b69a6b7234e80af416bdf",
+    "rowSha256": "6a2b238dc6f497ec9444aafd005f84c830fcd4de7c274e07065ff1dd27c4e50e",
+    "hostSha256": "cfaf61ca85a45c18bfdee2c531e67ba3d25b9b4c96118723bfd032f00f189be1",
+    "parserSha256": "6211e9d63c50bc8686ddebbc4d211fceedb4acd3303849ea29137c031517e167",
+    "buildSha256": "de94fc6aebd0480b6ad82b8ec5f5c9265ab4442f015f65cd70e42c96ba53cf14"
+  },
+  "observedSeal": {
+    "path": "packages/scope/src/archive-build.ts",
+    "sourceSeal": "e1111bfef1fe94cc8436498679395ba1b9b8adba3db8651f4f24d87d68696853"
+  },
+  "lifecycle": {
+    "ownerPid": 39735,
+    "child": {
+      "label": "source-seals",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-archive-fixed-parent-build-seal-source-20261024-v2/produce-source-seals.mjs",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023"
+      ],
+      "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+      "pid": 39750,
+      "exit": 0,
+      "signal": null,
+      "wall": 0.10855433298274875,
+      "user": 0.11985499999999999,
+      "system": 0.019562000000000003
+    },
+    "errors": [],
+    "signals": [],
+    "stderr": "Only the exact Node experimental stripTypeScriptTypes warning; no thrown error.",
+    "singleMaintainedProducer": "The held producer imports scripts/security-entry-points.mjs and calls sourceSeal once for the literal archive-build path; the command and exact one-row stdout agree."
+  },
+  "guards": {
+    "allocatedEqualsBeforeEqualsChildAfterEqualsAfter": true,
+    "cacheAllowanceUsed": false,
+    "dimensions": {
+      "source": 3001,
+      "dependencies": 6072,
+      "tools": 219,
+      "toolResolutions": 218,
+      "environmentDigests": 60,
+      "preparation": 13
+    },
+    "dependencyLinks": 32,
+    "allSourceAndDependencyPhysicalFieldsEqual": true,
+    "allMainRefsEnvironmentToolsResolversPreparationEqual": true,
+    "heldSourceMatchesAtRunPreparation": true,
+    "bindingSha256": "381a57921029c778fe8b4e572ef3841b25a7c85cd0cb9b6154be39d3dd13cf4d",
+    "CODEX_TOOL_CALL_ID": "Excluded by the reviewed snapshot implementation; invocation retains its hash as external root provenance. No raw environment values are printed."
+  },
+  "costs": {
+    "wall": 2.3190649589523673,
+    "pythonCpu": 1.989963,
+    "childrenUser": 0.219386,
+    "childrenSystem": 0.122262,
+    "inclusiveCpu": 2.331611
+  },
+  "costQualification": "Owner totals include all snapshots and metadata subprocesses. Child wall/user/system are nested within owner accounting and must not be added again. This is a parser-only result, not tests, compiler, application, gate or hosted validation. Map adoption is outside this run.",
+  "finiteEvidencePins": [
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-build-seal-evidence-20261024-v2/after.json",
+      "bytes": 3268310,
+      "sha256": "bc3bcab0c12a53c55b2d65ce026e8eee791240dcb40aa50262cf56385f9c8d47",
+      "device": 16777231,
+      "inode": 545857477,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792811602736983928,
+      "ctimeNs": 1792811602736983928
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-build-seal-evidence-20261024-v2/before.json",
+      "bytes": 3268310,
+      "sha256": "bc3bcab0c12a53c55b2d65ce026e8eee791240dcb40aa50262cf56385f9c8d47",
+      "device": 16777231,
+      "inode": 545857467,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792811601172068452,
+      "ctimeNs": 1792811601172068452
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-build-seal-evidence-20261024-v2/invocation.json",
+      "bytes": 573,
+      "sha256": "2f56491e1c67ba63366d8ecf58ac167d1389eb847e502dc31bdbe1d106e4dfea",
+      "device": 16777231,
+      "inode": 545857465,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792811600419955339,
+      "ctimeNs": 1792811600419955339
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-build-seal-evidence-20261024-v2/result.json",
+      "bytes": 1471,
+      "sha256": "9d4a9012b4dad0244103f886c529a0232e5086baceb16c93b1ff8daf3054d6ff",
+      "device": 16777231,
+      "inode": 545857478,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792811602739050053,
+      "ctimeNs": 1792811602739050053
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-build-seal-evidence-20261024-v2/source-seals-after.json",
+      "bytes": 3268310,
+      "sha256": "bc3bcab0c12a53c55b2d65ce026e8eee791240dcb40aa50262cf56385f9c8d47",
+      "device": 16777231,
+      "inode": 545857475,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792811602007032523,
+      "ctimeNs": 1792811602007032523
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-build-seal-evidence-20261024-v2/source-seals.command.json",
+      "bytes": 310,
+      "sha256": "f16a32ff0bba66b99f485e6d115c7c416b9ffb27149725c818259f59e40177c2",
+      "device": 16777231,
+      "inode": 545857468,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792811601173981452,
+      "ctimeNs": 1792811601173981452
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-build-seal-evidence-20261024-v2/source-seals.pid.json",
+      "bytes": 19,
+      "sha256": "24addfef9392fec9d1f609a182bfc5fa3f884efeb3b2d4c0089a7cc3b9f62045",
+      "device": 16777231,
+      "inode": 545857471,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792811601175716702,
+      "ctimeNs": 1792811601175716702
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-build-seal-evidence-20261024-v2/source-seals.process.json",
+      "bytes": 480,
+      "sha256": "28b52d38d883f78c33fc5823542325b3bc44a75c01bd7b21a7590f4fe8aeef52",
+      "device": 16777231,
+      "inode": 545857473,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792811601282595492,
+      "ctimeNs": 1792811601282595492
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-build-seal-evidence-20261024-v2/source-seals.stderr",
+      "bytes": 183,
+      "sha256": "246d76cda8b419be5b1e929b009573d238080a34eff962ea0ea47f82d5fa35b6",
+      "device": 16777231,
+      "inode": 545857470,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792811601276271201,
+      "ctimeNs": 1792811601276271201
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-build-seal-evidence-20261024-v2/source-seals.stdout",
+      "bytes": 148,
+      "sha256": "42574076bc2c704389fe898c7dd9b077a3365171369c5e1e8e85eff6cd30eea8",
+      "device": 16777231,
+      "inode": 545857469,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792811601276169909,
+      "ctimeNs": 1792811601276169909
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-build-seal-binding-allocated-20261024-v2.json",
+      "bytes": 3471935,
+      "sha256": "381a57921029c778fe8b4e572ef3841b25a7c85cd0cb9b6154be39d3dd13cf4d",
+      "device": 16777231,
+      "inode": 545857461,
+      "mode": "0o644",
+      "nlink": 1,
+      "mtimeNs": 1792811593493401945,
+      "ctimeNs": 1792811593493401945
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-build-seal-source-20261024-v2/ancestry.json",
+      "bytes": 650,
+      "sha256": "b6947f3b1e668d4cdb5ebc3317ca787304acc8ce45e01cb81be8a36a5c37a6c0",
+      "device": 16777231,
+      "inode": 545857210,
+      "mode": "0o444",
+      "nlink": 1,
+      "mtimeNs": 1792811327691373359,
+      "ctimeNs": 1792811327691373359
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-build-seal-source-20261024-v2/checkpoint.json",
+      "bytes": 676,
+      "sha256": "a6dcce52f02ad1f7c7293387485a566cb91cb8bcd262ccf3a1eefd1218761c71",
+      "device": 16777231,
+      "inode": 545857207,
+      "mode": "0o444",
+      "nlink": 1,
+      "mtimeNs": 1792811327691034525,
+      "ctimeNs": 1792811327691034525
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-build-seal-source-20261024-v2/external-tools.json",
+      "bytes": 17122,
+      "sha256": "99b660bc1d87a1c6e0f08cdfaf511f9935b5493a736c675d14b5db4e807d68db",
+      "device": 16777231,
+      "inode": 545857206,
+      "mode": "0o444",
+      "nlink": 1,
+      "mtimeNs": 1792811327644376901,
+      "ctimeNs": 1792811327644376901
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-build-seal-source-20261024-v2/input-status.json",
+      "bytes": 3220,
+      "sha256": "89a5639b4b4ebd59c7b4e7ce1a32e54d8defab51d4c24a4826c6d72e1ee4e6b4",
+      "device": 16777231,
+      "inode": 545857209,
+      "mode": "0o444",
+      "nlink": 1,
+      "mtimeNs": 1792811327691300650,
+      "ctimeNs": 1792811327691300650
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-build-seal-source-20261024-v2/manifest.json",
+      "bytes": 1981,
+      "sha256": "60bca32e8e373ec5ae48597ba8e880c5e6dba90a7407e9ebf0bb72351d45a205",
+      "device": 16777231,
+      "inode": 545857215,
+      "mode": "0o444",
+      "nlink": 1,
+      "mtimeNs": 1792811327692371734,
+      "ctimeNs": 1792811327692371734
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-build-seal-source-20261024-v2/mapped-owners.json",
+      "bytes": 4104,
+      "sha256": "18954888594818d66ac1c2888044005e082dd735e597cc6ff9905e89e45b1a0e",
+      "device": 16777231,
+      "inode": 545857208,
+      "mode": "0o444",
+      "nlink": 1,
+      "mtimeNs": 1792811327691219025,
+      "ctimeNs": 1792811327691219025
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-build-seal-source-20261024-v2/owner.py",
+      "bytes": 13408,
+      "sha256": "68f53a680e8bbd3dc9efb07826018e505c828bd1dc31f7a3a8b727e7287bb1ec",
+      "device": 16777231,
+      "inode": 545857204,
+      "mode": "0o444",
+      "nlink": 1,
+      "mtimeNs": 1792811327644115526,
+      "ctimeNs": 1792811327644115526
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-build-seal-source-20261024-v2/plan.md",
+      "bytes": 2657,
+      "sha256": "672cbf8383b59d0a15fb77595977b7f8deda506b7769464245b3e6e6bfa08620",
+      "device": 16777231,
+      "inode": 545857211,
+      "mode": "0o444",
+      "nlink": 1,
+      "mtimeNs": 1792811327691436817,
+      "ctimeNs": 1792811327691436817
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-build-seal-source-20261024-v2/produce-source-seals.mjs",
+      "bytes": 918,
+      "sha256": "42e27e7f82f758c5f21e32c72c6b68e83d217472b3b52ab4ce7ff5365d9f66da",
+      "device": 16777231,
+      "inode": 545857205,
+      "mode": "0o444",
+      "nlink": 1,
+      "mtimeNs": 1792811327644249026,
+      "ctimeNs": 1792811327644249026
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-build-seal-source-20261024-v2/v1-to-v2-metadata.patch",
+      "bytes": 10356,
+      "sha256": "e61aebba9b290ade2a9b9128a7cd4ea5b01fe7e7b67c00ff9181c7bf6a104ce4",
+      "device": 16777231,
+      "inode": 545857214,
+      "mode": "0o444",
+      "nlink": 1,
+      "mtimeNs": 1792811327692093025,
+      "ctimeNs": 1792811327692093025
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-build-seal-source-20261024-v2/v1-to-v2-owner.patch",
+      "bytes": 356,
+      "sha256": "f20d3bc80189b78f0b778a535d5153d97b9e7653c3c6a100dfd414e2d0cc739a",
+      "device": 16777231,
+      "inode": 545857212,
+      "mode": "0o444",
+      "nlink": 1,
+      "mtimeNs": 1792811327691618317,
+      "ctimeNs": 1792811327691618317
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-build-seal-source-20261024-v2/v1-to-v2-tools.patch",
+      "bytes": 1006,
+      "sha256": "64e09b32052e70eeefbc0a77b6fbb202a3cc1b4470916ff4a789cbb9724a31a6",
+      "device": 16777231,
+      "inode": 545857213,
+      "mode": "0o444",
+      "nlink": 1,
+      "mtimeNs": 1792811327691787359,
+      "ctimeNs": 1792811327691787359
+    }
+  ]
+}

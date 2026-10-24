@@ -1,0 +1,616 @@
+{
+  "state": "INDEPENDENT_CLOSED_MATCHED_GEOMETRY_CONTROL",
+  "rootNaturalObservation": {
+    "session": 88513,
+    "tool": "d33fc2",
+    "exit": 0,
+    "attribution": "Root original process observation; not auditor monitoring"
+  },
+  "prerequisiteQualification": "Root explicitly narrowed prerequisite from proposedhealthy35 to actualhealthyGit6,durable7414b92a. This doesnot upgrade other failed/unrun owningcases.",
+  "head": "16f861d81fe3d814ead650a116363c7633d92915",
+  "tree": "69d2eb8e48f91eda3bdc3a1ab53c58e59413092a",
+  "allocation": "66844be8d3b6cc587bf7d8afeb713f7e720c9333",
+  "ownerPid": 95262,
+  "child": {
+    "argv": [
+      "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+      "/private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/vitest/vitest.mjs",
+      "run",
+      "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/git/test/journal-v2-frontier.test.ts",
+      "--config",
+      "/private/tmp/artroom-builder-archive-fixed-parent-20261023/vitest.config.ts",
+      "--project",
+      "git",
+      "--allowOnly=false",
+      "--passWithNoTests=false",
+      "--reporter=default",
+      "--reporter=json",
+      "--reporter=/private/tmp/artroom-builder-archive-fixed-parent-20261023/scripts/test-progress.mjs",
+      "--outputFile.json=/private/tmp/artroom-archive-frontier-geometry-control-evidence-20261024-v1/vitest.json"
+    ],
+    "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+    "pid": 95324,
+    "exit": 1,
+    "signal": null,
+    "wall": 0.7468177910195664,
+    "user": 0.897355,
+    "system": 0.15031299999999997
+  },
+  "caseCounts": {
+    "passed": 5,
+    "failed": 1
+  },
+  "failure": {
+    "name": "the SHA-256 frontier stays within its literal byte bound at all 604 permitted tree rows",
+    "rawJSONMessage": "AssertionError: Refuse the second root row before its 512-byte metadata debit: expected 2 to be 1 // Object.is equality\n    at /private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/git/test/journal-v2-frontier.test.ts:158:86\n    at async file:///private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20",
+    "line": "158",
+    "meaning": "Tree-shape refusal still occurs; only extra second512rowdebit detected. Valid604/hash/cost assertions earlier in samecase reached. No later Native/scale inference."
+  },
+  "callbacks": {
+    "run-start": 1,
+    "case-ready": 6,
+    "case-result": 6,
+    "case-final": 6,
+    "run-end": 1
+  },
+  "terminalCases": [
+    {
+      "event": "case-final",
+      "time": "2026-10-24T02:41:08.209Z",
+      "id": "727517370_0",
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/git/test/journal-v2-frontier.test.ts",
+      "name": "a sha1 native parent witness owns only eleven receipt-bound objects and no old payload",
+      "state": "passed"
+    },
+    {
+      "event": "case-final",
+      "time": "2026-10-24T02:41:08.209Z",
+      "id": "727517370_1",
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/git/test/journal-v2-frontier.test.ts",
+      "name": "a sha256 native parent witness owns only eleven receipt-bound objects and no old payload",
+      "state": "passed"
+    },
+    {
+      "event": "case-final",
+      "time": "2026-10-24T02:41:08.209Z",
+      "id": "727517370_2",
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/git/test/journal-v2-frontier.test.ts",
+      "name": "a stored frontier refuses changed custody, head, schema, object bytes, count and order",
+      "state": "passed"
+    },
+    {
+      "event": "case-final",
+      "time": "2026-10-24T02:41:08.209Z",
+      "id": "727517370_3",
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/git/test/journal-v2-frontier.test.ts",
+      "name": "the bounded frontier carries unchanged subtrees across numeric rollovers without reading old pass leaves",
+      "state": "passed"
+    },
+    {
+      "event": "case-final",
+      "time": "2026-10-24T02:41:08.209Z",
+      "id": "727517370_4",
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/git/test/journal-v2-frontier.test.ts",
+      "name": "a frontier refuses a future path or noncanonical head and reserves metadata before source I/O",
+      "state": "passed"
+    },
+    {
+      "event": "case-final",
+      "time": "2026-10-24T02:41:08.209Z",
+      "id": "727517370_5",
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/git/test/journal-v2-frontier.test.ts",
+      "name": "the SHA-256 frontier stays within its literal byte bound at all 604 permitted tree rows",
+      "state": "failed"
+    }
+  ],
+  "guards": "Allocatedsnapshotexactbefore; exactsinglemutantsource andstatus only beforechild; allfullSource/depsroot6072/32links/tools/env/refs/prep exactoutside selectedGitcachecell+emptytempmetadata. Original targetdevice/inode/mode/nlink/bytes/hash restored; targetctime allowanceonly,mtime retained.",
+  "restoration": {
+    "path": "packages/git/src/journal-v2-frontier.ts",
+    "original": {
+      "device": 16777231,
+      "inode": 545535574,
+      "mode": "0o644",
+      "nlink": 1,
+      "kind": "file",
+      "bytes": 10829,
+      "sha256": "d0cd7f3886d42caabaf57d89deadefe27383f818811933aa6048716853395c20",
+      "mtimeNs": 1792808780712251557,
+      "ctimeNs": 1792808780712251557
+    },
+    "restored": {
+      "device": 16777231,
+      "inode": 545535574,
+      "mode": "0o644",
+      "nlink": 1,
+      "kind": "file",
+      "bytes": 10829,
+      "sha256": "d0cd7f3886d42caabaf57d89deadefe27383f818811933aa6048716853395c20",
+      "mtimeNs": 1792808780712251557,
+      "ctimeNs": 1792809668983200646
+    },
+    "qualification": "Original device/inode/mode/nlink/bytes/hash exact; only targetmtime/ctime may reflect controlled rename. No other Source allowance."
+  },
+  "costs": {
+    "wall": 3.7934609579388052,
+    "pythonCpu": 2.748672,
+    "childrenUser": 1.032353,
+    "childrenSystem": 0.290763,
+    "inclusiveCpu": 4.071788
+  },
+  "sourcePins": [
+    {
+      "path": "ancestry.json",
+      "bytes": 287,
+      "sha256": "26246b1d1c14dc1caaef7b93c0ffd6af8b6bd724712d2c4dfe6907eb500628de"
+    },
+    {
+      "path": "checkpoint.json",
+      "bytes": 252,
+      "sha256": "f39bca9f755dc55cd422e926ce20fe1758762d09a2314f8db270587b1e39ce75"
+    },
+    {
+      "path": "control-proof.json",
+      "bytes": 1544,
+      "sha256": "d5a3c7314e006c96a99b41d9059cc24aa8219b2de59e973e3a1d4c2ea66a3f43"
+    },
+    {
+      "path": "external-tools.json",
+      "bytes": 17117,
+      "sha256": "ae2dc28ca1bc6f09d274d8d8fe227957261731527b4a4b7bad6bc1530d348095"
+    },
+    {
+      "path": "input-status.json",
+      "bytes": 562,
+      "sha256": "ad0a9e24076c4200f410ca087d08d1851f7869726f88da464963ca814e0c991e"
+    },
+    {
+      "path": "ledger.json",
+      "bytes": 847,
+      "sha256": "b8c877bd3959423a474e8831c1da11d601b97f432b43100c5fb98f883215a41f"
+    },
+    {
+      "path": "owner.delta",
+      "bytes": 12610,
+      "sha256": "5c5a43beba97ee1aac8cb23d9eb9dec8fcdea357a98525df09903f80fe5dbc8d"
+    },
+    {
+      "path": "owner.py",
+      "bytes": 22488,
+      "sha256": "b18776c0ac459ff2902ae236180218de9da3565291fff1fb3fb90ca5eb3dd7bf"
+    },
+    {
+      "path": "plan.md",
+      "bytes": 1835,
+      "sha256": "fbe0b366ccf05f593697de5d0a3fab3d557ae56ba947d01bf2c548ee253ec8b1"
+    }
+  ],
+  "inputPins": [
+    {
+      "path": "/private/tmp/artroom-archive-frontier-geometry-control-evidence-20261024-v1/after.json",
+      "bytes": 3316161,
+      "sha256": "c77be64a4fc674518239382275cecc59931d35fb32fd52ece15076733abd9408",
+      "identity": [
+        16777231,
+        545850752,
+        33188,
+        1,
+        3316161,
+        1792809669710221280,
+        1792809669710221280
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-frontier-geometry-control-evidence-20261024-v1/before.json",
+      "bytes": 3316161,
+      "sha256": "43def1d511dd9191e04174751258afe03403bf5aeaebb5c1471601d071725973",
+      "identity": [
+        16777231,
+        545850715,
+        33188,
+        1,
+        3316161,
+        1792809666706611612,
+        1792809666706611612
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-frontier-geometry-control-evidence-20261024-v1/command.json",
+      "bytes": 967,
+      "sha256": "70e8dad9b755d9967e34d14db19aa7cab770e5df446eae619a5178d914c47b9c",
+      "identity": [
+        16777231,
+        545850724,
+        33188,
+        1,
+        967,
+        1792809667478585228,
+        1792809667478585228
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-frontier-geometry-control-evidence-20261024-v1/invocation.json",
+      "bytes": 487,
+      "sha256": "83193b5f4bb003882e1d8691a5e088107875886a8639ab52e1989901ba387ea9",
+      "identity": [
+        16777231,
+        545850713,
+        33188,
+        1,
+        487,
+        1792809665938996374,
+        1792809665938996374
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-frontier-geometry-control-evidence-20261024-v1/mutant-after.json",
+      "bytes": 3316205,
+      "sha256": "8ed009a295b586b694aa208a3b3f12f51889c6a4fd90737939f443e05b383efb",
+      "identity": [
+        16777231,
+        545850749,
+        33188,
+        1,
+        3316205,
+        1792809668960140884,
+        1792809668960140884
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-frontier-geometry-control-evidence-20261024-v1/mutant-before.json",
+      "bytes": 3316205,
+      "sha256": "c52cbde2ad6176cd805a730380777dadba9dc35bb3081bf2e62996ecb51607d5",
+      "identity": [
+        16777231,
+        545850723,
+        33188,
+        1,
+        3316205,
+        1792809667451265047,
+        1792809667451265047
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-frontier-geometry-control-evidence-20261024-v1/mutant.data",
+      "bytes": 10811,
+      "sha256": "9e34a99b6b8278de50cd91619cbe2ce44370eadda41a03a39e6c1dcbe1a33cfa",
+      "identity": [
+        16777231,
+        545850718,
+        33188,
+        1,
+        10811,
+        1792809666719622494,
+        1792809666719622494
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-frontier-geometry-control-evidence-20261024-v1/mutation.json",
+      "bytes": 385,
+      "sha256": "e39891710aa69dfb2345c68b8e4db906f7b8975905ccb1535a730b69e7310c2b",
+      "identity": [
+        16777231,
+        545850716,
+        33188,
+        1,
+        385,
+        1792809666718463702,
+        1792809666718463702
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-frontier-geometry-control-evidence-20261024-v1/mutation.patch",
+      "bytes": 587,
+      "sha256": "29a9a1406c9da582fc19fd314fd8b5630757f0e675afcc1d9345acb421412b72",
+      "identity": [
+        16777231,
+        545850719,
+        33188,
+        1,
+        587,
+        1792809666719680744,
+        1792809666719680744
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-frontier-geometry-control-evidence-20261024-v1/original.data",
+      "bytes": 10829,
+      "sha256": "d0cd7f3886d42caabaf57d89deadefe27383f818811933aa6048716853395c20",
+      "identity": [
+        16777231,
+        545850717,
+        33188,
+        1,
+        10829,
+        1792809666719536411,
+        1792809666719536411
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-frontier-geometry-control-evidence-20261024-v1/pid.json",
+      "bytes": 19,
+      "sha256": "679353d178d83fb8a456c8ca9c0ed8e3ef6701de5552266202f53865a1e97c76",
+      "identity": [
+        16777231,
+        545850727,
+        33188,
+        1,
+        19,
+        1792809667480454437,
+        1792809667480454437
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-frontier-geometry-control-evidence-20261024-v1/process.json",
+      "bytes": 938,
+      "sha256": "30031ccc6cb5b26707432ea26eee7f6f75474cb5fe45046e0a69b1baa30a71b4",
+      "identity": [
+        16777231,
+        545850747,
+        33188,
+        1,
+        938,
+        1792809668225616247,
+        1792809668225616247
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-frontier-geometry-control-evidence-20261024-v1/progress.jsonl",
+      "bytes": 5898,
+      "sha256": "e9354ed77278304f3eca02aa66322ed5597ed1a764a4f36cd39fd4c138b8d02b",
+      "identity": [
+        16777231,
+        545850745,
+        33152,
+        1,
+        5898,
+        1792809668209372613,
+        1792809668209372613
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-frontier-geometry-control-evidence-20261024-v1/restoration.json",
+      "bytes": 808,
+      "sha256": "bacfd3605d92f278d6e04f944bb5210f6ffd642645c30fb95b30d6db5f98e1e0",
+      "identity": [
+        16777231,
+        545850750,
+        33188,
+        1,
+        808,
+        1792809668983414355,
+        1792809668983414355
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-frontier-geometry-control-evidence-20261024-v1/result.json",
+      "bytes": 2539,
+      "sha256": "a5a8317d49a23672af15e7c41202b5b2dfe687bcb66283e02d730eee40bcced7",
+      "identity": [
+        16777231,
+        545850753,
+        33188,
+        1,
+        2539,
+        1792809669732502958,
+        1792809669732502958
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-frontier-geometry-control-evidence-20261024-v1/stderr",
+      "bytes": 776,
+      "sha256": "c4e1f79919f87b0dff4b1302336752db7ee3d2f55de4e2970f79c73036986539",
+      "identity": [
+        16777231,
+        545850726,
+        33188,
+        1,
+        776,
+        1792809668208784654,
+        1792809668208784654
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-frontier-geometry-control-evidence-20261024-v1/stdout",
+      "bytes": 1047,
+      "sha256": "14618fd313c64c2454f324f42fb170127ab1821e1bd09a07d00793d3a993a096",
+      "identity": [
+        16777231,
+        545850725,
+        33188,
+        1,
+        1047,
+        1792809668209545780,
+        1792809668209545780
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-frontier-geometry-control-evidence-20261024-v1/vitest.json",
+      "bytes": 2982,
+      "sha256": "6eb30919f37a98aa8a459f7fa363331d19e766f4b8ab03793d8e600ce54a17ec",
+      "identity": [
+        16777231,
+        545850746,
+        33188,
+        1,
+        2982,
+        1792809668209374238,
+        1792809668209374238
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-frontier-geometry-control-binding-allocated-20261024-v1.json",
+      "bytes": 3519612,
+      "sha256": "0427d6a81d9cb4d07f90e3a759972ce35e9b5f231ea0bc732f85301dbf5fe7a8",
+      "identity": [
+        16777231,
+        545850706,
+        33188,
+        1,
+        3519612,
+        1792809658645285736,
+        1792809658645285736
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-frontier-geometry-control-binding-null-20261024-v1.json",
+      "bytes": 3519574,
+      "sha256": "ca4bd313a45825f556e643671ce5bddcc496b596bde6d012fd60898df3eb4948",
+      "identity": [
+        16777231,
+        545850601,
+        33188,
+        1,
+        3519574,
+        1792809633925661073,
+        1792809633925661073
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-frontier-geometry-control-source-20261024-v1/manifest.json",
+      "bytes": 1429,
+      "sha256": "a0423abb86db36aa7d2bed0dceda1036c89281ba3f107bb097486e81ce72e03a",
+      "identity": [
+        16777231,
+        545848216,
+        33188,
+        1,
+        1429,
+        1792808854661194771,
+        1792808854661194771
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-frontier-geometry-control-source-20261024-v1/ancestry.json",
+      "bytes": 287,
+      "sha256": "26246b1d1c14dc1caaef7b93c0ffd6af8b6bd724712d2c4dfe6907eb500628de",
+      "identity": [
+        16777231,
+        545848215,
+        33188,
+        1,
+        287,
+        1792808822037018399,
+        1792808822037018399
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-frontier-geometry-control-source-20261024-v1/checkpoint.json",
+      "bytes": 252,
+      "sha256": "f39bca9f755dc55cd422e926ce20fe1758762d09a2314f8db270587b1e39ce75",
+      "identity": [
+        16777231,
+        545848208,
+        33188,
+        1,
+        252,
+        1792808854657525348,
+        1792808854657525348
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-frontier-geometry-control-source-20261024-v1/control-proof.json",
+      "bytes": 1544,
+      "sha256": "d5a3c7314e006c96a99b41d9059cc24aa8219b2de59e973e3a1d4c2ea66a3f43",
+      "identity": [
+        16777231,
+        545848209,
+        33188,
+        1,
+        1544,
+        1792808854657347431,
+        1792808854657347431
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-frontier-geometry-control-source-20261024-v1/external-tools.json",
+      "bytes": 17117,
+      "sha256": "ae2dc28ca1bc6f09d274d8d8fe227957261731527b4a4b7bad6bc1530d348095",
+      "identity": [
+        16777231,
+        545848211,
+        33188,
+        1,
+        17117,
+        1792808822036547357,
+        1792808822036547357
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-frontier-geometry-control-source-20261024-v1/input-status.json",
+      "bytes": 562,
+      "sha256": "ad0a9e24076c4200f410ca087d08d1851f7869726f88da464963ca814e0c991e",
+      "identity": [
+        16777231,
+        545848212,
+        33188,
+        1,
+        562,
+        1792808854657607223,
+        1792808854657607223
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-frontier-geometry-control-source-20261024-v1/ledger.json",
+      "bytes": 847,
+      "sha256": "b8c877bd3959423a474e8831c1da11d601b97f432b43100c5fb98f883215a41f",
+      "identity": [
+        16777231,
+        545848207,
+        33188,
+        1,
+        847,
+        1792808822032773975,
+        1792808822032773975
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-frontier-geometry-control-source-20261024-v1/owner.delta",
+      "bytes": 12610,
+      "sha256": "5c5a43beba97ee1aac8cb23d9eb9dec8fcdea357a98525df09903f80fe5dbc8d",
+      "identity": [
+        16777231,
+        545848214,
+        33188,
+        1,
+        12610,
+        1792808854660783771,
+        1792808854660783771
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-frontier-geometry-control-source-20261024-v1/owner.py",
+      "bytes": 22488,
+      "sha256": "b18776c0ac459ff2902ae236180218de9da3565291fff1fb3fb90ca5eb3dd7bf",
+      "identity": [
+        16777231,
+        545848210,
+        33188,
+        1,
+        22488,
+        1792808854657697224,
+        1792808854657697224
+      ]
+    },
+    {
+      "path": "/private/tmp/artroom-archive-frontier-geometry-control-source-20261024-v1/plan.md",
+      "bytes": 1835,
+      "sha256": "fbe0b366ccf05f593697de5d0a3fab3d557ae56ba947d01bf2c548ee253ec8b1",
+      "identity": [
+        16777231,
+        545848213,
+        33188,
+        1,
+        1835,
+        1792808854660886563,
+        1792808854660886563
+      ]
+    }
+  ],
+  "qualification": "No projectruntime/retry/livecandidate/dependency reads. Originalexpectedchild1 preserved; wrapperroot0 attributed. Costs nested/overlap; healthyGit6 baseline carried,not repeated."
+}

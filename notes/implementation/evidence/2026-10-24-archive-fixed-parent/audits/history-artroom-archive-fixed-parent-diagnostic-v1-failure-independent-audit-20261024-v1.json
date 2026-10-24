@@ -1,0 +1,693 @@
+{
+  "kind": "independent_closed_diagnostic_audit",
+  "request": "fc2548ae1ab9c7c5e859d422611f8a34fd0ff13c",
+  "promise": "28cdea0d83a29e9a02c5107d89c6e21b10341fc2",
+  "rootAttribution": {
+    "session": 23560,
+    "tool": "eb599a",
+    "naturalExit": 1,
+    "source": "Parent original natural closure, not independently rerun."
+  },
+  "status": "Original diagnostic failed. Both Scope compilers passed; the first driver case failed and 12 cases remain unfinished. No full owning pass or accepted repair claim.",
+  "allocation": "65507780bafaaa4c0f680aeb11ed6a92cc31cd6a",
+  "child": {
+    "label": "focused",
+    "argv": [
+      "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+      "scripts/focused-check.mjs",
+      "/private/tmp/artroom-archive-fixed-parent-diagnostic-evidence-20261024-v1/focused-plan.json",
+      "/private/tmp/artroom-archive-fixed-parent-diagnostic-evidence-20261024-v1/focused"
+    ],
+    "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+    "pid": 17297,
+    "exit": 1,
+    "signal": null,
+    "wall": 6.399085500044748,
+    "user": 9.964692999999999,
+    "system": 1.527213
+  },
+  "phases": [
+    {
+      "name": "scope-production",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/tsconfig.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+      "started": "2026-10-24T01:49:48.064Z",
+      "ended": "2026-10-24T01:49:48.360Z",
+      "measuredCommandMilliseconds": 296.27333300000004,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.29,
+      "userSeconds": 1.16,
+      "systemSeconds": 0.13,
+      "cpuSeconds": 1.29
+    },
+    {
+      "name": "scope-test",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/typescript/bin/tsc",
+        "-p",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/tsconfig.test.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+      "started": "2026-10-24T01:49:48.517Z",
+      "ended": "2026-10-24T01:49:49.129Z",
+      "measuredCommandMilliseconds": 611.889459,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 0.61,
+      "userSeconds": 3.01,
+      "systemSeconds": 0.24,
+      "cpuSeconds": 3.25
+    },
+    {
+      "name": "body",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/vitest/vitest.mjs",
+        "run",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+        "--config",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/vitest.config.ts",
+        "--bail=1",
+        "--allowOnly=false",
+        "--passWithNoTests=false",
+        "--reporter=verbose",
+        "--reporter=json",
+        "--reporter=/private/tmp/artroom-builder-archive-fixed-parent-20261023/scripts/focused-check.mjs",
+        "--outputFile.json=/private/tmp/artroom-archive-fixed-parent-diagnostic-evidence-20261024-v1/focused/vitest.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+      "started": "2026-10-24T01:49:49.275Z",
+      "ended": "2026-10-24T01:49:54.073Z",
+      "measuredCommandMilliseconds": 4797.823708,
+      "exitCode": 1,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 4.79,
+      "userSeconds": 5.39,
+      "systemSeconds": 0.79,
+      "cpuSeconds": 6.18
+    }
+  ],
+  "guardComparison": {
+    "allocatedEqualsBefore": true,
+    "focusedAfterEqualsAfter": true,
+    "allFixedFieldsExactOutsideDeclaredAllowance": true,
+    "sourceRows": 3000,
+    "dependencyRowsIncludingRoot": 6072,
+    "tools": 219,
+    "environmentRows": 60,
+    "head": "02ebab660491dd6258d232e1716e623c454d7e45",
+    "tree": "3a5d7964c83c579852ba2bb733393f14fd6386f7",
+    "mainRefs": {
+      "refs/heads/Main": "d7aea0b03ce8b9c1afcea7f3f6252b66d0d3630a",
+      "refs/remotes/origin/main": "d7aea0b03ce8b9c1afcea7f3f6252b66d0d3630a"
+    },
+    "cacheBeforeBytes": 45928,
+    "cacheAfterBytes": 45928,
+    "cacheCellChanges": [
+      {
+        "key": "scope:packages/scope/test/archive-driver.test.ts",
+        "before": {
+          "duration": 498,
+          "failed": true
+        },
+        "after": {
+          "duration": 439,
+          "failed": true
+        }
+      }
+    ],
+    "allowance": "Only driver-file cache cell, same physical cache byte/hash/timestamps and same existing empty .vite-temp timestamps. No other field differs."
+  },
+  "coverage": {
+    "cases": [
+      {
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+        "name": "the real native alarm archives asynchronously while sixteen turns complete",
+        "status": "failed",
+        "started": true,
+        "observed": [
+          {
+            "project": "scope",
+            "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+            "name": "the real native alarm archives asynchronously while sixteen turns complete",
+            "status": "failed",
+            "errors": 1,
+            "retryCount": 0,
+            "repeatCount": 0
+          }
+        ]
+      },
+      {
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+        "name": "native archive alarm stops missing-input without another mint or send",
+        "status": "unfinished",
+        "started": true,
+        "observed": [
+          {
+            "project": "scope",
+            "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+            "name": "native archive alarm stops missing-input without another mint or send",
+            "status": "pending",
+            "errors": 0,
+            "retryCount": 0,
+            "repeatCount": 0
+          }
+        ]
+      },
+      {
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+        "name": "native archive alarm stops rebuild-mismatch without another mint or send",
+        "status": "unfinished",
+        "started": true,
+        "observed": [
+          {
+            "project": "scope",
+            "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+            "name": "native archive alarm stops rebuild-mismatch without another mint or send",
+            "status": "pending",
+            "errors": 0,
+            "retryCount": 0,
+            "repeatCount": 0
+          }
+        ]
+      },
+      {
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+        "name": "a pre-Mark target failure survives eviction and new native input without losing its alarm",
+        "status": "unfinished",
+        "started": true,
+        "observed": [
+          {
+            "project": "scope",
+            "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+            "name": "a pre-Mark target failure survives eviction and new native input without losing its alarm",
+            "status": "pending",
+            "errors": 0,
+            "retryCount": 0,
+            "repeatCount": 0
+          }
+        ]
+      },
+      {
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+        "name": "confirms a lost reply by read-back with no second commit or journal entry",
+        "status": "unfinished",
+        "started": true,
+        "observed": [
+          {
+            "project": "scope",
+            "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+            "name": "confirms a lost reply by read-back with no second commit or journal entry",
+            "status": "pending",
+            "errors": 0,
+            "retryCount": 0,
+            "repeatCount": 0
+          }
+        ]
+      },
+      {
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+        "name": "adaptive Native passes reserve writing, incremental sending and confirmation before more lookahead",
+        "status": "unfinished",
+        "started": true,
+        "observed": [
+          {
+            "project": "scope",
+            "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+            "name": "adaptive Native passes reserve writing, incremental sending and confirmation before more lookahead",
+            "status": "pending",
+            "errors": 0,
+            "retryCount": 0,
+            "repeatCount": 0
+          }
+        ]
+      },
+      {
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+        "name": "adaptive Native selection finishes a covered earlier prefix before an uncovered later class",
+        "status": "unfinished",
+        "started": true,
+        "observed": [
+          {
+            "project": "scope",
+            "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+            "name": "adaptive Native selection finishes a covered earlier prefix before an uncovered later class",
+            "status": "pending",
+            "errors": 0,
+            "retryCount": 0,
+            "repeatCount": 0
+          }
+        ]
+      },
+      {
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+        "name": "resumes marked sha1 bytes after eviction and then archives the later rule input",
+        "status": "unfinished",
+        "started": true,
+        "observed": [
+          {
+            "project": "scope",
+            "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+            "name": "resumes marked sha1 bytes after eviction and then archives the later rule input",
+            "status": "pending",
+            "errors": 0,
+            "retryCount": 0,
+            "repeatCount": 0
+          }
+        ]
+      },
+      {
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+        "name": "resumes marked sha256 bytes after eviction and then archives the later rule input",
+        "status": "unfinished",
+        "started": true,
+        "observed": [
+          {
+            "project": "scope",
+            "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+            "name": "resumes marked sha256 bytes after eviction and then archives the later rule input",
+            "status": "pending",
+            "errors": 0,
+            "retryCount": 0,
+            "repeatCount": 0
+          }
+        ]
+      },
+      {
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+        "name": "stops on an unexpected ref without overwriting it",
+        "status": "unfinished",
+        "started": true,
+        "observed": [
+          {
+            "project": "scope",
+            "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+            "name": "stops on an unexpected ref without overwriting it",
+            "status": "pending",
+            "errors": 0,
+            "retryCount": 0,
+            "repeatCount": 0
+          }
+        ]
+      },
+      {
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+        "name": "coalesces one host pass while a flood of native turns completes",
+        "status": "unfinished",
+        "started": true,
+        "observed": [
+          {
+            "project": "scope",
+            "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+            "name": "coalesces one host pass while a flood of native turns completes",
+            "status": "pending",
+            "errors": 0,
+            "retryCount": 0,
+            "repeatCount": 0
+          }
+        ]
+      },
+      {
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+        "name": "a late host continuation cannot send or record after the original deadline",
+        "status": "unfinished",
+        "started": true,
+        "observed": [
+          {
+            "project": "scope",
+            "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+            "name": "a late host continuation cannot send or record after the original deadline",
+            "status": "pending",
+            "errors": 0,
+            "retryCount": 0,
+            "repeatCount": 0
+          }
+        ]
+      },
+      {
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+        "name": "the native driver confirms a pending v1 attempt before a separate same-cutoff conversion and new v2 pass",
+        "status": "unfinished",
+        "started": true,
+        "observed": [
+          {
+            "project": "scope",
+            "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+            "name": "the native driver confirms a pending v1 attempt before a separate same-cutoff conversion and new v2 pass",
+            "status": "pending",
+            "errors": 0,
+            "retryCount": 0,
+            "repeatCount": 0
+          }
+        ]
+      }
+    ],
+    "classification": {
+      "passed": 0,
+      "failed": 1,
+      "unfinished": 12
+    },
+    "rawAssertionStates": {
+      "failed": 1,
+      "pending": 12
+    },
+    "eventCounts": {
+      "selection": 1,
+      "collected": 1,
+      "started": 13,
+      "result": 13,
+      "end": 1
+    },
+    "resultCallbackStates": {
+      "failed": 1,
+      "pending": 12
+    },
+    "unhandledErrors": 0,
+    "coverageIssues": [
+      "run incomplete, interrupted or has unhandled errors",
+      "file failed, skipped, incomplete or has collection errors",
+      "required case did not pass exactly once",
+      "built-in JSON count/file/status mismatch"
+    ],
+    "qualification": "All13 started/result reporter rows exist, but12 pending rows do not prove executed bodies. Framework bail end reason interrupted coexists with natural child exit1/no signal. JSON numPendingTests0 is inconsistent with its12pending assertions; use case records."
+  },
+  "failure": {
+    "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts",
+    "ancestorTitles": [],
+    "fullName": "the real native alarm archives asynchronously while sixteen turns complete",
+    "status": "failed",
+    "title": "the real native alarm archives asynchronously while sixteen turns complete",
+    "duration": 437,
+    "failureMessages": [
+      "AssertionError: expected { reason: 'limit', where: null } to be null\n    at /private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-driver.test.ts:57:30\n    at private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+    ],
+    "meta": {},
+    "tags": []
+  },
+  "temporaryDiagnostic": {
+    "count": 1,
+    "rawRow": {
+      "phase": "finish-budget",
+      "reason": "budget-limit",
+      "used": {
+        "entries": 1,
+        "attempts": 27,
+        "nodes": 23,
+        "calls": 64,
+        "metadata": 805446,
+        "inputWork": 10816519
+      },
+      "quote": {
+        "entries": 1,
+        "attempts": 57,
+        "nodes": 36,
+        "calls": 148,
+        "metadata": 3472538,
+        "inputWork": 20950850
+      },
+      "reserve": null,
+      "frontier": {
+        "entries": 0,
+        "attempts": 22,
+        "nodes": 18,
+        "calls": 58,
+        "metadata": 2798738,
+        "inputWork": 6980664
+      },
+      "append": {
+        "entries": 0,
+        "attempts": 28,
+        "nodes": 16,
+        "calls": 56,
+        "metadata": 22400,
+        "inputWork": 61726
+      },
+      "layout": null,
+      "markUnits": 4722,
+      "markedRowBytes": 11505
+    },
+    "bounds": {
+      "entries": 4096,
+      "attempts": 512,
+      "nodes": 64,
+      "calls": 16384,
+      "metadata": 4194304,
+      "inputWork": 67108864
+    },
+    "usedPlusQuote": {
+      "entries": 2,
+      "attempts": 84,
+      "nodes": 59,
+      "calls": 212,
+      "metadata": 4277984,
+      "inputWork": 31767369
+    },
+    "excess": {
+      "metadata": 83680
+    },
+    "arithmetic": "805446 + 3472538 = 4277984 metadata; limit4194304; excess83680. Each other dimension fits its unchanged default bound.",
+    "budgetSource": {
+      "commit": "02ebab660491dd6258d232e1716e623c454d7e45",
+      "path": "packages/scope/src/archive-budget.ts",
+      "bytes": 8554,
+      "sha256": "cfe0e8ad1d902e49d1387cb1b38973fe1a1adb8de58813c3c6e40e39fa4b735a"
+    },
+    "qualification": "This row is actual temporary diagnostic output at the finish-budget check, not an additional charge, refund or proof that every quoted unit would be spent. It identifies the failing forecast dimension in this run; it does not prove the proposed correction or all prior failure causes."
+  },
+  "costs": {
+    "wall": 8.676006792113185,
+    "pythonCpu": 2.05171,
+    "childrenUser": 10.066491,
+    "childrenSystem": 1.630691,
+    "inclusiveCpu": 13.748892
+  },
+  "costQualification": "Compiler/body, child and owner inclusive costs overlap; do not sum nested totals. Original outer natural status is root-attributed.",
+  "errors": [
+    "RuntimeError: child failed/interrupted; later phases unrun"
+  ],
+  "signals": [],
+  "inputPins": [
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-diagnostic-evidence-20261024-v1/after.json",
+      "bytes": 3317264,
+      "sha256": "ca5048b451888136e63930542ffa21bf0d7066192fd5235d00ebef118d60c07c",
+      "device": 16777231,
+      "inode": 545841631,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-diagnostic-evidence-20261024-v1/before.json",
+      "bytes": 3317264,
+      "sha256": "f06ebfa7baf404696deff2a89b148cec2c8acf2508ec2d841004ab31efb21704",
+      "device": 16777231,
+      "inode": 545841461,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-diagnostic-evidence-20261024-v1/focused/body.log",
+      "bytes": 5181,
+      "sha256": "c966b691f0e506d66c32636d9712a9cea74e67e731021161128af926885b2444",
+      "device": 16777231,
+      "inode": 545841482,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-diagnostic-evidence-20261024-v1/focused/coverage-ledger.json",
+      "bytes": 14353,
+      "sha256": "a73805c8525d831b33dcc6db63495b825e69b7a9bea8038b26c900a1206db1f0",
+      "device": 16777231,
+      "inode": 545841624,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-diagnostic-evidence-20261024-v1/focused/coverage.jsonl",
+      "bytes": 15765,
+      "sha256": "dba7b3a85070db13b148e8ae4eebcb882098c5a46bad4f14381753752727f721",
+      "device": 16777231,
+      "inode": 545841500,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-diagnostic-evidence-20261024-v1/focused/manifest.json",
+      "bytes": 1059,
+      "sha256": "90b2c2e91377d5c0e48ed97f84afa109e6defe5cd021add00043b66a1bb4c5e5",
+      "device": 16777231,
+      "inode": 545841626,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-diagnostic-evidence-20261024-v1/focused/plan.json",
+      "bytes": 507772,
+      "sha256": "a6ecc13fd762a9b2ec5b718fd43c419d01eb61ba9bc2a08a4833273f3feae4e5",
+      "device": 16777231,
+      "inode": 545841469,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-diagnostic-evidence-20261024-v1/focused/result.json",
+      "bytes": 7221,
+      "sha256": "2b49c58fb3bf11c8ff594112d4bffc05e5aba2df3fc0682635b435cdd0f9dbb1",
+      "device": 16777231,
+      "inode": 545841625,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-diagnostic-evidence-20261024-v1/focused/scope-production.log",
+      "bytes": 29,
+      "sha256": "b8db48d2ac042f59f4db78f7df4cfb4e8d89f0fdadeb20cdf30d05e6aaae9dec",
+      "device": 16777231,
+      "inode": 545841471,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-diagnostic-evidence-20261024-v1/focused/scope-test.log",
+      "bytes": 29,
+      "sha256": "13d4a8a29c389250bf0dc9afcc5087fd4b82e481cf53cee46d250d54729e9285",
+      "device": 16777231,
+      "inode": 545841479,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-diagnostic-evidence-20261024-v1/focused/vitest.json",
+      "bytes": 4446,
+      "sha256": "499ca2279be4f9f11f75660848360abefab865fb7faada249708d986d9e37c22",
+      "device": 16777231,
+      "inode": 545841622,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-diagnostic-evidence-20261024-v1/focused-after.json",
+      "bytes": 3317264,
+      "sha256": "ca5048b451888136e63930542ffa21bf0d7066192fd5235d00ebef118d60c07c",
+      "device": 16777231,
+      "inode": 545841629,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-diagnostic-evidence-20261024-v1/focused-plan.json",
+      "bytes": 507772,
+      "sha256": "a6ecc13fd762a9b2ec5b718fd43c419d01eb61ba9bc2a08a4833273f3feae4e5",
+      "device": 16777231,
+      "inode": 545841463,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-diagnostic-evidence-20261024-v1/focused.command.json",
+      "bytes": 361,
+      "sha256": "a23c635057d32341b7708410e6b3af9aa8fb9d612ec4c003acbcd77061f067a8",
+      "device": 16777231,
+      "inode": 545841464,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-diagnostic-evidence-20261024-v1/focused.pid.json",
+      "bytes": 19,
+      "sha256": "6760a10608e1f4a3f17031c998ae1350a0eafd49d05d62ec144119e3e15aed74",
+      "device": 16777231,
+      "inode": 545841467,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-diagnostic-evidence-20261024-v1/focused.process.json",
+      "bytes": 510,
+      "sha256": "5e60f388b88ba8631dc34d7d1b451d7392633a65035c5eb03dfab03c56f23277",
+      "device": 16777231,
+      "inode": 545841627,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-diagnostic-evidence-20261024-v1/focused.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "device": 16777231,
+      "inode": 545841466,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-diagnostic-evidence-20261024-v1/focused.stdout",
+      "bytes": 392,
+      "sha256": "d5b39f67d7a46ad431479d3aef61f27200305a641a67a605e60fb671eef7678f",
+      "device": 16777231,
+      "inode": 545841465,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-diagnostic-evidence-20261024-v1/invocation.json",
+      "bytes": 490,
+      "sha256": "b115916999d1a6a9fb6f58980e1b0e8815234abba4fdf79b45595e579e2c2eb6",
+      "device": 16777231,
+      "inode": 545841459,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-diagnostic-evidence-20261024-v1/result.json",
+      "bytes": 1927,
+      "sha256": "3aa7a29716798ff29abbddb37c6459b6841baa5e3bb70a3c4675b765ded59c9b",
+      "device": 16777231,
+      "inode": 545841632,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-diagnostic-binding-allocated-20261024-v1.json",
+      "bytes": 4052965,
+      "sha256": "5d247af83a4e169f869d7ae3f1fd15041b1bffa6c4ec369202c05c51a0168c75",
+      "device": 16777231,
+      "inode": 545841453,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-diagnostic-owning-source-20261024-v1/ledger.json",
+      "bytes": 1635,
+      "sha256": "3941f66500b91453fdc0c61b35c9e9ca0bfc551d93c73d7f88a79c3b80118489",
+      "device": 16777231,
+      "inode": 545840284,
+      "mode": "0o444",
+      "nlink": 1
+    }
+  ],
+  "scope": "Read-only finite closed DATA plus immutable budget source. No live Source/dependency/ref reads, program import/historical execution, tests, mutation or next-owner preparation."
+}

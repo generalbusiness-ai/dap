@@ -1,0 +1,489 @@
+{
+  "state": "REVIEWED_SOURCE_ADOPTION_PROPOSAL_32_ACTUAL_LEAVES",
+  "request": "fc2548ae1ab9c7c5e859d422611f8a34fd0ff13c",
+  "inputs": [
+    {
+      "source": "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-evidence-20261024-v2/result.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/continuation/result.json",
+      "bytes": 6493,
+      "sha256": "a266cecb17903c5a1e927427b0af4aacfd0304322f1527a442ff3ec577414147",
+      "identity": [
+        16777231,
+        545859775,
+        33188,
+        1,
+        6493,
+        1792812626341176828,
+        1792812626341176828
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-evidence-20261024-v2/focused/coverage.jsonl",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/continuation/coverage.jsonl",
+      "bytes": 8570,
+      "sha256": "55f8a3b0dbcf33aef8da8426a9bc15d183f465b5dcc14a2445e981a01b2a16d2",
+      "identity": [
+        16777231,
+        545859519,
+        33024,
+        1,
+        8570,
+        1792812624653388549,
+        1792812624845737202
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-evidence-20261024-v2/focused/vitest.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/continuation/vitest.json",
+      "bytes": 34388,
+      "sha256": "b7278db1e27214cc56287be1d51bd906387f63967e74138a2b5db8a5e03d3723",
+      "identity": [
+        16777231,
+        545859765,
+        33024,
+        1,
+        34388,
+        1792812624653354799,
+        1792812624845783077
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-preparation-reuse-owning-v3-independent-audit-20261024-v1.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/audits/reuse-outcome-audit.json",
+      "bytes": 23175,
+      "sha256": "e06aadf1c5ba84b974e8f278df156c84619b629aa04a495849f8392e0ab98cd2",
+      "identity": [
+        16777231,
+        545858548,
+        33060,
+        1,
+        23175,
+        1792812004635681092,
+        1792812004635776009
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-build-seal-v2-independent-audit-20261024-v1.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/audits/build-seal-audit.json",
+      "bytes": 13327,
+      "sha256": "eebfc22ca7f03b4e0af547c24b0b9157a0115d845cb36e65839de46dcd173ef6",
+      "identity": [
+        16777231,
+        545857563,
+        33060,
+        1,
+        13327,
+        1792811677626284987,
+        1792811677626359279
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-frontier-geometry-control-independent-audit-20261024-v1.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/audits/geometry-control-audit.json",
+      "bytes": 19396,
+      "sha256": "0cd8fb335d8052c3745ed64931d0d640f1b1a371812ac019f23144140ed4020f",
+      "identity": [
+        16777231,
+        545850990,
+        33060,
+        1,
+        19396,
+        1792809798847123470,
+        1792809798847207095
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-publication-frontier-fixture-independent-source-review-20261024-v1.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/audits/publication-fixture-review.json",
+      "bytes": 3575,
+      "sha256": "8a0b76da19fc40797f9128e57c000d3c76b5385c6349ce5e7c136eaa64546d5a",
+      "identity": [
+        16777231,
+        545859197,
+        33060,
+        1,
+        3575,
+        1792812429654024884,
+        1792812429654024884
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-legacy-preparation-reuse-v2-independent-source-review-20261024-v1.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/audits/reuse-source-review.json",
+      "bytes": 4828,
+      "sha256": "01aed5efe35c7a932cb6fd40b88ad5950423138f0e00b6282ba096a4d60e60b7",
+      "identity": [
+        16777231,
+        545856951,
+        33060,
+        1,
+        4828,
+        1792811221147541286,
+        1792811221147541286
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-preparation-reuse-continuation-v2-independent-audit-20261024-v1.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/audits/continuation-outcome-audit.json",
+      "bytes": 22004,
+      "sha256": "5e0bd6e6eb3bd142f79cc253126778bfe7c54bc0f17a3d49c26db6ee1e748c76",
+      "identity": [
+        16777231,
+        545860068,
+        33060,
+        1,
+        22004,
+        1792813083179015673,
+        1792813083179074465
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-control-evidence-20261024-v11/result.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/native-control/result.json",
+      "bytes": 2891,
+      "sha256": "65e4acf5527131b3a3ab951ecd72729c7ec114ca2d98f26d9b53e7324fa51414",
+      "identity": [
+        16777231,
+        545860417,
+        33188,
+        1,
+        2891,
+        1792813175585143430,
+        1792813175585143430
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-control-evidence-20261024-v11/fixed-parent-failure.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/native-control/fixed-parent-failure.json",
+      "bytes": 731,
+      "sha256": "4a4761a1e8c3398e4ff07c86e05bce4a6b67bed467e065b690e876cb1361168f",
+      "identity": [
+        16777231,
+        545860413,
+        33188,
+        1,
+        731,
+        1792813174841390369,
+        1792813174841390369
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-control-evidence-20261024-v11/stderr",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/native-control/stderr",
+      "bytes": 1609,
+      "sha256": "02250d280245401a88af264091509d2f2a884a21b5bf9c942f53507ac8a2168f",
+      "identity": [
+        16777231,
+        545860240,
+        33188,
+        1,
+        1609,
+        1792813174026697157,
+        1792813174026697157
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-control-evidence-20261024-v11/progress.jsonl",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/native-control/progress.jsonl",
+      "bytes": 2994,
+      "sha256": "868e0aba79f3e9fe20db41f5c8ae59f909f0b7d3472dae074a22a4d666b00262",
+      "identity": [
+        16777231,
+        545860259,
+        33152,
+        1,
+        2994,
+        1792813174027285574,
+        1792813174027285574
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-control-evidence-20261024-v11/restoration.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/native-control/restoration.json",
+      "bytes": 803,
+      "sha256": "64b7147251f19e02035c61c2e24a1a0e33ba44b5a2d79bdc0119fe3b8ec41912",
+      "identity": [
+        16777231,
+        545860414,
+        33188,
+        1,
+        803,
+        1792813174841851036,
+        1792813174841851036
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-control-evidence-20261024-v11/command.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/native-control/command.json",
+      "bytes": 964,
+      "sha256": "3dfc3681e0cce3ebc600353363b3de7ff3ed5f1782924688282914df0f7f7a2b",
+      "identity": [
+        16777231,
+        545860238,
+        33188,
+        1,
+        964,
+        1792813167856054295,
+        1792813167856054295
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-control-evidence-20261024-v11/process.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/native-control/process.json",
+      "bytes": 937,
+      "sha256": "1de28c684fc984fcde44df05d576039d779b0f5612af37bfa8a37cf6650be286",
+      "identity": [
+        16777231,
+        545860409,
+        33188,
+        1,
+        937,
+        1792813174053820625,
+        1792813174053820625
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-control-evidence-20261024-v11/mutation.patch",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/native-control/mutation.patch",
+      "bytes": 685,
+      "sha256": "8ca1e62ba35d3101e97dee718c577608a72626c0ec879d0b03f2fd3319ec9417",
+      "identity": [
+        16777231,
+        545860234,
+        33188,
+        1,
+        685,
+        1792813167104591647,
+        1792813167104591647
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-control-evidence-20261024-v11/vitest.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/native-control/vitest.json",
+      "bytes": 3140,
+      "sha256": "dabac6ca0ab7434eeb8ffabef0cfd98db437a5c59c6084d06d74c469a16ca8d5",
+      "identity": [
+        16777231,
+        545860408,
+        33188,
+        1,
+        3140,
+        1792813174027291241,
+        1792813174027291241
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-control-v11-final-union-independent-source-review-20261024-v1.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/audits/native-control-source-review.json",
+      "bytes": 3654,
+      "sha256": "8f79fa2575b88cddb7f0b6d6f5b45305a653d4ea9b6e4b028247bd3deb2bd892",
+      "identity": [
+        16777231,
+        545860220,
+        33060,
+        1,
+        3654,
+        1792813159821506589,
+        1792813159821506589
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-owning-v2-failure-independent-audit-20261023-v1.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/audits/history-artroom-archive-fixed-parent-owning-v2-failure-independent-audit-20261023-v1.json",
+      "bytes": 17265,
+      "sha256": "e30e5b01077ab149c85ab7b73ac54fad777e0293c0e25dc1161baa7cfe41c4d4",
+      "identity": [
+        16777231,
+        545621233,
+        33060,
+        1,
+        17265,
+        1792795586867252399,
+        1792795586867335066
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-continuation-v2-failure-independent-audit-20261024-v1.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/audits/history-artroom-archive-fixed-parent-continuation-v2-failure-independent-audit-20261024-v1.json",
+      "bytes": 24235,
+      "sha256": "0ff3ec23c643185bd0cd15d6c83d81a915bef3d77364cdd1704e12f810563ba4",
+      "identity": [
+        16777231,
+        545838346,
+        33060,
+        1,
+        24235,
+        1792805722699883648,
+        1792805722699883648
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-continuation-v3-failure-independent-audit-20261024-v1.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/audits/history-artroom-archive-fixed-parent-continuation-v3-failure-independent-audit-20261024-v1.json",
+      "bytes": 41010,
+      "sha256": "47741bd532a9215195f375478d04ede249b3a7ab4edc2e4357491c8336e15e96",
+      "identity": [
+        16777231,
+        545839654,
+        33060,
+        1,
+        41010,
+        1792806092028629538,
+        1792806092028629538
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-continuation-v4-failure-independent-audit-20261024-v1.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/audits/history-artroom-archive-fixed-parent-continuation-v4-failure-independent-audit-20261024-v1.json",
+      "bytes": 34810,
+      "sha256": "39318872a33247ca7a0c76a191b5912910623433bede5991560da44826957f20",
+      "identity": [
+        16777231,
+        545840138,
+        33060,
+        1,
+        34810,
+        1792806347812533981,
+        1792806347812533981
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-diagnostic-v1-failure-independent-audit-20261024-v1.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/audits/history-artroom-archive-fixed-parent-diagnostic-v1-failure-independent-audit-20261024-v1.json",
+      "bytes": 26076,
+      "sha256": "2f26a38adb8721f8a498f1603e7fa9f3dabf79c6fa10ec32bafad8d35105a2df",
+      "identity": [
+        16777231,
+        545841758,
+        33060,
+        1,
+        26076,
+        1792806692845186668,
+        1792806692845186668
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-repair-v1-failure-independent-audit-20261024-v1.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/audits/history-artroom-archive-fixed-parent-repair-v1-failure-independent-audit-20261024-v1.json",
+      "bytes": 37723,
+      "sha256": "4898498c0268ca53a82f73fa179eca278a49a1e42bca8e4730e14e7d51a8c4e0",
+      "identity": [
+        16777231,
+        545843076,
+        33060,
+        1,
+        37723,
+        1792807472832332283,
+        1792807472832332283
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-actual-scale-diagnostic-v1-independent-audit-20261024-v1.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/audits/history-artroom-archive-fixed-parent-actual-scale-diagnostic-v1-independent-audit-20261024-v1.json",
+      "bytes": 14574,
+      "sha256": "5cd4e47bbf945fbbb742e4bd7bf5c00c34aca21b916bfc67728d28d14c81805f",
+      "identity": [
+        16777231,
+        545844168,
+        33060,
+        1,
+        14574,
+        1792807850446514370,
+        1792807850446581368
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-repair-v2-failure-independent-audit-20261024-v1.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/audits/history-artroom-archive-fixed-parent-repair-v2-failure-independent-audit-20261024-v1.json",
+      "bytes": 15670,
+      "sha256": "0191debe26ea02d01c3937d9da4f8572494830190bed1b1dc21f8a718dfc0f28",
+      "identity": [
+        16777231,
+        545847016,
+        33060,
+        1,
+        15670,
+        1792808504384922819,
+        1792808504384981236
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-actual-scale-diagnostic-v2-independent-audit-20261024-v1.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/audits/history-artroom-archive-fixed-parent-actual-scale-diagnostic-v2-independent-audit-20261024-v1.json",
+      "bytes": 14910,
+      "sha256": "15faf56bc035c1eef818d765e482fa27462cc990f43ad572f639427ec2733ea4",
+      "identity": [
+        16777231,
+        545847834,
+        33060,
+        1,
+        14910,
+        1792808639939838062,
+        1792808639939838062
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-repair-v3-outcome-independent-audit-20261024-v1.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/audits/history-artroom-archive-fixed-parent-repair-v3-outcome-independent-audit-20261024-v1.json",
+      "bytes": 31529,
+      "sha256": "9dfb140a0e73172da431abd629e576506b8b9a35902e7d4480054e2d2d070ba9",
+      "identity": [
+        16777231,
+        545850760,
+        33060,
+        1,
+        31529,
+        1792809739873007325,
+        1792809739873071409
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-bootstrap-diagnostic-v1-independent-audit-20261024-v1.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/audits/history-artroom-archive-fixed-parent-bootstrap-diagnostic-v1-independent-audit-20261024-v1.json",
+      "bytes": 15033,
+      "sha256": "9260e16c4d425a8bc4a6463bc1cd16447d21b5c7835c37bbfee0c85b306ada02",
+      "identity": [
+        16777231,
+        545855526,
+        33060,
+        1,
+        15033,
+        1792810120155018179,
+        1792810120155113513
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-final-seal-independent-audit-20261024-v4.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/audits/history-artroom-archive-fixed-parent-final-seal-independent-audit-20261024-v4.json",
+      "bytes": 12392,
+      "sha256": "16608cca547964c33002172589fc5668cf2ea5fd54e6cdb0066f51494a41ba29",
+      "identity": [
+        16777231,
+        545837788,
+        33060,
+        1,
+        12392,
+        1792805157163903341,
+        1792805157163986966
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-native-dispatch-control-v11-independent-audit-20261024-v1.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/audits/native-control-outcome-audit.json",
+      "bytes": 21899,
+      "sha256": "03b881940ba5fc511d3faabcf12546354aa07d04a1833cb9885892fefc780e3a",
+      "identity": [
+        16777231,
+        545860590,
+        33060,
+        1,
+        21899,
+        1792813281814705993,
+        1792813281814739243
+      ]
+    }
+  ],
+  "count": 32,
+  "bytes": 461290,
+  "qualification": "Finite immediate-adoption proposal: exactly32 actual original leaves; author has not copied them to the repository. Full guards/bindings remain external as pinned in audits. Both controls independently audited. Gate pending. Measured edit subtotal and its ledger will be added with gate outcome."
+}
