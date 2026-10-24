@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9abcf432b27390a0f8da4dcb034ec9adf1c53d9f","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-24-archive-fixed-parent/gate-v9/custody.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9ad80ae51007035d1a7206d518cdee46028f52c2","text":"Merge retired a covered predecessor; the successor is at packages/git/src/journal-anchor-legacy.ts."}
