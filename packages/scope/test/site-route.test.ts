@@ -14,6 +14,8 @@ import { FILE_BYTES, redacted, refused, site } from "../src/site/route.ts";
 import { ServingAdmission, type ServingRequest } from "../src/serving-admission.ts";
 import { SCOPE_INDEX_NAME } from "../src/scope-index.ts";
 import { net } from "../src/testing.ts";
+import roomWorker from "../../../apps/room/worker.ts";
+import scopeWorker from "../src/worker.ts";
 import { soon } from "./net.ts";
 import { Platform, rita, sam, settle } from "./repository.ts";
 import { platformOutside } from "./worker.ts";
@@ -540,6 +542,23 @@ test("refusals preserve machine reasons and statuses while browsers get safe Pag
   const brokenIndex: Binding<string> = { idFromName: name => name, get: () => { throw Error("scripted index unavailable"); } };
   expect((await site(new Request(address), { SCOPES: scopes, SCOPE_INDEX: brokenIndex }, send)).status).toBe(503);
   expect([targets, fetches]).toEqual([before, 0]);
+
+  // Real Worker dispatch with a refusing fixed-owner stand-in. This proves
+  // address forwarding and ordering, not platform header authenticity.
+  const edgeAddresses: (string | null)[] = [];
+  const edgeIndex: Binding<string> = { idFromName: name => { expect(name).toBe(SCOPE_INDEX_NAME); return name; },
+    get: () => ({ admitServing: async (request: ServingRequest, address: string | null) => {
+      expect(request).toEqual({ kind: "site-read" }); edgeAddresses.push(address); return "rate-limited" as const;
+    } }) };
+  const edgeEnvironment = { SCOPES: scopes, SCOPE_INDEX: edgeIndex } as unknown as Parameters<typeof roomWorker.fetch>[1];
+  const edgeBefore = targets;
+  for (const entry of [roomWorker, scopeWorker]) {
+    const response = await entry.fetch(new Request(address, { headers: { "cf-connecting-ip": "192.0.2.91" } }), edgeEnvironment);
+    expect([response.status, response.headers.get("retry-after"), response.headers.get("cache-control")]).toEqual([429, "60", "no-store"]);
+    await response.body?.cancel();
+  }
+  expect(edgeAddresses).toEqual(["192.0.2.91", "192.0.2.91"]);
+  expect([targets, fetches]).toEqual([edgeBefore, 0]);
 });
 
 // Invariant: the ETag is the commit and the path: the same for the same commit and path, new for a new commit or another path,

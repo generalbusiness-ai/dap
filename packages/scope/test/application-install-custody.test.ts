@@ -6,24 +6,25 @@
 import { command, memoryStore as cliStore, type Context } from "../../cli/src/index.ts";
 import { applicationCommands } from "../../cli/src/application-install-runtime.ts";
 import type { SignedIntent } from "@generalbusiness/dap-contract";
-import { McpService, memoryStore as custodyStore, type ServerPort } from "@generalbusiness/dap-mcp";
+import { McpService, memoryStore as custodyStore, type ServerPort, type HostedRegistry, MODERN } from "@generalbusiness/dap-mcp";
 import type { Fetched } from "@generalbusiness/dap-derive";
 import type { Sourced } from "../src/namespace.ts";
 import { lending } from "../../../examples/lending/definition.ts";
 import { countingCommitments } from "../../../apps/counter/commitments.ts";
 import { env } from "cloudflare:test";
-import { expect, test } from "vitest";
-import { PROPOSED_BOUNDS, type Digest } from "@generalbusiness/dap-contract";
-import { canonicalize, isSeed, parseStrict, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
+import { expect, test, vi } from "vitest";
+import { PROPOSED_BOUNDS, type ControlRequest, type Digest } from "@generalbusiness/dap-contract";
+import { b64url, canonicalize, digestBytes, isSeed, parseStrict, scopeIdOf, signControl, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { httpSource, verify } from "@generalbusiness/dap-replay";
 import { TRUSTED_APPLICATION_COHORT as C, applicationPublicationOrigin, installedApplicationPublicationOrigin, platform } from "@generalbusiness/dap-platform";
 import { applicationScreenPath, readApplicationScreenAddress, readApplicationScreenContext } from "@generalbusiness/dap-client/application";
-import { secretSigner, signedApplicationInstall } from "@generalbusiness/dap-client";
+import { encodeAgentKeyInvitation, invitationIssueFields, secretSigner, signedApplicationInstall, type AgentKeyInvitation } from "@generalbusiness/dap-client";
 import { outsideOf as hostOutside } from "../src/worker.ts";
 import nativeWorker from "../../../apps/room/worker.ts";
 import { applicationSandboxPage } from "../src/applications/route.ts";
 import { applicationHttpPeer, applicationResolverFixture, sessionRoom, dispatchFixture, driveFixture, effectFixture, reader, applicationContentBindings, applicationWorkerBindings } from "./fixtures-native.ts";
 import { rita, sam, routed } from "./repository.ts";
+import { hostedTest } from "./worker.ts";
 
 const refusesAtBirth = { ...countingCommitments, acts: { ...countingCommitments.acts, establish: { ...countingCommitments.acts["establish"]!, guards: [{ rule: "install-refusal" }] } }, rules: { ...countingCommitments.rules, "install-refusal": "false" } };
 const installations = [
@@ -294,4 +295,67 @@ test.each([
     // The register is not an application room, even though it is native.
     expect((await nativeWorker.fetch(new Request("https://scopes.test" + applicationScreenPath(R.name, 0, f.packet.ids.presentation)), applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(f.trust), env.SCOPE_INDEX))).status).toBe(404);
   } finally { await env.APPLICATION_CONTENT.delete(f.key); life.release(); }
+}, 30_000);
+
+
+// Actual native Membership7 controller/agent enrolment, SQLite and MCP HTTP
+// dispatch. The candidate package and redirect response are TEST stand-ins;
+// this is an Env-to-opener witness, not successful package installation.
+test("hosted Worker application trust reaches its lazy native agent before the package opener", async () => {
+  const { life, D, children } = await sessionRoom(C.register), [M, A, G] = children;
+  if (!M || !A || !G) throw Error("The native room must confirm its siblings.");
+  const previous = { applicationSettings: hostedTest.applicationSettings, toolSettings: hostedTest.toolSettings, now: hostedTest.now };
+  let resetAgent: (() => Promise<void>) | undefined, restoreFetch: (() => void) | undefined;
+  hostedTest.now = life.now;
+  hostedTest.toolSettings = { MCP_ENABLED: "true", MCP_TOOL_ADDITIONS: '["install_application"]' };
+  try {
+    const seat = await life.wait(() => M.did(rita, "seat", { expected: { roster: 1 } }));
+    await life.wait(async () => M.did(rita, "first-key", { fields: { member: seat }, expected: await M.expected({ roster: 0, member: seat }) }));
+    const membership = await life.wait(() => M.at()), directory = await life.wait(() => D.at());
+    const roster = await life.wait(() => M.item(0));
+    const actions = roster.values["agentActions"];
+    if (!Array.isArray(actions)) expect.fail("The actual membership must expose its agent actions.");
+    await life.wait(async () => M.did(rita, "set-actions", { on: 0, expected: await M.expected({ on: 0 }), fields: { role: "agent", actions: [...actions, "application.install"] } }));
+    const handle = "@trust-forward", member = await life.wait(() => M.did(rita, "add-member", { fields: { handle, kind: "agent", controller: { membership, member: "@rita" } } }));
+    const secret = b64url(crypto.getRandomValues(new Uint8Array(32)));
+    const invitation = await life.wait(async () => M.did(rita, "invite-key", { fields: { member, kind: "agent", ...invitationIssueFields(C.membership, secret), inviteEnds: timeOf(life.now() + 3_600_000) }, expected: await M.expected({ member }) }));
+    const sealed = await life.wait(() => M.sealed());
+    const fact = (seq: number) => ({ at: membership, seq, hash: sealed.find(row => row.entry.seq === seq)!.hash });
+    const link: AgentKeyInvitation = { v: 1, kind: "agent-key", service: "https://scopes.test", repository: { directory, membership, rules: A.name, destination: G.name }, definition: C.membership, handle,
+      controller: { membership, member: "@rita" }, member: fact(member), invitation: fact(invitation), secret, expected: await life.wait(() => M.expected({ on: 0, member })) };
+    const release = `sha256:${"d".repeat(64)}` as const;
+    hostedTest.applicationSettings = { APPLICATION_TRUST: JSON.stringify([{ release, publisher: rita.key, host: "packages.test" }]) };
+    const body = utf8(JSON.stringify({ link: encodeAgentKeyInvitation(link) }));
+    const request: ControlRequest = { v: 1, action: "create", service: "https://scopes.test", membership, agent: null, actor: rita.key, body: digestBytes(body), op: "trust-forward-create", notAfter: timeOf(life.now() + 60_000) };
+    const registry = env.REGISTRIES.get(env.REGISTRIES.idFromName(membership.scope)) as unknown as Pick<HostedRegistry, "create">;
+    const created = await life.wait(() => registry.create(signControl(request, rita.secret), body, "https://scopes.test"));
+    expect(created.status).toBe(201);
+    const agent = created.body["agent"], bearer = created.body["bearer"];
+    if (typeof agent !== "string" || typeof bearer !== "string") expect.fail("The genuine enrolling call must disclose the new bearer.");
+    const object = env.AGENTS.get(env.AGENTS.idFromString(agent)) as unknown as { reset(): Promise<void>; counts(): Promise<{ streams: number; sessions: number }> };
+    resetAgent = () => object.reset();
+    const requests: Request[] = [];
+    // All mocked fetches are observed outside the callback, so a caught
+    // callback assertion cannot disguise an unexpected request.
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
+      requests.push(input instanceof Request ? input : new Request(input, init));
+      return new Response(null, { status: 302, headers: { location: "https://other.test/redirect" } });
+    });
+    restoreFetch = () => fetchSpy.mockRestore();
+    const response = await life.wait(() => nativeWorker.fetch(new Request("https://scopes.test/mcp", { method: "POST", headers: {
+      authorization: `Bearer ${bearer}`, "content-type": "application/json", "mcp-protocol-version": MODERN, "mcp-method": "tools/call", "mcp-name": "install_application" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "install_application", arguments: {
+        uri: `git+https://packages.test/apps.git/@${"c".repeat(40)}/application.dap.json`, release, roles: [], values: {}, idempotencyKey: "trust-forward-install" }, _meta: { "io.modelcontextprotocol/protocolVersion": MODERN, "io.modelcontextprotocol/clientCapabilities": {} } } }) }),
+      { ...env, SCOPES: env.PLATFORM, MCP_ENABLED: "true", MCP_TOOL_ADDITIONS: '["install_application"]' }));
+    expect(response.status).toBe(200);
+    const result = await response.json() as { result: { isError: boolean } };
+    expect(requests).toHaveLength(1);
+    expect([requests[0]!.url, requests[0]!.redirect, requests[0]!.credentials]).toEqual(["https://packages.test/apps.git/info/refs?service=git-upload-pack", "manual", "omit"]);
+    expect(result.result.isError).toBe(true); // The scripted redirect is refused.
+    expect((await life.wait(() => A.entries())).filter(entry => entry.input.type === "act" && entry.input.signed.intent.kind === "install-application")).toEqual([]);
+    expect(await object.counts()).toEqual({ streams: 0, sessions: 0 });
+  } finally {
+    restoreFetch?.();
+    try { await resetAgent?.(); }
+    finally { hostedTest.applicationSettings = previous.applicationSettings; hostedTest.toolSettings = previous.toolSettings; hostedTest.now = previous.now; life.release(); }
+  }
 }, 30_000);
