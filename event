@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2a4e491fac3f6f9e7ff941fed0473ad64a8c8c6c","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/application-command.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2a8edcb5aa447bd543dac8d961ae622872494a4a","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-24-kernel-hygiene-evidence/six-owner-seal-stdout.json."}
