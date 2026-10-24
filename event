@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:685fedf9e980ee00b49fff9dab276d547d3e0e55","text":"Merge retired a covered predecessor with no successor at its old path."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6863dcdcb3705cf716dd411fd26199dcc133829e","text":"Merge retired a covered predecessor; the successor is at scripts/check-kernel-boundary.mjs."}
