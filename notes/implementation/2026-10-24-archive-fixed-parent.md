@@ -2,9 +2,9 @@
 
 The local Native witness completed 200 appends with 400 retained files and zero remote parent reads. Disabling only native dispatch made the same whole-file control fail at pass 25 on an oversized remote tree; its other two cases passed. The chosen path bounds local parent state per pass without raising receipt, authority or work limits. This does not establish hosted capacity or oversized legacy recovery.
 
-Request `fc2548ae1ab9c7c5e859d422611f8a34fd0ff13c`. Promise `28cdea0d83a29e9a02c5107d89c6e21b10341fc2`. Accepted Main is `d7aea0b0`. Current checked fixture checkpoint is `62e76a4992c9671a802a30c5f0cbe91cb4b6513a`, tree `483c829f8cc3896e7f7e5e1a8873192701bee3af`.
+Request `fc2548ae1ab9c7c5e859d422611f8a34fd0ff13c`. Promise `28cdea0d83a29e9a02c5107d89c6e21b10341fc2`. Accepted Main is `d7aea0b0`. The earlier checked fixture checkpoint was `62e76a4992c9671a802a30c5f0cbe91cb4b6513a`, tree `483c829f8cc3896e7f7e5e1a8873192701bee3af`. The later gate ran at `d33eba016678a911fbc27e245d40eaa22e4c92d7`.
 
-**Focused validation completed in separate runs.** Earlier 29 passing cases, 16 preparation-reuse passes and six continuation passes retain their separate Source bindings. The reuse run itself failed with five unfinished cases; the corrected continuation passed. Both controls matched; the ordinary gate is pending.
+**Focused validation completed in separate runs.** Earlier 29 passing cases, 16 preparation-reuse passes and six continuation passes retain their separate Source bindings. The reuse run itself failed with five unfinished cases; the corrected continuation passed. Both controls matched. The later ordinary gate failed three cases; the current repair has not yet run its owning checks, controls or gate.
 
 ## Exact state has a fixed bound
 
@@ -22,19 +22,23 @@ Paid SQL BLOB comparison checks captured trusted bytes without projecting and re
 
 Frontier capture gives `JournalObjectReader.tree` its geometry bound. Excess rows refuse before decode, allocation or row debit; generic readers retain 4,096 rows. Postparse checks remain. Valid and rejected captures reserve at most 604 rows instead of the malformed-prefix 957-row forecast, saving 361,472 metadata and input-work units. No cap is raised. Some shapes can still exceed budget.
 
+The current repair also bounds each numeric frontier level by the confirmed or selected receipt position. That bound constrains reads, tree parsing, validation and encoding before the corresponding work. The maximum remains 604 rows and 28,828 bytes; unspecified forecast callers retain that maximum. At position zero, Source arithmetic reduces the failed finish forecast by 1,013,760 metadata units. The projected 260,609-unit margin is not an observed successful pass.
+
 ## Legacy migration remains bounded
 
-A confirmed v2 receipt with both keys absent may seed once through complete-closure `objects`, under original ceilings of 8 MiB and 8,192 objects and tighter remaining-budget admission before credentials or HTTP. It allows one GET and POST, with no missing-object retry or isolated-read tariff. Installation rechecks exact row/key state and inserts only confirmed frontier metadata. It creates no receipt, Mark, attempt or wake; the driver retries before selection, mint or send. Old pending readback can confirm without bootstrap or another send. Over-cap archives still refuse.
+Planner ruling `63a9216f` replaces the former complete-closure bootstrap. A confirmed v2 receipt with both keys absent seeds through one depth-one, `blob:none` read of its exact current commit and trees, followed by at most one exact head-blob read. It does not walk history or fall back to ordinary remote parent reads. The fixed migration limits and actual admission measurements will be recorded after the owning run; the ordinary 8,487-byte stopgap allowance and original pass budgets remain unchanged.
+
+The migration adapter charges bounded framing, actual object counts, input work and returned copies to the same remaining budget after the existing policy checks. The existing private capture, validation and compare-and-swap installer bind commit, receipt, scope, incarnation, paths and head. Installation writes only confirmed frontier metadata. It creates no receipt, Mark, attempt or wake, and retries before selection, mint or send. Over-bound or inconsistent inputs leave the native state unchanged. Old pending readback remains first.
 
 The genuine preparation repair reuses one receipt-bound `JournalPassPreparation` for `journalLegacyCopyCount` and append preparation. Already parsed private parent trees are reused; paid work is not credited back. Preparation, forecasting and consumption share a busy guard across awaited work. Overlapping operations refuse before spending or corrupting the session. Emission still requires the exact selected prepared paths. Published appends use the native frontier.
 
-The real bootstrap witness now confirms its first append at 62 nodes (4 entries, 91 attempts, 243 calls, 1,986,052 metadata and 35,815,082 input work). This is a measured small-archive success, not a capacity promise. Missing-state bootstrap still uses a budget-derived complete-closure bound; an oversized closure can refuse before any read.
+Before this migration repair, the real bootstrap witness confirmed its first append at 62 nodes (4 entries, 91 attempts, 243 calls, 1,986,052 metadata and 35,815,082 input work). This is a measured small-archive success, not a capacity promise. That result used the superseded complete-closure migration and does not validate the new current-parent route.
 
 ## Keep failed runs and completed coverage distinct
 
 Audits retain original status, costs, guards, and identities. Pending reporter rows do not prove executed bodies.
 
-Earlier audits retain two compiler failures with no bodies, a driver failure, scale failures at pass 1 (metadata 83,680 and 15,393 over cap), and pass 98 (1,591 over cap). The bounded-tree run passed 29, failed bootstrap and left five unfinished. Its diagnostic measured finish nodes 38 + 36 = 74 against 64; other dimensions fit. Temporary diagnostics are removed. These distinct local failures do not establish a hosted cause. Original failure audits are selected in the evidence manifest; none is relabelled successful.
+Earlier audits retain two compiler failures with no bodies, a driver failure with metadata 83,680 over cap, scale failures at pass 1 (including a 15,393-unit diagnostic excess), and pass 98 (1,591 over cap). The bounded-tree run passed 29, failed bootstrap and left five unfinished. Its diagnostic measured finish nodes 38 + 36 = 74 against 64; other dimensions fit. Temporary diagnostics are removed. These distinct local failures do not establish a hosted cause. Original failure audits are selected in the evidence manifest; none is relabelled successful.
 
 The later genuine reuse run at `54607417` passed all four compilers, Git 13 and bootstrap 3. It failed the first publication case and left five cases unfinished: **16 PASS / 1 FAIL / 5 unfinished**. Its [audit](evidence/2026-10-24-archive-fixed-parent/audits/reuse-outcome-audit.json) preserves that failure and exact fixed guards. Owner wall was 16.564348 seconds and inclusive CPU 25.143211 seconds; nested child costs overlap.
 
@@ -52,9 +56,9 @@ Root observed session `22865` naturally exit 0 (`78ea10`), mutant child `78982` 
 
 ## Actual seals and hosted context
 
-Earlier parser session `54692` exited 0 with exact guards. Its [audit](evidence/2026-10-24-archive-fixed-parent/audits/history-artroom-archive-fixed-parent-final-seal-independent-audit-20261024-v4.json) retains driver and host attribution. Current values are:
+Earlier parser session `54692` exited 0 with exact guards. Its [audit](evidence/2026-10-24-archive-fixed-parent/audits/history-artroom-archive-fixed-parent-final-seal-independent-audit-20261024-v4.json) retains driver and host attribution. Values at the failed gate were:
 
-- Current `archive-build.ts`: `e1111bfef1fe94cc8436498679395ba1b9b8adba3db8651f4f24d87d68696853`.
+- `archive-build.ts`: `e1111bfef1fe94cc8436498679395ba1b9b8adba3db8651f4f24d87d68696853`.
 - `archive-driver.ts`: `a3d1bc20aeab36e4153fd40fef3437f6d53b7c3ff432097c68a126ac289a4249`.
 - `archive-host.ts`: `ab91d539daf94c381886d515e9510322e3d79e7cdf48cfd3efe20f2e88a4c75b`.
 
@@ -62,10 +66,16 @@ The [single build-seal audit](evidence/2026-10-24-archive-fixed-parent/audits/bu
 
 Planner report `462f064f` observed Room A stall at a tree of 8,698 bytes against 8,487. That is attributed hosted context, not candidate recovery.
 
-## Remaining validation
+## Failed gate and remaining validation
 
-The first gate at `05ec70ff` stopped at whitespace checking: a copied raw stderr log ended with an extra blank line. No compiler or test ran. The corrected evidence stores that log in a reversible UTF-8 JSON record; its decoded bytes and original hash are unchanged. The original failed gate result is retained. The gate continuation will run the previously unreached stages.
+The first gate at `05ec70ff` stopped at whitespace checking: a copied raw stderr log ended with an extra blank line. No compiler or test ran. The corrected evidence stores that log in a reversible UTF-8 JSON record; its decoded bytes and original hash are unchanged.
 
-The measured edit subtotal will be added with the gate outcome. Its cost ledger is not part of this evidence adoption.
+The next gate at `d33eba01` naturally exited 1. All seven preflight stages passed, including 40 compiler commands. Vitest reported **3,516 PASS / 3 FAIL / 3 SKIP** across 494 files. The later 37 Node cases and 55 Counting checks were unreached. There were no unhandled errors or signals. Missing progress callbacks for terminal passing cases remain reporting gaps, with no inferred body start or physical drain.
 
-Ordinary `npm run gate`, its outcome audit, measured edit subtotal and final review are **PENDING**. Coverage comprises 51 distinct cases in separate Source-bound runs: earlier 29, genuine reuse 16, then continuation 6. This is not a single whole-owning PASS. Full multi-megabyte guards remain external, pinned by the audits. The compact evidence manifest records retained results, coverage and audits. No hosted execution or capacity is established.
+The legacy input-work case failed before its first planning observation. Its migration and append phases are now separated in the proposed witness. The installed Grow budget assertion expected two entry units but recorded one: used metadata 2,382,306 plus forecast finish 2,565,149 exceeded the 4,194,304 cap by 753,151. Its public command follower then failed because the producer had not published its handoff. These are retained failures, not successful prerequisites.
+
+The gate owner measured 1,452.932674 seconds elapsed and 1,641.400524 seconds inclusive CPU. Its child cost is nested and must not be added. Full fixed guards were exact except the declared same-inode Vitest results-cache cell. The compact failure companion and independent audit retain original assertions, metadata, byte-offset excerpts, input bindings and costs; the large raw log remains external.
+
+The measured subtotal for 21 retained invocations is 1,983.285161 seconds elapsed and 2,238.259532 seconds CPU. This is a sum of separately measured invocations, not end-to-end calendar time. It excludes unmeasured Source preparation, reviews, metadata captures and tool overhead; cache and load were not controlled. Earlier 19 rows remain unchanged, with the two failed gates appended.
+
+Current repair validation is **PENDING**: affected compilers and seven whole test files; migration and frontier-cost controls; actual seals for changed driver and host; then one ordinary gate and exact review. The existing 200-append and native-dispatch results retain their original Source bindings. The new tests must measure seed-only migration separately from the same 300-checkpoint Native drain, including actual prefixes, sequence advance, per-pass costs and pass count. No hosted execution, Room A recovery or capacity claim is established.

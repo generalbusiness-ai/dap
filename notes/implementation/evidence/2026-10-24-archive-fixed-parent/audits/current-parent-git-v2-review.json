@@ -1,0 +1,351 @@
+{
+  "state": "INDEPENDENT_GIT_V2_SOURCE_CLEAR_RUNTIME_UNRUN",
+  "request": "fc2548ae1ab9c7c5e859d422611f8a34fd0ff13c",
+  "promise": "28cdea0d83a29e9a02c5107d89c6e21b10341fc2",
+  "basis": "d33eba016678a911fbc27e245d40eaa22e4c92d7",
+  "reviewedGitSource": "/private/tmp/artroom-archive-current-parent-git-source-20261024-v2",
+  "sourceManifestSha256": "d30464fc44d6d6aca38c86bd2784d9818ec2556fcd89ac8b203e767b4325003e",
+  "blockers": [],
+  "resolvedFixtureRisk": {
+    "v1": "New migrationHead was not attached to a ref while allowReachable/allowTip were false. Reviewer reported a dangling-want fixture ambiguity, not an observed runtime failure.",
+    "v2": "One exact test-local setRef makes migrationHead the advertised tip before the migration exchange. Production remains byte-exact V1. All 14 registrations/order stay exact; original V1 retained unexecuted."
+  },
+  "transportFindings": [
+    "currentParent requires unused explicit isolated v2 state. It consumes that source before exchange; object/ref/refs/repeated currentParent cannot start a later network request. Results bypass the ordinary object cache and return caller-owned copies.",
+    "One GET and one depth-one blob:none POST share the existing absolute isolated deadline. Advertisement byte/frame bounds and response pkt-line bound are separate; bounded HTTP/inflate streams use fixed capacities rather than retained per-fragment descriptor arrays. Default callers retain prior behavior.",
+    "Decoder header count admission precedes per-entry arrays/maps. Actual wire callbacks precede copy, declared-size callbacks precede framing/inflation, delta result callbacks precede construction, output callback precedes caller-owned copies. Trusted thrown values remain exact and source-terminal, without cancellation becoming a successful outcome.",
+    "Wire 32,768 / ad 1,024 / ad 32 frames / response 64 frames / pack count 587 apply in the Scope migration context. Commit <= 1,024, tree companion sum <= 16,384, aggregate raw inflation/reconstructed output <= 17,408; exact head uses a fresh bounded source, one record / inflation 1,024 / wire 9,216. Pack checksums and all returned object hashes are retained. Wanted commit must exist; additional commits/blobs/tags refuse.",
+    "The transport deliberately does not prove all tree companions reachable or establish native authority. Scope must authenticate the selected receipt/scope/head/tree paths and separately bound head blob through its existing frontier validator/store chain. Arbitrary extra tree companions stay byte/count bounded and charged.",
+    "New stricter bounded mode can refuse otherwise valid but over-frame/representation packs. Source clarity is not a claim of universal host compatibility, native migration capacity or measured peak heap."
+  ],
+  "adversarialWitnessReview": {
+    "registrationCount": 14,
+    "registrationNamesOrderExact": true,
+    "positive": "Existing real Git v2 case additionally requires one advertised current commit plus exactly 16,384 valid tree bytes, omitting 40 ancestors and unrequested blobs, with count/output fee callbacks and GET/POST shape.",
+    "negative": "Existing framing case adds one-byte fragmentation, ad byte/frame and response frame exhaustion, blob/ancestor companions, over 16 KiB tree, and exact count/inflate/output refusal identity plus consumed-source checks. Existing shared wire cancellation/deadline and both delta-encoding/refusal tests remain selected.",
+    "runtime": "All authored assertions are unrun in this review; source-only register counts are not passing results."
+  },
+  "scopeAccountingCorrespondence": {
+    "reviewScope": "API and callback/physical-bound correspondence only against supplied Scope V1; separate peer owns full Scope/native correctness review.",
+    "parentWorkCallbackBytesUpper": 68608,
+    "headWorkCallbackBytesUpper": 12288,
+    "totalWorkCallbackBytesUpper": 80896,
+    "scopeConservativeReservationWorkBytes": 221184,
+    "scopeReservation": {
+      "calls": 4,
+      "metadata": 1234944,
+      "inputWork": 8452096
+    },
+    "callbackAndFixedReadDebitsUpper": {
+      "metadata": 1076992,
+      "inputWork": 3640064
+    },
+    "qualification": "Arithmetic bounds actual spend sites in the two read exchanges and private returned-object map only. Original capture/validation/encoding/prechecks/CAS and finish reservation are separate; this does not prove whole migration fits every Native shape. Callback admissions spend the same original budget; no refund or reset. Logical tariff, not measured heap."
+  },
+  "checks": {
+    "gitV1AndV2FullPatchesReconstructAfterimages": true,
+    "gitV2OnlyAdditionalCodeChangeIsExactSetRef": true,
+    "allSourcePinsStableFinalRecheck": true,
+    "allSourceFilesCanonicalSingleLinkStableFD": true
+  },
+  "sourcePins": [
+    {
+      "path": "/private/tmp/artroom-archive-current-parent-git-source-20261024-v1/manifest.json",
+      "bytes": 1404,
+      "sha256": "0963f6cee4b68824c5dba94762b13f36a403e691a18604fbd2bb3b04752e7a72",
+      "mode": "0o444",
+      "nlink": 1,
+      "device": 16777231,
+      "inode": 545915760,
+      "mtimeNs": 1792816411487714285,
+      "ctimeNs": 1792816411487785373
+    },
+    {
+      "path": "/private/tmp/artroom-archive-current-parent-git-source-20261024-v1/basis/packages/git/src/http-read.ts",
+      "bytes": 47613,
+      "sha256": "819bdf711d8fe4e2dcfd58551dc9e844c51e17fd65a556a4adce167808ccc704",
+      "mode": "0o444",
+      "nlink": 1,
+      "device": 16777231,
+      "inode": 545915474,
+      "mtimeNs": 1792816073284274499,
+      "ctimeNs": 1792816411487999014
+    },
+    {
+      "path": "/private/tmp/artroom-archive-current-parent-git-source-20261024-v1/basis/packages/git/test/http-read.test.ts",
+      "bytes": 56391,
+      "sha256": "23cfc3d418d3e35caa568314ac14a2a09db674d603cf21acfccb5a50514b9dfb",
+      "mode": "0o444",
+      "nlink": 1,
+      "device": 16777231,
+      "inode": 545915476,
+      "mtimeNs": 1792816073292986456,
+      "ctimeNs": 1792816411487970137
+    },
+    {
+      "path": "/private/tmp/artroom-archive-current-parent-git-source-20261024-v1/plan.md",
+      "bytes": 3955,
+      "sha256": "a80325039e2319205331ba08b28e6c608dea4197ef071842841f22eee1c5aecb",
+      "mode": "0o444",
+      "nlink": 1,
+      "device": 16777231,
+      "inode": 545915759,
+      "mtimeNs": 1792816411486832302,
+      "ctimeNs": 1792816411487797082
+    },
+    {
+      "path": "/private/tmp/artroom-archive-current-parent-git-source-20261024-v1/proof.json",
+      "bytes": 3397,
+      "sha256": "1a31decdbe7a08166b0138d0a1984b07530210c30aa7926ecad00acef9122335",
+      "mode": "0o444",
+      "nlink": 1,
+      "device": 16777231,
+      "inode": 545915758,
+      "mtimeNs": 1792816411486764506,
+      "ctimeNs": 1792816411487817709
+    },
+    {
+      "path": "/private/tmp/artroom-archive-current-parent-git-source-20261024-v1/source/packages/git/src/http-read.ts",
+      "bytes": 53547,
+      "sha256": "971cd519e75ce9a7304a222989ac280595bf145164eb0d3d6dcaaf39b0ce5882",
+      "mode": "0o444",
+      "nlink": 1,
+      "device": 16777231,
+      "inode": 545915475,
+      "mtimeNs": 1792816411484309740,
+      "ctimeNs": 1792816411488156234
+    },
+    {
+      "path": "/private/tmp/artroom-archive-current-parent-git-source-20261024-v1/source/packages/git/test/http-read.test.ts",
+      "bytes": 63639,
+      "sha256": "742ed8bd8141c749d608bd410474589f14e219aa192bcfc44586a57b813aa311",
+      "mode": "0o444",
+      "nlink": 1,
+      "device": 16777231,
+      "inode": 545915477,
+      "mtimeNs": 1792816344393070817,
+      "ctimeNs": 1792816411488128357
+    },
+    {
+      "path": "/private/tmp/artroom-archive-current-parent-git-source-20261024-v1/source.patch",
+      "bytes": 26978,
+      "sha256": "17457aa82d2c483a8c5b70be5a8357b99db76b45057599493d49ec340283658f",
+      "mode": "0o444",
+      "nlink": 1,
+      "device": 16777231,
+      "inode": 545915757,
+      "mtimeNs": 1792816411486163419,
+      "ctimeNs": 1792816411487768414
+    },
+    {
+      "path": "/private/tmp/artroom-archive-current-parent-git-source-20261024-v2/manifest.json",
+      "bytes": 1553,
+      "sha256": "d30464fc44d6d6aca38c86bd2784d9818ec2556fcd89ac8b203e767b4325003e",
+      "mode": "0o444",
+      "nlink": 1,
+      "device": 16777231,
+      "inode": 545916282,
+      "mtimeNs": 1792816838308587521,
+      "ctimeNs": 1792816838308665146
+    },
+    {
+      "path": "/private/tmp/artroom-archive-current-parent-git-source-20261024-v2/basis/packages/git/src/http-read.ts",
+      "bytes": 47613,
+      "sha256": "819bdf711d8fe4e2dcfd58551dc9e844c51e17fd65a556a4adce167808ccc704",
+      "mode": "0o444",
+      "nlink": 1,
+      "device": 16777231,
+      "inode": 545916268,
+      "mtimeNs": 1792816838303869977,
+      "ctimeNs": 1792816838308857729
+    },
+    {
+      "path": "/private/tmp/artroom-archive-current-parent-git-source-20261024-v2/basis/packages/git/test/http-read.test.ts",
+      "bytes": 56391,
+      "sha256": "23cfc3d418d3e35caa568314ac14a2a09db674d603cf21acfccb5a50514b9dfb",
+      "mode": "0o444",
+      "nlink": 1,
+      "device": 16777231,
+      "inode": 545916270,
+      "mtimeNs": 1792816838304037727,
+      "ctimeNs": 1792816838308830021
+    },
+    {
+      "path": "/private/tmp/artroom-archive-current-parent-git-source-20261024-v2/plan.md",
+      "bytes": 4267,
+      "sha256": "6593c1af617b5426a1b11ecb7af4601ee508ce8d62d1db6ca2e21a86d9265c54",
+      "mode": "0o444",
+      "nlink": 1,
+      "device": 16777231,
+      "inode": 545916271,
+      "mtimeNs": 1792816838304893019,
+      "ctimeNs": 1792816838308675229
+    },
+    {
+      "path": "/private/tmp/artroom-archive-current-parent-git-source-20261024-v2/proof.json",
+      "bytes": 3511,
+      "sha256": "ffbbe600333caa4078229ad34d70dc4c20e1b884bb57ff209d8d067ab8ccaf38",
+      "mode": "0o444",
+      "nlink": 1,
+      "device": 16777231,
+      "inode": 545916272,
+      "mtimeNs": 1792816838305005977,
+      "ctimeNs": 1792816838308690979
+    },
+    {
+      "path": "/private/tmp/artroom-archive-current-parent-git-source-20261024-v2/source/packages/git/src/http-read.ts",
+      "bytes": 53547,
+      "sha256": "971cd519e75ce9a7304a222989ac280595bf145164eb0d3d6dcaaf39b0ce5882",
+      "mode": "0o444",
+      "nlink": 1,
+      "device": 16777231,
+      "inode": 545916277,
+      "mtimeNs": 1792816838304473894,
+      "ctimeNs": 1792816838308999438
+    },
+    {
+      "path": "/private/tmp/artroom-archive-current-parent-git-source-20261024-v2/source/packages/git/test/http-read.test.ts",
+      "bytes": 63735,
+      "sha256": "763a9558491ac2c68b757e41292c3ffee583fca77b699dd362d7f44f71c57ade",
+      "mode": "0o444",
+      "nlink": 1,
+      "device": 16777231,
+      "inode": 545916279,
+      "mtimeNs": 1792816838304809977,
+      "ctimeNs": 1792816838308973063
+    },
+    {
+      "path": "/private/tmp/artroom-archive-current-parent-git-source-20261024-v2/source.patch",
+      "bytes": 27075,
+      "sha256": "87c71797be9ad014e65b05153fdc4f915dd74984b8650b2f7f27451972e3e9b1",
+      "mode": "0o444",
+      "nlink": 1,
+      "device": 16777231,
+      "inode": 545916280,
+      "mtimeNs": 1792816838306649645,
+      "ctimeNs": 1792816838308638563
+    },
+    {
+      "path": "/private/tmp/artroom-archive-current-parent-git-source-20261024-v2/v1-to-v2.patch",
+      "bytes": 5665,
+      "sha256": "3591c8f8dc0f609c3b5cbff323490566cb2c20aed51abdcdcce0c135156b6076",
+      "mode": "0o444",
+      "nlink": 1,
+      "device": 16777231,
+      "inode": 545916281,
+      "mtimeNs": 1792816838307817145,
+      "ctimeNs": 1792816838308654354
+    },
+    {
+      "path": "/private/tmp/artroom-archive-current-parent-scope-source-20261024-v1/manifest.json",
+      "bytes": 1588,
+      "sha256": "4711a28b847c286a6439a8c9ff78aa2804ff3723caef660033c6fe2f7e24f227",
+      "mode": "0o644",
+      "nlink": 1,
+      "device": 16777231,
+      "inode": 545915787,
+      "mtimeNs": 1792816551338525279,
+      "ctimeNs": 1792816551338525279
+    },
+    {
+      "path": "/private/tmp/artroom-archive-current-parent-scope-source-20261024-v1/source/packages/scope/src/archive-bootstrap-cost.ts",
+      "bytes": 3133,
+      "sha256": "121ce902c1107f97560a1e37cec3233a03a800fc8efa24cc62abed1fe82f3482",
+      "mode": "0o644",
+      "nlink": 1,
+      "device": 16777231,
+      "inode": 545915036,
+      "mtimeNs": 1792816376772117109,
+      "ctimeNs": 1792816376772117109
+    },
+    {
+      "path": "/private/tmp/artroom-archive-current-parent-scope-source-20261024-v1/source/packages/scope/src/archive-driver.ts",
+      "bytes": 28172,
+      "sha256": "6dc69e5a59d627bd79aafcc6d7f2b5ccb8405d45ed3a5e9db3d549b13419d2fc",
+      "mode": "0o644",
+      "nlink": 1,
+      "device": 16777231,
+      "inode": 545915038,
+      "mtimeNs": 1792816505935987229,
+      "ctimeNs": 1792816505935987229
+    },
+    {
+      "path": "/private/tmp/artroom-archive-current-parent-scope-source-20261024-v1/source/packages/scope/src/archive-host.ts",
+      "bytes": 17078,
+      "sha256": "36ed3f81451a292bfbb2d30e4b0870ec7f1f66f3b86b7e0de99f9925bf5d3a2e",
+      "mode": "0o644",
+      "nlink": 1,
+      "device": 16777231,
+      "inode": 545915037,
+      "mtimeNs": 1792816505936170062,
+      "ctimeNs": 1792816505936170062
+    },
+    {
+      "path": "/private/tmp/artroom-archive-current-parent-scope-source-20261024-v1/source/packages/scope/test/archive-input-work.test.ts",
+      "bytes": 18523,
+      "sha256": "14dff38500c915c0e04cdd407a1c214912203096f1581fedfbf483294a7ca8b0",
+      "mode": "0o644",
+      "nlink": 1,
+      "device": 16777231,
+      "inode": 545915041,
+      "mtimeNs": 1792816181385741232,
+      "ctimeNs": 1792816181385741232
+    },
+    {
+      "path": "/private/tmp/artroom-archive-current-parent-scope-source-20261024-v1/source/packages/scope/test/archive-parent-bootstrap.test.ts",
+      "bytes": 29074,
+      "sha256": "349fc99eff279b575757684089b885a3a1b559919508d2d68fbe17d79042ed39",
+      "mode": "0o644",
+      "nlink": 1,
+      "device": 16777231,
+      "inode": 545915040,
+      "mtimeNs": 1792816157948473188,
+      "ctimeNs": 1792816157948473188
+    },
+    {
+      "path": "/private/tmp/artroom-archive-current-parent-scope-source-20261024-v1/source.patch",
+      "bytes": 56484,
+      "sha256": "bc99a6acbecd824987793efeb96c866f343e39fa298af6387659c14f9e526cda",
+      "mode": "0o644",
+      "nlink": 1,
+      "device": 16777231,
+      "inode": 545915784,
+      "mtimeNs": 1792816551337918778,
+      "ctimeNs": 1792816551337918778
+    },
+    {
+      "path": "/private/tmp/artroom-archive-current-parent-scope-source-20261024-v1/paths.json",
+      "bytes": 1605,
+      "sha256": "dd8e11a8dccf147d3cd98a2ed5ef01ca43e343f7365b23a6dd4cc3b7959c208f",
+      "mode": "0o644",
+      "nlink": 1,
+      "device": 16777231,
+      "inode": 545915785,
+      "mtimeNs": 1792816551338039779,
+      "ctimeNs": 1792816551338039779
+    },
+    {
+      "path": "/private/tmp/artroom-archive-current-parent-scope-source-20261024-v1/plan.md",
+      "bytes": 5818,
+      "sha256": "5cd5524c19ff87694077a0b39aa4a43f19d9b1a9f17239f5a08001453281f4dd",
+      "mode": "0o644",
+      "nlink": 1,
+      "device": 16777231,
+      "inode": 545915786,
+      "mtimeNs": 1792816551295615130,
+      "ctimeNs": 1792816551295615130
+    },
+    {
+      "path": "/private/tmp/artroom-archive-current-parent-scope-source-20261024-v1/registrations.json",
+      "bytes": 811,
+      "sha256": "b4574d03acfe36dfcc64ef35cb602a033336f11e45a77c33a967fd41351e9529",
+      "mode": "0o644",
+      "nlink": 1,
+      "device": 16777231,
+      "inode": 545915897,
+      "mtimeNs": 1792816551338381154,
+      "ctimeNs": 1792816551338381154
+    }
+  ],
+  "scopeLimits": "No project import/parser/compiler/test/host/capture/eval, no candidate checkout/ref/dependency reads or mutations. Only explicitly granted inert Source packets were read; unified-patch replay and arithmetic are stdlib metadata operations. No healthy cohort or gate was run. Final adoption/owning/control/gate allocation remains root-owned."
+}

@@ -1,0 +1,678 @@
+{
+  "schema": "fixed-parent-measured-local-verification-cost-2",
+  "request": "fc2548ae1ab9c7c5e859d422611f8a34fd0ff13c",
+  "promise": "28cdea0d83a29e9a02c5107d89c6e21b10341fc2",
+  "state": "BOUNDED_MEASURED_SUBTOTAL_THROUGH_FAILED_GATE_V9",
+  "scope": "Original 19 recorded owners retained unchanged, plus original V8 preflight and V9 failed ordinary gate. This is a measured subtotal through that historical checkpoint, not complete edit-to-review cost or a final passing review packet.",
+  "selectionDescriptor": {
+    "path": "/private/tmp/artroom-archive-fixed-parent-primary-source-20261024-v10/evidence-proposal.json",
+    "bytes": 17287,
+    "sha256": "3c067a9359127996babd5c57ef49d95afee18fbad9d8e3132395a7a418107745"
+  },
+  "runs": [
+    {
+      "invocation": "dependency adoption",
+      "source": "/private/tmp/artroom-fixed-parent-dependency-adoption-source-20261023-v2/adopt.py",
+      "result": {
+        "path": "/private/tmp/artroom-fixed-parent-dependency-adoption-evidence-20261023-v1/result.json",
+        "bytes": 945,
+        "sha256": "2f3fe3682ff6decb92c6c5f863f64ef67b617957a8073a67b1dac9639ff7623b"
+      },
+      "allocation": "f768a6e4af6df0450a5ebeb27d9fea1f97c6df16",
+      "status": "passed",
+      "classification": "Private dependency copy passed; no package execution.",
+      "wallSeconds": 3.8855004999786615,
+      "inclusiveCpuSeconds": 3.3048800000000007,
+      "childExitCodes": [
+        0
+      ],
+      "inPrimaryV10SelectedRunScope": false
+    },
+    {
+      "invocation": "initial driver/row seals",
+      "source": "/private/tmp/artroom-archive-fixed-parent-seal-owning-source-20261023-v1/owner.py",
+      "result": {
+        "path": "/private/tmp/artroom-archive-fixed-parent-seal-owning-evidence-20261023-v1/result.json",
+        "bytes": 1478,
+        "sha256": "9ff1f3ac7c9e0424ad71992a9f0a671d030b099a27150cbc2f65d9a060f58f16"
+      },
+      "allocation": "c080bd863cd5849ce555dbefc707bf601f480d29",
+      "status": "passed",
+      "classification": "Actual driver/row parser passed.",
+      "wallSeconds": 3.363199625047855,
+      "inclusiveCpuSeconds": 2.698913,
+      "childExitCodes": [
+        0
+      ],
+      "inPrimaryV10SelectedRunScope": false
+    },
+    {
+      "invocation": "final build/driver/host seals",
+      "source": "/private/tmp/artroom-archive-fixed-parent-final-seal-source-20261024-v4/owner.py",
+      "result": {
+        "path": "/private/tmp/artroom-archive-fixed-parent-final-seal-evidence-20261024-v4/result.json",
+        "bytes": 1694,
+        "sha256": "5b8887fe2820e85c366e31c133b499a2af68a7f8f83cc092f06dfe9f5e1f3427"
+      },
+      "allocation": "15b932b84273e39fd0f94772a6640032ee81f916",
+      "status": "passed",
+      "classification": "Actual three-owner parser passed.",
+      "wallSeconds": 2.347165041952394,
+      "inclusiveCpuSeconds": 2.371791,
+      "childExitCodes": [
+        0
+      ],
+      "inPrimaryV10SelectedRunScope": true
+    },
+    {
+      "invocation": "build seal refresh",
+      "source": "/private/tmp/artroom-archive-fixed-parent-build-seal-source-20261024-v2/owner.py",
+      "result": {
+        "path": "/private/tmp/artroom-archive-fixed-parent-build-seal-evidence-20261024-v2/result.json",
+        "bytes": 1471,
+        "sha256": "9d4a9012b4dad0244103f886c529a0232e5086baceb16c93b1ff8daf3054d6ff"
+      },
+      "allocation": "7967d21653e4dacc4177e626dd03f842aa1c66cd",
+      "status": "passed",
+      "classification": "Actual build parser passed.",
+      "wallSeconds": 2.3190649589523673,
+      "inclusiveCpuSeconds": 2.331611,
+      "childExitCodes": [
+        0
+      ],
+      "inPrimaryV10SelectedRunScope": true
+    },
+    {
+      "invocation": "original owning V2",
+      "source": "/private/tmp/artroom-archive-fixed-parent-owning-source-20261023-v2/owner.py",
+      "result": {
+        "path": "/private/tmp/artroom-archive-fixed-parent-owning-evidence-20261023-v2/result.json",
+        "bytes": 2131,
+        "sha256": "3f34659842831feebe7b5dd03c66194f09c8e4e751cf511c9afe71f78f0fd0ef"
+      },
+      "allocation": "339382d04f2b07610154d63deffe4cbd7ad9615c",
+      "status": "failed",
+      "classification": "Compiler failure; all 31 body cases unrun.",
+      "wallSeconds": 4.376927500008605,
+      "inclusiveCpuSeconds": 5.591216,
+      "childExitCodes": [
+        0,
+        1
+      ],
+      "inPrimaryV10SelectedRunScope": true
+    },
+    {
+      "invocation": "continuation V2",
+      "source": "/private/tmp/artroom-archive-fixed-parent-continuation-owning-source-20261024-v2/owner.py",
+      "result": {
+        "path": "/private/tmp/artroom-archive-fixed-parent-continuation-evidence-20261024-v2/result.json",
+        "bytes": 1698,
+        "sha256": "663666965a07dd3596d479bcb3a7849fed9fba20037d71befaeac3426dfeb7cd"
+      },
+      "allocation": "254c2322cea8e1250020bb84da66d402ab0f4b54",
+      "status": "failed",
+      "classification": "Fixture compiler failure; all 31 body cases unrun.",
+      "wallSeconds": 4.038040166953579,
+      "inclusiveCpuSeconds": 8.236535,
+      "childExitCodes": [
+        1
+      ],
+      "inPrimaryV10SelectedRunScope": true
+    },
+    {
+      "invocation": "continuation V3",
+      "source": "/private/tmp/artroom-archive-fixed-parent-continuation-owning-source-20261024-v3/owner.py",
+      "result": {
+        "path": "/private/tmp/artroom-archive-fixed-parent-continuation-evidence-20261024-v3/result.json",
+        "bytes": 1834,
+        "sha256": "8a2e8d6f7db2c970ffcd3887774473dbaf725faa58a20937c0b2614fd5ad6c5e"
+      },
+      "allocation": "505648767c2916a7519d569825241ac2e3eb32a0",
+      "status": "failed",
+      "classification": "Git6 passed; scale assertion failed at 1; 24 unfinished.",
+      "wallSeconds": 40.906422166968696,
+      "inclusiveCpuSeconds": 43.922847999999995,
+      "childExitCodes": [
+        1
+      ],
+      "inPrimaryV10SelectedRunScope": true
+    },
+    {
+      "invocation": "body continuation V4",
+      "source": "/private/tmp/artroom-archive-fixed-parent-continuation-owning-source-20261024-v4/owner.py",
+      "result": {
+        "path": "/private/tmp/artroom-archive-fixed-parent-continuation-evidence-20261024-v4/result.json",
+        "bytes": 1873,
+        "sha256": "c1b0e5c036e5b7b89dee6042a885155f7cebb49bb769c3295f896f4503d939f0"
+      },
+      "allocation": "e3339e94af29b5ca786b328e4c8a3967ae299808",
+      "status": "failed",
+      "classification": "First driver assertion failed; 23 unfinished.",
+      "wallSeconds": 7.62516425002832,
+      "inclusiveCpuSeconds": 9.127278,
+      "childExitCodes": [
+        1
+      ],
+      "inPrimaryV10SelectedRunScope": true
+    },
+    {
+      "invocation": "driver diagnostic",
+      "source": "/private/tmp/artroom-archive-fixed-parent-diagnostic-owning-source-20261024-v1/owner.py",
+      "result": {
+        "path": "/private/tmp/artroom-archive-fixed-parent-diagnostic-evidence-20261024-v1/result.json",
+        "bytes": 1927,
+        "sha256": "3aa7a29716798ff29abbddb37c6459b6841baa5e3bb70a3c4675b765ded59c9b"
+      },
+      "allocation": "65507780bafaaa4c0f680aeb11ed6a92cc31cd6a",
+      "status": "failed",
+      "classification": "Driver assertion failed; metadata quote 83,680 over cap.",
+      "wallSeconds": 8.676006792113185,
+      "inclusiveCpuSeconds": 13.748892,
+      "childExitCodes": [
+        1
+      ],
+      "inPrimaryV10SelectedRunScope": true
+    },
+    {
+      "invocation": "pair-size repair V1",
+      "source": "/private/tmp/artroom-archive-fixed-parent-repair-owning-source-20261024-v1/owner.py",
+      "result": {
+        "path": "/private/tmp/artroom-archive-fixed-parent-repair-owning-evidence-20261024-v1/result.json",
+        "bytes": 1956,
+        "sha256": "750fe7c68154980d09b52aa33fa02267b80f37b60dba1762da7ac25917230c74"
+      },
+      "allocation": "68634323409223a91f85016d7da4d19ab538dddc",
+      "status": "failed",
+      "classification": "Scale assertion failed at 1; 24 unfinished.",
+      "wallSeconds": 39.54449366708286,
+      "inclusiveCpuSeconds": 44.515383,
+      "childExitCodes": [
+        1
+      ],
+      "inPrimaryV10SelectedRunScope": true
+    },
+    {
+      "invocation": "first scale diagnostic",
+      "source": "/private/tmp/artroom-archive-fixed-parent-scale-diagnostic-owning-source-20261024-v1/owner.py",
+      "result": {
+        "path": "/private/tmp/artroom-archive-fixed-parent-scale-diagnostic-evidence-20261024-v1/result.json",
+        "bytes": 1914,
+        "sha256": "bf2b8a9334e53b295e48d84a8e4b9a586d82c4d92143e5aa805c1bb07cd01ec0"
+      },
+      "allocation": "066731d5acf195b7d57f873d371d27d4c7037434",
+      "status": "failed",
+      "classification": "Scale assertion failed at 1; metadata quote 15,393 over cap.",
+      "wallSeconds": 39.48479970905464,
+      "inclusiveCpuSeconds": 44.392299,
+      "childExitCodes": [
+        1
+      ],
+      "inPrimaryV10SelectedRunScope": true
+    },
+    {
+      "invocation": "BLOB repair V2",
+      "source": "/private/tmp/artroom-archive-fixed-parent-repair-owning-source-20261024-v2/owner.py",
+      "result": {
+        "path": "/private/tmp/artroom-archive-fixed-parent-repair-owning-evidence-20261024-v2/result.json",
+        "bytes": 1976,
+        "sha256": "affb036430a6752f42cec53a750f9c2278f3eaf586005a399967e54fff15b5b2"
+      },
+      "allocation": "d8d9e48e24204eb8abdab4205f5ad97707834cf9",
+      "status": "failed",
+      "classification": "Scale confirmed through 97, failed at 98; 24 unfinished.",
+      "wallSeconds": 40.60229420801625,
+      "inclusiveCpuSeconds": 45.990148,
+      "childExitCodes": [
+        1
+      ],
+      "inPrimaryV10SelectedRunScope": true
+    },
+    {
+      "invocation": "later scale diagnostic",
+      "source": "/private/tmp/artroom-archive-fixed-parent-scale-diagnostic-owning-source-20261024-v2/owner.py",
+      "result": {
+        "path": "/private/tmp/artroom-archive-fixed-parent-scale-diagnostic-evidence-20261024-v2/result.json",
+        "bytes": 1915,
+        "sha256": "3805b438c54ed0da92f6dfe066a88bfc758e0dc9654a770c497e60bf1126b6a5"
+      },
+      "allocation": "258d759748852946a80fae4ae1fd626d258ce969",
+      "status": "failed",
+      "classification": "Scale assertion failed at 98; metadata quote 1,591 over cap.",
+      "wallSeconds": 41.585447291028686,
+      "inclusiveCpuSeconds": 47.011008,
+      "childExitCodes": [
+        1
+      ],
+      "inPrimaryV10SelectedRunScope": true
+    },
+    {
+      "invocation": "bounded-parser repair V3",
+      "source": "/private/tmp/artroom-archive-fixed-parent-repair-owning-source-20261024-v3/owner.py",
+      "result": {
+        "path": "/private/tmp/artroom-archive-fixed-parent-repair-owning-evidence-20261024-v3/result.json",
+        "bytes": 1914,
+        "sha256": "bead611e5a0d6b3a516d30e4ad452f8b520d5f2d564d1a9d4fbedfcda17d4fe8"
+      },
+      "allocation": "540da0713b1579518db055904f4caa286bf07574",
+      "status": "failed",
+      "classification": "29 passed; bootstrap assertion failed; 5 unfinished.",
+      "wallSeconds": 240.430439125048,
+      "inclusiveCpuSeconds": 253.07316699999998,
+      "childExitCodes": [
+        1
+      ],
+      "inPrimaryV10SelectedRunScope": true
+    },
+    {
+      "invocation": "bootstrap diagnostic",
+      "source": "/private/tmp/artroom-archive-fixed-parent-bootstrap-diagnostic-owning-source-20261024-v1/owner.py",
+      "result": {
+        "path": "/private/tmp/artroom-archive-fixed-parent-bootstrap-diagnostic-evidence-20261024-v1/result.json",
+        "bytes": 2050,
+        "sha256": "a3dadcf428f2d476f59e54989e621569102aaa3c9a2ca969e39962ca05713d9d"
+      },
+      "allocation": "7f0349440d75002e4e176ad88bc1dc4c8ec6ddec",
+      "status": "failed",
+      "classification": "First bootstrap assertion failed; 2 unfinished; finish nodes 74 against 64.",
+      "wallSeconds": 8.627964208018966,
+      "inclusiveCpuSeconds": 13.449850999999999,
+      "childExitCodes": [
+        1
+      ],
+      "inPrimaryV10SelectedRunScope": true
+    },
+    {
+      "invocation": "geometry negative control",
+      "source": "/private/tmp/artroom-archive-frontier-geometry-control-source-20261024-v1/owner.py",
+      "result": {
+        "path": "/private/tmp/artroom-archive-frontier-geometry-control-evidence-20261024-v1/result.json",
+        "bytes": 2539,
+        "sha256": "a5a8317d49a23672af15e7c41202b5b2dfe687bcb66283e02d730eee40bcced7"
+      },
+      "allocation": "66844be8d3b6cc587bf7d8afeb713f7e720c9333",
+      "status": "matched-control",
+      "classification": "Matched control: 5 passed, 1 intended assertion failure; restored.",
+      "wallSeconds": 3.7934609579388052,
+      "inclusiveCpuSeconds": 4.071788,
+      "childExitCodes": [
+        1
+      ],
+      "inPrimaryV10SelectedRunScope": true
+    },
+    {
+      "invocation": "preparation reuse owning V3",
+      "source": "/private/tmp/artroom-archive-preparation-reuse-owning-source-20261024-v3/owner.py",
+      "result": {
+        "path": "/private/tmp/artroom-archive-preparation-reuse-owning-evidence-20261024-v3/result.json",
+        "bytes": 2250,
+        "sha256": "a186170f46879b91fbcdd48200e0832933db75e862344bf8ac46271a2bf6af37"
+      },
+      "allocation": "902c220b3cfd669dc2776596f160aa0be9255bf1",
+      "status": "failed",
+      "classification": "16 passed; publication assertion failed; 5 unfinished.",
+      "wallSeconds": 16.564348207903095,
+      "inclusiveCpuSeconds": 25.143211,
+      "childExitCodes": [
+        1
+      ],
+      "inPrimaryV10SelectedRunScope": true
+    },
+    {
+      "invocation": "publication/parent continuation V2",
+      "source": "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-source-20261024-v2/owner.py",
+      "result": {
+        "path": "/private/tmp/artroom-archive-preparation-reuse-continuation-owning-evidence-20261024-v2/result.json",
+        "bytes": 6493,
+        "sha256": "a266cecb17903c5a1e927427b0af4aacfd0304322f1527a442ff3ec577414147"
+      },
+      "allocation": "66b4869262927d21d2166825bd6e54284529ab1a",
+      "status": "passed",
+      "classification": "Scope test compiler and all 6 cases passed.",
+      "wallSeconds": 11.225245416979305,
+      "inclusiveCpuSeconds": 15.508597,
+      "childExitCodes": [
+        0
+      ],
+      "inPrimaryV10SelectedRunScope": true
+    },
+    {
+      "invocation": "native-dispatch negative control",
+      "source": "/private/tmp/artroom-archive-fixed-parent-control-source-20261024-v11/owner.py",
+      "result": {
+        "path": "/private/tmp/artroom-archive-fixed-parent-control-evidence-20261024-v11/result.json",
+        "bytes": 2891,
+        "sha256": "65e4acf5527131b3a3ab951ecd72729c7ec114ca2d98f26d9b53e7324fa51414"
+      },
+      "allocation": "c2fbb18be529c6cb9d95893b7b8a28c644dc13cb",
+      "status": "matched-control",
+      "classification": "Matched control: 2 passed, 1 intended assertion failure; restored.",
+      "wallSeconds": 9.247072250000201,
+      "inclusiveCpuSeconds": 10.701099999999999,
+      "childExitCodes": [
+        1
+      ],
+      "inPrimaryV10SelectedRunScope": true
+    },
+    {
+      "invocation": "original final-gate V8 preflight",
+      "source": "/private/tmp/artroom-archive-fixed-parent-final-gate-source-20261024-v8/gate-owner.py",
+      "result": {
+        "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v8/result.json",
+        "bytes": 1859,
+        "sha256": "180a66fd88c09b2494da3e199aedcc9992cb5de1027769ae094fd54642f1ee8f"
+      },
+      "allocation": "86ccfbe4eac1e1538edc28d7b7a00f647e24184c",
+      "status": "failed",
+      "classification": "Preflight failed at whitespace stage (exit 2); Vitest and later steps were not reached.",
+      "wallSeconds": 1.7094305830541998,
+      "inclusiveCpuSeconds": 1.668492,
+      "childExitCodes": [
+        1
+      ],
+      "inPrimaryV10SelectedRunScope": false,
+      "invocationReceipt": {
+        "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v8/invocation.json",
+        "bytes": 867,
+        "sha256": "d4dd86095da72ae26ad913335508ee8b42af50bbc5db9d6e92d96cbad2e3fb94"
+      },
+      "childPid": 93992,
+      "childSignal": null,
+      "outerClosure": {
+        "session": 7994,
+        "naturalExit": 1,
+        "tool": "36fbec",
+        "attribution": "Root supplied original tool closure; child 93992 exit 1/no signal independently retained in result."
+      },
+      "costRule": "Count outer owner inclusive totals once. Do not add child npm, gate stage, compiler, Vitest or time totals.",
+      "independentAudit": {
+        "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-v8-preflight-independent-audit-20261024-v1.json",
+        "bytes": 7714,
+        "sha256": "097914c2a8b051872c0f89cbf929a6447e6807c7539feef408dfbdf90b062ef0",
+        "peer": "3802acbcd5cf35fad6c1068cdd7a4360c1ae9bb5",
+        "rootFullReadPrefix": "51c10c",
+        "attribution": "Root accepted and fully read the independent preflight audit; this ledger update hashes the exact audit leaf without rerunning or re-auditing the gate."
+      }
+    },
+    {
+      "invocation": "original final-gate V9",
+      "source": "/private/tmp/artroom-archive-fixed-parent-final-gate-source-20261024-v9/gate-owner.py",
+      "result": {
+        "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/result.json",
+        "bytes": 1524647,
+        "sha256": "4e738405defd3e2b178a9e3f85395fdc0c0dba6f7cfed5a987563593afd1ad2d"
+      },
+      "allocation": "cf60061d92fd4c3097d5a3720f7e3f09e8015726",
+      "status": "failed",
+      "classification": "Ordinary gate failed: 3516 passed, 3 failed, 3 skipped across 494 files; later Node37 and Counting55 not reached.",
+      "wallSeconds": 1452.9326743329875,
+      "inclusiveCpuSeconds": 1641.4005240000001,
+      "childExitCodes": [
+        1
+      ],
+      "inPrimaryV10SelectedRunScope": false,
+      "invocationReceipt": {
+        "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/invocation.json",
+        "bytes": 866,
+        "sha256": "cb027bf7480d32922c9f07f696da37e6065cabd4a1dc6ffcc0ff39b36ca5ff02"
+      },
+      "childPid": 1188,
+      "childSignal": null,
+      "outerClosure": {
+        "session": 84049,
+        "naturalExit": 1,
+        "tool": "a1b655",
+        "attribution": "Root-reported original tool closure; result records the child independently."
+      },
+      "costRule": "Count outer owner inclusive totals once. Do not add child npm, gate stage, compiler, Vitest or time totals.",
+      "independentAudit": {
+        "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-v9-independent-audit-20261024-v1.json",
+        "bytes": 30042,
+        "sha256": "14edb99f09dd0a5c65659caf3e7c6fd056498a30dbd2792ada11ad991b8457bc",
+        "peer": "0600a1fe703363916bd50150091552db1c60039f",
+        "rootAcceptance": "57830621d08187bf99f47f51b69b0c901f4eac68",
+        "attribution": "Root accepted the full independent V9 audit; this ledger update hashes the exact audit leaf without rerunning or re-auditing the gate."
+      }
+    }
+  ],
+  "totals": {
+    "selectedVerificationOwners": {
+      "originalOwnerInvocations": 17,
+      "sumRecordedWallSeconds": 521.394355918048,
+      "sumRecordedInclusiveCpuSeconds": 589.186723,
+      "exactDecimalWallSeconds": "521.3943559180479545",
+      "exactDecimalInclusiveCpuSeconds": "589.186722999999973"
+    },
+    "additionalEarlierPreparationOwners": {
+      "originalOwnerInvocations": 2,
+      "sumRecordedWallSeconds": 7.248700125026517,
+      "sumRecordedInclusiveCpuSeconds": 6.003793000000001,
+      "exactDecimalWallSeconds": "7.2487001250265165",
+      "exactDecimalInclusiveCpuSeconds": "6.0037930000000007"
+    },
+    "allListedOwners": {
+      "originalOwnerInvocations": 21,
+      "sumRecordedWallSeconds": 1983.2851609591162,
+      "sumRecordedInclusiveCpuSeconds": 2238.259532,
+      "exactDecimalWallSeconds": "1983.2851609591161708",
+      "exactDecimalInclusiveCpuSeconds": "2238.2595320000000737"
+    },
+    "originalNineteenOwners": {
+      "originalOwnerInvocations": 19,
+      "sumRecordedWallSeconds": 528.6430560430745,
+      "sumRecordedInclusiveCpuSeconds": 595.190516,
+      "exactDecimalWallSeconds": "528.6430560430744710",
+      "exactDecimalInclusiveCpuSeconds": "595.1905159999999737"
+    },
+    "appendedFailedGateOwners": {
+      "originalOwnerInvocations": 2,
+      "sumRecordedWallSeconds": 1454.6421049160417,
+      "sumRecordedInclusiveCpuSeconds": 1643.0690160000001,
+      "exactDecimalWallSeconds": "1454.6421049160416998",
+      "exactDecimalInclusiveCpuSeconds": "1643.0690160000001"
+    }
+  },
+  "accounting": [
+    "Each original allocation/result is counted once; frozen copies and audits add no second runtime.",
+    "Use recorded outer-owner inclusiveCpu. Do not add nested focused, compiler, Vitest, parser, cp, process or time costs.",
+    "Summed wall is the sum of separate invocations, not calendar elapsed time; other local work can overlap.",
+    "Exact-decimal strings sum the original recorded decimal numbers. Numeric totals are their JSON floating-point representation.",
+    "Matched controls retain intentional child exit 1; failed owning and diagnostic outcomes remain failed.",
+    "Original 19 row objects are unchanged. V8 and V9 are two additional original allocations, not copies of prior runs. V9 was a failed ordinary gate; its measured cost is included without upgrading its outcome."
+  ],
+  "missingOrExcluded": [
+    {
+      "scope": "Metadata captures, pre-I/O attempts without retained owner timing, Source preparation/review, audits, evidence freezes/copies, Git adoption/commits and outer tool/polling overhead",
+      "wallSeconds": null,
+      "inclusiveCpuSeconds": null,
+      "reason": "Not measured by these finite owner result receipts; absent is not zero."
+    },
+    {
+      "scope": "Forthcoming current-parent migration repair, revalidation, any later gate, and audit/release overhead",
+      "wallSeconds": null,
+      "inclusiveCpuSeconds": null,
+      "reason": "PENDING or outside these original owner receipts. V8/V9 historical failed gate costs are now included; no future gate cost or success is implied."
+    }
+  ],
+  "machineLoadCache": {
+    "historicalMachineLabelInCostReceipts": null,
+    "historicalLoadSamples": null,
+    "controlledColdWarmCacheLabels": null,
+    "rootAttributedPreparationTimeSpot": {
+      "tool": "01f7c5",
+      "model": "Mac17,7",
+      "chip": "Apple M5 Max",
+      "logicalCpus": 18,
+      "vmLoadavg": [
+        1.3,
+        1.61,
+        1.6
+      ]
+    },
+    "qualification": "The retained root-supplied machine/load spot belongs to preparation of the original 19-owner ledger. It is not a historical load sample for V8/V9 and does not prove process isolation. Private dependencies and OS caches were reused without a controlled cold/warm protocol; these are local verification costs, not portable benchmarks.",
+    "previousLedgerQualification": "Root supplied this spot reading after the runs; it is not historical run load or evidence of isolation. Private dependencies were copied and reused; no controlled cold-cache protocol is claimed. Original guards constrain declared Vitest cache cells and empty Vite-temp changes, not OS cache warmth. These are local verification observations, not portable benchmarks.",
+    "appendedGateLoadSamples": null
+  },
+  "noNewRuntime": "Only explicit closed result/invocation attribution and two exact accepted audit leaf reads, stdlib data checks and external Source writing. No project execution, capture, candidate, dependencies, active output or ref mutation.",
+  "previousLedger": {
+    "path": "/private/tmp/artroom-archive-fixed-parent-measured-cost-ledger-20261024-v2/cost-ledger.json",
+    "bytes": 26802,
+    "sha256": "df185e4c923f6d7777a6a181273ce4cd42fbc94f5d2ec11480b4f1f5110c2c15",
+    "durable": "f09b1beb6574cbb7bf37e7b0abfb353afff2cf07"
+  },
+  "gateCheckpointStatus": {
+    "result": {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/result.json",
+      "bytes": 1524647,
+      "sha256": "4e738405defd3e2b178a9e3f85395fdc0c0dba6f7cfed5a987563593afd1ad2d"
+    },
+    "head": "d33eba0166",
+    "headAttribution": "Root supplied immutable gate checkpoint prefix; this cost-only append does not inspect live refs or adopt it.",
+    "outerSession": 84049,
+    "outerNaturalExit": 1,
+    "outerTool": "a1b655",
+    "childPid": 1188,
+    "childExit": 1,
+    "childSignal": null,
+    "ownerErrors": [],
+    "ownerSignals": [],
+    "terminalCases": 3522,
+    "files": 494,
+    "states": {
+      "passed": 3516,
+      "skipped": 3,
+      "failed": 3
+    },
+    "failedCases": [
+      {
+        "id": "380254411_0",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-input-work.test.ts",
+        "name": "legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder",
+        "state": "failed"
+      },
+      {
+        "id": "-1531300267_2",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-installed.test.ts",
+        "name": "installed Grow production scopes export genesis zero after a late native Membership8 directory binding",
+        "state": "failed"
+      },
+      {
+        "id": "-1531300267_3",
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-installed.test.ts",
+        "name": "installed Grow production public archive command verifies its native producer clone",
+        "state": "failed"
+      }
+    ],
+    "reachedStages": {
+      "whitespace": {
+        "exit": 0,
+        "printedWall": 0.0,
+        "printedCpu": 0.0
+      },
+      "commit-messages": {
+        "exit": 0,
+        "printedWall": 0.1,
+        "printedCpu": 0.1
+      },
+      "commit-test": {
+        "exit": 0,
+        "printedWall": 0.7,
+        "printedCpu": 0.6
+      },
+      "helpers": {
+        "exit": 0,
+        "printedWall": 0.4,
+        "printedCpu": 0.5
+      },
+      "citations": {
+        "exit": 0,
+        "printedWall": 5.5,
+        "printedCpu": 5.8
+      },
+      "cite-test": {
+        "exit": 0,
+        "printedWall": 0.3,
+        "printedCpu": 0.3
+      },
+      "typecheck": {
+        "exit": 0,
+        "printedWall": 9.8,
+        "printedCpu": 37.1
+      },
+      "test": {
+        "exit": 1,
+        "printedWall": 1433.2,
+        "printedCpu": 1594.7
+      }
+    },
+    "nodeSummaries": {
+      "commit-test": {
+        "tests": [
+          4
+        ],
+        "pass": [
+          4
+        ],
+        "fail": [
+          0
+        ]
+      },
+      "cite-test": {
+        "tests": [
+          7
+        ],
+        "pass": [
+          7
+        ],
+        "fail": [
+          0
+        ]
+      },
+      "test": {
+        "tests": [],
+        "pass": [],
+        "fail": []
+      }
+    },
+    "unreached": [
+      "later built-in Node37 block",
+      "Counting55 browser block"
+    ],
+    "callbacks": {
+      "ready": 3503,
+      "result": 3501,
+      "missingReadyIds": 19,
+      "missingResultIds": 21,
+      "qualification": "Callback gaps are reporting gaps against terminal framework rows. They do not identify running cases, physical drain, teardown or a failure cause."
+    },
+    "independentGateAudit": {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-v9-independent-audit-20261024-v1.json",
+      "bytes": 30042,
+      "sha256": "14edb99f09dd0a5c65659caf3e7c6fd056498a30dbd2792ada11ad991b8457bc",
+      "peer": "0600a1fe703363916bd50150091552db1c60039f",
+      "rootAcceptance": "57830621d08187bf99f47f51b69b0c901f4eac68",
+      "attribution": "Root accepted the full independent V9 audit; this ledger update hashes the exact audit leaf without rerunning or re-auditing the gate."
+    },
+    "qualification": "Retained owner result supplies the bounded cost/terminal coverage summary; full independent outcome/guard audit is completed and root-accepted at the exact referenced leaf. This attribution-only update does not repeat that audit or relabel the failed gate."
+  },
+  "plannerNextStep": {
+    "rulingPrefix": "63a9216f",
+    "attribution": "Root reports planner route (b), current-parent migration. Full ruling was not read for this cost-only append.",
+    "status": "Historical failed checkpoint evidence for forthcoming repair; not a final review packet."
+  },
+  "originalLedger": {
+    "path": "/private/tmp/artroom-archive-fixed-parent-measured-cost-ledger-20261024-v1/cost-ledger.json",
+    "bytes": 17952,
+    "sha256": "c348dfb2f0d40b728b094fe68458f436cda8dbf6be7620c850c0709c2e2de71e",
+    "durable": "ca0aacec2f800ae0036782e73d0be58bf04244fc",
+    "originalState": "BOUNDED_MEASURED_SUBTOTAL_GATE_PENDING"
+  },
+  "attributionUpdateOnly": {
+    "measurementsChanged": false,
+    "rowsAdded": 0,
+    "originalRows": 21,
+    "filled": "V8 original outer closure and accepted V8/V9 independent audit references. Later migration-repair costs append separately."
+  }
+}

@@ -1,5 +1,5 @@
 {
-  "state": "SELECTED_EVIDENCE_WITH_REVERSIBLE_LOG_ENCODING",
+  "state": "SELECTED_EVIDENCE_REPAIR_VALIDATION_PENDING",
   "request": "fc2548ae1ab9c7c5e859d422611f8a34fd0ff13c",
   "inputs": [
     {
@@ -526,9 +526,159 @@
         1792813777039506315,
         1792813777039506315
       ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-final-gate-v9-failure-companion-20261024-v1/custody.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/gate-v9/custody.json",
+      "bytes": 7589,
+      "sha256": "c47207196e69822407bc484e82c194d48c259b81b64f2a72e1e167bc883b371a",
+      "identity": [
+        16777231,
+        545915239,
+        33060,
+        1,
+        7589,
+        1792815845432156257,
+        1792815845432175298
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-final-gate-v9-failure-companion-20261024-v1/failure-excerpts.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/gate-v9/failure-excerpts.json",
+      "bytes": 9443,
+      "sha256": "d247cef560ac31857774a51484f32b6bd8bb6e08aa78e7a96f44a8b385284b7a",
+      "identity": [
+        16777231,
+        545915238,
+        33060,
+        1,
+        9443,
+        1792815845431985882,
+        1792815845432008090
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-final-gate-v9-failure-companion-20261024-v1/summary.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/gate-v9/summary.json",
+      "bytes": 3377,
+      "sha256": "3d3010d2439fb2539e5c03b4e68dae79569ae5b9522eaf6e4c0d3c323841958e",
+      "identity": [
+        16777231,
+        545915237,
+        33060,
+        1,
+        3377,
+        1792815845431760798,
+        1792815845431845590
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-final-gate-v9-independent-audit-20261024-v1.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/audits/gate-v9-audit.json",
+      "bytes": 30042,
+      "sha256": "14edb99f09dd0a5c65659caf3e7c6fd056498a30dbd2792ada11ad991b8457bc",
+      "identity": [
+        16777231,
+        545915082,
+        33060,
+        1,
+        30042,
+        1792815709682835745,
+        1792815709682908870
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-measured-cost-ledger-20261024-v3/cost-ledger.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/costs-v3/cost-ledger.json",
+      "bytes": 28998,
+      "sha256": "4718fea7fb31372617255578128f99b1b7dce1fea29e38488b12f45492f820cf",
+      "identity": [
+        16777231,
+        545915351,
+        33060,
+        1,
+        28998,
+        1792815966390242424,
+        1792815966390271591
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-measured-cost-ledger-20261024-v3/append-proof.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/costs-v3/append-proof.json",
+      "bytes": 3511,
+      "sha256": "6ddb0924a286947a425fbe7f955391f8092ab8bff28a1ff2c68ef31c122290d0",
+      "identity": [
+        16777231,
+        545915352,
+        33060,
+        1,
+        3511,
+        1792815966390432799,
+        1792815966390451883
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-measured-cost-ledger-20261024-v3/failed-gate-addendum.md",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/costs-v3/failed-gate-addendum.md",
+      "bytes": 3771,
+      "sha256": "c308446546796a3cfc009dedf5dead9b4eec283b9ecb2ecb5eb5c350a4b5b341",
+      "identity": [
+        16777231,
+        545915353,
+        33060,
+        1,
+        3771,
+        1792815966390556466,
+        1792815966390573841
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-through-frontier-profile-v2-independent-source-review-20261024-v1.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/audits/through-profile-v2-review.json",
+      "bytes": 7374,
+      "sha256": "623145a253ee8bdc685607ed386b699a965ba13a39e5b38cd4078f365dd81971",
+      "identity": [
+        16777231,
+        545916223,
+        33060,
+        1,
+        7374,
+        1792816805180468333,
+        1792816805180550291
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-current-parent-git-independent-source-review-20261024-v1.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/audits/current-parent-git-v2-review.json",
+      "bytes": 15928,
+      "sha256": "1e159c4b215c2e560bc06b3c842dd6d80c817e33f4a2d3feea7fa084b15a4c86",
+      "identity": [
+        16777231,
+        545916426,
+        33060,
+        1,
+        15928,
+        1792817036219593593,
+        1792817036219658718
+      ]
+    },
+    {
+      "source": "/private/tmp/artroom-archive-current-parent-scope-v3-independent-source-review-20261024-v1.json",
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/audits/current-parent-scope-v3-review.json",
+      "bytes": 6541,
+      "sha256": "84ffcb076ca6f1fc056b55c87af8058b36c9c83c73ce2154576cc596064b8544",
+      "identity": [
+        16777231,
+        545917353,
+        33060,
+        1,
+        6541,
+        1792818020804962361,
+        1792818020805027111
+      ]
     }
   ],
-  "count": 34,
-  "bytes": 463606,
-  "qualification": "33 original evidence leaves and one reversible UTF-8 JSON log container. Each selected payload is pinned. The container decodes exactly to the original stderr bytes/hash; external originals are unchanged. Full guards/bindings remain external through audit pins. Gate V8 stopped at whitespace before compilers/tests; corrected documentation will continue the unreached gate. Measured edit subtotal will be added with final gate outcome."
+  "count": 44,
+  "bytes": 580180,
+  "qualification": "Original evidence preserved, with failed gate V9, measured invocation subtotal and accepted source reviews appended. Payloads retain original hashes and external custody. Current repair runtime checks, controls, seals and gate remain pending."
 }

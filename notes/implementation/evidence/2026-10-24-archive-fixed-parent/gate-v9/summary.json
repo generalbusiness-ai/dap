@@ -1,0 +1,69 @@
+{
+  "schema": "historical-failed-gate-companion/v1",
+  "request": "fc2548ae1ab9c7c5e859d422611f8a34fd0ff13c",
+  "promise": "28cdea0d83a29e9a02c5107d89c6e21b10341fc2",
+  "state": "HISTORICAL_FAILED_GATE_V9_NOT_FINAL_GATE_PASS",
+  "checkpoint": {
+    "head": "d33eba016678a911fbc27e245d40eaa22e4c92d7",
+    "tree": "a86dd7e82e0f585396c30341155319cc6cc58f7e",
+    "status": "",
+    "mainRefs": {
+      "refs/heads/Main": "d7aea0b03ce8b9c1afcea7f3f6252b66d0d3630a",
+      "refs/remotes/origin/main": "d7aea0b03ce8b9c1afcea7f3f6252b66d0d3630a"
+    },
+    "originMain": "d7aea0b03ce8b9c1afcea7f3f6252b66d0d3630a",
+    "mergeBase": "d7aea0b03ce8b9c1afcea7f3f6252b66d0d3630a"
+  },
+  "originalClosure": "Root reports session 84049 natural exit 1 / tool a1b655; retained gate child 1188 exit 1, signal null.",
+  "coverage": {
+    "terminalCases": 3522,
+    "files": 494,
+    "passed": 3516,
+    "failed": 3,
+    "skipped": 3,
+    "allExpectedIdentityTuplesAuthenticated": true,
+    "failures": [
+      {
+        "id": "380254411_0",
+        "project": "scope",
+        "file": "packages/scope/test/archive-input-work.test.ts",
+        "name": "legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder",
+        "expected": "passed",
+        "actual": "failed"
+      },
+      {
+        "id": "-1531300267_2",
+        "project": "scope",
+        "file": "packages/scope/test/archive-installed.test.ts",
+        "name": "installed Grow production scopes export genesis zero after a late native Membership8 directory binding",
+        "expected": "passed",
+        "actual": "failed"
+      },
+      {
+        "id": "-1531300267_3",
+        "project": "scope",
+        "file": "packages/scope/test/archive-installed.test.ts",
+        "name": "installed Grow production public archive command verifies its native producer clone",
+        "expected": "passed",
+        "actual": "failed"
+      }
+    ],
+    "callbackGaps": {
+      "ready": 19,
+      "result": 21,
+      "qualification": "All missing callback IDs have terminal passed states. Gaps remain reporting limitations; no start/drain is inferred."
+    },
+    "unhandledErrors": 0
+  },
+  "stages": "Seven prerequisites, including all 40 displayed typecheck commands, passed. Vitest/test stage failed. Later Node37 and Counting55 were unreached.",
+  "guards": "All fixed fields, Source/dependency/tool/npm/ref/environment namespaces stayed exact except the same-inode permitted Vitest results.json cache file (45928 to 46029 bytes). No retained Vite timestamp files. Ordinary-gate allowance covers this cache file; it is not per-case cache proof.",
+  "costs": {
+    "outerWall": 1452.9326743329875,
+    "outerPythonCpu": 1.766912,
+    "childrenUser": 1472.082605,
+    "childrenSys": 167.551007,
+    "inclusiveCpu": 1641.4005240000001
+  },
+  "costQualification": "Owner includes all guards and gate child; gate child includes npm, typechecks and tests. Child, stages and per-case durations overlap; do not sum into outer totals. Failed gate cost remains a separate closed invocation, absent from earlier pending-gate cost subtotal.",
+  "limits": "No successful gate, hosted recovery or migration acceptance claim. Earlier focused passes and controls remain separate. This compact companion retains exact failure excerpts; full run rows and large logs remain external and pinned in custody.json."
+}

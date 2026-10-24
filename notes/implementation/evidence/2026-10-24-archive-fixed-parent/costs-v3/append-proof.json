@@ -1,0 +1,78 @@
+{
+  "previousLedger": {
+    "path": "/private/tmp/artroom-archive-fixed-parent-measured-cost-ledger-20261024-v1/cost-ledger.json",
+    "bytes": 17952,
+    "sha256": "c348dfb2f0d40b728b094fe68458f436cda8dbf6be7620c850c0709c2e2de71e"
+  },
+  "originalRowsRetainedExactly": true,
+  "originalRows": 19,
+  "appendedRows": 2,
+  "totalRows": 21,
+  "allocationsUnique": true,
+  "newFiniteReceipts": [
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v8/result.json",
+      "bytes": 1859,
+      "sha256": "180a66fd88c09b2494da3e199aedcc9992cb5de1027769ae094fd54642f1ee8f"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v8/invocation.json",
+      "bytes": 867,
+      "sha256": "d4dd86095da72ae26ad913335508ee8b42af50bbc5db9d6e92d96cbad2e3fb94"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/result.json",
+      "bytes": 1524647,
+      "sha256": "4e738405defd3e2b178a9e3f85395fdc0c0dba6f7cfed5a987563593afd1ad2d"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/invocation.json",
+      "bytes": 866,
+      "sha256": "cb027bf7480d32922c9f07f696da37e6065cabd4a1dc6ffcc0ff39b36ca5ff02"
+    }
+  ],
+  "exactAppendWallSeconds": "1454.6421049160416998",
+  "exactAppendInclusiveCpuSeconds": "1643.0690160000001",
+  "newTotals": {
+    "originalOwnerInvocations": 21,
+    "sumRecordedWallSeconds": 1983.2851609591162,
+    "sumRecordedInclusiveCpuSeconds": 2238.259532,
+    "exactDecimalWallSeconds": "1983.2851609591161708",
+    "exactDecimalInclusiveCpuSeconds": "2238.2595320000000737"
+  },
+  "noNestedAddition": true,
+  "originalV8OuterToolClosure": {
+    "session": 7994,
+    "naturalExit": 1,
+    "tool": "36fbec",
+    "attribution": "Root supplied original tool closure; child 93992 exit 1/no signal independently retained in result."
+  },
+  "v9OuterClosureAttribution": "Root: original 84049, natural 1, tool a1b655. Child 1188 exit 1 independently retained in result.",
+  "independentGateAudit": {
+    "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-v9-independent-audit-20261024-v1.json",
+    "bytes": 30042,
+    "sha256": "14edb99f09dd0a5c65659caf3e7c6fd056498a30dbd2792ada11ad991b8457bc",
+    "peer": "0600a1fe703363916bd50150091552db1c60039f",
+    "rootAcceptance": "57830621d08187bf99f47f51b69b0c901f4eac68",
+    "attribution": "Root accepted the full independent V9 audit; this ledger update hashes the exact audit leaf without rerunning or re-auditing the gate."
+  },
+  "independentV8PreflightAudit": {
+    "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-v8-preflight-independent-audit-20261024-v1.json",
+    "bytes": 7714,
+    "sha256": "097914c2a8b051872c0f89cbf929a6447e6807c7539feef408dfbdf90b062ef0",
+    "peer": "3802acbcd5cf35fad6c1068cdd7a4360c1ae9bb5",
+    "rootFullReadPrefix": "51c10c",
+    "attribution": "Root accepted and fully read the independent preflight audit; this ledger update hashes the exact audit leaf without rerunning or re-auditing the gate."
+  },
+  "attributionUpdate": {
+    "fromLedger": {
+      "path": "/private/tmp/artroom-archive-fixed-parent-measured-cost-ledger-20261024-v2/cost-ledger.json",
+      "bytes": 26802,
+      "sha256": "df185e4c923f6d7777a6a181273ce4cd42fbc94f5d2ec11480b4f1f5110c2c15"
+    },
+    "all21MeasurementsAndAllTotalsUnchanged": true,
+    "allOriginal19RowsUnchanged": true,
+    "newOwnerRows": 0,
+    "newRuntime": false
+  }
+}

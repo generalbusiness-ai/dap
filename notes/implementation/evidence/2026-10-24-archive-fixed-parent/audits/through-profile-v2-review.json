@@ -1,0 +1,146 @@
+{
+  "schema": "through-profile-v2-source-review/v1",
+  "request": "fc2548ae1ab9c7c5e859d422611f8a34fd0ff13c",
+  "promise": "28cdea0d83a29e9a02c5107d89c6e21b10341fc2",
+  "verdict": "Bounded Source review clear; V1 test findings resolved, no new mandatory finding in V2. Actual compiler/owning/control/Grow fit remains unmeasured.",
+  "issues": [],
+  "source": {
+    "manifest": "/private/tmp/artroom-archive-through-frontier-profile-source-20261024-v2/manifest.json",
+    "bytes": 3583,
+    "sha256": "dcf0f0eb76319ec8bb93924d6d7b5df9679f77b70fde72d9ccab6a8c9be86e0f",
+    "indexedPayloads": 20,
+    "fullPatchSha256": "24a3d53fc59a541be495e66224b45a141a8741083dcdf77890a7c894c65eac52",
+    "v1ToV2DeltaSha256": "eb7c3b854169c8dac0c1786759b37274c67d73f608590410a2a76bf26e23635b"
+  },
+  "priorReview": {
+    "path": "/private/tmp/artroom-archive-through-frontier-profile-independent-source-review-20261024-v1.json",
+    "bytes": 9722,
+    "sha256": "2670393178c76a98bb3b0350f18788c4ae86ce083985662fa9b77b3371aace94"
+  },
+  "resolvedFindings": [
+    {
+      "finding": "Incorrect maximum observation on metadata-probing source.object",
+      "resolution": "Both affected fixtures use existing boundedObject, record its explicit ceiling and delegate the same held exact source. Existing reader still performs requested-size/type/owned-copy/hash checks. Ordinary two-call path remains tested elsewhere and unchanged. Reader proof excerpt authenticated against immutable d33 blob."
+    },
+    {
+      "finding": "Missing actual through101 capture/validation",
+      "resolution": "Same rollover case now has explicit through99, through100 and through101 operations before continuing102..4095. Existing case name, count and deadline unchanged."
+    }
+  ],
+  "newBootstrapCoupling": {
+    "source": "archive-frontier-cost.ts forecastArchiveFrontierBootstrapFinish(rowBytes, through?) and store.bootstrapFinish(token)",
+    "analysis": "Store derives through only from private token binding. Public token copies cannot lower the forecast. Remote extraction stays separately charged; local future validation, encode, copy and write bounds use the same confirmed receipt profile as actual validate/encode/copy/write. Actual captured rowBytes exact comparison tariff and independent native SQL caps remain unchanged. Omitted through preserves global bounds. No authorization or allowance is derived from the forecast.",
+    "integrationLimit": "The separate migration driver/host/cost caller must pass matching confirmed through to its Git capture forecast; that external packet is outside this V2 review and still requires union review."
+  },
+  "carriedProductionProof": "V1 capture, validation, envelope precheck and adaptive selected-through modules remain coherent. Maximum604 rows/28828 raw bytes/11objects and64KiB native cap unchanged. Source files for Git profile/barrel, adaptive and storetest are byte-exact V1; only the two cap-observation fixtures, boundary split, redundant test-loop removal and explicit bootstrap finish coupling change.",
+  "testScope": "Git frontier6 and Scope store4 registrations match basis exactly; no new registration, timeout, assertion weakening or production observation hook. Small/malformed/full604 and real rollover/custody/SQL atomic tests retained. Formula-reimplementation loop removed in favor of literal boundaries and actual captures.",
+  "runtimeQualification": "No project import, sourceSeal, compiler, collection, test/control/gate/capture or candidate/dependency read. Metadata arithmetic projection is not an actual installed Grow margin, universal pass fit, hosted migration/recovery or accepted final union.",
+  "readerProof": {
+    "commit": "d33eba016678a911fbc27e245d40eaa22e4c92d7",
+    "path": "packages/git/src/journal-objects.ts",
+    "bytes": 13402,
+    "sha256": "ad8680c6d71188a4786c47984d3ef51939dd29640edb06f4e659ec055d304c1a"
+  },
+  "sourcePins": [
+    {
+      "path": "basis/packages/git/src/journal-v2-frontier.ts",
+      "bytes": 10829,
+      "sha256": "d0cd7f3886d42caabaf57d89deadefe27383f818811933aa6048716853395c20"
+    },
+    {
+      "path": "basis/packages/git/src/journal.ts",
+      "bytes": 2532,
+      "sha256": "8a5c2dbe65d9a3c450cebb5082336f4b27e9eebb42af3ba44494c8b9f2198422"
+    },
+    {
+      "path": "basis/packages/git/test/journal-v2-frontier.test.ts",
+      "bytes": 12059,
+      "sha256": "ef829acf554da681c39aa203c09aec6e492e8c29e40a21c913db06cd892fa512"
+    },
+    {
+      "path": "basis/packages/scope/src/archive-adaptive.ts",
+      "bytes": 16040,
+      "sha256": "8ef347b59e5caea2b6d25c2a61bacc2f47164c8524a5b860c2bbd19ee4215773"
+    },
+    {
+      "path": "basis/packages/scope/src/archive-frontier-cost.ts",
+      "bytes": 8056,
+      "sha256": "29ea9cb679183485d1df196d1bb5039266501425954c3f73a48e8818ffb00454"
+    },
+    {
+      "path": "basis/packages/scope/src/archive-frontier-store.ts",
+      "bytes": 29846,
+      "sha256": "76ab293a88a7bdec02a5d287103003073d14bd149a9a40bb999986b98ba33d55"
+    },
+    {
+      "path": "basis/packages/scope/test/archive-frontier-store.test.ts",
+      "bytes": 21368,
+      "sha256": "98150acf6ba0717afdb61f44eb1fdd94f80f23e90e985b671e4885235dee2ccf"
+    },
+    {
+      "path": "control-plan.json",
+      "bytes": 1104,
+      "sha256": "01c7569d0fefcfcf03ee4919728f84931a8dc3484dc35b6293b9d5961460f295"
+    },
+    {
+      "path": "plan.md",
+      "bytes": 6070,
+      "sha256": "1f41be2cc55fa0ef7c0c408984e18a57ea9a71476798d61e50beececaa2ff581"
+    },
+    {
+      "path": "proof.json",
+      "bytes": 13374,
+      "sha256": "40b56ea12448d0bdd7d2284ac5599e82ebcaa607e910a18c5d890ebc27e5823a"
+    },
+    {
+      "path": "reader-protocol-proof.json",
+      "bytes": 6002,
+      "sha256": "b16940d012cc2b88246b907a1436b384c2d145cf53a58f482201b4ca7354f68d"
+    },
+    {
+      "path": "source/packages/git/src/journal-v2-frontier.ts",
+      "bytes": 12393,
+      "sha256": "8a79366ae569d21983e3f42b158ede6c941b056eb121093d215dced3531da5ab"
+    },
+    {
+      "path": "source/packages/git/src/journal.ts",
+      "bytes": 2562,
+      "sha256": "002e16b6fc93fa35e2e7cc7358950eb3818c56a8bed7a92fc51ab190df77acdf"
+    },
+    {
+      "path": "source/packages/git/test/journal-v2-frontier.test.ts",
+      "bytes": 14903,
+      "sha256": "aa8d7e659f9e395e44d6bf9e5979e3e839b210836b2df11acfe54730bb1cba06"
+    },
+    {
+      "path": "source/packages/scope/src/archive-adaptive.ts",
+      "bytes": 16086,
+      "sha256": "f57a7c4a41bbffafdbb3ce44dfdb161ea158562980bebaaa051ecb736297e717"
+    },
+    {
+      "path": "source/packages/scope/src/archive-frontier-cost.ts",
+      "bytes": 8453,
+      "sha256": "fe8f03fd94259fb74dad61a9866f8ffa7da549f0a6b6534db5fb41cca06e3971"
+    },
+    {
+      "path": "source/packages/scope/src/archive-frontier-store.ts",
+      "bytes": 30109,
+      "sha256": "aa04c767ecdccb4e0d1423d94260583afbf3aaa65f2cf1c0e61d98715285bc62"
+    },
+    {
+      "path": "source/packages/scope/test/archive-frontier-store.test.ts",
+      "bytes": 22617,
+      "sha256": "d5fa9634596134ef8ddabdbe7205982b85d035505c514d5dfcc259f7e470d4a3"
+    },
+    {
+      "path": "source.patch",
+      "bytes": 35327,
+      "sha256": "24a3d53fc59a541be495e66224b45a141a8741083dcdf77890a7c894c65eac52"
+    },
+    {
+      "path": "v1-to-v2.patch",
+      "bytes": 28440,
+      "sha256": "eb7c3b854169c8dac0c1786759b37274c67d73f608590410a2a76bf26e23635b"
+    }
+  ]
+}

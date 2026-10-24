@@ -7,7 +7,7 @@ import { captureJournalParentFrontier, journalRef, type JournalArchive, type Jou
 import { ARCHIVE_BOUNDS, ArchiveBudget, ArchiveStopped } from "./archive-budget.ts";
 import { archiveParent, copyArchiveObjects } from "./archive-parent.ts";
 import { ArchiveFrontiers, type ArchiveFrontierBase, type ArchiveFrontierPrepared } from "./archive-frontier-store.ts";
-import { selectArchiveBootstrapBounds } from "./archive-bootstrap-cost.ts";
+import { admitArchiveMigration } from "./archive-bootstrap-cost.ts";
 import { planPublishedArchiveConversion, rebuildArchive, rebuildArchivePass } from "./archive-build.ts";
 import { planAdaptiveArchivePass, planRootAdaptiveArchivePass } from "./archive-adaptive.ts";
 import type { FixtureArchiveSourcePins } from "./archive-source-pins.ts";
@@ -33,7 +33,9 @@ export interface ArchiveSend {
 export interface ArchiveProvider {
   format(repository: DestinationRepository, allowed: () => boolean): Promise<JournalFormat>;
   ref(repository: DestinationRepository, ref: string, allowed: () => boolean): Promise<string | null>;
-  objects(repository: DestinationRepository, commit: string, most: { readonly bytes: number; readonly objects: number }, allowed: () => boolean, budget?: ArchiveBudget): Promise<readonly JournalObject[]>;
+  objects(repository: DestinationRepository, commit: string, most: { readonly bytes: number; readonly objects: number }, allowed: () => boolean): Promise<readonly JournalObject[]>;
+  /** One shallow filtered current-parent read and one exact head blob; no history. */
+  readParent?(repository: DestinationRepository, commit: string, allowed: () => boolean, budget: ArchiveBudget): Promise<JournalObjectSource>;
   readObject?(repository: DestinationRepository, object: { readonly id: string; readonly type: JournalObject["type"]; readonly maximum: number }, allowed: () => boolean, budget: ArchiveBudget): ReturnType<JournalObjectSource["object"]>;
   mintArchive(repository: DestinationRepository, at: ScopeRef, allowed: () => boolean): Promise<ArchiveCredential | null>;
   sendArchive(request: ArchiveSend): Promise<unknown>;
@@ -258,19 +260,15 @@ export class ArchiveDriver {
         if (!same(context.binding, { ...identity, commit: row.confirmed.commit, through: row.confirmed.through })) return budget.stop("unavailable");
         const finish = frontiers.bootstrapFinish(context);
         if (!finish.ok) return budget.stop("limit");
-        const maximum = selectArchiveBootstrapBounds(this.#maximum, budget, finish.cost);
-        if (maximum === null) return done({ state: "retry", next: scheduled, reason: "limit" });
+        if (!admitArchiveMigration(this.#maximum, budget, finish.cost, context.binding.through.seq)) return done({ state: "retry", next: scheduled, reason: "limit" });
+        const readParent = this.#options.provider.readParent;
+        if (!readParent) return budget.stop("unavailable");
         const captured = await budget.lookaheadAsync(finish.cost, async () => {
-          // This one-time migration uses the approved complete-closure port,
-          // never the steady-state exact-object path or a second witness.
-          const objects = await budget.wait(() => this.#options.provider.objects({ ...row!.repository },
-            context.binding.commit, maximum, allowed, budget));
-          if (!Array.isArray(objects) || objects.length > maximum.objects) return budget.stop("limit");
-          const held = copyArchiveObjects(objects, row!.format, budget, maximum.bytes);
-          return captureJournalParentFrontier(context.binding, { object: async (id, most) => {
-            const object = held.get(id);
-            return object ? { type: object.type, size: object.data.length, data: object.data.length <= most ? object.data : null } : null;
-          } }, budget);
+          // Current-parent only: exact commit and current trees, then the
+          // separately bounded head blob. No complete closure or fallback.
+          const source = await budget.wait(() => readParent.call(this.#options.provider,
+            { ...row!.repository }, context.binding.commit, allowed, budget));
+          return captureJournalParentFrontier(context.binding, source, budget);
         });
         if (captured.kind === "limited") return done({ state: "retry", next: scheduled, reason: "limit" });
         const prepared = await frontiers.prepareConfirmedBootstrap(context, captured.value, budget);

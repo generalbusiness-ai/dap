@@ -114,7 +114,7 @@ async function readBytes(stream: ReadableStream<Uint8Array> | null, limit: numbe
       const next = await reader.read();
       if (expired) throw fail("read deadline");
       beforeDeadline(deadline);
-      if (next.done) return buffer === null ? concat(chunks) : buffer.slice(0, total);
+      if (next.done) return buffer === null ? concat(chunks) : buffer.subarray(0, total);
       total += next.value.length;
       if (total > limit) throw large("read bytes");
       work?.reserve(next.value.length);

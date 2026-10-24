@@ -1,0 +1,162 @@
+{
+  "schema": "finite-failed-gate-custody-descriptor/v1",
+  "fullAudit": {
+    "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-v9-independent-audit-20261024-v1.json",
+    "bytes": 30042,
+    "sha256": "14edb99f09dd0a5c65659caf3e7c6fd056498a30dbd2792ada11ad991b8457bc",
+    "gitseq": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0600a1fe703363916bd50150091552db1c60039f"
+  },
+  "originalClosedRawPins": [
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/after.json",
+      "bytes": 3273515,
+      "sha256": "7b7f59c04efd5b639c203fc2295d32aebbb20fd6047c290cabfba8c35abb3a1f"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/before.json",
+      "bytes": 3273515,
+      "sha256": "38918350f1f187336abc7ffbb277b66b36189e2cbc080b2fc6e2b6bb165f50df"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/case-ledger.json",
+      "bytes": 1454200,
+      "sha256": "46b39099794f884b40ffff02505333e8d3eea9f515e487374db4dbddd2e5e4b5"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/child-pid.json",
+      "bytes": 18,
+      "sha256": "bbfd81082ada4272a5e6358f013a6c7170d9d3e3e7553b6d6a87c606ec7c77fb"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/dependency-delta.json",
+      "bytes": 579,
+      "sha256": "8e4b66a06ce2237e97349fbe6326b74e5029b9b7e5c2bb2f8a3c72eb37a1284f"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/gate.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/gate.stdout.log",
+      "bytes": 5009,
+      "sha256": "1ad786e3dcd04609b84cd7283e816faa3417e75e729c69e89b43aa82aa8afc22"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/invocation.json",
+      "bytes": 866,
+      "sha256": "cb027bf7480d32922c9f07f696da37e6065cabd4a1dc6ffcc0ff39b36ca5ff02"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/process.json",
+      "bytes": 347,
+      "sha256": "9823ae9df587686b86387082802902e958527687b03129797df741952165d9ce"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/result.json",
+      "bytes": 1524647,
+      "sha256": "4e738405defd3e2b178a9e3f85395fdc0c0dba6f7cfed5a987563593afd1ad2d"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/test-progress.jsonl",
+      "bytes": 3583416,
+      "sha256": "fe75c92f2d3d9e27a5f0429061057776bf28cb9954af2a2cbe0db19c9d870702"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/stages/citations.log",
+      "bytes": 1540528,
+      "sha256": "3bd9c9b49e95cbb01df2c98cb0c9a3a48e386cab3c9d5e414263bfd638205400"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/stages/citations.time",
+      "bytes": 29,
+      "sha256": "fda5c49d334078bf75c61f9b9e6b4a097e781651340af5ff4f14e7386d9b78d7"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/stages/cite-test.log",
+      "bytes": 760,
+      "sha256": "4fe367b8a8c727aee2b5e42015dc728674b27b71d2435736a54a83fa571ebe62"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/stages/cite-test.time",
+      "bytes": 29,
+      "sha256": "0d0fd84beeba689ea3f5c7625115622be27e4fea751fee104a511b9a9faad869"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/stages/commit-messages.log",
+      "bytes": 39,
+      "sha256": "beb83dafa9215eee43b9e8fec396126fce0939219ba736eb4c680ef71510cbed"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/stages/commit-messages.time",
+      "bytes": 29,
+      "sha256": "2f00bb14f48e47d581a40c36302b3d8f94ecd53f8ccfa6825008731de11235d2"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/stages/commit-test.log",
+      "bytes": 594,
+      "sha256": "911ba20af551dd419f9588a29175c18c412378476b3b779423313a06764ea340"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/stages/commit-test.time",
+      "bytes": 29,
+      "sha256": "0b39182b504faf1e7eaefcd078ca5bd0ce94cba7d235110458bb210d5799520a"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/stages/helpers.log",
+      "bytes": 68,
+      "sha256": "2d852bd490024e0a21c9c055db2c13d467d635c1a29d05f0b92f5d7643828175"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/stages/helpers.time",
+      "bytes": 29,
+      "sha256": "c8a50dd0868543374d1d2d3b4d269596ee608d57ba2ad2f1721682939aece716"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/stages/section-citations.json",
+      "bytes": 3898411,
+      "sha256": "ba689397ad739b069f0842be8478f0490e054ec6fef24552918395d76c47dc69"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/stages/test.log",
+      "bytes": 18857008,
+      "sha256": "6d24c623d8236a9a2c2d8d4e43bb429a0ba4c57c21c490aba90ab24def399220"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/stages/test.time",
+      "bytes": 37,
+      "sha256": "6bca73ef4e9ab82f02474fae431d7867eb5049d2c187858de17b44651aaf0935"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/stages/typecheck.log",
+      "bytes": 1987,
+      "sha256": "62170bbe0cd055cff4699debd9470a886c0f98f328e7c9517d899c021a3788d0"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/stages/typecheck.time",
+      "bytes": 30,
+      "sha256": "b71c0ab6b70bb50b932dc88645dbd0d2d16061dd79a27cd5700e062382bc3aa5"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/stages/whitespace.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/stages/whitespace.time",
+      "bytes": 29,
+      "sha256": "b19caaf7f42fccf27d8c76a198f52fea0f91edf4f9fc11246dfb0c794d708d58"
+    }
+  ],
+  "allocatedBindingPin": {
+    "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-binding-allocated-20261024-v9.json",
+    "bytes": 3482290,
+    "sha256": "f982481d99accbc61354f8448a0a7670aa0c07fb66aba68ea9d1fda78bb82c7f"
+  },
+  "sourceManifestPin": {
+    "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-source-20261024-v9/manifest.json",
+    "bytes": 2108,
+    "sha256": "57e454c25ad270eedd2a3f69905c7f16bc988c6a537b1ea824d3745dc2870a91"
+  },
+  "qualification": "External descriptors only. No huge result/case ledger/test log copied into this companion. The pinned full audit retains physical read identities, Source payload pins and all proof qualifications. Listed paths are inert evidence locators, not grants to execute programs or follow their contents."
+}

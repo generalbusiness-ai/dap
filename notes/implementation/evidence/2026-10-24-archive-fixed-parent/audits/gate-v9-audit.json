@@ -1,0 +1,891 @@
+{
+  "schema": "closed-final-gate-failure-audit/v1",
+  "request": "fc2548ae1ab9c7c5e859d422611f8a34fd0ff13c",
+  "promise": "28cdea0d83a29e9a02c5107d89c6e21b10341fc2",
+  "verdict": "Failed ordinary gate authenticated: exact 3522 identities, three assertion failures, all fixed guards preserved outside the single declared cache file. No successful-gate claim.",
+  "issues": [],
+  "method": "Stable bounded regular single-link reads of the eleven closed top-level files, seventeen copied stage leaves, allocated binding, and Source manifest plus thirteen named payloads. Full test.log (18,857,008 bytes) read within 64 MiB cap. No external original temporary stage path followed, no live candidate/dependency reads, no historical helper execution, rerun, checkout copy or mutation.",
+  "outerClosureAttribution": "Root reports original session 84049 natural exit 1 / tool a1b655. Retained child 1188 naturally exits 1 with signal null; root original closure remains attributed rather than a separately persisted process observation.",
+  "allocation": "cf60061d92fd4c3097d5a3720f7e3f09e8015726",
+  "checkpoint": {
+    "head": "d33eba016678a911fbc27e245d40eaa22e4c92d7",
+    "tree": "a86dd7e82e0f585396c30341155319cc6cc58f7e",
+    "status": "",
+    "mainRefs": {
+      "refs/heads/Main": "d7aea0b03ce8b9c1afcea7f3f6252b66d0d3630a",
+      "refs/remotes/origin/main": "d7aea0b03ce8b9c1afcea7f3f6252b66d0d3630a"
+    },
+    "originMain": "d7aea0b03ce8b9c1afcea7f3f6252b66d0d3630a",
+    "mergeBase": "d7aea0b03ce8b9c1afcea7f3f6252b66d0d3630a"
+  },
+  "sourcePreparation": {
+    "manifestSha256": "57e454c25ad270eedd2a3f69905c7f16bc988c6a537b1ea824d3745dc2870a91",
+    "payloads": 13,
+    "manifestRowsAuthenticated": true,
+    "actualOwnerAndFourCriticalInputPhysicalHashesMatchAtRunExternalGuard": true,
+    "historicalLabel": "Source manifest still calls the held helper unexecuted; actual invocation and result below are the runtime evidence."
+  },
+  "lifecycle": {
+    "ownerPid": 1156,
+    "child": {
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/opt/homebrew/lib/node_modules/npm/bin/npm-cli.js",
+        "run",
+        "gate"
+      ],
+      "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+      "pid": 1188,
+      "exit": 1,
+      "signal": null,
+      "wall": 1450.3498875829391,
+      "user": 1472.0023919999999,
+      "sys": 167.459026
+    },
+    "errors": [],
+    "receivedSignals": []
+  },
+  "guards": {
+    "allocatedEqualsBefore": true,
+    "allNondependencyFieldsEqualBeforeAfter": true,
+    "dependencyDeltaExactlyRecomputed": true,
+    "onlyChangedDependency": "node_modules/.vite/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/results.json",
+    "sameCacheDeviceInodeModeNlink": true,
+    "cacheBytesBeforeAfter": [
+      45928,
+      46029
+    ],
+    "noRetainedViteTimestampFiles": true,
+    "sourceAllPhysicalHashesUnchanged": true,
+    "dimensions": {
+      "source": 3037,
+      "dependencies": 6072,
+      "external": 233,
+      "npmNamespace": 2414,
+      "environmentDigests": 60,
+      "toolResolutions": 214,
+      "pathResolvers": 17
+    },
+    "limitation": "The reviewed ordinary-gate allowance permits the whole results.json cache file, not per-case cache cells. Actual delta is only that same-inode regular single-link file. Snapshot schema does not retain source/dependency timestamps; physical device/inode/mode/nlink/bytes/hash fields are compared exactly."
+  },
+  "stages": {
+    "outcomes": {
+      "whitespace": {
+        "exit": 0,
+        "printedWall": 0.0,
+        "printedCpu": 0.0
+      },
+      "commit-messages": {
+        "exit": 0,
+        "printedWall": 0.1,
+        "printedCpu": 0.1
+      },
+      "commit-test": {
+        "exit": 0,
+        "printedWall": 0.7,
+        "printedCpu": 0.6
+      },
+      "helpers": {
+        "exit": 0,
+        "printedWall": 0.4,
+        "printedCpu": 0.5
+      },
+      "citations": {
+        "exit": 0,
+        "printedWall": 5.5,
+        "printedCpu": 5.8
+      },
+      "cite-test": {
+        "exit": 0,
+        "printedWall": 0.3,
+        "printedCpu": 0.3
+      },
+      "typecheck": {
+        "exit": 0,
+        "printedWall": 9.8,
+        "printedCpu": 37.1
+      },
+      "test": {
+        "exit": 1,
+        "printedWall": 1433.2,
+        "printedCpu": 1594.7
+      }
+    },
+    "rawTimeLeaves": {
+      "whitespace": {
+        "real": 0.01,
+        "user": 0.0,
+        "sys": 0.01
+      },
+      "commit-messages": {
+        "real": 0.11,
+        "user": 0.08,
+        "sys": 0.02
+      },
+      "commit-test": {
+        "real": 0.66,
+        "user": 0.42,
+        "sys": 0.2
+      },
+      "helpers": {
+        "real": 0.39,
+        "user": 0.43,
+        "sys": 0.05
+      },
+      "citations": {
+        "real": 5.5,
+        "user": 5.54,
+        "sys": 0.21
+      },
+      "cite-test": {
+        "real": 0.34,
+        "user": 0.27,
+        "sys": 0.07
+      },
+      "typecheck": {
+        "real": 9.79,
+        "user": 32.97,
+        "sys": 4.14
+      },
+      "test": {
+        "real": 1433.23,
+        "user": 1432.09,
+        "sys": 162.61
+      }
+    },
+    "allSeventeenCopiedStageBytesHashesMatchRetainedOriginalDescriptors": true,
+    "typecheckCommandsShown": 40,
+    "nodeSummary": {
+      "commit-test": {
+        "tests": [
+          4
+        ],
+        "pass": [
+          4
+        ],
+        "fail": [
+          0
+        ]
+      },
+      "cite-test": {
+        "tests": [
+          7
+        ],
+        "pass": [
+          7
+        ],
+        "fail": [
+          0
+        ]
+      },
+      "test": {
+        "tests": [],
+        "pass": [],
+        "fail": []
+      }
+    },
+    "Node37": "Unreached after Vitest failure; no Node37 summary exists.",
+    "Counting55": "Unreached after Vitest failure; no Counting55 summary exists."
+  },
+  "coverage": {
+    "terminalCases": 3522,
+    "files": 494,
+    "states": {
+      "passed": 3516,
+      "skipped": 3,
+      "failed": 3
+    },
+    "expectedIdentityTuplesAllMatchIgnoringOnlyThreeStateChanges": true,
+    "stateChanges": [
+      {
+        "id": "380254411_0",
+        "project": "scope",
+        "file": "packages/scope/test/archive-input-work.test.ts",
+        "name": "legacy v2 parent work preserves partial Native checkpoint progress and drains the exact remainder",
+        "expected": "passed",
+        "actual": "failed"
+      },
+      {
+        "id": "-1531300267_2",
+        "project": "scope",
+        "file": "packages/scope/test/archive-installed.test.ts",
+        "name": "installed Grow production scopes export genesis zero after a late native Membership8 directory binding",
+        "expected": "passed",
+        "actual": "failed"
+      },
+      {
+        "id": "-1531300267_3",
+        "project": "scope",
+        "file": "packages/scope/test/archive-installed.test.ts",
+        "name": "installed Grow production public archive command verifies its native producer clone",
+        "expected": "passed",
+        "actual": "failed"
+      }
+    ],
+    "eventCounts": {
+      "run-start": 1,
+      "case-ready": 3503,
+      "case-result": 3501,
+      "case-final": 3522,
+      "run-end": 1
+    },
+    "callbackResultStates": {
+      "passed": 3495,
+      "skipped": 3,
+      "failed": 3
+    },
+    "missingReadyCount": 19,
+    "missingResultCount": 21,
+    "missingReadyIds": [
+      "1746186093_10_0",
+      "1746186093_10_1",
+      "1746186093_10_2",
+      "1746186093_10_3",
+      "1746186093_10_4",
+      "1746186093_10_5",
+      "1746186093_10_6",
+      "1746186093_11_1",
+      "1746186093_12_0",
+      "1746186093_12_1",
+      "1746186093_12_2",
+      "1746186093_12_3",
+      "1746186093_12_4",
+      "1746186093_12_5",
+      "1746186093_5",
+      "1746186093_6",
+      "1746186093_7_0",
+      "1746186093_9_0",
+      "369754740_0_0"
+    ],
+    "missingResultIds": [
+      "1746186093_10_0",
+      "1746186093_10_1",
+      "1746186093_10_2",
+      "1746186093_10_3",
+      "1746186093_10_4",
+      "1746186093_10_5",
+      "1746186093_10_6",
+      "1746186093_11_0",
+      "1746186093_11_1",
+      "1746186093_12_0",
+      "1746186093_12_1",
+      "1746186093_12_2",
+      "1746186093_12_3",
+      "1746186093_12_4",
+      "1746186093_4",
+      "1746186093_5",
+      "1746186093_6",
+      "1746186093_7_0",
+      "1746186093_8_0",
+      "1746186093_9_0",
+      "1760911592_0"
+    ],
+    "allMissingCallbackIdsTerminalPassed": true,
+    "runEnd": {
+      "event": "run-end",
+      "time": "2026-10-24T04:18:15.331Z",
+      "files": 494,
+      "unhandledErrors": 0,
+      "reason": "failed"
+    },
+    "qualification": "All 3522 terminal framework rows are authoritative. The nineteen ready and twenty-one result gaps remain reporting limitations; absence is not converted into a failed case or inferred start/drain. Zero unhandled errors. The failed owner does not itself enforce successful-state correspondence, so this audit independently checks all expected identities and the three exact state deviations."
+  },
+  "failures": {
+    "inputWork": {
+      "id": "380254411_0",
+      "location": "archive-input-work.test.ts:149:37",
+      "assertion": "beforePlanning.length expected greater than zero; actual zero.",
+      "qualification": "The intended preplanning cost assertion and later drain assertions are not reached; this failure is not an observed work-cap assertion and no broad source cause is inferred."
+    },
+    "installedGrowProducer": {
+      "id": "-1531300267_2",
+      "location": "archive-installed.test.ts:861:135",
+      "assertion": "initial.cost.entries expected 2, actual 1.",
+      "rawDiagnostic": {
+        "scope": "sc_y6fpz7xowndu73scb5g55rwfobt6qppaaxpsnr37biyhgzqu2cga",
+        "cutoff": {
+          "seq": 0,
+          "hash": "sha256:6cd7861e3fe886692338d54201f1f1a9eb90613f36927db9f9f8bcc30ff689a6"
+        },
+        "initial": {
+          "result": {
+            "state": "stopped",
+            "next": null,
+            "reason": "limit"
+          },
+          "cost": {
+            "entries": 1,
+            "attempts": 5,
+            "nodes": 18,
+            "calls": 53,
+            "metadata": 2382809,
+            "inputWork": 38910192
+          },
+          "confirmed": null,
+          "pending": null,
+          "sourceRefused": false,
+          "birthCalls": 4,
+          "phases": [
+            {
+              "birth": {
+                "scope": "sc_y6fpz7xowndu73scb5g55rwfobt6qppaaxpsnr37biyhgzqu2cga",
+                "reply": {
+                  "named": "sha256:b89e7f84740dfd8b24f78e8b52aff5aa8d4181750a7b5f385c1ef6f993846787",
+                  "native": false,
+                  "birthUnits": 4427,
+                  "birthBytes": 4427
+                }
+              }
+            },
+            {
+              "birth": {
+                "scope": "sc_egyc4lqhvjqq4yakcvs32xndlwdylshouyknhshl5jm7ydrzbwva",
+                "reply": {
+                  "named": "sha256:d2bc830e74caaabab32dbad17adae6812050fb4d36b67e97145d39c2a4cfe2ea",
+                  "native": false,
+                  "birthUnits": 3869,
+                  "birthBytes": 3869
+                }
+              }
+            },
+            {
+              "birth": {
+                "scope": "sc_rf27qs2i6lyhfovuvstar6byp6fajxmghtsrrwdn35gfdcu2zppa",
+                "reply": {
+                  "named": "platform:directory@16",
+                  "native": true,
+                  "birthUnits": 5983,
+                  "birthBytes": 5983
+                }
+              }
+            },
+            {
+              "birth": {
+                "scope": "sc_swseffyw4grxy3lyr7es24droznot2mtgqz7xutyjdijmyenxvnq",
+                "reply": {
+                  "named": "platform:destination@12",
+                  "native": true,
+                  "birthUnits": 4133,
+                  "birthBytes": 4133
+                }
+              }
+            },
+            {
+              "target": {
+                "host": "artifacts",
+                "id": "rf27qs2i6lyhfovuvstar6byp6fajxmghtsrrwdn35gfdcu2zppa-1",
+                "name": "rf27qs2i6lyhfovuvstar6byp6fajxmghtsrrwdn35gfdcu2zppa-1",
+                "namespace": "artroom-demo"
+              },
+              "cost": {
+                "entries": 0,
+                "attempts": 0,
+                "nodes": 4,
+                "calls": 14,
+                "metadata": 1647712,
+                "inputWork": 10647136
+              }
+            },
+            {
+              "sources": {
+                "after": null,
+                "through": {
+                  "seq": 1,
+                  "hash": "sha256:cf94c2bc068517eb35c185f1f25e70b8d06345f3bdb824788b189cae173cfdf4"
+                },
+                "exact": false
+              },
+              "cost": {
+                "entries": 0,
+                "attempts": 0,
+                "nodes": 4,
+                "calls": 19,
+                "metadata": 1680832,
+                "inputWork": 17393600
+              }
+            },
+            {
+              "sourceReturn": {
+                "exact": false,
+                "rebuildWitnessed": false,
+                "keys": [
+                  "pins",
+                  "replayScopes",
+                  "prepare"
+                ],
+                "prepareType": "function"
+              }
+            },
+            {
+              "prepareEntered": 0,
+              "budgetSame": true
+            },
+            {
+              "sourcePrepared": 0,
+              "before": {
+                "entries": 0,
+                "attempts": 0,
+                "nodes": 14,
+                "calls": 19,
+                "metadata": 1716133,
+                "inputWork": 17658277
+              },
+              "after": {
+                "entries": 0,
+                "attempts": 0,
+                "nodes": 14,
+                "calls": 23,
+                "metadata": 1733829,
+                "inputWork": 18957829
+              }
+            },
+            {
+              "rejectedFit": {
+                "cost": {
+                  "entries": 1,
+                  "attempts": 34,
+                  "nodes": 26,
+                  "calls": 104,
+                  "metadata": 2565149,
+                  "inputWork": 28220663
+                },
+                "used": {
+                  "entries": 1,
+                  "attempts": 5,
+                  "nodes": 18,
+                  "calls": 49,
+                  "metadata": 2382306,
+                  "inputWork": 32560101
+                }
+              }
+            }
+          ],
+          "nativeRootReservations": 0
+        }
+      },
+      "rejectedFit": {
+        "cost": {
+          "entries": 1,
+          "attempts": 34,
+          "nodes": 26,
+          "calls": 104,
+          "metadata": 2565149,
+          "inputWork": 28220663
+        },
+        "used": {
+          "entries": 1,
+          "attempts": 5,
+          "nodes": 18,
+          "calls": 49,
+          "metadata": 2382306,
+          "inputWork": 32560101
+        }
+      },
+      "qualification": "Actual stopped-limit/partial initial work and rejected-fit diagnostic retained. This audit does not invent a migration or production fix from the failed assertion."
+    },
+    "dependentPublicCommand": {
+      "id": "-1531300267_3",
+      "location": "archive-installed.test.ts:1222:26",
+      "assertion": "The immediately preceding native producer did not publish a command session.",
+      "qualification": "Dependent missing-handoff failure; no independent successful public-command validation."
+    }
+  },
+  "costs": {
+    "outerWall": 1452.9326743329875,
+    "outerPythonCpu": 1.766912,
+    "childrenUser": 1472.082605,
+    "childrenSys": 167.551007,
+    "inclusiveCpu": 1641.4005240000001
+  },
+  "costQualification": "Owner includes all guards and gate child; gate child includes npm, typechecks and tests. Child, stages and per-case durations overlap; do not sum into outer totals. Failed gate cost remains a separate closed invocation, absent from earlier pending-gate cost subtotal.",
+  "acceptanceLimits": "Gate failed naturally. Earlier focused successes, negative controls and source reviews are retained separately and cannot make this gate green. Later Node37/Counting55, migration decision and future correction/acceptance remain unresolved by this run. No hosted success or recovery claim.",
+  "finiteEvidencePins": [
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/after.json",
+      "bytes": 3273515,
+      "sha256": "7b7f59c04efd5b639c203fc2295d32aebbb20fd6047c290cabfba8c35abb3a1f",
+      "device": 16777231,
+      "inode": 545914638,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/before.json",
+      "bytes": 3273515,
+      "sha256": "38918350f1f187336abc7ffbb277b66b36189e2cbc080b2fc6e2b6bb165f50df",
+      "device": 16777231,
+      "inode": 545861947,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/case-ledger.json",
+      "bytes": 1454200,
+      "sha256": "46b39099794f884b40ffff02505333e8d3eea9f515e487374db4dbddd2e5e4b5",
+      "device": 16777231,
+      "inode": 545914619,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/child-pid.json",
+      "bytes": 18,
+      "sha256": "bbfd81082ada4272a5e6358f013a6c7170d9d3e3e7553b6d6a87c606ec7c77fb",
+      "device": 16777231,
+      "inode": 545861950,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/dependency-delta.json",
+      "bytes": 579,
+      "sha256": "8e4b66a06ce2237e97349fbe6326b74e5029b9b7e5c2bb2f8a3c72eb37a1284f",
+      "device": 16777231,
+      "inode": 545914639,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/gate.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "device": 16777231,
+      "inode": 545861949,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/gate.stdout.log",
+      "bytes": 5009,
+      "sha256": "1ad786e3dcd04609b84cd7283e816faa3417e75e729c69e89b43aa82aa8afc22",
+      "device": 16777231,
+      "inode": 545861948,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/invocation.json",
+      "bytes": 866,
+      "sha256": "cb027bf7480d32922c9f07f696da37e6065cabd4a1dc6ffcc0ff39b36ca5ff02",
+      "device": 16777231,
+      "inode": 545861910,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/process.json",
+      "bytes": 347,
+      "sha256": "9823ae9df587686b86387082802902e958527687b03129797df741952165d9ce",
+      "device": 16777231,
+      "inode": 545914600,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/result.json",
+      "bytes": 1524647,
+      "sha256": "4e738405defd3e2b178a9e3f85395fdc0c0dba6f7cfed5a987563593afd1ad2d",
+      "device": 16777231,
+      "inode": 545914640,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/test-progress.jsonl",
+      "bytes": 3583416,
+      "sha256": "fe75c92f2d3d9e27a5f0429061057776bf28cb9954af2a2cbe0db19c9d870702",
+      "device": 16777231,
+      "inode": 545862227,
+      "mode": "0o600",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/stages/citations.log",
+      "bytes": 1540528,
+      "sha256": "3bd9c9b49e95cbb01df2c98cb0c9a3a48e386cab3c9d5e414263bfd638205400",
+      "device": 16777231,
+      "inode": 545914602,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/stages/citations.time",
+      "bytes": 29,
+      "sha256": "fda5c49d334078bf75c61f9b9e6b4a097e781651340af5ff4f14e7386d9b78d7",
+      "device": 16777231,
+      "inode": 545914603,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/stages/cite-test.log",
+      "bytes": 760,
+      "sha256": "4fe367b8a8c727aee2b5e42015dc728674b27b71d2435736a54a83fa571ebe62",
+      "device": 16777231,
+      "inode": 545914604,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/stages/cite-test.time",
+      "bytes": 29,
+      "sha256": "0d0fd84beeba689ea3f5c7625115622be27e4fea751fee104a511b9a9faad869",
+      "device": 16777231,
+      "inode": 545914605,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/stages/commit-messages.log",
+      "bytes": 39,
+      "sha256": "beb83dafa9215eee43b9e8fec396126fce0939219ba736eb4c680ef71510cbed",
+      "device": 16777231,
+      "inode": 545914606,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/stages/commit-messages.time",
+      "bytes": 29,
+      "sha256": "2f00bb14f48e47d581a40c36302b3d8f94ecd53f8ccfa6825008731de11235d2",
+      "device": 16777231,
+      "inode": 545914607,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/stages/commit-test.log",
+      "bytes": 594,
+      "sha256": "911ba20af551dd419f9588a29175c18c412378476b3b779423313a06764ea340",
+      "device": 16777231,
+      "inode": 545914608,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/stages/commit-test.time",
+      "bytes": 29,
+      "sha256": "0b39182b504faf1e7eaefcd078ca5bd0ce94cba7d235110458bb210d5799520a",
+      "device": 16777231,
+      "inode": 545914609,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/stages/helpers.log",
+      "bytes": 68,
+      "sha256": "2d852bd490024e0a21c9c055db2c13d467d635c1a29d05f0b92f5d7643828175",
+      "device": 16777231,
+      "inode": 545914610,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/stages/helpers.time",
+      "bytes": 29,
+      "sha256": "c8a50dd0868543374d1d2d3b4d269596ee608d57ba2ad2f1721682939aece716",
+      "device": 16777231,
+      "inode": 545914611,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/stages/section-citations.json",
+      "bytes": 3898411,
+      "sha256": "ba689397ad739b069f0842be8478f0490e054ec6fef24552918395d76c47dc69",
+      "device": 16777231,
+      "inode": 545914612,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/stages/test.log",
+      "bytes": 18857008,
+      "sha256": "6d24c623d8236a9a2c2d8d4e43bb429a0ba4c57c21c490aba90ab24def399220",
+      "device": 16777231,
+      "inode": 545914613,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/stages/test.time",
+      "bytes": 37,
+      "sha256": "6bca73ef4e9ab82f02474fae431d7867eb5049d2c187858de17b44651aaf0935",
+      "device": 16777231,
+      "inode": 545914614,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/stages/typecheck.log",
+      "bytes": 1987,
+      "sha256": "62170bbe0cd055cff4699debd9470a886c0f98f328e7c9517d899c021a3788d0",
+      "device": 16777231,
+      "inode": 545914615,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/stages/typecheck.time",
+      "bytes": 30,
+      "sha256": "b71c0ab6b70bb50b932dc88645dbd0d2d16061dd79a27cd5700e062382bc3aa5",
+      "device": 16777231,
+      "inode": 545914616,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/stages/whitespace.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "device": 16777231,
+      "inode": 545914617,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v9/stages/whitespace.time",
+      "bytes": 29,
+      "sha256": "b19caaf7f42fccf27d8c76a198f52fea0f91edf4f9fc11246dfb0c794d708d58",
+      "device": 16777231,
+      "inode": 545914618,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-binding-allocated-20261024-v9.json",
+      "bytes": 3482290,
+      "sha256": "f982481d99accbc61354f8448a0a7670aa0c07fb66aba68ea9d1fda78bb82c7f",
+      "device": 16777231,
+      "inode": 545861908,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-source-20261024-v9/manifest.json",
+      "bytes": 2108,
+      "sha256": "57e454c25ad270eedd2a3f69905c7f16bc988c6a537b1ea824d3745dc2870a91",
+      "device": 16777231,
+      "inode": 545861751,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-source-20261024-v9/ancestry.json",
+      "bytes": 291,
+      "sha256": "13a1ddc2e5bb0e99549196e94cdea78c7e492bee76af058347b9f50b57813a2f",
+      "device": 16777231,
+      "inode": 545861738,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-source-20261024-v9/checkpoint.json",
+      "bytes": 870,
+      "sha256": "8f898fa5cd40cc2809ae0a6bea683a8c3527330229219d66f11f12929c29bebd",
+      "device": 16777231,
+      "inode": 545861739,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-source-20261024-v9/count-and-identity-proof.json",
+      "bytes": 55588,
+      "sha256": "bd84811c4526f44b1ba3c850c0b9544b016ab28afc91b1f698c605d7da3b09d6",
+      "device": 16777231,
+      "inode": 545861740,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-source-20261024-v9/expected-case-ledger.json",
+      "bytes": 995370,
+      "sha256": "a84488079bb8a61e90a21073aa0c9de7aa3226e34d44e6d11c7385fda9a37ea0",
+      "device": 16777231,
+      "inode": 545861741,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-source-20261024-v9/external-tools.json",
+      "bytes": 16839,
+      "sha256": "c01595d5d989555cbe89839fe2b05cc0f3a8d886fbf8e0cac19a307b0015c05c",
+      "device": 16777231,
+      "inode": 545861742,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-source-20261024-v9/gate-expectations.json",
+      "bytes": 374,
+      "sha256": "72ef0a472a6717b615f9defb0ceb894714849ec6b942eaa65922c3b377ec53a6",
+      "device": 16777231,
+      "inode": 545861743,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-source-20261024-v9/gate-owner.py",
+      "bytes": 19018,
+      "sha256": "040aa3d685f02e176de0840af5ef6dedc5c35771350e732f62bf0a4a57603cc1",
+      "device": 16777231,
+      "inode": 545861744,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-source-20261024-v9/held-focused-31-ledger.json",
+      "bytes": 4540,
+      "sha256": "fbe229497d58e433daa1b12b24f5c447ad148db8c22fd52b956166fa32968244",
+      "device": 16777231,
+      "inode": 545861745,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-source-20261024-v9/pin-map.json",
+      "bytes": 480,
+      "sha256": "9bf70f29e8e41c2c63ddbedc3263a9e7ced86c9713c9374c4589bc8b0fb325d7",
+      "device": 16777231,
+      "inode": 545861746,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-source-20261024-v9/plan.md",
+      "bytes": 1554,
+      "sha256": "c33a26c8e27ff556fe5c725492be8ff1527ae2d175d55db7948344d123529222",
+      "device": 16777231,
+      "inode": 545861747,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-source-20261024-v9/registration-source-excerpts.txt",
+      "bytes": 6471,
+      "sha256": "c67d41359ab8f6593a7cd9f6b1c7334d8076787ab778bcf83bdffaccabf5e0d3",
+      "device": 16777231,
+      "inode": 545861748,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-source-20261024-v9/task-id-source-excerpts.txt",
+      "bytes": 2786,
+      "sha256": "01bb3217a604bf07df29c70961868407fc644844bc99ec531120374334bdb3ec",
+      "device": 16777231,
+      "inode": 545861749,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-source-20261024-v9/v8-to-v9.patch",
+      "bytes": 9494,
+      "sha256": "57bb9d8e0b9a1f2d34bb8c91efe3a4491f6bba9f3975cc04b679ecb0d69d2315",
+      "device": 16777231,
+      "inode": 545861750,
+      "mode": "0o444",
+      "nlink": 1
+    }
+  ]
+}
