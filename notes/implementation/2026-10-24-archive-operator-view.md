@@ -33,15 +33,15 @@ Six warm native test cases have been authored for absent, target, confirmed,
 stopped, pending and uncreated state. They exercise the actual namespace RPC,
 compare application SQLite and the platform alarm, and trap recovery, driver,
 provider and write attempts. Their scope excludes constructor effects. They
-have not run. Compilation, native validation, maintained seal generation,
-entry-point checks, the final gate and source review remain pending.
+have not run. Compilation, native validation, entry-point checks, the final
+gate and review remain pending.
 
-Before validation, derive three seals with the maintained `sourceSeal`:
-`object.ts` supplies both existing object slots, `archive-row.ts` supplies its
-existing archive slot, and `archive-operator.ts` needs a new archive slot.
-The helper requires its own seal because the parser does not follow imports.
-The HTTP inventory needs no route row. A short prose qualification should
-identify the private RPC and its cold-activation limit outside that table.
+The maintained `sourceSeal` produced three actual outputs from the reviewed
+source. `object.ts` supplies both existing object slots, `archive-row.ts`
+supplies its existing archive slot, and `archive-operator.ts` has a new archive
+slot. The helper has its own seal because the parser does not follow imports.
+All other seal entries are unchanged. The HTTP inventory has no new route row;
+its prose identifies the private RPC and the cold-activation limit.
 
 This work is tracked by request `57917747` and promise `352e2c80`. It changes
 observation only; the stopped-row reset and live operator installation are

@@ -9,6 +9,12 @@ result. It does not imply that the gate runs before object activation or all
 other work. For `none`, the work and state columns cover the whole request.
 Refusals and unsupported methods are not additional routes.
 
+The private namespace RPC `ScopeObject.archiveState` observes bounded stored
+archive state and the platform alarm. It has no HTTP, member or MCP route.
+The method performs no recovery or writes on a warm object. Existing cold
+constructor effects and the authenticated caller remain subject to the
+operator installation decision.
+
 - **none**: no caller identity or membership proof. Publication and package
   trust checks can still restrict the bytes served.
 - **creation**: parentless serving admission followed by the native genesis
