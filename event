@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8cee19fc571144616ba85722c6e3638b68cb9eb0","text":"Merge retired a covered predecessor; the successor is at packages/git/src/journal-anchor-legacy.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8d743dce7a61c8a0f9564888d42d806dc94275d7","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-24-archive-fixed-parent/post-gate-repair/head-seen-control-audit.json."}
