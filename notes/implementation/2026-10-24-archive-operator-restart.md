@@ -52,7 +52,7 @@ restart head after the planner's diagnostic decision.
 
 ## Verification status
 
-Source and witnesses are authored only. The row witness uses explicitly
+The row witness uses explicitly
 test-authored stopped metadata for expiry, target/receipt/generation
 refusal, replay, CAS race and transaction rollback. The real Native archive
 witness first builds a confirmed-v2 receipt and frontier, then uses a
@@ -60,16 +60,39 @@ labelled historical stop and the existing nativeBirth ingress to expose
 the deployment-setting stand-in. Host and deployment authority remain
 TEST stand-ins; no Cloudflare deployment control plane or hosted recovery
 is exercised. The updated diagnostic still exposes no raw Mark payload.
-Affected compiler contexts, whole-file witnesses, paired control, maintained
-AST seals and the ordinary gate have not run. Six existing mapped owners
+Whole-file witnesses, paired control, maintained AST seals and the ordinary
+gate remain pending. Six existing mapped owners
 supply seven seal slots; the new directive parser will also receive an
 explicit owner row. The planned actual producer therefore has seven calls
 and eight map slots. No values are filled before that producer runs.
 
 Scope production and test compilers cover the archive implementation and
 fixture wiring. They do not directly compile the Grow deployment wrapper;
-its one-line setting forwarding has Source review and still needs the
-deployment build check. The planned focused cases cover the changed archive
+its one-line setting forwarding has Source review and a separate strict
+compiler check is prepared. The planned focused cases cover the changed archive
 witnesses and bounded-read regressions, not every shared-worker importer.
-The ordinary gate remains required. No dependency setup, parser, package
-install or deployment is recorded here.
+The ordinary gate remains required.
+
+The private dependency copy completed as original `62109`, without an
+install. The maintained compatibility check passed once and left the
+already adopted pool bundle unchanged. Original `76102` passed the Scope
+production compiler, then failed the Scope test compiler at
+`archive-driver.test.ts:539`: the cleanup callback returned the boolean
+from `Map.delete` instead of void. All 43 selected bodies were unrun.
+The correction keeps the same cleanup call inside a void callback.
+Production source and assertions are unchanged. Its outer cost was
+1.61 seconds wall and 4.94 seconds CPU.
+
+The first separate Grow check failed before source checking with TS2688:
+its external configuration could not resolve the pool's exported type
+library. A corrected configuration names the same three declaration
+libraries by absolute path and preserves strict checking. That first
+outer span was 0.89 seconds wall and 0.97 seconds CPU. Both failures retain
+their original outcomes. The Scope continuation will carry the successful
+production compiler because only the test callback and this note changed.
+The corrected Grow check and Scope test compiler remain pending.
+
+These costs were observed on macOS 27.0.1 arm64 with the existing private
+dependency pool and caches. Load and cache temperature were uncontrolled.
+Nested compiler timings are not added to their outer spans. No parser,
+package install or deployment has run for this change.

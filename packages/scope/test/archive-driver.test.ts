@@ -536,7 +536,7 @@ test("a deployment restart is consumed after the diagnostic on ordinary ingress 
   expect(frontier.some(value => value["k"] === "archive-frontier-confirmed-1")).toBe(true);
   const payload = { v:1 as const,at:lane.at,repository:stopped.repository,format:stopped.format,confirmed:stopped.confirmed!,rowDigest:digestBytes(utf8(canonicalize(stopped))),generation:0,expires:timeOf(Date.parse(lane.c.clock.now)+600_000) };
   fixtureArchiveRestart.set(lane.name,canonicalize({ ...payload,command:digestBytes(utf8(canonicalize(payload))) }));
-  onTestFinished(() => fixtureArchiveRestart.delete(lane.name));
+  onTestFinished(() => { fixtureArchiveRestart.delete(lane.name); });
   const diagnostics: Record<string,unknown>[] = [];
   const log = vi.spyOn(console,"info").mockImplementation((...args: unknown[]) => {
     const [label,value] = args;
