@@ -1771,13 +1771,15 @@ usage or settings. The explicit deployment choice remains pending. Leaving
 opt-in unset closes existing endpoints. The
 local slice A implementation and validation, including the passing gate,
 are recorded in [the admission note](../notes/implementation/2026-10-24-hosted-mcp-admission.md)
-and its review record. The bounded failure window and authenticated control
-cleanup are recorded in [the failure-cleanup note](../notes/implementation/2026-10-24-hosted-mcp-failure-cleanup.md).
+and its review record. The bounded failure window, authenticated control
+cleanup and their validation, including the passing gate, are recorded in
+[the failure-cleanup note](../notes/implementation/2026-10-24-hosted-mcp-failure-cleanup.md);
+deployment of that follow-up is pending.
 Bearer expiry and secret-free issuance receipts are recorded in
 [the bearer-expiry note](../notes/implementation/2026-10-24-hosted-mcp-bearer-expiry.md).
-Those follow-ups retain their own verification and deployment qualifications;
-A's passing gate does not establish their acceptance. R15 remains separate
-unfinished work.
+That follow-up retains its own gate, review and deployment qualifications;
+A's and B's passing gates do not establish its acceptance. R15 remains
+separate unfinished work.
 
 ### Routes
 

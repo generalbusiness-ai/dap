@@ -121,8 +121,10 @@ export function planAdaptiveArchivePass(sql: Sql, context: AdaptiveArchiveContex
 export function planRootAdaptiveArchivePass(sql: Sql, context: AdaptiveArchiveContext, budget: ArchiveBudget) {
   return adaptiveArchivePass(true, sql, context, budget);
 }
+/** Proven capacity exit before selection; not an ordinary build refusal. */
+interface DeferredForCapacity { readonly ok: false; readonly deferred: "capacity" }
 async function adaptiveArchivePass(coupled: boolean, sql: Sql, context: AdaptiveArchiveContext, budget: ArchiveBudget): Promise<
-  ArchiveBuildFailure | (Extract<Awaited<ReturnType<typeof planPublishedArchivePass>>, { ok: true }> & { readonly parentObjects: readonly string[] })> {
+  ArchiveBuildFailure | DeferredForCapacity | (Extract<Awaited<ReturnType<typeof planPublishedArchivePass>>, { ok: true }> & { readonly parentObjects: readonly string[] })> {
   try {
     if (context.row.pending !== null || context.row.confirmed !== null && context.row.confirmed.layout !== 2
       || !same(context.row.at, context.at) || context.row.format !== context.format
@@ -149,6 +151,7 @@ async function adaptiveArchivePass(coupled: boolean, sql: Sql, context: Adaptive
     let scout: ArchiveScout | undefined;
     let nextSource = (context.after?.seq ?? -1) + 1;
     let selected: { through: Head; cost: ArchiveCost; parent: ParentMetadata } | undefined;
+    let capacityLimited = false;
     for (;;) {
       const reserve = selected ? sum(selected.cost, { metadata: 256, inputWork: 512 }) : {};
       if (context.prepareSources && nextSource <= context.through.seq) {
@@ -161,7 +164,7 @@ async function adaptiveArchivePass(coupled: boolean, sql: Sql, context: Adaptive
             throw error;
           }
         });
-        if (prepared.kind === "limited") break;
+        if (prepared.kind === "limited") { capacityLimited = true; break; }
         if (!prepared.value.ok) {
           if (selected) break;
           throw prepared.value.error;
@@ -185,12 +188,13 @@ async function adaptiveArchivePass(coupled: boolean, sql: Sql, context: Adaptive
           throw error;
         }
       });
+      if (step.kind === "limited") capacityLimited = true;
       if (step.kind !== "position") break;
       nextSource = step.position.seq + 1;
       const through = { seq: step.position.seq, hash: step.position.hash };
       const quoted = budget.lookahead(selected?.cost ?? {}, () => ({ shape: scout!.layout(through), inventory: scout!.inventoryCost(through),
         setup: through.seq === context.through.seq ? scout!.selectionCost(through) : setupCost() }));
-      if (quoted.kind === "limited") break;
+      if (quoted.kind === "limited") { capacityLimited = true; break; }
       const { shape, inventory, setup } = quoted.value;
       const prepared = await budget.lookaheadAsync(selected?.cost ?? {}, async () => {
         budget.spend({ metadata: shape.files.length * 128, inputWork: shape.files.length * 256 });
@@ -200,11 +204,15 @@ async function adaptiveArchivePass(coupled: boolean, sql: Sql, context: Adaptive
         const parent = parentMetadata(context, budget), cost = finishCost(context, preparation, shape, through, inventory, oldRowBytes, parent, setup, legacyAnchors?.anchors.length ?? 0, budget);
         return { parent, cost };
       });
-      if (prepared.kind === "limited" || prepared.value.cost === null || !budget.canSpend(prepared.value.cost)) break;
+      if (prepared.kind === "limited") { capacityLimited = true; break; }
+      // A null forecast is a hard layout/input refusal. Only an actual
+      // quote that cannot fit establishes capacity deferral.
+      if (prepared.value.cost === null) break;
+      if (!budget.canSpend(prepared.value.cost)) { capacityLimited = true; break; }
       selected = { through, cost: prepared.value.cost, parent: prepared.value.parent };
       if (through.seq === context.through.seq) break;
     }
-    if (!selected || !scout) return { ok: false, reason: "limit" };
+    if (!selected || !scout) return capacityLimited ? { ok: false, deferred: "capacity" } : { ok: false, reason: "limit" };
     const constraints = scout.select(selected.through);
     const built = await (coupled ? planRootPublishedArchivePass : planPublishedArchivePass)(sql, { at: context.at, through: selected.through, after: context.after,
       bounds: context.bounds, policies: context.policies, format: context.format, parent: context.parent,
