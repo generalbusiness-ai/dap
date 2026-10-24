@@ -1,1 +1,0 @@
-Inactive old-only write children would still be visited by emit's child scan. Prefer a separately charged private read-only cache, leaving write children, selected paths, active flags and forecast/emission graph unchanged.

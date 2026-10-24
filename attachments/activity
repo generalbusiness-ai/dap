@@ -1,1 +1,0 @@
-Immutable Git reads only. No candidate/dependency reads, edits, imports, runtime, capture, tests or installs.
