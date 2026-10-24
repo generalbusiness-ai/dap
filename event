@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:279a10020e7ef52df1b7eb390ccc858dfa20f901","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-23-archive-input-work/owning-v3/result.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:27a14fae8a61285f7e57c3722795d8da5daeb7fb","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-host.ts."}
