@@ -7,6 +7,7 @@ import { captureJournalParentFrontier, journalRef, type JournalArchive, type Jou
 import { ARCHIVE_BOUNDS, ArchiveBudget, ArchiveStopped } from "./archive-budget.ts";
 import { archiveParent, copyArchiveObjects } from "./archive-parent.ts";
 import { ArchiveFrontiers, type ArchiveFrontierBase, type ArchiveFrontierPrepared } from "./archive-frontier-store.ts";
+import { selectArchiveBootstrapBounds } from "./archive-bootstrap-cost.ts";
 import { planPublishedArchiveConversion, rebuildArchive, rebuildArchivePass } from "./archive-build.ts";
 import { planAdaptiveArchivePass, planRootAdaptiveArchivePass } from "./archive-adaptive.ts";
 import type { FixtureArchiveSourcePins } from "./archive-source-pins.ts";
@@ -32,7 +33,7 @@ export interface ArchiveSend {
 export interface ArchiveProvider {
   format(repository: DestinationRepository, allowed: () => boolean): Promise<JournalFormat>;
   ref(repository: DestinationRepository, ref: string, allowed: () => boolean): Promise<string | null>;
-  objects(repository: DestinationRepository, commit: string, most: { readonly bytes: number; readonly objects: number }, allowed: () => boolean): Promise<readonly JournalObject[]>;
+  objects(repository: DestinationRepository, commit: string, most: { readonly bytes: number; readonly objects: number }, allowed: () => boolean, budget?: ArchiveBudget): Promise<readonly JournalObject[]>;
   readObject?(repository: DestinationRepository, object: { readonly id: string; readonly type: JournalObject["type"]; readonly maximum: number }, allowed: () => boolean, budget: ArchiveBudget): ReturnType<JournalObjectSource["object"]>;
   mintArchive(repository: DestinationRepository, at: ScopeRef, allowed: () => boolean): Promise<ArchiveCredential | null>;
   sendArchive(request: ArchiveSend): Promise<unknown>;
@@ -257,10 +258,19 @@ export class ArchiveDriver {
         if (!same(context.binding, { ...identity, commit: row.confirmed.commit, through: row.confirmed.through })) return budget.stop("unavailable");
         const finish = frontiers.bootstrapFinish(context);
         if (!finish.ok) return budget.stop("limit");
+        const maximum = selectArchiveBootstrapBounds(this.#maximum, budget, finish.cost);
+        if (maximum === null) return done({ state: "retry", next: scheduled, reason: "limit" });
         const captured = await budget.lookaheadAsync(finish.cost, async () => {
-          const remote = await this.#parent(row!, budget, allowed, frontiers, null);
-          if (remote.parent === null) return budget.stop("unavailable");
-          return captureJournalParentFrontier(context.binding, remote.parent.source, budget);
+          // This one-time migration uses the approved complete-closure port,
+          // never the steady-state exact-object path or a second witness.
+          const objects = await budget.wait(() => this.#options.provider.objects({ ...row!.repository },
+            context.binding.commit, maximum, allowed, budget));
+          if (!Array.isArray(objects) || objects.length > maximum.objects) return budget.stop("limit");
+          const held = copyArchiveObjects(objects, row!.format, budget, maximum.bytes);
+          return captureJournalParentFrontier(context.binding, { object: async (id, most) => {
+            const object = held.get(id);
+            return object ? { type: object.type, size: object.data.length, data: object.data.length <= most ? object.data : null } : null;
+          } }, budget);
         });
         if (captured.kind === "limited") return done({ state: "retry", next: scheduled, reason: "limit" });
         const prepared = await frontiers.prepareConfirmedBootstrap(context, captured.value, budget);
@@ -290,6 +300,11 @@ export class ArchiveDriver {
         mark = row.pending;
       } else {
         step = "plan";
+        // Only unpublished old v2 receipts need the historical pass metadata.
+        // This explicit transition port is never the native append source and
+        // is never consulted for pending rebuild or published steady state.
+        const legacyAnchorParent = row.confirmed?.layout === 2 && row.confirmed.anchorsPublished !== true && base !== null
+          ? (await this.#parent(row, budget, allowed, frontiers, null)).parent : null;
         const common = { bounds: this.#options.bounds, policies: this.#options.policies.registry, parent: previous.parent,
           markedAt: this.#options.clock(), ...(sources ? { fixtureSources: sources } : {}),
           ...(preparedSources?.replayScopes ? { replayScopes: preparedSources.replayScopes } : {}) };
@@ -301,6 +316,7 @@ export class ArchiveDriver {
         }
         else {
           const adaptive = await ("production" in this.#options ? planRootAdaptiveArchivePass : planAdaptiveArchivePass)(this.#options.sql, { ...common, at, through,
+            ...(legacyAnchorParent ? { legacyAnchorParent } : {}),
             ...(preparedSources?.prepare ? { prepareSources: preparedSources.prepare } : {}),
             after: row.confirmed?.through ?? null, format: row.format, row,
             atomicFirstAttempt: true,

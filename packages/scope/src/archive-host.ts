@@ -12,6 +12,7 @@ import type { DestinationRepository } from "./destination-host.ts";
 import { sendOnce } from "./github-host.ts";
 import { sendArchiveAppend } from "./archive-send.ts";
 import { beginArchiveParentRead, type ArchiveParentReadObservation } from "./archive-parent-read-diagnostic.ts";
+import { archiveBootstrapReadCost } from "./archive-bootstrap-cost.ts";
 
 /** Explicit stand-ins. Production credentials cannot be selected by config. */
 export interface ArchiveTokens {
@@ -47,7 +48,7 @@ export function archiveProvider(ports: { readonly tokens: ArchiveTokens; readonl
   const { tokens, clock } = ports;
   const isolatedObjectProtocol = host.isolatedObjectProtocol;
   const held = new WeakMap<ArchiveCredential, { repository: DestinationRepository; at: ScopeRef; ref: string; original: ArchiveCredential }>();
-  const source = async (repository: DestinationRepository, allowed: () => boolean, most?: { bytes: number; objects: number }, isolated = false, observation?: ArchiveParentReadObservation, reserveObjects?: (count: number) => void): Promise<SmartHttpSource> => {
+  const source = async (repository: DestinationRepository, allowed: () => boolean, most?: { bytes: number; objects: number }, isolated = false, observation?: ArchiveParentReadObservation, reserveObjects?: (count: number) => void, oneClosure = false): Promise<SmartHttpSource> => {
     check(allowed); repository = { ...repository }; host.transport(repository); // Validate before the first port call.
     observation?.phase("token");
     const plaintext = await tokens.read({ ...repository }, allowed); check(allowed);
@@ -56,12 +57,20 @@ export function archiveProvider(ports: { readonly tokens: ArchiveTokens; readonl
     const transport = host.transport(repository, plaintext);
     const maxBytes = Math.min(transport.maxBytes, most?.bytes ?? transport.maxBytes);
     const originalFetch = transport.fetch ?? ((request: Request) => fetch(request));
+    let requests = 0;
     return new SmartHttpSource({ ...transport, maxBytes,
-      ...(observation ? { fetch: async function(this: unknown, request: Request) {
+      ...(observation || oneClosure ? { fetch: async function(this: unknown, request: Request) {
         const get = request.method === "GET";
-        observation.phase(get ? "advertisement-request" : "object-request");
+        // A complete pack may satisfy every cached closure read. An omitted
+        // object must refuse, not start another negotiation on this allowance.
+        if (oneClosure) {
+          check(allowed);
+          if (requests === 0 ? !get : requests !== 1 || request.method !== "POST") return bad();
+          requests++;
+        }
+        observation?.phase(get ? "advertisement-request" : "object-request");
         const response = await originalFetch.call(this, request);
-        observation.phase(get ? "advertisement-response" : "object-response");
+        observation?.phase(get ? "advertisement-response" : "object-response");
         return response;
       } } : {}),
       ...(most === undefined ? {} : { bounds: { ...(transport.bounds ?? READ_BOUNDS), closureObjects: Math.min(transport.bounds?.closureObjects ?? READ_BOUNDS.closureObjects, most.objects) } }),
@@ -113,10 +122,15 @@ export function archiveProvider(ports: { readonly tokens: ArchiveTokens; readonl
         return value;
       } catch (error) { observation.refused(error); throw error; }
     },
-    async objects(repository, commit, most, allowed) {
+    async objects(repository, commit, most, allowed, budget) {
       const maximum = { ...most };
       if (!Number.isSafeInteger(maximum.bytes) || maximum.bytes < 32 || maximum.bytes > 8 * 1024 * 1024 || !Number.isSafeInteger(maximum.objects) || maximum.objects < 1 || maximum.objects > 8192) return bad();
-      const input = await source(repository, allowed, maximum);
+      check(allowed);
+      // Native bootstrap alone supplies its original budget. Admit the whole
+      // bounded decoder/walk/copy profile before token, identity or HTTP work.
+      // Actual counts do not receive a second debit after this reservation.
+      if (budget) budget.spend(archiveBootstrapReadCost(maximum));
+      const input = await source(repository, allowed, maximum, false, undefined, undefined, budget !== undefined);
       const collected = new Map<string, JournalObject>(); let bytes = 0;
       const recording: GitSource = {
         object: async (id, limit) => {

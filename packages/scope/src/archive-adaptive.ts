@@ -33,6 +33,9 @@ export interface AdaptiveArchiveContext {
   readonly at: ScopeRef; readonly through: Head; readonly after: Head | null;
   readonly bounds: Bounds; readonly policies: ArchivePolicyRegistry; readonly format: JournalFormat;
   readonly parent: { readonly id: string; readonly source: JournalObjectSource } | null;
+  /** Explicit receipt-bound old pass metadata for anchor migration only.
+   * The core append parent remains the independent native frontier above. */
+  readonly legacyAnchorParent?: { readonly id: string; readonly source: JournalObjectSource };
   readonly markedAt: Timestamp; readonly fixtureSources?: FixtureArchiveSourcePins;
   readonly replayScopes?: readonly ScopeRef[];
   /** Host source identity preparation for exactly the next candidate. It
