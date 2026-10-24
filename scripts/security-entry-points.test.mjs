@@ -36,12 +36,12 @@ const seals = {
   "packages/scope/src/item-queries.ts": "61ead9996d2c338a26331e04b8576c52425d8d2c88dc86173a7d79108c2ee418",
   "packages/scope/src/applications/projection.ts": "f7d3bb45d448ec654a89f875697f865e1e89baeb5d7529e0db0859bd855b009f",
   "packages/scope/src/destination-host.ts": "b86198499cadddaf47f439ed39f7e44f8da78fbed120e185b787b153f0dc66eb",
-  "packages/mcp/src/hosted.ts": "25e38fd6cb4529d86e1695a0a2abb85b40d5eb6efe13f0ab5830a22dd6474234",
+  "packages/mcp/src/hosted.ts": "12022f8f5816776931b6fdf1ab5bf7910af6371237523c5a8a05ab987fce30c4",
   "packages/mcp/src/hosted-tools.ts": "5bb4dd74b12896bb8f5f5cb366f25bd31af849c2690d0e3ab5d81eb277f94a47", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/service.ts": "e8d95eca7d989a5f883fdae5236865d181b9b1a3129828876df07c5122762836", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/catalogue.ts": "194dd82a6d3f188909485c4c1b9db33aee671b06fb46840e92fc0b8df2a79726", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/inventory.ts": "74c5db16355c5badacf9dc6cc241d20d6400908a160324c07d88db9191b455f8", // Reviewed R5 admission owner; actual maintained parser output.
-  "packages/mcp/src/http.ts": "9a1450bef9f94b55b4751a3368032dfc480555628b48ccfdd55fd43e9c853af8",
+  "packages/mcp/src/http.ts": "757f8b3644c6afdf5d6c0399bd3865f879c8aa4841a7429aaa30c264ee9d76a6",
   "examples/grow/simulator-worker.ts": "2d60dab3a9a5b204b69f15bc5ec3473fa48513888d7ffdb0c1fc179f6fe4883c",
   "examples/grow/simulator-host.ts": "26a8521b98737cae3d80a9fe3b9ac17fb10b11fcf2f8ce973251253bdbf2b7df"
 };
@@ -55,8 +55,8 @@ const pendingArchiveSeals = {
   "packages/scope/src/archive-source-window.ts": "4db3f5885e7541f713b9668d1cde655e42be1950dd6af77d5711a323b3582e1c",
   "packages/scope/src/archive-publication.ts": "d8c39d220bc7eea59301478aa553960267aac16f06502b4103a85647c71eb457",
   "packages/scope/src/archive-build.ts": "e1111bfef1fe94cc8436498679395ba1b9b8adba3db8651f4f24d87d68696853",
-  "packages/scope/src/archive-driver.ts": "7d065eb9f2d3dd9f8b9f5f4ebe5703dd4b983fb18ca52bde48024fb4b6a39092", // Capacity deferral reviewed; actual maintained parser output.
-  "packages/scope/src/archive-row.ts": "c8432419f27faaeca4c91343474bd6f2257e0a1686322a303c61f110d12a0a83",
+  "packages/scope/src/archive-driver.ts": "acaee7f86ebdddb1936dbe260331f39d22ca764ca0f628418f821cfcdd36e9bc", // Capacity deferral reviewed; actual maintained parser output.
+  "packages/scope/src/archive-row.ts": "b70e54ce9c07f2e903357028ed2e0cc723544a41e6aaa92c715639b05cb1a1f6",
   "packages/scope/src/floor-writer.ts": "fb8fd859844b8d10ba43b477bcaf07ab32fe1bfa1b6684ad9ae70b930d328a11",
   "packages/scope/src/object.ts": "cd9a7c68a2cafbdfcb810dedd5fa5cb57c00f2d6dcd0fc61d42a10633fa709b0", // Must match the separately adopted original owner value above.
   "apps/room/worker.grow.ts": "791c2bfcb8b2a62d8f0d8afec627ac76b63be4b9f1ee5de27d3f6c081959bc01",

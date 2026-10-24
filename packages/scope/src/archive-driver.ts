@@ -314,6 +314,7 @@ export class ArchiveDriver {
           planned = await planPublishedArchiveConversion(this.#options.sql, { ...common, row }, budget);
         }
         else {
+          const capacity = rows.prepareCapacityDeferral(row, count => this.#later(count), budget);
           const adaptive = await ("production" in this.#options ? planRootAdaptiveArchivePass : planAdaptiveArchivePass)(this.#options.sql, { ...common, at, through,
             ...(legacyAnchorParent ? { legacyAnchorParent } : {}),
             ...(preparedSources?.prepare ? { prepareSources: preparedSources.prepare } : {}),
@@ -321,8 +322,9 @@ export class ArchiveDriver {
             atomicFirstAttempt: true,
             parentHeld: previous.held, parentUsed: previous.used, maximum: this.#maximum }, budget);
           if (!adaptive.ok && "deferred" in adaptive) {
-            // The existing pre-Mark defer already owns this retry wake.
-            // Keep all spent work; no Mark, attempt, token or extra debit.
+            // Only genuine capacity shortage escalates the durable wake.
+            // Its write was reserved before lookahead, not after exhaustion.
+            scheduled = capacity.persist();
             return done({ state: "retry", next: scheduled, reason: "limit" });
           }
           if (adaptive.ok) selectedParentObjects = adaptive.parentObjects;
