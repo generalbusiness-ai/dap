@@ -59,11 +59,36 @@ actual Mark with wake bytes identical to the captured pre-Mark wake, then
 requires the stale capacity update to refuse without changing the Mark.
 Its Mark is test-authored bookkeeping, not host acceptance.
 
-Source review, actual maintained driver and row seals, compilers, affected
-tests, and one ordinary gate remain pending. The separately held operator
-reader must use the new backward-compatible wake decoder when integrated;
-its current diagnostic projection can keep the same pending, stopped, and
-next fields. The counter does not change those fields' meaning.
+Root and peer accepted the Source. The actual maintained producer computed
+the driver and row seals, and root adopted only those map values in clean
+`280a423333b8c91adcc1414c4616700eb08c5818`.
+
+Affected original `65813` completed naturally with exit 0. Scope production
+and test compilers passed, followed by the whole driver 18 and row 8 cases.
+All 26 planned, collected, started, and terminal semantic identities agree
+with Vitest JSON. The run ended passed with zero unhandled errors. Four
+maintained Source, tool, workspace, alias, and lock guards passed at that
+clean checkpoint. These are boundary guards, not a new full physical
+proof of the dependency pool throughout execution.
+
+Only eight per-case result callbacks were emitted, all from the row file.
+The 18 driver cases have passing terminal and JSON outcomes, but their
+result callbacks are absent. This reporting gap is retained explicitly.
+The external Python owner measured 15.31 seconds wall and 19.35 seconds
+CPU, at printed 0.01-second precision. Its focused child and phase costs
+are nested and are not added again.
+
+The independent closed audit is
+`/private/tmp/artroom-archive-capacity-backoff-focused-independent-audit-20261024-v1/manifest.json`.
+The proposed cadence and stale-Mark controls have not run. Their Source
+preparation does not establish a distinguishing outcome.
+
+The separately held corrected operator diagnostic must integrate before
+the final backoff gate. Root will compose the backward-compatible wake
+decoder once and refresh the actual row seal after integration. Its
+current diagnostic projection can keep the same pending, stopped, and
+next fields. The counter does not change those fields' meaning. One
+ordinary gate, exact-head review, and deployment remain pending.
 
 The planner requires this head to land before the separate restart
 transition. The planner then owns one deployment containing capacity
