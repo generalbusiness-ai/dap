@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:db26635b8bf4558fb43e69f438bd60bc04018f34","text":"Merge retired a covered predecessor; the successor is at apps/counter/browser/projection.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:db2d224f54bfa01673ec6829d3be3f5f4add9b2e","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/floor-writer.ts."}
