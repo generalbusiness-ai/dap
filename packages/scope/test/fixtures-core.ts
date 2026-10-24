@@ -6,9 +6,9 @@ import { secretSigner } from "@generalbusiness/dap-client";
 /** Each call retains the caller's exact public TEST seed. */
 export const fixedSigner = (fill: number) => secretSigner(new Uint8Array(32).fill(fill));
 
-/** One explicitly trusted release/publisher pair, in the original wire order. */
-export const applicationTrust = (packet: { ids: { release: string } }, publisher: KeyId): string =>
-  JSON.stringify([{ release: packet.ids.release, publisher }]);
+/** One explicitly trusted release/publisher/host row, in the original wire order. */
+export const applicationTrust = (packet: { ids: { release: string } }, publisher: KeyId, host = "git.example"): string =>
+  JSON.stringify([{ release: packet.ids.release, publisher, host }]);
 
 /** Content-host ports also admit deliberately empty or invalid trust strings. */
 export const applicationContentBindings = <Content>(content: Content, trust: string) =>

@@ -188,7 +188,7 @@ valid required settings, not whether a particular public room exists.
 | `GET, HEAD /page/` | `none` | Method and path checks; embedded asset lookup | None | Fixed embedded assets | None |
 | `GET, HEAD /page/page.js` | `none` | Method and path checks; embedded asset lookup | None | Fixed embedded assets | None |
 | `GET, HEAD /brand/*` | `none` | Method and asset-name lookup; base64 decode | None | Fixed embedded asset map | None |
-| `GET /site/*` | `none` | Publication proof, room and repository reads; render | Activation; provider read-token mint and attempted revoke | 1 MiB file; 64 path segments; 8 KiB path; bounded publication proof; no address rate limit | Scope RPC; configured Git host, including Artifacts token calls |
+| `GET /site/*` | `none` | Publication proof, room and repository reads; render | Activation; provider read-token mint and attempted revoke | 240 GET attempts/address/minute at fixed index; 4096 active windows; 1 MiB file; 64 path segments; 8 KiB path; bounded publication proof | Scope RPC; configured Git host, including Artifacts token calls |
 | `GET, HEAD /applications/*` | `none` | Address and exact configured sandbox descriptor; redirect or refuse, never package bytes | None | 8 KiB path; at most 32 configured descriptors | None |
 | `GET /v1/demo/creation-offer` | `none` | Demo config and origin checks; register projection | Activation of configured register | Exact current or legacy register; GET only | Configured register RPC |
 | `POST /v1/scopes` | `creation` | JSON and seed; closed deployment pin and signature admission before object selection | Refused closed admission selects no object and writes no scope state; accepted or local/open paths activate and judge genesis | 1 MiB body; turn bounds; fixed creation key/address window before target lookup | No scope RPC on closed admission refusal; admitted scope namespace and creation follow-up after sealing |
@@ -261,7 +261,7 @@ Rules identity in Room mode. This metadata replaces no source or host check.
 | `GET, HEAD /page/` | `none` | Method and path checks; embedded asset lookup | None | Fixed embedded assets | None |
 | `GET, HEAD /page/page.js` | `none` | Method and path checks; embedded asset lookup | None | Fixed embedded assets | None |
 | `GET, HEAD /brand/*` | `none` | Method and asset-name lookup; base64 decode | None | Fixed embedded asset map | None |
-| `GET /site/*` | `none` | Publication proof, room and repository reads; render | Activation; provider read-token mint and attempted revoke | 1 MiB file; 64 path segments; 8 KiB path; bounded publication proof; no address rate limit | Scope RPC; configured Git host, including Artifacts token calls |
+| `GET /site/*` | `none` | Publication proof, room and repository reads; render | Activation; provider read-token mint and attempted revoke | 240 GET attempts/address/minute at fixed index; 4096 active windows; 1 MiB file; 64 path segments; 8 KiB path; bounded publication proof | Scope RPC; configured Git host, including Artifacts token calls |
 | `GET, HEAD /applications/*` | `none` | Address and exact configured sandbox descriptor; redirect or refuse, never package bytes | None | 8 KiB path; at most 32 configured descriptors | None |
 | `GET /v1/demo/creation-offer` | `none` | Demo config and origin checks; register projection | Activation of configured register | Exact current or legacy register; GET only | Configured register RPC |
 | `POST /v1/scopes` | `creation` | JSON and seed; closed deployment pin and signature admission before object selection | Refused closed admission selects no object and writes no scope state; accepted or local/open paths activate and judge genesis | 1 MiB body; turn bounds; fixed creation key/address window before target lookup | No scope RPC on closed admission refusal; admitted scope namespace and creation follow-up after sealing |
@@ -307,7 +307,7 @@ header or body authentication. Application screens need an uncommitted
 | `GET, HEAD /page/` | `none` | Method and path checks; embedded asset lookup | None | Fixed embedded assets | None |
 | `GET, HEAD /page/page.js` | `none` | Method and path checks; embedded asset lookup | None | Fixed embedded assets | None |
 | `GET, HEAD /brand/*` | `none` | Method and asset-name lookup; base64 decode | None | Fixed embedded asset map | None |
-| `GET /site/*` | `none` | Publication proof, room and repository reads; render | Activation; provider read-token mint and attempted revoke | 1 MiB file; 64 path segments; 8 KiB path; bounded publication proof; no address rate limit | Scope RPC; configured Git host, including Artifacts token calls |
+| `GET /site/*` | `none` | Publication proof, room and repository reads; render | Activation; provider read-token mint and attempted revoke | 240 GET attempts/address/minute at fixed index; 4096 active windows; 1 MiB file; 64 path segments; 8 KiB path; bounded publication proof | Scope RPC; configured Git host, including Artifacts token calls |
 | `GET, HEAD /applications/*` | `none` | Address and exact configured sandbox descriptor; redirect or refuse, never package bytes | None | 8 KiB path; at most 32 configured descriptors | None |
 | `GET /v1/demo/creation-offer` | `none` | Demo config and origin checks; register projection | Activation of configured register | Exact current or legacy register; GET only | Configured register RPC |
 | `POST /v1/scopes` | `creation` | JSON and seed; closed deployment pin and signature admission before object selection | Refused closed admission selects no object and writes no scope state; accepted or local/open paths activate and judge genesis | 1 MiB body; turn bounds; fixed creation key/address window before target lookup | No scope RPC on closed admission refusal; admitted scope namespace and creation follow-up after sealing |
@@ -424,6 +424,58 @@ evidence for the platform adapter, not an in-tree runtime witness.
 | Route and method | Gate class | Work before the gate | State written before the gate | Bounds | Outbound calls |
 |---|---|---|---|---|---|
 | `GET, HEAD /*` | `none` | Platform asset selection | None | Finite deployed asset set; platform serving limits | None |
+
+## Unread read-token custody
+
+Only the trusted destination `mint-read` adapter enrolls newly minted member
+read tokens for local plaintext expiry. A durable marker binds the full scope
+and incarnation, token ID, mint operation, attempt and provider-reported end.
+The native alarm processes bounded backfill and due-queue quanta; delivery is
+not an exact-wall-clock guarantee. Taking or dropping plaintext keeps its
+metadata and does not revoke the provider token. Generic write-token plaintext
+stays available for provider revocation, even if its ID resembles a read handle.
+
+Planner decision `21a8e35b103dd0280ea711d78d167db0d355cafd` accepts partial
+legacy coverage. An untagged row needs bounded retained current-incarnation
+mint-read, opening and confirmed-outcome proof before enrollment. Rows with
+missing, pruned, oversized, invalid or unproved old-incarnation evidence remain
+retained because no safe retained discriminator separates them from write
+credentials. A held legacy read confirmed after its once-through backfill scan
+also remains retained; confirmation alone does not enroll it. All newly minted
+explicit read tokens are queued. No complete legacy cleanup is claimed.
+
+Current [Artifacts minting](../../packages/scope/src/artifacts-host.ts) sends
+the requested read lifetime to the provider and records its returned
+`expiresAt`. Current [GitHub minting](../../packages/scope/src/github-host.ts)
+records the installation token's provider-reported expiry rather than sending
+the requested seconds; the [client](../../packages/git/src/github.ts) requires
+a future expiry within 65 minutes of its clock. These adapter checks do not
+prove deployed provider enforcement or an unknown legacy row's origin or expiry.
+See the [implementation note](../../notes/implementation/2026-10-24-read-token-expiry.md)
+for the bounded maintenance and pending validation limits.
+
+## Public Site address window
+
+After method, credential-in-URL and path bounds, every valid `/site` GET
+(including redirects, versions and conditional reads) reserves an address
+attempt at the existing fixed `SCOPE_INDEX` serving object before room,
+publication or provider work. Its separate counter admits 240 attempts per
+fixed 60-second window and retains at most 4096 active keys. Addresses have a
+64 UTF-8-byte bound before RPC serialization and in the owner. Only the outer
+platform fetch forwards Cloudflare's `CF-Connecting-IP`; this relies on the
+platform setting that header. Synthetic and service-binding callers cannot
+select a bucket by putting a header on their supplied Request: without an
+explicit trusted transport address they share one internal missing-address
+bucket. No caller-supplied address grants authority.
+
+A full live table refuses a new address; it never evicts an active window.
+Only expired windows are reclaimed. Quota, capacity or invalid address refusal
+answers 429 with `Retry-After: 60` and `Cache-Control: no-store`. A missing or
+unavailable fixed index answers 503 without selecting the room or provider.
+The existing creation and signed-read counters keep their own accounting.
+The single fixed owner shares the window across Worker ingress isolates;
+its counters are memory-only and reset when that owner is evicted or replaced.
+This is a serving bound, not a durable quota or a global network limit.
 
 ## Witness and limits
 

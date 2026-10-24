@@ -47,6 +47,7 @@
 import { GitRefusal, READ_BOUNDS, Reader, type ObjectId, type TreeEntry } from "@generalbusiness/dap-git";
 import { canonicalize } from "@generalbusiness/dap-bytes";
 import { credentialInUrl } from "../sessions.ts";
+import { admitServing } from "../serving-admission.ts";
 import { StepError, publicationOf, publishedCommitOf, readerOf, roomOf, type Opened, type SiteEnv, type SiteStep } from "./host.ts";
 import { renderMarkdown, titleOf } from "./markdown.ts";
 import { escapeHtml } from "./node.ts";
@@ -62,8 +63,8 @@ export const LISTED_TITLES = 100;
 /** The room's own page, which every page's footer links to (`page.ts`). */
 const ROOM_PAGE = "/page/";
 
-export type SiteRefusal = "bad-request" | "method-not-allowed" | "not-found" | "not-published" | "too-large" | "host-not-configured" | "unreadable";
-const STATUS: Record<SiteRefusal, number> = { "bad-request": 400, "method-not-allowed": 405, "not-found": 404, "not-published": 404, "too-large": 413, "host-not-configured": 503, unreadable: 502 };
+export type SiteRefusal = "bad-request" | "method-not-allowed" | "not-found" | "not-published" | "too-large" | "host-not-configured" | "unreadable" | "rate-limited" | "unavailable";
+const STATUS: Record<SiteRefusal, number> = { "bad-request": 400, "method-not-allowed": 405, "not-found": 404, "not-published": 404, "too-large": 413, "host-not-configured": 503, unreadable: 502, "rate-limited": 429, unavailable: 503 };
 
 /** A refusal. The browser representation exposes no provider error or private input. */
 export function refused(reason: SiteRefusal, sentence: string, step?: SiteStep, browser?: { request: Request; room?: string }): Response {
@@ -74,7 +75,7 @@ export function refused(reason: SiteRefusal, sentence: string, step?: SiteStep, 
     const q = quality === undefined ? 1 : Number(quality.slice(quality.indexOf("=") + 1).trim());
     return Number.isFinite(q) && q > 0 && q <= 1;
   }) === true;
-  const headers = { "content-type": html ? "text/html; charset=utf-8" : "text/plain; charset=utf-8", "cache-control": "no-store", "x-content-type-options": "nosniff", "vary": "Accept", ...(step ? { "x-site-step": step } : {}) };
+  const headers = { "content-type": html ? "text/html; charset=utf-8" : "text/plain; charset=utf-8", "cache-control": "no-store", "x-content-type-options": "nosniff", "vary": "Accept", ...(step ? { "x-site-step": step } : {}), ...(reason === "rate-limited" ? { "retry-after": "60" } : {}) };
   if (!html) return new Response(`${reason}: ${sentence}\n`, { status: STATUS[reason], headers });
   const explanations: Record<SiteRefusal, string> = {
     "bad-request": "This Pages address is not valid.",
@@ -84,6 +85,8 @@ export function refused(reason: SiteRefusal, sentence: string, step?: SiteStep, 
     "too-large": "This page is too large to read here.",
     "host-not-configured": `This host does not read the repository of ${browser?.room ?? "this room"}.`,
     unreadable: "The published page could not be read.",
+    "rate-limited": "Too many Pages reads. Try again after a minute.",
+    unavailable: "Pages are temporarily unavailable. Try again later.",
   };
   const body = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Pages</title>
@@ -251,8 +254,10 @@ ${body}</main>
 `;
 }
 
-/** One request to the site route. `fetch`: the transport to the Git host, for a test's scripted host. */
-export async function site(request: Request, env: SiteEnv, fetch?: (request: Request) => Promise<Response>): Promise<Response> {
+/** One site request. Only the outer platform fetch supplies its trusted edge
+ * address. Synthetic/service requests share the null-address bucket; this
+ * function never trusts an address header on their supplied Request. */
+export async function site(request: Request, env: SiteEnv, fetch?: (request: Request) => Promise<Response>, address: string | null = null): Promise<Response> {
   const url = new URL(request.url);
   let roomName: string | undefined;
   const refusal = (reason: SiteRefusal, sentence: string, step?: SiteStep) => refused(reason, sentence, step, { request, ...(roomName === undefined ? {} : { room: roomName }) });
@@ -260,10 +265,13 @@ export async function site(request: Request, env: SiteEnv, fetch?: (request: Req
   if (request.method !== "GET") return refusal("method-not-allowed", "the site answers GET only");
   const parsed = parse(url);
   if (!parsed) return refusal("bad-request", "a site address names a directory, a ref and a path, with no empty, '.' or '..' segment");
-  // No ref: the published branch.
+  if (parsed.ref !== null && (parsed.path.length > 64 || utf8.encode(parsed.path.join("/")).length > 8192)) return refusal("unreadable", "publication-history-limit", "objects");
+  const admission = await admitServing(env, { kind: "site-read" }, address);
+  if (admission !== "admitted") return admission === "rate-limited"
+    ? refusal("rate-limited", "too many site reads") : refusal("unavailable", "the site is temporarily unavailable");
+  // Redirects and conditional reads also consume a public-site attempt.
   if (parsed.ref === null) return new Response(null, { status: 302, headers: { location: `/site/${segment(parsed.directory)}/HEAD/`, "cache-control": "no-store" } });
   const { directory, ref, path, trailing } = parsed;
-  if (path.length > 64 || utf8.encode(path.join("/")).length > 8192) return refusal("unreadable", "publication-history-limit", "objects");
   const versions = ref === "versions" && path.length === 0;
 
   let room;

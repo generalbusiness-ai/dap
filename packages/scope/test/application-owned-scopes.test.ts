@@ -34,7 +34,7 @@ test("one native install creates and confirms the declared root and child with i
     const membership = await life.wait(() => M.at()), directory = await life.wait(() => D.at());
     const port: ServerPort = { service: "https://scopes.test", signer: secretSigner(rita.secret), custody: memoryStore(), now: life.now,
       config: { read: async () => ({ service: "https://scopes.test", repository: { directory, membership, rules: A.name, destination: G.name } }), addRoot: async () => { throw Error("Use the native installation."); } },
-      applicationFetch: fetchPackage, fetch: (url, init) => life.wait(() => routed(url, init)) };
+      applicationFetch: fetchPackage, applicationTrust: bindings.APPLICATION_TRUST, fetch: (url, init) => life.wait(() => routed(url, init)) };
     const mcp = new McpService(port);
     const installed = await life.wait(() => mcp.call("install_application", { uri: f.uri, release: packet.ids.release, roles: ["admin"], values: {}, idempotencyKey: "TEST-owned-scopes-install" }));
     expect(installed.structuredContent).toMatchObject({ answer: "accepted", phase: "recorded" });

@@ -33,7 +33,7 @@ test.each([["device", C, undefined, false], ["device/archive bound", AC, "journa
     const membership = await life.wait(() => M.at()), directory = await life.wait(() => D.at()), owner = { membership, member: "@rita" as const };
     const port: ServerPort = { service: "https://scopes.test", signer: secretSigner(rita.secret), custody: memoryStore(), now: life.now,
       config: { read: async () => ({ service: "https://scopes.test", repository: { directory, membership, rules: A.name, destination: G.name } }), addRoot: async () => { throw Error("Native discovery only."); } },
-      applicationFetch: peer.fetch, fetch: (url, init) => life.wait(() => routed(url, init)),
+      applicationFetch: peer.fetch, applicationTrust: JSON.stringify(f.trust), fetch: (url, init) => life.wait(() => routed(url, init)),
     };
     const mcp = new McpService(port), args = { uri: f.uri, release: packet.ids.release, roles: ["admin"], values: {}, owner, idempotencyKey: "TEST-device-native-install" };
     const missing = await life.wait(() => mcp.call("install_application", { ...args, owner: { membership, member: "@missing" }, idempotencyKey: "TEST-device-owner-missing" }));

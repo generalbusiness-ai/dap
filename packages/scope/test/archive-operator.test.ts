@@ -5,11 +5,12 @@
  * cold-object, authenticated installation or hosted recovery witness. */
 import { runInDurableObject } from "cloudflare:test";
 import { expect, onTestFinished, test, vi } from "vitest";
-import type { ScopeId } from "@generalbusiness/dap-contract";
+import type { OperationId, ScopeId } from "@generalbusiness/dap-contract";
 import { archiveOperatorState, archiveRowDiagnostic, type ArchiveOperatorView } from "../src/archive-operator.ts";
 import { ArchiveDriver } from "../src/archive-driver.ts";
 import { canonicalize, digestBytes, utf8 } from "@generalbusiness/dap-bytes";
 import { ArchiveRows } from "../src/archive-row.ts";
+import { CredentialStore } from "../src/credential-store.ts";
 import { at, creation, objectOf, rita } from "./fixtures-native.ts";
 import { createNativeArchiveLane, archiveAuthorityBasis, archiveAuthorityPolicies } from "./support/archive-native-authority.ts";
 import { ScriptedHost } from "./support/archive-driver.ts";
@@ -175,6 +176,15 @@ test("a warm uncreated operator target stays absent and does not initialize miss
 
 test.for(["nativeBirth", "readiness", "queryItems", "proofSource"] as const)("existing %s ingress logs one bounded archive diagnostic before recovery per activation", async ingress => {
   const { lane, row } = await fixture("pending");
+  // TEST provider-mint stand-in: real private custody/enrollment, not a
+  // provider call or fabricated expiry queue. Its wake must use the same
+  // diagnostic ordering as archive recovery on the next activation.
+  await lane.inside(state => {
+    const custody = new CredentialStore(archiveSql(state), () => lane.at);
+    expect(custody.putRead({ id: "operator-expiry-fixture", mint: "900:0" as OperationId,
+      attempt: 1, ends: at(900), plaintext: "TEST PRIVATE expiry credential" })).toBe("stored");
+    expect(custody.expiryWake(lane.c.clock.now)).toBe(at(900));
+  });
   const seen: unknown[][] = [], order: string[] = [];
   const logging = vi.spyOn(console, "info").mockImplementation((...args: unknown[]) => {
     if (args[0] === "archive-row-diagnostic-v1") { seen.push(args); order.push("diagnostic"); }

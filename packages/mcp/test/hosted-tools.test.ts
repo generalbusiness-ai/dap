@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { hostedMcpTools, McpService, memoryStore, WORDS } from "../src/index.ts";
+import { hostedMcpTools, McpService, memoryStore, WORDS, type ServerPort } from "../src/index.ts";
 import { fixedSigner } from "./fixtures.ts";
 import { StandIn } from "./support/standin.ts";
 import { TRUSTED_APPLICATION_COHORT, firstExtents } from "@generalbusiness/dap-platform";
@@ -130,4 +130,40 @@ test("actual-target standing and definition selection refuse before signing, cus
     expect(writes.some(bytes => bytes.includes('"kind":"install-application"'))).toBe(false);
     expect(installPeer.requests.some(request => request.endsWith("/acts"))).toBe(false);
   }
+});
+
+// Actual MCP dispatch/custody/HTTPS Git opener; native room answers and the
+// outbound response are TEST stand-ins. No live host or native judgment.
+test("install trust binds the expected release and host before fetching and rechecks after custody awaits", async () => {
+  const signer = fixedSigner(30), release = `sha256:${"d".repeat(64)}` as const;
+  const args = { uri: `git+https://packages.test/apps.git/@${"c".repeat(40)}/application.dap.json`, release, roles: [], values: {}, idempotencyKey: "operator-trusted-install" };
+  const row = { release, publisher: signer.key, host: "packages.test" };
+  const peer = new StandIn(signer.key, "admin", ["application.install"]);
+  peer.scopes.get(peer.directory.scope)!.definition = TRUSTED_APPLICATION_COHORT.directory;
+  peer.scopes.get(peer.rules.scope)!.definition = TRUSTED_APPLICATION_COHORT.rules;
+  const requests: Request[] = [];
+  const port: ServerPort = { service: "https://scopes.test", signer, fetch: peer.fetch, now: () => Date.parse("2099-01-01T00:00:00Z"),
+    config: { read: async () => peer.config(), addRoot: async () => {} }, custody: memoryStore(),
+    applicationFetch: async request => { requests.push(request); return new Response(null, { status: 302, headers: { location: "https://other.test/redirect" } }); } };
+  for (const setting of [undefined, "[]", JSON.stringify([{ ...row, release: `sha256:${"e".repeat(64)}` }]), JSON.stringify([{ ...row, host: "other.test" }])]) {
+    port.applicationTrust = setting;
+    const service = new McpService(port), answer = await service.call("install_application", args);
+    expect(answer.structuredContent["error"]).toBe("target");
+    expect(requests).toHaveLength(0);
+    expect(peer.requests.some(request => request.endsWith("/acts"))).toBe(false);
+  }
+  port.applicationTrust = JSON.stringify([row]);
+  const custody = memoryStore(), lock = custody.lock;
+  custody.lock = async (...values) => { port.applicationTrust = "[]"; return lock(...values); };
+  port.custody = custody;
+  const rechecked = await new McpService(port).call("install_application", args);
+  expect(rechecked.isError).toBe(true); expect(requests).toHaveLength(0);
+  expect(peer.requests.some(request => request.endsWith("/acts"))).toBe(false);
+  // A trusted URI reaches the real bounded opener; its redirect never becomes
+  // another request. Real packet/signature success stays in native install custody.
+  port.custody = memoryStore(); port.applicationTrust = JSON.stringify([row]);
+  expect((await new McpService(port).call("install_application", args)).isError).toBe(true);
+  expect(requests).toHaveLength(1);
+  expect([new URL(requests[0]!.url).host, requests[0]!.redirect, requests[0]!.credentials]).toEqual(["packages.test", "manual", "omit"]);
+  expect(peer.requests.some(request => request.endsWith("/acts"))).toBe(false);
 });

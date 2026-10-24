@@ -63,12 +63,14 @@ export class Wakes {
   readonly #dispatches: boolean;
   #driver: number | null = null;
   readonly #archive: (() => Timestamp | null) | undefined;
+  readonly #credentials: (() => Timestamp | null) | undefined;
 
-  constructor(store: Store, alarm: Alarm, dispatches = true, archive?: () => Timestamp | null) {
+  constructor(store: Store, alarm: Alarm, dispatches = true, archive?: () => Timestamp | null, credentials?: () => Timestamp | null) {
     this.#store = store;
     this.#alarm = alarm;
     this.#dispatches = dispatches;
     this.#archive = archive;
+    this.#credentials = credentials;
     this.deadline = { set: (at) => { store.setDeadline(at); return this.set(); } };
     this.maintenance = { set: (at) => { store.setSignerMaintenance(at); return this.set(); } };
   }
@@ -82,7 +84,8 @@ export class Wakes {
     const dispatch = this.#dispatches ? this.#store.nextDispatch() : null;
     const maintenance = this.#store.signerMaintenance();
     const archive = this.#archive?.() ?? null;
-    const at = [deadline === null ? null : timeMs(deadline), dispatch, this.#store.nextSend(), this.#driver, maintenance === null ? null : timeMs(maintenance), archive === null ? null : timeMs(archive)].filter((ms): ms is number => ms !== null);
+    const credentials = this.#credentials?.() ?? null;
+    const at = [deadline === null ? null : timeMs(deadline), dispatch, this.#store.nextSend(), this.#driver, maintenance === null ? null : timeMs(maintenance), archive === null ? null : timeMs(archive), credentials === null ? null : timeMs(credentials)].filter((ms): ms is number => ms !== null);
     return this.#alarm.set(at.length === 0 ? null : timeOf(Math.min(...at)));
   }
 }

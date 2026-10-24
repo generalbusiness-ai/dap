@@ -126,7 +126,7 @@ test("a real change and Lending tell share one slot: the held change finishes fi
     expect(fileReceipt).toMatchObject({cause:{from:source,n:0},path,contentDigest:textDigest(fromLending),commit:laterCommit});
     expect(final.filter(item=>item.type==="receipt"&&item.values["commit"]===changePush)).toMatchObject([{state:"written"}]);
     expect(final.filter(item=>item.type==="receipt"&&item.values["commit"]===laterCommit)).toMatchObject([{state:"written"}]);
-    const page=async(commit:string)=>site(new Request(`https://scopes.test/site/${D.name}/${commit}/${path}`),{SCOPES:env.PLATFORM,...host.bindings(R.name)},host.stand.fetch);
+    const page=async(commit:string)=>site(new Request(`https://scopes.test/site/${D.name}/${commit}/${path}`),{SCOPE_INDEX:env.SCOPE_INDEX,SCOPES:env.PLATFORM,...host.bindings(R.name)},host.stand.fetch,`fixture:${D.name}`);
     const earlier=await page(changePush), newest=await page(laterCommit);
     expect(earlier.status).toBe(200);expect(await earlier.text()).toContain("From the real change");
     expect(newest.status).toBe(200);expect(await newest.text()).toContain("Later Lending page");

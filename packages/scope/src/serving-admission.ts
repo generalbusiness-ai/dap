@@ -6,8 +6,9 @@ import { signedReadForLimits } from "./signed-reads.ts";
 import { SCOPE_INDEX_NAME, type ScopeIndexEnvironment } from "./scope-index.ts";
 import { ServingLimits, servingLimitConfig, type ServingLimitSettings } from "./serving-limits.ts";
 import { addressKey } from "./limits.ts";
+import { SiteReadWindow, siteReadAddressKey } from "./site/window.ts";
 
-export type ServingRequest = { kind: "creation"; signed: unknown } | { kind: "signed-read"; reader: unknown };
+export type ServingRequest = { kind: "creation"; signed: unknown } | { kind: "signed-read"; reader: unknown } | { kind: "site-read" };
 export type ServingDecision = "admitted" | "invalid" | "rate-limited" | "unavailable";
 export interface ServingEnvironment extends ScopeIndexEnvironment, ServingLimitSettings {}
 interface ServingPort { admitServing(request: ServingRequest, address: string | null): Promise<ServingDecision> }
@@ -26,11 +27,13 @@ export function boundedParentlessIntent(supplied: unknown): SignedIntent | null 
  * never from an admission caller. has()/registration do not call this code. */
 export class ServingAdmission {
   readonly #limits: ServingLimits | null;
+  readonly #site = new SiteReadWindow();
   constructor(settings: ServingLimitSettings) {
     const config = servingLimitConfig(settings);
     this.#limits = config ? new ServingLimits(config) : null;
   }
   admit(request: ServingRequest, address: string | null, now: number): ServingDecision {
+    if (request?.kind === "site-read") return this.#site.admit(address, now) ? "admitted" : "rate-limited";
     if (!this.#limits) return "unavailable";
     if (typeof address !== "string" && address !== null) return "invalid";
     const hasAddress = addressKey(address) !== null;
@@ -54,6 +57,7 @@ export class ServingAdmission {
 /** Shared HTTP/service/hosted ingress. Only the fixed object's serving method
  * is addressed here, never the proposed target or a proof/index lookup. */
 export async function admitServing(env: ServingEnvironment, request: ServingRequest, address: string | null): Promise<ServingDecision> {
+  if (request?.kind === "site-read" && siteReadAddressKey(address) === null) return "rate-limited";
   if (!env.SCOPE_INDEX) return "unavailable";
   try {
     const port = env.SCOPE_INDEX.get(env.SCOPE_INDEX.idFromName(SCOPE_INDEX_NAME)) as ServingPort;

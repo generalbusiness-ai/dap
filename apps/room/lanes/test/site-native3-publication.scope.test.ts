@@ -64,7 +64,7 @@ test("native @3 cleaned publication retains immutable Site eligibility while tim
       const tables = state.storage.sql.exec<{ name: string }>("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%' ORDER BY name").toArray();
       return tables.map(({ name }) => [name, state.storage.sql.exec(`SELECT * FROM "${name.replaceAll('"', '""')}"`).toArray()]);
     });
-    const get = (commit: string, conditional = true) => site(new Request(`https://scopes.test/site/${config.repository!.directory.scope}/${commit}/README.md`, { ...(conditional ? { headers: { "if-none-match": "*" } } : {}) }), { SCOPES: env.PLATFORM, ...at.bindings(register!.name) }, at.stand.fetch);
+    const get = (commit: string, conditional = true) => site(new Request(`https://scopes.test/site/${config.repository!.directory.scope}/${commit}/README.md`, { ...(conditional ? { headers: { "if-none-match": "*" } } : {}) }), { SCOPE_INDEX: env.SCOPE_INDEX, SCOPES: env.PLATFORM, ...at.bindings(register!.name) }, at.stand.fetch, `fixture:${config.repository!.directory.scope}`);
     const before = await lifetime.wait(() => snapshot());
     const old = await lifetime.wait(() => get(first, false)); expect(old.status).toBe(200);
     const body = await lifetime.wait(() => old.text()); expect(body).toContain("First published");

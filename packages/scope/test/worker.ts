@@ -300,7 +300,9 @@ export const hostedTest: {
   configHold: Promise<void> | null;
   /** Explicit hosted tool settings for the native MCP fixture; null enables its comprehensive historical tool contract. */
   toolSettings: { MCP_ENABLED: string; MCP_TOOL_ADDITIONS?: string } | null;
-} = { metrics: null, now: null, pause: null, lose: null, controlBudget: null, custodyBounds: null, failWrite: null, faultAt: null, failSession: false, configHold: null, toolSettings: null };
+  /** Raw deployment setting for the native constructor witness, never an AgentPorts override. */
+  applicationSettings: Pick<McpEnv, "APPLICATION_TRUST"> | null;
+} = { metrics: null, now: null, pause: null, lose: null, controlBudget: null, custodyBounds: null, failWrite: null, faultAt: null, failSession: false, configHold: null, toolSettings: null, applicationSettings: null };
 /** The scripted reset: thrown at a fence, once. */
 export class ScriptedReset extends Error { constructor(fence: string) { super(`scripted reset at ${fence}`); } }
 type HostedEnv = McpEnv & { PLATFORM: DurableObjectNamespace };
@@ -318,7 +320,7 @@ export class PlatformMcpAgent extends McpAgent<HostedEnv> {
   #startupBinding: Binding | null = null;
   constructor(ctx: DurableObjectState, env: HostedEnv) {
     const index = startupTest.index;
-    super(ctx, { ...env, ...creationTest.settings, ...(index ? { SCOPE_INDEX: index } : {}), ...(hostedTest.toolSettings ?? { MCP_ENABLED: "true", MCP_TOOL_ADDITIONS: '["create","install_application","credential","prepare","join","record","step","text"]' }) });
+    super(ctx, { ...env, ...creationTest.settings, ...hostedTest.applicationSettings, ...(index ? { SCOPE_INDEX: index } : {}), ...(hostedTest.toolSettings ?? { MCP_ENABLED: "true", MCP_TOOL_ADDITIONS: '["create","install_application","credential","prepare","join","record","step","text"]' }) });
     this.#productionHostedFetch = creationTest.productionHostedFetch;
     this.#startup = index !== null;
   }

@@ -34,7 +34,17 @@ test("unknown foreign facts, site and application lookups and hosted registry re
   const fact = { at: atRef, seq: 0, hash: digestBytes(utf8("unknown")) };
   let targetCalls = 0, registryCalls = 0, bodyReads = 0, indexReads = 0;
   const targets: Binding = { idFromName() { targetCalls++; throw Error("unknown target namespace touched"); }, get() { targetCalls++; throw Error("unknown target instantiated"); } };
-  const index: ScopeIndexPort = { async has() { indexReads++; return false; }, async register() { throw Error("lookup wrote index"); } };
+  // Scripted fixed-owner admission permits this lookup-only witness to reach
+  // the unchanged unknown-index boundary; it is not a real quota witness.
+  const index: ScopeIndexPort & { admitServing(request: unknown, address: unknown): Promise<"admitted"> } = {
+    async has() { indexReads++; return false; },
+    async register() { throw Error("lookup wrote index"); },
+    async admitServing(request, address) {
+      expect(request).toEqual({ kind: "site-read" });
+      expect(address).toBeNull();
+      return "admitted";
+    },
+  };
   const settings = { SCOPE_INDEX: { idFromName: (name: string) => name, get: () => index } };
   const gated = indexedScopes(targets, settings), ports = namespace(gated);
   expect(await ports.resolver.read(fact, 1)).toEqual({ absent: true });
