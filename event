@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:cf659b32abac6af73b9ae51a899bc7b9baa135aa","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-24-archive-fixed-parent/final-gate-continuation/manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d0947517c8620c0493c2d6bbd4e9f808ec51332d","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-driver.ts."}
