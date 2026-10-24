@@ -21,7 +21,7 @@ const seals = {
   "packages/scope/src/applications/route.ts": "a9c2c7071bc190a9dc44be6efe57b973203c40d3fff8ab35263f73818925ae29", // Actual union parser value adopted by root.
   "packages/scope/src/item-query-wire.ts": "8206b9a6531ca30cae1bc49cc249eea08c70a658305f41b3ebea6eda042055a8",
   "packages/scope/src/applications/projection-wire.ts": "2e07df5447469dc09aff0d4017e010634150f49c92f614221402cf46a869c6d0",
-  "packages/scope/src/object.ts": "a79071905d5041b971d05d7756b9fcf4e1e2b9b194549290ac09da8cd22a2949", // Reviewed archive alarm recovery; actual maintained parser output.
+  "packages/scope/src/object.ts": "dd155814daab71eafd4af006b03e37888da11beb307502a81b53da6760d0d98f", // Reviewed archive alarm recovery; actual maintained parser output.
   "packages/scope/src/core.ts": "c7f2e49246b1e784981337ee13af53b17bab424a13112d5a40ff76b75fb7a128",
   "packages/derive/src/genesis.ts": "df7722143f01c8084b8f045ef959b203ae1756c4dfde170d0454cfe0b0392843",
   "packages/derive/src/judge.ts": "c0ed325bc2fa84693b40d3d53a9ad54a9a9786dab39dd3b9c6039ac553488f63",
@@ -48,7 +48,7 @@ const seals = {
 // Integrated archive owners computed by the maintained owning parser.
 // Root adopted the reviewed outputs; the historical map name is retained here.
 const pendingArchiveSeals = {
-  "packages/scope/src/archive-operator.ts": "34f066812a2c0e9a911fa7cdc8514094f351daa29fbf0f788598fcc3da1a86aa", // Private observation owner; actual maintained parser output.
+  "packages/scope/src/archive-operator.ts": "24ec09cba3d9c135be6fda8d290e8cf2b34ce4937cbfcbb5a508263fa248078f", // Private observation owner; actual maintained parser output.
   // Publication and floor owners were reviewed before these values were
   // computed by the maintained parser on the integrated source.
   "packages/scope/src/archive-target.ts": "33826c2966d39df7f4d46aa74365f55b9e7e2a2317f26f9f98a735792ccb4a39",
@@ -58,7 +58,7 @@ const pendingArchiveSeals = {
   "packages/scope/src/archive-driver.ts": "7d065eb9f2d3dd9f8b9f5f4ebe5703dd4b983fb18ca52bde48024fb4b6a39092", // Capacity deferral reviewed; actual maintained parser output.
   "packages/scope/src/archive-row.ts": "c8432419f27faaeca4c91343474bd6f2257e0a1686322a303c61f110d12a0a83",
   "packages/scope/src/floor-writer.ts": "fb8fd859844b8d10ba43b477bcaf07ab32fe1bfa1b6684ad9ae70b930d328a11",
-  "packages/scope/src/object.ts": "a79071905d5041b971d05d7756b9fcf4e1e2b9b194549290ac09da8cd22a2949", // Must match the separately adopted original owner value above.
+  "packages/scope/src/object.ts": "dd155814daab71eafd4af006b03e37888da11beb307502a81b53da6760d0d98f", // Must match the separately adopted original owner value above.
   "apps/room/worker.grow.ts": "791c2bfcb8b2a62d8f0d8afec627ac76b63be4b9f1ee5de27d3f6c081959bc01",
   "apps/room/archive-policy.ts": "ed3b746b5a26c3e872e41b13ba133f43ade42b5612aa5028ba544fc013be5ce7",
   "apps/room/archive.ts": "36b2250301a217b6e1c74cd1cea1a65a45390be3679e4a2fd2e809890eb6abf5",
