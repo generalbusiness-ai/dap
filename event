@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:dd4d4a13565f661598e64b81eab016cf72d5dc5c","text":"Merge retired a covered predecessor; the successor is at examples/grow/tick-budget.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:dd4d76a00229a44b18cd00e5d93c71b9dc82e3d5","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/owned-scopes-browser.mjs."}
