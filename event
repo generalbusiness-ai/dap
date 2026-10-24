@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:75a59c6f29409c4960ea513f11364094e270612b","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/application-codec/application-fact-times.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:75abef538055ff271749742d82d0939b69a7c191","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-24-kernel-hygiene-evidence/structural-restoration.json."}
