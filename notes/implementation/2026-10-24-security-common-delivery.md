@@ -13,7 +13,7 @@ The common delivery is tracked by request
 `7dfe31c9c5e25fe5d37cd5e1d9e5c00bb6b9b733`, promise
 `4042361eb7c6096fad91932c17fa7392f7ed704f`. The earlier notes retain
 their failed runs, partial outcomes, controls, and source-stage limits.
-The status below supersedes their pending integration and composed-seal text.
+The status below records their later integration and composed-seal evidence.
 
 The Worker retains both trusted Site address forwarding and HostedAgent
 application trust forwarding. The storage object schedules credential expiry
@@ -176,19 +176,145 @@ and the R10 host-match control retain their separate historical evidence.
 | Targeted repair continuation `70072` | 10.49 | 15.71 |
 | Replacement object seal | 0.17 | 0.22 |
 | Previously unreached Node/Counting tail `26900` | 7.60 | 10.48 |
+| Sandbox-refused gate launch `51038` (Root-attributed) | 18.76 | 46.79 |
+| Failed ordinary gate `90462` | 1291.10 | 1485.21 |
+| Isolated Lending diagnostic `10462` | 9.19 | 13.53 |
+| Lending fixture-precondition continuation `14055` | 9.04 | 13.21 |
+| Passing ordinary gate `61084` | 1317.35 | 1514.79 |
 
 Nested compiler, body, and child times overlap these spans and are not added.
 The runs used macOS 27.0.1 on arm64 with existing private dependencies
 and caches. Load and cache temperature were uncontrolled. These observations
 are local validation costs, not a benchmark or total implementation cost.
 
-The ordinary common gate remains failed. Its targeted repair continuation
-and separate previously unreached tail passed and are accepted. This report
-is the only change after validated tree
-`d6e12d17527af33bfbaa9eff6c518f291c15a81d`; source, tests, configuration,
-lock and seal map carry unchanged. The reporting artifact identifies the
-exact later documentation-only head. Request-specific exact-head review and
-landing remain pending. No whole-gate success is claimed from these separate
-continuations.
-Settings migration and deployment remain planner-owned. No hosted deployment
-or provider enforcement is claimed.
+Original ordinary gate `70364` remains failed. Its targeted repair
+continuation `70072` and previously unreached tail `26900` passed and are
+accepted; their separate outcomes are not a whole-gate success.
+
+## Later ordinary gate and Lending follow-up
+
+The sandbox-refused launch `51038` stopped before cases with a localhost
+listen `EPERM`. Its run-start header named 499 files, but supplies no case
+outcome. It remains a separate infrastructure failure; its outer measurement
+is 18.76 wall seconds and 46.79 inclusive CPU seconds, attributed to Root.
+
+Permission-corrected ordinary gate `90462` then closed naturally with exit 1
+at `3447b3b2b17d793e2215a3518b2ffdd1e7d92f6b`, tree
+`96bc114c4374f56a87b744a068185b413ac0cfd6`. The seven preceding stages,
+including all 40 compiler invocations, passed. Vitest recorded 3,552 PASS,
+one FAIL and three SKIP across 499 files, with 3,556 unique terminal IDs
+and zero unhandled errors. All IDs retain their exact project/file/name
+mapping from `70364`; display names can repeat. Eighteen ready and 21 result
+callbacks are absent, all for passed terminal cases. No callback is invented.
+
+The compose and scope-index failures from `70364` passed in this gate.
+Lending failed at `lending.test.ts:379:43`: expected `current`, received
+`behind`. Its underlying reason was not printed, so neither a timeout nor
+provider, Site or expiry causation is established. All 140 affected cases
+retain the expected 138 PASS and two ordinary SKIP outcomes; all 34
+control-baseline cases and all 26 targeted repair cases passed. Node 39 and
+Counting 55 were unreached in this gate. Their earlier separate pass remains
+historical evidence. The closed audit is
+`/private/tmp/artroom-security-common-gate-v3-independent-audit-20261024-v1/manifest.json`.
+Root independently reconstructed these comparisons in
+`d4ee3d84ee78a7304b32af12851f15e2be647629`.
+
+Isolated diagnostic `10462` passed the Scope test compiler and complete
+Lending scenario at `b99ddd8d02a5824797c83064fdc71952a9994c12`.
+It retained the added diagnostic assertion payload, without a settle, retry,
+read-order or deadline change. The failure was not reproduced and no failing
+reason was obtained. This is not a repair or an explanation of `90462`.
+Its audit is
+`/private/tmp/artroom-common-lending-diagnostic-independent-audit-20261024-v1/manifest.json`.
+
+Source review then found a real fixture-precondition gap: awaiting the return
+act receipt does not join its scheduled dispatcher or prove its publish-file
+result has been applied. The test now uses the existing bounded fixture
+dispatch helper and requires the exact return send's held=false, target,
+acknowledgement and applied-result state before the visitor read. All prior
+assertions and the original registration and deadline remain. This adds no
+product change, quota change, retry or clock advance, and does not establish
+that this possible interleaving caused `90462`.
+
+Root accepted the fixture proposal in
+`86cfa9b405b3055392ea70818d4ddaacb20b79ad`. Complete Lending witness
+`14055` and its Scope test compiler passed at
+`c215460f083d55f243c68440a89f0fbb1274098c`, tree
+`4d3c78b94d3b9d71a4b79ef264c9850be325b311`. The complete scenario retained
+its original visitor-current, later donation, 64-thing and replay assertions;
+no per-assertion execution counters are supplied. Collected, start, result,
+end and JSON evidence agree on its one PASS, with no retry, repeat or
+unhandled error. Three recorded Source/tool/workspace/alias boundaries pass.
+This isolated result does not prove suite stability or the original cause.
+The fixture and follow-up audit manifests are
+`/private/tmp/artroom-security-common-lending-return-fixture-source-20261024-v1/manifest.json`
+and
+`/private/tmp/artroom-common-lending-return-focused-independent-audit-20261024-v1/manifest.json`.
+Their exact payload sizes and SHA-256 values are in the accompanying report
+proposal's `evidence-roster.json`.
+
+## Required ordinary-gate resubmission
+
+Checker review `a4cdaecc395635ca470fcce2d11e1e78a6b9d87f` at
+`3447b3b2b17d793e2215a3518b2ffdd1e7d92f6b` found no code defect, but
+requested changes because an ordinary gate had not passed after the
+production repair. The 26-case continuation and separate tails do not meet
+that requirement. The four request bindings carry to the resubmission.
+
+Fresh ordinary gate `61084` closed naturally with exit 0 at
+`c215460f083d55f243c68440a89f0fbb1274098c`, tree
+`4d3c78b94d3b9d71a4b79ef264c9850be325b311`, under allocation
+`a084a91461f1ef52987d22eb74e5f462ec443345`. All eight ordinary stages
+passed, including 40 compiler invocations. Vitest recorded 3,553 PASS and
+three ordinary SKIP outcomes across 499 files (498 passed, one skipped),
+with 3,556 unique terminal IDs. Its run ended at
+`2026-10-24T21:40:48.388Z` with zero unhandled errors.
+
+Every ID retains its exact project/file/name mapping from both `70364` and
+`90462`; display names can repeat. Relative to `90462`, only Lending changes
+from FAIL to PASS. Relative to `70364`, compose and scope-index change from
+FAIL to PASS. The full affected set retains 138 PASS and two ordinary SKIP
+outcomes. All 34 control-baseline and 26 repair cases pass, as does the
+complete Lending scenario. Complete case success supports reaching its later
+assertions; no per-assertion execution counters or original-cause proof are
+claimed.
+
+There are 3,536 ready callbacks and 3,535 result callbacks: 20 ready and 21
+result callbacks are absent, all for passed terminal cases. There are no
+duplicate or unexpected callback IDs; full terminal outcomes remain retained.
+Both ordinary tails actually ran in this gate: all 39 Node and 55 Counting
+cases passed, each with zero failures, cancellations, skips or todo cases.
+Their raw titles and summaries are retained. These reporters supply no
+numeric case IDs or separate unhandled-error counter. The experimental Node
+warning remains in the raw log; no path named by Counting output was followed.
+
+The before and after checkpoints are equal and clean. Recorded lock, literal
+lock-hash stamp, Node and npm descriptors match. All 17 original/copied stage
+pairs match exact bytes, sizes, SHA-256 values and recorded physical
+descriptors. The owner reports no errors and the npm child exits 0 without a
+signal. These checks prove the recorded boundaries, not continuous memory
+custody, a full dependency lifetime census or a Main-ref binding.
+
+The independent audit manifest is
+`/private/tmp/artroom-security-common-gate-v4-independent-audit-20261024-v1/manifest.json`
+(1,450 bytes, SHA-256
+`2e8643d9d06146b90a3678f40fc08ef71dfa580c64971c92b9371ba5a86a2b66`).
+Its `audit.json` is 8,897 bytes, SHA-256
+`62adc24007a9f5846e3b65ace409ba7d6aef79295a3dfd9e8ff661cc669440b2`.
+Root independently reconstructed the result and accepted its closed outcome
+in `5598747d962d526061e022a19754e63e4e0606a6`. Root then authenticated
+the independent audit and its finite inputs and adopted it in
+`29ad36ec579af56283987d9209d776c4b19ac018`.
+
+The failed `70364` and `90462` gates, refused `51038` launch, separate repair
+and historical tails, and both isolated Lending passes remain distinct.
+This fresh gate passes at its exact tested head; it does not prove the cause
+of an earlier failure or universal suite stability. Request-specific review
+approval and landing remain pending.
+
+Only report text is proposed after the tested code. Production, tests,
+configuration, lock and seal map remain unchanged by this report proposal.
+The reporting artifact must identify the final documentation-only head and
+its relation to the gate's exact tested head. Request-specific resubmission,
+approval and landing remain pending. Settings migration and deployment
+remain planner-owned. No hosted deployment or provider enforcement is claimed.

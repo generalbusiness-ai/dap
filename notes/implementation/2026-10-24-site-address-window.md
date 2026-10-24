@@ -27,9 +27,9 @@ Cloudflare ingress contract; this is not independent proof of a caller's IP.
 
 Refusals are finite and contain no address or provider detail: quota/capacity
 and invalid address answer 429, `Retry-After: 60`, and no-store; absent or
-unavailable index answers 503 before target/provider work. The three maintained
-configs already bind `SCOPE_INDEX` to `ScopeIndex`: artroom-scope, dap-grow and
-dap-lending. No new setting, binding or migration is introduced. Local/test
+unavailable index answers 503 before target/provider work. The four maintained
+room configurations already bind `SCOPE_INDEX` to `ScopeIndex`: artroom-scope,
+dap-demo, dap-grow and dap-lending. No new setting, binding or migration is introduced. Local/test
 callers without that existing binding now get 503 for valid Site reads.
 The planner owns any deployment after review; none is performed here.
 
@@ -120,7 +120,9 @@ not a cold-cache benchmark or a portable throughput claim. They omit source
 review and other unmeasured preparation; no total implementation cost is
 claimed.
 
-The Source now integrates approved archive Main
+## Historical archive integration
+
+This source stage integrated approved archive Main
 `55e4be6cdc0300b0a1865c237be3097cfb232edd` without product adaptation.
 All five R4 Sources and seals, inherited R9 settings and `--keep-vars`
 remain unchanged. Incoming archive Sources/tests and their eight actual
@@ -129,7 +131,28 @@ and values. The changed Scope object and shared test Worker add a new
 import closure: earlier validation and controls remain evidence at their
 original heads, not an exact-head pass for this integration.
 
-The final gate and exact-head review remain pending. Integrate the eventual
-R9 landing before that gate. No deployment or hosted
-provider acceptance is claimed. R4 token reuse, R13 expiry/member quota and
-R10/R11 trust remain separate.
+## Common delivery status
+
+The later [common delivery note](2026-10-24-security-common-delivery.md) records approved R9 Main
+`56de75676275e07e02887c7c1b5aaa862668fac6`, the composed seals,
+failed gate `70364`, passing 26-case repair continuation `70072`, and
+passing Node 39/Counting 55 tail `26900`. Those results retain their exact
+source and callback qualifications; none relabels the failed gate.
+
+Checker review `a4cdaecc395635ca470fcce2d11e1e78a6b9d87f` found no
+code defect and required a fresh ordinary gate on the repaired code before
+resubmission. The later common gate `90462` failed only in Lending; isolated diagnostic
+`10462` and complete Lending witness `14055` then passed. The added return
+precondition closes a real fixture gap without proving the original cause.
+Fresh ordinary gate `61084` passed at `c215460f`: all eight stages, 40
+compiler invocations, 3,553 passed Vitest cases and three ordinary skips, Node 39
+and Counting 55. Its 3,556 exact terminal IDs include all 140 affected cases,
+34 control-baseline cases, 26 repair cases and complete Lending. Twenty ready
+and 21 result callbacks are absent, all for passed terminal cases; none is
+invented. The common note preserves all failures, exact evidence, boundary
+guards, costs and limitations. Root accepted the closed result in
+`5598747d962d526061e022a19754e63e4e0606a6` and adopted the independent
+audit in `29ad36ec579af56283987d9209d776c4b19ac018`. Exact-head review
+approval and landing remain pending. No deployment or hosted
+provider acceptance is claimed. R4 token reuse, member quotas and R11
+act revocation remain outside this Site-window slice.
