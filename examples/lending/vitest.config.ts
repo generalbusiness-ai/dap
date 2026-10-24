@@ -6,10 +6,10 @@ export default defineConfig({
   root: new URL(".", import.meta.url).pathname,
   resolve: { alias: [
     { find: "@generalbusiness/dap-platform/membership-actions", replacement: source("platform/src/membership-actions.ts") },
-    { find: "@generalbusiness/dap-platform", replacement: source("platform/src/index.ts") },
+    { find: /^@generalbusiness\/dap-platform$/, replacement: source("platform/src/index.ts") },
     { find: "@generalbusiness/dap-derive/testing", replacement: source("derive/test/fixtures.ts") },
     { find: "@generalbusiness/dap-derive/rule", replacement: source("derive/src/rule/index.ts") },
-    { find: "@generalbusiness/dap-derive", replacement: source("derive/src/index.ts") },
+    { find: /^@generalbusiness\/dap-derive$/, replacement: source("derive/src/index.ts") },
     { find: /^@generalbusiness\/dap-bytes$/, replacement: source("bytes/src/index.ts") },
     { find: "@generalbusiness/dap-contract", replacement: source("contract/src/index.ts") },
   ] },
