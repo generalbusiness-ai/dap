@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1499e9b54da0742e499f67a65f1585ca319fc5ad","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-frontier-store.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:15d0c60aef62ee45f21b4acaa0957baf8cd44d2d","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-24-archive-fixed-parent/audits/history-artroom-archive-fixed-parent-continuation-v3-failure-independent-audit-20261024-v1.json."}
