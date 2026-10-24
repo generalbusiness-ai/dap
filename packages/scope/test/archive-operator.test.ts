@@ -174,37 +174,41 @@ test("a warm uncreated operator target stays absent and does not initialize miss
 
 test.for(["nativeBirth", "readiness", "queryItems", "proofSource"] as const)("existing %s ingress logs one bounded archive diagnostic before recovery per activation", async ingress => {
   const { lane, row } = await fixture("pending");
-  await lane.restart();
   const seen: unknown[][] = [], order: string[] = [];
-  let alarmReads = 0;
-  const owned: Promise<unknown>[] = [];
-  let restoreAlarm: (() => void) | undefined;
-  await runInDurableObject(lane.object, (_instance, state) => {
-    const original = state.storage.getAlarm.bind(state.storage);
-    const spy = vi.spyOn(state.storage, "getAlarm").mockImplementation(() => { alarmReads++; return original(); });
-    const originalWait = state.waitUntil.bind(state);
-    const waiting = vi.spyOn(state, "waitUntil").mockImplementation(promise => { owned.push(promise); originalWait(promise); });
-    restoreAlarm = () => { waiting.mockRestore(); spy.mockRestore(); };
-  });
   const logging = vi.spyOn(console, "info").mockImplementation((...args: unknown[]) => {
     if (args[0] === "archive-row-diagnostic-v1") { seen.push(args); order.push("diagnostic"); }
   });
   const waking = vi.spyOn(ArchiveDriver.prototype, "wake").mockImplementation(() => { order.push("recovery"); return null; });
+  const originalLoad = ArchiveRows.prototype.load;
+  const loading = vi.spyOn(ArchiveRows.prototype, "load").mockImplementation(function (this: ArchiveRows, ...args: Parameters<ArchiveRows["load"]>) {
+    order.push("diagnostic-row-read");
+    return originalLoad.apply(this, args);
+  });
   try {
-    const object = lane.object as unknown as { nativeBirth(at: unknown, milliseconds: number): Promise<unknown>; readiness(): Promise<unknown>;
-      queryItems(encoded: unknown, reader: unknown): Promise<unknown>; proofSource(fact: unknown, maxBytes: number, milliseconds: number): Promise<unknown>; serving(): Promise<unknown> };
-    const enter = () => ingress === "nativeBirth" ? object.nativeBirth(null, 1) : ingress === "readiness" ? object.readiness()
-      : ingress === "queryItems" ? object.queryItems(null, null) : object.proofSource(null, 1, 1);
-    await Promise.all([enter(), enter()]);
-    expect(owned.length, "the first ingress must own its diagnostic before any fallback ingress").toBeGreaterThan(0);
-    await Promise.all([...owned]);
-    expect(seen.filter(args => (args[1] as { scope?: string }).scope === lane.name)).toHaveLength(1);
-    expect(alarmReads).toBe(1);
+    // Install instrumentation before eviction/activation, not in a callback
+    // after the constructor has already completed its synchronous reads.
+    await lane.restart();
+    await lane.inside(async (_state, instance) => {
+      order.push("ingress");
+      const object = instance as { nativeBirth(at: unknown, milliseconds: number): unknown; readiness(): unknown;
+        queryItems(encoded: unknown, reader: unknown): unknown; proofSource(fact: unknown, maxBytes: number, milliseconds: number): unknown;
+        observed(method: "queryItems", args: unknown[], identity: { request: null; trace: null }): Promise<unknown> };
+      const enter = () => ingress === "nativeBirth" ? object.nativeBirth(null, 1) : ingress === "readiness" ? object.readiness()
+        : ingress === "queryItems" ? object.queryItems(null, null) : object.proofSource(null, 1, 1);
+      await Promise.all([enter(), enter()]);
+      // This existing async ingress awaits the constructor's retained
+      // promise, deterministically settling the log without a timer.
+      await object.observed("queryItems", [null, null], { request: null, trace: null });
+    });
+    expect(order.indexOf("diagnostic-row-read")).toBeGreaterThanOrEqual(0);
+    expect(order.indexOf("diagnostic-row-read")).toBeLessThan(order.indexOf("ingress"));
+    expect(loading).toHaveBeenCalledTimes(1);
+    const object = lane.object as unknown as { serving(): Promise<unknown> };
     await object.serving();
     await object.serving();
     const lines = seen.filter(args => (args[1] as { scope?: string }).scope === lane.name);
     expect(lines).toHaveLength(1);
-    expect(alarmReads).toBe(1);
+    expect(loading).toHaveBeenCalledTimes(1);
     expect(order.indexOf("diagnostic")).toBeGreaterThanOrEqual(0);
     expect(order.indexOf("recovery")).toBeGreaterThan(order.indexOf("diagnostic"));
     const value = lines[0]![1] as Record<string, unknown>;
@@ -212,5 +216,5 @@ test.for(["nativeBirth", "readiness", "queryItems", "proofSource"] as const)("ex
     expect(value["phase"]).toBe("pending");
     expect(value["pendingMark"]).toEqual({ commit: row!.pending!.commit, through: row!.pending!.through });
     expect(JSON.stringify(value)).not.toMatch(/manifest|credential|token|secret|TEST PRIVATE/);
-  } finally { restoreAlarm?.(); waking.mockRestore(); logging.mockRestore(); }
+  } finally { loading.mockRestore(); waking.mockRestore(); logging.mockRestore(); }
 });

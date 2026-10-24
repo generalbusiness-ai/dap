@@ -13,35 +13,35 @@ frontiers and private error text. Scope and archive metadata are captured
 synchronously before the diagnostic's one `getAlarm` await. SQL and platform
 alarm are sequential observations, not an atomic snapshot.
 
-The once-per-activation promise is installed before observation begins.
-Existing asynchronous invocation and observed-call paths wait for its log
-before continuing. Synchronous invocation, first-turn and direct native-birth
-paths start the same observation without changing public synchronous
-signatures. Recovery and first-turn operations work wait behind that promise;
-coalescing flags prevent duplicate deferred scheduling. Existing alarm recovery
-still makes its own authoritative fresh alarm read and revision checks. An
-unknown observation or unavailable log resolves the diagnostic and does not
-refuse ingress. Alarm invocation starts the diagnostic before its pass.
-This reaches existing common invocation, observed, first-turn and native-birth
-paths, plus the existing direct readiness/query/proof, site/application and
-other metadata RPC entrypoints. The same helper owns its promise with one
-`waitUntil`; it adds no new route or caller.
+The correction makes the constructor own the once-per-activation
+observation after its required fields initialize. Diagnostic SQL finishes before
+any bounded read method begins. The retained promise owns the platform alarm
+read and log through `waitUntil`. Direct read and proof methods no longer start
+diagnostic work. Existing asynchronous ingress, first-turn and recovery paths
+wait for that promise; the production constructor's archive activation scheduling
+also waits for the line before evaluating its recovery predicates. Coalescing
+flags prevent duplicate deferred scheduling. Existing alarm recovery still makes
+its own fresh alarm read and revision checks. Unknown observations and unavailable
+logging do not refuse ingress. No caller or route is added.
 
 When native scope metadata is absent, unread archive and wake fields remain
 unknown rather than inferred absent. Unread row reasons are unknown too.
 
-The warm boundary is accepted by the planner. Constructor schema initialization
-and existing activation scheduling remain unchanged; this is not cold-object
-purity or a deployed recovery claim. The restart transition and its authenticated
-caller remain separate work.
+The warm observation boundary is accepted by the planner. Constructor schema
+initialization and maintenance remain existing activation costs; diagnostic work
+is also constructor-owned, outside the bounded query envelope. This is not a
+claim of cold-object purity or deployed recovery. The restart transition and its
+operator authorization remain separate work.
 
 The prior source at `03b40dfc1187b297abbcee7c6792da93c29e9de4` passed two Scope
 compiler contexts and 13 cases in original run 96204, accepted by
 `c71e52b1c066679830b2b74bd07e0506bf6fdfd5`. That evidence applies to the prior
 RPC/internal-reader source only. Its proposed identity control was never run.
-The revised source retains six warm internal-reader purity cases and adds four
-existing-ingress witnesses for one line, one diagnostic alarm read and ordering
-before recovery. These claims apply to the local fixtures, not deployment.
+The revised source retains six warm internal-reader purity cases. Four new
+cold-activation witnesses supersede the prior four warm ingress witnesses:
+instrumentation precedes activation and checks that the diagnostic row read
+precedes the method body, one read and one line survive repeated entry, and
+recovery follows the log. These revised witnesses have not run.
 
 Original run `20590` at `4fcc3e08` passed both Scope compiler contexts and all
 34 affected cases: 10 operator/diagnostic, 17 driver and 7 row cases. Its
@@ -61,9 +61,32 @@ environment and preparation values stayed fixed. The four full control
 snapshots show only the declared existing cache-cell and empty temporary
 directory allowances in dependencies.
 
+The affected 34-case run and stored-name control remain evidence for their
+original source. The internal reader, row decoder and stored-name fence are
+unchanged by the constructor correction; their evidence carries with
+that qualification. The prior four warm ingress witnesses do not validate the
+new constructor lifetime.
+
+Original gate `45227` at `4ff21a113e0f9ed16412d7911ad44c24800dece6`
+failed with 3,540 passed, one failed and three skipped cases across 498 files.
+All stages before the test stage passed. The unchanged malformed-query witness
+failed at `item-query-owned.test.ts:65:86`: starting the diagnostic in
+`queryItems` performed protected SQL before malformed-input validation. The
+correction removes that work from the method; it does not weaken the query
+bounds, assertion or deadline. The later Node and Counting stages were not
+reached. These are terminal report counts, not a claim of complete individual
+result callbacks. The independent audit reconciled 3,544 unique terminal IDs:
+18 ready callbacks and 38 result callbacks were missing, all for terminally
+passing cases. No duplicate, unknown or mismatched IDs or unhandled errors
+were reported. Node 39 and Counting 55 were unreached.
+
 The focused command took 18.06 seconds wall and 24.01 seconds CPU; the control
-took 10.67 seconds wall and 12.27 seconds CPU. Nested costs overlap these
-outer measurements and are not added. These are local partial costs.
-The final gate, exact-head review, landing and deployment remain pending.
-The observations remain warm and non-atomic; no restart permission or cold
-constructor purity is inferred.
+took 10.67 seconds wall and 12.27 seconds CPU. The failed gate took 1,360.71
+seconds wall and 1,565.66 seconds CPU. Nested child and stage costs overlap
+these outer measurements and are not added. These are local partial costs.
+
+Object-only seal derivation and validation of the constructor correction
+remain pending. The failed original gate remains failed; no replacement gate
+pass, exact-head review, landing or deployment is claimed. SQL and platform
+alarm remain non-atomic; no restart permission or cold constructor purity is
+inferred.

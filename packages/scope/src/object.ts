@@ -298,6 +298,10 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
       clock: this.#clock, sessionPreparation: this.#sessionPreparation, flights: this.#queryFlights, source: wiring.applicationDeclarationSource ?? null, births: ports.births ?? null });
     // The session requests that this scope has answered, each until its `notAfter`: one more table that is no part of the store.
     this.#requests = new SessionRequests({ exec: (query, ...bindings) => ctx.storage.sql.exec(query, ...bindings) });
+    // The constructor owns this activation observation. Its synchronous SQL
+    // finishes before any bounded read method begins; ingress awaits only
+    // the retained promise before recovery, not another diagnostic read.
+    const diagnostic = this.#diagnoseArchive();
     // Only bounded control initialization happened above. No read runs a
     // migration quantum; an activated legacy object schedules its owner.
     const pending = store.localSigners.pending(), maintenance = store.signerMaintenance();
@@ -311,12 +315,15 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     // prefix without awaiting host I/O or appending an
     // entry. Generic/fixture deployments retain their old activation behavior.
     if (archive && "production" in archive) {
-      const existing = store.scope(), birth = genesis();
-      if (existing?.status === "active" && birth?.decision === "applied" && archive.admit(existing.at, birth.seed)) {
-        this.#archive?.committed();
-        try { ctx.waitUntil(Promise.resolve(wakes.set()).catch(() => undefined)); }
-        catch { /* Archive scheduling cannot refuse an existing native scope. */ }
-      }
+      const activation = diagnostic.then(() => {
+        const existing = store.scope(), birth = genesis();
+        if (existing?.status === "active" && birth?.decision === "applied" && archive.admit(existing.at, birth.seed)) {
+          this.#archive?.committed();
+          return wakes.set();
+        }
+      }).catch(() => undefined);
+      try { ctx.waitUntil(activation); }
+      catch { /* Archive scheduling cannot refuse an existing native scope. */ }
     }
   }
 
@@ -329,7 +336,6 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   protected wiring(_name: string | undefined): Wiring { return {}; }
   /** Internal metadata probe. No public route, reader, native turn or head. */
   readiness(): "ready" | "absent" | "not-ready" | "unavailable" {
-    void this.#diagnoseArchive();
     try {
       const scope = this.#store.scope();
       if (!scope) return "absent";
@@ -355,7 +361,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     return answer;
   }
 
-  /** One warm activation observation before recovery. No new caller surface.
+  /** One constructor-owned activation observation before recovery. No new caller surface.
    * A failed read/log is finite and never blocks subsequent ingress. */
   #diagnoseArchive(): Promise<void> {
     if (this.#archiveDiagnostic) return this.#archiveDiagnostic;
@@ -458,7 +464,6 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     return measured(this.#context(place, identity), work);
   }
   #invokeSync<A>(place: string, work: () => A): A {
-    void this.#diagnoseArchive();
     this.#recoverArchiveAlarm();
     const parent = operational();
     if (parent) return parent.place === place ? work() : inOperation({ ...parent, place, turn: { entered: false, known: true }, httpPublic: false }, work);
@@ -481,7 +486,6 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
 
   /** No caller bytes or mutable summary establish index membership. */
   async registerKnown(): Promise<boolean> {
-    void this.#diagnoseArchive();
     // Temporary fixed-category observation. Never log native values or errors.
     let phase: "configuration" | "entry-missing" | "entry-size" | "scope" | "entry" | "entry-parse" | "entry-integrity"
       | "genesis-prev" | "genesis-type" | "genesis-decision" | "seed-address" | "incarnation" | "kind" | "index-register" = "configuration";
@@ -600,13 +604,12 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     return this.#genesisProofs.eligible(request);
   }
   /** One owned bounded query; starts no activation turn or legacy read walk. */
-  queryItems(encoded: unknown, reader: unknown) { void this.#diagnoseArchive(); return this.#itemQueries.read(encoded, reader); }
+  queryItems(encoded: unknown, reader: unknown) { return this.#itemQueries.read(encoded, reader); }
   /** Namespace-only host capability; intentionally absent from HTTP routing. */
-  archiveItem(ask: ArchiveHostItemAsk) { void this.#diagnoseArchive(); return this.#archiveItem(ask); }
-  applicationProjection(encoded: unknown, reader: unknown) { void this.#diagnoseArchive(); return this.#applicationProjections.read(encoded, reader); }
+  archiveItem(ask: ArchiveHostItemAsk) { return this.#archiveItem(ask); }
+  applicationProjection(encoded: unknown, reader: unknown) { return this.#applicationProjections.read(encoded, reader); }
   /** Admission of identifiers precedes authority and storage work. */
   async requests(reader: unknown, request?: string, trace?: string, cursor?: string) {
-    void this.#diagnoseArchive();
     const query = requestQuery(request, trace, cursor);
     if (!query) return { ok: false, reason: "not-found" } as const;
     await this.#readers.prepare?.(reader, "requests");
@@ -614,7 +617,6 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   }
   /** Exact internal causal-proof bytes. Read-only: deliberately bypasses #first/sourceOrigin. */
   proofSource(fact: unknown, maxBytes: number, milliseconds?: number) {
-    void this.#diagnoseArchive();
     if (milliseconds === undefined) return this.#proofBytes.exact(fact, maxBytes);
     const began = this.#queryFlights.clock.now(), ends = began + milliseconds;
     if (!Number.isSafeInteger(milliseconds) || milliseconds <= 0 || milliseconds > EXACT_PROOF_RECEIVER_BOUNDS.milliseconds || !Number.isFinite(began) || !Number.isFinite(ends)) return null;
@@ -629,7 +631,6 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   /** Closed raw birth view with scheduling metadata recovery only; no native
    * turn, source identity, host I/O or authority work. */
   nativeBirth(at: unknown, milliseconds: number, maxBytes?: number) {
-    void this.#diagnoseArchive();
     this.#recoverArchiveAlarm();
     const began = this.#queryFlights.clock.now(), ends = began + milliseconds;
     if (!Number.isSafeInteger(milliseconds) || milliseconds <= 0 || milliseconds > EXACT_PROOF_RECEIVER_BOUNDS.milliseconds || !Number.isFinite(began) || !Number.isFinite(ends)) return null;
@@ -639,7 +640,6 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   }
   /** Immutable bounded custody only. No #first, turn, driver or authority. */
   creationDeclaration(at: unknown, digest: unknown, maxBytes: number, milliseconds: number): string | null {
-    void this.#diagnoseArchive();
     const began = this.#queryFlights.clock.now(), ends = began + milliseconds;
     if (!Number.isSafeInteger(milliseconds) || milliseconds <= 0 || milliseconds > EXACT_PROOF_RECEIVER_BOUNDS.milliseconds || !Number.isFinite(began) || !Number.isFinite(ends)) return null;
     const active = () => { const now = this.#queryFlights.clock.now(); return now >= began && now < ends; };
@@ -647,38 +647,33 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     catch { return null; }
   }
   /** Authenticated small directory witness. No HTTP route or activation turn. */
-  sessionReference(request: unknown): string | null { void this.#diagnoseArchive(); return this.#sessionReferences.read(request); }
+  sessionReference(request: unknown): string | null { return this.#sessionReferences.read(request); }
   /** Future bounded query support only; existing public reads are unchanged. */
   protected sessionEligibility(reader: unknown, visibility: QueryVisibility): Promise<boolean> { return this.#sessionPreparation.eligible(reader, visibility); }
   /** Site reads publication selection and immutable proof; unlike ordinary reads these start no outside work. */
-  demoCreationOffer(config: DemoCreationConfig) { void this.#diagnoseArchive(); return demoCreationOffer(this.#store, this.#scope.pinned()?.named, config); }
-  siteDestination() { void this.#diagnoseArchive(); return siteDestination(this.#store, this.#scope.pinned()?.named); }
+  demoCreationOffer(config: DemoCreationConfig) { return demoCreationOffer(this.#store, this.#scope.pinned()?.named, config); }
+  siteDestination() { return siteDestination(this.#store, this.#scope.pinned()?.named); }
   siteRoom() {
-    void this.#diagnoseArchive();
     if ((this.#store.storedBytes(0) ?? 0) > 1024 * 1024 || (this.#store.scopeBytes() ?? 0) > 1024 * 1024) throw new Error("publication-history-limit");
     return sourced(this.#store, this.#scope.pinned(), 0);
   }
-  sitePublication(directory: unknown, repository: unknown) { void this.#diagnoseArchive(); return sitePublication(this.#store, this.#scope.pinned()?.named, directory, repository); }
-  sitePublishedCommit(directory: unknown, repository: unknown, commit: unknown) { void this.#diagnoseArchive(); return sitePublishedCommit(this.#store, this.#scope.pinned()?.named, directory, repository, commit); }
+  sitePublication(directory: unknown, repository: unknown) { return sitePublication(this.#store, this.#scope.pinned()?.named, directory, repository); }
+  sitePublishedCommit(directory: unknown, repository: unknown, commit: unknown) { return sitePublishedCommit(this.#store, this.#scope.pinned()?.named, directory, repository, commit); }
   /** The bytes of one declaration this scope retains, for a child that is about to write its genesis (sections 7.2 and 9.2). */
   /** Native, read-only routing metadata; no public scope-data bypass. */
   applicationRoom() {
-    void this.#diagnoseArchive();
     this.#first(); const pinned = this.#scope.pinned();
     return pinned?.definition ? applicationRoom(this.#store, pinned.named) : null;
   }
   applicationRoomBytes(): string | null {
-    void this.#diagnoseArchive();
     const room = this.applicationRoom();
     return room === null ? null : applicationJson(room, 1024);
   }
   applicationInstallation(directory: import("@generalbusiness/dap-contract").ScopeRef, item: number) {
-    void this.#diagnoseArchive();
     this.#first(); const pinned = this.#scope.pinned();
     return pinned?.definition ? applicationInstallation(this.#store, pinned.named, directory, item) : null;
   }
   applicationProjectionDeclaration(directory: import("@generalbusiness/dap-contract").ScopeRef, item: number, name: string) {
-    void this.#diagnoseArchive();
     this.#first(); const pinned = this.#scope.pinned();
     if (!pinned?.definition) return null;
     return applicationProjectionDeclaration(this.#store, pinned.named, directory, item, name, (domain, digest, most) => {
@@ -690,7 +685,6 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     });
   }
   applicationProjectionDeclarationBytes(directory: import("@generalbusiness/dap-contract").ScopeRef, item: number, name: string): string | null {
-    void this.#diagnoseArchive();
     const declared = this.applicationProjectionDeclaration(directory, item, name);
     return declared === null ? null : applicationJson(declared, APPLICATION_DECLARATION_BYTES);
   }
@@ -821,7 +815,6 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
 
   /** Internal namespace read of one exact job's current state. */
   async jobState(fact: import("@generalbusiness/dap-contract").FactRef): Promise<{ state: string; decidedBy: import("@generalbusiness/dap-contract").FactRef | null } | null> {
-    void this.#diagnoseArchive();
     this.#first(); const scope = this.#store.scope(); const sealed = this.#store.stored(fact.seq);
     if (!scope || !sealed || fact.at.scope !== scope.at.scope || fact.at.inc !== scope.at.inc || sealed.hash !== fact.hash) return null;
     const item = this.#store.item(fact.seq);
@@ -831,7 +824,6 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   }
   /** Authenticated by the signed job-read request and current configured checker. */
   async reservationSnapshot(asked: SignedIntent): Promise<import("@generalbusiness/dap-contract").ReservationSnapshot | { refused: "reservation-stage-missing" | "reservation-stage-mismatch" } | null> {
-    void this.#diagnoseArchive();
     this.#first();
     try { return await this.#outside.snapshot?.(asked) ?? null; } catch { return null; }
   }
@@ -843,7 +835,6 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
    * handle that names nothing and a scope that is no destination are each `forbidden`. Nothing is written.
    */
   async credential(reader: unknown, handle: unknown): Promise<Read<{ token: string; ends: string; remote: string }>> {
-    void this.#diagnoseArchive();
     this.#first();
     await this.#prepared(reader, "credential");
     const key = this.#readers.holder?.(reader, "credential") ?? false;
