@@ -175,7 +175,9 @@ test("an actually supported but unadmitted native cohort and a refused native bi
     const first = (await room.D.entries())[0]!, send = first.sends.find(send => isSeed(send.to) && send.to.kind === "membership")!;
     const child = room.children[0]!;
     const f = recorded([room.R, room.D, ...room.children], child.name);
-    expect(await namespace(indexedScopes(f.binding, { ...f.env, ...config(room.R.name) })).transport.send(envelopeOf(first, send.n)))
+    // Every proposed pin is configured, so refusal must still enforce the fixed lineage families.
+    const settings = { ...f.env, ...config(room.R.name), PLATFORM_CREATION_PINS: JSON.stringify(Object.values(TRUSTED_APPLICATION_COHORT)) };
+    expect(await namespace(indexedScopes(f.binding, settings)).transport.send(envelopeOf(first, send.n)))
       .toEqual({ answer: "routing", reason: "not-found" });
     expect(f.counts()).toEqual({ targetNames: 0, targetGets: 0, forbidden: 0 });
 
