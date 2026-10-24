@@ -1,0 +1,330 @@
+{
+  "state": "SCOPED_CHECKS_CLOSED_ORIGINAL_GATE_FAILED_EXACT_HEAD_REVIEW_PENDING",
+  "request": "fc2548ae1ab9c7c5e859d422611f8a34fd0ff13c",
+  "promise": "28cdea0d83a29e9a02c5107d89c6e21b10341fc2",
+  "testedHead": "b86df6e5c5fc7e6c6ba095ef95c0cb01c60ca397",
+  "testedTree": "397762ef93ac782b4b86b00df6a84a8a60b351ba",
+  "acceptedMain": "d7aea0b03ce8b9c1afcea7f3f6252b66d0d3630a",
+  "inputs": [
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v14/result.json",
+      "bytes": 6940,
+      "sha256": "e47d4d3c9aa08e5271b4992467a8866d25018d9ae0c9d2b2eed74bf50125e362",
+      "identity": [
+        16777231,
+        545980474,
+        33188,
+        1,
+        6940,
+        1792824428553707582,
+        1792824428553707582
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/final-gate-continuation/gate-result.json"
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-final-gate-v14-independent-audit-20261024-v1/audit.json",
+      "bytes": 38436,
+      "sha256": "484225650bcfa9674bf307538608f13a23193b8a3838ac9fae5eb1336ff9a569",
+      "identity": [
+        16777231,
+        545980651,
+        33060,
+        1,
+        38436,
+        1792824608794351323,
+        1792824608794509073
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/final-gate-continuation/gate-audit.json"
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-final-gate-v14-independent-audit-20261024-v1/completion-addendum.json",
+      "bytes": 1256,
+      "sha256": "8168088fe42a77792fd586f042607b1568983f2c8060b22f01dd05626057d335",
+      "identity": [
+        16777231,
+        545980674,
+        33060,
+        1,
+        1256,
+        1792824653388471687,
+        1792824653388545520
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/final-gate-continuation/gate-audit-completion.json"
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-final-gate-v14-independent-audit-20261024-v1/failure-excerpts.txt",
+      "sourceBytes": 2305,
+      "sourceSha256": "1bd78c76aab250ca8bb3ab5cde05a0c8ca0389ec8e777f0baf7b2ed2061ecb13",
+      "sourceIdentity": [
+        16777231,
+        545980650,
+        33060,
+        1,
+        2305,
+        1792824608784568991,
+        1792824608794530365
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/final-gate-continuation/gate-failure-excerpts.txt",
+      "bytes": 2304,
+      "sha256": "8a864206de5a9f47b3af457a11a516662a2f476996598edf01af7ac67f496147",
+      "derivation": {
+        "operation": "Remove only the surplus final LF, preserving exactly one final newline.",
+        "removedBytes": 1,
+        "originalUnchanged": true,
+        "qualification": "Derived documentation excerpt only; original failed-gate audit leaf and all failure text remain unchanged."
+      }
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-final-gate-evidence-20261024-v14/gate.stdout.log",
+      "bytes": 2320,
+      "sha256": "0053f51a6118aa4fc5e1abd9e87e51a54c229c4ec87ead293fa055213892d872",
+      "identity": [
+        16777231,
+        545934127,
+        33188,
+        1,
+        2320,
+        1792824427509222463,
+        1792824427509222463
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/final-gate-continuation/gate.stdout.log"
+    },
+    {
+      "source": "/private/tmp/artroom-archive-duplicate-ready-diagnosis-source-20261024-v1/explanation.md",
+      "bytes": 1314,
+      "sha256": "eb48b83a4109c8821d0518d2c67537c3f4971ebc268da0e92257f70227a3db97",
+      "identity": [
+        16777231,
+        545981248,
+        33060,
+        1,
+        1314,
+        1792825153704622103,
+        1792825153704898978
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/final-gate-continuation/duplicate-ready-explanation.md"
+    },
+    {
+      "source": "/private/tmp/artroom-archive-duplicate-ready-diagnosis-source-20261024-v1/diagnosis.json",
+      "bytes": 8829,
+      "sha256": "63c945df2177d558746c533827cb239eef8542398601d856e70fcfc703432bb8",
+      "identity": [
+        16777231,
+        545981249,
+        33060,
+        1,
+        8829,
+        1792825153704828769,
+        1792825153704936269
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/final-gate-continuation/duplicate-ready-diagnosis.json"
+    },
+    {
+      "source": "/private/tmp/artroom-archive-cost-receipt-two-test-source-20261024-v1/source.patch",
+      "bytes": 1814,
+      "sha256": "f43f5c59c05cfcac6e42230c014c18f2bbd01397e8e995f8cd04c25b59b7f808",
+      "identity": [
+        16777231,
+        545980774,
+        33060,
+        1,
+        1814,
+        1792824697887969362,
+        1792824698000913672
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/final-gate-continuation/test-correction.patch"
+    },
+    {
+      "source": "/private/tmp/artroom-archive-cost-receipt-two-test-source-20261024-v1/proof.json",
+      "bytes": 7895,
+      "sha256": "cbb138edea97da09b91c74df3c165dd902db7b1e8c4f26ef4594af46f1cb4686",
+      "identity": [
+        16777231,
+        545980775,
+        33060,
+        1,
+        7895,
+        1792824698000098631,
+        1792824698000777798
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/final-gate-continuation/test-correction-proof.json"
+    },
+    {
+      "source": "/private/tmp/artroom-archive-cost-receipt-two-test-independent-source-review-20261024-v1.json",
+      "bytes": 1312,
+      "sha256": "85b2cb31bb5b019394c2422a4e63e01dc9ddc1417afe36d617b437ecc51cca25",
+      "identity": [
+        16777231,
+        545980964,
+        33060,
+        1,
+        1312,
+        1792824985460619946,
+        1792824985460695905
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/final-gate-continuation/test-correction-source-review.json"
+    },
+    {
+      "source": "/private/tmp/artroom-archive-cost-receipt-two-test-source-20261024-v1/manifest.json",
+      "bytes": 1189,
+      "sha256": "4f778ba5d232f3dee52653652739863ec1445ef86680fc8a46bb43cd45824238",
+      "identity": [
+        16777231,
+        545980776,
+        33060,
+        1,
+        1189,
+        1792824698001006006,
+        1792824698001030047
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/final-gate-continuation/test-correction-source-manifest.json"
+    },
+    {
+      "source": "/private/tmp/artroom-stale-scalar-followup-owning-evidence-20261024-v3/result.json",
+      "bytes": 10601,
+      "sha256": "9d4a71a42b1b177800247c8c9f62f57e9ef6893d1720f294b5ce733cb71be54a",
+      "identity": [
+        16777231,
+        545981463,
+        33188,
+        1,
+        10601,
+        1792825199673664102,
+        1792825199673664102
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/final-gate-continuation/scoped13-result.json"
+    },
+    {
+      "source": "/private/tmp/artroom-stale-scalar-followup-v3-independent-audit-20261024-v1.json",
+      "bytes": 35136,
+      "sha256": "7ebd00bc57e736cb9202de548f4a07ea6ace16d97d92a3af1bd08aae49d3a075",
+      "identity": [
+        16777231,
+        545981861,
+        33060,
+        1,
+        35136,
+        1792825321890717647,
+        1792825321890797480
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/final-gate-continuation/scoped13-audit.json"
+    },
+    {
+      "source": "/private/tmp/artroom-archive-unreached-tail-owning-evidence-20261024-v3/result.json",
+      "bytes": 12199,
+      "sha256": "2271c7eff5c10c0d9582c776951a684f501ada6afb90f342a0924540349400da",
+      "identity": [
+        16777231,
+        545981777,
+        33188,
+        1,
+        12199,
+        1792825286449577865,
+        1792825286449577865
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/final-gate-continuation/tail-result.json"
+    },
+    {
+      "source": "/private/tmp/artroom-archive-unreached-tail-v3-independent-audit-20261024-v1.json",
+      "bytes": 31630,
+      "sha256": "145bdc9e7d92c650167d8c57e72c85774357207f8ef2887892a077b05baefaf9",
+      "identity": [
+        16777231,
+        545981903,
+        33060,
+        1,
+        31630,
+        1792825397953032439,
+        1792825397953088314
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/final-gate-continuation/tail-audit.json"
+    },
+    {
+      "source": "/private/tmp/artroom-stale-scalar-and-tail-audit-completion-20261024-v1.json",
+      "bytes": 6814,
+      "sha256": "e4b2ebd9d71da406210f3ac04eab862fc62458682f9c0797541b2af1a0b86616",
+      "identity": [
+        16777231,
+        545981951,
+        33060,
+        1,
+        6814,
+        1792825423148328693,
+        1792825423148371860
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/final-gate-continuation/continuation-audit-completion.json"
+    },
+    {
+      "source": "/private/tmp/artroom-archive-unreached-tail-owning-evidence-20261024-v3/node37.stdout",
+      "bytes": 4121,
+      "sha256": "ff6a2e91f2a55dec9b4eea6c2554e9af95b39c7fed35c691036f4be883d4c1a3",
+      "identity": [
+        16777231,
+        545981561,
+        33188,
+        1,
+        4121,
+        1792825282286169302,
+        1792825282286169302
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/final-gate-continuation/node37.stdout"
+    },
+    {
+      "source": "/private/tmp/artroom-archive-unreached-tail-owning-evidence-20261024-v3/counting55.stdout",
+      "bytes": 6754,
+      "sha256": "e4b065b6048836ba08c3e264d10f0ac28bd8b9e5e4fef6837de46aa3d66d74d9",
+      "identity": [
+        16777231,
+        545981762,
+        33188,
+        1,
+        6754,
+        1792825284976493085,
+        1792825284976493085
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/final-gate-continuation/counting55.stdout"
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-measured-cost-ledger-20261024-v8/cost-ledger.json",
+      "bytes": 101868,
+      "sha256": "8b1209b54fb36a551f93085ee56505bb78d28780260522800605e601d27236b5",
+      "identity": [
+        16777231,
+        545981889,
+        33060,
+        1,
+        101868,
+        1792825379038308564,
+        1792825379038656230
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/final-gate-continuation/cost-ledger.json"
+    },
+    {
+      "source": "/private/tmp/artroom-archive-fixed-parent-measured-cost-ledger-20261024-v8/append-proof.json",
+      "bytes": 3827,
+      "sha256": "083052740e35230521852ba7cf446397b02f1ca58218a87423a8cb4bf247261b",
+      "identity": [
+        16777231,
+        545981890,
+        33060,
+        1,
+        3827,
+        1792825379038481480,
+        1792825379038645064
+      ],
+      "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/final-gate-continuation/cost-append-proof.json"
+    }
+  ],
+  "authoredDecisions": {
+    "target": "notes/implementation/evidence/2026-10-24-archive-fixed-parent/final-gate-continuation/decisions.json",
+    "action": "add",
+    "bytes": 2309,
+    "sha256": "876dd85fecc54fda456f4ee394ac1693651a44c4e87b8662e178a88c00321b28"
+  },
+  "qualification": [
+    "19 exact copies plus one excerpt with surplus final blank line removed. No guard maps, full 11 MiB log, candidate/dependency reads, active runtime or embedded path traversal.",
+    "All 19 exact-copy bytes/SHA256 and the unchanged excerpt source were authenticated through stable regular-file reads. The derived excerpt target digest is recorded separately from its original source pin; originals remain unchanged. Unrecorded historic physical identities are not inferred.",
+    "Original gate remains FAILED. Corrected whole-file and unreached-tail continuations are separate successful observations, not an npm run gate exit0.",
+    "Earlier tracked evidence manifests and history remain untouched. Historical pending text inside exact copied Source/cost DATA remains historical; closed audits/decisions state current facts."
+  ]
+}

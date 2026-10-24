@@ -1,0 +1,37 @@
+{
+  "state": "HELD_EXTERNAL_TWO_TEST_RECEIPT_CORRECTION_NO_RUNTIME",
+  "basis": "e9511c4383d81b845c66eb8801e95ce50ac38c13",
+  "changedPaths": 2,
+  "files": [
+    {
+      "path": "basis/packages/git/test/journal-v2-budget.test.ts",
+      "bytes": 5720,
+      "sha256": "ff9e6c750b1fbd83c5698a762150177bc0531e2e70959389280022a0b857b7d1"
+    },
+    {
+      "path": "basis/packages/scope/test/archive-host.test.ts",
+      "bytes": 30036,
+      "sha256": "ed1ba72aa1c8a34bab62de90e6421d30428a9cad196a11f2179be992f614dcd7"
+    },
+    {
+      "path": "proof.json",
+      "bytes": 7895,
+      "sha256": "cbb138edea97da09b91c74df3c165dd902db7b1e8c4f26ef4594af46f1cb4686"
+    },
+    {
+      "path": "source/packages/git/test/journal-v2-budget.test.ts",
+      "bytes": 5805,
+      "sha256": "c45dfb7136b0fdaf728ca79dc17277357ac97db7c7f1b0d89fb6364c2523cb6f"
+    },
+    {
+      "path": "source/packages/scope/test/archive-host.test.ts",
+      "bytes": 30036,
+      "sha256": "af38849e69e2b2ad0bb5f21083cd00b6627378f461f91414b8bc52ba2584b837"
+    },
+    {
+      "path": "source.patch",
+      "bytes": 1814,
+      "sha256": "f43f5c59c05cfcac6e42230c014c18f2bbd01397e8e995f8cd04c25b59b7f808"
+    }
+  ]
+}

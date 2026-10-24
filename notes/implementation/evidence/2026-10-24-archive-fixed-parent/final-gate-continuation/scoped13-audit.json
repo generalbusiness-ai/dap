@@ -1,0 +1,953 @@
+{
+  "state": "CLOSED_SCOPED13_PASS_INDEPENDENTLY_RECONCILED_ORIGINAL_GATE_STILL_FAILED",
+  "request": "fc2548ae1ab9c7c5e859d422611f8a34fd0ff13c",
+  "promise": "28cdea0d83a29e9a02c5107d89c6e21b10341fc2",
+  "originalClosure": {
+    "session": 37406,
+    "naturalExit": 0,
+    "rootTool": "76e1dd",
+    "attribution": "Root supplied original outer natural closure; raw child77257 independently natural0/no signal."
+  },
+  "head": "b86df6e5c5fc7e6c6ba095ef95c0cb01c60ca397",
+  "tree": "397762ef93ac782b4b86b00df6a84a8a60b351ba",
+  "allocation": "cf1fc1fe915bba3f677074eeedc378abadfa2e81",
+  "rawBinding": {
+    "path": "/private/tmp/artroom-stale-scalar-followup-binding-raw-20261024-v3.json",
+    "bytes": 4103124,
+    "sha256": "da1d92094e4c4f433739d4f502fee8d3cf750b2336bb93f399219c272d1a49a3",
+    "device": 16777231,
+    "inode": 545981244,
+    "mode": "0o644",
+    "nlink": 1
+  },
+  "allocatedBinding": {
+    "path": "/private/tmp/artroom-stale-scalar-followup-binding-allocated-20261024-v3.json",
+    "bytes": 4103162,
+    "sha256": "e8d9c458a8929698e7041e1ab45994315b1a45fb7e58dd040a8b21d74341f4aa",
+    "device": 16777231,
+    "inode": 545981334,
+    "mode": "0o644",
+    "nlink": 1
+  },
+  "allocationOnlyDelta": true,
+  "sourceManifest": {
+    "path": "/private/tmp/artroom-stale-scalar-followup-owning-source-20261024-v3/manifest.json",
+    "bytes": 3083,
+    "sha256": "2ef82a56b5f2b6850516c1cfa416628b512fe63c133589adc603b1e34260d8f6",
+    "device": 16777231,
+    "inode": 545981146,
+    "mode": "0o444",
+    "nlink": 1
+  },
+  "sourcePayloadsAuthenticated": 17,
+  "guards": {
+    "beforeExactlyAllocated": true,
+    "postFocusedExactlyFinal": true,
+    "allGroupsExactAfterNarrowAllowance": true,
+    "fixedGroupNames": [
+      "root",
+      "head",
+      "tree",
+      "branch",
+      "status",
+      "mainRefs",
+      "source",
+      "lockSha256",
+      "tools",
+      "toolResolutions",
+      "gitContext",
+      "pathResolvers",
+      "preparation",
+      "cwd",
+      "python",
+      "environmentDigests"
+    ],
+    "sourceRows": 3071,
+    "dependencyRowsIncludingRoot": 6072,
+    "relativeLinks": 32,
+    "actualDependencyDelta": {
+      ".vite/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/results.json": {
+        "before": {
+          "device": 16777231,
+          "inode": 545594279,
+          "mode": "0o644",
+          "nlink": 1,
+          "kind": "file",
+          "bytes": 46036,
+          "sha256": "f6527beb6be57c68510fb165471ee3cf916a9b6f93cff3263422e3f4eb6f0341",
+          "mtimeNs": 1792824427320324127,
+          "ctimeNs": 1792824427320324127
+        },
+        "after": {
+          "device": 16777231,
+          "inode": 545594279,
+          "mode": "0o644",
+          "nlink": 1,
+          "kind": "file",
+          "bytes": 46038,
+          "sha256": "d8cb93c6004b4383f09da7cee6f63be382ca7d6b4ed98dc42f4a9cd712d70027",
+          "mtimeNs": 1792825197971116451,
+          "ctimeNs": 1792825197971116451
+        }
+      },
+      ".vite-temp": {
+        "before": {
+          "device": 16777231,
+          "inode": 545589263,
+          "mode": "0o755",
+          "nlink": 2,
+          "kind": "directory",
+          "mtimeNs": 1792823211279723976,
+          "ctimeNs": 1792823211279723976
+        },
+        "after": {
+          "device": 16777231,
+          "inode": 545589263,
+          "mode": "0o755",
+          "nlink": 2,
+          "kind": "directory",
+          "mtimeNs": 1792825194075429874,
+          "ctimeNs": 1792825194075429874
+        }
+      }
+    },
+    "actualChangedCacheCells": {
+      "git:packages/git/test/journal-v2-budget.test.ts": {
+        "before": {
+          "duration": 29.522625000001426,
+          "failed": true
+        },
+        "after": {
+          "duration": 24.190000000000055,
+          "failed": false
+        }
+      },
+      "scope:packages/scope/test/archive-host.test.ts": {
+        "before": {
+          "duration": 69,
+          "failed": true
+        },
+        "after": {
+          "duration": 88,
+          "failed": false
+        }
+      }
+    },
+    "cacheOldKeysRetained": true,
+    "noRetainedViteTempChildren": true,
+    "qualification": "Cache bytes/hash/mtime/ctime only; existing empty temp-dir mtime/ctime only. Physical mode/device/inode/link count retained. Final snapshot exactly equals post-focused baseline with no second allowance."
+  },
+  "selection": [
+    {
+      "project": "git",
+      "path": "packages/git/test/journal-v2-budget.test.ts",
+      "pool": "threads",
+      "cases": [
+        "a full numeric path at the highest position fits one original writer and append budget"
+      ]
+    },
+    {
+      "project": "scope",
+      "path": "packages/scope/test/archive-host.test.ts",
+      "pool": "cloudflare-pool",
+      "cases": [
+        "github archive credential cannot escape its native journal ref",
+        "artifacts archive credential cannot escape its native journal ref",
+        "github archive send owns its command and bytes before discovery awaits",
+        "artifacts archive send owns its command and bytes before discovery awaits",
+        "github rechecks expiry, revocation and the pass fence after awaits",
+        "artifacts rechecks expiry, revocation and the pass fence after awaits",
+        "github parent reads cap decoded objects and bytes in the actual transport",
+        "artifacts parent reads cap decoded objects and bytes in the actual transport",
+        "github incremental parent reads one exact object after reserving the original pass work",
+        "artifacts incremental parent reads one exact object after reserving the original pass work",
+        "github incremental send validates exact parent edges and keeps its final credential fence",
+        "artifacts incremental send validates exact parent edges and keeps its final credential fence"
+      ]
+    }
+  ],
+  "phases": [
+    {
+      "name": "body",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/node_modules/vitest/vitest.mjs",
+        "run",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/git/test/journal-v2-budget.test.ts",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+        "--config",
+        "/private/tmp/artroom-builder-archive-fixed-parent-20261023/vitest.config.ts",
+        "--bail=1",
+        "--allowOnly=false",
+        "--passWithNoTests=false",
+        "--reporter=verbose",
+        "--reporter=json",
+        "--reporter=/private/tmp/artroom-builder-archive-fixed-parent-20261023/scripts/focused-check.mjs",
+        "--outputFile.json=/private/tmp/artroom-stale-scalar-followup-owning-evidence-20261024-v3/focused/vitest.json"
+      ],
+      "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+      "started": "2026-10-24T06:59:53.506Z",
+      "ended": "2026-10-24T06:59:57.998Z",
+      "measuredCommandMilliseconds": 4491.6839580000005,
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallSeconds": 4.48,
+      "userSeconds": 5.04,
+      "systemSeconds": 0.74,
+      "cpuSeconds": 5.78
+    }
+  ],
+  "cases": [
+    {
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/git/test/journal-v2-budget.test.ts",
+      "name": "a full numeric path at the highest position fits one original writer and append budget",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "git",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/git/test/journal-v2-budget.test.ts",
+          "name": "a full numeric path at the highest position fits one original writer and append budget",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "github archive credential cannot escape its native journal ref",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+          "name": "github archive credential cannot escape its native journal ref",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "artifacts archive credential cannot escape its native journal ref",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+          "name": "artifacts archive credential cannot escape its native journal ref",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "github archive send owns its command and bytes before discovery awaits",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+          "name": "github archive send owns its command and bytes before discovery awaits",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "artifacts archive send owns its command and bytes before discovery awaits",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+          "name": "artifacts archive send owns its command and bytes before discovery awaits",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "github rechecks expiry, revocation and the pass fence after awaits",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+          "name": "github rechecks expiry, revocation and the pass fence after awaits",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "artifacts rechecks expiry, revocation and the pass fence after awaits",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+          "name": "artifacts rechecks expiry, revocation and the pass fence after awaits",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "github parent reads cap decoded objects and bytes in the actual transport",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+          "name": "github parent reads cap decoded objects and bytes in the actual transport",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "artifacts parent reads cap decoded objects and bytes in the actual transport",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+          "name": "artifacts parent reads cap decoded objects and bytes in the actual transport",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "github incremental parent reads one exact object after reserving the original pass work",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+          "name": "github incremental parent reads one exact object after reserving the original pass work",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "artifacts incremental parent reads one exact object after reserving the original pass work",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+          "name": "artifacts incremental parent reads one exact object after reserving the original pass work",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "github incremental send validates exact parent edges and keeps its final credential fence",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+          "name": "github incremental send validates exact parent edges and keeps its final credential fence",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "artifacts incremental send validates exact parent edges and keeps its final credential fence",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+          "name": "artifacts incremental send validates exact parent edges and keeps its final credential fence",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    }
+  ],
+  "modules": [
+    {
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/git/test/journal-v2-budget.test.ts",
+      "status": "passed",
+      "errors": 0
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+      "status": "passed",
+      "errors": 0
+    }
+  ],
+  "callbackCounts": {
+    "selection": 1,
+    "collected": 2,
+    "started": 13,
+    "result": 13,
+    "end": 1
+  },
+  "runEnd": {
+    "event": "end",
+    "reason": "passed",
+    "unhandledErrors": 0,
+    "modules": [
+      {
+        "project": "git",
+        "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/git/test/journal-v2-budget.test.ts",
+        "status": "passed",
+        "errors": 0,
+        "cases": [
+          {
+            "project": "git",
+            "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/git/test/journal-v2-budget.test.ts",
+            "name": "a full numeric path at the highest position fits one original writer and append budget",
+            "status": "passed",
+            "errors": 0,
+            "retryCount": 0,
+            "repeatCount": 0
+          }
+        ]
+      },
+      {
+        "project": "scope",
+        "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+        "status": "passed",
+        "errors": 0,
+        "cases": [
+          {
+            "project": "scope",
+            "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+            "name": "github archive credential cannot escape its native journal ref",
+            "status": "passed",
+            "errors": 0,
+            "retryCount": 0,
+            "repeatCount": 0
+          },
+          {
+            "project": "scope",
+            "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+            "name": "artifacts archive credential cannot escape its native journal ref",
+            "status": "passed",
+            "errors": 0,
+            "retryCount": 0,
+            "repeatCount": 0
+          },
+          {
+            "project": "scope",
+            "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+            "name": "github archive send owns its command and bytes before discovery awaits",
+            "status": "passed",
+            "errors": 0,
+            "retryCount": 0,
+            "repeatCount": 0
+          },
+          {
+            "project": "scope",
+            "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+            "name": "artifacts archive send owns its command and bytes before discovery awaits",
+            "status": "passed",
+            "errors": 0,
+            "retryCount": 0,
+            "repeatCount": 0
+          },
+          {
+            "project": "scope",
+            "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+            "name": "github rechecks expiry, revocation and the pass fence after awaits",
+            "status": "passed",
+            "errors": 0,
+            "retryCount": 0,
+            "repeatCount": 0
+          },
+          {
+            "project": "scope",
+            "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+            "name": "artifacts rechecks expiry, revocation and the pass fence after awaits",
+            "status": "passed",
+            "errors": 0,
+            "retryCount": 0,
+            "repeatCount": 0
+          },
+          {
+            "project": "scope",
+            "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+            "name": "github parent reads cap decoded objects and bytes in the actual transport",
+            "status": "passed",
+            "errors": 0,
+            "retryCount": 0,
+            "repeatCount": 0
+          },
+          {
+            "project": "scope",
+            "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+            "name": "artifacts parent reads cap decoded objects and bytes in the actual transport",
+            "status": "passed",
+            "errors": 0,
+            "retryCount": 0,
+            "repeatCount": 0
+          },
+          {
+            "project": "scope",
+            "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+            "name": "github incremental parent reads one exact object after reserving the original pass work",
+            "status": "passed",
+            "errors": 0,
+            "retryCount": 0,
+            "repeatCount": 0
+          },
+          {
+            "project": "scope",
+            "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+            "name": "artifacts incremental parent reads one exact object after reserving the original pass work",
+            "status": "passed",
+            "errors": 0,
+            "retryCount": 0,
+            "repeatCount": 0
+          },
+          {
+            "project": "scope",
+            "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+            "name": "github incremental send validates exact parent edges and keeps its final credential fence",
+            "status": "passed",
+            "errors": 0,
+            "retryCount": 0,
+            "repeatCount": 0
+          },
+          {
+            "project": "scope",
+            "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+            "name": "artifacts incremental send validates exact parent edges and keeps its final credential fence",
+            "status": "passed",
+            "errors": 0,
+            "retryCount": 0,
+            "repeatCount": 0
+          }
+        ]
+      }
+    ]
+  },
+  "builtInJson": {
+    "tests": 13,
+    "passed": 13,
+    "failed": 0,
+    "pending": 0,
+    "todo": 0
+  },
+  "child": {
+    "label": "focused",
+    "argv": [
+      "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+      "scripts/focused-check.mjs",
+      "/private/tmp/artroom-stale-scalar-followup-owning-evidence-20261024-v3/focused-plan.json",
+      "/private/tmp/artroom-stale-scalar-followup-owning-evidence-20261024-v3/focused"
+    ],
+    "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+    "pid": 77257,
+    "exit": 0,
+    "signal": null,
+    "wall": 4.888415083987638,
+    "user": 5.271588,
+    "system": 0.9459779999999999
+  },
+  "cost": {
+    "wall": 7.208652459084988,
+    "pythonCpu": 2.1021590000000003,
+    "childrenUser": 5.370418,
+    "childrenSystem": 1.046847,
+    "inclusiveCpu": 8.519424
+  },
+  "costQualification": "Owner inclusive totals include child/phase work and metadata guards; nested intervals overlap. No sum of outer and nested CPU.",
+  "rawPins": [
+    {
+      "path": "/private/tmp/artroom-stale-scalar-followup-owning-evidence-20261024-v3/before.json",
+      "bytes": 3348659,
+      "sha256": "ad0d13c8c9ab00e2d6565c4850f385da262d4b5d9b0ac502701418f30304d252",
+      "device": 16777231,
+      "inode": 545981343,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-stale-scalar-followup-owning-evidence-20261024-v3/focused.process.json",
+      "bytes": 505,
+      "sha256": "7d60454553f0abc29be9895a5a368adf60cc55b62dc601eb5e7960d50af60097",
+      "device": 16777231,
+      "inode": 545981458,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-stale-scalar-followup-owning-evidence-20261024-v3/focused.stdout",
+      "bytes": 197,
+      "sha256": "8fccc6b80582adb674c1fe4205f4c883aabbacffe0c2a93e99e7f553c9f9878b",
+      "device": 16777231,
+      "inode": 545981346,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-stale-scalar-followup-owning-evidence-20261024-v3/result.json",
+      "bytes": 10601,
+      "sha256": "9d4a71a42b1b177800247c8c9f62f57e9ef6893d1720f294b5ce733cb71be54a",
+      "device": 16777231,
+      "inode": 545981463,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-stale-scalar-followup-owning-evidence-20261024-v3/focused.command.json",
+      "bytes": 355,
+      "sha256": "53d2489c0ff681d33600ab7368ad2719869593f3099155343d992b74a31f8742",
+      "device": 16777231,
+      "inode": 545981345,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-stale-scalar-followup-owning-evidence-20261024-v3/focused.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "device": 16777231,
+      "inode": 545981347,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-stale-scalar-followup-owning-evidence-20261024-v3/after.json",
+      "bytes": 3348661,
+      "sha256": "9e4506c64b737efb6f06bd1f5744076d37f92eff958b5ea676916868f70ced5d",
+      "device": 16777231,
+      "inode": 545981462,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-stale-scalar-followup-owning-evidence-20261024-v3/focused.pid.json",
+      "bytes": 19,
+      "sha256": "1354d4e48cb0659d53adf666a383926663767821b041c3bb5766439f3f78efa5",
+      "device": 16777231,
+      "inode": 545981348,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-stale-scalar-followup-owning-evidence-20261024-v3/focused-plan.json",
+      "bytes": 524228,
+      "sha256": "349d4b32402b38d81e89ef47a9a03f3470aca42fffe3e5d0ee348f5e500ea9cb",
+      "device": 16777231,
+      "inode": 545981344,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-stale-scalar-followup-owning-evidence-20261024-v3/focused-after.json",
+      "bytes": 3348661,
+      "sha256": "9e4506c64b737efb6f06bd1f5744076d37f92eff958b5ea676916868f70ced5d",
+      "device": 16777231,
+      "inode": 545981460,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-stale-scalar-followup-owning-evidence-20261024-v3/invocation.json",
+      "bytes": 470,
+      "sha256": "655a4f54a86e5ae839eb95bd41f51641f6fc7840fa271e721e56f237ea05307b",
+      "device": 16777231,
+      "inode": 545981339,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-stale-scalar-followup-owning-evidence-20261024-v3/focused/plan.json",
+      "bytes": 524228,
+      "sha256": "349d4b32402b38d81e89ef47a9a03f3470aca42fffe3e5d0ee348f5e500ea9cb",
+      "device": 16777231,
+      "inode": 545981350,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-stale-scalar-followup-owning-evidence-20261024-v3/focused/result.json",
+      "bytes": 3725,
+      "sha256": "9217c500b06a43f7a7ef70e6dca36c51ff54296f41b3e22878e7034d9ec0b940",
+      "device": 16777231,
+      "inode": 545981456,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-stale-scalar-followup-owning-evidence-20261024-v3/focused/vitest.json",
+      "bytes": 6343,
+      "sha256": "a7e6f76341d3e3394db8dbc625270a0a4b19fe5e0233ebe2f0326327aed17980",
+      "device": 16777231,
+      "inode": 545981453,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-stale-scalar-followup-owning-evidence-20261024-v3/focused/coverage.jsonl",
+      "bytes": 16134,
+      "sha256": "38a474bed58d232bdf1e78df8b3c294da7a4609d77746ebfe5318a35bfc3f399",
+      "device": 16777231,
+      "inode": 545981370,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-stale-scalar-followup-owning-evidence-20261024-v3/focused/body.log",
+      "bytes": 2393,
+      "sha256": "77c30b27b0f8fe11cb322dd60c90e0c11438cdb758a3d3a8cc7435684cc1ed8d",
+      "device": 16777231,
+      "inode": 545981352,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-stale-scalar-followup-owning-evidence-20261024-v3/focused/manifest.json",
+      "bytes": 825,
+      "sha256": "8fd7badd4dbd4656a68cbf9bdad8651a0b3a773af9d4e74b39c2c44b7e6b11cc",
+      "device": 16777231,
+      "inode": 545981457,
+      "mode": "0o400",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-stale-scalar-followup-owning-evidence-20261024-v3/focused/coverage-ledger.json",
+      "bytes": 14129,
+      "sha256": "201c32dff820540b5cbe20cb49f794c7051aabff117f1881d006ee98e04ae319",
+      "device": 16777231,
+      "inode": 545981455,
+      "mode": "0o400",
+      "nlink": 1
+    }
+  ],
+  "sourcePins": [
+    {
+      "path": "/private/tmp/artroom-stale-scalar-followup-owning-source-20261024-v3/adopted-two-test-manifest.json",
+      "bytes": 1189,
+      "sha256": "4f778ba5d232f3dee52653652739863ec1445ef86680fc8a46bb43cd45824238",
+      "device": 16777231,
+      "inode": 545981139,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-stale-scalar-followup-owning-source-20261024-v3/adopted-two-test-proof.json",
+      "bytes": 7895,
+      "sha256": "cbb138edea97da09b91c74df3c165dd902db7b1e8c4f26ef4594af46f1cb4686",
+      "device": 16777231,
+      "inode": 545981140,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-stale-scalar-followup-owning-source-20261024-v3/adopted-two-test-source-review.json",
+      "bytes": 1312,
+      "sha256": "85b2cb31bb5b019394c2422a4e63e01dc9ddc1417afe36d617b437ecc51cca25",
+      "device": 16777231,
+      "inode": 545981141,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-stale-scalar-followup-owning-source-20261024-v3/ancestry.json",
+      "bytes": 201,
+      "sha256": "03e098cf7241d448e96b23508e6f9e2e7aac80f7be5b37f32d0c5b0b26e25e83",
+      "device": 16777231,
+      "inode": 545981131,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-stale-scalar-followup-owning-source-20261024-v3/checkpoint.json",
+      "bytes": 324,
+      "sha256": "2ba2ab962eb135ec5e611fbf853982247a7b1cc699ffa7abd29d45ea1e314fa1",
+      "device": 16777231,
+      "inode": 545981130,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-stale-scalar-followup-owning-source-20261024-v3/external-tools.json",
+      "bytes": 17097,
+      "sha256": "c2e30d02fed06226daf3ca1ff0aae53ccfa1774b8e7f4b8717e7b82378e20d0f",
+      "device": 16777231,
+      "inode": 545981132,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-stale-scalar-followup-owning-source-20261024-v3/fill-proof.json",
+      "bytes": 7931,
+      "sha256": "7b7cbd5a40cb3ff6cac440ba4f4b7961003bc5ac689081068ed37a4aae40aaed",
+      "device": 16777231,
+      "inode": 545981144,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-stale-scalar-followup-owning-source-20261024-v3/ledger.delta.patch",
+      "bytes": 1561,
+      "sha256": "ac179324cdfdfe1195dbd7c0a37ee9b46d5d5894f705422eed6fdd91e840f380",
+      "device": 16777231,
+      "inode": 545981134,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-stale-scalar-followup-owning-source-20261024-v3/ledger.json",
+      "bytes": 1537,
+      "sha256": "d0783cdd5edf7d57b7b3e05a305bea863d4f9d5629cd8062f5356fc0202d792a",
+      "device": 16777231,
+      "inode": 545981137,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-stale-scalar-followup-owning-source-20261024-v3/original-gate-audit.json",
+      "bytes": 38436,
+      "sha256": "484225650bcfa9674bf307538608f13a23193b8a3838ac9fae5eb1336ff9a569",
+      "device": 16777231,
+      "inode": 545981142,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-stale-scalar-followup-owning-source-20261024-v3/original-gate-completion-addendum.json",
+      "bytes": 1256,
+      "sha256": "8168088fe42a77792fd586f042607b1568983f2c8060b22f01dd05626057d335",
+      "device": 16777231,
+      "inode": 545981143,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-stale-scalar-followup-owning-source-20261024-v3/owner.delta.patch",
+      "bytes": 7305,
+      "sha256": "23563a080a6e275b55b98b23936528dbffde98293e3cfd9fbf7365bf72022fff",
+      "device": 16777231,
+      "inode": 545981136,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-stale-scalar-followup-owning-source-20261024-v3/owner.py",
+      "bytes": 19530,
+      "sha256": "547a4f8c3c2d4d2855cbf57cd29aad28db670ae3f3ed92634b072fa9bd2af38a",
+      "device": 16777231,
+      "inode": 545981133,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-stale-scalar-followup-owning-source-20261024-v3/plan.md",
+      "bytes": 2184,
+      "sha256": "022502a1bc3ebc729088e9460db9bdb1eba71b08bb42a33cdc344f5bb3f7f722",
+      "device": 16777231,
+      "inode": 545981135,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-stale-scalar-followup-owning-source-20261024-v3/selection-proof.json",
+      "bytes": 15067,
+      "sha256": "fb3e319d79acd7a62eadc6490f0620e5bcd7d66172475caf80c421a0458b4de3",
+      "device": 16777231,
+      "inode": 545981129,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-stale-scalar-followup-owning-source-20261024-v3/tools.delta.patch",
+      "bytes": 1138,
+      "sha256": "079d4bd5cdd3bc759c6b3a6d51d99fe65ceb45a97ceeef74740033cc1a672476",
+      "device": 16777231,
+      "inode": 545981138,
+      "mode": "0o444",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-stale-scalar-followup-owning-source-20261024-v3/v2-to-v3-fill.patch",
+      "bytes": 17178,
+      "sha256": "ac0f9c13e2fdd1deef105c9f23409fdf3624b29430e4b62d49873139b9a483b1",
+      "device": 16777231,
+      "inode": 545981145,
+      "mode": "0o444",
+      "nlink": 1
+    }
+  ],
+  "limits": [
+    "Only scoped13 PASS; original V14 gate and duplicate-ready owner failure remain failed. No ordinary-gate upgrade.",
+    "Focused reporter exposes semantic project/file/name identities, not numeric task IDs; none invented.",
+    "No compiler, compatibility, parser, healthy17 or gate repeat. No live candidate/dependency/source/tool reads; only finite closed evidence/used Source/bindings."
+  ]
+}

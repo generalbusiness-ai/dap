@@ -1,0 +1,258 @@
+{
+  "allocation": "3d6563c3ef0051f00e7abfd2cb9bc5f2033a7c9e",
+  "errors": [
+    "RuntimeError: duplicate ready callback"
+  ],
+  "receivedSignals": [],
+  "child": {
+    "argv": [
+      "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+      "/opt/homebrew/lib/node_modules/npm/bin/npm-cli.js",
+      "run",
+      "gate"
+    ],
+    "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+    "pid": 59347,
+    "exit": 1,
+    "signal": null,
+    "wall": 1233.7489193340298,
+    "user": 1263.276876,
+    "sys": 166.84904899999998
+  },
+  "stageEvidence": {
+    "location": "/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.dyFgQm8a9V",
+    "files": {
+      "citations.log": {
+        "mode": "0o644",
+        "device": 16777231,
+        "inode": 545934282,
+        "nlink": 1,
+        "kind": "file",
+        "bytes": 1540528,
+        "sha256": "7283657221da2b682a3bd3c6033e8dc9587f096515f37160a942a9910e7cd7d9"
+      },
+      "citations.time": {
+        "mode": "0o644",
+        "device": 16777231,
+        "inode": 545934283,
+        "nlink": 1,
+        "kind": "file",
+        "bytes": 29,
+        "sha256": "0c589e7283054921e405c88afa6e301caa1f691f51c1efc7e494020bb54a2543"
+      },
+      "cite-test.log": {
+        "mode": "0o644",
+        "device": 16777231,
+        "inode": 545934286,
+        "nlink": 1,
+        "kind": "file",
+        "bytes": 760,
+        "sha256": "e24c7b1aefd02f4fef12deb9f60eba34d75be607a44c5d847530800b6f640ffe"
+      },
+      "cite-test.time": {
+        "mode": "0o644",
+        "device": 16777231,
+        "inode": 545934287,
+        "nlink": 1,
+        "kind": "file",
+        "bytes": 29,
+        "sha256": "10a723bc3b9c9f73c12f8f0f4dff4a202a179b8fbbe6f4d72a968e50311ebcd1"
+      },
+      "commit-messages.log": {
+        "mode": "0o644",
+        "device": 16777231,
+        "inode": 545934135,
+        "nlink": 1,
+        "kind": "file",
+        "bytes": 39,
+        "sha256": "3e005adbebc4ecf196ca22b0aa0e3b49cd2607c7ea38195671bfb7116501752b"
+      },
+      "commit-messages.time": {
+        "mode": "0o644",
+        "device": 16777231,
+        "inode": 545934136,
+        "nlink": 1,
+        "kind": "file",
+        "bytes": 29,
+        "sha256": "66b019f3b91dd78b8a648f25e84fc8cee994db5eb175e39de9579bfdd75b994e"
+      },
+      "commit-test.log": {
+        "mode": "0o644",
+        "device": 16777231,
+        "inode": 545934137,
+        "nlink": 1,
+        "kind": "file",
+        "bytes": 595,
+        "sha256": "5c07c4a4aad7dcd7fa72a13d96328bd0174632ec3fb27459154cf673ab5e2069"
+      },
+      "commit-test.time": {
+        "mode": "0o644",
+        "device": 16777231,
+        "inode": 545934138,
+        "nlink": 1,
+        "kind": "file",
+        "bytes": 29,
+        "sha256": "ddab934b8b958c26a7ce259112c1216df60e2762e691b37a57f679b4ddd3ab10"
+      },
+      "helpers.log": {
+        "mode": "0o644",
+        "device": 16777231,
+        "inode": 545934280,
+        "nlink": 1,
+        "kind": "file",
+        "bytes": 68,
+        "sha256": "2d852bd490024e0a21c9c055db2c13d467d635c1a29d05f0b92f5d7643828175"
+      },
+      "helpers.time": {
+        "mode": "0o644",
+        "device": 16777231,
+        "inode": 545934281,
+        "nlink": 1,
+        "kind": "file",
+        "bytes": 29,
+        "sha256": "c8a50dd0868543374d1d2d3b4d269596ee608d57ba2ad2f1721682939aece716"
+      },
+      "section-citations.json": {
+        "mode": "0o600",
+        "device": 16777231,
+        "inode": 545934285,
+        "nlink": 1,
+        "kind": "file",
+        "bytes": 3898411,
+        "sha256": "4f80312e4b9298e0218fb66f23eb86064997dc56f93aac3ad28222f18bbfa639"
+      },
+      "test.log": {
+        "mode": "0o644",
+        "device": 16777231,
+        "inode": 545934353,
+        "nlink": 1,
+        "kind": "file",
+        "bytes": 11468809,
+        "sha256": "83a53750b11b73fc99e633b1990adf649ad383514059664aadf8ecb69db70747"
+      },
+      "test.time": {
+        "mode": "0o644",
+        "device": 16777231,
+        "inode": 545934354,
+        "nlink": 1,
+        "kind": "file",
+        "bytes": 37,
+        "sha256": "1efaafde15bd3c393813efd510b6b2cbcab65cf1a97eec53d7553d6e2d5a26d0"
+      },
+      "typecheck.log": {
+        "mode": "0o644",
+        "device": 16777231,
+        "inode": 545934348,
+        "nlink": 1,
+        "kind": "file",
+        "bytes": 1987,
+        "sha256": "62170bbe0cd055cff4699debd9470a886c0f98f328e7c9517d899c021a3788d0"
+      },
+      "typecheck.time": {
+        "mode": "0o644",
+        "device": 16777231,
+        "inode": 545934349,
+        "nlink": 1,
+        "kind": "file",
+        "bytes": 30,
+        "sha256": "1c745fbf590534007a792208d66c1324ae379f5018e06631016621f3219bf9f7"
+      },
+      "whitespace.log": {
+        "mode": "0o644",
+        "device": 16777231,
+        "inode": 545934133,
+        "nlink": 1,
+        "kind": "file",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "whitespace.time": {
+        "mode": "0o644",
+        "device": 16777231,
+        "inode": 545934134,
+        "nlink": 1,
+        "kind": "file",
+        "bytes": 29,
+        "sha256": "b19caaf7f42fccf27d8c76a198f52fea0f91edf4f9fc11246dfb0c794d708d58"
+      }
+    },
+    "stages": {
+      "whitespace": {
+        "exit": 0,
+        "printedWall": 0.0,
+        "printedCpu": 0.0
+      },
+      "commit-messages": {
+        "exit": 0,
+        "printedWall": 0.1,
+        "printedCpu": 0.1
+      },
+      "commit-test": {
+        "exit": 0,
+        "printedWall": 0.6,
+        "printedCpu": 0.5
+      },
+      "helpers": {
+        "exit": 0,
+        "printedWall": 0.4,
+        "printedCpu": 0.5
+      },
+      "citations": {
+        "exit": 0,
+        "printedWall": 5.5,
+        "printedCpu": 5.8
+      },
+      "cite-test": {
+        "exit": 0,
+        "printedWall": 0.3,
+        "printedCpu": 0.3
+      },
+      "typecheck": {
+        "exit": 0,
+        "printedWall": 9.5,
+        "printedCpu": 37.2
+      },
+      "test": {
+        "exit": 1,
+        "printedWall": 1217.0,
+        "printedCpu": 1385.3
+      }
+    },
+    "nodeSummaries": {
+      "commit-test": {
+        "tests": [
+          4
+        ],
+        "pass": [
+          4
+        ],
+        "fail": [
+          0
+        ]
+      },
+      "cite-test": {
+        "tests": [
+          7
+        ],
+        "pass": [
+          7
+        ],
+        "fail": [
+          0
+        ]
+      },
+      "test": {
+        "tests": [],
+        "pass": [],
+        "fail": []
+      }
+    },
+    "qualification": "Stage timing is nested within gate child/outer totals; never sum these overlapping intervals."
+  },
+  "outerWall": 1235.5651862079976,
+  "outerPythonCpu": 1.53921,
+  "childrenUser": 1263.350823,
+  "childrenSys": 166.930859,
+  "inclusiveCpu": 1431.820892,
+  "costQualification": "Outer inclusive totals include metadata guards and the gate child. Gate child includes nested npm/stage/test work; stage costs overlap these totals."
+}

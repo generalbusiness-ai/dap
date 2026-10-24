@@ -1,0 +1,106 @@
+{
+  "state": "ACTUAL37_CLOSED_MEASURED_COST_ONLY",
+  "previous35Ledger": {
+    "path": "/private/tmp/artroom-archive-fixed-parent-measured-cost-ledger-20261024-v7/cost-ledger.json",
+    "bytes": 64761,
+    "sha256": "3a12560480380caae695b92dca32a9001670cdf56d3af58b9280516ace16081f",
+    "device": 16777231,
+    "inode": 545980572,
+    "mode": "0o444",
+    "nlink": 1
+  },
+  "previous35ObjectsExact": true,
+  "staged36": {
+    "path": "/private/tmp/artroom-archive-fixed-parent-owner36-cost-pending-20261024-v1.json",
+    "bytes": 7529,
+    "sha256": "d96db63ba58c3ae9effb2f93d861070301fcb88f15a5f046ce7dfbfdce7cd71e",
+    "device": 16777231,
+    "inode": 545981555,
+    "mode": "0o444",
+    "nlink": 1
+  },
+  "actual36ResultReauthenticated": {
+    "path": "/private/tmp/artroom-stale-scalar-followup-owning-evidence-20261024-v3/result.json",
+    "bytes": 10601,
+    "sha256": "9d4a71a42b1b177800247c8c9f62f57e9ef6893d1720f294b5ce733cb71be54a",
+    "device": 16777231,
+    "inode": 545981463,
+    "mode": "0o644",
+    "nlink": 1
+  },
+  "actual37ClosedInputs": [
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-evidence-20261024-v3/result.json",
+      "bytes": 12199,
+      "sha256": "2271c7eff5c10c0d9582c776951a684f501ada6afb90f342a0924540349400da",
+      "device": 16777231,
+      "inode": 545981777,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-evidence-20261024-v3/invocation.json",
+      "bytes": 472,
+      "sha256": "a5e78f6246a187fc80dc7aac7230a876370ad49c74b24022869eb08c88238b92",
+      "device": 16777231,
+      "inode": 545981557,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-evidence-20261024-v3/node37.process.json",
+      "bytes": 682,
+      "sha256": "147427318e8096fcbbb8ef107bab144980dc09388287ceb86930086f08728bd2",
+      "device": 16777231,
+      "inode": 545981757,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-evidence-20261024-v3/counting55.process.json",
+      "bytes": 340,
+      "sha256": "b7f7776d4a6f1d14851ad01036e552dacd286a9c3ced1aa5e04d74c28964bdca",
+      "device": 16777231,
+      "inode": 545981772,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-evidence-20261024-v3/node37.stdout",
+      "bytes": 4121,
+      "sha256": "ff6a2e91f2a55dec9b4eea6c2554e9af95b39c7fed35c691036f4be883d4c1a3",
+      "device": 16777231,
+      "inode": 545981561,
+      "mode": "0o644",
+      "nlink": 1
+    },
+    {
+      "path": "/private/tmp/artroom-archive-unreached-tail-owning-evidence-20261024-v3/counting55.stdout",
+      "bytes": 6754,
+      "sha256": "e4b065b6048836ba08c3e264d10f0ac28bd8b9e5e4fef6837de46aa3d66d74d9",
+      "device": 16777231,
+      "inode": 545981762,
+      "mode": "0o644",
+      "nlink": 1
+    }
+  ],
+  "strictTailLedger": {
+    "path": "/private/tmp/artroom-archive-unreached-tail-owning-source-20261024-v3/ledger.json",
+    "bytes": 9427,
+    "sha256": "0d0d97d1a076854da319bb8d5cce2fe1ae7483c4240395b31249e78df527e489",
+    "device": 16777231,
+    "inode": 545981156,
+    "mode": "0o444",
+    "nlink": 1
+  },
+  "unique37AllocationsAndResultPaths": true,
+  "newTwoOwnerOuterCosts": {
+    "wallSeconds": "15.834901084075682",
+    "inclusiveCpuSeconds": "20.082446"
+  },
+  "all37ExactDecimal": {
+    "wallSeconds": "3384.2076838333159408",
+    "inclusiveCpuSeconds": "3876.6540490000000714"
+  },
+  "qualification": "Raw tails each exactly37/55passed, no duplicate names or failed/cancelled/skipped/todo; durations finite. Full outcome/guard audits are separate and pending. Prior gate35 callback error remains immutable; no embedded path followed or new runtime."
+}

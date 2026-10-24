@@ -1,0 +1,29 @@
+{
+  "audit": {
+    "path": "/private/tmp/artroom-archive-fixed-parent-final-gate-v14-independent-audit-20261024-v1/audit.json",
+    "bytes": 38436,
+    "sha256": "484225650bcfa9674bf307538608f13a23193b8a3838ac9fae5eb1336ff9a569"
+  },
+  "typecheck": {
+    "contexts": 40,
+    "workspaceCommands": 14,
+    "rootTailContexts": 7,
+    "stageExit": 0,
+    "logSha256": "62170bbe0cd055cff4699debd9470a886c0f98f328e7c9517d899c021a3788d0",
+    "qualification": "All forty compiler contexts are in maintained && chains whose containing stage naturally exited0. No compiler replay."
+  },
+  "callbackSummary": {
+    "readyEvents": 3507,
+    "readyUnique": 3506,
+    "duplicateReadyId": "1746186093_12_6",
+    "duplicateReadyOccurrences": 2,
+    "duplicateCaseTerminal": "passed",
+    "missingReady": 17,
+    "resultEvents": 3501,
+    "resultUnique": 3501,
+    "missingResult": 22,
+    "duplicateResults": 0,
+    "qualification": "Raw duplicate is two ready events10ms apart for one passing Scope turn case. No retry inferred. Full raw event positions and gap identity records are in audit."
+  },
+  "qualifiedOutcome": "OwnerFAIL duplicate-ready; childFAIL three original exact-cost assertions. Independent reconciliation does not rewrite or upgrade either result."
+}

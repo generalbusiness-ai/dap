@@ -1,0 +1,23 @@
+--- a/packages/git/test/journal-v2-budget.test.ts
++++ b/packages/git/test/journal-v2-budget.test.ts
+@@ -52,7 +52,8 @@
+   expect(built.ok, JSON.stringify(built)).toBe(true); if (!built.ok) return;
+   for (const row of built.archive.objects) held.set(row.id, row);
+   expect(await verifyJournalAppend({ format: "sha1", at: fixture.at, old: old.id, commit: built.archive.commit, source, budget })).toEqual({ ok: true });
+-  const cost = budget.admitted(); expect(cost.nodes).toBe(31);
++  // Three parent lookup nodes, eleven prepared path nodes, eleven comparison nodes.
++  const cost = budget.admitted(); expect(cost.nodes).toBe(25);
+   for (const [key, ceiling] of Object.entries(ARCHIVE_BOUNDS)) expect(cost[key as keyof typeof cost]).toBeLessThanOrEqual(ceiling);
+   (context.task.meta as Record<string, unknown>)["highestSharedPassBudget"] = { cost, writerLayout: built.archive.layoutWork,
+     maximumNumericRows: 100, pass: last, setup: setup.admitted(),
+--- a/packages/scope/test/archive-host.test.ts
++++ b/packages/scope/test/archive-host.test.ts
+@@ -350,7 +350,7 @@
+   expect(shape).toEqual({ objects: 27, bytes: 3789, maximum: 65536 });
+   expect(budget.charges[0]).toEqual({ metadata: 3456, inputWork: 15156 });
+   expect(budget.charges.at(-1)).toEqual({ inputWork: 30312 });
+-  expect(budget.admitted()).toEqual({ entries: 0, attempts: 32, nodes: 16, calls: 64, metadata: 27766, inputWork: 98310 });
++  expect(budget.admitted()).toEqual({ entries: 0, attempts: 25, nodes: 10, calls: 50, metadata: 22774, inputWork: 89628 });
+   // Future transfer includes one outgoing driver copy in addition to the
+   // adapter's copy/pack. Append validation remains priced separately.
+   expect(forecast).toEqual({ ok: true, cost: { entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 6912, inputWork: 60624 } });

@@ -1,0 +1,266 @@
+{
+  "allocation": "cf1fc1fe915bba3f677074eeedc378abadfa2e81",
+  "status": "passed",
+  "children": [
+    {
+      "label": "focused",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "scripts/focused-check.mjs",
+        "/private/tmp/artroom-stale-scalar-followup-owning-evidence-20261024-v3/focused-plan.json",
+        "/private/tmp/artroom-stale-scalar-followup-owning-evidence-20261024-v3/focused"
+      ],
+      "cwd": "/private/tmp/artroom-builder-archive-fixed-parent-20261023",
+      "pid": 77257,
+      "exit": 0,
+      "signal": null,
+      "wall": 4.888415083987638,
+      "user": 5.271588,
+      "system": 0.9459779999999999
+    }
+  ],
+  "errors": [],
+  "signals": [],
+  "cases": [
+    {
+      "project": "git",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/git/test/journal-v2-budget.test.ts",
+      "name": "a full numeric path at the highest position fits one original writer and append budget",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "git",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/git/test/journal-v2-budget.test.ts",
+          "name": "a full numeric path at the highest position fits one original writer and append budget",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "github archive credential cannot escape its native journal ref",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+          "name": "github archive credential cannot escape its native journal ref",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "artifacts archive credential cannot escape its native journal ref",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+          "name": "artifacts archive credential cannot escape its native journal ref",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "github archive send owns its command and bytes before discovery awaits",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+          "name": "github archive send owns its command and bytes before discovery awaits",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "artifacts archive send owns its command and bytes before discovery awaits",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+          "name": "artifacts archive send owns its command and bytes before discovery awaits",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "github rechecks expiry, revocation and the pass fence after awaits",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+          "name": "github rechecks expiry, revocation and the pass fence after awaits",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "artifacts rechecks expiry, revocation and the pass fence after awaits",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+          "name": "artifacts rechecks expiry, revocation and the pass fence after awaits",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "github parent reads cap decoded objects and bytes in the actual transport",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+          "name": "github parent reads cap decoded objects and bytes in the actual transport",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "artifacts parent reads cap decoded objects and bytes in the actual transport",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+          "name": "artifacts parent reads cap decoded objects and bytes in the actual transport",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "github incremental parent reads one exact object after reserving the original pass work",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+          "name": "github incremental parent reads one exact object after reserving the original pass work",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "artifacts incremental parent reads one exact object after reserving the original pass work",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+          "name": "artifacts incremental parent reads one exact object after reserving the original pass work",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "github incremental send validates exact parent edges and keeps its final credential fence",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+          "name": "github incremental send validates exact parent edges and keeps its final credential fence",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    },
+    {
+      "project": "scope",
+      "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+      "name": "artifacts incremental send validates exact parent edges and keeps its final credential fence",
+      "status": "passed",
+      "started": true,
+      "observed": [
+        {
+          "project": "scope",
+          "file": "/private/tmp/artroom-builder-archive-fixed-parent-20261023/packages/scope/test/archive-host.test.ts",
+          "name": "artifacts incremental send validates exact parent edges and keeps its final credential fence",
+          "status": "passed",
+          "errors": 0,
+          "retryCount": 0,
+          "repeatCount": 0
+        }
+      ]
+    }
+  ],
+  "wall": 7.208652459084988,
+  "pythonCpu": 2.1021590000000003,
+  "childrenUser": 5.370418,
+  "childrenSystem": 1.046847,
+  "inclusiveCpu": 8.519424,
+  "qualification": "Scoped test-only stale scalar continuation: whole Git budget1 and Scope host12, exact13 semantic identities, body only with empty compiler contexts. No healthy focused17, full gate, compiler, compatibility or parser repeat. Original gate80683 remains failed, including its duplicate-ready owner error. Final test afterimages/checkpoint require root review and adoption before capture. Full guards and original deadlines/pools retained; only these two selected cache cells and existing empty Vite-temp timestamps allowed. Nested costs overlap."
+}

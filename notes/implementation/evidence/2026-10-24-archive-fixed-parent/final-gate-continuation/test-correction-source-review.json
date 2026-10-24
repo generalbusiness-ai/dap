@@ -1,0 +1,14 @@
+{
+  "status": "SOURCE_CLEAR_TWO_TEST_EXACT_COST_RECEIPTS",
+  "manifest": {
+    "path": "/private/tmp/artroom-archive-cost-receipt-two-test-source-20261024-v1/manifest.json",
+    "sha256": "4f778ba5d232f3dee52653652739863ec1445ef86680fc8a46bb43cd45824238"
+  },
+  "checks": [
+    "All6 authored leaves authenticated; both beforeimages exact immutablee951 Git.",
+    "Afterimages reconstructed exactly from only node31\u219225 plus explanatorycomment, and one five-scalar hosttuple change. Every other byte including assertions, ceilings, names, setup and deadlines unchanged. Parameterizedhostassertion covers twoadapters, no newregistration.",
+    "Gitnodes3parent+11preparation+11comparison=25. Removed6tree+1duplicateheadreads yield7attempts/14calls/6nodes. Rowmetadata6*128+8*512+128=4992; input6*256+266*7+8*512+256+4*233=8682; newhosttotals22774metadata/89628input. Readercharges and unchangedfoldedvalidator source correspond.",
+    "No production, authority, cap or deadline change. Existing successful append/refusal and transferforecast assertions retained."
+  ],
+  "limits": "Static Source arithmetic only; no execution/imports/livecandidate/dependencies. Original gate remains failed, including separate duplicate-ready observer failure. Owning continuation and callback disposition remain pending."
+}
