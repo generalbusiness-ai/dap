@@ -10,8 +10,8 @@ K2, K3 and K11 are implemented at `fb105fa7`. The structural check, its
 paired control, SDK checks and Page build checks passed. Six maintained
 source-seal results were adopted in seven map slots at `8bfdc37e`, preserving
 the four archive values. All 28 affected compiler roots and all 129 cases
-in 25 whole files passed. The ordinary gate and exact-head checker review
-remain pending. The
+in 25 whole files passed. The ordinary gate at `8658d109` failed; the
+whole-file and previously unreached checks subsequently passed. The
 [implementation report](../notes/implementation/2026-10-24-kernel-hygiene.md)
 records the outcomes and their limits. K1, K4, K5, K6 and K10 remain open;
 this work does not change their status. No deployment is part of this
@@ -75,7 +75,7 @@ is not meant to be kernel, is listed in section 5 with what passing takes.
 | `apps/room` | Application | Passes for the kernel | Its lanes are definitions pinned by digest. It also holds the production entry of the platform Worker (`apps/room/worker.ts:2`, `wrangler.jsonc`), and the kernel names its lane actions (K4, K10). |
 | `examples/grow` | Application | Passes to retire; fails to replace | `contract` fixes the device kinds at fan, heater and vent (`contract/src/device-command.ts:5`, K4). |
 | `examples/lending` | Application | Passes | — |
-| `examples/demo-repo` (retired) | Removed example | K11 implemented; review pending | Its two policy files and the active guide command and link are removed. Dated notes and reports remain unchanged. |
+| `examples/demo-repo` (retired) | Removed example | K11 implemented | Its two policy files and the active guide command and link are removed. Dated notes and reports remain unchanged. |
 
 The request that commissioned this page proposed `packages/scope` and
 `packages/replay` as kernel. The test places them outside. The runtime host
@@ -102,9 +102,9 @@ whether it is one, or a special case that the kernel knows.
 Each item says what passing takes, and names the request that covers it.
 K4 has no request yet. K7 and K8 are closed. K2, K3 and K11 have the
 implementation described below. The structural check and paired control
-passed, as did all affected compilers and whole-file cases. The ordinary
-gate and exact-head checker review remain pending. The implementation report
-keeps each result separate.
+passed, as did all affected compilers and whole-file cases. The
+implementation report records the failed gate at `8658d109` and its
+scoped continuations as separate results.
 
 - **K1. Platform rules are code that replay needs.** A platform scope pins
   `platform:<name>@<n>`. Replay derives it only with code that its caller
@@ -123,8 +123,8 @@ keeps each result separate.
   `dap-platform/package-validation`; its 11 existing integration cases
   now live in platform. Caller bounds, profiles, graph decisions and codec errors stay
   unchanged. The corpus harness remains in derive. Request `30c7c3ec`
-  covers K2, K3 and K11. Affected checks passed; the ordinary gate and
-  exact-head review remain pending.
+  covers K2, K3 and K11. The implementation report records the affected
+  checks, failed gate and scoped continuations.
 - **K3. Application codecs leave `bytes`.** All 20 modules now live in `platform/src/application-codec/`, exposed by
   `dap-platform/application` and `dap-platform/application-v2`.
   The directory preserves the existing native `platform/src/application.ts`
@@ -181,7 +181,7 @@ keeps each result separate.
 - **K11. The dead example is removed.** The two tracked files
   below `examples/demo-repo` and the command/link in `docs/policy-pack.md`
   are deleted. The guide states the removal. Dated notes and reports are
-  unchanged; final review remains pending.
+  unchanged.
 
 ## 6. Kernel promises
 
@@ -240,6 +240,19 @@ A head adds to the kernel when it does any of these:
 The checker checks this rule on every head that touches these packages.
 A head that removes a kernel promise also needs this review.
 
+Request `30c7c3ec` makes two file/export additions under this rule, while
+adding no new kernel capability:
+
+- `derive/src/field-types.ts` and the `./field-types` export give
+  `fieldAssignable` its home beside the validator that already used and
+  re-exported it. Field assignability is a grammar rule for derivation,
+  so it belongs in the kernel rather than a replaceable platform service.
+- The bytes index now exports the existing `Signer` type from
+  `bytes/src/signer.ts`. That type belongs to the signature domain bytes
+  already owns. It was previously exposed through `bytes/application`;
+  the type-only root export lets the relocated platform codecs use it
+  without keeping application codecs in the kernel.
+
 ### Maintained production dependency check
 
 `node scripts/check-kernel-boundary.mjs` parses production imports,
@@ -286,8 +299,9 @@ the original file was restored. The control is not committed.
 
 The structural check addresses dependency placement, not byte compatibility
 or native authority. The implementation report records these results,
-the passed moved codec witnesses, and the ordinary gate and exact-head
-checker review separately. The gate and review remain pending.
+the passed moved codec witnesses, the failed gate at `8658d109` and its
+scoped continuations separately. The workroom records the exact-head
+review and landing decisions.
 
 
 ### 7.1 Filing while parts fail the test
