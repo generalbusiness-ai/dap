@@ -46,6 +46,7 @@ import { JoinLimits, isJoin, type LimitConfig } from "./limits.ts";
 import { Operations, type Outside } from "./operations.ts";
 import { OperatorRecord, sendAgain, type Incident, type Resent } from "./operator.ts";
 import { Dispatcher, Wakes } from "./outbox.ts";
+import { CredentialStore } from "./credential-store.ts";
 import { ArchiveDriver, type FixtureArchiveDriverOptions, type RoomArchiveDriverOptions } from "./archive-driver.ts";
 import { archiveHostItem, type ArchiveHostConfiguration, type ArchiveHostItemAsk } from "./archive-host-item.ts";
 import { GenesisProofs, type ProofTimer } from "./genesis-proof.ts";
@@ -140,6 +141,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   readonly #dispatcher: Dispatcher | null;
   readonly #operations: Operations;
   readonly #wakes: Wakes;
+  readonly #credentialExpiry: CredentialStore;
   readonly #clock: Clock;
   readonly #transport: Transport | null;
   readonly #seconds: number;
@@ -183,7 +185,10 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     const given: Ports = { ...production(), alarm, ...wiring.ports };
     // The one alarm serves the earliest deadline, the next attempt of an outside operation and, with a transport, the next dispatch.
     const schedulingAlarm: Alarm = { set: at => { this.#alarmRevision++; return given.alarm.set(at); } };
-    const wakes = new Wakes(store, schedulingAlarm, given.transport !== null, wiring.fixtureArchive || wiring.archive ? () => this.#archive?.wake() ?? null : undefined);
+    const credentialExpiry = new CredentialStore(this.#readSql, () => store.scope()?.at ?? null);
+    this.#credentialExpiry = credentialExpiry;
+    const wakes = new Wakes(store, schedulingAlarm, given.transport !== null, wiring.fixtureArchive || wiring.archive ? () => this.#archive?.wake() ?? null : undefined,
+      () => credentialExpiry.expiryWake(given.clock.read()));
     this.#wakes = wakes;
     // The authority of a deployed scope reads this scope's own genesis entry, for the membership scope that it records.
     const genesis = (): Extract<Input, { type: "genesis" }> | null => {
@@ -300,6 +305,8 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
       // Preserve a durable earlier wake across repeated activation.
       ctx.waitUntil(Promise.resolve(wakes.maintenance.set(pending ? maintenance ?? this.#maintenanceAt() : null)));
     }
+    // Scheduling only on activation; legacy custody work stays alarm-owned.
+    if (credentialExpiry.expiryWake(given.clock.read()) !== null) ctx.waitUntil(Promise.resolve(wakes.set()));
     // A running room may bind after its quiet scopes' last commit. Its busy
     // child's checked target route activates Directory; its own charged full
     // discovery activates the quiet Rules sibling. Schedule the existing
@@ -701,6 +708,9 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
       return await this.#invoke("alarm", async () => {
         this.#fresh = false;
         try {
+          // Private expiry has its own bounded quantum and durable earliest wake.
+          try { this.#credentialExpiry.expire(this.#clock.read()); }
+          catch { /* Final wake arbitration preserves the due queue for retry. */ }
           // One synchronous bounded quantum gets a turn before potentially
           // asynchronous native owners. A backlog never drains in one alarm.
           try { this.#store.localSigners.maintain(); }

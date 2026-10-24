@@ -50,7 +50,7 @@ export interface SnapshotReader {
   job(fact: FactRef): Promise<{ entry: Entry; under: string; state: string; decidedBy?: FactRef | null } | null>;
   key(membership: string, key: KeyId): Promise<unknown>;
 }
-export interface DestinationHostOptions { snapshotReader?: SnapshotReader; host: string; namespace: string; provider: DestinationProvider; custody: Pick<CredentialStore, "put" | "reply" | "live" | "read" | "judged" | "revoked" | "pending" | "expectRevoke" | "revocations" | "held" | "take"> }
+export interface DestinationHostOptions { snapshotReader?: SnapshotReader; host: string; namespace: string; provider: DestinationProvider; custody: Pick<CredentialStore, "put" | "putRead" | "reply" | "live" | "read" | "judged" | "revoked" | "pending" | "expectRevoke" | "revocations" | "held" | "take"> }
 
 /** The byte domain of the nonsecret handle of a member's read credential. */
 const READ_HANDLE = "artroom.read-credential.v1";
@@ -154,7 +154,7 @@ export class DestinationHost implements Outside {
         if (members(reply, ["minted"])?.["minted"] === false) return answer("refused", {});
         const body = members(reply, ["id", "ends", "plaintext"]);
         if (!body || body["id"] !== id || typeof body["ends"] !== "string" || timeMs(body["ends"]) === null || typeof body["plaintext"] !== "string" || body["plaintext"].length === 0 || utf8(body["plaintext"]).length > 4096) return null;
-        const held = this.#options.custody.put({ id, ends: body["ends"], plaintext: body["plaintext"], mint: operation.id, attempt: request.attempt });
+        const held = this.#options.custody.putRead({ id, ends: body["ends"], plaintext: body["plaintext"], mint: operation.id, attempt: request.attempt });
         return held === "stored" || held === "repeat" ? answer("confirmed", { token: id, ends: body["ends"] }) : null;
       }
       if (operation.kind === DESTINATION_KINDS.mint) {

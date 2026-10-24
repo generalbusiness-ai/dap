@@ -80,11 +80,12 @@ describe("destination outside adapter; scripted host, platform judgments in memo
     const storage = await create();
     await storage.inside(async (state) => {
       const f = fixture(state.storage.sql);
+      f.provider.mintReply = { id: "read:provider-token-1", ends: t(60), plaintext: "private-token-1" };
       f.branch.confirmed();
       const write = operation(f.branch, "first-head");
       const mint = operation(f.branch, "mint");
       const minted = await f.host.send(f.request(mint));
-      expect(minted).toEqual({ result: "confirmed", evidence: { basis: "own-answer", body: { token: "provider-token-1", ends: t(60) } } });
+      expect(minted).toEqual({ result: "confirmed", evidence: { basis: "own-answer", body: { token: "read:provider-token-1", ends: t(60) } } });
       expect(f.custody.read(mint, 1)).toMatchObject({ state: "held", plaintext: "private-token-1" });
       expect(await f.host.send(f.request(write))).toMatchObject({ result: "refused", evidence: { body: { send: "not-sent" } } });
       // Simulate loss after the provider reply was kept, before its outcome.
@@ -138,10 +139,15 @@ describe("destination outside adapter; scripted host, platform judgments in memo
       const blockedCleanup = new DestinationHost(f.given, { ...f.options, custody: blockedCustody });
       expect(await blockedCleanup.send(f.request(revoke))).toBeNull();
       expect(f.provider.calls.filter((call) => call.kind === "revoke")).toHaveLength(0);
+      // Expiry maintenance must preserve write plaintext even when its
+      // provider identity imitates a read handle; late revoke still needs it.
+      f.custody.expire(t(60));
+      expect(f.custody.read(mint, 1)?.plaintext).toBe("private-token-1");
       const restarted = new DestinationHost(f.given, { ...f.options, custody: new CredentialStore(state.storage.sql, () => f.branch.at) });
       const revoked = await restarted.send(f.request(revoke));
-      expect(f.custody.revocations(null, 1)).toEqual({ items: [{ revoke, attempt: 1, mint, mintAttempt: 1, id: "provider-token-1" }], more: false });
-      expect(revoked).toMatchObject({ result: "confirmed", evidence: { body: { token: "provider-token-1" } } });
+      expect(f.provider.calls.filter(call => call.kind === "revoke").at(-1)?.body).toEqual({ id: "read:provider-token-1", plaintext: "private-token-1" });
+      expect(f.custody.revocations(null, 1)).toEqual({ items: [{ revoke, attempt: 1, mint, mintAttempt: 1, id: "read:provider-token-1" }], more: false });
+      expect(revoked).toMatchObject({ result: "confirmed", evidence: { body: { token: "read:provider-token-1" } } });
       expect(f.custody.read(mint, 1)).toMatchObject({ state: "live", plaintext: "private-token-1" });
       expect(f.branch.lost(revoke, 1).result).toBe("write");
       expect(restarted.replies(1)).toEqual({ answers: [], more: false });

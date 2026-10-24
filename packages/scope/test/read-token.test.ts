@@ -1,4 +1,4 @@
-import { runInDurableObject } from "cloudflare:test";
+import { runDurableObjectAlarm, runInDurableObject } from "cloudflare:test";
 import { describe, expect, onTestFinished, test } from "vitest";
 import type { Intent, ScopeRef, Seed } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, intentDigest, scopeIdOf, seedDigest, signIntent, textDigest } from "@generalbusiness/dap-bytes";
@@ -155,12 +155,30 @@ describe("a member's read token on real scopes (the planner's decision for I5). 
 
       // At its end a token is not answered. Two tokens with one end: the one read a second before it is answered; the one read at
       // it is forbidden, and dropped.
-      const [early, late] = [await readToken(una, 1), await readToken(una, 1)];
-      if (!("handle" in early) || !("handle" in late)) throw new Error("read-token was not accepted");
+      const [early, late, future] = [await readToken(una, 1), await readToken(una, 1), await readToken(una, 2)];
+      if (!("handle" in early) || !("handle" in late) || !("handle" in future)) throw new Error("read-token was not accepted");
       expect(early.handle.ends).toBe(late.handle.ends);
       net.clock.now = soon(3599);
       expect((await credential(early.handle.token, await sessionOf(una))).status).toBe(200);
       net.clock.now = soon(1);
+      // Leave late unread: only the real native alarm may remove its plaintext.
+      // Restart proves scheduling comes from durable custody, not an in-memory timer.
+      // Simulate an untagged pre-upgrade read credential. Its actual retained
+      // native opening/outcome must authenticate migration; no prefix inference.
+      await runInDurableObject(G.object, (_instance, state: DurableObjectState) => {
+        state.storage.sql.exec("DELETE FROM private_read_credential WHERE id=?", late.handle.token).toArray();
+        state.storage.sql.exec("DELETE FROM private_credential_expiry WHERE id=?", late.handle.token).toArray();
+        state.storage.sql.exec("UPDATE private_credential_expiry_backfill SET last_scope=NULL,last_id=NULL,done=0").toArray();
+      });
+      await G.restart();
+      const beforeExpiry = (await G.summary()).at;
+      expect(await owner.required(() => runDurableObjectAlarm(G.object))).toBe(true);
+      const expiredCustody = await runInDurableObject(G.object, (_instance, state: DurableObjectState) => state.storage.sql.exec("SELECT id, plaintext IS NULL AS dropped, state, ends FROM private_credential WHERE id IN (?, ?) ORDER BY id", late.handle.token, future.handle.token).toArray());
+      expect(expiredCustody).toEqual([
+        { id: late.handle.token, dropped: 1, state: "live", ends: late.handle.ends },
+        { id: future.handle.token, dropped: 0, state: "live", ends: future.handle.ends },
+      ].sort((a, b) => a.id.localeCompare(b.id)));
+      expect((await G.summary()).at).toEqual(beforeExpiry);
       expect((await credential(late.handle.token, await sessionOf(una))).status).toBe(403);
       expect(await runInDurableObject(G.object, (_instance, state: DurableObjectState) => state.storage.sql.exec("SELECT plaintext FROM private_credential WHERE id = ?", late.handle.token).toArray())).toEqual([{ plaintext: null }]);
 
