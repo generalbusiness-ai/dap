@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5f31e858a9678aec46654145b8f40e4073bb7b9d","text":"Merge retired a covered predecessor; the successor is at packages/git/src/journal-objects.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5fa8c7d6fd599bfaf1e0b12490e06a1a0c87c40a","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-24-archive-fixed-parent/final-gate-continuation/test-correction-source-manifest.json."}
