@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:200e42d91caaa4e8161828ec50b4eb9c158ea311","text":"Merge retired a covered predecessor; the successor is at packages/platform/test/application-install.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:201c8108cf43ae849145776b2ecef0c8c14af08a","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-24-kernel-hygiene-evidence/structural-result.json."}
