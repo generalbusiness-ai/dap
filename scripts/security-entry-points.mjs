@@ -135,7 +135,8 @@ async function scopeRows(text) {
   return [...result.values()];
 }
 
-async function hostedInventory(source) {
+async function hostedInventory(source, settings) {
+  const { hostedMcpTools } = load(readSource("packages/mcp/src/hosted-tools.ts"), ["GENERIC_TOOL_NAMES", "HOSTED_TOOL_OMISSIONS", "hostedMcpTools"], {});
   const text = declaration(source, "mcpRoute"), agent = "a".repeat(64), paths = strings(text, value => value.startsWith("/") && !value.endsWith("/"));
   const { SCOPE_INDEX_NAME, scopeIndex } = load(readSource("packages/scope/src/scope-index.ts"), ["SCOPE_INDEX_NAME", "scopeIndex"], {});
   walk(parse(text), node => {
@@ -152,7 +153,7 @@ async function hostedInventory(source) {
   const result = new Map(), marker = dispatch => { throw { dispatch }; };
   let action;
   const { mcpRoute } = load(source, ["mcpRoute", "boundedBytes"], {
-    admittedRequestUrl: () => true, URL, Response, Uint8Array, CONTROL_BODY_BYTES: 64 * 1024, scopeIndex,
+    admittedRequestUrl: () => true, URL, Response, Uint8Array, CONTROL_BODY_BYTES: 64 * 1024, scopeIndex, hostedMcpTools,
     json: status => new Response(null, { status }),
     controlOf: () => ({ request: { action, agent: action === "create" ? null : agent, membership: { scope: "witness" } } }),
   });
@@ -169,7 +170,7 @@ async function hostedInventory(source) {
   const methods = new Set([...methodsIn(text), ...methodsIn(readSource("packages/mcp/src/http.ts"))]);
   for (const path of paths) for (const method of methods) for (action of ["create", "bearer", "retire"]) {
     const request = new Request(`https://inventory.invalid${path}`, { method, headers: { authorization: `Bearer ${agent}.witness` } });
-    try { await mcpRoute(request, { REGISTRIES: namespace, AGENTS: namespace, SCOPE_INDEX: index }); }
+    try { await mcpRoute(request, { ...settings, REGISTRIES: namespace, AGENTS: namespace, SCOPE_INDEX: index }); }
     catch (error) {
       if (!error?.dispatch) throw error;
       const route = row(method, path.replace(agent, ":agent"), error.dispatch);
@@ -272,7 +273,7 @@ function sandboxBindings() {
 }
 
 function jsonc(file) { return JSON.parse(readSource(file).replace(/^\s*\/\/.*$/gm, "")); }
-export async function servedInventory({ scopeSource = readSource(scopeFile), applicationSource = readSource("packages/scope/src/applications/route.ts") } = {}) {
+export async function servedInventory({ scopeSource = readSource(scopeFile), applicationSource = readSource("packages/scope/src/applications/route.ts"), hostedSettings = { MCP_ENABLED: "true" } } = {}) {
   const scope = await scopeRows(scopeSource);
   const page = readSource("apps/room/page/route.ts"), pagePaths = [];
   walk(parse(declaration(page, "page")), node => { if (node.type === "SwitchCase" && typeof node.test?.value === "string") pagePaths.push(node.test.value); });
@@ -284,7 +285,9 @@ export async function servedInventory({ scopeSource = readSource(scopeFile), app
     ...methodRows(methodsIn(declaration(applicationSource, "applicationPage")), prefixesIn(declaration(applicationSource, "applicationPage")).map(prefix => prefix + "*"), "none"),
     ...methodRows(methodsIn(declaration(readSource("apps/room/demo-creation.ts"), "demoCreationRoute")), strings(declaration(readSource("apps/room/demo-creation.ts"), "DEMO_OFFER_PATH")), "none"),
   ];
-  const hostedRows = await hostedInventory(scopeSource);
+  // The table describes reachability with valid deployment settings. Do not
+  // bypass the real hosted policy to reach the finite matcher.
+  const hostedRows = await hostedInventory(scopeSource, hostedSettings);
   const result = new Map();
   for (const [file, entry] of [
     ["apps/room/wrangler.jsonc", "worker.ts"],

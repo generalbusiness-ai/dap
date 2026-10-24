@@ -28,7 +28,7 @@ import { MCP_METRIC_SCHEMA, type McpMetricPoint } from "../src/metrics.ts";
 /** Production default dispatch, in this isolate. The actual native PLATFORM namespace is this fixture's Scope binding;
  * REGISTRIES and AGENTS keep their existing native subclasses, clocks, custody and control fences. */
 const routed = (url: string | URL, init?: RequestInit): Promise<Response> => {
-  const action = () => worker.fetch(new Request(url, init), { ...env, SCOPES: env.PLATFORM, ...(startupTest.index ? { SCOPE_INDEX: startupTest.index } : {}) });
+  const action = () => worker.fetch(new Request(url, init), { ...env, SCOPES: env.PLATFORM, ...(startupTest.index ? { SCOPE_INDEX: startupTest.index } : {}), ...(hostedTest.toolSettings ?? { MCP_ENABLED: "true", MCP_TOOL_ADDITIONS: '["create","install_application","credential","prepare","join","record","step","text"]' }) });
   return startupTest.owner ? startupTest.owner.wait(action) : action();
 };
 const fetchLike = ((url: string | URL | Request, init?: RequestInit) => routed(url instanceof Request ? url.url : url, init)) as unknown as typeof fetch;
@@ -200,6 +200,32 @@ const mcp = async (bearer: string, method: string, headers: Record<string, strin
 const META = { "io.modelcontextprotocol/protocolVersion": MODERN, "io.modelcontextprotocol/clientCapabilities": {} };
 const modernCall = (bearer: string, name: string, args: Record<string, unknown>, id = 1) =>
   mcp(bearer, "POST", { "mcp-protocol-version": MODERN, "mcp-method": "tools/call", "mcp-name": name }, { jsonrpc: "2.0", id, method: "tools/call", params: { name, arguments: args, _meta: META } });
+test("hosted default policy travels through Worker Env and the actual agent constructor to list and call", async () => {
+  const previousToolSettings = hostedTest.toolSettings;
+  hostedTest.toolSettings = { MCP_ENABLED: "true" };
+  const room = mcpRoom();
+  hostedTest.now = () => room.now();
+  hostedTest.pause = waiting => room.pause(waiting);
+  try {
+    const rita = room.agent("rita");
+    await createRoom(room, rita);
+    const bot = await hosted(room, rita, "@default-policy", "default-policy-create");
+    const listed = await room.wait(() => mcp(bot.bearer, "POST", { "mcp-protocol-version": MODERN, "mcp-method": "tools/list" }, { jsonrpc: "2.0", id: 1, method: "tools/list", params: { _meta: META } }));
+    expect(listed.status).toBe(200);
+    const body = await listed.json() as { result: { tools: { name: string }[] } };
+    const names = body.result.tools.map(tool => tool.name);
+    expect(names).toContain("room");
+    for (const name of ["create", "install_application", "credential", "prepare", "join", "record", "step", "text"]) {
+      expect(names).not.toContain(name);
+      const called = await room.wait(() => modernCall(bot.bearer, name, {}));
+      const refused = await called.json() as { result: { isError: boolean; structuredContent: Record<string, unknown> } };
+      expect(refused.result.isError).toBe(true);
+      expect(refused.result.structuredContent).toEqual({ error: "unknown-tool", message: `No tool is named ${name} in this list.`, next: "Call tools/list." });
+    }
+    const orientation = await room.wait(() => modernCall(bot.bearer, "room", {}));
+    expect((await orientation.json() as { result: { isError: boolean } }).result.isError).toBe(false);
+  } finally { hostedTest.toolSettings = previousToolSettings; done(room); }
+});
 // Invariant: an enrolled native hosted agent's production fetch port carries
 // deployment admission settings, so its signed parentless install is refused.
 // The existing room uses the TEST namespace/clock and a STAND-IN Git provider.
@@ -495,11 +521,16 @@ test("H2, H3 and H4: agents kept apart, control authority, the bearer and revoca
     expect(afterListen.text(), "with its result").toContain('"resultType":"complete"');
     expect((await mcp(botNew, "POST", { "mcp-protocol-version": MODERN, "mcp-method": "tools/list" }, { jsonrpc: "2.0", id: 1, method: "tools/list", params: { _meta: META } })).status).toBe(401);
     expect((await room.wait(() => post(`/mcp/agents/${bot.agent}/bearer`, control(room, rita.secret, "bearer", M, bot.agent, "", "after-retire"), ""))).status).toBe(409);
-    // After revoke-key of bot3's key by the admin: its act is refused by the scope with membership's reason, and custody records it.
+    // Revoking the native key does not retire this hosted bearer. Fresh
+    // standing hides the act before signing or custody, rather than sending
+    // an act that the native scope would refuse.
     const keyItem = (await allItems(rita, "membership")).find((i) => i.type === "key" && i.values["id"] === bot3.key)!;
     expect((await rita.ok("key.revoke", { on: keyItem.id, fields: { as: "retired" }, idempotencyKey: "revoke-bot3" }))["answer"]).toBe("accepted");
-    const refused = await factOf(await room.wait(() => modernCall(bot3Rotated, "issue.create", { fields: { definition: DEMO_DIGESTS.issue, title: "after revocation", conditions: ["done"] }, idempotencyKey: "after-revoke" })));
-    expect(refused.answer, JSON.stringify(refused)).toBe("refused");
+    const hidden = await room.wait(() => modernCall(bot3Rotated, "issue.create", { fields: { definition: DEMO_DIGESTS.issue, title: "after revocation", conditions: ["done"] }, idempotencyKey: "after-revoke" }));
+    expect(hidden.status, "the hosted bearer remains authenticated").toBe(200);
+    const refused = (await hidden.json() as { result: { structuredContent: { error: string } } }).result.structuredContent;
+    expect(refused.error, JSON.stringify(refused)).toBe("unknown-tool");
+    expect(await agentStub(bot3.agent).custodyRecord("after-revoke"), "hidden acts create no custody record").toBeNull();
     // Expiry: seven days past the original request's deadline, the op is stale and no answer body remains in either object.
     room.advance(8 * 86_400_000);
     expect((await room.wait(() => post(`/mcp/agents/${bot3.agent}/bearer`, control(room, rita.secret, "bearer", M, bot3.agent, "", "rita-bearer-3"), ""))).status, "stale").toBe(409);

@@ -1735,6 +1735,46 @@ agent's by construction; one registry per repository creates agents. The
 design is notes/2026-10-13-hosted-mcp-endpoint.md; this section is what an
 operator and a controller need.
 
+### Hosted admission settings
+
+The endpoint is off unless `MCP_ENABLED` is exactly `"true"`, both
+`REGISTRIES` and `AGENTS` are bound, and `MCP_TOOL_ADDITIONS` is absent or
+valid. A closed endpoint returns `404` before reading the request body or
+addressing either namespace. This applies to the control routes too.
+
+`MCP_TOOL_ADDITIONS` is an optional JSON array of distinct known generic
+tool names, at most 1,024 characters and 18 names. Unknown names,
+duplicates, a different JSON shape, or an oversized setting close the
+endpoint. The hosted default omits `create`, `install_application`,
+`credential`, `prepare`, `join`, `record`, `step`, and `text`. To enable
+needed tools, name them explicitly, for example `["prepare","text"]`.
+The other accepted names are `room`, `inspect`, `application_installation`,
+`items`, `steps`, `sends`, `wait`, `settle`, `actions`, and `act`. The
+existing service mode still decides whether `actions` and `act` are listed.
+These settings do not change local Node MCP defaults.
+
+A named act call takes a fresh inventory snapshot and applies the same
+selection and standing predicates as `tools/list`. Dispatch also checks
+the actual target's membership: standing on scope A cannot admit the same
+operation on ungranted scope B. This target check also applies to generic
+`act`, `prepare` with a kind, and view actions. Generic
+`install_application` checks the actual target before package resolution or
+custody work. This is an admission check, not an R9 trust-schema change.
+Existing code-granted,
+action-null, and unknown-standing cases keep their admission rules. The
+native scope remains the judge of every admitted act.
+
+Before rollout, the planner inventories existing hosted agents and their
+required tools (request `92d54432`), chooses each Worker's opt-in and additions, and deploys
+only after exact-head review. Repository bindings do not establish live
+usage or settings. The explicit deployment choice remains pending. Leaving
+opt-in unset closes existing endpoints. The
+local slice A implementation and validation, including the passing gate,
+are recorded in [the admission note](../notes/implementation/2026-10-24-hosted-mcp-admission.md)
+and its review record.
+Bearer lifecycle, plaintext retention, failure-map bounds, authentication
+ordering, and R15 are separate unfinished work.
+
 ### Routes
 
 | Route | Authorization | What it does |
@@ -1911,10 +1951,13 @@ and final-item reads, that poll returns no item; a later poll reads again.
 Observed run of `packages/mcp/test/budget.test.ts`, on the stand-in scope
 service of the Node tests, which counts every request the server makes. A
 warm call holds a read session; a cold call adds one session request. The
-plan's bound is plan 031, section 8. Response bytes are the whole result
-of the warm call, as the service makes it; the test asserts both calls' sizes against the bound.
+response bounds are from plan 031, section 8. Response bytes are the whole
+result of the warm call, as the service makes it. The test asserts both calls'
+sizes against the bound. The table retains the historical observed counts and
+response sizes. The last column includes the current fresh-admission read
+bounds for the two named act tools.
 
-| Tool | Reads, warm | Posts | Cold | Response bytes | Plan's bound, warm |
+| Tool | Historical reads, warm | Posts | Cold | Response bytes | Current read bound, warm |
 |---|---|---|---|---|---|
 | `room` | 3 | 0 | +1 session | 3874 | 3, + roots and memberships |
 | `inspect` | 1 | 0 | +1 | 990 | 1 |
@@ -1929,11 +1972,23 @@ of the warm call, as the service makes it; the test asserts both calls' sizes ag
 | `wait`, one poll | 1 | 0 | +1 | 476 | 1 |
 | `settle` | 1 | 0 | +1 | 1570 | 1 |
 | `actions` | 1 | 0 | +1 | 20056 | 3 |
-| `issue.comment`, on a lane | 1 | 1 | +1 | 1184 | 2 |
-| `issue.create`, with the definition's bytes read | 2 | 1 | +1 | 1204 | 2 |
+| `issue.comment`, on a lane | 1 | 1 | +1 | 1184 | 4 |
+| `issue.create`, with the definition's bytes read | 2 | 1 | +1 | 1204 | 5 |
 | `create` | 0 | 1 | | | 0 |
 | `credential`, a second token after the first was read | 3 | 0 | +1 | 362 | 1 |
 | `tools/list` | 3 | 0 | +1 | | 3, + roots and memberships |
+
+Fresh act admission reads Membership, Directory, and Rules on each attempt.
+`issue.comment` then reads its target lane: four reads in this fixture.
+`issue.create` also reads its Directory target and the retained definition
+bytes from Rules: five reads. The budget witness checks those exact routes
+for both cold and warm calls. These bounds apply to this room with no
+applications or standalone roots. They do not raise the other tools' bounds.
+
+The R5 whole-file validation observed four reads for `issue.comment` and
+five for `issue.create`, with the exact routes checked for both cold and
+warm calls. All 22 runnable cases passed; the existing Darwin reclaimer
+case was skipped. Response sizes in the table remain historical.
 
 `credential` reads the act's entry, then the entries after it until the
 operation's outcome names the token (two here), then the credential route:
@@ -1974,8 +2029,9 @@ Other observed figures from the same run:
 - A 200 KiB retained text is read whole in 4 calls of `text` by offset.
 - With a 2 KiB list page, each descriptor larger than the page is alone on
   its page (35 of them), and all 71 tools are reachable.
-- 70 resubmissions of one refused envelope: each of the 70 made 1 read and
-  1 post, and all 70 outcomes are readable.
+- 70 resubmissions of one refused envelope: each of the 70 made 4 reads and
+  1 post, with no new session. Every attempt checked the same four routes
+  above, and all 70 outcomes remained readable in the R5 validation.
 - A subscribed client is told 2 times for an activation and a role change,
   and 0 times for an ordinary head advance. Each watch run reads 3
   summaries.

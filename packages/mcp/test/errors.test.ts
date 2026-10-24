@@ -57,7 +57,7 @@ test("archived submit and settlement stay explicit and terminal without inventin
 // Existing retained envelope and scripted room/settlement only. This tests
 // install's custody consumer, not Git package preparation or native admission.
 test("install_application returns its archived settlement on repeat without fetching or submitting again", async () => {
-  const signer = fixedSigner(22), stand = new StandIn(signer.key), store = memoryStore();
+  const signer = fixedSigner(22), stand = new StandIn(signer.key, "admin", ["application.install"]), store = memoryStore();
   stand.scopes.get(stand.directory.scope)!.definition = TRUSTED_APPLICATION_COHORT.directory;
   stand.scopes.get(stand.rules.scope)!.definition = TRUSTED_APPLICATION_COHORT.rules;
   const args = { uri: `git+https://packages.test/apps.git/@${"c".repeat(40)}/application.dap.json`, release: head.hash, roles: [], values: {}, idempotencyKey: "retained-install" };

@@ -10,7 +10,7 @@ const seals = {
   "apps/room/demo-creation.ts": "d9850f4854182c0231a2ae9a985882343e7f3dfea67ea034cafe4fca4bb0d77f",
   "apps/room/page/route.ts": "62c8f69b9f516f1b5acdaef57d7aed25268d8cf03283bdffdd4b1b5f20bb6b3d",
   "apps/room/brand/route.ts": "71b45ff9b41b3bea31c775a16525349591e0d4f7dfdc65da79f095816b1c343c",
-  "packages/scope/src/worker.ts": "2e3546e4c7a70ce17ae42c8e1367287277b26a7a67fa6dfe4fa2d83c4b5eedca", // Actual union parser value adopted by root.
+  "packages/scope/src/worker.ts": "a8ed6b8fa224ff4fcd3ed9cfc085344756d621c4a9a9598be260e2515bab013d", // Actual union parser value adopted by root.
   "packages/scope/src/scope-index.ts": "98a91329fbe8926127aab2db555970278e898cec347fd4f20569b19f1f879d54", // New internal lookup/registration boundary.
   "packages/scope/src/creation-admission.ts": "5fe79f1b3a9f760c318cd5f9c66d768fe8a1815e47454e351826443b617ead58", // Reviewed R1 ancestry owner; adopted AST value.
   "packages/scope/src/creation-lineage.ts": "82f46501400fde4903e9bd3b216d345f8af871d0311157da3faa9469e5b33140", // Reviewed whole-lineage boundary; adopted AST value.
@@ -36,7 +36,11 @@ const seals = {
   "packages/scope/src/item-queries.ts": "61ead9996d2c338a26331e04b8576c52425d8d2c88dc86173a7d79108c2ee418",
   "packages/scope/src/applications/projection.ts": "f7d3bb45d448ec654a89f875697f865e1e89baeb5d7529e0db0859bd855b009f",
   "packages/scope/src/destination-host.ts": "b86198499cadddaf47f439ed39f7e44f8da78fbed120e185b787b153f0dc66eb",
-  "packages/mcp/src/hosted.ts": "337b73c8773a5ce3424fc67b5746710d800ca1e4d4074ba6819f94560817641d",
+  "packages/mcp/src/hosted.ts": "3125d8d617f214a83b07a8173406b567ed652953b70e39cd45bc7aff48f0e966",
+  "packages/mcp/src/hosted-tools.ts": "5bb4dd74b12896bb8f5f5cb366f25bd31af849c2690d0e3ab5d81eb277f94a47", // Reviewed R5 admission owner; actual maintained parser output.
+  "packages/mcp/src/service.ts": "e8d95eca7d989a5f883fdae5236865d181b9b1a3129828876df07c5122762836", // Reviewed R5 admission owner; actual maintained parser output.
+  "packages/mcp/src/catalogue.ts": "194dd82a6d3f188909485c4c1b9db33aee671b06fb46840e92fc0b8df2a79726", // Reviewed R5 admission owner; actual maintained parser output.
+  "packages/mcp/src/inventory.ts": "74c5db16355c5badacf9dc6cc241d20d6400908a160324c07d88db9191b455f8", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/http.ts": "9a1450bef9f94b55b4751a3368032dfc480555628b48ccfdd55fd43e9c853af8",
   "examples/grow/simulator-worker.ts": "2d60dab3a9a5b204b69f15bc5ec3473fa48513888d7ffdb0c1fc179f6fe4883c",
   "examples/grow/simulator-host.ts": "26a8521b98737cae3d80a9fe3b9ac17fb10b11fcf2f8ce973251253bdbf2b7df"
@@ -117,6 +121,13 @@ test("the bijection rejects a missing row, an extra row, and a changed gate", as
   assert.throws(() => modeled(grow + '\nexport { default } from "./worker.ts";'));
   assert.throws(() => roomHttpEntry("apps/room/unreviewed.ts"), { code: "ERR_ASSERTION" });
   const actual = await servedInventory();
+  // The enabled table must not silently model a disabled deployment as
+  // reachable. The real policy removes only its hosted dispatch rows.
+  const disabled = await servedInventory({ hostedSettings: {} });
+  for (const [worker, rows] of actual) {
+    assert.deepEqual(disabled.get(worker), rows.filter(row => !/^[A-Z]+ \/mcp(?:\/|$)/.test(row.route)));
+  }
+  assert.throws(() => assertInventory(disabled, document()), { code: "ERR_ASSERTION", message: /route\/method\/gate bijection/ });
   for (const fault of [rows => rows.slice(1), rows => [...rows, { route: "POST /unserved", gate: "none" }], rows => rows.map((row, i) => i === 0 ? { ...row, gate: "membership" } : row)]) {
     const docs = document(); docs.set("artroom-scope", fault(docs.get("artroom-scope")));
     assert.throws(() => assertInventory(actual, docs), { code: "ERR_ASSERTION", message: /route\/method\/gate bijection/ });

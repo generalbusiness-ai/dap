@@ -163,7 +163,7 @@ describe("what a call costs, end to end", () => {
     expect(observed[0]!.doubles.slice(2)).toEqual([0, 0, attempts, 0]);
     expect(metrics.at(-1)!.doubles.slice(1, 3)).toEqual([0, 0]);
   });
-  // Invariant: each tool's reads, warm and cold, are within section 8's table, and its whole result within its bound: a cold
+  // Invariant: each tool's reads follow the table, including fresh act admission, and its whole result fits its bound: a cold
   // call adds one session request, an expired session one more, a refused session one signed read per read, and a session the
   // scope refuses on a read one signed-read fallback for that read.
   test("reads per tool, warm and cold, with expired, refused and forbidden sessions", async ({ annotate }) => {
@@ -184,7 +184,8 @@ describe("what a call costs, end to end", () => {
     const token2 = await s.service.call("repository.read-token", { on: 0, fields: { hours: 1 }, idempotencyKey: "rt-1" });
     const tokens = [tokenSeq, (token2.structuredContent["fact"] as { seq: number }).seq];
     let n = 0;
-    // Each tool: [name, arguments, reads bound (warm), response bound in bytes]. Bounds are section 8's, for the whole CallResult as
+    // Each tool: [name, arguments, reads bound (warm), response bound in bytes]. Act read bounds include fresh admission.
+    // Response bounds are section 8's, for the whole CallResult as
     // the service makes it: the structured content, the text and isError together. Over 2026-07-28 the wire adds
     // MODERN_RESULT_EXTRA bytes, which wire.test.ts measures and the bounds do not count.
     const tools: [string, () => Record<string, unknown>, number, number][] = [
@@ -201,8 +202,8 @@ describe("what a call costs, end to end", () => {
       ["wait", () => ({ scope: 1, seq: commentSeq }), 1, BOUNDS.act],
       ["settle", () => ({ target: 1, idempotencyKey: "c-0" }), 1, BOUNDS.act],
       ["actions", () => ({ scope: 1 }), 3, BOUNDS.large],
-      ["issue.comment", () => ({ target: 1, fields: { body: `Comment ${++n}.` }, idempotencyKey: `c-${n}` }), 2, BOUNDS.act],
-      ["issue.create", () => ({ fields: { definition: definitionDigest(issueDemo), title: `Issue ${++n}`, conditions: ["c"] }, idempotencyKey: `i-${n}` }), 2, BOUNDS.act],
+      ["issue.comment", () => ({ target: 1, fields: { body: `Comment ${++n}.` }, idempotencyKey: `c-${n}` }), 4, BOUNDS.act],
+      ["issue.create", () => ({ fields: { definition: definitionDigest(issueDemo), title: `Issue ${++n}`, conditions: ["c"] }, idempotencyKey: `i-${n}` }), 5, BOUNDS.act],
       ["credential", () => ({ entry: tokens.shift() }), 1, BOUNDS.credential],
     ];
     const figures: string[] = [];
@@ -224,6 +225,21 @@ describe("what a call costs, end to end", () => {
       expect(sessions(cold.requests), label).toBe(1);
       expect(sessions(warm.requests), label).toBe(0);
       expect([cold.bytes, warm.bytes].every((b) => b <= bytes), `${label}: ${cold.bytes} and ${warm.bytes} bytes, bound ${bytes}`).toBe(true);
+      if (name === "issue.comment" || name === "issue.create") {
+        // Fresh standing and inventory cost three summaries on every attempt.
+        // The target is read separately; create also needs retained definition bytes.
+        const repository = s.config.repository!;
+        const expectedReads = [
+          `GET /v1/scopes/${M}`,
+          `GET /v1/scopes/${repository.directory.scope}`,
+          `GET /v1/scopes/${repository.rules}`,
+          `GET /v1/scopes/${name === "issue.comment" ? laneOf(s, 1).ref.scope : repository.directory.scope}`,
+          ...(name === "issue.create" ? [`GET /v1/scopes/${repository.rules}/retained/definition/${encodeURIComponent(definitionDigest(issueDemo))}`] : []),
+        ].sort();
+        for (const call of [cold, warm]) {
+          expect(call.requests.filter(r => r.startsWith("GET ")).sort(), `${label} read routes`).toEqual(expectedReads);
+        }
+      }
       figures.push(`${label}: warm ${reads(warm.requests)} reads, ${posts(warm.requests)} posts; cold +${sessions(cold.requests)} session; ${warm.bytes} bytes (bound ${bound} reads)`);
       if (name !== "credential" && name !== "actions") expect(reads(warm.requests), `${label} reads ${warm.requests.join(", ")}`).toBeLessThanOrEqual(bound);
     }
@@ -677,8 +693,8 @@ describe("what a call costs, end to end", () => {
     await annotate(`paging: a 64 KiB item alone on its inspect page; a 200 KiB text in ${calls} text calls; ${alone} descriptors alone on a 2 KiB list page of ${whole} tools`);
   });
 
-  // Invariant: terminal resubmissions past 64 outcomes keep every outcome readable, and each resubmission costs one read and one
-  // post, with the custody record on disk.
+  // Invariant: terminal resubmissions past 64 outcomes keep every outcome readable. Each attempt refreshes membership,
+  // directory and rules, reads the target lane and posts once, with the custody record on disk.
   test("resubmissions past 64 outcomes", async ({ annotate }) => {
     const dir = mkdtempSync(join(tmpdir(), "mcp-budget-"));
     const s = roomOf("admin", [issueDemo], { custody: fileStore(dir) });
@@ -688,8 +704,14 @@ describe("what a call costs, end to end", () => {
     for (let i = 0; i < 70; i++) {
       const sent = await counted(s, () => s.service.call("issue.comment", { target: 1, fields: { body: "Again." }, idempotencyKey: "again", ...(i > 0 ? { resubmit: true } : {}) }));
       expect(sent.result.structuredContent["answer"], JSON.stringify(sent.result.structuredContent)).toBe("refused");
-      // Every one of the 70: one read of the lane and one post, and nothing else (the session was taken by the list before).
-      expect([reads(sent.requests), posts(sent.requests), sessions(sent.requests)], `refusal ${i + 1}: ${sent.requests.join(", ")}`).toEqual([1, 1, 0]);
+      // Every attempt checks fresh standing before posting; the session was taken by the list before.
+      expect([reads(sent.requests), posts(sent.requests), sessions(sent.requests)], `refusal ${i + 1}: ${sent.requests.join(", ")}`).toEqual([4, 1, 0]);
+      expect(sent.requests.filter(request => request.startsWith("GET ")).sort()).toEqual([
+        `GET /v1/scopes/${s.config.repository!.membership.scope}`,
+        `GET /v1/scopes/${s.config.repository!.directory.scope}`,
+        `GET /v1/scopes/${s.config.repository!.rules}`,
+        `GET /v1/scopes/${laneOf(s, 1).ref.scope}`,
+      ].sort());
       last = sent.requests;
     }
     const settled = (await s.service.call("settle", { target: 1, idempotencyKey: "again" })).structuredContent;

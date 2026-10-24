@@ -258,6 +258,8 @@ export class HostedRegistry {
 // ---------------------------------------------------------------- the agent
 
 export interface AgentPorts extends Authority {
+  /** Hosted deployment policy, separate from the durable agent configuration. */
+  genericTools?: readonly string[];
   /** Separate MCP observation map; never a native input or an authority read. */
   metrics?: McpMetricOptions;
   /** This object's own ID, as the registry allotted it. */
@@ -333,6 +335,7 @@ export class HostedAgent {
     const read = async (): Promise<McpConfig> => { await this.ports.configHold?.(); return this.#row()?.config ?? row.config; };
     this.#service = new McpService({
       service: row.config.service, fetch: this.ports.fetch, signer: secretSigner(row.seed), custody: sqliteStore(this.sql, this.ports.custodyBounds, this.ports.now), now: this.ports.now,
+      ...(this.ports.genericTools !== undefined ? { genericTools: this.ports.genericTools } : {}),
       ...(this.ports.metrics ? { metrics: this.ports.metrics } : {}),
       ...(this.ports.every ? { every: this.ports.every } : {}), ...(this.ports.pause ? { pause: this.ports.pause } : {}),
       config: {
