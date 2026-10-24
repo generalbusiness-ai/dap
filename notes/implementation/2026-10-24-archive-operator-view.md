@@ -41,7 +41,8 @@ The revised source retains six warm internal-reader purity cases. Four new
 cold-activation witnesses supersede the prior four warm ingress witnesses:
 instrumentation precedes activation and checks that the diagnostic row read
 precedes the method body, one read and one line survive repeated entry, and
-recovery follows the log. These revised witnesses have not run.
+recovery follows the log. The corrected lifetime is validated by later run
+`72970`, described below.
 
 Original run `20590` at `4fcc3e08` passed both Scope compiler contexts and all
 34 affected cases: 10 operator/diagnostic, 17 driver and 7 row cases. Its
@@ -104,8 +105,29 @@ claim of a complete physical dependency snapshot or a 3,120-file inventory.
 The outer run took 9.39 seconds wall and 14.42 seconds CPU; its 9.363-second
 wrapper measurement and nested compiler/body costs overlap and are not added.
 
+Original corrected gate `94166` at
+`8c802272acb4b3cd4791bc6e0dca55b17adec273` /
+`96e7e0f60c816f24f92983cf7ffb044f3002b1b7` exited naturally with status 0.
+All eight stages passed, including 40 compiler contexts. The complete terminal
+ledger contains 3,544 unique runtime IDs: 3,541 passed and three skipped across
+498 files, with zero unhandled errors. The later Node 39 and Counting 55
+witnesses also passed. All observed callback identities and states agree with
+the terminal ledger. Nineteen ready callbacks and 21 result callbacks are
+absent, all for terminally passing cases; this is not a complete individual
+callback claim. The raw evidence and independent audit retain those gaps.
+
+The gate owner verified the same clean head/tree, lockfile, adopted install
+stamp, Node and npm launcher before and after the run. It skipped installation
+against the verified stamp. These recorded guards are not a full physical
+Source/dependency/environment/Main snapshot. The outer command took 1,386.19
+seconds wall and 1,584.85 seconds CPU. Its npm-child and stage costs overlap
+that measurement and are not added. This is local execution evidence, not a
+controlled cache or load benchmark.
+
+The closed independent audit is retained at
+`/private/tmp/artroom-archive-operator-log-gate-v2-independent-audit-20261024-v1/manifest.json`.
 The failed original gate `45227` remains failed. The prior stored-name control
-and affected34 result retain their original-source qualifications. A new
-ordinary gate is pending; no exact-head review, landing or deployment is
-claimed. SQL and platform alarm remain non-atomic, and no cold constructor
-purity or restart authority is inferred.
+and affected 34 result retain their original-source qualifications. No
+exact-head review, landing or deployment is claimed here. SQL and platform
+alarm remain non-atomic, and no cold constructor purity, restart authority or
+hosted recovery is inferred.
