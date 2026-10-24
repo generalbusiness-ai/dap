@@ -521,6 +521,8 @@ test("H2, H3 and H4: agents kept apart, control authority, the bearer and revoca
     expect(afterListen.text(), "with its result").toContain('"resultType":"complete"');
     expect((await mcp(botNew, "POST", { "mcp-protocol-version": MODERN, "mcp-method": "tools/list" }, { jsonrpc: "2.0", id: 1, method: "tools/list", params: { _meta: META } })).status).toBe(401);
     expect((await room.wait(() => post(`/mcp/agents/${bot.agent}/bearer`, control(room, rita.secret, "bearer", M, bot.agent, "", "after-retire"), ""))).status).toBe(409);
+    // Keep a persisted session so rejected controls must preserve it too.
+    const retentionSession = await legacySession(bot3Rotated);
     // Revoking the native key does not retire this hosted bearer. Fresh
     // standing hides the act before signing or custody, rather than sending
     // an act that the native scope would refuse.
@@ -533,12 +535,57 @@ test("H2, H3 and H4: agents kept apart, control authority, the bearer and revoca
     expect(await agentStub(bot3.agent).custodyRecord("after-revoke"), "hidden acts create no custody record").toBeNull();
     // Expiry: seven days past the original request's deadline, the op is stale and no answer body remains in either object.
     room.advance(8 * 86_400_000);
+    const agentObject = env.AGENTS.get(env.AGENTS.idFromString(bot3.agent));
+    const registryObject = env.REGISTRIES.get(env.REGISTRIES.idFromName(M.scope));
+    const agentRetention = () => runInDurableObject(agentObject, (instance, state) => ({
+      control: state.storage.sql.exec("SELECT op, fingerprint, state, answer, not_after FROM control ORDER BY op").toArray(),
+      agent: state.storage.sql.exec("SELECT state, key, bearer, answer, updated FROM agent WHERE id = 1").toArray(),
+      sessions: state.storage.sql.exec("SELECT id, row, created FROM session ORDER BY id").toArray(),
+      used: Number(state.storage.sql.exec("SELECT v FROM control_budget WHERE k = 'used'").toArray()[0]!["v"]),
+      counts: (instance as PlatformMcpAgent).counts(),
+      durable: (instance as PlatformMcpAgent).durableFacts(),
+    }));
+    const registryRetention = () => runInDurableObject(registryObject, (_instance, state) => ({
+      control: state.storage.sql.exec("SELECT op, fingerprint, state, answer, not_after FROM control ORDER BY op").toArray(),
+      agents: state.storage.sql.exec("SELECT agent, handle, key, state, created FROM agents ORDER BY agent").toArray(),
+      used: Number(state.storage.sql.exec("SELECT v FROM control_budget WHERE k = 'used'").toArray()[0]!["v"]),
+    }));
+    const beforeAgentExpiry = await agentRetention(), beforeRegistryExpiry = await registryRetention();
+    expect(beforeAgentExpiry.control.some(row => row["answer"] !== null), "legacy control answers are present before cleanup").toBe(true);
+    expect(beforeAgentExpiry.agent[0]!["answer"], "the legacy creation answer is present too").not.toBeNull();
+    expect(beforeAgentExpiry.sessions.map(row => row["id"])).toContain(retentionSession);
+    expect(beforeRegistryExpiry.control.some(row => row["answer"] !== null)).toBe(true);
+    // Both headers have the right actor, body and route, but Paul's key did
+    // not sign for Rita. Refusal must precede even retention-budget writes.
+    const badAgent = await room.wait(() => post(`/mcp/agents/${bot3.agent}/bearer`, control(room, paul.secret, "bearer", M, bot3.agent, "", "bad-expiry-agent", { actor: rita.key as KeyId }), ""));
+    expect([badAgent.status, await badAgent.json()]).toEqual([403, { error: "control", rule: "signature" }]);
+    expect(await agentRetention(), "invalid signature changes no answer, budget, session or agent state").toEqual(beforeAgentExpiry);
+    const badRegistry = await room.wait(() => post("/mcp/agents", control(room, paul.secret, "create", M, null, body3, "bad-expiry-registry", { actor: rita.key as KeyId }), body3));
+    expect([badRegistry.status, await badRegistry.json()]).toEqual([403, { error: "control", rule: "signature" }]);
+    expect(await registryRetention(), "the registry already authenticates before cleanup").toEqual(beforeRegistryExpiry);
     expect((await room.wait(() => post(`/mcp/agents/${bot3.agent}/bearer`, control(room, rita.secret, "bearer", M, bot3.agent, "", "rita-bearer-3"), ""))).status, "stale").toBe(409);
+    const afterAgentExpiry = await agentRetention();
+    const agentAnswerBytes = beforeAgentExpiry.control.reduce((bytes, row) => bytes + (row["answer"] === null ? 0 : utf8(String(row["answer"])).length), 0);
+    expect(afterAgentExpiry.control).toEqual(beforeAgentExpiry.control.map(row => ({ ...row, answer: null })));
+    expect(afterAgentExpiry.agent).toEqual(beforeAgentExpiry.agent.map(row => ({ ...row, answer: null })));
+    expect(afterAgentExpiry.used, "cleanup credits only the expired control answer bytes").toBe(beforeAgentExpiry.used - agentAnswerBytes);
+    expect(afterAgentExpiry.sessions).toEqual(beforeAgentExpiry.sessions);
+    expect(afterAgentExpiry.counts).toEqual(beforeAgentExpiry.counts);
+    expect(afterAgentExpiry.durable).toEqual(beforeAgentExpiry.durable);
+    expect((await room.wait(() => post(`/mcp/agents/${bot3.agent}/bearer`, control(room, rita.secret, "bearer", M, bot3.agent, "", "rita-bearer-3"), ""))).status).toBe(409);
+    expect(await agentRetention(), "a second stale replay credits nothing twice").toEqual(afterAgentExpiry);
     const heldByAgent = await agentStub(bot3.agent).heldAnswers();
     expect(heldByAgent.control.every((r) => !r.answer), JSON.stringify(heldByAgent)).toBe(true);
     expect(heldByAgent.agent, "the creation's answer, with the bearer shown once, is gone").toBe(false);
     // The registry removes its copies at its next control operation: a stale replay of the creation finds the op stale and no body kept.
     expect((await room.wait(() => post("/mcp/agents", control(room, paul.secret, "create", M, null, body3, "paul-create-3"), body3))).status, "a stale creation replay").toBe(409);
+    const afterRegistryExpiry = await registryRetention();
+    const registryAnswerBytes = beforeRegistryExpiry.control.reduce((bytes, row) => bytes + (row["answer"] === null ? 0 : utf8(String(row["answer"])).length), 0);
+    expect(afterRegistryExpiry.control).toEqual(beforeRegistryExpiry.control.map(row => ({ ...row, answer: null })));
+    expect(afterRegistryExpiry.agents).toEqual(beforeRegistryExpiry.agents);
+    expect(afterRegistryExpiry.used).toBe(beforeRegistryExpiry.used - registryAnswerBytes);
+    expect((await room.wait(() => post("/mcp/agents", control(room, paul.secret, "create", M, null, body3, "paul-create-3"), body3))).status).toBe(409);
+    expect(await registryRetention(), "registry tombstones also prevent a second credit").toEqual(afterRegistryExpiry);
     expect((await registryStub(M.scope).heldAnswers()).every((r) => !r.answer)).toBe(true);
     // An oversized streaming control body is refused while it streams, before any object is reached: no row appears.
     const before = (await registryStub(M.scope).agents()).length;
