@@ -83,13 +83,13 @@ printed once, marked the failed phase partial and retained exit 1. All
 source and dependency boundary guards passed. Outer cost was 159.78
 seconds wall and 411.79 seconds CPU; nested timings are not added.
 
-The isolated repair changes only that failing test and this note. It
+The historical isolated repair changed only that failing test and its note. It
 uses the existing independent SHA-1 loose-object fixture writer, checks
 each returned ID against the built object, then asks real Git to check
 all inserted objects in one batch. Existing Git `fsck`, offline replay,
 every original assertion, all three ranges and the 30-second deadline
 remain. No shared helper, production code, configuration or dependency
-changes after the failed gate.
+changed in that isolated repair.
 
 Under `docs/testing.md`'s isolated test-file follow-up rule, the follow-up
 covers the replay test compiler context, the whole failing file and
@@ -126,14 +126,17 @@ follow-up are historical evidence for `801129fc`. They do not validate a
 later change to the reporter. The compatibility repair below changes
 tooling source, so the isolated test-file exception no longer covers the
 new candidate. Fresh owning checks on Node 22 and Node 26 passed as recorded
-below. A fresh ordinary gate remains pending. Exact-head checker review and landing also
-remain pending. This tooling change requires no deployment.
+below. Fresh ordinary gate `3310` passed at the new tooling checkpoint as
+recorded below. Exact-head checker review and landing remain pending. This
+tooling change requires no deployment.
 
 These timings were recorded on an Apple M5 Max with 18 logical processors.
-Load was not sampled for the owning checks or gate. OS cache temperature
-was uncontrolled, and the checkout used privately copied dependencies.
-A later load sample cannot describe those earlier runs. The measurements
-are local observations, not a portable performance benchmark.
+Load was not sampled for the earlier owning checks or failed gate. During
+the fresh gate, one early sample at 17:56:14 UTC showed load averages of
+1.21, 1.52 and 1.79; it does not describe the whole interval. OS cache
+temperature was uncontrolled, and the checkout used privately copied
+dependencies. These are local observations, not a portable performance
+benchmark.
 
 ## Node 22 compatibility
 
@@ -166,4 +169,43 @@ CPU for Node 22, and 0.68 seconds wall and 0.68 seconds CPU for Node 26.
 The nested Node command costs are not added again; the two wall times are
 not one elapsed run. These are local observations with uncontrolled load
 and caches, not a performance comparison or a full supported-version matrix.
-The fresh ordinary gate, exact-head review and landing remain pending.
+Exact-head review and landing remain pending.
+
+## Fresh ordinary gate
+
+Ordinary gate `3310` completed naturally with exit 0 at `0b245ed4`, tree
+`d225abb2`. All eight stages and forty compiler contexts passed. Maintained
+Node checks passed all 53 cases, and Counting passed all 55 generated Node
+cases. Plain Vitest recorded 2,816 passes and one ordinary skip; native
+Vitest recorded 769 passes and two ordinary skips. Together the Vitest
+phases finished 3,588 cases in 501 files, with no unhandled errors.
+
+The maintained summary printed once, ranked ten actual known-duration
+cases and reported zero contradictory observations. The Scope project's
+duration sum was partial solely because the skipped recorder module had
+no duration. Every executed module had a numeric duration. The 57 unknown
+Node file-wrapper observations stayed outside the case ranking; reporter
+end-of-stream records were separate from successful public summaries.
+
+Plain callbacks were complete. Native had 17 missing readiness callbacks
+and 19 missing intermediate result callbacks, all with terminal PASS
+records. There were no duplicate or conflicting identities. Missing
+callbacks do not establish missing or unfinished tests, or a retry.
+
+Root accepted the independent closed audit. All 25 original/copy pairs
+matched. Four clean boundary records matched the allocation under the
+inherited named-cache and empty-temp exceptions. These were finite source
+and tool checks, environment hashes and dependency metadata, not continuous
+custody or a complete proof of dependency contents.
+
+The outer command used 1,370.82 seconds wall and 1,581.07 seconds CPU.
+Nested phase and test-and-hook timings are included in the outer workload
+and are not added again. The gate reused its verified dependency view and
+skipped installation. This full gate validates the reporter compatibility tooling at its
+recorded checkpoint; it does not relabel failed gate `82795` or Node 22
+baseline `44405` as passing.
+
+This proposed follow-up changes only this primary note after the gated
+checkpoint. Its resulting commit is not yet known. Exact-head checker
+review and landing remain pending; this local test-tooling change needs
+no Worker deployment.
