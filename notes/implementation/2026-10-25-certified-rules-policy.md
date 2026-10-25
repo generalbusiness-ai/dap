@@ -55,15 +55,33 @@ closed missing-field refusal and ownership-witness issues before adoption.
 | Whitespace | `git diff --check` | 0 | Empty output |
 | Generation, compilers and owning tests | Pending final Source integration | Pending | Pending |
 | Ordinary gate and exact-head review | Pending owning validation | Pending | Pending |
+| Maintained declarations and inert historical comparison | `node --import node_modules/tsx/dist/loader.mjs packages/platform/scripts/pin-native-declarations.mjs`, then the reviewed data observer | 0 | `e5f667a4aae67ccbf7b031e78fb76f2b2b51935202c08553fe3e9cfdd0c7c45c` |
+
+The maintained producer and inert output comparison passed once at `42bc3fa3`.
+All 65 historical pins and 33 historical declaration texts remain exact.
+The output has 69 named pins and 35 distinct declaration texts. The Node
+loader printed its `DEP0205` deprecation warning, retained in raw stderr.
+The outer run took 1.96 seconds elapsed and 2.01 CPU seconds; nested spans
+are not added. Safe output lives under
+`/Users/hughpyle/play/artroom-evidence/2026-10-25-certified-rules-policy/`.
+Physical and environment snapshots stay in a separate private directory.
+
+The archive outcome reader now recognizes the exact G14 certificate
+selector and ordered policy and tree domains. It projects bounded real
+SQLite fields, preserving the native selector's malformed-body behavior.
+The existing changes-only projection stays unchanged. Its appended
+scripted guard checks remain unrun, and genuine Native archive and replay
+validation remain pending. The exact three producer and ten place rows
+still await adoption from the observed generated output.
 
 ## Open limits
 
-Request `0716e75a` still needs exact archive/replay policy rows, maintained
-native declaration generation, actual structural seals, the real-family
+Request `0716e75a` still needs exact archive/replay policy rows,
+actual structural seals, the real-family
 native publication and required-job witnesses, a proportional control,
-compiler closure, the ordinary gate and exact-head review. Generated
-digests will come from the maintained producer. Source reviews establish
-no runtime result or hosted fit.
+compiler closure, the ordinary gate and exact-head review. The maintained
+producer has generated the new declaration digests; Source review alone
+establishes no runtime result or hosted fit.
 
 Two native journeys now have reviewed Source in the lanes package. They
 cover actual new-family birth and certified publication, stale policy and

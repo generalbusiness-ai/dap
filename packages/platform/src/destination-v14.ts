@@ -1,7 +1,7 @@
 /** Prospective G14 data only; catalog/default/protocol dispatch is separate. */
 import type { FieldValue, PlatformData } from '@generalbusiness/dap-contract';
 import { canonicalize, isDigest, isFactRef, same, utf8 } from '@generalbusiness/dap-bytes';
-import { type RuleGiven, type Rules, type RuleEffect } from '@generalbusiness/dap-derive';
+import { type RuleGiven, type Rules, type RuleEffect, type OperationRules } from '@generalbusiness/dap-derive';
 import { destination4, destinationRules4, certifiedReservationSnapshot, certifiedCheckGenerations } from './destination.ts';
 import { rulesPolicyProposalV11, rulesPolicyPatternsV11 } from './rules-policy-v11.ts';
 import { RULES_TREE_PROOF, verifyRulesTree } from './rules-policy-tree.ts';
@@ -34,6 +34,10 @@ function readRecord(value:unknown,keys:readonly string[]):Record<string,unknown>
   if(value===null||typeof value!=='object'||Array.isArray(value)||Object.keys(value).length!==keys.length)return null;
   return keys.every(key=>Object.hasOwn(value,key))?value as Record<string,unknown>:null;
 }
+/** The exact pure selector shared with bounded archive metadata projection.
+ * It selects no value when the complete native evidence body is malformed. */
+export const rulesCertificateEvidenceValues: NonNullable<OperationRules['values']> = answer=>evidence(answer.body)?[{...RULES_POLICY_VALUE_V11,digest:answer.body.proposal as import('@generalbusiness/dap-contract').Digest},
+      {...RULES_TREE_PROOF,digest:answer.body.proof as import('@generalbusiness/dap-contract').Digest}]:[];
 const certificateAct:PlatformData['acts'][string]={step:'transition',on:'branch',grant:'rules.publish',also:{},
   fields:{proposal:{type:'digest',required:true,value:RULES_POLICY_VALUE_V11},directoryBirth:birthField('platform:directory'),
     rulesBirth:birthField('platform:rules'),membershipBirth:birthField('platform:membership')},
@@ -71,8 +75,7 @@ export const destinationRulesV14:Rules={...destinationRules4,
   }},
   'rules-certificate-outcome-v14':{place:'outcome',rules:{selects:true,read:false,retries:()=>false,
     valueDomains:[RULES_POLICY_VALUE_V11,RULES_TREE_PROOF],
-    values:answer=>evidence(answer.body)?[{...RULES_POLICY_VALUE_V11,digest:answer.body.proposal as import('@generalbusiness/dap-contract').Digest},
-      {...RULES_TREE_PROOF,digest:answer.body.proof as import('@generalbusiness/dap-contract').Digest}]:[],
+    values:rulesCertificateEvidenceValues,
     origin:(_given,operation)=>operation.attempts.find(attempt=>attempt.attempt===1)?.opened??null,
     unknown:()=>({}),wellFormed:(result,answer)=>result==='confirmed'?answer.basis==='own-answer'&&evidence(answer.body):readRecord(answer.body,[])!==null,
     holds:(given,operation)=>{

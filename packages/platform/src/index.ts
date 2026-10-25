@@ -97,3 +97,5 @@ export function nativeDeclarationText(named: string): Readonly<{ digest: string;
 export { RULES_CERTIFICATE_KIND, RULES_POLICY_VALUE_V11, rulesCertificateOpening, rulesCertificateBranchMatches } from "./rules-certificate.ts";
 export { rulesPolicyProposalV11, rulesPolicyPatternsV11, type RulesPolicyV11 } from "./rules-policy-v11.ts";
 export { RULES_TREE_PROOF, RULES_TREE_BOUNDS, verifyRulesTree, type RulesTreeBinding } from "./rules-policy-tree.ts";
+
+export { rulesCertificateEvidenceValues } from "./destination-v14.ts";
