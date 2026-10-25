@@ -44,7 +44,24 @@ quiescent donor. It excluded runtime caches and verified the unchanged
 lockfile stamp. Its separate outer cost was 2.28 seconds wall and 1.94
 seconds CPU.
 
-Root reviews and integrates parallel Sol Source packets for orchestration,
-reporting and phase/Counting seams. Affected tooling checks, the
-sequencing control, one ordinary gate and exact-head checker review
-remain pending. This tooling change requires no deployment.
+Root reviewed and integrated parallel Sol Source packets for orchestration,
+reporting and phase/Counting seams. One affected command at `38bd089d`
+ran five whole Node files: all fifteen cases passed, with no skip or
+cancellation. It exercised the actual custom reporter, the actual Bash
+gate's early-failure summary, and child launch, spawn failure and signal
+handling. The separate outer command used 3.64 seconds wall and 3.13
+seconds CPU. Source and environment hashes matched before and after.
+
+One control at disposable `894f10a7` changed only the stop guard to
+`false`. The unchanged six-case owning file finished with four passes
+and two assertion failures. The required plain-failure case observed
+the later native sentinel where it required absence (`test.test.mjs:45`).
+The spawn-failure branch failed at the same boundary (`:56`); its later
+signal variant was not reached in that control. The separate command
+used 2.23 seconds wall and 2.07 seconds CPU. The candidate stayed
+untouched, and the control branch is neither pushed nor landed.
+
+These are tiny process-boundary workloads and a declared Git refusal
+stand-in, with the real orchestration and summary code. They make no
+Worker or provider claim. One ordinary gate and exact-head checker
+review remain pending. This tooling change requires no deployment.
