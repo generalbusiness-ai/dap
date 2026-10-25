@@ -1,6 +1,8 @@
 # R6 platform creation versions
 
-This change selects the coherent archive-device-application cohort: register 17, directory 16, membership 8, rules 10, destination 12 and inbox 1. Historical catalog entries remain available for existing scopes, acts and replay. A saved or attempted install plan keeps its original pins and identities, including `@3`; this change does not rewrite it.
+This note records the initial candidate and its failed gate. The separate [versioned Source proposal](2026-10-25-security-r6-versioned-publication.md) addresses the resulting compatibility and replay findings. The original tested worktree remains intact.
+
+The initial candidate selects the coherent archive-device-application cohort: register 17, directory 16, membership 8, rules 10, destination 12 and inbox 1. Historical catalog entries remain available for existing scopes, acts and replay. A saved or attempted install plan keeps its original pins and identities, including `@3`; this change does not rewrite it.
 
 The deployment setting `PLATFORM_CREATION_PINS` adds explicitly approved historical pins to the newest cohort. Its strict JSON reader accepts at most 128 distinct supported complete pins within 8,192 UTF-8 bytes, with a code-unit bound before UTF-8 allocation. Missing or explicit undefined selects the newest cohort, as does an empty list. Null, duplicates, malformed data, unknown pins or exceeded bounds produce a null policy that closes new platform genesis. The parsed policy owns frozen pin data. The setting grants no membership, provider or signing authority.
 

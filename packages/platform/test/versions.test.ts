@@ -107,11 +107,11 @@ test("every shipped version resolves to its own data, pinned by digest, and vers
   expect(digests["platform:rules@4"]).not.toBe(DIGESTS["platform:rules@3"]);
   expect(["platform:rules@1", "platform:rules@2", "platform:rules@3"].map(named => platform(named)!.data.items["rules"]!.values["ownerMayReview"]!.default)).toEqual([false, false, false]);
   for (const named of Object.keys(DIGESTS)) expect(platform(named)).toBe(VERSIONS[named]);
-  expect(["platform:destination@13", "platform:destination@0", "platform:destination@02", "platform:destination", "platform:task@1", "toString"].map(platform)).toEqual(Array(6).fill(null));
+  expect(["platform:destination@9999", "platform:destination@0", "platform:destination@02", "platform:destination", "platform:task@1", "toString"].map(platform)).toEqual(Array(6).fill(null));
   // New creation defaults advance together; every historical catalog pin above stays exact.
-  expect(NEWEST).toEqual({ "platform:register": "platform:register@17", "platform:directory": "platform:directory@16",
+  expect(NEWEST).toEqual({ "platform:register": "platform:register@18", "platform:directory": "platform:directory@17",
     "platform:membership": "platform:membership@8", "platform:rules": "platform:rules@10",
-    "platform:destination": "platform:destination@12", "platform:inbox": "platform:inbox@1" });
+    "platform:destination": "platform:destination@13", "platform:inbox": "platform:inbox@1" });
   // Version 2 adds the act `read-token` and its operation `mint-read` to the destination, and nothing to version 1.
   const [one, two] = [platform("platform:destination@1")!, platform("platform:destination@2")!];
   expect([Object.hasOwn(one.data.acts, "read-token"), Object.hasOwn(one.data.outcomes, "mint-read"), Object.hasOwn(one.rules, "mint-read"), Object.hasOwn(one.rules, "open-read-token")]).toEqual([false, false, false, false]);

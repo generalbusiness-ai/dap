@@ -193,12 +193,19 @@ async function planned(): Promise<void> {
   const kept = await command(sam, ["install", "--planned"]);
   expect([kept.code, (await sam.store.config())!.register?.scope]).toEqual([0, samPlan.register]);
 
-  // Control: a plan, then a plain install, creates another register than the planned one.
+  // The new default uses exact selected-plan custody even when --cohort was
+  // omitted. A plain install cannot replace that plan. A fresh config can
+  // found a different register without changing the original request.
   const paul: Context = { store: memoryStore(), fetch, now };
   expect((await command(paul, ["install", "--plan", SERVICE])).code).toBe(0);
-  const paulPlan = (await paul.store.config())!.plan!;
-  expect((await command(paul, ["install", SERVICE])).code).toBe(0);
-  expect((await paul.store.config())!.register!.scope).not.toBe(paulPlan.register);
+  const paulBefore = (await paul.store.config())!;
+  const paulPlan = paulBefore.plan!;
+  const replacement = await command(paul, ["install", SERVICE]);
+  expect([replacement.code, replacement.lines[0]]).toEqual([1, "Refused: install-pending. The retained selected plan must use its original cohort and request; run install --planned."]);
+  expect(await paul.store.config()).toEqual(paulBefore);
+  const fresh: Context = { store: memoryStore(), fetch, now };
+  expect((await command(fresh, ["install", SERVICE])).code).toBe(0);
+  expect((await fresh.store.config())!.register!.scope).not.toBe(paulPlan.register);
 
   // The new order. Plan: the register ID and the seed's time are printed, and the plan is kept with no secret.
   const host: { R: Platform | null; registerDefinition: string } = { R: null, registerDefinition: "" };

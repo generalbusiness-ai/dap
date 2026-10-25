@@ -132,8 +132,10 @@ bindings and settings when preparing an authorized release. See the
 
 ## Creation versions
 
-New unqualified installs select register 17, directory 16, membership 8,
-rules 10, destination 12 and inbox 1. Existing scopes retain the exact pin
+This source selects the `archive-device-publication` cohort for new
+unqualified installs: register 18, directory 17, membership 8, rules 10,
+destination 13 and inbox 1. These proposal versions await the planner's
+versioning and rollout disposition. Existing scopes retain the exact pin
 in their genesis. Advancing these defaults changes neither an installed
 register nor a retained CLI plan.
 
@@ -160,7 +162,8 @@ children from its existing register 5 and directory 5 can add these pins:
 Use that example only when the deployment's retained evidence supports
 those pins. Inbox 1 is already included. A recognized catalog pin does
 not add a supported lineage family: deployed child admission still checks
-the `archive-device-application` or `application` family and its native
+the `archive-device-publication`, `archive-device-application` or
+`application` family and its native
 creator proofs. The setting grants no member, credential or host authority.
 An index entry permits lookup, not creation.
 
@@ -173,6 +176,15 @@ It does not block later reads, acts or replay of existing scopes. Neither
 `ALLOW_OPEN_CREATION` nor a missing `DEPLOYMENT` skips the version policy
 in a deployed Scope class. Raw engine fixtures without that wiring are a
 separate compatibility path.
+
+The fixed public creation offer and `--register-policy open` retain
+register 17, directory 16 and destination 12. They do not follow the new
+private-install default. A Worker that continues serving that public
+cohort needs an explicitly reviewed allowance for those historical pins
+and its original register root. Membership 8, Rules 10 and Inbox 1 are
+already in the new implicit cohort. Keep the old offer and attempted
+request identities exact. The new publication protocol belongs to the
+new cohort; these changes preserve the old cohort's evaluator.
 
 For each planned Worker rollout:
 
@@ -196,6 +208,10 @@ For each planned Worker rollout:
    admitted by R1. A GitHub register pin alone does not open that API.
    Preserve attempted plans and their original pins and IDs. Do not replan
    an attempted or acknowledged install to make it fit the new defaults.
+   R1 admits one configured register root. Allowing both sets of version
+   pins does not admit two roots. Use a separate Worker or an explicitly
+   planned root cutover for the new register; retain the old root for a
+   Worker serving the fixed public offer.
 4. Have the planner deploy the exact reviewed source and nonsecret policy.
    Apply the review to `artroom-scope`, `dap-demo`, `dap-lending` and `dap-grow`
    separately, as applicable. Preserve their existing bindings, secrets,

@@ -12,9 +12,9 @@ import { memoryStore } from "../src/store.ts";
 // no native judgment, registration or deployment mode is proved here.
 function fixture(ordinals: { root?: number; child?: number; definitions?: { register?: Seed["definition"]; directory?: Seed["definition"]; rules?: Seed["definition"] } } = {}) {
   const ref = (seed: Seed, n: number): ScopeRef => ({ scope: scopeIdOf(seed), kind: seed.kind, inc: newIncarnation(new Uint8Array(16).fill(n)) });
-  const registerSeed: Seed = { v: 1, kind: "register", definition: ordinals.definitions?.register ?? "platform:register@17", creator: null, cause: textDigest("operator inventory register"), ordinal: 0 };
+  const registerSeed: Seed = { v: 1, kind: "register", definition: ordinals.definitions?.register ?? "platform:register@18", creator: null, cause: textDigest("operator inventory register"), ordinal: 0 };
   const R = ref(registerSeed, 1);
-  const rootSeed: Seed = { ...registerSeed, kind: "directory", definition: ordinals.definitions?.directory ?? "platform:directory@16", creator: R, cause: textDigest("operator inventory root"), ordinal: ordinals.root ?? 0 };
+  const rootSeed: Seed = { ...registerSeed, kind: "directory", definition: ordinals.definitions?.directory ?? "platform:directory@17", creator: R, cause: textDigest("operator inventory root"), ordinal: ordinals.root ?? 0 };
   const D = ref(rootSeed, 2);
   const otherSeed: Seed = { ...rootSeed, cause: textDigest("another room is not traversed") };
   const childSeed: Seed = { ...rootSeed, kind: "rules", definition: ordinals.definitions?.rules ?? "platform:rules@10", creator: D, cause: textDigest("operator inventory child"), ordinal: ordinals.child ?? 0 };
@@ -128,7 +128,7 @@ test("operator sweep validates locally and reports exact listed genesis outcomes
   held = utf8(`${canonicalize(manifest)}\n`);
   const versions = await scopeIndexCommand(ctx, ["versions", "--manifest", "saved.json"], files);
   expect(versions.code).toBe(0);
-  expect(JSON.parse(versions.lines[0]!)).toMatchObject({ manifestDigest: digestBytes(held), ready: true, listed: 3, usableCreationCohorts: ["archive-device-application"] });
+  expect(JSON.parse(versions.lines[0]!)).toMatchObject({ manifestDigest: digestBytes(held), ready: true, listed: 3, usableCreationCohorts: ["archive-device-publication"] });
   expect(calls.filter(call => !call.endsWith("/sessions"))).toEqual(manifest.scopes.map(row => `GET:/v1/scopes/${row.at.scope}/entries/0`));
   expect(versions.lines.join("\n")).toContain("No setting is changed or emitted");
   const report = await verifyIndexManifest(manifest, { ...f.reads, entry: async (scope, seq) => {
@@ -146,8 +146,14 @@ test("operator versions binds saved genesis and separates observed catalog pins 
   const f = fixture(), manifest = await captureIndexManifest("https://service.test", f.D, f.reads);
   f.calls.length = 0;
   expect(await indexManifestVersions(manifest, f.reads)).toMatchObject({ ready: true,
-    observedPins: ["platform:directory@16", "platform:register@17", "platform:rules@10"], usableCreationCohorts: ["archive-device-application"] });
+    observedPins: ["platform:directory@17", "platform:register@18", "platform:rules@10"], usableCreationCohorts: ["archive-device-publication"] });
   expect(f.calls).toEqual(manifest.scopes.map(row => `entry:${row.at.scope}:0`));
+  // Old ADC pins remain recognized observations. This partial inventory lacks
+  // its Destination12, so it does not claim that complete old creation cohort.
+  const historical = fixture({ definitions: { register: "platform:register@17", directory: "platform:directory@16", rules: "platform:rules@10" } });
+  const held = await captureIndexManifest("https://service.test", historical.D, historical.reads);
+  expect(await indexManifestVersions(held, historical.reads)).toMatchObject({ ready: true,
+    observedPins: ["platform:directory@16", "platform:register@17", "platform:rules@10"], usableCreationCohorts: ["archive-device-publication"] });
   const legacy = fixture({ definitions: { register: "platform:register@3", directory: "platform:directory@3", rules: "platform:rules@2" } });
   const old = await captureIndexManifest("https://service.test", legacy.D, legacy.reads);
   const report = await indexManifestVersions(old, legacy.reads);

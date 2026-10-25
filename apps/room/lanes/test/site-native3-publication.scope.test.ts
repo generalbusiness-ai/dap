@@ -35,7 +35,7 @@ test("native @3 cleaned publication retains immutable Site eligibility while tim
   const run = (...argv: string[]) => command(ctx, argv);
   const ok = (answer: Outcome) => { expect(answer.code, answer.lines.join("\n")).toBe(0); return answer; };
   try {
-    ok(await lifetime.wait(() => run("install", "https://scopes.test", "--host", at.host, "--namespace", at.namespace)));
+    ok(await lifetime.wait(() => run("install", "https://scopes.test", "--host", at.host, "--namespace", at.namespace, "--cohort", "application-publication")));
     const R = register = new Platform((await lifetime.wait(() => ctx.store.config()))!.register!.scope); wire(R.name); await lifetime.wait(() => R.restart()); nodes.push(R);
     lifetime.setHold(envelope => { if ("definition" in envelope.to) wire(scopeIdOf(envelope.to)); return false; });
     ok(await lifetime.wait(() => run("claim", "Native Site", "--handle", "@rita")));

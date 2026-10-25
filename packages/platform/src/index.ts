@@ -1,6 +1,6 @@
 import { NATIVE_DECLARATION_PINS, NATIVE_DECLARATION_TEXT } from "./native-declarations.generated.ts";
 import { VERSIONS } from "./native-catalog.ts";
-import { ARCHIVE_DEVICE_APPLICATION_COHORT } from "./archive-binding-wire.ts";
+import { ARCHIVE_DEVICE_PUBLICATION_COHORT } from "./archive-binding-wire.ts";
 export { VERSIONS, platform, type Platform } from "./native-catalog.ts";
 export { applicationRoom, applicationInstallation } from "./application-install-reader.ts";
 export { applicationProjectionDeclaration } from "./application-projection-reader.ts";
@@ -9,7 +9,7 @@ export { TRUSTED_APPLICATION_COHORT, INSTALL_DEFINITION_BYTES, INSTALL_SEMANTIC_
 export { DECLARED_APPLICATION_RULES } from "./application-install-v2.ts";
 export { DECLARED_APPLICATION_COHORT } from "./application-install-v2-wire.ts";
 export { ARCHIVE_REPLAY_CODE } from "./archive-replay-code.ts";
-export { ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT } from "./archive-binding-wire.ts";
+export { ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT } from "./archive-binding-wire.ts";
 export { DEVICE_APPLICATION_COHORT } from "./device-application-wire.ts";
 export { deviceApplicationRequirement } from "./device-application-package.ts";
 export { INVITATION_KEY_COHORT, directory9, directoryRules9, membership6, membershipRules6 } from "./invitation-key.ts";
@@ -51,7 +51,7 @@ export { COLLECT_MOST, DESTINATION, DESTINATION_1, DESTINATION_5, DESTINATION_AT
 export { initialCommitObjects, readmeText, receiptObjects, receiptRef, importRef, type Readme, type DestinationObject, type DestinationCommit, type ObjectFormat } from "./destination-objects.ts";
 export { EDIT_PATH_BYTES, editCommit, editObjects, editPath, editTree, manifestCommit } from "./destination-objects.ts";
 export { PROPOSE_FILE, fileOf, sourcesOf, manifestFiles } from "./destination-reading.ts";
-export { sourceName, installedApplicationPublicationOrigin, applicationPublicationOrigin, publishingLaneOrigin, publishingLaneAffiliation, PUBLISHING_LANE_DIGESTS, ISSUE_LANE_DIGESTS } from "./publishing-provenance.ts";
+export { sourceName, installedApplicationPublicationOrigin, archiveDevicePublicationOrigin, applicationPublicationOrigin, publishingLaneOrigin, publishingLaneAffiliation, PUBLISHING_LANE_DIGESTS, ISSUE_LANE_DIGESTS } from "./publishing-provenance.ts";
 export { filePublicationCause, filePublicationCurrent, newestFilePublication, fileSupersededOutcome, destinationPublicationAt } from "./destination.ts";
 export { filePublicationCommit, fileReceiptObjects, fileReceiptRef, type FilePublicationCause } from "./destination-objects.ts";
 export type { LaneRead } from "./destination.ts";
@@ -78,7 +78,7 @@ export type { Extent, ExtentClass, ExtentJudged, ExtentsAsked, ExtentsJudged, Ho
 
 /** New creation defaults only. Existing scopes and explicit cohort pins stay fixed. */
 export const NEWEST: Readonly<Record<string, PlatformDefinition>> = {
-  "platform:inbox": ARCHIVE_DEVICE_APPLICATION_COHORT.inbox, "platform:membership": ARCHIVE_DEVICE_APPLICATION_COHORT.membership, "platform:register": ARCHIVE_DEVICE_APPLICATION_COHORT.register, "platform:directory": ARCHIVE_DEVICE_APPLICATION_COHORT.directory, "platform:rules": ARCHIVE_DEVICE_APPLICATION_COHORT.rules, "platform:destination": ARCHIVE_DEVICE_APPLICATION_COHORT.destination,
+  "platform:inbox": ARCHIVE_DEVICE_PUBLICATION_COHORT.inbox, "platform:membership": ARCHIVE_DEVICE_PUBLICATION_COHORT.membership, "platform:register": ARCHIVE_DEVICE_PUBLICATION_COHORT.register, "platform:directory": ARCHIVE_DEVICE_PUBLICATION_COHORT.directory, "platform:rules": ARCHIVE_DEVICE_PUBLICATION_COHORT.rules, "platform:destination": ARCHIVE_DEVICE_PUBLICATION_COHORT.destination,
 };
 
 /** The data of the newest version of each platform definition, by name without the version. */

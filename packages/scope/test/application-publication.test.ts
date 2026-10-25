@@ -2,9 +2,9 @@ import { scopePublisher as publisher, publisherContainerData } from "./definitio
 import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
-import type { FactRef, Intent, ScopeRef, Seed } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, definitionDigest, factRefOf, intentDigest, scopeIdOf, signIntent, textDigest, timeOf } from "@generalbusiness/dap-bytes";
-import { applicationPublicationOrigin, FILE_PUBLICATION_COHORT, fileReceiptRef, platform } from "@generalbusiness/dap-platform";
+import type { DeclaredDefinition, FactRef, Intent, ScopeRef, Seed } from "@generalbusiness/dap-contract";
+import { b64url, canonicalize, definitionDigest, factRefOf, intentDigest, isSeed, scopeIdOf, signIntent, textDigest, timeOf } from "@generalbusiness/dap-bytes";
+import { applicationPublicationOrigin, archiveDevicePublicationOrigin, ARCHIVE_DEVICE_PUBLICATION_COHORT, FILE_PUBLICATION_COHORT, fileReceiptRef, platform } from "@generalbusiness/dap-platform";
 import { Reader } from "@generalbusiness/dap-git";
 import { httpSource, verify } from "@generalbusiness/dap-replay";
 import { SqliteStore } from "../src/index.ts";
@@ -14,8 +14,16 @@ import { site } from "../src/site/route.ts";
 import { ownHost } from "./hosts.ts";
 import { soon } from "./net.ts";
 import { Platform, rita, routed, sam } from "./repository.ts";
-import { reader, dispatchFixture, driveFixture, nativeFixtureLifetime } from "./fixtures-native.ts";
+import { reader, dispatchFixture, driveFixture, effectFixture, nativeFixtureLifetime, applicationResolverFixture, applicationHttpPeer, applicationWorkerBindings } from "./fixtures-native.ts";
 import { beginSessionFixture } from "./session-settings.ts";
+
+import { DEVICE_COMMAND } from "@generalbusiness/dap-contract";
+import { emptyPackageComposition } from "@generalbusiness/dap-package-graph";
+import { packApplication2, readApplicationProjection } from "@generalbusiness/dap-platform/application-v2";
+import { secretSigner, signedDeviceApplicationInstall } from "@generalbusiness/dap-client";
+import { outsideOf as hostOutside } from "../src/worker.ts";
+import { fixedSigner } from "./fixtures-core.ts";
+import { devicePackageFixture } from "../../derive/test/fixtures-device-command.ts";
 
 // A made-up declared publisher deliberately uses the reserved word change.
 // Its acts and native factory are real; no change-lane role is granted.
@@ -298,5 +306,175 @@ test("a native application publishes once after missing proof, keeps later sourc
     const foreignHead = (await b.G.summary()).at;
     expect(await b.G.stub.deliver(await envelope(crossApp, cross))).toEqual({ answer: "source-unverified" });
     expect((await b.G.summary()).at).toEqual(foreignHead);
+  } finally { life.release(); }
+});
+
+// Native R18/D17/M8/Q10/G13 creation, signed v2 install and device owner
+// grant. This TEST declaration reports a real device-command fixture's
+// readings as files. Package HTTP, signing key, Git host and clock are
+// labelled stand-ins; neither a deployed provider nor physical device runs.
+test("an archive-device-publication application automatically publishes device reports and supersedes an unsent older report", async () => {
+  const cohort = ARCHIVE_DEVICE_PUBLICATION_COHORT;
+  const declared: DeclaredDefinition = {
+    ...devicePackageFixture,
+    items: { ...devicePackageFixture.items, root: { ...devicePackageFixture.items["root"]!, refs: {
+      destination: { fixed: true, required: true, to: { type: "scope", kind: "destination" } },
+    } } },
+    acts: { ...devicePackageFixture.acts,
+      start: { ...devicePackageFixture.acts["start"]!, fields: { destination: { type: "scope", kind: "destination", required: true } },
+        effects: [{ ref: { slot: "destination", from: { field: "destination" } } }] },
+      report: { ...devicePackageFixture.acts["report"]!, also: { root: { item: "root", one: true } },
+        fields: { ...devicePackageFixture.acts["report"]!.fields, path: { type: "text", max: 256, required: true }, content: { type: "text", max: 1024, required: true } },
+        sends: [{ tell: { to: { slot: "destination", of: "also.root" }, message: "publish-file",
+          fields: { path: { field: "path" }, content: { field: "content" } }, result: {} } }],
+      },
+    },
+  };
+  const id = definitionDigest(declared);
+  const packet = await packApplication2({ name: "test.device-file-publication", version: "1", semantic: {
+    ...emptyPackageComposition(), v: 2, entry: id, definitions: [{ id, bytes: canonicalize(declared) }],
+    host: { execution: "recorded-do", profiles: ["restricted@1"] },
+    capabilities: [{ name: DEVICE_COMMAND, bounds: { kinds: ["heater"], owners: 1 } }],
+    roles: { admin: ["command", "start"] }, projections: { root: readApplicationProjection({ v: 1, definition: id, revision: "revision",
+      sources: { root: { item: "root", read: "one", states: ["ready"], limit: 1, fields: {} } } }) }, predecessor: null,
+  }, presentation: { v: 2, entry: "index.html", assets: [{ path: "index.html", mediaType: "text/html", bytes: "VEVTVA" }],
+    descriptions: {}, views: {}, resources: {} } }, fixedSigner(81));
+  const owner = beginSessionFixture({ secret: b64url(crypto.getRandomValues(new Uint8Array(32))), sessions: true, inspector: reader });
+  const life = nativeFixtureLifetime(owner, { required: false });
+  const host = ownHost();
+  let allowPush = true;
+  const pushedOperations: string[] = [];
+  const pause = async (nodes: readonly Platform[]) => {
+    const callbacks = async () => {
+      let joined = 0;
+      for (const node of nodes) {
+        const read = await life.wait(() => (node.stub as unknown as { awaitScheduledCallbacks(): Promise<{ callbacks: number }> }).awaitScheduledCallbacks());
+        if (!Number.isSafeInteger(read.callbacks) || read.callbacks < 0) throw Error("The fixture callback count is invalid");
+        joined += read.callbacks;
+      }
+      return joined;
+    };
+    for (let pass = 0; pass < 64; pass++) {
+      await callbacks(); await driveFixture(nodes, life.wait);
+      if (await callbacks() === 0) return;
+    }
+    throw Error("The fixture exceeded 64 callback and driver rounds");
+  };
+  try {
+    const install: Intent = { v: 1, to: null, actor: rita.key, kind: "install", on: null, expected: {},
+      fields: { host: host.host, namespace: host.namespace, policy: "keys", founders: [rita.key] }, idempotencyKey: crypto.randomUUID(), notAfter: soon(60) };
+    const R = life.platform(scopeIdOf({ v: 1, kind: "register", definition: cohort.register, creator: null, cause: intentDigest(install), ordinal: 0 }));
+    const bindings = host.bindings(R.name);
+    life.outside(R.name, (given, sql) => host.outside(given, sql, bindings));
+    expect(await R.stub.create(signIntent(install, rita.secret), cohort.register)).toMatchObject({ answer: "accepted" });
+    const found = await R.intent(rita, "found", { expected: await R.expected({ register: 0 }), fields: { branch: "main", founderHandle: "@rita", recoveryKey: sam.key } });
+    const D = life.platform(scopeIdOf({ v: 1, kind: "directory", definition: cohort.directory, creator: await R.at(), cause: intentDigest(found.intent), ordinal: 0 }));
+    expect(await R.stub.submit(found, [])).toMatchObject({ answer: "accepted" });
+    await pause([R, D]);
+    const initial = (await D.entries())[0]!;
+    const sibling = (kind: ScopeRef["kind"]) => {
+      const send = initial.sends.find(row => "definition" in row.to && row.to.kind === kind);
+      if (!send || !("definition" in send.to)) throw Error("The real Directory creates each sibling");
+      return life.platform(scopeIdOf(send.to));
+    };
+    const M = sibling("membership"), Q = sibling("rules"), G = sibling("destination");
+    life.outside(G.name, (given, sql) => {
+      const actual = host.outside(given, sql, bindings);
+      return { ...actual,
+        accepts: (capability, kind) => (kind !== "push" || allowPush) && actual.accepts(capability, kind),
+        send: async request => {
+          if (request.kind === "push") pushedOperations.push(request.operation);
+          return actual.send(request);
+        },
+      };
+    });
+    await G.restart();
+    const nodes = [R, D, M, Q, G];
+    await pause(nodes);
+    const seat = await M.did(rita, "seat", { expected: await M.expected({ roster: 0 }) });
+    await M.did(rita, "first-key", { fields: { member: seat }, expected: await M.expected({ roster: 0, member: seat }) });
+    const fixture = await applicationResolverFixture("sha1", undefined, {}, undefined, packet), peer = applicationHttpPeer(fixture);
+    const applicationBindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(fixture.trust), env.SCOPE_INDEX);
+    for (const node of [D, Q]) {
+      life.outside(node.name, (given, sql) => hostOutside(given, sql, applicationBindings, peer.fetch));
+      await node.restart();
+    }
+    const membership = await M.at(), directory = await D.at();
+    const prepared = await signedDeviceApplicationInstall(secretSigner(rita.secret), packet.bytes,
+      { rules: await Q.at(), uri: fixture.uri, release: packet.ids.release, roles: ["admin"], values: {}, owner: { membership, member: "@rita" } },
+      { now: life.now(), idempotencyKey: "TEST-versioned-device-file-publication" });
+    const installed = await Q.stub.submit(prepared.signed, [], prepared.beside);
+    expect(installed).toMatchObject({ answer: "accepted" });
+    if (installed.answer !== "accepted") return expect.fail("The signed device package must be installed");
+    await effectFixture([Q], life.wait); await dispatchFixture(nodes, life.wait);
+    const creation = (await D.entries()).flatMap(entry => entry.sends).find(send => isSeed(send.to) && send.to.definition === id);
+    if (!creation || !isSeed(creation.to)) return expect.fail("The native install must create this exact device publisher");
+    expect(creation.message).toMatchObject({ body: { creationContext: { v: 2, delegate: true,
+      deviceCommand: { capability: DEVICE_COMMAND, owner: { membership, member: "@rita" }, root: id, definitions: [id] } } } });
+    const C = life.platform(scopeIdOf(creation.to)); nodes.push(C);
+    await pause(nodes);
+    for (const [node, pin] of [[R, cohort.register], [D, cohort.directory], [M, cohort.membership], [Q, cohort.rules], [G, cohort.destination]] as const)
+      expect((await node.summary()).value.definition).toBe(pin);
+    expect(await Q.item(installed.receipt.fact.seq)).toMatchObject({ state: "active", refs: { scope: await C.at() } });
+    expect((await C.item(0)).refs["destination"]).toEqual(await G.at());
+    expect((await G.item(0)).state).toBe("ready");
+    const device = await C.did(rita, "commission", { fields: { kind: "heater" } });
+    const command = await C.did(rita, "command", { on: device, expected: await C.expected({ on: device }), fields: { target: "on", level: 80 } });
+    expect((await C.entries())[command]!.input).toMatchObject({ type: "act", signed: { intent: { kind: "command" } } });
+    expect(await C.item(device)).toMatchObject({ values: { kind: "heater", target: "on", level: 80 }, refs: { targetAt: command } });
+    const state = () => life.wait(() => runInDurableObject(G.object, (_object, storage) => {
+      const store = new SqliteStore({ exec: (sql, ...args) => storage.storage.sql.exec(sql, ...args), transaction: run => storage.storage.transactionSync(run) });
+      return { ...store.all(), sending: store.all().operations.filter(row => row.kind === "push").map(row => ({ id: row.id, mark: store.sending(row.id, 1)?.sent })) };
+    }));
+    const report = (content: string) => C.did(rita, "report", { on: device, fields: { reported: 80, path: "device/reading.md", content } });
+    const first = await report("# First device reading\n");
+    await pause(nodes);
+    const firstCause = factRefOf((await C.entries())[first]!);
+    const proof = await life.wait(() => namespace(env.PLATFORM).resolver.read(firstCause, 30, true));
+    expect(proof && "entry" in proof ? archiveDevicePublicationOrigin(firstCause, directory, await G.at(), proof.origin ?? []) : null).toBe(true);
+    expect((await state()).items.find(item => item.type === "file-publication" && item.values["sourceSeq"] === first)).toMatchObject({ state: "published" });
+    const receiptReader = new Reader({
+      object: async objectId => { const object = host.stand.objects.get(objectId); return object ? { type: object.type, size: object.data.length, data: object.data } : null; },
+      ref: async name => host.stand.refs.get(name) ?? null,
+      refs: async (prefix, limit) => [...host.stand.refs].filter(([name]) => name.startsWith(prefix)).slice(0, limit + 1).map(([ref, target]) => ({ ref, target })),
+    });
+    const receipt = async (from: FactRef) => {
+      const target = await receiptReader.ref(fileReceiptRef({ from, n: 0 }));
+      expect(target).not.toBeNull(); if (!target) throw Error("The real publication has an exact public receipt");
+      const commit = await receiptReader.linked(target), tree = await receiptReader.tree(commit.tree);
+      const file = tree.find(row => new TextDecoder().decode(row.name) === "receipt.json");
+      if (!file) throw Error("The receipt commit contains receipt.json");
+      return JSON.parse(new TextDecoder().decode(await receiptReader.object(file.id, "blob"))) as Record<string, unknown>;
+    };
+    expect(await receipt(firstCause)).toMatchObject({ cause: { from: firstCause, n: 0 }, path: "device/reading.md", contentDigest: textDigest("# First device reading\n") });
+    allowPush = false; await G.restart();
+    const old = await report("# Older queued device reading\n"); await pause(nodes);
+    const queued = await state(), oldItem = queued.items.find(item => item.type === "file-publication" && item.values["sourceSeq"] === old)!;
+    expect(oldItem).toBeDefined();
+    const oldPush = queued.operations.find(row => row.kind === "push" && row.for === oldItem.id)!;
+    expect(oldPush.attempts[0]!.outcomes).toEqual([]);
+    expect(queued.sending.find(row => row.id === oldPush.id)?.mark).toBeNull();
+    expect(pushedOperations).not.toContain(oldPush.id);
+    const latest = await report("# Latest device reading\n"); await pause(nodes);
+    const pushCount = pushedOperations.length;
+    const queuedHead = host.stand.refs.get("refs/heads/main");
+    expect(queuedHead).not.toBeNull();
+    expect(queuedHead).toBeDefined();
+    allowPush = true; await G.restart(); await pause(nodes);
+    const after = await state();
+    expect(after.items.find(item => item.id === oldItem.id)?.state).toBe("superseded");
+    expect(after.items.find(item => item.type === "file-publication" && item.values["sourceSeq"] === latest)?.state).toBe("published");
+    expect(after.sending.find(row => row.id === oldPush.id)?.mark).toBeNull();
+    expect(pushedOperations).not.toContain(oldPush.id);
+    expect(pushedOperations).toHaveLength(pushCount + 1);
+    const oldCause = factRefOf((await C.entries())[old]!), latestCause = factRefOf((await C.entries())[latest]!);
+    const head = host.stand.refs.get("refs/heads/main");
+    expect(await receipt(oldCause)).toMatchObject({ cause: { from: oldCause, n: 0 }, supersededBy: { from: latestCause, n: 0 },
+      path: "device/reading.md", contentDigest: textDigest("# Older queued device reading\n"), commit: queuedHead });
+    expect(await receipt(latestCause)).toMatchObject({ cause: { from: latestCause, n: 0 }, path: "device/reading.md", contentDigest: textDigest("# Latest device reading\n") });
+    const response = await life.wait(() => site(new Request(`${SERVICE}/site/${D.name}/${head}/device/reading.md`),
+      { SCOPE_INDEX: env.SCOPE_INDEX, SCOPES: env.PLATFORM, ...bindings }, host.stand.fetch, `fixture:${D.name}`));
+    expect(response.status).toBe(200); expect(await response.text()).toContain("Latest device reading");
+    expect(pushedOperations).not.toContain(oldPush.id);
   } finally { life.release(); }
 });

@@ -4,7 +4,7 @@ import { inject, expect, test, onTestFinished } from "vitest";
 import { PROPOSED_BOUNDS, type Entry, type FactRef, type ScopeId, type ScopeRef } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, timeOf, unb64url, definitionDigest, sign, keyIdOfSecret, digestBytes, factRefOf, scopeIdOf, timeMs, utf8, textDigest } from "@generalbusiness/dap-bytes";
 import { requestSession, sessionRequest, signedReader, type Fetch } from "@generalbusiness/dap-client";
-import { firstExtents, CONFIGURATION_DOMAIN, platform, revokedToken, destinationWrite, destinationRevokedMint } from "@generalbusiness/dap-platform";
+import { ARCHIVE_DEVICE_PUBLICATION_COHORT, FILE_PUBLICATION_COHORT, firstExtents, CONFIGURATION_DOMAIN, platform, revokedToken, destinationWrite, destinationRevokedMint } from "@generalbusiness/dap-platform";
 import { httpSource, verify } from "@generalbusiness/dap-replay";
 import { SqliteStore, CAPABILITY_CODE } from "@generalbusiness/dap-scope";
 import { ownOf } from "../../../../packages/scope/src/core.ts";
@@ -83,12 +83,12 @@ async function publicationCheckpoint(node: Platform) {
 
 
 
-test("a manifest-list reservation records both files before the configured checker passes; no branch push occurs before that pass (real scopes, STAND-IN Git host and scheduler)", async ({ task }) => {
+test.each(["application-publication", "default"] as const)("a manifest-list reservation records both files before the configured checker passes; no branch push occurs before that pass (real scopes, STAND-IN Git host and scheduler; %s creation)", async (creation, { task }) => {
   net.hold = net.deaf = null;
   const owner = beginSessionFixture({ secret: b64url(crypto.getRandomValues(new Uint8Array(32))), sessions: true, inspector: reader });
   onTestFinished(owner.close);
   const wired = new Set<ScopeId>();
-  try { await story(ownHost(), wired, false, false, false, false, false, undefined, false, false, undefined, undefined, false, task.meta); }
+  try { await story(ownHost(), wired, false, false, false, false, false, undefined, false, false, undefined, undefined, false, task.meta, creation === "default"); }
   finally { owner.close(); net.hold = null; for (const name of wired) platformOutside.delete(name); }
 }, 120_000);
 test("a retry fence after publication starts is refused without superseding the live job or forgetting the unknown send (real scopes; host and scheduler STAND-INs)", async () => {
@@ -213,7 +213,7 @@ test("a valid custom required rules input is activated natively but stops the fi
   try { await story(ownHost(), wired, false, false, false, false, false, undefined, false, false, undefined, "custom-required"); }
   finally { owner.close(); net.hold = null; for (const name of wired) platformOutside.delete(name); }
 }, 120_000);
-async function story(at: Stand, wired: Set<ScopeId>, startedOnly = false, unknownStageOnly = false, unknownDeleteOnly = false, oneFileOnly = false, refusePushOnly = false, linkFault?: "summary" | "request" | "reply" | "unavailable" | "accepted", exhaustCleanup: false | "ref" | "token" | "token-unknown" = false, unknownMintOnly = false, nonemptyProfile?: "production" | "demo", proposalFault?: "source-reply" | "source-unavailable" | "source-refused" | "source-mismatch" | "manifest-reply" | "rules-read" | "custom-required", receiptRecoveryOnly = false, checkpointMeta?: object): Promise<void> {
+async function story(at: Stand, wired: Set<ScopeId>, startedOnly = false, unknownStageOnly = false, unknownDeleteOnly = false, oneFileOnly = false, refusePushOnly = false, linkFault?: "summary" | "request" | "reply" | "unavailable" | "accepted", exhaustCleanup: false | "ref" | "token" | "token-unknown" = false, unknownMintOnly = false, nonemptyProfile?: "production" | "demo", proposalFault?: "source-reply" | "source-unavailable" | "source-refused" | "source-mismatch" | "manifest-reply" | "rules-read" | "custom-required", receiptRecoveryOnly = false, checkpointMeta?: object, newestCreation = false): Promise<void> {
   const activeChange = nonemptyProfile === "production" ? change3 : changeDemo3;
   const fetch = ((url: string, init?: RequestInit) => routed(url, init)) as unknown as Fetch;
   const now = () => timeMs(net.clock.now)!;
@@ -291,13 +291,16 @@ async function story(at: Stand, wired: Set<ScopeId>, startedOnly = false, unknow
   const creator = person(), checker = person();
   const run = (who: Context, ...argv: string[]) => command(who, argv);
   const ok = (outcome: Outcome) => { expect(outcome.code, outcome.lines.join("\n")).toBe(0); return outcome; };
-  ok(await run(creator, "install", SERVICE, "--host", at.host, "--namespace", at.namespace));
+  // Keep historical reservation stories fixed; only the first invariant also exercises newest creation.
+  ok(await run(creator, "install", SERVICE, "--host", at.host, "--namespace", at.namespace,
+    ...(newestCreation ? [] : ["--cohort", "application-publication"])));
   R = new Platform((await creator.store.config())!.register!.scope); wire(R.name); await R.restart(); known.push(R);
   net.hold = (envelope) => { if ("definition" in envelope.to) wire(scopeIdOf(envelope.to)); return false; };
   ok(await run(creator, "claim", "tree", "--handle", "@rita"));
   const repository = (await creator.store.config())!.repository!;
   const G = new Platform(repository.destination); known.push(G); await pause([]);
-  expect((await G.summary()).value.definition).toBe("platform:destination@3");
+  expect((await G.summary()).value.definition).toBe(newestCreation
+    ? ARCHIVE_DEVICE_PUBLICATION_COHORT.destination : FILE_PUBLICATION_COHORT.destination);
   const first = host.refs.get("refs/heads/main")!;
   if (receiptRecoveryOnly) {
     ok(await run(creator, "act", "publish", "--on", "rules", "--target", "0", "--set", "approvals=0", "--set", "ownerMayReview=false", "--set", "checks=[]", "--set", "labels=[]", "--set", `extents=${JSON.stringify(firstExtents({ approvals: 0, checks: [] }))}`));

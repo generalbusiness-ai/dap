@@ -3,7 +3,7 @@
 import { same } from "@generalbusiness/dap-bytes";
 import { ITEM_QUERY_BOUNDS, type Digest, type Item, type ItemQuery, type PlatformDefinition, type ScopeRef, type Seed } from "@generalbusiness/dap-contract";
 import { canonicalize, encodeItemQueryParameter, isDigest, isRecord, isScopeRef, isSeed, readItemQueryReply, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
-import { ARCHIVE_DEVICE_APPLICATION_COHORT as DC, isOf } from "@generalbusiness/dap-platform";
+import { ARCHIVE_DEVICE_APPLICATION_COHORT as DC, ARCHIVE_DEVICE_PUBLICATION_COHORT as PC, isOf } from "@generalbusiness/dap-platform";
 import { ARCHIVE_NATIVE_DATA } from "@generalbusiness/dap-git/archive-policy";
 import type { ArchiveBudget } from "./archive-budget.ts";
 import type { FixtureArchiveTarget } from "./archive-driver.ts";
@@ -111,7 +111,8 @@ export function archiveTarget(reads: ArchiveTargetReads): Omit<FixtureArchiveDep
         || !select(at, found.named, from ? "creator" : "self", from))) return null;
       if (at.kind === "directory") {
         if (!isOf(found.named, "platform:directory")) return null;
-        if (dependencies && found.named !== DC.directory) return null;
+        const cohort = found.named === DC.directory ? DC : found.named === PC.directory ? PC : null;
+        if (dependencies && !cohort) return null;
         const room = await one(at, "repository", ["open"], budget, archiving, at);
         if (room?.values["archive"] !== "journal") return null;
         const configured = repository(room?.values["repository"]), destination = room?.refs["destination"];
@@ -122,12 +123,13 @@ export function archiveTarget(reads: ArchiveTargetReads): Omit<FixtureArchiveDep
         if (!branch || !same(branch.refs["directory"], at) || !same(repository(branch.values["repository"]), configured)) return null;
         if (dependencies) {
           const rules = room.refs["rules"];
-          if (!isScopeRef(rules) || rules.kind !== "rules" || target.named !== DC.destination) return null;
+          // Equal declaration bytes do not permit mixing versioned families.
+          if (!cohort || !isScopeRef(rules) || rules.kind !== "rules" || target.named !== cohort.destination) return null;
           // The lane pass does not enumerate an unrelated Rules journal.
           // It still rejects scope-ID aliases across the entire route and
           // both native sibling references before returning its repository.
           const prior = scopes.get(rules.scope), priorDestination = scopes.get(destination.scope);
-          if (prior && (!same(prior.at, rules) || prior.named !== DC.rules)
+          if (prior && (!same(prior.at, rules) || prior.named !== cohort.rules)
             || priorDestination && (!same(priorDestination.at, destination) || priorDestination.named !== target.named)
             || rules.scope === destination.scope) return null;
           if (mode === "room") {
@@ -138,7 +140,7 @@ export function archiveTarget(reads: ArchiveTargetReads): Omit<FixtureArchiveDep
           // keeps the original actual read; all final fences below still run.
           if (initialRules) budget.spend({ inputWork: 1024 });
           const rulebook = initialRules && same(initialRules.at, rules) ? initialRules.birth : await birth(rules, budget);
-          if (!rulebook || rulebook.named !== DC.rules || !same(rulebook.seed.creator, at)
+          if (!rulebook || rulebook.named !== cohort.rules || !same(rulebook.seed.creator, at)
             || !select(rules, rulebook.named, "rules", at) || !select(destination, target.named, "destination", at)) return null;
         }
         return result(configured);

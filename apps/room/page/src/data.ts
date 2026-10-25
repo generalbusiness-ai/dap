@@ -42,7 +42,7 @@ import {
   ScopeHandle, activeDirectory, collectItemQuery, partitionIndexes, declaredHandle, httpTransport, requestSession, secretSigner, signerSessionRequest, shapeDeclaredAct, signedIntent, signedReads, type Fetch, type Session as ReadSession, type Signer, type Signing, type Transport,
 } from "@generalbusiness/dap-client";
 import { LINK, describe, expectedOf, heldActs, linkOf, valueOf, type ActShape, type DefinitionShape, type Standing } from "@generalbusiness/dap-cli";
-import { DEFINITION_DOMAIN, ROLE_LISTS, fileSound, firstExtents, isExtents, platform, type Role } from "@generalbusiness/dap-platform";
+import { ARCHIVE_DEVICE_PUBLICATION_COHORT, DEFINITION_DOMAIN, ROLE_LISTS, fileSound, firstExtents, isExtents, platform, type Role } from "@generalbusiness/dap-platform";
 import type { Extent as PolicyExtent } from "@generalbusiness/dap-platform";
 import { knownLIST1 } from "./source-support.ts";
 import { currentStanding, reviewCandidates } from "./membership-projection.ts";
@@ -461,7 +461,7 @@ async function reviewPolicyOf(room: Room, change: ScopeRef, proposal: Item, held
     const handle = handleOf(room, source.at.scope);
     const { summary, at } = await summaryOf(handle);
     if (summary.status !== "active" || canonicalize(summary.scope) !== canonicalize(source.at) || at.seq < source.seq
-      || !["platform:rules@1", "platform:rules@2", "platform:rules@3", "platform:rules@4"].includes(summary.definition)) return null;
+      || !["platform:rules@1", "platform:rules@2", "platform:rules@3", "platform:rules@4", ARCHIVE_DEVICE_PUBLICATION_COHORT.rules].includes(summary.definition)) return null;
     const rules = summary.items.find(item => item.type === "rules" && item.state === "current");
     if (!rules) return null;
     const published = rules.refs["published"] ?? 0;
@@ -757,7 +757,7 @@ export async function roomInitialization(room: Room): Promise<RoomInitialization
       || canonicalize(repository?.refs["membership"]) !== canonicalize(room.membership)) return unavailable;
     const handle = handleOf(room, room.rules), { summary, at } = await summaryOf(handle);
     if (summary.status !== "active" || canonicalize(summary.scope) !== canonicalize(named)
-      || !["platform:rules@1", "platform:rules@2", "platform:rules@3", "platform:rules@4"].includes(summary.definition)) return unavailable;
+      || !["platform:rules@1", "platform:rules@2", "platform:rules@3", "platform:rules@4", ARCHIVE_DEVICE_PUBLICATION_COHORT.rules].includes(summary.definition)) return unavailable;
     const rules = summary.items.filter(item => item.type === "rules");
     if (rules.length !== 1) return unavailable;
     const current = rules[0]!;
@@ -770,7 +770,7 @@ export async function roomInitialization(room: Room): Promise<RoomInitialization
     // a retired definition also proves that this room has been configured.
     const definitions = await itemsOf(room, handle, summary, "definition", at);
     if (definitions.length > 0) return { state: "configured" };
-    // Known rules1–4 initial item; only the explicit rules4 pin defaults owner review to true.
+    // Rules10 inherits the Rules3 policy item; only explicit Rules4 defaults owner review to true.
     if (canonicalize(current.refs["directory"]) !== canonicalize(directory.summary.scope)
       || current.values["membership"] !== room.membership.scope || typeof current.values["branch"] !== "string"
       || current.values["approvals"] !== 1 || current.values["ownerMayReview"] !== (summary.definition === "platform:rules@4") || current.values["singleControllerException"] !== false

@@ -81,9 +81,9 @@ async function story(lifetime: ReturnType<typeof nativeFixtureLifetime>): Promis
   const installed = await run(rita, "install", SERVICE, "--host", "git.example", "--namespace", "artroom");
   expect(installed.code, installed.lines.join("\n")).toBe(0);
   const R = node((await rita.store.config())!.register!.scope);
-  expect(installed.lines).toEqual([`Installed: register ${R.name}, under platform:register@17.`, expect.stringMatching(/^The operator key key_\S+ is kept in the config directory, readable only by you\. It is the one creator key\.$/)]);
+  expect(installed.lines).toEqual([`Installed: register ${R.name}, under platform:register@18.`, expect.stringMatching(/^The operator key key_\S+ is kept in the config directory, readable only by you\. It is the one creator key\.$/)]);
   // A new register is created on the newest version, and the room that it creates on the newest version of each definition.
-  expect((await R.summary()).value).toMatchObject({ status: "active", definition: "platform:register@17" });
+  expect((await R.summary()).value).toMatchObject({ status: "active", definition: "platform:register@18" });
   // Before the claim the operator key holds no session, and reads the register by signed reads of the log: its genesis is all there
   // is, and it replays.
   const early = await run(rita, "verify", "register");
@@ -115,7 +115,7 @@ async function story(lifetime: ReturnType<typeof nativeFixtureLifetime>): Promis
   for (const scope of [D, M, node(repository.rules), node(repository.destination), node(repository.inbox!)]) expect((await scope.summary()).value.status).toBe("active");
   expect(claimed.lines).toEqual([
     `Created demo: directory ${D.name}, membership ${M.name}, rules ${repository.rules}, destination ${repository.destination}; each created and confirmed.`,
-    "Definitions: platform:directory@16, platform:membership@8, platform:rules@10, platform:destination@12.",
+    "Definitions: platform:directory@17, platform:membership@8, platform:rules@10, platform:destination@13.",
     expect.stringMatching(new RegExp(`^You are @rita, an admin, on key key_\\S+; your inbox is ${repository.inbox}\\.$`)),
   ]);
   expect(outsideOf(R.name).attempts).toEqual(["1:0#1"]);
@@ -147,7 +147,7 @@ async function story(lifetime: ReturnType<typeof nativeFixtureLifetime>): Promis
   // acts: what una's role holds on the directory, read with her session from the definition and from her standing in membership.
   const unasActs = await run(una, "acts", "directory");
   expect(unasActs).toEqual({ code: 0, lines: [
-    `Acts on ${D.name} (platform:directory@16) for @una (member):`,
+    `Acts on ${D.name} (platform:directory@17) for @una (member):`,
     "  open-issue: opens a lane; needs issue.open. Fields: definition:digest title:text body?:text conditions:list.",
     "  open-pr: opens a lane; needs change.open. Fields: definition:digest title:text body?:text draft:bool.",
     "  open-task: opens a task; needs task.control. Fields: worker:member controller:member lane:scope.",

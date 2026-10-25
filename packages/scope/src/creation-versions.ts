@@ -1,11 +1,11 @@
 /** Deployment creation policy. Historical loading and replay never use it. */
 import type { PlatformDefinition } from "@generalbusiness/dap-contract";
 import { isPlatformDefinition, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
-import { ARCHIVE_DEVICE_APPLICATION_COHORT, platform } from "@generalbusiness/dap-platform";
+import { ARCHIVE_DEVICE_PUBLICATION_COHORT, platform } from "@generalbusiness/dap-platform";
 
 export interface PlatformCreationSettings { PLATFORM_CREATION_PINS?: unknown }
 export interface PlatformCreationPolicy { readonly pins: readonly PlatformDefinition[] }
-const newest = Object.values(ARCHIVE_DEVICE_APPLICATION_COHORT);
+const newest = Object.values(ARCHIVE_DEVICE_PUBLICATION_COHORT);
 const defaults: PlatformCreationPolicy = Object.freeze({ pins: Object.freeze([...newest]) });
 /** Undefined is the absent setting, including an explicitly undefined field.
  * Null is invalid. No caller-owned array or mutable setting survives parsing. */

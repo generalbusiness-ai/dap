@@ -10,7 +10,7 @@ test("explicit Counting cohort uses bounded native live rows while preserving ol
   expect(COUNTING_COHORT).toEqual({ register: "platform:register@6", directory: "platform:directory@6", membership: "platform:membership@5", rules: "platform:rules@3", destination: "platform:destination@2", inbox: "platform:inbox@1" });
   expect(DIRECTORY_OF[COUNTING_COHORT.register]).toBe(COUNTING_COHORT.directory);
   expect(SIBLINGS_OF[COUNTING_COHORT.directory]).toEqual({ membership: COUNTING_COHORT.membership, rules: COUNTING_COHORT.rules, destination: COUNTING_COHORT.destination });
-  expect(NEWEST).toEqual({ "platform:register": "platform:register@17", "platform:directory": "platform:directory@16", "platform:membership": "platform:membership@8", "platform:rules": "platform:rules@10", "platform:destination": "platform:destination@12", "platform:inbox": "platform:inbox@1" });
+  expect(NEWEST).toEqual({ "platform:register": "platform:register@18", "platform:directory": "platform:directory@17", "platform:membership": "platform:membership@8", "platform:rules": "platform:rules@10", "platform:destination": "platform:destination@13", "platform:inbox": "platform:inbox@1" });
   for (const pin of ["platform:membership@1", "platform:membership@2", APPLICATION_COHORT.membership]) {
     expect(platform(pin)!.data).toBe(membership);
     expect([platform(pin)!.data.items["member"]!.max, platform(pin)!.data.items["key"]!.max]).toEqual([10000, 10000]);

@@ -10,10 +10,11 @@ import type { FixtureArchiveSourcePins } from "./archive-source-pins.ts";
 type Selection = { readonly at: ScopeRef; readonly objects: readonly { readonly foreign?: NonNullable<JournalSelection["objects"][number]["foreign"]> }[] };
 
 /** `archived` is the exact producer closure selected for this repository.
- * Its copied facts must be replayed. Only Register17 and Membership8 facts
- * outside that closure may become anchors under decisions 5a642337 and
- * 066e49b3. Decision a7d03336 removes the copy-count bound: authority and
- * observation heads need no copy. These are candidate references; replay
+ * Its copied facts must be replayed. Only exact Register17/18 and Membership8
+ * facts outside that closure may become anchors. Decisions 5a642337 and
+ * 066e49b3 define the anchor trust boundary. Decision a7d03336 removes the
+ * copy-count bound: authority and observation heads need no copy. These
+ * are candidate references; replay
  * with published trust must consult every listed fact in its own range.
  * An observed value remains on the caller's word with its head. */
 export class ArchiveReplayAnchors {
@@ -83,7 +84,7 @@ export class ArchiveReplayAnchors {
         this.#pins.set(key, source.pin);
       }
       const pin = this.#pins.get(key);
-      if (pin !== "platform:register@17" && pin !== "platform:membership@8") return stop("unsupported-foreign-copy");
+      if (pin !== "platform:register@17" && pin !== "platform:register@18" && pin !== "platform:membership@8") return stop("unsupported-foreign-copy");
     }
     this.budget.spend({ inputWork: this.#facts.size * 1024 * (Math.ceil(Math.log2(this.#facts.size + 1)) + 1) });
     const compare = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0;

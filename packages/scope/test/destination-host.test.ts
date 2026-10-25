@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import type { Digest, FieldValue, OperationId, RetainedInput, ScopeId } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, factRefOf, newIncarnation, signIntent } from "@generalbusiness/dap-bytes";
 import { t } from "@generalbusiness/dap-derive/testing";
-import { DESTINATION_5, destination5, destinationRules5, destinationReceipt, initialCommitObjects, type DestinationObject, type RecordedJudgeEvidence } from "@generalbusiness/dap-platform";
+import { DESTINATION_5, destination4, destinationRules4, destination5, destinationRules5, destinationReceipt, initialCommitObjects, type DestinationObject, type RecordedJudgeEvidence } from "@generalbusiness/dap-platform";
 import { useOf } from "@generalbusiness/dap-derive";
 import { keys } from "@generalbusiness/dap-derive/testing";
 import { publicationJourney } from "../../platform/test/support-publication-journey.ts";
@@ -291,13 +291,16 @@ describe("destination outside adapter; scripted host, platform judgments in memo
   });
 });
 
-// Invariant: the production host retains @4 file inspection and fenced
-// reservation snapshot behavior for explicit @5, using its record-shaped
+// Invariant: the production host retains file inspection and fenced
+// reservation snapshots for D1's record generations and ADC's array
 // generations. Creator/lane/membership/provider answers remain stand-ins.
-test("D1 production host inspects automatic files and reads the current fenced checker generation without treating metadata as an array", async () => {
+test.each([
+  ["D1", destination5, DESTINATION_5, destinationRules5],
+  ["ADC publication", destination4, "platform:destination@13", destinationRules4],
+] as const)("%s production host inspects automatic files and reads the current fenced checker generation", async (_label, data, named, rules) => {
   const storage = await create();
   await storage.inside(async state => {
-    const journey = publicationJourney(destination5, DESTINATION_5, destinationRules5);
+    const journey = publicationJourney(data, named, rules);
     const make = () => {
       const ledger = journey.make(), provider = new Provider(), retained = new Map<Digest, RetainedInput>();
       const given: OutsideGiven = { state: ledger.state, own: ledger.own, scope: () => ledger.state.scope(),
@@ -312,8 +315,8 @@ test("D1 production host inspects automatic files and reads the current fenced c
     expect(journey.file(file.ledger).result).toBe("write");
     file.provider.seen = HEAD; // empty scripted object response means absent path
     const fileJudge = `${file.ledger.head.seq}:0` as OperationId;
-    expect(fileHost.accepts(DESTINATION_5, "file-judge")).toBe(true);
-    expect(fileHost.recovery.accepts(DESTINATION_5, "file-judge")).toBe(true);
+    expect(fileHost.accepts(named, "file-judge")).toBe(true);
+    expect(fileHost.recovery.accepts(named, "file-judge")).toBe(true);
     expect(fileHost.accepts("platform:destination@6", "file-judge")).toBe(true);
     expect(fileHost.recovery.accepts("platform:destination@6", "file-judge")).toBe(true);
     expect(fileHost.accepts("platform:destination@7", "file-judge")).toBe(true);

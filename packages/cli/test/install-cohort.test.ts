@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 import type { PlatformDefinition, Receipt, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, intentDigest, newIncarnation, scopeIdOf, textDigest, timeMs } from "@generalbusiness/dap-bytes";
 import type { Fetch } from "@generalbusiness/dap-client";
-import { INVITATION_KEY_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
+import { INVITATION_KEY_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { command, install, installPlanned, memoryStore, planInstall, type Config, type Context, type Store } from "../src/index.ts";
 
 const SERVICE = "https://cohort.test";
@@ -12,6 +12,7 @@ const COHORTS = [
   { name: "archive-declared-application", definition: ARCHIVE_DECLARED_APPLICATION_COHORT.register, other: COHORT },
   { name: "device-application", definition: DEVICE_APPLICATION_COHORT.register, other: COHORT },
   { name: "archive-device-application", definition: ARCHIVE_DEVICE_APPLICATION_COHORT.register, other: COHORT },
+  { name: "archive-device-publication", definition: ARCHIVE_DEVICE_PUBLICATION_COHORT.register, other: COHORT },
   { name: "declared-application", definition: DECLARED_APPLICATION_COHORT.register, other: COHORT },
   { name: "invitation-key", definition: INVITATION_KEY_COHORT.register, other: COHORT },
   { name: COHORT, definition: TRUSTED_APPLICATION_COHORT.register, other: "application" },
@@ -45,7 +46,7 @@ function scenario(fault: "none" | "reply" | "save" = "none", replaceUnsentLegacy
       const kept = (await store.config())!;
       if (replaceUnsentLegacy && kept.plan?.definition === "platform:register@3" && kept.plan.attempted === undefined) {
         // This one direct-default path may replace a definitely-unsent old plan.
-        expect(request.definition).toBe("platform:register@17");
+        expect(request.definition).toBe("platform:register@18");
       } else if (COHORTS.some(cohort => cohort.definition === request.definition)) {
         expect(kept.plan?.attempted).toMatch(/^sha256:/);
         expect(canonicalize(kept.plan?.["founding"])).toBe(canonicalize(request.creation));
@@ -83,7 +84,7 @@ test("closed cohort selection uses the new default and preserves retained histor
   const legacy = scenario("none", true);
   expect((await command(legacy.ctx, ["install", "--plan", SERVICE])).code).toBe(0);
   const fresh = (await legacy.store.config())!;
-  expect(fresh.plan!.definition).toBe("platform:register@17");
+  expect(fresh.plan!.definition).toBe("platform:register@18");
   // A pre-upgrade, definitely-unsent plan keeps its exact old version/ID.
   const legacyPlan = { ...fresh.plan!, definition: "platform:register@3" as const, register: scopeIdOf({ v: 1, kind: "register", definition: "platform:register@3", creator: null, cause: intentDigest(fresh.plan!["founding"].intent), ordinal: 0 }) };
   await legacy.store.save({ ...fresh, plan: legacyPlan });

@@ -218,3 +218,8 @@ export function deviceApplicationPublicationOrigin(from: FactRef, directory: Sco
 export function archiveDeviceApplicationPublicationOrigin(from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly Fetched[]): boolean | null {
   return installedApplicationOrigin(from, directory, destination, facts, { directory: "platform:directory@16", rules: "platform:rules@10", destination: "platform:destination@12", membership: "platform:membership@8", deviceCommand: true });
 }
+
+/** Corrected publication cohort only; Destination12 retains its original policy. */
+export function archiveDevicePublicationOrigin(from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly Fetched[]): boolean | null {
+  return installedApplicationOrigin(from, directory, destination, facts, { directory: "platform:directory@17", rules: "platform:rules@10", destination: "platform:destination@13", membership: "platform:membership@8", deviceCommand: true });
+}

@@ -11,9 +11,9 @@ import { act, acts, apps, claim, clone, edit, install, installPlanned, invite, i
 
 export const USAGE = [
   "Usage:",
-  "  dap install <base-url> [--host <git-host>] [--namespace <name>] [--register-policy keys|open] [--cohort application|application-publication|trusted-application|declared-application|device-application|archive-application|archive-declared-application|archive-device-application|invitation-key]",
-  "  dap install --plan <base-url> [--host <git-host>] [--namespace <name>] [--register-policy keys|open] [--cohort application|application-publication|trusted-application|declared-application|device-application|archive-application|archive-declared-application|archive-device-application|invitation-key]",
-  "  dap install --planned [--register-policy keys|open] [--cohort application|application-publication|trusted-application|declared-application|device-application|archive-application|archive-declared-application|archive-device-application|invitation-key]",
+  "  dap install <base-url> [--host <git-host>] [--namespace <name>] [--register-policy keys|open] [--cohort application|application-publication|trusted-application|declared-application|device-application|archive-application|archive-declared-application|archive-device-application|archive-device-publication|invitation-key]",
+  "  dap install --plan <base-url> [--host <git-host>] [--namespace <name>] [--register-policy keys|open] [--cohort application|application-publication|trusted-application|declared-application|device-application|archive-application|archive-declared-application|archive-device-application|archive-device-publication|invitation-key]",
+  "  dap install --planned [--register-policy keys|open] [--cohort application|application-publication|trusted-application|declared-application|device-application|archive-application|archive-declared-application|archive-device-application|archive-device-publication|invitation-key]",
   "  dap install <git+https-uri> --release <release-id> --request <kept-key> [--role <default-role> ...] [--values <genesis-JSON>] [--owner <full-member-JSON>]",
   "  dap application <install-item>",
   "  dap apps [--cursor <cursor>]",
@@ -101,7 +101,7 @@ export async function command(ctx: Context, argv: readonly string[]): Promise<Ou
       }
       if (["release", "request", "role", "values", "owner"].some(name => parsed.flags.has(name))) return needs("a git+https URI for application options");
       const cohorts = parsed.flags.get("cohort");
-      if (cohorts && (cohorts.length !== 1 || (cohorts[0] !== "application" && cohorts[0] !== "application-publication" && cohorts[0] !== "trusted-application" && cohorts[0] !== "declared-application" && cohorts[0] !== "device-application" && cohorts[0] !== "archive-application" && cohorts[0] !== "archive-declared-application" && cohorts[0] !== "archive-device-application" && cohorts[0] !== "invitation-key"))) return { code: 2, lines: ["--cohort takes exactly one value: application, application-publication, trusted-application, declared-application, device-application, archive-application, archive-declared-application, archive-device-application or invitation-key.", USAGE] };
+      if (cohorts && (cohorts.length !== 1 || (cohorts[0] !== "application" && cohorts[0] !== "application-publication" && cohorts[0] !== "trusted-application" && cohorts[0] !== "declared-application" && cohorts[0] !== "device-application" && cohorts[0] !== "archive-application" && cohorts[0] !== "archive-declared-application" && cohorts[0] !== "archive-device-application" && cohorts[0] !== "archive-device-publication" && cohorts[0] !== "invitation-key"))) return { code: 2, lines: ["--cohort takes exactly one value: application, application-publication, trusted-application, declared-application, device-application, archive-application, archive-declared-application, archive-device-application, archive-device-publication or invitation-key.", USAGE] };
       const policies = parsed.flags.get("register-policy");
       if (policies && (policies.length !== 1 || (policies[0] !== "keys" && policies[0] !== "open"))) return { code: 2, lines: ["--register-policy takes exactly one value: keys or open.", USAGE] };
       const registerPolicy = policies?.[0] as RegisterPolicy | undefined;
