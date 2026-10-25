@@ -333,7 +333,8 @@ export class ArchiveDriver {
           const adaptive = await ("production" in this.#options ? planRootAdaptiveArchivePass : planAdaptiveArchivePass)(this.#options.sql, { ...common, at, through,
             ...(legacyAnchorParent ? { legacyAnchorParent } : {}),
             ...(preparedSources?.prepare ? { prepareSources: preparedSources.prepare } : {}),
-            after: row.confirmed?.through ?? null, format: row.format, row,
+            after: row.confirmed?.through ?? null, format: row.format, row: capacity.planning?.row ?? row,
+            ...(capacity.planning ? { rowSnapshot: capacity.planning.token } : {}),
             atomicFirstAttempt: true,
             parentHeld: previous.held, parentUsed: previous.used, maximum: this.#maximum }, budget);
           if (!adaptive.ok && "deferred" in adaptive) {
