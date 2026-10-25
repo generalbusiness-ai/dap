@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:282cde94a86cb5d9ac35ff0598b81c7fea490eda","text":"Merge retired a covered predecessor with no successor at its old path."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2862e9e999903d518e2b37946041dc9d551dcd2b","text":"Merge retired a covered predecessor; the successor is at apps/room/docs/ledger.md."}
