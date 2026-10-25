@@ -6,6 +6,7 @@ import { join } from "node:path";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
 import { connect } from "node:net";
+import { pathToFileURL } from "node:url";
 import { runNodeWitness } from "./node-witness.mjs";
 
 async function fixture(t, body) {
@@ -17,7 +18,7 @@ async function fixture(t, body) {
 }
 
 test("the generated witness's own test timeout names the stalled case and preserves its failure", { timeout: 10_000 }, async t => {
-  const { file } = await fixture(t, `
+  const { file, dir } = await fixture(t, `
     import test from 'node:test';
     test('blocked generated client', t => {
       const keepAlive = setInterval(() => {}, 1000);
@@ -26,12 +27,20 @@ test("the generated witness's own test timeout names the stalled case and preser
     });
   `);
   const messages = [];
-  const run = await runNodeWitness([file], { testTimeoutMs: 100, runTimeoutMs: 3000, capture: true, report: line => messages.push(line) });
+  const reporter = join(dir, "timing-reporter.mjs"), destination = join(dir, "timing.jsonl");
+  await writeFile(reporter, `export default async function* (source) {
+    for await (const event of source) if (event.type === 'test:fail') yield JSON.stringify({type:event.type,name:event.data.name,duration:event.data.details.duration_ms})+'\\n';
+  }`);
+  const run = await runNodeWitness([file], { testTimeoutMs: 100, runTimeoutMs: 3000, capture: true,
+    observation: { reporter: pathToFileURL(reporter).href, destination }, report: line => messages.push(line) });
   assert.equal(run.code, 1);
   assert.equal(run.reason, "exit");
   assert.match(run.stdout + run.stderr, /blocked generated client/);
   assert.match(run.stdout + run.stderr, /timed out after 100ms/);
   assert.deepEqual(messages, []);
+  const records = (await readFile(destination, "utf8")).trim().split("\n").map(line => JSON.parse(line));
+  const failed = records.find(record => record.name === "blocked generated client");
+  assert.equal(failed?.type, "test:fail"); assert.ok(failed.duration >= 0);
 });
 
 test("a module that never reaches a case hits the whole child deadline even if reporting fails", { timeout: 10_000 }, async t => {

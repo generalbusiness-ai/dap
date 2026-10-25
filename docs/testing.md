@@ -469,9 +469,10 @@ it. This audit does not make historical commits part of the branch gate.
 
 The gate runs `node scripts/check-shared-helpers.mjs` before typechecking.
 For a gate that needs a durable list of started and finished cases, set
-`ARTROOM_TEST_PROGRESS` to a new file in an existing evidence directory.
-Vitest then uses verbose output and writes JSON lines for case callbacks,
-each case's final framework state and the run's end. Native incremental
+`ARTROOM_TEST_PROGRESS` to a new path in an existing evidence directory.
+The test command prints separate paths for its plain and native phases.
+Each Vitest process uses verbose output and writes its own JSON lines for
+case callbacks, each case's final framework state and the run's end. Native incremental
 callbacks can omit cases that later report passed, so a start without a
 result marks a reporting gap. It does not prove that a case is still
 running or identify a cause. An existing file is refused. This observes
@@ -485,14 +486,14 @@ re-export aliases are allowed. The check includes new untracked source
 files and excludes test fixtures. Its two Node cases run in `npm test`.
 
 It installs only if `package-lock.json` changed since the last install,
-typechecks every workspace, and runs every test: one vitest process for
-the repository (`vitest.config.ts` at the root, one project for each of
-`bytes`, `derive`, `platform`, `git`, `checkers`, `replay`, `client`,
-`scope`, `scope-denial`, `lanes`, `cli`, `page`, `mcp`, `counting`, and
-`lending`), then the built-in Node checks in `scripts/active-source.test.mjs`,
-`scripts/cloudflare-pool-compat.test.mjs`, `homepage/test/home.test.mjs`, and
-`packages/cli/test/config-dir.test.mjs`. The existing Counting browser check
-in `apps/counter/scripts/test-browser.mjs` follows those Node checks.
+typechecks every workspace, and runs the fixed stages of `scripts/test.mjs`
+in order: the kernel boundary check, the maintained Node checks, the
+Counting build and generated Node witnesses, the fourteen plain Vitest
+projects, then the two native Vitest projects. Any failed stage stops the
+later stages. The plain phase selects its project data before Vitest
+resolves inherited configs, so an early failure starts no Worker project.
+The two phases share the canonical declarations in `vitest.projects.mjs`;
+the full `vitest.config.ts` remains available for focused commands.
 The compatibility witness uses the guarded actual pool factory and private-copy
 workflow; its plain Node base class is not native authority evidence. The active-source script checks that no
 active file imports from `spikes/parked/` or names a removed format, and that no
@@ -500,8 +501,8 @@ platform package depends on the lanes package or imports from it. It prints the 
 each step's elapsed and CPU time. It also fails on a whitespace error in
 what the branch changed. `npm run gate -- --ci` reinstalls first.
 
-The Node projects share one group with at most four active file tasks in
-total. The root `test.maxWorkers: 4` sets this limit in the ordinary gate.
+The fourteen plain projects share one group with at most four active file
+tasks in total. The root `test.maxWorkers: 4` sets this limit in the ordinary gate.
 The `scope` project follows in the workerd pool, against real Durable
 Objects with SQLite storage, with its explicit one-worker configuration.
 The later `scope-denial` group also keeps one worker. This limits active
@@ -511,6 +512,21 @@ also replaces the native projects' one-worker settings. The
 `git` project runs the real `git` program, as a client and as a server, on
 local repositories, and one file of the `checkers` project runs it for the
 runner's checkout. Nothing runs twice.
+
+Both `npm test` and the gate print up to ten slowest observed cases and
+the observed test-and-hook duration sum for each Vitest project. Node and
+Counting have separate case-duration sums. These concurrent duration sums
+are neither elapsed time nor CPU time. Missing durations remain unknown;
+failed or incomplete phases are labelled partial, and stages that never
+started are labelled unreached. Counting records the generated Node file
+and its validated source mapping. Its result does not prove browser execution.
+
+The test command prints its evidence directory. Timing observations stay
+separate from the optional callback stream above. A failed pre-test gate
+check still prints a summary with no observed cases and unreached stages.
+Report failures fail an otherwise passing run while preserving an earlier
+child failure. A process killed before finalization cannot print a final
+summary.
 
 The `scope-denial` project then runs the post-sent local-denial witness in
 its own Worker runtime, with the same Worker and real SQLite storage. Both

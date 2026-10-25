@@ -9,6 +9,12 @@ import { tmpdir } from "node:os";
 import { runNodeWitness } from "./node-witness.mjs";
 const root=realpathSync(fileURLToPath(new URL("../../../",import.meta.url)));
 const inside=(base,path)=>{const part=relative(base,path);return part===""||!part.startsWith("..")&&!isAbsolute(part);};
+// Only the orchestrator opts into observation. An incomplete directory or
+// wrong phase refuses before the existing single build; no NODE_OPTIONS.
+const evidence=process.env["ARTROOM_TEST_EVIDENCE_DIR"];
+const observing=evidence!==undefined;
+if(observing&&(!evidence||!isAbsolute(evidence)||process.env["ARTROOM_TEST_PHASE"]!=="counting"))throw new Error("Counting observation settings are incomplete.");
+const observation=observing?{reporter:new URL("../../../scripts/test-summary.mjs",import.meta.url).href,destination:resolve(evidence,"counting.jsonl")}:undefined;
 const lock=await readFile(resolve(root,"package-lock.json"));
 const lockData=JSON.parse(lock);
 const lockHash=createHash("sha256").update(lock).digest("hex");
@@ -46,10 +52,12 @@ for(const name of inputs){const supplied=resolve(root,name),path=realpathSync(su
   else if(!dependencyRoots.some(base=>inside(base,path)))throw new Error("Counting witness input is outside the current source and locked dependencies.");
 }
 for(const name of ["packages/client/src/observe.ts","packages/client/src/head-stream.ts","packages/client/src/index.ts","packages/client/src/intent.ts","packages/bytes/src/index.ts","packages/contract/src/index.ts","apps/counter/commitments.ts","apps/counter/commitments-pin.ts",...entries.map(path=>relative(root,path))])if(!source.has(realpathSync(resolve(root,name))))throw new Error("Counting witness omitted a current source dependency.");
-const files=outputs.map(([name,info])=>{const path=realpathSync(resolve(root,name));if(!inside(output,path)||!info.entryPoint||!entries.includes(realpathSync(resolve(root,info.entryPoint))))throw new Error("Unexpected Counting witness entry or output.");return path;});
+const mappings=observing?[]:null;
+const files=outputs.map(([name,info])=>{const path=realpathSync(resolve(root,name));if(!inside(output,path)||!info.entryPoint||!entries.includes(realpathSync(resolve(root,info.entryPoint))))throw new Error("Unexpected Counting witness entry or output.");if(mappings)mappings.push({generated:path,source:realpathSync(resolve(root,info.entryPoint))});return path;});
 if(new Set(files.map(path=>basename(path))).size!==names.length||new Set(outputs.map(([,info])=>info.entryPoint)).size!==names.length)throw new Error("Duplicate Counting witness output.");
 
 await writeFile(resolve(output,"source.json"),JSON.stringify({root,entries,outputs:files}));
-const run=await runNodeWitness(files,{cwd:root});
+if(mappings)await writeFile(resolve(evidence,"counting-sources.json"),JSON.stringify({version:1,mappings}),{flag:"wx"});
+const run=await runNodeWitness(files,observation?{cwd:root,observation}:{cwd:root});
 console.log(`Counting Node witness evidence: ${output}`);
 process.exitCode=run.code;
