@@ -5,7 +5,7 @@
 import { env, runDurableObjectAlarm, runInDurableObject } from "cloudflare:test";
 import { expect, inject, test } from "vitest";
 import { DEVICE_COMMAND, PROPOSED_BOUNDS, type DeclaredDefinition, type Digest, type FactRef, type Head, type Input, type PlatformDefinition, type ScopeId, type ScopeRef, type Sealed } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, encodeItemQueryParameter, isDigest, isEntry, isFactRef, isScopeId, isRecord, isSeed, parseStrict, scopeIdOf, textDigest, timeMs, timeOf, unb64url, utf8 } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, digestBytes, encodeItemQueryParameter, isDigest, isEntry, isFactRef, isScopeId, isRecord, isSeed, parseStrict, scopeIdOf, textDigest, timeMs, timeOf, unb64url, utf8 } from "@generalbusiness/dap-bytes";
 import { readApplicationPackage2, readPublishedApplicationPackage2 } from "@generalbusiness/dap-platform/application-v2";
 import { inputTexts, outcomeValueDomains, ownersOf, validateDefinition, type OperationRules, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
@@ -13,6 +13,7 @@ import { ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT,
 import { ScopeHandle, httpTransport, invitationIssueFields, invitationRedemptionFields, requestSession, secretSigner, sessionRequest } from "@generalbusiness/dap-client";
 import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-mcp";
 import { archiveSource, verifyArchive, TRUSTS } from "@generalbusiness/dap-replay";
+import { Reader, idOf, objectId } from "@generalbusiness/dap-git";
 import { buildJournalPass, journalRef, verifyJournalAppend, type JournalArchive, type JournalObject, type JournalPassArchive } from "@generalbusiness/dap-git/journal";
 import { readJournalRepositoryArchive } from "@generalbusiness/dap-git/journal-reader";
 import { command as dapCommand, memoryStore as cliMemoryStore } from "../../cli/src/index.ts";
@@ -20,6 +21,7 @@ import { artifactsOutside } from "../src/artifacts-wiring.ts";
 import type { ArtifactsNamespace } from "../src/artifacts-host.ts";
 import { archiveInput } from "../src/archive-input.ts";
 import { ArchiveDriver } from "../src/archive-driver.ts";
+import { ArchiveFrontiers } from "../src/archive-frontier-store.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
 import { archiveSourceReferences, archiveSourceWindow } from "../src/archive-source-window.ts";
 import { stopArchivePrefix } from "../src/archive-prefix.ts";
@@ -31,7 +33,7 @@ import { DEMO_RELEASE, DEMO_PUBLISHER } from "../../../examples/grow/demo-releas
 import { archiveHostWiring, roomArchiveWiring, roomArchiveConstructions } from "./worker.ts";
 import type { OutsideGiven } from "../src/object.ts";
 import type { DestinationRepository } from "../src/destination-host.ts";
-import { ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
+import { ARCHIVE_BOUNDS, ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
 import { archiveEntryHeader, archiveEntryPrivacy, archiveSupportMetadata, recordArchiveSupportMetadata } from "../src/archive-entry-metadata.ts";
 import { archivePrefixMetadata } from "../src/archive-prefix.ts";
 import { forecastArchiveEntryPrivacy } from "../src/archive-entry-privacy-cost.ts";
@@ -122,11 +124,13 @@ function commandReportDiagnostic(value: unknown) {
 // Each offline follower immediately follows its own native producer. No
 // Native owner, private key or plaintext read token crosses this boundary.
 interface NativeCommandHandoff { producer: string; id: string; lines: readonly string[]; refs: readonly { ref: string; id: string }[] }
-for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation warm", "Grow activation evicted", "Grow publication"]) {
-  const producerTitle = `installed ${scenario} scopes export genesis zero after a late native Membership8 directory binding`;
+for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation warm", "Grow activation evicted", "Grow publication", "Grow Room A shape"]) {
+  const producerTitle = scenario === "Grow Room A shape"
+    ? "installed old R17 Grow advances a published thirty-seven-pass history from sequence 146 with an exact remainder"
+    : `installed ${scenario} scopes export genesis zero after a late native Membership8 directory binding`;
   let retainedCommand: NativeCommandHandoff | null = null;
   test(producerTitle, { timeout: 30_000 }, async context => {
-  const activationScenario = scenario.startsWith("Grow activation"), productionScenario = scenario === "Grow production" || activationScenario, kind = scenario === "fixture" ? "fixture" : "Grow";
+  const activationScenario = scenario.startsWith("Grow activation"), productionScenario = scenario === "Grow production" || scenario === "Grow Room A shape" || activationScenario, kind = scenario === "fixture" ? "fixture" : "Grow";
   const prepared = kind === "fixture" ? await applicationOwnedScopesPacket() : (() => {
     const captured = inject("maintainedApplications")[productionScenario ? "growDemo" : "grow"], bytes = unb64url(captured.bytes);
     if (!bytes) throw Error("The maintained TEST Grow packet must be captured.");
@@ -585,6 +589,166 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
         return metadata.selection().map(held => ({ fact: held.fact, content: held.content }));
       }));
       expect(admitted).toContainEqual({ fact: copy.source, content: copy.content });
+    }
+    if (scenario === "Grow Room A shape") {
+      // Room A's payload/producer union is unavailable. This is the real
+      // installed old R17/D16/Q10/G12 Grow family, not its hosted identity.
+      // History uses genuine entries and published writer/Mark/frontier APIs;
+      // no accepted flag, entry body, retained payload or budget is patched.
+      const observed: Record<string, unknown> = {
+        qualification: "Local installed old-family Grow shape, not Room A's unknown seq147 payload or hosted charge. TEST package/provider/clock; no hosted mapping or capacity claim.",
+        plannerShape: { confirmed: 146, commits: 37, approximateTreeBytes: 8698 },
+        history: [] as unknown[], passes: [] as unknown[], originalBounds: ARCHIVE_BOUNDS,
+      };
+      (context.task.meta as Record<string, unknown>)["roomAPlanningShape"] = observed;
+      const history = observed["history"] as unknown[], passes = observed["passes"] as unknown[];
+      const at = await life.wait(() => childScope.at());
+      const original = await life.wait(() => childScope.sealed());
+      expect(original.at(-1)!.entry.seq).toBeLessThan(146);
+      await life.wait(() => runInDurableObject(childScope.object, async instance => {
+        for (let seq = original.at(-1)!.entry.seq + 1; seq <= 146; seq++)
+          expect(await (instance as unknown as { checkpoint(): Promise<Checkpointed> }).checkpoint()).toMatchObject({ answer: "written" });
+      }));
+      const native = await life.wait(() => childScope.sealed());
+      expect(native.at(-1)!.entry.seq).toBe(146);
+      const repository = (await life.wait(() => D.item(0))).values["repository"] as unknown as DestinationRepository;
+      const archivePeer = new ArchiveArtifactsPeer(repository, life.now);
+      const identity = { at, format: "sha1" as const, repository: digestBytes(utf8(canonicalize(repository))) };
+      const replayScopes = discovery!.scopes.map(scope => scope.at);
+      let prior: Head | null = null, parent: string | null = null;
+      // 0..2, then thirty-six four-entry ranges: 147 actual Native rows,
+      // last position146, exactly37 commits. These are not invented bodies.
+      for (let pass = 0; pass < 37; pass++) {
+        const last = pass === 0 ? 2 : 2 + pass * 4;
+        const sealed = native.find(value => value.entry.seq === last)!;
+        expect(sealed).toBeDefined(); const through = { seq: last, hash: sealed.hash };
+        const result = await life.wait(() => runInDurableObject(childScope.object, async (_instance, state) => {
+          const sql = archiveSql(state), rows = new ArchiveRows(sql, at), budget = new ArchiveBudget();
+          try {
+          rows.target(repository, "sha1", budget);
+          const frontiers = new ArchiveFrontiers(sql, identity);
+          const base = parent === null ? null : await frontiers.readConfirmed({ ...identity, commit: parent, through: prior! }, budget);
+          const made = await planPublishedArchivePass(sql, { at, through, after: prior, bounds: PROPOSED_BOUNDS,
+            policies, format: "sha1", parent: parent === null ? null : { id: parent, source: archivePeer.source },
+            markedAt: timeOf(life.now()), fixtureSources, replayScopes }, budget);
+          if (!made.ok) return { ok: false as const, result: made, cost: budget.admitted() };
+          expect(made.archive.manifest.anchors).toEqual(JSON.parse(made.mark.anchorPublication!).anchors);
+          // TEST remote accepts genuine writer objects; no actual provider.
+          for (const object of made.archive.objects) archivePeer.data.set(object.id, object);
+          const manifest = archivePeer.data.get(idOf("blob", utf8(made.archive.manifestBytes)));
+          expect(manifest?.type).toBe("blob");
+          expect(JSON.parse(new TextDecoder().decode(manifest!.data)).anchors).toEqual(JSON.parse(made.mark.anchorPublication!).anchors);
+          const prepared = await frontiers.prepareFromSource(archivePeer.source, made.mark, base, budget);
+          const confirmed = sql.transaction(() => {
+            rows.markAttempt(made.mark, timeOf(life.now()), budget); frontiers.stage(prepared, budget);
+            frontiers.promote(prepared, budget); return rows.confirm(made.archive.commit, budget).confirmed!;
+          });
+          return { ok: true as const, confirmed, cost: budget.admitted(), objects: made.archive.objects.length };
+          } catch (error) {
+            return { ok: false as const, result: { error: error instanceof Error ? error.name + ": " + error.message : String(error) }, cost: budget.admitted() };
+          }
+        }));
+        history.push({ pass, from: prior === null ? 0 : prior.seq + 1, through, result });
+        expect(result.ok, canonicalize({ pass, result })).toBe(true); if (!result.ok) return;
+        expect(result.confirmed).toMatchObject({ through, layout: 2, anchorsPublished: true });
+        prior = through; parent = result.confirmed.commit;
+        archivePeer.refs.set(journalRef(at.scope), parent);
+      }
+      const reader = new Reader(archivePeer.source), tip = await reader.commit(objectId(parent!, "TEST installed history"));
+      const trees = [tip.tree], visited = new Set<string>(); let treeBytes = 0, files = 0;
+      for (const id of trees) {
+        if (visited.has(id)) continue; visited.add(id);
+        treeBytes += (await reader.object(id, "tree")).length;
+        for (const edge of await reader.tree(id)) { if (edge.kind === "tree") trees.push(edge.id); else files++; }
+      }
+      const commits: string[] = [];
+      for (let id: string | null = parent; id !== null;) {
+        commits.push(id); const commit = await reader.commit(objectId(id, "TEST history parent"));
+        expect(commit.parents.length).toBeLessThanOrEqual(1); id = commit.parents[0] ?? null;
+      }
+      expect(commits).toHaveLength(37); expect(prior!.seq).toBe(146);
+      observed["actualHistory"] = { through: prior, commits: commits.length, treeBytes, trees: visited.size, files,
+        treeBytesDifferenceFromPlanner: treeBytes - 8698, replayScopes: replayScopes.length,
+        qualification: "Measured genuine journal layout; no padding or assertion that tree bytes equal hosted8698." };
+      // A signed real Grow act, not a checkpoint standing in for a complex
+      // application input. Nothing asserts its effects/uses match hosted147.
+      const next = await life.wait(() => childScope.did(rita, "commission-zone", { fields: { label: "TEST next Room A-shaped zone", setpoint: 2400, band: 200 } }));
+      expect(next).toBe(147);
+      const candidate = (await life.wait(() => childScope.sealed())).find(row => row.entry.seq === next)!;
+      observed["candidate"] = { input: candidate.entry.input.type, bytes: utf8(canonicalize(candidate.entry)).length,
+        effects: candidate.entry.effects.length, uses: candidate.entry.uses.length, sends: candidate.entry.sends.length,
+        prepared: candidate.entry.prepared.length, qualification: "Actual signed fixture act; hosted input/effects/uses/retained sizes remain unknown." };
+      // A suffix makes exact remainder observable; none of it is pre-marked.
+      await life.wait(() => runInDurableObject(childScope.object, async instance => {
+        for (let n = 0; n < 5; n++) expect(await (instance as unknown as { checkpoint(): Promise<Checkpointed> }).checkpoint()).toMatchObject({ answer: "written" });
+      }));
+      const targetEntries = await life.wait(() => childScope.sealed()), targetLast = targetEntries.at(-1)!;
+      const target = { seq: targetLast.entry.seq, hash: targetLast.hash };
+      // The production target uses the existing native host-item RPC. Keep
+      // its actual allowlist/authority checks instead of scripting a target.
+      for (const scope of [D, G]) {
+        archiveHostWiring.set(scope.name, hostConfig);
+        life.cleanup(() => { archiveHostWiring.delete(scope.name); });
+        await life.wait(() => scope.restart());
+      }
+      const environment = { ARTIFACTS: archivePeer.binding,
+        ARTIFACTS_CONFIG: canonicalize({ registerScope: R.name, namespace: repository.namespace, host: "service.invalid", maxBytes: 8 * 1024 * 1024, credentialIdentity: "adapter-attempt" }),
+        GROW_ARCHIVE_CONFIG: canonicalize({ policy: "grow-room-archive-1", release: DEMO_RELEASE, directory: D.name, repositoryName: repository.name }) };
+      for (let pass = 0; prior!.seq < target.seq && pass < target.seq - 146; pass++) {
+        const wake = await life.wait(() => runInDurableObject(childScope.object, (_instance, state) => new ArchiveRows(archiveSql(state), at).wake()));
+        if (wake) { life.active(); net.clock.now = wake; }
+        const outcome = await life.wait(() => runInDurableObject(childScope.object, async (_instance, state) => {
+          const sql = archiveSql(state), store = new SqliteStore(sql), events: unknown[] = [];
+          const stack = () => (new Error("TEST budget observation").stack ?? "").split("\n").slice(1, 12).join("\n").slice(0, 3072);
+          const record = (event: unknown) => { if (events.length < 64) events.push(event); };
+          const budget = new class extends ArchiveBudget {
+            override canSpend(cost: Partial<ArchiveCost>): boolean {
+              const fits = super.canSpend(cost);
+              if (!fits) { const used = this.admitted(); const shortfall = Object.fromEntries((Object.keys(ARCHIVE_BOUNDS) as (keyof ArchiveCost)[])
+                .map(key => [key, Math.max(0, used[key] + (cost[key] ?? 0) - ARCHIVE_BOUNDS[key])]));
+                record({ kind: "refused-fit", cost: { ...cost }, used, shortfall, stack: stack() }); }
+              return fits;
+            }
+            override spend(cost: Partial<ArchiveCost>): void {
+              const before = this.admitted(); try { super.spend(cost); }
+              catch (error) { record({ kind: "refused-debit", cost: { ...cost }, before, after: this.admitted(),
+                error: error instanceof Error ? error.name + ": " + error.message : String(error), stack: stack() }); throw error; }
+            }
+            override lookahead<T>(reserve: Partial<ArchiveCost>, read: () => T) {
+              const result = super.lookahead(reserve, read); if (result.kind === "limited") record({ kind: "limited-lookahead", reserve: { ...reserve }, used: this.admitted(), stack: stack() }); return result;
+            }
+            override async lookaheadAsync<T>(reserve: Partial<ArchiveCost>, read: () => Promise<T>) {
+              const result = await super.lookaheadAsync(reserve, read); if (result.kind === "limited") record({ kind: "limited-async-lookahead", reserve: { ...reserve }, used: this.admitted(), stack: stack() }); return result;
+            }
+          }();
+          let parentRequests = 0;
+          const fetch = (request: Request) => {
+            if (request.url.endsWith("/git-upload-pack") || request.url.endsWith("service=git-upload-pack")) parentRequests++;
+            return archivePeer.fetch(request);
+          };
+          const options = growArchiveDriver(archiveGiven(store), sql, env.PLATFORM, environment, policies, PROPOSED_BOUNDS, fetch);
+          if (!options) throw Error("Exact old-family Grow archive wiring required");
+          const result = await new ArchiveDriver({ ...options, sql, current: () => ({ at, head: target }),
+            clock: () => timeOf(life.now()), budget: () => budget }).run();
+          const row = new ArchiveRows(sql, at).load();
+          return { result, cost: budget.admitted(), events, parentRequests, confirmed: row?.confirmed, pending: row?.pending,
+            stopped: row?.stopped, remainder: targetEntries.filter(entry => entry.entry.seq > (row?.confirmed?.through.seq ?? -1)).map(entry => ({ seq: entry.entry.seq, hash: entry.hash })) };
+        }));
+        passes.push({ pass, from: prior!.seq + 1, target, outcome });
+        expect(outcome.result, canonicalize(observed)).toMatchObject({ state: "confirmed" });
+        expect(outcome.pending).toBeNull(); expect(outcome.stopped).toBeNull(); expect(outcome.parentRequests).toBe(0);
+        expect(outcome.confirmed).toMatchObject({ layout: 2, anchorsPublished: true });
+        const receipt = outcome.confirmed!;
+        expect(receipt.through.seq).toBeGreaterThan(prior!.seq); expect(receipt.through.seq).toBeLessThanOrEqual(target.seq);
+        expect(receipt.through.hash).toBe(targetEntries.find(entry => entry.entry.seq === receipt.through.seq)!.hash);
+        expect((await reader.commit(objectId(receipt.commit, "TEST appended receipt"))).parents).toEqual([parent]);
+        expect(outcome.remainder.map(entry => entry.seq)).toEqual(Array.from({ length: target.seq - receipt.through.seq }, (_, n) => receipt.through.seq + n + 1));
+        for (const key of Object.keys(ARCHIVE_BOUNDS) as (keyof ArchiveCost)[]) expect(outcome.cost[key]).toBeLessThanOrEqual(ARCHIVE_BOUNDS[key]);
+        prior = receipt.through; parent = receipt.commit;
+      }
+      expect(prior).toEqual(target);
+      expect((await life.wait(() => childScope.sealed())).map(row => row.hash)).toEqual(targetEntries.map(row => row.hash));
+      return;
     }
     const diagnosticArchives = new Map<ScopeId, JournalArchive | JournalPassArchive>();
     const passAnchors = new Map<ScopeId, readonly FactRef[]>();
