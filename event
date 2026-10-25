@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9134cb8bfe21cc1c9676d71c03e1c94404e005fc","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-25-codebase-techdebt-review.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9d1cf06523222eb8c689feee9d14377603a763bc","text":"Merge retired a covered predecessor; the successor is at packages/cli/test/demo-config.test.ts."}
