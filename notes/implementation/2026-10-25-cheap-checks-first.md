@@ -125,8 +125,8 @@ Ordinary gate `82795` remains failed. The isolated replay repair and accepted
 follow-up are historical evidence for `801129fc`. They do not validate a
 later change to the reporter. The compatibility repair below changes
 tooling source, so the isolated test-file exception no longer covers the
-new candidate. Fresh owning checks on Node 22 and Node 26, then a fresh
-ordinary gate, remain pending. Exact-head checker review and landing also
+new candidate. Fresh owning checks on Node 22 and Node 26 passed as recorded
+below. A fresh ordinary gate remains pending. Exact-head checker review and landing also
 remain pending. This tooling change requires no deployment.
 
 These timings were recorded on an Apple M5 Max with 18 logical processors.
@@ -135,7 +135,7 @@ was uncontrolled, and the checkout used privately copied dependencies.
 A later load sample cannot describe those earlier runs. The measurements
 are local observations, not a portable performance benchmark.
 
-## Node 22 compatibility blocker
+## Node 22 compatibility
 
 The earlier checks used pinned Node 26.12.1. The package also permits Node
 22.23.4, whose public events lack the reporter's modern case-identity fields.
@@ -149,10 +149,21 @@ The measured Node command used 0.90 seconds wall and 0.16 seconds CPU.
 The Python wrapper's CPU was not measured, so those figures are not a
 complete wrapper cost or delivery total.
 
-Root is reviewing a repair in `scripts/test-summary.mjs`, its owning test
-and `docs/testing.md`, with the declared engines unchanged. Missing modern
+The reviewed repair in `scripts/test-summary.mjs`, its owning test and
+`docs/testing.md` keeps the declared engines unchanged. Missing modern
 identities remain unknown and excluded from case ranking. Neither a
 legacy type label nor a raw ordinal establishes a case identity. Actual
 end-of-stream consumption is distinct from a framework summary or success:
 known failed terminals must still prevent a successful reporting outcome.
-The final source, owning checks and new gate outcomes remain unearned.
+Valid empty-string skip and TODO reasons retain their directive states.
+
+At `07822ce1`, tree `55c07722`, the whole three-case reporter owning file
+passed on actual Node 22.23.4 and Node 26.12.1, with no failures, skips or
+cancellations. The recorded source, environment and binary pins agree
+before and after each command. The checks ran independently in parallel.
+Their complete Python-owner costs were 0.55 seconds wall and 0.54 seconds
+CPU for Node 22, and 0.68 seconds wall and 0.68 seconds CPU for Node 26.
+The nested Node command costs are not added again; the two wall times are
+not one elapsed run. These are local observations with uncontrolled load
+and caches, not a performance comparison or a full supported-version matrix.
+The fresh ordinary gate, exact-head review and landing remain pending.
