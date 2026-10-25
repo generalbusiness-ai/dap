@@ -24,7 +24,7 @@
 import { ascii } from "./ascii.ts";
 import { hex } from "@generalbusiness/dap-bytes";
 import { sha1 } from "@noble/hashes/legacy.js";
-import { GitRefusal, objectId, refName, type GitReason, type ObjectId } from "./names.ts";
+import { GitRefusal, objectId, refName, type GitReason, type ObjectId } from "./pure-names.ts";
 
 export type ObjectType = "commit" | "tree" | "blob" | "tag";
 const TYPES: readonly string[] = ["commit", "tree", "blob", "tag"];
