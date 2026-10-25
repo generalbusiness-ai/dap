@@ -721,9 +721,10 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
               const result = await super.lookaheadAsync(reserve, read); if (result.kind === "limited") record({ kind: "limited-async-lookahead", reserve: { ...reserve }, used: this.admitted(), stack: stack() }); return result;
             }
           }();
-          let parentRequests = 0;
+          let parentObjectRequests = 0, refAdvertisements = 0;
           const fetch = (request: Request) => {
-            if (request.url.endsWith("/git-upload-pack") || request.url.endsWith("service=git-upload-pack")) parentRequests++;
+            if (request.method === "POST" && request.url.endsWith("/git-upload-pack")) parentObjectRequests++;
+            if (request.method === "GET" && request.url.endsWith("/info/refs?service=git-upload-pack")) refAdvertisements++;
             return archivePeer.fetch(request);
           };
           const options = growArchiveDriver(archiveGiven(store), sql, env.PLATFORM, environment, policies, PROPOSED_BOUNDS, fetch);
@@ -731,12 +732,14 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
           const result = await new ArchiveDriver({ ...options, bounds: PROPOSED_BOUNDS, sql, current: () => ({ at, head: target }),
             clock: () => timeOf(life.now()), budget: () => budget }).run();
           const row = new ArchiveRows(sql, at).load();
-          return { result, cost: budget.admitted(), events, parentRequests, confirmed: row?.confirmed, pending: row?.pending,
+          return { result, cost: budget.admitted(), events, parentObjectRequests, refAdvertisements, confirmed: row?.confirmed, pending: row?.pending,
             stopped: row?.stopped, remainder: targetEntries.filter(entry => entry.entry.seq > (row?.confirmed?.through.seq ?? -1)).map(entry => ({ seq: entry.entry.seq, hash: entry.hash })) };
         }));
         passes.push({ pass, from: prior!.seq + 1, target, outcome });
         expect(outcome.result, canonicalize(observed)).toMatchObject({ state: "confirmed" });
-        expect(outcome.pending).toBeNull(); expect(outcome.stopped).toBeNull(); expect(outcome.parentRequests).toBe(0);
+        expect(outcome.pending).toBeNull(); expect(outcome.stopped).toBeNull(); expect(outcome.parentObjectRequests).toBe(0);
+        // Incremental send verifies its result, then the driver independently reads the ref before confirming.
+        expect(outcome.refAdvertisements).toBe(2);
         expect(outcome.confirmed).toMatchObject({ layout: 2, anchorsPublished: true });
         const receipt = outcome.confirmed!;
         expect(receipt.through.seq).toBeGreaterThan(prior!.seq); expect(receipt.through.seq).toBeLessThanOrEqual(target.seq);
