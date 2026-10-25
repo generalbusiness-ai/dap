@@ -1,1 +1,1 @@
-{"kind":"promise","text":"I will clarify the document/failing-file continuation rule, preserving the distinction between a failed gate and successful follow-up and the unchanged-production condition, in one reviewed documentation-only head."}
+{"kind":"artifact","text":"Merge published the current artifact at apps/room/page/test/retained-editor.scope.test.ts","body":{"commit":"c8a3fb2488744e4decca61e1d0b147546335f953","path":"apps/room/page/test/retained-editor.scope.test.ts"}}
