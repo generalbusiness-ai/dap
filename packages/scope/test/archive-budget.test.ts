@@ -1,5 +1,6 @@
 import { expect, test } from "vitest";
 import { ArchiveBudget, ArchiveStopped, ARCHIVE_BOUNDS } from "../src/archive-budget.ts";
+import { admitArchiveMigration } from "../src/archive-bootstrap-cost.ts";
 
 test("one pass admits exact cumulative limits, refuses the next unit atomically and never resets after failure", () => {
   const budget = new ArchiveBudget({}, () => 0);
@@ -8,6 +9,18 @@ test("one pass admits exact cumulative limits, refuses the next unit atomically 
   expect(() => budget.spend({ attempts: 1 })).toThrow(ArchiveStopped);
   expect(() => budget.spend({})).toThrow(ArchiveStopped);
   expect(budget.admitted()).toEqual(ARCHIVE_BOUNDS);
+  const refused = new ArchiveBudget({ nodes: 2, metadata: 3 }, () => 0);
+  try { refused.spend({ nodes: 3, metadata: 5 }); expect.fail("The actual debit must refuse."); }
+  catch (error) {
+    expect(error).toBeInstanceOf(ArchiveStopped);
+    expect((error as ArchiveStopped).capacityRefusal).toEqual({ kind: "debit",
+      requested: { entries: 0, attempts: 0, nodes: 3, calls: 0, metadata: 5, inputWork: 0 },
+      reserved: { entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0, inputWork: 0 },
+      used: { entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0, inputWork: 0 },
+      limit: { ...ARCHIVE_BOUNDS, nodes: 2, metadata: 3 },
+      shortfall: { entries: 0, attempts: 0, nodes: 1, calls: 0, metadata: 2, inputWork: 0 } });
+  }
+  expect(refused.admitted()).toEqual({ entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0, inputWork: 0 });
   for (const key of Object.keys(ARCHIVE_BOUNDS) as (keyof typeof ARCHIVE_BOUNDS)[]) {
     const one = new ArchiveBudget({}, () => 0);
     expect(() => one.spend({ [key]: ARCHIVE_BOUNDS[key] + 1 })).toThrow(ArchiveStopped);
@@ -24,6 +37,22 @@ test("bad costs, unknown fields, unsafe arithmetic and raised limits fail closed
   expect(() => new ArchiveBudget({ calls: ARCHIVE_BOUNDS.calls + 1 })).toThrow(ArchiveStopped);
   expect(() => new ArchiveBudget({ extra: 1 } as never)).toThrow(ArchiveStopped);
   expect(() => new ArchiveBudget({}, () => 0).spend({ extra: 1 } as never)).toThrow(ArchiveStopped);
+  // Generic/malformed limit is not evidence of a particular budget axis.
+  for (const bad of [{ extra: 1 }, { nodes: -1 }]) {
+    try { new ArchiveBudget({}, () => 0).spend(bad as never); expect.fail("Bad cost must refuse."); }
+    catch (error) { expect(error).toMatchObject({ reason: "limit", capacityRefusal: null }); }
+  }
+  const generic = new ArchiveBudget({}, () => 0);
+  expect(() => generic.stop("limit")).toThrow(expect.objectContaining({ capacityRefusal: null }));
+  const migration = new ArchiveBudget({ calls: 0 }, () => 0), refusals: unknown[] = [];
+  expect(admitArchiveMigration(8 * 1024 * 1024, migration, {}, 146, refusal => refusals.push(refusal))).toBe(false);
+  expect(refusals).toMatchObject([{ kind: "migration-quote", shortfall: { calls: expect.any(Number) } }]);
+  const snapshot = refusals[0] as { shortfall: { calls: number } };
+  expect(snapshot.shortfall.calls).toBeGreaterThan(0);
+  refusals.length = 0;
+  // A too-small transport maximum is a hard shape refusal, not this quote.
+  expect(admitArchiveMigration(1, migration, {}, 146, refusal => refusals.push(refusal))).toBe(false);
+  expect(refusals).toEqual([]);
 });
 
 test("native reservations include returned metadata and input work before SQL, and a terminal failure makes no further calls", () => {
@@ -40,7 +69,8 @@ test("native reservations include returned metadata and input work before SQL, a
 test("metadata lookahead keeps completed debits and refuses before SQL would consume the selected prefix's finish allowance", () => {
   // A counted SQL port, not a SQLite/privacy witness: the invariant is the
   // budget's before-call debit and the unchanged final cumulative limit.
-  const budget = new ArchiveBudget({ calls: 3, metadata: 12, inputWork: 30 }, () => 0);
+  let clockReads = 0;
+  const budget = new ArchiveBudget({ calls: 3, metadata: 12, inputWork: 30 }, () => { clockReads++; return 0; });
   const reserve = { calls: 1, metadata: 8, inputWork: 20 }; let calls = 0;
   const sql = budget.native({ exec() { calls++; return { toArray: () => [{ n: 1 }] }; } }, () => ({ metadata: 3, inputWork: 2 }));
   const limited = budget.lookahead(reserve, () => {
@@ -48,9 +78,17 @@ test("metadata lookahead keeps completed debits and refuses before SQL would con
     sql.exec("SELECT 2"); // This would take metadata needed by the finish.
     return "must not finish lookahead";
   });
-  expect(limited).toEqual({ kind: "limited" });
+  expect(limited).toEqual({ kind: "limited", refusal: { kind: "debit",
+    requested: { entries: 0, attempts: 0, nodes: 0, calls: 1, metadata: 3, inputWork: 5 },
+    reserved: { entries: 0, attempts: 0, nodes: 0, calls: 1, metadata: 8, inputWork: 20 },
+    used: { entries: 0, attempts: 0, nodes: 0, calls: 1, metadata: 3, inputWork: 5 },
+    limit: { ...ARCHIVE_BOUNDS, calls: 3, metadata: 12, inputWork: 30 },
+    shortfall: { entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 2, inputWork: 0 } } });
   expect(calls).toBe(1);
   expect(budget.admitted()).toMatchObject({ calls: 1, metadata: 3, inputWork: 5 });
+  const beforeObservation = { clockReads, spent: budget.admitted() };
+  expect(budget.capacityRefusal({ metadata: 10 }, "finish-quote")).toMatchObject({ kind: "finish-quote", shortfall: { metadata: 1 } });
+  expect({ clockReads, spent: budget.admitted() }).toEqual(beforeObservation);
   // The forecast is a copied value; changing the caller's object during a
   // later attempt cannot release the protected allowance.
   const second = budget.lookahead(reserve, () => {
@@ -60,9 +98,10 @@ test("metadata lookahead keeps completed debits and refuses before SQL would con
     try { sql.exec("SELECT 3"); } catch { /* Simulate that boundary. */ }
     return "must not escape the pending shortage";
   });
-  expect(second).toEqual({ kind: "limited" });
+  expect(second).toEqual(limited); // Copied reserve and first refused debit survive the caught exception.
   expect(calls).toBe(1);
-  expect(budget.lookahead({ metadata: 10 }, () => "unreachable")).toEqual({ kind: "limited" });
+  expect(budget.lookahead({ metadata: 10 }, () => "unreachable")).toMatchObject({ kind: "limited",
+    refusal: { kind: "lookahead-reserve", requested: { metadata: 10 }, reserved: { metadata: 0 }, used: { metadata: 3 }, shortfall: { metadata: 1 } } });
   expect(budget.lookahead({ inputWork: 20 }, () => 7)).toEqual({ kind: "read", value: 7 });
   budget.spend({ calls: 2, metadata: 9, inputWork: 25 });
   expect(budget.admitted()).toMatchObject({ calls: 3, metadata: 12, inputWork: 30 });
@@ -85,7 +124,8 @@ test("structured asynchronous metadata lookahead keeps the finish reserve across
   expect(calls).toBe(1);
   reserve.metadata = 0; // The guard owns its original copied forecast.
   release();
-  expect(await pending).toEqual({ kind: "limited" });
+  expect(await pending).toMatchObject({ kind: "limited", refusal: { kind: "debit",
+    reserved: { metadata: 8 }, used: { metadata: 3 }, shortfall: { metadata: 2 } } });
   expect(calls).toBe(1);
   expect(budget.admitted()).toMatchObject({ calls: 1, metadata: 3, inputWork: 5 });
   budget.spend({ calls: 2, metadata: 9, inputWork: 25 });

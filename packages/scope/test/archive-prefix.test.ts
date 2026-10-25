@@ -53,7 +53,8 @@ test("native scalar lookahead stops before a whole entry would consume the owner
     if (second.kind !== "position") return expect.fail("The second native position must fit.");
     const used = budget.admitted(), reserve = { inputWork: ARCHIVE_BOUNDS.inputWork - used.inputWork - ARCHIVE_POSITION_METADATA_BYTES };
     const next = window.next(reserve), after = budget.admitted();
-    expect(next).toEqual({ kind: "limited" });
+    expect(next).toMatchObject({ kind: "limited", refusal: { kind: "window-entry",
+      reserved: { inputWork: reserve.inputWork }, used: { inputWork: after.inputWork } } });
     const prefix = window.prefix({ seq: second.position.seq, hash: second.position.hash });
     const finalWorkFits = budget.canSpend(reserve);
     budget.spend(reserve);

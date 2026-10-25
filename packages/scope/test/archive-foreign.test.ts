@@ -429,7 +429,8 @@ test("anchor forecast counts nested necessary keys without charging irrelevant b
           new ArchiveBudget({ inputWork: work - 1 }))).toThrow(expect.objectContaining({ reason: "limit" }));
         const protectedBudget = new ArchiveBudget();
         expect(protectedBudget.lookahead({ inputWork: ARCHIVE_BOUNDS.inputWork - work + 1 }, () =>
-          archiveEntryAnchorCandidates(forbidden, position, PROPOSED_BOUNDS.entryBytes, protectedBudget))).toEqual({ kind: "limited" });
+          archiveEntryAnchorCandidates(forbidden, position, PROPOSED_BOUNDS.entryBytes, protectedBudget))).toMatchObject({ kind: "limited",
+            refusal: { kind: "debit", shortfall: { inputWork: 1 } } });
         expect(forbiddenCalls).toBe(0); expect(protectedBudget.admitted().inputWork).toBe(0);
         // A refused later read neither consumes its debit nor replaces any
         // earlier prefix count. The same original budget can still finish.

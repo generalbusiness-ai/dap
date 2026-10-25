@@ -9,11 +9,20 @@ export type ArchiveCost = { -readonly [K in keyof typeof ARCHIVE_BOUNDS]: number
 const keys = ["entries", "attempts", "nodes", "calls", "metadata", "inputWork"] as const;
 export type ArchiveStopReason = "limit" | "timeout" | "unavailable";
 export class ArchiveStopped extends Error {
-  constructor(readonly reason: ArchiveStopReason) { super(`archive-${reason}`); }
+  constructor(readonly reason: ArchiveStopReason, readonly capacityRefusal: ArchiveCapacityCheck | null = null) { super(`archive-${reason}`); }
 }
 const zero = (): ArchiveCost => ({ entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0, inputWork: 0 });
+export interface ArchiveCapacityCheck {
+  readonly kind: "debit" | "lookahead-reserve" | "window-metadata" | "window-entry" | "finish-quote" | "migration-quote";
+  readonly requested: Readonly<ArchiveCost>; readonly reserved: Readonly<ArchiveCost>;
+  readonly used: Readonly<ArchiveCost>; readonly limit: Readonly<ArchiveCost>; readonly shortfall: Readonly<ArchiveCost>;
+}
+export interface ArchiveCapacityRefusal extends ArchiveCapacityCheck {
+  readonly site: "prepare-sources" | "scout-open" | "scout-next" | "shape-inventory" | "prepare-finish" | "finish-affordability" | "frontier-capture" | "migration-affordability" | "plan-debit" | "pass-debit";
+}
+export interface ArchiveCapacityLimited { readonly kind: "limited"; readonly refusal: ArchiveCapacityCheck | null }
 class ArchiveLookaheadLimited extends Error {}
-type Lookahead<T> = { readonly kind: "limited" } | { readonly kind: "read"; readonly value: T };
+type Lookahead<T> = ArchiveCapacityLimited | { readonly kind: "read"; readonly value: T };
 
 /** Limits may only decrease in trusted tests/configuration. There is no
  * reset, top-up, per-entry allowance or uncharged cache path. */
@@ -25,6 +34,7 @@ export class ArchiveBudget {
   #stopped: ArchiveStopReason | null = null;
   #reserve: ArchiveCost | null = null;
   #lookaheadBlocked = false;
+  #lookaheadRefusal: ArchiveCapacityCheck | null = null;
   #asyncLookahead = false;
   constructor(limits: Partial<ArchiveCost> = {}, readonly now: () => number = () => performance.now(), milliseconds = ARCHIVE_SECONDS * 1000) {
     if (!natural(milliseconds) || milliseconds > ARCHIVE_SECONDS * 1000 || Object.keys(limits).some(key => !(keys as readonly string[]).includes(key))) throw new ArchiveStopped("limit");
@@ -34,7 +44,10 @@ export class ArchiveBudget {
     if (!Number.isFinite(this.#last)) throw new ArchiveStopped("unavailable");
     this.#until = this.#last + milliseconds;
   }
-  stop(reason: ArchiveStopReason): never { this.#stopped ??= reason; throw new ArchiveStopped(this.#stopped); }
+  stop(reason: ArchiveStopReason, refusal: ArchiveCapacityCheck | null = null): never {
+    this.#stopped ??= reason;
+    throw new ArchiveStopped(this.#stopped, this.#stopped === reason ? refusal : null);
+  }
   check(): void {
     if (this.#stopped) throw new ArchiveStopped(this.#stopped);
     const time = this.now();
@@ -54,23 +67,39 @@ export class ArchiveBudget {
     }
     return keys.every(key => (cost[key] ?? 0) <= this.#limits[key] - this.#used[key]);
   }
+  /** Refusal-only observation of a validated affordability decision. No clock,
+   * debit or admission; callers attach it to that operation's result, never
+   * treat an earlier exploratory refusal as the pass's terminal cause. */
+  capacityRefusal(cost: Partial<ArchiveCost>, kind: ArchiveCapacityCheck["kind"], reserve: Partial<ArchiveCost> = {}): ArchiveCapacityCheck | null {
+    if ([cost, reserve].some(value => Object.keys(value).some(key => !(keys as readonly string[]).includes(key)))
+      || keys.some(key => !natural(cost[key] ?? 0) || !natural(reserve[key] ?? 0))) return null;
+    const shortfall = zero();
+    for (const key of keys) {
+      shortfall[key] = Math.max(0, (cost[key] ?? 0) + (reserve[key] ?? 0) - (this.#limits[key] - this.#used[key]));
+      if (!natural(shortfall[key])) return null;
+    }
+    if (!keys.some(key => shortfall[key] > 0)) return null;
+    return { kind, requested: { ...zero(), ...cost }, reserved: { ...zero(), ...reserve },
+      used: { ...this.#used }, limit: { ...this.#limits }, shortfall };
+  }
   spend(cost: Partial<ArchiveCost>): void {
     const fits = this.canSpend(cost);
     if (this.#reserve !== null) {
       if (!fits || keys.some(key => (cost[key] ?? 0) + this.#reserve![key] > this.#limits[key] - this.#used[key])) {
+        this.#lookaheadRefusal = this.capacityRefusal(cost, "debit", this.#reserve);
         this.#lookaheadBlocked = true;
         throw new ArchiveLookaheadLimited();
       }
-    } else if (!fits) this.stop("limit");
+    } else if (!fits) this.stop("limit", this.capacityRefusal(cost, "debit"));
     for (const key of keys) this.#used[key] += cost[key] ?? 0;
   }
-  #beginLookahead(reserve: Partial<ArchiveCost>, asynchronous: boolean): boolean {
+  #beginLookahead(reserve: Partial<ArchiveCost>, asynchronous: boolean): ArchiveCapacityLimited | null {
     this.check();
     if (this.#reserve !== null) return this.stop("unavailable");
-    if (!this.canSpend(reserve)) return false;
+    if (!this.canSpend(reserve)) return { kind: "limited", refusal: this.capacityRefusal(reserve, "lookahead-reserve") };
     this.#reserve = { ...zero(), ...reserve };
     this.#asyncLookahead = asynchronous;
-    return true;
+    return null;
   }
   #limitedLookahead(error: unknown): boolean {
     if (!(error instanceof ArchiveLookaheadLimited) && !this.#lookaheadBlocked) return false;
@@ -80,20 +109,21 @@ export class ArchiveBudget {
     catch (pending) { if (!(pending instanceof ArchiveLookaheadLimited)) throw pending; }
     return true;
   }
-  #endLookahead(): void { this.#reserve = null; this.#lookaheadBlocked = false; this.#asyncLookahead = false; }
+  #endLookahead(): void { this.#reserve = null; this.#lookaheadBlocked = false; this.#lookaheadRefusal = null; this.#asyncLookahead = false; }
   /** Protect an already selected prefix's finish forecast while doing only
    * synchronous metadata lookahead. Every completed debit stays spent.
    * Refusal happens before the next debit/SQL and leaves this same budget
    * usable for finishing. This creates no allowance or admission rights. */
   lookahead<T>(reserve: Partial<ArchiveCost>, read: () => T): Lookahead<T> {
-    if (!this.#beginLookahead(reserve, false)) return { kind: "limited" };
+    const limited = this.#beginLookahead(reserve, false);
+    if (limited) return limited;
     try {
       const value = read();
       if (value !== null && (typeof value === "object" || typeof value === "function") && "then" in value) return this.stop("unavailable");
       this.check();
       return { kind: "read", value };
     } catch (error) {
-      if (this.#limitedLookahead(error)) return { kind: "limited" };
+      if (this.#limitedLookahead(error)) return { kind: "limited", refusal: this.#lookaheadRefusal };
       throw error;
     } finally { this.#endLookahead(); }
   }
@@ -102,7 +132,8 @@ export class ArchiveBudget {
    * may not detach tasks. This is no cancellation lease or I/O admission.
    * Every awaited read shares the original allowance and deadline. */
   lookaheadAsync<T>(reserve: Partial<ArchiveCost>, read: () => Promise<T>): Promise<Lookahead<T>> {
-    if (!this.#beginLookahead(reserve, true)) return Promise.resolve({ kind: "limited" });
+    const limited = this.#beginLookahead(reserve, true);
+    if (limited) return Promise.resolve(limited);
     return this.#readLookaheadAsync(read);
   }
   async #readLookaheadAsync<T>(read: () => Promise<T>): Promise<Lookahead<T>> {
@@ -111,7 +142,7 @@ export class ArchiveBudget {
       this.check();
       return { kind: "read", value };
     } catch (error) {
-      if (this.#limitedLookahead(error)) return { kind: "limited" };
+      if (this.#limitedLookahead(error)) return { kind: "limited", refusal: this.#lookaheadRefusal };
       throw error;
     } finally { this.#endLookahead(); }
   }

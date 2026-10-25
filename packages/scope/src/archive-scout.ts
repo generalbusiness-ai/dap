@@ -3,7 +3,7 @@
  * Every selected prefix still requires fresh whole-prefix inventory. */
 import type { Bounds, Digest, FactRef, Head, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isHead, natural } from "@generalbusiness/dap-bytes";
-import { type ArchiveBudget, type ArchiveCost } from "./archive-budget.ts";
+import { type ArchiveBudget, type ArchiveCost, type ArchiveCapacityLimited } from "./archive-budget.ts";
 import { ArchiveDeclarations } from "./archive-declarations.ts";
 import { ArchiveDeclarationPlan } from "./archive-declaration-plan.ts";
 import { recordArchiveCurrentDeclarationClosure, recordArchivePotentialDeclarationClosure, type ArchiveDeclarationFootprint } from "./archive-declaration-scout.ts";
@@ -42,7 +42,7 @@ interface Row {
   readonly anchorCandidates: number;
   readonly work: Readonly<ArchiveCost>; readonly uses: number; readonly sources: number; readonly sourceWork: Readonly<ArchiveCost>;
 }
-export type ArchiveScoutStep = { readonly kind: "end" | "limited" }
+export type ArchiveScoutStep = { readonly kind: "end" } | ArchiveCapacityLimited
   | { readonly kind: "position"; readonly position: ArchivePrivacyPosition;
       readonly plan: ArchiveLocalReferencePlan; readonly measurements: readonly ArchiveReferenceMeasurement[] };
 export interface ArchiveScoutFrame {
