@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/2026-10-25-codebase-techdebt-review.md","body":{"commit":"c8c968431fbab3b8638b226d502061f679383f79","path":"notes/2026-10-25-codebase-techdebt-review.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7d6a7425cd70265633b151e7d736745208a9612e","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-25-codebase-techdebt-review.md."}
