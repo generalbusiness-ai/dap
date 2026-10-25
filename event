@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/reports/2026-10-24-sprint-report.md","body":{"commit":"d5e55530fc2ee3e4c8f6791108635d1d2639e49e","path":"notes/reports/2026-10-24-sprint-report.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:30236f9ec414d0ae3b3cc082069bc9468cab9901","text":"Merge retired a covered predecessor; the successor is at notes/reports/2026-10-24-sprint-report.md."}
