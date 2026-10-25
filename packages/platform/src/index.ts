@@ -43,7 +43,7 @@ import { RULES } from "./rules.ts";
 import { rulesScope, rulesScope4 } from "./rules-scope.ts";
 
 export { inbox, membership, membership5, register, directory, directory2, directory7, destination, destination2, destination4, destination5, destination6, destinationRules4, destinationRules5, destinationRules6 };
-export { isOf, isStandingDestination, pinnedBy, pinnedOf, versionOf } from "./versions.ts";
+export { isOf, isStandingDestination, pinnedBy, pinnedOf, usesFilePublicationProtocol, usesStagedPublicationProtocol, versionOf } from "./versions.ts";
 export { ACTIONS_MOST, FIRST_ACTIONS, FIRST_ACTIONS_OF, MEMBERSHIP, MEMBERSHIP_1, NO_MEMBER, ROLE_LISTS, ROLE_TABLE, ROLE_TABLE_OF, actionsIn, isActions, isHandle, standingOf, type Role } from "./membership.ts";
 export { CREATION_ATTEMPTS, DIRECTORY_OF, REGISTER, REPOSITORY, directoryIdOf, directorySeed, registerRules, repositoryName } from "./register.ts";
 export { DEFINITION_DOMAIN, DIRECTORY, IMPORT_ATTEMPTS, SEEN, SIBLINGS_OF, directoryMembership, directoryRules, directoryRulesScope } from "./directory.ts";
