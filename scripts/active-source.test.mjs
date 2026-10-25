@@ -104,9 +104,9 @@ test("rules tree proofs use only the exact pure Git parser boundary", () => {
     for (const { value } of moduleSpecifierSpans(text(file))) if (/dap-git|(?:^|\/)git\//.test(value)) assert.equal(allowed(file, value), true, `${file}: ${value}`);
   }
   const finite = new Map([
-    ["packages/git/src/tree-proof.ts", ["./reader.ts", "./names.ts"]],
-    ["packages/git/src/reader.ts", ["./ascii.ts", "@generalbusiness/dap-bytes", "@noble/hashes/legacy.js", "./names.ts"]],
-    ["packages/git/src/names.ts", []],
+    ["packages/git/src/tree-proof.ts", ["./reader.ts", "./pure-names.ts"]],
+    ["packages/git/src/reader.ts", ["./ascii.ts", "@generalbusiness/dap-bytes", "@noble/hashes/legacy.js", "./pure-names.ts"]],
+    ["packages/git/src/pure-names.ts", []],
     ["packages/git/src/ascii.ts", []],
   ]);
   for (const [file, expected] of finite) assert.deepEqual([...new Set(moduleSpecifierSpans(text(file)).map(r => r.value))].sort(), [...expected].sort(), file);
