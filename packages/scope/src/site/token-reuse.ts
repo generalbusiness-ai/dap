@@ -4,7 +4,7 @@
 import { canonicalize, isScopeId, timeMs, utf8 } from "@generalbusiness/dap-bytes";
 import { refName } from "@generalbusiness/dap-git";
 import { READ_TTL } from "../artifacts-host.ts";
-import { ARTIFACTS_HOST, artifactsReadiness, type ArtifactsBindings } from "../artifacts-wiring.ts";
+import { ARTIFACTS_HOST, type ArtifactsReadiness } from "../artifacts-wiring.ts";
 import type { DestinationRepository } from "../destination-host.ts";
 import type { Sql, SqlValue } from "../sqlite.ts";
 
@@ -36,13 +36,13 @@ const nowIs = (now: number): boolean => Number.isSafeInteger(now) && now >= 0 &&
  * bounded by the 256 retained keys. All transitions run in one transaction. */
 export class SiteTokenReuse {
   readonly #sql: Sql;
-  readonly #settings: () => ArtifactsBindings;
+  readonly #readiness: () => ArtifactsReadiness;
   readonly #clock: () => number;
   readonly #schedule: () => Promise<void>;
   readonly #flights = new Map<string, Flight>();
   #waiters = 0;
-  constructor(sql: Sql, settings: () => ArtifactsBindings, clock: () => number, schedule: () => Promise<void>) {
-    this.#sql = sql; this.#settings = settings; this.#clock = clock; this.#schedule = schedule;
+  constructor(sql: Sql, readiness: () => ArtifactsReadiness, clock: () => number, schedule: () => Promise<void>) {
+    this.#sql = sql; this.#readiness = readiness; this.#clock = clock; this.#schedule = schedule;
   }
   #exists(): boolean { return this.#sql.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='private_site_token'").toArray().length === 1; }
   maintain(now: number): void {
@@ -63,7 +63,7 @@ export class SiteTokenReuse {
       && typeof row["plaintext"] === "string" ? { ok: true, plaintext: row["plaintext"], ends: row["ends"] } : PENDING;
   }
   async acquire(request: SiteTokenRequest): Promise<SiteTokenAnswer> {
-    const ready = artifactsReadiness(this.#settings()), supplied = record(request), repository = record(supplied?.["repository"]);
+    const ready = this.#readiness(), supplied = record(request), repository = record(supplied?.["repository"]);
     if (ready.state !== "wired" || !supplied || Object.keys(supplied).length !== 4 || !repository || Object.keys(repository).length !== 4
       || supplied["register"] !== ready.config.registerScope || !isScopeId(supplied["register"])
       || supplied["configuration"] !== canonicalize(ready.config)
@@ -92,7 +92,7 @@ export class SiteTokenReuse {
     if (!selected) return FULL;
     const generation = selected.row["generation"] as string;
     const current = () => {
-      const actual = artifactsReadiness(this.#settings());
+      const actual = this.#readiness();
       return actual.state === "wired" && actual.binding === ready.binding && canonicalize(actual.config) === canonicalize(ready.config);
     };
     const remote = async (wait: Wait) => {

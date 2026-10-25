@@ -7,7 +7,7 @@ import { canonicalize } from "@generalbusiness/dap-bytes";
 import { otherLane } from "@generalbusiness/dap-derive/testing";
 import { SiteTokenReuse, type SiteTokenRequest, type SiteTokenPort } from "../src/site/token-reuse.ts";
 import { readerOf, type Room, type SiteEnv } from "../src/site/host.ts";
-import type { ArtifactsBindings } from "../src/artifacts-wiring.ts";
+import { artifactsReadiness, type ArtifactsBindings } from "../src/artifacts-wiring.ts";
 import type { ArtifactsNamespace } from "../src/artifacts-host.ts";
 import type { Sql } from "../src/sqlite.ts";
 import { SCOPE_INDEX_NAME } from "../src/scope-index.ts";
@@ -39,7 +39,7 @@ test("private Site custody shares one mint, preserves actual expiry and refuses 
   await holder.inside(async state => {
     const sql: Sql = { exec: (query, ...args) => state.storage.sql.exec(query, ...args), transaction: run => state.storage.transactionSync(run) };
     let now = Date.parse("2099-01-01T00:00:00Z");
-    const p = provider(() => now), make = () => new SiteTokenReuse(sql, () => p.settings, () => now, async () => {});
+    const p = provider(() => now), make = () => new SiteTokenReuse(sql, () => artifactsReadiness(p.settings), () => now, async () => {});
     let tokens = make();
     const first = await tokens.acquire(request());
     expect(first).toMatchObject({ ok: true, plaintext: "private-1", ends: now + 120_000 });
@@ -98,10 +98,10 @@ test("Site token waiters and durable reservations enforce 8, 64, 32 and 256 boun
     const now = Date.parse("2099-01-01T00:00:00Z"), p = provider(() => now);
     const release = gate<unknown>();
     p.hold(() => release.promise);
-    const tokens = new SiteTokenReuse(sql, () => p.settings, () => now, async () => {});
+    const tokens = new SiteTokenReuse(sql, () => artifactsReadiness(p.settings), () => now, async () => {});
     const leaders = Array.from({ length: 32 }, (_, n) => tokens.acquire(request(`refs/heads/held-${n}`)));
     expect(await tokens.acquire(request("refs/heads/overflow"))).toEqual({ ok: false, reason: "capacity" });
-    const restarted = new SiteTokenReuse(sql, () => p.settings, () => now, async () => {});
+    const restarted = new SiteTokenReuse(sql, () => artifactsReadiness(p.settings), () => now, async () => {});
     expect(await restarted.acquire(request("refs/heads/overflow"))).toEqual({ ok: false, reason: "capacity" });
     const waiters = Array.from({ length: 8 }, () => tokens.acquire(request("refs/heads/held-0")));
     expect(await tokens.acquire(request("refs/heads/held-0"))).toEqual({ ok: false, reason: "capacity" }); // only eight global waiters so far
@@ -127,7 +127,7 @@ test("Site reuse keeps config and remote checks fresh and holds malformed or amb
     const p = provider(() => now);
     let settings: ArtifactsBindings = p.settings;
     let schedule = async () => {};
-    const tokens = new SiteTokenReuse(sql, () => settings, () => now, () => schedule());
+    const tokens = new SiteTokenReuse(sql, () => artifactsReadiness(settings), () => now, () => schedule());
     expect((await tokens.acquire(request())).ok).toBe(true);
     p.remote("https://foreign.invalid/replaced");
     expect(await tokens.acquire(request())).toEqual({ ok: false, reason: "provider", step: "info" });
@@ -165,7 +165,7 @@ test("Site reuse keeps config and remote checks fresh and holds malformed or amb
     // second live token. No null-plaintext row is classified as ready.
     p.hold(null);
     let alarms = 0;
-    const lost = new SiteTokenReuse(sql, () => settings, () => now, async () => { if (++alarms === 2) throw Error("scripted alarm failure"); });
+    const lost = new SiteTokenReuse(sql, () => artifactsReadiness(settings), () => now, async () => { if (++alarms === 2) throw Error("scripted alarm failure"); });
     const alarmKey = request("refs/heads/alarm-failure");
     expect(await lost.acquire(alarmKey)).toEqual({ ok: false, reason: "unavailable" });
     expect(sql.exec("SELECT state,plaintext,ends FROM private_site_token WHERE state='unavailable'").toArray()).toEqual([{ state: "unavailable", plaintext: null, ends: now + 120_000 }]);

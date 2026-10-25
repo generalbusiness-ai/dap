@@ -77,7 +77,7 @@ import type { OutboxItem, Sealed } from "./store.ts";
 import type { ReadCredential } from "./destination-host.ts";
 import { gitHubOutside, type GitHubBindings } from "./github-wiring.ts";
 import { within } from "./turn.ts";
-import { ARTIFACTS_HOST, artifactsOutside, type ArtifactsBindings } from "./artifacts-wiring.ts";
+import { ARTIFACTS_HOST, artifactsOutside, artifactsReadiness, type ArtifactsBindings } from "./artifacts-wiring.ts";
 import { recordedHost } from "./host-wiring.ts";
 import { NO_OUTSIDE, type Outside } from "./operations.ts";
 import type { NativeItemQuery } from "./item-queries.ts";
@@ -111,15 +111,15 @@ export class ScopeIndex extends DurableObject<Env> {
   readonly #rows = new ScopeIndexRows(this.ctx.storage.sql);
   readonly #serving = new ServingAdmission(this.env);
   readonly #siteTokens = new SiteTokenReuse({ exec: (query, ...args) => this.ctx.storage.sql.exec(query, ...args), transaction: run => this.ctx.storage.transactionSync(run) }, () => {
-    // Read current provider settings afresh for every custody check.
+    // Decode current provider readiness afresh for every custody check.
     const configuration = this.env.ARTIFACTS_CONFIG;
     const namespace = this.env.ARTIFACTS_NAMESPACE;
     const binding = this.env.ARTIFACTS;
-    return {
+    return artifactsReadiness({
       ...(configuration === undefined ? {} : { ARTIFACTS_CONFIG: configuration }),
       ...(namespace === undefined ? {} : { ARTIFACTS_NAMESPACE: namespace }),
       ARTIFACTS: binding,
-    };
+    });
   }, () => Date.now(), () => this.#scheduleSiteTokens());
   #siteAlarm: Promise<void> | null = null;
   #siteAlarmRevision = 0;
