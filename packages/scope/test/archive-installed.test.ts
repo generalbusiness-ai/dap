@@ -728,7 +728,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
           };
           const options = growArchiveDriver(archiveGiven(store), sql, env.PLATFORM, environment, policies, PROPOSED_BOUNDS, fetch);
           if (!options) throw Error("Exact old-family Grow archive wiring required");
-          const result = await new ArchiveDriver({ ...options, sql, current: () => ({ at, head: target }),
+          const result = await new ArchiveDriver({ ...options, bounds: PROPOSED_BOUNDS, sql, current: () => ({ at, head: target }),
             clock: () => timeOf(life.now()), budget: () => budget }).run();
           const row = new ArchiveRows(sql, at).load();
           return { result, cost: budget.admitted(), events, parentRequests, confirmed: row?.confirmed, pending: row?.pending,
