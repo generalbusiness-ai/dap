@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c3667100596c4e52857438f8b32b7a7d3c17710a","text":"Merge retired a covered predecessor; the successor is at vitest.config.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:cfb43d7b8a62dc3e48635720f316cad29fab43dc","text":"Merge retired a covered predecessor; the successor is at apps/counter/scripts/node-witness.test.mjs."}
