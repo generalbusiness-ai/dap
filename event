@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:505dd6542defd3b8221aa297e37e5826f9c69cf0","text":"Merge retired a covered predecessor; the successor is at apps/room/page/src/data.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:51c95c221d2a2010d689272cff1adcb6809a34a3","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/archive-binding-wire.ts."}
