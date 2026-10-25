@@ -1,8 +1,8 @@
 # Room A entry 150 metadata shortfall
 
-Room A's hosted archive pass refused at entry 150 because its next metadata request exceeded the 4 MiB bound by 1,106 or 1,109 bytes in the retained observations. An authenticated sample and a closed local component diagnostic now describe the actual entries and two charged components. They do not yet establish an affordable full finish, a selected cutoff or hosted recovery. The chosen proposal uses one later capacity-retry alarm to build exactly the next entry. Source implementation is in progress; actual fit and validation remain pending.
+Room A's hosted archive pass refused at entry 150 because its next metadata request exceeded the 4 MiB bound by 1,106 or 1,109 bytes in the retained observations. The implemented fallback uses a later capacity-retry alarm to build exactly the next entry from fresh inputs. A local Native driver witness confirmed 63 through 64 within the original bounds, and the owning checks passed. That local result does not establish a full finish for Room A's unavailable private confirmed-149 context or hosted recovery.
 
-This note records work under parent request `1aedd35b` and promise `3afb5000`. It changes no archive limits, native authority, recorded entry meaning, deployment or provider state.
+This note records work under parent request `1aedd35b` and promise `3afb5000`. Implementation is tracked under child `f6ba323d` and promise `a2b586e5`. The change preserves archive limits, native authority and recorded entry meaning. No deployment or provider change is claimed.
 
 ## Authenticated sample
 
@@ -33,9 +33,9 @@ The diagnostic's original before/after records agree at the approved checkpoint 
 
 The initial V1 command failed with exit 9 because Node rejected a flag before evaluation. That failed attempt remains failed and measured no components. Its outer cost was 0.06 seconds wall and 0.06 seconds CPU. The corrected run used 1.17 seconds wall and 0.88 seconds CPU. Inner timings of 0.6022595 seconds wall and 0.547718 seconds CPU overlap the outer command and are not added. These are partial local measurements, not a benchmark or complete delivery cost.
 
-## Chosen fixed-prefix proposal
+## Implemented fixed-next-entry path
 
-The accepted design replaces the unimplemented two-phase selection-hint idea with a single-alarm fixed-next-entry fallback. It adds no durable hint or extra scout/build alarm. Implementation is assigned under child `f6ba323d`, promise `a2b586e5`; this note records the proposal and source work in progress, not completed behavior.
+The implementation follows the accepted single-alarm design. It adds no durable hint or extra scout/build alarm. The fixed path is implemented at `6fa5eef0`; the strengthened local witness is committed at `de263bbd`.
 
 For an eligible published, confirmed v2 row without pending Mark or stop, the driver reads the already-validated previous capacity-deferral count. Zero keeps normal adaptive planning. A positive count chooses exactly `confirmed.through.seq + 1` on the later genuine capacity-retry alarm. It does not attempt the fallback after exhausting adaptive planning in the same alarm. The count selects a strategy, never authorizes an input. Confirmation resets the existing wake so normal batching can resume.
 
@@ -43,10 +43,42 @@ Fresh target resolution and source setup remain in their existing order. The fix
 
 The admission boundary is actual work already spent plus every remaining operation through confirmation, with an additional 65,536-byte metadata margin. Completed inventory is already charged; omitting its future forecast is not a refund or credit. Body/input reads, publication and journal work, transfer, bookkeeping, frontier and any new handoff work remain paid. All original dimensions, prices, deadlines, row/wake and Mark/frontier comparisons, fresh authority checks and pending-Mark rebuild semantics remain. Initialization, conversion, unpublished-anchor migration and existing pending work retain their paths.
 
-A complete quote that cannot fit uses the existing prepaid capacity retry/backoff. Malformed or unsupported inventory remains a hard refusal; an unexpected actual overrun remains a failed bound or forecast witness. Neither the measured components nor the old hosted quote proves this new completed/remaining boundary will fit entry 150. No saving, successful cutoff, whole-finish cost or hosted progress is asserted in this draft.
+A complete quote that cannot fit uses the existing prepaid capacity retry/backoff. Malformed or unsupported inventory remains a hard refusal; an unexpected actual overrun remains a failed bound or forecast witness. Neither the measured components nor the old hosted quote proves that this new boundary will fit Room A entry 150. The closed local witness below measures its own finish; it does not reconstruct the missing hosted context.
 
 Independent design review V2 found no material design blocker. It corrected the earlier source-order assessment: normal source setup can remain in place because entry-specific reads occur inside `prepare(next)`. This is a design review, not implementation verification or authentic approval of a completed candidate.
 
-## Validation still pending
+## Closed local validation
 
-The exact implementation afterimages, current-budget ownership and remaining-quote proof, owning tests/control, actual source seals if needed, full finish or pass-fit measurements, ordinary gate, authentic review and planner rollout remain pending. Required witnesses include later-deferral exact-next selection, genuine fresh source withdrawal, all-axis quote-versus-actual work and margin, changed receipt/concurrent Mark, same-budget ownership and old pending-Mark byte-identical rebuilds. No prior archive failure is reclassified by a chosen design, sample completeness or component success. Private evidence grants do not authorize publication of raw entry/rule/provider bodies, environment values, credentials or physical snapshots.
+Owning run `8132` completed naturally with both Scope compiler contexts passing and all 47 cases passing across six whole files: driver, build, row, frontier store, installed archive and input work. All 47 collected, started, terminal and JSON case records agree, with no unhandled errors or retries. Nineteen intermediate result callbacks are absent, all in the driver file. Their terminal and JSON records pass; the missing callbacks are not inferred.
+
+The Native driver witness uses declared target, source and provider stand-ins. After a genuine capacity deferral, it confirms exactly the next entry, from 63 to 64. Its quote covers all six budget dimensions. The complete quote uses 830,681 metadata bytes, including work already spent; actual completion uses 648,076. The final 4 MiB metadata headroom is 3,546,228 bytes, exceeding the required 65,536-byte margin. These are costs for this local witness, not the hosted entry-150 pass.
+
+The same witness refuses a 524,288-byte metadata cap with a 371,929-byte shortfall. A second cap of 863,449 bytes admits the quoted 830,681 bytes but not the additional margin: 896,217 bytes are required, leaving a 32,768-byte shortfall. Fresh source withdrawal reports retry/unavailable without a fixed-finish quote. The hard-refusal diagnostic reports stopped/other; its masked reason is not evidence of a more specific public error.
+
+Node run `64240` completed naturally with all four entry-point inventory cases passing and compatibility accepted. It ran at implementation checkpoint `6fa5eef0`. The later `de263bbd` change only strengthens the driver test, so this is carried evidence, not a second Node run at that later head.
+
+The negative control `26505` disables only the fixed-path selection. Its whole driver file records 18 passing cases and one intended failure at `archive-driver.test.ts:474`: `fixedFinish` is null where the witness requires a quote. The old adaptive route reaches its constrained finish refusal instead. Later assertions in that failed case are unreached. The control remains exit 1; it is not relabelled as a passing test run. Root restored the exact clean positive head and tree. Independent closed audits of the affected run and control are accepted.
+
+The strengthened installed old-register-17 Grow witness also completed after a fixture correction. Its first run, `75547`, passed the test compiler but recorded seven passing cases and one failure. The new assertion assumed `candidate.entry.uses.length > 0`, while the actual signed entry has zero uses. That failure occurred before the capacity or fixed-path checks and earns no entry-147 progress claim.
+
+The test-only correction preserves the actual device-target prepared rule and one inline authority grant without claiming a retained foreign-use body. Follow-up `61908` passed the test compiler and all eight cases in the whole installed file. It first forces a genuine zero-entry capacity retry at `scout-open`, with a one-entry shortfall. The archive row, confirmed receipt and peer side effects remain unchanged.
+
+On the next pass, a fresh budget with the original allowance lets the real Grow source ports confirm exactly entry 147 from confirmed 146. The complete quote uses 2,930,245 metadata bytes; actual completion uses 2,633,486, leaving 1,560,818 bytes of headroom. The quote and actual costs satisfy all six original dimensions, including the 65,536-byte metadata margin. The following normal pass drains entries 148–152 with `fixedFinish: null`, showing normal batching resumes after confirmation resets the capacity wake.
+
+This witness runs at test-only correction `9ecfafb0`. Its provider is the fixture Artifacts peer. It covers the actual rule and device-target geometry with zero retained foreign uses, not Room A's missing private inputs. Its new branch returns after draining, before that case's later clone/offline assertions. Other existing cases retain their own coverage; no new Room A clone result is claimed. The closed result and counters are Root-verified. The independent pair audit reconciles all eight started, terminal and JSON cases, with no unhandled errors. Its three clean finite Source boundaries per run do not establish continuous physical dependency custody. Root accepted that audit in event `473f861c` after authenticating all leaves and reading the full receipt.
+
+The maintained affected-run guards compare four clean boundaries, including 1,730 active Source/configuration hashes, two external inputs, 14 workspaces and 41 export aliases. They are finite boundary checks, not a physical dependency-pool census, environment vector or continuous-custody proof. The control's two finite guards likewise do not establish physical restoration to the same inode.
+
+| Closed local command | Wall seconds | CPU seconds |
+|---|---:|---:|
+| Two Scope compilers and 47 owning cases | 65.64 | 79.27 |
+| Compatibility and four Node inventory cases | 1.49 | 1.84 |
+| Whole-driver negative control | 12.61 | 14.50 |
+| First installed-witness run, failed | 56.14 | 69.54 |
+| Corrected installed-witness follow-up | 56.10 | 69.47 |
+
+These outer commands are separate. Their nested compiler, body and child timings overlap and are not added. The earlier component costs remain separate partial measurements, not a complete edit-to-review cost or portable performance benchmark.
+
+## Remaining evidence and rollout
+
+The ordinary gate, authentic Architecture, Security and Simplification review, and planner rollout remain pending. The private confirmed-149 context is still missing, so hosted entry-150 fit and recovery remain unproved. No prior failure is reclassified by these local successes. Private evidence grants do not authorize publication of raw entry, rule or provider bodies, environment values, credentials or physical snapshots.
