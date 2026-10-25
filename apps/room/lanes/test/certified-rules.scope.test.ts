@@ -18,8 +18,6 @@ import { changeDemo, changeDemo3 } from "../src/index.ts";
 
 import { certifiedNativeRoom, openRulesCertificate, publishRulesCertificate, configureRules } from "../../../../packages/scope/test/certified-rules-fixture.ts";
 
-const SERVICE = "https://scopes.test";
-
 // Actual new-family interpretation/SQLite and signed grants. The Git object
 // provider, package HTTP, clock and bounded scheduler are explicit TEST stands.
 // This does not exercise isolated provider HTTP or a deployed service.
@@ -51,7 +49,7 @@ test("certified-rules native birth and device install bootstrap a real tree cert
   }, presentation: { v: 2, entry: "index.html", assets: [{ path: "index.html", mediaType: "text/html", bytes: "VEVTVA" }],
     descriptions: {}, views: {}, resources: {} } }, fixedSigner(81));
   const room = await certifiedNativeRoom();
-  const { life, host, providerCalls, control, pause, R, D, M, Q, G, nodes, bindings } = room;
+  const { life, host, providerCalls, control, pause, R, D, M, Q, G, nodes } = room;
   try {
     const fixture = await applicationResolverFixture("sha1", undefined, {}, undefined, packet), peer = applicationHttpPeer(fixture);
     const applicationBindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(fixture.trust), env.SCOPE_INDEX);

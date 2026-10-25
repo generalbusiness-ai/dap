@@ -4,7 +4,7 @@
 import { runInDurableObject } from "cloudflare:test";
 import { expect, inject, test } from "vitest";
 import { PROPOSED_BOUNDS, type Digest, type FactRef, type Input, type PlatformDefinition } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, definitionDigest, digestBytes, factRefOf, unb64url, utf8 } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, definitionDigest, digestBytes, factRefOf, isPlatformDefinition, unb64url, utf8 } from "@generalbusiness/dap-bytes";
 import { ARCHIVE_CERTIFIED_RULES_COHORT, RULES_PATTERNS, RULES_POLICY_VALUE_V11, RULES_TREE_PROOF, platform, rulesPolicyProposalV11 } from "@generalbusiness/dap-platform";
 import { invitationIssueFields, invitationRedemptionFields } from "@generalbusiness/dap-client";
 import { localRetainedPlan, ownersOf, outcomeValueDomains, validateDefinition, valueDigest, type OperationRules } from "@generalbusiness/dap-derive";
@@ -31,13 +31,13 @@ import { changeDemo } from "../src/index.ts";
 const EXTENTS_DOMAIN = "artroom-rules-extents-2";
 const inline = new Set<Input["type"]>(["genesis", "act", "delivery", "timed", "diagnosis", "outcome", "preparation", "checkpoint"]);
 function reviewed(pin: PlatformDefinition | Digest): ReviewedArchivePolicy {
-  const native = pin === definitionDigest(changeDemo) ? null : platform(pin as PlatformDefinition);
+  const native = isPlatformDefinition(pin) ? platform(pin) : null;
   if (!native && pin !== definitionDigest(changeDemo)) throw Error("No TEST policy for an unknown pin");
   const checked = validateDefinition(native?.data ?? changeDemo, PROPOSED_BOUNDS, RULE_PROFILES,
     native ? { platform: true, outcomeValues: outcomeValueDomains(native.data, native.rules) } : {});
   if (!checked.ok) throw Error("TEST policy needs the actual validated owner declaration");
   const owners = new Map<string, Map<string, OperationRules>>();
-  if (native) {
+  if (native && isPlatformDefinition(pin)) {
     const code = ownersOf(checked.definition, { named: pin, rules: native.rules }, null), kinds = new Map<string, OperationRules>();
     for (const kind of Object.keys(native.data.outcomes ?? {})) {
       const rules = code?.rules(pin, kind); if (!rules) throw Error("Actual native outcome owner required");
@@ -71,7 +71,7 @@ test("certified native policy and proof plus its consumed single policy envelope
     expect(configured.values).toMatchObject({ configured: true, policy: proposal.policy, proposal: proposal.digest });
     const envelope = { configured: true, policy: configured.values["policy"], proposal: configured.values["proposal"], certificate: configured.values["certificate"] };
     const envelopeDigest = valueDigest(EXTENTS_DOMAIN, envelope);
-    const rulesHead = factRefOf((await Q.sealed()).at(-1)!);
+    const rulesHead = factRefOf((await Q.sealed()).at(-1)!.entry);
 
     // Real lane creation/review/reserve; no CLI precheck or supplied observation.
     const change = definitionDigest(changeDemo);
@@ -89,7 +89,7 @@ test("certified native policy and proof plus its consumed single policy envelope
     const observed = gHistory.flatMap(sealed => "observed" in sealed.entry.input ? (sealed.entry.input.observed ?? []).flatMap(use => {
       const observation = use.observation;
       return "subject" in observation && observation.subject === "rules" && observation.content.asked === "rules" && observation.content.extents === envelopeDigest
-        ? [{ consumer: factRefOf(sealed), observation }] : [];
+        ? [{ consumer: factRefOf(sealed.entry), observation }] : [];
     }) : []);
     expect(observed.length).toBeGreaterThan(0);
     expect(observed.some(row => canonicalize(row.observation.of) === canonicalize(rulesHead.at) && row.observation.head.seq >= rulesHead.seq)).toBe(true);
@@ -140,7 +140,7 @@ test("certified native policy and proof plus its consumed single policy envelope
       const at = await scope.at(), last = rows.at(-1)!;
       const result = await life.wait(() => runInDurableObject(scope.object, async (_instance, state) => {
         const sql = archiveSql(state), budget = new ArchiveBudget(), owner = new ArchiveRows(sql, at);
-        owner.target(repository, "sha1", budget);
+        const target = owner.target(repository, "sha1", budget);
         const made = await planPublishedArchivePass(sql, { at, through: { seq: last.entry.seq, hash: last.hash }, after: null,
           bounds: PROPOSED_BOUNDS, policies, format: "sha1", parent: null, markedAt: soon(0), fixtureSources, replayScopes }, budget);
         if (!made.ok) return { ok: false as const, result: made, cost: budget.admitted() };
@@ -148,7 +148,7 @@ test("certified native policy and proof plus its consumed single policy envelope
           const object = made.archive.objects.find(row => row.id === id);
           return object ? { type: object.type, size: object.data.length, data: object.data.length <= maximum ? object.data : null } : null;
         } };
-        const frontiers = new ArchiveFrontiers(sql, { at, repository, format: "sha1" });
+        const frontiers = new ArchiveFrontiers(sql, { at, repository: digestBytes(utf8(canonicalize(target.repository))), format: "sha1" });
         const prepared = await frontiers.prepareFromSource(source, made.mark, null, budget);
         const confirmed = sql.transaction(() => {
           owner.markAttempt(made.mark, soon(0), budget); frontiers.stage(prepared, budget);
