@@ -1,5 +1,7 @@
 # Carry-pass amendment Draft 2: planning review
 
+Status: retired; no work follows from it.
+
 2026-10-04. Decision with reasons for builder request
 `baf433197782044df08d0809e33d869f4c1099af`, planner promise
 `357e0bcdde3c93e0d078f387ff6af32ab4acd735`. This request owes no Git

@@ -612,9 +612,6 @@ Two sets of generated files follow the lane definitions:
 by `apps/room/lanes/scripts/reference.mjs`. The pins test fails while
 either is stale.
 
-The earlier spikes were removed from main. They remain at the tag
-`spikes-final`, where `spikes/parked/README.md` says what is there.
-
 ### Follow-up after a gate
 
 Do not run the gate again for a commit that changes only documents; say that the
@@ -702,10 +699,10 @@ check, and consider deleting the guard.
 
 ## The invariant map
 
-[notes/plans/test-invariants.md](../notes/plans/test-invariants.md) maps the earlier
-model's tests, which are removed. It is the proof plan's to replace. Until
-then each test's name states its invariant, and the two deltas notes name
-the witness of each decision.
+The retired [test-invariants map](../notes/plans/retired/test-invariants.md)
+covers the earlier model's tests, which are removed. It is the proof plan's
+to replace. Until then each test's name states its invariant, and the two
+deltas notes name the witness of each decision.
 
 ## For reviewers
 

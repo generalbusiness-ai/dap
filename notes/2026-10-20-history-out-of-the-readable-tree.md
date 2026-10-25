@@ -1,7 +1,7 @@
 # History out of the readable tree
 
-Status: current. It landed at `2a77bc5f` (approval `5cadc468`). Nothing
-here is built.
+Status: current. It landed at `2a77bc5f` (approval `5cadc468`). Slice H1
+is built (25 October 2026); H2 to H6 are not.
 
 dap is a repository that people and agents both read and change. An
 agent that adds a feature first searches the tree for a similar one and
@@ -93,7 +93,7 @@ the same rules.
 | Item | Disposition |
 |---|---|
 | `packages/platform/src/application-install.ts` (314 lines) and `-wire.ts` (52), beside `application-install-v2.ts` (85) and `-v2-wire.ts` (7) | Slice H6. The current rules (rules 10 through `archive-binding.ts` and `device-application-rules.ts`) use parts of both. Those parts are shared current code and stay in `src`, in one file with no suffix. The parts that only history pins use move to the history home. |
-| `packages/bytes/src/application.ts` and `application-v2.ts`, `application-package.ts` and `-package-v2.ts`, `application-types.ts` and `application-v2-types.ts` | Slice H6. Two classes. Shared current code, such as the semantic, presentation and release checks of `application-package-validation` that the v2 reader reuses (`application-package-v2.ts:6-8`, `:30-31`), stays in `src`. The superseded public codec moves to the bytes history home, and one dispatcher reads a retained packet by its own format. A stored packet is never read as a newer format. Signed release domains and canonical bytes do not change. |
+| The application codec under `packages/platform/src/application-codec/` (`application-package.ts`, `application-package-v2.ts` and their types; moved from `packages/bytes` by K3, `13da4cc6`) | Slice H6. Two classes. Shared current code, such as the semantic, presentation and release checks of `application-package-validation` that the v2 reader reuses (`application-package-v2.ts:6-8`, `:30-31`), stays in `src`. The superseded public codec moves to the bytes history home, and one dispatcher reads a retained packet by its own format. A stored packet is never read as a newer format. Signed release domains and canonical bytes do not change. |
 | `packages/scope/test/support/legacy-lending-projection.ts`, `application-v2-fixture.ts` | Follow the forms above in H6. |
 
 ### 2.3 Lane generations
@@ -390,7 +390,7 @@ list is empty.
 | H3 | Active manifest, file classes, the gate check of 3.5 (rules 1 to 4), the generated index | builder | 2 days | H1, H2 |
 | H4 | Version questions replace the literal lists outside `packages/platform`. Each question answers for all 62 pins, and the lists that stop early today (`scope/src/reads.ts:219`, `apps/room/page/src/data.ts:461`, `cli/src/commands.ts:1523`, `replay/src/verify.ts:1671`) answer for the current pins, with native, CLI, page and replay acceptance on the current cohort. The behavior witness of section 4. Gate rule 5 | builder | 3 days | H3 |
 | H5 | Platform history home: every history pin, cohort and test moved; `CURRENT` and the CLI default; saved-plan recognition (3.7) with a saved-plan, restart and readback witness; current files without version numbers; data digests and behavior rows unchanged | builder | 3 days | H4 |
-| H6 | Install and bytes parallel forms (2.2): shared current code kept, the superseded codec to the bytes history home behind one dispatcher; the existing exact v1 and v2 packet and retained-input tests unchanged. Gate rule 6 for `packages/bytes` and `packages/platform` | builder | 2 days | H5 |
+| H6 | Install and bytes parallel forms (2.2): shared current code kept, the superseded codec to the platform history home behind one dispatcher; the existing exact v1 and v2 packet and retained-input tests unchanged. Gate rule 6 for `packages/platform` | builder | 2 days | H5 |
 | H7 | Lane generation 1 and the lending service configuration to their history homes; `change3.ts` and `digests3.ts` lose their suffix. Gate rule 6 for the lanes | builder | 1 day | H5, the layout note's room-host slice |
 | H8 | Deletion of history pins with empty user lists | builder | 1 day | section 5's answer |
 

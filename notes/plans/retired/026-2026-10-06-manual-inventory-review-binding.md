@@ -1,5 +1,7 @@
 # Manual inventory review evidence
 
+Status: retired; no work follows from it.
+
 2026-10-06. This evidence bundle gives the unchanged manual inventory a
 single-head independent successor planning review binding. Its primary
 clarifies the operative acceptance criteria. It adds no delivered manual

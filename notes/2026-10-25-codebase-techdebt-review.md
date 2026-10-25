@@ -2,7 +2,7 @@
 
 Status: landed `c5b8e00c`; describes work that is done. Request `72a6df7d`.
 Slices landed on 25 October: PD-1 (`5248b0be`), BR-1 (`f5a6338c`), BR-2
-(`86204d44`) and PD-6 (this head).
+(`86204d44`), PD-6 (`778fea00`) and PD-7 (this head).
 
 The planner deploys `dap-grow` from `apps/room/wrangler.grow.jsonc`. That file
 sets the scope index to register mode. The live Worker has run in enforce mode
@@ -682,6 +682,12 @@ not a builder request from this review.
 - **PD-7, status and guides (TD-17).** A planner head finishes H1, corrects the
   roadmap and the plan 032 and 033 status lines, amends the history note and its
   slice H6, and adds `node scripts/check-doc-links.mjs` to the gate.
+  Done in this head: 31 plans, the usability packet, the handoff log and the
+  test-invariants map moved to `notes/plans/retired/` with status lines; a
+  plans index and `notes/README.md`; the three inactive guides moved to
+  `notes/retired-guides/`; roadmap, plan 032 and 033, and history-note lines
+  corrected; the link checker is a gate step. Not in this head: the
+  status-line gate test of H1 (rule 4), which joins BR-7.
 - **PD-8, allowance lists (TD-02).** The creation-pin list for `dap-grow` and
   `dap-lending`, or a record that a Worker takes no new children on a historical
   family, before BR-1 is filed.
