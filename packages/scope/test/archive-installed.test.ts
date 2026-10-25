@@ -9,7 +9,7 @@ import { b64url, canonicalize, encodeItemQueryParameter, isDigest, isEntry, isFa
 import { readApplicationPackage2, readPublishedApplicationPackage2 } from "@generalbusiness/dap-platform/application-v2";
 import { inputTexts, outcomeValueDomains, ownersOf, validateDefinition, type OperationRules, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
-import { ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, platform } from "@generalbusiness/dap-platform";
+import { ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, platform } from "@generalbusiness/dap-platform";
 import { ScopeHandle, httpTransport, invitationIssueFields, invitationRedemptionFields, requestSession, secretSigner, sessionRequest } from "@generalbusiness/dap-client";
 import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-mcp";
 import { archiveSource, verifyArchive, TRUSTS } from "@generalbusiness/dap-replay";
@@ -122,7 +122,7 @@ function commandReportDiagnostic(value: unknown) {
 // Each offline follower immediately follows its own native producer. No
 // Native owner, private key or plaintext read token crosses this boundary.
 interface NativeCommandHandoff { producer: string; id: string; lines: readonly string[]; refs: readonly { ref: string; id: string }[] }
-for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation warm", "Grow activation evicted"]) {
+for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation warm", "Grow activation evicted", "Grow publication"]) {
   const producerTitle = `installed ${scenario} scopes export genesis zero after a late native Membership8 directory binding`;
   let retainedCommand: NativeCommandHandoff | null = null;
   test(producerTitle, { timeout: 30_000 }, async context => {
@@ -140,7 +140,8 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
     expect(packet.package.release.manifest.publisher).toBe(DEMO_PUBLISHER);
     expect([rootId, childId]).toEqual(GROW_ARCHIVE_DEFINITIONS);
   }
-  const C = kind === "fixture" ? ARCHIVE_DECLARED_APPLICATION_COHORT : ARCHIVE_DEVICE_APPLICATION_COHORT;
+  const C = scenario === "Grow publication" ? ARCHIVE_DEVICE_PUBLICATION_COHORT
+    : kind === "fixture" ? ARCHIVE_DECLARED_APPLICATION_COHORT : ARCHIVE_DEVICE_APPLICATION_COHORT;
   // Original byte-cost receipts use whole-second timestamps. Other native
   // witnesses may advance this shared clock by milliseconds. Advance it
   // monotonically before creating any scope; keep its identity and history.
@@ -432,9 +433,9 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       expect(discovery?.scopes.map(scope => ({ scope: scope.at.scope, named: scope.named, via: scope.via }))).toEqual([
         { scope: childScope.name, named: childId, via: "self" },
         { scope: rootScope.name, named: rootId, via: "creator" },
-        { scope: D.name, named: ARCHIVE_DEVICE_APPLICATION_COHORT.directory, via: "creator" },
-        { scope: A.name, named: ARCHIVE_DEVICE_APPLICATION_COHORT.rules, via: "rules" },
-        { scope: G.name, named: ARCHIVE_DEVICE_APPLICATION_COHORT.destination, via: "destination" },
+        { scope: D.name, named: C.directory, via: "creator" },
+        { scope: A.name, named: C.rules, via: "rules" },
+        { scope: G.name, named: C.destination, via: "destination" },
       ]);
       if (!discovery) throw Error("The bound native producer graph must be discovered.");
       // The same production gate admits no other item or pinned register.
@@ -656,9 +657,9 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
           "platform:directory@16": { entries: 14, attempts: 128, nodes: 23, calls: 223, metadata: 474298, inputWork: 34957641 },
           "platform:rules@10": { entries: 11, attempts: 80, nodes: 23, calls: 164, metadata: 373104, inputWork: 36436351 },
           "platform:destination@12": { entries: 2, attempts: 26, nodes: 20, calls: 54, metadata: 234024, inputWork: 17754830 } };
-        // Preserve the original fixture byte receipts verbatim. The separate
-        // production scenario uses different recorded repository identity bytes.
-        if (!productionScenario) expect(planned.archive.cost).toEqual(originalPassCosts[birth.seed.definition]);
+        // Preserve receipts from the original Grow fixture only. Publication
+        // cohort costs remain observed below, never guessed from old identities.
+        if (scenario === "Grow") expect(planned.archive.cost).toEqual(originalPassCosts[birth.seed.definition]);
         for (const sealed of read.value) {
           const through = { seq: sealed.entry.seq, hash: sealed.hash };
           const old: string | null = parent, receipt: Head | null = after;
@@ -692,7 +693,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
               "sha256:5e2d34fa9965662aa508aaaffd83bdcd4198746ae8d4a8dd24654d74289529a4": 512,
               "sha256:69424c1bbbf7c2f81528fcc6c910b1230a88d061ac3655c5bde916aaa2572c56": 0,
               "platform:directory@16": 1024, "platform:rules@10": 272640, "platform:destination@12": 378112 };
-            expect(originalSupport).toEqual({ entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0,
+            if (scenario === "Grow") expect(originalSupport).toEqual({ entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0,
               inputWork: independentSupport[privacySupport.named] });
             supportComponents.push({ named: privacySupport.named, semanticName: privacySupport.definition.declared.name,
               role: scope.name === rootScope.name ? "root" : scope.name === childScope.name ? "child" : "native", digest: privacySupport.definition.digest,
@@ -746,7 +747,9 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       passes: sharedPassFootprints, wholePasses: sharedWholePassFootprints,
       supportComponents, supportQualification: "Original trusted support validation plus repeated actual counted scout; same component budget pays fresh prefix, both full support validations,128metadata/256input count bookkeeping and privacy. Scalar forecast matches the original validation delta only, no refund/credit; final native inventory validates support afresh. No declaration payload body is fetched by this trusted support walk. No fresh validation credit or complete driver admission claim.",
       entryPrivacyComponents, entryPrivacyQualification: "Actual native header and entry-privacy calls before extraction, each component has its own unchanged default budget and fresh prefix/JSON reservation. Delta excludes that separately paid prefix, trusted support validation, foreign classification, and all payload reads; no whole-export or driver admission claimed.",
-      qualification: "Actual installed Grow and its discovered native Directory16, Rules10 and Destination12 histories. Each diagnostic one-entry pass uses one original default30s ledger for fresh native inventory, canonical Git build and, for each noninitial pass, append validation. Genesis has no prior append and no append-validator claim. Real fixture entries and retained bytes; explicit TEST package peer, owner input, policy/source/authority configuration and scheduler. No remote confirmation, production admission or deployed cadence claim. Kind/domain counts concern these fixture entries, not all theoretically possible native entries."
+      qualification: scenario === "Grow publication"
+        ? `Actual installed Grow publication and its discovered native ${C.directory}, ${C.rules} and ${C.destination} histories. Each diagnostic one-entry pass uses its original default budget for fresh native inventory, Git build and applicable append validation. Costs are observations, not old-cohort goldens. Explicit TEST packet/owner/policy/source/authority and scheduler; no remote confirmation or hosted claim.`
+        : "Actual installed Grow and its discovered native Directory16, Rules10 and Destination12 histories. Each diagnostic one-entry pass uses one original default30s ledger for fresh native inventory, canonical Git build and, for each noninitial pass, append validation. Genesis has no prior append and no append-validator claim. Real fixture entries and retained bytes; explicit TEST package peer, owner input, policy/source/authority configuration and scheduler. No remote confirmation, production admission or deployed cadence claim. Kind/domain counts concern these fixture entries, not all theoretically possible native entries."
     };
     if (productionScenario) {
       // Invariant: each actual installed/native entry fits a confirmed
@@ -964,7 +967,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
         const componentBudget = new ArchiveBudget(), bytes = utf8(held).length;
         const header = archiveEntryHeader(sql, { kind: "copy", content: copy.content, bytes }, componentBudget);
         const before = componentBudget.admitted();
-        archiveMembershipCopy(sql, copy.content, bytes, header, "platform:directory@16", componentBudget);
+        archiveMembershipCopy(sql, copy.content, bytes, header, C.directory, componentBudget);
         const after = componentBudget.admitted(), membershipCopyCost = Object.fromEntries(Object.keys(before).map(key =>
           [key, after[key as keyof ArchiveCost] - before[key as keyof ArchiveCost]])) as ArchiveCost;
         expect(membershipCopyCost).toEqual({ entries: 0, attempts: 0, nodes: 0, calls: 1, metadata: 512, inputWork: 512 + bytes * 16 });
@@ -981,7 +984,9 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
         } finally { sql.exec("UPDATE retained_input SET bytes = ? WHERE kind = 'entry' AND digest = ?", held, copy.content); }
         return { results, membershipCopyCost, bytes };
       }));
-      (context.task.meta as Record<string, unknown>)["membershipCopyCostReceipt"] = { bytes: refused.bytes, cost: refused.membershipCopyCost, qualification: "Actual native public Membership8 application-grants copy in Directory16; independent component budget pays its own original header JSON first. Delta is only original kind/secret-field scan; no diagnostic export credit, new policy or full driver claim." };
+      (context.task.meta as Record<string, unknown>)["membershipCopyCostReceipt"] = { bytes: refused.bytes, cost: refused.membershipCopyCost, qualification: scenario === "Grow publication"
+        ? `Actual native public Membership8 application-grants copy in ${C.directory}; independent component budget pays its own original header JSON first. Delta is only original kind/secret-field scan; no diagnostic export credit, new policy or full driver claim.`
+        : "Actual native public Membership8 application-grants copy in Directory16; independent component budget pays its own original header JSON first. Delta is only original kind/secret-field scan; no diagnostic export credit, new policy or full driver claim." };
       expect(refused.results).toEqual(Array.from({ length: 3 }, () => ({ ok: false, reason: "unsupported-credential-cohort" })));
     }
     if (kind === "fixture") return;

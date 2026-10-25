@@ -1,8 +1,14 @@
 // Judged in-memory fixture authority and owner/host replies remain stand-ins.
 // This witnesses the portable adapter; local Git parsing has separate tests.
 import { expect, test, vi } from "vitest";
-import type { FactRef, ScopeId } from "@generalbusiness/dap-contract";
-import { utf8 } from "@generalbusiness/dap-bytes";
+import { PROPOSED_BOUNDS, type Digest, type FactRef, type PlatformDefinition, type Request, type ScopeId, type ScopeRef } from "@generalbusiness/dap-contract";
+import { canonicalize, isSeed, newIncarnation, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
+import { clockOf, judgeGenesis, judgeOutcome } from "@generalbusiness/dap-derive";
+import { keys, Ledger, T0 } from "@generalbusiness/dap-derive/testing";
+import { platform as nativePlatform, repositoryName } from "@generalbusiness/dap-platform";
+import { installing, registerSeed } from "../../platform/test/support-creation.ts";
+import { checkedPlatformData, written } from "../../platform/test/fixtures.ts";
+import { served } from "./world.ts";
 import { ARCHIVE_HEAD_TRUST, ARCHIVE_SOURCE_TRUST, archiveSource, verifyArchive, type ArchiveData, type ArchiveReadPort, type ArchiveSourceOptions } from "../src/archive.ts";
 import { MemorySource, type MemoryScope } from "../src/source.ts";
 import { TRUSTS, verify } from "../src/verify.ts";
@@ -119,4 +125,58 @@ test("floor commit probes share the already opened scope allowance", async () =>
   expect((await archived.page(scope.scope.scope, 0, { bytes: 4096, entries: 1 })).ok).toBe(true);
   for (const commit of ["b".repeat(40), "c".repeat(40)]) expect(await archived.floorReceipt(scope.scope.scope, commit, { bytes: 4096 })).toMatchObject({ ok: true, through: fixture.options.head });
   expect(reads).toBe(2);
+});
+
+// Real native Register/Directory judgments, retained canonical entries and
+// portable offline replay. The repository-create reply and in-memory store
+// are labelled fixtures; no native Worker, private source export or host runs.
+test("exact caller anchors classify private Register17 and Register18 copies without admitting unknown archive names", async () => {
+  for (const pin of ["platform:register@17", "platform:register@18"] as const) {
+    const native = nativePlatform(pin)!;
+    const registerDefinition = checkedPlatformData(native.data), registerRules = { named: pin, rules: native.rules };
+    const R = new Ledger(registerDefinition, "platform:register");
+    const install = installing(keys.paul, "keys", [keys.rita.key]);
+    const seed = registerSeed(install, { definition: pin });
+    R.seal(written(judgeGenesis(R.state, registerDefinition,
+      { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(74)), seed, creation: install },
+      { clock: clockOf(R.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: null, platform: registerRules })));
+    const found = R.act(keys.rita, "found", { expected: { register: R.item(0).revision },
+      fields: { branch: "main", founderHandle: "@rita", recoveryKey: keys.sam.key } }, { platform: registerRules, grants: [] });
+    expect(found.result).toBe("write");
+    const claim = R.fact(R.head.seq);
+    // The real native selecting rule constructs the actual Directory seed.
+    // Only this own host answer is scripted; no entry or source name is forged.
+    R.seal(written(judgeOutcome(R.state, registerDefinition,
+      { type: "outcome", operation: `${claim.seq}:0`, attempt: 1, result: "confirmed", evidence: { basis: "own-answer",
+        body: { name: repositoryName(R.item(claim.seq).values["seed"] as Digest, 1), id: "TEST-private-register-repo" } } },
+      { clock: clockOf(R.state, T0), bounds: PROPOSED_BOUNDS, platform: registerRules, own: R.own })));
+    const creation = R.last.sends[0]!;
+    if (!isSeed(creation.to)) return expect.fail("The native Register must emit an exact Directory seed");
+    const directoryNative = nativePlatform(creation.to.definition)!;
+    const directoryDefinition = checkedPlatformData(directoryNative.data), D = new Ledger(directoryDefinition, "platform:directory");
+    D.seal(written(judgeGenesis(D.state, directoryDefinition,
+      { name: scopeIdOf(creation.to), inc: newIncarnation(new Uint8Array(16).fill(75)), to: creation.to, from: R.fact(R.head.seq), n: creation.n, message: creation.message as Request },
+      { clock: clockOf(D.state, T0), bounds: PROPOSED_BOUNDS, prepared: [], own: D.own,
+        facts: [{ fact: claim, entry: R.entries[claim.seq]!.entry, under: R.under }],
+        source: { entry: R.last, under: R.under }, platform: { named: creation.to.definition as PlatformDefinition, rules: directoryNative.rules } })));
+    const archived = served(D, [R, D]);
+    // Stored clone copies deliberately carry no caller-supplied alias. The
+    // adapter may derive it from this basis only for the exact anchored fact.
+    const retained = archived.retained.map(input => { const { under: _under, ...rest } = input; return rest; });
+    const anchors = [...new Map([...D.last.uses.map(use => use.fact), R.fact(R.head.seq)].map(fact => [canonicalize(fact), fact])).values()];
+    const base = port([{ ...archived, retained }]);
+    const offline = (basis: PlatformDefinition = pin, kind: ScopeRef["kind"] = "register") => archiveSource({ open: async (scope, work) => {
+      const read = await base.open(scope, work);
+      return read.ok ? { ...read, archive: { ...read.archive, foreignSources: [{ at: { ...R.at, kind }, pin: basis }] } } : read;
+    } });
+    const options = { mode: "replay" as const, scope: D.at.scope, head: D.head, platform: nativePlatform, grants: "proven" as const,
+      anchors: anchors.map(fact => ({ scope: fact.at.scope, seq: fact.seq, hash: fact.hash })) };
+    expect(await verifyArchive(offline(), options)).toMatchObject({ kind: "verification",
+      verification: { report: { result: "consistent", anchors } } });
+    expect(await verifyArchive(offline(), { ...options, anchors: [] })).toMatchObject({ kind: "verification",
+      verification: { report: { result: "missing-dependency", dependencies: { missing: expect.any(Array) } } } });
+    for (const rejected of [offline("platform:register@19"), offline(pin, "membership")]) {
+      expect(await verifyArchive(rejected, options)).toMatchObject({ kind: "verification", verification: { report: { result: "mismatch" } } });
+    }
+  }
 });
