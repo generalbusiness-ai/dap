@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"scripts/test.mjs at exact c435fc25ece051db42d42efc7065c2df4d48d0ae on builder/notes-evidence-warning-20261025, under promise git:sha1…2461b45 on request git:sha1…a2d9bef","body":{"commit":"c435fc25ece051db42d42efc7065c2df4d48d0ae","path":"scripts/test.mjs"}}
+{"kind":"artifact","text":"scripts/gate.sh at exact c435fc25ece051db42d42efc7065c2df4d48d0ae on builder/notes-evidence-warning-20261025, under promise git:sha1…2461b45 on request git:sha1…a2d9bef","body":{"commit":"c435fc25ece051db42d42efc7065c2df4d48d0ae","path":"scripts/gate.sh"}}
