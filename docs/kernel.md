@@ -179,7 +179,7 @@ scoped continuations as separate results.
   configuration into a platform home. Design request `1fcd6692` takes it
   into its scope.
 - **K11. The dead example is removed.** The two tracked files
-  below `examples/demo-repo` and the command/link in `docs/policy-pack.md`
+  below `examples/demo-repo` and the command/link in the retired policy-pack guide
   are deleted. The guide states the removal. Dated notes and reports are
   unchanged.
 
