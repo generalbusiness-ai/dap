@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:55cd11cb5e9e5d7ae027c7097782f14604cb439d","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/publishing-provenance.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:57274cd079c8563e209e6e680c667dd1ab6ce3cb","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-25-security-r6-versioned-publication.md."}
