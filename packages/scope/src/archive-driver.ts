@@ -305,6 +305,7 @@ export class ArchiveDriver {
       let archive: JournalArchive | JournalPassArchive;
       let mark: ArchiveMark;
       let selectedParentObjects: readonly string[] | undefined;
+      let selectedRowContextBytes: number | undefined;
       if (row.pending) {
         step = "rebuild";
         const rebuild = row.pending.layout === 2 ? rebuildArchivePass : rebuildArchive;
@@ -345,7 +346,7 @@ export class ArchiveDriver {
             return done({ state: "retry", next: scheduled, reason: "limit" });
           }
           if (!adaptive.ok && "capacityRefusal" in adaptive) capacityRefusal = adaptive.capacityRefusal ?? null;
-          if (adaptive.ok) selectedParentObjects = adaptive.parentObjects;
+          if (adaptive.ok) { selectedParentObjects = adaptive.parentObjects; selectedRowContextBytes = adaptive.rowContextBytes; }
           else if (adaptive.reason === "mismatch") return done({ state: "retry", next: scheduled ?? this.#later(0), reason: adaptive.reason });
           planned = adaptive;
         }
@@ -365,7 +366,7 @@ export class ArchiveDriver {
             const object = all.get(id);
             return object ? { type: object.type, size: object.data.length, data: object.data.length <= maximum ? object.data : null } : null;
           },
-        }, mark, base ?? conversionBase, budget, archiveFrontierRowContextBound(row));
+        }, mark, base ?? conversionBase, budget, selectedRowContextBytes ?? archiveFrontierRowContextBound(row));
         step = "mark";
         row = this.#options.sql.transaction(() => {
           const marked = rows.markAttempt(mark, next, budget);

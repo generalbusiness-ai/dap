@@ -66,7 +66,7 @@ function parentMetadata(context: AdaptiveArchiveContext, budget: ArchiveBudget):
 const setupCost = (): ArchiveCost => sum(archiveDeclarationHandoffCost(ARCHIVE_BOUNDS.nodes),
   archiveForeignHandoffCost(ARCHIVE_BOUNDS.attempts), archiveRetainedHandoffCost(ARCHIVE_BOUNDS.attempts), { inputWork: ARCHIVE_BOUNDS.entries * 32 });
 function finishCost(context: AdaptiveArchiveContext, preparation: JournalPassPreparation, shape: ArchiveScoutLayoutQuote, through: Head,
-  inventory: ArchiveCost, oldRowBytes: number, parent: ParentMetadata, setup: ArchiveCost, legacyAnchors: number, budget: ArchiveBudget): ArchiveCost | null {
+  inventory: ArchiveCost, oldRowBytes: number, rowContextBytes: number, parent: ParentMetadata, setup: ArchiveCost, legacyAnchors: number, budget: ArchiveBudget): ArchiveCost | null {
   // A copied fact can be needed without being written in a local entry.
   // The scout paid for a necessary-key count on each selected local row.
   // It includes nested FactRefs and of/head observations independently of
@@ -110,7 +110,7 @@ function finishCost(context: AdaptiveArchiveContext, preparation: JournalPassPre
     bytes: parent.bytes + patch.layoutWork.outputWork + commit.layoutWork.outputWork,
     incremental: context.parent !== null, maximum: context.maximum });
   if (!rows.ok || !transfer.ok) return null;
-  const frontier = forecastArchiveFrontierFinish({ hasBase: context.parent !== null, through: through.seq, captureFromSource: true, rowContextBytes: archiveFrontierRowContextBound(context.row),
+  const frontier = forecastArchiveFrontierFinish({ hasBase: context.parent !== null, through: through.seq, captureFromSource: true, rowContextBytes,
     markUnits: shape.selectionUnits + publicationUnits, markedRowBytes: pending });
   if (!frontier.ok) return null;
   return sum(setup, inventory, shape.input, publication, { inputWork: JOURNAL_SELECTION_BYTES * 3 }, selection.cost, body.cost,
@@ -126,7 +126,7 @@ export function planRootAdaptiveArchivePass(sql: Sql, context: AdaptiveArchiveCo
 /** Proven capacity exit before selection; not an ordinary build refusal. */
 interface DeferredForCapacity { readonly ok: false; readonly deferred: "capacity"; readonly capacityRefusal: ArchiveCapacityRefusal | null }
 async function adaptiveArchivePass(coupled: boolean, sql: Sql, context: AdaptiveArchiveContext, budget: ArchiveBudget): Promise<
-  (ArchiveBuildFailure & { readonly capacityRefusal?: ArchiveCapacityRefusal | null }) | DeferredForCapacity | (Extract<Awaited<ReturnType<typeof planPublishedArchivePass>>, { ok: true }> & { readonly parentObjects: readonly string[] })> {
+  (ArchiveBuildFailure & { readonly capacityRefusal?: ArchiveCapacityRefusal | null }) | DeferredForCapacity | (Extract<Awaited<ReturnType<typeof planPublishedArchivePass>>, { ok: true }> & { readonly parentObjects: readonly string[]; readonly rowContextBytes: number })> {
   try {
     const snapshotBytes = Object.hasOwn(context, "rowSnapshot")
       ? consumeArchivePlanningSnapshot(context.rowSnapshot, sql, context.row, budget) : null;
@@ -142,6 +142,11 @@ async function adaptiveArchivePass(coupled: boolean, sql: Sql, context: Adaptive
       budget.spend({ metadata: 32 * 1024, inputWork: 256 * 1024 });
       oldRowBytes = utf8(canonicalize(context.row)).length;
     }
+    // Pay the scalar ceiling and its forecast-to-store handoff once, before
+    // lookahead. Only the consumed private snapshot earns the tighter bound;
+    // standalone serialization keeps the original generic ceiling.
+    budget.spend({ metadata: 128, inputWork: 256 });
+    const rowContextBytes = archiveFrontierRowContextBound(context.row, snapshotBytes ?? undefined);
     const unpublished = context.row.confirmed?.layout === 2 && context.row.confirmed.anchorsPublished !== true;
     // Published receipts retain their original operation order. Only the
     // one-time unpublished transition needs the preparation first.
@@ -210,7 +215,7 @@ async function adaptiveArchivePass(coupled: boolean, sql: Sql, context: Adaptive
         const delta: string[] = [];
         for (const file of shape.files) if (file.path !== "journal/v2/head.json" && !file.path.endsWith("/pass.json") && !paths.has(file.path)) { paths.add(file.path); delta.push(file.path); }
         if (delta.length) await preparation.prepare(delta);
-        const parent = parentMetadata(context, budget), cost = finishCost(context, preparation, shape, through, inventory, oldRowBytes, parent, setup, legacyAnchors?.anchors.length ?? 0, budget);
+        const parent = parentMetadata(context, budget), cost = finishCost(context, preparation, shape, through, inventory, oldRowBytes, rowContextBytes, parent, setup, legacyAnchors?.anchors.length ?? 0, budget);
         return { parent, cost };
       });
       if (prepared.kind === "limited") { capacityLimited = true; capacityRefusal = prepared.refusal && { ...prepared.refusal, site: "prepare-finish" }; break; }
@@ -233,7 +238,7 @@ async function adaptiveArchivePass(coupled: boolean, sql: Sql, context: Adaptive
       markedAt: context.markedAt, ...(context.fixtureSources ? { fixtureSources: context.fixtureSources } : {}),
       ...(context.replayScopes ? { replayScopes: context.replayScopes } : {}),
       preparation, ...(legacyAnchors ? { legacyAnchors } : {}), ...constraints }, budget);
-    return built.ok ? { ...built, parentObjects: selected.parent.ids } : built;
+    return built.ok ? { ...built, parentObjects: selected.parent.ids, rowContextBytes } : built;
   } catch (error) {
     if (error instanceof ArchiveStopped) return { ok: false, reason: error.reason,
       capacityRefusal: error.capacityRefusal && { ...error.capacityRefusal, site: "plan-debit" } };

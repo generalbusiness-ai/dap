@@ -42,13 +42,22 @@ export function archiveFrontierMarkCost(units: number): Partial<ArchiveCost> {
  * numbers, separators and an optional future anchorsPublished flag; another
  * KiB is retained by the measured projection's descriptor fence. No body
  * is copied. */
-export function archiveFrontierRowContextBound(row: Pick<ArchiveRow, "at" | "repository" | "confirmed">): number {
+export function archiveFrontierRowContextBound(row: Pick<ArchiveRow, "at" | "repository" | "confirmed">, ownedRowBytes?: number): number {
   const repo = row.repository, old = row.confirmed;
   const units = row.at.scope.length + row.at.inc.length + row.at.kind.length
     + repo.host.length + repo.id.length + repo.name.length + repo.namespace.length
     + (old === null ? 0 : old.commit.length + old.through.hash.length);
   if (!natural(units)) throw new ArchiveStopped("unavailable");
-  return Math.min(32 * 1024, 2048 + units * 6);
+  const generic = Math.min(32 * 1024, 2048 + units * 6);
+  if (ownedRowBytes === undefined) return generic;
+  if (!natural(ownedRowBytes) || ownedRowBytes === 0 || ownedRowBytes > ARCHIVE_ROW_BYTES) throw new ArchiveStopped("unavailable");
+  // Only a consumed same-owner planning snapshot supplies this size. Its
+  // canonical row contains the three disjoint projected objects, including
+  // escaped/UTF-8 strings. Keep the SQL descriptor fence and 32 bytes for
+  // the optional anchorsPublished spelling accepted during promotion.
+  // This is only a ceiling: both paid SQL measurements and identity checks
+  // still run, and refuse any changed context that exceeds it.
+  return Math.min(generic, 1024 + ownedRowBytes + 32);
 }
 
 export interface ArchiveFrontierFinishShape {
