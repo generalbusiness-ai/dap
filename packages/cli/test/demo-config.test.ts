@@ -30,4 +30,8 @@ test("dap-demo has private namespaces, enforced index and the Grow serving bound
   expect(start.register.scope).toBe(JSON.parse(demo.vars.ARTIFACTS_CONFIG).registerScope);
   for (const field of ["SERVING_CREATION_KEY_PER_HOUR", "SERVING_CREATION_ADDRESS_PER_HOUR", "SERVING_READ_KEY_PER_MINUTE", "SERVING_READ_ADDRESS_PER_MINUTE"]) expect(demo.vars[field]).toBe(grow.vars[field]);
   for (const field of ["ALLOW_OPEN_CREATION", "DEPLOYMENT", "SESSION_SECRET"]) expect(demo.vars).not.toHaveProperty(field);
+  // PD-6: artroom-scope carries its live retained-Start value until 8 November 2026 (docs/deploy.md).
+  const scope = read("wrangler.jsonc");
+  expect(JSON.parse(scope.vars.DEMO_START_CONFIG)).toEqual({"definition": "platform:register@8", "deployment": "artroom-scope-demo-2026-10-07", "origin": "https://artroom-scope.inguz.workers.dev", "register": {"inc": "in_dsfqvkghobbf4jkjqkcptkycua", "kind": "register", "scope": "sc_ncinb5dyvrhtzpos52pbzr2uib3vk5fovqc5nqypfjdxs6kugsmq"}, "v": 2});
+  for (const field of ["ARTIFACTS_CONFIG", "ARTIFACTS_NAMESPACE", "DEPLOYMENT", "SESSION_SECRET", "PLATFORM_CREATION_PINS"]) expect(scope.vars).not.toHaveProperty(field);
 });

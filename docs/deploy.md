@@ -54,7 +54,13 @@ Grow carries that same allowance; Lending carries register 5, directory 5,
 membership 4, rules 3, destination 2 and inbox 1. These are exact file-owned
 allowances, added to the parser's implicit newest family. The generic
 `artroom-scope` file retains register mode and no additional allowance;
-its retained-room role is separate from this public offer.
+its retained-room role is separate from this public offer. The file carries
+the live `DEMO_START_CONFIG`, so a deploy from it reproduces the Worker's
+retained Start settings. Retained Start requests end on 8 November 2026.
+On that date the planner deploys the file without that variable, deletes
+the unused secrets `GITHUB_APP_PRIVATE_KEY`, `GITHUB_CREATION_TOKEN` and
+`GITHUB_READ_TOKEN` from the Worker, and records the versions here. The
+legacy creation code leaves with BR-11 of the technical-debt review.
 
 `--keep-vars` preserves settings omitted from the file. Explicit file
 values and reviewed `--var` values still override them and need review.
