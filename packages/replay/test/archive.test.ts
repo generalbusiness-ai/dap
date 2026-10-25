@@ -171,7 +171,10 @@ test("exact caller anchors classify private Register17 and Register18 copies wit
     } });
     const options = { mode: "replay" as const, scope: D.at.scope, head: D.head, platform: nativePlatform, grants: "proven" as const,
       anchors: anchors.map(fact => ({ scope: fact.at.scope, seq: fact.seq, hash: fact.hash })) };
-    expect(await verifyArchive(offline(), options)).toMatchObject({ kind: "verification",
+    const verified = await verifyArchive(offline(), options);
+    const diagnostic = { pin, kind: verified.kind, ...(verified.kind === "verification"
+      ? { result: verified.verification.report.result, why: verified.verification.why } : { result: verified.result, reason: verified.reason }) };
+    expect(verified, JSON.stringify(diagnostic)).toMatchObject({ kind: "verification",
       verification: { report: { result: "consistent", anchors } } });
     expect(await verifyArchive(offline(), { ...options, anchors: [] })).toMatchObject({ kind: "verification",
       verification: { report: { result: "missing-dependency", dependencies: { missing: expect.any(Array) } } } });
