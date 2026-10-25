@@ -1,6 +1,6 @@
 # Match room deploy files to the reviewed deployment policy
 
-BR-1 records the planner's PD-8 policy in the room deployment files. Grow and Lending now name enforced index admission, and Demo, Grow and Lending carry the exact additional creation family their existing register creates. The affected checks passed and a negative inventory control distinguished its fault. The ordinary gate and authentic exact-head review remain **pending**. This is local configuration evidence, not a new deployment or a fresh reading of live settings.
+BR-1 records the planner's PD-8 policy in the room deployment files. Grow and Lending now name enforced index admission, and Demo, Grow and Lending carry the exact additional creation family their existing register creates. The affected checks passed and a negative inventory control distinguished its fault. The ordinary gate passed on the reviewed source checkpoint; authentic exact-head review remains **pending**. This is local configuration evidence, not a new deployment or a fresh reading of live settings.
 
 ## Configuration and compatibility
 
@@ -32,8 +32,18 @@ Control `59614` removed only Demo's source-inventory pair, leaving the documente
 
 The exact positive branch/head/tree and target bytes were restored cleanly at `4f26e1d9efa3e598528a04dd0cce0345960d966b`, tree `44e794908c8e3505ed8ef93a7aaa1ef93e4777a0`. This is not a same-inode restoration claim. The independent source review was clear. Root accepted the independently audited closed control. Its four recorded boundaries are exact, including the cache. These observations do not prove continuous isolation or complete dependency contents. The outer control command used 1.82 seconds wall and 2.11 seconds CPU.
 
+## Ordinary gate
+
+Original gate `75445` closed naturally with owner 0 and npm child 0 at `e8ec5a8b8015d7caf2d8b1a61a2432e8bacc807d`, tree `a5d04fe824895016b51dc67a8a29ab5a416efd75`. All eight gate stages passed, including the maintained chained typecheck with 40 compiler invocations. The test stage reports 3,585 passes and three ordinary skips across 3,588 cases in 501 files. Eleven owning Node files passed 42 tests, followed by 55 generated Counting Node tests. Counting is Node coverage, not browser validation. There were no unhandled errors, signals, owner errors or unreached stages.
+
+The independent audit reconciles all 3,588 unique terminal case IDs. The BR-1 CLI configuration case has complete ready/result/final coverage. Across the full suite, 13 ready and 33 result callbacks are missing; every affected ID has a terminal pass. No duplicate callbacks, extra IDs or identity/state mismatches were found. Missing callbacks are not inferred present, and terminal status does not prove every assertion executed. No separate collection, builtin Vitest JSON or retry ledger was emitted.
+
+All 17 original/copied stage files authenticate. Four recorded boundaries match under the narrow named results-file and directory-metadata allowances. This is finite checkpoint/source/tool/environment and dependency-descriptor evidence, not continuous isolation or a complete dependency-content proof. Root accepted the frozen independent gate audit.
+
+The gate's outer command used 1,398.77 seconds wall and 1,608.09 seconds inclusive CPU (1,439.73 user plus 168.36 system). Npm child, owner and stage measurements are nested within that command and are not added again. These are partial local measurements, not a benchmark or full delivery cost.
+
 ## Remaining delivery
 
 The accepted filesystem-only private dependency copy used 2.32 seconds wall and 1.93 seconds CPU. It copied 5,498 regular files, 535 directories and 32 relative links without package installation, package execution or copied runtime caches. It prepares the private dependency view; it is not a test or compatibility execution. All reported costs are partial local measurements, not a benchmark or full delivery total.
 
-One ordinary gate, authentic exact-head checker review, final delivery head and planner rollout remain **pending**. No gate pass, Main landing or hosted acceptance is inferred from the affected run or control. This note reports request `3e836613` under promise `06d1084c` only; any archive shortfall preempts it. BR-2 and R7 remain separate. Private evidence grants do not authorize publication of raw logs, environment values, provider payloads or physical snapshots.
+Authentic exact-head checker review, final delivery head, landing and planner rollout remain **pending**. This proposed follow-up changes only the primary note; the gate ran on `e8ec5a8b`, not on the future documentation commit. No further gate run is implied by this note-only update. A local gate pass establishes no deployment or hosted acceptance. This note reports request `3e836613` under promise `06d1084c` only; any archive shortfall preempts it. BR-2 and R7 remain separate. Private evidence grants do not authorize publication of raw logs, environment values, provider payloads or physical snapshots.
