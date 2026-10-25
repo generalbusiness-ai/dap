@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:88f5d23e8d735ef9c74a823260644356ee15ab7f","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-25-site-token-reuse.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8bf152826c25a4e8ac6f2b87b5641737fd26feb2","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/site-route.test.ts."}
