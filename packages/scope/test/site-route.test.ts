@@ -363,7 +363,9 @@ test("a page: a markdown file at HEAD, at its branch and at a tag renders as HTM
     expect(named.body).toContain(`<a href="/site/${D.name}/${ref}/README.md">home</a>`);
   }
   expect(host.minted.length).toBeGreaterThan(0);
-  expect(host.revoked.size).toBe(0);
+  // Closing a Site reader must not revoke its shared read token. The
+  // creation token has its own legitimate lifecycle and is not in minted.
+  expect(host.minted.filter(token => host.revoked.has(token))).toEqual([]);
 });
 
 // Invariant: one checked-in document renders the supported GFM constructs through Site; its repository links and image
