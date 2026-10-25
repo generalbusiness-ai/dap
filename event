@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at vitest.projects.mjs","body":{"commit":"86204d441de03232ecb68fc603e115eb327c73e3","path":"vitest.projects.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:033c31765e459d8e7ca1a59eeccf9f8c978b912a","text":"Merge retired a covered predecessor; the successor is at apps/counter/scripts/node-witness.test.mjs."}
