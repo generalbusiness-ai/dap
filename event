@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:033c31765e459d8e7ca1a59eeccf9f8c978b912a","text":"Merge retired a covered predecessor; the successor is at apps/counter/scripts/node-witness.test.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:04b1add00b33c036540702297edccf75fe04a930","text":"Merge retired a covered predecessor; the successor is at apps/counter/scripts/test-browser.mjs."}
