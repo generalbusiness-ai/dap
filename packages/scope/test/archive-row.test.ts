@@ -7,7 +7,7 @@ import { ARCHIVE_ROW_BYTES, ArchiveRows, consumeArchivePlanningSnapshot, type Ar
 import { readArchiveRestart } from "../src/archive-restart.ts";
 import { ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
 import { at, create, type Lane } from "./fixtures-native.ts";
-import { SqliteStore } from "../src/sqlite.ts";
+import { SqliteStore, type SqlValue } from "../src/sqlite.ts";
 import { readRetainedArchivePass } from "../src/archive-retained-pass.ts";
 import { archiveSql } from "./support/archive.ts";
 import { ARCHIVE_CONFIRMED_ROW_BYTES, archivePendingRowBytesUpper, forecastArchiveBookkeeping } from "../src/archive-row-cost.ts";
@@ -163,7 +163,10 @@ test("persists retries and stops with a small wake index", async () => {
 test("capacity wake reservations preserve old rows, saturate and refuse a stale Mark", async () => {
   const lane = await create(), head = await lane.head();
   await lane.inside(state => {
-    const sql = archiveSql(state), store = new ArchiveRows(sql, lane.at);
+    const native = archiveSql(state); let nativeCalls = 0;
+    const sql = { transaction: native.transaction, exec(query: string, ...args: SqlValue[]) {
+      nativeCalls++; return native.exec(query, ...args);
+    } }, store = new ArchiveRows(sql, lane.at);
     const target = store.target(repository, "sha1"); store.defer(at(30));
     // Only this store's same-budget owned row earns serialization reuse.
     // Genuine token failure below is the exact cross-budget control seam.
@@ -186,13 +189,17 @@ test("capacity wake reservations preserve old rows, saturate and refuse a stale 
     expect(Reflect.set(genuine.planning.row.repository, "host", "cannot change owned snapshot")).toBe(false);
     expect(consumeArchivePlanningSnapshot(genuine.planning.token, sql, genuine.planning.row, genuine.allowance)).toBe(size);
     expect(() => consumeArchivePlanningSnapshot(genuine.planning.token, sql, genuine.planning.row, genuine.allowance)).toThrow("archive-row-unavailable");
-    for (const mutation of ["accessor", "value"] as const) {
+    for (const mutation of ["accessor", "value", "object", "oversized"] as const) {
       const allowance = new ArchiveBudget(), owned = store.load(allowance)!;
       let getters = 0;
+      const trap = { get length() { getters++; return 1; }, get toJSON() { getters++; return () => repository.host; } };
       Object.defineProperty(owned.repository, "host", mutation === "accessor"
-        ? { get() { getters++; return repository.host; } } : { value: "different bounded host" });
+        ? { get() { getters++; return repository.host; } }
+        : { value: mutation === "object" ? trap : mutation === "oversized" ? "x".repeat(32769) : "different bounded host" });
+      const before = nativeCalls;
       expect(() => store.prepareCapacityDeferral(owned, () => at(60), allowance)).toThrow("archive-row-unavailable");
       expect(getters).toBe(0);
+      if (mutation !== "value") expect(nativeCalls).toBe(before);
     }
     const allowance = new ArchiveBudget(), owned = store.load(allowance)!;
     expect(store.prepareCapacityDeferral({ ...owned }, () => at(60), allowance).planning).toBeUndefined();

@@ -366,12 +366,17 @@ export class ArchiveRows {
         budget.spend(custody);
         const data = (key: string): unknown => Object.getOwnPropertyDescriptor(row, key)?.value;
         if (!dataShape(row, ["v", "at", "repository", "format", "confirmed", "pending", "attempts", "next", "stopped"])
+          || data("pending") !== null || data("stopped") !== null
           || data("at") !== this.#ownedAt || data("repository") !== this.#ownedRepository || data("confirmed") !== this.#ownedConfirmed
           || !dataShape(this.#ownedAt!, ["scope", "inc", "kind"]) || !dataShape(this.#ownedRepository!, ["host", "id", "name", "namespace"])
           || this.#ownedConfirmed !== null && (!dataShape(this.#ownedConfirmed, ["commit", "through",
             ...(Object.hasOwn(this.#ownedConfirmed, "layout") ? ["layout"] : []), ...(Object.hasOwn(this.#ownedConfirmed, "anchorsPublished") ? ["anchorsPublished"] : [])])
             || Object.getOwnPropertyDescriptor(this.#ownedConfirmed, "through")?.value !== this.#ownedThrough
             || !dataShape(this.#ownedThrough!, ["seq", "hash"]))) return refuse("unavailable");
+        // Data descriptors can still contain objects or oversized strings.
+        // The original closed-schema validator rejects those by type/length
+        // before any row bound, serialization, clone or SQL projection.
+        checked(row, this.#at, budget);
       }
       const previous = this.#wake(budget);
       if (!previous || previous.stopped || row.pending !== null || row.stopped !== null) return refuse("unavailable");
