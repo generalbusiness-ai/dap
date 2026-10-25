@@ -25,7 +25,7 @@ import { countedEntries } from "@generalbusiness/dap-derive";
 
 import type { Bounds, Digest, Entry, FactRef, Incarnation, PlatformDefinition, ScopeId, Seed, UnavailableReason } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isPlatformDefinition, newIncarnation, isSeed, parseStrict, platformName } from "@generalbusiness/dap-bytes";
-import { applicationPublicationOrigin, publishingLaneAffiliation } from "@generalbusiness/dap-platform";
+import { applicationPublicationOrigin, publishingLaneAffiliation, usesFilePublicationProtocol } from "@generalbusiness/dap-platform";
 import { bound, clockOf, creationFields, factsNamed, isEntryOf, isFactRef, isLocalId, isObject, isScopeRef, judgeDelivery, judgeGenesis, messageFacts, messageTexts, own, prepareRules, readFields, textsNamed } from "@generalbusiness/dap-derive";
 import type { Clock as Reading, Creation, Delivered, DeliveryContext, Fetched, Judgment, PlatformRules, StateView, ValidDefinition } from "@generalbusiness/dap-derive";
 import { NO_INCARNATION, Observes, Received, ownOf, retainedFacts, snapshotsOf, used, valuesOf, type Scope } from "./core.ts";
@@ -136,7 +136,7 @@ export class Deliveries {
     const receiving = this.#scope.pinned();
     const reserve = receiving && isPlatformDefinition(receiving.named) && platformName(receiving.named) === "platform:destination"
       && message.class === "request" && message.type === "tell" && isObject(message.body) && message.body["message"] === "reserve";
-    const file = ["platform:destination@4", "platform:destination@5", "platform:destination@6", "platform:destination@7", "platform:destination@8", "platform:destination@13"].includes(receiving?.named ?? "") && message.class === "request" && message.type === "tell"
+    const file = usesFilePublicationProtocol(receiving?.named ?? "") && message.class === "request" && message.type === "tell"
       && isObject(message.body) && message.body["message"] === "publish-file";
     const previous = store.decided(from.at, from.seq, delivered.n);
     const known = previous !== null;
