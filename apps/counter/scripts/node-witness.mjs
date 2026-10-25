@@ -1,21 +1,31 @@
 // Bound the generated Node test process, including startup and teardown.
 // Node's per-test timer alone cannot bound a blocked application thread.
 import { spawn } from "node:child_process";
-import { basename } from "node:path";
+import { basename, isAbsolute } from "node:path";
 
 export function runNodeWitness(files, {
   cwd,
   testTimeoutMs = 30_000,
   runTimeoutMs = 120_000,
   capture = false,
+  observation,
   report = console.error,
 } = {}) {
   for (const ms of [testTimeoutMs, runTimeoutMs]) if (!Number.isSafeInteger(ms) || ms <= 0 || ms > 2_147_483_647) throw new Error("Counting witness timeout must be a finite positive timer.");
+  const reporterArgs = [];
+  if (observation !== undefined) {
+    if (!observation || typeof observation.reporter !== "string" || typeof observation.destination !== "string"
+      || !isAbsolute(observation.destination)) throw new Error("Counting observation requires an absolute reporter file URL and destination.");
+    const reporter = new URL(observation.reporter);
+    if (reporter.protocol !== "file:" || reporter.host !== "" || reporter.search || reporter.hash) throw new Error("Counting observation reporter must be a local file URL.");
+    reporterArgs.push("--test-reporter=spec", `--test-reporter=${reporter.href}`,
+      "--test-reporter-destination=stdout", `--test-reporter-destination=${observation.destination}`);
+  }
   const names = files.map(file => basename(file)).join(", ");
   const grouped = process.platform !== "win32";
   const env = Object.fromEntries(Object.entries(process.env).filter(([name]) => !["NODE_PATH", "NODE_OPTIONS", "NODE_TEST_CONTEXT"].includes(name)));
   return new Promise(resolve => {
-    const child = spawn(process.execPath, ["--test", `--test-timeout=${testTimeoutMs}`, ...files], {
+    const child = spawn(process.execPath, ["--test", `--test-timeout=${testTimeoutMs}`, ...reporterArgs, ...files], {
       cwd, env, detached: grouped, stdio: capture ? ["ignore", "pipe", "pipe"] : "inherit",
     });
     let reason = "exit", interruption = 0, stdout = "", stderr = "";
