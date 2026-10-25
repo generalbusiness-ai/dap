@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/cli/test/demo-config.test.ts","body":{"commit":"778fea00ce1d92bcc2af59bc5343cdb5fe41feea","path":"packages/cli/test/demo-config.test.ts"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:25990dbdabb7568beb7dbf088365dd63b15753e0","text":"Merge retired a covered predecessor; the successor is at docs/self-host.md."}
