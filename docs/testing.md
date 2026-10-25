@@ -429,7 +429,8 @@ the final gate, meaningful controls, manual acceptance or complete review.
 
 ## Before a review
 
-Run the gate once, at the head you will send.
+Run the gate once, at the head you will send, except for the
+[limited follow-ups below](#follow-up-after-a-gate).
 
 ```
 npm run gate
@@ -594,11 +595,27 @@ either is stale.
 The earlier spikes were removed from main. They remain at the tag
 `spikes-final`, where `spikes/parked/README.md` says what is there.
 
-Do not run it again for a commit that changes only documents; say that the
+### Follow-up after a gate
+
+Do not run the gate again for a commit that changes only documents; say that the
 source and tests are unchanged, and give the two tree hashes.
 When a gate fails only in a test that reads a document and the repair changes
 only that document, rerun that test file and the steps the gate never reached,
 and report the failed run and follow-up together.
+
+If a gate fails only in one test file, a targeted follow-up can cover an
+isolated repair to that file. Only the failing test file and
+explanatory documentation may change. Production code, configuration outside
+that file, dependencies, shared helpers and imported code must remain unchanged.
+The test file must not be imported by other files.
+
+Run any compiler context whose inputs changed, the whole owning test file,
+and the steps the gate never reached. Retain all original cases, their
+deadlines and their assertions about production behavior.
+Do not replace the failed case with a narrower test or weaken its assertions.
+Keep the failed gate and follow-up outcomes separate. The checker must assess
+whether the exact repair and evidence meet these conditions; a passing follow-up
+does not turn the failed gate into a pass.
 
 ## Entry-point inventory
 
@@ -674,7 +691,8 @@ the witness of each decision.
 
 Review the change, the invariants it touches and their witnesses. Probe
 with a few focused counterexamples of your own. Run the gate once at the
-head under review. Do not rebuild a per-field or per-guard inventory.
+head under review, subject to the [limited follow-up exception](#follow-up-after-a-gate).
+Do not rebuild a per-field or per-guard inventory.
 
 ## Measuring the cost
 
