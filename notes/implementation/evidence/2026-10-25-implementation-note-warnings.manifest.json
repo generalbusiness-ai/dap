@@ -328,7 +328,7 @@
   "primaryNote": {
     "path": "notes/implementation/2026-10-25-implementation-note-warnings.md",
     "bytes": 9821,
-    "sha256": "ff3a5d0a2e51a5c08ab2e07146a47142eb9c0304f3ad7fce8635512dc8de1d58"
+    "sha256": "69f25d53cfc1bb26b0c012aa1e374f11da64f359f0aac2092cdb54d0e488d70e"
   },
   "seal": {
     "index": "SHA256SUMS",
@@ -343,7 +343,9 @@
   "retention": {
     "minimumDays": 30,
     "retainUntilAtLeastUTC": "2026-11-25T22:23:31.072926+00:00",
-    "removalAuthority": "planner; no automatic deletion"
+    "removalAuthority": "planner; no automatic deletion",
+    "minimumDaysAfterLanding": 30,
+    "qualification": "Retain until the later of the initial UTC minimum and 30 days after the actual landing. Only the planner may remove the directory."
   },
   "withheld": [
     "Private Source/tool/environment/dependency/cache vectors and raw capture/binding/envelope records",

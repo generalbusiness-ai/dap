@@ -134,7 +134,7 @@ The [evidence manifest](evidence/2026-10-25-implementation-note-warnings.manifes
 indexes the durable files and their hashes. The top-level `SHA256SUMS` covers
 all other retained files, including the already sealed subphase indexes.
 The evidence root is read-only after the final writes. Retention is at least
-30 days after sealing, with removal controlled by the planner. Raw
+30 days after landing, with removal controlled by the planner. Raw
 environment and physical binding vectors remain private.
 Finite boundary checks do not prove continuous isolation or all dependency
 content bytes. The note and final manifest can change after this tested
