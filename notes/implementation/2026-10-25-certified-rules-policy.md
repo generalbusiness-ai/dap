@@ -43,7 +43,7 @@ slice.
 
 ## Evidence
 
-This is the initial Source checkpoint. Ten reviewed external packets were
+This is a Source checkpoint. Ten reviewed external packets were
 assembled with four explicit predecessor-to-successor overlaps. The six
 Page paths and narrow barrel/workspace-lock changes were reviewed
 separately. All existing beforeimages matched both Main `86204d44` and the
@@ -65,6 +65,19 @@ compiler closure, the ordinary gate and exact-head review. Generated
 digests will come from the maintained producer. Source reviews establish
 no runtime result or hosted fit.
 
-Archive request `3e01b385` keeps runtime and landing priority. Its limited
-follow-up is running independently. The planner owns deployment and any
+Two native journeys now have reviewed Source in the lanes package. They
+cover actual new-family birth and certified publication, stale policy and
+required jobs, and staged publication with a replaced job generation.
+Both Membership invitations use the actual key and proof encoding. The
+journeys remain uncompiled and unexecuted. A native negative witness for
+a foreign Membership incarnation remains a gap: Q11 refuses that policy
+at its same-sibling checker boundary.
+
+Private dependency setup is accepted after a preserved initial refusal
+and a reviewed continuation. The hidden npm metadata lacked an existing
+workspace edge. The continuation repairs that edge and the new Git edge,
+then writes the recipient lock stamp last. It installs no package.
+
+Archive request `3e01b385` keeps landing priority. Its limited follow-up
+passed and its final head is under exact-head review. The planner owns deployment and any
 new-family creation allowance after review.
