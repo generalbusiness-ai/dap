@@ -15,6 +15,7 @@ import { ARCHIVE_BOUNDS, ArchiveBudget, type ArchiveCost, type ArchiveCapacityRe
 import { driver, ScriptedHost } from "./support/archive-driver.ts";
 import type { ArchivePolicyRegistry } from "../src/archive-inventory.ts";
 import { archiveHostGate as gate } from "./support/archive-provider.ts";
+import { ArchivePrefixStopped } from "../src/archive-prefix.ts";
 import { ArchiveDriver } from "../src/archive-driver.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
 import { planArchive, type ArchiveFixedFinish } from "../src/archive-build.ts";
@@ -438,9 +439,9 @@ test("adaptive Native passes reserve writing, incremental sending and confirmati
   // and published frontier, but explicit TEST target/source/provider ports.
   // A fresh capacity wake must not retry adaptive scouting in that budget.
   const sourceOrder: string[] = [], fixedBudgets: ArchiveBudget[] = [];
-  let withdraw = false;
-  const productionPass = (shortage = false) => lane.inside(state => {
-    const budget = new ArchiveBudget(shortage ? { entries: 0 } : {}); fixedBudgets.push(budget);
+  let withdraw = false, hardWithdraw = false;
+  const productionPass = (shortage = false, metadata?: number) => lane.inside(state => {
+    const budget = new ArchiveBudget(shortage ? { entries: 0 } : metadata === undefined ? {} : { metadata }); fixedBudgets.push(budget);
     return new ArchiveDriver({ production: "room-binding", sql: archiveSql(state),
       current: () => ({ at: lane.at, head }), clock: () => lane.c.clock.now, bounds: PROPOSED_BOUNDS,
       policies: { registry: archiveAuthorityPolicies(lane, archivePolicies) }, admit: () => true,
@@ -450,6 +451,7 @@ test("adaptive Native passes reserve writing, incremental sending and confirmati
         expect(actualBudget).toBe(budget); expect(exact).toBe(false); sourceOrder.push("sources");
         return { pins: archiveAuthorityBasis(lane)!.pins, prepare: async (seq, sameBudget) => {
           expect(sameBudget).toBe(budget); sourceOrder.push(`prepare:${seq}`);
+          if (hardWithdraw) throw new ArchivePrefixStopped("foreign-source-unavailable");
           if (withdraw) budget.stop("unavailable");
         } };
       },
@@ -462,7 +464,57 @@ test("adaptive Native passes reserve writing, incremental sending and confirmati
   expect(capacityWake.capacityDeferrals).toBe(1);
   expect((await row(lane))!.confirmed).toEqual(published); expect((await row(lane))!.pending).toBeNull();
   const sendsBefore = host.sends.length, mintsBefore = host.mintCalls;
-  lane.c.clock.now = capacityWake.next; withdraw = true; sourceOrder.length = 0;
+  // A lower per-turn metadata allowance must reach the complete fixed
+  // quote, not exhaust a discovery debit. If 512 KiB cannot reach that
+  // boundary this fixture fails visibly; no affordability result is faked.
+  lane.c.clock.now = capacityWake.next; sourceOrder.length = 0;
+  const constrainedMetadata = 512 * 1024;
+  expect(await productionPass(false, constrainedMetadata)).toMatchObject({ state: "retry", reason: "limit" });
+  const refusedFixed = diagnostics.at(-1)!;
+  expect(refusedFixed.fixedFinish, JSON.stringify(refusedFixed)).not.toBeNull();
+  expect(refusedFixed.capacityRefusal, JSON.stringify(refusedFixed)).toMatchObject({
+    site: "finish-affordability", kind: "finish-quote", limit: { metadata: constrainedMetadata }, reserved: { metadata: 65_536 },
+  });
+  expect(refusedFixed.capacityRefusal!.shortfall.metadata).toBeGreaterThan(0);
+  expect(refusedFixed.fixedFinish!.metadataMargin).toBe(65_536);
+  expect(refusedFixed.capacityRefusal!.used).toEqual(refusedFixed.fixedFinish!.used);
+  expect(refusedFixed.capacityRefusal!.requested).toEqual(refusedFixed.fixedFinish!.remaining);
+  expect(refusedFixed.cost.metadata).toBeLessThanOrEqual(constrainedMetadata);
+  expect(sourceOrder).toEqual(["target", "sources", `prepare:${published.through.seq + 1}`]);
+  expect((await row(lane))!.confirmed).toEqual(published); expect((await row(lane))!.pending).toBeNull();
+  expect(host.sends).toHaveLength(sendsBefore); expect(host.mintCalls).toBe(mintsBefore);
+  const afterQuoteWake = await lane.inside(state => new ArchiveRows(archiveSql(state), lane.at).wake());
+  expect(afterQuoteWake).not.toBeNull();
+  // The same confirmed receipt supplies an actual quote for a new trusted
+  // test limit. This fresh turn must fit R itself but refuse its 64 KiB
+  // margin; the assertions below use its new actual U/R, not the old ones.
+  const marginOnlyMetadata = refusedFixed.fixedFinish!.used.metadata + refusedFixed.fixedFinish!.remaining.metadata + 32_768;
+  expect(Number.isSafeInteger(marginOnlyMetadata)).toBe(true);
+  expect(marginOnlyMetadata).toBeLessThanOrEqual(ARCHIVE_BOUNDS.metadata);
+  lane.c.clock.now = afterQuoteWake!; sourceOrder.length = 0;
+  expect(await productionPass(false, marginOnlyMetadata)).toMatchObject({ state: "retry", reason: "limit" });
+  const refusedMargin = diagnostics.at(-1)!;
+  expect(refusedMargin.fixedFinish, JSON.stringify(refusedMargin)).not.toBeNull();
+  const marginQuote = refusedMargin.fixedFinish!;
+  const actualWithoutMargin = marginQuote.used.metadata + marginQuote.remaining.metadata;
+  expect(actualWithoutMargin, JSON.stringify(refusedMargin)).toBeLessThanOrEqual(marginOnlyMetadata);
+  expect(actualWithoutMargin + 65_536, JSON.stringify(refusedMargin)).toBeGreaterThan(marginOnlyMetadata);
+  expect(marginQuote.metadataMargin).toBe(65_536);
+  expect(refusedMargin.capacityRefusal, JSON.stringify(refusedMargin)).toMatchObject({
+    site: "finish-affordability", kind: "finish-quote", limit: { metadata: marginOnlyMetadata }, reserved: { metadata: 65_536 },
+  });
+  expect(refusedMargin.capacityRefusal!.used).toEqual(marginQuote.used);
+  expect(refusedMargin.capacityRefusal!.requested).toEqual(marginQuote.remaining);
+  expect(refusedMargin.capacityRefusal!.shortfall.metadata).toBeGreaterThan(0);
+  expect(refusedMargin.cost.metadata).toBeLessThanOrEqual(marginOnlyMetadata);
+  expect(sourceOrder).toEqual(["target", "sources", `prepare:${published.through.seq + 1}`]);
+  expect((await row(lane))!.confirmed).toEqual(published); expect((await row(lane))!.pending).toBeNull();
+  expect(host.sends).toHaveLength(sendsBefore); expect(host.mintCalls).toBe(mintsBefore);
+  const afterMarginWake = await lane.inside(state => new ArchiveRows(archiveSql(state), lane.at).wake());
+  expect(afterMarginWake).not.toBeNull();
+  // Each retry gets its own ordinary original allowance; neither earlier
+  // constrained budget is raised, reset or reused after its refusal.
+  lane.c.clock.now = afterMarginWake!; withdraw = true; sourceOrder.length = 0;
   expect(await productionPass()).toMatchObject({ state: "retry", reason: "unavailable" });
   expect(sourceOrder).toEqual(["target", "sources", `prepare:${published.through.seq + 1}`]);
   expect((await row(lane))!.confirmed).toEqual(published); expect((await row(lane))!.pending).toBeNull();
@@ -491,10 +543,24 @@ test("adaptive Native passes reserve writing, incremental sending and confirmati
     const cost = budget.admitted();
     for (const key of ["entries", "attempts", "nodes", "calls", "metadata", "inputWork"] as const) expect(cost[key]).toBeLessThanOrEqual(ARCHIVE_BOUNDS[key]);
   }
+  // Put the irreversible hard-source refusal last: no test resets a stop
+  // or invents a second Native fixture with a conflicting clock owner.
+  expect(await productionPass(true)).toMatchObject({ state: "retry", reason: "limit" });
+  const hardWake = await lane.inside(state => new ArchiveRows(archiveSql(state), lane.at).wake());
+  expect(hardWake).not.toBeNull(); lane.c.clock.now = hardWake!;
+  const hardMints = host.mintCalls, hardSends = host.sends.length;
+  hardWithdraw = true; sourceOrder.length = 0;
+  expect(await productionPass()).toMatchObject({ state: "stopped", reason: "foreign-source-unavailable", next: null });
+  expect(sourceOrder).toEqual(["target", "sources", `prepare:${fixedReceipt.confirmed!.through.seq + 1}`]);
+  const hardDiagnostic = diagnostics.at(-1)!;
+  expect(hardDiagnostic.fixedFinish).toBeNull(); expect(hardDiagnostic.capacityRefusal).toBeNull();
+  expect((await row(lane))!).toMatchObject({ confirmed: fixedReceipt.confirmed, pending: null, stopped: { reason: "foreign-source-unavailable" } });
+  expect(host.mintCalls).toBe(hardMints); expect(host.sends).toHaveLength(hardSends);
+  expect(await lane.head()).toEqual(head);
   (context.task.meta as Record<string, unknown>)["adaptiveNative"] = { cap: maximum, first: first.through.seq, second: second.confirmed!.through.seq,
     costs: budgets.map(budget => budget.admitted()), quotes, lookaheads, appendCalls: host.appendCalls,
-    fixed: { sourceOrder, costs: fixedBudgets.map(budget => budget.admitted()), through: fixedReceipt.confirmed!.through },
-    qualification: "Actual Native checkpoint entries, adaptive scouting, fresh inventory, writer, driver copies, production incremental-send code including validator/copy/pack and Native row confirmation; HTTP/host/token/policies remain TEST stand-ins. Original production caps including 64 MiB input; bounded synchronous observations require charged discarded lookahead under a positive finish reserve. Two original adaptive passes plus one shortage, one withdrawn-source retry and one fixed-next confirmation; no cadence/10000-one-entry claim." };
+    fixed: { refusedFixed, refusedMargin, marginOnlyMetadata, hardDiagnostic, sourceOrder, costs: fixedBudgets.map(budget => budget.admitted()), through: fixedReceipt.confirmed!.through },
+    qualification: "Actual Native checkpoint entries, adaptive scouting, fresh inventory, writer, driver copies, production incremental-send code including validator/copy/pack and Native row confirmation; HTTP/host/token/policies remain TEST stand-ins. Original production caps including 64 MiB input; bounded synchronous observations require charged discarded lookahead under a positive finish reserve. Two original adaptive passes plus genuine capacity wakes, a constrained complete-quote refusal, a margin-only refusal, an unavailable source retry, one fixed-next confirmation and a final preserved hard-source refusal; no cadence/10000-one-entry claim." };
 });
 
 test("adaptive Native selection finishes a covered earlier prefix before an uncovered later class", async () => {
