@@ -66,7 +66,7 @@ authorization to install a register remains unimplemented.
 The examples are from one run of the test in
 `packages/cli/test/story.scope.test.ts`, with long IDs cut short.
 
-**`dap install <base-url> [--host <git-host>] [--namespace <name>] [--register-policy keys|open] [--cohort application|application-publication|trusted-application|declared-application|device-application|archive-application|archive-declared-application|archive-device-application|invitation-key]`**
+**`dap install <base-url> [--host <git-host>] [--namespace <name>] [--register-policy keys|open] [--cohort file-publication|application|application-publication|trusted-application|declared-application|device-application|archive-application|archive-declared-application|archive-device-application|archive-device-publication|invitation-key]`**
 creates the register with an `install` intent, signed by a new operator
 key, which is also the one creator key. The host defaults to `github.com`
 and the namespace to `artroom`. For the demo's host, the hosting's own Git
@@ -78,7 +78,7 @@ Installed: register sc_hinqqbm4....
 The operator key key_baqzbaDy... is kept in the config directory, readable only by you. It is the one founder key.
 ```
 
-**`dap install --plan <base-url> [--host <git-host>] [--namespace <name>] [--register-policy keys|open] [--cohort application|application-publication|trusted-application|declared-application|device-application|archive-application|archive-declared-application|archive-device-application|invitation-key]`**
+**`dap install --plan <base-url> [--host <git-host>] [--namespace <name>] [--register-policy keys|open] [--cohort file-publication|application|application-publication|trusted-application|declared-application|device-application|archive-application|archive-declared-application|archive-device-application|archive-device-publication|invitation-key]`**
 signs the same `install` intent and creates nothing. A register's ID is a
 function of its seed, and the seed of the intent and the register's
 version alone, so the command prints the ID that the install will create,
@@ -95,7 +95,7 @@ Planned: register sc_4kq2v7..., under platform:register@2, on host artifacts, na
 Set registerScope to sc_4kq2v7... in the Worker's host setting, then run dap install --planned before 2026-10-08T09:14:00Z.
 ```
 
-**`dap install --planned [--register-policy keys|open] [--cohort application|application-publication|trusted-application|declared-application|device-application|archive-application|archive-declared-application|archive-device-application|invitation-key]`** creates the planned register, with the kept
+**`dap install --planned [--register-policy keys|open] [--cohort file-publication|application|application-publication|trusted-application|declared-application|device-application|archive-application|archive-declared-application|archive-device-application|archive-device-publication|invitation-key]`** creates the planned register, with the kept
 intent and no other argument. Before anything is sent it checks the plan:
 a plan whose ID is not the one its intent and version make, or whose
 version is not supported by the installed catalog, is refused as
@@ -110,10 +110,10 @@ or delete the original config or keys.
 
 For example, set `DAP_HOME` to a new private directory, then run
 `dap install --plan <base-url> --cohort <cohort> --host <host>
---namespace <namespace>`, using `application`, `application-publication`,
+--namespace <namespace>`, using `file-publication`, `application`, `application-publication`,
 `trusted-application`, `declared-application`, `device-application`,
 `archive-application`, `archive-declared-application`,
-`archive-device-application` or `invitation-key`
+`archive-device-application`, `archive-device-publication` or `invitation-key`
 for `<cohort>`. After configuring the new register ID,
 run `dap install --planned --cohort <cohort>` with the same
 `DAP_HOME`. This creates separate custody and a new operator key; it
@@ -143,7 +143,10 @@ install. `--planned` without a policy reuses it; an explicit conflicting policy
 refuses before submission and keeps the original plan. This open selector
 stays register@17 even if a later task changes the ordinary default.
 
-Without an explicit open policy, omitting `--cohort` keeps the legacy default. `--cohort application` selects
+Without an explicit open policy, omitting `--cohort` selects
+`ARCHIVE_DEVICE_PUBLICATION_COHORT`: register@18, directory@17, membership@8,
+rules@10, destination@13 and inbox@1. `--cohort archive-device-publication`
+selects that same cohort explicitly. `--cohort application` selects
 `APPLICATION_COHORT`: register@5, directory@5, membership@4, rules@3,
 destination@2 and inbox@1, each with the `platform:` prefix.
 `--cohort trusted-application` selects `TRUSTED_APPLICATION_COHORT`:
@@ -161,7 +164,13 @@ Other package v2 declared projections use the
 declared-application cohort. Package v1 keeps
 the trusted-application cohort and its original proof format.
 The retired register@6, directory@6 and membership@5 cohort remains readable;
-new installs cannot select it. `--cohort application-publication`
+new installs cannot select it. `--cohort file-publication` selects the
+historical manifest-publication room: register@3, directory@3, membership@2,
+rules@2, destination@3 and inbox@1. This selection uses exact planned custody.
+An older unmarked, definitely unsent register@3 plan can still be replaced.
+Explicit selection of a matching retained plan keeps its original signature
+and adds only a local custody marker. Attempted plans always retain their
+original request. `--cohort application-publication`
 selects `FILE_PUBLICATION_COHORT`: register@9, directory@8, membership@4,
 rules@3, destination@4 and inbox@1. `--cohort invitation-key` selects
 register@10, directory@9, membership@6, rules@3, destination@2 and inbox@1.

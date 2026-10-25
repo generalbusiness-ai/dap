@@ -427,7 +427,8 @@ test("an archive-device-publication application automatically publishes device r
       const store = new SqliteStore({ exec: (sql, ...args) => storage.storage.sql.exec(sql, ...args), transaction: run => storage.storage.transactionSync(run) });
       return { ...store.all(), sending: store.all().operations.filter(row => row.kind === "push").map(row => ({ id: row.id, mark: store.sending(row.id, 1)?.sent })) };
     }));
-    const report = (content: string) => C.did(rita, "report", { on: device, fields: { reported: 80, path: "device/reading.md", content } });
+    const report = async (content: string) => C.did(rita, "report", { on: device,
+      expected: await C.expected({ on: device, root: 0 }), fields: { reported: 80, path: "device/reading.md", content } });
     const first = await report("# First device reading\n");
     await pause(nodes);
     const firstCause = factRefOf((await C.entries())[first]!);

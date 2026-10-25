@@ -4,7 +4,7 @@ import { inject, expect, test, onTestFinished } from "vitest";
 import { PROPOSED_BOUNDS, type Entry, type FactRef, type ScopeId, type ScopeRef } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, timeOf, unb64url, definitionDigest, sign, keyIdOfSecret, digestBytes, factRefOf, scopeIdOf, timeMs, utf8, textDigest } from "@generalbusiness/dap-bytes";
 import { requestSession, sessionRequest, signedReader, type Fetch } from "@generalbusiness/dap-client";
-import { ARCHIVE_DEVICE_PUBLICATION_COHORT, FILE_PUBLICATION_COHORT, firstExtents, CONFIGURATION_DOMAIN, platform, revokedToken, destinationWrite, destinationRevokedMint } from "@generalbusiness/dap-platform";
+import { ARCHIVE_DEVICE_PUBLICATION_COHORT, firstExtents, CONFIGURATION_DOMAIN, platform, revokedToken, destinationWrite, destinationRevokedMint } from "@generalbusiness/dap-platform";
 import { httpSource, verify } from "@generalbusiness/dap-replay";
 import { SqliteStore, CAPABILITY_CODE } from "@generalbusiness/dap-scope";
 import { ownOf } from "../../../../packages/scope/src/core.ts";
@@ -83,7 +83,7 @@ async function publicationCheckpoint(node: Platform) {
 
 
 
-test.for(["application-publication", "default"] as const)("a manifest-list reservation records both files before the configured checker passes; no branch push occurs before that pass (real scopes, STAND-IN Git host and scheduler; %s creation)", { timeout: 120_000 }, async (creation, { task }) => {
+test.for(["file-publication", "default"] as const)("a manifest-list reservation records both files before the configured checker passes; no branch push occurs before that pass (real scopes, STAND-IN Git host and scheduler; %s creation)", { timeout: 120_000 }, async (creation, { task }) => {
   net.hold = net.deaf = null;
   const owner = beginSessionFixture({ secret: b64url(crypto.getRandomValues(new Uint8Array(32))), sessions: true, inspector: reader });
   onTestFinished(owner.close);
@@ -294,14 +294,14 @@ async function story(at: Stand, wired: Set<ScopeId>, startedOnly = false, unknow
   const ok = (outcome: Outcome) => { expect(outcome.code, outcome.lines.join("\n")).toBe(0); return outcome; };
   // Keep historical reservation stories fixed; only the first invariant also exercises newest creation.
   ok(await run(creator, "install", SERVICE, "--host", at.host, "--namespace", at.namespace,
-    ...(newestCreation ? [] : ["--cohort", "application-publication"])));
+    ...(newestCreation ? [] : ["--cohort", "file-publication"])));
   R = new Platform((await creator.store.config())!.register!.scope); wire(R.name); await R.restart(); known.push(R);
   net.hold = (envelope) => { if ("definition" in envelope.to) wire(scopeIdOf(envelope.to)); return false; };
   ok(await run(creator, "claim", "tree", "--handle", "@rita"));
   const repository = (await creator.store.config())!.repository!;
   const G = new Platform(repository.destination); known.push(G); await pause([]);
   expect((await G.summary()).value.definition).toBe(newestCreation
-    ? ARCHIVE_DEVICE_PUBLICATION_COHORT.destination : FILE_PUBLICATION_COHORT.destination);
+    ? ARCHIVE_DEVICE_PUBLICATION_COHORT.destination : "platform:destination@3");
   const first = host.refs.get("refs/heads/main")!;
   if (receiptRecoveryOnly) {
     ok(await run(creator, "act", "publish", "--on", "rules", "--target", "0", "--set", "approvals=0", "--set", "ownerMayReview=false", "--set", "checks=[]", "--set", "labels=[]", "--set", `extents=${JSON.stringify(firstExtents({ approvals: 0, checks: [] }))}`));
@@ -971,8 +971,16 @@ async function story(at: Stand, wired: Set<ScopeId>, startedOnly = false, unknow
   const expireLane = new Platform(expireMatch[1] as ScopeId);
   const expireMerge = (await expireLane.summary()).value.items.find((item) => item.type === "merge")!;
   const expiringPublication = (await G.summary()).value.items.find((item) => item.type === "publication" && item.state === "reserved")!;
-  net.clock.now = timeOf(timeMs(net.clock.now)! + 1800_000);
-  await run(creator, "act", "add-room", "--on", "destination", "--target", String(expiringPublication.id)); // The ordinary act drains the expired reservation before judging the act.
+  const deadline = expiringPublication.values["checkDeadline"];
+  expect(deadline).toBe(expireMerge.values["checkDeadline"]);
+  if (typeof deadline !== "string") throw Error("The reserved publication needs its recorded check deadline.");
+  const due = timeMs(deadline);
+  if (due === null) throw Error("The reserved publication deadline must be a valid timestamp.");
+  expect(due).toBeGreaterThan(timeMs(net.clock.now)!);
+  net.clock.now = timeOf(due);
+  // Drive the actual Destination timed owner, not an unchecked unrelated act.
+  // The scheduler stand-in below drains effects/dispatch but does not fire alarms.
+  await runDurableObjectAlarm(G.object);
   await runDurableObjectAlarm(expireLane.object);
   expect((await expireLane.summary()).value.items.some((item) => item.type === "merge")).toBe(false);
   expect((await expireLane.entries()).some((entry) => entry.effects.some((effect) => effect.effect === "value" && effect.slot === "reason" && effect.value === "required-check-timeout"))).toBe(true);
