@@ -31,6 +31,37 @@ A deployment serves rooms of every definition version that its platform
 package has shipped, each by the version that its genesis pinned
 ([scopes.md](scopes.md), "Definition versions").
 
+## Public demo Worker
+
+The public room offer uses `dap-demo` at
+`https://dap-demo.inguz.workers.dev`, configured by
+[`apps/room/wrangler.demo.jsonc`](../apps/room/wrangler.demo.jsonc). Its
+Durable Object and Artifacts namespaces are private to this Worker. Keep
+the committed Start origin, register ScopeRef and Artifacts register root
+exact. `DEPLOYMENT` and `SESSION_SECRET` remain separately held bindings.
+
+For a planner deployment from the reviewed checkout:
+
+```sh
+ARTROOM_REPO=/absolute/path/to/the-reviewed-checkout
+cd "$(mktemp -d)"
+npx -y wrangler@4.147.0 deploy --keep-vars --config "$ARTROOM_REPO/apps/room/wrangler.demo.jsonc"
+```
+
+The file sets enforce mode and the reviewed additional creation family:
+register 17, directory 16, membership 8, rules 10, destination 12 and inbox 1.
+Grow carries that same allowance; Lending carries register 5, directory 5,
+membership 4, rules 3, destination 2 and inbox 1. These are exact file-owned
+allowances, added to the parser's implicit newest family. The generic
+`artroom-scope` file retains register mode and no additional allowance;
+its retained-room role is separate from this public offer.
+
+`--keep-vars` preserves settings omitted from the file. Explicit file
+values and reviewed `--var` values still override them and need review.
+This configuration does not deploy or change an existing scope's pin. The
+planner owns deployment, index verification and any later R7 root cutover;
+BR-1 does not replace the fixed register 17 offer or remove its allowance.
+
 ## Grow demo Worker
 
 The Grow demo uses Worker `dap-grow` at

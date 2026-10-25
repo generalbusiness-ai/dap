@@ -291,6 +291,7 @@ export async function servedInventory({ scopeSource = readSource(scopeFile), app
   const result = new Map();
   for (const [file, entry] of [
     ["apps/room/wrangler.jsonc", "worker.ts"],
+    ["apps/room/wrangler.demo.jsonc", "worker.ts"],
     ["apps/room/wrangler.grow.jsonc", "worker.grow.ts"],
     ["apps/room/wrangler.lending.jsonc", "worker.ts"],
   ]) {
@@ -324,7 +325,7 @@ export function documentedInventory(text) {
   const tables = new Map();
   let table;
   for (const line of text.split("\n")) {
-    const heading = /^## (artroom-scope|dap-grow|dap-lending|dap-grow-simulator|dap-home|dap-application-sandbox)$/.exec(line);
+    const heading = /^## (artroom-scope|dap-demo|dap-grow|dap-lending|dap-grow-simulator|dap-home|dap-application-sandbox)$/.exec(line);
     if (heading) { table = []; assert.ok(!tables.has(heading[1]), "Duplicate Worker table"); tables.set(heading[1], table); }
     if (!line.startsWith("| `")) continue;
     const cells = line.split("|").slice(1, -1).map(cell => cell.trim());

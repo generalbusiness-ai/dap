@@ -22,7 +22,7 @@ deployment, run the pinned tool from a scratch directory:
 ```sh
 ARTROOM_REPO=/absolute/path/to/artroom
 cd "$(mktemp -d)"
-npx -y wrangler@4.147.0 deploy --config "$ARTROOM_REPO/apps/room/wrangler.grow.jsonc"
+npx -y wrangler@4.147.0 deploy --keep-vars --config "$ARTROOM_REPO/apps/room/wrangler.grow.jsonc"
 ```
 
 Planner owns deployment and the remaining hosted acceptance procedure.
@@ -269,7 +269,7 @@ scratch directory with the reviewed absolute checkout path in
 `GROW_CHECKOUT` and the verified public binding JSON in `GROW_BINDING`:
 
 ```sh
-npx --yes --package wrangler@4.147.0 -- wrangler deploy --config "${GROW_CHECKOUT:?Set the reviewed checkout}/examples/grow/wrangler.jsonc" --var "GROW_BINDING:${GROW_BINDING:?Set the verified public Room binding}"
+npx --yes --package wrangler@4.147.0 -- wrangler deploy --keep-vars --config "${GROW_CHECKOUT:?Set the reviewed checkout}/examples/grow/wrangler.jsonc" --var "GROW_BINDING:${GROW_BINDING:?Set the verified public Room binding}"
 npx --yes --package wrangler@4.147.0 -- wrangler secret put GROW_SENSORS_SECRET --config "$GROW_CHECKOUT/examples/grow/wrangler.jsonc"
 npx --yes --package wrangler@4.147.0 -- wrangler secret put GROW_CLIMATE_SECRET --config "$GROW_CHECKOUT/examples/grow/wrangler.jsonc"
 ```
@@ -356,7 +356,7 @@ one-minute cadence throughout.
 3. Deploy the reviewed scope Worker from a scratch directory:
 
    ```sh
-   npx --yes --package wrangler@4.147.0 -- wrangler deploy --config "${GROW_CHECKOUT:?Set the reviewed checkout}/apps/room/wrangler.grow.jsonc"
+   npx --yes --package wrangler@4.147.0 -- wrangler deploy --keep-vars --config "${GROW_CHECKOUT:?Set the reviewed checkout}/apps/room/wrangler.grow.jsonc"
    ```
 
    Record the actual Worker version and settings. Set no archive Worker
