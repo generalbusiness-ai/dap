@@ -67,13 +67,17 @@ in a separate private worktree. It is never landed.
 
 | Check | Command | Exit | Output SHA256 |
 | --- | --- | ---: | --- |
+| Production compiler: unchanged after test registration fix | `node node_modules/typescript/lib/tsc.js -p packages/scope/tsconfig.json` | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
 | Initial test compiler: registration error retained | `node node_modules/typescript/lib/tsc.js -p packages/scope/tsconfig.test.json` | 1 | `88e2aed213e4ec5c983e2cdf6fe3867d64f9bc66d301ab1f6e93efda46606670` |
 | Corrected test compiler | Same compiler command | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
 | Whole owning file: six pass | `node node_modules/vitest/vitest.mjs run --config vitest.native.config.ts --project scope packages/scope/test/archive-parent-bootstrap.test.ts` | 0 | `6ca91e9d13bd11c9b09311ea375ad7408e654f7bcf5222a7f20311bd79aab7a6` |
 | Other 31 whole archive files: 162 pass | Same native command with the 31 explicit file arguments recorded in `remaining-result.json` | 0 | `919ba3e60c114bb2527a10681108da43ac401dfa5976fe624ffce6a7932c7b24` |
 | Control: four historical pass, two new assertions fail | Same owning-file command after the control's production compiler passes | 1 | `7f03e59e4ccdfa21b3aace1abb9380337f9fcaf0021e4c86671704706bdb8fb9` |
-| Ordinary gate: obsolete authority seal | `npm run gate` at `7ebb6fb9` | 1 | Final digest pending |
-| Seal-only repair and unreached stages | Whole `scripts/security-entry-points.test.mjs`, then Counting, plain and native stages | Pending | Pending |
+| Ordinary gate: obsolete authority seal | `npm run gate` at `7ebb6fb9` | 1 | `a0d0f2b3f8bbcf6b555cdc0a71051b391df2d3d00e68db341b17af3ddeba8c67` |
+| Repaired whole Node file: four pass | `node --test scripts/security-entry-points.test.mjs` with maintained spec and JSONL reporters | 0 | `0ca00969625fb1bae550d1d194e1af18fb6c36df974d5ecd5aa833ffa012f031` |
+| Unreached Counting stage: 55 pass | `node apps/counter/scripts/test-browser.mjs` | 0 | `eb94d5fde5690b740ac42a2aa056b4ba468ff7bd65736920bda8070479ccee6a` |
+| Unreached plain stage: 2,816 pass, one skipped | `node node_modules/vitest/vitest.mjs run --config vitest.plain.config.ts` | 0 | `8526885b7b350e36cee352edcd01eefff6d9e3fe52d8652600603e110e9282f7` |
+| Unreached native stage: 771 pass, two skipped | `node node_modules/vitest/vitest.mjs run --config vitest.native.config.ts` | 0 | `b79cccf4123165fb3aa5ebc4bf22ecc1a480c3aacda4209022672364002d07d0` |
 
 Counts come from the same-run maintained progress and timing streams and
 the terminal output. The owning file has six matching ready/result/final
@@ -103,24 +107,48 @@ checks, all 40 compiler contexts and the kernel stage. Its Node stage had
 plain and native stages were unreached. The maintained owning parser then
 computed the actual AST seals for the already reviewed build and driver
 sources; only those two expected digest literals and this note change
-after the gate. Test bodies, assertions, production, configuration,
-dependencies and shared helpers are unchanged. The test file has no
-importers. Under `docs/testing.md`'s single-file follow-up rule, run the
-whole owning Node file and the unreached stages, retaining the failed gate
-separately. A follow-up pass will not turn that gate into a pass.
+after the gate. Assertion logic, production, configuration, dependencies
+and shared helpers are unchanged. The test file has no
+importers. Under `docs/testing.md`'s single-file follow-up rule, the
+whole owning Node file and the unreached stages ran separately at commit
+`c26006bc762b9d5ef13ea3a4cf87280b37f86bf3`, tree
+`4000f86d51a76828691d26b776e7bec3adf4a39e`. All four commands exited zero.
+The original gate remains failed. This continuation is not another
+ordinary-gate pass.
 
-The failed gate took 57.04 seconds elapsed and 101.42 CPU seconds under the
-same outer timing method; no repeated whole gate is planned. The final
-follow-up checkpoint, results, one external evidence directory and the
-PD-2 manifest will be added in a documents-only follow-up.
-No raw output is committed. This head uses the expressly allowed temporary
-directory exception in ruling `fcab078d`; later heads use the durable home
-directory. Raw environment and physical snapshots remain private and are
-withheld from the review directory, as are any unredacted request bodies.
+The follow-up plain run has 2,817 unique final cases with matching ready,
+result and timing callbacks. Native has 773 unique final cases. Its 15
+missing ready callbacks and 34 missing result callbacks all have passed
+final states. There are no duplicate identities or contradictory states.
+The native output includes an uncaught `RefcountedCanceler` diagnostic
+with an `abortContextSignal` stack, while the runner reports zero
+unhandled errors. Both observations remain visible. The 30,000-entry
+floor case passes in 313,882 ms under its unchanged 600,000 ms deadline.
+Counting runs four generated Node witness modules, not a browser.
+
+The failed gate took 57.04 seconds elapsed and 101.42 CPU seconds. The
+limited follow-up took 1,579.34 elapsed and 1,776.71 CPU seconds. These are
+separate outer process costs. Nested phase costs are not added. Independent
+audits authenticate ten follow-up Source, tool, environment, dependency
+and cache cuts and seven unchanged observation copies. These are finite
+boundary checks, not continuous custody or a new complete dependency-byte
+proof. No healthy compiler, kernel or other Node file was repeated.
+
+The [evidence manifest](evidence/2026-10-25-archive-unpublished-next.manifest.json)
+names every review payload in
+`/private/tmp/artroom-archive-unpublished-next-review-evidence-20261025-v1`.
+Its validation checkpoint is `c26006bc` and tree `4000f86d`; the final
+review head changes only this note and the manifest. The directory carries
+`SHA256SUMS`, becomes read-only after its last write and remains for at
+least 30 days or until a planner-authorized removal. This head uses the
+explicit temporary-directory exception in ruling `fcab078d`; later heads
+use the durable home directory. No raw output is committed. Raw environment
+and physical snapshots remain private and are withheld from the review
+directory. No secrets, tokens or unredacted request bodies are included.
 
 ## Open limits
 
-Request `3e01b385` still needs the limited follow-up and exact-head review.
+Request `3e01b385` still needs exact-head review and landing.
 Parent request `1aedd35b` remains open for the planner's deployment and
 two-wake observations of the hosted Directory, Site and Destination rows.
 Local fixture quotes do not establish hosted fit. If fresh inventory still
