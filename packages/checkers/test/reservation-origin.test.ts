@@ -1,6 +1,6 @@
 /** Pure checker snapshot boundary. The retained @3 record supplies signed
  * source/object bytes; changing its outcome owner below is a synthetic
- * cohort-selection control, not a recorded native @5/@6 run or a Git checkout. */
+ * cohort-selection control, not a recorded native @5/@6/@13 run or a Git checkout. */
 import { readFileSync } from "node:fs";
 import { expect, test } from "vitest";
 import type { Digest, ReservationSnapshot } from "@generalbusiness/dap-contract";
@@ -14,8 +14,8 @@ const snapshot = (): ReservationSnapshot => ({ ...structuredClone(saved.snapshot
   return { ...object, data };
 }) });
 
-test("the checker accepts explicit D1 and partition reservation owners while unknown and previously unsupported cohorts remain refused", () => {
-  for (const version of [3, 5, 6, 4, 7]) {
+test("the checker accepts explicit reservation owners including the corrected cohort while unsupported owners and missing proof remain refused", () => {
+  for (const version of [3, 5, 6, 13, 4, 7, 12, 9999]) {
     const reservation = snapshot(), input = reservation.reservation.entry.input;
     if (input.type !== "outcome") throw Error("Recorded reservation is an outcome");
     input.owner = `platform:destination@${version}`;
@@ -26,7 +26,15 @@ test("the checker accepts explicit D1 and partition reservation owners while unk
     const notice: Notice = { lane: reservation.job.entry.at, job: factRefOf(reservation.job.entry), name: name.value, tree: reservation.tree };
     const read: OriginRead = { entry: reservation.job, manifest: reservation.manifest, pinned: saved.configurationDigest, activated: { name: "change", state: "active" }, reservation };
     const result = originOf(notice, read);
-    if (version === 3 || version === 5 || version === 6) expect(result).toMatchObject({ job: { commit: reservation.commit, ref: reservation.ref, tree: reservation.tree } });
+    if (version === 3 || version === 5 || version === 6 || version === 13) expect(result).toMatchObject({ job: { commit: reservation.commit, ref: reservation.ref, tree: reservation.tree } });
     else expect(result).toEqual({ not: "no-manifest" });
+    if (version === 13) {
+      // A supported owner cannot replace the exact manifest dependency proof.
+      const missing = structuredClone(reservation);
+      missing.reservation.entry.uses = [];
+      missing.reservation.hash = entryHash(missing.reservation.entry);
+      missing.ref = `refs/artroom/reservations/${missing.reservation.hash.slice(7)}`;
+      expect(originOf(notice, { ...read, reservation: missing })).toEqual({ not: "no-manifest" });
+    }
   }
 });

@@ -326,13 +326,14 @@ test("an archive-device-publication application automatically publishes device r
       report: { ...devicePackageFixture.acts["report"]!, also: { root: { item: "root", one: true } },
         fields: { ...devicePackageFixture.acts["report"]!.fields, path: { type: "text", max: 256, required: true }, content: { type: "text", max: 1024, required: true } },
         sends: [{ tell: { to: { slot: "destination", of: "also.root" }, message: "publish-file",
-          fields: { path: { field: "path" }, content: { field: "content" } }, result: {} } }],
+          fields: { path: { field: "path" }, content: { field: "content" } }, result: { refused: [], undelivered: [] } } }],
       },
     },
   };
   const id = definitionDigest(declared);
   const packet = await packApplication2({ name: "test.device-file-publication", version: "1", semantic: {
     ...emptyPackageComposition(), v: 2, entry: id, definitions: [{ id, bytes: canonicalize(declared) }],
+    connections: [{ from: id, item: "root", slot: "destination", to: "outside" }],
     host: { execution: "recorded-do", profiles: ["restricted@1"] },
     capabilities: [{ name: DEVICE_COMMAND, bounds: { kinds: ["heater"], owners: 1 } }],
     roles: { admin: ["command", "start"] }, projections: { root: readApplicationProjection({ v: 1, definition: id, revision: "revision",

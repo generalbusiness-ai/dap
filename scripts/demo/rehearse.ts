@@ -15,7 +15,7 @@ import { b64url, digestBytes, entryHash, canonicalize, intentDigest, isPlatformD
 import { ScopeHandle, httpTransport, requestSession, secretSigner, sessionRequest, signedReads } from "@generalbusiness/dap-client";
 import { command, type Context, type Outcome } from "@generalbusiness/dap-cli";
 import { DEMO_DIGESTS, MANIFEST_DIGESTS, changeDemo, changeDemo3, issueDemo } from "@generalbusiness/dap-lanes";
-import { firstExtents, platform } from "@generalbusiness/dap-platform";
+import { ARCHIVE_DEVICE_PUBLICATION_COHORT, firstExtents, platform } from "@generalbusiness/dap-platform";
 
 /** The three people of the script, each with a fresh config directory. Hardware identity is not verified. */
 export type Person = "founder" | "member" | "maintainer";
@@ -306,7 +306,7 @@ function shots(stage: Stage): Shot[] {
       typed: () => ["dap", "verify", "--all"],
       expect: { code: 0, lines: (v) => [
         ...[["register", "register"], ["directory", "directory"], ["membership", "membership"], ["rules", "rules"], ["destination", "destination"], ["lane", "issue"], ["lane", "published"], ["lane", "controlled"], ["lane", "stale"], ["lane", "reproposed"], ["lane", "refused"], ["inbox", "founderInbox"], ["inbox", "memberInbox"], ["inbox", "maintainerInbox"]]
-          .flatMap(([kind, name]) => [`${kind} {${name}}, entry <seq>: consistent.`, ...(kind === "destination" && v["registerDefinition"] === "platform:register@3" ? ["Cleanup status: destination {destination}, entry <seq>: no reservation is recorded as cleanup-owed."] : [])]),
+          .flatMap(([kind, name]) => [`${kind} {${name}}, entry <seq>: consistent.`, ...(kind === "destination" && ["platform:register@3", ARCHIVE_DEVICE_PUBLICATION_COHORT.register].includes(v["registerDefinition"] ?? "") ? ["Cleanup status: destination {destination}, entry <seq>: no reservation is recorded as cleanup-owed."] : [])]),
         "All consistent: 14 scopes.",
       ] },
     },

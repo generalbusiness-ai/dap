@@ -165,21 +165,30 @@ test("exact caller anchors classify private Register17 and Register18 copies wit
     const retained = archived.retained.map(input => { const { under: _under, ...rest } = input; return rest; });
     const anchors = [...new Map([...D.last.uses.map(use => use.fact), R.fact(R.head.seq)].map(fact => [canonicalize(fact), fact])).values()];
     const base = port([{ ...archived, retained }]);
-    const offline = (basis: PlatformDefinition = pin, kind: ScopeRef["kind"] = "register") => archiveSource({ open: async (scope, work) => {
+    const offline = (basis: PlatformDefinition = pin, kind: ScopeRef["kind"] = "register",
+      privateReads: { scope: ScopeId; result: string }[] = []) => archiveSource({ open: async (scope, work) => {
       const read = await base.open(scope, work);
+      if (scope === R.at.scope && !read.ok) privateReads.push({ scope, result: read.result });
       return read.ok ? { ...read, archive: { ...read.archive, foreignSources: [{ at: { ...R.at, kind }, pin: basis }] } } : read;
     } });
     const options = { mode: "replay" as const, scope: D.at.scope, head: D.head, platform: nativePlatform, grants: "proven" as const,
       anchors: anchors.map(fact => ({ scope: fact.at.scope, seq: fact.seq, hash: fact.hash })) };
-    const verified = await verifyArchive(offline(), options);
+    const privateReads: { scope: ScopeId; result: string }[] = [];
+    const verified = await verifyArchive(offline(pin, "register", privateReads), options);
     const diagnostic = { pin, kind: verified.kind, ...(verified.kind === "verification"
       ? { result: verified.verification.report.result, why: verified.verification.why } : { result: verified.result, reason: verified.reason }) };
     expect(verified, JSON.stringify(diagnostic)).toMatchObject({ kind: "verification",
       verification: { report: { result: "consistent", anchors } } });
+    expect(privateReads, JSON.stringify({ pin, privateReads })).toEqual([]);
     expect(await verifyArchive(offline(), { ...options, anchors: [] })).toMatchObject({ kind: "verification",
       verification: { report: { result: "missing-dependency", dependencies: { missing: expect.any(Array) } } } });
-    for (const rejected of [offline("platform:register@19"), offline(pin, "membership")]) {
-      expect(await verifyArchive(rejected, options)).toMatchObject({ kind: "verification", verification: { report: { result: "mismatch" } } });
+    // Caller anchors can still prove this replay without a descriptive alias.
+    // An unknown pin or wrong kind must not take the private-name shortcut:
+    // it must try the exact unavailable private history and receive not-found.
+    for (const [basis, kind] of [["platform:register@19", "register"], [pin, "membership"]] as const) {
+      const refused: { scope: ScopeId; result: string }[] = [];
+      await verifyArchive(offline(basis, kind, refused), options);
+      expect(refused).toEqual([{ scope: R.at.scope, result: "not-found" }]);
     }
   }
 });

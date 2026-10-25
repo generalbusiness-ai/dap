@@ -287,7 +287,8 @@ async function story(at: Stand, wired: Set<ScopeId>, startedOnly = false, unknow
   ]);
 
   const files: Record<string, Uint8Array> = { "change3.json": utf8(canonicalize(activeChange)), "one.md": utf8("# One\n"), "two.md": utf8("# Two\n") };
-  const person = (): Context => ({ store: memoryStore(), fetch, now, pause, read: async (path) => files[path] ?? null });
+  // TEST acknowledgement trust is scoped to this exact configured native HTTP fixture.
+  const person = (): Context => ({ store: memoryStore(), fetch, trustedCreationService: { service: SERVICE, fetch }, now, pause, read: async (path) => files[path] ?? null });
   const creator = person(), checker = person();
   const run = (who: Context, ...argv: string[]) => command(who, argv);
   const ok = (outcome: Outcome) => { expect(outcome.code, outcome.lines.join("\n")).toBe(0); return outcome; };
