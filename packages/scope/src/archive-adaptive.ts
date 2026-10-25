@@ -14,7 +14,7 @@ import { archiveForeignHandoffCost } from "./archive-foreign-plan.ts";
 import type { ArchivePolicyRegistry } from "./archive-inventory.ts";
 import { ArchivePrefixStopped } from "./archive-prefix.ts";
 import { archivePendingRowBytesUpper, forecastArchiveBookkeeping } from "./archive-row-cost.ts";
-import type { ArchiveRow } from "./archive-row.ts";
+import { consumeArchivePlanningSnapshot, type ArchiveRow } from "./archive-row.ts";
 import { ArchiveScout } from "./archive-scout.ts";
 import type { ArchiveScoutLayoutQuote } from "./archive-scout-layout.ts";
 import type { FixtureArchiveSourcePins } from "./archive-source-pins.ts";
@@ -42,6 +42,8 @@ export interface AdaptiveArchiveContext {
    * runs outside native frames and inside this owner's earlier-finish fence. */
   readonly prepareSources?: (seq: number, budget: ArchiveBudget) => Promise<void>;
   readonly row: ArchiveRow;
+  /** Optional single-use same-SQL/budget owned-row serialization receipt. */
+  readonly rowSnapshot?: unknown;
   /** The production driver performs these two logical steps in one save. */
   readonly atomicFirstAttempt?: boolean;
   /** The driver's actual bounded parent cache. A selected prefix retains
@@ -126,14 +128,20 @@ interface DeferredForCapacity { readonly ok: false; readonly deferred: "capacity
 async function adaptiveArchivePass(coupled: boolean, sql: Sql, context: AdaptiveArchiveContext, budget: ArchiveBudget): Promise<
   (ArchiveBuildFailure & { readonly capacityRefusal?: ArchiveCapacityRefusal | null }) | DeferredForCapacity | (Extract<Awaited<ReturnType<typeof planPublishedArchivePass>>, { ok: true }> & { readonly parentObjects: readonly string[] })> {
   try {
+    const snapshotBytes = Object.hasOwn(context, "rowSnapshot")
+      ? consumeArchivePlanningSnapshot(context.rowSnapshot, sql, context.row, budget) : null;
     if (context.row.pending !== null || context.row.confirmed !== null && context.row.confirmed.layout !== 2
       || !same(context.row.at, context.at) || context.row.format !== context.format
       || !same(context.row.confirmed?.through ?? null, context.after)
       || (context.row.confirmed?.commit ?? null) !== (context.parent?.id ?? null)) return { ok: false, reason: "parent" };
-    // A loaded canonical row has no pending manifest. Bound its four
-    // repository strings before serializing the Native metadata snapshot.
-    budget.spend({ metadata: 32 * 1024, inputWork: 256 * 1024 });
-    const oldRowBytes = utf8(canonicalize(context.row)).length;
+    // Standalone callers still pay and serialize. Supplied tokens must be
+    // genuine, single-use and bound to this exact SQL, row and allowance.
+    let oldRowBytes: number;
+    if (snapshotBytes !== null) oldRowBytes = snapshotBytes;
+    else {
+      budget.spend({ metadata: 32 * 1024, inputWork: 256 * 1024 });
+      oldRowBytes = utf8(canonicalize(context.row)).length;
+    }
     const unpublished = context.row.confirmed?.layout === 2 && context.row.confirmed.anchorsPublished !== true;
     // Published receipts retain their original operation order. Only the
     // one-time unpublished transition needs the preparation first.
