@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5fe9562dcd8263fde186d17aa89e29aed1ba1e4b","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/native-declarations.generated.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:603810f57d7916f7c7e7cff5a94d017b51a25b67","text":"Merge retired a covered predecessor; the successor is at docs/deploy.md."}
