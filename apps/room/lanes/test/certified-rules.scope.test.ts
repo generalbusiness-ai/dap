@@ -63,7 +63,47 @@ test("certified-rules native birth and device install bootstrap a real tree cert
     if (installed.answer !== "accepted") throw Error("The actual signed device package must install");
     await effectFixture([Q], life.wait); await dispatchFixture(nodes, life.wait);
     const creation = (await D.entries()).flatMap(entry => entry.sends).find(send => isSeed(send.to) && send.to.definition === id);
-    if (!creation || !isSeed(creation.to)) throw Error("Actual device application creation send required");
+    if (!creation || !isSeed(creation.to)) {
+      // TEST snapshot AFTER the initial failed creation search. These reads
+      // may observe later state; they do not repeat that search or settle work.
+      const snapshot = "after-initial-missing-creation-search", rowCap = 16, textCap = 96;
+      const closed = (value: unknown, allowed: readonly string[]) => typeof value === "string" && allowed.includes(value)
+        ? value : value === undefined || value === null ? null : "outside-closed-set";
+      const short = (value: unknown) => typeof value === "string" && utf8(value).length <= textCap ? value : null;
+      const reasons = ["unsupported-object-format", "untrusted-release", "unsupported-host", "unsupported-definition", "package-invalid", "package-too-large",
+        "source-refused", "content-not-retained", "definitions-full", "role-actions-full", "install-route-refused", "archive-unavailable",
+        "application-creation-refused", "application-creation-conflict"];
+      try {
+        const job = (await Q.summary()).value.items.find(item => item.id === installed.receipt.fact.seq);
+        const qEntries = await Q.entries(), dEntries = await D.entries();
+        const qOutcomes = qEntries.flatMap(entry => {
+          const input = entry.input;
+          if (input.type !== "outcome" || !["fetch-application", "admit-application"].includes(input.kind)) return [];
+          const attempt = entry.effects.find(effect => effect.effect === "attempt" && effect.operation === input.operation && effect.attempt === input.attempt);
+          return [{ seq: entry.seq, kind: closed(input.kind, ["fetch-application", "admit-application"]), result: closed(input.result, ["confirmed", "refused", "unknown"]),
+            selected: attempt?.effect === "attempt" ? attempt.selected : null,
+            reason: closed(isRecord(input.evidence.body) ? input.evidence.body["reason"] : undefined, reasons) }];
+        });
+        const dReceived = dEntries.flatMap(entry => {
+          const input = entry.input;
+          if (input.type !== "delivery" || input.message.class !== "request" || !isRecord(input.message.body)) return [];
+          const kind = closed(input.message.body["message"], ["application-stage", "application-grants", "application-create"]);
+          return kind === null || kind === "outside-closed-set" ? [] : [{ seq: entry.seq, kind,
+            decision: "decision" in input ? closed(input.decision, ["applied", "refused", "superseded"]) : null }];
+        });
+        const seeds = dEntries.flatMap(entry => entry.sends.flatMap(send => isSeed(send.to)
+          ? [{ kind: short(send.to.kind), definition: short(send.to.definition) }] : []));
+        const diagnostic = canonicalize({ snapshot, rowCap, textCap,
+          job: { found: job !== undefined, state: closed(job?.state, ["pending", "active", "refused"]),
+            phase: closed(job?.values["phase"], ["fetch", "admission", "activation", "grants", "creation"]), reason: closed(job?.values["reason"], reasons) },
+          qOutcomeCount: qOutcomes.length, qOutcomes: qOutcomes.slice(-rowCap), dReceivedCount: dReceived.length, dReceived: dReceived.slice(-rowCap),
+          createdSeedCount: seeds.length, createdSeeds: seeds.slice(-rowCap) });
+        console.info("TEST certified install diagnostic", utf8(diagnostic).length <= 8192 ? diagnostic : canonicalize({ snapshot, diagnostic: "metadata-over-bound" }));
+      } catch {
+        console.info("TEST certified install diagnostic", canonicalize({ snapshot, diagnostic: "metadata-unavailable" }));
+      }
+      throw Error("Actual device application creation send required");
+    }
     expect(creation.message).toMatchObject({ body: { creationContext: { v: 2, delegate: true,
       deviceCommand: { capability: DEVICE_COMMAND, owner: { membership, member: "@rita" }, root: id, definitions: [id] } } } });
     const C = life.platform(scopeIdOf(creation.to)); nodes.push(C); await pause(nodes);
