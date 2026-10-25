@@ -121,6 +121,6 @@ These pages go from understanding to reference.
 | [Deployment trust boundaries](security/trust-boundaries.md) | Resource authority and sharing across deployment configurations. |
 | [Definition-author security reference](security/definition-authors.md) | Validation refusals, permissive forms, and authority checks. |
 
-The following pages describe the earlier model and are marked inactive. Read
-their status before using them: [Release the packages](release.md),
-[the dap protocol](protocol.md) and [the default policy pack](policy-pack.md).
+Three guides of the earlier model (its release guide, its protocol and its
+default policy pack) are retired under `notes/retired-guides/`. This
+directory describes only the current system.

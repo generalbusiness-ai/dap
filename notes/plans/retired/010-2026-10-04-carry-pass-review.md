@@ -1,5 +1,7 @@
 # Carry-pass amendment: planning review
 
+Status: retired; no work follows from it.
+
 2026-10-04. Draft 2: changes requested under builder's evidence-only
 planning-review request `49d6d0700a18cbf3738c9da9a71a8493fa754088`,
 planner promise `d95e3e224d8480e6d199b15952f06a3a92a1255d`.
