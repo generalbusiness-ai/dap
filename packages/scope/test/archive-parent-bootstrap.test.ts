@@ -454,7 +454,7 @@ test("current-parent migration handles six and thirty-seven old passes without w
 // Only these new cases exercise the production strategy selector. Admission
 // checks the actual applied birth; target, source metadata, HTTP and tokens
 // remain explicit TEST ports, not a deployed Grow configuration.
-test.for([0, 1] as const)("unpublished v2 cutoff %i migrates exactly next after a real capacity wake and rebuilds its pending Mark", async (cutoff, context) => {
+test.for([0, 1] as const)("unpublished v2 cutoff %i migrates exactly next after a real capacity wake and rebuilds its pending Mark", { timeout: 20_000 }, async (cutoff, context) => {
   const fixture = await nativeArchiveFixture(), lane = await fixture.create({}, {}, archiveDefinition), host = transport(lane);
   if (cutoff === 1) await lane.did(rita, "remark", { on: 0, fields: { text: "signed old unpublished input" } });
   const oldHead = await lane.head(); expect(oldHead.seq).toBe(cutoff);
@@ -592,4 +592,4 @@ test.for([0, 1] as const)("unpublished v2 cutoff %i migrates exactly next after 
     expect(budget.admitted()[axis]).toBeLessThanOrEqual(ARCHIVE_BOUNDS[axis]);
   (context.task.meta as Record<string, unknown>)["unpublishedExactNext"] = { cutoff, initialEntries, refusedAdaptive, refusedQuote, fixed, mark,
     qualification: "Actual Native entries, birth, row, frontier bootstrap and six-axis driver budget. TEST policy/source/target/HTTP/token ports. Initial lower ENTRY ceiling is a genuine capacity precondition, not a default64 hosted reproduction; fixed migration uses all ordinary limits. Pending rebuild keeps the exact original Mark across native advance and eviction." };
-}, 20_000);
+});
