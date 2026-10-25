@@ -21,6 +21,12 @@ test("one pass admits exact cumulative limits, refuses the next unit atomically 
       shortfall: { entries: 0, attempts: 0, nodes: 1, calls: 0, metadata: 2, inputWork: 0 } });
   }
   expect(refused.admitted()).toEqual({ entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0, inputWork: 0 });
+  const unsafe = new ArchiveBudget({ metadata: 2 }, () => 0);
+  // Each operand is safe, but their sum rounds above MAX_SAFE_INTEGER.
+  // The refusal still happens; it must not report a rounded shortfall.
+  expect(unsafe.lookahead({ metadata: 2 }, () => unsafe.spend({ metadata: Number.MAX_SAFE_INTEGER })))
+    .toEqual({ kind: "limited", refusal: null });
+  expect(unsafe.admitted().metadata).toBe(0);
   for (const key of Object.keys(ARCHIVE_BOUNDS) as (keyof typeof ARCHIVE_BOUNDS)[]) {
     const one = new ArchiveBudget({}, () => 0);
     expect(() => one.spend({ [key]: ARCHIVE_BOUNDS[key] + 1 })).toThrow(ArchiveStopped);

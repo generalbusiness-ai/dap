@@ -75,7 +75,11 @@ export class ArchiveBudget {
       || keys.some(key => !natural(cost[key] ?? 0) || !natural(reserve[key] ?? 0))) return null;
     const shortfall = zero();
     for (const key of keys) {
-      shortfall[key] = Math.max(0, (cost[key] ?? 0) + (reserve[key] ?? 0) - (this.#limits[key] - this.#used[key]));
+      const combined = (cost[key] ?? 0) + (reserve[key] ?? 0);
+      // An unsafe intermediate can round back to an apparently safe but
+      // incorrect shortfall. Absence is more honest than a guessed axis.
+      if (!natural(combined)) return null;
+      shortfall[key] = Math.max(0, combined - (this.#limits[key] - this.#used[key]));
       if (!natural(shortfall[key])) return null;
     }
     if (!keys.some(key => shortfall[key] > 0)) return null;
