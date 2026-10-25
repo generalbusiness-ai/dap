@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/security-entry-points.test.mjs","body":{"commit":"5a9aeaf542227205617d475586e3a5bfb8fa22d9","path":"scripts/security-entry-points.test.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:02379db39a61e2e180d0a1e1662ad7b9034413b1","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-frontier-cost.ts."}
