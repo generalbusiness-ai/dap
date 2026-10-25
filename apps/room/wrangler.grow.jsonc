@@ -1,6 +1,6 @@
 // Grow's scope Worker at https://dap-grow.inguz.workers.dev.
 // Deploy from a scratch directory with the pinned tool:
-// npx -y wrangler@4.147.0 deploy --config /absolute/path/to/artroom/apps/room/wrangler.grow.jsonc
+// npx -y wrangler@4.147.0 deploy --keep-vars --config /absolute/path/to/artroom/apps/room/wrangler.grow.jsonc
 // Set SESSION_SECRET separately from stdin.
 // Durable Objects and Register17 belong to this Worker. The artroom-demo
 // Artifacts namespace and application-content bucket are shared.
@@ -77,8 +77,9 @@
     }
   ],
   "vars": {
-    // Initial rollout only; enforce is a recorded deploy-time --var override.
-    "SCOPE_INDEX_MODE": "register",
+    // Recorded live mode; preserve enforced admission on deployment.
+    "SCOPE_INDEX_MODE": "enforce",
+    "PLATFORM_CREATION_PINS": "[\"platform:register@17\",\"platform:directory@16\",\"platform:membership@8\",\"platform:rules@10\",\"platform:destination@12\",\"platform:inbox@1\"]",
     // Planner-confirmed item 2 and release. This serves the unchanged
     // placeholder at its sandbox origin, not a standalone Grow UI.
     "APPLICATION_SCREEN_HOSTS": "[{\"v\":1,\"screenOrigin\":\"https://grow.inguz.space\",\"roomOrigin\":\"https://dap-grow.inguz.workers.dev\",\"directory\":\"sc_ryghgistvpshbaznxlbleop5zqruy2kmogy4jeigr7j3yqlewceq\",\"item\":2,\"presentation\":\"sha256:5bd818a796771c0b6bdd6eac7d5b0fe6ed70358ddc2c33dec82bfd11cd558cf4\"}]",
