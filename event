@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8682dc46e79bd8976eabfce603b9bb25d74bfda4","text":"Merge retired a covered predecessor; the successor is at docs/security/settings.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:88f5d23e8d735ef9c74a823260644356ee15ab7f","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-25-site-token-reuse.md."}
