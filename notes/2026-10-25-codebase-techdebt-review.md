@@ -1,7 +1,8 @@
 # Codebase technical-debt review
 
 Status: landed `c5b8e00c`; describes work that is done. Request `72a6df7d`.
-Slices landed: PD-1 (`5248b0be`) and BR-1 (`f5a6338c`), both on 25 October.
+Slices landed on 25 October: PD-1 (`5248b0be`), BR-1 (`f5a6338c`), BR-2
+(`86204d44`) and PD-6 (this head).
 
 The planner deploys `dap-grow` from `apps/room/wrangler.grow.jsonc`. That file
 sets the scope index to register mode. The live Worker has run in enforce mode
@@ -672,7 +673,12 @@ not a builder request from this review.
   Each is a new pin with its own design note.
 - **PD-6, artroom-scope (TD-13).** An end date for retained Start requests; its
   live nonsecret settings committed to its file; the GitHub secrets that the
-  operator record lists as unused deleted.
+  operator record lists as unused deleted. Ruled: retained Start requests end
+  on 8 November 2026 (the deployment recorded no creation event in the 14
+  days to 25 October). The live `DEMO_START_CONFIG` is in the file under a
+  config test; `ARTIFACTS_CONFIG` and `DEPLOYMENT` stay operator secrets on
+  that Worker. The three GitHub secrets serve retained GitHub destinations
+  until the end date and are deleted with the variable on that date.
 - **PD-7, status and guides (TD-17).** A planner head finishes H1, corrects the
   roadmap and the plan 032 and 033 status lines, amends the history note and its
   slice H6, and adds `node scripts/check-doc-links.mjs` to the gate.

@@ -56,6 +56,7 @@ no global installation or Wrangler dependency in this checkout is needed.
 3. Choose an unused Worker name and a new Artifacts namespace, such as
    `dap-my-room`. Edit `apps/room/wrangler.jsonc`: set `name` to that
    Worker name, set the `artifacts` entry's `namespace` to your namespace,
+   remove the `DEMO_START_CONFIG` line, which belongs to `artroom-scope`,
    and add the following top-level plain variables with your chosen values.
 
    ```json
