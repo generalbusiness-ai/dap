@@ -4,6 +4,7 @@ import { pathToFileURL } from 'node:url';
 
 const duration = value => typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : null;
 const text = value => typeof value === 'string' ? value : null;
+const directive = value => value === true || typeof value === 'string';
 const number = value => Number.isSafeInteger(value) && value >= 0 ? value : null;
 const projects = ['bytes','derive','platform','git','checkers','replay','client','scope','scope-denial','lanes','cli','page','mcp','counting','lending','grow'];
 const phases = ['kernel','node','counting','plain','native'];
@@ -15,6 +16,7 @@ const nodeKey = row => row.entryFile !== null && row.testId !== null ? JSON.stri
 export default async function* nodeReporter(source) {
   const phase = process.env.ARTROOM_TEST_PHASE;
   if (phase !== 'node' && phase !== 'counting') throw new Error('Unknown Node observation phase');
+  let terminalOrdinal = 0;
   for await (const { type, data } of source) {
     if (!['test:enqueue','test:dequeue','test:complete','test:pass','test:fail','test:summary','test:interrupted'].includes(type)) continue;
     const row = { version:1, record:'node-event', runner:'node', phase, event:type };
@@ -27,11 +29,18 @@ export default async function* nodeReporter(source) {
       Object.assign(row, { entryFile:text(data.entryFile), file:text(data.file), testId:number(data.testId),parentId:number(data.parentId),
         name:text(data.name),nesting:number(data.nesting),testNumber:number(data.testNumber),line:number(data.line),column:number(data.column),
         classification: data.type ?? data.details?.type ?? null, durationMs:duration(data.details?.duration_ms),
-        state:data.skip ? 'skipped' : data.todo ? 'todo' : type === 'test:fail' ? 'failed' : type === 'test:pass' ? 'passed'
+        state:directive(data.skip) ? 'skipped' : directive(data.todo) ? 'todo' : type === 'test:fail' ? 'failed' : type === 'test:pass' ? 'passed'
           : type === 'test:complete' ? (data.details?.passed ? 'passed' : 'failed') : null });
+    }
+    if (['test:pass','test:fail'].includes(type)) {
+      terminalOrdinal++;
+      // This distinguishes raw observations only. It never becomes a test ID.
+      if (row.entryFile === null || row.testId === null) row.terminalOrdinal = terminalOrdinal;
     }
     yield JSON.stringify(row) + '\n';
   }
+  // Real input EOF, not a public test:summary or an assertion of child success.
+  yield JSON.stringify({version:1,record:'reporter-end',runner:'node',phase}) + '\n';
 }
 
 /** Retain all inputs. Reconcile identities, never display names. Durations
@@ -80,11 +89,15 @@ export function summarize({ stages, observations, mappings = [] }) {
     const stage = stageRows.find(row => row.name === phase);
     const endings = observations.filter(row => row.phase === phase && (row.record === 'end' || row.event === 'test:summary'));
     const interrupted = observations.some(row => row.phase === phase && row.event === 'test:interrupted');
-    const terminalOK = endings.length > 0 && !interrupted && endings.every(row => row.runner === 'vitest'
-      ? row.reason === 'passed' && row.unhandledErrors === 0 : row.success === true);
+    const reporterEOF = ['node','counting'].includes(phase) && observations.some(row => row.phase === phase && row.record === 'reporter-end' && row.runner === 'node');
+    const terminalOK = !interrupted && (endings.length > 0 ? endings.every(row => row.runner === 'vitest'
+      ? row.reason === 'passed' && row.unhandledErrors === 0 : row.success === true)
+      : reporterEOF && !observations.some(row => row.phase === phase && row.runner === 'node' && row.record === 'node-event'
+        && ['test:pass','test:fail'].includes(row.event) && row.state === 'failed'));
     if (stage.status === 'passed' && !terminalOK) issues.push('Incomplete or unsuccessful terminal reporting: '+phase);
-    return {phase,terminal:endings.length > 0,interrupted,status:stage.status === 'unreached' ? 'unreached'
-      : stage.status === 'passed' && terminalOK ? 'complete' : 'partial'};
+    return {phase,terminal:endings.length > 0 || reporterEOF,interrupted,
+      basis:endings.length > 0 ? 'public-terminal' : reporterEOF ? 'reporter-eof' : 'missing',
+      status:stage.status === 'unreached' ? 'unreached' : stage.status === 'passed' && terminalOK ? 'complete' : 'partial'};
   });
   const projectRows = projects.map(project => {
     const phase = ['scope','scope-denial'].includes(project) ? 'native' : 'plain';
@@ -114,8 +127,10 @@ export function formatSummary(summary) {
   for (const phase of ['node','counting']) {
     const rows = summary.cases.filter(row => row.runner === 'node' && row.phase === phase), known = rows.filter(row => row.durationMs !== null);
     lines.push(`${phase} observed cases: ${rows.length}; duration sum ${known.length ? ms(known.reduce((sum,row) => sum+row.durationMs,0)) : 'unknown'}; missing durations ${rows.length-known.length}`);
+    const unidentified = summary.unknown.filter(row => row.phase === phase && ['test:pass','test:fail'].includes(row.event));
+    if (unidentified.length) lines.push(`${phase} identity limitation: ${unidentified.length} terminal observations lack reconciled case identity or classification, remain unknown and are excluded from ranking. Zero reconciled cases does not mean zero executed tests; typed file wrappers may be indistinguishable.`);
   }
-  for (const phase of summary.completeness) lines.push(`${phase.phase} terminal evidence: ${phase.status}; ${phase.terminal ? 'observed' : 'missing or unreached'}${phase.interrupted ? '; interrupted' : ''}`);
+  for (const phase of summary.completeness) lines.push(`${phase.phase} terminal evidence: ${phase.status}; ${phase.terminal ? 'observed' : 'missing or unreached'}${phase.interrupted ? '; interrupted' : ''}${phase.basis === 'reporter-eof' ? '; reporter stream consumed; successful stage exit still required; case coverage unknown' : ''}`);
   lines.push(`Unknown/suite observations: ${summary.unknown.length}; contradictory records: ${summary.issues.length}`);
   for (const issue of summary.issues) lines.push(issue);
   return lines.join('\n') + '\n';

@@ -49,6 +49,51 @@ test('Node public events retain duplicates, classify suites separately and map a
     assert.equal(summary.cases.length,2);assert.equal(summary.top.length,2);assert.equal(summary.top[0].mappedSource,'/real.test.ts');
     assert(summary.unknown.length>0);assert.equal(summary.nodeSummaries[0].success,false);
     assert(!JSON.stringify(observations).includes('not copied'));assert.equal(observations.find(row=>row.event==='test:interrupted').interrupted.length,1);
+    assert.equal(observations.at(-1).record,'reporter-end');
+    // Official22.0 grammar: ordinary terminals have no IDs/type; Suite alone
+    // supplies type='suite'. Later22 typed terminals still have no stable IDs.
+    const oldLocation={file:'/old.test.mjs',line:1,column:1,nesting:0};
+    for (const typed of [false,true]) {
+      const legacy=[...[1,2].flatMap(testNumber=>[
+        {type:'test:enqueue',data:{...oldLocation,name:'same',...(typed?{type:'test'}:{})}},
+        {type:'test:complete',data:{...oldLocation,name:'same',testNumber,details:{passed:true,duration_ms:0,...(typed?{type:'test'}:{})}}},
+        {type:'test:pass',data:{...oldLocation,name:'same',testNumber,details:{duration_ms:0,...(typed?{type:'test'}:{})}}}]),
+        {type:'test:pass',data:{...oldLocation,name:'suite',details:{type:'suite',duration_ms:2}}},
+        {type:'test:fail',data:{...oldLocation,name:'todo true',todo:true,details:{duration_ms:1,...(typed?{type:'test'}:{})}}},
+        {type:'test:pass',data:{...oldLocation,name:'skip true',skip:true,details:{duration_ms:0,...(typed?{type:'test'}:{})}}},
+        {type:'test:fail',data:{...oldLocation,name:'todo empty',todo:'',details:{duration_ms:1,...(typed?{type:'test'}:{})}}},
+        {type:'test:pass',data:{...oldLocation,name:'skip empty',skip:'',details:{duration_ms:0,...(typed?{type:'test'}:{})}}},
+        {type:'test:pass',data:{...oldLocation,name:'false directives',todo:false,skip:false,details:{duration_ms:0,...(typed?{type:'test'}:{})}}}];
+      const oldRows=[];for await(const line of nodeReporter(legacy))oldRows.push(JSON.parse(line));
+      const oldSummary=summarize({stages:[{name:'counting',status:'passed'}],observations:oldRows});
+      assert.equal(oldSummary.cases.length,0);assert.equal(oldSummary.top.length,0);
+      const terminal=oldSummary.unknown.filter(row=>row.event==='test:pass'&&row.name==='same');
+      assert.equal(terminal.length,2);assert.equal(new Set(terminal.map(row=>row.terminalOrdinal)).size,2);
+      assert(terminal.every(row=>row.entryFile===null&&row.testId===null));
+      assert.equal(oldSummary.completeness.find(row=>row.phase==='counting').basis,'reporter-eof');
+      assert.equal(oldSummary.completeness.find(row=>row.phase==='counting').status,'complete');
+      assert.equal(oldSummary.issues.length,0);assert(!oldRows.some(row=>row.event==='test:summary'));
+      for (const name of ['todo true','todo empty']) assert.equal(oldRows.find(row=>row.name===name).state,'todo');
+      for (const name of ['skip true','skip empty']) assert.equal(oldRows.find(row=>row.name===name).state,'skipped');
+      assert.equal(oldRows.find(row=>row.name==='false directives').state,'passed');
+      assert.match(formatSummary(oldSummary),/Zero reconciled cases does not mean zero executed tests/);
+      const truncated=summarize({stages:[{name:'counting',status:'passed'}],observations:oldRows.slice(0,-1)});
+      assert(truncated.issues.some(issue=>issue.includes('terminal reporting')));
+      const unsuccessful=summarize({stages:[{name:'counting',status:'passed'}],observations:[...oldRows,{record:'node-event',runner:'node',phase:'counting',event:'test:summary',success:false}]});
+      assert(unsuccessful.issues.length>0); // EOF cannot override a real unsuccessful public summary.
+      // FileTest can emit a terminal with the same actual type as a test.
+      // Keep it unknown, and never let EOF conceal its actual failed outcome.
+      const failedRows=[];for await(const line of nodeReporter([...legacy,
+        {type:'test:fail',data:{...oldLocation,name:'/old.test.mjs',details:{duration_ms:1,...(typed?{type:'test'}:{})}}},
+      ]))failedRows.push(JSON.parse(line));
+      const contradiction=summarize({stages:[{name:'counting',status:'passed'}],observations:failedRows});
+      assert.equal(contradiction.cases.length,0);assert.equal(contradiction.top.length,0);
+      assert(contradiction.unknown.some(row=>row.event==='test:fail'&&row.state==='failed'));
+      assert.equal(contradiction.completeness.find(row=>row.phase==='counting').status,'partial');
+      assert(contradiction.issues.some(issue=>issue.includes('terminal reporting')));
+      const failedStage=summarize({stages:[{name:'counting',status:'failed'}],observations:failedRows});
+      assert.equal(failedStage.completeness.find(row=>row.phase==='counting').status,'partial');assert.equal(failedStage.issues.length,0);
+    }
   } finally {if(prior===undefined)delete process.env.ARTROOM_TEST_PHASE;else process.env.ARTROOM_TEST_PHASE=prior;}
 });
 
@@ -63,9 +108,20 @@ test('actual Node reporter integration preserves failed cases and an early empty
     assert.equal(child.signal,null);assert.equal(child.status,1,child.stderr);
     const observations=readFileSync(output,'utf8').trim().split('\n').map(line=>JSON.parse(line));
     const summary=summarize({stages:[{name:'node',status:'failed'}],observations});
-    assert.equal(summary.cases.filter(row=>row.name==='same').length,2);
-    assert(summary.cases.some(row=>row.name==='same'&&row.state==='failed'));
-    assert(summary.cases.some(row=>row.state==='skipped'));assert(summary.top.every(row=>Number.isFinite(row.durationMs)));
+    const named=observations.filter(row=>['test:pass','test:fail'].includes(row.event)&&(row.name==='same'||row.name==='ordinary skip'));
+    assert.equal(named.filter(row=>row.name==='same').length,2);
+    assert(named.some(row=>row.name==='same'&&row.state==='failed'));assert(named.some(row=>row.state==='skipped'));
+    if (named.every(row=>row.entryFile!==null&&row.testId!==null)) {
+      // Preserve all modern verified-identity assertions unchanged.
+      assert.equal(summary.cases.filter(row=>row.name==='same').length,2);
+      assert(summary.cases.some(row=>row.name==='same'&&row.state==='failed'));
+      assert(summary.cases.some(row=>row.state==='skipped'));
+    } else {
+      assert.equal(summary.cases.length,0);assert.equal(summary.top.length,0);
+      assert(summary.unknown.some(row=>row.event==='test:fail'&&row.name==='same'));
+    }
+    assert.equal(observations.filter(row=>row.record==='reporter-end').length,1);
+    assert(summary.top.every(row=>Number.isFinite(row.durationMs)));
     const empty=spawnSync(process.execPath,[new URL('./test-summary.mjs',import.meta.url).pathname,join(dir,'absent')],{encoding:'utf8'});
     assert.equal(empty.status,0,empty.stderr);assert.match(empty.stdout,/No observed cases/);assert.match(empty.stdout,/native: unreached/);
   } finally {rmSync(dir,{recursive:true,force:true});}

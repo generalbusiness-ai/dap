@@ -518,7 +518,11 @@ the observed test-and-hook duration sum for each Vitest project. Node and
 Counting have separate case-duration sums. These concurrent duration sums
 are neither elapsed time nor CPU time. Missing durations remain unknown;
 failed or incomplete phases are labelled partial, and stages that never
-started are labelled unreached. Counting records the generated Node file
+started are labelled unreached. Older Node APIs can lack stable case identities:
+all such terminals remain unknown and are excluded from ranking, including
+typed file wrappers the API cannot distinguish. Reporter EOF plus a successful
+stage exit proves stream consumption only, not complete case coverage; it does
+not invent a public test summary. Counting records the generated Node file
 and its validated source mapping. Its result does not prove browser execution.
 
 The test command prints its evidence directory. Timing observations stay

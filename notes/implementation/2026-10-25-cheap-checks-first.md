@@ -67,7 +67,8 @@ Worker or provider claim.
 
 The first gate preflight refused before launching any application
 command: its capture used a different `CODEX_SANDBOX` setting from the
-approved execution call. The failed setup is retained. A fresh capture
+approved execution call. That failed setup used 0.52 seconds wall and
+0.52 seconds CPU. It remains failed. A fresh capture
 under the matching execution setting kept the full environment guard;
 no cache reset, package installation or test preceded the correction.
 
@@ -90,9 +91,68 @@ every original assertion, all three ranges and the 30-second deadline
 remain. No shared helper, production code, configuration or dependency
 changes after the failed gate.
 
-Under `docs/testing.md`'s isolated test-file follow-up rule, the remaining
-checks are the replay test compiler context, the whole failing file and
+Under `docs/testing.md`'s isolated test-file follow-up rule, the follow-up
+covers the replay test compiler context, the whole failing file and
 the native phase that the gate never reached. The healthy plain files
-and earlier stages are carried from the failed gate. Follow-up results
-and exact-head checker review remain pending; they cannot turn the
-failed gate into a pass. This tooling change requires no deployment.
+and earlier stages are carried from the failed gate. Follow-up `16214`
+completed naturally with exit 0 at `801129fc`, tree `ab37fe58`. Its three
+direct commands passed: the replay test compiler, the whole repaired
+one-case file, and the previously unreached native phase. Native recorded
+769 passes and two ordinary skips across 771 unique final cases in 227
+files, with no unhandled errors.
+
+The repaired case has matching readiness, result and final PASS records.
+Native has 18 missing readiness callbacks and 40 missing intermediate result
+callbacks, all with terminal PASS records. There are no duplicate or
+conflicting identities. Missing callbacks do not establish an unstarted
+or still-running case. The separate timing streams reconcile the same
+actual case identities without inventing a collection report or retries.
+
+Root accepted the independent closed follow-up audit. All eight clean
+boundary records match the allocation under the inherited named cache and
+empty `.vite-temp` directory timestamp exceptions. The four observation-copy pairs match
+the original records. These are finite source and tool checks, environment hashes and
+dependency metadata, not continuous custody of dependency contents.
+
+The follow-up used 1,327.32 seconds wall and 1,343.59 seconds CPU. Nested
+compiler, file and native timings overlap the outer command and are not
+added. It did not invoke another maintained whole-gate summary. The closed
+raw timing and progress streams were reconciled independently; they do
+not replace the failed gate's original summary or manufacture one healthy
+combined run.
+
+Ordinary gate `82795` remains failed. The isolated replay repair and accepted
+follow-up are historical evidence for `801129fc`. They do not validate a
+later change to the reporter. The compatibility repair below changes
+tooling source, so the isolated test-file exception no longer covers the
+new candidate. Fresh owning checks on Node 22 and Node 26, then a fresh
+ordinary gate, remain pending. Exact-head checker review and landing also
+remain pending. This tooling change requires no deployment.
+
+These timings were recorded on an Apple M5 Max with 18 logical processors.
+Load was not sampled for the owning checks or gate. OS cache temperature
+was uncontrolled, and the checkout used privately copied dependencies.
+A later load sample cannot describe those earlier runs. The measurements
+are local observations, not a portable performance benchmark.
+
+## Node 22 compatibility blocker
+
+The earlier checks used pinned Node 26.12.1. The package also permits Node
+22.23.4, whose public events lack the reporter's modern case-identity fields.
+Actual Node 22.23.4 baseline `44405` completed naturally with exit 1: two
+owning cases passed and one failed at `test-summary.test.mjs:66:12`, where
+the integration expected two identified cases and observed zero. Recorded source,
+environment and binary pins agree before and after. That failure
+is retained separately from the Node 26 results.
+
+The measured Node command used 0.90 seconds wall and 0.16 seconds CPU.
+The Python wrapper's CPU was not measured, so those figures are not a
+complete wrapper cost or delivery total.
+
+Root is reviewing a repair in `scripts/test-summary.mjs`, its owning test
+and `docs/testing.md`, with the declared engines unchanged. Missing modern
+identities remain unknown and excluded from case ranking. Neither a
+legacy type label nor a raw ordinal establishes a case identity. Actual
+end-of-stream consumption is distinct from a framework summary or success:
+known failed terminals must still prevent a successful reporting outcome.
+The final source, owning checks and new gate outcomes remain unearned.
