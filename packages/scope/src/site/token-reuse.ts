@@ -107,7 +107,9 @@ export class SiteTokenReuse {
       return handle;
     };
     if (selected.row["state"] === "ready") {
-      const deadline = deadlineAt(selected.row["ends"] as number, this.#clock);
+      // Bound this acquisition even if the provider reports a distant end.
+      // This local deadline never changes the durable token's actual expiry.
+      const deadline = deadlineAt(Math.min(selected.row["ends"] as number, now + (READ_TTL + 60) * 1000), this.#clock);
       try { await remote(deadline.wait); await deadline.wait(this.#schedule()); return current() ? this.#ready(key, generation) : NO_TOKEN; }
       catch (error) { return failed(error); }
       finally { deadline.close(); }
