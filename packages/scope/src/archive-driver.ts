@@ -10,7 +10,7 @@ import { ArchiveFrontiers, type ArchiveFrontierBase, type ArchiveFrontierPrepare
 import { archiveFrontierRowContextBound } from "./archive-frontier-cost.ts";
 import { admitArchiveMigration } from "./archive-bootstrap-cost.ts";
 import { planPublishedArchiveConversion, rebuildArchive, rebuildArchivePass, type ArchiveFixedFinish } from "./archive-build.ts";
-import { planAdaptiveArchivePass, planRootAdaptiveArchivePass, planRootFixedArchivePass } from "./archive-adaptive.ts";
+import { planAdaptiveArchivePass, planRootAdaptiveArchivePass, planRootFixedArchivePass, planRootFixedUnpublishedArchivePass } from "./archive-adaptive.ts";
 import type { FixtureArchiveSourcePins } from "./archive-source-pins.ts";
 import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, readArchivePin, readArchivePinAfterReceipt } from "./archive-pin.ts";
 import type { ArchivePolicyRegistry } from "./archive-inventory.ts";
@@ -334,10 +334,10 @@ export class ArchiveDriver {
         else {
           const capacity = rows.prepareCapacityDeferral(row, count => this.#later(count), budget);
           // A previous genuine capacity wake chooses this strategy before
-          // planning spends its allowance. Initial, unpublished and pending
-          // work retain their original paths; no exhausted-pass fallback.
+          // planning spends its allowance. Unpublished receipts still admit
+          // their complete old range; no exhausted-pass fallback.
           const fixed = "production" in this.#options && capacity.priorCapacityDeferrals > 0
-            && row.confirmed?.layout === 2 && row.confirmed.anchorsPublished === true && base !== null;
+            && row.confirmed?.layout === 2 && base !== null;
           let selectedThrough = through;
           if (fixed) {
             const seq = row.confirmed!.through.seq + 1;
@@ -348,7 +348,7 @@ export class ArchiveDriver {
             selectedThrough = { seq, hash: next[0]["hash"] };
             if (seq === through.seq && selectedThrough.hash !== through.hash) return budget.stop("unavailable");
           }
-          const planner = fixed ? planRootFixedArchivePass
+          const planner = fixed ? (row.confirmed!.anchorsPublished === true ? planRootFixedArchivePass : planRootFixedUnpublishedArchivePass)
             : "production" in this.#options ? planRootAdaptiveArchivePass : planAdaptiveArchivePass;
           const adaptive = await planner(this.#options.sql, { ...common, at, through: selectedThrough,
             ...(legacyAnchorParent ? { legacyAnchorParent } : {}),

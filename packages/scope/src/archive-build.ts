@@ -287,17 +287,54 @@ export interface ArchiveFixedFinish {
 
 /** Separate scheduling strategy after a capacity retry, not a second
  * attempt in the adaptive caller's already-spent budget. */
-export async function planRootFixedPublishedArchivePass(sql: Sql, context: ArchivePassContext & {
+type FixedArchivePassContext = ArchivePassContext & {
   readonly oldRowBytes: number; readonly rowContextBytes: number; readonly maximum: number;
   readonly atomicFirstAttempt?: boolean;
   readonly parentHeld: ReadonlyMap<string, JournalObject>; readonly parentUsed: ReadonlySet<string>;
-}, budget: ArchiveBudget) {
+};
+export async function planRootFixedPublishedArchivePass(sql: Sql, context: FixedArchivePassContext, budget: ArchiveBudget) {
   if (!context.after || !context.parent || context.through.seq !== context.after.seq + 1 || context.legacyAnchors !== undefined)
     return { ok: false as const, reason: "parent" as const };
   const begun = await budget.wait(() => JournalPassPreparation.begin({ format: context.format, at: context.at,
     after: context.after, parent: context.parent, budget }));
   if (!begun.ok) return begun;
+  return finishRootFixedArchivePass(sql, context, begun.preparation, budget);
+}
+
+/** Only this owner can supply legacy anchors to the fixed continuation.
+ * Complete old-range admission and new inventory share one preparation. */
+export async function planRootFixedLegacyArchivePass(sql: Sql, context: FixedArchivePassContext & {
+  readonly row: ArchiveRow;
+  readonly legacyAnchorParent?: NonNullable<Parent>;
+  readonly prepareSources?: (seq: number, budget: ArchiveBudget) => Promise<void>;
+}, budget: ArchiveBudget) {
+  const old = context.row.confirmed;
+  if (!old || old.layout !== 2 || old.anchorsPublished === true || context.row.pending !== null || context.row.stopped !== null
+    || !same(context.row.at, context.at) || context.row.format !== context.format
+    || !context.after || !same(context.after, old.through) || !context.parent || context.parent.id !== old.commit
+    || context.through.seq !== context.after.seq + 1 || context.legacyAnchors !== undefined || context.preparation !== undefined)
+    return { ok: false as const, reason: "parent" as const };
+  const begun = await budget.wait(() => JournalPassPreparation.begin({ format: context.format, at: context.at,
+    after: context.after, parent: context.parent, budget }));
+  if (!begun.ok) return begun;
   const preparation = begun.preparation;
+  const legacyAnchors = await planLegacyArchiveAnchors(sql, { ...context, preparation }, budget);
+  if (!legacyAnchors) return { ok: false as const, reason: "parent" as const };
+  if (context.prepareSources) {
+    const prepared = await budget.wait(async () => {
+      try { await context.prepareSources!(context.through.seq, budget); return { ok: true as const }; }
+      catch (error) {
+        if (error instanceof ArchivePrefixStopped) return { ok: false as const, error };
+        throw error;
+      }
+    });
+    if (!prepared.ok) throw prepared.error;
+  }
+  return finishRootFixedArchivePass(sql, { ...context, legacyAnchors }, preparation, budget, legacyAnchors.anchors.length);
+}
+
+async function finishRootFixedArchivePass(sql: Sql, context: FixedArchivePassContext,
+  preparation: JournalPassPreparation, budget: ArchiveBudget, legacyAnchorCount = 0) {
   const selected = inventoryArchiveRoot(sql, context.at, context.through, context.bounds, context.policies,
     budget, context.fixtureSources, context.after);
   if (!selected.ok) return selected;
@@ -325,7 +362,7 @@ export async function planRootFixedPublishedArchivePass(sql: Sql, context: Archi
   // new read, serialization or clock observation is supplied to diagnostics.
   budget.spend({ metadata: 512, inputWork: 1024 });
   const remaining = forecastArchiveFinish(context, preparation, shape, context.through, empty,
-    context.oldRowBytes, context.rowContextBytes, parent, empty, 0, budget);
+    context.oldRowBytes, context.rowContextBytes, parent, empty, legacyAnchorCount, budget);
   if (remaining === null) return { ok: false as const, reason: "limit" as const };
   const fixedFinish: ArchiveFixedFinish = Object.freeze({ used: Object.freeze(budget.admitted()),
     remaining: Object.freeze({ ...remaining }), metadataMargin: 64 * 1024 });
