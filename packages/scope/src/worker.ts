@@ -110,7 +110,17 @@ export interface Env extends GitHubBindings, ArtifactsBindings, ApplicationBindi
 export class ScopeIndex extends DurableObject<Env> {
   readonly #rows = new ScopeIndexRows(this.ctx.storage.sql);
   readonly #serving = new ServingAdmission(this.env);
-  readonly #siteTokens = new SiteTokenReuse({ exec: (query, ...args) => this.ctx.storage.sql.exec(query, ...args), transaction: run => this.ctx.storage.transactionSync(run) }, () => this.env, () => Date.now(), () => this.#scheduleSiteTokens());
+  readonly #siteTokens = new SiteTokenReuse({ exec: (query, ...args) => this.ctx.storage.sql.exec(query, ...args), transaction: run => this.ctx.storage.transactionSync(run) }, () => {
+    // Read current provider settings afresh for every custody check.
+    const configuration = this.env.ARTIFACTS_CONFIG;
+    const namespace = this.env.ARTIFACTS_NAMESPACE;
+    const binding = this.env.ARTIFACTS;
+    return {
+      ...(configuration === undefined ? {} : { ARTIFACTS_CONFIG: configuration }),
+      ...(namespace === undefined ? {} : { ARTIFACTS_NAMESPACE: namespace }),
+      ARTIFACTS: binding,
+    };
+  }, () => Date.now(), () => this.#scheduleSiteTokens());
   #siteAlarm: Promise<void> | null = null;
   #siteAlarmRevision = 0;
   async #scheduleSiteTokens(): Promise<void> {
