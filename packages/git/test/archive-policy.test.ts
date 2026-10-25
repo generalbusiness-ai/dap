@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import { INVITATION_KEY_MEMBERSHIP } from "@generalbusiness/dap-contract";
+import { INVITATION_KEY_MEMBERSHIP, INVITATION_PROOF_DOMAIN } from "@generalbusiness/dap-contract";
 import { textDigest } from "@generalbusiness/dap-bytes";
 import { ARCHIVE_NATIVE_DATA, admitArchiveExport, admitArchiveNativeValuePlace } from "../src/archive-policy.ts";
 
@@ -13,7 +13,7 @@ test("export admission checks exact reviewed native pin and data together, prese
     expect(admitArchiveExport(pin, certified, inventory)).toEqual({ ok: false, reason: "unsupported-credential-cohort" });
   }
   expect(inventory).not.toHaveBeenCalled();
-  for (const pin of ["platform:directory@14", "platform:register@17", "platform:register@18", "platform:directory@18", "platform:destination@14"]) {
+  for (const pin of ["platform:directory@14", "platform:register@17", "platform:register@18", "platform:register@19", "platform:directory@19"]) {
     expect(admitArchiveExport(pin, certified, inventory, ARCHIVE_NATIVE_DATA["platform:directory@16"])).toEqual({ ok: false, reason: "unsupported-archive-cohort" });
   }
   for (const [pin, digest] of Object.entries(ARCHIVE_NATIVE_DATA)) {
@@ -52,4 +52,33 @@ test("export admission checks exact reviewed native pin and data together, prese
     expect(admitArchiveNativeValuePlace(pin, data, "artroom-changed-set-1", 256 * 1024 + 1, owner)).toBe(false);
     expect(admitArchiveNativeValuePlace(pin, declaration, "artroom-changed-set-1", 256 * 1024, owner)).toBe(false);
   }
+  // Policy-function boundary only: these full pin/data/place rows do not
+  // prove native certificate outcome selection, inventory, export or replay.
+  const q11 = "platform:rules@11", q11Data = ARCHIVE_NATIVE_DATA[q11]!;
+  const g14 = "platform:destination@14", g14Data = ARCHIVE_NATIVE_DATA[g14]!;
+  const proposal = "acts.publish.fields.proposal.value", proof = "acts.publish.fields.proof.value";
+  const policyDomain = "artroom-rules-policy-1", treeDomain = "artroom-rules-tree-1", bound = 256 * 1024;
+  expect(admitArchiveNativeValuePlace(q11, q11Data, policyDomain, bound, proposal)).toBe(true);
+  expect(admitArchiveNativeValuePlace(q11, q11Data, treeDomain, bound, proof)).toBe(true);
+  expect(admitArchiveNativeValuePlace(q11, q11Data, policyDomain, bound, proof)).toBe(false);
+  expect(admitArchiveNativeValuePlace(q11, q11Data, treeDomain, bound, proposal)).toBe(false);
+  expect(admitArchiveNativeValuePlace(q11, g14Data, policyDomain, bound, proposal)).toBe(false);
+  expect(admitArchiveNativeValuePlace(q11, q11Data, treeDomain, bound + 1, proof)).toBe(false);
+  const certificateOwner = "owners.platform:destination@14.certify-rules-tree";
+  for (const domain of [policyDomain, treeDomain]) {
+    expect(admitArchiveNativeValuePlace(g14, g14Data, domain, bound, certificateOwner)).toBe(true);
+    expect(admitArchiveNativeValuePlace(g14, g14Data, domain, bound, "owners.platform:destination@14.judge")).toBe(false);
+    expect(admitArchiveNativeValuePlace(g14, g14Data, domain, bound, "owners.platform:destination@13.certify-rules-tree")).toBe(false);
+  }
+  expect(admitArchiveNativeValuePlace(g14, q11Data, policyDomain, bound, certificateOwner)).toBe(false);
+  expect(admitArchiveNativeValuePlace(g14, g14Data, treeDomain, bound + 1, certificateOwner)).toBe(false);
+  const observation = "outcomes.judge.observes.0.retains.0";
+  expect(admitArchiveNativeValuePlace(g14, g14Data, "artroom-rules-extents-2", bound, observation)).toBe(true);
+  expect(admitArchiveNativeValuePlace(g14, g14Data, "artroom-rules-extents-1", bound, observation)).toBe(false);
+  expect(admitArchiveNativeValuePlace(g14, g14Data, "artroom-rules-extents-2", bound, certificateOwner)).toBe(false);
+  for (const pin of ["platform:destination@12", "platform:destination@13"]) {
+    expect(admitArchiveNativeValuePlace(pin, ARCHIVE_NATIVE_DATA[pin]!, "artroom-rules-extents-2", bound, observation)).toBe(false);
+  }
+  expect(admitArchiveNativeValuePlace(q11, q11Data, INVITATION_PROOF_DOMAIN, bound, proposal)).toBe(false);
+  expect(admitArchiveNativeValuePlace(g14, g14Data, INVITATION_PROOF_DOMAIN, bound, certificateOwner)).toBe(false);
 });

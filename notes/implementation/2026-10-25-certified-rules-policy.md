@@ -72,12 +72,12 @@ SQLite fields, preserving the native selector's malformed-body behavior.
 The existing changes-only projection stays unchanged. Its appended
 scripted guard checks remain unrun, and genuine Native archive and replay
 validation remain pending. The exact three producer and ten place rows
-still await adoption from the observed generated output.
+now use the observed generated digests. Their policy test and four new
+version goldens remain unrun. Historical rows and goldens stay exact.
 
 ## Open limits
 
-Request `0716e75a` still needs exact archive/replay policy rows,
-actual structural seals, the real-family
+Request `0716e75a` still needs actual structural seals, the real-family
 native publication and required-job witnesses, a proportional control,
 compiler closure, the ordinary gate and exact-head review. The maintained
 producer has generated the new declaration digests; Source review alone

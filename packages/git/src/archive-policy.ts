@@ -8,7 +8,7 @@ export type ArchiveExportRefusal = "unsupported-credential-cohort" | "unsupporte
 export type ArchiveExportAdmission = { ok: true } | { ok: false; reason: ArchiveExportRefusal };
 export interface ArchivePrivacyInventory { readonly customDomains: boolean; readonly foreignCopies: boolean }
 
-/** Reviewed native producer data for the two exact device/archive cohorts. These
+/** Reviewed native producer data for the exact archive families. These
  * pins admit export inventory, never credentials, authority or a root journal.
  * The caller derives the digest from its installed VERSION_DATA, not input. */
 export const ARCHIVE_NATIVE_DATA: Readonly<Record<string, Digest>> = Object.freeze({
@@ -19,6 +19,10 @@ export const ARCHIVE_NATIVE_DATA: Readonly<Record<string, Digest>> = Object.free
   // bytes do not establish evaluator equivalence or archive readiness.
   "platform:directory@17": "sha256:c8c40477f369a19213439eaa1a3263dad1ce16038e5df605b6f7322737380b55",
   "platform:destination@13": "sha256:f29353b2ca1f551ab6a7d622bbd57aa6dfc7fc3748358ce709ccee728e4c15df",
+  // Actual maintained R7 generation; earlier producer rows stay exact.
+  "platform:directory@18": "sha256:c8c40477f369a19213439eaa1a3263dad1ce16038e5df605b6f7322737380b55",
+  "platform:rules@11": "sha256:0195194743b16d2a3c6beaaad2bf8ebb23c319ba55dc1c1f4f06d5dddcb31a63",
+  "platform:destination@14": "sha256:0a558668c52afc2cf1a023ee711de93c93c70a86a0255974d8a0107b03bd5f12",
 });
 
 /** Decision 74a99989. These are candidate public platform configuration
@@ -38,6 +42,17 @@ export const ARCHIVE_NATIVE_VALUE_PLACES = Object.freeze([
   { pin: "platform:destination@12", data: ARCHIVE_NATIVE_DATA["platform:destination@12"]!, domain: "artroom-changed-set-1", place: "owners.platform:destination@12.judge", max: 256 * 1024 },
   { pin: "platform:destination@13", data: ARCHIVE_NATIVE_DATA["platform:destination@13"]!, domain: "artroom-rules-extents-1", place: "outcomes.judge.observes.0.retains.0", max: 256 * 1024 },
   { pin: "platform:destination@13", data: ARCHIVE_NATIVE_DATA["platform:destination@13"]!, domain: "artroom-changed-set-1", place: "owners.platform:destination@13.judge", max: 256 * 1024 },
+  // Q11/G14 exact public configuration places; no credential or authority exception.
+  { pin: "platform:rules@11", data: ARCHIVE_NATIVE_DATA["platform:rules@11"]!, domain: "artroom-check-configuration-1", place: "acts.keep-configuration.fields.digest.value", max: 32768 },
+  { pin: "platform:rules@11", data: ARCHIVE_NATIVE_DATA["platform:rules@11"]!, domain: "dap-application-release-2", place: "acts.install-application.fields.release.value", max: 4096 },
+  { pin: "platform:rules@11", data: ARCHIVE_NATIVE_DATA["platform:rules@11"]!, domain: "dap-application-semantics-2", place: "acts.install-application.fields.semantic.value", max: 262144 },
+  { pin: "platform:rules@11", data: ARCHIVE_NATIVE_DATA["platform:rules@11"]!, domain: "artroom-rules-policy-1", place: "acts.publish.fields.proposal.value", max: 262144 },
+  { pin: "platform:rules@11", data: ARCHIVE_NATIVE_DATA["platform:rules@11"]!, domain: "artroom-rules-tree-1", place: "acts.publish.fields.proof.value", max: 262144 },
+  { pin: "platform:destination@14", data: ARCHIVE_NATIVE_DATA["platform:destination@14"]!, domain: "artroom-rules-extents-2", place: "outcomes.judge.observes.0.retains.0", max: 262144 },
+  { pin: "platform:destination@14", data: ARCHIVE_NATIVE_DATA["platform:destination@14"]!, domain: "artroom-changed-set-1", place: "owners.platform:destination@14.judge", max: 262144 },
+  { pin: "platform:destination@14", data: ARCHIVE_NATIVE_DATA["platform:destination@14"]!, domain: "artroom-rules-policy-1", place: "acts.certify-rules-tree.fields.proposal.value", max: 262144 },
+  { pin: "platform:destination@14", data: ARCHIVE_NATIVE_DATA["platform:destination@14"]!, domain: "artroom-rules-policy-1", place: "owners.platform:destination@14.certify-rules-tree", max: 262144 },
+  { pin: "platform:destination@14", data: ARCHIVE_NATIVE_DATA["platform:destination@14"]!, domain: "artroom-rules-tree-1", place: "owners.platform:destination@14.certify-rules-tree", max: 262144 },
 ] as const);
 
 /** Mechanical value/selection vocabulary only. The whole-prefix inventory
