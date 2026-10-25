@@ -53,7 +53,7 @@ test("fresh Page Start discovers native Register17 and refuses a deployed legacy
     const R = lifetime.platform(scopeIdOf(seed));
     expect((await lifetime.wait(() => R.stub.create(install, ARCHIVE_DEVICE_APPLICATION_COHORT.register))).answer).toBe("accepted");
     const register = await lifetime.wait(() => R.at());
-    const deployed = { SCOPE_INDEX: env.SCOPE_INDEX, SCOPE_INDEX_MODE: "enforce", DEPLOYMENT: TEST_DEPLOYMENT, ...host.bindings(R.name), ARTIFACTS_NAMESPACE: host.namespace };
+    const deployed = { SCOPE_INDEX: env.SCOPE_INDEX, SCOPE_INDEX_MODE: "enforce", DEPLOYMENT: TEST_DEPLOYMENT, PLATFORM_CREATION_PINS: JSON.stringify([ARCHIVE_DEVICE_APPLICATION_COHORT.register, ARCHIVE_DEVICE_APPLICATION_COHORT.directory, ARCHIVE_DEVICE_APPLICATION_COHORT.destination]), ...host.bindings(R.name), ARTIFACTS_NAMESPACE: host.namespace };
     const transport = namespace(indexedScopes(env.PLATFORM, deployed)).transport;
     const forwarded: Transport = { send: async envelope => { if (isSeed(envelope.to)) wire(scopeIdOf(envelope.to)); return transport.send(envelope); } };
     const wire = (name: ScopeId) => { lifetime.platform(name); lifetime.outside(name, (given, sql) => host.outside(given, sql, host.bindings(R.name))); lifetime.wire(name, () => ({ transport: forwarded })); };

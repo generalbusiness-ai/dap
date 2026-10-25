@@ -1,6 +1,7 @@
 /** Operator observations, not registration proof or a global scope inventory. */
 import type { Digest, ScopeRef, Seed, Sealed, Read } from "@generalbusiness/dap-contract";
 import { canonicalize, factRefOf, isDigest, isRecord, isScopeRef, isSeed, isSealed, parseStrict, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
+import { APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, platform } from "@generalbusiness/dap-platform";
 
 export const INDEX_INVENTORY_BOUNDS = Object.freeze({ scopes: 4096, pages: 4096, pagesPerScope: 1000, bytes: 16 * 1024 * 1024 });
 export interface IndexScope { readonly at: ScopeRef; readonly genesis: Digest }
@@ -152,4 +153,43 @@ export async function verifyIndexManifest(manifest: IndexManifest, reads: IndexR
     } catch { unavailable++; rows.push({ at: row.at, result: "unavailable", reason: "read-failed" }); }
   }
   return { listed: manifest.scopes.length, verified, unavailable, mismatch, rows };
+}
+
+/** Saved identities only. A known catalog pin is not a creation-lineage grant. */
+export async function indexManifestVersions(manifest: IndexManifest, reads: IndexReads) {
+  const cohorts = [
+    { name: "archive-device-publication", pins: ARCHIVE_DEVICE_PUBLICATION_COHORT },
+    { name: "archive-device-application", pins: ARCHIVE_DEVICE_APPLICATION_COHORT },
+    { name: "application", pins: APPLICATION_COHORT },
+  ] as const;
+  const newest = new Set<string>(Object.values(ARCHIVE_DEVICE_PUBLICATION_COHORT));
+  const lineage = new Set<string>(cohorts.flatMap(cohort => Object.values(cohort.pins)));
+  const observed = new Set<string>();
+  const rows: { at: ScopeRef; result: "verified" | "unavailable" | "mismatch" | "unsupported"; definition?: string; reason?: string }[] = [];
+  for (const row of manifest.scopes) {
+    try {
+      const got = await reads.entry(row.at.scope, 0);
+      if (!got.ok) { rows.push({ at: row.at, result: "unavailable", reason: got.reason }); continue; }
+      let actual: IndexScope;
+      try { actual = genesis(got.value, row.at.scope, row.at); }
+      catch { rows.push({ at: row.at, result: "mismatch", reason: "genesis-identity" }); continue; }
+      if (actual.genesis !== row.genesis) { rows.push({ at: row.at, result: "mismatch", reason: "genesis-hash" }); continue; }
+      const input = got.value.entry.input;
+      if (input.type !== "genesis") throw Error("checked genesis required");
+      const definition = input.seed.definition;
+      if (isDigest(definition)) { rows.push({ at: row.at, result: "verified", definition }); continue; }
+      if (!platform(definition) || !definition.startsWith(`platform:${row.at.kind}@`)) {
+        rows.push({ at: row.at, result: "unsupported", definition, reason: "unknown-platform-pin" }); continue;
+      }
+      observed.add(definition);
+      rows.push({ at: row.at, result: lineage.has(definition) ? "verified" : "unsupported", definition,
+        ...(lineage.has(definition) ? {} : { reason: "unsupported-creation-family" }) });
+    } catch { rows.push({ at: row.at, result: "unavailable", reason: "read-failed" }); }
+  }
+  const ready = rows.every(row => row.result === "verified");
+  return {
+    listed: manifest.scopes.length, ready, observedPins: [...observed].sort(), rows,
+    usableCreationCohorts: ready ? cohorts.filter(cohort => Object.values(cohort.pins).every(pin => newest.has(pin) || observed.has(pin))).map(cohort => cohort.name) : [],
+    qualification: "Listed saved genesis observations and supported lineage pin coverage only; not R1 register configuration, index completeness, deployment readiness or automatic configuration.",
+  };
 }

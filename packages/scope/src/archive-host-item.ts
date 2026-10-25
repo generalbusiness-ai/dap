@@ -6,7 +6,7 @@
 import type { ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import { isDigest, isEntry, isFactRef, isScopeRef, parseStrict, readItemQueryParameter, same } from "@generalbusiness/dap-bytes";
 import { isEntryOf } from "@generalbusiness/dap-derive";
-import { ARCHIVE_DEVICE_APPLICATION_COHORT as C, directoryIdOf } from "@generalbusiness/dap-platform";
+import { ARCHIVE_DEVICE_APPLICATION_COHORT as C, ARCHIVE_DEVICE_PUBLICATION_COHORT as PC, directoryIdOf } from "@generalbusiness/dap-platform";
 import type { OutsideGiven } from "./given.ts";
 import { hostBound } from "./host-wiring.ts";
 import { itemQueryPage } from "./item-query-page.ts";
@@ -26,7 +26,7 @@ export function archiveHostItem(sql: Pick<Sql, "exec">, given: OutsideGiven, pin
     const scope = given.scope(), genesis = given.genesis();
     if (!query || !scope || !pinned || !same(query.scope, scope.at) || query.limit !== 1 || query.cursor !== null || query.ids !== null) return refused;
     if (scope.at.kind === "directory") {
-      if (!same(scope.at, ask.directory) || pinned.named !== C.directory || query.type !== "repository" || query.states.join() !== "open") return refused;
+      if (!same(scope.at, ask.directory) || (pinned.named !== C.directory && pinned.named !== PC.directory) || query.type !== "repository" || query.states.join() !== "open") return refused;
       const row = given.state.page("repository", ["open"], null, 1).items[0];
       const claim = row?.refs["claim"], repository = row?.values["repository"] as Record<string, unknown> | undefined;
       if (row?.values["archive"] !== "journal" || !same(row.refs["register"], genesis?.seed.creator)
@@ -40,7 +40,7 @@ export function archiveHostItem(sql: Pick<Sql, "exec">, given: OutsideGiven, pin
       const seed = seeds.length === 1 && seeds[0]?.effect === "value" ? seeds[0].value : null;
       if (!isDigest(seed) || directoryIdOf(seed) !== scope.at.scope) return refused;
     } else if (scope.at.kind === "destination") {
-      if (pinned.named !== C.destination || query.type !== "branch" || query.states.join() !== "empty,ready"
+      if ((pinned.named !== C.destination && pinned.named !== PC.destination) || query.type !== "branch" || query.states.join() !== "empty,ready"
         || !same(genesis?.seed.creator, ask.directory) || !hostBound(given, config.registerScope, config.host, config.namespace)(pinned.named)) return refused;
     } else return refused;
     return itemQueryPage(sql, { scope, pinned }, query, () => true);

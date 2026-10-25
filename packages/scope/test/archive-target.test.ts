@@ -2,11 +2,12 @@
  * and setup/read authority are sessionRoom's labelled fixture stand-ins.
  * This resolves a target only; it admits no room to archive export. */
 import { env } from "cloudflare:workers";
-import { ARCHIVE_APPLICATION_COHORT as C, ARCHIVE_DEVICE_APPLICATION_COHORT as DC } from "@generalbusiness/dap-platform";
+import { ARCHIVE_APPLICATION_COHORT as C, ARCHIVE_DEVICE_APPLICATION_COHORT as DC, ARCHIVE_DEVICE_PUBLICATION_COHORT as PC } from "@generalbusiness/dap-platform";
 import { expect, test } from "vitest";
 import { ITEM_QUERY_BOUNDS, type ScopeRef, type Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, newIncarnation, parseStrict } from "@generalbusiness/dap-bytes";
+import { canonicalize, encodeItemQueryParameter, entryHash, itemQueryArgument, itemQueryDigest, newIncarnation, parseStrict, readItemQueryParameter, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { ArchiveBudget } from "../src/archive-budget.ts";
+import { archiveReplayAnchors } from "../src/archive-anchors.ts";
 import { fixtureArchiveTarget, fixtureArchiveTargetIn, type FixtureArchiveTargetReads } from "../src/archive-target.ts";
 import { namespace } from "../src/namespace.ts";
 import type { NativeItemQuery } from "../src/item-queries.ts";
@@ -14,7 +15,7 @@ import { mintSession, readerOf } from "../src/sessions.ts";
 import { sessionRoom, sessionRepository } from "./fixtures-native.ts";
 import { rita } from "./repository.ts";
 
-test.each([["archive", C], ["device/archive", DC]] as const)("native creator chain and fixed directory/destination records resolve the same single archive repository (%s)", async (_label, C) => {
+test.each([["archive", C], ["device/archive", DC], ["device/publication/archive", PC]] as const)("native creator chain and fixed directory/destination records resolve the same single archive repository (%s)", async (_label, C) => {
   const room = await sessionRoom(C.register);
   try {
     const reader = readerOf(mintSession(room.sessions, { ...room.claims, reads: ["summary", "items"] }));
@@ -34,14 +35,21 @@ test.each([["archive", C], ["device/archive", DC]] as const)("native creator cha
     const head = (await room.D.summary()).at;
     expect(await resolver.resolve(directory, genesis.input.seed, new ArchiveBudget())).toEqual(expected);
     const discovered = await resolver.discover(directory, genesis.input.seed, new ArchiveBudget());
-    if (C === DC) {
+    if (C === DC || C === PC) {
       expect(discovered?.repository).toEqual(expected);
       expect(discovered?.scopes.map(scope => ({ kind: scope.at.kind, named: scope.named, via: scope.via }))).toEqual([
-        { kind: "directory", named: DC.directory, via: "self" },
-        { kind: "rules", named: DC.rules, via: "rules" },
-        { kind: "destination", named: DC.destination, via: "destination" },
+        { kind: "directory", named: C.directory, via: "self" },
+        { kind: "rules", named: C.rules, via: "rules" },
+        { kind: "destination", named: C.destination, via: "destination" },
       ]);
       expect(discovered?.scopes.slice(1).map(scope => scope.from)).toEqual([directory, directory]);
+      const claim = genesis.input.source;
+      if (!claim) return expect.fail("native directory must retain its actual founding claim");
+      expect(claim.at).toEqual(await room.R.at());
+      // Classification of an already selected genuine root reference only;
+      // this neither exports the Register nor proves a complete archive pass.
+      expect(archiveReplayAnchors({ at: directory, objects: [{ foreign: { fact: claim, pin: C.register } }] }, [directory], new ArchiveBudget())).toEqual([claim]);
+      expect(() => archiveReplayAnchors({ at: directory, objects: [{ foreign: { fact: claim, pin: "platform:register@19" } }] }, [directory], new ArchiveBudget())).toThrow("unsupported-foreign-copy");
     } else expect(discovered).toBeNull();
     const child = room.children[0]!, childBirth = (await child.entries())[0]!;
     if (childBirth.input.type !== "genesis") return expect.fail("native child birth missing");
@@ -56,22 +64,44 @@ test.each([["archive", C], ["device/archive", DC]] as const)("native creator cha
   } finally { room.life.release(); }
 });
 
-// Corrupt only the scripted reply boundary after genuine native reads. A
+// Corrupt the scripted proof/reply boundary after genuine native reads. A
 // missing/ambiguous/different target is unavailable, with no summary fallback.
-test.each([["archive", C], ["device/archive", DC]] as const)("a claim-bound archive target refuses truncated or mismatched records and spends the original budget before RPC (%s)", async (_label, C) => {
+test.each([["archive", C], ["device/archive", DC], ["device/publication/archive", PC]] as const)("a claim-bound archive target refuses truncated or mismatched records and spends the original budget before RPC (%s)", async (_label, C) => {
   const room = await sessionRoom(C.register, "journal");
   try {
     const reader = readerOf(mintSession(room.sessions, { ...room.claims, reads: ["summary", "items"] }));
     const directory = await room.D.at(), opening = (await room.D.entries())[0]!;
     if (opening.input.type !== "genesis") return expect.fail("native directory birth missing");
     const seed: Seed = opening.input.seed;
+    const births = namespace(env.PLATFORM).births, destination = await room.children[2]!.at();
+    const originalBirth = await births.read(destination, 10_000, 256 * 1024);
+    if (!originalBirth) return expect.fail("native destination birth missing");
+    // A labelled corrupt-source specimen, not an actual mixed native birth.
+    // Rebind every proof identity so ordinary birth validation still passes;
+    // only the exact Directory/Destination cohort pairing may reject it.
+    const mixedEntry = parseStrict(originalBirth.proof.bytes) as any;
+    const mixedPin = C === PC ? DC.destination : PC.destination;
+    mixedEntry.input.seed.definition = mixedPin;
+    const mixedDestination = { ...destination, scope: scopeIdOf(mixedEntry.input.seed) };
+    mixedEntry.at = mixedDestination;
+    const mixedBirth = { ...originalBirth, named: mixedPin,
+      proof: { fact: { at: mixedDestination, seq: 0, hash: entryHash(mixedEntry) }, bytes: canonicalize(mixedEntry) } };
     let calls = 0, fault = "";
-    const reads: FixtureArchiveTargetReads = { fixture: "archive-target-reads", births: namespace(env.PLATFORM).births,
+    const reads: FixtureArchiveTargetReads = { fixture: "archive-target-reads", births: { read: (at, milliseconds, maxBytes) =>
+      fault === "cohort" && at.scope === mixedDestination.scope ? Promise.resolve(mixedBirth) : births.read(at, milliseconds, maxBytes) },
       query: async (at, encoded) => {
         calls++;
-        const result = await (env.PLATFORM.get(env.PLATFORM.idFromName(at.scope)) as unknown as { queryItems(encoded: string, reader: unknown): Promise<NativeItemQuery> }).queryItems(encoded, reader);
+        const mixed = fault === "cohort" && at.scope === mixedDestination.scope;
+        const query = readItemQueryParameter(encoded);
+        if (!query) return expect.fail("target must send a valid bounded item query");
+        const source = mixed ? destination : at;
+        const sourceQuery = mixed ? encodeItemQueryParameter({ ...query, scope: destination }) : encoded;
+        if (!sourceQuery) return expect.fail("source query missing");
+        const result = await (env.PLATFORM.get(env.PLATFORM.idFromName(source.scope)) as unknown as { queryItems(encoded: string, reader: unknown): Promise<NativeItemQuery> }).queryItems(sourceQuery, reader);
         if (!result.ok) return result;
         const body = parseStrict(result.serialized) as any;
+        if (fault === "cohort" && at.kind === "directory") body.value.items[0].refs.destination = mixedDestination;
+        if (mixed) { body.value.scope = at; body.value.query = itemQueryDigest(query); body.value.argument = itemQueryArgument(query); }
         if (fault === "truncated") body.complete = false;
         if (fault === "missing") body.value.items = [];
         if (fault === "ambiguous") body.value.items.push({ ...body.value.items[0], id: body.value.items[0].id + 1 });
@@ -85,9 +115,14 @@ test.each([["archive", C], ["device/archive", DC]] as const)("a claim-bound arch
     const resolver = fixtureArchiveTarget(reads);
     expect(await resolver.resolve(directory, seed, new ArchiveBudget())).toEqual((await room.D.item(0)).values["repository"]);
     for (fault of ["truncated", "missing", "ambiguous", "repository", "directory", "oversized"]) expect(await resolver.resolve(directory, seed, new ArchiveBudget())).toBeNull();
-    if (C === DC) {
+    if (C === DC || C === PC) {
       for (fault of ["truncated", "missing", "ambiguous", "repository", "directory", "oversized"]) expect(await resolver.discover(directory, seed, new ArchiveBudget())).toBeNull();
       fault = "rules";
+      expect(await resolver.resolve(directory, seed, new ArchiveBudget())).toEqual((await room.D.item(0)).values["repository"]);
+      expect(await resolver.discover(directory, seed, new ArchiveBudget())).toBeNull();
+      fault = "cohort";
+      // Legacy repository lookup deliberately does not select producer
+      // cohorts. It proves the other scripted proof/query fences passed.
       expect(await resolver.resolve(directory, seed, new ArchiveBudget())).toEqual((await room.D.item(0)).values["repository"]);
       expect(await resolver.discover(directory, seed, new ArchiveBudget())).toBeNull();
     }

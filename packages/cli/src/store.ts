@@ -62,6 +62,9 @@ export interface PendingInvitationIssue { operation: string; request: string; di
  */
 export interface PlannedInstall {
   service: string; definition: PlatformDefinition; "founding": SignedIntent; register: ScopeId;
+  /** Local explicit selection only; excluded from signed/attempted identity.
+   * Absent on legacy plans. A present value other than true is malformed. */
+  selected?: true;
   /** Saved before possible submission, bound to the exact original plan. */
   attempted?: Digest;
   /** Configured-service acknowledgement, retained for later history verification. */

@@ -6,11 +6,11 @@ import { APPLICATION_COHORT, COUNTING_COHORT, DIRECTORY_OF, FIRST_ACTIONS_OF, NE
 
 // Actual platform data/common admission function; counts are a SCRIPTED state.
 // This proves no native transaction, concurrent admission, expiry or session.
-test("explicit Counting cohort uses bounded native live rows while preserving old data, defaults and separate domain grants", () => {
+test("explicit Counting cohort uses bounded native live rows while preserving old data and separate domain grants", () => {
   expect(COUNTING_COHORT).toEqual({ register: "platform:register@6", directory: "platform:directory@6", membership: "platform:membership@5", rules: "platform:rules@3", destination: "platform:destination@2", inbox: "platform:inbox@1" });
   expect(DIRECTORY_OF[COUNTING_COHORT.register]).toBe(COUNTING_COHORT.directory);
   expect(SIBLINGS_OF[COUNTING_COHORT.directory]).toEqual({ membership: COUNTING_COHORT.membership, rules: COUNTING_COHORT.rules, destination: COUNTING_COHORT.destination });
-  expect(NEWEST).toEqual({ "platform:register": "platform:register@3", "platform:directory": "platform:directory@3", "platform:membership": "platform:membership@2", "platform:rules": "platform:rules@2", "platform:destination": "platform:destination@3", "platform:inbox": "platform:inbox@1" });
+  expect(NEWEST).toEqual({ "platform:register": "platform:register@18", "platform:directory": "platform:directory@17", "platform:membership": "platform:membership@8", "platform:rules": "platform:rules@10", "platform:destination": "platform:destination@13", "platform:inbox": "platform:inbox@1" });
   for (const pin of ["platform:membership@1", "platform:membership@2", APPLICATION_COHORT.membership]) {
     expect(platform(pin)!.data).toBe(membership);
     expect([platform(pin)!.data.items["member"]!.max, platform(pin)!.data.items["key"]!.max]).toEqual([10000, 10000]);

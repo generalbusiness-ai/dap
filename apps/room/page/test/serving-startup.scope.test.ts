@@ -48,7 +48,7 @@ test("Register17 default-limit Page Start uses indexed child admission and a sep
     const install = await signedIntent(installer, { to: null, kind: "install", fields: { host: host.host, namespace: host.namespace, policy: "open" } }, { now: life.now() });
     const seed: Seed = { v: 1, kind: "register", definition: ARCHIVE_DEVICE_APPLICATION_COHORT.register, creator: null, cause: intentDigest(install.intent), ordinal: 0 };
     const R = life.platform(scopeIdOf(seed));
-    const deployed = { SCOPE_INDEX: env.STARTUP_INDEX, SCOPE_INDEX_MODE: "enforce", DEPLOYMENT: TEST_DEPLOYMENT, ...host.bindings(R.name), ARTIFACTS_NAMESPACE: host.namespace };
+    const deployed = { SCOPE_INDEX: env.STARTUP_INDEX, SCOPE_INDEX_MODE: "enforce", DEPLOYMENT: TEST_DEPLOYMENT, PLATFORM_CREATION_PINS: JSON.stringify([ARCHIVE_DEVICE_APPLICATION_COHORT.register, ARCHIVE_DEVICE_APPLICATION_COHORT.directory, ARCHIVE_DEVICE_APPLICATION_COHORT.destination]), ...host.bindings(R.name), ARTIFACTS_NAMESPACE: host.namespace };
     const transport = namespace(indexedScopes(env.PLATFORM, deployed)).transport;
     let childAdmissions = 0;
     const forwarded: Transport = { send: async envelope => {

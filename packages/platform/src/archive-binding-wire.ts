@@ -12,4 +12,10 @@ export const ARCHIVE_DEVICE_APPLICATION_COHORT = Object.freeze({
   register: "platform:register@17", directory: "platform:directory@16", membership: "platform:membership@8",
   rules: "platform:rules@10", destination: "platform:destination@12", inbox: "platform:inbox@1",
 } as const);
+/** Corrected publication protocol in a separate draft cohort. Old pins keep
+ * their original evaluators; version assignment and rollout require review. */
+export const ARCHIVE_DEVICE_PUBLICATION_COHORT = Object.freeze({
+  register: "platform:register@18", directory: "platform:directory@17", membership: "platform:membership@8",
+  rules: "platform:rules@10", destination: "platform:destination@13", inbox: "platform:inbox@1",
+} as const);
 export const archiveInstallPin = (pin: string): boolean => pin === ARCHIVE_APPLICATION_COHORT.rules || pin === ARCHIVE_DECLARED_APPLICATION_COHORT.rules || pin === ARCHIVE_DEVICE_APPLICATION_COHORT.rules;

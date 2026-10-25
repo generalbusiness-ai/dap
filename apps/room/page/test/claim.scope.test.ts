@@ -6,13 +6,14 @@ import type { ScopeId, SignedIntent } from "@generalbusiness/dap-contract";
 import { b64url, isKeyId, scopeIdOf, verify } from "@generalbusiness/dap-bytes";
 import type { Fetch } from "@generalbusiness/dap-client";
 import { routed } from "../../../../packages/scope/test/repository.ts";
-import { claimRoom as nativeClaimRoom, claimStatus, type ClaimOptions, type ClaimStorage } from "../src/claim.ts";
+import { claimRoom as nativeClaimRoom, claimStatus, allowedClaim, type ClaimOptions, type ClaimStorage } from "../src/claim.ts";
 import { command, memoryStore, type Context } from "@generalbusiness/dap-cli";
 import { reader } from "../../../../packages/scope/test/support.ts";
 import { OwnGit, ownHost } from "../../../../packages/scope/test/hosts.ts";
 import { artifactsOutside } from "../../../../packages/scope/src/artifacts-wiring.ts";
 import type { ArtifactsNamespace } from "../../../../packages/scope/src/artifacts-host.ts";
 import type { ClaimLocks } from "../src/claim.ts";
+import { ARCHIVE_DEVICE_PUBLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { memoryPageKeys } from "./private-key-fixture.ts";
 const keys = memoryPageKeys();
 
@@ -48,7 +49,10 @@ async function registerFixture() {
     R = lifetime.platform(config.register!.scope); wire(R.name); await lifetime.wait(() => R.restart());
     lifetime.setHold(envelope => { if ("definition" in envelope.to) wire(scopeIdOf(envelope.to)); return false; });
     const secret = (await lifetime.wait(() => ctx.store.secret(config.key)))!;
-    return { config, pause, fetch, secret, session: { service: "https://scopes.test", secret, now: ctx.now! }, lifetime, done: lifetime.release };
+    const session = { service: "https://scopes.test", secret, now: ctx.now! };
+    const configured = await lifetime.wait(() => allowedClaim({ ...session, fetch }, config.register!));
+    expect(configured.definition).toBe(ARCHIVE_DEVICE_PUBLICATION_COHORT.register);
+    return { config, configured, pause, fetch, secret, session, lifetime, done: lifetime.release };
   } catch (error) { lifetime.release(); throw error; }
 }
 // Test stand-in for Web Locks: queues every caller sharing the same lock name.
@@ -78,7 +82,7 @@ test("the browser's native claim survives lost founding and enrollment replies w
   const claimRoom: typeof nativeClaimRoom = (session, configured, storage, label, options) => d.lifetime.wait(() => nativeClaimRoom(session, configured, storage, label, { ...options, keys }));
   try {
     const secret = d.secret;
-    const configured = { register: d.config.register!, definition: "platform:register@3" as const };
+    const configured = d.configured;
     const values = new Map<string, string>();
     let failWrites = false;
     let dropWrites = false;
@@ -194,7 +198,7 @@ test("a changed Page context stops queued and prepared native claims before deli
   const d = await registerFixture();
   const claimRoom: typeof nativeClaimRoom = (session, configured, storage, label, options) => d.lifetime.wait(() => nativeClaimRoom(session, configured, storage, label, { ...options, keys }));
   try {
-    const configured = { register: d.config.register!, definition: "platform:register@3" as const };
+    const configured = d.configured;
     const values = new Map<string, string>();
     let selected = true;
     let invalidate: "found" | "seat" | "firstKey" | null = null;
@@ -268,7 +272,7 @@ test("explicit new creates another native directory while exact operation resume
   const d = await registerFixture();
   const claimRoom: typeof nativeClaimRoom = (session, configured, storage, label, options) => d.lifetime.wait(() => nativeClaimRoom(session, configured, storage, label, { ...options, keys }));
   try {
-    const configured = { register: d.config.register!, definition: "platform:register@3" as const };
+    const configured = d.configured;
     const values = new Map<string, string>();
     const storage: ClaimStorage = { getItem: (key) => values.get(key) ?? null, setItem: (key, value) => { d.lifetime.active(); values.set(key, value); } };
     let loseCreation = true;

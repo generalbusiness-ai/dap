@@ -1,5 +1,6 @@
 import { NATIVE_DECLARATION_PINS, NATIVE_DECLARATION_TEXT } from "./native-declarations.generated.ts";
 import { VERSIONS } from "./native-catalog.ts";
+import { ARCHIVE_DEVICE_PUBLICATION_COHORT } from "./archive-binding-wire.ts";
 export { VERSIONS, platform, type Platform } from "./native-catalog.ts";
 export { applicationRoom, applicationInstallation } from "./application-install-reader.ts";
 export { applicationProjectionDeclaration } from "./application-projection-reader.ts";
@@ -8,7 +9,7 @@ export { TRUSTED_APPLICATION_COHORT, INSTALL_DEFINITION_BYTES, INSTALL_SEMANTIC_
 export { DECLARED_APPLICATION_RULES } from "./application-install-v2.ts";
 export { DECLARED_APPLICATION_COHORT } from "./application-install-v2-wire.ts";
 export { ARCHIVE_REPLAY_CODE } from "./archive-replay-code.ts";
-export { ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT } from "./archive-binding-wire.ts";
+export { ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT } from "./archive-binding-wire.ts";
 export { DEVICE_APPLICATION_COHORT } from "./device-application-wire.ts";
 export { deviceApplicationRequirement } from "./device-application-package.ts";
 export { INVITATION_KEY_COHORT, directory9, directoryRules9, membership6, membershipRules6 } from "./invitation-key.ts";
@@ -34,12 +35,12 @@ export { PARTITION_IDENTITY_POLICY, PARTITION_IDENTITY_BOUNDS, partitionReceiver
 import type { PlatformData, PlatformDefinition } from "@generalbusiness/dap-contract";
 import { destination, destination2, destination4, destination5, destination6, destinationRules4, destinationRules5, destinationRules6 } from "./destination.ts";
 import { inbox } from "./inbox.ts";
-import { MEMBERSHIP, membership, membership5 } from "./membership.ts";
+import { membership, membership5 } from "./membership.ts";
 export { DEMO_REGISTER, DEMO_PURPOSE, WEB_DEMO_COHORT, WEB_DEMO_REGISTER, demoRegister, demoRegisterRules, webDemoRegister } from "./demo-register.ts";
 import { register } from "./register.ts";
 import { directory, directory2, directory7 } from "./directory.ts";
 import { RULES } from "./rules.ts";
-import { RULES_SCOPE, rulesScope, rulesScope4 } from "./rules-scope.ts";
+import { rulesScope, rulesScope4 } from "./rules-scope.ts";
 
 export { inbox, membership, membership5, register, directory, directory2, directory7, destination, destination2, destination4, destination5, destination6, destinationRules4, destinationRules5, destinationRules6 };
 export { isOf, isStandingDestination, pinnedBy, pinnedOf, versionOf } from "./versions.ts";
@@ -50,7 +51,7 @@ export { COLLECT_MOST, DESTINATION, DESTINATION_1, DESTINATION_5, DESTINATION_AT
 export { initialCommitObjects, readmeText, receiptObjects, receiptRef, importRef, type Readme, type DestinationObject, type DestinationCommit, type ObjectFormat } from "./destination-objects.ts";
 export { EDIT_PATH_BYTES, editCommit, editObjects, editPath, editTree, manifestCommit } from "./destination-objects.ts";
 export { PROPOSE_FILE, fileOf, sourcesOf, manifestFiles } from "./destination-reading.ts";
-export { sourceName, installedApplicationPublicationOrigin, applicationPublicationOrigin, publishingLaneOrigin, publishingLaneAffiliation, PUBLISHING_LANE_DIGESTS, ISSUE_LANE_DIGESTS } from "./publishing-provenance.ts";
+export { sourceName, installedApplicationPublicationOrigin, archiveDevicePublicationOrigin, applicationPublicationOrigin, publishingLaneOrigin, publishingLaneAffiliation, PUBLISHING_LANE_DIGESTS, ISSUE_LANE_DIGESTS } from "./publishing-provenance.ts";
 export { filePublicationCause, filePublicationCurrent, newestFilePublication, fileSupersededOutcome, destinationPublicationAt } from "./destination.ts";
 export { filePublicationCommit, fileReceiptObjects, fileReceiptRef, type FilePublicationCause } from "./destination-objects.ts";
 export type { LaneRead } from "./destination.ts";
@@ -75,9 +76,9 @@ export type { Extent, ExtentClass, ExtentJudged, ExtentsAsked, ExtentsJudged, Ho
  * and version.
  */
 
-/** Existing default creation cohort. Supporting application scopes require explicit APPLICATION_COHORT pins. */
+/** New creation defaults only. Existing scopes and explicit cohort pins stay fixed. */
 export const NEWEST: Readonly<Record<string, PlatformDefinition>> = {
-  "platform:inbox": "platform:inbox@1", "platform:membership": MEMBERSHIP, "platform:register": "platform:register@3", "platform:directory": "platform:directory@3", "platform:rules": RULES_SCOPE, "platform:destination": "platform:destination@3",
+  "platform:inbox": ARCHIVE_DEVICE_PUBLICATION_COHORT.inbox, "platform:membership": ARCHIVE_DEVICE_PUBLICATION_COHORT.membership, "platform:register": ARCHIVE_DEVICE_PUBLICATION_COHORT.register, "platform:directory": ARCHIVE_DEVICE_PUBLICATION_COHORT.directory, "platform:rules": ARCHIVE_DEVICE_PUBLICATION_COHORT.rules, "platform:destination": ARCHIVE_DEVICE_PUBLICATION_COHORT.destination,
 };
 
 /** The data of the newest version of each platform definition, by name without the version. */

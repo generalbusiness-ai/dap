@@ -136,7 +136,7 @@ export class Deliveries {
     const receiving = this.#scope.pinned();
     const reserve = receiving && isPlatformDefinition(receiving.named) && platformName(receiving.named) === "platform:destination"
       && message.class === "request" && message.type === "tell" && isObject(message.body) && message.body["message"] === "reserve";
-    const file = ["platform:destination@4", "platform:destination@5", "platform:destination@6", "platform:destination@7", "platform:destination@8"].includes(receiving?.named ?? "") && message.class === "request" && message.type === "tell"
+    const file = ["platform:destination@4", "platform:destination@5", "platform:destination@6", "platform:destination@7", "platform:destination@8", "platform:destination@13"].includes(receiving?.named ?? "") && message.class === "request" && message.type === "tell"
       && isObject(message.body) && message.body["message"] === "publish-file";
     const previous = store.decided(from.at, from.seq, delivered.n);
     const known = previous !== null;
@@ -197,7 +197,7 @@ export class Deliveries {
       const destination = store.scope()?.at;
       if (!isScopeRef(directory) || !destination) return retry("dependency-unavailable");
       const destinationPin = pinned?.platform?.named;
-      const policy = destinationPin === "platform:destination@7" || destinationPin === "platform:destination@8"
+      const policy = destinationPin === "platform:destination@7" || destinationPin === "platform:destination@8" || destinationPin === "platform:destination@13"
         ? this.#ports.definitions.platform(destinationPin)?.applicationPublicationOrigin : applicationPublicationOrigin;
       const native = reader?.mode === "partition-v1" ? await reader.publication(from, directory, destination, "application") : policy?.(from, directory, destination, read.origin ?? []) ?? null;
       if (native === null) return retry("dependency-unavailable");

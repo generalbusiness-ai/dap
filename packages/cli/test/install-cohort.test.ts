@@ -2,16 +2,18 @@ import { expect, test } from "vitest";
 import type { PlatformDefinition, Receipt, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, intentDigest, newIncarnation, scopeIdOf, textDigest, timeMs } from "@generalbusiness/dap-bytes";
 import type { Fetch } from "@generalbusiness/dap-client";
-import { INVITATION_KEY_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
+import { INVITATION_KEY_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { command, install, installPlanned, memoryStore, planInstall, type Config, type Context, type Store } from "../src/index.ts";
 
 const SERVICE = "https://cohort.test";
 const COHORT = "trusted-application" as const;
 const COHORTS = [
+  { name: "file-publication", definition: "platform:register@3", other: COHORT },
   { name: "archive-application", definition: ARCHIVE_APPLICATION_COHORT.register, other: COHORT },
   { name: "archive-declared-application", definition: ARCHIVE_DECLARED_APPLICATION_COHORT.register, other: COHORT },
   { name: "device-application", definition: DEVICE_APPLICATION_COHORT.register, other: COHORT },
   { name: "archive-device-application", definition: ARCHIVE_DEVICE_APPLICATION_COHORT.register, other: COHORT },
+  { name: "archive-device-publication", definition: ARCHIVE_DEVICE_PUBLICATION_COHORT.register, other: COHORT },
   { name: "declared-application", definition: DECLARED_APPLICATION_COHORT.register, other: COHORT },
   { name: "invitation-key", definition: INVITATION_KEY_COHORT.register, other: COHORT },
   { name: COHORT, definition: TRUSTED_APPLICATION_COHORT.register, other: "application" },
@@ -19,7 +21,7 @@ const COHORTS = [
   { name: "application", definition: APPLICATION_COHORT.register, other: COHORT },
 ] as const;
 // Fake service answers and memory storage: no native authority or host proof.
-function scenario(fault: "none" | "reply" | "save" = "none") {
+function scenario(fault: "none" | "reply" | "save" = "none", replaceUnsentLegacy = false) {
   const store = memoryStore();
   const bodies: string[] = [];
   let failed = false;
@@ -43,7 +45,10 @@ function scenario(fault: "none" | "reply" | "save" = "none") {
       const body = String(init?.body);
       const request = JSON.parse(body) as { creation: SignedIntent; definition: PlatformDefinition };
       const kept = (await store.config())!;
-      if (COHORTS.some(cohort => cohort.definition === request.definition)) {
+      if (replaceUnsentLegacy && kept.plan?.definition === "platform:register@3" && kept.plan.attempted === undefined) {
+        // This one direct-default path may replace a definitely-unsent old plan.
+        expect(request.definition).toBe("platform:register@18");
+      } else if (COHORTS.some(cohort => cohort.definition === request.definition)) {
         expect(kept.plan?.attempted).toMatch(/^sha256:/);
         expect(canonicalize(kept.plan?.["founding"])).toBe(canonicalize(request.creation));
         expect(kept.plan?.definition).toBe(request.definition);
@@ -61,7 +66,7 @@ function scenario(fault: "none" | "reply" | "save" = "none") {
   return { ctx, store, bodies, metrics: () => ({ saves, keyReads, keyWrites }) };
 }
 
-test("closed cohort selection preserves legacy defaults and refuses retained binding conflicts without replacing custody", async () => {
+test("closed cohort selection uses the new default and preserves retained historical plans without replacing custody", async () => {
   const bad = scenario();
   for (const args of [["install", SERVICE, "--cohort"], ["install", SERVICE, "--cohort", "latest"], ["install", SERVICE, "--cohort", "counting-commitments"], ["install", SERVICE, "--cohort", ""], ["install", SERVICE, "--cohort", COHORT, "--cohort", COHORT], ["install", SERVICE, "--cohort", "application", "--cohort", COHORT]]) {
     expect((await command(bad.ctx, args)).code).toBe(2);
@@ -77,11 +82,14 @@ test("closed cohort selection preserves legacy defaults and refuses retained bin
   const retiredMetrics = retired.metrics();
   expect(await installPlanned(retired.ctx)).toMatchObject({ code: 1, lines: [expect.stringMatching(/^Refused: retired-cohort/)] });
   expect([retired.metrics(), retired.bodies, (await retired.store.config())!.plan]).toEqual([retiredMetrics, [], retiredPlan]);
-  const legacy = scenario();
+  const legacy = scenario("none", true);
   expect((await command(legacy.ctx, ["install", "--plan", SERVICE])).code).toBe(0);
-  const legacyPlan = (await legacy.store.config())!.plan!;
-  expect(legacyPlan.definition).toBe("platform:register@3");
-  for (const { name } of COHORTS) {
+  const fresh = (await legacy.store.config())!;
+  expect(fresh.plan!.definition).toBe("platform:register@18");
+  // A pre-upgrade, definitely-unsent plan keeps its exact old version/ID.
+  const legacyPlan = { ...fresh.plan!, definition: "platform:register@3" as const, register: scopeIdOf({ v: 1, kind: "register", definition: "platform:register@3", creator: null, cause: intentDigest(fresh.plan!["founding"].intent), ordinal: 0 }) };
+  await legacy.store.save({ ...fresh, plan: legacyPlan });
+  for (const { name } of COHORTS.filter(cohort => cohort.name !== "file-publication")) {
     const metrics = legacy.metrics();
     expect((await command(legacy.ctx, ["install", SERVICE, "--cohort", name])).code).toBe(1);
     expect((await command(legacy.ctx, ["install", "--planned", "--cohort", name])).code).toBe(1);
@@ -90,11 +98,69 @@ test("closed cohort selection preserves legacy defaults and refuses retained bin
   expect((await command(legacy.ctx, ["install", SERVICE])).code).toBe(0);
   expect((await legacy.store.config())!.register!.scope).not.toBe(legacyPlan.register);
 
+  // Explicitly selecting a matching old plan promotes only local custody.
+  const promotion = scenario();
+  expect((await planInstall(promotion.ctx, SERVICE)).code).toBe(0);
+  const unmarked = (await promotion.store.config())!;
+  const historical = { ...unmarked.plan!, definition: "platform:register@3" as const, register: scopeIdOf({ v: 1, kind: "register", definition: "platform:register@3", creator: null, cause: intentDigest(unmarked.plan!["founding"].intent), ordinal: 0 }) };
+  await promotion.store.save({ ...unmarked, plan: historical });
+  const promotionMetrics = promotion.metrics();
+  expect((await planInstall(promotion.ctx, SERVICE, { cohort: "file-publication" })).code).toBe(0);
+  const promoted = (await promotion.store.config())!;
+  expect(promoted).toEqual({ ...unmarked, plan: { ...historical, selected: true } });
+  expect([promotion.metrics(), promotion.bodies]).toEqual([{ ...promotionMetrics, saves: promotionMetrics.saves + 1 }, []]);
+  expect((await install(promotion.ctx, SERVICE)).code).toBe(1);
+  expect((await planInstall(promotion.ctx, SERVICE)).code).toBe(1);
+  expect(await promotion.store.config()).toEqual(promoted);
+
+  // A dropped promotion marker cannot be used as exact selected custody.
+  const dropped = scenario();
+  expect((await planInstall(dropped.ctx, SERVICE)).code).toBe(0);
+  const droppedConfig = (await dropped.store.config())!;
+  const droppedPlan = { ...droppedConfig.plan!, definition: "platform:register@3" as const, register: scopeIdOf({ v: 1, kind: "register", definition: "platform:register@3", creator: null, cause: intentDigest(droppedConfig.plan!["founding"].intent), ordinal: 0 }) };
+  await dropped.store.save({ ...droppedConfig, plan: droppedPlan });
+  dropped.ctx.store = { ...dropped.ctx.store, save: async next => {
+    const copy = structuredClone(next); if (copy.plan) delete copy.plan.selected;
+    await dropped.store.save(copy);
+  } };
+  expect((await planInstall(dropped.ctx, SERVICE, { cohort: "file-publication" })).code).toBe(1);
+  expect([dropped.bodies, (await dropped.store.config())!.plan]).toEqual([[], droppedPlan]);
+
+  // Unknown marker values refuse both implicit replacement and exact delivery.
+  for (const selected of [false, "true", null, undefined]) {
+    const malformed = scenario();
+    expect((await planInstall(malformed.ctx, SERVICE)).code).toBe(0);
+    const config = (await malformed.store.config())!;
+    await malformed.store.save({ ...config, plan: { ...config.plan!, selected: selected as never } });
+    const saved = await malformed.store.config(), metrics = malformed.metrics();
+    expect((await install(malformed.ctx, SERVICE)).code).toBe(1);
+    expect((await planInstall(malformed.ctx, SERVICE)).code).toBe(1);
+    expect((await planInstall(malformed.ctx, SERVICE, { cohort: "file-publication" })).code).toBe(1);
+    expect((await installPlanned(malformed.ctx)).code).toBe(1);
+    expect([malformed.bodies, await malformed.store.config(), malformed.metrics()]).toEqual([[], saved, metrics]);
+  }
+
+  const recovery = scenario("reply");
+  await planInstall(recovery.ctx, SERVICE);
+  const configuredRecovery = (await recovery.store.config())!;
+  const oldPlan = { ...configuredRecovery.plan!, definition: "platform:register@3" as const, register: scopeIdOf({ v: 1, kind: "register", definition: "platform:register@3", creator: null, cause: intentDigest(configuredRecovery.plan!["founding"].intent), ordinal: 0 }) };
+  await recovery.store.save({ ...configuredRecovery, plan: oldPlan });
+  expect((await installPlanned(recovery.ctx)).code).toBe(1);
+  const attempted = (await recovery.store.config())!.plan!;
+  expect(attempted.attempted).toMatch(/^sha256:/);
+  expect((await install(recovery.ctx, SERVICE)).code).toBe(1);
+  expect((await planInstall(recovery.ctx, SERVICE)).code).toBe(1);
+  expect((await recovery.store.config())!.plan).toEqual(attempted);
+  expect((await installPlanned(recovery.ctx, { cohort: "file-publication" })).code).toBe(0);
+  expect(recovery.bodies).toHaveLength(2);
+  expect(recovery.bodies[1]).toBe(recovery.bodies[0]);
+  expect((await recovery.store.config())!.plan).toMatchObject({ ...attempted, definition: "platform:register@3", register: oldPlan.register, selected: true });
+
   for (const { name, definition, other } of COHORTS) {
     const s = scenario();
     expect((await command(s.ctx, ["install", "--plan", SERVICE, "--cohort", name, "--host", "artifacts", "--namespace", "room"])).code).toBe(0);
     const original = (await s.store.config())!;
-    expect([original.plan!.definition, s.bodies]).toEqual([definition, []]);
+    expect([original.plan!.definition, original.plan!.selected, s.bodies]).toEqual([definition, true, []]);
     expect((await command(s.ctx, ["install", "--plan", SERVICE, "--cohort", name])).code).toBe(0);
     expect(await s.store.config()).toEqual(original);
     const metrics = s.metrics();

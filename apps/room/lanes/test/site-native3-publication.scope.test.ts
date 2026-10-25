@@ -31,11 +31,14 @@ test("native @3 cleaned publication retains immutable Site eligibility while tim
     await driveFixture(known, lifetime.wait);
   };
   const files = { "change3.json": utf8(canonicalize(changeDemo3)), "one.md": utf8("# First published\n\n[Self](README.md)\n"), "two.md": utf8("# Second published\n"), "check.json": utf8(canonicalize({ image: `sha256:${"7".repeat(64)}`, steps: [["fixture-check"]] })) };
-  const ctx: Context = { store: memoryStore(), fetch: ((url: string, init?: RequestInit) => lifetime.wait(() => routed(url, init))) as never, now: () => timeMs(net.clock.now)!, pause, read: async name => files[name as keyof typeof files] ?? null };
+  const SERVICE = "https://scopes.test";
+  const fetch: NonNullable<Context["fetch"]> = ((url: string, init?: RequestInit) => lifetime.wait(() => routed(url, init))) as never;
+  // TEST acknowledgement trust uses the same configured service and exact native fetch function.
+  const ctx: Context = { store: memoryStore(), fetch, trustedCreationService: { service: SERVICE, fetch }, now: () => timeMs(net.clock.now)!, pause, read: async name => files[name as keyof typeof files] ?? null };
   const run = (...argv: string[]) => command(ctx, argv);
   const ok = (answer: Outcome) => { expect(answer.code, answer.lines.join("\n")).toBe(0); return answer; };
   try {
-    ok(await lifetime.wait(() => run("install", "https://scopes.test", "--host", at.host, "--namespace", at.namespace)));
+    ok(await lifetime.wait(() => run("install", "https://scopes.test", "--host", at.host, "--namespace", at.namespace, "--cohort", "file-publication")));
     const R = register = new Platform((await lifetime.wait(() => ctx.store.config()))!.register!.scope); wire(R.name); await lifetime.wait(() => R.restart()); nodes.push(R);
     lifetime.setHold(envelope => { if ("definition" in envelope.to) wire(scopeIdOf(envelope.to)); return false; });
     ok(await lifetime.wait(() => run("claim", "Native Site", "--handle", "@rita")));

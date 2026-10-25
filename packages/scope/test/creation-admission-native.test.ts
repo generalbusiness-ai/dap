@@ -22,7 +22,7 @@ test("deployed service admits its pinned register and its judged directory child
   try {
     const install: Intent = { v: 1, to: null, actor: keys.paul.key, kind: "install", on: null, expected: {}, fields: { host: "git.example", namespace: "artroom", policy: "keys", founders: [rita.key] }, idempotencyKey: crypto.randomUUID(), notAfter: soon(60) };
     const R = lifetime.platform(scopeIdOf({ v: 1, kind: "register", definition: REGISTER, creator: null, cause: intentDigest(install), ordinal: 0 }));
-    creationTest.settings = { DEPLOYMENT: "native-creation-admission", ARTIFACTS_CONFIG: JSON.stringify({ registerScope: R.name, namespace: "artroom", host: "git.example", maxBytes: 1024, credentialIdentity: "adapter-attempt" }) };
+    creationTest.settings = { PLATFORM_CREATION_PINS: JSON.stringify([REGISTER]), DEPLOYMENT: "native-creation-admission", ARTIFACTS_CONFIG: JSON.stringify({ registerScope: R.name, namespace: "artroom", host: "git.example", maxBytes: 1024, credentialIdentity: "adapter-attempt" }) };
     const api = env.CREATION_API as unknown as ScopeApi;
     const host = outsideOf(R.name);
     lifetime.wire(R.name, () => ({ outside: { accepts: () => { lifetime.active(); return host.accepts(); }, send: request => lifetime.wait(() => host.send(request)), late: deliver => { lifetime.active(); host.late(deliver); } } }));

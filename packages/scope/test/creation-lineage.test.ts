@@ -9,7 +9,7 @@ import { canonicalize, definitionDigest, digestBytes, factRefOf, intentDigest, i
 import { packApplication2, readApplicationProjection } from "@generalbusiness/dap-platform/application-v2";
 import { emptyPackageComposition } from "@generalbusiness/dap-package-graph";
 import type { Delivered } from "@generalbusiness/dap-derive";
-import { APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, TRUSTED_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
+import { APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, TRUSTED_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-mcp";
 import { secretSigner } from "@generalbusiness/dap-client";
 import { admitChildCreation, type CreationTimer } from "../src/creation-lineage.ts";
@@ -21,7 +21,8 @@ import { rita, routed, type Platform } from "./repository.ts";
 import { fixedSigner } from "./fixtures-core.ts";
 import { soon } from "./net.ts";
 
-const config = (register: string) => ({ DEPLOYMENT: "TEST-lineage", ARTIFACTS_CONFIG: JSON.stringify({ registerScope: register, namespace: "lineage", host: "git.example", maxBytes: 1024, credentialIdentity: "adapter-attempt" }) });
+// Explicit historical-family policy: lineage authority still comes from native proofs.
+const config = (register: string) => ({ PLATFORM_CREATION_PINS: JSON.stringify([...new Set([...Object.values(APPLICATION_COHORT), ...Object.values(ARCHIVE_DEVICE_APPLICATION_COHORT)])]), DEPLOYMENT: "TEST-lineage", ARTIFACTS_CONFIG: JSON.stringify({ registerScope: register, namespace: "lineage", host: "git.example", maxBytes: 1024, credentialIdentity: "adapter-attempt" }) });
 const envelopeOf = (entry: Entry, n: number): Delivered => {
   const send = entry.sends.find(send => send.n === n);
   if (!send) throw Error("genuine retained create required");
@@ -30,7 +31,7 @@ const envelopeOf = (entry: Entry, n: number): Delivered => {
 async function declarationsFor(register: PlatformDefinition) {
   const ordinary = await applicationOwnedScopesPacket();
   if (register === APPLICATION_COHORT.register) return ordinary;
-  // The17-cohort genuinely requires a device package and an existing owner.
+  // The device cohorts genuinely require a device package and an existing owner.
   // Keep the real command schema, add a normal static child, and sign only a
   // public TEST release. No old native definition or publisher key changes.
   const root = lineageDeviceRoot(ordinary);
@@ -59,8 +60,8 @@ function recorded(nodes: readonly Platform[], target: string, overrides: (peer: 
   return { binding, index, env: { SCOPE_INDEX: { idFromName: (name: string) => name, get: () => index } }, counts: () => ({ targetNames, targetGets, forbidden }) };
 }
 
-test("both approved native cohorts admit their exact child chain and refuse another configured register before child lookup", async () => {
-  for (const cohort of [ARCHIVE_DEVICE_APPLICATION_COHORT, APPLICATION_COHORT]) {
+test("three approved native cohorts admit their exact child chain and refuse another configured register before child lookup", async () => {
+  for (const cohort of [ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, APPLICATION_COHORT]) {
     const room = await sessionRoom(cohort.register);
     const { life, R, D, children } = room;
     try {
@@ -174,7 +175,9 @@ test("an actually supported but unadmitted native cohort and a refused native bi
     const first = (await room.D.entries())[0]!, send = first.sends.find(send => isSeed(send.to) && send.to.kind === "membership")!;
     const child = room.children[0]!;
     const f = recorded([room.R, room.D, ...room.children], child.name);
-    expect(await namespace(indexedScopes(f.binding, { ...f.env, ...config(room.R.name) })).transport.send(envelopeOf(first, send.n)))
+    // Every proposed pin is configured, so refusal must still enforce the fixed lineage families.
+    const settings = { ...f.env, ...config(room.R.name), PLATFORM_CREATION_PINS: JSON.stringify(Object.values(TRUSTED_APPLICATION_COHORT)) };
+    expect(await namespace(indexedScopes(f.binding, settings)).transport.send(envelopeOf(first, send.n)))
       .toEqual({ answer: "routing", reason: "not-found" });
     expect(f.counts()).toEqual({ targetNames: 0, targetGets: 0, forbidden: 0 });
 
@@ -274,7 +277,7 @@ test("the whole creation attempt admits exactly16 bodies before a genuine legacy
   } finally { life.release(); }
 }, 30_000);
 
-test.each([ARCHIVE_DEVICE_APPLICATION_COHORT, APPLICATION_COHORT])("$register authenticated Directory closure admits a second-level declared child and rejects substituted bytes before lookup", async cohort => {
+test.each([ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, APPLICATION_COHORT])("$register authenticated Directory closure admits a second-level declared child and rejects substituted bytes before lookup", async cohort => {
   const { packet, root: rootDefinition, child: childDefinition, rootId, childId } = await declarationsFor(cohort.register);
   const room = await sessionRoom(cohort.register), { life, R, D, children } = room, [M, A, G] = children;
   if (!M || !A || !G) throw Error("native cohort siblings required");

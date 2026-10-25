@@ -12,7 +12,7 @@ import { APPLICATION_COHORT, FILE_PUBLICATION_COHORT, APPLICATION_VALUES_BYTES, 
 
 const opener: MemberRef = { membership: { kind: "membership", scope: `sc_${"a".repeat(51)}a`, inc: `in_${"a".repeat(25)}a` }, member: "@admin" };
 
-test("supporting cohort validates with actual embedded rules, grants establishment only to admin, and leaves the existing default pins unchanged", () => {
+test("supporting cohort validates with actual embedded rules, grants establishment only to admin, and keeps its pins separate from the newest creation defaults", () => {
   expect(validateDefinition(declaration, PROPOSED_BOUNDS, RULE_PROFILES).ok).toBe(true);
   for (const named of Object.values(APPLICATION_COHORT)) {
     const supplied = platform(named)!;
@@ -20,7 +20,7 @@ test("supporting cohort validates with actual embedded rules, grants establishme
     expect(checked.ok, named).toBe(true);
     if (checked.ok) expect(runnable(checked.definition, supplied.rules), named).toBe(true);
   }
-  expect(NEWEST).toEqual({ "platform:register": "platform:register@3", "platform:directory": "platform:directory@3", "platform:membership": "platform:membership@2", "platform:rules": "platform:rules@2", "platform:destination": "platform:destination@3", "platform:inbox": "platform:inbox@1" });
+  expect(NEWEST).toEqual({ "platform:register": "platform:register@18", "platform:directory": "platform:directory@17", "platform:membership": "platform:membership@8", "platform:rules": "platform:rules@10", "platform:destination": "platform:destination@13", "platform:inbox": "platform:inbox@1" });
   for (const [role, actions] of Object.entries(FIRST_ACTIONS_OF[APPLICATION_COHORT.membership]!)) {
     expect(actions).toEqual([...FIRST_ACTIONS_OF["platform:membership@2"]![role as keyof typeof FIRST_ACTIONS_OF[string]], ...(role === "admin" ? ["application.establish"] : [])]);
   }

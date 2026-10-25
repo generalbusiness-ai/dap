@@ -6,7 +6,7 @@ import { directory11, directoryRules11 } from "./application-install-creation.ts
 import { APPLICATION_INSTALL_RULES, applicationInstallRulesScope, applicationInstallRules } from "./application-install.ts";
 import { DECLARED_APPLICATION_RULES, applicationInstallRulesScope2, applicationInstallRules2 } from "./application-install-v2.ts";
 import { DECLARED_APPLICATION_COHORT } from "./application-install-v2-wire.ts";
-import { ARCHIVE_APPLICATION_COHORT as AC, ARCHIVE_DECLARED_APPLICATION_COHORT as AC2, ARCHIVE_DEVICE_APPLICATION_COHORT as ADC } from "./archive-binding-wire.ts";
+import { ARCHIVE_APPLICATION_COHORT as AC, ARCHIVE_DECLARED_APPLICATION_COHORT as AC2, ARCHIVE_DEVICE_APPLICATION_COHORT as ADC, ARCHIVE_DEVICE_PUBLICATION_COHORT as ADP } from "./archive-binding-wire.ts";
 import { archiveRegister, archiveDirectory, archiveDeclaredDirectory, archiveRulesScope, archiveDeclaredRulesScope, archiveDeviceDirectory, archiveDeviceRulesScope, archiveDeviceRules } from "./archive-binding.ts";
 import { DEVICE_APPLICATION_COHORT } from "./device-application-wire.ts";
 import { deviceApplicationRulesScope, deviceApplicationRules } from "./device-application-rules.ts";
@@ -17,7 +17,7 @@ import { COUNTING_COHORT, directory6, directoryRules6 } from "./counting-cohort.
 import { PARTITION_COHORT, directory10, directoryRules10, directoryPartition1, directoryPartitionRules1 } from "./directory-partitions.ts";
 import { PARTITION_IDENTITY_POLICY } from "./partition-provenance.ts";
 import type { Digest, ObservationRequest, PlatformData } from "@generalbusiness/dap-contract";
-import { sourceName, applicationPublicationOrigin, installedApplicationPublicationOrigin, declaredApplicationPublicationOrigin, archiveApplicationPublicationOrigin, archiveDeclaredApplicationPublicationOrigin, deviceApplicationPublicationOrigin, archiveDeviceApplicationPublicationOrigin } from "./publishing-provenance.ts";
+import { sourceName, applicationPublicationOrigin, installedApplicationPublicationOrigin, declaredApplicationPublicationOrigin, archiveApplicationPublicationOrigin, archiveDeclaredApplicationPublicationOrigin, deviceApplicationPublicationOrigin, archiveDeviceApplicationPublicationOrigin, archiveDevicePublicationOrigin } from "./publishing-provenance.ts";
 import { destination, destination2, destination3, destination4, destination5, destination6, destinationMembership, destinationRules, destinationRules2, destinationRules3, destinationRules4, destinationRules5, destinationRules6, destinationRulesScope } from "./destination.ts";
 import { inbox, inboxRules } from "./inbox.ts";
 import { MEMBERSHIP, MEMBERSHIP_1, membership, membership5, membershipRules, standingOf } from "./membership.ts";
@@ -98,6 +98,9 @@ export interface Platform {
  * cannot run.
  */
 const VERSION_DATA: Readonly<Record<string, Platform>> = {
+  [ADP.register]: { data: archiveRegister, rules: registerRules },
+  [ADP.directory]: { data: archiveDeviceDirectory, rules: deviceApplicationDirectoryRules, declaredText: (state, digest) => installDefinitionText(state, digest, "application-catalog"), membership: directoryMembership, rulesScope: directoryRulesScope },
+  [ADP.destination]: { data: destination4, rules: destinationRules4, membership: destinationMembership, rulesScope: destinationRulesScope, applicationPublicationOrigin: archiveDevicePublicationOrigin },
   [AC.register]: { data: archiveRegister, rules: registerRules },
   [AC2.register]: { data: archiveRegister, rules: registerRules },
   [AC.directory]: { data: archiveDirectory, rules: directoryRules11, declaredText: (state, digest) => installDefinitionText(state, digest, "application-catalog"), membership: directoryMembership, rulesScope: directoryRulesScope },

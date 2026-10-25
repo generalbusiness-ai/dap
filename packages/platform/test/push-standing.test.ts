@@ -18,11 +18,11 @@ const observe = (over: Partial<Observation> = {}) => ({ observed: observed(over)
 const opened = (ledger: ReturnType<typeof journey.make>) => ledger.last.effects.filter(effect => effect.effect === "operation");
 const openingId = (ledger: ReturnType<typeof journey.make>, kind: string): OperationId => `${ledger.head.seq}:${opened(ledger).find(effect => effect.kind === kind)!.k}`;
 
-test("D1 validates and runs under an explicit pin while existing default founding stays @3", () => {
+test("D1 validates and runs under an explicit pin while new default founding uses @13", () => {
   expect(derivable(journey.definition, null)).toBe(true);
   expect(runnable(journey.definition, journey.platform.rules)).toBe(true);
   expect(platform(named)?.data).toBe(data);
-  expect(NEWEST["platform:destination"]).toBe("platform:destination@3");
+  expect(NEWEST["platform:destination"]).toBe("platform:destination@13");
   expect(Object.keys(destination5.items["publication"]!.values)).toHaveLength(12);
 });
 

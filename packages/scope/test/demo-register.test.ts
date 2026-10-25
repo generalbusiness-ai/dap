@@ -27,6 +27,7 @@ test("an outside founder needs open policy and its actual child is indexed at ge
       expect(pin).toBe("platform:register@17");
       const name = scopeIdOf({ v: 1, kind: "register", definition: pin, creator: null, cause: intentDigest(install), ordinal: 0 });
       const settings = { SCOPE_INDEX: env.SCOPE_INDEX, SCOPE_INDEX_MODE: "enforce", DEPLOYMENT: "TEST-dap-demo",
+        PLATFORM_CREATION_PINS: JSON.stringify([ARCHIVE_DEVICE_APPLICATION_COHORT.register, ARCHIVE_DEVICE_APPLICATION_COHORT.directory, ARCHIVE_DEVICE_APPLICATION_COHORT.destination]),
         ARTIFACTS_CONFIG: JSON.stringify({ registerScope: name, namespace: "demo-policy", host: "service.invalid", maxBytes: 1024, credentialIdentity: "adapter-attempt" }) };
       const index = scopeIndex(settings)!;
       const R = life.platform(name), host = outsideOf(name); life.wire(name, () => ({ outside: host }));

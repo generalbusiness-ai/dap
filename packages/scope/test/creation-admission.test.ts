@@ -34,14 +34,21 @@ test("deployed creation refuses a fresh key's install and direct founding before
 test("only the pinned signed register install reaches creation; explicit local/test opening preserves the parentless API", async () => {
   const secret = crypto.getRandomValues(new Uint8Array(32)), actor = keyIdOfSecret(secret);
   const intent: Intent = { v: 1, to: null, actor, kind: "install", on: null, expected: {},
-    fields: { host: "artifacts", namespace: "artroom-demo", policy: "open" }, idempotencyKey: "pinned-install", notAfter: "2030-01-01T00:00:00Z" };
+    fields: { host: "artifacts", namespace: "artroom-demo", policy: "open" }, idempotencyKey: `pinned-install-${crypto.randomUUID()}`, notAfter: "2030-01-01T00:00:00Z" };
   const signed = signIntent(intent, secret);
   const seed: Seed = { v: 1, kind: "register", definition: "platform:register@3", creator: null, cause: intentDigest(intent), ordinal: 0 };
   const name = scopeIdOf(seed), addressed: string[] = [];
+  let targetGets = 0;
   const unavailable = { answer: "unavailable", reason: "unavailable" } as const;
-  const binding: Binding<string> = { idFromName: name => { addressed.push(name); return name; }, get: () => ({ create: async () => unavailable }) };
+  const binding: Binding<string> = { idFromName: name => { addressed.push(name); return name; }, get: () => { targetGets++; return { create: async () => unavailable }; } };
   const config = JSON.stringify({ registerScope: name, namespace: "artroom-demo", host: "service.invalid", maxBytes: 1024, credentialIdentity: "adapter-attempt" });
-  const settings: CreationAdmission = { DEPLOYMENT: "creation-admission-test", ARTIFACTS_CONFIG: config };
+  // Explicit historical pin keeps this R1 witness separate from R6 defaults.
+  const settings: CreationAdmission = { PLATFORM_CREATION_PINS: JSON.stringify([seed.definition]), DEPLOYMENT: "creation-admission-test", ARTIFACTS_CONFIG: config };
+  // A fresh signed/configured R1 register is not permission to create an excluded pin.
+  // The unique install names an unlisted scope in the real fixed index.
+  expect(await api(binding, null, { ...settings, PLATFORM_CREATION_PINS: "[]", SCOPE_INDEX: env.SCOPE_INDEX }).create(signed, seed.definition))
+    .toEqual({ answer: "refused", reason: "unsupported-definition" });
+  expect(addressed).toEqual([]); expect(targetGets).toBe(0);
   expect(await api(binding, null, { ...settings, SCOPE_INDEX: env.SCOPE_INDEX }).create(signed, seed.definition)).toEqual(unavailable);
   expect(addressed.splice(0)).toEqual([name]);
   const changed = signIntent({ ...intent, idempotencyKey: "different-install" }, secret);
@@ -57,7 +64,7 @@ test("only the pinned signed register install reaches creation; explicit local/t
     expect(await api(binding, null, { SCOPE_INDEX: env.SCOPE_INDEX, DEPLOYMENT, ALLOW_OPEN_CREATION: "true" }).create(changed, seed.definition)).toEqual({ answer: "refused", reason: "unauthorized" });
   }
   expect(addressed).toEqual([]);
-  expect(await api(binding, null, { SCOPE_INDEX: env.SCOPE_INDEX, DEPLOYMENT: "local-test", ALLOW_OPEN_CREATION: "true" }).create(changed, seed.definition)).toEqual(unavailable);
+  expect(await api(binding, null, { SCOPE_INDEX: env.SCOPE_INDEX, DEPLOYMENT: "local-test", ALLOW_OPEN_CREATION: "true", PLATFORM_CREATION_PINS: JSON.stringify([seed.definition]) }).create(changed, seed.definition)).toEqual(unavailable);
   expect(addressed.splice(0)).toEqual([changedName]);
   // The local creation opening is not an unconfigured rate-limit bypass.
   expect(await api(binding).create(changed, seed.definition)).toEqual(unavailable);

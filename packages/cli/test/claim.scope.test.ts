@@ -94,11 +94,11 @@ async function resumed(owner: SessionOwner, cleanups: (() => void)[], resourcesA
     owner.active();
     if (kind === "found" && mismatchedDefinition) {
       mismatchedDefinition = false;
-      // The Worker really admits the exact request under @3. Only this HTTP
+      // The Worker really admits the exact request under @17. Only this HTTP
       // response metadata is scripted; the actual core's receipt is checked.
       const actual = await response.json() as { answer: string; receipt: { definition: string } };
       owner.active();
-      expect([actual.answer, actual.receipt.definition]).toEqual(["accepted", "platform:register@3"]);
+      expect([actual.answer, actual.receipt.definition]).toEqual(["accepted", "platform:register@18"]);
       return Response.json({ ...actual, receipt: { ...actual.receipt, definition: "platform:register@1" } });
     }
     if (kind === after) { after = null; await response.body?.cancel(); owner.active(); throw new Error("scripted loss after accepted enrollment"); }
@@ -293,7 +293,7 @@ async function resumed(owner: SessionOwner, cleanups: (() => void)[], resourcesA
   const resumedClaim = await run("claim", "demo");
   expect(resumedClaim.code, resumedClaim.lines.join("\n")).toBe(0);
   const config = (await configOf())!;
-  expect([config.claim, config.handle, resumedClaim.lines[1], resumedClaim.lines[2]]).toEqual([undefined, "@rita", "Definitions: platform:directory@3, platform:membership@2, platform:rules@2, platform:destination@3.", expect.stringMatching(/^You are @rita, an admin, on key key_\S+; your inbox is sc_\S+\.$/)]);
+  expect([config.claim, config.handle, resumedClaim.lines[1], resumedClaim.lines[2]]).toEqual([undefined, "@rita", "Definitions: platform:directory@17, platform:membership@8, platform:rules@10, platform:destination@13.", expect.stringMatching(/^You are @rita, an admin, on key key_\S+; your inbox is sc_\S+\.$/)]);
   const D = platform(config.repository!.directory.scope);
   expect((await owner.required(() => D.entries()))[0]!.uses.map((use) => use.fact.seq)).toContain((await creates())[1]!.seq);
   // No third found; each creation attempt was sent once, by the pass that the register's first call after its restart started.

@@ -1,5 +1,6 @@
 import { expect, test } from "vitest";
 import { takeBytes, utf8 } from "@generalbusiness/dap-bytes";
+import { ARCHIVE_DEVICE_PUBLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { act, joinRoom, listLanes, loadChange, openRoom, placeOf } from "../src/data.ts";
 import { checkEditRequest, continueEdit, prepareEdit } from "../src/retained-editor-data.ts";
 import { demo } from "./support/demo.ts";
@@ -20,7 +21,7 @@ test("retained text creates a new member proposal with exact bytes and original 
     const destination = await d.G.stub.summary(room.reader!.reader());
     expect(destination.ok).toBe(true);
     if (!destination.ok) throw new Error(destination.reason);
-    expect(destination.value.definition).toBe("platform:destination@3");
+    expect(destination.value.definition).toBe(ARCHIVE_DEVICE_PUBLICATION_COHORT.destination);
     const publishedBefore = destination.value.items.find((item) => item.type === "branch")!.values["head"];
     const prepared = await prepareEdit(room, source, original.id, draft, options).then(task => ({ state: "prepared" as const, task }), error => ({ state: "refused" as const, reason: String(error) }));
     expect(prepared.state).toBe("prepared");

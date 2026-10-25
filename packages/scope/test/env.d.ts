@@ -12,6 +12,7 @@ declare namespace Cloudflare {
     APPLICATION_CONTENT: R2Bucket;
     METRIC_CONTROL: DurableObjectNamespace;
     AS_DEPLOYED: DurableObjectNamespace;
+    CREATION_VERSIONS: DurableObjectNamespace;
     NET: DurableObjectNamespace;
     PLATFORM: DurableObjectNamespace;
     /** The hosted MCP endpoint's namespaces, over PLATFORM (test/worker.ts). */

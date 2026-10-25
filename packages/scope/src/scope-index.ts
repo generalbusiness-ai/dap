@@ -1,10 +1,11 @@
 /** One deployment-wide index. It proves reachability, never native authority. */
 import type { Digest, ScopeKind, ScopeRef } from "@generalbusiness/dap-contract";
-import { isDigest, isScopeId, isScopeRef, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { isDigest, isPlatformDefinition, isScopeId, isScopeRef, scopeIdOf } from "@generalbusiness/dap-bytes";
 import type { Binding } from "./namespace.ts";
 import type { Sql } from "./sqlite.ts";
 import type { CreationAdmission } from "./creation-admission.ts";
 import { admitChildCreation } from "./creation-lineage.ts";
+import { injectedPlatformCreationPolicy, permitsNewPlatformScope } from "./creation-versions.ts";
 
 export const SCOPE_INDEX_NAME = "applied-genesis-v1";
 export interface ScopeRegistration { at: ScopeRef; genesis: Digest }
@@ -74,7 +75,9 @@ export function indexedScopes(binding: Binding, env: ScopeIndexEnvironment): Bin
   if (!modes) { modes = new Map(); indexes.set(indexBinding, modes); }
   const prior = modes.get(mode);
   if (prior && prior.settings.DEPLOYMENT === env.DEPLOYMENT && prior.settings.ARTIFACTS_CONFIG === env.ARTIFACTS_CONFIG
-    && prior.settings.ALLOW_OPEN_CREATION === env.ALLOW_OPEN_CREATION) return prior.binding;
+    && prior.settings.ALLOW_OPEN_CREATION === env.ALLOW_OPEN_CREATION
+    && Object.hasOwn(prior.settings, "PLATFORM_CREATION_PINS") === Object.hasOwn(env, "PLATFORM_CREATION_PINS")
+    && prior.settings.PLATFORM_CREATION_PINS === env.PLATFORM_CREATION_PINS) return prior.binding;
   // Never retain a caller's mutable environment object as the selected policy.
   const settings: ScopeIndexEnvironment = {
     SCOPE_INDEX_MODE: mode,
@@ -82,7 +85,9 @@ export function indexedScopes(binding: Binding, env: ScopeIndexEnvironment): Bin
     ...(env.DEPLOYMENT === undefined ? {} : { DEPLOYMENT: env.DEPLOYMENT }),
     ...(env.ARTIFACTS_CONFIG === undefined ? {} : { ARTIFACTS_CONFIG: env.ARTIFACTS_CONFIG }),
     ...(env.ALLOW_OPEN_CREATION === undefined ? {} : { ALLOW_OPEN_CREATION: env.ALLOW_OPEN_CREATION }),
+    ...(Object.hasOwn(env, "PLATFORM_CREATION_PINS") ? { PLATFORM_CREATION_PINS: env.PLATFORM_CREATION_PINS } : {}),
   };
+  const policy = injectedPlatformCreationPolicy(settings);
   const adapter: Binding<string> = {
     idFromName: name => name,
     get: name => new Proxy({}, { get(_target, key) {
@@ -96,6 +101,12 @@ export function indexedScopes(binding: Binding, env: ScopeIndexEnvironment): Bin
         try { index = scopeIndex(settings); } catch { return missing(); }
         if (!index) return missing();
         const actualArgs = key === "observed" ? args[1] as unknown[] : args;
+        if (method === "create" && isPlatformDefinition(actualArgs?.[1]) && policy !== undefined
+          && !permitsNewPlatformScope(policy, actualArgs[1])) {
+          try { if (await index.has(name) !== true) return missing(); } catch { return missing(); }
+          // This admits lookup only; the target must prove its sealed applied
+          // genesis and let its native repeat/mismatch judge decide.
+        }
         const envelope = method === "deliver" ? actualArgs?.[0] as { to?: unknown; message?: { type?: unknown; class?: unknown } } : null;
         // A malformed create must not fall into register-mode legacy lookup.
         // Non-reference delivery targets are new-child addresses only; even

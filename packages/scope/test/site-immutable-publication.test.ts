@@ -60,13 +60,14 @@ test("two native publications retain older immutable content and deny pending/co
     const directory = d.config.repository!.directory;
     const repo = await d.wait(() => runInDurableObject(d.D.object, (_instance, state) => { d.active(); return JSON.parse(state.storage.sql.exec<{ record: string }>("SELECT record FROM item WHERE type = 'repository'").one().record).values.repository; }));
     expect(await peer.sitePublishedCommit(directory, repo as never, "e".repeat(40))).toEqual({ ok: false, reason: "not-published" });
-    // The default CLI install creates the actual @3 graph, including native
-    // publication cleanup. These are deliberate folded-state corruptions;
+    // The default CLI install creates native publication cleanup. Its receipt
+    // points to the publication by a ref or recorded value for its protocol.
+    // These are deliberate folded-state corruptions;
     // restore the exact original column and bytes after each projection check.
     const historicalPublication = await d.wait(() => runInDurableObject(d.G.object, (_instance, state) => {
       d.active();
       const receipt = JSON.parse(state.storage.sql.exec<{ record: string }>("SELECT record FROM item WHERE type = 'receipt' AND json_extract(record, '$.values.commit') = ?", first).one().record);
-      return state.storage.sql.exec<{ id: number; state: string; record: string }>("SELECT id, state, record FROM item WHERE id = ?", receipt.refs.publication).one();
+      return state.storage.sql.exec<{ id: number; state: string; record: string }>("SELECT id, state, record FROM item WHERE id = ?", receipt.refs.publication ?? receipt.values.publication).one();
     }));
     for (const cleanupState of ["cleanup-deleted", "cleanup-owed", "cleaned"]) {
       await d.wait(() => runInDurableObject(d.G.object, (_instance, state) => {

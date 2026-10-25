@@ -14,11 +14,33 @@ test("setting reads follow immutable lexical aliases and refuse unsupported esca
       const owned = env;
       const { SECRET: secret } = owned;
       void owned?.BINDING; void env["TEXT"];
+      Object.hasOwn(env, "PLATFORM_CREATION_PINS");
+      Object.hasOwn(owned, "PLATFORM_CREATION_PINS");
       accept({ ...env, BINDING: secret });
       { const env = { ignored: true }; void env.IGNORED; }
     }
   `, "specimen.ts", options);
-  assert.deepEqual([...new Set(reads.map(r => r.name))].sort(), ["BINDING", "SECRET", "TEXT"]);
+  assert.deepEqual([...new Set(reads.map(r => r.name))].sort(), ["BINDING", "PLATFORM_CREATION_PINS", "SECRET", "TEXT"]);
+  assert.equal(reads.filter(row => row.name === "PLATFORM_CREATION_PINS").length, 2,
+    "Own-property tests record the exact key for both the Env root and its immutable alias");
+  for (const body of [
+    'Object.hasOwn(env, key);', 'Object["hasOwn"](env, "PLATFORM_CREATION_PINS");',
+    'other.hasOwn(env, "PLATFORM_CREATION_PINS");', 'Object.hasOwn(env, "notCanonical");',
+    'const Object = { hasOwn() { return true; } }; Object.hasOwn(env, "PLATFORM_CREATION_PINS");',
+    'try {} catch (Object) { Object.hasOwn(env, "PLATFORM_CREATION_PINS"); }',
+    'if (false) { var Object; } Object.hasOwn(env, "PLATFORM_CREATION_PINS");',
+    'Object.hasOwn = custom; Object.hasOwn(env, "PLATFORM_CREATION_PINS");',
+    'Object.defineProperty(Object, "hasOwn", { value: custom }); Object.hasOwn(env, "PLATFORM_CREATION_PINS");',
+    'globalThis.Object.hasOwn = custom; Object.hasOwn(env, "PLATFORM_CREATION_PINS");',
+    'globalThis.Object = custom; Object.hasOwn(env, "PLATFORM_CREATION_PINS");',
+    'const holder = { Object }; holder.Object.hasOwn = value => value.SECURITY_SETTINGS_UNDOCUMENTED; Object.hasOwn(env, "PLATFORM_CREATION_PINS");',
+    'const holder = [Object]; holder[0].hasOwn = custom; Object.hasOwn(env, "PLATFORM_CREATION_PINS");',
+    'let holder; holder = Object; holder.hasOwn = custom; Object.hasOwn(env, "PLATFORM_CREATION_PINS");',
+    'function holder() { return Object; } holder().hasOwn = custom; Object.hasOwn(env, "PLATFORM_CREATION_PINS");',
+    'Object.hasOwn({ ...env, COPY: env.SECURITY_SETTINGS_UNDOCUMENTED }, "PLATFORM_CREATION_PINS");',
+  ]) assert.throws(() => environmentReads(`function run(env: Env) { ${body} }`, "has-own.ts", options), /unsupported setting syntax/);
+  assert.throws(() => environmentReads('import Object from "./custom.ts"; function run(env: Env) { Object.hasOwn(env, "PLATFORM_CREATION_PINS"); }', "has-own.ts", options), /unsupported setting syntax/);
+  assert.throws(() => environmentReads('function run(env: Env, Object: unknown) { Object.hasOwn(env, "PLATFORM_CREATION_PINS"); }', "has-own.ts", options), /unsupported setting syntax/);
   for (const body of ["let copy = env;", "unknown(env);", "void env[key];", "return env;", "const {...rest} = env;"]) {
     assert.throws(() => environmentReads(`function run(env: Env) { ${body} }`, "specimen.ts", options), /unsupported setting syntax/);
   }

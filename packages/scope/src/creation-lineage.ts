@@ -1,13 +1,14 @@
 import { readDeployment } from "./deployment-setting.ts";
+import { injectedPlatformCreationPolicy, permitsNewPlatformScope } from "./creation-versions.ts";
 /** Serving admission, not a kernel judgment. Only checked applied native
  * history in this deployment may open a child object. */
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Digest, Entry, FactRef, PlatformDefinition, ScopeKind, ScopeRef, Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, intentDigest, isDigest, isFactRef, isLocalId, isSeed, isSignedIntentShape, parseStrict, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { canonicalize, definitionDigest, intentDigest, isDigest, isPlatformDefinition, isFactRef, isLocalId, isSeed, isSignedIntentShape, parseStrict, scopeIdOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { creates, isObject, isScopeRef, same, sentBy, validateDefinition, type Delivered } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { applicationJson } from "@generalbusiness/dap-platform/application";
-import { APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
+import { APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { artifactsRegisterScope } from "./artifacts-wiring.ts";
 import type { CreationAdmission } from "./creation-admission.ts";
 import { readNativeBirth, type NativeBirth } from "./native-birth.ts";
@@ -15,9 +16,9 @@ import type { Binding, Peer } from "./namespace.ts";
 import { proofEntry, type ProofBody } from "./proof-bytes.ts";
 
 export const CREATION_LINEAGE_BOUNDS = Object.freeze({ bodies: 16, bytes: 1024 * 1024, attempts: 64, visits: 512, milliseconds: 10_000 });
-/** The planner's exact live cohorts. Runtime support for another pin is not
- * admission. In particular artroom-scope's unreported cohort is absent. */
-export const CREATION_COHORTS = [ARCHIVE_DEVICE_APPLICATION_COHORT, APPLICATION_COHORT] as const;
+/** Exact code-supported creation families, each bound to its configured
+ * register and native creator proofs. This is not a deployment inventory. */
+export const CREATION_COHORTS = [ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, APPLICATION_COHORT] as const;
 type Cohort = typeof CREATION_COHORTS[number];
 type Pin = Digest | PlatformDefinition;
 interface Edge { child: Seed; from: FactRef; n: number; message: Delivered["message"]; source: Entry; creator: NativeBirth }
@@ -33,6 +34,7 @@ interface Known { has(scope: string, kind?: ScopeKind): Promise<boolean> }
  * raw namespace idFromName/get, even during register-mode reconciliation.
  * There is no source(), network/archive, retained-copy or caller-anchor fallback. */
 export async function admitChildCreation(binding: Binding, settings: CreationAdmission, known: Known, supplied: unknown, clock: CreationTimer = timer): Promise<ChildAdmission> {
+  const policy = injectedPlatformCreationPolicy(settings);
   const began = clock.now(), ends = began + CREATION_LINEAGE_BOUNDS.milliseconds;
   if (!Number.isFinite(began) || !Number.isFinite(ends)) return unavailable();
   let expired = false, bodies = 0, bytes = 0, attempts = 0, visits = 0;
@@ -99,6 +101,12 @@ export async function admitChildCreation(binding: Binding, settings: CreationAdm
       if (!isObject(envelope) || !isSeed(envelope["to"]) || !isFactRef(envelope["from"]) || !isLocalId(envelope["n"])
         || !isObject(envelope["message"]) || envelope["message"]["class"] !== "request" || envelope["message"]["type"] !== "create") return refused();
       const owned = envelope as unknown as Delivered;
+      const selected = owned.to as Seed;
+      if (policy !== undefined && isPlatformDefinition(selected.definition) && !permitsNewPlatformScope(policy, selected.definition)) {
+        attempt();
+        if (await known.has(scopeIdOf(selected), selected.kind) !== true) return refused();
+        active(); // lookup permission only, never proof of an existing genesis
+      }
       if (settings.DEPLOYMENT !== undefined && readDeployment(settings.DEPLOYMENT) === null) return unavailable();
       if (settings.DEPLOYMENT === undefined || settings.ALLOW_OPEN_CREATION === "true") return admitted(owned);
       const register = artifactsRegisterScope(settings.ARTIFACTS_CONFIG);

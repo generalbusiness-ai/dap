@@ -13,7 +13,7 @@ test("export admission checks exact reviewed native pin and data together, prese
     expect(admitArchiveExport(pin, certified, inventory)).toEqual({ ok: false, reason: "unsupported-credential-cohort" });
   }
   expect(inventory).not.toHaveBeenCalled();
-  for (const pin of ["platform:directory@14", "platform:register@17"]) {
+  for (const pin of ["platform:directory@14", "platform:register@17", "platform:register@18", "platform:directory@18", "platform:destination@14"]) {
     expect(admitArchiveExport(pin, certified, inventory, ARCHIVE_NATIVE_DATA["platform:directory@16"])).toEqual({ ok: false, reason: "unsupported-archive-cohort" });
   }
   for (const [pin, digest] of Object.entries(ARCHIVE_NATIVE_DATA)) {
@@ -22,6 +22,7 @@ test("export admission checks exact reviewed native pin and data together, prese
     expect(inventory).not.toHaveBeenCalled();
     expect(admitArchiveExport(pin, certified, inventory, digest)).toEqual({ ok: true });
     expect(admitArchiveExport(pin, certified, () => ({ customDomains: true, foreignCopies: false }), digest)).toEqual({ ok: false, reason: "unsupported-custom-domain" });
+    expect(admitArchiveExport(pin, certified, () => ({ customDomains: false, foreignCopies: true }), digest)).toEqual({ ok: false, reason: "unsupported-foreign-copy" });
     inventory.mockClear();
   }
   expect(admitArchiveExport("platform:directory@9", certified, inventory)).toEqual({ ok: false, reason: "unsupported-archive-cohort" });
@@ -40,4 +41,15 @@ test("export admission checks exact reviewed native pin and data together, prese
   expect(admitArchiveNativeValuePlace("platform:rules@9", data, domain, 4096, place)).toBe(false);
   expect(admitArchiveNativeValuePlace(rules, declaration, domain, 4096, place)).toBe(false);
   expect(admitArchiveNativeValuePlace(rules, data, domain, 8192, place)).toBe(false);
+  // The two Destination evaluators share declaration data, but each keeps
+  // its own exact owner place. Neither admits the other's changed-set row.
+  for (const version of [12, 13]) {
+    const pin = `platform:destination@${version}`, data = ARCHIVE_NATIVE_DATA[pin]!;
+    const owner = `owners.${pin}.judge`;
+    expect(admitArchiveNativeValuePlace(pin, data, "artroom-changed-set-1", 256 * 1024, owner)).toBe(true);
+    expect(admitArchiveNativeValuePlace(pin, data, "artroom-rules-extents-1", 256 * 1024, "outcomes.judge.observes.0.retains.0")).toBe(true);
+    expect(admitArchiveNativeValuePlace(pin, data, "artroom-changed-set-1", 256 * 1024, `owners.platform:destination@${version === 12 ? 13 : 12}.judge`)).toBe(false);
+    expect(admitArchiveNativeValuePlace(pin, data, "artroom-changed-set-1", 256 * 1024 + 1, owner)).toBe(false);
+    expect(admitArchiveNativeValuePlace(pin, declaration, "artroom-changed-set-1", 256 * 1024, owner)).toBe(false);
+  }
 });
