@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3082d07abe2caad7626fa80b3ac6d80f9e7e4796","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-frontier-cost.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:34e7e66a77c204e8d80b4cdbd98692897a3f1512","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-driver.ts."}
