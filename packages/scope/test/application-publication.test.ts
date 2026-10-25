@@ -16,6 +16,8 @@ import { soon } from "./net.ts";
 import { Platform, rita, routed, sam } from "./repository.ts";
 import { reader, dispatchFixture, driveFixture, effectFixture, nativeFixtureLifetime, applicationResolverFixture, applicationHttpPeer, applicationWorkerBindings } from "./fixtures-native.ts";
 import { beginSessionFixture } from "./session-settings.ts";
+import { SCOPE_INDEX_NAME } from "../src/scope-index.ts";
+import { siteTokenTestSettings } from "./worker.ts";
 
 import { DEVICE_COMMAND } from "@generalbusiness/dap-contract";
 import { emptyPackageComposition } from "@generalbusiness/dap-package-graph";
@@ -290,7 +292,14 @@ test("a native application publishes once after missing proof, keeps later sourc
     const noAppHead = (await a.G.summary()).at;
     expect(await a.G.stub.deliver(await envelope(nested, nestedWrite))).toEqual({ answer: "source-unverified" });
     expect((await a.G.summary()).at).toEqual(noAppHead);
-    const response = await life.wait(() => site(new Request(`${SERVICE}/site/${a.D.name}/${newerMain}/shelf/native.md`), { SCOPE_INDEX: env.SCOPE_INDEX, SCOPES: env.PLATFORM, ...a.bindings }, a.host.stand.fetch, `fixture:${a.D.name}`));
+    // The provider is scripted; fixed-owner RPC, SQL and alarms remain actual.
+    life.active();
+    const siteTokenSettings = a.bindings;
+    siteTokenTestSettings.set(SCOPE_INDEX_NAME, siteTokenSettings);
+    life.cleanup(() => {
+      if (siteTokenTestSettings.get(SCOPE_INDEX_NAME) === siteTokenSettings) siteTokenTestSettings.delete(SCOPE_INDEX_NAME);
+    });
+    const response = await life.wait(() => site(new Request(`${SERVICE}/site/${a.D.name}/${newerMain}/shelf/native.md`), { SCOPE_INDEX: env.SCOPE_INDEX, SCOPES: env.PLATFORM, ...siteTokenSettings }, a.host.stand.fetch, `fixture:${a.D.name}`));
     expect(response.status).toBe(200);
     expect(await response.text()).toContain("Later shelf wins");
     const checkedHead = (await a.G.summary()).at;
@@ -474,8 +483,15 @@ test("an archive-device-publication application automatically publishes device r
     expect(await receipt(oldCause)).toMatchObject({ cause: { from: oldCause, n: 0 }, supersededBy: { from: latestCause, n: 0 },
       path: "device/reading.md", contentDigest: textDigest("# Older queued device reading\n"), commit: queuedHead });
     expect(await receipt(latestCause)).toMatchObject({ cause: { from: latestCause, n: 0 }, path: "device/reading.md", contentDigest: textDigest("# Latest device reading\n") });
+    // The provider is scripted; fixed-owner RPC, SQL and alarms remain actual.
+    life.active();
+    const siteTokenSettings = bindings;
+    siteTokenTestSettings.set(SCOPE_INDEX_NAME, siteTokenSettings);
+    life.cleanup(() => {
+      if (siteTokenTestSettings.get(SCOPE_INDEX_NAME) === siteTokenSettings) siteTokenTestSettings.delete(SCOPE_INDEX_NAME);
+    });
     const response = await life.wait(() => site(new Request(`${SERVICE}/site/${D.name}/${head}/device/reading.md`),
-      { SCOPE_INDEX: env.SCOPE_INDEX, SCOPES: env.PLATFORM, ...bindings }, host.stand.fetch, `fixture:${D.name}`));
+      { SCOPE_INDEX: env.SCOPE_INDEX, SCOPES: env.PLATFORM, ...siteTokenSettings }, host.stand.fetch, `fixture:${D.name}`));
     expect(response.status).toBe(200); expect(await response.text()).toContain("Latest device reading");
     expect(pushedOperations).not.toContain(oldPush.id);
   } finally { life.release(); }

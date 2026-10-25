@@ -15,6 +15,8 @@ import { drainScheduledFixture } from "../../../../packages/scope/test/support/n
 import { platformOutside } from "@generalbusiness/dap-scope/testing/worker";
 import { site } from "../../../../packages/scope/src/site/route.ts";
 import type { SiteEnv } from "../../../../packages/scope/src/site/host.ts";
+import { SCOPE_INDEX_NAME } from "../../../../packages/scope/src/scope-index.ts";
+import { siteTokenTestSettings } from "../../../../packages/scope/test/worker.ts";
 import { gitHub, ownHost, readerOf, type Stand } from "../../../../packages/scope/test/hosts.ts";
 import { Platform, routed } from "../../../../packages/scope/test/repository.ts";
 import { command, memoryStore, type Context, type Outcome } from "../../../../packages/cli/src/index.ts";
@@ -94,9 +96,11 @@ describe("dap edit on real scopes, through the production wiring of each Git hos
       const owner = beginSessionFixture({ secret: b64url(crypto.getRandomValues(new Uint8Array(32))), sessions: true, inspector: reader });
       onTestFinished(owner.close);
       const wired = new Set<ScopeId>();
+      const siteCleanups: (() => void)[] = [];
       try {
-        await story(await made(), wired, task.meta);
+        await story(await made(), wired, siteCleanups, task.meta);
       } finally {
+        for (const cleanup of siteCleanups) cleanup();
         owner.close();
         net.hold = null;
         for (const name of wired) platformOutside.delete(name);
@@ -105,7 +109,7 @@ describe("dap edit on real scopes, through the production wiring of each Git hos
   }
 });
 
-async function story(at: Stand, wired: Set<ScopeId>, checkpointMeta?: object): Promise<void> {
+async function story(at: Stand, wired: Set<ScopeId>, siteCleanups: (() => void)[], checkpointMeta?: object): Promise<void> {
   const fetch = ((url: string, init?: RequestInit) => routed(url, init)) as unknown as Fetch;
   const now = () => timeMs(net.clock.now)!;
   const host = at.stand;
@@ -155,7 +159,15 @@ async function story(at: Stand, wired: Set<ScopeId>, checkpointMeta?: object): P
   // (`platform:destination@2`).
   const first = initialCommitObjects("sha1", G.name, (await G.entries())[0]!.time, (await G.item(0)).refs["claim"] as never, { name: ((await G.item(0)).values["repository"] as { name: string }).name, handle: "@rita", directory: D.name }).commit;
   expect([(await G.item(0)).values["head"], host.refs.get("refs/heads/main")]).toEqual([first, first]);
-  const siteEnv: SiteEnv = { SCOPE_INDEX: env.SCOPE_INDEX, SCOPES: env.PLATFORM, ...bindings() };
+  // The provider is scripted; fixed-owner RPC, SQL and alarms remain actual.
+  const siteSettings = bindings();
+  if (at.host === "artifacts") {
+    siteTokenTestSettings.set(SCOPE_INDEX_NAME, siteSettings);
+    siteCleanups.push(() => {
+      if (siteTokenTestSettings.get(SCOPE_INDEX_NAME) === siteSettings) siteTokenTestSettings.delete(SCOPE_INDEX_NAME);
+    });
+  }
+  const siteEnv: SiteEnv = { SCOPE_INDEX: env.SCOPE_INDEX, SCOPES: env.PLATFORM, ...siteSettings };
   const page = async (path: string) => { const response = await site(new Request(`${SERVICE}/site/${D.name}/HEAD/${path}`), siteEnv, host.fetch, `fixture:${D.name}`); return { status: response.status, body: await response.text() }; };
   // The site already serves the creation README, which the first edit replaces.
   const created = await page("README.md");

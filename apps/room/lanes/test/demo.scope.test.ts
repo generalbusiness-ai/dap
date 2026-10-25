@@ -8,6 +8,8 @@ import { beginSessionFixture } from "../../../../packages/scope/test/session-set
 import { platformOutside } from "@generalbusiness/dap-scope/testing/worker";
 import worker, { type Env } from "../../worker.ts";
 import { site } from "../../../../packages/scope/src/site/route.ts";
+import { SCOPE_INDEX_NAME } from "../../../../packages/scope/src/scope-index.ts";
+import { siteTokenTestSettings } from "../../../../packages/scope/test/worker.ts";
 import { gitHub, Hub, ownHost, type Stand } from "../../../../packages/scope/test/hosts.ts";
 import { Platform, routed, settle } from "../../../../packages/scope/test/repository.ts";
 import { memoryStore, type Context, type Git, type Outcome } from "../../../../packages/cli/src/index.ts";
@@ -46,8 +48,9 @@ describe("the demo runner's rehearsal on real scopes. The Git host, git and the 
       const owner = beginSessionFixture({ secret: b64url(crypto.getRandomValues(new Uint8Array(32))), sessions: true, inspector: null });
       onTestFinished(owner.close);
       const wired = new Set<ScopeId>();
+      const siteCleanups: (() => void)[] = [];
       try {
-        const { stage } = testStage(ownHost(), wired);
+        const { stage } = testStage(ownHost(), wired, siteCleanups);
         let current = "", intercepted = false, laterMutations = 0;
         const runnableAfterFault: number[] = [];
         const rehearsal = await rehearse({
@@ -83,6 +86,7 @@ describe("the demo runner's rehearsal on real scopes. The Git host, git and the 
         expect(rehearsal.shots.slice(failed.n).every(shot => shot.code === -1), `every later shot must stay unrun after ${target}`).toBe(true);
         expect([laterMutations, runnableAfterFault], `no later mutation or runnable callback after ${target}`).toEqual([0, []]);
       } finally {
+        for (const cleanup of siteCleanups) cleanup();
         owner.close(); net.hold = null;
         for (const name of wired) platformOutside.delete(name);
       }
@@ -95,9 +99,11 @@ describe("the demo runner's rehearsal on real scopes. The Git host, git and the 
       const owner = beginSessionFixture({ secret: b64url(crypto.getRandomValues(new Uint8Array(32))), sessions: true, inspector: null });
       onTestFinished(owner.close);
       const wired = new Set<ScopeId>();
+      const siteCleanups: (() => void)[] = [];
       try {
-        await story(await make(), wired);
+        await story(await make(), wired, siteCleanups);
       } finally {
+        for (const cleanup of siteCleanups) cleanup();
         owner.close();
         net.hold = null;
         for (const name of wired) platformOutside.delete(name);
@@ -111,9 +117,10 @@ describe("the demo runner's rehearsal on real scopes. The Git host, git and the 
       const owner = beginSessionFixture({ secret: b64url(crypto.getRandomValues(new Uint8Array(32))), sessions: true, inspector: null });
       onTestFinished(owner.close);
       const wired = new Set<ScopeId>();
+      const siteCleanups: (() => void)[] = [];
       try {
         const at = await make();
-        const { stage, people, drained } = testStage(at, wired);
+        const { stage, people, drained } = testStage(at, wired, siteCleanups);
         const next: number[] = [];
         const rehearsal = await rehearse({ ...stage, manifest: true, beforeShot: async (shot) => { next.push(shot.n); } });
         const failed = rehearsal.shots.filter((shot) => !shot.match).map((shot) => `${shot.n}. ${shot.title}: ${shot.why}\n${shot.lines.join("\n")}`);
@@ -140,6 +147,7 @@ describe("the demo runner's rehearsal on real scopes. The Git host, git and the 
         expect(judged(published.expected, { code: 0, lines: [published.lines[0]!.replace("2 files", "1 files"), published.lines[1]!] }, {})).toMatch(/^line 1/);
         await drained();
       } finally {
+        for (const cleanup of siteCleanups) cleanup();
         owner.close(); net.hold = null;
         for (const name of wired) platformOutside.delete(name);
       }
@@ -156,9 +164,11 @@ describe("the demo runner's rehearsal on real scopes. The Git host, git and the 
     const owner = beginSessionFixture({ secret: b64url(crypto.getRandomValues(new Uint8Array(32))), sessions: true, inspector: null });
     onTestFinished(owner.close);
     const wired = new Set<ScopeId>();
+    const siteCleanups: (() => void)[] = [];
     try {
-      await record(ownHost(), wired);
+      await record(ownHost(), wired, siteCleanups);
     } finally {
+      for (const cleanup of siteCleanups) cleanup();
       owner.close();
       net.hold = null;
       for (const name of wired) platformOutside.delete(name);
@@ -170,8 +180,8 @@ describe("the demo runner's rehearsal on real scopes. The Git host, git and the 
 interface Recorded { status: number; headers: Record<string, string>; body: string }
 const KEPT_HEADERS = ["content-type", "content-security-policy", "location", "x-content-type-options"];
 
-async function record(at: Stand, wired: Set<ScopeId>): Promise<void> {
-  const { stage, people, pages, drained } = testStage(at, wired);
+async function record(at: Stand, wired: Set<ScopeId>, siteCleanups: (() => void)[]): Promise<void> {
+  const { stage, people, pages, drained } = testStage(at, wired, siteCleanups);
   const rehearsal = await rehearse(stage);
   expect(rehearsal.ok).toBe(true);
   await drained();
@@ -243,10 +253,11 @@ async function record(at: Stand, wired: Set<ScopeId>): Promise<void> {
 }
 
 /** The stage of the rehearsal on the test Worker, and what the test reads of it: the people's contexts and the stand-in host. */
-function testStage(at: Stand, wired: Set<ScopeId>): { stage: Stage; people: Partial<Record<Person, Context>>; pages: Fetch; drained(): Promise<void> } {
+function testStage(at: Stand, wired: Set<ScopeId>, siteCleanups: (() => void)[]): { stage: Stage; people: Partial<Record<Person, Context>>; pages: Fetch; drained(): Promise<void> } {
   const fetch = ((url: string, init?: RequestInit) => routed(url, init)) as unknown as Fetch;
   const now = () => timeMs(net.clock.now)!;
   let register: ScopeId | null = null;
+  let siteSettings: ReturnType<Stand["bindings"]> | null = null;
   const wire = (name: ScopeId) => { wired.add(name); platformOutside.set(name, (given, sql) => at.outside(given, sql, at.bindings(register!))); };
   net.hold = (envelope) => { if ("definition" in envelope.to) wire(scopeIdOf(envelope.to)); return false; };
   // STAND-IN for the scheduler, as in `issues.scope.test.ts`; it keeps every scope a command has waited on.
@@ -289,7 +300,7 @@ function testStage(at: Stand, wired: Set<ScopeId>): { stage: Stage; people: Part
   // The paths as the deployed Worker answers them: the site route over the stand-in host, the page, and the scope routes.
   const deployed = async (url: string, init?: RequestInit): Promise<Response> => {
     const path = new URL(url).pathname;
-    return path.startsWith("/site/") ? site(new Request(url, init), { SCOPE_INDEX: env.SCOPE_INDEX, SCOPES: env.PLATFORM, ...at.bindings(register!) }, at.stand.fetch, `fixture:${register!}`)
+    return path.startsWith("/site/") ? site(new Request(url, init), { SCOPE_INDEX: env.SCOPE_INDEX, SCOPES: env.PLATFORM, ...(at.host === "artifacts" ? siteSettings! : at.bindings(register!)) }, at.stand.fetch, `fixture:${register!}`)
       : path.startsWith("/page/") ? worker.fetch(new Request(url, init), { SCOPES: env.PLATFORM, SCOPE_INDEX: env.SCOPE_INDEX } as Env) : routed(url, init);
   };
   const people: Partial<Record<Person, Context>> = {};
@@ -303,6 +314,15 @@ function testStage(at: Stand, wired: Set<ScopeId>): { stage: Stage; people: Part
     },
     pin: async (planned) => {
       register = planned as ScopeId;
+      // Share only Artifacts provider settings with the actual fixed token owner.
+      if (at.host === "artifacts") {
+        const settings = at.bindings(register);
+        siteSettings = settings;
+        siteTokenTestSettings.set(SCOPE_INDEX_NAME, settings);
+        siteCleanups.push(() => {
+          if (siteTokenTestSettings.get(SCOPE_INDEX_NAME) === settings) siteTokenTestSettings.delete(SCOPE_INDEX_NAME);
+        });
+      }
       wire(register);
       known.push(new Platform(register));
       return `STAND-IN for the operator's setting: the test wires ${registerSetting(at.host)} to ${planned} before the planned install.`;
@@ -332,8 +352,8 @@ function testStage(at: Stand, wired: Set<ScopeId>): { stage: Stage; people: Part
   return { stage, people, pages: deployed as unknown as Fetch, drained: () => pause([]) };
 }
 
-async function story(at: Stand, wired: Set<ScopeId>): Promise<void> {
-  const { stage, people, drained } = testStage(at, wired);
+async function story(at: Stand, wired: Set<ScopeId>, siteCleanups: (() => void)[]): Promise<void> {
+  const { stage, people, drained } = testStage(at, wired, siteCleanups);
   const told: number[] = [];
   const next: NextShot[] = [];
   const events: string[] = [];
