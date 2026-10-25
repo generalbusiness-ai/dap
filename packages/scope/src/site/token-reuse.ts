@@ -70,7 +70,7 @@ export class SiteTokenReuse {
       || repository["host"] !== ARTIFACTS_HOST || repository["namespace"] !== ready.config.namespace
       || typeof repository["name"] !== "string" || !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,99}$/.test(repository["name"])
       || repository["name"].toLowerCase().endsWith(".git") || repository["id"] !== repository["name"]
-      || typeof supplied["ref"] !== "string" || supplied["ref"].length > 1024 || utf8.encode(supplied["ref"]).length > 1024 || !supplied["ref"].startsWith("refs/")) return NO_TOKEN;
+      || typeof supplied["ref"] !== "string" || supplied["ref"].length > 1024 || utf8(supplied["ref"]).length > 1024 || !supplied["ref"].startsWith("refs/")) return NO_TOKEN;
     try { refName(supplied["ref"], "Site token ref"); } catch (error) { return failed(error); }
     const name = repository["name"];
     const now = this.#clock();
