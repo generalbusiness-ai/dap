@@ -46,7 +46,7 @@ import { archiveHostItem, type ArchiveHostConfiguration, type ArchiveHostItemAsk
 import { Scope, type Checkpointed } from "../src/core.ts";
 import { SqliteStore, type Sql } from "../src/sqlite.ts";
 import { archiveReplayAnchors } from "../src/archive-anchors.ts";
-import { planArchive, planArchivePass, planPublishedArchivePass } from "../src/archive-build.ts";
+import { planArchive, planArchivePass, planPublishedArchivePass, type ArchiveFixedFinish } from "../src/archive-build.ts";
 import { ARCHIVE_SOURCE_PINS, FixtureArchiveSourcePins, type FixtureArchiveSourceBirth } from "../src/archive-source-pins.ts";
 import type { ReviewedArchivePolicy } from "../src/archive-inventory.ts";
 import { outsideOf as hostOutside } from "../src/worker.ts";
@@ -700,6 +700,10 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       expect(candidateInput.signed.intent).toMatchObject({ kind: "set-fan", actor: vic.key, on: roomAFan });
       expect(candidateInput.signed.intent.fields).toEqual({ level: 100, target: "on" });
       expect(candidateInput.authority).toHaveLength(1); expect(candidate.entry.effects).toHaveLength(6);
+      // The fixed path must cover actual rule and foreign authority inputs,
+      // not only the checkpoint-only strategy witness.
+      expect(candidate.entry.prepared.some(prepared => prepared.rule === "device-target")).toBe(true);
+      expect(candidate.entry.uses.length).toBeGreaterThan(0);
       // A suffix makes exact remainder observable; none of it is pre-marked.
       await life.wait(() => runInDurableObject(childScope.object, async instance => {
         for (let n = 0; n < 5; n++) expect(await (instance as unknown as { checkpoint(): Promise<Checkpointed> }).checkpoint()).toMatchObject({ answer: "written" });
@@ -716,10 +720,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       const environment = { ARTIFACTS: archivePeer.binding,
         ARTIFACTS_CONFIG: canonicalize({ registerScope: R.name, namespace: repository.namespace, host: "service.invalid", maxBytes: 8 * 1024 * 1024, credentialIdentity: "adapter-attempt" }),
         GROW_ARCHIVE_CONFIG: canonicalize({ policy: "grow-room-archive-1", release: DEMO_RELEASE, directory: D.name, repositoryName: repository.name }) };
-      for (let pass = 0; prior!.seq < target.seq && pass < target.seq - 146; pass++) {
-        const wake = await life.wait(() => runInDurableObject(childScope.object, (_instance, state) => new ArchiveRows(archiveSql(state), at).wake()));
-        if (wake) { life.active(); net.clock.now = wake; }
-        const outcome = await life.wait(() => runInDurableObject(childScope.object, async (_instance, state) => {
+      const runPass = (shortage = false) => life.wait(() => runInDurableObject(childScope.object, async (_instance, state) => {
           const sql = archiveSql(state), store = new SqliteStore(sql), events: unknown[] = [];
           const stack = () => (new Error("TEST budget observation").stack ?? "").split("\n").slice(1, 12).join("\n").slice(0, 3072);
           const record = (event: unknown) => { if (events.length < 64) events.push(event); };
@@ -742,7 +743,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
             override async lookaheadAsync<T>(reserve: Partial<ArchiveCost>, read: () => Promise<T>) {
               const result = await super.lookaheadAsync(reserve, read); if (result.kind === "limited") record({ kind: "limited-async-lookahead", reserve: { ...reserve }, used: this.admitted(), stack: stack() }); return result;
             }
-          }();
+          }(shortage ? { entries: 0 } : {});
           let parentObjectRequests = 0, refAdvertisements = 0;
           const fetch = (request: Request) => {
             if (request.method === "POST" && request.url.endsWith("/git-upload-pack")) parentObjectRequests++;
@@ -751,12 +752,49 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
           };
           const options = growArchiveDriver(archiveGiven(store), sql, env.PLATFORM, environment, policies, PROPOSED_BOUNDS, fetch);
           if (!options) throw Error("Exact old-family Grow archive wiring required");
-          const result = await new ArchiveDriver({ ...options, bounds: PROPOSED_BOUNDS, sql, current: () => ({ at, head: target }),
-            clock: () => timeOf(life.now()), budget: () => budget }).run();
+          let fixedFinish: ArchiveFixedFinish | null = null, capacityRefusal: unknown = null, diagnosticCount = 0;
+          const info = console.info;
+          const capture = (...args: unknown[]) => {
+            if (args[0] === "archive-pass-diagnostic-v1" && isRecord(args[1])) {
+              diagnosticCount++;
+              fixedFinish = (args[1]["fixedFinish"] ?? null) as ArchiveFixedFinish | null;
+              capacityRefusal = args[1]["capacityRefusal"] ?? null;
+            }
+            info.apply(console, args);
+          };
+          console.info = capture;
+          let result: Awaited<ReturnType<ArchiveDriver["run"]>>;
+          try {
+            result = await new ArchiveDriver({ ...options, bounds: PROPOSED_BOUNDS, sql, current: () => ({ at, head: target }),
+              clock: () => timeOf(life.now()), budget: () => budget }).run();
+          } finally { if (console.info === capture) console.info = info; }
           const row = new ArchiveRows(sql, at).load();
-          return { result, cost: budget.admitted(), events, parentObjectRequests, refAdvertisements, confirmed: row?.confirmed, pending: row?.pending,
+          return { result, cost: budget.admitted(), events, parentObjectRequests, refAdvertisements, fixedFinish: fixedFinish as ArchiveFixedFinish | null, capacityRefusal, diagnosticCount, confirmed: row?.confirmed, pending: row?.pending,
             stopped: row?.stopped, remainder: targetEntries.filter(entry => entry.entry.seq > (row?.confirmed?.through.seq ?? -1)).map(entry => ({ seq: entry.entry.seq, hash: entry.hash })) };
         }));
+      // One real reduced-allowance pass stores the capacity wake. It cannot
+      // mint, mark or send; the next pass gets a fresh original allowance.
+      const beforeCapacity = await life.wait(() => runInDurableObject(childScope.object,
+        (_instance, state) => new ArchiveRows(archiveSql(state), at).load()));
+      const peerBeforeCapacity = { minted: archivePeer.minted.length, sends: archivePeer.sends.length,
+        posts: archivePeer.posts.length, refs: [...archivePeer.refs] };
+      const capacity = await runPass(true);
+      observed["forcedCapacity"] = capacity;
+      expect(capacity.result, canonicalize(observed)).toMatchObject({ state: "retry", reason: "limit" });
+      expect(capacity.cost.entries).toBe(0); expect(capacity.diagnosticCount).toBe(1);
+      expect(capacity.fixedFinish).toBeNull();
+      expect(capacity.capacityRefusal).toMatchObject({ site: "scout-open", shortfall: { entries: 1 } });
+      expect(capacity.confirmed).toEqual(beforeCapacity!.confirmed);
+      expect(capacity.pending).toBeNull(); expect(capacity.stopped).toBeNull();
+      expect(await life.wait(() => runInDurableObject(childScope.object,
+        (_instance, state) => new ArchiveRows(archiveSql(state), at).load()))).toEqual(beforeCapacity);
+      expect(capacity.result.next).not.toBeNull();
+      expect({ minted: archivePeer.minted.length, sends: archivePeer.sends.length,
+        posts: archivePeer.posts.length, refs: [...archivePeer.refs] }).toEqual(peerBeforeCapacity);
+      for (let pass = 0; prior!.seq < target.seq && pass < target.seq - 146; pass++) {
+        const wake = await life.wait(() => runInDurableObject(childScope.object, (_instance, state) => new ArchiveRows(archiveSql(state), at).wake()));
+        if (wake) { life.active(); net.clock.now = wake; }
+        const outcome = await runPass();
         passes.push({ pass, from: prior!.seq + 1, target, outcome });
         expect(outcome.result, canonicalize(observed)).toMatchObject({ state: "confirmed" });
         expect(outcome.pending).toBeNull(); expect(outcome.stopped).toBeNull(); expect(outcome.parentObjectRequests).toBe(0);
@@ -764,6 +802,20 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
         expect(outcome.refAdvertisements).toBe(2);
         expect(outcome.confirmed).toMatchObject({ layout: 2, anchorsPublished: true });
         const receipt = outcome.confirmed!;
+        if (pass === 0) {
+          expect(receipt.through).toEqual({ seq: 147, hash: candidate.hash });
+          expect(outcome.diagnosticCount).toBe(1);
+          expect(outcome.fixedFinish, canonicalize(observed)).not.toBeNull();
+          const finish = outcome.fixedFinish!;
+          expect(finish.metadataMargin).toBe(65_536);
+          for (const key of Object.keys(ARCHIVE_BOUNDS) as (keyof ArchiveCost)[]) {
+            expect(finish.used[key]).toBeLessThanOrEqual(outcome.cost[key]);
+            expect(outcome.cost[key] - finish.used[key], canonicalize({ key, outcome })).toBeLessThanOrEqual(finish.remaining[key]);
+            expect(finish.used[key] + finish.remaining[key] + (key === "metadata" ? finish.metadataMargin : 0))
+              .toBeLessThanOrEqual(ARCHIVE_BOUNDS[key]);
+          }
+          expect(ARCHIVE_BOUNDS.metadata - outcome.cost.metadata).toBeGreaterThanOrEqual(finish.metadataMargin);
+        }
         expect(receipt.through.seq).toBeGreaterThan(prior!.seq); expect(receipt.through.seq).toBeLessThanOrEqual(target.seq);
         expect(receipt.through.hash).toBe(targetEntries.find(entry => entry.entry.seq === receipt.through.seq)!.hash);
         expect((await reader.commit(objectId(receipt.commit, "TEST appended receipt"))).parents).toEqual([parent]);
