@@ -5,7 +5,7 @@ import type { Bounds, Head, ScopeRef, Timestamp } from "@generalbusiness/dap-con
 import { canonicalize, same, utf8 } from "@generalbusiness/dap-bytes";
 import { JournalPassPreparation, type JournalFormat, type JournalObject, type JournalObjectSource } from "@generalbusiness/dap-git/journal";
 import { ARCHIVE_BOUNDS, ArchiveStopped, type ArchiveBudget, type ArchiveCost, type ArchiveCapacityRefusal } from "./archive-budget.ts";
-import { planPublishedArchivePass, planRootPublishedArchivePass, planRootFixedPublishedArchivePass, planLegacyArchiveAnchors, type ArchiveBuildFailure } from "./archive-build.ts";
+import { planPublishedArchivePass, planRootPublishedArchivePass, planRootFixedPublishedArchivePass, planRootFixedLegacyArchivePass, planLegacyArchiveAnchors, type ArchiveBuildFailure } from "./archive-build.ts";
 import { archiveDeclarationHandoffCost } from "./archive-declaration-plan.ts";
 import { archiveRetainedHandoffCost } from "./archive-retained.ts";
 import { archiveForeignHandoffCost } from "./archive-foreign-plan.ts";
@@ -208,6 +208,24 @@ export async function planRootFixedArchivePass(sql: Sql, context: AdaptiveArchiv
       if (!prepared.ok) throw prepared.error;
     }
     return await planRootFixedPublishedArchivePass(sql, { ...context, ...rowContext }, budget);
+  } catch (error) {
+    if (error instanceof ArchiveStopped) return { ok: false as const, reason: error.reason,
+      capacityRefusal: error.capacityRefusal && { ...error.capacityRefusal, site: "plan-debit" as const } };
+    if (error instanceof ArchivePrefixStopped) return { ok: false as const, reason: error.reason };
+    throw error;
+  }
+}
+
+/** Unpublished receipts must admit the complete old range before the same
+ * pass inventories its exact next entry. No caller supplies legacy anchors. */
+export async function planRootFixedUnpublishedArchivePass(sql: Sql, context: AdaptiveArchiveContext, budget: ArchiveBudget) {
+  try {
+    const old = context.row.confirmed;
+    if (!old || old.layout !== 2 || old.anchorsPublished === true || context.row.pending !== null || context.row.stopped !== null
+      || !context.after || context.through.seq !== context.after.seq + 1 || !context.parent) return { ok: false as const, reason: "parent" as const };
+    const rowContext = planningRowContext(sql, context, budget);
+    if (!rowContext.ok) return rowContext;
+    return await planRootFixedLegacyArchivePass(sql, { ...context, ...rowContext }, budget);
   } catch (error) {
     if (error instanceof ArchiveStopped) return { ok: false as const, reason: error.reason,
       capacityRefusal: error.capacityRefusal && { ...error.capacityRefusal, site: "plan-debit" as const } };
