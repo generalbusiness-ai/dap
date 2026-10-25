@@ -62,8 +62,8 @@ const pendingArchiveSeals = {
   "packages/scope/src/archive-source-window.ts": "4db3f5885e7541f713b9668d1cde655e42be1950dd6af77d5711a323b3582e1c",
   "packages/scope/src/archive-publication.ts": "d8c39d220bc7eea59301478aa553960267aac16f06502b4103a85647c71eb457",
   "packages/scope/src/archive-build.ts": "e1111bfef1fe94cc8436498679395ba1b9b8adba3db8651f4f24d87d68696853",
-  "packages/scope/src/archive-driver.ts": "006e53f3ef1b7a3e97cd53df3c8f8aa964d089e0c53a5bbe06efe8794d5e091d", // Capacity deferral reviewed; actual maintained parser output.
-  "packages/scope/src/archive-row.ts": "be48ef12598ad4f5d0084bd05e760a4537faf23a96f21dce8c9e8748c7eddfda",
+  "packages/scope/src/archive-driver.ts": "d44b3d5ca3644a793eba9485906bcc23a616d6e9efe6723a2ac39b00278e6913", // Capacity deferral reviewed; actual maintained parser output.
+  "packages/scope/src/archive-row.ts": "1cb161a8aaccde3ba5aef183acbc30d591c9f0acbfc7ae6773f712620c0b2bb5",
   "packages/scope/src/floor-writer.ts": "fb8fd859844b8d10ba43b477bcaf07ab32fe1bfa1b6684ad9ae70b930d328a11",
   "packages/scope/src/object.ts": "091396e5ebe195252695a84287fc1edf2c1bb45fc2d1c65d14d679643694d9b1", // Must match the separately adopted original owner value above.
   "apps/room/worker.grow.ts": "0cc4c1c63f79f8da8dad5e98b2ace5b69fcd818d41640ed4e316ee534adf749f",
