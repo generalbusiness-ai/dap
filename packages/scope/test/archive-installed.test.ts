@@ -131,6 +131,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
   let retainedCommand: NativeCommandHandoff | null = null;
   test(producerTitle, { timeout: 30_000 }, async context => {
   const activationScenario = scenario.startsWith("Grow activation"), productionScenario = scenario === "Grow production" || scenario === "Grow Room A shape" || activationScenario, kind = scenario === "fixture" ? "fixture" : "Grow";
+  let roomAFan: number | null = null;
   const prepared = kind === "fixture" ? await applicationOwnedScopesPacket() : (() => {
     const captured = inject("maintainedApplications")[productionScenario ? "growDemo" : "grow"], bytes = unb64url(captured.bytes);
     if (!bytes) throw Error("The maintained TEST Grow packet must be captured.");
@@ -272,6 +273,14 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       expect(answer.isError, JSON.stringify(answer.structuredContent)).toBe(false);
       expect(answer.structuredContent).toMatchObject({ step: { answer: { answer: "accepted" } } });
       expect(await life.wait(() => childScope.item(heater))).toMatchObject({ values: { outcome: "confirmed" } });
+      if (scenario === "Grow Room A shape") {
+        // A real active fan under the same installed device-command grant.
+        // No extra device or actor is introduced in the seven older cases.
+        roomAFan = await life.wait(async () => childScope.did(rita, "commission-device", {
+          fields: { zone, kind: "fan", label: "TEST Room A fan", minLevel: 0, maxLevel: 100, target: "off", level: 0 },
+          expected: await childScope.expected({ zone }),
+        }));
+      }
     }
     const configuredRepository = (await life.wait(() => D.item(0))).values["repository"] as { host: string; namespace: string };
     const hostConfig: ArchiveHostConfiguration = { registerScope: R.name, host: configuredRepository.host, namespace: configuredRepository.namespace, directory: D.name };
@@ -670,14 +679,27 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       observed["actualHistory"] = { through: prior, commits: commits.length, treeBytes, trees: visited.size, files,
         treeBytesDifferenceFromPlanner: treeBytes - 8698, replayScopes: replayScopes.length,
         qualification: "Measured genuine journal layout; no padding or assertion that tree bytes equal hosted8698." };
-      // A signed real Grow act, not a checkpoint standing in for a complex
-      // application input. Nothing asserts its effects/uses match hosted147.
-      const next = await life.wait(() => childScope.did(rita, "commission-zone", { fields: { label: "TEST next Room A-shaped zone", setpoint: 2400, band: 200 } }));
+      // Match the reported act/fields and native grant/effect shape without
+      // claiming the fixture's uses, bytes or retained inventory are hosted147.
+      expect(roomAFan).not.toBeNull();
+      const next = await life.wait(async () => childScope.did(vic, "set-fan", {
+        on: roomAFan!, fields: { level: 100, target: "on" }, expected: await childScope.expected({ on: roomAFan! }),
+      }));
       expect(next).toBe(147);
       const candidate = (await life.wait(() => childScope.sealed())).find(row => row.entry.seq === next)!;
-      observed["candidate"] = { input: candidate.entry.input.type, bytes: utf8(canonicalize(candidate.entry)).length,
-        effects: candidate.entry.effects.length, uses: candidate.entry.uses.length, sends: candidate.entry.sends.length,
-        prepared: candidate.entry.prepared.length, qualification: "Actual signed fixture act; hosted input/effects/uses/retained sizes remain unknown." };
+      const candidateInput = candidate.entry.input;
+      observed["candidate"] = { input: candidateInput.type,
+        kind: candidateInput.type === "act" ? candidateInput.signed.intent.kind : null,
+        fields: candidateInput.type === "act" ? candidateInput.signed.intent.fields : null,
+        grants: candidateInput.type === "act" ? candidateInput.authority.length : null,
+        bytes: utf8(canonicalize(candidate.entry)).length, effects: candidate.entry.effects.length,
+        uses: candidate.entry.uses.length, sends: candidate.entry.sends.length, prepared: candidate.entry.prepared.length,
+        qualification: "Actual signed fixture set-fan; only reported kind/fields/grant/effect shape is matched. Hosted bytes/uses/retained sizes and8698 tree layout remain unmatched." };
+      expect(candidateInput.type).toBe("act");
+      if (candidateInput.type !== "act") throw Error("Actual signed set-fan required");
+      expect(candidateInput.signed.intent).toMatchObject({ kind: "set-fan", actor: vic.key, on: roomAFan });
+      expect(candidateInput.signed.intent.fields).toEqual({ level: 100, target: "on" });
+      expect(candidateInput.authority).toHaveLength(1); expect(candidate.entry.effects).toHaveLength(6);
       // A suffix makes exact remainder observable; none of it is pre-marked.
       await life.wait(() => runInDurableObject(childScope.object, async instance => {
         for (let n = 0; n < 5; n++) expect(await (instance as unknown as { checkpoint(): Promise<Checkpointed> }).checkpoint()).toMatchObject({ answer: "written" });
