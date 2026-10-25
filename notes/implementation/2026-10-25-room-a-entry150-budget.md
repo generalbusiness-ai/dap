@@ -1,6 +1,6 @@
 # Room A entry 150 metadata shortfall
 
-Room A's hosted archive pass refused at entry 150 because its next metadata request exceeded the 4 MiB bound by 1,106 or 1,109 bytes in the retained observations. The implemented fallback uses a later capacity-retry alarm to build exactly the next entry from fresh inputs. A local Native driver witness confirmed 63 through 64 within the original bounds, and the owning checks passed. That local result does not establish a full finish for Room A's unavailable private confirmed-149 context or hosted recovery.
+Room A's hosted archive pass refused at entry 150 because its next metadata request exceeded the 4 MiB bound by 1,106 or 1,109 bytes in the retained observations. The implemented fallback uses a later capacity-retry alarm to build exactly the next entry from fresh inputs. Local Native witnesses confirmed 63 through 64 and 146 through 147 within the original bounds. The owning checks and ordinary gate passed. That local result does not establish a full finish for Room A's unavailable private confirmed-149 context or hosted recovery.
 
 This note records work under parent request `1aedd35b` and promise `3afb5000`. Implementation is tracked under child `f6ba323d` and promise `a2b586e5`. The change preserves archive limits, native authority and recorded entry meaning. No deployment or provider change is claimed.
 
@@ -79,6 +79,18 @@ The maintained affected-run guards compare four clean boundaries, including 1,73
 
 These outer commands are separate. Their nested compiler, body and child timings overlap and are not added. The earlier component costs remain separate partial measurements, not a complete edit-to-review cost or portable performance benchmark.
 
+## Ordinary gate passed
+
+Ordinary gate `73297` completed naturally with exit 0 at `64da4edc`, tree `1daf599e`. All eight stages passed, including 40 printed compiler contexts. Vitest recorded 3,585 passing cases and three ordinary skips across 3,588 unique terminal cases in 501 files. The following Node blocks passed all 42 maintained cases and all 55 generated Counting cases. The Counting result is Node validation, not browser execution.
+
+The independent audit reconciles all 3,588 unique final records with the printed result. There are 17 missing readiness callbacks and 40 missing intermediate result callbacks, all with terminal PASS records. The 3,572 raw readiness notifications represent 3,571 unique cases because one case emitted the same readiness notification twice, 61 milliseconds apart. It has one result and one final PASS record. No result or final record is duplicated, and no identity or state conflicts appear. The duplicate does not establish a retry; this gate emits no retry counters or built-in Vitest JSON.
+
+Root accepted the independent closed audit after checking the retained evidence. All 17 original stage-output copies match. Four clean boundary records match the allocation under the narrow, named cache exceptions. The finite checks cover Source and tool pins, environment hashes and dependency metadata at those boundaries. They do not prove continuous physical dependency custody or a full dependency-content read history.
+
+The outer gate used 1,518.24 seconds wall and 1,739.10 seconds CPU. Its test-stage timing of 1,499.8 seconds wall and 1,692.9 seconds CPU, and the nested npm command, overlap the outer cost and are not added. Dependency installation was skipped after verification against the existing lockfile. The gate used the original settings.
+
+The proposed final follow-up changes only the primary note. Production, tests and the seal map remain those of the gated checkpoint. The documentation-only update does not require another gate under `docs/testing.md`. It does not turn the local witness into a hosted entry-150 reproduction.
+
 ## Remaining evidence and rollout
 
-The ordinary gate, authentic Architecture, Security and Simplification review, and planner rollout remain pending. The private confirmed-149 context is still missing, so hosted entry-150 fit and recovery remain unproved. No prior failure is reclassified by these local successes. Private evidence grants do not authorize publication of raw entry, rule or provider bodies, environment values, credentials or physical snapshots.
+Authentic Architecture, Security and Simplification review of the final candidate, landing and planner rollout remain pending. The private confirmed-149 context is still missing, so hosted entry-150 fit and recovery remain unproved. No prior failure is reclassified by these local successes. Private evidence grants do not authorize publication of raw entry, rule or provider bodies, environment values, credentials or physical snapshots.
