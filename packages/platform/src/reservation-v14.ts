@@ -154,8 +154,7 @@ export function judgeReservationV14(asked: ReservationAskedV14): ReservationWith
   // every required status before returning unmet or success: invalid wins.
   if (judged.reserved === null || judged.reserved === false && judged.reason !== "incomplete" && !judged.reason.startsWith("rules-not-met")) return judged;
   const required = requiredStanding(asked.statement, selected.read, selected.required, asked.time);
-  if (required.status === "invalid") return no("evidence-invalid");
-  if (required.status === "unmet") return no("rules-not-met");
+  if (required.status !== "met") return no(required.status === "invalid" ? "evidence-invalid" : "rules-not-met");
   if (!judged.reserved) return judged;
   if (!judged.standing) return no("evidence-invalid");
   return { ...judged, standing: { base: judged.standing.base, checks: required.checks } };

@@ -13,12 +13,12 @@ const exact = (v: unknown, names: readonly string[]): v is Record<string, unknow
 const text = (v:unknown,max:number):v is string => typeof v==='string' && v.length>0 && v.length<=max && utf8(v).length<=max;
 const sha1 = (v:unknown):v is string => typeof v==='string' && /^[0-9a-f]{40}$/.test(v);
 export function readRulesCertificateBinding(value:unknown):RulesTreeBinding|null {
-  if(!exact(value,['rules','proposal','destination','repository','ref','commit']) || !isScopeRef(value.rules) || value.rules.kind!=='rules'
-    || !isScopeRef(value.destination) || value.destination.kind!=='destination' || !isDigest(value.proposal) || !sha1(value.commit)
-    || !text(value.ref,267) || !value.ref.startsWith('refs/heads/') || !exact(value.repository,['host','namespace','name','id'])
-    || !Object.values(value.repository).every(v=>text(v,256)))return null;
-  return {rules:{...value.rules},proposal:value.proposal,destination:{...value.destination},
-    repository:{host:value.repository.host as string,namespace:value.repository.namespace as string,name:value.repository.name as string,id:value.repository.id as string},ref:value.ref,commit:value.commit};
+  if(!exact(value,['rules','proposal','destination','repository','ref','commit']) || !isScopeRef(value['rules']) || value['rules'].kind!=='rules'
+    || !isScopeRef(value['destination']) || value['destination'].kind!=='destination' || !isDigest(value['proposal']) || !sha1(value['commit'])
+    || !text(value['ref'],267) || !value['ref'].startsWith('refs/heads/') || !exact(value['repository'],['host','namespace','name','id'])
+    || !Object.values(value['repository']).every(v=>text(v,256)))return null;
+  return {rules:{...value['rules']},proposal:value['proposal'],destination:{...value['destination']},
+    repository:{host:value['repository']['host'] as string,namespace:value['repository']['namespace'] as string,name:value['repository']['name'] as string,id:value['repository']['id'] as string},ref:value['ref'],commit:value['commit']};
 }
 /** Immutable opening only; current head/branch equality remains required at
  * the host before and after I/O and again in native outcome selection. */
@@ -101,8 +101,8 @@ export function rulesPublishedCertificate(given:RuleGiven,proposal:Digest,proof:
     const input=answer.entry.input,op=`${request.seq}:0`;
     if(input.owner!=='platform:destination@14'||input.kind!==RULES_CERTIFICATE_KIND||input.operation!==op||input.attempt!==1
       ||input.result!=='confirmed'||input.evidence.basis!=='own-answer'||answer.entry.seq!==request.seq+1||answer.entry.prev!==request.hash
-      ||!exact(input.evidence.body,['proposal','proof','started'])||input.evidence.body.proposal!==proposal||input.evidence.body.proof!==proof
-      ||!same(input.evidence.body.started,request))return null;
+      ||!exact(input.evidence.body,['proposal','proof','started'])||input.evidence.body['proposal']!==proposal||input.evidence.body['proof']!==proof
+      ||!same(input.evidence.body['started'],request))return null;
     const selected=answer.entry.effects.filter(e=>e.effect==='attempt');
     if(selected.length!==1||!selected.some(e=>e.effect==='attempt'&&e.operation===op&&e.attempt===1&&e.result==='confirmed'&&e.selected===true))return null;
     const openingEffect=opening.entry.effects.find(e=>e.effect==='operation'&&e.k===0);

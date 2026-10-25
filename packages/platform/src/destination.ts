@@ -1331,12 +1331,14 @@ function policyInput14(given: RuleGiven): ReservationPolicyInputV14 | null {
 export function certifiedReservationSnapshot(value: unknown): CertifiedReservationSnapshot | null {
   try {
   if (!isObject(value) || Object.keys(value).length !== 6 || !["observation", "input", "touched", "required", "tree", "manifest"].every(k => Object.hasOwn(value, k))
-    || !isObject(value["observation"]) || !isObject(value["input"]) || Object.keys(value["input"]).length !== 3
-    || !["rules", "destination", "extents"].every(k => Object.hasOwn(value["input"], k))
+    || !isObject(value["observation"])) return null;
+  const inputValue = value["input"];
+  if (!isObject(inputValue) || Object.keys(inputValue).length !== 3
+    || !["rules", "destination", "extents"].every(k => Object.hasOwn(inputValue, k))
     || !Array.isArray(value["touched"]) || value["touched"].length > 8 || !value["touched"].every(x => typeof x === "string" && x.length <= 64)
     || !Array.isArray(value["required"]) || value["required"].length > 32 || !isObjectId(value["tree"]) || !isFactRef(value["manifest"])) return null;
   const observation = value["observation"] as unknown as import("@generalbusiness/dap-contract").RulesObservation;
-  const input = value["input"] as unknown as ReservationPolicyInputV14;
+  const input = inputValue as unknown as ReservationPolicyInputV14;
   if (!isObject(input.extents) || utf8(canonicalize(input.extents)).length > 262144) return null;
   const decoded = readRulesPolicyObservationV14(observation, input, observation.at);
   if (!decoded.ok) return null;

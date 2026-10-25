@@ -7,7 +7,7 @@ import { archiveDeviceRulesScope, archiveDeviceRules } from './archive-binding.t
 import { rulesAnswer, revisionOf } from './rules-scope.ts';
 import { rulesOwnerMayReviewV11, rulesPolicyProposalV11, rulesPolicyPatternsV11 } from './rules-policy-v11.ts';
 import { RULES_TREE_PROOF, verifyRulesTree } from './rules-policy-tree.ts';
-import { RULES_POLICY_VALUE_V11, RULES_EXTENTS_VALUE_V11, rulesCertificateFamily, rulesPublishedCertificate,
+import { RULES_POLICY_VALUE_V11, RULES_EXTENTS_VALUE_V11, rulesPublishedCertificate,
   type RulesCertificateProvenanceV11 } from './rules-certificate.ts';
 
 const TRANSPORT=['proposal','proof','certificateRequest','certificate','directoryBirth','destinationBirth','membershipBirth'];
