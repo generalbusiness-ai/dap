@@ -11,7 +11,7 @@ const seals = {
   "apps/room/demo-creation.ts": "d9850f4854182c0231a2ae9a985882343e7f3dfea67ea034cafe4fca4bb0d77f",
   "apps/room/page/route.ts": "62c8f69b9f516f1b5acdaef57d7aed25268d8cf03283bdffdd4b1b5f20bb6b3d",
   "apps/room/brand/route.ts": "71b45ff9b41b3bea31c775a16525349591e0d4f7dfdc65da79f095816b1c343c",
-  "packages/scope/src/worker.ts": "bba205afc7ef7b6cb9e848e2d9c638abca707c050aa304ed5a28bd96fca97b4f", // Actual composed Worker seal from the maintained parser.
+  "packages/scope/src/worker.ts": "83018e4e2766e0526f125aeb4e863cb2322709efcd5e17e6000ed3723ec9fe58", // Actual composed Worker seal from the maintained parser.
   "packages/scope/src/scope-index.ts": "e5658b5fc39cc15bc08e7e71711a67c5859a0e0de94ede88ee5b8b5dbc3d7919", // New internal lookup/registration boundary.
   "packages/scope/src/creation-admission.ts": "0531cbd36d1ae4c0eadc9d836eb5eec13f896fc7c8b8faaaaf9c3c24e3759ccd", // Reviewed R1 ancestry owner; adopted AST value.
   "packages/scope/src/creation-lineage.ts": "1c7566832d4b414926a9792c722d8132bbd06655c59cc28632577d2d9ec52d2c", // Reviewed whole-lineage boundary; adopted AST value.
