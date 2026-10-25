@@ -442,6 +442,11 @@ checks every commit in `base..HEAD`, including merges and side history.
 If the base is unavailable, the message check fails. Fetch `origin/main`
 before running the gate.
 
+After `doc-links`, the `notes` step runs
+`node scripts/check-notes.mjs <base> HEAD` with that same base and prints its
+warning lines. Findings do not fail the gate. Git, base, or decoding errors
+still fail the step.
+
 A subject has at most 100 Unicode code points. Put detail in the body after
 an empty line. In the subject and body, separate a word of three or more
 Unicode letters from an ASCII hexadecimal run of at least seven
@@ -670,10 +675,14 @@ and screenshot series go in the directory and its manifest.
 
 The rule applies to heads filed after ruling `fcab078d` of 25 October
 2026. Notes, evidence files and manifests already in the tree stay as
-they are. A gate step that warns on a note over 40 KB, or on a new path
-under `notes/implementation/evidence/` that is not a manifest, is a
-separate builder item; until it lands, the checker applies the rule by
-hand.
+they are. The gate's `notes` step checks the committed base-to-head file
+changes. It warns on each added or changed file under
+`notes/implementation/` over 40,960 bytes, and on each added path under
+`notes/implementation/evidence/` whose name does not end in `.manifest.json`.
+A new name counts as an addition. Unchanged and deleted historical paths
+produce no warning. The check reads Git objects, not working-tree files.
+Warnings exit 0. Git, missing-base, and decoding errors exit 2. The check
+does not verify manifest contents or replace the reviewer's evidence check.
 
 ## Entry-point inventory
 
