@@ -4,7 +4,8 @@ import { expect, test } from "vitest";
 import type { ScopeRef } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { textDigest } from "@generalbusiness/dap-bytes";
-import { outcomeValueDependencies, type OperationRules } from "@generalbusiness/dap-derive";
+import { operationValueSelector, outcomeValueDependencies, outcomeValueDomains, ownersOf, validateDefinition, type OperationRules } from "@generalbusiness/dap-derive";
+import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { ARCHIVE_CERTIFIED_RULES_COHORT, RULES_CERTIFICATE_KIND, destinationEvidenceValues, platform, rulesCertificateEvidenceValues } from "@generalbusiness/dap-platform";
 import { ArchiveOutcomeValues } from "../src/archive-outcome-values.ts";
 import { ArchiveBudget } from "../src/archive-budget.ts";
@@ -58,10 +59,17 @@ test("native field projection returns only requested digest scalars, preserves s
   const at = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "destination" } as ScopeRef;
   const proposal = textDigest("SCRIPTED admitted policy"), proof = textDigest("SCRIPTED admitted tree proof"), hash = textDigest("SCRIPTED selected outcome");
   const started = { at, seq: 1, hash: textDigest("SCRIPTED certificate opening") }, position = { seq: 2, hash, bytes: 512 };
-  const native = platform(ARCHIVE_CERTIFIED_RULES_COHORT.destination)!.rules["rules-certificate-outcome-v14"];
-  if (!native || native.place !== "outcome") return expect.fail("The exact native certificate owner is required.");
-  expect(native.rules.values).toBe(rulesCertificateEvidenceValues);
-  const rules: OperationRules = { ...native.rules, valueDomains: native.rules.valueDomains!.map(row => ({ ...row })) };
+  const pin = ARCHIVE_CERTIFIED_RULES_COHORT.destination, native = platform(pin);
+  if (!native) return expect.fail("The exact native certificate definition is required.");
+  const checked = validateDefinition(native.data, PROPOSED_BOUNDS, RULE_PROFILES,
+    { platform: true, outcomeValues: outcomeValueDomains(native.data, native.rules) });
+  if (!checked.ok) return expect.fail("The exact native certificate declaration must validate.");
+  const actualRules = ownersOf(checked.definition, { named: pin, rules: native.rules }, null)?.rules(pin, RULES_CERTIFICATE_KIND);
+  const values = actualRules?.values, valueDomains = actualRules?.valueDomains;
+  if (!actualRules || !values || !valueDomains) return expect.fail("The compiled native certificate owner and value domains are required.");
+  expect(operationValueSelector(actualRules)).toBe(rulesCertificateEvidenceValues);
+  const domains = valueDomains.map(row => ({ ...row }));
+  const rules: OperationRules = { ...actualRules, valueDomains: domains };
   const owners = (given: OperationRules, owner: string = ARCHIVE_CERTIFIED_RULES_COHORT.destination, kind: string = RULES_CERTIFICATE_KIND) => new Map([[owner, new Map([[kind, given]])]]);
   const budget = new ArchiveBudget(), queries: string[] = [];
   const good: Record<string, SqlValue> = { body_object: 1, body_keys: 3, proposal, proof, started_object: 1, started_keys: 3,
@@ -109,7 +117,7 @@ test("native field projection returns only requested digest scalars, preserves s
   mutate = () => { rules.values = alien; };
   expect(() => projector.project(sql, at, position)).toThrow("unsupported-archive-cohort");
   expect(callbackCalls).toBe(0);
-  rules.values = native.rules.values;
-  mutate = () => { rules.valueDomains = [...rules.valueDomains!].reverse(); };
+  rules.values = values;
+  mutate = () => { rules.valueDomains = [...domains].reverse(); };
   expect(() => projector.project(sql, at, position)).toThrow("unsupported-archive-cohort");
 });
