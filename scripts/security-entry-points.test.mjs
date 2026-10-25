@@ -5,6 +5,7 @@ import { assertInventory, documentedInventory, servedInventory, sourceSeal, room
 
 // Reviewed matcher/gate owners. These are change tripwires, not runtime proof.
 const seals = {
+  "packages/platform/src/versions.ts": "ad0df6cc74999170acd89db49e40c62d7a4d1dc324b8ae112deeed4c28a51a4a", // Closed native publication protocol policy; actual maintained parser output.
   "apps/room/worker.ts": "aba04e12dc206f0be6bda4a8edeac64569e0edd44b7a87772595d7db40bb8b67",
   "apps/room/fetch.ts": "c335dde72f4d4f2d6410e156a5c2c66c9a3ed54ee6bd788408cfd89e61602b7b", // R2 owning AST value adopted on the reviewed branch.
   "apps/room/demo-creation.ts": "d9850f4854182c0231a2ae9a985882343e7f3dfea67ea034cafe4fca4bb0d77f",
@@ -28,7 +29,7 @@ const seals = {
   "packages/derive/src/genesis.ts": "df7722143f01c8084b8f045ef959b203ae1756c4dfde170d0454cfe0b0392843",
   "packages/derive/src/judge.ts": "e5ba38505774aa3be277931deed6d8bafb81c4a57dcebb2295d57a85f2a877f4",
   "packages/scope/src/sessions.ts": "636cf37fa756f7b8abe9d2f7bc36381fee78901f26a5b24fa9ce2096223e9c4d",
-  "packages/scope/src/reads.ts": "c45892a2d04c1cd47817f57cdbf763995ce3fa323dbde56d1eb626499bb5813b",
+  "packages/scope/src/reads.ts": "7d66e866c46fc354286d6454e202402788881b062b87376d85ee35888f938b26",
   "packages/scope/src/signed-reads.ts": "6c4c4c81f44994c2ac9e4ca921c8f34184977a1256d6574e78514b814512eaf0", // R12 custody-only serving helper; native checks unchanged.
   "packages/scope/src/limits.ts": "6d4966a12e86067c39f61a243601d0d3a78a66850ee07f4ae80e97e22ab3639e", // R12 verified-key join failure window.
   "packages/scope/src/serving-limits.ts": "3a9f410f926f1e3711b78a750dd7dfb055f418fa9904be55ccb3f8cea869a987", // New bounded memory-only counter, no live eviction.
@@ -37,7 +38,7 @@ const seals = {
   "packages/scope/src/session-preparation.ts": "4b9699cb1ee06234162dc2088c5c37be1804e1e9f15985fa1f0dc3151170bd85",
   "packages/scope/src/item-queries.ts": "61ead9996d2c338a26331e04b8576c52425d8d2c88dc86173a7d79108c2ee418",
   "packages/scope/src/applications/projection.ts": "f7d3bb45d448ec654a89f875697f865e1e89baeb5d7529e0db0859bd855b009f",
-  "packages/scope/src/destination-host.ts": "1f85d5adf1ea030ee2cb1b29aa044d50cd6ea9b4798f3595858f2fe02d5846c9",
+  "packages/scope/src/destination-host.ts": "4f43170cd043810ed67bcfa86c883b7faed30489dcc4a94ed13fa49839554af6",
   "packages/mcp/src/hosted.ts": "ebf77243d7987bf328a81c237865a3ba6b65a03f3327976cb37455a58a971a01",
   "packages/mcp/src/hosted-tools.ts": "5bb4dd74b12896bb8f5f5cb366f25bd31af849c2690d0e3ab5d81eb277f94a47", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/service.ts": "eb24dc018c81fb50a5e63ab4e5c9c47583dfe4a93df9b4c999a2bdf033d432bf", // Reviewed R5 admission owner; actual maintained parser output.
@@ -61,8 +62,8 @@ const pendingArchiveSeals = {
   "packages/scope/src/archive-source-window.ts": "4db3f5885e7541f713b9668d1cde655e42be1950dd6af77d5711a323b3582e1c",
   "packages/scope/src/archive-publication.ts": "d8c39d220bc7eea59301478aa553960267aac16f06502b4103a85647c71eb457",
   "packages/scope/src/archive-build.ts": "e1111bfef1fe94cc8436498679395ba1b9b8adba3db8651f4f24d87d68696853",
-  "packages/scope/src/archive-driver.ts": "006e53f3ef1b7a3e97cd53df3c8f8aa964d089e0c53a5bbe06efe8794d5e091d", // Capacity deferral reviewed; actual maintained parser output.
-  "packages/scope/src/archive-row.ts": "be48ef12598ad4f5d0084bd05e760a4537faf23a96f21dce8c9e8748c7eddfda",
+  "packages/scope/src/archive-driver.ts": "d44b3d5ca3644a793eba9485906bcc23a616d6e9efe6723a2ac39b00278e6913", // Capacity deferral reviewed; actual maintained parser output.
+  "packages/scope/src/archive-row.ts": "1cb161a8aaccde3ba5aef183acbc30d591c9f0acbfc7ae6773f712620c0b2bb5",
   "packages/scope/src/floor-writer.ts": "fb8fd859844b8d10ba43b477bcaf07ab32fe1bfa1b6684ad9ae70b930d328a11",
   "packages/scope/src/object.ts": "091396e5ebe195252695a84287fc1edf2c1bb45fc2d1c65d14d679643694d9b1", // Must match the separately adopted original owner value above.
   "apps/room/worker.grow.ts": "0cc4c1c63f79f8da8dad5e98b2ace5b69fcd818d41640ed4e316ee534adf749f",

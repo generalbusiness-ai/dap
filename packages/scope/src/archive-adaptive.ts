@@ -5,7 +5,7 @@ import type { Bounds, Head, ScopeRef, Timestamp } from "@generalbusiness/dap-con
 import { canonicalize, same, utf8 } from "@generalbusiness/dap-bytes";
 import { JournalPassPreparation, JOURNAL_SELECTION_BYTES, forecastJournalAppendFixed, forecastJournalCommit,
   forecastJournalPassBody, forecastJournalSelection, type JournalFormat, type JournalObject, type JournalObjectSource } from "@generalbusiness/dap-git/journal";
-import { ARCHIVE_BOUNDS, ArchiveStopped, type ArchiveBudget, type ArchiveCost } from "./archive-budget.ts";
+import { ARCHIVE_BOUNDS, ArchiveStopped, type ArchiveBudget, type ArchiveCost, type ArchiveCapacityRefusal } from "./archive-budget.ts";
 import { planPublishedArchivePass, planRootPublishedArchivePass, planLegacyArchiveAnchors, type ArchiveBuildFailure } from "./archive-build.ts";
 import { archivePublicationBytesUpper, archiveReplayScopeUnits } from "./archive-publication.ts";
 import { archiveDeclarationHandoffCost } from "./archive-declaration-plan.ts";
@@ -14,7 +14,7 @@ import { archiveForeignHandoffCost } from "./archive-foreign-plan.ts";
 import type { ArchivePolicyRegistry } from "./archive-inventory.ts";
 import { ArchivePrefixStopped } from "./archive-prefix.ts";
 import { archivePendingRowBytesUpper, forecastArchiveBookkeeping } from "./archive-row-cost.ts";
-import type { ArchiveRow } from "./archive-row.ts";
+import { consumeArchivePlanningSnapshot, type ArchiveRow } from "./archive-row.ts";
 import { ArchiveScout } from "./archive-scout.ts";
 import type { ArchiveScoutLayoutQuote } from "./archive-scout-layout.ts";
 import type { FixtureArchiveSourcePins } from "./archive-source-pins.ts";
@@ -42,6 +42,8 @@ export interface AdaptiveArchiveContext {
    * runs outside native frames and inside this owner's earlier-finish fence. */
   readonly prepareSources?: (seq: number, budget: ArchiveBudget) => Promise<void>;
   readonly row: ArchiveRow;
+  /** Optional single-use same-SQL/budget owned-row serialization receipt. */
+  readonly rowSnapshot?: unknown;
   /** The production driver performs these two logical steps in one save. */
   readonly atomicFirstAttempt?: boolean;
   /** The driver's actual bounded parent cache. A selected prefix retains
@@ -122,18 +124,24 @@ export function planRootAdaptiveArchivePass(sql: Sql, context: AdaptiveArchiveCo
   return adaptiveArchivePass(true, sql, context, budget);
 }
 /** Proven capacity exit before selection; not an ordinary build refusal. */
-interface DeferredForCapacity { readonly ok: false; readonly deferred: "capacity" }
+interface DeferredForCapacity { readonly ok: false; readonly deferred: "capacity"; readonly capacityRefusal: ArchiveCapacityRefusal | null }
 async function adaptiveArchivePass(coupled: boolean, sql: Sql, context: AdaptiveArchiveContext, budget: ArchiveBudget): Promise<
-  ArchiveBuildFailure | DeferredForCapacity | (Extract<Awaited<ReturnType<typeof planPublishedArchivePass>>, { ok: true }> & { readonly parentObjects: readonly string[] })> {
+  (ArchiveBuildFailure & { readonly capacityRefusal?: ArchiveCapacityRefusal | null }) | DeferredForCapacity | (Extract<Awaited<ReturnType<typeof planPublishedArchivePass>>, { ok: true }> & { readonly parentObjects: readonly string[] })> {
   try {
+    const snapshotBytes = Object.hasOwn(context, "rowSnapshot")
+      ? consumeArchivePlanningSnapshot(context.rowSnapshot, sql, context.row, budget) : null;
     if (context.row.pending !== null || context.row.confirmed !== null && context.row.confirmed.layout !== 2
       || !same(context.row.at, context.at) || context.row.format !== context.format
       || !same(context.row.confirmed?.through ?? null, context.after)
       || (context.row.confirmed?.commit ?? null) !== (context.parent?.id ?? null)) return { ok: false, reason: "parent" };
-    // A loaded canonical row has no pending manifest. Bound its four
-    // repository strings before serializing the Native metadata snapshot.
-    budget.spend({ metadata: 32 * 1024, inputWork: 256 * 1024 });
-    const oldRowBytes = utf8(canonicalize(context.row)).length;
+    // Standalone callers still pay and serialize. Supplied tokens must be
+    // genuine, single-use and bound to this exact SQL, row and allowance.
+    let oldRowBytes: number;
+    if (snapshotBytes !== null) oldRowBytes = snapshotBytes;
+    else {
+      budget.spend({ metadata: 32 * 1024, inputWork: 256 * 1024 });
+      oldRowBytes = utf8(canonicalize(context.row)).length;
+    }
     const unpublished = context.row.confirmed?.layout === 2 && context.row.confirmed.anchorsPublished !== true;
     // Published receipts retain their original operation order. Only the
     // one-time unpublished transition needs the preparation first.
@@ -152,6 +160,7 @@ async function adaptiveArchivePass(coupled: boolean, sql: Sql, context: Adaptive
     let nextSource = (context.after?.seq ?? -1) + 1;
     let selected: { through: Head; cost: ArchiveCost; parent: ParentMetadata } | undefined;
     let capacityLimited = false;
+    let capacityRefusal: ArchiveCapacityRefusal | null = null;
     for (;;) {
       const reserve = selected ? sum(selected.cost, { metadata: 256, inputWork: 512 }) : {};
       if (context.prepareSources && nextSource <= context.through.seq) {
@@ -164,7 +173,7 @@ async function adaptiveArchivePass(coupled: boolean, sql: Sql, context: Adaptive
             throw error;
           }
         });
-        if (prepared.kind === "limited") { capacityLimited = true; break; }
+        if (prepared.kind === "limited") { capacityLimited = true; capacityRefusal = prepared.refusal && { ...prepared.refusal, site: "prepare-sources" }; break; }
         if (!prepared.value.ok) {
           if (selected) break;
           throw prepared.value.error;
@@ -176,9 +185,9 @@ async function adaptiveArchivePass(coupled: boolean, sql: Sql, context: Adaptive
         try {
           const opened = budget.lookahead(reserve, () => scout ? scout.resume(sql)
             : (coupled ? ArchiveScout.openRoot : ArchiveScout.open)(sql, context.at, context.through, context.after, context.bounds, context.policies, budget, context.fixtureSources));
-          if (opened.kind === "limited") return { kind: "limited" as const };
+          if (opened.kind === "limited") return { ...opened, site: "scout-open" as const };
           const frame = opened.value; scout = frame.scout;
-          try { return frame.next(reserve); }
+          try { const next = frame.next(reserve); return next.kind === "limited" ? { ...next, site: "scout-next" as const } : next; }
           finally { frame.close(); }
         } catch (error) {
           // An inadmissible later candidate grants no rights, but need not
@@ -188,13 +197,13 @@ async function adaptiveArchivePass(coupled: boolean, sql: Sql, context: Adaptive
           throw error;
         }
       });
-      if (step.kind === "limited") capacityLimited = true;
+      if (step.kind === "limited") { capacityLimited = true; capacityRefusal = step.refusal && { ...step.refusal, site: step.site }; }
       if (step.kind !== "position") break;
       nextSource = step.position.seq + 1;
       const through = { seq: step.position.seq, hash: step.position.hash };
       const quoted = budget.lookahead(selected?.cost ?? {}, () => ({ shape: scout!.layout(through), inventory: scout!.inventoryCost(through),
         setup: through.seq === context.through.seq ? scout!.selectionCost(through) : setupCost() }));
-      if (quoted.kind === "limited") { capacityLimited = true; break; }
+      if (quoted.kind === "limited") { capacityLimited = true; capacityRefusal = quoted.refusal && { ...quoted.refusal, site: "shape-inventory" }; break; }
       const { shape, inventory, setup } = quoted.value;
       const prepared = await budget.lookaheadAsync(selected?.cost ?? {}, async () => {
         budget.spend({ metadata: shape.files.length * 128, inputWork: shape.files.length * 256 });
@@ -204,15 +213,20 @@ async function adaptiveArchivePass(coupled: boolean, sql: Sql, context: Adaptive
         const parent = parentMetadata(context, budget), cost = finishCost(context, preparation, shape, through, inventory, oldRowBytes, parent, setup, legacyAnchors?.anchors.length ?? 0, budget);
         return { parent, cost };
       });
-      if (prepared.kind === "limited") { capacityLimited = true; break; }
+      if (prepared.kind === "limited") { capacityLimited = true; capacityRefusal = prepared.refusal && { ...prepared.refusal, site: "prepare-finish" }; break; }
       // A null forecast is a hard layout/input refusal. Only an actual
       // quote that cannot fit establishes capacity deferral.
       if (prepared.value.cost === null) break;
-      if (!budget.canSpend(prepared.value.cost)) { capacityLimited = true; break; }
+      if (!budget.canSpend(prepared.value.cost)) {
+        capacityLimited = true;
+        const refusal = budget.capacityRefusal(prepared.value.cost, "finish-quote");
+        capacityRefusal = refusal && { ...refusal, site: "finish-affordability" };
+        break;
+      }
       selected = { through, cost: prepared.value.cost, parent: prepared.value.parent };
       if (through.seq === context.through.seq) break;
     }
-    if (!selected || !scout) return capacityLimited ? { ok: false, deferred: "capacity" } : { ok: false, reason: "limit" };
+    if (!selected || !scout) return capacityLimited ? { ok: false, deferred: "capacity", capacityRefusal } : { ok: false, reason: "limit" };
     const constraints = scout.select(selected.through);
     const built = await (coupled ? planRootPublishedArchivePass : planPublishedArchivePass)(sql, { at: context.at, through: selected.through, after: context.after,
       bounds: context.bounds, policies: context.policies, format: context.format, parent: context.parent,
@@ -221,7 +235,9 @@ async function adaptiveArchivePass(coupled: boolean, sql: Sql, context: Adaptive
       preparation, ...(legacyAnchors ? { legacyAnchors } : {}), ...constraints }, budget);
     return built.ok ? { ...built, parentObjects: selected.parent.ids } : built;
   } catch (error) {
-    if (error instanceof ArchiveStopped || error instanceof ArchivePrefixStopped) return { ok: false, reason: error.reason };
+    if (error instanceof ArchiveStopped) return { ok: false, reason: error.reason,
+      capacityRefusal: error.capacityRefusal && { ...error.capacityRefusal, site: "plan-debit" } };
+    if (error instanceof ArchivePrefixStopped) return { ok: false, reason: error.reason };
     throw error;
   }
 }

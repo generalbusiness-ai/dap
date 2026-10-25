@@ -2,7 +2,7 @@
  * response, not complete history or a larger pass allowance. */
 import { natural } from "@generalbusiness/dap-bytes";
 import { forecastJournalParentFrontier } from "@generalbusiness/dap-git/journal";
-import { ArchiveStopped, type ArchiveBudget, type ArchiveCost } from "./archive-budget.ts";
+import { ArchiveStopped, type ArchiveBudget, type ArchiveCost, type ArchiveCapacityCheck } from "./archive-budget.ts";
 
 export const ARCHIVE_MIGRATION_TREE_BYTES = 18 * 1024;
 export const ARCHIVE_MIGRATION_COMMIT_BYTES = 1024;
@@ -38,12 +38,15 @@ export function archiveMigrationReadReservation(): Readonly<ArchiveCost> {
     inputWork: metadata + work + bytes * 8 });
 }
 export function admitArchiveMigration(maximum: number, budget: ArchiveBudget,
-  finish: Partial<ArchiveCost>, through: number): boolean {
+  finish: Partial<ArchiveCost>, through: number, refused?: (refusal: ArchiveCapacityCheck | null) => void): boolean {
   if (!natural(maximum) || maximum < 1 || maximum > 8 * 1024 * 1024
     || Object.keys(finish).some(key => !(keys as readonly string[]).includes(key))
     || keys.some(key => !natural(finish[key] ?? 0))) throw new ArchiveStopped("unavailable");
   // This route promises the fixed tree bound, never a dynamically shrunken
   // profile that silently excludes an otherwise supported old journal.
   if (maximum < ARCHIVE_MIGRATION_TREE_BYTES + ARCHIVE_MIGRATION_COMMIT_BYTES) return false;
-  return budget.canSpend(sum(finish, forecastJournalParentFrontier(false, through), archiveMigrationReadReservation()));
+  const cost = sum(finish, forecastJournalParentFrontier(false, through), archiveMigrationReadReservation());
+  const fits = budget.canSpend(cost);
+  if (!fits) refused?.(budget.capacityRefusal(cost, "migration-quote"));
+  return fits;
 }
