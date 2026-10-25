@@ -637,6 +637,47 @@ Keep the failed gate and follow-up outcomes separate. The checker must assess
 whether the exact repair and evidence meet these conditions; a passing follow-up
 does not turn the failed gate into a pass.
 
+### The implementation note and its evidence
+
+Each landing head carries one implementation note under
+`notes/implementation/`, of at most 40 KB, in this order: what changed;
+the decisions and why; the final evidence as one table with a row per
+check (check, command, exit code, digest of its output); the open limits,
+each with the request that owns it. Say how each timing, count or
+reconstruction was taken.
+
+Raw run output stays out of the tree: gate logs, JSON reports, tail
+captures, mutation inventories and results, stdout and stderr. Write it
+to one new directory under the owner's home,
+`~/play/artroom-evidence/<date>-<head-slug>/`, with a `SHA256SUMS` file at
+its top. Make the directory read-only after the last write
+(`chmod -R a-w`) and keep it for at least 30 days after the landing. Do
+not use `/tmp` or `/private/tmp`; a restart clears them. Removing a
+directory later is a planner act that names its manifest.
+
+The head commits one manifest at
+`notes/implementation/evidence/<date>-<head-slug>.manifest.json` and
+nothing else under that directory. The manifest holds: a qualification
+line; the absolute directory path; the checkpoint commit and tree the
+evidence was taken at; the file count; and a `files` list with the path,
+bytes and sha256 of every file the note cites. The note's evidence table
+names the same checkpoint. Where the reviewed head differs from it, the
+follow-up rule above applies.
+
+A raw file that holds a secret, a token or an unredacted request body
+stays out of the directory as well; the note names it as withheld. Other
+raw output, including room identifiers from hosted tails, may stay.
+
+Design packets commit their sources and at most three key images. Renders
+and screenshot series go in the directory and its manifest.
+
+The rule applies to heads filed after ruling `fcab078d` of 25 October
+2026. Notes, evidence files and manifests already in the tree stay as
+they are. A gate step that warns on a note over 40 KB, or on a new path
+under `notes/implementation/evidence/` that is not a manifest, is a
+separate builder item; until it lands, the checker applies the rule by
+hand.
+
 ## Entry-point inventory
 
 `node --test scripts/security-entry-points.test.mjs` checks the route, method,
@@ -710,7 +751,11 @@ the witness of each decision.
 ## For reviewers
 
 Review the change, the invariants it touches and their witnesses. Probe
-with a few focused counterexamples of your own. Run the gate once at the
+with a few focused counterexamples of your own. Check the head's evidence
+manifest: every listed file exists at the directory with its size and
+digest, and every digest the note cites is in the manifest. A missing or
+changed file is a changes-requested gap. Cite the manifest's own sha256
+in the report. Run the gate once at the
 head under review, subject to the [limited follow-up exception](#follow-up-after-a-gate).
 Do not rebuild a per-field or per-guard inventory.
 
