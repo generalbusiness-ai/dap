@@ -11,7 +11,7 @@ const seals = {
   "apps/room/demo-creation.ts": "d9850f4854182c0231a2ae9a985882343e7f3dfea67ea034cafe4fca4bb0d77f",
   "apps/room/page/route.ts": "62c8f69b9f516f1b5acdaef57d7aed25268d8cf03283bdffdd4b1b5f20bb6b3d",
   "apps/room/brand/route.ts": "71b45ff9b41b3bea31c775a16525349591e0d4f7dfdc65da79f095816b1c343c",
-  "packages/scope/src/worker.ts": "83018e4e2766e0526f125aeb4e863cb2322709efcd5e17e6000ed3723ec9fe58", // Actual composed Worker seal from the maintained parser.
+  "packages/scope/src/worker.ts": "43b3ad63a4d0a5a99b88902fe6ea0bc4a8295284660eb002860d409ca0706c2c", // Actual composed Worker seal from the maintained parser.
   "packages/scope/src/scope-index.ts": "e5658b5fc39cc15bc08e7e71711a67c5859a0e0de94ede88ee5b8b5dbc3d7919", // New internal lookup/registration boundary.
   "packages/scope/src/creation-admission.ts": "0531cbd36d1ae4c0eadc9d836eb5eec13f896fc7c8b8faaaaf9c3c24e3759ccd", // Reviewed R1 ancestry owner; adopted AST value.
   "packages/scope/src/creation-lineage.ts": "1c7566832d4b414926a9792c722d8132bbd06655c59cc28632577d2d9ec52d2c", // Reviewed whole-lineage boundary; adopted AST value.
@@ -21,7 +21,7 @@ const seals = {
   "packages/scope/src/health.ts": "98a9538a31f927996d56470357a3a227f1935f21463c174329d8b7faac129528",
   "packages/scope/src/site/route.ts": "ab2fd36e5d4d57e854aa94e2738a82b454afd2f169ac324cb7fba237f67e2416",
   "packages/scope/src/site/host.ts": "913b5798103fb6472f4fc56f5613a517ed3f60df52b44a01930df47dcd2923a2", // Private Site token custody; actual maintained parser output.
-  "packages/scope/src/site/token-reuse.ts": "2a3081f8dc978e88d6e746575804e479d96d523aaa4a644a0c1247587cebf676", // Private Site token custody; actual maintained parser output.
+  "packages/scope/src/site/token-reuse.ts": "6868a52935ee8c42e1d38a9216f62e768781c8d18c36f5f8705c2052fb12567d", // Private Site token custody; actual maintained parser output.
   "packages/scope/src/site/window.ts": "a5f64febfd69c17c682dc8bf1aa464378a3609d73d9ef0112c16fd79892aea54", // Bounded site-read window; actual maintained parser output.
   "packages/scope/src/applications/route.ts": "ad62679ad22021474b193d7e9b2f98d6146c85ebe9d223d66901c309b5b84abc", // Actual union parser value adopted by root.
   "packages/scope/src/item-query-wire.ts": "8206b9a6531ca30cae1bc49cc249eea08c70a658305f41b3ebea6eda042055a8",
