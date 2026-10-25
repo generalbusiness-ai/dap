@@ -2,18 +2,18 @@
  * Repository/token service and HTTP acceptance are explicit TEST stand-ins.
  * The large refusal fixture is a mechanical selected inventory, not a claim
  * of Native validation or replay of its contents. */
-import { expect, test } from "vitest";
-import { PROPOSED_BOUNDS, type Head } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { expect, onTestFinished, test, vi } from "vitest";
+import { PROPOSED_BOUNDS, type Entry, type Head } from "@generalbusiness/dap-contract";
+import { canonicalize, digestBytes, scopeIdOf, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { GitRefusal, Reader, idOf, objectId, parseCommit } from "@generalbusiness/dap-git";
 import { captureJournalParentFrontier, journalRef, JOURNAL_SELECTION_BYTES, buildJournalPass, type JournalObject } from "@generalbusiness/dap-git/journal";
-import { ArchiveBudget } from "../src/archive-budget.ts";
+import { ARCHIVE_BOUNDS, ArchiveBudget, type ArchiveCapacityRefusal, type ArchiveCost } from "../src/archive-budget.ts";
 import { ARCHIVE_MIGRATION_TREE_BYTES, ARCHIVE_MIGRATION_COMMIT_BYTES } from "../src/archive-bootstrap-cost.ts";
 import { ArchiveDriver, type FixtureArchiveProvider } from "../src/archive-driver.ts";
 import { ArchiveFrontiers } from "../src/archive-frontier-store.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
 import { writeArchivePublication } from "../src/archive-publication.ts";
-import { planRootArchivePass } from "../src/archive-build.ts";
+import { planRootArchivePass, type ArchiveFixedFinish } from "../src/archive-build.ts";
 import { ArtifactsProvider } from "../src/artifacts-host.ts";
 import { ArchiveArtifactsPeer } from "./support/archive-artifacts.ts";
 import { archiveAuthorityAnchors, archiveAuthorityBasis, archiveAuthorityPolicies, nativeArchiveFixture } from "./support/archive-native-authority.ts";
@@ -449,3 +449,147 @@ test("current-parent migration handles six and thirty-seven old passes without w
   (context.task.meta as Record<string, unknown>)["currentParentMigration"] = { measured,
     qualification: "Real Native entries, row receipts and SQLite; distributed mechanical retained selections and scripted HTTP/token host. Current-tree bytes measured independently; no hosted measurement or arbitrary-history capacity claim." };
 }, 20_000);
+
+
+// Only these new cases exercise the production strategy selector. Admission
+// checks the actual applied birth; target, source metadata, HTTP and tokens
+// remain explicit TEST ports, not a deployed Grow configuration.
+test.for([0, 1] as const)("unpublished v2 cutoff %i migrates exactly next after a real capacity wake and rebuilds its pending Mark", { timeout: 20_000 }, async (cutoff, context) => {
+  const fixture = await nativeArchiveFixture(), lane = await fixture.create({}, {}, archiveDefinition), host = transport(lane);
+  if (cutoff === 1) await lane.did(rita, "remark", { on: 0, fields: { text: "signed old unpublished input" } });
+  const oldHead = await lane.head(); expect(oldHead.seq).toBe(cutoff);
+  const oldAnchors = archiveAuthorityAnchors(lane);
+  const seed = await lane.inside(async state => {
+    const sql = archiveSql(state), made = await planRootArchivePass(sql, { at: lane.at, through: oldHead, after: null,
+      bounds: PROPOSED_BOUNDS, policies: archiveAuthorityPolicies(lane, archivePolicies), format: "sha1", parent: null,
+      markedAt: lane.c.clock.now, fixtureSources: archiveAuthorityBasis(lane)!.pins }, new ArchiveBudget());
+    expect(made.ok ? "accepted" : made).toBe("accepted"); if (!made.ok) throw Error(canonicalize(made));
+    const rows = new ArchiveRows(sql, lane.at); rows.target(repository, "sha1"); rows.mark(made.mark);
+    expect(rows.confirm(made.mark.commit).confirmed).toEqual({ commit: made.archive.commit, through: oldHead, layout: 2 });
+    return made.archive;
+  });
+  for (const object of seed.objects) host.peer.data.set(object.id, object);
+  host.peer.refs.set(journalRef(lane.at.scope), seed.commit);
+  const original = (await row(lane))!;
+  expect(original.confirmed).not.toHaveProperty("anchorsPublished"); expect(await keys(lane)).toEqual([]);
+  await lane.inside(async (_state, instance) => {
+    for (let n = 0; n < 3; n++) expect(await (instance as TestScope).checkpoint()).toMatchObject({ answer: "written" });
+  });
+  const head = await lane.head(), first = oldHead.seq + 1;
+  const birth = await lane.inside(state => JSON.parse(state.storage.sql.exec<{ bytes: string }>("SELECT bytes FROM entry WHERE seq = 0").one().bytes) as Entry);
+  expect(birth.input.type).toBe("genesis");
+  if (birth.input.type !== "genesis") throw Error("Actual native birth required");
+  expect(birth.input.decision).toBe("applied"); expect(scopeIdOf(birth.input.seed)).toBe(lane.at.scope);
+  expect(birth.at).toEqual(lane.at); expect(birth.input.inc).toBe(lane.at.inc); expect(birth.input.seed.kind).toBe(lane.at.kind);
+  const birthSeed = canonicalize(birth.input.seed);
+  const diagnostics: { state: string; cost: ArchiveCost; fixedFinish: ArchiveFixedFinish | null; capacityRefusal: ArchiveCapacityRefusal | null }[] = [];
+  const info = console.info, log = vi.spyOn(console, "info").mockImplementation((...args: unknown[]) => {
+    if (args[0] === "archive-pass-diagnostic-v1") diagnostics.push(args[1] as (typeof diagnostics)[number]);
+    info(...args);
+  });
+  onTestFinished(() => log.mockRestore());
+  const order: string[] = [], budgets: ArchiveBudget[] = [];
+  const production = (limits: Partial<ArchiveCost> = {}) => lane.inside(state => {
+    const budget = new ArchiveBudget(limits); budgets.push(budget);
+    return new ArchiveDriver({ production: "room-binding", sql: archiveSql(state),
+      current: () => {
+        const scope = JSON.parse(state.storage.sql.exec<{ v: string }>("SELECT v FROM meta WHERE k = 'scope'").one().v);
+        return { at: scope.at, head: scope.head };
+      }, clock: () => lane.c.clock.now, bounds: PROPOSED_BOUNDS,
+      policies: { registry: archiveAuthorityPolicies(lane, archivePolicies) },
+      admit: (at, admittedSeed) => canonicalize(at) === canonicalize(lane.at)
+        && admittedSeed.kind === lane.at.kind && scopeIdOf(admittedSeed) === lane.at.scope && canonicalize(admittedSeed) === birthSeed,
+      provider: host.provider, budget: () => budget,
+      target: { resolve: async () => { order.push("target"); return repository; } },
+      sources: async (_after, _through, sameBudget, exact) => {
+        expect(sameBudget).toBe(budget); order.push(exact ? "sources:pending" : "sources:plan");
+        return { pins: archiveAuthorityBasis(lane)!.pins, prepare: async (seq, actualBudget) => {
+          expect(actualBudget).toBe(budget); order.push(`prepare:${seq}`);
+        } };
+      },
+    }).run();
+  });
+  // Native frontier bootstrap is a separate turn, not publication or a
+  // capacity wake. No old receipt/publication bit or wake counter is edited.
+  expect(await production()).toMatchObject({ state: "retry" });
+  expect(await row(lane)).toEqual(original); expect(host.controls.mintCalls).toBe(0); expect(host.controls.sendCalls).toBe(0);
+  expect((await keys(lane)).map(value => value.k)).toEqual([CONFIRMED]);
+  expectMigration(host, seed.commit);
+  const bootstrapMigrations = [...host.migrations];
+  const expectNoParentFallback = () => {
+    expect(host.controls.migrationReads).toBe(1); expect(host.migrations).toEqual(bootstrapMigrations);
+  };
+  await lane.restart(); await due(lane); order.length = 0;
+  // Trusted lower ENTRY ceiling only: old inventory pays cutoff+1, Scout
+  // pays one more; fresh inventory cannot fit. Publication validation reads
+  // bodies but selectedEntries adds no entry tariff. This is NOT an
+  // all-default adaptive 65/64 reproduction. Its actual refusal must agree.
+  const initialEntries = cutoff + 2;
+  expect(await production({ entries: initialEntries })).toMatchObject({ state: "retry", reason: "limit" });
+  const refusedAdaptive = diagnostics.at(-1)!;
+  expect(refusedAdaptive.fixedFinish).toBeNull(); expect(refusedAdaptive.capacityRefusal).not.toBeNull();
+  expect(refusedAdaptive.capacityRefusal!.shortfall.entries).toBeGreaterThan(0);
+  expect(refusedAdaptive.capacityRefusal!.limit.entries).toBe(initialEntries);
+  expect(await row(lane)).toEqual(original);
+  const wake = await lane.inside(state => JSON.parse(state.storage.sql.exec<{ v: string }>("SELECT v FROM meta WHERE k = 'archive-wake-1'").one().v));
+  expect(wake.capacityDeferrals).toBe(1);
+  expect(host.controls.mintCalls).toBe(0); expect(host.controls.sendCalls).toBe(0);
+  await due(lane); order.length = 0;
+  // A genuine lower metadata ceiling exercises the complete quote; if this
+  // fixture cannot reach it, the test fails instead of claiming coverage.
+  const constrainedMetadata = 512 * 1024;
+  expect(await production({ metadata: constrainedMetadata })).toMatchObject({ state: "retry", reason: "limit" });
+  const refusedQuote = diagnostics.at(-1)!;
+  expect(refusedQuote.fixedFinish, JSON.stringify(refusedQuote)).not.toBeNull();
+  expect(refusedQuote.capacityRefusal).toMatchObject({ site: "finish-affordability", kind: "finish-quote", reserved: { metadata: 65_536 }, limit: { metadata: constrainedMetadata } });
+  expect(refusedQuote.capacityRefusal!.used).toEqual(refusedQuote.fixedFinish!.used);
+  expect(refusedQuote.capacityRefusal!.requested).toEqual(refusedQuote.fixedFinish!.remaining);
+  expect(refusedQuote.capacityRefusal!.shortfall.metadata).toBeGreaterThan(0);
+  expect(await row(lane)).toEqual(original); expect(host.controls.mintCalls).toBe(0); expect(host.controls.sendCalls).toBe(0);
+  expect(order).toEqual(["target", "sources:plan", ...Array.from({ length: cutoff + 1 }, (_, seq) => `prepare:${seq}`), `prepare:${first}`]);
+  await due(lane); order.length = 0; host.controls.missingMint = true;
+  expect(await production()).toMatchObject({ state: "retry", reason: "unavailable" });
+  const pending = (await row(lane))!, mark = pending.pending!;
+  expect(mark).toMatchObject({ parent: seed.commit, layout: 2, through: { seq: first } });
+  expect(mark.through.seq).toBeLessThan(head.seq); expect(pending.confirmed).toEqual(original.confirmed);
+  expect(pending.confirmed).not.toHaveProperty("anchorsPublished"); expect(host.controls.sendCalls).toBe(0);
+  const publication = JSON.parse(mark.anchorPublication!);
+  expect(publication).toMatchObject({ legacyAnchors: { from: 0, through: cutoff, anchors: expect.arrayContaining([...oldAnchors]) } });
+  expect(publication.legacyAnchors.anchors).toHaveLength(oldAnchors.length);
+  const fixed = diagnostics.at(-1)!; expect(fixed.fixedFinish, JSON.stringify(fixed)).not.toBeNull();
+  const quote = fixed.fixedFinish!; expect(quote.metadataMargin).toBe(65_536);
+  // Full old inventory plus exactly one next inventory, with no Scout visit.
+  expect(quote.used.entries).toBe(cutoff + 2);
+  for (const axis of ["entries", "attempts", "nodes", "calls", "metadata", "inputWork"] as const) {
+    expect(fixed.cost[axis], JSON.stringify({ axis, fixed })).toBeLessThanOrEqual(quote.used[axis] + quote.remaining[axis]);
+    expect(quote.used[axis] + quote.remaining[axis] + (axis === "metadata" ? quote.metadataMargin : 0)).toBeLessThanOrEqual(ARCHIVE_BOUNDS[axis]);
+  }
+  expect(ARCHIVE_BOUNDS.metadata - fixed.cost.metadata).toBeGreaterThanOrEqual(65_536);
+  expect(order).toEqual(["target", "sources:plan", ...Array.from({ length: cutoff + 1 }, (_, seq) => `prepare:${seq}`), `prepare:${first}`]);
+  const oldReads = [...host.reads], oldCommit = seed.commit;
+  expectNoParentFallback();
+  await lane.inside(async (_state, instance) => { expect(await (instance as TestScope).checkpoint()).toMatchObject({ answer: "written" }); });
+  const advanced = await lane.head(); expect(advanced.seq).toBeGreaterThan(head.seq);
+  await lane.restart(); await due(lane); order.length = 0; host.controls.loseReadback = true;
+  expect(await production()).toMatchObject({ state: "retry", reason: "unavailable" });
+  expect((await row(lane))!.pending).toEqual(mark); expect((await row(lane))!.confirmed?.commit).toBe(oldCommit);
+  expect((await row(lane))!.confirmed).not.toHaveProperty("anchorsPublished");
+  expect(host.peer.sends).toEqual([mark.commit]); expect(host.peer.refs.get(journalRef(lane.at.scope))).toBe(mark.commit);
+  expect(host.reads).toEqual(oldReads); expectNoParentFallback(); expect(order).toEqual(["target", "sources:pending"]);
+  const sentObjects = [...host.peer.data].map(([id, object]) => [id, object.type, [...object.data]]);
+  await lane.restart(); await due(lane);
+  expect(await production()).toMatchObject({ state: "confirmed" });
+  const confirmed = (await row(lane))!;
+  expect(confirmed.pending).toBeNull(); expect(confirmed.confirmed).toEqual({ commit: mark.commit, through: mark.through, layout: 2, anchorsPublished: true });
+  expect(host.peer.sends).toEqual([mark.commit]); expect([...host.peer.data].map(([id, object]) => [id, object.type, [...object.data]])).toEqual(sentObjects);
+  expect(host.reads).toEqual(oldReads); expectNoParentFallback(); expect(await lane.head()).toEqual(advanced);
+  expect(parseCommit(host.peer.data.get(mark.commit)!.data).parents).toEqual([oldCommit]);
+  const publishedReads = [...host.reads]; await due(lane);
+  expect(await production()).toMatchObject({ state: "confirmed" });
+  expect((await row(lane))!.confirmed).toMatchObject({ through: advanced, anchorsPublished: true });
+  expect(host.reads).toEqual(publishedReads); expectNoParentFallback(); expect(await lane.head()).toEqual(advanced);
+  for (const budget of budgets) for (const axis of ["entries", "attempts", "nodes", "calls", "metadata", "inputWork"] as const)
+    expect(budget.admitted()[axis]).toBeLessThanOrEqual(ARCHIVE_BOUNDS[axis]);
+  (context.task.meta as Record<string, unknown>)["unpublishedExactNext"] = { cutoff, initialEntries, refusedAdaptive, refusedQuote, fixed, mark,
+    qualification: "Actual Native entries, birth, row, frontier bootstrap and six-axis driver budget. TEST policy/source/target/HTTP/token ports. Initial lower ENTRY ceiling is a genuine capacity precondition, not a default64 hosted reproduction; fixed migration uses all ordinary limits. Pending rebuild keeps the exact original Mark across native advance and eviction." };
+});
