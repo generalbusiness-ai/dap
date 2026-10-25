@@ -1,6 +1,7 @@
 # Codebase technical-debt review
 
-Status: review draft, 25 October 2026, at Main `c8a3fb24`. Request `72a6df7d`.
+Status: landed `c5b8e00c`; describes work that is done. Request `72a6df7d`.
+Slices landed: PD-1 (`5248b0be`) and BR-1 (`f5a6338c`), both on 25 October.
 
 The planner deploys `dap-grow` from `apps/room/wrangler.grow.jsonc`. That file
 sets the scope index to register mode. The live Worker has run in enforce mode
@@ -632,7 +633,11 @@ not a builder request from this review.
 ## 7. Decisions for the planner
 
 - **PD-1, archive restart procedure (TD-08).** A planner head adds the runbook
-  section before the next restart directive on `dap-grow`.
+  section before the next restart directive on `dap-grow`. Landed `5248b0be`.
+  Its first use, on 25 October, restarted the Directory, Site and Destination
+  rows on `dap-grow` to generation 1 and removed the directive. The three rows
+  then deferred on a nodes shortfall of 1, reported to the builder in
+  `89538bb9`.
 - **PD-2, note shape (TD-10).** A ruling, with the checker's agreement, on
   implementation notes and a digest manifest for raw evidence.
 - **PD-3, scale cases (TD-06).** Option (a): every case keeps its real limit;
@@ -683,7 +688,7 @@ deployed by 6 November).
 
 | Order | Request | Covers | Acceptance condition | Size | Place |
 |---|---|---|---|---|---|
-| 1 | BR-1, deploy files match the live Workers | TD-01, TD-02, TD-03, TD-12 | Each room file's index mode and creation-pin allowance equal the recorded live values under a config test, and every documented deploy command carries `--keep-vars`. `worker.grow.ts` is type checked, and the entry-point check covers `wrangler.demo.jsonc`. | small | First after `1aedd35b` and PD-8; before R7 |
+| 1 | BR-1, deploy files match the live Workers | TD-01, TD-02, TD-03, TD-12 | Each room file's index mode and creation-pin allowance equal the recorded live values under a config test, and every documented deploy command carries `--keep-vars`. `worker.grow.ts` is type checked, and the entry-point check covers `wrangler.demo.jsonc`. | small | First after `1aedd35b` and PD-8; before R7. Landed `f5a6338c` |
 | 2 | BR-2, cheap checks first | TD-05; reporting part of TD-07 | A failure in a plain project or a post-runner check stops the gate before the Worker test project starts. Each gate ends with its ten slowest cases and time per project. | small | After BR-1; before R7 |
 | 3 | BR-3, more workers for the Worker test project | TD-04 | The project runs with two or more workers; one measurement run and one ordinary gate pass, with phase times before and after. | small (medium if shared-state tests break) | After R7; before R11 |
 | 4 | BR-4, recurring unrelated failures | TD-07 | Lending records its `reason`; the archive command's limit is at least three times its median; the 4,800-input row is gone with its two named witnesses kept; `archive-git-v2-layout` keeps its failure detail. A stuck fixture owner yields one named skip that fails the run. | small | After BR-3; the fixture part after the archive heads that edit it |
