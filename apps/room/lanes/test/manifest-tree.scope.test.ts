@@ -83,14 +83,14 @@ async function publicationCheckpoint(node: Platform) {
 
 
 
-test.each(["application-publication", "default"] as const)("a manifest-list reservation records both files before the configured checker passes; no branch push occurs before that pass (real scopes, STAND-IN Git host and scheduler; %s creation)", async (creation, { task }) => {
+test.for(["application-publication", "default"] as const)("a manifest-list reservation records both files before the configured checker passes; no branch push occurs before that pass (real scopes, STAND-IN Git host and scheduler; %s creation)", { timeout: 120_000 }, async (creation, { task }) => {
   net.hold = net.deaf = null;
   const owner = beginSessionFixture({ secret: b64url(crypto.getRandomValues(new Uint8Array(32))), sessions: true, inspector: reader });
   onTestFinished(owner.close);
   const wired = new Set<ScopeId>();
   try { await story(ownHost(), wired, false, false, false, false, false, undefined, false, false, undefined, undefined, false, task.meta, creation === "default"); }
   finally { owner.close(); net.hold = null; for (const name of wired) platformOutside.delete(name); }
-}, 120_000);
+});
 test("a retry fence after publication starts is refused without superseding the live job or forgetting the unknown send (real scopes; host and scheduler STAND-INs)", async () => {
   net.hold = net.deaf = null;
   const owner = beginSessionFixture({ secret: b64url(crypto.getRandomValues(new Uint8Array(32))), sessions: true, inspector: reader });
