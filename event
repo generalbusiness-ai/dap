@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/security-entry-points.mjs","body":{"commit":"f5a6338c56a8e0a2017762e724d72900936c5716","path":"scripts/security-entry-points.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1f91cb731c842be24b841f3b7bc25f7e4539b62c","text":"Merge retired a covered predecessor; the successor is at apps/room/wrangler.grow.jsonc."}
