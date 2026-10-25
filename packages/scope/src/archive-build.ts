@@ -3,10 +3,10 @@
 import { same, natural } from "@generalbusiness/dap-bytes";
 import type { Bounds, Digest, FactRef, Head, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalize, isRecord, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
-import { buildJournalArchive, buildJournalPass, convertJournalArchiveV1, JOURNAL_SELECTION_BYTES, journalSelection, journalPassSelection, journalAnchorCopyCount, journalLegacyCopyCount, validateJournalPublicationEntries, JournalPassPreparation, JournalWork, type JournalArchive, type JournalPassArchive, type JournalSelection, type JournalPassSelection, type JournalCost, type JournalFormat, type JournalLayoutResult, type JournalObjectSource, type JournalAnchorPublication, type JournalLegacyAnchors } from "@generalbusiness/dap-git/journal";
-import { ARCHIVE_BOUNDS, ArchiveBudget, ArchiveStopped } from "./archive-budget.ts";
+import { buildJournalArchive, buildJournalPass, convertJournalArchiveV1, JOURNAL_SELECTION_BYTES, journalSelection, journalPassSelection, journalAnchorCopyCount, journalLegacyCopyCount, validateJournalPublicationEntries, JournalPassPreparation, JournalWork, type JournalArchive, type JournalPassArchive, type JournalSelection, type JournalPassSelection, type JournalCost, type JournalFormat, type JournalLayoutResult, type JournalObject, type JournalObjectSource, type JournalAnchorPublication, type JournalLegacyAnchors } from "@generalbusiness/dap-git/journal";
+import { ARCHIVE_BOUNDS, ArchiveBudget, ArchiveStopped, type ArchiveCapacityRefusal, type ArchiveCost } from "./archive-budget.ts";
 import { archiveInput } from "./archive-input.ts";
-import { inventoryArchive, inventoryArchiveRoot, type ArchivePolicyRegistry } from "./archive-inventory.ts";
+import { inventoryArchive, inventoryArchiveRoot, type ArchiveInventory, type ArchivePolicyRegistry } from "./archive-inventory.ts";
 import type { ArchiveMark, ArchiveRow } from "./archive-row.ts";
 import type { Sql } from "./sqlite.ts";
 import { ArchivePrefixStopped, type ArchivePrefixReason } from "./archive-prefix.ts";
@@ -16,6 +16,10 @@ import { readArchiveTextBytes } from "./archive-text.ts";
 import type { ArchivePlanFence } from "./archive-plan-fence.ts";
 import type { ArchiveForeignExpectedCopy } from "./archive-foreign.ts";
 import { archiveReplayScopes, readArchivePublication, writeArchivePublication } from "./archive-publication.ts";
+import { archiveFixedLayout } from "./archive-fixed-layout.ts";
+import { archiveParentMetadata, forecastArchiveFinish } from "./archive-finish-cost.ts";
+import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, readArchivePinAfterReceipt } from "./archive-pin.ts";
+import { archivePinValidationWork } from "./archive-inventory-cost.ts";
 
 type LayoutFailure = Extract<JournalLayoutResult, { ok: false }>;
 export type ArchiveBuildFailure = LayoutFailure | { readonly ok: false; readonly reason: ArchivePrefixReason | "rebuild-mismatch" | "manifest" };
@@ -231,15 +235,23 @@ async function planArchivePassInternal(selectInventory: typeof inventoryArchive,
     || preparation.format !== format || preparation.parent !== (parent?.id ?? null) || !same(preparation.at, at) || !same(preparation.after, after))) return { ok: false, reason: "parent" };
   const selected = selectInventory(sql, at, through, context.bounds, context.policies, budget, fixtureSources, after, context.forecast, context.declarationSizes, context.expectedCopies, context.retainedSizes);
   if (!selected.ok) return selected;
+  const owned = ownedPassManifest(selected.inventory, preparation, budget);
+  if (!owned.ok) return owned;
+  return buildOwnedPass(sql, context, budget, owned.inventory, owned.manifest, publish, parent, format, markedAt, fixtureSources);
+}
+
+/** The result never leaves this module. Both paths retain actual native
+ * admission and continue from the same owned inventory without a second read. */
+function ownedPassManifest(selected: ArchiveInventory, preparation: JournalPassPreparation | undefined, budget: ArchiveBudget) {
   // This stored cost reserves the native inventory on restart. The actual
   // layout metadata is rebuilt and charged again then. Attribute only the
   // exact settled preparation calls, including discarded candidate work;
   // the live ledger and final archive cost keep every original debit.
-  let inventory = selected.inventory;
+  let inventory = selected;
   if (preparation) {
     const cost = budget.admitted(), metadata = preparation.metadataCost();
     for (const key of Object.keys(ARCHIVE_BOUNDS) as (keyof JournalCost)[]) {
-      if (!natural(metadata[key]) || metadata[key] > cost[key]) return { ok: false, reason: "unavailable" };
+      if (!natural(metadata[key]) || metadata[key] > cost[key]) return { ok: false as const, reason: "unavailable" as const };
       cost[key] -= metadata[key];
     }
     inventory = { ...inventory, cost };
@@ -247,6 +259,12 @@ async function planArchivePassInternal(selectInventory: typeof inventoryArchive,
   budget.spend({ inputWork: JOURNAL_SELECTION_BYTES * 3 });
   const manifest = canonicalize(inventory);
   if (manifest.length > JOURNAL_SELECTION_BYTES || utf8(manifest).length > JOURNAL_SELECTION_BYTES) budget.stop("limit");
+  return { ok: true as const, inventory, manifest };
+}
+
+async function buildOwnedPass(sql: Sql, context: ArchivePassContext, budget: ArchiveBudget,
+  inventory: ArchiveInventory, manifest: string, publish: boolean, parent: Parent, format: JournalFormat, markedAt: Timestamp, fixtureSources?: FixtureArchiveSourcePins): Promise<ArchiveBuildFailure | { readonly ok: true; readonly archive: JournalPassArchive; readonly mark: ArchiveMark; readonly anchors?: readonly FactRef[] }> {
+  const preparation = context.preparation;
   const replay = replayInput(archiveInput(sql, inventory, budget, fixtureSources), inventory, context.replayScopes, budget, fixtureSources, publish, context.legacyAnchors);
   if (!replay.ok) return replay;
   const built = await buildJournalPass({ format, selection: manifest, input: replay.input, parent, budget, ...(publish ? { publication: replay.publication } : {}), ...(preparation ? { preparation } : {}) });
@@ -255,8 +273,71 @@ async function planArchivePassInternal(selectInventory: typeof inventoryArchive,
   if (!built.ok) return built;
   const anchorPublication = publish ? writeArchivePublication(replay.publication(), budget) : undefined;
   return { ...built, ...(publish ? { archive: { ...built.archive, cost: budget.admitted() } } : {}),
-    mark: { commit: built.archive.commit, parent: parent?.id ?? null, through: { ...selected.inventory.through }, manifest, markedAt, layout: 2,
+    mark: { commit: built.archive.commit, parent: parent?.id ?? null, through: { ...inventory.through }, manifest, markedAt, layout: 2,
       ...(anchorPublication !== undefined ? { anchorPublication, replayScopes: replay.scopes! } : {}) }, ...(collected.anchors ? { anchors: collected.anchors } : {}) };
+}
+
+
+/** Numeric diagnostic only. It grants no allowance, object or authority. */
+export interface ArchiveFixedFinish {
+  readonly used: Readonly<ArchiveCost>;
+  readonly remaining: Readonly<ArchiveCost>;
+  readonly metadataMargin: number;
+}
+
+/** Separate scheduling strategy after a capacity retry, not a second
+ * attempt in the adaptive caller's already-spent budget. */
+export async function planRootFixedPublishedArchivePass(sql: Sql, context: ArchivePassContext & {
+  readonly oldRowBytes: number; readonly rowContextBytes: number; readonly maximum: number;
+  readonly atomicFirstAttempt?: boolean;
+  readonly parentHeld: ReadonlyMap<string, JournalObject>; readonly parentUsed: ReadonlySet<string>;
+}, budget: ArchiveBudget) {
+  if (!context.after || !context.parent || context.through.seq !== context.after.seq + 1 || context.legacyAnchors !== undefined)
+    return { ok: false as const, reason: "parent" as const };
+  const begun = await budget.wait(() => JournalPassPreparation.begin({ format: context.format, at: context.at,
+    after: context.after, parent: context.parent, budget }));
+  if (!begun.ok) return begun;
+  const preparation = begun.preparation;
+  const selected = inventoryArchiveRoot(sql, context.at, context.through, context.bounds, context.policies,
+    budget, context.fixtureSources, context.after);
+  if (!selected.ok) return selected;
+  const owned = ownedPassManifest(selected.inventory, preparation, budget);
+  if (!owned.ok) return owned;
+  const shape = sql.transaction(() => archiveFixedLayout(sql, owned.inventory, utf8(owned.manifest).length,
+    context.bounds.entryBytes, budget, context.fixtureSources));
+  // The actual inventory has completed. No inventory/map-handoff forecast
+  // is credited or subtracted from admitted(); every later input read stays.
+  budget.spend({ metadata: shape.files.length * 128, inputWork: shape.files.length * 256 });
+  const paths = shape.files.filter(file => file.path !== "journal/v2/head.json" && !file.path.endsWith("/pass.json"))
+    .map(file => file.path);
+  await preparation.prepare(paths);
+  // This path prepares parent edges after inventory. Rebind the actual
+  // current native identity after that await without selecting bodies again.
+  budget.spend({ inputWork: archivePinValidationWork() });
+  const current = readArchivePinAfterReceipt(budget.native(sql, () => ({
+    metadata: ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES, inputWork: 0,
+  })), context.at);
+  const policy = current && context.policies.get(current.seed.definition);
+  if (!current || !policy?.review || policy.support.named !== current.seed.definition) return { ok: false as const, reason: "mismatch" as const };
+  const parent = archiveParentMetadata(context, budget);
+  const empty = { entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0, inputWork: 0 };
+  // Two bounded numeric vectors and their diagnostic handoff. No callback,
+  // new read, serialization or clock observation is supplied to diagnostics.
+  budget.spend({ metadata: 512, inputWork: 1024 });
+  const remaining = forecastArchiveFinish(context, preparation, shape, context.through, empty,
+    context.oldRowBytes, context.rowContextBytes, parent, empty, 0, budget);
+  if (remaining === null) return { ok: false as const, reason: "limit" as const };
+  const fixedFinish: ArchiveFixedFinish = Object.freeze({ used: Object.freeze(budget.admitted()),
+    remaining: Object.freeze({ ...remaining }), metadataMargin: 64 * 1024 });
+  const withMargin = { ...remaining, metadata: remaining.metadata + fixedFinish.metadataMargin };
+  if (!budget.canSpend(withMargin)) {
+    const refusal = budget.capacityRefusal(remaining, "finish-quote", { metadata: 64 * 1024 });
+    const capacityRefusal: ArchiveCapacityRefusal | null = refusal && { ...refusal, site: "finish-affordability" };
+    return { ok: false as const, deferred: "capacity" as const, capacityRefusal, fixedFinish };
+  }
+  const built = await buildOwnedPass(sql, { ...context, preparation }, budget, owned.inventory, owned.manifest, true,
+    context.parent, context.format, context.markedAt, context.fixtureSources);
+  return built.ok ? { ...built, parentObjects: parent.ids, rowContextBytes: context.rowContextBytes, fixedFinish } : built;
 }
 
 /** Restart follows the marked interval and pass references exactly. It
