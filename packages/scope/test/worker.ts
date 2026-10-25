@@ -42,8 +42,17 @@ import { sessionFields, testSessionBypass } from "./session-settings.ts";
 import { startupTest, startupScopes, StartupReadTrace } from "./support/serving-startup.ts";
 import type { Binding } from "../src/namespace.ts";
 export { StartupServingIndex } from "./support/serving-startup.ts";
-import scopeWorker, { ApplicationScreenService, DeployedScope, McpAgent, McpRegistry, ScopeIndex, ScopeService, route, sessionWiring, type Env, type McpEnv } from "../src/worker.ts";
-export { ScopeIndex } from "../src/worker.ts";
+import scopeWorker, { ApplicationScreenService, DeployedScope, McpAgent, McpRegistry, ScopeIndex as DeployedScopeIndex, ScopeService, route, sessionWiring, type Env, type McpEnv } from "../src/worker.ts";
+/** Scripted provider settings only; fixed-owner RPC, SQL and alarms are actual. */
+export const siteTokenTestSettings = new Map<string, import("../src/artifacts-wiring.ts").ArtifactsBindings>();
+export class ScopeIndex extends DeployedScopeIndex {
+  constructor(ctx: DurableObjectState, env: Env) {
+    super(ctx, new Proxy(env, { get(target, key) {
+      const selected = siteTokenTestSettings.get(ctx.id.name ?? "");
+      return selected && Object.hasOwn(selected, key) ? Reflect.get(selected, key) : Reflect.get(target, key);
+    } }));
+  }
+}
 /** Separate actual fixed-object namespace for small-limit boundary witnesses.
  * Heavy existing fixtures explicitly retain their high finite test policy. */
 export class ServingTestIndex extends ScopeIndex {

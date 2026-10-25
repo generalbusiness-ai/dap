@@ -48,7 +48,7 @@ import { GitRefusal, READ_BOUNDS, Reader, type ObjectId, type TreeEntry } from "
 import { canonicalize } from "@generalbusiness/dap-bytes";
 import { credentialInUrl } from "../sessions.ts";
 import { admitServing } from "../serving-admission.ts";
-import { StepError, publicationOf, publishedCommitOf, readerOf, roomOf, type Opened, type SiteEnv, type SiteStep } from "./host.ts";
+import { SiteTokenUnavailable, StepError, publicationOf, publishedCommitOf, readerOf, roomOf, type Opened, type SiteEnv, type SiteStep } from "./host.ts";
 import { renderMarkdown, titleOf } from "./markdown.ts";
 import { escapeHtml } from "./node.ts";
 
@@ -302,13 +302,15 @@ export async function site(request: Request, env: SiteEnv, fetch?: (request: Req
       proof = selection.proof;
     } catch (e) { logged("room", e); return refusal("unreadable", "the publication proof could not be read", "room"); }
   }
-  const open = readerOf(env, room, fetch);
+  const tokenRef = versions ? `refs/heads/${room.branch}` : immutable ? proof!.receipt.ref : selected!.ref;
+  const open = readerOf(env, room, fetch, tokenRef);
   if (!open) return refusal("host-not-configured", "this deployment does not read that room's repository");
 
   let opened: Opened;
   try {
     opened = await open();
   } catch (e) {
+    if (e instanceof SiteTokenUnavailable) return refusal("unavailable", "the site token is temporarily unavailable", "token");
     const failed = e instanceof StepError ? e.step : "open";
     logged(failed, e);
     return refusal("unreadable", "the repository could not be read", failed);

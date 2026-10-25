@@ -14,6 +14,8 @@ import { ownHost, readerOf } from "../../../../packages/scope/test/hosts.ts";
 import { Platform, rita, routed } from "../../../../packages/scope/test/repository.ts";
 import { net } from "../../../../packages/scope/src/testing.ts";
 import { site } from "../../../../packages/scope/src/site/route.ts";
+import { SCOPE_INDEX_NAME } from "../../../../packages/scope/src/scope-index.ts";
+import { siteTokenTestSettings } from "../../../../packages/scope/test/worker.ts";
 import type { Item } from "@generalbusiness/dap-derive";
 
 // Real CLI-created R9/D8/M4/Q3/G4, real change and Lending scopes, factory
@@ -36,6 +38,7 @@ test("a real change and Lending tell share one slot: the held change finishes fi
   const ok = (result: Outcome) => { expect(result.code, result.lines.join("\n")).toBe(0); return result; };
   const retained = (G: Platform): Promise<Item[]> => life.wait(() => runInDurableObject(G.object, (_object, state) => state.storage.sql.exec<{record:string}>("SELECT record FROM item ORDER BY id").toArray().map(row => JSON.parse(row.record) as Item)));
   let release = () => {}, originalEdit: Promise<Outcome> | undefined;
+  let closeSiteTokens = () => {};
     // Exactly one actual receive-pack answer is held after the stand-in applied
     // the change's main compare-and-swap. No reply is lost or operation resent.
     let held = false, armed = false;
@@ -126,9 +129,16 @@ test("a real change and Lending tell share one slot: the held change finishes fi
     expect(fileReceipt).toMatchObject({cause:{from:source,n:0},path,contentDigest:textDigest(fromLending),commit:laterCommit});
     expect(final.filter(item=>item.type==="receipt"&&item.values["commit"]===changePush)).toMatchObject([{state:"written"}]);
     expect(final.filter(item=>item.type==="receipt"&&item.values["commit"]===laterCommit)).toMatchObject([{state:"written"}]);
-    const page=async(commit:string)=>site(new Request(`https://scopes.test/site/${D.name}/${commit}/${path}`),{SCOPE_INDEX:env.SCOPE_INDEX,SCOPES:env.PLATFORM,...host.bindings(R.name)},host.stand.fetch,`fixture:${D.name}`);
+    // The provider is scripted; fixed-owner RPC, SQL and alarms remain actual.
+    life.active();
+    const siteSettings = host.bindings(R.name);
+    siteTokenTestSettings.set(SCOPE_INDEX_NAME, siteSettings);
+    closeSiteTokens = () => {
+      if (siteTokenTestSettings.get(SCOPE_INDEX_NAME) === siteSettings) siteTokenTestSettings.delete(SCOPE_INDEX_NAME);
+    };
+    const page=async(commit:string)=>site(new Request(`https://scopes.test/site/${D.name}/${commit}/${path}`),{SCOPE_INDEX:env.SCOPE_INDEX,SCOPES:env.PLATFORM,...siteSettings},host.stand.fetch,`fixture:${D.name}`);
     const earlier=await page(changePush), newest=await page(laterCommit);
     expect(earlier.status).toBe(200);expect(await earlier.text()).toContain("From the real change");
     expect(newest.status).toBe(200);expect(await newest.text()).toContain("Later Lending page");
-  } finally { release();if(originalEdit) await originalEdit.catch(()=>undefined);life.release(); }
+  } finally { closeSiteTokens();release();if(originalEdit) await originalEdit.catch(()=>undefined);life.release(); }
 });

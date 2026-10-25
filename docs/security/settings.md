@@ -500,10 +500,11 @@ parser, failure behavior, health visibility, and other readers.
       "status": "read",
       "readers": [
         "packages/scope/src/scope-index.ts",
-        "packages/scope/src/serving-admission.ts"
+        "packages/scope/src/serving-admission.ts",
+        "packages/scope/src/site/host.ts"
       ],
-      "parser": "scopeIndex addresses the fixed applied-genesis-v1 owner; indexedScopes requires it before protected target lookup.",
-      "missing": "Indexed existing-target requests refuse.",
+      "parser": "scopeIndex addresses the fixed applied-genesis-v1 owner; indexedScopes requires it before protected target lookup. The Artifacts Site reader addresses that same fixed owner for shared read-token custody.",
+      "missing": "Indexed existing-target requests refuse. Artifacts Site reads cannot acquire a read token and return unavailable.",
       "invalid": "Runtime call failure refuses lookup; binding shape is not parsed as text.",
       "health": "No direct index-mode/backfill field."
     },

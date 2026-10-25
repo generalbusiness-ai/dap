@@ -1,4 +1,5 @@
 import { env } from "cloudflare:workers";
+import { runInDurableObject } from "cloudflare:test";
 import { afterAll, beforeAll, expect, test, vi } from "vitest";
 import type { Intent, Seed } from "@generalbusiness/dap-contract";
 import { canonicalize, intentDigest, scopeIdOf, signIntent, utf8, digestBytes, takeBytes } from "@generalbusiness/dap-bytes";
@@ -18,7 +19,7 @@ import roomWorker from "../../../apps/room/worker.ts";
 import scopeWorker from "../src/worker.ts";
 import { soon } from "./net.ts";
 import { Platform, rita, sam, settle } from "./repository.ts";
-import { platformOutside } from "./worker.ts";
+import { siteTokenTestSettings, platformOutside } from "./worker.ts";
 import completeness from "./site/completeness/fixture.md?raw";
 import companion from "./site/completeness/companion.md?raw";
 import diagram from "./site/completeness/diagram.svg?raw";
@@ -179,7 +180,7 @@ class Scripted {
           if (this.failing === "token") throw new Error("scripted: createToken refused");
           const plaintext = `read-plaintext-${this.minted.length + 1}`;
           this.minted.push(plaintext);
-          return { id: `tok-${this.minted.length}`, [this.tokenField]: plaintext, scope, expiresAt: "2026-10-07T13:15:00Z" };
+          return { id: `tok-${this.minted.length}`, [this.tokenField]: plaintext, scope, expiresAt: "2099-01-01T00:00:00Z" };
         },
         revokeToken: async (token) => { this.revoked.add(token); return true; },
         info: async () => {
@@ -275,6 +276,7 @@ beforeAll(async () => {
   const registerSeed: Seed = { v: 1, kind: "register", definition: REGISTER, creator: null, cause: intentDigest(install), ordinal: 0 };
   R = new Platform(scopeIdOf(registerSeed));
   siteEnv = { SCOPES: publishedScopes, ARTIFACTS: host.ns, ARTIFACTS_CONFIG: canonicalize({ registerScope: R.name, namespace: NAMESPACE, host: SERVICE, maxBytes: MAX_BYTES, credentialIdentity: "adapter-attempt" }) };
+  siteTokenTestSettings.set(SCOPE_INDEX_NAME, siteEnv);
   platformOutside.set(R.name, (given, sql) => artifactsOutside(given, sql, siteEnv, host.fetch));
   expect(await R.stub.create(signIntent(install, paul.secret), REGISTER)).toMatchObject({ answer: "accepted" });
   const matched = await R.intent(rita, "found", { expected: await R.expected({ register: 0 }), fields: { branch: "main", "founderHandle": "@rita", recoveryKey: sam.key } });
@@ -323,12 +325,13 @@ afterAll(() => {
   net.hold = prior.hold;
   net.deaf = prior.deaf;
   platformOutside.delete(R.name);
+  siteTokenTestSettings.delete(SCOPE_INDEX_NAME);
 });
 
 const page = async (response: Response) => ({ status: response.status, type: response.headers.get("content-type"), body: await response.text() });
 
 // Invariant: a markdown file at a ref of the room's repository answers as HTML, its relative links and images under the same
-// prefix, raw HTML and a javascript: address made inert; every read token minted for it is revoked.
+// prefix, raw HTML and a javascript: address made inert; closing each read leaves the shared expiring token alive.
 test("a page: a markdown file at HEAD, at its branch and at a tag renders as HTML with relative links under /site, headings with GitHub's ids, and raw HTML escaped (STAND-IN host)", async () => {
   const at = `/site/${D.name}/HEAD/docs/guide.md`;
   const response = await get(at);
@@ -360,7 +363,9 @@ test("a page: a markdown file at HEAD, at its branch and at a tag renders as HTM
     expect(named.body).toContain(`<a href="/site/${D.name}/${ref}/README.md">home</a>`);
   }
   expect(host.minted.length).toBeGreaterThan(0);
-  expect(host.minted.filter((token) => !host.revoked.has(token))).toEqual([]);
+  // Closing a Site reader must not revoke its shared read token. The
+  // creation token has its own legitimate lifecycle and is not in minted.
+  expect(host.minted.filter(token => host.revoked.has(token))).toEqual([]);
 });
 
 // Invariant: one checked-in document renders the supported GFM constructs through Site; its repository links and image
@@ -604,7 +609,11 @@ test("cache: same commit, same ETag, and If-None-Match answers 304 only for a se
 // trailing `/` and no final `.git`; any other remote is refused before a token is minted.
 test("binding answers: a token named token, and a remote reported with or without .git and a trailing slash, each read the page; another remote is refused at the step info (STAND-IN host)", async () => {
   const at = `/site/${D.name}/HEAD/README.md`;
+  const clearTokens = () => runInDurableObject(env.SCOPE_INDEX.get(env.SCOPE_INDEX.idFromName(SCOPE_INDEX_NAME)), (_object, state) => {
+    if (state.storage.sql.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='private_site_token'").toArray().length) state.storage.sql.exec("DELETE FROM private_site_token").toArray();
+  });
   try {
+    await clearTokens();
     host.tokenField = "token";
     expect((await get(at)).status).toBe(200);
     host.tokenField = "plaintext";
@@ -631,6 +640,11 @@ test("a failure at each step answers the same refusal with x-site-step and logs 
   const spy = vi.spyOn(console, "error").mockImplementation((...args: unknown[]) => { lines.push(args.map(String).join(" ")); });
   try {
     for (const [failing, step] of [["get", "open"], ["info", "info"], ["token", "token"], ["refs", "refs"], ["pack", "objects"]] as const) {
+      // Independent provider-failure setup: remove only this fixture's private
+      // credentials so the token failure actually enters createToken.
+      await runInDurableObject(env.SCOPE_INDEX.get(env.SCOPE_INDEX.idFromName(SCOPE_INDEX_NAME)), (_object, state) => {
+    if (state.storage.sql.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='private_site_token'").toArray().length) state.storage.sql.exec("DELETE FROM private_site_token").toArray();
+  });
       host.failing = failing;
       lines.length = 0;
       const response = await get(at);

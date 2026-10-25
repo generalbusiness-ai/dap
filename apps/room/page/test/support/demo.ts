@@ -23,6 +23,8 @@ import type { Fetch } from "@generalbusiness/dap-client";
 import { firstExtents } from "@generalbusiness/dap-platform";
 import { site } from "../../../../../packages/scope/src/site/route.ts";
 import type { SiteEnv } from "../../../../../packages/scope/src/site/host.ts";
+import { SCOPE_INDEX_NAME } from "../../../../../packages/scope/src/scope-index.ts";
+import { siteTokenTestSettings } from "../../../../../packages/scope/test/worker.ts";
 import { ownHost, type Stand } from "../../../../../packages/scope/test/hosts.ts";
 import { type Platform, routed } from "../../../../../packages/scope/test/repository.ts";
 import { nativeFixtureLifetime, driveFixture } from "../../../../../packages/scope/test/support/native-fixture-lifetime.ts";
@@ -158,7 +160,15 @@ export async function demo(wrap: (fetch: Fetch, owner: SessionOwner) => Fetch = 
     known.push(D, M, rules, G);
     await pause();
     active();
-    siteEnv = { SCOPE_INDEX: env.SCOPE_INDEX, SCOPES: env.PLATFORM, ...bindings() };
+    // The actual fixed token owner needs the same scripted provider as
+    // this route. Cleanup removes only this fixture's own settings; it
+    // cannot restore a retired predecessor or clear a successor's owner.
+    const tokenSettings = bindings();
+    siteTokenTestSettings.set(SCOPE_INDEX_NAME, tokenSettings);
+    lifetime.cleanup(() => {
+      if (siteTokenTestSettings.get(SCOPE_INDEX_NAME) === tokenSettings) siteTokenTestSettings.delete(SCOPE_INDEX_NAME);
+    });
+    siteEnv = { SCOPE_INDEX: env.SCOPE_INDEX, SCOPES: env.PLATFORM, ...tokenSettings };
 
     // Full setup enrolls Paul; Una's actual invitation can be omitted by a founder-only reader.
     if (!setup.editorOnly) {

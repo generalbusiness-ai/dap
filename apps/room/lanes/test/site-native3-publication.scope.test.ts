@@ -12,6 +12,8 @@ import { driveFixture } from "../../../../packages/scope/test/support/native-fix
 import { ownHost } from "../../../../packages/scope/test/hosts.ts";
 import { Platform, routed } from "../../../../packages/scope/test/repository.ts";
 import { site } from "../../../../packages/scope/src/site/route.ts";
+import { SCOPE_INDEX_NAME } from "../../../../packages/scope/src/scope-index.ts";
+import { siteTokenTestSettings } from "../../../../packages/scope/test/worker.ts";
 
 // Real @3 CLI/register/directory/lane/rules/destination admission and cleanup.
 // Only the Git provider, scheduler, clock and local key store are STAND-INs.
@@ -22,6 +24,7 @@ test("native @3 cleaned publication retains immutable Site eligibility while tim
   console.info("native-stage", "native3", "started", performance.now() - stageOrigin, lastStarted = "setup", lastCompleted);
   const lifetime = siteFixtureLifetime();
   const at = ownHost();
+  let closeSiteTokens = () => {};
   let register: Platform | undefined;
   let destination: Platform | undefined;
   const nodes: Platform[] = [];
@@ -67,7 +70,14 @@ test("native @3 cleaned publication retains immutable Site eligibility while tim
       const tables = state.storage.sql.exec<{ name: string }>("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%' ORDER BY name").toArray();
       return tables.map(({ name }) => [name, state.storage.sql.exec(`SELECT * FROM "${name.replaceAll('"', '""')}"`).toArray()]);
     });
-    const get = (commit: string, conditional = true) => site(new Request(`https://scopes.test/site/${config.repository!.directory.scope}/${commit}/README.md`, { ...(conditional ? { headers: { "if-none-match": "*" } } : {}) }), { SCOPE_INDEX: env.SCOPE_INDEX, SCOPES: env.PLATFORM, ...at.bindings(register!.name) }, at.stand.fetch, `fixture:${config.repository!.directory.scope}`);
+    // The provider is scripted; fixed-owner RPC, SQL and alarms remain actual.
+    lifetime.active();
+    const siteSettings = at.bindings(register!.name);
+    siteTokenTestSettings.set(SCOPE_INDEX_NAME, siteSettings);
+    closeSiteTokens = () => {
+      if (siteTokenTestSettings.get(SCOPE_INDEX_NAME) === siteSettings) siteTokenTestSettings.delete(SCOPE_INDEX_NAME);
+    };
+    const get = (commit: string, conditional = true) => site(new Request(`https://scopes.test/site/${config.repository!.directory.scope}/${commit}/README.md`, { ...(conditional ? { headers: { "if-none-match": "*" } } : {}) }), { SCOPE_INDEX: env.SCOPE_INDEX, SCOPES: env.PLATFORM, ...siteSettings }, at.stand.fetch, `fixture:${config.repository!.directory.scope}`);
     const before = await lifetime.wait(() => snapshot());
     const old = await lifetime.wait(() => get(first, false)); expect(old.status).toBe(200);
     const body = await lifetime.wait(() => old.text()); expect(body).toContain("First published");
@@ -103,6 +113,7 @@ test("native @3 cleaned publication retains immutable Site eligibility while tim
     console.info("native-stage", "native3", "completed", performance.now() - stageOrigin, lastStarted, lastCompleted = "expiry-alarm-and-refusal");
   } finally {
     console.info("native-stage", "native3", "started", performance.now() - stageOrigin, lastStarted = "cleanup", lastCompleted);
+    closeSiteTokens();
     lifetime.release();
     console.info("native-stage", "native3", "completed", performance.now() - stageOrigin, lastStarted, lastCompleted = "cleanup");
   }
