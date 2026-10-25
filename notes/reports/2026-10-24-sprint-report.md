@@ -279,10 +279,10 @@ read before and after each one and changed only in its version fields.
 
 | Owner | Work | Request |
 |---|---|---|
-| Builder | R6 versioned default cohort, to review and landing | `3837ccc9` |
+| Builder | R6 versioned default cohort; land and push after exact-head approval | `3837ccc9` |
 | Builder | R7 and finding 3.4, after the planner assigns versions | `e3d5a73e` |
 | Builder | R16 consumer slice, after the ruling | `48013952` |
-| Checker | Review R6 at its exact head, then land it and push | `3837ccc9` |
+| Checker | Review R6 at its exact head and file the landing check | `3837ccc9` |
 | Checker | Review R7 and R16 heads when they are filed | — |
 | Planner | Deploy `main` to `dap-grow`: the archive heads, R4, R9, R10 and R13. Move its application trust rows to the release, publisher and host form first. Leave `MCP_ENABLED` unset. | `ea0152b3` |
 | Planner | Read the diagnostic lines for Room A and `c7a17b72`, restart the stopped row with a short directive, then tail and measure | `ea0152b3` |
