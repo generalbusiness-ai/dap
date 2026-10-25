@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a456ffc736ef770cfcf9ceb7df58c615588ed7b2","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-25-archive-unpublished-next.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c57bd7f68af274349f6916b9950aaa6dae5c2427","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-driver.ts."}
