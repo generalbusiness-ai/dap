@@ -77,7 +77,9 @@ test("the platform package depends only on contract, bytes, derive and package g
 // server's other modules and broad Git/provider/Node entry points stay closed.
 // Grow's exact development host fixture constructs a synthetic archive and
 // exercises the actual smart-HTTP send boundary with scripted host replies.
-const applicationGitUsers = new Set(["packages/mcp/package.json", "packages/mcp/src/service.ts", "apps/room/lanes/test/grow-archive.test.ts"]);
+// The certified native archive journey reads its real local Git clone for
+// offline replay; this grants no production Git import.
+const applicationGitUsers = new Set(["packages/mcp/package.json", "packages/mcp/src/service.ts", "apps/room/lanes/test/grow-archive.test.ts", "apps/room/lanes/test/certified-rules-archive.scope.test.ts"]);
 // Replay's Node and integration test boundaries may depend on Git. The v2
 // witnesses combine real Git archives with offline Replay; Git itself stays
 // below Replay and imports none of it, including from its own tests.
