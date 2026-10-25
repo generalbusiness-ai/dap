@@ -26,7 +26,7 @@ const seals = {
   "packages/scope/src/object.ts": "091396e5ebe195252695a84287fc1edf2c1bb45fc2d1c65d14d679643694d9b1", // Actual composed storage owner seal from the maintained parser.
   "packages/scope/src/core.ts": "c7f2e49246b1e784981337ee13af53b17bab424a13112d5a40ff76b75fb7a128",
   "packages/derive/src/genesis.ts": "df7722143f01c8084b8f045ef959b203ae1756c4dfde170d0454cfe0b0392843",
-  "packages/derive/src/judge.ts": "c0ed325bc2fa84693b40d3d53a9ad54a9a9786dab39dd3b9c6039ac553488f63",
+  "packages/derive/src/judge.ts": "e5ba38505774aa3be277931deed6d8bafb81c4a57dcebb2295d57a85f2a877f4",
   "packages/scope/src/sessions.ts": "636cf37fa756f7b8abe9d2f7bc36381fee78901f26a5b24fa9ce2096223e9c4d",
   "packages/scope/src/reads.ts": "c45892a2d04c1cd47817f57cdbf763995ce3fa323dbde56d1eb626499bb5813b",
   "packages/scope/src/signed-reads.ts": "6c4c4c81f44994c2ac9e4ca921c8f34184977a1256d6574e78514b814512eaf0", // R12 custody-only serving helper; native checks unchanged.
