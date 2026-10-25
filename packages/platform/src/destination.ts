@@ -24,9 +24,11 @@
  */
 
 import type { FactRef, FieldValue, KeyId, Observation, OperationId, PlatformData, PlatformDefinition, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, factRefOf, isDigest, isFactRef, isScopeRef, timeOf, timeMs, utf8, textDigest } from "@generalbusiness/dap-bytes";
+import { canonicalize, entryHash, factRefOf, isDigest, isFactRef, isScopeRef, timeOf, timeMs, utf8, textDigest, isMemberRef } from "@generalbusiness/dap-bytes";
 import type { Item, Opening, Operation, OperationRules, Own, PlatformRule, PublicationOrigin, RecordedRef, RuleEffect, RuleGiven, RuleRequest, Rules, StateView } from "@generalbusiness/dap-derive";
 import { DESTINATION_CHANGED_SET, isJudgeChanges, isRecordedJudgeEvidence, isObjectId, judgeReservation, judgeReservationWithStanding, fileSound, type ReservationAsked, type ReservationRead, type ReservationStanding, type Statement } from "./reservation.ts";
+import { judgeReservationV14, judgeListEligibilityV14, readRulesPolicyObservationV14, requiredChecksV14, type ReservationPolicyInputV14, type ListEligibilityV14 } from "./reservation-v14.ts";
+import type { RulesCheckV11 } from "./rules-policy-v11.ts";
 import { publicationStandingRecord, publicationStandingKeys, type PublicationStandingRecord } from "./publication-standing.ts";
 import { referenceOf } from "./rules-scope.ts";
 import { isExtents, classify } from "./extents.ts";
@@ -1304,6 +1306,119 @@ export interface LaneRead {
 /** The reader of a lane's entries for one reservation. Null: they are not at hand, or no reader is written. */
 export type Reads = (given: RuleGiven, publication: Item, statement: Statement) => LaneRead | null;
 
+/** G14 snapshots are native-written records, never caller policy fields.
+ * Every use re-decodes the complete policy and checks its captured projection. */
+interface CertifiedReservationSnapshot {
+  observation: import("@generalbusiness/dap-contract").RulesObservation;
+  input: ReservationPolicyInputV14;
+  touched: string[];
+  required: readonly RulesCheckV11[];
+  tree: string;
+  manifest: FactRef;
+}
+const certified = (given: RuleGiven): boolean => pinnedBy(given) === "platform:destination@14";
+const equal14 = (a: unknown, b: unknown): boolean => {
+  try { return canonicalize(a) === canonicalize(b); } catch { return false; }
+};
+function policyInput14(given: RuleGiven): ReservationPolicyInputV14 | null {
+  const seen = given.observed({ asked: "rules" })?.observation;
+  const rules = destinationRulesScope(given.state), scope = given.state.scope();
+  if (!seen || !("subject" in seen) || seen.subject !== "rules" || seen.content.asked !== "rules" || !seen.content.extents
+    || !rules?.inc || !scope || !equal14(seen.of, { scope: rules.scope, inc: rules.inc, kind: "rules" })) return null;
+  const extents = given.value("artroom-rules-extents-2", seen.content.extents, 262144);
+  return { rules: seen.of, destination: scope.at, extents };
+}
+export function certifiedReservationSnapshot(value: unknown): CertifiedReservationSnapshot | null {
+  try {
+  if (!isObject(value) || Object.keys(value).length !== 6 || !["observation", "input", "touched", "required", "tree", "manifest"].every(k => Object.hasOwn(value, k))
+    || !isObject(value["observation"]) || !isObject(value["input"]) || Object.keys(value["input"]).length !== 3
+    || !["rules", "destination", "extents"].every(k => Object.hasOwn(value["input"], k))
+    || !Array.isArray(value["touched"]) || value["touched"].length > 8 || !value["touched"].every(x => typeof x === "string" && x.length <= 64)
+    || !Array.isArray(value["required"]) || value["required"].length > 32 || !isObjectId(value["tree"]) || !isFactRef(value["manifest"])) return null;
+  const observation = value["observation"] as unknown as import("@generalbusiness/dap-contract").RulesObservation;
+  const input = value["input"] as unknown as ReservationPolicyInputV14;
+  if (!isObject(input.extents) || utf8(canonicalize(input.extents)).length > 262144) return null;
+  const decoded = readRulesPolicyObservationV14(observation, input, observation.at);
+  if (!decoded.ok) return null;
+  const touched = value["touched"] as string[], required = requiredChecksV14(decoded.view.policy, touched);
+  if (!required.ok || !equal14(required.checks, value["required"])) return null;
+  // The one named complete-policy envelope was admitted at 256KiB. The snapshot adds only bounded
+  // observation/descriptors/identities; this is a new declaration, not an old cap increase.
+  if (utf8(canonicalize(value)).length > 600000) return null;
+  return { observation, input: { ...input }, touched: [...touched], required: required.checks,
+    tree: value["tree"] as string, manifest: value["manifest"] };
+  } catch { return null; }
+}
+interface CertifiedCheckProof { result: FactRef; key: KeyId; decided: number; configuration: string; checker: RulesCheckV11["checker"]; tree: string; proposal: string }
+interface CertifiedGeneration extends CheckGeneration { proof?: CertifiedCheckProof }
+export function certifiedCheckGenerations(value: unknown): value is readonly CertifiedGeneration[] {
+  return Array.isArray(value) && value.length <= 32 && value.every(row => isObject(row) && typeof row["name"] === "string" && row["name"].length <= 128
+    && isFactRef(row["job"]) && typeof row["passed"] === "boolean" && Object.keys(row).every(k => ["name", "job", "passed", "proof"].includes(k))
+    && (!Object.hasOwn(row, "proof") || isObject(row["proof"]) && Object.keys(row["proof"]).length === 7
+      && isFactRef(row["proof"]["result"]) && typeof row["proof"]["key"] === "string" && row["proof"]["key"].length <= 256
+      && Number.isSafeInteger(row["proof"]["decided"]) && isDigest(row["proof"]["configuration"]) && isMemberRef(row["proof"]["checker"])
+      && isObjectId(row["proof"]["tree"]) && isDigest(row["proof"]["proposal"])))
+    && new Set(value.map(row => row.name)).size === value.length;
+}
+function captured14(given: RuleGiven, publication: Item): CertifiedReservationSnapshot | null {
+  const snapshot = certifiedReservationSnapshot(publication.values["certifiedPolicy"]);
+  return snapshot && isFactRef(publication.refs["manifest"]) && Array.isArray(publication.values["requiredChecks"])
+    && equal14(snapshot.manifest, publication.refs["manifest"]) && snapshot.tree === publication.values["tree"]
+    && equal14(snapshot.input.destination, given.resolved.at) && equal14(publication.values["requiredChecks"], snapshot.required.map(row => row.name)) ? snapshot : null;
+}
+/** The one checker proof shared by delivery admission and current-key outcome.
+ * uses are admitted native facts; comparison uses full facts, not hash alone. */
+function checked14(given: RuleGiven, publication: Item, fields: Readonly<Record<string, unknown>>, current: boolean): { name: string; proof: CertifiedCheckProof } | null {
+  const snapshot = captured14(given, publication), jobFact = fields["job"], resultFact = fields["result"];
+  if (!snapshot || !isFactRef(jobFact) || !isFactRef(resultFact) || !equal14(jobFact.at, snapshot.manifest.at) || !equal14(resultFact.at, snapshot.manifest.at)) return null;
+  const job = given.uses.find(use => equal14(use.fact, jobFact))?.entry, result = given.uses.find(use => equal14(use.fact, resultFact))?.entry;
+  if (job?.input.type !== "act" || job.input.signed.intent.kind !== "request-check" || result?.input.type !== "act" || !["check", "check-error"].includes(result.input.signed.intent.kind)) return null;
+  const opened = job.input.signed.intent.fields, decided = result.input.signed.intent.fields;
+  const descriptor = snapshot.required.find(row => row.name === opened["name"]);
+  const generation = generations(publication, given).find(row => row.name === opened["name"]);
+  const grant = result.input.authority.find(row => row.actions.includes("change.check"));
+  const historical = grant?.fresh?.observation, key = result.input.signed.intent.actor;
+  const states = result.effects.filter(effect => effect.effect === "state" && effect.item === job.seq && ["passed", "failed", "errored"].includes(effect.state));
+  if (!descriptor || !generation || !equal14(generation.job, jobFact) || opened["manifest"] !== snapshot.manifest.seq || opened["configuration"] !== descriptor.configuration
+    || decided["job"] !== job.seq || decided["configuration"] !== descriptor.configuration || decided["tree"] !== snapshot.tree || states.length !== 1
+    || !job.effects.some(effect => effect.effect === "value" && effect.item === job.seq && effect.slot === "tree" && effect.value === snapshot.tree)
+    || !grant || grant.key !== key || !equal14(grant.subject, descriptor.checker) || !equal14(result.input.authority[0]?.subject, descriptor.checker)
+    || !historical || "subject" in historical || historical.key !== key || historical.member !== descriptor.checker.member || !equal14(historical.of, descriptor.checker.membership)
+    || !historical.actions.includes("change.check")) return null;
+  if (current) {
+    const seen = given.observed({ key })?.observation;
+    if (!seen || "subject" in seen || seen.key !== key || seen.keyState !== "active" || seen.memberState !== "active" || seen.member !== descriptor.checker.member
+      || !equal14(seen.of, descriptor.checker.membership) || !seen.actions.includes("change.check")
+      || (seen.controller !== null || seen.controllerActive !== null) && seen.controllerActive !== true
+      || timeMs(seen.at) === null || timeMs(given.time)! < timeMs(seen.at)! || timeMs(given.time)! - timeMs(seen.at)! > 10000) return null;
+  }
+  if (decided["outcome"] === "passed" && !states.some(effect => effect.effect === "state" && effect.state === "passed")) return null;
+  return { name: descriptor.name, proof: { result: resultFact, key, decided: given.resolved.self, configuration: descriptor.configuration,
+    checker: descriptor.checker, tree: snapshot.tree, proposal: (snapshot.input.extents as Record<string, unknown>)["proposal"] as string } };
+}
+/** Missing capture is never an empty set. A persisted passed flag counts only
+ * with its own accepted check-judge effect and exact current generation. */
+function complete14(given: RuleGiven, publication: Item, passes: readonly CertifiedGeneration[]): boolean {
+  const snapshot = captured14(given, publication);
+  if (!snapshot || !certifiedCheckGenerations(passes)) return false;
+  return snapshot.required.every(descriptor => {
+    const rows = passes.filter(row => row.name === descriptor.name), row = rows[0], proof = row?.proof;
+    if (rows.length !== 1 || !row?.passed || !proof || proof.configuration !== descriptor.configuration || !equal14(proof.checker, descriptor.checker)
+      || proof.tree !== snapshot.tree || proof.proposal !== (snapshot.input.extents as Record<string, unknown>)["proposal"]) return false;
+    if (proof.decided === given.resolved.self) {
+      const result = given.uses.find(use => equal14(use.fact, proof.result))?.entry;
+      if (result?.input.type !== "act" || result.input.signed.intent.fields["outcome"] !== "passed") return false;
+      const fresh = checked14(given, publication, { job: row.job, result: proof.result }, true);
+      return fresh !== null && equal14(fresh.proof, proof);
+    }
+    if (proof.decided >= given.resolved.self) return false;
+    const entry = given.own(proof.decided)?.entry;
+    return entry?.input.type === "outcome" && entry.input.owner === "platform:destination@14" && entry.input.kind === "check-judge" && entry.input.result === "confirmed"
+      && entry.effects.some(effect => effect.effect === "value" && effect.item === publication.id && effect.slot === "passes" && Array.isArray(effect.value)
+        && effect.value.some(accepted => equal14(accepted, row)));
+  });
+}
+
 const READ_LIST: Reads = (given, publication, statement) => {
   const manifest = given.uses.find((use) => use.fact.hash === statement.manifest.hash)?.entry;
   if (!manifest || !sourcesOf(manifest) || manifest.input.type !== "act") return null;
@@ -1370,7 +1485,7 @@ function reservationRead(given: RuleGiven, publication: Item, statement: Stateme
   return {
     merger: keyOf(merge.input.signed.intent.actor), rules,
     sound: lane.sound !== false,
-    extents: rules?.content.asked === "rules" && rules.content.extents ? (() => { const list = given.value("artroom-rules-extents-1", rules.content.extents!, 262144); if (!isExtents(list)) throw new Error("the rules observation names no list of extents"); return list; })() : null,
+    extents: certified(given) ? (() => { const input = policyInput14(given); const decoded = input && readRulesPolicyObservationV14(rules, input, given.time); return decoded && decoded.ok ? decoded.view.policy.extents : null; })() : rules?.content.asked === "rules" && rules.content.extents ? (() => { const list = given.value("artroom-rules-extents-1", rules.content.extents!, 262144); if (!isExtents(list)) throw new Error("the rules observation names no list of extents"); return list; })() : null,
     singleControllerException: rules?.content.asked === "rules" && rules.content.singleControllerException === true,
     manifest: { ...lane.manifest, reports },
     controllersOfAuthors: lane.manifest.authors.flatMap((member) => { const seen = given.observed({ member })?.observation; return seen && "subject" in seen && seen.subject === "member" && seen.controller !== null ? [seen.controller] : []; }),
@@ -1502,7 +1617,13 @@ const judgeDecides = (reads: Reads, list = false): Decides => (given) => {
   const asked = { recorded: typeof head === "string" ? head : null, evidence, statement, time, file };
   // First from the evidence and this scope's own records. Only where that does not decide are `observed` and `uses` read.
   let standing: ReservationStanding | null = null;
+  let eligibility14: Extract<ListEligibilityV14, { eligible: true }> | null = null;
   const decide = (asked: ReservationAsked) => {
+    if (input.owner === "platform:destination@14" && asked.read !== null) {
+      const policy = policyInput14(given);
+      if (!policy) return { reserved: false as const, reason: "evidence-invalid" };
+      return judgeReservationV14({ ...asked, policy });
+    }
     if (!isStandingDestination(input.owner)) return judgeReservation(asked);
     const detailed = judgeReservationWithStanding(asked);
     standing = detailed.reserved ? detailed.standing ?? null : null;
@@ -1527,9 +1648,15 @@ const judgeDecides = (reads: Reads, list = false): Decides => (given) => {
       } else {
         const commit = manifestCommit(formatOf(evidence.tree)!, resolved.at.scope, time, evidence.tree!, read.manifest.base, statement.operation);
         read = { ...read, manifest: { ...read.manifest, integration: commit.id, tree: evidence.tree } };
-        const withoutChecks = { ...read.rules!, content: { ...read.rules!.content, checks: [] } } as ReservationRead["rules"];
-        const policy = { ...read, rules: withoutChecks, extents: read.extents?.map((extent) => ({ ...extent, checks: [] })) ?? null };
-        judged = decide({ ...asked, read: policy });
+        if (certified(given)) {
+          const policy = policyInput14(given), result = policy ? judgeListEligibilityV14({ ...asked, read, policy }) : { eligible: false as const, reason: "evidence-invalid" };
+          if (result.eligible === true) { eligibility14 = result; judged = { reserved: true, integration: result.integration, reason: result.reason }; }
+          else judged = result.eligible === null ? { reserved: null } : { reserved: false, reason: result.reason };
+        } else {
+          const withoutChecks = { ...read.rules!, content: { ...read.rules!.content, checks: [] } } as ReservationRead["rules"];
+          const policy = { ...read, rules: withoutChecks, extents: read.extents?.map((extent) => ({ ...extent, checks: [] })) ?? null };
+          judged = decide({ ...asked, read: policy });
+        }
       }
     } else judged = decide({ ...asked, read });
   }
@@ -1552,20 +1679,31 @@ const judgeDecides = (reads: Reads, list = false): Decides => (given) => {
     });
     if (!standingRecord) throw new Error("D1 counted reservation provenance exceeds its bound");
   }
-  const requiredChecks = list && read?.rules?.content.asked === "rules" ? [...new Set([
+  const requiredChecks = eligibility14 ? eligibility14.required.map(row => row.name) : list && read?.rules?.content.asked === "rules" ? [...new Set([
     ...read.rules.content.checks.filter((check) => check.required).map((check) => check.name),
     ...(read.extents && evidence.changes && !("over" in evidence.changes) ? (() => {
       const touched = new Set(classify(read.extents!, evidence.changes.paths, evidence.changes.links, evidence.changes.unreadable).touched.map((row) => row.extent));
       return read.extents!.filter((extent) => touched.has(extent.name)).flatMap((extent) => extent.checks);
     })() : []),
   ])] : [];
+  let captured: CertifiedReservationSnapshot | null = null;
+  if (certified(given) && list) {
+    const selected = eligibility14 as Extract<ListEligibilityV14, { eligible: true }> | null, policy = policyInput14(given);
+    if (!selected || !policy || !read?.rules || !evidence.changes || "over" in evidence.changes) throw Error("G14 configured list snapshot required");
+    const touched = classify(selected.view.policy.extents, evidence.changes.paths, evidence.changes.links, evidence.changes.unreadable).touched.map(row => row.extent);
+    captured = certifiedReservationSnapshot({ observation: read.rules, input: policy, touched, required: selected.required, tree: evidence.tree, manifest: statement.manifest });
+    if (!captured) throw Error("G14 captured policy exceeds native bound");
+  }
   return {
     effects: [
+      ...(captured ? [{ effect: "value", item: publication.id, slot: "certifiedPolicy", value: captured as unknown as FieldValue } as const,
+        { effect: "value", item: publication.id, slot: "requiredChecks", value: requiredChecks } as const,
+        { effect: "value", item: publication.id, slot: "passes", value: [] } as const] : []),
       { effect: "state", item: publication.id, state: "reserved" }, { effect: "ref", item: branch.id, slot: "slot", to: publication.id }, { effect: "ref", item: branch.id, slot: "judging", to: null },
       { effect: "value", item: publication.id, slot: "integration", value: judged.integration }, { effect: "value", item: publication.id, slot: "reservedAt", value: resolved.self },
       ...(judged.reason === null ? [] : [{ effect: "value", item: publication.id, slot: "reason", value: judged.reason } as const]),
       ...(standingRecord ? [{ effect: "value", item: publication.id, slot: "passes", value: standingRecord as unknown as FieldValue } as const] : []),
-      ...(list ? [{ effect: "value", item: publication.id, slot: "tree", value: evidence.tree! } as const, ...(requiredChecks.length ? [{ effect: "value", item: publication.id, slot: "requiredChecks", value: requiredChecks } as const, { effect: "value", item: publication.id, slot: "checkDeadline", value: timeOf(timeMs(time)! + 1800_000) } as const] : [])] : []),
+      ...(list ? [{ effect: "value", item: publication.id, slot: "tree", value: evidence.tree! } as const, ...(requiredChecks.length ? [...(captured ? [] : [{ effect: "value", item: publication.id, slot: "requiredChecks", value: requiredChecks } as const]), { effect: "value", item: publication.id, slot: "checkDeadline", value: timeOf(timeMs(time)! + 1800_000) } as const] : [])] : []),
     ],
     opens: list ? [opening(given, "reservation-stage", 1, publication.id), opening(given, DESTINATION_KINDS.mint, DESTINATION_ATTEMPTS.mint, publication.id)] : [opening(given, DESTINATION_KINDS.push, DESTINATION_ATTEMPTS.push, publication.id), opening(given, DESTINATION_KINDS.mint, DESTINATION_ATTEMPTS.mint, publication.id)],
     update: list ? null : { ...(list ? { tree: evidence.tree!, commit: judged.integration, ...(requiredChecks.length ? { checkDeadline: timeOf(timeMs(time)! + 1800_000) } : {}) } : {}), publication, state: "reserved", outcome: "committed", ...(judged.reason === null ? {} : { reason: judged.reason }), rules },
@@ -2326,6 +2464,7 @@ export const destinationRules3: Rules = (() => {
     } },
     "resend3-due": { place: "guard", refusals: ["resend-not-due"], run: (given) => {
       const target = given.resolved.subjects.get("on");
+      if (certified(given) && target?.type === "publication" && target.values["tree"] !== undefined && !complete14(given, target, generations(target, given))) return { holds: false, name: "resend-not-due" };
       if (["cleanup-aborted", "published", "cleanup-deleted", "cleanup-owed"].includes(target?.state ?? "")) return { holds: false, name: "resend-not-due" };
       const old = WRITTEN["resend-due"]!; return old.place === "guard" ? old.run(given) : { holds: false, name: "resend-not-due" };
     } },
@@ -2358,7 +2497,9 @@ export const destinationRules3: Rules = (() => {
       const manifest = publication.refs["manifest"] as FactRef;
       const grant = result?.input.type === "act" ? result.input.authority.find((authority) => authority.actions.includes("change.check")) : null;
       const reserved = typeof publication.values["reservedAt"] === "number" ? given.own(publication.values["reservedAt"])?.entry : null;
-      const observation = reserved?.input.type === "outcome" ? reserved.input.observed?.map((use) => use.observation).find((seen) => "subject" in seen && seen.subject === "rules") : null;
+      const snapshot14 = certified(given) ? captured14(given, publication) : null;
+      if (certified(given) && !snapshot14) return { holds: false, name: "not-this-check" };
+      const observation = snapshot14?.observation ?? (reserved?.input.type === "outcome" ? reserved.input.observed?.map((use) => use.observation).find((seen) => "subject" in seen && seen.subject === "rules") : null);
       const configured = observation && "content" in observation && observation.content.asked === "rules" ? observation.content.checks.find((check) => check.name === opened?.["name"]) : null;
       const historical = grant?.fresh?.observation;
       const authentic = !!fields && !!opened && !!configured && job!.at.scope === manifest.at.scope && job!.at.inc === manifest.at.inc && opened["manifest"] === manifest.seq
@@ -2369,15 +2510,17 @@ export const destinationRules3: Rules = (() => {
         && historical.actions.includes("change.check") && canonicalize(historical.of) === canonicalize(grant?.subject.membership)
         && opened["configuration"] === configured.configuration && (fields["outcome"] === "passed" || fields["outcome"] === "failed" || typeof fields["reason"] === "string") && grant?.subject.member === configured.checker
         && result!.effects.some((effect) => effect.effect === "state" && effect.item === job!.seq && (effect.state === "passed" || effect.state === "failed" || effect.state === "errored"));
-      return authentic ? { holds: true } : { holds: false, name: "not-this-check" };
+      return authentic && (!certified(given) || checked14(given, publication, given.resolved.fields, false) !== null) ? { holds: true } : { holds: false, name: "not-this-check" };
     } },
     "checked-result": { place: "effect", most: 6, run: (given) => {
       const publication = given.resolved.subjects.get("also.publication")!;
       const job = given.uses.find((use) => use.fact.hash === (given.resolved.fields["job"] as FactRef).hash)!.entry;
       const name = job.input.type === "act" ? job.input.signed.intent.fields["name"] as string : "";
-      const passes = generations(publication, given).map((row) => row.name === name ? { ...row, passed: true } : row);
+      const verified14 = certified(given) ? checked14(given, publication, given.resolved.fields, true) : null;
+      if (certified(given) && !verified14) return [];
+      const passes = generations(publication, given).map((row) => row.name === name ? { ...row, passed: true, ...(verified14 ? { proof: verified14.proof } : {}) } : row);
       const required = (publication.values["requiredChecks"] ?? []) as string[];
-      const ready = publication.values["checkDeadline"] !== undefined && required.every((check) => passes.some((row) => row.name === check && row.passed));
+      const ready = publication.values["checkDeadline"] !== undefined && (certified(given) ? complete14(given, publication, passes) : required.every((check) => passes.some((row) => row.name === check && row.passed)));
       return [{ effect: "value", item: publication.id, slot: "passes", value: passes as unknown as FieldValue }, ...(ready ? [
         { effect: "value", item: publication.id, slot: "checkDeadline", value: null } as const,
         ...opened(given, 0, DESTINATION_KINDS.push, DESTINATION_ATTEMPTS.push, publication.id),
@@ -2398,10 +2541,13 @@ export const destinationRules3: Rules = (() => {
     const token = tokenStep(given, operation);
     if (given.input.result === "unknown") return { effects: [...token.effects, { effect: "value", item: publication.id, slot: "reason", value: "reservation-stage-unknown" }], opens: token.opens, update: { publication, state: "reserved", outcome: "unknown", reason: "reservation-stage-unknown" } };
     if (given.input.result !== "confirmed" || body.seen !== publication.values["integration"] || body.tree !== publication.values["tree"]) return { effects: [...token.effects, { effect: "state", item: publication.id, state: "cleanup-aborted" }, { effect: "value", item: publication.id, slot: "reason", value: "reservation-stage-mismatch" }, { effect: "ref", item: branchOf(given.state)!.id, slot: "slot", to: null }], opens: [...token.opens, opening(given, "reservation-delete", 3, publication.id), opening(given, "mint", 1, publication.id)], update: { publication, state: "not-reserved", outcome: "refused", reason: "reservation-stage-mismatch" } };
-    const required = (publication.values["requiredChecks"] ?? []) as string[];
+    const snapshot14 = certified(given) ? captured14(given, publication) : null;
+    if (certified(given) && !snapshot14) throw Error("G14 stage has no captured complete policy");
+    const required = snapshot14 ? snapshot14.required.map(row => row.name) : (publication.values["requiredChecks"] ?? []) as string[];
+    const ready14 = !certified(given) || complete14(given, publication, generations(publication, given));
     const reservation = given.own(publication.values["reservedAt"] as number)!;
     const ref = `refs/artroom/reservations/${reservation.hash.slice(7)}`;
-    return { effects: token.effects, opens: [...token.opens, ...(required.length ? [] : [opening(given, DESTINATION_KINDS.push, DESTINATION_ATTEMPTS.push, publication.id), opening(given, DESTINATION_KINDS.mint, 1, publication.id)])],
+    return { effects: token.effects, opens: [...token.opens, ...((required.length || !ready14) ? [] : [opening(given, DESTINATION_KINDS.push, DESTINATION_ATTEMPTS.push, publication.id), opening(given, DESTINATION_KINDS.mint, 1, publication.id)])],
       update: { publication, state: "reserved", outcome: "committed", tree: publication.values["tree"] as string, commit: publication.values["integration"] as string, reservationRef: ref, ...(required.length ? { checkDeadline: publication.values["checkDeadline"] as string } : {}) } };
   };
   const receiptPrior = rules["receipt"] as Extract<PlatformRule, { place: "outcome" }>;
@@ -2474,16 +2620,22 @@ export const destinationRules3: Rules = (() => {
       const opening = given.own(Number(operation.id.split(":")[0]))!.entry;
       const held = opening.effects.find((effect) => effect.effect === "operation" && effect.kind === "check-judge");
       const publication = held?.effect === "operation" && typeof held.for === "number" ? given.state.item(held.for) : null;
-      const result = given.uses.find((use) => use.entry.input.type === "act" && ["check", "check-error"].includes(use.entry.input.signed.intent.kind))?.entry;
+      const result = certified(given) ? given.uses.find(use => equal14(use.fact, (given.input.type === "outcome" && isObject(given.input.evidence.body) ? given.input.evidence.body["result"] : null)))?.entry
+        : given.uses.find((use) => use.entry.input.type === "act" && ["check", "check-error"].includes(use.entry.input.signed.intent.kind))?.entry;
       const fields = result?.input.type === "act" ? result.input.signed.intent.fields : null;
       const key = result?.input.type === "act" ? result.input.signed.intent.actor : null;
       const seen = key ? given.observed({ key })?.observation : null;
       if (!publication || publication.state !== "reserved" || !resultGeneration(given, publication) || !seen || "subject" in seen || seen.keyState === "compromised") return null;
-      if (fields?.["outcome"] !== "passed") return updateRequest(given, { publication, state: "not-reserved", outcome: "refused", reason: "required-check-failed" });
-      const job = given.uses.find((use) => use.entry.input.type === "act" && use.entry.input.signed.intent.kind === "request-check")?.entry;
+      if (!certified(given) && fields?.["outcome"] !== "passed") return updateRequest(given, { publication, state: "not-reserved", outcome: "refused", reason: "required-check-failed" });
+      const job = certified(given) ? given.uses.find(use => equal14(use.fact, (given.input.type === "outcome" && isObject(given.input.evidence.body) ? given.input.evidence.body["job"] : null)))?.entry
+        : given.uses.find((use) => use.entry.input.type === "act" && use.entry.input.signed.intent.kind === "request-check")?.entry;
       const name = job?.input.type === "act" ? job.input.signed.intent.fields["name"] : null;
-      const passes = generations(publication, given).map((row) => row.name === name ? { ...row, passed: true } : row);
-      const complete = ((publication.values["requiredChecks"] ?? []) as string[]).every((check) => passes.some((row) => row.name === check && row.passed));
+      const resultFact14 = given.uses.find(use => use.entry === result)?.fact;
+      const verified14 = certified(given) && job && resultFact14 ? checked14(given, publication, { job: given.uses.find(use => use.entry === job)?.fact, result: resultFact14 }, true) : null;
+      if (certified(given) && !verified14) return null;
+      if (certified(given) && fields?.["outcome"] !== "passed") return updateRequest(given, { publication, state: "not-reserved", outcome: "refused", reason: "required-check-failed" });
+      const passes = generations(publication, given).map((row) => row.name === name ? { ...row, passed: true, ...(verified14 ? { proof: verified14.proof } : {}) } : row);
+      const complete = certified(given) ? complete14(given, publication, passes) : ((publication.values["requiredChecks"] ?? []) as string[]).every((check) => passes.some((row) => row.name === check && row.passed));
       return complete && publication.values["checkDeadline"] !== undefined ? updateRequest(given, { publication, state: "reserved", outcome: "committed", tree: publication.values["tree"] as string, commit: publication.values["integration"] as string }) : null;
     } },
     "reservation-stage": { place: "outcome", rules: {
@@ -2522,6 +2674,7 @@ export const destinationRules3: Rules = (() => {
         const key = result?.input.type === "act" ? result.input.signed.intent.actor : null;
         const observation = key ? given.observed({ key })?.observation : null;
         if (!observation || "subject" in observation || observation.keyState === "compromised") return { effects: [], sends: [], opens: [] };
+        if (certified(given) && checked14(given, publication, fields, true) === null) return { effects: [], sends: [], opens: [] };
         const resultFields = result?.input.type === "act" ? result.input.signed.intent.fields : null;
         if (resultFields?.["outcome"] !== "passed") {
           const branch = branchOf(given.state)!;

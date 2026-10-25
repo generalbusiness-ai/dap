@@ -16,6 +16,7 @@ import { SmartHttpSource } from "@generalbusiness/dap-git/http-read";
 import type { DestinationBinding, DestinationInspection, DestinationProvider, DestinationRepository } from "./destination-host.ts";
 import type { RegisterProvider } from "./register-host.ts";
 import { fixtureArchiveProvider, type FixtureArchivePorts } from "./archive-host.ts";
+import { readRulesTree, rulesTreeRequest, rulesTreeIsolation, type RulesTreeRequest, type RulesTreeObjects } from "./rules-tree-provider.ts";
 
 export interface GitHubProviderOptions {
   app: GitHubAppOptions;
@@ -163,6 +164,11 @@ export class GitHubProvider implements RegisterProvider, DestinationProvider {
     if (!(await new Reader(recording, this.#bounds).closure(commit)).complete) return bad();
     return [...collected.values()];
   }
+  async rulesTree(repository: DestinationRepository, request: RulesTreeRequest): Promise<RulesTreeObjects> {
+    const asked = rulesTreeRequest(request);
+    repository = { ...repository };
+    return readRulesTree(await this.#source(repository, true), asked, this.#bounds);
+  }
   async send(request: Parameters<DestinationProvider["send"]>[0]): Promise<unknown> {
     request = { ...request, repository: { ...request.repository }, binding: { ...request.binding, scope: { ...request.binding.scope } } };
     const remote = this.#remote(request.repository);
@@ -186,14 +192,14 @@ export class GitHubProvider implements RegisterProvider, DestinationProvider {
   #transport(remote: string) {
     return { remote, maxBytes: this.#options.maxBytes, bounds: this.#bounds, ...(this.#options.app.fetch === undefined ? {} : { fetch: this.#options.app.fetch }), ...(this.#options.app.timeoutMs === undefined ? {} : { timeoutMs: this.#options.app.timeoutMs }) };
   }
-  async #source(repository: DestinationRepository): Promise<SmartHttpSource> {
+  async #source(repository: DestinationRepository, rulesTree = false): Promise<SmartHttpSource> {
     repository = { ...repository };
     const remote = this.#remote(repository);
     const plaintext = await this.#options.readCredential({ ...repository });
     // Lookup validates the configured account and the recorded stable ID.
     // A missing/unexposed lookup is uncertainty, never an absent Git object.
     await requireGitHubRepositoryIdentity((name, token) => this.#app.repository(name, token), repository, plaintext);
-    return new SmartHttpSource({ ...this.#transport(remote), ...(plaintext === undefined ? {} : { authorization: gitAuthorization(plaintext) }) });
+    return new SmartHttpSource({ ...this.#transport(remote), ...(rulesTree ? rulesTreeIsolation(this.#options.maxBytes) : {}), ...(plaintext === undefined ? {} : { authorization: gitAuthorization(plaintext) }) });
   }
 }
 

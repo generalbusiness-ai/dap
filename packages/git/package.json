@@ -15,7 +15,8 @@
     "./journal-reader": "./src/journal-reader.ts",
     "./journal-local": "./src/journal-local.ts",
     "./journal": "./src/journal.ts",
-    "./application": "./src/application.ts"
+    "./application": "./src/application.ts",
+    "./tree-proof": "./src/tree-proof.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.test.json",

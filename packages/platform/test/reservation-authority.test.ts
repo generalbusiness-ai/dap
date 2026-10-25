@@ -1,10 +1,13 @@
 import { expect, test } from "vitest";
 import type { FactRef } from "@generalbusiness/dap-contract";
-import { textDigest } from "@generalbusiness/dap-bytes";
-import { observationOf } from "@generalbusiness/dap-derive";
+import { canonicalize, newIncarnation, textDigest, utf8 } from "@generalbusiness/dap-bytes";
+import { observationOf, valueDigest } from "@generalbusiness/dap-derive";
 import { d, otherLane, t } from "@generalbusiness/dap-derive/testing";
 import { MEMBERSHIP, standingOf } from "../src/membership.ts";
 import { judgeReservation, judgeReservationWithStanding, type Statement } from "../src/reservation.ts";
+import { judgeListEligibilityV14, judgeReservationV14, readRulesPolicyObservationV14, type ReservationAskedV14 } from "../src/reservation-v14.ts";
+import { RULES_PATTERNS } from "../src/extents.ts";
+import { rulesPolicyProposalV11 } from "../src/rules-policy-v11.ts";
 import { CREATED, HEAD, NEXT, reading, rulesObserved, keyObserved, Roster, membershipPaul as paul, membershipRita as rita, membershipUna as una } from "./fixtures-entry.ts";
 
 // Membership is judged in memory with its real rules below the made-up office of Roster. Its standing is the actual
@@ -42,7 +45,7 @@ for (const loses of ["last active key", "membership"] as const) test(`a customiz
     .toEqual({ reserved: true, integration: NEXT, reason: null });
 });
 
-test("D1 metadata follows the actual independent approvals and required check decisions while the old result shape stays exact", () => {
+test("D1 metadata and G14 required checks retain actual decision provenance while historical results stay exact", () => {
   // Lane facts and observations are stand-ins. This is the actual pure
   // reservation policy, with no runtime admission or key-freshness claim.
   const name: Statement = { ...statement, verdicts: [
@@ -74,4 +77,91 @@ test("D1 metadata follows the actual independent approvals and required check de
   const decided = judgeReservationWithStanding(byExtent);
   expect(decided).toMatchObject({ reserved: true, standing: { base: [{ key: read.merger!.key }, { key: una.key }], checks: [{ name: "verify", key: una.key }] } });
   expect(judgeReservation(byExtent)).toEqual({ reserved: true, integration: NEXT, reason: null });
+
+  // G14 pure consumer: every observation, lane proof and certificate below
+  // is a labelled stand-in. No native policy publication or job is executed.
+  // The actual strict decoder/judge must enforce a global check that no
+  // touched extent names; the historical result above remains unchanged.
+  const lintKey = keyObserved(una, t(0)), verifyKey = keyObserved(paul, t(0));
+  const proposed = rulesPolicyProposalV11({ approvals: 0, allowZeroApprovals: true, ownerMayReview: false,
+    checks: [
+      { name: "lint", configuration: d("b"), required: false, checker: { membership: lintKey.of, member: lintKey.member } },
+      { name: "verify", configuration: d("c"), required: true, checker: { membership: verifyKey.of, member: verifyKey.member } },
+    ], labels: [], extents: [
+      { name: "rules", patterns: [...RULES_PATTERNS], approvals: 1, approver: "change.review", checks: [], class: "authority" },
+      { name: "source", patterns: [], approvals: 0, allowZeroApprovals: true, approver: "change.review", checks: ["lint"], class: "content" },
+    ] });
+  if (!proposed.ok) throw new Error("the strict fixture policy must be valid");
+  const policy = proposed.policy;
+  const destination = { ...statement.operation.at, kind: "destination" as const };
+  const certificate = { request: { ...fact(10), at: destination }, certificate: { ...fact(11), at: destination }, proof: d("d"), commit: HEAD };
+  const envelope = { configured: true, policy, proposal: proposed.digest, certificate };
+  const observed = { ...rulesObserved(t(0)), definition: "platform:rules@11" as const, content: {
+    asked: "rules" as const, approvals: policy.approvals, ownerMayReview: policy.ownerMayReview, labels: policy.labels,
+    checks: policy.checks.map(check => ({ ...check, checker: check.checker.member })), singleControllerException: false,
+    extents: valueDigest("artroom-rules-extents-2", envelope),
+  } };
+  const strictStatement: Statement = { ...statement, jobs: [
+    { job: fact(12), name: "lint", state: "passed", decidedBy: fact(13) },
+    { job: fact(14), name: "verify", state: "passed", decidedBy: fact(15) },
+  ] };
+  const strictRead = reading(t(0), { rules: observed, extents: policy.extents,
+    checks: { lint: { opening: "sound", deciding: true, key: lintKey }, verify: { opening: "sound", deciding: true, key: verifyKey } } });
+  const strict: ReservationAskedV14 = { recorded: HEAD, evidence: CREATED, statement: strictStatement, read: strictRead, time: t(0),
+    policy: { rules: observed.of, destination, extents: envelope } };
+  const lintOnly = { ...strict, statement: { ...strictStatement, jobs: strictStatement.jobs.slice(0, 1) } };
+  expect(judgeReservation(lintOnly)).toEqual({ reserved: true, integration: NEXT, reason: null });
+  expect(judgeReservationV14(lintOnly)).toEqual({ reserved: false, reason: "rules-not-met" });
+  // The one authenticated value owns the full checker/policy projection;
+  // there is no second digest/value lookup that a generic observer can miss.
+  const decodedEnvelope = readRulesPolicyObservationV14(observed, strict.policy, t(0));
+  expect(decodedEnvelope).toMatchObject({ ok: true, view: { proposal: proposed.digest, policy } });
+  const oversized = { ...envelope, policy: { ...policy, labels: ["x".repeat(262144)] } };
+  expect(utf8(canonicalize(oversized)).length).toBeGreaterThan(262144);
+  const oversizedObserved = { ...observed, content: { ...observed.content, extents: valueDigest("artroom-rules-extents-2", oversized) } };
+  expect(readRulesPolicyObservationV14(oversizedObserved, { ...strict.policy, extents: oversized }, t(0)))
+    .toEqual({ ok: false, reason: "evidence-invalid" });
+  // A configured envelope cannot borrow a policy from an unrelated input.
+  const absentPolicy = { ...envelope, policy: null };
+  expect(readRulesPolicyObservationV14({ ...observed, content: { ...observed.content,
+    extents: valueDigest("artroom-rules-extents-2", absentPolicy) } }, { ...strict.policy, extents: absentPolicy }, t(0)))
+    .toEqual({ ok: false, reason: "evidence-invalid" });
+
+  expect(judgeReservationV14({ ...strict, read: { ...strictRead, checks: { ...strictRead.checks,
+    verify: { ...strictRead.checks["verify"]!, opening: "other-configuration" } } } })).toEqual({ reserved: false, reason: "rules-not-met" });
+  const invalidGlobal = { ...strict, statement: { ...strictStatement, jobs: strictStatement.jobs.slice(1) },
+    read: { ...strictRead, checks: { ...strictRead.checks, verify: { ...strictRead.checks["verify"]!, deciding: false } } } };
+  expect(judgeReservation(invalidGlobal)).toEqual({ reserved: false, reason: "rules-not-met:source" });
+  expect(judgeReservationV14(invalidGlobal)).toEqual({ reserved: false, reason: "evidence-invalid" });
+  expect(judgeReservationV14(strict)).toEqual({ reserved: true, integration: NEXT, reason: null, standing: {
+    base: [{ key: strictRead.merger!.key, from: statement.operation }], checks: [
+      { name: "lint", job: fact(12), result: fact(13), key: lintKey.key },
+      { name: "verify", job: fact(14), result: fact(15), key: verifyKey.key },
+    ],
+  } });
+  const otherIncarnation = { ...verifyKey, of: { ...verifyKey.of, inc: newIncarnation(new Uint8Array(16).fill(9)) } };
+  expect(judgeReservationV14({ ...strict, read: { ...strictRead, checks: { ...strictRead.checks,
+    verify: { ...strictRead.checks["verify"]!, key: otherIncarnation } } } })).toEqual({ reserved: false, reason: "evidence-invalid" });
+  expect(judgeReservationV14({ ...strict, statement: { ...strictStatement, jobs: strictStatement.jobs.map(job =>
+    job.name === "verify" ? { job: job.job, name: job.name, state: job.state } : job) } })).toEqual({ reserved: false, reason: "evidence-invalid" });
+
+  // Eligibility may stage without future tree-bound jobs. It is not a final
+  // reservation and still captures both full configured checker references.
+  const beforeStage = { ...strict, statement: { ...strictStatement, jobs: [] }, read: { ...strictRead, checks: {} } };
+  const eligible = judgeListEligibilityV14(beforeStage);
+  expect(eligible).toMatchObject({ eligible: true, integration: NEXT, required: policy.checks });
+  expect(eligible).not.toHaveProperty("reserved");
+  expect(judgeReservationV14(beforeStage)).toEqual({ reserved: false, reason: "rules-not-met" });
+  const unconfigured = { configured: false, policy: null, proposal: null, certificate: null };
+  const missingPolicy = { ...strict, policy: { ...strict.policy, extents: unconfigured },
+    read: { ...strictRead, rules: { ...observed, content: { ...observed.content, extents: valueDigest("artroom-rules-extents-2", unconfigured) } } } };
+  expect(judgeReservationV14(missingPolicy)).toEqual({ reserved: false, reason: "rules-not-configured" });
+  expect(judgeListEligibilityV14(missingPolicy)).toEqual({ eligible: false, reason: "rules-not-configured" });
+  expect(judgeReservationV14({ ...missingPolicy, read: { ...missingPolicy.read, merger: null } })).toEqual({ reserved: false, reason: "authority-lost" });
+  expect(judgeReservationV14({ ...missingPolicy, recorded: NEXT })).toEqual({ reserved: false, reason: "out-of-date" });
+  // A lane-cached or contradictory outer checker configuration cannot stand
+  // in for the complete proposal that the authenticated Q11 answer names.
+  expect(judgeReservationV14({ ...strict, read: { ...strictRead, rules: { ...observed, content: { ...observed.content,
+    checks: observed.content.checks.map(check => check.name === "verify" ? { ...check, configuration: d("e") } : check) } } } })).toEqual({ reserved: false, reason: "evidence-invalid" });
+
 });

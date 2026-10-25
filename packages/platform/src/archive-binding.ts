@@ -1,18 +1,20 @@
 /** Archive binding is an explicit cohort; shipped definition bodies stay fixed. */
 import type { PlatformData } from "@generalbusiness/dap-contract";
+import { isRecord, isSeed } from "@generalbusiness/dap-bytes";
+import type { Rules } from "@generalbusiness/dap-derive";
 import { register, ARCHIVE } from "./register.ts";
 import { directory11 } from "./application-install-creation.ts";
 import { applicationInstallRulesScope } from "./application-install.ts";
 import { applicationInstallRulesScope2 } from "./application-install-v2.ts";
-import { deviceApplicationDirectory } from "./device-application-directory.ts";
+import { deviceApplicationDirectory, deviceApplicationDirectoryRules } from "./device-application-directory.ts";
 import { deviceApplicationRulesScope, deviceApplicationRules } from "./device-application-rules.ts";
-import { ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT } from "./archive-binding-wire.ts";
+import { ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT } from "./archive-binding-wire.ts";
 
 export const archiveRegister: PlatformData = { ...register, acts: { ...register.acts,
   found: { ...register.acts["found"]!, fields: { ...register.acts["found"]!.fields, archive: { ...ARCHIVE, required: false } } },
 } };
 
-function directory(base: PlatformData, cohort: typeof ARCHIVE_APPLICATION_COHORT | typeof ARCHIVE_DECLARED_APPLICATION_COHORT | typeof ARCHIVE_DEVICE_APPLICATION_COHORT): PlatformData {
+function directory(base: PlatformData, cohort: typeof ARCHIVE_APPLICATION_COHORT | typeof ARCHIVE_DECLARED_APPLICATION_COHORT | typeof ARCHIVE_DEVICE_APPLICATION_COHORT | typeof ARCHIVE_CERTIFIED_RULES_COHORT): PlatformData {
   const establish = base.acts["establish"]!, stage = base.receives["application-stage"]!;
   return { ...base,
     items: { ...base.items, repository: { ...base.items["repository"]!,
@@ -42,6 +44,23 @@ export const archiveDirectory = directory(directory11, ARCHIVE_APPLICATION_COHOR
 export const archiveDeclaredDirectory = directory(directory11, ARCHIVE_DECLARED_APPLICATION_COHORT);
 
 export const archiveDeviceDirectory = directory(deviceApplicationDirectory, ARCHIVE_DEVICE_APPLICATION_COHORT);
+
+/** Only D18 creates Q11 with an explicit false owner-review choice. Keep
+ * the native sibling seeds, membership creation and all old sends intact. */
+export const archiveCertifiedRulesDirectory = directory(deviceApplicationDirectory, ARCHIVE_CERTIFIED_RULES_COHORT);
+export const archiveCertifiedRulesDirectoryRules: Rules = {
+  ...deviceApplicationDirectoryRules,
+  "create-rules": { place: "send", run: given => {
+    const rule = deviceApplicationDirectoryRules["create-rules"];
+    if (!rule || rule.place !== "send") throw Error("native rules creation rule required");
+    const request = rule.run(given);
+    if (!request || !isSeed(request.to) || request.to.definition !== ARCHIVE_CERTIFIED_RULES_COHORT.rules
+      || request.message.class !== "request" || request.message.type !== "create" || !isRecord(request.message.body)
+      || !isRecord(request.message.body["fields"])) throw Error("certified rules sibling creation required");
+    return { ...request, message: { ...request.message, body: { ...request.message.body,
+      fields: { ...request.message.body["fields"], ownerMayReview: false } } } };
+  } },
+};
 
 function rules(base: PlatformData): PlatformData {
   const installation = base.items["installation"]!, { needsDestination: _old, ...values } = installation.values;

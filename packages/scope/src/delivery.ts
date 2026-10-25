@@ -197,7 +197,7 @@ export class Deliveries {
       const destination = store.scope()?.at;
       if (!isScopeRef(directory) || !destination) return retry("dependency-unavailable");
       const destinationPin = pinned?.platform?.named;
-      const policy = destinationPin === "platform:destination@7" || destinationPin === "platform:destination@8" || destinationPin === "platform:destination@13"
+      const policy = destinationPin === "platform:destination@7" || destinationPin === "platform:destination@8" || destinationPin === "platform:destination@13" || destinationPin === "platform:destination@14"
         ? this.#ports.definitions.platform(destinationPin)?.applicationPublicationOrigin : applicationPublicationOrigin;
       const native = reader?.mode === "partition-v1" ? await reader.publication(from, directory, destination, "application") : policy?.(from, directory, destination, read.origin ?? []) ?? null;
       if (native === null) return retry("dependency-unavailable");

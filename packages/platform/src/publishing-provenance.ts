@@ -223,3 +223,8 @@ export function archiveDeviceApplicationPublicationOrigin(from: FactRef, directo
 export function archiveDevicePublicationOrigin(from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly Fetched[]): boolean | null {
   return installedApplicationOrigin(from, directory, destination, facts, { directory: "platform:directory@17", rules: "platform:rules@10", destination: "platform:destination@13", membership: "platform:membership@8", deviceCommand: true });
 }
+
+/** Only the certified-rules destination admits this exact device factory. */
+export function archiveCertifiedRulesPublicationOrigin(from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly Fetched[]): boolean | null {
+  return installedApplicationOrigin(from, directory, destination, facts, { directory: "platform:directory@18", rules: "platform:rules@11", destination: "platform:destination@14", membership: "platform:membership@8", deviceCommand: true });
+}

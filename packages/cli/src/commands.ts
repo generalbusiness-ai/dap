@@ -1,4 +1,4 @@
-import { ARCHIVE_REPLAY_CODE, INVITATION_KEY_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT } from "@generalbusiness/dap-platform";
+import { ARCHIVE_REPLAY_CODE, INVITATION_KEY_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT } from "@generalbusiness/dap-platform";
 import { invitationIssueFields, invitationRedemptionFields, isInvitationMembership } from "@generalbusiness/dap-client";
 import { applicationList } from "./application-list.ts";
 /**
@@ -410,7 +410,7 @@ async function createdBy(handle: ScopeHandle, seq: number): Promise<{ n: number;
 // ---------------------------------------------------------------- the commands
 
 /** Explicit selection only; omission retains the installed default cohort. */
-export type InstallCohort = "file-publication" | "application" | "application-publication" | "trusted-application" | "declared-application" | "device-application" | "archive-application" | "archive-device-application" | "archive-device-publication" | "archive-declared-application" | "invitation-key";
+export type InstallCohort = "file-publication" | "application" | "application-publication" | "trusted-application" | "declared-application" | "device-application" | "archive-application" | "archive-device-application" | "archive-device-publication" | "archive-certified-rules" | "archive-declared-application" | "invitation-key";
 export type RegisterPolicy = "keys" | "open";
 export interface InstallOptions { host?: string; namespace?: string; cohort?: InstallCohort; registerPolicy?: RegisterPolicy }
 const INSTALL_COHORTS: Readonly<Record<InstallCohort, PlatformDefinition>> = {
@@ -424,6 +424,7 @@ const INSTALL_COHORTS: Readonly<Record<InstallCohort, PlatformDefinition>> = {
   "archive-declared-application": ARCHIVE_DECLARED_APPLICATION_COHORT.register,
   "archive-device-application": ARCHIVE_DEVICE_APPLICATION_COHORT.register,
   "archive-device-publication": ARCHIVE_DEVICE_PUBLICATION_COHORT.register,
+  "archive-certified-rules": ARCHIVE_CERTIFIED_RULES_COHORT.register,
   "device-application": DEVICE_APPLICATION_COHORT.register,
 };
 function selectedRegister(cohort: unknown): PlatformDefinition | undefined {
@@ -439,7 +440,8 @@ function selectedRegister(cohort: unknown): PlatformDefinition | undefined {
   if (cohort === "archive-declared-application") return INSTALL_COHORTS["archive-declared-application"];
   if (cohort === "archive-device-application") return INSTALL_COHORTS["archive-device-application"];
   if (cohort === "archive-device-publication") return INSTALL_COHORTS["archive-device-publication"];
-  return stopCommand(usage("--cohort takes exactly file-publication, application, application-publication, trusted-application, declared-application, device-application, archive-application, archive-declared-application, archive-device-application, archive-device-publication or invitation-key; nothing was signed or sent."));
+  if (cohort === "archive-certified-rules") return INSTALL_COHORTS["archive-certified-rules"];
+  return stopCommand(usage("--cohort takes exactly file-publication, application, application-publication, trusted-application, declared-application, device-application, archive-application, archive-declared-application, archive-device-application, archive-device-publication, archive-certified-rules or invitation-key; nothing was signed or sent."));
 }
 /** Public creation is an explicit fixed cohort, independent of future defaults. */
 function installSelection(options: Pick<InstallOptions, "cohort" | "registerPolicy">): PlatformDefinition | undefined {

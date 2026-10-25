@@ -16,6 +16,10 @@ const drafts = new Map<string, Record<string, string>>();
 /** A rules form has no authority of its own: only the offered publish action may call send. */
 export function rulesEditor(rules: Rules, send: Send, context: { blocked?: boolean; draftKey?: string } = {}): HTMLElement {
   const form = h("form", { class: "rules-editor", "data-act": "publish" });
+  if (rules.readOnlyReason) {
+    form.append(h("p", { role: "status" }, rules.readOnlyReason));
+    return form;
+  }
   if (rules.item === undefined || rules.approvals === null || rules.ownerMayReview === null || rules.singleControllerException === null || rules.extents === null) {
     form.append(h("p", { role: "status" }, "The complete rules could not be read. Check status before editing."));
     return form;

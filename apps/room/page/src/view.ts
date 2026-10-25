@@ -177,7 +177,9 @@ export function changeScreen(room: Room, change: ChangeView, last: Answer | null
 }
 
 export function rulesScreen(room: Room, rules: RulesView, editable = false): HTMLElement {
+  if (rules.readOnlyReason) editable = false;
   return h("main", { class: "screen form-layout" }, h("div", { class: "detail-top" }, h("h1", { class: "rules-title" }, "Rules"), h("div", { class: "toolbar-actions", "data-action-slot": "next" })),
+    rules.readOnlyReason ? h("p", { role: "status" }, rules.readOnlyReason + " Displayed from the current signed summary.") : null,
     !editable ? rules.extents?.length ? section("Review requirements", rules.extents.map((e) => h("div", { class: "rule-row" },
       h("div", {}, h("strong", { class: "rule-label" }, e.name), h("span", { class: "rule-path" }, list(e.patterns ?? [], "Any other file paths"))),
       h("span", {}, `${e.approvals} approval${e.approvals === 1 ? "" : "s"}`),

@@ -44,6 +44,7 @@ import {
 import { LINK, describe, expectedOf, heldActs, linkOf, valueOf, type ActShape, type DefinitionShape, type Standing } from "@generalbusiness/dap-cli";
 import { ARCHIVE_DEVICE_PUBLICATION_COHORT, DEFINITION_DOMAIN, ROLE_LISTS, fileSound, firstExtents, isExtents, platform, type Role } from "@generalbusiness/dap-platform";
 import type { Extent as PolicyExtent } from "@generalbusiness/dap-platform";
+import { Q11_READ_ONLY, rulesSummaryV11 } from "./rules-summary-v11.ts";
 import { knownLIST1 } from "./source-support.ts";
 import { currentStanding, reviewCandidates } from "./membership-projection.ts";
 
@@ -789,6 +790,9 @@ export async function roomInitialization(room: Room): Promise<RoomInitialization
 }
 
 export interface RulesView {
+  /** Q11 only: summary-bound read-only presentation, not native observation authentication. */
+  configured?: boolean;
+  readOnlyReason?: string;
   /** The actual rules item, used by publish transitions. */
   item?: number;
   scope: ScopeId; head: Head;
@@ -808,6 +812,26 @@ export async function loadRules(room: Room): Promise<RulesView> {
   const { summary, at } = await summaryOf(handle);
   const rules = summary.items.find((item) => item.type === "rules");
   if (!rules) throw new Unreadable(`${room.rules} holds no rules.`);
+  if (summary.definition === "platform:rules@11") {
+    if (summary.status !== "active" || summary.scope.kind !== "rules" || summary.scope.scope !== room.rules
+      || summary.items.filter(item => item.type === "rules").length !== 1) throw new Unreadable("The complete certified rules could not be read.");
+    const read = rulesSummaryV11(rules, room.destination);
+    if (!read) throw new Unreadable("The certified rules summary is inconsistent or unavailable.");
+    const published = rules.refs["published"], policy = read.policy;
+    if (read.configured && (typeof published !== "number" || !Number.isSafeInteger(published) || published < 0 || published > at.seq))
+      throw new Unreadable("The certified rules publication is unavailable.");
+    return { scope: room.rules, item: rules.id, head: at, configured: read.configured,
+      readOnlyReason: read.configured ? Q11_READ_ONLY : "Certified rules have not been configured. " + Q11_READ_ONLY,
+      revision: read.configured && typeof published === "number" ? published : null,
+      approvals: policy?.approvals ?? null, ownerMayReview: policy?.ownerMayReview ?? null,
+      singleControllerException: policy ? policy.singleControllerException === true : null,
+      checks: policy ? policy.checks.map(check => ({ ...check, checker: { ...check.checker, membership: { ...check.checker.membership } } })) : [],
+      labels: policy ? [...policy.labels] : [],
+      extents: policy ? policy.extents.map(extent => ({ ...extent, patterns: [...extent.patterns], checks: [...extent.checks] })) : null,
+      definitions: (await itemsOf(room, handle, summary, "definition", at)).map(d => ({ name: String(d.values["name"]), digest: String(d.values["digest"]), state: d.state })),
+      controllers: holdersOf((await summaryOf(handleOf(room, room.membership.scope))).summary.items, "rules.publish"),
+    };
+  }
   // The slot holds the position of the last `publish` in this scope's history: the revision of the rules (`revisionOf`).
   const published = rules.refs["published"];
   return {
@@ -896,6 +920,7 @@ export async function actsOn(room: Room, scope: ScopeId): Promise<{ acts: Offere
   const me = await refreshStanding(room);
   const handle = handleOf(room, scope);
   const summary = (await summaryOf(handle)).summary;
+  if (summary.definition === "platform:rules@11") return { acts: [], hidden: 0 };
   let { shape } = await shapeOf(room, handle, summary);
   if (scope === room.directory && summary.definition === "platform:directory@10") {
     const selected = await activeDirectory({ summary: scope => handleOf(room, scope).summary(), query: (scope, query) => handleOf(room, scope).queryItems(query) }, summary.scope, room.membership);
@@ -1023,6 +1048,7 @@ export async function act(room: Room, scope: ScopeId, kind: string, asked: { on?
   if (scope === room.directory && OPENING_ACTS.has(kind)) scope = await openingScope(room);
   const handle = handleOf(room, scope);
   const { summary, at: before } = await summaryOf(handle);
+  if (summary.definition === "platform:rules@11") throw new Unreadable(Q11_READ_ONLY);
   const { shape, declared } = await shapeOf(room, handle, summary);
   const declaration = shape.acts[kind];
   if (!declaration || kind === shape.genesis) throw new Unreadable(`${kind} is not an act of ${shape.name}.`);

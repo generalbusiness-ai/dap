@@ -18,4 +18,9 @@ export const ARCHIVE_DEVICE_PUBLICATION_COHORT = Object.freeze({
   register: "platform:register@18", directory: "platform:directory@17", membership: "platform:membership@8",
   rules: "platform:rules@10", destination: "platform:destination@13", inbox: "platform:inbox@1",
 } as const);
-export const archiveInstallPin = (pin: string): boolean => pin === ARCHIVE_APPLICATION_COHORT.rules || pin === ARCHIVE_DECLARED_APPLICATION_COHORT.rules || pin === ARCHIVE_DEVICE_APPLICATION_COHORT.rules;
+/** Certified rules are an explicit scheduled family, never an implicit default. */
+export const ARCHIVE_CERTIFIED_RULES_COHORT = Object.freeze({
+  register: "platform:register@19", directory: "platform:directory@18", membership: "platform:membership@8",
+  rules: "platform:rules@11", destination: "platform:destination@14", inbox: "platform:inbox@1",
+} as const);
+export const archiveInstallPin = (pin: string): boolean => pin === ARCHIVE_APPLICATION_COHORT.rules || pin === ARCHIVE_DECLARED_APPLICATION_COHORT.rules || pin === ARCHIVE_DEVICE_APPLICATION_COHORT.rules || pin === ARCHIVE_CERTIFIED_RULES_COHORT.rules;

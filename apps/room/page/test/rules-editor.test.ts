@@ -48,6 +48,9 @@ const button = (form: Element, label: string) => form.all().find((node) => node.
 
 test("unchanged rules and canceled confirmation sign nothing; malformed advanced values remain editable", () => {
   const sent: unknown[] = [];
+  const readOnly = asElement(rulesEditor({ ...rules(), readOnlyReason: "Certified rules are read-only." }, () => expect.fail("must not send")));
+  expect(readOnly.textContent).toContain("Certified rules are read-only.");
+  expect(readOnly.all().some(node => node.tag === "button" || node.tag === "input")).toBe(false);
   const form = asElement(rulesEditor(rules(), (...args) => sent.push(args)));
   const labelFor = (name: string) => form.all().find(node => node.tag === "label" && node.all().some(control => control.name === name))!.children[0];
   expect([labelFor("ownerMayReview"), labelFor("singleControllerException"), labelFor("approvals")]).toEqual(["Agent controllers can review their own agents?", "Single controller exception?", "Default approvals"]);

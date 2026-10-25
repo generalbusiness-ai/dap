@@ -1,0 +1,70 @@
+# Certified rules policy
+
+Request `0716e75a`, remaining R7 work; promise `7e959e25`.
+
+## What changed
+
+The prospective native family is Register 19, Directory 18, Membership 8,
+Rules 11, Destination 14 and Inbox 1. Existing defaults stay at Register
+18; the public offer and recorded Grow family stay at Register 17. The
+planner owns later creation allowances and rollout.
+
+Rules 11 validates a complete owned policy, explicit owner-review and
+zero-approval choices, review-only extent approvers, the protected rules
+minimum and explicit future-pattern occurrences. A bounded repository-tree
+proof checks the policy patterns at the captured commit. Destination 14
+certifies that proposal through its actual native operation and selected
+own outcome before the first Rules publication.
+
+The one named Rules observation value contains the complete policy,
+proposal and certificate. Destination admission enforces the global and
+touched required-check union. List publication captures the complete
+policy and stages before future jobs exist; final push depends on current
+accepted native job generations. Historical selectors retain their exact
+version sets, with explicit additions for the new family.
+
+Page reads validate a coherent signed-summary policy for presentation.
+The view is read-only and unsupported Rules 11 writes refuse before
+signing. Native observation and certificate authority stay with the
+native admission path.
+
+## Decisions and why
+
+The existing native dependency mechanism names the observation's outer
+extents digest. One bounded complete envelope fits that mechanism without
+changing generic observation semantics. Initial list eligibility and final
+permission to publish remain separate so a new tree can stage before its
+checks run. The existing second-step key limit remains eight.
+
+The Page transport already reads signed summaries. Its presentation uses
+those summaries and the shared strict decoder. A new public observation
+endpoint and a Page certificate-publication workflow remain outside this
+slice.
+
+## Evidence
+
+This is the initial Source checkpoint. Ten reviewed external packets were
+assembled with four explicit predecessor-to-successor overlaps. The six
+Page paths and narrow barrel/workspace-lock changes were reviewed
+separately. All existing beforeimages matched both Main `86204d44` and the
+worktree's Main `778fea00` basis before adoption. Source reviews found and
+closed missing-field refusal and ownership-witness issues before adoption.
+
+| Check | Command | Exit | Output digest |
+| --- | --- | --- | --- |
+| Whitespace | `git diff --check` | 0 | Empty output |
+| Generation, compilers and owning tests | Pending final Source integration | Pending | Pending |
+| Ordinary gate and exact-head review | Pending owning validation | Pending | Pending |
+
+## Open limits
+
+Request `0716e75a` still needs exact archive/replay policy rows, maintained
+native declaration generation, actual structural seals, the real-family
+native publication and required-job witnesses, a proportional control,
+compiler closure, the ordinary gate and exact-head review. Generated
+digests will come from the maintained producer. Source reviews establish
+no runtime result or hosted fit.
+
+Archive request `3e01b385` keeps runtime and landing priority. Its limited
+follow-up is running independently. The planner owns deployment and any
+new-family creation allowance after review.
