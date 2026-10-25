@@ -63,5 +63,36 @@ untouched, and the control branch is neither pushed nor landed.
 
 These are tiny process-boundary workloads and a declared Git refusal
 stand-in, with the real orchestration and summary code. They make no
-Worker or provider claim. One ordinary gate and exact-head checker
-review remain pending. This tooling change requires no deployment.
+Worker or provider claim.
+
+The first gate preflight refused before launching any application
+command: its capture used a different `CODEX_SANDBOX` setting from the
+approved execution call. The failed setup is retained. A fresh capture
+under the matching execution setting kept the full environment guard;
+no cache reset, package installation or test preceded the correction.
+
+Ordinary gate `82795` then finished naturally with exit 1. All compiler
+contexts passed. The kernel check, all 53 maintained Node cases and all
+55 generated Counting cases passed. The plain phase recorded 2,815
+passes, one failure and one skip in 274 files. Its failure was
+`archive-git-v2-layout.test.ts:70`: the fixture's `git hash-object` child
+hit its 30-second limit. The raw failure establishes that timeout and
+does not identify its cause. The native phase was unreached. The summary
+printed once, marked the failed phase partial and retained exit 1. All
+source and dependency boundary guards passed. Outer cost was 159.78
+seconds wall and 411.79 seconds CPU; nested timings are not added.
+
+The isolated repair changes only that failing test and this note. It
+uses the existing independent SHA-1 loose-object fixture writer, checks
+each returned ID against the built object, then asks real Git to check
+all inserted objects in one batch. Existing Git `fsck`, offline replay,
+every original assertion, all three ranges and the 30-second deadline
+remain. No shared helper, production code, configuration or dependency
+changes after the failed gate.
+
+Under `docs/testing.md`'s isolated test-file follow-up rule, the remaining
+checks are the replay test compiler context, the whole failing file and
+the native phase that the gate never reached. The healthy plain files
+and earlier stages are carried from the failed gate. Follow-up results
+and exact-head checker review remain pending; they cannot turn the
+failed gate into a pass. This tooling change requires no deployment.

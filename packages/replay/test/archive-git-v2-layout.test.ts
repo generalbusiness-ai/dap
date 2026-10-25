@@ -13,8 +13,8 @@ import { journalRef } from "../../git/src/journal-path.ts";
 import type { JournalReadResult } from "../../git/src/journal-reader.ts";
 import { journalV2PassPath, journalV2SegmentPath } from "../../git/src/journal-v2-path.ts";
 import { ArchiveSegmentCursor } from "../../git/src/journal-segments.ts";
-import { archiveObjectSource, archiveRepository, selectedInput, syntheticJournal, writeArchiveObjects } from "../../git/test/support/journal.ts";
-import { cleanup, git } from "../../git/test/support/repo.ts";
+import { archiveObjectSource, archiveRepository, selectedInput, syntheticJournal } from "../../git/test/support/journal.ts";
+import { cleanup, confirm, git, put } from "../../git/test/support/repo.ts";
 
 afterAll(cleanup);
 test("three v2 passes cover ten thousand entries without rereading old entries or rewriting earlier files", async () => {
@@ -67,7 +67,8 @@ test("three v2 passes cover ten thousand entries without rereading old entries o
     }
     expect(calls.filter(call => call.startsWith("entry:"))).toEqual(entries.map(entry => `entry:${entry.seq}`));
     if (first !== 0) expect(calls.every(call => call.startsWith("entry:"))).toBe(true);
-    writeArchiveObjects(directory, built.archive.objects);
+    for (const object of built.archive.objects) expect(put(directory, object.type, object.data)).toBe(object.id);
+    expect(confirm(directory)).toEqual([]);
     const files = git(directory, ["ls-tree", "-r", built.archive.commit]).split("\n");
     expect(files.some(line => line.endsWith("\t" + journalV2PassPath(first)))).toBe(true);
     expect(files.some(line => line.endsWith("\t" + journalV2SegmentPath(first)))).toBe(true);
