@@ -4,7 +4,7 @@ import { canonicalize, digestBytes, same, utf8 } from "@generalbusiness/dap-byte
 import type { Bounds, Head, ScopeRef, Seed, Timestamp } from "@generalbusiness/dap-contract";
 import { isScopeRef, timeMs, timeOf } from "@generalbusiness/dap-bytes";
 import { captureJournalParentFrontier, journalRef, type JournalArchive, type JournalPassArchive, type JournalFormat, type JournalObject, type JournalObjectSource } from "@generalbusiness/dap-git/journal";
-import { ARCHIVE_BOUNDS, ArchiveBudget, ArchiveStopped } from "./archive-budget.ts";
+import { ARCHIVE_BOUNDS, ArchiveBudget, ArchiveStopped, type ArchiveCapacityRefusal } from "./archive-budget.ts";
 import { archiveParent, copyArchiveObjects } from "./archive-parent.ts";
 import { ArchiveFrontiers, type ArchiveFrontierBase, type ArchiveFrontierPrepared } from "./archive-frontier-store.ts";
 import { archiveFrontierRowContextBound } from "./archive-frontier-cost.ts";
@@ -147,6 +147,7 @@ export class ArchiveDriver {
     // Temporary pass diagnostic: fixed categories and already-loaded scalars
     // only. It adds no archive read, admission, retry or persistent state.
     let step = "row-load", detail = "none", caught = "none";
+    let capacityRefusal: ArchiveCapacityRefusal | null = null;
     let phase = "unknown", confirmed: number | null = null, pending: number | null = null, attempts = 0, hasNext = false;
     const observed: { outcome?: ArchivePass } = {};
     const done = (value: ArchivePass): ArchivePass => { observed.outcome = value; return value; };
@@ -271,7 +272,8 @@ export class ArchiveDriver {
         if (!same(context.binding, { ...identity, commit: row.confirmed.commit, through: row.confirmed.through })) return budget.stop("unavailable");
         const finish = frontiers.bootstrapFinish(context);
         if (!finish.ok) return budget.stop("limit");
-        if (!admitArchiveMigration(this.#maximum, budget, finish.cost, context.binding.through.seq)) return done({ state: "retry", next: scheduled, reason: "limit" });
+        if (!admitArchiveMigration(this.#maximum, budget, finish.cost, context.binding.through.seq,
+          refusal => { capacityRefusal = refusal && { ...refusal, site: "migration-affordability" }; })) return done({ state: "retry", next: scheduled, reason: "limit" });
         const readParent = this.#options.provider.readParent;
         if (!readParent) return budget.stop("unavailable");
         const captured = await budget.lookaheadAsync(finish.cost, async () => {
@@ -281,7 +283,10 @@ export class ArchiveDriver {
             { ...row!.repository }, context.binding.commit, allowed, budget));
           return captureJournalParentFrontier(context.binding, source, budget);
         });
-        if (captured.kind === "limited") return done({ state: "retry", next: scheduled, reason: "limit" });
+        if (captured.kind === "limited") {
+          capacityRefusal = captured.refusal && { ...captured.refusal, site: "frontier-capture" };
+          return done({ state: "retry", next: scheduled, reason: "limit" });
+        }
         const prepared = await frontiers.prepareConfirmedBootstrap(context, captured.value, budget);
         if (!allowed()) return budget.stop("unavailable");
         frontiers.installConfirmedBootstrap(prepared, budget);
@@ -335,8 +340,10 @@ export class ArchiveDriver {
             // Only genuine capacity shortage escalates the durable wake.
             // Its write was reserved before lookahead, not after exhaustion.
             scheduled = capacity.persist();
+            capacityRefusal = adaptive.capacityRefusal;
             return done({ state: "retry", next: scheduled, reason: "limit" });
           }
+          if (!adaptive.ok && "capacityRefusal" in adaptive) capacityRefusal = adaptive.capacityRefusal ?? null;
           if (adaptive.ok) selectedParentObjects = adaptive.parentObjects;
           else if (adaptive.reason === "mismatch") return done({ state: "retry", next: scheduled ?? this.#later(0), reason: adaptive.reason });
           planned = adaptive;
@@ -384,6 +391,10 @@ export class ArchiveDriver {
       if (seen !== row.pending!.parent) { rows.stop("conflict", ref, budget); return done({ state: "stopped", next: null, reason: "conflict" }); }
       return done({ state: "retry", next });
     } catch (error) {
+      // Preserve a terminal planner debit if a subsequent row stop encounters
+      // that same stopped budget; never borrow an exploratory refusal.
+      if (error instanceof ArchiveStopped && error.capacityRefusal) capacityRefusal = { ...error.capacityRefusal, site: "pass-debit" };
+      else if (!(error instanceof ArchiveStopped) || error.reason !== "limit") capacityRefusal = null;
       caught = error instanceof ArchiveStopped ? error.reason : "other";
       const reason = error instanceof ArchiveStopped ? error.reason : "unavailable";
       this.#fallback = scheduled ?? this.#later(0); return done({ state: "retry", next: this.#fallback, reason });
@@ -398,7 +409,7 @@ export class ArchiveDriver {
         console.info("archive-pass-diagnostic-v1", {
           step, detail, rowPhaseAtLoad: phase, confirmed: position(confirmed), pending: position(pending), attemptsAtLoad: position(attempts), hasNext,
           attempted, state: observed.outcome?.state ?? "threw", reason: reason === undefined ? "none" : known.includes(reason) ? reason : "other",
-          caught: known.includes(caught) ? caught : caught === "none" ? "none" : "other", cost: budget.admitted(), parentRead,
+          caught: known.includes(caught) ? caught : caught === "none" ? "none" : "other", cost: budget.admitted(), parentRead, capacityRefusal,
         });
       } catch { /* Observation cannot replace the original archive result. */ }
     }
