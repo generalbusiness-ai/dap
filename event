@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f201af8ec6d131f9916e017fee7ea8c9fbebe9a5","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-window.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fb16f58861a93d47a6cc20e2b22d35b2716b9688","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-driver.ts."}
