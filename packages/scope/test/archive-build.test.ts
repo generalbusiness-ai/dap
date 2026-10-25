@@ -30,6 +30,7 @@ const sumCharges = (charges: readonly Partial<ArchiveCost>[]): ArchiveCost => {
   return total;
 };
 import { archiveDefinition as base, archivePolicies as policies, archiveRepository as repository, archiveSql as sqlOf } from "./support/archive.ts";
+import { createNativeArchiveLane, archiveAuthorityBasis, archiveAuthorityPolicies } from "./support/archive-native-authority.ts";
 
 async function first(lane: Lane, format: JournalFormat) {
   const through = await lane.head();
@@ -290,30 +291,32 @@ test("v2 native inventory and restart read only the marked new interval and keep
   expect(rebuilt.archive.cost.nodes).toBe(next.archive.cost.nodes);
   await lane.inside(state => new ArchiveRows(sqlOf(state), lane.at).confirm(next.mark.commit));
   expect(await lane.head()).not.toEqual(through);
-  // Genuine no-token adaptive preparation retains the original fixed
-  // serialization debit. Persist its actual cost-bearing Mark untouched;
-  // a later turn/restart must still rebuild its exact immutable selection.
-  const fallbackThrough = await lane.head();
-  const all = new Map([...first.archive.objects, ...next.archive.objects].map(object => [object.id, object]));
-  const heldParent = parentOf({ ...next.archive, objects: [...all.values()] }), parentUsed = new Set<string>();
-  const fallbackParent = { id: heldParent.id, source: { object(id: string, maximum: number) {
-    parentUsed.add(id); return heldParent.source.object(id, maximum);
-  } } };
-  const fallback = await lane.inside(async state => {
-    const sql = sqlOf(state), budget = new RecordingInventoryBudget(), row = new ArchiveRows(sql, lane.at).load(budget)!;
-    const planned = await planAdaptiveArchivePass(sql, { at: lane.at, through: fallbackThrough, after: through,
-      bounds: PROPOSED_BOUNDS, policies, format: "sha1", parent: fallbackParent, markedAt: at(2), row,
-      parentHeld: all, parentUsed, maximum: 8 * 1024 * 1024 }, budget);
+  // The component history above deliberately uses scripted authority and
+  // unpublished receipts. This additional publication witness needs real
+  // Native Membership observations and their authenticated source pins;
+  // no flags or source proofs are retrofitted onto the component history.
+  const fallbackLane = await createNativeArchiveLane({}, {}, base);
+  expect((await fallbackLane.submit(fallbackLane.remark("standalone adaptive publication"))).answer).toBe("accepted");
+  const fallbackThrough = await fallbackLane.head(), pins = archiveAuthorityBasis(fallbackLane)!.pins;
+  // No token: retain the original fixed serialization debit, then persist
+  // the actual returned cost-bearing Mark without editing its cost JSON.
+  const fallback = await fallbackLane.inside(async state => {
+    const sql = sqlOf(state), budget = new RecordingInventoryBudget(), rows = new ArchiveRows(sql, fallbackLane.at);
+    const row = rows.target(repository, "sha1", budget);
+    const planned = await planAdaptiveArchivePass(sql, { at: fallbackLane.at, through: fallbackThrough, after: null,
+      bounds: PROPOSED_BOUNDS, policies: archiveAuthorityPolicies(fallbackLane), fixtureSources: pins,
+      format: "sha1", parent: null, markedAt: fallbackLane.c.clock.now, row,
+      parentHeld: new Map(), parentUsed: new Set(), maximum: 8 * 1024 * 1024 }, budget);
     expect(budget.charges).toContainEqual({ metadata: 32 * 1024, inputWork: 256 * 1024 });
     expect(planned.ok, JSON.stringify(planned)).toBe(true);
     if (!planned.ok) throw Error("fallback preparation refused");
-    new ArchiveRows(sql, lane.at).mark(planned.mark);
+    rows.mark(planned.mark);
     return planned;
   });
-  await lane.submit(lane.remark("later than the fallback Mark"));
-  await lane.restart();
-  const fallbackRebuilt = await lane.inside(async state => {
-    const sql = sqlOf(state), row = new ArchiveRows(sql, lane.at).load()!;
+  expect((await fallbackLane.submit(fallbackLane.remark("later than the fallback Mark"))).answer).toBe("accepted");
+  await fallbackLane.restart();
+  const fallbackRebuilt = await fallbackLane.inside(async state => {
+    const sql = sqlOf(state), row = new ArchiveRows(sql, fallbackLane.at).load()!;
     expect(row.pending).toEqual(fallback.mark);
     const selected = JSON.parse(row.pending!.manifest), positions = new Set(selected.entries.map((entry: { seq: number }) => entry.seq));
     const exact: Sql = { transaction: action => state.storage.transactionSync(action), exec(query, ...args) {
@@ -321,8 +324,8 @@ test("v2 native inventory and restart read only the marked new interval and keep
       else if (!query.includes(" FROM retained_input ") && !query.includes(" FROM retained_value ")) expect.fail(`unselected fallback rebuild query: ${query}`);
       return sql.exec(query, ...args);
     } };
-    const built = await rebuildArchivePass(exact, row, fallbackParent, new ArchiveBudget());
-    expect(new ArchiveRows(sql, lane.at).load()!.pending!.manifest).toBe(fallback.mark.manifest);
+    const built = await rebuildArchivePass(exact, row, null, new ArchiveBudget(), pins);
+    expect(new ArchiveRows(sql, fallbackLane.at).load()!.pending!.manifest).toBe(fallback.mark.manifest);
     return built;
   });
   expect(fallbackRebuilt.ok, JSON.stringify(fallbackRebuilt)).toBe(true); if (!fallbackRebuilt.ok) return;
