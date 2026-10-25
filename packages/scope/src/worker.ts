@@ -94,6 +94,7 @@ import { readPlatformCreationPolicy, injectedPlatformCreationPolicy, permitsNewP
 import { admitsParentlessCreation, type CreationAdmission } from "./creation-admission.ts";
 import { indexedScopes, scopeIndex, ScopeIndexRows, type ScopeIndexEnvironment, type ScopeRegistration } from "./scope-index.ts";
 import { admitServing, boundedParentlessIntent, ServingAdmission, type ServingEnvironment, type ServingRequest } from "./serving-admission.ts";
+import { SiteTokenReuse, type SiteTokenRequest } from "./site/token-reuse.ts";
 import { presentsSignedRead } from "./signed-reads.ts";
 
 /**
@@ -109,6 +110,27 @@ export interface Env extends GitHubBindings, ArtifactsBindings, ApplicationBindi
 export class ScopeIndex extends DurableObject<Env> {
   readonly #rows = new ScopeIndexRows(this.ctx.storage.sql);
   readonly #serving = new ServingAdmission(this.env);
+  readonly #siteTokens = new SiteTokenReuse({ exec: (query, ...args) => this.ctx.storage.sql.exec(query, ...args), transaction: run => this.ctx.storage.transactionSync(run) }, () => this.env, () => Date.now(), () => this.#scheduleSiteTokens());
+  #siteAlarm: Promise<void> | null = null;
+  #siteAlarmRevision = 0;
+  async #scheduleSiteTokens(): Promise<void> {
+    this.#siteAlarmRevision++;
+    if (this.#siteAlarm) return this.#siteAlarm;
+    this.#siteAlarm = (async () => {
+      let revision: number;
+      do {
+        revision = this.#siteAlarmRevision;
+        const actual = await this.ctx.storage.getAlarm();
+        if (revision !== this.#siteAlarmRevision) continue;
+        const next = this.#siteTokens.wake();
+        if (next !== null && (actual === null || actual > next)) await this.ctx.storage.setAlarm(next);
+      } while (revision !== this.#siteAlarmRevision);
+    })();
+    try { await this.#siteAlarm; } finally { this.#siteAlarm = null; }
+  }
+  async acquireSiteRead(request: SiteTokenRequest) { return this.#siteTokens.acquire(request); }
+  async alarm() { this.#siteTokens.maintain(Date.now()); await this.#scheduleSiteTokens(); }
+
   has(scope: string, kind?: ScopeKind) { return this.#rows.has(scope, kind); }
   register(proof: ScopeRegistration) { return this.#rows.register(proof); }
   /** Separate synchronous memory-only action; has() remains SQL-read-only. */

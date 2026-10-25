@@ -11,8 +11,7 @@
  * destinations may use the host (`host-wiring.ts`, `hostBound`).
  *
  * The repository is read over smart HTTP, as the destinations read it: on
- * Cloudflare Artifacts with a read token minted for the read and
- * revoked after; on GitHub with the deployment's `GITHUB_READ_TOKEN`, or
+ * Cloudflare Artifacts with a privately shared expiring read token; on GitHub with the deployment's `GITHUB_READ_TOKEN`, or
  * with none when the setting says reads are public.
  */
 import { isRecord } from "@generalbusiness/dap-bytes";
@@ -23,9 +22,9 @@ import { READ_BOUNDS, type GitSource } from "@generalbusiness/dap-git";
 import { githubRepository, type GitHubAccount } from "@generalbusiness/dap-git/github";
 import { requireGitHubRepositoryIdentity } from "../github-host.ts";
 import { SmartHttpSource } from "@generalbusiness/dap-git/http-read";
-import { READ_TTL } from "../artifacts-host.ts";
 import { ARTIFACTS_HOST, artifactsReadiness, type ArtifactsBindings } from "../artifacts-wiring.ts";
-import type { ScopeIndexEnvironment } from "../scope-index.ts";
+import { SCOPE_INDEX_NAME, type ScopeIndexEnvironment } from "../scope-index.ts";
+import type { SiteTokenPort } from "./token-reuse.ts";
 import type { DestinationRepository } from "../destination-host.ts";
 import { gitHubReadiness, type GitHubBindings } from "../github-wiring.ts";
 import type { Binding, Sourced } from "../namespace.ts";
@@ -71,7 +70,7 @@ export async function publishedCommitOf(scopes: Binding, directory: string, room
     && canonicalize(proof.repository) === canonicalize(room.repository) && proof.commit === commit ? selected : absent;
 }
 
-/** A source for one repository, and how to end it: a minted read token is revoked. */
+/** A request-local repository source. Closing it never revokes a shared token. */
 export interface Opened {
   source: GitSource;
   close(): Promise<void>;
@@ -83,6 +82,9 @@ export interface Opened {
 
 /** The steps of a read, as a refusal's `x-site-step` header and the log name them. */
 export type SiteStep = "room" | "open" | "info" | "token" | "refs" | "objects" | "render";
+
+/** Finite token-owner refusal; never contains provider details or plaintext. */
+export class SiteTokenUnavailable extends Error { constructor() { super("Site token unavailable"); this.name = "SiteTokenUnavailable"; } }
 
 /** An error of one step of opening a repository. */
 export class StepError extends Error {
@@ -146,7 +148,7 @@ export async function roomOf(scopes: Binding, directory: string): Promise<Room |
  * by the host's pinned register, or the record is not at the host's
  * namespace.
  */
-export function readerOf(env: SiteEnv, room: Room, fetch?: (request: Request) => Promise<Response>): (() => Promise<Opened>) | null {
+export function readerOf(env: SiteEnv, room: Room, fetch?: (request: Request) => Promise<Response>, publishedRef = `refs/heads/${room.branch}`): (() => Promise<Opened>) | null {
   const { repository } = room;
   const send = fetch ?? ((request: Request) => globalThis.fetch(request));
   // Each source records its last request and answer, for the log line of a failed read. No header and no query is kept.
@@ -169,26 +171,31 @@ export function readerOf(env: SiteEnv, room: Room, fetch?: (request: Request) =>
   if (repository.host === ARTIFACTS_HOST) {
     const ready = artifactsReadiness(env);
     if (ready.state !== "wired") return null;
-    const { config, binding } = ready, service = config.host;
+    const { config } = ready, service = config.host;
     if (config.namespace !== repository.namespace || config.registerScope !== room.register) return null;
     if (!REPOSITORY_NAME.test(repository.name) || repository.name.toLowerCase().endsWith(".git") || repository.id !== repository.name) return null;
     const remote = `https://${service}/git/${repository.namespace}/${repository.name}.git`;
     return async () => {
-      const handle = await step("open", () => binding.get(repository.name));
-      // The service's own report of the remote must be the expected one before a token is minted. A trailing `/` and a
-      // final `.git` are not compared: either form names the same repository.
-      const info = await step("info", () => handle.info());
-      if (!sameRemote(recordOrNull(info)?.["remote"], remote)) throw new StepError("info", `the service reports another remote, ${typeof recordOrNull(info)?.["remote"]}`);
-      // The minted token's plaintext is `plaintext`, or `token` where the service names it so.
-      const minted = recordOrNull(await step("token", () => handle.createToken("read", READ_TTL)));
-      const plaintext = typeof minted?.["plaintext"] === "string" ? minted["plaintext"] : minted?.["token"];
-      if (typeof plaintext !== "string" || !/^[!-~]{1,4096}$/.test(plaintext)) throw new StepError("token", `no read token in the answer; its fields: ${minted ? Object.keys(minted).sort().join(", ") : "none"}`);
-      const { source, last } = transport(remote, config.maxBytes, `Bearer ${plaintext}`);
+      // The fixed owner derives provider authority from its own current env.
+      // This expected identity prevents a changed owner config being paired
+      // with this request's older transport or native publication selection.
+      let answer: Awaited<ReturnType<SiteTokenPort["acquireSiteRead"]>>;
+      try {
+        if (!env.SCOPE_INDEX) throw Error("missing Site token owner");
+        const owner = env.SCOPE_INDEX.get(env.SCOPE_INDEX.idFromName(SCOPE_INDEX_NAME)) as SiteTokenPort;
+        answer = await owner.acquireSiteRead({ register: room.register, repository, ref: publishedRef, configuration: canonicalize(config) });
+      } catch { throw new SiteTokenUnavailable(); }
+      if (!answer.ok) {
+        if (answer.reason === "provider") throw new StepError(answer.step, "Artifacts Site acquisition failed");
+        throw new SiteTokenUnavailable();
+      }
+      let local: ReturnType<typeof transport> | null = transport(remote, config.maxBytes, `Bearer ${answer.plaintext}`);
+      const secrets = [answer.plaintext];
+      const active = () => { if (!local) throw new Error("Site reader closed"); return local; };
       return {
-        source, last, secrets: [plaintext],
-        close: async () => {
-          try { await handle.revokeToken(plaintext); } catch { /* it ends at its expiry */ }
-        },
+        source: { ref: name => active().source.ref(name), refs: (prefix, limit) => active().source.refs(prefix, limit), object: (id, limit) => active().source.object(id, limit) },
+        last: () => local?.last() ?? "", secrets,
+        close: async () => { local = null; secrets.length = 0; },
       };
     };
   }
