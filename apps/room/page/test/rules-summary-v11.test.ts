@@ -22,8 +22,9 @@ test("Q11 summary presentation owns the complete policy and refuses contradictio
   const values = { ...made.policy, singleControllerException: false, configured: true, policy: made.policy, proposal: made.digest, certificate };
   const summaryItem = item(values), read = rulesSummaryV11(summaryItem, G.scope);
   expect(read).toEqual({ configured: true, policy: made.policy, proposal: made.digest });
-  const absentProjection = item(values); delete absentProjection.values["checks"];
-  expect(rulesSummaryV11(absentProjection, G.scope)).toBeNull();
+  const missingChecks: Record<string, unknown> = { ...values };
+  delete missingChecks["checks"];
+  expect(rulesSummaryV11(item(missingChecks), G.scope)).toBeNull();
   const inputPolicy = summaryItem.values["policy"];
   if (!isRecord(inputPolicy) || !Array.isArray(inputPolicy["labels"])) throw Error("Fixture policy labels must be mutable JSON");
   inputPolicy["labels"].push("caller mutation");
