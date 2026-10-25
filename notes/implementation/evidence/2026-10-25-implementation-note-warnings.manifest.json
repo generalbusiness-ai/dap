@@ -1,0 +1,355 @@
+{
+  "qualification": "Retained exact closed data for the warning task, with failed preparation history and qualified accepted ordinary gate. File hashes establish the listed bytes, not continuous custody, full dependency content or static Source-name expansion. Raw environment/physical/binding vectors were not copied.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-25-notes-evidence-warning",
+  "checkpoint": {
+    "commit": "4ec02207f7098854b764c9370f305b56adef79d7",
+    "tree": "402f279f8ea29b4040831f4abd4f1c38d3e6766f"
+  },
+  "request": "28b878ed0ddc0a85cd0af98a0b4e53bd7a2d9bef",
+  "RootAcceptance": "3cf435b71a708d0a1a607db3de54c018221f5829",
+  "fileCount": 63,
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "bytes": 6066,
+      "sha256": "e83499632d1200bbbbe54803c04f60f40e27a7033eb90bb29785978d3464be5e"
+    },
+    {
+      "path": "dependency-copy-continuation-v1/SHA256SUMS",
+      "bytes": 597,
+      "sha256": "d9b7fc02dbe5f86ef4e48423e98c974dac5daa8c5c287b596acd6e4b385d5008"
+    },
+    {
+      "path": "dependency-copy-continuation-v1/child-outer-time.log",
+      "bytes": 29,
+      "sha256": "dcba75cae0b7eeb32c7e17ca9bb2ee0e8a8d1be8b457b45adb61a0813fa5de6b"
+    },
+    {
+      "path": "dependency-copy-continuation-v1/filesystem-audit.curated.json",
+      "bytes": 1452,
+      "sha256": "3718ca941bc280555a854116fc3652566b06d34106b692104b9db92496409d7b"
+    },
+    {
+      "path": "dependency-copy-continuation-v1/independent-closed-audit.json",
+      "bytes": 3752,
+      "sha256": "272b838bdb4c89ae3c18d4f171c6e36eae6cffaf64e844cf512d44954d5133b3"
+    },
+    {
+      "path": "dependency-copy-continuation-v1/result.json",
+      "bytes": 961,
+      "sha256": "bbdb3daaf8d6a1948c890d1af7b01dc39e8aa8c3df40596c91acf3d9e22a6bbd"
+    },
+    {
+      "path": "dependency-copy-continuation-v1/root-outer-time.log",
+      "bytes": 29,
+      "sha256": "82a84293a51c962ed9fa72a9118be7fbc15d8c35ad1af1bbc79389eeff21411f"
+    },
+    {
+      "path": "dependency-copy-continuation-v1/stderr.log",
+      "bytes": 1158,
+      "sha256": "a3b37c7ae0ee33f14d0d8bcd397b59a2141f0f2883f6c404b703acbe48b1cd6d"
+    },
+    {
+      "path": "dependency-copy-continuation-v1/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "dependency-copy-v1/SHA256SUMS",
+      "bytes": 328,
+      "sha256": "333898e7eef13a37a7d611563bed648077b5d7ec925611786ee9bc1a3934dbf2"
+    },
+    {
+      "path": "dependency-copy-v1/child-outer-time.log",
+      "bytes": 29,
+      "sha256": "88fdeeeae7694ea14f9c63b337db9bf63a7111c2993e102cd32b15db712f17ee"
+    },
+    {
+      "path": "dependency-copy-v1/result.json",
+      "bytes": 859,
+      "sha256": "786c29e2d20f8db58925dcdfc62b7adc75d1e1a84bd1b12efbfe4d3586068a65"
+    },
+    {
+      "path": "dependency-copy-v1/root-outer-time.log",
+      "bytes": 29,
+      "sha256": "35e11876f91ec54c7a6f702062fe3e363ef78b96b77a35f311b5283aa529d867"
+    },
+    {
+      "path": "dependency-copy-v1/stderr.log",
+      "bytes": 1118,
+      "sha256": "764c42f71926b8370f54e8b984d236957f168c5f270b7118f84e154bc9232141"
+    },
+    {
+      "path": "gate-portable-audit.json",
+      "bytes": 6305,
+      "sha256": "15b4682039b335c85985cf16869778688d506497d8fdc58b7d8a963809c30127"
+    },
+    {
+      "path": "gate-v1-outer-time.log",
+      "bytes": 37,
+      "sha256": "93655a952fdb3a0628a2a77d6e8fe33c1ded17f00cf2e6685a10b755b543cf50"
+    },
+    {
+      "path": "gate-v1/gate.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "gate-v1/gate.stdout.log",
+      "bytes": 6193,
+      "sha256": "3d1331fb2f704af691cbdff5aa25e6d6d5ff411935cea89468c430a1f975834e"
+    },
+    {
+      "path": "gate-v1/phases.json",
+      "bytes": 333,
+      "sha256": "55586b7742093b91bf96215a33620db29d28b4677735b546abc36ac998f18261"
+    },
+    {
+      "path": "gate-v1/progress.jsonl.native.jsonl",
+      "bytes": 849625,
+      "sha256": "5d760e851f28d38d24a2e32d9b5e3ca5f88bd20e7665cd9efc073e915b83ad47"
+    },
+    {
+      "path": "gate-v1/progress.jsonl.plain.jsonl",
+      "bytes": 2822148,
+      "sha256": "dd549f7d3e82242d914485d713479dd824832289a6b4e56b70714d81f96cda57"
+    },
+    {
+      "path": "gate-v1/result.json",
+      "bytes": 6328,
+      "sha256": "11971d29f6e7f74a64d31d6d4dc08f2ad6fef46e86c2df752162da66bfe0e37c"
+    },
+    {
+      "path": "gate-v1/stages/citations.log",
+      "bytes": 1554568,
+      "sha256": "22970c3346db6a6900b310f5afe30e3e21a2e5a777013a1500d9f0d22a0f045b"
+    },
+    {
+      "path": "gate-v1/stages/citations.time",
+      "bytes": 29,
+      "sha256": "a42aa93373141a1ab43d94e580a3fcaf8da62f6311c8777c3995df9e51c6a0ae"
+    },
+    {
+      "path": "gate-v1/stages/cite-test.log",
+      "bytes": 759,
+      "sha256": "fc14c94c7eb80b89b6dd76fbe916ec43377f675c449369fea215ec6d024129b5"
+    },
+    {
+      "path": "gate-v1/stages/cite-test.time",
+      "bytes": 29,
+      "sha256": "4888f1bb2d06f8a10868a54819bd92b9a3885a31551cc79710723df32ef023cd"
+    },
+    {
+      "path": "gate-v1/stages/commit-messages.log",
+      "bytes": 38,
+      "sha256": "fc8765466e4e267859aeefd91456d6d8c027c5b75f972ee69d76ef7d3d3dd256"
+    },
+    {
+      "path": "gate-v1/stages/commit-messages.time",
+      "bytes": 29,
+      "sha256": "66b019f3b91dd78b8a648f25e84fc8cee994db5eb175e39de9579bfdd75b994e"
+    },
+    {
+      "path": "gate-v1/stages/commit-test.log",
+      "bytes": 594,
+      "sha256": "21ffd248c958cedacad46cbe9037e6b24bce3ea066259757ca90f7576c392ba2"
+    },
+    {
+      "path": "gate-v1/stages/commit-test.time",
+      "bytes": 29,
+      "sha256": "6b20d7e480bfd46e5951d30423eb11b49ef1a6218540f6dd341279054b2dc9f4"
+    },
+    {
+      "path": "gate-v1/stages/doc-links.log",
+      "bytes": 38,
+      "sha256": "e198314d887740ef75cca348b8928e3400173f99638c20791df13e2f804a461c"
+    },
+    {
+      "path": "gate-v1/stages/doc-links.time",
+      "bytes": 29,
+      "sha256": "b4fca40ba8148ab5120605c178c053e9b7d823a37d00ec23eee23a748dd7e8bb"
+    },
+    {
+      "path": "gate-v1/stages/helpers.log",
+      "bytes": 68,
+      "sha256": "3a2abcd88fd31309aee7f20597fddac1453c89a86d5ff9ccfaa4f60d689488e6"
+    },
+    {
+      "path": "gate-v1/stages/helpers.time",
+      "bytes": 29,
+      "sha256": "0de34fa5b668e50ae506174e490f74b87197f10331ed499d5440042f690eae54"
+    },
+    {
+      "path": "gate-v1/stages/notes.log",
+      "bytes": 18,
+      "sha256": "35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1"
+    },
+    {
+      "path": "gate-v1/stages/notes.time",
+      "bytes": 29,
+      "sha256": "66b019f3b91dd78b8a648f25e84fc8cee994db5eb175e39de9579bfdd75b994e"
+    },
+    {
+      "path": "gate-v1/stages/section-citations.json",
+      "bytes": 3907730,
+      "sha256": "9051e037ac7a403072a1ece69d7c181e2c4a5b485ae38ee7193463bcb1e05c4c"
+    },
+    {
+      "path": "gate-v1/stages/test.log",
+      "bytes": 15055997,
+      "sha256": "cd4d4c0cd5e3b7f9e31068bfe84cd63a890f4729be5f4c910b0a6b122ddb1d3a"
+    },
+    {
+      "path": "gate-v1/stages/test.time",
+      "bytes": 37,
+      "sha256": "7265a7b7f09f235f5f3e3d7f40deb642781e53325880f4854673c8c31df5c6c4"
+    },
+    {
+      "path": "gate-v1/stages/typecheck.log",
+      "bytes": 1987,
+      "sha256": "62170bbe0cd055cff4699debd9470a886c0f98f328e7c9517d899c021a3788d0"
+    },
+    {
+      "path": "gate-v1/stages/typecheck.time",
+      "bytes": 30,
+      "sha256": "a74e1fdbeb7c45314c5247f54a284c5a401f07f7c9459881c900de948f171780"
+    },
+    {
+      "path": "gate-v1/stages/whitespace.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "gate-v1/stages/whitespace.time",
+      "bytes": 29,
+      "sha256": "e321fd66e43908c3ec255c752ac518d47c383da51140731add2e65b0adc7930d"
+    },
+    {
+      "path": "gate-v1/test-evidence/counting-sources.json",
+      "bytes": 952,
+      "sha256": "97dcd19555dac85238765fdf9070a5e2d8c261d6f469a1a15c1d2a24a5a53573"
+    },
+    {
+      "path": "gate-v1/test-evidence/counting.jsonl",
+      "bytes": 133774,
+      "sha256": "d0449e4038a40d39661d4b0ebeb879f537fc6b8d9b1f5fb6f1c35063768331f6"
+    },
+    {
+      "path": "gate-v1/test-evidence/native.jsonl",
+      "bytes": 752095,
+      "sha256": "ce70fea346495a4f584041702f807e57f8293751b80c9829a7aa29df25dba456"
+    },
+    {
+      "path": "gate-v1/test-evidence/node.jsonl",
+      "bytes": 145130,
+      "sha256": "d8e8cffac44475642070048966ad486fc32be8dbd856f552e300f109d8aa3674"
+    },
+    {
+      "path": "gate-v1/test-evidence/plain.jsonl",
+      "bytes": 2372842,
+      "sha256": "9c7b696d9f16f12d8139741c0e1bbdc09db8c07ffc5db76331287c65c4f99e17"
+    },
+    {
+      "path": "gate-v1/test-evidence/stages.json",
+      "bytes": 981,
+      "sha256": "7ff542e1f6e4dff1ce3c201235215149dd0ddca10fdd55aa2723527434b1e001"
+    },
+    {
+      "path": "gate-v1/test-progress/native.jsonl",
+      "bytes": 849625,
+      "sha256": "5d760e851f28d38d24a2e32d9b5e3ca5f88bd20e7665cd9efc073e915b83ad47"
+    },
+    {
+      "path": "gate-v1/test-progress/plain.jsonl",
+      "bytes": 2822148,
+      "sha256": "dd549f7d3e82242d914485d713479dd824832289a6b4e56b70714d81f96cda57"
+    },
+    {
+      "path": "metadata-capture-outer-time.log",
+      "bytes": 29,
+      "sha256": "291260ccb5ae0658c5ac311ff46fded9fa56787df5055fcbffefdf60a56bba08"
+    },
+    {
+      "path": "metadata-setup-outer-time.log",
+      "bytes": 29,
+      "sha256": "495996945614091ad977eabb9b45106c2b30bef4ef4fdb6ce1be97418153ad80"
+    },
+    {
+      "path": "owning-v1/outer-time.log",
+      "bytes": 29,
+      "sha256": "231acddfe1674462e74f5533229fdc8bf8f54589fcb0d42407061950853a24d5"
+    },
+    {
+      "path": "owning-v1/result.json",
+      "bytes": 1354,
+      "sha256": "18c7bb05d6787c3bd1e28341f120b615d98fbc79fab9e71c790f40c6c6dfec93"
+    },
+    {
+      "path": "owning-v2/SHA256SUMS",
+      "bytes": 470,
+      "sha256": "e8bcbc9cb9dced93defd51c4c54c19e4993e2b74725b80a037c737f98b9f5d68"
+    },
+    {
+      "path": "owning-v2/manifest.json",
+      "bytes": 1402,
+      "sha256": "bfcb505ba9eb56492191eb11e0e59decd25a9184aab218f58561cf185087c5bf"
+    },
+    {
+      "path": "owning-v2/node.jsonl",
+      "bytes": 8187,
+      "sha256": "c3f0747d939f274250b16e2f69889ee23ff5c05a9295f5289603066cd1c852b2"
+    },
+    {
+      "path": "owning-v2/outer-time.log",
+      "bytes": 29,
+      "sha256": "1589d25cfd8afe25afba084d6f0143872df29134df53f7047bf47f2d701fb52d"
+    },
+    {
+      "path": "owning-v2/result.json",
+      "bytes": 1279,
+      "sha256": "bd1b5dd684d10ded90693a14f3cd290d542c41257f62c7e9f9413c4c1bb3233c"
+    },
+    {
+      "path": "owning-v2/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "owning-v2/stdout.log",
+      "bytes": 432,
+      "sha256": "e3d07f4ee48bbead7794d291563a189837e625c2392a978e23d1f0515bc96c05"
+    },
+    {
+      "path": "root-acceptance.json",
+      "bytes": 1771,
+      "sha256": "bd11af2ddb796fe460a36de80fd0401cc1e25538953be379e661173807756382"
+    }
+  ],
+  "primaryNote": {
+    "path": "notes/implementation/2026-10-25-implementation-note-warnings.md",
+    "bytes": 9821,
+    "sha256": "69f25d53cfc1bb26b0c012aa1e374f11da64f359f0aac2092cdb54d0e488d70e"
+  },
+  "seal": {
+    "index": "SHA256SUMS",
+    "covers": 62,
+    "excludes": [
+      "SHA256SUMS"
+    ],
+    "nestedIndexes": "Existing subphase SHA256SUMS retained byte-exact and covered by top-level index.",
+    "manifestLocation": "This repository manifest is outside the evidence root and is not a payload of its SHA index; no self-reference.",
+    "readOnly": "All evidence files and directories have no write bits after finalization."
+  },
+  "retention": {
+    "minimumDays": 30,
+    "retainUntilAtLeastUTC": "2026-11-25T22:23:31.072926+00:00",
+    "removalAuthority": "planner; no automatic deletion",
+    "minimumDaysAfterLanding": 30,
+    "qualification": "Retain until the later of the initial UTC minimum and 30 days after the actual landing. Only the planner may remove the directory."
+  },
+  "withheld": [
+    "Private Source/tool/environment/dependency/cache vectors and raw capture/binding/envelope records",
+    "Full private raw filesystem audit snapshots; curated public receipt retained"
+  ],
+  "review": "Exact final review and landing remain pending. Final repository delta is limited to primary note and this manifest."
+}
