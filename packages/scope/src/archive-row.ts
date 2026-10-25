@@ -55,6 +55,24 @@ export class ArchiveRowRefusal extends Error {
   constructor(reason: ArchiveRowRefusal["reason"]) { super(`archive-row-${reason}`); this.reason = reason; }
 }
 const refuse = (reason: ArchiveRowRefusal["reason"]): never => { throw new ArchiveRowRefusal(reason); };
+/** Only this module issues planning credit. The token carries no durable
+ * authority and is consumed before the planner can await or touch SQL. */
+const planningSnapshots = new WeakMap<object, { readonly sql: Sql; readonly row: ArchiveRow; readonly budget: ArchiveBudget; readonly bytes: number }>();
+export function consumeArchivePlanningSnapshot(token: unknown, sql: Sql, row: ArchiveRow, budget: ArchiveBudget): number {
+  const snapshot = typeof token === "object" && token !== null ? planningSnapshots.get(token) : undefined;
+  if (!snapshot || snapshot.sql !== sql || snapshot.row !== row || snapshot.budget !== budget) return refuse("unavailable");
+  planningSnapshots.delete(token as object);
+  budget.check();
+  return snapshot.bytes;
+}
+/** Inspect only the owner's original plain objects, before any caller field
+ * access. A replaced object, accessor, symbol or added key cannot gain credit. */
+function dataShape(value: object, expected: readonly string[]): boolean {
+  if (Object.getPrototypeOf(value) !== Object.prototype && Object.getPrototypeOf(value) !== null) return false;
+  const keys = Reflect.ownKeys(value);
+  return keys.length === expected.length && keys.every(key => typeof key === "string" && expected.includes(key)
+    && Object.hasOwn(Object.getOwnPropertyDescriptor(value, key)!, "value"));
+}
 const fields = (value: Record<string, unknown>, expected: string): boolean => Object.keys(value).sort().join(",") === expected;
 const objectId = (value: unknown, format: Format): value is string => typeof value === "string" && (format === "sha1" ? /^[0-9a-f]{40}$/ : /^[0-9a-f]{64}$/).test(value);
 function position(value: unknown, format: Format): value is ArchivedPosition {
@@ -104,6 +122,21 @@ function checked(value: unknown, at: ScopeRef, budget: ArchiveBudget): ArchiveRo
 export class ArchiveRows {
   readonly #sql: Sql;
   readonly #at: ScopeRef;
+  // One last owned parse only; no cross-pass cache, allowance or SQL authority.
+  #ownedRow: ArchiveRow | null = null;
+  #ownedBudget: ArchiveBudget | null = null;
+  #ownedText = "";
+  #ownedBytes = 0;
+  #ownedAt: ScopeRef | null = null;
+  #ownedRepository: DestinationRepository | null = null;
+  #ownedConfirmed: ArchivedPosition | null = null;
+  #ownedThrough: Head | null = null;
+  #remember(row: ArchiveRow, bytes: string, size: number, budget: ArchiveBudget): ArchiveRow {
+    this.#ownedRow = row; this.#ownedBudget = budget; this.#ownedText = bytes; this.#ownedBytes = size;
+    this.#ownedAt = row.at; this.#ownedRepository = row.repository;
+    this.#ownedConfirmed = row.confirmed; this.#ownedThrough = row.confirmed?.through ?? null;
+    return row;
+  }
   constructor(sql: Sql, at: ScopeRef) {
     if (!isScopeRef(at)) refuse("unavailable");
     this.#sql = sql; this.#at = { ...at };
@@ -122,7 +155,7 @@ export class ArchiveRows {
     let value: unknown;
     try { value = parseStrict(bytes); if (canonicalize(value) !== bytes) return refuse("unavailable"); }
     catch { return refuse("unavailable"); }
-    return { row: checked(value, this.#at, budget), bytes };
+    return { row: this.#remember(checked(value, this.#at, budget), bytes, size, budget), bytes };
   }
   #save(value: ArchiveRow, budget: ArchiveBudget, afterConfirmation: Timestamp | null = null): ArchiveRow {
     checked(value, this.#at, budget);
@@ -141,7 +174,9 @@ export class ArchiveRows {
     // reserved before serialization, UTF-8 allocation or owned parsing.
     budget.spend({ calls: reservation.calls, inputWork: reservation.inputWork - ARCHIVE_ROW_SAVE_FIXED_WORK });
     const bytes = canonicalize(value);
-    if (bytes.length > limit || utf8(bytes).length > limit) return refuse("limit");
+    if (bytes.length > limit) return refuse("limit");
+    const size = utf8(bytes).length;
+    if (size > limit) return refuse("limit");
     budget.check();
     this.#sql.exec("INSERT INTO meta (k, v) VALUES (?, ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v", KEY, bytes).toArray();
     // A small alarm index prevents a new turn from loading the manifest.
@@ -149,7 +184,7 @@ export class ArchiveRows {
     this.#sql.exec("INSERT INTO meta (k, v) VALUES (?, ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v", WAKE, canonicalize(wake)).toArray();
     budget.check();
     // Expose an owned snapshot, not the caller's mutable mark or head.
-    return parseStrict(bytes) as ArchiveRow;
+    return this.#remember(parseStrict(bytes) as ArchiveRow, bytes, size, budget);
   }
   load(budget = new ArchiveBudget()): ArchiveRow | null { return this.#sql.transaction(() => this.#load(budget)?.row ?? null); }
   /** Checked canonical native bytes for an internal compare-and-set token.
@@ -315,8 +350,34 @@ export class ArchiveRows {
   /** Reserve this tiny transition before adaptive lookahead can consume the
    * remaining allowance. Only an actual capacity deferral applies it. The
    * exact-byte comparison prevents a stale pass replacing a newer wake. */
-  prepareCapacityDeferral(row: ArchiveRow, later: (count: number) => Timestamp | null, budget: ArchiveBudget): { readonly persist: () => Timestamp } {
+  prepareCapacityDeferral(row: ArchiveRow, later: (count: number) => Timestamp | null, budget: ArchiveBudget): {
+    readonly persist: () => Timestamp; readonly planning?: { readonly row: ArchiveRow; readonly token: object };
+  } {
     return this.#sql.transaction(() => {
+      // The extra fixed-schema inspection, owned parse and byte comparison
+      // are paid separately. Large rows retain the original path: there is
+      // no reason to buy a snapshot costing more than the duplicate it saves.
+      const clone = archiveFrontierSnapshotCost(this.#ownedBytes), comparison = archiveFrontierRowCompareCost(this.#ownedBytes);
+      const custody = { metadata: 4096 + (clone.metadata ?? 0) + comparison.metadata,
+        inputWork: 4096 + (clone.inputWork ?? 0) + comparison.inputWork };
+      const eligible = row === this.#ownedRow && budget === this.#ownedBudget
+        && custody.metadata < 32 * 1024 && custody.inputWork < 256 * 1024;
+      if (eligible) {
+        budget.spend(custody);
+        const data = (key: string): unknown => Object.getOwnPropertyDescriptor(row, key)?.value;
+        if (!dataShape(row, ["v", "at", "repository", "format", "confirmed", "pending", "attempts", "next", "stopped"])
+          || data("pending") !== null || data("stopped") !== null
+          || data("at") !== this.#ownedAt || data("repository") !== this.#ownedRepository || data("confirmed") !== this.#ownedConfirmed
+          || !dataShape(this.#ownedAt!, ["scope", "inc", "kind"]) || !dataShape(this.#ownedRepository!, ["host", "id", "name", "namespace"])
+          || this.#ownedConfirmed !== null && (!dataShape(this.#ownedConfirmed, ["commit", "through",
+            ...(Object.hasOwn(this.#ownedConfirmed, "layout") ? ["layout"] : []), ...(Object.hasOwn(this.#ownedConfirmed, "anchorsPublished") ? ["anchorsPublished"] : [])])
+            || Object.getOwnPropertyDescriptor(this.#ownedConfirmed, "through")?.value !== this.#ownedThrough
+            || !dataShape(this.#ownedThrough!, ["seq", "hash"]))) return refuse("unavailable");
+        // Data descriptors can still contain objects or oversized strings.
+        // The original closed-schema validator rejects those by type/length
+        // before any row bound, serialization, clone or SQL projection.
+        checked(row, this.#at, budget);
+      }
       const previous = this.#wake(budget);
       if (!previous || previous.stopped || row.pending !== null || row.stopped !== null) return refuse("unavailable");
       const count = Math.min(32, (previous.capacityDeferrals ?? 0) + 1), bound = archiveFrontierRowContextBound(row);
@@ -326,12 +387,23 @@ export class ArchiveRows {
       budget.spend(archiveFrontierSnapshotCost(bound));
       const expectedRow = canonicalize(row), rowBytes = utf8(expectedRow).length;
       if (rowBytes > bound) return refuse("limit");
+      let planning: { readonly row: ArchiveRow; readonly token: object } | undefined;
+      if (eligible) {
+        if (expectedRow !== this.#ownedText || rowBytes !== this.#ownedBytes) return refuse("unavailable");
+        const owned = parseStrict(this.#ownedText) as ArchiveRow;
+        Object.freeze(owned.at); Object.freeze(owned.repository);
+        if (owned.confirmed) { Object.freeze(owned.confirmed.through); Object.freeze(owned.confirmed); }
+        Object.freeze(owned);
+        const token = Object.freeze({});
+        planningSnapshots.set(token, { sql: this.#sql, row: owned, budget, bytes: rowBytes });
+        planning = Object.freeze({ row: owned, token });
+      }
       const expected = canonicalize(previous), wakeBytes = utf8(expected).length;
       const rowCompare = archiveFrontierRowCompareCost(rowBytes), wakeCompare = archiveFrontierRowCompareCost(wakeBytes);
       budget.spend({ calls: 1, metadata: rowCompare.metadata + wakeCompare.metadata + 256,
         inputWork: rowCompare.inputWork + rowCompare.metadata + wakeCompare.inputWork + wakeCompare.metadata + 4096 });
       let used = false;
-      return { persist: () => {
+      return { ...(planning ? { planning } : {}), persist: () => {
         if (used) return refuse("unavailable");
         used = true;
         budget.check();

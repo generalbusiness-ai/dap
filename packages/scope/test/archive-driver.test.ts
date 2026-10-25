@@ -11,7 +11,7 @@ import { canonicalize, digestBytes, timeOf, utf8 } from "@generalbusiness/dap-by
 import { journalRef } from "@generalbusiness/dap-git/journal";
 import { readJournalRepositoryArchive } from "@generalbusiness/dap-git/journal-reader";
 import { archiveSource, verifyArchive, TRUSTS } from "@generalbusiness/dap-replay";
-import { ARCHIVE_BOUNDS, ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
+import { ARCHIVE_BOUNDS, ArchiveBudget, type ArchiveCost, type ArchiveCapacityRefusal } from "../src/archive-budget.ts";
 import { driver, ScriptedHost } from "./support/archive-driver.ts";
 import type { ArchivePolicyRegistry } from "../src/archive-inventory.ts";
 import { archiveHostGate as gate } from "./support/archive-provider.ts";
@@ -23,6 +23,16 @@ import { archiveDefinition, archivePolicies, archiveRepository, archiveSql } fro
 import { fixtureArchiveWiring, fixtureArchiveRestart } from "./worker.ts";
 import type { TestScope } from "./worker.ts";
 
+// Observe the existing production diagnostic; no scheduling or budget hook.
+function passDiagnostics() {
+  const records: { state: string; reason: string; capacityRefusal: ArchiveCapacityRefusal | null }[] = [], info = console.info;
+  const log = vi.spyOn(console, "info").mockImplementation((...args: unknown[]) => {
+    if (args[0] === "archive-pass-diagnostic-v1") records.push(args[1] as (typeof records)[number]);
+    info(...args);
+  });
+  onTestFinished(() => log.mockRestore());
+  return records;
+}
 const row = (lane: Lane) => lane.inside(state => new ArchiveRows(archiveSql(state), lane.at).load());
 async function alarmFixture(host: ScriptedHost, resolve = async () => { host.targets++; return archiveRepository; }, factory = false,
   options: { budget?: () => ArchiveBudget; maxBytes?: number } = {}) {
@@ -173,9 +183,10 @@ test("a pre-Mark target failure survives eviction and new native input without l
     const records = observed.map(args => {
       expect(args).toHaveLength(2);
       const record = args[1] as Record<string, unknown>;
-      expect(Object.keys(record).sort()).toEqual(["step", "detail", "rowPhaseAtLoad", "confirmed", "pending", "attemptsAtLoad", "hasNext", "attempted", "state", "reason", "caught", "cost", "parentRead"].sort());
+      expect(Object.keys(record).sort()).toEqual(["step", "detail", "rowPhaseAtLoad", "confirmed", "pending", "attemptsAtLoad", "hasNext", "attempted", "state", "reason", "caught", "cost", "parentRead", "capacityRefusal"].sort());
       // This stand-in provider has no exact-object transport. It must not
       // invent a parent-read phase from a target failure or native work.
+      expect(record["capacityRefusal"]).toBeNull();
       expect(record["parentRead"]).toEqual({ ordinal: 0, type: "none", maximum: 0, phase: "none", refusal: "none" });
       expect(["row-load", "pin", "due-check", "target", "format", "pending-readback", "parent", "bootstrap", "sources", "rebuild", "plan", "frontier", "mark", "copy", "mint", "send", "readback", "confirm"]).toContain(record["step"]);
       expect(["none", "not-due", "wake-not-due", "target-missing", "target-different"]).toContain(record["detail"]);
@@ -224,6 +235,7 @@ test("confirms a lost reply by read-back with no second commit or journal entry"
 // Each Native archive fixture owns its clock until this test finishes.
 // Separate registrations keep the production fixture lifetime guard intact.
 test.each([0, 1])("a native archive shortage at %s entries retries the same head after eviction", async entries => {
+  const diagnostics = passDiagnostics();
   const retryHost = new ScriptedHost("sha1"), quotes: { cost: Partial<ArchiveCost>; spent: ArchiveCost; fits: boolean }[] = [];
   let limited = 0;
   const makeShortage = () => {
@@ -259,6 +271,12 @@ test.each([0, 1])("a native archive shortage at %s entries retries the same head
   expect(await retryLane.alarm()).toBe(true);
   expect(budgets).toHaveLength(1);
   const shortage = budgets[0]!; expect(() => shortage.check()).not.toThrow();
+  expect(diagnostics).toHaveLength(1);
+  const refusal = diagnostics[0]!.capacityRefusal;
+  expect(refusal, "the actual no-prefix capacity exit must carry its own refusal").not.toBeNull();
+  expect(refusal).toMatchObject({ site: entries === 0 ? "scout-open" : "finish-affordability", kind: entries === 0 ? "debit" : "finish-quote" });
+  expect(refusal!.shortfall.entries).toBeGreaterThan(0);
+  expect(refusal!.used.entries).toBe(entries); expect(refusal!.limit.entries).toBe(entries);
   const deferred = (await row(retryLane))!;
   expect(deferred).toMatchObject({ pending: null, confirmed: null, stopped: null, attempts: 0, next: null });
   expect(await retryLane.inside(state => new ArchiveRows(archiveSql(state), retryLane.at).wake())).toBe(due);
@@ -286,6 +304,7 @@ test.each([0, 1])("a native archive shortage at %s entries retries the same head
   expect((await row(retryLane))!).toMatchObject({ pending: null, stopped: null, confirmed: { through: before } });
   expect(retryHost.sends).toHaveLength(1); expect(await retryLane.head()).toEqual(before);
   expect(shortage.admitted()).toEqual(spent);
+  expect(diagnostics.at(-1)).toMatchObject({ state: "confirmed", capacityRefusal: null });
   console.info("archive-capacity-deferral-witness", { entries, limited, quotes, spent, due,
     confirmed: (await row(retryLane))!.confirmed!.through,
     qualification: "Actual Native alarms, persisted wake, eviction and confirmation; only the first pass lowers the existing entries allowance. Host, credentials and policy admission remain TEST stand-ins. No hosted cancellation cause or recovery is established." });
@@ -330,6 +349,7 @@ test("capacity deferrals survive eviction, cap at five minutes and reset after p
 });
 
 test("a native archive null transfer forecast remains stopped without a wake or Mark", async context => {
+  const diagnostics = passDiagnostics();
   // A byte/layout refusal is not evidence of temporary capacity shortage.
   // maxBytes=1 makes the real transfer forecast null; it must stay stopped.
   const hardHost = new ScriptedHost("sha1"), hardBudgets: ArchiveBudget[] = [];
@@ -345,6 +365,7 @@ test("a native archive null transfer forecast remains stopped without a wake or 
   expect(await hardLane.alarm()).toBe(true);
   expect(hardBudgets).toHaveLength(1);
   expect((await row(hardLane))!).toMatchObject({ pending: null, confirmed: null, stopped: { reason: "limit" }, attempts: 0, next: null });
+  expect(diagnostics.at(-1)).toMatchObject({ state: "stopped", capacityRefusal: null });
   expect(hardQuotes).toBe(0); expect(hardHost.mintCalls).toBe(0); expect(hardHost.sends).toEqual([]);
   expect(await hardLane.inside(state => new ArchiveRows(archiveSql(state), hardLane.at).wake())).toBeNull();
   expect(await hardLane.alarmAt()).toBeNull(); expect(await hardLane.head()).toEqual(hardHead);
@@ -355,6 +376,7 @@ test("a native archive null transfer forecast remains stopped without a wake or 
 // Invariant: earlier whole entries can complete after actual lookahead has
 // spent work, including the real incremental-send code and Native receipt.
 test("adaptive Native passes reserve writing, incremental sending and confirmation before more lookahead", async context => {
+  const diagnostics = passDiagnostics();
   const lane = await createNativeArchiveLane({}, {}, archiveDefinition), host = new ScriptedHost("sha1");
   await lane.inside(async (_state, instance) => {
     for (let n = 0; n < 300; n++) expect(await (instance as TestScope).checkpoint()).toMatchObject({ answer: "written" });
@@ -408,6 +430,8 @@ test("adaptive Native passes reserve writing, incremental sending and confirmati
       && (read.kind === "limited" || read.seq !== null && read.seq > through)), JSON.stringify({ through, lookaheads: lookaheads[index] })).toBe(true);
   }
   expect(await lane.head()).toEqual(head); expect(host.closureReads).toBe(0);
+  expect(diagnostics).toHaveLength(2);
+  for (const diagnostic of diagnostics) expect(diagnostic).toMatchObject({ state: "confirmed", capacityRefusal: null });
   (context.task.meta as Record<string, unknown>)["adaptiveNative"] = { cap: maximum, first: first.through.seq, second: second.confirmed!.through.seq,
     costs: budgets.map(budget => budget.admitted()), quotes, lookaheads, appendCalls: host.appendCalls,
     qualification: "Actual Native checkpoint entries, adaptive scouting, fresh inventory, writer, driver copies, production incremental-send code including validator/copy/pack and Native row confirmation; HTTP/host/token/policies remain TEST stand-ins. Original production caps including 64 MiB input; bounded synchronous observations require charged discarded lookahead under a positive finish reserve. Two passes only; no cadence/10000-one-entry claim." };

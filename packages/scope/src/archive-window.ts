@@ -3,14 +3,14 @@
 import type { Bounds, Digest, Head, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isHead, natural, timeMs } from "@generalbusiness/dap-bytes";
 import { JOURNAL_V2_LAST_POSITION } from "@generalbusiness/dap-git/journal";
-import { ArchiveBudget, type ArchiveCost } from "./archive-budget.ts";
+import { ArchiveBudget, type ArchiveCost, type ArchiveCapacityLimited } from "./archive-budget.ts";
 import { ARCHIVE_POSITION_METADATA_BYTES, ARCHIVE_PRIVACY_JSON_PASSES, archivePrefixMetadata, readArchiveScopeFrame, stopArchivePrefix as stop, type ArchivePosition, type ArchivePrefix } from "./archive-prefix.ts";
 import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, readArchivePin, readArchivePinAfterReceipt } from "./archive-pin.ts";
 import type { Sql } from "./sqlite.ts";
 import { archiveRootMetadata } from "./archive-prefix.ts";
 import type { ArchivePolicyRegistry } from "./archive-inventory.ts";
 
-type Step = { readonly kind: "position"; readonly position: ArchivePosition } | { readonly kind: "end" | "limited" };
+type Step = { readonly kind: "position"; readonly position: ArchivePosition } | { readonly kind: "end" } | ArchiveCapacityLimited;
 /** Process-local, opaque and one-use. This holds metadata and the original
  * budget, never a SQL port, transaction, certificate or payload admission. */
 export interface ArchiveWindowCheckpoint { readonly kind: "archive-window-checkpoint" }
@@ -52,7 +52,7 @@ export class ArchiveWindow {
     // Validate the forecast even when a later bound would decide first.
     this.budget.canSpend(reserve);
     const metadata = { calls: 1, metadata: ARCHIVE_POSITION_METADATA_BYTES, inputWork: ARCHIVE_POSITION_METADATA_BYTES };
-    if (!this.budget.canSpend(add(reserve, metadata))) return { kind: "limited" };
+    if (!this.budget.canSpend(add(reserve, metadata))) return { kind: "limited", refusal: this.budget.capacityRefusal(metadata, "window-metadata", reserve) };
     const held = readPosition(this.sql, this.#next, this.bounds, this.budget);
     if (this.#next === this.head.seq && held.hash !== this.head.hash) return stop("mismatch");
     if (this.#next === this.base.positions[0]!.seq && (held.hash !== this.base.positions[0]!.hash || held.bytes !== this.base.positions[0]!.bytes)) return stop("mismatch");
@@ -60,7 +60,7 @@ export class ArchiveWindow {
     // archivePrefixMetadata. Later positions pay the same unchanged debit.
     if (this.#next !== this.base.positions[0]!.seq) {
       const cost = { entries: 1, inputWork: held.bytes * ARCHIVE_PRIVACY_JSON_PASSES };
-      if (!this.budget.canSpend(add(reserve, cost))) return { kind: "limited" };
+      if (!this.budget.canSpend(add(reserve, cost))) return { kind: "limited", refusal: this.budget.capacityRefusal(cost, "window-entry", reserve) };
       this.budget.spend(cost);
     }
     this.#next++;

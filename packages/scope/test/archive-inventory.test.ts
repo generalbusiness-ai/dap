@@ -286,7 +286,10 @@ test("Native scout preserves an earlier whole prefix after a refused lookahead d
     const before = budget.admitted(), calls = queries.length;
     // Leave exactly one scalar position query. Its debit remains spent;
     // the following header debit refuses before Native JSON/SQL work.
-    expect(frame.next({ metadata: ARCHIVE_BOUNDS.metadata - before.metadata - 192 })).toEqual({ kind: "limited" });
+    const limited = frame.next({ metadata: ARCHIVE_BOUNDS.metadata - before.metadata - 192 });
+    expect(limited).toMatchObject({ kind: "limited", refusal: { kind: "debit" } });
+    if (limited.kind !== "limited" || !limited.refusal) return expect.fail("The actual header debit must carry its refusal.");
+    expect(limited.refusal.shortfall.metadata).toBeGreaterThan(0);
     const after = budget.admitted(); expect(after.metadata - before.metadata).toBe(192);
     expect(after.entries - before.entries).toBe(1); expect(queries.length - calls).toBe(1);
     expect(() => frame.next()).toThrow("archive-unavailable");
