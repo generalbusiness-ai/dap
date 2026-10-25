@@ -401,3 +401,272 @@ the floor for Room A, with margin 10,000 and minimum 1,000, and proves the
 count falls after a confirmed pass. No production floor is enabled by this
 archive configuration. Copies, a clone, or offline replay alone do not
 complete the journal-bound obligation.
+
+## Archive stops and restarts
+
+Each archived scope keeps one archive row in its own object. A pass that
+runs out of its budget can leave that row in one of two states. A deferral
+keeps the row live and tries again later. A stop is durable: the row stays
+stopped until a deployment directive clears it. This section tells the
+planner how to read a row and how to tell the two states apart. It then
+tells how to build, supply, confirm and remove a restart directive. The
+code that reads the directive is `packages/scope/src/archive-restart.ts`;
+the row checks are in `packages/scope/src/archive-row.ts`. These steps
+need the Cloudflare principal that deploys `dap-grow`; no member, route
+or MCP tool can restart an archive.
+
+### Read the row diagnostic
+
+Each object logs one `archive-row-diagnostic-v1` line to the Worker tail
+when it activates, before any recovery. The line never holds a raw row,
+a token or a Mark payload. Its fields:
+
+| Field | Meaning |
+| --- | --- |
+| `scope` | The scope ID of the object. |
+| `state` | `present` when the object holds an archive row; `absent` when it never archived; `unknown` when the read failed. |
+| `phase` | The row's phase: `target` (no confirmed pass yet), `confirmed`, `pending` or `stopped`. |
+| `reason` | For a stopped row, the stop reason: one of the 25 reasons the archive records (for example `limit`, `timeout`, `unavailable`, `mismatch`, `parent`, `foreign-source-unavailable`, `rebuild-mismatch`), or `unknown`. Only a row stopped with `limit` can be restarted. |
+| `confirmed` | The last confirmed position: the repository `commit` and the journal head `through` (`hash`, `seq`). |
+| `pendingMark` | A pass in progress, or `absent`. |
+| `storedWake` | The durable wake: `pending`, `stopped` and the `next` time. |
+| `platformAlarm` | The object's platform alarm time in milliseconds, or `absent`. |
+| `rowDigest` | SHA-256 of the canonical row, given only for a row stopped with reason `limit` and no pending Mark. |
+| `restartGeneration` | How many directives this row has consumed. A new row starts at 0. |
+
+To read every row of the room, capture the tail and then activate each
+object:
+
+1. From a scratch directory, start a bounded tail in JSON form:
+
+   ```sh
+   cd "$(mktemp -d)"
+   npx -y wrangler@4.147.0 tail dap-grow --format json > tail.json
+   ```
+
+   Stop the tail after the read; a tail that runs on leaves a Wrangler
+   process behind. Run it under a wrapper that ends the whole process
+   group after a fixed time, for example this one, as
+   `perl tailfor.pl 1500 npx -y wrangler@4.147.0 tail dap-grow --format json`:
+
+   ```perl
+   # Usage: perl tailfor.pl SECONDS command...
+   my $secs = shift; my $pid = fork();
+   if ($pid == 0) { setpgrp(0, 0); exec @ARGV; exit 127; }
+   sleep $secs; kill 'TERM', -$pid; sleep 3;
+   kill 'KILL', -$pid; waitpid($pid, 0);
+   ```
+2. In the operator's established Grow context, make one read of each
+   scope. A scope index sweep does this for the whole room:
+
+   ```sh
+   dap scope-index inventory --out grow-inventory.json
+   dap scope-index sweep --manifest grow-inventory.json
+   ```
+
+   The inventory file also records each scope's full reference (`at`:
+   `inc`, `kind` and `scope`). A directive needs that reference.
+3. Select the diagnostic lines from the tail. Each tail event is one JSON
+   object. A diagnostic is a log entry whose first message part is
+   `archive-row-diagnostic-v1`. Its second part is the record above.
+   One object logs the line once per activation. A quiet object that
+   stays warm logs nothing until it activates again.
+
+A stopped row reads like this (Directory, 25 October, trimmed to the
+fields that matter):
+
+```json
+{"scope":"sc_ryghgistvpshbaznxlbleop5zqruy2kmogy4jeigr7j3yqlewceq",
+ "state":"present","phase":"stopped","reason":"limit",
+ "confirmed":{"commit":"648de05437006b0fb72877f88dd22593f84c2a44",
+   "through":{"hash":"sha256:277efc46fa05f040519c47851a0c099b3da082f9f0f830a416e374f99019a557","seq":1}},
+ "pendingMark":"absent","storedWake":{"next":null,"pending":false,"stopped":true},
+ "platformAlarm":"absent",
+ "rowDigest":"sha256:1e856885bb8db1be5a9a383fa781c51493da85623cfa64e617b21d3555e1e2f5",
+ "restartGeneration":0}
+```
+
+### Tell a deferral from a stop
+
+A pass that cannot fit its first entry in the budget defers. The pass
+line ends with state `retry`, reason `limit` and a `capacityRefusal`.
+The row line shows `storedWake` with `pending` true, `stopped` false and
+a `next` time. The row stays live. Inside the wake the object counts the
+deferrals, from 1 to 32; the count does not appear in the row line. The
+next attempt waits 1 second doubled for each deferral, and at most 300
+seconds. A confirmed pass resets the count. No directive is needed; the
+row tries again by itself.
+
+After a capacity deferral, the next pass of a published row archives
+exactly the next entry instead of a batch. Its pass line carries
+`fixedFinish`: the cost `used` so far, the `remaining` cost of the
+finish, and the `metadataMargin` of 65,536 bytes that the quote adds.
+When that complete quote does not fit, the pass line shows
+`capacityRefusal` with site `finish-affordability`, kind `finish-quote`
+and reserved metadata 65,536, and the row defers again. A later head
+that reduces the pass cost takes effect at the next attempt.
+
+Each pass also logs one `archive-pass-diagnostic-v1` line. It gives the
+`step` the pass reached (`row-load`, `due-check`, `plan`, `sources`,
+`mark`, `send`, `confirm` and others). It gives the `state` and
+`reason` the pass ended with, the `cost` it admitted, and `fixedFinish`
+(null for an ordinary pass). When a budget check refused work,
+`capacityRefusal` names the `site` and `kind` of the check.
+It gives six axes (`entries`, `attempts`, `nodes`, `calls`, `metadata`,
+`inputWork`) for `requested`, `reserved`, `used`, `limit` and
+`shortfall`. The shortfall says what a fix must cut. Report it with the
+pass, not a guess from totals.
+
+A pass can still stop a row with reason `limit`. That happens when the
+finish quote is null, or when a debit outside the planner's lookahead
+refuses: the pass line then shows `capacityRefusal` with site
+`plan-debit`. A row stopped before the deferral landed stays stopped too.
+A stopped row shows `phase` `stopped`, `storedWake.stopped` `true` and
+`next` `null`. It does not retry. Only a directive restarts it, and only
+when its reason is `limit`.
+
+### Build a directive
+
+A directive restarts exactly one row, and only the row it names. Build
+it from the diagnostic, the inventory and the deployment settings; never
+from another scope or from a guess.
+
+1. Check the diagnostic: `state` `present`, `phase` `stopped`, `reason`
+   `limit`, `pendingMark` `absent`, `storedWake` with `stopped` `true` and
+   `next` `null`. Note `rowDigest`, `restartGeneration` and `confirmed`.
+2. Compose the row as the object stores it, with these fields and no
+   others:
+   - `v`: 1.
+   - `at`: the scope's full reference from the inventory file.
+   - `repository`: `host`, `id`, `name` and `namespace`. The row copies
+     them from the Destination's repository item; they are not the host name in
+     `ARTIFACTS_CONFIG`. On `dap-grow` every row of the room names the
+     same repository. Its host is `artifacts` and its namespace is
+     `artroom-demo`. Its `id` and `name` both equal `repositoryName` in
+     `GROW_ARCHIVE_CONFIG`.
+   - `format`: `sha1`.
+   - `confirmed`: `anchorsPublished` true, `commit` and `through` from the
+     diagnostic, and `layout` 2.
+   - `pending`: null. `attempts`: 0. `next`: null.
+   - `stopped`: `{"reason":"limit","where":null}`.
+3. Serialize the row in canonical JSON (RFC 8785: keys sorted, no
+   spaces) and take its SHA-256. It must equal the diagnostic's
+   `rowDigest`. If it does not, the stored row differs from the one you
+   composed. The two fields the diagnostic does not show are
+   `anchorsPublished` (present or absent) and `stopped.where` (null or a
+   step name); try those variants only. If no variant matches, stop:
+   a directive built from a wrong row is refused and the stop stays.
+4. Compose the directive with exactly these fields: `v` 1, `at`,
+   `repository`, `format` and `confirmed` as in the row, and `rowDigest`.
+   Add the diagnostic's `restartGeneration` as `generation` and an
+   absolute `expires` time. Write the time as `YYYY-MM-DDTHH:MM:SSZ` with no
+   fraction; a `.000` fraction is refused. Choose a short window that
+   covers the deploy and the objects' turnover, for example six hours.
+5. Take the SHA-256 of the canonical directive without `command`, and
+   add it as `command`. Serialize the whole directive in canonical JSON.
+   It must be at most 8 KiB.
+6. Run the real parser on the value before any deploy. From the reviewed
+   checkout, write a short script that calls `readArchiveRestart(raw, now)`
+   from `packages/scope/src/archive-restart.ts`. It returns null for a
+   value the Worker would refuse, and the parsed directive otherwise.
+
+The directive that restarted Room A on 24 October, as deployed:
+
+```json
+{"at":{"inc":"in_utplzcz25syvvy7dqkb4jniwmi","kind":"lane","scope":"sc_2dn76oxegateryveqeoxx2wqov6rv4z6yepreht3y5h3u5lw7gqq"},
+ "command":"sha256:1a96ec607b427808eef652b0bad61331dc102f824917dbfcec837bd94634e804",
+ "confirmed":{"anchorsPublished":true,"commit":"11cae5e5f9c80327f1a3df9c5e49c2a025d02956","layout":2,
+   "through":{"hash":"sha256:d3ac27816ad942cbe344eb9e5b2f6d4334a2709b548b53d9ebc31b2f59396f67","seq":146}},
+ "expires":"2026-10-25T06:30:00Z","format":"sha1","generation":0,
+ "repository":{"host":"artifacts","id":"ryghgistvpshbaznxlbleop5zqruy2kmogy4jeigr7j3yqlewceq-1",
+   "name":"ryghgistvpshbaznxlbleop5zqruy2kmogy4jeigr7j3yqlewceq-1","namespace":"artroom-demo"},
+ "rowDigest":"sha256:8a148e2bf603e0dacd212449f2b6c9e4ce1062fcc24a7c3825d05fb11e84e7da","v":1}
+```
+
+The line breaks above are for reading; the deployed value is one line.
+Both digests reproduce from the row and directive composed as in steps 2
+to 5.
+
+### Supply the directive
+
+The directive is a plain setting of `dap-grow`, `ARCHIVE_RESTART_DIRECTIVE`,
+read by `apps/room/worker.grow.ts`. Supply it on the ordinary deploy
+command, from a scratch directory, as a `--var` value:
+
+```sh
+DIRECTIVE="$(cat directive.json)"
+npx -y wrangler@4.147.0 deploy --keep-vars --config "$ARTROOM_REPO/apps/room/wrangler.grow.jsonc" --var "ARCHIVE_RESTART_DIRECTIVE:$DIRECTIVE"
+```
+
+Deploy the same reviewed source that is live, so that the only change is
+the setting. Record the Worker version. The Worker holds one directive at
+a time, so restart one row for each deploy. A request body, header or
+route cannot supply the directive, and the other room Workers ignore the
+setting.
+
+### Confirm the restart
+
+Objects still run the previous version for some minutes after a
+deploy. Wait five minutes, then activate the target object with one read.
+The object reads the directive after its diagnostic and before it
+recovers its alarm. When the directive is applied, the row's stop is
+cleared, the wake is set one second ahead, and the restart generation
+increases by one. Confirm it from the next diagnostic line of that
+scope: `restartGeneration` is one more than before, `storedWake.stopped`
+is `false` and `next` is a time. Later lines show a larger
+`confirmed.through.seq`. When the next entry does not fit, the pass log
+shows a deferral or a capacity refusal instead.
+
+The Worker logs nothing for a refused directive; the diagnostic is the
+only sign. If the line still shows the old generation and `phase`
+`stopped` after activation, the directive was refused. The causes are:
+
+- The expiry has passed.
+- `generation` is not the row's current generation.
+- The row differs from the directive in `rowDigest`, `repository`,
+  `format` or `confirmed`.
+- `at` is not this object's scope.
+- The row has a pending Mark, a `next` time or attempts.
+- The scope is not active, or the Worker has no archive policy.
+- A driver or alarm was active at that moment.
+
+For the last cause, one more activation is enough. For the others, build
+a new directive and deploy again. A new expiry changes the `command`
+digest, so the new directive is distinct from the old one.
+
+A directive that was applied stays harmless while it is set. On each
+later activation the object sees the same `command` at generation plus
+one and does nothing. After its expiry it is refused, and that also
+changes nothing.
+
+### Remove the directive
+
+Remove the setting at the next `dap-grow` deploy. `--keep-vars` keeps a
+setting that the file omits, so this one deploy runs without it:
+
+```sh
+npx -y wrangler@4.147.0 deploy --config "$ARTROOM_REPO/apps/room/wrangler.grow.jsonc"
+```
+
+Secrets are held separately and survive. A deploy without `--keep-vars`
+drops every plain setting that the file does not set. So, before you run
+it, read the live version's settings and list every plain setting that
+is not in `wrangler.grow.jsonc`:
+
+```sh
+npx -y wrangler@4.147.0 deployments status --name dap-grow --json
+npx -y wrangler@4.147.0 versions view "$LIVE_VERSION" --name dap-grow --json
+```
+
+Carry each such setting on the removal command as a reviewed `--var`,
+or stop. On 25 October the live plain settings of `dap-grow` were
+exactly the file's eleven. After the deploy, read the new version's
+settings and check that `ARCHIVE_RESTART_DIRECTIVE` is absent:
+
+```sh
+npx -y wrangler@4.147.0 versions view "$VERSION" --name dap-grow --json
+```
+
+Record the deploy and the version in the workroom, under the request
+that asked for the restart. Record the row's generation before and
+after, and the first pass outcome.
