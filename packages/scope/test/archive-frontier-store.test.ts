@@ -8,7 +8,7 @@ import { patchJournalV2Tree } from "../../git/src/journal-v2-tree.ts";
 import { ArchiveFrontiers, type ArchiveFrontierPrepared, type ArchiveFrontierBootstrap, type ArchiveFrontierBootstrapPrepared } from "../src/archive-frontier-store.ts";
 import { ARCHIVE_FRONTIER_BYTES, ARCHIVE_FRONTIER_ENCODING_BOUND, archiveFrontierEncodingBound, archiveFrontierRowContextBound, forecastArchiveFrontierFinish } from "../src/archive-frontier-cost.ts";
 import { ArchiveBudget } from "../src/archive-budget.ts";
-import { ArchiveRows, type ArchiveMark } from "../src/archive-row.ts";
+import { ArchiveRows, consumeArchivePlanningSnapshot, type ArchiveMark } from "../src/archive-row.ts";
 import { at, create } from "./fixtures-native.ts";
 import { archiveRepository, archiveSql } from "./support/archive.ts";
 import type { Sql } from "../src/sqlite.ts";
@@ -17,13 +17,13 @@ import type { Head, ScopeRef } from "@generalbusiness/dap-contract";
 const CONFIRMED = "archive-frontier-confirmed-1", PENDING = "archive-frontier-pending-1";
 const repository = digestBytes(utf8(canonicalize(archiveRepository)));
 const budget = () => new ArchiveBudget({}, () => 0);
-async function fixture(scope: ScopeRef, through: Head, parent: string | null = null, first = 0) {
+async function fixture(scope: ScopeRef, through: Head, parent: string | null = null, first = 0, repositoryId = repository) {
   const work = new JournalWork(budget()), maker = new JournalObjects("sha1", work);
   const files = [{ path: "journal/v2/head.json", data: utf8(canonicalize({ v: 2, scope, through: through.seq, hash: through.hash })) },
     { path: journalV2PassPath(first), data: utf8("TEST mechanical pass leaf; not an admitted manifest") }];
   const tree = await patchJournalV2Tree(null, null, files, maker, work);
   const commit = maker.commit(tree, parent, 1_700_000_000).id;
-  const binding: JournalParentBinding = { format: "sha1", repository, at: scope, through, commit };
+  const binding: JournalParentBinding = { format: "sha1", repository: repositoryId, at: scope, through, commit };
   const objects = new Map<string, JournalObject>(maker.objects().map(object => [object.id, object]));
   const source = { object: async (id: string, maximum: number) => {
     const object = objects.get(id); return object ? { type: object.type, size: object.data.length, data: maximum >= object.data.length ? object.data : null } : null;
@@ -33,7 +33,7 @@ async function fixture(scope: ScopeRef, through: Head, parent: string | null = n
     manifest: canonicalize({ format: "artroom-local-inventory-2", after: null, objects: [] }) };
   return { binding, frontier, mark, source };
 }
-const store = (sql: Sql, scope: ScopeRef) => new ArchiveFrontiers(sql, { at: scope, repository, format: "sha1" });
+const store = (sql: Sql, scope: ScopeRef, repositoryId = repository) => new ArchiveFrontiers(sql, { at: scope, repository: repositoryId, format: "sha1" });
 const values = (sql: Sql) => sql.exec("SELECT k, v FROM meta WHERE k IN (?, ?) ORDER BY k", CONFIRMED, PENDING).toArray();
 
 test("frontier Mark and promotion share rollback cuts and the pending proof survives native eviction", async () => {
@@ -162,7 +162,11 @@ test("a prepared frontier cannot overwrite a changed key or a different native M
 });
 
 test("frontier size and work are admitted before body reads or writes, without refunding a rollback", async () => {
-  const lane = await create(), made = await fixture(lane.at, await lane.head());
+  // SQLite measures UTF-8 JSON bytes, not JS string length. Exercise quote,
+  // backslash, escaped controls, BMP and astral characters in the real row.
+  const escapedRepository = { ...archiveRepository, namespace: 'TEST "\\\n\t雪🌱' };
+  const repositoryId = digestBytes(utf8(canonicalize(escapedRepository)));
+  const lane = await create(), made = await fixture(lane.at, await lane.head(), null, 0, repositoryId);
   await lane.inside(async state => {
     const sql = archiveSql(state), queries: string[] = [];
     const projectionPrefix = "SELECT json_extract(v, '$.at') AS at,";
@@ -178,7 +182,7 @@ test("frontier size and work are admitted before body reads or writes, without r
       const cursor = sql.exec(query, ...args);
       return racing ? { toArray() { const rows = cursor.toArray(); projectedRaceRows = rows.length; return rows; } } : cursor;
     } };
-    const frontiers = store(counted, lane.at);
+    const frontiers = store(counted, lane.at, repositoryId);
     await expect(frontiers.readConfirmed(made.binding, new ArchiveBudget({ metadata: 0 }, () => 0))).rejects.toThrow("archive-limit");
     expect(queries).toEqual([]);
     sql.exec("INSERT INTO meta(k,v) VALUES (?,?)", CONFIRMED, "x".repeat(ARCHIVE_FRONTIER_BYTES + 1));
@@ -189,7 +193,15 @@ test("frontier size and work are admitted before body reads or writes, without r
     queries.length = 0;
     expect(await frontiers.readPending(made.binding, null as unknown as ArchiveMark, new ArchiveBudget({ metadata: 192 }, () => 0))).toBeNull();
     expect(queries).toHaveLength(2);
-    const rows = new ArchiveRows(sql, lane.at); rows.target(archiveRepository, "sha1", budget());
+    const rows = new ArchiveRows(sql, lane.at), planningBudget = budget();
+    const oldRow = rows.target(escapedRepository, "sha1", planningBudget);
+    const planning = rows.prepareCapacityDeferral(oldRow, () => at(60), planningBudget).planning!;
+    expect(planning).toBeDefined();
+    const ownedRowBytes = consumeArchivePlanningSnapshot(planning.token, sql, planning.row, planningBudget);
+    expect(ownedRowBytes).toBe(utf8(canonicalize(planning.row)).length);
+    const ownedContextBytes = archiveFrontierRowContextBound(planning.row, ownedRowBytes);
+    expect(ownedContextBytes).toBeLessThan(archiveFrontierRowContextBound(planning.row));
+    expect(() => consumeArchivePlanningSnapshot(planning.token, sql, planning.row, planningBudget)).toThrow("archive-row-unavailable");
     const prepared = await frontiers.prepare(made.frontier, made.mark, null, budget()); rows.markAttempt(made.mark, at(1), budget());
     const measured = budget();
     expect(() => sql.transaction(() => { frontiers.stage(prepared, measured); throw Error("TEST measure rollback"); })).toThrow("TEST measure rollback");
@@ -214,7 +226,7 @@ test("frontier size and work are admitted before body reads or writes, without r
     const validating = budget(); await frontiers.prepare(made.frontier, made.mark, null, validating);
     if (defaultForecast.ok) for (const key of Object.keys(defaultForecast.cost) as (keyof typeof defaultForecast.cost)[])
       expect(validating.admitted()[key], `Default unknown-frontier ${key}`).toBeLessThanOrEqual(defaultForecast.cost[key]);
-    const markedNative = rows.loadSnapshot(budget())!, contextBytes = archiveFrontierRowContextBound(markedNative.row);
+    const markedNative = rows.loadSnapshot(budget())!, contextBytes = ownedContextBytes;
     expect(contextBytes).toBeGreaterThanOrEqual(1024); expect(contextBytes).toBeLessThan(32 * 1024);
     const contextForecast = forecastArchiveFrontierFinish({ hasBase: false, through: made.mark.through.seq, captureFromSource: true,
       rowContextBytes: contextBytes, markUnits: made.mark.manifest.length, markedRowBytes: rowSize as number });
@@ -232,6 +244,8 @@ test("frontier size and work are admitted before body reads or writes, without r
     expect(scalarIndex).toBeGreaterThanOrEqual(0); expect(projectionIndex).toBeGreaterThan(scalarIndex);
     expect(queries[scalarIndex]).toContain("AS atBytes"); expect(queries[scalarIndex]).toContain("AS repositoryBytes");
     expect(queries[scalarIndex]).toContain("AS confirmedBytes");
+    const projected = sql.exec("SELECT octet_length(json_extract(v, '$.at')) AS a, octet_length(json_extract(v, '$.repository')) AS r, CASE WHEN json_type(v, '$.confirmed') = 'null' THEN 0 ELSE octet_length(json_extract(v, '$.confirmed')) END AS c FROM meta WHERE k = ?", "archive-row-1").toArray()[0]!;
+    expect(1024 + (projected["a"] as number) + (projected["r"] as number) + (projected["c"] as number)).toBeLessThanOrEqual(contextBytes);
     expect(narrowStage.admitted().calls).toBe(spent.calls);
     expect(narrowStage.admitted().metadata).toBeLessThan(spent.metadata);
     expect(narrowStage.admitted().inputWork).toBeLessThan(spent.inputWork);
@@ -301,12 +315,33 @@ test("frontier size and work are admitted before body reads or writes, without r
     // must cover actual stage/promotion while fencing changed larger keys
     // before their bodies, including within the independent 64 KiB cap.
     const base = await frontiers.readConfirmed(made.binding, budget()); expect(base).not.toBeNull();
-    const next = await fixture(lane.at, { ...made.mark.through, seq: made.mark.through.seq + 1 }, made.mark.commit, made.mark.through.seq + 1);
-    const nextContextBytes = archiveFrontierRowContextBound(rows.load(budget())!);
+    const next = await fixture(lane.at, { ...made.mark.through, seq: made.mark.through.seq + 1 }, made.mark.commit, made.mark.through.seq + 1, repositoryId);
+    const nextPlanningBudget = budget(), nextRow = rows.load(nextPlanningBudget)!;
+    const nextPlanning = rows.prepareCapacityDeferral(nextRow, () => at(60), nextPlanningBudget).planning!;
+    expect(nextPlanning).toBeDefined();
+    const nextOwnedBytes = consumeArchivePlanningSnapshot(nextPlanning.token, sql, nextPlanning.row, nextPlanningBudget);
+    const nextContextBytes = archiveFrontierRowContextBound(nextPlanning.row, nextOwnedBytes);
+    expect(nextContextBytes).toBeLessThan(archiveFrontierRowContextBound(nextPlanning.row));
+    // Compare the original six-per-unit ceiling with the owned-byte bound,
+    // separately from the older 32 KiB fallback comparison above.
+    const genericContextBytes = archiveFrontierRowContextBound(nextPlanning.row);
+    const genericContextQuote = forecastArchiveFrontierFinish({ hasBase: true, through: next.mark.through.seq, captureFromSource: true,
+      rowContextBytes: genericContextBytes, markUnits: next.mark.manifest.length, markedRowBytes: 16 * 1024 });
+    const ownedContextQuote = forecastArchiveFrontierFinish({ hasBase: true, through: next.mark.through.seq, captureFromSource: true,
+      rowContextBytes: nextContextBytes, markUnits: next.mark.manifest.length, markedRowBytes: 16 * 1024 });
+    expect(genericContextQuote.ok && ownedContextQuote.ok).toBe(true);
+    if (genericContextQuote.ok && ownedContextQuote.ok) {
+      expect(genericContextQuote.cost.metadata - ownedContextQuote.cost.metadata).toBe(2 * 5 * (genericContextBytes - nextContextBytes));
+      expect(genericContextQuote.cost.inputWork - ownedContextQuote.cost.inputWork).toBe(2 * 13 * (genericContextBytes - nextContextBytes));
+      for (const key of ["entries", "attempts", "nodes", "calls"] as const)
+        expect(ownedContextQuote.cost[key]).toBe(genericContextQuote.cost[key]);
+    }
     const future = budget(), ready = await frontiers.prepareFromSource(next.source, next.mark, base, future, nextContextBytes);
     expect(future.admitted().nodes, "Loaded-base source-owned preparation visits nine trees once").toBe(9);
     rows.markAttempt(next.mark, at(2), budget());
     const marked = rows.loadSnapshot(budget())!.bytes;
+    const nextProjection = sql.exec("SELECT octet_length(json_extract(v, '$.at')) AS a, octet_length(json_extract(v, '$.repository')) AS r, octet_length(json_extract(v, '$.confirmed')) AS c FROM meta WHERE k = ?", "archive-row-1").toArray()[0]!;
+    expect(1024 + (nextProjection["a"] as number) + (nextProjection["r"] as number) + (nextProjection["c"] as number)).toBeLessThanOrEqual(nextContextBytes);
     const confirmed = values(sql)[0]!["v"] as string;
     const changed = "x".repeat(ARCHIVE_FRONTIER_ENCODING_BOUND + 1);
     sql.exec("UPDATE meta SET v = ? WHERE k = ?", changed, CONFIRMED);
