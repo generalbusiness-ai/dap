@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8aa9d90cd2b800831a04d8ace85726c5d2075758","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-25-room-a-entry150-budget.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a8f9b366ad057888e9053381be5ba158a8fb20b4","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-driver.ts."}
