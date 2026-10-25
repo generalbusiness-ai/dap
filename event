@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b418fb80cac2a753bd1a02038b4acb6c087c6e98","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-24-security-r6-creation-versions.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b55a8d530c672708405d2c7b7b81c3012d994673","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/applications/announce.ts."}
