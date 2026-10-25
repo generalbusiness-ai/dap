@@ -2,11 +2,15 @@
 
 Request allocation: `ce0c956dfff242a87caeb7bd338077314cd09747`.
 
-The local Room A-shaped reproduction confirmed sequence 147, then refused
-148 with metadata used 2,846,036 plus finish quote 1,352,518: 4,250 over the
-unchanged 4 MiB allowance. Its genuine native history has 37 published
-commits through 146. Its entries and tree sizes differ from the hosted room;
-this result does not establish the hosted refusal axis or a hosted fix.
+The original commission-zone trial (original 44389; whole file 7 PASS,
+1 FAIL) rejected an exploratory quote for 148 during lookahead: metadata
+used 2,846,036 plus finish quote 1,352,518 was 4,250 over the unchanged
+4 MiB allowance. The same pass then confirmed 147 before the transport
+assertion failed; later draining was unreached. Its genuine native history
+has 37 published commits through 146. Its entries and tree sizes differ
+from the hosted room. The subsequent genuine fan candidate has not yet
+been measured. These observations establish neither the hosted refusal
+axis nor a hosted fix.
 
 Before adaptive planning, capacity deferral already serializes the checked
 no-pending row and reserves its exact payload/wake comparisons. Adaptive
