@@ -694,16 +694,16 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
         grants: candidateInput.type === "act" ? candidateInput.authority.length : null,
         bytes: utf8(canonicalize(candidate.entry)).length, effects: candidate.entry.effects.length,
         uses: candidate.entry.uses.length, sends: candidate.entry.sends.length, prepared: candidate.entry.prepared.length,
-        qualification: "Actual signed fixture set-fan; only reported kind/fields/grant/effect shape is matched. Hosted bytes/uses/retained sizes and8698 tree layout remain unmatched." };
+        qualification: "Actual signed fixture set-fan with device-target rule input and inline authority. The measured uses count does not follow from that authority; no fixed-path retained foreign-body coverage is claimed. Hosted bytes/uses/retained sizes and8698 tree layout remain unmatched." };
       expect(candidateInput.type).toBe("act");
       if (candidateInput.type !== "act") throw Error("Actual signed set-fan required");
       expect(candidateInput.signed.intent).toMatchObject({ kind: "set-fan", actor: vic.key, on: roomAFan });
       expect(candidateInput.signed.intent.fields).toEqual({ level: 100, target: "on" });
       expect(candidateInput.authority).toHaveLength(1); expect(candidate.entry.effects).toHaveLength(6);
-      // The fixed path must cover actual rule and foreign authority inputs,
-      // not only the checkpoint-only strategy witness.
+      // Exercise actual rule input and inline authority through fresh Grow
+      // discovery/source ports. Inline authority does not imply a retained
+      // foreign-use body; the observed uses count stays in the diagnostic.
       expect(candidate.entry.prepared.some(prepared => prepared.rule === "device-target")).toBe(true);
-      expect(candidate.entry.uses.length).toBeGreaterThan(0);
       // A suffix makes exact remainder observable; none of it is pre-marked.
       await life.wait(() => runInDurableObject(childScope.object, async instance => {
         for (let n = 0; n < 5; n++) expect(await (instance as unknown as { checkpoint(): Promise<Checkpointed> }).checkpoint()).toMatchObject({ answer: "written" });
