@@ -129,7 +129,7 @@ export class ScopeIndex extends DurableObject<Env> {
     try { await this.#siteAlarm; } finally { this.#siteAlarm = null; }
   }
   async acquireSiteRead(request: SiteTokenRequest) { return this.#siteTokens.acquire(request); }
-  async alarm() { this.#siteTokens.maintain(Date.now()); await this.#scheduleSiteTokens(); }
+  override async alarm() { this.#siteTokens.maintain(Date.now()); await this.#scheduleSiteTokens(); }
 
   has(scope: string, kind?: ScopeKind) { return this.#rows.has(scope, kind); }
   register(proof: ScopeRegistration) { return this.#rows.register(proof); }
