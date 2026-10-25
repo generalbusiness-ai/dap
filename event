@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/section-citation-findings.json","body":{"commit":"75b2233cfff795f83257d3e998c9d186ee47c112","path":"scripts/section-citation-findings.json"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:02e959af27282439952f18a22ae4729c91985099","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-20-history-out-of-the-readable-tree.md."}
