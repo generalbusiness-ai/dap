@@ -37,4 +37,7 @@ The remaining failures led to three fixture repairs. Historical destination 3 st
 
 The closed third continuation supplies nine complete replay passes for the held single private Register 18 classifier control. The control has not run. Its expected observation is one unavailable private Register read, not a replay mismatch. A final unchanged-input check and separate capture and execution allocation remain required.
 
+
+The historical selector and custody changes passed independent Source review and were committed at `e3ad4150`. One maintained call supplied the changed CLI owner seal. A justified Page build at `72631b54` then passed with a changed script and unchanged HTML; both generated literals match their `dist` bytes and digests. Its corrected wrapper also passed. The next affected continuation covers thirteen compiler contexts and eight whole files, including the three repaired fixtures, CLI custody, command inventory and the changed Page asset. Earlier healthy whole files carry forward only where their inputs and contracts remain unchanged.
+
 There has been no review approval, branch push, landing, deployment, live-pin inventory or hosted acceptance for this proposal. The original failed candidate and external repair packets remain available. Final delivery bindings, validation scope and planner rollout must be settled before review.
