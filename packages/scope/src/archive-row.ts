@@ -351,7 +351,7 @@ export class ArchiveRows {
    * remaining allowance. Only an actual capacity deferral applies it. The
    * exact-byte comparison prevents a stale pass replacing a newer wake. */
   prepareCapacityDeferral(row: ArchiveRow, later: (count: number) => Timestamp | null, budget: ArchiveBudget): {
-    readonly persist: () => Timestamp; readonly planning?: { readonly row: ArchiveRow; readonly token: object };
+    readonly priorCapacityDeferrals: number; readonly persist: () => Timestamp; readonly planning?: { readonly row: ArchiveRow; readonly token: object };
   } {
     return this.#sql.transaction(() => {
       // The extra fixed-schema inspection, owned parse and byte comparison
@@ -403,7 +403,7 @@ export class ArchiveRows {
       budget.spend({ calls: 1, metadata: rowCompare.metadata + wakeCompare.metadata + 256,
         inputWork: rowCompare.inputWork + rowCompare.metadata + wakeCompare.inputWork + wakeCompare.metadata + 4096 });
       let used = false;
-      return { ...(planning ? { planning } : {}), persist: () => {
+      return { priorCapacityDeferrals: previous.capacityDeferrals ?? 0, ...(planning ? { planning } : {}), persist: () => {
         if (used) return refuse("unavailable");
         used = true;
         budget.check();

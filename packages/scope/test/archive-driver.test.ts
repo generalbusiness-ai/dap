@@ -15,8 +15,9 @@ import { ARCHIVE_BOUNDS, ArchiveBudget, type ArchiveCost, type ArchiveCapacityRe
 import { driver, ScriptedHost } from "./support/archive-driver.ts";
 import type { ArchivePolicyRegistry } from "../src/archive-inventory.ts";
 import { archiveHostGate as gate } from "./support/archive-provider.ts";
+import { ArchiveDriver } from "../src/archive-driver.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
-import { planArchive } from "../src/archive-build.ts";
+import { planArchive, type ArchiveFixedFinish } from "../src/archive-build.ts";
 import { at, rita, una, type Lane } from "./fixtures-native.ts";
 import { createNativeArchiveLane, createNativeArchiveApplicationLane, archiveAuthorityBasis, archiveAuthorityPolicies, archiveAuthorityAnchors } from "./support/archive-native-authority.ts";
 import { archiveDefinition, archivePolicies, archiveRepository, archiveSql } from "./support/archive.ts";
@@ -25,7 +26,7 @@ import type { TestScope } from "./worker.ts";
 
 // Observe the existing production diagnostic; no scheduling or budget hook.
 function passDiagnostics() {
-  const records: { state: string; reason: string; capacityRefusal: ArchiveCapacityRefusal | null }[] = [], info = console.info;
+  const records: { state: string; reason: string; capacityRefusal: ArchiveCapacityRefusal | null; cost: ArchiveCost; fixedFinish: ArchiveFixedFinish | null }[] = [], info = console.info;
   const log = vi.spyOn(console, "info").mockImplementation((...args: unknown[]) => {
     if (args[0] === "archive-pass-diagnostic-v1") records.push(args[1] as (typeof records)[number]);
     info(...args);
@@ -183,10 +184,11 @@ test("a pre-Mark target failure survives eviction and new native input without l
     const records = observed.map(args => {
       expect(args).toHaveLength(2);
       const record = args[1] as Record<string, unknown>;
-      expect(Object.keys(record).sort()).toEqual(["step", "detail", "rowPhaseAtLoad", "confirmed", "pending", "attemptsAtLoad", "hasNext", "attempted", "state", "reason", "caught", "cost", "parentRead", "capacityRefusal"].sort());
+      expect(Object.keys(record).sort()).toEqual(["step", "detail", "rowPhaseAtLoad", "confirmed", "pending", "attemptsAtLoad", "hasNext", "attempted", "state", "reason", "caught", "cost", "parentRead", "capacityRefusal", "fixedFinish"].sort());
       // This stand-in provider has no exact-object transport. It must not
       // invent a parent-read phase from a target failure or native work.
       expect(record["capacityRefusal"]).toBeNull();
+      expect(record["fixedFinish"]).toBeNull();
       expect(record["parentRead"]).toEqual({ ordinal: 0, type: "none", maximum: 0, phase: "none", refusal: "none" });
       expect(["row-load", "pin", "due-check", "target", "format", "pending-readback", "parent", "bootstrap", "sources", "rebuild", "plan", "frontier", "mark", "copy", "mint", "send", "readback", "confirm"]).toContain(record["step"]);
       expect(["none", "not-due", "wake-not-due", "target-missing", "target-different"]).toContain(record["detail"]);
@@ -432,9 +434,67 @@ test("adaptive Native passes reserve writing, incremental sending and confirmati
   expect(await lane.head()).toEqual(head); expect(host.closureReads).toBe(0);
   expect(diagnostics).toHaveLength(2);
   for (const diagnostic of diagnostics) expect(diagnostic).toMatchObject({ state: "confirmed", capacityRefusal: null });
+  // Exercise the production strategy selector with genuine Native entries
+  // and published frontier, but explicit TEST target/source/provider ports.
+  // A fresh capacity wake must not retry adaptive scouting in that budget.
+  const sourceOrder: string[] = [], fixedBudgets: ArchiveBudget[] = [];
+  let withdraw = false;
+  const productionPass = (shortage = false) => lane.inside(state => {
+    const budget = new ArchiveBudget(shortage ? { entries: 0 } : {}); fixedBudgets.push(budget);
+    return new ArchiveDriver({ production: "room-binding", sql: archiveSql(state),
+      current: () => ({ at: lane.at, head }), clock: () => lane.c.clock.now, bounds: PROPOSED_BOUNDS,
+      policies: { registry: archiveAuthorityPolicies(lane, archivePolicies) }, admit: () => true,
+      provider: host, budget: () => budget,
+      target: { resolve: async () => { sourceOrder.push("target"); return archiveRepository; } },
+      sources: async (_after, _through, actualBudget, exact) => {
+        expect(actualBudget).toBe(budget); expect(exact).toBe(false); sourceOrder.push("sources");
+        return { pins: archiveAuthorityBasis(lane)!.pins, prepare: async (seq, sameBudget) => {
+          expect(sameBudget).toBe(budget); sourceOrder.push(`prepare:${seq}`);
+          if (withdraw) budget.stop("unavailable");
+        } };
+      },
+    }).run();
+  });
+  const published = second.confirmed!;
+  expect(published).toMatchObject({ layout: 2, anchorsPublished: true });
+  expect(await productionPass(true)).toMatchObject({ state: "retry", reason: "limit" });
+  const capacityWake = await lane.inside(state => JSON.parse(state.storage.sql.exec<{ v: string }>("SELECT v FROM meta WHERE k = 'archive-wake-1'").one().v));
+  expect(capacityWake.capacityDeferrals).toBe(1);
+  expect((await row(lane))!.confirmed).toEqual(published); expect((await row(lane))!.pending).toBeNull();
+  const sendsBefore = host.sends.length, mintsBefore = host.mintCalls;
+  lane.c.clock.now = capacityWake.next; withdraw = true; sourceOrder.length = 0;
+  expect(await productionPass()).toMatchObject({ state: "retry", reason: "unavailable" });
+  expect(sourceOrder).toEqual(["target", "sources", `prepare:${published.through.seq + 1}`]);
+  expect((await row(lane))!.confirmed).toEqual(published); expect((await row(lane))!.pending).toBeNull();
+  expect(host.sends).toHaveLength(sendsBefore); expect(host.mintCalls).toBe(mintsBefore);
+  const retryAt = await lane.inside(state => new ArchiveRows(archiveSql(state), lane.at).wake());
+  expect(retryAt).not.toBeNull(); lane.c.clock.now = retryAt!;
+  withdraw = false; sourceOrder.length = 0;
+  expect(await productionPass()).toMatchObject({ state: "confirmed" });
+  expect(sourceOrder).toEqual(["target", "sources", `prepare:${published.through.seq + 1}`]);
+  const fixedReceipt = (await row(lane))!;
+  expect(fixedReceipt.confirmed!.through.seq).toBe(published.through.seq + 1);
+  expect(fixedReceipt.confirmed!.through.seq).toBeLessThan(head.seq);
+  expect(fixedReceipt).toMatchObject({ pending: null, stopped: null });
+  expect(host.sends).toHaveLength(sendsBefore + 1);
+  const finished = diagnostics.at(-1)!;
+  expect(finished).toMatchObject({ state: "confirmed", capacityRefusal: null });
+  expect(finished.fixedFinish, JSON.stringify(finished)).not.toBeNull();
+  const fixedQuote = finished.fixedFinish!;
+  expect(fixedQuote.metadataMargin).toBe(65_536);
+  for (const key of ["entries", "attempts", "nodes", "calls", "metadata", "inputWork"] as const) {
+    expect(finished.cost[key], JSON.stringify({ key, finished })).toBeLessThanOrEqual(fixedQuote.used[key] + fixedQuote.remaining[key]);
+  }
+  expect(ARCHIVE_BOUNDS.metadata - finished.cost.metadata, JSON.stringify(finished)).toBeGreaterThanOrEqual(fixedQuote.metadataMargin);
+  expect(await lane.head()).toEqual(head);
+  for (const budget of fixedBudgets) {
+    const cost = budget.admitted();
+    for (const key of ["entries", "attempts", "nodes", "calls", "metadata", "inputWork"] as const) expect(cost[key]).toBeLessThanOrEqual(ARCHIVE_BOUNDS[key]);
+  }
   (context.task.meta as Record<string, unknown>)["adaptiveNative"] = { cap: maximum, first: first.through.seq, second: second.confirmed!.through.seq,
     costs: budgets.map(budget => budget.admitted()), quotes, lookaheads, appendCalls: host.appendCalls,
-    qualification: "Actual Native checkpoint entries, adaptive scouting, fresh inventory, writer, driver copies, production incremental-send code including validator/copy/pack and Native row confirmation; HTTP/host/token/policies remain TEST stand-ins. Original production caps including 64 MiB input; bounded synchronous observations require charged discarded lookahead under a positive finish reserve. Two passes only; no cadence/10000-one-entry claim." };
+    fixed: { sourceOrder, costs: fixedBudgets.map(budget => budget.admitted()), through: fixedReceipt.confirmed!.through },
+    qualification: "Actual Native checkpoint entries, adaptive scouting, fresh inventory, writer, driver copies, production incremental-send code including validator/copy/pack and Native row confirmation; HTTP/host/token/policies remain TEST stand-ins. Original production caps including 64 MiB input; bounded synchronous observations require charged discarded lookahead under a positive finish reserve. Two original adaptive passes plus one shortage, one withdrawn-source retry and one fixed-next confirmation; no cadence/10000-one-entry claim." };
 });
 
 test("adaptive Native selection finishes a covered earlier prefix before an uncovered later class", async () => {

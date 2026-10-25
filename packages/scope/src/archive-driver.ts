@@ -1,6 +1,6 @@
 /** One bounded asynchronous archive pass. No entry, operation or public RPC.
  * Configuration and reviewed policy belong to the trusted object owner. */
-import { canonicalize, digestBytes, same, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, digestBytes, isDigest, same, utf8 } from "@generalbusiness/dap-bytes";
 import type { Bounds, Head, ScopeRef, Seed, Timestamp } from "@generalbusiness/dap-contract";
 import { isScopeRef, timeMs, timeOf } from "@generalbusiness/dap-bytes";
 import { captureJournalParentFrontier, journalRef, type JournalArchive, type JournalPassArchive, type JournalFormat, type JournalObject, type JournalObjectSource } from "@generalbusiness/dap-git/journal";
@@ -9,8 +9,8 @@ import { archiveParent, copyArchiveObjects } from "./archive-parent.ts";
 import { ArchiveFrontiers, type ArchiveFrontierBase, type ArchiveFrontierPrepared } from "./archive-frontier-store.ts";
 import { archiveFrontierRowContextBound } from "./archive-frontier-cost.ts";
 import { admitArchiveMigration } from "./archive-bootstrap-cost.ts";
-import { planPublishedArchiveConversion, rebuildArchive, rebuildArchivePass } from "./archive-build.ts";
-import { planAdaptiveArchivePass, planRootAdaptiveArchivePass } from "./archive-adaptive.ts";
+import { planPublishedArchiveConversion, rebuildArchive, rebuildArchivePass, type ArchiveFixedFinish } from "./archive-build.ts";
+import { planAdaptiveArchivePass, planRootAdaptiveArchivePass, planRootFixedArchivePass } from "./archive-adaptive.ts";
 import type { FixtureArchiveSourcePins } from "./archive-source-pins.ts";
 import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, readArchivePin, readArchivePinAfterReceipt } from "./archive-pin.ts";
 import type { ArchivePolicyRegistry } from "./archive-inventory.ts";
@@ -19,6 +19,7 @@ import { finishArchiveParentRead, startArchiveParentReadPass } from "./archive-p
 import { readArchiveRestart } from "./archive-restart.ts";
 import type { DestinationRepository } from "./destination-host.ts";
 import type { Sql } from "./sqlite.ts";
+import { ARCHIVE_POSITION_METADATA_BYTES } from "./archive-inventory-cost.ts";
 import { readArchiveScopeFrame } from "./archive-prefix.ts";
 
 export interface ArchiveCredential { readonly id: string; readonly ends: Timestamp; readonly plaintext: string }
@@ -148,6 +149,7 @@ export class ArchiveDriver {
     // only. It adds no archive read, admission, retry or persistent state.
     let step = "row-load", detail = "none", caught = "none";
     let capacityRefusal: ArchiveCapacityRefusal | null = null;
+    let fixedFinish: ArchiveFixedFinish | null = null;
     let phase = "unknown", confirmed: number | null = null, pending: number | null = null, attempts = 0, hasNext = false;
     const observed: { outcome?: ArchivePass } = {};
     const done = (value: ArchivePass): ArchivePass => { observed.outcome = value; return value; };
@@ -331,13 +333,31 @@ export class ArchiveDriver {
         }
         else {
           const capacity = rows.prepareCapacityDeferral(row, count => this.#later(count), budget);
-          const adaptive = await ("production" in this.#options ? planRootAdaptiveArchivePass : planAdaptiveArchivePass)(this.#options.sql, { ...common, at, through,
+          // A previous genuine capacity wake chooses this strategy before
+          // planning spends its allowance. Initial, unpublished and pending
+          // work retain their original paths; no exhausted-pass fallback.
+          const fixed = "production" in this.#options && capacity.priorCapacityDeferrals > 0
+            && row.confirmed?.layout === 2 && row.confirmed.anchorsPublished === true && base !== null;
+          let selectedThrough = through;
+          if (fixed) {
+            const seq = row.confirmed!.through.seq + 1;
+            const next = this.#options.sql.transaction(() => budget.native(this.#options.sql,
+              () => ({ metadata: ARCHIVE_POSITION_METADATA_BYTES, inputWork: 0 })).exec(
+              "SELECT hash FROM entry WHERE seq = ? AND typeof(hash) = 'text' AND octet_length(hash) = 71 LIMIT 1", seq).toArray());
+            if (next.length !== 1 || !isDigest(next[0]?.["hash"]) || seq > through.seq) return budget.stop("unavailable");
+            selectedThrough = { seq, hash: next[0]["hash"] };
+            if (seq === through.seq && selectedThrough.hash !== through.hash) return budget.stop("unavailable");
+          }
+          const planner = fixed ? planRootFixedArchivePass
+            : "production" in this.#options ? planRootAdaptiveArchivePass : planAdaptiveArchivePass;
+          const adaptive = await planner(this.#options.sql, { ...common, at, through: selectedThrough,
             ...(legacyAnchorParent ? { legacyAnchorParent } : {}),
             ...(preparedSources?.prepare ? { prepareSources: preparedSources.prepare } : {}),
             after: row.confirmed?.through ?? null, format: row.format, row: capacity.planning?.row ?? row,
             ...(capacity.planning ? { rowSnapshot: capacity.planning.token } : {}),
             atomicFirstAttempt: true,
             parentHeld: previous.held, parentUsed: previous.used, maximum: this.#maximum }, budget);
+          if ("fixedFinish" in adaptive) fixedFinish = adaptive.fixedFinish;
           if (!adaptive.ok && "deferred" in adaptive) {
             // Only genuine capacity shortage escalates the durable wake.
             // Its write was reserved before lookahead, not after exhaustion.
@@ -411,7 +431,7 @@ export class ArchiveDriver {
         console.info("archive-pass-diagnostic-v1", {
           step, detail, rowPhaseAtLoad: phase, confirmed: position(confirmed), pending: position(pending), attemptsAtLoad: position(attempts), hasNext,
           attempted, state: observed.outcome?.state ?? "threw", reason: reason === undefined ? "none" : known.includes(reason) ? reason : "other",
-          caught: known.includes(caught) ? caught : caught === "none" ? "none" : "other", cost: budget.admitted(), parentRead, capacityRefusal,
+          caught: known.includes(caught) ? caught : caught === "none" ? "none" : "other", cost: budget.admitted(), parentRead, capacityRefusal, fixedFinish,
         });
       } catch { /* Observation cannot replace the original archive result. */ }
     }
