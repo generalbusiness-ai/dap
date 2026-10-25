@@ -56,6 +56,7 @@ if [ "$failed" = 0 ] && [ -n "$base" ]; then step whitespace git diff --check -B
 [ "$failed" = 0 ] && step helpers node scripts/check-shared-helpers.mjs
 [ "$failed" = 0 ] && step citations node scripts/check-section-citations.mjs --report "$out/section-citations.json"
 [ "$failed" = 0 ] && step cite-test node --test scripts/check-section-citations.test.mjs
+[ "$failed" = 0 ] && step doc-links node scripts/check-doc-links.mjs
 [ "$failed" = 0 ] && step typecheck npm run typecheck
 # npm's unchanged pretest hook prepares compatibility once. The fixed test
 # owner defers its summary to this gate's unconditional EXIT finalizer.

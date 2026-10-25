@@ -66,7 +66,7 @@ In order, nearest first.
 | Capability | State | Use cases that need it |
 |---|---|---|
 | [An application's own messages between scopes](#an-applications-own-messages-between-scopes) | Runs within one room: the grow site and its rooms; not yet across rooms | 21, 25, 31, 32, 33, 37, 39, 40, 41, 51, and parts of 08, 18, 19, 24 |
-| [Durability levels](#durability-levels) | Recorded is declared; Live, Sequenced and the journal floor are designed, not built | 36, 44, and the live part of every case |
+| [Durability levels](#durability-levels) | Recorded is declared; the journal floor's first two slices are built; Live and Sequenced are designed, not built | 36, 44, and the live part of every case |
 | [A fork for each hold](#a-fork-for-each-hold) | Planned; a first measurement ran | 34 |
 | [Offline work and propose from a branch](#offline-work-and-propose-from-a-branch) | Proposing a branch's UTF-8 files is built; offline work is designed, not built; a pack upload protocol is not designed | 34 |
 | [Private views in one record](#private-views-in-one-record) | Not designed in dap; tested in the dap-spike | 42, and the club and the kanban board from the dap-spike's sweep |
@@ -133,8 +133,9 @@ binding; it is no longer a durability level.
 **Today.** Execution supports Recorded only. Explicit archive cohorts let
 the Directory bind a journal archive, and a signed package can require
 that binding before installation. Existing cohorts retain their old pins.
-Binding does not establish export. The archive engine's current acceptance
-remains fixture-only, with production admission and consent still outstanding.
+Binding does not establish export. The archive engine runs on the hosted
+`dap-grow` Worker for the demo room; admission and consent for other rooms
+are still outstanding.
 
 **Use cases.** Practice counting that keeps no record (44); presence and
 hypotheses during an incident (36); the drafts and tentative options in

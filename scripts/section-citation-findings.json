@@ -13,30 +13,6 @@
     "disposition": "Planner-owned mixed reference: the authority note does not have these sections. Normative prose is unchanged; this citation is unresolved."
   },
   {
-    "file": "notes/implementation/2026-10-04-carry-pass-amendment.md",
-    "line": 14,
-    "target": "docs/protocol.md",
-    "missingSections": [
-      "35"
-    ],
-    "excerpt": "Proposed place: docs/protocol.md section 35, contract amendment 8,",
-    "excerptSha256": "9caf1ec73652a2736cccda00cee33953ff10d2a0b73a21908fd824f2f2876c99",
-    "expectedOccurrences": 1,
-    "disposition": "Historical proposed placement, not a current protocol section. The unadopted proposal is retained unchanged and remains unresolved."
-  },
-  {
-    "file": "notes/plans/015-2026-10-04-carry-pass-draft3-decision.md",
-    "line": 62,
-    "target": "docs/protocol.md",
-    "missingSections": [
-      "35"
-    ],
-    "excerpt": "Placement: `docs/protocol.md`, section 35, contract amendment 8,",
-    "excerptSha256": "0936aecc5790273ed4f92becdf1a906822bbf9b2c96b89da1586b45f3732540c",
-    "expectedOccurrences": 1,
-    "disposition": "Historical proposed incorporation placement, not a current protocol section. The draft is retained unchanged and remains unresolved."
-  },
-  {
     "file": "notes/2026-10-04-scope-and-replay-contract.md",
     "line": 11424,
     "target": "notes/2026-10-04-authority-effects-and-publication.md",
@@ -60,5 +36,4 @@
     "expectedOccurrences": 1,
     "disposition": "The syntactic adjacent-document binding does not resolve. Source text is unchanged; document-owner review is needed. This listing makes no claim that code follows the cited rule."
   }
-
 ]
