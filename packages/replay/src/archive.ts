@@ -175,7 +175,7 @@ class Session implements HistorySource {
         this.work.spend({ metadata: 256, inputWork: 512 });
         if (!this.#anchorScopes.has(source.at.scope)) continue;
         if (source.pin === "platform:membership@8" && source.at.kind === "membership"
-          || (source.pin === "platform:register@17" || source.pin === "platform:register@18") && source.at.kind === "register") selected.set(canonicalize(source.at), platformName(source.pin));
+          || (source.pin === "platform:register@17" || source.pin === "platform:register@18" || source.pin === "platform:register@19") && source.at.kind === "register") selected.set(canonicalize(source.at), platformName(source.pin));
       }
       names = selected; this.#privateNames.set(archive.scope.scope, names);
     }
