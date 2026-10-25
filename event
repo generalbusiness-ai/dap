@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0753d59dcc8b0aae5fde6a7468cd8b16825481a2","text":"Merge retired a covered predecessor with no successor at its old path."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:096b363d87729cae3103107dd2b0d347d8c05832","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-25-codebase-techdebt-review.md."}
