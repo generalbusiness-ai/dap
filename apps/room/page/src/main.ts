@@ -729,7 +729,7 @@ function startScreen(): HTMLElement {
               const copy = h("button", { type: "button", class: "link-button" }, "Copy invitation link");
               copy.addEventListener("click", () => { if (!current()) return; if (!navigator.clipboard) { answer.textContent = "Select the private invitation link to copy it yourself."; return; } void navigator.clipboard.writeText(issued.link!).catch(() => { if (current()) answer.textContent = "Copy was unavailable. Select the private invitation link to copy it yourself."; }); });
               const instructions = issued.kind === "agent-key" ? h("div", {},
-                h("p", {}, "On the agent’s computer, use a new owner-only ARTROOM_HOME directory so it creates its own key. Do not use the creator’s config or key."),
+                h("p", {}, "On the agent’s computer, use a new owner-only DAP_HOME directory so it creates its own key. Do not use the creator’s config or key."),
                 h("pre", {}, "dap join <private invitation link>"),
                 h("p", {}, "If its reply is lost, check the exact original without submitting:"), h("pre", {}, "dap join <same-private-link> --check")) : null;
               linkHost.replaceChildren(privateLink, copy, ...(instructions ? [instructions] : []));

@@ -1,0 +1,311 @@
+{
+  "qualification": "BR10 final delivery: completed owning evidence plus the single ordinary gate at its exact checkpoint. Gate exit 0. Original raw failures, source indexes, owner scripts, and observation gaps are retained; nothing was rerun.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-26-br10-cleanup-delivery",
+  "checkpoint": {
+    "commit": "5ff4fc52892c45ba8c6c1d7d0da97a31011f69b4",
+    "tree": "69d166347c5b349d6a177b9a08647f8e79a37afb"
+  },
+  "fileCount": 60,
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "bytes": 5516,
+      "sha256": "4cae632cd4112a01f453d52e97ef71179be8b1e1985e93fb3b39eedf91af581e"
+    },
+    {
+      "path": "delivery-summary.json",
+      "bytes": 9815,
+      "sha256": "c8870496aa29800a1c697f79b5519c6ebda579563b1ae8d19c80e9f06ab37fc3"
+    },
+    {
+      "path": "gate/SHA256SUMS",
+      "bytes": 2950,
+      "sha256": "fa7bc429a4f6b56b5ee67b5b7c23648314b9ebe83f81c2a5d3302356ea692016"
+    },
+    {
+      "path": "gate/dependency-provenance.json",
+      "bytes": 6112,
+      "sha256": "670d1bfa473b6b7a912153d7cbd43d32f6b92ab34da2931f4f2bf1e391eeb34e"
+    },
+    {
+      "path": "gate/gate.log",
+      "bytes": 6055,
+      "sha256": "32885cd9e2dcc96d2b604b7f6dfe3a18f5c0338a733d287cb1c75311d41fbf68"
+    },
+    {
+      "path": "gate/manifest.json",
+      "bytes": 5248,
+      "sha256": "94263922a55997e1924b13cbf3aa8739a535e960f62c61dd8d57010861d9047f"
+    },
+    {
+      "path": "gate/progress.native.jsonl",
+      "bytes": 836907,
+      "sha256": "16294f5495548b327675c7e8f4c35782b86c6252c52f18d16a6dfcf934898445"
+    },
+    {
+      "path": "gate/progress.plain.jsonl",
+      "bytes": 2756302,
+      "sha256": "965d26c8ce6e80bdba174ec6fc9d97a5020f109459986d0a09aeefd757bd52b1"
+    },
+    {
+      "path": "gate/result.json",
+      "bytes": 1006,
+      "sha256": "614f26c800dd2bf5fac80a93ff23488759923ddabd6cafef534c024c4c4df6cd"
+    },
+    {
+      "path": "gate/stages/citations.log",
+      "bytes": 1554454,
+      "sha256": "44dcc5d03529e09f48ccb955750fed904f81a0b7eeb2b519aa6ac0e98f28af5e"
+    },
+    {
+      "path": "gate/stages/citations.time",
+      "bytes": 29,
+      "sha256": "7a61a1572ee4a0a7205d76a81fcb3887ac4db334688bae83185d1b3f0290d1d2"
+    },
+    {
+      "path": "gate/stages/cite-test.log",
+      "bytes": 758,
+      "sha256": "22f9ba9502ef6d0eb2777a6fb68d57d0065138dfe005a36d7d4d17015b798756"
+    },
+    {
+      "path": "gate/stages/cite-test.time",
+      "bytes": 29,
+      "sha256": "c4b882d306df69b5f5ca50ec49095414d87bf33d588d9b17520e91df8242ed86"
+    },
+    {
+      "path": "gate/stages/commit-messages.log",
+      "bytes": 38,
+      "sha256": "fc8765466e4e267859aeefd91456d6d8c027c5b75f972ee69d76ef7d3d3dd256"
+    },
+    {
+      "path": "gate/stages/commit-messages.time",
+      "bytes": 29,
+      "sha256": "66b019f3b91dd78b8a648f25e84fc8cee994db5eb175e39de9579bfdd75b994e"
+    },
+    {
+      "path": "gate/stages/commit-test.log",
+      "bytes": 594,
+      "sha256": "f58c9e167c265a73f38408037f9a5c58cb4715d775179528a9f46d0167b611b7"
+    },
+    {
+      "path": "gate/stages/commit-test.time",
+      "bytes": 29,
+      "sha256": "bcf70b5cc4381559080e741ecb1068a18baffb56fe3c4a8e9e526ccfe2a42121"
+    },
+    {
+      "path": "gate/stages/doc-links.log",
+      "bytes": 38,
+      "sha256": "e198314d887740ef75cca348b8928e3400173f99638c20791df13e2f804a461c"
+    },
+    {
+      "path": "gate/stages/doc-links.time",
+      "bytes": 29,
+      "sha256": "4fcd318aeef94765464c5ea577c2c34b80431e22ec23240a06933273f40c3012"
+    },
+    {
+      "path": "gate/stages/helpers.log",
+      "bytes": 68,
+      "sha256": "a61f51ffa69345c1eb015c7a3873dab38cc89b54f75ec28550b416c0b434b881"
+    },
+    {
+      "path": "gate/stages/helpers.time",
+      "bytes": 29,
+      "sha256": "b4364618309779cde2ecb0f546cde716236b8b1f49dcca8427511e5552809657"
+    },
+    {
+      "path": "gate/stages/notes.log",
+      "bytes": 18,
+      "sha256": "35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1"
+    },
+    {
+      "path": "gate/stages/notes.time",
+      "bytes": 29,
+      "sha256": "b2b892ce9a7c8ad29214199a33b154dab17a22613496aeb4905dbef44d49cb57"
+    },
+    {
+      "path": "gate/stages/section-citations.json",
+      "bytes": 3907473,
+      "sha256": "3a77a864e3a56b22d7ceaa8b12edab7b76c10b0f9b2772a5eed901ba7133097f"
+    },
+    {
+      "path": "gate/stages/test-evidence/counting-sources.json",
+      "bytes": 912,
+      "sha256": "b591ece272601e2e185be1ec12fce810015609f80e5635aa17a440a46444447f"
+    },
+    {
+      "path": "gate/stages/test-evidence/counting.jsonl",
+      "bytes": 133774,
+      "sha256": "e34b2bcb8d97888ad9fde8661c657e06fa07fcb4a5e0b51e25341061f91fb08b"
+    },
+    {
+      "path": "gate/stages/test-evidence/native.jsonl",
+      "bytes": 741128,
+      "sha256": "077448966e4628810e1dd5ee7ee0dc847bbc70c6236619c4a03d16a3f19b2553"
+    },
+    {
+      "path": "gate/stages/test-evidence/node.jsonl",
+      "bytes": 141453,
+      "sha256": "1ad69cae5a2291aa139057fdf9677e6952dd083fa4ea6e71584e2cb0e51f29db"
+    },
+    {
+      "path": "gate/stages/test-evidence/plain.jsonl",
+      "bytes": 2328156,
+      "sha256": "13362ae90bde83cc37016bad500b079cd32660861eb37d0f58270943a8e03843"
+    },
+    {
+      "path": "gate/stages/test-evidence/stages.json",
+      "bytes": 971,
+      "sha256": "8cd911ff8aa0b1ac17e667dfdbd1ce5d69a6d80e1e3e47091e5f6ca04220d7f3"
+    },
+    {
+      "path": "gate/stages/test.log",
+      "bytes": 15420809,
+      "sha256": "757bf3e69bda989ee720f93ea1749f823e5295b07619235cd327dd95338dbad9"
+    },
+    {
+      "path": "gate/stages/test.time",
+      "bytes": 37,
+      "sha256": "f0dd1e4ab0d2a949c6b848ac057756193f218872fdec4d8c3e0f541ef2cb5634"
+    },
+    {
+      "path": "gate/stages/typecheck.log",
+      "bytes": 1987,
+      "sha256": "62170bbe0cd055cff4699debd9470a886c0f98f328e7c9517d899c021a3788d0"
+    },
+    {
+      "path": "gate/stages/typecheck.time",
+      "bytes": 30,
+      "sha256": "8adadb81b0e71a2f18d66cb70202559e34362a25a2bc23e7b336f1e34382f0e8"
+    },
+    {
+      "path": "gate/stages/whitespace.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "gate/stages/whitespace.time",
+      "bytes": 29,
+      "sha256": "7c37aaf02050685adc336b6657f5e058dd8dee09ebc263ad7ffcd6601fcf3e83"
+    },
+    {
+      "path": "owners/consolidation-driver.py",
+      "bytes": 11683,
+      "sha256": "418e3b4764e72dd37ed6ff6c3a9808b7c2df1cb23c8a3395ad43df3c07580f03"
+    },
+    {
+      "path": "owners/final-note-template.md",
+      "bytes": 7114,
+      "sha256": "7ba154c00622709bf32a26d5a663715fcf425237d72a1c7fa12705d636b38d99"
+    },
+    {
+      "path": "owners/gate-driver.py",
+      "bytes": 3288,
+      "sha256": "bd2d1317725b20dbf5d615314adc4667045a19c84ced2651e8eddc21ab80b98b"
+    },
+    {
+      "path": "owners/scripts/cloudflare-pool-compat.mjs",
+      "bytes": 7089,
+      "sha256": "f3c258f26eaf591ef36b5ca96d7e379ec1c27440cd0f5d07566b124a111e26e3"
+    },
+    {
+      "path": "owners/scripts/gate.sh",
+      "bytes": 3222,
+      "sha256": "001c4b105112a776795083610eeb36afa29aae9f336f8f3e67abe1dafd72dbce"
+    },
+    {
+      "path": "owners/scripts/test-progress.mjs",
+      "bytes": 2823,
+      "sha256": "ebeb8e25bf568615fcfaf33533b4058f00b99a71571e1cd939542124fe31a495"
+    },
+    {
+      "path": "owners/scripts/test-summary.mjs",
+      "bytes": 12471,
+      "sha256": "cca649572cfbdfd0568ce8eecd511d5afc8d41b52cc3d791c6c4a32d92747d78"
+    },
+    {
+      "path": "owners/scripts/test.mjs",
+      "bytes": 8151,
+      "sha256": "be4083a347e64c8a4ec609cadf10068ab01c133af9a4ee800d1dc2c4ba715b84"
+    },
+    {
+      "path": "owning/SHA256SUMS",
+      "bytes": 1186,
+      "sha256": "92daae402c7953c92111e471e03aa1ef02c296dcb0a721d96558b8c47674f5c9"
+    },
+    {
+      "path": "owning/active-source.log",
+      "bytes": 1235,
+      "sha256": "7fa958fb3c4fdfb89b0d2f04780cfbeb458b35160bf2dc9a9b442cea0543d46d"
+    },
+    {
+      "path": "owning/build.json",
+      "bytes": 1129,
+      "sha256": "7c328698f2f69151f442524f5980c8270966df2f91a40432d6b341e1ea98a149"
+    },
+    {
+      "path": "owning/dependency-provenance.json",
+      "bytes": 6112,
+      "sha256": "670d1bfa473b6b7a912153d7cbd43d32f6b92ab34da2931f4f2bf1e391eeb34e"
+    },
+    {
+      "path": "owning/driver.py",
+      "bytes": 14258,
+      "sha256": "9f000e4a61f5c49305c7d669579573f1798d54bedf97262f8f7da616c1c750b4"
+    },
+    {
+      "path": "owning/page-build.log",
+      "bytes": 188,
+      "sha256": "bf59b1655d939a0103ef0de1963ad6edba58892d1e303408571c6120f04e451d"
+    },
+    {
+      "path": "owning/page-owning-tests.log",
+      "bytes": 597,
+      "sha256": "3c439db91c734c0d6fd00ccd1ed4cf0297ac46ec06b2a626db85c869c3f382d0"
+    },
+    {
+      "path": "owning/page-progress.jsonl",
+      "bytes": 2251,
+      "sha256": "fbb374835c48e6a6bbd8a877452c816c864f9e055f9ce600d0cf478d51d34da4"
+    },
+    {
+      "path": "owning/page-scope-compiler.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "owning/page-source-compiler.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "owning/page-test-compiler.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "owning/page-tests.json",
+      "bytes": 1717,
+      "sha256": "eade374c29af994b26b500cbc3f3f0ab340209244c4598addc7dd0c1f36f2dce"
+    },
+    {
+      "path": "owning/page-timing.jsonl",
+      "bytes": 2685,
+      "sha256": "d782d9895f3b16106f1ca21d21ab3e69cd9e818e7f8a964b188981e4df1d462e"
+    },
+    {
+      "path": "owning/pool-preparation.log",
+      "bytes": 343,
+      "sha256": "789f2a3719021f6725b19b5ea52eb3ac436b14f6b084b416d1d6e396e5165289"
+    },
+    {
+      "path": "owning/result.json",
+      "bytes": 5939,
+      "sha256": "a6d285850b64f7b0d39c53047e4b3fcd93ad42635f4bf9484658169414427679"
+    },
+    {
+      "path": "provenance/owning-manifest.json",
+      "bytes": 2926,
+      "sha256": "6c7b1b06f9dcd47788d879837a3dbedf3b7b91073223288e4c42baded8f6af9a"
+    }
+  ]
+}
