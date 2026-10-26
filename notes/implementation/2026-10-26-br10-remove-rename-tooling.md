@@ -30,6 +30,14 @@ original references. The CLI still accepts `ARTROOM_HOME` as a compatible
 alias. This change updates the Page's preferred name without changing
 configuration selection.
 
+The initial exact-file approval covered the eight changed paths. A guarded
+landing then stopped before staging because an older planner-owned artifact
+covers the whole `docs` directory. This documentation-only recut requests
+explicit review coverage of that directory. Every other file under `docs`
+is identical to Main `986c7120`; the only directory change is removal of
+`docs/workspace-rename.md`. Source, tests, configuration, assets, lock and
+all gate inputs remain unchanged from the passed checkpoint below.
+
 ## Evidence
 
 The dependency copy and Page asset build started at
