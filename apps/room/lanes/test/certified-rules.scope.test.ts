@@ -86,14 +86,16 @@ test("certified-rules native birth and device install bootstrap a real tree cert
     if (opening.answer !== "accepted") throw new Error(`open-pr was not accepted: ${JSON.stringify(opening)}`);
     const opened = opening.receipt.fact.seq;
     const L = life.platform((await D.created(opened)).name); nodes.push(L); await pause(nodes);
+    const laneRules = (await L.summary()).value.items.find(item => item.type === "rules");
+    if (!laneRules) throw Error("Actual native lane rules item required");
     const secret = b64url(new Uint8Array(32).fill(91)); // Public TEST seed, never operator custody.
     const invitation = await M.did(rita, "invite-member", { fields: { handle: "@una", role: "member", ...invitationIssueFields(cohort.membership, secret), inviteEnds: soon(3600) } });
     await M.did(una, "join", { fields: invitationRedemptionFields(cohort.membership, await M.at(), invitation, una.key, secret) });
     const content = "# Certified room proposal\n";
     const manifest = await L.did(rita, "propose-file", { fields: { base: firstHead!, path: "native.md", digest: digestBytes(utf8(content)), size: utf8(content).length, content }, expected: await L.expected({ proposal: 0 }) });
-    await L.did(una, "review-verdict", { fields: { manifest, verdict: "approve" } });
+    await L.did(una, "review-verdict", { expected: await L.expected({ manifest, proposal: 0 }), fields: { manifest, verdict: "approve" } });
     const pushes = host.stand.pushes.length;
-    await L.did(rita, "merge", { fields: { manifest, reports: [] } }); await pause(nodes);
+    await L.did(rita, "merge", { expected: await L.expected({ proposal: 0, manifest, rules: laneRules.id }), fields: { manifest, reports: [] } }); await pause(nodes);
     expect((await G.summary()).value.items.filter(item => item.type === "publication"))
       .toEqual(expect.arrayContaining([expect.objectContaining({ state: "not-reserved", values: expect.objectContaining({ reason: "rules-not-configured" }) })]));
     expect(host.stand.refs.get("refs/heads/main")).toBe(firstHead); expect(host.stand.pushes).toHaveLength(pushes);
@@ -198,9 +200,9 @@ test("fresh certified global checks override a stale native lane and staged publ
     expect((await Q.item(0)).values["certificate"]).toMatchObject({ request: fresh.request, certificate: fresh.certificate });
 
     // Actual native held commitment, not a fabricated source/permission flag.
-    const offer = await L.did(rita, "offer", { fields: { terms: "TEST genuine held full-manifest work" } });
+    const offer = await L.did(rita, "offer", { expected: await L.expected({ proposal: 0 }), fields: { terms: "TEST genuine held full-manifest work" } });
     await L.did(rita, "accept", { on: offer, expected: await L.expected({ on: offer }), fields: { terms: factRefOf((await L.entries())[offer]!) } });
-    const hold = await L.did(rita, "take-hold", { fields: { commitment: offer } });
+    const hold = await L.did(rita, "take-hold", { expected: await L.expected({ commitment: offer, proposal: 0 }), fields: { commitment: offer } });
     const heldEntry = (await L.entries())[hold]!;
     const built = editObjects("sha1", id => {
       const object = host.stand.objects.get(id);
@@ -208,7 +210,7 @@ test("fresh certified global checks override a stale native lane and staged publ
     }, initialHead!, "source.md", utf8("# Native full manifest\n"), { scope: L.name, time: heldEntry.time, operation: factRefOf(heldEntry) });
     if (!built) throw Error("Production Git builder must build this ordinary source path");
     for (const object of built.objects) host.stand.objects.set(object.id, { id: object.id, type: object.kind, data: object.body });
-    const manifest = await L.did(rita, "propose-manifest", { fields: { hold, instance: "TEST-native-full-manifest", selected: [], decisions: [],
+    const manifest = await L.did(rita, "propose-manifest", { expected: await L.expected({ proposal: 0, hold, commitment: offer }), fields: { hold, instance: "TEST-native-full-manifest", selected: [], decisions: [],
       base: initialHead!, integration: built.commit, tree: built.tree, complete: true } });
     const frozen = await L.item(manifest); expect(frozen.values["tree"]).toBe(built.tree);
     const directMerge = async () => {
@@ -216,7 +218,7 @@ test("fresh certified global checks override a stale native lane and staged publ
       life.setHold(envelope => envelope.from.at.scope === L.name && envelope.message.class === "request" && envelope.message.type === "tell"
         && isRecord(envelope.message.body) && envelope.message.body["message"] === "reserve");
       try {
-        seq = await L.did(rita, "merge", { fields: { manifest, reports: [] } });
+        seq = await L.did(rita, "merge", { expected: await L.expected({ proposal: 0, manifest, rules: heldP0.id }), fields: { manifest, reports: [] } });
         const entry = (await L.entries())[seq]!, sends = entry.sends.filter(send => send.message.class === "request" && send.message.type === "tell"
           && isRecord(send.message.body) && send.message.body["message"] === "reserve");
         expect(sends).toHaveLength(1); const send = sends[0]!;
@@ -230,8 +232,8 @@ test("fresh certified global checks override a stale native lane and staged publ
     const missing = (await G.summary()).value.items.filter(item => item.type === "publication").at(-1)!;
     expect(missing).toMatchObject({ state: "not-reserved", values: { reason: "rules-not-met" } });
     expect(host.stand.refs.get("refs/heads/main")).toBe(initialHead); expect(host.stand.pushes).toHaveLength(pushesBefore);
-    const oldJob = await L.did(rita, "request-check", { fields: { manifest, name: "verify", configuration: C0 } });
-    await L.did(una, "check", { fields: { job: oldJob, tree: built.tree, configuration: C0, outcome: "passed" } });
+    const oldJob = await L.did(rita, "request-check", { expected: await L.expected({ manifest, proposal: 0, rules: heldP0.id }), fields: { manifest, name: "verify", configuration: C0 } });
+    await L.did(una, "check", { expected: await L.expected({ job: oldJob, rules: heldP0.id, proposal: 0 }), fields: { job: oldJob, tree: built.tree, configuration: C0, outcome: "passed" } });
     expect(await L.item(oldJob)).toMatchObject({ state: "passed", values: { configuration: C0, tree: built.tree } });
     await directMerge();
     expect((await G.summary()).value.items.filter(item => item.type === "publication").at(-1))
@@ -239,8 +241,8 @@ test("fresh certified global checks override a stale native lane and staged publ
     expect(host.stand.refs.get("refs/heads/main")).toBe(initialHead); expect(host.stand.pushes).toHaveLength(pushesBefore);
     // Refresh only after both stale-policy refusals have been witnessed.
     await L.did(rita, "ask-rules", { on: 0, expected: await L.expected({ on: 0 }) }); await pause(nodes);
-    const currentJob = await L.did(rita, "request-check", { fields: { manifest, earlier: oldJob, name: "verify", configuration: C1 } });
-    await L.did(una, "check", { fields: { job: currentJob, tree: built.tree, configuration: C1, outcome: "passed" } });
+    const currentJob = await L.did(rita, "request-check", { expected: await L.expected({ manifest, proposal: 0, earlier: oldJob, rules: heldP0.id }), fields: { manifest, earlier: oldJob, name: "verify", configuration: C1 } });
+    await L.did(una, "check", { expected: await L.expected({ job: currentJob, rules: heldP0.id, proposal: 0 }), fields: { job: currentJob, tree: built.tree, configuration: C1, outcome: "passed" } });
     await directMerge();
     expect(host.stand.refs.get("refs/heads/main")).toBe(built.commit);
     expect((await G.summary()).value.items.filter(item => item.type === "publication").at(-1)).toMatchObject({ state: "published" });
@@ -248,12 +250,14 @@ test("fresh certified global checks override a stale native lane and staged publ
     // A distinct genuine list lane stages first. Future tree-bound jobs
     // cannot exist until that actual stage is recorded by the destination.
     const list = await openLane(changeDemo3, "current native list generation");
+    const listRules = (await list.summary()).value.items.find(item => item.type === "rules");
+    if (!listRules) throw Error("Actual native list rules item required");
     const content = "# Staged native source\n";
-    const source = await list.did(rita, "propose-file", { fields: { base: built.commit, path: "list.md", digest: digestBytes(utf8(content)), size: utf8(content).length, content } });
+    const source = await list.did(rita, "propose-file", { expected: await list.expected({ proposal: 0 }), fields: { base: built.commit, path: "list.md", digest: digestBytes(utf8(content)), size: utf8(content).length, content } });
     const file = { path: "list.md", entry: factRefOf((await list.entries())[source]!), digest: digestBytes(utf8(content)) };
-    const listManifest = await list.did(rita, "propose-manifest", { fields: { base: built.commit, files: [file] } });
+    const listManifest = await list.did(rita, "propose-manifest", { expected: await list.expected({ proposal: 0 }), fields: { base: built.commit, files: [file] } });
     expect((await list.summary()).value.items.some(item => item.type === "job")).toBe(false);
-    const listMerge = await list.did(rita, "merge", { fields: { manifest: listManifest, reports: [] } }); await pause(nodes);
+    const listMerge = await list.did(rita, "merge", { expected: await list.expected({ proposal: 0, manifest: listManifest, rules: listRules.id }), fields: { manifest: listManifest, reports: [] } }); await pause(nodes);
     const operation = factRefOf((await list.entries())[listMerge]!);
     const publication = (await G.summary()).value.items.find(item => item.type === "publication" && canonicalize(item.refs["operation"]) === canonicalize(operation));
     if (!publication) throw Error("Actual staged list publication required");
@@ -263,18 +267,18 @@ test("fresh certified global checks override a stale native lane and staged publ
     expect(host.stand.refs.get("refs/heads/main")).toBe(built.commit);
     const openedBeforeJobs = (await G.entries()).flatMap(entry => entry.effects).filter(effect => effect.effect === "operation" && effect.for === publication.id && effect.kind === "push");
     expect(openedBeforeJobs).toEqual([]);
-    const g1 = await list.did(rita, "request-check", { fields: { manifest: listManifest, name: "verify", configuration: C1 } }); await pause(nodes);
+    const g1 = await list.did(rita, "request-check", { expected: await list.expected({ manifest: listManifest, proposal: 0, rules: listRules.id }), fields: { manifest: listManifest, name: "verify", configuration: C1 } }); await pause(nodes);
     life.setHold(envelope => envelope.from.at.scope === list.name && envelope.message.class === "request" && envelope.message.type === "tell"
       && isRecord(envelope.message.body) && envelope.message.body["message"] === "checked");
     try {
-      await list.did(una, "check", { fields: { job: g1, tree: staged.values["tree"]!, configuration: C1, outcome: "passed" } });
+      await list.did(una, "check", { expected: await list.expected({ job: g1, rules: listRules.id, proposal: 0, manifest: listManifest }), fields: { job: g1, tree: staged.values["tree"]!, configuration: C1, outcome: "passed" } });
       await pause(nodes);
-      const g2 = await list.did(rita, "request-check", { fields: { manifest: listManifest, earlier: g1, name: "verify", configuration: C1 } });
+      const g2 = await list.did(rita, "request-check", { expected: await list.expected({ manifest: listManifest, proposal: 0, earlier: g1, rules: listRules.id }), fields: { manifest: listManifest, earlier: g1, name: "verify", configuration: C1 } });
       await pause(nodes); expect((await list.item(g1)).state).toBe("superseded");
       life.setHold(() => false); await pause(nodes);
       expect(host.stand.refs.get("refs/heads/main")).toBe(built.commit);
       expect((await G.entries()).flatMap(entry => entry.effects).filter(effect => effect.effect === "operation" && effect.for === publication.id && effect.kind === "push")).toEqual([]);
-      await list.did(una, "check", { fields: { job: g2, tree: staged.values["tree"]!, configuration: C1, outcome: "passed" } }); await pause(nodes);
+      await list.did(una, "check", { expected: await list.expected({ job: g2, rules: listRules.id, proposal: 0, manifest: listManifest }), fields: { job: g2, tree: staged.values["tree"]!, configuration: C1, outcome: "passed" } }); await pause(nodes);
       expect((await G.item(publication.id)).state).toBe("published");
       expect(host.stand.refs.get("refs/heads/main")).toBe(staged.values["integration"]);
       expect(host.stand.refs.has(String(stageRef))).toBe(false);

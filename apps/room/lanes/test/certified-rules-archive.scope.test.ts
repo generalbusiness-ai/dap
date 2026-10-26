@@ -80,13 +80,15 @@ test("certified native policy and proof plus its consumed single policy envelope
     if (opening.answer !== "accepted") throw new Error(`open-pr was not accepted: ${JSON.stringify(opening)}`);
     const opened = opening.receipt.fact.seq;
     const L = life.platform((await D.created(opened)).name); nodes.push(L); await pause(nodes);
+    const laneRules = (await L.summary()).value.items.find(item => item.type === "rules");
+    if (!laneRules) throw Error("Actual native lane rules item required");
     const secret = b64url(new Uint8Array(32).fill(94)); // Public TEST invitation only.
     const invitation = await M.did(rita, "invite-member", { fields: { handle: "@una", role: "member", inviteEnds: soon(3600), ...invitationIssueFields(C.membership, secret) } });
     await M.did(una, "join", { fields: invitationRedemptionFields(C.membership, await M.at(), invitation, una.key, secret) });
     const content = "# Native certified archive consumer\n";
     const manifest = await L.did(rita, "propose-file", { fields: { base: firstHead!, path: "archive-native.md", digest: digestBytes(utf8(content)), size: utf8(content).length, content }, expected: await L.expected({ proposal: 0 }) });
-    await L.did(una, "review-verdict", { fields: { manifest, verdict: "approve" } });
-    await L.did(rita, "merge", { fields: { manifest, reports: [] } }); await pause(nodes);
+    await L.did(una, "review-verdict", { expected: await L.expected({ manifest, proposal: 0 }), fields: { manifest, verdict: "approve" } });
+    await L.did(rita, "merge", { expected: await L.expected({ proposal: 0, manifest, rules: laneRules.id }), fields: { manifest, reports: [] } }); await pause(nodes);
     const gHistory = await G.sealed();
     const observed = gHistory.flatMap(sealed => "observed" in sealed.entry.input ? (sealed.entry.input.observed ?? []).flatMap(use => {
       const observation = use.observation;
