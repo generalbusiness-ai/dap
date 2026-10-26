@@ -14,6 +14,7 @@ import { isStandingDestination, publicationStandingRecord, certifiedPublicationS
 import { DESTINATION_KINDS, READ_TOKEN_HOURS, destinationBranch, destinationMint, destinationRead, destinationReceipt, destinationRevokedMint, destinationSends, destinationStatement, destinationTarget, destinationWrite, editObjects, editTree, manifestCommit, editPath, fileOf, sourcesOf, manifestFiles, fileSound, firstHeadCommit, initialCommitOf, isOf, isRecordedJudgeEvidence, revokedToken, filePublicationCause, filePublicationCurrent, filePublicationCommit, type DestinationObject, type EditFile, type ObjectFormat, type RecordedJudgeEvidence } from "@generalbusiness/dap-platform";
 import { GitRefusal, READ_BOUNDS, Reader, type GitSource } from "@generalbusiness/dap-git";
 import { RULES_CERTIFICATE_KIND, RULES_POLICY_VALUE_V11, rulesCertificateOpening, rulesCertificateBranchMatches, rulesPolicyProposalV11, rulesPolicyPatternsV11, RULES_TREE_PROOF, RULES_TREE_BOUNDS, verifyRulesTree, type RulesTreeBinding } from "@generalbusiness/dap-platform";
+import { rulesCertificateOpeningV15, rulesCertificateDeclineV15 } from "@generalbusiness/dap-platform";
 import type { RulesTreeRequest, RulesTreeObjects } from "./rules-tree-provider.ts";
 import type { CredentialPosition, CredentialStore, RevocationPosition } from "./credential-store.ts";
 import type { OutsideGiven } from "./given.ts";
@@ -84,7 +85,7 @@ export class DestinationHost implements Outside {
   #revokeCursor: RevocationPosition | null = null;
   constructor(given: OutsideGiven, options: DestinationHostOptions) { this.#given = given; this.#options = options; }
 
-  accepts(owner: string, kind: string): boolean { return owner === "platform:destination@14" && kind === RULES_CERTIFICATE_KIND || usesFilePublicationProtocol(owner) && kind === "file-judge" || isOf(owner, OWNER) && ([...Object.values(DESTINATION_KINDS), "check-judge", "reservation-stage", "reservation-delete"] as string[]).includes(kind); }
+  accepts(owner: string, kind: string): boolean { return (owner === "platform:destination@14" || owner === "platform:destination@15") && kind === RULES_CERTIFICATE_KIND || usesFilePublicationProtocol(owner) && kind === "file-judge" || isOf(owner, OWNER) && ([...Object.values(DESTINATION_KINDS), "check-judge", "reservation-stage", "reservation-delete"] as string[]).includes(kind); }
   /** Repeating these reads never repeats a host mutation. The driver keeps the same attempt. */
   readonly recovery = {
     accepts: (owner: string, kind: string): boolean => usesFilePublicationProtocol(owner) && kind === "file-judge" || isOf(owner, OWNER) && [DESTINATION_KINDS.judge, DESTINATION_KINDS.read, DESTINATION_KINDS.adoptRead, "check-judge"].includes(kind as "judge" | "read" | "adopt-read" | "check-judge"),
@@ -140,7 +141,7 @@ export class DestinationHost implements Outside {
       const context = this.#bound(request);
       if (!context) return null;
       const { operation, repository, ref } = context;
-      if (operation.owner === "platform:destination@14" && operation.kind === RULES_CERTIFICATE_KIND) {
+      if ((operation.owner === "platform:destination@14" || operation.owner === "platform:destination@15") && operation.kind === RULES_CERTIFICATE_KIND) {
         return await this.#certifyRulesTree(request, operation, repository, ref);
       }
       if (operation.kind === "check-judge") {
@@ -213,7 +214,9 @@ export class DestinationHost implements Outside {
    * freshness claim. The policy copy stays private across the provider await. */
   async #certifyRulesTree(request: EffectRequest, operation: Operation, repository: DestinationRepository, ref: string): Promise<EffectAnswer | null> {
     if (request.attempt !== 1) return null;
-    const opening = rulesCertificateOpening(this.#given.own, operation, request.scope);
+    const hardened = operation.owner === "platform:destination@15";
+    const readOpening = hardened ? rulesCertificateOpeningV15 : rulesCertificateOpening;
+    const opening = readOpening(this.#given.own, operation, request.scope);
     if (!opening) return null;
     const { binding, started } = opening;
     const captured = canonicalize(binding);
@@ -223,7 +226,15 @@ export class DestinationHost implements Outside {
         && sameScope(expected.destination, request.scope) && scope.head.seq === started.seq && scope.head.hash === started.hash
         && rulesCertificateBranchMatches(this.#given.state, expected, operation.for!);
     };
-    if (!current(binding) || canonicalize(repository) !== canonicalize(binding.repository) || ref !== binding.ref) return null;
+    const declined = (): EffectAnswer | null => {
+      if (!hardened) return null;
+      const scope = this.#given.scope();
+      if (!scope || scope.status !== "active" || !sameScope(scope.at, request.scope)) return null;
+      const body = rulesCertificateDeclineV15(this.#given.own, request.scope, scope.head, started);
+      return body ? answer("refused", body) : null;
+    };
+    if (canonicalize(repository) !== canonicalize(binding.repository) || ref !== binding.ref) return null;
+    if (!current(binding)) return declined();
     const retained = this.#given.retained("value", binding.proposal, RULES_POLICY_VALUE_V11.domain);
     if (!retained || retained.kind !== "value" || retained.domain !== RULES_POLICY_VALUE_V11.domain || retained.digest !== binding.proposal
       || typeof retained.bytes !== "string" || retained.bytes.length > RULES_POLICY_VALUE_V11.max
@@ -244,8 +255,9 @@ export class DestinationHost implements Outside {
     // Private sent bookkeeping does not move the native head. Any genuine
     // intervening entry, changed attempt/origin or branch binding does.
     const rebound = this.#bound(request);
-    const reopened = rebound && rulesCertificateOpening(this.#given.own, rebound.operation, request.scope);
-    if (!reopened || canonicalize(reopened.binding) !== captured || canonicalize(reopened.started) !== canonicalize(started) || !current(binding)) return null;
+    const reopened = rebound && readOpening(this.#given.own, rebound.operation, request.scope);
+    if (!reopened || canonicalize(reopened.binding) !== captured || canonicalize(reopened.started) !== canonicalize(started)) return null;
+    if (!current(binding)) return declined();
     if (!objects || !(objects.commitBytes instanceof Uint8Array) || !Array.isArray(objects.trees) || objects.trees.length > RULES_TREE_BOUNDS.visits) return answer("refused", {});
     let used = payloadBytes, decoded = 0;
     const encode = (bytes: Uint8Array, metadata: number): string | null => {
