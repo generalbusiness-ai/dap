@@ -394,18 +394,17 @@ These are separate command intervals. The machine was
 `[1.91357421875, 2.431640625, 2.52783203125]`. Existing shared dependencies
 were reused without package installation or cache reset.
 
-Request `0716e75a` owns exact-head review and any repair it identifies.
-The index records the failed V3 gate, the passing whole Rules file and the
-failed native phase separately. The one-line archive test repair at `8b85ece5` passed the compiler and whole
-owning file at `5a816922`. Only this note and the evidence manifest change
-after that execution checkpoint. Planner question `53707834` remains open
-for disposition of the sequential follow-up choice. The checker owns
-acceptance of the combined evidence and exact-head review. No approval or
-landing is implied.
+The original R7 delivery was approved in checker report `21c4328b` and
+landed at Main `6852f78d`, receipt `e8203cd5`. The failed V3 gate and failed
+native follow-up remain failed; the repaired owning files passed separately.
+Planner ruling `036e7f12` and the checker accepted that combined evidence,
+resolving the validation question `53707834` without another gate.
 
-This family addresses findings 3.2, 3.3 and 3.4. Their closure remains
-conditional on the checker accepting the failed gate with its limited
-follow-up and reviewing the exact final candidate. Finding 2.2 belongs to the earlier R6 work recorded in
+This documents-only follow-up belongs to request
+`8d8eef8933b222cb846f97f1d6010c8c8a9788f9` and needs its own exact-head review.
+It changes no source, test, policy or prior execution record.
+The original approval closes findings 3.2, 3.3 and 3.4 of `6dd06d03`.
+Finding 2.2 belongs to the earlier R6 work recorded in
 [versioned publication](2026-10-25-security-r6-versioned-publication.md).
 
 Native tests establish the real family and protocol with explicit TEST
