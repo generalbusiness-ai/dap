@@ -22,7 +22,7 @@ export const ARCHIVE_NATIVE_DATA: Readonly<Record<string, Digest>> = Object.free
   // Actual maintained R7 generation; earlier producer rows stay exact.
   "platform:directory@18": "sha256:c8c40477f369a19213439eaa1a3263dad1ce16038e5df605b6f7322737380b55",
   "platform:rules@11": "sha256:e98867a65659630c9181a16c2a45441a128010f1ee8544264869bd9d39f9767f",
-  "platform:destination@14": "sha256:7084c17205638085f0ae9f79a0ce81a0a6e4c8af42b2faf4db2e6dd578fcb463",
+  "platform:destination@14": "sha256:fe3cd527ae7f38b2d1132a9ee170459c0f96b7bfb0c80c7caa0904de57b1433b",
 });
 
 /** Decision 74a99989. These are candidate public platform configuration
