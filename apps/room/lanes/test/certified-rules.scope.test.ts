@@ -1,7 +1,7 @@
 import { env } from "cloudflare:workers";
 import { expect, test } from "vitest";
 import type { DeclaredDefinition, Digest, FactRef } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, digestBytes, definitionDigest, factRefOf, isDigest, isRecord, isSeed, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, digestBytes, definitionDigest, factRefOf, isDigest, isRecord, isScopeRef, isSeed, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { ARCHIVE_CERTIFIED_RULES_COHORT, RULES_CERTIFICATE_KIND, RULES_PATTERNS, RULES_TREE_PROOF, rulesPolicyProposalV11, CONFIGURATION_DOMAIN, editObjects, type RulesPolicyV11 } from "@generalbusiness/dap-platform";
 import { emptyPackageComposition } from "@generalbusiness/dap-package-graph";
 import { packApplication2, readApplicationProjection } from "@generalbusiness/dap-platform/application-v2";
@@ -16,6 +16,7 @@ import { devicePackageFixture } from "../../../../packages/derive/test/fixtures-
 import { valueDigest } from "@generalbusiness/dap-derive";
 import { changeDemo, changeDemo3 } from "../src/index.ts";
 
+import { platformDeliveryObservers } from "../../../../packages/scope/test/worker.ts";
 import { certifiedNativeRoom, openRulesCertificate, publishRulesCertificate, configureRules } from "../../../../packages/scope/test/certified-rules-fixture.ts";
 
 // Actual new-family interpretation/SQLite and signed grants. The Git object
@@ -53,6 +54,26 @@ test("certified-rules native birth and device install bootstrap a real tree cert
   try {
     const fixture = await applicationResolverFixture("sha1", undefined, {}, undefined, packet), peer = applicationHttpPeer(fixture);
     const applicationBindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(fixture.trust), env.SCOPE_INDEX);
+    const stageDeliveryRows: { answer: string; reason: string | null; name: string | null }[] = [];
+    let stageDeliveryOverflow = false;
+    const observedWord = (value: unknown, allowed: readonly string[]) => typeof value === "string" && allowed.includes(value)
+      ? value : value === undefined || value === null ? null : "outside-closed-set";
+    const observeDelivery: NonNullable<ReturnType<typeof platformDeliveryObservers.get>> = (envelope, answer) => {
+      if (platformDeliveryObservers.get(Q.name) !== observeDelivery || envelope.from.at.scope !== Q.name
+        || !isScopeRef(envelope.to) || envelope.to.scope !== D.name || envelope.to.kind !== "directory"
+        || envelope.message.class !== "request" || envelope.message.type !== "tell"
+        || !isRecord(envelope.message.body) || envelope.message.body["message"] !== "application-stage") return;
+      if (stageDeliveryRows.length >= 16) { stageDeliveryOverflow = true; return; }
+      stageDeliveryRows.push({ answer: answer === "rejected" ? "rejected" : answer === null ? "no-answer"
+        : observedWord(answer.answer, ["recorded", "retry", "routing", "source-unverified"]) ?? "outside-closed-set",
+        reason: observedWord(answer !== null && typeof answer === "object" && "reason" in answer ? answer.reason : undefined,
+          ["dependency-unavailable", "busy", "clock-behind", "scope-provisional", "guard-incomplete", "authority-unavailable", "unavailable", "rate-limited", "scope-full", "unsupported-definition", "wrong-incarnation", "not-found"]),
+        name: observedWord(answer !== null && typeof answer === "object" && "name" in answer ? answer.name : undefined,
+          ["scopeEntries", "scopeBytes", "scopeItems", "scopeRecords", "scopeRequests"]) });
+    };
+    if (platformDeliveryObservers.has(Q.name)) throw Error("TEST stage delivery observer already owned");
+    platformDeliveryObservers.set(Q.name, observeDelivery);
+    life.cleanup(() => { if (platformDeliveryObservers.get(Q.name) === observeDelivery) platformDeliveryObservers.delete(Q.name); stageDeliveryRows.length = 0; });
     for (const node of [D, Q]) { life.outside(node.name, (given, sql) => hostOutside(given, sql, applicationBindings, peer.fetch)); await node.restart(); }
     const membership = await M.at();
     const prepared = await signedDeviceApplicationInstall(secretSigner(rita.secret), packet.bytes,
@@ -111,6 +132,7 @@ test("certified-rules native birth and device install bootstrap a real tree cert
         const seeds = dEntries.flatMap(entry => entry.sends.flatMap(send => isSeed(send.to)
           ? [{ kind: short(send.to.kind), definition: short(send.to.definition) }] : []));
         const diagnostic = canonicalize({ snapshot, rowCap, textCap,
+          stageDeliveryObservation: { complete: !stageDeliveryOverflow, rows: stageDeliveryRows.slice(0, rowCap) },
           job: { found: job !== undefined, state: closed(job?.state, ["pending", "active", "refused"]),
             phase: closed(job?.values["phase"], ["fetch", "admission", "activation", "grants", "creation"]), reason: closed(job?.values["reason"], reasons) },
           stageOutbox: { requested: qOutbox !== null, readOk: qOutbox?.ok ?? null,

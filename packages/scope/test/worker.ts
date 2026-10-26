@@ -156,6 +156,10 @@ for (const field of ["sessions", "secret", "inspector"] as const) Object.defineP
 /** Test-only, name-bound outside factories. ScopeObject supplies its live
  * readonly store facade after storage exists; no default port is changed. */
 export const platformOutside = new Map<string, (given: OutsideGiven, sql: Pick<SqlStorage, "exec">) => Outside>();
+/** Passive TEST observation only. The original send promise is returned;
+ * observers must own a name and remove their exact token at fixture close. */
+export const platformDeliveryObservers = new Map<string, (envelope: import("@generalbusiness/dap-derive").Delivered,
+  answer: import("../src/ports.ts").Delivery | null | "rejected") => void>();
 /** The name of the test deployment, which a session's token names. */
 export const TEST_DEPLOYMENT = "artroom-scope-test";
 
@@ -235,7 +239,16 @@ export class PlatformScope extends DeployedScope<PlatformEnv> {
       ports: {
         ...deployed.ports, clock: net.clock,
         // Transport that a test can hold: a send that `net.hold` matches is not delivered, and its attempt gets no answer.
-        transport: { send: (envelope) => (net.hold?.(envelope) ? Promise.resolve(null) : transport!.send(envelope)) },
+        transport: { send: (envelope) => {
+          const pending = net.hold?.(envelope) ? Promise.resolve(null) : transport!.send(envelope);
+          const observer = platformDeliveryObservers.get(name ?? "");
+          if (observer) void pending.then(answer => {
+            try { if (platformDeliveryObservers.get(name ?? "") === observer) observer(envelope, answer); } catch { /* Observation changes no transport answer. */ }
+          }, () => {
+            try { if (platformDeliveryObservers.get(name ?? "") === observer) observer(envelope, "rejected"); } catch { /* The original rejection remains on pending. */ }
+          });
+          return pending;
+        } },
         // A scripted peer: an entry that a test wrote by hand, for a lane that sends a notice. Every other entry is read from the real object.
         resolver: { read: (fact, seconds, origin) => { const peer = net.peers.get(fact.hash); return peer ? Promise.resolve(peer) : resolver.read(fact, seconds, origin); } },
         definitions: { read: (named, holder) => definitions.read(named, holder), platform: (named) => (platformNet.without === null ? platform(named) : lacking(named, platformNet.without)) },
