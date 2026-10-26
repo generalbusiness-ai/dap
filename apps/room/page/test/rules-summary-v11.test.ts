@@ -3,7 +3,7 @@ import type { Item, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, isRecord, keyIdOfSecret, newIncarnation, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { Session } from "@generalbusiness/dap-client";
 import { RULES_PATTERNS, rulesPolicyProposalV11 } from "@generalbusiness/dap-platform";
-import { rulesSummaryV11, Q11_READ_ONLY } from "../src/rules-summary-v11.ts";
+import { rulesSummaryV11 } from "../src/rules-summary-v11.ts";
 import { act, type Room } from "../src/data.ts";
 
 const digest = digestBytes(new Uint8Array([1]));
@@ -34,17 +34,17 @@ test("Q11 summary presentation owns the complete policy and refuses contradictio
   expect(rulesSummaryV11(item({ configured: false, policy: {} }), G.scope)).toBeNull();
 });
 
-test("Q11 Page writes refuse before intent signing or mutation transport", async () => {
+test.each([11, 12])("Q%s Page writes refuse before intent signing or mutation transport", async version => {
   let signatures = 0, mutations = 0;
   const key = keyIdOfSecret(new Uint8Array(32)), now = () => Date.parse("2026-10-25T00:00:00Z");
   const room: Room = { session: { service: "https://room.test", now,
-    signer: { key, sign: async () => { signatures++; throw Error("Must not sign a Q11 write"); } },
+    signer: { key, sign: async () => { signatures++; throw Error("Must not sign a certified rules write"); } },
     fetch: async (_url, init) => {
       if ((init?.method ?? "GET") !== "GET") { mutations++; throw Error("Must not mutate"); }
-      return Response.json({ ok: true, complete: true, at: { seq: 1, hash: digest }, value: { scope: Q, definition: "platform:rules@11", status: "active", time: "2026-10-25T00:00:00Z", counts: [], items: [] } });
+      return Response.json({ ok: true, complete: true, at: { seq: 1, hash: digest }, value: { scope: Q, definition: `platform:rules@${version}`, status: "active", time: "2026-10-25T00:00:00Z", counts: [], items: [] } });
     } }, directory: D.scope, membership: M, rules: Q.scope, destination: G.scope, key, me: null,
     reader: new Session("SCRIPTED-session", { v: 1, deployment: "SCRIPTED", membership: M, member: "@reader", key, reads: ["summary"], ends: "2026-10-25T01:00:00Z" }),
     unsessioned: null, directoryIndex: null, definitions: new Map() };
-  await expect(act(room, Q.scope, "publish")).rejects.toThrow(Q11_READ_ONLY);
+  await expect(act(room, Q.scope, "publish")).rejects.toThrow("Certified rules are read-only in this page. No user-facing publish command is available yet.");
   expect([signatures, mutations]).toEqual([0, 0]);
 });
