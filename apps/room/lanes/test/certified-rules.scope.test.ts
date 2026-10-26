@@ -130,7 +130,8 @@ test("certified-rules native birth and device install bootstrap a real tree cert
     const proof = body["proof"], kept = await G.stub.retained(reader, "value", proof, RULES_TREE_PROOF.domain);
     expect(kept).toMatchObject({ ok: true }); if (!kept.ok) throw Error("Actual certificate proof must be retained");
     const publish = (request: FactRef, answer: FactRef) => publishRulesCertificate(room, proposed.policy, request, answer, proof, kept.value.bytes);
-    expect(await publish(started, certificate)).toMatchObject({ answer: "accepted" });
+    const published = await publish(started, certificate);
+    expect(published, canonicalize(published)).toMatchObject({ answer: "accepted" });
     const configured = await Q.item(0);
     expect(configured.values).toMatchObject({ configured: true, proposal: proposed.digest, policy: proposed.policy,
       certificate: { request: started, certificate, proof, commit: firstHead } });
