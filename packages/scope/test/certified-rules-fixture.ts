@@ -90,7 +90,7 @@ export async function openRulesCertificate(room: CertifiedRoom, policy: RulesPol
     rulesBirth: factRefOf((await Q.entries())[0]!), membershipBirth: factRefOf((await M.entries())[0]!),
   } });
   const answer = await G.stub.submit(signed, [], { values: [canonicalize(proposal.policy)] });
-  expect(answer).toMatchObject({ answer: "accepted" });
+  expect(answer, canonicalize(answer)).toMatchObject({ answer: "accepted" });
   if (answer.answer !== "accepted") throw Error("Actual certificate opening required");
   return factRefOf((await G.entries())[answer.receipt.fact.seq]!);
 }
