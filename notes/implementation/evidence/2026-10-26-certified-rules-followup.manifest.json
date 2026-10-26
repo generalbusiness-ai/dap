@@ -1,21 +1,16 @@
 {
-  "qualification": "Final R7 gate V3 and limited follow-up index. Earlier accepted V17, controls, generation and Page evidence remain in the 2026-10-25 manifest without rerunning them. Gate V3 failed; its one-file repair and previously unreached native stage have separate outcomes. Native failed only the two Register19 sentinel cases; one-line Register20 repair 8b85ece5c2 remains unverified pending planner disposition. Startup reporter failure remains failed.",
-  "directory": "/Users/hughpyle/play/artroom-evidence",
+  "qualification": "Closed R7 delivery evidence copied from the original capture directories into one read-only directory with top-level SHA256SUMS. Original command metadata retains original execution paths. Gate V3 and the initial native continuation remain failed. The whole Rules file, then the Scope compiler and whole archive-target file passed after isolated test-only unsupported-version sentinel repairs. Production/configuration/dependencies/shared helpers unchanged after gate V3. Sequential limited-follow-up acceptability remains for the checker to assess; planner question 53707834 records the issue. Earlier accepted V17, generation, controls and Page evidence remain in the 2026-10-25 manifest and were not rerun.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-26-certified-rules-delivery",
   "checkpoint": {
-    "commit": "ae49c5a6126c8b6704811783ca9c943d65f8f4b2",
-    "tree": "96975fe5755918a615b1ddb9484e750a07d3e0d2"
+    "commit": "5a81692258c6ad1a04f375ee2b3bf00760a3304f",
+    "tree": "4824d97f7004dba170dbb4e6f351bd58793db420"
   },
   "originalGateCheckpoint": {
     "commit": "8ba23a3428d5cf451a2b3a82a05ca3cf6d24c75f",
     "tree": "1fe50e37282e0f394b0a20316b00286e323c1d9d"
   },
-  "fileCount": 53,
+  "fileCount": 60,
   "files": [
-    {
-      "path": "2026-10-25-certified-rules-policy/SHA256SUMS",
-      "bytes": 98833,
-      "sha256": "485f2379b65eab321d19c3253789bb1ef8d8c7dc27a768eda45362035f638cb6"
-    },
     {
       "path": "2026-10-25-certified-rules-policy/gate-v3/gate.stderr.log",
       "bytes": 0,
@@ -187,6 +182,41 @@
       "sha256": "17a831247b2fef05b765e7aeac7874eeaba425c4a368e0cb3df6cf4fee63b93e"
     },
     {
+      "path": "2026-10-26-certified-rules-archive-target-followup/SHA256SUMS",
+      "bytes": 512,
+      "sha256": "f35908d6d6739fab543f8c71e570828a8b34008128ecdc9331ea0b88e17e933a"
+    },
+    {
+      "path": "2026-10-26-certified-rules-archive-target-followup/archive-target.log",
+      "bytes": 23536,
+      "sha256": "9565784fd0176a85dae5c467e6502e06eb0e73aa57b2cc13c7ded115365aadfa"
+    },
+    {
+      "path": "2026-10-26-certified-rules-archive-target-followup/archive-target.progress.jsonl",
+      "bytes": 7607,
+      "sha256": "aab445712e8a973f6b233997764b17218fa1aa9176df6f9e1cd5424f19f41606"
+    },
+    {
+      "path": "2026-10-26-certified-rules-archive-target-followup/archive-target.timing.jsonl",
+      "bytes": 6244,
+      "sha256": "9fb38c9528be092685c9c7e2201b53fe29765b11705830bc3b2e89cf9e7ca9e3"
+    },
+    {
+      "path": "2026-10-26-certified-rules-archive-target-followup/compiler.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "2026-10-26-certified-rules-archive-target-followup/manifest.json",
+      "bytes": 1005,
+      "sha256": "0c668d7309728cf90e42e9f3b52f11501e9cb8952a8c223f87f9e6da6e7ba4fe"
+    },
+    {
+      "path": "2026-10-26-certified-rules-archive-target-followup/result.json",
+      "bytes": 1471,
+      "sha256": "26127530fafafefa2de934ab4fe913cf9970582f5053e2bb035021156152d14c"
+    },
+    {
       "path": "2026-10-26-certified-rules-followup/SHA256SUMS",
       "bytes": 503,
       "sha256": "b13745261282a504f7fbe65015095ead9971139db0e7e015c902ee00e76ef881"
@@ -275,6 +305,53 @@
       "path": "2026-10-26-certified-rules-review-index/summary.json",
       "bytes": 11309,
       "sha256": "ca01fc53c96a58f85ec55420d67822b3f31e3ac883c0d337333f5a008f705942"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 7535,
+      "sha256": "c7d70cfd1363336b34bc8957b4f2bc61bc4377cf2e8a8062d35213b0df674e6d"
     }
-  ]
+  ],
+  "previousFollowupCheckpoint": {
+    "commit": "ae49c5a6126c8b6704811783ca9c943d65f8f4b2",
+    "tree": "96975fe5755918a615b1ddb9484e750a07d3e0d2"
+  },
+  "finalFollowup": {
+    "phases": [
+      {
+        "name": "compiler",
+        "argv": [
+          "/opt/homebrew/bin/node",
+          "node_modules/typescript/bin/tsc",
+          "-p",
+          "packages/scope/tsconfig.test.json"
+        ],
+        "exit": 0,
+        "wallSeconds": 0.6776097919791937,
+        "childCpuSeconds": 3.418263
+      },
+      {
+        "name": "archive-target",
+        "argv": [
+          "/opt/homebrew/bin/node",
+          "node_modules/vitest/vitest.mjs",
+          "run",
+          "--config",
+          "vitest.native.config.ts",
+          "--project",
+          "scope",
+          "packages/scope/test/archive-target.test.ts"
+        ],
+        "exit": 0,
+        "wallSeconds": 7.507798375096172,
+        "childCpuSeconds": 9.048874
+      }
+    ],
+    "cases": 7,
+    "outcome": "passed",
+    "unhandledErrors": 0,
+    "ready": 7,
+    "result": 7,
+    "final": 7
+  }
 }

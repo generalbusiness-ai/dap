@@ -125,9 +125,14 @@ Native then found the same stale-negative pattern at
 Register 19 is now supported. Commit `8b85ece5` changes only that negative
 sentinel to Register 20. The positive actual-family check and every assertion,
 case and deadline remain. No test imports the repaired file. That second
-repair has not run. Planner question `53707834`, filed under the two-failure
-guidance in `34c8885a`, owns the choice between a second bounded follow-up
-and a new gate.
+repair passed its owning Scope test compiler and all seven cases in the
+whole archive-target file at `5a816922`, tree `4824d97f`. Its seven ready,
+result and final callback identities agree, with zero reported unhandled
+errors. No remaining stage was unreached after the native run. This is a
+second isolated test-only follow-up, with no repeated suite or production
+change. Planner question `53707834` records the validation choice under
+`34c8885a`; the checker must assess the combined evidence. No planner
+acceptance is claimed.
 
 The initial limited follow-up followed docs/testing.md: the owning compiler, the
 whole failed test file, and the native stage that V3 never reached. The
@@ -169,6 +174,8 @@ earlier runs.
 | First follow-up reporter startup | Root Vitest whole rules-scope file with the invalid observation phase `rules-scope` | 1; startup error, no assertions ran | `c709d1bd60432718c09b2515e6f7eb662971eb19b3167b178f9b104317b97f07` (`2026-10-26-certified-rules-followup/rules-scope.log`) | `ae49c5a6`, tree `96975fe5` |
 | Repaired whole test file | `node node_modules/vitest/vitest.mjs run --config vitest.plain.config.ts --project platform packages/platform/test/rules-scope.test.ts` | 0; 9 passed | `ab330e1b3e6415162cc3ace17142b1a5db2dbc69ebf90168934b92574fecf43d` (`2026-10-26-certified-rules-followup-v2/rules-scope.log`) | `ae49c5a6`, tree `96975fe5` |
 | Previously unreached native stage | `node node_modules/vitest/vitest.mjs run --config vitest.native.config.ts` | 1; 778 passed, 2 failed, 2 skipped in final records; zero reported unhandled errors | `e22e1589b62197f6209671def03d7d0411b3f6a8520dd444ec1a6fe9fd38d902` (`2026-10-26-certified-rules-followup-v2/native.log`) | `ae49c5a6`, tree `96975fe5` |
+| Scope test compiler | `node node_modules/typescript/bin/tsc -p packages/scope/tsconfig.test.json` | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` (`2026-10-26-certified-rules-archive-target-followup/compiler.log`) | `5a816922`, tree `4824d97f` |
+| Repaired whole archive-target file | `node node_modules/vitest/vitest.mjs run --config vitest.native.config.ts --project scope packages/scope/test/archive-target.test.ts` | 0; all 7 cases passed | `9565784fd0176a85dae5c467e6502e06eb0e73aa57b2cc13c7ded115365aadfa` (`2026-10-26-certified-rules-archive-target-followup/archive-target.log`) | `5a816922`, tree `4824d97f` |
 
 The first ordinary gate stopped at whitespace: one extra blank line at
 EOF in each of `packages/git/src/pure-names.ts` and
@@ -287,6 +294,12 @@ The final callback counts, states and unhandled errors are in the retained
 `2026-10-26-certified-rules-review-index/summary.json`, indexed by the final
 manifest. No production source or test changed during those commands.
 
+The final archive-target follow-up used the same machine, Node version and
+existing cache. Its initial load averages were [1.49462890625, 1.69189453125, 2.046875].
+compiler took 0.68 seconds elapsed and 3.42 child CPU seconds.
+archive-target took 7.51 seconds elapsed and 9.05 child CPU seconds.
+These separate command intervals are not a new gate measurement.
+
 ### Required witnesses and rollout
 
 The request's witnesses remain at their existing boundaries:
@@ -319,10 +332,12 @@ the scheduled demo cohort and deployment after landing under `0716e75a`.
 
 Request `0716e75a` owns exact-head review and any repair it identifies.
 The index records the failed V3 gate, the passing whole Rules file and the
-failed native phase separately. The one-line archive test repair at
-`8b85ece5` follows the execution checkpoint and remains unverified.
-Planner question `53707834` owns the next validation choice. This note and
-its manifest add no production source changes. No approval or landing is implied.
+failed native phase separately. The one-line archive test repair at `8b85ece5` passed the compiler and whole
+owning file at `5a816922`. Only this note and the evidence manifest change
+after that execution checkpoint. Planner question `53707834` remains open
+for disposition of the sequential follow-up choice. The checker owns
+acceptance of the combined evidence and exact-head review. No approval or
+landing is implied.
 
 This family addresses findings 3.2, 3.3 and 3.4. Their closure remains
 conditional on the checker accepting the failed gate with its limited
