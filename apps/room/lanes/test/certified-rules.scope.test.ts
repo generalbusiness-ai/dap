@@ -1,6 +1,6 @@
 import { env } from "cloudflare:workers";
 import { expect, test } from "vitest";
-import type { DeclaredDefinition, Digest, FactRef, Item, Read } from "@generalbusiness/dap-contract";
+import type { Answer, DeclaredDefinition, Digest, FactRef, Grant, Item, Read, SignedIntent } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, digestBytes, definitionDigest, factRefOf, isDigest, isRecord, isSeed, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { ARCHIVE_CERTIFIED_RULES_COHORT, RULES_CERTIFICATE_KIND, RULES_PATTERNS, RULES_TREE_PROOF, rulesPolicyProposalV11, CONFIGURATION_DOMAIN, editObjects, type RulesPolicyV11 } from "@generalbusiness/dap-platform";
 import { emptyPackageComposition } from "@generalbusiness/dap-package-graph";
@@ -15,6 +15,7 @@ import { fixedSigner } from "../../../../packages/scope/test/fixtures-core.ts";
 import { devicePackageFixture } from "../../../../packages/derive/test/fixtures-device-command.ts";
 import { valueDigest } from "@generalbusiness/dap-derive";
 import { changeDemo, changeDemo3 } from "../src/index.ts";
+import { Host } from "./support/graph.ts";
 
 import { certifiedNativeRoom, openRulesCertificate, publishRulesCertificate, configureRules } from "../../../../packages/scope/test/certified-rules-fixture.ts";
 
@@ -203,6 +204,17 @@ test("fresh certified global checks override a stale native lane and staged publ
       await lane.did(rita, "ask-rules", { on: 0, expected: await lane.expected({ on: 0 }) }); await pause(nodes); return lane;
     };
     const L = await openLane(changeDemo, "stale native full manifest");
+    // Real hold@1 records/guards/outcomes; mint, stage and ancestry answers
+    // are the existing deterministic TEST stand, not an external Git service.
+    const holdHost = new Host();
+    life.outside(L.name, () => ({
+      accepts: (owner, kind) => holdHost.accepts(owner, kind),
+      send: request => Promise.resolve(holdHost.send(request)),
+    }));
+    await L.restart(); // Outside is captured once for this object's life.
+    const preparedLane = L.stub as unknown as {
+      prepare(signed: SignedIntent, grants: readonly Grant[], capability: string, step: string): Promise<Answer>;
+    };
     const heldP0 = structuredClone((await L.summary()).value.items.find(item => item.type === "rules")!);
     expect(heldP0.values["checks"]).toEqual(expect.arrayContaining([expect.objectContaining({ name: "verify", configuration: C0, required: false })]));
     const fresh = await configureRules(room, P1);
@@ -216,14 +228,27 @@ test("fresh certified global checks override a stale native lane and staged publ
     await L.did(rita, "accept", { on: offer, expected: await L.expected({ on: offer }), fields: { terms: factRefOf((await L.entries())[offer]!) } });
     const hold = await L.did(rita, "take-hold", { expected: await L.expected({ commitment: offer, proposal: 0 }), fields: { commitment: offer } });
     const heldEntry = (await L.entries())[hold]!;
+    const instance = "TEST-native-full-manifest";
+    // As in Graph.instance, task is a descriptive TEST reference. No task
+    // scope is created or delivered, and it supplies no authority.
+    const instanced = await preparedLane.prepare(await L.intent(rita, "hold@1:instance", {
+      fields: { hold, task: { ...await L.at(), kind: "task" }, instance },
+    }), [], "hold@1", "instance");
+    expect(instanced).toMatchObject({ answer: "accepted" });
     const built = editObjects("sha1", id => {
       const object = host.stand.objects.get(id);
       return object && object.type !== "tag" ? { id, kind: object.type, body: object.data } : null;
     }, initialHead!, "source.md", utf8("# Native full manifest\n"), { scope: L.name, time: heldEntry.time, operation: factRefOf(heldEntry) });
     if (!built) throw Error("Production Git builder must build this ordinary source path");
     for (const object of built.objects) host.stand.objects.set(object.id, { id: object.id, type: object.kind, data: object.body });
-    const manifest = await L.did(rita, "propose-manifest", { expected: await L.expected({ proposal: 0, hold, commitment: offer }), fields: { hold, instance: "TEST-native-full-manifest", selected: [], decisions: [],
+    const manifestIntent = await L.intent(rita, "propose-manifest", { expected: await L.expected({ proposal: 0, hold, commitment: offer }), fields: { hold, instance, selected: [], decisions: [],
       base: initialHead!, integration: built.commit, tree: built.tree, complete: true } });
+    // The provisional pin names this exact signed intent. Do not re-sign it.
+    expect(await preparedLane.prepare(manifestIntent, [], "hold@1", "stage")).toMatchObject({ answer: "accepted" });
+    await effectFixture([L], life.wait);
+    const admitted = await L.stub.submit(manifestIntent, []);
+    if (admitted.answer !== "accepted") throw Error(`propose-manifest was not accepted: ${JSON.stringify(admitted)}`);
+    const manifest = admitted.receipt.fact.seq;
     const frozen = await L.item(manifest); expect(frozen.values["tree"]).toBe(built.tree);
     const directMerge = async () => {
       let seq: number | null = null;
