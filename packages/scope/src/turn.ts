@@ -396,11 +396,7 @@ export class Turns {
       throw error;
     }
     const size = utf8(bytes).length;
-    if (size > this.#bounds.entryBytes) {
-      // Temporary TEST diagnosis. Root restores this exact guard before gate.
-      console.info("r7-entry-size-refusal-v1", { entryBytes: size, entryBytesLimit: this.#bounds.entryBytes });
-      throw new Unfit("size");
-    }
+    if (size > this.#bounds.entryBytes) throw new Unfit("size");
     const hash = entryHash(entry);
     this.#store.append(entry, hash, bytes, size);
     for (const input of retain) this.#store.retain(input);

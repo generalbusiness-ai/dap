@@ -1,8 +1,7 @@
 import { expect } from "vitest";
-import { PROPOSED_BOUNDS, type Digest, type FactRef, type Intent, type ScopeRef } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, factRefOf, intentDigest, isDigest, isFieldValue, isRecord, isSeed, parseStrict, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
-import { ARCHIVE_CERTIFIED_RULES_COHORT, RULES_CERTIFICATE_KIND, RULES_POLICY_VALUE_V11, RULES_TREE_PROOF, platform, rulesPolicyProposalV11, type RulesPolicyV11 } from "@generalbusiness/dap-platform";
-import { placesOf, readFields, valueDigest } from "@generalbusiness/dap-derive";
+import type { Digest, FactRef, Intent, ScopeRef } from "@generalbusiness/dap-contract";
+import { b64url, canonicalize, factRefOf, intentDigest, isDigest, isRecord, isSeed, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
+import { ARCHIVE_CERTIFIED_RULES_COHORT, RULES_CERTIFICATE_KIND, RULES_TREE_PROOF, rulesPolicyProposalV11, type RulesPolicyV11 } from "@generalbusiness/dap-platform";
 import { DestinationHost, type DestinationProvider } from "../src/destination-host.ts";
 import { CredentialStore } from "../src/credential-store.ts";
 import { readRulesTree } from "../src/rules-tree-provider.ts";
@@ -99,45 +98,10 @@ export async function publishRulesCertificate(room: CertifiedRoom, policy: Rules
   const proposed = rulesPolicyProposalV11(policy);
   if (!proposed.ok) throw Error("Strict policy required");
   const { D, M, Q, G } = room;
-  const signed = await Q.intent(rita, "publish", { on: 0, expected: await Q.expected({ on: 0 }),
+  return Q.stub.submit(await Q.intent(rita, "publish", { on: 0, expected: await Q.expected({ on: 0 }),
     fields: JSON.parse(canonicalize({ ...proposed.policy, proposal: proposed.digest, proof, certificateRequest: request, certificate,
-      directoryBirth: factRefOf((await D.entries())[0]!), destinationBirth: factRefOf((await G.entries())[0]!), membershipBirth: factRefOf((await M.entries())[0]!) })) });
-  const values = [canonicalize(proposed.policy), proofBytes];
-  const answer = await Q.stub.submit(signed, [], { values });
-  if (answer.answer === "refused" && answer.reason === "bad-field") {
-    // Snapshot only after the actual refused submit. Do not print fields or values.
-    const publish = platform(ARCHIVE_CERTIFIED_RULES_COHORT.rules)?.data.acts["publish"];
-    // readFields defers native code marks to the subsequent rule check.
-    const fields = publish ? readFields(publish.fields as Parameters<typeof readFields>[0], signed.intent.fields, PROPOSED_BOUNDS) : null;
-    const places = publish ? placesOf(publish.fields, signed.intent.fields) : [];
-    const namedValues = (["proposal", "proof"] as const).map(field => {
-      const declared = field === "proposal" ? RULES_POLICY_VALUE_V11 : RULES_TREE_PROOF;
-      const place = places.find(row => row.field === field), digest = signed.intent.fields[field];
-      return { field, placePresent: place !== undefined, domainMatches: place?.domain === declared.domain,
-        boundMatches: place?.max === declared.max, fieldIsDigest: isDigest(digest), supplied: values.map(bytes => {
-          const withinLimit = bytes.length <= declared.max && utf8(bytes).length <= declared.max;
-          if (!withinLimit) return { withinLimit, parsed: false, canonical: false, digestMatches: false };
-          try {
-            const value = parseStrict(bytes);
-            return { withinLimit, parsed: true, canonical: canonicalize(value) === bytes,
-              digestMatches: isDigest(digest) && valueDigest(declared.domain, value) === digest };
-          } catch { return { withinLimit, parsed: false, canonical: false, digestMatches: false }; }
-        }) };
-    });
-    const extents = signed.intent.fields["extents"];
-    let extentsCanonicalBytes: number | null = null;
-    try { extentsCanonicalBytes = utf8(canonicalize(extents)).length; } catch { /* No value/body or exception text. */ }
-    const diagnostic = canonicalize({ answer: { answer: answer.answer, reason: answer.reason,
-      ...(answer.name === undefined ? {} : { name: answer.name.slice(0, 256) }), judgedAt: answer.judgedAt },
-      readFields: fields === null ? { assessed: false } : fields.ok ? { assessed: true, ok: true }
-        : { assessed: true, ok: false, detail: fields.detail.slice(0, 256) },
-      suppliedValueCount: values.length, namedValues, codedExtents: { fieldValue: isFieldValue(extents),
-        array: Array.isArray(extents), count: Array.isArray(extents) ? extents.length : null,
-        canonicalUtf8Bytes: extentsCanonicalBytes } });
-    if (utf8(diagnostic).length > 4096) throw Error("TEST Q11 publish admission diagnostic exceeded 4096 bytes");
-    throw Error(`TEST Q11 publish admission AFTER refused submit: ${diagnostic}`);
-  }
-  return answer;
+      directoryBirth: factRefOf((await D.entries())[0]!), destinationBirth: factRefOf((await G.entries())[0]!), membershipBirth: factRefOf((await M.entries())[0]!) })) }), [],
+    { values: [canonicalize(proposed.policy), proofBytes] });
 }
 export async function configureRules(room: CertifiedRoom, policy: RulesPolicyV11) {
   const request = await openRulesCertificate(room, policy); await room.pause(room.nodes);

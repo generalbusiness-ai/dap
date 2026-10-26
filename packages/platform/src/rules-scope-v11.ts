@@ -54,7 +54,7 @@ export const rulesScopeV11:PlatformData={...archiveDeviceRulesScope,
       certificateRequest:birthField('platform:destination','certify-rules-tree'),certificate:birthField('platform:destination','certify-rules-tree'),
       directoryBirth:birthField('platform:directory','establish'),destinationBirth:birthField('platform:destination','establish'),membershipBirth:birthField('platform:membership','establish')},
       guards:[...oldPublish.guards.filter(guard=>!('code'in guard&&guard.code==='extents-hold')),{code:'q11-certified-policy',row:'R7'}],
-      effects:[{code:'q11-publish-policy',row:'R7'}]},
+      effects:[{code:'q11-publish-policy',row:'R7'},{ref:{slot:'published',from:'self'}}]},
   }};
 function provenance(value:unknown):value is RulesCertificateProvenanceV11 {
   return isRecord(value)&&Object.keys(value).length===4&&['request','certificate','proof','commit'].every(key=>Object.hasOwn(value,key))
@@ -67,14 +67,13 @@ export const rulesScopeRulesV11:Rules={...archiveDeviceRules,
   'q11-certified-policy':{place:'guard',refusals:['invalid-policy','approval-opt-in-required','approver-not-review','rules-extent-required','catch-all-required','extent-check-unknown','extent-tree-unavailable','extent-pattern-unmatched','rules-certificate-unavailable'],run:given=>{
     const result=publication(given);return result.ok?{holds:true}:no(result.reason);
   }},
-  'q11-publish-policy':{place:'effect',most:11,run:given=>{
+  'q11-publish-policy':{place:'effect',most:10,run:given=>{
     const result=publication(given),item=rulesOf(given.state);if(!result.ok||!item)throw Error('checked Q11 publication missing');
     const p=result.policy;
     return [
       ...Object.entries({approvals:p.approvals,ownerMayReview:p.ownerMayReview,checks:p.checks,labels:p.labels,extents:p.extents,
         singleControllerException:p.singleControllerException===true,configured:true,policy:p,proposal:result.proposal,certificate:result.certificate})
         .map(([slot,value]):RuleEffect=>({effect:'value',item:item.id,slot,value:value as FieldValue})),
-      {effect:'ref',item:item.id,slot:'published',to:given.resolved.self},
     ];
   }},
 };
