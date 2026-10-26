@@ -8,11 +8,13 @@
  * the time of the entry that reserved it, and sends them with the base's closure.
  * Every provider sends them the same way. */
 import type { ReservationSnapshot, SignedIntent, Entry, FactRef, FieldValue, KeyId, OperationId, RetainedInput, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, isOperationId, isFactRef, verifySignedIntent, parseStrict, timeMs, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, b64url, entryHash, isOperationId, isFactRef, verifySignedIntent, parseStrict, timeMs, utf8 } from "@generalbusiness/dap-bytes";
 import { isEntryOf, valueDigest, type Item, type Operation } from "@generalbusiness/dap-derive";
-import { isStandingDestination, publicationStandingRecord, usesFilePublicationProtocol, usesStagedPublicationProtocol } from "@generalbusiness/dap-platform";
+import { isStandingDestination, publicationStandingRecord, certifiedPublicationState, usesFilePublicationProtocol, usesStagedPublicationProtocol } from "@generalbusiness/dap-platform";
 import { DESTINATION_KINDS, READ_TOKEN_HOURS, destinationBranch, destinationMint, destinationRead, destinationReceipt, destinationRevokedMint, destinationSends, destinationStatement, destinationTarget, destinationWrite, editObjects, editTree, manifestCommit, editPath, fileOf, sourcesOf, manifestFiles, fileSound, firstHeadCommit, initialCommitOf, isOf, isRecordedJudgeEvidence, revokedToken, filePublicationCause, filePublicationCurrent, filePublicationCommit, type DestinationObject, type EditFile, type ObjectFormat, type RecordedJudgeEvidence } from "@generalbusiness/dap-platform";
 import { GitRefusal, READ_BOUNDS, Reader, type GitSource } from "@generalbusiness/dap-git";
+import { RULES_CERTIFICATE_KIND, RULES_POLICY_VALUE_V11, rulesCertificateOpening, rulesCertificateBranchMatches, rulesPolicyProposalV11, rulesPolicyPatternsV11, RULES_TREE_PROOF, RULES_TREE_BOUNDS, verifyRulesTree, type RulesTreeBinding } from "@generalbusiness/dap-platform";
+import type { RulesTreeRequest, RulesTreeObjects } from "./rules-tree-provider.ts";
 import type { CredentialPosition, CredentialStore, RevocationPosition } from "./credential-store.ts";
 import type { OutsideGiven } from "./given.ts";
 import type { EffectAnswer, EffectRequest, Outside } from "./operations.ts";
@@ -31,6 +33,9 @@ export interface DestinationProvider {
   ref(repository: DestinationRepository, ref: string): Promise<string | null>;
   /** Read and validate the complete object closure before returning it. */
   objects(repository: DestinationRepository, commit: string): Promise<readonly DestinationObject[]>;
+  /** Captured SHA-1 commit and reachable trees only, within the caller's
+   * remaining canonical payload allowance. No full-closure fallback. */
+  rulesTree?(repository: DestinationRepository, request: RulesTreeRequest): Promise<RulesTreeObjects>;
   /** Validate object closure and ancestry at the actual send boundary. Own reply: {send:...}. */
   send(request: { repository: DestinationRepository; ref: string; old: string | null; commit: string; objects: readonly DestinationObject[]; expectedTree?: string; requireParentless: boolean; token: string; binding: DestinationBinding; allowed(): boolean; sentAt?: Timestamp }): Promise<unknown>;
   deleteRef?(request: { repository: DestinationRepository; ref: string; old: string; token: string; binding: DestinationBinding; allowed(): boolean; sentAt?: Timestamp }): Promise<unknown>;
@@ -79,7 +84,7 @@ export class DestinationHost implements Outside {
   #revokeCursor: RevocationPosition | null = null;
   constructor(given: OutsideGiven, options: DestinationHostOptions) { this.#given = given; this.#options = options; }
 
-  accepts(owner: string, kind: string): boolean { return usesFilePublicationProtocol(owner) && kind === "file-judge" || isOf(owner, OWNER) && ([...Object.values(DESTINATION_KINDS), "check-judge", "reservation-stage", "reservation-delete"] as string[]).includes(kind); }
+  accepts(owner: string, kind: string): boolean { return owner === "platform:destination@14" && kind === RULES_CERTIFICATE_KIND || usesFilePublicationProtocol(owner) && kind === "file-judge" || isOf(owner, OWNER) && ([...Object.values(DESTINATION_KINDS), "check-judge", "reservation-stage", "reservation-delete"] as string[]).includes(kind); }
   /** Repeating these reads never repeats a host mutation. The driver keeps the same attempt. */
   readonly recovery = {
     accepts: (owner: string, kind: string): boolean => usesFilePublicationProtocol(owner) && kind === "file-judge" || isOf(owner, OWNER) && [DESTINATION_KINDS.judge, DESTINATION_KINDS.read, DESTINATION_KINDS.adoptRead, "check-judge"].includes(kind as "judge" | "read" | "adopt-read" | "check-judge"),
@@ -135,6 +140,9 @@ export class DestinationHost implements Outside {
       const context = this.#bound(request);
       if (!context) return null;
       const { operation, repository, ref } = context;
+      if (operation.owner === "platform:destination@14" && operation.kind === RULES_CERTIFICATE_KIND) {
+        return await this.#certifyRulesTree(request, operation, repository, ref);
+      }
       if (operation.kind === "check-judge") {
         const input = request.origin.entry.input;
         const body = input.type === "delivery" && input.message.class === "request" && input.message.type === "tell" ? input.message.body as { fields: Record<string, FieldValue> } : null;
@@ -199,6 +207,74 @@ export class DestinationHost implements Outside {
       }
       return await this.#write(request, operation, repository, ref);
     } catch { return null; } // Provider errors may contain secrets.
+  }
+
+  /** A retained proof of one native-captured head, never an external ref
+   * freshness claim. The policy copy stays private across the provider await. */
+  async #certifyRulesTree(request: EffectRequest, operation: Operation, repository: DestinationRepository, ref: string): Promise<EffectAnswer | null> {
+    if (request.attempt !== 1) return null;
+    const opening = rulesCertificateOpening(this.#given.own, operation, request.scope);
+    if (!opening) return null;
+    const { binding, started } = opening;
+    const captured = canonicalize(binding);
+    const current = (expected: RulesTreeBinding): boolean => {
+      const scope = this.#given.scope();
+      return !!scope && scope.status === "active" && sameScope(scope.at, request.scope)
+        && sameScope(expected.destination, request.scope) && scope.head.seq === started.seq && scope.head.hash === started.hash
+        && rulesCertificateBranchMatches(this.#given.state, expected, operation.for!);
+    };
+    if (!current(binding) || canonicalize(repository) !== canonicalize(binding.repository) || ref !== binding.ref) return null;
+    const retained = this.#given.retained("value", binding.proposal, RULES_POLICY_VALUE_V11.domain);
+    if (!retained || retained.kind !== "value" || retained.domain !== RULES_POLICY_VALUE_V11.domain || retained.digest !== binding.proposal
+      || typeof retained.bytes !== "string" || retained.bytes.length > RULES_POLICY_VALUE_V11.max
+      || utf8(retained.bytes).length > RULES_POLICY_VALUE_V11.max) return null;
+    const proposal = rulesPolicyProposalV11(parseStrict(retained.bytes));
+    if (!proposal.ok || proposal.digest !== binding.proposal || canonicalize(proposal.policy) !== retained.bytes) return null;
+    const policyBytes = retained.bytes;
+    const read = this.#options.provider.rulesTree;
+    if (!read) return answer("refused", {});
+    // Replace the empty payload in the complete canonical envelope. This
+    // is one allowance, not 262144 bytes plus the identity/binding envelope.
+    const emptyPayload = { commitBytes: "", trees: [] };
+    const empty = { v: 1, ...binding, ...emptyPayload };
+    const emptyBytes = utf8(canonicalize(empty)).length, payloadBytes = utf8(canonicalize(emptyPayload)).length;
+    const maximum = RULES_TREE_PROOF.max - emptyBytes + payloadBytes;
+    if (!Number.isSafeInteger(maximum) || maximum < payloadBytes || maximum > RULES_TREE_PROOF.max) return answer("refused", {});
+    const objects = await read.call(this.#options.provider, { ...binding.repository }, { commit: binding.commit, maxCanonicalBytes: maximum });
+    // Private sent bookkeeping does not move the native head. Any genuine
+    // intervening entry, changed attempt/origin or branch binding does.
+    const rebound = this.#bound(request);
+    const reopened = rebound && rulesCertificateOpening(this.#given.own, rebound.operation, request.scope);
+    if (!reopened || canonicalize(reopened.binding) !== captured || canonicalize(reopened.started) !== canonicalize(started) || !current(binding)) return null;
+    if (!objects || !(objects.commitBytes instanceof Uint8Array) || !Array.isArray(objects.trees) || objects.trees.length > RULES_TREE_BOUNDS.visits) return answer("refused", {});
+    let used = payloadBytes, decoded = 0;
+    const encode = (bytes: Uint8Array, metadata: number): string | null => {
+      if (!(bytes instanceof Uint8Array)) return null;
+      const encoded = Math.ceil(bytes.length / 3) * 4;
+      if (bytes.length > RULES_TREE_BOUNDS.objectBytes - decoded || metadata + encoded > maximum - used) return null;
+      used += metadata + encoded; decoded += bytes.length;
+      const value = b64url(bytes).replace(/-/g, "+").replace(/_/g, "/");
+      return value + "=".repeat((4 - value.length % 4) % 4);
+    };
+    const commitBytes = encode(objects.commitBytes, 0);
+    if (commitBytes === null) return answer("refused", {});
+    const trees: { id: string; bytes: string }[] = [];
+    for (const row of objects.trees) {
+      if (!row || typeof row.id !== "string" || !/^[0-9a-f]{40}$/.test(row.id)) return answer("refused", {});
+      const metadata = utf8(canonicalize({ id: row.id, bytes: "" })).length + (trees.length ? 1 : 0);
+      const bytes = encode(row.bytes, metadata);
+      if (bytes === null) return answer("refused", {});
+      trees.push({ id: row.id, bytes });
+    }
+    trees.sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+    const proof = { v: 1, ...binding, commitBytes, trees }, proofBytes = canonicalize(proof);
+    if (proofBytes.length > RULES_TREE_PROOF.max || utf8(proofBytes).length > RULES_TREE_PROOF.max) return answer("refused", {});
+    const proofDigest = valueDigest(RULES_TREE_PROOF.domain, proof);
+    if (!verifyRulesTree(proofBytes, proofDigest, binding, rulesPolicyPatternsV11(proposal.policy)).ok) return answer("refused", {});
+    return { ...answer("confirmed", { proposal: binding.proposal, proof: proofDigest, started }), retain: [
+      { kind: "value", domain: RULES_POLICY_VALUE_V11.domain, digest: binding.proposal, bytes: policyBytes },
+      { kind: "value", domain: RULES_TREE_PROOF.domain, digest: proofDigest, bytes: proofBytes },
+    ] };
   }
 
   /** Only the actual committed outcome releases custody for use or drops a revoked secret. */
@@ -286,7 +362,11 @@ export class DestinationHost implements Outside {
     const generationFits = () => {
       const current = this.#given.state.item(publication.id), value = current?.values["passes"];
       let rows: readonly { name: string; job: FactRef }[];
-      if (isStandingDestination(this.#given.genesis()?.seed.definition)) {
+      if (this.#given.genesis()?.seed.definition === "platform:destination@14") {
+        const record = certifiedPublicationState(value);
+        if (!record) return false;
+        rows = record.generations;
+      } else if (isStandingDestination(this.#given.genesis()?.seed.definition)) {
         const record = publicationStandingRecord(value);
         if (!record || record.reservation !== current?.values["reservedAt"]) return false;
         rows = record.checks;

@@ -130,8 +130,8 @@ test("floor commit probes share the already opened scope allowance", async () =>
 // Real native Register/Directory judgments, retained canonical entries and
 // portable offline replay. The repository-create reply and in-memory store
 // are labelled fixtures; no native Worker, private source export or host runs.
-test("exact caller anchors classify private Register17 and Register18 copies without admitting unknown archive names", async () => {
-  for (const pin of ["platform:register@17", "platform:register@18"] as const) {
+test("exact caller anchors classify reviewed private Register copies without admitting unknown archive names", async () => {
+  for (const pin of ["platform:register@17", "platform:register@18", "platform:register@19"] as const) {
     const native = nativePlatform(pin)!;
     const registerDefinition = checkedPlatformData(native.data), registerRules = { named: pin, rules: native.rules };
     const R = new Ledger(registerDefinition, "platform:register");
@@ -185,7 +185,7 @@ test("exact caller anchors classify private Register17 and Register18 copies wit
     // Caller anchors can still prove this replay without a descriptive alias.
     // An unknown pin or wrong kind must not take the private-name shortcut:
     // it must try the exact unavailable private history and receive not-found.
-    for (const [basis, kind] of [["platform:register@19", "register"], [pin, "membership"]] as const) {
+    for (const [basis, kind] of [["platform:register@20", "register"], [pin, "membership"]] as const) {
       const refused: { scope: ScopeId; result: string }[] = [];
       await verifyArchive(offline(basis, kind, refused), options);
       expect(refused).toEqual([{ scope: R.at.scope, result: "not-found" }]);

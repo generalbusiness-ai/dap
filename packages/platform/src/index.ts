@@ -9,7 +9,7 @@ export { TRUSTED_APPLICATION_COHORT, INSTALL_DEFINITION_BYTES, INSTALL_SEMANTIC_
 export { DECLARED_APPLICATION_RULES } from "./application-install-v2.ts";
 export { DECLARED_APPLICATION_COHORT } from "./application-install-v2-wire.ts";
 export { ARCHIVE_REPLAY_CODE } from "./archive-replay-code.ts";
-export { ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT } from "./archive-binding-wire.ts";
+export { ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT } from "./archive-binding-wire.ts";
 export { DEVICE_APPLICATION_COHORT } from "./device-application-wire.ts";
 export { deviceApplicationRequirement } from "./device-application-package.ts";
 export { INVITATION_KEY_COHORT, directory9, directoryRules9, membership6, membershipRules6 } from "./invitation-key.ts";
@@ -57,6 +57,7 @@ export { filePublicationCommit, fileReceiptObjects, fileReceiptRef, type FilePub
 export type { LaneRead } from "./destination.ts";
 /** Internal versioned metadata reader shared by native host and rules. */
 export { publicationStandingRecord } from "./publication-standing.ts";
+export { certifiedPublicationState } from "./destination.ts";
 // The host port reads the same recorded operation context as the rules.
 export { branchOf as destinationBranch, mintOf as destinationMint, servedBy as destinationWrite, statementOf as destinationStatement, targetOf as destinationTarget, writeSends as destinationSends, readFor as destinationRead } from "./destination.ts";
 export { mintRevoked as destinationRevokedMint } from "./destination.ts";
@@ -92,3 +93,10 @@ export function nativeDeclarationText(named: string): Readonly<{ digest: string;
   if (!Object.hasOwn(NATIVE_DECLARATION_TEXT, digest)) return null;
   return { digest, text: NATIVE_DECLARATION_TEXT[digest]! };
 }
+
+// Prospective certified-rules helpers consumed by the bounded Scope host.
+export { RULES_CERTIFICATE_KIND, RULES_POLICY_VALUE_V11, rulesCertificateOpening, rulesCertificateBranchMatches } from "./rules-certificate.ts";
+export { rulesPolicyProposalV11, rulesPolicyPatternsV11, type RulesPolicyV11 } from "./rules-policy-v11.ts";
+export { RULES_TREE_PROOF, RULES_TREE_BOUNDS, verifyRulesTree, type RulesTreeBinding } from "./rules-policy-tree.ts";
+
+export { rulesCertificateEvidenceValues } from "./destination-v14.ts";

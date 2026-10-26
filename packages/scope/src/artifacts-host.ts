@@ -18,6 +18,7 @@ import type { DestinationBinding, DestinationInspection, DestinationProvider, De
 import { deleteRefOnce, inspectGit, sendOnce, type DestinationRefDeletion } from "./github-host.ts";
 import type { RegisterProvider } from "./register-host.ts";
 import { archiveProvider, fixtureArchiveProvider, type FixtureArchivePorts } from "./archive-host.ts";
+import { readRulesTree, rulesTreeRequest, rulesTreeIsolation, type RulesTreeRequest, type RulesTreeObjects } from "./rules-tree-provider.ts";
 
 /** A repository handle of the binding: the parts this port uses. */
 export interface ArtifactsRepository {
@@ -268,6 +269,10 @@ export class ArtifactsProvider implements RegisterProvider, DestinationProvider 
       return [...collected.values()];
     });
   }
+  rulesTree(repository: DestinationRepository, request: RulesTreeRequest): Promise<RulesTreeObjects> {
+    const asked = rulesTreeRequest(request);
+    return this.#read({ ...repository }, source => readRulesTree(source, asked, this.#bounds), true);
+  }
   async send(request: Parameters<DestinationProvider["send"]>[0]): Promise<unknown> {
     request = { ...request, repository: { ...request.repository }, binding: { ...request.binding, scope: { ...request.binding.scope } } };
     const remote = this.#remote(request.repository);
@@ -304,7 +309,7 @@ export class ArtifactsProvider implements RegisterProvider, DestinationProvider 
    * The reply must state read scope and an actual expiry. A failed
    * revocation is not proof that the requested TTL was honored.
    */
-  async #read<T>(repository: DestinationRepository, read: (source: SmartHttpSource) => Promise<T>): Promise<T> {
+  async #read<T>(repository: DestinationRepository, read: (source: SmartHttpSource) => Promise<T>, rulesTree = false): Promise<T> {
     repository = { ...repository };
     const remote = this.#remote(repository);
     const handleOf = await this.#options.binding.get(repository.name);
@@ -314,7 +319,7 @@ export class ArtifactsProvider implements RegisterProvider, DestinationProvider 
     try {
       if (own(token, "scope") !== "read") return bad();
       endsOf(own(token, "expiresAt"));
-      return await read(new SmartHttpSource({ ...this.#transport(remote), authorization: `Bearer ${plaintext}` }));
+      return await read(new SmartHttpSource({ ...this.#transport(remote), ...(rulesTree ? rulesTreeIsolation(this.#options.maxBytes) : {}), authorization: `Bearer ${plaintext}` }));
     } finally {
       try { await handleOf.revokeToken(plaintext); } catch { /* no confirmed revocation; the reported expiry remains the service's assertion */ }
     }

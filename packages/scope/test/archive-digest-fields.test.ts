@@ -1,7 +1,13 @@
 /** Genuine native genesis/act rows and SQLite. This witnesses reference
  * projection only, not privacy admission, integrity, export or Replay. */
 import { expect, test } from "vitest";
+import type { ScopeRef } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { textDigest } from "@generalbusiness/dap-bytes";
+import { operationValueSelector, outcomeValueDependencies, outcomeValueDomains, ownersOf, validateDefinition, type OperationRules } from "@generalbusiness/dap-derive";
+import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
+import { ARCHIVE_CERTIFIED_RULES_COHORT, RULES_CERTIFICATE_KIND, destinationEvidenceValues, platform, rulesCertificateEvidenceValues } from "@generalbusiness/dap-platform";
+import { ArchiveOutcomeValues } from "../src/archive-outcome-values.ts";
 import { ArchiveBudget } from "../src/archive-budget.ts";
 import { readArchiveDigestFields } from "../src/archive-digest-fields.ts";
 import type { SqlValue } from "../src/sqlite.ts";
@@ -45,4 +51,73 @@ test("native field projection returns only requested digest scalars, preserves s
   expect(result.after.calls).toBeGreaterThan(result.before.calls);
   expect(result.after.inputWork).toBeGreaterThan(result.before.inputWork);
   expect(result.wrongSource).toEqual({ ok: false, reason: "mismatch" });
+
+
+  // SCRIPTED scalar SQL port: selector identity, grammar and mutation guards
+  // only. The separate native G14 journey owns real SQL/body correspondence,
+  // authenticated certificate provenance and full archive export.
+  const at = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "destination" } as ScopeRef;
+  const proposal = textDigest("SCRIPTED admitted policy"), proof = textDigest("SCRIPTED admitted tree proof"), hash = textDigest("SCRIPTED selected outcome");
+  const started = { at, seq: 1, hash: textDigest("SCRIPTED certificate opening") }, position = { seq: 2, hash, bytes: 512 };
+  const pin = ARCHIVE_CERTIFIED_RULES_COHORT.destination, native = platform(pin);
+  if (!native) return expect.fail("The exact native certificate definition is required.");
+  const checked = validateDefinition(native.data, PROPOSED_BOUNDS, RULE_PROFILES,
+    { platform: true, outcomeValues: outcomeValueDomains(native.data, native.rules) });
+  if (!checked.ok) return expect.fail("The exact native certificate declaration must validate.");
+  const actualRules = ownersOf(checked.definition, { named: pin, rules: native.rules }, null)?.rules(pin, RULES_CERTIFICATE_KIND);
+  const values = actualRules?.values, valueDomains = actualRules?.valueDomains;
+  if (!actualRules || !values || !valueDomains) return expect.fail("The compiled native certificate owner and value domains are required.");
+  expect(operationValueSelector(actualRules)).toBe(rulesCertificateEvidenceValues);
+  const domains = valueDomains.map(row => ({ ...row }));
+  const rules: OperationRules = { ...actualRules, valueDomains: domains };
+  const owners = (given: OperationRules, owner: string = ARCHIVE_CERTIFIED_RULES_COHORT.destination, kind: string = RULES_CERTIFICATE_KIND) => new Map([[owner, new Map([[kind, given]])]]);
+  const budget = new ArchiveBudget(), queries: string[] = [];
+  const good: Record<string, SqlValue> = { body_object: 1, body_keys: 3, proposal, proof, started_object: 1, started_keys: 3,
+    at_object: 1, at_keys: 3, scope: at.scope, inc: at.inc, kind: at.kind, seq: started.seq, hash: started.hash };
+  let projected = good;
+  let mutate: (() => void) | undefined;
+  const sql = { exec(query: string) {
+    queries.push(query);
+    if (query.includes("known.key AS slot")) return { toArray: () => [{ slot: 0, result: "confirmed" }] };
+    mutate?.();
+    return { toArray: () => [projected] };
+  } };
+  const projector = new ArchiveOutcomeValues(owners(rules), budget, PROPOSED_BOUNDS);
+  const origin = { at: { at, seq: position.seq, hash }, input: "outcome" as const };
+  const expected = outcomeValueDependencies(origin, rules, { basis: "own-answer", body: { proposal, proof, started } })!
+    .map(({ dependency, value }) => ({ dependency, max: value.max }));
+  expect(projector.project(sql, at, position)).toEqual(expected);
+  expect(expected.map(row => row.dependency)).toMatchObject([
+    { mode: "required", consumer: "outcome-value", key: { kind: "value", domain: "artroom-rules-policy-1", digest: proposal } },
+    { mode: "required", consumer: "outcome-value", key: { kind: "value", domain: "artroom-rules-tree-1", digest: proof } },
+  ]);
+  const before = budget.admitted();
+  expect(projector.project(sql, at, position)).toEqual(expected);
+  const after = budget.admitted();
+  expect(after.calls).toBeGreaterThan(before.calls);
+  expect(after.inputWork).toBeGreaterThan(before.inputWork);
+  // Extra body fields and malformed actual started scalars select no values,
+  // exactly as the native callback does; no valid fact is fabricated.
+  projected = { ...good, body_keys: 4 };
+  expect(projector.project(sql, at, position)).toEqual([]);
+  expect(rulesCertificateEvidenceValues({ basis: "own-answer", body: { proposal, proof, started, extra: true } })).toEqual([]);
+  projected = { ...good, hash: null };
+  expect(projector.project(sql, at, position)).toEqual([]);
+  expect(rulesCertificateEvidenceValues({ basis: "own-answer", body: { proposal, proof, started: { ...started, hash: null } } })).toEqual([]);
+  const attempts = queries.length;
+  expect(() => new ArchiveOutcomeValues(owners(rules, "platform:destination@13"), budget, PROPOSED_BOUNDS)).toThrow("unsupported-archive-cohort");
+  expect(() => new ArchiveOutcomeValues(owners(rules, ARCHIVE_CERTIFIED_RULES_COHORT.destination, "judge"), budget, PROPOSED_BOUNDS)).toThrow("unsupported-archive-cohort");
+  expect(queries).toHaveLength(attempts);
+  let callbackCalls = 0;
+  const alien = () => { callbackCalls++; return []; };
+  expect(() => new ArchiveOutcomeValues(owners({ ...rules, values: alien }), budget, PROPOSED_BOUNDS)).toThrow("unsupported-archive-cohort");
+  expect(() => new ArchiveOutcomeValues(owners({ ...rules, values: destinationEvidenceValues }), budget, PROPOSED_BOUNDS)).toThrow("unsupported-archive-cohort");
+  expect(() => new ArchiveOutcomeValues(owners({ ...rules, valueDomains: [{ domain: "artroom-rules-policy-1", max: 262145 }, { domain: "artroom-rules-tree-1", max: 262144 }] }), budget, PROPOSED_BOUNDS)).toThrow("unsupported-archive-cohort");
+  projected = good;
+  mutate = () => { rules.values = alien; };
+  expect(() => projector.project(sql, at, position)).toThrow("unsupported-archive-cohort");
+  expect(callbackCalls).toBe(0);
+  rules.values = values;
+  mutate = () => { rules.valueDomains = [...domains].reverse(); };
+  expect(() => projector.project(sql, at, position)).toThrow("unsupported-archive-cohort");
 });

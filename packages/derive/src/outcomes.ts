@@ -183,9 +183,18 @@ function given(mark: OutcomeMark, j: Judging, kinds: Readonly<Record<string, Out
     if (opened.some((kind, i) => !listed.includes(kind) || opened.indexOf(kind) !== i)) throw outside(mark, "an operation of a kind that its mark does not list, or two of one kind");
   }
   // The same derivation that a mark in a written list meets: one rule for the effects, and one for each request, in their order.
-  const rules: [string, Rules[string]][] = [["effects", { place: "effect", most: effects.length, run: () => effects }], ...sends.map((request, n): [string, Rules[string]] => [`send.${n}`, { place: "send", run: () => request }])];
-  const joining: Judging = { ...j, platform: { named: j.platform!.named, rules: Object.fromEntries(rules) } };
-  const joined = deriveEffects(joining, [{ code: "effects", row: mark.row } as unknown as EffectForm], [], null);
+  // Slot types still belong to the pinned native rules. Synthetic marks must not hide any of them.
+  const native = j.platform!.rules, names = new Set(Object.keys(native));
+  const fresh = (base: string): string => {
+    let code = base, suffix = 0;
+    while (names.has(code)) code = `${base}.${++suffix}`;
+    names.add(code);
+    return code;
+  };
+  const effectCode = fresh("effects"), sendCodes = sends.map((_, n) => fresh(`send.${n}`));
+  const rules: [string, Rules[string]][] = [[effectCode, { place: "effect", most: effects.length, run: () => effects }], ...sends.map((request, n): [string, Rules[string]] => [sendCodes[n]!, { place: "send", run: () => request }])];
+  const joining: Judging = { ...j, platform: { named: j.platform!.named, rules: { ...native, ...Object.fromEntries(rules) } } };
+  const joined = deriveEffects(joining, [{ code: effectCode, row: mark.row } as unknown as EffectForm], [], null);
   if (!joined.ok) throw outside(mark, `effects that the entry cannot hold: ${"reason" in joined ? joined.reason : joined.unavailable}`);
   // The synthetic rule joins and validates the callback's effects; its
   // length is no declaration of what the originating outcome may start.
@@ -200,7 +209,7 @@ function given(mark: OutcomeMark, j: Judging, kinds: Readonly<Record<string, Out
   if (joined.opened && Object.hasOwn(own((j.definition.declared as unknown as PlatformData).items, joined.opened.type)!, "holds")) throw outside(mark, "an opening of a holder in an outcome");
   // Section 6.3: `max` bounds the live items of a type, whatever opens the item. An act or a handler is refused `type-full`.
   if (joined.opened && overMax(j.view, j.definition, joined.opened.type, joined.opened.state) !== null) throw outside(mark, "effects that the entry cannot hold: type-full");
-  const requests = deriveSends(joining, sends.map((_, n) => ({ code: `send.${n}`, row: mark.row }) as unknown as SendForm), joined.working, NO_CAUSE, 0, undefined, joined.opened !== null);
+  const requests = deriveSends(joining, sends.map((_, n) => ({ code: sendCodes[n]!, row: mark.row }) as unknown as SendForm), joined.working, NO_CAUSE, 0, undefined, joined.opened !== null);
   if (!requests.ok) throw outside(mark, `requests that the entry cannot hold: ${"reason" in requests ? requests.reason : requests.unavailable}`);
   if (!mark.send) return { effects: joined.effects, sends: requests.sends satisfies Send[], opens };
 

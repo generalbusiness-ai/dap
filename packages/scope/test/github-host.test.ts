@@ -3,6 +3,7 @@ import { canonicalize, utf8 } from "@generalbusiness/dap-bytes";
 import { valueDigest } from "@generalbusiness/dap-derive";
 import { Reader, idOf, snapshotCommit, type GitSource, type SnapshotFile } from "@generalbusiness/dap-git";
 import { DESTINATION_CHANGED_SET, isJudgeChanges } from "@generalbusiness/dap-platform";
+import { buildPack } from "@generalbusiness/dap-git/http";
 import { GitHubProvider, inspectGit } from "../src/github-host.ts";
 import type { DestinationBinding, DestinationInspection } from "../src/destination-host.ts";
 
@@ -185,4 +186,41 @@ test("scripted GitHub provider creation loss and mismatched cleanup stay pending
   expect(await mintRequest!.json()).toEqual({ repository_ids: [71], permissions: { contents: "read" } });
   expect(provider.remote(repository)).toBe("https://github.com/demo/repo.git");
   expect(JSON.stringify(provider)).not.toContain(token);
+});
+
+
+// Scripted HTTP authority boundary; real isolated smart-HTTP parser and packs.
+// No actual GitHub repository or installation is contacted.
+test("scripted GitHub rules tree reads isolate the commit and trees with the configured read credential and stable identity", async () => {
+  const f = fixture();
+  const root = f.tree([{ path: "README.md", mode: "100644", id: "a".repeat(40) }]);
+  const head = f.commit(root, ["b".repeat(40)]);
+  const wants: string[] = [], authorizations: (string | null)[] = [];
+  let identity = 71;
+  const pkt = (text: string) => `${(utf8(text).length + 4).toString(16).padStart(4, "0")}${text}`;
+  const provider = new GitHubProvider({ host: "github.com", namespace: "demo", maxBytes: 262144,
+    app: { issuer: "fixture", privateKey: "-----BEGIN PRIVATE KEY-----\nYQ==\n-----END PRIVATE KEY-----", installationId: 99, account: { id: 17, login: "demo", type: "Organization" }, fetch: async request => {
+      authorizations.push(request.headers.get("authorization"));
+      if (new URL(request.url).hostname === "api.github.com") return new Response(JSON.stringify({ id: identity, name: "repo", owner: { id: 17, login: "demo", type: "Organization" }, private: false, full_name: "demo/repo", html_url: "https://github.com/demo/repo", clone_url: "https://github.com/demo/repo.git" }), { headers: { "content-type": "application/json" } });
+      if (request.method === "GET") return new Response(`${pkt("# service=git-upload-pack\n")}0000${pkt(`${head} refs/heads/main\0shallow filter allow-reachable-sha1-in-want\n`)}0000`, { headers: { "content-type": "application/x-git-upload-pack-advertisement" } });
+      const body = await request.text();
+      expect(body).toContain("deepen 1\n"); expect(body).toContain("filter tree:0\n");
+      const wanted = /want ([0-9a-f]{40})/.exec(body)![1]!; wants.push(wanted);
+      const object = f.objects.get(wanted)!;
+      expect(object).toBeDefined();
+      const pack = await buildPack([{ id: wanted, type: object.type, data: object.data }], { maxBytes: 262144 });
+      const prefix = utf8(`0000${pkt("NAK\n")}`), answer = new Uint8Array(prefix.length + pack.length); answer.set(prefix); answer.set(pack, prefix.length);
+      return new Response(answer, { headers: { "content-type": "application/x-git-upload-pack-result" } });
+    } }, readCredential: async () => "held-read", credentialHandle: async () => { throw new Error("write mint forbidden"); } });
+  await expect(provider.rulesTree(repository, { commit: "a".repeat(64), maxCanonicalBytes: 262144 })).rejects.toThrow();
+  await expect(provider.rulesTree(repository, { commit: head, maxCanonicalBytes: 262145 })).rejects.toThrow();
+  expect(authorizations).toEqual([]); expect(wants).toEqual([]);
+  const result = await provider.rulesTree(repository, { commit: head, maxCanonicalBytes: 262144 });
+  expect(wants).toEqual([head, root]);
+  expect(result.trees.map(row => row.id)).toEqual([root]);
+  expect(authorizations[0]).toBe("Bearer held-read");
+  expect(authorizations.slice(1).every(value => value === `Basic ${btoa("x-access-token:held-read")}`)).toBe(true);
+  const prior = wants.length; identity = 72;
+  await expect(provider.rulesTree(repository, { commit: head, maxCanonicalBytes: 262144 })).rejects.toThrow();
+  expect(wants.length).toBe(prior);
 });

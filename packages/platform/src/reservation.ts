@@ -189,6 +189,21 @@ export function judgeReservation(asked: ReservationAsked): Reservation { return 
  * native eligibility and touched-extent computation, not a second policy. */
 export function judgeReservationWithStanding(asked: ReservationAsked): ReservationWithStanding { return reservationDecision(asked, true); }
 
+/** The retained-lane reader supplies the opening/deciding/signing facts.
+ * Shared without changing the historical order or result semantics. G14
+ * separately binds the full checker MemberRef and complete standing. */
+export function reservationCheckStatus(statement: Statement, read: Pick<ReservationRead, "checks">, name: string): "met" | "unmet" | "invalid" {
+  const jobs = statement.jobs.filter((job) => job.name === name);
+  // Checks 1 and 2: exactly one live job with that name, and it is `passed`.
+  if (jobs.length !== 1 || jobs[0]!.state !== "passed") return "unmet";
+  const shown = Object.hasOwn(read.checks, name) ? read.checks[name]! : null;
+  // Check 3: the opening entry is that job's; another configuration than the rules hold now does not meet the rule.
+  if (shown === null || shown.opening === "unsound") return "invalid";
+  if (shown.opening === "other-configuration") return "unmet";
+  // Checks 4 to 8.
+  return shown.deciding && shown.key !== null && shown.key.keyState !== "compromised" ? "met" : "invalid";
+}
+
 function reservationDecision({ recorded, evidence, statement, read, time, file = null }: ReservationAsked, retainStanding: boolean): ReservationWithStanding {
   const no = (reason: string): Reservation => ({ reserved: false, reason });
   // G5: the member `changes` is over its bound. Nothing more is judged.
@@ -238,18 +253,7 @@ function reservationDecision({ recorded, evidence, statement, read, time, file =
     const key = read.verdicts[n]?.key ?? null;
     return verdict.verdict === "approve" && key !== null && key.keyState !== "compromised" && key.member === verdict.reviewer.member ? [{ extent: verdict.extent ?? null, member: key.member, holds: key.actions, key: key.key, from: verdict.review }] : [];
   });
-  /** One required check, by the second table of section 6.5. */
-  const check = (name: string): "met" | "unmet" | "invalid" => {
-    const jobs = statement.jobs.filter((job) => job.name === name);
-    // Checks 1 and 2: exactly one live job with that name, and it is `passed`.
-    if (jobs.length !== 1 || jobs[0]!.state !== "passed") return "unmet";
-    const shown = Object.hasOwn(read.checks, name) ? read.checks[name]! : null;
-    // Check 3: the opening entry is that job's; another configuration than the rules hold now does not meet the rule.
-    if (shown === null || shown.opening === "unsound") return "invalid";
-    if (shown.opening === "other-configuration") return "unmet";
-    // Checks 4 to 8.
-    return shown.deciding && shown.key !== null && shown.key.keyState !== "compromised" ? "met" : "invalid";
-  };
+  const check = (name: string): "met" | "unmet" | "invalid" => reservationCheckStatus(statement, read, name);
   const success = (reason: string | null, countedApprovals: typeof approvals, required: readonly string[]): ReservationWithStanding => {
     const reserved: Reservation = { reserved: true, integration, reason };
     if (!retainStanding) return reserved;

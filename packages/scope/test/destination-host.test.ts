@@ -1,16 +1,19 @@
 import { describe, expect, test } from "vitest";
 import type { Digest, FieldValue, OperationId, RetainedInput, ScopeId } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, factRefOf, newIncarnation, signIntent } from "@generalbusiness/dap-bytes";
+import { canonicalize, entryHash, utf8, factRefOf, newIncarnation, signIntent } from "@generalbusiness/dap-bytes";
 import { t } from "@generalbusiness/dap-derive/testing";
 import { DESTINATION_5, destination4, destinationRules4, destination5, destinationRules5, destinationReceipt, initialCommitObjects, type DestinationObject, type RecordedJudgeEvidence } from "@generalbusiness/dap-platform";
-import { useOf } from "@generalbusiness/dap-derive";
+import { idOf, snapshotCommit } from "@generalbusiness/dap-git";
+import { RULES_CERTIFICATE_KIND, RULES_POLICY_VALUE_V11, RULES_TREE_PROOF, RULES_PATTERNS, rulesPolicyProposalV11 } from "@generalbusiness/dap-platform";
+import { useOf, valueDigest, type Operation } from "@generalbusiness/dap-derive";
 import { keys } from "@generalbusiness/dap-derive/testing";
 import { publicationJourney } from "../../platform/test/support-publication-journey.ts";
 import { keyObserved } from "../../platform/test/support-destination.ts";
-import { Branch, HEAD, NEXT, OTHER, TREE, handMade, rita } from "../../../packages/platform/test/support-destination.ts";
+import { Branch, HEAD, NEXT, OTHER, TREE, handMade, rita, RULES } from "../../../packages/platform/test/support-destination.ts";
 import { CredentialStore } from "../src/credential-store.ts";
 import { DestinationHost, type DestinationBinding, type DestinationHostOptions, type DestinationInspection, type DestinationProvider, type DestinationRepository } from "../src/destination-host.ts";
 import type { OutsideGiven } from "../src/object.ts";
+import type { RulesTreeObjects } from "../src/rules-tree-provider.ts";
 import type { EffectAnswer, EffectRequest } from "../src/operations.ts";
 import { create } from "./fixtures-native.ts";
 
@@ -258,6 +261,92 @@ describe("destination outside adapter; scripted host, platform judgments in memo
       }
       f.provider.mintReply = { minted: false };
       expect(await f.host.send(request)).toEqual({ result: "refused", evidence: { basis: "own-answer", body: {} } });
+    });
+  });
+
+  // Captured-native-view and provider STAND-INS: the real host checks the
+  // immutable typed opening, head fence, proof parser/hash and budgets.
+  // This supplies no native sibling lineage, grant or selected outcome proof.
+  test("rules certification binds its actual opening and complete policy, bounds the full proof and rejects intervening native changes", async () => {
+    const storage = await create();
+    await storage.inside(async state => {
+      const f = fixture(state.storage.sql), owner = "platform:destination@14" as const;
+      const policy = { approvals: 1, ownerMayReview: false, checks: [], labels: [], extents: [
+        { name: "rules", patterns: [...RULES_PATTERNS], futurePatterns: [...RULES_PATTERNS], approvals: 1, approver: "change.review", checks: [], class: "authority" },
+        { name: "source", patterns: [], approvals: 1, approver: "change.review", checks: [], class: "content" },
+      ] };
+      const proposal = rulesPolicyProposalV11(policy); if (!proposal.ok) return expect.fail("the explicit synthetic policy must decode");
+      const policyBytes = canonicalize(proposal.policy);
+      const built = snapshotCommit([{ path: "README.md", mode: "100644", id: "a".repeat(40) }], "certificate fixture\n");
+      const binding = { rules: RULES, proposal: proposal.digest, destination: f.branch.at,
+        repository: { host: "git.example", namespace: "artroom", name: "demo", id: "r1" }, ref: "refs/heads/main", commit: built.commit };
+      const holder = f.branch.branch.id;
+      const entry = handMade(f.branch.at, RULES_CERTIFICATE_KIND, [], rita, { proposal: proposal.digest }, () => [
+        { effect: "value", item: holder, slot: "rulesCertificateRequest", value: binding as unknown as FieldValue },
+        { effect: "operation", k: 0, owner, kind: RULES_CERTIFICATE_KIND, attempts: 1, for: holder },
+        { effect: "attempt", operation: { k: 0 }, attempt: 1, result: "opened", selected: null },
+      ]);
+      const origin = { entry, hash: entryHash(entry) }, started = factRefOf(entry);
+      const recorded: Operation = { id: `${entry.seq}:0`, owner, kind: RULES_CERTIFICATE_KIND, most: 1,
+        attempts: [{ attempt: 1, opened: entry.seq, outcomes: [] }], selected: null, for: holder };
+      const request: EffectRequest = { scope: f.branch.at, owner, kind: RULES_CERTIFICATE_KIND, operation: recorded.id, attempt: 1, origin };
+      let currentHead = { seq: entry.seq, hash: origin.hash }, branchHead = built.commit;
+      const branch = () => ({ ...f.branch.branch, state: "ready", values: { ...f.branch.branch.values, repository: binding.repository,
+        name: "main", head: branchHead, rules: RULES.scope } });
+      const view = new Proxy(f.given.state, { get(target, key) {
+        if (key === "operation") return (id: OperationId) => id === recorded.id ? recorded : target.operation(id);
+        if (key === "item") return (id: number) => id === holder ? branch() : target.item(id);
+        if (key === "page") return (...args: Parameters<OutsideGiven["state"]["page"]>) => args[0] === "branch" ? { items: [branch()], more: false } : target.page(...args);
+        const value: unknown = Reflect.get(target, key); return typeof value === "function" ? value.bind(target) : value;
+      } });
+      const genesis = f.given.genesis()!;
+      const given: OutsideGiven = { ...f.given, state: view,
+        scope: () => ({ ...f.given.scope()!, status: "active", head: currentHead }),
+        genesis: () => ({ ...genesis, seed: { ...genesis.seed, definition: owner } }),
+        own: seq => seq === entry.seq ? origin : f.given.own(seq),
+        retained: (kind, digest, domain) => kind === "value" && digest === proposal.digest && domain === RULES_POLICY_VALUE_V11.domain
+          ? { kind: "value", digest, domain, bytes: policyBytes } : null,
+      };
+      const unsupported = new DestinationHost(given, f.options);
+      expect(unsupported.accepts(owner, RULES_CERTIFICATE_KIND)).toBe(true);
+      expect(unsupported.accepts("platform:destination@13", RULES_CERTIFICATE_KIND)).toBe(false);
+      expect(await unsupported.send(request)).toEqual({ result: "refused", evidence: { basis: "own-answer", body: {} } });
+      expect(f.provider.calls).toEqual([]);
+      const commit = built.objects.find(row => row.type === "commit")!;
+      let payload: RulesTreeObjects = { commitBytes: commit.data, trees: built.objects.filter(row => row.type === "tree").map(row => ({ id: row.id, bytes: row.data })) };
+      const reads: { repository: DestinationRepository; commit: string; maxCanonicalBytes: number }[] = [];
+      let during: (() => void) | undefined;
+      const provider = Object.assign(f.provider, { rulesTree: async (repository: DestinationRepository, asked: { commit: string; maxCanonicalBytes: number }) => {
+        reads.push({ repository, ...asked }); during?.(); return payload;
+      } });
+      const host = new DestinationHost(given, { ...f.options, provider });
+      const reply = await host.send(request);
+      expect(reply).toMatchObject({ result: "confirmed", evidence: { basis: "own-answer", body: { proposal: proposal.digest, started } } });
+      expect(reply!.retain?.map(row => row.domain)).toEqual([RULES_POLICY_VALUE_V11.domain, RULES_TREE_PROOF.domain]);
+      expect(reply!.retain![0]!.bytes).toBe(policyBytes);
+      const proofBytes = reply!.retain![1]!.bytes, proof = JSON.parse(proofBytes);
+      expect(valueDigest(RULES_TREE_PROOF.domain, proof)).toBe(reply!.retain![1]!.digest);
+      expect(reply!.evidence.body).toEqual({ proposal: proposal.digest, proof: reply!.retain![1]!.digest, started });
+      expect(proof).toMatchObject({ v: 1, ...binding });
+      expect(idOf("commit", payload.commitBytes)).toBe(binding.commit);
+      const empty = canonicalize({ v: 1, ...binding, commitBytes: "", trees: [] });
+      expect(reads).toEqual([{ repository: binding.repository, commit: binding.commit,
+        maxCanonicalBytes: RULES_TREE_PROOF.max - utf8(empty).length + utf8(canonicalize({ commitBytes: "", trees: [] })).length }]);
+      expect(utf8(proofBytes).length).toBeLessThanOrEqual(RULES_TREE_PROOF.max);
+      // No parents, blobs, refs, mint, push or custody operation was used.
+      expect(f.provider.calls).toEqual([]);
+      const beforeWrongAttempt = reads.length;
+      expect(await host.send({ ...request, attempt: 2 })).toBeNull(); expect(reads).toHaveLength(beforeWrongAttempt);
+      during = () => { currentHead = { seq: entry.seq + 1, hash: origin.hash }; };
+      expect(await host.send(request)).toBeNull();
+      currentHead = { seq: entry.seq, hash: origin.hash }; during = () => { branchHead = "b".repeat(40); };
+      expect(await host.send(request)).toBeNull();
+      branchHead = built.commit; during = undefined;
+      payload = { commitBytes: commit.data, trees: [] };
+      expect(await host.send(request)).toEqual({ result: "refused", evidence: { basis: "own-answer", body: {} } });
+      payload = { commitBytes: new Uint8Array(196609), trees: [] };
+      expect(await host.send(request)).toEqual({ result: "refused", evidence: { basis: "own-answer", body: {} } });
+      expect(f.provider.calls).toEqual([]);
     });
   });
 

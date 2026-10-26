@@ -3,7 +3,7 @@
  * Unknown pins gain no protocol by having a larger version number. */
 const MANIFEST_DESTINATIONS: ReadonlySet<string> = new Set([
   "platform:destination@3", "platform:destination@4", "platform:destination@5",
-  "platform:destination@6", "platform:destination@13",
+  "platform:destination@6", "platform:destination@13", "platform:destination@14",
 ]);
 
 export const supportsManifestListDestination = (definition: string): boolean => MANIFEST_DESTINATIONS.has(definition);

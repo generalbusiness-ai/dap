@@ -77,10 +77,13 @@ test("the platform package depends only on contract, bytes, derive and package g
 // server's other modules and broad Git/provider/Node entry points stay closed.
 // Grow's exact development host fixture constructs a synthetic archive and
 // exercises the actual smart-HTTP send boundary with scripted host replies.
-const applicationGitUsers = new Set(["packages/mcp/package.json", "packages/mcp/src/service.ts", "apps/room/lanes/test/grow-archive.test.ts"]);
+// The certified native archive journey reads its real local Git clone for
+// offline replay; this grants no production Git import.
+const applicationGitUsers = new Set(["packages/mcp/package.json", "packages/mcp/src/service.ts", "apps/room/lanes/test/grow-archive.test.ts", "apps/room/lanes/test/certified-rules-archive.scope.test.ts"]);
 // Replay's Node and integration test boundaries may depend on Git. The v2
 // witnesses combine real Git archives with offline Replay; Git itself stays
 // below Replay and imports none of it, including from its own tests.
+const rulesProofGitUsers = new Set(["packages/platform/package.json", "packages/platform/src/rules-policy-tree.ts"]);
 const replayGitUsers = new Set(["packages/replay/src/git.ts", "packages/replay/test/archive-git.test.ts", "packages/replay/test/archive-git-fixture.ts", "packages/replay/package.json",
   "packages/replay/test/archive-git-v2-convert.test.ts", "packages/replay/test/archive-git-v2-layout.test.ts", "packages/replay/test/archive-git-v2-reader.test.ts",
   "packages/replay/test/archive-anchor-ranges.test.ts"]);
@@ -89,11 +92,28 @@ test("Git keeps its lower-layer dependencies; Replay names it only at its exact 
   const source = (f) => packagePath(f).startsWith("packages/") && !f.endsWith(".md");
   const inside = files.filter((f) => source(f) && packagePath(f).startsWith("packages/git/"));
   assert.deepEqual(inside.filter((f) => /(?:artroom|dap)-(derive|platform|scope|replay|client|lanes|checkers)/.test(text(f))), []);
-  const named = files.filter((f) => source(f) && !replayGitUsers.has(f) && !applicationGitUsers.has(f) && !/^packages\/(git|scope|checkers)\/|^packages\/platform\/test\//.test(packagePath(f)));
+  const named = files.filter((f) => source(f) && !replayGitUsers.has(f) && !applicationGitUsers.has(f) && !rulesProofGitUsers.has(f) && !/^packages\/(git|scope|checkers)\/|^packages\/platform\/test\//.test(packagePath(f)));
   assert.deepEqual(named.filter((f) => /dap-git/.test(text(f))), []);
   const replay = JSON.parse(text("packages/replay/package.json"));
   assert.equal(replay.dependencies?.["@generalbusiness/dap-git"], undefined);
   assert.equal(replay.devDependencies?.["@generalbusiness/dap-git"], replay.version);
+});
+
+// One pure proof parser edge; platform cannot use a provider or a Git barrel.
+test("rules tree proofs use only the exact pure Git parser boundary", () => {
+  const allowed = (file, specifier) => file === "packages/platform/src/rules-policy-tree.ts" && specifier === "@generalbusiness/dap-git/tree-proof";
+  for (const file of files.filter(f => /^packages\/platform\/src\/.*\.ts$/.test(f))) {
+    for (const { value } of moduleSpecifierSpans(text(file))) if (/dap-git|(?:^|\/)git\//.test(value)) assert.equal(allowed(file, value), true, `${file}: ${value}`);
+  }
+  const finite = new Map([
+    ["packages/git/src/tree-proof.ts", ["./reader.ts", "./pure-names.ts"]],
+    ["packages/git/src/reader.ts", ["./ascii.ts", "@generalbusiness/dap-bytes", "@noble/hashes/legacy.js", "./pure-names.ts"]],
+    ["packages/git/src/pure-names.ts", []],
+    ["packages/git/src/ascii.ts", []],
+  ]);
+  for (const [file, expected] of finite) assert.deepEqual([...new Set(moduleSpecifierSpans(text(file)).map(r => r.value))].sort(), [...expected].sort(), file);
+  assert.equal(JSON.parse(text("packages/git/package.json")).exports["./tree-proof"], "./src/tree-proof.ts");
+  assert.deepEqual(text("packages/git/src/tree-proof.ts").match(/export \{[^}]+\}/g), ["export { idOf, parseCommit, parseTree }", "export { GitRefusal }"]);
 });
 
 const nodeReplayInputs = new Set(["packages/replay/src/git.ts", "packages/replay/src/bin.ts"]);

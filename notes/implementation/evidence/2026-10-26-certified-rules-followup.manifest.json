@@ -1,0 +1,357 @@
+{
+  "qualification": "Closed R7 delivery evidence copied from the original capture directories into one read-only directory with top-level SHA256SUMS. Original command metadata retains original execution paths. Gate V3 and the initial native continuation remain failed. The whole Rules file, then the Scope compiler and whole archive-target file passed after isolated test-only unsupported-version sentinel repairs. Production/configuration/dependencies/shared helpers unchanged after gate V3. Sequential limited-follow-up acceptability remains for the checker to assess; planner question 53707834 records the issue. Earlier accepted V17, generation, controls and Page evidence remain in the 2026-10-25 manifest and were not rerun.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-26-certified-rules-delivery",
+  "checkpoint": {
+    "commit": "5a81692258c6ad1a04f375ee2b3bf00760a3304f",
+    "tree": "4824d97f7004dba170dbb4e6f351bd58793db420"
+  },
+  "originalGateCheckpoint": {
+    "commit": "8ba23a3428d5cf451a2b3a82a05ca3cf6d24c75f",
+    "tree": "1fe50e37282e0f394b0a20316b00286e323c1d9d"
+  },
+  "fileCount": 60,
+  "files": [
+    {
+      "path": "2026-10-25-certified-rules-policy/gate-v3/gate.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "2026-10-25-certified-rules-policy/gate-v3/gate.stdout.log",
+      "bytes": 7438,
+      "sha256": "b747c6e1d28ca89a205e66ade75533f4feadf1d840bd879eb3206aae1b8af876"
+    },
+    {
+      "path": "2026-10-25-certified-rules-policy/gate-v3/phases.json",
+      "bytes": 333,
+      "sha256": "73232827f9e454ff2b29208e28b24ab7cf9be7b3593c4c9e486bcd082bbdab3c"
+    },
+    {
+      "path": "2026-10-25-certified-rules-policy/gate-v3/progress.jsonl.plain.jsonl",
+      "bytes": 2891522,
+      "sha256": "621d50b160a3b32b01f42c8659b7810f42d3f2d77fd12ae00d57dc6684d16e2f"
+    },
+    {
+      "path": "2026-10-25-certified-rules-policy/gate-v3/result.json",
+      "bytes": 6074,
+      "sha256": "63ff38cbe07f219b0c8ca22a9fcab6fe2bea542251d9d1815c30abc7141b75e0"
+    },
+    {
+      "path": "2026-10-25-certified-rules-policy/gate-v3/stages/citations.log",
+      "bytes": 1554454,
+      "sha256": "44dcc5d03529e09f48ccb955750fed904f81a0b7eeb2b519aa6ac0e98f28af5e"
+    },
+    {
+      "path": "2026-10-25-certified-rules-policy/gate-v3/stages/citations.time",
+      "bytes": 29,
+      "sha256": "20a80db33157077d44c828bc51a9ae4e54dbc7884108d226af9a76b430953892"
+    },
+    {
+      "path": "2026-10-25-certified-rules-policy/gate-v3/stages/cite-test.log",
+      "bytes": 759,
+      "sha256": "cf49f619fd6ac0b86006a8e919eba7ba1b2b08cad679ec3a6423ac8d469a2b06"
+    },
+    {
+      "path": "2026-10-25-certified-rules-policy/gate-v3/stages/cite-test.time",
+      "bytes": 29,
+      "sha256": "4888f1bb2d06f8a10868a54819bd92b9a3885a31551cc79710723df32ef023cd"
+    },
+    {
+      "path": "2026-10-25-certified-rules-policy/gate-v3/stages/commit-messages.log",
+      "bytes": 39,
+      "sha256": "57a1469549ff0b62d3c495907920ac3be540605aa7f92d73bb347b6eb7a3601c"
+    },
+    {
+      "path": "2026-10-25-certified-rules-policy/gate-v3/stages/commit-messages.time",
+      "bytes": 29,
+      "sha256": "66b019f3b91dd78b8a648f25e84fc8cee994db5eb175e39de9579bfdd75b994e"
+    },
+    {
+      "path": "2026-10-25-certified-rules-policy/gate-v3/stages/commit-test.log",
+      "bytes": 595,
+      "sha256": "5d1cafe440beca8ab925532d586062483b93dde16b8fd3fe7b1d4b3eda0552d3"
+    },
+    {
+      "path": "2026-10-25-certified-rules-policy/gate-v3/stages/commit-test.time",
+      "bytes": 29,
+      "sha256": "be537b16509ca2d32bba6dbeffcddc3dcd8b378d8d3b84d7bb9fd4c7e25f0ba9"
+    },
+    {
+      "path": "2026-10-25-certified-rules-policy/gate-v3/stages/doc-links.log",
+      "bytes": 38,
+      "sha256": "e198314d887740ef75cca348b8928e3400173f99638c20791df13e2f804a461c"
+    },
+    {
+      "path": "2026-10-25-certified-rules-policy/gate-v3/stages/doc-links.time",
+      "bytes": 29,
+      "sha256": "b4fca40ba8148ab5120605c178c053e9b7d823a37d00ec23eee23a748dd7e8bb"
+    },
+    {
+      "path": "2026-10-25-certified-rules-policy/gate-v3/stages/helpers.log",
+      "bytes": 68,
+      "sha256": "a61f51ffa69345c1eb015c7a3873dab38cc89b54f75ec28550b416c0b434b881"
+    },
+    {
+      "path": "2026-10-25-certified-rules-policy/gate-v3/stages/helpers.time",
+      "bytes": 29,
+      "sha256": "607e03c76f5b773a4b3f2ca9e17555888ac18bce3745e448475e728cec34712f"
+    },
+    {
+      "path": "2026-10-25-certified-rules-policy/gate-v3/stages/notes.log",
+      "bytes": 18,
+      "sha256": "35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1"
+    },
+    {
+      "path": "2026-10-25-certified-rules-policy/gate-v3/stages/notes.time",
+      "bytes": 29,
+      "sha256": "b2b892ce9a7c8ad29214199a33b154dab17a22613496aeb4905dbef44d49cb57"
+    },
+    {
+      "path": "2026-10-25-certified-rules-policy/gate-v3/stages/section-citations.json",
+      "bytes": 3907473,
+      "sha256": "3a77a864e3a56b22d7ceaa8b12edab7b76c10b0f9b2772a5eed901ba7133097f"
+    },
+    {
+      "path": "2026-10-25-certified-rules-policy/gate-v3/stages/test.log",
+      "bytes": 496536,
+      "sha256": "e8902ea6f4a11f70a85984e060dcaed3f36de69e7d18981f0f3fc379b22d10fa"
+    },
+    {
+      "path": "2026-10-25-certified-rules-policy/gate-v3/stages/test.time",
+      "bytes": 34,
+      "sha256": "0e19447a3453d78b755df355ff1f768663f35eae909aa9f6b33e94de0f07ce8d"
+    },
+    {
+      "path": "2026-10-25-certified-rules-policy/gate-v3/stages/typecheck.log",
+      "bytes": 1987,
+      "sha256": "62170bbe0cd055cff4699debd9470a886c0f98f328e7c9517d899c021a3788d0"
+    },
+    {
+      "path": "2026-10-25-certified-rules-policy/gate-v3/stages/typecheck.time",
+      "bytes": 31,
+      "sha256": "bb76e8ef2c98fe85841c3ee8960eccdcfc15d7f3e70741c977b5b872ec47619d"
+    },
+    {
+      "path": "2026-10-25-certified-rules-policy/gate-v3/stages/whitespace.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "2026-10-25-certified-rules-policy/gate-v3/stages/whitespace.time",
+      "bytes": 29,
+      "sha256": "1b8d0d4fdf2955c5bcff36d100b897b95f05fdbb9bb675d66c4ebc9dcfdd27c4"
+    },
+    {
+      "path": "2026-10-25-certified-rules-policy/gate-v3/test-evidence/counting-sources.json",
+      "bytes": 976,
+      "sha256": "4b3fbd2c6993b4ba601d5fda68f0be0148c9fe08e3994d114d0fe081378c9561"
+    },
+    {
+      "path": "2026-10-25-certified-rules-policy/gate-v3/test-evidence/counting.jsonl",
+      "bytes": 133791,
+      "sha256": "822cbbf682d161eeafe378bd0e8aee7c61c2b095b8bc115d6fc62f9a172356d6"
+    },
+    {
+      "path": "2026-10-25-certified-rules-policy/gate-v3/test-evidence/node.jsonl",
+      "bytes": 150556,
+      "sha256": "622f3718c21aa774bccffa9577c64cba21eca559baf764c1b081d568d1648619"
+    },
+    {
+      "path": "2026-10-25-certified-rules-policy/gate-v3/test-evidence/plain.jsonl",
+      "bytes": 2427027,
+      "sha256": "ee4fb5cfb8c8aedadc2b9e3b82ba32713559d61a29c8fee25ab65d9190346ffd"
+    },
+    {
+      "path": "2026-10-25-certified-rules-policy/gate-v3/test-evidence/stages.json",
+      "bytes": 973,
+      "sha256": "4a8ef277ce4dd54b715a2cb5119782ae22ecd894f760e324818e70e91dc541c2"
+    },
+    {
+      "path": "2026-10-25-certified-rules-policy/gate-v3/test-progress/plain.jsonl",
+      "bytes": 2891522,
+      "sha256": "621d50b160a3b32b01f42c8659b7810f42d3f2d77fd12ae00d57dc6684d16e2f"
+    },
+    {
+      "path": "2026-10-25-certified-rules-policy/gate-v3-owner.stderr-time.log",
+      "bytes": 34,
+      "sha256": "28bf09b9ff427fae00c67f974512c67458b82d56e3239579ef8b03d4999b5ba6"
+    },
+    {
+      "path": "2026-10-25-certified-rules-policy/gate-v3-owner.stdout.log",
+      "bytes": 4787,
+      "sha256": "17a831247b2fef05b765e7aeac7874eeaba425c4a368e0cb3df6cf4fee63b93e"
+    },
+    {
+      "path": "2026-10-26-certified-rules-archive-target-followup/SHA256SUMS",
+      "bytes": 512,
+      "sha256": "f35908d6d6739fab543f8c71e570828a8b34008128ecdc9331ea0b88e17e933a"
+    },
+    {
+      "path": "2026-10-26-certified-rules-archive-target-followup/archive-target.log",
+      "bytes": 23536,
+      "sha256": "9565784fd0176a85dae5c467e6502e06eb0e73aa57b2cc13c7ded115365aadfa"
+    },
+    {
+      "path": "2026-10-26-certified-rules-archive-target-followup/archive-target.progress.jsonl",
+      "bytes": 7607,
+      "sha256": "aab445712e8a973f6b233997764b17218fa1aa9176df6f9e1cd5424f19f41606"
+    },
+    {
+      "path": "2026-10-26-certified-rules-archive-target-followup/archive-target.timing.jsonl",
+      "bytes": 6244,
+      "sha256": "9fb38c9528be092685c9c7e2201b53fe29765b11705830bc3b2e89cf9e7ca9e3"
+    },
+    {
+      "path": "2026-10-26-certified-rules-archive-target-followup/compiler.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "2026-10-26-certified-rules-archive-target-followup/manifest.json",
+      "bytes": 1005,
+      "sha256": "0c668d7309728cf90e42e9f3b52f11501e9cb8952a8c223f87f9e6da6e7ba4fe"
+    },
+    {
+      "path": "2026-10-26-certified-rules-archive-target-followup/result.json",
+      "bytes": 1471,
+      "sha256": "26127530fafafefa2de934ab4fe913cf9970582f5053e2bb035021156152d14c"
+    },
+    {
+      "path": "2026-10-26-certified-rules-followup/SHA256SUMS",
+      "bytes": 503,
+      "sha256": "b13745261282a504f7fbe65015095ead9971139db0e7e015c902ee00e76ef881"
+    },
+    {
+      "path": "2026-10-26-certified-rules-followup/compiler.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "2026-10-26-certified-rules-followup/manifest.json",
+      "bytes": 974,
+      "sha256": "8086a82359e9680064069167095e35bad115e2e09476d58f3a8b04ad4db5288c"
+    },
+    {
+      "path": "2026-10-26-certified-rules-followup/result.json",
+      "bytes": 1377,
+      "sha256": "ae297c0f718ca40fcbdfc2bcf5ceafe2d8ab717db560c31b6ea4920e3d8055e2"
+    },
+    {
+      "path": "2026-10-26-certified-rules-followup/rules-scope.log",
+      "bytes": 1569,
+      "sha256": "c709d1bd60432718c09b2515e6f7eb662971eb19b3167b178f9b104317b97f07"
+    },
+    {
+      "path": "2026-10-26-certified-rules-followup/rules-scope.progress.jsonl",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "2026-10-26-certified-rules-followup/rules-scope.timing.jsonl",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "2026-10-26-certified-rules-followup-v2/SHA256SUMS",
+      "bytes": 675,
+      "sha256": "7452c570658990ca324b61803ac89f4043e3721e2148b6c0cd0adc27c0792593"
+    },
+    {
+      "path": "2026-10-26-certified-rules-followup-v2/manifest.json",
+      "bytes": 1304,
+      "sha256": "9c166608c9612ad7499c5922a67313fc3ca9279fc33bd83b98fc69bd540d39de"
+    },
+    {
+      "path": "2026-10-26-certified-rules-followup-v2/native.log",
+      "bytes": 14975596,
+      "sha256": "e22e1589b62197f6209671def03d7d0411b3f6a8520dd444ec1a6fe9fd38d902"
+    },
+    {
+      "path": "2026-10-26-certified-rules-followup-v2/native.progress.jsonl",
+      "bytes": 873707,
+      "sha256": "324a8ceb05a5bb1cf7cd03f5dfb742e4f4f64fbe8bc2716a513e8c12c4be60c6"
+    },
+    {
+      "path": "2026-10-26-certified-rules-followup-v2/native.timing.jsonl",
+      "bytes": 772983,
+      "sha256": "8ee211690cf8875e8bd517020ab91e1e83179147357f256d6700b11c6841ff2d"
+    },
+    {
+      "path": "2026-10-26-certified-rules-followup-v2/result.json",
+      "bytes": 1378,
+      "sha256": "a640cff9707115ec01385a7186289167930a71857dae4a6631f07dfdb3a0d75e"
+    },
+    {
+      "path": "2026-10-26-certified-rules-followup-v2/rules-scope.log",
+      "bytes": 3022,
+      "sha256": "ab330e1b3e6415162cc3ace17142b1a5db2dbc69ebf90168934b92574fecf43d"
+    },
+    {
+      "path": "2026-10-26-certified-rules-followup-v2/rules-scope.progress.jsonl",
+      "bytes": 13611,
+      "sha256": "4ba3f4ce44f6befc9127927c6f7bab7fec4c229e9a664026d839a38963c534ed"
+    },
+    {
+      "path": "2026-10-26-certified-rules-followup-v2/rules-scope.timing.jsonl",
+      "bytes": 10691,
+      "sha256": "c8443b5f11f225cf90cba6e423b91f7883117dce2e583a5cbcb1dd6ad458a52a"
+    },
+    {
+      "path": "2026-10-26-certified-rules-review-index/SHA256SUMS",
+      "bytes": 79,
+      "sha256": "be8caabffc9536bf8836fdeff9e9c6561f4885fd4a02d94c18f5b3eb479df14a"
+    },
+    {
+      "path": "2026-10-26-certified-rules-review-index/summary.json",
+      "bytes": 11309,
+      "sha256": "ca01fc53c96a58f85ec55420d67822b3f31e3ac883c0d337333f5a008f705942"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 7535,
+      "sha256": "c7d70cfd1363336b34bc8957b4f2bc61bc4377cf2e8a8062d35213b0df674e6d"
+    }
+  ],
+  "previousFollowupCheckpoint": {
+    "commit": "ae49c5a6126c8b6704811783ca9c943d65f8f4b2",
+    "tree": "96975fe5755918a615b1ddb9484e750a07d3e0d2"
+  },
+  "finalFollowup": {
+    "phases": [
+      {
+        "name": "compiler",
+        "argv": [
+          "/opt/homebrew/bin/node",
+          "node_modules/typescript/bin/tsc",
+          "-p",
+          "packages/scope/tsconfig.test.json"
+        ],
+        "exit": 0,
+        "wallSeconds": 0.6776097919791937,
+        "childCpuSeconds": 3.418263
+      },
+      {
+        "name": "archive-target",
+        "argv": [
+          "/opt/homebrew/bin/node",
+          "node_modules/vitest/vitest.mjs",
+          "run",
+          "--config",
+          "vitest.native.config.ts",
+          "--project",
+          "scope",
+          "packages/scope/test/archive-target.test.ts"
+        ],
+        "exit": 0,
+        "wallSeconds": 7.507798375096172,
+        "childCpuSeconds": 9.048874
+      }
+    ],
+    "cases": 7,
+    "outcome": "passed",
+    "unhandledErrors": 0,
+    "ready": 7,
+    "result": 7,
+    "final": 7
+  }
+}

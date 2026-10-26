@@ -305,3 +305,35 @@ test("scripted mint and send: one write token with the service's expiry, one pus
     expect(await p.mint(repository, binding).then(() => "answered", () => "failed")).toBe("failed");
   }
 });
+
+
+// Scripted binding and HTTP; no actual Artifacts service or native operation.
+test("scripted Artifacts rules tree reads isolate objects and revoke their read token after success or refusal", async () => {
+  const s = service();
+  const built = snapshotCommit([{ path: "README.md", mode: "100644", id: "a".repeat(40) }], "rules tree\n");
+  const objects = new Map(built.objects.map(row => [row.id, row]));
+  const wants: string[] = [];
+  let supported = true;
+  const p = provider(s, async request => {
+    expect(request.headers.get("authorization")).toMatch(/^Bearer read-plaintext-/);
+    if (request.method === "GET") return response(`${pkt("# service=git-upload-pack\n")}0000${pkt(`${built.commit} refs/heads/main\0${supported ? "shallow filter allow-reachable-sha1-in-want" : "ofs-delta"}\n`)}0000`, "application/x-git-upload-pack-advertisement");
+    const body = await request.text();
+    expect(body).toContain("deepen 1\n"); expect(body).toContain("filter tree:0\n");
+    const wanted = /want ([0-9a-f]{40})/.exec(body)![1]!; wants.push(wanted);
+    const object = objects.get(wanted)!; expect(object).toBeDefined();
+    const pack = await buildPack([{ id: wanted, type: object.type, data: object.data }], { maxBytes: 262144 });
+    const prefix = utf8(`0000${pkt("NAK\n")}`), answer = new Uint8Array(prefix.length + pack.length); answer.set(prefix); answer.set(pack, prefix.length);
+    return response(answer, "application/x-git-upload-pack-result");
+  });
+  const result = await p.rulesTree(repository, { commit: built.commit, maxCanonicalBytes: 262144 });
+  expect(wants).toEqual([built.commit, built.tree]);
+  expect(result.trees.map(row => row.id)).toEqual([built.tree]);
+  expect(s.calls.at(-1)).toBe("revokeToken repo-1 read-plaintext-1");
+  supported = false;
+  await expect(p.rulesTree(repository, { commit: built.commit, maxCanonicalBytes: 262144 })).rejects.toThrow();
+  expect(wants).toEqual([built.commit, built.tree]); // no full-closure fallback
+  expect(s.calls.at(-1)).toBe("revokeToken repo-1 read-plaintext-2");
+  s.calls.length = 0;
+  expect(() => p.rulesTree(repository, { commit: "a".repeat(64), maxCanonicalBytes: 262144 })).toThrow();
+  expect(s.calls).toEqual([]);
+});

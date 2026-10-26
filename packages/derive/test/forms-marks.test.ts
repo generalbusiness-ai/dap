@@ -362,6 +362,31 @@ describe("a rule is run at the check of its mark's place (sections 4.2 and 6.1)"
       return judged.result === "write" ? judged.draft.effects : judged.result;
     };
     expect([clause(gateOf), clause(ticketOf)]).toEqual([[], ticketOf({ resolved: { self: asked + 1 } } as RuleGiven)]);
+
+    // Made-up native types deliberately collide with both synthetic names.
+    // The real outcome join must run them, not discard, shadow or bypass them.
+    const coded = new Scope(gateWith(data => {
+      markRuntimeChange8(data);
+      data.items.gate.values.note = { fixed: false, required: false, of: { type: "code", code: "effects", row: "P22" } };
+      data.items.gate.values.key = { fixed: false, required: false, of: { type: "code", code: "send.0", row: "P22" } };
+    }));
+    coded.did(rita, "issue", { fields: { hash: textDigest("one") } });
+    expect(said(enter(coded, una, "one", owned({ "key-id": opens })))).toEqual(["write", null, null, null]);
+    const codedOperation = `${coded.last.seq}:0` as OperationId, calls: unknown[] = [];
+    const typed = (note: number) => settleOutcome(coded.state, coded.definition,
+      { type: "outcome", operation: codedOperation, attempt: 1, result: "confirmed", evidence: { basis: "own-answer", body: {} } },
+      { clock: clockOf(coded.state, coded.now), bounds: PROPOSED_BOUNDS, own: coded.own, platform: owned({
+        effects: { place: "type", run: (_given, value) => { calls.push(["effects", value]); return value === 2; } },
+        "send.0": { place: "type", run: (_given, value) => { calls.push(["send.0", value]); return value === "native"; } },
+        probe: { place: "outcome", rules: { selects: false, read: false, retries: () => false,
+          derives: () => ({ effects: [{ effect: "value", item: 0, slot: "note", value: note },
+            { effect: "value", item: 0, slot: "key", value: "native" }], sends: [tell], opens: [] }) } },
+      }) });
+    const codedBefore = structuredClone(coded.state.item(0));
+    const valid = typed(2);
+    expect(valid.result === "write" && [valid.draft.effects.slice(1), valid.draft.sends.map(send => send.message)])
+      .toEqual([[{ effect: "value", item: 0, slot: "note", value: 2 }, { effect: "value", item: 0, slot: "key", value: "native" }], [tell.message]]);
+    expect([typed(3).result, calls, coded.state.item(0)]).toEqual(["unavailable", [["effects", 2], ["send.0", "native"], ["effects", 3]], codedBefore]);
   });
 
   // Scope contract, revision 17, sections 6.1 and 7.2, with revision 19's "How the child reads the entry that opened the operation";
