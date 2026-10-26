@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0ba093f441e0099d7bf8345365be8b1e76ee2174","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-26-certified-rules-followup.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0c13419248c43deb593681b8a5ae682cb824c2f2","text":"Merge retired a covered predecessor; the successor is at packages/checkers/src/job.ts."}
