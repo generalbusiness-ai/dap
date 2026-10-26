@@ -76,12 +76,29 @@ test("certified-rules native birth and device install bootstrap a real tree cert
       try {
         const job = (await Q.summary()).value.items.find(item => item.id === installed.receipt.fact.seq);
         const qEntries = await Q.entries(), dEntries = await D.entries();
+        const stageSends = qEntries.flatMap(entry => entry.input.type === "outcome" && ["fetch-application", "admit-application"].includes(entry.input.kind)
+          ? entry.sends.filter(send => send.message.class === "request" && isRecord(send.message.body) && send.message.body["message"] === "application-stage")
+            .map(send => ({ seq: entry.seq, n: send.n })) : []);
+        const qOutbox = stageSends.length ? await Q.stub.outbox(reader) : null;
+        const stageOutbox = stageSends.slice(-rowCap).map(send => {
+          const row = qOutbox?.ok ? qOutbox.value.find(item => item.outboxId === `${send.seq}.${send.n}`) : undefined;
+          return { seq: send.seq, n: send.n, found: row !== undefined, held: row?.held ?? null,
+            attemptCount: row?.attempts.length ?? null,
+            answers: row?.attempts.slice(-rowCap).map(attempt => closed(attempt.answer, ["none", "wrong-incarnation", "not-found", "retry", "acknowledged"])) ?? [],
+            acknowledged: row ? row.acknowledged !== null : null,
+            result: closed(row?.result?.clause, ["applied", "refused", "superseded", "conflict"]),
+            diagnosis: closed(row?.diagnosis?.finding, ["undelivered", "delivery-unavailable"]) };
+        });
         const qOutcomes = qEntries.flatMap(entry => {
           const input = entry.input;
           if (input.type !== "outcome" || !["fetch-application", "admit-application"].includes(input.kind)) return [];
           const attempt = entry.effects.find(effect => effect.effect === "attempt" && effect.operation === input.operation && effect.attempt === input.attempt);
           return [{ seq: entry.seq, kind: closed(input.kind, ["fetch-application", "admit-application"]), result: closed(input.result, ["confirmed", "refused", "unknown"]),
-            selected: attempt?.effect === "attempt" ? attempt.selected : null,
+            selected: attempt?.effect === "attempt" ? attempt.selected : null, sendCount: entry.sends.length,
+            applicationStageCount: stageSends.filter(send => send.seq === entry.seq).length,
+            stageTargets: entry.sends.filter(send => send.message.class === "request" && isRecord(send.message.body) && send.message.body["message"] === "application-stage")
+              .slice(-rowCap).map(send => ({ n: send.n, kind: closed(send.to.kind, ["directory"]),
+                targetEqualsD: dEntries[0] ? canonicalize(send.to) === canonicalize(dEntries[0].at) : null })),
             reason: closed(isRecord(input.evidence.body) ? input.evidence.body["reason"] : undefined, reasons) }];
         });
         const dReceived = dEntries.flatMap(entry => {
@@ -96,6 +113,8 @@ test("certified-rules native birth and device install bootstrap a real tree cert
         const diagnostic = canonicalize({ snapshot, rowCap, textCap,
           job: { found: job !== undefined, state: closed(job?.state, ["pending", "active", "refused"]),
             phase: closed(job?.values["phase"], ["fetch", "admission", "activation", "grants", "creation"]), reason: closed(job?.values["reason"], reasons) },
+          stageOutbox: { requested: qOutbox !== null, readOk: qOutbox?.ok ?? null,
+            complete: qOutbox?.ok ? qOutbox.complete : null, stageSendCount: stageSends.length, rows: stageOutbox },
           qOutcomeCount: qOutcomes.length, qOutcomes: qOutcomes.slice(-rowCap), dReceivedCount: dReceived.length, dReceived: dReceived.slice(-rowCap),
           createdSeedCount: seeds.length, createdSeeds: seeds.slice(-rowCap) });
         console.info("TEST certified install diagnostic", utf8(diagnostic).length <= 8192 ? diagnostic : canonicalize({ snapshot, diagnostic: "metadata-over-bound" }));
