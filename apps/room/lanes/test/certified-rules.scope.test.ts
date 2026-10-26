@@ -1,6 +1,6 @@
 import { env } from "cloudflare:workers";
 import { expect, test } from "vitest";
-import type { DeclaredDefinition, Digest, FactRef } from "@generalbusiness/dap-contract";
+import type { DeclaredDefinition, Digest, FactRef, Item, Read } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, digestBytes, definitionDigest, factRefOf, isDigest, isRecord, isSeed, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { ARCHIVE_CERTIFIED_RULES_COHORT, RULES_CERTIFICATE_KIND, RULES_PATTERNS, RULES_TREE_PROOF, rulesPolicyProposalV11, CONFIGURATION_DOMAIN, editObjects, type RulesPolicyV11 } from "@generalbusiness/dap-platform";
 import { emptyPackageComposition } from "@generalbusiness/dap-package-graph";
@@ -9,7 +9,7 @@ import { DEVICE_COMMAND } from "@generalbusiness/dap-contract";
 import { invitationIssueFields, invitationRedemptionFields, secretSigner, signedDeviceApplicationInstall } from "@generalbusiness/dap-client";
 import { outsideOf as hostOutside } from "../../../../packages/scope/src/worker.ts";
 import { soon } from "../../../../packages/scope/test/net.ts";
-import { rita, una } from "../../../../packages/scope/test/repository.ts";
+import { rita, una, type Platform } from "../../../../packages/scope/test/repository.ts";
 import { reader, dispatchFixture, effectFixture, applicationResolverFixture, applicationHttpPeer, applicationWorkerBindings } from "../../../../packages/scope/test/fixtures-native.ts";
 import { fixedSigner } from "../../../../packages/scope/test/fixtures-core.ts";
 import { devicePackageFixture } from "../../../../packages/derive/test/fixtures-device-command.ts";
@@ -17,6 +17,15 @@ import { valueDigest } from "@generalbusiness/dap-derive";
 import { changeDemo, changeDemo3 } from "../src/index.ts";
 
 import { certifiedNativeRoom, openRulesCertificate, publishRulesCertificate, configureRules } from "../../../../packages/scope/test/certified-rules-fixture.ts";
+
+// Summary contains live items only. Terminal oracles require the retained
+// final-item page; an incomplete page cannot prove absence.
+async function retainedItems(node: Platform, type: string): Promise<readonly Item[]> {
+  const read = await (node.stub as unknown as { items(reader: unknown, type: string): Promise<Read<readonly Item[]>> }).items(reader, type);
+  if (!read.ok) throw Error("Actual retained native items read required");
+  if (!read.complete) throw Error("Complete retained native items page required");
+  return read.value;
+}
 
 // Actual new-family interpretation/SQLite and signed grants. The Git object
 // provider, package HTTP, clock and bounded scheduler are explicit TEST stands.
@@ -96,9 +105,10 @@ test("certified-rules native birth and device install bootstrap a real tree cert
     const manifest = await L.did(rita, "propose-file", { fields: { base: firstHead!, path: "native.md", digest: digestBytes(utf8(content)), size: utf8(content).length, content }, expected: await L.expected({ proposal: 0 }) });
     await L.did(una, "review-verdict", { expected: await L.expected({ manifest, proposal: 0 }), fields: { manifest, verdict: "approve" } });
     const pushes = host.stand.pushes.length;
-    await L.did(rita, "merge", { expected: await L.expected({ proposal: 0, manifest, rules: laneRules.id }), fields: { manifest, reports: [] } }); await pause(nodes);
-    expect((await G.summary()).value.items.filter(item => item.type === "publication"))
-      .toEqual(expect.arrayContaining([expect.objectContaining({ state: "not-reserved", values: expect.objectContaining({ reason: "rules-not-configured" }) })]));
+    const merge = await L.did(rita, "merge", { expected: await L.expected({ proposal: 0, manifest, rules: laneRules.id }), fields: { manifest, reports: [] } }); await pause(nodes);
+    const operation = factRefOf((await L.entries())[merge]!);
+    expect((await retainedItems(G, "publication")).find(item => canonicalize(item.refs["operation"]) === canonicalize(operation)))
+      .toMatchObject({ state: "not-reserved", values: { reason: "rules-not-configured" } });
     expect(host.stand.refs.get("refs/heads/main")).toBe(firstHead); expect(host.stand.pushes).toHaveLength(pushes);
 
     const proposed = rulesPolicyProposalV11({ approvals: 1, ownerMayReview: false, checks: [], labels: [], extents: [
@@ -229,25 +239,34 @@ test("fresh certified global checks override a stale native lane and staged publ
       } finally { life.setHold(() => false); }
       await pause(nodes); if (seq === null) throw Error("Actual native merge required"); return seq;
     };
+    const publicationFor = async (merge: number) => {
+      const operation = factRefOf((await L.entries())[merge]!);
+      return (await retainedItems(G, "publication")).find(item => canonicalize(item.refs["operation"]) === canonicalize(operation));
+    };
     const pushesBefore = host.stand.pushes.length;
-    await directMerge();
-    const missing = (await G.summary()).value.items.filter(item => item.type === "publication").at(-1)!;
+    const missingMerge = await directMerge();
+    const missing = await publicationFor(missingMerge);
     expect(missing).toMatchObject({ state: "not-reserved", values: { reason: "rules-not-met" } });
     expect(host.stand.refs.get("refs/heads/main")).toBe(initialHead); expect(host.stand.pushes).toHaveLength(pushesBefore);
     const oldJob = await L.did(rita, "request-check", { expected: await L.expected({ manifest, proposal: 0, rules: heldP0.id }), fields: { manifest, name: "verify", configuration: C0 } });
     await L.did(una, "check", { expected: await L.expected({ job: oldJob, rules: heldP0.id, proposal: 0 }), fields: { job: oldJob, tree: built.tree, configuration: C0, outcome: "passed" } });
     expect(await L.item(oldJob)).toMatchObject({ state: "passed", values: { configuration: C0, tree: built.tree } });
-    await directMerge();
-    expect((await G.summary()).value.items.filter(item => item.type === "publication").at(-1))
+    const staleMerge = await directMerge();
+    expect(await publicationFor(staleMerge))
       .toMatchObject({ state: "not-reserved", values: { reason: "rules-not-met" } });
     expect(host.stand.refs.get("refs/heads/main")).toBe(initialHead); expect(host.stand.pushes).toHaveLength(pushesBefore);
     // Refresh only after both stale-policy refusals have been witnessed.
     await L.did(rita, "ask-rules", { on: 0, expected: await L.expected({ on: 0 }) }); await pause(nodes);
     const currentJob = await L.did(rita, "request-check", { expected: await L.expected({ manifest, proposal: 0, earlier: oldJob, rules: heldP0.id }), fields: { manifest, earlier: oldJob, name: "verify", configuration: C1 } });
     await L.did(una, "check", { expected: await L.expected({ job: currentJob, rules: heldP0.id, proposal: 0 }), fields: { job: currentJob, tree: built.tree, configuration: C1, outcome: "passed" } });
-    await directMerge();
+    const currentMerge = await directMerge();
     expect(host.stand.refs.get("refs/heads/main")).toBe(built.commit);
-    expect((await G.summary()).value.items.filter(item => item.type === "publication").at(-1)).toMatchObject({ state: "published" });
+    const currentPublication = await publicationFor(currentMerge);
+    expect(currentPublication).toMatchObject({ state: "cleaned" });
+    if (!currentPublication) throw Error("Actual cleaned current-generation publication required");
+    expect((await G.entries()).flatMap(entry => entry.effects)).toEqual(expect.arrayContaining([
+      expect.objectContaining({ effect: "state", item: currentPublication.id, state: "published" }),
+    ]));
 
     // A distinct genuine list lane stages first. Future tree-bound jobs
     // cannot exist until that actual stage is recorded by the destination.
@@ -276,12 +295,15 @@ test("fresh certified global checks override a stale native lane and staged publ
       await list.did(una, "check", { expected: await list.expected({ job: g1, rules: listRules.id, proposal: 0, manifest: listManifest }), fields: { job: g1, tree: staged.values["tree"]!, configuration: C1, outcome: "passed" } });
       await pause(nodes);
       const g2 = await list.did(rita, "request-check", { expected: await list.expected({ manifest: listManifest, proposal: 0, earlier: g1, rules: listRules.id }), fields: { manifest: listManifest, earlier: g1, name: "verify", configuration: C1 } });
-      await pause(nodes); expect((await list.item(g1)).state).toBe("superseded");
+      await pause(nodes); expect((await retainedItems(list, "job")).find(item => item.id === g1)?.state).toBe("superseded");
       life.setHold(() => false); await pause(nodes);
       expect(host.stand.refs.get("refs/heads/main")).toBe(built.commit);
       expect((await G.entries()).flatMap(entry => entry.effects).filter(effect => effect.effect === "operation" && effect.for === publication.id && effect.kind === "push")).toEqual([]);
       await list.did(una, "check", { expected: await list.expected({ job: g2, rules: listRules.id, proposal: 0, manifest: listManifest }), fields: { job: g2, tree: staged.values["tree"]!, configuration: C1, outcome: "passed" } }); await pause(nodes);
-      expect((await G.item(publication.id)).state).toBe("published");
+      expect((await retainedItems(G, "publication")).find(item => item.id === publication.id && canonicalize(item.refs["operation"]) === canonicalize(operation))?.state).toBe("cleaned");
+      expect((await G.entries()).flatMap(entry => entry.effects)).toEqual(expect.arrayContaining([
+        expect.objectContaining({ effect: "state", item: publication.id, state: "published" }),
+      ]));
       expect(host.stand.refs.get("refs/heads/main")).toBe(staged.values["integration"]);
       expect(host.stand.refs.has(String(stageRef))).toBe(false);
       expect((await G.entries()).flatMap(entry => entry.effects).filter(effect => effect.effect === "operation" && effect.for === publication.id && effect.kind === "push")).toHaveLength(1);
