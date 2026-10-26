@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:02307bc7faa56f35b6d9a590f2238f7ca4725a29","text":"Merge retired a covered predecessor; the successor is at packages/scope/vitest.worker.config.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:03a11b6a55475fe812da96b35c5bcf35080d292c","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-26-br3-worker-parallelism-delivery.manifest.json."}
