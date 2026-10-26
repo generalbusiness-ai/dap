@@ -80,6 +80,7 @@ test("certified native policy and proof plus its consumed single policy envelope
     if (opening.answer !== "accepted") throw new Error(`open-pr was not accepted: ${JSON.stringify(opening)}`);
     const opened = opening.receipt.fact.seq;
     const L = life.platform((await D.created(opened)).name); nodes.push(L); await pause(nodes);
+    await L.did(rita, "ask-rules", { on: 0, expected: await L.expected({ on: 0 }) }); await pause(nodes);
     const laneRules = (await L.summary()).value.items.find(item => item.type === "rules");
     if (!laneRules) throw Error("Actual native lane rules item required");
     const secret = b64url(new Uint8Array(32).fill(94)); // Public TEST invitation only.

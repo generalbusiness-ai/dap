@@ -86,6 +86,7 @@ test("certified-rules native birth and device install bootstrap a real tree cert
     if (opening.answer !== "accepted") throw new Error(`open-pr was not accepted: ${JSON.stringify(opening)}`);
     const opened = opening.receipt.fact.seq;
     const L = life.platform((await D.created(opened)).name); nodes.push(L); await pause(nodes);
+    await L.did(rita, "ask-rules", { on: 0, expected: await L.expected({ on: 0 }) }); await pause(nodes);
     const laneRules = (await L.summary()).value.items.find(item => item.type === "rules");
     if (!laneRules) throw Error("Actual native lane rules item required");
     const secret = b64url(new Uint8Array(32).fill(91)); // Public TEST seed, never operator custody.
@@ -188,7 +189,8 @@ test("fresh certified global checks override a stale native lane and staged publ
       const opening = await D.stub.submit(await D.intent(rita, "open-pr", { expected: await D.expected({ repository: 0 }), fields: { definition: definitionDigest(definition), title, draft: false } }), [], { values: [canonicalize(definition)] });
       if (opening.answer !== "accepted") throw new Error(`open-pr was not accepted: ${JSON.stringify(opening)}`);
       const seq = opening.receipt.fact.seq;
-      const lane = life.platform((await D.created(seq)).name); nodes.push(lane); await pause(nodes); return lane;
+      const lane = life.platform((await D.created(seq)).name); nodes.push(lane); await pause(nodes);
+      await lane.did(rita, "ask-rules", { on: 0, expected: await lane.expected({ on: 0 }) }); await pause(nodes); return lane;
     };
     const L = await openLane(changeDemo, "stale native full manifest");
     const heldP0 = structuredClone((await L.summary()).value.items.find(item => item.type === "rules")!);
