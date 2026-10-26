@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:658af7e7cc4643a94cecb52fd7cd247dec70f2d5","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/scope-index-manifest.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6803e28cc9c12e972e890855953c703fa61ce61a","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-25-certified-rules-policy.md."}
