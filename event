@@ -1,1 +1,1 @@
-{"kind":"promise","text":"Planner takes the 26 October sprint report: one documents-only head on planner/sprint-report-20261026 adding notes/reports/2026-10-26-sprint-report.md, reviewed at its exact head over Main a97c7425, then landed and pushed by the planner."}
+{"kind":"artifact","text":"notes at exact 8972657ec49af7f521312e24e72e87885603ea23 on planner/sprint-report-20261026, under promise git:sha1…a48e19d on request git:sha1…2e283af","body":{"commit":"8972657ec49af7f521312e24e72e87885603ea23","path":"notes"}}
