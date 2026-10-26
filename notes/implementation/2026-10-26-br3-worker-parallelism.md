@@ -32,33 +32,63 @@ before runtime validation.
 
 The root project comments and testing guide now describe two Scope workers
 and the separate single denial worker. No packages were installed for this
-preparation. This worktree has no `node_modules`; the one Node witness below
-needs no external dependency.
+preparation. The initial worktree had no `node_modules`; the Node witness
+below needs no external dependency. The later compiler used a separate copy
+of R7's existing dependency installation, as recorded below.
 
 ## Evidence
 
-Checks ran at `da2cf7737f30c0918c7e6e6200b866166a9d7a2c`, tree
-`3ed91174f2b826039bc04b22b1c09ac02fd5f6d2`. The final note and manifest
-are later documentation changes. The
+The initial checks ran at `da2cf7737f30c0918c7e6e6200b866166a9d7a2c`, tree
+`3ed91174f2b826039bc04b22b1c09ac02fd5f6d2`. The
 [evidence manifest](evidence/2026-10-26-br3-source-preparation.manifest.json)
 names the read-only output directory and its `SHA256SUMS`.
 
-| Check | Command | Exit | Output SHA-256 |
-| --- | --- | --- | --- |
-| Canonical phase selection | `node --test scripts/test-phases.test.mjs` | 0; one case passed | `87b7db670166cf0df4d0ac1eac4cc637705ac1b5a00e5ec0675cdb250c84d980` |
-| Source whitespace | `git diff --check 9daa037e1976fa0e245192823cce96fc8741360d HEAD` | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+The dependency copy and Scope test compiler ran at
+`f6fb666c6b175ccf45253d3c53ffddfd6101bcba`, tree
+`1a97efff5b47b5be8a2b1f4fc05001ec26e95833`. Production source, test source
+and configuration are unchanged between these checkpoints. The
+[compiler and dependency manifest](evidence/2026-10-26-br3-scope-test-compiler.manifest.json)
+indexes the copy proof, exact driver and compiler output. Its directory is
+read-only with a top-level `SHA256SUMS`. Only documentation changes follow
+the compiler checkpoint.
+
+| Check | Command | Exit | Output SHA-256 | Checkpoint |
+| --- | --- | --- | --- | --- |
+| Canonical phase selection | `node --test scripts/test-phases.test.mjs` | 0; one case passed | `87b7db670166cf0df4d0ac1eac4cc637705ac1b5a00e5ec0675cdb250c84d980` | `da2cf773` |
+| Source whitespace | `git diff --check 9daa037e1976fa0e245192823cce96fc8741360d HEAD` | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` | `da2cf773` |
+| Private dependency copy and lock comparison | `python3 /private/tmp/artroom-br3-copy-deps-20261026.py` | 0; 14 workspace links rebound | `ab3fd2f36f49ec505c740350828785c120f7e8a9cc34ad2def9969c96d590258` (`compiler/dependency-provenance.json`) | `f6fb666c` |
+| Scope test compiler | `node node_modules/typescript/bin/tsc -p packages/scope/tsconfig.test.json` | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` (`compiler/compiler.log`) | `f6fb666c` |
+| Real worktree dependency directory | Python `os.rename` of the private directory, followed by directory identity, stamp and 14 workspace-link checks | 0 | `65ff21c6869cab2bbede53632203e208f17762e1bd2e87714077a0d7e462d07b` (`dependency-materialization.json`) | `f6fb666c` |
 
 The phase-selection witness does not resolve inherited Worker configs or
 prove that two native runtimes execute concurrently. It preserves the
-canonical split and the ordered separate denial project. No compiler,
-native suite, measurement or gate ran in this preparation.
+canonical split and the ordered separate denial project. No native suite,
+measurement or gate ran in this preparation.
+
+The source installation's earned stamp matches R7 lock
+`645224923cabfd70b51b8add2a43be12673444779d18002a42ed4254b3216d6e`.
+After removing only R7's platform-to-git workspace dependency edge, the
+parsed lock equals BR-3's lock
+`f9d837e29e9e96874eb59c5eed718b1d824b98d2cc86fda615f1047011ee99cc`.
+Every external package and workspace link lock entry matches separately.
+The copy driver rebound all 14 workspace links to this worktree and wrote
+the verified target stamp. It did not install a package or alter R7, BR-9
+or Main's dependency directories. The proof does not claim independent
+verification of every installed dependency byte.
+
+The compiler passed while `node_modules` was a symlink to the separate
+private copy. Afterwards, the same directory was atomically moved to real
+`/private/tmp/artroom-builder-br3-workers-20261026/node_modules`, because
+the Cloudflare pretest check requires an owned real directory. The move
+preserved the directory's device and inode; the 14 links and target stamp
+were checked again. No compiler rerun is claimed after that move.
 
 ## Open limits
 
 Request `50695e48` owns the measurement, ordinary gate, exact-head review
 and any repair needed when tests run on two workers. After R7 settles,
-the owner must recut this preparation if Main has moved and provision its
-existing reviewed dependency view before those runs.
+the owner must recut this preparation if Main has moved and recheck the
+copied dependency view and lock stamp before those runs.
 
 The focused measurement can time the unchanged native phase command:
 `node node_modules/vitest/vitest.mjs run --config vitest.native.config.ts`.
