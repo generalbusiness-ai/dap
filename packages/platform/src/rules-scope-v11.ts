@@ -61,6 +61,22 @@ function provenance(value:unknown):value is RulesCertificateProvenanceV11 {
     &&isFactRef(value['request'])&&isFactRef(value['certificate'])&&isDigest(value['proof'])&&typeof value['commit']==='string'&&/^[0-9a-f]{40}$/.test(value['commit']);
 }
 export const rulesScopeRulesV11:Rules={...archiveDeviceRules,
+  // Q11 validates its full policy; lanes still consume the established summary protocol.
+  'rules-update':{place:'send',run:given=>{
+    const held=observationPolicy(given.state),item=rulesOf(given.state);
+    if(given.input.type!=='delivery'||!held||!item)throw Error('Q11 rules-update requires the stored policy and its delivery');
+    const p=held.envelope.policy;
+    if(p===null){
+      const prior=archiveDeviceRules['rules-update'];
+      if(!prior||prior.place!=='send')throw Error('native rules-update send required');
+      return prior.run(given);
+    }
+    const detail={approvals:p.approvals,ownerMayReview:p.ownerMayReview,checks:p.checks.map(({name,configuration,required,checker})=>({name,configuration,required,checker})),labels:p.labels,
+      singleControllerException:p.singleControllerException===true,
+      extents:p.extents.map(({name,approvals,approver,checks,class:of})=>({name,approvals,approver,checks,class:of}))};
+    return {to:given.input.from.at,message:{class:'request',type:'relate',body:{name:'rules',
+      item:{at:given.resolved.at,seq:item.id,hash:item.opened},state:'current',detail}}};
+  }},
   'q11-bounded-extents':{place:'type',run:(_given,value)=>Array.isArray(value)&&value.length>=1&&value.length<=8&&bounded(value,RULES_POLICY_VALUE_V11.max)},
   'q11-complete-policy':{place:'type',run:(_given,value)=>rulesPolicyProposalV11(value).ok&&bounded(value,RULES_POLICY_VALUE_V11.max)},
   'q11-certificate-provenance':{place:'type',run:(_given,value)=>provenance(value)},
