@@ -97,6 +97,20 @@ test("certified-rules native birth and device install bootstrap a real tree cert
       try {
         const job = (await Q.summary()).value.items.find(item => item.id === installed.receipt.fact.seq);
         const qEntries = await Q.entries(), dEntries = await D.entries();
+        const repository = (await D.summary()).value.items.find(item => item.type === "repository");
+        const siblingReadiness = ([["membership", M], ["rules", Q], ["destination", G]] as const).map(([kind, node]) => {
+          const ref = repository?.refs[kind];
+          return { kind, validRef: isScopeRef(ref) && ref.kind === kind,
+            matchesFixtureScope: isScopeRef(ref) && ref.scope === node.name };
+        });
+        const directoryBirth = dEntries.find(entry => entry.seq === 0);
+        const siblingResults = dEntries.flatMap(entry => {
+          const input = entry.input;
+          if (input.type !== "delivery" || input.message.class !== "result" || !directoryBirth
+            || input.message.of.from.seq !== directoryBirth.seq || canonicalize(input.message.of.from.at) !== canonicalize(directoryBirth.at)) return [];
+          return [{ seq: entry.seq, n: input.message.of.n, kind: closed(input.from.at.kind, ["membership", "rules", "destination"]),
+            outcome: closed(input.message.outcome, ["applied", "refused", "superseded"]) }];
+        });
         const stageSends = qEntries.flatMap(entry => entry.input.type === "outcome" && ["fetch-application", "admit-application"].includes(entry.input.kind)
           ? entry.sends.filter(send => send.message.class === "request" && isRecord(send.message.body) && send.message.body["message"] === "application-stage")
             .map(send => ({ seq: entry.seq, n: send.n })) : []);
@@ -133,6 +147,8 @@ test("certified-rules native birth and device install bootstrap a real tree cert
           ? [{ kind: short(send.to.kind), definition: short(send.to.definition) }] : []));
         const diagnostic = canonicalize({ snapshot, rowCap, textCap,
           stageDeliveryObservation: { complete: !stageDeliveryOverflow, rows: stageDeliveryRows.slice(0, rowCap) },
+          directoryReadiness: { repositoryFound: repository !== undefined, state: closed(repository?.state, ["open"]),
+            siblings: siblingReadiness, resultCount: siblingResults.length, results: siblingResults.slice(-rowCap) },
           job: { found: job !== undefined, state: closed(job?.state, ["pending", "active", "refused"]),
             phase: closed(job?.values["phase"], ["fetch", "admission", "activation", "grants", "creation"]), reason: closed(job?.values["reason"], reasons) },
           stageOutbox: { requested: qOutbox !== null, readOk: qOutbox?.ok ?? null,
