@@ -5,10 +5,14 @@ Request: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:50695e48bce9
 ## What changed
 
 The `scope` project allows two workers and keeps `isolate: false`.
-Each worker reuses its own runtime across files. The separate
-`scope-denial` project still runs after it, with one worker and its own
-runtime. The root file-task limit remains four. Test selections,
-assertions, deadlines and production source are unchanged.
+Each worker reuses its own runtime across files. The current proposal
+moves the existing Lending file into a separate ordered `scope-lending`
+project with one worker and its own runtime, followed by `scope-denial`
+with one worker in another runtime. The root file-task limit remains four.
+Every witness is selected once. Expected assertions, deadlines and
+production source are unchanged. Planner disposition under question
+`72a1266e`, owning checks and a new exact-head ordinary gate are pending.
+This is an unvalidated proposal, not an approved isolation result.
 
 The initial source preparation used Main `9daa037e`. R7 has since landed
 on Main `6852f78d`; BR-3's three preparation commits were rebased onto that
@@ -27,6 +31,16 @@ The first two-worker gate at `eceeb5e9` failed the Lending story's second
 current-read assertion. The owner retains that failed gate separately.
 A later diagnostic-only isolated run passed without exposing the masked
 cause. Neither outcome establishes that cause.
+
+Gate V2 at `cbb08aff65dfbf68008bf27b979b4e4a989ffd38`, tree
+`640f42b1a863700b44c891816ced233e0edbc0ca`, also closed with exit one.
+Its Lending case failed the first current-read assertion after 678 ms,
+again with the masked no-query-reply reason. Its whole command took
+852.986 seconds and 1,810.542 child CPU seconds; its maintained native
+phase took 736.957 seconds with 779 passed, one failed and two skipped.
+Both failed gates remain failed. The deterministic fixture-coherence
+control below demonstrated that fixture gap; it did not establish or
+repair the recurrent masked mixed-project failure.
 
 The historical Lending projection stand-in now collects at most two complete
 attempts. It restarts once only when independently validated sources name
@@ -52,8 +66,8 @@ to the workers. Source inspection found no concrete setup change to make
 before runtime validation.
 
 The root project comments and testing guide now describe two Scope workers
-and the separate single denial worker. No packages were installed for this
-preparation. The initial worktree had no `node_modules`; the Node witness
+and the proposed ordered single Lending and denial workers. No packages
+were installed for this preparation. The initial worktree had no `node_modules`; the Node witness
 below needs no external dependency. The later compiler used a separate copy
 of R7's existing dependency installation, as recorded below.
 
@@ -77,6 +91,27 @@ The returned-item expectation moves after the first successful look; the
 same expected state follows the same write. The first current requirement
 now uses `expect.fail` so its failure is an assertion in the paired control.
 The earlier bounded diagnostic observer remains diagnostic-only.
+
+The proposed Lending config has its own Cloudflare pool plugin, the same
+test Worker and Wrangler bindings, one exact file selection, `isolate: false`,
+one worker and the existing 30-second framework allowance. It starts no
+clone server or maintained-package capture: the Lending story consumes
+neither setup's injected data. The remaining Scope project keeps both
+setup owners. The root and package entrypoints both order Scope, Lending
+and denial as groups one, two and three. The existing partition witness
+now expects fourteen plain and three native projects, seventeen in total.
+
+The summary's project inventory and native phase classification both include
+Lending. Its existing terminal-reporting witness now requires all three
+native projects to be observed only with a successful native terminal;
+without that terminal all remain partial. These source changes have not
+been run. The first-look assertion message now also includes only the
+already bounded safe projection-error labels, as the second-look message
+already did. It adds no observer, read, retry or story act.
+
+This proposal bounds Worker reuse around the repeatedly failing story.
+It claims neither a proven cause nor physical draining of earlier runtimes.
+The actual ordinary gate must decide whether the proposed boundary holds.
 
 ## Evidence
 
@@ -114,6 +149,9 @@ note and the new manifest change after that checkpoint.
 | Preparation patch comparison | `git range-diff 9daa037e1976fa0e245192823cce96fc8741360d..0ae2618738414c8fd705dad5e9b28e8aff59cd95 6852f78d3279ef13a33b7b9d0b283e9ba96f079f..2017e679338ad516592b5ee9e6798fea70e6c6ef` | 0; all three patches unchanged | `e00f80a28d580163d5c3a68f447a29381738c3d3a0329057591fd40826167358` (`range-diff.log`) | `2017e679` |
 | Scope test compiler after fixture repair | `node node_modules/typescript/bin/tsc -p packages/scope/tsconfig.test.json` | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` (`compiler.log`) | `e29acab4` |
 | Whole Lending file paired control | `node scripts/control.mjs packages/scope/test/support/legacy-lending-projection.ts '<restart guard>' '<guard disabled>' --expect 'the lending library on real scopes' -- . --config vitest.native.config.ts --project scope packages/scope/test/lending.test.ts --reporter=/private/tmp/artroom-br3-control-progress-20261026.mjs` (exact replacement and argv in `result.json`) | 0; distinguishes, healthy 1 passed, fault 1 assertion failed | `306484fb618a2f5a77d75ecd20a150a754517779946b2491e550b3740f858cfe` (`control.log`) | `e29acab4` |
+| Initial ordinary gate | `npm run gate` | 1; 887.092 seconds whole wall, 1,877.359 child CPU seconds; native 761.231 seconds, 779 passed, 1 failed, 2 skipped | `964f17354d3df14a80900e4448a50a690f6bd5536d0c6bd2e3371880415047fb` (`gate-v1/result.json`) | `eceeb5e9` |
+| Ordinary gate V2 after fixture repair | `npm run gate` | 1; 852.986 seconds whole wall, 1,810.542 child CPU seconds; native 736.957 seconds, 779 passed, 1 failed, 2 skipped | `53b2d7c4c7ff0ea1599fd66ce1206ce6d3fb02f6371b8efe3cb4b081067aaa25` (`gate-v2/result.json`) | `cbb08aff` |
+| Proposed isolated Lending configuration | Owning partition/terminal witnesses, compiler and new exact-head ordinary gate | Pending planner disposition and serialized execution | Not run | Current proposal |
 
 The repair compiler and one maintained paired control ran at
 `e29acab45e6eb113af89e8b084b0650c8c038a62`, tree
@@ -129,8 +167,21 @@ remained clean. An external reporter adapter only selects separate output
 paths and delegates the maintained reporter's actual callbacks unchanged.
 The maintained control hides healthy-run stdout; the healthy callbacks,
 timing records and helper's passing-count summary are retained. No missing
-callback or stdout is reconstructed. Only this note and the manifest change
-after the repair checkpoint.
+callback or stdout is reconstructed. The immediate follow-up at `cbb08aff`
+changed only the note and manifest. The current isolation proposal changes
+configuration, its existing reporting/partition witnesses and the bounded
+first-look message; the historical control is not relabelled as validation
+of those later inputs.
+
+The owner retains the closed gate outputs under
+`~/play/artroom-evidence/2026-10-26-br3-two-workers-gate` and
+`~/play/artroom-evidence/2026-10-26-br3-two-workers-gate-v2`.
+The table's gate result digests name those actual files; final consolidation
+will index both separately. The initial gate checkpoint is
+`eceeb5e92125a48e699b799750a6fb4e64e9593b`, tree
+`4d3578dfeed0ef1ade7573af6f8a03e250b04d41`. Native wall comes from the
+canonical maintained stage ledger, never a sum of concurrent case times.
+Native CPU remains unknown; whole-gate CPU cannot be assigned to that phase.
 
 The phase-selection witness does not resolve inherited Worker configs or
 prove that two native runtimes execute concurrently. It preserves the
@@ -171,31 +222,30 @@ the eventual ordinary gate must compile the upstream R7 inputs too.
 
 ## Open limits
 
-Request `50695e48` owns a fresh ordinary gate after this shared fixture
-repair and final evidence consolidation. The paired control proves the
-deliberately interleaved fixture gap, not the original gate's masked cause
+Request `50695e48` owns a fresh ordinary gate on the approved candidate and
+final evidence consolidation. Planner disposition under `72a1266e` and
+serialized owning checks remain pending for this proposal. The paired
+control proves the deliberately interleaved fixture gap, not the original gate's masked cause
 or cross-file stability. A continuously changing head can still exhaust
-the two-attempt bound and refuse. No native whole suite or gate was run for
-this repair; the earlier failed gate remains failed.
+the two-attempt bound and refuse. No compiler, test, build or gate ran for
+the current isolation proposal. Both earlier failed gates remain failed.
 
 Request `50695e48` owns the measurement, ordinary gate, exact-head review
 and any repair needed when tests run on two workers. The owner must check
 whether Main moved again and recheck the copied dependency view and lock
 stamp before those runs.
 
-The focused measurement can time the unchanged native phase command:
-`node node_modules/vitest/vitest.mjs run --config vitest.native.config.ts`.
-Use the existing progress and timing reporters with new output paths,
-leave `VITEST_MAX_WORKERS` unset, and retain elapsed time, child CPU, machine,
-load, cache state, final case states and the per-project phase span. Run
-the ordinary `npm run gate` separately, once at the candidate sent for review.
-The owner must decide the measurement command before execution: the older
-`scripts/measure-tests.sh` also installs packages and repeats package suites,
-so invoking it unchanged would exceed this source-preparation plan.
+Planner ruling `cf0328ba` accepts one instrumented ordinary `npm run gate`
+as both the measurement and gate. Use its existing progress and timing
+records, leave `VITEST_MAX_WORKERS` unset, and retain wall time, whole-command
+child CPU, machine, load, cache state, final case states and phase spans.
+No separate native measurement or `scripts/measure-tests.sh` is proposed.
 
-Report the one-worker baseline's exact head, tree, selection and outcome
-beside the two-worker result. R7's 1,315.81-second native continuation
-failed two tests, so it cannot be described as the cost of a passing gate.
+Use BR9's passing ordinary gate at `f4735c54` as the before observation,
+with its exact source, phase selection and outcome. Its whole command took
+1,431.83 seconds; its native phase took 1,310.25 seconds. R7's
+1,315.81-second native continuation at `ae49c5a6` failed two tests and is
+an additional failed point, not the passing before gate.
 A comparison across different code trees or uncontrolled load must state
 those differences and cannot establish a controlled speedup.
 

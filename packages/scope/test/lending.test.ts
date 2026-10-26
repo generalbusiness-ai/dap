@@ -257,7 +257,7 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
       return response;
     };
     const his = browser(nasruddin, "@nasruddin", { reply: false }, returnDuringRead), g = his.open();
-    { const seen = await g.look(); if (seen.status !== "current") expect.fail(`look: ${JSON.stringify(seen).slice(0, 300)}`);
+    { const seen = await g.look(); if (seen.status !== "current") expect.fail(`look: ${JSON.stringify(seen).slice(0, 300)}; projectionErrors: ${JSON.stringify(his.projectionErrors())}`);
       expect(seen.actions).toContain("lending.member"); expect(seen.actions).not.toContain("lending.staff"); }
     expect(await L.item(small)).toMatchObject({ state: "available", parties: { borrower: null } });
     const seenAgain = await g.look();
