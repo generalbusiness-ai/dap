@@ -2,6 +2,8 @@
 
 Request `0716e75a`, promise `7e959e25`.
 
+Governing request: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0716e75a7daaf4ea46c71e95ee9a7406d460ff57.
+
 ## What changed
 
 The explicit `archive-certified-rules` family is Register 19, Directory 18,
@@ -110,11 +112,32 @@ existing identities.
 
 The [evidence manifest](evidence/2026-10-25-certified-rules-policy.manifest.json) indexes the retained files and execution checkpoints.
 
-The two failed ordinary gates ran at `d0453d10` and `52c2714c`, with
-separate outcomes below. This candidate retains the EOF repair and adds
-consistent local predicate renames. No replacement gate result or future
-checkpoint hash is assigned here. The table keeps execution checkpoints
-distinct.
+Three ordinary gates failed at distinct checkpoints, as recorded below.
+Gate V3 reached the plain tests and found one obsolete unsupported-version
+expectation. The repair at `ae49c5a6` changes only that expectation and its
+comment in `packages/platform/test/rules-scope.test.ts`: Rules 12, rather
+than the newly supported Rules 11, must remain unsupported. All nine cases,
+assertions and deadlines remain. No other test imports that file.
+Production source, dependencies, configuration and shared helpers are unchanged.
+
+Native then found the same stale-negative pattern at
+`packages/scope/test/archive-target.test.ts:52`, in two parameterized cases.
+Register 19 is now supported. Commit `8b85ece5` changes only that negative
+sentinel to Register 20. The positive actual-family check and every assertion,
+case and deadline remain. No test imports the repaired file. That second
+repair has not run. Planner question `53707834`, filed under the two-failure
+guidance in `34c8885a`, owns the choice between a second bounded follow-up
+and a new gate.
+
+The initial limited follow-up followed docs/testing.md: the owning compiler, the
+whole failed test file, and the native stage that V3 never reached. The
+failed gate remains failed. The first follow-up attempt passed the compiler,
+then stopped before test execution because I used an invalid reporter phase.
+The corrected attempt uses the maintained `plain` and `native` phase names.
+The [final evidence manifest](evidence/2026-10-26-certified-rules-followup.manifest.json)
+records both attempts and V3 at their actual execution checkpoints. The
+earlier manifest remains the historical index for accepted evidence.
+
 The completed Page owning checkpoint remains `1f8ed9ef`. Each output
 bundle index below names preserved logs, command arguments, outcomes and
 case identities. Commands with a bound plan use the exact arguments in
@@ -141,7 +164,11 @@ earlier runs.
 | Section-citation owning check | `node scripts/check-section-citations.mjs --report <recorded report path>` | 0; existing advisories retained | `44dcc5d03529e09f48ccb955750fed904f81a0b7eeb2b519aa6ac0e98f28af5e` (`helper-names-owning-v1/citations.log`) | Same repaired Source |
 | Documentation-link owning check | `node scripts/check-doc-links.mjs` | 0; 705 checked, zero broken links | `e198314d887740ef75cca348b8928e3400173f99638c20791df13e2f804a461c` (`helper-names-owning-v1/doc-links.log`) | Same repaired Source |
 | Page freshness after the helper rename | Pinned Node and root Vitest whole `apps/room/page/test/assets.test.ts`, `--config vitest.config.ts` and the recorded reporters | 0; one existing case passed and the current bundle matched | `73070b7b6145f5f2ad704be86fdb639ed2eef5a9a3fa906d0b29b493bfb55dce` (`helper-name-page-assets-v1/manifest.json`) | Intentional dirty `52c2714c` plus six identifier replacements |
-| Ordinary gate V3 | `npm run gate` | HELD: corrected checkpoint not yet run | HELD | HELD |
+| Ordinary gate V3 | `npm run gate` | 1; kernel, Node, Counting and prechecks passed. Plain: 2834 passed, 1 failed, 1 skipped. Native unreached | `63ff38cbe07f219b0c8ca22a9fcab6fe2bea542251d9d1815c30abc7141b75e0` (`gate-v3/result.json`) | `8ba23a34`, tree `1fe50e37` |
+| Follow-up compiler | `node node_modules/typescript/bin/tsc -p packages/platform/tsconfig.test.json` | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` (`2026-10-26-certified-rules-followup/compiler.log`) | `ae49c5a6`, tree `96975fe5` |
+| First follow-up reporter startup | Root Vitest whole rules-scope file with the invalid observation phase `rules-scope` | 1; startup error, no assertions ran | `c709d1bd60432718c09b2515e6f7eb662971eb19b3167b178f9b104317b97f07` (`2026-10-26-certified-rules-followup/rules-scope.log`) | `ae49c5a6`, tree `96975fe5` |
+| Repaired whole test file | `node node_modules/vitest/vitest.mjs run --config vitest.plain.config.ts --project platform packages/platform/test/rules-scope.test.ts` | 0; 9 passed | `ab330e1b3e6415162cc3ace17142b1a5db2dbc69ebf90168934b92574fecf43d` (`2026-10-26-certified-rules-followup-v2/rules-scope.log`) | `ae49c5a6`, tree `96975fe5` |
+| Previously unreached native stage | `node node_modules/vitest/vitest.mjs run --config vitest.native.config.ts` | 1; 778 passed, 2 failed, 2 skipped in final records; zero reported unhandled errors | `e22e1589b62197f6209671def03d7d0411b3f6a8520dd444ec1a6fe9fd38d902` (`2026-10-26-certified-rules-followup-v2/native.log`) | `ae49c5a6`, tree `96975fe5` |
 
 The first ordinary gate stopped at whitespace: one extra blank line at
 EOF in each of `packages/git/src/pure-names.ts` and
@@ -174,7 +201,8 @@ It establishes no new compiler, native or Page-build result.
 The three static owning commands then passed on that deliberately repaired
 Source. Their separate elapsed and CPU spans were 0.40 and 0.50 seconds
 for shared helpers, 5.64 and 5.91 for citations, and 0.09 and 0.09 for
-links. No outer aggregate was measured. Gate V3 remains pending.
+links. No outer aggregate was measured. Gate V3 later failed at the
+whole-definition test described above.
 
 A subsequent whole assets witness passed on the deliberate six-identifier
 repair of `52c2714c`. It confirmed that the current Page bundle is exact;
@@ -246,17 +274,59 @@ The evidence retains bounded diagnostic outputs from failed runs. Raw
 environment, private bindings and physical Source, tool and dependency
 vectors are withheld from the portable bundles.
 
+The follow-up ran on macOS-27.0.1-arm64-arm-64bit-Mach-O, Node v26.12.1.
+Existing private dependencies and earned caches were reused without reset.
+The initial load averages were [2.10791015625, 2.6318359375, 2.552734375]. Separate command intervals were:
+rules-scope 0.85 seconds elapsed and 1.28 child CPU seconds.
+native 1315.81 seconds elapsed and 1329.90 child CPU seconds.
+These are separate command measurements, not one measured gate.
+Native has 769 ready, 749 result and 782 final callback identities. The
+terminal summary and final records agree on 778 passed, two failed and two
+skipped. Earlier callback gaps remain unknown and are not reconstructed.
+The final callback counts, states and unhandled errors are in the retained
+`2026-10-26-certified-rules-review-index/summary.json`, indexed by the final
+manifest. No production source or test changed during those commands.
+
+### Required witnesses and rollout
+
+The request's witnesses remain at their existing boundaries:
+
+- `packages/scope/test/creation-versions.test.ts` pairs refusal of old new
+  genesis with accepted new genesis and repeat creation, reads and acts on a
+  sealed live old scope. The earlier R6 note records its accepted evidence.
+- `packages/platform/test/rules-policy-v11.test.ts` pairs accepted complete
+  policy with missing owner choice, zero approvals without each opt-in,
+  forbidden approver actions and missing protected coverage. Each refusal
+  has its asserted reason. Historical permissive extents remain unchanged.
+- `packages/platform/test/rules-policy-tree.test.ts` pairs an unmatched
+  pattern refusal with the same pattern explicitly marked for a future path.
+- The first `certified-rules.scope.test.ts` case pairs a signed publication
+  without `ownerMayReview` with an accepted publication using the same real
+  certificate and retained values. The refused attempt changes no Rules row.
+- The second case uses a stale lane rules copy and fresh Destination policy.
+  Destination requires current global and touched-extent jobs before push.
+  The retained global required-check fault removes that enforcement and
+  publishes where the unchanged case requires refusal. The table records
+  the assertion failure and restored baseline separately.
+
+No existing live scope changes its pinned definition. This family affects
+only new scopes explicitly created as Register 19, Directory 18, Rules 11
+and Destination 14. The public and recorded Grow families remain at Register
+17, and the default remains Register 18. The planner owns creation allowances,
+the scheduled demo cohort and deployment after landing under `0716e75a`.
+
 ## Open limits
 
-Request `0716e75a` still owns the ordinary gate, final evidence index and
-exact-head review. The kernel control, Page build and Page owning outcomes
-are closed. Gates V1 and V2 remain failed. Gate V3 remains held until its
-actual closed outcome is authenticated. No final review head, approval, landing or deployment is
-implied.
+Request `0716e75a` owns exact-head review and any repair it identifies.
+The index records the failed V3 gate, the passing whole Rules file and the
+failed native phase separately. The one-line archive test repair at
+`8b85ece5` follows the execution checkpoint and remains unverified.
+Planner question `53707834` owns the next validation choice. This note and
+its manifest add no production source changes. No approval or landing is implied.
 
 This family addresses findings 3.2, 3.3 and 3.4. Their closure remains
-conditional on the ordinary gate and exact-head review of the final
-candidate. Finding 2.2 belongs to the earlier R6 work recorded in
+conditional on the checker accepting the failed gate with its limited
+follow-up and reviewing the exact final candidate. Finding 2.2 belongs to the earlier R6 work recorded in
 [versioned publication](2026-10-25-security-r6-versioned-publication.md).
 
 Native tests establish the real family and protocol with explicit TEST
