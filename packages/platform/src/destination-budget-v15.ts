@@ -151,7 +151,14 @@ export function certifiedCaptureBudgetV15(record: CertifiedPublicationStateV15, 
   delete input.observed;
   const passEffects = entry.effects.filter(effect => effect.effect === 'value' && effect.slot === 'passes');
   if (passEffects.length !== 1) throw Error('A certified capture writes one complete passes record');
-  const shell = maximumEnvelope({ ...entry, input, effects: entry.effects.map(effect => effect.effect === 'value' && effect.slot === 'passes' ? { ...effect, value: null } : effect) });
+  // destinationRules4's fileEffects lowers the capture's branch slot/judging
+  // refs after the judge callback. The stored value/value form is five bytes
+  // longer than ref/to. Forecast that longer form for every ref; any ref that
+  // remains a ref is then conservatively over-counted, never under-counted.
+  const effects = entry.effects.map(effect => effect.effect === 'ref'
+    ? { effect: 'value', item: effect.item, slot: effect.slot, value: effect.to }
+    : effect.effect === 'value' && effect.slot === 'passes' ? { ...effect, value: null } : effect);
+  const shell = maximumEnvelope({ ...entry, input, effects });
   const observationRecordsBytes = observationBytes('rules', bounds) + 9 * observationBytes('key', bounds)
     + 65 * observationBytes('member', bounds) + observationBytes('holders', bounds, 1);
   // G15 keeps the exact five G14 row maxima: 1+1+1+65+8 = 76.
