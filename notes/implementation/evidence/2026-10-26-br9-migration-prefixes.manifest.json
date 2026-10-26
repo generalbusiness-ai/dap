@@ -1,0 +1,371 @@
+{
+  "qualification": "Closed BR9 owning/control and both ordinary gates, copied without altering original capture metadata into one read-only delivery directory. Gate V1 failed pretest because the module root was symlinked; gate V2 passed after moving the same private dependency copy into a real directory. Candidate source/tests and head stayed fixed. Main moved separately during V2 from9daa to6852. Raw native callback gaps remain unknown; terminal records are separate observations. No R7 evidence was re-authenticated.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-26-br9-migration-prefixes-delivery",
+  "checkpoint": {
+    "commit": "f4735c5435224d9dbe828099cc280a6e3adef1b2",
+    "tree": "849083ea95a3630556531dd6ac7d441632a2c83d"
+  },
+  "executionCheckpoints": [
+    {
+      "commit": "9a6671ab3030792834960b964f27c028570b4428",
+      "tree": "f36021a293cabc28aa0038ce6d7ee94a4e87459a",
+      "phases": [
+        "owning/compiler",
+        "owning/migration-control"
+      ]
+    },
+    {
+      "commit": "f4735c5435224d9dbe828099cc280a6e3adef1b2",
+      "tree": "849083ea95a3630556531dd6ac7d441632a2c83d",
+      "phases": [
+        "gate-v1",
+        "gate-v2"
+      ]
+    }
+  ],
+  "fileCount": 68,
+  "files": [
+    {
+      "path": "gate-v1/SHA256SUMS",
+      "bytes": 2168,
+      "sha256": "1e224b643164916e3e38188d34c2218b87838d943b1c4d2d5ef36860fa013a11"
+    },
+    {
+      "path": "gate-v1/dependency-provenance.json",
+      "bytes": 2683,
+      "sha256": "18a32681f049dce8f1f02d3d5a1f3eb58e446dbd926c9fedd8098c18b523bfc6"
+    },
+    {
+      "path": "gate-v1/gate.log",
+      "bytes": 3244,
+      "sha256": "a1d3eff557cc0bca338d421a02119b95e80a9ba760afe6c84a8785cf01af04ed"
+    },
+    {
+      "path": "gate-v1/manifest.json",
+      "bytes": 3895,
+      "sha256": "2c8824b2b42463b8d11b2d0188f899285b21bcffa2bc851f4c0c1446596927be"
+    },
+    {
+      "path": "gate-v1/result.json",
+      "bytes": 961,
+      "sha256": "9dbed439ad6a986f99a4c7f4ea813688632962ebf8361e36113344ced6777f2b"
+    },
+    {
+      "path": "gate-v1/stages/citations.log",
+      "bytes": 1554568,
+      "sha256": "ce07c68fa2c34272c78027af62c8ff1bb6c33dc76dea8b1ae6b77aee1e293838"
+    },
+    {
+      "path": "gate-v1/stages/citations.time",
+      "bytes": 29,
+      "sha256": "6261ac2c2d23bb1258814c55b6a8f14c02074f523980ac94512a95c15c563988"
+    },
+    {
+      "path": "gate-v1/stages/cite-test.log",
+      "bytes": 756,
+      "sha256": "bd2237158ae5c9a6ce5bc7f53c66275eeb13cfb113d85715165133ffcc4374a2"
+    },
+    {
+      "path": "gate-v1/stages/cite-test.time",
+      "bytes": 29,
+      "sha256": "10a723bc3b9c9f73c12f8f0f4dff4a202a179b8fbbe6f4d72a968e50311ebcd1"
+    },
+    {
+      "path": "gate-v1/stages/commit-messages.log",
+      "bytes": 38,
+      "sha256": "8b64c7a412d0921e8f3c08e1c23ecbb1ca1092bff45a46a1aeeb30d2d35a0c5a"
+    },
+    {
+      "path": "gate-v1/stages/commit-messages.time",
+      "bytes": 29,
+      "sha256": "b2b892ce9a7c8ad29214199a33b154dab17a22613496aeb4905dbef44d49cb57"
+    },
+    {
+      "path": "gate-v1/stages/commit-test.log",
+      "bytes": 595,
+      "sha256": "bab4147beaa467b2fc33515fff86b2259600154ecf4c0394b973788c4b91ead3"
+    },
+    {
+      "path": "gate-v1/stages/commit-test.time",
+      "bytes": 29,
+      "sha256": "33b6391fc442b14b9846d20295599e3e3e7e5901415858326f4ea3f1249064db"
+    },
+    {
+      "path": "gate-v1/stages/doc-links.log",
+      "bytes": 38,
+      "sha256": "e198314d887740ef75cca348b8928e3400173f99638c20791df13e2f804a461c"
+    },
+    {
+      "path": "gate-v1/stages/doc-links.time",
+      "bytes": 29,
+      "sha256": "4fcd318aeef94765464c5ea577c2c34b80431e22ec23240a06933273f40c3012"
+    },
+    {
+      "path": "gate-v1/stages/helpers.log",
+      "bytes": 68,
+      "sha256": "3a2abcd88fd31309aee7f20597fddac1453c89a86d5ff9ccfaa4f60d689488e6"
+    },
+    {
+      "path": "gate-v1/stages/helpers.time",
+      "bytes": 29,
+      "sha256": "e76faeeb2120f77486557af57ba772c3bd92f04a3a8aa20ba78ac08b0cc51ffe"
+    },
+    {
+      "path": "gate-v1/stages/notes.log",
+      "bytes": 18,
+      "sha256": "35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1"
+    },
+    {
+      "path": "gate-v1/stages/notes.time",
+      "bytes": 29,
+      "sha256": "b2b892ce9a7c8ad29214199a33b154dab17a22613496aeb4905dbef44d49cb57"
+    },
+    {
+      "path": "gate-v1/stages/section-citations.json",
+      "bytes": 3907730,
+      "sha256": "5eed96cf010577bf595bd45e467fe5d47bea83760c08a83a63dde9950732b02b"
+    },
+    {
+      "path": "gate-v1/stages/test.log",
+      "bytes": 118,
+      "sha256": "c30d871b74a4d84995b7b1aa351560439cc690fa18468254a91f87913a5f5187"
+    },
+    {
+      "path": "gate-v1/stages/test.time",
+      "bytes": 29,
+      "sha256": "228ad819278688da9a90ac137c539ca1828e25bea74ceb6dcfaff0635e99fa35"
+    },
+    {
+      "path": "gate-v1/stages/typecheck.log",
+      "bytes": 1987,
+      "sha256": "62170bbe0cd055cff4699debd9470a886c0f98f328e7c9517d899c021a3788d0"
+    },
+    {
+      "path": "gate-v1/stages/typecheck.time",
+      "bytes": 30,
+      "sha256": "8a325123de45f34a816f59aa38290760bb74da98f75d9b8dcb1acaf3370f0bdd"
+    },
+    {
+      "path": "gate-v1/stages/whitespace.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "gate-v1/stages/whitespace.time",
+      "bytes": 29,
+      "sha256": "b19caaf7f42fccf27d8c76a198f52fea0f91edf4f9fc11246dfb0c794d708d58"
+    },
+    {
+      "path": "gate-v2/SHA256SUMS",
+      "bytes": 2950,
+      "sha256": "0829ecfe8f5c3c4d9c1813bebb7d280f2f427e88e7a1e7a73d6065185b476eae"
+    },
+    {
+      "path": "gate-v2/dependency-provenance.json",
+      "bytes": 2960,
+      "sha256": "a2cd2fca33db079fa900c1afd2fe1c32c61aa734fcdbfe7cd0d2288330a39dc0"
+    },
+    {
+      "path": "gate-v2/gate.log",
+      "bytes": 6063,
+      "sha256": "d6d697029cc2edabfa26c69603675b4e52b8be7ae8c10e4049455f028999eec0"
+    },
+    {
+      "path": "gate-v2/manifest.json",
+      "bytes": 5242,
+      "sha256": "2b53c2a76319a7cbead14bfba44e6a5fb432d5cfbbf314e4900678f8aa3ee197"
+    },
+    {
+      "path": "gate-v2/progress.native.jsonl",
+      "bytes": 833601,
+      "sha256": "a85beda949d376eac30fbd15e6a1699e00668403c93ae75060b786155ab0d6f2"
+    },
+    {
+      "path": "gate-v2/progress.plain.jsonl",
+      "bytes": 2755454,
+      "sha256": "fcb23b2883682fe805db851bdf7221fca42db32fd343b0e59ffa6c9f7a0d9d12"
+    },
+    {
+      "path": "gate-v2/result.json",
+      "bytes": 1000,
+      "sha256": "21d5db37e40b1c60a2b1efc6385918f1bb9c6ef726984d6b79f58e9efbcc8c48"
+    },
+    {
+      "path": "gate-v2/stages/citations.log",
+      "bytes": 1554568,
+      "sha256": "ce07c68fa2c34272c78027af62c8ff1bb6c33dc76dea8b1ae6b77aee1e293838"
+    },
+    {
+      "path": "gate-v2/stages/citations.time",
+      "bytes": 29,
+      "sha256": "816f68fa1f5aaa955c668d488cea9e73cec911df8f36a556e92cc653f0192178"
+    },
+    {
+      "path": "gate-v2/stages/cite-test.log",
+      "bytes": 760,
+      "sha256": "b307a9a89317058501e23337bb24435a938b91d949249798a07469baf2670f1a"
+    },
+    {
+      "path": "gate-v2/stages/cite-test.time",
+      "bytes": 29,
+      "sha256": "c4b882d306df69b5f5ca50ec49095414d87bf33d588d9b17520e91df8242ed86"
+    },
+    {
+      "path": "gate-v2/stages/commit-messages.log",
+      "bytes": 38,
+      "sha256": "8b64c7a412d0921e8f3c08e1c23ecbb1ca1092bff45a46a1aeeb30d2d35a0c5a"
+    },
+    {
+      "path": "gate-v2/stages/commit-messages.time",
+      "bytes": 29,
+      "sha256": "2f00bb14f48e47d581a40c36302b3d8f94ecd53f8ccfa6825008731de11235d2"
+    },
+    {
+      "path": "gate-v2/stages/commit-test.log",
+      "bytes": 594,
+      "sha256": "87142c68bccb642a4938b5a66a07f015aec50ce6a99ba5477435643eeb0b70b4"
+    },
+    {
+      "path": "gate-v2/stages/commit-test.time",
+      "bytes": 29,
+      "sha256": "65d2997de03cd8e938c3025504479c78f311cbbec84b51726f3802dfb3a3b810"
+    },
+    {
+      "path": "gate-v2/stages/doc-links.log",
+      "bytes": 38,
+      "sha256": "e198314d887740ef75cca348b8928e3400173f99638c20791df13e2f804a461c"
+    },
+    {
+      "path": "gate-v2/stages/doc-links.time",
+      "bytes": 29,
+      "sha256": "4fcd318aeef94765464c5ea577c2c34b80431e22ec23240a06933273f40c3012"
+    },
+    {
+      "path": "gate-v2/stages/helpers.log",
+      "bytes": 68,
+      "sha256": "3a2abcd88fd31309aee7f20597fddac1453c89a86d5ff9ccfaa4f60d689488e6"
+    },
+    {
+      "path": "gate-v2/stages/helpers.time",
+      "bytes": 29,
+      "sha256": "96c5e45f2f29ec2c40d19a49e27c5672db5b88645c154de926b28fd515f71b27"
+    },
+    {
+      "path": "gate-v2/stages/notes.log",
+      "bytes": 18,
+      "sha256": "35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1"
+    },
+    {
+      "path": "gate-v2/stages/notes.time",
+      "bytes": 29,
+      "sha256": "2f00bb14f48e47d581a40c36302b3d8f94ecd53f8ccfa6825008731de11235d2"
+    },
+    {
+      "path": "gate-v2/stages/section-citations.json",
+      "bytes": 3907730,
+      "sha256": "5eed96cf010577bf595bd45e467fe5d47bea83760c08a83a63dde9950732b02b"
+    },
+    {
+      "path": "gate-v2/stages/test-evidence/counting-sources.json",
+      "bytes": 920,
+      "sha256": "59427bdead1bb51d8f7f36bbeb37079adfcff28f6407c74e8a4d35214c2cecfc"
+    },
+    {
+      "path": "gate-v2/stages/test-evidence/counting.jsonl",
+      "bytes": 133785,
+      "sha256": "73291633aa7418674928fe32d11d8104730c12eaab990803dcf1d9be3e6d6492"
+    },
+    {
+      "path": "gate-v2/stages/test-evidence/native.jsonl",
+      "bytes": 740396,
+      "sha256": "46d8404d94229771e7e01298188834b3dc663b7bbd2627ca7766df758a2b9c82"
+    },
+    {
+      "path": "gate-v2/stages/test-evidence/node.jsonl",
+      "bytes": 140642,
+      "sha256": "acbe6dcdd87183631ca98c73e5d7cf63aaf831bad847a097bef2f5cf14ca8163"
+    },
+    {
+      "path": "gate-v2/stages/test-evidence/plain.jsonl",
+      "bytes": 2324145,
+      "sha256": "13b70e67487d577264a5669862b3faeab9893db1d2e2aa890d26b39dd587034b"
+    },
+    {
+      "path": "gate-v2/stages/test-evidence/stages.json",
+      "bytes": 969,
+      "sha256": "cd3d292fc2c1a55b97305a5f525de2e3a4715f113aea0a96d4e789257abb7592"
+    },
+    {
+      "path": "gate-v2/stages/test.log",
+      "bytes": 15395444,
+      "sha256": "f488b87aec362d56be9c79e76e5781f187d43066b9a8ec022df6167946f40ec0"
+    },
+    {
+      "path": "gate-v2/stages/test.time",
+      "bytes": 37,
+      "sha256": "6144e2a08b0763e60ce6acf3ecbfd56ea9d7a8e827c288f4d5d66a65052db6e6"
+    },
+    {
+      "path": "gate-v2/stages/typecheck.log",
+      "bytes": 1987,
+      "sha256": "62170bbe0cd055cff4699debd9470a886c0f98f328e7c9517d899c021a3788d0"
+    },
+    {
+      "path": "gate-v2/stages/typecheck.time",
+      "bytes": 30,
+      "sha256": "3f5e8fe21db3dd43b6a2b01be16b0bb2b93701457adaf53f2427fe968c305114"
+    },
+    {
+      "path": "gate-v2/stages/whitespace.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "gate-v2/stages/whitespace.time",
+      "bytes": 29,
+      "sha256": "b19caaf7f42fccf27d8c76a198f52fea0f91edf4f9fc11246dfb0c794d708d58"
+    },
+    {
+      "path": "owning/SHA256SUMS",
+      "bytes": 424,
+      "sha256": "95924d41685a8f8862f9cf9c61e315df52d706a907c54122bb2b24542375fce5"
+    },
+    {
+      "path": "owning/compiler.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "owning/compiler.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "owning/migration-control.stderr",
+      "bytes": 2066,
+      "sha256": "57a147ab8662ff8d22a613c0091c5d5d96c503ad18b0b3fb9eb948da9e2f3a31"
+    },
+    {
+      "path": "owning/migration-control.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "owning/result.json",
+      "bytes": 3181,
+      "sha256": "e07c2fddadfca87517b191ff6445528f5c857303876e11d692f4773ec55af3ed"
+    },
+    {
+      "path": "terminal-observations.json",
+      "bytes": 23360,
+      "sha256": "387d11529a4aca6d52d9096777e22ab6eed9d7e5acb035ddc09620ec49ceda02"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 6388,
+      "sha256": "c023769c64e52b58e9a493f3fcaf201729aa863b13292f1b6c99e5d860253746"
+    }
+  ],
+  "retention": "Directory and all files are read-only; retain for at least30days after landing.",
+  "withheld": "No secrets, tokens, raw environment or unredacted request bodies were captured."
+}
