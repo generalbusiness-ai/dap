@@ -24,7 +24,7 @@
  */
 
 import type { FactRef, FieldValue, KeyId, Observation, OperationId, PlatformData, PlatformDefinition, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, factRefOf, isDigest, isFactRef, isScopeRef, timeOf, timeMs, utf8, textDigest, isMemberRef } from "@generalbusiness/dap-bytes";
+import { canonicalize, parseStrict, entryHash, factRefOf, isDigest, isFactRef, isScopeRef, timeOf, timeMs, utf8, textDigest, isMemberRef } from "@generalbusiness/dap-bytes";
 import type { Item, Opening, Operation, OperationRules, Own, PlatformRule, PublicationOrigin, RecordedRef, RuleEffect, RuleGiven, RuleRequest, Rules, StateView } from "@generalbusiness/dap-derive";
 import { DESTINATION_CHANGED_SET, isJudgeChanges, isRecordedJudgeEvidence, isObjectId, judgeReservation, judgeReservationWithStanding, fileSound, type ReservationAsked, type ReservationRead, type ReservationStanding, type Statement } from "./reservation.ts";
 import { judgeReservationV14, judgeListEligibilityV14, readRulesPolicyObservationV14, requiredChecksV14, type ReservationPolicyInputV14, type ListEligibilityV14 } from "./reservation-v14.ts";
@@ -1362,8 +1362,26 @@ export function certifiedCheckGenerations(value: unknown): value is readonly Cer
       && isObjectId(row["proof"]["tree"]) && isDigest(row["proof"]["proposal"])))
     && new Set(value.map(row => row.name)).size === value.length;
 }
+/** G14 keeps its complete captured policy and current generations in one
+ * publication slot. Decode owned bytes at each boundary; the total record,
+ * not just its policy, must fit the existing snapshot ceiling. */
+interface CertifiedPublicationState {
+  policy: CertifiedReservationSnapshot;
+  generations: readonly CertifiedGeneration[];
+}
+export function certifiedPublicationState(value: unknown): CertifiedPublicationState | null {
+  try {
+    if (!isObject(value) || Object.keys(value).length !== 2 || !Object.hasOwn(value, "policy") || !Object.hasOwn(value, "generations")) return null;
+    const text = canonicalize(value);
+    if (utf8(text).length > 600000) return null;
+    const owned = parseStrict(text);
+    if (!isObject(owned)) return null;
+    const policy = certifiedReservationSnapshot(owned["policy"]), generations = owned["generations"];
+    return policy && certifiedCheckGenerations(generations) ? { policy, generations } : null;
+  } catch { return null; }
+}
 function captured14(given: RuleGiven, publication: Item): CertifiedReservationSnapshot | null {
-  const snapshot = certifiedReservationSnapshot(publication.values["certifiedPolicy"]);
+  const snapshot = certifiedPublicationState(publication.values["passes"])?.policy;
   return snapshot && isFactRef(publication.refs["manifest"]) && Array.isArray(publication.values["requiredChecks"])
     && equal14(snapshot.manifest, publication.refs["manifest"]) && snapshot.tree === publication.values["tree"]
     && equal14(snapshot.input.destination, given.resolved.at) && equal14(publication.values["requiredChecks"], snapshot.required.map(row => row.name)) ? snapshot : null;
@@ -1416,8 +1434,11 @@ function complete14(given: RuleGiven, publication: Item, passes: readonly Certif
     if (proof.decided >= given.resolved.self) return false;
     const entry = given.own(proof.decided)?.entry;
     return entry?.input.type === "outcome" && entry.input.owner === "platform:destination@14" && entry.input.kind === "check-judge" && entry.input.result === "confirmed"
-      && entry.effects.some(effect => effect.effect === "value" && effect.item === publication.id && effect.slot === "passes" && Array.isArray(effect.value)
-        && effect.value.some(accepted => equal14(accepted, row)));
+      && entry.effects.some(effect => {
+        if (effect.effect !== "value" || effect.item !== publication.id || effect.slot !== "passes") return false;
+        const accepted = certifiedPublicationState(effect.value);
+        return accepted !== null && equal14(accepted.policy, snapshot) && accepted.generations.some(generation => equal14(generation, row));
+      });
   });
 }
 
@@ -1688,19 +1709,18 @@ const judgeDecides = (reads: Reads, list = false): Decides => (given) => {
       return read.extents!.filter((extent) => touched.has(extent.name)).flatMap((extent) => extent.checks);
     })() : []),
   ])] : [];
-  let captured: CertifiedReservationSnapshot | null = null;
+  let captured: CertifiedPublicationState | null = null;
   if (certified(given) && list) {
     const selected = eligibility14 as Extract<ListEligibilityV14, { eligible: true }> | null, policy = policyInput14(given);
     if (!selected || !policy || !read?.rules || !evidence.changes || "over" in evidence.changes) throw Error("G14 configured list snapshot required");
     const touched = classify(selected.view.policy.extents, evidence.changes.paths, evidence.changes.links, evidence.changes.unreadable).touched.map(row => row.extent);
-    captured = certifiedReservationSnapshot({ observation: read.rules, input: policy, touched, required: selected.required, tree: evidence.tree, manifest: statement.manifest });
+    captured = certifiedPublicationState({ policy: { observation: read.rules, input: policy, touched, required: selected.required, tree: evidence.tree, manifest: statement.manifest }, generations: [] });
     if (!captured) throw Error("G14 captured policy exceeds native bound");
   }
   return {
     effects: [
-      ...(captured ? [{ effect: "value", item: publication.id, slot: "certifiedPolicy", value: captured as unknown as FieldValue } as const,
-        { effect: "value", item: publication.id, slot: "requiredChecks", value: requiredChecks } as const,
-        { effect: "value", item: publication.id, slot: "passes", value: [] } as const] : []),
+      ...(captured ? [{ effect: "value", item: publication.id, slot: "passes", value: captured as unknown as FieldValue } as const,
+        { effect: "value", item: publication.id, slot: "requiredChecks", value: requiredChecks } as const] : []),
       { effect: "state", item: publication.id, state: "reserved" }, { effect: "ref", item: branch.id, slot: "slot", to: publication.id }, { effect: "ref", item: branch.id, slot: "judging", to: null },
       { effect: "value", item: publication.id, slot: "integration", value: judged.integration }, { effect: "value", item: publication.id, slot: "reservedAt", value: resolved.self },
       ...(judged.reason === null ? [] : [{ effect: "value", item: publication.id, slot: "reason", value: judged.reason } as const]),
@@ -2420,12 +2440,25 @@ function cleanupStatus(publication: Item, changed: { ref?: string | null; token?
 const generations = (publication: Item, given: RuleGiven): CheckGeneration[] => {
   const value = publication.values["passes"];
   if (value === undefined || value === null) return [];
+  if (certified(given)) {
+    const record = certifiedPublicationState(value);
+    if (!record) throw new Error("G14 current policy and generation provenance is unavailable");
+    return [...record.generations];
+  }
   if (Array.isArray(value)) return value as unknown as CheckGeneration[];
   if (!isStandingDestination(pinnedBy(given))) throw new Error("This destination version keeps array generations");
   const record = publicationStandingRecord(value);
   if (!record || record.reservation !== publication.values["reservedAt"]) throw new Error("D1 current generation provenance is unavailable");
   return [...record.checks];
 };
+/** This helper writes a structured passes value only for G14. Historical arrays still reach
+ * their original evaluator and the D1 wrapper without a shape change. */
+function generationValue(publication: Item, given: RuleGiven, rows: readonly CheckGeneration[]): FieldValue {
+  if (!certified(given)) return rows as unknown as FieldValue;
+  const policy = captured14(given, publication), record = policy ? certifiedPublicationState({ policy, generations: rows }) : null;
+  if (!record) throw new Error("G14 updated policy and generations exceed the native bound");
+  return record as unknown as FieldValue;
+}
 const resultGeneration = (given: RuleGiven, publication: Item): boolean => {
   const job = given.uses.find((use) => use.entry.input.type === "act" && use.entry.input.signed.intent.kind === "request-check");
   const name = job?.entry.input.type === "act" ? job.entry.input.signed.intent.fields["name"] : null;
@@ -2486,7 +2519,7 @@ export const destinationRules3: Rules = (() => {
     "fence-generation": { place: "effect", most: 1, run: (given) => {
       const publication = given.resolved.subjects.get("also.publication")!;
       const name = given.resolved.fields["name"] as string, job = given.resolved.fields["job"] as FactRef;
-      return [{ effect: "value", item: publication.id, slot: "passes", value: [...generations(publication, given).filter((row) => row.name !== name), { name, job, passed: false }] as unknown as FieldValue }];
+      return [{ effect: "value", item: publication.id, slot: "passes", value: generationValue(publication, given, [...generations(publication, given).filter((row) => row.name !== name), { name, job, passed: false }]) }];
     } },
     "checked-publication": { place: "also", bind: (items) => items[0]?.id ?? null },
     "checked-bound": { place: "guard", refusals: ["not-the-reservation", "not-this-check"], run: (given) => {
@@ -2523,7 +2556,7 @@ export const destinationRules3: Rules = (() => {
       const passes = generations(publication, given).map((row) => row.name === name ? { ...row, passed: true, ...(verified14 ? { proof: verified14.proof } : {}) } : row);
       const required = (publication.values["requiredChecks"] ?? []) as string[];
       const ready = publication.values["checkDeadline"] !== undefined && (certified(given) ? complete14(given, publication, passes) : required.every((check) => passes.some((row) => row.name === check && row.passed)));
-      return [{ effect: "value", item: publication.id, slot: "passes", value: passes as unknown as FieldValue }, ...(ready ? [
+      return [{ effect: "value", item: publication.id, slot: "passes", value: generationValue(publication, given, passes) }, ...(ready ? [
         { effect: "value", item: publication.id, slot: "checkDeadline", value: null } as const,
         ...opened(given, 0, DESTINATION_KINDS.push, DESTINATION_ATTEMPTS.push, publication.id),
         ...opened(given, 1, DESTINATION_KINDS.mint, DESTINATION_ATTEMPTS.mint, publication.id),

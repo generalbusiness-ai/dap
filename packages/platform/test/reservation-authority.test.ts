@@ -8,6 +8,7 @@ import { judgeReservation, judgeReservationWithStanding, type Statement } from "
 import { judgeListEligibilityV14, judgeReservationV14, readRulesPolicyObservationV14, type ReservationAskedV14 } from "../src/reservation-v14.ts";
 import { RULES_PATTERNS } from "../src/extents.ts";
 import { rulesPolicyProposalV11 } from "../src/rules-policy-v11.ts";
+import { certifiedPublicationState } from "../src/destination.ts";
 import { CREATED, HEAD, NEXT, reading, rulesObserved, keyObserved, Roster, membershipPaul as paul, membershipRita as rita, membershipUna as una } from "./fixtures-entry.ts";
 
 // Membership is judged in memory with its real rules below the made-up office of Roster. Its standing is the actual
@@ -159,6 +160,32 @@ test("D1 metadata and G14 required checks retain actual decision provenance whil
   expect(judgeListEligibilityV14(missingPolicy)).toEqual({ eligible: false, reason: "rules-not-configured" });
   expect(judgeReservationV14({ ...missingPolicy, read: { ...missingPolicy.read, merger: null } })).toEqual({ reserved: false, reason: "authority-lost" });
   expect(judgeReservationV14({ ...missingPolicy, recorded: NEXT })).toEqual({ reserved: false, reason: "out-of-date" });
+  // One owned, bounded record must keep the captured policy when a job
+  // generation changes. These are shape fixtures, not accepted native jobs.
+  if (!eligible.eligible) throw new Error("the strict fixture must be eligible before staging");
+  const callerLabels = [...policy.labels];
+  const captured = { observation: observed, input: { ...strict.policy, extents: { ...envelope, policy: { ...policy, labels: callerLabels } } },
+    touched: ["source"], required: eligible.required, tree: CREATED.tree, manifest: statement.manifest };
+  const current = { name: "verify", job: fact(14), passed: true, proof: { result: fact(15), key: verifyKey.key, decided: 16,
+    configuration: d("c"), checker: { membership: verifyKey.of, member: verifyKey.member }, tree: CREATED.tree, proposal: proposed.digest } };
+  const original = { policy: captured, generations: [current] };
+  const stored = certifiedPublicationState(original);
+  expect(stored).toEqual(original);
+  if (!stored) throw new Error("the combined fixture record must be valid");
+  const next = { name: "verify", job: fact(17), passed: false };
+  const fenced = certifiedPublicationState({ policy: stored.policy, generations: [next] });
+  expect(fenced).toEqual({ policy: stored.policy, generations: [next] });
+  expect(stored.generations).toEqual([current]);
+  expect(certifiedPublicationState({ ...original, generations: [current, next] })).toBeNull();
+  expect(certifiedPublicationState({ ...original, generations: [next], certifiedPolicy: captured })).toBeNull();
+  expect(certifiedPublicationState({ ...original, policy: { ...captured, required: [] } })).toBeNull();
+  current.proof.configuration = d("e");
+  expect(stored.generations[0]?.proof?.configuration).toBe(d("c"));
+  // Mutating the caller's policy cannot rewrite an already decoded record.
+  const storedPolicyText = canonicalize(stored.policy);
+  callerLabels.push("later-label");
+  expect(canonicalize(stored.policy)).toBe(storedPolicyText);
+
   // A lane-cached or contradictory outer checker configuration cannot stand
   // in for the complete proposal that the authenticated Q11 answer names.
   expect(judgeReservationV14({ ...strict, read: { ...strictRead, rules: { ...observed, content: { ...observed.content,

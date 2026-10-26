@@ -2,7 +2,7 @@
 import type { FieldValue, PlatformData } from '@generalbusiness/dap-contract';
 import { canonicalize, isDigest, isFactRef, same, utf8 } from '@generalbusiness/dap-bytes';
 import { type RuleGiven, type Rules, type RuleEffect, type OperationRules } from '@generalbusiness/dap-derive';
-import { destination4, destinationRules4, certifiedReservationSnapshot, certifiedCheckGenerations } from './destination.ts';
+import { destination4, destinationRules4, certifiedPublicationState } from './destination.ts';
 import { rulesPolicyProposalV11, rulesPolicyPatternsV11 } from './rules-policy-v11.ts';
 import { RULES_TREE_PROOF, verifyRulesTree } from './rules-policy-tree.ts';
 import { RULES_CERTIFICATE_KIND, RULES_POLICY_VALUE_V11, readRulesCertificateBinding, rulesCertificateBranchMatches,
@@ -49,8 +49,7 @@ const oldJudge=destination4.outcomes['judge']!;
 const oldJudgeRule=destinationRules4['judge'];
 if(!oldJudgeRule||oldJudgeRule.place!=='outcome')throw Error('native judge outcome required');
 export const destinationV14:PlatformData={...destination4,items:{...destination4.items,publication:{...oldPublication,values:{...oldPublication.values,
-  certifiedPolicy:{fixed:false,required:false,of:{type:'code',code:'certified-reservation-snapshot-v14',row:'R7'}},
-  passes:{fixed:false,required:false,of:{type:'code',code:'certified-check-generations-v14',row:'R7'}}}},branch:{...oldBranch,
+  passes:{fixed:false,required:false,of:{type:'code',code:'certified-publication-state-v14',row:'R7'}}}},branch:{...oldBranch,
   holds:{...oldBranch.holds,operations:{...oldBranch.holds?.operations,[RULES_CERTIFICATE_KIND]:1}},
   values:{...oldBranch.values,rulesCertificateRequest:{fixed:false,required:false,of:{type:'code',code:'rules-certificate-binding-v14',row:'R7'}}}}},
   acts:{...destination4.acts,[RULES_CERTIFICATE_KIND]:certificateAct},outcomes:{...destination4.outcomes,
@@ -59,8 +58,7 @@ export const destinationV14:PlatformData={...destination4,items:{...destination4
 
 export const destinationRulesV14:Rules={...destinationRules4,
   judge:{...oldJudgeRule,rules:{...oldJudgeRule.rules,most:{...oldJudgeRule.rules.most!,effects:16}}},
-  'certified-reservation-snapshot-v14':{place:'type',run:(_given,value)=>certifiedReservationSnapshot(value)!==null},
-  'certified-check-generations-v14':{place:'type',run:(_given,value)=>certifiedCheckGenerations(value)},
+  'certified-publication-state-v14':{place:'type',run:(_given,value)=>certifiedPublicationState(value)!==null},
   'rules-certificate-binding-v14':{place:'type',run:(_given,value)=>readRulesCertificateBinding(value)!==null},
   'rules-certificate-request-v14':{place:'guard',refusals:['rules-certificate-unavailable'],run:given=>{
     // Standard native grant/key/member checks still precede this sibling proof.
