@@ -706,12 +706,12 @@ test("a deployment restart is consumed after the diagnostic on ordinary ingress 
   expect({ targets:host.targets,mints:host.mintCalls,sends:host.sends.length,closures:host.closureReads,reads:host.objectReads.length }).toEqual(calls);
   expect((await lane.inside(state => new ArchiveRows(archiveSql(state),lane.at).restartReceipt())).generation).toBe(1);
   const next = await lane.alarmAt(); expect(next).not.toBeNull();
-  // Latest directive replay is read-only, including after a later stop.
-  await lane.inside(state => new ArchiveRows(archiveSql(state),lane.at).stop("limit"));
+  // Latest directive replay is read-only, including after a later foreign-source stop.
+  await lane.inside(state => new ArchiveRows(archiveSql(state),lane.at).stop("foreign-source-unavailable"));
   await lane.restart();
   await (lane.object as unknown as { nativeBirth(at:unknown,milliseconds:number):Promise<unknown> }).nativeBirth(lane.at,10_000);
   await lane.inside((_state,instance) => (instance as { awaitScheduledCallbacks():Promise<unknown> }).awaitScheduledCallbacks());
-  expect((await row(lane))!.stopped?.reason).toBe("limit");
+  expect((await row(lane))!.stopped?.reason).toBe("foreign-source-unavailable");
   // A fresh diagnostic-bound operator generation is required to retry again.
   const again = (await row(lane))!, payload2 = { ...payload,generation:1,rowDigest:digestBytes(utf8(canonicalize(again))) };
   fixtureArchiveRestart.set(lane.name,canonicalize({ ...payload2,command:digestBytes(utf8(canonicalize(payload2))) }));

@@ -17,7 +17,7 @@ import { exact } from "../../packages/scope/src/host-wiring.ts";
 import { DEMO_RELEASE } from "../../examples/grow/demo-release.ts";
 import type { Sql } from "../../packages/scope/src/sqlite.ts";
 import { archiveSourceReferences } from "../../packages/scope/src/archive-source-window.ts";
-import { stopArchivePrefix } from "../../packages/scope/src/archive-prefix.ts";
+import { ArchivePrefixStopped } from "../../packages/scope/src/archive-prefix.ts";
 import { ArchiveStopped } from "../../packages/scope/src/archive-budget.ts";
 
 export interface GrowArchiveEnvironment extends ArtifactsBindings { GROW_ARCHIVE_CONFIG?: string; ARCHIVE_RESTART_DIRECTIVE?: string }
@@ -83,7 +83,8 @@ export function growArchiveDriver(given: OutsideGiven, sql: Sql, binding: Bindin
         if (sameBudget !== budget) return budget.stop("unavailable");
         // End this synchronous native frame before any peer await. Only
         // copied source references cross it; the scout opens a fresh frame.
-        const sources = sql.transaction(() => archiveSourceReferences(sql, seq, bounds, budget).sources);
+        const candidate = sql.transaction(() => archiveSourceReferences(sql, seq, bounds, budget));
+        const sources = candidate.sources;
         for (const where of sources) {
           const key = canonicalize(where); if (included.has(key)) continue;
           let source = births.get(key);
@@ -98,7 +99,16 @@ export function growArchiveDriver(given: OutsideGiven, sql: Sql, binding: Bindin
               }
             });
             const birth = readNativeBirth(reply, where, 256 * 1024), policy = birth ? policies.get(birth.named) : null;
-            if (!birth || !policy) return stopArchivePrefix("foreign-source-unavailable");
+            if (!birth || !policy) {
+              // Bounded copies of already validated metadata only. No raw birth,
+              // payload, error or transport credential enters the pass diagnostic.
+              budget.spend({ metadata: 512, inputWork: 1024 });
+              throw new ArchivePrefixStopped("foreign-source-unavailable", Object.freeze({
+                candidate: Object.freeze({ ...candidate.position }), source: Object.freeze({ ...where }),
+                classification: birth ? "unsupported-policy" as const : "birth-unavailable" as const,
+                ...(birth ? birth.named.length <= 128 ? { pin: birth.named } : { pinOmitted: true as const } : {}),
+              }));
+            }
             source = { at: where, birth: { bytes: birth.proof.bytes, hash: birth.proof.fact.hash }, ...(policy.declaration ? { declaration: policy.declaration } : {}) };
             births.set(key, source);
           }

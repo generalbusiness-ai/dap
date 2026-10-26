@@ -134,13 +134,22 @@ test.for(["absent", "target", "confirmed", "stopped", "pending"] as const)("a wa
   expect(view.state).toBe("read"); if (view.state !== "read") expect.fail("a warm valid scope must be read");
   expect(view.storedWake).toEqual(wake === null ? { state: "absent" } : { state: "present", ...wake });
   expect(view.platformAlarm).toEqual(phase === "pending" ? { state: "absent" } : { state: "present", at: Date.parse(at(900)) });
-  expect(view.row).toEqual(row === null ? { state: "absent" } : { state: "present", rowDigest: row.stopped?.reason === "limit" && row.pending === null ? digestBytes(utf8(canonicalize(row))) : null, restartGeneration: 0, at: row.at, repository: row.repository, format: row.format,
+  expect(view.row).toEqual(row === null ? { state: "absent" } : { state: "present", rowDigest: row.stopped?.reason === "limit" && row.pending === null && row.confirmed?.layout === 2 && wake?.stopped === true && !wake.pending && wake.next === null ? digestBytes(utf8(canonicalize(row))) : null, restartGeneration: 0, at: row.at, repository: row.repository, format: row.format,
     phase, reason: row.stopped?.reason ?? null, confirmed: row.confirmed,
     pendingMark: row.pending === null ? null : { commit: row.pending.commit, parent: row.pending.parent, through: row.pending.through,
       markedAt: row.pending.markedAt, ...(row.pending.layout === 2 ? { layout: 2 } : {}) }, attempts: row.attempts, next: row.next });
   (context.task.meta as Record<string, unknown>)["operatorObservation"] = { phase, queries: measured.queries, platformAlarm: measured.alarm,
     qualification: "Warm internal reader only; exact application SQLite and actual platform alarm unchanged. Constructor DDL/activation, authenticated installation, atomic SQL/alarm snapshot and hosted recovery are not established." };
 
+  if (phase === "confirmed") {
+    expect(row!.confirmed?.layout).toBe(2);
+    await lane.inside(state => new ArchiveRows(archiveSql(state), lane.at).stop("foreign-source-unavailable"));
+    const foreign = (await observed(lane.object, [lane.name], host, resolve)).answers[0]!;
+    const foreignRow = await lane.inside(state => new ArchiveRows(archiveSql(state),lane.at).load());
+    expect(foreign).toMatchObject({ state:"read",row:{ reason:"foreign-source-unavailable",rowDigest:digestBytes(utf8(canonicalize(foreignRow))) } });
+    await lane.inside(state => state.storage.sql.exec("UPDATE meta SET v=? WHERE k='archive-wake-1'",canonicalize({ pending:false,stopped:false,next:null })));
+    expect((await observed(lane.object, [lane.name], host, resolve)).answers[0]).toMatchObject({ row:{ rowDigest:null } });
+  }
   if (phase === "stopped") {
     await lane.inside(state => new ArchiveRows(archiveSql(state), lane.at).stop("TEST PRIVATE REASON", "TEST PRIVATE DETAIL"));
     const masked = (await observed(lane.object, [lane.name], host, resolve)).answers[0]!;
