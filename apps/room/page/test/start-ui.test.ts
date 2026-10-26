@@ -210,7 +210,7 @@ test("Start is explicit; Back fences late discovery, reload only offers Check an
     expect(issue.mock.calls.at(-1)![3].kind).toBe("agent-key");
     expect(root.textContent).toContain("dap join <private invitation link>");
     expect(root.textContent).toContain("dap join <same-private-link> --check");
-    expect(root.textContent).toContain("new owner-only ARTROOM_HOME directory");
+    expect(root.textContent).toContain("new owner-only DAP_HOME directory");
     // A late ready-screen action cannot replace a newly selected connection.
     const changedSettings = JSON.stringify({ place: null, publicKey: keyIdOfSecret(new Uint8Array(32).fill(64)) });
     values.set("artroom-page", changedSettings);
