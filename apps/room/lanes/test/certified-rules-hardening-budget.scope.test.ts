@@ -90,7 +90,10 @@ test("G15 admits the maximum constructed capture, retains 32 real proofs, and re
       const seq = await prepared.lane.did(rita, "merge", { expected: await prepared.lane.expected({ proposal: 0, manifest: prepared.manifest, rules: prepared.rules.id }), fields: { manifest: prepared.manifest, reports: [] } });
       await pause(nodes);
       const operation = factRefOf((await hardeningEntries(prepared.lane))[seq]!);
-      const publication = (await hardeningItems(G, "publication")).find(item => canonicalize(item.refs["operation"]) === canonicalize(operation));
+      // Summary keeps live publications. The retained items surface keeps
+      // final publications, including a reserve that was refused.
+      const publications = [...(await G.summary()).value.items.filter(item => item.type === "publication"), ...await hardeningItems(G, "publication")];
+      const publication = publications.find(item => canonicalize(item.refs["operation"]) === canonicalize(operation));
       if (!publication) return expect.fail("The real reserve send must create a native publication");
       return publication;
     };
