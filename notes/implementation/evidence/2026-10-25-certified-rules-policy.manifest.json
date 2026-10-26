@@ -1,5 +1,5 @@
 {
-  "qualification": "Pre-gate finite note-cited output manifest. Multiple actual execution checkpoints are grouped below; the current owning checkpoint does not replace historical execution heads or later-adoption distinctions. Bundle-index hashes identify retained output bundles, not a synthetic combined passing run. Original failures remain failed. Nested SHA256SUMS cover uncited portable payloads; this file directly indexes all114 selected note-cited indexes/checksums and individual file outputs. Raw environment/bindings/physical vectors stay private. First ordinary gate27835 failed at whitespace (npm child2/owner1); all later shell/compiler/test stages were unreached. Future GateV2/review and final aggregate Home index/parent sealing remain pending; no nonexistent future file is listed.",
+  "qualification": "Pre-gate finite note-cited output manifest. Multiple actual execution checkpoints are grouped below; the current owning checkpoint does not replace historical execution heads or later-adoption distinctions. Bundle-index hashes identify retained output bundles, not a synthetic combined passing run. Original failures remain failed. Nested SHA256SUMS cover uncited portable payloads; this file directly indexes all132 selected note-cited indexes/checksums and individual file outputs. Raw environment/bindings/physical vectors stay private. First ordinary gate27835 failed at whitespace (npm2/owner1); second92211 failed at helpers (npm1/owner1) after three precheck passes. Main compiler/test suffixes were unreached. Three post-repair static scripts separately exited0 on intentionally dirty six-identifier repair; no combined outer time was measured. Future GateV3/review and final aggregate Home index/parent sealing remain pending; no nonexistent future file is listed. Latest one-case Page freshness also passed on the same intentional dirty helper rename; its Node command interval is not a wrapper outer measurement. No rebuild owed by this actual freshness result.",
   "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-25-certified-rules-policy",
   "checkpoint": {
     "commit": "1f8ed9effd8966c02aa4e2df6daf9470676b493a",
@@ -106,6 +106,13 @@
       "tree": "52e860a675103b4c17c8ec7868a0b520b1c6b421",
       "phases": [
         "native-fixture-v9"
+      ]
+    },
+    {
+      "commit": "52c2714c313298ba98ba632a747fbefa1d2985ac",
+      "tree": "03a8f8c20542a18c491b9aadfd39ba1562c5f1b8",
+      "phases": [
+        "gate-v2"
       ]
     },
     {
@@ -341,7 +348,7 @@
       }
     ]
   },
-  "fileCount": 114,
+  "fileCount": 132,
   "files": [
     {
       "path": "combined-owning-v1/SHA256SUMS",
@@ -387,6 +394,16 @@
       "path": "gate-v1/whitespace-repair-receipt.json",
       "bytes": 862,
       "sha256": "d8d00829305b7205e3cc0a9ebce1bfcfd14b42751d1374453ed5be8039519fe8"
+    },
+    {
+      "path": "gate-v2/SHA256SUMS",
+      "bytes": 1468,
+      "sha256": "e4c62912b7283d565ad98edca2375c79cb8ed617e5c773dfbe02aefb2cbfe5d2"
+    },
+    {
+      "path": "gate-v2/manifest.json",
+      "bytes": 3233,
+      "sha256": "a9800b3e2a08e0e1c83676deadfe826bad2e07239b582deb9bd56f55998f8aa6"
     },
     {
       "path": "generation-v1-exterior.SHA256SUMS",
@@ -467,6 +484,86 @@
       "path": "global-required-control-v1/manifest.json",
       "bytes": 10370,
       "sha256": "1ce26c0fded53a5731808037579091cfb4c83b638dd3606fe706bbbaa7b65cdf"
+    },
+    {
+      "path": "helper-name-page-assets-v1/SHA256SUMS",
+      "bytes": 806,
+      "sha256": "f0049340f64de2588add2c86f15a887674c518c43b8c9a89dc4fd63a305cbfec"
+    },
+    {
+      "path": "helper-name-page-assets-v1/manifest.json",
+      "bytes": 2490,
+      "sha256": "73070b7b6145f5f2ad704be86fdb639ed2eef5a9a3fa906d0b29b493bfb55dce"
+    },
+    {
+      "path": "helper-names-owning-v1/SHA256SUMS",
+      "bytes": 1220,
+      "sha256": "9db005d1bb5eb7dc56dbedb876ae2732e71d51fda1fa2356862ae5349f56bb28"
+    },
+    {
+      "path": "helper-names-owning-v1/citations.log",
+      "bytes": 1554454,
+      "sha256": "44dcc5d03529e09f48ccb955750fed904f81a0b7eeb2b519aa6ac0e98f28af5e"
+    },
+    {
+      "path": "helper-names-owning-v1/citations.original-child-outcome.json",
+      "bytes": 288,
+      "sha256": "c59540b5f30d42349129cada841b753997638a8f18ef97abcb58ed43dc0c4abf"
+    },
+    {
+      "path": "helper-names-owning-v1/citations.time",
+      "bytes": 29,
+      "sha256": "4eb9ab298c07919c3c13d39c1944457a419b1344780e27336f1d4430e22a141b"
+    },
+    {
+      "path": "helper-names-owning-v1/doc-links.log",
+      "bytes": 38,
+      "sha256": "e198314d887740ef75cca348b8928e3400173f99638c20791df13e2f804a461c"
+    },
+    {
+      "path": "helper-names-owning-v1/doc-links.original-child-outcome.json",
+      "bytes": 167,
+      "sha256": "464f1e5db92cb40c9c4bd142d14c72934320729872e46241f3e78ea175e3cfe4"
+    },
+    {
+      "path": "helper-names-owning-v1/doc-links.time",
+      "bytes": 29,
+      "sha256": "4fcd318aeef94765464c5ea577c2c34b80431e22ec23240a06933273f40c3012"
+    },
+    {
+      "path": "helper-names-owning-v1/helper-name-repair-receipt.json",
+      "bytes": 877,
+      "sha256": "e5aa39e7806b3adbe9ccbd69817f9838a307eb578eec28a363991704128aafd4"
+    },
+    {
+      "path": "helper-names-owning-v1/helpers.log",
+      "bytes": 68,
+      "sha256": "a61f51ffa69345c1eb015c7a3873dab38cc89b54f75ec28550b416c0b434b881"
+    },
+    {
+      "path": "helper-names-owning-v1/helpers.original-child-outcome.json",
+      "bytes": 170,
+      "sha256": "55f8585372fde8ba410b8672c7a8283607b958fc09f7ec7f42ddd6b1c6a1c74d"
+    },
+    {
+      "path": "helper-names-owning-v1/helpers.time",
+      "bytes": 29,
+      "sha256": "cd82ad72698764fe20fa73116bbaf2c736308338b3cdce7dd8fb7d18b8e11148"
+    },
+    {
+      "path": "helper-names-owning-v1/manifest.json",
+      "bytes": 5749,
+      "sha256": "b1357567f634d26d6c64450820fb6e10b538003c971cfc8f75776b6d56c0b069"
+    },
+    {
+      "path": "helper-names-owning-v1/result.json",
+      "bytes": 1086,
+      "sha256": "53e83545a4286a24b6027484164c45afa09f63b641671d9e449d5f223d939f64"
+    },
+    {
+      "path": "helper-names-owning-v1/section-citations.json",
+      "bytes": 3907473,
+      "sha256": "3a77a864e3a56b22d7ceaa8b12edab7b76c10b0f9b2772a5eed901ba7133097f"
     },
     {
       "path": "kernel-control-v1/SHA256SUMS",
@@ -936,5 +1033,68 @@
       "sha256": "d8d00829305b7205e3cc0a9ebce1bfcfd14b42751d1374453ed5be8039519fe8"
     },
     "qualification": "Exact Root receipt only; Source afterimages not independently executed by manifest preparation. This is not a gate rerun or pass."
-  }
+  },
+  "laterFailedOrdinaryGate": {
+    "checkpoint": {
+      "commit": "52c2714c313298ba98ba632a747fbefa1d2985ac",
+      "tree": "03a8f8c20542a18c491b9aadfd39ba1562c5f1b8"
+    },
+    "originalSession": 92211,
+    "npmChildExit": 1,
+    "ownerExit": 1,
+    "passedShellStages": [
+      "whitespace",
+      "commit-messages",
+      "commit-test"
+    ],
+    "failedStage": "helpers: two local sha1 predicate names shadow existing bytes/hash.ts owner",
+    "install": "SKIPPED",
+    "laterMainCompilerTestStages": "UNREACHED",
+    "observedMainCases": 0,
+    "unhandledErrors": null,
+    "qualification": "Commit-test precheck did run; not a main-suite result. Compatibility/citations/doc-links suffixes also unreached in this gate. Original failed exits remain, no GateV3 result or new clean head invented."
+  },
+  "postRunHelperRenameRepair": {
+    "kind": "Source-repair-receipt",
+    "file": {
+      "path": "helper-names-owning-v1/helper-name-repair-receipt.json",
+      "bytes": 877,
+      "sha256": "e5aa39e7806b3adbe9ccbd69817f9838a307eb578eec28a363991704128aafd4"
+    },
+    "qualification": "Six identifier occurrences replaced across two files, exact inverse original bytes preserved per Root receipt. This is separate post-run Source evidence, not failed gate becoming passed."
+  },
+  "intentionalDirtyExecutions": [
+    {
+      "phase": "helper-names-owning-v1",
+      "originalSession": 62394,
+      "commitBasis": {
+        "commit": "52c2714c313298ba98ba632a747fbefa1d2985ac",
+        "tree": "03a8f8c20542a18c491b9aadfd39ba1562c5f1b8"
+      },
+      "actualSourceState": "Intentional dirty six-identifier replacement, bound by exact repair receipt; NOT a clean execution tree or new commit.",
+      "receiptFile": "helper-names-owning-v1/helper-name-repair-receipt.json",
+      "actualReturncodes": {
+        "helpers": 0,
+        "citations": 0,
+        "doc-links": 0
+      },
+      "outerMeasured": false,
+      "timingQualification": "Only separate command wall/CPU spans; do not present their sums as measured pipeline outer. Citation unresolved advisories retained."
+    },
+    {
+      "phase": "helper-name-page-assets-v1",
+      "commitBasis": {
+        "commit": "52c2714c313298ba98ba632a747fbefa1d2985ac",
+        "tree": "03a8f8c20542a18c491b9aadfd39ba1562c5f1b8"
+      },
+      "actualSourceState": "Intentional dirty six-identifier repair, not clean52c or a new execution head.",
+      "actualResult": "Existing wholeassets.test1PASS/page/1136525596_0;ready/result/final/JSONcomplete;no additional cases",
+      "NodeCommandInterval": {
+        "wallSeconds": 0.72,
+        "inclusiveCpuSeconds": 1.19
+      },
+      "outerMeasured": false,
+      "qualification": "Progress has no retry/repeat fields; default config/no overrides only, not observed zero counters. Full3199Source maps remain private; unchanged maps reported in retained Root audit. No futureGateV3 claim."
+    }
+  ]
 }

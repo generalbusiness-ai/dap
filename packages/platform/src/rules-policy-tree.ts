@@ -24,7 +24,7 @@ export type RulesTreeResult = { ok: true; leaves: number; treeVisits: number; ex
 const utf8 = new TextEncoder();
 const object = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
 const keys = (v: Record<string, unknown>, fields: readonly string[]): boolean => Object.keys(v).length === fields.length && fields.every(k => Object.hasOwn(v, k));
-const sha1 = (v: unknown): v is string => typeof v === "string" && /^[0-9a-f]{40}$/.test(v);
+const isSha1Hex = (v: unknown): v is string => typeof v === "string" && /^[0-9a-f]{40}$/.test(v);
 const fail = (): never => { throw new Error("extent-tree-unavailable"); };
 function decode(v: unknown, allowance: { bytes: number }): Uint8Array {
   if (typeof v !== "string" || v.length > Math.ceil(RULES_TREE_BOUNDS.objectBytes / 3) * 4 || v.length % 4 !== 0
@@ -47,7 +47,7 @@ function decode(v: unknown, allowance: { bytes: number }): Uint8Array {
 export function verifyRulesTree(canonical: string, digest: Digest, binding: RulesTreeBinding, patterns: readonly RulesTreePattern[] = []): RulesTreeResult {
   try {
     if (typeof canonical !== "string" || canonical.length > RULES_TREE_PROOF.max || utf8.encode(canonical).length > RULES_TREE_PROOF.max
-      || patterns.length > RULES_TREE_BOUNDS.patterns || !isDigest(digest) || !sha1(binding.commit)) return fail();
+      || patterns.length > RULES_TREE_BOUNDS.patterns || !isDigest(digest) || !isSha1Hex(binding.commit)) return fail();
     const proof: unknown = parseStrict(canonical);
     if (!object(proof) || !keys(proof, ["v", "rules", "proposal", "destination", "repository", "ref", "commit", "commitBytes", "trees"])
       || proof["v"] !== 1 || canonicalize(proof) !== canonical || valueDigest(RULES_TREE_PROOF.domain, proof) !== digest
@@ -55,7 +55,7 @@ export function verifyRulesTree(canonical: string, digest: Digest, binding: Rule
       || !isScopeRef(proof["destination"]) || proof["destination"].kind !== "destination" || !isDigest(proof["proposal"])
       || !object(proof["repository"]) || !keys(proof["repository"], ["host", "namespace", "name", "id"])
       || Object.values(proof["repository"]).some(v => typeof v !== "string")
-      || typeof proof["ref"] !== "string" || !sha1(proof["commit"]) || !Array.isArray(proof["trees"])) return fail();
+      || typeof proof["ref"] !== "string" || !isSha1Hex(proof["commit"]) || !Array.isArray(proof["trees"])) return fail();
     for (const field of ["rules", "proposal", "destination", "repository", "ref", "commit"] as const) {
       if (canonicalize(proof[field]) !== canonicalize(binding[field])) return fail();
     }
@@ -66,7 +66,7 @@ export function verifyRulesTree(canonical: string, digest: Digest, binding: Rule
     const trees = new Map<string, readonly TreeEntry[]>();
     let previous = "";
     for (const row of proof["trees"]) {
-      if (!object(row) || !keys(row, ["id", "bytes"]) || !sha1(row["id"]) || row["id"] <= previous || trees.size >= RULES_TREE_BOUNDS.visits) return fail();
+      if (!object(row) || !keys(row, ["id", "bytes"]) || !isSha1Hex(row["id"]) || row["id"] <= previous || trees.size >= RULES_TREE_BOUNDS.visits) return fail();
       previous = row["id"];
       const bytes = decode(row["bytes"], allowance);
       if (idOf("tree", bytes) !== row["id"]) return fail();

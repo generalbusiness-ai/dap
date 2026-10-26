@@ -11,10 +11,10 @@ export const RULES_EXTENTS_VALUE_V11 = { domain:'artroom-rules-extents-2',max:26
 export interface RulesCertificateProvenanceV11 { request: FactRef; certificate: FactRef; proof: Digest; commit: string }
 const exact = (v: unknown, names: readonly string[]): v is Record<string, unknown> => isRecord(v) && Object.keys(v).length === names.length && names.every(k=>Object.hasOwn(v,k));
 const text = (v:unknown,max:number):v is string => typeof v==='string' && v.length>0 && v.length<=max && utf8(v).length<=max;
-const sha1 = (v:unknown):v is string => typeof v==='string' && /^[0-9a-f]{40}$/.test(v);
+const isSha1Hex = (v:unknown):v is string => typeof v==='string' && /^[0-9a-f]{40}$/.test(v);
 export function readRulesCertificateBinding(value:unknown):RulesTreeBinding|null {
   if(!exact(value,['rules','proposal','destination','repository','ref','commit']) || !isScopeRef(value['rules']) || value['rules'].kind!=='rules'
-    || !isScopeRef(value['destination']) || value['destination'].kind!=='destination' || !isDigest(value['proposal']) || !sha1(value['commit'])
+    || !isScopeRef(value['destination']) || value['destination'].kind!=='destination' || !isDigest(value['proposal']) || !isSha1Hex(value['commit'])
     || !text(value['ref'],267) || !value['ref'].startsWith('refs/heads/') || !exact(value['repository'],['host','namespace','name','id'])
     || !Object.values(value['repository']).every(v=>text(v,256)))return null;
   return {rules:{...value['rules']},proposal:value['proposal'],destination:{...value['destination']},

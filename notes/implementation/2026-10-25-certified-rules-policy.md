@@ -110,17 +110,20 @@ existing identities.
 
 The [evidence manifest](evidence/2026-10-25-certified-rules-policy.manifest.json) indexes the retained files and execution checkpoints.
 
-The first ordinary gate ran at `d0453d10`, tree `0c1305bf`. This candidate
-retains that Source with two single-byte EOF removals and the updated
-note and evidence index. The table keeps each execution checkpoint distinct.
+The two failed ordinary gates ran at `d0453d10` and `52c2714c`, with
+separate outcomes below. This candidate retains the EOF repair and adds
+consistent local predicate renames. No replacement gate result or future
+checkpoint hash is assigned here. The table keeps execution checkpoints
+distinct.
 The completed Page owning checkpoint remains `1f8ed9ef`. Each output
 bundle index below names preserved logs, command arguments, outcomes and
 case identities. Commands with a bound plan use the exact arguments in
 that bundle's command ledger. The command descriptions are not replacement
-shell scripts. Full hashes identify bundle indexes, not declaration
-values or a synthesized total of earlier runs.
+shell scripts. The output column names each hash as a bundle index or an
+individual log. Neither is a declaration value or a synthesized total of
+earlier runs.
 
-| Check | Actual command or bound command set | Original exit and outcome | Output bundle digest | Execution checkpoint |
+| Check | Actual command or bound command set | Original exit and outcome | Output digest | Execution checkpoint |
 | --- | --- | --- | --- | --- |
 | Q11 declaration generation | `node --import node_modules/tsx/dist/loader.mjs packages/platform/scripts/pin-native-declarations.mjs`, then the bound output observer | 0; producer and observer passed | `7971acb724d63ebebf1bedc12b8899ecb797e0325803cd73b453153b9031dc64` (`generation-v4/retention-manifest.json`) | `89eca884`, tree `773c7ce3`; later adoption `b67ba2b8` |
 | Latest G14 declaration generation | `node --import node_modules/tsx/dist/loader.mjs packages/platform/scripts/pin-native-declarations.mjs`, then the bound output observer | 0; producer and comparison passed | `cb463dfcb2c1a65f8b33cbc5dd757c47f631303b2ffb94327543d8e021149922` (`generation-v5/retention-manifest.json`) | `eddc1771`; later adoption `d2e88bea` |
@@ -133,7 +136,12 @@ values or a synthesized total of earlier runs.
 | Page build after the kernel repair | `npm run build --workspace @generalbusiness/dap-page` (maintained `node scripts/assets.mjs`), then the bound output comparison | 0; build, owner and capsule passed, outputs matched retained copies | `091d0e7a7bbb6b807991f1f4d691c3c9a6174ce04282a14c58cb7ea9b37f89d0` (`page-build-v5/manifest.json`) | Built `c64dc766`, tree `f9b6bf03`; assets adopted at `1f8ed9ef` |
 | Page owning checks | `tsc -p apps/room/page/tsconfig.json`, then `tsconfig.test.json`; root Vitest whole `apps/room/page/test/assets.test.ts` with the recorded config and reporters | 0; both compilers and the one existing case passed | `f3f0d1967b1aad5873691ba18f90331280046d850b21c03a5160905938037ae4` (`page-owning-v1/manifest.json`) | `1f8ed9ef`, tree `a5ecf677` |
 | Ordinary gate V1 | `npm run gate` | npm child 2, owner 1; whitespace failed. Compatibility, compilers and tests were unreached, with zero observed cases. Install skipped | `865b67da905aa86d34e4af136cdf047efeeabbc3b18b8e0b0f7d7dc41cd63cd0` (`gate-v1/manifest.json`) | `d0453d10`, tree `0c1305bf` |
-| Ordinary gate V2 | `npm run gate` | HELD: corrected checkpoint not yet run | HELD | HELD |
+| Ordinary gate V2 | `npm run gate` | npm child 1, owner 1; shared-helper check failed. Whitespace and both commit checks passed. Later checks, compilers and main tests were unreached; install skipped | `a9800b3e2a08e0e1c83676deadfe826bad2e07239b582deb9bd56f55998f8aa6` (`gate-v2/manifest.json`) | `52c2714c`, tree `03a8f8c2` |
+| Shared-helper owning check | `node scripts/check-shared-helpers.mjs` | 0; 670 Source files and 134 shared exports checked | `a61f51ffa69345c1eb015c7a3873dab38cc89b54f75ec28550b416c0b434b881` (`helper-names-owning-v1/helpers.log`) | Six-identifier repair of `52c2714c`; no invented commit |
+| Section-citation owning check | `node scripts/check-section-citations.mjs --report <recorded report path>` | 0; existing advisories retained | `44dcc5d03529e09f48ccb955750fed904f81a0b7eeb2b519aa6ac0e98f28af5e` (`helper-names-owning-v1/citations.log`) | Same repaired Source |
+| Documentation-link owning check | `node scripts/check-doc-links.mjs` | 0; 705 checked, zero broken links | `e198314d887740ef75cca348b8928e3400173f99638c20791df13e2f804a461c` (`helper-names-owning-v1/doc-links.log`) | Same repaired Source |
+| Page freshness after the helper rename | Pinned Node and root Vitest whole `apps/room/page/test/assets.test.ts`, `--config vitest.config.ts` and the recorded reporters | 0; one existing case passed and the current bundle matched | `73070b7b6145f5f2ad704be86fdb639ed2eef5a9a3fa906d0b29b493bfb55dce` (`helper-name-page-assets-v1/manifest.json`) | Intentional dirty `52c2714c` plus six identifier replacements |
+| Ordinary gate V3 | `npm run gate` | HELD: corrected checkpoint not yet run | HELD | HELD |
 
 The first ordinary gate stopped at whitespace: one extra blank line at
 EOF in each of `packages/git/src/pure-names.ts` and
@@ -144,9 +152,40 @@ compiler or test body, so it establishes no new test result.
 Root removed exactly one terminal newline byte from each file. Every
 other byte remains unchanged. The subsequent `git diff --check` passed.
 The repair changes no policy, assertion, deadline or fixture behavior.
-The original gate stays failed, and the corrected ordinary gate remains
-pending. The repair receipt records byte correspondence, not a passing
+Gate V1 stays failed. Gate V2 also failed later, as recorded below. The repair receipt records byte correspondence, not a passing
 rerun.
+
+Gate V2 passed whitespace, commit messages and the commit-message test,
+then stopped at `check-shared-helpers.mjs`. Two local SHA-1 format
+predicates used the name of the shared byte-hash function. The npm child
+exit was 1 and the owner exit was 1, with no guard errors. Its outer span
+was 2.61 seconds elapsed and 2.67 CPU seconds. Citations, documentation
+links, compilers, main tests and pretest compatibility were unreached.
+There were zero observed main cases. Their unhandled-error state is
+unknown, not zero.
+
+Root renamed the local predicates from `sha1` to `isSha1Hex`: two identifier
+occurrences in `rules-certificate.ts` and four in `rules-policy-tree.ts`.
+The exact inverse restores every original byte. The regular expressions,
+decisions and binding checks stay unchanged. This Source-only rename
+changes no declaration data and requires no declaration generation.
+It establishes no new compiler, native or Page-build result.
+
+The three static owning commands then passed on that deliberately repaired
+Source. Their separate elapsed and CPU spans were 0.40 and 0.50 seconds
+for shared helpers, 5.64 and 5.91 for citations, and 0.09 and 0.09 for
+links. No outer aggregate was measured. Gate V3 remains pending.
+
+A subsequent whole assets witness passed on the deliberate six-identifier
+repair of `52c2714c`. It confirmed that the current Page bundle is exact;
+all 3199 Source hashes were unchanged across the command. The one actual
+`page` case has complete ready, result and final records, with zero
+reported module and unhandled errors. The 0.72-second elapsed and
+1.19-CPU-second measurement covers the Node command only, with no wrapper
+outer span. The progress schema has no observed retry or repeat fields.
+The run used the default settings without overrides. This witness
+establishes freshness of the existing bundle, so the rename requires no
+new Page build.
 
 V17 has 69 actual ready, result and final identities, no pending cases and
 zero reported unhandled errors. Ten finite clean cuts passed. Its outer
@@ -211,8 +250,8 @@ vectors are withheld from the portable bundles.
 
 Request `0716e75a` still owns the ordinary gate, final evidence index and
 exact-head review. The kernel control, Page build and Page owning outcomes
-are closed. Gate V1 remains failed. Gate V2 remains held until its actual closed
-outcome is authenticated. No final review head, approval, landing or deployment is
+are closed. Gates V1 and V2 remain failed. Gate V3 remains held until its
+actual closed outcome is authenticated. No final review head, approval, landing or deployment is
 implied.
 
 This family addresses findings 3.2, 3.3 and 3.4. Their closure remains
