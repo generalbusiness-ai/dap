@@ -143,7 +143,7 @@ test("G15 admits the maximum constructed capture, retains 32 real proofs, and re
           effect.effect === "value" && effect.slot === "requiredChecks" ? { ...effect, value: checks.map(check => check.name) }
             : effect.effect === "attempt" && typeof effect.operation === "string" ? { ...effect, operation } : effect) };
         const budget = certifiedCaptureBudgetV15(record, PROPOSED_BOUNDS, shell);
-        return { p, record, budget, shell };
+        return { p, record, budget };
       };
       let low = 0, high = PADDING_MAX;
       expect(forecast(low).budget.admitted).toBe(true); expect(forecast(high).budget.admitted).toBe(false);
@@ -193,53 +193,8 @@ test("G15 admits the maximum constructed capture, retains 32 real proofs, and re
     const overflowCapture = (await hardeningEntries(G)).find(entry => entry.effects.some(effect => effect.effect === "value" && effect.item === rejected.id && effect.slot === "passes"));
     const overflowPasses = overflowCapture?.effects.find(effect => effect.effect === "value" && effect.item === rejected.id && effect.slot === "passes");
     const overflowRecord = overflowPasses?.effect === "value" ? certifiedPublicationStateV15(overflowPasses.value, PROPOSED_BOUNDS) : null;
-    const byteDifferences: { path: string; forecastBytes: number; actualBytes: number }[] = [];
-    let firstDifference: string | null = null;
-    const compare = (forecast: unknown, actual: unknown, path: string): void => {
-      if (canonicalize(forecast) === canonicalize(actual)) return;
-      if (isRecord(forecast) && isRecord(actual)) {
-        for (const key of [...new Set([...Object.keys(forecast), ...Object.keys(actual)])].sort()) {
-          if (Object.hasOwn(forecast, key) && Object.hasOwn(actual, key)) compare(forecast[key], actual[key], `${path}.${key}`);
-          else if (byteDifferences.length < 24) {
-            firstDifference ??= `${path}.${key}`;
-            byteDifferences.push({ path: `${path}.${key}`, forecastBytes: Object.hasOwn(forecast, key) ? utf8(canonicalize(forecast[key])).length : 0, actualBytes: Object.hasOwn(actual, key) ? utf8(canonicalize(actual[key])).length : 0 });
-          }
-        }
-      } else if (Array.isArray(forecast) && Array.isArray(actual) && forecast.length === actual.length) {
-        for (let index = 0; index < forecast.length; index++) compare(forecast[index], actual[index], `${path}[${index}]`);
-      } else {
-        firstDifference ??= path;
-        const forecastBytes = utf8(canonicalize(forecast)).length, actualBytes = utf8(canonicalize(actual)).length;
-        if (forecastBytes !== actualBytes && byteDifferences.length < 24) byteDifferences.push({ path, forecastBytes, actualBytes });
-      }
-    };
-    if (overflowRecord) compare(negative.next.record, overflowRecord, "record");
-    // Compare carrying-entry shapes without hashes, times, numeric positions,
-    // observed payloads or the passes value obscuring the envelope difference.
-    const shape = (value: unknown): unknown => typeof value === "number" ? "number" : typeof value === "string" ? utf8(canonicalize(value)).length
-      : Array.isArray(value) ? value.map(shape) : isRecord(value) ? Object.fromEntries(Object.entries(value).filter(([key]) => key !== "observed").map(([key, member]) => [key, shape(value["effect"] === "value" && value["slot"] === "passes" && key === "value" ? null : member)])) : value;
-    const shapeDifferences: { path: string; forecast: unknown; actual: unknown }[] = [];
-    const compareShape = (forecast: unknown, actual: unknown, path: string): void => {
-      if (canonicalize(forecast) === canonicalize(actual)) return;
-      if (isRecord(forecast) && isRecord(actual) && canonicalize(Object.keys(forecast).sort()) === canonicalize(Object.keys(actual).sort())) {
-        for (const key of Object.keys(forecast).sort()) compareShape(forecast[key], actual[key], `${path}.${key}`);
-      } else if (Array.isArray(forecast) && Array.isArray(actual) && forecast.length === actual.length) {
-        for (let index = 0; index < forecast.length; index++) compareShape(forecast[index], actual[index], `${path}[${index}]`);
-      } else if (shapeDifferences.length < 24) shapeDifferences.push({ path, forecast, actual });
-    };
-    if (overflowCapture) compareShape(shape(negative.next.shell), shape(overflowCapture), "capture");
-    const effectShapes = (entry: Entry) => entry.effects.map(effect => ({ effect: effect.effect, ...("slot" in effect ? { slot: effect.slot } : {}), ...("value" in effect ? { valueType: effect.value === null ? "null" : Array.isArray(effect.value) ? "array" : typeof effect.value, ...(effect.effect === "value" && effect.slot === "reason" ? { reason: effect.value } : {}) } : {}) }));
-    const overflowDiagnostic = { forecast: negative.next.budget, actual: overflowRecord && overflowCapture ? certifiedCaptureBudgetV15(overflowRecord, PROPOSED_BOUNDS, overflowCapture) : null,
-      forecastRecordBytes: utf8(canonicalize(negative.next.record)).length, actualRecordBytes: overflowRecord ? utf8(canonicalize(overflowRecord)).length : null,
-      forecastInputOperation: negative.next.shell.input.type === "outcome" ? negative.next.shell.input.operation : null,
-      inputOperation: overflowCapture?.input.type === "outcome" ? overflowCapture.input.operation : null,
-      forecastAttempts: negative.next.shell.effects.filter(effect => effect.effect === "attempt"), attempts: overflowCapture?.effects.filter(effect => effect.effect === "attempt") ?? [], usesCount: overflowCapture?.uses.length ?? null,
-      templateUsesCount: template.uses.length, effectsCount: overflowCapture?.effects.length ?? null, templateEffectsCount: template.effects.length,
-      forecastEffects: effectShapes(negative.next.shell), actualEffects: overflowCapture ? effectShapes(overflowCapture) : null,
-      forecastEvidenceKeys: negative.next.shell.input.type === "outcome" && isRecord(negative.next.shell.input.evidence.body) ? Object.keys(negative.next.shell.input.evidence.body).sort() : null,
-      actualEvidenceKeys: overflowCapture?.input.type === "outcome" && isRecord(overflowCapture.input.evidence.body) ? Object.keys(overflowCapture.input.evidence.body).sort() : null,
-      forecastUses: negative.next.shell.uses, actualUses: overflowCapture?.uses ?? null, firstDifference, byteDifferences, shapeDifferences };
-    expect(rejected, canonicalize(overflowDiagnostic)).toMatchObject({ state: "not-reserved", values: { reason: "evidence-too-large" } });
+    const overflowBudget = overflowRecord && overflowCapture ? certifiedCaptureBudgetV15(overflowRecord, PROPOSED_BOUNDS, overflowCapture) : null;
+    expect(rejected, canonicalize({ forecast: negative.next.budget, actual: overflowBudget })).toMatchObject({ state: "not-reserved", values: { reason: "evidence-too-large" } });
     expect((await hardeningEntries(G)).flatMap(entry => entry.effects).filter(effect => effect.effect === "value" && effect.item === rejected.id && effect.slot === "passes")).toEqual([]);
     expect(host.stand.refs.get("refs/heads/main")).toBe(base);
 
