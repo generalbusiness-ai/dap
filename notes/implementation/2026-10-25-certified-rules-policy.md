@@ -347,6 +347,25 @@ questions, slice H) owns this limit, request
 git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:487496f5ad73675926a070808188cd2a228334c1,
 as corrected by planner `264e7136` and checker `2eeec03f`.
 
+A certificate binds one captured commit and is not marked used. The same
+proposal can therefore be published again with that certificate after the
+repository changes. Pattern coverage is proven at the certified commit,
+not at the later publication. Publication still requires `rules.publish`.
+
+Certification also requires a quiet destination during the tree read. Any
+intervening entry, including a read-token act, leaves the request unanswered.
+The member must file a new certificate request with its own operation slot.
+Repeated deliberate interference remains a liveness limit.
+
+The `certifiedPublicationState` decoder accepts a `passes` record up to
+600,000 bytes, while `Bounds.entryBytes` limits a whole entry to 256 KiB.
+The decoder's ceiling therefore does not establish that every admitted
+record can be written. An oversized entry is refused and holds the publication.
+The certificate-reuse, certification-answer and record-size limits belong
+to the R7 hardening request
+git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5e6d482cbf1712a4c62294421663f3b58f099f70,
+scheduled after BR-3 and BR-9 and before the certified cohort is enabled.
+
 This documentation-only clarification starts from landed Main
 `6852f78d3279ef13a33b7b9d0b283e9ba96f079f`, tree
 `b4dbac71198f26f84513966c58d9cef7f248a0b2`. Only this note changes.
