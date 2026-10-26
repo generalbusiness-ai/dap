@@ -322,7 +322,11 @@ test("fresh certified global checks override a stale native lane and staged publ
     const publication = (await G.summary()).value.items.find(item => item.type === "publication" && canonicalize(item.refs["operation"]) === canonicalize(operation));
     if (!publication) throw Error("Actual staged list publication required");
     const staged = await list.item(listManifest), stageRef = staged.values["reservationRef"];
-    expect(stageRef).toMatch(/^refs\/artroom\/reservations\//); expect(staged.values["tree"]).toMatch(/^[0-9a-f]{40}$/);
+    // Snapshot after the same pause and reads; no stage completion or absence is inferred.
+    const stageText = (value: unknown, max: number) => typeof value === "string" ? value.slice(0, max) : value === null || value === undefined ? null : "non-string";
+    const stageContext = canonicalize({ publication: { state: stageText(publication.state, 64), reason: stageText(publication.values["reason"], 128) },
+      staged: { reservationRef: stageText(stageRef, 192), tree: stageText(staged.values["tree"], 64), integration: stageText(staged.values["integration"], 64) } });
+    expect(stageRef, stageContext).toMatch(/^refs\/artroom\/reservations\//); expect(staged.values["tree"], stageContext).toMatch(/^[0-9a-f]{40}$/);
     expect(host.stand.refs.get(String(stageRef))).toBe(staged.values["integration"]);
     expect(host.stand.refs.get("refs/heads/main")).toBe(built.commit);
     const openedBeforeJobs = (await G.entries()).flatMap(entry => entry.effects).filter(effect => effect.effect === "operation" && effect.for === publication.id && effect.kind === "push");
