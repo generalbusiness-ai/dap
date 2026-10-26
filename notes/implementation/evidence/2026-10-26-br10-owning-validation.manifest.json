@@ -1,0 +1,86 @@
+{
+  "qualification": "BR10 owning validation only. Exact-lock private physical dependency copy from BR3, with workspace links rebound to BR10. No package installation and no independent authentication of every installed dependency byte. Build and validation have separately recorded checkpoints. The ordinary gate is separate and is not run by this driver. Owning checks all passed: True.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-26-br10-owning-validation",
+  "checkpoint": {
+    "commit": "9414b878e516386eb93184b5c0a95299de19f309",
+    "tree": "ada045e716dc272baee1da0a6ebb15a5d10328c5"
+  },
+  "fileCount": 15,
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "bytes": 1186,
+      "sha256": "92daae402c7953c92111e471e03aa1ef02c296dcb0a721d96558b8c47674f5c9"
+    },
+    {
+      "path": "active-source.log",
+      "bytes": 1235,
+      "sha256": "7fa958fb3c4fdfb89b0d2f04780cfbeb458b35160bf2dc9a9b442cea0543d46d"
+    },
+    {
+      "path": "build.json",
+      "bytes": 1129,
+      "sha256": "7c328698f2f69151f442524f5980c8270966df2f91a40432d6b341e1ea98a149"
+    },
+    {
+      "path": "dependency-provenance.json",
+      "bytes": 6112,
+      "sha256": "670d1bfa473b6b7a912153d7cbd43d32f6b92ab34da2931f4f2bf1e391eeb34e"
+    },
+    {
+      "path": "driver.py",
+      "bytes": 14258,
+      "sha256": "9f000e4a61f5c49305c7d669579573f1798d54bedf97262f8f7da616c1c750b4"
+    },
+    {
+      "path": "page-build.log",
+      "bytes": 188,
+      "sha256": "bf59b1655d939a0103ef0de1963ad6edba58892d1e303408571c6120f04e451d"
+    },
+    {
+      "path": "page-owning-tests.log",
+      "bytes": 597,
+      "sha256": "3c439db91c734c0d6fd00ccd1ed4cf0297ac46ec06b2a626db85c869c3f382d0"
+    },
+    {
+      "path": "page-progress.jsonl",
+      "bytes": 2251,
+      "sha256": "fbb374835c48e6a6bbd8a877452c816c864f9e055f9ce600d0cf478d51d34da4"
+    },
+    {
+      "path": "page-scope-compiler.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "page-source-compiler.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "page-test-compiler.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "page-tests.json",
+      "bytes": 1717,
+      "sha256": "eade374c29af994b26b500cbc3f3f0ab340209244c4598addc7dd0c1f36f2dce"
+    },
+    {
+      "path": "page-timing.jsonl",
+      "bytes": 2685,
+      "sha256": "d782d9895f3b16106f1ca21d21ab3e69cd9e818e7f8a964b188981e4df1d462e"
+    },
+    {
+      "path": "pool-preparation.log",
+      "bytes": 343,
+      "sha256": "789f2a3719021f6725b19b5ea52eb3ac436b14f6b084b416d1d6e396e5165289"
+    },
+    {
+      "path": "result.json",
+      "bytes": 5939,
+      "sha256": "a6d285850b64f7b0d39c53047e4b3fcd93ad42635f4bf9484658169414427679"
+    }
+  ]
+}
