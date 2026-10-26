@@ -8,9 +8,10 @@ export default defineConfig({
     globalSetup: ["./test/support/local-clone-setup.ts", "./test/support/maintained-applications-setup.ts"],
     include: ["test/**/*.test.ts"],
     exclude: ["test/operation-denial.test.ts"],
-    // One isolate for every file: the Worker is loaded once. Each test creates its own scope, which is its own object and storage.
+    // Two worker runtimes reuse their own isolate across files. Each test
+    // creates its own scope, which is its own object and storage.
     isolate: false,
-    maxWorkers: 1,
+    maxWorkers: 2,
     // Bounded harness allowance for multi-scope functional stories in one
     // isolate. Explicit case limits and modeled protocol assertions still apply.
     testTimeout: 30_000,

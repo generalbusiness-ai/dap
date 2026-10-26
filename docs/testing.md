@@ -509,11 +509,12 @@ what the branch changed. `npm run gate -- --ci` reinstalls first.
 The fourteen plain projects share one group with at most four active file
 tasks in total. The root `test.maxWorkers: 4` sets this limit in the ordinary gate.
 The `scope` project follows in the workerd pool, against real Durable
-Objects with SQLite storage, with its explicit one-worker configuration.
+Objects with SQLite storage, with an explicit limit of two workers.
+Each worker reuses its own isolate across files.
 The later `scope-denial` group also keeps one worker. This limits active
 file tasks, not all live workers, child processes or overlapping teardown.
 Keep `VITEST_MAX_WORKERS` unset for the gate: that environment override
-also replaces the native projects' one-worker settings. The
+also replaces the native projects' explicit worker limits. The
 `git` project runs the real `git` program, as a client and as a server, on
 local repositories, and one file of the `checkers` project runs it for the
 runner's checkout. Nothing runs twice.
@@ -588,7 +589,8 @@ to take the page's screenshots in Chromium. That script needs
 gate.
 
 The lane scenarios, `apps/room/lanes/test/*.scope.test.ts`, run from
-the root inside the `scope` project: the same test Worker, loaded once.
+the root inside the `scope` project: the same Worker code, loaded once per
+worker runtime.
 The root `vitest.config.ts` adds them, and no file of the scope package
 names the lanes package. The Site publication and clock lifetime scenarios
 also live in the lanes package: they need its definition or graph. They use

@@ -2,11 +2,11 @@
  * Canonical projects for the root suite and its plain/native phase views.
  * Each project keeps its package's own config. The plain projects share a
  * group with at most four active file tasks in total. The `scope` and `scope-denial` groups
- * follow in order, each retaining its explicit one-worker configuration.
+ * follow in order, with two scope workers and one separate denial worker.
  * The file-task limit does not cap child processes or overlapping teardown.
  *
  * The lane scenarios on real scopes, `apps/room/lanes/test/*.scope.test.ts`,
- * run here inside the `scope` project: the same Worker, loaded once. A
+ * run here inside the `scope` project: one Worker loaded per runtime. A
  * second project in the Workers runtime pool historically added 0.7 seconds to this run,
  * and the files in the one project add 0.2 (observed, three runs each, on a
  * shared machine). The scope package does not name them: this file does.
