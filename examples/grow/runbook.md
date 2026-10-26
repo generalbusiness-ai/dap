@@ -426,12 +426,12 @@ a token or a Mark payload. Its fields:
 | `scope` | The scope ID of the object. |
 | `state` | `present` when the object holds an archive row; `absent` when it never archived; `unknown` when the read failed. |
 | `phase` | The row's phase: `target` (no confirmed pass yet), `confirmed`, `pending` or `stopped`. |
-| `reason` | For a stopped row, the stop reason: one of the 25 reasons the archive records (for example `limit`, `timeout`, `unavailable`, `mismatch`, `parent`, `foreign-source-unavailable`, `rebuild-mismatch`), or `unknown`. Only a row stopped with `limit` can be restarted. |
+| `reason` | For a stopped row, the stop reason: one of the 25 reasons the archive records (for example `limit`, `timeout`, `unavailable`, `mismatch`, `parent`, `foreign-source-unavailable`, `rebuild-mismatch`), or `unknown`. A directive can restart an eligible row stopped with `limit` or `foreign-source-unavailable`. |
 | `confirmed` | The last confirmed position: the repository `commit` and the journal head `through` (`hash`, `seq`). |
 | `pendingMark` | A pass in progress, or `absent`. |
 | `storedWake` | The durable wake: `pending`, `stopped` and the `next` time. |
 | `platformAlarm` | The object's platform alarm time in milliseconds, or `absent`. |
-| `rowDigest` | SHA-256 of the canonical row, given only for a row stopped with reason `limit` and no pending Mark. |
+| `rowDigest` | SHA-256 of the canonical row, given only when the row meets the restart conditions below, including its stored wake. |
 | `restartGeneration` | How many directives this row has consumed. A new row starts at 0. |
 
 To read every row of the room, capture the tail and then activate each
@@ -517,13 +517,25 @@ It gives six axes (`entries`, `attempts`, `nodes`, `calls`, `metadata`,
 `shortfall`. The shortfall says what a fix must cut. Report it with the
 pass, not a guess from totals.
 
+When foreign source preparation fails, `sourceFailure` names the candidate
+head and the source's full scope reference. Its classification is
+`birth-unavailable` or `unsupported-policy`. A validated definition pin
+appears only when it fits the diagnostic's 128-byte ASCII bound. If that
+pin is longer, `pinOmitted` is true. No pin is reported when the birth
+is unavailable. The field is null when no such failure was captured.
+These fields describe that pass; they do not reconstruct an earlier stop.
+
 A pass can still stop a row with reason `limit`. That happens when the
 finish quote is null, or when a debit outside the planner's lookahead
 refuses: the pass line then shows `capacityRefusal` with site
 `plan-debit`. A row stopped before the deferral landed stays stopped too.
 A stopped row shows `phase` `stopped`, `storedWake.stopped` `true` and
 `next` `null`. It does not retry. Only a directive restarts it, and only
-when its reason is `limit`.
+when its reason is `limit` or `foreign-source-unavailable`.
+
+For `foreign-source-unavailable`, first establish that the source belongs
+to the configured archive policy and restore its availability. A directive
+does not widen that policy. An unsupported source stops the row again.
 
 ### Build a directive
 
@@ -532,8 +544,11 @@ it from the diagnostic, the inventory and the deployment settings; never
 from another scope or from a guess.
 
 1. Check the diagnostic: `state` `present`, `phase` `stopped`, `reason`
-   `limit`, `pendingMark` `absent`, `storedWake` with `stopped` `true` and
-   `next` `null`. Note `rowDigest`, `restartGeneration` and `confirmed`.
+   `limit` or `foreign-source-unavailable`, and `pendingMark` `absent`.
+   The row must have a layout-2 confirmed receipt, zero attempts and no
+   `next` time. Its stored wake must exist, with `stopped` `true`,
+   `pending` `false` and `next` `null`. Require `rowDigest` and note it
+   with `restartGeneration` and `confirmed`.
 2. Compose the row as the object stores it, with these fields and no
    others:
    - `v`: 1.
@@ -548,7 +563,7 @@ from another scope or from a guess.
    - `confirmed`: `anchorsPublished` true, `commit` and `through` from the
      diagnostic, and `layout` 2.
    - `pending`: null. `attempts`: 0. `next`: null.
-   - `stopped`: `{"reason":"limit","where":null}`.
+   - `stopped`: `reason` from the diagnostic and `where` null initially.
 3. Serialize the row in canonical JSON (RFC 8785: keys sorted, no
    spaces) and take its SHA-256. It must equal the diagnostic's
    `rowDigest`. If it does not, the stored row differs from the one you
@@ -627,6 +642,8 @@ only sign. If the line still shows the old generation and `phase`
   `format` or `confirmed`.
 - `at` is not this object's scope.
 - The row has a pending Mark, a `next` time or attempts.
+- The row has no layout-2 confirmed receipt, or its reason is ineligible.
+- The stored wake is absent, pending, not stopped or has a `next` time.
 - The scope is not active, or the Worker has no archive policy.
 - A driver or alarm was active at that moment.
 

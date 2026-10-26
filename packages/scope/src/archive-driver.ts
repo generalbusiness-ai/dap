@@ -20,7 +20,7 @@ import { readArchiveRestart } from "./archive-restart.ts";
 import type { DestinationRepository } from "./destination-host.ts";
 import type { Sql } from "./sqlite.ts";
 import { ARCHIVE_POSITION_METADATA_BYTES } from "./archive-inventory-cost.ts";
-import { readArchiveScopeFrame } from "./archive-prefix.ts";
+import { ArchivePrefixStopped, readArchiveScopeFrame, type ArchiveSourceFailure } from "./archive-prefix.ts";
 
 export interface ArchiveCredential { readonly id: string; readonly ends: Timestamp; readonly plaintext: string }
 export interface ArchiveSend {
@@ -150,6 +150,7 @@ export class ArchiveDriver {
     let step = "row-load", detail = "none", caught = "none";
     let capacityRefusal: ArchiveCapacityRefusal | null = null;
     let fixedFinish: ArchiveFixedFinish | null = null;
+    let sourceFailure: ArchiveSourceFailure | null = null;
     let phase = "unknown", confirmed: number | null = null, pending: number | null = null, attempts = 0, hasNext = false;
     const observed: { outcome?: ArchivePass } = {};
     const done = (value: ArchivePass): ArchivePass => { observed.outcome = value; return value; };
@@ -301,8 +302,17 @@ export class ArchiveDriver {
       const previous = await this.#parent(row, budget, allowed, frontiers, base);
       const prepareSources = "production" in this.#options ? this.#options.sources : undefined;
       step = "sources";
-      const preparedSources = prepareSources ? await budget.wait(() => prepareSources(row!.confirmed?.layout === 2 ? row!.confirmed.through : null,
-        row!.pending?.through ?? through, budget, !!row!.pending)) : null;
+      const preparedSources = prepareSources ? await budget.wait(async () => {
+        try { return await prepareSources(row!.confirmed?.layout === 2 ? row!.confirmed.through : null,
+          row!.pending?.through ?? through, budget, !!row!.pending); }
+        catch (error) {
+          // Preserve only the prepaid metadata; wait() retains its original
+          // pending unavailable/timeout/debit classification. Late settlements
+          // cannot change a completed pass diagnostic.
+          if (active && error instanceof ArchivePrefixStopped) sourceFailure = error.sourceFailure ?? null;
+          throw error;
+        }
+      }) : null;
       const sources = preparedSources?.pins ?? this.#options.fixtureSources;
       let archive: JournalArchive | JournalPassArchive;
       let mark: ArchiveMark;
@@ -312,7 +322,7 @@ export class ArchiveDriver {
         step = "rebuild";
         const rebuild = row.pending.layout === 2 ? rebuildArchivePass : rebuildArchive;
         const rebuilt = await rebuild(this.#options.sql, row, previous.parent, budget, sources);
-        if (!rebuilt.ok) { rows.stop(rebuilt.reason, "where" in rebuilt ? rebuilt.where ?? null : null, budget); return done({ state: "stopped", next: null, reason: rebuilt.reason }); }
+        if (!rebuilt.ok) { sourceFailure = rebuilt.sourceFailure ?? null; rows.stop(rebuilt.reason, "where" in rebuilt ? rebuilt.where ?? null : null, budget); return done({ state: "stopped", next: null, reason: rebuilt.reason }); }
         archive = rebuilt.archive;
         mark = row.pending;
       } else {
@@ -370,7 +380,7 @@ export class ArchiveDriver {
           else if (adaptive.reason === "mismatch") return done({ state: "retry", next: scheduled ?? this.#later(0), reason: adaptive.reason });
           planned = adaptive;
         }
-        if (!planned.ok) { rows.stop(planned.reason, "where" in planned ? planned.where ?? null : null, budget); return done({ state: "stopped", next: null, reason: planned.reason }); }
+        if (!planned.ok) { sourceFailure = planned.sourceFailure ?? null; rows.stop(planned.reason, "where" in planned ? planned.where ?? null : null, budget); return done({ state: "stopped", next: null, reason: planned.reason }); }
         archive = planned.archive;
         mark = planned.mark;
       }
@@ -413,6 +423,7 @@ export class ArchiveDriver {
       if (seen !== row.pending!.parent) { rows.stop("conflict", ref, budget); return done({ state: "stopped", next: null, reason: "conflict" }); }
       return done({ state: "retry", next });
     } catch (error) {
+      if (error instanceof ArchivePrefixStopped) sourceFailure = error.sourceFailure ?? null;
       // Preserve a terminal planner debit if a subsequent row stop encounters
       // that same stopped budget; never borrow an exploratory refusal.
       if (error instanceof ArchiveStopped && error.capacityRefusal) capacityRefusal = { ...error.capacityRefusal, site: "pass-debit" };
@@ -426,12 +437,12 @@ export class ArchiveDriver {
       if (credential) { try { budget.check(); await budget.wait(() => this.#options.provider.revokeArchive(credential!)); } catch { /* The short-lived credential may expire; it is never recorded. */ } }
       try {
         const reason = observed.outcome?.reason;
-        const known = ["limit", "timeout", "unavailable", "conflict", "mismatch", "parent", "missing-input", "rebuild-mismatch", "unsupported-archive-cohort"];
+        const known = ["limit", "timeout", "unavailable", "conflict", "mismatch", "parent", "missing-input", "rebuild-mismatch", "unsupported-archive-cohort", "foreign-source-unavailable"];
         const position = (value: number | null) => value !== null && Number.isSafeInteger(value) && value >= 0 ? value : null;
         console.info("archive-pass-diagnostic-v1", {
           step, detail, rowPhaseAtLoad: phase, confirmed: position(confirmed), pending: position(pending), attemptsAtLoad: position(attempts), hasNext,
           attempted, state: observed.outcome?.state ?? "threw", reason: reason === undefined ? "none" : known.includes(reason) ? reason : "other",
-          caught: known.includes(caught) ? caught : caught === "none" ? "none" : "other", cost: budget.admitted(), parentRead, capacityRefusal, fixedFinish,
+          caught: known.includes(caught) ? caught : caught === "none" ? "none" : "other", cost: budget.admitted(), parentRead, capacityRefusal, fixedFinish, sourceFailure,
         });
       } catch { /* Observation cannot replace the original archive result. */ }
     }

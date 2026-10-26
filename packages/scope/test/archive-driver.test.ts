@@ -185,11 +185,12 @@ test("a pre-Mark target failure survives eviction and new native input without l
     const records = observed.map(args => {
       expect(args).toHaveLength(2);
       const record = args[1] as Record<string, unknown>;
-      expect(Object.keys(record).sort()).toEqual(["step", "detail", "rowPhaseAtLoad", "confirmed", "pending", "attemptsAtLoad", "hasNext", "attempted", "state", "reason", "caught", "cost", "parentRead", "capacityRefusal", "fixedFinish"].sort());
+      expect(Object.keys(record).sort()).toEqual(["step", "detail", "rowPhaseAtLoad", "confirmed", "pending", "attemptsAtLoad", "hasNext", "attempted", "state", "reason", "caught", "cost", "parentRead", "capacityRefusal", "fixedFinish", "sourceFailure"].sort());
       // This stand-in provider has no exact-object transport. It must not
       // invent a parent-read phase from a target failure or native work.
       expect(record["capacityRefusal"]).toBeNull();
       expect(record["fixedFinish"]).toBeNull();
+      expect(record["sourceFailure"]).toBeNull();
       expect(record["parentRead"]).toEqual({ ordinal: 0, type: "none", maximum: 0, phase: "none", refusal: "none" });
       expect(["row-load", "pin", "due-check", "target", "format", "pending-readback", "parent", "bootstrap", "sources", "rebuild", "plan", "frontier", "mark", "copy", "mint", "send", "readback", "confirm"]).toContain(record["step"]);
       expect(["none", "not-due", "wake-not-due", "target-missing", "target-different"]).toContain(record["detail"]);
@@ -706,12 +707,12 @@ test("a deployment restart is consumed after the diagnostic on ordinary ingress 
   expect({ targets:host.targets,mints:host.mintCalls,sends:host.sends.length,closures:host.closureReads,reads:host.objectReads.length }).toEqual(calls);
   expect((await lane.inside(state => new ArchiveRows(archiveSql(state),lane.at).restartReceipt())).generation).toBe(1);
   const next = await lane.alarmAt(); expect(next).not.toBeNull();
-  // Latest directive replay is read-only, including after a later stop.
-  await lane.inside(state => new ArchiveRows(archiveSql(state),lane.at).stop("limit"));
+  // Latest directive replay is read-only, including after a later foreign-source stop.
+  await lane.inside(state => new ArchiveRows(archiveSql(state),lane.at).stop("foreign-source-unavailable"));
   await lane.restart();
   await (lane.object as unknown as { nativeBirth(at:unknown,milliseconds:number):Promise<unknown> }).nativeBirth(lane.at,10_000);
   await lane.inside((_state,instance) => (instance as { awaitScheduledCallbacks():Promise<unknown> }).awaitScheduledCallbacks());
-  expect((await row(lane))!.stopped?.reason).toBe("limit");
+  expect((await row(lane))!.stopped?.reason).toBe("foreign-source-unavailable");
   // A fresh diagnostic-bound operator generation is required to retry again.
   const again = (await row(lane))!, payload2 = { ...payload,generation:1,rowDigest:digestBytes(utf8(canonicalize(again))) };
   fixtureArchiveRestart.set(lane.name,canonicalize({ ...payload2,command:digestBytes(utf8(canonicalize(payload2))) }));

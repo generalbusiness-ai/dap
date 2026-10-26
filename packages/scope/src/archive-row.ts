@@ -50,6 +50,12 @@ export interface ArchiveRow {
   readonly stopped: { readonly reason: string; readonly where: string | null } | null;
 }
 export interface ArchiveStoredWake { readonly pending: boolean; readonly stopped: boolean; readonly next: Timestamp | null }
+/** Operator retry eligibility only. Source/export admission still runs afresh. */
+export function archiveRestartEligible(row: ArchiveRow, wake: ArchiveStoredWake | null): boolean {
+  return (row.stopped?.reason === "limit" || row.stopped?.reason === "foreign-source-unavailable")
+    && row.pending === null && row.attempts === 0 && row.next === null && row.confirmed?.layout === 2
+    && wake !== null && wake.stopped && !wake.pending && wake.next === null;
+}
 export class ArchiveRowRefusal extends Error {
   readonly reason: "unavailable" | "limit" | "conflict" | "outstanding" | "stopped";
   constructor(reason: ArchiveRowRefusal["reason"]) { super(`archive-row-${reason}`); this.reason = reason; }
@@ -215,7 +221,7 @@ export class ArchiveRows {
       if (!snapshot) return "refused";
       const row = snapshot.row;
       budget.spend({ metadata: 32 * 1024, inputWork: snapshot.bytes.length * 64 + 64 * 1024 });
-      if (row.stopped?.reason !== "limit" || row.pending !== null || row.attempts !== 0 || row.next !== null || row.confirmed?.layout !== 2
+      if (!archiveRestartEligible(row, this.storedWake(budget))
         || !same(row.repository,command.repository) || row.format !== command.format || !same(row.confirmed,command.confirmed)
         || digestBytes(utf8(snapshot.bytes)) !== command.rowDigest) return "refused";
       // Exact row and generation receipt comparison occurs after all reads,

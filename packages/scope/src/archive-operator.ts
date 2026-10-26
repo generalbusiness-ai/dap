@@ -4,7 +4,7 @@ import type { ScopeId, ScopeRef, Timestamp } from "@generalbusiness/dap-contract
 import { canonicalize, digestBytes, isHead, isRecord, isScopeRef, natural, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import { ArchiveBudget } from "./archive-budget.ts";
 import { ARCHIVE_SCOPE_METADATA_BYTES } from "./archive-pin.ts";
-import { ArchiveRows, type ArchivedPosition, type ArchiveMark, type ArchiveStoredWake } from "./archive-row.ts";
+import { ArchiveRows, archiveRestartEligible, type ArchivedPosition, type ArchiveMark, type ArchiveStoredWake } from "./archive-row.ts";
 import type { DestinationRepository } from "./destination-host.ts";
 import type { Sql } from "./sqlite.ts";
 
@@ -61,6 +61,9 @@ export async function archiveOperatorState(sql: Pick<Sql, "exec">, name: ScopeId
   // load() owns the existing strict, canonical, bounded ArchiveRow decoder.
   // Its synchronous frame is read-only; never construct SqliteStore here.
   const rows = new ArchiveRows({ exec: sql.exec.bind(sql), transaction: read => read() }, at);
+  let storedWake: Observation<ArchiveStoredWake>;
+  try { const wake = rows.storedWake(budget); storedWake = wake === null ? { state: "absent" } : { state: "present", pending: wake.pending, stopped: wake.stopped, next: wake.next }; }
+  catch { storedWake = { state: "unknown" }; }
   let row: Observation<ArchiveOperatorRow>;
   try {
     const snapshot = rows.loadSnapshot(budget);
@@ -71,7 +74,7 @@ export async function archiveOperatorState(sql: Pick<Sql, "exec">, name: ScopeId
       // Only a no-Mark stopped row can authorize restart. Do not add a
       // second whole-manifest hash to an otherwise readable pending diagnostic.
       let rowDigest: string | null = null;
-      if (value.stopped?.reason === "limit" && value.pending === null) {
+      if (archiveRestartEligible(value, storedWake.state === "present" ? storedWake : null)) {
         budget.spend({ inputWork: snapshot!.bytes.length * 64 });
         rowDigest = digestBytes(utf8(snapshot!.bytes));
       }
@@ -84,9 +87,6 @@ export async function archiveOperatorState(sql: Pick<Sql, "exec">, name: ScopeId
         pendingMark: pending === null ? null : { commit: pending.commit, parent: pending.parent, through: { ...pending.through }, markedAt: pending.markedAt, ...(pending.layout === 2 ? { layout: 2 as const } : {}) }, attempts: value.attempts, next: value.next };
     }
   } catch { row = { state: "unknown" }; }
-  let storedWake: Observation<ArchiveStoredWake>;
-  try { const wake = rows.storedWake(budget); storedWake = wake === null ? { state: "absent" } : { state: "present", pending: wake.pending, stopped: wake.stopped, next: wake.next }; }
-  catch { storedWake = { state: "unknown" }; }
   let platformAlarm: Observation<{ readonly at: number }>;
   try { const alarm = await getAlarm(); platformAlarm = alarm === null ? { state: "absent" } : Number.isSafeInteger(alarm) && alarm >= 0 ? { state: "present", at: alarm } : { state: "unknown" }; }
   catch { platformAlarm = { state: "unknown" }; }
