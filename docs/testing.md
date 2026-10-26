@@ -333,11 +333,14 @@ answers, and nothing about a real host, a real tree or a runner.
 
 The functional `scope` project sets a thirty-second framework allowance in
 `packages/scope/vitest.worker.config.ts` for cases without an explicit
-limit. Its multi-scope stories share one Worker isolate on a shared machine.
-Case-specific limits and modeled protocol, read, clock, capacity and latency
-assertions keep their own bounds. Pure Node projects and the separate
-`scope-denial` project keep their existing budgets. This allowance describes
-the harness and makes no product latency or general stability claim. A
+limit. Each worker reuses its own isolate across multi-scope story files
+on a shared machine.
+The dedicated `scope-lending` project preserves the same thirty-second
+allowance for its unchanged story. Case-specific limits and modeled
+protocol, read, clock, capacity and latency assertions keep their own bounds.
+Pure Node projects and the separate `scope-denial` project keep their
+existing budgets. This allowance describes the harness and makes no
+product latency or general stability claim. A
 committed budget change needs a new exact-head gate; earlier failed runs
 and their original limits remain evidence.
 
@@ -494,7 +497,7 @@ It installs only if `package-lock.json` changed since the last install,
 typechecks every workspace, and runs the fixed stages of `scripts/test.mjs`
 in order: the kernel boundary check, the maintained Node checks, the
 Counting build and generated Node witnesses, the fourteen plain Vitest
-projects, then the two native Vitest projects. Any failed stage stops the
+projects, then the three native Vitest projects. Any failed stage stops the
 later stages. The plain phase selects its project data before Vitest
 resolves inherited configs, so an early failure starts no Worker project.
 The two phases share the canonical declarations in `vitest.projects.mjs`;
@@ -509,11 +512,13 @@ what the branch changed. `npm run gate -- --ci` reinstalls first.
 The fourteen plain projects share one group with at most four active file
 tasks in total. The root `test.maxWorkers: 4` sets this limit in the ordinary gate.
 The `scope` project follows in the workerd pool, against real Durable
-Objects with SQLite storage, with its explicit one-worker configuration.
-The later `scope-denial` group also keeps one worker. This limits active
+Objects with SQLite storage, with an explicit limit of two workers.
+Each worker reuses its own isolate across files.
+The `scope-lending` group follows with one worker and its own runtime, then
+`scope-denial` with one worker in another runtime. This limits active
 file tasks, not all live workers, child processes or overlapping teardown.
 Keep `VITEST_MAX_WORKERS` unset for the gate: that environment override
-also replaces the native projects' one-worker settings. The
+also replaces the native projects' explicit worker limits. The
 `git` project runs the real `git` program, as a client and as a server, on
 local repositories, and one file of the `checkers` project runs it for the
 runner's checkout. Nothing runs twice.
@@ -536,6 +541,14 @@ check still prints a summary with no observed cases and unreached stages.
 Report failures fail an otherwise passing run while preserving an earlier
 child failure. A process killed before finalization cannot print a final
 summary.
+
+The existing Lending story runs only in `scope-lending`, after `scope`.
+It uses the same real Worker, SQLite, read sessions, story acts, expected
+assertions and deadlines. It needs neither the clone server nor maintained
+application capture setup. Its repeated mixed-project projection failure
+remains masked; a fresh single-file runtime bounds reuse without proving
+the original cause, physical draining or universal cross-file cleanup.
+Both the root and Scope package entrypoints select the story exactly once.
 
 The `scope-denial` project then runs the post-sent local-denial witness in
 its own Worker runtime, with the same Worker and real SQLite storage. Both
@@ -588,7 +601,8 @@ to take the page's screenshots in Chromium. That script needs
 gate.
 
 The lane scenarios, `apps/room/lanes/test/*.scope.test.ts`, run from
-the root inside the `scope` project: the same test Worker, loaded once.
+the root inside the `scope` project: the same Worker code, loaded once per
+worker runtime.
 The root `vitest.config.ts` adds them, and no file of the scope package
 names the lanes package. The Site publication and clock lifetime scenarios
 also live in the lanes package: they need its definition or graph. They use

@@ -5,11 +5,11 @@ import { testOptions } from "../vitest.projects.mjs";
 test("the canonical partition keeps inherited native configs out of the plain phase and refuses inconsistent selection", () => {
   const all = testOptions(), plain = testOptions("plain"), native = testOptions("native");
   assert.deepEqual(plain.projects.map(project => project.test.name), ["bytes", "derive", "platform", "git", "checkers", "replay", "client", "lanes", "cli", "page", "mcp", "counting", "lending", "grow"]);
-  assert.deepEqual(native.projects.map(project => project.test.name), ["scope", "scope-denial"]);
-  assert.equal(all.projects.length, 16);
+  assert.deepEqual(native.projects.map(project => project.test.name), ["scope", "scope-lending", "scope-denial"]);
+  assert.equal(all.projects.length, 17);
   assert.deepEqual(new Set([...plain.projects, ...native.projects]), new Set(all.projects));
-  assert.ok(plain.projects.every(project => !project.extends.includes("vitest.worker") && !project.extends.includes("vitest.denial")));
-  assert.deepEqual(native.projects.map(project => project.test.sequence.groupOrder), [1, 2]);
+  assert.ok(plain.projects.every(project => !project.extends.includes("vitest.worker") && !project.extends.includes("vitest.lending") && !project.extends.includes("vitest.denial")));
+  assert.deepEqual(native.projects.map(project => project.test.sequence.groupOrder), [1, 2, 3]);
   assert.equal(plain.maxWorkers, 4); assert.equal(native.maxWorkers, 4);
   assert.throws(() => testOptions("unknown"), /Unknown test phase/);
   // Exercise the actual selection guard, without importing or resolving an

@@ -6,7 +6,7 @@ const duration = value => typeof value === 'number' && Number.isFinite(value) &&
 const text = value => typeof value === 'string' ? value : null;
 const directive = value => value === true || typeof value === 'string';
 const number = value => Number.isSafeInteger(value) && value >= 0 ? value : null;
-const projects = ['bytes','derive','platform','git','checkers','replay','client','scope','scope-denial','lanes','cli','page','mcp','counting','lending','grow'];
+const projects = ['bytes','derive','platform','git','checkers','replay','client','scope','scope-lending','scope-denial','lanes','cli','page','mcp','counting','lending','grow'];
 const phases = ['kernel','node','counting','plain','native'];
 const vitestKey = row => JSON.stringify([row.phase,row.project,row.file,row.id]);
 const nodeKey = row => row.entryFile !== null && row.testId !== null ? JSON.stringify([row.phase,row.entryFile,row.testId]) : null;
@@ -100,7 +100,7 @@ export function summarize({ stages, observations, mappings = [] }) {
       status:stage.status === 'unreached' ? 'unreached' : stage.status === 'passed' && terminalOK ? 'complete' : 'partial'};
   });
   const projectRows = projects.map(project => {
-    const phase = ['scope','scope-denial'].includes(project) ? 'native' : 'plain';
+    const phase = ['scope','scope-lending','scope-denial'].includes(project) ? 'native' : 'plain';
     const phaseState = completeness.find(row => row.phase === phase).status;
     const reached = phaseState !== 'unreached';
     const rows = modules.filter(row => row.project === project), valid = rows.filter(row => row.durationMs !== null);

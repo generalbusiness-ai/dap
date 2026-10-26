@@ -30,6 +30,18 @@ test('timing reconciles actual identities, missing callbacks and concurrent dura
   assert.equal(failed.projects.find(row=>row.project==='bytes').status,'partial');assert.equal(failed.issues.length,0);
   assert(summarize({stages,observations:[row,{...end,unhandledErrors:1}]}).issues.length>0);
   assert(summarize({stages:[{name:'node',status:'passed'}],observations:[{record:'node-event',phase:'node',event:'test:summary',success:false}]}).issues.length>0);
+  // Every real native project belongs to the native stage, and a missing
+  // native terminal cannot silently become complete project coverage.
+  const nativeStages = [{name:'native',status:'passed',wallMs:5,userMs:null,systemMs:null}];
+  const nativeModules = ['scope','scope-lending','scope-denial'].map(project =>
+    ({...knownModule,phase:'native',project,file:`/${project}.test.ts`}));
+  const nativeSummary = summarize({stages:nativeStages,observations:[...nativeModules,{...end,phase:'native'}]});
+  assert.deepEqual(nativeSummary.projects.filter(row=>row.phase==='native').map(row=>[row.project,row.status]),
+    [['scope','observed'],['scope-lending','observed'],['scope-denial','observed']]);
+  assert.equal(nativeSummary.completeness.find(row=>row.phase==='native').status,'complete');
+  const nativeTruncated = summarize({stages:nativeStages,observations:nativeModules});
+  assert(nativeTruncated.issues.some(issue=>issue.includes('terminal reporting: native')));
+  assert(nativeTruncated.projects.filter(row=>row.phase==='native').every(row=>row.status==='partial'));
 });
 
 test('Node public events retain duplicates, classify suites separately and map actual generated sources', async () => {

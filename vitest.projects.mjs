@@ -1,12 +1,13 @@
 /**
  * Canonical projects for the root suite and its plain/native phase views.
  * Each project keeps its package's own config. The plain projects share a
- * group with at most four active file tasks in total. The `scope` and `scope-denial` groups
- * follow in order, each retaining its explicit one-worker configuration.
+ * group with at most four active file tasks in total. The `scope`,
+ * `scope-lending` and `scope-denial` groups follow in order, with worker
+ * limits of two, one and one in separate runtimes.
  * The file-task limit does not cap child processes or overlapping teardown.
  *
  * The lane scenarios on real scopes, `apps/room/lanes/test/*.scope.test.ts`,
- * run here inside the `scope` project: the same Worker, loaded once. A
+ * run here inside the `scope` project: one Worker loaded per runtime. A
  * second project in the Workers runtime pool historically added 0.7 seconds to this run,
  * and the files in the one project add 0.2 (observed, three runs each, on a
  * shared machine). The scope package does not name them: this file does.
@@ -17,8 +18,11 @@
  * `packages/mcp/test/*.scope.test.ts`, run here the same way, and have no
  * Worker of their own.
  *
- * The post-sent local-denial witness has its own `scope-denial` Worker
- * runtime after `scope`. This isolates the observed unsafe-abort interaction
+ * The historical Lending story has its own ordered `scope-lending` Worker
+ * runtime after `scope`. Its repeated mixed-project failure remains masked;
+ * this bounds runtime reuse without claiming that cause is established.
+ * The post-sent local-denial witness then has its own `scope-denial` Worker
+ * runtime. This isolates the observed unsafe-abort interaction
  * with later Operations tests; each witness still runs once in the native phase.
  */
 const project = (name, dir, config, group, more = [], options = {}) =>
@@ -37,7 +41,8 @@ const projects = [
         // the demo runner's recorder for its captures: `DEMO_RECORD=1` (scripts/demo-captures.ts --recorded).
         provide: { pageRecord: process.env["PAGE_RECORD"] === "1", demoRecord: process.env["DEMO_RECORD"] === "1" },
       }),
-      project("scope-denial", "packages/scope", "vitest.denial.config.ts", 2),
+      project("scope-lending", "packages/scope", "vitest.lending.config.ts", 2),
+      project("scope-denial", "packages/scope", "vitest.denial.config.ts", 3),
       project("lanes", "apps/room/lanes", "vitest.config.ts", 0),
       project("cli", "packages/cli", "vitest.config.ts", 0),
       project("page", "apps/room/page", "vitest.config.ts", 0),
@@ -57,7 +62,7 @@ const projects = [
 ];
 
 const plainNames = ["bytes", "derive", "platform", "git", "checkers", "replay", "client", "lanes", "cli", "page", "mcp", "counting", "lending", "grow"];
-const nativeNames = ["scope", "scope-denial"];
+const nativeNames = ["scope", "scope-lending", "scope-denial"];
 const namesEqual = (actual, expected) => actual.length === expected.length && actual.every((name, index) => name === expected[index]);
 
 // Select data before Vitest resolves any inherited package config/plugin.
@@ -68,8 +73,8 @@ export function testOptions(phase = "all") {
   const native = projects.filter(project => project.test.sequence.groupOrder !== 0);
   if (!namesEqual(plain.map(project => project.test.name), plainNames)
     || !namesEqual(native.map(project => project.test.name), nativeNames)
-    || native[0].test.sequence.groupOrder !== 1 || native[1].test.sequence.groupOrder !== 2) {
-    throw new Error("The canonical test projects do not match the fourteen/plain two/native partition.");
+    || native.some((project, index) => project.test.sequence.groupOrder !== index + 1)) {
+    throw new Error("The canonical test projects do not match the fourteen/plain three/native partition.");
   }
   return {
     maxWorkers: 4,
