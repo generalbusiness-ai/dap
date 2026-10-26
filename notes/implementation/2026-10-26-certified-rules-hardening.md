@@ -26,7 +26,28 @@ The native certificate file passes all four cases: first/fresh/used/stale public
 
 Raw directory: `/Users/hughpyle/play/artroom-evidence/2026-10-26-r7-hardening-delivery`. Each phase retains its full command, commit, tree, source status, output digest, wall time, child CPU time, and driver. The private physical dependency view reuses the existing exact-lock capsule, with 14 workspace links rebound to this worktree; no installation or cache reset ran. Generation and asset builds are source mutations, not passing clean-checkpoint validations. Early generation had untracked native test files, explicitly recorded in its result. All failed integration runs remain separate below.
 
-The ordinary gate has not run yet. Its final result, measured byte annotation, checkpoint and manifest will replace this sentence after closure.
+The ordinary gate at `04ed601d6bbeae64863c6be7121e069e868feb35`, tree
+`d09d223faf5d7baa6af5df055c85e4ec8ff5634f`, failed naturally with exit 1.
+It took 71.694346 wall seconds and 118.768294 child CPU seconds, measured
+around the unchanged `npm run gate` command. Kernel passed; Node had 56
+passes and one failure. Counting, plain and native were unreached. The
+failure was a source-seal expectation in `security-entry-points.test.mjs`,
+not a runtime authority assertion. The original logs remain separate.
+
+A builder source review found 12 stale seal literals over 11 changed
+owners; `object.ts` has two rows. The review checked the explicit family
+lists, native creation and archive bindings, configured bounds, and host
+revalidation against the intended contract. No route matcher or gate
+class changed. The repair at
+`1e58a6a5e1cf6539a540aa7aeb0e73e237d69c7d`, tree
+`fe8b288d1e90e033a48053e48d5afb2bbe1723cf`, changes only those literals.
+All 70 map rows and every assertion remain. No production, imported
+helper, configuration, dependency or compiler input changed. The whole
+owning Node file then passed. This follows the limited follow-up rule in
+`docs/testing.md`; it does not turn the failed gate into a pass. The three
+unreached stages, measured byte annotation, final manifest and checker
+review remain outstanding. Archive capacity request `499b2a80` preempts
+promotion of this head; capture question `cbdf2559` is with the planner.
 
 | Check | Command | Commit | Exit | Output SHA-256 |
 | --- | --- | --- | --- | --- |
@@ -56,6 +77,8 @@ The ordinary gate has not run yet. Its final result, measured byte annotation, c
 | `page-build-final` | `npm run build --workspace @generalbusiness/dap-page` | `1c38e61605e7fda7b7e76cbc5346dfd4e64e855d` | 0 | `59e502fdc454525702ac735b5c78ec5ad9e96d448b4a5b08553ecbb36e773ebe` |
 | `final-owning-compiler` | `npm run typecheck --workspace @generalbusiness/dap-platform --workspace @generalbusiness/dap-lanes --workspace @generalbusiness/dap-page` | `f5b59e4e45b0d6f1d2978375791c8ca2ce904164` | 0 | `9bfde5b6d34064ac53ad8a7772762c119a83fdb62d6c6987128b522a106028a3` |
 | `final-owning-plain` | `node node_modules/vitest/vitest.mjs run --config vitest.plain.config.ts --project platform --project page destination-budget-v15.test.ts assets.test.ts` | `f5b59e4e45b0d6f1d2978375791c8ca2ce904164` | 0 | `d83ebef11f9221f6aca11809435ba1a5fbb64f46b81a2874bba5482a2a61bee0` |
+| `ordinary-gate` | `npm run gate` | `04ed601d6bbeae64863c6be7121e069e868feb35` | 1 | `da5c0b72bd911e011e81c1c42a23ed53a9177f034c2a867b512f9f192d377c9a` |
+| `security-seal-followup` | `node --test scripts/security-entry-points.test.mjs` | `1e58a6a5e1cf6539a540aa7aeb0e73e237d69c7d` | 0 | `fa5e30c37c61b0b945f2236c226d1a2c7f0a2209c1f04f4039181d70b62f18da` |
 
 ## Open limits
 
