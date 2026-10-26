@@ -5,14 +5,20 @@ Request: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:50695e48bce9
 ## What changed
 
 The `scope` project allows two workers and keeps `isolate: false`.
-Each worker reuses its own runtime across files. The current proposal
+Each worker reuses its own runtime across files. The accepted isolation
 moves the existing Lending file into a separate ordered `scope-lending`
 project with one worker and its own runtime, followed by `scope-denial`
 with one worker in another runtime. The root file-task limit remains four.
 Every witness is selected once. Expected assertions, deadlines and
-production source are unchanged. Planner disposition under question
-`72a1266e`, owning checks and a new exact-head ordinary gate are pending.
-This is an unvalidated proposal, not an approved isolation result.
+production source are unchanged. Planner disposition
+`29be96629213ba13f3acff8c9dec58f47a641926` accepted this bounded change at
+`bd9d4dec5f79008c803a8eae506403430169aedb`. Its owning checks passed once
+after the BR10 gate closed. A new exact-head ordinary gate remains pending;
+the owning pass does not establish mixed-project stability.
+
+Question `72a1266e` was superseded. Its replacement `0db80e82` was answered
+and retired after the decision. Work continues under the original request
+and promise, without using a retired question or answer as its basis.
 
 The initial source preparation used Main `9daa037e`. R7 has since landed
 on Main `6852f78d`; BR-3's three preparation commits were rebased onto that
@@ -41,6 +47,8 @@ phase took 736.957 seconds with 779 passed, one failed and two skipped.
 Both failed gates remain failed. The deterministic fixture-coherence
 control below demonstrated that fixture gap; it did not establish or
 repair the recurrent masked mixed-project failure.
+BR4 request `15b0f8ab` owns that unknown cross-file cause, retaining the
+original failure at the second-look assertion's line 237.
 
 The historical Lending projection stand-in now collects at most two complete
 attempts. It restarts once only when independently validated sources name
@@ -66,7 +74,7 @@ to the workers. Source inspection found no concrete setup change to make
 before runtime validation.
 
 The root project comments and testing guide now describe two Scope workers
-and the proposed ordered single Lending and denial workers. No packages
+and the accepted ordered single Lending and denial workers. No packages
 were installed for this preparation. The initial worktree had no `node_modules`; the Node witness
 below needs no external dependency. The later compiler used a separate copy
 of R7's existing dependency installation, as recorded below.
@@ -92,7 +100,7 @@ same expected state follows the same write. The first current requirement
 now uses `expect.fail` so its failure is an assertion in the paired control.
 The earlier bounded diagnostic observer remains diagnostic-only.
 
-The proposed Lending config has its own Cloudflare pool plugin, the same
+The Lending config has its own Cloudflare pool plugin, the same
 test Worker and Wrangler bindings, one exact file selection, `isolate: false`,
 one worker and the existing 30-second framework allowance. It starts no
 clone server or maintained-package capture: the Lending story consumes
@@ -104,14 +112,16 @@ now expects fourteen plain and three native projects, seventeen in total.
 The summary's project inventory and native phase classification both include
 Lending. Its existing terminal-reporting witness now requires all three
 native projects to be observed only with a successful native terminal;
-without that terminal all remain partial. These source changes have not
-been run. The first-look assertion message now also includes only the
+without that terminal all remain partial. Both whole owning Node files
+passed at the accepted checkpoint. The first-look assertion message also includes only the
 already bounded safe projection-error labels, as the second-look message
 already did. It adds no observer, read, retry or story act.
 
-This proposal bounds Worker reuse around the repeatedly failing story.
+This change bounds Worker reuse around the repeatedly failing story.
 It claims neither a proven cause nor physical draining of earlier runtimes.
-The actual ordinary gate must decide whether the proposed boundary holds.
+The actual ordinary gate must decide whether this boundary holds across
+the full inventory. If it reports another shared-state failure, stop and
+seek a planner disposition rather than repair again within BR3.
 
 ## Evidence
 
@@ -151,7 +161,10 @@ note and the new manifest change after that checkpoint.
 | Whole Lending file paired control | `node scripts/control.mjs packages/scope/test/support/legacy-lending-projection.ts '<restart guard>' '<guard disabled>' --expect 'the lending library on real scopes' -- . --config vitest.native.config.ts --project scope packages/scope/test/lending.test.ts --reporter=/private/tmp/artroom-br3-control-progress-20261026.mjs` (exact replacement and argv in `result.json`) | 0; distinguishes, healthy 1 passed, fault 1 assertion failed | `306484fb618a2f5a77d75ecd20a150a754517779946b2491e550b3740f858cfe` (`control.log`) | `e29acab4` |
 | Initial ordinary gate | `npm run gate` | 1; 887.092 seconds whole wall, 1,877.359 child CPU seconds; native 761.231 seconds, 779 passed, 1 failed, 2 skipped | `964f17354d3df14a80900e4448a50a690f6bd5536d0c6bd2e3371880415047fb` (`gate-v1/result.json`) | `eceeb5e9` |
 | Ordinary gate V2 after fixture repair | `npm run gate` | 1; 852.986 seconds whole wall, 1,810.542 child CPU seconds; native 736.957 seconds, 779 passed, 1 failed, 2 skipped | `53b2d7c4c7ff0ea1599fd66ce1206ce6d3fb02f6371b8efe3cb4b081067aaa25` (`gate-v2/result.json`) | `cbb08aff` |
-| Proposed isolated Lending configuration | Owning partition/terminal witnesses, compiler and new exact-head ordinary gate | Pending planner disposition and serialized execution | Not run | Current proposal |
+| Whole owning Node files after isolation | `/opt/homebrew/bin/node --test scripts/test-phases.test.mjs scripts/test-summary.test.mjs` | 0; 4 passed | `f3de338a445fb7f75d36f42c64400b109a576688441b200e42bd645bd75325dc` (`node-owning.log`) | `bd9d4dec` |
+| Scope test compiler after isolation | `/opt/homebrew/bin/node node_modules/typescript/bin/tsc -p packages/scope/tsconfig.test.json` | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` (`compiler.log`) | `bd9d4dec` |
+| Whole dedicated Lending project | `/opt/homebrew/bin/node node_modules/vitest/vitest.mjs run --config vitest.native.config.ts --project scope-lending` | 0; 1 passed, 3,925 ms case; 6.988 seconds command wall, 7.989 child CPU seconds | `05508da3ee11cf19a36e2aa83edc2fb53c775fa71725b9edbd1368f74c9f98c5` (`lending.log`) | `bd9d4dec` |
+| Final ordinary gate and measurement | `npm run gate` once on the settled head | Pending | Not run | Settled head after this documentation follow-up |
 
 The repair compiler and one maintained paired control ran at
 `e29acab45e6eb113af89e8b084b0650c8c038a62`, tree
@@ -172,6 +185,22 @@ changed only the note and manifest. The current isolation proposal changes
 configuration, its existing reporting/partition witnesses and the bounded
 first-look message; the historical control is not relabelled as validation
 of those later inputs.
+
+The isolation owning checks ran at
+`bd9d4dec5f79008c803a8eae506403430169aedb`, tree
+`1703484866f0dfbe5aaf2d159cdb6d133b816b86`. The
+[interim owning manifest](evidence/2026-10-26-br3-lending-isolation-owning.manifest.json)
+is the exact manifest emitted by the single authorized driver run; its
+SHA-256 is `d8736d801142a320e106ee0aa52ea70cdf6a903c2ab1e2b6e5abfbaf21261deb`.
+It indexes nine read-only home files with a top-level `SHA256SUMS`, including
+the exact driver, preflight, actual command results and native callbacks.
+Preflight checked the exact clean head/tree, real owned dependency directory,
+unchanged `645224…` lock/stamp, all fourteen BR3 workspace links and the
+closed successful BR10 result before root released serialized execution.
+The two Node files, compiler and dedicated project each ran once, in that
+order. All passed and the head/tree stayed clean and unchanged. No healthy/fault
+control, full native phase, installation or ordinary gate was repeated.
+Only this note and the copied interim manifest change after that checkpoint.
 
 The owner retains the closed gate outputs under
 `~/play/artroom-evidence/2026-10-26-br3-two-workers-gate` and
@@ -222,13 +251,16 @@ the eventual ordinary gate must compile the upstream R7 inputs too.
 
 ## Open limits
 
-Request `50695e48` owns a fresh ordinary gate on the approved candidate and
-final evidence consolidation. Planner disposition under `72a1266e` and
-serialized owning checks remain pending for this proposal. The paired
+Request `50695e48` owns a fresh ordinary gate on the settled accepted candidate
+and final evidence consolidation. Disposition `29be9662` accepted the bounded
+isolation; serialized owning checks passed. The paired
 control proves the deliberately interleaved fixture gap, not the original gate's masked cause
 or cross-file stability. A continuously changing head can still exhaust
-the two-attempt bound and refuse. No compiler, test, build or gate ran for
-the current isolation proposal. Both earlier failed gates remain failed.
+the two-attempt bound and refuse. The final ordinary gate is still pending.
+Both earlier failed gates remain failed. BR4 request `15b0f8ab` owns the
+unknown cross-file cause and the original line-237 failure record. Any new
+shared-state failure in the final gate requires a planner question, with
+no further BR3 repair loop.
 
 Request `50695e48` owns the measurement, ordinary gate, exact-head review
 and any repair needed when tests run on two workers. The owner must check

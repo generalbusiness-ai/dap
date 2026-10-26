@@ -1,0 +1,56 @@
+{
+  "qualification": "Interim owning validation only: exact accepted isolation checkpoint, two whole owning Node files, Scope test compiler, dedicated scope-lending project once, first failure stops later commands. No whole native suite, ordinary gate, new paired control or measurement. Original mixed-project masked cause remains unknown; fresh ordinary gate and final consolidation remain root-owned.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-26-br3-lending-isolation-owning-v1",
+  "checkpoint": {
+    "commit": "bd9d4dec5f79008c803a8eae506403430169aedb",
+    "tree": "1703484866f0dfbe5aaf2d159cdb6d133b816b86"
+  },
+  "fileCount": 9,
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "bytes": 655,
+      "sha256": "3bbda83d15babd14d068606c7fb3ca934af6bce77b1b043cae5e1612cad08a06"
+    },
+    {
+      "path": "compiler.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "lending.log",
+      "bytes": 5963,
+      "sha256": "05508da3ee11cf19a36e2aa83edc2fb53c775fa71725b9edbd1368f74c9f98c5"
+    },
+    {
+      "path": "node-owning.log",
+      "bytes": 565,
+      "sha256": "f3de338a445fb7f75d36f42c64400b109a576688441b200e42bd645bd75325dc"
+    },
+    {
+      "path": "owning-driver.py",
+      "bytes": 11642,
+      "sha256": "6562ea7ed7c2ec472d4fa22445a4a34ccc095efb259c0ff74b9e78980e6bafdc"
+    },
+    {
+      "path": "preflight.json",
+      "bytes": 5033,
+      "sha256": "ea06b43d056d3c58d26105b464ac2a3cf64574e3687c7d3b23608b2ce1688e35"
+    },
+    {
+      "path": "progress.native.jsonl",
+      "bytes": 1304,
+      "sha256": "b70aee60fd9c3b7482863f2ffce7344d4ed1916090e63c96ea742a44ccb25d7a"
+    },
+    {
+      "path": "result.json",
+      "bytes": 8229,
+      "sha256": "e7366d63298df9852161069ee7e0287d2851a019901a7b5d83df3891ae70cf11"
+    },
+    {
+      "path": "timing.native.jsonl",
+      "bytes": 1438,
+      "sha256": "da48cc5211c3a7ac8a28d85978db4ce06af81d8faf16abdb13434f9ee1c8c7ff"
+    }
+  ]
+}
