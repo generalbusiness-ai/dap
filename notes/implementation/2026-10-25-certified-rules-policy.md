@@ -13,9 +13,9 @@ The planner owns any later creation allowance or deployment.
 
 Rules 11 accepts a complete policy with explicit owner-review and
 zero-approval choices. It binds that policy to a bounded repository-tree
-proof and a selected native Destination certificate. Destination 14 uses
-the authenticated policy for publication and enforces both global required
-checks and checks required by touched extents.
+proof and a selected native Destination certificate. For change publications
+through the reservation path, Destination 14 uses the authenticated policy
+and enforces both global required checks and checks required by touched extents.
 
 The new native journeys now pass through actual family creation,
 certificate publication, policy refusal, current required jobs, staged
@@ -62,8 +62,8 @@ An already pinned incarnation must still match exactly.
 
 ### Stage before jobs, then require current jobs before push
 
-Initial list eligibility requires a configured policy. It does not demand
-jobs for a tree that has not yet been staged. Destination captures the
+For change publications, initial list eligibility requires a configured
+policy. It does not demand jobs for a tree that has not yet been staged. Destination captures the
 complete policy and required descriptors, stages the tree, then requires
 current accepted job generations before push. Global required checks join
 the touched-extent union. Invalid global evidence takes precedence over
@@ -329,6 +329,29 @@ and Destination 14. The public and recorded Grow families remain at Register
 the scheduled demo cohort and deployment after landing under `0716e75a`.
 
 ## Open limits
+
+The required-check enforcement above applies to change publications through
+the reservation path. Destination 14 inherits `publish-file` from Destination 4:
+an installed application can still write any path, including a rules extent,
+without change review or required checks. This follows the documented
+[file-publication model](../../packages/platform/README.md).
+Reserved paths and declared application prefixes
+belong to R16, request
+git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b300dca1381f27beed6c0d3278ccc5955f86c7dc.
+No publication policy changes in this clarification.
+
+The hardcoded next-unsupported-version sentinels become stale whenever a
+supported version is added. Deriving them from the supported set would
+change shared helpers and remains outside this head. BR-13 (version
+questions, slice H) owns this limit, request
+git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:487496f5ad73675926a070808188cd2a228334c1,
+as corrected by planner `264e7136` and checker `2eeec03f`.
+
+This documentation-only clarification starts from landed Main
+`6852f78d3279ef13a33b7b9d0b283e9ba96f079f`, tree
+`b4dbac71198f26f84513966c58d9cef7f248a0b2`. Only this note changes.
+Production source, tests and the historical gate and evidence records remain
+unchanged. The documents-only rule in `docs/testing.md` requires no gate rerun.
 
 Request `0716e75a` owns exact-head review and any repair it identifies.
 The index records the failed V3 gate, the passing whole Rules file and the
