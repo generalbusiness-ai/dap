@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { PROPOSED_BOUNDS, type Entry, type FactRef } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type Entry, type FactRef, type MemberRef } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, definitionDigest, digestBytes, factRefOf, isRecord, utf8 } from "@generalbusiness/dap-bytes";
 import { CONFIGURATION_DOMAIN, HARDENED_CERTIFIED_RULES_COHORT, RULES_PATTERNS, certifiedCaptureBudgetV15, certifiedPublicationStateV15, platform, rulesPolicyProposalV11, type CertifiedPublicationStateV15, type RulesPolicyV11 } from "@generalbusiness/dap-platform";
 import { invitationIssueFields, invitationRedemptionFields } from "@generalbusiness/dap-client";
@@ -58,7 +58,7 @@ test("G15 admits the maximum constructed capture, retains 32 real proofs, and re
     const secret = b64url(new Uint8Array(32).fill(94)); // Public TEST invitation seed.
     const invitation = await M.did(rita, "invite-member", { fields: { handle: "@una", role: "checker", ...invitationIssueFields(HARDENED_CERTIFIED_RULES_COHORT.membership, secret), inviteEnds: soon(3600) } });
     await M.did(una, "join", { fields: invitationRedemptionFields(HARDENED_CERTIFIED_RULES_COHORT.membership, await M.at(), invitation, una.key, secret) });
-    const checker = { membership: await M.at(), member: "@una" };
+    const checker: MemberRef = { membership: await M.at(), member: "@una" };
     const checks: RulesCheckV11[] = [];
     for (let index = 0; index < 32; index++) {
       const name = `c${String(index).padStart(2, "0")}`;
@@ -72,6 +72,8 @@ test("G15 admits the maximum constructed capture, retains 32 real proofs, and re
     const declaration = canonicalize(changeDemo3), digest = definitionDigest(changeDemo3);
     expect(await Q.stub.submit(await Q.intent(rita, "activate", { fields: { digest, name: "change" } }), [], { values: [declaration] })).toMatchObject({ answer: "accepted" });
     const prepare = async (name: string) => {
+      const laneBase = base;
+      if (!laneBase) return expect.fail("Each native lane needs the actual Git base");
       const opening = await D.stub.submit(await D.intent(rita, "open-pr", { expected: await D.expected({ repository: 0 }), fields: { definition: digest, title: name, draft: false } }), [], { values: [declaration] });
       if (opening.answer !== "accepted") return expect.fail(`A genuine native lane must open: ${canonicalize(opening)}`);
       const lane = life.platform((await D.created(opening.receipt.fact.seq)).name); nodes.push(lane); await pause(nodes);
@@ -79,9 +81,9 @@ test("G15 admits the maximum constructed capture, retains 32 real proofs, and re
       const rules = (await lane.summary()).value.items.find(item => item.type === "rules");
       if (!rules) return expect.fail("The lane must retain its real rules reply");
       const content = `# ${name}\n`, path = `${name}.md`;
-      const source = await lane.did(rita, "propose-file", { expected: await lane.expected({ proposal: 0 }), fields: { base, path, digest: digestBytes(utf8(content)), size: utf8(content).length, content } });
+      const source = await lane.did(rita, "propose-file", { expected: await lane.expected({ proposal: 0 }), fields: { base: laneBase, path, digest: digestBytes(utf8(content)), size: utf8(content).length, content } });
       const file = { path, entry: factRefOf((await hardeningEntries(lane))[source]!), digest: digestBytes(utf8(content)) };
-      const manifest = await lane.did(rita, "propose-manifest", { expected: await lane.expected({ proposal: 0 }), fields: { base, files: [file] } });
+      const manifest = await lane.did(rita, "propose-manifest", { expected: await lane.expected({ proposal: 0 }), fields: { base: laneBase, files: [file] } });
       return { lane, rules, manifest, fact: factRefOf((await hardeningEntries(lane))[manifest]!) };
     };
     const merge = async (prepared: Awaited<ReturnType<typeof prepare>>) => {
