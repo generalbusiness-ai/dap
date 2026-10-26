@@ -10,6 +10,7 @@ import { soon } from "./net.ts";
 import { Platform, rita, sam } from "./repository.ts";
 import { reader, driveFixture, nativeFixtureLifetime } from "./fixtures-native.ts";
 import { beginSessionFixture } from "./session-settings.ts";
+import { platformDeliveryObservers } from "./worker.ts";
 
 // New-family fixtures only: no historical fixture or production authority changes.
 export async function certifiedNativeRoom() {
@@ -58,6 +59,27 @@ export async function certifiedNativeRoom() {
     expect(await R.stub.create(signIntent(install, rita.secret), cohort.register)).toMatchObject({ answer: "accepted" });
     const found = await R.intent(rita, "found", { expected: await R.expected({ register: 0 }), fields: { branch: "main", founderHandle: "@rita", recoveryKey: sam.key } });
     const D = life.platform(scopeIdOf({ v: 1, kind: "directory", definition: cohort.directory, creator: await R.at(), cause: intentDigest(found.intent), ordinal: 0 }));
+    const destinationBirthRows: { answer: string; reason: string | null; name: string | null }[] = [];
+    let destinationBirthOverflow = false;
+    const observedWord = (value: unknown, allowed: readonly string[]) => typeof value === "string" && allowed.includes(value)
+      ? value : value === undefined || value === null ? null : "outside-closed-set";
+    const observeDestinationBirth: NonNullable<ReturnType<typeof platformDeliveryObservers.get>> = (envelope, answer) => {
+      if (platformDeliveryObservers.get(D.name) !== observeDestinationBirth || envelope.from.at.scope !== D.name
+        || !isSeed(envelope.to) || envelope.to.kind !== "destination" || envelope.to.definition !== cohort.destination
+        || canonicalize(envelope.to.creator) !== canonicalize(envelope.from.at)
+        || envelope.message.class !== "request" || envelope.message.type !== "create") return;
+      if (destinationBirthRows.length >= 16) { destinationBirthOverflow = true; return; }
+      destinationBirthRows.push({ answer: answer === "rejected" ? "rejected" : answer === null ? "no-answer"
+        : observedWord(answer.answer, ["recorded", "retry", "routing", "source-unverified"]) ?? "outside-closed-set",
+        reason: observedWord(answer !== null && typeof answer === "object" && "reason" in answer ? answer.reason : undefined,
+          ["dependency-unavailable", "busy", "clock-behind", "scope-provisional", "guard-incomplete", "authority-unavailable", "unavailable", "rate-limited", "scope-full", "unsupported-definition", "wrong-incarnation", "not-found"]),
+        name: observedWord(answer !== null && typeof answer === "object" && "name" in answer ? answer.name : undefined,
+          ["scopeEntries", "scopeBytes", "scopeItems", "scopeRecords", "scopeRequests"]) });
+    };
+    if (platformDeliveryObservers.has(D.name)) throw Error("TEST destination birth observer already owned");
+    platformDeliveryObservers.set(D.name, observeDestinationBirth);
+    life.cleanup(() => { if (platformDeliveryObservers.get(D.name) === observeDestinationBirth) platformDeliveryObservers.delete(D.name); destinationBirthRows.length = 0; });
+    const destinationBirthObservation = () => { life.active(); return { complete: !destinationBirthOverflow, rows: destinationBirthRows.map(row => ({ ...row })) }; };
     expect(await R.stub.submit(found, [])).toMatchObject({ answer: "accepted" }); await pause([R, D]);
     const directoryBirthEntry = (await D.entries())[0]!;
     const sibling = (kind: ScopeRef["kind"]) => {
@@ -76,7 +98,7 @@ export async function certifiedNativeRoom() {
     await G.restart(); await pause(nodes);
     const seat = await M.did(rita, "seat", { expected: await M.expected({ roster: 0 }) });
     await M.did(rita, "first-key", { fields: { member: seat }, expected: await M.expected({ roster: 0, member: seat }) });
-    return { life, host, providerCalls, control, pause, R, D, M, Q, G, nodes, bindings };
+    return { life, host, providerCalls, control, pause, R, D, M, Q, G, nodes, bindings, destinationBirthObservation };
   } catch (error) { life.release(); throw error; }
 }
 export type CertifiedRoom = Awaited<ReturnType<typeof certifiedNativeRoom>>;

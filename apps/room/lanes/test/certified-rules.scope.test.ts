@@ -156,6 +156,7 @@ test("certified-rules native birth and device install bootstrap a real tree cert
           ? [{ kind: short(send.to.kind), definition: short(send.to.definition) }] : []));
         const diagnostic = canonicalize({ snapshot, rowCap, textCap,
           stageDeliveryObservation: { complete: !stageDeliveryOverflow, rows: stageDeliveryRows.slice(0, rowCap) },
+          initialDestinationDeliveryObservation: room.destinationBirthObservation(),
           destinationBirth: {
             summary: { ok: destinationSummary.ok, reason: destinationSummary.ok ? null : readReason(destinationSummary.reason),
               complete: destinationSummary.ok ? destinationSummary.complete : null,
