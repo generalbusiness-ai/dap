@@ -26,6 +26,7 @@
 import type { FactRef, FieldValue, KeyId, Observation, OperationId, PlatformData, PlatformDefinition, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, parseStrict, entryHash, factRefOf, isDigest, isFactRef, isScopeRef, timeOf, timeMs, utf8, textDigest, isMemberRef } from "@generalbusiness/dap-bytes";
 import type { Item, Opening, Operation, OperationRules, Own, PlatformRule, PublicationOrigin, RecordedRef, RuleEffect, RuleGiven, RuleRequest, Rules, StateView } from "@generalbusiness/dap-derive";
+import { observedOf } from "@generalbusiness/dap-derive";
 import { DESTINATION_CHANGED_SET, isJudgeChanges, isRecordedJudgeEvidence, isObjectId, judgeReservation, judgeReservationWithStanding, fileSound, type ReservationAsked, type ReservationRead, type ReservationStanding, type Statement } from "./reservation.ts";
 import { judgeReservationV14, judgeListEligibilityV14, readRulesPolicyObservationV14, requiredChecksV14, type ReservationPolicyInputV14, type ListEligibilityV14 } from "./reservation-v14.ts";
 import type { RulesCheckV11 } from "./rules-policy-v11.ts";
@@ -1324,7 +1325,9 @@ function policyInput14(given: RuleGiven): ReservationPolicyInputV14 | null {
   const seen = given.observed({ asked: "rules" })?.observation;
   const rules = destinationRulesScope(given.state), scope = given.state.scope();
   if (!seen || !("subject" in seen) || seen.subject !== "rules" || seen.content.asked !== "rules" || !seen.content.extents
-    || !rules?.inc || !scope || !equal14(seen.of, { scope: rules.scope, inc: rules.inc, kind: "rules" })) return null;
+    || !rules || !scope || !observedOf(seen.of, rules)) return null;
+  // Current rows already passed native observation guards. The first retained
+  // answer fixes the recorded incarnation; an existing pin must still match.
   const extents = given.value("artroom-rules-extents-2", seen.content.extents, 262144);
   return { rules: seen.of, destination: scope.at, extents };
 }
