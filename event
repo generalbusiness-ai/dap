@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a649dabcb340b53bd7d678250de8ffa3b34fc8ff","text":"Merge retired a covered predecessor; the successor is at apps/room/page/src/main.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ba294dc17ffbf5e8a235dd83c819bbd9d386b5f3","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-26-br10-remove-rename-tooling.md."}
