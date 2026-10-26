@@ -1,0 +1,43 @@
+{
+  "qualification": "Owning CLI test compiler and one paired source-config control only. The whole owning file passes before one migration-tag mutation and fails by its prefix assertion after it; the original config is restored. No gate, Wrangler invocation, hosted observation or deployment. Existing shared dependencies reused without installation or cache reset.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-26-br9-migration-prefixes",
+  "checkpoint": {
+    "commit": "9a6671ab3030792834960b964f27c028570b4428",
+    "tree": "f36021a293cabc28aa0038ce6d7ee94a4e87459a"
+  },
+  "fileCount": 6,
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "bytes": 424,
+      "sha256": "95924d41685a8f8862f9cf9c61e315df52d706a907c54122bb2b24542375fce5"
+    },
+    {
+      "path": "compiler.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "compiler.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "migration-control.stderr",
+      "bytes": 2066,
+      "sha256": "57a147ab8662ff8d22a613c0091c5d5d96c503ad18b0b3fb9eb948da9e2f3a31"
+    },
+    {
+      "path": "migration-control.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "result.json",
+      "bytes": 3181,
+      "sha256": "e07c2fddadfca87517b191ff6445528f5c857303876e11d692f4773ec55af3ed"
+    }
+  ],
+  "retention": "Keep for at least 30 days after landing; directory and all files are read-only.",
+  "withheld": "No secret, token, raw environment or unredacted request body was captured."
+}
