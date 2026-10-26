@@ -542,8 +542,8 @@
   ],
   "primaryNote": {
     "path": "notes/implementation/2026-10-25-site-foreign-source-recovery.md",
-    "bytes": 13608,
-    "sha256": "cc7d234b36a3bcf542c5720b203a17a5effaf9f03b73efff98b11c627163d58d"
+    "bytes": 13640,
+    "sha256": "0e45ade4872a26dbba457524c041b775a0bd869a6425b624d2a632004c38b96c"
   },
   "seal": {
     "index": "SHA256SUMS",
