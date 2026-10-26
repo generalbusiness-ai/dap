@@ -2,13 +2,14 @@
 
 Status: landed; describes work that is done.
 
-The sprint ran from 17:00 on 25 October to 17:00 on 26 October. Six
-heads landed on `main`: the archive source recovery, the certified rules
-policy (R7) with its documentation follow-up, and three slices of the
-codebase review (BR-9, BR-10, BR-3). The three room Workers run the day's
-last landing. The demo room's archive advanced from entry 9,824 to
-24,333, the Site row recovered and reached its frontier, and at 15:35
-both rows began to defer at the finish quote.
+The sprint ran from 17:00 on 25 October to 17:00 on 26 October. Eight
+heads landed on `main`: the 25 October sprint report, the advisory
+notes and evidence warnings in the gate, the archive source recovery,
+the certified rules policy (R7) with its documentation follow-up, and
+three slices of the codebase review (BR-9, BR-10, BR-3). The three room
+Workers run the day's last landing. The demo room's archive advanced
+from entry 9,824 to 24,333, the Site row recovered and reached its
+frontier, and at 15:35 both rows began to defer at the finish quote.
 
 ## Story: the certified rules policy lands
 
@@ -73,10 +74,12 @@ a pointer to the commit that holds them, and makes the Page name
 `DAP_HOME`. Its first landing was refused: deleting a guide under `docs`
 retires the planner's directory artifact at `docs`, which the eight
 reviewed paths did not cover. The builder recut the head with `docs` as
-a ninth artifact, the checker approved the recut, and the merge
-superseded the pointer. The rule is recorded: a head that deletes, moves
-or edits a file another actor published names the parent directory in
-its first artifact filing.
+a ninth artifact, the checker approved the recut, and the merge retired
+the planner's `docs` artifact `42e1aca1` (successor `ff5f4f04`, landing
+check `03e852f7`), although the answer had said that artifact stays
+live. The rule is recorded: a head that deletes, moves or edits a file
+under `docs`, `notes` or `apps/room/docs` that another actor published
+names that directory in its own artifact filing.
 
 BR-3 (`a97c7425`, 14:36) runs the Scope test project on two workers
 without isolation. Two gates failed on one historical Lending story
@@ -90,6 +93,9 @@ unknown and belongs to BR-4.
 
 ## What landed
 
+- `d1c3622f`, 25 October 17:14: the 25 October sprint report.
+- `575c113f`, 25 October 18:45: advisory notes and evidence warnings in
+  the gate (`scripts/check-notes.mjs`).
 - `9daa037e`, 25 October 22:34: an explicit restart after an archive
   source is unavailable; `sourceFailure` in the pass diagnostic.
 - `6852f78d`, 09:36: certified rules for change publications (R7;
@@ -127,19 +133,23 @@ demo repository's trees fit the certificate bound.
 - A failed gate followed by isolated test-only repairs: the follow-up
   rule applies to each repair; two failures on one cause end the chain
   with a question or one ordinary gate at the exact head (`036e7f12`).
-- The hardening head is the next platform version after R7. Rules 11 and
-  destination 14 have shipped and do not change; the head creates
-  register 20, directory 19, rules 12, destination 15 and the matching
-  family. BR-13 moves behind it (`e17cbaa4`).
+- The hardening head is the next platform version after R7. Register
+  19, directory 18, rules 11 and destination 14 stay exact; destination
+  15 is reserved; a new register, directory or rules version is allowed
+  only if its data or rules change. BR-13 moves behind it (`e17cbaa4`).
+  The builder plans to create register 20, directory 19, rules 12 and
+  destination 15 (`f82aba22`).
 - A certificate request interrupted by a concurrent entry gets a
-  deterministic declined answer that names the entry; no kernel change.
+  deterministic declined answer that names the entry; no kernel change
+  (`e17cbaa4`, item 2).
 - For BR-3 the instrumented ordinary gate is the measurement run; the
   before figures are the BR-9 gate and the R7 native run, each labelled
   by how it was taken (`cf0328ba`).
 - The Lending story is isolated in its own one-worker project rather
   than diagnosed further (`29be9662`).
-- A head that touches files other actors published names their parent
-  directory in its artifact filing (`92278157`).
+- A head that deletes, moves or edits a file under `docs`, `notes` or
+  `apps/room/docs` that another actor published names that directory in
+  its own artifact filing (`92278157`).
 - The three Workers redeploy together from the day's last landing
   rather than waiting for the Room A row to finish.
 
