@@ -1459,6 +1459,14 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       // native SQLite. Only the child's nativeBirth RPC is fault-injected;
       // the Artifacts peer remains a TEST provider, not hosted acceptance.
       const peer = productionPeer!;
+      // The preceding offline proof deliberately cleared the original
+      // transport map. This new online TEST phase restores only the actual
+      // fsck-checked and offline-verified clone, preserving that earlier proof.
+      expect(peer.data.size).toBe(0);
+      for (const [id,object] of clonedObjects) {
+        if (!["commit","tree","blob"].includes(object.type)) expect.fail("the verified archive clone must contain archive objects");
+        peer.data.set(id,{id,type:object.type as JournalObject["type"],data:new Uint8Array(object.data)});
+      }
       const repository = (await life.wait(() => D.item(0))).values["repository"] as unknown as DestinationRepository;
       const environment = { ARTIFACTS:peer.binding,
         ARTIFACTS_CONFIG:canonicalize({registerScope:R.name,namespace:repository.namespace,host:"service.invalid",maxBytes:8*1024*1024,credentialIdentity:"adapter-attempt"}),
@@ -1506,6 +1514,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
         }));
         const before=await inspect(),writes=peer.minted.filter(value=>value.scope==="write").length,sends=peer.sends.length;
         expect(before.row?.confirmed?.layout).toBe(2);expect(before.row?.pending).toBeNull();
+        expect(peer.refs.get(journalRef(at.scope))).toBe(before.row!.confirmed!.commit);
         expect(before.row!.confirmed!.through.seq).toBeLessThan(through.seq);
         // Choose the actual next Room-source entry, without inventing an
         // entry body or changing admission. If preceding entries exist,
