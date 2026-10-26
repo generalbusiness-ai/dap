@@ -1,6 +1,6 @@
 import { expect } from "vitest";
 import { PROPOSED_BOUNDS, type Digest, type FactRef, type Intent, type ScopeRef } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, factRefOf, intentDigest, isDigest, isRecord, isSeed, parseStrict, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, factRefOf, intentDigest, isDigest, isFieldValue, isRecord, isSeed, parseStrict, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
 import { ARCHIVE_CERTIFIED_RULES_COHORT, RULES_CERTIFICATE_KIND, RULES_POLICY_VALUE_V11, RULES_TREE_PROOF, platform, rulesPolicyProposalV11, type RulesPolicyV11 } from "@generalbusiness/dap-platform";
 import { placesOf, readFields, valueDigest } from "@generalbusiness/dap-derive";
 import { DestinationHost, type DestinationProvider } from "../src/destination-host.ts";
@@ -124,11 +124,16 @@ export async function publishRulesCertificate(room: CertifiedRoom, policy: Rules
           } catch { return { withinLimit, parsed: false, canonical: false, digestMatches: false }; }
         }) };
     });
+    const extents = signed.intent.fields["extents"];
+    let extentsCanonicalBytes: number | null = null;
+    try { extentsCanonicalBytes = utf8(canonicalize(extents)).length; } catch { /* No value/body or exception text. */ }
     const diagnostic = canonicalize({ answer: { answer: answer.answer, reason: answer.reason,
       ...(answer.name === undefined ? {} : { name: answer.name.slice(0, 256) }), judgedAt: answer.judgedAt },
       readFields: fields === null ? { assessed: false } : fields.ok ? { assessed: true, ok: true }
         : { assessed: true, ok: false, detail: fields.detail.slice(0, 256) },
-      suppliedValueCount: values.length, namedValues, codedExtents: "unassessed: requires native RuleGiven" });
+      suppliedValueCount: values.length, namedValues, codedExtents: { fieldValue: isFieldValue(extents),
+        array: Array.isArray(extents), count: Array.isArray(extents) ? extents.length : null,
+        canonicalUtf8Bytes: extentsCanonicalBytes } });
     if (utf8(diagnostic).length > 4096) throw Error("TEST Q11 publish admission diagnostic exceeded 4096 bytes");
     throw Error(`TEST Q11 publish admission AFTER refused submit: ${diagnostic}`);
   }
