@@ -1,0 +1,47 @@
+{
+  "qualification": "Two required documentation checks at a clean note checkpoint. Source and tests match landed R7 Main; prose changes only in the existing R7 note. This mechanical manifest is the only additional path required by the implementation-evidence convention. No gate or test rerun and no reread of earlier accepted execution evidence.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-26-r7-note-clarifications",
+  "base": {
+    "commit": "6852f78d3279ef13a33b7b9d0b283e9ba96f079f",
+    "tree": "b4dbac71198f26f84513966c58d9cef7f248a0b2"
+  },
+  "checkpoint": {
+    "commit": "ca6b2b2a988e087a30cebb759d4099ad06d5b285",
+    "tree": "02501bfd7bb1874b473bd279b90115332e1dfe4f"
+  },
+  "fileCount": 6,
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "bytes": 426,
+      "sha256": "6e8709c65ce4d369febdc6530ab5d3196bc90c87a928ee2e5367f405e9664741"
+    },
+    {
+      "path": "doc-links.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "doc-links.stdout",
+      "bytes": 38,
+      "sha256": "e198314d887740ef75cca348b8928e3400173f99638c20791df13e2f804a461c"
+    },
+    {
+      "path": "result.json",
+      "bytes": 1555,
+      "sha256": "d3012845136a7fa643789f48c1fe176bbac1e1cefa42bf6d377be693e3594f68"
+    },
+    {
+      "path": "section-citations.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "section-citations.stdout",
+      "bytes": 1554454,
+      "sha256": "44dcc5d03529e09f48ccb955750fed904f81a0b7eeb2b519aa6ac0e98f28af5e"
+    }
+  ],
+  "retention": "Directory and files are read-only; retain for at least 30 days after landing.",
+  "withheld": "No raw environment, secret, token or unredacted request body was captured."
+}

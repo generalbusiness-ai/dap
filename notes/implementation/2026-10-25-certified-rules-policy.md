@@ -13,9 +13,9 @@ The planner owns any later creation allowance or deployment.
 
 Rules 11 accepts a complete policy with explicit owner-review and
 zero-approval choices. It binds that policy to a bounded repository-tree
-proof and a selected native Destination certificate. Destination 14 uses
-the authenticated policy for publication and enforces both global required
-checks and checks required by touched extents.
+proof and a selected native Destination certificate. For change publications
+through the reservation path, Destination 14 uses the authenticated policy
+and enforces both global required checks and checks required by touched extents.
 
 The new native journeys now pass through actual family creation,
 certificate publication, policy refusal, current required jobs, staged
@@ -62,8 +62,8 @@ An already pinned incarnation must still match exactly.
 
 ### Stage before jobs, then require current jobs before push
 
-Initial list eligibility requires a configured policy. It does not demand
-jobs for a tree that has not yet been staged. Destination captures the
+For change publications, initial list eligibility requires a configured
+policy. It does not demand jobs for a tree that has not yet been staged. Destination captures the
 complete policy and required descriptors, stages the tree, then requires
 current accepted job generations before push. Global required checks join
 the touched-extent union. Invalid global evidence takes precedence over
@@ -176,6 +176,8 @@ earlier runs.
 | Previously unreached native stage | `node node_modules/vitest/vitest.mjs run --config vitest.native.config.ts` | 1; 778 passed, 2 failed, 2 skipped in final records; zero reported unhandled errors | `e22e1589b62197f6209671def03d7d0411b3f6a8520dd444ec1a6fe9fd38d902` (`2026-10-26-certified-rules-followup-v2/native.log`) | `ae49c5a6`, tree `96975fe5` |
 | Scope test compiler | `node node_modules/typescript/bin/tsc -p packages/scope/tsconfig.test.json` | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` (`2026-10-26-certified-rules-archive-target-followup/compiler.log`) | `5a816922`, tree `4824d97f` |
 | Repaired whole archive-target file | `node node_modules/vitest/vitest.mjs run --config vitest.native.config.ts --project scope packages/scope/test/archive-target.test.ts` | 0; all 7 cases passed | `9565784fd0176a85dae5c467e6502e06eb0e73aa57b2cc13c7ded115365aadfa` (`2026-10-26-certified-rules-archive-target-followup/archive-target.log`) | `5a816922`, tree `4824d97f` |
+| R7 note clarification links | `node scripts/check-doc-links.mjs` | 0; 705 relative links, 0 broken | `e198314d887740ef75cca348b8928e3400173f99638c20791df13e2f804a461c` (`doc-links.stdout`, clarification manifest) | `ca6b2b2a`, tree `02501bfd` |
+| R7 note clarification section citations | `node scripts/check-section-citations.mjs` | 0; 1809 resolved, 12809 unresolved, 0 broken, 3 known unresolved, 0 listing errors | `44dcc5d03529e09f48ccb955750fed904f81a0b7eeb2b519aa6ac0e98f28af5e` (`section-citations.stdout`, clarification manifest) | `ca6b2b2a`, tree `02501bfd` |
 
 The first ordinary gate stopped at whitespace: one extra blank line at
 EOF in each of `packages/git/src/pure-names.ts` and
@@ -330,18 +332,79 @@ the scheduled demo cohort and deployment after landing under `0716e75a`.
 
 ## Open limits
 
-Request `0716e75a` owns exact-head review and any repair it identifies.
-The index records the failed V3 gate, the passing whole Rules file and the
-failed native phase separately. The one-line archive test repair at `8b85ece5` passed the compiler and whole
-owning file at `5a816922`. Only this note and the evidence manifest change
-after that execution checkpoint. Planner question `53707834` remains open
-for disposition of the sequential follow-up choice. The checker owns
-acceptance of the combined evidence and exact-head review. No approval or
-landing is implied.
+The required-check enforcement above applies to change publications through
+the reservation path. Destination 14 inherits `publish-file` from Destination 4:
+an installed application can still write any path, including a rules extent,
+without change review or required checks. This follows the documented
+[file-publication model](../../packages/platform/README.md).
+Reserved paths and declared application prefixes
+belong to R16, request
+git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b300dca1381f27beed6c0d3278ccc5955f86c7dc.
+No publication policy changes in this clarification.
 
-This family addresses findings 3.2, 3.3 and 3.4. Their closure remains
-conditional on the checker accepting the failed gate with its limited
-follow-up and reviewing the exact final candidate. Finding 2.2 belongs to the earlier R6 work recorded in
+The hardcoded next-unsupported-version sentinels become stale whenever a
+supported version is added. Deriving them from the supported set would
+change shared helpers and remains outside this head. BR-13 (version
+questions, slice H) owns this limit, request
+git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:487496f5ad73675926a070808188cd2a228334c1,
+as corrected by planner `264e7136` and checker `2eeec03f`.
+
+A certificate binds one captured commit and is not marked used. The same
+proposal can therefore be published again with that certificate after the
+repository changes. Pattern coverage is proven at the certified commit,
+not at the later publication. Publication still requires `rules.publish`.
+
+Certification also requires a quiet destination during the tree read. Any
+intervening entry, including a read-token act, leaves the request unanswered.
+The member must file a new certificate request with its own operation slot.
+Repeated deliberate interference remains a liveness limit.
+
+The `certifiedPublicationState` decoder accepts a `passes` record up to
+600,000 bytes, while `Bounds.entryBytes` limits a whole entry to 256 KiB.
+The decoder's ceiling therefore does not establish that every admitted
+record can be written. An oversized entry is refused and holds the publication.
+The certificate-reuse, certification-answer and record-size limits belong
+to the R7 hardening request
+git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5e6d482cbf1712a4c62294421663f3b58f099f70,
+scheduled after BR-3 and BR-9 and before the certified cohort is enabled.
+
+This documentation-only clarification starts from landed Main
+`6852f78d3279ef13a33b7b9d0b283e9ba96f079f`, tree
+`b4dbac71198f26f84513966c58d9cef7f248a0b2`. All prose changes remain in
+this note. The required documentation checks ran at clean checkpoint
+`ca6b2b2a988e087a30cebb759d4099ad06d5b285`, tree
+`02501bfd7bb1874b473bd279b90115332e1dfe4f`; only this note differs from the
+base at that checkpoint. Production source, tests and historical gate and
+evidence records remain unchanged. The documents-only rule in
+`docs/testing.md` requires no gate rerun.
+
+The [clarification manifest](evidence/2026-10-26-r7-note-clarifications.manifest.json)
+is the only additional path. It mechanically records the two required check
+outputs under the implementation-evidence rule in `docs/testing.md`.
+No earlier manifest or retained output changes. Its six files, including
+`SHA256SUMS`, are read-only. The table records both checks at their actual
+checkpoint, before this output index was added. The unresolved section
+citations are advisories; the checker reports no broken citation or listing error.
+
+The capture owner measured each command with a monotonic clock and
+`RUSAGE_CHILDREN`. Link check: 0.10 seconds elapsed and 0.11 child CPU
+seconds. Citation check: 6.19 seconds elapsed and 6.49 child CPU seconds.
+These are separate command intervals. The machine was
+`macOS-27.0.1-arm64-arm-64bit`, Node `v26.12.1`; initial load averages were
+`[1.91357421875, 2.431640625, 2.52783203125]`. Existing shared dependencies
+were reused without package installation or cache reset.
+
+The original R7 delivery was approved in checker report `21c4328b` and
+landed at Main `6852f78d`, receipt `e8203cd5`. The failed V3 gate and failed
+native follow-up remain failed; the repaired owning files passed separately.
+Planner ruling `036e7f12` and the checker accepted that combined evidence,
+resolving the validation question `53707834` without another gate.
+
+This documents-only follow-up belongs to request
+`8d8eef8933b222cb846f97f1d6010c8c8a9788f9` and needs its own exact-head review.
+It changes no source, test, policy or prior execution record.
+The original approval closes findings 3.2, 3.3 and 3.4 of `6dd06d03`.
+Finding 2.2 belongs to the earlier R6 work recorded in
 [versioned publication](2026-10-25-security-r6-versioned-publication.md).
 
 Native tests establish the real family and protocol with explicit TEST
