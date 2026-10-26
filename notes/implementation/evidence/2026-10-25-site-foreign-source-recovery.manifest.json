@@ -1,0 +1,562 @@
+{
+  "qualification": "Completed focused validation and one guard distinction span the explicit checkpoints in each phase manifest and the note. The aggregate checkpoint identifies the restored positive Source; this is not one combined test invocation. Ordinary gate and final index are pending. Private environment and physical vectors are withheld.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-25-site-foreign-source-recovery",
+  "checkpoint": {
+    "commit": "37d3ef7304da46dd7b9cee75d7e1faada1737299",
+    "tree": "f07d53144d543f02c7d19e2210578888ddd3f58a"
+  },
+  "request": "501cacd485a08d73c7f0888b63b26f7a8da8c5e6",
+  "RootAcceptance": "1d7aeea32777d661141aaafdcbc2e3b0b217c20e",
+  "fileCount": 106,
+  "files": [
+    {
+      "path": "dependency-copy-setup-v1/SHA256SUMS",
+      "bytes": 424,
+      "sha256": "8ea5da417792ccc272ea7e06da91f5456bc857c952d0bf6273684510f1619057"
+    },
+    {
+      "path": "dependency-copy-setup-v1/adoption-receipt.json",
+      "bytes": 1353,
+      "sha256": "e6ba255dc0e21bfcf806a77455299f2e11c77805d22d365c0818337c3b92ad33"
+    },
+    {
+      "path": "dependency-copy-setup-v1/copy-outer-time.log",
+      "bytes": 29,
+      "sha256": "8fe07d92bd465c5b1baadd0e9259dd38fd225f4f7e88cfabff93038b24839a08"
+    },
+    {
+      "path": "dependency-copy-setup-v1/copy-stdout.log",
+      "bytes": 1071,
+      "sha256": "fe4e1b0f780a0fd3545100b2c93a9d76402279ea28fea59adda2706a1ac9bc75"
+    },
+    {
+      "path": "dependency-copy-setup-v1/manifest.json",
+      "bytes": 2820,
+      "sha256": "07b5eb2d7c15f96153021f3876fd20aabf6c4918b629555bc41d49e53375bf19"
+    },
+    {
+      "path": "dependency-copy-setup-v1/portable-summary.json",
+      "bytes": 1708,
+      "sha256": "100f818f60e782e2eaf1a247b95e5741b40853882ff2deaf2ebaf50c35998786"
+    },
+    {
+      "path": "metadata-helper-v1/SHA256SUMS",
+      "bytes": 330,
+      "sha256": "054e9b3b923ae8d0e3413a2654f422cf77f31df89b6dd5440ea3f88414cdd4b6"
+    },
+    {
+      "path": "metadata-helper-v1/manifest.json",
+      "bytes": 1864,
+      "sha256": "03c5bc5bc209aedbc3eb6f08838f19ff871850ea853551cfc6f7f0e6799c6c0d"
+    },
+    {
+      "path": "metadata-helper-v1/planner-stderr.log",
+      "bytes": 191,
+      "sha256": "5e2096a9212c85a6e049922dd70e6346ac83de020ab68184d89ac489c79f7634"
+    },
+    {
+      "path": "metadata-helper-v1/planner-stdout.json",
+      "bytes": 2989,
+      "sha256": "d86be30fed5d2befc0388e4e969dfa72ae5021fd9c31c7a79048c95b9387ba5f"
+    },
+    {
+      "path": "metadata-helper-v1/receipt.json",
+      "bytes": 2647,
+      "sha256": "e3b71173643af1037e3d2fae0fce2c04bab8e64cc33ecde4d1eba07aee2e0ae2"
+    },
+    {
+      "path": "node-structural-v1/SHA256SUMS",
+      "bytes": 566,
+      "sha256": "723e6cb27f92941786a7073a4e1697f5c01aa4719e7126c42deb976ef81f7b58"
+    },
+    {
+      "path": "node-structural-v1/manifest.json",
+      "bytes": 4619,
+      "sha256": "51ccde59446d36da362318fe270eddb7b0efd8751c2f6b61c0fa201be7b44b7c"
+    },
+    {
+      "path": "node-structural-v1/original-child-outcome.json",
+      "bytes": 80,
+      "sha256": "125188cf5a3e21d97cd866a6f0dd8ddfb9ac8f2bc2dc3ce38200a83f7f304d3c"
+    },
+    {
+      "path": "node-structural-v1/outer-time.log",
+      "bytes": 29,
+      "sha256": "c18f970e0fbe680dbed12652a931df8d0b825998e2caf06c5e91801ff3f51761"
+    },
+    {
+      "path": "node-structural-v1/receipt.json",
+      "bytes": 1195,
+      "sha256": "22fbd5566c7702f844a1aa8c3ae7ee407d90ca110236e9e79146511bbb2337fe"
+    },
+    {
+      "path": "node-structural-v1/result.json",
+      "bytes": 223,
+      "sha256": "8fa7f8e00febf0e4d56def2052251f04b6b2b0e90856050fb44cb973db36b124"
+    },
+    {
+      "path": "node-structural-v1/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "node-structural-v1/stdout.log",
+      "bytes": 1160,
+      "sha256": "8bc80342352b609a92b944638a1c35f564c5e8991cc2a598ca43c9714df5f85a"
+    },
+    {
+      "path": "owning-v1/SHA256SUMS",
+      "bytes": 1237,
+      "sha256": "c274042b9c907c058926f6e57d83d391a0746fc73f42910d003501480ae023e1"
+    },
+    {
+      "path": "owning-v1/capsule/original-child-outcome.json",
+      "bytes": 179,
+      "sha256": "8e5bda8af104cc190c63fdb05244f1a3c359c8c9934d9b8319fa1c5a61c916da"
+    },
+    {
+      "path": "owning-v1/capsule/result.json",
+      "bytes": 179,
+      "sha256": "8e5bda8af104cc190c63fdb05244f1a3c359c8c9934d9b8319fa1c5a61c916da"
+    },
+    {
+      "path": "owning-v1/capsule/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "owning-v1/capsule/stdout.log",
+      "bytes": 432,
+      "sha256": "71972e58bfdd9af5a72dd90e56c11a5508ef90f650c312b64e3fa3766847b377"
+    },
+    {
+      "path": "owning-v1/compiler/packages-scope-tsconfig.log",
+      "bytes": 29,
+      "sha256": "e3f9517eb6023a31bc11c439be57ec6093b403ce3282ede920cd554a095166ed"
+    },
+    {
+      "path": "owning-v1/compiler/packages-scope-tsconfig.test.log",
+      "bytes": 29,
+      "sha256": "3d77514664e82bbf1a5b69765f0a54f2309caef6720707573a5c13a0a7a9d12d"
+    },
+    {
+      "path": "owning-v1/driver/body.log",
+      "bytes": 80555,
+      "sha256": "d7343d70a003c741496774fa7f5d6bdb67f5978b63ff2910c4b489b46d7f1edc"
+    },
+    {
+      "path": "owning-v1/driver/coverage.jsonl",
+      "bytes": 58987,
+      "sha256": "dbefbefbf445cf35a04fdade85656f3b9b2c1eb033d0b61ea6ede7661cffc6a9"
+    },
+    {
+      "path": "owning-v1/driver/progress.jsonl",
+      "bytes": 44937,
+      "sha256": "684059ad49f48fc62a271799d5f69abb5aa55efcd8034ccd389518607428643e"
+    },
+    {
+      "path": "owning-v1/driver/result.json",
+      "bytes": 8484,
+      "sha256": "5ee442e136717c7ea0c57609404ea47b993e8aab88ff66afe98a14e0f095d5a3"
+    },
+    {
+      "path": "owning-v1/driver/vitest.json",
+      "bytes": 146246,
+      "sha256": "04e80d71f56ae62bd3d1035e67cd682748cbb3ba0894a3b62b4d98aa6b9b95a7"
+    },
+    {
+      "path": "owning-v1/manifest.json",
+      "bytes": 7533,
+      "sha256": "d1280c8bb2eca02b6c2259fb313ffd271b15d325dee637d7a7f0e2dbfd8f42fe"
+    },
+    {
+      "path": "owning-v1/outer-time.log",
+      "bytes": 31,
+      "sha256": "5c6dd08a4f4ae73a0f285c7a4197af6fd4c6bea691233f0322bb0bf15811d3e5"
+    },
+    {
+      "path": "owning-v1/receipt.json",
+      "bytes": 4301,
+      "sha256": "8caf2c169aa58f64373270641344fa1679e4508717da4209c5fb0f29fd87f32f"
+    },
+    {
+      "path": "owning-v2/SHA256SUMS",
+      "bytes": 1229,
+      "sha256": "39ec3f0de9ba31471ac2d7900620bf33adbb2f5383abd85ddd925a4ea3588cd4"
+    },
+    {
+      "path": "owning-v2/capsule/original-child-outcome.json",
+      "bytes": 178,
+      "sha256": "5ac762973e3179657a07c6737fa5911d2cb3c760c2b5e6599199e02e233e3a1c"
+    },
+    {
+      "path": "owning-v2/capsule/result.json",
+      "bytes": 178,
+      "sha256": "5ac762973e3179657a07c6737fa5911d2cb3c760c2b5e6599199e02e233e3a1c"
+    },
+    {
+      "path": "owning-v2/capsule/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "owning-v2/capsule/stdout.log",
+      "bytes": 316,
+      "sha256": "235495d0dfa51483595047ebca4a143ec2ee6fe3e2ac6e6109d019d05614bd91"
+    },
+    {
+      "path": "owning-v2/compiler/packages-scope-tsconfig.test.log",
+      "bytes": 29,
+      "sha256": "e20c14318de82ef9c31c614bea0e4c752d5292824198fd9fcf9743fa6aea0734"
+    },
+    {
+      "path": "owning-v2/driver/body.log",
+      "bytes": 83449,
+      "sha256": "3bb827215f98f12b6d3670cf0fb136c785532ca199c784cfa223c50d931092a6"
+    },
+    {
+      "path": "owning-v2/driver/coverage.jsonl",
+      "bytes": 58988,
+      "sha256": "7655759c15116351609765f3909aa2fa68513e1fe982a9a04353b54851abcb48"
+    },
+    {
+      "path": "owning-v2/driver/progress.jsonl",
+      "bytes": 44937,
+      "sha256": "9d8df9567598cc35bdcf681d571416b4a3bd1c9d508b7846c10bc3d3950e4566"
+    },
+    {
+      "path": "owning-v2/driver/result.json",
+      "bytes": 6525,
+      "sha256": "e07eaf22e57ca4f50b2484ecc3752d20f6a45af29cb6e53b5c4d02bdbf2345eb"
+    },
+    {
+      "path": "owning-v2/driver/vitest.json",
+      "bytes": 147878,
+      "sha256": "e35c106f819ef00ba79ec41f22bdc6508755b542f8452878eca043f290aa49ab"
+    },
+    {
+      "path": "owning-v2/failure-only-diagnostic.json",
+      "bytes": 1938,
+      "sha256": "fe8af625245457339d153dd5c092f4a6b2de5bf55b853c3ecbe0905fa6e898d6"
+    },
+    {
+      "path": "owning-v2/manifest.json",
+      "bytes": 7707,
+      "sha256": "a3c04e9a60ff3e74f5a7c4b3a8f3ce518752630d7fc92e7c84e9917dafd5d667"
+    },
+    {
+      "path": "owning-v2/outer-time.log",
+      "bytes": 31,
+      "sha256": "0113a008ba76ccfebb5cfa672360cd4703b7c4c09edc296bea8f9a336decf5df"
+    },
+    {
+      "path": "owning-v2/receipt.json",
+      "bytes": 7659,
+      "sha256": "511f21be4d677c881819e7e9d6780cb238b721d11d2c0abe2eb241884abdadcf"
+    },
+    {
+      "path": "owning-v3/SHA256SUMS",
+      "bytes": 1134,
+      "sha256": "771a974e94dcaf4fd9a6fca42c4cdeb5207459e60e4298e7506f2c39cd927c2d"
+    },
+    {
+      "path": "owning-v3/capsule/original-child-outcome.json",
+      "bytes": 179,
+      "sha256": "bb88a3f30ab85853f56e1623b679e07507e546ce4f397b82ab40396cc0aebe20"
+    },
+    {
+      "path": "owning-v3/capsule/result.json",
+      "bytes": 179,
+      "sha256": "bb88a3f30ab85853f56e1623b679e07507e546ce4f397b82ab40396cc0aebe20"
+    },
+    {
+      "path": "owning-v3/capsule/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "owning-v3/capsule/stdout.log",
+      "bytes": 316,
+      "sha256": "b64930b5bc256c78531b38f2a07e252038c9bad4069aa9334f0f0e1041a66c2a"
+    },
+    {
+      "path": "owning-v3/compiler/packages-scope-tsconfig.test.log",
+      "bytes": 29,
+      "sha256": "9a85263318db1b8b337ee22651ace4a7732e956cbb96b3f39b78d1bbd31e886e"
+    },
+    {
+      "path": "owning-v3/driver/body.log",
+      "bytes": 148610,
+      "sha256": "4cf27ed174d76983f64f7087f0e33641c5ca6a1aee53c892d485e7c3b1d4aa9b"
+    },
+    {
+      "path": "owning-v3/driver/coverage.jsonl",
+      "bytes": 57755,
+      "sha256": "fd1bf1c625997b8bd00e0a65d7b24a20823f8e8e1e1592c25ce28dcdb1e35be7"
+    },
+    {
+      "path": "owning-v3/driver/progress.jsonl",
+      "bytes": 43637,
+      "sha256": "8992f2444c5a6bcfbd87f2b43cda198baebb4e86c00d0e23bd9de43146d77765"
+    },
+    {
+      "path": "owning-v3/driver/result.json",
+      "bytes": 6511,
+      "sha256": "8f7e2bf6af3064f841c484b4b4fff8d7f5c6f5c9f52b9d56a7acd2df5d0a731b"
+    },
+    {
+      "path": "owning-v3/driver/vitest.json",
+      "bytes": 231869,
+      "sha256": "e813bb497705d6bc15f6d667259c5d95a38860565f7efd91fd79044fae23ee37"
+    },
+    {
+      "path": "owning-v3/manifest.json",
+      "bytes": 7474,
+      "sha256": "29825653dceb0dfe7090f25df143400921d872c92bdd1f77083b281a20a76d8e"
+    },
+    {
+      "path": "owning-v3/outer-time.log",
+      "bytes": 31,
+      "sha256": "000213c124147b454563823942da9c0a222a67778ac8a87ae19c29a157c42fbd"
+    },
+    {
+      "path": "owning-v3/receipt.json",
+      "bytes": 3721,
+      "sha256": "ec7eb318c083687012014a97d42544567e4769fa12be6ec3ace75ca35266153b"
+    },
+    {
+      "path": "owning-v4/SHA256SUMS",
+      "bytes": 1134,
+      "sha256": "33f6215fd5ed2fd2d703b3fdf4787711f12da549f557e8c3ebbb709c772e18f2"
+    },
+    {
+      "path": "owning-v4/capsule/original-child-outcome.json",
+      "bytes": 179,
+      "sha256": "0d8bd39c8230f3505c25ae0bab45ee1c62179a3ae57ee84c928ab628fbce8ca5"
+    },
+    {
+      "path": "owning-v4/capsule/result.json",
+      "bytes": 179,
+      "sha256": "0d8bd39c8230f3505c25ae0bab45ee1c62179a3ae57ee84c928ab628fbce8ca5"
+    },
+    {
+      "path": "owning-v4/capsule/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "owning-v4/capsule/stdout.log",
+      "bytes": 316,
+      "sha256": "291c682e1448953bcdebe372969add0d2d3ab62db3227fa7f103e7719cc7787f"
+    },
+    {
+      "path": "owning-v4/compiler/packages-scope-tsconfig.test.log",
+      "bytes": 29,
+      "sha256": "3d0055fea45cfcfe657d5dd342131cfdfda171003357207678ac70e5b392668f"
+    },
+    {
+      "path": "owning-v4/driver/body.log",
+      "bytes": 195651,
+      "sha256": "a63dfcfe2c68987b928a72a21abd77bd1b60e280b468c3092266f6b682ae29a3"
+    },
+    {
+      "path": "owning-v4/driver/coverage.jsonl",
+      "bytes": 42121,
+      "sha256": "0fb69c0c6c74dcd6c0945c2ee6b7d37d31241093921e43f70108e373684f5dc4"
+    },
+    {
+      "path": "owning-v4/driver/progress.jsonl",
+      "bytes": 30537,
+      "sha256": "6493f55c4d7e7b7c24ee9b809714ec150926ff76faddfb0dea4372bd236feb43"
+    },
+    {
+      "path": "owning-v4/driver/result.json",
+      "bytes": 6236,
+      "sha256": "e75ba787d22abc05f2d282fce58fece06c5c436835cc10556bb952f551ab1524"
+    },
+    {
+      "path": "owning-v4/driver/vitest.json",
+      "bytes": 30646,
+      "sha256": "4758c9bb0c7ba932df3bb28a1fa4c225b1d22675c5846140f2d4127f07c03ab5"
+    },
+    {
+      "path": "owning-v4/manifest.json",
+      "bytes": 7797,
+      "sha256": "8561395577d09d1a3121ce1e6dd7b1359616be5cd581403bd83f66b12ec23578"
+    },
+    {
+      "path": "owning-v4/outer-time.log",
+      "bytes": 31,
+      "sha256": "cc95f39e8c95d30fdb6055cbf6cbe52c62e53f936544b635d8a856712ba0f874"
+    },
+    {
+      "path": "owning-v4/receipt.json",
+      "bytes": 3196,
+      "sha256": "e4f4c740eecd433a4b8ced753a69ff54bb70458737b3461b9d9210933a87cbcf"
+    },
+    {
+      "path": "seals-v1/SHA256SUMS",
+      "bytes": 392,
+      "sha256": "ef3e36591d4e32d82f7e1b3f2bf85a42f8e0f2c2955736744cfdb71c29be6f9a"
+    },
+    {
+      "path": "seals-v1/manifest.json",
+      "bytes": 3575,
+      "sha256": "984d07727cdab0930109ac37a597b40902bab8d3deaf6fff91105a6a5acadbf7"
+    },
+    {
+      "path": "seals-v1/receipt.json",
+      "bytes": 2562,
+      "sha256": "e0430849895a8d6655477f384472e654a17d849042d28e4dcfd0bf74bad23877"
+    },
+    {
+      "path": "seals-v1/result.json",
+      "bytes": 2176,
+      "sha256": "4f01208adbb279cde0753717615b45799c01941ba74e956a29316072d7963b73"
+    },
+    {
+      "path": "seals-v1/stderr.log",
+      "bytes": 182,
+      "sha256": "dd652d7b411db47557d2a6511ec25152a4187d61d3f65ea794756c6adaf68efa"
+    },
+    {
+      "path": "seals-v1/stdout.json",
+      "bytes": 715,
+      "sha256": "affd330782af4ce0a2d44fc2fa0855ed70ea3df7778119d3cbaabac2539e8bf8"
+    },
+    {
+      "path": "wake-control-v1/SHA256SUMS",
+      "bytes": 2062,
+      "sha256": "a534a500e0884286e054cfeb35060a4c2aa5ea356103b5dc84fad188a65a501b"
+    },
+    {
+      "path": "wake-control-v1/actual-case-ledger.json",
+      "bytes": 2947,
+      "sha256": "a875e77cdf5bfa9502461d6a8a2c7cf1a4c493b24c223cdcded59cb70b14bc57"
+    },
+    {
+      "path": "wake-control-v1/actual-case-table.tsv",
+      "bytes": 1586,
+      "sha256": "fa4e0aa195f6e5a724f67bd34889c8a095277ebce32219f66d8820a542665089"
+    },
+    {
+      "path": "wake-control-v1/binding-preflight/owner.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "wake-control-v1/binding-preflight/owner.stdout.log",
+      "bytes": 1291,
+      "sha256": "c3e3b9a747e006a0877195e0cdc6a690e0bfb1ecb6929d84b4eebd24b7cc819d"
+    },
+    {
+      "path": "wake-control-v1/binding-preflight/result.json",
+      "bytes": 1345,
+      "sha256": "3a5595c43cfef6586018455233de25012065b6a464f4b7d550613f8e1f39869e"
+    },
+    {
+      "path": "wake-control-v1/distinguishing/oracle.json",
+      "bytes": 2470,
+      "sha256": "692b0633861f761c86200f76e51e8a3146aac6669668c5f7e0170895dfffd322"
+    },
+    {
+      "path": "wake-control-v1/distinguishing/outer-time.log",
+      "bytes": 29,
+      "sha256": "0d83bf82d62d185d020d5b5f1cb4071945cf7005dede8b7465a259a3c40bd21c"
+    },
+    {
+      "path": "wake-control-v1/distinguishing/phases.json",
+      "bytes": 629,
+      "sha256": "1dbcc0f95e501d23f83ad9b977c916600a6722eb0c64f2d28427ffedf7542f60"
+    },
+    {
+      "path": "wake-control-v1/distinguishing/progress.jsonl",
+      "bytes": 8856,
+      "sha256": "cf393cdc2b3330e52ae224f949d20abd3037c68dd4ff0bde0bed7a200d771f75"
+    },
+    {
+      "path": "wake-control-v1/distinguishing/result.json",
+      "bytes": 4352,
+      "sha256": "4fdb30ca010adefd57140f32d5018cb6f3b7e9681b00441422fd0e09d9fd7248"
+    },
+    {
+      "path": "wake-control-v1/distinguishing/tests.stderr.log",
+      "bytes": 1347,
+      "sha256": "c7d9f8260bba23a6f55f6002c57870d15eb831cad0936f734e77bacc82dc6993"
+    },
+    {
+      "path": "wake-control-v1/distinguishing/tests.stdout.log",
+      "bytes": 17568,
+      "sha256": "b90b9273812bf1a1634b2671bf2720d6b2722d8e2eed38b7f52f365cb2da3feb"
+    },
+    {
+      "path": "wake-control-v1/distinguishing/vitest.json",
+      "bytes": 5560,
+      "sha256": "182b538909d3198024a3adb3d8da0be1c2a54ea61d11931e4b985e87ad7ec75e"
+    },
+    {
+      "path": "wake-control-v1/listener-preflight/phases.json",
+      "bytes": 629,
+      "sha256": "dc8e1df402f9b34248e679ad086726d387ac96f9d0671bae27be4c0d8a3003fa"
+    },
+    {
+      "path": "wake-control-v1/listener-preflight/progress.jsonl",
+      "bytes": 66,
+      "sha256": "ade8ada2e52cbefcf5161e8529b795a0f4c982b2ac2f742e01c4292f72e82068"
+    },
+    {
+      "path": "wake-control-v1/listener-preflight/result.json",
+      "bytes": 2008,
+      "sha256": "11f786989e29b248276ce38452cfcf8ed42f06bb725facffdbe29bbdf18f2038"
+    },
+    {
+      "path": "wake-control-v1/listener-preflight/tests.stderr.log",
+      "bytes": 593,
+      "sha256": "31227639ffa4ea5304b34b54bb050f186d66ea902944c800571fdee685264884"
+    },
+    {
+      "path": "wake-control-v1/listener-preflight/tests.stdout.log",
+      "bytes": 83,
+      "sha256": "00d55b5aacdf6bd635c2e37f4b60ff6f395afb57422d7ac12e33ac6475b990e8"
+    },
+    {
+      "path": "wake-control-v1/manifest.json",
+      "bytes": 9097,
+      "sha256": "fd92ee01e5b34bd19fd3fd519ea5fe6b36ffa9edc68a12fcf932690652df2d74"
+    },
+    {
+      "path": "wake-control-v1/prior-failures.json",
+      "bytes": 1933,
+      "sha256": "e04676a7062bf3c0bf29456ecf7dc4bd0ab0460676aea528f762c36d62b46a7a"
+    },
+    {
+      "path": "wake-control-v1/receipt.json",
+      "bytes": 5052,
+      "sha256": "8389a477337c628ce29b334084a08525cc70ea379d5338bdf62eaf974230414e"
+    },
+    {
+      "path": "wake-control-v1/restoration.json",
+      "bytes": 1108,
+      "sha256": "930cc24543d566902038883212a801c51312aba129878be764093ca591ad4fc4"
+    }
+  ],
+  "primaryNote": {
+    "path": "notes/implementation/2026-10-25-site-foreign-source-recovery.md",
+    "bytes": 13608,
+    "sha256": "cc7d234b36a3bcf542c5720b203a17a5effaf9f03b73efff98b11c627163d58d"
+  },
+  "seal": {
+    "index": "SHA256SUMS",
+    "state": "Existing phases are read-only. Parent stays writable for one ordinary gate and final index.",
+    "manifestLocation": "Repository manifest is outside evidence root; no self-reference."
+  },
+  "retention": {
+    "minimumDaysAfterLanding": 30,
+    "removalAuthority": "planner; no automatic deletion"
+  },
+  "withheld": [
+    "Full Source/tool/environment/dependency/cache vectors and raw capture/binding/envelope records",
+    "Operator credentials, raw metadata-helper bodies and private filesystem audit snapshots"
+  ],
+  "review": "Exact-head review and landing are workroom acts under the request; gate evidence remains pending."
+}
