@@ -212,18 +212,36 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
 
     // The member interface's gateway, on the same real scopes. The private store and the
     // lock are in-memory STAND-INS for the browser's; the lost reply is made by the test.
+    const knownProjectionErrors = new Set([
+      "The native item projection does not match its declaration.",
+      "The historical fixture needs a complete authenticated history page.",
+      "The historical projection stand-in received another binding.",
+      "Expected a journal source.",
+    ]);
     const browser = (who: Actor, handle: `@${string}`, lose: { reply: boolean } = { reply: false }, readFetch: Fetch = fetch, current: () => boolean = () => true) => {
       let slot: string | null = null, posts = 0;
       const envelopes: string[] = [];
+      const projectionErrors: string[] = [];
+      const projection = legacyLendingProjection(SERVICE, application, readFetch);
+      // Diagnostic only: retain at most three fixed labels before the query
+      // transport hides the rejection. Forward the same call and error.
+      const projectedFetch: Fetch = (url, init) => projection(url, init).catch((error: unknown) => {
+        const message = error instanceof Error ? error.message : null;
+        const label = typeof message === "string" && message.length <= 128 && knownProjectionErrors.has(message) ? message
+          : error instanceof TypeError ? "TypeError" : error instanceof RangeError ? "RangeError"
+          : error instanceof SyntaxError ? "SyntaxError" : error instanceof Error ? "Error" : null;
+        if (label !== null && projectionErrors.length < 3) projectionErrors.push(label);
+        throw error;
+      });
       const store: KeptStore = { load: async () => slot === null ? null : JSON.parse(slot) as Kept, save: async (value) => { slot = JSON.stringify(value); }, clear: async () => { slot = null; } };
       let chain: Promise<unknown> = Promise.resolve();
       const lock = { run: <T>(work: () => Promise<T>): Promise<T> => { const next = chain.then(work, work); chain = next.catch(() => undefined); return next; } };
       const open = (): ReturnType<typeof lendingGateway> => lendingGateway(
         { origin: SERVICE, deployment: "lending-fixture", scope: scopeOfLending, definition: LENDING_DEFINITION, membership, member: { membership, member: handle }, publicKey: who.key },
         { key: who.key, sign: async (bytes: Uint8Array) => (await import("@generalbusiness/dap-client")).secretSigner(who.secret).sign(bytes) },
-        { current, lock, store, application, fetch: legacyLendingProjection(SERVICE, application, readFetch), now: () => timeMs(soon(0))! + skew.ms,
+        { current, lock, store, application, fetch: projectedFetch, now: () => timeMs(soon(0))! + skew.ms,
           actFetch: async (url, init) => { posts++; envelopes.push(String(init?.body)); const response = await fetch(url, init); if (lose.reply) throw new Error("the reply was lost"); return response as never; } });
-      return { open, store, posts: () => posts, kept: () => slot, envelopes };
+      return { open, store, posts: () => posts, kept: () => slot, envelopes, projectionErrors: () => [...projectionErrors] };
     };
     const scopeOfLending = await L.at(), skew = { ms: 0 };
     const application = { scope: scopeOfLending, directory: await D.at(), item: 0, definition: LENDING_DEFINITION };
@@ -234,7 +252,7 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
     { const seen = await g.look(); if (seen.status !== "current") throw new Error(`look: ${JSON.stringify(seen).slice(0, 300)}`);
       expect(seen.actions).toContain("lending.member"); expect(seen.actions).not.toContain("lending.staff"); }
     const seenAgain = await g.look();
-    expect(seenAgain, JSON.stringify(seenAgain).slice(0, 1000)).toMatchObject({ status: "current", view: { things: [{ id: big, state: "gone", reason: "Nasruddin says the pot died", revision: lent + 1 }, { id: small, state: "available" }, { id: fresh, state: "available" }] } });
+    expect(seenAgain, JSON.stringify({ projectionErrors: his.projectionErrors(), read: seenAgain }).slice(0, 1000)).toMatchObject({ status: "current", view: { things: [{ id: big, state: "gone", reason: "Nasruddin says the pot died", revision: lent + 1 }, { id: small, state: "available" }, { id: fresh, state: "available" }] } });
     // A proposal the view rules out signs and sends nothing.
     expect(await g.act("return", { thing: small })).toEqual({ status: "nothing-sent", reason: "That thing is not lent." });
     expect([his.posts(), his.kept()]).toEqual([0, null]);
