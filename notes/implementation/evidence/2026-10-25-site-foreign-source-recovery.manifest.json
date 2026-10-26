@@ -1,14 +1,19 @@
 {
-  "qualification": "Completed focused validation and one guard distinction span the explicit checkpoints in each phase manifest and the note. The aggregate checkpoint identifies the restored positive Source; this is not one combined test invocation. Ordinary gate and final index are pending. Private environment and physical vectors are withheld.",
+  "qualification": "One ordinary gate passed at checkpoint, followed only by this note and manifest. Earlier focused checks and the distinguishing control retain their own explicit phase checkpoints; these are separate invocations. All 151 durable files are indexed and read-only. Private environment and physical vectors are withheld.",
   "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-25-site-foreign-source-recovery",
   "checkpoint": {
-    "commit": "37d3ef7304da46dd7b9cee75d7e1faada1737299",
-    "tree": "f07d53144d543f02c7d19e2210578888ddd3f58a"
+    "commit": "89dac63259d2ee5e2dac93df0d151a51b4a1c957",
+    "tree": "0fb2d4aa27c0422674c204e0de325e73d503fb6c"
   },
   "request": "501cacd485a08d73c7f0888b63b26f7a8da8c5e6",
-  "RootAcceptance": "1d7aeea32777d661141aaafdcbc2e3b0b217c20e",
-  "fileCount": 106,
+  "RootAcceptance": "95f8cd2fee91b5a33443148634b2814cd9f68048",
+  "fileCount": 151,
   "files": [
+    {
+      "path": "SHA256SUMS",
+      "bytes": 14812,
+      "sha256": "ed1b628af2857f77ffcb0487e593de69a17c592527f06a417fee62b22b05e94f"
+    },
     {
       "path": "dependency-copy-setup-v1/SHA256SUMS",
       "bytes": 424,
@@ -38,6 +43,226 @@
       "path": "dependency-copy-setup-v1/portable-summary.json",
       "bytes": 1708,
       "sha256": "100f818f60e782e2eaf1a247b95e5741b40853882ff2deaf2ebaf50c35998786"
+    },
+    {
+      "path": "gate-v1-outer-time.log",
+      "bytes": 37,
+      "sha256": "b3b3f19bca414ba1ee0ac73ed0af8d8d716faa20fbe3e3828bc5fd9e454f5d60"
+    },
+    {
+      "path": "gate-v1/SHA256SUMS",
+      "bytes": 3630,
+      "sha256": "e5479778baf2439e2710edac4e150d71faafb9dc00c640e5b07283a6aac59274"
+    },
+    {
+      "path": "gate-v1/audit/outer-time.log",
+      "bytes": 37,
+      "sha256": "b3b3f19bca414ba1ee0ac73ed0af8d8d716faa20fbe3e3828bc5fd9e454f5d60"
+    },
+    {
+      "path": "gate-v1/audit/privacy-screen.json",
+      "bytes": 2126,
+      "sha256": "e67a302a758d7a09754244824118cc2bc364b24e0165abf83a7c11f3d8241192"
+    },
+    {
+      "path": "gate-v1/audit/privacy-summary.md",
+      "bytes": 741,
+      "sha256": "884ccf0c53e74cbfcc13626560c8a8166a5c31dda42a7645cfb5a652b4be09f7"
+    },
+    {
+      "path": "gate-v1/audit/review.md",
+      "bytes": 3903,
+      "sha256": "190afbb12497754eec31c9438c35a8ec88589c392b6c36194662cd39c16316ad"
+    },
+    {
+      "path": "gate-v1/audit/root-boundary-receipt.json",
+      "bytes": 3050,
+      "sha256": "fc97a2144b05f1df55c877001dff9b8032ed83305c2c835cebbd6a37500cd88f"
+    },
+    {
+      "path": "gate-v1/gate.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "gate-v1/gate.stdout.log",
+      "bytes": 6266,
+      "sha256": "7f0c63893424edd6476cd88cb01becd2bcef08dbb7f9db770f07a598249aa533"
+    },
+    {
+      "path": "gate-v1/manifest.json",
+      "bytes": 7157,
+      "sha256": "9c99e53d7079d0e27f111f24b041944507aa65aff16bf0be9cfc4cc7236745a2"
+    },
+    {
+      "path": "gate-v1/phases.json",
+      "bytes": 333,
+      "sha256": "2f6a428631054b717ffb373733ccc0de4a6ec261a851c8b0e7851e46054cba50"
+    },
+    {
+      "path": "gate-v1/progress.jsonl.native.jsonl",
+      "bytes": 858006,
+      "sha256": "7c7a126fe2e5b92913853231725ea541f7448a6ae417c9eccb251d6c0640938c"
+    },
+    {
+      "path": "gate-v1/progress.jsonl.plain.jsonl",
+      "bytes": 2872854,
+      "sha256": "2c4a5b507ac3b1d917fa29abd1bc15e608a93e211b730be941625a0e8a26dd7a"
+    },
+    {
+      "path": "gate-v1/result.json",
+      "bytes": 6327,
+      "sha256": "4d1932598b063c4590717ee77e734a380cfac85bea763cd1aa5bf5c34c5a9498"
+    },
+    {
+      "path": "gate-v1/stages/citations.log",
+      "bytes": 1554568,
+      "sha256": "1bf1de6439ebc475efb24a9015d3d42479cd34c0f987bc6cb10082cd66ef3031"
+    },
+    {
+      "path": "gate-v1/stages/citations.time",
+      "bytes": 29,
+      "sha256": "77ff676cd410d7fc04141df608d247c359cace305feeb9565689723a763a66b4"
+    },
+    {
+      "path": "gate-v1/stages/cite-test.log",
+      "bytes": 760,
+      "sha256": "db32f7a3c4edb208b3ab0e200e34be2f9d9ff21b297f5621144500c54ca469f9"
+    },
+    {
+      "path": "gate-v1/stages/cite-test.time",
+      "bytes": 29,
+      "sha256": "10a723bc3b9c9f73c12f8f0f4dff4a202a179b8fbbe6f4d72a968e50311ebcd1"
+    },
+    {
+      "path": "gate-v1/stages/commit-messages.log",
+      "bytes": 38,
+      "sha256": "d565ad41c5104d7b8ad898e430e0ae846198a92a98421a50b7b7dd1fe7b6b472"
+    },
+    {
+      "path": "gate-v1/stages/commit-messages.time",
+      "bytes": 29,
+      "sha256": "66b019f3b91dd78b8a648f25e84fc8cee994db5eb175e39de9579bfdd75b994e"
+    },
+    {
+      "path": "gate-v1/stages/commit-test.log",
+      "bytes": 594,
+      "sha256": "eddfebe7fce7f7fcc2a76dd7c0f8229b3b9e8857d3eb60d5a1facf143eea2ed8"
+    },
+    {
+      "path": "gate-v1/stages/commit-test.time",
+      "bytes": 29,
+      "sha256": "5f58735b3428bff48d1b6d52075462f8ac45aebfd3455b107c1240b246e06a74"
+    },
+    {
+      "path": "gate-v1/stages/doc-links.log",
+      "bytes": 38,
+      "sha256": "e198314d887740ef75cca348b8928e3400173f99638c20791df13e2f804a461c"
+    },
+    {
+      "path": "gate-v1/stages/doc-links.time",
+      "bytes": 29,
+      "sha256": "4fcd318aeef94765464c5ea577c2c34b80431e22ec23240a06933273f40c3012"
+    },
+    {
+      "path": "gate-v1/stages/helpers.log",
+      "bytes": 68,
+      "sha256": "3a2abcd88fd31309aee7f20597fddac1453c89a86d5ff9ccfaa4f60d689488e6"
+    },
+    {
+      "path": "gate-v1/stages/helpers.time",
+      "bytes": 29,
+      "sha256": "66cd6a43c0aea77d812ad5a5b185345c60c5d70a167dc6ff4c80e3bfab0349f2"
+    },
+    {
+      "path": "gate-v1/stages/notes.log",
+      "bytes": 18,
+      "sha256": "35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1"
+    },
+    {
+      "path": "gate-v1/stages/notes.time",
+      "bytes": 29,
+      "sha256": "b2b892ce9a7c8ad29214199a33b154dab17a22613496aeb4905dbef44d49cb57"
+    },
+    {
+      "path": "gate-v1/stages/section-citations.json",
+      "bytes": 3907730,
+      "sha256": "e9d602df1cb90b52dead162977766ef1b4e7d38f058f10b7e540403f3c4cfe42"
+    },
+    {
+      "path": "gate-v1/stages/test.log",
+      "bytes": 15394961,
+      "sha256": "97012679108e94eb09fe6152163038c1f68692531d3728713d03e6d24aac959f"
+    },
+    {
+      "path": "gate-v1/stages/test.time",
+      "bytes": 37,
+      "sha256": "71b53b6b508d19d81dc69d3163621c23fb6a6d8071a1dcd58451b66b1510489b"
+    },
+    {
+      "path": "gate-v1/stages/typecheck.log",
+      "bytes": 1987,
+      "sha256": "62170bbe0cd055cff4699debd9470a886c0f98f328e7c9517d899c021a3788d0"
+    },
+    {
+      "path": "gate-v1/stages/typecheck.time",
+      "bytes": 30,
+      "sha256": "b277d1f16f0becb2ea3228c0d638d6954552195e0ea712990902afc5db8801ba"
+    },
+    {
+      "path": "gate-v1/stages/whitespace.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "gate-v1/stages/whitespace.time",
+      "bytes": 29,
+      "sha256": "e321fd66e43908c3ec255c752ac518d47c383da51140731add2e65b0adc7930d"
+    },
+    {
+      "path": "gate-v1/test-evidence/counting-sources.json",
+      "bytes": 976,
+      "sha256": "ce24236ce12efb471b667bc802219e7b51821373ac14fed3d79c53efb63aa21c"
+    },
+    {
+      "path": "gate-v1/test-evidence/counting.jsonl",
+      "bytes": 133779,
+      "sha256": "97295391eb0619ddc01c32497b8e3dbbcc03e429c0d743b540039809826bf143"
+    },
+    {
+      "path": "gate-v1/test-evidence/native.jsonl",
+      "bytes": 760708,
+      "sha256": "17c811e1b3c4f9ae4ac9b8a8a642ea507d9ba1325d33f018d0c25e55152eb09f"
+    },
+    {
+      "path": "gate-v1/test-evidence/node.jsonl",
+      "bytes": 148496,
+      "sha256": "a7684aa297d825a33022bf4ab179b70ec3253aabe87df5e15919925ae13abc4b"
+    },
+    {
+      "path": "gate-v1/test-evidence/plain.jsonl",
+      "bytes": 2410128,
+      "sha256": "d51a17ac54c0cb39cc24e519a8c8f2fc40bb801dba0d5b8fcbaa7ee733bdf84b"
+    },
+    {
+      "path": "gate-v1/test-evidence/stages.json",
+      "bytes": 977,
+      "sha256": "212c519a53a71f19ec4d3328c92376d08a5ee676a0b3f70378d33a4d0992acf0"
+    },
+    {
+      "path": "gate-v1/test-progress/native.jsonl",
+      "bytes": 858006,
+      "sha256": "7c7a126fe2e5b92913853231725ea541f7448a6ae417c9eccb251d6c0640938c"
+    },
+    {
+      "path": "gate-v1/test-progress/plain.jsonl",
+      "bytes": 2872854,
+      "sha256": "2c4a5b507ac3b1d917fa29abd1bc15e608a93e211b730be941625a0e8a26dd7a"
+    },
+    {
+      "path": "manifest.json",
+      "bytes": 26691,
+      "sha256": "8d1751bc36f47475e637bafdbdf4ca1bd197126a93b76b03d505a66bd9ebd047"
     },
     {
       "path": "metadata-helper-v1/SHA256SUMS",
@@ -542,13 +767,17 @@
   ],
   "primaryNote": {
     "path": "notes/implementation/2026-10-25-site-foreign-source-recovery.md",
-    "bytes": 13640,
-    "sha256": "0e45ade4872a26dbba457524c041b775a0bd869a6425b624d2a632004c38b96c"
+    "bytes": 18491,
+    "sha256": "2cf6ca24c72ccad38a71134970d7fce850a2d29f22189a492f75b4c5d92c34d9"
   },
   "seal": {
     "index": "SHA256SUMS",
-    "state": "Existing phases are read-only. Parent stays writable for one ordinary gate and final index.",
-    "manifestLocation": "Repository manifest is outside evidence root; no self-reference."
+    "state": "Final parent and all phases sealed read-only after the last write; no further evidence writes.",
+    "manifestLocation": "Repository manifest is outside evidence root; no self-reference.",
+    "indexSha256": "ed1b628af2857f77ffcb0487e593de69a17c592527f06a417fee62b22b05e94f",
+    "indexEntries": 150,
+    "aggregateManifest": "manifest.json",
+    "aggregateManifestSha256": "8d1751bc36f47475e637bafdbdf4ca1bd197126a93b76b03d505a66bd9ebd047"
   },
   "retention": {
     "minimumDaysAfterLanding": 30,
@@ -556,7 +785,22 @@
   },
   "withheld": [
     "Full Source/tool/environment/dependency/cache vectors and raw capture/binding/envelope records",
-    "Operator credentials, raw metadata-helper bodies and private filesystem audit snapshots"
+    "Operator credentials, raw metadata-helper bodies and private filesystem audit snapshots",
+    "Independent full audit/input roster and gate environment, binding and private copy vectors"
   ],
-  "review": "Exact-head review and landing are workroom acts under the request; gate evidence remains pending."
+  "review": "Exact-head review and landing are workroom acts under the request. Source and tests are unchanged from the gate checkpoint; the two-path documents-only follow-up is recorded with both actual tree hashes in the workroom.",
+  "focusedCheckpoint": {
+    "commit": "37d3ef7304da46dd7b9cee75d7e1faada1737299",
+    "tree": "f07d53144d543f02c7d19e2210578888ddd3f58a"
+  },
+  "gate": {
+    "originalSession": 23200,
+    "gateChildExit": 0,
+    "ownerExit": 0,
+    "signal": null,
+    "errors": [],
+    "outerWallSeconds": 1507.59,
+    "outerCpuSeconds": 1734.95,
+    "qualification": "Inclusive external outer time; owner/child spans are nested and not added. Counts, skips, callback gaps and finite screening limits are in the note and retained audit."
+  }
 }
