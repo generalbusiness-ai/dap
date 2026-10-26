@@ -50,7 +50,7 @@ function capturedRecord(entry: Entry): CertifiedPublicationStateV15 {
 // check proofs, SQLite entries and replay are real. Git objects, callback
 // scheduling and the checker's known result use explicit TEST stands. No live
 // checker runner or external provider HTTP is exercised.
-test("G15 admits the maximum constructed capture, retains 32 real proofs, and refuses the next capture before storing passes", { timeout: 180_000 }, async () => {
+test("G15 admits the maximum constructed capture, retains 32 real proofs, and refuses the next capture before storing passes", { timeout: 180_000 }, async ({ annotate }) => {
   const room = await hardeningNativeRoom(), { life, host, D, M, Q, G, nodes, pause } = room;
   try {
     let base = host.stand.refs.get("refs/heads/main");
@@ -220,6 +220,6 @@ test("G15 admits the maximum constructed capture, retains 32 real proofs, and re
     expect(utf8(canonicalize(complete.entry)).length).toBeGreaterThan(utf8(canonicalize(complete.record)).length);
     const replayed = await verify(httpSource("https://scopes.test", { fetch: routed, reader }), { mode: "replay", scope: G.name, platform, grants: "proven", anchors: [], capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE, head: (await G.summary()).at });
     expect([replayed.report.result, replayed.why ?? null]).toEqual(["consistent", null]);
-    console.info("G15 native hardening bytes", JSON.stringify({ entryBytes: PROPOSED_BOUNDS.entryBytes, maxStoredEntryBytes: Math.max(...entries.map(entry => utf8(canonicalize(entry)).length)), maxPassesRecordBytes: Math.max(...records.map(({ record }) => utf8(canonicalize(record)).length)), proof32RecordBytes: utf8(canonicalize(complete.record)).length, proof32EntryBytes: utf8(canonicalize(complete.entry)).length, positiveCaptureForecastBytes: positive.last.budget.captureEntryBytes, positiveCaptureBudgetBytes: actualBudget.captureEntryBytes, positiveCaptureActualBytes: utf8(canonicalize(actualCapture)).length, negativeNextForecastBytes: negative.next.budget.captureEntryBytes }));
+    await annotate(JSON.stringify({ entryBytes: PROPOSED_BOUNDS.entryBytes, maxStoredEntryBytes: Math.max(...entries.map(entry => utf8(canonicalize(entry)).length)), maxPassesRecordBytes: Math.max(...records.map(({ record }) => utf8(canonicalize(record)).length)), proof32RecordBytes: utf8(canonicalize(complete.record)).length, proof32EntryBytes: utf8(canonicalize(complete.entry)).length, positiveCaptureForecastBytes: positive.last.budget.captureEntryBytes, positiveCaptureBudgetBytes: actualBudget.captureEntryBytes, positiveCaptureActualBytes: utf8(canonicalize(actualCapture)).length, negativeNextForecastBytes: negative.next.budget.captureEntryBytes }), "G15 native hardening bytes");
   } finally { life.release(); }
 });
