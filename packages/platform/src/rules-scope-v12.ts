@@ -32,7 +32,7 @@ function publication(given:RuleGiven) {
   const certificate=rulesPublishedCertificateV15(given,proposal,proof);
   if(!certificate)return {ok:false as const,reason:'rules-certificate-unavailable' as const};
   const item=rulesOf(given.state),previous=item?.values['certificate'];
-  if(!item || item.values['configured']===true&&!provenance(previous) || previous!==undefined&&!provenance(previous))return {ok:false as const,reason:'rules-certificate-unavailable' as const};
+  if(!item || item.values['configured']===true&&!provenance(previous) || previous!==undefined&&previous!==null&&!provenance(previous))return {ok:false as const,reason:'rules-certificate-unavailable' as const};
   if(provenance(previous)){
     // One monotone request position under the same complete sibling ref.
     // Never reset the position by accepting another incarnation/destination.
