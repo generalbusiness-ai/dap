@@ -10,9 +10,11 @@ Each worker reuses its own runtime across files. The separate
 runtime. The root file-task limit remains four. Test selections,
 assertions, deadlines and production source are unchanged.
 
-This is source preparation from Main `9daa037e`. The R7 review must settle
-before the owner schedules BR-3's runtime measurement and ordinary gate.
-No speedup or passing runtime result is claimed here.
+The initial source preparation used Main `9daa037e`. R7 has since landed
+on Main `6852f78d`; BR-3's three preparation commits were rebased onto that
+head without conflicts. The two-worker change remains source preparation.
+The owner still holds its runtime measurement and ordinary gate until the
+current BR-9 gate finishes. No speedup or passing runtime result is claimed.
 
 ## Decisions and why
 
@@ -49,8 +51,17 @@ The dependency copy and Scope test compiler ran at
 and configuration are unchanged between these checkpoints. The
 [compiler and dependency manifest](evidence/2026-10-26-br3-scope-test-compiler.manifest.json)
 indexes the copy proof, exact driver and compiler output. Its directory is
-read-only with a top-level `SHA256SUMS`. Only documentation changes follow
-the compiler checkpoint.
+read-only with a top-level `SHA256SUMS`. Its original follow-up changed
+only documentation. The later R7 rebase incorporates upstream source and
+test changes; that compiler result remains historical and is not relabelled
+as validation of the rebased head.
+
+The rebase and dependency comparison ran at
+`2017e679338ad516592b5ee9e6798fea70e6c6ef`, tree
+`68e301ef712bfffb18b24f357a88eb4e543a3fd6`. The
+[rebase manifest](evidence/2026-10-26-br3-r7-rebase.manifest.json)
+names its small read-only evidence directory and checksum index. Only this
+note and the new manifest change after that checkpoint.
 
 | Check | Command | Exit | Output SHA-256 | Checkpoint |
 | --- | --- | --- | --- | --- |
@@ -59,6 +70,8 @@ the compiler checkpoint.
 | Private dependency copy and lock comparison | `python3 /private/tmp/artroom-br3-copy-deps-20261026.py` | 0; 14 workspace links rebound | `ab3fd2f36f49ec505c740350828785c120f7e8a9cc34ad2def9969c96d590258` (`compiler/dependency-provenance.json`) | `f6fb666c` |
 | Scope test compiler | `node node_modules/typescript/bin/tsc -p packages/scope/tsconfig.test.json` | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` (`compiler/compiler.log`) | `f6fb666c` |
 | Real worktree dependency directory | Python `os.rename` of the private directory, followed by directory identity, stamp and 14 workspace-link checks | 0 | `65ff21c6869cab2bbede53632203e208f17762e1bd2e87714077a0d7e462d07b` (`dependency-materialization.json`) | `f6fb666c` |
+| Rebase and dependency comparison | `git rebase 6852f78d3279ef13a33b7b9d0b283e9ba96f079f`, then `python3 /private/tmp/artroom-br3-rebase-proof-20261026.py` | 0; no conflicts, one exact lock edge, 14 links checked | `f632734cc7284969e8b35b7fab42ef6678047f2b975bd609f8270bf26dfdd914` (`rebase-and-dependencies.json`) | `2017e679` |
+| Preparation patch comparison | `git range-diff 9daa037e1976fa0e245192823cce96fc8741360d..0ae2618738414c8fd705dad5e9b28e8aff59cd95 6852f78d3279ef13a33b7b9d0b283e9ba96f079f..2017e679338ad516592b5ee9e6798fea70e6c6ef` | 0; all three patches unchanged | `e00f80a28d580163d5c3a68f447a29381738c3d3a0329057591fd40826167358` (`range-diff.log`) | `2017e679` |
 
 The phase-selection witness does not resolve inherited Worker configs or
 prove that two native runtimes execute concurrently. It preserves the
@@ -83,12 +96,26 @@ the Cloudflare pretest check requires an owned real directory. The move
 preserved the directory's device and inode; the 14 links and target stamp
 were checked again. No compiler rerun is claimed after that move.
 
+After the R7 rebase, adding its single platform-to-git edge to the old
+parsed BR-3 lock produces the new lock exactly. The new lock is
+`645224923cabfd70b51b8add2a43be12673444779d18002a42ed4254b3216d6e`.
+All external package and workspace link entries remain identical. All 14
+workspace links still point to BR-3, which now reads R7's upstream manifests
+and exports. Only after those comparisons, the existing real dependency
+directory's stamp and private provenance were updated. No files were
+installed or recopied, and no other dependency view changed.
+
+The Scope and denial configs and root project declarations remain byte-for-byte
+equal to their pre-rebase versions. The rebase adds no BR-3 changes beyond
+the three preparation patches. No compiler or phase witness was repeated:
+the eventual ordinary gate must compile the upstream R7 inputs too.
+
 ## Open limits
 
 Request `50695e48` owns the measurement, ordinary gate, exact-head review
-and any repair needed when tests run on two workers. After R7 settles,
-the owner must recut this preparation if Main has moved and recheck the
-copied dependency view and lock stamp before those runs.
+and any repair needed when tests run on two workers. The owner must check
+whether Main moved again and recheck the copied dependency view and lock
+stamp before those runs.
 
 The focused measurement can time the unchanged native phase command:
 `node node_modules/vitest/vitest.mjs run --config vitest.native.config.ts`.

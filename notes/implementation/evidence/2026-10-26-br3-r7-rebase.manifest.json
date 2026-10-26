@@ -1,0 +1,31 @@
+{
+  "qualification": "Own three BR3 commits rebased cleanly onto landed R7 main. No manual conflict resolution, installation, compiler repeat, native test, measurement or gate. The existing separate real worktree dependency directory is retained; exact parsed lock delta is one platform-to-git workspace edge, and every external/link entry matches. No full physical dependency-byte equivalence claim. Historical compiler evidence stays at its original pre-R7 head/tree.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-26-br3-r7-rebase",
+  "checkpoint": {
+    "commit": "2017e679338ad516592b5ee9e6798fea70e6c6ef",
+    "tree": "68e301ef712bfffb18b24f357a88eb4e543a3fd6"
+  },
+  "fileCount": 4,
+  "files": [
+    {
+      "path": "driver.py",
+      "bytes": 4674,
+      "sha256": "a4a563429dad05bacb0c3536622b6e9f2944fe89e11d4f0b456e484430362a66"
+    },
+    {
+      "path": "range-diff.log",
+      "bytes": 259,
+      "sha256": "e00f80a28d580163d5c3a68f447a29381738c3d3a0329057591fd40826167358"
+    },
+    {
+      "path": "rebase-and-dependencies.json",
+      "bytes": 3935,
+      "sha256": "f632734cc7284969e8b35b7fab42ef6678047f2b975bd609f8270bf26dfdd914"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 252,
+      "sha256": "0962ce47718ba67fdf3998c4c971270050cdd97f24e07e501ebbe6f0d1d5bda5"
+    }
+  ]
+}
