@@ -111,6 +111,15 @@ test("certified-rules native birth and device install bootstrap a real tree cert
           return [{ seq: entry.seq, n: input.message.of.n, kind: closed(input.from.at.kind, ["membership", "rules", "destination"]),
             outcome: closed(input.message.outcome, ["applied", "refused", "superseded"]) }];
         });
+        const destinationSummary = await G.stub.summary(reader), destinationHistory = await G.stub.history(reader);
+        const destinationEntries = destinationHistory.ok ? destinationHistory.value.map(sealed => sealed.entry) : [];
+        const destinationBirth = destinationEntries.find(entry => entry.seq === 0);
+        const destinationCreate = directoryBirth?.sends.find(send => isSeed(send.to) && send.to.kind === "destination" && send.to.definition === cohort.destination);
+        const directoryOutbox = destinationCreate ? await D.stub.outbox(reader) : null;
+        const destinationCreateRow = directoryOutbox?.ok && directoryBirth && destinationCreate
+          ? directoryOutbox.value.find(row => row.outboxId === `${directoryBirth.seq}.${destinationCreate.n}`) : undefined;
+        const readReason = (value: unknown) => closed(value, ["archived", "not-found", "wrong-incarnation", "forbidden", "scope-provisional", "unsupported-definition",
+          "history-unavailable", "too-large", "unavailable", "sessions-unavailable", "clock-behind", "rate-limited"]);
         const stageSends = qEntries.flatMap(entry => entry.input.type === "outcome" && ["fetch-application", "admit-application"].includes(entry.input.kind)
           ? entry.sends.filter(send => send.message.class === "request" && isRecord(send.message.body) && send.message.body["message"] === "application-stage")
             .map(send => ({ seq: entry.seq, n: send.n })) : []);
@@ -147,6 +156,32 @@ test("certified-rules native birth and device install bootstrap a real tree cert
           ? [{ kind: short(send.to.kind), definition: short(send.to.definition) }] : []));
         const diagnostic = canonicalize({ snapshot, rowCap, textCap,
           stageDeliveryObservation: { complete: !stageDeliveryOverflow, rows: stageDeliveryRows.slice(0, rowCap) },
+          destinationBirth: {
+            summary: { ok: destinationSummary.ok, reason: destinationSummary.ok ? null : readReason(destinationSummary.reason),
+              complete: destinationSummary.ok ? destinationSummary.complete : null,
+              status: destinationSummary.ok ? closed(destinationSummary.value.status, ["active", "provisional", "refused"]) : null,
+              definitionMatches: destinationSummary.ok ? destinationSummary.value.definition === cohort.destination : null,
+              branches: destinationSummary.ok ? destinationSummary.value.items.filter(item => item.type === "branch").slice(0, rowCap)
+                .map(item => ({ state: closed(item.state, ["empty", "ready"]) })) : [] },
+            history: { ok: destinationHistory.ok, reason: destinationHistory.ok ? null : readReason(destinationHistory.reason),
+              complete: destinationHistory.ok ? destinationHistory.complete : null, entryCount: destinationHistory.ok ? destinationEntries.length : null,
+              genesisFoundInPage: destinationHistory.ok ? destinationBirth?.input.type === "genesis" : null,
+              genesisDecision: destinationBirth?.input.type === "genesis" ? closed(destinationBirth.input.decision, ["applied", "refused"]) : null,
+              genesisResultSendCount: destinationBirth ? destinationBirth.sends.filter(send => send.message.class === "result").length : null,
+              entries: destinationEntries.slice(-rowCap).map(entry => ({ seq: entry.seq,
+                type: closed(entry.input.type, ["genesis", "act", "delivery", "outcome", "timed", "diagnosis", "checkpoint"]),
+                kind: entry.input.type === "outcome" ? closed(entry.input.kind, ["first-head", "mint", "revoke", "read", "receipt", "certify-rules-tree"]) : null,
+                result: entry.input.type === "outcome" ? closed(entry.input.result, ["confirmed", "refused", "unknown"]) : null })) },
+            directoryCreate: { found: destinationCreate !== undefined, n: destinationCreate?.n ?? null,
+              readRequested: directoryOutbox !== null, readOk: directoryOutbox?.ok ?? null,
+              readReason: directoryOutbox && !directoryOutbox.ok ? readReason(directoryOutbox.reason) : null,
+              complete: directoryOutbox?.ok ? directoryOutbox.complete : null,
+              rowFoundInPage: directoryOutbox?.ok ? destinationCreateRow !== undefined : null,
+              held: destinationCreateRow?.held ?? null, attemptCount: destinationCreateRow?.attempts.length ?? null,
+              answers: destinationCreateRow?.attempts.slice(-rowCap).map(attempt => closed(attempt.answer, ["none", "wrong-incarnation", "not-found", "retry", "acknowledged"])) ?? [],
+              acknowledged: destinationCreateRow ? destinationCreateRow.acknowledged !== null : null,
+              result: closed(destinationCreateRow?.result?.clause, ["applied", "refused", "superseded", "conflict"]),
+              diagnosis: closed(destinationCreateRow?.diagnosis?.finding, ["undelivered", "delivery-unavailable"]) } },
           directoryReadiness: { repositoryFound: repository !== undefined, state: closed(repository?.state, ["open"]),
             siblings: siblingReadiness, resultCount: siblingResults.length, results: siblingResults.slice(-rowCap) },
           job: { found: job !== undefined, state: closed(job?.state, ["pending", "active", "refused"]),
