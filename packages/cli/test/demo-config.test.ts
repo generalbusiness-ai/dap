@@ -1,7 +1,45 @@
 /** Source config boundary; no Wrangler invocation or deployment proof. */
 import { readFileSync } from "node:fs";
+import { isDeepStrictEqual } from "node:util";
 import { expect, test } from "vitest";
 const read = (name: string) => JSON.parse(readFileSync(new URL(`../../../apps/room/${name}`, import.meta.url), "utf8").replace(/^\s*\/\/.*$/gm, ""));
+
+// Each deployed Worker owns its migration history, including its tag scheme.
+// New migrations may append; existing steps must retain all their fields.
+const deployedMigrations = [
+  ["wrangler.jsonc", [
+    { tag: "v1", new_sqlite_classes: ["DeployedScope"] },
+    { tag: "v2", new_sqlite_classes: ["McpRegistry", "McpAgent"] },
+    { tag: "v3", new_sqlite_classes: ["ScopeIndex"] },
+  ]],
+  ["wrangler.grow.jsonc", [
+    { tag: "v1", new_sqlite_classes: ["DeployedScope"] },
+    { tag: "v2", new_sqlite_classes: ["McpRegistry", "McpAgent"] },
+    { tag: "v3-scope-index", new_sqlite_classes: ["ScopeIndex"] },
+  ]],
+  ["wrangler.lending.jsonc", [
+    { tag: "v1", new_sqlite_classes: ["DeployedScope"] },
+    { tag: "v2-scope-index", new_sqlite_classes: ["ScopeIndex"] },
+  ]],
+  ["wrangler.demo.jsonc", [
+    { tag: "v1", new_sqlite_classes: ["DeployedScope", "ScopeIndex", "McpRegistry", "McpAgent"] },
+  ]],
+] as const;
+const retainsMigrationPrefix = (current: unknown, pinned: readonly unknown[]): boolean =>
+  Array.isArray(current) && isDeepStrictEqual(current.slice(0, pinned.length), pinned);
+
+test("deployed room migrations retain their original content and order while new steps may append", () => {
+  for (const [file, pinned] of deployedMigrations) {
+    const current = read(file).migrations;
+    expect(retainsMigrationPrefix(current, pinned), file).toBe(true);
+    // The appended class is a test specimen, not a deployed class.
+    expect(retainsMigrationPrefix([...current, { tag: "test-next", new_sqlite_classes: ["TestOnlyNextClass"] }], pinned), file).toBe(true);
+    expect(retainsMigrationPrefix(current.slice(1), pinned), `${file}: removed step`).toBe(false);
+    expect(retainsMigrationPrefix([{ ...current[0], tag: "rewritten" }, ...current.slice(1)], pinned), `${file}: rewritten step`).toBe(false);
+    if (current.length > 1) expect(retainsMigrationPrefix([...current].reverse(), pinned), `${file}: reordered steps`).toBe(false);
+  }
+});
+
 test("dap-demo has private namespaces, enforced index and the Grow serving bounds without open parentless creation", () => {
   const demo = read("wrangler.demo.jsonc"), grow = read("wrangler.grow.jsonc");
   // PD-8 records each deployed Worker's exact additional family. The
@@ -21,7 +59,6 @@ test("dap-demo has private namespaces, enforced index and the Grow serving bound
   expect([demo.name, demo.main, demo.vars.SCOPE_INDEX_MODE]).toEqual(["dap-demo", "worker.ts", "enforce"]);
   expect(demo.durable_objects.bindings.map((row: { name: string }) => row.name).sort()).toEqual(["AGENTS", "REGISTRIES", "SCOPES", "SCOPE_INDEX"]);
   expect(demo.durable_objects.bindings.every((row: object) => !Object.hasOwn(row, "script_name"))).toBe(true);
-  expect(demo.migrations.flatMap((row: { new_sqlite_classes: string[] }) => row.new_sqlite_classes).sort()).toEqual(["DeployedScope", "McpAgent", "McpRegistry", "ScopeIndex"]);
   expect(demo.artifacts).toEqual([{ binding: "ARTIFACTS", namespace: "dap-demo", remote: true }]);
   expect(demo.vars.ARTIFACTS_NAMESPACE).toBe("dap-demo");
   expect(JSON.parse(demo.vars.ARTIFACTS_CONFIG)).toEqual({ registerScope: "sc_b5q435os6lggypatelcltqzvul4kqxzdaaxpmybvwumsmxwj2djq", namespace: "dap-demo", host: "6e953d231f1c9aadffbf59537a82e13a.artifacts.cloudflare.net", maxBytes: 10485760, credentialIdentity: "adapter-attempt" });
