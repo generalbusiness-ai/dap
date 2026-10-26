@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ba294dc17ffbf5e8a235dd83c819bbd9d386b5f3","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-26-br10-remove-rename-tooling.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c2b3a8a5b0e2f86422d039643a9a7ddf9045d35e","text":"Merge retired a covered predecessor with no successor at its old path."}
