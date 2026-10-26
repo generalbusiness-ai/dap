@@ -1,7 +1,7 @@
 import { env } from "cloudflare:workers";
 import { expect, test } from "vitest";
 import type { DeclaredDefinition, Digest, FactRef } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, digestBytes, definitionDigest, factRefOf, isDigest, isRecord, isScopeRef, isSeed, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, digestBytes, definitionDigest, factRefOf, isDigest, isRecord, isSeed, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { ARCHIVE_CERTIFIED_RULES_COHORT, RULES_CERTIFICATE_KIND, RULES_PATTERNS, RULES_TREE_PROOF, rulesPolicyProposalV11, CONFIGURATION_DOMAIN, editObjects, type RulesPolicyV11 } from "@generalbusiness/dap-platform";
 import { emptyPackageComposition } from "@generalbusiness/dap-package-graph";
 import { packApplication2, readApplicationProjection } from "@generalbusiness/dap-platform/application-v2";
@@ -16,7 +16,6 @@ import { devicePackageFixture } from "../../../../packages/derive/test/fixtures-
 import { valueDigest } from "@generalbusiness/dap-derive";
 import { changeDemo, changeDemo3 } from "../src/index.ts";
 
-import { platformDeliveryObservers } from "../../../../packages/scope/test/worker.ts";
 import { certifiedNativeRoom, openRulesCertificate, publishRulesCertificate, configureRules } from "../../../../packages/scope/test/certified-rules-fixture.ts";
 
 // Actual new-family interpretation/SQLite and signed grants. The Git object
@@ -54,26 +53,6 @@ test("certified-rules native birth and device install bootstrap a real tree cert
   try {
     const fixture = await applicationResolverFixture("sha1", undefined, {}, undefined, packet), peer = applicationHttpPeer(fixture);
     const applicationBindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(fixture.trust), env.SCOPE_INDEX);
-    const stageDeliveryRows: { answer: string; reason: string | null; name: string | null }[] = [];
-    let stageDeliveryOverflow = false;
-    const observedWord = (value: unknown, allowed: readonly string[]) => typeof value === "string" && allowed.includes(value)
-      ? value : value === undefined || value === null ? null : "outside-closed-set";
-    const observeDelivery: NonNullable<ReturnType<typeof platformDeliveryObservers.get>> = (envelope, answer) => {
-      if (platformDeliveryObservers.get(Q.name) !== observeDelivery || envelope.from.at.scope !== Q.name
-        || !isScopeRef(envelope.to) || envelope.to.scope !== D.name || envelope.to.kind !== "directory"
-        || envelope.message.class !== "request" || envelope.message.type !== "tell"
-        || !isRecord(envelope.message.body) || envelope.message.body["message"] !== "application-stage") return;
-      if (stageDeliveryRows.length >= 16) { stageDeliveryOverflow = true; return; }
-      stageDeliveryRows.push({ answer: answer === "rejected" ? "rejected" : answer === null ? "no-answer"
-        : observedWord(answer.answer, ["recorded", "retry", "routing", "source-unverified"]) ?? "outside-closed-set",
-        reason: observedWord(answer !== null && typeof answer === "object" && "reason" in answer ? answer.reason : undefined,
-          ["dependency-unavailable", "busy", "clock-behind", "scope-provisional", "guard-incomplete", "authority-unavailable", "unavailable", "rate-limited", "scope-full", "unsupported-definition", "wrong-incarnation", "not-found"]),
-        name: observedWord(answer !== null && typeof answer === "object" && "name" in answer ? answer.name : undefined,
-          ["scopeEntries", "scopeBytes", "scopeItems", "scopeRecords", "scopeRequests"]) });
-    };
-    if (platformDeliveryObservers.has(Q.name)) throw Error("TEST stage delivery observer already owned");
-    platformDeliveryObservers.set(Q.name, observeDelivery);
-    life.cleanup(() => { if (platformDeliveryObservers.get(Q.name) === observeDelivery) platformDeliveryObservers.delete(Q.name); stageDeliveryRows.length = 0; });
     for (const node of [D, Q]) { life.outside(node.name, (given, sql) => hostOutside(given, sql, applicationBindings, peer.fetch)); await node.restart(); }
     const membership = await M.at();
     const prepared = await signedDeviceApplicationInstall(secretSigner(rita.secret), packet.bytes,
@@ -84,119 +63,7 @@ test("certified-rules native birth and device install bootstrap a real tree cert
     if (installed.answer !== "accepted") throw Error("The actual signed device package must install");
     await effectFixture([Q], life.wait); await dispatchFixture(nodes, life.wait);
     const creation = (await D.entries()).flatMap(entry => entry.sends).find(send => isSeed(send.to) && send.to.definition === id);
-    if (!creation || !isSeed(creation.to)) {
-      // TEST snapshot AFTER the initial failed creation search. These reads
-      // may observe later state; they do not repeat that search or settle work.
-      const snapshot = "after-initial-missing-creation-search", rowCap = 16, textCap = 96;
-      const closed = (value: unknown, allowed: readonly string[]) => typeof value === "string" && allowed.includes(value)
-        ? value : value === undefined || value === null ? null : "outside-closed-set";
-      const short = (value: unknown) => typeof value === "string" && utf8(value).length <= textCap ? value : null;
-      const reasons = ["unsupported-object-format", "untrusted-release", "unsupported-host", "unsupported-definition", "package-invalid", "package-too-large",
-        "source-refused", "content-not-retained", "definitions-full", "role-actions-full", "install-route-refused", "archive-unavailable",
-        "application-creation-refused", "application-creation-conflict"];
-      try {
-        const job = (await Q.summary()).value.items.find(item => item.id === installed.receipt.fact.seq);
-        const qEntries = await Q.entries(), dEntries = await D.entries();
-        const repository = (await D.summary()).value.items.find(item => item.type === "repository");
-        const siblingReadiness = ([["membership", M], ["rules", Q], ["destination", G]] as const).map(([kind, node]) => {
-          const ref = repository?.refs[kind];
-          return { kind, validRef: isScopeRef(ref) && ref.kind === kind,
-            matchesFixtureScope: isScopeRef(ref) && ref.scope === node.name };
-        });
-        const directoryBirth = dEntries.find(entry => entry.seq === 0);
-        const siblingResults = dEntries.flatMap(entry => {
-          const input = entry.input;
-          if (input.type !== "delivery" || input.message.class !== "result" || !directoryBirth
-            || input.message.of.from.seq !== directoryBirth.seq || canonicalize(input.message.of.from.at) !== canonicalize(directoryBirth.at)) return [];
-          return [{ seq: entry.seq, n: input.message.of.n, kind: closed(input.from.at.kind, ["membership", "rules", "destination"]),
-            outcome: closed(input.message.outcome, ["applied", "refused", "superseded"]) }];
-        });
-        const destinationSummary = await G.stub.summary(reader), destinationHistory = await G.stub.history(reader);
-        const destinationEntries = destinationHistory.ok ? destinationHistory.value.map(sealed => sealed.entry) : [];
-        const destinationBirth = destinationEntries.find(entry => entry.seq === 0);
-        const destinationCreate = directoryBirth?.sends.find(send => isSeed(send.to) && send.to.kind === "destination" && send.to.definition === cohort.destination);
-        const directoryOutbox = destinationCreate ? await D.stub.outbox(reader) : null;
-        const destinationCreateRow = directoryOutbox?.ok && directoryBirth && destinationCreate
-          ? directoryOutbox.value.find(row => row.outboxId === `${directoryBirth.seq}.${destinationCreate.n}`) : undefined;
-        const readReason = (value: unknown) => closed(value, ["archived", "not-found", "wrong-incarnation", "forbidden", "scope-provisional", "unsupported-definition",
-          "history-unavailable", "too-large", "unavailable", "sessions-unavailable", "clock-behind", "rate-limited"]);
-        const stageSends = qEntries.flatMap(entry => entry.input.type === "outcome" && ["fetch-application", "admit-application"].includes(entry.input.kind)
-          ? entry.sends.filter(send => send.message.class === "request" && isRecord(send.message.body) && send.message.body["message"] === "application-stage")
-            .map(send => ({ seq: entry.seq, n: send.n })) : []);
-        const qOutbox = stageSends.length ? await Q.stub.outbox(reader) : null;
-        const stageOutbox = stageSends.slice(-rowCap).map(send => {
-          const row = qOutbox?.ok ? qOutbox.value.find(item => item.outboxId === `${send.seq}.${send.n}`) : undefined;
-          return { seq: send.seq, n: send.n, found: row !== undefined, held: row?.held ?? null,
-            attemptCount: row?.attempts.length ?? null,
-            answers: row?.attempts.slice(-rowCap).map(attempt => closed(attempt.answer, ["none", "wrong-incarnation", "not-found", "retry", "acknowledged"])) ?? [],
-            acknowledged: row ? row.acknowledged !== null : null,
-            result: closed(row?.result?.clause, ["applied", "refused", "superseded", "conflict"]),
-            diagnosis: closed(row?.diagnosis?.finding, ["undelivered", "delivery-unavailable"]) };
-        });
-        const qOutcomes = qEntries.flatMap(entry => {
-          const input = entry.input;
-          if (input.type !== "outcome" || !["fetch-application", "admit-application"].includes(input.kind)) return [];
-          const attempt = entry.effects.find(effect => effect.effect === "attempt" && effect.operation === input.operation && effect.attempt === input.attempt);
-          return [{ seq: entry.seq, kind: closed(input.kind, ["fetch-application", "admit-application"]), result: closed(input.result, ["confirmed", "refused", "unknown"]),
-            selected: attempt?.effect === "attempt" ? attempt.selected : null, sendCount: entry.sends.length,
-            applicationStageCount: stageSends.filter(send => send.seq === entry.seq).length,
-            stageTargets: entry.sends.filter(send => send.message.class === "request" && isRecord(send.message.body) && send.message.body["message"] === "application-stage")
-              .slice(-rowCap).map(send => ({ n: send.n, kind: closed(send.to.kind, ["directory"]),
-                targetEqualsD: dEntries[0] ? canonicalize(send.to) === canonicalize(dEntries[0].at) : null })),
-            reason: closed(isRecord(input.evidence.body) ? input.evidence.body["reason"] : undefined, reasons) }];
-        });
-        const dReceived = dEntries.flatMap(entry => {
-          const input = entry.input;
-          if (input.type !== "delivery" || input.message.class !== "request" || !isRecord(input.message.body)) return [];
-          const kind = closed(input.message.body["message"], ["application-stage", "application-grants", "application-create"]);
-          return kind === null || kind === "outside-closed-set" ? [] : [{ seq: entry.seq, kind,
-            decision: "decision" in input ? closed(input.decision, ["applied", "refused", "superseded"]) : null }];
-        });
-        const seeds = dEntries.flatMap(entry => entry.sends.flatMap(send => isSeed(send.to)
-          ? [{ kind: short(send.to.kind), definition: short(send.to.definition) }] : []));
-        const diagnostic = canonicalize({ snapshot, rowCap, textCap,
-          stageDeliveryObservation: { complete: !stageDeliveryOverflow, rows: stageDeliveryRows.slice(0, rowCap) },
-          initialDestinationDeliveryObservation: room.destinationBirthObservation(),
-          destinationBirth: {
-            summary: { ok: destinationSummary.ok, reason: destinationSummary.ok ? null : readReason(destinationSummary.reason),
-              complete: destinationSummary.ok ? destinationSummary.complete : null,
-              status: destinationSummary.ok ? closed(destinationSummary.value.status, ["active", "provisional", "refused"]) : null,
-              definitionMatches: destinationSummary.ok ? destinationSummary.value.definition === cohort.destination : null,
-              branches: destinationSummary.ok ? destinationSummary.value.items.filter(item => item.type === "branch").slice(0, rowCap)
-                .map(item => ({ state: closed(item.state, ["empty", "ready"]) })) : [] },
-            history: { ok: destinationHistory.ok, reason: destinationHistory.ok ? null : readReason(destinationHistory.reason),
-              complete: destinationHistory.ok ? destinationHistory.complete : null, entryCount: destinationHistory.ok ? destinationEntries.length : null,
-              genesisFoundInPage: destinationHistory.ok ? destinationBirth?.input.type === "genesis" : null,
-              genesisDecision: destinationBirth?.input.type === "genesis" ? closed(destinationBirth.input.decision, ["applied", "refused"]) : null,
-              genesisResultSendCount: destinationBirth ? destinationBirth.sends.filter(send => send.message.class === "result").length : null,
-              entries: destinationEntries.slice(-rowCap).map(entry => ({ seq: entry.seq,
-                type: closed(entry.input.type, ["genesis", "act", "delivery", "outcome", "timed", "diagnosis", "checkpoint"]),
-                kind: entry.input.type === "outcome" ? closed(entry.input.kind, ["first-head", "mint", "revoke", "read", "receipt", "certify-rules-tree"]) : null,
-                result: entry.input.type === "outcome" ? closed(entry.input.result, ["confirmed", "refused", "unknown"]) : null })) },
-            directoryCreate: { found: destinationCreate !== undefined, n: destinationCreate?.n ?? null,
-              readRequested: directoryOutbox !== null, readOk: directoryOutbox?.ok ?? null,
-              readReason: directoryOutbox && !directoryOutbox.ok ? readReason(directoryOutbox.reason) : null,
-              complete: directoryOutbox?.ok ? directoryOutbox.complete : null,
-              rowFoundInPage: directoryOutbox?.ok ? destinationCreateRow !== undefined : null,
-              held: destinationCreateRow?.held ?? null, attemptCount: destinationCreateRow?.attempts.length ?? null,
-              answers: destinationCreateRow?.attempts.slice(-rowCap).map(attempt => closed(attempt.answer, ["none", "wrong-incarnation", "not-found", "retry", "acknowledged"])) ?? [],
-              acknowledged: destinationCreateRow ? destinationCreateRow.acknowledged !== null : null,
-              result: closed(destinationCreateRow?.result?.clause, ["applied", "refused", "superseded", "conflict"]),
-              diagnosis: closed(destinationCreateRow?.diagnosis?.finding, ["undelivered", "delivery-unavailable"]) } },
-          directoryReadiness: { repositoryFound: repository !== undefined, state: closed(repository?.state, ["open"]),
-            siblings: siblingReadiness, resultCount: siblingResults.length, results: siblingResults.slice(-rowCap) },
-          job: { found: job !== undefined, state: closed(job?.state, ["pending", "active", "refused"]),
-            phase: closed(job?.values["phase"], ["fetch", "admission", "activation", "grants", "creation"]), reason: closed(job?.values["reason"], reasons) },
-          stageOutbox: { requested: qOutbox !== null, readOk: qOutbox?.ok ?? null,
-            complete: qOutbox?.ok ? qOutbox.complete : null, stageSendCount: stageSends.length, rows: stageOutbox },
-          qOutcomeCount: qOutcomes.length, qOutcomes: qOutcomes.slice(-rowCap), dReceivedCount: dReceived.length, dReceived: dReceived.slice(-rowCap),
-          createdSeedCount: seeds.length, createdSeeds: seeds.slice(-rowCap) });
-        console.info("TEST certified install diagnostic", utf8(diagnostic).length <= 8192 ? diagnostic : canonicalize({ snapshot, diagnostic: "metadata-over-bound" }));
-      } catch {
-        console.info("TEST certified install diagnostic", canonicalize({ snapshot, diagnostic: "metadata-unavailable" }));
-      }
-      throw Error("Actual device application creation send required");
-    }
+    if (!creation || !isSeed(creation.to)) throw Error("Actual device application creation send required");
     expect(creation.message).toMatchObject({ body: { creationContext: { v: 2, delegate: true,
       deviceCommand: { capability: DEVICE_COMMAND, owner: { membership, member: "@rita" }, root: id, definitions: [id] } } } });
     const C = life.platform(scopeIdOf(creation.to)); nodes.push(C); await pause(nodes);
