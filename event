@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c972a74ca626468b01df155b5a7104d35582f278","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-26-br3-worker-parallelism.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d64da5252579f49156fea3c779e3d8cf50504003","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/support/legacy-lending-projection.ts."}
