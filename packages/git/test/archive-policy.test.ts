@@ -13,7 +13,7 @@ test("export admission checks exact reviewed native pin and data together, prese
     expect(admitArchiveExport(pin, certified, inventory)).toEqual({ ok: false, reason: "unsupported-credential-cohort" });
   }
   expect(inventory).not.toHaveBeenCalled();
-  for (const pin of ["platform:directory@14", "platform:register@17", "platform:register@18", "platform:register@19", "platform:directory@19"]) {
+  for (const pin of ["platform:directory@14", "platform:register@17", "platform:register@18", "platform:register@19", "platform:directory@20"]) {
     expect(admitArchiveExport(pin, certified, inventory, ARCHIVE_NATIVE_DATA["platform:directory@16"])).toEqual({ ok: false, reason: "unsupported-archive-cohort" });
   }
   for (const [pin, digest] of Object.entries(ARCHIVE_NATIVE_DATA)) {
