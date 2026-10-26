@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2280e436d5057d69a199f57129b34ded50f9fcba","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-26-br9-migration-prefixes.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:316bc96ec491a74d896a9553eae7c9208a55950e","text":"Merge retired a covered predecessor; the successor is at packages/cli/test/demo-config.test.ts."}
