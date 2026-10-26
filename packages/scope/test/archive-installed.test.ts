@@ -1536,7 +1536,29 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
         expect(restarted.generation).toBe(stopped.generation+1);
         expect(peer.minted.filter(value=>value.scope==="write")).toHaveLength(stoppedWrites);expect(peer.sends).toHaveLength(stoppedSends);
         net.clock.now=timeOf(life.now()+1000);
-        expect(await run()).toMatchObject({state:"confirmed"});
+        const recovery=await run();
+        let recoveryFailure:string|undefined;
+        if(recovery.state!=="confirmed") {
+          recoveryFailure="Site recovery diagnostic unavailable";
+          try {
+            const lastPassDiagnostic=diagnostics.at(-1)??null;
+            // AFTER the failed result: a separate TEST read, not an atomic
+            // same-cut observation and not another archive/recovery attempt.
+            const after=await life.wait(()=>runInDurableObject(rootScope.object,(_instance,state)=>{
+              const rows=new ArchiveRows(archiveSql(state),at),row=rows.load(),wake=rows.storedWake();
+              return {rowState:row===null?"absent":"present",
+                confirmed:row?.confirmed?{commit:row.confirmed.commit,through:row.confirmed.through,layout:row.confirmed.layout??null,anchorsPublished:row.confirmed.anchorsPublished??null}:null,
+                pending:row?.pending?{commit:row.pending.commit,through:row.pending.through,parent:row.pending.parent,layout:row.pending.layout??null}:null,
+                attempts:row?.attempts??null,next:row?.next??null,
+                stopped:row?.stopped?(["limit","foreign-source-unavailable","conflict"].includes(row.stopped.reason)?row.stopped.reason:"other"):null,
+                wake:wake?{pending:wake.pending,stopped:wake.stopped,next:wake.next}:null,
+                generation:rows.restartReceipt().generation};
+            })).catch(()=>({snapshot:"unavailable"}));
+            const metadata=JSON.stringify({stage:"AFTER failed recovery result; separate read-only TEST snapshot",at,through,result:recovery,now:timeOf(life.now()),lastPassDiagnostic,after});
+            recoveryFailure=utf8(metadata).length<=16*1024?metadata:"Site recovery diagnostic exceeded its 16384-byte bound";
+          } catch { /* Observation must not replace the confirmation assertion. */ }
+        }
+        expect(recovery,recoveryFailure).toMatchObject({state:"confirmed"});
         expect((await inspect()).row?.confirmed?.through).toEqual(through);
         expect(diagnostics.at(-1)?.["sourceFailure"]).toBeNull();
         // A valid birth with an unreviewed pin remains a hard stop. Operator
