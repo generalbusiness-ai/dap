@@ -57,20 +57,20 @@ const seals = {
 // Root adopted the reviewed outputs; the historical map name is retained here.
 const pendingArchiveSeals = {
   "packages/scope/src/archive-restart.ts": "1ef6109fa2fc54cc481e31d818ce739fa037594aeabe17f065208c22a2c425af", // Deployment directive parser; actual maintained output.
-  "packages/scope/src/archive-operator.ts": "672ad996c5362209e809c5a921a8182ca8269a7a6d597db138da3c21dfc2e0aa", // Private observation owner; actual maintained parser output.
+  "packages/scope/src/archive-operator.ts": "422376afb07d7345290d1e821eb6410bc834c55edd86540fa058b94c405d08c9", // Private observation owner; actual maintained parser output.
   // Publication and floor owners were reviewed before these values were
   // computed by the maintained parser on the integrated source.
   "packages/scope/src/archive-target.ts": "4044b6f04b736c653aac496479cbbd98c791f371f157801e7909bc67279488e9",
   "packages/scope/src/archive-source-window.ts": "4db3f5885e7541f713b9668d1cde655e42be1950dd6af77d5711a323b3582e1c",
   "packages/scope/src/archive-publication.ts": "d8c39d220bc7eea59301478aa553960267aac16f06502b4103a85647c71eb457",
-  "packages/scope/src/archive-build.ts": "f881687d313a00b33419a0e62a0b6d17906938719621f5aecc20e515187f9bb0", // Fixed-prefix inventory ownership reviewed; actual maintained parser output.
-  "packages/scope/src/archive-driver.ts": "95268b9f69d6ed0c814f709e957713b8d0b230a86164184b61fe51dce43ad5c8", // Later capacity retry reviewed; actual maintained parser output.
-  "packages/scope/src/archive-row.ts": "e96224d4a44c1c8ebc68f24ce54993c81198b07eb71fd1b82ba2848262842616", // Paid prior-capacity scalar reviewed; actual maintained parser output.
+  "packages/scope/src/archive-build.ts": "038fabbfd864ad30f623076b6aa107137075472445fe98eaf1e3d4cbc3a0bd2b", // Fixed-prefix inventory ownership reviewed; actual maintained parser output.
+  "packages/scope/src/archive-driver.ts": "fe9903582ae33ed6ac73383fcd1886879e057344289fd7f4f799707857ab3359", // Later capacity retry reviewed; actual maintained parser output.
+  "packages/scope/src/archive-row.ts": "02f01270071d022253335b5d4b41c8574e75f0eb806e58f70afa60e4b8fbc613", // Paid prior-capacity scalar reviewed; actual maintained parser output.
   "packages/scope/src/floor-writer.ts": "fb8fd859844b8d10ba43b477bcaf07ab32fe1bfa1b6684ad9ae70b930d328a11",
   "packages/scope/src/object.ts": "091396e5ebe195252695a84287fc1edf2c1bb45fc2d1c65d14d679643694d9b1", // Must match the separately adopted original owner value above.
   "apps/room/worker.grow.ts": "0cc4c1c63f79f8da8dad5e98b2ace5b69fcd818d41640ed4e316ee534adf749f",
   "apps/room/archive-policy.ts": "ed3b746b5a26c3e872e41b13ba133f43ade42b5612aa5028ba544fc013be5ce7",
-  "apps/room/archive.ts": "8252a0d142fcf7bac4c266980e0cbc4c592d1ad8783914b16d8f40ba6fb824f9",
+  "apps/room/archive.ts": "fdd3889d0662acc3c1e9bdbc0d0776c1e69cfdf31237a433856080f259ba8f1b",
   "packages/scope/src/archive-host-item.ts": "c2a8b08490e9f0590c456f12fd8e65a8b10cee8bc7cbda9d9c33f6ab366fb9d4",
   "packages/scope/src/archive-host.ts": "e376746b7a1001a47715f666c4777e135bf1c48a162bfffe9c80e0ec913f079f", // Staged input charges and bounded bootstrap reviewed; actual maintained parser output.
   "packages/scope/src/artifacts-host.ts": "63895c56490aeb1711834902012cec9277e11f35dd6881b99a6598032d1e1bc7",

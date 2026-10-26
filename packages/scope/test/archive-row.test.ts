@@ -478,6 +478,13 @@ test("an expiring deployment directive atomically restarts only its exact stoppe
       expect(sql.exec("SELECT k,v FROM meta WHERE k LIKE 'archive-%' ORDER BY k").toArray()).toEqual(beforeRefusal);
     }
     sql.exec("UPDATE meta SET v=? WHERE k='archive-row-1'",canonicalize(original));
+    for (const wake of [null, { pending:false,stopped:false,next:null }, { pending:true,stopped:true,next:null }]) {
+      if (wake === null) sql.exec("DELETE FROM meta WHERE k='archive-wake-1'");
+      else sql.exec("UPDATE meta SET v=? WHERE k='archive-wake-1'",canonicalize(wake));
+      expect(store.restart(command,at(1),at(0))).toBe("refused");
+      expect(store.load()).toEqual(original); expect(store.restartReceipt().generation).toBe(0);
+      sql.exec("INSERT INTO meta(k,v) VALUES('archive-wake-1',?) ON CONFLICT(k) DO UPDATE SET v=excluded.v",canonicalize({ pending:false,stopped:true,next:null }));
+    }
     const fail = new ArchiveRows({ ...sql,exec(query,...bindings) {
       if (query.startsWith("INSERT INTO meta(k,v)") && bindings[0] === "archive-restart-1") throw new Error("TEST restart receipt write interrupted");
       return sql.exec(query,...bindings);
@@ -501,5 +508,13 @@ test("an expiring deployment directive atomically restarts only its exact stoppe
     const stoppedAgain = store.load();
     expect(store.restart(command,at(2),at(0))).toBe("already-applied");
     expect(store.load()).toEqual(stoppedAgain); expect(store.wake()).toBeNull();
+    store.stop("foreign-source-unavailable");
+    const foreign = store.load()!;
+    const fresh = readArchiveRestart(encoded({ ...payload,generation:1,rowDigest:digestBytes(utf8(canonicalize(foreign))) }),at(0));
+    if (!fresh) expect.fail("the operator binds a fresh exact foreign-source stopped row");
+    expect(store.restart(fresh,at(2),at(0))).toBe("applied");
+    expect(store.load()).toEqual({ ...foreign,stopped:null });
+    expect(store.restartReceipt().generation).toBe(2);
+    expect(sql.exec("SELECT v FROM meta WHERE k='archive-frontier-confirmed-1'").toArray()).toEqual([{ v:"TEST opaque frontier bytes, never parsed" }]);
   });
 });

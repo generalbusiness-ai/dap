@@ -181,7 +181,7 @@ async function adaptiveArchivePass(coupled: boolean, sql: Sql, context: Adaptive
   } catch (error) {
     if (error instanceof ArchiveStopped) return { ok: false, reason: error.reason,
       capacityRefusal: error.capacityRefusal && { ...error.capacityRefusal, site: "plan-debit" } };
-    if (error instanceof ArchivePrefixStopped) return { ok: false, reason: error.reason };
+    if (error instanceof ArchivePrefixStopped) return { ok: false, reason: error.reason, ...(error.sourceFailure ? { sourceFailure: error.sourceFailure } : {}) };
     throw error;
   }
 }
@@ -211,7 +211,7 @@ export async function planRootFixedArchivePass(sql: Sql, context: AdaptiveArchiv
   } catch (error) {
     if (error instanceof ArchiveStopped) return { ok: false as const, reason: error.reason,
       capacityRefusal: error.capacityRefusal && { ...error.capacityRefusal, site: "plan-debit" as const } };
-    if (error instanceof ArchivePrefixStopped) return { ok: false as const, reason: error.reason };
+    if (error instanceof ArchivePrefixStopped) return { ok: false as const, reason: error.reason, ...(error.sourceFailure ? { sourceFailure: error.sourceFailure } : {}) };
     throw error;
   }
 }
@@ -229,7 +229,7 @@ export async function planRootFixedUnpublishedArchivePass(sql: Sql, context: Ada
   } catch (error) {
     if (error instanceof ArchiveStopped) return { ok: false as const, reason: error.reason,
       capacityRefusal: error.capacityRefusal && { ...error.capacityRefusal, site: "plan-debit" as const } };
-    if (error instanceof ArchivePrefixStopped) return { ok: false as const, reason: error.reason };
+    if (error instanceof ArchivePrefixStopped) return { ok: false as const, reason: error.reason, ...(error.sourceFailure ? { sourceFailure: error.sourceFailure } : {}) };
     throw error;
   }
 }

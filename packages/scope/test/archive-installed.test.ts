@@ -3,7 +3,7 @@
  * archive policy are explicit fixtures. No provider or production admission.
  * Device replies are explicit TEST owner input, not physical execution. */
 import { env, runDurableObjectAlarm, runInDurableObject } from "cloudflare:test";
-import { expect, inject, test } from "vitest";
+import { expect, inject, test, vi } from "vitest";
 import { DEVICE_COMMAND, PROPOSED_BOUNDS, type DeclaredDefinition, type Digest, type FactRef, type Head, type Input, type PlatformDefinition, type ScopeId, type ScopeRef, type Sealed } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, digestBytes, encodeItemQueryParameter, isDigest, isEntry, isFactRef, isScopeId, isRecord, isSeed, parseStrict, scopeIdOf, textDigest, timeMs, timeOf, unb64url, utf8 } from "@generalbusiness/dap-bytes";
 import { readApplicationPackage2, readPublishedApplicationPackage2 } from "@generalbusiness/dap-platform/application-v2";
@@ -23,6 +23,7 @@ import { archiveInput } from "../src/archive-input.ts";
 import { ArchiveDriver } from "../src/archive-driver.ts";
 import { ArchiveFrontiers } from "../src/archive-frontier-store.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
+import { readArchiveRestart } from "../src/archive-restart.ts";
 import { archiveSourceReferences, archiveSourceWindow } from "../src/archive-source-window.ts";
 import { stopArchivePrefix } from "../src/archive-prefix.ts";
 import { ArchiveArtifactsPeer } from "./support/archive-artifacts.ts";
@@ -1453,6 +1454,142 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       copies: credentialCounts, refusedDomains: 2, refusedCredentials: 3, anchorRefusals: 4,
       qualification: "Native test-host journals and issued reads; TEST package/owner/scheduler/policy/object repository. Explicit private facts and observed values on caller trust; Real local Git mirror clone and five offline reports; no live private source read by collector, provider, hosted transport or deployment acceptance.",
     }), "native-archive-closure");
+    if (scenario === "Grow production") {
+      // Real installed Site/Room entries, Grow target/source preparation and
+      // native SQLite. Only the child's nativeBirth RPC is fault-injected;
+      // the Artifacts peer remains a TEST provider, not hosted acceptance.
+      const peer = productionPeer!;
+      // The preceding offline proof deliberately cleared the original
+      // transport map. This new online TEST phase restores only the actual
+      // fsck-checked and offline-verified clone, preserving that earlier proof.
+      expect(peer.data.size).toBe(0);
+      for (const [id,object] of clonedObjects) {
+        if (!["commit","tree","blob"].includes(object.type)) expect.fail("the verified archive clone must contain archive objects");
+        peer.data.set(id,{id,type:object.type as JournalObject["type"],data:new Uint8Array(object.data)});
+      }
+      const repository = (await life.wait(() => D.item(0))).values["repository"] as unknown as DestinationRepository;
+      const environment = { ARTIFACTS:peer.binding,
+        ARTIFACTS_CONFIG:canonicalize({registerScope:R.name,namespace:repository.namespace,host:"service.invalid",maxBytes:8*1024*1024,credentialIdentity:"adapter-attempt"}),
+        GROW_ARCHIVE_CONFIG:canonicalize({policy:"grow-room-archive-1",release:DEMO_RELEASE,directory:D.name,repositoryName:repository.name}) };
+      const beforeHead = (await life.wait(() => rootScope.summary())).at;
+      const reportSite = async () => {
+        const openAlerts=(await life.wait(()=>childScope.summary())).value.items.filter(item=>item.type==="alert" && ["open","held","authorized"].includes(item.state)).length;
+        expect(openAlerts).toBeLessThanOrEqual(4);
+        await life.wait(async()=>childScope.did(una,"report-site",{on:0,fields:{openAlerts},expected:await childScope.expected({on:0})}));
+        await driveFixture([rootScope,childScope],life.wait);
+      };
+      await reportSite();
+      const relation = (await life.wait(() => rootScope.sealed())).find(sealed => sealed.entry.seq > beforeHead.seq
+        && sealed.entry.uses.some(use => use.fact.at.scope === childScope.name));
+      if (!relation) expect.fail("a genuine delivered Room summary must retain its Room source");
+      const through = { seq:relation.entry.seq,hash:relation.hash }, at = relation.entry.at;
+      let unavailable = true, refusedBirths = 0, currentThrough = through;
+      const sourcePolicies = new Map(policies);
+      const sourceAt = await life.wait(() => childScope.at());
+      const binding = { idFromName:(name:string)=>env.PLATFORM.idFromName(name),get:(id:DurableObjectId)=> {
+        const stub=env.PLATFORM.get(id);
+        return new Proxy(stub,{get(target,key){
+          const method=Reflect.get(target,key);
+          if(typeof method!=="function")return method;
+          return async (...args:unknown[])=>{
+            if(key==="nativeBirth" && canonicalize(args[0])===canonicalize(sourceAt) && unavailable){refusedBirths++;return null;}
+            return (target as unknown as Record<PropertyKey,(...args:unknown[])=>Promise<unknown>>)[key]!(...args);
+          };
+        }});
+      }};
+      const diagnostics:Record<string,unknown>[]=[];
+      const log=vi.spyOn(console,"info").mockImplementation((label:unknown,value:unknown)=>{
+        if(label==="archive-pass-diagnostic-v1" && typeof value==="object" && value!==null)diagnostics.push(value as Record<string,unknown>);
+      });
+      try {
+        const run=()=>life.wait(()=>runInDurableObject(rootScope.object,async(_instance,state)=>{
+          const sql=archiveSql(state),store=new SqliteStore(sql);
+          const options=growArchiveDriver(archiveGiven(store),sql,binding,environment,sourcePolicies,PROPOSED_BOUNDS,peer.fetch);
+          if(!options)throw Error("the reviewed Grow host fixture must be admitted");
+          return new ArchiveDriver({...options,sql,current:()=>({ at,head:currentThrough }),clock:()=>timeOf(life.now()),bounds:PROPOSED_BOUNDS}).run();
+        }));
+        const inspect=()=>life.wait(()=>runInDurableObject(rootScope.object,(_instance,state)=>{
+          const sql=archiveSql(state),rows=new ArchiveRows(sql,at);
+          return {row:rows.load(),generation:rows.restartReceipt().generation,frontier:sql.exec("SELECT k,v FROM meta WHERE k IN ('archive-frontier-confirmed-1','archive-frontier-pending-1') ORDER BY k").toArray()};
+        }));
+        const before=await inspect(),writes=peer.minted.filter(value=>value.scope==="write").length,sends=peer.sends.length;
+        expect(before.row?.confirmed?.layout).toBe(2);expect(before.row?.pending).toBeNull();
+        expect(peer.refs.get(journalRef(at.scope))).toBe(before.row!.confirmed!.commit);
+        expect(before.row!.confirmed!.through.seq).toBeLessThan(through.seq);
+        // Choose the actual next Room-source entry, without inventing an
+        // entry body or changing admission. If preceding entries exist,
+        // the driver may first publish that earlier valid prefix.
+        const first=await run();
+        if(first.state==="confirmed")expect(await run()).toMatchObject({state:"stopped",reason:"foreign-source-unavailable"});
+        else expect(first).toMatchObject({state:"stopped",reason:"foreign-source-unavailable"});
+        const stopped=await inspect();
+        expect(refusedBirths).toBeGreaterThan(0);
+        expect(stopped.row?.stopped?.reason).toBe("foreign-source-unavailable");expect(stopped.row?.pending).toBeNull();
+        expect(stopped.row?.confirmed?.through.seq).toBe(through.seq-1);
+        expect(diagnostics.at(-1)?.["sourceFailure"]).toEqual({candidate:through,source:sourceAt,classification:"birth-unavailable"});
+        const stoppedWrites=peer.minted.filter(value=>value.scope==="write").length,stoppedSends=peer.sends.length;
+        // No write credential or push belongs to the refused candidate.
+        expect(stoppedWrites-writes).toBe(first.state==="confirmed"?1:0);expect(stoppedSends-sends).toBe(first.state==="confirmed"?1:0);
+        expect(await run()).toMatchObject({state:"stopped",reason:"foreign-source-unavailable"});
+        expect(peer.minted.filter(value=>value.scope==="write")).toHaveLength(stoppedWrites);expect(peer.sends).toHaveLength(stoppedSends);
+        unavailable=false;
+        await life.wait(()=>runInDurableObject(rootScope.object,(_instance,state)=>{
+          const sql=archiveSql(state),rows=new ArchiveRows(sql,at),row=rows.load()!;
+          const payload={v:1,at,repository:row.repository,format:row.format,confirmed:row.confirmed,rowDigest:digestBytes(utf8(canonicalize(row))),generation:stopped.generation,expires:timeOf(life.now()+60000)};
+          const command=readArchiveRestart(canonicalize({...payload,command:digestBytes(utf8(canonicalize(payload)))}),timeOf(life.now()));
+          if(!command)throw Error("the exact operator directive must parse");
+          expect(rows.restart(command,timeOf(life.now()+1000),timeOf(life.now()))).toBe("applied");
+        }));
+        const restarted=await inspect();
+        expect(restarted.row).toEqual({...stopped.row,stopped:null});expect(restarted.frontier).toEqual(stopped.frontier);
+        expect(restarted.generation).toBe(stopped.generation+1);
+        expect(peer.minted.filter(value=>value.scope==="write")).toHaveLength(stoppedWrites);expect(peer.sends).toHaveLength(stoppedSends);
+        net.clock.now=timeOf(life.now()+1000);
+        const recovery=await run();
+        let recoveryFailure:string|undefined;
+        if(recovery.state!=="confirmed") {
+          recoveryFailure="Site recovery diagnostic unavailable";
+          try {
+            const lastPassDiagnostic=diagnostics.at(-1)??null;
+            // AFTER the failed result: a separate TEST read, not an atomic
+            // same-cut observation and not another archive/recovery attempt.
+            const after=await life.wait(()=>runInDurableObject(rootScope.object,(_instance,state)=>{
+              const rows=new ArchiveRows(archiveSql(state),at),row=rows.load(),wake=rows.storedWake();
+              return {rowState:row===null?"absent":"present",
+                confirmed:row?.confirmed?{commit:row.confirmed.commit,through:row.confirmed.through,layout:row.confirmed.layout??null,anchorsPublished:row.confirmed.anchorsPublished??null}:null,
+                pending:row?.pending?{commit:row.pending.commit,through:row.pending.through,parent:row.pending.parent,layout:row.pending.layout??null}:null,
+                attempts:row?.attempts??null,next:row?.next??null,
+                stopped:row?.stopped?(["limit","foreign-source-unavailable","conflict"].includes(row.stopped.reason)?row.stopped.reason:"other"):null,
+                wake:wake?{pending:wake.pending,stopped:wake.stopped,next:wake.next}:null,
+                generation:rows.restartReceipt().generation};
+            })).catch(()=>({snapshot:"unavailable"}));
+            const metadata=JSON.stringify({stage:"AFTER failed recovery result; separate read-only TEST snapshot",at,through,result:recovery,now:timeOf(life.now()),lastPassDiagnostic,after});
+            recoveryFailure=utf8(metadata).length<=16*1024?metadata:"Site recovery diagnostic exceeded its 16384-byte bound";
+          } catch { /* Observation must not replace the confirmation assertion. */ }
+        }
+        expect(recovery,recoveryFailure).toMatchObject({state:"confirmed"});
+        expect((await inspect()).row?.confirmed?.through).toEqual(through);
+        expect(diagnostics.at(-1)?.["sourceFailure"]).toBeNull();
+        // A valid birth with an unreviewed pin remains a hard stop. Operator
+        // retry eligibility never grants policy admission or a write token.
+        const writesAfterRecovery=peer.minted.filter(value=>value.scope==="write").length,sendsAfterRecovery=peer.sends.length;
+        await reportSite();
+        const unsupported=(await life.wait(()=>rootScope.sealed())).find(value=>value.entry.seq>through.seq&&value.entry.uses.some(use=>use.fact.at.scope===childScope.name));
+        if(!unsupported)expect.fail("a second genuine Room summary must name its source");
+        currentThrough={seq:unsupported.entry.seq,hash:unsupported.hash};sourcePolicies.delete(childId);
+        const unsupportedFirst=await run();
+        if(unsupportedFirst.state==="confirmed")expect(await run()).toMatchObject({state:"stopped",reason:"foreign-source-unavailable"});
+        else expect(unsupportedFirst).toMatchObject({state:"stopped",reason:"foreign-source-unavailable"});
+        expect(diagnostics.at(-1)?.["sourceFailure"]).toEqual({candidate:currentThrough,source:sourceAt,classification:"unsupported-policy",pin:childId});
+        const unsupportedStopped=await inspect();
+        expect(unsupportedStopped.row?.confirmed?.through.seq).toBe(currentThrough.seq-1);expect(unsupportedStopped.row?.pending).toBeNull();
+        const unsupportedWrites=writesAfterRecovery+(unsupportedFirst.state==="confirmed"?1:0),unsupportedSends=sendsAfterRecovery+(unsupportedFirst.state==="confirmed"?1:0);
+        expect(peer.minted.filter(value=>value.scope==="write")).toHaveLength(unsupportedWrites);expect(peer.sends).toHaveLength(unsupportedSends);
+        sourcePolicies.set(childId,policies.get(childId)!);
+        expect(await run()).toMatchObject({state:"stopped",reason:"foreign-source-unavailable"});
+        expect(peer.minted.filter(value=>value.scope==="write")).toHaveLength(unsupportedWrites);expect(peer.sends).toHaveLength(unsupportedSends);
+      } finally {log.mockRestore();}
+    }
     if (productionScenario) {
       expect(commandHandoff, "the successful native producer must retain its exact command session").toBeDefined();
       if (!commandHandoff) expect.fail("missing native command session");

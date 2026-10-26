@@ -9,7 +9,7 @@ import { archiveInput } from "./archive-input.ts";
 import { inventoryArchive, inventoryArchiveRoot, type ArchiveInventory, type ArchivePolicyRegistry } from "./archive-inventory.ts";
 import type { ArchiveMark, ArchiveRow } from "./archive-row.ts";
 import type { Sql } from "./sqlite.ts";
-import { ArchivePrefixStopped, type ArchivePrefixReason } from "./archive-prefix.ts";
+import { ArchivePrefixStopped, type ArchiveSourceFailure, type ArchivePrefixReason } from "./archive-prefix.ts";
 import type { FixtureArchiveSourcePins } from "./archive-source-pins.ts";
 import { ArchiveReplayAnchors } from "./archive-anchors.ts";
 import { readArchiveTextBytes } from "./archive-text.ts";
@@ -22,7 +22,7 @@ import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, readArchivePinAfterRec
 import { archivePinValidationWork } from "./archive-inventory-cost.ts";
 
 type LayoutFailure = Extract<JournalLayoutResult, { ok: false }>;
-export type ArchiveBuildFailure = LayoutFailure | { readonly ok: false; readonly reason: ArchivePrefixReason | "rebuild-mismatch" | "manifest" };
+export type ArchiveBuildFailure = (LayoutFailure | { readonly ok: false; readonly reason: ArchivePrefixReason | "rebuild-mismatch" | "manifest" }) & { readonly sourceFailure?: ArchiveSourceFailure };
 export type ArchiveBuildResult = { readonly ok: true; readonly archive: JournalArchive } | ArchiveBuildFailure;
 export type ArchivePassBuildResult = { readonly ok: true; readonly archive: JournalPassArchive } | ArchiveBuildFailure;
 type Parent = { readonly id: string; readonly source: JournalObjectSource } | null;
@@ -390,7 +390,7 @@ export async function rebuildArchivePass(sql: Sql, row: ArchiveRow, parent: Pare
   let input: ReturnType<typeof archiveInput>;
   try { input = archiveInput(sql, selection, budget, fixtureSources); }
   catch (error) {
-    if (error instanceof ArchivePrefixStopped) return { ok: false, reason: error.reason };
+    if (error instanceof ArchivePrefixStopped) return { ok: false, reason: error.reason, ...(error.sourceFailure ? { sourceFailure: error.sourceFailure } : {}) };
     throw error;
   }
   const publication = mark.anchorPublication === undefined ? undefined : readArchivePublication(mark.anchorPublication,
@@ -452,7 +452,7 @@ export async function rebuildArchive(sql: Sql, row: ArchiveRow, parent: Parent, 
   let input: ReturnType<typeof archiveInput>;
   try { input = archiveInput(sql, selection, budget, fixtureSources); }
   catch (error) {
-    if (error instanceof ArchivePrefixStopped) return { ok: false, reason: error.reason };
+    if (error instanceof ArchivePrefixStopped) return { ok: false, reason: error.reason, ...(error.sourceFailure ? { sourceFailure: error.sourceFailure } : {}) };
     throw error;
   }
   const built = await buildJournalArchive({ format, selection: mark.manifest, input, parent: base, budget });

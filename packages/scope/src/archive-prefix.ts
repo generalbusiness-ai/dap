@@ -20,7 +20,16 @@ import { ARCHIVE_PRIVACY_JSON_PASSES, ARCHIVE_POSITION_METADATA_BYTES, ARCHIVE_F
 export { ARCHIVE_PRIVACY_JSON_PASSES, ARCHIVE_POSITION_METADATA_BYTES } from "./archive-inventory-cost.ts";
 
 export type ArchivePrefixReason = ArchiveExportRefusal | "unavailable" | "incomplete" | "mismatch" | "limit" | "foreign-source-unavailable" | "foreign-source-mismatch";
-export class ArchivePrefixStopped extends Error { constructor(readonly reason: ArchivePrefixReason) { super(`archive-${reason}`); } }
+export interface ArchiveSourceFailure {
+  readonly candidate: Head;
+  readonly source: ScopeRef;
+  readonly classification: "birth-unavailable" | "unsupported-policy";
+  readonly pin?: Digest | PlatformDefinition;
+  readonly pinOmitted?: true;
+}
+export class ArchivePrefixStopped extends Error {
+  constructor(readonly reason: ArchivePrefixReason, readonly sourceFailure?: ArchiveSourceFailure) { super(`archive-${reason}`); }
+}
 export const stopArchivePrefix = (reason: ArchivePrefixReason): never => { throw new ArchivePrefixStopped(reason); };
 export interface ArchivePosition { readonly seq: number; readonly hash: Digest; readonly bytes: number }
 export interface ArchivePrefix {
