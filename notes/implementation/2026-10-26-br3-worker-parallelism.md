@@ -13,8 +13,15 @@ assertions, deadlines and production source are unchanged.
 The initial source preparation used Main `9daa037e`. R7 has since landed
 on Main `6852f78d`; BR-3's three preparation commits were rebased onto that
 head without conflicts. The two-worker change remains source preparation.
-The owner still holds its runtime measurement and ordinary gate until the
-current BR-9 gate finishes. No speedup or passing runtime result is claimed.
+The owner still holds its runtime measurement and ordinary gate pending
+the serialized validation plan. No speedup or passing runtime result is claimed.
+
+The latest recut includes the R7 documentation follow-up on Main
+`d36773b337299d8ed6fac103dff6b94954e0321a`. That upstream delta changes
+only R7's note and a manifest. Source, tests and lock are unchanged from
+`6852f78d`; the existing dependency view and `645224…` stamp remain in place.
+No compiler or check was repeated. All evidence checkpoints below retain
+their original identities.
 
 ## Decisions and why
 
