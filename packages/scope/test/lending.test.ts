@@ -207,8 +207,6 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
     // Anyone may return a lent thing: the passer-by brings back what Nasruddin borrowed.
     await refused(async () => L.act(passerby, "return", await on(small)), "guard-failed");
     await L.did(nasruddin, "borrow", await on(small));
-    await L.did(passerby, "return", await on(small));
-    expect(await L.item(small)).toMatchObject({ state: "available", parties: { borrower: null } });
 
     // The member interface's gateway, on the same real scopes. The private store and the
     // lock are in-memory STAND-INS for the browser's; the lost reply is made by the test.
@@ -246,11 +244,22 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
     const scopeOfLending = await L.at(), skew = { ms: 0 };
     const application = { scope: scopeOfLending, directory: await D.at(), item: 0, definition: LENDING_DEFINITION };
     const countThings = async () => (await things()).length;
-    // Finish earlier publication replies before this fixture's multi-read projection.
-    await settle(L, G);
-    const his = browser(nasruddin, "@nasruddin"), g = his.open();
-    { const seen = await g.look(); if (seen.status !== "current") throw new Error(`look: ${JSON.stringify(seen).slice(0, 300)}`);
+    // Materialize one old item reply, then perform the story's original return
+    // and drain before history is read. The stand-in must collect one head.
+    let returned = false;
+    const returnDuringRead: Fetch = async (url, init) => {
+      const response = await fetch(url, init);
+      if (!returned && new URL(url).pathname === `/v1/scopes/${encodeURIComponent(L.name)}/query-items`) {
+        returned = true;
+        await L.did(passerby, "return", await on(small));
+        await settle(L, G);
+      }
+      return response;
+    };
+    const his = browser(nasruddin, "@nasruddin", { reply: false }, returnDuringRead), g = his.open();
+    { const seen = await g.look(); if (seen.status !== "current") expect.fail(`look: ${JSON.stringify(seen).slice(0, 300)}`);
       expect(seen.actions).toContain("lending.member"); expect(seen.actions).not.toContain("lending.staff"); }
+    expect(await L.item(small)).toMatchObject({ state: "available", parties: { borrower: null } });
     const seenAgain = await g.look();
     expect(seenAgain, JSON.stringify({ projectionErrors: his.projectionErrors(), read: seenAgain }).slice(0, 1000)).toMatchObject({ status: "current", view: { things: [{ id: big, state: "gone", reason: "Nasruddin says the pot died", revision: lent + 1 }, { id: small, state: "available" }, { id: fresh, state: "available" }] } });
     // A proposal the view rules out signs and sends nothing.
