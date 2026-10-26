@@ -176,6 +176,8 @@ earlier runs.
 | Previously unreached native stage | `node node_modules/vitest/vitest.mjs run --config vitest.native.config.ts` | 1; 778 passed, 2 failed, 2 skipped in final records; zero reported unhandled errors | `e22e1589b62197f6209671def03d7d0411b3f6a8520dd444ec1a6fe9fd38d902` (`2026-10-26-certified-rules-followup-v2/native.log`) | `ae49c5a6`, tree `96975fe5` |
 | Scope test compiler | `node node_modules/typescript/bin/tsc -p packages/scope/tsconfig.test.json` | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` (`2026-10-26-certified-rules-archive-target-followup/compiler.log`) | `5a816922`, tree `4824d97f` |
 | Repaired whole archive-target file | `node node_modules/vitest/vitest.mjs run --config vitest.native.config.ts --project scope packages/scope/test/archive-target.test.ts` | 0; all 7 cases passed | `9565784fd0176a85dae5c467e6502e06eb0e73aa57b2cc13c7ded115365aadfa` (`2026-10-26-certified-rules-archive-target-followup/archive-target.log`) | `5a816922`, tree `4824d97f` |
+| R7 note clarification links | `node scripts/check-doc-links.mjs` | 0; 705 relative links, 0 broken | `e198314d887740ef75cca348b8928e3400173f99638c20791df13e2f804a461c` (`doc-links.stdout`, clarification manifest) | `ca6b2b2a`, tree `02501bfd` |
+| R7 note clarification section citations | `node scripts/check-section-citations.mjs` | 0; 1809 resolved, 12809 unresolved, 0 broken, 3 known unresolved, 0 listing errors | `44dcc5d03529e09f48ccb955750fed904f81a0b7eeb2b519aa6ac0e98f28af5e` (`section-citations.stdout`, clarification manifest) | `ca6b2b2a`, tree `02501bfd` |
 
 The first ordinary gate stopped at whitespace: one extra blank line at
 EOF in each of `packages/git/src/pure-names.ts` and
@@ -368,9 +370,29 @@ scheduled after BR-3 and BR-9 and before the certified cohort is enabled.
 
 This documentation-only clarification starts from landed Main
 `6852f78d3279ef13a33b7b9d0b283e9ba96f079f`, tree
-`b4dbac71198f26f84513966c58d9cef7f248a0b2`. Only this note changes.
-Production source, tests and the historical gate and evidence records remain
-unchanged. The documents-only rule in `docs/testing.md` requires no gate rerun.
+`b4dbac71198f26f84513966c58d9cef7f248a0b2`. All prose changes remain in
+this note. The required documentation checks ran at clean checkpoint
+`ca6b2b2a988e087a30cebb759d4099ad06d5b285`, tree
+`02501bfd7bb1874b473bd279b90115332e1dfe4f`; only this note differs from the
+base at that checkpoint. Production source, tests and historical gate and
+evidence records remain unchanged. The documents-only rule in
+`docs/testing.md` requires no gate rerun.
+
+The [clarification manifest](evidence/2026-10-26-r7-note-clarifications.manifest.json)
+is the only additional path. It mechanically records the two required check
+outputs under the implementation-evidence rule in `docs/testing.md`.
+No earlier manifest or retained output changes. Its six files, including
+`SHA256SUMS`, are read-only. The table records both checks at their actual
+checkpoint, before this output index was added. The unresolved section
+citations are advisories; the checker reports no broken citation or listing error.
+
+The capture owner measured each command with a monotonic clock and
+`RUSAGE_CHILDREN`. Link check: 0.10 seconds elapsed and 0.11 child CPU
+seconds. Citation check: 6.19 seconds elapsed and 6.49 child CPU seconds.
+These are separate command intervals. The machine was
+`macOS-27.0.1-arm64-arm-64bit`, Node `v26.12.1`; initial load averages were
+`[1.91357421875, 2.431640625, 2.52783203125]`. Existing shared dependencies
+were reused without package installation or cache reset.
 
 Request `0716e75a` owns exact-head review and any repair it identifies.
 The index records the failed V3 gate, the passing whole Rules file and the
