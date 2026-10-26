@@ -24,7 +24,8 @@ test("Q12 consumes a certificate once at a fresh revision and keeps the full Des
   try {
     const p = policy(), destination = await room.G.at(), first = await hardeningCertificate(room, p);
     const publish = (certificate: typeof first) => publishHardeningCertificate(room, p, certificate.request, certificate.certificate, certificate.proof, certificate.proofBytes);
-    expect(await publish(first)).toMatchObject({ answer: "accepted" });
+    const firstPublished = await publish(first);
+    expect(firstPublished, canonicalize(firstPublished)).toMatchObject({ answer: "accepted" });
     const configured = structuredClone(await room.Q.item(0));
     expect(await publish(first)).toMatchObject({ answer: "refused", reason: "guard-failed", name: "rules-certificate-used" });
     expect(await room.Q.item(0)).toEqual(configured);
@@ -66,7 +67,7 @@ for (const boundary of ["heldBeforeSend", "heldRead", "heldAnswer"] as const) {
       const outcome = entries.find(entry => entry.input.type === "outcome" && entry.input.operation === `${request.seq}:0`);
       if (!outcome || outcome.input.type !== "outcome") return expect.fail("The actual interrupted native outcome is required");
       expect(outcome.input.kind).toBe(RULES_CERTIFICATE_KIND);
-      expect(outcome.effects).toEqual(expect.arrayContaining([expect.objectContaining({ effect: "attempt", operation: `${request.seq}:0`, selected: false })]));
+      expect(outcome.effects).toEqual(expect.arrayContaining([expect.objectContaining({ effect: "attempt", operation: `${request.seq}:0`, selected: boundary === "heldAnswer" ? false : null })]));
       const declined = outcome.effects.filter(effect => effect.effect === "value" && effect.slot === "rulesCertificateDeclined");
       expect(declined).toHaveLength(1);
       const value = declined[0];

@@ -140,7 +140,8 @@ export async function configureHardeningRules(room: HardeningRoom, policy: Rules
   const kept = await room.G.stub.retained(reader, "value", body["proof"], RULES_TREE_PROOF.domain);
   if (!kept.ok) throw Error("Actual retained proof required");
   const certificate = factRefOf(outcome);
-  expect(await publishHardeningCertificate(room, policy, request, certificate, body["proof"], kept.value.bytes)).toMatchObject({ answer: "accepted" });
+  const published = await publishHardeningCertificate(room, policy, request, certificate, body["proof"], kept.value.bytes);
+  expect(published, canonicalize(published)).toMatchObject({ answer: "accepted" });
   return { request, certificate, proof: body["proof"], proofBytes: kept.value.bytes };
 }
 
