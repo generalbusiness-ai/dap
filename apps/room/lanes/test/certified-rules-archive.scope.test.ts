@@ -13,7 +13,7 @@ import { archiveSource, verifyArchive } from "@generalbusiness/dap-replay";
 import { journalRef, type JournalObject } from "@generalbusiness/dap-git/journal";
 import { readJournalRepositoryArchive } from "@generalbusiness/dap-git/journal-reader";
 import { certifiedNativeRoom, configureRules } from "../../../../packages/scope/test/certified-rules-fixture.ts";
-import { rita, sam } from "../../../../packages/scope/test/repository.ts";
+import { rita, una } from "../../../../packages/scope/test/repository.ts";
 import { reader } from "../../../../packages/scope/test/fixtures-native.ts";
 import { soon } from "../../../../packages/scope/test/net.ts";
 import { archiveSql } from "../../../../packages/scope/test/support/archive.ts";
@@ -81,11 +81,11 @@ test("certified native policy and proof plus its consumed single policy envelope
     const opened = opening.receipt.fact.seq;
     const L = life.platform((await D.created(opened)).name); nodes.push(L); await pause(nodes);
     const secret = b64url(new Uint8Array(32).fill(94)); // Public TEST invitation only.
-    const invitation = await M.did(rita, "invite-member", { fields: { handle: "@sam", role: "member", inviteEnds: soon(3600), ...invitationIssueFields(C.membership, secret) } });
-    await M.did(sam, "join", { fields: invitationRedemptionFields(C.membership, await M.at(), invitation, sam.key, secret) });
+    const invitation = await M.did(rita, "invite-member", { fields: { handle: "@una", role: "member", inviteEnds: soon(3600), ...invitationIssueFields(C.membership, secret) } });
+    await M.did(una, "join", { fields: invitationRedemptionFields(C.membership, await M.at(), invitation, una.key, secret) });
     const content = "# Native certified archive consumer\n";
     const manifest = await L.did(rita, "propose-file", { fields: { base: firstHead!, path: "archive-native.md", digest: digestBytes(utf8(content)), size: utf8(content).length, content }, expected: await L.expected({ proposal: 0 }) });
-    await L.did(sam, "review-verdict", { fields: { manifest, verdict: "approve" } });
+    await L.did(una, "review-verdict", { fields: { manifest, verdict: "approve" } });
     await L.did(rita, "merge", { fields: { manifest, reports: [] } }); await pause(nodes);
     const gHistory = await G.sealed();
     const observed = gHistory.flatMap(sealed => "observed" in sealed.entry.input ? (sealed.entry.input.observed ?? []).flatMap(use => {

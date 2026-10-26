@@ -9,7 +9,7 @@ import { DEVICE_COMMAND } from "@generalbusiness/dap-contract";
 import { invitationIssueFields, invitationRedemptionFields, secretSigner, signedDeviceApplicationInstall } from "@generalbusiness/dap-client";
 import { outsideOf as hostOutside } from "../../../../packages/scope/src/worker.ts";
 import { soon } from "../../../../packages/scope/test/net.ts";
-import { rita, sam } from "../../../../packages/scope/test/repository.ts";
+import { rita, una } from "../../../../packages/scope/test/repository.ts";
 import { reader, dispatchFixture, effectFixture, applicationResolverFixture, applicationHttpPeer, applicationWorkerBindings } from "../../../../packages/scope/test/fixtures-native.ts";
 import { fixedSigner } from "../../../../packages/scope/test/fixtures-core.ts";
 import { devicePackageFixture } from "../../../../packages/derive/test/fixtures-device-command.ts";
@@ -87,11 +87,11 @@ test("certified-rules native birth and device install bootstrap a real tree cert
     const opened = opening.receipt.fact.seq;
     const L = life.platform((await D.created(opened)).name); nodes.push(L); await pause(nodes);
     const secret = b64url(new Uint8Array(32).fill(91)); // Public TEST seed, never operator custody.
-    const invitation = await M.did(rita, "invite-member", { fields: { handle: "@sam", role: "member", ...invitationIssueFields(cohort.membership, secret), inviteEnds: soon(3600) } });
-    await M.did(sam, "join", { fields: invitationRedemptionFields(cohort.membership, await M.at(), invitation, sam.key, secret) });
+    const invitation = await M.did(rita, "invite-member", { fields: { handle: "@una", role: "member", ...invitationIssueFields(cohort.membership, secret), inviteEnds: soon(3600) } });
+    await M.did(una, "join", { fields: invitationRedemptionFields(cohort.membership, await M.at(), invitation, una.key, secret) });
     const content = "# Certified room proposal\n";
     const manifest = await L.did(rita, "propose-file", { fields: { base: firstHead!, path: "native.md", digest: digestBytes(utf8(content)), size: utf8(content).length, content }, expected: await L.expected({ proposal: 0 }) });
-    await L.did(sam, "review-verdict", { fields: { manifest, verdict: "approve" } });
+    await L.did(una, "review-verdict", { fields: { manifest, verdict: "approve" } });
     const pushes = host.stand.pushes.length;
     await L.did(rita, "merge", { fields: { manifest, reports: [] } }); await pause(nodes);
     expect((await G.summary()).value.items.filter(item => item.type === "publication"))
@@ -156,9 +156,9 @@ test("fresh certified global checks override a stale native lane and staged publ
     expect((await G.item(0)).state).toBe("ready");
     const initialHead = host.stand.refs.get("refs/heads/main"); expect(initialHead).toMatch(/^[0-9a-f]{40}$/);
     const invitationSecret = b64url(new Uint8Array(32).fill(92)); // Public TEST seed, never operator custody.
-    const invitation = await M.did(rita, "invite-member", { fields: { handle: "@sam", role: "checker", ...invitationIssueFields(ARCHIVE_CERTIFIED_RULES_COHORT.membership, invitationSecret), inviteEnds: soon(3600) } });
-    await M.did(sam, "join", { fields: invitationRedemptionFields(ARCHIVE_CERTIFIED_RULES_COHORT.membership, await M.at(), invitation, sam.key, invitationSecret) });
-    const checker = { membership: await M.at(), member: "@sam" };
+    const invitation = await M.did(rita, "invite-member", { fields: { handle: "@una", role: "checker", ...invitationIssueFields(ARCHIVE_CERTIFIED_RULES_COHORT.membership, invitationSecret), inviteEnds: soon(3600) } });
+    await M.did(una, "join", { fields: invitationRedemptionFields(ARCHIVE_CERTIFIED_RULES_COHORT.membership, await M.at(), invitation, una.key, invitationSecret) });
+    const checker = { membership: await M.at(), member: "@una" };
     const configurations: Digest[] = [];
     for (const image of ["7", "8"]) {
       const value = { name: "verify", image: `sha256:${image.repeat(64)}`, environment: [], steps: [["check", "verify"]],
@@ -231,7 +231,7 @@ test("fresh certified global checks override a stale native lane and staged publ
     expect(missing).toMatchObject({ state: "not-reserved", values: { reason: "rules-not-met" } });
     expect(host.stand.refs.get("refs/heads/main")).toBe(initialHead); expect(host.stand.pushes).toHaveLength(pushesBefore);
     const oldJob = await L.did(rita, "request-check", { fields: { manifest, name: "verify", configuration: C0 } });
-    await L.did(sam, "check", { fields: { job: oldJob, tree: built.tree, configuration: C0, outcome: "passed" } });
+    await L.did(una, "check", { fields: { job: oldJob, tree: built.tree, configuration: C0, outcome: "passed" } });
     expect(await L.item(oldJob)).toMatchObject({ state: "passed", values: { configuration: C0, tree: built.tree } });
     await directMerge();
     expect((await G.summary()).value.items.filter(item => item.type === "publication").at(-1))
@@ -240,7 +240,7 @@ test("fresh certified global checks override a stale native lane and staged publ
     // Refresh only after both stale-policy refusals have been witnessed.
     await L.did(rita, "ask-rules", { on: 0, expected: await L.expected({ on: 0 }) }); await pause(nodes);
     const currentJob = await L.did(rita, "request-check", { fields: { manifest, earlier: oldJob, name: "verify", configuration: C1 } });
-    await L.did(sam, "check", { fields: { job: currentJob, tree: built.tree, configuration: C1, outcome: "passed" } });
+    await L.did(una, "check", { fields: { job: currentJob, tree: built.tree, configuration: C1, outcome: "passed" } });
     await directMerge();
     expect(host.stand.refs.get("refs/heads/main")).toBe(built.commit);
     expect((await G.summary()).value.items.filter(item => item.type === "publication").at(-1)).toMatchObject({ state: "published" });
@@ -267,14 +267,14 @@ test("fresh certified global checks override a stale native lane and staged publ
     life.setHold(envelope => envelope.from.at.scope === list.name && envelope.message.class === "request" && envelope.message.type === "tell"
       && isRecord(envelope.message.body) && envelope.message.body["message"] === "checked");
     try {
-      await list.did(sam, "check", { fields: { job: g1, tree: staged.values["tree"]!, configuration: C1, outcome: "passed" } });
+      await list.did(una, "check", { fields: { job: g1, tree: staged.values["tree"]!, configuration: C1, outcome: "passed" } });
       await pause(nodes);
       const g2 = await list.did(rita, "request-check", { fields: { manifest: listManifest, earlier: g1, name: "verify", configuration: C1 } });
       await pause(nodes); expect((await list.item(g1)).state).toBe("superseded");
       life.setHold(() => false); await pause(nodes);
       expect(host.stand.refs.get("refs/heads/main")).toBe(built.commit);
       expect((await G.entries()).flatMap(entry => entry.effects).filter(effect => effect.effect === "operation" && effect.for === publication.id && effect.kind === "push")).toEqual([]);
-      await list.did(sam, "check", { fields: { job: g2, tree: staged.values["tree"]!, configuration: C1, outcome: "passed" } }); await pause(nodes);
+      await list.did(una, "check", { fields: { job: g2, tree: staged.values["tree"]!, configuration: C1, outcome: "passed" } }); await pause(nodes);
       expect((await G.item(publication.id)).state).toBe("published");
       expect(host.stand.refs.get("refs/heads/main")).toBe(staged.values["integration"]);
       expect(host.stand.refs.has(String(stageRef))).toBe(false);
