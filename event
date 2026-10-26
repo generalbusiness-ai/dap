@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:287c69bd896d696d4a4265e878f81f506f7b5df9","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-25-site-foreign-source-recovery.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:31e1fd0baae1507bd1965402f5c48eb09840bc15","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-operator.ts."}
