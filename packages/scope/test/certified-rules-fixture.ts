@@ -107,7 +107,8 @@ export async function publishRulesCertificate(room: CertifiedRoom, policy: Rules
   if (answer.answer === "refused" && answer.reason === "bad-field") {
     // Snapshot only after the actual refused submit. Do not print fields or values.
     const publish = platform(ARCHIVE_CERTIFIED_RULES_COHORT.rules)?.data.acts["publish"];
-    const fields = publish ? readFields(publish.fields, signed.intent.fields, PROPOSED_BOUNDS) : null;
+    // readFields defers native code marks to the subsequent rule check.
+    const fields = publish ? readFields(publish.fields as Parameters<typeof readFields>[0], signed.intent.fields, PROPOSED_BOUNDS) : null;
     const places = publish ? placesOf(publish.fields, signed.intent.fields) : [];
     const namedValues = (["proposal", "proof"] as const).map(field => {
       const declared = field === "proposal" ? RULES_POLICY_VALUE_V11 : RULES_TREE_PROOF;
