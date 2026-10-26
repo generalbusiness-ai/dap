@@ -116,4 +116,3 @@ export async function configureRules(room: CertifiedRoom, policy: RulesPolicyV11
   expect(await publishRulesCertificate(room, policy, request, certificate, body["proof"], kept.value.bytes)).toMatchObject({ answer: "accepted" });
   return { request, certificate, proof: body["proof"] };
 }
-

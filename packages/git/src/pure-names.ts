@@ -96,4 +96,3 @@ export function branchRef(value: unknown, what: string): string {
   if (!ref.startsWith("refs/heads/")) throw new GitRefusal("not-a-branch", what);
   return ref;
 }
-

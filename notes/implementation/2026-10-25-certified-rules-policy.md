@@ -110,8 +110,10 @@ existing identities.
 
 The [evidence manifest](evidence/2026-10-25-certified-rules-policy.manifest.json) indexes the retained files and execution checkpoints.
 
-This draft describes Source at `1f8ed9ef`, tree `a5ecf677`, after the
-assets-only adoption. Each output
+The first ordinary gate ran at `d0453d10`, tree `0c1305bf`. This candidate
+retains that Source with two single-byte EOF removals and the updated
+note and evidence index. The table keeps each execution checkpoint distinct.
+The completed Page owning checkpoint remains `1f8ed9ef`. Each output
 bundle index below names preserved logs, command arguments, outcomes and
 case identities. Commands with a bound plan use the exact arguments in
 that bundle's command ledger. The command descriptions are not replacement
@@ -130,7 +132,21 @@ values or a synthesized total of earlier runs.
 | Kernel native-type control | Package-local Vitest whole `test/forms-marks.test.ts`, `--config vitest.config.ts`, threads and default bail 0; baseline then one guarded fault | Baseline 0, 46 passed. Fault and owner 1 retained, 45 passed and one intended AssertionError at 388:8. Distinctness established | `372d2e516a9399c345d0bce2d95997b3e9b95f3a850ca82f4b2f6cac6433b809` (`kernel-control-v1/manifest.json`) | Positive `c64dc766`; exact Source and modes restored |
 | Page build after the kernel repair | `npm run build --workspace @generalbusiness/dap-page` (maintained `node scripts/assets.mjs`), then the bound output comparison | 0; build, owner and capsule passed, outputs matched retained copies | `091d0e7a7bbb6b807991f1f4d691c3c9a6174ce04282a14c58cb7ea9b37f89d0` (`page-build-v5/manifest.json`) | Built `c64dc766`, tree `f9b6bf03`; assets adopted at `1f8ed9ef` |
 | Page owning checks | `tsc -p apps/room/page/tsconfig.json`, then `tsconfig.test.json`; root Vitest whole `apps/room/page/test/assets.test.ts` with the recorded config and reporters | 0; both compilers and the one existing case passed | `f3f0d1967b1aad5873691ba18f90331280046d850b21c03a5160905938037ae4` (`page-owning-v1/manifest.json`) | `1f8ed9ef`, tree `a5ecf677` |
-| Ordinary gate | `npm run gate` | HELD: no result in this draft | HELD | HELD |
+| Ordinary gate V1 | `npm run gate` | npm child 2, owner 1; whitespace failed. Compatibility, compilers and tests were unreached, with zero observed cases. Install skipped | `865b67da905aa86d34e4af136cdf047efeeabbc3b18b8e0b0f7d7dc41cd63cd0` (`gate-v1/manifest.json`) | `d0453d10`, tree `0c1305bf` |
+| Ordinary gate V2 | `npm run gate` | HELD: corrected checkpoint not yet run | HELD | HELD |
+
+The first ordinary gate stopped at whitespace: one extra blank line at
+EOF in each of `packages/git/src/pure-names.ts` and
+`packages/scope/test/certified-rules-fixture.ts`. Its outer span was
+1.48 seconds elapsed and 1.45 CPU seconds. It reached no compatibility,
+compiler or test body, so it establishes no new test result.
+
+Root removed exactly one terminal newline byte from each file. Every
+other byte remains unchanged. The subsequent `git diff --check` passed.
+The repair changes no policy, assertion, deadline or fixture behavior.
+The original gate stays failed, and the corrected ordinary gate remains
+pending. The repair receipt records byte correspondence, not a passing
+rerun.
 
 V17 has 69 actual ready, result and final identities, no pending cases and
 zero reported unhandled errors. Ten finite clean cuts passed. Its outer
@@ -195,8 +211,8 @@ vectors are withheld from the portable bundles.
 
 Request `0716e75a` still owns the ordinary gate, final evidence index and
 exact-head review. The kernel control, Page build and Page owning outcomes
-are closed. The gate row remains held until its actual closed outcome is
-authenticated. No final review head, approval, landing or deployment is
+are closed. Gate V1 remains failed. Gate V2 remains held until its actual closed
+outcome is authenticated. No final review head, approval, landing or deployment is
 implied.
 
 This family addresses findings 3.2, 3.3 and 3.4. Their closure remains

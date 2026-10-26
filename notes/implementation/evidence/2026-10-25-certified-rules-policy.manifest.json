@@ -1,5 +1,5 @@
 {
-  "qualification": "Pre-gate finite note-cited output manifest. Multiple actual execution checkpoints are grouped below; the current owning checkpoint does not replace historical execution heads or later-adoption distinctions. Bundle-index hashes identify retained output bundles, not a synthetic combined passing run. Original failures remain failed. Nested SHA256SUMS cover uncited portable payloads; this file directly indexes all111 selected note-cited indexes/checksums and individual file outputs. Raw environment/bindings/physical vectors stay private. Ordinary gate/review and final aggregate Home index/parent sealing remain pending; no nonexistent future file is listed.",
+  "qualification": "Pre-gate finite note-cited output manifest. Multiple actual execution checkpoints are grouped below; the current owning checkpoint does not replace historical execution heads or later-adoption distinctions. Bundle-index hashes identify retained output bundles, not a synthetic combined passing run. Original failures remain failed. Nested SHA256SUMS cover uncited portable payloads; this file directly indexes all114 selected note-cited indexes/checksums and individual file outputs. Raw environment/bindings/physical vectors stay private. First ordinary gate27835 failed at whitespace (npm child2/owner1); all later shell/compiler/test stages were unreached. Future GateV2/review and final aggregate Home index/parent sealing remain pending; no nonexistent future file is listed.",
   "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-25-certified-rules-policy",
   "checkpoint": {
     "commit": "1f8ed9effd8966c02aa4e2df6daf9470676b493a",
@@ -231,6 +231,13 @@
       ]
     },
     {
+      "commit": "d0453d107aead7b224cf82feef181d3771c281da",
+      "tree": "0c1305bf5981cdfc0e33ac3b4319024b856b65b2",
+      "phases": [
+        "gate-v1"
+      ]
+    },
+    {
       "commit": "d2e88beadc5a02c35400c7220865e571424ec72e",
       "tree": "3914d26ba1b8d371ed805d7e54898b41f13eabe6",
       "phases": [
@@ -334,7 +341,7 @@
       }
     ]
   },
-  "fileCount": 111,
+  "fileCount": 114,
   "files": [
     {
       "path": "combined-owning-v1/SHA256SUMS",
@@ -365,6 +372,21 @@
       "path": "early-pure-v1/manifest.json",
       "bytes": 7710,
       "sha256": "f4c271e9be190649b4684f373d6714a168c0135cd0edc49fb095378c158133ea"
+    },
+    {
+      "path": "gate-v1/SHA256SUMS",
+      "bytes": 930,
+      "sha256": "fc3e36926403592d07683e54f29e7a0b4c9065bf315bad476151f88860d64106"
+    },
+    {
+      "path": "gate-v1/manifest.json",
+      "bytes": 2287,
+      "sha256": "865b67da905aa86d34e4af136cdf047efeeabbc3b18b8e0b0f7d7dc41cd63cd0"
+    },
+    {
+      "path": "gate-v1/whitespace-repair-receipt.json",
+      "bytes": 862,
+      "sha256": "d8d00829305b7205e3cc0a9ebce1bfcfd14b42751d1374453ed5be8039519fe8"
     },
     {
       "path": "generation-v1-exterior.SHA256SUMS",
@@ -891,5 +913,28 @@
       "bytes": 2000,
       "sha256": "83b8db1519e311fd643f56d8a79d50518899a4636a57ea94bbb57bd7ddf90da8"
     }
-  ]
+  ],
+  "failedOrdinaryGate": {
+    "checkpoint": {
+      "commit": "d0453d107aead7b224cf82feef181d3771c281da",
+      "tree": "0c1305bf5981cdfc0e33ac3b4319024b856b65b2"
+    },
+    "originalSession": 27835,
+    "npmChildExit": 2,
+    "ownerExit": 1,
+    "reached": "whitespace exit2; extra EOF blank lines in two files",
+    "allLaterShellCompilerTestStages": "UNREACHED",
+    "observedCases": 0,
+    "unhandledErrors": null,
+    "qualification": "Original failure retained. The post-run repair receipt describes one terminal newline removed per file; Root reported git diff --check0, but no new ordinary gate pass is implied. No current dirty/future commit or self-referential final head is invented."
+  },
+  "postRunWhitespaceRepair": {
+    "kind": "Source-repair-receipt",
+    "file": {
+      "path": "gate-v1/whitespace-repair-receipt.json",
+      "bytes": 862,
+      "sha256": "d8d00829305b7205e3cc0a9ebce1bfcfd14b42751d1374453ed5be8039519fe8"
+    },
+    "qualification": "Exact Root receipt only; Source afterimages not independently executed by manifest preparation. This is not a gate rerun or pass."
+  }
 }
