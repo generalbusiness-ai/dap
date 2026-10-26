@@ -16,10 +16,14 @@ export const platformFloorReferences: NonNullable<PlatformRules["floorReferences
     return;
   }
   if (definition.declared.name !== "platform:destination") return;
-  // Only G15 declares this opaque code slot. Both local facts are actual
-  // future readers' roots, rather than arbitrary numbers in the value.
-  const declined = definition.declared.items["branch"]?.values["rulesCertificateDeclined"]?.of;
-  if (declined?.type === "code" && declined.code === "rules-certificate-declined-v15") {
+  // Native code types are recorded in validated marks, rather than the
+  // resolved declared FieldType. Only the exact G15 genesis selects this
+  // reader. Old definitions have no such mark and retain their old roots.
+  const declined = definition.marks.some(mark => mark.kind === "type"
+    && mark.path === "items.branch.values.rulesCertificateDeclined.of"
+    && mark.code === "rules-certificate-declined-v15");
+  const genesis = declined ? _history(0)?.entry.input : null;
+  if (genesis?.type === "genesis" && genesis.seed.definition === "platform:destination@15") {
     for (const item of snapshot.items) if (item.type === "branch") {
       const record = readRulesCertificateDeclinedV15(item.values["rulesCertificateDeclined"]);
       if (record && same(record.request.at, snapshot.scope?.at) && same(record.interveningFact.at, snapshot.scope?.at)) {
