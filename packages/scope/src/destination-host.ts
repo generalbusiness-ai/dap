@@ -10,7 +10,7 @@
 import type { ReservationSnapshot, SignedIntent, Entry, FactRef, FieldValue, KeyId, OperationId, RetainedInput, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalize, b64url, entryHash, isOperationId, isFactRef, verifySignedIntent, parseStrict, timeMs, utf8 } from "@generalbusiness/dap-bytes";
 import { isEntryOf, valueDigest, type Item, type Operation } from "@generalbusiness/dap-derive";
-import { isStandingDestination, publicationStandingRecord, certifiedPublicationState, usesFilePublicationProtocol, usesStagedPublicationProtocol } from "@generalbusiness/dap-platform";
+import { isStandingDestination, publicationStandingRecord, certifiedPublicationState, certifiedPublicationStateV15, usesFilePublicationProtocol, usesStagedPublicationProtocol } from "@generalbusiness/dap-platform";
 import { DESTINATION_KINDS, READ_TOKEN_HOURS, destinationBranch, destinationMint, destinationRead, destinationReceipt, destinationRevokedMint, destinationSends, destinationStatement, destinationTarget, destinationWrite, editObjects, editTree, manifestCommit, editPath, fileOf, sourcesOf, manifestFiles, fileSound, firstHeadCommit, initialCommitOf, isOf, isRecordedJudgeEvidence, revokedToken, filePublicationCause, filePublicationCurrent, filePublicationCommit, type DestinationObject, type EditFile, type ObjectFormat, type RecordedJudgeEvidence } from "@generalbusiness/dap-platform";
 import { GitRefusal, READ_BOUNDS, Reader, type GitSource } from "@generalbusiness/dap-git";
 import { RULES_CERTIFICATE_KIND, RULES_POLICY_VALUE_V11, rulesCertificateOpening, rulesCertificateBranchMatches, rulesPolicyProposalV11, rulesPolicyPatternsV11, RULES_TREE_PROOF, RULES_TREE_BOUNDS, verifyRulesTree, type RulesTreeBinding } from "@generalbusiness/dap-platform";
@@ -374,7 +374,13 @@ export class DestinationHost implements Outside {
     const generationFits = () => {
       const current = this.#given.state.item(publication.id), value = current?.values["passes"];
       let rows: readonly { name: string; job: FactRef }[];
-      if (this.#given.genesis()?.seed.definition === "platform:destination@14") {
+      if (this.#given.genesis()?.seed.definition === "platform:destination@15") {
+        const bounds = this.#given.bounds;
+        if (!bounds) return false;
+        const record = certifiedPublicationStateV15(value, bounds);
+        if (!record) return false;
+        rows = record.generations;
+      } else if (this.#given.genesis()?.seed.definition === "platform:destination@14") {
         const record = certifiedPublicationState(value);
         if (!record) return false;
         rows = record.generations;
