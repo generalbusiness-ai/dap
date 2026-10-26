@@ -424,9 +424,9 @@ export function judgeTimed(view: StateView, definition: ValidDefinition, selecte
   if (!effects.ok) throw new Error(`timed rule ${selected.rule} cannot apply: ${"unavailable" in effects ? effects.unavailable : effects.reason}`);
   const opened: Effect[] = [];
   const opens = (rule as PlatformTimedRule).opens ?? [];
-  if (opens.length && ((context.platform?.named !== "platform:destination@3" && context.platform?.named !== "platform:destination@13" && context.platform?.named !== "platform:destination@14") || scope.at.kind !== "destination")) return { result: "unavailable", reason: "unavailable" };
+  if (opens.length && ((context.platform?.named !== "platform:destination@3" && context.platform?.named !== "platform:destination@13" && context.platform?.named !== "platform:destination@14" && context.platform?.named !== "platform:destination@15") || scope.at.kind !== "destination")) return { result: "unavailable", reason: "unavailable" };
   for (const [k, open] of opens.entries()) opened.push(
-    { effect: "operation", k, owner: context.platform?.named === "platform:destination@14" ? "platform:destination@14" : context.platform?.named === "platform:destination@13" ? "platform:destination@13" : "platform:destination@3", kind: open.kind, attempts: open.attempts, for: selected.item },
+    { effect: "operation", k, owner: context.platform?.named === "platform:destination@15" ? "platform:destination@15" : context.platform?.named === "platform:destination@14" ? "platform:destination@14" : context.platform?.named === "platform:destination@13" ? "platform:destination@13" : "platform:destination@3", kind: open.kind, attempts: open.attempts, for: selected.item },
     { effect: "attempt", operation: { k }, attempt: 1, result: "opened", selected: null },
   );
   return withinCounts(view, definition, { result: "write", draft: { input: { type: "timed", item: selected.item, rule: selected.rule, due: selected.due }, uses: [], prepared: [], effects: [...effects.effects, ...opened], sends: [], judgesTime: true } } as TimedJudgment);

@@ -21,6 +21,7 @@ export const ARCHIVE_NATIVE_DATA: Readonly<Record<string, Digest>> = Object.free
   "platform:destination@13": "sha256:f29353b2ca1f551ab6a7d622bbd57aa6dfc7fc3748358ce709ccee728e4c15df",
   // Actual maintained R7 generation; earlier producer rows stay exact.
   "platform:directory@18": "sha256:c8c40477f369a19213439eaa1a3263dad1ce16038e5df605b6f7322737380b55",
+  "platform:directory@19": "sha256:c8c40477f369a19213439eaa1a3263dad1ce16038e5df605b6f7322737380b55",
   "platform:rules@11": "sha256:e98867a65659630c9181a16c2a45441a128010f1ee8544264869bd9d39f9767f",
   "platform:destination@14": "sha256:fe3cd527ae7f38b2d1132a9ee170459c0f96b7bfb0c80c7caa0904de57b1433b",
 });
@@ -53,6 +54,17 @@ export const ARCHIVE_NATIVE_VALUE_PLACES = Object.freeze([
   { pin: "platform:destination@14", data: ARCHIVE_NATIVE_DATA["platform:destination@14"]!, domain: "artroom-rules-policy-1", place: "acts.certify-rules-tree.fields.proposal.value", max: 262144 },
   { pin: "platform:destination@14", data: ARCHIVE_NATIVE_DATA["platform:destination@14"]!, domain: "artroom-rules-policy-1", place: "owners.platform:destination@14.certify-rules-tree", max: 262144 },
   { pin: "platform:destination@14", data: ARCHIVE_NATIVE_DATA["platform:destination@14"]!, domain: "artroom-rules-tree-1", place: "owners.platform:destination@14.certify-rules-tree", max: 262144 },
+  // Q12/G15 exact successor places; their data pins are filled from the native projection.
+  { pin: "platform:rules@12", data: ARCHIVE_NATIVE_DATA["platform:rules@12"]!, domain: "artroom-check-configuration-1", place: "acts.keep-configuration.fields.digest.value", max: 32768 },
+  { pin: "platform:rules@12", data: ARCHIVE_NATIVE_DATA["platform:rules@12"]!, domain: "dap-application-release-2", place: "acts.install-application.fields.release.value", max: 4096 },
+  { pin: "platform:rules@12", data: ARCHIVE_NATIVE_DATA["platform:rules@12"]!, domain: "dap-application-semantics-2", place: "acts.install-application.fields.semantic.value", max: 262144 },
+  { pin: "platform:rules@12", data: ARCHIVE_NATIVE_DATA["platform:rules@12"]!, domain: "artroom-rules-policy-1", place: "acts.publish.fields.proposal.value", max: 262144 },
+  { pin: "platform:rules@12", data: ARCHIVE_NATIVE_DATA["platform:rules@12"]!, domain: "artroom-rules-tree-1", place: "acts.publish.fields.proof.value", max: 262144 },
+  { pin: "platform:destination@15", data: ARCHIVE_NATIVE_DATA["platform:destination@15"]!, domain: "artroom-rules-extents-2", place: "outcomes.judge.observes.0.retains.0", max: 262144 },
+  { pin: "platform:destination@15", data: ARCHIVE_NATIVE_DATA["platform:destination@15"]!, domain: "artroom-changed-set-1", place: "owners.platform:destination@15.judge", max: 262144 },
+  { pin: "platform:destination@15", data: ARCHIVE_NATIVE_DATA["platform:destination@15"]!, domain: "artroom-rules-policy-1", place: "acts.certify-rules-tree.fields.proposal.value", max: 262144 },
+  { pin: "platform:destination@15", data: ARCHIVE_NATIVE_DATA["platform:destination@15"]!, domain: "artroom-rules-policy-1", place: "owners.platform:destination@15.certify-rules-tree", max: 262144 },
+  { pin: "platform:destination@15", data: ARCHIVE_NATIVE_DATA["platform:destination@15"]!, domain: "artroom-rules-tree-1", place: "owners.platform:destination@15.certify-rules-tree", max: 262144 },
 ] as const);
 
 /** Mechanical value/selection vocabulary only. The whole-prefix inventory

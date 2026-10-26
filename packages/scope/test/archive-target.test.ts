@@ -49,7 +49,7 @@ test.each([["archive", C], ["device/archive", DC], ["device/publication/archive"
       // Classification of an already selected genuine root reference only;
       // this neither exports the Register nor proves a complete archive pass.
       expect(archiveReplayAnchors({ at: directory, objects: [{ foreign: { fact: claim, pin: C.register } }] }, [directory], new ArchiveBudget())).toEqual([claim]);
-      expect(() => archiveReplayAnchors({ at: directory, objects: [{ foreign: { fact: claim, pin: "platform:register@20" } }] }, [directory], new ArchiveBudget())).toThrow("unsupported-foreign-copy");
+      expect(() => archiveReplayAnchors({ at: directory, objects: [{ foreign: { fact: claim, pin: "platform:register@21" } }] }, [directory], new ArchiveBudget())).toThrow("unsupported-foreign-copy");
     } else expect(discovered).toBeNull();
     const child = room.children[0]!, childBirth = (await child.entries())[0]!;
     if (childBirth.input.type !== "genesis") return expect.fail("native child birth missing");

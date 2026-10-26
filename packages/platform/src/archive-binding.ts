@@ -8,13 +8,13 @@ import { applicationInstallRulesScope } from "./application-install.ts";
 import { applicationInstallRulesScope2 } from "./application-install-v2.ts";
 import { deviceApplicationDirectory, deviceApplicationDirectoryRules } from "./device-application-directory.ts";
 import { deviceApplicationRulesScope, deviceApplicationRules } from "./device-application-rules.ts";
-import { ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT } from "./archive-binding-wire.ts";
+import { ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT } from "./archive-binding-wire.ts";
 
 export const archiveRegister: PlatformData = { ...register, acts: { ...register.acts,
   found: { ...register.acts["found"]!, fields: { ...register.acts["found"]!.fields, archive: { ...ARCHIVE, required: false } } },
 } };
 
-function directory(base: PlatformData, cohort: typeof ARCHIVE_APPLICATION_COHORT | typeof ARCHIVE_DECLARED_APPLICATION_COHORT | typeof ARCHIVE_DEVICE_APPLICATION_COHORT | typeof ARCHIVE_CERTIFIED_RULES_COHORT): PlatformData {
+function directory(base: PlatformData, cohort: typeof ARCHIVE_APPLICATION_COHORT | typeof ARCHIVE_DECLARED_APPLICATION_COHORT | typeof ARCHIVE_DEVICE_APPLICATION_COHORT | typeof ARCHIVE_CERTIFIED_RULES_COHORT | typeof HARDENED_CERTIFIED_RULES_COHORT): PlatformData {
   const establish = base.acts["establish"]!, stage = base.receives["application-stage"]!;
   return { ...base,
     items: { ...base.items, repository: { ...base.items["repository"]!,
@@ -55,6 +55,22 @@ export const archiveCertifiedRulesDirectoryRules: Rules = {
     if (!rule || rule.place !== "send") throw Error("native rules creation rule required");
     const request = rule.run(given);
     if (!request || !isSeed(request.to) || request.to.definition !== ARCHIVE_CERTIFIED_RULES_COHORT.rules
+      || request.message.class !== "request" || request.message.type !== "create" || !isRecord(request.message.body)
+      || !isRecord(request.message.body["fields"])) throw Error("certified rules sibling creation required");
+    return { ...request, message: { ...request.message, body: { ...request.message.body,
+      fields: { ...request.message.body["fields"], ownerMayReview: false } } } };
+  } },
+};
+
+/** D19 creates the Q12 sibling with the same explicit owner-review choice. */
+export const hardenedCertifiedRulesDirectory = directory(deviceApplicationDirectory, HARDENED_CERTIFIED_RULES_COHORT);
+export const hardenedCertifiedRulesDirectoryRules: Rules = {
+  ...deviceApplicationDirectoryRules,
+  "create-rules": { place: "send", run: given => {
+    const rule = deviceApplicationDirectoryRules["create-rules"];
+    if (!rule || rule.place !== "send") throw Error("native rules creation rule required");
+    const request = rule.run(given);
+    if (!request || !isSeed(request.to) || request.to.definition !== HARDENED_CERTIFIED_RULES_COHORT.rules
       || request.message.class !== "request" || request.message.type !== "create" || !isRecord(request.message.body)
       || !isRecord(request.message.body["fields"])) throw Error("certified rules sibling creation required");
     return { ...request, message: { ...request.message, body: { ...request.message.body,

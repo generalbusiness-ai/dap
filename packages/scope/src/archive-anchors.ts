@@ -85,7 +85,7 @@ export class ArchiveReplayAnchors {
       }
       const pin = this.#pins.get(key);
       if (pin !== "platform:register@17" && pin !== "platform:register@18" && pin !== "platform:membership@8"
-        && !(pin === "platform:register@19" && fact.at.kind === "register")) return stop("unsupported-foreign-copy");
+        && !((pin === "platform:register@19" || pin === "platform:register@20") && fact.at.kind === "register")) return stop("unsupported-foreign-copy");
     }
     this.budget.spend({ inputWork: this.#facts.size * 1024 * (Math.ceil(Math.log2(this.#facts.size + 1)) + 1) });
     const compare = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0;

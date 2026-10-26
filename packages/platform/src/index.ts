@@ -9,7 +9,7 @@ export { TRUSTED_APPLICATION_COHORT, INSTALL_DEFINITION_BYTES, INSTALL_SEMANTIC_
 export { DECLARED_APPLICATION_RULES } from "./application-install-v2.ts";
 export { DECLARED_APPLICATION_COHORT } from "./application-install-v2-wire.ts";
 export { ARCHIVE_REPLAY_CODE } from "./archive-replay-code.ts";
-export { ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT } from "./archive-binding-wire.ts";
+export { ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT } from "./archive-binding-wire.ts";
 export { DEVICE_APPLICATION_COHORT } from "./device-application-wire.ts";
 export { deviceApplicationRequirement } from "./device-application-package.ts";
 export { INVITATION_KEY_COHORT, directory9, directoryRules9, membership6, membershipRules6 } from "./invitation-key.ts";
@@ -100,3 +100,7 @@ export { rulesPolicyProposalV11, rulesPolicyPatternsV11, type RulesPolicyV11 } f
 export { RULES_TREE_PROOF, RULES_TREE_BOUNDS, verifyRulesTree, type RulesTreeBinding } from "./rules-policy-tree.ts";
 
 export { rulesCertificateEvidenceValues } from "./destination-v14.ts";
+
+export { rulesScopeV12, rulesScopeRulesV12, rulesAnswerV12, rulesObservedValuesV12 } from "./rules-scope-v12.ts";
+export { rulesCertificateFamilyV15, rulesCertificateOpeningV15, rulesPublishedCertificateV15, rulesCertificateDeclineV15, rulesCertificateInterveningFactV15, readRulesCertificateDeclinedV15, RULES_CERTIFICATE_DECLINED_V15_MAX, type RulesCertificateDeclinedV15 } from "./rules-certificate-v15.ts";
+export { certifiedPublicationStateV15, certifiedReservationSnapshotV15, certifiedPublicationBudgetV15, certifiedCaptureBudgetV15, certifiedFutureEnvelopeBytesV15, type CertifiedPublicationStateV15, type CertifiedReservationSnapshotV15, type CertifiedGenerationV15 } from "./destination-budget-v15.ts";

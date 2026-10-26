@@ -8,7 +8,7 @@ import { canonicalize, definitionDigest, intentDigest, isDigest, isPlatformDefin
 import { creates, isObject, isScopeRef, same, sentBy, validateDefinition, type Delivered } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { applicationJson } from "@generalbusiness/dap-platform/application";
-import { APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT } from "@generalbusiness/dap-platform";
+import { APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT } from "@generalbusiness/dap-platform";
 import { artifactsRegisterScope } from "./artifacts-wiring.ts";
 import type { CreationAdmission } from "./creation-admission.ts";
 import { readNativeBirth, type NativeBirth } from "./native-birth.ts";
@@ -18,7 +18,7 @@ import { proofEntry, type ProofBody } from "./proof-bytes.ts";
 export const CREATION_LINEAGE_BOUNDS = Object.freeze({ bodies: 16, bytes: 1024 * 1024, attempts: 64, visits: 512, milliseconds: 10_000 });
 /** Exact code-supported creation families, each bound to its configured
  * register and native creator proofs. This is not a deployment inventory. */
-export const CREATION_COHORTS = [ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, APPLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT] as const;
+export const CREATION_COHORTS = [ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, APPLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT] as const;
 type Cohort = typeof CREATION_COHORTS[number];
 type Pin = Digest | PlatformDefinition;
 interface Edge { child: Seed; from: FactRef; n: number; message: Delivered["message"]; source: Entry; creator: NativeBirth }
