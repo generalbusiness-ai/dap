@@ -4,282 +4,249 @@ Request: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:50695e48bce9
 
 ## What changed
 
-The `scope` project allows two workers and keeps `isolate: false`.
-Each worker reuses its own runtime across files. The accepted isolation
-moves the existing Lending file into a separate ordered `scope-lending`
-project with one worker and its own runtime, followed by `scope-denial`
-with one worker in another runtime. The root file-task limit remains four.
-Every witness is selected once. Expected assertions, deadlines and
-production source are unchanged. Planner disposition
-`29be96629213ba13f3acff8c9dec58f47a641926` accepted this bounded change at
-`bd9d4dec5f79008c803a8eae506403430169aedb`. Its owning checks passed once
-after the BR10 gate closed. A new exact-head ordinary gate remains pending;
-the owning pass does not establish mixed-project stability.
+The `scope` native project allows two workers and keeps `isolate: false`.
+Each worker reuses its runtime across files. The existing Lending story runs
+once in a separate one-worker `scope-lending` project after Scope; the
+one-worker `scope-denial` project follows it. Both the root and Scope package
+entrypoints select these files exactly once. The root file-task limit stays
+four. Expected behavior assertions, deadlines and production source remain.
+The final ordinary gate G3 passed at its exact source checkpoint.
 
-Question `72a1266e` was superseded. Its replacement `0db80e82` was answered
-and retired after the decision. Work continues under the original request
-and promise, without using a retired question or answer as its basis.
-
-The initial source preparation used Main `9daa037e`. R7 has since landed
-on Main `6852f78d`; BR-3's three preparation commits were rebased onto that
-head without conflicts. The two-worker change was source preparation at
-those checkpoints, before the owner's serialized runtime validation.
-No speedup is claimed.
-
-The latest recut includes the R7 documentation follow-up on Main
-`d36773b337299d8ed6fac103dff6b94954e0321a`. That upstream delta changes
-only R7's note and a manifest. Source, tests and lock are unchanged from
-`6852f78d`; the existing dependency view and `645224…` stamp remain in place.
-No compiler or check was repeated. All evidence checkpoints below retain
-their original identities.
-
-The first two-worker gate at `eceeb5e9` failed the Lending story's second
-current-read assertion. The owner retains that failed gate separately.
-A later diagnostic-only isolated run passed without exposing the masked
-cause. Neither outcome establishes that cause.
-
-Gate V2 at `cbb08aff65dfbf68008bf27b979b4e4a989ffd38`, tree
-`640f42b1a863700b44c891816ced233e0edbc0ca`, also closed with exit one.
-Its Lending case failed the first current-read assertion after 678 ms,
-again with the masked no-query-reply reason. Its whole command took
-852.986 seconds and 1,810.542 child CPU seconds; its maintained native
-phase took 736.957 seconds with 779 passed, one failed and two skipped.
-Both failed gates remain failed. The deterministic fixture-coherence
-control below demonstrated that fixture gap; it did not establish or
-repair the recurrent masked mixed-project failure.
-BR4 request `15b0f8ab` owns that unknown cross-file cause, retaining the
-original failure at the second-look assertion's line 237.
-
-The historical Lending projection stand-in now collects at most two complete
-attempts. It restarts once only when independently validated sources name
-different native heads. The existing story deterministically crosses an
-accepted return act between the first materialized item response and history.
-The original act, drain, returned-item expectation, current requirements,
-second look, action assertions, post counts and deadlines remain.
+The historical Lending projection stand-in collects at most two complete
+attempts. It restarts once only when independently validated original
+sources name different complete native `{seq, hash}` heads. The existing
+story places its same passer-by return and drain between the first native
+item response and history. The same returned-item expectation follows the
+first successful look. All original acts, second-look requirements, roles,
+post counts and deadlines remain. Only bounded existing diagnostic labels
+were added to the first failure message.
 
 ## Decisions and why
 
-Two workers are the smallest change that permits files to run in parallel.
-The pinned Cloudflare pool creates a Miniflare instance for each pool
-worker. The archive fixture's module-local clock and owner remain within
-that worker's runtime. No clock, fixture lifetime or cleanup assertion changes.
+Two workers are the smallest change allowing different files to overlap.
+The pinned pool creates one Miniflare per worker. Each archive clock and
+fixture owner stays within its worker. Scope retains the clone-server and
+maintained-application global setup; clone calls use separate directories
+and random sessions, and captured application packets are immutable.
+Lending uses the same real Worker, SQLite and Wrangler bindings, with one
+exact file, `isolate: false`, and its existing 30-second allowance. It needs
+neither global setup. Denial retains its separate runtime and budget.
 
-The project-wide setup remains shared. The clone server allocates an
-ephemeral listener and nonce per setup. Only `runtime-versions.test.ts`
-configures its singleton repository. Archive clone calls allocate unique
-temporary directories, and archive command sessions have random IDs and
-separate session records. Teardown runs after the project. The maintained
-application setup captures immutable packet data once and provides copies
-to the workers. Source inspection found no concrete setup change to make
-before runtime validation.
+Planner decision `29be96629213ba13f3acff8c9dec58f47a641926` accepted this
+bounded isolation at `bd9d4dec5f79008c803a8eae506403430169aedb` after two
+failed gates. Owning checks ran once after BR10's gate closed; one final
+ordinary gate then supplied both validation and the after measurement,
+as allowed by `cf0328ba`. Superseded question `72a1266e` and answered,
+retired replacement `0db80e82` are historical; work rests on the original
+request and promise.
 
-The root project comments and testing guide now describe two Scope workers
-and the accepted ordered single Lending and denial workers. No packages
-were installed for this preparation. The initial worktree had no `node_modules`; the Node witness
-below needs no external dependency. The later compiler used a separate copy
-of R7's existing dependency installation, as recorded below.
+The stand-in validates each original source through the unchanged strict
+projector before comparing heads: query binding, complete items, declared
+fields, journal bytes, chain and final hash. Refused, malformed, incomplete,
+binding and transport errors propagate immediately. A generic `stale`
+error never selects a restart. After its one allowed restart, the aggregate
+projector stays strict. The interleave flag is set before awaiting the same
+accepted return and drain; it adds no sleep, act or unjoined gate.
 
-The Lending helper serves only the main browser and visitor reads in the
-existing Lending file. Each original item and journal source first passes
-the unchanged strict projector independently, with its native head untouched.
-That checks query binding, successful complete items, declared fields, and
-the journal's bytes, chain and final hash. Only then does the collector
-compare every source's complete `{seq, hash}` to history. A malformed,
-refused, incomplete, binding or transport failure propagates immediately.
-No error catch selects a restart: even a journal-tail `stale` refusal stays
-a refusal. After the one permitted restart, the unchanged aggregate
-projector decides the result or keeps its refusal.
+V1 failed the second current requirement; V2 failed the first after 678 ms,
+with the underlying error again masked by no-query-reply. Both runs remain
+failed. A diagnostic isolated pass captured no cause. The paired control
+proves the deliberately interleaved coherence gap, and G3 shows one passing
+run with the accepted runtime boundary. Neither establishes the unknown
+cross-file cause. BR4 request `15b0f8ab` retains that cause and the original
+V1 second-look failure at `lending.test.ts:237`.
 
-The one-shot fetch interleave sets its flag before awaiting the story's
-original passer-by return and original dispatch drain. The return is an
-accepted native write, so history follows a head newer than the retained
-first response. The route constructs that response from the native owner's
-already serialized envelope. This uses no sleep, extra act or unjoined gate.
-The returned-item expectation moves after the first successful look; the
-same expected state follows the same write. The first current requirement
-now uses `expect.fail` so its failure is an assertion in the paired control.
-The earlier bounded diagnostic observer remains diagnostic-only.
-
-The Lending config has its own Cloudflare pool plugin, the same
-test Worker and Wrangler bindings, one exact file selection, `isolate: false`,
-one worker and the existing 30-second framework allowance. It starts no
-clone server or maintained-package capture: the Lending story consumes
-neither setup's injected data. The remaining Scope project keeps both
-setup owners. The root and package entrypoints both order Scope, Lending
-and denial as groups one, two and three. The existing partition witness
-now expects fourteen plain and three native projects, seventeen in total.
-
-The summary's project inventory and native phase classification both include
-Lending. Its existing terminal-reporting witness now requires all three
-native projects to be observed only with a successful native terminal;
-without that terminal all remain partial. Both whole owning Node files
-passed at the accepted checkpoint. The first-look assertion message also includes only the
-already bounded safe projection-error labels, as the second-look message
-already did. It adds no observer, read, retry or story act.
-
-This change bounds Worker reuse around the repeatedly failing story.
-It claims neither a proven cause nor physical draining of earlier runtimes.
-The actual ordinary gate must decide whether this boundary holds across
-the full inventory. If it reports another shared-state failure, stop and
-seek a planner disposition rather than repair again within BR3.
+Dependencies came from an existing earned installation. All fourteen
+workspace links were rebound; external/link lock entries matched, with only
+the allowed platform-to-git workspace edge across the R7 recut. The final
+lock/stamp is `645224923cabfd70b51b8add2a43be12673444779d18002a42ed4254b3216d6e`.
+The same private directory became real `node_modules` for the pool's
+ownership check. No package was installed and no other dependency view was
+changed. These comparisons do not authenticate every dependency byte.
 
 ## Evidence
 
-The initial checks ran at `da2cf7737f30c0918c7e6e6200b866166a9d7a2c`, tree
-`3ed91174f2b826039bc04b22b1c09ac02fd5f6d2`. The
-[evidence manifest](evidence/2026-10-26-br3-source-preparation.manifest.json)
-names the read-only output directory and its `SHA256SUMS`.
+G3 ran at `9c2d5f4bc882102acc6c826e2d44bcc5142f3400`, tree
+`4d69701074dcc15edb2f84ddb85305cea073a080`, and closed exit 0 with the same
+clean head. All gate steps and all five fixed test stages passed. Its public
+totals were 57 Node cases passed, 55 Counting cases passed, 2835 plain
+cases passed with one skipped, and 780 native cases passed with two skipped. Whole G3 elapsed was
+882.237472083 seconds and child CPU was 1870.506783 seconds.
 
-The dependency copy and Scope test compiler ran at
-`f6fb666c6b175ccf45253d3c53ffddfd6101bcba`, tree
-`1a97efff5b47b5be8a2b1f4fc05001ec26e95833`. Production source, test source
-and configuration are unchanged between these checkpoints. The
-[compiler and dependency manifest](evidence/2026-10-26-br3-scope-test-compiler.manifest.json)
-indexes the copy proof, exact driver and compiler output. Its directory is
-read-only with a top-level `SHA256SUMS`. Its original follow-up changed
-only documentation. The later R7 rebase incorporates upstream source and
-test changes; that compiler result remains historical and is not relabelled
-as validation of the rebased head.
+The [final delivery manifest](evidence/2026-10-26-br3-worker-parallelism-delivery.manifest.json)
+indexes 181 files under
+`/Users/hughpyle/play/artroom-evidence/2026-10-26-br3-worker-parallelism-delivery`;
+its SHA-256 is `288bbc2a966e94914562e068a498233deee3105849cf812b8f0bee96e838e4c0`. The directory is retained read-only,
+with top-level `SHA256SUMS`. It keeps each original BR3 raw directory and
+index, prior unlanded manifests as provenance, source owners, and the
+analysis input. Original home directories remain retained. The short
+prefixes below name separate original runs; failed and passing evidence
+are never combined into a replacement result.
 
-The rebase and dependency comparison ran at
-`2017e679338ad516592b5ee9e6798fea70e6c6ef`, tree
-`68e301ef712bfffb18b24f357a88eb4e543a3fd6`. The
-[rebase manifest](evidence/2026-10-26-br3-r7-rebase.manifest.json)
-names its small read-only evidence directory and checksum index. Only this
-note and the new manifest change after that checkpoint.
+The table uses six decimals for derived phase observations where available;
+older displayed values retain their original precision. Whole wall and
+child CPU come from each command's metadata. Phase wall comes only from
+its canonical ledger. Concurrent case/module durations and nested phases
+are never summed into whole wall. Native phase CPU is unknown; whole-gate
+CPU is never assigned to native. Exact argv, timings, machine, load, cache,
+source identities and restorations remain in the indexed records.
 
-| Check | Command | Exit | Output SHA-256 | Checkpoint |
-| --- | --- | --- | --- | --- |
-| Canonical phase selection | `node --test scripts/test-phases.test.mjs` | 0; one case passed | `87b7db670166cf0df4d0ac1eac4cc637705ac1b5a00e5ec0675cdb250c84d980` | `da2cf773` |
-| Source whitespace | `git diff --check 9daa037e1976fa0e245192823cce96fc8741360d HEAD` | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` | `da2cf773` |
-| Private dependency copy and lock comparison | `python3 /private/tmp/artroom-br3-copy-deps-20261026.py` | 0; 14 workspace links rebound | `ab3fd2f36f49ec505c740350828785c120f7e8a9cc34ad2def9969c96d590258` (`compiler/dependency-provenance.json`) | `f6fb666c` |
-| Scope test compiler | `node node_modules/typescript/bin/tsc -p packages/scope/tsconfig.test.json` | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` (`compiler/compiler.log`) | `f6fb666c` |
-| Real worktree dependency directory | Python `os.rename` of the private directory, followed by directory identity, stamp and 14 workspace-link checks | 0 | `65ff21c6869cab2bbede53632203e208f17762e1bd2e87714077a0d7e462d07b` (`dependency-materialization.json`) | `f6fb666c` |
-| Rebase and dependency comparison | `git rebase 6852f78d3279ef13a33b7b9d0b283e9ba96f079f`, then `python3 /private/tmp/artroom-br3-rebase-proof-20261026.py` | 0; no conflicts, one exact lock edge, 14 links checked | `f632734cc7284969e8b35b7fab42ef6678047f2b975bd609f8270bf26dfdd914` (`rebase-and-dependencies.json`) | `2017e679` |
-| Preparation patch comparison | `git range-diff 9daa037e1976fa0e245192823cce96fc8741360d..0ae2618738414c8fd705dad5e9b28e8aff59cd95 6852f78d3279ef13a33b7b9d0b283e9ba96f079f..2017e679338ad516592b5ee9e6798fea70e6c6ef` | 0; all three patches unchanged | `e00f80a28d580163d5c3a68f447a29381738c3d3a0329057591fd40826167358` (`range-diff.log`) | `2017e679` |
-| Scope test compiler after fixture repair | `node node_modules/typescript/bin/tsc -p packages/scope/tsconfig.test.json` | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` (`compiler.log`) | `e29acab4` |
-| Whole Lending file paired control | `node scripts/control.mjs packages/scope/test/support/legacy-lending-projection.ts '<restart guard>' '<guard disabled>' --expect 'the lending library on real scopes' -- . --config vitest.native.config.ts --project scope packages/scope/test/lending.test.ts --reporter=/private/tmp/artroom-br3-control-progress-20261026.mjs` (exact replacement and argv in `result.json`) | 0; distinguishes, healthy 1 passed, fault 1 assertion failed | `306484fb618a2f5a77d75ecd20a150a754517779946b2491e550b3740f858cfe` (`control.log`) | `e29acab4` |
-| Initial ordinary gate | `npm run gate` | 1; 887.092 seconds whole wall, 1,877.359 child CPU seconds; native 761.231 seconds, 779 passed, 1 failed, 2 skipped | `964f17354d3df14a80900e4448a50a690f6bd5536d0c6bd2e3371880415047fb` (`gate-v1/result.json`) | `eceeb5e9` |
-| Ordinary gate V2 after fixture repair | `npm run gate` | 1; 852.986 seconds whole wall, 1,810.542 child CPU seconds; native 736.957 seconds, 779 passed, 1 failed, 2 skipped | `53b2d7c4c7ff0ea1599fd66ce1206ce6d3fb02f6371b8efe3cb4b081067aaa25` (`gate-v2/result.json`) | `cbb08aff` |
-| Whole owning Node files after isolation | `/opt/homebrew/bin/node --test scripts/test-phases.test.mjs scripts/test-summary.test.mjs` | 0; 4 passed | `f3de338a445fb7f75d36f42c64400b109a576688441b200e42bd645bd75325dc` (`node-owning.log`) | `bd9d4dec` |
-| Scope test compiler after isolation | `/opt/homebrew/bin/node node_modules/typescript/bin/tsc -p packages/scope/tsconfig.test.json` | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` (`compiler.log`) | `bd9d4dec` |
-| Whole dedicated Lending project | `/opt/homebrew/bin/node node_modules/vitest/vitest.mjs run --config vitest.native.config.ts --project scope-lending` | 0; 1 passed, 3,925 ms case; 6.988 seconds command wall, 7.989 child CPU seconds | `05508da3ee11cf19a36e2aa83edc2fb53c775fa71725b9edbd1368f74c9f98c5` (`lending.log`) | `bd9d4dec` |
-| Final ordinary gate and measurement | `npm run gate` once on the settled head | Pending | Not run | Settled head after this documentation follow-up |
+| Check | Command/source | Checkpoint | Exit and terminal outcome | Wall seconds | Child CPU seconds | Retained output SHA-256 |
+| --- | --- | --- | --- | --- | --- | --- |
+| Canonical phase selection | `node --test scripts/test-phases.test.mjs` | `da2cf773` | exit 0; 1 passed | not measured | unknown | `87b7db670166cf0df4d0ac1eac4cc637705ac1b5a00e5ec0675cdb250c84d980` |
+| Preparation whitespace | `git diff --check 9daa037e1976fa0e245192823cce96fc8741360d HEAD` | `da2cf773` | exit 0 | not measured | unknown | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| Private dependency proof | Retained copy driver and materialization checks | `f6fb666c` | 14 links; exact external/link lock comparison; no install | not measured | unknown | `ab3fd2f36f49ec505c740350828785c120f7e8a9cc34ad2def9969c96d590258`; materialization `65ff21c6869cab2bbede53632203e208f17762e1bd2e87714077a0d7e462d07b` |
+| Historical Scope test compiler | `node node_modules/typescript/bin/tsc -p packages/scope/tsconfig.test.json` | `f6fb666c` | exit 0 | 0.96 | 3.53 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| R7 recut and dependency comparison | Retained rebase driver and `git range-diff` | `2017e679` | exit 0; no conflicts; one allowed workspace edge; 14 links | not measured | unknown | `f632734cc7284969e8b35b7fab42ef6678047f2b975bd609f8270bf26dfdd914`; range diff `e00f80a28d580163d5c3a68f447a29381738c3d3a0329057591fd40826167358` |
+| Diagnostic compiler | Scope test compiler | `7ee71a54` | exit 0 | 0.62 | 3.13 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| Diagnostic isolated Lending file | `node node_modules/vitest/vitest.mjs run --config vitest.native.config.ts --project scope packages/scope/test/lending.test.ts` | `7ee71a54` | exit 0; 1 passed; cause not captured | 7.91 | 9.56 | `e3222fdf98f2629f39592b48b4bea2d2c056bc3fb67cffa3c6bc2406085339fd` |
+| Repair compiler | Scope test compiler | `e29acab4` | exit 0 | 0.63 | 3.10 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| Repair paired control | `node scripts/control.mjs` exact argv and replacement in `ctrl/result.json` | `e29acab4` | exit 0 distinguishes: healthy 1 passed; fault 1 intended AssertionError | 13.69 (pair) | 16.67 (pair) | `306484fb618a2f5a77d75ecd20a150a754517779946b2491e550b3740f858cfe` |
+| BR9 before: whole gate | `npm run gate` | `f4735c54` | 0; passed, older code, one Scope worker | 1431.828723 | 1661.266269 | `525e8cb13a5b3ed2502d4648b008e257c5bfacc1eb6a66be13e7c7eb533a978b` (`baseline-observations.json`) |
+| BR9 before: kernel | Derived canonical phase ledger | `f4735c54` | 0; passed | 0.191410 | unknown | `525e8cb13a5b3ed2502d4648b008e257c5bfacc1eb6a66be13e7c7eb533a978b` (`baseline-observations.json`) |
+| BR9 before: node | Derived canonical phase ledger | `f4735c54` | 0; 56 public cases passed | 36.439615 | unknown | `525e8cb13a5b3ed2502d4648b008e257c5bfacc1eb6a66be13e7c7eb533a978b` (`baseline-observations.json`) |
+| BR9 before: counting | Derived canonical phase ledger | `f4735c54` | 0; 55 passed | 2.077884 | unknown | `525e8cb13a5b3ed2502d4648b008e257c5bfacc1eb6a66be13e7c7eb533a978b` (`baseline-observations.json`) |
+| BR9 before: plain | Derived canonical phase ledger | `f4735c54` | 0; 2817 passed, 1 skipped | 64.604058 | unknown | `525e8cb13a5b3ed2502d4648b008e257c5bfacc1eb6a66be13e7c7eb533a978b` (`baseline-observations.json`) |
+| BR9 before: native | Derived canonical phase ledger | `f4735c54` | 0; 771 passed, 2 skipped | 1310.254681 | unknown | `525e8cb13a5b3ed2502d4648b008e257c5bfacc1eb6a66be13e7c7eb533a978b` (`baseline-observations.json`) |
+| R7 additional failed native point | `node node_modules/vitest/vitest.mjs run --config vitest.native.config.ts` | `ae49c5a6` | 1; 778 passed, 2 failed, 2 skipped | 1315.809744 | 1329.898563 | `525e8cb13a5b3ed2502d4648b008e257c5bfacc1eb6a66be13e7c7eb533a978b` (`baseline-observations.json`) |
+| BR3 initial: whole gate | `npm run gate` | `eceeb5e9` | 1; failed | 887.092 | 1877.359 | `13cba9557ce7bfc60e734ed53ae51b1d36c82a906a198c488ba8a4b705cc7259` (`a1/analysis.json`) |
+| BR3 initial: kernel | Derived canonical phase ledger | `eceeb5e9` | exit 0; passed | 0.194 | unknown | `13cba9557ce7bfc60e734ed53ae51b1d36c82a906a198c488ba8a4b705cc7259` (`a1/analysis.json`) |
+| BR3 initial: node | Derived canonical phase ledger | `eceeb5e9` | exit 0; 57 passed | 38.005 | unknown | `13cba9557ce7bfc60e734ed53ae51b1d36c82a906a198c488ba8a4b705cc7259` (`a1/analysis.json`) |
+| BR3 initial: counting | Derived canonical phase ledger | `eceeb5e9` | exit 0; 55 passed | 2.136 | unknown | `13cba9557ce7bfc60e734ed53ae51b1d36c82a906a198c488ba8a4b705cc7259` (`a1/analysis.json`) |
+| BR3 initial: plain | Derived canonical phase ledger | `eceeb5e9` | exit 0; 2835 passed, 1 skipped | 66.577 | unknown | `13cba9557ce7bfc60e734ed53ae51b1d36c82a906a198c488ba8a4b705cc7259` (`a1/analysis.json`) |
+| BR3 initial: native | Derived canonical phase ledger | `eceeb5e9` | exit 1; 1 failed, 779 passed, 2 skipped | 761.231 | unknown | `13cba9557ce7bfc60e734ed53ae51b1d36c82a906a198c488ba8a4b705cc7259` (`a1/analysis.json`) |
+| BR3 V2: whole gate | `npm run gate` | `cbb08aff` | 1; failed | 852.986079 | 1810.541754 | `c6ecbdb70541d6ebeb8ac9f1a2e04721fe06e0bb14b55e3329d6effda9a1ff01` (`a2/analysis.json`) |
+| BR3 V2: kernel | Derived canonical phase ledger | `cbb08aff` | exit 0; passed | 0.184268583 | unknown | `c6ecbdb70541d6ebeb8ac9f1a2e04721fe06e0bb14b55e3329d6effda9a1ff01` (`a2/analysis.json`) |
+| BR3 V2: node | Derived canonical phase ledger | `cbb08aff` | exit 0; 57 passed | 36.29350475 | unknown | `c6ecbdb70541d6ebeb8ac9f1a2e04721fe06e0bb14b55e3329d6effda9a1ff01` (`a2/analysis.json`) |
+| BR3 V2: counting | Derived canonical phase ledger | `cbb08aff` | exit 0; 55 passed | 1.9299353340000016 | unknown | `c6ecbdb70541d6ebeb8ac9f1a2e04721fe06e0bb14b55e3329d6effda9a1ff01` (`a2/analysis.json`) |
+| BR3 V2: plain | Derived canonical phase ledger | `cbb08aff` | exit 0; 2835 passed, 1 skipped | 59.650898999999995 | unknown | `c6ecbdb70541d6ebeb8ac9f1a2e04721fe06e0bb14b55e3329d6effda9a1ff01` (`a2/analysis.json`) |
+| BR3 V2: native | Derived canonical phase ledger | `cbb08aff` | exit 1; 779 passed, 1 failed, 2 skipped | 736.957111875 | unknown | `c6ecbdb70541d6ebeb8ac9f1a2e04721fe06e0bb14b55e3329d6effda9a1ff01` (`a2/analysis.json`) |
+| Isolation whole owning Node files | `node --test scripts/test-phases.test.mjs scripts/test-summary.test.mjs` | `bd9d4dec` | 0; 4 passed | not reported here | not reported here | `f3de338a445fb7f75d36f42c64400b109a576688441b200e42bd645bd75325dc` (`iso/node-owning.log`) |
+| Isolation Scope test compiler | `node node_modules/typescript/bin/tsc -p packages/scope/tsconfig.test.json` | `bd9d4dec` | 0 | not reported here | not reported here | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` (`iso/compiler.log`) |
+| Whole dedicated Lending project | `node node_modules/vitest/vitest.mjs run --config vitest.native.config.ts --project scope-lending` | `bd9d4dec` | 0; 1 passed; 3925 ms case | 6.988 | 7.989 | `05508da3ee11cf19a36e2aa83edc2fb53c775fa71725b9edbd1368f74c9f98c5` (`iso/lending.log`) |
+| BR3 G3: whole ordinary gate and after measurement | `npm run gate` | `9c2d5f4b` | 0; passed | 882.237472083 | 1870.506783 | `8fb9ad9a8fb1d6818f852f8ba93a463ef30f37c7e832d4f93041eec61a59c838` (`g3/result.json`) |
+| BR3 G3: kernel | Canonical phase ledger, retained analysis | `9c2d5f4b` | 0; passed | 0.209378 | unknown | `5b44e43d122f829bb4f90956016ee385ea0afcd0811e0112f0b2439b487e1b5d` (`a3/analysis.json`) |
+| BR3 G3: node | Canonical phase ledger, retained analysis | `9c2d5f4b` | 0; 57 passed | 37.988777 | unknown | `5b44e43d122f829bb4f90956016ee385ea0afcd0811e0112f0b2439b487e1b5d` (`a3/analysis.json`) |
+| BR3 G3: counting | Canonical phase ledger, retained analysis | `9c2d5f4b` | 0; 55 passed | 1.985896 | unknown | `5b44e43d122f829bb4f90956016ee385ea0afcd0811e0112f0b2439b487e1b5d` (`a3/analysis.json`) |
+| BR3 G3: plain | Canonical phase ledger, retained analysis | `9c2d5f4b` | 0; 2835 passed, 1 skipped | 69.409942 | unknown | `5b44e43d122f829bb4f90956016ee385ea0afcd0811e0112f0b2439b487e1b5d` (`a3/analysis.json`) |
+| BR3 G3: native | Canonical phase ledger, retained analysis | `9c2d5f4b` | 0; 780 passed, 2 skipped | 753.643904 | unknown | `5b44e43d122f829bb4f90956016ee385ea0afcd0811e0112f0b2439b487e1b5d` (`a3/analysis.json`) |
+| Closed G3 analysis | `node artroom-br3-analyze-isolated-closed-gate-20261026.mjs` on closed G3 records | `9c2d5f4b records` | analysis 0; G3 remains passed | not measured | unknown | `5b44e43d122f829bb4f90956016ee385ea0afcd0811e0112f0b2439b487e1b5d` (`a3/analysis.json`) |
 
-The repair compiler and one maintained paired control ran at
-`e29acab45e6eb113af89e8b084b0650c8c038a62`, tree
-`4aeb67935d527d8098a4f6ae129ed6435bfb0cf6`. The
-[coherence control manifest](evidence/2026-10-26-br3-lending-coherence-control.manifest.json)
-indexes the read-only output, checksum index, original/fault source digests,
-machine, load and command timings. The compiler exited zero. The unchanged
-whole story passed once; disabling only the head-restart guard made its
-first current requirement fail by `AssertionError` at line 260 with status
-`behind`. Both runs reported one ready/result/final callback and zero
-unhandled errors. The helper was restored byte-for-byte and the checkpoint
-remained clean. An external reporter adapter only selects separate output
-paths and delegates the maintained reporter's actual callbacks unchanged.
-The maintained control hides healthy-run stdout; the healthy callbacks,
-timing records and helper's passing-count summary are retained. No missing
-callback or stdout is reconstructed. The immediate follow-up at `cbb08aff`
-changed only the note and manifest. The current isolation proposal changes
-configuration, its existing reporting/partition witnesses and the bounded
-first-look message; the historical control is not relabelled as validation
-of those later inputs.
+BR9 is the passing before gate on older code with one Scope worker; all
+five phases passed. Its head/tree were `f4735c5435224d9dbe828099cc280a6e3adef1b2` /
+`849083ea95a3630556531dd6ac7d441632a2c83d`. R7's native command at
+`ae49c5a6126c8b6704811783ca9c943d65f8f4b2`, tree
+`96975fe5755918a615b1ddb9484e750a07d3e0d2`, failed two cases and remains
+an additional failed observation. Those baselines are reused solely from
+`baseline-observations.json`, SHA-256
+`525e8cb13a5b3ed2502d4648b008e257c5bfacc1eb6a66be13e7c7eb533a978b`.
+G3 analysis records that source and hash in `baselineReuse`. Embedded old
+R7/BR9 result, manifest and raw paths were neither followed nor reopened;
+their accepted evidence was not reauthenticated. The index does not itself
+record worker topology; the one-worker description is supplied context.
 
-The isolation owning checks ran at
+Descriptions place these observations on macOS 27.0.1 arm64 and Node
+v26.12.1, but do not establish identical physical machines. Starting loads
+were BR9 `[1.728515625, 1.82421875, 1.93505859375]`, R7
+`[2.10791015625, 2.6318359375, 2.552734375]`, V1
+`[1.5347, 2.0464, 2.3735]`, V2
+`[1.35400390625, 1.39990234375, 1.44287109375]`, and G3
+`[2.0107421875, 2.755859375, 2.82666015625]`. G3 describes a private
+copied dependency installation with earned caches, fourteen rebound links,
+real owned `node_modules`, and no install or reset. BR9 describes the same
+workflow; R7 describes existing private dependencies with no reset or
+priming. Equal descriptions do not establish equal physical cache states.
+Code trees, inventories, outcomes, runtime setup, load and cache histories
+differ. These are uncontrolled observations; no ratio or speedup is claimed.
+
+Callback counts use actual `(project, file, id)` identities. V1 plain had
+2836 ready/result/final records with no gaps. V1 native had 767 ready,
+766 result, and 782 final; two ready identities lacked a result, one result
+lacked a ready, fifteen finals lacked a ready, and sixteen finals lacked a
+result. V2 plain also had 2836 of each, without gaps. V2 native had 765
+ready, 763 result, and 782 final; respective gaps were 2, 0, 17 and 19.
+Both failed native runs ended with 779 passed, one failed, and two skipped.
+
+G3 plain had 2836 actual ready, result and final identities, without gaps.
+G3 native had 767 ready, 745 result, and 782 final; 22 ready identities
+lacked a result, no result lacked a ready, fifteen finals lacked a ready,
+and 37 finals lacked a result. There were no duplicate or unidentified
+callback identities. Its finals report 780 passed and two skipped. Both
+Vitest run ends report zero unhandled errors in each of V1, V2 and G3.
+Kernel and Node unhandled counts remain unknown. Final states never supply
+missing starts, results or execution intervals; those gaps remain unknown.
+
+G3's maintained native inventory reports Scope with 228 observed module
+records and partial duration coverage, Lending with one observed module,
+and denial with one. The skipped Page recorder has no numeric module
+duration, so Scope duration coverage stays partial despite the passed
+terminal outcome. Module durations are concurrent sums, not phase wall.
+
+G3 has 743 complete, uniquely paired executed intervals; two paired records
+were ambiguous or invalid for interval use. One actual overlap is between
+Scope's `archive-one-entry-scale.test.ts`, id `-1444993209_0`, ready
+`2026-10-26T17:44:25.602Z` and result `17:48:10.644Z`, and
+`floor-archive.test.ts`, id `-1601051069_0`, ready `17:44:25.615Z` and
+result `17:44:26.039Z`. Both passed. Their overlap is
+`17:44:25.615Z`–`17:44:26.039Z`. Each endpoint comes from one actual ready
+and one actual result callback. This shows different-file framework
+execution overlap, without measuring CPU occupancy or full-phase worker
+utilization. Separate actual overlap witnesses for failed V1 and V2 remain
+in their analyses; no missing callback is reconstructed.
+
+The paired control at `e29acab45e6eb113af89e8b084b0650c8c038a62`, tree
+`4aeb67935d527d8098a4f6ae129ed6435bfb0cf6`, passed the whole story once.
+Disabling only the restart guard then failed its first current requirement
+by the intended `AssertionError` with status `behind`, without timeout or
+unhandled error. The helper was restored byte-for-byte; test bytes stayed
+identical. Healthy helper SHA-256 is
+`040cc416701ac8da25b34f9465bb87b7465524913e128e05ecd4ba2d1975dae5`;
+fault helper is `0e53196a7ba81b52e39f1e2139fe8c1154c2058e2fee3999356e36bbd462befd`.
+The external reporter adapter only selected output paths and delegated
+maintained callbacks. Healthy stdout suppressed by the control helper
+remains absent; callbacks, timing and passing-count summary are retained.
+
+The isolation owning checkpoint was
 `bd9d4dec5f79008c803a8eae506403430169aedb`, tree
-`1703484866f0dfbe5aaf2d159cdb6d133b816b86`. The
-[interim owning manifest](evidence/2026-10-26-br3-lending-isolation-owning.manifest.json)
-is the exact manifest emitted by the single authorized driver run; its
-SHA-256 is `d8736d801142a320e106ee0aa52ea70cdf6a903c2ab1e2b6e5abfbaf21261deb`.
-It indexes nine read-only home files with a top-level `SHA256SUMS`, including
-the exact driver, preflight, actual command results and native callbacks.
-Preflight checked the exact clean head/tree, real owned dependency directory,
-unchanged `645224…` lock/stamp, all fourteen BR3 workspace links and the
-closed successful BR10 result before root released serialized execution.
-The two Node files, compiler and dedicated project each ran once, in that
-order. All passed and the head/tree stayed clean and unchanged. No healthy/fault
-control, full native phase, installation or ordinary gate was repeated.
-Only this note and the copied interim manifest change after that checkpoint.
+`1703484866f0dfbe5aaf2d159cdb6d133b816b86`. Its two whole Node files,
+Scope test compiler and whole dedicated Lending project each ran once,
+in order, after BR10's successful closure. All passed without source
+mutation. The subsequent G3 checkpoint adds only the note and interim
+manifest. These owning results and the historical control keep their own
+source identities; neither is relabelled as testing later configuration.
 
-The owner retains the closed gate outputs under
-`~/play/artroom-evidence/2026-10-26-br3-two-workers-gate` and
-`~/play/artroom-evidence/2026-10-26-br3-two-workers-gate-v2`.
-The table's gate result digests name those actual files; final consolidation
-will index both separately. The initial gate checkpoint is
-`eceeb5e92125a48e699b799750a6fb4e64e9593b`, tree
-`4d3578dfeed0ef1ade7573af6f8a03e250b04d41`. Native wall comes from the
-canonical maintained stage ledger, never a sum of concurrent case times.
-Native CPU remains unknown; whole-gate CPU cannot be assigned to that phase.
+V1 remains at `eceeb5e92125a48e699b799750a6fb4e64e9593b`, tree
+`4d3578dfeed0ef1ade7573af6f8a03e250b04d41`; V2 remains at
+`cbb08aff65dfbf68008bf27b979b4e4a989ffd38`, tree
+`640f42b1a863700b44c891816ced233e0edbc0ca`. Other historical full checkpoint
+and tree pairs are retained in `checkpoints.json`. Preparation and compiler
+records predate the R7 recut; they retain those limits. G3 compiled and
+checked its actual upstream inputs.
 
-The phase-selection witness does not resolve inherited Worker configs or
-prove that two native runtimes execute concurrently. It preserves the
-canonical split and the ordered separate denial project. No native suite,
-measurement or gate ran in this preparation.
+Main and origin stayed at `986c7120` throughout G3. This branch starts
+from the R7 documentation follow-up at `d36773b3`; Main also has BR9's
+migration-prefix guard and its note/manifest. Those three paths are
+disjoint from this branch's changes. G3 used its own fourteen workspace
+links and source inputs. No gate of a merged Main tree is claimed; the
+review must assess composition with the target.
 
-The source installation's earned stamp matches R7 lock
-`645224923cabfd70b51b8add2a43be12673444779d18002a42ed4254b3216d6e`.
-After removing only R7's platform-to-git workspace dependency edge, the
-parsed lock equals BR-3's lock
-`f9d837e29e9e96874eb59c5eed718b1d824b98d2cc86fda615f1047011ee99cc`.
-Every external package and workspace link lock entry matches separately.
-The copy driver rebound all 14 workspace links to this worktree and wrote
-the verified target stamp. It did not install a package or alter R7, BR-9
-or Main's dependency directories. The proof does not claim independent
-verification of every installed dependency byte.
-
-The compiler passed while `node_modules` was a symlink to the separate
-private copy. Afterwards, the same directory was atomically moved to real
-`/private/tmp/artroom-builder-br3-workers-20261026/node_modules`, because
-the Cloudflare pretest check requires an owned real directory. The move
-preserved the directory's device and inode; the 14 links and target stamp
-were checked again. No compiler rerun is claimed after that move.
-
-After the R7 rebase, adding its single platform-to-git edge to the old
-parsed BR-3 lock produces the new lock exactly. The new lock is
-`645224923cabfd70b51b8add2a43be12673444779d18002a42ed4254b3216d6e`.
-All external package and workspace link entries remain identical. All 14
-workspace links still point to BR-3, which now reads R7's upstream manifests
-and exports. Only after those comparisons, the existing real dependency
-directory's stamp and private provenance were updated. No files were
-installed or recopied, and no other dependency view changed.
-
-The Scope and denial configs and root project declarations remain byte-for-byte
-equal to their pre-rebase versions. The rebase adds no BR-3 changes beyond
-the three preparation patches. No compiler or phase witness was repeated:
-the eventual ordinary gate must compile the upstream R7 inputs too.
+The final documentation tail may change only this note and the six named
+unlanded BR3 manifest removals plus their one delivery-manifest replacement.
+Before review, record its final commit/tree externally and compare it with
+G3's exact tree to confirm that source, tests, configuration, assets and
+lock are unchanged. No final commit self-hash is asserted here. No compiler,
+test, native phase, build, measurement or gate repeats for that documents-only tail.
 
 ## Open limits
 
-Request `50695e48` owns a fresh ordinary gate on the settled accepted candidate
-and final evidence consolidation. Disposition `29be9662` accepted the bounded
-isolation; serialized owning checks passed. The paired
-control proves the deliberately interleaved fixture gap, not the original gate's masked cause
-or cross-file stability. A continuously changing head can still exhaust
-the two-attempt bound and refuse. The final ordinary gate is still pending.
-Both earlier failed gates remain failed. BR4 request `15b0f8ab` owns the
-unknown cross-file cause and the original line-237 failure record. Any new
-shared-state failure in the final gate requires a planner question, with
-no further BR3 repair loop.
+Request `50695e48` owns final consolidation and exact-head review and
+landing. One accepted G3 gate passed; V1 and V2 remain failed. BR4 request
+`15b0f8ab` owns the unknown cross-file cause and the original line-237
+failure record. A changing native head can still exhaust the stand-in's
+two-attempt bound and refuse. Neither the fixture control nor this one
+isolated passing gate proves the original cause, physical draining,
+universal cross-file cleanup or a controlled performance improvement.
 
-Request `50695e48` owns the measurement, ordinary gate, exact-head review
-and any repair needed when tests run on two workers. The owner must check
-whether Main moved again and recheck the copied dependency view and lock
-stamp before those runs.
-
-Planner ruling `cf0328ba` accepts one instrumented ordinary `npm run gate`
-as both the measurement and gate. Use its existing progress and timing
-records, leave `VITEST_MAX_WORKERS` unset, and retain wall time, whole-command
-child CPU, machine, load, cache state, final case states and phase spans.
-No separate native measurement or `scripts/measure-tests.sh` is proposed.
-
-Use BR9's passing ordinary gate at `f4735c54` as the before observation,
-with its exact source, phase selection and outcome. Its whole command took
-1,431.83 seconds; its native phase took 1,310.25 seconds. R7's
-1,315.81-second native continuation at `ae49c5a6` failed two tests and is
-an additional failed point, not the passing before gate.
-A comparison across different code trees or uncontrolled load must state
-those differences and cannot establish a controlled speedup.
-
-The older request `7783018d` remains separate. This preparation neither
-repeats its campaign nor claims to close it. Archive work retains priority.
+The older request `7783018d` remains separate. Its campaign is neither
+repeated nor claimed closed. Archive work retains priority. Evidence
+cleanup after the retention period needs a planner act naming the manifest.
