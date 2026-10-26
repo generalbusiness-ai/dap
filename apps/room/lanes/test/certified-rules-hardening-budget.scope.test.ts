@@ -213,5 +213,6 @@ test("G15 admits the maximum constructed capture, retains 32 real proofs, and re
     expect(utf8(canonicalize(complete.entry)).length).toBeGreaterThan(utf8(canonicalize(complete.record)).length);
     const replayed = await verify(httpSource("https://scopes.test", { fetch: routed, reader }), { mode: "replay", scope: G.name, platform, grants: "proven", anchors: [], capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE, head: (await G.summary()).at });
     expect([replayed.report.result, replayed.why ?? null]).toEqual(["consistent", null]);
+    console.info("G15 native hardening bytes", JSON.stringify({ entryBytes: PROPOSED_BOUNDS.entryBytes, maxStoredEntryBytes: Math.max(...entries.map(entry => utf8(canonicalize(entry)).length)), maxPassesRecordBytes: Math.max(...records.map(({ record }) => utf8(canonicalize(record)).length)), proof32RecordBytes: utf8(canonicalize(complete.record)).length, proof32EntryBytes: utf8(canonicalize(complete.entry)).length, positiveCaptureForecastBytes: positive.last.budget.captureEntryBytes, positiveCaptureBudgetBytes: actualBudget.captureEntryBytes, positiveCaptureActualBytes: utf8(canonicalize(actualCapture)).length, negativeNextForecastBytes: negative.next.budget.captureEntryBytes }));
   } finally { life.release(); }
 });
