@@ -1,9 +1,10 @@
 import { membershipWrittenRoles } from "./definition-corpus-data.ts";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type DeclaredDefinition } from "@generalbusiness/dap-contract";
-import { definitionDigest } from "@generalbusiness/dap-bytes";
-import { PROFILES, derivable, ruleAt, runnable, outcomeValueDomains, validateDefinition } from "@generalbusiness/dap-derive";
-import { ACTIONS_MOST, DESTINATION_CHANGED_SET, ROLE_LISTS, RULES, definitions, destinationMembership, destinationRulesScope, inbox, membership, platform, rulesMembership } from "../src/index.ts";
+import { canonicalize, definitionDigest, parseStrict, platformName } from "@generalbusiness/dap-bytes";
+import { CAPABILITY_CODE, PROFILES, counted, derivable, ruleAt, runnable, outcomeValueDomains, validateDefinition } from "@generalbusiness/dap-derive";
+import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
+import { ARCHIVE_CERTIFIED_RULES_COHORT, ACTIONS_MOST, DESTINATION_CHANGED_SET, ROLE_LISTS, RULES, definitions, destinationMembership, destinationRulesScope, inbox, membership, platform, rulesMembership } from "../src/index.ts";
 
 // The plan's T43, for `platform:inbox@1` (authority note, revision 16, section 12.1.6). The package holds six definitions: the two
 // lists at the end of this test name them. T43 for each of the other five is in this file or in the test file of its definition.
@@ -124,6 +125,27 @@ test("every platform definition supplies the rules of its whole pinned data, inc
   expect([lacks("platform:register@1"), lacks("platform:directory@1")]).toEqual([[], []]);
   // Revision 28 gives the destination's two formerly missing commit rules, so none is absent.
   expect([lacks("platform:destination@1"), lacks("platform:membership@1"), lacks("platform:rules@1"), lacks("platform:inbox@1")]).toEqual([[], [], [], []]);
+  // Match Scope.platform's pure admission inputs for the scheduled family.
+  // CAPABILITY_CODE is the maintained default registry; this is no native
+  // genesis, Worker, storage, transport or deployed-configuration witness.
+  for (const pin of Object.values(ARCHIVE_CERTIFIED_RULES_COHORT)) {
+    const supplied = platform(pin);
+    expect(supplied, `${pin}: native catalog entry`).not.toBeNull();
+    if (!supplied) throw Error(`Missing native catalog entry: ${pin}`);
+    const domains = outcomeValueDomains(supplied.data, supplied.rules);
+    expect(domains, `${pin}: static outcome value domains`).not.toBeNull();
+    const checked = validateDefinition(parseStrict(canonicalize(supplied.data)), PROPOSED_BOUNDS, RULE_PROFILES,
+      { platform: true, outcomeValues: domains });
+    expect(checked.ok ? [] : checked.problems, `${pin}: whole definition admission`).toEqual([]);
+    if (!checked.ok) throw Error(`Whole definition admission failed: ${pin}`);
+    expect(checked.definition.declared.name, `${pin}: native name`).toBe(platformName(pin));
+    expect(derivable(checked.definition, CAPABILITY_CODE), `${pin}: capability forms`).toBe(true);
+    expect(counted(checked.definition, CAPABILITY_CODE, PROPOSED_BOUNDS), `${pin}: derived entry bounds`).toBeNull();
+    const missing = checked.definition.marks.filter(mark => ruleAt(supplied.rules, mark.code, mark.kind) === null)
+      .map(mark => ({ path: mark.path, code: mark.code, kind: mark.kind }));
+    expect(missing, `${pin}: missing native mark rules`).toEqual([]);
+    expect(runnable(checked.definition, supplied.rules), `${pin}: runnable whole definition`).toBe(true);
+  }
 });
 
 // Authority note, revision 25, section 12.1, "Where the rules scope and the destination record their membership reference" (I3 deltas
