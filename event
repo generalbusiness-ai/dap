@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/implementation/evidence/2026-10-26-r7-note-clarifications.manifest.json","body":{"commit":"d36773b337299d8ed6fac103dff6b94954e0321a","path":"notes/implementation/evidence/2026-10-26-r7-note-clarifications.manifest.json"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1dbfca321c792546b770eb0f706a501436ca4437","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-25-certified-rules-policy.md."}
