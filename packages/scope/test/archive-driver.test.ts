@@ -185,11 +185,12 @@ test("a pre-Mark target failure survives eviction and new native input without l
     const records = observed.map(args => {
       expect(args).toHaveLength(2);
       const record = args[1] as Record<string, unknown>;
-      expect(Object.keys(record).sort()).toEqual(["step", "detail", "rowPhaseAtLoad", "confirmed", "pending", "attemptsAtLoad", "hasNext", "attempted", "state", "reason", "caught", "cost", "parentRead", "capacityRefusal", "fixedFinish"].sort());
+      expect(Object.keys(record).sort()).toEqual(["step", "detail", "rowPhaseAtLoad", "confirmed", "pending", "attemptsAtLoad", "hasNext", "attempted", "state", "reason", "caught", "cost", "parentRead", "capacityRefusal", "fixedFinish", "sourceFailure"].sort());
       // This stand-in provider has no exact-object transport. It must not
       // invent a parent-read phase from a target failure or native work.
       expect(record["capacityRefusal"]).toBeNull();
       expect(record["fixedFinish"]).toBeNull();
+      expect(record["sourceFailure"]).toBeNull();
       expect(record["parentRead"]).toEqual({ ordinal: 0, type: "none", maximum: 0, phase: "none", refusal: "none" });
       expect(["row-load", "pin", "due-check", "target", "format", "pending-readback", "parent", "bootstrap", "sources", "rebuild", "plan", "frontier", "mark", "copy", "mint", "send", "readback", "confirm"]).toContain(record["step"]);
       expect(["none", "not-due", "wake-not-due", "target-missing", "target-different"]).toContain(record["detail"]);
