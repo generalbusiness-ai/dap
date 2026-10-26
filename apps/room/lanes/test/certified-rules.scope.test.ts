@@ -82,7 +82,9 @@ test("certified-rules native birth and device install bootstrap a real tree cert
     // reserve send reach G14 while its Q11 sibling is still unconfigured.
     const changeDigest = definitionDigest(changeDemo), changeBytes = canonicalize(changeDemo);
     expect(await Q.stub.submit(await Q.intent(rita, "activate", { fields: { digest: changeDigest, name: "change" } }), [], { values: [changeBytes] })).toMatchObject({ answer: "accepted" });
-    const opened = await D.did(rita, "open-pr", { fields: { definition: changeDigest, title: "unconfigured native reserve", draft: false }, expected: await D.expected({ repository: 0 }) });
+    const opening = await D.stub.submit(await D.intent(rita, "open-pr", { fields: { definition: changeDigest, title: "unconfigured native reserve", draft: false }, expected: await D.expected({ repository: 0 }) }), [], { values: [changeBytes] });
+    if (opening.answer !== "accepted") throw new Error(`open-pr was not accepted: ${JSON.stringify(opening)}`);
+    const opened = opening.receipt.fact.seq;
     const L = life.platform((await D.created(opened)).name); nodes.push(L); await pause(nodes);
     const secret = b64url(new Uint8Array(32).fill(91)); // Public TEST seed, never operator custody.
     const invitation = await M.did(rita, "invite-member", { fields: { handle: "@sam", role: "member", ...invitationIssueFields(cohort.membership, secret), inviteEnds: soon(3600) } });
@@ -181,7 +183,9 @@ test("fresh certified global checks override a stale native lane and staged publ
       expect(await Q.stub.submit(await Q.intent(rita, "activate", { fields: { digest, name: "change" } }), [], { values: [canonicalize(definition)] })).toMatchObject({ answer: "accepted" });
     }
     const openLane = async (definition: DeclaredDefinition, title: string) => {
-      const seq = await D.did(rita, "open-pr", { expected: await D.expected({ repository: 0 }), fields: { definition: definitionDigest(definition), title, draft: false } });
+      const opening = await D.stub.submit(await D.intent(rita, "open-pr", { expected: await D.expected({ repository: 0 }), fields: { definition: definitionDigest(definition), title, draft: false } }), [], { values: [canonicalize(definition)] });
+      if (opening.answer !== "accepted") throw new Error(`open-pr was not accepted: ${JSON.stringify(opening)}`);
+      const seq = opening.receipt.fact.seq;
       const lane = life.platform((await D.created(seq)).name); nodes.push(lane); await pause(nodes); return lane;
     };
     const L = await openLane(changeDemo, "stale native full manifest");

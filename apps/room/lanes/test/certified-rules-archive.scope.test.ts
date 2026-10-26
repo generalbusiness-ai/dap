@@ -76,7 +76,9 @@ test("certified native policy and proof plus its consumed single policy envelope
     // Real lane creation/review/reserve; no CLI precheck or supplied observation.
     const change = definitionDigest(changeDemo);
     expect(await Q.stub.submit(await Q.intent(rita, "activate", { fields: { digest: change, name: "change" } }), [], { values: [canonicalize(changeDemo)] })).toMatchObject({ answer: "accepted" });
-    const opened = await D.did(rita, "open-pr", { fields: { definition: change, title: "TEST certified archive consumer", draft: false }, expected: await D.expected({ repository: 0 }) });
+    const opening = await D.stub.submit(await D.intent(rita, "open-pr", { fields: { definition: change, title: "TEST certified archive consumer", draft: false }, expected: await D.expected({ repository: 0 }) }), [], { values: [canonicalize(changeDemo)] });
+    if (opening.answer !== "accepted") throw new Error(`open-pr was not accepted: ${JSON.stringify(opening)}`);
+    const opened = opening.receipt.fact.seq;
     const L = life.platform((await D.created(opened)).name); nodes.push(L); await pause(nodes);
     const secret = b64url(new Uint8Array(32).fill(94)); // Public TEST invitation only.
     const invitation = await M.did(rita, "invite-member", { fields: { handle: "@sam", role: "member", inviteEnds: soon(3600), ...invitationIssueFields(C.membership, secret) } });
