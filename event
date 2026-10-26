@@ -1,1 +1,1 @@
-{"kind":"promise","text":"Planner takes the practice survey: one documents-only head on planner/agentic-practice-survey-20261026 adding notes/2026-10-26-agentic-development-practice-survey.md, reviewed at its exact head over Main a97c7425.","body":{"branch":"planner/agentic-practice-survey-20261026"}}
+{"kind":"artifact","text":"notes at exact c81b168db1e008eb3397174b175e16eec3332d43 on planner/agentic-practice-survey-20261026, under promise git:sha1…8776194 on request git:sha1…4ed4e67","body":{"commit":"c81b168db1e008eb3397174b175e16eec3332d43","path":"notes"}}
