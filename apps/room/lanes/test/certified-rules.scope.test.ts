@@ -130,6 +130,19 @@ test("certified-rules native birth and device install bootstrap a real tree cert
     const proof = body["proof"], kept = await G.stub.retained(reader, "value", proof, RULES_TREE_PROOF.domain);
     expect(kept).toMatchObject({ ok: true }); if (!kept.ok) throw Error("Actual certificate proof must be retained");
     const publish = (request: FactRef, answer: FactRef) => publishRulesCertificate(room, proposed.policy, request, answer, proof, kept.value.bytes);
+    // The native policy activation must not fill an omitted owner choice.
+    // Keep the genuine certificate and both retained values unchanged.
+    const beforeMissingOwner = structuredClone(await Q.item(0));
+    const missingOwnerFields = JSON.parse(canonicalize({ ...proposed.policy, proposal: proposed.digest, proof,
+      certificateRequest: started, certificate, directoryBirth: factRefOf((await D.entries())[0]!),
+      destinationBirth: factRefOf((await G.entries())[0]!), membershipBirth: factRefOf((await M.entries())[0]!) }));
+    delete missingOwnerFields["ownerMayReview"];
+    expect(Object.hasOwn(missingOwnerFields, "ownerMayReview")).toBe(false);
+    const missingOwner = await Q.stub.submit(await Q.intent(rita, "publish", {
+      on: 0, expected: { on: beforeMissingOwner.revision }, fields: missingOwnerFields,
+    }), [], { values: [canonicalize(proposed.policy), kept.value.bytes] });
+    expect(missingOwner, canonicalize(missingOwner)).toMatchObject({ answer: "refused", reason: "bad-field" });
+    expect(await Q.item(0)).toEqual(beforeMissingOwner); // Includes current published ref, state and revision.
     const published = await publish(started, certificate);
     expect(published, canonicalize(published)).toMatchObject({ answer: "accepted" });
     const configured = await Q.item(0);
