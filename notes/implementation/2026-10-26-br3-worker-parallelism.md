@@ -12,9 +12,9 @@ assertions, deadlines and production source are unchanged.
 
 The initial source preparation used Main `9daa037e`. R7 has since landed
 on Main `6852f78d`; BR-3's three preparation commits were rebased onto that
-head without conflicts. The two-worker change remains source preparation.
-The owner still holds its runtime measurement and ordinary gate pending
-the serialized validation plan. No speedup or passing runtime result is claimed.
+head without conflicts. The two-worker change was source preparation at
+those checkpoints, before the owner's serialized runtime validation.
+No speedup is claimed.
 
 The latest recut includes the R7 documentation follow-up on Main
 `d36773b337299d8ed6fac103dff6b94954e0321a`. That upstream delta changes
@@ -22,6 +22,18 @@ only R7's note and a manifest. Source, tests and lock are unchanged from
 `6852f78d`; the existing dependency view and `645224…` stamp remain in place.
 No compiler or check was repeated. All evidence checkpoints below retain
 their original identities.
+
+The first two-worker gate at `eceeb5e9` failed the Lending story's second
+current-read assertion. The owner retains that failed gate separately.
+A later diagnostic-only isolated run passed without exposing the masked
+cause. Neither outcome establishes that cause.
+
+The historical Lending projection stand-in now collects at most two complete
+attempts. It restarts once only when independently validated sources name
+different native heads. The existing story deterministically crosses an
+accepted return act between the first materialized item response and history.
+The original act, drain, returned-item expectation, current requirements,
+second look, action assertions, post counts and deadlines remain.
 
 ## Decisions and why
 
@@ -44,6 +56,27 @@ and the separate single denial worker. No packages were installed for this
 preparation. The initial worktree had no `node_modules`; the Node witness
 below needs no external dependency. The later compiler used a separate copy
 of R7's existing dependency installation, as recorded below.
+
+The Lending helper serves only the main browser and visitor reads in the
+existing Lending file. Each original item and journal source first passes
+the unchanged strict projector independently, with its native head untouched.
+That checks query binding, successful complete items, declared fields, and
+the journal's bytes, chain and final hash. Only then does the collector
+compare every source's complete `{seq, hash}` to history. A malformed,
+refused, incomplete, binding or transport failure propagates immediately.
+No error catch selects a restart: even a journal-tail `stale` refusal stays
+a refusal. After the one permitted restart, the unchanged aggregate
+projector decides the result or keeps its refusal.
+
+The one-shot fetch interleave sets its flag before awaiting the story's
+original passer-by return and original dispatch drain. The return is an
+accepted native write, so history follows a head newer than the retained
+first response. The route constructs that response from the native owner's
+already serialized envelope. This uses no sleep, extra act or unjoined gate.
+The returned-item expectation moves after the first successful look; the
+same expected state follows the same write. The first current requirement
+now uses `expect.fail` so its failure is an assertion in the paired control.
+The earlier bounded diagnostic observer remains diagnostic-only.
 
 ## Evidence
 
@@ -79,6 +112,25 @@ note and the new manifest change after that checkpoint.
 | Real worktree dependency directory | Python `os.rename` of the private directory, followed by directory identity, stamp and 14 workspace-link checks | 0 | `65ff21c6869cab2bbede53632203e208f17762e1bd2e87714077a0d7e462d07b` (`dependency-materialization.json`) | `f6fb666c` |
 | Rebase and dependency comparison | `git rebase 6852f78d3279ef13a33b7b9d0b283e9ba96f079f`, then `python3 /private/tmp/artroom-br3-rebase-proof-20261026.py` | 0; no conflicts, one exact lock edge, 14 links checked | `f632734cc7284969e8b35b7fab42ef6678047f2b975bd609f8270bf26dfdd914` (`rebase-and-dependencies.json`) | `2017e679` |
 | Preparation patch comparison | `git range-diff 9daa037e1976fa0e245192823cce96fc8741360d..0ae2618738414c8fd705dad5e9b28e8aff59cd95 6852f78d3279ef13a33b7b9d0b283e9ba96f079f..2017e679338ad516592b5ee9e6798fea70e6c6ef` | 0; all three patches unchanged | `e00f80a28d580163d5c3a68f447a29381738c3d3a0329057591fd40826167358` (`range-diff.log`) | `2017e679` |
+| Scope test compiler after fixture repair | `node node_modules/typescript/bin/tsc -p packages/scope/tsconfig.test.json` | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` (`compiler.log`) | `e29acab4` |
+| Whole Lending file paired control | `node scripts/control.mjs packages/scope/test/support/legacy-lending-projection.ts '<restart guard>' '<guard disabled>' --expect 'the lending library on real scopes' -- . --config vitest.native.config.ts --project scope packages/scope/test/lending.test.ts --reporter=/private/tmp/artroom-br3-control-progress-20261026.mjs` (exact replacement and argv in `result.json`) | 0; distinguishes, healthy 1 passed, fault 1 assertion failed | `306484fb618a2f5a77d75ecd20a150a754517779946b2491e550b3740f858cfe` (`control.log`) | `e29acab4` |
+
+The repair compiler and one maintained paired control ran at
+`e29acab45e6eb113af89e8b084b0650c8c038a62`, tree
+`4aeb67935d527d8098a4f6ae129ed6435bfb0cf6`. The
+[coherence control manifest](evidence/2026-10-26-br3-lending-coherence-control.manifest.json)
+indexes the read-only output, checksum index, original/fault source digests,
+machine, load and command timings. The compiler exited zero. The unchanged
+whole story passed once; disabling only the head-restart guard made its
+first current requirement fail by `AssertionError` at line 260 with status
+`behind`. Both runs reported one ready/result/final callback and zero
+unhandled errors. The helper was restored byte-for-byte and the checkpoint
+remained clean. An external reporter adapter only selects separate output
+paths and delegates the maintained reporter's actual callbacks unchanged.
+The maintained control hides healthy-run stdout; the healthy callbacks,
+timing records and helper's passing-count summary are retained. No missing
+callback or stdout is reconstructed. Only this note and the manifest change
+after the repair checkpoint.
 
 The phase-selection witness does not resolve inherited Worker configs or
 prove that two native runtimes execute concurrently. It preserves the
@@ -118,6 +170,13 @@ the three preparation patches. No compiler or phase witness was repeated:
 the eventual ordinary gate must compile the upstream R7 inputs too.
 
 ## Open limits
+
+Request `50695e48` owns a fresh ordinary gate after this shared fixture
+repair and final evidence consolidation. The paired control proves the
+deliberately interleaved fixture gap, not the original gate's masked cause
+or cross-file stability. A continuously changing head can still exhaust
+the two-attempt bound and refuse. No native whole suite or gate was run for
+this repair; the earlier failed gate remains failed.
 
 Request `50695e48` owns the measurement, ordinary gate, exact-head review
 and any repair needed when tests run on two workers. The owner must check

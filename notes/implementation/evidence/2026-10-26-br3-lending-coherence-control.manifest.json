@@ -1,0 +1,56 @@
+{
+  "qualification": "One Scope compiler and one maintained whole-Lending-file paired control. Healthy story passed; only head-restart guard disabled caused the intended first-current AssertionError, then source restored. This proves the deterministic historical fixture coherence gap, not the masked cause of the original failed two-worker gate. A fresh ordinary gate remains required.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-26-br3-lending-coherence-control",
+  "checkpoint": {
+    "commit": "e29acab45e6eb113af89e8b084b0650c8c038a62",
+    "tree": "4aeb67935d527d8098a4f6ae129ed6435bfb0cf6"
+  },
+  "fileCount": 9,
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "bytes": 668,
+      "sha256": "2243a6300fa4c82a98ecc437b021f2f02bcafd3282a5d8ee620c22bca9702c13"
+    },
+    {
+      "path": "compiler.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "control-progress.mjs",
+      "bytes": 787,
+      "sha256": "f0c3134dcff75fb33888da642645f4ebb20a491fc7cfe90f92cf8994567a1137"
+    },
+    {
+      "path": "control.log",
+      "bytes": 6760,
+      "sha256": "306484fb618a2f5a77d75ecd20a150a754517779946b2491e550b3740f858cfe"
+    },
+    {
+      "path": "progress.after.jsonl",
+      "bytes": 1277,
+      "sha256": "266e415fefd484767a920c0fb5ec2867028a638df7d90e94436fb7618407dab2"
+    },
+    {
+      "path": "progress.before.jsonl",
+      "bytes": 1277,
+      "sha256": "8d5b7f1ee08a2fafa3bf2e1d3a18a63d13ff93a3b522996834e2111667dc1825"
+    },
+    {
+      "path": "result.json",
+      "bytes": 2973,
+      "sha256": "d0bfb12206f1eebe837087bc0d609f70d9c117f2f09e5367ba11d61fce51e6bf"
+    },
+    {
+      "path": "timing.after.jsonl",
+      "bytes": 1400,
+      "sha256": "53096b8d08c0ba44980951777b180e5d043ff02688d41a76303a83cd8a4cc720"
+    },
+    {
+      "path": "timing.before.jsonl",
+      "bytes": 1404,
+      "sha256": "06a6047be3309dcb39cb493f05fdc4af592bc715c7e0f02393d9856f3cc61b69"
+    }
+  ]
+}
