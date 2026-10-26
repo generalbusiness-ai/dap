@@ -38,7 +38,9 @@ function readRecord(value:unknown,keys:readonly string[]):Record<string,unknown>
  * It selects no value when the complete native evidence body is malformed. */
 export const rulesCertificateEvidenceValues: NonNullable<OperationRules['values']> = answer=>evidence(answer.body)?[{...RULES_POLICY_VALUE_V11,digest:answer.body.proposal as import('@generalbusiness/dap-contract').Digest},
       {...RULES_TREE_PROOF,digest:answer.body.proof as import('@generalbusiness/dap-contract').Digest}]:[];
-const certificateAct:PlatformData['acts'][string]={step:'transition',on:'branch',grant:'rules.publish',also:{},
+// Each signed request admits room for its own certificate operation, as read-token does.
+const certificateAct:PlatformData['acts'][string]={step:'transition',on:'branch',grant:'rules.publish',
+  adds:{operations:{[RULES_CERTIFICATE_KIND]:1}},also:{},
   fields:{proposal:{type:'digest',required:true,value:RULES_POLICY_VALUE_V11},directoryBirth:birthField('platform:directory'),
     rulesBirth:birthField('platform:rules'),membershipBirth:birthField('platform:membership')},
   guards:[{state:['ready']},{code:'rules-certificate-request-v14',row:'R7'}],
@@ -50,7 +52,6 @@ const oldJudgeRule=destinationRules4['judge'];
 if(!oldJudgeRule||oldJudgeRule.place!=='outcome')throw Error('native judge outcome required');
 export const destinationV14:PlatformData={...destination4,items:{...destination4.items,publication:{...oldPublication,values:{...oldPublication.values,
   passes:{fixed:false,required:false,of:{type:'code',code:'certified-publication-state-v14',row:'R7'}}}},branch:{...oldBranch,
-  holds:{...oldBranch.holds,operations:{...oldBranch.holds?.operations,[RULES_CERTIFICATE_KIND]:1}},
   values:{...oldBranch.values,rulesCertificateRequest:{fixed:false,required:false,of:{type:'code',code:'rules-certificate-binding-v14',row:'R7'}}}}},
   acts:{...destination4.acts,[RULES_CERTIFICATE_KIND]:certificateAct},outcomes:{...destination4.outcomes,
     judge:{...oldJudge,most:{...oldJudge.most!,effects:16},observes:oldJudge.observes!.map(row=>row.of==='rules'?{...row,retains:[{domain:'artroom-rules-extents-2',max:262144}]}:row)},
