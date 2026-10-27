@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6d4b83b29dedb5cf2994b8fabba97e1811c0e269","text":"Merge retired a covered predecessor; the successor is at scripts/test/fixtures/usage-report/metrics-test-emissions.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9860e027ae69271976c3b320fb27d3a7fd887414","text":"Merge retired a covered predecessor; the successor is at scripts/test.mjs."}
