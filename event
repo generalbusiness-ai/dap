@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/git/src/archive-policy.ts","body":{"commit":"33690b698c9c83e317ba99e9781989047144d53c","path":"packages/git/src/archive-policy.ts"}}
+{"kind":"artifact","text":"Merge published the current artifact at packages/git/test/archive-policy.test.ts","body":{"commit":"33690b698c9c83e317ba99e9781989047144d53c","path":"packages/git/test/archive-policy.test.ts"}}
