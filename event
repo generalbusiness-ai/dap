@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e9924d506efac9f778e790cc21e4783f616ce95e","text":"Merge retired a covered predecessor; the successor is at apps/room/wrangler.demo.jsonc."}
+{"kind":"promise","text":"Write the self-hosting amendment (Git host as the deployer's choice: none, artifacts or github.com; a host-none room without publication) as a new draft of notes/2026-10-19-self-hosting-on-celld.md, answering the eight points, and land it after checker review."}
