@@ -1,11 +1,10 @@
-# Prepare the installed-release metadata listing
+# List installed application releases
 
-This is a preparation checkpoint, not a completed operator command. The pure
-projector, recorded TEST metadata, six focused cases and four paired controls
-are complete. The transport, command dispatch, deployment paragraph, ordinary
-gate, final manifest, evidence seal and checker review remain due.
+The Node operator command, projector, deployment guidance and focused evidence
+are complete. The ordinary gate, final manifest, evidence seal and exact-head
+checker review remain due. This note claims no live read, landing or deployment.
 
-## Request and unresolved boundary
+## Request and read boundary
 
 The assigned request is
 `git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:521f57a15e85897faa9703ae3a7c8061c6d5589c`,
@@ -14,9 +13,13 @@ under promise
 It precedes R14 child `00abd5aa`; archive work under `0f0eeab7` still preempts.
 No live read or builder deployment has run.
 
-Ruling request
+Ruling
+`git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2dc765ac41e0287b5854e0790622ad29a4d0033a`
+answers request
 `git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f7825ea7a2a01eeb7e4803d6760325e66f795895`
-asks how the no-registration/write condition applies to existing server reads.
+and defines the no-registration/write condition as no mutation, session,
+registration or retry request issued by this command. Existing server read
+maintenance remains permitted and explicitly qualified.
 At base Main `f9aca97f84803860cb10a714b1bf643e50bc87f1`,
 `packages/scope/src/scope-index.ts` can call `registerKnown()` during an unknown
 register-mode lookup, including a read. A public summary enters `#invoke` and
@@ -26,17 +29,39 @@ the first-turn work. An existing public read cannot guarantee zero incidental
 server writes. The existing `scopeIndexAccess` also acquires a session and may
 repeat a forbidden read with signed authentication.
 
-The proposed adapter would validate the saved manifest locally, then issue one
+The Node adapter validates the saved manifest locally, then issues one
 signed-only bounded summary GET per listed scope, without a session, retry,
-fallback, pagination, redirect, mutation or registration request. That boundary
-needs the planner's explicit ruling before implementation. A summary can bind
+fallback, pagination, redirect, mutation or registration request. A summary can bind
 the observed full scope reference and native pin, but cannot reverify the saved
-genesis hash. No waiver or new server endpoint is inferred here.
+genesis hash. No new server endpoint or deployment is part of this work.
 
-The same ruling asks about locators. The current row uses `scope` for the
+The ruling confirms the locators. Each row uses `scope` for the
 created application and `installItem: {scope, item}` for the owning Rules scope
 and installation ID. This preserves both full references within the five
-requested fields. It remains provisional until the ruling arrives.
+requested fields.
+
+Run `dap scope-index applications --manifest FILE --out FILE` with the saved
+operator manifest and matching CLI configuration. Existing exclusive atomic file
+publication never replaces a prior report. Saved JSON contains only
+`manifestPath`, `manifestDigest`, `applications` and `errors`. Its run summary
+pairs the same absolute manifest path and exact saved-byte digest with counts
+and complete/incomplete status. It prints no service configuration. Every
+unreadable scope has a validated fixed reason or `unavailable`; exception text
+is never emitted. An incomplete report is saved with exit 1. Invalid local
+inputs, missing signing custody, failed publication or an oversized report
+produce a fixed error and no partial output file.
+
+Local manifest validation precedes signing-key access and the network. The
+adapter reuses existing signed reads directly, bypassing the session/fallback
+inventory adapter. Reads are serial and bounded to the manifest's 4,096 scopes,
+4 MiB and 30 seconds per response. It aborts caller waiting at the existing
+transport deadline; an injected fetch that ignores cancellation may retain its
+own resources. Output is limited to 16 MiB with exact UTF-8 accounting before
+retaining each row. A cap failure stops the run and publishes no report, so it
+cannot be mistaken for a complete inventory. No settings or persistent signing
+custody are written. `docs/deploy.md` tells the planner to retain each manifest
+pair and obtain a complete report for Grow, Demo and Lending before further
+R11 deployment; reported release/publisher/host rows populate current trust.
 
 ## Implemented projection
 
@@ -61,7 +86,7 @@ malformed active sibling invalidates the whole scope's rows. A pending job
 retains valid active rows with a fixed `installation-pending` error: a real
 application child can precede its active announcement. The caller must treat
 that result as incomplete. This is a deployment observation, not replay or a
-trust grant. The future transport owns byte and deadline bounds; this pure
+trust grant. The transport owns byte and deadline bounds; this pure
 function performs no read or output operation.
 
 ## Evidence and limits
@@ -111,6 +136,17 @@ The later readonly repair affects only the separate recorded-sample test; the
 four selected control witnesses are unchanged. These are requested outcome
 controls, not a mutation sweep.
 
+Two further transport controls compile the actual adapter. Adding a second
+summary GET fails the unchanged call-count assertion (ten calls instead of
+five). Emitting caught exception text in `why` fails the unchanged fixed-error
+array assertion with the TEST sentinel visible; the later sentinel-absence
+boolean is not reached, and is not claimed as the distinguishing assertion.
+Both controls restore the same adapter SHA-256
+`005bb51f6dfc7f3979e966878fb25780700b33506110edae81e3dae33d0946bd`.
+Command tests also cover local validation before signing, no store writes,
+redirect refusal, response bytes/deadline, exclusive publication and the real
+16 MiB output cap. These HTTP replies are scripted, not live reads.
+
 The initial five-case run passed, but its outer `/usr/bin/time -lp` command
 exited 1 after a sandbox-denied `sysctl` call. That wrapper result is retained
 and is not called a successful command. Later Python wrappers record wall and
@@ -130,10 +166,16 @@ with existing caches, not whole-edit latency or an isolated-machine benchmark.
 | Immutable fixture repair compiles | same test TypeScript context | 0 | `repaired-test-typecheck/output.log`: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
 | Repaired owning file: six passed | plain Vitest, CLI project, one file | 0 | `repaired-owning-plain/output.log`: `cbe46e09860677c68da09ed2878142489ef8deea99044b49207de614c133f9eb` |
 | Shared helper audit: 678 sources, 134 byte exports | `node scripts/check-shared-helpers.mjs` | 0 | `owning-shared-helpers/output.log`: `850cd7e06f8c7ea8d72b66f47d47eb4c5cd252a6612edd2621450af3752f425c` |
+| New command, projector and legacy operator cases: 16 passed | three focused CLI Vitest files | 0 | `command-plain-01/output.log`: `21e9bbfcd9f6e7cd6efb0389de85b19804ca2c7e2638cd0dac0c5ce5d1a7b1ed` |
+| CLI source compiler context | `tsc -p packages/cli/tsconfig.json --noEmit` | 0 | `command-ts-source-01/output.log`: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| CLI test compiler context | `tsc -p packages/cli/tsconfig.test.json --noEmit` | 0 | `command-ts-test-01/output.log`: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| Page and MCP browser-resource freshness: two passed, two unselected | two focused freshness witnesses | 0 | `browser-resource-freshness/output.log`: `58b17a927379e678779ea7670d8b3e874bf4b59018c4734c6cd93fda82333d5f` |
+| Repeat-read transport control compiles, fails call-count assertion, restores | selected command witness | compiler 0; child 1 | `command-transport-repeat-control-01/selected-test.log`: `12377382849f28f3458c21d25cefc9b68ddcda85e9b54a3cd1ba31297b31282d` |
+| Exception-disclosure transport control compiles, fails fixed-error assertion, restores | selected command witness | compiler 0; child 1 | `command-transport-privacy-control-01/selected-test.log`: `9dbcdb203362ca2f4299ab37c65865a3e675008c621e4cc47438545b60d70d88` |
 
 ## Remaining work
 
-Resolve `f7825ea7`, implement the agreed transport/command and deployment
-paragraph, run its focused command witnesses and the ordinary gate once, then
-finish the PD-2 manifest/seal and exact-head review. No artifact report, review
-request, landing or deployment is claimed by this checkpoint.
+Run the ordinary gate once, then finish the PD-2 manifest/seal and exact-head
+review. The focused command run passed 16 cases across three files, including
+the legacy operator commands; both changed CLI TypeScript contexts passed.
+No artifact report, review request, landing or deployment is claimed yet.
