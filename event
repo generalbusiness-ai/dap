@@ -1,1 +1,1 @@
-{"kind":"promise","text":"Carry the design note on pointing and claims in packages to checker review and land it as a planner head."}
+{"kind":"artifact","text":"docs/use-cases.md at exact 18103d2b311ee557c0fb368027d52762e51c53ef on planner/use-cases-pointing-20261027, under promise git:sha1…14c6b59 on request git:sha1…48a1968\n\nUse cases: pointing at things and claims of agreement, head 18103d2b.","body":{"commit":"18103d2b311ee557c0fb368027d52762e51c53ef","path":"docs/use-cases.md"}}
