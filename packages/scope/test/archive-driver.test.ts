@@ -545,15 +545,30 @@ test("adaptive Native passes reserve writing, incremental sending and confirmati
   expect(capture.ledgerReconciled).toBe(true);
   expect(capture.admitted).toEqual(finished.cost);
   expect(capture.firstQuote?.throughSeq).toBe(published.through.seq + 1);
+  expect(capture.firstQuote?.throughHash).toBe(fixedReceipt.confirmed!.through.hash);
   expect(capture.firstQuote?.costs?.total).toEqual(fixedQuote.remaining);
   expect(capture.firstQuote?.admitted).toEqual(fixedQuote.used);
   expect(capture.firstFinishAttribution?.admitted).toEqual(fixedQuote.used);
   expect(capture.firstFinishAttribution?.complete, JSON.stringify(capture.firstFinishAttribution)).toBe(true);
   expect(capture.selectedQuote?.throughSeq).toBe(fixedReceipt.confirmed!.through.seq);
+  expect(capture.selectedQuote?.throughHash).toBe(fixedReceipt.confirmed!.through.hash);
   expect(capture.rowContext?.snapshotConsumed).toBe(true);
   expect(capture.finishGeometryComplete, JSON.stringify(capture.firstQuote)).toBe(true);
   const captureText = JSON.stringify(capture);
   for (const secret of ["TEST ARCHIVE TOKEN", ...Object.values(archiveRepository)]) expect(captureText).not.toContain(secret);
+  // Every string leaf must be the fixed qualification/availability label or
+  // an explicitly named immutable head hash. A single byte of content fails.
+  const privateFree = (value: unknown, key = ""): boolean => {
+    if (value === null || typeof value === "boolean") return true;
+    if (typeof value === "number") return Number.isSafeInteger(value) && value >= 0;
+    if (typeof value === "string") return key === "throughHash" ? /^sha256:[0-9a-f]{64}$/.test(value)
+      : key === "qualification" ? value === "Numeric diagnostic only; observer overhead can affect the original timeout. No source, body or admission authority."
+      : key === "debitAttribution" && ["observed", "unavailable"].includes(value);
+    if (Array.isArray(value)) return value.every(item => privateFree(item));
+    return typeof value === "object" && Object.entries(value).every(([field, item]) => privateFree(item, field));
+  };
+  expect(privateFree(capture)).toBe(true);
+  expect(privateFree({ ...capture, content: "x" })).toBe(false);
   (context.task.meta as Record<string, unknown>)["capacityCaptureBytes"] = new TextEncoder().encode(captureText).length;
   expect(fixedQuote.metadataMargin).toBe(65_536);
   for (const key of ["entries", "attempts", "nodes", "calls", "metadata", "inputWork"] as const) {

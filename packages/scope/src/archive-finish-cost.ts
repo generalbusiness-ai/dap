@@ -93,7 +93,7 @@ export function forecastArchiveFinish(context: ArchiveFinishContext, preparation
   // remain uncaptured, rather than manufacturing missing forecast components.
   // sourceLookups is a diagnostic subset of publication, not another debit.
   observeArchiveFinishQuote(budget, {
-    throughSeq: through.seq,
+    throughSeq: through.seq, throughHash: through.hash,
     scalars: {
       stage: 0, oldRowBytes, rowContextBytes, parentObjects: parent.objects, parentBytes: parent.bytes,
       parentPresent: context.parent !== null ? 1 : 0, maximum: context.maximum, legacyAnchors,

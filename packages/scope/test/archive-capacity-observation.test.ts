@@ -1,6 +1,7 @@
 /** Numeric diagnostics over the real budget, with counted SQL/clock stands.
  * These are plain function witnesses, not native archive or source admission. */
 import { expect, test } from "vitest";
+import { isDigest } from "@generalbusiness/dap-bytes";
 import { ARCHIVE_BOUNDS, ArchiveBudget, ArchiveStopped } from "../src/archive-budget.ts";
 import { createObservedArchiveBudget, observeArchiveFinishQuote, observeArchiveRowContext, observeArchiveSelection,
   readArchiveCapacityObservation, registerCustomArchiveBudget } from "../src/archive-capacity-observation.ts";
@@ -66,6 +67,7 @@ test("geometry observation leaves a custom budget's ledger method untouched", ()
   expect(reads).toBe(0);
   expect(report.debitAttribution).toBe("unavailable");
   expect(report.admitted).toBeNull();
+  expect(report.terminal).toBeNull();
   expect(report.rowContext).toBeNull();
   expect(report.firstQuote).toBeNull();
   expect(report.selectedQuote).toBeNull();
@@ -245,4 +247,33 @@ test("the first completed finish keeps an immutable debit boundary after later w
   expect(after.admitted?.calls).toBe(3);
   expect(JSON.stringify(after.firstFinishAttribution)).toBe(before);
   expect(after.firstFinishAttribution?.admitted?.metadata).toBe(1);
+});
+
+test("target identity copies only a valid digest and rejects malformed hashes or foreign content fields", () => {
+  const hash = "sha256:" + "a".repeat(64), other = "sha256:" + "b".repeat(64);
+  if (!isDigest(hash) || !isDigest(other)) throw Error("The synthetic target hashes must be digests.");
+  const budget = createObservedArchiveBudget({}, () => 0);
+  const quote = { throughSeq: 7, throughHash: hash, scalars: { stage: 0 } };
+  observeArchiveFinishQuote(budget, quote);
+  quote.throughHash = other;
+  const terminal = { throughSeq: 7, throughHash: hash };
+  const before = readArchiveCapacityObservation(budget, terminal)!;
+  terminal.throughHash = other;
+  expect(before.firstQuote?.throughHash).toBe(hash);
+  expect(before.terminal?.throughHash).toBe(hash);
+  expect(Object.isFrozen(before.firstQuote)).toBe(true);
+  expect(Object.isFrozen(before.terminal)).toBe(true);
+  observeArchiveFinishQuote(budget, { throughSeq: 8, throughHash: "private-parent/path" } as never);
+  observeArchiveFinishQuote(budget, { throughSeq: 8, throughHash: hash, content: "foreign request content" } as never);
+  const malformed = readArchiveCapacityObservation(budget, { throughSeq: 8, throughHash: "private-parent/path" } as never)!;
+  expect(malformed.firstQuote?.throughHash).toBe(hash);
+  expect(malformed.lastCompleteQuote?.throughHash).toBe(hash);
+  expect(malformed.terminal).toBeNull();
+  expect(malformed.observationComplete).toBe(false);
+  expect(malformed.flags).not.toBe(0);
+  const foreign = readArchiveCapacityObservation(budget, { throughSeq: 8, throughHash: hash, content: "foreign request content" } as never)!;
+  expect(foreign.terminal).toBeNull();
+  const text = JSON.stringify(foreign);
+  expect(text).not.toContain("private-parent/path");
+  expect(text).not.toContain("foreign request content");
 });

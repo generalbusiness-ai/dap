@@ -1,7 +1,9 @@
 /** Temporary numeric archive diagnostic. It grants no work or admission.
  * Its allocations and stack inspection can affect the original deadline.
- * Bodies, caller strings, SQL and archive path names never enter its state. */
-import { natural } from "@generalbusiness/dap-bytes";
+ * Only validated target digests and closed numeric geometry are retained.
+ * Bodies, SQL and archive path names never enter its state. */
+import type { Digest } from "@generalbusiness/dap-contract";
+import { isDigest, natural } from "@generalbusiness/dap-bytes";
 import { ArchiveBudget, type ArchiveCost } from "./archive-budget.ts";
 
 const AXES = ["entries", "attempts", "nodes", "calls", "metadata", "inputWork"] as const;
@@ -22,6 +24,7 @@ const LAYOUT_PARTS = ["used", "limits", "patch", "body", "commit"] as const;
 const LAYOUT_AXES = ["objects", "trees", "files", "names", "depth", "objectBytes", "outputWork"] as const;
 export interface ArchiveFinishQuoteGeometry {
   readonly throughSeq: number;
+  readonly throughHash?: Digest;
   readonly scalars?: NumericFields<typeof ARCHIVE_FINISH_SCALARS[number]>;
   readonly costs?: CostFields<typeof ARCHIVE_FINISH_COSTS[number]>;
   readonly layout?: Readonly<Partial<Record<typeof LAYOUT_PARTS[number], NumericFields<typeof LAYOUT_AXES[number]>>>>;
@@ -30,6 +33,7 @@ const TERMINAL_SCALARS = ["strategy", "state", "reason", "refusalKind", "refusal
 const TERMINAL_COSTS = ["cost", "fixedUsed", "fixedRemaining", "refusalRequested", "refusalReserved", "refusalUsed", "refusalLimit", "refusalShortfall"] as const;
 export interface ArchiveTerminalGeometry {
   readonly throughSeq: number | null;
+  readonly throughHash?: Digest;
   readonly scalars?: NumericFields<typeof TERMINAL_SCALARS[number]>;
   readonly costs?: CostFields<typeof TERMINAL_COSTS[number]>;
 }
@@ -380,8 +384,14 @@ export function observeArchiveFinishQuote(budget: ArchiveBudget, input: ArchiveF
   const state = states.get(budget); if (!state || !state.observed) return;
   safely(state, () => {
     state.quoteCalls = count(state, state.quoteCalls);
-    const own = fields(input, ["throughSeq", "scalars", "costs", "layout"]);
+    const own = fields(input, ["throughSeq", "throughHash", "scalars", "costs", "layout"]);
     if (!own || !natural(own["throughSeq"]?.value)) { state.flags |= FLAGS.malformed; return; }
+    let throughHash: Digest | undefined;
+    if (own["throughHash"]) {
+      const value: unknown = own["throughHash"].value;
+      if (!isDigest(value)) { state.flags |= FLAGS.malformed; return; }
+      throughHash = value;
+    }
     const scalar = own["scalars"] ? numbers(own["scalars"].value, ARCHIVE_FINISH_SCALARS) : {};
     const cost = own["costs"] ? costs(own["costs"].value, ARCHIVE_FINISH_COSTS) : {};
     const work = own["layout"] ? fields(own["layout"].value, LAYOUT_PARTS) : {};
@@ -393,7 +403,7 @@ export function observeArchiveFinishQuote(budget: ArchiveBudget, input: ArchiveF
       layout[part] = Object.freeze(value);
     }
     const ledger = state.observed ? admitted(budget, state) : null;
-    const quote = Object.freeze({ throughSeq: own["throughSeq"]!.value as number, scalars: Object.freeze(scalar),
+    const quote = Object.freeze({ throughSeq: own["throughSeq"]!.value as number, ...(throughHash !== undefined ? { throughHash } : {}), scalars: Object.freeze(scalar),
       costs: Object.freeze(cost), layout: Object.freeze(layout), admitted: ledger === null ? null : frozenCost(ledger) });
     state.firstQuote ??= quote; state.lastQuote = quote;
     if (scalar.stage === 0 && state.firstFinishAttribution === null) state.firstFinishAttribution = finishAttribution(state, ledger);
@@ -414,12 +424,18 @@ export function observeArchiveSelection(budget: ArchiveBudget, throughSeq: numbe
   });
 }
 function terminal(input: ArchiveTerminalGeometry): ArchiveTerminalGeometry | null {
-  const own = fields(input, ["throughSeq", "scalars", "costs"]);
+  const own = fields(input, ["throughSeq", "throughHash", "scalars", "costs"]);
   if (!own || own["throughSeq"] === undefined || own["throughSeq"].value !== null && !natural(own["throughSeq"].value)) return null;
+  let throughHash: Digest | undefined;
+  if (own["throughHash"]) {
+    const value: unknown = own["throughHash"].value;
+    if (!isDigest(value)) return null;
+    throughHash = value;
+  }
   const scalar = own["scalars"] ? numbers(own["scalars"].value, TERMINAL_SCALARS) : {};
   const cost = own["costs"] ? costs(own["costs"].value, TERMINAL_COSTS) : {};
   return scalar === null || cost === null ? null : Object.freeze({ throughSeq: own["throughSeq"].value as number | null,
-    scalars: Object.freeze(scalar), costs: Object.freeze(cost) });
+    ...(throughHash !== undefined ? { throughHash } : {}), scalars: Object.freeze(scalar), costs: Object.freeze(cost) });
 }
 function completeQuote(quote: ArchiveFinishQuoteGeometry | null): boolean {
   if (!quote || quote.scalars?.stage !== 0 || !quote.costs || !quote.layout
@@ -440,7 +456,7 @@ function completeQuote(quote: ArchiveFinishQuoteGeometry | null): boolean {
 export function readArchiveCapacityObservation(budget: ArchiveBudget, input: ArchiveTerminalGeometry) {
   const state = states.get(budget); if (!state) return null;
   const captured: { value: ArchiveTerminalGeometry | null } = { value: null };
-  safely(state, () => { captured.value = terminal(input); if (captured.value === null) state.flags |= FLAGS.malformed; });
+  if (state.observed) safely(state, () => { captured.value = terminal(input); if (captured.value === null) state.flags |= FLAGS.malformed; });
   const end = captured.value;
   const actual = state.observed ? admitted(budget, state) : null;
   const ledgerReconciled = actual !== null && AXES.every(axis => actual[axis] === state.admittedDelta[axis]);
@@ -449,7 +465,8 @@ export function readArchiveCapacityObservation(budget: ArchiveBudget, input: Arc
     debitAttribution: state.observed ? "observed" as const : "unavailable" as const,
     debitAttributionComplete: state.observed && state.flags === 0,
     finishGeometryComplete: state.observed && state.rowContext !== null && completeQuote(state.firstQuote),
-    observationComplete: state.observed && state.flags === 0 && state.rowContext !== null && completeQuote(state.firstQuote) && end !== null,
+    observationComplete: state.observed && state.flags === 0 && state.rowContext !== null && completeQuote(state.firstQuote)
+      && isDigest(state.firstQuote?.throughHash) && end !== null,
     flags: state.flags, ledgerReconciled, admitted: actual, admittedDelta: { ...state.admittedDelta }, unattributedAdmittedDelta: { ...state.unattributedAdmittedDelta },
     debitCalls: state.debitCalls, affordabilityCalls: state.affordabilityCalls, droppedSiteCalls: state.droppedSiteCalls, droppedRefusals: state.droppedRefusals,
     sites: [...state.sites.values()].map(row => ({ ...row, frames: row.frames.map(frame => [...frame]), attemptedDebit: { ...row.attemptedDebit },

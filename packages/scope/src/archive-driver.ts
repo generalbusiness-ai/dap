@@ -157,6 +157,7 @@ export class ArchiveDriver {
     // Capture codes: 0 no planner, 1 adaptive, 2 fixed published,
     // 3 fixed unpublished, 4 conversion, 5 pending rebuild.
     let captureStrategy = 0, captureThrough: number | null = null, captureSelected: number | null = null;
+    let captureThroughHash: Head["hash"] | undefined;
     let captureEntries: number | undefined;
     let phase = "unknown", confirmed: number | null = null, pending: number | null = null, attempts = 0, hasNext = false;
     const observed: { outcome?: ArchivePass } = {};
@@ -235,7 +236,7 @@ export class ArchiveDriver {
       const ref = journalRef(at.scope);
       // Resolve an outstanding attempt before reconstructing or minting again.
       if (row.pending) {
-        captureStrategy = 5;
+        captureStrategy = 5; captureThrough = row.pending.through.seq; captureThroughHash = row.pending.through.hash;
         if (!attempted) {
           const next = this.#later(row.attempts);
           if (next === null) { budget.stop("unavailable"); return done({ state: "retry", next: null, reason: "unavailable" }); }
@@ -345,7 +346,7 @@ export class ArchiveDriver {
           ...(preparedSources?.replayScopes ? { replayScopes: preparedSources.replayScopes } : {}) };
         let planned: Awaited<ReturnType<typeof planPublishedArchiveConversion>>;
         if (row.confirmed && row.confirmed.layout !== 2) {
-          captureStrategy = 4; captureThrough = through.seq;
+          captureStrategy = 4; captureThrough = through.seq; captureThroughHash = through.hash;
           if (row.confirmed.through.seq >= ARCHIVE_BOUNDS.entries) return budget.stop("limit");
           if (preparedSources?.prepare) for (let seq = 0; seq <= row.confirmed.through.seq; seq++) await preparedSources.prepare(seq, budget);
           planned = await planPublishedArchiveConversion(this.#options.sql, { ...common, row }, budget);
@@ -371,6 +372,7 @@ export class ArchiveDriver {
             : "production" in this.#options ? planRootAdaptiveArchivePass : planAdaptiveArchivePass;
           captureStrategy = fixed ? row.confirmed!.anchorsPublished === true ? 2 : 3 : 1;
           captureThrough = selectedThrough.seq;
+          captureThroughHash = selectedThrough.hash;
           const adaptive = await planner(this.#options.sql, { ...common, at, through: selectedThrough,
             ...(legacyAnchorParent ? { legacyAnchorParent } : {}),
             ...(preparedSources?.prepare ? { prepareSources: preparedSources.prepare } : {}),
@@ -461,6 +463,7 @@ export class ArchiveDriver {
         const refusalSites = ["prepare-sources", "scout-open", "scout-next", "shape-inventory", "prepare-finish", "finish-affordability", "frontier-capture", "migration-affordability", "plan-debit", "pass-debit"];
         const capacityObservation = readArchiveCapacityObservation(budget, {
           throughSeq: captureThrough,
+          ...(captureThroughHash !== undefined ? { throughHash: captureThroughHash } : {}),
           scalars: {
             strategy: captureStrategy, state: states.indexOf(observed.outcome?.state ?? "") + 1,
             // 0 absent, 1 unrecognised, then the existing known-reason order.
