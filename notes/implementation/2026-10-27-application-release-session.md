@@ -1,7 +1,7 @@
 # List installed releases from Rules scopes through the operator session
 
-The Rules-only repair and its focused checks passed. The new ordinary gate,
-final evidence seal and exact-head checker review remain due. No live query
+The Rules-only repair, focused checks and new ordinary gate passed. Final
+repair evidence is sealed read-only. Exact-head checker review remains due. No live query
 or deployment is part of this child. The earlier candidate passed its gate
 but was rejected for incomplete scope-kind coverage; that result does not
 validate this repair.
@@ -87,12 +87,12 @@ when used. This child changes no grants, authority, settings or session policy.
 
 ## Current evidence and its limits
 
-Fresh repair evidence is open at
+Final repair evidence is retained read-only at
 `/Users/hughpyle/play/artroom-evidence/2026-10-27-application-release-session-recut`.
 `prior-head/` is an exact size-and-hash copy of all 73 files sealed for the
 rejected candidate. The original sealed directory remains unchanged. The
-checked-in evidence manifest still describes that prior directory. One final
-repair manifest and a new seal remain due after the new gate.
+final replacement manifest inventories the repair evidence and all 73 prior
+files. The raw index and read-only seal cover that complete inventory.
 
 Fresh Node checks passed 15 cases in exactly two files: nine command-boundary
 cases and six projector cases. CLI source, Node-test and Native-test compiler
@@ -168,7 +168,7 @@ hashes and output digest. Standalone scripted recording and control records
 name their current Git head/tree and source/test hashes, including temporary
 instrumentation or the changed adapter. They do not record separate before/after
 working-file inventories.
-No package was installed. The new gate checkpoint will bind the final source.
+No package was installed. The new gate checkpoint below binds the final source.
 
 The prior gate passed at `30a0933de6f5f612c79c4b44054c431f142eeab3`, tree
 `168852247492ecd9c43dabbd64c3f622bd05079d`, before checker rejection.
@@ -178,6 +178,39 @@ plain 2,863 passed and one skipped, and Native 795 passed and two skipped.
 Both Vitest terminals had zero unhandled errors. Native callbacks lacked 17
 ready and 38 result observations; those omissions establish no cause or missing
 duration. Prior source equality binds that prior tree only, not this repair.
+
+The new ordinary `npm run gate` naturally passed at commit `ecb6d08d789b8a47532f7e4a9cd27ee329e1e622`,
+tree `1169aad04141b6e3a28ee4c5390605e959510c57`. The checkout was clean before and after, the driver recorded
+no signal, every fixed stage passed, and both Vitest terminals reported zero
+unhandled errors. It ran from `2026-10-27T11:51:59.805726Z` to
+`2026-10-27T12:07:32.345942Z`. Outer wall time was 932.446831959
+seconds. Child CPU was 1981.075428000 seconds, comprising
+1752.317094000 user and 228.758334000
+system seconds. The machine was `{"architecture": "arm64", "cpus": 18, "release": "27.2.0", "system": "Darwin"}`, with Node `v26.12.1`.
+Load averages were `{"before": [1.361328125, 1.51025390625, 1.796875], "after": [3.7685546875, 3.66552734375, 3.14892578125]}`.
+
+New gate public totals reconciled to final identities and stdout: node: 66 passed; counting: 55 passed; plain: 2,863 passed, 1 skipped cases and 281 passed files; native: 796 passed, 2 skipped cases and 233 passed, 1 skipped files.
+The retained analysis records per-stage timings and identity counts. It also
+requires the exact new Native listing case and its module to finish passed. Callback
+observations remain qualified: plain: 0 final identities without ready and 0 without result callbacks; native: 17 final identities without ready and 38 without result callbacks. Missing callbacks
+establish no cause, readiness or missing duration. Concurrent case-duration
+sums are not wall time or CPU. Focused checks, controls and the prior rejected
+candidate's gate remain separate observations.
+
+Only three documentation files change after the new gate: `docs/deploy.md`,
+this implementation note and its replacement evidence manifest. The guide's
+coverage clarification follows the documents-only rule in `docs/testing.md`.
+All 3,243 other tracked blobs and modes equal the tested checkpoint,
+including other implementation notes, recorded in `gate-source-equality.json`
+(SHA-256 `1f3986c8f3d428513959b311c9d7d52ef47bc350239730042175f17e956ddb74`). `finalization-inputs.json` binds the existing
+raw files and preserves the prior manifest. All 73 `prior-head/` files retain
+their original bytes and read-only file modes. The final manifest includes
+both the top-level SHA-256 index and the prior-head index.
+
+The analyzer's zero process exit is an analyst-reported attestation, distinct
+from the gate exit carried by its JSON. `analysis-command.json` retains
+reproduction argv reconstructed from explicit input paths. It does not claim
+the analyzer recorded its process argv.
 
 Paths below are relative to the fresh raw directory. `T` means
 `node node_modules/typescript/bin/tsc`. `VC` means
@@ -205,20 +238,35 @@ compiler first, then witness. A dash means this table does not repeat a timing, 
 | Ignoring session: compiles, named assertion fails | `T -p packages/cli/tsconfig.json; VC packages/cli/test/scope-index-applications-command.test.ts -t "uses one acquired session where the same scripted host refuses Signed reads" --reporter=verbose` | 0 / 1 | 0.292479708/1.206747000; 1.227863334/1.671694000 | `control-ignore-session-types/output.log`: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`; `control-ignore-session-witness/output.log`: `aa44c856d7dd1ac2c9f74294212835e7f7e406a9593b54cd8f4fed42a95247d1` |
 | Continuing after uncertainty: compiles, named assertion fails | `T -p packages/cli/tsconfig.json; VC packages/cli/test/scope-index-applications-command.test.ts -t "stops private session exceptions, malformed answers and redirects before summary reads" --reporter=verbose` | 0 / 1 | 0.296327166/1.193876000; 1.241971542/1.665900000 | `control-continue-after-uncertain-session-types/output.log`: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`; `control-continue-after-uncertain-session-witness/output.log`: `7b463338e59814d1d784fcbf0aabb13c60b84deb5b09d09ee564d45550f0a418` |
 | Omitting skipped bytes: compiles, named assertion fails | `T -p packages/cli/tsconfig.json; VC packages/cli/test/scope-index-applications-command.test.ts -t "keeps empty success distinct from exclusive publication and output bounds" --reporter=verbose` | 0 / 1 | 0.291972666/1.190653000; 1.461646417/1.959993000 | `control-omit-skipped-accounting-types/output.log`: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`; `control-omit-skipped-accounting-witness/output.log`: `0ab4d705a276de07f69edf5f0a15e9d3700e31ef8641e1fc4bbbdc8069603fa8` |
-| New ordinary gate for this repair: pending | `npm run gate` | not run | — | No new gate output or pass claim. |
+| New ordinary Rules-only repair gate: naturally passed | `npm run gate` | 0 | 932.446831959/1981.075428000 | `ordinary-gate/output.log`: `44173e96369e7e842b6938b185987be071785549a88c68ca0914151d503c0491` |
+| New gate identity, public-count and callback reconciliation | Retained analysis; reproduction argv in `analysis-command.json` | 0 | — | `ordinary-gate-analysis.json`: `aed688d255635a6d6cf518e0a98750d66c82198394b6e55d41af1aab0404c821` |
 
 ## Open limits
 
-The new ordinary gate, final raw packaging, replacement manifest, read-only
-seal and exact-head checker review remain due under child `0c4a4236` and ruling
-`382923ff`. The parent installed-release command request `521f57a1` landed
+The new ordinary gate, final raw packaging, replacement manifest and read-only
+seal are complete. Exact-head checker review remains due under child
+`0c4a4236` and ruling `382923ff`. The parent installed-release command request `521f57a1` landed
 before this child; its prior result does not close this repair.
 
-The planner owns Demo's missing operator repository configuration and reruns
-`dap-grow`, `dap-lending` and `dap-demo` from the landed head. R11 deployment
-stays held until those reports are complete. The observed eleven Grow and
-eight Lending forbidden summaries prove neither the failed internal Signed
-condition nor a defect in deployment settings. Local Native admission does
-not establish live admission. The command proves no global inventory,
-independent genesis replay, fresh status for skipped kinds, authority grant or
-trust-policy decision.
+Planner record `5939c87ff3a57779fea600aa687ffad6e431f554` reports that the
+Demo operator room has been founded. Its first six-scope inventory and empty
+report cover that operator room only. This is a planner-reported observation,
+not a new builder query or validation of the repaired source.
+
+Checker correction `578b5da4f7cbf7c0fa9b5f401edb8b137402d94a` establishes the
+coverage limit: inventory binds the operator's configured Directory, so a
+manifest and report cover that one repository even when the Worker hosts more.
+An empty new operator room does not cover visitor rooms or their installations.
+The deployed index does not extend this command's manifest coverage.
+
+After landing, the planner still reruns `dap-grow`, `dap-lending` and `dap-demo`.
+Before R11 deployment, other repositories require a separately authorized
+coverage path or an explicitly authorized decision to withdraw installations
+outside the chosen trust list, recorded with the deployment. This child adds no Worker-wide read path or authority. Those reports
+and the multi-repository decision remain due before R11 deployment.
+
+The observed eleven Grow and eight Lending forbidden summaries prove neither
+the failed internal Signed condition nor a defect in deployment settings.
+Local Native admission does not establish live admission. The command proves
+no Worker-wide inventory, independent genesis replay, fresh status for skipped
+kinds, authority grant or trust-policy decision.

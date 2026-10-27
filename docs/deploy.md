@@ -451,6 +451,16 @@ summaries bind observed scope references and native pins; they do not reverify t
 global inventory. The planner records all three runs before further R11
 deployments and uses the existing `--keep-vars` deployment commands.
 
+The manifest and report cover only the repository rooted at the operator's
+configured Directory, not every repository hosted by the Worker. A complete
+empty report for a newly founded operator room does not cover visitor rooms
+or their installed releases. Before deploying R11 source, the planner must
+record a separately authorized coverage path for any other repositories, or
+an explicitly authorized decision to withdraw installations outside the chosen
+trust list at deployment.
+A Worker-wide listing needs its own request and read authority. This child
+adds neither that read path nor authority for other repositories.
+
 Local `dap mcp` and `dap install` also read `APPLICATION_TRUST` from their process environment.
 Set the same JSON policy before starting it if package installation is
 needed. Other local tools keep their existing defaults. Hosted tool opt-in
