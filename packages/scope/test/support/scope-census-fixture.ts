@@ -15,7 +15,7 @@ import { soon } from "../net.ts";
 import { nativeFixtureLifetime, dispatchFixture } from "./native-fixture-lifetime.ts";
 import { sessionRepository } from "./session-room.ts";
 
-export async function scopeCensusFixture(options: { members?: boolean; readLimit?: number; addressLimit?: number; proofRead?: () => void } = {}) {
+export async function scopeCensusFixture(options: { members?: boolean; registerOnly?: boolean; readLimit?: number; addressLimit?: number; proofRead?: () => void } = {}) {
   const owner = beginSessionFixture({ secret: "TEST scope census session secret", sessions: false, inspector: null });
   const life = nativeFixtureLifetime(owner, { required: false });
   const indexName = `TEST-census-${crypto.randomUUID()}`;
@@ -36,7 +36,8 @@ export async function scopeCensusFixture(options: { members?: boolean; readLimit
       } }),
     } as unknown as DurableObjectNamespace;
     const settings = {
-      ARTIFACTS_CONFIG: JSON.stringify({ registerScope: register.scope, namespace: "TEST-census", host: "artifacts.example", maxBytes: 10485760, credentialIdentity: "adapter-attempt" }),
+      REGISTER_SCOPE: register.scope,
+      ARTIFACTS_CONFIG: options.registerOnly ? undefined : JSON.stringify({ registerScope: register.scope, namespace: "TEST-census", host: "artifacts.example", maxBytes: 10485760, credentialIdentity: "adapter-attempt" }),
       SCOPES: proofScopes, SCOPE_INDEX_MODE: "enforce",
       ...(options.readLimit === undefined ? {} : { SERVING_READ_KEY_PER_MINUTE: String(options.readLimit) }),
       ...(options.addressLimit === undefined ? {} : { SERVING_READ_ADDRESS_PER_MINUTE: String(options.addressLimit) }),

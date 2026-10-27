@@ -141,7 +141,7 @@ async function resumed(owner: SessionOwner, cleanups: (() => void)[], resourcesA
   const secrets = async () => (await owner.required(() => Promise.all([rita.store.secret("operator"), rita.store.secret("recovery")]))).filter((s) => s !== null).map((s) => b64url(s!));
   const noSecret = async () => { const text = JSON.stringify(await configOf()); for (const secret of await secrets()) expect(text).not.toContain(secret); };
 
-  expect((await run("install", SERVICE, "--host", "git.example", "--namespace", "artroom")).code).toBe(0);
+  expect((await run("install", SERVICE, "--host", "github.com", "--namespace", "artroom")).code).toBe(0);
   owner.active();
   const R = platform((await configOf())!.register!.scope);
   registerName = R.name;

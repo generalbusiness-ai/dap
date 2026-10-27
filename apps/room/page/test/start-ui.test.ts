@@ -77,6 +77,7 @@ class Element {
 // Actual key/journal custody is in start-custody.test; native admission is separate.
 // Startup migration is a stand-in here; this case owns the rendered Start controls.
 test("Start is explicit; Back fences late discovery, reload only offers Check and Continue, and public configuration never exports the browser key", async () => {
+  let demoStart = false;
   const root = new Element("div"), location = { origin: "https://dap-demo.inguz.workers.dev", hash: "#/join" };
   const ref = (kind: "register" | "directory" | "membership") => ({ scope: scopeIdOf({ v: 1, kind, definition: kind === "register" ? "platform:register@17" : kind === "directory" ? "platform:directory@16" : "platform:membership@8", creator: null, cause: textDigest("SCRIPTED Start UI " + kind), ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(5)), kind });
   const register = ref("register"), directory = ref("directory"), membership = ref("membership");
@@ -97,6 +98,7 @@ test("Start is explicit; Back fences late discovery, reload only offers Check an
   const files = vi.fn(async () => ({ config: JSON.stringify({ repository: { directory: selectedDirectory, membership }, handle: "@founder" }) }));
   const recovery = vi.fn(async () => { throw new Error("The browser signing key must not be exported."); });
   let finishOffer!: (value: CreationOffer) => void;
+  const request = vi.fn(async () => { throw new Error("Unexpected page request in the scripted Start UI"); });
   const offerRead = vi.fn(() => new Promise<CreationOffer>(resolve => { finishOffer = resolve; }));
   const start = vi.fn(async (_origin: string, _storage: unknown, _options: StartOptions): Promise<StartedRoom> => {
     original = { key, configured: _options.mode === "new" ? { register, definition: "platform:register@17" } : original!.configured, handle: "@founder", label: "Personal intent", operation: "original", state: complete ? "complete" : "pending" };
@@ -109,7 +111,8 @@ test("Start is explicit; Back fences late discovery, reload only offers Check an
   vi.doMock("../src/start-custody.ts", () => ({ originalStart: () => original, startRoom: start }));
   vi.doMock("../src/data.ts", async () => ({ ...await vi.importActual<typeof import("../src/data.ts")>("../src/data.ts"), openRoom: async (session: import("../src/data.ts").Session) => ({ session, directory: selectedDirectory.scope, membership, key, name: "Recorded host name", me: verified ? { handle: "@founder", role: "admin", actions: [], ref: { membership, member: "@founder" } } : null }) }));
   vi.doMock("../src/view.ts", async () => ({ ...await vi.importActual<typeof import("../src/view.ts")>("../src/view.ts"), h: (tag: string, attrs: Record<string, string> = {}, ...children: unknown[]) => { const element = new Element(tag); for (const [k, v] of Object.entries(attrs)) element.setAttribute(k, v); element.children = children.flat().filter(child => child !== null && child !== undefined && child !== false) as (Element | string)[]; return element; } }));
-  vi.stubGlobal("document", { title: "", getElementById: () => root, activeElement: null, createElement: () => new Element("a") });
+  vi.stubGlobal("fetch", request);
+  vi.stubGlobal("document", { documentElement: { getAttribute: () => demoStart ? "true" : "false" }, title: "", getElementById: () => root, activeElement: null, createElement: () => new Element("a") });
   vi.stubGlobal("location", location); vi.stubGlobal("localStorage", { getItem: (name: string) => values.get(name) ?? null, setItem: save });
   vi.stubGlobal("window", { addEventListener: (_name: string, fn: () => void) => { redraw = fn; } });
   const createUrl = vi.spyOn(URL, "createObjectURL").mockImplementation(blob => { if (!(blob instanceof Blob)) throw new Error("SCRIPTED expected Blob"); blobs.push(blob); return "blob:SCRIPTED"; });
@@ -127,6 +130,7 @@ test("Start is explicit; Back fences late discovery, reload only offers Check an
       ["#/config", "Join with a config and key", "Use config.json and its matching device key."],
     ]);
     expect(start).not.toHaveBeenCalled(); expect(offerRead).not.toHaveBeenCalled();
+    demoStart = true;
     // Old-origin Start links to the new service without discovery or custody.
     const freshOrigin = location.origin;
     location.origin = "https://artroom-scope.inguz.workers.dev"; location.hash = "#/start"; redraw(); await flush();
@@ -147,6 +151,14 @@ test("Start is explicit; Back fences late discovery, reload only offers Check an
     location.hash = choices[0]!.attrs["href"]!; redraw(); await flush();
     expect(root.textContent).toContain("Start a room"); expect(root.all().some(e => e.attrs["type"] === "email")).toBe(false);
     expect(start).not.toHaveBeenCalled(); expect(offerRead).not.toHaveBeenCalled();
+    demoStart = false; redraw(); await flush();
+    expect(root.textContent).toContain("Create a room with the CLI on this service.");
+    expect(root.textContent).toContain("--host none");
+    expect(request).not.toHaveBeenCalled();
+    expect(root.all().some(e => e.tag === "form")).toBe(false);
+    expect(start).not.toHaveBeenCalled(); expect(offerRead).not.toHaveBeenCalled();
+    expect(save).not.toHaveBeenCalled(); expect(values.size).toBe(0);
+    demoStart = true; redraw(); await flush();
     // Missing discovery is explained without starting custody or changing the connection.
     offerRead.mockRejectedValueOnce(new Error("SCRIPTED same-origin founding offer is unavailable or invalid"));
     find("input").value = "Personal intent"; find("form").fire("submit"); await flush();
@@ -160,6 +172,7 @@ test("Start is explicit; Back fences late discovery, reload only offers Check an
     location.hash = "#/start"; redraw(); await flush(); find("input").value = "Personal intent"; find("form").fire("submit"); finishOffer(offer); await flush();
     expect(start).toHaveBeenCalledTimes(1); expect(start.mock.calls[0]![2].mode).toBe("new");
     expect(start.mock.calls[0]![2].offer?.definition).toBe("platform:register@17");
+    demoStart = false;
     // Reloaded legacy custody is not retargeted to the current fresh offer.
     original = { ...original!, configured: { register: legacyRegister, definition: "platform:register@7" } };
     selectedDirectory = { ...directory, scope: scopeIdOf({ v: 1, kind: "directory", definition: "platform:directory@3", creator: null, cause: textDigest("SCRIPTED retained UI directory"), ordinal: 0 }) };

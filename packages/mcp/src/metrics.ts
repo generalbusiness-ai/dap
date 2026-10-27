@@ -22,6 +22,7 @@ const NATIVE: Record<RefusalReason | UnavailableReason | MismatchReason | ReadRe
   "scope-provisional": true, "guard-incomplete": true, "authority-unavailable": true, unavailable: true,
   "rate-limited": true, "idempotency-mismatch": true, "not-found": true, "wrong-incarnation": true, forbidden: true,
   "history-unavailable": true, "too-large": true, "sessions-unavailable": true, "bad-request": true, replayed: true,
+  "no-repository": true,
 };
 const REASONS = new Set([...Object.keys(NATIVE), ...PHASES, ...STEP_PHASES, "none", "exception", "shape", "stale-descriptor", "restart", "transport", "custody", "credential", "target", "unknown-tool", "read", "conflicting", "full", "locked", "unreadable", "terminal", "unkept"]);
 const ENDS = new Set(["ok", "refused", "error", "unavailable"]);

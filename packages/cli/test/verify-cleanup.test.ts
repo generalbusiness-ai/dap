@@ -10,12 +10,12 @@ const summary = (definition: Summary["definition"] = "platform:destination@3"): 
 const item = (id: number, reason: string): Item => ({ id, type: "publication", state: "cleanup-owed", revision: 3, opened: textDigest("opened"), parties: {}, refs: {}, values: { cleanupReason: reason, cleanupAttempts: 3, integration: `git:sha1:${"a".repeat(40)}`, token: "private-token-must-not-print" }, attributed: [] });
 
 // Scripted read-port boundary: no native destination or external cleanup runs.
-test.each(["platform:destination@3", "platform:destination@4", "platform:destination@5", "platform:destination@6", "platform:destination@13"] as const)("%s complete same-head cleanup observations name every owed change reservation and retain unknown custody without exposing token values", async (definition) => {
+test.each(["platform:destination@3", "platform:destination@4", "platform:destination@5", "platform:destination@6", "platform:destination@13", "platform:destination@16"] as const)("%s complete same-head cleanup observations name every owed change reservation and retain unknown custody without exposing token values", async (definition) => {
   const cursors: (string | undefined)[] = [];
   const both: Item = { ...item(8, "reservation-token-unknown"), values: { ...item(8, "reservation-token-unknown").values, cleanupReason: { refReason: "reservation-stage-unknown", tokenReason: "reservation-token-unknown", tokenAttempts: 1, refRemoved: false }, cleanupAttempts: 1 } };
   const file: Item = { id: 16, type: "file-publication", state: "unresolved", revision: 2, opened: textDigest("file opening"), attributed: [], parties: {},
     refs: { sender: { ...at, kind: "lane" } }, values: { sourceSeq: 4, sourceHash: textDigest("source"), sourceOrdinal: 0, path: "shelf/pot.md", content: "# Pot", contentDigest: textDigest("# Pot"), token: "private-file-token-must-not-print" } };
-  const liveSummary = (): Read<Summary> => { const read = summary(definition); return read.ok ? { ...read, value: { ...read.value, items: [item(4, "reservation-ref"), both, ...(["platform:destination@4", "platform:destination@6", "platform:destination@13"].includes(definition) ? [file] : [])] } } : read; };
+  const liveSummary = (): Read<Summary> => { const read = summary(definition); return read.ok ? { ...read, value: { ...read.value, items: [item(4, "reservation-ref"), both, ...(["platform:destination@4", "platform:destination@6", "platform:destination@13", "platform:destination@16"].includes(definition) ? [file] : [])] } } : read; };
   const final = { ...item(12, "reservation-ref"), state: "cleaned" };
   const result = await observeCleanup({ summary: async () => liveSummary(), items: async (_type, cursor) => {
     cursors.push(cursor);
@@ -62,7 +62,7 @@ test.each(["platform:destination@3", "platform:destination@4", "platform:destina
   const old = await observeCleanup({ summary: async () => summary("platform:destination@2"), items: async () => { throw new Error("No @3 scan under old pin"); } }, target);
   expect(old.finding).toBeNull();
   expect(old.lines).toEqual([]);
-  for (const unsupported of ["platform:destination@12", "platform:destination@99"] as const) {
+  for (const unsupported of ["platform:destination@12", "platform:destination@17", "platform:destination@99"] as const) {
     const unknown = await observeCleanup({ summary: async () => summary(unsupported), items: async () => { throw new Error("No cleanup protocol inferred for this pin"); } }, target);
     expect(unknown).toEqual({ lines: [], finding: null });
   }

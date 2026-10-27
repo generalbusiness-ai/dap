@@ -14,7 +14,7 @@
  * and it computes the hash itself.
  */
 
-import type { Answer, DeliveryRefusal, Created, MismatchReason, RefusalReason, Read, ScopeApi, UnavailableReason } from "@generalbusiness/dap-contract";
+import type { Answer, DeliveryRefusal, Created, CreationUnavailableReason, MismatchReason, RefusalReason, Read, ScopeApi, UnavailableReason } from "@generalbusiness/dap-contract";
 import { isScopeBoundName } from "@generalbusiness/dap-contract";
 import { REFUSAL_REASONS, isItemQueryRead, among, isOutboxItem, isFactRef, isHead, isItem, isListOf, isLogPage, isRead, isReceipt, isRecord, isRetainedInput, isSealed, isSummary } from "@generalbusiness/dap-bytes";
 import { isArchived } from "./journal-tail.ts";
@@ -31,6 +31,7 @@ const ACT_REFUSED: Record<RefusalReason, true> = REFUSAL_REASONS;
 /** Why a creation is refused (`Created`). */
 const CREATION_REFUSED: Record<RefusalReason | DeliveryRefusal | "unsupported-definition", true> = { ...REFUSAL_REASONS, "source-unverified": true, "unsupported-definition": true };
 const UNAVAILABLE: Record<UnavailableReason, true> = { "dependency-unavailable": true, busy: true, "clock-behind": true, "scope-provisional": true, "guard-incomplete": true, "authority-unavailable": true, unavailable: true, "rate-limited": true };
+const CREATION_UNAVAILABLE: Record<CreationUnavailableReason, true> = { ...UNAVAILABLE, misconfigured: true, "host-unavailable": true };
 const MISMATCH: Record<MismatchReason, true> = { "idempotency-mismatch": true };
 
 /** A record with exactly these members. */
@@ -42,7 +43,7 @@ function isCreated(v: unknown): v is Created {
   switch (v["answer"]) {
     case "accepted": return only(v, "answer", "receipt") && isReceipt(v["receipt"]);
     case "refused": return (only(v, "answer", "reason") || (only(v, "answer", "reason", "name") && v["reason"] === "scope-full" && isScopeBoundName(v["name"]))) && among(CREATION_REFUSED)(v["reason"]);
-    case "unavailable": return only(v, "answer", "reason") && among(UNAVAILABLE)(v["reason"]);
+    case "unavailable": return only(v, "answer", "reason") && among(CREATION_UNAVAILABLE)(v["reason"]);
     default: return false;
   }
 }

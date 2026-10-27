@@ -104,7 +104,7 @@ async function story(lifetime: Lifetime, selected?: SelectedCohort): Promise<voi
       await lifetime.wait(() => retainHistoricalInstallPlan(admin, SERVICE, historical.register, { host: "git.example", namespace }));
     }
     const installed = cohort === "application" || cohort === "archive-device-application"
-      ? await run(admin, "install", SERVICE, "--host", "git.example", "--namespace", namespace, "--cohort", cohort)
+      ? await run(admin, "install", SERVICE, "--host", "github.com", "--namespace", namespace, "--cohort", cohort)
       : await run(admin, "install", "--planned", "--cohort", cohort);
     expect(installed.code, installed.lines.join("\n")).toBe(0);
     const R = node((await admin.store.config())!.register!.scope);

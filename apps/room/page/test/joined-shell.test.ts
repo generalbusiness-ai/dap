@@ -59,7 +59,7 @@ test("joined room/account clicks disclose identity without leaving the room, and
   const place = { directory: "directory", membership: { scope: "membership", kind: "membership", inc: "one" } };
   const publicKey = keyIdOfSecret(secret), unexpectedKeyOperation = uiKeys([publicKey]);
   const signer = { key: publicKey, sign: unexpectedKeyOperation };
-  const room = { session: { service: location.origin, signer }, ...place, name: "Hugh's room", key: keyIdOfSecret(secret), me: { handle: "@hugh-web", role: "member", actions: [] }, reader: {}, rules: "rules", destination: "destination" };
+  const room = { session: { service: location.origin, signer }, ...place, name: "Hugh's room", key: keyIdOfSecret(secret), me: { handle: "@hugh-web", role: "member", actions: [] }, reader: {}, rules: "rules", destination: "destination", publication: "repository" };
   const saved = JSON.stringify({ place, publicKey });
   const setItem = vi.fn();
   vi.doMock("../src/data.ts", async () => ({
@@ -108,6 +108,14 @@ test("joined room/account clicks disclose identity without leaving the room, and
       ["#/config", "Join with a config and key", "Use config.json and its matching device key."],
     ]);
     back.click(); expect(location.hash).toBe("#/");
+    redraw(); await fixture.wait(() => main.workbenchLifecycle.idle());
+    expect(root.all().some(e => e.tag === "a" && e.textContent === "Pages")).toBe(true);
+    room.publication = "unpublished";
+    redraw(); await fixture.wait(() => main.workbenchLifecycle.idle());
+    expect(root.textContent).toContain("No publication");
+    expect(root.all().some(e => e.tag === "a" && e.attrs["href"]?.startsWith("/site/"))).toBe(false);
+    expect(root.all().some(e => e.tag === "a" && e.textContent === "Pages")).toBe(false);
+
     expect(unexpectedKeyOperation).not.toHaveBeenCalled();
     expect(setItem).not.toHaveBeenCalled(); expect(root.textContent).not.toContain("Settings");
   } finally { await fixture.retire(); vi.unstubAllGlobals(); vi.doUnmock("../src/browser-key-store.ts"); vi.doUnmock("../src/page-key-migration.ts"); vi.doUnmock("../src/data.ts"); vi.resetModules(); }

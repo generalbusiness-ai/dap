@@ -57,7 +57,7 @@ test("operator installation and planned replay refuse a missing hook signer desp
   expect((await installPlanned(ctx, { cohort: "trusted-application" })).code).toBe(1);
   expect(canonicalize(await store.config())).toBe(retained);
   const fresh: Store = { ...store, config: async () => null };
-  expect((await install({ ...ctx, store: fresh }, service)).code).toBe(1);
+  expect((await install({ ...ctx, store: fresh }, service, { host: "github.com" })).code).toBe(1);
   expect([reads, writes, submits]).toEqual([0, 0, 0]);
 });
 

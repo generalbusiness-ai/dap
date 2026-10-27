@@ -48,7 +48,10 @@ namespace or service can throw at its call boundary. The rows say when that
 is the actual behavior. Optional telemetry uses a best-effort fallback.
 
 The room health response reports sessions, its selected register probe,
-version metadata, and finite Artifacts/GitHub wiring states. A configured
+version metadata, and finite Artifacts/GitHub wiring states. An explicit
+`REGISTER_SCOPE` selects its host-independent probe; malformed or conflicting
+pin settings return unavailable without probing an object. With no explicit
+setting, the existing GitHub/Artifacts selection and ambiguity rules remain. A configured
 host that is off makes health return `503`; absent host configuration is
 separate. Two different configured register roots remain ambiguous. A
 `wired` state proves local syntax and binding checks, not provider
@@ -64,14 +67,18 @@ makes no unconditional “no object before genesis” claim.
 
 The registered-scope census serves only in enforce mode, including the
 default when the mode is absent. Register mode returns `unsupported`;
-a missing index returns `absent`. Its operator pin comes through the
-existing `artifactsRegisterScope` accessor. The full stored Register row
-and its checked founding install determine the permitted signing key.
-Neither the caller's configured root nor a membership session supplies
-that authority. This adds no setting and attests no deployed census.
+a missing index returns `absent`. Creation, child lineage and census use
+`readRegisterScope`: the nonsecret `REGISTER_SCOPE` is primary, with a valid
+Artifacts configuration as a legacy fallback. When both are supplied, their
+register IDs must agree. Supplied malformed or conflicting values fail
+closed. A deployed creation with neither pin remains closed, including the
+explicit local/test opening. No host binding is needed to read the pin.
+The full stored Register row and its checked founding install determine
+the permitted census signing key. Neither a caller-selected root nor a
+membership session supplies that authority. This attests no deployed census.
 
 `PLATFORM_CREATION_PINS` adds deployment-approved historical pins to the
-newest creation cohort. It does not change existing scopes' pins or admit
+hosted publication and unpublished creation cohorts. It does not change existing scopes' pins or admit
 another native lineage family. An index entry permits lookup only; the
 native target must validate an exact existing birth before an excluded
 pin can repeat. [Creation versions](../deploy.md#creation-versions) describes
@@ -130,6 +137,7 @@ parser, failure behavior, health visibility, and other readers.
 | `MCP_TOOL_ADDITIONS` | text | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/mcp/src/hosted-tools.ts`](../../packages/mcp/src/hosted-tools.ts) |
 | `METRICS` | binding | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
 | `PLATFORM_CREATION_PINS` | text | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/creation-versions.ts`](../../packages/scope/src/creation-versions.ts) |
+| `REGISTER_SCOPE` | text | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/register-setting.ts`](../../packages/scope/src/register-setting.ts) |
 | `REGISTRIES` | binding | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
 | `ROOM` | binding | `dap-application-sandbox` | [`apps/sandbox/worker.ts`](../../apps/sandbox/worker.ts) |
 | `SCOPES` | binding | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
@@ -271,11 +279,12 @@ parser, failure behavior, health visibility, and other readers.
         "apps/room/archive.ts",
         "packages/scope/src/scope-index.ts",
         "packages/scope/src/demo-creation.ts",
-        "packages/scope/src/scope-index-census.ts"
+        "packages/scope/src/scope-index-census.ts",
+        "packages/scope/src/register-setting.ts"
       ],
       "parser": "artifactsConfiguration: at most 4096 characters, strict exact JSON fields registerScope/namespace/host/maxBytes/credentialIdentity; host uses artifactsService; identity must adapter-attempt.",
-      "missing": "Artifacts outside port off; deployed pinned creation cannot use this host pin.",
-      "invalid": "Artifacts factory/site off and creation pin refused.",
+      "missing": "Artifacts outside port off; REGISTER_SCOPE can independently supply the creation, lineage and census identity.",
+      "invalid": "Artifacts factory/site off. A supplied malformed config or disagreement with REGISTER_SCOPE makes creation misconfigured; lineage and census fail closed.",
       "health": "wiring.artifacts off/unconfigured or off/invalid-config; configured off makes status 503."
     },
     {
@@ -436,8 +445,8 @@ parser, failure behavior, health visibility, and other readers.
         "packages/scope/src/creation-lineage.ts",
         "packages/scope/src/scope-index.ts"
       ],
-      "parser": "Only the exact string true opens the local/test creation escape. DEPLOYMENT is validated first.",
-      "missing": "A configured deployment requires its pinned register/verified creator chain; absent local DEPLOYMENT preserves local behavior.",
+      "parser": "Only the exact string true opens the local/test creation escape. DEPLOYMENT and supplied register settings are validated first; a deployed escape still requires a valid register pin and does not bypass the new host/cohort checks.",
+      "missing": "A configured deployment requires its pinned register and verified creator chain; absent local DEPLOYMENT preserves local behavior.",
       "invalid": "Values other than true do not open the escape.",
       "health": "Not reported; a healthy response does not attest this policy."
     },
@@ -456,8 +465,8 @@ parser, failure behavior, health visibility, and other readers.
         "packages/scope/src/worker.ts",
         "packages/scope/src/scope-index.ts"
       ],
-      "parser": "readPlatformCreationPolicy: a JSON string of at most 8192 UTF-8 bytes containing at most 128 distinct exact pins supported by platform(). The newest ARCHIVE_DEVICE_APPLICATION_COHORT is always included. An absent field or explicit undefined selects that default; an empty array adds no historical pins.",
-      "missing": "DeployedScope permits new platform genesis under the newest cohort only. Raw internal engine wiring without an injected deployment policy retains its compatibility behavior.",
+      "parser": "readPlatformCreationPolicy: a JSON string of at most 8192 UTF-8 bytes containing at most 128 distinct exact pins supported by platform(). The ARCHIVE_DEVICE_PUBLICATION_COHORT and UNPUBLISHED_COHORT pins are always included. An absent field or explicit undefined selects that baseline; an empty array adds no historical pins.",
+      "missing": "DeployedScope permits new platform genesis under the hosted publication and unpublished baseline cohorts. Raw internal engine wiring without an injected deployment policy retains its compatibility behavior.",
       "invalid": "Null, malformed JSON, a non-array, duplicate or unknown pins, or an exceeded bound closes new platform genesis. An exact existing repeat requires an active scope and a bounded applied birth with canonical bytes and a matching hash. Scope address, kind, incarnation, pin and seed must match. The predecessor must be null and native support current. Original routing and authority checks remain. Reads, later acts and replay retain their recorded pins.",
       "health": "Not validated or reported by /health. Its session, register and host checks can pass while this policy closes new platform creation."
     },
@@ -669,10 +678,11 @@ parser, failure behavior, health visibility, and other readers.
       "readers": [
         "packages/scope/src/worker.ts",
         "apps/room/demo-creation.ts",
-        "packages/scope/src/github-wiring.ts"
+        "packages/scope/src/github-wiring.ts",
+        "apps/room/fetch.ts"
       ],
-      "parser": "demoCreationConfig/legacyGitHubDemoConfig bind the supported exact version, origin, deployment, register/cohort and host context.",
-      "missing": "Demo creation route unavailable.",
+      "parser": "demoCreationConfig/legacyGitHubDemoConfig bind the supported exact version, origin, deployment, register/cohort and host context. The Page route exposes only a boolean for setting presence; the offer route retains its full parser and authority checks.",
+      "missing": "Demo creation route unavailable. Page Start shows the CLI instruction and makes no creation-offer request.",
       "invalid": "Invalid config refuses demo creation; no loose config fallback.",
       "health": "Not reported separately."
     },
@@ -921,6 +931,26 @@ parser, failure behavior, health visibility, and other readers.
       "missing": "No successful scheduled agent work.",
       "invalid": "Scheduled owner refuses rather than using another principal.",
       "health": "No health route."
+    },
+    {
+      "deployments": [
+        "artroom-scope",
+        "dap-demo",
+        "dap-lending",
+        "dap-grow"
+      ],
+      "name": "REGISTER_SCOPE",
+      "kind": "text",
+      "status": "read",
+      "readers": [
+        "packages/scope/src/register-setting.ts",
+        "packages/scope/src/scope-index.ts",
+        "packages/scope/src/health.ts"
+      ],
+      "parser": "readRegisterScope: one exact ScopeId string, without trimming or coercion; primary identity for creation, child lineage and census. Supplied ARTIFACTS_CONFIG must parse and name the same register. No provider or binding is consulted.",
+      "missing": "Uses a valid Artifacts-only legacy pin; with neither source, deployed creation is unauthorized and lineage/census stay closed.",
+      "invalid": "Malformed supplied pin/config or disagreement makes creation misconfigured before target lookup; lineage/census refuse. The explicit deployed open-creation escape does not bypass this check.",
+      "health": "An explicit valid pin selects the existing bounded/cached readiness probe independently of provider wiring. Malformed or conflicting pins report register unavailable without a probe; a ready pin does not attest provider connectivity, creation policy or a census. With no explicit field, legacy host-root selection is unchanged."
     }
   ]
 }

@@ -1,5 +1,5 @@
 import { offerFloor } from "./floor-writer.ts";
-import { applicationRoom, applicationInstallation, applicationProjectionDeclaration } from "@generalbusiness/dap-platform";
+import { applicationRoom, applicationInstallation, applicationProjectionDeclaration, UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
 /**
  * One scope as one Durable Object (scope contract, section 2.3): the object
  * named by the scope's ID in the one scope namespace, with SQLite storage.
@@ -897,6 +897,14 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     const key = this.#readers.holder?.(reader, "credential") ?? false;
     if (key === "sessions-unavailable" || key === "clock-behind") return { ok: false, reason: key };
     const scope = this.#store.scope();
+    if (key !== false && typeof handle === "string" && scope?.status === "active" && scope.at.kind === "destination"
+      && this.#scope.pinned()?.named === UNPUBLISHED_COHORT.destination) {
+      const positions = this.#store.itemPositions("branch", null, 2);
+      const branch = positions.length === 1 && positions[0]!.size <= 1024 * 1024 ? this.#store.item(positions[0]!.id) : null;
+      if (branch?.state === "unpublished" && branch.values["repository"] == null && branch.values["head"] == null
+        && typeof branch.values["name"] === "string" && isScopeId(branch.values["membership"]) && isScopeId(branch.values["rules"])
+        && isScopeRef(branch.refs["directory"]) && branch.refs["directory"].kind === "directory") return { ok: false, reason: "no-repository" };
+    }
     const answer = key !== false && typeof handle === "string" && scope?.at.kind === "destination" ? this.#outside.credential?.(handle, key) ?? null : null;
     return answer && scope ? { ok: true, at: scope.head, value: answer, complete: true } : { ok: false, reason: "forbidden" };
   }

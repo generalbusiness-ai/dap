@@ -78,6 +78,8 @@ export interface Room {
   destination: ScopeId;
   /** The repository name already recorded by the directory; no claimed display name is inferred. */
   name?: string;
+  /** Missing publication is recognized only from the exact unpublished directory. */
+  publication?: "repository" | "unpublished";
   key: KeyId;
   /** The caller's role and actions in membership, or null when the key is no active member's. */
   me: (Standing & { ref?: MemberRef }) | null;
@@ -292,6 +294,9 @@ export async function openRoom(session: Session, place: Place): Promise<Room> {
   room.rules = rules;
   room.destination = destination;
   const recordedRepository = repository.values["repository"];
+  if (summary.definition === "platform:directory@20" && summary.status === "active" && repository.state === "open" && recordedRepository == null) room.publication = "unpublished";
+  else if (recordedRepository && typeof recordedRepository === "object" && !Array.isArray(recordedRepository) && ["host", "namespace", "name", "id"].every(field => field in recordedRepository && typeof (recordedRepository as Record<string, unknown>)[field] === "string")) room.publication = "repository";
+  else throw new Unreadable(`The directory ${place.directory} records no valid publication metadata.`);
   if (recordedRepository && typeof recordedRepository === "object" && !Array.isArray(recordedRepository) && "name" in recordedRepository && typeof recordedRepository["name"] === "string") room.name = recordedRepository["name"];
   await refreshStanding(room);
   return room;
@@ -702,7 +707,8 @@ export function operationsOf(entries: readonly Entry[]): (Operation & { for: num
 // ---------------------------------------------------------------- the published site
 
 /** The address of a path on the room's published site: the site route, on the published branch (`HEAD`). */
-export function siteAddress(room: Pick<Room, "session" | "directory">, path: string): string {
+export function siteAddress(room: Pick<Room, "session" | "directory" | "publication">, path: string): string {
+  if (room.publication === "unpublished") return "";
   return `${room.session.service.replace(/\/+$/, "")}/site/${room.directory}/HEAD/${path.split("/").map(encodeURIComponent).join("/")}`;
 }
 
@@ -713,7 +719,8 @@ export interface SitePage { address: string; status: number; text: string }
 const SITE_BYTES = 1024 * 1024 + 64 * 1024;
 
 /** One page of the room's published site, as the site route answers it. No session is presented by this client; site eligibility remains the site owner's policy. */
-export async function loadSite(room: Pick<Room, "session" | "directory">, path: string): Promise<SitePage> {
+export async function loadSite(room: Pick<Room, "session" | "directory" | "publication">, path: string): Promise<SitePage> {
+  if (room.publication === "unpublished") throw new Unreadable("no-repository: this room has no publication.");
   const address = siteAddress(room, path);
   const send = room.session.fetch ?? (globalThis as { fetch?: Fetch }).fetch;
   if (!send) throw new Unreadable("This runtime has no fetch.");

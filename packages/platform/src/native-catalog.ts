@@ -28,6 +28,11 @@ import { MEMBERSHIP, MEMBERSHIP_1, membership, membership5, membershipRules, sta
 import { DEMO_REGISTER, WEB_DEMO_COHORT, WEB_DEMO_REGISTER, demoRegister, demoRegisterRules, webDemoRegister } from "./demo-register.ts";
 import { register, registerRules } from "./register.ts";
 import { directory, directory2, directory3, directory7, directoryMembership, directoryRules, directoryRulesScope } from "./directory.ts";
+import { UNPUBLISHED_COHORT } from "./archive-binding-wire.ts";
+import { unpublishedRegister, unpublishedRegisterRules } from "./unpublished-register.ts";
+import { unpublishedDirectory, unpublishedDirectoryRules } from "./unpublished-directory.ts";
+import { unpublishedDestination, unpublishedDestinationRules } from "./unpublished-destination.ts";
+import { unpublishedApplicationPublicationOrigin } from "./publishing-provenance.ts";
 import type { RecordedRef, Rules, StateView } from "@generalbusiness/dap-derive";
 
 import { PUBLISH, RULES_SCOPE, RULES_SCOPE_1, rulesAnswer, rulesMembership, rulesObservedValues, rulesScope, rulesScope2, rulesScope3, rulesScope4, rulesScopeRules, rulesScopeRules3 } from "./rules-scope.ts";
@@ -102,6 +107,9 @@ export interface Platform {
  * cannot run.
  */
 const VERSION_DATA: Readonly<Record<string, Platform>> = {
+  [UNPUBLISHED_COHORT.register]: { data: unpublishedRegister, rules: unpublishedRegisterRules },
+  [UNPUBLISHED_COHORT.directory]: { data: unpublishedDirectory, rules: unpublishedDirectoryRules, declaredText: (state, digest) => installDefinitionText(state, digest, "application-catalog"), membership: directoryMembership, rulesScope: directoryRulesScope },
+  [UNPUBLISHED_COHORT.destination]: { data: unpublishedDestination, rules: unpublishedDestinationRules, membership: destinationMembership, rulesScope: destinationRulesScope, applicationPublicationOrigin: unpublishedApplicationPublicationOrigin },
   [HCR.register]: { data: archiveRegister, rules: registerRules },
   [HCR.directory]: { data: hardenedCertifiedRulesDirectory, rules: hardenedCertifiedRulesDirectoryRules, declaredText: (state, digest) => installDefinitionText(state, digest, "application-catalog"), membership: directoryMembership, rulesScope: directoryRulesScope },
   [HCR.rules]: { data: rulesScopeV12, rules: rulesScopeRulesV12, hostPreparationKinds: ["fetch-application"], declaredText: (state, digest) => installDefinitionText(state, digest, "definition"), observed: rulesAnswerV12, observedValues: rulesObservedValuesV12, revised: PUBLISH, membership: rulesMembership },

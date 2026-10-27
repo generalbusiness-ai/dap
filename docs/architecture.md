@@ -160,9 +160,11 @@ the settlement of existing work continue under their recorded definitions.
 Native platform scopes and proved unpackaged creations have no installed
 release to withdraw. Missing provenance makes admission unavailable.
 
-## Durability: three places the record lives
+## Durability: storage, publication and replay
 
-dap keeps the record in three places, each with a different job.
+With publication configured, dap keeps the record in three places, each
+with a different job. A room under a register installed with host `none`
+has no publication; its operator's backup covers the service's record.
 
 **The scope's own storage.** Each scope is one Durable Object. Its
 entries, sends, retained inputs and folded items are written in one
@@ -189,6 +191,20 @@ opened the operation. The published repository and its receipts outlive
 the service, and anyone who can clone the repository can read them. This publication covers the
 repository's content and the receipts, not the full journal of every
 scope.
+
+Under host `none`, the register creates the directory without opening a
+repository operation. The directory keeps its normal control item and
+child references. Its destination has an `unpublished` branch and an empty
+repository slot, with no first head. Repository-dependent acts and reads
+refuse `no-repository`. A refused publication delivery returns its result
+to the sending scope, so that request becomes final without opening host
+work. A business act that sent it may already have been accepted.
+
+Members, rules, issues, retained content, installed application acts and
+service replay remain available within the existing scope bounds. Package
+installation can still fetch an immutable release independently of the
+register's host. There is no repository receipt or journal archive under
+host `none`; journal entries stay in the scope's own storage.
 
 **Replay as the independent reader.** `@generalbusiness/dap-replay`
 reads a scope's stored bytes through the read API and checks them without
@@ -231,6 +247,11 @@ checked inputs to a judgment, not shared storage.
 
 The Worker's fixed scope index records registered full references and their
 genesis hashes. Its census is a deployment observation, not native authority.
+Creation, child lineage and census share the host-independent
+`REGISTER_SCOPE` selector. A valid Artifacts configuration remains the
+legacy fallback. When both settings are supplied, their register IDs must
+agree; malformed or conflicting settings close creation before target
+lookup. The register pin supplies identity, not host readiness or authority.
 Only the key that signed the pinned Register's founding `install` can read
 it, through a signed `census` request. The index binds that key to its own
 stored Register row and the Register's checked native birth. Membership
@@ -247,11 +268,11 @@ saved genesis and reports its actual definition pin or an explicit failure.
 
 | Part | Owns |
 |---|---|
-| Register and directory | Creating a repository, and the room's child scopes |
+| Register and directory | Creating the room's child scopes and, when selected, its repository |
 | Membership | Members, enrolled keys, roles and the authority a scope may observe |
 | Rules | The room's published configuration and review requirements |
 | Lane | The application's work items, versions, reviews and declared messages |
-| Destination | Judging a publication and recording its outside-operation pending work |
+| Destination | Holding unpublished state, or judging publication and recording its outside-operation pending work |
 | Git host adapter | Bounded Git reads and authorized host requests. It reports evidence, not decisions |
 | Replay | Independent checking of a recorded journal, with its stated coverage and trusts |
 

@@ -63,12 +63,12 @@ export const LISTED_TITLES = 100;
 /** The room's own page, which every page's footer links to (`page.ts`). */
 const ROOM_PAGE = "/page/";
 
-export type SiteRefusal = "bad-request" | "method-not-allowed" | "not-found" | "not-published" | "too-large" | "host-not-configured" | "unreadable" | "rate-limited" | "unavailable";
-const STATUS: Record<SiteRefusal, number> = { "bad-request": 400, "method-not-allowed": 405, "not-found": 404, "not-published": 404, "too-large": 413, "host-not-configured": 503, unreadable: 502, "rate-limited": 429, unavailable: 503 };
+export type SiteRefusal = "bad-request" | "method-not-allowed" | "not-found" | "not-published" | "no-repository" | "too-large" | "host-not-configured" | "unreadable" | "rate-limited" | "unavailable";
+const STATUS: Record<SiteRefusal, number> = { "bad-request": 400, "method-not-allowed": 405, "not-found": 404, "not-published": 404, "no-repository": 404, "too-large": 413, "host-not-configured": 503, unreadable: 502, "rate-limited": 429, unavailable: 503 };
 
 /** A refusal. The browser representation exposes no provider error or private input. */
 export function refused(reason: SiteRefusal, sentence: string, step?: SiteStep, browser?: { request: Request; room?: string }): Response {
-  const html = browser?.request.headers.get("accept")?.split(",").some(part => {
+  const html = reason !== "no-repository" && browser?.request.headers.get("accept")?.split(",").some(part => {
     const [type, ...parameters] = part.trim().toLowerCase().split(";");
     if (type?.trim() !== "text/html") return false;
     const quality = parameters.find(parameter => /^\s*q\s*=/.test(parameter));
@@ -76,12 +76,13 @@ export function refused(reason: SiteRefusal, sentence: string, step?: SiteStep, 
     return Number.isFinite(q) && q > 0 && q <= 1;
   }) === true;
   const headers = { "content-type": html ? "text/html; charset=utf-8" : "text/plain; charset=utf-8", "cache-control": "no-store", "x-content-type-options": "nosniff", "vary": "Accept", ...(step ? { "x-site-step": step } : {}), ...(reason === "rate-limited" ? { "retry-after": "60" } : {}) };
-  if (!html) return new Response(`${reason}: ${sentence}\n`, { status: STATUS[reason], headers });
+  if (!html) return new Response(reason === "no-repository" ? reason : `${reason}: ${sentence}\n`, { status: STATUS[reason], headers });
   const explanations: Record<SiteRefusal, string> = {
     "bad-request": "This Pages address is not valid.",
     "method-not-allowed": "Pages can be read with GET.",
     "not-found": "No published page is available at this address.",
     "not-published": "The room has no confirmed published page at this address.",
+    "no-repository": "This room has no repository to publish.",
     "too-large": "This page is too large to read here.",
     "host-not-configured": `This host does not read the repository of ${browser?.room ?? "this room"}.`,
     unreadable: "The published page could not be read.",
@@ -282,6 +283,7 @@ export async function site(request: Request, env: SiteEnv, fetch?: (request: Req
     return refusal("unreadable", e instanceof Error && e.message === "publication-history-limit" ? "publication-history-limit" : "the room could not be read", "room");
   }
   if (!room) return refusal("not-found", "no room has that directory");
+  if (room.repository === null) return refusal("no-repository", "the room has no repository");
   roomName = room.repository.name;
   let publication;
   try { publication = await publicationOf(env.SCOPES, directory, room); }
@@ -324,7 +326,7 @@ export async function site(request: Request, env: SiteEnv, fetch?: (request: Req
     ? new Response(null, { status: 304, headers: cached }) : null;
   const eligible = async (answer: Response): Promise<Response> => {
     const now = await roomOf(env.SCOPES, directory);
-    if (!now || canonicalize(now) !== canonicalize(room)) return refusal("not-published", "the room identity changed during this read");
+    if (!now || now.repository === null || canonicalize(now) !== canonicalize(room)) return refusal("not-published", "the room identity changed during this read");
     if (!versions && proof) {
       const currentProof = await publishedCommitOf(env.SCOPES, directory, now, proof.commit);
       if (!currentProof.ok) return currentProof.reason === "publication-history-limit" ? refusal("unreadable", "publication-history-limit", "room") : refusal("not-published", "the publication is no longer eligible");

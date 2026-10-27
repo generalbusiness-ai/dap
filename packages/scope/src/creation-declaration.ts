@@ -2,7 +2,7 @@
  * The caller separately authenticates the Directory's birth and exact send. */
 import { canonicalize, definitionDigest, isDigest, isScopeRef, parseStrict, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { same } from "@generalbusiness/dap-derive";
-import { APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT, platform } from "@generalbusiness/dap-platform";
+import { APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT, UNPUBLISHED_COHORT, platform } from "@generalbusiness/dap-platform";
 import type { Pinned } from "./core.ts";
 import type { Store } from "./store.ts";
 import { PROOF_BYTE_BOUNDS } from "./proof-bytes.ts";
@@ -11,7 +11,7 @@ export function creationDeclaration(store: Store, pinned: Pinned | null, at: unk
   if (!active() || !isScopeRef(at) || at.kind !== "directory" || !isDigest(digest) || !Number.isSafeInteger(maxBytes) || maxBytes <= 0 || maxBytes > PROOF_BYTE_BOUNDS.body) return null;
   const scope = store.scope();
   if (!active() || !scope || scope.status !== "active" || !same(scope.at, at) || !pinned?.platform
-    || ![APPLICATION_COHORT.directory, ARCHIVE_DEVICE_APPLICATION_COHORT.directory, ARCHIVE_DEVICE_PUBLICATION_COHORT.directory, ARCHIVE_CERTIFIED_RULES_COHORT.directory, HARDENED_CERTIFIED_RULES_COHORT.directory].some(named => named === pinned.named)) return null;
+    || ![APPLICATION_COHORT.directory, ARCHIVE_DEVICE_APPLICATION_COHORT.directory, ARCHIVE_DEVICE_PUBLICATION_COHORT.directory, ARCHIVE_CERTIFIED_RULES_COHORT.directory, HARDENED_CERTIFIED_RULES_COHORT.directory, UNPUBLISHED_COHORT.directory].some(named => named === pinned.named)) return null;
   const directSize = store.retainedSize("definition", digest);
   let raw: string;
   if (directSize !== null) {

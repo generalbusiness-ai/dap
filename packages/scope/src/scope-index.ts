@@ -76,7 +76,7 @@ export function indexedScopes(binding: Binding, env: ScopeIndexEnvironment): Bin
   let modes = indexes.get(indexBinding);
   if (!modes) { modes = new Map(); indexes.set(indexBinding, modes); }
   const prior = modes.get(mode);
-  if (prior && prior.settings.DEPLOYMENT === env.DEPLOYMENT && prior.settings.ARTIFACTS_CONFIG === env.ARTIFACTS_CONFIG
+  if (prior && prior.settings.DEPLOYMENT === env.DEPLOYMENT && prior.settings.REGISTER_SCOPE === env.REGISTER_SCOPE && prior.settings.ARTIFACTS_CONFIG === env.ARTIFACTS_CONFIG
     && prior.settings.ALLOW_OPEN_CREATION === env.ALLOW_OPEN_CREATION
     && Object.hasOwn(prior.settings, "PLATFORM_CREATION_PINS") === Object.hasOwn(env, "PLATFORM_CREATION_PINS")
     && prior.settings.PLATFORM_CREATION_PINS === env.PLATFORM_CREATION_PINS) return prior.binding;
@@ -85,6 +85,7 @@ export function indexedScopes(binding: Binding, env: ScopeIndexEnvironment): Bin
     SCOPE_INDEX_MODE: mode,
     ...(env.SCOPE_INDEX === undefined ? {} : { SCOPE_INDEX: env.SCOPE_INDEX }),
     ...(env.DEPLOYMENT === undefined ? {} : { DEPLOYMENT: env.DEPLOYMENT }),
+    ...(env.REGISTER_SCOPE === undefined ? {} : { REGISTER_SCOPE: env.REGISTER_SCOPE }),
     ...(env.ARTIFACTS_CONFIG === undefined ? {} : { ARTIFACTS_CONFIG: env.ARTIFACTS_CONFIG }),
     ...(env.ALLOW_OPEN_CREATION === undefined ? {} : { ALLOW_OPEN_CREATION: env.ALLOW_OPEN_CREATION }),
     ...(Object.hasOwn(env, "PLATFORM_CREATION_PINS") ? { PLATFORM_CREATION_PINS: env.PLATFORM_CREATION_PINS } : {}),

@@ -69,7 +69,9 @@ test("three approved native cohorts admit their exact child chain and refuse ano
       const nativeChild = directoryBirth.sends.find(send => isSeed(send.to) && send.to.kind === "membership")!;
       const child = children[0]!;
       const delivered = envelopeOf(directoryBirth, nativeChild.n);
-      const f = recorded([R, D, ...children], child.name), settings = { ...f.env, ...config(R.name) };
+      // A Register-only setting proves the same actual native child lineage;
+      // provider configuration is unnecessary to select its authority root.
+      const f = recorded([R, D, ...children], child.name), settings = { ...f.env, ...config(R.name), REGISTER_SCOPE: R.name, ARTIFACTS_CONFIG: undefined };
       const before = await life.wait(() => child.entries());
       const ports = namespace(indexedScopes(f.binding, settings));
       expect(await life.wait(() => ports.transport.send(delivered))).toMatchObject({ answer: "recorded" });
@@ -165,7 +167,9 @@ test("a late whole-lineage index result and an oversized body never activate any
       expect(await admitChildCreation(binding, { ALLOW_OPEN_CREATION: "true", DEPLOYMENT: deployment }, { async has() { ancestorLookups++; throw Error("invalid deployment reached creator index"); } }, delivered)).toEqual({ kind: "unavailable" });
       expect({ calls, ancestorLookups }).toEqual({ calls: 0, ancestorLookups: 0 });
     }
-    expect((await admitChildCreation(binding, { ALLOW_OPEN_CREATION: "true", DEPLOYMENT: "local" }, { async has() { throw Error("local opening reached index"); } }, delivered)).kind).toBe("admitted");
+    // A deployed escape cannot supply the missing Register setting.
+    expect((await admitChildCreation(binding, { ALLOW_OPEN_CREATION: "true", DEPLOYMENT: "local" }, { async has() { throw Error("unconfigured opening reached index"); } }, delivered)).kind).toBe("unavailable");
+    expect((await admitChildCreation(binding, { REGISTER_SCOPE: room.R.name, ALLOW_OPEN_CREATION: "true", DEPLOYMENT: "local" }, { async has() { throw Error("local opening reached index"); } }, delivered)).kind).toBe("admitted");
   } finally { room.life.release(); }
 }, 30_000);
 

@@ -3,7 +3,7 @@ import type { FactRef, ScopeId, SignedRead } from "@generalbusiness/dap-contract
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { same, intentDigest, isDigest, isPlatformDefinition, isScopeId, isScopeRef, scopeIdOf, verifySignedIntent, within, LATE } from "@generalbusiness/dap-bytes";
 import { platform } from "@generalbusiness/dap-platform";
-import { artifactsRegisterScope } from "./artifacts-wiring.ts";
+import { readRegisterScope } from "./register-setting.ts";
 import { proofEntry, PROOF_BYTE_BOUNDS, EXACT_PROOF_RECEIVER_BOUNDS, type ProofBody } from "./proof-bytes.ts";
 import { scopedSignedRead } from "./signed-reads.ts";
 import { ScopeIndexRows, SCOPE_INDEX_NAME, type ScopeRegistration } from "./scope-index.ts";
@@ -103,7 +103,8 @@ export async function scopeIndexCensusRoute(request: Request, env: ServingEnviro
       || new Set(keys).size !== keys.length) return response(refused("forbidden"));
     const after = url.searchParams.get("cursor") ?? "", rawLimit = url.searchParams.get("limit") ?? "100";
     if (!/^(?:[1-9][0-9]?|100)$/.test(rawLimit)) return response(refused("forbidden"));
-    const limit = Number(rawLimit), reader = request.headers.get("authorization"), pinned = artifactsRegisterScope(env.ARTIFACTS_CONFIG);
+    const limit = Number(rawLimit), reader = request.headers.get("authorization"), selected = readRegisterScope(env);
+    const pinned = selected.kind === "pinned" ? selected.scope : null;
     if (!requestOf(reader, pinned, after, limit, Date.now())) return response(refused("forbidden"));
     if (!env.SCOPE_INDEX) return response(refused("absent"));
     const decision = await admitServing(env, { kind: "signed-read", reader }, address);

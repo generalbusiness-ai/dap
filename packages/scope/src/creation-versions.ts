@@ -1,11 +1,13 @@
 /** Deployment creation policy. Historical loading and replay never use it. */
 import type { PlatformDefinition } from "@generalbusiness/dap-contract";
 import { isPlatformDefinition, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
-import { ARCHIVE_DEVICE_PUBLICATION_COHORT, platform } from "@generalbusiness/dap-platform";
+import { ARCHIVE_DEVICE_PUBLICATION_COHORT, UNPUBLISHED_COHORT, platform } from "@generalbusiness/dap-platform";
 
 export interface PlatformCreationSettings { PLATFORM_CREATION_PINS?: unknown }
 export interface PlatformCreationPolicy { readonly pins: readonly PlatformDefinition[] }
-const newest = Object.values(ARCHIVE_DEVICE_PUBLICATION_COHORT);
+// Retain the existing hosted baseline and admit the related host-none family.
+// This does not change any recorded pin or the CLI's hosted default choice.
+const newest = [...new Set([...Object.values(ARCHIVE_DEVICE_PUBLICATION_COHORT), ...Object.values(UNPUBLISHED_COHORT)])];
 const defaults: PlatformCreationPolicy = Object.freeze({ pins: Object.freeze([...newest]) });
 /** Undefined is the absent setting, including an explicitly undefined field.
  * Null is invalid. No caller-owned array or mutable setting survives parsing. */

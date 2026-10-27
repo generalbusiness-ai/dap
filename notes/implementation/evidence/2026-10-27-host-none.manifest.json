@@ -1,0 +1,39 @@
+{
+  "qualification": "Draft evidence inventory before first owning checks. Preparation observations and unexecuted helper sources are retained; no owning check, gate, review, deployment or seal is claimed.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-27-host-none",
+  "request": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2b5e3a07f68f4ab9f24b59f4211f9914c991c930",
+  "promise": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:50eb700b344f334c37dfeafcf63032dc7abaa59d",
+  "base": {
+    "commit": "61fc3e3dcb56b6fb435125fc484dc46cda87485e",
+    "tree": "b5fdae2027dca72a09fca8ccfef31070ec89047d"
+  },
+  "fileCount": 5,
+  "totalBytes": 71273,
+  "files": [
+    {
+      "path": "cli-page-handoff.json",
+      "bytes": 4651,
+      "sha256": "9d26d5393742e5ddddca9c7cc25a80e78905baf408cf0178e2d7ea2cef114d0b"
+    },
+    {
+      "path": "preparation-observations.json",
+      "bytes": 1271,
+      "sha256": "62dcbbc21a15f0a892aeca096026095c07d5bd91cbdb27cea8369a86747ae5ee"
+    },
+    {
+      "path": "prepared-page-qa.mjs",
+      "bytes": 13661,
+      "sha256": "d181de9ed6f5ee86e0797ca4b5b49c9015eb91a79031e7fdd42acbf253dc7081"
+    },
+    {
+      "path": "prepared-runner.py",
+      "bytes": 5576,
+      "sha256": "7f1b906ed9f4547ecba6ee1453768d6e196c832946cbf5d1b5676b18a30625cd"
+    },
+    {
+      "path": "seal-preparation.json",
+      "bytes": 46114,
+      "sha256": "dd6768bee573a7936136f4b77e2c1b49a4a2526121b2badf1a4eb9f024003bde"
+    }
+  ]
+}

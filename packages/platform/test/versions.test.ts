@@ -21,6 +21,10 @@ import { creationRita as rita } from "./fixtures-entry.ts";
 // Evidence: /tmp/artroom-cohort25-generation-one/result.json
 // SHA-256: e2a2052d23705690ec4b884786f453718875f6505d515fdda88a20191eb64269.
 const DIGESTS: Readonly<Record<string, string>> = {
+  // G1 canonical generation; every historical literal below stays exact.
+  "platform:register@21": "sha256:f24574f61a1a6e7b2658a19d8925a3cdab702937831b038040efb8a225171ee5",
+  "platform:directory@20": "sha256:061289c868b371dfe97b692e95627e78afa550db1b83a2b664a40dfaa3fcf8b1",
+  "platform:destination@16": "sha256:f7e36c2b10e19bed3ac9353ca9f86ea2682122e0ccec06cde3efa1b887895691",
   // Observed canonical hardening generation; historical literals stay exact.
   "platform:register@20": "sha256:af4c384cebbf4e9b9526bf939dee17b7faa370dc3026b54ae7a7b57c2a254091",
   "platform:directory@19": "sha256:c8c40477f369a19213439eaa1a3263dad1ce16038e5df605b6f7322737380b55",

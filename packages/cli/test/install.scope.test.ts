@@ -94,7 +94,7 @@ async function recovering(): Promise<void> {
   };
   for (const mode of ["reply", "save"] as const) {
     const s = scenario(mode);
-    expect((await command(s.ctx, ["install", "--plan", SERVICE])).code).toBe(0);
+    expect((await command(s.ctx, ["install", "--plan", SERVICE, "--host", "github.com"])).code).toBe(0);
     const original = (await s.store.config())!.plan!;
     // Capture the deliberately injected save failure only for this witness.
     const lost = await command(s.ctx, ["install", "--planned"]).catch(() => ({ code: 1 }));
@@ -107,7 +107,7 @@ async function recovering(): Promise<void> {
     await s.store.save({ ...pending, plan: changed });
     expect([(await command(s.ctx, ["install", "--planned"])).lines[0]?.split(".")[0], s.submissions.length]).toEqual(["Refused: plan-mismatch", 1]);
     await s.store.save(pending);
-    for (const replacement of [["install", "--plan", SERVICE], ["install", SERVICE]]) {
+    for (const replacement of [["install", "--plan", SERVICE, "--host", "github.com"], ["install", SERVICE, "--host", "github.com"]]) {
       expect((await command(s.ctx, replacement)).lines[0]).toMatch(/^Refused: install-pending\./);
       expect(await s.store.config()).toEqual(pending);
     }
@@ -147,13 +147,13 @@ async function recovering(): Promise<void> {
     expect(timeMs(net.clock.now)! - timeMs(genesis.time)!).toBeGreaterThan(900_000);
   }
   const unsent = scenario("unsent");
-  expect((await command(unsent.ctx, ["install", "--plan", SERVICE])).code).toBe(0);
+  expect((await command(unsent.ctx, ["install", "--plan", SERVICE, "--host", "github.com"])).code).toBe(0);
   const unsentPlan = (await unsent.store.config())!.plan!;
   net.clock.now = timeOf(Date.parse(unsentPlan["founding"].intent.notAfter) + 1000);
   expect([(await command(unsent.ctx, ["install", "--planned"])).lines[0]?.split(".")[0], unsent.submissions]).toEqual(["Refused: plan-expired", []]);
 
   const unaccepted = scenario("unaccepted");
-  expect((await command(unaccepted.ctx, ["install", "--plan", SERVICE])).code).toBe(0);
+  expect((await command(unaccepted.ctx, ["install", "--plan", SERVICE, "--host", "github.com"])).code).toBe(0);
   expect((await command(unaccepted.ctx, ["install", "--planned"])).code).toBe(1);
   const unacceptedPlan = (await unaccepted.store.config())!.plan!;
   net.clock.now = timeOf(Date.parse(unacceptedPlan["founding"].intent.notAfter) + 1000);
@@ -176,7 +176,7 @@ async function planned(): Promise<void> {
 
   // A mismatched plan: its kept register ID is not the one its intent makes. Refused by name; nothing is sent, so no register exists.
   const sam: Context = { store: memoryStore(), fetch, now, trustedCreationService: { service: SERVICE, fetch } };
-  expect((await command(sam, ["install", "--plan", SERVICE, "--host", "git.example", "--namespace", "artroom"])).code).toBe(0);
+  expect((await command(sam, ["install", "--plan", SERVICE, "--host", "github.com", "--namespace", "artroom"])).code).toBe(0);
   const samPlan = (await sam.store.config())!.plan!;
   const other = samPlan.register.replace(/.$/, (c) => (c === "a" ? "b" : "a"));
   await sam.store.save({ ...(await sam.store.config())!, plan: { ...samPlan, register: other as never } });
@@ -197,14 +197,14 @@ async function planned(): Promise<void> {
   // omitted. A plain install cannot replace that plan. A fresh config can
   // found a different register without changing the original request.
   const paul: Context = { store: memoryStore(), fetch, now };
-  expect((await command(paul, ["install", "--plan", SERVICE])).code).toBe(0);
+  expect((await command(paul, ["install", "--plan", SERVICE, "--host", "github.com"])).code).toBe(0);
   const paulBefore = (await paul.store.config())!;
   const paulPlan = paulBefore.plan!;
-  const replacement = await command(paul, ["install", SERVICE]);
+  const replacement = await command(paul, ["install", SERVICE, "--host", "github.com"]);
   expect([replacement.code, replacement.lines[0]]).toEqual([1, "Refused: install-pending. The retained selected plan must use its original cohort and request; run install --planned."]);
   expect(await paul.store.config()).toEqual(paulBefore);
   const fresh: Context = { store: memoryStore(), fetch, now };
-  expect((await command(fresh, ["install", SERVICE])).code).toBe(0);
+  expect((await command(fresh, ["install", SERVICE, "--host", "github.com"])).code).toBe(0);
   expect((await fresh.store.config())!.register!.scope).not.toBe(paulPlan.register);
 
   // The new order. Plan: the register ID and the seed's time are printed, and the plan is kept with no secret.
@@ -223,12 +223,12 @@ async function planned(): Promise<void> {
   const pause = async (waiting: readonly string[]) => { await answering(); await settle(...waiting.map((scope) => new Platform(scope as never))); };
   const rita: Context = { store: memoryStore(), fetch, now, pause, tries: 3, trustedCreationService: { service: SERVICE, fetch } };
   const run = (...argv: string[]) => command(rita, argv);
-  const plan = await run("install", "--plan", SERVICE, "--host", "git.example", "--namespace", "artroom");
+  const plan = await run("install", "--plan", SERVICE, "--host", "github.com", "--namespace", "artroom");
   const kept1 = (await rita.store.config())!;
   expect([plan.code, kept1.register, kept1.plan?.register]).toEqual([0, undefined, expect.stringMatching(/^sc_/)]);
   expect(plan.lines).toEqual([
-    `Planned: register ${kept1.plan!.register}, under ${kept1.plan!.definition}, on host git.example, namespace artroom. The seed's time is ${kept1.plan!["founding"].intent.notAfter}.`,
-    `Set registerScope to ${kept1.plan!.register} in the Worker's host setting, then run dap install --planned before ${kept1.plan!["founding"].intent.notAfter}.`,
+    `Planned: register ${kept1.plan!.register}, under ${kept1.plan!.definition}, on host github.com, namespace artroom. The seed's time is ${kept1.plan!["founding"].intent.notAfter}.`,
+    `Set REGISTER_SCOPE to ${kept1.plan!.register} in the Worker's settings, then run dap install --planned before ${kept1.plan!["founding"].intent.notAfter}.`,
   ]);
   await noSecret(rita);
 

@@ -6,7 +6,7 @@ import { expect, test } from "vitest";
 import type { Intent, PlatformDefinition, Seed } from "@generalbusiness/dap-contract";
 import { canonicalize, intentDigest, parseStrict, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import { keys } from "@generalbusiness/dap-derive/testing";
-import { ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, platform } from "@generalbusiness/dap-platform";
+import { ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, UNPUBLISHED_COHORT, platform } from "@generalbusiness/dap-platform";
 import { readPlatformCreationPolicy, injectedPlatformCreationPolicy, permitsNewPlatformScope } from "../src/creation-versions.ts";
 import { admitChildCreation, type CreationTimer } from "../src/creation-lineage.ts";
 import { indexedScopes, type ScopeIndexPort } from "../src/scope-index.ts";
@@ -22,11 +22,16 @@ const install = () => signIntent({ v: 1, to: null, actor: keys.paul.key, kind: "
 const seedOf = (signed: ReturnType<typeof install>, definition: PlatformDefinition): Seed => ({ v: 1, kind: "register", definition, creator: null, cause: intentDigest(signed.intent), ordinal: 0 });
 
 test("creation policy owns bounded known pins; absent and explicit undefined default, invalid configuration closes", () => {
-  const expected = Object.values(ARCHIVE_DEVICE_PUBLICATION_COHORT);
+  // The unpublished family is an additional admitted baseline, not a change
+  // to the existing hosted creation choices or their native pins.
+  const expected = [...new Set([...Object.values(ARCHIVE_DEVICE_PUBLICATION_COHORT), ...Object.values(UNPUBLISHED_COHORT)])];
   for (const settings of [{}, { PLATFORM_CREATION_PINS: undefined }, { PLATFORM_CREATION_PINS: "[]" }]) {
     const policy = readPlatformCreationPolicy(settings);
     expect(policy?.pins).toEqual(expected);
     expect(permitsNewPlatformScope(policy, newest)).toBe(true);
+    expect(permitsNewPlatformScope(policy, UNPUBLISHED_COHORT.register)).toBe(true);
+    expect(permitsNewPlatformScope(policy, UNPUBLISHED_COHORT.directory)).toBe(true);
+    expect(permitsNewPlatformScope(policy, UNPUBLISHED_COHORT.destination)).toBe(true);
     expect(permitsNewPlatformScope(policy, legacy)).toBe(false);
     expect(permitsNewPlatformScope(policy, ARCHIVE_DEVICE_APPLICATION_COHORT.register)).toBe(false);
   }

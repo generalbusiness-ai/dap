@@ -24,7 +24,7 @@ export default {
     if (hosted) return hosted;
     const application = await applicationPage(request, lookups);
     if (application) return application;
-    return new URL(request.url).pathname === DEMO_OFFER_PATH ? demoCreationRoute(request, lookups) : isSite(request) ? site(request, lookups, undefined, request.headers.get("cf-connecting-ip")) : isPage(request) ? page(request) : isBrand(request) ? brand(request) : route(request, scopes, env, request.headers.get("cf-connecting-ip"));
+    return new URL(request.url).pathname === DEMO_OFFER_PATH ? demoCreationRoute(request, lookups) : isSite(request) ? site(request, lookups, undefined, request.headers.get("cf-connecting-ip")) : isPage(request) ? page(request, env.DEMO_START_CONFIG !== undefined) : isBrand(request) ? brand(request) : route(request, scopes, env, request.headers.get("cf-connecting-ip"));
     });
   },
 };
