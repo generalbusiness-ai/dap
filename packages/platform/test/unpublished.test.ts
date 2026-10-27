@@ -123,11 +123,13 @@ test("a native unpublished found directly creates its directory, applies its res
   // directory genesis and the exact recorded native founding request.
   const resultInput = R.last.input;
   if (resultInput.type !== "delivery" || resultInput.message.class !== "result") throw Error("Native applied result required");
+  const directoryGenesis = D.last.input;
+  if (directoryGenesis.type !== "genesis") throw Error("Native directory genesis required");
   const wrongIncarnation = { ...resultInput, from: { ...resultInput.from, at: { ...resultInput.from.at, inc: R.at.inc } } };
   const refusedResult = { ...resultInput, message: { ...resultInput.message, outcome: "refused" as const } };
   const original = R.own(1)!;
   const unrelated = { ...resultContext, own: () => ({ ...original, hash: R.fact(0).hash }) };
-  const wrongOrigin = { ...resultContext, own: () => ({ ...original, entry: { ...original.entry, input: D.last.input } }) };
+  const wrongOrigin = { ...resultContext, own: () => ({ ...original, entry: { ...original.entry, input: directoryGenesis } }) };
   expect([
     accepts(resultContext, { ...D.fact(0), seq: 1 }),
     accepts(resultContext, { ...D.fact(0), hash: R.fact(0).hash }),
@@ -135,7 +137,7 @@ test("a native unpublished found directly creates its directory, applies its res
     accepts(unrelated, D.fact(0)),
     accepts(wrongOrigin, D.fact(0)),
     accepts({ ...resultContext, input: refusedResult }, D.fact(0)),
-    accepts({ ...resultContext, input: D.last.input }, D.fact(0)),
+    accepts({ ...resultContext, input: directoryGenesis }, D.fact(0)),
   ]).toEqual([false, false, false, false, false, false, false]);
   take(D, U.directory, R, R.head.seq, 0, facts);
   expect(D.state.scope()!.status).toBe("active");

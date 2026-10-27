@@ -1,18 +1,20 @@
 /** One real Native unpublished room, CLI, member sessions, installed signed
- * Lending package, delivery/result fold and whole-room replay. Local files,
+ * device-publisher package, delivery/result fold and whole-room replay. Local files,
  * package signer/trust/Git peer, screen bytes, scheduler and clock are TEST
  * fixtures. Package fetch is legitimate; no repository host is installed. */
 import { env, runInDurableObject } from "cloudflare:test";
 import { expect, onTestFinished, test } from "vitest";
-import { DOMAINS, type FactRef, type FieldValue, type OutboxId, type ScopeId } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, digestBytes, factRefOf, isFactRef, isMemberRef, isRecord, isSeed, LATE, scopeIdOf, textDigest, timeOf, utf8, within } from "@generalbusiness/dap-bytes";
+import { DEVICE_COMMAND, DOMAINS, type DeclaredDefinition, type FactRef, type FieldValue, type OutboxId, type ScopeId } from "@generalbusiness/dap-contract";
+import { b64url, canonicalize, definitionDigest, digestBytes, factRefOf, isFactRef, isMemberRef, isRecord, isSeed, LATE, scopeIdOf, textDigest, timeOf, utf8, within } from "@generalbusiness/dap-bytes";
 import { secretSigner, type Fetch, type Signer } from "@generalbusiness/dap-client";
 import { firstExtents, UNPUBLISHED_COHORT as C } from "@generalbusiness/dap-platform";
+import { packApplication2, readApplicationProjection } from "@generalbusiness/dap-platform/application-v2";
+import { emptyPackageComposition } from "@generalbusiness/dap-package-graph";
 import { firstExtentsV11, rulesPolicyProposalV11 } from "../../platform/src/rules-policy-v11.ts";
 import { McpService, memoryStore as custodyStore, type ServerPort } from "@generalbusiness/dap-mcp";
 import { issueDemo, changeDemo, DEMO_DIGESTS } from "../../../apps/room/lanes/src/index.ts";
 import { openRoom, listLanes, loadIssue, loadChange } from "../../../apps/room/page/src/data.ts";
-import { lending } from "../../../examples/lending/definition.ts";
+import { devicePackageFixture } from "../../derive/test/fixtures-device-command.ts";
 import { ScriptedClock, net } from "../../scope/src/testing.ts";
 import { route, outsideOf as hostOutside } from "../../scope/src/worker.ts";
 import roomWorker from "../../../apps/room/worker.ts";
@@ -22,7 +24,7 @@ import { reader } from "../../scope/test/support.ts";
 import { nativeFixtureLifetime, driveFixture, dispatchFixture } from "../../scope/test/support/native-fixture-lifetime.ts";
 import { applicationResolverFixture } from "../../scope/test/support/application-fixture.ts";
 import { applicationHttpPeer } from "../../scope/test/support/application-http-peer.ts";
-import { applicationContentBindings } from "../../scope/test/fixtures-core.ts";
+import { applicationContentBindings, fixedSigner } from "../../scope/test/fixtures-core.ts";
 import { command, memoryStore, type Context, type Outcome } from "../src/index.ts";
 
 const SERVICE = "https://scopes.test";
@@ -30,6 +32,26 @@ let activeClock: { failed: boolean } | null = null;
 const ok = (value: Outcome) => { expect(value.code, value.lines.join("\n")).toBe(0); return value; };
 const noRepository = (value: Outcome) => { expect(value.code).toBe(1); expect(value.lines.join("\n")).toContain("no-repository"); };
 const typed = (value: FieldValue) => typeof value === "string" ? value : canonicalize(value);
+
+// The existing device-file-publication specimen, with its meaningful device
+// capability and exact declaration. No unused companion or capability is
+// added to make an ordinary package look like a device package. Reports are
+// explicit TEST readings; this witness exercises no physical heater.
+const devicePublisher: DeclaredDefinition = {
+  ...devicePackageFixture,
+  items: { ...devicePackageFixture.items, root: { ...devicePackageFixture.items["root"]!, refs: {
+    destination: { fixed: true, required: true, to: { type: "scope", kind: "destination" } },
+  } } },
+  acts: { ...devicePackageFixture.acts,
+    start: { ...devicePackageFixture.acts["start"]!, fields: { destination: { type: "scope", kind: "destination", required: true } },
+      effects: [{ ref: { slot: "destination", from: { field: "destination" } } }] },
+    report: { ...devicePackageFixture.acts["report"]!, also: { root: { item: "root", one: true } },
+      fields: { ...devicePackageFixture.acts["report"]!.fields, path: { type: "text", max: 256, required: true }, content: { type: "text", max: 1024, required: true } },
+      sends: [{ tell: { to: { slot: "destination", of: "also.root" }, message: "publish-file",
+        fields: { path: { field: "path" }, content: { field: "content" } }, result: { refused: [], undelivered: [] } } }],
+    },
+  },
+};
 
 test("host none creates a real local room, settles installed publication refusal at its sender and verifies every discovered scope", async context => {
   if (activeClock?.failed) return context.skip("Host-none fixture skipped: prior close failed; ownership retained");
@@ -81,8 +103,17 @@ test("host none creates a real local room, settles installed publication refusal
   })().catch(error => { if (activeClock === outer) outer.failed = true; throw error; });
   onTestFinished(close);
   try {
-    const f = await applicationResolverFixture("sha1", undefined,
-      { admin: ["lending.member", "lending.staff"], member: ["lending.member"] }, lending);
+    const id = definitionDigest(devicePublisher);
+    const packet = await packApplication2({ name: "test.host-none-device-publication", version: "1", semantic: {
+      ...emptyPackageComposition(), v: 2, entry: id, definitions: [{ id, bytes: canonicalize(devicePublisher) }],
+      connections: [{ from: id, item: "root", slot: "destination", to: "outside" }],
+      host: { execution: "recorded-do", profiles: ["restricted@1"] },
+      capabilities: [{ name: DEVICE_COMMAND, bounds: { kinds: ["heater"], owners: 1 } }],
+      roles: { admin: ["command", "start"] }, projections: { root: readApplicationProjection({ v: 1, definition: id, revision: "revision",
+        sources: { root: { item: "root", read: "one", states: ["ready"], limit: 1, fields: {} } } }) }, predecessor: null,
+    }, presentation: { v: 2, entry: "index.html", assets: [{ path: "index.html", mediaType: "text/html", bytes: "VEVTVA" }],
+      descriptions: {}, views: {}, resources: {} } }, fixedSigner(81));
+    const f = await applicationResolverFixture("sha1", undefined, { admin: ["command", "start"] }, devicePublisher, packet);
     expect(await env.APPLICATION_CONTENT.head(f.key)).toBeNull();
     releaseKey = f.key; // Only this initially absent release key belongs to cleanup.
     const peer = applicationHttpPeer(f), bindings = applicationContentBindings(env.APPLICATION_CONTENT, JSON.stringify(f.trust));
@@ -123,7 +154,7 @@ test("host none creates a real local room, settles installed publication refusal
       // Only this TEST bridge adapts that option; actual wire/auth is retained.
       const { redirect: _redirect, credentials: _credentials, ...wire } = init as typeof init & { redirect?: string; credentials?: string };
       const response = await wait(() => route(new Request(url, { ...wire, redirect: "manual" }), env.PLATFORM,
-        { REGISTER_SCOPE: register ?? undefined, SCOPE_INDEX: env.SCOPE_INDEX, DEPLOYMENT: TEST_DEPLOYMENT }));
+        { ...(register === null ? {} : { REGISTER_SCOPE: register }), SCOPE_INDEX: env.SCOPE_INDEX, DEPLOYMENT: TEST_DEPLOYMENT }));
       return { status: response.status, body: response.body };
     };
     const body = "TEST detached issue body, kept locally without publication.";
@@ -217,15 +248,14 @@ test("host none creates a real local room, settles installed publication refusal
       return answer.structuredContent;
     };
     expect(await call("text", { scope: I.name, kind: "text", digest: textDigest(body) })).toMatchObject({ text: body });
-    // Rules10's device-install input requires an explicit existing owner,
-    // including for this ordinary signed Lending package. Use the actual
-    // member party recorded by the CLI's seat/first-key setup.
+    // Rules10's device-install input requires an explicit existing owner.
+    // Use the actual member party recorded by CLI seat/first-key setup.
     const nativeOwner = (await wait(() => M.summary())).value.items.find(item => item.type === "member"
       && item.state === "active" && item.values["handle"] === "@owner")?.parties["member"];
     if (!isMemberRef(nativeOwner)) throw Error("Actual active Native owner member required");
     expect(nativeOwner.membership).toEqual(repository.membership);
     const installed = await call("install_application", { uri: f.uri, release: f.packet.ids.release,
-      roles: ["admin", "member"], owner: nativeOwner, values: {}, idempotencyKey: "TEST-host-none-Lending" });
+      roles: ["admin"], owner: nativeOwner, values: {}, idempotencyKey: "TEST-host-none-device-publisher" });
     expect(installed).toMatchObject({ answer: "accepted", phase: "recorded" });
     const job = Number(installed["item"]); expect(Number.isSafeInteger(job)).toBe(true);
     await pause([]);
@@ -237,38 +267,49 @@ test("host none creates a real local room, settles installed publication refusal
     const L = track(applicationAt["scope"] as ScopeId);
     expect((await wait(() => L.summary())).value.definition).toBe(f.packet.package.semantic.entry);
     expect(await call("application_installation", { item: job })).toMatchObject({ state: "active", scope: await wait(() => L.at()) });
-    const donated = await call("act", { target: L.name, digest: f.packet.package.semantic.entry, kind: "donate", fields: {
-      name: "TEST pot", description: "Local state works without publication", page: "shelf/0000000000000001.md", content: "TEST signed shelf page" }, idempotencyKey: "TEST-host-none-donate" });
-    expect(donated["answer"]).toBe("accepted");
-    const donation = donated["fact"];
-    if (!isFactRef(donation)) throw Error("Actual donated source fact required");
-    const sending = (await wait(() => L.sealed())).find(row => row.entry.seq === donation.seq)!;
-    expect(factRefOf(sending.entry)).toEqual(donation);
+    const commissioned = await call("act", { target: L.name, digest: id, kind: "commission", fields: { kind: "heater" }, idempotencyKey: "TEST-host-none-commission" });
+    expect(commissioned["answer"]).toBe("accepted");
+    const device = commissioned["fact"];
+    if (!isFactRef(device)) throw Error("Actual commissioned device fact required");
+    const commanded = await call("act", { target: L.name, digest: id, kind: "command", on: device.seq,
+      fields: { target: "on", level: 80 }, idempotencyKey: "TEST-host-none-command" });
+    expect(commanded["answer"]).toBe("accepted");
+    const commandFact = commanded["fact"];
+    if (!isFactRef(commandFact)) throw Error("Actual device command fact required");
+    expect(await wait(() => L.item(device.seq))).toMatchObject({ values: { kind: "heater", target: "on", level: 80 }, refs: { targetAt: commandFact.seq } });
+    const reported = await call("act", { target: L.name, digest: id, kind: "report", on: device.seq,
+      fields: { reported: 80, path: "device/reading.md", content: "# TEST device reading80\n" }, idempotencyKey: "TEST-host-none-report" });
+    expect(reported["answer"]).toBe("accepted");
+    const report = reported["fact"];
+    if (!isFactRef(report)) throw Error("Actual device report source fact required");
+    expect(await wait(() => L.item(device.seq))).toMatchObject({ values: { reported: 80 } });
+    const sending = (await wait(() => L.sealed())).find(row => row.entry.seq === report.seq)!;
+    expect(factRefOf(sending.entry)).toEqual(report);
     const publication = sending.entry.sends.find(send => send.message.class === "request" && send.message.type === "tell"
       && isRecord(send.message.body) && send.message.body["message"] === "publish-file");
-    if (!publication) throw Error("Actual installed Lending publication request required");
+    if (!publication) throw Error("Actual installed device publication request required");
     await dispatchFixture([L, G], wait);
     const refused = (await wait(() => G.entries())).find(entry => entry.input.type === "delivery"
-      && entry.input.from.at.scope === L.name && entry.input.from.seq === donation.seq && entry.input.n === publication.n)!;
-    expect(refused.input).toMatchObject({ type: "delivery", from: donation, n: publication.n, decision: "refused", reason: { code: "guard-failed", name: "no-repository" } });
+      && entry.input.from.at.scope === L.name && entry.input.from.seq === report.seq && entry.input.n === publication.n)!;
+    expect(refused.input).toMatchObject({ type: "delivery", from: report, n: publication.n, decision: "refused", reason: { code: "guard-failed", name: "no-repository" } });
     expect(refused.effects.filter(effect => effect.effect === "operation" || effect.effect === "open")).toEqual([]);
     expect(refused.sends).toHaveLength(1);
-    expect(refused.sends[0]).toMatchObject({ to: await wait(() => L.at()), message: { class: "result", of: { from: donation, n: publication.n }, outcome: "refused", reason: { code: "guard-failed", name: "no-repository" } } });
+    expect(refused.sends[0]).toMatchObject({ to: await wait(() => L.at()), message: { class: "result", of: { from: report, n: publication.n }, outcome: "refused", reason: { code: "guard-failed", name: "no-repository" } } });
     const settlements = (await wait(() => L.entries())).filter(entry => entry.input.type === "delivery" && entry.input.message.class === "result"
-      && canonicalize(entry.input.message.of) === canonicalize({ from: donation, n: publication.n }));
+      && canonicalize(entry.input.message.of) === canonicalize({ from: report, n: publication.n }));
     expect(settlements).toHaveLength(1);
     expect(settlements[0]!.input).toMatchObject({ type: "delivery", from: factRefOf(refused), n: 0,
       message: refused.sends[0]!.message, clause: "refused" });
-    const outboxId = `${donation.seq}.${publication.n}` as OutboxId;
+    const outboxId = `${report.seq}.${publication.n}` as OutboxId;
     expect(await call("sends", { scope: L.name, outboxId })).toMatchObject({ outboxItem: { outboxId, result: { seq: settlements[0]!.seq, clause: "refused" }, diagnosis: null } });
     expect(await call("wait", { scope: L.name, outboxId, seconds: 1 })).toMatchObject({ timedOut: false, outboxItem: { result: { seq: settlements[0]!.seq, clause: "refused" }, diagnosis: null } });
     const pending = await wait(() => runInDurableObject(L.object, (_instance, state) => state.storage.sql.exec<{ n: number }>(
-      "SELECT COUNT(*) AS n FROM outbox WHERE seq=? AND n=? AND request IS NOT NULL AND result IS NULL AND (diagnosis IS NULL OR json_extract(diagnosis,'$.finding')<>'undelivered')", donation.seq, publication.n).one().n));
+      "SELECT COUNT(*) AS n FROM outbox WHERE seq=? AND n=? AND request IS NOT NULL AND result IS NULL AND (diagnosis IS NULL OR json_extract(diagnosis,'$.finding')<>'undelivered')", report.seq, publication.n).one().n));
     expect(pending).toBe(0);
-    for (const kind of ["borrow", "return"] as const) {
-      expect(await call("act", { target: L.name, digest: f.packet.package.semantic.entry, kind, on: donation.seq, fields: { content: "TEST " + kind }, idempotencyKey: "TEST-host-none-" + kind })).toMatchObject({ answer: "accepted" });
-      await dispatchFixture([L, G], wait);
-    }
+    expect(await call("act", { target: L.name, digest: id, kind: "report", on: device.seq,
+      fields: { reported: 81, path: "device/reading.md", content: "# TEST later device reading81\n" }, idempotencyKey: "TEST-host-none-later-report" })).toMatchObject({ answer: "accepted" });
+    await dispatchFixture([L, G], wait);
+    expect(await wait(() => L.item(device.seq))).toMatchObject({ values: { reported: 81 } });
 
     // Actual local file proposal, deliberately NOT a fetched published base.
     ok(await act(admin, "directory", "open-pr", { definition: DEMO_DIGESTS.change, title: "TEST retained local file", draft: false }, undefined, ["change.json"]));
@@ -358,8 +399,9 @@ test("host none creates a real local room, settles installed publication refusal
     expect(new Set(consistent.map(line => line.split(" ")[1]!.replace(/,$/, "")))).toEqual(new Set(expected.map(node => node.name)));
     expect(verified.lines.at(-1)).toBe(`All consistent: ${expected.length} scopes.`);
     expect(verified.lines.filter(line => line.startsWith("Cleanup status:"))).toEqual([expect.stringContaining(G.name)]);
-    Object.assign(context.task.meta, { hostNone: { qualification: "Real CLI/Worker/Native memberships, installed signed TEST Lending package, sender-final refusal and whole-room replay; TEST host-time clock, local files, package Git peer/screen/trust and finite scheduler. No deployed room, repository service or UI rendering claim.",
-      registerOnlyAdmission: true, scopes: expected.length, packageRelease: f.packet.ids.release, publicationSource: donation,
+    Object.assign(context.task.meta, { hostNone: { qualification: "Real CLI/Worker/Native memberships, installed signed v2 TEST device publisher, meaningful device-command capability, sender-final refusal and whole-room replay; TEST heater readings, host-time clock, local files, package Git peer/screen/trust and finite scheduler. No physical device, ordinary-package support, deployed room, repository service or UI rendering claim.",
+      registerOnlyAdmission: true, scopes: expected.length, packageRelease: f.packet.ids.release, commissionedDevice: device,
+      deviceCommand: commandFact, reportedValue: 80, laterReportedValue: 81, publicationSource: report,
       publicationOrdinal: publication.n, publicationResult: "refused", destination: "unpublished", repositoryCalls: 0 } });
   } catch (error) {
     try { await close(); }

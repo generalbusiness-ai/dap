@@ -802,7 +802,7 @@ function connectionScreen(path: "join" | "invitation" | "config", connected: Roo
   const current = () => drawing === capturedDraw && location.hash === capturedRoute && settingsContext(settings() ?? { place: null, publicKey: "" }) === capturedContext;
   const back = () => h("a", { class: "entry-back", href: "#/join" }, h("span", { "aria-hidden": "true" }, "‹"), "Back");
   if (path === "join") return h("main", { class: "screen entry-screen" },
-    connected ? h("a", { class: "entry-back", href: "#/" }, h("span", { "aria-hidden": "true" }, "‹"), `Back to ${connected.name}`) : null,
+    connected ? h("a", { class: "entry-back", href: "#/" }, h("span", { "aria-hidden": "true" }, "‹"), connected.name ? `Back to ${connected.name}` : "Back to room") : null,
     h("h1", {}, connected ? "Join another room" : "Join or create a room"),
     ignoredSavedAddress ? h("p", { class: "entry-answer" }, "The saved connection address is ignored. Your room and key are kept. Use a connection below; this page reads only its own service.") : null,
     h("div", { class: "entry-choices" },

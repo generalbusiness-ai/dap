@@ -59,7 +59,7 @@ test("joined room/account clicks disclose identity without leaving the room, and
   const place = { directory: "directory", membership: { scope: "membership", kind: "membership", inc: "one" } };
   const publicKey = keyIdOfSecret(secret), unexpectedKeyOperation = uiKeys([publicKey]);
   const signer = { key: publicKey, sign: unexpectedKeyOperation };
-  const room = { session: { service: location.origin, signer }, ...place, name: "Hugh's room", key: keyIdOfSecret(secret), me: { handle: "@hugh-web", role: "member", actions: [] }, reader: {}, rules: "rules", destination: "destination", publication: "repository" };
+  const room = { session: { service: location.origin, signer }, ...place, name: "Hugh's room" as string | undefined, key: keyIdOfSecret(secret), me: { handle: "@hugh-web", role: "member", actions: [] }, reader: {}, rules: "rules", destination: "destination", publication: "repository" };
   const saved = JSON.stringify({ place, publicKey });
   const setItem = vi.fn();
   vi.doMock("../src/data.ts", async () => ({
@@ -111,10 +111,22 @@ test("joined room/account clicks disclose identity without leaving the room, and
     redraw(); await fixture.wait(() => main.workbenchLifecycle.idle());
     expect(root.all().some(e => e.tag === "a" && e.textContent === "Pages")).toBe(true);
     room.publication = "unpublished";
+    room.name = undefined;
     redraw(); await fixture.wait(() => main.workbenchLifecycle.idle());
     expect(root.textContent).toContain("No publication");
     expect(root.all().some(e => e.tag === "a" && e.attrs["href"]?.startsWith("/site/"))).toBe(false);
     expect(root.all().some(e => e.tag === "a" && e.textContent === "Pages")).toBe(false);
+    root.all().find(e => e.tag === "a" && e.textContent === "Change connection")!.click();
+    expect(location.hash).toBe("#/join");
+    redraw(); await fixture.wait(() => main.workbenchLifecycle.idle());
+    expect(root.all().find(e => e.tag === "h1")?.textContent).toBe("Join another room");
+    const unnamedBack = root.all().find(e => e.tag === "a" && e.textContent.includes("Back to room"))!;
+    expect(unnamedBack.attrs["href"]).toBe("#/");
+    expect(root.textContent).not.toContain("undefined");
+    unnamedBack.click(); expect(location.hash).toBe("#/");
+    redraw(); await fixture.wait(() => main.workbenchLifecycle.idle());
+    expect(root.textContent).toContain("No publication");
+
 
     expect(unexpectedKeyOperation).not.toHaveBeenCalled();
     expect(setItem).not.toHaveBeenCalled(); expect(root.textContent).not.toContain("Settings");
