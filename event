@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:807849e66c57f85caac45ac48d048470652c6589","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-27-security-r14-limit-hint.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b0d51bac512ce6bf30bc58344edd8cbdb50e8789","text":"Merge retired a covered predecessor; the successor is at scripts/usage-report.test.mjs."}
