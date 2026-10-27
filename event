@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"notes at exact 880d9cdfb1882b69d34920d093f6c345ef170d9c on planner/pointing-claims-packages-20261027, under promise git:sha1…b4c678d on request git:sha1…818bd0a\n\nDesign note: pointing and claims in packages, recut 880d9cdf for the checker's four gaps (8164acf4).","body":{"commit":"880d9cdfb1882b69d34920d093f6c345ef170d9c","path":"notes"}}
+{"kind":"artifact","text":"Merge published the current artifact at packages/scope/test/lending.test.ts","body":{"commit":"aa3ae87393745df7d769f72157d8dd6ae93687d9","path":"packages/scope/test/lending.test.ts"}}
