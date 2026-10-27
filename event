@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/cli/src/scope-index-applications-command.ts","body":{"commit":"6499a12bb16317d9bc614e5f5e905fb4d662cc87","path":"packages/cli/src/scope-index-applications-command.ts"}}
+{"kind":"artifact","text":"Merge published the current artifact at packages/cli/test/scope-index-applications-command.test.ts","body":{"commit":"6499a12bb16317d9bc614e5f5e905fb4d662cc87","path":"packages/cli/test/scope-index-applications-command.test.ts"}}
