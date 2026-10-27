@@ -85,8 +85,17 @@ runs `archiveFinish` and CLI verification. Its two prior sealed passing
 durations were 25,668 and 29,457 ms against a 30,000 ms test limit.
 The run was interrupted while the newly issued child request's identity
 and paired controls were completed. It is not a Native or gate pass.
-The narrow BR-4 deadline repair is pending under request
-`git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3ae5d8b5946a4ff4731041101a3edf09d3fa72b0`.
+The existing BR-4 request
+`git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:15b0f8ab3242d73fb0ac1efa4113cda42ee699df`
+already requests a command limit at least three times its median. The
+offline follower alone now has a 90,000 ms test limit: three times the
+two-observation median of 27,562.5 ms is 82,687.5 ms. The Native
+producer and every archive budget retain their original 30 seconds.
+The censored 30,084 ms failure is not treated as a complete duration.
+The basis is recorded in `f73e6a6c`; the planner's delivery preference
+was requested in `3ae5d8b5` and remains open. Other BR-4 work is not
+part of this delivery. This repair requires a fresh gate and claims no
+failed-gate follow-up exception.
 Final evidence and the manifest are pending.
 
 The repaired observer was compiled with cached pinned Wrangler 4.147.0
@@ -119,6 +128,7 @@ incomplete in target identity.
 | Previously unreached Native | Unchanged `fixedStages` production command | 130; interrupted | Pending final manifest |
 | Bundled observer and old-origin control | Local compiled observer in workerd | 0; repair passes, old origin remains incomplete | Pending final manifest |
 | Completeness, privacy and debit controls | Local compiled observer with Native numeric inputs | 0; positive case and three intended rejections | Pending final manifest |
+| Native producer and offline CLI follower after the BR-4 deadline repair | `vitest run --project scope packages/scope/test/archive-installed.test.ts -t '^installed Grow production '` | 0; two passed, six unselected | Pending final manifest |
 | Ordinary gate after the runtime repair | `npm run gate` | 130; interrupted, offline follower timeout observed | Pending final manifest |
 | Final ordinary gate | `npm run gate` | Pending | Pending final manifest |
 
