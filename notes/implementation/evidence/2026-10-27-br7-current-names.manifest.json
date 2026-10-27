@@ -1,12 +1,32 @@
 {
-  "qualification": "Preparation snapshot after focused validation and rebase, before the first ordinary gate. Collection remains open until final reporting. Per-run working-source hashes identify focused inputs; rebase.json proves unchanged task source.",
+  "qualification": "One naturally closed ordinary BR7 gate after rebase, per-run preparation receipts, deliberate and inconclusive controls separately qualified, focused Native delivery (32 cases in six files), sealed Node sourceSeal follow-up and page-assets equality. Existing nested seals and the original external seal evidence remain unchanged. No live query, deployment, authority-policy change, archive action or new application-family capability. Only this implementation note and manifest follow the tested checkpoint; all other tracked blobs/modes equal it. Missing callbacks remain qualified.",
   "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-27-br7-current-names",
   "checkpoint": {
-    "commit": "2ec2743c256692fe9e0a1f6b920b023750a28bbd",
-    "tree": "4b37c7b1bb9b68328e2f6a28144925c9ea878d82"
+    "commit": "10e89e18ed98da667b362d8ea182279b6050040d",
+    "tree": "7f13a3a120958ece38e6128811e5d58b9b6ad4a9"
   },
-  "fileCount": 119,
+  "fileCount": 170,
   "files": [
+    {
+      "path": "SHA256SUMS",
+      "bytes": 17317,
+      "sha256": "7602c7255425af7af3c39f358ec2896ffddeaee41bc8c9cffc4defbb6a03903f"
+    },
+    {
+      "path": "analysis-run.json",
+      "bytes": 2384,
+      "sha256": "bc05ede072f89658877a3c3faeb3b2d3f8430e8bccad7d7b5aa6cc552a876ada"
+    },
+    {
+      "path": "analysis-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "analysis-stdout.log",
+      "bytes": 1242,
+      "sha256": "7a1256933eeada5ad6b1b0d7af006cfcf431953e5b32b51b82d1739471f29852"
+    },
     {
       "path": "capture-focused.py",
       "bytes": 1412,
@@ -293,6 +313,21 @@
       "sha256": "a01d6115c7c43668344f4b64891f33dfcac24070bf547fb6020559445a417922"
     },
     {
+      "path": "finalization-inputs.json",
+      "bytes": 28433,
+      "sha256": "5d8272073f4881f7df453ba892602ddd64c63700417f68118f30b75e7e5e8090"
+    },
+    {
+      "path": "gate-source-checkpoint.json",
+      "bytes": 3975,
+      "sha256": "2686da40f31ae17a6f6d18299d900bf86766dda2c615890ca3b28b3929f2560b"
+    },
+    {
+      "path": "gate-source-equality.json",
+      "bytes": 894689,
+      "sha256": "4003234c95f44f03067504b0e85f03ce571445805f213ae9b887f98eccc367d5"
+    },
+    {
       "path": "lanes-native-types-v1.json",
       "bytes": 3570,
       "sha256": "c41c707fa45b26736b24657688dbeb6b49c9e857c4c7688192fc92aaa8622137"
@@ -361,6 +396,211 @@
       "path": "native-focused-v1/started.json",
       "bytes": 644798,
       "sha256": "04af1bba2277618cd46554507ab71438f552d079f1ff421e9cb33ed9901cfd50"
+    },
+    {
+      "path": "nested-seal-preservation.json",
+      "bytes": 13779,
+      "sha256": "0b990f95982002d9a43a25c27925319d5bf23a2412e097ffdab6a6633910aaf9"
+    },
+    {
+      "path": "ordinary-gate/counting-witness/app.test.mjs",
+      "bytes": 350912,
+      "sha256": "d66b5972d57b1a0d99b53165d0e9be70b3c40affa40b60aa882ed3dc529433d6"
+    },
+    {
+      "path": "ordinary-gate/counting-witness/client.test.mjs",
+      "bytes": 297122,
+      "sha256": "40d15c49603575809a059de6daf87ad1090d2eb1220ae97b97600e1529fa753d"
+    },
+    {
+      "path": "ordinary-gate/counting-witness/device-key.test.mjs",
+      "bytes": 110027,
+      "sha256": "3292c05f13e303cafeec1fded72a02d43041846acfee1d1fb36819c0c050b9bb"
+    },
+    {
+      "path": "ordinary-gate/counting-witness/metafile.json",
+      "bytes": 70755,
+      "sha256": "122f5d52760dd55a26985b788e433fce2647128665348f464fa91eebdcd66f84"
+    },
+    {
+      "path": "ordinary-gate/counting-witness/source.json",
+      "bytes": 999,
+      "sha256": "20fb4345f1336b6d451c62cb43909d36033217f484f3fdf10263af4c3a1b451c"
+    },
+    {
+      "path": "ordinary-gate/counting-witness/voice-controller.test.mjs",
+      "bytes": 181912,
+      "sha256": "c66a28003ee1dbcaa395abe3c8d58e26adda3a6204c3c98fb9dfea006fd58d46"
+    },
+    {
+      "path": "ordinary-gate/driver.py",
+      "bytes": 3915,
+      "sha256": "93fb24248d1fca9ad869d06576a0a9787eb6689318dc76bb7b2a8f8cf1e9c1ac"
+    },
+    {
+      "path": "ordinary-gate/output.log",
+      "bytes": 6495,
+      "sha256": "f6cef8607be61e2a4428d58eab0fe6a94ac043f2d7a123fa52c1668dbb55f86e"
+    },
+    {
+      "path": "ordinary-gate/progress.native.jsonl",
+      "bytes": 906716,
+      "sha256": "20481aafb9e7a78199b05c3b25c153a07c0adbe763465db5e667fb0bcccffe88"
+    },
+    {
+      "path": "ordinary-gate/progress.plain.jsonl",
+      "bytes": 2988906,
+      "sha256": "3937e6532914b6a59c4d720b8baf63250b5e1757cdcb346e77b2fb733c9a5db4"
+    },
+    {
+      "path": "ordinary-gate/result.json",
+      "bytes": 1517,
+      "sha256": "9c6e149b7e82481b523e26bb9daae4bbe5c28ff197169ec714bba8c1d0ef3996"
+    },
+    {
+      "path": "ordinary-gate/stages/citations.log",
+      "bytes": 1554342,
+      "sha256": "8e017e78b1b77665e5844577753c175fb4d1053863380ab144701525b6918f43"
+    },
+    {
+      "path": "ordinary-gate/stages/citations.time",
+      "bytes": 29,
+      "sha256": "84c0a9647f3a0c2f61d793d1f816096f935026ffec989d3c4d0520701bd4f962"
+    },
+    {
+      "path": "ordinary-gate/stages/cite-test.log",
+      "bytes": 761,
+      "sha256": "e030dcfeb1da7c0b97955725023b6923386c0aff5ea95e7e12f0dfd1c2d8746c"
+    },
+    {
+      "path": "ordinary-gate/stages/cite-test.time",
+      "bytes": 29,
+      "sha256": "c4b882d306df69b5f5ca50ec49095414d87bf33d588d9b17520e91df8242ed86"
+    },
+    {
+      "path": "ordinary-gate/stages/commit-messages.log",
+      "bytes": 38,
+      "sha256": "fc8765466e4e267859aeefd91456d6d8c027c5b75f972ee69d76ef7d3d3dd256"
+    },
+    {
+      "path": "ordinary-gate/stages/commit-messages.time",
+      "bytes": 29,
+      "sha256": "2f00bb14f48e47d581a40c36302b3d8f94ecd53f8ccfa6825008731de11235d2"
+    },
+    {
+      "path": "ordinary-gate/stages/commit-test.log",
+      "bytes": 595,
+      "sha256": "a95817907915ca4c4ec13085260e7abc4636a4f5edffe5adfc3b710a68e44cad"
+    },
+    {
+      "path": "ordinary-gate/stages/commit-test.time",
+      "bytes": 29,
+      "sha256": "87fb2a2762abf7c22f1210b4dd7d57616e81a778819ed6b13e5ed37ff6de179f"
+    },
+    {
+      "path": "ordinary-gate/stages/doc-links.log",
+      "bytes": 38,
+      "sha256": "d32eaa916626747fdc1c632131b58a6e719335f9eb304291180692016a1b1dc5"
+    },
+    {
+      "path": "ordinary-gate/stages/doc-links.time",
+      "bytes": 29,
+      "sha256": "b4fca40ba8148ab5120605c178c053e9b7d823a37d00ec23eee23a748dd7e8bb"
+    },
+    {
+      "path": "ordinary-gate/stages/helpers.log",
+      "bytes": 68,
+      "sha256": "eaf32c94c81feb78a512719678069a7204d82821f73581ebc5a6ece8f53543b1"
+    },
+    {
+      "path": "ordinary-gate/stages/helpers.time",
+      "bytes": 29,
+      "sha256": "111edbfe8345d6cfaf2dcb62d6405cfb61bd2a9554e1bc4f5c3265a392f73110"
+    },
+    {
+      "path": "ordinary-gate/stages/notes.log",
+      "bytes": 18,
+      "sha256": "35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1"
+    },
+    {
+      "path": "ordinary-gate/stages/notes.time",
+      "bytes": 29,
+      "sha256": "21089e98a92f2e843b9342f6cd87de658cc9dd74bd39bd0f7e833e59d3fceea0"
+    },
+    {
+      "path": "ordinary-gate/stages/section-citations.json",
+      "bytes": 3907220,
+      "sha256": "8b53e9def9cc4cb77acc7cca66621982aafd92c36e4ce214e414e33afcd04f25"
+    },
+    {
+      "path": "ordinary-gate/stages/test-evidence/counting-sources.json",
+      "bytes": 1008,
+      "sha256": "482fc92ea2b300ee0f997371d55f0b8b3d02e7e24c14ef17bceab42068250ca0"
+    },
+    {
+      "path": "ordinary-gate/stages/test-evidence/counting.jsonl",
+      "bytes": 133793,
+      "sha256": "b670edf94452a9ca0c6d6aea8300fc6dddb0de23203532fcc6863413240ea3f8"
+    },
+    {
+      "path": "ordinary-gate/stages/test-evidence/native.jsonl",
+      "bytes": 802411,
+      "sha256": "53cead648c6b0462d482fbcd5a3404be6be1a2af1c1ca70b0fd634d9de12f2fd"
+    },
+    {
+      "path": "ordinary-gate/stages/test-evidence/node.jsonl",
+      "bytes": 176340,
+      "sha256": "069e5cd454a958a2a979a5e5c819ff8bf0db3a5163e329c3ed9643dc6eb1a6ec"
+    },
+    {
+      "path": "ordinary-gate/stages/test-evidence/plain.jsonl",
+      "bytes": 2501663,
+      "sha256": "7d7c3543cf2ea90b1d8ab18a823b4c0f967f0a1b8d9cdd3376e5eebcf8b1b739"
+    },
+    {
+      "path": "ordinary-gate/stages/test-evidence/stages.json",
+      "bytes": 975,
+      "sha256": "5724d79073e0c4834b486ae3bd3d41a1f72f3899084e3f32bb2240511701bb62"
+    },
+    {
+      "path": "ordinary-gate/stages/test.log",
+      "bytes": 31716777,
+      "sha256": "650960d3eac8e1734295238943636bf0f830683210647a2cd22a652ff4770fe3"
+    },
+    {
+      "path": "ordinary-gate/stages/test.time",
+      "bytes": 37,
+      "sha256": "1af6d289e147d1695e638aa101f61138f89d1b83dc905a6756b166a1aa99e259"
+    },
+    {
+      "path": "ordinary-gate/stages/typecheck.log",
+      "bytes": 1987,
+      "sha256": "62170bbe0cd055cff4699debd9470a886c0f98f328e7c9517d899c021a3788d0"
+    },
+    {
+      "path": "ordinary-gate/stages/typecheck.time",
+      "bytes": 31,
+      "sha256": "9d9248a4d2e178bcabeab56b0dec1347f9e50fbac5621890e05696e9f3fafc2e"
+    },
+    {
+      "path": "ordinary-gate/stages/whitespace.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "ordinary-gate/stages/whitespace.time",
+      "bytes": 29,
+      "sha256": "5ed4b22c002d89a63842f002eeee0387686ebc2634e949e7a57ba49c480c4db8"
+    },
+    {
+      "path": "ordinary-gate/started.json",
+      "bytes": 689,
+      "sha256": "7c85cbd6242de64f794a4b8cb8ee392235e0216d8e09b63e22411a99e3b64058"
+    },
+    {
+      "path": "ordinary-gate-analysis.json",
+      "bytes": 59229,
+      "sha256": "4cb870acccb3adad75384e7f40cd4c8f02025981051c78b1305cde1eadb0e848"
     },
     {
       "path": "page-assets-equality-v1/SHA256SUMS",
@@ -451,6 +691,21 @@
       "path": "rebase.json",
       "bytes": 4568,
       "sha256": "37038878ad32e8d3f5f22de285fd338292a0cfb1fad0f812cad030e70fe0092f"
+    },
+    {
+      "path": "retained-harnesses/artroom-br7-current-names-analysis-run-20261027.py",
+      "bytes": 5781,
+      "sha256": "d69582254d4a62de9e73a217f43fb32c391cfb28a87935f7dbfdde9250eb5090"
+    },
+    {
+      "path": "retained-harnesses/artroom-br7-current-names-finalize-20261027.py",
+      "bytes": 34516,
+      "sha256": "af7dc22444e26aeadff8b63d4ba2694dd1aa2e712a542448002d03c9163d28b3"
+    },
+    {
+      "path": "retained-harnesses/artroom-br7-current-names-gate-analysis-20261027.py",
+      "bytes": 22576,
+      "sha256": "4159f1da2bce7393aa7adc73d9349acc855cb682a84ae693c3cbe840b1b2e297"
     },
     {
       "path": "scope-types-v1.json",
