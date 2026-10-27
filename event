@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at docs/use-cases.md","body":{"commit":"260a9782e56d6fb7665246cf5ef2eda580345477","path":"docs/use-cases.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1fc221c1c4877f530f25630e33a065f86671c3fa","text":"Merge retired a covered predecessor; the successor is at docs/use-cases.md."}
