@@ -44,10 +44,46 @@ class changed. The repair at
 All 70 map rows and every assertion remain. No production, imported
 helper, configuration, dependency or compiler input changed. The whole
 owning Node file then passed. This follows the limited follow-up rule in
-`docs/testing.md`; it does not turn the failed gate into a pass. The three
-unreached stages, measured byte annotation, final manifest and checker
-review remain outstanding. Archive capacity request `499b2a80` preempts
-promotion of this head; capture question `cbdf2559` is with the planner.
+`docs/testing.md`; it does not turn the failed gate into a pass.
+
+The first follow-up executions of the unreached stages used clean
+`1a06191bcada5091b20d91d238093d1cbe8d348f`, tree
+`e77278af5cada58fcad9862e537924fbc65c4b00`. Counting passed 55 cases in
+2.040181583 wall seconds; plain passed 2848 cases with one skip in
+62.489929792 wall seconds. Native failed naturally after 959.463545208
+wall seconds and 1847.630373 child CPU seconds. V8 exhausted its heap
+near 1.4 GB, then Miniflare restarted the runtime. Later Vitest-state
+errors followed that restart. Final case identities reconcile to 784
+passed, two skipped and two pending; module identities reconcile to 230
+passed, one skipped and one pending. One unhandled Worker error remains.
+The timing record's `reason:"passed"` does not establish success when its
+unhandled-error count is one and the command exits 1.
+
+Both pending cases belong to `maintained-application-projections.test.ts`.
+A single fresh execution of that unchanged module, with the same native
+configuration and resource limits, passed both cases with no unhandled
+errors in 14.244790542 wall seconds and 15.937134 child CPU seconds.
+The separate Lending and denial projects passed in the failed full run.
+This diagnostic does not replace the failed Native phase or identify its
+allocator or physical worker. Nearby floor-archive output does not prove
+causation; that floor case subsequently passed. Raw forensic reconciliation
+is retained in `native-followup/failure-forensics.json`.
+
+The G15 budget case passed within that failed Native phase. Its awaited
+annotation reports `entryBytes:262144`, `maxStoredEntryBytes:88084`,
+`maxPassesRecordBytes:83907`, `proof32RecordBytes:83907`,
+`proof32EntryBytes:88084`, `positiveCaptureForecastBytes:262144`,
+`positiveCaptureBudgetBytes:262144`, `positiveCaptureActualBytes:63927`,
+and `negativeNextForecastBytes:262146`. These are measurements of that
+case, rather than evidence that the full phase passed.
+
+The memory failure, final manifest and checker review remain unresolved.
+Planner decision `6634c94c293fb6f956244e30e8a115330543e0e8` puts this
+hardening first, then current archive-capacity request
+`0f0eeab748533208c813092ebf1ad0dab5087105`. The original gate and Native
+failure remain separate failed results. No full retry, increased heap,
+extended deadline, fixture relocation or case removal has been used to
+make them pass.
 
 | Check | Command | Commit | Exit | Output SHA-256 |
 | --- | --- | --- | --- | --- |
@@ -79,8 +115,17 @@ promotion of this head; capture question `cbdf2559` is with the planner.
 | `final-owning-plain` | `node node_modules/vitest/vitest.mjs run --config vitest.plain.config.ts --project platform --project page destination-budget-v15.test.ts assets.test.ts` | `f5b59e4e45b0d6f1d2978375791c8ca2ce904164` | 0 | `d83ebef11f9221f6aca11809435ba1a5fbb64f46b81a2874bba5482a2a61bee0` |
 | `ordinary-gate` | `npm run gate` | `04ed601d6bbeae64863c6be7121e069e868feb35` | 1 | `da5c0b72bd911e011e81c1c42a23ed53a9177f034c2a867b512f9f192d377c9a` |
 | `security-seal-followup` | `node --test scripts/security-entry-points.test.mjs` | `1e58a6a5e1cf6539a540aa7aeb0e73e237d69c7d` | 0 | `fa5e30c37c61b0b945f2236c226d1a2c7f0a2209c1f04f4039181d70b62f18da` |
+| `counting-followup` | `node apps/counter/scripts/test-browser.mjs` | `1a06191bcada5091b20d91d238093d1cbe8d348f` | 0 | `a913ab107e2ab500aaa886bbf50e8f909bed05735395716325aa89d3cba9f96d` |
+| `plain-followup` | `node node_modules/vitest/vitest.mjs run --config vitest.plain.config.ts` | `1a06191bcada5091b20d91d238093d1cbe8d348f` | 0 | `8bf9814a59df4b2835c3f7235b3b3d094e3af4a3a417294fd7acdbc94de2ed0c` |
+| `native-followup` | `node node_modules/vitest/vitest.mjs run --config vitest.native.config.ts` | `1a06191bcada5091b20d91d238093d1cbe8d348f` | 1 | `bae43e1a0110bffe18cabc447db77693d8377570741cf69c12430bcc8f2dc802` |
+| `projection-diagnostic` | `node node_modules/vitest/vitest.mjs run --config vitest.native.config.ts --project scope maintained-application-projections.test.ts` | `1a06191bcada5091b20d91d238093d1cbe8d348f` | 0 | `f1df623d27278af4cb37e09393b947a9b1ac1b5b79ac58e0e5bae5cee65f95b0` |
 
 ## Open limits
+
+Request `5e6d482c` owns the unresolved Native heap exhaustion that blocks
+this delivery's review. The fresh projection diagnostic narrows the
+investigation but supplies no proven repair. Source and installed-pool
+retention investigation continues; the failed full run is not waived.
 
 Request `5e6d482c` owns the remaining deliberate entry-flood liveness limit, the absence of a user-facing certified-policy publish command, and planner-scheduled cohort enablement. This delivery changes no deployment or creation allowance. A fresh request can succeed when the Destination is quiet; a member adding entries on purpose can keep making it decline. The conservative observation/proof reserve can refuse policies whose immediate record alone would fit.
 
