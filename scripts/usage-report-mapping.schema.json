@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Usage report operator mapping, version 1",
+  "description": "Structure of an operator-owned mapping stored outside the repository. The usage-report parser also enforces the 64 KiB file limit, external real path, known Worker names, unique Worker rows, alias uniqueness across rows, and UTF-8 byte limits.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "workers"],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "workers": {
+      "type": "array",
+      "maxItems": 32,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["worker", "deployments"],
+        "properties": {
+          "worker": {
+            "type": "string",
+            "minLength": 1,
+            "description": "An exact Worker name in the current checked-in configuration inventory. The parser enforces inventory membership and one row per Worker."
+          },
+          "deployments": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 16,
+            "uniqueItems": true,
+            "description": "Historical metric deployment labels declared by the operator for this Worker. A label cannot belong to more than one Worker row.",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "not": {
+                "pattern": "[\\u0000-\\u001f\\u007f]"
+              },
+              "description": "At most 128 UTF-8 bytes. The character limit here is necessary but insufficient; the parser enforces the byte limit."
+            }
+          }
+        }
+      }
+    }
+  }
+}

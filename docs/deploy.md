@@ -432,15 +432,34 @@ saved scope-index manifest and matching operator CLI configuration. Keep the
 scope index in enforce mode where that mode applies. Retain the manifest path
 and digest with the run report. Set one live `APPLICATION_TRUST` row for every
 distinct reported release, publisher and host; resolve inconsistent rows before
-deployment. An unreadable scope, malformed record or pending installation
-makes the report incomplete: investigate it and rerun until complete before deploying. The
-command makes one signed summary GET per listed scope and sends no session,
-registration or mutation request. Existing server reads can still resume
-parked work, diagnose archives or recover alarms. These are host maintenance,
-not a write-free server snapshot. Summaries bind observed scope references and
-native pins; they do not reverify the manifest's genesis hashes or prove a
+deployment. An unreadable Rules scope, malformed record or pending installation
+makes the report incomplete: investigate it and rerun until complete before
+deploying. The command requests one existing operator read session from the configured
+membership before reading summaries. This is the one request beyond one
+summary GET per listed Rules scope. Other listed kinds receive a saved
+`not-applicable` status and no summary request, because they cannot hold native
+installation items. This trusts the kind in each validated manifest reference,
+as it trusts the manifest for which scopes exist. Skipped kinds are not fresh
+host observations. The session stays in memory. Acquisition can
+write the host's bounded replay and rate bookkeeping; it creates no history
+entry. A valid session refusal or absent membership selects initial signed
+reads. A failed or malformed acquisition stops the command. No summary is
+retried, and the command sends no registration or business mutation. Existing
+server reads can still resume parked work, diagnose archives or recover
+alarms. These are host maintenance, not a write-free server snapshot. Rules
+summaries bind observed scope references and native pins; they do not reverify the manifest's genesis hashes or prove a
 global inventory. The planner records all three runs before further R11
 deployments and uses the existing `--keep-vars` deployment commands.
+
+The manifest and report cover only the repository rooted at the operator's
+configured Directory, not every repository hosted by the Worker. A complete
+empty report for a newly founded operator room does not cover visitor rooms
+or their installed releases. Before deploying R11 source, the planner must
+record a separately authorized coverage path for any other repositories, or
+an explicitly authorized decision to withdraw installations outside the chosen
+trust list at deployment.
+A Worker-wide listing needs its own request and read authority. This child
+adds neither that read path nor authority for other repositories.
 
 Local `dap mcp` and `dap install` also read `APPLICATION_TRUST` from their process environment.
 Set the same JSON policy before starting it if package installation is

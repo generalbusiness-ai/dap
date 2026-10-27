@@ -36,9 +36,10 @@ changes the definition's bytes and digest. It does not change an existing
 scope's pin. Live and Sequenced levels are not supported yet. Their declarations
 are refused as `unsupported-definition`, without creating a recorded fallback.
 
-An archive is a separate binding of the room. Create an archive-capable room
-with `--cohort archive-application` for package v1 or
-`--cohort archive-declared-application` for ordinary v2. A v2 package with
+An archive is a separate binding of the room. Ordinary package v1 requires
+an existing historical `archive-application` room; ordinary v2 requires an
+existing historical `archive-declared-application` room. These families are
+not offered for new creation. A v2 package with
 `device-command@1` uses `--cohort archive-device-application` and an
 existing owner selected with `--owner`. A signed package can require the
 binding with `host.requires: ["archive"]`. In these cohorts, installation
@@ -447,10 +448,11 @@ references and checks native command records.
 
 ## Publish a file from an act
 
-Create a room with `dap install --cohort application-publication` to use
-the file-publication factory and destination. Existing rooms keep their
-original pins. The new cohort uses register@9, directory@8, membership@4,
-rules@3, destination@4 and inbox@1, each with the `platform:` prefix.
+The file-publication factory and destination are available in existing
+historical `application-publication` rooms. This family is not offered for
+new creation. Existing rooms keep their original pins: register@9,
+directory@8, membership@4, rules@3, destination@4 and inbox@1, each with the
+`platform:` prefix.
 
 Declare a genesis field named `destination`, with type `scope` and kind
 `destination`. Keep that reference in a fixed item slot. The directory

@@ -8,7 +8,9 @@ presentation at `/applications/<directory>/<item>/<presentation>/`.
 
 ## Install and connect
 
-Create a generic room with `--cohort declared-application`. Pack and commit
+New room creation does not currently offer a family that installs ordinary
+application packages such as Counter. Use an existing historical
+`declared-application` room for these instructions. Pack and commit
 the maintained package, have the host operator list its exact release and
 publisher, then run the Git-URI install from [the CLI guide](../../../docs/cli.md).
 The install records the selected default grants, activates the declaration,

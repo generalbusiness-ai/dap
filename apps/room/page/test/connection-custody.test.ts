@@ -1,10 +1,10 @@
 import { expect, test, vi } from "vitest";
 import { canonicalize, keyIdOfSecret, newIncarnation, scopeIdOf, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { secretSigner, type Signer } from "@generalbusiness/dap-client";
-import type { Context, InvitationIssueInput, InvitationIssueResult } from "@generalbusiness/dap-cli";
+import type { Context, InvitationIssueInput, InvitationIssueResult } from "@generalbusiness/dap-cli/browser";
 import type { ClaimStorage } from "../src/claim.ts";
 const shared = vi.hoisted(() => ({ issueInvitation: vi.fn() }));
-vi.mock("@generalbusiness/dap-cli", async () => ({ ...await vi.importActual<typeof import("@generalbusiness/dap-cli")>("@generalbusiness/dap-cli"), ...shared }));
+vi.mock("@generalbusiness/dap-cli/browser", async () => ({ ...await vi.importActual<typeof import("@generalbusiness/dap-cli/browser")>("@generalbusiness/dap-cli/browser"), ...shared }));
 const creator = vi.hoisted(() => ({ originalStart: vi.fn(), startRoom: vi.fn(), recoveryKeyOnce: vi.fn() }));
 vi.mock("../src/start-custody.ts", () => creator);
 vi.mock("../src/data.ts", async () => ({ ...await vi.importActual<typeof import("../src/data.ts")>("../src/data.ts"), openRoom: async (session: { service: string; signer: Signer }) => ({ session, directory: directory.scope, membership, key, me: { handle: "@founder", ref: controller, actions: ["membership.invite", "membership.manage"] } }) }));

@@ -1,3 +1,4 @@
+import { retainHistoricalInstallPlan } from "../../../../packages/cli/test/support/historical-install-plan.ts";
 import { customRequiredChangeData } from "./support/definition-corpus-data.ts";
 import { runInDurableObject, runDurableObjectAlarm } from "cloudflare:test";
 import { inject, expect, test, onTestFinished } from "vitest";
@@ -293,8 +294,12 @@ async function story(at: Stand, wired: Set<ScopeId>, startedOnly = false, unknow
   const run = (who: Context, ...argv: string[]) => command(who, argv);
   const ok = (outcome: Outcome) => { expect(outcome.code, outcome.lines.join("\n")).toBe(0); return outcome; };
   // Keep historical reservation stories fixed; only the first invariant also exercises newest creation.
-  ok(await run(creator, "install", SERVICE, "--host", at.host, "--namespace", at.namespace,
-    ...(newestCreation ? [] : ["--cohort", "file-publication"])));
+  if (newestCreation) {
+    ok(await run(creator, "install", SERVICE, "--host", at.host, "--namespace", at.namespace));
+  } else {
+    await retainHistoricalInstallPlan(creator, SERVICE, "platform:register@3", { host: at.host, namespace: at.namespace });
+    ok(await run(creator, "install", "--planned", "--cohort", "file-publication"));
+  }
   R = new Platform((await creator.store.config())!.register!.scope); wire(R.name); await R.restart(); known.push(R);
   net.hold = (envelope) => { if ("definition" in envelope.to) wire(scopeIdOf(envelope.to)); return false; };
   ok(await run(creator, "claim", "tree", "--handle", "@rita"));

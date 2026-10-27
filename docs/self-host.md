@@ -178,9 +178,10 @@ Counter and Lending are signed application packages. The Worker serves their
 screens through the generic `/applications/<directory>/<install-item>/<presentation>/`
 route. The old `/counting/` and `/lending/` routes are retired.
 
-Create a separate room with `--cohort trusted-application` in the planned
-install flow above. The room in this rehearsal keeps its historical pins;
-there is no automatic cohort migration. The operator must configure the
+New room creation does not currently offer a family that installs ordinary
+application packages such as Counter or Lending. These instructions apply
+to an existing historical `trusted-application` room. The room in this
+rehearsal keeps its historical pins; there is no automatic cohort migration. The operator must configure the
 [private application content bucket and exact release trust](deploy.md#trusted-application-screens)
 before an application can be installed.
 

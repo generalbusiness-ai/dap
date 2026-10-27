@@ -7,7 +7,8 @@ import type { Answer, Entry, FactRef, MemberRef, Receipt, SignedIntent, Summary,
 import { b64url, canonicalize, entryHash, factRefOf, intentDigest, isMemberRef, isScopeRef, isScopeId, isRecord, isHead, isKeyId, REFUSAL_REASONS, unb64url, timeMs, isReceipt, isSignedIntentShape, keyIdOfSecret, parseStrict, scopeIdOf, textDigest, timeOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { agentKeyInvitationOf, encodeAgentKeyInvitation, httpTransport, isAgentKeyMembership, ScopeHandle, secretSigner, signedIntent, requestSession, signerSessionRequest, type AgentKeyMembership, type Signer } from "@generalbusiness/dap-client";
 import { APPLICATION_COHORT, FILE_PUBLICATION_COHORT, COUNTING_COHORT, DEMO_REGISTER, DIRECTORY_OF, WEB_DEMO_COHORT, isHandle, platform } from "@generalbusiness/dap-platform";
-import { expectedOf, LINK, linkOf, type Context, type DefinitionShape, type Link, type Outcome } from "./commands.ts";
+import { expectedOf, LINK, linkOf, type DefinitionShape, type Link } from "./browser-helpers.ts";
+import type { Context, Outcome } from "./commands.ts";
 import type { Config, PendingInvitationIssue, Repository } from "./store.ts";
 
 export interface InvitationIssueInput { kind: "person" | "agent-key"; handle: string; hours: number; role?: "member" | "maintainer" | "admin"; controller?: MemberRef }

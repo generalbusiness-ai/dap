@@ -1,3 +1,4 @@
+import { retainHistoricalInstallPlan } from "../../cli/test/support/historical-install-plan.ts";
 import { expect, onTestFinished, test } from "vitest";
 import type { Entry, Intent, Seed } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, entryHash, intentDigest, isSeed, scopeIdOf, seedDigest, textDigest, timeMs, utf8 } from "@generalbusiness/dap-bytes";
@@ -53,8 +54,7 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
   const context: Context = { store, fetch, trustedCreationService: { service: SERVICE, fetch },
     now: () => { lifetime.active(); return timeMs(soon(0))!; } };
   const run = (...argv: string[]) => lifetime.wait(() => command(context, argv));
-  const planned = await run("install", "--plan", SERVICE, "--cohort", "application-publication", "--host", "git.example", "--namespace", "lending");
-  expect(planned.code, planned.lines.join("\n")).toBe(0);
+  await lifetime.wait(() => retainHistoricalInstallPlan(context, SERVICE, FILE_PUBLICATION_COHORT.register, { host: "git.example", namespace: "lending" }));
   const plan = (await lifetime.wait(() => store.config()))?.plan;
   if (!plan) throw new Error("The CLI must retain the original application install plan.");
   const R = new OwnedPlatform(plan.register);

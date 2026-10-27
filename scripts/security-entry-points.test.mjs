@@ -1,7 +1,178 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import { assertInventory, documentedInventory, servedInventory, sourceSeal, roomHttpEntry, sandboxInventory } from "./security-entry-points.mjs";
+import { assertInventory, documentedInventory, servedInventory, sourceSeal, namedSourceSeals, roomHttpEntry, sandboxInventory } from "./security-entry-points.mjs";
+
+// Every runtime declaration is selected. $module retains ordered imports,
+// exports, declaration identities, and module execution. Each expected hash has
+// its own source-ordered line. Root adopts actual parser values after review.
+const namedOwners = {
+  "packages/scope/src/object.ts": {
+    "packages/scope/src/object.ts:$module": "b2197a674c00a83707d36ee014baadc3eb98c66339cb38da4eb18555c19d1ee2",
+    "packages/scope/src/object.ts:ScopeObject": "895129c998e88aa5b2a40c6d22e38ab9ef6c2d1ebacf0b76e762430df3a2ffd1",
+  },
+  "packages/scope/src/worker.ts": {
+    "packages/scope/src/worker.ts:$module": "3e710c0e2d89674055af262bbc0e97d1622fc79c8641e6515d16beb83cd28717",
+    "packages/scope/src/worker.ts:ScopeIndex": "8051698500f75ce3b03fdd057744195758206618eb33e398d4b62fa74af98708",
+    "packages/scope/src/worker.ts:MISSING": "e8958a6cf8d4cd2f412b30c76b38aca2f4523bc2b9df96606ac01059b6d4fb42",
+    "packages/scope/src/worker.ts:api": "43b1600c799b41fe7781ea4b16c3584a7e2878c3cbedc1df4d18166f175200e8",
+    "packages/scope/src/worker.ts:BODY_BYTES": "158a6579a52843b40416a1f4d27e7bffb5e0f5df07105254bd3e87c3d3d203fd",
+    "packages/scope/src/worker.ts:answered": "f1c36263f63cc8977a334b803d6c89c4863d2e078704d7cdffdce1c3dc2eaea0",
+    "packages/scope/src/worker.ts:READ_STATUS": "d1bad71c3dd0ee1a99969ba66740bfb4bba30af83dc1ff749123a30891fc94b3",
+    "packages/scope/src/worker.ts:SESSION_STATUS": "99632b0bd230a76488353a2e1fce61925bbb595605a27d0f9e8c8e67f77a9587",
+    "packages/scope/src/worker.ts:read": "4a083fdf987741284f15628b0c45881da42de526268465ee66f4c37422636dd9",
+    "packages/scope/src/worker.ts:body": "c93c1b9fbe8c86c85bad134535f22e138e76cfe5653c19ce09ba1a638287da36",
+    "packages/scope/src/worker.ts:QUERY_STATUS": "cb170da8d7dca22a5dd36b21c59decce3a629ec5aff60745a39b350a1f2c9489",
+    "packages/scope/src/worker.ts:queryResponse": "3ce5909b0b8713f13903dc84328673d0cfa85910dff434b928e22fd3e2fe11b9",
+    "packages/scope/src/worker.ts:PROJECTION_STATUS": "c37cfcdbb416865b0082d7b326a76c8476deab28059b07bdd665c7cc9cdb7111",
+    "packages/scope/src/worker.ts:projectionResponse": "e17f1f4aa800bc06b4f8d065f77e8a594c2738c77873a52671fa7f1b22bf249b",
+    "packages/scope/src/worker.ts:route": "8e41a02f0a9d01c802beea51c095d82f3720ca0d3d5dc178213f5de2a8ccde63",
+    "packages/scope/src/worker.ts:routedRequest": "37fc2fd95d2be9029b40183efa8cea18a24a95e41e8fbce11ce568ac755b7b61",
+    "packages/scope/src/worker.ts:outsideOf": "0a294da6ca47625e2f760f7ef692e537d4491620019d1d34c5cbd305856a02ff",
+    "packages/scope/src/worker.ts:sessionWiring": "cb8f4d0e2b06854a3fbf080e5b4ce72e4182060b60f27cc7fb7f5ed6ac8779c5",
+    "packages/scope/src/worker.ts:snapshotReaderOf": "2b6810718421650701eb1edfa9b100ceefef11a1fdcb18603fccf4e6830ea9e2",
+    "packages/scope/src/worker.ts:DeployedScope": "0714da9436f9fd5a4c70169986ba9f056046490903dc6072b7d2a28adb28b5ef",
+    "packages/scope/src/worker.ts:ApplicationStreamLifetime": "4c82d6b5ea8ae68089f2f80321e3361b6176c9725d0b46481b6f32b6d2093ba3",
+    "packages/scope/src/worker.ts:ApplicationScreenService": "e1c29ed4d31ac059a57cda4a31577021295d91b2b29a5e610c9a3b6c60e5daad",
+    "packages/scope/src/worker.ts:ScopeService": "943cdeb596c860208cf2914114d36e0e25a196ea0afcc763212d2184e181be9b",
+    "packages/scope/src/worker.ts:mcpRoute": "307aad98a86f153e7f45783283c90d25d33e1b5b422a3dcd93eb0bc57a64888b",
+    "packages/scope/src/worker.ts:boundedBytes": "6553fab5e2b9129266d64c02f7c3c9317095f1888fd12a10d12490d9f5d90f40",
+    "packages/scope/src/worker.ts:observeThrough": "7e507f9bd9233223446711d089eb6d6b4236b69642eb9d39260e4712d81dab7a",
+    "packages/scope/src/worker.ts:sqlOf": "5631baea8c5029d6ba93da6b3d199e63897c5f5ac05ae61e16b8d6f3e337f7fb",
+    "packages/scope/src/worker.ts:McpRegistry": "f03a3a5f89e4a5b77c63d82dc72eb60c1eb34801a8dc55e661d05f7c07c7325b",
+    "packages/scope/src/worker.ts:McpAgent": "a36d308c7bd5a575e6784a307fb3b404eb2187d39da8a93294eea2217b765c8f",
+  },
+  "packages/cli/src/commands.ts": {
+    "packages/cli/src/commands.ts:$module": "ebcdde3e8bde987efb2f575babba3388796e645fa0eb75368c957f45f392563c",
+    "packages/cli/src/commands.ts:NEW_REGISTER": "f828e83eeb39a37566e323156efb63274fc43b1d6b9e95b38fbf0cdbba327fbf",
+    "packages/cli/src/commands.ts:short": "62f9d565f48fc73fc6b282a941d6d37a48055c6c32f2ef88f21b22ead55f6e57",
+    "packages/cli/src/commands.ts:scopeIndexAccess": "b54a6859075907491f4c19313b149572acd5b3bd94c492d61fb342601759c299",
+    "packages/cli/src/commands.ts:directoryReader": "ebf7a12b7e199bfb0e7962191eae486cc1ca4ed04707f9dd73eacbc48b8e147c",
+    "packages/cli/src/commands.ts:openingDirectory": "6d4a21e1c95322a35ff4b68ee9753efea36ba9013d100748587084babbd8f087",
+    "packages/cli/src/commands.ts:scopeNamed": "d16130a225872b6e96da8b6375ff41dcec104f7772f1e6c527c92d03cfd382e4",
+    "packages/cli/src/commands.ts:definitionOf": "138ced231e1b804af138be95c50fdd958e478c196d21b11cba3a431658bedf0b",
+    "packages/cli/src/commands.ts:laneActive": "8797076412cc4a14365ca99fc4faed2de3f34e7d0b7b62fc6283a446615a8aee",
+    "packages/cli/src/commands.ts:INSTALL_COHORTS": "cc53130f8fe3eee48a812126a7acfb0ebed0fc69bad2e67a0ab21de86e39d15a",
+    "packages/cli/src/commands.ts:CREATION_INSTALL_COHORTS": "a6fb0b26fa66fb8c356f9f0a39f34d7f51943795a09381cfeb1274c44ef57883",
+    "packages/cli/src/commands.ts:selectedRegister": "2139210b850d8a1f37ac8ea44ce86556a87dc280039d86ed1fd798d211cef108",
+    "packages/cli/src/commands.ts:installSelection": "aa1a4dea2a4b54bf32d3fbebabea3f82b5892ddcf1506dfc0c387d87abd0c18e",
+    "packages/cli/src/commands.ts:selectedPlan": "d49aa2ab7620a418121c6f4afba66998e36e79bffe48cd8728e7aad309b1b545",
+    "packages/cli/src/commands.ts:install": "4a251f182d2e6bd403e0d4e5728c63cb13af71e890290b2172d1f0e1aaf6d0ac",
+    "packages/cli/src/commands.ts:installing": "db64ce1eeafadde108ab95d008adaeb63ceae2913b78b19733edb0cedba50514",
+    "packages/cli/src/commands.ts:registerIdOf": "5db562b18c0929cea45b8322e913408ed5326b3b865aece7b884c284f137102d",
+    "packages/cli/src/commands.ts:knownPlatform": "7b5bdce0c14e94a85bce0329ddaef5b6a5ba276b1c5ef4393155b1468aafa8a8",
+    "packages/cli/src/commands.ts:installAttemptOf": "9a7a6449aee1060b49444f9bef0e3fe271e5279d29ddec38caa9fd6b3a1d95a2",
+    "packages/cli/src/commands.ts:readBackCohortConfig": "440e708afd45bf7ca11a22d1c913ccd642a4aa58d7ac7d92b6d1da753dec980b",
+    "packages/cli/src/commands.ts:saveCohortConfig": "1414316c62c3977bc1e64131e636a7821ed3dbe7389abc50d557ea7764d6bf44",
+    "packages/cli/src/commands.ts:retainedCohortPlan": "9a4da2b6b172f0208fbcb1551a61c38ccfdd3a1494496e97e0ca47c2acb9d8f5",
+    "packages/cli/src/commands.ts:cohortPlan": "1399c578e038b1984e7d6654f0f99c3170ab66503e0fd673bff824c333df5a25",
+    "packages/cli/src/commands.ts:plannedLines": "91e3f48e17767bab1494b8ec5c5332c3c736bdb1b76bdacc8bb04db17bc10048",
+    "packages/cli/src/commands.ts:planInstall": "788be2e396e6ddb77b0d63f6dc35bde936543e9920c0cbeea369eaf64885c9ae",
+    "packages/cli/src/commands.ts:installPlanned": "746f81f7078018a4bdd15e21606c3ed37eff93b4be159129e41a774bcf8a46db",
+    "packages/cli/src/commands.ts:executePlannedInstall": "a09634f96857240c400272ad3c3552ee293a6b069b7777816f9c0341a72398d0",
+    "packages/cli/src/commands.ts:invite": "0f89f53e82d14214cc46d83bb6df8e11516e328c5b54eacced4dcc67ae1c2d5b",
+    "packages/cli/src/commands.ts:join": "6c1ee13d33e404308ff73008807d432b924bcf4632c2ad1b8e5ee1b5b5b9ffa7",
+    "packages/cli/src/commands.ts:standing": "57372328838e0f9bcb936554f41738f9445ed53384112aae1cdad745a4dc1fce",
+    "packages/cli/src/commands.ts:acts": "f4577a1dbe4bb307bf92057f101967b5fd2f9a11240342f4f3377e177a81fd53",
+    "packages/cli/src/commands.ts:act": "bf5e36896d2227e10953d14d68d637f9010dc5b2a122b60e0af4eda192bcfd52",
+    "packages/cli/src/commands.ts:apps": "02729fd520eb4ed349fad0e776f974929a3663d442a0588e9b95ee104ed9ed8c",
+    "packages/cli/src/commands.ts:items": "035ef813ce6aea0c10a2215c856e5e8c30fed9e0db64dcd24eb43e98ee713baa",
+    "packages/cli/src/commands.ts:entryLine": "61bf6dce3240a56b1a4d0286b713cb5cfce96d1f933c03b89182e71ff8cf7846",
+    "packages/cli/src/commands.ts:log": "3ef9c27f7f2f22e7f2531f7e4d0cc859af988009fb92e3e79b13261a45943aeb",
+    "packages/cli/src/commands.ts:show": "e5008fae01934cb48b95ed52c0f9108c9f2f8799ef8072e61b80f1abe2823fc9",
+    "packages/cli/src/commands.ts:sessionFirst": "832b4853757655ef0a55eed96380b74e7f99bc9e5b52f6c313ccbc317d63197e",
+    "packages/cli/src/commands.ts:replayOf": "de6925692424fad8bfe461290d26844889ac6e307de65f5efe87c4c00442b41d",
+    "packages/cli/src/commands.ts:verifyScopeCommand": "8695b46fe4fd4c69eb4d7b5ad5b49b010122a0b250efdf4643ac535c6250bcb6",
+    "packages/cli/src/commands.ts:roomScopes": "5901ca4e335d783b6427b4fdc14b35047d73d6ab0675b984acc9b3af3cc932b6",
+    "packages/cli/src/commands.ts:verifyAll": "b6676842c822b32ef9be318561e2bc47511117831872306242bc3656047f9ce0",
+    "packages/cli/src/commands.ts:OWN_HOST": "d8049ba56c1494f7f9ab575b4ccdbe4ea8192229bb9d2a280bbb4528e1c5784a",
+    "packages/cli/src/commands.ts:remoteOf": "57afba6cdd6f9169d7366eb5641f61a52a420f55ba723bff6922bfc6332496a9",
+    "packages/cli/src/commands.ts:remoteLine": "1eb8d789b8f70e63d8b28176c5b5f923eeae5065c26a17487274295b2803d354",
+    "packages/cli/src/commands.ts:destinationOf": "2acd67789da285ae9eddfc91c6621611b266b405633101a56cbe6a39e1aa2928",
+    "packages/cli/src/commands.ts:remote": "d0f05ff2a083a73c12c15fead59d453f1f825299e2f18376c7116f77df51e686",
+    "packages/cli/src/commands.ts:authorization": "e4e08477eb4c8766ccbb228da6d28f0b0c98a11500d80fcbe92e686eabb654ec",
+    "packages/cli/src/commands.ts:b64": "2ccaf086d7986f6c72fc6eb746042e77b2da0a99cba0d51e10a9aa87025e0c6d",
+    "packages/cli/src/commands.ts:headerEnv": "2b29643df8f13576381b9be7133dd6f5dc668a80d10822ac7fbc0d3bcb1ee878",
+    "packages/cli/src/commands.ts:clone": "5d1088ac8cf44d7f137682ae071f79312df579690d2b49f696e19c50aaede5d6",
+    "packages/cli/src/commands.ts:EDIT_BYTES": "9bbee0ea572e3aee4339d86e8e59defc86538133d2ad92449cdc827c7b86b2b5",
+    "packages/cli/src/commands.ts:fileOf": "f2c2de1136cfd275c0b2003f3ae5abd2ff8d7ba508351a05dc8145664dada339",
+    "packages/cli/src/commands.ts:textOf": "1ae1ce4970caf7b99eb7370475b4506f47b23c9f8b09fd93933a664f2406747a",
+    "packages/cli/src/commands.ts:stateOf": "28ea558ff346032f886d018fa25925b7e0ed64fc914fb8b6a25fc08c6ab174a2",
+    "packages/cli/src/commands.ts:valueOf_": "b5c04f914e3a5b9ddd741664cb83611b825719e519f3b4e423515279493bac44",
+    "packages/cli/src/commands.ts:activeDefinition": "0d7eb32794c7dbaeb2ff7df1b4480dc96d71ef5c58061a3232f711eabfcd94c7",
+    "packages/cli/src/commands.ts:laneOf": "628ff633a6ede2a3f75ae5b5f6e701f6692214a1902898b504ab33b96e658712",
+    "packages/cli/src/commands.ts:supportsEdit": "8f0e9431ab92a0725c94389550908542074ee0065f4ef97575fb796aa429fcfc",
+    "packages/cli/src/commands.ts:edit": "b8fe81e52625c35b01703f848c02be245bf85d91286bff57b9398bf114ca8657",
+    "packages/cli/src/commands.ts:propose": "22916050b1658be02f6bba62094dd3295ff401b3c0f17f048a77ceb9306cce4a",
+    "packages/cli/src/commands.ts:proposingFiles": "22a95036e1d4e2b2541a999f5ada1f69b83fec0fae29c0ce241319a211395daf",
+    "packages/cli/src/commands.ts:merge": "5db41332cb2a3a70862082652d904b7ad5c8655678674ce2462e6712bf5b9839",
+    "packages/cli/src/commands.ts:merging": "9f9bc34cce2621ddc4c6a15cbd04c452636b6f252665729b20c2ef62eef72343",
+    "packages/cli/src/commands.ts:memberOf": "82b7786a17e358f6ae9e91da4bc64425092497ebd78da4369235ae1653e092e7",
+    "packages/cli/src/commands.ts:issuesOf": "d24885bf29ab4542768b2b73e65c1e33ff4c8f4a01b3308391a96b468bf22b68",
+    "packages/cli/src/commands.ts:issueNamed": "41f15c6fce12bc4ac95a9cd53a9a17872a1443ff2a7827b388b087dbf62a9c57",
+    "packages/cli/src/commands.ts:issueAct": "86f0bead725ab55410f67d6bf62fa3f158e223d6e21576fe8ae41ecb8fecfeab",
+    "packages/cli/src/commands.ts:issueOpen": "12c1b281cc703159eaa1eeb42cae6680ce19d2abff348757938e56d4c80d7d43",
+    "packages/cli/src/commands.ts:issueComment": "01dd1d82b2df0d7afaf5f555deace4eedc6c54393e8002d3c79781bb8ea85867",
+    "packages/cli/src/commands.ts:issueAssign": "ef0fbd113156b7e6ba241dc6933dadf26300e30f26436e161413c89b890847f2",
+    "packages/cli/src/commands.ts:issueClose": "b3b3543b2a97faba39e1a2236792d92d1fb14159bdc25feefbe5f6383358026f",
+    "packages/cli/src/commands.ts:issues": "cc896c23a5c618666a5408925e51f0629a50c810bb87eb9ea0ca16db4d494477",
+    "packages/cli/src/commands.ts:linking": "e425a12db2c6e4da95f28b73f366215f4347592d6b868d3fd943fab497766280",
+    "packages/cli/src/commands.ts:status": "69334cd4691807170af4be64688b8d9a528cadc82717aad5ae1207f03298b18a",
+  },
+  "packages/mcp/src/service.ts": {
+    "packages/mcp/src/service.ts:$module": "8f09f4948038c96b9ba9cf9a917e0519404c87b60ca93a2d26a5ecffc93f2a08",
+    "packages/mcp/src/service.ts:ListRestart": "83803f5cf365099c3ed7ad6d12153b68e7616977007feffed4ca4b01bd4ca95d",
+    "packages/mcp/src/service.ts:SERVER_NAME": "1a22dd379fec10cbed8b5938dfd522ce9e8cffe176de5f4554e3cad8668764e2",
+    "packages/mcp/src/service.ts:SERVER_VERSION": "93926c4b4205a41211c5dfd2e083d8a5d4eed978060ba4d0781fb54d9d3eb366",
+    "packages/mcp/src/service.ts:INSTRUCTIONS": "40301d4cf4dd1c45f29eadbcd4483f791f3d5038beb4a98c03bad0a1e9c47924",
+    "packages/mcp/src/service.ts:LIST_PAGE_BYTES": "59dd525548661c8bb7618a95bd2fb0d6b1b2fd122a15ea45213a0ae0d26c949b",
+    "packages/mcp/src/service.ts:WATCH_MS": "d28d2082347de271b370282a615fc2dc8e34a7d6962e08d76375d7292afaa0c8",
+    "packages/mcp/src/service.ts:WAIT_MOST_SECONDS": "18c43e609ce676dbf274befbe7224acfae088c3435e31eaea0e3a549f780868f",
+    "packages/mcp/src/service.ts:SEARCH_ENTRIES": "ebb27ed02343da3a66559ab18d5b621bbad76c5eb3fd905dddd0fa6224bfcfa3",
+    "packages/mcp/src/service.ts:NAME_BYTES": "eb5d62e380f50f07aee001aec26c9231aa055d764899a3b6196b2802bbd82e9b",
+    "packages/mcp/src/service.ts:SEARCH_PAGES": "298946253cdfd6df568a241f3bf5eddd96bf6b9134fb238032aa96340aa8177a",
+    "packages/mcp/src/service.ts:SINGLETON_PLACES": "ec70762d20b63a866c02b01074f0f4f20a50b5040e040648133c2b08ca04557d",
+    "packages/mcp/src/service.ts:callResultText": "7a858143e1225b48031ff2a853d96ad2a6c0efcd1c101924bea6d04d6e183b67",
+    "packages/mcp/src/service.ts:BOUNDS": "838a3fb5498e8b323318642271e728afe0e2409fb658f370ce9e7d7c2c6cbfbb",
+    "packages/mcp/src/service.ts:PAGE_SPARE": "b56f933bf61a623da82d81f9c1b944072d6c71538bf56e6e622c3c2d24a7eb09",
+    "packages/mcp/src/service.ts:pageOf": "e0aed29507d78dc28f1b498cf91a4d01bfa6e59aae798f1414fc909e071b6bb2",
+    "packages/mcp/src/service.ts:ok": "0c1818e2749e7828fa629cfc35cc4d7203068f7243d3193907ac71a416fd13b0",
+    "packages/mcp/src/service.ts:ERROR_BYTES": "3cf4f0d3c6271b3cef45b42e64e8d210f063b480addfd1f4f1d26d73c3e64d04",
+    "packages/mcp/src/service.ts:failed": "d77838edf83316f8fc07c79973a118b3589d432ecb7a22dfe8f7115c3e1c24d6",
+    "packages/mcp/src/service.ts:projectAnswer": "ab287949458589079d41c6552bb2a306162fff4c3b30edb21ab83a74fed72cab",
+    "packages/mcp/src/service.ts:configDigest": "db445c9209d8d937f49e2016f1a7ef2eb7ab57a189a05093d2ce8d61e49ff5db",
+    "packages/mcp/src/service.ts:Stop": "be559905e3dbcdb763828b74b97ba6c27e00c98644ae913cb46daaa6b4a0ebe7",
+    "packages/mcp/src/service.ts:stopCall": "f8d89a63e2e2336d69c4fe331483fc42f64ad5c183df574ae74e0f774223a007",
+    "packages/mcp/src/service.ts:READ": "c46ffafd29a0b32d79613c7d6b784a9d6cab99b90c99b98fe9246a8b6b6682eb",
+    "packages/mcp/src/service.ts:WRITE": "5920731b91c504f8bfb945b3edbe132bea0167ec1c9a44579e3dd658e5e9cd91",
+    "packages/mcp/src/service.ts:scopeArg": "f26abaf59aa4dd047516a35275783c236e8f5410f1472a9fdcac4a0a5cc22652",
+    "packages/mcp/src/service.ts:keyArg": "368a6f3d59380df455b92a9478dc8c993a5535b2d40e9046a4e71df139cc5149",
+    "packages/mcp/src/service.ts:McpService": "c51367525765ce35aa9d89f2c481b0964e0d08589788d682e7b8e63b235afdaa",
+    "packages/mcp/src/service.ts:lineOf": "b8fc3e8118f71914f365f08ff318da437f69ee1e5e693956e0e88101d5177e00",
+    "packages/mcp/src/service.ts:creationName": "a7dd4dd268ace0088ef0be50510ccc654090f1ddcc09aa0a4271f161b05ca444",
+    "packages/mcp/src/service.ts:valueDigest": "e745a5f9e668cd13e52b41194b57f43576380feabc7065d00146c76ce0910e73",
+  },
+  "packages/scope/src/core.ts": {
+    "packages/scope/src/core.ts:$module": "75efd9edb075e1c99193c1113c0567161bdbfb6a37c0be3acf252e459d1858fa",
+    "packages/scope/src/core.ts:receiptOf": "eec86b2750142cc246ff91fee8b690f33edcf38b4e23e92abbf70a1d8e9acb7d",
+    "packages/scope/src/core.ts:snapshotsOf": "b7ecf53e025201a0a328b1d370656d801024c5671ff3af57f4aa2aa56678c7d7",
+    "packages/scope/src/core.ts:ownOf": "8a7bfb5faab9e4721ba340f51484b2eef6cfa5b5836d49492c2722adfbec4be8",
+    "packages/scope/src/core.ts:used": "277fcdbfc5dc4e1ea59971de284da29ea6ef90a7b3bac81293ee69d5b6633e4f",
+    "packages/scope/src/core.ts:retainedFacts": "34d29abff776b476ee0ff545766856f5a85e38744a23ef2d3f12acc0d21eed1c",
+    "packages/scope/src/core.ts:Received": "db4689920e8d485672b8b95e2cee94383e08d3b8cd8eb6da8142e84fbf4bd8b4",
+    "packages/scope/src/core.ts:creationKind": "e2e00414a034ccf7aa3c35fe4bf942ba0a189501242e236748538df2d808a71e",
+    "packages/scope/src/core.ts:besideOf": "cceb69d4007385f239803a343bdb869be34a51f8e4ff77747d0601971295a7e4",
+    "packages/scope/src/core.ts:valuesBeside": "134877aaddc41a23dfb25403ff4c150f2afabc4172108636d898610471ec541d",
+    "packages/scope/src/core.ts:valuesOf": "a2ac72acccf44690145f1e9211dae55da00bd6c402457f44afeb37a0549e97e9",
+    "packages/scope/src/core.ts:NO_INCARNATION": "8cca846345560da60c7c99a48ff125a8ef1bf243dff712abb89530c9c56d9086",
+    "packages/scope/src/core.ts:unavailable": "053e97cd7fbe3f33c5a57f9fc3b5bfc97844778ffa88b96c0e7b723e50bf6495",
+    "packages/scope/src/core.ts:said": "c3358e3632f8c1c114c3a3e51687256d38bcfc7950aaf21af0b779c138e3e46a",
+    "packages/scope/src/core.ts:heldBy": "a66b415809db685c99cc8961ba592bd8bdcb8bda8f2f4ea1e73fe71c4b052fd1",
+    "packages/scope/src/core.ts:told": "bc25d088d5c51694f6e3a813f11f2875144c7a3bdfaa8d124063dc1f65e2fe67",
+    "packages/scope/src/core.ts:Observes": "9a0e37bc23db915ebdfd3ec4eef21172918f50fc3e19de840d2b03746efc3710",
+    "packages/scope/src/core.ts:Scope": "b164bec378884e160c480c5aec7075281ca4dda931bf511f53bc69680a58a3d6",
+  },
+};
 
 // Reviewed matcher/gate owners. These are change tripwires, not runtime proof.
 const seals = {
@@ -11,7 +182,7 @@ const seals = {
   "apps/room/demo-creation.ts": "d9850f4854182c0231a2ae9a985882343e7f3dfea67ea034cafe4fca4bb0d77f",
   "apps/room/page/route.ts": "62c8f69b9f516f1b5acdaef57d7aed25268d8cf03283bdffdd4b1b5f20bb6b3d",
   "apps/room/brand/route.ts": "71b45ff9b41b3bea31c775a16525349591e0d4f7dfdc65da79f095816b1c343c",
-  "packages/scope/src/worker.ts": "4ddbc7494a00818b4e07313dcf20111f3c7baa25c9144f52840a6a23b8420af5", // R11 current deployment admission; actual maintained parser output.
+  "packages/scope/src/worker.ts": namedOwners["packages/scope/src/worker.ts"],
   "packages/scope/src/scope-index.ts": "e5658b5fc39cc15bc08e7e71711a67c5859a0e0de94ede88ee5b8b5dbc3d7919", // New internal lookup/registration boundary.
   "packages/scope/src/creation-admission.ts": "0531cbd36d1ae4c0eadc9d836eb5eec13f896fc7c8b8faaaaf9c3c24e3759ccd", // Reviewed R1 ancestry owner; adopted AST value.
   "packages/scope/src/creation-lineage.ts": "3561f0b5b5d39c025db2c86f4386a1ccf6a8d18f05de26d79f6c5b68730f10b3", // Reviewed whole-lineage boundary; adopted AST value.
@@ -26,8 +197,8 @@ const seals = {
   "packages/scope/src/applications/route.ts": "ad62679ad22021474b193d7e9b2f98d6146c85ebe9d223d66901c309b5b84abc", // Actual union parser value adopted by root.
   "packages/scope/src/item-query-wire.ts": "8206b9a6531ca30cae1bc49cc249eea08c70a658305f41b3ebea6eda042055a8",
   "packages/scope/src/applications/projection-wire.ts": "2e07df5447469dc09aff0d4017e010634150f49c92f614221402cf46a869c6d0",
-  "packages/scope/src/object.ts": "b30582dff0dfbb9e8e505dbe1e4d3060d48fa6887fc0f2cb2496d7636885ab80", // R11 host admission wiring; actual maintained parser output.
-  "packages/scope/src/core.ts": "c4947b598d30870139a4f59d7ed3d2535d75a884f570cb4b57be0543d69fd888", // Fresh acts and terminal/historical refusals; actual maintained parser output.
+  "packages/scope/src/object.ts": namedOwners["packages/scope/src/object.ts"],
+  "packages/scope/src/core.ts": namedOwners["packages/scope/src/core.ts"],
   "packages/scope/src/applications/act-admission.ts": "36049cc17487cc58f5d44099f55a225730079dd90006d0237ab9034181c42bd3", // Exact native provenance and current trust; actual maintained parser output.
   "packages/derive/src/genesis.ts": "df7722143f01c8084b8f045ef959b203ae1756c4dfde170d0454cfe0b0392843",
   "packages/derive/src/judge.ts": "65a10677dd4da355e9edac490979cacf6911cfa1aa37020c41516f5c53ad94fb",
@@ -44,7 +215,7 @@ const seals = {
   "packages/scope/src/destination-host.ts": "b0190439a9861b931c01cc35b283ed6a57aea11a0806e9de185fba5c5ea4e4b8",
   "packages/mcp/src/hosted.ts": "ebf77243d7987bf328a81c237865a3ba6b65a03f3327976cb37455a58a971a01",
   "packages/mcp/src/hosted-tools.ts": "5bb4dd74b12896bb8f5f5cb366f25bd31af849c2690d0e3ab5d81eb277f94a47", // Reviewed R5 admission owner; actual maintained parser output.
-  "packages/mcp/src/service.ts": "eb24dc018c81fb50a5e63ab4e5c9c47583dfe4a93df9b4c999a2bdf033d432bf", // Reviewed R5 admission owner; actual maintained parser output.
+  "packages/mcp/src/service.ts": namedOwners["packages/mcp/src/service.ts"],
   "packages/mcp/src/catalogue.ts": "194dd82a6d3f188909485c4c1b9db33aee671b06fb46840e92fc0b8df2a79726", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/inventory.ts": "74c5db16355c5badacf9dc6cc241d20d6400908a160324c07d88db9191b455f8", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/http.ts": "757f8b3644c6afdf5d6c0399bd3865f879c8aa4841a7429aaa30c264ee9d76a6",
@@ -69,7 +240,7 @@ const pendingArchiveSeals = {
   "packages/scope/src/archive-driver.ts": "cd52e871a95ee7b485d2ef231f1c06c3ab1c203c127879d6566aa86893f59c8b", // Bounded capture and exact head identity; unchanged authority and retry decisions; actual maintained parser output.
   "packages/scope/src/archive-row.ts": "02f01270071d022253335b5d4b41c8574e75f0eb806e58f70afa60e4b8fbc613", // Paid prior-capacity scalar reviewed; actual maintained parser output.
   "packages/scope/src/floor-writer.ts": "fb8fd859844b8d10ba43b477bcaf07ab32fe1bfa1b6684ad9ae70b930d328a11",
-  "packages/scope/src/object.ts": "b30582dff0dfbb9e8e505dbe1e4d3060d48fa6887fc0f2cb2496d7636885ab80", // Same R11 owner value as above.
+  "packages/scope/src/object.ts": namedOwners["packages/scope/src/object.ts"],
   "apps/room/worker.grow.ts": "0cc4c1c63f79f8da8dad5e98b2ace5b69fcd818d41640ed4e316ee534adf749f",
   "apps/room/archive-policy.ts": "ed3b746b5a26c3e872e41b13ba133f43ade42b5612aa5028ba544fc013be5ce7",
   "apps/room/archive.ts": "fdd3889d0662acc3c1e9bdbc0d0776c1e69cfdf31237a433856080f259ba8f1b",
@@ -80,27 +251,39 @@ const pendingArchiveSeals = {
 };
 // Actual maintained parser outputs adopted by root; never infer hashes from intent.
 const pendingR8Seals = {
-  "packages/cli/src/commands.ts": "92c2d18d72acdfdc5032d46d2751dfc9c77b43bc6293f237fd75e611c84b100b", // Actual integrated CLI parser value adopted by root.
+  "packages/cli/src/commands.ts": namedOwners["packages/cli/src/commands.ts"],
+  "packages/cli/src/browser-helpers.ts": "7e5f139e800efad56f08799f4e34700f2fde7c76de33422a2eb69d03de4f03fa", // Moved description, expectation and value helpers; actual maintained parser output.
+  "packages/cli/src/claim.ts": "29ec2ef89a2b0bc9d9b123629be752ee235e1a16c2a8f3088a0358080d865959", // Moved claim verification and retained custody; actual maintained parser output.
+  "packages/cli/src/command-support.ts": "0b1bde3a5a01a218b2446d29f358cbe6f78ac5922d967f795e5d19d603e76aaf", // Moved shared read, session and signing support; actual maintained parser output.
   "apps/sandbox/worker.ts": "d354c1740d51e2b83e0b93272384607c609c65386c3fc4b8d977edfb89b6636a",
   "packages/client/src/application-gateway.ts": "daa1d28c02085bd6be7a9698a7120cd106cc7233aad92565aaa05e67427878ef",
   "packages/client/src/application-route.ts": "dcb686835049af3043e1cb8c73a989545636ea5bac2d85aaee6be92b6cd3abcc",
   "packages/scope/src/applications/bindings.ts": "8212d318f058035a580c945f1140717fe31ea42638024e1099069cf654400888",
 };
+const sourceOf = file => readFileSync(new URL("../" + file, import.meta.url), "utf8");
+const selectedNames = (file, expected = namedOwners[file]) =>
+  Object.keys(expected).map(key => key.slice(file.length + 1)).filter(name => name !== "$module");
+function ownerRecords(file, expected = namedOwners[file], source = sourceOf(file)) {
+  const actual = namedSourceSeals(file, selectedNames(file, expected), source);
+  return Object.fromEntries(Object.entries(actual).map(([name, hash]) => [file + ":" + name, hash]));
+}
+function assertOwner(file, expected, source) {
+  const actual = typeof expected === "string" ? { [file]: sourceSeal(file) } : ownerRecords(file, expected, source);
+  const records = typeof expected === "string" ? { [file]: expected } : expected;
+  assert.deepEqual(Object.keys(actual), Object.keys(records), `Review changed named-owner inventory: ${file}`);
+  for (const [key, hash] of Object.entries(actual)) {
+    const review = `${key} actual ${hash}; Review source before adopting a new seal.`;
+    assert.match(records[key], /^[0-9a-f]{64}$/, review);
+    assert.equal(hash, records[key], review);
+  }
+}
+
 const document = () => documentedInventory(readFileSync(new URL("../docs/security/entry-points.md", import.meta.url), "utf8"));
 
 test("every served Worker route/method has exactly its reviewed gate-class row", async () => {
   assertInventory(await servedInventory(), document());
-  for (const [file, seal] of Object.entries(pendingArchiveSeals)) {
-    assert.equal(typeof seal, "string", `Integrated AST seal is pending review: ${file}`);
-    assert.equal(sourceSeal(file), seal, `Review changed archive authority owner: ${file}`);
-  }
-  for (const [file, seal] of Object.entries(seals)) {
-    assert.equal(typeof seal, "string", `Integrated R8 AST seal is pending review: ${file}`);
-    assert.equal(sourceSeal(file), seal, `Review changed matcher or gate owner: ${file}`);
-  }
-  for (const [file, seal] of Object.entries(pendingR8Seals)) {
-    assert.equal(typeof seal, "string", `Integrated R8 AST seal is pending review: ${file}`);
-    assert.equal(sourceSeal(file), seal, `Review sandbox owner: ${file}`);
+  for (const owners of [pendingArchiveSeals, seals, pendingR8Seals]) {
+    for (const [file, expected] of Object.entries(owners)) assertOwner(file, expected);
   }
 });
 
@@ -171,4 +354,86 @@ test("R8 public and sandbox matcher changes fail their finite inventory", async 
   const noMetadata = await sandboxInventory({ sandboxSource: sandbox.replace(metadataGate, 'request.method !== "POST" || !!url.search') });
   assert.ok(baseline.some(row => row.route === "GET /_application-host"));
   assert.ok(!noMetadata.some(row => row.route === "GET /_application-host"));
+});
+
+function replaceOnce(source, before, after) {
+  assert.equal(source.split(before).length, 2, "The control must change exactly one current source occurrence");
+  return source.replace(before, after);
+}
+function changedRecords(before, after) {
+  assert.deepEqual(Object.keys(after), Object.keys(before), "A body control must retain the declaration inventory");
+  return Object.keys(before).filter(key => before[key] !== after[key]);
+}
+
+test("named seals isolate real router, same-module helper, and display-body changes", () => {
+  for (const [file, name, from, to] of [
+    ["packages/scope/src/worker.ts", "routedRequest", 'if (what === "requests") return read(await scopes.requests', 'if (what === "request-window") return read(await scopes.requests'],
+    ["packages/scope/src/worker.ts", "body", 'new TextDecoder("utf-8", { fatal: true, ignoreBOM: false })', 'new TextDecoder("utf-8", { fatal: false, ignoreBOM: false })'],
+    ["packages/cli/src/commands.ts", "entryLine", '`genesis ${input.kind}`', '`genesis-kind ${input.kind}`'],
+  ]) {
+    const source = sourceOf(file), baseline = ownerRecords(file);
+    const changed = replaceOnce(source, from, to), actual = ownerRecords(file, namedOwners[file], changed);
+    const key = file + ":" + name;
+    assert.deepEqual(changedRecords(baseline, actual), [key], "Only the changed declaration may require a new hash");
+    assertOwner(file, baseline, source);
+    assert.throws(() => assertOwner(file, baseline, changed), error =>
+      error.code === "ERR_ASSERTION" && error.message.startsWith(`${key} actual ${actual[key]}; Review source before adopting a new seal.`));
+  }
+});
+
+test("module seals retain import wiring, executable initialization, and declaration kind", () => {
+  const file = "packages/scope/src/worker.ts", source = sourceOf(file), baseline = ownerRecords(file);
+  assertOwner(file, baseline, source);
+  for (const changed of [
+    replaceOnce(source, 'from "./deployment-setting.ts"', 'from "./other-deployment-setting.ts"'),
+    replaceOnce(source, 'import { readDeployment }', 'import { readDeployment as changedReadDeployment }'),
+    source + '\nimport "./other-side-effect.ts";\n',
+    source + '\nvoid 0;\n',
+  ]) {
+    const actual = ownerRecords(file, namedOwners[file], changed);
+    assert.deepEqual(changedRecords(baseline, actual), [file + ":$module"]);
+    assert.throws(() => assertOwner(file, baseline, changed), { code: "ERR_ASSERTION", message: /worker\.ts:\$module actual [a-f0-9]{64}; Review source/ });
+  }
+  for (const replacement of ["const BODY_BYTES = 1024 * 1024 + 1;", "let BODY_BYTES = 1024 * 1024;", "var BODY_BYTES = 1024 * 1024;"]) {
+    const changed = replaceOnce(source, "const BODY_BYTES = 1024 * 1024;", replacement);
+    const actual = ownerRecords(file, namedOwners[file], changed);
+    assert.deepEqual(changedRecords(baseline, actual), [file + ":$module", file + ":BODY_BYTES"], "Initializer and original const/let/var kind stay protected");
+    assert.throws(() => assertOwner(file, baseline, changed), { code: "ERR_ASSERTION", message: /worker\.ts:\$module actual [a-f0-9]{64}; Review source/ });
+  }
+});
+
+test("named selection refuses missing, duplicate, new, and unsupported runtime declarations", () => {
+  const file = "packages/scope/src/worker.ts", source = sourceOf(file), names = selectedNames(file);
+  assert.doesNotThrow(() => namedSourceSeals(file, names, source));
+  const refusal = { message: /^Named source seals:/ };
+  assert.throws(() => namedSourceSeals(file, names.slice(1), source), refusal);
+  assert.throws(() => namedSourceSeals(file, [...names, "notADeclaration"], source), refusal);
+  assert.throws(() => namedSourceSeals(file, [...names, names[0]], source), refusal);
+  assert.throws(() => namedSourceSeals(file, [...names, "$module"], source), refusal);
+  assert.throws(() => namedSourceSeals(file, names, source + '\nfunction unreviewedOwner() {}\n'), refusal);
+  assert.throws(() => namedSourceSeals(file, names, source + '\nconst { extra } = {};\n'), refusal);
+  // Var redeclaration is valid parser input; the seal selector must refuse it.
+  const duplicate = replaceOnce(source, "const BODY_BYTES = 1024 * 1024;", "var BODY_BYTES = 1024 * 1024;") + '\nvar BODY_BYTES;\n';
+  assert.throws(() => namedSourceSeals(file, names, duplicate), refusal);
+  const commands = "packages/cli/src/commands.ts";
+  assert.throws(() => namedSourceSeals(commands, selectedNames(commands),
+    replaceOnce(sourceOf(commands), "function entryLine(", "function changedEntryLine(")), refusal);
+});
+
+test("the shared object seal protects its constructor, field, and private helper in both review categories", () => {
+  const file = "packages/scope/src/object.ts", source = sourceOf(file), baseline = ownerRecords(file);
+  assert.equal(seals[file], namedOwners[file]);
+  assert.equal(pendingArchiveSeals[file], namedOwners[file]);
+  for (const owners of [seals, pendingArchiveSeals]) assertOwner(file, owners[file], source);
+  for (const [from, to] of [
+    ["const name = ctx.id.name;", 'const name = ctx.id.name ?? "changed";'],
+    ["#fresh = true;", "#fresh = false;"],
+    ["this.#record.follow(this.#store);", "if (this.#fresh) this.#record.follow(this.#store);"],
+  ]) {
+    const changed = replaceOnce(source, from, to), actual = ownerRecords(file, namedOwners[file], changed);
+    assert.deepEqual(changedRecords(baseline, actual), [file + ":ScopeObject"], "The whole class owns its fields, construction, and private method bodies");
+    for (const owners of [seals, pendingArchiveSeals]) {
+      assert.throws(() => assertOwner(file, owners[file], changed), { code: "ERR_ASSERTION", message: /object\.ts:ScopeObject actual [a-f0-9]{64}; Review source/ });
+    }
+  }
 });

@@ -7,13 +7,14 @@ import { parseStrict } from "@generalbusiness/dap-bytes";
 import { applicationInstallation, installApplication } from "./application-install.ts";
 import { enrolAgentKey, invitePerson } from "./invitations.ts";
 import { AGENT_KEY_LINK } from "@generalbusiness/dap-client";
-import { act, acts, apps, claim, clone, edit, install, installPlanned, invite, issueAssign, issueClose, issueComment, issueOpen, issues, items, join, log, merge, planInstall, propose, remote, show, status, verify, type Context, type InstallCohort, type RegisterPolicy, type Outcome } from "./commands.ts";
+import { act, acts, apps, claim, clone, edit, install, installPlanned, invite, issueAssign, issueClose, issueComment, issueOpen, issues, items, join, log, merge, planInstall, propose, remote, show, status, verify, CREATION_INSTALL_COHORTS, type Context, type InstallCohort, type RegisterPolicy, type Outcome } from "./commands.ts";
 
 export const USAGE = [
   "Usage:",
-  "  dap install <base-url> [--host <git-host>] [--namespace <name>] [--register-policy keys|open] [--cohort file-publication|application|application-publication|trusted-application|declared-application|device-application|archive-application|archive-declared-application|archive-device-application|archive-device-publication|archive-certified-rules|hardened-certified-rules|invitation-key]",
-  "  dap install --plan <base-url> [--host <git-host>] [--namespace <name>] [--register-policy keys|open] [--cohort file-publication|application|application-publication|trusted-application|declared-application|device-application|archive-application|archive-declared-application|archive-device-application|archive-device-publication|archive-certified-rules|hardened-certified-rules|invitation-key]",
-  "  dap install --planned [--register-policy keys|open] [--cohort file-publication|application|application-publication|trusted-application|declared-application|device-application|archive-application|archive-declared-application|archive-device-application|archive-device-publication|archive-certified-rules|hardened-certified-rules|invitation-key]",
+  `  dap install <base-url> [--host <git-host>] [--namespace <name>] [--register-policy keys|open] [--cohort ${CREATION_INSTALL_COHORTS.join("|")}]`,
+  `  dap install --plan <base-url> [--host <git-host>] [--namespace <name>] [--register-policy keys|open] [--cohort ${CREATION_INSTALL_COHORTS.join("|")}]`,
+  "  dap install --planned [--register-policy keys|open] [--cohort <saved-cohort>]",
+  "  install --planned also recognizes historical cohort names from the retained plan.",
   "  dap install <git+https-uri> --release <release-id> --request <kept-key> [--role <default-role> ...] [--values <genesis-JSON>] [--owner <full-member-JSON>]",
   "  dap application <install-item>",
   "  dap apps [--cursor <cursor>]",
@@ -102,7 +103,7 @@ export async function command(ctx: Context, argv: readonly string[]): Promise<Ou
       }
       if (["release", "request", "role", "values", "owner"].some(name => parsed.flags.has(name))) return needs("a git+https URI for application options");
       const cohorts = parsed.flags.get("cohort");
-      if (cohorts && (cohorts.length !== 1 || (cohorts[0] !== "file-publication" && cohorts[0] !== "application" && cohorts[0] !== "application-publication" && cohorts[0] !== "trusted-application" && cohorts[0] !== "declared-application" && cohorts[0] !== "device-application" && cohorts[0] !== "archive-application" && cohorts[0] !== "archive-declared-application" && cohorts[0] !== "archive-device-application" && cohorts[0] !== "archive-device-publication" && cohorts[0] !== "archive-certified-rules" && cohorts[0] !== "hardened-certified-rules" && cohorts[0] !== "invitation-key"))) return { code: 2, lines: ["--cohort takes exactly one value: file-publication, application, application-publication, trusted-application, declared-application, device-application, archive-application, archive-declared-application, archive-device-application, archive-device-publication, archive-certified-rules, hardened-certified-rules or invitation-key.", USAGE] };
+      if (cohorts && (cohorts.length !== 1 || (cohorts[0] !== "file-publication" && cohorts[0] !== "application" && cohorts[0] !== "application-publication" && cohorts[0] !== "trusted-application" && cohorts[0] !== "declared-application" && cohorts[0] !== "device-application" && cohorts[0] !== "archive-application" && cohorts[0] !== "archive-declared-application" && cohorts[0] !== "archive-device-application" && cohorts[0] !== "archive-device-publication" && cohorts[0] !== "archive-certified-rules" && cohorts[0] !== "hardened-certified-rules" && cohorts[0] !== "invitation-key"))) return { code: 2, lines: ["--cohort needs one current creation family or the historical family of a retained plan.", USAGE] };
       const policies = parsed.flags.get("register-policy");
       if (policies && (policies.length !== 1 || (policies[0] !== "keys" && policies[0] !== "open"))) return { code: 2, lines: ["--register-policy takes exactly one value: keys or open.", USAGE] };
       const registerPolicy = policies?.[0] as RegisterPolicy | undefined;

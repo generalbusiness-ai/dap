@@ -3,7 +3,7 @@ import { freeze } from "@generalbusiness/dap-bytes";
 import type { Answer, Beside, DeclaredDefinition, Digest, FactRef, FieldValue, Grant, Head, KeyId, ScopeId, ScopeRef, Seed, SignedIntent, Summary } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, digestBytes, entryHash, isFactRef, scopeIdOf, utf8, verifySignedIntent, wellFormed } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, declaredHandle, httpTransport, shapeDeclaredAct, signedIntent, signedReads } from "@generalbusiness/dap-client";
-import { expectedOf, heldActs, type DefinitionShape } from "@generalbusiness/dap-cli";
+import { expectedOf, heldActs, type DefinitionShape } from "@generalbusiness/dap-cli/browser";
 import { ARCHIVE_DEVICE_PUBLICATION_COHORT, editPath, fileSound, platform } from "@generalbusiness/dap-platform";
 import { knownLIST1 } from "./source-support.ts";
 import { actAssociation, openingScope, openRoom, sessionSigner, Unreadable, type ChangeView, type Room } from "./data.ts";

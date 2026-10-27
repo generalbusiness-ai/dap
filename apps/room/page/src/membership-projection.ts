@@ -4,7 +4,7 @@ import { isRecord as record } from "@generalbusiness/dap-bytes";
 import type { Item, KeyId, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, isKeyId, isMemberRef, utf8 } from "@generalbusiness/dap-bytes";
 import { CONTROLLER, EXTENT_CLASSES, EXTENTS_MOST, ROLE_LISTS, RULES_EXTENT, isActions, type Extent, type Role } from "@generalbusiness/dap-platform";
-import type { Standing } from "@generalbusiness/dap-cli";
+import type { Standing } from "@generalbusiness/dap-cli/browser";
 
 type Choice = { label: string; value: string };
 type Member = { item: Item; ref: MemberRef; actions: readonly string[]; controller: string | null | undefined; live: boolean };
