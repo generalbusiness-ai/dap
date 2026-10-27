@@ -5,7 +5,7 @@ import { env } from "cloudflare:workers";
 import { ARCHIVE_APPLICATION_COHORT as C, ARCHIVE_DEVICE_APPLICATION_COHORT as DC, ARCHIVE_DEVICE_PUBLICATION_COHORT as PC } from "@generalbusiness/dap-platform";
 import { expect, test } from "vitest";
 import { ITEM_QUERY_BOUNDS, type ScopeRef, type Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, encodeItemQueryParameter, entryHash, itemQueryArgument, itemQueryDigest, newIncarnation, parseStrict, readItemQueryParameter, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { canonicalize, encodeItemQueryParameter, entryHash, itemQueryArgument, itemQueryDigest, newIncarnation, parseStrict, readItemQueryParameter, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { ArchiveBudget } from "../src/archive-budget.ts";
 import { archiveReplayAnchors } from "../src/archive-anchors.ts";
 import { fixtureArchiveTarget, fixtureArchiveTargetIn, type FixtureArchiveTargetReads } from "../src/archive-target.ts";
@@ -148,37 +148,50 @@ test("one locate reuses only its identical checked Rules birth and keeps final f
     expect(C.rules).not.toBe(DC.rules);
     const births = namespace(env.PLATFORM).births;
     let requested: ScopeRef[] = [], itemReads = 0, substitute: ScopeRef | null = null, firstFails = false;
+    let birthBytes: (number | null)[] = [], itemBytes: (number | null)[] = [];
     const reads: FixtureArchiveTargetReads = { fixture: "archive-target-reads", births: { read: async (at, milliseconds, maxBytes) => {
       requested.push({ ...at });
-      if (firstFails && requested.length === 1) return null;
+      if (firstFails && requested.length === 1) { birthBytes.push(null); return null; }
       // A second availability observation would fail; the adopted contract
       // allows the first checked immutable result to suffice in this call.
       if (requested.filter(ref => canonicalize(ref) === canonicalize(rules)).length > 1) throw Error("second Rules transport unavailable");
-      return births.read(at, milliseconds, maxBytes);
+      const reply = await births.read(at, milliseconds, maxBytes);
+      birthBytes.push(reply ? utf8(reply.proof.bytes).length : null);
+      return reply;
     } }, query: async (at, encoded) => {
       itemReads++;
       const result = await (env.PLATFORM.get(env.PLATFORM.idFromName(at.scope)) as unknown as { queryItems(encoded: string, reader: unknown): Promise<NativeItemQuery> }).queryItems(encoded, reader);
-      if (!result.ok || at.kind !== "directory" || !substitute) return result;
+      if (!result.ok || at.kind !== "directory" || !substitute) {
+        itemBytes.push(result.ok ? utf8(result.serialized).length : null);
+        return result;
+      }
       const body = parseStrict(result.serialized) as any;
       body.value.items[0].refs.rules = { ...substitute };
-      return { ok: true, serialized: canonicalize(body) };
+      const serialized = canonicalize(body); itemBytes.push(utf8(serialized).length);
+      return { ok: true, serialized };
     } };
     const resolver = fixtureArchiveTarget(reads);
     const run = async (replacement: ScopeRef | null = null) => {
-      requested = []; itemReads = 0; substitute = replacement;
+      requested = []; itemReads = 0; birthBytes = []; itemBytes = []; substitute = replacement;
       const budget = new ArchiveBudget(), result = await resolver.discover(rules, opening.input.type === "genesis" ? opening.input.seed : expect.fail("genesis required"), budget);
-      return { result, cost: budget.admitted(), requested: [...requested], itemReads };
+      return { result, cost: budget.admitted(), reservations: budget.reservationCosts(), requested: [...requested], itemReads,
+        birthBytes: [...birthBytes], itemBytes: [...itemBytes] };
     };
     const resolved = await run();
     expect(resolved.result?.repository).toEqual((await room.D.item(0)).values["repository"]);
     expect(resolved.requested).toEqual([rules, directory, destination]); expect(resolved.itemReads).toBe(2);
     const B = 256 * 1024, P = ITEM_QUERY_BOUNDS.payloadBytes;
-    const old = { entries: 0, attempts: 0, nodes: 4, calls: 6, metadata: 4 * B + 2 * P + 3 * 512,
-      inputWork: 4 * B * 8 + 2 * P * 4 + 4 * 1024 };
-    expect(resolved.cost).toEqual({ ...old, nodes: old.nodes - 1, calls: old.calls - 1,
-      // The new descriptive list copies the three actual checked refs,
-      // at the existing full-ref metadata/comparison prices.
-      metadata: old.metadata - B + 3 * 512, inputWork: old.inputWork - B * 8 + 1024 + 3 * 1024 });
+    expect(resolved.birthBytes).toHaveLength(3); expect(resolved.itemBytes).toHaveLength(2);
+    for (const size of [...resolved.birthBytes, ...resolved.itemBytes]) expect(size).toBeGreaterThan(0);
+    const actualBirthBytes = resolved.birthBytes.reduce<number>((sum, size) => sum + size!, 0);
+    const actualItemBytes = resolved.itemBytes.reduce<number>((sum, size) => sum + size!, 0);
+    expect(resolved.cost).toEqual({ entries: 0, attempts: 0, nodes: 3, calls: 5,
+      // Three distinct checked births and two serialized replies settle to
+      // their actual UTF8 sizes. Full-ref copies/comparisons stay charged.
+      metadata: actualBirthBytes + actualItemBytes + 6 * 512,
+      inputWork: actualBirthBytes * 8 + actualItemBytes * 4 + 8 * 1024 });
+    expect(resolved.reservations).toEqual({ metadataReserved: 3 * B + 2 * P + 6 * 512,
+      metadataSettled: resolved.cost.metadata, unsettledMetadata: 0, settlementRefusal: "none" });
     expect(resolved.result?.publicScopes).toEqual([rules, directory, destination]);
     // These full-ref coherence fences refuse before a substituted birth read.
     for (const replacement of [{ ...rules, inc: newIncarnation(new Uint8Array(16).fill(37)) }, { ...rules, kind: "directory" as const }]) {
@@ -195,6 +208,9 @@ test("one locate reuses only its identical checked Rules birth and keeps final f
     // A separate invocation must make its first actual read again.
     firstFails = true;
     const missing = await run(); expect(missing.result).toBeNull(); expect(missing.requested).toEqual([rules]); expect(missing.itemReads).toBe(0);
+    expect(missing.birthBytes).toEqual([null]); expect(missing.itemBytes).toEqual([]);
+    expect(missing.cost).toEqual({ entries: 0, attempts: 0, nodes: 1, calls: 1, metadata: B, inputWork: B * 8 });
+    expect(missing.reservations).toEqual({ metadataReserved: B, metadataSettled: B, unsettledMetadata: B, settlementRefusal: "none" });
     firstFails = false; requested = []; itemReads = 0; substitute = null;
     await expect(resolver.discover(rules, opening.input.seed, new ArchiveBudget({ calls: 0 }))).rejects.toThrow("archive-limit");
     expect(requested).toEqual([]); expect(itemReads).toBe(0);

@@ -36,6 +36,10 @@ export class ArchiveBudget {
   #lookaheadBlocked = false;
   #lookaheadRefusal: ArchiveCapacityCheck | null = null;
   #asyncLookahead = false;
+  readonly #reservations = new WeakMap<object, Readonly<ArchiveCost>>();
+  #unsettledMetadata = 0;
+  #releasedMetadata = 0;
+  #settlementRefusal: "none" | "unknown-reservation" | "invalid-received" = "none";
   constructor(limits: Partial<ArchiveCost> = {}, readonly now: () => number = () => performance.now(), milliseconds = ARCHIVE_SECONDS * 1000) {
     if (!natural(milliseconds) || milliseconds > ARCHIVE_SECONDS * 1000 || Object.keys(limits).some(key => !(keys as readonly string[]).includes(key))) throw new ArchiveStopped("limit");
     this.#limits = { ...ARCHIVE_BOUNDS, ...limits };
@@ -97,6 +101,44 @@ export class ArchiveBudget {
     } else if (!fits) this.stop("limit", this.capacityRefusal(cost, "debit"));
     for (const key of keys) this.#used[key] += cost[key] ?? 0;
   }
+  /** Admit the complete read ceiling before I/O. Only this budget can
+   * settle the opaque handle; an abandoned read keeps its full charge. */
+  reserve(cost: Partial<ArchiveCost>): object {
+    const copy = { ...cost };
+    this.spend(copy);
+    const handle = Object.freeze({});
+    const held = Object.freeze({ ...zero(), ...copy });
+    this.#reservations.set(handle, held);
+    this.#unsettledMetadata += held.metadata;
+    return handle;
+  }
+  /** Release only unused byte allowance after a completed, bounded read.
+   * Calls, nodes, entries and attempts have happened and remain charged.
+   * Byte-proportional input work rounds up; fixed work belongs in spend().
+   * No settlement can revive a stopped pass or move its original deadline. */
+  settle(handle: object, received: number): void {
+    this.check();
+    const held = this.#reservations.get(handle);
+    if (!held) { this.#settlementRefusal = "unknown-reservation"; this.stop("limit"); }
+    if (!natural(received) || received > held.metadata) {
+      this.#settlementRefusal = "invalid-received"; this.stop("limit");
+    }
+    const released = held.metadata - received;
+    if (!natural(this.#releasedMetadata + released)) this.stop("unavailable");
+    const inputWork = held.metadata === 0 ? held.inputWork : Math.ceil(held.inputWork * received / held.metadata);
+    this.#reservations.delete(handle);
+    this.#used.metadata -= released;
+    this.#used.inputWork -= held.inputWork - inputWork;
+    this.#unsettledMetadata -= held.metadata;
+    this.#releasedMetadata += released;
+  }
+  /** Copied scalars only. Reserved includes every debit before refunds;
+   * settled includes outstanding reservations at their full ceilings. */
+  reservationCosts(): Readonly<{ metadataReserved: number; metadataSettled: number; unsettledMetadata: number;
+    settlementRefusal: "none" | "unknown-reservation" | "invalid-received" }> {
+    return { metadataReserved: this.#used.metadata + this.#releasedMetadata, metadataSettled: this.#used.metadata,
+      unsettledMetadata: this.#unsettledMetadata, settlementRefusal: this.#settlementRefusal };
+  }
   #beginLookahead(reserve: Partial<ArchiveCost>, asynchronous: boolean): ArchiveCapacityLimited | null {
     this.check();
     if (this.#reserve !== null) return this.stop("unavailable");
@@ -115,7 +157,8 @@ export class ArchiveBudget {
   }
   #endLookahead(): void { this.#reserve = null; this.#lookaheadBlocked = false; this.#lookaheadRefusal = null; this.#asyncLookahead = false; }
   /** Protect an already selected prefix's finish forecast while doing only
-   * synchronous metadata lookahead. Every completed debit stays spent.
+   * synchronous metadata lookahead. Completed work stays spent; only unused
+   * read-byte reservations settle after a completed receipt.
    * Refusal happens before the next debit/SQL and leaves this same budget
    * usable for finishing. This creates no allowance or admission rights. */
   lookahead<T>(reserve: Partial<ArchiveCost>, read: () => T): Lookahead<T> {
@@ -152,16 +195,19 @@ export class ArchiveBudget {
   }
   /** Includes projected metadata in the same cumulative input-work ledger.
    * The caller separately reserves repeated parsing/hashing work. */
-  native(sql: Pick<Sql, "exec">, reservation: (query: string, args: readonly SqlValue[]) => { metadata: number; inputWork: number }): Pick<Sql, "exec"> {
+  native(sql: Pick<Sql, "exec">, reservation: (query: string, args: readonly SqlValue[]) => { metadata: number; inputWork: number },
+    received?: (rows: readonly Record<string, SqlValue>[]) => number): Pick<Sql, "exec"> {
     return { exec: (query, ...args) => {
       this.check();
       if (!query.startsWith("SELECT ") || query.includes(";")) this.stop("unavailable");
       try {
         const cost = reservation(query, args);
         if (!natural(cost.metadata) || !natural(cost.inputWork)) this.stop("limit");
-        this.spend({ calls: 1, metadata: cost.metadata, inputWork: cost.inputWork + cost.metadata });
+        const debit = { calls: 1, metadata: cost.metadata, inputWork: cost.inputWork + cost.metadata };
+        const handle = received ? this.reserve(debit) : (this.spend(debit), null);
         const rows = sql.exec(query, ...args).toArray();
         this.check();
+        if (handle !== null) this.settle(handle, received!(rows));
         return { toArray: () => { this.check(); return rows; } };
       } catch (error) {
         if (error instanceof ArchiveStopped || error instanceof ArchiveLookaheadLimited) throw error;

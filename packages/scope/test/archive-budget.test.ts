@@ -152,3 +152,151 @@ test("original deadline and monotone clock fence asynchronous lookahead and reje
   let clock = 2; const backwards = new ArchiveBudget({}, () => clock); clock = 1;
   expect(() => backwards.check()).toThrow("archive-unavailable");
 });
+
+test("a completed read releases only its unused byte charge and preserves every operation count", () => {
+  const budget = new ArchiveBudget({ metadata: 12, inputWork: 37 }, () => 0);
+  const ceiling = { entries: 1, attempts: 4, nodes: 3, calls: 2, metadata: 10, inputWork: 31 };
+  const handle = budget.reserve(ceiling);
+  expect(budget.admitted()).toEqual(ceiling);
+  expect(budget.reservationCosts()).toMatchObject({ metadataReserved: 10, metadataSettled: 10, unsettledMetadata: 10, settlementRefusal: "none" });
+  expect(budget.canSpend({ metadata: 3 })).toBe(false);
+  // The handle owns the admitted ceiling, not this caller's later mutation.
+  ceiling.metadata = 0; ceiling.inputWork = 0;
+  budget.settle(handle, 3);
+  expect(budget.admitted()).toEqual({ entries: 1, attempts: 4, nodes: 3, calls: 2, metadata: 3, inputWork: 10 });
+  expect(budget.reservationCosts()).toMatchObject({ metadataReserved: 10, metadataSettled: 3, unsettledMetadata: 0, settlementRefusal: "none" });
+  expect(budget.canSpend({ metadata: 9, inputWork: 27 })).toBe(true);
+  budget.spend({ metadata: 9, inputWork: 27 });
+  expect(budget.admitted()).toMatchObject({ metadata: 12, inputWork: 37, calls: 2, nodes: 3, attempts: 4, entries: 1 });
+  expect(budget.reservationCosts()).toMatchObject({ metadataReserved: 19, metadataSettled: 12, unsettledMetadata: 0 });
+
+  const pureWork = new ArchiveBudget({}, () => 0);
+  const work = pureWork.reserve({ calls: 1, inputWork: 9 });
+  pureWork.settle(work, 0);
+  expect(pureWork.admitted()).toMatchObject({ calls: 1, metadata: 0, inputWork: 9 });
+});
+
+test("W2 a throwing SQL read keeps its full reservation and cannot start another read", () => {
+  // Counted synchronous SQL stand-in: this witnesses the budget boundary only.
+  const budget = new ArchiveBudget({ metadata: 10, inputWork: 40 }, () => 0);
+  let calls = 0, measured = 0;
+  const sql = budget.native({ exec() { calls++; throw new Error("scripted read failure"); } },
+    () => ({ metadata: 10, inputWork: 30 }), () => { measured++; return 0; });
+  expect(() => sql.exec("SELECT 1")).toThrow("archive-unavailable");
+  expect(calls).toBe(1); expect(measured).toBe(0);
+  expect(budget.admitted()).toMatchObject({ calls: 1, metadata: 10, inputWork: 40 });
+  expect(budget.reservationCosts()).toMatchObject({ metadataReserved: 10, metadataSettled: 10, unsettledMetadata: 10, settlementRefusal: "none" });
+  expect(() => sql.exec("SELECT 2")).toThrow("archive-unavailable");
+  expect(calls).toBe(1);
+
+  // A still-outstanding read also consumes capacity before any terminal error.
+  const held = new ArchiveBudget({ metadata: 10, inputWork: 40 }, () => 0);
+  held.reserve({ calls: 1, metadata: 10, inputWork: 40 });
+  const next = held.native({ exec() { calls++; return { toArray: () => [] }; } }, () => ({ metadata: 1, inputWork: 0 }));
+  expect(() => next.exec("SELECT 3")).toThrow("archive-limit");
+  expect(calls).toBe(1);
+  expect(held.admitted()).toMatchObject({ calls: 1, metadata: 10, inputWork: 40 });
+  expect(held.reservationCosts()).toMatchObject({ metadataReserved: 10, metadataSettled: 10, unsettledMetadata: 10 });
+});
+
+test("a measured SQL receipt settles its bytes once while the default SQL charge stays unchanged", () => {
+  // Scripted rows and byte measurement, not a physical SQLite sizing witness.
+  const budget = new ArchiveBudget({}, () => 0); let calls = 0, measurements = 0;
+  const source = { exec() { calls++; return { toArray: () => [{ value: "ok" }] }; } };
+  const measured = budget.native(source, () => ({ metadata: 8, inputWork: 0 }), rows => {
+    measurements++; expect(rows).toEqual([{ value: "ok" }]);
+    expect(budget.admitted()).toMatchObject({ calls: 1, metadata: 8, inputWork: 8 });
+    return 2;
+  });
+  expect(measured.exec("SELECT value").toArray()).toEqual([{ value: "ok" }]);
+  expect(budget.admitted()).toMatchObject({ calls: 1, metadata: 2, inputWork: 2 });
+  const unchanged = budget.native(source, () => ({ metadata: 3, inputWork: 2 }));
+  expect(unchanged.exec("SELECT value").toArray()).toEqual([{ value: "ok" }]);
+  expect(calls).toBe(2); expect(measurements).toBe(1);
+  expect(budget.admitted()).toMatchObject({ calls: 2, metadata: 5, inputWork: 7 });
+  expect(budget.reservationCosts()).toMatchObject({ metadataReserved: 11, metadataSettled: 5, unsettledMetadata: 0 });
+});
+
+test("W3 invalid received sizes are recorded without releasing a reservation or reviving the pass", () => {
+  for (const received of [-1, -0, 0.5, NaN, Infinity, 11]) {
+    const budget = new ArchiveBudget({}, () => 0), handle = budget.reserve({ calls: 1, metadata: 10, inputWork: 40 });
+    expect(() => budget.settle(handle, received)).toThrow("archive-limit");
+    expect(budget.admitted()).toMatchObject({ calls: 1, metadata: 10, inputWork: 40 });
+    expect(budget.reservationCosts()).toMatchObject({ metadataReserved: 10, metadataSettled: 10,
+      unsettledMetadata: 10, settlementRefusal: "invalid-received" });
+    expect(() => budget.settle(handle, 0)).toThrow("archive-limit");
+    expect(() => budget.spend({})).toThrow("archive-limit");
+    expect(budget.admitted()).toMatchObject({ metadata: 10, inputWork: 40 });
+  }
+});
+
+test("W3 unknown, foreign and reused reservation handles cannot create credit", () => {
+  const unknown = new ArchiveBudget({}, () => 0);
+  expect(() => unknown.settle({}, 0)).toThrow("archive-limit");
+  expect(unknown.reservationCosts()).toMatchObject({ metadataReserved: 0, metadataSettled: 0,
+    unsettledMetadata: 0, settlementRefusal: "unknown-reservation" });
+
+  const owner = new ArchiveBudget({}, () => 0), other = new ArchiveBudget({}, () => 0);
+  const handle = owner.reserve({ calls: 1, metadata: 10, inputWork: 40 });
+  other.reserve({ calls: 1, metadata: 10, inputWork: 40 });
+  expect(() => other.settle(handle, 0)).toThrow("archive-limit");
+  expect(other.reservationCosts()).toMatchObject({ metadataSettled: 10, unsettledMetadata: 10, settlementRefusal: "unknown-reservation" });
+  expect(owner.reservationCosts()).toMatchObject({ metadataSettled: 10, unsettledMetadata: 10, settlementRefusal: "none" });
+  owner.settle(handle, 3);
+  expect(() => owner.settle(handle, 0)).toThrow("archive-limit");
+  expect(owner.admitted()).toMatchObject({ calls: 1, metadata: 3, inputWork: 12 });
+  expect(owner.reservationCosts()).toMatchObject({ metadataReserved: 10, metadataSettled: 3,
+    unsettledMetadata: 0, settlementRefusal: "unknown-reservation" });
+});
+
+test("an outstanding asynchronous read stays charged while lookahead protects the selected finish", async () => {
+  const budget = new ArchiveBudget({ calls: 3, metadata: 12, inputWork: 40 }, () => 0);
+  let release!: () => void;
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  const pending = budget.lookaheadAsync({ calls: 1, metadata: 8, inputWork: 24 }, async () => {
+    const first = budget.reserve({ calls: 1, metadata: 3, inputWork: 6 });
+    await budget.wait(() => gate);
+    budget.settle(first, 1);
+    const second = budget.reserve({ calls: 1, metadata: 2, inputWork: 4 });
+    budget.settle(second, 2);
+    return "received";
+  });
+  expect(budget.admitted()).toMatchObject({ calls: 1, metadata: 3, inputWork: 6 });
+  expect(budget.reservationCosts()).toMatchObject({ metadataSettled: 3, unsettledMetadata: 3 });
+  release();
+  expect(await pending).toEqual({ kind: "read", value: "received" });
+  budget.spend({ calls: 1, metadata: 8, inputWork: 24 });
+  expect(budget.admitted()).toMatchObject({ calls: 3, metadata: 11, inputWork: 30 });
+  expect(budget.reservationCosts()).toMatchObject({ metadataReserved: 13, metadataSettled: 11, unsettledMetadata: 0 });
+
+  const limited = new ArchiveBudget({ metadata: 12 }, () => 0);
+  expect(limited.lookahead({ metadata: 8 }, () => {
+    limited.reserve({ metadata: 3 });
+    limited.reserve({ metadata: 2 });
+  })).toMatchObject({ kind: "limited", refusal: { reserved: { metadata: 8 }, shortfall: { metadata: 1 } } });
+  expect(limited.admitted().metadata).toBe(3);
+  expect(limited.reservationCosts()).toMatchObject({ metadataReserved: 3, metadataSettled: 3, unsettledMetadata: 3 });
+});
+
+test("late receipts and a backwards clock cannot settle away charges after the original deadline", async () => {
+  let now = 0, release!: (bytes: number) => void, installed = false;
+  const budget = new ArchiveBudget({}, () => now, 10);
+  const handle = budget.reserve({ calls: 1, metadata: 10, inputWork: 40 });
+  const gate = new Promise<number>(resolve => { release = resolve; });
+  const pending = budget.wait(() => gate).then(bytes => { budget.settle(handle, bytes); installed = true; });
+  now = 10;
+  expect(() => budget.check()).toThrow("archive-timeout");
+  release(2);
+  await expect(pending).rejects.toThrow("archive-timeout");
+  expect(installed).toBe(false);
+  expect(() => budget.settle(handle, 0)).toThrow("archive-timeout");
+  expect(budget.admitted()).toMatchObject({ calls: 1, metadata: 10, inputWork: 40 });
+  expect(budget.reservationCosts()).toMatchObject({ metadataReserved: 10, metadataSettled: 10, unsettledMetadata: 10 });
+
+  let clock = 2;
+  const backwards = new ArchiveBudget({}, () => clock), outstanding = backwards.reserve({ metadata: 4, inputWork: 8 });
+  clock = 1;
+  expect(() => backwards.settle(outstanding, 0)).toThrow("archive-unavailable");
+  expect(backwards.admitted()).toMatchObject({ metadata: 4, inputWork: 8 });
+  expect(backwards.reservationCosts().unsettledMetadata).toBe(4);
+});

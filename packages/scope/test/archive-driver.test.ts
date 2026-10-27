@@ -187,7 +187,7 @@ test("a pre-Mark target failure survives eviction and new native input without l
     const records = observed.map(args => {
       expect(args).toHaveLength(2);
       const record = args[1] as Record<string, unknown>;
-      expect(Object.keys(record).sort()).toEqual(["step", "detail", "rowPhaseAtLoad", "confirmed", "pending", "attemptsAtLoad", "hasNext", "attempted", "state", "reason", "caught", "cost", "parentRead", "capacityRefusal", "fixedFinish", "sourceFailure", "capacityObservation"].sort());
+      expect(Object.keys(record).sort()).toEqual(["step", "detail", "rowPhaseAtLoad", "confirmed", "pending", "attemptsAtLoad", "hasNext", "attempted", "state", "reason", "caught", "cost", "reservationCosts", "parentRead", "capacityRefusal", "fixedFinish", "sourceFailure", "capacityObservation"].sort());
       expect(record["capacityObservation"]).toBeNull();
       // This stand-in provider has no exact-object transport. It must not
       // invent a parent-read phase from a target failure or native work.
@@ -208,6 +208,13 @@ test("a pre-Mark target failure survives eviction and new native input without l
       const cost = record["cost"] as Record<string, unknown>;
       expect(Object.keys(cost).sort()).toEqual(Object.keys(ARCHIVE_BOUNDS).sort());
       for (const value of Object.values(cost)) expect(typeof value === "number" && Number.isSafeInteger(value) && value >= 0).toBe(true);
+      const reservationCosts = record["reservationCosts"] as ReturnType<ArchiveBudget["reservationCosts"]>;
+      expect(Object.keys(reservationCosts).sort()).toEqual(["metadataReserved", "metadataSettled", "unsettledMetadata", "settlementRefusal"].sort());
+      for (const value of [reservationCosts.metadataReserved, reservationCosts.metadataSettled, reservationCosts.unsettledMetadata]) expect(Number.isSafeInteger(value) && value >= 0).toBe(true);
+      expect(reservationCosts.metadataSettled).toBe(cost["metadata"]);
+      expect(reservationCosts.metadataReserved).toBeGreaterThanOrEqual(reservationCosts.metadataSettled);
+      expect(reservationCosts.unsettledMetadata).toBeLessThanOrEqual(reservationCosts.metadataSettled);
+      expect(reservationCosts.settlementRefusal).toBe("none");
       return record;
     });
     expect(records.some(record => record["step"] === "target" && record["state"] === "retry" && record["caught"] === "unavailable")).toBe(true);

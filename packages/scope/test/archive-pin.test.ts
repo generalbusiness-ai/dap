@@ -4,10 +4,11 @@ import { evictDurableObject, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import type { Intent, PlatformDefinition, ScopeRef, Seed } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, intentDigest, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
+import { canonicalize, intentDigest, newIncarnation, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
 import { grantOf } from "@generalbusiness/dap-derive/testing";
 import { standingData } from "../../derive/test/fixtures-standing.ts";
-import { ARCHIVE_PIN_BYTES, ARCHIVE_PIN_KEY, ARCHIVE_SCOPE_METADATA_BYTES, readArchivePin } from "../src/archive-pin.ts";
+import { ARCHIVE_PIN_BYTES, ARCHIVE_PIN_KEY, ARCHIVE_SCOPE_METADATA_BYTES, archivePinReadBytes, readArchivePin } from "../src/archive-pin.ts";
+import { ArchiveBudget } from "../src/archive-budget.ts";
 import { controls } from "../src/testing.ts";
 import { wired } from "./outside.ts";
 import { START, at, objectOf, rita, stubOf } from "./fixtures-native.ts";
@@ -48,6 +49,20 @@ test("a native genesis writes bound seed/pin metadata atomically; four bounded m
     expect(result.pin).toEqual({ format: "artroom-archive-pin-1", at: scope, seed: f.seed, genesis: f.answer.receipt.fact.hash });
     expect(result.queries).toHaveLength(4);
     expect(result.queries[0]).toContain("octet_length(v)");
+    const measured = await runInDurableObject(objectOf(f.name), (_instance, state) => {
+      const budget = new ArchiveBudget({}, () => 0);
+      const sql = budget.native(state.storage.sql, () => ({ metadata: ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES, inputWork: 0 }), archivePinReadBytes);
+      return { pin: readArchivePin(sql, scope), cost: budget.admitted(), reservations: budget.reservationCosts() };
+    });
+    expect(measured.pin).toEqual(result.pin);
+    // Four real SELECTs return two metadata bodies, their two sizes and
+    // type/key labels, then the 71-byte genesis hash. A size value is eight
+    // bytes of SQL scalar payload, not another copy of the body it describes.
+    const bodyBytes = before.filter(row => row.k === ARCHIVE_PIN_KEY || row.k === "scope").reduce((sum, row) => sum + utf8(row.v).length, 0);
+    const returned = bodyBytes + 13 + 5 + 2 * 8 + 2 * 4 + 71;
+    expect(measured.cost).toMatchObject({ calls: 4, metadata: returned, inputWork: returned });
+    expect(measured.reservations).toEqual({ metadataReserved: 4 * (ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES),
+      metadataSettled: returned, unsettledMetadata: 0, settlementRefusal: "none" });
     expect(await metadata(f.name)).toEqual(before);
     await evictDurableObject(objectOf(f.name));
     expect(await read(f.name, scope)).toEqual(result);

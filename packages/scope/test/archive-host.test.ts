@@ -3,13 +3,15 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type ScopeRef } from "@generalbusiness/dap-contract";
 import { isScopeRef, timeOf, utf8 } from "@generalbusiness/dap-bytes";
-import { GitRefusal, snapshotCommit } from "@generalbusiness/dap-git";
+import { GitRefusal, idOf, snapshotCommit } from "@generalbusiness/dap-git";
 import { buildPack } from "@generalbusiness/dap-git/http";
 import { SmartHttpSource } from "@generalbusiness/dap-git/http-read";
 import { journalRef, type JournalPassArchive } from "@generalbusiness/dap-git/journal";
 import { GitHubProvider } from "../src/github-host.ts";
 import { ArtifactsProvider } from "../src/artifacts-host.ts";
 import type { FixtureArchivePorts } from "../src/archive-host.ts";
+import { archiveProvider } from "../src/archive-host.ts";
+import { ARCHIVE_MIGRATION_WIRE_BYTES, ARCHIVE_MIGRATION_HEAD_BYTES } from "../src/archive-bootstrap-cost.ts";
 import type { ArchiveSend } from "../src/archive-driver.ts";
 import { ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
 import { finishArchiveParentRead } from "../src/archive-parent-read-diagnostic.ts";
@@ -124,6 +126,83 @@ function fixture(host: "github" | "artifacts", isolated = false, actual?: { at: 
       return { release: gate.release, started: began.promise };
     } };
 }
+
+// Actual adapter, pack encoder/decoder and budget. Credentials, repository,
+// response bytes and the budget clock are TEST stand-ins; no network is used.
+function parentReceiptFixture(failure?: { phase: "parent" | "head"; kind: "hash" | "fence" | "budget" }) {
+  const repository = { host: "artifacts", namespace: "TEST", name: "receipts", id: "receipts" };
+  const blob = { type: "blob" as const, data: utf8("TEST head receipt\n"), id: idOf("blob", utf8("TEST head receipt\n")) };
+  const snapshot = snapshotCommit([{ path: "head", mode: "100644", id: blob.id }], "TEST parent receipt\n");
+  let allowed = true, now = 0, posts = 0, expireAtSettlement = false;
+  const ceilings = [ARCHIVE_MIGRATION_WIRE_BYTES, ARCHIVE_MIGRATION_HEAD_BYTES + 8192];
+  const received: number[] = [];
+  class ReceiptBudget extends ArchiveBudget {
+    readonly settlements: { before: ArchiveCost; after: ArchiveCost; received: number }[] = [];
+    override settle(handle: object, bytes: number): void {
+      if (expireAtSettlement) now = 30_000;
+      const before = this.admitted();
+      super.settle(handle, bytes);
+      this.settlements.push({ before, after: this.admitted(), received: bytes });
+    }
+  }
+  const budget = new ReceiptBudget({}, () => now);
+  const provider = archiveProvider({ clock: () => timeOf(0), tokens: {
+    read: async () => "TEST read credential", mint: async () => null, revoke: async () => undefined,
+  } }, {
+    identity: async () => undefined,
+    transport: () => ({ remote: "https://service.invalid/TEST.git", maxBytes: 64 * 1024, fetch: async request => {
+      const phase = posts === 0 ? "parent" : "head";
+      expect(budget.reservationCosts().unsettledMetadata).toBe(ceilings[posts]);
+      if (request.method === "GET") return reply(`${pkt("version 2\n")}${pkt("fetch=shallow filter\n")}0000`, "upload-pack-advertisement");
+      expect(request.method).toBe("POST");
+      const wanted = /want ([0-9a-f]{40})/.exec(await request.text())?.[1];
+      expect(wanted).toBe(phase === "parent" ? snapshot.commit : blob.id);
+      const pack = await buildPack(phase === "parent" ? snapshot.objects : [blob], { maxBytes: 64 * 1024 });
+      if (failure?.phase === phase && failure.kind === "hash") pack[pack.length - 1]! ^= 1;
+      const prefix = utf8(pkt("packfile\n") + (pack.length + 5).toString(16).padStart(4, "0") + "\x01");
+      const body = new Uint8Array(prefix.length + pack.length + 4);
+      body.set(prefix); body.set(pack, prefix.length); body.set(utf8("0000"), prefix.length + pack.length);
+      received.push(body.length); posts++;
+      if (failure?.phase === phase) {
+        if (failure.kind === "fence") allowed = false;
+        if (failure.kind === "budget") expireAtSettlement = true;
+      }
+      return new Response(body, { headers: { "content-type": "application/x-git-upload-pack-result" } });
+    } }),
+  });
+  return { budget, received, ceilings, blob, snapshot,
+    read: () => provider.readParent!(repository, snapshot.commit, () => allowed, budget) };
+}
+
+test("current-parent and lazy head reads settle only their own received wire ceiling", async () => {
+  const f = parentReceiptFixture(), source = await f.read();
+  expect(await source.object(f.snapshot.commit, 1024)).toMatchObject({ type: "commit" });
+  expect(await source.boundedObject!(f.blob.id, "blob", 1024)).toEqual({ type: "blob", size: f.blob.data.length, data: f.blob.data });
+  expect(f.budget.settlements).toHaveLength(2);
+  for (const [index, settlement] of f.budget.settlements.entries()) {
+    expect(settlement.received).toBe(f.received[index]);
+    expect(settlement.received).toBeLessThan(f.ceilings[index]!);
+    const released = f.ceilings[index]! - settlement.received;
+    expect(settlement.after).toEqual({ ...settlement.before,
+      metadata: settlement.before.metadata - released, inputWork: settlement.before.inputWork - released });
+  }
+  expect(f.budget.reservationCosts().unsettledMetadata).toBe(0);
+  expect(await source.boundedObject!(f.blob.id, "blob", 1024)).toMatchObject({ type: "blob" });
+  expect(f.received).toHaveLength(2); expect(f.budget.settlements).toHaveLength(2);
+});
+
+test.each(["parent", "head"] as const)("%s read retains its wire ceiling on invalid pack, fence or settlement deadline", async phase => {
+  for (const kind of ["hash", "fence", "budget"] as const) {
+    const f = parentReceiptFixture({ phase, kind });
+    const outcome = phase === "parent" ? f.read() : f.read().then(source => source.boundedObject!(f.blob.id, "blob", 1024));
+    await expect(outcome).rejects.toMatchObject(kind === "hash" ? { reason: "hash-mismatch", what: "pack trailer" }
+      : kind === "fence" ? { reason: "unreadable", what: "archive fixture adapter" } : { reason: "timeout" });
+    const completed = phase === "parent" ? 0 : 1;
+    expect(f.received).toHaveLength(completed + 1);
+    expect(f.budget.settlements).toHaveLength(completed);
+    expect(f.budget.reservationCosts().unsettledMetadata).toBe(f.ceilings[completed]);
+  }
+});
 
 // Actual adapters reject wrong native scope/repository/ref and forged or
 // revoked identity before any HTTP discovery, including a valid token object.

@@ -641,6 +641,10 @@ export class SmartHttpSource implements GitSource {
   #deadline: number | null = null;
   #operations = 0;
   #currentParentUsed = false;
+  #receivedObjectBytes = 0;
+  /** Fully received bounded POST response bytes; excludes GET advertisements.
+   * This transport receipt does not certify pack or object validation. */
+  get receivedObjectBytes(): number { return this.#receivedObjectBytes; }
   /** Fixed per-source payload allowance; null identifies the full-closure mode. */
   get isolatedPayloadAllowance(): number | null { return this.#isolation?.ownedBytes ?? null; }
   constructor(options: SmartHttpReadOptions) {
@@ -753,6 +757,7 @@ export class SmartHttpSource implements GitSource {
       }
       const result = await readBytes(response.body, Math.min(responseLimit, this.#options.maxBytes), this.#deadline ?? undefined, protocolV2 ? this.#work : undefined, protocolV2 && (this.#currentParentUsed || this.#isolation?.advertisementBytes !== undefined || this.#isolation?.maxInflatedBytes !== undefined));
       this.#timely();
+      if (body !== undefined) this.#receivedObjectBytes += result.length;
       return result;
     } catch (e) {
       if (this.#work?.refused(e)) throw e;
