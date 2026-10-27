@@ -1,16 +1,291 @@
 {
-  "qualification": "Preparation snapshot before the one ordinary gate; replaced with final sealed index before review. Focused source hashes are in each result, not the base Git tree.",
+  "qualification": "One naturally closed ordinary R14 limit-hint gate, nine passing owning Node cases, one deliberately restored old-hint rejection failing by assertion, exact restoration, and post-test guide wrapping only. Authored TEST rows reconstruct the reported provider envelope; no live SQL, private provider rows, account coverage, telemetry change or deployment. Only this implementation note and manifest follow the tested checkpoint; all other tracked blobs/modes equal it. Missing callbacks remain qualified.",
   "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-27-security-r14-limit-hint",
   "checkpoint": {
-    "commit": "6499a12bb16317d9bc614e5f5e905fb4d662cc87",
-    "tree": "688c65618473c98443a204ee974b3fa1dcd02b20"
+    "commit": "9bbf4a9e572dbff78687e0fbc040dc4be483db11",
+    "tree": "b24a320feb4709b223485a6fd8b82d0749bffe5d"
   },
-  "fileCount": 3,
+  "fileCount": 66,
   "files": [
     {
-      "path": "setup.json",
-      "bytes": 387,
-      "sha256": "03e254cbb6ace535ad66cff9ed4059bae00bf6fd94fbcf5581046250ccdea26e"
+      "path": "SHA256SUMS",
+      "bytes": 6723,
+      "sha256": "5e5be2ef39b54ac7f6f3acbdfa5d4eb0cd07e55b658a000bab553c9a6156611a"
+    },
+    {
+      "path": "analysis-run.json",
+      "bytes": 2459,
+      "sha256": "d320b2e3ca8a904157cad8b9bb2f1d96a6566b0295f28156a9c72208becabf2e"
+    },
+    {
+      "path": "analysis-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "analysis-stdout.log",
+      "bytes": 710,
+      "sha256": "86a450f5bfafa7e0e1ea3ac653daeb608df27e8dea2fe8f22ecd9c8d31d94d38"
+    },
+    {
+      "path": "candidate-sources/docs/usage-report.md",
+      "bytes": 9629,
+      "sha256": "84b9abaef015d2f484cb051ce65358df1fddbd21235a4bfa93275d2016f1600e"
+    },
+    {
+      "path": "candidate-sources/scripts/usage-report.mjs",
+      "bytes": 23486,
+      "sha256": "a3a3c83438c158d4294208e5aed92e6061705178ee7d9e72cc6644363f6aa62e"
+    },
+    {
+      "path": "candidate-sources/scripts/usage-report.test.mjs",
+      "bytes": 22912,
+      "sha256": "bc0669276deb5e69dbac64fec0a4da0471ec60acc9853d1e7f3327d8b75cf4dc"
+    },
+    {
+      "path": "finalization-inputs.json",
+      "bytes": 10913,
+      "sha256": "5b7f093b0e324e175029bd1ebe176ca7d85a17d1ce4bcf9ede7ddb73541bc350"
+    },
+    {
+      "path": "focused-started.json",
+      "bytes": 1211,
+      "sha256": "f3498fe4481e2b2b5a46b896d988667864e47332a14005e437630904987a77d0"
+    },
+    {
+      "path": "gate-source-equality.json",
+      "bytes": 893843,
+      "sha256": "638d6ad7aea19f174b57d7d5b51a925ca4cab2a006cd9b8d3f8d19a65a3f423d"
+    },
+    {
+      "path": "old-hint-control/mutated-usage-report.mjs",
+      "bytes": 23639,
+      "sha256": "01e763735fdc9622902cbec132e07023e642966d73ab2301bb3b8434909c4b66"
+    },
+    {
+      "path": "old-hint-control/mutation.json",
+      "bytes": 593,
+      "sha256": "c44418005192a7d769ddacead9a20cc4aa6f436a3a11919ac5869ef7bd092897"
+    },
+    {
+      "path": "old-hint-control/restoration.json",
+      "bytes": 932,
+      "sha256": "e3e0ba93111277713c100988a70746aa774b6d65eefa0c27a2eb4085b9aecaa4"
+    },
+    {
+      "path": "old-hint-control/verification.json",
+      "bytes": 342,
+      "sha256": "90827a2e71e5acca22d4dfef7a37661d5880eca66b586409699414b5024c231b"
+    },
+    {
+      "path": "old-hint-control-selected/output.log",
+      "bytes": 2099,
+      "sha256": "7387e11a601eab3b2e4a796257b6fc6baa230734a74a58ead439956bbb99ff9b"
+    },
+    {
+      "path": "old-hint-control-selected/result.json",
+      "bytes": 2591,
+      "sha256": "97d80c7ce66f09fa9008480ae795e843b41595e3cfe25f31cc0ed72146852e0f"
+    },
+    {
+      "path": "ordinary-gate/counting-witness/app.test.mjs",
+      "bytes": 350912,
+      "sha256": "d66b5972d57b1a0d99b53165d0e9be70b3c40affa40b60aa882ed3dc529433d6"
+    },
+    {
+      "path": "ordinary-gate/counting-witness/client.test.mjs",
+      "bytes": 297122,
+      "sha256": "40d15c49603575809a059de6daf87ad1090d2eb1220ae97b97600e1529fa753d"
+    },
+    {
+      "path": "ordinary-gate/counting-witness/device-key.test.mjs",
+      "bytes": 110027,
+      "sha256": "3292c05f13e303cafeec1fded72a02d43041846acfee1d1fb36819c0c050b9bb"
+    },
+    {
+      "path": "ordinary-gate/counting-witness/metafile.json",
+      "bytes": 70755,
+      "sha256": "9c433d1ce2d32fa256125ab4a53ef1f296bebb0ac304fffc34c0c911419734e7"
+    },
+    {
+      "path": "ordinary-gate/counting-witness/source.json",
+      "bytes": 1029,
+      "sha256": "2f5a2009e8dd3d240e9b2bcf56a3513412fca71efd5363c793595d3ce2f9dcd4"
+    },
+    {
+      "path": "ordinary-gate/counting-witness/voice-controller.test.mjs",
+      "bytes": 181912,
+      "sha256": "c66a28003ee1dbcaa395abe3c8d58e26adda3a6204c3c98fb9dfea006fd58d46"
+    },
+    {
+      "path": "ordinary-gate/driver.py",
+      "bytes": 3921,
+      "sha256": "687bdb1bb82e22bbf32fd55233191565fd5ecb135a781fb711ae971a34399707"
+    },
+    {
+      "path": "ordinary-gate/output.log",
+      "bytes": 6568,
+      "sha256": "a1de71cca3990a007d2c6a932db942075b2ae0ae47bd68cd5ae997a387266651"
+    },
+    {
+      "path": "ordinary-gate/progress.native.jsonl",
+      "bytes": 921239,
+      "sha256": "3d8b075ad24b31890d026be91d3f53c2707e6eeeab2f5d7153ab02c50430204e"
+    },
+    {
+      "path": "ordinary-gate/progress.plain.jsonl",
+      "bytes": 3039451,
+      "sha256": "1f10c1f2c0b0876059aa30282663cba2c17cfca892b00ee211d920ac1fc81071"
+    },
+    {
+      "path": "ordinary-gate/result.json",
+      "bytes": 1521,
+      "sha256": "ba22a3b2f3234c68558148d460b121af78972ba1de3b2391d6763a7ef6eed528"
+    },
+    {
+      "path": "ordinary-gate/stages/citations.log",
+      "bytes": 1554342,
+      "sha256": "9ddfaa8c161667ff138b75cf11e8929abc3c0d3238bac3df7c4620e497ec49a9"
+    },
+    {
+      "path": "ordinary-gate/stages/citations.time",
+      "bytes": 29,
+      "sha256": "66b8d80bc49d92c0fec48d057098ff0cf80524df878c8f178405a23b6cf7079d"
+    },
+    {
+      "path": "ordinary-gate/stages/cite-test.log",
+      "bytes": 762,
+      "sha256": "d6b84a47e146bffbe4ce7d51867b7012f4ee60e8733596bf1e4be273f52cd414"
+    },
+    {
+      "path": "ordinary-gate/stages/cite-test.time",
+      "bytes": 29,
+      "sha256": "d9918759d9ab2757144f827c20769d929f617fcc6c8127e4f493ee1dc947ff29"
+    },
+    {
+      "path": "ordinary-gate/stages/commit-messages.log",
+      "bytes": 38,
+      "sha256": "e961aa82d898e3425096da8901160f918cd74166d8c76fd918aaac9c3386377d"
+    },
+    {
+      "path": "ordinary-gate/stages/commit-messages.time",
+      "bytes": 29,
+      "sha256": "2f00bb14f48e47d581a40c36302b3d8f94ecd53f8ccfa6825008731de11235d2"
+    },
+    {
+      "path": "ordinary-gate/stages/commit-test.log",
+      "bytes": 593,
+      "sha256": "4f1d54645d3ea18ba1d9d3afb272dd07d555687192f0a57aa40dc34357a26b41"
+    },
+    {
+      "path": "ordinary-gate/stages/commit-test.time",
+      "bytes": 29,
+      "sha256": "1b550a513c3c9afd33ccce0c979e7852475ddffc7cf2de9b1549f2837f4298fd"
+    },
+    {
+      "path": "ordinary-gate/stages/doc-links.log",
+      "bytes": 38,
+      "sha256": "d32eaa916626747fdc1c632131b58a6e719335f9eb304291180692016a1b1dc5"
+    },
+    {
+      "path": "ordinary-gate/stages/doc-links.time",
+      "bytes": 29,
+      "sha256": "b4fca40ba8148ab5120605c178c053e9b7d823a37d00ec23eee23a748dd7e8bb"
+    },
+    {
+      "path": "ordinary-gate/stages/helpers.log",
+      "bytes": 68,
+      "sha256": "eaf32c94c81feb78a512719678069a7204d82821f73581ebc5a6ece8f53543b1"
+    },
+    {
+      "path": "ordinary-gate/stages/helpers.time",
+      "bytes": 29,
+      "sha256": "d31ee4c641d86ec25662519b70cf6afff97402484ee0733c5abde657637035f8"
+    },
+    {
+      "path": "ordinary-gate/stages/notes.log",
+      "bytes": 18,
+      "sha256": "35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1"
+    },
+    {
+      "path": "ordinary-gate/stages/notes.time",
+      "bytes": 29,
+      "sha256": "21089e98a92f2e843b9342f6cd87de658cc9dd74bd39bd0f7e833e59d3fceea0"
+    },
+    {
+      "path": "ordinary-gate/stages/section-citations.json",
+      "bytes": 3907220,
+      "sha256": "f50bdc2c94e5d053d031527206776dc8f846f828a597b5be3f206bcc1f5b5f31"
+    },
+    {
+      "path": "ordinary-gate/stages/test-evidence/counting-sources.json",
+      "bytes": 1032,
+      "sha256": "d9e8b2abeb61469ae8ff71f1c79c3b1f124608b62a437db6a1c83a640c17fa2f"
+    },
+    {
+      "path": "ordinary-gate/stages/test-evidence/counting.jsonl",
+      "bytes": 133764,
+      "sha256": "a4563d707705a47d44b08bebfbe261c0ec5632a47a76f0cf0e1dca968df18a20"
+    },
+    {
+      "path": "ordinary-gate/stages/test-evidence/native.jsonl",
+      "bytes": 814599,
+      "sha256": "1884754cb38edb806e34260fff59cc349d4a9997d4774157e94d35f23bc82655"
+    },
+    {
+      "path": "ordinary-gate/stages/test-evidence/node.jsonl",
+      "bytes": 180229,
+      "sha256": "87b28fa52eb77f079109aa3870e816d18b7438e4fad3a1f160f514cb4b72fcce"
+    },
+    {
+      "path": "ordinary-gate/stages/test-evidence/plain.jsonl",
+      "bytes": 2538786,
+      "sha256": "e6f1558fd10f6eecbf8208f5d56a17abc7c9247030400c68084ec8ded07af450"
+    },
+    {
+      "path": "ordinary-gate/stages/test-evidence/stages.json",
+      "bytes": 971,
+      "sha256": "70ec2f169d0334a80cf5ebe1e16a333db719529772041499a07b96cf8c40955d"
+    },
+    {
+      "path": "ordinary-gate/stages/test.log",
+      "bytes": 31719421,
+      "sha256": "a1a357ddc03f38b164615531674b425e9b1d84f432d690811f21322a059bd17d"
+    },
+    {
+      "path": "ordinary-gate/stages/test.time",
+      "bytes": 37,
+      "sha256": "74d5bdcce856199d68fa7cf0d1bd134656e6aadd0d8b74409df669fc353e8b5d"
+    },
+    {
+      "path": "ordinary-gate/stages/typecheck.log",
+      "bytes": 1987,
+      "sha256": "62170bbe0cd055cff4699debd9470a886c0f98f328e7c9517d899c021a3788d0"
+    },
+    {
+      "path": "ordinary-gate/stages/typecheck.time",
+      "bytes": 31,
+      "sha256": "acd8d3539e7321bc90a6bb529bf39ba85e06fcfeba0d6a3ac85cacaee878217e"
+    },
+    {
+      "path": "ordinary-gate/stages/whitespace.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "ordinary-gate/stages/whitespace.time",
+      "bytes": 29,
+      "sha256": "b19caaf7f42fccf27d8c76a198f52fea0f91edf4f9fc11246dfb0c794d708d58"
+    },
+    {
+      "path": "ordinary-gate/started.json",
+      "bytes": 689,
+      "sha256": "204e9c189f422c623d88dbee4063b74d853d55049f2948e1c42bbbce11728251"
+    },
+    {
+      "path": "ordinary-gate-analysis.json",
+      "bytes": 27708,
+      "sha256": "7d1a0a89838b5014e8ace6b7f2a3d323a22c1a012c0ee090e99003c8b9966ac6"
     },
     {
       "path": "owning-node/output.log",
@@ -18,9 +293,49 @@
       "sha256": "29572a482402a28e9e7b4b547c56234a34e19401939cf0f071f14cec79665d3a"
     },
     {
-      "path": "old-hint-control-selected/output.log",
-      "bytes": 2099,
-      "sha256": "7387e11a601eab3b2e4a796257b6fc6baa230734a74a58ead439956bbb99ff9b"
+      "path": "owning-node/result.json",
+      "bytes": 2467,
+      "sha256": "8c9ca6634be40e94db2e473c26a0ca21957ae3ad6d22a45f3e8bcacc2952e3de"
+    },
+    {
+      "path": "post-test-guide-formatting/result.json",
+      "bytes": 881,
+      "sha256": "595d9387685468a9b4d6346e49d5f314d300b1b2f65bed84f2f51118b55b4610"
+    },
+    {
+      "path": "post-test-guide-formatting/usage-report.md",
+      "bytes": 9629,
+      "sha256": "9c85fe07fdab2f964d994b6f6a1a9cb2d8c6f4689cb487350328da69ee49e02c"
+    },
+    {
+      "path": "retained-harnesses/artroom-r14-limit-hint-analysis-run-20261027.py",
+      "bytes": 5790,
+      "sha256": "9f4052194e4fe152c57c4a5a40807e58e9b2d6fe7ddc9779f5ecdfe87f92ce76"
+    },
+    {
+      "path": "retained-harnesses/artroom-r14-limit-hint-finalize-20261027.py",
+      "bytes": 25073,
+      "sha256": "f213d012e4c1e0165e854fa94cd262c34857528931d41829e1758997d9fd2081"
+    },
+    {
+      "path": "retained-harnesses/artroom-r14-limit-hint-focused-20261027.py",
+      "bytes": 6354,
+      "sha256": "4603f48116c0712278e09f909f9c066a734a891022ca56ca5b2439df1d025dcc"
+    },
+    {
+      "path": "retained-harnesses/artroom-r14-limit-hint-gate-analysis-20261027.py",
+      "bytes": 20075,
+      "sha256": "8858f5ff3dc8a9e4efad4a46e0aee6e85662eece83c5132fb4a494882c2793f1"
+    },
+    {
+      "path": "setup.json",
+      "bytes": 387,
+      "sha256": "03e254cbb6ace535ad66cff9ed4059bae00bf6fd94fbcf5581046250ccdea26e"
+    },
+    {
+      "path": "source-checkpoint.json",
+      "bytes": 438,
+      "sha256": "ffa202a227aa49b3cb925ff63481ec705689733eb5a634831754025421b25961"
     }
   ]
 }
