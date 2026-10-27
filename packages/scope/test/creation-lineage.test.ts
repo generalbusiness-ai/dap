@@ -56,7 +56,7 @@ function recorded(nodes: readonly Platform[], target: string, overrides: (peer: 
     idFromName(name) { if (!known.has(name)) { forbidden++; throw Error("unindexed namespace touched"); } if (name === target) targetNames++; return name; },
     get(name) { if (name === target) targetGets++; return overrides(env.PLATFORM.get(env.PLATFORM.idFromName(name)) as unknown as Peer, name); },
   };
-  const index: ScopeIndexPort = { async has(name) { return known.has(name); }, async register() { throw Error("lineage lookup registered an ancestor"); } };
+  const index: ScopeIndexPort = { async has(name) { return known.has(name); }, async register() { throw Error("lineage lookup registered an ancestor"); }, async list() { throw Error("lineage requested census"); } };
   return { binding, index, env: { SCOPE_INDEX: { idFromName: (name: string) => name, get: () => index } }, counts: () => ({ targetNames, targetGets, forbidden }) };
 }
 

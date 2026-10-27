@@ -1,0 +1,12 @@
+{
+  "qualification": "Draft: source preparation only. Owning checks, ordinary gate, final inventory and read-only seal remain due. No hosted census or deployment claimed.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-27-scope-index-census",
+  "request": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f51f16f4e23d8a1e02a54dbb302f1dba4fb14513",
+  "promise": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d28d9bcd02aa9374774c52e565f5b5c893c657f1",
+  "base": {
+    "commit": "7b22054759a1989dece040ee05fe7de9f6793e92",
+    "tree": "c88b4d9a82c2991311be87e25c85397bb60e6d87"
+  },
+  "fileCount": 0,
+  "files": []
+}

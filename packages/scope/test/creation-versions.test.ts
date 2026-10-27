@@ -48,7 +48,7 @@ test("creation policy owns bounded known pins; absent and explicit undefined def
 test("indexed creation captures policy before awaits and changes cache identity without retaining mutable Env", async () => {
   let lookups = 0, targets = 0;
   let release!: (known: boolean) => void;
-  const index: ScopeIndexPort = { has: async () => { lookups++; return new Promise<boolean>(resolve => { release = resolve; }); }, register: async () => false };
+  const index: ScopeIndexPort = { has: async () => { lookups++; return new Promise<boolean>(resolve => { release = resolve; }); }, register: async () => false, async list() { throw Error("creation requested census"); } };
   const binding: Binding<string> = { idFromName: name => { targets++; return name; }, get: () => ({ create: async () => "native judge" }) };
   const settings = { SCOPE_INDEX: { idFromName: (name: string) => name, get: () => index }, PLATFORM_CREATION_PINS: "[]" as unknown };
   const signed = install(), name = scopeIdOf(seedOf(signed, legacy));

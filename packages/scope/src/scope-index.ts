@@ -6,12 +6,14 @@ import type { Sql } from "./sqlite.ts";
 import type { CreationAdmission } from "./creation-admission.ts";
 import { admitChildCreation } from "./creation-lineage.ts";
 import { injectedPlatformCreationPolicy, permitsNewPlatformScope } from "./creation-versions.ts";
+import type { ScopeCensusResult } from "./scope-index-census.ts";
 
 export const SCOPE_INDEX_NAME = "applied-genesis-v1";
 export interface ScopeRegistration { at: ScopeRef; genesis: Digest }
 export interface ScopeIndexPort {
   has(scope: string, kind?: ScopeKind): Promise<boolean>;
   register(proof: ScopeRegistration): Promise<boolean>;
+  list(after: string, limit: number, reader: unknown): Promise<ScopeCensusResult>;
 }
 export interface ScopeIndexEnvironment extends CreationAdmission { SCOPE_INDEX?: Binding; SCOPE_INDEX_MODE?: string }
 

@@ -46,9 +46,13 @@ export { StartupServingIndex } from "./support/serving-startup.ts";
 import scopeWorker, { ApplicationScreenService, DeployedScope, McpAgent, McpRegistry, ScopeIndex as DeployedScopeIndex, ScopeService, route, sessionWiring, type Env, type McpEnv } from "../src/worker.ts";
 /** Scripted provider settings only; fixed-owner RPC, SQL and alarms are actual. */
 export const siteTokenTestSettings = new Map<string, import("../src/artifacts-wiring.ts").ArtifactsBindings>();
+/** Env-only census fixtures; authorization, exact proof RPC and SQL are production. */
+export const scopeCensusTestSettings = new Map<string, Partial<Env>>();
 export class ScopeIndex extends DeployedScopeIndex {
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, new Proxy(env, { get(target, key) {
+      const census = scopeCensusTestSettings.get(ctx.id.name ?? "");
+      if (census && Object.hasOwn(census, key)) return Reflect.get(census, key);
       const selected = siteTokenTestSettings.get(ctx.id.name ?? "");
       return selected && Object.hasOwn(selected, key) ? Reflect.get(selected, key) : Reflect.get(target, key);
     } }));

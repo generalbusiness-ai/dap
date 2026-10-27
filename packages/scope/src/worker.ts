@@ -77,7 +77,7 @@ import type { OutboxItem, Sealed } from "./store.ts";
 import type { ReadCredential } from "./destination-host.ts";
 import { gitHubOutside, type GitHubBindings } from "./github-wiring.ts";
 import { within } from "./turn.ts";
-import { ARTIFACTS_HOST, artifactsOutside, artifactsReadiness, type ArtifactsBindings } from "./artifacts-wiring.ts";
+import { ARTIFACTS_HOST, artifactsOutside, artifactsReadiness, artifactsRegisterScope, type ArtifactsBindings } from "./artifacts-wiring.ts";
 import { recordedHost } from "./host-wiring.ts";
 import { NO_OUTSIDE, type Outside } from "./operations.ts";
 import type { NativeItemQuery } from "./item-queries.ts";
@@ -93,6 +93,7 @@ import type { MetricPoint } from "./metrics.ts";
 import { readPlatformCreationPolicy, injectedPlatformCreationPolicy, permitsNewPlatformScope } from "./creation-versions.ts";
 import { admitsParentlessCreation, type CreationAdmission } from "./creation-admission.ts";
 import { indexedScopes, scopeIndex, ScopeIndexRows, type ScopeIndexEnvironment, type ScopeRegistration } from "./scope-index.ts";
+import { ScopeIndexCensus, scopeIndexCensusRoute } from "./scope-index-census.ts";
 import { admitServing, boundedParentlessIntent, ServingAdmission, type ServingEnvironment, type ServingRequest } from "./serving-admission.ts";
 import { SiteTokenReuse, type SiteTokenRequest } from "./site/token-reuse.ts";
 import { presentsSignedRead } from "./signed-reads.ts";
@@ -106,10 +107,23 @@ import { presentsSignedRead } from "./signed-reads.ts";
  */
 export interface Env extends GitHubBindings, ArtifactsBindings, ApplicationBindings, MetricEnvironment, CreationAdmission, ScopeIndexEnvironment, ServingEnvironment, HostedMcpSettings { SCOPES: DurableObjectNamespace; SESSION_SECRET?: string; DEPLOYMENT?: string }
 
-/** Only the fixed internal binding exposes this class; there is no HTTP index route. */
+/** Fixed internal owner; HTTP exposes only its authenticated census page. */
 export class ScopeIndex extends DurableObject<Env> {
   readonly #rows = new ScopeIndexRows(this.ctx.storage.sql);
   readonly #serving = new ServingAdmission(this.env);
+  readonly #census = new ScopeIndexCensus({
+    sql: this.ctx.storage.sql,
+    register: () => artifactsRegisterScope(this.env.ARTIFACTS_CONFIG),
+    mode: () => this.env.SCOPE_INDEX_MODE,
+    proof: async (fact, maxBytes, milliseconds) => {
+      const target = this.env.SCOPES.get(this.env.SCOPES.idFromName(fact.at.scope)) as unknown as {
+        proofSource(fact: FactRef, maxBytes: number, milliseconds: number): Promise<import("./proof-bytes.ts").ProofBody | null>;
+      };
+      return target.proofSource(fact, maxBytes, milliseconds);
+    },
+    rate: reader => this.#serving.admit({ kind: "signed-read", reader }, null, Date.now()),
+    now: () => Date.now(),
+  });
   readonly #siteTokens = new SiteTokenReuse({ exec: (query, ...args) => this.ctx.storage.sql.exec(query, ...args), transaction: run => this.ctx.storage.transactionSync(run) }, () => {
     // Decode current provider readiness afresh for every custody check.
     const configuration = this.env.ARTIFACTS_CONFIG;
@@ -143,6 +157,7 @@ export class ScopeIndex extends DurableObject<Env> {
 
   has(scope: string, kind?: ScopeKind) { return this.#rows.has(scope, kind); }
   register(proof: ScopeRegistration) { return this.#rows.register(proof); }
+  list(after: string, limit: number, reader: unknown) { return this.#census.list(after, limit, reader); }
   /** Separate synchronous memory-only action; has() remains SQL-read-only. */
   admitServing(request: ServingRequest, address: string | null) { return this.#serving.admit(request, address, Date.now()); }
 }
@@ -397,6 +412,7 @@ async function routedRequest(request: Request, binding: Binding, env: CreationAd
   const url = new URL(request.url);
   // Section 5.3: a credential in a URL is refused before anything is routed, and is not used. That does not undo the exposure.
   if (credentialInUrl(url)) return json(400, { error: "credential-in-url" });
+  if (url.pathname === "/v1/scope-index/census") return scopeIndexCensusRoute(request, env);
   const scopes = api(binding, address, env);
   let parts: string[];
   try {

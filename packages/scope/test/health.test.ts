@@ -29,7 +29,7 @@ test("production health keeps indexed transport identity for concurrent and cach
   const started = new Promise<void>(resolve => { entered = resolve; });
   let calls = 0, indexReads = 0, admitted = true;
   const target = { idFromName: () => name, get: () => ({ readiness: () => { calls++; entered(); return held; } }) };
-  const index: ScopeIndexPort = { async has() { indexReads++; return admitted; }, async register() { throw Error("health registered a scope"); } };
+  const index: ScopeIndexPort = { async has() { indexReads++; return admitted; }, async register() { throw Error("health registered a scope"); }, async list() { throw Error("health requested census"); } };
   const indexBinding = { idFromName: (value: string) => value, get: () => index };
   const base = { ...env, ...settings, SCOPES: target as unknown as DurableObjectNamespace, SCOPE_INDEX: indexBinding, GITHUB_APP_CONFIG: github(name) };
   const first = scopeWorker.fetch(request(), base);

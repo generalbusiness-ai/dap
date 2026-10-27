@@ -71,6 +71,9 @@ const adminReads = strings(declaration(readSource("packages/scope/src/sessions.t
 const readGate = name => adminReads.includes(name) ? "admin" : signedReads.includes(name) ? "self-signed" : "session";
 const gates = {
   create: "creation", submit: "membership", prepare: "membership", settle: "self-signed", session: "membership", reservationSnapshot: "membership",
+  // Census is signed only by the pinned register's standing founding-install
+  // signer. It is not an ordinary member/session read; its whole owner is sealed.
+  census: "self-signed",
   summary: readGate("summary"), items: readGate("items"), history: readGate("history"), entry: readGate("entry"), outbox: readGate("outbox"), outboxItem: readGate("outbox"), log: readGate("log"), retained: readGate("retained"), queryItems: readGate("query-items"), applicationProjection: "session", stream: "session", credential: "session",
   incidents: readGate("incidents"), requests: readGate("requests"), waiting: readGate("waiting"),
 };
@@ -89,6 +92,14 @@ async function scopeRows(text) {
     });
     return [...out];
   };
+  const literalPaths = new Set();
+  walk(parse(routeText), node => {
+    if (node.type !== "BinaryExpression") return;
+    for (const [left, right] of [[node.left, node.right], [node.right, node.left]]) {
+      if (left.type === "MemberExpression" && left.object?.name === "url" && left.property?.name === "pathname"
+        && right.type === "Literal" && typeof right.value === "string" && right.value.startsWith("/")) literalPaths.add(right.value);
+    }
+  });
   const scope = "sc_" + "a".repeat(52), generic = "__parameter__";
   const result = new Map();
   const dispatched = operation => { throw { dispatch: operation }; };
@@ -105,20 +116,51 @@ async function scopeRows(text) {
   };
   const wire = load(readSource("packages/scope/src/item-query-wire.ts"), ["REQUEST_URL_BYTES", "ITEM_QUERY_URL_BYTES", "ITEM_QUERY_ENCODED_CHARS", "queryTarget", "queryUrl", "admittedRequestUrl", "itemQueryWire"], globals);
   const projection = load(readSource("packages/scope/src/applications/projection-wire.ts"), ["path", "applicationProjectionWire"], { ...globals, B: APPLICATION_PROJECTION_WIRE_BOUNDS });
-  const { routedRequest } = load(text, ["body", "routedRequest"], { ...globals, itemQueryWire: wire.itemQueryWire, applicationProjectionWire: projection.applicationProjectionWire });
+  const { SCOPE_INDEX_NAME } = load(readSource("packages/scope/src/scope-index.ts"), ["SCOPE_INDEX_NAME"], {});
+  const { scopeIndexCensusRoute } = load(readSource("packages/scope/src/scope-index-census.ts"), ["refused", "statuses", "response", "scopeIndexCensusRoute"], {
+    URL, Response, SCOPE_INDEX_NAME,
+    artifactsRegisterScope: () => scope,
+    // Authority stand-in: no signature or founding-install proof is checked
+    // here. The actual helper still owns its path, method, query and reply checks.
+    requestOf: reader => reader === "Signed census-witness" ? {} : null,
+    isScopeId: value => value === scope,
+  });
+  let censusDispatched = false;
+  const censusIndex = {
+    idFromName(name) { assert.equal(name, SCOPE_INDEX_NAME); return name; },
+    get(name) {
+      assert.equal(name, SCOPE_INDEX_NAME);
+      // Protected fixed-owner dispatch stand-in. A returned page, rather than
+      // a thrown sentinel, passes through the helper's actual response checks.
+      return { async list() { censusDispatched = true; return { ok: true, rows: [], next: null }; } };
+    },
+  };
+  const { routedRequest } = load(text, ["body", "routedRequest"], { ...globals, scopeIndexCensusRoute, itemQueryWire: wire.itemQueryWire, applicationProjectionWire: projection.applicationProjectionWire });
   const domains = [literals("v"), literals("root"), [undefined, scope], [undefined, ...literals("what")], [undefined, generic, "0", ...literals("which")], [undefined, generic]];
   function* product(at = 0, prefix = []) {
     if (at === domains.length) { yield prefix; return; }
     for (const value of domains[at]) yield* product(at + 1, [...prefix, value]);
   }
+  const candidates = [...literalPaths].map(path => ({ path, parts: null }));
   for (const parts of product()) {
     const firstMissing = parts.indexOf(undefined);
     if (firstMissing !== -1 && parts.slice(firstMissing).some(part => part !== undefined)) continue;
-    const path = "/" + parts.filter(part => part !== undefined).join("/");
+    candidates.push({ path: "/" + parts.filter(part => part !== undefined).join("/"), parts });
+  }
+  // Literal pathname branches and the existing segment classes both execute
+  // the real matcher. No fixed route list substitutes for either grammar.
+  for (const { path, parts } of candidates) {
     for (const method of methodsIn(routeText)) {
       const query = path.endsWith("/query-items") ? "?q=e30" : path.endsWith("/application-projection") ? "?p=e30" : "";
-      const request = new Request(`https://inventory.invalid${path}${query}`, { method, headers: { authorization: "Session witness" }, ...(method === "POST" ? { body: "{}" } : {}) });
-      try { await routedRequest(request, binding); }
+      const request = new Request(`https://inventory.invalid${path}${query}`, { method, headers: { authorization: parts === null ? "Signed census-witness" : "Session witness" }, ...(method === "POST" ? { body: "{}" } : {}) });
+      censusDispatched = false;
+      try {
+        const response = await routedRequest(request, binding, { SCOPE_INDEX: censusIndex });
+        if (censusDispatched) {
+          assert.equal(response.status, 200, "The actual census helper returns the dispatched page");
+          dispatched("census");
+        }
+      }
       catch (error) {
         if (!error?.dispatch) throw error;
         const operation = error.dispatch;
@@ -126,8 +168,8 @@ async function scopeRows(text) {
         // Normalize only unconstrained arguments. Literal matcher choices,
         // such as waiting's two lists, stay distinct.
         const parameters = { items: ["type"], entry: ["seq"], outboxItem: ["duty"], retained: ["kind", "digest"], credential: ["handle"] };
-        const normalized = parts.filter(part => part !== undefined).map((part, index) => index === 2 ? ":scope" : index >= 4 && parameters[operation] ? ":" + parameters[operation][index - 4] : part).join("/");
-        const route = row(method, "/" + normalized, gates[operation]);
+        const normalized = parts === null ? path : "/" + parts.filter(part => part !== undefined).map((part, index) => index === 2 ? ":scope" : index >= 4 && parameters[operation] ? ":" + parameters[operation][index - 4] : part).join("/");
+        const route = row(method, normalized, gates[operation]);
         result.set(route.route, route);
       }
     }

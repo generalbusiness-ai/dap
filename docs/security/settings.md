@@ -62,6 +62,14 @@ response, and the existence of index code do not prove backfill completion or
 deployed enforcement. The separate R2 continuation remains open; this page
 makes no unconditional “no object before genesis” claim.
 
+The registered-scope census serves only in enforce mode, including the
+default when the mode is absent. Register mode returns `unsupported`;
+a missing index returns `absent`. Its operator pin comes through the
+existing `artifactsRegisterScope` accessor. The full stored Register row
+and its checked founding install determine the permitted signing key.
+Neither the caller's configured root nor a membership session supplies
+that authority. This adds no setting and attests no deployed census.
+
 `PLATFORM_CREATION_PINS` adds deployment-approved historical pins to the
 newest creation cohort. It does not change existing scopes' pins or admit
 another native lineage family. An index entry permits lookup only; the
@@ -262,7 +270,8 @@ parser, failure behavior, health visibility, and other readers.
         "packages/scope/src/site/host.ts",
         "apps/room/archive.ts",
         "packages/scope/src/scope-index.ts",
-        "packages/scope/src/demo-creation.ts"
+        "packages/scope/src/demo-creation.ts",
+        "packages/scope/src/scope-index-census.ts"
       ],
       "parser": "artifactsConfiguration: at most 4096 characters, strict exact JSON fields registerScope/namespace/host/maxBytes/credentialIdentity; host uses artifactsService; identity must adapter-attempt.",
       "missing": "Artifacts outside port off; deployed pinned creation cannot use this host pin.",
@@ -466,7 +475,7 @@ parser, failure behavior, health visibility, and other readers.
         "packages/scope/src/worker.ts",
         "packages/scope/src/scope-index.ts"
       ],
-      "parser": "scopeIndex/indexedScopes accept register or enforce; undefined selects enforce.",
+      "parser": "scopeIndex/indexedScopes accept register or enforce; undefined selects enforce. Census serves in enforce only; register returns unsupported.",
       "missing": "Uses enforce with a valid index binding.",
       "invalid": "Invalid mode refuses indexed target lookup.",
       "health": "Not a mode, backfill or enforcement attestation."
@@ -508,10 +517,11 @@ parser, failure behavior, health visibility, and other readers.
       "readers": [
         "packages/scope/src/scope-index.ts",
         "packages/scope/src/serving-admission.ts",
-        "packages/scope/src/site/host.ts"
+        "packages/scope/src/site/host.ts",
+        "packages/scope/src/scope-index-census.ts"
       ],
-      "parser": "scopeIndex addresses the fixed applied-genesis-v1 owner; indexedScopes requires it before protected target lookup. The Artifacts Site reader addresses that same fixed owner for shared read-token custody.",
-      "missing": "Indexed existing-target requests refuse. Artifacts Site reads cannot acquire a read token and return unavailable.",
+      "parser": "scopeIndex addresses the fixed applied-genesis-v1 owner; indexedScopes requires it before protected target lookup. The Artifacts Site reader addresses that same fixed owner for shared read-token custody. Census addresses only that fixed owner and authenticates its pinned Register install signer.",
+      "missing": "Indexed existing-target requests refuse. Artifacts Site reads cannot acquire a read token and return unavailable. Census returns absent without a manifest.",
       "invalid": "Runtime call failure refuses lookup; binding shape is not parsed as text.",
       "health": "No direct index-mode/backfill field."
     },

@@ -87,7 +87,8 @@ export type SessionAnswer = { ok: true; token: string; session: SessionClaims } 
 export interface ReadRequest { v: 1; to: ScopeId; actor: KeyId; read: SignedReadName; arg: string; notAfter: Timestamp }
 export interface SignedRead { request: ReadRequest; sig: Base64Url }
 /** The reads that a signed read may name. */
-export type SignedReadName = "summary" | "history" | "entry" | "log" | "retained" | "query-items";
+/** census is authorized by the fixed index, outside ordinary scope reads. */
+export type SignedReadName = "summary" | "history" | "entry" | "log" | "retained" | "query-items" | "census";
 
 /**
  * The hosted MCP endpoint's control request (notes/2026-10-13-hosted-mcp-endpoint.md,
