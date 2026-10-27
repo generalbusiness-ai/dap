@@ -169,6 +169,7 @@ that hosted SQL ran or that a real account's data has the expected shape.
 The planner's first SQL run exposed the limit-hint mismatch in request
 `686f4ec9328d19f727e7f5e1352d0b550e6c595c`. Its observed envelope shape
 informed a scripted TEST case; no private provider rows were copied.
-Repaired end-to-end compatibility still awaits the planner's rerun with its
-own credential and operator mapping, filed under R14. This script adds no
+The planner subsequently recorded a complete rerun with exit 0, a bounded
+response, and no unassigned groups under R14 (`dbf7e6bd`). That run establishes
+acceptance for its reported window and selected Workers. This script adds no
 telemetry and does not close the parent request's coverage gaps.
