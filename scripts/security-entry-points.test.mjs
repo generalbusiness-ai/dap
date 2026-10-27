@@ -27,7 +27,7 @@ const seals = {
   "packages/scope/src/item-query-wire.ts": "8206b9a6531ca30cae1bc49cc249eea08c70a658305f41b3ebea6eda042055a8",
   "packages/scope/src/applications/projection-wire.ts": "2e07df5447469dc09aff0d4017e010634150f49c92f614221402cf46a869c6d0",
   "packages/scope/src/object.ts": "b30582dff0dfbb9e8e505dbe1e4d3060d48fa6887fc0f2cb2496d7636885ab80", // R11 host admission wiring; actual maintained parser output.
-  "packages/scope/src/core.ts": "1026ba09113e73277ed600838b1cb780c8599fd611aa65895641d71af542575d", // Fresh acts and historical keys; actual maintained parser output.
+  "packages/scope/src/core.ts": "c4947b598d30870139a4f59d7ed3d2535d75a884f570cb4b57be0543d69fd888", // Fresh acts and terminal/historical refusals; actual maintained parser output.
   "packages/scope/src/applications/act-admission.ts": "36049cc17487cc58f5d44099f55a225730079dd90006d0237ab9034181c42bd3", // Exact native provenance and current trust; actual maintained parser output.
   "packages/derive/src/genesis.ts": "df7722143f01c8084b8f045ef959b203ae1756c4dfde170d0454cfe0b0392843",
   "packages/derive/src/judge.ts": "65a10677dd4da355e9edac490979cacf6911cfa1aa37020c41516f5c53ad94fb",

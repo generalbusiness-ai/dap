@@ -575,7 +575,9 @@ export class Scope {
     let known = this.#store.accepted(intent.actor, intent.idempotencyKey) !== null;
     // Deployment admission changes no recorded judgment. A known key keeps
     // its original receipt or mismatch even after its release is withdrawn.
-    const admissionPort = this.#ports.freshActAdmission;
+    // A refused genesis can never become active. Its terminal judgment is
+    // independent of release provenance and keeps the original refusal.
+    const admissionPort = scope.status === "refused" ? undefined : this.#ports.freshActAdmission;
     let admission: Awaited<ReturnType<NonNullable<Ports["freshActAdmission"]>["read"]>> = null;
     const admissionRefusal = (head: Head): Answer | null => {
       if (!admissionPort) return null;
