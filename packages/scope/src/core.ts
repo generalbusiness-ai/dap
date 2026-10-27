@@ -8,7 +8,7 @@ import { countedEntries, archivedPosition, heldPositions, judgeFloor } from "@ge
  * the answer to a creation, is the contract's, and is exported here again.
  */
 
-import type { ActType, Answer, Beside, Bounds, ScopeBoundName, CapabilityName, DeclaredDefinition, Digest, OutboxId, Entry, FactRef, Created, Grant, ObservationUse, PlatformDefinition, Receipt, RefusalReason, ScopeId, Seed, Settlement, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
+import type { ActType, Answer, Beside, Bounds, ScopeBoundName, CapabilityName, DeclaredDefinition, Digest, OutboxId, Entry, FactRef, Created, Grant, Head, ObservationUse, PlatformDefinition, Receipt, RefusalReason, ScopeId, Seed, Settlement, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, intentDigest, isDigest, isEntry, isGrant, rawRetainedJSON, isPlatformDefinition, newIncarnation, parseStrict, platformName, retainedValueKey, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { actNeeds, actionOf, outcomeValueDomains, checkpointOf, clockOf, counted, derivable, factsNamed, genesisBodiesPresent, ownersOf, inputTexts, isObject, judgeAct, judgeCheckpoint, judgeGenesis, judgePreparation, own, placesOf, preparationScopeGrant, prepareRules, presentedTypes, readFields, runnable, stepsOf, validateDefinition, windowOf } from "@generalbusiness/dap-derive";
 import type { ActJudgment, Clock as Reading, Draft, Fetched, SignedCreation, GrantDecision, JudgeContext, Needed, Observing, Own, Owners, Placed, PlatformRules, Presented, Snapshots, StateView, Texts, ValidDefinition, Window } from "@generalbusiness/dap-derive";
@@ -572,7 +572,25 @@ export class Scope {
     // Section 4.2: a key on a sealed entry is answered from history, with the same receipt or a mismatch. That answer reads no
     // foreign entry, so none is fetched for it, and a lost dependency cannot hide it. The turn still drains first, and the
     // judge gives the answer; an intent with a key that is not accepted is new work and meets every check below.
-    const known = this.#store.accepted(intent.actor, intent.idempotencyKey) !== null;
+    let known = this.#store.accepted(intent.actor, intent.idempotencyKey) !== null;
+    // Deployment admission changes no recorded judgment. A known key keeps
+    // its original receipt or mismatch even after its release is withdrawn.
+    const admissionPort = this.#ports.freshActAdmission;
+    let admission: Awaited<ReturnType<NonNullable<Ports["freshActAdmission"]>["read"]>> = null;
+    const admissionRefusal = (head: Head): Answer | null => {
+      if (!admissionPort) return null;
+      let state: "allowed" | "application-revoked" | "unavailable" = "unavailable";
+      try { state = admission?.current() ?? "unavailable"; } catch { /* incomplete admission stays closed */ }
+      return state === "allowed" ? null : state === "application-revoked"
+        ? { answer: "refused", reason: "application-revoked", judgedAt: head }
+        : unavailable("dependency-unavailable");
+    };
+    if (!known && admissionPort) {
+      try { admission = await admissionPort.read(); } catch { /* no proof is no admission */ }
+      known = this.#store.accepted(intent.actor, intent.idempotencyKey) !== null;
+      const refusal = known ? null : admissionRefusal(this.#store.scope()?.head ?? scope.head);
+      if (refusal) return refusal;
+    }
     // Section 6.2: a fact that names this scope is a local fact. It is not fetched: the judge reads this scope's own history.
     // Section 6.4: a presented fact is fetched before the turn like a fact field. One that the act does not declare is fetched for
     // nothing: the judge refuses the input.
@@ -625,6 +643,10 @@ export class Scope {
         switch (judged.result) {
           case "write": {
             const head = view.scope()!.head;
+            // The asynchronous dependency and authority reads may have
+            // outlived the configuration observed before the turn.
+            const refusal = admissionRefusal(head);
+            if (refusal) return said<Answer>(refusal);
             return {
               // Section 6.2, "Retention": each value that the entry names is kept with it, in the entry's own transaction.
               verdict: "write", draft: judged.draft, facts, retain: [...used(judged.draft, facts), ...texts.retain(definition, judged.draft), ...valuesOf(judged.draft)],

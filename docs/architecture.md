@@ -146,6 +146,20 @@ Rules work the same way. The room's destination observes the rules scope
 and records the revision and digest of the rules it judged against. A
 rule change later does not change a judgment already made.
 
+The deployed host also controls whether it accepts new acts from installed
+application releases. Before reading an unknown act's dependencies, it checks
+the release against current `APPLICATION_TRUST`. It repeats that check before
+writing the act. Immutable native creation records identify the installation,
+including declared child scopes. A shared definition digest does not make two
+installations the same release.
+
+Withdrawal returns `application-revoked` without recording an act. This is
+deployment admission, outside the pure judges. Previously accepted keys keep
+their receipts and mismatch behavior. Replay, deliveries, timed inputs, and
+the settlement of existing work continue under their recorded definitions.
+Native platform scopes and proved unpackaged creations have no installed
+release to withdraw. Missing provenance makes admission unavailable.
+
 ## Durability: three places the record lives
 
 dap keeps the record in three places, each with a different job.

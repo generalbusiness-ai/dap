@@ -430,7 +430,17 @@ Set the same JSON policy before starting it if package installation is
 needed. Other local tools keep their existing defaults. Hosted tool opt-in
 and native membership standing remain separate requirements. The host checks the complete signed packet and exact publisher before
 storing it. A screen request also checks current trust and its active native
-installation. Revoked trust stops screen delivery. This same-origin route
+installation. Revoked trust stops screen delivery. The native host also
+refuses fresh acts on that installation and its declared descendants with
+`application-revoked`. It identifies the exact release through native creation
+records, so another trusted release with the same definitions remains usable.
+An absent or malformed trust list closes this admission too. Previously
+accepted receipts, replay, and pending work retain their original behavior.
+No new setting or storage migration is required. The planner deploys the
+reviewed source with the existing `--keep-vars` commands and checks the
+intended release list before withdrawing a release.
+
+This same-origin route
 is not isolation for arbitrary packages: only operator-listed trusted
 releases enter. The current host Git transport explicitly refuses SHA-256
 repositories before network; it does not fall back to another source.

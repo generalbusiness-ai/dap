@@ -52,6 +52,7 @@ test("Native live install and destination mint/read origins survive a floor and 
     const packet = await applicationResolverFixture("sha1", undefined, { admin: ["counting.control"], member: ["counting.fulfill"] });
     contentKey = packet.key;
     const peer = applicationHttpPeer(packet), bindings = applicationContentBindings(env.APPLICATION_CONTENT, JSON.stringify(packet.trust));
+    life.applicationTrust(() => bindings.APPLICATION_TRUST);
     let admit = false, admissions = 0;
     life.outside(D.name, (given, sql) => hostOutside(given, sql, bindings, peer.fetch));
     life.outside(A.name, (given, sql) => {

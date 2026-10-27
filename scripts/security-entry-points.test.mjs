@@ -11,7 +11,7 @@ const seals = {
   "apps/room/demo-creation.ts": "d9850f4854182c0231a2ae9a985882343e7f3dfea67ea034cafe4fca4bb0d77f",
   "apps/room/page/route.ts": "62c8f69b9f516f1b5acdaef57d7aed25268d8cf03283bdffdd4b1b5f20bb6b3d",
   "apps/room/brand/route.ts": "71b45ff9b41b3bea31c775a16525349591e0d4f7dfdc65da79f095816b1c343c",
-  "packages/scope/src/worker.ts": "52e311f25bd9dfc5fe5140d193d3f5b836b99a4054fbd5adc997b642fed454a7", // Actual composed Worker seal from the maintained parser.
+  "packages/scope/src/worker.ts": "4ddbc7494a00818b4e07313dcf20111f3c7baa25c9144f52840a6a23b8420af5", // R11 current deployment admission; actual maintained parser output.
   "packages/scope/src/scope-index.ts": "e5658b5fc39cc15bc08e7e71711a67c5859a0e0de94ede88ee5b8b5dbc3d7919", // New internal lookup/registration boundary.
   "packages/scope/src/creation-admission.ts": "0531cbd36d1ae4c0eadc9d836eb5eec13f896fc7c8b8faaaaf9c3c24e3759ccd", // Reviewed R1 ancestry owner; adopted AST value.
   "packages/scope/src/creation-lineage.ts": "3561f0b5b5d39c025db2c86f4386a1ccf6a8d18f05de26d79f6c5b68730f10b3", // Reviewed whole-lineage boundary; adopted AST value.
@@ -26,8 +26,9 @@ const seals = {
   "packages/scope/src/applications/route.ts": "ad62679ad22021474b193d7e9b2f98d6146c85ebe9d223d66901c309b5b84abc", // Actual union parser value adopted by root.
   "packages/scope/src/item-query-wire.ts": "8206b9a6531ca30cae1bc49cc249eea08c70a658305f41b3ebea6eda042055a8",
   "packages/scope/src/applications/projection-wire.ts": "2e07df5447469dc09aff0d4017e010634150f49c92f614221402cf46a869c6d0",
-  "packages/scope/src/object.ts": "bc3241f84d65cfdffce21ae15603dda588231844566194f191ff9c867b229e15", // Actual composed storage owner seal from the maintained parser.
-  "packages/scope/src/core.ts": "c7f2e49246b1e784981337ee13af53b17bab424a13112d5a40ff76b75fb7a128",
+  "packages/scope/src/object.ts": "b30582dff0dfbb9e8e505dbe1e4d3060d48fa6887fc0f2cb2496d7636885ab80", // R11 host admission wiring; actual maintained parser output.
+  "packages/scope/src/core.ts": "1026ba09113e73277ed600838b1cb780c8599fd611aa65895641d71af542575d", // Fresh acts and historical keys; actual maintained parser output.
+  "packages/scope/src/applications/act-admission.ts": "36049cc17487cc58f5d44099f55a225730079dd90006d0237ab9034181c42bd3", // Exact native provenance and current trust; actual maintained parser output.
   "packages/derive/src/genesis.ts": "df7722143f01c8084b8f045ef959b203ae1756c4dfde170d0454cfe0b0392843",
   "packages/derive/src/judge.ts": "65a10677dd4da355e9edac490979cacf6911cfa1aa37020c41516f5c53ad94fb",
   "packages/scope/src/sessions.ts": "636cf37fa756f7b8abe9d2f7bc36381fee78901f26a5b24fa9ce2096223e9c4d",
@@ -36,7 +37,7 @@ const seals = {
   "packages/scope/src/limits.ts": "6d4966a12e86067c39f61a243601d0d3a78a66850ee07f4ae80e97e22ab3639e", // R12 verified-key join failure window.
   "packages/scope/src/serving-limits.ts": "3a9f410f926f1e3711b78a750dd7dfb055f418fa9904be55ccb3f8cea869a987", // New bounded memory-only counter, no live eviction.
   "packages/scope/src/serving-admission.ts": "56196763d35e17e67df94862264b2b1af0f1e812d46cc5c50163a4c580cd06a2", // New bounded original-signature/counter ingress.
-  "packages/bytes/src/records.ts": "bc4e65e75215c2d940b0884a6810d5d90969455ba956c1e9731a3ed0d3c1b6af", // Public typed read refusal vocabulary (kernel section 7).
+  "packages/bytes/src/records.ts": "57ca6402f59ec8b1cbe23ab7e5bf907765711112c391e73589b07808545f1245", // R11 named serving refusal; actual maintained parser output.
   "packages/scope/src/session-preparation.ts": "4b9699cb1ee06234162dc2088c5c37be1804e1e9f15985fa1f0dc3151170bd85",
   "packages/scope/src/item-queries.ts": "61ead9996d2c338a26331e04b8576c52425d8d2c88dc86173a7d79108c2ee418",
   "packages/scope/src/applications/projection.ts": "f7d3bb45d448ec654a89f875697f865e1e89baeb5d7529e0db0859bd855b009f",
@@ -68,7 +69,7 @@ const pendingArchiveSeals = {
   "packages/scope/src/archive-driver.ts": "fe9903582ae33ed6ac73383fcd1886879e057344289fd7f4f799707857ab3359", // Later capacity retry reviewed; actual maintained parser output.
   "packages/scope/src/archive-row.ts": "02f01270071d022253335b5d4b41c8574e75f0eb806e58f70afa60e4b8fbc613", // Paid prior-capacity scalar reviewed; actual maintained parser output.
   "packages/scope/src/floor-writer.ts": "fb8fd859844b8d10ba43b477bcaf07ab32fe1bfa1b6684ad9ae70b930d328a11",
-  "packages/scope/src/object.ts": "bc3241f84d65cfdffce21ae15603dda588231844566194f191ff9c867b229e15", // Must match the separately adopted original owner value above.
+  "packages/scope/src/object.ts": "b30582dff0dfbb9e8e505dbe1e4d3060d48fa6887fc0f2cb2496d7636885ab80", // Same R11 owner value as above.
   "apps/room/worker.grow.ts": "0cc4c1c63f79f8da8dad5e98b2ace5b69fcd818d41640ed4e316ee534adf749f",
   "apps/room/archive-policy.ts": "ed3b746b5a26c3e872e41b13ba133f43ade42b5612aa5028ba544fc013be5ce7",
   "apps/room/archive.ts": "fdd3889d0662acc3c1e9bdbc0d0776c1e69cfdf31237a433856080f259ba8f1b",

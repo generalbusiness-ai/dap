@@ -33,6 +33,7 @@ test("maintained Grow Site creates a native Room and opens its owned grid throug
   if (!M || !A || !G) throw Error("The declared cohort needs its three siblings.");
   const f = await applicationResolverFixture("sha1", undefined, {}, undefined, packet), peer = applicationHttpPeer(f);
   const bindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(f.trust), env.SCOPE_INDEX);
+  life.applicationTrust(() => bindings.APPLICATION_TRUST);
   try {
     const seat = await life.wait(() => M.did(rita, "seat", { expected: { roster: 1 } }));
     await life.wait(async () => M.did(rita, "first-key", { fields: { member: seat }, expected: await M.expected({ roster: 0, member: seat }) }));

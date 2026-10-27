@@ -68,9 +68,12 @@ the saved-manifest report, register pin and planner rollout steps.
 The health response does not inspect this setting. A `200` response does
 not prove that a requested platform pin can create a new scope.
 
-`APPLICATION_TRUST` controls package admission and serving under its own
-parser. This reference does not change that schema or claim to resolve
-trust revocation, provider custody, or the separate R11 behavior.
+`APPLICATION_TRUST` controls package installation, serving, and admission of
+fresh acts under installed releases. Withdrawal refuses new acts with
+`application-revoked`, including declared descendants. Native creation records
+identify the release. Missing provenance returns unavailable. Accepted-key
+recovery, replay, and pending settlement do not consult this admission gate.
+This reference changes no trust schema or provider custody.
 Deployment and secret-setting procedures remain in [Deploy dap](../deploy.md).
 
 ## Source-owned inventory
@@ -616,8 +619,8 @@ parser, failure behavior, health visibility, and other readers.
         "packages/scope/src/applications/wiring.ts"
       ],
       "parser": "readApplicationTrust validates the supported exact release/publisher/host trust rows; later package checks still authenticate bytes and semantics.",
-      "missing": "No package admitted or served under absent trust.",
-      "invalid": "No package admitted or served under malformed trust.",
+      "missing": "No package admitted or served; fresh acts under installed releases refuse application-revoked.",
+      "invalid": "No package admitted or served; fresh acts under installed releases refuse application-revoked.",
       "health": "Not reported; a healthy response is not package trust or host authorization."
     },
     {

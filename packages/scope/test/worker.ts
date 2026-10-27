@@ -40,6 +40,7 @@ import { codeLost, controls, net, netPorts, testPorts } from "../src/testing.ts"
 import { signedDiagnosticFor } from "./signed-read-diagnostic.ts";
 import { sessionFields, testSessionBypass } from "./session-settings.ts";
 import { startupTest, startupScopes, StartupReadTrace } from "./support/serving-startup.ts";
+import { applicationTrustSettings } from "./support/application-trust-settings.ts";
 import type { Binding } from "../src/namespace.ts";
 export { StartupServingIndex } from "./support/serving-startup.ts";
 import scopeWorker, { ApplicationScreenService, DeployedScope, McpAgent, McpRegistry, ScopeIndex as DeployedScopeIndex, ScopeService, route, sessionWiring, type Env, type McpEnv } from "../src/worker.ts";
@@ -181,7 +182,14 @@ export class PlatformScope extends DeployedScope<PlatformEnv> {
         if (index >= 0) scheduled.splice(index, 1);
       }, () => {});
     };
-    super(ctx, startupTest.index ? { ...env, SCOPE_INDEX: startupTest.index } : env);
+    const bindings = startupTest.index ? { ...env, SCOPE_INDEX: startupTest.index } : env;
+    super(ctx, new Proxy(bindings, { get(target, key) {
+      if (key === "APPLICATION_TRUST") {
+        const read = applicationTrustSettings.get(ctx.id.name ?? "");
+        if (read) return read();
+      }
+      return Reflect.get(target, key, target);
+    } }));
     this.#scheduledCallbacks = scheduled;
   }
 

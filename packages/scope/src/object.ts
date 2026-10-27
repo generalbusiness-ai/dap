@@ -56,6 +56,7 @@ import { EXACT_PROOF_RECEIVER_BOUNDS, ProofBytes } from "./proof-bytes.ts";
 import { PreparationFlights } from "./preparation-flight.ts";
 import { ItemQueries } from "./item-queries.ts";
 import { ApplicationProjections } from "./applications/projection.ts";
+import { ApplicationActAdmission } from "./applications/act-admission.ts";
 import { APPLICATION_DECLARATION_BYTES, type ApplicationDeclarationSource } from "./applications/projection-source.ts";
 import { applicationJson } from "@generalbusiness/dap-platform/application";
 import { ReadPreparation } from "./read-preparation.ts";
@@ -109,6 +110,8 @@ export interface Wiring {
   sessions?: () => Sessions | null;
   sessionReferenceSource?: SessionReferenceSource;
   applicationDeclarationSource?: ApplicationDeclarationSource;
+  /** Current deployment trust. Absence leaves raw engine wiring unchanged. */
+  applicationTrust?: () => unknown;
   /** Internal elapsed-time clock; production uses the shared preparation timer. */
   queryTimer?: ProofTimer;
   limits?: LimitConfig;
@@ -138,6 +141,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   readonly #queryFlights: PreparationFlights;
   readonly #itemQueries: ItemQueries;
   readonly #applicationProjections: ApplicationProjections;
+  readonly #applicationActAdmission: ApplicationActAdmission | null;
   readonly #proofBytes: ProofBytes;
   readonly #genesisProofs: GenesisProofs;
   readonly #readPreparation: ReadPreparation;
@@ -235,7 +239,8 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
       },
     };
     const outside = wiring.outside?.(outsideGiven);
-    const ports: Ports = { ...given, alarm: wakes.deadline, ...(authority ? { authority } : {}), ...(readers ? { readers } : {}), ...(outside ? { outside } : {}) };
+    const ports: Ports = { ...given, alarm: wakes.deadline, ...(authority ? { authority } : {}), ...(readers ? { readers } : {}), ...(outside ? { outside } : {}),
+      ...(wiring.applicationTrust && !given.freshActAdmission ? { freshActAdmission: { read: () => this.#applicationActAdmission!.read() } } : {}) };
     // The operator's record: two tables of this object's storage that are no part of the store, and that no judgment is given.
     const record = new OperatorRecord({ exec: (query, ...bindings) => ctx.storage.sql.exec(query, ...bindings) }, ports.clock, () => store.scope()?.at ?? null);
     this.#name = isScopeId(name) ? name : null;
@@ -303,6 +308,9 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
       policy: () => `native-read-support-v1:${digestBytes(utf8(canonicalize(bounds)))}`,
       declared: bytes => this.#scope.validate(bytes), platform: named => this.#scope.platform(named),
     });
+    this.#applicationActAdmission = wiring.applicationTrust ? new ApplicationActAdmission({ preparation: this.#readPreparation,
+      local: this.#proofBytes, births: ports.births ?? null, proofs: ports.proofs ?? null, trust: wiring.applicationTrust,
+      ...(wiring.queryTimer ? { timer: wiring.queryTimer } : {}) }) : null;
     this.#sessionReferences = new SessionReferences(this.#readPreparation, this.#sessions, this.#clock);
     this.#sessionPreparation = new SessionPreparation(this.#readPreparation, this.#sessions, this.#clock, wiring.sessionReferenceSource ?? null);
     this.#itemQueries = new ItemQueries({ name: this.#name, sql: this.#readSql, preparation: this.#readPreparation,

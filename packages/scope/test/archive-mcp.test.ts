@@ -19,6 +19,7 @@ test.each([ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT])("na
   if (!M || !A || !G) throw Error("The native archive siblings are required.");
   const f = await applicationResolverFixture("sha1", undefined, { admin: ["counting.control"] }, undefined, v2?.packet), peer = applicationHttpPeer(f);
   const bindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(f.trust), env.SCOPE_INDEX);
+  life.applicationTrust(() => bindings.APPLICATION_TRUST);
   try {
     const seat = await life.wait(() => M.did(rita, "seat", { expected: { roster: 1 } }));
     await life.wait(async () => M.did(rita, "first-key", { fields: { member: seat }, expected: await M.expected({ roster: 0, member: seat }) }));

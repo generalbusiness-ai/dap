@@ -159,6 +159,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
   let commandHandoff: NativeCommandHandoff | undefined;
   const f = await applicationResolverFixture("sha1", undefined, {}, undefined, packet), peer = applicationHttpPeer(f);
   const bindings = { SCOPES: env.PLATFORM, APPLICATION_CONTENT: env.APPLICATION_CONTENT, APPLICATION_TRUST: JSON.stringify(f.trust) };
+  life.applicationTrust(() => bindings.APPLICATION_TRUST);
   try {
     const seat = await life.wait(() => M.did(rita, "seat", { expected: { roster: 1 } }));
     await life.wait(async () => M.did(rita, "first-key", { fields: { member: seat }, expected: await M.expected({ roster: 0, member: seat }) }));

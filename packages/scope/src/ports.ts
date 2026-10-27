@@ -10,6 +10,7 @@
  */
 
 import type { NativeBirthSource } from "./native-birth.ts";
+import type { FreshActAdmission } from "./applications/act-admission.ts";
 import type { ProofSource } from "./proof-bytes.ts";
 import type { Archived, Digest, Entry, FactRef, Grant, KeyId, ObservationUse, PlatformDefinition, Prepared, RoutingRefusal, ScopeRef, SignedIntent, Timestamp, UnavailableReason } from "@generalbusiness/dap-contract";
 import { CAPABILITY_CODE, timeOf, type Capabilities, type Clock as Reading, type Delivered, type Fetched, type Owners, type Presented, type RuleInput, type StateView, type Needed, type Observing, type Window } from "@generalbusiness/dap-derive";
@@ -248,6 +249,8 @@ export interface Readers {
 }
 
 export interface Ports {
+  /** Deployment admission for new acts only; never a replay or pending-work judge. */
+  freshActAdmission?: FreshActAdmission;
   /** Dedicated trusted-native causal proof reads, admitted before materialization. No generic resolver fallback. */
   proofs?: ProofSource;
   /** Bounded raw native birth metadata; no identity alias or authority. */

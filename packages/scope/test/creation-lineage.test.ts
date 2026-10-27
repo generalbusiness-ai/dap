@@ -293,6 +293,7 @@ test.each([ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT,
     } else {
       const f = await applicationResolverFixture("sha1", undefined, {}, undefined, packet), peer = applicationHttpPeer(f);
       const bindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(f.trust), env.SCOPE_INDEX);
+      life.applicationTrust(() => bindings.APPLICATION_TRUST);
       for (const node of [D, A]) { life.outside(node.name, (given, sql) => hostOutside(given, sql, bindings, peer.fetch)); await life.wait(() => node.restart()); }
       const directory = await life.wait(() => D.at()), membership = await life.wait(() => M.at());
       const port: ServerPort = { service: "https://scopes.test", signer: secretSigner(rita.secret), custody: memoryStore(), now: life.now,
