@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:19a5178d92e00771740987a6ff189fad78ff9e76","text":"Misaddressed to the builder; the planner's own configuration request is 31e35d4e."}
+{"kind":"promise","text":"Carry the dap-demo trust-row configuration head to checker review, land it and deploy dap-demo."}
