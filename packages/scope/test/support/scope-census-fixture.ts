@@ -18,8 +18,8 @@ export async function scopeCensusFixture(options: { members?: boolean; readLimit
   const life = nativeFixtureLifetime(owner, { required: false });
   const indexName = `TEST-census-${crypto.randomUUID()}`;
   try {
-    // Align this fixture before its genesis; no production clock is replaced.
-    life.advance(Math.max(0, Date.now() - life.now()));
+    // Native births and ordinary reads keep the owned scripted clock. The
+    // census standing check independently uses the real host clock.
     const first = await sessionRepository(life, C.register), other = await sessionRepository(life, C.register);
     const register = await life.wait(() => first.R.at()), root = await life.wait(() => first.D.at());
     const membership = await life.wait(() => first.children[0]!.at());

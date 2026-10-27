@@ -1,7 +1,8 @@
 /** Real Native scope births, registered index rows/SQL, install-signer gate,
  * routed reads and unchanged entry-0/hash/pin verification. Host configuration,
- * local config/files, aligned setup clock and the in-process fetch bridge are
- * TEST fixtures. No hosted deployment or unregistered-object inventory runs. */
+ * local config/files, owned Native clock and the in-process fetch bridge are
+ * TEST fixtures. Census signatures use the host clock; existing scope reads
+ * use the Native fixture clock. No hosted or unregistered-object census runs. */
 import { expect, test } from "vitest";
 import type { ScopeRef } from "@generalbusiness/dap-contract";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
@@ -39,6 +40,9 @@ test("Native CLI census lists the registered fleet for versions while ordinary i
         // bridge assertions above, not simulated provider redirect handling.
         return f.fetch(url, init);
       } };
+    // The index owner uses Date.now. Ordinary scope objects use the fixture's
+    // owned 2099 clock, so their unchanged read transport signs on that clock.
+    const nativeCtx: Context = { ...ctx, now: () => f.life.now() };
     const files: IndexFiles = { read: async path => {
       const bytes = saved.get(path); if (!bytes) expect.fail("The command must read its complete saved manifest."); return bytes.slice();
     }, save: async (path, bytes) => {
@@ -55,7 +59,7 @@ test("Native CLI census lists the registered fleet for versions while ordinary i
       expect(manifest.scopes).toEqual(f.rows);
 
       calls.length = 0;
-      const versions = await scopeIndexCommand(ctx, ["versions", "--manifest", "TEST-census.json"], files);
+      const versions = await scopeIndexCommand(nativeCtx, ["versions", "--manifest", "TEST-census.json"], files);
       // These are only the existing versions report's TEST metadata/fixed
       // reasons, so a failing run retains its actual per-row refusal.
       expect(versions.code, versions.lines.join("\n")).toBe(0);
@@ -69,7 +73,7 @@ test("Native CLI census lists the registered fleet for versions while ordinary i
       expect(calls.some(call => call.path.includes("/history"))).toBe(false);
 
       calls.length = 0;
-      const inventory = await scopeIndexCommand(ctx, ["inventory", "--out", "TEST-repository.json"], files);
+      const inventory = await scopeIndexCommand(nativeCtx, ["inventory", "--out", "TEST-repository.json"], files);
       expect(inventory.code).toBe(0);
       const repository = readIndexManifest(saved.get("TEST-repository.json")!, f.service, f.root);
       const own = [f.R.name, f.D.name, ...f.children.map(node => node.name)], other = [f.other.R.name, f.other.D.name, ...f.other.children.map(node => node.name)];
@@ -83,8 +87,9 @@ test("Native CLI census lists the registered fleet for versions while ordinary i
       expect(choices.every(choice => choice.branch === "real" && choice.sessions && choice.requiredLeases > 0)).toBe(true);
       console.info("TEST-native-census-command-proof-v1", { censusRows: manifest.scopes.length, censusPages: 1,
         verifiedPins: observed.rows.length, repositoryRows: repository.scopes.length, otherRepositoryRows: other.length,
+        hostClock: Date.now(), nativeClock: f.life.now(),
         signedEntryReads: entryReads.length, requiredSessionLease: sessionSettings().sessions,
-        qualification: "Actual Native index/gate/route/entry hash and pin reads; TEST configuration/files, setup clock and in-process wire bridge. Registered scopes only; not a hosted census or absence proof." });
+        qualification: "Actual Native index/gate/route/entry hash and pin reads; TEST configuration/files, owned Native clock projection and in-process wire bridge. Registered scopes only; not a hosted census or absence proof." });
     });
   } finally { stopWatching(); f.life.release(); }
 });

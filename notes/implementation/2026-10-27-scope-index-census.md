@@ -68,6 +68,8 @@ The checkpoint, final manifest and read-only seal remain due.
 | Initial CLI and signed-read tests | `plain/receipt.json` | 0 | `plain/output.log`: `338f36f102964f0d8c3ef5d95474856b0d05b5906dabdcaa6d2fa2937c008dce` |
 | Initial Native census witnesses | `native/receipt.json` | 1 | `native/output.log`: `90449a65934e63ebebbf40058ce5dd8dacbe8df20c3335fd40fb7fd67fd99c0b` |
 | Route and setting inventories | `inventory/receipt.json` | 0 | `inventory/output.log`: `6b45989950ab8bf65ed620861e25d4d6a3cbe8580496797e6fd470c8cf85d387` |
+| Compiler follow-up | `types-followup/receipt.json` | 0 | `types-followup/output.log`: `389c9027c3954cf176c3b2c7076f55c42c090dfb6deed0dfaba722f34a6badce` |
+| Native follow-up | `native-followup/receipt.json` | 1 | `native-followup/output.log`: `f61762942d1a655af4ab6ece5fc66cce8f4025b24481f78d01c8d7a70bb38792` |
 | Follow-up, controls and ordinary gate | Pending | Pending | Pending |
 
 These four independent commands ran in parallel at clean checkpoint
@@ -80,6 +82,19 @@ and failed two witness assertions: the session observer does not observe
 Signed reads, and the integration version report was unready. These are
 pre-gate results, not a failed or passing gate. Repairs and later results
 will remain distinct. No hosted census or deployment is claimed.
+
+At clean `50602fab6413fe23ff9bcfa8a1f0b9a4d7265a0d`, tree
+`4c191646b5efc7b9427771473da955f262e8f136`, both compiler contexts
+passed. All three Native server cases passed; the CLI integration remained
+unready, now retaining every row's `forbidden` outcome. Signed reads invoke
+their own policy and do not call the Session observer. The false observer
+expectation was removed while the actual authority assertions remained.
+
+Source review found that the fixture's native clock starts in 2099, while
+the CLI context signed ordinary reads on the 2026 host clock. The repair
+keeps host-clock signing for census and gives the unchanged ordinary
+readers the owned native clock. It changes no production authorization.
+The corrected Native integration and compiler follow-up remain due.
 
 ## Open obligations
 
