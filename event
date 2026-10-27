@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/implementation/evidence/2026-10-27-r14-documents.manifest.json","body":{"commit":"7b22054759a1989dece040ee05fe7de9f6793e92","path":"notes/implementation/evidence/2026-10-27-r14-documents.manifest.json"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:186d1a75ba8a8ebe68024a87731d876315cfbc18","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-27-r14-telemetry-coverage.md."}
