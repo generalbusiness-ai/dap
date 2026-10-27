@@ -4,7 +4,7 @@
 import { DOMAINS } from "@generalbusiness/dap-contract";
 import { env } from "cloudflare:test";
 import { expect, test } from "vitest";
-import { canonicalize, isSeed, newIncarnation, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { canonicalize, isSeed, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import { DECLARED_APPLICATION_COHORT as C, platform } from "@generalbusiness/dap-platform";
 import { ScopeHandle, httpTransport, requestSession, secretSigner, sessionRequest } from "@generalbusiness/dap-client";
 import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-mcp";
@@ -15,7 +15,7 @@ import { applicationOwnedScopesPacket, applicationWorkerBindings, applicationRes
 import { rita, routed } from "./repository.ts";
 import { soon } from "./net.ts";
 
-test("one native install creates and confirms the declared root and child with inherited session membership", async () => {
+test("native installed roots and children keep exact release ownership after trust withdrawal", async () => {
   const { packet, rootId, childId } = await applicationOwnedScopesPacket();
   const foreign = await applicationOwnedScopesPacket("test-owned-root", "2");
   expect(foreign.childId).toBe(childId);
@@ -27,6 +27,7 @@ test("one native install creates and confirms the declared root and child with i
   let packageFetch = peer.fetch;
   const fetchPackage = (request: Request) => packageFetch(request);
   const bindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify([...f.trust, ...other.trust]), env.SCOPE_INDEX);
+  life.applicationTrust(() => bindings.APPLICATION_TRUST);
   try {
     const seat = await life.wait(() => M.did(rita, "seat", { expected: { roster: 1 } }));
     await life.wait(async () => M.did(rita, "first-key", { fields: { member: seat }, expected: await M.expected({ roster: 0, member: seat }) }));
@@ -114,6 +115,34 @@ test("one native install creates and confirms the declared root and child with i
     expect(await life.wait(() => root.item(0))).toMatchObject({ values: { count: 0 } });
     expect((await life.wait(() => oldViews.call("view_act", { view: "child", cut: 1, action: "bump" }))).structuredContent).toMatchObject({ error: "view", reason: "stale" });
     expect(signatures).toBe(1);
+    const acceptedInput = (await life.wait(() => child.last())).input;
+    if (acceptedInput.type !== "act") throw Error("The native child act must be recorded.");
+    const acceptedSigned = acceptedInput.signed;
+    const accepted = await life.wait(() => child.stub.submit(acceptedSigned, []));
+    expect(accepted.answer).toBe("accepted");
+    const rootAccepted = await life.wait(async () => root.act(rita, "bump", { on: 0, expected: await root.expected({ on: 0 }) }));
+    expect(rootAccepted.answer).toBe("accepted");
+    // Both installations have byte-identical definitions. Removing one
+    // release must refuse that installation and its descendant only.
+    bindings.APPLICATION_TRUST = JSON.stringify(other.trust);
+    for (const cold of [false, true]) {
+      if (cold) for (const node of [root, child]) await life.wait(() => node.restart());
+      for (const node of [root, child]) {
+        const before = await life.wait(() => node.sealed());
+        const expected = await life.wait(() => node.expected({ on: 0 }));
+        const fresh = await life.wait(() => Promise.all([node.intent(rita, "bump", { on: 0, expected }), node.intent(rita, "bump", { on: 0, expected })]));
+        const refusals = await life.wait(() => Promise.all(fresh.map(signed => node.stub.submit(signed, []))));
+        for (const refused of refusals) expect(refused, "fresh acts under the withdrawn exact release must refuse").toEqual({ answer: "refused", reason: "application-revoked", judgedAt: { seq: before.at(-1)!.entry.seq, hash: before.at(-1)!.hash } });
+        expect(await life.wait(() => node.sealed())).toEqual(before);
+      }
+      expect(await life.wait(() => child.stub.submit(acceptedSigned, []))).toEqual(accepted);
+      const changed = signIntent({ ...acceptedSigned.intent, fields: { changed: true } }, rita.secret);
+      expect(await life.wait(() => child.stub.submit(changed, []))).toEqual({ answer: "mismatch", reason: "idempotency-mismatch" });
+      expect(await life.wait(() => handle.settle(acceptedSigned))).toMatchObject(accepted.answer === "accepted" ? { ok: true, value: accepted.receipt } : { ok: true });
+    }
+    for (const node of [otherRoot, otherChild]) {
+      expect(await life.wait(async () => node.act(rita, "bump", { on: 0, expected: await node.expected({ on: 0 }) }))).toMatchObject({ answer: "accepted" });
+    }
     for (const node of [root, child]) {
       const summary = await life.wait(() => node.summary());
       if (!summary.ok) throw Error("The native journal must have a current head.");

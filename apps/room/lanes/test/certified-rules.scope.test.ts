@@ -63,6 +63,7 @@ test("certified-rules native birth and device install bootstrap a real tree cert
   try {
     const fixture = await applicationResolverFixture("sha1", undefined, {}, undefined, packet), peer = applicationHttpPeer(fixture);
     const applicationBindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(fixture.trust), env.SCOPE_INDEX);
+    life.applicationTrust(() => applicationBindings.APPLICATION_TRUST);
     for (const node of [D, Q]) { life.outside(node.name, (given, sql) => hostOutside(given, sql, applicationBindings, peer.fetch)); await node.restart(); }
     const membership = await M.at();
     const prepared = await signedDeviceApplicationInstall(secretSigner(rita.secret), packet.bytes,

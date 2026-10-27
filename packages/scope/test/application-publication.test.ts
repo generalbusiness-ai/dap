@@ -405,6 +405,7 @@ test("an archive-device-publication application automatically publishes device r
     await M.did(rita, "first-key", { fields: { member: seat }, expected: await M.expected({ roster: 0, member: seat }) });
     const fixture = await applicationResolverFixture("sha1", undefined, {}, undefined, packet), peer = applicationHttpPeer(fixture);
     const applicationBindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(fixture.trust), env.SCOPE_INDEX);
+    life.applicationTrust(() => applicationBindings.APPLICATION_TRUST);
     for (const node of [D, Q]) {
       life.outside(node.name, (given, sql) => hostOutside(given, sql, applicationBindings, peer.fetch));
       await node.restart();

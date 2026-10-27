@@ -190,6 +190,9 @@ test("an actually supported but unadmitted native cohort and a refused native bi
     expect(await room.life.wait(() => refused.stub.create(signIntent(intent, rita.secret), seed.definition))).toMatchObject({ answer: "refused" });
     const entry = await room.life.wait(() => runInDurableObject(refused.object, (_instance, state) => parseStrict(String(state.storage.sql.exec("SELECT bytes FROM entry WHERE seq=0").one()["bytes"])) as Entry));
     expect(entry.input).toMatchObject({ type: "genesis", decision: "refused" });
+    const fresh = signIntent({ ...intent, to: entry.at, kind: "found", idempotencyKey: crypto.randomUUID() }, rita.secret);
+    expect(await room.life.wait(() => refused.stub.submit(fresh, [])), "a refused native birth keeps its terminal refusal before release admission")
+      .toEqual({ answer: "refused", reason: "scope-refused", judgedAt: { seq: entry.seq, hash: factRefOf(entry).hash } });
     const childSeed: Seed = { v: 1, kind: "directory", definition: ARCHIVE_DEVICE_APPLICATION_COHORT.directory, creator: entry.at, cause: seedDigest(seed), ordinal: 0 };
     const negative: Delivered = { to: childSeed, from: factRefOf(entry), n: 0, message: { class: "request", type: "create", body: { fields: {} } } };
     const closed = recorded([refused], scopeIdOf(childSeed));
@@ -293,6 +296,7 @@ test.each([ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT,
     } else {
       const f = await applicationResolverFixture("sha1", undefined, {}, undefined, packet), peer = applicationHttpPeer(f);
       const bindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(f.trust), env.SCOPE_INDEX);
+      life.applicationTrust(() => bindings.APPLICATION_TRUST);
       for (const node of [D, A]) { life.outside(node.name, (given, sql) => hostOutside(given, sql, bindings, peer.fetch)); await life.wait(() => node.restart()); }
       const directory = await life.wait(() => D.at()), membership = await life.wait(() => M.at());
       const port: ServerPort = { service: "https://scopes.test", signer: secretSigner(rita.secret), custody: memoryStore(), now: life.now,

@@ -22,6 +22,7 @@ test("a native install requiring archive refuses an unbound room before grants, 
   if (!M || !A || !G) return expect.fail("the actual room siblings must exist");
   const f = await applicationResolverFixture("sha1", undefined, { member: ["counting.fulfill"] }, undefined, undefined, true);
   const peer = applicationHttpPeer(f), bindings = applicationContentBindings(env.APPLICATION_CONTENT, JSON.stringify(f.trust));
+  life.applicationTrust(() => bindings.APPLICATION_TRUST);
   try {
     const seatExpected = await life.wait(() => M.expected({ roster: 0 }));
     const seat = await life.wait(() => M.did(rita, "seat", { expected: seatExpected }));

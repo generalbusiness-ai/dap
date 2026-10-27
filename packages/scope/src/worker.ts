@@ -590,6 +590,7 @@ export class DeployedScope<E extends Env = Env> extends ScopeObject<E> {
       platformCreationPolicy: readPlatformCreationPolicy({ PLATFORM_CREATION_PINS: this.env.PLATFORM_CREATION_PINS }),
       registerGenesis: async proof => scopeIndex(this.env)?.register(proof) ?? false,
       ports: namespace(this.scopes()),
+      applicationTrust: () => this.env.APPLICATION_TRUST,
       authority: (given) => repositoryAuthority({ ...given, reader: membershipIn(this.scopes()) }),
       // Wired whether or not a host is configured now: `outsideOf` reads the settings at each call, and with neither it sends nothing.
       outside: (given: OutsideGiven) => outsideOf(given, this.ctx.storage.sql, this.env, undefined, snapshotReaderOf(this.scopes())),

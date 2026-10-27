@@ -26,6 +26,7 @@ test.each([["device", C, undefined, false], ["device/archive bound", AC, "journa
   if (!M || !A || !G) throw Error("The device cohort needs its exact siblings.");
   const f = await applicationResolverFixture("sha1", undefined, {}, undefined, packet), peer = applicationHttpPeer(f);
   const bindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(f.trust), env.SCOPE_INDEX);
+  life.applicationTrust(() => bindings.APPLICATION_TRUST);
   try {
     const seat = await life.wait(() => M.did(rita, "seat", { expected: { roster: 1 } }));
     await life.wait(async () => M.did(rita, "first-key", { fields: { member: seat }, expected: await M.expected({ roster: 0, member: seat }) }));
@@ -141,6 +142,13 @@ test.each([["device", C, undefined, false], ["device/archive bound", AC, "journa
     await life.wait(() => app.restart());
     expect(await life.wait(async () => app.act(rita, "command", { on: device, expected: await app.expected({ on: device }), fields: { target: "off", level: 0 } })))
       .toMatchObject({ answer: "refused", reason: "unauthorized" });
+    // Withdrawing the release stops new acts. The already-open command
+    // keeps its reserved answer; revocation must not strand its settlement.
+    bindings.APPLICATION_TRUST = "[]";
+    const revokedHead = (await life.wait(() => app.summary())).at;
+    expect(await life.wait(async () => app.act(rita, "command", { on: device, expected: await app.expected({ on: device }), fields: { target: "off", level: 0 } })))
+      .toMatchObject({ answer: "refused", reason: "application-revoked" });
+    expect((await life.wait(() => app.summary())).at).toEqual(revokedHead);
     const answered = await life.wait(() => mcp.call("prepare", { resource: app.name, capability: DEVICE_COMMAND, step: "answer",
       fields: { command: { at: scope, seq: command, hash: commandFact.hash }, outcome: "confirmed", description: "TEST device answered" }, idempotencyKey: "TEST-device-owner-answer" }));
     expect(answered.isError, JSON.stringify(answered.structuredContent)).toBe(false);

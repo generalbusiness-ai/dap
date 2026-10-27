@@ -7,6 +7,7 @@ import type { SessionOwner } from "../session-settings.ts";
 import { Platform } from "../repository.ts";
 import { wired } from "../outside.ts";
 import { platformOutside } from "../worker.ts";
+import { applicationTrustSettings } from "./application-trust-settings.ts";
 
 type PortFactory = NonNullable<ReturnType<typeof wired.get>>;
 type OutsideFactory = NonNullable<ReturnType<typeof platformOutside.get>>;
@@ -66,7 +67,8 @@ export function nativeFixtureLifetime(owner: SessionOwner, options: { required?:
   let hold: NonNullable<typeof net.hold> = () => false;
   const deaf: NonNullable<typeof net.deaf> = () => false;
   let released = false;
-  const ports = resources(wired), outsides = resources(platformOutside), peers = resources(net.peers);
+  const ports = resources(wired), outsides = resources(platformOutside), peers = resources(net.peers), trust = resources(applicationTrustSettings);
+  let trustSetting: (() => unknown) | null = null;
   const cleanups = new Set<() => void>();
   net.hold = hold; net.deaf = deaf;
   predecessors.set(hold, before.hold); predecessors.set(deaf, before.deaf);
@@ -103,7 +105,7 @@ export function nativeFixtureLifetime(owner: SessionOwner, options: { required?:
       retired.add(hold); retired.add(deaf);
       if (net.hold === hold) net.hold = previousLive(before.hold);
       if (net.deaf === deaf) net.deaf = previousLive(before.deaf);
-      ports.release(); outsides.release(); peers.release();
+      ports.release(); outsides.release(); peers.release(); trust.release();
     }
     // Every gate and provider is released even if one cleanup failed. Do not
     // expose arbitrary cleanup errors, which may contain private fixture data.
@@ -116,7 +118,9 @@ export function nativeFixtureLifetime(owner: SessionOwner, options: { required?:
   const ownedPlatforms = new Map<ScopeId, Platform>();
   const platform = (name: ScopeId): Platform => {
     active();
-    const node = new OwnedPlatform(name); ownedPlatforms.set(name, node); return node;
+    const node = new OwnedPlatform(name); ownedPlatforms.set(name, node);
+    if (trustSetting) trust.set(name, trustSetting);
+    return node;
   };
   class OwnedPlatform extends Platform {
     override get stub() {
@@ -142,6 +146,11 @@ export function nativeFixtureLifetime(owner: SessionOwner, options: { required?:
     platform,
     /** Known fixture handles, including dynamically discovered children. */
     platforms: (): readonly Platform[] => [...ownedPlatforms.values()],
+    /** The real deployed admission reads this setting for each new act. */
+    applicationTrust(read: () => unknown): void {
+      active(); trustSetting = read;
+      for (const name of ownedPlatforms.keys()) trust.set(name, read);
+    },
     cleanup(run: () => void): void { if (released) run(); else cleanups.add(run); },
     setHold(next: NonNullable<typeof net.hold>): void {
       active(); if (next === hold) return;

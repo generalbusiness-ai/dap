@@ -103,6 +103,24 @@ The scope rows use these shared descriptions:
   first use the fixed serving windows below. Joins retain their membership-local
   failed-address window and also count verified-key failures without an address.
 
+Fresh submitted acts also pass deployment admission in
+[applications/act-admission.ts](../../packages/scope/src/applications/act-admission.ts).
+HTTP, service-binding, and direct native calls reach this same Core gate.
+Before a new act reads foreign dependencies, the host identifies its installed
+release from immutable native creation records and checks current
+`APPLICATION_TRUST`. It checks trust again before writing the act. Accepted
+keys retain their receipt and mismatch behavior. Native platform scopes and
+proved unpackaged creations are exempt. Withdrawal returns
+`application-revoked`; incomplete proof returns `dependency-unavailable`.
+
+The ancestry walk admits at most 18 ancestors, 37 bodies, 16 MiB of body
+bytes, and 36 native RPCs, with a 1 MiB per-body limit. The local birth uses
+the existing preparation allowance. One ten-second flight owns unresolved
+native work; a caller timeout does not release it. Only immutable provenance
+is cached. No package, R2, Git, or provider read belongs to this gate.
+The gate writes no entry. Activation and existing background work keep their
+separate behavior described above.
+
 For preparation requests, [core.ts](../../packages/scope/src/core.ts) verifies
 the signature before starting the turn. [turn.ts](../../packages/scope/src/turn.ts)
 then drains due timed work before
@@ -564,6 +582,7 @@ not prove those descriptions. Changes in runtime settings need the settings
 and deployment review as well.
 
 Gate owners: [core.ts](../../packages/scope/src/core.ts),
+[applications/act-admission.ts](../../packages/scope/src/applications/act-admission.ts),
 [judge.ts](../../packages/derive/src/judge.ts),
 [sessions.ts](../../packages/scope/src/sessions.ts),
 [reads.ts](../../packages/scope/src/reads.ts),

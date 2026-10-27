@@ -253,6 +253,22 @@ The idempotency key belongs to the first intent that took effect under it, for t
 unavailable before that receipt. Keep the original signed envelope and inspect
 the journal rather than signing a new request to recover a lost reply.
 
+The deployed host can refuse a new act with `application-revoked` when its
+installed application release is absent from current `APPLICATION_TRUST`.
+Missing or malformed trust also refuses installed releases. The host proves
+the release from native creation records, including a declared child's
+ancestors. It does not infer a release from a definition digest. Incomplete
+provenance returns `unavailable` with `dependency-unavailable`.
+
+This admission check runs before new dependency reads and again before an
+act is written. It writes no refusal entry and changes no recorded judgment.
+An accepted actor and idempotency key still recover their receipt or mismatch.
+Native platform scopes and proved unpackaged scopes are exempt. Deliveries,
+timed rules, outcomes, and capability preparations keep their existing rules.
+The supported package capability's answer step settles an already-open device
+command, so withdrawal does not strand that reserved settlement. Replay uses
+the recorded inputs and does not consult current deployment trust.
+
 ## How a change takes effect
 
 A scope processes one input at a time. Each is a **turn**:

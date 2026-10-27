@@ -27,6 +27,7 @@ async function fixture(register: PlatformDefinition) {
     await life.wait(async () => M.did(rita, "first-key", { fields: { member: seat }, expected: await M.expected({ roster: 0, member: seat }) }));
     const f = await applicationResolverFixture("sha1", undefined, {}, undefined, packet), peer = applicationHttpPeer(f);
     const bindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(f.trust), env.SCOPE_INDEX);
+    life.applicationTrust(() => bindings.APPLICATION_TRUST);
     for (const node of [D, A]) { life.outside(node.name, (given, sql) => hostOutside(given, sql, bindings, peer.fetch)); await life.wait(() => node.restart()); }
     const membership = await life.wait(() => M.at()), directory = await life.wait(() => D.at());
     const owner = { membership, member: "@rita" as const }, signer = secretSigner(rita.secret);

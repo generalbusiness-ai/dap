@@ -35,6 +35,7 @@ test.each(["counter", "lending"] as const)("maintained %s package installs and i
   if (!M || !A || !G) throw Error("The declared cohort needs its three siblings.");
   const f = await applicationResolverFixture("sha1", undefined, {}, undefined, packet), peer = applicationHttpPeer(f);
   const bindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(f.trust), env.SCOPE_INDEX);
+  life.applicationTrust(() => bindings.APPLICATION_TRUST);
   const now = life.now(), previousNow = Date.now, fixtureNow = () => now;
   // Inflate polls this clock frequently; a spy would retain every call.
   Date.now = fixtureNow;

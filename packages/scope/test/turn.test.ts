@@ -1,11 +1,14 @@
 import { turnWholeChange, turnAbandonChange, turnTargetChange, turnRequestsChange } from "./definition-corpus-data.ts";
-import { describe, expect, test, vi } from "vitest";
+import { describe, expect, onTestFinished, test, vi } from "vitest";
 import { DOMAINS, PROPOSED_BOUNDS, type Receipt} from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, rawRetainedJSON, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { AmountError, MemoryState, applyEntry, checkpointOf, reserved, stateDigest, timeMs } from "@generalbusiness/dap-derive";
 import { SqliteStore, Turns, Wakes, production } from "../src/index.ts";
 import { variant } from "@generalbusiness/dap-derive/testing";
 import { HOLD, at, definition, create, rita, una, vic } from "./fixtures-native.ts";
+import { testAuthority } from "../src/testing.ts";
+import type { FreshActAdmissionDecision } from "../src/applications/act-admission.ts";
+import { wired } from "./outside.ts";
 
 // The shared lane's unused link form names a dummy child digest. These
 // settlement/storage witnesses need a closed opt-in birth, so omit only
@@ -238,6 +241,50 @@ test("logical key counts in real SQLite retain final keys, ignore transport ACKs
   expect([counts.acknowledged, counts.unavailable]).toEqual([pending, pending]);
   expect([counts.undelivered, counts.answered, counts.afterRollback, counts.reopened]).toEqual([retained, retained, retained, retained]);
   expect(counts.rolledBack).toBe(true);
+});
+
+test("fresh application admission is rechecked after an async authority read; accepted keys bypass unavailable admission", async () => {
+  // Real Core, turn, judgment and SQLite. Admission and authority are narrow
+  // scripted ports: no native release provenance or trust lookup is proved.
+  const s = await create(), authority = testAuthority();
+  let state: FreshActAdmissionDecision = "allowed", available = true, revokeDuringRead = false;
+  const reads = { admission: 0, current: 0, authority: 0 }, observed: FreshActAdmissionDecision[] = [];
+  wired.set(s.name, () => ({
+    freshActAdmission: { read: async () => {
+      reads.admission++;
+      if (!available) throw Error("scripted application admission unavailable");
+      return { current: () => { reads.current++; observed.push(state); return state; } };
+    } },
+    authority: { read: async (asked, seconds) => {
+      reads.authority++;
+      const held = await authority.read(asked, seconds);
+      if (revokeDuringRead) state = "application-revoked";
+      return held;
+    } },
+  }));
+  onTestFinished(() => { wired.delete(s.name); });
+  await s.restart();
+  const original = s.remark("accepted before withdrawal"), accepted = await s.submit(original);
+  expect(accepted).toMatchObject({ answer: "accepted" });
+  const before = await s.head();
+  observed.length = 0;
+  revokeDuringRead = true;
+  expect(await s.submit(s.remark("withdrawn during authority read"))).toEqual({
+    answer: "refused", reason: "application-revoked", judgedAt: before,
+  });
+  expect(observed[0]).toBe("allowed");
+  expect(observed).toContain("application-revoked");
+  expect(await s.head()).toEqual(before);
+  expect(await s.entries(before.seq + 1)).toEqual([]);
+
+  // A known key is historical work, even when a new admission cannot be read.
+  available = false; state = "unavailable";
+  const beforeRepeat = { ...reads };
+  expect(await s.submit(original)).toEqual(accepted);
+  const changed = s.intent(rita, "remark", { on: 0, fields: { text: "same key, different intent" }, idempotencyKey: original.intent.idempotencyKey });
+  expect(await s.submit(changed)).toEqual({ answer: "mismatch", reason: "idempotency-mismatch" });
+  expect(reads).toEqual(beforeRepeat);
+  expect(await s.head()).toEqual(before);
 });
 
 describe("the head check (section 5.2, steps 4 to 6)", () => {

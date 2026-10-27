@@ -46,6 +46,7 @@ test.each(installations)("$name: one signed native install settles through Direc
     return typeof value === "function" ? value.bind(target) : value;
   } });
   const peer = applicationHttpPeer(f), bindings = applicationContentBindings(bucket, JSON.stringify(f.trust));
+  life.applicationTrust(() => bindings.APPLICATION_TRUST);
   let fetchSends = 0, admissionSends = 0, preparations = 0, recoveries = 0, forbiddenPreparations = 0;
   try {
     // Counting the first real put requires a cold release, not a prior
