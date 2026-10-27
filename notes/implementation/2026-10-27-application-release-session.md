@@ -108,6 +108,13 @@ verified exact-lock view and rebound to this worktree with no dangling links.
 The lock SHA-256 is
 `645224923cabfd70b51b8add2a43be12673444779d18002a42ed4254b3216d6e`.
 
+Before this child's first ordinary gate, R14 landed as Main
+`6f47bf98fa09ac0f3957ac9f6cc3ae21b2333b1e`. This branch was recut onto it
+without conflicts; all four task files were byte-identical across that rebase.
+`recut-provenance.json` records the old and new heads and file hashes. The
+listing adapter and tests retain the exact SHA-256 values above. The ordinary
+gate now checks the combined baseline, including the landed R14 script.
+
 Paths below are relative to the raw directory. Gate checkpoint and final
 manifest remain pending. Times are individual local command observations,
 not whole-edit latency or a controlled benchmark.
