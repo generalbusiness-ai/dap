@@ -1,17 +1,16 @@
-# Archive capacity measurement: partial two-row result
+# Archive capacity measurement: two-row draft
 
-This draft records retained Site and Room A first-quote measurements and offline
-numeric comparisons. Room A now has a complete numeric quote at entry 33387.
-Its exact observed-build source map and charge-site analysis remain pending.
-This is a PARTIAL measurement note, not an artifact submission, checker review,
-gate result, landing request, or completion of the parent request. No cost cut
-is justified by the evidence recorded here.
+This measurement draft records Site 9172 and Room A 33387 numeric finish
+comparisons and mapped charge sites. A single evidence collector is assembled
+and has an open pre-gate manifest. The ordinary gate, final evidence seal and
+exact-head checker review remain due. This is not a completed or landed
+delivery. The evidence justifies no cost cut or fitting claim.
 
 The governing request is
 `git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0f0eeab748533208c813092ebf1ad0dab5087105`,
 under promise `0a23bfc8189b7d6a485a9158128afef6c2c6edd1`. All further act IDs in
 this note belong to that workroom genesis. Planner ruling
-`6634c94c293fb6f956244e30e8a115330543e0e8` changes the targets to each row's
+`git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6634c94c293fb6f956244e30e8a115330543e0e8` changes the targets to each row's
 current next entry when captured. The original Room A 24334 and Site 8477
 have already been archived. The ruling requires a cut only if measurement
 attributes growth to R7. Otherwise the work must explain the used metadata
@@ -22,17 +21,20 @@ The source finding is `e55acc74884a287efd468b5c75019374b57c63cf`. The retained
 Site finding is `d6c64ea4c013f205a2c6c87e10901f03155af6c6`. Planner capture
 `4564445552db60f78d8df28e66d634527c71febd` and finding
 `194d4ee15df0767b0e54f63221a4e121fe2c1aca` bind the new Room A observation.
-The exact observed-build bundle and map were requested under
-`47777d9a861ba812d69678ee0b14bcec02bfb8eb` with `no_git_artifact=true`.
-This draft adds no
-production code, test, hosted read, mutation, deployment, directive, endpoint,
-authority exception, or budget change. It does not borrow the separate R14
-gate as archive validation. The note worktree starts at Main
-`d73b53c971d90bb246bad868815912bad0e83682`.
+Planner build evidence
+`git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4f85fd94f5fe749e3a7dda3d1a0a717a8257a898`
+answers `47777d9a861ba812d69678ee0b14bcec02bfb8eb`: the downloaded uploaded
+module is byte-identical to the reconstructed module; the map is reconstructed,
+not uploaded. This note changes no runtime, authority or allowance and performs
+no hosted action. The separate R14 gate does not validate this delivery.
+The note worktree was updated to landed Main
+`aecabde196c187afd731134f5ee9e0d427efe62a`, tree
+`7dbede7934e1d66541cd2016a48a8cc52bb0395f`. Its checkpoint `98810e9b1462dfa8980c5de180f33ffbc839135d`
+adds only the unchanged partial measurement note. This revision does
+not identify a final review head.
 
 The existing [capture delivery note](2026-10-27-archive-capacity-capture.md)
-describes the capture implementation and its earlier witnesses. The measurements
-below retain their own exact targets, numeric inputs, and capture limitations.
+describes the capture implementation and its earlier witnesses. Each measurement keeps its own target and capture limits.
 
 ## The retained Site observation
 
@@ -46,15 +48,12 @@ entry 9172 to
 `sha256:af27e1fb46fc7b60dff5fa90985589d66feeeaf1d0a91d5f00d7d9f1230e5fad`.
 The retained Worker version is `ffa1d021-923e-4813-85fd-2620b8b5996b`.
 
-The original tail is deliberately withheld from the evidence directory:
-unrelated records contain request headers and body keys. Only the closed
-numeric projection, source digest and locator, public build bytes, and
-offline analysis are retained. No full tail was copied for this note.
-`extraction.json` records a compact payload size of 48,905 bytes and compact
-message size of 48,936 bytes. The pretty-printed `numeric-pass.json` is
-106,554 bytes. These are serialization measurements. They do not reassert
-the survey's differently measured 55,250-byte line or prove transmission
-completeness.
+The full tail is withheld because unrelated records include request headers
+and body keys. Retained evidence contains only the closed numeric projection,
+source digest and locator, public build bytes and offline analysis. No full tail
+was copied. `extraction.json` records compact payload/message sizes of
+48,905/48,936 bytes; pretty `numeric-pass.json` is 106,554 bytes. These do not
+reassert the survey's differently measured 55,250-byte line or prove completeness.
 
 The pass reports `step=plan`, `state=retry`, `reason=limit`, and adaptive
 strategy 1. It has `fixedFinish=null`. Finish geometry is complete and the
@@ -74,22 +73,15 @@ that Site had no next entry solely because `hasNext=false` is withdrawn.
 
 ## Site reconstruction from captured numeric geometry
 
-The retained tool evaluates these exact historical source heads:
-
-- Before R7: `9daa037e1976fa0e245192823cce96fc8741360d`.
-- R7 head: `a97c7425f860273ee0c37f9a4f3631bf2b24bfed`.
-
-It re-evaluates selection reservation, selection, body, commit, fixed append,
-transfer, row bookkeeping, and frontier arithmetic. Setup, inventory, input,
-source lookups, publication, patch, and append edges remain observed common
-components. Source lookups are already inside publication and are not added
-twice. The tool checks byte identity of all 36 bound source files across
-both heads and checks reconstructed components against the captured quote.
-The evidence contains both sets of source snapshots. The 36 relative paths
-have 72 retained copies under `sources/<historical-head>/`. Each entry in
-`reconstruction.json`'s `sourceEvidence` gives the path, byte length, SHA-256,
-and cross-head equality. Those records carry the source identity detail;
-the table below groups that detail through the reconstruction result.
+The tool evaluates pre-R7 `9daa037e1976fa0e245192823cce96fc8741360d` and R7
+`a97c7425f860273ee0c37f9a4f3631bf2b24bfed`. It re-evaluates selection
+reservation, selection, body, commit, fixed append, transfer, row bookkeeping
+and frontier arithmetic. Setup, inventory, input, source lookups, publication,
+patch and append edges stay observed common work. Source lookups are already
+inside publication and are not added twice. It checks all 36 bound source files
+for cross-head byte equality and compares reconstructed components with the
+quote. `reconstruction.json.sourceEvidence` binds path, size and SHA-256 for
+72 retained copies under `sources/<historical-head>/`.
 
 Patch and append-edge geometry does not expose private parent paths or full
 tree topology. Their observed costs are carried rather than recomputed from
@@ -158,20 +150,14 @@ The retained sites therefore explain 2,036,528 of the 2,608,469 metadata
 units. Another 571,941 metadata units and 20,310,956 input-work units remain
 unattributed. The capped table cannot identify their source sites.
 
-The same capture provides one exact coarse checkpoint split.
-`capacityObservation.rowContextCalls` is 1, and `rowContextAdmitted` is
-`(0, 11, 12, 40, 1600374, 9310764)`. Subtracting that from
-`firstFinishAttribution.admitted` gives
-`(1, 22, 17, 49, 1008095, 22989525)`. Thus 1,600,374 metadata units were already
-admitted at the row-context checkpoint and another 1,008,095 were admitted
-before the first quote. These are cumulative checkpoint totals, not a
-partition of the missing charge sites. No site snapshot accompanies the
-row-context checkpoint. Site records accumulate later debits: the first 41
-retained records already sum to 1,743,275 metadata units, exceeding the
-row-context total. Their order therefore cannot identify the earlier phase.
-The quote's `costs` fields forecast finish work; they cannot explain omitted
-admitted work. This arithmetic uses the existing numeric capture and reruns no
-reconstruction or host work.
+The capture has one row-context call with admitted vector
+`(0, 11, 12, 40, 1600374, 9310764)`. The first-finish difference is
+`(1, 22, 17, 49, 1008095, 22989525)`: 1,600,374 metadata at the checkpoint
+and 1,008,095 later. These are ledger intervals, not missing-site partitions.
+No site snapshot accompanies the earlier checkpoint. Sites accumulate later
+debits: the first 41 records already sum to 1,743,275 metadata, above that
+checkpoint. Their order cannot identify a phase. Forecast `costs` cannot explain
+omitted admitted work. This arithmetic reruns no reconstruction or host work.
 
 The birth and item-query debits reserve bounded response allowances before
 the reads. They are not measured response sizes. `JournalWork.metadata`
@@ -210,10 +196,16 @@ and requested finish vectors do not make those two targets interchangeable.
 The observed Worker version is `abbb266c-641d-4747-a9ba-a439cf64ff25`.
 The planner identifies deployment `7097f15cb551542680da75442a4c967a899849ff`,
 based on Main `6499a12bb16317d9bc614e5f5e905fb4d662cc87`.
-The exact bundle and source-map pair for this observation is still awaited;
-those deployment labels alone do not establish source-line association.
-The older Site bundle and map belong to its different observed version and
-are not used for Room A. The full tail is withheld from the builder evidence
+Planner evidence `4f85fd94` supplies the downloaded uploaded module and a
+reconstructed map. No uploaded map exists. The reconstructed JavaScript and
+application JSON both equal the downloaded uploaded bytes. The map was emitted
+with that identical JavaScript. `RoomA/observed-build-proof.json` checks all 13
+sealed operator files and binds 443 public project sources in the map to exact
+Git source `6499a12b`; 13 other map sources are not bound by that comparison.
+The manifest explicitly records these origins. Supplied metadata and operator
+provenance are not independently authenticated provider attestation. Read-only
+mode checks are observations, not permanent immutability or ACL proof.
+The older Site bundle and map are not used for Room A. The full tail is withheld from the builder evidence
 collection. The planner
 retains the full tail separately in its sealed collection. Only the closed
 numeric projection, target identities, provenance, and offline results are
@@ -277,40 +269,68 @@ One row-context call provides the coarse checkpoint vector
 admitted vector is `(1, 18, 15, 36, 1058737, 17913861)`. Thus 1,835,802
 metadata units are already admitted at that checkpoint, and another 1,058,737
 accrue between it and the first-finish checkpoint. These are cumulative ledger differences.
-The retained site totals accumulate later work and cannot be apportioned
-to either interval or assigned to phases. The 127 retained site-frame
-occurrences all carry numeric code 0. A separate frames-projection invocation
-exited 0 and retained `frames-input.json`, with first-finish and terminal
-attribution kept distinct. Projection is not source mapping. No Room A frame
-has yet been associated with an authoritative source location. The missing map and incomplete site
-attribution leave the charge-site and row-growth explanation partial.
-Neither this one pass nor comparison with the differently shaped Site pass
-establishes a growth curve, an entry-only cause, or R7 causality.
+The retained site totals accumulate later work and cannot be assigned to
+these intervals or phases. Frame projection and mapping both exited 0.
+The 127 first-finish frame occurrences use code 0. Across the separately
+retained snapshots, all 89 distinct captured frames resolve through the
+reconstructed map, with zero unresolved. The mapper checks one-based captured
+coordinates against the generated spend property and uses the nearest preceding
+source-map segment. These are source associations, not complete runtime call
+trees, Native authority or replay. Neither this pass nor comparison with the
+differently shaped Site pass establishes a growth curve, an entry-only cause,
+or R7 causality.
 
-The source formulas explain how costs depend on row and journal geometry.
-The ten compared formula files are byte-identical at the two historical
-heads and observed deployment source `6499a12bb16317d9bc614e5f5e905fb4d662cc87`.
-`RoomA/formula-source-identity-20261027.json` records all 30 verified snapshots
-(10,548 bytes, SHA-256
-`53ee6694fcdff247fd8f13ecbabd942c74295d8947b82178241fa2f378451dff`).
-The actual command and streams are retained under
-`RoomA/formula-source-identity/`; its exit is 0. This comparison covers only
-those files, not the whole plan or the emitted bundle.
+The ten formula files are byte-identical at both historical heads and observed
+source `6499a12b`. `RoomA/formula-source-identity-20261027.json` binds all 30
+snapshots; its result receipt retains the actual command and exit 0. This comparison covers
+those formulas, not whole-plan behavior or counterfactual used work. The finish
+forecast remains separate from admitted work. The source details below explain
+row, body, tree, copy and frontier inputs without asserting R7 causality.
 
-Pending-row bytes include the old row and upper bounds for manifest,
-publication and replay-scope text. Here `pending=15672` is a projected
-row-byte upper bound. Bookkeeping prices repeated row loads, manifest units,
-replay scopes and new retained keys. Body and tree work depend on entry
-counts, retained names, selected paths, affected tree rows and object counts.
-Parent bytes increase copy and pack input work; copied object counts increase
-transfer metadata. Frontier work combines receipt-bound tree ceilings with
-pending-row, context, mark and encoding sizes. These formulas differ from
-response reservations: a birth or item lookup can reserve 256 KiB of metadata
-before the read, regardless of the bytes returned. The 1,713,289 metadata
-finish quote remains separate from the 2,894,539 metadata already admitted.
-Some finish components remain observations carried into the reconstruction.
-Source identity does not attribute unmapped frames, establish a growth curve,
-or show that R7 caused the refusal. It justifies no cost cut.
+## What the retained Room A charge sites explain
+
+The retained arithmetic groups partition all 64 first-finish site records once,
+by their complete retained stack of at most two frames. They sum to 2,250,433
+metadata; the separate 644,106 unattributed metadata gives the admitted
+2,894,539 exactly. The source interpretation collects the nonzero charges into
+13 groups: target birth 1,048,576; target item queries 524,288; source birth
+262,144; JournalWork metadata 160,928; native SELECT reservations 131,223;
+direct frontier-store operations 50,208; repository identity 32,768; direct row
+snapshots 30,442; target dependency/identity descriptors 4,608; object-port
+reservations 3,200; retained parents 1,408; source validation 512; and context
+128. The retained 13-group proof covers all 45 nonzero-metadata sites exactly once.
+The other 19 sites have zero metadata but still contribute on other axes. The
+proof accounts for them separately and reconciles all six admitted axes. These
+cumulative groups are not phases.
+
+Seven response ceilings account for 1,835,008 metadata: four target birth
+reads, two item queries and one source-preparation birth, each reserving
+262,144 before the read (`archive-target.ts:59–73`; `apps/room/archive.ts:88–95`).
+They are ceilings, not returned bytes or seven necessarily distinct sources.
+The mapped callers distinguish initial birth, creator traversal, destination
+birth, repository and branch queries, and candidate source preparation.
+
+Within JournalWork, 137,216 is 268 tree-row visits at 512 metadata each
+(`journal-objects.ts:187–200`), not 268 unique rows. Repeated parsing costs work.
+The remaining 23,712 includes 12,715 of receipt-bound frontier payload ceilings
+for 11 objects (`journal-v2-frontier.ts:28–38,94–107`), not their 5,194 actual bytes.
+Six pin SELECT ceilings add 104,448 = 6 * (1,024 + 16,384), through two size
+queries and four metadata-value queries (`archive-driver.ts:179–180`;
+`archive-pin.ts:46,51`; `archive-budget.ts:155–163`). Small returned values do
+not reduce those reservations.
+
+Frontier operations separately charge envelope ownership 35,596, a public
+owned copy 8,010, source descriptors 1,408 and copied object bytes 5,194.
+The 8,195 stored-text SELECT reservation already belongs to the native SELECT
+group and is not added again. Direct row snapshots total 30,442. The initial
+596-byte row is an input to their formulas; `pending=15672` forecasts future
+row bytes, not an admitted pending-row read. The source-window candidate
+reservation uses `(64 + 1) * 256 = 16,640` metadata, not 65 observed references,
+and its scan work depends on entry bytes. Source validation separately charges
+512 metadata and `sourceText.length * 96` input work. These explain charges
+through lookup counts, tree visits, row sizes, copies and frontier geometry.
+They do not fill the dropped-call gap or establish a historical cost slope.
+The finish forecast is kept outside the admitted-site partition.
 
 ## Historical fixed finish and capture limits
 
@@ -338,28 +358,28 @@ inventory is false. This proves neither log completeness nor a cause for an
 absent diagnostic. The later Room A pass also has `fixedFinish=null`, so it
 adds no fixed strategy 2 or 3 witness.
 
-The source finding at Main `f9aca97f84803860cb10a714b1bf643e50bc87f1` identifies
-only the alarm as a production caller of `ArchiveDriver.run()`, after earlier
-alarm owners. The method coalesces an in-flight pass. Summary and cold
-activation can recover or schedule archive wakes, but do not synchronously
-run the pass. The observer emits best-effort from the pass's `finally`
-block for idle, retry, stopped, and confirmed outcomes. An earlier alarm
-owner can fail before the archive call, and an observation failure is
-swallowed. Missing lines therefore identify neither absence of an archive
-alarm nor its cause. The original tail's `nativeBirth` RPC label is observed
-context, not proof of the pass's caller or scheduling cause.
+The source finding at Main `f9aca97f84803860cb10a714b1bf643e50bc87f1` finds only
+the alarm calls `ArchiveDriver.run()` in production, after earlier alarm owners.
+The method coalesces an in-flight pass. Summary and cold activation recover or
+schedule wakes but do not synchronously run the pass. The observer emits best-
+effort in `finally` for idle, retry, stopped and confirmed outcomes. Earlier
+alarm owners can fail before it; observer failures are swallowed. Missing lines
+prove neither absence of an archive alarm nor its cause. The tail's `nativeBirth`
+RPC label is context, not proof of the caller or scheduling cause.
 
 ## Retained evidence snapshot
 
-The builder raw collections are still open. In the single table, `Site/` means
-`/Users/hughpyle/play/artroom-evidence/2026-10-27-archive-site-9172/`, and
-`RoomA/` means
-`/Users/hughpyle/play/artroom-evidence/2026-10-27-archive-rooma-33387/`.
-These are table prefixes, not a claim that both collections share a directory.
-The table selects actual files supporting the findings. It is not a sealed
-`SHA256SUMS` inventory or a committed PD-2 manifest. Final evidence must index
-all retained files, including both sets of historical source snapshots and
-all failed-invocation sources. Withheld full tails are not table entries.
+All table paths now refer to the single collector at
+`/Users/hughpyle/play/artroom-evidence/2026-10-27-archive-capacity-measurement`.
+Its `Site/` and `RoomA/` trees are byte-for-byte, mode-preserving copies of the
+two earlier raw collections. `assembly/copy-receipt.json` checks complete
+before/after source inventories and copied content. All 270 source files,
+historical snapshots and failed-invocation sources are retained. Original
+command paths and argv remain unchanged in copied receipts; assembly reruns
+no observation, extraction, reconstruction, mapping or query. The assembler
+and its actual outer process receipt are retained. Full tails stay withheld.
+The table selects supporting files; the open manifest indexes the current
+collector. Final gate evidence and the final index/seal remain due.
 
 For the older Site collection, only the two reconstruction invocations have
 retained process exit and timing receipts. Both receipts record clean Main
@@ -383,16 +403,25 @@ runs on the shared machine, not benchmark or product latency claims. The
 reconstruction was not rerun to draft this note. A dash means that the retained
 file has no separate recorded process exit.
 
-Room A extraction v1 and v2 record clean Main `4419008a`, tree `8ff17372`.
-Extraction v3, reconstruction, checkpoint analysis, and frame projection record
-clean Main
-`bb23e50f`, tree `e072e845`. Those are offline command checkpoints, not hosted
-source identity. Their exact argv, full head and tree hashes, source and output
-digests, and timings are in the named receipts. A1, A2, A3, AR, AC, and AF below refer respectively to those six receipts'
-recorded commands. Each result receipt binds the invoked source digest; the
-exact invoked sources and runners remain retained even where not table rows. The checkpoint
-artifact SHA-256 is `6dfa790802957c3dcecd179c157f7ef5ca8383a76c51612a2d9ce7b2aa1b738f`;
-its summary stdout has a different digest and is retained separately.
+Room A A1/A2 record clean Main `4419008a`, tree `8ff17372`; A3/AR/AC/AF
+record clean Main `bb23e50f`, tree `e072e845`. These are offline command
+checkpoints, not hosted source identity. A1/A2/A3/AR/AC/AF refer to extraction
+v1/v2/v3, reconstruction, checkpoint analysis and frame projection. Every exact
+argv, full checkpoint hash, invoked source, runner, timing and output digest is
+retained in its named receipt. The checkpoint artifact and summary stdout have
+different digests; both are retained.
+
+Room A receipts record exit, wall seconds and child CPU seconds respectively:
+A1 1, 0.035259125/0.033157000; A2 1, 0.050465166/0.039724000; A3 0, 0.047558292/0.039330000; AR 0, 0.918711083/0.865535000; AC 0, 0.021950292/0.020017000; AF 0, 0.036472083/0.028218000; AI 0, 0.831517708/0.712610000; AS 0, 0.067994000/0.059365000; AB 0, 0.043601750/0.040780000; AP 0, 0.143908916/0.138393000; AM 0, 0.036533750/0.033610000; AX 0, 0.261465041/0.331582000; AG 0, 0.020563458/0.018724000; AZ 0, 0.020191959/0.018719000.
+AI is the ten-formula source comparison; AS is the earlier source-binding
+check; AB retains the public build; AP verifies its bytes and public sources;
+AM creates the provenance manifest; AX maps frames; AG groups 64 records; AZ
+checks the disjoint 13-group source partition and its coefficients.
+Each exact argv remains in that phase's `result.json`, with source, runner and
+stdout digests. AB/AP/AM/AX/AG/AZ record clean Main `aecabde1`, tree `7dbede79`.
+The shared machine is Darwin 27.2 arm64 with 18 logical CPUs and Node 26.12.1.
+AX's recorded load before and after is (1.607, 1.889, 2.062). These single
+process timings do not measure product latency or compare runtime performance.
 
 | Check or retained material | Command or role | Exit | File | Bytes | SHA-256 |
 |---|---|---:|---|---:|---|
@@ -428,24 +457,46 @@ its summary stdout has a different digest and is retained separately.
 | Room A reconstruction and both source sets | AR result; 36 bound files per head | 0 | `RoomA/reconstruction.json` | 19710 | `09a855b1a725d667b9780a931f266b8265e2c3023ba7e4ae0c0f0d69b157dda7` |
 | Room A checkpoint ledgers and limits | AC result; eight input hashes | 0 | `RoomA/attribution-checkpoints.json` | 7393 | `6dfa790802957c3dcecd179c157f7ef5ca8383a76c51612a2d9ce7b2aa1b738f` |
 | Room A numeric frames and identity | AF result; distinct observation snapshots | 0 | `RoomA/frames-input.json` | 85852 | `9f8bc4a1192c50f9ac0f8a9592f4dff16dceef43dd8c7d9f39fbc3194bfe06e9` |
+| Room A formula identities | AI; ten formulas at three exact heads | 0 | `RoomA/formula-source-identity-20261027.json` | 10548 | `53ee6694fcdff247fd8f13ecbabd942c74295d8947b82178241fa2f378451dff` |
+| Room A retained public build | AB; public copies, no provider binding values | 0 | `RoomA/observed-build-retention.json` | 2674 | `ed96925d84449a23af1c926a8202f5367e47a7f5bcbeeb0ea69368bcdbbc9396` |
+| Room A observed-build proof | AP; 443 public sources; 13 other sources unbound | 0 | `RoomA/observed-build-proof.json` | 144816 | `3d5d0a44f98af31a89ca3dbde4db0f200de64cfe2eaf82b778e43d923ba661bc` |
+| Room A explicit map provenance | AM; uploaded module, reconstructed map | 0 | `RoomA/observed-build-manifest.json` | 4490 | `e06d7684e765583a713d7ade5a2f2493ecfbba31a08e127b1cc41a711ae4a416` |
+| Room A mapped frames | AX; 89 distinct, zero unresolved | 0 | `RoomA/frame-mapping.json` | 257230 | `597f64b657b42b26788aebbdacb3657deb2fc1ca548282951026c4ea888c2bb0` |
+| Room A disjoint retained-site groups | AG; 64 records once; unknown debits retained | 0 | `RoomA/mapped-charge-groups.json` | 45514 | `8a0a1c1ef50f6181e93969366f1b0b7667a071882da7c7b97a20e15dc14e2f67` |
+| Room A source-charge partition | AZ; 13 groups cover 45 nonzero sites; six axes reconcile | 0 | `RoomA/source-charge-partition.json` | 7564 | `ea334a12908ebef1d1ae66898b6a4e2ffff52327ed45b89b715228c405302ffd` |
+| AB command/timing receipt | Exact argv and clean checkpoint | 0 | `RoomA/retain-observed-build/result.json` | 1494 | `971c3542d45ac29b6b90f7b129d329dc54e9c2f2170d6b3d3c1f0768b12cb956` |
+| AP command/timing receipt | Exact argv and clean checkpoint | 0 | `RoomA/observed-build-proof/result.json` | 1493 | `894dbbb1216468083a13c4fb65c1096c2703a8705a51d06ea2992007f42b2082` |
+| AM command/timing receipt | Exact argv and clean checkpoint | 0 | `RoomA/observed-build-manifest/result.json` | 1479 | `9b665fc5766a19d769b4be93ac062d114e5f08216409aab9b52b6565a274d8df` |
+| AX command/timing receipt | Exact argv and clean checkpoint | 0 | `RoomA/frame-mapping/result.json` | 2107 | `ac143864694fd5acc12d427867a796cb4783ffa16d9a04a22e2caf247e283d01` |
+| AG command/timing receipt | Exact argv and clean checkpoint | 0 | `RoomA/mapped-charge-groups/result.json` | 1494 | `eaba723c78551fa7d71e4c2109d65629956e4b559b7cf8e8d65d055877858aa5` |
+| AZ command/timing receipt | Exact argv and clean checkpoint | 0 | `RoomA/source-charge-partition/result.json` | 1497 | `75c8a90b6d10bcd7531222e87f8613e288e404f40daad1e20e7826d176b71947` |
+| Exact-lock dependency view; no installation | `RoomA/dependency-setup/result.json` | 0 | `RoomA/dependency-view.json` | 1090 | `f151bf1f282be97b7941dd064260005a80ecc5fdc04686c1face9040f888d996` |
+| Complete source-copy assembly | `assembly/copy-receipt.json` | 0 | `assembly/copy-receipt.json` | 390254 | `3aef8a81aaf1d6def492b4d771ddf927464280e15824ba56c54d5bc289b0f1b0` |
+| Actual assembler process output | `assembly-process/result.json` | 0 | `assembly-process/output.log` | 506 | `23d2f01fe86359064fb3fd1ebedfa562a02a53db85f4936cc0c71c5c0529470a` |
+
+The dependency setup cloned the verified cache without installation, rebound
+14 workspace links into this worktree, and found no broken links. The exact
+lock SHA-256 is `645224923cabfd70b51b8add2a43be12673444779d18002a42ed4254b3216d6e`.
+Its receipt binds clean checkpoint `98810e9b1462dfa8980c5de180f33ffbc839135d`.
+The later gate receives its own explicit checkpoint and tree.
+The assembler child exited 0 in 0.203077167 wall seconds and 0.175708000
+child CPU seconds. Its actual command, source, streams and checkpoints are
+retained under `assembly-process/`. These copying timings are not benchmarks.
 
 ## Work still owned by the parent request
 
-Request `0f0eeab748533208c813092ebf1ad0dab5087105`, as narrowed by ruling
-`6634c94c293fb6f956244e30e8a115330543e0e8`, still owns these limits:
+The measured numeric comparisons and available charge-site explanations are
+recorded above. The parent still owns final delivery:
 
-- Obtain and verify the exact bundle and source map for Room A's observed
-  version, then associate its retained code-0 frames. Do not reuse Site's map.
-- Complete the used-metadata and row-growth explanation within the available
-  attribution. Both rows now have exact-target numeric finish comparisons,
-  each with zero historical finish delta. Their carried used vectors are not
-  counterfactual old-head measurements and establish no R7 or entry-only cause.
-- Apply the ruling's conditional cut requirement only if measurement
-  attributes growth to R7. This draft delivers no cut, fit claim, or paired
-  fitting control.
-- Finish and seal the raw evidence, add the PD-2 manifest, run the required
-  ordinary gate at the exact resulting head, and obtain its checker review
-  before any completion or landing claim. None is supplied by this draft.
+- Add the ordinary-gate evidence, finish the manifest and seal the collector.
+  The assembled inputs already preserve the source interpretation, 13-group
+  proof, all failed invocations and both historical source sets.
+- Run the required ordinary gate at the exact resulting head and obtain
+  checker review before completion or landing. No such result is claimed here.
+- Apply the ruling's conditional cut requirement only if measurement attributes
+  growth to R7. Neither zero historical finish delta nor carried observed used
+  work establishes that cause. This draft supplies no cut, fit claim, paired
+  fitting control, whole-plan counterfactual or growth curve.
 
 The capture delivery and the separate R14 work keep their own evidence.
 The new Room A analysis is offline work over the retained numeric capture.
