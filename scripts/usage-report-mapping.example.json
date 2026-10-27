@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "workers": [
+    {
+      "worker": "dap-grow",
+      "deployments": [
+        "TEST-ONLY-replace-with-operator-deployment-history"
+      ]
+    }
+  ]
+}

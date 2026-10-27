@@ -1,0 +1,167 @@
+{
+  "qualification": "TEST emissions from the actual Metrics writer into a scripted sink; timestamps supplied by that sink. No provider response, hosted SQL or Native plan was executed.",
+  "source": "packages/scope/src/metrics.ts",
+  "sourceSha256": "f3ebf8c17fe91239bae1f5a9c0238584b836e7929822e2bfe81822cfc41d9c4a",
+  "window": {
+    "from": "2026-09-27T12:00:00.000Z",
+    "through": "2026-10-27T12:00:00.000Z",
+    "fromSeconds": 1790510400,
+    "throughSeconds": 1793102400
+  },
+  "cases": {
+    "balanced": [
+      {
+        "observedAt": "2026-10-01T12:00:00.000Z",
+        "point": {
+          "indexes": [],
+          "blobs": [
+            "turn",
+            "TEST-usage-deployment",
+            "11111111-1111-1111-1111-111111111111",
+            "acts",
+            "answer",
+            "none",
+            "none",
+            "none",
+            "accepted"
+          ],
+          "doubles": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      {
+        "observedAt": "2026-10-01T12:00:00.000Z",
+        "point": {
+          "indexes": [],
+          "blobs": [
+            "route",
+            "TEST-usage-deployment",
+            "11111111-1111-1111-1111-111111111111",
+            "health",
+            "ok",
+            "2xx",
+            "none",
+            "none",
+            "pre-turn"
+          ],
+          "doubles": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      {
+        "observedAt": "2026-10-01T12:00:00.000Z",
+        "point": {
+          "indexes": [],
+          "blobs": [
+            "metric-dropped",
+            "TEST-usage-deployment",
+            "11111111-1111-1111-1111-111111111111",
+            "metrics",
+            "dropped",
+            "summary",
+            "none",
+            "none",
+            "none"
+          ],
+          "doubles": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    ],
+    "sidecarLoss": [
+      {
+        "observedAt": "2026-10-01T12:00:00.000Z",
+        "point": {
+          "indexes": [],
+          "blobs": [
+            "turn",
+            "TEST-usage-deployment",
+            "11111111-1111-1111-1111-111111111111",
+            "acts",
+            "answer",
+            "none",
+            "none",
+            "none",
+            "accepted"
+          ],
+          "doubles": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      {
+        "observedAt": "2026-10-01T12:00:00.000Z",
+        "point": {
+          "indexes": [],
+          "blobs": [
+            "route",
+            "TEST-usage-deployment",
+            "11111111-1111-1111-1111-111111111111",
+            "health",
+            "ok",
+            "2xx",
+            "none",
+            "none",
+            "pre-turn"
+          ],
+          "doubles": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      {
+        "observedAt": "2026-10-01T12:00:00.000Z",
+        "point": {
+          "indexes": [],
+          "blobs": [
+            "metric-dropped",
+            "TEST-usage-deployment",
+            "11111111-1111-1111-1111-111111111111",
+            "metrics",
+            "dropped",
+            "summary",
+            "none",
+            "none",
+            "none"
+          ],
+          "doubles": [
+            1,
+            8,
+            1,
+            1,
+            0,
+            0
+          ]
+        }
+      }
+    ]
+  }
+}

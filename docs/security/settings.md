@@ -1,5 +1,9 @@
 # Worker settings and bindings
 
+For a qualified comparison with recorded route-place telemetry, see
+[Report observed Worker use](../usage-report.md). That script uses an external
+operator mapping and does not prove that a configured route or binding was unused.
+
 This reference describes the checked-in Worker code and deployment configurations.
 It does not read deployed values, attest a rollout, or test a provider. Secrets
 are named here; their values do not belong in this page, a log, or a journal.
