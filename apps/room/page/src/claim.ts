@@ -4,7 +4,7 @@
 import type { KeyId, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, isKeyId, isScopeRef, parseStrict, unb64url } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, httpTransport, signedReads, isCreationOffer, type Fetch } from "@generalbusiness/dap-client";
-import { claim, checkClaim, type Config, type Context, type Outcome, type PendingClaim, type Repository, type Store } from "@generalbusiness/dap-cli";
+import { claim, checkClaim, type Config, type Context, type Outcome, type PendingClaim, type Repository, type Store } from "@generalbusiness/dap-cli/browser";
 import { DIRECTORY_OF } from "@generalbusiness/dap-platform";
 import { sessionKey, sessionSigner, type Session } from "./data.ts";
 import { pageKeyStore } from "./browser-key-store.ts";

@@ -2,7 +2,7 @@
  * this Page adapter owns their browser retention and original-operation lock. */
 import type { KeyId, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isRecord, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
-import { issueInvitation, isInvitationIssueInput, type Config, type Store, type InvitationIssueInput, type InvitationIssueResult } from "@generalbusiness/dap-cli";
+import { issueInvitation, isInvitationIssueInput, type Config, type Store, type InvitationIssueInput, type InvitationIssueResult } from "@generalbusiness/dap-cli/browser";
 import { openRoom, sessionSigner, type Room } from "./data.ts";
 import { startRoom, originalStart, recoveryKeyOnce, type StartOptions } from "./start-custody.ts";
 import type { ClaimStorage } from "./claim.ts";
