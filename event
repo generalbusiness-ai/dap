@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fe638a5932dcf4d5c2aa437c4ba99f70b75cbcab","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-26-certified-rules-hardening.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ff1798407170e30a5f7da402d9d3fe36baef20e1","text":"Merge retired a covered predecessor; the successor is at packages/checkers/src/job.ts."}
