@@ -28,7 +28,7 @@ const namedOwners = {
     "packages/scope/src/worker.ts:projectionResponse": "e17f1f4aa800bc06b4f8d065f77e8a594c2738c77873a52671fa7f1b22bf249b",
     "packages/scope/src/worker.ts:route": "8e41a02f0a9d01c802beea51c095d82f3720ca0d3d5dc178213f5de2a8ccde63",
     "packages/scope/src/worker.ts:routedRequest": "4ef253e62f36ddbf69b3bedcf593de3023ed072ee6ca6bfa435390dd1d7858dd",
-    "packages/scope/src/worker.ts:outsideOf": "8aa529a84473be224fa51a354eb3cccdb355af135f053ebfcab19bc6d8ffd310",
+    "packages/scope/src/worker.ts:outsideOf": "4a0e7abc473f7a648b7e51c5f53de7385867f1cdd5a65e4be05ab319f0d52b0f",
     "packages/scope/src/worker.ts:sessionWiring": "cb8f4d0e2b06854a3fbf080e5b4ce72e4182060b60f27cc7fb7f5ed6ac8779c5",
     "packages/scope/src/worker.ts:snapshotReaderOf": "2b6810718421650701eb1edfa9b100ceefef11a1fdcb18603fccf4e6830ea9e2",
     "packages/scope/src/worker.ts:DeployedScope": "0714da9436f9fd5a4c70169986ba9f056046490903dc6072b7d2a28adb28b5ef",

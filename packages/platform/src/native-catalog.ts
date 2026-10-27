@@ -31,7 +31,7 @@ import { directory, directory2, directory3, directory7, directoryMembership, dir
 import { UNPUBLISHED_COHORT } from "./archive-binding-wire.ts";
 import { unpublishedRegister, unpublishedRegisterRules } from "./unpublished-register.ts";
 import { unpublishedDirectory, unpublishedDirectoryRules } from "./unpublished-directory.ts";
-import { unpublishedDestination, unpublishedDestinationRules } from "./unpublished-destination.ts";
+import { unpublishedDestination, unpublishedDestinationMembership, unpublishedDestinationRules, unpublishedDestinationRulesScope } from "./unpublished-destination.ts";
 import { unpublishedApplicationPublicationOrigin } from "./publishing-provenance.ts";
 import type { RecordedRef, Rules, StateView } from "@generalbusiness/dap-derive";
 
@@ -109,7 +109,7 @@ export interface Platform {
 const VERSION_DATA: Readonly<Record<string, Platform>> = {
   [UNPUBLISHED_COHORT.register]: { data: unpublishedRegister, rules: unpublishedRegisterRules },
   [UNPUBLISHED_COHORT.directory]: { data: unpublishedDirectory, rules: unpublishedDirectoryRules, declaredText: (state, digest) => installDefinitionText(state, digest, "application-catalog"), membership: directoryMembership, rulesScope: directoryRulesScope },
-  [UNPUBLISHED_COHORT.destination]: { data: unpublishedDestination, rules: unpublishedDestinationRules, membership: destinationMembership, rulesScope: destinationRulesScope, applicationPublicationOrigin: unpublishedApplicationPublicationOrigin },
+  [UNPUBLISHED_COHORT.destination]: { data: unpublishedDestination, rules: unpublishedDestinationRules, membership: unpublishedDestinationMembership, rulesScope: unpublishedDestinationRulesScope, applicationPublicationOrigin: unpublishedApplicationPublicationOrigin },
   [HCR.register]: { data: archiveRegister, rules: registerRules },
   [HCR.directory]: { data: hardenedCertifiedRulesDirectory, rules: hardenedCertifiedRulesDirectoryRules, declaredText: (state, digest) => installDefinitionText(state, digest, "application-catalog"), membership: directoryMembership, rulesScope: directoryRulesScope },
   [HCR.rules]: { data: rulesScopeV12, rules: rulesScopeRulesV12, hostPreparationKinds: ["fetch-application"], declaredText: (state, digest) => installDefinitionText(state, digest, "definition"), observed: rulesAnswerV12, observedValues: rulesObservedValuesV12, revised: PUBLISH, membership: rulesMembership },

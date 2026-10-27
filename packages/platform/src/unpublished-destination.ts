@@ -1,9 +1,23 @@
 /** Destination16 records an unpublished branch and refuses repository work. */
-import type { PlatformData } from "@generalbusiness/dap-contract";
-import type { Rules } from "@generalbusiness/dap-derive";
+import type { PlatformData, ScopeId } from "@generalbusiness/dap-contract";
+import type { Item, RecordedRef, Rules, StateView } from "@generalbusiness/dap-derive";
 import { destination4, destinationRules4 } from "./destination.ts";
 import { destinationV14, destinationRulesV14 } from "./destination-v14.ts";
 import { RULES_CERTIFICATE_KIND } from "./rules-certificate.ts";
+import { referenceOf } from "./rules-scope.ts";
+
+/** Destination16 also retains its sibling references before publication. */
+export const unpublishedDestinationBranch = (state: Pick<StateView, "page">): Item | null => {
+  const branch = state.page("branch", ["unpublished", "empty", "ready"], null, 1).items[0] ?? null;
+  // Preserve the inherited representation of heterogeneous item references.
+  return branch && Object.hasOwn(branch.values, "slot") ? { ...branch, refs: { ...branch.refs, slot: branch.values["slot"] ?? null, judging: branch.values["judging"] ?? null } } : branch;
+};
+const heldId = (state: Pick<StateView, "page">, slot: "membership" | "rules"): ScopeId | null => {
+  const id = unpublishedDestinationBranch(state)?.values[slot];
+  return typeof id === "string" ? (id as ScopeId) : null;
+};
+export const unpublishedDestinationMembership = (state: Pick<StateView, "page" | "incarnations">): RecordedRef | null => referenceOf(state, heldId(state, "membership"), "membership");
+export const unpublishedDestinationRulesScope = (state: Pick<StateView, "page" | "incarnations">): RecordedRef | null => referenceOf(state, heldId(state, "rules"), "rules");
 
 const branch = destination4.items["branch"]!, establish = destination4.acts["establish"]!;
 const certificate = destinationV14.acts[RULES_CERTIFICATE_KIND]!;

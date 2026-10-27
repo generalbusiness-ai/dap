@@ -36,7 +36,7 @@ import type { Digest, Entry, Input, KeyId, Observation, ObservationRequest, Obse
 import { canonicalize, hex, isObservationUse, isRecord, parseStrict } from "@generalbusiness/dap-bytes";
 import { WINDOWS, contentChecked, contentStates, fixedBy, highestHead, isScopeRef, judgeGrant, membershipOf, namedBy, observationOf, observedName, observedOf, prefer, revoked, same, subjectName, valueDigest, type Clock as Reading, type ContentStates, type GrantJudgment, type Needed, type RecordedRef, type Retains, type StateView, type ValueRead } from "@generalbusiness/dap-derive";
 import { isPlatformDefinition } from "@generalbusiness/dap-bytes";
-import { SIBLINGS_OF, destinationBranch, platform, standingOf } from "@generalbusiness/dap-platform";
+import { SIBLINGS_OF, UNPUBLISHED_COHORT, destinationBranch, unpublishedDestinationBranch, platform, standingOf } from "@generalbusiness/dap-platform";
 import type { Asked, Authority, Clock, Further, Random, Standing } from "./ports.ts";
 import type { SessionReading } from "./sessions.ts";
 
@@ -404,7 +404,10 @@ export function repositorySessionBirth(config: Pick<Repository, "genesis" | "sta
   const definitions = Object.keys(SIBLINGS_OF).filter((named) => platform(named) && (scope.kind === "destination" || scope.kind === "rules") && SIBLINGS_OF[named]![scope.kind] === genesis?.seed.definition);
   if (!definitions.length || !state || !same(state.scope()?.at, scope) || genesis?.decision !== "applied" || genesis.seed.kind !== scope.kind) return null;
   const directory = genesis.seed.creator;
-  const held = (scope.kind === "destination" ? destinationBranch(state) : state.page("rules", ["current"], null, 1).items[0])?.refs["directory"];
+  const item = scope.kind === "destination"
+    ? (genesis.seed.definition === UNPUBLISHED_COHORT.destination ? unpublishedDestinationBranch(state) : destinationBranch(state))
+    : state.page("rules", ["current"], null, 1).items[0];
+  const held = item?.refs["directory"];
   const membership = recorded === undefined ? recordedMembership(config, scope) : recorded;
   return directory?.kind === "directory" && isScopeRef(held) && same(held, directory) && genesis.source?.seq === 0 && same(genesis.source.at, directory) && genesis.message?.class === "request" && genesis.message.type === "create" && membership?.kind === "membership" ? { directory, membership, definitions } : null;
 }
