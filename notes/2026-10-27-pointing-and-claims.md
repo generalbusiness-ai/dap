@@ -1,4 +1,4 @@
-# Pointing and claims: the common part of a room and the local part of a package
+# Pointing and claims: a room's common part and each package's local part
 
 Status: current. A proposal to the planner, filed on 27 October 2026
 against main `6f47bf98`. Nothing here is built. It amends the
@@ -52,6 +52,10 @@ the slices.
   statement is a comment entry. It opens no item.
 - **Claim**: an item with named parties and one text. Its kinds are
   `agree`, `dispute`, `close` and `same`.
+- **Target**: the package scope whose act a claim consents to. A claim
+  with no target binds no package.
+- **Consumed**: a claim that an act of its target scope has bound a
+  member through. A claim is presented once.
 - **Signature**: a party's act on a claim. The claim takes effect, as
   `agreed`, in the entry of the last signature.
 - **Agreeing entry**: that entry. It is the fact that a package presents
@@ -68,45 +72,60 @@ the slices.
 
 ## 3. Commons package
 
-The commons is a declared package in the form of the
-[packages note](2026-10-18-application-packages-and-builder-room.md).
-Its logical name is `ai.generalbusiness.commons`. Its one definition is
-named `commons`. A room installs it at creation, and its scope is one
+The commons is a native platform definition, `platform:commons@1`,
+pinned in every creation cohort beside the directory, membership, rules
+and destination definitions. Its scope is created with the room, one
 for each room, like the capture scope of the
-[capture note](2026-10-21-capture-with-source.md). It holds no server
-code and no screens of its own. The generic interface of the host shows
-it.
+[capture note](2026-10-21-capture-with-source.md). It is not an
+installed package in the form of the
+[packages note](2026-10-18-application-packages-and-builder-room.md):
+no release is fetched for it, and no trust row admits or withdraws it,
+so the admission rule that R11 landed (`application-revoked`) never
+applies to pointing and claims. Removing a trust row withdraws one
+installed package from fresh acts; it cannot withdraw the common part of
+every room at once. The commons holds no server code and no screens of
+its own. The generic interface of the host shows it. The kernel page's
+count of pinned versions grows by one when it lands.
 
 ### 3.1 Items
 
 | Item | Many | States | Parties | Values and refs |
 |---|---|---|---|---|
-| `thing` | yes, at most 100 live | `open` | `pointer`: the author of the opening act, fixed | `label`: text, at most 256 bytes. `digests`: list of at most 16 digests. `addresses`: list of at most 16 texts of at most 1,024 bytes. `members`: list of at most 16 members. `entries`: list of at most 16 records `{ scope: text, seq: int, hash: digest }`. None is fixed. |
-| `claim` | yes, at most 100 live | `proposed`; `agreed` final; `withdrawn` final | `proposer`: the author, fixed. `parties`: list of at most 16 members, fixed, required. `signed`: list of at most 16 members, not fixed. | `kind`: enum `agree`, `dispute`, `close`, `same`, fixed. `text`: detached text, at most 64 KiB, fixed. `outcome`: text, at most 64 bytes, for `close`. `about`: list of at most 16 refs to `thing`, fixed. `cites`: list of at most 16 facts of kind `claim`, `sign`, `say` or `point` under `commons`, fixed. `entries`: list of at most 16 records as on `thing`, for an entry of another definition. |
+| `thing` | yes, at most 100 live | `open`; `retired` final | `pointer`: the author of the opening act, fixed | `label`: text, at most 256 bytes. `digests`: list of at most 16 digests. `addresses`: list of at most 16 texts of at most 1,024 bytes. `members`: list of at most 16 members. `entries`: list of at most 16 records `{ scope: text, seq: int, hash: digest }`. None is fixed. |
+| `claim` | yes, at most 100 live | `proposed`; `agreed` final; `withdrawn` final | `proposer`: the author, fixed. `parties`: list of at most 16 members, fixed, required. `signed`: list of at most 16 members, not fixed. | `kind`: enum `agree`, `dispute`, `close`, `same`, fixed. `target`: scope reference, fixed, optional. `text`: detached text, at most 64 KiB, fixed. `outcome`: text, at most 64 bytes, for `close`. `about`: list of at most 16 refs to `thing`, fixed. `cites`: list of at most 16 facts of kind `claim`, `sign`, `say` or `point` under `commons`, fixed. `entries`: list of at most 16 records as on `thing`, for an entry of another definition. |
 
-A thing has no final state, so a room keeps every thing it has pointed
-at. The bound of 100 is a bound to measure (section 10). A claim is
-live only while it is proposed, so agreed and withdrawn claims do not
-count against the bound. A statement is an entry and has no bound of
-its own.
+A thing stays `open` until an admin retires it, so a room keeps every
+thing it has pointed at. A claim is live only while it is proposed, so
+agreed and withdrawn claims do not count against the bound. Each bound
+of 100 is shared: one member holds at most 25 live things that they
+opened and at most 25 proposed claims that they proposed, and the next
+act is refused `member-share`. No one member can stop pointing or
+claiming for the room. The bounds are bounds to measure (section 10). A
+statement is an entry and has no bound of its own.
+
+A claim's `target` is the scope reference of the package scope whose
+act it consents to. A claim is presented only to acts of that scope
+(section 4). A claim with no target binds no package.
 
 ### 3.2 Acts
 
 | Act | Step | On | Grant | Guards | Effects |
 |---|---|---|---|---|---|
-| `point` | open | `thing` | `commons.point` | none | sets `pointer` to the signer and the fields given |
+| `point` | open | `thing` | `commons.point` | the signer's share (section 3.1) is not full | sets `pointer` to the signer and the fields given |
 | `locate` | transition | `thing` | `commons.point` | the thing is `open` | adds the given locators to the lists; removes none |
+| `retire` | transition | `thing` | `commons.retire` | the thing is `open` | sets `retired`; the thing stays citable by its opening entry |
 | `say` | comment | none | `commons.say` | none | the entry holds `text` (detached, at most 64 KiB), `about` (list of at most 16 refs to `thing`) and `cites` (as on `claim`) |
 | `withdraw-statement` | comment | none | `commons.say` | the cited `say` entry's signer is the signer | the entry cites the withdrawn statement |
-| `claim` | open | `claim` | `commons.claim` | `parties` holds the signer; for `close` and `dispute`, `parties` is the signer alone | sets `proposer`, `parties`, `kind`, `text`, `about`, `cites`, `entries`; adds the signer to `signed`; sets `agreed` when `parties` has one member |
-| `sign` | transition | `claim` | `commons.claim` | the claim is `proposed`; `parties` holds the signer; `signed` does not | adds the signer to `signed`; sets `agreed` when every member of `parties` is in `signed` |
-| `withdraw-claim` | transition | `claim` | `commons.claim` | the claim is `proposed`; the signer is `proposer` | sets `withdrawn` |
+| `claim` | open | `claim` | `commons.claim` | `parties` holds the signer and no member twice, else `duplicate-party`; for `close` and `dispute`, `parties` is the signer alone; the signer's share (section 3.1) is not full | sets `proposer`, `parties`, `kind`, `text`, `about`, `cites`, `entries`; adds the signer to `signed`; sets `agreed` when `parties` has one member |
+| `sign` | transition | `claim` | `commons.claim` | the claim is `proposed`; `parties` holds the signer; `signed` does not | adds the signer to `signed`; sets `agreed` when the count of `signed` plus one equals the count of `parties` |
+| `withdraw-claim` | transition | `claim` | `commons.claim` | the claim is `proposed`; the signer is `proposer` or a member of `parties`, or holds an admin role | sets `withdrawn` |
 | `adopt` | comment | none | `commons.adopt` | none | the entry holds `semantic` (digest) and `presentation` (digest); section 5 |
 
 The three grants `commons.point`, `commons.say` and `commons.claim` are
-granted to every member role at install. `commons.adopt` is granted to
-every member role as well. A room's membership can narrow any of them
-later, under its own rules.
+granted to every member role when the room is created. `commons.adopt`
+is granted to every member role as well. `commons.retire` is granted to
+admin roles only. A room's membership can narrow any of them later,
+under its own rules.
 
 A claim of kind `close` is one party's statement that its part of the
 matter is closed. Its `outcome` is the party's own word for it:
@@ -116,12 +135,17 @@ accept what `cites` or `entries` names. A claim of kind `same` says that
 the things in `about` are one thing. Each takes effect at once, because
 its parties are the signer alone. None of them changes any other item.
 
-The condition "every member of `parties` is in `signed`" is a condition
-on an effect. The first slice chooses its form, as a conditional effect
-over the two lists or as a rule expression, and proves it with witness
-W2 (section 7). In either form, a claim with one party is
-`agreed` in its opening entry. A claim with n parties is `agreed` in
-the entry of its nth distinct signature.
+The condition "every member of `parties` is in `signed`" is a count,
+not a comparison of lists. `parties` has no duplicate member, because
+`claim` refuses one. `sign` requires that the signer is in `parties`
+and not yet in `signed`. So `signed` is always a subset of `parties`
+with no duplicate, and every party has signed exactly when the count of
+`signed` equals the count of `parties`. The `sign` effect is one
+conditional: when the count of `signed` plus one equals the count of
+`parties`, set `agreed`. It is bounded by 16 and needs no set operator.
+A claim with one party is `agreed` in its opening entry. A claim with n
+parties is `agreed` in the entry of its nth signature. Witness W2
+(section 7) proves it.
 
 ### 3.3 What the commons does not do
 
@@ -140,8 +164,8 @@ the entry of its nth distinct signature.
 
 A package that serves a matter declares a connection to the commons as
 an `outside` endpoint, in the form of the packages note (section 2).
-The validator proves that the host's commons definition has the kinds
-the package names. Then the package uses the commons in two ways.
+The validator proves that the pinned commons version has the kinds the
+package names. Then the package uses the commons in two ways.
 
 **About.** Any act can carry a field
 `about: { type: "list", of: { type: "fact", kind: ["point"], under: "commons" }, max: 16 }`.
@@ -164,16 +188,24 @@ issue definition's `performer`, written by `accept` from the signer, is
 `signer`. A renovation package's `contractor` on a change order is
 `claim`.
 
-A guard reads the presented agreeing entry with the `presented` operand
-and its parts. Two encodings are possible. In the first, the act
-presents the agreeing entry alone, and the guard reads `parties` and
-`text` as that entry set them. In the second, the act presents the
-claim's opening entry beside it, and the guard reads `parties` and
-`text` from the opening entry. The slice that builds the first `claim`
-slot chooses one and proves witness W3 with it. In both, the guard
-compares the claim's `text` digest with the act's own `terms` field. So
+A guard reads the presented claim as two entries: the claim's opening
+entry, which fixed `parties`, `text` and `target`, and its agreeing
+entry. The guard checks that both name the same claim item, that
+`target` is the act's own scope, that `parties` holds the member the
+act writes, that `signed` in the agreeing entry holds every party, and
+that the claim's `text` digest equals the act's own `terms` field. So
 an acceptance under the package names the exact words the parties
-signed.
+signed, and a claim signed for one room's package cannot be carried
+into another.
+
+A presented claim is consumed. The host keeps, for each scope, the set
+of agreeing entries that acts of that scope have bound a member
+through, as the certified-rules hardening keeps used certificates, and
+refuses a second presentation of the same agreeing entry with
+`consent-consumed`. One claim therefore consents to one act in one
+scope. "The contractor agrees to this change at this price" binds the
+contractor to that change order and to no later one with the same
+words.
 
 This is the rule the catalogue states. A package's structure is entered
 only through a claim of agreement by the parties it binds, or through an
@@ -203,6 +235,15 @@ the adopted presentation. The room's `present` act stays as the default
 for members who adopted nothing. A member can adopt again at any time,
 and the record shows which reading each member used from which position.
 When a dispute turns on what a screen showed, that is the fact to cite.
+
+An adopted presentation is served only when its release is in the
+Worker's `APPLICATION_TRUST`, the list that admits an installed package.
+The host checks the list when each session starts, as R11 checks
+admission on each use. A member's `adopt` records the choice and grants
+nothing. When the adopted release is not trusted, the session uses the
+room's default presentation and the host names the reason,
+`presentation-untrusted`. Act descriptions can mislabel an act, so a
+presentation enters a member's session only on the operator's trust.
 
 Act descriptions are part of the local part. The owner's presentation
 can call an act "variation" where the contractor's calls it "change
@@ -245,8 +286,8 @@ connects to the commons. They are the test for overreach.
 |---|---|---|
 | W1 | **Structure after pointing.** A room holds three things, two statements and one agreed claim between A and B, and no package. The package is installed. A signs the package's first act, with the earlier claim presented. | The act takes effect. The entry's `about` names the earlier things by their opening entries. No earlier entry changes. |
 | W2 | **Agreement in the last signature.** A claim names A, B and C. A signs at opening, B signs, C signs. | The claim is `proposed` after A and after B, and `agreed` in C's entry. A second signature by B is refused. A one-party `close` is `agreed` in its opening entry. |
-| W3 | **Consent before binding.** The package's act writes B into a `claim` slot. A signs it with no claim presented, then with a claim that B has not signed, then with a claim whose text differs from the act's `terms`, then with the agreed claim. | The first three are refused with the reasons the guards name. The fourth takes effect. |
-| W4 | **Two readings.** A adopts presentation P, B adopts presentation Q, both for the package's semantic id. Both read the entry of W3. | Each member's session returns the entry under its own projection and description. No shared act was needed, and the two `adopt` entries are in the record. |
+| W3 | **Consent before binding.** The package's act writes B into a `claim` slot. A signs it with no claim presented, then with a claim that B has not signed, then with a claim whose text differs from the act's `terms`, then with the agreed claim, then with the same agreed claim presented again to a second act. | The first three are refused with the reasons the guards name. The fourth takes effect. The fifth is refused `consent-consumed`. |
+| W4 | **Two readings.** A adopts presentation P, B adopts presentation Q, both for the package's semantic id. C adopts presentation R, whose release is not in the Worker's trust list. All three read the entry of W3. | A's and B's sessions return the entry under their own projection and description. C's `adopt` is recorded, and C's session uses the room default with reason `presentation-untrusted`. No shared act was needed, and the three `adopt` entries are in the record. |
 | W5 | **Close without agreement.** The package's item reaches its final state. B signs a `close` claim with outcome `disputed`. | The item is final. B's claim is `agreed`. A projection of the matter shows both, and shows the matter as closed for B only. |
 
 The renovation cases 29 and 30 are the exit test: a matter room that
@@ -269,7 +310,10 @@ The slices change these with their code. This head changes nothing.
 | [capture note](2026-10-21-capture-with-source.md), section 2 | No field names a thing. | Every capture act gains `about`, a list of at most 16 facts of kind `point` under `commons`. |
 | `packages/contract/src/definition.ts`, `ItemType.parties` | `SlotRule & { list, max, author }` | And `consent?: "signer" \| "claim" \| "declared"`. |
 | [write an application](../docs/write-an-application.md) | Declare the item types first. | Point at the commons first; declare `consent` on each party slot; final states end items. |
-| [roadmap](../docs/roadmap.md) | No row for the common part of a room. | One row: pointing and claims, with the commons package and member presentations. |
+| [roadmap](../docs/roadmap.md) | No row for the common part of a room. | One row: pointing and claims, with the commons definition and member presentations. |
+| [kernel page](../docs/kernel.md), K1 | 73 pinned versions. | 74, with `platform:commons@1`. |
+| Each Worker's creation cohort (`PLATFORM_CREATION_PINS`) | Register, directory, membership, rules and destination. | And the commons. |
+| The host's session start | Serves the room's `present` choice. | Serves the member's adopted presentation when its release is trusted (section 5). |
 | [use cases](../docs/use-cases.md), "What a reusable application needs to say" | One list. | Two lists, fixed for everyone and left to each party, on the catalogue head filed with this note. |
 
 ## 9. Slices
@@ -277,17 +321,21 @@ The slices change these with their code. This head changes nothing.
 Each slice is a request to the builder, in this order. None is filed by
 this note.
 
-- **PC1. The commons package.** The definition of section 3, validated
-  and pinned, installed at room creation by the host's default cohort,
-  shown by the generic interface. Witness W2. Measures the bound of 100
-  things on the demo rooms.
+- **PC1. The commons definition.** The native definition of section 3,
+  pinned in the creation cohorts of the three Workers, created with the
+  room, shown by the generic interface. Witness W2, and the exhaustion
+  case: one member opens 25 things and proposes 25 claims, the next of
+  each is refused `member-share`, another member still points and
+  claims, and an admin retires a thing. Measures the bound of 100 things
+  on the demo rooms.
 - **PC2. Consent on party slots.** The `consent` rule, the validator's
   checks, the install screen's list of `declared` slots, and the first
   `claim` slot in a package. Witnesses W1 and W3.
 - **PC3. Member presentations.** The presentation package form, the
-  `adopt` act, and the host's per-session presentation in the browser
-  and over MCP. Witness W4. After the presentation boundary of the
-  self-contained applications note (M2).
+  `adopt` act, the trust check at session start, and the host's
+  per-session presentation in the browser and over MCP. Witness W4.
+  After the presentation boundary of the self-contained applications
+  note (M2).
 - **PC4. Closings and the matter projection.** The `close` claim in the
   room's views, and the three catalogue scenarios in `dap check`.
   Witness W5, and the renovation exit test with the matter package of
@@ -298,6 +346,8 @@ this note.
 - Things for each room: 100 live in PC1. A room that points at more
   refuses `point` with `too-many-things`. The demo rooms report their
   count after one month.
+- Things opened by one member, live: 25. Claims proposed by one member
+  at once: 25. The next act is refused `member-share`.
 - Claims proposed at once: 100. Agreed and withdrawn claims are final
   and retained.
 - Locators for each thing: 16 of each kind.
@@ -338,4 +388,5 @@ and `packages/contract/src/application-projection.ts` at main
 retained files and definition succession notes; and the dap-spike's
 design and direction notes at `9d738e2e`. The frame comes from Star and
 Griesemer (1989), Star (2010), Bowker and Star (1999, chapter 9) and
-Licklider and Taylor (1968). Nothing was run for this note.
+Licklider and Taylor (1968). Nothing was run for this note. Recut on
+27 October after the checker's review 8164acf4, at main `260a9782`.
