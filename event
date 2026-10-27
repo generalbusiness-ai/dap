@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:29b4fdefa57a9c74db39513a14663351af065e6f","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-27-br8-browser-boundary.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2c9413a828bad9ecd42781b7f82f14bd5a3613c4","text":"Merge retired a covered predecessor; the successor is at packages/cli/package.json."}
