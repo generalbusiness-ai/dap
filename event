@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f864e880076df38a8c4605420fb82ad4e77f3dea","text":"Merge retired a covered predecessor; the successor is at docs/self-host.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fd06a517b82d51b07016e16dde7e483a6d0dac43","text":"Merge retired a covered predecessor; the successor is at packages/cli/test/support/historical-install-plan.ts."}
