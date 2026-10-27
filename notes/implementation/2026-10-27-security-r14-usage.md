@@ -1,8 +1,9 @@
 # Report Worker observations with explicit coverage limits
 
-Work in progress: source and focused evidence are complete. The ordinary gate,
-final manifest, evidence seal, and exact-head checker review remain due. This
-note claims no live query, real credential use, landing, or deployment.
+Source, focused checks, the ordinary gate and evidence packaging are complete.
+Exact-head checker review remains due. Review and landing wait
+behind the installed-release listing request `521f57a1`. This note claims no
+live query, real credential use, landing, or deployment.
 
 ## What changed
 
@@ -11,7 +12,7 @@ and compares it with the checked-in Worker inventory. The CLI accepts a
 32-character account ID, an external mapping path, optional Worker selections,
 and an optional completed UTC end time. The credential comes only from bounded
 noninteractive stdin. It is absent from arguments, files, environment fallbacks,
-SQL, reports, and provider error messages. A report containing credential text
+SQL, and reports. Provider error messages are not emitted. A report containing credential text
 is withheld completely. The CLI emits no replacement report in that case.
 
 The operator mapping associates historical deployment labels with configured
@@ -89,8 +90,10 @@ response-envelope rule changed, to cover the final source.
 
 Source checkpoint: `2617c210ba4efb927c3fd9436b8b5c16acb0ba68`, tree
 `556d8c1f5a47e85457c13b8b096b1311e834ae0f`. Focused checks ran on earlier
-working states of base Main `f9aca97f`; each result retains its command, head,
-tree, changed-file hashes, exit, wall time, child CPU and output hash. The final
+working states of base Main `f9aca97f`; owning and control-wrapper results
+retain their command, head, tree, changed-file hashes, exit, wall time, child
+CPU and output hash. Individual control results retain arguments, syntax and
+child exits, and output hashes. The final
 core SHA-256 is `4860370b4afb21cb04e8c3679a9c0f740b97d794b8f7c64b506d263c4bfc2214`.
 No package was installed: the private dependency view was copied from the prior
 verified exact-lock view, rebound to this worktree, and checked for dangling
@@ -115,9 +118,30 @@ overwritten before retention; its exact bytes are unavailable. The corrected
 probe is retained. The initial token failure remains a failure; passing later
 checks do not relabel it.
 
-Raw evidence remains open at
+The ordinary gate naturally passed at checkpoint
+`815a780cdf87583cccb60888172265491cbe5dbb`, tree
+`89a77ba8ad0f04dcb1b78edb827916b599e837a0`. Its checkout was clean before and
+after, with no signal or interrupted stage. The driver measured
+1,183.684096083 seconds wall and 2,383.665516 seconds child CPU. Node reports
+66 passed, including the nine new cases; Counting reports 55 passed; plain
+Vitest reports 2,848 passed and one skipped across 279 passing modules; Native
+reports 795 passed and two skipped across 232 passing and one skipped module.
+All phases reached natural success with zero unhandled errors. Final identities
+are unique and reconcile to public terminal records. Native has 797 final
+callbacks; 16 lack a ready callback and 38 lack a result callback. Those missing
+observations establish no cause or missing duration. Plain has all three
+callbacks for each final identity. Concurrent case/module durations are neither
+wall time nor CPU. The retained analyzer hashes its 39 gate inputs.
+
+Raw evidence is indexed and made read-only at
 `/Users/hughpyle/play/artroom-evidence/2026-10-27-security-r14-usage`.
-It will be indexed, manifested and made read-only after the final gate. Timings
+The checked-in manifest is
+`notes/implementation/evidence/2026-10-27-security-r14-usage.manifest.json`.
+It names every retained file, including the checksum index. The 1,847 tracked
+paths outside `notes/` have identical Git blob bytes at the gate checkpoint
+and this worktree; `gate-source-equality.json` has SHA-256
+`ad1256fa6d11ea145a469702148640231f1518d13f5ad6e47d6372fa6b64b629`.
+Only this note and its evidence manifest follow the gate. Timings
 are the observed command intervals and child-process CPU retained in each
 result. They are not a measured whole-edit latency. Machine: Darwin 27.2.0
 arm64, 18 CPUs, Node v26.12.1, shared load and existing private caches. No
@@ -142,12 +166,14 @@ cold-cache or isolated-machine claim is made.
 | Initial static probe: wrong schema field assumption; no implementation failure established | `node /private/tmp/artroom-r14-static-probe-20261027.mjs` | 1 | `schema-example-and-owner-plan/output.log`: `4b6120dde65359b15cb08c97757e1c22346c88a523e19201e5848313fe111cf7` |
 | Repeated static probe with same obsolete assumption; not relied on | `node /private/tmp/artroom-r14-static-probe-20261027.mjs` | 1 | `schema-example-and-owner-plan-repair/output.log`: `4b6120dde65359b15cb08c97757e1c22346c88a523e19201e5848313fe111cf7` |
 | Corrected schema/example and fixed-owner probe: 8 Workers, 181 catalog routes, 29 bindings; test file included once | `node /private/tmp/artroom-r14-static-probe-20261027.mjs` | 0 | `schema-example-and-owner-plan-final/output.log`: `ade296e35123caff8e5385f295daa706fdf0cd7dab4a6d5d4b39c18298fb9297` |
+| Ordinary gate: all five stages passed at exact checkpoint above; no unhandled errors | `npm run gate` | 0 | `ordinary-gate/output.log`: `0df42cad84d939d26efdd4c15e3b9f1e394611a229c6a55882d1f36a2211cc5f` |
+| Gate reconciliation: unique finals, terminal totals and callback gaps | `python3 /private/tmp/artroom-r14-gate-analysis-20261027.py` | 0 | `gate-analysis/analyze.json`: `0e9fd8c186299f8ed483af3975d6eae422725f05d9a30701bfec479b66f24330` |
 
 ## Open limits
 
-- The ordinary gate, manifest, seal, and exact-head review remain due under the
-  child request above. No hosted compatibility or actual account coverage has
-  been established.
+- Exact-head review remains due under the child request above. The
+  installed-release listing `521f57a1` precedes review and landing.
+  No hosted compatibility or actual account coverage has been established.
 - Parent R14 remains open. Deployment aliases cannot authenticate historical
   Worker identity. Missing route methods, native versions, feature identity,
   binding use, disabled writers, sampling and silent losses prevent retirement
