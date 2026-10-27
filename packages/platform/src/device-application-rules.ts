@@ -11,14 +11,14 @@ import { INSTALL_DEFINITION_BYTES, INSTALL_DEFINITIONS, readInstallAdditions } f
 import { applicationValues } from "./application.ts";
 import { rulesMembership } from "./rules-scope.ts";
 import { deviceApplicationRequirement } from "./device-application-package.ts";
-import { ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT } from "./archive-binding-wire.ts";
+import { ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT } from "./archive-binding-wire.ts";
 import { pinnedBy } from "./versions.ts";
 import { DEVICE_GENESIS_BYTES, DEVICE_GRANT_BYTES } from "./device-application-wire.ts";
 
 import { APPLICATION_SEMANTIC_VALUE2, APPLICATION_RELEASE_VALUE2 } from "./application-install-v2.ts";
 const archiveInstall = (given: RuleGiven): boolean => {
   const pin = pinnedBy(given);
-  return pin === ARCHIVE_DEVICE_APPLICATION_COHORT.rules || pin === ARCHIVE_CERTIFIED_RULES_COHORT.rules;
+  return pin === ARCHIVE_DEVICE_APPLICATION_COHORT.rules || pin === ARCHIVE_CERTIFIED_RULES_COHORT.rules || pin === HARDENED_CERTIFIED_RULES_COHORT.rules;
 };
 const install = applicationInstallRulesScope.acts["install-application"]!;
 export const deviceApplicationRulesScope: PlatformData = {

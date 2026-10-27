@@ -3,7 +3,7 @@
 import { same } from "@generalbusiness/dap-bytes";
 import { ITEM_QUERY_BOUNDS, type Digest, type Item, type ItemQuery, type PlatformDefinition, type ScopeRef, type Seed } from "@generalbusiness/dap-contract";
 import { canonicalize, encodeItemQueryParameter, isDigest, isRecord, isScopeRef, isSeed, readItemQueryReply, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
-import { ARCHIVE_DEVICE_APPLICATION_COHORT as DC, ARCHIVE_DEVICE_PUBLICATION_COHORT as PC, ARCHIVE_CERTIFIED_RULES_COHORT as RC, isOf } from "@generalbusiness/dap-platform";
+import { ARCHIVE_DEVICE_APPLICATION_COHORT as DC, ARCHIVE_DEVICE_PUBLICATION_COHORT as PC, ARCHIVE_CERTIFIED_RULES_COHORT as RC, HARDENED_CERTIFIED_RULES_COHORT as HC, isOf } from "@generalbusiness/dap-platform";
 import { ARCHIVE_NATIVE_DATA } from "@generalbusiness/dap-git/archive-policy";
 import type { ArchiveBudget } from "./archive-budget.ts";
 import type { FixtureArchiveTarget } from "./archive-driver.ts";
@@ -111,7 +111,7 @@ export function archiveTarget(reads: ArchiveTargetReads): Omit<FixtureArchiveDep
         || !select(at, found.named, from ? "creator" : "self", from))) return null;
       if (at.kind === "directory") {
         if (!isOf(found.named, "platform:directory")) return null;
-        const cohort = found.named === DC.directory ? DC : found.named === PC.directory ? PC : found.named === RC.directory ? RC : null;
+        const cohort = found.named === DC.directory ? DC : found.named === PC.directory ? PC : found.named === RC.directory ? RC : found.named === HC.directory ? HC : null;
         if (dependencies && !cohort) return null;
         const room = await one(at, "repository", ["open"], budget, archiving, at);
         if (room?.values["archive"] !== "journal") return null;

@@ -23,4 +23,9 @@ export const ARCHIVE_CERTIFIED_RULES_COHORT = Object.freeze({
   register: "platform:register@19", directory: "platform:directory@18", membership: "platform:membership@8",
   rules: "platform:rules@11", destination: "platform:destination@14", inbox: "platform:inbox@1",
 } as const);
-export const archiveInstallPin = (pin: string): boolean => pin === ARCHIVE_APPLICATION_COHORT.rules || pin === ARCHIVE_DECLARED_APPLICATION_COHORT.rules || pin === ARCHIVE_DEVICE_APPLICATION_COHORT.rules || pin === ARCHIVE_CERTIFIED_RULES_COHORT.rules;
+/** Explicit hardened successor. Defaults and deployed creation policy stay fixed. */
+export const HARDENED_CERTIFIED_RULES_COHORT = Object.freeze({
+  register: "platform:register@20", directory: "platform:directory@19", membership: "platform:membership@8",
+  rules: "platform:rules@12", destination: "platform:destination@15", inbox: "platform:inbox@1",
+} as const);
+export const archiveInstallPin = (pin: string): boolean => pin === ARCHIVE_APPLICATION_COHORT.rules || pin === ARCHIVE_DECLARED_APPLICATION_COHORT.rules || pin === ARCHIVE_DEVICE_APPLICATION_COHORT.rules || pin === ARCHIVE_CERTIFIED_RULES_COHORT.rules || pin === HARDENED_CERTIFIED_RULES_COHORT.rules;

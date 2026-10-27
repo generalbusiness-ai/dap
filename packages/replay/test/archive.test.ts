@@ -185,7 +185,7 @@ test("exact caller anchors classify reviewed private Register copies without adm
     // Caller anchors can still prove this replay without a descriptive alias.
     // An unknown pin or wrong kind must not take the private-name shortcut:
     // it must try the exact unavailable private history and receive not-found.
-    for (const [basis, kind] of [["platform:register@20", "register"], [pin, "membership"]] as const) {
+    for (const [basis, kind] of [["platform:register@21", "register"], [pin, "membership"]] as const) {
       const refused: { scope: ScopeId; result: string }[] = [];
       await verifyArchive(offline(basis, kind, refused), options);
       expect(refused).toEqual([{ scope: R.at.scope, result: "not-found" }]);

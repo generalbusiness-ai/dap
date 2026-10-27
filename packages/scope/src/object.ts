@@ -227,7 +227,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
       lookup: (...args) => store.lookup(...args), all: () => store.all(),
     };
     const outsideGiven: OutsideGiven = {
-      ...made, state: outsideState,
+      ...made, state: outsideState, bounds,
       retained: (...args) => store.retained(...args),
       own: (seq) => {
         const kept = Number.isSafeInteger(seq) && seq >= 0 ? store.stored(seq) : null;

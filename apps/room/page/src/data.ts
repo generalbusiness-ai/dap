@@ -790,7 +790,7 @@ export async function roomInitialization(room: Room): Promise<RoomInitialization
 }
 
 export interface RulesView {
-  /** Q11 only: summary-bound read-only presentation, not native observation authentication. */
+  /** Q11 and Q12: summary-bound read-only presentation, not native observation authentication. */
   configured?: boolean;
   readOnlyReason?: string;
   /** The actual rules item, used by publish transitions. */
@@ -805,6 +805,8 @@ export interface RulesView {
   controllers: string[];
 }
 
+const isCertifiedRules = (definition: unknown): boolean => definition === "platform:rules@11" || definition === "platform:rules@12";
+
 /** The rules of the room, as the rules scope holds them, and the members who may change them. */
 export async function loadRules(room: Room): Promise<RulesView> {
   await fresh(room);
@@ -812,7 +814,7 @@ export async function loadRules(room: Room): Promise<RulesView> {
   const { summary, at } = await summaryOf(handle);
   const rules = summary.items.find((item) => item.type === "rules");
   if (!rules) throw new Unreadable(`${room.rules} holds no rules.`);
-  if (summary.definition === "platform:rules@11") {
+  if (isCertifiedRules(summary.definition)) {
     if (summary.status !== "active" || summary.scope.kind !== "rules" || summary.scope.scope !== room.rules
       || summary.items.filter(item => item.type === "rules").length !== 1) throw new Unreadable("The complete certified rules could not be read.");
     const read = rulesSummaryV11(rules, room.destination);
@@ -920,7 +922,7 @@ export async function actsOn(room: Room, scope: ScopeId): Promise<{ acts: Offere
   const me = await refreshStanding(room);
   const handle = handleOf(room, scope);
   const summary = (await summaryOf(handle)).summary;
-  if (summary.definition === "platform:rules@11") return { acts: [], hidden: 0 };
+  if (isCertifiedRules(summary.definition)) return { acts: [], hidden: 0 };
   let { shape } = await shapeOf(room, handle, summary);
   if (scope === room.directory && summary.definition === "platform:directory@10") {
     const selected = await activeDirectory({ summary: scope => handleOf(room, scope).summary(), query: (scope, query) => handleOf(room, scope).queryItems(query) }, summary.scope, room.membership);
@@ -1048,7 +1050,7 @@ export async function act(room: Room, scope: ScopeId, kind: string, asked: { on?
   if (scope === room.directory && OPENING_ACTS.has(kind)) scope = await openingScope(room);
   const handle = handleOf(room, scope);
   const { summary, at: before } = await summaryOf(handle);
-  if (summary.definition === "platform:rules@11") throw new Unreadable(Q11_READ_ONLY);
+  if (isCertifiedRules(summary.definition)) throw new Unreadable(Q11_READ_ONLY);
   const { shape, declared } = await shapeOf(room, handle, summary);
   const declaration = shape.acts[kind];
   if (!declaration || kind === shape.genesis) throw new Unreadable(`${kind} is not an act of ${shape.name}.`);

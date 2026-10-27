@@ -1,10 +1,10 @@
-/** Q11 Page presentation from one complete authenticated summary.
+/** Q11 and Q12 Page presentation from one complete authenticated summary.
  * This is not a native observation, certificate verification or permission. */
 import type { Digest, Item, ScopeId } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isFactRef, isRecord, same, utf8 } from "@generalbusiness/dap-bytes";
 import { rulesPolicyProposalV11, type RulesPolicyV11 } from "@generalbusiness/dap-platform";
 
-export const Q11_READ_ONLY = "Certified rules are read-only in this page. Use the certified rules workflow to change them.";
+export const Q11_READ_ONLY = "Certified rules are read-only in this page. No user-facing publish command is available yet.";
 export type RulesSummaryV11 = { configured: false; policy: null } | { configured: true; policy: RulesPolicyV11; proposal: Digest };
 const fits = (value: unknown): boolean => { try { return utf8(canonicalize(value)).length <= 262144; } catch { return false; } };
 

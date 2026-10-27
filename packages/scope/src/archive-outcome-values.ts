@@ -4,7 +4,7 @@
 import type { Bounds, Digest, Input, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isFactRef, isPlatformDefinition, natural } from "@generalbusiness/dap-bytes";
 import { boundedRetainedDependencies, operationValueSelector, outcomeValueDependencies, type OperationRules, type PlannedRetainedDependency } from "@generalbusiness/dap-derive";
-import { ARCHIVE_CERTIFIED_RULES_COHORT, RULES_CERTIFICATE_KIND, destinationEvidenceValues, rulesCertificateEvidenceValues } from "@generalbusiness/dap-platform";
+import { ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT, RULES_CERTIFICATE_KIND, destinationEvidenceValues, rulesCertificateEvidenceValues } from "@generalbusiness/dap-platform";
 import type { ArchiveBudget } from "./archive-budget.ts";
 import { checkArchiveFieldSource, readArchiveDigestFields } from "./archive-digest-fields.ts";
 import { stopArchivePrefix as stop, type ArchivePosition } from "./archive-prefix.ts";
@@ -13,9 +13,10 @@ import { sqlJsonText as text, type Sql } from "./sqlite.ts";
 interface Owner { readonly name: string; readonly kind: string; readonly rules: OperationRules }
 const knownValues = (name: string, kind: string, rules: OperationRules): void => {
   const selector = operationValueSelector(rules);
-  if (selector === rulesCertificateEvidenceValues || name === ARCHIVE_CERTIFIED_RULES_COHORT.destination && kind === RULES_CERTIFICATE_KIND) {
+  const certificateOwner = name === ARCHIVE_CERTIFIED_RULES_COHORT.destination || name === HARDENED_CERTIFIED_RULES_COHORT.destination;
+  if (selector === rulesCertificateEvidenceValues || certificateOwner && kind === RULES_CERTIFICATE_KIND) {
     const domains = rules.valueDomains;
-    if (selector !== rulesCertificateEvidenceValues || name !== ARCHIVE_CERTIFIED_RULES_COHORT.destination || kind !== RULES_CERTIFICATE_KIND
+    if (selector !== rulesCertificateEvidenceValues || !certificateOwner || kind !== RULES_CERTIFICATE_KIND
       || !Array.isArray(domains) || domains.length !== 2
       || domains[0]?.domain !== "artroom-rules-policy-1" || domains[0].max !== 262144
       || domains[1]?.domain !== "artroom-rules-tree-1" || domains[1].max !== 262144) return stop("unsupported-archive-cohort");

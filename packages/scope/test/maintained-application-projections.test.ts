@@ -3,7 +3,7 @@
  * adapters. Git/package HTTP host, clock, scheduler and private browser stores
  * are explicit fixtures. No browser, provider effect or deployment runs. */
 import { env } from "cloudflare:test";
-import { expect, inject, onTestFinished, test, vi } from "vitest";
+import { expect, inject, onTestFinished, test } from "vitest";
 import { canonicalize, factRefOf, isRecord, isScopeRef, isSeed, same, scopeIdOf, unb64url } from "@generalbusiness/dap-bytes";
 import { readPublishedApplicationPackage2 } from "@generalbusiness/dap-platform/application-v2";
 import { DECLARED_APPLICATION_COHORT as C } from "@generalbusiness/dap-platform";
@@ -35,10 +35,12 @@ test.each(["counter", "lending"] as const)("maintained %s package installs and i
   if (!M || !A || !G) throw Error("The declared cohort needs its three siblings.");
   const f = await applicationResolverFixture("sha1", undefined, {}, undefined, packet), peer = applicationHttpPeer(f);
   const bindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(f.trust), env.SCOPE_INDEX);
-  const now = life.now(), date = vi.spyOn(Date, "now").mockReturnValue(now);
+  const now = life.now(), previousNow = Date.now, fixtureNow = () => now;
+  // Inflate polls this clock frequently; a spy would retain every call.
+  Date.now = fixtureNow;
   let dispose = () => {};
   let observation: Observation | undefined;
-  onTestFinished(async () => { dispose(); await observation?.done; date.mockRestore(); });
+  onTestFinished(async () => { dispose(); await observation?.done; if (Date.now === fixtureNow) Date.now = previousNow; });
   try {
     const seat = await life.wait(() => M.did(rita, "seat", { expected: { roster: 1 } }));
     await life.wait(async () => M.did(rita, "first-key", { fields: { member: seat }, expected: await M.expected({ roster: 0, member: seat }) }));
@@ -148,5 +150,5 @@ test.each(["counter", "lending"] as const)("maintained %s package installs and i
     expect(paths).toContain(`/v1/scopes/${app.name}/application-projection`);
     expect(paths).not.toContain(`/v1/scopes/${app.name}/history`);
     expect((await life.wait(() => A.entries())).filter(entry => entry.input.type === "act" && entry.input.signed.intent.kind === "install-application")).toHaveLength(1);
-  } finally { dispose(); await observation?.done; date.mockRestore(); life.release(); }
+  } finally { dispose(); await observation?.done; if (Date.now === fixtureNow) Date.now = previousNow; life.release(); }
 }, 30_000);
