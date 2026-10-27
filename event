@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:17fe942b6bfc5d45d95d28a343a7651a0a3fe754","text":"Merge retired a covered predecessor; the successor is at scripts/test/fixtures/usage-report/scripted-sql.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1aeda5b581f5d2ff82ae227c88335291a57ee480","text":"Merge retired a covered predecessor; the successor is at scripts/usage-report.mjs."}
