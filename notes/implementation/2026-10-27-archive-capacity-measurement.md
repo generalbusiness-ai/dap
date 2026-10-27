@@ -1,10 +1,11 @@
-# Archive capacity measurement: two-row draft
+# Archive capacity measurement: two-row result
 
-This measurement draft records Site 9172 and Room A 33387 numeric finish
-comparisons and mapped charge sites. A single evidence collector is assembled
-and has an open pre-gate manifest. The ordinary gate, final evidence seal and
-exact-head checker review remain due. This is not a completed or landed
-delivery. The evidence justifies no cost cut or fitting claim.
+This report records Site 9172 and Room A 33387 numeric finish comparisons
+and mapped charge sites. One ordinary gate naturally passed at
+`85c9ee210024af58b648a89e28a3610408f11457`, tree `7dd31fd418d5d0ffd20667393df68b935b6c522e`.
+The assembled collector has its final index, manifest and read-only seal.
+Exact-head checker review and landing remain due. The evidence justifies no
+cost cut, fitting claim or paired fitting control.
 
 The governing request is
 `git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0f0eeab748533208c813092ebf1ad0dab5087105`,
@@ -371,15 +372,17 @@ RPC label is context, not proof of the caller or scheduling cause.
 
 All table paths now refer to the single collector at
 `/Users/hughpyle/play/artroom-evidence/2026-10-27-archive-capacity-measurement`.
-Its `Site/` and `RoomA/` trees are byte-for-byte, mode-preserving copies of the
-two earlier raw collections. `assembly/copy-receipt.json` checks complete
+Its `Site/` and `RoomA/` copies matched all source bytes and modes at assembly.
+The final seal removes their write bits; original modes remain in the receipt.
+The original two raw collections were not rewritten or sealed by finalization. `assembly/copy-receipt.json` checks complete
 before/after source inventories and copied content. All 270 source files,
 historical snapshots and failed-invocation sources are retained. Original
 command paths and argv remain unchanged in copied receipts; assembly reruns
 no observation, extraction, reconstruction, mapping or query. The assembler
 and its actual outer process receipt are retained. Full tails stay withheld.
-The table selects supporting files; the open manifest indexes the current
-collector. Final gate evidence and the final index/seal remain due.
+The table selects supporting files; the final manifest indexes every collector
+file, including `SHA256SUMS`. That root index excludes itself. Copied original
+paths and argv remain provenance, not claims that those commands ran again.
 
 For the older Site collection, only the two reconstruction invocations have
 retained process exit and timing receipts. Both receipts record clean Main
@@ -473,32 +476,64 @@ process timings do not measure product latency or compare runtime performance.
 | Exact-lock dependency view; no installation | `RoomA/dependency-setup/result.json` | 0 | `RoomA/dependency-view.json` | 1090 | `f151bf1f282be97b7941dd064260005a80ecc5fdc04686c1face9040f888d996` |
 | Complete source-copy assembly | `assembly/copy-receipt.json` | 0 | `assembly/copy-receipt.json` | 390254 | `3aef8a81aaf1d6def492b4d771ddf927464280e15824ba56c54d5bc289b0f1b0` |
 | Actual assembler process output | `assembly-process/result.json` | 0 | `assembly-process/output.log` | 506 | `23d2f01fe86359064fb3fd1ebedfa562a02a53db85f4936cc0c71c5c0529470a` |
+| Ordinary gate | Natural exit; actual argv in ordinary-gate/result.json | 0 | `ordinary-gate/output.log` | 6758 | `5723427caa0dc6c6398dfcd09a470b71f1f14e380b5b2ce04632c00c2b12af07` |
+| Gate reconciliation | Actual analyzer subprocess; argv in analysis-run.json | 0 | `analysis-stdout.log` | 454 | `dd9d72445c93b4f88a030d6718e3d28d5c991c4e0ab7d8087a853dcfde6bf910` |
+| All other tracked blobs and modes equal gate | Git diff/tree and direct hashes; gate-source-equality.json | 0 | `gate-source-equality.json` | 898378 | `1c5c507683a8823b55bb5a189a542748118c0d692ccfa029651dbc6e1e8befef` |
 
 The dependency setup cloned the verified cache without installation, rebound
 14 workspace links into this worktree, and found no broken links. The exact
 lock SHA-256 is `645224923cabfd70b51b8add2a43be12673444779d18002a42ed4254b3216d6e`.
 Its receipt binds clean checkpoint `98810e9b1462dfa8980c5de180f33ffbc839135d`.
-The later gate receives its own explicit checkpoint and tree.
+The ordinary gate checkpoint is bound above.
 The assembler child exited 0 in 0.203077167 wall seconds and 0.175708000
 child CPU seconds. Its actual command, source, streams and checkpoints are
 retained under `assembly-process/`. These copying timings are not benchmarks.
 
-## Work still owned by the parent request
+The ordinary gate ran from `2026-10-27T17:02:57.428131Z` to
+`2026-10-27T17:22:12.121113Z`: 1154.608430042 wall seconds,
+2419.810253000 child CPU (2196.247396000 user,
+223.562857000 system). It had clean source before and after,
+no driver signals and natural exit 0. Machine `{"architecture": "arm64", "cpus": 18, "release": "27.2.0", "system": "Darwin"}`,
+Node `v26.12.1`; load `[1.09912109375, 1.74267578125, 1.88623046875]` before and
+`[2.76123046875, 3.01318359375, 2.8203125]` after. Actual reconciled totals: node: 70 passed; counting: 55 passed; plain: 2,865 passed, 1 skipped cases, 282 passed modules; native: 796 passed, 2 skipped cases, 233 passed, 1 skipped modules.
+Both Vitest terminals report zero unhandled errors. These gate cases are separate
+from the numeric, map, source, assembly and attribution checks above.
 
-The measured numeric comparisons and available charge-site explanations are
-recorded above. The parent still owns final delivery:
+Callback observations: plain: 0 finals without ready, 0 without result, 0 duplicate ready and 0 duplicate result identities; native: 20 finals without ready, 42 without result, 0 duplicate ready and 0 duplicate result identities. Missing callbacks establish
+no cause, readiness or missing duration. The analyzer rejects duplicate or
+conflicting final identities. Concurrent durations are not wall time or CPU.
+`analysis-run.json` retains the actual analyzer argv/exit, timing, streams and
+source/output digests. All 39 input hashes are checked. No owning-case count,
+archive fitting control or Native authority witness is invented for this report.
 
-- Add the ordinary-gate evidence, finish the manifest and seal the collector.
-  The assembled inputs already preserve the source interpretation, 13-group
-  proof, all failed invocations and both historical source sets.
-- Run the required ordinary gate at the exact resulting head and obtain
-  checker review before completion or landing. No such result is claimed here.
-- Apply the ruling's conditional cut requirement only if measurement attributes
-  growth to R7. Neither zero historical finish delta nor carried observed used
-  work establishes that cause. This draft supplies no cut, fit claim, paired
-  fitting control, whole-plan counterfactual or growth curve.
+The notes check emitted one soft warning: the initial complete manifest was
+57,331 bytes, above its 40,960-byte guidance. Completeness is preserved: the
+final manifest is 72312 bytes. No gate or package check is
+rerun during reporting. Reporting-preparation outer stdout is transcript-only;
+`preparation/preparation.json` is its retained receipt, not a fabricated stream.
 
-The capture delivery and the separate R14 work keep their own evidence.
-The new Room A analysis is offline work over the retained numeric capture.
-No new Native witness, fake SQL execution, live provider read, or hosted action
-was performed to revise this note.
+`gate-source-equality.json` (SHA-256
+`1c5c507683a8823b55bb5a189a542748118c0d692ccfa029651dbc6e1e8befef`) records the complete tracked-file
+count, Git blobs, SHA-256 hashes and modes. All tracked files, including other
+notes, equal the gate except exactly this note and manifest. Retained harnesses
+include the exact finalizer and analyzer. Only this collector is sealed by
+removing write bits after its last write. Existing read-only entries/indexes
+are preserved. Final head/tree are bound by publication, not a self-reference.
+
+A source-only audit (`fidelity/receipt.json`; actual command in
+`historical-source-audit/result.json`, exit 0) retains 19 source snapshots.
+Observed Grow policy excludes the new G14 `certificateBody` reader by
+construction, not by missing frames. Its policy bytes match all three heads
+and the digest-pinned map proof. Full historical planning and admitted work
+were not replayed; private-anchor topology remains unproved. No quantitative
+R7 growth or new Native proof follows.
+
+## Remaining limits and review
+
+The two captures and source associations retain the limitations above:
+unattributed work and dropped calls, a reconstructed map, carried common work,
+and no counterfactual old-head execution or measured growth curve. These
+observations do not attribute growth to R7, so the ruling's conditional cut
+requirement is not triggered. No cut, fit claim, paired fitting control, new
+capture, provider query, deployment or runtime change is supplied here.
+Exact-head checker review and landing remain due under the parent request.
