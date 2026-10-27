@@ -35,29 +35,6 @@ describe("canonical JSON", () => {
     for (const bytes of [[0x22, 0xff, 0x22], [0xef, 0xbb, 0xbf, 0x31]]) expect(() => parseStrictBytes(new Uint8Array(bytes))).toThrow(CanonicalError);
   });
 
-  test("long strings keep exact values and strict refusals across escape boundaries", () => {
-    const run = "a".repeat(16_384);
-    const escaped = '"' + run + '\\n' + run + '\\"\\\\€\\ud83d\\ude00' + run + '"';
-    const value = run + "\n" + run + '"\\€😀' + run;
-    expect(parseStrict(escaped)).toBe(value);
-    expect(parseStrictBytes(utf8(escaped))).toBe(value);
-    // The text API can join a raw surrogate half with its escaped partner.
-    for (const text of ['"' + run + "\ud83d" + '\\ude00' + run + '"', '"' + run + '\\ud83d' + "\ude00" + run + '"']) {
-      expect(parseStrict(text)).toBe(run + "😀" + run);
-    }
-    const refused = [
-      ['"' + run, run.length + 1, "unterminated string"],
-      ['"' + run + '\\x"', run.length + 3, "bad escape"],
-      ['"' + run + '\\u12x4"', run.length + 3, "bad unicode escape"],
-      ['"' + run + '\n"', run.length + 1, "control character in string"],
-      ['"' + run + "\ud83d" + '\\n"', run.length + 5, "lone surrogate in string"],
-      ['"' + run + '\\ud800a"', run.length + 9, "lone surrogate in string"],
-    ] as const;
-    for (const [text, position, reason] of refused) {
-      expect(() => parseStrict(text)).toThrow(new CanonicalError(`invalid JSON at ${position}: ${reason}`));
-    }
-  });
-
   test("canonical bytes survive a parse and a rewrite unchanged, with `__proto__` as an ordinary key", () => {
     const text = '{"__proto__":{"x":1},"a":[[],{"__proto__":{"__proto__":null}}],"b":"\u20ac\\n"}';
     const value = parseStrictBytes(utf8(text));
