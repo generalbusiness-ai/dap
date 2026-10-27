@@ -1,8 +1,8 @@
 # Read installed releases through the operator session
 
-Implementation and focused verification are complete. The ordinary gate,
-sealed evidence and exact-head review remain due. No live query or deployment
-is part of this child.
+Implementation, focused verification and the ordinary gate passed. Evidence is
+sealed read-only. Exact-head checker review remains due. No live query or
+deployment is part of this child.
 
 ## What changes
 
@@ -17,6 +17,12 @@ wrapper that prohibits redirects. A valid session refusal, or absent configured
 membership, selects initial Signed reads. A transport failure, timeout or
 malformed session answer stops with a fixed error before any summary or output
 file. The command neither retries a summary nor renews its session.
+
+Acquisition uses a fresh 16-byte operation identity and sets its request expiry up to
+60 seconds ahead. The existing client limits the answer to 16 KiB and the token
+string to 4,096 UTF-16 code units, with a 30-second request/body deadline. The
+request expiry limits issuance, not the issued token's lifetime. The host's
+existing session lifetime and per-read clock checks remain unchanged.
 
 Session acquisition is the one request beyond the summary GETs. The host can
 write bounded replay and rate bookkeeping in `session_request`; it makes no
@@ -68,7 +74,7 @@ until those reports are complete.
 
 ## Evidence
 
-Evidence is being assembled at
+Evidence is retained read-only at
 `/Users/hughpyle/play/artroom-evidence/2026-10-27-application-release-session`.
 The recorded scripted host witness uses identical summary data and authorization
 policy for sessionless refusal and session admission. It proves the command's
@@ -115,9 +121,30 @@ without conflicts; all four task files were byte-identical across that rebase.
 listing adapter and tests retain the exact SHA-256 values above. The ordinary
 gate now checks the combined baseline, including the landed R14 script.
 
-Paths below are relative to the raw directory. Gate checkpoint and final
-manifest remain pending. Times are individual local command observations,
-not whole-edit latency or a controlled benchmark.
+The ordinary `npm run gate` naturally passed at commit `30a0933de6f5f612c79c4b44054c431f142eeab3`
+and tree `168852247492ecd9c43dabbd64c3f622bd05079d` with a clean checkout before and after, no driver signal,
+and zero unhandled errors in both Vitest terminals. It ran from
+`2026-10-27T11:00:58.632653Z` to `2026-10-27T11:20:53.549919Z`.
+Outer wall time was 1194.802030500 seconds; child CPU was
+2458.947548000 seconds (2233.447433000 user,
+225.500115000 system). The recorded machine was
+`{"architecture": "arm64", "cpus": 18, "release": "27.2.0", "system": "Darwin"}`, Node `v26.12.1`; load averages were `{"before": [2.12744140625, 1.9423828125, 2.2158203125], "after": [2.69482421875, 3.154296875, 3.076171875]}`.
+
+Public totals reconciled to final identities and stdout: node: 66 passed; counting: 55 passed; plain: 2,863 passed, 1 skipped cases and 281 passed files; native: 795 passed, 2 skipped cases and 232 passed, 1 skipped files.
+Callbacks remain qualified: plain: 0 final identities without a ready callback and 0 without a result callback; native: 17 final identities without a ready callback and 38 without a result callback. Missing callbacks establish
+no cause, readiness or missing duration. Concurrent case-duration sums are not
+wall time or CPU. The retained analysis records stage timings and detailed
+identity counts separately from focused runs.
+The analysis command below is reconstructed for reproduction from its explicit
+input paths. The analyzer did not record its own process argv. Its zero process
+exit was reported from the analyst's terminal, separately from gate exit.
+
+Only this child's note and manifest change after the gate. All 3,243
+other tracked blobs and modes equal the tested tree, including other notes,
+as recorded in `gate-source-equality.json` (SHA-256 `178c324e92cba5979228bdfaa49ba5aa46a13c36b078515adbdc573d7e33b007`).
+The final manifest inventories all retained files, including the SHA-256 index.
+Times are individual local observations, not whole-edit latency or a controlled
+benchmark. Paths below are relative to the raw directory.
 
 | Check | Command | Exit | Output and SHA-256 |
 | --- | --- | --- | --- |
@@ -130,12 +157,15 @@ not whole-edit latency or a controlled benchmark.
 | Ignoring session: named assertion fails | `Vitest cli -t uses one acquired session` | 1 | `control-ignore-session-compiled-witness/output.log`: `011ff0b3bc9cc114ce855ba1808a79d779c49264e2fe39bdc384fc26ff4b6487` |
 | Uncertain-acquisition control compiles | `tsc -p packages/cli/tsconfig.json` | 0 | `control-continue-after-uncertain-session-types/output.log`: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
 | Continuing after uncertainty: named assertion fails | `Vitest cli -t stops private session exceptions` | 1 | `control-continue-after-uncertain-session-witness/output.log`: `79f3d32f968a962ee177f0971aa895344423602ec818f2d931bdc1ec01954bbb` |
+| Ordinary combined-tree gate: naturally passed | `npm run gate` | 0 | `ordinary-gate/output.log`: `ca2e96d2f11d7fae9633b788d92c461b2d148b1cbd563b90a79ade8365f5b109` |
+| Gate identity, public-count and callback reconciliation | `python3 /private/tmp/artroom-listing-session-gate-analysis-20261027.py /Users/hughpyle/play/artroom-evidence/2026-10-27-application-release-session/ordinary-gate --output /Users/hughpyle/play/artroom-evidence/2026-10-27-application-release-session/ordinary-gate-analysis.json --checkpoint 30a0933de6f5f612c79c4b44054c431f142eeab3 --tree 168852247492ecd9c43dabbd64c3f622bd05079d --repo /Users/hughpyle/play/artroom/.builder-worktrees/application-release-session-20261027 --stage-ledger /Users/hughpyle/play/artroom-evidence/2026-10-27-application-release-session/ordinary-gate/stages/test-evidence/stages.json --counting-mapping /Users/hughpyle/play/artroom-evidence/2026-10-27-application-release-session/ordinary-gate/stages/test-evidence/counting-sources.json --node-timing /Users/hughpyle/play/artroom-evidence/2026-10-27-application-release-session/ordinary-gate/stages/test-evidence/node.jsonl --counting-timing /Users/hughpyle/play/artroom-evidence/2026-10-27-application-release-session/ordinary-gate/stages/test-evidence/counting.jsonl --plain-timing /Users/hughpyle/play/artroom-evidence/2026-10-27-application-release-session/ordinary-gate/stages/test-evidence/plain.jsonl --native-timing /Users/hughpyle/play/artroom-evidence/2026-10-27-application-release-session/ordinary-gate/stages/test-evidence/native.jsonl --plain-progress /Users/hughpyle/play/artroom-evidence/2026-10-27-application-release-session/ordinary-gate/progress.plain.jsonl --native-progress /Users/hughpyle/play/artroom-evidence/2026-10-27-application-release-session/ordinary-gate/progress.native.jsonl` | 0 | `ordinary-gate-analysis.json`: `90aefaa5d19092759fcd2a0a7896fddda833a76dca4fbdaac4bee70d48e73c84` |
 
 
 ## Open limits
 
 The parent installed-release request `521f57a1` already landed. This child
-owes implementation, the paired recorded control, PD-2 evidence, gate and review.
+has completed implementation, the paired recorded control, PD-2 evidence and
+the gate. Exact-head checker review remains due.
 The planner owns all hosted reruns under this request and the Demo configuration
 gap. Summaries retain the previous projection limits: no genesis revalidation,
 global inventory proof, authority grant or trust-policy decision.
