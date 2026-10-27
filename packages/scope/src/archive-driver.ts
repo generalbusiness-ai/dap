@@ -21,6 +21,7 @@ import type { DestinationRepository } from "./destination-host.ts";
 import type { Sql } from "./sqlite.ts";
 import { ARCHIVE_POSITION_METADATA_BYTES } from "./archive-inventory-cost.ts";
 import { ArchivePrefixStopped, readArchiveScopeFrame, type ArchiveSourceFailure } from "./archive-prefix.ts";
+import { createObservedArchiveBudget, registerCustomArchiveBudget, observeArchiveSelection, readArchiveCapacityObservation } from "./archive-capacity-observation.ts";
 
 export interface ArchiveCredential { readonly id: string; readonly ends: Timestamp; readonly plaintext: string }
 export interface ArchiveSend {
@@ -143,7 +144,9 @@ export class ArchiveDriver {
       base === null ? null : { frontier: base.frontier, source: frontiers.source(base, budget) });
   }
   async #pass(): Promise<ArchivePass> {
-    const budget = this.#options.budget?.() ?? new ArchiveBudget();
+    const suppliedBudget = this.#options.budget?.();
+    const budget = suppliedBudget ?? ("production" in this.#options ? createObservedArchiveBudget() : new ArchiveBudget());
+    if (suppliedBudget) registerCustomArchiveBudget(budget);
     startArchiveParentReadPass(budget);
     // Temporary pass diagnostic: fixed categories and already-loaded scalars
     // only. It adds no archive read, admission, retry or persistent state.
@@ -151,6 +154,11 @@ export class ArchiveDriver {
     let capacityRefusal: ArchiveCapacityRefusal | null = null;
     let fixedFinish: ArchiveFixedFinish | null = null;
     let sourceFailure: ArchiveSourceFailure | null = null;
+    // Capture codes: 0 no planner, 1 adaptive, 2 fixed published,
+    // 3 fixed unpublished, 4 conversion, 5 pending rebuild.
+    let captureStrategy = 0, captureThrough: number | null = null, captureSelected: number | null = null;
+    let captureThroughHash: Head["hash"] | undefined;
+    let captureEntries: number | undefined;
     let phase = "unknown", confirmed: number | null = null, pending: number | null = null, attempts = 0, hasNext = false;
     const observed: { outcome?: ArchivePass } = {};
     const done = (value: ArchivePass): ArchivePass => { observed.outcome = value; return value; };
@@ -228,6 +236,7 @@ export class ArchiveDriver {
       const ref = journalRef(at.scope);
       // Resolve an outstanding attempt before reconstructing or minting again.
       if (row.pending) {
+        captureStrategy = 5; captureThrough = row.pending.through.seq; captureThroughHash = row.pending.through.hash;
         if (!attempted) {
           const next = this.#later(row.attempts);
           if (next === null) { budget.stop("unavailable"); return done({ state: "retry", next: null, reason: "unavailable" }); }
@@ -337,6 +346,7 @@ export class ArchiveDriver {
           ...(preparedSources?.replayScopes ? { replayScopes: preparedSources.replayScopes } : {}) };
         let planned: Awaited<ReturnType<typeof planPublishedArchiveConversion>>;
         if (row.confirmed && row.confirmed.layout !== 2) {
+          captureStrategy = 4; captureThrough = through.seq; captureThroughHash = through.hash;
           if (row.confirmed.through.seq >= ARCHIVE_BOUNDS.entries) return budget.stop("limit");
           if (preparedSources?.prepare) for (let seq = 0; seq <= row.confirmed.through.seq; seq++) await preparedSources.prepare(seq, budget);
           planned = await planPublishedArchiveConversion(this.#options.sql, { ...common, row }, budget);
@@ -360,6 +370,9 @@ export class ArchiveDriver {
           }
           const planner = fixed ? (row.confirmed!.anchorsPublished === true ? planRootFixedArchivePass : planRootFixedUnpublishedArchivePass)
             : "production" in this.#options ? planRootAdaptiveArchivePass : planAdaptiveArchivePass;
+          captureStrategy = fixed ? row.confirmed!.anchorsPublished === true ? 2 : 3 : 1;
+          captureThrough = selectedThrough.seq;
+          captureThroughHash = selectedThrough.hash;
           const adaptive = await planner(this.#options.sql, { ...common, at, through: selectedThrough,
             ...(legacyAnchorParent ? { legacyAnchorParent } : {}),
             ...(preparedSources?.prepare ? { prepareSources: preparedSources.prepare } : {}),
@@ -367,6 +380,11 @@ export class ArchiveDriver {
             ...(capacity.planning ? { rowSnapshot: capacity.planning.token } : {}),
             atomicFirstAttempt: true,
             parentHeld: previous.held, parentUsed: previous.used, maximum: this.#maximum }, budget);
+          if (adaptive.ok) {
+            captureSelected = adaptive.mark.through.seq;
+            captureEntries = captureSelected - (row.confirmed?.through.seq ?? -1);
+            observeArchiveSelection(budget, captureSelected);
+          }
           if ("fixedFinish" in adaptive) fixedFinish = adaptive.fixedFinish;
           if (!adaptive.ok && "deferred" in adaptive) {
             // Only genuine capacity shortage escalates the durable wake.
@@ -439,10 +457,31 @@ export class ArchiveDriver {
         const reason = observed.outcome?.reason;
         const known = ["limit", "timeout", "unavailable", "conflict", "mismatch", "parent", "missing-input", "rebuild-mismatch", "unsupported-archive-cohort", "foreign-source-unavailable"];
         const position = (value: number | null) => value !== null && Number.isSafeInteger(value) && value >= 0 ? value : null;
+        const cost = budget.admitted();
+        const states = ["idle", "disabled", "retry", "stopped", "confirmed"];
+        const refusalKinds = ["debit", "lookahead-reserve", "window-metadata", "window-entry", "finish-quote", "migration-quote"];
+        const refusalSites = ["prepare-sources", "scout-open", "scout-next", "shape-inventory", "prepare-finish", "finish-affordability", "frontier-capture", "migration-affordability", "plan-debit", "pass-debit"];
+        const capacityObservation = readArchiveCapacityObservation(budget, {
+          throughSeq: captureThrough,
+          ...(captureThroughHash !== undefined ? { throughHash: captureThroughHash } : {}),
+          scalars: {
+            strategy: captureStrategy, state: states.indexOf(observed.outcome?.state ?? "") + 1,
+            // 0 absent, 1 unrecognised, then the existing known-reason order.
+            reason: reason === undefined ? 0 : known.indexOf(reason) + 2,
+            ...(captureSelected !== null ? { selectedSeq: captureSelected } : {}),
+            ...(captureEntries !== undefined ? { selectedEntries: captureEntries } : {}),
+            ...(fixedFinish ? { metadataMargin: fixedFinish.metadataMargin } : {}),
+            ...(capacityRefusal ? { refusalKind: refusalKinds.indexOf(capacityRefusal.kind) + 1,
+              refusalSite: refusalSites.indexOf(capacityRefusal.site) + 1 } : {}),
+          },
+          costs: { cost, ...(fixedFinish ? { fixedUsed: fixedFinish.used, fixedRemaining: fixedFinish.remaining } : {}),
+            ...(capacityRefusal ? { refusalRequested: capacityRefusal.requested, refusalReserved: capacityRefusal.reserved,
+              refusalUsed: capacityRefusal.used, refusalLimit: capacityRefusal.limit, refusalShortfall: capacityRefusal.shortfall } : {}) },
+        });
         console.info("archive-pass-diagnostic-v1", {
           step, detail, rowPhaseAtLoad: phase, confirmed: position(confirmed), pending: position(pending), attemptsAtLoad: position(attempts), hasNext,
           attempted, state: observed.outcome?.state ?? "threw", reason: reason === undefined ? "none" : known.includes(reason) ? reason : "other",
-          caught: known.includes(caught) ? caught : caught === "none" ? "none" : "other", cost: budget.admitted(), parentRead, capacityRefusal, fixedFinish, sourceFailure,
+          caught: known.includes(caught) ? caught : caught === "none" ? "none" : "other", cost, parentRead, capacityRefusal, fixedFinish, sourceFailure, capacityObservation,
         });
       } catch { /* Observation cannot replace the original archive result. */ }
     }

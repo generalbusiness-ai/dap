@@ -1600,7 +1600,11 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
   });
 
   if (scenario === "Grow production") {
-    test(`installed ${scenario} public archive command verifies its native producer clone`, { timeout: 30_000 }, async context => {
+    // BR-4: prior sealed runs took 25,668 and 29,457 ms. Three times
+    // their median is 82,687.5 ms. Each concurrent replay child gets 90 s;
+    // the follower leaves another 10 s for reporting and joined cleanup.
+    // The Native producer and each original archive budget stay at 30 s.
+    test(`installed ${scenario} public archive command verifies its native producer clone`, { timeout: 100_000 }, async context => {
       const basis = retainedCommand;
       if (!basis) expect.fail("the immediately preceding native producer did not publish a command session");
       retainedCommand = null;
