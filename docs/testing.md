@@ -331,6 +331,13 @@ answers, and nothing about a real host, a real tree or a runner.
   that write get their own. The packages share one fixture set, exported by
   `@generalbusiness/dap-derive/testing`.
 
+The Native archive fixture joins owned work for at most nine seconds when it
+closes. If close fails while ownership remains, the fixture keeps its clock
+and resources. Later cases skip before allocating another fixture, with the
+reason `Native archive fixture skipped: prior close failed; ownership retained`.
+The original failure still fails the run. Late task completion does not clear
+that failed owner. Ordinary overlap with a healthy owner remains an error.
+
 The functional `scope` project sets a thirty-second framework allowance in
 `packages/scope/vitest.worker.config.ts` for cases without an explicit
 limit. Each worker reuses its own isolate across multi-scope story files
