@@ -418,7 +418,9 @@ turn coverage.
 
 ### Install a trusted application package
 
-In a room created with `--cohort trusted-application`, `install_application`
+New room creation does not currently offer a family that installs ordinary
+application packages such as Counter or Lending. In an existing historical
+`trusted-application` room, `install_application`
 records one native admin request. Its arguments are `uri`, `release`, `roles`,
 `values`, and `idempotencyKey`. The URI names a regular Git blob at an exact
 commit. `APPLICATION_TRUST` must list that exact release, publisher, and
@@ -523,7 +525,7 @@ One scope: its definition and digest, status, head, counts by item type and stat
 
 ### `create`
 
-Creates a scope with no existing target, and records it in your configuration so later connections list its tools. definition: a platform name such as platform:register@3, a definition's JSON, or its digest; kind: the definition's genesis act; fields; texts and definitions beside it; membership: the membership scope standing for the new scope is read from. Kept under custody like an act: the idempotencyKey is required.
+Creates a scope with no existing target, and records it in your configuration so later connections list its tools. definition: a platform name such as platform:register@18, a definition's JSON, or its digest; kind: the definition's genesis act; fields; texts and definitions beside it; membership: the membership scope standing for the new scope is read from. Kept under custody like an act: the idempotencyKey is required.
 
 ```json
 {
@@ -1599,7 +1601,7 @@ works; the count given is the default recipe's.
 | `dap install <git+https-uri>` (trusted-application room) | `install_application` with URI, release, selected roles, genesis values and the retained request key: 1 | `install_application`: 1 | 1 |
 | `dap application <install-item>` (trusted-application room) | `application_installation` with the recorded item: 1 | `application_installation`: 1 | 1 |
 | `dap apps [--cursor <cursor>]` (MCP gap: bounded application listing) | Unavailable in MCP; use the CLI listing | Unavailable in MCP | Unavailable in MCP |
-| `dap install <base-url>`, `--plan`, `--planned` | `create` with `platform:register@3` (or the cohort's register), kind install, the host, namespace, policy and creator keys: 1. The signed intent is kept before it is sent, which is what --plan keeps; after a lost reply, settle adds 1 | `create`: 1 | 1 |
+| `dap install <base-url>`, `--plan`, `--planned` | `create` with `platform:register@18` by default (or an explicitly selected admitted cohort's register), kind install, the host, namespace, policy and creator keys: 1. The signed intent is kept before it is sent, which is what --plan keeps; after a lost reply, settle adds 1 | `create`: 1 | 1 |
 | `dap create <name>` | `room.create` on the register with the branch, the creator's handle and a recovery key, `wait` with the entry for the created directory and its children, `room.seat`, `room.first-key` with the seat's entry, `wait` for the inbox: 5 | `actions` on the register, `act`, `wait`, `actions` on membership, `act` seat, `act` first-key, `wait`: 7 | 5 |
 | Page: Create room | the same calls as `dap create`: `room.create`, `wait`, `room.seat`, `room.first-key`, `wait`: 5 | the same calls as `dap create`: 7 | 5 |
 | `dap invite <@member> --role <role>` | `member.invite` with the handle, the role, the digest of a secret of at least 32 bytes that the inviter makes, and the end; the inviter passes the link with the number and secret to the member: 1 | `actions` on membership, `act`: 2 | 1 |

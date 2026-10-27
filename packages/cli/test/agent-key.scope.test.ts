@@ -1,5 +1,6 @@
+import { retainHistoricalInstallPlan } from "./support/historical-install-plan.ts";
 /**
- * Tagged agent-key issuance and enrolment on the current application cohorts (requests 53850986 and f54185fb): the trusted application cohort, whose
+ * Tagged agent-key issuance and enrolment on the retained historical and admitted application cohorts (requests 53850986 and f54185fb): the trusted application cohort, whose
  * membership is pinned to platform:membership@7, and the application cohort, pinned to platform:membership@4. The command's
  * functions run over the Worker's real routes on real scopes of the namespace PLATFORM, with the real read sessions under a
  * TEST SECRET; the Git host and the scheduler are STAND-INs, as in story.scope.test.ts.
@@ -95,9 +96,16 @@ async function story(lifetime: Lifetime, selected?: SelectedCohort): Promise<voi
   const person = (): Context => ({ store: memoryStore(), fetch, now, pause, trustedCreationService: { service: SERVICE, fetch } });
   const run = async (who: Context, ...argv: string[]): Promise<Outcome> => lifetime.wait(() => command(who, argv));
 
-  /** A room of one cohort, created by its admin through the command: install with the cohort, wire the host stand-in, create. */
+  /** A room on its exact pin: retain historical plans or prepare an admitted cohort, deliver through the command, wire the host stand-in, create. */
   const create = async (admin: Context, cohort: "trusted-application" | SelectedCohort | "application", namespace: string, name: string, handle: string) => {
-    const installed = await run(admin, "install", SERVICE, "--host", "git.example", "--namespace", namespace, "--cohort", cohort);
+    if (cohort !== "application" && cohort !== "archive-device-application") {
+      const historical = { "trusted-application": TRUSTED_APPLICATION_COHORT, "declared-application": DECLARED_APPLICATION_COHORT,
+        "archive-application": ARCHIVE_APPLICATION_COHORT, "archive-declared-application": ARCHIVE_DECLARED_APPLICATION_COHORT }[cohort];
+      await lifetime.wait(() => retainHistoricalInstallPlan(admin, SERVICE, historical.register, { host: "git.example", namespace }));
+    }
+    const installed = cohort === "application" || cohort === "archive-device-application"
+      ? await run(admin, "install", SERVICE, "--host", "git.example", "--namespace", namespace, "--cohort", cohort)
+      : await run(admin, "install", "--planned", "--cohort", cohort);
     expect(installed.code, installed.lines.join("\n")).toBe(0);
     const R = node((await admin.store.config())!.register!.scope);
     lifetime.wire(R.name, () => {

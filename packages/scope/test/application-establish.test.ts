@@ -1,3 +1,4 @@
+import { retainHistoricalInstallPlan } from "../../cli/test/support/historical-install-plan.ts";
 import { countingContainerData, countingPublicationData } from "./definition-corpus-data.ts";
 import { runInDurableObject } from "cloudflare:test";
 import { expect, onTestFinished, test } from "vitest";
@@ -54,8 +55,12 @@ test.each([{ name: "application", cohort: APPLICATION_COHORT }, { name: "applica
   const context: Context = { store, fetch, trustedCreationService: { service: SERVICE, fetch },
     now: () => { lifetime.active(); return timeMs(soon(0))!; } };
   const run = (...argv: string[]) => lifetime.wait(() => command(context, argv));
-  const planned = await run("install", "--plan", SERVICE, "--cohort", name, "--host", "git.example", "--namespace", "application");
-  expect(planned.code, planned.lines.join("\n")).toBe(0);
+  if (name === "application") {
+    const planned = await run("install", "--plan", SERVICE, "--cohort", name, "--host", "git.example", "--namespace", "application");
+    expect(planned.code, planned.lines.join("\n")).toBe(0);
+  } else {
+    await lifetime.wait(() => retainHistoricalInstallPlan(context, SERVICE, cohort.register, { host: "git.example", namespace: "application" }));
+  }
   const pending = await lifetime.wait(() => store.config());
   const plan = pending?.plan;
   if (!plan) throw new Error("The CLI must retain the original application install plan.");

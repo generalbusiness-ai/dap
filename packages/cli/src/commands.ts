@@ -428,6 +428,9 @@ const INSTALL_COHORTS: Readonly<Record<InstallCohort, PlatformDefinition>> = {
   "hardened-certified-rules": HARDENED_CERTIFIED_RULES_COHORT.register,
   "device-application": DEVICE_APPLICATION_COHORT.register,
 };
+/** New plans only. Historical selectors remain in INSTALL_COHORTS for retained custody.
+ * The owning test pins these register versions to Scope's CREATION_COHORTS. */
+export const CREATION_INSTALL_COHORTS = ["application", "archive-device-application", "archive-device-publication", "archive-certified-rules", "hardened-certified-rules"] as const satisfies readonly InstallCohort[];
 function selectedRegister(cohort: unknown): PlatformDefinition | undefined {
   if (cohort === undefined) return undefined;
   if (cohort === "file-publication") return INSTALL_COHORTS["file-publication"];
@@ -443,7 +446,7 @@ function selectedRegister(cohort: unknown): PlatformDefinition | undefined {
   if (cohort === "archive-device-publication") return INSTALL_COHORTS["archive-device-publication"];
   if (cohort === "archive-certified-rules") return INSTALL_COHORTS["archive-certified-rules"];
   if (cohort === "hardened-certified-rules") return INSTALL_COHORTS["hardened-certified-rules"];
-  return stopCommand(usage("--cohort takes exactly file-publication, application, application-publication, trusted-application, declared-application, device-application, archive-application, archive-declared-application, archive-device-application, archive-device-publication, archive-certified-rules, hardened-certified-rules or invitation-key; nothing was signed or sent."));
+  return stopCommand(usage("--cohort needs one current creation family or the historical family of a retained plan; nothing was signed or sent."));
 }
 /** Public creation is an explicit fixed cohort, independent of future defaults. */
 function installSelection(options: Pick<InstallOptions, "cohort" | "registerPolicy">): PlatformDefinition | undefined {
@@ -563,6 +566,9 @@ async function cohortPlan(ctx: Context, service: string, options: InstallOptions
   if (before && (before.key !== "operator" || before.repository || before.claim || before.join)) {
     stopCommand(usage("This config directory already holds another setup or pending request. Use a separate config directory for the selected install."));
   }
+  if (!CREATION_INSTALL_COHORTS.some(name => INSTALL_COHORTS[name] === definition)) {
+    stopCommand(usage(`This cohort is retained for historical install plans only. For a new plan, --cohort takes ${CREATION_INSTALL_COHORTS.join(", ")}. Nothing was signed or sent.`));
+  }
   const { signed } = await installing(ctx, options, { ...signing(ctx), lifetimeSeconds: PROPOSED_BOUNDS.intentLifetimeSeconds - 60 });
   const plan: PlannedInstall = { service, definition, "founding": signed, register: registerIdOf(signed, definition), selected: true };
   await saveCohortConfig(ctx, { ...before, v: 1, service, key: "operator", plan });
@@ -616,7 +622,7 @@ async function executePlannedInstall(ctx: Context, cohort?: InstallCohort, expec
   const before = await ctx.store.config();
   if (before?.register) return usage(`This config directory has a register already: ${before.register.scope}.`);
   const kept = before?.plan ?? stopCommand(usage("No install is planned here. Run: dap install --plan <base-url>."));
-  if (kept.definition === COUNTING_COHORT.register) return failed("Refused: retired-cohort. New rooms use the generic trusted-application cohort. The old plan is kept; nothing was sent.");
+  if (kept.definition === COUNTING_COHORT.register) return failed("Refused: retired-cohort. Choose a currently admitted cohort for a new room. The old plan is kept; nothing was sent.");
   if (selected && kept.definition !== selected) return failed("Refused: plan-mismatch. The selected cohort conflicts with the original install plan. Nothing was sent; the plan is kept.");
   if (registerPolicy !== undefined && (!isSignedIntentShape(kept["founding"]) || kept["founding"].intent.fields["policy"] !== registerPolicy)) return failed("Refused: plan-mismatch. The register policy conflicts with the original install plan. Nothing was sent; the plan is kept.");
   if (expected && canonicalize(kept) !== canonicalize(expected)) return failed("Held: the selected install plan changed before delivery. Nothing was sent; restore the original request.");
@@ -640,7 +646,7 @@ async function executePlannedInstall(ctx: Context, cohort?: InstallCohort, expec
   if (plan.attempted === undefined && now >= timeMs(plan["founding"].intent.notAfter)!) {
     const label = Object.entries(INSTALL_COHORTS).find(([, pin]) => pin === plan.definition)?.[0] ?? "trusted-application";
     return failed(`Refused: plan-expired. The planned install could be created until ${plan["founding"].intent.notAfter}. ${strictCustody
-      ? `No request was sent by this run. Keep this original config directory unchanged. For a new ${label} plan, set DAP_HOME to a separate empty directory. If ARTROOM_HOME is set, unset it or set it to that same new directory; different directories refuse before configuration is read. Configure the host with that new plan's register ID before installing.`
+      ? `No request was sent by this run. Keep this original config directory unchanged. For a new plan${CREATION_INSTALL_COHORTS.some(name => name === label) ? ` on ${label}` : " on an admitted cohort"}, set DAP_HOME to a separate empty directory. If ARTROOM_HOME is set, unset it or set it to that same new directory; different directories refuse before configuration is read. Configure the host with that new plan's register ID before installing.`
       : "Nothing was sent. Plan again, and set the new register ID."}`);
   }
   const matches = (receipt: unknown): receipt is NonNullable<PlannedInstall["acknowledged"]>["receipt"] => isReceipt(receipt)

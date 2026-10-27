@@ -55,9 +55,9 @@ import { pinnedBy } from "./versions.ts";
  * rules state the scope's own version as their owner.
  */
 export const DIRECTORY_OF: Readonly<Record<string, PlatformDefinition>> = { "platform:register@1": "platform:directory@1", "platform:register@2": "platform:directory@2", "platform:register@3": "platform:directory@3", "platform:register@5": "platform:directory@5", "platform:register@6": "platform:directory@6", "platform:register@7": "platform:directory@3", "platform:register@8": "platform:directory@7", "platform:register@9": "platform:directory@8", "platform:register@10": "platform:directory@9", "platform:register@11": "platform:directory@10", "platform:register@12": "platform:directory@11", "platform:register@13": "platform:directory@12", "platform:register@14": "platform:directory@13", "platform:register@15": "platform:directory@14", "platform:register@16": "platform:directory@15", "platform:register@17": "platform:directory@16", "platform:register@18": "platform:directory@17", "platform:register@19": "platform:directory@18", "platform:register@20": "platform:directory@19" };
-/** The newest version of the register: the one under which `install` creates a register. */
+/** Historical default register retained for existing callers. */
 export const REGISTER = "platform:register@2" satisfies PlatformDefinition;
-/** The directory that the newest register creates. */
+/** The directory that this historical register creates. */
 export const DIRECTORY = DIRECTORY_OF[REGISTER]!;
 
 /** The bound on the creation attempts of one creation claim, and on the attempts of each cleanup (section 3.8; U9). */

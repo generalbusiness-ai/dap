@@ -1,3 +1,4 @@
+import { retainHistoricalInstallPlan } from "../../../../packages/cli/test/support/historical-install-plan.ts";
 import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
@@ -57,7 +58,8 @@ test("a real change and Lending tell share one slot: the held change finishes fi
       return response;
     };
   try {
-    ok(await run("install", "https://scopes.test", "--cohort", "application-publication", "--host", host.host, "--namespace", host.namespace));
+    await life.wait(() => retainHistoricalInstallPlan(ctx, "https://scopes.test", FILE_PUBLICATION_COHORT.register, { host: host.host, namespace: host.namespace }));
+    ok(await run("install", "--planned", "--cohort", "application-publication"));
     const R = register = new Platform((await store.config())!.register!.scope); wire(R.name); await R.restart(); nodes.push(R);
     life.setHold(envelope => { if ("definition" in envelope.to) wire(scopeIdOf(envelope.to)); return false; });
     ok(await run("claim", "Mixed publication", "--handle", "@rita"));
