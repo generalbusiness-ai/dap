@@ -151,6 +151,21 @@ The retained sites therefore explain 2,036,528 of the 2,608,469 metadata
 units. Another 571,941 metadata units and 20,310,956 input-work units remain
 unattributed. The capped table cannot identify their source sites.
 
+The same capture provides one exact coarse checkpoint split.
+`capacityObservation.rowContextCalls` is 1, and `rowContextAdmitted` is
+`(0, 11, 12, 40, 1600374, 9310764)`. Subtracting that from
+`firstFinishAttribution.admitted` gives
+`(1, 22, 17, 49, 1008095, 22989525)`. Thus 1,600,374 metadata units were already
+admitted at the row-context checkpoint and another 1,008,095 were admitted
+before the first quote. These are cumulative checkpoint totals, not a
+partition of the missing charge sites. No site snapshot accompanies the
+row-context checkpoint. Site records accumulate later debits: the first 41
+retained records already sum to 1,743,275 metadata units, exceeding the
+row-context total. Their order therefore cannot identify the earlier phase.
+The quote's `costs` fields forecast finish work; they cannot explain omitted
+admitted work. This arithmetic uses the existing numeric capture and reruns no
+reconstruction or host work.
+
 The birth and item-query debits reserve bounded response allowances before
 the reads. They are not measured response sizes. `JournalWork.metadata`
 charges structural work as well as the same amount of input work. For
