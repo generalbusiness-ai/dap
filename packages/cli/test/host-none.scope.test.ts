@@ -411,7 +411,7 @@ test("host none creates a real local room, settles installed publication refusal
         "SELECT COUNT(*) AS n FROM outbox WHERE request IS NOT NULL AND result IS NULL AND (diagnosis IS NULL OR json_extract(diagnosis,'$.finding')<>'undelivered')").one().n));
       expect(pendingRequests).toBe(0);
     }
-    expect(outsideSends.every(request => ["fetch-application", "admit-application"].includes(request.kind))).toBe(true);
+    expect(outsideSends.every(request => ["fetch-application", "admit-application", "announce-application"].includes(request.kind))).toBe(true);
     expect(peer.ads()).toBeGreaterThan(0);
     const single = ok(await run(member, ["verify", I.name]));
     expect(single.lines[0]).toBe("Result: consistent, for the mode, target, coverage and trusts stated below.");
@@ -423,7 +423,7 @@ test("host none creates a real local room, settles installed publication refusal
     expect(new Set(consistent.map(line => line.split(" ")[1]!.replace(/,$/, "")))).toEqual(new Set(expected.map(node => node.name)));
     expect(verified.lines.at(-1)).toBe(`All consistent: ${expected.length} scopes.`);
     expect(verified.lines.filter(line => line.startsWith("Cleanup status:"))).toEqual([expect.stringContaining(G.name)]);
-    Object.assign(context.task.meta, { hostNone: { qualification: "Real CLI/Worker/Native memberships, installed signed v2 TEST device publisher, meaningful device-command capability, sender-final refusal and whole-room replay; TEST heater readings, host-time clock, local files, package Git peer/screen/trust and finite scheduler. No physical device, ordinary-package support, deployed room, repository service or UI rendering claim.",
+    Object.assign(context.task.meta, { hostNone: { qualification: "Real CLI/Worker/Native memberships, installed signed v2 TEST device publisher, meaningful device-command capability, local journal-read application announcement, sender-final refusal and whole-room replay; TEST heater readings, host-time clock, local files, package Git peer/screen/trust and finite scheduler. No physical device, ordinary-package support, deployed room, repository service or UI rendering claim.",
       registerOnlyAdmission: true, scopes: expected.length, packageRelease: f.packet.ids.release, commissionedDevice: device,
       deviceCommand: commandFact, reportedValue: 80, laterReportedValue: 81, publicationSource: report,
       publicationOrdinal: publication.n, publicationResult: "refused", destination: "unpublished", repositoryCalls: 0 } });
