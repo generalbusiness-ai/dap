@@ -1,0 +1,111 @@
+{
+  "qualification": "Recorded TEST metadata projected from two actual Native Rules summaries in one existing install witness. Complete summaries, item bodies, signatures, headers, tokens and settings were not retained. Host, repository, clock and read-session inspector remain TEST fixtures. No live read or deployment runs.",
+  "sourceCommit": "f9aca97f84803860cb10a714b1bf643e50bc87f1",
+  "projectorSha256": "f07250f67ae3025facce3c4c0f0340de38aef18a0f96c440b1a7ce3743a9289c",
+  "sourceState": "sourceCommit names the checked-out base; projectorSha256 identifies the uncommitted projector bytes used for the Native capture.",
+  "samples": {
+    "none": {
+      "observation": {
+        "complete": true,
+        "counts": [
+          [
+            "installation",
+            "active",
+            0
+          ],
+          [
+            "installation",
+            "pending",
+            0
+          ],
+          [
+            "installation",
+            "refused",
+            0
+          ]
+        ],
+        "head": {
+          "hash": "sha256:11aedba81723dcad66aae99b2eb585ca9257590ce633dd5efb30ad66a9a414eb",
+          "seq": 1
+        },
+        "phases": [],
+        "pin": "platform:rules@5",
+        "scope": {
+          "inc": "in_liy7qijyvkwevajysxmbnpo7ea",
+          "kind": "rules",
+          "scope": "sc_63mx7xrfdoel4ya4yxij7c2rvspkua4ncz4obnjgylj4aklp3hva"
+        },
+        "status": "active"
+      },
+      "result": {
+        "applications": [],
+        "errors": []
+      },
+      "sample": "none"
+    },
+    "one": {
+      "observation": {
+        "complete": true,
+        "counts": [
+          [
+            "installation",
+            "active",
+            1
+          ],
+          [
+            "installation",
+            "pending",
+            0
+          ],
+          [
+            "installation",
+            "refused",
+            0
+          ]
+        ],
+        "head": {
+          "hash": "sha256:f592b0ac8fcfa59a4d12f18beb6c6ad6c43285de25a31bedeb66ff1967276556",
+          "seq": 10
+        },
+        "phases": [
+          {
+            "item": 2,
+            "phase": "creation",
+            "state": "active"
+          }
+        ],
+        "pin": "platform:rules@5",
+        "scope": {
+          "inc": "in_liy7qijyvkwevajysxmbnpo7ea",
+          "kind": "rules",
+          "scope": "sc_63mx7xrfdoel4ya4yxij7c2rvspkua4ncz4obnjgylj4aklp3hva"
+        },
+        "status": "active"
+      },
+      "result": {
+        "applications": [
+          {
+            "host": "git.example",
+            "installItem": {
+              "item": 2,
+              "scope": {
+                "inc": "in_liy7qijyvkwevajysxmbnpo7ea",
+                "kind": "rules",
+                "scope": "sc_63mx7xrfdoel4ya4yxij7c2rvspkua4ncz4obnjgylj4aklp3hva"
+              }
+            },
+            "publisher": "key_Z3p02WTkqE_6UCWotVN7XEo3rW0UboVHg6xzRoSiB8Q",
+            "release": "sha256:14350156fcc43bb59d142cc5b84c0b84088f12beda47f36a9e98621dd5311c80",
+            "scope": {
+              "inc": "in_gisckqbc2grw4w6fdbsvs4376y",
+              "kind": "lane",
+              "scope": "sc_2nmgl6zvrlagrlh2hlij4ba4oimp4mzxxq2khpqo2rsvfzignkua"
+            }
+          }
+        ],
+        "errors": []
+      },
+      "sample": "one"
+    }
+  }
+}

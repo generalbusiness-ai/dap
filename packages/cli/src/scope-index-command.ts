@@ -6,6 +6,7 @@ import { randomUUID } from "node:crypto";
 import { canonicalize, digestBytes, utf8 } from "@generalbusiness/dap-bytes";
 import { scopeIndexAccess, type Context, type Outcome } from "./commands.ts";
 import { captureIndexManifest, INDEX_INVENTORY_BOUNDS, indexManifestVersions, readIndexManifest, verifyIndexManifest } from "./scope-index-manifest.ts";
+import { scopeIndexApplicationsCommand } from "./scope-index-applications-command.ts";
 
 export interface IndexFiles { read(path: string): Promise<Uint8Array>; save(path: string, bytes: Uint8Array): Promise<void> }
 /** The opened descriptor, not a prior pathname stat, owns the byte bound. */
@@ -42,8 +43,9 @@ export async function saveIndexFile(path: string, bytes: Uint8Array): Promise<vo
   } finally { await unlink(temporary); }
 }
 const FILES: IndexFiles = { read: readIndexFile, save: saveIndexFile };
-const USAGE = "dap scope-index inventory --out FILE | sweep --manifest FILE | verify --manifest FILE | versions --manifest FILE";
+const USAGE = "dap scope-index inventory --out FILE | sweep --manifest FILE | verify --manifest FILE | versions --manifest FILE | applications --manifest FILE --out FILE";
 export async function scopeIndexCommand(ctx: Context, argv: readonly string[], files: IndexFiles = FILES): Promise<Outcome> {
+  if (argv[0] === "applications") return scopeIndexApplicationsCommand(ctx, argv, files);
   const [verb, flag, path, ...extra] = argv;
   if (!(verb === "inventory" || verb === "sweep" || verb === "verify" || verb === "versions") || flag !== (verb === "inventory" ? "--out" : "--manifest") || !path || extra.length) return { code: 2, lines: [USAGE] };
   try {

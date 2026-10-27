@@ -33,6 +33,7 @@ export const USAGE = [
   "  dap verify <scope>",
   "  dap verify --all",
   "  dap scope-index inventory --out FILE | sweep --manifest FILE | verify --manifest FILE | versions --manifest FILE (Node operator only)",
+  "  dap scope-index applications --manifest FILE --out FILE (Node operator only)",
   "  dap status [<scope>] [--request <16-hex-id>]",
   "  dap remote",
   "  dap clone [<directory>] [--hours 1] [--archive]",

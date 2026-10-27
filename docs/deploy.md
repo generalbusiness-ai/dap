@@ -425,6 +425,23 @@ reviews the migrated nonsecret values and deploys with the existing
 `--keep-vars` commands above. `--keep-vars` alone does not migrate an old
 row. No builder deployment is part of this change.
 
+Before deploying R11 source, run `dap scope-index applications --manifest
+worker-scopes.json --out installed-releases.json` for `dap-grow`, `dap-demo`,
+and `dap-lending`, using each Worker's
+saved scope-index manifest and matching operator CLI configuration. Keep the
+scope index in enforce mode where that mode applies. Retain the manifest path
+and digest with the run report. Set one live `APPLICATION_TRUST` row for every
+distinct reported release, publisher and host; resolve inconsistent rows before
+deployment. An unreadable scope, malformed record or pending installation
+makes the report incomplete: investigate it and rerun until complete before deploying. The
+command makes one signed summary GET per listed scope and sends no session,
+registration or mutation request. Existing server reads can still resume
+parked work, diagnose archives or recover alarms. These are host maintenance,
+not a write-free server snapshot. Summaries bind observed scope references and
+native pins; they do not reverify the manifest's genesis hashes or prove a
+global inventory. The planner records all three runs before further R11
+deployments and uses the existing `--keep-vars` deployment commands.
+
 Local `dap mcp` and `dap install` also read `APPLICATION_TRUST` from their process environment.
 Set the same JSON policy before starting it if package installation is
 needed. Other local tools keep their existing defaults. Hosted tool opt-in
