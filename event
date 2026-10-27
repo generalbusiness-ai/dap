@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8cf692f195ccbeb9c3b7118f8c883b1c759fdef0","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/browser-helpers.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:914b5b756add37f35c6af3a7814fabacc5e113b1","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/browser.ts."}
