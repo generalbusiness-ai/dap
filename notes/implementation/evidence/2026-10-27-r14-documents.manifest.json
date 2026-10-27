@@ -1,15 +1,24 @@
 {
-  "qualification": "Draft, open evidence inventory of the initial pre-style document checks. Final document and source checks, complete inventory and read-only seal remain due. No gate, query, deployment or parent closure is claimed.",
+  "qualification": "Complete R14 documents-child collector, including the root SHA256SUMS (its own rows exclude itself). Initial seven pre-style records are historical and unchanged; styled documents are not claimed byte-identical to their earlier body. Final checks/source proof bind the clean named checkpoint; only note/manifest follow it. No gate, hosted query, deployment, parent closure or census completion is claimed. Phase receipt precedes writes and is not a final process result.",
   "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-27-r14-documents",
   "request": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:082750e849acdb3351ffc4f376aeb0140b7946db",
   "promise": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:43f14337d15a33d822581e2b755a88fa17413ad8",
   "checkpoint": {
-    "commit": "60f863245b2b819a44b7b037ce70d2b6ee284e22",
-    "tree": "8229ee80b376f48a5a811a9d227d1549656735e8",
-    "qualification": "Initial checks used the intentionally dirty proposal status recorded in checks-receipt.json."
+    "commit": "b4efabbfe0b675a68d57298b61609f5eb3110d4f",
+    "tree": "c0d5fc93a8a528ddc9ede0d346e14f889481cf22"
   },
-  "fileCount": 7,
+  "base": {
+    "commit": "ca7b16bc9a297912a065ca97773b510f6f14dcdc",
+    "tree": "28ce6857d84a17b1cac2bd3e2fa2eb7dd1b9d07f"
+  },
+  "fileCount": 23,
+  "totalBytes": 11937209,
   "files": [
+    {
+      "path": "SHA256SUMS",
+      "bytes": 1979,
+      "sha256": "4c5c50f269feab2c950dac0cb2483bfd9a81a2a8c6350fed70c1f31e36c4516c"
+    },
     {
       "path": "checks-receipt.json",
       "bytes": 2214,
@@ -29,6 +38,81 @@
       "path": "documents-driver.py",
       "bytes": 5594,
       "sha256": "88d44bfece9974b0793e30f718d26c1e62570860bf2d8d014a1541b710ed03e6"
+    },
+    {
+      "path": "finalization/finalizer.py",
+      "bytes": 20074,
+      "sha256": "fc131b6eec89bb8d25f3705ab03275460e847ec65afe1935edd8f74e533a7586"
+    },
+    {
+      "path": "finalization/phase-receipt.json",
+      "bytes": 4680,
+      "sha256": "9fde73471677c3b56b8f41d9bf883347cdc6ebf2c71f924dbcc46680e2fb6646"
+    },
+    {
+      "path": "followup/commit-messages.log",
+      "bytes": 38,
+      "sha256": "fc8765466e4e267859aeefd91456d6d8c027c5b75f972ee69d76ef7d3d3dd256"
+    },
+    {
+      "path": "followup/doc-links.log",
+      "bytes": 38,
+      "sha256": "ea3db4480950a942acf4a5ec3c1305da41cfc1fc348a7c2c33ececf42e2286d6"
+    },
+    {
+      "path": "followup/driver.py",
+      "bytes": 7202,
+      "sha256": "8639335c9c542a2db0ed9b9a5c7ea22b5254f0bb652fda0981ac9576d09a344b"
+    },
+    {
+      "path": "followup/notes.log",
+      "bytes": 18,
+      "sha256": "35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1"
+    },
+    {
+      "path": "followup/receipt.json",
+      "bytes": 3666,
+      "sha256": "3dcd73291a3366b0c6640913b12583ef89a59762d6adbed438d15d089ea21033"
+    },
+    {
+      "path": "followup/section-citations.json",
+      "bytes": 3912007,
+      "sha256": "bf778c4917560a9bd1e2da9c95c5b079f54ddade6236a1b5011d281c655217d6"
+    },
+    {
+      "path": "followup/section-citations.log",
+      "bytes": 1556191,
+      "sha256": "44620ba05cede79a1aa003f5064d6c8dabcab0c1dd1efd35650293f2dac3d690"
+    },
+    {
+      "path": "followup/source-binding.json",
+      "bytes": 899876,
+      "sha256": "ed26c9893db24a80b8a526ef6dd17d7d0715147564d5a191d32303245e27a6df"
+    },
+    {
+      "path": "followup/style.json",
+      "bytes": 2434,
+      "sha256": "8d6b77dfa1f81f7561ac870cf0696d2913eb9765ac92c0a954c88b719e27d3b0"
+    },
+    {
+      "path": "followup/whitespace.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "followup/word-diff.log",
+      "bytes": 30515,
+      "sha256": "4c7849e50301a5f8d850e0540f0d89064b115826a877e913c8d650bad6ca0680"
+    },
+    {
+      "path": "preflight-sandbox-failure.json",
+      "bytes": 668,
+      "sha256": "126e3efb9960da4269483ed239dec3d53ba5a181de84d514381f02c0047e8e12"
+    },
+    {
+      "path": "preflight-sandbox-source.py",
+      "bytes": 19511,
+      "sha256": "81d78d70b53daab57ebc6c01d30e615ae43fbec8acb4f05b70c2b6e01490f373"
     },
     {
       "path": "section-citations.json",
