@@ -284,6 +284,48 @@ test("host none creates a real local room, settles installed publication refusal
       outcomes: (await wait(() => A.entries())).flatMap(entry => entry.input.type === "outcome"
         ? [{ kind: entry.input.kind, result: entry.input.result }] : []).slice(-16),
     } });
+    if (installation.state !== "active") {
+      // Closed lineage only, on failure: no signed fields, message bodies,
+      // evidence, actor keys or package/private content enter this record.
+      const directoryHistory = await wait(() => D.stub.history(reader));
+      const outboxes = [];
+      for (const [role, node] of [["directory", D], ["rules", A]] as const) {
+        const read = await wait(() => node.stub.outbox(reader));
+        outboxes.push({ role, scope: node.name, ...(read.ok ? {
+          loadedItems: read.value.length, items: read.value.slice(-16).map(item => ({
+            source: item.outboxId, to: isSeed(item.to) ? scopeIdOf(item.to) : item.to.scope,
+            kind: item.to.kind, class: item.class, held: item.held,
+            attempts: item.attempts.slice(-4).map(attempt => attempt.answer),
+            acknowledged: item.acknowledged ? { scope: item.acknowledged.at.scope, seq: item.acknowledged.seq } : null,
+            result: item.result, diagnosis: item.diagnosis,
+          })),
+        } : { unavailable: read.reason }) });
+      }
+      Object.assign(context.task.meta, { hostNoneCreationTrace: {
+        qualification: "Failure-only bounded Directory history and Directory/Rules outbox metadata; loaded pages only, not a Native quiescence proof.",
+        directory: directoryHistory.ok ? { scope: D.name, loadedEntries: directoryHistory.value.length,
+          entries: directoryHistory.value.slice(-8).map(({ entry }) => {
+            const input = entry.input;
+            const message = input.type === "delivery" && input.message.class === "request" && isRecord(input.message.body)
+              ? input.message.body["message"] : null;
+            return { seq: entry.seq, type: input.type,
+              kind: input.type === "act" ? input.signed.intent.kind
+                : input.type === "genesis" || input.type === "outcome" ? input.kind
+                : typeof message === "string" && /^[a-z][a-z0-9-]{0,63}$/.test(message) ? message : null,
+              decision: "decision" in input ? input.decision : null,
+              reason: "reason" in input ? input.reason : null,
+              clause: "clause" in input ? input.clause : null,
+              source: input.type === "delivery" ? { scope: input.from.at.scope, seq: input.from.seq, n: input.n } : null,
+              sendsCount: entry.sends.length, sends: entry.sends.slice(0, 16).map(send => ({ n: send.n,
+                to: isSeed(send.to) ? scopeIdOf(send.to) : send.to.scope, kind: send.to.kind,
+                class: send.message.class, type: "type" in send.message ? send.message.type : null })),
+              operations: entry.effects.flatMap(effect => effect.effect === "operation"
+                ? [{ k: effect.k, kind: effect.kind, owner: effect.owner }] : []).slice(0, 16),
+            };
+          }) } : { scope: D.name, unavailable: directoryHistory.reason },
+        outboxes,
+      } });
+    }
     expect(installation.state).toBe("active");
     expect(await env.APPLICATION_CONTENT.head(f.key)).not.toBeNull();
     const applicationAt = installation.refs["scope"];

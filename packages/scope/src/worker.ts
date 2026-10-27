@@ -533,7 +533,9 @@ export function outsideOf(given: OutsideGiven, sql: Pick<SqlStorage, "exec">, en
   };
   const selected = (owner: string, kind: string): Outside => {
     if ((owner === "platform:rules@5" || owner === "platform:rules@6" || owner === "platform:rules@7" || owner === "platform:rules@8" || owner === "platform:rules@9" || owner === "platform:rules@10" || owner === "platform:rules@11" || owner === "platform:rules@12") && ["fetch-application", "admit-application"].includes(kind)) return wiring("application", [env.APPLICATION_CONTENT, env.APPLICATION_TRUST], () => applicationHostOutside(env, PROPOSED_BOUNDS, fetch));
-    if ((owner === "platform:directory@11" || owner === "platform:directory@12" || owner === "platform:directory@13" || owner === "platform:directory@14" || owner === "platform:directory@15" || owner === "platform:directory@16" || owner === "platform:directory@17" || owner === "platform:directory@18" || owner === "platform:directory@19") && kind === "announce-application") return announcement;
+    // Share the bridge's exact owner policy; host-none install notices do
+    // not depend on selecting a repository host.
+    if (announcement.accepts(owner, kind)) return announcement;
     return pick();
   };
   return {

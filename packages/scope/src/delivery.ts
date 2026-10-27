@@ -25,7 +25,7 @@ import { countedEntries } from "@generalbusiness/dap-derive";
 
 import type { Bounds, Digest, Entry, FactRef, Incarnation, PlatformDefinition, ScopeId, Seed, UnavailableReason } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isPlatformDefinition, newIncarnation, isSeed, parseStrict, platformName } from "@generalbusiness/dap-bytes";
-import { applicationPublicationOrigin, publishingLaneAffiliation, usesFilePublicationProtocol } from "@generalbusiness/dap-platform";
+import { UNPUBLISHED_COHORT, applicationPublicationOrigin, publishingLaneAffiliation, usesFilePublicationProtocol } from "@generalbusiness/dap-platform";
 import { bound, clockOf, creationFields, factsNamed, isEntryOf, isFactRef, isLocalId, isObject, isScopeRef, judgeDelivery, judgeGenesis, messageFacts, messageTexts, own, prepareRules, readFields, textsNamed } from "@generalbusiness/dap-derive";
 import type { Clock as Reading, Creation, Delivered, DeliveryContext, Fetched, Judgment, PlatformRules, StateView, ValidDefinition } from "@generalbusiness/dap-derive";
 import { NO_INCARNATION, Observes, Received, ownOf, retainedFacts, snapshotsOf, used, valuesOf, type Scope } from "./core.ts";
@@ -192,12 +192,13 @@ export class Deliveries {
       source = carryProducerName({ fact: from, entry: named.entry, under: named.under }, named);
     }
     const resolver = reader ?? this.#ports.resolver;
+    const destinationPin = pinned?.platform?.named;
+    const publicationStates = destinationPin === UNPUBLISHED_COHORT.destination ? ["unpublished", "empty", "ready"] : ["empty", "ready"];
     if (file && !known) {
-      const directory = store.page("branch", ["empty", "ready"], null, 1).items[0]?.refs["directory"];
+      const directory = store.page("branch", publicationStates, null, 1).items[0]?.refs["directory"];
       const destination = store.scope()?.at;
       if (!isScopeRef(directory) || !destination) return retry("dependency-unavailable");
-      const destinationPin = pinned?.platform?.named;
-      const policy = destinationPin === "platform:destination@7" || destinationPin === "platform:destination@8" || destinationPin === "platform:destination@13" || destinationPin === "platform:destination@14" || destinationPin === "platform:destination@15"
+      const policy = destinationPin === "platform:destination@7" || destinationPin === "platform:destination@8" || destinationPin === "platform:destination@13" || destinationPin === "platform:destination@14" || destinationPin === "platform:destination@15" || destinationPin === UNPUBLISHED_COHORT.destination
         ? this.#ports.definitions.platform(destinationPin)?.applicationPublicationOrigin : applicationPublicationOrigin;
       const native = reader?.mode === "partition-v1" ? await reader.publication(from, directory, destination, "application") : policy?.(from, directory, destination, read.origin ?? []) ?? null;
       if (native === null) return retry("dependency-unavailable");
@@ -208,7 +209,7 @@ export class Deliveries {
     // check, not a changed historical judgment or a manufactured refusal entry.
     // An already recorded decision remains recorded and answers its repeat.
     if (reserve && !known && source.under === "change") {
-      const directory = store.page("branch", ["empty", "ready"], null, 1).items[0]?.refs["directory"];
+      const directory = store.page("branch", publicationStates, null, 1).items[0]?.refs["directory"];
       const destination = store.scope()?.at;
       if (!isScopeRef(directory) || !destination) return retry("dependency-unavailable");
       const native = reader?.mode === "partition-v1" ? await reader.publication(from, directory, destination, "change") : read.origin ? publishingLaneAffiliation(from, directory, destination, read.origin) : null;
