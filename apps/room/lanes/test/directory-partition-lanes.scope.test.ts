@@ -4,7 +4,7 @@ import { validateDefinition } from "@generalbusiness/dap-derive";
 import { ReceiverReads } from "../../../../packages/scope/src/receiver-reads.ts";
 import { ReadPreparation } from "../../../../packages/scope/src/read-preparation.ts";
 import { expect, test } from "vitest";
-import type { Seed } from "@generalbusiness/dap-contract";
+import type { FactRef, Seed } from "@generalbusiness/dap-contract";
 import { canonicalize, factRefOf, scopeIdOf, seedDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { PARTITION_COHORT as C, partitionSourceName, partitionReceiverPolicy, partitionDeclaredCreationPolicy, platform } from "@generalbusiness/dap-platform";
 import { proofEntry, PROOF_BYTE_BOUNDS } from "../../../../packages/scope/src/proof-bytes.ts";
@@ -178,7 +178,14 @@ test("two native partition roots keep cross-room block and restart release with 
     const asked = await A.I.did(rita, "ask", { fields: { addressee: { membership: await A.M.at(), member: "@rita" }, question: "May another room depend on this answer?" } });
     const foreign = factRefOf((await A.I.entries())[asked]!);
     const offered = await B.I.did(rita, "offer", { expected: await B.I.expected({ goal: 0 }) });
-    await B.I.did(rita, "accept", { on: offered, expected: await B.I.expected({ on: offered }), fields: { terms: factRefOf((await B.I.entries())[0]!) } });
+    const acceptExpectedB = await B.I.expected({ on: offered });
+    const bornB = (await B.I.entries())[0]!;
+    await B.I.did(rita, "accept", { on: offered, expected: acceptExpectedB, fields: { terms: factRefOf(bornB) } });
+    if (bornB.input.type !== "genesis" || !bornB.input.source) return expect.fail("native issue has no recorded creator source");
+    const rootSourceB = bornB.input.source;
+    // Fresh-act admission finishes before the receiver's partition proof.
+    // Record its actual native creator read separately, without warming it.
+    const admissionCalls = [`birth:${canonicalize(rootSourceB.at)}`];
     const actual = namespace(env.PLATFORM), calls: string[] = [];
     life.wire(B.I.name, () => ({
       births: { read: (at, ms, max) => { calls.push(`birth:${canonicalize(at)}`); return actual.births.read(at, ms, max); } },
@@ -189,7 +196,10 @@ test("two native partition roots keep cross-room block and restart release with 
     const blocked = await B.I.act(rita, "block", { expected: await B.I.expected({ commitment: offered }), fields: { commitment: offered, on: foreign } });
     expect(blocked).toMatchObject({ answer: "accepted" });
     if (blocked.answer !== "accepted") return;
-    expect(calls).toHaveLength(17); expect(new Set(calls).size).toBe(17);
+    expect(calls).toHaveLength(18);
+    expect(calls.slice(0, admissionCalls.length)).toEqual(admissionCalls);
+    const blockProofCalls = calls.slice(admissionCalls.length);
+    expect(blockProofCalls).toHaveLength(17); expect(new Set(blockProofCalls).size).toBe(17);
     const entry = (await B.I.entries())[blocked.receipt.fact.seq]!, use = entry.uses.find(use => use.fact.hash === foreign.hash);
     if (!use) return expect.fail("cross-root block retained no source");
     expect(await B.I.stub.retained(reader, "entry", use.content)).toMatchObject({ ok: true, value: { under: "declared:issue" } });
@@ -197,7 +207,9 @@ test("two native partition roots keep cross-room block and restart release with 
     const answered = await A.I.did(rita, "answer", { on: asked, expected: await A.I.expected({ on: asked }), fields: { answer: "Yes" } });
     calls.length = 0;
     expect(await B.I.act(rita, "release-block", { on: blocked.receipt.fact.seq, expected: await B.I.expected({ on: blocked.receipt.fact.seq, commitment: offered }), fields: { commitment: offered, answer: factRefOf((await A.I.entries())[answered]!) } })).toMatchObject({ answer: "accepted" });
-    expect(calls).toHaveLength(17);
+    expect(calls).toHaveLength(18);
+    expect(calls.slice(0, admissionCalls.length)).toEqual(admissionCalls);
+    expect(calls.slice(admissionCalls.length)).toHaveLength(17);
     expect(await actual.resolver.read(foreign, 10)).toMatchObject({ under: "declared:issue" });
     const replayed = await verify(httpSource("https://scopes.test", { fetch: routed, reader }), { mode: "replay", scope: B.I.name, head: (await B.I.summary()).at, platform, grants: "proven", anchors: [], capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE });
     expect(replayed, canonicalize(replayed)).toMatchObject({ report: { result: "consistent" } });
@@ -219,19 +231,27 @@ test("two native partition roots keep cross-room block and restart release with 
     expect(anchoredRoot.report.coverage.some(covered => covered.scope.scope === B.D.name)).toBe(false);
     const deepen = async (room: typeof A) => {
       let current = room.I;
-      const nodes = [room.D, room.P, room.M, current];
+      const nodes = [room.D, room.P, room.M, current], sources: FactRef[] = [];
       for (let depth = 1; depth <= 3; depth++) {
         const plan = await current.did(rita, "open-plan", { expected: await current.expected({ goal: 0 }) });
         const concern = await current.did(rita, "add-concern", { expected: await current.expected({ plan }), fields: { plan, purpose: "Two independent bounded lineages", role: "required", title: `Disjoint concern ${depth}`, conditions: ["Preserve native identity"] } });
-        const send = (await current.entries())[concern]!.sends.find(send => (send.to as Seed).kind === "lane");
+        const created = (await current.entries())[concern]!;
+        const send = created.sends.find(send => (send.to as Seed).kind === "lane");
         if (!send) return expect.fail("native concern emitted no child");
+        sources.push(factRefOf(created));
         current = life.platform(scopeIdOf(send.to as Seed)); nodes.push(current);
         await dispatchFixture(nodes, life.wait);
         expect((await current.summary()).value.status).toBe("active");
       }
-      return current;
+      return { scope: current, sources };
     };
-    const deepestA = await deepen(A), deepestB = await deepen(B);
+    const { scope: deepestA } = await deepen(A), { scope: deepestB, sources: deepSourcesB } = await deepen(B);
+    // The nearest creator entry is retained locally. The next three edges
+    // each need their native birth and exact recorded creator-source fact.
+    const deepAdmissionCalls = [...deepSourcesB].reverse().concat(rootSourceB).flatMap((fact, index) => [
+      `birth:${canonicalize(fact.at)}`, ...(index === 0 ? [] : [`fact:${canonicalize(fact)}`]),
+    ]);
+    expect(deepAdmissionCalls).toHaveLength(7);
     const deepAsk = await deepestA.did(rita, "ask", { fields: { addressee: { membership: await A.M.at(), member: "@rita" }, question: "Two disjoint depth-four lineages" } });
     const physical: string[] = [], operation = new PartitionProofOperation({
       births: { read: (at, ms, max) => { physical.push(`birth:${canonicalize(at)}`); return actual.births.read(at, ms, max); } },
@@ -250,7 +270,10 @@ test("two native partition roots keep cross-room block and restart release with 
     }));
     await deepestB.restart(); physical.length = 0;
     expect(await deepestB.act(rita, "block", { expected: await deepestB.expected({ commitment: deepOffer }), fields: { commitment: deepOffer, on: factRefOf((await deepestA.entries())[deepAsk]!) } })).toMatchObject({ answer: "accepted" });
-    expect(physical).toHaveLength(29); expect(new Set(physical).size).toBe(29);
+    expect(physical).toHaveLength(36);
+    expect(physical.slice(0, deepAdmissionCalls.length)).toEqual(deepAdmissionCalls);
+    const deepProofCalls = physical.slice(deepAdmissionCalls.length);
+    expect(deepProofCalls).toHaveLength(29); expect(new Set(deepProofCalls).size).toBe(29);
     const deepReplay = await verify(httpSource("https://scopes.test", { fetch: routed, reader }), { mode: "replay", scope: deepestB.name, head: (await deepestB.summary()).at, platform, grants: "proven", anchors: [], capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE });
     expect(deepReplay, canonicalize(deepReplay)).toMatchObject({ report: { result: "consistent" } });
   } finally { life.release(); }
