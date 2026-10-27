@@ -6,7 +6,7 @@ import { digestBytes, newIncarnation, scopeIdOf, utf8 } from "@generalbusiness/d
 import { signedReader } from "@generalbusiness/dap-client";
 import { ScopeIndexRows, type ScopeRegistration } from "../src/scope-index.ts";
 import { route } from "../src/worker.ts";
-import { observeSessionReads, type SessionReadChoice } from "./session-settings.ts";
+import { sessionSettings } from "./session-settings.ts";
 import { scopeCensusFixture } from "./support/scope-census-fixture.ts";
 
 // Active-object snapshots exclude cold constructor migrations. No denial is
@@ -39,19 +39,18 @@ test("census admits the native founding install signer and denies member Signed,
     // that same clock. Its request is current; its recorded install/found
     // roots are old. Census independently uses the real host clock, on which
     // its own fresh signature is current. No clocks are substituted in code.
-    // The required lease forces the real ordinary-read authority branch.
-    const reads: SessionReadChoice[] = [], release = observeSessionReads(f.life.owner, read => reads.push(read));
-    try {
+    // Signed headers use checkSignedRead directly, never the TEST readers-port
+    // bypass or its session observer. Keep required mode explicit as well.
+    await f.life.owner.required(async () => {
+      expect(sessionSettings()).toMatchObject({ sessions: true, inspector: null });
       const current = await signedReader(f.operator, f.register.scope, "summary", "summary", { now: () => f.life.now() });
-      const fresh = await f.life.owner.required(() => f.life.wait(() => f.R.stub.summary(current)));
+      const fresh = await f.life.wait(() => f.R.stub.summary(current));
       expect(fresh.ok).toBe(true);
       f.life.advance((PROPOSED_BOUNDS.intentLifetimeSeconds + 1) * 1000);
       const ordinary = await signedReader(f.operator, f.register.scope, "summary", "summary", { now: () => f.life.now() });
-      const read = await f.life.owner.required(() => f.life.wait(() => f.R.stub.summary(ordinary)));
+      const read = await f.life.wait(() => f.R.stub.summary(ordinary));
       expect(read).toEqual({ ok: false, reason: "forbidden" });
-      expect(reads.length).toBeGreaterThan(0);
-      expect(reads.every(read => read.branch === "real" && read.sessions && read.requiredLeases > 0)).toBe(true);
-    } finally { release(); }
+    });
     expect((await f.request(await f.reading())).status).toBe(200);
   } finally { f.life.release(); }
 });
@@ -105,7 +104,7 @@ test("census returns next null on an exactly 100-row final SQLite page under nat
     const extras: ScopeRegistration[] = [];
     for (let ordinal = 0; ordinal < 100 - f.rows.length; ordinal++) {
       const hash = digestBytes(utf8(`TEST census metadata ${ordinal}`));
-      const seed = { v: 1 as const, kind: "lane", definition: hash, creator: null, cause: hash, ordinal };
+      const seed = { v: 1 as const, kind: "lane" as const, definition: hash, creator: null, cause: hash, ordinal };
       const at: ScopeRef = { scope: scopeIdOf(seed), inc: newIncarnation(crypto.getRandomValues(new Uint8Array(16))), kind: "lane" };
       extras.push({ at, genesis: hash });
     }

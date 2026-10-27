@@ -6,7 +6,7 @@ import { expect, test } from "vitest";
 import type { ScopeRef } from "@generalbusiness/dap-contract";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { scopeCensusFixture } from "../../scope/test/support/scope-census-fixture.ts";
-import { observeSessionReads, type SessionReadChoice } from "../../scope/test/session-settings.ts";
+import { observeSessionReads, sessionSettings, type SessionReadChoice } from "../../scope/test/session-settings.ts";
 import { scopeIndexCommand, type IndexFiles } from "../src/scope-index-command.ts";
 import { readIndexManifest } from "../src/scope-index-manifest.ts";
 import type { Context } from "../src/commands.ts";
@@ -45,6 +45,7 @@ test("Native CLI census lists the registered fleet for versions while ordinary i
       expect(saved.has(path)).toBe(false); saved.set(path, bytes.slice());
     } };
     await f.life.owner.required(async () => {
+      expect(sessionSettings().sessions).toBe(true); expect(sessionSettings().inspector).toBeNull();
       const census = await scopeIndexCommand(ctx, ["census", "--out", "TEST-census.json"], files);
       expect(census.code).toBe(0); expect(census.lines).toHaveLength(1);
       expect(JSON.parse(census.lines[0]!)).toMatchObject({ v: 1, outcome: "complete", rows: f.rows.length, pages: 1, written: true });
@@ -55,13 +56,16 @@ test("Native CLI census lists the registered fleet for versions while ordinary i
 
       calls.length = 0;
       const versions = await scopeIndexCommand(ctx, ["versions", "--manifest", "TEST-census.json"], files);
-      expect(versions.code).toBe(0);
+      // These are only the existing versions report's TEST metadata/fixed
+      // reasons, so a failing run retains its actual per-row refusal.
+      expect(versions.code, versions.lines.join("\n")).toBe(0);
       const observed = JSON.parse(versions.lines[0]!) as { ready: boolean; listed: number; rows: { at: ScopeRef; result: string; definition?: string }[] };
       expect(observed.ready).toBe(true); expect(observed.listed).toBe(f.rows.length);
       const pins: Partial<Record<ScopeRef["kind"], string>> = ARCHIVE_DEVICE_APPLICATION_COHORT;
       expect(observed.rows).toEqual(f.rows.map(row => ({ at: row.at, result: "verified", definition: pins[row.at.kind] })));
       const entryReads = calls.filter(call => call.path.endsWith("/entries/0"));
       expect(new Set(entryReads.map(call => call.path))).toEqual(new Set(f.rows.map(row => `/v1/scopes/${row.at.scope}/entries/0`)));
+      expect(entryReads.every(call => call.authority === "Signed")).toBe(true);
       expect(calls.some(call => call.path.includes("/history"))).toBe(false);
 
       calls.length = 0;
@@ -74,11 +78,12 @@ test("Native CLI census lists the registered fleet for versions while ordinary i
       expect(other.every(scope => manifest.scopes.some(row => row.at.scope === scope))).toBe(true);
       expect(other.every(scope => repository.scopes.every(row => row.at.scope !== scope))).toBe(true);
       expect(calls.some(call => other.some(scope => call.path.includes(scope)))).toBe(false);
-      expect(choices.length).toBeGreaterThan(0);
+      // Signed reads go straight to checkSignedRead, not the Session readers
+      // port. Any Session preparation observed here must still use real policy.
       expect(choices.every(choice => choice.branch === "real" && choice.sessions && choice.requiredLeases > 0)).toBe(true);
       console.info("TEST-native-census-command-proof-v1", { censusRows: manifest.scopes.length, censusPages: 1,
         verifiedPins: observed.rows.length, repositoryRows: repository.scopes.length, otherRepositoryRows: other.length,
-        genericReadsUsedRealRequiredPolicy: true,
+        signedEntryReads: entryReads.length, requiredSessionLease: sessionSettings().sessions,
         qualification: "Actual Native index/gate/route/entry hash and pin reads; TEST configuration/files, setup clock and in-process wire bridge. Registered scopes only; not a hosted census or absence proof." });
     });
   } finally { stopWatching(); f.life.release(); }

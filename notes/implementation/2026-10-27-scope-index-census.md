@@ -1,7 +1,7 @@
 # Registered-scope census
 
-Status: implementation and witnesses are being prepared. Checks, gate and
-exact-head review remain due.
+Status: first owning checks completed; focused repairs and follow-up checks
+remain due. The ordinary gate and exact-head review have not run.
 
 Child `f51f16f4`, under promise `d28d9bcd`, adds a bounded census of the
 Worker's registered full scope references and genesis hashes. Its base is
@@ -64,10 +64,22 @@ The checkpoint, final manifest and read-only seal remain due.
 
 | Check | Command | Exit | Output SHA-256 |
 | --- | --- | --- | --- |
-| Owning checks and ordinary gate | Pending source freeze | Pending | Pending |
+| Initial compiler contexts | `types/receipt.json` | 1 | `types/output.log`: `97ba2820f58b4ae248e7c0ca34da58296f50b6dd39ac5d6a9e8c56e3be7d455e` |
+| Initial CLI and signed-read tests | `plain/receipt.json` | 0 | `plain/output.log`: `338f36f102964f0d8c3ef5d95474856b0d05b5906dabdcaa6d2fa2937c008dce` |
+| Initial Native census witnesses | `native/receipt.json` | 1 | `native/output.log`: `90449a65934e63ebebbf40058ce5dd8dacbe8df20c3335fd40fb7fd67fd99c0b` |
+| Route and setting inventories | `inventory/receipt.json` | 0 | `inventory/output.log`: `6b45989950ab8bf65ed620861e25d4d6a3cbe8580496797e6fd470c8cf85d387` |
+| Follow-up, controls and ordinary gate | Pending | Pending | Pending |
 
-No completed test, gate, hosted census or deployment is claimed by this
-draft. The final note will distinguish actual check results and controls.
+These four independent commands ran in parallel at clean checkpoint
+`0fbfc2a6b9c190df9de190b5b0906ef7d04e50ae`, tree
+`2e4217aa785a8035c8ba49a25dd896da9e20f264`. Each terminated naturally,
+retained its actual output and verified unchanged tracked bytes and modes.
+The plain checks passed 15 tests; the inventories passed 11. The compiler
+found two test literal-inference errors. Native checks passed two cases
+and failed two witness assertions: the session observer does not observe
+Signed reads, and the integration version report was unready. These are
+pre-gate results, not a failed or passing gate. Repairs and later results
+will remain distinct. No hosted census or deployment is claimed.
 
 ## Open obligations
 

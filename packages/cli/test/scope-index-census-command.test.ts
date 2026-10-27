@@ -39,7 +39,7 @@ function fixture(count: number | Registered[] = 3) {
   let published: Uint8Array | undefined;
   let signer: () => Promise<Signer | null> = async () => actor;
   const calls: { cursor: string; method: string; authorization: string }[] = [], local: string[] = [];
-  const page = (cursor: string, size = SCOPE_INDEX_CENSUS_BOUNDS.pageSize) => {
+  const page = (cursor: string, size: number = SCOPE_INDEX_CENSUS_BOUNDS.pageSize) => {
     const first = registered.findIndex(value => value.row.at.scope > cursor), remaining = first < 0 ? [] : registered.slice(first);
     const rows = remaining.slice(0, size).map(value => value.row);
     return { rows, next: remaining.length > size ? rows.at(-1)!.at.scope : null };
