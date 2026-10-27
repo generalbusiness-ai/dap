@@ -94,14 +94,23 @@ is never left pending:
 | `certify-rules-tree` on the destination | reads the rules tree from the repository | refused `no-repository` |
 | `publish-file` route | writes a file into the repository | refused `no-repository` |
 | site route `/site/<directory>/HEAD/<path>` | reads the repository over smart HTTP | 404 with body `no-repository` |
+| a `publish-file` delivery from an application's act (the file-publication protocol, such as the lending shelf) | opens a file publication, `file-judge`, push, receipt | answered at once with a refused result, `no-repository`, delivered back to the sending scope |
+
+The last row is neither a route nor a command. It is a message from
+another scope's accepted act, and today the destination opens a file
+publication for it and pushes. Without a repository the destination does
+not open anything: it answers the delivery with a definite result,
+refused `no-repository`, so the sending act's outcome is final and never
+pending. The same answer goes to a site-publication delivery.
 
 The rules-tree certificate has one consequence for the creation cohort.
 The rules scope versions that require the certificate (v11 and v12, on
 register@19 and @20) cannot publish rules without a repository. A
-host-`none` deployment therefore pins a creation cohort whose rules
-scope does not require it (rules@10) until section 9's later slice
-gives the certificate a form that reads the rules tree from the scope.
-The install screen says which cohorts a host-`none` register admits.
+host-`none` deployment therefore pins the unpublished cohort (section
+9), whose rules scope is rules@10 and does not require it, until slice
+G4 gives the certificate a form that reads the rules tree from the
+scope. The install act under host `none` admits that cohort only, and
+the CLI selects it when `--host none` is given without `--cohort`.
 
 What keeps working, and is witnessed as such (section 10, W1):
 `dap create`; members, `dap invite` and `dap join`; every act of every
@@ -133,6 +142,22 @@ feeds section 4.7 and this section with the measured copy time of a
 stopped fleet. Replay stays the independent check: `dap verify --all`
 on a restored fleet proves the restored record's chain, hashes and
 signatures, which is the same guarantee it gives today.
+
+Without publication there is also no journal archive. The archive driver
+writes each scope's journal passes into the destination's repository,
+and `bind-archive` names a repository on the register's host. Under
+host `none` no scope archives. Every entry stays in the scope's own
+storage for the life of the room, and the archive passes that the Room A
+capacity work measures do not run. The bound that then limits a room is
+the scope's own: the record bounds the contract names (`scopeEntries`,
+`scopeBytes`, `scopeItems`, `scopeRecords`, `scopeRequests`), and under
+them what the cell's SQLite database and the fleet bucket admit. A scope
+at its bound refuses new entries with the bound's name as the reason, as
+a scope without an archive binding does today. The members then start a
+new room, or the deployer gives the room a host (section 8) so that the
+archive can take over. Section 4's list of what keeps working holds for
+a room within its bounds; a long room does not behave as it does with a
+host, and the install screen says so beside the host choice.
 
 A deployer who wants the second place chooses `github.com`, or the own
 host H2 when it is built. The choice is per register, so one deployment
@@ -188,8 +213,12 @@ whose repository may be absent, present from creation, or bound later.
 | [hosts page](../docs/hosts.md) | two hosts | three choices, the required flag, the room without publication |
 | [architecture page](../docs/architecture.md), durability | three places | the second place is absent under host `none`; the operator's backup covers the record |
 | [self-hosting note](2026-10-19-self-hosting-on-celld.md), 4.2 and decision 3 | own host is the default | deployer's choice; `none` first; H2 later |
-| [kernel page](../docs/kernel.md), K1 | 73 pinned versions | 76: one new register, directory and destination version each |
-| Creation cohorts | pin register@17 and later | a host-`none` deployment pins a cohort without the rules certificate |
+| `packages/platform/src/archive-binding-wire.ts` | six explicit cohorts | one more, `UNPUBLISHED_COHORT`: register@21, directory@20, membership@8, rules@10, destination@16, inbox@1 |
+| `CREATION_COHORTS` in `packages/scope/src/creation-lineage.ts` | five cohorts, found by the register's pin | the unpublished cohort added, or child creation under host `none` is refused |
+| the cohort list in `packages/scope/src/applications/act-admission.ts` | nine cohorts, found by the directory's pin | the unpublished cohort added, or installed applications in such rooms answer `unavailable` |
+| `CREATION_INSTALL_COHORTS` in `packages/cli/src/commands.ts` | five names, pinned by test to `CREATION_COHORTS` | `unpublished` added, and the test extended |
+| `PLATFORM_CREATION_PINS` on the deployment | the archive-device-application pins | the celld deployment's example pins name the unpublished cohort |
+| [kernel page](../docs/kernel.md), K1 | 73 pinned versions | 76: register@21, directory@20 and destination@16 are new; membership@8, rules@10 and inbox@1 are reused unchanged, which is what keeps the count at three |
 
 ## 10. Slices
 
@@ -200,8 +229,10 @@ this note.
   of section 9; the CLI flag, the refusals and the shortened wait; the
   page and `dap status` wording; the site route. Witnesses: W1, a room
   created under a host-`none` register on the test Worker, with every
-  act in section 4's "keeps working" list taken and every repository
-  act refused `no-repository`, none pending; W2, `dap install --host
+  act in section 4's "keeps working" list taken, every repository act
+  refused `no-repository`, none pending, and one `publish-file` delivery
+  from an installed application answered refused with the sending act's
+  outcome final; W2, `dap install --host
   other` refused `host-unknown` and `--host artifacts` refused
   `host-unavailable` where the binding is absent; W3, `dap verify
   --all` consistent on that room. One gate and exact-head review.
