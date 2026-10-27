@@ -61,7 +61,7 @@
     },
     {
       "name": "create",
-      "description": "Creates a scope with no existing target, and records it in your configuration so later connections list its tools. definition: a platform name such as platform:register@3, a definition's JSON, or its digest; kind: the definition's genesis act; fields; texts and definitions beside it; membership: the membership scope standing for the new scope is read from. Kept under custody like an act: the idempotencyKey is required.",
+      "description": "Creates a scope with no existing target, and records it in your configuration so later connections list its tools. definition: a platform name such as platform:register@18, a definition's JSON, or its digest; kind: the definition's genesis act; fields; texts and definitions beside it; membership: the membership scope standing for the new scope is read from. Kept under custody like an act: the idempotencyKey is required.",
       "inputSchema": {
         "type": "object",
         "properties": {

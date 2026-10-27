@@ -1,7 +1,9 @@
+import { retainHistoricalInstallPlan } from "./support/historical-install-plan.ts";
+import { TRUSTED_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { expect, test } from "vitest";
 import { keyIdOfSecret, verify } from "@generalbusiness/dap-bytes";
 import { memoryStore, type Store } from "../src/store.ts";
-import { install, planInstall, installPlanned, type Context } from "../src/commands.ts";
+import { install, installPlanned, type Context } from "../src/commands.ts";
 import { secretSigner } from "@generalbusiness/dap-client";
 import { canonicalize, intentDigest, newIncarnation, textDigest } from "@generalbusiness/dap-bytes";
 import type { Receipt, SignedIntent } from "@generalbusiness/dap-contract";
@@ -43,7 +45,7 @@ test("operator installation and planned replay refuse a missing hook signer desp
   const service = "https://signer-install.test", store = memoryStore();
   await store.keep("operator", new Uint8Array(32).fill(21));
   const now = () => Date.parse("2026-10-09T12:00:00Z");
-  expect((await planInstall({ store, now }, service, { cohort: "trusted-application" })).code).toBe(0);
+  await retainHistoricalInstallPlan({ store, now }, service, TRUSTED_APPLICATION_COHORT.register);
   const retained = canonicalize(await store.config());
   let reads = 0, writes = 0, submits = 0;
   const originalSecret = store.secret;
@@ -68,7 +70,7 @@ test("an existing hook operator supplies the exact planned identity and replays 
   store.secret = async () => { reads++; throw new Error("must not export a raw key"); };
   store.keep = async () => { writes++; throw new Error("must not replace the operator"); };
   const now = () => Date.parse("2026-10-09T12:00:00Z");
-  expect((await planInstall({ store, now }, service, { cohort: "trusted-application" })).code).toBe(0);
+  await retainHistoricalInstallPlan({ store, now }, service, TRUSTED_APPLICATION_COHORT.register);
   const original = (await store.config())!.plan!, signed = canonicalize(original.founding), signatures = signs;
   expect(original.founding.intent.actor).toBe(operator.key);
   const bodies: string[] = [];

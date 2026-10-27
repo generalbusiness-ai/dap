@@ -29,7 +29,7 @@ room membership, device enrollment, audio or a hosted installation.
 TEST actors for SDK work.
 
 For native use, commit the signed packet to an HTTPS Git repository and
-[install its exact release](../../docs/cli.md) in a `trusted-application` room.
+[install its exact release](../../docs/cli.md) in an existing historical `trusted-application` room.
 The operator must trust that release and publisher. Read the active result
 with `dap application <install-item>` and open its screen URL. The screen
 loads its exact room and installation binding, then enrolls a device from a

@@ -11,7 +11,7 @@ client does. The framework is described in
 This page describes the definition `counting-commitments`, declared in
 [commitments.ts](commitments.ts). The Counter page in [browser](browser)
 runs it. Its [package config](dap.application.json) builds the maintained
-presentation and definition for an ordinary trusted-application room.
+presentation and definition for an existing historical trusted-application room.
 [Taking part in a Counter](../../docs/mcp.md#taking-part-in-a-counter)
 shows an agent taking part through MCP tools. An earlier definition,
 `counting`, is also kept here; see

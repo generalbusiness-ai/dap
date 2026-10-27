@@ -12,7 +12,7 @@ screens. Its [package config](dap.application.json) builds the maintained
 interface for the generic installed-application route. Use `dap check` and
 `dap pack --config examples/lending/dap.application.json` from the repository
 root, then install the committed packet by immutable Git URI and expected
-release in a `trusted-application` room. The host operator lists its exact
+release in an existing historical `trusted-application` room. The host operator lists its exact
 release and publisher. [The CLI guide](../../docs/cli.md) describes the flow.
 A matching invitation enrolls this browser with a nonextractable key.
 

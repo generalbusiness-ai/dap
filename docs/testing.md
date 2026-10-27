@@ -453,7 +453,9 @@ Run the gate once, at the head you will send, except for the
 npm run gate
 ```
 
-The gate checks commit messages before its source helpers and typechecking.
+The gate checks commit messages, shared helpers, section citations and
+documentation links before typechecking. It also runs the Node tests for
+the commit-message and section-citation checkers.
 It uses the same `git merge-base HEAD origin/main` base as whitespace and
 checks every commit in `base..HEAD`, including merges and side history.
 If the base is unavailable, the message check fails. Fetch `origin/main`
@@ -759,7 +761,7 @@ runs them again and restores the file. It gives one of three results:
 | survives | 1 | every test still passed: they do not see this fault |
 | inconclusive | 2 | nothing was shown: the tests did not start, did not pass before the change, did not load or compile with it, ran fewer tests than before, had any timeout, or failed only by a thrown error |
 
-A helper that checks a result, such as `expectRefusal`, fails with
+A result-checking helper fails with
 `expect.fail`, not with a thrown `Error`, so that a test which fails there
 has failed by an assertion.
 

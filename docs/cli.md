@@ -66,7 +66,7 @@ authorization to install a register remains unimplemented.
 The examples are from one run of the test in
 `packages/cli/test/story.scope.test.ts`, with long IDs cut short.
 
-**`dap install <base-url> [--host <git-host>] [--namespace <name>] [--register-policy keys|open] [--cohort file-publication|application|application-publication|trusted-application|declared-application|device-application|archive-application|archive-declared-application|archive-device-application|archive-device-publication|invitation-key]`**
+**`dap install <base-url> [--host <git-host>] [--namespace <name>] [--register-policy keys|open] [--cohort application|archive-device-application|archive-device-publication|archive-certified-rules|hardened-certified-rules]`**
 creates the register with an `install` intent, signed by a new operator
 key, which is also the one creator key. The host defaults to `github.com`
 and the namespace to `artroom`. For the demo's host, the hosting's own Git
@@ -78,7 +78,7 @@ Installed: register sc_hinqqbm4....
 The operator key key_baqzbaDy... is kept in the config directory, readable only by you. It is the one founder key.
 ```
 
-**`dap install --plan <base-url> [--host <git-host>] [--namespace <name>] [--register-policy keys|open] [--cohort file-publication|application|application-publication|trusted-application|declared-application|device-application|archive-application|archive-declared-application|archive-device-application|archive-device-publication|invitation-key]`**
+**`dap install --plan <base-url> [--host <git-host>] [--namespace <name>] [--register-policy keys|open] [--cohort application|archive-device-application|archive-device-publication|archive-certified-rules|hardened-certified-rules]`**
 signs the same `install` intent and creates nothing. A register's ID is a
 function of its seed, and the seed of the intent and the register's
 version alone, so the command prints the ID that the install will create,
@@ -91,11 +91,11 @@ original envelope, version, register and deadline, including when planning
 is repeated.
 
 ```
-Planned: register sc_4kq2v7..., under platform:register@2, on host artifacts, namespace artroom-demo. The seed's time is 2026-10-08T09:14:00Z.
+Planned: register sc_4kq2v7..., under platform:register@18, on host artifacts, namespace artroom-demo. The seed's time is 2026-10-08T09:14:00Z.
 Set registerScope to sc_4kq2v7... in the Worker's host setting, then run dap install --planned before 2026-10-08T09:14:00Z.
 ```
 
-**`dap install --planned [--register-policy keys|open] [--cohort file-publication|application|application-publication|trusted-application|declared-application|device-application|archive-application|archive-declared-application|archive-device-application|archive-device-publication|invitation-key]`** creates the planned register, with the kept
+**`dap install --planned [--register-policy keys|open] [--cohort <saved-cohort>]`** creates the planned register, with the kept
 intent and no other argument. Before anything is sent it checks the plan:
 a plan whose ID is not the one its intent and version make, or whose
 version is not supported by the installed catalog, is refused as
@@ -110,10 +110,8 @@ or delete the original config or keys.
 
 For example, set `DAP_HOME` to a new private directory, then run
 `dap install --plan <base-url> --cohort <cohort> --host <host>
---namespace <namespace>`, using `file-publication`, `application`, `application-publication`,
-`trusted-application`, `declared-application`, `device-application`,
-`archive-application`, `archive-declared-application`,
-`archive-device-application`, `archive-device-publication` or `invitation-key`
+--namespace <namespace>`, using `application`, `archive-device-application`,
+`archive-device-publication`, `archive-certified-rules` or `hardened-certified-rules`
 for `<cohort>`. After configuring the new register ID,
 run `dap install --planned --cohort <cohort>` with the same
 `DAP_HOME`. This creates separate custody and a new operator key; it
@@ -126,7 +124,7 @@ and intent. Its acceptance is a service acknowledgement; independent
 journal verification remains separate.
 
 ```
-Installed: register sc_4kq2v7..., under platform:register@2, as planned.
+Installed: register sc_4kq2v7..., under platform:register@18, as planned.
 ```
 
 [deploy.md](deploy.md) says why and when to plan first.
@@ -149,46 +147,51 @@ rules@10, destination@13 and inbox@1. `--cohort archive-device-publication`
 selects that same cohort explicitly. `--cohort application` selects
 `APPLICATION_COHORT`: register@5, directory@5, membership@4, rules@3,
 destination@2 and inbox@1, each with the `platform:` prefix.
-`--cohort trusted-application` selects `TRUSTED_APPLICATION_COHORT`:
-register@12, directory@11, membership@7, rules@5, destination@7 and inbox@1.
-`--cohort declared-application` selects `DECLARED_APPLICATION_COHORT`:
-register@13, directory@12, membership@7, rules@6, destination@8 and inbox@1.
-`--cohort device-application` selects `DEVICE_APPLICATION_COHORT`: register@16,
-directory@15, membership@7, rules@9, destination@11 and inbox@1. It accepts
-package v2 with the finite `device-command@1` requirement and an explicit
-existing owner. `--cohort archive-device-application` selects
+`--cohort archive-device-application` selects
 `ARCHIVE_DEVICE_APPLICATION_COHORT`: register@17, directory@16,
-membership@8, rules@10, destination@12 and inbox@1. It combines the same
-Device owner and command protocol with archive binding at claim or later.
-Other package v2 declared projections use the
-declared-application cohort. Package v1 keeps
-the trusted-application cohort and its original proof format.
-The retired register@6, directory@6 and membership@5 cohort remains readable;
-new installs cannot select it. `--cohort file-publication` selects the
-historical manifest-publication room: register@3, directory@3, membership@2,
-rules@2, destination@3 and inbox@1. This selection uses exact planned custody.
-An older unmarked, definitely unsent register@3 plan can still be replaced.
-Explicit selection of a matching retained plan keeps its original signature
-and adds only a local custody marker. Attempted plans always retain their
-original request. `--cohort application-publication`
-selects `FILE_PUBLICATION_COHORT`: register@9, directory@8, membership@4,
-rules@3, destination@4 and inbox@1. `--cohort invitation-key` selects
-register@10, directory@9, membership@6, rules@3, destination@2 and inbox@1.
-It uses the application factory, not the file-publication factory. These
-choices use the existing exact
-planned-install custody. Unknown or multiple choices, another retained
-cohort, service, host or namespace refuse before signing or sending.
-`install --planned` may omit the selection: it uses the saved definition
-and signature. It never upgrades a plan to a newer catalog version.
+membership@8, rules@10, destination@12 and inbox@1. It accepts device-command
+packages with an explicit existing owner, and archive binding at claim or later.
+`--cohort archive-certified-rules` selects `ARCHIVE_CERTIFIED_RULES_COHORT`:
+register@19, directory@18, membership@8, rules@11, destination@14 and inbox@1.
+`--cohort hardened-certified-rules` selects `HARDENED_CERTIFIED_RULES_COHORT`:
+register@20, directory@19, membership@8, rules@12, destination@15 and inbox@1.
+These are the five code-supported creation families. The service's configured
+creation policy still decides whether a particular new register is admitted.
+Unknown or multiple choices, another retained cohort, service, host or
+namespace refuse before signing or sending. Creation defaults and existing
+room pins do not change when an explicit choice is added.
 
-Choose `application-publication` for a new application room whose acts tell
-the destination `publish-file`. Configure the host with that exact planned
-register ID before installing. Existing rooms retain their original pins.
-Directory@8 supplies its own destination when the application's genesis
-declares `destination` with type `scope` and kind `destination`; callers
-cannot include that reserved field in `values`. See
-[Publish a file from an act](write-an-application.md#publish-a-file-from-an-act)
+New room creation does not currently offer a family that installs ordinary
+application packages such as Counter or Lending. The device families require
+`device-command@1`; the `application` family supports explicit definition
+activation and establishment, rather than the package-install command.
+
+### Historical rooms and retained plans
+
+The CLI still reads saved plans for `file-publication` (register@3),
+`application-publication` (register@9), `trusted-application` (register@12),
+`declared-application` (register@13), `device-application` (register@16),
+`archive-application` (register@14), `archive-declared-application` (register@15)
+and `invitation-key` (register@10). These names are not offered for fresh plans.
+The retired register@6 cohort remains readable but cannot be installed.
+
+`install --planned` may omit the selection: it uses the saved definition
+and signature. An explicit historical selector must match that retained plan.
+It never upgrades the plan to a newer catalog version. Explicit selection
+of a matching retained plan adds only a local custody marker; its signature,
+register ID and deadline remain the same. Attempted plans always retain
+their original request. An older unmarked, definitely unsent register@3 plan
+can still be replaced by the ordinary default planning path.
+
+An existing `application-publication` room uses register@9, directory@8,
+membership@4, rules@3, destination@4 and inbox@1. Its application's acts can
+tell the destination `publish-file`. Directory@8 supplies its own destination
+when the application's genesis declares `destination` with type `scope` and
+kind `destination`; callers cannot include that reserved field in `values`.
+See [Publish a file from an act](write-an-application.md#publish-a-file-from-an-act)
 for the write authority and publication outcomes.
+
+### Create an application by explicit activation
 
 For an application such as Jam, use a separate owner-only `DAP_HOME`
 and a deployed service that supports all six exact application pins:
@@ -249,12 +252,13 @@ The corrected Counter parent remains intact. A new ordinary gate and
 an independent review of the code are still required for this follow-up.
 
 **`dap install <git+https-uri> --release <release-id> --request <kept-key> [--role <default-role> ...] [--values <genesis-JSON>] [--owner <full-member-JSON>]`**
-records one application install in a room created with
-`--cohort trusted-application` for package v1, or
-`--cohort declared-application` for ordinary package v2. A device-command
-package uses `--cohort device-application`, or
-`--cohort archive-device-application` when its room needs archive binding.
-Both require `--owner` as the
+records one application install. Ordinary package v1 requires an existing
+historical `trusted-application` room; ordinary v2 requires an existing
+historical `declared-application` room. Neither family is offered for new
+creation. A device-command package can use the currently admitted
+`archive-device-application`, `archive-device-publication`,
+`archive-certified-rules` or `hardened-certified-rules` family, or an existing
+historical `device-application` room. Device packages require `--owner` as the
 full JSON MemberRef, including its membership scope, incarnation and member
 handle. The native install checks that this member is active in the room
 membership. The signed package declares kinds and one owner requirement;
@@ -277,11 +281,12 @@ selects no default grants. Existing grants remain. `--values` is a JSON object
 of application genesis fields; its default is `{}`.
 
 A package whose signed host requirements include `archive` needs an
-archive-capable room: select `--cohort archive-application` for package v1
-or `--cohort archive-declared-application` for ordinary v2. A v2 package
-with `device-command@1` uses `--cohort archive-device-application` and an
-explicit existing owner. These are explicit new pins; they do not migrate
-an existing room. The package needs the room's
+archive-capable room. Ordinary package v1 requires an existing historical
+`archive-application` room; ordinary v2 requires an existing historical
+`archive-declared-application` room. These families are not offered for new
+creation. A v2 package with `device-command@1` can use a currently admitted
+device family and an explicit existing owner. No selection migrates an
+existing room. The package needs the room's
 Directory binding `archive: "journal"`. Without it, installation ends with
 `archive-unavailable` before granting roles or creating the application.
 An admin may set the binding at claim or later with `bind-archive`. Submit

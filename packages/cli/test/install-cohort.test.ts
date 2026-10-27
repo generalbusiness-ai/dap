@@ -1,9 +1,11 @@
+import { retainHistoricalInstallPlan } from "./support/historical-install-plan.ts";
 import { expect, test } from "vitest";
 import type { PlatformDefinition, Receipt, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, intentDigest, newIncarnation, scopeIdOf, textDigest, timeMs } from "@generalbusiness/dap-bytes";
 import type { Fetch } from "@generalbusiness/dap-client";
-import { INVITATION_KEY_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT } from "@generalbusiness/dap-platform";
-import { command, install, installPlanned, memoryStore, planInstall, type Config, type Context, type Store } from "../src/index.ts";
+import { INVITATION_KEY_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT } from "@generalbusiness/dap-platform";
+import { CREATION_COHORTS } from "../../scope/src/creation-lineage.ts";
+import { CREATION_INSTALL_COHORTS, USAGE, command, install, installPlanned, memoryStore, planInstall, type Config, type Context, type Store } from "../src/index.ts";
 
 const SERVICE = "https://cohort.test";
 const COHORT = "trusted-application" as const;
@@ -19,6 +21,8 @@ const COHORTS = [
   { name: COHORT, definition: TRUSTED_APPLICATION_COHORT.register, other: "application" },
   { name: "application-publication", definition: FILE_PUBLICATION_COHORT.register, other: COHORT },
   { name: "application", definition: APPLICATION_COHORT.register, other: COHORT },
+  { name: "archive-certified-rules", definition: ARCHIVE_CERTIFIED_RULES_COHORT.register, other: COHORT },
+  { name: "hardened-certified-rules", definition: HARDENED_CERTIFIED_RULES_COHORT.register, other: COHORT },
 ] as const;
 // Fake service answers and memory storage: no native authority or host proof.
 function scenario(fault: "none" | "reply" | "save" = "none", replaceUnsentLegacy = false) {
@@ -66,6 +70,39 @@ function scenario(fault: "none" | "reply" | "save" = "none", replaceUnsentLegacy
   return { ctx, store, bodies, metrics: () => ({ saves, keyReads, keyWrites }) };
 }
 
+// A historical config fixture, not a new-creation path. Its signed intent is
+// retained unchanged; the register pin and ID describe the saved old plan.
+async function retainedPlan(s: ReturnType<typeof scenario>, name: typeof COHORTS[number]["name"], options: { host?: string; namespace?: string } = {}) {
+  if (CREATION_INSTALL_COHORTS.some(current => current === name)) {
+    expect((await planInstall(s.ctx, SERVICE, { ...options, cohort: name })).code).toBe(0);
+  } else {
+    await retainHistoricalInstallPlan(s.ctx, SERVICE, COHORTS.find(cohort => cohort.name === name)!.definition, options);
+  }
+}
+
+test("fresh creation offers exactly admitted families and refuses historical selectors before custody", async () => {
+  const admitted = new Set(CREATION_COHORTS.map(cohort => cohort.register));
+  const offered = COHORTS.filter(cohort => CREATION_INSTALL_COHORTS.some(name => name === cohort.name));
+  expect(offered.map(cohort => cohort.definition).sort()).toEqual([...admitted].sort());
+  const help = USAGE.split("\n").filter(line => line.includes("[--cohort ") && !line.includes("--planned"));
+  expect(help).toHaveLength(2);
+  for (const { name, definition } of COHORTS) {
+    const s = scenario();
+    if (admitted.has(definition as never)) {
+      expect((await command(s.ctx, ["install", "--plan", SERVICE, "--cohort", name])).code).toBe(0);
+      expect((await s.store.config())!.plan!.definition).toBe(definition);
+      expect(help.every(line => line.includes(name))).toBe(true);
+    } else {
+      for (const args of [["install", SERVICE, "--cohort", name], ["install", "--plan", SERVICE, "--cohort", name]])
+        expect(await command(s.ctx, args)).toMatchObject({ code: 2, lines: [expect.stringContaining("historical install plans only")] });
+      expect((await install(s.ctx, SERVICE, { cohort: name })).code).toBe(2);
+      expect((await planInstall(s.ctx, SERVICE, { cohort: name })).code).toBe(2);
+      expect([s.metrics(), s.bodies, await s.store.config()]).toEqual([{ saves: 0, keyReads: 0, keyWrites: 0 }, [], null]);
+      expect(help.every(line => !line.split("[--cohort ")[1]!.split("]")[0]!.split("|").includes(name))).toBe(true);
+    }
+  }
+});
+
 test("closed cohort selection uses the new default and preserves retained historical plans without replacing custody", async () => {
   const bad = scenario();
   for (const args of [["install", SERVICE, "--cohort"], ["install", SERVICE, "--cohort", "latest"], ["install", SERVICE, "--cohort", "counting-commitments"], ["install", SERVICE, "--cohort", ""], ["install", SERVICE, "--cohort", COHORT, "--cohort", COHORT], ["install", SERVICE, "--cohort", "application", "--cohort", COHORT]]) {
@@ -75,7 +112,7 @@ test("closed cohort selection uses the new default and preserves retained histor
   expect([bad.metrics(), bad.bodies, await bad.store.config()]).toEqual([{ saves: 0, keyReads: 0, keyWrites: 0 }, [], null]);
   // A well-shaped retained Counter plan still cannot create a new room.
   const retired = scenario();
-  expect((await planInstall(retired.ctx, SERVICE, { cohort: COHORT })).code).toBe(0);
+  await retainedPlan(retired, COHORT);
   const configured = (await retired.store.config())!, founding = configured.plan!["founding"];
   const retiredPlan = { ...configured.plan!, definition: "platform:register@6" as const, register: scopeIdOf({ v: 1, kind: "register", definition: "platform:register@6", creator: null, cause: intentDigest(founding.intent), ordinal: 0 }) };
   await retired.store.save({ ...configured, plan: retiredPlan });
@@ -158,7 +195,7 @@ test("closed cohort selection uses the new default and preserves retained histor
 
   for (const { name, definition, other } of COHORTS) {
     const s = scenario();
-    expect((await command(s.ctx, ["install", "--plan", SERVICE, "--cohort", name, "--host", "artifacts", "--namespace", "room"])).code).toBe(0);
+    await retainedPlan(s, name, { host: "artifacts", namespace: "room" });
     const original = (await s.store.config())!;
     expect([original.plan!.definition, original.plan!.selected, s.bodies]).toEqual([definition, true, []]);
     expect((await command(s.ctx, ["install", "--plan", SERVICE, "--cohort", name])).code).toBe(0);
@@ -185,7 +222,7 @@ test("closed cohort selection uses the new default and preserves retained histor
     // The expired selected plan is retained; planning there cannot renew it.
     const expired = scenario();
     const where = ["--cohort", name, "--host", "artifacts", "--namespace", "room"];
-    expect((await command(expired.ctx, ["install", "--plan", SERVICE, ...where])).code).toBe(0);
+    await retainedPlan(expired, name, { host: "artifacts", namespace: "room" });
     const expiredConfig = (await expired.store.config())!;
     const deadline = timeMs(expiredConfig.plan!["founding"].intent.notAfter)!;
     expired.ctx.now = () => deadline + 1;
@@ -198,7 +235,7 @@ test("closed cohort selection uses the new default and preserves retained histor
     ]) {
       const refused = await command(expired.ctx, args);
       expect(refused.code).toBe(1);
-      expect(refused.lines[0]).toContain(`For a new ${name} plan, set DAP_HOME to a separate empty directory`);
+      expect(refused.lines[0]).toContain(`For a new plan on ${CREATION_INSTALL_COHORTS.some(current => current === name) ? name : "an admitted cohort"}, set DAP_HOME to a separate empty directory`);
       expect(refused.lines[0]).toContain("If ARTROOM_HOME is set, unset it or set it to that same new directory");
       expect(refused.lines[0]).toContain("different directories refuse before configuration is read");
       expect(refused.lines[0]).not.toContain("Plan again");
@@ -207,6 +244,11 @@ test("closed cohort selection uses the new default and preserves retained histor
     expect([expired.metrics().saves, expired.metrics().keyWrites]).toEqual([before.saves, before.keyWrites]);
     const separate = scenario();
     separate.ctx.now = expired.ctx.now;
+    if (!CREATION_INSTALL_COHORTS.some(current => current === name)) {
+      expect((await command(separate.ctx, ["install", "--plan", SERVICE, ...where])).code).toBe(2);
+      expect([await separate.store.config(), separate.bodies, separate.metrics()]).toEqual([null, [], { saves: 0, keyReads: 0, keyWrites: 0 }]);
+      continue;
+    }
     expect((await command(separate.ctx, ["install", "--plan", SERVICE, ...where])).code).toBe(0);
     const freshPlan = (await separate.store.config())!.plan!;
     expect([freshPlan.definition, freshPlan["founding"].intent.fields]).toEqual([expiredConfig.plan!.definition, { ...expiredConfig.plan!["founding"].intent.fields, "founders": [freshPlan["founding"].intent.actor] }]);
@@ -222,6 +264,7 @@ test("selected delivery requires exact plan and attempt readback and recovers th
   for (const { name } of COHORTS) {
     for (const mode of ["reply", "save"] as const) {
       const s = scenario(mode);
+      await retainedPlan(s, name);
       const first = await install(s.ctx, SERVICE, { cohort: name }).catch(() => ({ code: 1 }));
       expect(first.code).toBe(1);
       const pending = (await s.store.config())!;
@@ -237,7 +280,7 @@ test("selected delivery requires exact plan and attempt readback and recovers th
     }
     // A store that silently drops the attempted marker provides no custody.
     const s = scenario();
-    expect((await planInstall(s.ctx, SERVICE, { cohort: name })).code).toBe(0);
+    await retainedPlan(s, name);
     const original: Config = (await s.store.config())!;
     s.ctx.store = { ...s.ctx.store, save: async next => { if (!next.plan?.attempted) await s.store.save(next); } };
     expect((await installPlanned(s.ctx, { cohort: name })).code).toBe(1);
@@ -248,7 +291,7 @@ test("selected delivery requires exact plan and attempt readback and recovers th
       if (next.plan) next.plan.service = "https://substituted.test";
       await changed.store.save(next);
     } };
-    expect((await install(changed.ctx, SERVICE, { cohort: name })).code).toBe(1);
+    expect((await install(changed.ctx, SERVICE, { cohort: "application" })).code).toBe(1);
     expect(changed.bodies).toEqual([]);
   }
 });

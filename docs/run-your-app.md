@@ -25,8 +25,9 @@ This guide uses the earlier `application` cohort and its explicit definition
 activation, creation, and role grants. It remains a low-level path for the
 tutorial's definition, which has no browser page.
 
-For a signed application package, use the `trusted-application` cohort and
-[package install command](cli.md). That path records one admin request and
+New room creation does not currently offer a family that installs ordinary
+application packages such as Counter or Lending. For an existing historical
+`trusted-application` room, use the [package install command](cli.md). That path records one admin request and
 serves the package's screen through the generic application route. The
 maintained [Counter](../apps/counter/APPLICATION.md) and
 [Lending](../examples/lending/APPLICATION.md) packages use it. `dap check`,
