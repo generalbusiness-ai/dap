@@ -1,9 +1,9 @@
 # Report Worker observations with explicit coverage limits
 
 The ordinary gate passed after this work was recut onto Main following the
-installed-release listing. Final non-note source equality, the raw index and
-manifest, evidence seal, and exact-head checker review remain due. This note
-claims no live query, real credential use, landing or deployment.
+installed-release listing. Source equality and the sealed evidence manifest are
+verified; exact-head checker review remains due. This note claims no live query,
+real credential use, landing or deployment.
 
 ## What changed
 
@@ -168,8 +168,8 @@ Final combined evidence is retained read-only at
 `/Users/hughpyle/play/artroom-evidence/2026-10-27-security-r14-usage-recut`.
 `prior-base/` is an exact copy of all 114 original sealed files. The final
 manifest inventories the recut evidence and that prior-base copy. Only this
-reporting note and the manifest change after the recut gate. All 2,805 non-note
-tracked files equal the tested tree, recorded in `gate-source-equality.json`
+reporting note and the manifest change after the recut gate. All 2,805 tracked files outside
+`notes/implementation/` equal the tested tree, recorded in `gate-source-equality.json`
 (SHA-256 `7fe3784df12e712dd9ce931d15441468667db4907072c5f25b313a175d3f34be`). The final artifact names the reviewed head and tree;
 no future implementation is covered by this equality. At the original
 gate and its reporting-only candidate
@@ -207,9 +207,8 @@ caches. No cold-cache or isolated-machine claim is made.
 
 ## Open limits
 
-- Final non-note source equality, the raw index and manifest, evidence seal,
-  and exact-head review remain due under the child request above. The preceding
-  listing `521f57a1` is landed.
+- Exact-head checker review remains due under the child request above.
+  The preceding listing `521f57a1` is landed.
   No hosted compatibility or actual account coverage has been established.
 - Parent R14 remains open. Deployment aliases cannot authenticate historical
   Worker identity. Missing route methods, native versions, feature identity,
