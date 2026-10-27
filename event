@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b6aba1ee83c10f230312bf85606c11aa3030861b","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/support/native-fixture-lifetime.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:babdfe0d890fe709b49ad3de8463c568d890f2e0","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-27-security-r11.manifest.json."}
