@@ -49,10 +49,13 @@ Those wrappers can also retry a forbidden session read through Signed authority
 that sessionless summary should pass or identify which path admitted each
 remote read. This adapter does not reuse those retry wrappers.
 
-The existing session protocol validates membership, active member and key,
+The existing host session issuer validates membership, active member and key,
 signature, expiry, nonce and usable deployment bindings. A target separately
 checks its session MAC, deployment, exact recorded membership/incarnation,
 clock, expiry and requested permission (`packages/scope/src/sessions.ts`).
+The existing client checks its answer shape and binds the requested membership
+scope, incarnation and actor key; it does not authenticate the token or establish
+hosted permission. The target performs that check when the token is used.
 Ordinary members can receive summary permission. `SESSION_SECRET` and
 `DEPLOYMENT` are required; this child changes neither setting nor authority.
 
