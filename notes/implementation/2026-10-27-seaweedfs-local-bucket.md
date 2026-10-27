@@ -231,6 +231,7 @@ versions and checksums in `VERSIONS.txt`.
 | 16 rooms in parallel | load driver, 800 acts | 0 for all 800 | `40378d9e70bbcf75e4ed67ebc54bb4196f5bfa3374144be638f505b276bbcfa9` (`raw/mini-logs/perf/p16.json`) |
 | celld dev comparison | load driver suite | 0 for every act | `3074a92a5e24354367226b81495c422b8a0f45b502d34a72b4742281d2d11969` (`raw/mini-logs/perf/dev-suite.txt`) |
 | Sustained run | load driver, 35 minutes, snapshots every 60 s | not recorded | `4f7f181745b08abbc314fedd0ec9ee4cede69c5b86c2adaa2b159e00a55e89c3` (`raw/mini-logs/sustained/snaps.jsonl`) |
+| Cost of fsync, rule on | `raw/mini-scripts/fsync-test.sh`, 200 acts | not recorded; all 200 acts exit 0 | `cd7ff7cc6223202303b79d8c06cf0501009a4cd70efa46afbb84f629d9e4ed50` (`raw/mini-logs/fsync/fsync-acts.json`) |
 | Full report | — | — | `2b84620a795fc69150c5ee339c514fac6d8cae909d1ca6e9f7f3b9466ff2c5cf` (`REPORT.md`) |
 
 ## 7. Open limits
@@ -239,24 +240,31 @@ versions and checksums in `VERSIONS.txt`.
   `add-member` answers 503 "guard-incomplete". The range guard on the
   member handle scans at most `guardScan` (1,000) items
   (`packages/derive/src/guards.ts`). Owned by the planner's request
-  for the problems this run found.
+  `a6847815` for the problems this run found, slice `121a8913`
+  (uniqueness guards answered from an index).
 - **dap: sessions.** `REQUESTS_PER_KEY` (64, `packages/scope/src/sessions.ts`)
   per key and scope answers 429 to new sessions. Reads then fall back to
   signed reads, which were refused or saw fewer entries; one
-  `verify --all` reported a false "incomplete" this way. Same owner.
+  `verify --all` reported a false "incomplete" this way. Same request,
+  slice `14895240` (the CLI reuses its session and reports the limit).
 - **dap: `verify --all`.** It stops at 64 scopes; on a room with 578
   members it took 585 s to report that. From a room other than the
   register's first one it cannot verify the register, and the same
   rule stops the key creating another room once its last signature is
-  no longer recent. Same owner.
+  no longer recent. Same request, slice `14895240`.
 - **celld at idle.** Resident cells cost CPU: 2.25 cores at about 2,000
   cells. After each restart celld restored about 700 cells with no
   request; the cause is not isolated and fits cells with armed alarms.
-  Same owner, to find whether dap arms those alarms.
+  Same request, slice `c3034274`, to find whether dap arms those
+  alarms; a celld matter if it does not.
 - **Single-node drain** never seals (section 3). Owned by the
-  self-hosting note's next draft.
+  self-hosting note's next draft, as a celld matter.
+- **Timed rules wake late on a cold cell.** A rule lapsed 20.2 s late
+  through celld's 60 s waker scan (section 3). Owned by the
+  self-hosting note's next draft, as a celld matter.
 - **Creation admission** needs `ARTIFACTS_CONFIG` even off Cloudflare.
-  Owned by the Git host choice note (request `cc0bf648`).
+  Owned by slice G1 of the Git host choice note, request `2b5e3a07`
+  (host `none`, with a host-independent register setting).
 - **Not measured:** server-sent event streams, acts that create no
   scope, two-node fleets, power loss, and the store's volume-slot cap.
 - **One machine, one version, about two hours.** celld does not
