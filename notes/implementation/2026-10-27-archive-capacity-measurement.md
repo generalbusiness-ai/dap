@@ -287,6 +287,31 @@ attribution leave the charge-site and row-growth explanation partial.
 Neither this one pass nor comparison with the differently shaped Site pass
 establishes a growth curve, an entry-only cause, or R7 causality.
 
+The source formulas explain how costs depend on row and journal geometry.
+The ten compared formula files are byte-identical at the two historical
+heads and observed deployment source `6499a12bb16317d9bc614e5f5e905fb4d662cc87`.
+`RoomA/formula-source-identity-20261027.json` records all 30 verified snapshots
+(10,548 bytes, SHA-256
+`53ee6694fcdff247fd8f13ecbabd942c74295d8947b82178241fa2f378451dff`).
+The actual command and streams are retained under
+`RoomA/formula-source-identity/`; its exit is 0. This comparison covers only
+those files, not the whole plan or the emitted bundle.
+
+Pending-row bytes include the old row and upper bounds for manifest,
+publication and replay-scope text. Here `pending=15672` is a projected
+row-byte upper bound. Bookkeeping prices repeated row loads, manifest units,
+replay scopes and new retained keys. Body and tree work depend on entry
+counts, retained names, selected paths, affected tree rows and object counts.
+Parent bytes increase copy and pack input work; copied object counts increase
+transfer metadata. Frontier work combines receipt-bound tree ceilings with
+pending-row, context, mark and encoding sizes. These formulas differ from
+response reservations: a birth or item lookup can reserve 256 KiB of metadata
+before the read, regardless of the bytes returned. The 1,713,289 metadata
+finish quote remains separate from the 2,894,539 metadata already admitted.
+Some finish components remain observations carried into the reconstruction.
+Source identity does not attribute unmapped frames, establish a growth curve,
+or show that R7 caused the refusal. It justifies no cost cut.
+
 ## Historical fixed finish and capture limits
 
 Planner ruling `6634c94c293fb6f956244e30e8a115330543e0e8` answers item 3 of the
