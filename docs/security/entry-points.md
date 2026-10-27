@@ -311,12 +311,17 @@ when the caller's HTTP read is refused; they do not grant the caller archive
 access. Register and Membership journals remain excluded. Generic and lending
 entries do not enable this wiring, and production retained floors remain off.
 
-Birth proofs, target item replies, pin SQL payloads and parent-frontier
-ownership reserve their full read ceiling before I/O. A successful bounded
+Birth proofs, target item replies, pin SQL payloads, migration reply buffers
+and parent-frontier ownership reserve their full read ceiling before I/O. A successful bounded
 receipt settles metadata and proportional input work to received bytes;
 an unavailable or failed read stays charged in full. Operation counts and
 the original deadline do not change. Fixed processing fees and transport
 input-work tariffs retain their existing charges.
+
+Migration reply buffers settle against completed bounded POST response bytes.
+GET advertisements keep their separate fixed fee. A transport byte receipt
+does not certify validation: the archive owner settles only after the pack,
+object type, size and original authority/deadline fences have passed.
 
 The pass diagnostic's `reservationCosts.metadataReserved` is metadata
 admitted before refunds. `metadataSettled` is the current charge, including

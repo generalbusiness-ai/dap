@@ -141,12 +141,15 @@ export function archiveProvider(ports: { readonly tokens: ArchiveTokens; readonl
       const reserveWork = (bytes: number) => budget.spend({ metadata: bytes, inputWork: bytes * 32 });
       const reserveOutput = (objects: number, bytes: number) => budget.spend({ metadata: objects * 256 + bytes, inputWork: objects * 256 + bytes * 4 });
       advertisement();
-      budget.spend({ metadata: ARCHIVE_MIGRATION_WIRE_BYTES, inputWork: ARCHIVE_MIGRATION_WIRE_BYTES });
+      const reservation = budget.reserve({ metadata: ARCHIVE_MIGRATION_WIRE_BYTES, inputWork: ARCHIVE_MIGRATION_WIRE_BYTES });
       const input = await source(repository, allowed, { bytes: ARCHIVE_MIGRATION_WIRE_BYTES, objects: ARCHIVE_MIGRATION_OBJECTS },
         true, undefined, reserveObjects, reserveWork, true, true, reserveOutput);
       const objects = await input.currentParent(id, { commitBytes: ARCHIVE_MIGRATION_COMMIT_BYTES,
         treeBytes: ARCHIVE_MIGRATION_TREE_BYTES, advertisementBytes: ARCHIVE_MIGRATION_AD_BYTES });
       check(allowed);
+      // This fresh source has one POST. Release only its unused ownership
+      // ceiling after validation; actual decoder/output fees remain spent.
+      budget.settle(reservation, input.receivedObjectBytes);
       // Decoder-owned bodies enter this private map without another payload
       // copy. Reserve list/map descriptors before constructing them.
       budget.spend({ metadata: objects.length * 256, inputWork: objects.length * 256 });
@@ -176,12 +179,13 @@ export function archiveProvider(ports: { readonly tokens: ArchiveTokens; readonl
           head = { id: headId, value: null };
           headReading = (async () => {
             advertisement();
-            budget.spend({ metadata: ARCHIVE_MIGRATION_HEAD_BYTES + 8192, inputWork: ARCHIVE_MIGRATION_HEAD_BYTES + 8192 });
+            const reservation = budget.reserve({ metadata: ARCHIVE_MIGRATION_HEAD_BYTES + 8192, inputWork: ARCHIVE_MIGRATION_HEAD_BYTES + 8192 });
             const sourceHead = await source(repository, allowed,
               { bytes: ARCHIVE_MIGRATION_HEAD_BYTES + 8192, objects: 1 }, true, undefined, reserveObjects, reserveWork, true, true, reserveOutput);
             const value = await sourceHead.object(headId, ARCHIVE_MIGRATION_HEAD_BYTES);
             check(allowed);
             if (value.type !== "blob" || !(value.data instanceof Uint8Array) || value.size !== value.data.length) return bad();
+            budget.settle(reservation, sourceHead.receivedObjectBytes);
             head!.value = value; return value;
           })();
         }

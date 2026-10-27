@@ -172,7 +172,8 @@ copies it.
 
 The optional journal archive runs in bounded alarm passes. A pass reserves
 the full ceiling before reading target or source birth proofs, target item
-replies, pin metadata or retained parent-frontier payloads. A completed,
+replies, pin metadata, migration reply buffers or retained parent-frontier
+payloads. A completed,
 checked read releases unused metadata allowance and the matching share of
 byte-based input work. Failed reads keep the full reservation. Calls and
 other operation counts, the original deadline and the finish forecast keep

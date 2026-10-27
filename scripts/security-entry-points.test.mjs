@@ -245,7 +245,7 @@ const pendingArchiveSeals = {
   "apps/room/archive-policy.ts": "ed3b746b5a26c3e872e41b13ba133f43ade42b5612aa5028ba544fc013be5ce7",
   "apps/room/archive.ts": "9547f8b9a4a1dd842b6151287a9b15efdf3abed011cb6b12bc191d5e04b78e4d", // Valid source proof settles; source policy and identity checks unchanged.
   "packages/scope/src/archive-host-item.ts": "44fd36bee675f5abc450ffb60b9858d820e20c88461589ecfeff61e36ef0e327",
-  "packages/scope/src/archive-host.ts": "e376746b7a1001a47715f666c4777e135bf1c48a162bfffe9c80e0ec913f079f", // Staged input charges and bounded bootstrap reviewed; actual maintained parser output.
+  "packages/scope/src/archive-host.ts": "ad759aff6f090fab3401d2f75274af294269f7db488ae2d5c56954759cdf754a", // Migration collectors settle only checked POST byte receipts; decoder fees and authority fences unchanged.
   "packages/scope/src/artifacts-host.ts": "df100e1d2d24bb859af31935b21598cd948e2dec0199d954c34742e33dc38f53",
   "packages/scope/src/artifacts-wiring.ts": "03616f13d672f8c5c1f2054ad2f8cfb9fb6468107f75b6153f38914d4f7f9bd6",
 };

@@ -1,13 +1,138 @@
 {
-  "qualification": "Draft collector for focused and historical numeric controls. Raw remains open; ordinary gate, exact checkpoint binding, index and seal remain due. Historical response/pin actual lengths are unavailable; no fitting claim.",
+  "qualification": "Draft complete collector for focused and numeric controls before the ordinary gate. Raw remains open; exact gate checkpoint, index and seal remain due. Synthetic conditional controls do not supply historical response/pin lengths or satisfy W1.",
   "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-27-archive-read-settlement",
   "checkpoint": {
     "commit": null,
     "tree": null,
     "status": "Pending ordinary gate checkpoint"
   },
-  "fileCount": 47,
+  "fileCount": 80,
   "files": [
+    {
+      "path": "conditional-admission/driver.mjs",
+      "bytes": 26840,
+      "sha256": "38d69a180153fa6b8f7a0715a1eee5414591b51247dd8da1d855e1cfa63693b7"
+    },
+    {
+      "path": "conditional-admission/receipt.json",
+      "bytes": 725,
+      "sha256": "693d4bf22cca9280695a6b4cd7a5ab3900cfcc45d91c31709f0ea53589ca1732"
+    },
+    {
+      "path": "conditional-admission/sources/packages/bytes/src/hash.ts",
+      "bytes": 1330,
+      "sha256": "88a6cd074f948731f83e70e7ce7efb8848fe7c2e940b379e39617894bd8e5f27"
+    },
+    {
+      "path": "conditional-admission/sources/packages/bytes/src/values.ts",
+      "bytes": 995,
+      "sha256": "615e85d7811e5c981608f4faaccae8bab848d4c800028ff9d3943ec519aeab7f"
+    },
+    {
+      "path": "conditional-admission/sources/packages/git/src/journal-anchors.ts",
+      "bytes": 7766,
+      "sha256": "6e25aae4e2ca589ad76fd10191d9a09a27a3ba1240bbbd55235fc98fa3dc2fba"
+    },
+    {
+      "path": "conditional-admission/sources/packages/git/src/journal-append-cost.ts",
+      "bytes": 2230,
+      "sha256": "315c886f1ec5d65abd9890c5137b1385799cd0b5d08a68c4e5f2d8755002a5e1"
+    },
+    {
+      "path": "conditional-admission/sources/packages/git/src/journal-commit-cost.ts",
+      "bytes": 1892,
+      "sha256": "ab22ba8ebd5b633d1a0daefdcd225f3f3d9517562f91ec645b36eb849cb44827"
+    },
+    {
+      "path": "conditional-admission/sources/packages/git/src/journal-object-cost.ts",
+      "bytes": 663,
+      "sha256": "6807f7e9964607d4143e454334d031428abb37d6059cfc834ce2bed9aca176f9"
+    },
+    {
+      "path": "conditional-admission/sources/packages/git/src/journal-objects.ts",
+      "bytes": 13402,
+      "sha256": "ad8680c6d71188a4786c47984d3ef51939dd29640edb06f4e659ec055d304c1a"
+    },
+    {
+      "path": "conditional-admission/sources/packages/git/src/journal-pass-cost.ts",
+      "bytes": 3926,
+      "sha256": "ea4c1ff8e76bd50f1b0c04073cce419f8a539962e6954a9176cfe75223701036"
+    },
+    {
+      "path": "conditional-admission/sources/packages/git/src/journal-selection-cost.ts",
+      "bytes": 2382,
+      "sha256": "b4acaa9910f1099399236df582f8259317e43110b954f2e42023b550c995a541"
+    },
+    {
+      "path": "conditional-admission/sources/packages/git/src/journal-v2-frontier.ts",
+      "bytes": 13069,
+      "sha256": "381f78b62ffe26261e7b646c49689f25b44c3df824a6e33a775d2e401c699220"
+    },
+    {
+      "path": "conditional-admission/sources/packages/git/src/journal-v2-path.ts",
+      "bytes": 4204,
+      "sha256": "2ca3ee505439e1ff018280e7875139db4c0e0b9b2892efbaf4fc6ca2da7c7cdc"
+    },
+    {
+      "path": "conditional-admission/sources/packages/git/src/journal-work.ts",
+      "bytes": 4989,
+      "sha256": "ed0e6e09ff8e561651109cc129e0aeed575edde7384ef82bc139c7c9b8c04e1f"
+    },
+    {
+      "path": "conditional-admission/sources/packages/scope/src/archive-budget.ts",
+      "bytes": 13766,
+      "sha256": "1a454f06f25e7fd34d7862e7e366f5e6a7f23d7a69cdc9c8b85b48d971ba8d92"
+    },
+    {
+      "path": "conditional-admission/sources/packages/scope/src/archive-build.ts",
+      "bytes": 34921,
+      "sha256": "d66d01a6e0e78a798786d5c242edcc9bef0f9d4eee2c24475c2c1c08845c30a6"
+    },
+    {
+      "path": "conditional-admission/sources/packages/scope/src/archive-capacity-observation.ts",
+      "bytes": 34216,
+      "sha256": "156daac9f7efaccea129e3fed68ae33c0dac6d07f94471676dcf0d363d87d140"
+    },
+    {
+      "path": "conditional-admission/sources/packages/scope/src/archive-finish-cost.ts",
+      "bytes": 9970,
+      "sha256": "e6eadb2577979d40006895f20de4bf9a0628ef621b5c61dd1c99110ebc09e51b"
+    },
+    {
+      "path": "conditional-admission/sources/packages/scope/src/archive-frontier-cost.ts",
+      "bytes": 10994,
+      "sha256": "c3ade90bbdee69f04a5a300a5c0622c88eb4f11859fa2a5d0e96e3b20e559d15"
+    },
+    {
+      "path": "conditional-admission/sources/packages/scope/src/archive-publication.ts",
+      "bytes": 2956,
+      "sha256": "74ce75f531cfc30d476949a2785947702c37d5e39a370b0efc1d4643109ef2d3"
+    },
+    {
+      "path": "conditional-admission/sources/packages/scope/src/archive-row-cost.ts",
+      "bytes": 6102,
+      "sha256": "7003025ac9993ad80e0419a6014d50b012f87a07614208c73d4ac2c687ae5429"
+    },
+    {
+      "path": "conditional-admission/sources/packages/scope/src/archive-transfer-cost.ts",
+      "bytes": 2273,
+      "sha256": "e9675acff3ef800dc883ce251632770ccbde8cf2a6dc8f65b5e258805a6daa5a"
+    },
+    {
+      "path": "conditional-admission/stderr.log",
+      "bytes": 183,
+      "sha256": "addb2f535fedfbec6bbb65c7b9dea4a11734449a6b33283e8497204beefa44c2"
+    },
+    {
+      "path": "conditional-admission/stdout.log",
+      "bytes": 1189,
+      "sha256": "d0784c6a959ee1a3c21cefac83468772fc18e034b45bf2fa9b8fec734b945bdc"
+    },
+    {
+      "path": "conditional-admission/w1-conditional.json",
+      "bytes": 35165,
+      "sha256": "bfb50ce5ab3e14056b789e32d626a88bba77e3b7dd6c26960d8f138823057466"
+    },
     {
       "path": "dependency-setup.json",
       "bytes": 436,
@@ -34,6 +159,11 @@
       "sha256": "9deee1108c4bbc261d38ef232f66bbe5ee1fbf28b7e3e8d7ccf106f29255e01f"
     },
     {
+      "path": "gate-analysis-prepared.py",
+      "bytes": 21086,
+      "sha256": "8ec406b8cae97f2692d72eaca6746c9c71be6f2b28ccca25a25656bc41e74f01"
+    },
+    {
       "path": "gate-driver-prepared.py",
       "bytes": 5266,
       "sha256": "1992e3dabaae9aac1f62db5ec2873154b264b0269b171805ccf976641ccbf4a0"
@@ -42,6 +172,36 @@
       "path": "git-typecheck.log",
       "bytes": 103,
       "sha256": "f7177ec41c5d59d1082d62357947755dcabdd6fe7cf48d36315c02839393bb49"
+    },
+    {
+      "path": "migration-focused-driver.py",
+      "bytes": 2223,
+      "sha256": "43200fdc5e92726975c33f18a91356716cfbb88fc4f671e70d0e442ab139636b"
+    },
+    {
+      "path": "migration-focused-receipt.json",
+      "bytes": 835580,
+      "sha256": "d28a0c7c7f44e2c769fed468f146af220be5fb96b0c7789b2532341be14ee3c6"
+    },
+    {
+      "path": "migration-focused-vitest.json",
+      "bytes": 31818,
+      "sha256": "45121dabe90dd877e25a12c4e9b37d7934ba2c8a8d52336565c0e83ad3815c5c"
+    },
+    {
+      "path": "migration-focused.log",
+      "bytes": 100589,
+      "sha256": "8d573d6ec7244b76cad4202934d47264ddd322ebf63af00ee8c355f1e3501f5f"
+    },
+    {
+      "path": "migration-security-seals.log",
+      "bytes": 1080,
+      "sha256": "946bfbf18dea4610f08fdef345ad50fe8ba86e008d6fa37a7ab337116f694d27"
+    },
+    {
+      "path": "migration-typecheck.log",
+      "bytes": 250,
+      "sha256": "a22bebe45957389503f81a89065b1a2e6ff61209f53dd26348ed7dbc15e68ff3"
     },
     {
       "path": "numeric-W1/driver.mjs",
@@ -62,6 +222,11 @@
       "path": "numeric-W1/stdout.log",
       "bytes": 0,
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "numeric-W1-final/committed-source-binding.json",
+      "bytes": 4247,
+      "sha256": "4c3775ca2549ceaae9011c37539e09786af2bf60e1993d792f51b948aa108043"
     },
     {
       "path": "numeric-W1-final/driver.mjs",
