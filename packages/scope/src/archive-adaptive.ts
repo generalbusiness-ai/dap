@@ -17,6 +17,7 @@ import type { FixtureArchiveSourcePins } from "./archive-source-pins.ts";
 import { archiveFrontierRowContextBound } from "./archive-frontier-cost.ts";
 import type { Sql } from "./sqlite.ts";
 import { archiveParentMetadata, forecastArchiveFinish, type ArchiveParentMetadata } from "./archive-finish-cost.ts";
+import { observeArchiveRowContext, observeArchiveSelection } from "./archive-capacity-observation.ts";
 
 const empty = (): ArchiveCost => ({ entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0, inputWork: 0 });
 function sum(...costs: readonly Partial<ArchiveCost>[]): ArchiveCost {
@@ -70,6 +71,7 @@ function planningRowContext(sql: Sql, context: AdaptiveArchiveContext, budget: A
   // standalone serialization keeps the original generic ceiling.
   budget.spend({ metadata: 128, inputWork: 256 });
   const rowContextBytes = archiveFrontierRowContextBound(context.row, snapshotBytes ?? undefined);
+  observeArchiveRowContext(budget, { oldRowBytes, rowContextBytes, snapshotConsumed: snapshotBytes !== null });
   return { ok: true as const, oldRowBytes, rowContextBytes };
 }
 export function planAdaptiveArchivePass(sql: Sql, context: AdaptiveArchiveContext, budget: ArchiveBudget) {
@@ -168,6 +170,7 @@ async function adaptiveArchivePass(coupled: boolean, sql: Sql, context: Adaptive
         break;
       }
       selected = { through, cost: prepared.value.cost, parent: prepared.value.parent };
+      observeArchiveSelection(budget, through.seq);
       if (through.seq === context.through.seq) break;
     }
     if (!selected || !scout) return capacityLimited ? { ok: false, deferred: "capacity", capacityRefusal } : { ok: false, reason: "limit" };

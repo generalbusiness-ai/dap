@@ -10,6 +10,7 @@ import { archivePublicationBytesUpper, archiveReplayScopeUnits } from "./archive
 import { archivePendingRowBytesUpper, forecastArchiveBookkeeping } from "./archive-row-cost.ts";
 import { forecastArchiveTransfer } from "./archive-transfer-cost.ts";
 import { forecastArchiveFrontierFinish } from "./archive-frontier-cost.ts";
+import { observeArchiveFinishQuote } from "./archive-capacity-observation.ts";
 
 const empty = (): ArchiveCost => ({ entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0, inputWork: 0 });
 function sum(...costs: readonly Partial<ArchiveCost>[]): ArchiveCost {
@@ -84,7 +85,42 @@ export function forecastArchiveFinish(context: ArchiveFinishContext, preparation
   const frontier = forecastArchiveFrontierFinish({ hasBase: context.parent !== null, through: through.seq, captureFromSource: true, rowContextBytes,
     markUnits: shape.selectionUnits + publicationUnits, markedRowBytes: pending });
   if (!frontier.ok) return null;
-  return sum(setup, inventory, shape.input, publication, { inputWork: JOURNAL_SELECTION_BYTES * 3 }, selection.cost, body.cost,
+  const selectionReservation = { inputWork: JOURNAL_SELECTION_BYTES * 3 };
+  const totalCost = sum(setup, inventory, shape.input, publication, selectionReservation, selection.cost, body.cost,
     patch.cost, commit.cost, context.parent && patch.appendEdges?.ok ? patch.appendEdges.cost : {},
     append?.ok ? append.cost : {}, transfer.cost, rows.cost, frontier.cost);
+  // Observe only the completed native quote. Earlier null/throw outcomes
+  // remain uncaptured, rather than manufacturing missing forecast components.
+  // sourceLookups is a diagnostic subset of publication, not another debit.
+  observeArchiveFinishQuote(budget, {
+    throughSeq: through.seq,
+    scalars: {
+      stage: 0, oldRowBytes, rowContextBytes, parentObjects: parent.objects, parentBytes: parent.bytes,
+      parentPresent: context.parent !== null ? 1 : 0, maximum: context.maximum, legacyAnchors,
+      anchors, totalAnchors: total, publicationUnits, scopeBase, scopes,
+      replayScopesPresent: context.replayScopes ? 1 : 0, atomicFirstAttempt: context.atomicFirstAttempt === true ? 1 : 0,
+      pending, entries: shape.entries, entryBytes: shape.entryBytes, objects: shape.objects, copies: shape.copies,
+      anchorCandidates: shape.anchorCandidates, manifestRows: shape.manifestRows, manifestBytes: shape.manifestBytes,
+      selectionUnits: shape.selectionUnits, measuredOmissions: shape.measuredOmissions, orderingInputWork: shape.orderingInputWork,
+      newRetained: shape.newRetained, retainedBytes: shape.retainedBytes, retainedNameUnits: shape.retainedNameUnits,
+      origins: shape.origins, files: shape.files.length, format: context.format === "sha1" ? 1 : 2,
+    },
+    costs: {
+      setup, inventory, input: shape.input, sourceLookups: sources?.lookups ?? {}, publication, selectionReservation,
+      selection: selection.cost, body: body.cost, patch: patch.cost, commit: commit.cost,
+      appendEdges: context.parent && patch.appendEdges?.ok ? patch.appendEdges.cost : {},
+      append: append?.ok ? append.cost : {}, transfer: transfer.cost, rows: rows.cost, frontier: frontier.cost, total: totalCost,
+    },
+    layout: {
+      used: { objects: used.objects, trees: used.trees, files: used.files, names: used.names,
+        depth: used.depth, objectBytes: used.objectBytes, outputWork: used.outputWork },
+      limits: { objects: limits.objects, trees: limits.trees, files: limits.files, names: limits.names,
+        depth: limits.depth, objectBytes: limits.objectBytes, outputWork: limits.outputWork },
+      patch: { objects: patch.layoutWork.objects, trees: patch.layoutWork.trees, names: patch.layoutWork.names,
+        objectBytes: patch.layoutWork.objectBytes, outputWork: patch.layoutWork.outputWork },
+      body: { outputWork: body.layoutWork.outputWork },
+      commit: { objects: commit.layoutWork.objects, objectBytes: commit.layoutWork.objectBytes, outputWork: commit.layoutWork.outputWork },
+    },
+  });
+  return totalCost;
 }
