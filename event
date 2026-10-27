@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/implementation/evidence/2026-10-27-archive-capacity-measurement.manifest.json","body":{"commit":"716360793fcbba627e621382cd3b312022ff47db","path":"notes/implementation/evidence/2026-10-27-archive-capacity-measurement.manifest.json"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4c8331c6c4d543d72f6ce42652c696ab3ee2aede","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-27-archive-capacity-measurement.manifest.json."}
