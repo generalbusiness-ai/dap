@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/cli/test/scope-index-applications.scope.test.ts","body":{"commit":"6499a12bb16317d9bc614e5f5e905fb4d662cc87","path":"packages/cli/test/scope-index-applications.scope.test.ts"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:06962e0ef26de734663260c54b3865d9f9cba647","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-27-application-release-session.md."}
