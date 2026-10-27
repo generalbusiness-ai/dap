@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:308fc21eb50af39ecd6a0a75b4c29a36c4011a47","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-27-archive-capacity-capture.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:32c6247c6e65006effaee34d8aed58c35fbbf931","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/archive-installed.test.ts."}
