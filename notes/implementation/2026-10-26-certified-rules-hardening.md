@@ -149,13 +149,39 @@ The ordinary owning projection command passed both cases with no
 unhandled errors in 8.137638291 wall seconds and 9.769300 child CPU seconds.
 The scope compiler passed in 1.364059084 wall seconds and 5.928494 child
 CPU seconds. Commit `89a343e00cc4d8745b5336a1b31cc98dd7b5e037` then
-merged Main's sprint-report documents. A fresh ordinary gate, the final
-manifest, and checker review remain pending. The original gate and Native
+merged Main's sprint-report documents. The original gate and Native
 failure remain separate failed results. No heap increase, extended
 deadline, fixture relocation, or case removal has been used to make them
 pass. Planner decision `6634c94c293fb6f956244e30e8a115330543e0e8` puts
 this hardening first, then archive-capacity request
 `0f0eeab748533208c813092ebf1ad0dab5087105`.
+
+The fresh ordinary gate passed at clean
+`1c5025051c500d26695fb8e0cbb0900f99568488`, tree
+`58ce7107f77def850bde48228df601f3d2cd887a`, with source unchanged through
+natural completion. It took 876.985378958 wall seconds and 1857.050867
+child CPU seconds around the unchanged `npm run gate` command. All static
+checks, compiler contexts and five test stages passed. Final identities
+reconcile to Node 57 passed, Counting 55 passed, plain 2848 passed and one
+skipped, and Native 786 passed and two skipped. Native's 232 modules are
+231 passed and one skipped. There are no duplicate or conflicting final
+identities and no unhandled errors. The final records, stdout totals and
+four Counting generated-source mappings agree. The two skips are retained
+in those totals.
+
+The final gate's awaited G15 annotation reports a largest complete entry
+of 88,072 bytes and a 32-proof record of 83,907 bytes. Its actual capture is
+63,903 bytes against the 262,144-byte bound. The positive forecast remains
+262,144 and the next constructed forecast 262,146. These are this run's
+concrete entry measurements; the earlier failed phase's measurements above
+remain separate.
+
+The [evidence manifest](evidence/2026-10-26-r7-hardening-delivery.manifest.json)
+names this gate checkpoint and every retained raw file. The raw directory
+has a final `SHA256SUMS` and is read-only. After the gate, only this note and
+that manifest change. Production code, tests, configuration and dependencies
+are unchanged. The reporting artifact names both the tested and reviewed
+tree hashes; no second gate is needed for this document-only follow-up.
 
 For the new investigation rows below, the command is the recorded child
 command. Instrumented phases retain their observation environment and
@@ -216,13 +242,13 @@ validation claim.
 | `clock-owning` | `node node_modules/vitest/vitest.mjs run --config vitest.native.config.ts --project scope maintained-application-projections.test.ts` | `a9232f009a7a470fe7be17820f7fed4eb5fb1778` | 0 | `c345fb9e6789c661aa9aba3c65cb52476a6c848a11f1d11a14d7c6f65fcc4fc5` |
 | `clock-compiler` | `npm run typecheck --workspace @generalbusiness/dap-scope` | `a9232f009a7a470fe7be17820f7fed4eb5fb1778` | 0 | `fb2b1b20daea8ec6bdc1bf8b7eceb9b3703b9e4ffe7530b18d9218bb23d34976` |
 | `heap-window-fixed-clock` | `node node_modules/vitest/vitest.mjs run --config /private/tmp/artroom-native-inspector-config-20261026.mjs --project scope certified-rules-hardening-certificate.scope.test.ts certified-rules-hardening-budget.scope.test.ts maintained-application-projections.test.ts` | `a9232f009a7a470fe7be17820f7fed4eb5fb1778` | 0 | `049a54daa7dd9ea6a45fd4d0d69615e31eb82f2603049d3ddece10e09c56f6cb` |
+| `ordinary-gate-clock` | `npm run gate` | `1c5025051c500d26695fb8e0cbb0900f99568488` | 0 | `b46305dcd49d010f0b8211f28792edd194c5b1b4d0080e94bc7c46294d78b59f` |
 
 ## Open limits
 
-Request `5e6d482c` owns verification of the test-only clock repair against
-a fresh ordinary gate, followed by the final evidence manifest and exact-head
-review. The bounded comparison identifies and removes the spy allocation
-source, but does not turn the earlier full-suite failure into a pass.
+Request `5e6d482c` owns the pending exact-head checker review. The fresh
+ordinary gate verifies the test-only clock repair with the complete suite;
+it does not turn the earlier full-suite failure into a pass.
 The experimental inspector adapter is outside the delivered tree and
 supplies no deployment, authority, or ordinary validation result.
 
