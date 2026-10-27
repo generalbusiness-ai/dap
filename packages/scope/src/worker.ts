@@ -121,7 +121,6 @@ export class ScopeIndex extends DurableObject<Env> {
       };
       return target.proofSource(fact, maxBytes, milliseconds);
     },
-    rate: reader => this.#serving.admit({ kind: "signed-read", reader }, null, Date.now()),
     now: () => Date.now(),
   });
   readonly #siteTokens = new SiteTokenReuse({ exec: (query, ...args) => this.ctx.storage.sql.exec(query, ...args), transaction: run => this.ctx.storage.transactionSync(run) }, () => {
@@ -412,7 +411,7 @@ async function routedRequest(request: Request, binding: Binding, env: CreationAd
   const url = new URL(request.url);
   // Section 5.3: a credential in a URL is refused before anything is routed, and is not used. That does not undo the exposure.
   if (credentialInUrl(url)) return json(400, { error: "credential-in-url" });
-  if (url.pathname === "/v1/scope-index/census") return scopeIndexCensusRoute(request, env);
+  if (url.pathname === "/v1/scope-index/census") return scopeIndexCensusRoute(request, env, address);
   const scopes = api(binding, address, env);
   let parts: string[];
   try {

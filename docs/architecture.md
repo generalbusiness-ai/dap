@@ -234,7 +234,9 @@ genesis hashes. Its census is a deployment observation, not native authority.
 Only the key that signed the pinned Register's founding `install` can read
 it, through a signed `census` request. The index binds that key to its own
 stored Register row and the Register's checked native birth. Membership
-sessions grant no census access. This standing predicate does not extend
+sessions grant no census access. Existing address and key windows precede
+the census owner's row and proof work, with one charge per request.
+This standing predicate does not extend
 ordinary signed reads' causal windows or follow later operator key changes.
 
 Census pages have an explicit end and at most 100 rows. The CLI saves only

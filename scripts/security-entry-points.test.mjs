@@ -13,7 +13,7 @@ const namedOwners = {
   },
   "packages/scope/src/worker.ts": {
     "packages/scope/src/worker.ts:$module": "9c36aeede1a1fb3574c8280d6e5d7bbe56e8ca0609cbeca02c96fae5a2911ba7",
-    "packages/scope/src/worker.ts:ScopeIndex": "dfaaeaa400c473249bc424a42335ea0142da5f67db69078193b6833e5cc529d4",
+    "packages/scope/src/worker.ts:ScopeIndex": "33776f193fce8ab57b0642c3476c8a22de1ad73fa2b3ef2d0448a7fd848fc929",
     "packages/scope/src/worker.ts:MISSING": "e8958a6cf8d4cd2f412b30c76b38aca2f4523bc2b9df96606ac01059b6d4fb42",
     "packages/scope/src/worker.ts:api": "43b1600c799b41fe7781ea4b16c3584a7e2878c3cbedc1df4d18166f175200e8",
     "packages/scope/src/worker.ts:BODY_BYTES": "158a6579a52843b40416a1f4d27e7bffb5e0f5df07105254bd3e87c3d3d203fd",
@@ -27,7 +27,7 @@ const namedOwners = {
     "packages/scope/src/worker.ts:PROJECTION_STATUS": "c37cfcdbb416865b0082d7b326a76c8476deab28059b07bdd665c7cc9cdb7111",
     "packages/scope/src/worker.ts:projectionResponse": "e17f1f4aa800bc06b4f8d065f77e8a594c2738c77873a52671fa7f1b22bf249b",
     "packages/scope/src/worker.ts:route": "8e41a02f0a9d01c802beea51c095d82f3720ca0d3d5dc178213f5de2a8ccde63",
-    "packages/scope/src/worker.ts:routedRequest": "deb3df8b4981fa76d7d2dd935f581ff4ba232547355a9ff3db84f05c2997b51f",
+    "packages/scope/src/worker.ts:routedRequest": "4ef253e62f36ddbf69b3bedcf593de3023ed072ee6ca6bfa435390dd1d7858dd",
     "packages/scope/src/worker.ts:outsideOf": "0a294da6ca47625e2f760f7ef692e537d4491620019d1d34c5cbd305856a02ff",
     "packages/scope/src/worker.ts:sessionWiring": "cb8f4d0e2b06854a3fbf080e5b4ce72e4182060b60f27cc7fb7f5ed6ac8779c5",
     "packages/scope/src/worker.ts:snapshotReaderOf": "2b6810718421650701eb1edfa9b100ceefef11a1fdcb18603fccf4e6830ea9e2",
@@ -184,7 +184,7 @@ const seals = {
   "apps/room/brand/route.ts": "71b45ff9b41b3bea31c775a16525349591e0d4f7dfdc65da79f095816b1c343c",
   "packages/scope/src/worker.ts": namedOwners["packages/scope/src/worker.ts"],
   "packages/scope/src/scope-index.ts": "90c96d452982f11c82ca6e3046fcaa484fde05f669a58c596e2c32490ace9dc0", // Census port type; existing internal lookup/registration behavior retained.
-  "packages/scope/src/scope-index-census.ts": "83c8a6b008f53b8e07c5f4bd64add69f75efef185f8177a2be84c71409b5f18d", // Same canonical equality imported from its existing owner; exact census authority and page guards unchanged.
+  "packages/scope/src/scope-index-census.ts": "5167c06adb55324696cc44a41d739aed5ba68fbc48ef11fa941882f8398f6142", // Address/key admission precedes owner proof; exact census authority and page guards retained, without duplicate owner charge.
   "packages/scope/src/creation-admission.ts": "0531cbd36d1ae4c0eadc9d836eb5eec13f896fc7c8b8faaaaf9c3c24e3759ccd", // Reviewed R1 ancestry owner; adopted AST value.
   "packages/scope/src/creation-lineage.ts": "3561f0b5b5d39c025db2c86f4386a1ccf6a8d18f05de26d79f6c5b68730f10b3", // Reviewed whole-lineage boundary; adopted AST value.
   "packages/scope/src/creation-versions.ts": "305d76f6e81ddba38e1ee009353060143857af393939f339f20e49ca874d8a8c", // Reviewed R6 creation-policy parser; actual maintained output.
@@ -309,6 +309,12 @@ test("a real matcher change fails the inventory bijection with the page unchange
   assert.ok(!censusRoutes.includes("GET /v1/scope-index/census"), "The documented census route no longer dispatches");
   assert.ok(!censusRoutes.includes("GET /v1/scope-index/renamed-census"), "The inner actual census guard still refuses the renamed outer route");
   assert.throws(() => assertInventory(renamed, document()), { code: "ERR_ASSERTION", message: /route\/method\/gate bijection/ });
+
+  const forwarded = "scopeIndexCensusRoute(request, env, address)";
+  assert.equal(source.split(forwarded).length, 2, "The forwarding control changes one real census helper call");
+  const noAddress = await servedInventory({ scopeSource: source.replace(forwarded, "scopeIndexCensusRoute(request, env, null)") });
+  assert.ok(!noAddress.get("artroom-scope").some(row => row.route === "GET /v1/scope-index/census"), "The actual helper cannot reach protected dispatch without forwarding the trusted address");
+  assert.throws(() => assertInventory(noAddress, document()), { code: "ERR_ASSERTION", message: /route\/method\/gate bijection/ });
 });
 
 test("the bijection rejects a missing row, an extra row, and a changed gate", async () => {

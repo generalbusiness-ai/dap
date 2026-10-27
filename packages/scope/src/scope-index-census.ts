@@ -6,9 +6,9 @@ import { platform } from "@generalbusiness/dap-platform";
 import { artifactsRegisterScope } from "./artifacts-wiring.ts";
 import { proofEntry, PROOF_BYTE_BOUNDS, EXACT_PROOF_RECEIVER_BOUNDS, type ProofBody } from "./proof-bytes.ts";
 import { scopedSignedRead } from "./signed-reads.ts";
-import { ScopeIndexRows, SCOPE_INDEX_NAME, type ScopeIndexEnvironment, type ScopeRegistration } from "./scope-index.ts";
+import { ScopeIndexRows, SCOPE_INDEX_NAME, type ScopeRegistration } from "./scope-index.ts";
 import type { Sql } from "./sqlite.ts";
-import type { ServingDecision } from "./serving-admission.ts";
+import { admitServing, type ServingEnvironment } from "./serving-admission.ts";
 
 export type ScopeCensusRefusal = "forbidden" | "absent" | "unsupported" | "rate-limited" | "unavailable";
 export type ScopeCensusResult = { readonly ok: true; readonly rows: readonly ScopeRegistration[]; readonly next: ScopeId | null }
@@ -32,7 +32,6 @@ interface CensusPorts {
   readonly register: () => ScopeId | null;
   readonly mode: () => unknown;
   readonly proof: (fact: FactRef, maxBytes: number, milliseconds: number) => Promise<ProofBody | null>;
-  readonly rate: (reader: unknown) => ServingDecision;
   readonly now: () => number;
 }
 
@@ -77,8 +76,6 @@ export class ScopeIndexCensus {
     if (mode === "register") return refused("unsupported");
     if (mode !== undefined && mode !== "enforce") return refused("unavailable");
     try {
-      const decision = this.ports.rate(reader);
-      if (decision !== "admitted") return refused(decision === "invalid" ? "forbidden" : decision);
       if (!requestOf(reader, pinned, after, limit, this.ports.now())) return refused("forbidden");
       const rows = this.#rows.list(after, limit);
       if (rows.length > limit) return refused("unavailable");
@@ -99,7 +96,7 @@ const response = (result: ScopeCensusResult): Response => new Response(JSON.stri
   { status: result.ok ? 200 : statuses[result.reason], headers: { "content-type": "application/json", "cache-control": "no-store" } });
 
 /** Exact Worker route; does not address any caller-selected scope object. */
-export async function scopeIndexCensusRoute(request: Request, env: ScopeIndexEnvironment): Promise<Response> {
+export async function scopeIndexCensusRoute(request: Request, env: ServingEnvironment, address: string | null = null): Promise<Response> {
   try {
     const url = new URL(request.url), keys = [...url.searchParams.keys()];
     if (url.pathname !== "/v1/scope-index/census" || request.method !== "GET" || url.hash || keys.some(key => key !== "cursor" && key !== "limit")
@@ -109,6 +106,8 @@ export async function scopeIndexCensusRoute(request: Request, env: ScopeIndexEnv
     const limit = Number(rawLimit), reader = request.headers.get("authorization"), pinned = artifactsRegisterScope(env.ARTIFACTS_CONFIG);
     if (!requestOf(reader, pinned, after, limit, Date.now())) return response(refused("forbidden"));
     if (!env.SCOPE_INDEX) return response(refused("absent"));
+    const decision = await admitServing(env, { kind: "signed-read", reader }, address);
+    if (decision !== "admitted") return response(refused(decision === "invalid" ? "forbidden" : decision));
     const owner = env.SCOPE_INDEX.get(env.SCOPE_INDEX.idFromName(SCOPE_INDEX_NAME)) as { list(after: string, limit: number, reader: unknown): Promise<ScopeCensusResult> };
     const result = await owner.list(after, limit, reader);
     if (!result || typeof result !== "object" || typeof result.ok !== "boolean") return response(refused("unavailable"));

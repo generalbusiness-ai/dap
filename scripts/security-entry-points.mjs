@@ -117,12 +117,24 @@ async function scopeRows(text) {
   const wire = load(readSource("packages/scope/src/item-query-wire.ts"), ["REQUEST_URL_BYTES", "ITEM_QUERY_URL_BYTES", "ITEM_QUERY_ENCODED_CHARS", "queryTarget", "queryUrl", "admittedRequestUrl", "itemQueryWire"], globals);
   const projection = load(readSource("packages/scope/src/applications/projection-wire.ts"), ["path", "applicationProjectionWire"], { ...globals, B: APPLICATION_PROJECTION_WIRE_BOUNDS });
   const { SCOPE_INDEX_NAME } = load(readSource("packages/scope/src/scope-index.ts"), ["SCOPE_INDEX_NAME"], {});
+  const censusAddress = "203.0.113.9";
+  let censusAdmissions = 0;
   const { scopeIndexCensusRoute } = load(readSource("packages/scope/src/scope-index-census.ts"), ["refused", "statuses", "response", "scopeIndexCensusRoute"], {
     URL, Response, SCOPE_INDEX_NAME,
     artifactsRegisterScope: () => scope,
     // Authority stand-in: no signature or founding-install proof is checked
     // here. The actual helper still owns its path, method, query and reply checks.
     requestOf: reader => reader === "Signed census-witness" ? {} : null,
+    // Admission stand-in: execute the real helper's call and require its
+    // trusted transport argument, not the deliberately different HTTP header.
+    // No counter or native authorization policy is exercised here.
+    admitServing: async (env, request, address) => {
+      assert.equal(env.SCOPE_INDEX, censusIndex);
+      assert.deepEqual(request, { kind: "signed-read", reader: "Signed census-witness" });
+      assert.equal(address, censusAddress);
+      censusAdmissions++;
+      return "admitted";
+    },
     isScopeId: value => value === scope,
   });
   let censusDispatched = false;
@@ -132,7 +144,11 @@ async function scopeRows(text) {
       assert.equal(name, SCOPE_INDEX_NAME);
       // Protected fixed-owner dispatch stand-in. A returned page, rather than
       // a thrown sentinel, passes through the helper's actual response checks.
-      return { async list() { censusDispatched = true; return { ok: true, rows: [], next: null }; } };
+      return { async list() {
+        assert.equal(censusAdmissions, 1, "One census admission precedes protected owner work");
+        censusDispatched = true;
+        return { ok: true, rows: [], next: null };
+      } };
     },
   };
   const { routedRequest } = load(text, ["body", "routedRequest"], { ...globals, scopeIndexCensusRoute, itemQueryWire: wire.itemQueryWire, applicationProjectionWire: projection.applicationProjectionWire });
@@ -152,11 +168,13 @@ async function scopeRows(text) {
   for (const { path, parts } of candidates) {
     for (const method of methodsIn(routeText)) {
       const query = path.endsWith("/query-items") ? "?q=e30" : path.endsWith("/application-projection") ? "?p=e30" : "";
-      const request = new Request(`https://inventory.invalid${path}${query}`, { method, headers: { authorization: parts === null ? "Signed census-witness" : "Session witness" }, ...(method === "POST" ? { body: "{}" } : {}) });
+      const request = new Request(`https://inventory.invalid${path}${query}`, { method, headers: { authorization: parts === null ? "Signed census-witness" : "Session witness", "cf-connecting-ip": "198.51.100.7" }, ...(method === "POST" ? { body: "{}" } : {}) });
       censusDispatched = false;
+      censusAdmissions = 0;
       try {
-        const response = await routedRequest(request, binding, { SCOPE_INDEX: censusIndex });
+        const response = await routedRequest(request, binding, { SCOPE_INDEX: censusIndex }, censusAddress);
         if (censusDispatched) {
+          assert.equal(censusAdmissions, 1, "The census admission seam is invoked exactly once");
           assert.equal(response.status, 200, "The actual census helper returns the dispatched page");
           dispatched("census");
         }

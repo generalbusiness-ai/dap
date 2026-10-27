@@ -5,6 +5,8 @@ import { b64url, entryHash } from "@generalbusiness/dap-bytes";
 import { invitationIssueFields, invitationRedemptionFields, secretSigner, signedReader, signerSessionRequest, requestSession, type Fetch } from "@generalbusiness/dap-client";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT as C } from "@generalbusiness/dap-platform";
 import { route } from "../../src/worker.ts";
+import type { FactRef } from "@generalbusiness/dap-contract";
+import type { ProofBody } from "../../src/proof-bytes.ts";
 import { SCOPE_INDEX_NAME, type ScopeIndexPort, type ScopeRegistration } from "../../src/scope-index.ts";
 import { scopeCensusTestSettings } from "../worker.ts";
 import { beginSessionFixture } from "../session-settings.ts";
@@ -13,7 +15,7 @@ import { soon } from "../net.ts";
 import { nativeFixtureLifetime, dispatchFixture } from "./native-fixture-lifetime.ts";
 import { sessionRepository } from "./session-room.ts";
 
-export async function scopeCensusFixture(options: { members?: boolean; readLimit?: number } = {}) {
+export async function scopeCensusFixture(options: { members?: boolean; readLimit?: number; addressLimit?: number; proofRead?: () => void } = {}) {
   const owner = beginSessionFixture({ secret: "TEST scope census session secret", sessions: false, inspector: null });
   const life = nativeFixtureLifetime(owner, { required: false });
   const indexName = `TEST-census-${crypto.randomUUID()}`;
@@ -23,10 +25,21 @@ export async function scopeCensusFixture(options: { members?: boolean; readLimit
     const first = await sessionRepository(life, C.register), other = await sessionRepository(life, C.register);
     const register = await life.wait(() => first.R.at()), root = await life.wait(() => first.D.at());
     const membership = await life.wait(() => first.children[0]!.at());
+    // Optional TEST spy forwards the exact proof RPC to the real Native
+    // object. It changes no proof bytes, authorization, owner, or counter.
+    const proofScopes = options.proofRead === undefined ? env.PLATFORM : {
+      idFromName: (name: string) => env.PLATFORM.idFromName(name),
+      get: (id: DurableObjectId) => ({ proofSource: (fact: FactRef, maxBytes: number, milliseconds: number) => {
+        options.proofRead!();
+        const target = env.PLATFORM.get(id) as unknown as { proofSource(fact: FactRef, maxBytes: number, milliseconds: number): Promise<ProofBody | null> };
+        return target.proofSource(fact, maxBytes, milliseconds);
+      } }),
+    } as unknown as DurableObjectNamespace;
     const settings = {
       ARTIFACTS_CONFIG: JSON.stringify({ registerScope: register.scope, namespace: "TEST-census", host: "artifacts.example", maxBytes: 10485760, credentialIdentity: "adapter-attempt" }),
-      SCOPES: env.PLATFORM, SCOPE_INDEX_MODE: "enforce",
+      SCOPES: proofScopes, SCOPE_INDEX_MODE: "enforce",
       ...(options.readLimit === undefined ? {} : { SERVING_READ_KEY_PER_MINUTE: String(options.readLimit) }),
+      ...(options.addressLimit === undefined ? {} : { SERVING_READ_ADDRESS_PER_MINUTE: String(options.addressLimit) }),
     };
     scopeCensusTestSettings.set(indexName, settings);
     life.cleanup(() => { scopeCensusTestSettings.delete(indexName); });
@@ -55,9 +68,9 @@ export async function scopeCensusFixture(options: { members?: boolean; readLimit
       const response = await life.wait(() => route(request, env.PLATFORM, environment));
       return { status: response.status, body: response.body };
     };
-    const request = async (reader: string | null, after = "", limit = 100) => {
+    const request = async (reader: string | null, after = "", limit = 100, address: string | null = null) => {
       const headers: Record<string, string> = reader === null ? {} : { authorization: reader };
-      return life.wait(() => route(new Request(`${service}/v1/scope-index/census?cursor=${encodeURIComponent(after)}&limit=${limit}`, { headers }), env.PLATFORM, environment));
+      return life.wait(() => route(new Request(`${service}/v1/scope-index/census?cursor=${encodeURIComponent(after)}&limit=${limit}`, { headers }), env.PLATFORM, environment, address));
     };
     const operator = secretSigner(rita.secret), member = secretSigner(una.secret);
     const reading = (after = "", target = register.scope) => signedReader(operator, target, "census", after);

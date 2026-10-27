@@ -3,14 +3,14 @@ import { runInDurableObject } from "cloudflare:test";
 import { env } from "cloudflare:workers";
 import { PROPOSED_BOUNDS, type ScopeRef } from "@generalbusiness/dap-contract";
 import { digestBytes, newIncarnation, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
-import { signedReader } from "@generalbusiness/dap-client";
+import { secretSigner, signedReader } from "@generalbusiness/dap-client";
 import { ScopeIndexRows, type ScopeRegistration } from "../src/scope-index.ts";
 import { route } from "../src/worker.ts";
 import { sessionSettings } from "./session-settings.ts";
 import { scopeCensusFixture } from "./support/scope-census-fixture.ts";
 
-// Active-object snapshots exclude cold constructor migrations. No denial is
-// permitted to run nativeBirth's archive recovery or write a serving counter.
+// Active-object snapshots exclude cold constructor migrations. Admission may
+// charge memory-only windows; census denial runs no recovery or SQL writes.
 const written = (stub: DurableObjectStub) => runInDurableObject(stub, async (_instance, state) => ({
   changes: state.storage.sql.exec<{ n: number }>("SELECT total_changes() AS n").one().n,
   alarm: await state.storage.getAlarm(),
@@ -117,5 +117,49 @@ test("census returns next null on an exactly 100-row final SQLite page under nat
     const expected = [...f.rows, ...extras].sort((a, b) => a.at.scope < b.at.scope ? -1 : 1);
     expect(expected).toHaveLength(100);
     expect(await response.json()).toEqual({ rows: expected, next: null });
+  } finally { f.life.release(); }
+});
+
+test("census key and trusted-address windows stop nonoperators before proof RPC and charge the native operator once", async () => {
+  let proofs = 0;
+  const f = await scopeCensusFixture({ readLimit: 1, addressLimit: 1, proofRead: () => { proofs++; } });
+  try {
+    // These valid self-signed keys have no operator authority. The only
+    // instrumented binding forwards proofSource to the genuine Native target;
+    // the fixed index, SQLite rows, authority check and counters are real.
+    const other = secretSigner(new Uint8Array(32).fill(93)), fresh = secretSigner(new Uint8Array(32).fill(94));
+    const nonoperator = await signedReader(f.member, f.register.scope, "census", "");
+    const otherReader = await signedReader(other, f.register.scope, "census", "");
+    const freshReader = await signedReader(fresh, f.register.scope, "census", "");
+    const first = await f.request(nonoperator, "", 100, "192.0.2.10");
+    expect(first.status).toBe(403);
+    expect(await first.json()).toEqual({ error: "forbidden" });
+    expect(proofs).toBe(1);
+
+    // Same verified key, new address: its key window is already spent.
+    const keyLimited = await f.request(nonoperator, "", 100, "192.0.2.11");
+    expect(keyLimited.status).toBe(429);
+    expect(await keyLimited.json()).toEqual({ error: "rate-limited" });
+    expect(proofs).toBe(1);
+
+    // New verified key, same trusted address: the address window also closes
+    // before the owner. No forwarded header supplies either address.
+    const addressLimited = await f.request(otherReader, "", 100, "192.0.2.10");
+    expect(addressLimited.status).toBe(429);
+    expect(await addressLimited.json()).toEqual({ error: "rate-limited" });
+    expect(proofs).toBe(1);
+
+    // An untouched key and address still reach native operator authorization.
+    expect((await f.request(freshReader, "", 100, "192.0.2.12")).status).toBe(403);
+    expect(proofs).toBe(2);
+    const operator = await f.reading();
+    const admitted = await f.request(operator, "", 100, "192.0.2.13");
+    expect(admitted.status).toBe(200);
+    expect(await admitted.json()).toEqual({ rows: f.rows, next: null });
+    expect(proofs).toBe(3); // limit 1 would fail here if the owner charged again
+    const again = await f.request(operator, "", 100, "192.0.2.14");
+    expect(again.status).toBe(429);
+    expect(await again.json()).toEqual({ error: "rate-limited" });
+    expect(proofs).toBe(3);
   } finally { f.life.release(); }
 });
