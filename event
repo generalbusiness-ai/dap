@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d8213226ec87f236f951ead0184cf8f4a1bf9c9d","text":"Merge retired a covered predecessor; the successor is at apps/room/lanes/test/certified-rules-hardening-budget.scope.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d8dfc9af28de7b054815ef26db3d75cc6540bcd1","text":"Merge retired a covered predecessor; the successor is at apps/room/page/test/rules-summary-v11.test.ts."}
