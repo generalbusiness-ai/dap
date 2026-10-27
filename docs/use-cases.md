@@ -10,6 +10,13 @@ The cases are proposals. Four of them exist, and their cards say
 **Built**. No case claims that an institution uses dap, that an outcome is
 fair or lawful, or that anyone saves money.
 
+Each card is one telling of its situation. Its cast, who decides what,
+and when each part closes are the example that the telling needs. They
+are not requirements that an application must fix in advance.
+[Pointing at things, and claims of agreement](#pointing-at-things-and-claims-of-agreement)
+says what an application fixes for everyone and what it leaves to each
+party.
+
 Cases 01 to 10 extend ten examples from a public thread by Jim Prosser
 ([opening](https://x.com/jimprosser/status/2108279507660726766),
 [conclusion](https://x.com/jimprosser/status/2108279638007107616)). Each of
@@ -29,6 +36,57 @@ and a brokered market.
 | [6. Changing rules and boundaries](#6-changing-rules-and-boundaries) | From the dap-spike's sweep, and Tailapps | Rules that change, expressions that compute what to write, and records that join |
 
 ## What the cases have in common
+
+### Pointing at things, and claims of agreement
+
+The things in these cases are concrete: a wall, a bill, a photograph, a
+car, a candidate for landing. What each thing means differs by party. To
+the owner a drawing is the kitchen they want. To the contractor it is a
+scope to price. To the insurer it is evidence of a date. The parties do
+not have to agree on what a thing means to work on it together. They
+have to agree only on which thing it is.
+
+So a room needs two kinds of act that no application defines:
+
+- **Pointing.** Anyone can name a thing and say something about it: here
+  is the wall; this file is the drawing of it; I read the width as
+  4.2 m. Pointing needs nobody's agreement. It opens nothing that another
+  party must answer.
+- **A claim of agreement.** Named parties sign one statement: the owner
+  and the contractor agree to this change at this price. The claim takes
+  effect only when every named party has signed. It fixes the words and
+  the signatures. It does not fix what each party takes the words to
+  mean.
+
+An application's rules are a third thing. They say what counts as a
+proposal, an acceptance or a completion, and what each one changes. The
+rules bind every member of the room the same way, so adopting them is
+itself a recorded act. A case goes wrong when an application fixes a
+thing's meaning before the parties have claimed it. A package that calls
+the claim closed because one of its items reached a final state has
+forced the family's part into the insurer's structure. So this catalogue
+follows one rule: an application's structure is entered only through a
+claim of agreement by the parties it binds, or through an authority that
+one party already holds. The insurer decides its own claim. Nobody
+decides for the family when they are home.
+
+Agreement then has three degrees, each one costlier than the one before:
+
+1. **The same thing.** The record gives this by itself. An entry has a
+   position and a hash, and a document has a digest. Two parties who
+   disagree about everything else can cite the same entry.
+2. **The same rules.** The parties adopt one definition, and every act
+   under it is judged the same way for all of them.
+3. **The same conclusion.** Nobody enforces this. Each party records its
+   own conclusion and closes its own part, and the record keeps both
+   when they differ.
+
+A matter approaches agreement by moving a fact up these degrees, one
+signed act at a time: a document is captured, an agent reads it, a party
+proposes, the other party accepts, and each party closes its own part. A
+fact can move down again. A later report that the appointment was
+cancelled by phone does not remove the recorded confirmation. It changes
+what each party can rely on, and the screen says so.
 
 ### Many decisions, each with its own owner
 
@@ -56,6 +114,9 @@ A memory of a phone call, an imported email and a signed commitment carry
 different weight. When an agent reads a document, by OCR, transcription
 or summary, its reading is a new statement attributed to the agent. The
 reading does not turn the document into the other party's confirmation.
+
+A person's own statement and a document are pointing. A signed act is a
+claim by one party. A claim of agreement is a signed act by several.
 
 The documents themselves never change. What people conclude from them,
 and where each matter stands, can change.
@@ -127,14 +188,24 @@ instead of trying again blindly.
 
 ### What a reusable application needs to say
 
-An application in this catalogue needs to declare the following:
+An application in this catalogue fixes some things for every member and
+leaves the rest to each party. It fixes, for everyone:
 
-- The subjects and the people involved, with what each may do.
-- Who can read what.
-- Exact versions of documents and terms.
 - The acts, the guards on them and what they write.
-- Which evidence each act depends on.
-- When each part counts as closed.
+- Which claim of agreement, or which granted authority, each act needs
+  before it binds a party other than its signer.
+- Exact versions of the documents and terms that its guards read.
+- Who can read what.
+- What the end of each of its items means. An item's final state ends
+  the item. It does not close any party's part of the matter.
+
+It leaves to each party:
+
+- Which things the matter is about, and what each thing means to them.
+- Who else takes part. An act names the parties it binds. The rest of
+  the cast is whoever points, says and claims.
+- How the record is shown to them, on a screen or to their agent.
+- When their own part is closed, and as what.
 
 Common acts are propose, review, approve, send, receive, accept, reject,
 perform, observe and close. Some never happen: a person can stop after
@@ -147,9 +218,9 @@ Missing, withheld, unreadable, refused and unanswered are different
 states. One person's disputed conclusion can stand beside a shared
 decision without forcing a single verdict.
 
-The same rules should decide what a screen shows and which acts are
-available. A store must not weaken a guard, and a screen must not show a
-task as complete from evidence it cannot see. The
+The rules decide which acts are available. A screen can show each party
+its own structure, but a store must not weaken a guard, and a screen must
+not show a task as complete from evidence it cannot see. The
 [self-contained applications](../notes/2026-10-15-self-contained-applications.md)
 note gives the package that declares all of it: definitions, rule
 expressions, read projections, presentation and act descriptions, with
@@ -1421,3 +1492,14 @@ test: whether one party holds the shared decision for the others. The
 grouping is a judgement from reading the documentation and the
 definitions. No case was built or run for this page, except the four
 marked **Built**.
+
+The frame of pointing and claims was added on 27 October 2026 against
+main `6f47bf98`. It comes from five sources: Star and Griesemer,
+"Institutional Ecology, 'Translations' and Boundary Objects" (Social
+Studies of Science, 1989); Star, "This is Not a Boundary Object"
+(Science, Technology, & Human Values, 2010); Bowker and Star, Sorting
+Things Out (1999), chapter 9, on boundary infrastructures; Licklider
+and Taylor, "The Computer as a Communication Device" (1968), on
+externalized models; and Maggie Appleton, "Planning with Agents"
+(maggieappleton.com/planning-agents), on thick interfaces between
+people and agents.
