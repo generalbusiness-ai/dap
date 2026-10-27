@@ -173,23 +173,24 @@ const PUBLIC_CODE_FILES = [
 ] as const;
 const publicCodes = new Map<string, number>(PUBLIC_CODE_FILES.map((path, index) => [path, index + 1]));
 const budgetCode = publicCodes.get("packages/scope/src/archive-budget.ts");
-const moduleUrl: unknown = import.meta.url;
-const moduleCode = typeof moduleUrl === "string" ? moduleUrl.replace(/^file:\/\//, "") : null;
 function coordinates(): readonly Frame[] | null {
   try {
     const stack = new Error().stack;
     if (typeof stack !== "string") return null;
     const frames: Frame[] = [];
-    let skipped = 0;
+    let skipped = 0, ownFile: string | null = null;
     for (const line of stack.split("\n")) {
       const match = /^\s*at (?:.* \()?(.+):(\d+):(\d+)\)?$/.exec(line);
       if (!match) continue;
+      // workerd can omit import.meta.url. The first frame is this fresh
+      // Error's own coordinates() frame, so it identifies this exact bundle.
+      ownFile ??= match[1]!.replace(/^file:\/\//, "");
       // coordinates(), then the observed spend/canSpend method.
       if (skipped++ < 2) continue;
       const file = match[1]!.replace(/^file:\/\//, ""), row = Number(match[2]), column = Number(match[3]);
       if (!natural(row) || row === 0 || !natural(column) || column === 0) break;
       const path = /(packages\/(?:scope|git)\/(?:src|test)\/[A-Za-z0-9._/-]+\.[cm]?[jt]s)$/.exec(file)?.[1];
-      const code = file === moduleCode ? 0 : path === undefined ? undefined : publicCodes.get(path);
+      const code = file === ownFile ? 0 : path === undefined ? undefined : publicCodes.get(path);
       if (code === undefined) break;
       frames.push(Object.freeze([code, row, column]));
       // A direct debit is one charge site. The shared native SQL wrapper
