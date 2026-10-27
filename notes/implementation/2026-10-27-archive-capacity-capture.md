@@ -88,15 +88,30 @@ and paired controls were completed. It is not a Native or gate pass.
 The existing BR-4 request
 `git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:15b0f8ab3242d73fb0ac1efa4113cda42ee699df`
 already requests a command limit at least three times its median. The
-offline follower alone now has a 90,000 ms test limit: three times the
+offline archive replay children now each have a 90,000 ms process limit:
+three times the
 two-observation median of 27,562.5 ms is 82,687.5 ms. The Native
 producer and every archive budget retain their original 30 seconds.
+The enclosing follower has 100,000 ms for the two concurrent children,
+reporting and joined cleanup. The separate normal-clone timer stays at
+30,000 ms. These observations time the whole follower, not each child.
 The censored 30,084 ms failure is not treated as a complete duration.
 The basis is recorded in `f73e6a6c`; the planner's delivery preference
 was requested in `3ae5d8b5` and remains open. Other BR-4 work is not
 part of this delivery. This repair requires a fresh gate and claims no
 failed-gate follow-up exception.
 Final evidence and the manifest are pending.
+
+The complete ordinary gate at `a5a29091` closed with exit 1 after
+1,126.866 seconds wall and 2,381.304 child CPU seconds. It passed Node,
+Counting and plain; Native recorded 794 passed, two skipped and one
+failed, with no unhandled errors. The follower's 90-second framework
+allowance exposed a separate 30-second process timer in
+`test/support/local-archive-command.ts`, which killed the replay
+children before their JSON reports completed. Updating only the outer
+test deadline had missed that actual runner guard. The helper repair
+changes shared fixture code and requires another ordinary gate. All
+original failed and interrupted evidence is retained.
 
 The repaired observer was compiled with cached pinned Wrangler 4.147.0
 and run in local workerd with the deployment's compatibility date and flag.
@@ -129,6 +144,8 @@ incomplete in target identity.
 | Bundled observer and old-origin control | Local compiled observer in workerd | 0; repair passes, old origin remains incomplete | Pending final manifest |
 | Completeness, privacy and debit controls | Local compiled observer with Native numeric inputs | 0; positive case and three intended rejections | Pending final manifest |
 | Native producer and offline CLI follower after the BR-4 deadline repair | `vitest run --project scope packages/scope/test/archive-installed.test.ts -t '^installed Grow production '` | 0; two passed, six unselected | Pending final manifest |
+| Actual child-runner limit and outer allowance | Same owning producer/follower command after the shared helper repair | 0; two passed, six unselected | Pending final manifest |
+| Scope, test and Node support compiler contexts after the helper repair | `npm run typecheck --workspace @generalbusiness/dap-scope` | 0 | Pending final manifest |
 | Ordinary gate after the runtime repair | `npm run gate` | 130; interrupted, offline follower timeout observed | Pending final manifest |
 | Final ordinary gate | `npm run gate` | Pending | Pending final manifest |
 
