@@ -44,7 +44,7 @@ const seals = {
   "packages/scope/src/destination-host.ts": "b0190439a9861b931c01cc35b283ed6a57aea11a0806e9de185fba5c5ea4e4b8",
   "packages/mcp/src/hosted.ts": "ebf77243d7987bf328a81c237865a3ba6b65a03f3327976cb37455a58a971a01",
   "packages/mcp/src/hosted-tools.ts": "5bb4dd74b12896bb8f5f5cb366f25bd31af849c2690d0e3ab5d81eb277f94a47", // Reviewed R5 admission owner; actual maintained parser output.
-  "packages/mcp/src/service.ts": "eb24dc018c81fb50a5e63ab4e5c9c47583dfe4a93df9b4c999a2bdf033d432bf", // Reviewed R5 admission owner; actual maintained parser output.
+  "packages/mcp/src/service.ts": "9b1f9dcf838e65a49d4bcef13cdf1dfae020ed48e5fc899fde4a5156e2ddc293", // BR7 create-tool register example only; admission gates unchanged; actual maintained parser output.
   "packages/mcp/src/catalogue.ts": "194dd82a6d3f188909485c4c1b9db33aee671b06fb46840e92fc0b8df2a79726", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/inventory.ts": "74c5db16355c5badacf9dc6cc241d20d6400908a160324c07d88db9191b455f8", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/http.ts": "757f8b3644c6afdf5d6c0399bd3865f879c8aa4841a7429aaa30c264ee9d76a6",
@@ -80,7 +80,7 @@ const pendingArchiveSeals = {
 };
 // Actual maintained parser outputs adopted by root; never infer hashes from intent.
 const pendingR8Seals = {
-  "packages/cli/src/commands.ts": "92c2d18d72acdfdc5032d46d2751dfc9c77b43bc6293f237fd75e611c84b100b", // Actual integrated CLI parser value adopted by root.
+  "packages/cli/src/commands.ts": "07f5ac89b739986f4489a93818109bd53617103908fb7c2c22102a8ae7a10ac3", // BR7 fresh-cohort guard and guidance; retained custody unchanged; actual maintained parser output.
   "apps/sandbox/worker.ts": "d354c1740d51e2b83e0b93272384607c609c65386c3fc4b8d977edfb89b6636a",
   "packages/client/src/application-gateway.ts": "daa1d28c02085bd6be7a9698a7120cd106cc7233aad92565aaa05e67427878ef",
   "packages/client/src/application-route.ts": "dcb686835049af3043e1cb8c73a989545636ea5bac2d85aaee6be92b6cd3abcc",

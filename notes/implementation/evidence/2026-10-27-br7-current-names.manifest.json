@@ -1,11 +1,11 @@
 {
-  "qualification": "Preparation snapshot: focused checks only. Collection remains open until the ordinary gate and final reporting; no final seal is claimed. Per-run dirty source hashes qualify the base checkpoint.",
+  "qualification": "Preparation snapshot including the completed focused Native, source-seal maintenance and page-assets checks. Collection remains open until the ordinary gate and final reporting; no final task seal is claimed. Per-run working-source hashes qualify the preparation base.",
   "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-27-br7-current-names",
   "checkpoint": {
     "commit": "6499a12bb16317d9bc614e5f5e905fb4d662cc87",
     "tree": "688c65618473c98443a204ee974b3fa1dcd02b20"
   },
-  "fileCount": 90,
+  "fileCount": 118,
   "files": [
     {
       "path": "capture-focused.py",
@@ -363,6 +363,36 @@
       "sha256": "04af1bba2277618cd46554507ab71438f552d079f1ff421e9cb33ed9901cfd50"
     },
     {
+      "path": "page-assets-equality-v1/SHA256SUMS",
+      "bytes": 394,
+      "sha256": "90bbd8401bb33cad8f4e35d18fa0574f9539a373399be25ac1e8d05630865f20"
+    },
+    {
+      "path": "page-assets-equality-v1/after.json",
+      "bytes": 3915,
+      "sha256": "63ccefa88bc9842f7c6cbb37ba82b3cc3ed408abf2ff4ecbeb7be4aa1b13193c"
+    },
+    {
+      "path": "page-assets-equality-v1/before.json",
+      "bytes": 3915,
+      "sha256": "63ccefa88bc9842f7c6cbb37ba82b3cc3ed408abf2ff4ecbeb7be4aa1b13193c"
+    },
+    {
+      "path": "page-assets-equality-v1/output.log",
+      "bytes": 269,
+      "sha256": "df073c78635a368822937a8dbbedac2c28508ade95fc7602430b85ccfabe1a2f"
+    },
+    {
+      "path": "page-assets-equality-v1/result.json",
+      "bytes": 807,
+      "sha256": "128706b172af3fc8ab91c84d52fafe99b7640b0c19fe1e8d6bd5b6567db72a75"
+    },
+    {
+      "path": "page-assets-equality-v1/source-wrapper.py",
+      "bytes": 2382,
+      "sha256": "f5a29289ea842e8f5f17b32febc6f87c5739a2d2609376c2b58cf1e845595fb0"
+    },
+    {
       "path": "pre-fixture-source/apps/room/lanes/test/file-publication.scope.test.ts",
       "bytes": 12055,
       "sha256": "62a573e9d2f2ed8a7f9daa3b1516fe464cecd12a5d289e75a8a06645422c0885"
@@ -413,6 +443,11 @@
       "sha256": "dbbf3639bf4e3c37d237d05047f26a68fd629f37498943f001d22f09ecf9f55f"
     },
     {
+      "path": "prepared-source-checkpoint.json",
+      "bytes": 3937,
+      "sha256": "3a461e560195e7f2b29c5f7336de4a66ed6dc0033694af352b3958c1e3a07ae3"
+    },
+    {
       "path": "scope-types-v1.json",
       "bytes": 3562,
       "sha256": "54d609eaaf3952d8efad8f884638ccf63fb31f8179f335f0df960af2abd22259"
@@ -426,6 +461,111 @@
       "path": "scope-types-v1.source.patch",
       "bytes": 64271,
       "sha256": "2959ae023735e54ef808d82a4075c08c336f7ac14c275ccbff7aa94f65f354ca"
+    },
+    {
+      "path": "seal-copy-provenance.json",
+      "bytes": 3500,
+      "sha256": "dbe864f34b727d2bb29279d4d775d91a340d61ab42791d6ca043403fffb33e64"
+    },
+    {
+      "path": "seal-followup/SHA256SUMS",
+      "bytes": 1659,
+      "sha256": "906ac89efe2f6df735ebc435013c18d7171ddc9bba1a2524b807b61ed47756ac"
+    },
+    {
+      "path": "seal-followup/after-security-entry-points.test.mjs",
+      "bytes": 16985,
+      "sha256": "4c08f80e32f1ae478fb4086f7472bcdd157cd906ca5307ceca351dbbf2951431"
+    },
+    {
+      "path": "seal-followup/after.json",
+      "bytes": 389,
+      "sha256": "36ce0b029341c370c3e06f87653a08c7b1083b1780741d2312ea70b64aa14ef6"
+    },
+    {
+      "path": "seal-followup/after.patch",
+      "bytes": 2302,
+      "sha256": "afa2ab5c1b5469285fcb487bbea6774ae8a5c58a570c9f41eda413401662f697"
+    },
+    {
+      "path": "seal-followup/before/packages/cli/src/commands.ts",
+      "bytes": 157487,
+      "sha256": "d35feadb694b8b2f0701491fd3d16ff1521774f342d9fe4948fbc535b75f4854"
+    },
+    {
+      "path": "seal-followup/before/packages/mcp/src/service.ts",
+      "bytes": 114924,
+      "sha256": "9a7713eeac43d8c2a89742a5b16702759ab636730997e5d4d559700f33f88ea3"
+    },
+    {
+      "path": "seal-followup/before/security-entry-points.test.mjs",
+      "bytes": 16902,
+      "sha256": "2a98aec83af771e3c42a5b868d78e44dac3a00f0a0af4af549dc3ba61eed2cf7"
+    },
+    {
+      "path": "seal-followup/before.json",
+      "bytes": 319,
+      "sha256": "bcf3be28678c9fc419f5d8a9a134058cd0b934efe359848ab8be158f4572bf1f"
+    },
+    {
+      "path": "seal-followup/current/packages/cli/src/commands.ts",
+      "bytes": 158005,
+      "sha256": "76daea2a521975b18fbba9785e336e9d2ab6ae4bc4808ff4520b67e3d738b43e"
+    },
+    {
+      "path": "seal-followup/current/packages/mcp/src/service.ts",
+      "bytes": 114925,
+      "sha256": "c5637aeb51811df57104e6c49d71de50ea9ac49c350988e1b0d734ad1e45ae79"
+    },
+    {
+      "path": "seal-followup/diff-check.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "seal-followup/owning-result.json",
+      "bytes": 536,
+      "sha256": "4e2b80795fef2556ba91955a86817f963cd636a14810de33238c67aaf167018c"
+    },
+    {
+      "path": "seal-followup/owning.log",
+      "bytes": 660,
+      "sha256": "c38e0f4b3a53f65df00df289828b7953ec5c5159aba9b16e04d08bb212cb0e13"
+    },
+    {
+      "path": "seal-followup/prepare-probe.py",
+      "bytes": 2407,
+      "sha256": "98bd9752a1efe7a5ccbfbadaa5bbdf0a3ee9a678ed8b5c576ba947abc30168e1"
+    },
+    {
+      "path": "seal-followup/probe-output.json",
+      "bytes": 18763,
+      "sha256": "2c4e94fa1d6acffc6da7ddabfd6470eea312b00dea99f58168bcbedea4b10ca0"
+    },
+    {
+      "path": "seal-followup/probe-result.json",
+      "bytes": 204,
+      "sha256": "b1bbd8118fe86a1b00f30369e1fb740f0631bb21537fd512a37f130720f7ba40"
+    },
+    {
+      "path": "seal-followup/probe-stderr.log",
+      "bytes": 183,
+      "sha256": "f5f9d5bd65bfbda8c720fea360dd96cc524069184f4c0992734eb04ece0ac48c"
+    },
+    {
+      "path": "seal-followup/probe.mjs",
+      "bytes": 1650,
+      "sha256": "87209adee6ad64e40dc7d367fd6796d4b80fbd1d10bf93793d93899bcd82efc0"
+    },
+    {
+      "path": "seal-followup/run-owning.py",
+      "bytes": 1435,
+      "sha256": "da4b2cd032716d964b3bf54b4cdb8d906cffcecaa99a32f1060f874897049b86"
+    },
+    {
+      "path": "seal-followup/source.diff",
+      "bytes": 8904,
+      "sha256": "2851e5720255dd4221a6a8cf94f3d3745a40627269a2db761365023a087337fd"
     },
     {
       "path": "section-citations-v1.json",

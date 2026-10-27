@@ -41,6 +41,15 @@ runtime client. Its owning test compares the actual admitted register pins.
 Historical selector recognition remains available for saved custody. Fixture
 setup uses exact register definitions rather than a second selector catalog.
 
+The existing security inventory also seals both changed CLI and MCP owners.
+Their previous parser values were reproduced, the actual new values were
+derived from the maintained parser, and only those two expectations changed.
+The route and gate-class table stays unchanged. These hashes check structural
+drift; Native delivery remains covered by the focused Native run. The sealed
+follow-up was copied byte-for-byte into this collection; provenance names
+the unchanged original directory. The existing page assets equality test
+passed without rebuilding the bundle.
+
 ## Evidence
 
 Focused validation is complete: the affected plain checks and all 32 Native
@@ -62,8 +71,8 @@ the fresh-selection case; both observations remain retained.
 
 Raw evidence is open at
 `/Users/hughpyle/play/artroom-evidence/2026-10-27-br7-current-names`.
-The table currently records preparation checks. Each output is `<check>.log`
-in that directory. The gate result and sealed index will be added before review.
+The table currently records preparation checks. The first 17 outputs use
+`<check>.log`; later rows use their named subdirectories. The gate result and sealed index will be added before review.
 
 | Check | Command | Exit | Output SHA-256 |
 | --- | --- | ---: | --- |
@@ -85,6 +94,9 @@ in that directory. The gate result and sealed index will be added before review.
 | section-citations-v1 | Exact argv in `section-citations-v1.json` | 0 | `12036d8cf9e6ddecaedfcc3b3198207686173c08a642666dcd116adf304610dd` |
 | section-citations-v2 | Exact argv in `section-citations-v2.json` | 0 | `4b1f6307d3a160f54e2a74273408573837a265f79c62bdeb5cdafa88a08463c4` |
 | Focused Native: six files, 32 passed | Exact argv in `native-focused-v1/result.json` | 0 | `5a6cf2978fcf2d95f2e1d0292e5ac9cf39466d5a225beb216d382a867aa48b25` |
+| Security source values | Exact argv in `seal-followup/probe-result.json` | 0 | `2c4e94fa1d6acffc6da7ddabfd6470eea312b00dea99f58168bcbedea4b10ca0` |
+| Security inventory: four passed | `node --test scripts/security-entry-points.test.mjs` | 0 | `c38e0f4b3a53f65df00df289828b7953ec5c5159aba9b16e04d08bb212cb0e13` |
+| Page assets: one passed | Exact argv in `page-assets-equality-v1/result.json` | 0 | `df073c78635a368822937a8dbbedac2c28508ade95fc7602430b85ccfabe1a2f` |
 
 ## Open limits
 
