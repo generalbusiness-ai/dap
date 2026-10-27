@@ -1,10 +1,11 @@
-# BR8 browser package boundary — preparation
+# BR8 browser package boundary
 
-BR8 has a browser-only package entry and focused validation. The ordinary gate,
-final evidence seal, checker review, and landing remain due. This note records
-preparation on working sources based on `aa3ae87393745df7d769f72157d8dd6ae93687d9`.
-The base commit alone does not identify those uncommitted bytes. Each retained
-receipt records its source state or refers to the retained extraction sources.
+BR8 provides the Page's portable browser package entry. One ordinary gate
+naturally passed at `049c0af9f6ae55fe61451336c339a1a1ac0f1e64`, tree
+`e61f824408213de582dc2e4af77e639e05993c36`. The source checkpoint binds 19 source, test,
+and guide paths based on `aa3ae87393745df7d769f72157d8dd6ae93687d9`. Focused and control
+runs below remain separate observations. Exact-head checker review and landing
+remain due.
 
 Rests-On: `git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:eea45d24d009ce962505aba810dc250bdc6fd76c`
 (request), `git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:561b1b81fb00c8e75277fbbce16a22112ece44a5`
@@ -111,6 +112,9 @@ control. Earlier failures remain part of the evidence.
 | Native: four files, ten cases passed | `native-claim-focused/result.json` | 0 | `native-claim-focused/stdout.log`: `7b3743747ba3437a3db7a1ff46070659b1302a9fbc8163151b4c9e1ced3adbed` |
 | Three generated-file attributes | `root-acceptance/attributes.json` | 0 | `root-acceptance/attributes.log`: `74cdc150ccbd1785ea1bcc29520ea554a69baf1d6eabc03f8ec9bac5d32dae8f` |
 | Source whitespace check | `root-acceptance/whitespace.json` | 0 | `root-acceptance/whitespace.log`: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| Ordinary gate: natural pass | `ordinary-gate/result.json` | 0 | `ordinary-gate/output.log`: `fb0aa0a2e2dc02c4ffb15f8e1f5c139767cd1b97b70b9060fe618b01fe6bbc0f` |
+| Actual gate analyzer subprocess | `analysis-run.json` | 0 | `analysis-run.json`: `d5773e9ac2b0422454ad93b04ce67f498634a98c1459754fe24b6d5a11432fce` |
+| Every other tracked blob and mode equals gate | `gate-source-equality.json; direct blob hashing in retained finalizer` | 0 | `gate-source-equality.json`: `00984b13a1c4f961f923fcd1de5ef2ce35c0cf9ce80922c5b12b72a3df0664e6` |
 
 The focused Native run used configured Worker and SQL execution for the existing
 CLI claim, outsider claim, agent-key recovery, and Page claim interfaces. All four
@@ -127,9 +131,34 @@ they are observations, not performance claims. Dependencies came from the
 verified cache with 14 workspace links rebound and no installation. Native
 before/after snapshots report unchanged source and dependency hashes.
 
-The adjacent manifest is an open preparation snapshot of every currently
-retained raw file, including nested indexes. It is not a final sealed manifest.
-The latest-base check fetched Main, which remains `aa3ae873`; the work already
-uses that base. The source checkpoint, ordinary gate, gate analysis, final index
-and seal, review, and landing remain delivery work.
-No gate success is inferred from these focused passes.
+The ordinary gate ran from `2026-10-27T14:15:44.150391Z` to
+`2026-10-27T14:36:39.608089Z`, wall 1255.363507583 seconds and
+child CPU 2518.140323000 seconds (2282.992109000
+user, 235.148214000 system). Its driver recorded no signals,
+clean source before and after, and natural exit 0. Machine:
+`{"architecture": "arm64", "cpus": 18, "release": "27.2.0", "system": "Darwin"}`; Node `v26.12.1`.
+Starting and ending load averages: `[0.802734375, 1.41650390625, 1.73486328125]` and
+`[4.35693359375, 4.19677734375, 3.50439453125]`. Actual final identities reconcile with public
+terminals: node: 66 passed; counting: 55 passed; plain: 2,865 passed, 1 skipped cases, 282 passed files; native: 796 passed, 2 skipped cases, 233 passed, 1 skipped files. Both Vitest terminals report zero unhandled errors.
+
+Observed callbacks: plain: 0 finals without ready, 0 without result; 0 duplicate ready and 0 duplicate result identities; native: 15 finals without ready, 37 without result; 0 duplicate ready and 0 duplicate result identities. Missing callbacks establish no cause,
+readiness, or missing duration. Concurrent case-duration sums are neither wall
+time nor CPU. The analyzer rejects duplicate or conflicting final identities.
+Owning gate finals passed: Node 4 passed;
+plain: packages/cli/test/browser-boundary.test.ts=1, packages/cli/test/invitation-link.test.ts=1, packages/cli/test/invitations.test.ts=9, packages/cli/test/store-signer.test.ts=5, packages/cli/test/creation-offer.test.ts=1, apps/room/page/test/start-custody.test.ts=3, apps/room/page/test/connection-custody.test.ts=4, apps/room/page/test/assets.test.ts=1; native: packages/cli/test/claim.scope.test.ts=1, packages/cli/test/outsider-claim.scope.test.ts=1, packages/cli/test/agent-key.scope.test.ts=5, apps/room/page/test/claim.scope.test.ts=3. The exact browser-boundary case has a unique passed final.
+`analysis-run.json` records the actual analyzer argv, exit, timing, stream hashes,
+and analyzer/output hashes. All analyzer input hashes are checked.
+
+Raw evidence is sealed read-only at `/Users/hughpyle/play/artroom-evidence/2026-10-27-br8-browser-boundary`. The single manifest indexes every
+raw file, including nested indexes and the root `SHA256SUMS`; that index excludes
+itself. Previously read-only evidence and its permissions remain unchanged.
+`gate-source-equality.json` (SHA-256 `00984b13a1c4f961f923fcd1de5ef2ce35c0cf9ce80922c5b12b72a3df0664e6`) records the complete count,
+Git blobs, SHA-256 hashes, and modes of every tracked file except exactly this
+note and its manifest, including other notes. Those two reporting files alone
+follow the tested checkpoint. Final head and tree are bound by the publication,
+not by a self-reference in this note. Retained harnesses include this finalizer
+and the actual gate analyzer. No tests are rerun during finalization.
+
+These local checks establish no live provider, deployment, or browser UI result.
+The change introduces no authority, pin, default, or protocol decision. Archive
+readiness under `0f0eeab7` retains priority. Checker review and landing remain due.
