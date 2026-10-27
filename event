@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:642aa199f49166e1fe5b88f3be5cec1dc1465c7a","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-27-br6-declaration-seals.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6ae174b39d2f0b0c39b47be898f5dcdcd367c2d5","text":"Merge retired a covered predecessor; the successor is at scripts/security-entry-points.mjs."}
