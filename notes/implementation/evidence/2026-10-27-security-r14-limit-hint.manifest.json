@@ -1,0 +1,26 @@
+{
+  "qualification": "Preparation snapshot before the one ordinary gate; replaced with final sealed index before review. Focused source hashes are in each result, not the base Git tree.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-27-security-r14-limit-hint",
+  "checkpoint": {
+    "commit": "6499a12bb16317d9bc614e5f5e905fb4d662cc87",
+    "tree": "688c65618473c98443a204ee974b3fa1dcd02b20"
+  },
+  "fileCount": 3,
+  "files": [
+    {
+      "path": "setup.json",
+      "bytes": 387,
+      "sha256": "03e254cbb6ace535ad66cff9ed4059bae00bf6fd94fbcf5581046250ccdea26e"
+    },
+    {
+      "path": "owning-node/output.log",
+      "bytes": 2362,
+      "sha256": "29572a482402a28e9e7b4b547c56234a34e19401939cf0f071f14cec79665d3a"
+    },
+    {
+      "path": "old-hint-control-selected/output.log",
+      "bytes": 2099,
+      "sha256": "7387e11a601eab3b2e4a796257b6fc6baa230734a74a58ead439956bbb99ff9b"
+    }
+  ]
+}

@@ -150,8 +150,10 @@ malformed response, or detected truncation does not become a zero-observed
 report. See the provider's [SQL API](https://developers.cloudflare.com/analytics/analytics-engine/sql-api/)
 and [response format](https://developers.cloudflare.com/analytics/analytics-engine/sql-reference/statements/).
 The parser accepts the expected response envelope and optional statistics or
-limit metadata. Unfamiliar fields, including an explicit failure field, make
-the query unobservable.
+limit metadata. `rows_before_limit_at_least` counts source rows before
+`GROUP BY`, not returned groups. The parser ignores that figure entirely and
+uses the query's group cap to detect truncation. Unfamiliar fields, including
+an explicit failure field, make the query unobservable.
 
 Sampling can hide observations and makes weighted totals estimates.
 `metric-dropped` summaries describe losses known to the writer; a missing
@@ -164,7 +166,9 @@ The gate performs no live query. Recorded TEST emissions exercise the actual
 metric writer with a scripted sink. Separately labelled scripted SQL API
 responses exercise the report parser and decisions. Neither is evidence
 that hosted SQL ran or that a real account's data has the expected shape.
-Compatibility with the actual SQL service remains unverified until the
-planner's first run with its own credential and operator mapping. The
-planner files that first report under R14. This script adds no telemetry and
-does not close the parent request's coverage gaps.
+The planner's first SQL run exposed the limit-hint mismatch in request
+`686f4ec9328d19f727e7f5e1352d0b550e6c595c`. Its observed envelope shape
+informed a scripted TEST case; no private provider rows were copied.
+Repaired end-to-end compatibility still awaits the planner's rerun with its
+own credential and operator mapping, filed under R14. This script adds no
+telemetry and does not close the parent request's coverage gaps.
