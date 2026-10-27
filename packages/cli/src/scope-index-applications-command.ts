@@ -1,8 +1,10 @@
 /** Node-only operator listing. The command requests reads only; a deployed
  * host may still perform its existing maintenance when handling those reads. */
 import { resolve } from "node:path";
-import { digestBytes, utf8 } from "@generalbusiness/dap-bytes";
-import { httpTransport, signedReads, type Fetch, type Signer } from "@generalbusiness/dap-client";
+import { Buffer } from "node:buffer";
+import type { ScopeRef } from "@generalbusiness/dap-contract";
+import { b64url, digestBytes, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { httpTransport, requestSession, signerSessionRequest, signedReads, type Fetch, type Signer } from "@generalbusiness/dap-client";
 import type { Context, Outcome } from "./commands.ts";
 import type { IndexFiles } from "./scope-index-command.ts";
 import { INDEX_INVENTORY_BOUNDS, readIndexManifest, type IndexManifest } from "./scope-index-manifest.ts";
@@ -11,10 +13,11 @@ import { storedSigner } from "./store-signer.ts";
 import type { Config } from "./store.ts";
 
 const USAGE = "dap scope-index applications --manifest FILE --out FILE";
-const QUALIFICATION = "Listed-scope summary observations only; saved genesis hashes were not reverified. The command requests no mutation, session, registration, retry or pagination; existing host maintenance may still run.";
-type CommandFailure = "configuration-unavailable" | "manifest-unavailable" | "manifest-invalid" | "signer-unavailable" | "output-too-large" | "output-unavailable";
+const QUALIFICATION = "Manifest kinds select Rules summary observations; other refs are marked not-applicable without a read. Saved genesis hashes were not reverified. At most one existing membership session is requested, with bounded host replay bookkeeping. The command requests no business mutation, registration, retry or pagination; existing host maintenance may still run.";
+type CommandFailure = "configuration-unavailable" | "manifest-unavailable" | "manifest-invalid" | "signer-unavailable" | "session-unavailable" | "output-too-large" | "output-unavailable";
 const TOO_LARGE = Symbol("output-too-large");
 type RedirectFetch = (url: string, init?: Parameters<Fetch>[1] & { redirect: "error"; credentials: "omit" }) => ReturnType<Fetch>;
+type NotApplicable = { readonly scope: ScopeRef; readonly status: "not-applicable" };
 
 function noRedirects(send: RedirectFetch): Fetch {
   return async (url, init) => {
@@ -34,14 +37,15 @@ function noRedirects(send: RedirectFetch): Fetch {
 class Report {
   readonly #applications: string[] = [];
   readonly #errors: string[] = [];
+  readonly #notApplicable: string[] = [];
   readonly #prefix: string;
   #bytes: number;
   constructor(manifestPath: string, manifestDigest: string) {
     this.#prefix = `{"manifestPath":${JSON.stringify(manifestPath)},"manifestDigest":${JSON.stringify(manifestDigest)},"applications":[`;
-    this.#bytes = Buffer.byteLength(this.#prefix + '],"errors":[]}\n');
+    this.#bytes = Buffer.byteLength(this.#prefix + '],"errors":[],"notApplicable":[]}\n');
     if (this.#bytes > INDEX_INVENTORY_BOUNDS.bytes) throw TOO_LARGE;
   }
-  #append(destination: string[], row: InstalledApplicationRow | ApplicationListingError): void {
+  #append(destination: string[], row: InstalledApplicationRow | ApplicationListingError | NotApplicable): void {
     const text = JSON.stringify(row);
     const bytes = Buffer.byteLength(text) + (destination.length ? 1 : 0);
     if (bytes > INDEX_INVENTORY_BOUNDS.bytes - this.#bytes) throw TOO_LARGE;
@@ -54,7 +58,9 @@ class Report {
   }
   get applications(): number { return this.#applications.length; }
   get errors(): number { return this.#errors.length; }
-  bytes(): Uint8Array { return utf8(this.#prefix + this.#applications.join(",") + '],"errors":[' + this.#errors.join(",") + "]}\n"); }
+  get notApplicable(): number { return this.#notApplicable.length; }
+  skip(scope: ScopeRef): void { this.#append(this.#notApplicable, { scope, status: "not-applicable" }); }
+  bytes(): Uint8Array { return utf8(this.#prefix + this.#applications.join(",") + '],"errors":[' + this.#errors.join(",") + '],"notApplicable":[' + this.#notApplicable.join(",") + "]}\n"); }
 }
 
 export async function scopeIndexApplicationsCommand(ctx: Context, argv: readonly string[], files: IndexFiles): Promise<Outcome> {
@@ -80,12 +86,26 @@ export async function scopeIndexApplicationsCommand(ctx: Context, argv: readonly
   if (!signer) return fail("signer-unavailable");
   const send = ctx.fetch ?? (globalThis as { fetch?: Fetch }).fetch;
   if (!send) return fail("configuration-unavailable");
-  const transport = signedReads(httpTransport(manifest.service, { fetch: noRedirects(send), bytes: 4 * 1024 * 1024, seconds: 30 }), signer, ctx.now ? { now: ctx.now } : {});
+  const fetch = noRedirects(send);
+  let reader: string | null = null;
+  const membership = config.repository.membership;
+  if (membership) {
+    try {
+      const now = ctx.now?.() ?? Date.now();
+      const asked = await signerSessionRequest(membership, signer, timeOf(Math.floor(now / 1000) * 1000 + 60_000), b64url(crypto.getRandomValues(new Uint8Array(16))));
+      const answer = await requestSession(manifest.service, membership.scope, asked, { fetch, seconds: 30 });
+      if (answer.ok) reader = answer.session.reader();
+      // A definite refusal selects Signed authority before any summary read.
+    } catch { return fail("session-unavailable"); }
+  }
+  const transport = signedReads(httpTransport(manifest.service, { fetch, bytes: 4 * 1024 * 1024, seconds: 30 }), signer, ctx.now ? { now: ctx.now } : {});
   const report = new Report(identity.manifestPath, identity.manifestDigest);
   try {
     for (const { at } of manifest.scopes) {
+      // The validated manifest's kind selects relevance; no read rechecks it.
+      if (at.kind !== "rules") { report.skip(at); continue; }
       try {
-        const reply = await transport.summary(at.scope, null);
+        const reply = await transport.summary(at.scope, reader);
         const result = projectScopeApplications(at, reply);
         report.add(result.applications, result.errors);
       } catch (error) {
@@ -96,5 +116,5 @@ export async function scopeIndexApplicationsCommand(ctx: Context, argv: readonly
   } catch { return fail("output-too-large"); }
   try { await files.save(outFile, report.bytes()); }
   catch { return fail("output-unavailable"); }
-  return { code: report.errors ? 1 : 0, lines: [JSON.stringify({ ...identity, status: report.errors ? "incomplete" : "complete", applications: report.applications, errors: report.errors }), QUALIFICATION] };
+  return { code: report.errors ? 1 : 0, lines: [JSON.stringify({ ...identity, status: report.errors ? "incomplete" : "complete", applications: report.applications, errors: report.errors, notApplicable: report.notApplicable }), QUALIFICATION] };
 }
