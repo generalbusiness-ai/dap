@@ -1,9 +1,10 @@
 /** Register21 adds an explicit host choice without changing old genesis rules. */
 import type { FieldValue, PlatformData } from "@generalbusiness/dap-contract";
-import { isRecord } from "@generalbusiness/dap-bytes";
+import { intentDigest, isFactRef, isRecord, isSeed, same, scopeIdOf } from "@generalbusiness/dap-bytes";
 import type { RuleGiven, Rules } from "@generalbusiness/dap-derive";
 import { archiveRegister } from "./archive-binding.ts";
 import { directorySeed, registerRules } from "./register.ts";
+import { UNPUBLISHED_COHORT } from "./archive-binding-wire.ts";
 
 const install = archiveRegister.acts["install"]!, found = archiveRegister.acts["found"]!;
 const registerOf = (given: RuleGiven) => given.resolved.subjects.get("also.register") ?? given.state.page("register", ["open"], null, 1).items[0];
@@ -11,6 +12,10 @@ const unpublished = (given: RuleGiven) => registerOf(given)?.values["host"] === 
 
 export const unpublishedRegister: PlatformData = {
   ...archiveRegister,
+  items: { ...archiveRegister.items, claim: { ...archiveRegister.items["claim"]!, refs: {
+    ...archiveRegister.items["claim"]!.refs,
+    genesis: { ...archiveRegister.items["claim"]!.refs["genesis"]!, to: { type: "code", code: "directory-genesis-result", row: "G1" } },
+  } } },
   acts: { ...archiveRegister.acts,
     install: { ...install, guards: [...install.guards, { code: "host-choice", row: "G1" }],
       effects: install.effects.map(effect => "value" in effect && effect.value.slot === "namespace"
@@ -23,6 +28,25 @@ export const unpublishedRegister: PlatformData = {
 
 export const unpublishedRegisterRules: Rules = {
   ...registerRules,
+  // A direct act's result clause has no source FactUse in its field list.
+  // The generic result judge has already verified this exact deciding entry;
+  // bind its fact to the original native create instead of inventing a read.
+  "directory-genesis-result": { place: "type", run: (given, value) => {
+    const input = given.input;
+    if (!isFactRef(value) || input.type !== "delivery" || input.message.class !== "result" || input.message.outcome !== "applied"
+      || !same(value, input.from) || value.seq !== 0 || value.at.kind !== "directory") return false;
+    const of = input.message.of, original = given.own(of.from.seq);
+    if (!original || original.hash !== of.from.hash || !same(of.from.at, given.resolved.at)) return false;
+    const sent = original.entry.sends.find(send => send.n === of.n);
+    if (!sent || !isSeed(sent.to) || scopeIdOf(sent.to) !== value.at.scope) return false;
+    const origin = original.entry.input;
+    const found = origin.type === "act" ? origin : origin.type === "outcome" && origin.kind === "create-repository" && origin.owner === UNPUBLISHED_COHORT.register
+      ? given.own(Number(origin.operation.split(":")[0]))?.entry.input : null;
+    return found?.type === "act" && found.signed.intent.kind === "found" && same(sent.to, {
+      v: 1, kind: "directory", definition: UNPUBLISHED_COHORT.directory, creator: given.resolved.at,
+      cause: intentDigest(found.signed.intent), ordinal: 0,
+    });
+  } },
   "host-choice": { place: "guard", refusals: ["host-unknown"], run: given =>
     ["none", "artifacts", "github.com"].includes(String(given.resolved.fields["host"]))
       ? { holds: true } : { holds: false, name: "host-unknown" } },

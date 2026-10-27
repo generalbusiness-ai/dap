@@ -979,7 +979,7 @@ export class McpService {
    * room recorded in the configuration; the list is derived again on the next call.
    */
   /** The actual generic room and exact Rules sibling, never a caller alias. */
-  async #applicationRoom(): Promise<{ directory: ScopeRef; membership: ScopeRef; rules: ScopeRef; destination: ScopeRef; cohort: typeof TRUSTED_APPLICATION_COHORT | typeof DECLARED_APPLICATION_COHORT | typeof DEVICE_APPLICATION_COHORT | typeof ARCHIVE_APPLICATION_COHORT | typeof ARCHIVE_DECLARED_APPLICATION_COHORT | typeof ARCHIVE_DEVICE_APPLICATION_COHORT | typeof ARCHIVE_DEVICE_PUBLICATION_COHORT }> {
+  async #applicationRoom(): Promise<{ directory: ScopeRef; membership: ScopeRef; rules: ScopeRef; destination: ScopeRef; cohort: typeof TRUSTED_APPLICATION_COHORT | typeof DECLARED_APPLICATION_COHORT | typeof DEVICE_APPLICATION_COHORT | typeof ARCHIVE_APPLICATION_COHORT | typeof ARCHIVE_DECLARED_APPLICATION_COHORT | typeof ARCHIVE_DEVICE_APPLICATION_COHORT | typeof ARCHIVE_DEVICE_PUBLICATION_COHORT | typeof UNPUBLISHED_COHORT }> {
     const config = await this.#port.config.read(), repository = config.repository;
     if (!repository || config.service !== this.#service) return stopCall({ error: "target", what: "configure a trusted-application room before installing" });
     const { summary: directory } = await this.#summary(repository.directory.scope, repository.membership);

@@ -144,7 +144,11 @@ test("host none creates a real local room, settles installed publication refusal
       return { store: { ...held,
         signer: async name => { const secret = await held.secret(name); return secret === null ? null : signing(secret); },
         newSigner: async name => { const secret = crypto.getRandomValues(new Uint8Array(32)); await held.keep(name, secret); return signing(secret); },
-      }, fetch, now: life.now, pause, read: async path => files[path]?.slice() ?? null,
+      }, fetch, now: life.now, pause,
+      // This fixture owns the exact configured service's real Worker route;
+      // this acknowledgement trust grants no independent history authority.
+      trustedCreationService: { service: SERVICE, fetch },
+      read: async path => files[path]?.slice() ?? null,
       git: { run: async () => { gitRuns++; throw Error("Unpublished commands must not invoke Git"); } } };
     };
     const admin = person(), member = person();

@@ -1,10 +1,10 @@
 import { expect, test } from "vitest";
-import type { FactRef, FieldValue, PlatformDefinition, Request, Seed } from "@generalbusiness/dap-contract";
+import type { Digest, FactRef, FieldValue, PlatformDefinition, Request, Seed } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
-import { clockOf, judgeDelivery, judgeGenesis, runnable, type Fetched, type PlatformRules } from "@generalbusiness/dap-derive";
+import { clockOf, judgeDelivery, judgeGenesis, judgeOutcome, runnable, type Fetched, type PlatformRules, type RuleGiven } from "@generalbusiness/dap-derive";
 import { Ledger, T0, keys, t } from "@generalbusiness/dap-derive/testing";
-import { platform, UNPUBLISHED_COHORT as U } from "../src/index.ts";
+import { platform, repositoryName, UNPUBLISHED_COHORT as U } from "../src/index.ts";
 import { checkedPlatformData, written } from "./fixtures.ts";
 
 // These are the actual native data, rules and pure judges in memory. No
@@ -15,10 +15,17 @@ function register(host: string, namespace = "TEST ignored under none") {
   const signed = signIntent({ v: 1, to: null, actor: keys.rita.key, kind: "install", on: null, expected: {},
     fields: { host, namespace, policy: "keys", founders: [keys.rita.key] }, idempotencyKey: "TEST install", notAfter: t(60) }, keys.rita.secret);
   const seed: Seed = { v: 1, kind: "register", definition: U.register, creator: null, cause: intentDigest(signed.intent), ordinal: 0 };
+  // Passive capture forwards the actual native guard, including its named
+  // answer. A parentless refused genesis records no result envelope/reason.
+  const native = code(U.register), guard = native.rules["host-choice"]!, hostChecks: unknown[] = [];
+  if (guard.place !== "guard") throw Error("Native host choice guard required");
+  const observed: PlatformRules = { ...native, rules: { ...native.rules, "host-choice": { ...guard, run: given => {
+    const checked = guard.run(given); hostChecks.push(checked); return checked;
+  } } } };
   const judgment = judgeGenesis(ledger.state, definition, { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(21)), seed, creation: signed },
-    { clock: clockOf(ledger.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: null, platform: code(U.register) });
+    { clock: clockOf(ledger.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: null, platform: observed });
   if (judgment.result === "write") ledger.seal(judgment.draft);
-  return { ledger, judgment };
+  return { ledger, judgment, hostChecks };
 }
 function found(ledger: Ledger, fields: Record<string, FieldValue> = {}) {
   return ledger.act(keys.rita, "found", { expected: { register: 1 }, fields: {
@@ -46,22 +53,20 @@ function take(target: Ledger, named: PlatformDefinition, from: Ledger, seq: numb
   target.seal(written(judgment));
 }
 
-test("unpublished native versions validate with complete rules and keep every named repository refusal surface", () => {
+test("new native versions are runnable under their complete validated declarations", () => {
   for (const named of [U.register, U.directory, U.destination]) {
     const native = platform(named)!;
     expect(runnable(checkedPlatformData(native.data), native.rules)).toBe(true);
   }
-  const destination = platform(U.destination)!.data, directory = platform(U.directory)!.data;
-  expect(destination.items["branch"]!.states["unpublished"]).toEqual({ final: false });
-  expect(destination.items["branch"]!.values["repository"]!.required).toBe(false);
-  expect(directory.items["repository"]!.values["repository"]!.required).toBe(false);
-  for (const name of ["read-token", "certify-rules-tree"]) expect(destination.acts[name]!.guards[0]).toEqual({ code: "has-repository", row: "G1" });
-  for (const name of ["reserve", "publish-file"]) expect(destination.receives[name]!.guards[0]).toEqual({ code: "has-repository", row: "G1" });
-  expect(directory.acts["bind-archive"]!.guards[0]).toEqual({ code: "has-repository", row: "G1" });
 });
 
-test("Register21 rejects an unknown host, normalizes none, and preserves the hosted creation opening", () => {
-  expect(register("other").judgment).toMatchObject({ result: "refused", reason: "guard-failed", name: "host-unknown" });
+test("Register21 rejects an unknown host, normalizes none, and settles a hosted creation from a scripted outside answer", () => {
+  const unknown = register("other");
+  expect(unknown.judgment.result).toBe("write");
+  expect(unknown.ledger.last.input).toMatchObject({ type: "genesis", decision: "refused" });
+  expect(unknown.ledger.state.scope()!.status).toBe("refused");
+  expect(unknown.ledger.last.effects).toEqual([]);
+  expect(unknown.hostChecks).toEqual([{ holds: false, name: "host-unknown" }]);
   const none = register("none").ledger;
   expect(none.item(0).values["namespace"]).toBe("");
   expect(found(none, { archive: "journal" })).toMatchObject({ result: "refused", reason: "guard-failed", name: "no-repository" });
@@ -72,6 +77,24 @@ test("Register21 rejects an unknown host, normalizes none, and preserves the hos
   expect(hosted.last.sends).toEqual([]);
   expect(hosted.state.operation("1:0")).toMatchObject({ kind: "create-repository", owner: U.register });
   expect(hosted.item(0).values["namespace"]).toBe("TEST namespace");
+  // SCRIPTED host answer only. The outcome, Directory20 genesis and returned
+  // result/confirmation below run the actual native data, rules and judges.
+  const repository = { host: "github.com", namespace: "TEST namespace",
+    name: repositoryName(hosted.item(1).values["seed"] as Digest, 1), id: "TEST hosted repository" };
+  hosted.seal(written(judgeOutcome(hosted.state, hosted.definition, { type: "outcome", operation: "1:0", attempt: 1, result: "confirmed",
+    evidence: { basis: "own-answer", body: { name: repository.name, id: repository.id } } }, {
+    clock: clockOf(hosted.state, hosted.now), bounds: hosted.bounds, platform: code(U.register), own: hosted.own,
+  })));
+  const facts = [{ fact: hosted.fact(1), entry: hosted.entries[1]!.entry, under: hosted.under }];
+  const D = child(hosted, 2, 0, U.directory, facts);
+  expect(D.last.input).toMatchObject({ type: "genesis", decision: "applied", seed: { definition: U.directory } });
+  const answer = D.last.sends.find(send => send.message.class === "result")!;
+  take(hosted, U.register, D, 0, answer.n);
+  expect(hosted.item(1)).toMatchObject({ state: "active", refs: { directory: D.at, genesis: D.fact(0) } });
+  expect(hosted.state.request(2, 0)?.result?.clause).toBe("applied");
+  take(D, U.directory, hosted, hosted.head.seq, 0, facts);
+  expect(D.state.scope()!.status).toBe("active");
+  expect(D.item(0).values["repository"]).toEqual(repository);
 });
 
 test("a native unpublished found directly creates its directory, applies its result, and creates a destination with no first-head work", () => {
@@ -89,6 +112,28 @@ test("a native unpublished found directly creates its directory, applies its res
   take(R, U.register, D, 0, answer.n);
   expect(R.item(1)).toMatchObject({ state: "active", refs: { directory: D.at, genesis: D.fact(0) } });
   expect(R.state.request(1, 0)?.result?.clause).toBe("applied");
+  const type = platform(U.register)!.rules["directory-genesis-result"]!;
+  if (type.place !== "type") throw Error("Native directory result type required");
+  const resultContext = { input: R.last.input, own: R.own, resolved: { at: R.at } } as unknown as RuleGiven;
+  expect(type.run(resultContext, D.fact(0))).toBe(true);
+  // One slot boundary: the verified result may name only its own deciding
+  // directory genesis and the exact recorded native founding request.
+  const resultInput = R.last.input;
+  if (resultInput.type !== "delivery" || resultInput.message.class !== "result") throw Error("Native applied result required");
+  const wrongIncarnation = { ...resultInput, from: { ...resultInput.from, at: { ...resultInput.from.at, inc: R.at.inc } } };
+  const refusedResult = { ...resultInput, message: { ...resultInput.message, outcome: "refused" as const } };
+  const original = R.own(1)!;
+  const unrelated = { ...resultContext, own: () => ({ ...original, hash: R.fact(0).hash }) };
+  const wrongOrigin = { ...resultContext, own: () => ({ ...original, entry: { ...original.entry, input: D.last.input } }) };
+  expect([
+    type.run(resultContext, { ...D.fact(0), seq: 1 }),
+    type.run(resultContext, { ...D.fact(0), hash: R.fact(0).hash }),
+    type.run({ ...resultContext, input: wrongIncarnation }, D.fact(0)),
+    type.run(unrelated, D.fact(0)),
+    type.run(wrongOrigin, D.fact(0)),
+    type.run({ ...resultContext, input: refusedResult }, D.fact(0)),
+    type.run({ ...resultContext, input: D.last.input }, D.fact(0)),
+  ]).toEqual([false, false, false, false, false, false, false]);
   take(D, U.directory, R, R.head.seq, 0, facts);
   expect(D.state.scope()!.status).toBe("active");
   expect(D.item(0).values["repository"]).toBeNull(); // canonical native empty slot

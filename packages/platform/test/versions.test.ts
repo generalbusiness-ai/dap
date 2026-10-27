@@ -22,7 +22,7 @@ import { creationRita as rita } from "./fixtures-entry.ts";
 // SHA-256: e2a2052d23705690ec4b884786f453718875f6505d515fdda88a20191eb64269.
 const DIGESTS: Readonly<Record<string, string>> = {
   // G1 canonical generation; every historical literal below stays exact.
-  "platform:register@21": "sha256:f24574f61a1a6e7b2658a19d8925a3cdab702937831b038040efb8a225171ee5",
+  "platform:register@21": "sha256:fbdc6072c321e201a966a2179a72db4519597dd262c81bd83f366b183e66125c",
   "platform:directory@20": "sha256:061289c868b371dfe97b692e95627e78afa550db1b83a2b664a40dfaa3fcf8b1",
   "platform:destination@16": "sha256:f7e36c2b10e19bed3ac9353ca9f86ea2682122e0ccec06cde3efa1b887895691",
   // Observed canonical hardening generation; historical literals stay exact.

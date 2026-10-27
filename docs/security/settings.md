@@ -322,10 +322,11 @@ parser, failure behavior, health visibility, and other readers.
         "packages/scope/src/worker.ts",
         "packages/scope/src/artifacts-wiring.ts",
         "packages/scope/src/site/host.ts",
-        "apps/room/archive.ts"
+        "apps/room/archive.ts",
+        "packages/scope/src/creation-admission.ts"
       ],
-      "parser": "artifactsBinding checks nonnull object/function with get/create/delete methods; runtime namespace is provisioned by Wrangler.",
-      "missing": "No Artifacts outside port.",
+      "parser": "artifactsBinding checks nonnull object/function with get/create/delete methods; runtime namespace is provisioned by Wrangler. Parentless Artifacts install admission checks binding presence after authorization; this is not a provider or runtime-method probe.",
+      "missing": "No Artifacts outside port. An authorized deployed install selecting artifacts returns host-unavailable before target lookup.",
       "invalid": "Method-shape mismatch closes wiring; this is not a provider-connectivity probe.",
       "health": "wiring.artifacts off/missing-binding when configured; status 503."
     },
