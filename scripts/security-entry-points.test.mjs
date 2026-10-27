@@ -66,7 +66,7 @@ const pendingArchiveSeals = {
   "packages/scope/src/archive-source-window.ts": "4db3f5885e7541f713b9668d1cde655e42be1950dd6af77d5711a323b3582e1c",
   "packages/scope/src/archive-publication.ts": "d8c39d220bc7eea59301478aa553960267aac16f06502b4103a85647c71eb457",
   "packages/scope/src/archive-build.ts": "038fabbfd864ad30f623076b6aa107137075472445fe98eaf1e3d4cbc3a0bd2b", // Fixed-prefix inventory ownership reviewed; actual maintained parser output.
-  "packages/scope/src/archive-driver.ts": "fe9903582ae33ed6ac73383fcd1886879e057344289fd7f4f799707857ab3359", // Later capacity retry reviewed; actual maintained parser output.
+  "packages/scope/src/archive-driver.ts": "cd52e871a95ee7b485d2ef231f1c06c3ab1c203c127879d6566aa86893f59c8b", // Bounded capture and exact head identity; unchanged authority and retry decisions; actual maintained parser output.
   "packages/scope/src/archive-row.ts": "02f01270071d022253335b5d4b41c8574e75f0eb806e58f70afa60e4b8fbc613", // Paid prior-capacity scalar reviewed; actual maintained parser output.
   "packages/scope/src/floor-writer.ts": "fb8fd859844b8d10ba43b477bcaf07ab32fe1bfa1b6684ad9ae70b930d328a11",
   "packages/scope/src/object.ts": "b30582dff0dfbb9e8e505dbe1e4d3060d48fa6887fc0f2cb2496d7636885ab80", // Same R11 owner value as above.

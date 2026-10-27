@@ -73,7 +73,9 @@ export async function archiveCommandSession(objects: LocalArchiveClone["objects"
           const chunks: Buffer[] = [], stdoutChunks: Buffer[] = [], stderrChunks: Buffer[] = []; let size = 0; let over = false; let failure: Error | undefined;
           const capture = (stream: Buffer[], chunk: Buffer) => { size += chunk.length; if (size > 8 * 1024 * 1024) { over = true; child.kill("SIGKILL"); } else { const owned = Buffer.from(chunk); chunks.push(owned); stream.push(owned); } };
           child.stdout.on("data", (chunk: Buffer) => capture(stdoutChunks, chunk)); child.stderr.on("data", (chunk: Buffer) => capture(stderrChunks, chunk));
-          const timer = setTimeout(() => child.kill("SIGKILL"), 30_000);
+          // BR-4: each concurrent child fits within the whole follower's
+          // measured duration. Three times its prior median is 82.6875 s.
+          const timer = setTimeout(() => child.kill("SIGKILL"), 90_000);
           child.on("error", error => { failure = error; });
           child.on("close", (code, signal) => {
             clearTimeout(timer);

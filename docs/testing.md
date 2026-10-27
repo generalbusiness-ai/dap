@@ -335,6 +335,13 @@ The functional `scope` project sets a thirty-second framework allowance in
 `packages/scope/vitest.worker.config.ts` for cases without an explicit
 limit. Each worker reuses its own isolate across multi-scope story files
 on a shared machine.
+The offline public archive command uses a process limit of at least three
+times its measured median on the shared machine. When only the enclosing
+follower has timings, use its median as a conservative bound for each
+concurrent child, and leave reporting and joined cleanup time in the outer
+test allowance. State the sample and keep the failed original limit as
+evidence. This harness rule does not raise a Native producer or protocol
+deadline.
 The dedicated `scope-lending` project preserves the same thirty-second
 allowance for its unchanged story. Case-specific limits and modeled
 protocol, read, clock, capacity and latency assertions keep their own bounds.
