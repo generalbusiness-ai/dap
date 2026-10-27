@@ -1,14 +1,82 @@
 {
-  "qualification": "Draft repair collector. The predecessor is preserved; repair document checks, full inventory and read-only seal remain due. No gate or parent completion is claimed.",
+  "qualification": "Complete naming-repair collector, including the root SHA256SUMS whose rows exclude itself. Previous copied manifest and recorded verification describe the earlier naming-rejected head; its sealed collector remains unchanged. Four actual repair checks and source/style proofs bind the clean checkpoint; only note/manifest follow. No gate, hosted query, deployment, parent closure or census completion. Phase exit:null is not final process success.",
   "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-27-r14-documents-naming-repair",
   "request": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:082750e849acdb3351ffc4f376aeb0140b7946db",
   "promise": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:43f14337d15a33d822581e2b755a88fa17413ad8",
+  "amendment": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f373d4d3260026e540d40803a038b13003d17652",
+  "review": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7432a899d4267ada6cf4ff03300cce5b371e034b",
+  "standingWordingRule": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d250c7f9a8a411b5e0557ae6ccef0e6e02cd3eec",
+  "checkpoint": {
+    "commit": "3fa5fb32c6f8138df25afd5d83e98139dc4c5a13",
+    "tree": "d6001a9ff591ab63c3f2ed44c8816894559f4071"
+  },
   "base": {
     "commit": "2acac9c5d3464e9b81e153a6d9512d276959f2b8",
     "tree": "51f3d8ddf7a0bf26070d1ffa1bec2ac31a761f20"
   },
-  "fileCount": 2,
+  "fileCount": 14,
+  "totalBytes": 957428,
   "files": [
+    {
+      "path": "SHA256SUMS",
+      "bytes": 1170,
+      "sha256": "af72783699a4546fab1d11d19d82648000e2f7920e4afa6a9eb553e79195fba4"
+    },
+    {
+      "path": "finalization/finalizer.py",
+      "bytes": 19538,
+      "sha256": "1607fccafe0f57d84c0acdb0d81952dcbae389fd0ee7cf0789d05589a910c777"
+    },
+    {
+      "path": "finalization/phase-receipt.json",
+      "bytes": 3470,
+      "sha256": "1b46f9ce387de7498e4b156cea209a7feb53dc1dd68ceb9f9fd365acf5402d22"
+    },
+    {
+      "path": "followup/commit-messages.log",
+      "bytes": 38,
+      "sha256": "70b235d629dedfb1f76eb6b8a46feb6d4145fef5efa7705ba09b8874f78d7662"
+    },
+    {
+      "path": "followup/doc-links.log",
+      "bytes": 38,
+      "sha256": "ea3db4480950a942acf4a5ec3c1305da41cfc1fc348a7c2c33ececf42e2286d6"
+    },
+    {
+      "path": "followup/driver.py",
+      "bytes": 7215,
+      "sha256": "8beaf367760a19521fd62f9848277f2ff541a732804cbecfa63eec589e008b61"
+    },
+    {
+      "path": "followup/notes.log",
+      "bytes": 18,
+      "sha256": "35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1"
+    },
+    {
+      "path": "followup/receipt.json",
+      "bytes": 3238,
+      "sha256": "3c052d3d9beab3791612bbbd32031a3189254f1bda93bc11596d37f32de21894"
+    },
+    {
+      "path": "followup/source-binding.json",
+      "bytes": 900458,
+      "sha256": "4283eb37f85f33a7f68593efd10ff33b98159e0938d9885c0d92a31ffacec292"
+    },
+    {
+      "path": "followup/style.json",
+      "bytes": 2826,
+      "sha256": "e44fef86e48a8c05a365df0912960ebe7a63de43a46a3dfb26603d64b5f63189"
+    },
+    {
+      "path": "followup/whitespace.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "followup/word-diff.log",
+      "bytes": 13820,
+      "sha256": "f8544d650bfc9b4f0fa01bf06976c5071b9a4cfa0646e7e273bd9bb5e03e3777"
+    },
     {
       "path": "previous-evidence.json",
       "bytes": 840,
