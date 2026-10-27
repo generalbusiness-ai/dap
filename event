@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:705f2a5f7ab40878daaf013d999e86292d9112d1","text":"Merge retired a covered predecessor; the successor is at apps/counter/browser/startup.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7ca3ae4a40d498f92a42376f9aafed05d4698bb9","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/application-establish.test.ts."}
