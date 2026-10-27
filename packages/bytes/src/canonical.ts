@@ -159,15 +159,18 @@ export function parseStrict(text: string): unknown {
   const string = (): string => {
     i++; // opening quote
     let out = "";
+    let start = i;
     for (;;) {
       if (i >= text.length) fail("unterminated string");
       const c = text.charCodeAt(i);
       if (c === 0x22) {
+        out += text.slice(start, i);
         i++;
         break;
       }
       if (c < 0x20) fail("control character in string");
       if (c === 0x5c) {
+        out += text.slice(start, i);
         const e = text[i + 1];
         i += 2;
         switch (e) {
@@ -189,9 +192,9 @@ export function parseStrict(text: string): unknown {
           default:
             fail("bad escape");
         }
+        start = i;
         continue;
       }
-      out += text[i];
       i++;
     }
     if (!wellFormed(out)) fail("lone surrogate in string");
