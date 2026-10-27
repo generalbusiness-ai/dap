@@ -1,9 +1,9 @@
 # Report Worker observations with explicit coverage limits
 
-Source and focused checks are complete. The original standalone gate passed;
-the work is now recut onto Main after the installed-release listing landed.
-The combined-tree gate, final evidence packaging and exact-head review remain
-due. This note claims no live query, real credential use, landing or deployment.
+The ordinary gate passed after this work was recut onto Main following the
+installed-release listing. Final non-note source equality, the raw index and
+manifest, evidence seal, and exact-head checker review remain due. This note
+claims no live query, real credential use, landing or deployment.
 
 ## What changed
 
@@ -137,17 +137,42 @@ The listing landed as Main `d73b53c971d90bb246bad868815912bad0e83682`.
 This work was then recut onto it without conflicts. The usage script remains
 byte-identical at the SHA above; the rebased source commit is
 `518fd6033acc6d4baec7030325e0ca54fc6af2cb`. The new Main adds the reviewed
-operator command and its tests, so a new gate validates the combined tree
-before this request's review. The earlier pass remains a prior-base result,
+operator command and its tests. The fresh gate below validates the combined
+tree before this request's review. The earlier pass remains a prior-base result,
 not validation of the changed baseline.
+
+The combined-tree ordinary gate naturally passed at
+`df115cd1df1496ff783b663d6b912ee07cf8029a`, tree
+`e78d5a2c01890a96cfad4982287c350ae0b24a80`. Its checkout was clean before and
+after, with no signal, interrupted stage, or reporting error. The driver
+measured 909.919289625 seconds wall and 1,929.314561 seconds child CPU. Node
+reports 66 passed; Counting reports 55 passed; plain Vitest reports 2,859
+passed and one skipped across 281 passing modules; Native reports 795 passed
+and two skipped across 232 passing and one skipped module. All five stages
+passed with zero unhandled errors. Final identities are unique, consistent,
+and reconcile to public terminal records and stdout.
+
+The recut run has all 2,860 plain ready, result, and final callbacks. Native
+has 797 final callbacks, 784 ready callbacks, and 761 result callbacks: 13
+finals lack ready observations and 36 lack result observations. These omissions
+establish no cause, readiness, or missing duration. Concurrent case/module
+duration sums are neither wall time nor CPU. The analyzer hashes all 39
+retained gate inputs. The run used the machine and private dependency view
+described below, with starting load averages 1.712890625, 1.8916015625, and
+2.0341796875. The gate validates this exact source tree, not a future
+reporting-only commit.
 
 The original evidence remains read-only at
 `/Users/hughpyle/play/artroom-evidence/2026-10-27-security-r14-usage`.
-Fresh combined evidence is being prepared at
-`/Users/hughpyle/play/artroom-evidence/2026-10-27-security-r14-usage-recut`;
-`prior-base/` is an exact copy of all 114 original sealed files. The manifest
-currently records the original evidence and will be replaced after the
-combined gate. At the original gate and its reporting-only candidate
+Final combined evidence is retained read-only at
+`/Users/hughpyle/play/artroom-evidence/2026-10-27-security-r14-usage-recut`.
+`prior-base/` is an exact copy of all 114 original sealed files. The final
+manifest inventories the recut evidence and that prior-base copy. Only this
+reporting note and the manifest change after the recut gate. All 2,805 non-note
+tracked files equal the tested tree, recorded in `gate-source-equality.json`
+(SHA-256 `7fe3784df12e712dd9ce931d15441468667db4907072c5f25b313a175d3f34be`). The final artifact names the reviewed head and tree;
+no future implementation is covered by this equality. At the original
+gate and its reporting-only candidate
 `bc588b2d40138c62ba6b32aedb9ea4b30afc1d2b`, all 1,847 non-note tracked blobs
 matched, as `prior-base/gate-source-equality.json` records (SHA-256
 `ad1256fa6d11ea145a469702148640231f1518d13f5ad6e47d6372fa6b64b629`).
@@ -177,11 +202,14 @@ caches. No cold-cache or isolated-machine claim is made.
 | Corrected schema/example and fixed-owner probe: 8 Workers, 181 catalog routes, 29 bindings; test file included once | `node /private/tmp/artroom-r14-static-probe-20261027.mjs` | 0 | `prior-base/schema-example-and-owner-plan-final/output.log`: `ade296e35123caff8e5385f295daa706fdf0cd7dab4a6d5d4b39c18298fb9297` |
 | Prior-base gate: all five stages passed at the original checkpoint; no unhandled errors | `npm run gate` | 0 | `prior-base/ordinary-gate/output.log`: `0df42cad84d939d26efdd4c15e3b9f1e394611a229c6a55882d1f36a2211cc5f` |
 | Gate reconciliation: unique finals, terminal totals and callback gaps | `python3 /private/tmp/artroom-r14-gate-analysis-20261027.py` | 0 | `prior-base/gate-analysis/analyze.json`: `0e9fd8c186299f8ed483af3975d6eae422725f05d9a30701bfec479b66f24330` |
+| Recut combined-tree ordinary gate: all five stages passed; Node 66, Counting 55, plain 2,859 plus one skip, Native 795 plus two skips; zero unhandled errors | `npm run gate` | 0 | `ordinary-gate/output.log`: `887663cdffcf3e66ba6bbcd61bed38d1eab84c8833285da0e87af2c97ea8ce75` |
+| Recut gate reconciliation: actual final identities, public totals, callback joins, and 39 input hashes | `python3 /private/tmp/artroom-r14-recut-gate-analysis-20261027.py [explicit retained gate, checkpoint, tree, timing and callback paths]` | 0 | `recut-gate-analysis.json`: `d53cef6140a126304aec9b4f5397c35acb41d44df0dc7ce2ab876ef2bcaf1dc4` |
 
 ## Open limits
 
-- The combined-tree gate, final manifest/seal and exact-head review remain due
-  under the child request above. The preceding listing `521f57a1` is landed.
+- Final non-note source equality, the raw index and manifest, evidence seal,
+  and exact-head review remain due under the child request above. The preceding
+  listing `521f57a1` is landed.
   No hosted compatibility or actual account coverage has been established.
 - Parent R14 remains open. Deployment aliases cannot authenticate historical
   Worker identity. Missing route methods, native versions, feature identity,
