@@ -1,11 +1,11 @@
 # Settle archive read reservations
 
-Status: focused checks and numeric controls passed. The first ordinary
-gate failed; repaired tests await a new gate and exact-head review. The historical Room A settled total cannot
-be recovered from the retained capture because several reply sizes were
-not recorded. Decision request `70b830a6b9c4ac3a662b1baff18845e63dbd7a25`
-asks the planner to resolve that acceptance gap and the boundary for other
-reader tariffs.
+Status: one ordinary gate passed at the source checkpoint below. The
+artifact report is ready for exact-head review after sealing. The effective
+W1 amendment accepts the four evidence parts described below; its ruling
+is no longer pending. Historical received lengths remain unknown, and the
+expected live settled total stays conditional until the planner's next
+deployed capture. No historical length or fitting total is invented.
 
 The request is
 `git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0052053d6d3a09aece00dc04737e3f50bc6dd568`,
@@ -67,10 +67,12 @@ output callbacks keep their existing fees.
 This head does not tune ceiling values, reorder planning, change the finish
 formula or change row and pin bounds. Actual-size read charges, logical
 allocation and processing fees stay on `spend`. Existing input-only
-bounded-object and legacy transport tariffs and local Git output collectors
-are outside the metadata-based settlement conversion
-pending the planner's scope answer. The source audit does not claim that
-every reader in the repository was converted.
+bounded-object and legacy transport tariffs, migration GET fees, local Git
+stdout/stderr maxima and logical fixed metadata fees stay unchanged, as
+approved by the effective amendment. Input-only tariffs are not refunded.
+The converted scope covers metadata-before-read ceilings, including the
+seven response, six pin, frontier payload and migration POST ceilings;
+the audit does not claim every reader was converted.
 
 ## Diagnostics and boundaries
 
@@ -149,15 +151,19 @@ real head's reservation, settlement, finish and admission at exactly
 4,194,304 metadata including margin. Increasing only `Q` by one refuses
 with a one-unit metadata shortfall. These are capacity arithmetic controls,
 not valid proof/query/SQL fixtures, historical measurements or Native
-executions. They do not satisfy historical W1. Their result explicitly
-records that the missing historical sizes remain unknown.
+executions. They supply the amended conditional aggregate boundary,
+separate from the actual-reader TEST subwitnesses below. Their retained
+result still records that historical received sizes are unknown; the
+amendment does not turn authored lengths into measured Room A data.
 
 ## Checks run so far
 
 Raw evidence is in
 `/Users/hughpyle/play/artroom-evidence/2026-10-27-archive-read-settlement/`.
-It remains writable while the delivery is assembled. A final manifest and
-SHA256SUMS seal remain due. The focused run used the working source before
+The collector is indexed and sealed read-only: 194 files,
+105959768 bytes, including the root `SHA256SUMS` (which excludes
+itself). The complete committed-manifest candidate has SHA-256
+`92efbf056da1957e03d26553150325080930a767584b7d200bf680d2056915fd`. No existing raw report was overwritten. The focused run used the working source before
 two comment clarifications and the documentation changes; its receipt
 records every tracked working-file hash before and after the run.
 
@@ -175,6 +181,18 @@ records every tracked working-file hash before and after the run.
 | Verified private test-pool preparation | `node scripts/cloudflare-pool-compat.mjs` | 0 | `preparation-cache.log`: `d03b9b803f377477f526a8d6cc240c8e18b71beffd9163bb0960c4d91268de65` |
 | Initial root-only dependency copy: CLI symlinks refused | Same preparation command | 1 | `preparation.log`: `72618d31217a4c868c0d5177eac1bffb5a6797fc3070c8501b0d2074937a03a2` |
 | Initial root-only copy lacked workspace-local Worker types | Scope typecheck command above | 1 | `scope-typecheck.log`: `4e9156a3a2db534a93618805d3fd8f01a7856c4abe4dc28fb2afd814d156445b` |
+| First ordinary gate: FAILED; retained separately | `npm run gate; ordinary-gate/result.json` | 1 | `ordinary-gate/output.log`: `8f88343ef0a7e241ab8ece0f7391d7b1d6fd8e8b8b3e9585d5249a71c8ed0b10` |
+| Failed-gate analyzer: actual separate execution | `gate-failure-analysis-run.json; actual argv` | 0 | `gate-failure-analysis.json`: `595ab865081a52785547e6da65407c3c8bcd97ff2fd1054b5d935116cfcc594f` |
+| Initial repair compiler context: failed | `npm run typecheck --workspace @generalbusiness/dap-scope` | 1 | `repair-typecheck.log`: `9799d20a7b3a1136694af525f75b5b7609e5c7cd01d1a6fcf0a98678c917f4db` |
+| Corrected repair compiler context | `npm run typecheck --workspace @generalbusiness/dap-scope` | 0 | `repair-typecheck-followup.log`: `fb2b1b20daea8ec6bdc1bf8b7eceb9b3703b9e4ffe7530b18d9218bb23d34976` |
+| Initial repair selection: failed; retained | `repair-focused-receipt.json; actual argv` | 1 | `repair-focused.log`: `72adec7adbfa5ce41da4f6cb3f56f4266e6f8308231f75505472cad2ddca129a` |
+| Lending isolated follow-up; two passed | `lending-isolated-receipt.json; actual argv` | 0 | `lending-isolated.log`: `f59013e811ba84186fc94b654c791cbea11203abb30f9c22b894ca3c46d22bac` |
+| Corrected installed/lending; ten passed; five historical controls | `repair-followup-receipt.json; actual argv` | 0 | `repair-followup.log`: `907c89e87bd380b782ca3a2e6ab99cf706fa6693c05ccbb57e2e5875974db1d8` |
+| Repaired ordinary gate: natural pass | `npm run gate; ordinary-gate-repaired/result.json` | 0 | `ordinary-gate-repaired/output.log`: `78b920d04e2165819535c18b5e381ebd546e69ac4b83a47c482d1fe97e01e0f9` |
+| Closed repaired-gate analysis | `analysis-run-repaired.json; actual analyzer argv` | 0 | `ordinary-gate-repaired-analysis.json`: `970d85f076d00327ccff3b772e11f14b5626b135df965fd0cbd4a28ed5f8c6e5` |
+| Every other tracked blob/mode and numeric source binding | `Retained source binding; verified by continuation` | 0 | `finalization/source-binding.json`: `5d2f0a260930c40a37f41a28cf57860c9a24cb4a061cc104c990cf1bbaae0a47` |
+| First evidence assembly: root-attested failure | `Original argv in assembly-receipt.json; root-attested tool result` | 1 | `finalization/first-attempt-failure.json`: `2ec535d90e7148b1ca1f08a7c3dcf552abf2c1c6965e8b7f97ebc0b26e0e21d5` |
+| Ordering-only partial collector verification | `Retained continuation; direct path/hash comparison` | 0 | `finalization/partial-state-verification.json`: `d4e514dbc6e9d51db43ca70aa732969e399f58df7279ad17d6208ae6efe39c77` |
 
 The focused run took 15.373 seconds wall and 22.983 child CPU seconds;
 all tracked working bytes were unchanged during it. It ran ten frontier,
@@ -230,7 +248,130 @@ measured around each separate plan; this is fixture timing, not a production
 performance result. Lending also passed its two cases alone. These passes
 do not identify or repair the earlier resolver's cause.
 
-A new ordinary gate is required because the first failed across three
-files. Its outputs go to `ordinary-gate-repaired/`; the failed gate remains
-separate under `ordinary-gate/`. The final evidence table and manifest
-will include both runs and all failed follow-ups before review.
+The required new ordinary gate passed at the exact repaired checkpoint
+reported below. Its `ordinary-gate-repaired/` evidence stays separate from
+the failed `ordinary-gate/` and all failed follow-ups. The final evidence
+table and manifest include both runs; the RPC teardown cause remains unknown.
+
+## Ordinary gate and reporting tail
+
+The earlier gate remains a failed run: exit1,
+1145.764902958 seconds wall and
+2407.359166000 child CPU seconds. Its final counts
+retain 4 failed cases in 3
+failed modules, with recorded unhandled counts
+`{"native": [1], "plain": [0]}`. Nothing in
+the follow-ups or this new gate changes that historical result or establishes
+the RPC teardown cause was fixed.
+
+The repair compiler exits1 and0 were observed by root at invocation. Their
+retained logs are `repair-typecheck.log` and `repair-typecheck-followup.log`;
+no separate source-run receipts were produced for those two commands. The
+failed-gate analyzer has its own actual exit0 receipt, source and output
+digests in `gate-failure-analysis-run.json`. That analyzer success does not
+change the historical gate's failure.
+
+The new `npm run gate` naturally closed with exit0, no forwarded signal and clean
+source before and after at `970737665a85bb548495404c2fcf3a2265c93459`, tree
+`f2483f95ed91c2fd2da81a8d9c78dfdfa3387511`. It ran from 2026-10-27T19:11:03.544230Z
+to 2026-10-27T19:26:00.636859Z: 896.996736542 seconds wall and
+1904.755274000 child CPU seconds. Stage wall observations:
+kernel 0.190s; node 38.174s; counting 1.942s; plain 67.567s; native 769.467s. Final identities reconcile to the public terminals:
+node: 70 passed; counting: 55 passed; plain: 2,869 passed, 1 skipped cases, 282 passed modules; native: 809 passed, 2 skipped cases, 233 passed, 1 skipped modules. Plain and Native terminals each report zero unhandled errors.
+
+Actual callback gaps stay explicit: plain: 0 finals without ready, 0 without result, 0 duplicate ready and 0 duplicate result identities; native: 13 finals without ready, 35 without result, 0 duplicate ready and 0 duplicate result identities.
+Ready/result callbacks and final identities are separate observations. Missing
+callbacks do not establish cause or missing durations. Case/module duration
+sums are concurrent work, not elapsed wall or CPU. The shared machine record
+is `{"architecture": "arm64", "cpus": 18, "release": "27.2.0", "system": "Darwin"}`, Node `v26.12.1`;
+load before/after is `[1.77197265625, 2.20703125, 2.2529296875]` /
+`[3.935546875, 3.83837890625, 3.30126953125]`. No runtime speed comparison follows.
+
+The full39-file gate input inventory and its hashes are checked against the
+actual analyzer output and receipt. Focused65 and migration35 remain separate
+runs; the failed first gate, historical numeric refusals and the authored conditional boundary are
+not counted as gate cases or promoted to measured historical received lengths.
+`finalization/source-binding.json` records every tracked Git blob and mode
+except exactly this note and manifest equal to the gate, including all other
+notes. Both twenty-source numeric snapshot sets equal those gate blobs.
+Only these two reporting files follow the gate. The final head and tree must
+be bound later by root's publication, not by a self-hash in this note.
+
+The original finalizer and its pre-write assembly receipt remain unchanged.
+That receipt still has `exit:null` and does not claim successful completion.
+The continuation has its own source and pre-write phase receipt; its actual
+post-seal terminal status is reported outside the sealed collector. No test, numeric control, capture, provider query or deployed
+pass was rerun during finalization. Historical received lengths remain
+unknown; the expected live settled total remains conditional until the
+planner's post-deployment capture. The W1 and ceiling-scope
+question is answered by the effective amendment; exact-head review and
+the planner's post-deployment capture remain due. This artifact report
+does not claim request completion, deployment or a live fitting total.
+
+## Effective W1 and ceiling-scope amendment
+
+The planner's effective answer is
+`git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ecefed5c49bdaee8fc6869ac59377c5bc873fcf6`,
+answering decision request `70b830a6b9c4ac3a662b1baff18845e63dbd7a25`.
+Its four parts are accounted for separately:
+
+- (a) Disabled settlement through the real admission code reproduces
+  4,673,364 metadata including margin and refuses.
+- (b) The one measured frontier credit replaces 12,715 with 5,194, giving
+  4,665,843; this partial remains refused.
+- (c) Separate TEST subwitnesses execute the actual readers with measured
+  reply bytes. `packages/scope/test/archive-target.test.ts` covers three
+  birth reads and two serialized queries with exact UTF8 net charges.
+  `packages/scope/test/archive-pin.test.ts` uses real SQLite, four SELECTs,
+  `readArchivePin` and `archivePinReadBytes` to reconcile actual scalar cells.
+  `packages/git/test/journal-v2-frontier.test.ts` covers eleven actual
+  SHA1/SHA256 frontier body lengths through capture, validation and the
+  archive ledger with a labelled synthetic Git source. These are multiple
+  TEST subwitnesses, not one shared Native Room A replay. Their cardinalities
+  differ from the unretained historical groups. The separate synthetic
+  aggregate witnesses the 1,467,917 threshold and Q+1 refusal; it supplies
+  no historical received length.
+- (d) The expected live settled total stays conditional until the planner
+  deploys the landed head and retains the next capture under this request.
+
+The amendment approves the metadata-ceiling scope and unchanged input-only
+fees described above. No ceiling value, formula, row bound or pin bound
+changes. The original five first-attempt finalization records retain their
+old pending labels as historical records; they are not the current ruling
+status and were not retroactively edited.
+
+## Evidence assembly failure and continuation
+
+Root observed the first `--write-and-seal` command exit1 with
+`ValueError: Written raw inventory differs from plan` at line622 of the
+retained `finalization/finalizer.py`. It had written five finalization files
+and the first root index, before writing this note or its manifest and before
+sealing. `finalization/first-attempt-failure.json` records that root-attested
+tool result. No separate failure timing, CPU or process-capture receipt is
+invented. The original pre-write receipt is not a final execution result.
+
+Read-only verification found exactly188 valid, unique index rows covering all
+other files in the189-file partial collector. Every indexed hash matched;
+there were no missing or extra paths. The failure was an ordering comparison:
+`Path` component order placed `numeric-W1/` before `numeric-W1-final/`, while
+the planned rows used relative POSIX strings. The corrected continuation uses
+relative POSIX string order for every new inventory and preserves the original
+input-inventory bytes and order. All3264 other tracked blobs/modes and both
+20-source snapshot sets still match the gate.
+
+The first index, SHA-256 `1c7669c71403ab90556e14188db140fcce912bb0d2f912d5561308a8a9321eb9`, is preserved byte-for-byte
+at `finalization/first-attempt-SHA256SUMS`. Its old entries remain relative to the collector root, not the
+backup directory. The new root index covers that backup, the unchanged five
+first-attempt files, continuation source, verification and phase records, and
+all other raw evidence. Only the new root index excludes itself. The complete
+manifest indexes it too. All predictable checks and final note/manifest/index
+serialization finished before the continuation's first mutation.
+
+The continuation verifies the final index, complete manifest inventory,
+read-only modes and unchanged gate sources before printing its actual terminal
+result. Neither assembly attempt runs a test or changes source semantics.
+The W1 amendment is effective; historical received lengths remain unknown,
+and the expected live settled total remains conditional on the planner's
+post-deployment capture. The RPC teardown cause remains unknown. The artifact
+report is ready for exact-head review after sealing; no request completion
+or deployed result follows from this assembly.
