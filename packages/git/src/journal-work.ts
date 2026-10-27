@@ -19,6 +19,13 @@ export interface JournalBudget {
   admitted(): JournalCost;
 }
 
+/** Native frontier capture can return only the unused part of its own
+ * pre-I/O reservation. General archive readers retain the common port. */
+export interface JournalReservationBudget extends JournalBudget {
+  reserve(cost: Partial<JournalCost>): object;
+  settle(handle: object, received: number): void;
+}
+
 export const JOURNAL_LAYOUT_LIMITS = Object.freeze({
   objects: 8192,
   trees: 2048,

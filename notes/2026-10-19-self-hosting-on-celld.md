@@ -2,7 +2,10 @@
 
 Status: current. 19 October 2026, draft 3. It is approved (`410a56a5`)
 and landed at `6eaae3f7`. Slices H1 to H5 are not built. Section 12
-lists what changed after each checker review.
+lists what changed after each checker review. The
+[Git host choice note](2026-10-27-git-host-choice.md) of 27 October
+amends sections 4.2, 4.7, 9 and 10: the host is the deployer's choice,
+`none` first, and H2 is a later option.
 
 Today dap runs only on Cloudflare: Workers, Durable Objects with SQLite,
 R2, and Cloudflare Artifacts as the git host. This note says how a

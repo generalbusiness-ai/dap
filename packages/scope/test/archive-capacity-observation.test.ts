@@ -190,6 +190,16 @@ test("site and refusal caps keep the native ledger while declaring lost attribut
   expect(report.ledgerReconciled).toBe(true);
   expect(report.observationComplete).toBe(false);
   expect(report.debitAttributionComplete).toBe(false);
+  // A reservation at an omitted site must refund that same unattributed
+  // bucket, rather than invent a later settlement-site attribution.
+  const handle = budget.reserve({ metadata: 8, inputWork: 16 });
+  budget.settle(handle, 2);
+  const settled = readArchiveCapacityObservation(budget, { throughSeq: null })!;
+  expect(settled.admitted?.metadata).toBe(67);
+  expect(settled.unattributedAdmittedDelta.metadata).toBe(3);
+  expect(settled.unattributedSettlementReduction).toMatchObject({ metadata: 6, inputWork: 12 });
+  expect(settled.ledgerReconciled).toBe(true);
+  expect(settled.debitAttributionComplete).toBe(false);
 });
 
 // A partial diagnostic must not become a complete cost reconstruction merely
@@ -276,4 +286,79 @@ test("target identity copies only a valid digest and rejects malformed hashes or
   const text = JSON.stringify(foreign);
   expect(text).not.toContain("private-parent/path");
   expect(text).not.toContain("foreign request content");
+});
+
+// The observer reports the real two-phase budget. It grants no admission,
+// performs no read and does not change the original clock/deadline checks.
+test("reservation settlement keeps net attribution at its original site and preserves native admission and clock calls", () => {
+  function exercise(budget: ArchiveBudget) {
+    const handle = budget.reserve({ calls: 1, nodes: 1, metadata: 8, inputWork: 16 });
+    budget.spend({ metadata: 1, inputWork: 2 });
+    budget.settle(handle, 2);
+    const beforeFinish = budget.admitted();
+    budget.spend({ calls: 2, metadata: 9, inputWork: 24 });
+    let failure: unknown;
+    try { budget.spend({ metadata: 1 }); } catch (error) { failure = error; }
+    return { beforeFinish, final: budget.admitted(), reservations: budget.reservationCosts(), failure };
+  }
+  let originalClock = 0, observedClock = 0;
+  const original = exercise(new ArchiveBudget({ calls: 3, metadata: 12, inputWork: 30 }, () => { originalClock++; return 0; }));
+  const budget = createObservedArchiveBudget({ calls: 3, metadata: 12, inputWork: 30 }, () => { observedClock++; return 0; });
+  expect(exercise(budget)).toEqual(original);
+  expect(observedClock).toBe(originalClock);
+  expect(original.beforeFinish).toMatchObject({ calls: 1, nodes: 1, metadata: 3, inputWork: 6 });
+  const beforeRead = observedClock, report = readArchiveCapacityObservation(budget, { throughSeq: 1 })!;
+  expect(observedClock).toBe(beforeRead);
+  expect(report.ledgerReconciled).toBe(true);
+  expect(report.admittedDelta).toEqual(original.final);
+  expect(report.reservationCalls).toBe(1); expect(report.settlementCalls).toBe(1); expect(report.settlementThrew).toBe(0);
+  expect(report.settlementReduction).toEqual({ entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 6, inputWork: 12 });
+  const reservedSite = report.sites.find(site => site.settlementReduction.metadata === 6)!;
+  expect(reservedSite).toBeDefined();
+  expect(reservedSite.attemptedDebit).toMatchObject({ calls: 1, nodes: 1, metadata: 8, inputWork: 16 });
+  expect(reservedSite.admittedDelta).toMatchObject({ calls: 1, nodes: 1, metadata: 2, inputWork: 4 });
+  for (const axis of ["entries", "attempts", "nodes", "calls", "metadata", "inputWork"] as const)
+    expect(report.sites.reduce((sum, site) => sum + site.admittedDelta[axis], report.unattributedAdmittedDelta[axis])).toBe(report.admitted?.[axis]);
+});
+
+test("settlement leaves earlier finish and row checkpoints as immutable snapshots", () => {
+  const budget = createObservedArchiveBudget({}, () => 0);
+  const handle = budget.reserve({ metadata: 8, inputWork: 16 });
+  observeArchiveRowContext(budget, { oldRowBytes: 9, rowContextBytes: 12, snapshotConsumed: true });
+  observeArchiveFinishQuote(budget, { throughSeq: 1, scalars: { stage: 0 } });
+  const before = readArchiveCapacityObservation(budget, { throughSeq: 1 })!;
+  const first = JSON.stringify(before.firstFinishAttribution);
+  budget.settle(handle, 2);
+  observeArchiveFinishQuote(budget, { throughSeq: 2, scalars: { stage: 0 } });
+  const after = readArchiveCapacityObservation(budget, { throughSeq: 2 })!;
+  expect(after.rowContextAdmitted).toMatchObject({ metadata: 8, inputWork: 16 });
+  expect(after.firstQuote?.admitted).toMatchObject({ metadata: 8, inputWork: 16 });
+  expect(after.lastCompleteQuote?.admitted).toMatchObject({ metadata: 2, inputWork: 4 });
+  expect(JSON.stringify(after.firstFinishAttribution)).toBe(first);
+  expect(after.firstFinishAttribution?.settlementReduction.metadata).toBe(0);
+  expect(Object.isFrozen(after.firstFinishAttribution?.settlementReduction)).toBe(true);
+  expect(after.settlementReduction).toMatchObject({ metadata: 6, inputWork: 12 });
+  expect(after.ledgerReconciled).toBe(true);
+});
+
+test("bad, repeated and foreign settlements preserve the native refusal and record no false refund", () => {
+  for (const fault of ["negative", "above", "repeated", "foreign"] as const) {
+    function exercise(budget: ArchiveBudget) {
+      const handle = budget.reserve({ metadata: 8, inputWork: 16 });
+      if (fault === "repeated") budget.settle(handle, 2);
+      const before = budget.admitted();
+      let failure: unknown;
+      try { budget.settle(fault === "foreign" ? Object.freeze({}) : handle, fault === "negative" ? -1 : fault === "above" ? 9 : 0); }
+      catch (error) { failure = error; }
+      return { before, after: budget.admitted(), reservations: budget.reservationCosts(), failure };
+    }
+    const original = exercise(new ArchiveBudget({}, () => 0)), budget = createObservedArchiveBudget({}, () => 0);
+    const observed = exercise(budget);
+    expect(observed).toEqual(original); expect(observed.failure).toBeInstanceOf(ArchiveStopped);
+    expect(observed.after).toEqual(observed.before);
+    const report = readArchiveCapacityObservation(budget, { throughSeq: null })!;
+    expect(report.ledgerReconciled).toBe(true); expect(report.settlementThrew).toBe(1);
+    expect(report.settlementReduction).toMatchObject({ metadata: fault === "repeated" ? 6 : 0, inputWork: fault === "repeated" ? 12 : 0 });
+    expect(observed.reservations.settlementRefusal).toBe(fault === "negative" || fault === "above" ? "invalid-received" : "unknown-reservation");
+  }
 });

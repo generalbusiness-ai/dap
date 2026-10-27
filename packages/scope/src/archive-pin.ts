@@ -7,6 +7,32 @@ import type { Sql, SqlValue } from "./sqlite.ts";
 export const ARCHIVE_PIN_KEY = "archive-pin-1";
 export const ARCHIVE_PIN_BYTES = 1024;
 export const ARCHIVE_SCOPE_METADATA_BYTES = 16 * 1024;
+/** Returned SQL cell payload, not the body sizes a size query describes.
+ * TEXT is UTF8, numbers occupy eight bytes, null has no payload. Column
+ * names and JS containers are not SQL cell payload. The pin queries return
+ * at most two rows and three scalar columns; malformed adapters get no
+ * credit. The original ceiling remains charged until this returns. */
+export function archivePinReadBytes(rows: readonly Record<string, SqlValue>[]): number {
+  const maximum = ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES;
+  if (!Array.isArray(rows) || rows.length > 2) return Infinity;
+  let bytes = 0;
+  for (const row of rows) {
+    if (!row || typeof row !== "object") return Infinity;
+    const fields = Object.getOwnPropertyDescriptors(row), names = Object.keys(fields).sort().join();
+    if (!["bytes,k,type", "v", "hash"].includes(names)) return Infinity;
+    for (const field of Object.values(fields)) {
+      if (!("value" in field)) return Infinity;
+      const value: unknown = field.value;
+      if (typeof value === "string") {
+        if (value.length > maximum - bytes) return Infinity;
+        bytes += utf8(value).length;
+      } else if (typeof value === "number" && Number.isFinite(value)) bytes += 8;
+      else if (value !== null) return Infinity;
+      if (bytes > maximum) return Infinity;
+    }
+  }
+  return bytes;
+}
 export interface ArchivePin {
   readonly format: "artroom-archive-pin-1";
   readonly at: ScopeRef;

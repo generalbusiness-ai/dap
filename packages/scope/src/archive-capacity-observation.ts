@@ -47,13 +47,21 @@ interface Site {
   debitCalls: number; debitReturned: number; debitThrew: number;
   affordabilityCalls: number; affordabilityPassed: number; affordabilityRefused: number; affordabilityThrew: number;
   readonly attemptedDebit: ArchiveCost; readonly admittedDelta: ArchiveCost; readonly attemptedAffordability: ArchiveCost;
+  readonly settlementReduction: ArchiveCost;
 }
 interface FinishDebitAttribution {
   readonly flags: number; readonly complete: boolean; readonly ledgerReconciled: boolean;
   readonly admitted: Readonly<ArchiveCost> | null;
   readonly admittedDelta: Readonly<ArchiveCost>; readonly unattributedAdmittedDelta: Readonly<ArchiveCost>;
   readonly debitCalls: number; readonly droppedSiteCalls: number;
-  readonly sites: readonly { readonly frames: readonly Frame[]; readonly debitCalls: number; readonly admittedDelta: Readonly<ArchiveCost> }[];
+  readonly reservationCalls: number; readonly settlementCalls: number; readonly settlementThrew: number;
+  readonly settlementReduction: Readonly<ArchiveCost>; readonly unattributedSettlementReduction: Readonly<ArchiveCost>;
+  readonly sites: readonly { readonly frames: readonly Frame[]; readonly debitCalls: number; readonly admittedDelta: Readonly<ArchiveCost>;
+    readonly settlementReduction: Readonly<ArchiveCost> }[];
+}
+interface Reservation {
+  readonly owner: Site | null; readonly charge: ArchiveCost;
+  settled: boolean;
 }
 interface Refusal {
   readonly operation: 0 | 1; readonly frames: readonly Frame[] | null;
@@ -65,6 +73,9 @@ interface State {
   flags: number; depth: number; debitCalls: number; affordabilityCalls: number; droppedSiteCalls: number; droppedRefusals: number;
   rowContextCalls: number; quoteCalls: number; selectionCalls: number; distinctSelections: number; selectedThroughSeq: number | null;
   readonly admittedDelta: ArchiveCost; readonly unattributedAdmittedDelta: ArchiveCost;
+  reservationCalls: number; settlementCalls: number; settlementThrew: number;
+  readonly settlementReduction: ArchiveCost; readonly unattributedSettlementReduction: ArchiveCost;
+  readonly reservations: WeakMap<object, Reservation>;
   readonly sites: Map<string, Site>; readonly refusals: Refusal[];
   rowContext: ArchiveRowContextGeometry | null; rowContextAdmitted: ArchiveCost | null;
   firstQuote: CapturedQuote | null; lastQuote: CapturedQuote | null; selectedQuote: CapturedQuote | null;
@@ -189,7 +200,7 @@ function coordinates(): readonly Frame[] | null {
       // workerd can omit import.meta.url. The first frame is this fresh
       // Error's own coordinates() frame, so it identifies this exact bundle.
       ownFile ??= match[1]!.replace(/^file:\/\//, "");
-      // coordinates(), then the observed spend/canSpend method.
+      // coordinates(), then the observed spend/reserve/canSpend method.
       if (skipped++ < 2) continue;
       const file = match[1]!.replace(/^file:\/\//, ""), row = Number(match[2]), column = Number(match[3]);
       if (!natural(row) || row === 0 || !natural(column) || column === 0) break;
@@ -207,6 +218,7 @@ function coordinates(): readonly Frame[] | null {
 }
 function fresh(observed: boolean): State {
   return { observed, flags: observed ? 0 : FLAGS.custom, depth: 0, debitCalls: 0, affordabilityCalls: 0, droppedSiteCalls: 0, droppedRefusals: 0,
+    reservationCalls: 0, settlementCalls: 0, settlementThrew: 0, settlementReduction: zero(), unattributedSettlementReduction: zero(), reservations: new WeakMap(),
     rowContextCalls: 0, quoteCalls: 0, selectionCalls: 0, distinctSelections: 0, selectedThroughSeq: null,
     admittedDelta: zero(), unattributedAdmittedDelta: zero(), sites: new Map(), refusals: [], rowContext: null, rowContextAdmitted: null,
     firstQuote: null, lastQuote: null, selectedQuote: null, firstFinishAttribution: null };
@@ -263,6 +275,11 @@ function add(target: ArchiveCost, amount: ArchiveCost): boolean {
   for (const axis of AXES) target[axis] += amount[axis];
   return true;
 }
+function subtract(target: ArchiveCost, amount: ArchiveCost): boolean {
+  if (AXES.some(axis => !natural(target[axis] - amount[axis]))) return false;
+  for (const axis of AXES) target[axis] -= amount[axis];
+  return true;
+}
 function delta(before: ArchiveCost | null, after: ArchiveCost | null): ArchiveCost | null {
   if (before === null || after === null) return null;
   const out = zero();
@@ -281,8 +298,11 @@ function finishAttribution(state: State, actual: ArchiveCost | null): FinishDebi
   return Object.freeze({ flags: state.flags, complete: state.flags === 0, ledgerReconciled,
     admitted: actual === null ? null : frozenCost(actual), admittedDelta: frozenCost(state.admittedDelta),
     unattributedAdmittedDelta: frozenCost(state.unattributedAdmittedDelta), debitCalls: state.debitCalls,
+    reservationCalls: state.reservationCalls, settlementCalls: state.settlementCalls, settlementThrew: state.settlementThrew,
+    settlementReduction: frozenCost(state.settlementReduction), unattributedSettlementReduction: frozenCost(state.unattributedSettlementReduction),
     droppedSiteCalls: state.droppedSiteCalls, sites: Object.freeze([...state.sites.values()].map(site => Object.freeze({
-      frames: frozenFrames(site.frames), debitCalls: site.debitCalls, admittedDelta: frozenCost(site.admittedDelta) }))) });
+      frames: frozenFrames(site.frames), debitCalls: site.debitCalls, admittedDelta: frozenCost(site.admittedDelta),
+      settlementReduction: frozenCost(site.settlementReduction) }))) });
 }
 function admitted(budget: ArchiveBudget, state: State): ArchiveCost | null {
   try {
@@ -305,11 +325,11 @@ function site(state: State, frames: readonly Frame[] | null): Site | null {
     state.flags |= FLAGS.sites; state.droppedSiteCalls = count(state, state.droppedSiteCalls); return null;
   }
   const out: Site = { frames, debitCalls: 0, debitReturned: 0, debitThrew: 0, affordabilityCalls: 0, affordabilityPassed: 0,
-    affordabilityRefused: 0, affordabilityThrew: 0, attemptedDebit: zero(), admittedDelta: zero(), attemptedAffordability: zero() };
+    affordabilityRefused: 0, affordabilityThrew: 0, attemptedDebit: zero(), admittedDelta: zero(), attemptedAffordability: zero(), settlementReduction: zero() };
   state.sites.set(key, out); return out;
 }
 function record(state: State, operation: 0 | 1, frames: readonly Frame[] | null, cost: unknown,
-  before: ArchiveCost | null, after: ArchiveCost | null, returned: boolean, result: unknown, error: unknown): void {
+  before: ArchiveCost | null, after: ArchiveCost | null, returned: boolean, result: unknown, error: unknown): Site | null {
   const requested = vector(cost), change = delta(before, after), owner = site(state, frames);
   if (requested === null || change === null) state.flags |= FLAGS.malformed;
   if (operation === 0) {
@@ -337,11 +357,37 @@ function record(state: State, operation: 0 | 1, frames: readonly Frame[] | null,
     if (state.refusals.length === MAX_REFUSALS) { state.flags |= FLAGS.refusals; state.droppedRefusals = count(state, state.droppedRefusals); }
     else state.refusals.push({ operation, frames, requested, before, after, result: returned ? 0 : 1, error: returned ? 0 : errorCode(error) });
   }
+  return owner;
+}
+function settlement(state: State, handle: object, before: ArchiveCost | null, after: ArchiveCost | null, returned: boolean): void {
+  state.settlementCalls = count(state, state.settlementCalls);
+  if (!returned) state.settlementThrew = count(state, state.settlementThrew);
+  // Settlement is a reduction. Keep the existing nonnegative debit vectors
+  // net of that reduction, attributed to the original reservation's site.
+  const reduction = delta(after, before), reserved = state.reservations.get(handle);
+  if (reduction === null || AXES.some(axis => axis !== "metadata" && axis !== "inputWork" && reduction[axis] !== 0)) {
+    state.flags |= FLAGS.malformed; return;
+  }
+  const changed = AXES.some(axis => reduction[axis] !== 0);
+  if (!returned || !reserved || reserved.settled) {
+    if (changed) state.flags |= FLAGS.ledger;
+    return;
+  }
+  reserved.settled = true;
+  const owner = reserved.owner, net = owner?.admittedDelta ?? state.unattributedAdmittedDelta;
+  if (AXES.some(axis => reduction[axis] > reserved.charge[axis] || reduction[axis] > net[axis] || reduction[axis] > state.admittedDelta[axis])
+    || !AXES.every(axis => natural(state.settlementReduction[axis] + reduction[axis])
+      && natural((owner?.settlementReduction ?? state.unattributedSettlementReduction)[axis] + reduction[axis]))) {
+    state.flags |= FLAGS.ledger; return;
+  }
+  subtract(state.admittedDelta, reduction); subtract(net, reduction);
+  add(state.settlementReduction, reduction);
+  add(owner?.settlementReduction ?? state.unattributedSettlementReduction, reduction);
 }
 class ObservedArchiveBudget extends ArchiveBudget {
   override spend(cost: Partial<ArchiveCost>): void {
     const state = states.get(this);
-    if (!state || !state.observed) return super.spend(cost);
+    if (!state || !state.observed || state.depth > 0) return super.spend(cost);
     const before = admitted(this, state), frames = coordinates();
     let returned = false, error: unknown;
     state.depth++;
@@ -350,6 +396,36 @@ class ObservedArchiveBudget extends ArchiveBudget {
     finally {
       state.depth--;
       safely(state, () => record(state, 0, frames, cost, before, admitted(this, state), returned, undefined, error));
+    }
+  }
+  override reserve(cost: Partial<ArchiveCost>): object {
+    const state = states.get(this);
+    if (!state || !state.observed || state.depth > 0) return super.reserve(cost);
+    const before = admitted(this, state), frames = coordinates();
+    let returned = false, handle: object | undefined, error: unknown;
+    state.depth++;
+    try { handle = super.reserve(cost); returned = true; return handle; }
+    catch (caught) { error = caught; throw caught; }
+    finally {
+      state.depth--;
+      safely(state, () => {
+        state.reservationCalls = count(state, state.reservationCalls);
+        const after = admitted(this, state), owner = record(state, 0, frames, cost, before, after, returned, undefined, error);
+        const charge = delta(before, after);
+        if (returned && handle !== undefined && charge !== null) state.reservations.set(handle, { owner, charge, settled: false });
+      });
+    }
+  }
+  override settle(handle: object, received: number): void {
+    const state = states.get(this);
+    if (!state || !state.observed || state.depth > 0) return super.settle(handle, received);
+    const before = admitted(this, state);
+    let returned = false;
+    state.depth++;
+    try { const result = super.settle(handle, received); returned = true; return result; }
+    finally {
+      state.depth--;
+      safely(state, () => settlement(state, handle, before, admitted(this, state), returned));
     }
   }
   override canSpend(cost: Partial<ArchiveCost>): boolean {
@@ -468,9 +544,11 @@ export function readArchiveCapacityObservation(budget: ArchiveBudget, input: Arc
     observationComplete: state.observed && state.flags === 0 && state.rowContext !== null && completeQuote(state.firstQuote)
       && isDigest(state.firstQuote?.throughHash) && end !== null,
     flags: state.flags, ledgerReconciled, admitted: actual, admittedDelta: { ...state.admittedDelta }, unattributedAdmittedDelta: { ...state.unattributedAdmittedDelta },
+    reservationCalls: state.reservationCalls, settlementCalls: state.settlementCalls, settlementThrew: state.settlementThrew,
+    settlementReduction: { ...state.settlementReduction }, unattributedSettlementReduction: { ...state.unattributedSettlementReduction },
     debitCalls: state.debitCalls, affordabilityCalls: state.affordabilityCalls, droppedSiteCalls: state.droppedSiteCalls, droppedRefusals: state.droppedRefusals,
     sites: [...state.sites.values()].map(row => ({ ...row, frames: row.frames.map(frame => [...frame]), attemptedDebit: { ...row.attemptedDebit },
-      admittedDelta: { ...row.admittedDelta }, attemptedAffordability: { ...row.attemptedAffordability } })),
+      admittedDelta: { ...row.admittedDelta }, attemptedAffordability: { ...row.attemptedAffordability }, settlementReduction: { ...row.settlementReduction } })),
     refusals: state.refusals.map(row => ({ ...row, frames: row.frames?.map(frame => [...frame]) ?? null,
       requested: row.requested && { ...row.requested }, before: row.before && { ...row.before }, after: row.after && { ...row.after } })),
     rowContextCalls: state.rowContextCalls, quoteCalls: state.quoteCalls, selectionCalls: state.selectionCalls,

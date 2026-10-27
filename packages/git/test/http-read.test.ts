@@ -76,6 +76,7 @@ test("Web upload-pack reads exact local Git closure and empty refs, and decodes 
     return host.upstream(request);
   } });
   const reader = new Reader(source);
+  expect(source.receivedObjectBytes).toBe(0);
   expect(await reader.snapshot("refs/heads/")).toEqual([{ ref: REF, target: head }]);
   expect(await reader.ref("refs/heads/absent")).toBeNull();
   expect(await reader.closure(head)).toEqual({ complete: true, objects: expected.size });
@@ -435,8 +436,11 @@ test("opt-in v2 fetch reads exact nonadvertised objects in two requests and keep
   // companion of the first commit response.
   expect(packs.map(row => row.count)).toEqual([2, 1, 1, 2]);
   expect(packs.reduce((bytes, row) => bytes + row.bytes, 0)).toBeLessThan(5000);
+  const received = packs.reduce((bytes, row) => bytes + row.bytes, 0);
+  expect(source.receivedObjectBytes).toBe(received);
   expect(await source.ref(REF)).toBe(head);
   expect(await source.refs("refs/heads/", 2)).toEqual([{ ref: REF, target: head }]);
+  expect(source.receivedObjectBytes).toBe(received);
   expect(requests.slice(-2).map(row => [row.method, row.protocol])).toEqual([["GET", null], ["GET", null]]);
 
   // Migration has its own transport shape. A real Git depth-one/blob:none
@@ -708,7 +712,7 @@ test("opt-in v2 validates sections and binary sidebands before exact pack admiss
   await expect(run(v2Bytes(onePack(remote, tag)), tag).outcome).rejects.toMatchObject({ reason: "wrong-type", what: "isolated pack entry" });
 
   const limits = { commitBytes: 1024, treeBytes: 16 * 1024, advertisementBytes: 1024 };
-  const parentRun = (bytes: Uint8Array, options: { count?: number; ad?: Uint8Array; fragmented?: boolean;
+  const parentRun = (bytes: Uint8Array, options: { count?: number; ad?: Uint8Array; fragmented?: boolean; streamFailure?: boolean;
     reserveObjects?: (count: number) => void; reserveWork?: (bytes: number) => void;
     reserveOutput?: (count: number, bytes: number) => void } = {}) => {
     let requests = 0;
@@ -720,6 +724,12 @@ test("opt-in v2 validates sections and binary sidebands before exact pack admiss
         ...(options.reserveOutput === undefined ? {} : { reserveOutput: options.reserveOutput }) },
       fetch: request => { requests++; return Promise.resolve(request.method === "GET"
         ? new Response(options.ad ?? v2AdvertisementBytes(), { headers: { "content-type": "application/x-git-upload-pack-advertisement" } })
+        : options.streamFailure ? new Response(new ReadableStream<Uint8Array>({
+          pull: (() => { let first = true; return (controller: ReadableStreamDefaultController<Uint8Array>) => {
+            if (first) { first = false; controller.enqueue(bytes.subarray(0, 8)); }
+            else controller.error(new Error("TEST interrupted POST body"));
+          }; })(),
+        }), { headers: { "content-type": "application/x-git-upload-pack-result" } })
         : options.fragmented ? new Response(new ReadableStream<Uint8Array>({
           pull: (() => { let at = 0; return (controller: ReadableStreamDefaultController<Uint8Array>) => { if (at === bytes.length) controller.close(); else controller.enqueue(bytes.subarray(at, ++at)); }; })(),
         }), { headers: { "content-type": "application/x-git-upload-pack-result" } }) : v2Response(bytes)); },
@@ -728,10 +738,21 @@ test("opt-in v2 validates sections and binary sidebands before exact pack admiss
   };
   const own = parentRun(v2Bytes(single));
   expect((await own.outcome).map(object => object.id)).toEqual([head]);
+  expect(own.source.receivedObjectBytes).toBe(v2Bytes(single).length);
   const fragmented = parentRun(v2Bytes(single), { fragmented: true });
   expect((await fragmented.outcome).map(object => object.id)).toEqual([head]);
   expect(fragmented.requests()).toBe(2);
-  await expect(parentRun(v2Bytes(paired)).outcome).rejects.toMatchObject({ reason: "wrong-type", what: "current parent companion" });
+  expect(fragmented.source.receivedObjectBytes).toBe(v2Bytes(single).length);
+  const wrongType = parentRun(v2Bytes(paired));
+  await expect(wrongType.outcome).rejects.toMatchObject({ reason: "wrong-type", what: "current parent companion" });
+  // Receipt is only transport completion; the owner must not settle a failed validation.
+  expect(wrongType.source.receivedObjectBytes).toBe(v2Bytes(paired).length);
+  const interrupted = parentRun(v2Bytes(single), { streamFailure: true });
+  await expect(interrupted.outcome).rejects.toMatchObject({ what: "read body" });
+  expect(interrupted.source.receivedObjectBytes).toBe(0);
+  const oversized = parentRun(new Uint8Array(32 * 1024 + 1));
+  await expect(oversized.outcome).rejects.toMatchObject({ reason: "too-large", what: "read bytes" });
+  expect(oversized.source.receivedObjectBytes).toBe(0);
   await expect(parentRun(v2Bytes(single), { count: 1, ad: new Uint8Array(1025) }).outcome).rejects.toMatchObject({ reason: "too-large", what: "read bytes" });
   const excessiveFrames = v2AdvertisementBytes([...Array.from({ length: 31 }, () => "a=b"), "fetch=shallow filter"]);
   await expect(parentRun(v2Bytes(single), { ad: excessiveFrames }).outcome).rejects.toMatchObject({ reason: "too-large", what: "upload advertisement packets" });
@@ -798,6 +819,7 @@ test("opt-in v2 retains one deadline and permanently abandons a late exact-objec
     expect(await outcome).toMatchObject({ what: "isolated read deadline" });
     release(); await vi.advanceTimersByTimeAsync(0);
     expect(pulls).toBe(0); expect(cancels).toBe(1);
+    expect(source.receivedObjectBytes).toBe(0);
     await expect(source.object(id, 1024)).rejects.toMatchObject({ what: "isolated source abandoned" });
     expect(calls).toBe(2);
   } finally { vi.useRealTimers(); }

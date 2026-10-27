@@ -57,19 +57,23 @@ export function archiveTarget(reads: ArchiveTargetReads): Omit<FixtureArchiveDep
   discoverRoom(at: ScopeRef, seed: Seed, budget: ArchiveBudget): Promise<ArchiveDependencyPlan | null>;
 } {
   const birth = async (at: ScopeRef, budget: ArchiveBudget) => {
-    budget.spend({ nodes: 1, calls: 1, metadata: BIRTH_BYTES, inputWork: BIRTH_BYTES * 8 });
+    const reservation = budget.reserve({ nodes: 1, calls: 1, metadata: BIRTH_BYTES, inputWork: BIRTH_BYTES * 8 });
     const found = readNativeBirth(await budget.wait(() => reads.births.read({ ...at }, Math.min(10_000, budget.remaining()), BIRTH_BYTES)), at, BIRTH_BYTES);
     if (!found) return null;
+    budget.settle(reservation, utf8(found.proof.bytes).length);
     const entry = proofEntry(found.proof, found.proof.fact, BIRTH_BYTES);
     return entry?.input.type === "genesis" && entry.input.decision === "applied" ? { entry, seed: entry.input.seed, named: found.named } : null;
   };
   const one = async (at: ScopeRef, type: string, states: readonly string[], budget: ArchiveBudget, archiving: ScopeRef, directory: ScopeRef): Promise<Item | null> => {
     const query: ItemQuery = { v: 1, scope: { ...at }, type, states, ids: null, limit: 1, cursor: null };
     const encoded = encodeItemQueryParameter(query); if (!encoded) return null;
-    budget.spend({ calls: 1, metadata: ITEM_QUERY_BOUNDS.payloadBytes, inputWork: ITEM_QUERY_BOUNDS.payloadBytes * 4 });
+    const reservation = budget.reserve({ calls: 1, metadata: ITEM_QUERY_BOUNDS.payloadBytes, inputWork: ITEM_QUERY_BOUNDS.payloadBytes * 4 });
     const answer = await budget.wait(() => reads.query({ ...at }, encoded, archiving, directory));
     if (!answer.ok || typeof answer.serialized !== "string" || answer.serialized.length > ITEM_QUERY_BOUNDS.payloadBytes) return null;
-    const page = readItemQueryReply(utf8(answer.serialized), query);
+    const serialized = utf8(answer.serialized);
+    if (serialized.length > ITEM_QUERY_BOUNDS.payloadBytes) return null;
+    const page = readItemQueryReply(serialized, query);
+    if (page) budget.settle(reservation, serialized.length);
     return page?.ok && page.complete && page.value.items.length === 1 ? page.value.items[0]! : null;
   };
   const locate = async (at: ScopeRef, seed: Seed, budget: ArchiveBudget, mode: "legacy" | "room" | "all"): Promise<ArchiveDependencyPlan | null> => {

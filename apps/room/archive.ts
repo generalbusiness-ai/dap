@@ -89,7 +89,7 @@ export function growArchiveDriver(given: OutsideGiven, sql: Sql, binding: Bindin
           const key = canonicalize(where); if (included.has(key)) continue;
           let source = births.get(key);
           if (!source) {
-            budget.spend({ nodes: 1, calls: 1, metadata: 256 * 1024, inputWork: 256 * 1024 * 8 });
+            const reservation = budget.reserve({ nodes: 1, calls: 1, metadata: 256 * 1024, inputWork: 256 * 1024 * 8 });
             const reply = await budget.wait(async () => {
               const timeout = Math.min(10_000, budget.remaining());
               try { return await namespace(binding).births.read(where, timeout, 256 * 1024); }
@@ -99,6 +99,7 @@ export function growArchiveDriver(given: OutsideGiven, sql: Sql, binding: Bindin
               }
             });
             const birth = readNativeBirth(reply, where, 256 * 1024), policy = birth ? policies.get(birth.named) : null;
+            if (birth) budget.settle(reservation, utf8(birth.proof.bytes).length);
             if (!birth || !policy) {
               // Bounded copies of already validated metadata only. No raw birth,
               // payload, error or transport credential enters the pass diagnostic.

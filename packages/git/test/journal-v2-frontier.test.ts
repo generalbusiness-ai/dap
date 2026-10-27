@@ -4,7 +4,7 @@ import { expect, test } from "vitest";
 import { canonicalize, digestBytes, utf8 } from "@generalbusiness/dap-bytes";
 import { ArchiveBudget } from "../../scope/src/archive-budget.ts";
 import { JournalObjectReader, JournalObjects, type JournalFormat, type JournalObject, type JournalObjectSource } from "../src/journal-objects.ts";
-import { JournalWork } from "../src/journal-work.ts";
+import { JournalWork, type JournalCost } from "../src/journal-work.ts";
 import { patchJournalV2Tree } from "../src/journal-v2-tree.ts";
 import { journalV2PassPath, journalV2RetainedPath } from "../src/journal-v2-path.ts";
 import { captureJournalParentFrontier, validateJournalParentFrontier, forecastJournalParentFrontier, journalParentFrontierProfile, JOURNAL_PARENT_FRONTIER_BYTES, JOURNAL_PARENT_FRONTIER_OBJECTS, JOURNAL_PARENT_FRONTIER_ROWS, type JournalParentBinding, type JournalParentFrontier } from "../src/journal-v2-frontier.ts";
@@ -138,6 +138,81 @@ test("a frontier refuses a future path or noncanonical head and reserves metadat
   const normal = await pass("sha1"), reads: string[] = [];
   await expect(captureJournalParentFrontier(normal.binding, source(normal.objects, reads), new ArchiveBudget({ metadata: 0 }, () => 0))).rejects.toThrow("limit");
   expect(reads).toEqual([]);
+});
+
+test.each(["sha1", "sha256"] as const)("a %s frontier settles only its captured ownership ceiling after checked source bytes arrive", async format => {
+  const made = await pass(format), allowance = budget(), actual = source(made.objects);
+  const reservations: { handle: object; maximum: number; before: JournalCost; reserved: JournalCost }[] = [];
+  const settlements: { handle: object; received: number; before: JournalCost; after: JournalCost }[] = [];
+  const reserve = allowance.reserve.bind(allowance), settle = allowance.settle.bind(allowance);
+  allowance.reserve = cost => {
+    const before = allowance.admitted(), handle = reserve(cost);
+    expect(cost.metadata).toBe(cost.inputWork);
+    if (typeof cost.metadata !== "number") throw Error("TEST ownership ceiling required");
+    reservations.push({ handle, maximum: cost.metadata, before, reserved: allowance.admitted() });
+    return handle;
+  };
+  allowance.settle = (handle, received) => {
+    const before = allowance.admitted(); settle(handle, received);
+    settlements.push({ handle, received, before, after: allowance.admitted() });
+  };
+  const frontier = await captureJournalParentFrontier(made.binding, {
+    object: actual.object,
+    boundedObject: async (id, _type, maximum) => {
+      // A reservation must still be outstanding when the source starts.
+      expect(reservations.length).toBe(settlements.length + 1);
+      const reservation = reservations.at(-1)!;
+      expect(reservation.maximum).toBe(maximum);
+      expect(reservation.reserved.metadata - reservation.before.metadata).toBe(maximum);
+      expect(reservation.reserved.inputWork - reservation.before.inputWork).toBe(maximum);
+      expect(allowance.admitted().metadata).toBeGreaterThanOrEqual(reservation.reserved.metadata);
+      return actual.object(id, maximum);
+    },
+  }, allowance);
+  expect(reservations).toHaveLength(JOURNAL_PARENT_FRONTIER_OBJECTS);
+  expect(settlements).toHaveLength(reservations.length);
+  let unused = 0;
+  for (const [index, reservation] of reservations.entries()) {
+    const settlement = settlements[index]!, bytes = frontier.objects[index]!.data.length;
+    expect(settlement.handle).toBe(reservation.handle);
+    expect(settlement.received).toBe(bytes);
+    const refund = reservation.maximum - bytes; unused += refund;
+    expect(settlement.before.metadata - settlement.after.metadata).toBe(refund);
+    expect(settlement.before.inputWork - settlement.after.inputWork).toBe(refund);
+    for (const key of ["entries", "attempts", "nodes", "calls"] as const) expect(settlement.after[key]).toBe(settlement.before[key]);
+  }
+  expect(unused).toBeGreaterThan(0);
+  expect(await validateJournalParentFrontier(frontier, made.binding, budget())).toEqual(frontier);
+});
+
+test.each(["throw", "oversize"] as const)("a frontier keeps its complete ownership reservation when source reads %s", async failure => {
+  const made = await pass("sha1"), allowance = budget();
+  const reserve = allowance.reserve.bind(allowance), settle = allowance.settle.bind(allowance);
+  let outstanding: { maximum: number; before: JournalCost; reserved: JournalCost } | undefined;
+  let atIo: JournalCost | undefined, settlements = 0;
+  allowance.reserve = cost => {
+    const before = allowance.admitted(), handle = reserve(cost);
+    if (typeof cost.metadata !== "number") throw Error("TEST ownership ceiling required");
+    outstanding = { maximum: cost.metadata, before, reserved: allowance.admitted() };
+    return handle;
+  };
+  allowance.settle = (handle, received) => { settlements++; settle(handle, received); };
+  const capture = captureJournalParentFrontier(made.binding, {
+    object: async () => { throw Error("TEST bounded source must be used"); },
+    boundedObject: async (_id, type, maximum) => {
+      expect(outstanding?.maximum).toBe(maximum);
+      expect(outstanding!.reserved.metadata - outstanding!.before.metadata).toBe(maximum);
+      expect(outstanding!.reserved.inputWork - outstanding!.before.inputWork).toBe(maximum);
+      atIo = allowance.admitted();
+      if (failure === "throw") throw Error("TEST frontier source failure");
+      return { type, size: maximum + 1, data: null };
+    },
+  }, allowance);
+  await expect(capture).rejects.toMatchObject({ reason: failure === "throw" ? "unavailable" : "limit" });
+  expect(outstanding).toBeDefined();
+  expect(atIo).toBeDefined();
+  expect(settlements).toBe(0);
+  expect(allowance.admitted()).toEqual(atIo);
 });
 
 

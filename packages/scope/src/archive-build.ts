@@ -18,7 +18,7 @@ import type { ArchiveForeignExpectedCopy } from "./archive-foreign.ts";
 import { archiveReplayScopes, readArchivePublication, writeArchivePublication } from "./archive-publication.ts";
 import { archiveFixedLayout } from "./archive-fixed-layout.ts";
 import { archiveParentMetadata, forecastArchiveFinish } from "./archive-finish-cost.ts";
-import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, readArchivePinAfterReceipt } from "./archive-pin.ts";
+import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, archivePinReadBytes, readArchivePinAfterReceipt } from "./archive-pin.ts";
 import { archivePinValidationWork } from "./archive-inventory-cost.ts";
 
 type LayoutFailure = Extract<JournalLayoutResult, { ok: false }>;
@@ -343,7 +343,8 @@ async function finishRootFixedArchivePass(sql: Sql, context: FixedArchivePassCon
   const shape = sql.transaction(() => archiveFixedLayout(sql, owned.inventory, utf8(owned.manifest).length,
     context.bounds.entryBytes, budget, context.fixtureSources));
   // The actual inventory has completed. No inventory/map-handoff forecast
-  // is credited or subtracted from admitted(); every later input read stays.
+  // is credited or subtracted from admitted(). Later reads admit their own
+  // ceilings; only unused byte reservations can settle after a receipt.
   budget.spend({ metadata: shape.files.length * 128, inputWork: shape.files.length * 256 });
   const paths = shape.files.filter(file => file.path !== "journal/v2/head.json" && !file.path.endsWith("/pass.json"))
     .map(file => file.path);
@@ -353,7 +354,7 @@ async function finishRootFixedArchivePass(sql: Sql, context: FixedArchivePassCon
   budget.spend({ inputWork: archivePinValidationWork() });
   const current = readArchivePinAfterReceipt(budget.native(sql, () => ({
     metadata: ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES, inputWork: 0,
-  })), context.at);
+  }), archivePinReadBytes), context.at);
   const policy = current && context.policies.get(current.seed.definition);
   if (!current || !policy?.review || policy.support.named !== current.seed.definition) return { ok: false as const, reason: "mismatch" as const };
   const parent = archiveParentMetadata(context, budget);

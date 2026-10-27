@@ -23,14 +23,19 @@ const CHECKPOINT_BACKLOG = 300;
 // The old maximum-based host tariff alone spends >32MiB on a 1MiB manifest.
 const LEGACY_PARENT_PREPLANNING_WORK = ARCHIVE_BOUNDS.inputWork / 4;
 
-/** Test-only attribution. Every debit still passes through the unchanged
- * original budget; totals include only successful spend calls, no refund. */
+type CostShare = { calls: number; cost: ArchiveCost };
+type DebitOwner = { share: CostShare; site: CostShare | null };
+
+/** Test-only attribution. Admission and owned settlement use the real budget.
+ * Net shares retain each reservation's original stage and site on settlement. */
 class ObservedArchiveBudget extends ArchiveBudget {
   stage = "before-parent";
   readonly checkpoints: { name: string; cost: ArchiveCost }[] = [];
   readonly shares = new Map<string, { calls: number; cost: ArchiveCost }>();
   readonly preEntrySites = new Map<string, { calls: number; cost: ArchiveCost }>();
   private beforeFirstScoutedEntry = true;
+  private lastDebit: DebitOwner | null = null;
+  private readonly reservationOwners = new WeakMap<object, DebitOwner>();
   checkpoint(name: string) { if (!this.checkpoints.some(row => row.name === name)) this.checkpoints.push({ name, cost: this.admitted() }); }
   override spend(cost: Partial<ArchiveCost>): void {
     const before = this.admitted(); super.spend(cost); const after = this.admitted();
@@ -38,6 +43,7 @@ class ObservedArchiveBudget extends ArchiveBudget {
     row.calls++;
     for (const key of Object.keys(row.cost) as (keyof ArchiveCost)[]) row.cost[key] += after[key] - before[key];
     this.shares.set(this.stage, row);
+    const owner: DebitOwner = { share: row, site: null }; this.lastDebit = owner;
     if (this.beforeFirstScoutedEntry) {
       let site = "<stack unavailable>";
       try { site = (new Error("TEST debit site").stack ?? "").split("\n").slice(1, 17)
@@ -48,7 +54,24 @@ class ObservedArchiveBudget extends ArchiveBudget {
       bucket.calls++;
       for (const key of Object.keys(bucket.cost) as (keyof ArchiveCost)[]) bucket.cost[key] += after[key] - before[key];
       this.preEntrySites.set(site, bucket);
+      owner.site = bucket;
     }
+  }
+  override reserve(cost: Partial<ArchiveCost>): object {
+    const handle = super.reserve(cost), owner = this.lastDebit;
+    if (!owner) throw Error("TEST reservation must have its admitted debit owner");
+    this.reservationOwners.set(handle, owner);
+    return handle;
+  }
+  override settle(handle: object, received: number): void {
+    const before = this.admitted(); super.settle(handle, received); const after = this.admitted();
+    const owner = this.reservationOwners.get(handle);
+    if (!owner) throw Error("TEST settlement must retain its reservation owner");
+    for (const key of Object.keys(owner.share.cost) as (keyof ArchiveCost)[]) {
+      owner.share.cost[key] += after[key] - before[key];
+      if (owner.site) owner.site.cost[key] += after[key] - before[key];
+    }
+    this.reservationOwners.delete(handle);
   }
   override lookahead<T>(reserve: Partial<ArchiveCost>, read: () => T) {
     this.checkpoint("before-scouting"); this.stage = "scouting-and-finish";
@@ -100,7 +123,7 @@ test("legacy v2 parent work preserves partial Native checkpoint progress and dra
   // failed control retains the actual original pass and reconstructed costs.
   (context.task.meta as Record<string, unknown>)["legacyParentInputWork"] = { seedTreeBytes, seedBlobs,
     checkpointBytes, backlog: CHECKPOINT_BACKLOG, preplanningCeiling: LEGACY_PARENT_PREPLANNING_WORK, observations,
-    qualification: "Actual Native300 backlog, original per-pass caps, truthful TEST HTTP/token/repository; local reconstructed successful debit shares. No4096 completion, hosted or throughput claim." };
+    qualification: "Actual Native300 backlog, original per-pass caps, truthful TEST HTTP/token/repository; local net debit shares after owned settlement. No4096 completion, hosted or throughput claim." };
   const actual = new ArtifactsProvider({ host: archiveRepository.host, namespace: archiveRepository.namespace,
     service: "service.invalid", maxBytes: 8 * 1024 * 1024, binding: peer.binding, fetch: request => peer.fetch(request),
     credentialHandle: async () => { throw Error("TEST fixture never uses production credential custody"); },
@@ -144,7 +167,7 @@ test("legacy v2 parent work preserves partial Native checkpoint progress and dra
   expect(await lane.inside(state => state.storage.sql.exec("SELECT k FROM meta WHERE k IN ('archive-frontier-confirmed-1', 'archive-frontier-pending-1') ORDER BY k").toArray()))
     .toEqual([{ k: "archive-frontier-confirmed-1" }]);
   (context.task.meta as Record<string, unknown>)["legacyParentMigration"] = { result: migration, cost: budgets[0]!.admitted(),
-    qualification: "Separate seed-only alarm under its original budget; excluded from append prefix totals, never refunded." };
+    qualification: "Separate seed-only alarm under its original budget with owned read settlement; excluded from append prefix totals, never credited to another pass." };
   const migrationBudget = budgets.shift()!;
   expect(migrationBudget.admitted().entries).toBe(0);
   beforePlanning = [];

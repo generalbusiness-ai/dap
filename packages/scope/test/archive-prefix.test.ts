@@ -7,7 +7,7 @@ import { ARCHIVE_DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform
 import type { Head, ScopeRef } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize, newIncarnation, textDigest, utf8 } from "@generalbusiness/dap-bytes";
-import { ARCHIVE_BOUNDS, ArchiveBudget } from "../src/archive-budget.ts";
+import { ARCHIVE_BOUNDS, ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
 import { ARCHIVE_POSITION_METADATA_BYTES, archivePrefixMetadata } from "../src/archive-prefix.ts";
 import { ArchiveWindow, openArchiveWindow, type ArchiveWindowCheckpoint } from "../src/archive-window.ts";
 import { definition, create, rita, sessionRoom } from "./fixtures-native.ts";
@@ -15,6 +15,22 @@ import { forecastArchivePrefix } from "../src/archive-inventory-cost.ts";
 
 const syntheticHash = textDigest("synthetic prefix row, not a verified entry");
 const certified = new Set([definition.digest]);
+// Observe original debits separately from the bytes returned by settlement.
+class PrefixBudget extends ArchiveBudget {
+  readonly gross = this.admitted();
+  override spend(cost: Partial<ArchiveCost>): void {
+    super.spend(cost);
+    for (const key of Object.keys(this.gross) as (keyof ArchiveCost)[]) this.gross[key] += cost[key] ?? 0;
+  }
+  measured() { return { cost: this.admitted(), gross: { ...this.gross }, reservation: this.reservationCosts() }; }
+}
+function expectSettledPinCost(measured: ReturnType<PrefixBudget["measured"]>) {
+  const { cost, gross, reservation } = measured, released = gross.metadata - cost.metadata;
+  expect(released).toBeGreaterThan(0);
+  expect(cost).toEqual({ ...gross, metadata: gross.metadata - released, inputWork: gross.inputWork - released });
+  expect(reservation).toEqual({ metadataReserved: gross.metadata, metadataSettled: cost.metadata,
+    unsettledMetadata: 0, settlementRefusal: "none" });
+}
 test("native platform prefix preserves its original data-checksum reservation", async () => {
   // Real cohort creation and SQLite. Host/clock/setup authority remain
   // sessionRoom stand-ins; scalar prefix admission is no export receipt.
@@ -22,18 +38,19 @@ test("native platform prefix preserves its original data-checksum reservation", 
   try {
     const scope = await room.D.at(), tip = (await room.D.summary()).at, through = { seq: tip.seq, hash: tip.hash };
     const result = await runInDurableObject(room.D.object, (_instance, state) => {
-      const budget = new ArchiveBudget(), prefix = archivePrefixMetadata(state.storage.sql, scope, through, PROPOSED_BOUNDS, budget, new Set());
-      return { cost: budget.admitted(), entries: prefix.positions.length, entryBytes: prefix.bytes,
+      const budget = new PrefixBudget(), prefix = archivePrefixMetadata(state.storage.sql, scope, through, PROPOSED_BOUNDS, budget, new Set());
+      return { ...budget.measured(), entries: prefix.positions.length, entryBytes: prefix.bytes,
         frameBytes: utf8(canonicalize(prefix.frame)).length };
     });
     const shape = { entries: result.entries, entryBytes: result.entryBytes, frameBytes: result.frameBytes,
       afterReceipt: false, definitionBytes: PROPOSED_BOUNDS.definitionBytes };
-    expect(forecastArchivePrefix({ ...shape, nativeData: true })).toEqual({ ok: true, cost: result.cost });
+    expectSettledPinCost(result);
+    expect(forecastArchivePrefix({ ...shape, nativeData: true })).toEqual({ ok: true, cost: result.gross });
     const ordinary = forecastArchivePrefix({ ...shape, nativeData: false });
     expect(ordinary.ok).toBe(true); if (!ordinary.ok) return;
-    expect(result.cost.nodes - ordinary.cost.nodes).toBe(1);
+    expect(result.gross.nodes - ordinary.cost.nodes).toBe(1);
     // Original 16 passes over the fixed 256 KiB declaration bound.
-    expect(result.cost.inputWork - ordinary.cost.inputWork).toBe(4_194_304);
+    expect(result.gross.inputWork - ordinary.cost.inputWork).toBe(4_194_304);
   } finally { room.life.release(); }
 });
 
@@ -134,31 +151,32 @@ test("native prefix admission binds the original cutoff and full pin before entr
   await lane.did(rita, "remark", { on: 0, fields: { text: "later unrelated input" } });
   const latest = await lane.head();
   const result = await lane.inside(state => {
-    const queries: string[] = [], budget = new ArchiveBudget();
+    const queries: string[] = [], budget = new PrefixBudget();
     const prefix = archivePrefixMetadata({ exec(query, ...args) { queries.push(query); return state.storage.sql.exec(query, ...args); } }, lane.at, through, PROPOSED_BOUNDS, budget, certified);
-    const afterBudget = new ArchiveBudget();
+    const afterBudget = new PrefixBudget();
     // TEST-supplied predecessor metadata, not an archive/host receipt.
     const following = archivePrefixMetadata(state.storage.sql, lane.at, latest, PROPOSED_BOUNDS, afterBudget, certified, through);
-    return { prefix, queries, cost: budget.admitted(), frameBytes: utf8(canonicalize(prefix.frame)).length,
-      after: { prefix: following, cost: afterBudget.admitted(), frameBytes: utf8(canonicalize(following.frame)).length } };
+    return { prefix, queries, ...budget.measured(), frameBytes: utf8(canonicalize(prefix.frame)).length,
+      after: { prefix: following, ...afterBudget.measured(), frameBytes: utf8(canonicalize(following.frame)).length } };
   });
-  (context.task.meta as Record<string, unknown>)["archivePrefixCost"] = { first: { cost: result.cost,
+  (context.task.meta as Record<string, unknown>)["archivePrefixCost"] = { first: { cost: result.cost, gross: result.gross, reservation: result.reservation,
     frameBytes: result.frameBytes, entries: result.prefix.positions.length, entryBytes: result.prefix.bytes },
-    after: { cost: result.after.cost, frameBytes: result.after.frameBytes,
+    after: { cost: result.after.cost, gross: result.after.gross, reservation: result.after.reservation, frameBytes: result.after.frameBytes,
       entries: result.after.prefix.positions.length, entryBytes: result.after.prefix.bytes },
     qualification: "Actual native SQLite/pin/frame/scalar position reads on original component budgets. Reviewed-cohort set and predecessor are TEST metadata, not privacy admission, integrity, archive receipts or export. No entry JSON or bodies selected." };
   expect([result.frameBytes, result.prefix.bytes, result.after.frameBytes, result.after.prefix.bytes]).toEqual([418, 1477, 418, 1557]);
-  expect(result.cost).toEqual({ entries: 1, attempts: 0, nodes: 0, calls: 7, metadata: 70434, inputWork: 237938 });
-  expect(result.after.cost).toEqual({ entries: 1, attempts: 0, nodes: 0, calls: 6, metadata: 53026, inputWork: 225650 });
-  for (const [prefix, cost, frameBytes, afterReceipt] of [[result.prefix, result.cost, result.frameBytes, false],
-    [result.after.prefix, result.after.cost, result.after.frameBytes, true]] as const) {
+  expect(result.gross).toEqual({ entries: 1, attempts: 0, nodes: 0, calls: 7, metadata: 70434, inputWork: 237938 });
+  expect(result.after.gross).toEqual({ entries: 1, attempts: 0, nodes: 0, calls: 6, metadata: 53026, inputWork: 225650 });
+  for (const [measured, afterReceipt] of [[result, false], [result.after, true]] as const) {
+    const { prefix, gross, frameBytes } = measured;
+    expectSettledPinCost(measured);
     const shape = { entries: prefix.positions.length, entryBytes: prefix.bytes,
       afterReceipt, nativeData: false, definitionBytes: PROPOSED_BOUNDS.definitionBytes };
-    expect(forecastArchivePrefix({ ...shape, frameBytes })).toEqual({ ok: true, cost });
+    expect(forecastArchivePrefix({ ...shape, frameBytes })).toEqual({ ok: true, cost: gross });
     const upper = forecastArchivePrefix(shape);
     expect(upper.ok).toBe(true); if (upper.ok) {
-      expect(upper.cost.metadata).toBeGreaterThan(cost.metadata);
-      expect(upper.cost.inputWork).toBeGreaterThan(cost.inputWork);
+      expect(upper.cost.metadata).toBeGreaterThan(gross.metadata);
+      expect(upper.cost.inputWork).toBeGreaterThan(gross.inputWork);
     }
   }
   expect(result.prefix.through).toEqual(through);
