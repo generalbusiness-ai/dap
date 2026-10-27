@@ -1,0 +1,3 @@
+apps/room/page/assets.ts -diff linguist-generated=true
+packages/mcp/src/views/generated.ts -diff linguist-generated=true
+apps/room/brand/assets.ts -diff linguist-generated=true

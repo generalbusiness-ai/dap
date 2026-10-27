@@ -80,7 +80,10 @@ const pendingArchiveSeals = {
 };
 // Actual maintained parser outputs adopted by root; never infer hashes from intent.
 const pendingR8Seals = {
-  "packages/cli/src/commands.ts": "07f5ac89b739986f4489a93818109bd53617103908fb7c2c22102a8ae7a10ac3", // BR7 fresh-cohort guard and guidance; retained custody unchanged; actual maintained parser output.
+  "packages/cli/src/commands.ts": "b18eccf644f5360bf8b74c02aa25a3e8ac54c007ffbc26851c8547785303f9b7", // BR8 extraction; unchanged command behavior; actual maintained parser output.
+  "packages/cli/src/browser-helpers.ts": "7e5f139e800efad56f08799f4e34700f2fde7c76de33422a2eb69d03de4f03fa", // Moved description, expectation and value helpers; actual maintained parser output.
+  "packages/cli/src/claim.ts": "29ec2ef89a2b0bc9d9b123629be752ee235e1a16c2a8f3088a0358080d865959", // Moved claim verification and retained custody; actual maintained parser output.
+  "packages/cli/src/command-support.ts": "0b1bde3a5a01a218b2446d29f358cbe6f78ac5922d967f795e5d19d603e76aaf", // Moved shared read, session and signing support; actual maintained parser output.
   "apps/sandbox/worker.ts": "d354c1740d51e2b83e0b93272384607c609c65386c3fc4b8d977edfb89b6636a",
   "packages/client/src/application-gateway.ts": "daa1d28c02085bd6be7a9698a7120cd106cc7233aad92565aaa05e67427878ef",
   "packages/client/src/application-route.ts": "dcb686835049af3043e1cb8c73a989545636ea5bac2d85aaee6be92b6cd3abcc",

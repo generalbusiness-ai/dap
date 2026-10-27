@@ -2,12 +2,12 @@ import { expect, test, vi } from "vitest";
 import type { SignedIntent } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, intentDigest, keyIdOfSecret, newIncarnation, scopeIdOf, textDigest, verify } from "@generalbusiness/dap-bytes";
 import { signedIntent, type CreationOffer } from "@generalbusiness/dap-client";
-import type { Context, PendingClaim, Repository } from "@generalbusiness/dap-cli";
+import type { Context, PendingClaim, Repository } from "@generalbusiness/dap-cli/browser";
 
 // Actual Page descriptor/journal, codec and offer validator over SCRIPTED CLI
 // workflow/locks/storage. No native admission, browser custody or host proof.
 const cli = vi.hoisted(() => ({ claim: vi.fn(), checkClaim: vi.fn() }));
-vi.mock("@generalbusiness/dap-cli", async () => ({ ...await vi.importActual<typeof import("@generalbusiness/dap-cli")>("@generalbusiness/dap-cli"), ...cli }));
+vi.mock("@generalbusiness/dap-cli/browser", async () => ({ ...await vi.importActual<typeof import("@generalbusiness/dap-cli/browser")>("@generalbusiness/dap-cli/browser"), ...cli }));
 import { originalStart, startRoom as actualStartRoom, recoveryKeyOnce } from "../src/start-custody.ts";
 import { memoryPageKeys } from "./private-key-fixture.ts";
 const keys = memoryPageKeys();

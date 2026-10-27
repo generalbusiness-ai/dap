@@ -41,7 +41,7 @@ import { LATE, b64url, byteOrder, canonicalize, definitionDigest, entryHash, int
 import {
   ScopeHandle, activeDirectory, collectItemQuery, partitionIndexes, declaredHandle, httpTransport, requestSession, secretSigner, signerSessionRequest, shapeDeclaredAct, signedIntent, signedReads, type Fetch, type Session as ReadSession, type Signer, type Signing, type Transport,
 } from "@generalbusiness/dap-client";
-import { LINK, describe, expectedOf, heldActs, linkOf, valueOf, type ActShape, type DefinitionShape, type Standing } from "@generalbusiness/dap-cli";
+import { LINK, describe, expectedOf, heldActs, linkOf, valueOf, type ActShape, type DefinitionShape, type Standing } from "@generalbusiness/dap-cli/browser";
 import { ARCHIVE_DEVICE_PUBLICATION_COHORT, DEFINITION_DOMAIN, ROLE_LISTS, fileSound, firstExtents, isExtents, platform, type Role } from "@generalbusiness/dap-platform";
 import type { Extent as PolicyExtent } from "@generalbusiness/dap-platform";
 import { Q11_READ_ONLY, rulesSummaryV11 } from "./rules-summary-v11.ts";
