@@ -1,7 +1,7 @@
 /** Worker-wide registered identities, never native authority or an atomic cut. */
 import type { FactRef, ScopeId, SignedRead } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, intentDigest, isDigest, isPlatformDefinition, isScopeId, isScopeRef, scopeIdOf, verifySignedIntent, within, LATE } from "@generalbusiness/dap-bytes";
+import { same, intentDigest, isDigest, isPlatformDefinition, isScopeId, isScopeRef, scopeIdOf, verifySignedIntent, within, LATE } from "@generalbusiness/dap-bytes";
 import { platform } from "@generalbusiness/dap-platform";
 import { artifactsRegisterScope } from "./artifacts-wiring.ts";
 import { proofEntry, PROOF_BYTE_BOUNDS, EXACT_PROOF_RECEIVER_BOUNDS, type ProofBody } from "./proof-bytes.ts";
@@ -16,7 +16,6 @@ export type ScopeCensusResult = { readonly ok: true; readonly rows: readonly Sco
 const refused = (reason: ScopeCensusRefusal): ScopeCensusResult => ({ ok: false, reason });
 const cursor = (value: unknown): value is string => value === "" || isScopeId(value);
 const limitOf = (value: unknown): value is number => typeof value === "number" && Number.isSafeInteger(value) && value >= 1 && value <= 100;
-const same = (left: unknown, right: unknown): boolean => canonicalize(left) === canonicalize(right);
 
 /** Shape, signature, target, exact cursor and current request expiry only.
  * This does not use a causal root or grant ordinary scope-read authority. */

@@ -184,7 +184,7 @@ const seals = {
   "apps/room/brand/route.ts": "71b45ff9b41b3bea31c775a16525349591e0d4f7dfdc65da79f095816b1c343c",
   "packages/scope/src/worker.ts": namedOwners["packages/scope/src/worker.ts"],
   "packages/scope/src/scope-index.ts": "90c96d452982f11c82ca6e3046fcaa484fde05f669a58c596e2c32490ace9dc0", // Census port type; existing internal lookup/registration behavior retained.
-  "packages/scope/src/scope-index-census.ts": "583cb0ea7477729b734c273e98f3061f5c0cc35059d8d768291510594f2d97c6", // Reviewed exact founding-install signer, bounded proof and authenticated census page owner.
+  "packages/scope/src/scope-index-census.ts": "83c8a6b008f53b8e07c5f4bd64add69f75efef185f8177a2be84c71409b5f18d", // Same canonical equality imported from its existing owner; exact census authority and page guards unchanged.
   "packages/scope/src/creation-admission.ts": "0531cbd36d1ae4c0eadc9d836eb5eec13f896fc7c8b8faaaaf9c3c24e3759ccd", // Reviewed R1 ancestry owner; adopted AST value.
   "packages/scope/src/creation-lineage.ts": "3561f0b5b5d39c025db2c86f4386a1ccf6a8d18f05de26d79f6c5b68730f10b3", // Reviewed whole-lineage boundary; adopted AST value.
   "packages/scope/src/creation-versions.ts": "305d76f6e81ddba38e1ee009353060143857af393939f339f20e49ca874d8a8c", // Reviewed R6 creation-policy parser; actual maintained output.
