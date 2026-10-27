@@ -1,16 +1,32 @@
 {
-  "qualification": "OPEN BR6 preparation snapshot. Actual parser/adoption and eight passing Node cases; three separately qualified expected child assertion failures with exact restoration. Setup/adoption outer stdout is transcript-only; no reconstructed raw process output. Gate, analysis, final index/seal, checker review and landing pending. Base HEAD alone does not bind dirty working source; per-run snapshots and explicit helper/test hashes do. Collection remains open.",
+  "qualification": "One naturally closed ordinary BR6 declaration-seals gate at the frozen checkpoint after the latest-base update. Actual 155-record parser adoption covers all150 declarations and five module records; all73 old owner seal outputs and68 nonconverted owners retained. Eight owning Node cases and three expected mutant assertion failures/restoration are separately qualified. Setup/adoption outer stdout is transcript-only; receipts and exact code/source snapshots are retained. Every tracked blob/mode except only this note and manifest equals the gate. Missing callbacks remain qualified. No Native authority, live provider, deployment or browser UI proof; review and landing remain due.",
   "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-27-br6-declaration-seals",
   "checkpoint": {
-    "commit": "4419008a8723ccb283c8784a843aa170790bd11e",
-    "tree": "8ff173724b0efb9dc59535b056888e7145a147c3"
+    "commit": "2ba8595f4d8f72d18164319af9c0632203be17f0",
+    "tree": "3c12c0e759d9d75e9756d06265cc5fad5eb9a21a"
   },
-  "workingSourceSha256": {
-    "scripts/security-entry-points.mjs": "ec69658635b9c204147655e01c3b2800e6e6736c58c578a3ee0348cd7d609cf3",
-    "scripts/security-entry-points.test.mjs": "72e4c1b10ceecfceca6c8ca9a00e830520962fdef98ac3f650fd58a5fcd581f9"
-  },
-  "fileCount": 85,
+  "fileCount": 139,
   "files": [
+    {
+      "path": "SHA256SUMS",
+      "bytes": 13951,
+      "sha256": "222c936593d0c6d305ec0531214212863b501c749b69b6cd13f42cecf4538776"
+    },
+    {
+      "path": "analysis-run.json",
+      "bytes": 2433,
+      "sha256": "3a4ee518d11651635002337d845c6ed0305f96a53fc659c5b00951fc1f9b7980"
+    },
+    {
+      "path": "analysis-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "analysis-stdout.log",
+      "bytes": 632,
+      "sha256": "195ae261585e3297f7e74a9b94ed3e602b8305ac8e168e07725aecf57b4735b6"
+    },
     {
       "path": "artroom-br6-setup-20261027.py",
       "bytes": 3227,
@@ -252,6 +268,226 @@
       "sha256": "860a0ebd9e889553f1f4f27f543505aa40cf73a19df846239302321af3f46fbf"
     },
     {
+      "path": "finalization-inputs.json",
+      "bytes": 22947,
+      "sha256": "d07cc5cb8835b1d4e8fb174e62b6ac7dde51fa3622a194a9b0161dd7e24bedda"
+    },
+    {
+      "path": "gate-source-equality.json",
+      "bytes": 897770,
+      "sha256": "b7c29c08f41a250fb75ed1b8324f16c6c98133f39c0be959ae8037eb0e790736"
+    },
+    {
+      "path": "latest-base-check.json",
+      "bytes": 987,
+      "sha256": "30f1b75db8cd756fe91e5acea28a786ebcbaf10495d8bd164c849078a6215dc8"
+    },
+    {
+      "path": "nested-seal-preservation.json",
+      "bytes": 205,
+      "sha256": "6901c4878b8d5316dc38ea23a8381474fed999a8e3228f08f7d090536136eb7c"
+    },
+    {
+      "path": "ordinary-gate/counting-witness/app.test.mjs",
+      "bytes": 350912,
+      "sha256": "d66b5972d57b1a0d99b53165d0e9be70b3c40affa40b60aa882ed3dc529433d6"
+    },
+    {
+      "path": "ordinary-gate/counting-witness/client.test.mjs",
+      "bytes": 297122,
+      "sha256": "40d15c49603575809a059de6daf87ad1090d2eb1220ae97b97600e1529fa753d"
+    },
+    {
+      "path": "ordinary-gate/counting-witness/device-key.test.mjs",
+      "bytes": 110027,
+      "sha256": "3292c05f13e303cafeec1fded72a02d43041846acfee1d1fb36819c0c050b9bb"
+    },
+    {
+      "path": "ordinary-gate/counting-witness/metafile.json",
+      "bytes": 70755,
+      "sha256": "ae72e78779648051833f50c4ce967d7bd46292a0e9e68be1695272cf46e00bff"
+    },
+    {
+      "path": "ordinary-gate/counting-witness/source.json",
+      "bytes": 1019,
+      "sha256": "215ee6249287b5aeba30c3678cca207a9e0b929af92fd7d51f7d7413cd42d5d2"
+    },
+    {
+      "path": "ordinary-gate/counting-witness/voice-controller.test.mjs",
+      "bytes": 181912,
+      "sha256": "c66a28003ee1dbcaa395abe3c8d58e26adda3a6204c3c98fb9dfea006fd58d46"
+    },
+    {
+      "path": "ordinary-gate/driver.py",
+      "bytes": 4211,
+      "sha256": "3be73f01210f48e483af4d953e61bb9087f680cd52650536180a264cf000fbe3"
+    },
+    {
+      "path": "ordinary-gate/output.log",
+      "bytes": 6544,
+      "sha256": "2d62d57587d0ab56640068ffa5e63bba8bb4b0190f51737d2d5aa356f803d31d"
+    },
+    {
+      "path": "ordinary-gate/progress.native.jsonl",
+      "bytes": 915692,
+      "sha256": "37b39e62e5fcea00ec69ba3319fe2386542238a3eaeb5e0aacd9dfd318f14383"
+    },
+    {
+      "path": "ordinary-gate/progress.plain.jsonl",
+      "bytes": 3024284,
+      "sha256": "70d6a583f632c3f274fd4ed00f55482b2f9841c0d3ac974a675cf525d1c67eea"
+    },
+    {
+      "path": "ordinary-gate/result.json",
+      "bytes": 1523,
+      "sha256": "a31883f9f34369e20cede49addf6ee0cf5ca27a1f2369fbdb32cbce1c3ae5952"
+    },
+    {
+      "path": "ordinary-gate/stages/citations.log",
+      "bytes": 1554342,
+      "sha256": "8e5d6683947a4b5177ef55f912ded0fdb44c554a33e18791e3c188df4fc670e4"
+    },
+    {
+      "path": "ordinary-gate/stages/citations.time",
+      "bytes": 29,
+      "sha256": "a33ee11001c1073cedbd3fd30ddda9d3df198b939c78eda48eeba4bc5ca47926"
+    },
+    {
+      "path": "ordinary-gate/stages/cite-test.log",
+      "bytes": 760,
+      "sha256": "d3416de0bfb35c955a0cf9dcd1859e77b4e0c5b48c8eb29047a4512f98907aae"
+    },
+    {
+      "path": "ordinary-gate/stages/cite-test.time",
+      "bytes": 29,
+      "sha256": "10a723bc3b9c9f73c12f8f0f4dff4a202a179b8fbbe6f4d72a968e50311ebcd1"
+    },
+    {
+      "path": "ordinary-gate/stages/commit-messages.log",
+      "bytes": 38,
+      "sha256": "e961aa82d898e3425096da8901160f918cd74166d8c76fd918aaac9c3386377d"
+    },
+    {
+      "path": "ordinary-gate/stages/commit-messages.time",
+      "bytes": 29,
+      "sha256": "66b019f3b91dd78b8a648f25e84fc8cee994db5eb175e39de9579bfdd75b994e"
+    },
+    {
+      "path": "ordinary-gate/stages/commit-test.log",
+      "bytes": 595,
+      "sha256": "0a29dc090b86e6ed5539c01ddc40e4fc306a2928b4072aa58de06c6b5caeec7f"
+    },
+    {
+      "path": "ordinary-gate/stages/commit-test.time",
+      "bytes": 29,
+      "sha256": "5a0c7d4ce7d8bb3e11e43564f1421eaa72556291130d2116e34ebd03dc20476f"
+    },
+    {
+      "path": "ordinary-gate/stages/doc-links.log",
+      "bytes": 38,
+      "sha256": "ea3db4480950a942acf4a5ec3c1305da41cfc1fc348a7c2c33ececf42e2286d6"
+    },
+    {
+      "path": "ordinary-gate/stages/doc-links.time",
+      "bytes": 29,
+      "sha256": "4fcd318aeef94765464c5ea577c2c34b80431e22ec23240a06933273f40c3012"
+    },
+    {
+      "path": "ordinary-gate/stages/helpers.log",
+      "bytes": 68,
+      "sha256": "2be669a53fe9ed864bbad0d82a416fdaa3a6490d5b07b7e782f1eb260d0531cc"
+    },
+    {
+      "path": "ordinary-gate/stages/helpers.time",
+      "bytes": 29,
+      "sha256": "111edbfe8345d6cfaf2dcb62d6405cfb61bd2a9554e1bc4f5c3265a392f73110"
+    },
+    {
+      "path": "ordinary-gate/stages/notes.log",
+      "bytes": 18,
+      "sha256": "35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1"
+    },
+    {
+      "path": "ordinary-gate/stages/notes.time",
+      "bytes": 29,
+      "sha256": "b2b892ce9a7c8ad29214199a33b154dab17a22613496aeb4905dbef44d49cb57"
+    },
+    {
+      "path": "ordinary-gate/stages/section-citations.json",
+      "bytes": 3907220,
+      "sha256": "62e1daded2634fa38ed07fb0290f48e304c13fb65cec3cf256b86fcd994c58a5"
+    },
+    {
+      "path": "ordinary-gate/stages/test-evidence/counting-sources.json",
+      "bytes": 1024,
+      "sha256": "427b23de7a15ad9db0cd30f2324518cd61aafbbda5ba5e17c82c68969f553491"
+    },
+    {
+      "path": "ordinary-gate/stages/test-evidence/counting.jsonl",
+      "bytes": 133783,
+      "sha256": "5bac833a4f0c9b26706e4198e02fd7e3f4d0b360f737a9b7929544782ff54ed4"
+    },
+    {
+      "path": "ordinary-gate/stages/test-evidence/native.jsonl",
+      "bytes": 810942,
+      "sha256": "2f51c8b7d5b3b2afb17a5f9fb2e7df4ed02ba922f4f02b92cd608a20bec35c7c"
+    },
+    {
+      "path": "ordinary-gate/stages/test-evidence/node.jsonl",
+      "bytes": 188194,
+      "sha256": "6aba646f535a9e3bdc6905822ff99571e71ad957ed65151ad9c2d828d8e1b5f3"
+    },
+    {
+      "path": "ordinary-gate/stages/test-evidence/plain.jsonl",
+      "bytes": 2528169,
+      "sha256": "dcdab57583ba46afc68fc45b27b87f43bc6d1c9dbd3c9a783f9ed11f9cdb70b4"
+    },
+    {
+      "path": "ordinary-gate/stages/test-evidence/stages.json",
+      "bytes": 978,
+      "sha256": "859b59d28508989c161c3e6082662bbc09575dbecf70fad1facfd778228373de"
+    },
+    {
+      "path": "ordinary-gate/stages/test.log",
+      "bytes": 31716479,
+      "sha256": "b1b1bbaccc8ea590d11e4ebff68afe450f83b485edbba87c7d39cef584ced082"
+    },
+    {
+      "path": "ordinary-gate/stages/test.time",
+      "bytes": 37,
+      "sha256": "3add21aba04216fd0cd6679a9de831cb06d3a20e90a150d0680ef7e7f99501ad"
+    },
+    {
+      "path": "ordinary-gate/stages/typecheck.log",
+      "bytes": 1987,
+      "sha256": "62170bbe0cd055cff4699debd9470a886c0f98f328e7c9517d899c021a3788d0"
+    },
+    {
+      "path": "ordinary-gate/stages/typecheck.time",
+      "bytes": 31,
+      "sha256": "cb202d249dfb79c16487284a3f5bdb26f41da64fe11badf8e184744ee6a18822"
+    },
+    {
+      "path": "ordinary-gate/stages/whitespace.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "ordinary-gate/stages/whitespace.time",
+      "bytes": 29,
+      "sha256": "b19caaf7f42fccf27d8c76a198f52fea0f91edf4f9fc11246dfb0c794d708d58"
+    },
+    {
+      "path": "ordinary-gate/started.json",
+      "bytes": 692,
+      "sha256": "11eabf6c206ddaecce0c1d46ec4cf16b16fd585e21f8b03e94cf9790a6267a01"
+    },
+    {
+      "path": "ordinary-gate-analysis.json",
+      "bytes": 35398,
+      "sha256": "6aa672a3218e4924424b7546d0bc0863fae5c4ab8f3902b72358aab5dfcb2ad0"
+    },
+    {
       "path": "owning-node/after.json",
       "bytes": 756285,
       "sha256": "815d29852e7d901079dc38b9eb9cf2af9c765c5ecb1fda1e9762fc1800a5cf47"
@@ -297,6 +533,31 @@
       "sha256": "aa8179b999305baf5ad2d6e817d77cee055f539ad4b99c12edc89ddd304cd0fe"
     },
     {
+      "path": "retained-harnesses/artroom-br6-controls-verify-20261027.py",
+      "bytes": 3321,
+      "sha256": "171b64980c088e7685b8736b47251341a63d58547d16f18545ab104d3e7e81c1"
+    },
+    {
+      "path": "retained-harnesses/artroom-br6-declaration-seals-analysis-run-20261027.py",
+      "bytes": 5793,
+      "sha256": "ae907d8e306cd12980ea09c8638ea4ad0ce038c02e7449010d8dbb0da08ca0b9"
+    },
+    {
+      "path": "retained-harnesses/artroom-br6-declaration-seals-finalize-20261027.py",
+      "bytes": 38051,
+      "sha256": "29671ef604ddfc29decfb93912de0555adb940f9d4c6cfb44afaa3ccd75a40e3"
+    },
+    {
+      "path": "retained-harnesses/artroom-br6-declaration-seals-gate-analysis-20261027.py",
+      "bytes": 24183,
+      "sha256": "4672bd1345bc45ad77263060ce9769215fa57399950ce985fb8590a68df6daf6"
+    },
+    {
+      "path": "retained-harnesses/artroom-br6-preparation-note-20261027.py",
+      "bytes": 19659,
+      "sha256": "df61cf350ae158c883298c7d4b77384e4816d732312d5e4923aea740364d8e33"
+    },
+    {
       "path": "seal-adoption/adopt.py",
       "bytes": 2225,
       "sha256": "773a70513c7c2bbf4bffd4e7188f2c0540410ecd10e48012899dca0cc2c76c9f"
@@ -330,6 +591,11 @@
       "path": "setup.json",
       "bytes": 981,
       "sha256": "45c460954f3c7f91656586d15c0baaeb4ca77527b839b00787e00ecfd9ee3649"
+    },
+    {
+      "path": "source-checkpoint.json",
+      "bytes": 720,
+      "sha256": "cdd034f7f539d41004a572980979f45da594a14a94a2292bdce47c04eddf591a"
     },
     {
       "path": "source-probe/after.json",
