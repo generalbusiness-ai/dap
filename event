@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/2026-10-27-git-host-choice.md","body":{"commit":"053c5595cbbef18e73aeffdefe098bc6e77c59cb","path":"notes/2026-10-27-git-host-choice.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3dd8884c3b32d5296303823d3c6c26e9c138fee2","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-19-self-hosting-on-celld.md."}
