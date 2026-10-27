@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:babdfe0d890fe709b49ad3de8463c568d890f2e0","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-27-security-r11.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c3c1e36ed89aa491aca76d94d0fac37da432c134","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/creation-lineage.test.ts."}
