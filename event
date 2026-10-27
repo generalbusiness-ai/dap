@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:538684f3ac8f9e07e9a949b450d19490745373f8","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-27-security-r14-usage.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:639ae67003ae8922ee3c4dfb508d0fc5a1ee4405","text":"Merge retired a covered predecessor; the successor is at scripts/security-settings.mjs."}
