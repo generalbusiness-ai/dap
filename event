@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6001bb537803932ee93fb60ce11b05fe1fcc1b73","text":"Merge retired a covered predecessor; the successor is at docs/write-an-application.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:705f2a5f7ab40878daaf013d999e86292d9112d1","text":"Merge retired a covered predecessor; the successor is at apps/counter/browser/startup.md."}
