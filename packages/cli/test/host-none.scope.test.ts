@@ -137,11 +137,28 @@ test("host none creates a real local room, settles installed publication refusal
     life.setHold(envelope => { if (isSeed(envelope.to)) track(scopeIdOf(envelope.to)); return false; });
     const pause = async (waiting: readonly ScopeId[]) => {
       for (const name of waiting) track(name);
-      // Refresh known children between finite scheduler rounds.
+      // An accepted act may already have its original operations driver in
+      // waitUntil. driveFixture alone can see that driver busy and return
+      // zero while its real package fetch/admission is still in flight.
+      // Join this fixture's callbacks on both sides of each finite round;
+      // this is not a global drain or Native quiescence claim.
+      let callbackCount = 0;
+      const callbacks = async () => {
+        let joined = 0;
+        for (const node of [...tracked.values()]) {
+          const result = await wait(() => (node.stub as unknown as { awaitScheduledCallbacks(): Promise<{ callbacks: number }> }).awaitScheduledCallbacks());
+          if (!Number.isSafeInteger(result.callbacks) || result.callbacks < 0) throw Error("Invalid owned driver callback count");
+          joined += result.callbacks; callbackCount += result.callbacks;
+          if (callbackCount > 4096) throw Error("Host-none driver callback bound exceeded");
+        }
+        return joined;
+      };
       for (let round = 0; round < 16; round++) {
         const before = tracked.size;
+        const joinedBefore = await callbacks();
         await driveFixture([...tracked.values()], wait);
-        if (tracked.size === before) return;
+        const joinedAfter = await callbacks();
+        if (!joinedBefore && !joinedAfter && tracked.size === before) return;
       }
       throw Error("Host-none creation discovery exceeded finite rounds");
     };
@@ -260,6 +277,13 @@ test("host none creates a real local room, settles installed publication refusal
     const job = Number(installed["item"]); expect(Number.isSafeInteger(job)).toBe(true);
     await pause([]);
     const installation = await wait(() => A.item(job));
+    Object.assign(context.task.meta, { hostNoneInstall: {
+      qualification: "Actual installation metadata after bounded joins of this fixture's owned callbacks and driver rounds; not a Native quiescence proof.",
+      state: installation.state, phase: installation.values["phase"], hasScope: isRecord(installation.refs["scope"]),
+      outsideKinds: [...new Set(outsideSends.map(request => request.kind))].map(kind => ({ kind, calls: outsideSends.filter(request => request.kind === kind).length })),
+      outcomes: (await wait(() => A.entries())).flatMap(entry => entry.input.type === "outcome"
+        ? [{ kind: entry.input.kind, result: entry.input.result }] : []).slice(-16),
+    } });
     expect(installation.state).toBe("active");
     expect(await env.APPLICATION_CONTENT.head(f.key)).not.toBeNull();
     const applicationAt = installation.refs["scope"];
