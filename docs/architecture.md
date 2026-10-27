@@ -229,6 +229,22 @@ flowchart TB
 Each scope owns a separate order and transaction. Dashed observations are
 checked inputs to a judgment, not shared storage.
 
+The Worker's fixed scope index records registered full references and their
+genesis hashes. Its census is a deployment observation, not native authority.
+Only the key that signed the pinned Register's founding `install` can read
+it, through a signed `census` request. The index binds that key to its own
+stored Register row and the Register's checked native birth. Membership
+sessions grant no census access. Existing address and key windows precede
+the census owner's row and proof work, with one charge per request.
+This standing predicate does not extend
+ordinary signed reads' causal windows or follow later operator key changes.
+
+Census pages have an explicit end and at most 100 rows. The CLI saves only
+a complete, nonempty manifest within 4,096 rows. Registrations whose IDs
+precede the current cursor can be missed during pagination; unregistered
+legacy objects are also absent. The unchanged manifest verifier checks each
+saved genesis and reports its actual definition pin or an explicit failure.
+
 | Part | Owns |
 |---|---|
 | Register and directory | Creating a repository, and the room's child scopes |

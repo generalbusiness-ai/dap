@@ -223,6 +223,22 @@ already in the new implicit cohort. Keep the old offer and attempted
 request identities exact. The new publication protocol belongs to the
 new cohort; these changes preserve the old cohort's evaluator.
 
+After the census implementation is deployed, an enforce-mode Worker also
+supports **`dap scope-index census --out FILE`**. Use its pinned Register's
+founding install key and the matching local service, Register and repository
+Directory configuration. The command saves a manifest only after every page
+completes within its bounds and the configured Directory is present. Run
+**`dap scope-index versions --manifest FILE`** over that file for the
+registered-scope pin report. This leaves the saved-manifest parser and each
+entry's existing read authority unchanged.
+
+The planner deploys the reviewed census source to all three hosted Workers
+and records the first census and pin report for each. Source tests establish
+no hosted census result. Registrations inserted below an advancing cursor
+can be missed during its recorded time window, and unregistered legacy
+objects remain a gap. A complete registered-scope census proves neither an
+empty legacy fleet nor permission to retire a definition version.
+
 For each planned Worker rollout:
 
 1. Retain that deployment's saved R2 manifest and the original CLI directory.

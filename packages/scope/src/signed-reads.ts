@@ -97,8 +97,9 @@ import { metric } from "./operational.ts";
 const SCHEME = "Signed ";
 /** The most characters of a presented value that are looked at. */
 const SIGNED_CHARS = 2048;
-/** The reads that a signed read may name. */
-export const SIGNED_READS: readonly SignedReadName[] = ["summary", "history", "entry", "log", "retained", "query-items"];
+/** Wire names only. census has a separate fixed-index predicate; parsing it
+ * grants no ordinary scope read or causal-window extension. */
+export const SIGNED_READS: readonly SignedReadName[] = ["summary", "history", "entry", "log", "retained", "query-items", "census"];
 /** The most characters of a signed read's argument: a digest, the longest argument, is 71. */
 const ARG_CHARS = 128;
 

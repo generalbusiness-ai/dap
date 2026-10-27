@@ -775,6 +775,49 @@ update it, so the row can still say `open`.
 Exit codes: 0 done; 1 refused, unavailable, not found or not consistent;
 2 a command line this cannot run.
 
+## Scope index observations
+
+**`dap scope-index census --out FILE`** lists registered scopes on the
+configured Cloudflare Worker. Use the key that signed its pinned Register's
+founding `install`. A member key or read session cannot run a census. The
+configured Register identifies the intended target; the Worker checks its
+own deployment pin and native birth before serving rows.
+
+The command signs each page's exact cursor. It uses no session, registration,
+fallback or retry. One run allows at most 30 seconds, 16 MiB of response
+bytes and 4,096 rows, with at most 100 rows per page. Pagination ends only
+when the response explicitly names no next cursor, including a full final
+page. These limits bound an observation, not an atomic snapshot.
+
+On completion, `FILE` contains the existing v1 manifest:
+`{v, service, root, scopes}`, with each row `{at, genesis}`. It must contain
+the configured repository Directory's full reference. Publication is
+exclusive: an existing file is not replaced. An empty or partial census
+writes no manifest.
+
+A local save error can leave the complete file present. An
+`output-unavailable` reason gives no publication acknowledgment; inspect
+the output path before choosing a new one.
+
+Every invocation prints one JSON outcome line with `v`, `outcome`, `rows`,
+`pages`, `startedAt`, `endedAt` and `written`. A failed page also names its
+input `cursor` and a fixed `reason`. Outcomes are `complete`, `empty`,
+`absent`, `unsupported`, `forbidden`, `root-unregistered`, `over-bound` and
+`page-failed`. Only `complete` exits successfully. `absent` means no index
+is configured; `unsupported` means register mode, which does
+not serve a census. Neither means an empty registered set.
+
+Registrations during the `startedAt` to `endedAt` window whose IDs precede
+the cursor can be missed. Unregistered legacy objects remain a gap even
+when the census completes. Later operator key succession is not supported.
+
+Run **`dap scope-index versions --manifest FILE`** to check every saved
+genesis and report its actual definition pin, or an explicit unavailable,
+mismatch or unsupported outcome. This retains the existing read authority;
+the census grants no additional entry access. The older
+**`dap scope-index inventory --out FILE`** follows only the configured
+repository's recorded creations and keeps its existing session authority.
+
 ## Reads and sessions
 
 **`dap status [<scope>] [--request <16-hex-id>]`** reports bounded

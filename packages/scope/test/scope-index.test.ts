@@ -39,6 +39,7 @@ test("unknown foreign facts, site and application lookups and hosted registry re
   const index: ScopeIndexPort & { admitServing(request: unknown, address: unknown): Promise<"admitted"> } = {
     async has() { indexReads++; return false; },
     async register() { throw Error("lookup wrote index"); },
+    async list() { throw Error("lookup requested census"); },
     async admitServing(request, address) {
       expect(request).toEqual({ kind: "site-read" });
       expect(address).toBeNull();
@@ -77,7 +78,7 @@ test("unknown foreign facts, site and application lookups and hosted registry re
   const reply = await mcpRoute(trapped, { ...settings, MCP_ENABLED: "true", SCOPES: targets as unknown as DurableObjectNamespace, REGISTRIES: registries as unknown as DurableObjectNamespace, AGENTS: env.AGENTS });
   expect(reply?.status).toBe(404);
   expect(indexReads).toBe(beforeSite + 3);
-  const otherKindIndex: ScopeIndexPort = { async has(_scope, kind) { return kind === undefined; }, async register() { throw Error("lookup wrote index"); } };
+  const otherKindIndex: ScopeIndexPort = { async has(_scope, kind) { return kind === undefined; }, async register() { throw Error("lookup wrote index"); }, async list() { throw Error("lookup requested census"); } };
   const otherKind = await mcpRoute(trapped, { MCP_ENABLED: "true", SCOPE_INDEX: { idFromName: name => name, get: () => otherKindIndex },
     SCOPES: targets as unknown as DurableObjectNamespace, REGISTRIES: registries as unknown as DurableObjectNamespace, AGENTS: env.AGENTS });
   expect(otherKind?.status).toBe(404); // a known Directory ID is not a known Membership
@@ -93,6 +94,7 @@ test("unknown scope gate touches no target and only the native target's applied 
   const index: ScopeIndexPort = {
     async has(name) { indexReads++; return known.has(name); },
     async register(proof) { registrations++; if (failRegistration) throw Error("TEST PRIVATE REGISTRATION ERROR"); known.set(proof.at.scope, proof); return true; },
+    async list() { throw Error("creation requested census"); },
   };
   const target: Binding = {
     idFromName(name) { targetNames++; return env.SCOPES.idFromName(name); },
@@ -173,7 +175,7 @@ test("unknown scope gate touches no target and only the native target's applied 
       registerKnown: async () => { rpcCalls++; throw Error("TEST PRIVATE RPC ERROR"); },
       summary: async () => { ordinaryCalls++; throw Error("unregistered summary must not run"); },
     }) };
-    const absent: ScopeIndexPort = { async has() { return false; }, async register() { throw Error("wrapper registered caller data"); } };
+    const absent: ScopeIndexPort = { async has() { return false; }, async register() { throw Error("wrapper registered caller data"); }, async list() { throw Error("wrapper requested census"); } };
     const broken = api(indexedScopes(rejected, { SCOPE_INDEX_MODE: "register", SCOPE_INDEX: { idFromName: name => name, get: () => absent } }));
     observed.length = 0;
     console.info = (...args: unknown[]) => { if (args[0] === "scope-index-registration") observed.push(args); else originalInfo(...args); };

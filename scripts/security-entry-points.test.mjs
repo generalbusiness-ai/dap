@@ -12,8 +12,8 @@ const namedOwners = {
     "packages/scope/src/object.ts:ScopeObject": "895129c998e88aa5b2a40c6d22e38ab9ef6c2d1ebacf0b76e762430df3a2ffd1",
   },
   "packages/scope/src/worker.ts": {
-    "packages/scope/src/worker.ts:$module": "3e710c0e2d89674055af262bbc0e97d1622fc79c8641e6515d16beb83cd28717",
-    "packages/scope/src/worker.ts:ScopeIndex": "8051698500f75ce3b03fdd057744195758206618eb33e398d4b62fa74af98708",
+    "packages/scope/src/worker.ts:$module": "9c36aeede1a1fb3574c8280d6e5d7bbe56e8ca0609cbeca02c96fae5a2911ba7",
+    "packages/scope/src/worker.ts:ScopeIndex": "33776f193fce8ab57b0642c3476c8a22de1ad73fa2b3ef2d0448a7fd848fc929",
     "packages/scope/src/worker.ts:MISSING": "e8958a6cf8d4cd2f412b30c76b38aca2f4523bc2b9df96606ac01059b6d4fb42",
     "packages/scope/src/worker.ts:api": "43b1600c799b41fe7781ea4b16c3584a7e2878c3cbedc1df4d18166f175200e8",
     "packages/scope/src/worker.ts:BODY_BYTES": "158a6579a52843b40416a1f4d27e7bffb5e0f5df07105254bd3e87c3d3d203fd",
@@ -27,7 +27,7 @@ const namedOwners = {
     "packages/scope/src/worker.ts:PROJECTION_STATUS": "c37cfcdbb416865b0082d7b326a76c8476deab28059b07bdd665c7cc9cdb7111",
     "packages/scope/src/worker.ts:projectionResponse": "e17f1f4aa800bc06b4f8d065f77e8a594c2738c77873a52671fa7f1b22bf249b",
     "packages/scope/src/worker.ts:route": "8e41a02f0a9d01c802beea51c095d82f3720ca0d3d5dc178213f5de2a8ccde63",
-    "packages/scope/src/worker.ts:routedRequest": "37fc2fd95d2be9029b40183efa8cea18a24a95e41e8fbce11ce568ac755b7b61",
+    "packages/scope/src/worker.ts:routedRequest": "4ef253e62f36ddbf69b3bedcf593de3023ed072ee6ca6bfa435390dd1d7858dd",
     "packages/scope/src/worker.ts:outsideOf": "0a294da6ca47625e2f760f7ef692e537d4491620019d1d34c5cbd305856a02ff",
     "packages/scope/src/worker.ts:sessionWiring": "cb8f4d0e2b06854a3fbf080e5b4ce72e4182060b60f27cc7fb7f5ed6ac8779c5",
     "packages/scope/src/worker.ts:snapshotReaderOf": "2b6810718421650701eb1edfa9b100ceefef11a1fdcb18603fccf4e6830ea9e2",
@@ -183,7 +183,8 @@ const seals = {
   "apps/room/page/route.ts": "62c8f69b9f516f1b5acdaef57d7aed25268d8cf03283bdffdd4b1b5f20bb6b3d",
   "apps/room/brand/route.ts": "71b45ff9b41b3bea31c775a16525349591e0d4f7dfdc65da79f095816b1c343c",
   "packages/scope/src/worker.ts": namedOwners["packages/scope/src/worker.ts"],
-  "packages/scope/src/scope-index.ts": "e5658b5fc39cc15bc08e7e71711a67c5859a0e0de94ede88ee5b8b5dbc3d7919", // New internal lookup/registration boundary.
+  "packages/scope/src/scope-index.ts": "90c96d452982f11c82ca6e3046fcaa484fde05f669a58c596e2c32490ace9dc0", // Census port type; existing internal lookup/registration behavior retained.
+  "packages/scope/src/scope-index-census.ts": "5167c06adb55324696cc44a41d739aed5ba68fbc48ef11fa941882f8398f6142", // Address/key admission precedes owner proof; exact census authority and page guards retained, without duplicate owner charge.
   "packages/scope/src/creation-admission.ts": "0531cbd36d1ae4c0eadc9d836eb5eec13f896fc7c8b8faaaaf9c3c24e3759ccd", // Reviewed R1 ancestry owner; adopted AST value.
   "packages/scope/src/creation-lineage.ts": "3561f0b5b5d39c025db2c86f4386a1ccf6a8d18f05de26d79f6c5b68730f10b3", // Reviewed whole-lineage boundary; adopted AST value.
   "packages/scope/src/creation-versions.ts": "305d76f6e81ddba38e1ee009353060143857af393939f339f20e49ca874d8a8c", // Reviewed R6 creation-policy parser; actual maintained output.
@@ -204,7 +205,7 @@ const seals = {
   "packages/derive/src/judge.ts": "65a10677dd4da355e9edac490979cacf6911cfa1aa37020c41516f5c53ad94fb",
   "packages/scope/src/sessions.ts": "636cf37fa756f7b8abe9d2f7bc36381fee78901f26a5b24fa9ce2096223e9c4d",
   "packages/scope/src/reads.ts": "7d66e866c46fc354286d6454e202402788881b062b87376d85ee35888f938b26",
-  "packages/scope/src/signed-reads.ts": "6c4c4c81f44994c2ac9e4ca921c8f34184977a1256d6574e78514b814512eaf0", // R12 custody-only serving helper; native checks unchanged.
+  "packages/scope/src/signed-reads.ts": "3204207ea73dc48cdc40727bbde7f8b734675975fd78694a501b0116cf0abfe2", // Census wire name; its separate fixed-index predicate grants no ordinary scope read.
   "packages/scope/src/limits.ts": "6d4966a12e86067c39f61a243601d0d3a78a66850ee07f4ae80e97e22ab3639e", // R12 verified-key join failure window.
   "packages/scope/src/serving-limits.ts": "3a9f410f926f1e3711b78a750dd7dfb055f418fa9904be55ccb3f8cea869a987", // New bounded memory-only counter, no live eviction.
   "packages/scope/src/serving-admission.ts": "56196763d35e17e67df94862264b2b1af0f1e812d46cc5c50163a4c580cd06a2", // New bounded original-signature/counter ingress.
@@ -289,6 +290,10 @@ test("every served Worker route/method has exactly its reviewed gate-class row",
 
 test("a real matcher change fails the inventory bijection with the page unchanged", async () => {
   const source = readFileSync(new URL("../packages/scope/src/worker.ts", import.meta.url), "utf8");
+  const baseline = await servedInventory({ scopeSource: source });
+  assertInventory(baseline, document());
+  assert.ok(baseline.get("artroom-scope").some(row => row.route === "GET /v1/scope-index/census" && row.gate === "self-signed"));
+  assert.ok(!baseline.get("artroom-scope").some(row => row.route === "POST /v1/scope-index/census"), "The actual census helper remains GET-only");
   const before = 'if (what === "requests") return read(await scopes.requests';
   assert.equal(source.split(before).length, 2, "The control must change exactly one dispatch branch");
   const changed = await servedInventory({ scopeSource: source.replace(before, 'if (what === "request-window") return read(await scopes.requests') });
@@ -296,6 +301,20 @@ test("a real matcher change fails the inventory bijection with the page unchange
   assert.ok(routes.includes("GET /v1/scopes/:scope/request-window"), "The new matcher must actually dispatch");
   assert.ok(!routes.includes("GET /v1/scopes/:scope/requests"), "The old matcher must no longer dispatch");
   assert.throws(() => assertInventory(changed, document()), { code: "ERR_ASSERTION", message: /route\/method\/gate bijection/ });
+
+  const census = 'url.pathname === "/v1/scope-index/census"';
+  assert.equal(source.split(census).length, 2, "The census control must change exactly one real pathname matcher");
+  const renamed = await servedInventory({ scopeSource: source.replace(census, 'url.pathname === "/v1/scope-index/renamed-census"') });
+  const censusRoutes = renamed.get("artroom-scope").map(row => row.route);
+  assert.ok(!censusRoutes.includes("GET /v1/scope-index/census"), "The documented census route no longer dispatches");
+  assert.ok(!censusRoutes.includes("GET /v1/scope-index/renamed-census"), "The inner actual census guard still refuses the renamed outer route");
+  assert.throws(() => assertInventory(renamed, document()), { code: "ERR_ASSERTION", message: /route\/method\/gate bijection/ });
+
+  const forwarded = "scopeIndexCensusRoute(request, env, address)";
+  assert.equal(source.split(forwarded).length, 2, "The forwarding control changes one real census helper call");
+  const noAddress = await servedInventory({ scopeSource: source.replace(forwarded, "scopeIndexCensusRoute(request, env, null)") });
+  assert.ok(!noAddress.get("artroom-scope").some(row => row.route === "GET /v1/scope-index/census"), "The actual helper cannot reach protected dispatch without forwarding the trusted address");
+  assert.throws(() => assertInventory(noAddress, document()), { code: "ERR_ASSERTION", message: /route\/method\/gate bijection/ });
 });
 
 test("the bijection rejects a missing row, an extra row, and a changed gate", async () => {
