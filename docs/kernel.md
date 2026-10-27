@@ -110,10 +110,11 @@ scoped continuations as separate results.
   `platform:<name>@<n>`. Replay derives it only with code that its caller
   supplies (`replay/src/verify.ts:1031-1055`), and its report says that no
   digest names those rules (`verify.ts:252-258`). The catalog pins 73
-  versions (`platform/src/native-catalog.ts:104-178`, one row each): 65
-  when this page landed, four more from the certified rules family
-  (`6852f78d`) and four more from its hardening (`33690b69`). Passing takes
-  one of three things: pin each version's rules by digest and archive the code;
+  versions (`platform/src/native-catalog.ts:104-178`, one row each): 62
+  when this page landed, three more from the versioned publication family
+  (`c8a3fb24`), four from the certified rules family (`6852f78d`) and four
+  from its hardening (`33690b69`). Passing takes one of three things: pin
+  each version's rules by digest and archive the code;
   move the shipped versions into a frozen part of the kernel; or replace
   the marks with declared forms. Design request `50133470` covers K1 and
   K6.
