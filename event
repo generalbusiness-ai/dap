@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6893500257f94025cbebaddb567258832fee0063","text":"Merge retired a covered predecessor; the successor is at apps/room/page/test/connection-custody.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6e395e4257aef4ba009f5bc01a38ed1cc192adc5","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-27-br8-browser-boundary.md."}
