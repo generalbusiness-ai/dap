@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6bef94775906dfe319dee9c9e7f768cbda0fefc4","text":"Merge retired a covered predecessor; the successor is at docs/deploy.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7252362ab3a61ebaecd2b3adf39cf0732dcd3f53","text":"Merge retired a covered predecessor; the successor is at apps/room/lanes/test/directory-partition-lanes.scope.test.ts."}
