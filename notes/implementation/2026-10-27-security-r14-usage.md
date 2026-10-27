@@ -1,9 +1,9 @@
 # Report Worker observations with explicit coverage limits
 
-Source, focused checks, the ordinary gate and evidence packaging are complete.
-Exact-head checker review remains due. Review and landing wait
-behind the installed-release listing request `521f57a1`. This note claims no
-live query, real credential use, landing, or deployment.
+Source and focused checks are complete. The original standalone gate passed;
+the work is now recut onto Main after the installed-release listing landed.
+The combined-tree gate, final evidence packaging and exact-head review remain
+due. This note claims no live query, real credential use, landing or deployment.
 
 ## What changed
 
@@ -88,7 +88,7 @@ response-envelope rule changed, to cover the final source.
 
 ## Evidence
 
-Source checkpoint: `2617c210ba4efb927c3fd9436b8b5c16acb0ba68`, tree
+Original focused source checkpoint: `2617c210ba4efb927c3fd9436b8b5c16acb0ba68`, tree
 `556d8c1f5a47e85457c13b8b096b1311e834ae0f`. Focused checks ran on earlier
 working states of base Main `f9aca97f`; owning and control-wrapper results
 retain their command, head, tree, changed-file hashes, exit, wall time, child
@@ -118,7 +118,7 @@ overwritten before retention; its exact bytes are unavailable. The corrected
 probe is retained. The initial token failure remains a failure; passing later
 checks do not relabel it.
 
-The ordinary gate naturally passed at checkpoint
+The original standalone gate naturally passed at checkpoint
 `815a780cdf87583cccb60888172265491cbe5dbb`, tree
 `89a77ba8ad0f04dcb1b78edb827916b599e837a0`. Its checkout was clean before and
 after, with no signal or interrupted stage. The driver measured
@@ -133,46 +133,55 @@ observations establish no cause or missing duration. Plain has all three
 callbacks for each final identity. Concurrent case/module durations are neither
 wall time nor CPU. The retained analyzer hashes its 39 gate inputs.
 
-Raw evidence is indexed and made read-only at
+The listing landed as Main `d73b53c971d90bb246bad868815912bad0e83682`.
+This work was then recut onto it without conflicts. The usage script remains
+byte-identical at the SHA above; the rebased source commit is
+`518fd6033acc6d4baec7030325e0ca54fc6af2cb`. The new Main adds the reviewed
+operator command and its tests, so a new gate validates the combined tree
+before this request's review. The earlier pass remains a prior-base result,
+not validation of the changed baseline.
+
+The original evidence remains read-only at
 `/Users/hughpyle/play/artroom-evidence/2026-10-27-security-r14-usage`.
-The checked-in manifest is
-`notes/implementation/evidence/2026-10-27-security-r14-usage.manifest.json`.
-It names every retained file, including the checksum index. The 1,847 tracked
-paths outside `notes/` have identical Git blob bytes at the gate checkpoint
-and this worktree; `gate-source-equality.json` has SHA-256
-`ad1256fa6d11ea145a469702148640231f1518d13f5ad6e47d6372fa6b64b629`.
-Only this note and its evidence manifest follow the gate. Timings
-are the observed command intervals and child-process CPU retained in each
-result. They are not a measured whole-edit latency. Machine: Darwin 27.2.0
-arm64, 18 CPUs, Node v26.12.1, shared load and existing private caches. No
-cold-cache or isolated-machine claim is made.
+Fresh combined evidence is being prepared at
+`/Users/hughpyle/play/artroom-evidence/2026-10-27-security-r14-usage-recut`;
+`prior-base/` is an exact copy of all 114 original sealed files. The manifest
+currently records the original evidence and will be replaced after the
+combined gate. At the original gate and its reporting-only candidate
+`bc588b2d40138c62ba6b32aedb9ea4b30afc1d2b`, all 1,847 non-note tracked blobs
+matched, as `prior-base/gate-source-equality.json` records (SHA-256
+`ad1256fa6d11ea145a469702148640231f1518d13f5ad6e47d6372fa6b64b629`).
+That equality does not describe the new baseline. Timings are observed command
+intervals and child-process CPU, not measured whole-edit latency. Machine:
+Darwin 27.2.0 arm64, 18 CPUs, Node v26.12.1, shared load and existing private
+caches. No cold-cache or isolated-machine claim is made.
 
 | Check | Command | Exit | Output and SHA-256 |
 | --- | --- | --- | --- |
-| Actual Metrics writer into fixed TEST sink; recording/provenance only | `python3 /private/tmp/artroom-r14-record-fixture-20261027.py` | 0 | `record-test-emissions/output.log`: `1d5f4d92d4b31a9b8a5243da30bb84321ef0d3aea03addbb78b542c1a4b250c8` |
-| Initial token-collision witness: 7 passed, one nested failure and its failed parent (2 failures); stdin teardown passed | `node --test scripts/usage-report.test.mjs` | 1 | `token-boundary-before-withholding/output.log`: `14a9b075733fb708896f732c3e8c7209ec00bbaa09ee31a07a5e5b862b8e758b` |
-| Withholding repair: 9 passed | `node --test scripts/usage-report.test.mjs` | 0 | `owning-after-withholding/output.log`: `6dd0a97f4aad5acbbac56e0bf61595d4eed7ddad276b2c050841a0d96a873eee` |
-| Initial four required controls: all compiled, distinguished and restored | `python3 /private/tmp/artroom-r14-controls-20261027.py` | 0 | `four-requested-controls/output.log`: `db1a80aafcc23b40adb928024acd08458008b5b6ee033da09051c437ab4ec59b` |
-| Final response envelope: 9 passed | `node --test scripts/usage-report.test.mjs` | 0 | `owning-final-response-envelope/output.log`: `b73ec7c1ffb575d86d5c59257bdf2b826a92ea58c6cb808640ca93b2a6f8b7b2` |
-| Four controls at final source: all compiled, distinguished and restored | `python3 /private/tmp/artroom-r14-final-controls-20261027.py` | 0 | `final-four-requested-controls/output.log`: `0c6d9900e1fc03f2fbea3a79fd1bba1cddbec63106539cddb401eb42a77b0ec8` |
-| Credential collision control; expected assertion failure | `node --test --test-name-pattern '^usage report never discloses' scripts/usage-report.test.mjs` | 1 | `final-control-token-non-disclosure/output.log`: `a8301ab8150afcf2a21a97555f079212c07382101f8b313e3e9f92c34b35bd39` |
-| Unmapped Worker refusal control; expected assertion failure | `node --test --test-name-pattern '^usage report explicitly refuses an unmappable Worker' scripts/usage-report.test.mjs` | 1 | `final-control-unmappable-worker/output.log`: `cf10b798f8e2d9415f56ce82eeff22113754ec5c79741ee1ace29ff16fe9dda6` |
-| Cap-plus-one response control; expected assertion failure | `node --test --test-name-pattern '^usage report refuses truncated or bounded-out observations without zero claims' scripts/usage-report.test.mjs` | 1 | `final-control-truncation/output.log`: `8b9ff9b242ff1e032320f2c98be060717a6d737f425dd4e9e0a1eab733ebda11` |
-| Qualified zero-observation wording control; expected assertion failure | `node --test --test-name-pattern '^usage report says no observed use within stated coverage, never never used' scripts/usage-report.test.mjs` | 1 | `final-control-qualified-wording/output.log`: `03f2218910ab307aa960221ca7285aca700f02d46d62158e0f35c94a855cb312` |
-| Existing settings inventory and test-owner files: 9 passed | `node --test scripts/security-settings.test.mjs scripts/test.test.mjs` | 0 | `owning-settings-and-test-owner/output.log`: `fdc91771fbd9d7354aa98c18ed4eb0c67094964d5a2e27a3ff62800921cb4819` |
-| Shared helpers: 677 sources, 134 byte exports | `node scripts/check-shared-helpers.mjs` | 0 | `owning-shared-helpers/output.log`: `e7bca15674d0020ad719f59665f93de6513ec2298f6c29cfe46c5d410e283ea5` |
-| Document links: 712 checked, none broken | `node scripts/check-doc-links.mjs` | 0 | `owning-document-links/output.log`: `d32eaa916626747fdc1c632131b58a6e719335f9eb304291180692016a1b1dc5` |
-| Node syntax | `node --check scripts/usage-report.mjs` | 0 | `owning-syntax/output.log`: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
-| Initial static probe: wrong schema field assumption; no implementation failure established | `node /private/tmp/artroom-r14-static-probe-20261027.mjs` | 1 | `schema-example-and-owner-plan/output.log`: `4b6120dde65359b15cb08c97757e1c22346c88a523e19201e5848313fe111cf7` |
-| Repeated static probe with same obsolete assumption; not relied on | `node /private/tmp/artroom-r14-static-probe-20261027.mjs` | 1 | `schema-example-and-owner-plan-repair/output.log`: `4b6120dde65359b15cb08c97757e1c22346c88a523e19201e5848313fe111cf7` |
-| Corrected schema/example and fixed-owner probe: 8 Workers, 181 catalog routes, 29 bindings; test file included once | `node /private/tmp/artroom-r14-static-probe-20261027.mjs` | 0 | `schema-example-and-owner-plan-final/output.log`: `ade296e35123caff8e5385f295daa706fdf0cd7dab4a6d5d4b39c18298fb9297` |
-| Ordinary gate: all five stages passed at exact checkpoint above; no unhandled errors | `npm run gate` | 0 | `ordinary-gate/output.log`: `0df42cad84d939d26efdd4c15e3b9f1e394611a229c6a55882d1f36a2211cc5f` |
-| Gate reconciliation: unique finals, terminal totals and callback gaps | `python3 /private/tmp/artroom-r14-gate-analysis-20261027.py` | 0 | `gate-analysis/analyze.json`: `0e9fd8c186299f8ed483af3975d6eae422725f05d9a30701bfec479b66f24330` |
+| Actual Metrics writer into fixed TEST sink; recording/provenance only | `python3 /private/tmp/artroom-r14-record-fixture-20261027.py` | 0 | `prior-base/record-test-emissions/output.log`: `1d5f4d92d4b31a9b8a5243da30bb84321ef0d3aea03addbb78b542c1a4b250c8` |
+| Initial token-collision witness: 7 passed, one nested failure and its failed parent (2 failures); stdin teardown passed | `node --test scripts/usage-report.test.mjs` | 1 | `prior-base/token-boundary-before-withholding/output.log`: `14a9b075733fb708896f732c3e8c7209ec00bbaa09ee31a07a5e5b862b8e758b` |
+| Withholding repair: 9 passed | `node --test scripts/usage-report.test.mjs` | 0 | `prior-base/owning-after-withholding/output.log`: `6dd0a97f4aad5acbbac56e0bf61595d4eed7ddad276b2c050841a0d96a873eee` |
+| Initial four required controls: all compiled, distinguished and restored | `python3 /private/tmp/artroom-r14-controls-20261027.py` | 0 | `prior-base/four-requested-controls/output.log`: `db1a80aafcc23b40adb928024acd08458008b5b6ee033da09051c437ab4ec59b` |
+| Final response envelope: 9 passed | `node --test scripts/usage-report.test.mjs` | 0 | `prior-base/owning-final-response-envelope/output.log`: `b73ec7c1ffb575d86d5c59257bdf2b826a92ea58c6cb808640ca93b2a6f8b7b2` |
+| Four controls at final source: all compiled, distinguished and restored | `python3 /private/tmp/artroom-r14-final-controls-20261027.py` | 0 | `prior-base/final-four-requested-controls/output.log`: `0c6d9900e1fc03f2fbea3a79fd1bba1cddbec63106539cddb401eb42a77b0ec8` |
+| Credential collision control; expected assertion failure | `node --test --test-name-pattern '^usage report never discloses' scripts/usage-report.test.mjs` | 1 | `prior-base/final-control-token-non-disclosure/output.log`: `a8301ab8150afcf2a21a97555f079212c07382101f8b313e3e9f92c34b35bd39` |
+| Unmapped Worker refusal control; expected assertion failure | `node --test --test-name-pattern '^usage report explicitly refuses an unmappable Worker' scripts/usage-report.test.mjs` | 1 | `prior-base/final-control-unmappable-worker/output.log`: `cf10b798f8e2d9415f56ce82eeff22113754ec5c79741ee1ace29ff16fe9dda6` |
+| Cap-plus-one response control; expected assertion failure | `node --test --test-name-pattern '^usage report refuses truncated or bounded-out observations without zero claims' scripts/usage-report.test.mjs` | 1 | `prior-base/final-control-truncation/output.log`: `8b9ff9b242ff1e032320f2c98be060717a6d737f425dd4e9e0a1eab733ebda11` |
+| Qualified zero-observation wording control; expected assertion failure | `node --test --test-name-pattern '^usage report says no observed use within stated coverage, never never used' scripts/usage-report.test.mjs` | 1 | `prior-base/final-control-qualified-wording/output.log`: `03f2218910ab307aa960221ca7285aca700f02d46d62158e0f35c94a855cb312` |
+| Existing settings inventory and test-owner files: 9 passed | `node --test scripts/security-settings.test.mjs scripts/test.test.mjs` | 0 | `prior-base/owning-settings-and-test-owner/output.log`: `fdc91771fbd9d7354aa98c18ed4eb0c67094964d5a2e27a3ff62800921cb4819` |
+| Shared helpers: 677 sources, 134 byte exports | `node scripts/check-shared-helpers.mjs` | 0 | `prior-base/owning-shared-helpers/output.log`: `e7bca15674d0020ad719f59665f93de6513ec2298f6c29cfe46c5d410e283ea5` |
+| Document links: 712 checked, none broken | `node scripts/check-doc-links.mjs` | 0 | `prior-base/owning-document-links/output.log`: `d32eaa916626747fdc1c632131b58a6e719335f9eb304291180692016a1b1dc5` |
+| Node syntax | `node --check scripts/usage-report.mjs` | 0 | `prior-base/owning-syntax/output.log`: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| Initial static probe: wrong schema field assumption; no implementation failure established | `node /private/tmp/artroom-r14-static-probe-20261027.mjs` | 1 | `prior-base/schema-example-and-owner-plan/output.log`: `4b6120dde65359b15cb08c97757e1c22346c88a523e19201e5848313fe111cf7` |
+| Repeated static probe with same obsolete assumption; not relied on | `node /private/tmp/artroom-r14-static-probe-20261027.mjs` | 1 | `prior-base/schema-example-and-owner-plan-repair/output.log`: `4b6120dde65359b15cb08c97757e1c22346c88a523e19201e5848313fe111cf7` |
+| Corrected schema/example and fixed-owner probe: 8 Workers, 181 catalog routes, 29 bindings; test file included once | `node /private/tmp/artroom-r14-static-probe-20261027.mjs` | 0 | `prior-base/schema-example-and-owner-plan-final/output.log`: `ade296e35123caff8e5385f295daa706fdf0cd7dab4a6d5d4b39c18298fb9297` |
+| Prior-base gate: all five stages passed at the original checkpoint; no unhandled errors | `npm run gate` | 0 | `prior-base/ordinary-gate/output.log`: `0df42cad84d939d26efdd4c15e3b9f1e394611a229c6a55882d1f36a2211cc5f` |
+| Gate reconciliation: unique finals, terminal totals and callback gaps | `python3 /private/tmp/artroom-r14-gate-analysis-20261027.py` | 0 | `prior-base/gate-analysis/analyze.json`: `0e9fd8c186299f8ed483af3975d6eae422725f05d9a30701bfec479b66f24330` |
 
 ## Open limits
 
-- Exact-head review remains due under the child request above. The
-  installed-release listing `521f57a1` precedes review and landing.
+- The combined-tree gate, final manifest/seal and exact-head review remain due
+  under the child request above. The preceding listing `521f57a1` is landed.
   No hosted compatibility or actual account coverage has been established.
 - Parent R14 remains open. Deployment aliases cannot authenticate historical
   Worker identity. Missing route methods, native versions, feature identity,
