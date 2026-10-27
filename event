@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c045e18fc0e7b89db8f4a5bbd30013196f8f8285","text":"Merge retired a covered predecessor; the successor is at scripts/test/fixtures/usage-report/record-metrics.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d5323999dba043e187f90df5d94b51406615d0b0","text":"Merge retired a covered predecessor; the successor is at docs/security/settings.md."}
