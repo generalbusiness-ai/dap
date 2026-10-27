@@ -31,9 +31,22 @@ const policy = (definition: ValidDefinition, entryTypes: ReadonlySet<Input["type
 const registry = new Map([[base.digest, policy(base)]]);
 async function scan(lane: Lane, through: Head, policies: ArchivePolicyRegistry = registry, limits: Partial<ArchiveCost> = {}, hook?: (query: string, sql: SqlStorage) => void, timing?: { now: () => number; milliseconds: number }) {
   return lane.inside(state => {
-    const calls: { query: string; key: unknown }[] = [], budget = new ArchiveBudget(limits, timing?.now, timing?.milliseconds);
+    const calls: { query: string; key: unknown }[] = [];
+    class PeakBudget extends ArchiveBudget {
+      readonly peak = this.admitted();
+      refused: { used: ArchiveCost; requested: Partial<ArchiveCost>; sqlCalls: number } | null = null;
+      override spend(cost: Partial<ArchiveCost>): void {
+        const used = this.admitted();
+        try { super.spend(cost); }
+        catch (error) { this.refused ??= { used, requested: { ...cost }, sqlCalls: calls.length }; throw error; }
+        // reserve() calls spend() before the read and any byte settlement.
+        const admitted = this.admitted();
+        for (const key of Object.keys(this.peak) as (keyof ArchiveCost)[]) this.peak[key] = Math.max(this.peak[key], admitted[key]);
+      }
+    }
+    const budget = new PeakBudget(limits, timing?.now, timing?.milliseconds);
     const result = inventoryArchive({ exec(query, ...args) { calls.push({ query, key: args[0] }); hook?.(query, state.storage.sql); return state.storage.sql.exec(query, ...args); }, transaction: work => state.storage.transactionSync(work) }, lane.at, through, PROPOSED_BOUNDS, policies, budget);
-    return { result, calls, cost: budget.admitted() };
+    return { result, calls, cost: budget.admitted(), peak: budget.peak, refused: budget.refused };
   });
 }
 const entryReads = (calls: { query: string }[]) => calls.filter(call => call.query.startsWith("SELECT bytes FROM entry"));
@@ -107,10 +120,28 @@ test("one native pass admits its exact measured call/byte/node limits and refuse
   const lane = await create({}, {}, base), through = await lane.head(), baseline = await scan(lane, through);
   expect(baseline.result.ok).toBe(true);
   if (!baseline.result.ok) return;
-  const cost = baseline.result.inventory.cost;
-  expect((await scan(lane, through, registry, { calls: cost.calls, inputWork: cost.inputWork, nodes: 1 })).result.ok).toBe(true);
-  expect((await scan(lane, through, registry, { calls: cost.calls - 1 })).result).toEqual({ ok: false, reason: "limit" });
-  expect((await scan(lane, through, registry, { inputWork: cost.inputWork - 1 })).result).toEqual({ ok: false, reason: "limit" });
+  const cost = baseline.result.inventory.cost, peak = baseline.peak;
+  expect(peak.nodes).toBe(1); expect(peak.calls).toBe(cost.calls);
+  expect(peak.metadata).toBeGreaterThan(cost.metadata);
+  expect(peak.inputWork).toBeGreaterThan(cost.inputWork);
+  const exact = await scan(lane, through, registry, { calls: peak.calls, metadata: peak.metadata, inputWork: peak.inputWork, nodes: 1 });
+  expect(exact.result).toEqual(baseline.result);
+  expect(exact.peak).toEqual(peak);
+  expect(exact.calls).toEqual(baseline.calls);
+  expect((await scan(lane, through, registry, { calls: peak.calls - 1 })).result).toEqual({ ok: false, reason: "limit" });
+  for (const axis of ["metadata", "inputWork"] as const) {
+    const limited = await scan(lane, through, registry, { [axis]: peak[axis] - 1 });
+    expect(limited.result).toEqual({ ok: false, reason: "limit" });
+    expect(limited.refused).not.toBeNull();
+    if (!limited.refused) continue;
+    expect(limited.refused.used[axis] + (limited.refused.requested[axis] ?? 0)).toBe(peak[axis]);
+    expect(limited.refused.requested.calls).toBe(1);
+    expect(limited.cost).toEqual(limited.refused.used);
+    // Earlier reads are valid. The denied read and all later SQL stay out.
+    expect(limited.calls.length).toBe(limited.refused.sqlCalls);
+    expect(limited.calls.length).toBeLessThan(baseline.calls.length);
+    expect(limited.calls).toEqual(baseline.calls.slice(0, limited.calls.length));
+  }
   const noNode = await scan(lane, through, registry, { nodes: 0 });
   expect(noNode.result).toEqual({ ok: false, reason: "limit" });
   expect(entryReads(noNode.calls)).toEqual([]); expect(payloadReads(noNode.calls)).toEqual([]);

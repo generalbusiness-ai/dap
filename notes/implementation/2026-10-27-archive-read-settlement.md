@@ -1,7 +1,7 @@
 # Settle archive read reservations
 
-Status: focused checks and numeric controls passed; the ordinary gate and
-exact-head review remain due. The historical Room A settled total cannot
+Status: focused checks and numeric controls passed. The first ordinary
+gate failed; repaired tests await a new gate and exact-head review. The historical Room A settled total cannot
 be recovered from the retained capture because several reply sizes were
 not recorded. Decision request `70b830a6b9c4ac3a662b1baff18845e63dbd7a25`
 asks the planner to resolve that acceptance gap and the boundary for other
@@ -205,3 +205,32 @@ drivers, logs and receipts remain in `numeric-W1/` and
 `numeric-W1-followup/`. The reviewed strip-only repair exited 0 in 0.276
 seconds wall and 0.305 child CPU seconds. Its driver SHA-256 is
 `dbcb4fc602be57745acde32f06cb5c42c8f3b9970eb1a80f35c3a0ebc0f2bd20`.
+
+## First gate and isolated repairs
+
+The ordinary gate at `340af95709eb807c4f3df575b33efc376ec4a844`
+(tree `754163f0fedae5883628727f9d2ec05945dccb48`) exited 1.
+All prechecks and compiler contexts passed. Node had 70 passes, Counting
+had 55, and plain had 2,869 passes and one skip. Native had 805 passes,
+four failures across three files, and two skips. One pending Vitest
+resolver also failed during teardown in the lending file's context. Its
+cause is unconfirmed. The closed raw gate directory is read-only.
+
+The repairs retain the original gross cost vectors in separate controls,
+while testing settled charges separately. Inventory now measures full
+outstanding reservation peaks for its exact-limit and one-unit-short
+checks; final net charges cannot serve as pre-read limits. No production
+source changed after the first gate. A first repair attempt exposed an
+incorrect selection field in the added control and reproduced the resolver
+error. Both failures remain recorded. The corrected compiler context
+passed. The prefix and inventory files passed all 24 cases. The corrected
+installed and lending files then passed all 10 cases in a shared runtime
+with no unhandled error. The five historical controls took 155 ms in total,
+measured around each separate plan; this is fixture timing, not a production
+performance result. Lending also passed its two cases alone. These passes
+do not identify or repair the earlier resolver's cause.
+
+A new ordinary gate is required because the first failed across three
+files. Its outputs go to `ordinary-gate-repaired/`; the failed gate remains
+separate under `ordinary-gate/`. The final evidence table and manifest
+will include both runs and all failed follow-ups before review.
