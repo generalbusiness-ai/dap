@@ -13,7 +13,7 @@ import type { ValidDefinition } from "@generalbusiness/dap-derive";
 import type { ArchivePolicyRegistry } from "./archive-inventory.ts";
 import { timeMs, type ScopeState } from "@generalbusiness/dap-derive";
 import { ARCHIVE_BOUNDS, ArchiveBudget } from "./archive-budget.ts";
-import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, readArchivePin, readArchivePinAfterReceipt, type ArchivePin } from "./archive-pin.ts";
+import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, archivePinReadBytes, readArchivePin, readArchivePinAfterReceipt, type ArchivePin } from "./archive-pin.ts";
 import type { Sql } from "./sqlite.ts";
 import { ARCHIVE_PRIVACY_JSON_PASSES, ARCHIVE_POSITION_METADATA_BYTES, ARCHIVE_FRAME_SIZE_METADATA,
   archivePinValidationWork, archiveNativeDataReservation, archiveScopeFrameReservation } from "./archive-inventory-cost.ts";
@@ -117,7 +117,7 @@ function prefixPin(sql: Pick<Sql, "exec">, expected: ScopeRef, budget: ArchiveBu
   const predecessor = after ? { ...after } : null;
   // Reserve validation as well as raw metadata replies, including cache hits.
   budget.spend({ inputWork: archivePinValidationWork() });
-  const pinSql = budget.native(sql, () => ({ metadata: ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES, inputWork: 0 }));
+  const pinSql = budget.native(sql, () => ({ metadata: ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES, inputWork: 0 }), archivePinReadBytes);
   const pin = predecessor ? readArchivePinAfterReceipt(pinSql, expected) : readArchivePin(pinSql, expected);
   if (!pin) { budget.check(); return stopArchivePrefix("unavailable"); }
   return pin;

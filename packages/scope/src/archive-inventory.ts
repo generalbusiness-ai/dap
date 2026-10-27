@@ -6,7 +6,7 @@ import { localRetainedPlan, requiredDependency, snapshotRead, UnsupportedConsume
 import type { DependencyOrigin, LocalRetainedPlan, RequiredDependency, RetainedDependency, RetainedKey, TextDependency } from "@generalbusiness/dap-derive";
 import { ArchiveBudget, ArchiveStopped, type ArchiveCost } from "./archive-budget.ts";
 import { archivePinValidationWork, archiveInventoryEntryWork } from "./archive-inventory-cost.ts";
-import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, readArchivePin, readArchivePinAfterReceipt } from "./archive-pin.ts";
+import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, archivePinReadBytes, readArchivePin, readArchivePinAfterReceipt } from "./archive-pin.ts";
 import { stopArchivePrefix as stop, archivePrefixMetadata, archiveRootMetadata, type ArchivePrefix, ArchivePrefixStopped, type ArchivePrefixReason } from "./archive-prefix.ts";
 import { archivePrivacyMetadata, type ArchiveSupport } from "./archive-privacy.ts";
 import { ArchiveRetainedReader, readArchiveProbe, archiveRetainedExpectedSize } from "./archive-retained.ts";
@@ -195,7 +195,7 @@ function inventoryArchiveInternal(coupled: boolean, sql: Sql, at: ScopeRef, thro
         // Rebind native scope/pin/cutoff before the only result. No await or
         // mutation can occur between this fence and returning the descriptor.
         budget.spend({ inputWork: archivePinValidationWork() });
-        const finalPin = (after ? readArchivePinAfterReceipt : readArchivePin)(budget.native(sql, () => ({ metadata: ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES, inputWork: 0 })), at);
+        const finalPin = (after ? readArchivePinAfterReceipt : readArchivePin)(budget.native(sql, () => ({ metadata: ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES, inputWork: 0 }), archivePinReadBytes), at);
         budget.check();
         if (!finalPin || canonicalize(finalPin) !== canonicalize(prefix.pin)) return stop("mismatch");
         const cutoff = budget.native(sql, () => ({ metadata: 128, inputWork: 0 })).exec("SELECT hash, size, octet_length(bytes) AS actual FROM entry WHERE seq = ? AND typeof(hash) = 'text' AND octet_length(hash) = 71 LIMIT 1", through.seq).toArray(), last = admitted.positions.at(-1)!;

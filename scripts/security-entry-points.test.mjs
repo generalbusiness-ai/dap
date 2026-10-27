@@ -233,17 +233,17 @@ const pendingArchiveSeals = {
   "packages/scope/src/archive-operator.ts": "422376afb07d7345290d1e821eb6410bc834c55edd86540fa058b94c405d08c9", // Private observation owner; actual maintained parser output.
   // Publication and floor owners were reviewed before these values were
   // computed by the maintained parser on the integrated source.
-  "packages/scope/src/archive-target.ts": "c34d8ddaf8a93ee0a845d8a02679f22a54431ab67d5234d53253e625f2570c89",
+  "packages/scope/src/archive-target.ts": "b679f2a125db53efe9fb96b2c048824dc388910b884547600776c8b7f7d727c4", // Read ceilings settle only after bounded replies; authority checks unchanged.
   "packages/scope/src/archive-source-window.ts": "4db3f5885e7541f713b9668d1cde655e42be1950dd6af77d5711a323b3582e1c",
   "packages/scope/src/archive-publication.ts": "d8c39d220bc7eea59301478aa553960267aac16f06502b4103a85647c71eb457",
-  "packages/scope/src/archive-build.ts": "038fabbfd864ad30f623076b6aa107137075472445fe98eaf1e3d4cbc3a0bd2b", // Fixed-prefix inventory ownership reviewed; actual maintained parser output.
-  "packages/scope/src/archive-driver.ts": "cd52e871a95ee7b485d2ef231f1c06c3ab1c203c127879d6566aa86893f59c8b", // Bounded capture and exact head identity; unchanged authority and retry decisions; actual maintained parser output.
+  "packages/scope/src/archive-build.ts": "b20a6d3c3572e702f92540021ff055c3126384fa17532bb16435ee5155b635fb", // Actual pin SQL payload settles; final identity fence unchanged.
+  "packages/scope/src/archive-driver.ts": "7007cc64415ac5f0c7777e5dc017383b969f819fe1d80395f4bc67bc505479d7", // Pin read settlement and bounded scalar observation; authority/retry checks unchanged.
   "packages/scope/src/archive-row.ts": "02f01270071d022253335b5d4b41c8574e75f0eb806e58f70afa60e4b8fbc613", // Paid prior-capacity scalar reviewed; actual maintained parser output.
   "packages/scope/src/floor-writer.ts": "fb8fd859844b8d10ba43b477bcaf07ab32fe1bfa1b6684ad9ae70b930d328a11",
   "packages/scope/src/object.ts": namedOwners["packages/scope/src/object.ts"],
   "apps/room/worker.grow.ts": "0cc4c1c63f79f8da8dad5e98b2ace5b69fcd818d41640ed4e316ee534adf749f",
   "apps/room/archive-policy.ts": "ed3b746b5a26c3e872e41b13ba133f43ade42b5612aa5028ba544fc013be5ce7",
-  "apps/room/archive.ts": "fdd3889d0662acc3c1e9bdbc0d0776c1e69cfdf31237a433856080f259ba8f1b",
+  "apps/room/archive.ts": "9547f8b9a4a1dd842b6151287a9b15efdf3abed011cb6b12bc191d5e04b78e4d", // Valid source proof settles; source policy and identity checks unchanged.
   "packages/scope/src/archive-host-item.ts": "44fd36bee675f5abc450ffb60b9858d820e20c88461589ecfeff61e36ef0e327",
   "packages/scope/src/archive-host.ts": "e376746b7a1001a47715f666c4777e135bf1c48a162bfffe9c80e0ec913f079f", // Staged input charges and bounded bootstrap reviewed; actual maintained parser output.
   "packages/scope/src/artifacts-host.ts": "df100e1d2d24bb859af31935b21598cd948e2dec0199d954c34742e33dc38f53",

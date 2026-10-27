@@ -12,7 +12,7 @@ import { admitArchiveMigration } from "./archive-bootstrap-cost.ts";
 import { planPublishedArchiveConversion, rebuildArchive, rebuildArchivePass, type ArchiveFixedFinish } from "./archive-build.ts";
 import { planAdaptiveArchivePass, planRootAdaptiveArchivePass, planRootFixedArchivePass, planRootFixedUnpublishedArchivePass } from "./archive-adaptive.ts";
 import type { FixtureArchiveSourcePins } from "./archive-source-pins.ts";
-import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, readArchivePin, readArchivePinAfterReceipt } from "./archive-pin.ts";
+import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, archivePinReadBytes, readArchivePin, readArchivePinAfterReceipt } from "./archive-pin.ts";
 import type { ArchivePolicyRegistry } from "./archive-inventory.ts";
 import { ArchiveRows, type ArchiveMark, type ArchiveRow } from "./archive-row.ts";
 import { finishArchiveParentRead, startArchiveParentReadPass } from "./archive-parent-read-diagnostic.ts";
@@ -177,7 +177,7 @@ export class ArchiveDriver {
       if (row?.stopped) return done({ state: "stopped", next: null, reason: row.stopped.reason });
       step = "pin";
       const readPin = row?.confirmed?.layout === 2 ? readArchivePinAfterReceipt : readArchivePin;
-      const pin = readPin(budget.native(this.#options.sql, () => ({ metadata: ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES, inputWork: 0 })), at);
+      const pin = readPin(budget.native(this.#options.sql, () => ({ metadata: ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES, inputWork: 0 }), archivePinReadBytes), at);
       budget.check();
       if (!pin) return done({ state: "retry", next: this.#later(0), reason: "unavailable" });
       if ("production" in this.#options && !this.#options.admit(at, pin.seed)) { this.#disabled = true; return done({ state: "disabled", next: null }); }
@@ -481,7 +481,9 @@ export class ArchiveDriver {
         console.info("archive-pass-diagnostic-v1", {
           step, detail, rowPhaseAtLoad: phase, confirmed: position(confirmed), pending: position(pending), attemptsAtLoad: position(attempts), hasNext,
           attempted, state: observed.outcome?.state ?? "threw", reason: reason === undefined ? "none" : known.includes(reason) ? reason : "other",
-          caught: known.includes(caught) ? caught : caught === "none" ? "none" : "other", cost, parentRead, capacityRefusal, fixedFinish, sourceFailure, capacityObservation,
+          caught: known.includes(caught) ? caught : caught === "none" ? "none" : "other", cost,
+          reservationCosts: ArchiveBudget.prototype.reservationCosts.call(budget),
+          parentRead, capacityRefusal, fixedFinish, sourceFailure, capacityObservation,
         });
       } catch { /* Observation cannot replace the original archive result. */ }
     }

@@ -5,7 +5,7 @@ import { canonicalize, isDigest, isHead, natural, timeMs } from "@generalbusines
 import { JOURNAL_V2_LAST_POSITION } from "@generalbusiness/dap-git/journal";
 import { ArchiveBudget, type ArchiveCost, type ArchiveCapacityLimited } from "./archive-budget.ts";
 import { ARCHIVE_POSITION_METADATA_BYTES, ARCHIVE_PRIVACY_JSON_PASSES, archivePrefixMetadata, readArchiveScopeFrame, stopArchivePrefix as stop, type ArchivePosition, type ArchivePrefix } from "./archive-prefix.ts";
-import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, readArchivePin, readArchivePinAfterReceipt } from "./archive-pin.ts";
+import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, archivePinReadBytes, readArchivePin, readArchivePinAfterReceipt } from "./archive-pin.ts";
 import type { Sql } from "./sqlite.ts";
 import { archiveRootMetadata } from "./archive-prefix.ts";
 import type { ArchivePolicyRegistry } from "./archive-inventory.ts";
@@ -99,7 +99,7 @@ export class ArchiveWindow {
     const { budget, base, bounds, head } = held;
     budget.check();
     budget.spend({ inputWork: 4 * (ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES) });
-    const pinSql = budget.native(sql, () => ({ metadata: ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES, inputWork: 0 }));
+    const pinSql = budget.native(sql, () => ({ metadata: ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES, inputWork: 0 }), archivePinReadBytes);
     const pin = base.after ? readArchivePinAfterReceipt(pinSql, base.pin.at) : readArchivePin(pinSql, base.pin.at);
     if (!pin) { budget.check(); return stop("unavailable"); }
     if (canonicalize(pin) !== canonicalize(base.pin)) return stop("mismatch");

@@ -170,6 +170,14 @@ storage transaction per turn. This is the authority for the scope's
 order. Nothing outside the service holds the journal until a reader
 copies it.
 
+The optional journal archive runs in bounded alarm passes. A pass reserves
+the full ceiling before reading target or source birth proofs, target item
+replies, pin metadata or retained parent-frontier payloads. A completed,
+checked read releases unused metadata allowance and the matching share of
+byte-based input work. Failed reads keep the full reservation. Calls and
+other operation counts, the original deadline and the finish forecast keep
+their existing bounds; settlement grants no read or publication authority.
+
 **Publication to a Git host.** A dap-room destination publishes
 repository content to a Git host: GitHub, or Cloudflare Artifacts. For
 the first head and for each publication it also writes a receipt

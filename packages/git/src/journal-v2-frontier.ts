@@ -9,7 +9,7 @@ import { journalTreeRowMetadata } from "./journal-object-cost.ts";
 import { JOURNAL_V2_LAST_POSITION, journalV2Directory } from "./journal-v2-path.ts";
 import { journalRecord } from "./journal-selection.ts";
 import { sameJournalScope } from "./journal-selection.ts";
-import { JournalWork, refuseJournal, type JournalBudget, type JournalCost } from "./journal-work.ts";
+import { JournalWork, refuseJournal, type JournalReservationBudget, type JournalCost } from "./journal-work.ts";
 
 export const JOURNAL_PARENT_FRONTIER_OBJECTS = 11;
 /** Three fixed trees, five 4,100-byte numeric trees, one 5,100-byte tree,
@@ -90,7 +90,7 @@ function edge(rows: readonly JournalTreeRow[], names: readonly string[]): void {
 /** Extract only the fixed witness. Every body is hash checked by the existing
  * reader, with the same caller budget/deadline. No descendant walk occurs. */
 export async function captureJournalParentFrontier(expected: JournalParentBinding, source: JournalObjectSource,
-  budget: JournalBudget, expectedParent?: string | null): Promise<JournalParentFrontier> {
+  budget: JournalReservationBudget, expectedParent?: string | null): Promise<JournalParentFrontier> {
   const work = new JournalWork(budget), owned = binding(expected, work), profile = journalParentFrontierProfile(owned.through.seq);
   const parent = expectedParent === undefined || expectedParent === null ? expectedParent : journalId(owned.format, expectedParent);
   work.metadata(JOURNAL_PARENT_FRONTIER_OBJECTS * 128);
@@ -101,8 +101,12 @@ export async function captureJournalParentFrontier(expected: JournalParentBindin
     if (ids.has(id)) return refuseJournal("parent");
     ids.add(id);
     // Reserve captured payload ownership before the reader can allocate it.
-    work.metadata(maximum);
+    // A refused/throwing read keeps its full ceiling; only an owned,
+    // size-checked and hash-checked body can settle this reservation.
+    work.check();
+    const reservation = budget.reserve({ metadata: maximum, inputWork: maximum });
     const data = await reader.read(id, type, maximum);
+    budget.settle(reservation, data.length);
     bytes += data.length;
     if (bytes > profile.bytes) return work.stop();
     objects.push(Object.freeze({ id, type, data }));
@@ -152,7 +156,7 @@ const nativeLength = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(Uint8
  * A supplied expectedParent also binds the actual commit edge to the Mark.
  * This function neither reads SQL nor trusts a prior validation flag. */
 export async function validateJournalParentFrontier(value: unknown, expected: JournalParentBinding,
-  budget: JournalBudget, expectedParent?: string | null): Promise<JournalParentFrontier> {
+  budget: JournalReservationBudget, expectedParent?: string | null): Promise<JournalParentFrontier> {
   const work = new JournalWork(budget), required = binding(expected, work), profile = journalParentFrontierProfile(required.through.seq);
   const parent = expectedParent === undefined || expectedParent === null ? expectedParent : journalId(required.format, expectedParent);
   work.metadata(1024 + JOURNAL_PARENT_FRONTIER_OBJECTS * 128);

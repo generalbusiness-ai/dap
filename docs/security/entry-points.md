@@ -311,6 +311,20 @@ when the caller's HTTP read is refused; they do not grant the caller archive
 access. Register and Membership journals remain excluded. Generic and lending
 entries do not enable this wiring, and production retained floors remain off.
 
+Birth proofs, target item replies, pin SQL payloads and parent-frontier
+ownership reserve their full read ceiling before I/O. A successful bounded
+receipt settles metadata and proportional input work to received bytes;
+an unavailable or failed read stays charged in full. Operation counts and
+the original deadline do not change. Fixed processing fees and transport
+input-work tariffs retain their existing charges.
+
+The pass diagnostic's `reservationCosts.metadataReserved` is metadata
+admitted before refunds. `metadataSettled` is the current charge, including
+outstanding reservations at their full ceilings; `unsettledMetadata` names
+that outstanding subset. `settlementRefusal` is `none`, `invalid-received`
+or `unknown-reservation`. These copied scalars and the observation's net
+site attribution grant no admission or authority.
+
 The internal `archiveItem` namespace port has no HTTP route. Its raw helper
 accepts trusted host input; the complete target birth walk and admitted binding
 supply its authority boundary. The table below adds no public archive route.
