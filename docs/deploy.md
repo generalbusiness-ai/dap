@@ -432,18 +432,22 @@ saved scope-index manifest and matching operator CLI configuration. Keep the
 scope index in enforce mode where that mode applies. Retain the manifest path
 and digest with the run report. Set one live `APPLICATION_TRUST` row for every
 distinct reported release, publisher and host; resolve inconsistent rows before
-deployment. An unreadable scope, malformed record or pending installation
-makes the report incomplete: investigate it and rerun until complete before deploying. The
-command requests one existing operator read session from the configured
+deployment. An unreadable Rules scope, malformed record or pending installation
+makes the report incomplete: investigate it and rerun until complete before
+deploying. The command requests one existing operator read session from the configured
 membership before reading summaries. This is the one request beyond one
-summary GET per listed scope. The session stays in memory. Acquisition can
+summary GET per listed Rules scope. Other listed kinds receive a saved
+`not-applicable` status and no summary request, because they cannot hold native
+installation items. This trusts the kind in each validated manifest reference,
+as it trusts the manifest for which scopes exist. Skipped kinds are not fresh
+host observations. The session stays in memory. Acquisition can
 write the host's bounded replay and rate bookkeeping; it creates no history
 entry. A valid session refusal or absent membership selects initial signed
 reads. A failed or malformed acquisition stops the command. No summary is
 retried, and the command sends no registration or business mutation. Existing
 server reads can still resume parked work, diagnose archives or recover
-alarms. These are host maintenance, not a write-free server snapshot. Summaries bind observed scope references and
-native pins; they do not reverify the manifest's genesis hashes or prove a
+alarms. These are host maintenance, not a write-free server snapshot. Rules
+summaries bind observed scope references and native pins; they do not reverify the manifest's genesis hashes or prove a
 global inventory. The planner records all three runs before further R11
 deployments and uses the existing `--keep-vars` deployment commands.
 

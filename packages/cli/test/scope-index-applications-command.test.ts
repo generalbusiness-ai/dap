@@ -37,10 +37,10 @@ function summary(scope: ScopeRef, items: readonly Item[] = []): unknown {
       [name, state, items.filter(item => item.type === name && item.state === state).length] as [string, string, number])) };
   return { ok: true, at: { seq: 100, hash: textDigest("TEST summary head") }, complete: true, value };
 }
-function fixture(ruleCount = 1, withMembership = false) {
+function fixture(ruleCount = 1, withMembership = false, otherKinds: readonly ScopeRef["kind"][] = []) {
   const root = ref("directory", 0), membership = ref("membership", 1), rules = Array.from({ length: ruleCount }, (_, i) => ref("rules", i + 1));
   const manifest: IndexManifest = { v: 1, service: service.toLowerCase(), root,
-    scopes: [root, ...rules].map(at => ({ at, genesis: textDigest(`TEST manifest ${at.scope}`) })).sort((a, b) => a.at.scope.localeCompare(b.at.scope)) };
+    scopes: [root, ...rules, ...otherKinds.map((kind, i) => ref(kind, i + 500))].map(at => ({ at, genesis: textDigest(`TEST manifest ${at.scope}`) })).sort((a, b) => a.at.scope.localeCompare(b.at.scope)) };
   let saved = utf8(canonicalize(manifest)), published: Uint8Array | undefined;
   const calls: { url: string; method: string }[] = [], local: string[] = [], readers: string[] = [];
   let asked: SignedSessionRequest | undefined;
@@ -90,12 +90,14 @@ test("application listing validates locally before reading key custody or reques
 });
 
 // Invariant: the same SCRIPTED host policy refuses Signed summaries and
-// admits an acquired session, with one acquisition and one GET per row.
+// admits an acquired session for Rules, with one acquisition and one GET
+// per Rules row. Every other manifest kind is skipped without a read.
 // This exercises client selection, not Native membership/session authority.
 test("application listing uses one acquired session where the same scripted host refuses Signed reads", async () => {
-  const signed = fixture(2), session = fixture(2, true);
-  const host = async (at: ScopeRef, reader: string) => reader === `Session ${sessionToken}`
-    ? Response.json(summary(at, at.kind === "rules" ? [installation(2)] : []))
+  const otherKinds = ["register", "membership", "destination", "inbox", "task", "lane"] as const;
+  const signed = fixture(2, false, otherKinds), session = fixture(2, true, otherKinds);
+  const host = async (at: ScopeRef, reader: string) => at.kind === "rules" && reader === `Session ${sessionToken}`
+    ? Response.json(summary(at, [installation(2)]))
     : Response.json({ ok: false, reason: "forbidden" }, { status: 403 });
   signed.respond(host); session.respond(host);
   const refused = await scopeIndexCommand(signed.ctx, argv, signed.files);
@@ -104,16 +106,20 @@ test("application listing uses one acquired session where the same scripted host
   const before = JSON.parse(new TextDecoder().decode(signed.published()!));
   const after = JSON.parse(new TextDecoder().decode(session.published()!));
   expect(before.applications).toEqual([]);
-  expect(before.errors).toEqual(signed.manifest.scopes.map(({ at }) => ({ scope: at, why: "forbidden" })));
+  expect(before.errors).toEqual(signed.manifest.scopes.filter(({ at }) => at.kind === "rules").map(({ at }) => ({ scope: at, why: "forbidden" })));
+  const skipped = session.manifest.scopes.filter(({ at }) => at.kind !== "rules").map(({ at }) => ({ scope: at, status: "not-applicable" }));
+  expect(skipped).toHaveLength(7); expect(before.notApplicable).toEqual(skipped); expect(after.notApplicable).toEqual(skipped);
   expect(after.errors).toEqual([]);
   expect(after.applications).toEqual(session.manifest.scopes.filter(({ at }) => at.kind === "rules").map(({ at }) =>
     ({ scope: ref("lane", 1002), installItem: { scope: at, item: 2 }, release, publisher, host: "git.example.test" })));
   expect(session.calls).toEqual([
     { url: `${session.manifest.service}/v1/scopes/${session.membership.scope}/sessions`, method: "POST" },
-    ...session.manifest.scopes.map(({ at }) => ({ url: `${session.manifest.service}/v1/scopes/${at.scope}`, method: "GET" })),
+    ...session.manifest.scopes.filter(({ at }) => at.kind === "rules").map(({ at }) => ({ url: `${session.manifest.service}/v1/scopes/${at.scope}`, method: "GET" })),
   ]);
-  expect(signed.calls).toHaveLength(signed.manifest.scopes.length);
-  expect(session.readers).toEqual(session.manifest.scopes.map(() => `Session ${sessionToken}`));
+  expect(signed.calls).toEqual(signed.manifest.scopes.filter(({ at }) => at.kind === "rules").map(({ at }) => ({ url: `${signed.manifest.service}/v1/scopes/${at.scope}`, method: "GET" })));
+  expect(session.readers).toEqual([`Session ${sessionToken}`, `Session ${sessionToken}`]);
+  expect(JSON.parse(admitted.lines[0]!)).toMatchObject({ status: "complete", applications: 2, errors: 0, notApplicable: 7 });
+  expect(JSON.parse(refused.lines[0]!)).toMatchObject({ status: "incomplete", applications: 0, errors: 2, notApplicable: 7 });
   expect(session.local.filter(value => value === "signer")).toHaveLength(1);
   expect(session.local.indexOf("manifest")).toBeLessThan(session.local.indexOf("signer"));
   const output = JSON.stringify({ after, admitted });
@@ -124,19 +130,19 @@ test("application listing uses one acquired session where the same scripted host
 // authority initially; a refused session summary is never tried again.
 test("application listing selects initial Signed reads after a valid session refusal or missing membership without summary fallback", async () => {
   for (const withMembership of [false, true]) {
-    const f = fixture(0, withMembership);
+    const f = fixture(1, withMembership);
     f.session(async () => Response.json({ ok: false, reason: "sessions-unavailable" }, { status: 503 }));
     expect((await scopeIndexCommand(f.ctx, argv, f.files)).code).toBe(0);
     expect(f.readers).toHaveLength(1); expect(f.readers[0]!.startsWith("Signed ")).toBe(true);
     expect(f.calls.map(call => call.method)).toEqual(withMembership ? ["POST", "GET"] : ["GET"]);
     expect(f.local.filter(value => value === "signer")).toHaveLength(1);
   }
-  const f = fixture(0, true);
+  const f = fixture(1, true);
   f.respond(async () => Response.json({ ok: false, reason: "forbidden" }, { status: 403 }));
   expect((await scopeIndexCommand(f.ctx, argv, f.files)).code).toBe(1);
   expect(f.calls.map(call => call.method)).toEqual(["POST", "GET"]);
   expect(f.readers).toEqual([`Session ${sessionToken}`]);
-  expect(JSON.parse(new TextDecoder().decode(f.published()!)).errors).toEqual([{ scope: f.root, why: "forbidden" }]);
+  expect(JSON.parse(new TextDecoder().decode(f.published()!)).errors).toEqual([{ scope: f.rules[0], why: "forbidden" }]);
 });
 
 // Invariant: an uncertain or malformed acquisition stops with a fixed error,
@@ -147,7 +153,7 @@ test("application listing stops private session exceptions, malformed answers an
     async () => Response.json({ ok: true, token: sessionToken, session: sentinel }),
     async () => new Response(sentinel, { status: 302, headers: { location: `https://${sentinel}.test` } }),
   ]) {
-    const f = fixture(0, true); f.session(respond);
+    const f = fixture(1, true); f.session(respond);
     expect(await scopeIndexCommand(f.ctx, argv, f.files)).toEqual({ code: 1, lines: [JSON.stringify({ manifestPath, manifestDigest: digestBytes(f.saved()), error: "session-unavailable" })] });
     expect(f.calls).toEqual([{ url: `${f.manifest.service}/v1/scopes/${f.membership.scope}/sessions`, method: "POST" }]);
     expect(f.readers).toEqual([]); expect(f.published()).toBeUndefined(); expect(f.local).not.toContain("output");
@@ -159,7 +165,7 @@ test("application listing stops private session exceptions, malformed answers an
 test("application listing stops an unanswered session without summary reads or output", async () => {
   vi.useFakeTimers();
   try {
-    const f = fixture(0, true); f.session(() => new Promise(() => undefined));
+    const f = fixture(1, true); f.session(() => new Promise(() => undefined));
     const running = scopeIndexCommand(f.ctx, argv, f.files);
     await vi.advanceTimersByTimeAsync(30_001);
     expect(await running).toEqual({ code: 1, lines: [JSON.stringify({ manifestPath, manifestDigest: digestBytes(f.saved()), error: "session-unavailable" })] });
@@ -168,7 +174,7 @@ test("application listing stops an unanswered session without summary reads or o
   } finally { vi.useRealTimers(); }
 });
 
-// Invariant: listed scope observations cause exactly one GET each, with no
+// Invariant: listed Rules observations cause exactly one GET each, with no
 // fallback/mutation/store write when no membership is configured; errors
 // remain distinct from empty.
 test("application listing reads each scope once and saves metadata with explicit unreadable and malformed errors", async () => {
@@ -182,12 +188,13 @@ test("application listing reads each scope once and saves metadata with explicit
   const outcome = await scopeIndexCommand(f.ctx, argv, f.files);
   expect(outcome.code).toBe(1);
   const report = JSON.parse(new TextDecoder().decode(f.published()!));
-  expect(Object.keys(report)).toEqual(["manifestPath", "manifestDigest", "applications", "errors"]);
+  expect(Object.keys(report)).toEqual(["manifestPath", "manifestDigest", "applications", "errors", "notApplicable"]);
   expect(report.manifestPath).toBe(manifestPath); expect(report.manifestDigest).toBe(digestBytes(f.saved()));
   expect(report.applications).toEqual([{ scope: ref("lane", 1002), installItem: { scope: f.rules[0], item: 2 }, release, publisher, host: "git.example.test" }]);
   expect(report.errors).toEqual(expect.arrayContaining([{ scope: f.rules[2], why: "forbidden" }, { scope: f.rules[3], why: "malformed-installation" }]));
   expect(report.errors).toHaveLength(2);
-  expect(f.calls).toEqual(f.manifest.scopes.map(({ at }) => ({ url: `${f.manifest.service}/v1/scopes/${at.scope}`, method: "GET" })));
+  expect(report.notApplicable).toEqual([{ scope: f.root, status: "not-applicable" }]);
+  expect(f.calls).toEqual(f.manifest.scopes.filter(({ at }) => at.kind === "rules").map(({ at }) => ({ url: `${f.manifest.service}/v1/scopes/${at.scope}`, method: "GET" })));
   expect(f.local.filter(value => value === "signer")).toHaveLength(1);
   expect(f.local.indexOf("manifest")).toBeLessThan(f.local.indexOf("signer"));
   const allOutput = JSON.stringify({ report, outcome });
@@ -200,14 +207,15 @@ test("application listing reads each scope once and saves metadata with explicit
 test("application listing withholds private failures and refuses redirects and oversized responses", async () => {
   for (const respond of [
     async () => { throw Error(sentinel); },
-    async () => new Response(JSON.stringify(summary(ref("directory", 0))), { status: 302, headers: { location: `https://${sentinel}.test` } }),
+    async () => new Response(JSON.stringify(summary(ref("rules", 1))), { status: 302, headers: { location: `https://${sentinel}.test` } }),
     async () => new Response(" ".repeat(4 * 1024 * 1024 + 1)),
   ]) {
-    const f = fixture(0); f.respond(respond);
+    const f = fixture(1); f.respond(respond);
     const outcome = await scopeIndexCommand(f.ctx, argv, f.files);
     const report = JSON.parse(new TextDecoder().decode(f.published()!));
     expect(outcome.code).toBe(1); expect(report.applications).toEqual([]);
-    expect(report.errors).toEqual([{ scope: f.root, why: "unavailable" }]); expect(f.calls).toHaveLength(1);
+    expect(report.errors).toEqual([{ scope: f.rules[0], why: "unavailable" }]); expect(f.calls).toHaveLength(1);
+    expect(report.notApplicable).toEqual([{ scope: f.root, status: "not-applicable" }]);
     expect(JSON.stringify({ outcome, report }).includes(sentinel)).toBe(false);
   }
   const f = fixture();
@@ -222,31 +230,48 @@ test("application listing withholds private failures and refuses redirects and o
 test("application listing stops an unanswered summary at the existing transport deadline", async () => {
   vi.useFakeTimers();
   try {
-    const f = fixture(0); f.respond(() => new Promise(() => undefined));
+    const f = fixture(1); f.respond(() => new Promise(() => undefined));
     const running = scopeIndexCommand(f.ctx, argv, f.files);
     await vi.advanceTimersByTimeAsync(30_001);
     expect((await running).code).toBe(1);
     expect(f.calls).toHaveLength(1);
-    expect(JSON.parse(new TextDecoder().decode(f.published()!)).errors).toEqual([{ scope: f.root, why: "unavailable" }]);
+    expect(JSON.parse(new TextDecoder().decode(f.published()!)).errors).toEqual([{ scope: f.rules[0], why: "unavailable" }]);
   } finally { vi.useRealTimers(); }
 });
 
 // Invariant: complete-empty is explicit success, while publication is
 // exclusive and exceeding the real output cap publishes no partial file.
 test("application listing keeps empty success distinct from exclusive publication and output bounds", async () => {
-  const empty = fixture(0);
+  const empty = fixture(1); empty.respond(async at => Response.json(summary(at)));
   expect((await scopeIndexCommand(empty.ctx, argv, empty.files)).code).toBe(0);
-  expect(JSON.parse(new TextDecoder().decode(empty.published()!))).toMatchObject({ applications: [], errors: [] });
+  expect(JSON.parse(new TextDecoder().decode(empty.published()!))).toMatchObject({ applications: [], errors: [], notApplicable: [{ scope: empty.root, status: "not-applicable" }] });
+  expect(empty.calls).toHaveLength(1);
+  const skipped = fixture(0);
+  expect((await scopeIndexCommand(skipped.ctx, argv, skipped.files)).code).toBe(0);
+  expect(skipped.calls).toEqual([]);
+  expect(JSON.parse(new TextDecoder().decode(skipped.published()!))).toMatchObject({ applications: [], errors: [], notApplicable: [{ scope: skipped.root, status: "not-applicable" }] });
   const directory = await mkdtemp(join(tmpdir(), "dap-application-listing-")), output = join(directory, "existing.json");
   try {
     await writeFile(output, sentinel);
-    const f = fixture(0);
+    const f = fixture(1);
     const outcome = await scopeIndexCommand(f.ctx, ["applications", "--manifest", manifestPath, "--out", output], { read: f.files.read, save: saveIndexFile });
     expect(outcome.code).toBe(1); expect(JSON.parse(outcome.lines[0]!).error).toBe("output-unavailable");
     expect(await readFile(output, "utf8")).toBe(sentinel); expect(outcome.lines.join(" ").includes(sentinel)).toBe(false);
   } finally { await rm(directory, { recursive: true, force: true }); }
-  const full = fixture(100), items = Array.from({ length: 64 }, (_, i) => installation(i, "a".repeat(3000) + ".test"));
-  full.respond(async at => Response.json(summary(at, at.kind === "rules" ? items : [])));
+  // The applications fit the real cap. Explicit skipped rows make the whole
+  // serialized report exceed it, so omitting their accounting is observable.
+  const full = fixture(64, false, Array<ScopeRef["kind"]>(32).fill("register"));
+  const rows = full.rules.flatMap(scope => Array.from({ length: 64 }, (_, item) =>
+    ({ scope: ref("lane", item + 1000), installItem: { scope, item }, release, publisher, host: "x.test" })));
+  const expected = { manifestPath, manifestDigest: digestBytes(full.saved()), applications: rows, errors: [], notApplicable: [] as { scope: ScopeRef; status: string }[] };
+  const room = INDEX_INVENTORY_BOUNDS.bytes - Buffer.byteLength(JSON.stringify(expected) + "\n") - 1;
+  const host = "a".repeat(Math.floor(room / rows.length)) + "x.test";
+  for (const row of rows) row.host = host;
+  expect(Buffer.byteLength(JSON.stringify(expected) + "\n")).toBeLessThanOrEqual(INDEX_INVENTORY_BOUNDS.bytes);
+  expected.notApplicable = full.manifest.scopes.filter(({ at }) => at.kind !== "rules").map(({ at }) => ({ scope: at, status: "not-applicable" }));
+  expect(Buffer.byteLength(JSON.stringify(expected) + "\n")).toBeGreaterThan(INDEX_INVENTORY_BOUNDS.bytes);
+  const items = Array.from({ length: 64 }, (_, i) => installation(i, host));
+  full.respond(async at => Response.json(summary(at, items)));
   const outcome = await scopeIndexCommand(full.ctx, argv, full.files);
   expect(outcome.code).toBe(1); expect(JSON.parse(outcome.lines[0]!).error).toBe("output-too-large");
   expect(full.published()).toBeUndefined(); expect(full.local).not.toContain("output");
