@@ -1,8 +1,8 @@
-# Report observed worker use
+# Report observed Worker use
 
-`scripts/usage-report.mjs` compares one 30-day analytics aggregate with the
-current checked-in worker configuration inventory. It reports observed use and
-states what the existing telemetry cannot measure. This is the R14 script
+`scripts/usage-report.mjs` compares one 30-day Analytics Engine aggregate with
+the current checked-in Worker configuration inventory. It reports observed use
+and states what the existing telemetry cannot measure. This is the R14 script
 partial. Parent request `bb763efa` remains open for individual routes, native
 platform versions, and features beyond the current telemetry.
 
@@ -33,24 +33,24 @@ option, or environment fallback. Input must contain a nonempty token of at most
 must end within ten seconds. The total input limit is 4,098 bytes. The script
 does not return the token or raw authenticated response in its report.
 
-Exit 0 means the bounded response was accepted and every selected worker was
-mapped. Exit 2 refuses input or an unmappable worker. Exit 1 marks an
+Exit 0 means the bounded response was accepted and every selected Worker was
+mapped. Exit 2 refuses input or an unmappable Worker. Exit 1 marks an
 incomplete query or another report failure. If report text would contain the
 credential, the script emits no report and exits 1. An unexpected final output
 failure also exits 1 without printing a fallback that could disclose the
 credential.
 
-`--account` is a 32-character lowercase hexadecimal provider account ID.
+`--account` is a 32-character lowercase hexadecimal Cloudflare account ID.
 `--mapping` is the absolute path to your mapping. Repeat `--worker` to select
-several known workers. Duplicate selections are refused. Without `--worker`,
-the script selects every worker in the current inventory, including those your
+several known Workers. Duplicate selections are refused. Without `--worker`,
+the script selects every Worker in the current inventory, including those your
 mapping omits.
 
 `--through` is optional. It accepts a valid UTC timestamp in
 `YYYY-MM-DDTHH:mm:ssZ` or `YYYY-MM-DDTHH:mm:ss.000Z` form, with no future time.
 Its default is the current UTC time rounded down to a whole second, captured
 once for the report. The 30-day window includes its start and excludes its end.
-The command does not change a worker setting, telemetry writer, deployment, or
+The command does not change a Worker setting, telemetry writer, deployment, or
 dependency.
 
 The mapping has exactly this version 1 structure:
@@ -69,12 +69,12 @@ The mapping has exactly this version 1 structure:
 
 The [JSON schema](../scripts/usage-report-mapping.schema.json) checks required
 keys, version, object shape, array limits, control characters, exact duplicate
-rows, and duplicate labels within a row. There are at most 32 worker rows and 1
-to 16 deployment labels per row. An empty worker array is accepted and leaves
-selected workers unmappable. Each label is nonempty, contains no control
-characters, and is at most 128 UTF-8 bytes. Unknown keys, duplicate workers,
-and labels shared by different worker rows are refused. The parser enforces the
-byte limits, cross-row uniqueness, and exact worker membership in the current
+rows, and duplicate labels within a row. There are at most 32 Worker rows and 1
+to 16 deployment labels per row. An empty Worker array is accepted and leaves
+selected Workers unmappable. Each label is nonempty, contains no control
+characters, and is at most 128 UTF-8 bytes. Unknown keys, duplicate Workers,
+and labels shared by different Worker rows are refused. The parser enforces the
+byte limits, cross-row uniqueness, and exact Worker membership in the current
 inventory. A schema character limit alone does not enforce a UTF-8 byte limit.
 
 The parser also enforces a 64 KiB mapping-file limit and checks the file's
@@ -83,13 +83,13 @@ does not make a mapping external. The repository retains the schema and TEST
 example only. Keep actual deployment history in your operator-owned external
 file.
 
-`worker` names a worker in the static configuration inventory. `deployments`
-contains the metric labels that you declare belonged to that worker during the
-report window. A `DEPLOYMENT` value is a telemetry label, not a worker
-identity. The script does not infer worker identity from that value. Current
+`worker` names a Worker in the static configuration inventory. `deployments`
+contains the metric labels that you declare belonged to that Worker during the
+report window. A `DEPLOYMENT` value is a telemetry label, not a Worker
+identity. The script does not infer Worker identity from that value. Current
 configuration cannot recover historical labels or prove that your mapping
 covers every deployment. The fallback label `unknown` cannot attribute
-telemetry to a worker. A selected worker without a mapping, or mapped only to
+telemetry to a Worker. A selected Worker without a mapping, or mapped only to
 `unknown`, is refused and identified in the report. A missing mapping is not a
 zero-use result.
 
@@ -100,8 +100,8 @@ the checked-in configuration, not a queried deployment. Consult the
 bindings, settings, and secrets. The report separates three statuses:
 
 - **Observed:** the accepted aggregate contains matching telemetry for the
-  mapped worker and an observable category.
-- **Zero-observed:** the mapped worker has some telemetry, but the accepted
+  mapped Worker and an observable category.
+- **Zero-observed:** the mapped Worker has some telemetry, but the accepted
   aggregate contains no matching route-place observation for this category.
   Read this as **no observed use**, subject to the reported coverage limits.
 - **Unobservable:** the existing telemetry cannot distinguish that configured
@@ -112,28 +112,28 @@ Coarse route families do not identify individual HTTP methods or paths. Native
 platform versions, individual features, and individual bindings are
 unobservable with the current metric shape. Do not turn a configured route
 pattern or a binding name into a claim of measured use. The report does not
-claim that a worker, route, version, feature, or binding was never used. An
+claim that a Worker, route, version, feature, or binding was never used. An
 empty route list with `coverage.routeInventory` set to `unavailable` means the
-static catalog lacks that worker's routes. It does not mean the worker has no
+static catalog lacks that Worker's routes. It does not mean the Worker has no
 routes.
 
 The JSON report puts coarse route-place observations in `workers[].groups`.
 Each group includes its `status`, qualified `message`, `weightedEvents`, and
 result categories. `workers[].routes` and `workers[].bindings` retain the
-static inventory with `unobservable` status. A worker's top-level status
+static inventory with `unobservable` status. A Worker's top-level status
 describes the presence of mapped telemetry, which can include loss summaries.
 It does not certify successful routes or accepted native acts.
 
 `workers[].coverage` states sampling, recorded loss, missing summaries, and the
 unobservable version and feature dimensions. `absenceProven` is always false.
 `query.unassignedGroups` counts groups without a usable mapped deployment
-label. The report includes `mappingSha256` and each worker's `deploymentCount`;
+label. The report includes `mappingSha256` and each Worker's `deploymentCount`;
 it does not echo deployment labels or the mapping path.
 
-Exit 0 means the query produced an accepted report with no selected worker
+Exit 0 means the query produced an accepted report with no selected Worker
 refused for its mapping. That report can still contain unobservable rows. Exit
 1 means the query or report is unavailable or incomplete. Exit 2 means invalid
-input or a selected worker refused for its mapping. When some selected workers
+input or a selected Worker refused for its mapping. When some selected Workers
 are mapped, the script can query once and still report mapping refusals for
 others. When none is mapped, it refuses before reading the token or making a
 request.
@@ -157,7 +157,7 @@ Sampling can hide observations and makes weighted totals estimates.
 `metric-dropped` summaries describe losses known to the writer; a missing
 summary does not prove loss-free capture. Disabled telemetry, write failures,
 missing historical aliases, and an incomplete window also limit coverage. Read
-the report's coverage and sampling qualifications before comparing workers or
+the report's coverage and sampling qualifications before comparing Workers or
 deciding what to retire.
 
 The gate performs no live query. Recorded TEST emissions exercise the actual
@@ -169,7 +169,7 @@ planner's first SQL run exposed the limit-hint mismatch in request
 informed a scripted TEST case; no private provider rows were copied. The
 planner subsequently recorded a complete rerun with exit 0, a bounded response,
 and no unassigned groups under R14 (`dbf7e6bd`). That run establishes
-acceptance for its reported window and selected workers. This script adds no
+acceptance for its reported window and selected Workers. This script adds no
 telemetry and does not close the parent request's coverage gaps.
 
 [analytics-sql-api]:

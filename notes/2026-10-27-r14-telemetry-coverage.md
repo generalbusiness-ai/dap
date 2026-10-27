@@ -23,12 +23,12 @@ Rests-On: `git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7d5cbfcfaf
 
 - **Hosted version is already present.**
   `packages/scope/src/operational.ts:10,38–43` takes `VERSION_METADATA.id` into
-  each metric context. `metrics.ts:37–44,46–72,104–107` validates a worker
-  version UUID and writes it as blob3. This identifies the emitting worker
+  each metric context. `metrics.ts:37–44,46–72,104–107` validates a Worker
+  version UUID and writes it as blob3. This identifies the emitting Worker
   build, not a native definition version. `scripts/usage-report.mjs:120–166`
   currently groups coarse route points without selecting that dimension. An
   operator mapping of `DEPLOYMENT` aliases is still a declaration, not an
-  authenticated worker identity.
+  authenticated Worker identity.
 - **Native pins need a new field at the owning scope.**
   `packages/scope/src/core.ts:376–387` resolves the genesis pin and its
   native/declared definition; `object.ts:487–512` owns invocation contexts.
@@ -101,12 +101,12 @@ record kinds on the existing METRICS binding: `usage-route-v2`,
 that touches several owners from claiming one native version or feature
 cross-product. None is a v1 route point.
 
-Each point has one public worker-name index, eight blobs, and six doubles. The
+Each point has one public Worker-name index, eight blobs, and six doubles. The
 index comes from a closed release profile, never from a request or
 `DEPLOYMENT`. Bound it to 64 UTF-8 bytes. Bound all blobs together to 512 UTF-8
 bytes and counters to the existing `METRIC_MAX`. These proposed limits fit the
 provider's current 20-blob, 20-double, one-index, 16-KB blob and 96-byte index
-limits: [analytics limits][analytics-limits]. Indexing only by worker can still
+limits: [analytics limits][analytics-limits]. Indexing only by Worker can still
 lose rare route or native-version dimensions to sampling; this choice supplies
 no absence proof.
 
@@ -114,7 +114,7 @@ no absence proof.
 | --- | --- |
 | blob1 | One of the three literal v2 kinds above. |
 | blob2 | Public release-profile SHA-256, or `unknown`. |
-| blob3 | Existing worker version UUID, or `unknown`; never a native pin. |
+| blob3 | Existing Worker version UUID, or `unknown`; never a native pin. |
 | blob4 | Trusted channel: `edge-http`, `sandbox-native`, `mcp-internal`, `scope-service`, `alarm`, `dispatch`, or `other-internal`. |
 | blob5 | A profile-bound code from the route, native-version, or feature-operation catalogue. Unknown and not-applicable have distinct sentinels. |
 | blob6 | Kind-specific operation or completion category, defined below. |
@@ -143,7 +143,7 @@ without their digest. Blob6 names the actual operation, initially `create`,
 to that method's actual result. Blob8 is `native`, `declared`, `unobserved`, or
 `not-applicable`. A generic completion is not act acceptance. Do not add a
 `pinned()` read or infer ownership from a caller-presented pin, a current
-default, an HTTP route, or the worker's build UUID. If a boundary does not
+default, an HTTP route, or the Worker's build UUID. If a boundary does not
 already resolve the pin, that dimension remains unobservable.
 
 For feature records, blob5 names a fixed operation from the release profile.
@@ -180,10 +180,10 @@ stdin-only token handling and all existing non-disclosure controls. Historical
 v1 points cannot be upgraded into exact-route/native/feature use.
 
 The proposed public setting is `USAGE_PROFILE`: a SHA-256 selecting a bundled,
-allowlisted profile containing the worker name, source/configuration inventory,
+allowlisted profile containing the Worker name, source/configuration inventory,
 all three code catalogues and telemetry capabilities. It contains no secrets or
 arbitrary runtime setting values. The operator separately binds that profile to
-the uploaded worker version and rollout interval. The setting is an emitter
+the uploaded Worker version and rollout interval. The setting is an emitter
 declaration, not provider authentication. Missing or invalid profiles supply no
 attributable v2 observation; v1 and native outcomes remain unchanged. A
 source-generated profile cannot certify runtime overrides. This is a proposed
@@ -203,15 +203,15 @@ rows (`scripts/security-entry-points.mjs:276,288–301`). Its
 method/template/gate bijection is a source model, not proof that a hosted
 setting enabled a route. The route table must be bound to the public profile
 and to the operator's actual feature/configuration intervals. A missing route
-inventory is unavailable, not an empty catalogue. Uninstrumented workers and
-entrypoints remain explicit parent gaps; a first room-worker slice cannot
+inventory is unavailable, not an empty catalogue. Uninstrumented Workers and
+entrypoints remain explicit parent gaps; a first room-Worker slice cannot
 silently close coverage for the lending app, sandbox, simulator, static assets,
 or the jam app.
 
 ## Window and evidence contract
 
 Require an operator-supplied manifest outside the repository that binds each
-selected worker to a hosted version UUID, exact reviewed source commit, a
+selected Worker to a hosted version UUID, exact reviewed source commit, a
 nonsecret static configuration-inventory digest, the telemetry
 schema/capability set and the rollout interval. Record the manifest digest with
 the report. Do not hash secrets or emit runtime settings. A digest of
@@ -222,7 +222,7 @@ cannot make this binding.
 
 Use a fixed half-open UTC window. Mark the interval before the reviewed
 instrumentation was deployed as unobservable for the new dimensions; never
-backfill it from v1 coarse places. Mixed hosted versions, missing workers,
+backfill it from v1 coarse places. Mixed hosted versions, missing Workers,
 rollout overlap, unknown config identity and uninstrumented service/background
 paths produce explicit uncovered intervals or dimensions. Report first/last
 observed event times only as observations, not proof of continuous coverage. A
@@ -263,7 +263,7 @@ deployment or provider completeness.
 
 ## Decision requested before implementation
 
-Adopt or amend the three bounded usage formats, worker index, shared point
+Adopt or amend the three bounded usage formats, Worker index, shared point
 budget, proposed `USAGE_PROFILE` setting, external version/configuration
 manifest, and rollout-window rules. Assign the implementation scope separately
 under R14, as item 3 of the ruling requires. The later implementation must
