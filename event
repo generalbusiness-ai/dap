@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"docs at exact fe1cd57e018a8e9937be01db05eee86a4e66ea78 on planner/kernel-count-20261027, under promise git:sha1…2f743fb on request git:sha1…887f9ad\n\nThe docs directory at the recut head (one changed file, docs/kernel.md).","body":{"commit":"fe1cd57e018a8e9937be01db05eee86a4e66ea78","path":"docs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8642d5d46ff254aae2aadaabe95d1a2d15a7ea3f","text":"Republished at fe1cd57e018a8e9937be01db05eee86a4e66ea78; the successor stands at docs."}
