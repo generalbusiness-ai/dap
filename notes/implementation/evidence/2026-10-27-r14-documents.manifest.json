@@ -1,0 +1,49 @@
+{
+  "qualification": "Draft, open evidence inventory of the initial pre-style document checks. Final document and source checks, complete inventory and read-only seal remain due. No gate, query, deployment or parent closure is claimed.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-27-r14-documents",
+  "request": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:082750e849acdb3351ffc4f376aeb0140b7946db",
+  "promise": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:43f14337d15a33d822581e2b755a88fa17413ad8",
+  "checkpoint": {
+    "commit": "60f863245b2b819a44b7b037ce70d2b6ee284e22",
+    "tree": "8229ee80b376f48a5a811a9d227d1549656735e8",
+    "qualification": "Initial checks used the intentionally dirty proposal status recorded in checks-receipt.json."
+  },
+  "fileCount": 7,
+  "files": [
+    {
+      "path": "checks-receipt.json",
+      "bytes": 2214,
+      "sha256": "9d3ebfbd9ba16a9700448d15f8f59cfde400762ac452db5760f8a497348e1811"
+    },
+    {
+      "path": "doc-links.log",
+      "bytes": 38,
+      "sha256": "ea3db4480950a942acf4a5ec3c1305da41cfc1fc348a7c2c33ececf42e2286d6"
+    },
+    {
+      "path": "document-comparison.json",
+      "bytes": 2268,
+      "sha256": "de9c9da9aff5d19dd69c0554b615f6f568a98827ad41e12f00fb83be804e8e6d"
+    },
+    {
+      "path": "documents-driver.py",
+      "bytes": 5594,
+      "sha256": "88d44bfece9974b0793e30f718d26c1e62570860bf2d8d014a1541b710ed03e6"
+    },
+    {
+      "path": "section-citations.json",
+      "bytes": 3912007,
+      "sha256": "b788862f9813526bd0b9fff25e1e4a296b1341c14c3cf8e38922855c8dff22b1"
+    },
+    {
+      "path": "section-citations.log",
+      "bytes": 1556191,
+      "sha256": "f70d297f97c3f005108f0d5f62fa48a9d46ffc9849c40e8d3bfb193748c55970"
+    },
+    {
+      "path": "whitespace.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}
