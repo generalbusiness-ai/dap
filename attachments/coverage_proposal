@@ -1,0 +1,272 @@
+# BR6 agreement proposal: conservative named declaration coverage
+
+Read-only proposal against exact BR8 head `3af6f41fd516e25ffba71952fe2304197044f50a`, tree
+`8ff173724b0efb9dc59535b056888e7145a147c3`. Root reports Main
+`4419008a8723ccb283c8784a843aa170790bd11e` has this exact tree.
+This is a proposed security-tripwire scope, not an implementation, new seal
+value, test result, checker agreement, or authority proof. No runtime source
+move or method-selector implementation is proposed in this first BR6 head.
+
+## Authority and prerequisites
+
+All act IDs below belong to workroom genesis
+`589bca982736a2361d15d53f7572375ef2f7aaf3`.
+
+- BR6 request: `aac5502169c50bc2d4460044c177817069a2e9d0`.
+- Agreement-first promise reported by root: `9b0a4edc877eda9b00b209caf14f6ada05046d05`.
+- Standing queue release: `5e61fd636812118c535662c3884165c6ad310c06`.
+  It releases the old 1aedd35b condition after BR8, one bounded head at a time.
+  Ready archive work under `0f0eeab748533208c813092ebf1ad0dab5087105`
+  preempts immediately. It does not provide the separate checker agreement.
+- Recorded restart: `89538bb97a52e1258272bde1618230060bb4e7f7`. This
+  historical record describes the three completed runbook restarts and later
+  deferrals. It is stale as a basis for new work. Current authority rests on
+  BR6 and the standing release, not the stale restart follow-up.
+- BR3 request: `50695e48bce9673efd1864fec5d264ffa28e384a`, satisfied.
+  Approval `20d9e1a4af099bf09baa0308b70fd3e38daad01e`; landing receipt
+  `0e1d9b48bf765047ca0725978dae155078c2fe5b`; merge
+  `a97c7425f860273ee0c37f9a4f3631bf2b24bfed`.
+- Original security inventory/remediation request:
+  `git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6dd06d03925e9eb34f4abc3e99b8ee81668d2ae3`.
+- Checker review preserving the agreement requirement:
+  `git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:de75cdd1b49cadacecd2dd7da45b403ea500d924`.
+  Its security paragraph says BR6 is correctly held for checker agreement.
+
+The concrete agreement sought is replacement of the five large-module
+whole-file tripwires by the explicit named declarations below, together
+with their module shells. All other current whole-file seals remain.
+
+Leave `declaration()` and `load()` unchanged. Leave `servedInventory()` and
+`assertInventory()` and their matcher execution unchanged. The new seal
+selector is separate from those invocation helpers. For every owner not
+converted by this agreement, `sourceSeal(file)` must produce exactly its
+existing output bytes and hash. Add no new normalization to that path.
+
+## Proposed seal contract
+
+1. Select original AST nodes from the maintained rolldown parser. Require
+   exactly one matching runtime declaration for each approved name. Refuse
+   missing, duplicate, destructured, or otherwise unsupported selections.
+   The invocation helper declaration(text, name) is not the seal extractor:
+   it first-matches and reconstructs variable declarators as const.
+2. Preserve the original VariableDeclaration kind and its selected original
+   declarator. Never normalize let or var to const. Preserve class heritage,
+   fields, initializers, constructors, private methods, getters, setters,
+   computed keys, static blocks, decorators, and member order when selecting
+   a whole named class. Apply the existing metadata cleaning and SHA-256
+   procedure to these original nodes.
+3. Add a module-shell record for each of the five owners. It covers every
+   runtime import binding and source, side-effect import, runtime export and
+   re-export, default-export expression, and top-level non-declaration
+   executable statement. It also covers every top-level runtime variable
+   initializer and its declaration kind. Module execution order is retained.
+   An unsupported executable construct fails closed instead of disappearing.
+   Named declaration exports contribute their name, kind, modifiers, and
+   export shape to the shell, not a second copy of their bodies. Anonymous
+   default-export expressions remain full executable AST. Keep the module
+   prelude and ordered declaration-name inventory, so a new owner, changed
+   import, or added initializer cannot fall between selected declarations.
+4. Record the declaration-name/kind inventory in the shell. A new, removed,
+   or changed-kind runtime declaration requires a reviewed coverage decision.
+   For an explicitly unselected function, record its identity but exclude
+   its body. No unselected executable initializer is permitted. Type-only
+   interfaces, aliases, and imports are outside this runtime-shell proposal;
+   normal type checking remains required.
+5. Give each selected declaration its own explicit seal record. Hashing a
+   file name plus a list into one large fingerprint would preserve the same
+   hot-line conflict and is not the intended table shape. A failure emits
+   one finite line naming file, declaration, actual maintained-parser hash,
+   and the rule requiring source review before adoption. Do not emit source.
+
+This contract preserves import rewiring and module-initializer coverage
+which function-body hashes alone would lose. It is a tripwire design, not
+proof that an imported implementation or injected port grants authority.
+
+## Five owner sets
+
+The following are finite conservative proposed sets from the exact head.
+They deliberately include helpers rather than claiming a complete lexical
+call-graph proof. Except for the one demonstrated presentation helper below,
+all current top-level runtime declarations in these five modules remain
+covered, separately. This avoids guessing which public read, proof, or
+service-binding helper can safely lose its existing protection.
+
+For ScopeObject, Scope, and McpService, read-only direct-this analysis from
+constructor plus public entry roots reaches every class method. No safe
+private-body omission has been established. Keep the whole named classes.
+Method selectors would split those hashes without establishing a smaller
+protected body set, so they are not part of this proposal.
+
+### packages/scope/src/object.ts
+
+Raw source SHA-256: `b6699c0be1cb7a57cd9fdbd19f61ac4abe9d6dce321d9685a433204b2162d5e2` (63525 UTF-8 bytes).
+
+Selected declarations (1):
+
+```text
+ScopeObject
+```
+
+Whole named classes in this set: `ScopeObject`.
+
+### packages/scope/src/worker.ts
+
+Raw source SHA-256: `fd531227d74aa47c36bbf1d97f28d73d13bdba1e8adbf6b3b246f9ecd96b0ce4` (63492 UTF-8 bytes).
+
+Selected declarations (28):
+
+```text
+ScopeIndex, MISSING, api, BODY_BYTES, answered, READ_STATUS, SESSION_STATUS, read, body, QUERY_STATUS, queryResponse, PROJECTION_STATUS, projectionResponse, route, routedRequest, outsideOf, sessionWiring, snapshotReaderOf, DeployedScope, ApplicationStreamLifetime, ApplicationScreenService, ScopeService, mcpRoute, boundedBytes, observeThrough, sqlOf, McpRegistry, McpAgent
+```
+
+Whole named classes in this set: `ScopeIndex`, `DeployedScope`, `ApplicationStreamLifetime`, `ApplicationScreenService`, `ScopeService`, `McpRegistry`, `McpAgent`.
+
+### packages/cli/src/commands.ts
+
+Raw source SHA-256: `b1d556f3f1af11f05fac5008d6fca6708236ca7f887964c7069a525644b6fb3b` (118219 UTF-8 bytes).
+
+Selected declarations (73):
+
+```text
+NEW_REGISTER, short, scopeIndexAccess, directoryReader, openingDirectory, scopeNamed, definitionOf, laneActive, INSTALL_COHORTS, CREATION_INSTALL_COHORTS, selectedRegister, installSelection, selectedPlan, install, installing, registerIdOf, knownPlatform, installAttemptOf, readBackCohortConfig, saveCohortConfig, retainedCohortPlan, cohortPlan, plannedLines, planInstall, installPlanned, executePlannedInstall, invite, join, standing, acts, act, apps, items, log, show, sessionFirst, replayOf, verifyScopeCommand, roomScopes, verifyAll, OWN_HOST, remoteOf, remoteLine, destinationOf, remote, authorization, b64, headerEnv, clone, EDIT_BYTES, fileOf, textOf, stateOf, valueOf_, activeDefinition, laneOf, supportsEdit, edit, propose, proposingFiles, merge, merging, memberOf, issuesOf, issueNamed, issueAct, issueOpen, issueComment, issueAssign, issueClose, issues, linking, status
+```
+
+### packages/mcp/src/service.ts
+
+Raw source SHA-256: `c5637aeb51811df57104e6c49d71de50ea9ac49c350988e1b0d734ad1e45ae79` (114925 UTF-8 bytes).
+
+Selected declarations (30):
+
+```text
+ListRestart, SERVER_NAME, SERVER_VERSION, INSTRUCTIONS, LIST_PAGE_BYTES, WATCH_MS, WAIT_MOST_SECONDS, SEARCH_ENTRIES, NAME_BYTES, SEARCH_PAGES, SINGLETON_PLACES, callResultText, BOUNDS, PAGE_SPARE, pageOf, ok, ERROR_BYTES, failed, projectAnswer, configDigest, Stop, stopCall, READ, WRITE, scopeArg, keyArg, McpService, lineOf, creationName, valueDigest
+```
+
+Whole named classes in this set: `ListRestart`, `Stop`, `McpService`.
+
+### packages/scope/src/core.ts
+
+Raw source SHA-256: `f4ef17a30d67d8450756dd000c2c68517129c9b7fe5b18b20125d59424da799f` (53531 UTF-8 bytes).
+
+Selected declarations (17):
+
+```text
+receiptOf, snapshotsOf, ownOf, used, retainedFacts, Received, creationKind, besideOf, valuesBeside, valuesOf, NO_INCARNATION, unavailable, said, heldBy, told, Observes, Scope
+```
+
+Whole named classes in this set: `Received`, `Observes`, `Scope`.
+
+## Why these roots and helpers stay
+
+- ScopeObject retains construction/wiring and every native ingress wrapper.
+  Its context, invocation, read preparation, creation-pin, session, proof,
+  archive, and alarm paths share private state. observed uses computed
+  this[method] dispatch. The imported OBSERVED_METHODS binding and every
+  dispatchable method must remain covered. Selecting only submit would miss
+  that wiring and the signed prepare/read paths.
+- Scope retains create, submit, prepare, standing, settle, floor, alarm,
+  checkpoint, and their common state. Same-module helpers include Received,
+  Observes, receiptOf, ownOf, snapshotsOf, used, retainedFacts, creationKind,
+  besideOf, valuesBeside, valuesOf, NO_INCARNATION, unavailable, said, heldBy,
+  and told. The conservative set also protects exported helpers even where
+  a direct-this walk does not establish their external callers.
+- Worker coverage keeps api, route/routedRequest, mcpRoute, outsideOf,
+  sessionWiring, snapshotReaderOf, and every exported Durable Object or
+  WorkerEntrypoint class, including the currently unbound ScopeService.
+  Its response/body/status helpers, size constants, boundedBytes,
+  observeThrough, sqlOf, and ApplicationStreamLifetime stay named and
+  protected. The inventory still executes its existing matcher model with
+  stand-ins. No matcher, route, gate class, or model changes here.
+- McpService retains constructor dispatch composition, fresh snapshot and
+  admission, generic tool admission, target checks, perform, create/install,
+  settlement, credential, and the methods they reach. Its same-module
+  argument parsers, output/privacy bounds, READ/WRITE sets, error handling,
+  and generation helpers stay covered. genericTools mixes prose with
+  dispatch/schema composition; description edits there still require a seal
+  update. No claim is made that declaration selection removes that coupling.
+- CLI coverage retains install selection and retained-plan custody, join,
+  invitation, act, mutation, and credential/clone paths. All their current
+  same-module helpers remain in the explicit set. Read and replay entry
+  declarations remain protected conservatively; this head does not silently
+  drop them through an incomplete mutating-call graph.
+
+## Demonstrated unrelated declaration
+
+Only packages/cli/src/commands.ts:entryLine is proposed as an unselected
+body. At this exact head its only callers are log and show. The function
+formats an already returned entry for display. It performs no request,
+key lookup, signing, storage, grant check, or token handoff. Keep its binding
+identity in the module shell so deleting it, changing its kind, or replacing
+it with a module-executed initializer cannot pass unnoticed. An edit only
+to its display wording is the concrete negative control: named gate seals
+and the unchanged route inventory should remain equal. This does not exempt
+log or show themselves. No other unselected runtime body is claimed safe.
+
+Type-only top-level declarations are also outside runtime declaration
+coverage. A type change can still fail TypeScript; its omission from a
+security seal does not make it a runtime acceptance claim.
+
+## BR8 moved code and duplicate object coverage
+
+Keep the existing whole-file seals for these moved owners unchanged:
+
+- packages/cli/src/browser-helpers.ts
+- packages/cli/src/claim.ts
+- packages/cli/src/command-support.ts
+
+These contain expectedOf/valueOf, link and grant helpers, exact claim
+custody, signing/session/read support, accepted-envelope checks, and
+shared answer handling that no longer live in commands.ts. Import source
+and binding records preserve commands.ts rewiring coverage; they do not
+replace the moved owners' own protection. Store-signer.ts is not listed in
+the current whole-file seal table. Its import binding remains protected,
+and the existing signer/claim runtime witnesses remain; this proposal adds
+no claim that its implementation is independently sealed. Other imported
+implementations keep their actual existing coverage. No transitive imported
+implementation seal is invented.
+
+object.ts appears in both seals and pendingArchiveSeals. Replace both
+whole-file entries in the same change. Use one shared named-owner record,
+referenced from both existing review categories, so archive construction
+and admission wiring retain their coverage without leaving an accidental
+whole-file tripwire in one loop or hashing only one category's concerns.
+Do not alter the inventory bijection or its existing controls.
+
+## Explicit limits and proposed owning checks
+
+The proposal narrows program-level coverage to explicit runtime
+declarations and module execution, with one demonstrated unrelated body
+excluded. Most class bodies remain protected as a unit. This is an honest
+limit of the current ownership shape. It does not claim that class-specific
+churn is solved. Further splitting requires a separately reviewed pure
+extraction, rather than an invented private-method omission.
+
+Imported implementation changes, mutable imported data, dynamic dispatch
+inside imported code, injected ports, and superclass behavior are not proved
+by these declaration seals. Their binding/source identities are protected,
+and their current independent whole-file seals and runtime witnesses stay.
+This is the same dependency-implementation limitation as a whole-file seal.
+The explicit same-module sets above avoid an unreviewed attempt to infer
+semantic dependencies from string matches or direct-this references.
+
+After checker agreement, the bounded implementation is in
+scripts/security-entry-points.mjs and scripts/security-entry-points.test.mjs,
+plus the normal PD-2 note/manifest. No production extraction is necessary
+for this conservative version. All other seal records and route inventory
+logic remain unchanged. Proposed meaningful checks are:
+
+1. Existing entry-point inventory and controls pass unchanged.
+2. A real protected router or gate/helper edit changes its named seal and
+   fails the intended assertion, even with unrelated declarations unchanged.
+3. A transitive same-module helper change, import-source/binding rewrite,
+   or top-level initializer change fails the correct record.
+4. Missing/duplicate selectors and let/var versus const changes fail closed.
+5. A display-only entryLine body edit preserves the named gate seals and
+   inventory. The whole-file baseline would detect that edit; the exemption
+   must therefore be part of the checker's explicit agreement.
+6. A class field/constructor/private helper change still changes its full
+   class declaration seal. Both object review categories use the new record.
+7. One ordinary gate at the final exact head and exact-head checker review.
+
+These are proposed witnesses only. No check, control, test, gate, new
+declaration seal, or runtime execution was performed for this proposal.
+Read-only parser queries inspected the exact Git source.
