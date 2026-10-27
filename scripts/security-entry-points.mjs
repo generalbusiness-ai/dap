@@ -359,3 +359,91 @@ export function sourceSeal(file) {
   };
   return createHash("sha256").update(JSON.stringify(clean(parse(readSource(file))))).digest("hex");
 }
+
+/** Review tripwires for complete named runtime coverage, not authority proof.
+ * Keep whole classes and every variable initializer. The shell records module
+ * execution and binding order without duplicating function or class bodies. */
+export function namedSourceSeals(file, names, source = readSource(file)) {
+  const refuse = reason => { throw Error(`Named source seals: ${reason}`); };
+  if (!Array.isArray(names) || names.some(name => typeof name !== "string" || !name || name === "$module")) refuse("invalid selectors");
+  const selected = new Set(names);
+  if (selected.size !== names.length) refuse("duplicate selector");
+  const clean = node => {
+    if (Array.isArray(node)) return node.map(clean);
+    if (!node || typeof node !== "object") return node;
+    return Object.fromEntries(Object.entries(node).filter(([key]) => !["start", "end", "loc", "raw", "comments", "leadingComments", "trailingComments"].includes(key)).map(([key, value]) => [key, clean(value)]));
+  };
+  const seal = node => createHash("sha256").update(JSON.stringify(clean(node))).digest("hex");
+  let program;
+  try { program = parse(source); }
+  catch { return refuse("unsupported syntax"); }
+  const declarations = new Map();
+  const inventory = [];
+  const typeOnly = node => node.declare === true || node.type === "TSInterfaceDeclaration" || node.type === "TSTypeAliasDeclaration";
+  const add = (node, kind, exported, original) => {
+    if (node.id?.type !== "Identifier") refuse("destructured or unsupported declaration");
+    const name = node.id.name;
+    if (name === "$module") refuse("reserved declaration name");
+    if (declarations.has(name)) refuse("duplicate runtime declaration");
+    declarations.set(name, original);
+    inventory.push({ name, kind, exported });
+  };
+  const declarationShell = (node, exported) => {
+    if (typeOnly(node)) return null;
+    if (node.type === "VariableDeclaration") {
+      if (!["const", "let", "var"].includes(node.kind) || !node.declarations.length) refuse("unsupported variable declaration");
+      for (const part of node.declarations) {
+        add(part, node.kind, exported, { type: node.type, kind: node.kind, declaration: part });
+      }
+      return node;
+    }
+    if (node.type === "FunctionDeclaration" || node.type === "ClassDeclaration") {
+      if (!node.body) refuse("unsupported declaration");
+      add(node, node.type, exported, node);
+      return { ...node, body: null };
+    }
+    return refuse("unsupported declaration");
+  };
+  const statements = new Set(["ExpressionStatement", "BlockStatement", "EmptyStatement", "DebuggerStatement", "IfStatement", "SwitchStatement", "TryStatement", "ThrowStatement", "ForStatement", "ForInStatement", "ForOfStatement", "WhileStatement", "DoWhileStatement", "LabeledStatement"]);
+  const body = [];
+  for (const node of program.body) {
+    if (typeOnly(node)) continue;
+    if (node.type === "ImportDeclaration") {
+      if (node.importKind === "type") continue;
+      // A value-form import may still evaluate its source with no surviving
+      // bindings. Only the explicitly type-only specifiers are omitted.
+      body.push({ ...node, specifiers: node.specifiers.filter(part => part.importKind !== "type") });
+    } else if (node.type === "ExportNamedDeclaration") {
+      if (node.exportKind === "type") continue;
+      if (node.declaration) {
+        const declaration = declarationShell(node.declaration, "named");
+        if (declaration) body.push({ ...node, declaration });
+      } else {
+        const specifiers = node.specifiers.filter(part => part.exportKind !== "type");
+        if (specifiers.length || node.source || !node.specifiers.length) body.push({ ...node, specifiers });
+      }
+    } else if (node.type === "ExportAllDeclaration") {
+      if (node.exportKind !== "type") body.push(node);
+    } else if (node.type === "ExportDefaultDeclaration") {
+      const value = node.declaration;
+      if (typeOnly(value)) continue;
+      if ((value.type === "FunctionDeclaration" || value.type === "ClassDeclaration") && value.id) {
+        body.push({ ...node, declaration: declarationShell(value, "default") });
+      } else if (["FunctionDeclaration", "ClassDeclaration", "Identifier", "Literal", "TemplateLiteral", "MetaProperty"].includes(value.type) || value.type.endsWith("Expression")) {
+        // An anonymous default has no selector identity. Its full executable
+        // AST, including any body, belongs to the module record.
+        body.push(node);
+      } else refuse("unsupported default export");
+    } else if (["VariableDeclaration", "FunctionDeclaration", "ClassDeclaration"].includes(node.type)) {
+      body.push(declarationShell(node, "local"));
+    } else if (statements.has(node.type)) {
+      body.push(node);
+    } else refuse("unsupported top-level statement");
+  }
+  for (const name of selected) if (!declarations.has(name)) refuse("missing runtime declaration");
+  for (const name of declarations.keys()) if (!selected.has(name)) refuse("unselected runtime declaration");
+  return Object.fromEntries([
+    ["$module", seal({ program: { ...program, body }, declarations: inventory })],
+    ...[...declarations].map(([name, node]) => [name, seal(node)]),
+  ]);
+}
