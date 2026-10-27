@@ -77,13 +77,95 @@ annotation reports `entryBytes:262144`, `maxStoredEntryBytes:88084`,
 and `negativeNextForecastBytes:262146`. These are measurements of that
 case, rather than evidence that the full phase passed.
 
-The memory failure, final manifest and checker review remain unresolved.
-Planner decision `6634c94c293fb6f956244e30e8a115330543e0e8` puts this
-hardening first, then current archive-capacity request
-`0f0eeab748533208c813092ebf1ad0dab5087105`. The original gate and Native
-failure remain separate failed results. No full retry, increased heap,
-extended deadline, fixture relocation or case removal has been used to
-make them pass.
+The bounded memory investigation began at
+`a51b0ac384339aa4ad24d42848b846634afbb1aa`, tree
+`cef54deb8952201ad29bad703c6a515757d62355`. The first observer command
+failed before tests because this Vitest CLI rejects `--runner`. A temporary
+configuration wrapper then loaded the observer. `process.memoryUsage()`
+did not provide usable heap readings in workerd. An experimental pool
+adapter enabled the loopback inspector through copied configuration
+views. The adapter preserved the two-worker bound, `isolate:false`, cases,
+assertions, and deadlines. Its instrumentation adds allocations and
+scheduling overhead. Its successful runs are diagnostic observations,
+rather than ordinary validation passes or replacements for the failed
+Native phase. Each instrumented phase retains its exact adapter, observer,
+driver, source hashes, and result under the raw directory named above.
+
+The first seven-case window selected the four certificate cases, the G15
+budget case, and the two maintained-application projection cases. It
+sampled heap usage once a second, with normal GC and no forced collection.
+Both experimental seven-case comparisons and the later clock comparison
+completed all seven cases with no unhandled errors. These small selections
+do not establish whole-suite success. The heap sampler maps local
+inspector runtimes for these runs. It does not identify the physical
+worker or retaining paths of the earlier full-suite crash.
+
+An initial Counter allocation profile retained live samples. A second
+profile, taken with the temporary parser candidate, also retained samples
+for allocations collected by major or minor GC, as defined by the
+[CDP protocol](https://github.com/ChromeDevTools/devtools-protocol/blob/master/pdl/js_protocol.pdl).
+That second profile assigned 3,615,421,544 of 4,593,500,284
+sampled allocation bytes to frames in `@vitest/spy`. Those totals describe
+sampled allocation volume during the profile window, including collected
+objects. They are not measured live heap or an exact allocation census.
+The stacks pass through Git pack inflate work in
+`packages/git/src/http-read.ts`.
+Source inspection connects that work to the projection fixture's
+`vi.spyOn(Date, "now").mockReturnValue(now)`: inflate repeatedly polls
+`Date.now`, and the unused spy records each call and result. The test
+never asserts on that history.
+
+A parser candidate at `f22dfe174a503192dd4091185a3cb095453721bb`
+replaced character-by-character string accumulation with ordinary-run
+slices. Its one-process synthetic 1 MiB string comparison reduced the
+observed heap after parsing from 44,653,896 to 10,517,064 bytes. Its 2981-case
+finite differential check found no differences in canonical output or
+exact parser errors. The owning parser tests and compiler passed. Those
+results did not explain the Native memory problem: the same seven-case
+Native window still reached 1,226,066,304 bytes in the reused runtime that
+ran the projection and certificate files.
+Commit `33ec61b284802c0a4adf723915aa3ac11ec1bd78` withdrew the parser
+candidate. No parser or other production change from that investigation
+remains relative to `a51b0ac384339aa4ad24d42848b846634afbb1aa`.
+
+The retained repair at `a9232f009a7a470fe7be17820f7fed4eb5fb1778`, tree
+`efb7282b4bc210a1d43a88965f4461bb8ab50bb9`, changes only
+`maintained-application-projections.test.ts`. It replaces the recording
+spy with a function returning the same fixed time, and restores the prior
+function during cleanup. The assertions and 30-second case deadlines
+remain unchanged. On the same seven-case selection, the reused runtime that ran the
+projection and certificate files had a largest sampled heap of 159,845,596
+bytes, compared with 1,249,323,620 before the clock repair. The baseline
+peak occurred after the certificate file started. These are runtime peaks,
+not memory attributed exclusively to a projection case. All observer
+sources were identical in the baseline and fixed-clock windows. The
+budget runtime's largest sample was 159,935,460 bytes, compared with
+165,205,424 before the clock repair. The complete diagnostic took
+63.200280458 wall seconds and 72.859324 child CPU seconds. These are
+one-run observations with normal GC and instrumentation overhead, not
+performance thresholds or proof of retained size.
+
+The ordinary owning projection command passed both cases with no
+unhandled errors in 8.137638291 wall seconds and 9.769300 child CPU seconds.
+The scope compiler passed in 1.364059084 wall seconds and 5.928494 child
+CPU seconds. Commit `89a343e00cc4d8745b5336a1b31cc98dd7b5e037` then
+merged Main's sprint-report documents. A fresh ordinary gate, the final
+manifest, and checker review remain pending. The original gate and Native
+failure remain separate failed results. No heap increase, extended
+deadline, fixture relocation, or case removal has been used to make them
+pass. Planner decision `6634c94c293fb6f956244e30e8a115330543e0e8` puts
+this hardening first, then archive-capacity request
+`0f0eeab748533208c813092ebf1ad0dab5087105`.
+
+For the new investigation rows below, the command is the recorded child
+command. Instrumented phases retain their observation environment and
+outer procedure in `result.json` and `driver.py`, with temporary configuration
+and profiler sources beside them. The synthetic parser rows use
+`parser-runs-synthetic/before.result.json` and `candidate.result.json`,
+plus the retained benchmark source. They name source digests instead of Git
+commits because that candidate was not yet committed. The table records
+outer command outcomes, including diagnostic successes that confer no
+validation claim.
 
 | Check | Command | Commit | Exit | Output SHA-256 |
 | --- | --- | --- | --- | --- |
@@ -119,13 +201,30 @@ make them pass.
 | `plain-followup` | `node node_modules/vitest/vitest.mjs run --config vitest.plain.config.ts` | `1a06191bcada5091b20d91d238093d1cbe8d348f` | 0 | `8bf9814a59df4b2835c3f7235b3b3d094e3af4a3a417294fd7acdbc94de2ed0c` |
 | `native-followup` | `node node_modules/vitest/vitest.mjs run --config vitest.native.config.ts` | `1a06191bcada5091b20d91d238093d1cbe8d348f` | 1 | `bae43e1a0110bffe18cabc447db77693d8377570741cf69c12430bcc8f2dc802` |
 | `projection-diagnostic` | `node node_modules/vitest/vitest.mjs run --config vitest.native.config.ts --project scope maintained-application-projections.test.ts` | `1a06191bcada5091b20d91d238093d1cbe8d348f` | 0 | `f1df623d27278af4cb37e09393b947a9b1ac1b5b79ac58e0e5bae5cee65f95b0` |
+| `memory-observer-capability` | `node node_modules/vitest/vitest.mjs run --config vitest.native.config.ts --project scope maintained-application-projections.test.ts --runner /private/tmp/artroom-native-memory-runner-20261026.mjs` | `a51b0ac384339aa4ad24d42848b846634afbb1aa` | 1 | `c9dca6a689f498b7caf15622e9ad5ed3776791562daa6a8ceaef4bc17c2a9398` |
+| `memory-observer-capability-v2` | `node node_modules/vitest/vitest.mjs run --config /private/tmp/artroom-native-memory-config-20261026.mjs --project scope maintained-application-projections.test.ts` | `a51b0ac384339aa4ad24d42848b846634afbb1aa` | 0 | `0e819acc6dd01d750ec02b9987f80574efbdcc1d754f85a942ce2fe338855bed` |
+| `inspector-capability` | `node node_modules/vitest/vitest.mjs run --config /private/tmp/artroom-native-inspector-config-20261026.mjs --project scope maintained-application-projections.test.ts` | `a51b0ac384339aa4ad24d42848b846634afbb1aa` | 0 | `0f8ef97aba3b05f74e356e0c52ff5276c7fbdcbe7fe14005749c3f621fff9013` |
+| `heap-window-seven-cases` | `node node_modules/vitest/vitest.mjs run --config /private/tmp/artroom-native-inspector-config-20261026.mjs --project scope certified-rules-hardening-certificate.scope.test.ts certified-rules-hardening-budget.scope.test.ts maintained-application-projections.test.ts` | `a51b0ac384339aa4ad24d42848b846634afbb1aa` | 0 | `bfc8e2f191509e3c3c3499d3e719cf83fa805f4f4bfcc740ed161eec3760dd82` |
+| `projection-allocation-profile` | `node node_modules/vitest/vitest.mjs run --config /private/tmp/artroom-native-inspector-config-20261026.mjs --project scope maintained-application-projections.test.ts` | `a51b0ac384339aa4ad24d42848b846634afbb1aa` | 0 | `66880d46a929556ceb401e7d1c27ebedbb9d98a8fe0a53f26352c3127f1c9d03` |
+| `parser-synthetic-before` | `node /private/tmp/artroom-canonical-runs-benchmark-20261026.mjs /Users/hughpyle/play/artroom/.builder-worktrees/r7-hardening-20261026/packages/bytes/src/canonical.ts` | source SHA-256 `fe90f1b5b7aba1ab15fd956a981676d50449e59b9370955204995ae1c124da5e` | 0 | `e3847115600ea3c23d2efa6ef0b29c5d35f38b3f3bd543c46eb29335e3a8569a` |
+| `parser-synthetic-candidate` | `node /private/tmp/artroom-canonical-runs-benchmark-20261026.mjs /private/tmp/artroom-canonical-runs-candidate-20261026.ts` | source SHA-256 `6dac5a521178a2ddf02d6ec7ac8311e98d263320d19f5c1882391ed501a6ab55` | 0 | `f388b9873155956d650c8b7110e33a78b53eb1c8e1e8ebd02ee3b9e0f6eba77b` |
+| `parser-differential` | `node /private/tmp/artroom-canonical-runs-differential-20261026.mjs` | `f22dfe174a503192dd4091185a3cb095453721bb` | 0 | `d47cf05481a7689648b93c8d536ed2d8c1d5f37a0620bc07aa4ee5b651e1b680` |
+| `parser-owning` | `node node_modules/vitest/vitest.mjs run --config vitest.plain.config.ts --project bytes canonical.test.ts` | `f22dfe174a503192dd4091185a3cb095453721bb` | 0 | `3f6cd6063c85bc1cf57d8a9a02428553a5a2fd0f83613d445ae78aa6a0bd10f8` |
+| `parser-compiler` | `npm run typecheck --workspace @generalbusiness/dap-bytes` | `f22dfe174a503192dd4091185a3cb095453721bb` | 0 | `ff3f3a0307660d6a3bcadfd4ae99f97c76da1f3c118c461674b9a43f17c7c8a8` |
+| `heap-window-parser-candidate` | `node node_modules/vitest/vitest.mjs run --config /private/tmp/artroom-native-inspector-config-20261026.mjs --project scope certified-rules-hardening-certificate.scope.test.ts certified-rules-hardening-budget.scope.test.ts maintained-application-projections.test.ts` | `f22dfe174a503192dd4091185a3cb095453721bb` | 0 | `03602017d778e79a6e1e4bf6e3f2af8795c0a45c83ab3838e1278de09f3f1411` |
+| `projection-allocation-collected-profile` | `node node_modules/vitest/vitest.mjs run --config /private/tmp/artroom-native-inspector-config-20261026.mjs --project scope maintained-application-projections.test.ts` | `f22dfe174a503192dd4091185a3cb095453721bb` | 0 | `1f73fac73e5bf8f88d683c3b0a5f04c10361f7b955e58c88ccc480c708790713` |
+| `clock-owning` | `node node_modules/vitest/vitest.mjs run --config vitest.native.config.ts --project scope maintained-application-projections.test.ts` | `a9232f009a7a470fe7be17820f7fed4eb5fb1778` | 0 | `c345fb9e6789c661aa9aba3c65cb52476a6c848a11f1d11a14d7c6f65fcc4fc5` |
+| `clock-compiler` | `npm run typecheck --workspace @generalbusiness/dap-scope` | `a9232f009a7a470fe7be17820f7fed4eb5fb1778` | 0 | `fb2b1b20daea8ec6bdc1bf8b7eceb9b3703b9e4ffe7530b18d9218bb23d34976` |
+| `heap-window-fixed-clock` | `node node_modules/vitest/vitest.mjs run --config /private/tmp/artroom-native-inspector-config-20261026.mjs --project scope certified-rules-hardening-certificate.scope.test.ts certified-rules-hardening-budget.scope.test.ts maintained-application-projections.test.ts` | `a9232f009a7a470fe7be17820f7fed4eb5fb1778` | 0 | `049a54daa7dd9ea6a45fd4d0d69615e31eb82f2603049d3ddece10e09c56f6cb` |
 
 ## Open limits
 
-Request `5e6d482c` owns the unresolved Native heap exhaustion that blocks
-this delivery's review. The fresh projection diagnostic narrows the
-investigation but supplies no proven repair. Source and installed-pool
-retention investigation continues; the failed full run is not waived.
+Request `5e6d482c` owns verification of the test-only clock repair against
+a fresh ordinary gate, followed by the final evidence manifest and exact-head
+review. The bounded comparison identifies and removes the spy allocation
+source, but does not turn the earlier full-suite failure into a pass.
+The experimental inspector adapter is outside the delivered tree and
+supplies no deployment, authority, or ordinary validation result.
 
 Request `5e6d482c` owns the remaining deliberate entry-flood liveness limit, the absence of a user-facing certified-policy publish command, and planner-scheduled cohort enablement. This delivery changes no deployment or creation allowance. A fresh request can succeed when the Destination is quiet; a member adding entries on purpose can keep making it decline. The conservative observation/proof reserve can refuse policies whose immediate record alone would fit.
 
