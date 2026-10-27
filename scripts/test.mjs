@@ -8,6 +8,7 @@ import { performance } from 'node:perf_hooks';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const stageNames = ['kernel', 'node', 'counting', 'plain', 'native'];
 const nodeFiles = [
+  'scripts/usage-report.test.mjs',
   'scripts/security-settings.test.mjs',
   'scripts/security-entry-points.test.mjs',
   'scripts/active-source.test.mjs',

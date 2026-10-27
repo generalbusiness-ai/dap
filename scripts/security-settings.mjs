@@ -261,7 +261,7 @@ function literal(node, file) {
   }));
   fail(file, node, "configuration is not JSON data");
 }
-const configOf = (source, file) => literal(parse(`(${source})`, file).body[0].expression.expression ?? parse(`(${source})`, file).body[0].expression, file);
+export const configOf = (source, file) => literal(parse(`(${source})`, file).body[0].expression.expression ?? parse(`(${source})`, file).body[0].expression, file);
 const configNames = config => [...Object.keys(config.vars ?? {}), ...[config.durable_objects?.bindings, config.r2_buckets, config.services, config.analytics_engine_datasets, config.artifacts].flatMap(rows => (rows ?? []).map(row => row.binding ?? row.name)), ...(config.version_metadata ? [config.version_metadata.binding] : []), ...(config.assets?.binding ? [config.assets.binding] : [])];
 
 export function readSettingsDocument(source) {
