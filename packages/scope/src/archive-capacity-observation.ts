@@ -5,7 +5,7 @@ import { natural } from "@generalbusiness/dap-bytes";
 import { ArchiveBudget, type ArchiveCost } from "./archive-budget.ts";
 
 const AXES = ["entries", "attempts", "nodes", "calls", "metadata", "inputWork"] as const;
-const MAX_SITES = 64, MAX_REFUSALS = 16, MAX_FRAMES = 3;
+const MAX_SITES = 64, MAX_REFUSALS = 16, MAX_FRAMES = 2;
 const FLAGS = { unknownSite: 1, sites: 2, refusals: 4, malformed: 8, observer: 16, counter: 32, ledger: 64, custom: 128 } as const;
 const zero = (): ArchiveCost => ({ entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0, inputWork: 0 });
 type NumericFields<K extends string> = Readonly<Partial<Record<K, number>>>;
@@ -44,6 +44,13 @@ interface Site {
   affordabilityCalls: number; affordabilityPassed: number; affordabilityRefused: number; affordabilityThrew: number;
   readonly attemptedDebit: ArchiveCost; readonly admittedDelta: ArchiveCost; readonly attemptedAffordability: ArchiveCost;
 }
+interface FinishDebitAttribution {
+  readonly flags: number; readonly complete: boolean; readonly ledgerReconciled: boolean;
+  readonly admitted: Readonly<ArchiveCost> | null;
+  readonly admittedDelta: Readonly<ArchiveCost>; readonly unattributedAdmittedDelta: Readonly<ArchiveCost>;
+  readonly debitCalls: number; readonly droppedSiteCalls: number;
+  readonly sites: readonly { readonly frames: readonly Frame[]; readonly debitCalls: number; readonly admittedDelta: Readonly<ArchiveCost> }[];
+}
 interface Refusal {
   readonly operation: 0 | 1; readonly frames: readonly Frame[] | null;
   readonly requested: ArchiveCost | null; readonly before: ArchiveCost | null; readonly after: ArchiveCost | null;
@@ -57,6 +64,7 @@ interface State {
   readonly sites: Map<string, Site>; readonly refusals: Refusal[];
   rowContext: ArchiveRowContextGeometry | null; rowContextAdmitted: ArchiveCost | null;
   firstQuote: CapturedQuote | null; lastQuote: CapturedQuote | null; selectedQuote: CapturedQuote | null;
+  firstFinishAttribution: FinishDebitAttribution | null;
 }
 const states = new WeakMap<ArchiveBudget, State>();
 const nativeAdmitted = ArchiveBudget.prototype.admitted;
@@ -164,6 +172,7 @@ const PUBLIC_CODE_FILES = [
   "packages/scope/test/archive-capacity-observation.test.ts",
 ] as const;
 const publicCodes = new Map<string, number>(PUBLIC_CODE_FILES.map((path, index) => [path, index + 1]));
+const budgetCode = publicCodes.get("packages/scope/src/archive-budget.ts");
 const moduleUrl: unknown = import.meta.url;
 const moduleCode = typeof moduleUrl === "string" ? moduleUrl.replace(/^file:\/\//, "") : null;
 function coordinates(): readonly Frame[] | null {
@@ -183,6 +192,9 @@ function coordinates(): readonly Frame[] | null {
       const code = file === moduleCode ? 0 : path === undefined ? undefined : publicCodes.get(path);
       if (code === undefined) break;
       frames.push(Object.freeze([code, row, column]));
+      // A direct debit is one charge site. The shared native SQL wrapper
+      // needs its immediate caller to identify which read is being charged.
+      if (frames.length === 1 && code !== budgetCode && code !== 0) break;
       if (frames.length === MAX_FRAMES) break;
     }
     return frames.length ? Object.freeze(frames) : null;
@@ -192,7 +204,7 @@ function fresh(observed: boolean): State {
   return { observed, flags: observed ? 0 : FLAGS.custom, depth: 0, debitCalls: 0, affordabilityCalls: 0, droppedSiteCalls: 0, droppedRefusals: 0,
     rowContextCalls: 0, quoteCalls: 0, selectionCalls: 0, distinctSelections: 0, selectedThroughSeq: null,
     admittedDelta: zero(), unattributedAdmittedDelta: zero(), sites: new Map(), refusals: [], rowContext: null, rowContextAdmitted: null,
-    firstQuote: null, lastQuote: null, selectedQuote: null };
+    firstQuote: null, lastQuote: null, selectedQuote: null, firstFinishAttribution: null };
 }
 function safely(state: State, work: () => void): void { try { work(); } catch { state.flags |= FLAGS.observer; } }
 function count(state: State, value: number): number {
@@ -251,6 +263,21 @@ function delta(before: ArchiveCost | null, after: ArchiveCost | null): ArchiveCo
   const out = zero();
   for (const axis of AXES) { out[axis] = after[axis] - before[axis]; if (!natural(out[axis])) return null; }
   return out;
+}
+const frozenCost = (value: Readonly<ArchiveCost>): Readonly<ArchiveCost> => Object.freeze({ ...value });
+const frozenFrames = (frames: readonly Frame[]): readonly Frame[] => Object.freeze(frames.map(frame => Object.freeze([...frame] as const)));
+function finishAttribution(state: State, actual: ArchiveCost | null): FinishDebitAttribution {
+  const attributed = zero(); let sumValid = true;
+  for (const site of state.sites.values()) if (!add(attributed, site.admittedDelta)) sumValid = false;
+  if (!add(attributed, state.unattributedAdmittedDelta)) sumValid = false;
+  const ledgerReconciled = actual !== null && sumValid
+    && AXES.every(axis => actual[axis] === state.admittedDelta[axis] && actual[axis] === attributed[axis]);
+  if (!ledgerReconciled) state.flags |= FLAGS.ledger;
+  return Object.freeze({ flags: state.flags, complete: state.flags === 0, ledgerReconciled,
+    admitted: actual === null ? null : frozenCost(actual), admittedDelta: frozenCost(state.admittedDelta),
+    unattributedAdmittedDelta: frozenCost(state.unattributedAdmittedDelta), debitCalls: state.debitCalls,
+    droppedSiteCalls: state.droppedSiteCalls, sites: Object.freeze([...state.sites.values()].map(site => Object.freeze({
+      frames: frozenFrames(site.frames), debitCalls: site.debitCalls, admittedDelta: frozenCost(site.admittedDelta) }))) });
 }
 function admitted(budget: ArchiveBudget, state: State): ArchiveCost | null {
   try {
@@ -366,8 +393,9 @@ export function observeArchiveFinishQuote(budget: ArchiveBudget, input: ArchiveF
     }
     const ledger = state.observed ? admitted(budget, state) : null;
     const quote = Object.freeze({ throughSeq: own["throughSeq"]!.value as number, scalars: Object.freeze(scalar),
-      costs: Object.freeze(cost), layout: Object.freeze(layout), admitted: ledger === null ? null : Object.freeze(ledger) });
+      costs: Object.freeze(cost), layout: Object.freeze(layout), admitted: ledger === null ? null : frozenCost(ledger) });
     state.firstQuote ??= quote; state.lastQuote = quote;
+    if (scalar.stage === 0 && state.firstFinishAttribution === null) state.firstFinishAttribution = finishAttribution(state, ledger);
   });
 }
 /** A refresh at the same sequence replaces its quote, without another distinct selection. */
@@ -419,6 +447,7 @@ export function readArchiveCapacityObservation(budget: ArchiveBudget, input: Arc
   return { version: 1, qualification: "Numeric diagnostic only; observer overhead can affect the original timeout. No source, body or admission authority.",
     debitAttribution: state.observed ? "observed" as const : "unavailable" as const,
     debitAttributionComplete: state.observed && state.flags === 0,
+    finishGeometryComplete: state.observed && state.rowContext !== null && completeQuote(state.firstQuote),
     observationComplete: state.observed && state.flags === 0 && state.rowContext !== null && completeQuote(state.firstQuote) && end !== null,
     flags: state.flags, ledgerReconciled, admitted: actual, admittedDelta: { ...state.admittedDelta }, unattributedAdmittedDelta: { ...state.unattributedAdmittedDelta },
     debitCalls: state.debitCalls, affordabilityCalls: state.affordabilityCalls, droppedSiteCalls: state.droppedSiteCalls, droppedRefusals: state.droppedRefusals,
@@ -428,5 +457,6 @@ export function readArchiveCapacityObservation(budget: ArchiveBudget, input: Arc
       requested: row.requested && { ...row.requested }, before: row.before && { ...row.before }, after: row.after && { ...row.after } })),
     rowContextCalls: state.rowContextCalls, quoteCalls: state.quoteCalls, selectionCalls: state.selectionCalls,
     distinctSelections: state.distinctSelections, selectedThroughSeq: state.selectedThroughSeq,
-    rowContext: state.rowContext, rowContextAdmitted: state.rowContextAdmitted && { ...state.rowContextAdmitted }, firstQuote: state.firstQuote, selectedQuote: state.selectedQuote, terminalQuote: state.lastQuote, terminal: end };
+    firstFinishAttribution: state.firstFinishAttribution,
+    rowContext: state.rowContext, rowContextAdmitted: state.rowContextAdmitted && { ...state.rowContextAdmitted }, firstQuote: state.firstQuote, selectedQuote: state.selectedQuote, lastCompleteQuote: state.lastQuote, terminal: end };
 }

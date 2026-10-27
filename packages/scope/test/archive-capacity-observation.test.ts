@@ -55,7 +55,7 @@ test("the exact native exception survives an observer and does not fabricate a d
 test("geometry observation leaves a custom budget's ledger method untouched", () => {
   let reads = 0;
   class CustomBudget extends ArchiveBudget {
-    override admitted() { reads++; throw Error("custom ledger must not be read"); }
+    override admitted(): never { reads++; throw Error("custom ledger must not be read"); }
   }
   const budget = new CustomBudget({}, () => 0);
   registerCustomArchiveBudget(budget);
@@ -69,7 +69,7 @@ test("geometry observation leaves a custom budget's ledger method untouched", ()
   expect(report.rowContext).toBeNull();
   expect(report.firstQuote).toBeNull();
   expect(report.selectedQuote).toBeNull();
-  expect(report.terminalQuote).toBeNull();
+  expect(report.lastCompleteQuote).toBeNull();
   expect(report.selectedThroughSeq).toBeNull();
   expect(report.rowContextCalls).toBe(0);
   expect(report.quoteCalls).toBe(0);
@@ -108,12 +108,75 @@ test("closed numeric copies survive caller mutation and same-sequence selection 
 
 test("site and refusal caps keep the native ledger while declaring lost attribution incomplete", () => {
   const budget = createObservedArchiveBudget({}, () => 0);
-  // Real engine frames with distinct coordinates in this public test source.
-  // The synthetic functions contain only this fixed trusted debit statement.
-  for (let line = 0; line < 65; line++) {
-    const spend = new Function("budget", "\n".repeat(line) + "budget.spend({ metadata: 1 });\n//# sourceURL=file:///packages/scope/test/archive-capacity-observation.test.ts") as (budget: ArchiveBudget) => void;
-    spend(budget);
-  }
+  // Distinct trusted call sites work in both Node and the bundled Worker.
+  const spenders = [
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+    () => budget.spend({ metadata: 1 }),
+  ];
+  for (const spend of spenders) spend();
   for (let index = 0; index < 17; index++) expect(budget.canSpend({ metadata: ARCHIVE_BOUNDS.metadata + 1 })).toBe(false);
   const report = readArchiveCapacityObservation(budget, { throughSeq: null })!;
   expect(report.sites).toHaveLength(64);
@@ -150,8 +213,36 @@ test("a final selection refresh preserves its admitted quote after later unselec
   const report = readArchiveCapacityObservation(budget, { throughSeq: 3 })!;
   expect(report.firstQuote?.throughSeq).toBe(1);
   expect(report.selectedQuote?.throughSeq).toBe(2);
-  expect(report.terminalQuote?.throughSeq).toBe(3);
+  expect(report.lastCompleteQuote?.throughSeq).toBe(3);
   expect(report.selectedThroughSeq).toBe(2);
   expect(report.distinctSelections).toBe(2);
   expect(report.selectionCalls).toBe(3);
+});
+
+test("the first completed finish keeps an immutable debit boundary after later writer work", () => {
+  const budget = createObservedArchiveBudget({}, () => 0);
+  budget.spend({ metadata: 1, calls: 1 });
+  observeArchiveFinishQuote(budget, { throughSeq: 7, scalars: { stage: 0 } });
+  const first = readArchiveCapacityObservation(budget, { throughSeq: 7 })!.firstFinishAttribution!;
+  const before = JSON.stringify(first);
+  expect(first.admitted?.metadata).toBe(1);
+  expect(first.admitted?.calls).toBe(1);
+  expect(first.ledgerReconciled).toBe(true);
+  for (const axis of ["entries", "attempts", "nodes", "calls", "metadata", "inputWork"] as const) {
+    const sites = first.sites.reduce((sum, site) => sum + site.admittedDelta[axis], 0);
+    expect(sites + first.unattributedAdmittedDelta[axis]).toBe(first.admitted?.[axis]);
+    expect(first.admittedDelta[axis]).toBe(first.admitted?.[axis]);
+  }
+  expect(Object.isFrozen(first)).toBe(true);
+  expect(Object.isFrozen(first.admitted)).toBe(true);
+  expect(Object.isFrozen(first.sites)).toBe(true);
+  expect(first.sites.every(site => Object.isFrozen(site) && Object.isFrozen(site.admittedDelta)
+    && Object.isFrozen(site.frames) && site.frames.every(Object.isFrozen))).toBe(true);
+  budget.spend({ metadata: 2, calls: 2 });
+  observeArchiveFinishQuote(budget, { throughSeq: 8, scalars: { stage: 0 } });
+  const after = readArchiveCapacityObservation(budget, { throughSeq: 8 })!;
+  expect(after.admitted?.metadata).toBe(3);
+  expect(after.admitted?.calls).toBe(3);
+  expect(JSON.stringify(after.firstFinishAttribution)).toBe(before);
+  expect(after.firstFinishAttribution?.admitted?.metadata).toBe(1);
 });

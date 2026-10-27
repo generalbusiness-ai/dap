@@ -24,10 +24,12 @@ import { createNativeArchiveLane, createNativeArchiveApplicationLane, archiveAut
 import { archiveDefinition, archivePolicies, archiveRepository, archiveSql } from "./support/archive.ts";
 import { fixtureArchiveWiring, fixtureArchiveRestart } from "./worker.ts";
 import type { TestScope } from "./worker.ts";
+import type { readArchiveCapacityObservation } from "../src/archive-capacity-observation.ts";
 
 // Observe the existing production diagnostic; no scheduling or budget hook.
 function passDiagnostics() {
-  const records: { state: string; reason: string; capacityRefusal: ArchiveCapacityRefusal | null; cost: ArchiveCost; fixedFinish: ArchiveFixedFinish | null }[] = [], info = console.info;
+  const records: { state: string; reason: string; capacityRefusal: ArchiveCapacityRefusal | null; cost: ArchiveCost; fixedFinish: ArchiveFixedFinish | null;
+    capacityObservation: ReturnType<typeof readArchiveCapacityObservation> }[] = [], info = console.info;
   const log = vi.spyOn(console, "info").mockImplementation((...args: unknown[]) => {
     if (args[0] === "archive-pass-diagnostic-v1") records.push(args[1] as (typeof records)[number]);
     info(...args);
@@ -185,7 +187,8 @@ test("a pre-Mark target failure survives eviction and new native input without l
     const records = observed.map(args => {
       expect(args).toHaveLength(2);
       const record = args[1] as Record<string, unknown>;
-      expect(Object.keys(record).sort()).toEqual(["step", "detail", "rowPhaseAtLoad", "confirmed", "pending", "attemptsAtLoad", "hasNext", "attempted", "state", "reason", "caught", "cost", "parentRead", "capacityRefusal", "fixedFinish", "sourceFailure"].sort());
+      expect(Object.keys(record).sort()).toEqual(["step", "detail", "rowPhaseAtLoad", "confirmed", "pending", "attemptsAtLoad", "hasNext", "attempted", "state", "reason", "caught", "cost", "parentRead", "capacityRefusal", "fixedFinish", "sourceFailure", "capacityObservation"].sort());
+      expect(record["capacityObservation"]).toBeNull();
       // This stand-in provider has no exact-object transport. It must not
       // invent a parent-read phase from a target failure or native work.
       expect(record["capacityRefusal"]).toBeNull();
@@ -441,19 +444,21 @@ test("adaptive Native passes reserve writing, incremental sending and confirmati
   // A fresh capacity wake must not retry adaptive scouting in that budget.
   const sourceOrder: string[] = [], fixedBudgets: ArchiveBudget[] = [];
   let withdraw = false, hardWithdraw = false;
-  const productionPass = (shortage = false, metadata?: number) => lane.inside(state => {
-    const budget = new ArchiveBudget(shortage ? { entries: 0 } : metadata === undefined ? {} : { metadata }); fixedBudgets.push(budget);
+  const productionPass = (shortage = false, metadata?: number, observe = false) => lane.inside(state => {
+    const budget = observe ? undefined : new ArchiveBudget(shortage ? { entries: 0 } : metadata === undefined ? {} : { metadata });
+    if (budget) fixedBudgets.push(budget);
     return new ArchiveDriver({ production: "room-binding", sql: archiveSql(state),
       current: () => ({ at: lane.at, head }), clock: () => lane.c.clock.now, bounds: PROPOSED_BOUNDS,
       policies: { registry: archiveAuthorityPolicies(lane, archivePolicies) }, admit: () => true,
-      provider: host, budget: () => budget,
+      provider: host, ...(budget ? { budget: () => budget } : {}),
       target: { resolve: async () => { sourceOrder.push("target"); return archiveRepository; } },
       sources: async (_after, _through, actualBudget, exact) => {
-        expect(actualBudget).toBe(budget); expect(exact).toBe(false); sourceOrder.push("sources");
+        if (budget) expect(actualBudget).toBe(budget); else fixedBudgets.push(actualBudget);
+        expect(exact).toBe(false); sourceOrder.push("sources");
         return { pins: archiveAuthorityBasis(lane)!.pins, prepare: async (seq, sameBudget) => {
-          expect(sameBudget).toBe(budget); sourceOrder.push(`prepare:${seq}`);
+          expect(sameBudget).toBe(actualBudget); sourceOrder.push(`prepare:${seq}`);
           if (hardWithdraw) throw new ArchivePrefixStopped("foreign-source-unavailable");
-          if (withdraw) budget.stop("unavailable");
+          if (withdraw) actualBudget.stop("unavailable");
         } };
       },
     }).run();
@@ -523,7 +528,7 @@ test("adaptive Native passes reserve writing, incremental sending and confirmati
   const retryAt = await lane.inside(state => new ArchiveRows(archiveSql(state), lane.at).wake());
   expect(retryAt).not.toBeNull(); lane.c.clock.now = retryAt!;
   withdraw = false; sourceOrder.length = 0;
-  expect(await productionPass()).toMatchObject({ state: "confirmed" });
+  expect(await productionPass(false, undefined, true)).toMatchObject({ state: "confirmed" });
   expect(sourceOrder).toEqual(["target", "sources", `prepare:${published.through.seq + 1}`]);
   const fixedReceipt = (await row(lane))!;
   expect(fixedReceipt.confirmed!.through.seq).toBe(published.through.seq + 1);
@@ -534,6 +539,22 @@ test("adaptive Native passes reserve writing, incremental sending and confirmati
   expect(finished).toMatchObject({ state: "confirmed", capacityRefusal: null });
   expect(finished.fixedFinish, JSON.stringify(finished)).not.toBeNull();
   const fixedQuote = finished.fixedFinish!;
+  // The default production budget emits the already-computed native quote.
+  // TEST host/source ports remain; numeric capture is no admission authority.
+  const capture = finished.capacityObservation!;
+  expect(capture.ledgerReconciled).toBe(true);
+  expect(capture.admitted).toEqual(finished.cost);
+  expect(capture.firstQuote?.throughSeq).toBe(published.through.seq + 1);
+  expect(capture.firstQuote?.costs?.total).toEqual(fixedQuote.remaining);
+  expect(capture.firstQuote?.admitted).toEqual(fixedQuote.used);
+  expect(capture.firstFinishAttribution?.admitted).toEqual(fixedQuote.used);
+  expect(capture.firstFinishAttribution?.complete, JSON.stringify(capture.firstFinishAttribution)).toBe(true);
+  expect(capture.selectedQuote?.throughSeq).toBe(fixedReceipt.confirmed!.through.seq);
+  expect(capture.rowContext?.snapshotConsumed).toBe(true);
+  expect(capture.finishGeometryComplete, JSON.stringify(capture.firstQuote)).toBe(true);
+  const captureText = JSON.stringify(capture);
+  for (const secret of ["TEST ARCHIVE TOKEN", ...Object.values(archiveRepository)]) expect(captureText).not.toContain(secret);
+  (context.task.meta as Record<string, unknown>)["capacityCaptureBytes"] = new TextEncoder().encode(captureText).length;
   expect(fixedQuote.metadataMargin).toBe(65_536);
   for (const key of ["entries", "attempts", "nodes", "calls", "metadata", "inputWork"] as const) {
     expect(finished.cost[key], JSON.stringify({ key, finished })).toBeLessThanOrEqual(fixedQuote.used[key] + fixedQuote.remaining[key]);
@@ -560,7 +581,7 @@ test("adaptive Native passes reserve writing, incremental sending and confirmati
   expect(await lane.head()).toEqual(head);
   (context.task.meta as Record<string, unknown>)["adaptiveNative"] = { cap: maximum, first: first.through.seq, second: second.confirmed!.through.seq,
     costs: budgets.map(budget => budget.admitted()), quotes, lookaheads, appendCalls: host.appendCalls,
-    fixed: { refusedFixed, refusedMargin, marginOnlyMetadata, hardDiagnostic, sourceOrder, costs: fixedBudgets.map(budget => budget.admitted()), through: fixedReceipt.confirmed!.through },
+    fixed: { refusedFixed, refusedMargin, marginOnlyMetadata, finished, hardDiagnostic, sourceOrder, costs: fixedBudgets.map(budget => budget.admitted()), through: fixedReceipt.confirmed!.through },
     qualification: "Actual Native checkpoint entries, adaptive scouting, fresh inventory, writer, driver copies, production incremental-send code including validator/copy/pack and Native row confirmation; HTTP/host/token/policies remain TEST stand-ins. Original production caps including 64 MiB input; bounded synchronous observations require charged discarded lookahead under a positive finish reserve. Two original adaptive passes plus genuine capacity wakes, a constrained complete-quote refusal, a margin-only refusal, an unavailable source retry, one fixed-next confirmation and a final preserved hard-source refusal; no cadence/10000-one-entry claim." };
 });
 
