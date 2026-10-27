@@ -58,7 +58,11 @@ cases across six files passed. The one ordinary gate remains due. The source pre
 `688c65618473c98443a204ee974b3fa1dcd02b20`. Each command's result records the
 working patch or file hashes where available; the base tree alone does not
 identify dirty tested bytes. `prep-summary.json` identifies the final prepared
-25 paths. No dependency was installed.
+25 paths; source-seal maintenance is recorded separately. No dependency was installed.
+
+Before the first gate, the work was rebased onto Main `59a19054`. All 26 task
+source, test and guide paths kept their tested bytes; `rebase.json` records
+the comparison and the five R14 base paths. The gate includes that new base.
 
 The first control attempt exited 2 before tests because its relative config
 path was duplicated. It is inconclusive. Corrected whole-file controls on
@@ -102,5 +106,5 @@ The table currently records preparation checks. The first 17 outputs use
 
 The planner owns creation-policy decisions for ordinary application packages.
 BR7 adds no admitted family or platform version. Archive parent `0f0eeab7`
-preempts this work when new capture evidence is ready. Recut onto the landed R14 repair, the gate, exact-head review and landing
+preempts this work when new capture evidence is ready. The gate, exact-head review and landing
 remain due under this request.

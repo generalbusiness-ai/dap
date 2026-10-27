@@ -1,11 +1,11 @@
 {
-  "qualification": "Preparation snapshot including the completed focused Native, source-seal maintenance and page-assets checks. Collection remains open until the ordinary gate and final reporting; no final task seal is claimed. Per-run working-source hashes qualify the preparation base.",
+  "qualification": "Preparation snapshot after focused validation and rebase, before the first ordinary gate. Collection remains open until final reporting. Per-run working-source hashes identify focused inputs; rebase.json proves unchanged task source.",
   "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-27-br7-current-names",
   "checkpoint": {
-    "commit": "6499a12bb16317d9bc614e5f5e905fb4d662cc87",
-    "tree": "688c65618473c98443a204ee974b3fa1dcd02b20"
+    "commit": "2ec2743c256692fe9e0a1f6b920b023750a28bbd",
+    "tree": "4b37c7b1bb9b68328e2f6a28144925c9ea878d82"
   },
-  "fileCount": 118,
+  "fileCount": 119,
   "files": [
     {
       "path": "capture-focused.py",
@@ -446,6 +446,11 @@
       "path": "prepared-source-checkpoint.json",
       "bytes": 3937,
       "sha256": "3a461e560195e7f2b29c5f7336de4a66ed6dc0033694af352b3958c1e3a07ae3"
+    },
+    {
+      "path": "rebase.json",
+      "bytes": 4568,
+      "sha256": "37038878ad32e8d3f5f22de285fd338292a0cfb1fad0f812cad030e70fe0092f"
     },
     {
       "path": "scope-types-v1.json",
