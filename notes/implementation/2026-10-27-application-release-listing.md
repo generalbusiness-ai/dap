@@ -1,8 +1,8 @@
 # List installed application releases
 
-The Node operator command, projector, deployment guidance and focused evidence
-are complete. The ordinary gate, final manifest, evidence seal and exact-head
-checker review remain due. This note claims no live read, landing or deployment.
+The Node operator command, projector, deployment guidance and ordinary gate
+are complete. Exact-head checker review remains due. This note claims no
+live read, landing or deployment.
 
 ## Request and read boundary
 
@@ -73,7 +73,7 @@ private item slots, body, signature, header, token or setting.
 
 The projector checks exact scope identity, active status, complete response,
 no continuation, supported native pin, native kind, sorted unique item IDs,
-sealed openings, revisions and complete native type/state counts. Live counts
+non-null opening digests, revisions and complete native type/state counts. Live counts
 must agree with the listed items and pinned maxima. Retained final counts are
 safe integers; they are not capped at the live-item maximum or presented as
 independent journal completeness. Only native Rules installation pins qualify;
@@ -91,8 +91,30 @@ function performs no read or output operation.
 
 ## Evidence and limits
 
-Raw preparation remains open and unsealed at
+The ordinary gate naturally passed at clean checkpoint
+`1cd66fe74b4d0d820066cec67207c33ff3e99c1c`, tree
+`174b2b483e31053f141b7e5b0af31418953d1b6e`, with no interruption or signal.
+The checkout stayed clean at that head. The driver measured 1,133.03317525
+seconds wall and 2,335.568022 seconds child CPU. Node reports 57 passed;
+Counting reports 55 passed; plain Vitest reports 2,859 passed and one skipped
+across 281 passing modules; Native reports 795 passed and two skipped across
+232 passing and one skipped module. All eleven new cases passed. All five
+stages reached natural success with zero unhandled errors. Final identities
+are unique and reconcile to public terminal records. Plain has all 2,860
+ready/result/final callbacks. Native has 797 final callbacks; thirteen lack a
+ready callback and 36 lack a result callback. Those omissions establish no
+cause, readiness or missing duration. Concurrent case/module duration sums are
+neither wall time nor CPU. The retained analyzer hashes its 39 gate inputs.
+
+Raw evidence is indexed and read-only at
 `/Users/hughpyle/play/artroom-evidence/2026-10-27-application-release-listing`.
+The checked-in manifest is
+`notes/implementation/evidence/2026-10-27-application-release-listing.manifest.json`.
+It names every retained file, including the checksum index. All 1,844 tracked
+paths outside `notes/` have identical Git blob bytes at the gate checkpoint
+and this worktree. `gate-source-equality.json` has SHA-256
+`39fa8bec6fca2a87046176e5ee6a05af35b9a60978f2a415ab9f011b9740ef8c`.
+Only this reporting note and its evidence manifest follow the gate.
 The projector SHA-256 is
 `f07250f67ae3025facce3c4c0f0340de38aef18a0f96c440b1a7ce3743a9289c`.
 Working-file hashes and base head/tree are retained by the command wrappers.
@@ -167,15 +189,17 @@ with existing caches, not whole-edit latency or an isolated-machine benchmark.
 | Repaired owning file: six passed | plain Vitest, CLI project, one file | 0 | `repaired-owning-plain/output.log`: `cbe46e09860677c68da09ed2878142489ef8deea99044b49207de614c133f9eb` |
 | Shared helper audit: 678 sources, 134 byte exports | `node scripts/check-shared-helpers.mjs` | 0 | `owning-shared-helpers/output.log`: `850cd7e06f8c7ea8d72b66f47d47eb4c5cd252a6612edd2621450af3752f425c` |
 | New command, projector and legacy operator cases: 16 passed | three focused CLI Vitest files | 0 | `command-plain-01/output.log`: `21e9bbfcd9f6e7cd6efb0389de85b19804ca2c7e2638cd0dac0c5ce5d1a7b1ed` |
-| CLI source compiler context | `tsc -p packages/cli/tsconfig.json --noEmit` | 0 | `command-ts-source-01/output.log`: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
-| CLI test compiler context | `tsc -p packages/cli/tsconfig.test.json --noEmit` | 0 | `command-ts-test-01/output.log`: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| CLI source compiler context | `tsc -p packages/cli/tsconfig.json` | 0 | `command-ts-source-01/output.log`: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| CLI test compiler context | `tsc -p packages/cli/tsconfig.test.json` | 0 | `command-ts-test-01/output.log`: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
 | Page and MCP browser-resource freshness: two passed, two unselected | two focused freshness witnesses | 0 | `browser-resource-freshness/output.log`: `58b17a927379e678779ea7670d8b3e874bf4b59018c4734c6cd93fda82333d5f` |
 | Repeat-read transport control compiles, fails call-count assertion, restores | selected command witness | compiler 0; child 1 | `command-transport-repeat-control-01/selected-test.log`: `12377382849f28f3458c21d25cefc9b68ddcda85e9b54a3cd1ba31297b31282d` |
 | Exception-disclosure transport control compiles, fails fixed-error assertion, restores | selected command witness | compiler 0; child 1 | `command-transport-privacy-control-01/selected-test.log`: `9dbcdb203362ca2f4299ab37c65865a3e675008c621e4cc47438545b60d70d88` |
+| Ordinary gate: all five stages passed at the exact checkpoint above | `npm run gate` | 0 | `ordinary-gate/output.log`: `bf7725e21f4d1b4beff57b6ad64261d463ff5980d8aa462c051b4fa687a64f32` |
+| Closed-gate reconciliation: unique finals and qualified callback gaps | offline gate analyzer | 0 | `gate-analysis/analyze.json`: `504f57a87889aa414db9f3fa2b9e6368159d4701ecce13627ee5ef34c52e2b68` |
 
 ## Remaining work
 
-Run the ordinary gate once, then finish the PD-2 manifest/seal and exact-head
-review. The focused command run passed 16 cases across three files, including
-the legacy operator commands; both changed CLI TypeScript contexts passed.
-No artifact report, review request, landing or deployment is claimed yet.
+Exact-head review remains due. The focused command run
+passed 16 cases across three files, including the legacy operator commands;
+both changed CLI TypeScript contexts passed. The planner performs all actual
+Worker reads and trust updates. No landing or deployment is claimed here.
