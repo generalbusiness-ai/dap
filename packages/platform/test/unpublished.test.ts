@@ -19,7 +19,7 @@ function register(host: string, namespace = "TEST ignored under none") {
   // answer. A parentless refused genesis records no result envelope/reason.
   const native = code(U.register), guard = native.rules["host-choice"]!, hostChecks: unknown[] = [];
   if (guard.place !== "guard") throw Error("Native host choice guard required");
-  const observed: PlatformRules = { ...native, rules: { ...native.rules, "host-choice": { ...guard, run: given => {
+  const observed: PlatformRules = { ...native, rules: { ...native.rules, "host-choice": { ...guard, run: (given: RuleGiven) => {
     const checked = guard.run(given); hostChecks.push(checked); return checked;
   } } } };
   const judgment = judgeGenesis(ledger.state, definition, { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(21)), seed, creation: signed },
@@ -115,7 +115,10 @@ test("a native unpublished found directly creates its directory, applies its res
   const type = platform(U.register)!.rules["directory-genesis-result"]!;
   if (type.place !== "type") throw Error("Native directory result type required");
   const resultContext = { input: R.last.input, own: R.own, resolved: { at: R.at } } as unknown as RuleGiven;
-  expect(type.run(resultContext, D.fact(0))).toBe(true);
+  // Runtime facts have the closed FieldValue shape; the interface types do
+  // not carry a string index signature. Use the actual claim slot location.
+  const accepts = (context: RuleGiven, value: unknown) => type.run(context, value as FieldValue, { item: 1, slot: "genesis" });
+  expect(accepts(resultContext, D.fact(0))).toBe(true);
   // One slot boundary: the verified result may name only its own deciding
   // directory genesis and the exact recorded native founding request.
   const resultInput = R.last.input;
@@ -126,13 +129,13 @@ test("a native unpublished found directly creates its directory, applies its res
   const unrelated = { ...resultContext, own: () => ({ ...original, hash: R.fact(0).hash }) };
   const wrongOrigin = { ...resultContext, own: () => ({ ...original, entry: { ...original.entry, input: D.last.input } }) };
   expect([
-    type.run(resultContext, { ...D.fact(0), seq: 1 }),
-    type.run(resultContext, { ...D.fact(0), hash: R.fact(0).hash }),
-    type.run({ ...resultContext, input: wrongIncarnation }, D.fact(0)),
-    type.run(unrelated, D.fact(0)),
-    type.run(wrongOrigin, D.fact(0)),
-    type.run({ ...resultContext, input: refusedResult }, D.fact(0)),
-    type.run({ ...resultContext, input: D.last.input }, D.fact(0)),
+    accepts(resultContext, { ...D.fact(0), seq: 1 }),
+    accepts(resultContext, { ...D.fact(0), hash: R.fact(0).hash }),
+    accepts({ ...resultContext, input: wrongIncarnation }, D.fact(0)),
+    accepts(unrelated, D.fact(0)),
+    accepts(wrongOrigin, D.fact(0)),
+    accepts({ ...resultContext, input: refusedResult }, D.fact(0)),
+    accepts({ ...resultContext, input: D.last.input }, D.fact(0)),
   ]).toEqual([false, false, false, false, false, false, false]);
   take(D, U.directory, R, R.head.seq, 0, facts);
   expect(D.state.scope()!.status).toBe("active");

@@ -37,7 +37,7 @@ export async function scopeCensusFixture(options: { members?: boolean; registerO
     } as unknown as DurableObjectNamespace;
     const settings = {
       REGISTER_SCOPE: register.scope,
-      ARTIFACTS_CONFIG: options.registerOnly ? undefined : JSON.stringify({ registerScope: register.scope, namespace: "TEST-census", host: "artifacts.example", maxBytes: 10485760, credentialIdentity: "adapter-attempt" }),
+      ...(options.registerOnly ? {} : { ARTIFACTS_CONFIG: JSON.stringify({ registerScope: register.scope, namespace: "TEST-census", host: "artifacts.example", maxBytes: 10485760, credentialIdentity: "adapter-attempt" }) }),
       SCOPES: proofScopes, SCOPE_INDEX_MODE: "enforce",
       ...(options.readLimit === undefined ? {} : { SERVING_READ_KEY_PER_MINUTE: String(options.readLimit) }),
       ...(options.addressLimit === undefined ? {} : { SERVING_READ_ADDRESS_PER_MINUTE: String(options.addressLimit) }),

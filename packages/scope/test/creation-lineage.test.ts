@@ -71,7 +71,8 @@ test("three approved native cohorts admit their exact child chain and refuse ano
       const delivered = envelopeOf(directoryBirth, nativeChild.n);
       // A Register-only setting proves the same actual native child lineage;
       // provider configuration is unnecessary to select its authority root.
-      const f = recorded([R, D, ...children], child.name), settings = { ...f.env, ...config(R.name), REGISTER_SCOPE: R.name, ARTIFACTS_CONFIG: undefined };
+      const { PLATFORM_CREATION_PINS, DEPLOYMENT } = config(R.name);
+      const f = recorded([R, D, ...children], child.name), settings = { ...f.env, PLATFORM_CREATION_PINS, DEPLOYMENT, REGISTER_SCOPE: R.name };
       const before = await life.wait(() => child.entries());
       const ports = namespace(indexedScopes(f.binding, settings));
       expect(await life.wait(() => ports.transport.send(delivered))).toMatchObject({ answer: "recorded" });

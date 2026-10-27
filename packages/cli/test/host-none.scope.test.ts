@@ -5,7 +5,7 @@
 import { env, runInDurableObject } from "cloudflare:test";
 import { expect, onTestFinished, test } from "vitest";
 import { DOMAINS, type FactRef, type FieldValue, type OutboxId, type ScopeId } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, digestBytes, factRefOf, isFactRef, isRecord, isSeed, LATE, scopeIdOf, textDigest, timeOf, utf8, within } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, digestBytes, factRefOf, isFactRef, isMemberRef, isRecord, isSeed, LATE, scopeIdOf, textDigest, timeOf, utf8, within } from "@generalbusiness/dap-bytes";
 import { secretSigner, type Fetch, type Signer } from "@generalbusiness/dap-client";
 import { firstExtents, UNPUBLISHED_COHORT as C } from "@generalbusiness/dap-platform";
 import { firstExtentsV11, rulesPolicyProposalV11 } from "../../platform/src/rules-policy-v11.ts";
@@ -123,7 +123,7 @@ test("host none creates a real local room, settles installed publication refusal
       // Only this TEST bridge adapts that option; actual wire/auth is retained.
       const { redirect: _redirect, credentials: _credentials, ...wire } = init as typeof init & { redirect?: string; credentials?: string };
       const response = await wait(() => route(new Request(url, { ...wire, redirect: "manual" }), env.PLATFORM,
-        { REGISTER_SCOPE: register ?? undefined, SCOPE_INDEX: env.SCOPE_INDEX, DEPLOYMENT: TEST_DEPLOYMENT, SESSION_SECRET: sessionSecret }));
+        { REGISTER_SCOPE: register ?? undefined, SCOPE_INDEX: env.SCOPE_INDEX, DEPLOYMENT: TEST_DEPLOYMENT }));
       return { status: response.status, body: response.body };
     };
     const body = "TEST detached issue body, kept locally without publication.";
@@ -217,8 +217,15 @@ test("host none creates a real local room, settles installed publication refusal
       return answer.structuredContent;
     };
     expect(await call("text", { scope: I.name, kind: "text", digest: textDigest(body) })).toMatchObject({ text: body });
+    // Rules10's device-install input requires an explicit existing owner,
+    // including for this ordinary signed Lending package. Use the actual
+    // member party recorded by the CLI's seat/first-key setup.
+    const nativeOwner = (await wait(() => M.summary())).value.items.find(item => item.type === "member"
+      && item.state === "active" && item.values["handle"] === "@owner")?.parties["member"];
+    if (!isMemberRef(nativeOwner)) throw Error("Actual active Native owner member required");
+    expect(nativeOwner.membership).toEqual(repository.membership);
     const installed = await call("install_application", { uri: f.uri, release: f.packet.ids.release,
-      roles: ["admin", "member"], values: {}, idempotencyKey: "TEST-host-none-Lending" });
+      roles: ["admin", "member"], owner: nativeOwner, values: {}, idempotencyKey: "TEST-host-none-Lending" });
     expect(installed).toMatchObject({ answer: "accepted", phase: "recorded" });
     const job = Number(installed["item"]); expect(Number.isSafeInteger(job)).toBe(true);
     await pause([]);

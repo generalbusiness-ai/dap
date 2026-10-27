@@ -199,16 +199,19 @@ test("closed cohort selection uses the new default and preserves retained histor
     await retainedPlan(s, name, { host: "artifacts", namespace: "room" });
     const original = (await s.store.config())!;
     expect([original.plan!.definition, original.plan!.selected, s.bodies]).toEqual([definition, true, []]);
-    expect((await command(s.ctx, ["install", "--plan", SERVICE, "--cohort", name, "--host", "github.com"])).code).toBe(0);
+    // Re-read the retained artifacts plan with the same required host. The
+    // explicit github.com request below remains the host-mismatch control.
+    const same = await command(s.ctx, ["install", "--plan", SERVICE, "--cohort", name, "--host", "artifacts"]);
+    expect(same.code, same.lines.join("\n")).toBe(0);
     expect(await s.store.config()).toEqual(original);
     const metrics = s.metrics();
     for (const args of [
       ["install", SERVICE, "--cohort", name, "--host", "github.com"],
-      ["install", "--plan", SERVICE, "--cohort", name, "--namespace", "other", "--host", "github.com"],
-      ["install", "https://other.test", "--cohort", name, "--host", "github.com"],
-      ["install", SERVICE, "--cohort", other, "--host", "github.com"], ["install", "--plan", SERVICE, "--cohort", other, "--host", "github.com"],
+      ["install", "--plan", SERVICE, "--cohort", name, "--namespace", "other", "--host", "artifacts"],
+      ["install", "https://other.test", "--cohort", name, "--host", "artifacts"],
+      ["install", SERVICE, "--cohort", other, "--host", "artifacts"], ["install", "--plan", SERVICE, "--cohort", other, "--host", "artifacts"],
       ["install", "--planned", "--cohort", other],
-      ["install", SERVICE, "--host", "github.com"], ["install", "--plan", SERVICE, "--host", "github.com"],
+      ["install", SERVICE, "--host", "artifacts"], ["install", "--plan", SERVICE, "--host", "artifacts"],
     ]) {
       expect((await command(s.ctx, args)).code).toBe(1);
       expect(await s.store.config()).toEqual(original);
