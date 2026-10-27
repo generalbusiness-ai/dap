@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fb7c5f68f11c2e83c36d92625dfb8f02bf62a407","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/support/native-fixture-lifetime.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fe94d6d45fa9e50c056b8253e129917b53324898","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/applications/act-admission.ts."}
