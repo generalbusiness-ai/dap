@@ -212,7 +212,7 @@ const seals = {
   "packages/scope/src/serving-limits.ts": "3a9f410f926f1e3711b78a750dd7dfb055f418fa9904be55ccb3f8cea869a987", // New bounded memory-only counter, no live eviction.
   "packages/scope/src/serving-admission.ts": "56196763d35e17e67df94862264b2b1af0f1e812d46cc5c50163a4c580cd06a2", // New bounded original-signature/counter ingress.
   "packages/bytes/src/records.ts": "4d0dd08359517502d5af21c6d205c1a3d1cf14479228f704dd6af1f2c72cb33a", // R11 named serving refusal; actual maintained parser output.
-  "packages/scope/src/session-preparation.ts": "4b9699cb1ee06234162dc2088c5c37be1804e1e9f15985fa1f0dc3151170bd85",
+  "packages/scope/src/session-preparation.ts": "01406a93bec4541eac502f3dd7b48c2e82c24e53c7f434c6c407c45427b31d9c",
   "packages/scope/src/item-queries.ts": "61ead9996d2c338a26331e04b8576c52425d8d2c88dc86173a7d79108c2ee418",
   "packages/scope/src/applications/projection.ts": "f7d3bb45d448ec654a89f875697f865e1e89baeb5d7529e0db0859bd855b009f",
   "packages/scope/src/destination-host.ts": "b0190439a9861b931c01cc35b283ed6a57aea11a0806e9de185fba5c5ea4e4b8",

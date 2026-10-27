@@ -2,6 +2,7 @@
 import { freeze } from "@generalbusiness/dap-bytes";
 import type { ScopeRef } from "@generalbusiness/dap-contract";
 import { isScopeRef, same, type Page, type StateView } from "@generalbusiness/dap-derive";
+import { UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
 import { recordedMembership, repositorySessionBirth } from "./authority.ts";
 import type { Clock } from "./ports.ts";
 import { ReadPreparation, type PreparedRead } from "./read-preparation.ts";
@@ -43,6 +44,8 @@ function referenceView(frame: PreparedRead): StateView {
     page(type: string, states: readonly string[], after: number | null, limit: number): Page {
       if (!Array.isArray(states) || after !== null || limit !== 1 || !(
         (type === "branch" && states.length === 2 && states[0] === "empty" && states[1] === "ready")
+        || (frame.pinned.named === UNPUBLISHED_COHORT.destination && type === "branch" && states.length === 3
+          && states[0] === "unpublished" && states[1] === "empty" && states[2] === "ready")
         || (type === "rules" && states.length === 1 && states[0] === "current")
         || (type === "repository" && states.length === 1 && states[0] === "open"))) return frame.budget.stop();
       const cached = pages.get(type);
