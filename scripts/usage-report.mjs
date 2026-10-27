@@ -147,8 +147,8 @@ export function decodeUsageResponse(value, window) {
     if (LABEL_COLUMNS.includes(column.name) ? !/^(?:String|FixedString\([1-9][0-9]*\)|LowCardinality\(String\))$/.test(column.type)
       : !/^(?:U?Int(?:8|16|32|64)|Float(?:32|64))$/.test(column.type)) return invalid();
   }
-  // Optional metadata is a conservative limit hint, never proof of coverage.
-  if (Object.hasOwn(value, "rows_before_limit_at_least") && uint(value.rows_before_limit_at_least) > value.data.length) throw Error("query-limit-hint");
+  // The provider hint counts input rows before aggregation, not returned
+  // groups. Ignore it; the query's group limit is checked above.
   const places = new Set(metricPlaces()), groups = new Set();
   return value.data.map(input => {
     if (!keys(input, COLUMNS) || !LABEL_COLUMNS.every(key => label(input[key]))) return invalid();

@@ -82,6 +82,29 @@ test("usage SQL decoding accepts recorded TEST shapes and exact numeric represen
   // finite and exactly representable before they can become report counts.
   for (const entry of numericStrings.meta) if (aliases.slice(6).includes(entry.name)) entry.type = "Float64";
   assert.deepEqual(decodeUsageResponse(numericStrings, window), plain);
+  // Reconstruct only the planner-recorded envelope shape (request 686f4ec9).
+  // Every value and label below is scripted TEST data, not provider rows.
+  const observedShape = {
+    data: Array.from({ length: 67 }, (_, index) => row("route", {
+      deployment: `TEST-recorded-shape-${index}`, storedRows: "2", weightedEvents: "6",
+      maximumSampleInterval: 3, maximumSecond: 2, weightedA: 0,
+    })),
+    meta: aliases.map(name => ({ name, type: aliases.slice(0, 6).includes(name) ? "String"
+      : ["storedRows", "weightedEvents"].includes(name) ? "UInt64"
+      : ["maximumSampleInterval", "firstSeconds", "lastSeconds"].includes(name) ? "UInt32" : "Float64" })),
+    rows: 67,
+    rows_before_limit_at_least: 350918,
+  };
+  let decoded;
+  assert.doesNotThrow(() => { decoded = decodeUsageResponse(observedShape, window); }, "input-row hint must not reject 67 returned groups");
+  assert.equal(decoded.length, 67);
+  assert.equal(decoded[0].storedRows, 2);
+  assert.equal(decoded[0].weightedEvents, 6);
+  assert.equal(decoded[0].maximumSampleInterval, 3);
+  const capped = { ...observedShape,
+    data: Array.from({ length: USAGE_LIMITS.groups + 1 }, (_, index) => ({ ...observedShape.data[0], deployment: `TEST-cap-${index}` })),
+    rows: USAGE_LIMITS.groups + 1 };
+  assert.throws(() => decodeUsageResponse(capped, window), undefined, "cap plus one returned groups remains incomplete regardless of the provider hint");
   const invalid = [
     ["in-band failure cannot be accepted as complete data", value => { value.exception = "TEST query failure after partial data"; }],
     ["duplicate alias", value => { value.meta[1] = copy(value.meta[0]); }],
@@ -206,7 +229,6 @@ test("usage report refuses truncated or bounded-out observations without zero cl
     let cancelled = false;
     const invalid = [
       ["cap plus one", () => Response.json(response(Array.from({ length: USAGE_LIMITS.groups + 1 }, (_, index) => row("route", { deployment: `TEST-row-${index}` }))))],
-      ["provider truncation hint", () => Response.json(response(undefined, { rows_before_limit_at_least: USAGE_LIMITS.groups + 1 }))],
       ["row count mismatch", () => Response.json(response(undefined, { rows: 3 }))],
       ["byte limit", () => {
         const body = encoded(writerResponse());
