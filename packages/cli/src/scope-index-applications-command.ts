@@ -1,8 +1,8 @@
 /** Node-only operator listing. The command requests reads only; a deployed
  * host may still perform its existing maintenance when handling those reads. */
 import { resolve } from "node:path";
-import { digestBytes, utf8 } from "@generalbusiness/dap-bytes";
-import { httpTransport, signedReads, type Fetch, type Signer } from "@generalbusiness/dap-client";
+import { b64url, digestBytes, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { httpTransport, requestSession, signerSessionRequest, signedReads, type Fetch, type Signer } from "@generalbusiness/dap-client";
 import type { Context, Outcome } from "./commands.ts";
 import type { IndexFiles } from "./scope-index-command.ts";
 import { INDEX_INVENTORY_BOUNDS, readIndexManifest, type IndexManifest } from "./scope-index-manifest.ts";
@@ -11,8 +11,8 @@ import { storedSigner } from "./store-signer.ts";
 import type { Config } from "./store.ts";
 
 const USAGE = "dap scope-index applications --manifest FILE --out FILE";
-const QUALIFICATION = "Listed-scope summary observations only; saved genesis hashes were not reverified. The command requests no mutation, session, registration, retry or pagination; existing host maintenance may still run.";
-type CommandFailure = "configuration-unavailable" | "manifest-unavailable" | "manifest-invalid" | "signer-unavailable" | "output-too-large" | "output-unavailable";
+const QUALIFICATION = "Listed-scope summary observations only; saved genesis hashes were not reverified. At most one existing membership session is requested, with bounded host replay bookkeeping. The command requests no business mutation, registration, retry or pagination; existing host maintenance may still run.";
+type CommandFailure = "configuration-unavailable" | "manifest-unavailable" | "manifest-invalid" | "signer-unavailable" | "session-unavailable" | "output-too-large" | "output-unavailable";
 const TOO_LARGE = Symbol("output-too-large");
 type RedirectFetch = (url: string, init?: Parameters<Fetch>[1] & { redirect: "error"; credentials: "omit" }) => ReturnType<Fetch>;
 
@@ -80,12 +80,24 @@ export async function scopeIndexApplicationsCommand(ctx: Context, argv: readonly
   if (!signer) return fail("signer-unavailable");
   const send = ctx.fetch ?? (globalThis as { fetch?: Fetch }).fetch;
   if (!send) return fail("configuration-unavailable");
-  const transport = signedReads(httpTransport(manifest.service, { fetch: noRedirects(send), bytes: 4 * 1024 * 1024, seconds: 30 }), signer, ctx.now ? { now: ctx.now } : {});
+  const fetch = noRedirects(send);
+  let reader: string | null = null;
+  const membership = config.repository.membership;
+  if (membership) {
+    try {
+      const now = ctx.now?.() ?? Date.now();
+      const asked = await signerSessionRequest(membership, signer, timeOf(Math.floor(now / 1000) * 1000 + 60_000), b64url(crypto.getRandomValues(new Uint8Array(16))));
+      const answer = await requestSession(manifest.service, membership.scope, asked, { fetch, seconds: 30 });
+      if (answer.ok) reader = answer.session.reader();
+      // A definite refusal selects Signed authority before any summary read.
+    } catch { return fail("session-unavailable"); }
+  }
+  const transport = signedReads(httpTransport(manifest.service, { fetch, bytes: 4 * 1024 * 1024, seconds: 30 }), signer, ctx.now ? { now: ctx.now } : {});
   const report = new Report(identity.manifestPath, identity.manifestDigest);
   try {
     for (const { at } of manifest.scopes) {
       try {
-        const reply = await transport.summary(at.scope, null);
+        const reply = await transport.summary(at.scope, reader);
         const result = projectScopeApplications(at, reply);
         report.add(result.applications, result.errors);
       } catch (error) {
