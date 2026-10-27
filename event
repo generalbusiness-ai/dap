@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b0c46f3dc8abb6a67496ab668b330e64ae540fc2","text":"Republished at 52511ced8b6b5239272dae61911ccec18acfbea8; the successor stands at packages/cli/src/scope-index-command.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:dc1777260f4035517ce859b34e41e9a63dec0219","text":"Republished at 52511ced8b6b5239272dae61911ccec18acfbea8; the successor stands at packages/cli/test/scope-index-census-command.test.ts."}
