@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:05a57dda9c894889230e8081db9968abb72f03dc","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-27-archive-read-settlement.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0603a6cb6b13af6d04d81d12482d13e410661d7c","text":"Merge retired a covered predecessor; the successor is at packages/git/src/journal-work.ts."}
