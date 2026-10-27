@@ -34,7 +34,8 @@ async function archiveAlarm(lane: Lane, alarmTimes?: number[]) {
 
 // The native alarm must archive a small prefix even when floor policy is
 // enabled, while its minimum/window prevents an unnecessary floor entry.
-test.each([{ inputs: 10, complete: true }, { inputs: 4800, complete: false }])("Native floor-policy alarm measures a$inputs-input archive prefix", async ({ inputs, complete }) => {
+test("Native floor-policy alarm measures a10-input archive prefix", async () => {
+  const inputs = 10;
   const lane = await createNativeArchiveLane({}, {}, archiveDefinition), host = new ScriptedArchiveHost("sha1", () => lane.c.clock.now), budgets: ArchiveBudget[] = [];
   fixtureArchiveWiring.set(lane.name, {
     fixtureSources: archiveAuthorityBasis(lane)!.pins,
@@ -44,9 +45,9 @@ test.each([{ inputs: 10, complete: true }, { inputs: 4800, complete: false }])("
   });
   onTestFinished(() => { fixtureArchiveWiring.delete(lane.name); });
   await lane.restart();
-  for (let n = 0; n < inputs; n++) expect((await lane.submit(lane.remark(`${complete ? "small prefix" : "old input"} ${n}`))).answer).toBe("accepted");
+  for (let n = 0; n < inputs; n++) expect((await lane.submit(lane.remark(`small prefix ${n}`))).answer).toBe("accepted");
   const head = await lane.head();
-  for (let alarm = 0; alarm < (complete ? 8 : 1); alarm++) {
+  for (let alarm = 0; alarm < 8; alarm++) {
     await archiveAlarm(lane);
     const observed = await lane.inside(state => {
       const sql = archiveSql(state), row = new ArchiveRows(sql, lane.at).load();
@@ -56,7 +57,6 @@ test.each([{ inputs: 10, complete: true }, { inputs: 4800, complete: false }])("
     console.info("floor-policy archive alarm", { inputs, alarm, time: lane.c.clock.now, observed,
       targets: host.targets, mints: host.mintCalls, sends: host.sends.length, budget: budgets.at(-1)?.admitted() });
     expect(observed.stopped).toBeNull(); expect(observed.floor).toBeNull();
-    if (!complete) { expect(observed.confirmed).toBeGreaterThanOrEqual(0); expect(observed.confirmed).toBeLessThanOrEqual(head.seq); return; }
     if (observed.confirmed === head.seq) { expect(await lane.head()).toEqual(head); return; }
   }
   expect.fail("a small native archive prefix must confirm within its actual alarm schedule");

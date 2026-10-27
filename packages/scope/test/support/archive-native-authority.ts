@@ -6,7 +6,7 @@ import { scopeFactoryChange, scopeScaleChange } from "../definition-corpus-data.
  * Each writer still pays its existing source lookup charges. No production
  * source-RPC, throughput, custody or full preparation-cost claim follows. */
 import { env } from "cloudflare:test";
-import { expect, inject, onTestFinished } from "vitest";
+import { expect, inject, onTestFinished, TestRunner } from "vitest";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT, FIRST_ACTIONS_OF } from "@generalbusiness/dap-platform";
 import type { Bounds, Digest, FactRef, Grant, MemberRef, PlatformDefinition } from "@generalbusiness/dap-contract";
 import { canonicalize, factRefOf, isFactRef, isRecord, isSeed, LATE, scopeIdOf, unb64url, within } from "@generalbusiness/dap-bytes";
@@ -30,7 +30,7 @@ import type {} from "./maintained-applications.ts";
 
 interface Basis { pins: FixtureArchiveSourcePins; policies: ArchivePolicyRegistry; observed: Map<string, FactRef>; setupCost: ReturnType<ArchiveBudget["admitted"]>; creator?: FactRef; confirmation?: FactRef }
 const bases = new WeakMap<Lane, Basis>();
-let activeClockOwner: object | null = null;
+let activeClockOwner: { failedClose: boolean } | null = null;
 /** TEST declaration for the two factory-born resume/replay cases only.
  * The genuine factory admits no capabilities. Their offer/assign rule input
  * remains; the unused hold capability, item, acts and timed rule are absent. */
@@ -77,8 +77,16 @@ export function archiveAuthorityPolicies(lane: Lane, policies: ArchivePolicyRegi
   return basis ? new Map([...policies, ...basis.policies]) : policies;
 }
 export async function nativeArchiveFixture() {
+  if (activeClockOwner?.failedClose) {
+    // Dynamic skip suppresses finish hooks: admit it before any new resource
+    // or hook exists, and outside the setup catch that preserves failures.
+    const reason = "Native archive fixture skipped: prior close failed; ownership retained";
+    const currentTest = TestRunner.getCurrentTest();
+    if (currentTest) currentTest.context.skip(reason);
+    throw Error(reason);
+  }
   if (activeClockOwner !== null) throw Error("Native archive fixture clock already owned");
-  const owner = {}, previousClock = net.clock, clock = new ScriptedClock(START);
+  const owner = { failedClose: false }, previousClock = net.clock, clock = new ScriptedClock(START);
   activeClockOwner = owner; net.clock = clock;
   let nativeLife: Awaited<ReturnType<typeof sessionRoom>>["life"] | undefined;
   const lanes: Lane[] = [];
@@ -146,7 +154,12 @@ export async function nativeArchiveFixture() {
       }
     }
     if (failures.length) throw new AggregateError(failures, "Native archive fixture owned work failed");
-  })();
+  })().catch(error => {
+    // Late completion cannot rehabilitate a close that retained ownership.
+    // Errors after successful release leave no poisoned successor state.
+    if (activeClockOwner === owner) owner.failedClose = true;
+    throw error;
+  });
   // Install before the first await, including native setup itself.
   onTestFinished(close);
   try {
@@ -265,7 +278,11 @@ export async function nativeArchiveFixture() {
       },
     };
     });
-  } catch (error) { await close(); throw error; }
+  } catch (error) {
+    try { await close(); }
+    catch (closeError) { throw new AggregateError([error, closeError], "Native archive fixture setup and cleanup failed"); }
+    throw error;
+  }
 }
 export async function createNativeArchiveLane(bounds: Partial<Bounds> = {}, reads: Partial<ReadBounds> = {}, under: ValidDefinition = archiveDefinition): Promise<Lane> {
   return (await nativeArchiveFixture()).create(bounds, reads, under);
