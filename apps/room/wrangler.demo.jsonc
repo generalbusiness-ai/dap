@@ -14,6 +14,7 @@
     "ARTIFACTS_CONFIG": "{\"registerScope\":\"sc_b5q435os6lggypatelcltqzvul4kqxzdaaxpmybvwumsmxwj2djq\",\"namespace\":\"dap-demo\",\"host\":\"6e953d231f1c9aadffbf59537a82e13a.artifacts.cloudflare.net\",\"maxBytes\":10485760,\"credentialIdentity\":\"adapter-attempt\"}",
     "DEMO_START_CONFIG": "{\"v\":3,\"origin\":\"https://dap-demo.inguz.workers.dev\",\"deployment\":\"dap-demo\",\"register\":{\"inc\":\"in_rjfrmifznpi65vm6y2kbc36xpi\",\"kind\":\"register\",\"scope\":\"sc_b5q435os6lggypatelcltqzvul4kqxzdaaxpmybvwumsmxwj2djq\"},\"definition\":\"platform:register@17\"}",
     "APPLICATION_SCREEN_HOSTS": "[]",
+    "APPLICATION_TRUST": "[{\"release\":\"sha256:71e10ca9499e926a4de1d8294ed83a772051dff677d8b1687bbd8e28e61802fa\",\"publisher\":\"key_gg4rXwy4v-kVqveN37_W_FW_-Wvsn3fgsal5z6gxfS0\",\"host\":\"github.com\"}]",
     "SERVING_CREATION_KEY_PER_HOUR": "10",
     "SERVING_CREATION_ADDRESS_PER_HOUR": "30",
     "SERVING_READ_KEY_PER_MINUTE": "240",
