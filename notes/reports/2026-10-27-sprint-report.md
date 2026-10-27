@@ -31,21 +31,24 @@ caught with 55,244 bytes of capture (pass 33,386), sealed as evidence
 for the builder's measurement.
 
 The measurement head (`71636079`, 13:33) recorded the finding: seven
-read ceilings of 262,144 bytes reserved 1,835,008 of a 2,894,539-byte
-metadata budget, and one Room A pass reserved 4,673,364 against the
-4,194,304 limit. The settlement request (`0052053d`) asked the archive
-budget to reserve at the ceiling and settle to the bytes received at
-every site; its W1 was amended to drop a historical settled total that
-the rows do not retain, with a conditional bound of 1,467,917 for the
-replay fixture. The settlement head (`ca7b16bc`, 15:53, 31 paths)
-landed and was deployed to all three Workers at 16:00. The capture at
+read ceilings of 262,144 bytes reserved 1,835,008 of the 2,894,539
+bytes of metadata admitted before the finish, and one Room A pass
+needed 4,673,364, with margin, against the 4,194,304 limit. The
+settlement request (`0052053d`) asked the archive budget to reserve at
+the ceiling and settle to the bytes received at every site; its W1 was
+amended to drop a historical settled total that
+the rows do not retain: the captured pass fits only if the received
+sizes that were not recorded add up to at most 1,467,917, a boundary a
+synthetic control shows. The settlement head (`ca7b16bc`, 15:53, 31
+paths) landed and was deployed to the grow Worker at 15:59 and the
+demo and lending Workers at 16:00. The capture at
 16:12 shows the new figures on an idle Room A pass: 1,664,604 reserved,
 62,700 settled, nothing unsettled. Room A confirmed 34,510. The live
 settled total of a plan pass waits for the next entries.
 
 ## Story: the remediation chain and its deploy rule
 
-The R7 hardening head (`33690b69`, 00:06, 35 commits, 60 paths) adds
+The R7 hardening head (`33690b69`, 00:06, 34 commits, 60 paths) adds
 certificate reuse, certification liveness, the passes-record ceiling
 and the Page wording as the next platform family (register 20,
 directory 19, rules 12, destination 15). Its native follow-up had
@@ -113,7 +116,7 @@ storage rule asks for it. Its owners are the slices above.
 - `9efe36a3`, 26 October 19:31: the 26 October sprint report.
 - `33690b69`, 00:06: R7 hardening (certificate reuse, liveness, passes
   ceiling, Page wording); platform family register 20, directory 19,
-  rules 12, destination 15.
+  rules 12, destination 15; 34 commits, 60 paths.
 - `994a638f`, 01:36: the K1 count follow-up on `docs/kernel.md`.
 - `1b45fb0e`, 02:51: numeric archive capacity capture on the pass
   diagnostic, with the BR-4 deadline repair as a named partial.
@@ -159,7 +162,7 @@ each grow deploy.
 | `dap-lending` | `3ba76328` | 08:38 | `6499a12b` | same |
 | `dap-grow` | `abbb266c` | 08:38 | `6499a12b` | same |
 | `dap-demo` | `fcaffa21` | 11:31 | `bb23e50f` | grow trust row |
-| `dap-grow` | `8ac15a41` | 16:00 | `ca7b16bc` | settlement, BR6 to BR8 |
+| `dap-grow` | `8ac15a41` | 15:59 | `ca7b16bc` | settlement, BR6 to BR8 |
 | `dap-demo` | `8ef92b84` | 16:00 | `ca7b16bc` | same |
 | `dap-lending` | `a22f5316` | 16:00 | `ca7b16bc` | same |
 
@@ -202,7 +205,8 @@ would have cut it, and whether to revisit.
   first design, with the archive budget as the one place a ceiling is
   charged, which the settlement head now is. Revisit: the budget no;
   the capture yes: bound or drop `capacityObservation` when the series
-  ends, since every idle pass now carries 13,486 bytes of it.
+  ends, since every idle pass now carries about 13,500 bytes of it
+  (13,481 on the first read, 13,486 on the 04:48 read).
 - R7 hardening (`33690b69`). Cost: four new platform versions and a
   60-path head for four bounded changes, plus a test-only repair for a
   spy that recorded every clock read. Alternative: none for the
@@ -235,8 +239,9 @@ would have cut it, and whether to revisit.
 - Census: the Worker operator is the install signer of the pinned
   register; pages end explicitly; the bound is 4,096 scopes; an
   incomplete census writes no manifest (`c0789349`).
-- Settlement W1 keeps no historical settled total; the replay fixture
-  carries a conditional bound (`ecefed5c`).
+- Settlement W1 keeps no historical settled total; the captured pass
+  carries a conditional bound of 1,467,917 on the unrecorded received
+  sizes (`ecefed5c`).
 - The first local deployment is the self-hosting direction, in one
   shape; the builder order is census, G1, H1, LAN keys, CLI sessions,
   uniqueness index, idle alarms (`46852be4`, `8a50aa07`).
