@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6b48e6b0136164be2f6806a9fb61e09730182fba","text":"Merge retired a covered predecessor; the successor is at packages/checkers/test/support/container-bridge.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7283d674dbcc033b9a85f33fa1fcdbaca950c852","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-28-j3-runner.md."}
