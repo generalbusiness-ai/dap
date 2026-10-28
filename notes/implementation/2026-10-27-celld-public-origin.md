@@ -69,7 +69,16 @@ checks the exact retained issuance for child readiness, with at most eight
 read-only Checks. It sends neither a replacement act nor Continue. A verified
 private handoff releases only its own completed config pointer, preserving all
 opaque snapshots. Diagnostics distinguish invitation state from HTTP status.
-This section will record the final terminal results before review. The final evidence will be sealed under
+At `7985f0fc`, the fresh actual proxy driver passed: configured signed
+creation 201; fresh unset, forwarded-only and wrong-service controls 403;
+two initialized MCP sessions and room tools; rotation and retirement 200;
+seven exact consistent journals; actual sessions ok and register ready200.
+Both celld processes ended naturally with exit0. Proxy counters retain four
+backend connection failures during bounded startup/readiness polling, not a
+claim of zero errors. The whole driver took 8.640s wall and 5.008s child CPU.
+The output digest is
+`b3d307b6154508d0b1bfcef7ead909525d33e1f6fe3ce9c485050460fea3297a`.
+This section will record the final gate terminal before review. The final evidence will be sealed under
 `/Users/hughpyle/play/artroom-evidence/2026-10-27-celld-public-origin`.
 The first draft inventory generator failed before parsing because a flat
 symlink view could not resolve native dependencies. Its failed output is

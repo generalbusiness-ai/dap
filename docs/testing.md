@@ -753,7 +753,7 @@ Parser, missing-value, invalid-value, and health descriptions still require
 source review. This structural check does not execute Worker modules or prove
 runtime failure behavior, deployed settings, provider connectivity, or hosted
 authorization. The root `npm test` command includes this file once in its
-explicit `node --test` list after Vitest.
+fixed Node stage before Counting and the plain and native Vitest phases.
 
 ## Showing that a test distinguishes
 
