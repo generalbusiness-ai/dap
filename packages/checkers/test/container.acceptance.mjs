@@ -18,7 +18,7 @@ const processRun = (command, args, seconds = 30) => new Promise((resolve, reject
   execFile(command[0], [...command.slice(1), ...args], { timeout: seconds * 1000, maxBuffer: 65536, encoding: "utf8" }, (error, stdout) => error ? reject(Error("TEST engine control failed")) : resolve(stdout.trim()));
 });
 export async function containerAcceptance(settings, directory) {
-  const { image, environment, command, canaryPort } = settings;
+  const { image, environment, command, execCommand, canaryPort } = settings;
   const root = join(directory, "direct-runs"); await mkdir(root, { mode: 0o700 });
   const privateHome = await mkdtemp(join(tmpdir(), "artroom-j3-TEST-custody-"));
   const keyFile = join(privateHome, "TEST-signing-key"); await writeFile(keyFile, randomBytes(32), { mode: 0o600 });
@@ -32,7 +32,7 @@ export async function containerAcceptance(settings, directory) {
   const token = randomBytes(32).toString("base64url"), host = new Host(remote, token), records = new MemoryRecords();
   const repository = `https://j3.test/${basename(remote)}`;
   let origins = 0, closed = 0;
-  const options = { root, command, originFor: async ask => {
+  const options = { root, command, execCommand, originFor: async ask => {
     origins++;
     const origin = await gatewayOrigin({ records, upstream: host.upstream, credential: value => ["authorization", `Bearer ${value}`] }, { attempt: ask.run, repository, update: null, token: { id: "TEST-read", state: "live", plaintext: token } });
     return { ...origin, close: async () => { await origin.close(); closed++; } };
@@ -86,6 +86,9 @@ export async function containerAcceptance(settings, directory) {
     }
     const failed = await run("real-failure", configuration([["/bin/sh", "-c", 'printf "bad\\n"; exit 1']]));
     assert.deepEqual(failed.outcome, { act: "check", outcome: "failed" });
+    const nonzero = await run("exact-nonzero-status", { ...configuration([["/bin/sh", "-c", 'printf "ok\\n"; exit 17']]), judged: { passed: { status: 17, line: "ok" }, failed: { status: 1, line: "bad" } } });
+    assert.deepEqual(nonzero.report.steps, [{ status: 17, line: "ok" }], "the actual exec process preserves a nonzero status beyond one");
+    assert.deepEqual(nonzero.outcome, { act: "check", outcome: "passed" });
     const hostileEnvironment = environment.map(variable => variable.name === "PATH" ? { ...variable, value: "/work/repo:/usr/bin:/bin" } : variable);
     const forged = JSON.stringify({ started: true, image, environment: hostileEnvironment, checkout: true, steps: [{ status: 0, line: "ok" }], end: "complete" });
     const untrusted = await run("trusted-checkout-path-and-synthetic-job-output", { ...configuration([["/j3-test-probe", "no-marker", "/work/pre-step-marker"], ["/bin/echo", forged]]), environment: hostileEnvironment });

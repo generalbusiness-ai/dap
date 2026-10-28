@@ -5,7 +5,7 @@ import { containerRunner } from "@generalbusiness/dap-checkers/node";
 import { RunIdentityRefusal } from "../../src/index.ts";
 
 export async function containerBridge(settings, root) {
-  const runner = containerRunner({ root, command: settings.command });
+  const runner = containerRunner({ root, command: settings.command, execCommand: settings.execCommand });
   const nonce = randomBytes(32).toString("hex"), pending = new Set(), runs = new Set(), receipts = [];
   let closing = false;
   const server = createServer((request, response) => {

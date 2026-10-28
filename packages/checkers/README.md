@@ -48,17 +48,31 @@ import { containerRunner } from "@generalbusiness/dap-checkers/node";
 const runner = containerRunner({
   root: "/private/checker-runs",
   command: ["/usr/local/bin/nerdctl"],
+  execCommand: ["/usr/local/bin/ctr", "--address", containerdSocket,
+    "--namespace", containerdNamespace, "tasks", "exec", "--fifo-dir", privateFifoDirectory],
   originFor,
 });
 ```
 
-`command` is trusted operator configuration: an argv prefix, never shell
-text or a value from the job. For the Lima instance used in development,
-the prefix is:
+`command` controls the container lifecycle through nerdctl. `execCommand`
+is the complete ctr tasks exec prefix for that same containerd instance.
+Both are trusted operator configuration, never shell text or a job value.
+Set `containerdSocket` and `containerdNamespace` to the actual engine's
+socket and namespace. Create `privateFifoDirectory` in the guest with mode
+`0700`, owned by the operator who runs ctr. The adapter appends the task's
+measured container ID and execution arguments. It retains both prefixes
+only in its private execution claim, outside `Job` and the container environment.
+
+For the Lima instance used in development, the lifecycle prefix is:
 
 ```ts
 ["/opt/homebrew/bin/limactl", "shell", "gitseq", "--", "nerdctl"]
 ```
+
+Use the same Lima prefix before `ctr` and its complete address, namespace
+and tasks exec arguments. The FIFO directory is inside that guest.
+ctr preserves the job's exit status and output without a nerdctl diagnostic
+line changing the last output line used for judgment.
 
 Give this runner and the external `ResultSigner` to `CheckerService`.
 The service authenticates the job and configuration before calling
@@ -131,7 +145,7 @@ retained report; the refusal cannot recover another job's passing result.
 
 The ordinary suite keeps its labelled stand-ins and does not claim that
 a container ran. The explicit acceptance driver requires a public manual
-configuration with exactly `command`, `image`, `environment` and
+configuration with exactly `command`, `execCommand`, `image`, `environment` and
 `canaryPort`. Its image additionally contains the test-only Go probe at
 `/j3-test-probe`.
 

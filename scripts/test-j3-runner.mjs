@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 /** Explicit real-container acceptance. No daemon-dependent skip/pass in gate.
  * node --import tsx scripts/test-j3-runner.mjs --config /absolute/public.json --out /absolute/new-directory
- * Config: {command:[absolute engine,...prefix],image:sha256,environment:[{name,value}],canaryPort:number}.
+ * Config includes command (engine prefix), execCommand (complete trusted ctr
+ * tasks exec prefix), image digest, exact environment and canaryPort. Both
+ * command prefixes remain Node-host-only; neither is part of a Job.
  * Root builds/pins the relay + /j3-test-probe image before this command. */
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
@@ -15,9 +17,11 @@ const args = process.argv.slice(2);
 if (args.length !== 4 || args[0] !== "--config" || args[2] !== "--out" || !isAbsolute(args[1]) || !isAbsolute(args[3])) throw Error("Use --config /absolute/public.json --out /absolute/new-directory");
 const info = await lstat(args[1]); assert(info.isFile() && !info.isSymbolicLink() && info.size <= 8192);
 const settings = JSON.parse(await readFile(args[1], "utf8"));
-assert.deepEqual(Object.keys(settings).sort(), ["canaryPort", "command", "environment", "image"]);
+assert.deepEqual(Object.keys(settings).sort(), ["canaryPort", "command", "environment", "execCommand", "image"]);
 assert(/^sha256:[a-f0-9]{64}$/.test(settings.image));
-assert(Array.isArray(settings.command) && settings.command.length >= 1 && settings.command.length <= 16 && settings.command.every(arg => typeof arg === "string" && arg.length <= 256 && !/[\x00-\x1f]/.test(arg)) && isAbsolute(settings.command[0]));
+for (const prefix of [settings.command, settings.execCommand]) {
+  assert(Array.isArray(prefix) && prefix.length >= 1 && prefix.length <= 16 && prefix.every(arg => typeof arg === "string" && arg.length > 0 && arg.length <= 256 && !/[\x00-\x1f]/.test(arg)) && isAbsolute(prefix[0]));
+}
 assert(Array.isArray(settings.environment) && settings.environment.length <= 64 && settings.environment.every(value => value && Object.keys(value).sort().join() === "name,value" && typeof value.name === "string" && typeof value.value === "string"));
 assert(Number.isInteger(settings.canaryPort) && settings.canaryPort >= 1024 && settings.canaryPort <= 65535);
 const output = args[3], root = dirname(dirname(fileURLToPath(import.meta.url)));

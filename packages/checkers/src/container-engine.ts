@@ -1,6 +1,7 @@
 /** Node-only nerdctl boundary. The job has loopback, an immutable relay and
  * private tmpfs; neither host files nor credentials enter its namespace. */
 import { spawn } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import { canonicalize, isDigest, textDigest } from "@generalbusiness/dap-bytes";
 import type { Digest } from "@generalbusiness/dap-contract";
 import { GitProgram, READ_BOUNDS, type Exec, type ExecResult } from "@generalbusiness/dap-git";
@@ -12,6 +13,8 @@ import type { RunReport, StepReport } from "./outcome.ts";
 
 export interface ContainerEngineOptions {
   argvPrefix: readonly string[];
+  /** Complete trusted ctr tasks exec prefix, including its private FIFO directory. */
+  execCommand: readonly string[];
   image: string;
   memoryBytes?: number;
   workBytes?: number;
@@ -112,8 +115,8 @@ function resolvedImage(bytes: Uint8Array, digest: Digest): void {
 }
 
 export function createContainerEngine(options: ContainerEngineOptions): ContainerEngine {
-  const prefix = [...options.argvPrefix], imageRef = options.image;
-  if (!prefix.length || prefix.some(v => !v || /[\u0000\r\n]/.test(v)) || !imageRef || /[\u0000\r\n]/.test(imageRef)) return error("configuration");
+  const prefix = [...options.argvPrefix], execCommand = [...options.execCommand], imageRef = options.image;
+  if ([prefix, execCommand].some(command => !command.length || command.some(v => !v || /[\u0000\r\n]/.test(v))) || !imageRef || /[\u0000\r\n]/.test(imageRef)) return error("configuration");
   const memory = options.memoryBytes ?? 512 * 1024 * 1024, work = options.workBytes ?? 128 * 1024 * 1024, pids = options.pids ?? 64;
   if (![memory, work, pids].every(v => Number.isSafeInteger(v) && v > 0) || memory > 4 * 1024 ** 3 || work > memory || pids > 256) return error("configuration");
   const cli = async (args: string[], signal?: AbortSignal): Promise<Uint8Array> => {
@@ -272,7 +275,7 @@ export function createContainerEngine(options: ContainerEngineOptions): Containe
       const execute = async (argv: readonly string[], milliseconds: number, bytes: number, capture: boolean, input?: Uint8Array, gitEnv?: Readonly<Record<string, string>>) => {
         const toolEnv = gitEnv ? [`PATH=${TOOL_PATH}`, ...Object.entries(gitEnv).map(([key, value]) => `${key}=${value}`)] : [];
         const program = argv[0] === "git" ? "/usr/bin/git" : argv[0];
-        ensure(); const result = await command(prefix, ["exec", "-i", "--user", "65532:65532", "--workdir", gitEnv ? "/work" : WORK, name,
+        ensure(); const result = await command(execCommand, ["--exec-id", randomUUID(), "--user", "65532:65532", "--cwd", gitEnv ? "/work" : WORK, id,
           ...(gitEnv ? [RELAY, "exec", String(toolEnv.length), ...toolEnv, "--", program!, ...argv.slice(1)] : argv)],
           { milliseconds: Math.min(milliseconds, remaining()), bytes, capture, ...(input ? { stdin: input } : {}), ...(signal ? { signal } : {}) });
         if (result.timedOut || result.limited) { expired = true; end(); return result; } ensure(); return result;

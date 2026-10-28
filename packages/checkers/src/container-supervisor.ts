@@ -19,7 +19,7 @@ async function supervise(dir: string): Promise<void> {
   if (launchBytes === null) throw Error("Checker supervisor origin missing");
   const launch = JSON.parse(launchBytes) as RunLaunch;
   if (launch.v !== 1 || (!ask.job.snapshot && (!launch.origin || typeof launch.origin.socket !== "string" || typeof launch.origin.repository !== "string"))) throw Error("Checker supervisor origin differs");
-  const engine = createContainerEngine({ argvPrefix: claim.command, image: claim.image });
+  const engine = createContainerEngine({ argvPrefix: claim.command, execCommand: claim.execCommand, image: claim.image });
   const abort = new AbortController();
   const stop = () => abort.abort();
   process.once("SIGTERM", stop); process.once("SIGINT", stop);

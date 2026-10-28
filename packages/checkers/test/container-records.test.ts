@@ -12,7 +12,7 @@ test("an oversized trusted command prefix cannot create an unreadable execution 
   try {
     const w = world(), origin = originOf(w.notice, { entry: w.job, pinned: digest("a"), activated: { name: "change", state: "active" }, manifest: w.manifest });
     if ("not" in origin) return expect.fail("The explicit stand-in origin must be a job");
-    const runner = containerRunner({ root, command: ["/usr/bin/false", ...Array.from({ length: 31 }, () => "x".repeat(4096))] });
+    const runner = containerRunner({ root, execCommand: ["/usr/bin/false"], command: ["/usr/bin/false", ...Array.from({ length: 31 }, () => "x".repeat(4096))] });
     const refusal = await runner.run({ run: "oversized-claim", job: origin.job, configuration: w.config }).then(() => null, error => error);
     expect(refusal).toBeInstanceOf(RunIdentityRefusal);
     expect(existsSync(root)).toBe(false);

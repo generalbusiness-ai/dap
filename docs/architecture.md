@@ -301,8 +301,9 @@ itself become a dap act, and a recorded act does not itself prove that a
 Git write finished.
 
 The checker package's platform-neutral entry supplies runner and signer
-interfaces. Its separate Node entry supplies a real nerdctl runner with a
-fresh container per job. The untrusted job has no external network; an
+interfaces. Its separate Node entry supplies a real containerd runner with a
+fresh container per job. Nerdctl manages its lifecycle; ctr preserves each
+process's exact exit status. The untrusted job has no external network; an
 immutable loopback relay passes its Git reads to the existing host-owned
 read-only Gateway. The signing key, token, control records and host files
 stay outside the job. Image, environment, resource enforcement and exact

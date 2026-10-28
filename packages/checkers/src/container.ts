@@ -17,17 +17,22 @@ export interface ContainerRunnerOptions {
   root: string;
   /** Trusted engine argv prefix, for example ["nerdctl"] or the supported Lima prefix. No shell text. */
   command: readonly string[];
+  /** Trusted complete ctr tasks exec prefix, including its socket, namespace and private FIFO directory. */
+  execCommand: readonly string[];
   /** Trusted custody-to-gateway wiring. Snapshot jobs never call it. No credential enters RunAsk. */
   originFor?: (ask: RunAsk, signal: AbortSignal) => Promise<ContainerRunnerOrigin>;
 }
 const unavailable = (): Error => new Error("The private checker execution could not be recovered; no replacement run was started.");
 const delay = () => new Promise<void>(resolve => { setTimeout(resolve, 100); });
 const validRun = (run: string): boolean => typeof run === "string" && /^[A-Za-z0-9_.-]{1,128}$/.test(run);
+const prefix = (value: readonly string[]): string[] => {
+  if (!Array.isArray(value) || !value.length || value.length > 32 || value.some(arg => typeof arg !== "string" || !arg || arg.length > 4096 || arg.includes("\0"))) throw unavailable();
+  return [...value];
+};
 
 export function containerRunner(options: ContainerRunnerOptions): Runner {
-  const command = [...options.command], rootOption = options.root, originFor = options.originFor;
-  if (!command.length || command.length > 32 || command.some(arg => !arg || arg.length > 4096 || arg.includes("\0"))) throw unavailable();
-  const engine = (claim: RunClaim) => createContainerEngine({ argvPrefix: claim.command, image: claim.image });
+  const command = prefix(options.command), execCommand = prefix(options.execCommand), rootOption = options.root, originFor = options.originFor;
+  const engine = (claim: RunClaim) => createContainerEngine({ argvPrefix: claim.command, execCommand: claim.execCommand, image: claim.image });
   const locate = async (run: string) => {
     if (!validRun(run)) throw unavailable();
     let root: string;
@@ -62,7 +67,7 @@ export function containerRunner(options: ContainerRunnerOptions): Runner {
     // Copy and validate before the first wait, including every snapshot byte.
     const encoded = encodeAsk(given), ask = decodeAsk(encoded), askDigest = digest(encoded);
     const createdAt = Date.now();
-    const claim: RunClaim = { v: 1, run: ask.run, askDigest, command, image: ask.configuration.image, needsOrigin: !ask.job.snapshot, container: containerName(ask.run),
+    const claim: RunClaim = { v: 1, run: ask.run, askDigest, command, execCommand, image: ask.configuration.image, needsOrigin: !ask.job.snapshot, container: containerName(ask.run),
       createdAt, finishBy: createdAt + (ask.configuration.limits.seconds + GRACE_SECONDS) * 1000 };
     const claimBytes = canonicalize(claim);
     if (Buffer.byteLength(claimBytes) > CLAIM_BYTES) throw new RunIdentityRefusal();
@@ -72,7 +77,8 @@ export function containerRunner(options: ContainerRunnerOptions): Runner {
     catch (error) { if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw unavailable(); }
     if (!created) {
       const prior = await locate(ask.run);
-      if (!prior || prior.claim.askDigest !== askDigest || canonicalize(prior.claim.command) !== canonicalize(command)) throw new RunIdentityRefusal();
+      if (!prior || prior.claim.askDigest !== askDigest || canonicalize(prior.claim.command) !== canonicalize(command)
+        || canonicalize(prior.claim.execCommand) !== canonicalize(execCommand)) throw new RunIdentityRefusal();
       for (;;) {
         const terminal = await terminalOf(prior.dir, prior.claim);
         if (terminal) return terminal.report;

@@ -94,6 +94,7 @@ export interface RunClaim {
   run: string;
   askDigest: string;
   command: readonly string[];
+  execCommand: readonly string[];
   image: Digest;
   needsOrigin: boolean;
   container: string;
@@ -152,7 +153,9 @@ export async function claimOf(dir: string, run: string): Promise<RunClaim | null
   if (bytes === null) return null;
   const claim = JSON.parse(bytes) as RunClaim;
   if (claim.v !== 1 || claim.run !== run || !/^[a-f0-9]{64}$/.test(claim.askDigest) || !Array.isArray(claim.command)
-    || !claim.command.length || claim.command.length > 32 || claim.command.some(x => typeof x !== "string" || !x || x.length > 4096)
+    || !claim.command.length || claim.command.length > 32 || claim.command.some(x => typeof x !== "string" || !x || x.length > 4096 || x.includes("\0"))
+    || !Array.isArray(claim.execCommand) || !claim.execCommand.length || claim.execCommand.length > 32
+    || claim.execCommand.some(x => typeof x !== "string" || !x || x.length > 4096 || x.includes("\0"))
     || !isDigest(claim.image) || typeof claim.needsOrigin !== "boolean" || typeof claim.container !== "string" || !Number.isSafeInteger(claim.createdAt) || !Number.isSafeInteger(claim.finishBy)
     || claim.finishBy <= claim.createdAt || claim.finishBy - claim.createdAt > (86_400 + GRACE_SECONDS) * 1000) throw refused();
   return claim;
