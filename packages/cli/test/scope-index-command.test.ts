@@ -147,8 +147,10 @@ test("operator manifest readers preserve managed refusals and sanitize private e
   const f = fixture(), manifest = await captureIndexManifest("https://service.test", f.D, f.reads);
   const refusal = new Stop({ code: 1, lines: ["Read session refused: rate-limited. The service reports a request-window retry delay of 23 seconds; this is not a retry grant."] });
   const refused: IndexReads = { ...f.reads, entry: async () => { throw refusal; } };
-  await expect(verifyIndexManifest(manifest, refused)).rejects.toBe(refusal);
-  await expect(indexManifestVersions(manifest, refused)).rejects.toBe(refusal);
+  const verificationStop = await verifyIndexManifest(manifest, refused).then(() => null, error => error);
+  expect(verificationStop).toBe(refusal);
+  const versionsStop = await indexManifestVersions(manifest, refused).then(() => null, error => error);
+  expect(versionsStop).toBe(refusal);
   const broken: IndexReads = { ...f.reads, entry: async () => { throw Error("TEST private transport credentials"); } };
   const expected = manifest.scopes.map(row => ({ at: row.at, result: "unavailable", reason: "read-failed" }));
   expect((await verifyIndexManifest(manifest, broken)).rows).toEqual(expected);
