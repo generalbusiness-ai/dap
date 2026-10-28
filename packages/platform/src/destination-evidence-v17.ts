@@ -382,7 +382,7 @@ export function evidenceDestinationDataV17(base: PlatformData): PlatformData {
         { of: "rules", window: 10, use: "once", without: "wait", retains: [RULES_EXTENTS_VALUE_V13] },
         { of: "key", from: "rule", max: 32, window: 10, use: "once", without: "wait", second: true },
       ] },
-    }, timed: { ...base.timed, "evidence-job-deadline": deadline("job"), "evidence-reuse-deadline": deadline("reuse-anchor"), "evidence-hold-deadline": deadline("hold-anchor") };
+    }, timed: { ...base.timed, "evidence-job-deadline": deadline("job"), "evidence-reuse-deadline": deadline("reuse-anchor"), "evidence-hold-deadline": deadline("hold-anchor") } };
 }
 
 function evidenceRelease(given: RuleGiven): { item: Item; record: EvidenceJobRecordV17 } | null {
